@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: circos-basic
 created: '2026-09-04T22:32:53Z'
-updated: '2026-10-24T08:15:26Z'
+updated: '2026-10-24T08:20:31Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40077021490
@@ -13,49 +13,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circos-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circos-basic/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - 'Composes the native ChartsContainer + PiePlot API: two pie series with paddingAngle
-    form the gapped outer segment ring (arc length follows Code size) and the concentric
-    coverage track, and both line up with the segment spans'
-  - A custom SVG overlay reads the drawing area through the useDrawingArea hook to
-    place the ribbons and labels on the same geometry as the pie rings
-  - Ribbon widths follow the call volume through one shared degrees-per-unit scale,
-    every ribbon ends on the two segments it connects, and fill opacity 0.45 keeps
-    crossing ribbons distinguishable in both themes
-  - 'The coverage track uses the imprint_seq ramp and the header explains it with
-    an inline gradient legend (58 to 95); segments use the Imprint palette in canonical
-    order, starting at #009E73'
-  - Segment labels are rotated radially and flipped on the left half so they never
-    read upside down; all chrome uses the theme tokens and reads correctly in both
-    renders
+  - 'Composes MUI X natively: two community pie series (paddingAngle gaps, innerRadius/outerRadius)
+    form the segment ring and the coverage track, and a custom SVG overlay placed
+    with the useDrawingArea hook draws the ribbons inside the same ChartsContainer'
+  - Outer ring arc lengths follow segment code size, and ribbon width is proportional
+    to API call volume through one shared degrees-per-unit scale, so both ends of
+    each ribbon have the same width and sit inside the two segments they connect
+  - 'Every segment takes one Imprint palette color, starting with brand green #009E73
+    for Gateway, and the ribbons take their source segment''s color at 0.45 fill opacity,
+    so crossings stay readable in both themes'
+  - The inner coverage track uses the imprint_seq ramp (t.seq), lines up with each
+    segment's span and gap, and a compact gradient legend in the header explains it
+  - A subtitle under the title states every encoding (ribbon width, ring size, track
+    color), and the header sets a clear title, subtitle, and legend hierarchy
+  - Realistic, neutral microservice scenario (8 services, 23 call flows) with plausible
+    kLOC and coverage values; skipAnimation is set and the data block follows the
+    adaptable-code layout
   weaknesses:
-  - 'VQ-06 (both): the subtitle says ''inner track ∝ Test coverage (%)'', but the
-    track encodes coverage by color on a fixed-thickness ring, not by size → describe
-    it as color, for example ''inner track color = Test coverage (%)''. Likely cause:
-    the SUBTITLE template string.'
-  - 'Suggestion: the green-to-blue imprint_seq track colors match the categorical
-    colors of Gateway (#009E73) and Catalog (blue), so Inventory''s track reads like
-    a Gateway element. Radial bar heights on the track would keep color reserved for
-    segment identity.'
-  - 'Suggestion: about 120 px of empty space between the header legend and the top
-    labels, plus a similar band below ''Orders'', could go to a slightly larger circle.'
+  - 'Suggestion: the imprint_seq ramp of the coverage track starts at the same brand
+    green as Gateway''s segment color, so a low-coverage track (Inventory) briefly
+    reads as another segment color; a slightly thinner track or a thin ink outline
+    would separate the two encodings more clearly.'
+  - 'Suggestion: near-vertical radial labels (Orders, Analytics, Gateway) could be
+    drawn tangentially or flipped to read left to right more easily.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the full 2400x2400 canvas.
-      Chrome: top-left title "circos-basic · javascript · muix · anyplot.ai" in bold dark ink, a gray subtitle explaining the encodings, and an inline legend "Test coverage (%): 58 [green→blue gradient] 95". Bold dark segment labels (Gateway, Auth, Catalog, Orders, Payments, Inventory, Notify, Analytics) are rotated radially around the ring. Everything is readable.
-      Data: the outer ring has 8 gapped segments in Imprint order (Gateway #009E73 green, Auth purple, Catalog blue, Orders ochre, Payments red, Inventory cyan, Notify mauve, Analytics olive), with arc length set by code size (Orders the longest, Notify the shortest). Inside it is a thicker coverage track colored on the green-to-blue sequential ramp. 23 translucent ribbons, colored by their source segment, cross the interior with widths proportional to the flow. The Gateway fan-out is the dominant green bundle, and thin ribbons stay visible.
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 square canvas.
+      Chrome: title "circos-basic · javascript · muix · anyplot.ai" in bold dark ink at the top left (~46% of width), a soft-ink subtitle explaining the encodings, and a "Test coverage (%): 58 [green→blue gradient] 95" legend row. Eight bold dark segment labels (Gateway, Auth, Catalog, Orders, Payments, Inventory, Notify, Analytics) are placed radially outside the ring. All text is readable.
+      Data: an outer ring of 8 segments with gaps, arc lengths following code size (Orders and Catalog largest, Notify smallest), colored with the Imprint palette (Gateway #009E73, Auth purple, Catalog blue, Orders ochre, Payments red, Inventory cyan, Notify mauve, Analytics olive). Inside it, a thicker coverage track per segment, colored green→blue by coverage and aligned with the segment spans. Translucent ribbons in the source segment's color cross the interior, with widths following call volume (Gateway→Auth widest). Ribbons stay distinguishable where they overlap.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title and labels flip to light ink and the subtitle to a light gray; all of it reads well. No dark-on-dark text anywhere.
-      Data: segment and track colors are identical to the light render. The ribbons keep the same hues at the same opacity and look darker over the dark page, but they stay distinguishable where they cross. The brand green reads clearly.
+      Chrome: title, subtitle, legend label and segment labels all switch to light ink and read clearly; no dark-on-dark text.
+      Data: segment, track and ribbon colors match the light render; only the translucent ribbons look darker because they blend with the dark page. The ribbons stay visible and distinguishable, and brand green is clearly visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -63,47 +61,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit sizes (title 22, labels 15, subtitle 15, legend 14 CSS px);
-          readable in both themes
+        comment: Every font size is set explicitly (title 22, subtitle 15, legend
+          14, labels 15 bold); all text is readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; ribbon overlap is permitted by the spec and handled
-          with translucency
+        comment: No text collisions; ribbon overlap in the center is permitted by
+          the spec and handled with translucency
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thin ribbons remain visible; rings and track are clear in both themes
+        comment: Rings, track and ribbons are clearly visible in both themes; hair-thin
+          weak ribbons are permitted
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; nothing relies on red versus green alone
+        comment: Segments are identified by labels as well as hue, and the 0.45 alpha
+          keeps ribbon crossings readable
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas, centered circle, nothing clipped or overflowing
+        comment: Square canvas; the circle and its labels fill about 58% of the area
+          with balanced margins and the header legend sits above it
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: The subtitle claims the track is proportional to coverage, but it
-          encodes coverage by color (defect line)
+        passed: true
+        comment: No axes; the subtitle and legend name every variable with units (req/s,
+          kLOC, %)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Imprint order starting at #009E73; imprint_seq for the continuous
-          track; correct backgrounds in both themes'
+        comment: 'Imprint palette in order starting with #009E73, imprint_seq for
+          the coverage track, and correct backgrounds in both themes'
     design_excellence:
       score: 10
       max: 20
@@ -113,20 +114,20 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Clear typographic hierarchy: bold title, encoding subtitle, inline
-          gradient legend, bold radial labels'
+        comment: A designed header hierarchy (bold title, soft-ink encoding subtitle,
+          inline gradient legend) and bold radial labels go beyond the baseline
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Radii and gaps chosen deliberately between the ring, track and ribbons;
-          labels flip on the left half to stay upright
+        comment: Segment ring, track and ribbon anchors share the same gaps and are
+          separated by consistent radial gaps; ribbon strokes match their fills
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
+        passed: true
         comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
@@ -137,28 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Circos layout with segment ring, ribbons and one inner track; no
-          unrequested layers
+        comment: 'A true circos plot: segment ring, one inner data track and ribbons,
+          with no unrequested layers'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'Gaps, proportional ribbon widths, distinct segment colors, an inner
-          track aligned to the segments and explained by a legend: all present'
+        comment: Gaps, size-proportional arcs, value-proportional ribbons, one color
+          per segment, translucent ribbons, and an aligned inner track with a legend
+          are all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Arc length follows code size; ribbon widths follow a shared value
-          scale and end on the correct segments
+        comment: Ribbons are anchored on their source and target segments with a shared
+          width scale; arc spans come from kLOC
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct mandated title; the coverage legend is labeled with units
+        comment: Title has the mandated format; the legend title 'Test coverage (%)'
+          is written for a reader
     data_quality:
       score: 15
       max: 15
@@ -168,22 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Unequal segment sizes, strong and weak connections, a hub, and varied
-          track values
+        comment: Unequal segment sizes, strong and weak flows, a hub (Gateway), and
+          track variation from 58 to 95
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible and neutral microservice dependency scenario (kLOC, req/s,
-          coverage)
+        comment: 'Microservice dependency graph: real-world plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 8 segments and 23 connections, inside the spec range; plausible values.
-          The spec has no Check values
+        comment: Plausible kLOC (9-40), coverage (58-95%) and req/s values (8-120);
+          the spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -193,34 +195,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: One overlay component, which the useDrawingArea hook requires; otherwise
-          linear
+        comment: Linear module-level computation; the only extra component is CircosOverlay,
+          which the useDrawingArea hook requires
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded data
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All three imports used
+        comment: ChartsContainer, PiePlot and useDrawingArea are all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Ribbon geometry has no library equivalent in muix; the hex parsing
-          is a few lines
+        comment: Ribbon geometry has no library equivalent in the community package;
+          complexity fits the task
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation set, current v9 composition
-          API
+        comment: Default-exported component, v9 ChartsContainer API, skipAnimation
+          set; the harness writes the outputs
     library_mastery:
       score: 6
       max: 10
@@ -230,32 +232,34 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Composition API (ChartsContainer + PiePlot + custom child) is the
-          documented pattern for custom marks
+        comment: 'Composition API used well: ChartsContainer with typed pie series
+          plus PiePlot instead of hand-drawn rings'
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Concentric pie series with native paddingAngle and the useDrawingArea
-          hook for the overlay
-  verdict: REJECTED
+        passed: true
+        comment: The useDrawingArea hook ties a custom SVG overlay to the chart's
+          coordinate space, a MUI X composition feature
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T08:12:14Z'
+  rendered_at: '2026-10-24T08:17:19Z'
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - bezier-curves
   - custom-legend
-  - polar-projection
+  - colorbar
+  - bezier-curves
   - html-export
-  - hover-tooltips
   patterns:
   - iteration-over-groups
   dataprep:
   - normalization
+  - cumulative-sum
   styling:
+  - minimal-chrome
   - alpha-blending
-  - publication-ready
+  - custom-colormap
+  - gradient-fill
