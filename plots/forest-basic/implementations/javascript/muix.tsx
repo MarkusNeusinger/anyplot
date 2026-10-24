@@ -1,6 +1,6 @@
 // anyplot.ai
 // forest-basic: Meta-Analysis Forest Plot
-// Library: muix 9.2.1 | JavaScript 22.23.2
+// Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 91/100 | Created: 2026-09-05
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
@@ -14,15 +14,7 @@ import Typography from "@mui/material/Typography";
 const t = window.ANYPLOT_TOKENS;
 
 // Constants
-const STUDY_COL = "study";
-const EFFECT_COL = "effect_size";
-const CI_LOWER = "ci_lower";
-const CI_UPPER = "ci_upper";
-const WEIGHT_COL = "weight";
-
 const TITLE = "Systolic BP Reduction · forest-basic · javascript · muix · anyplot.ai";
-const SUBTITLE_PREFIX = "Mean difference vs. placebo (mmHg) · squares sized by study weight · diamond = pooled effect";
-const X_AXIS_LABEL = "Mean Difference in Systolic Blood Pressure (mmHg)";
 const POOLED_LABEL = "Pooled Effect (Random Effects)";
 const NULL_LABEL = "No difference";
 const NULL_EFFECT = 0;
@@ -41,42 +33,49 @@ const MARGIN = { top: 20, right: 256, bottom: 20, left: 16 };
 const X_AXIS_HEIGHT = 56;
 const Y_AXIS_WIDTH = 228;
 
-// Data — randomized controlled trials comparing antihypertensive therapy vs. placebo (mmHg SBP change)
+// Columns: set these to your data's column names
+const STUDY = "Study"; // role: study
+const EFFECT = "Mean difference in SBP (mmHg)"; // role: effect_size
+const CI_LOWER = "95% CI lower"; // role: ci_lower
+const CI_UPPER = "95% CI upper"; // role: ci_upper
+const WEIGHT = "Study weight"; // role: weight
+
+// Data: replace this block with your own records
 const data: Record<string, string | number>[] = [
-  { [STUDY_COL]: "Anderson et al. 2019", [EFFECT_COL]: -4.2, [CI_LOWER]: -7.1, [CI_UPPER]: -1.3, [WEIGHT_COL]: 11.9 },
-  { [STUDY_COL]: "Chen et al. 2020", [EFFECT_COL]: -6.8, [CI_LOWER]: -9.5, [CI_UPPER]: -4.1, [WEIGHT_COL]: 15.1 },
-  { [STUDY_COL]: "Dubois et al. 2020", [EFFECT_COL]: -3.1, [CI_LOWER]: -6.9, [CI_UPPER]: 0.7, [WEIGHT_COL]: 8.8 },
-  { [STUDY_COL]: "Fernandez et al. 2021", [EFFECT_COL]: -8.5, [CI_LOWER]: -11.2, [CI_UPPER]: -5.8, [WEIGHT_COL]: 16.0 },
-  { [STUDY_COL]: "Garcia et al. 2021", [EFFECT_COL]: -5.0, [CI_LOWER]: -8.8, [CI_UPPER]: -1.2, [WEIGHT_COL]: 10.5 },
-  { [STUDY_COL]: "Halvorsen et al. 2022", [EFFECT_COL]: -7.3, [CI_LOWER]: -10.0, [CI_UPPER]: -4.6, [WEIGHT_COL]: 15.7 },
-  { [STUDY_COL]: "Ivanova et al. 2022", [EFFECT_COL]: -2.0, [CI_LOWER]: -5.5, [CI_UPPER]: 1.5, [WEIGHT_COL]: 7.9 },
-  { [STUDY_COL]: "Kowalski et al. 2023", [EFFECT_COL]: -6.1, [CI_LOWER]: -8.7, [CI_UPPER]: -3.5, [WEIGHT_COL]: 14.1 },
+  { [STUDY]: "Anderson et al. 2019", [EFFECT]: -4.2, [CI_LOWER]: -7.1, [CI_UPPER]: -1.3, [WEIGHT]: 11.9 },
+  { [STUDY]: "Chen et al. 2020", [EFFECT]: -6.8, [CI_LOWER]: -9.5, [CI_UPPER]: -4.1, [WEIGHT]: 15.1 },
+  { [STUDY]: "Dubois et al. 2020", [EFFECT]: -3.1, [CI_LOWER]: -6.9, [CI_UPPER]: 0.7, [WEIGHT]: 8.8 },
+  { [STUDY]: "Fernandez et al. 2021", [EFFECT]: -8.5, [CI_LOWER]: -11.2, [CI_UPPER]: -5.8, [WEIGHT]: 16.0 },
+  { [STUDY]: "Garcia et al. 2021", [EFFECT]: -5.0, [CI_LOWER]: -8.8, [CI_UPPER]: -1.2, [WEIGHT]: 10.5 },
+  { [STUDY]: "Halvorsen et al. 2022", [EFFECT]: -7.3, [CI_LOWER]: -10.0, [CI_UPPER]: -4.6, [WEIGHT]: 15.7 },
+  { [STUDY]: "Ivanova et al. 2022", [EFFECT]: -2.0, [CI_LOWER]: -5.5, [CI_UPPER]: 1.5, [WEIGHT]: 7.9 },
+  { [STUDY]: "Kowalski et al. 2023", [EFFECT]: -6.1, [CI_LOWER]: -8.7, [CI_UPPER]: -3.5, [WEIGHT]: 14.1 },
 ];
 
-// DerSimonian-Laird random-effects pooled estimate computed from the study rows
+// Plot: reads only data and the constants above
 const nStudies = data.length;
 const studyRecords = data.map((r, i) => {
-  const name = String(r[STUDY_COL]);
-  const effect = Number(r[EFFECT_COL]);
+  const name = String(r[STUDY]);
+  const effect = Number(r[EFFECT]);
   const lower = Number(r[CI_LOWER]);
   const upper = Number(r[CI_UPPER]);
-  const weight = Number(r[WEIGHT_COL]);
+  const weight = Number(r[WEIGHT]);
   const se = (upper - lower) / (2 * Z_95);
-  const invVar = 1 / (se * se || 1);
+  const invVar = 1 / (se * se);
   return { name, effect, lower, upper, weight, se, invVar, y: nStudies - i };
 });
 
 const sumInvVar = studyRecords.reduce((s, r) => s + r.invVar, 0);
-const fixedMean = studyRecords.reduce((s, r) => s + r.invVar * r.effect, 0) / (sumInvVar || 1);
+const fixedMean = studyRecords.reduce((s, r) => s + r.invVar * r.effect, 0) / sumInvVar;
 const qStat = studyRecords.reduce((s, r) => s + r.invVar * Math.pow(r.effect - fixedMean, 2), 0);
-const df = Math.max(1, nStudies - 1);
-const cDenom = sumInvVar - studyRecords.reduce((s, r) => s + r.invVar * r.invVar, 0) / (sumInvVar || 1);
-const tauSq = Math.max(0, (qStat - df) / (cDenom || 1));
+const df = nStudies - 1;
+const cDenom = sumInvVar - studyRecords.reduce((s, r) => s + r.invVar * r.invVar, 0) / sumInvVar;
+const tauSq = Math.max(0, (qStat - df) / cDenom);
 
 const reWeights = studyRecords.map((r) => 1 / (r.se * r.se + tauSq));
 const sumReWeights = reWeights.reduce((s, w) => s + w, 0);
-const pooledEffect = studyRecords.reduce((s, r, idx) => s + reWeights[idx] * r.effect, 0) / (sumReWeights || 1);
-const pooledSe = Math.sqrt(1 / (sumReWeights || 1));
+const pooledEffect = studyRecords.reduce((s, r, idx) => s + reWeights[idx] * r.effect, 0) / sumReWeights;
+const pooledSe = Math.sqrt(1 / sumReWeights);
 const pooledLower = pooledEffect - Z_95 * pooledSe;
 const pooledUpper = pooledEffect + Z_95 * pooledSe;
 const iSquared = qStat > df ? ((qStat - df) / qStat) * 100 : 0;
@@ -89,7 +88,7 @@ const rows = studyRecords.map((s) => ({
   ...s,
   halfSize:
     MIN_MARKER_HALF +
-    ((s.weight - minWeight) / (maxWeight - minWeight || 1)) * (MAX_MARKER_HALF - MIN_MARKER_HALF),
+    ((s.weight - minWeight) / (maxWeight - minWeight)) * (MAX_MARKER_HALF - MIN_MARKER_HALF),
 }));
 
 const overallY = 1 - POOLED_ROW_GAP;
@@ -100,23 +99,23 @@ const yLabels = new Map<number, string>(
 
 const rawXMin = Math.min(...rows.map((s) => s.lower), pooledLower, NULL_EFFECT);
 const rawXMax = Math.max(...rows.map((s) => s.upper), pooledUpper, NULL_EFFECT);
-const rawXSpan = rawXMax - rawXMin || 1;
-const xMin = Number((rawXMin - rawXSpan * X_PAD_SHARE).toFixed(1));
-const xMax = Number((rawXMax + rawXSpan * X_PAD_SHARE).toFixed(1));
+const rawXSpan = rawXMax - rawXMin;
+const xMin = rawXMin - rawXSpan * X_PAD_SHARE;
+const xMax = rawXMax + rawXSpan * X_PAD_SHARE;
 
 function ForestMarks() {
-  const xScale = useXScale();
-  const yScale = useYScale();
+  const xScale = useXScale() as (v: number) => number;
+  const yScale = useYScale() as (v: number) => number;
   const drawingArea = useDrawingArea();
 
-  const dividerY = yScale((rows[rows.length - 1].y + overallY) / 2) ?? 0;
+  const dividerY = yScale((rows[rows.length - 1].y + overallY) / 2);
   const textX = drawingArea.left + drawingArea.width + 18;
   const capHalf = 6;
 
-  const cyOverall = yScale(overallY) ?? 0;
-  const xL = xScale(pooledLower) ?? 0;
-  const xC = xScale(pooledEffect) ?? 0;
-  const xU = xScale(pooledUpper) ?? 0;
+  const cyOverall = yScale(overallY);
+  const xL = xScale(pooledLower);
+  const xC = xScale(pooledEffect);
+  const xU = xScale(pooledUpper);
   const halfH = 13;
 
   return (
@@ -131,10 +130,10 @@ function ForestMarks() {
       />
 
       {rows.map((r) => {
-        const cx = xScale(r.effect) ?? 0;
-        const cy = yScale(r.y) ?? 0;
-        const x1 = xScale(r.lower) ?? 0;
-        const x2 = xScale(r.upper) ?? 0;
+        const cx = xScale(r.effect);
+        const cy = yScale(r.y);
+        const x1 = xScale(r.lower);
+        const x2 = xScale(r.upper);
         const half = r.halfSize;
         return (
           <g key={r.name}>
@@ -143,7 +142,7 @@ function ForestMarks() {
             <line x1={x2} x2={x2} y1={cy - capHalf} y2={cy + capHalf} stroke={t.palette[0]} strokeWidth={2.2} />
             <rect x={cx - half} y={cy - half} width={half * 2} height={half * 2} fill={t.palette[0]} />
             <text x={textX} y={cy + 5} fontSize={14} fill={t.inkSoft} fontFamily="sans-serif">
-              {`${r.effect.toFixed(1)} [${r.lower.toFixed(1)}, ${r.upper.toFixed(1)}]  ·  ${r.weight.toFixed(1)}%`}
+              {`${r.effect.toFixed(1)} [${r.lower.toFixed(1)}, ${r.upper.toFixed(1)}]  ·  w = ${r.weight.toFixed(1)}`}
             </text>
           </g>
         );
@@ -167,7 +166,7 @@ function ForestMarks() {
 export default function Chart() {
   const chartWidth = window.ANYPLOT_SIZE.width;
   const chartHeight = window.ANYPLOT_SIZE.height - TITLE_HEIGHT - SUBTITLE_HEIGHT;
-  const subtitle = `${SUBTITLE_PREFIX} (k = ${nStudies}, I² = ${iSquared.toFixed(0)}%)`;
+  const subtitle = `${EFFECT} · squares sized by ${WEIGHT} · diamond = pooled effect (k = ${nStudies}, I² = ${iSquared.toFixed(0)}%)`;
 
   return (
     <Box
@@ -213,7 +212,7 @@ export default function Chart() {
             min: xMin,
             max: xMax,
             height: X_AXIS_HEIGHT,
-            label: X_AXIS_LABEL,
+            label: EFFECT,
             labelStyle: { fontSize: 15, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           },
