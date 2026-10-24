@@ -1,7 +1,7 @@
 // anyplot.ai
 // errorbar-asymmetric: Asymmetric Error Bars Plot
-// Library: muix 9.0.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-05
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 92/100 | Created: 2026-09-05
 
 import * as React from "react";
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -13,68 +13,68 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
-const FONT = "system-ui, -apple-system, 'Segoe UI', sans-serif";
 
 // Constants
-const X_COL = "Nitrogen Dose (kg/ha)";
-const Y_COL = "Yield Increase (%)";
-const ERROR_LOWER = "errorLower";
-const ERROR_UPPER = "errorUpper";
-
-const CENTRAL_LABEL = "Median yield increase";
-const BOUNDS_LABEL = "10th–90th percentile range (asymmetric bounds)";
-const PLATEAU_ANNOTATION = "Diminishing returns, widening spread";
+const FONT = "system-ui, -apple-system, 'Segoe UI', sans-serif";
+const TITLE = "errorbar-asymmetric · javascript · muix · anyplot.ai";
+const TITLE_HEIGHT = 58;
+const SUBTITLE_HEIGHT = 42;
+const MARGIN = { top: 20, right: 48, bottom: 20, left: 24 };
 const PLATEAU_SPREAD_SHARE = 0.85;
 const Y_PAD_TOP_SHARE = 0.12;
 const Y_PAD_BOTTOM_SHARE = 0.04;
 const CAP_BAND_SHARE = 0.28;
 const MARKER_RADIUS = 10;
+const POINT_COLOR = t.palette[0];
 
-// Data: crop yield increase (%) by nitrogen fertilizer dose (kg/ha)
+// Columns: set these to your data's column names
+const DOSE = "Nitrogen dose (kg/ha)"; // role: x
+const YIELD_GAIN = "Median yield increase (%)"; // role: y
+const LOWER_ERROR = "10th percentile gap (%)"; // role: error_lower
+const UPPER_ERROR = "90th percentile gap (%)"; // role: error_upper
+
+// Data: replace this block with your own records
 const data = [
-  { [X_COL]: "0", [Y_COL]: 1, [ERROR_LOWER]: 1, [ERROR_UPPER]: 2 },
-  { [X_COL]: "40", [Y_COL]: 8, [ERROR_LOWER]: 3, [ERROR_UPPER]: 5 },
-  { [X_COL]: "80", [Y_COL]: 19, [ERROR_LOWER]: 4, [ERROR_UPPER]: 8 },
-  { [X_COL]: "120", [Y_COL]: 29, [ERROR_LOWER]: 6, [ERROR_UPPER]: 11 },
-  { [X_COL]: "160", [Y_COL]: 35, [ERROR_LOWER]: 7, [ERROR_UPPER]: 13 },
-  { [X_COL]: "200", [Y_COL]: 38, [ERROR_LOWER]: 8, [ERROR_UPPER]: 11 },
-  { [X_COL]: "240", [Y_COL]: 36, [ERROR_LOWER]: 10, [ERROR_UPPER]: 9 },
+  { [DOSE]: "0", [YIELD_GAIN]: 1, [LOWER_ERROR]: 1, [UPPER_ERROR]: 2 },
+  { [DOSE]: "40", [YIELD_GAIN]: 8, [LOWER_ERROR]: 3, [UPPER_ERROR]: 5 },
+  { [DOSE]: "80", [YIELD_GAIN]: 19, [LOWER_ERROR]: 4, [UPPER_ERROR]: 8 },
+  { [DOSE]: "120", [YIELD_GAIN]: 29, [LOWER_ERROR]: 6, [UPPER_ERROR]: 11 },
+  { [DOSE]: "160", [YIELD_GAIN]: 35, [LOWER_ERROR]: 7, [UPPER_ERROR]: 13 },
+  { [DOSE]: "200", [YIELD_GAIN]: 38, [LOWER_ERROR]: 8, [UPPER_ERROR]: 11 },
+  { [DOSE]: "240", [YIELD_GAIN]: 36, [LOWER_ERROR]: 10, [UPPER_ERROR]: 9 },
 ];
 
-// Derived series arrays and axis bounds from data extent
-const categories = data.map((r) => r[X_COL]);
-const centralValues = data.map((r) => r[Y_COL]);
-const lowerErrors = data.map((r) => r[ERROR_LOWER]);
-const upperErrors = data.map((r) => r[ERROR_UPPER]);
-const totalSpreads = data.map((r) => r[ERROR_LOWER] + r[ERROR_UPPER]);
+// Plot: reads only data and the constants above
+const categories = data.map((r) => String(r[DOSE]));
+const centralValues = data.map((r) => Number(r[YIELD_GAIN]));
+const lowerErrors = data.map((r) => Number(r[LOWER_ERROR]));
+const upperErrors = data.map((r) => Number(r[UPPER_ERROR]));
+const totalSpreads = data.map((r) => Number(r[LOWER_ERROR]) + Number(r[UPPER_ERROR]));
 
-const lowerBounds = data.map((r) => r[Y_COL] - r[ERROR_LOWER]);
-const upperBounds = data.map((r) => r[Y_COL] + r[ERROR_UPPER]);
+const lowerBounds = data.map((r) => Number(r[YIELD_GAIN]) - Number(r[LOWER_ERROR]));
+const upperBounds = data.map((r) => Number(r[YIELD_GAIN]) + Number(r[UPPER_ERROR]));
 
 const rawYMin = Math.min(...lowerBounds);
 const rawYMax = Math.max(...upperBounds);
-const ySpan = rawYMax - rawYMin || 1;
+const ySpan = rawYMax - rawYMin;
 const yMin = Math.min(0, rawYMin - ySpan * Y_PAD_BOTTOM_SHARE);
 const yMax = rawYMax + ySpan * Y_PAD_TOP_SHARE;
 
-// Rule-based detection of the widening-spread plateau region
 const maxSpread = Math.max(...totalSpreads);
 const plateauStartIndex = totalSpreads.findIndex((s) => s >= maxSpread * PLATEAU_SPREAD_SHARE);
-
-const POINT_COLOR = t.palette[0];
+let plateauEndIndex = plateauStartIndex;
+for (let i = totalSpreads.length - 1; i >= 0; i--) {
+  if (totalSpreads[i] >= maxSpread * PLATEAU_SPREAD_SHARE) {
+    plateauEndIndex = i;
+    break;
+  }
+}
+const PLATEAU_ANNOTATION = `Spread ≥ ${Math.round(PLATEAU_SPREAD_SHARE * 100)}% of maximum`;
+const BOUNDS_LABEL = `Asymmetric bounds (−${LOWER_ERROR}, +${UPPER_ERROR})`;
 
 function ErrorBars() {
-  const xScale = useXScale() as unknown as {
-    (v: string): number | undefined;
-    bandwidth: () => number;
-    step: () => number;
-  };
-  const yScale = useYScale() as unknown as {
-    (v: number): number | undefined;
-    range: () => [number, number];
-  };
-
-  if (!xScale || !yScale || typeof xScale.bandwidth !== "function") return null;
+  const xScale = useXScale() as any;
+  const yScale = useYScale() as any;
 
   const capHalfWidth = Math.min(18, xScale.bandwidth() * CAP_BAND_SHARE);
   const halfGap = (xScale.step() - xScale.bandwidth()) / 2;
@@ -82,12 +82,10 @@ function ErrorBars() {
   const plotTop = Math.min(yRange0, yRange1);
   const plotBottom = Math.max(yRange0, yRange1);
 
-  const showPlateau = plateauStartIndex >= 0 && plateauStartIndex < categories.length;
-  const plateauX0 = showPlateau
-    ? (xScale(categories[plateauStartIndex]) ?? 0) - halfGap
-    : 0;
+  const showPlateau = plateauStartIndex >= 0 && plateauEndIndex >= plateauStartIndex;
+  const plateauX0 = showPlateau ? xScale(categories[plateauStartIndex]) - halfGap : 0;
   const plateauX1 = showPlateau
-    ? (xScale(categories[categories.length - 1]) ?? 0) + xScale.bandwidth() + halfGap
+    ? xScale(categories[plateauEndIndex]) + xScale.bandwidth() + halfGap
     : 0;
 
   return (
@@ -119,10 +117,10 @@ function ErrorBars() {
       )}
 
       {categories.map((cat, i) => {
-        const cx = (xScale(cat) ?? 0) + xScale.bandwidth() / 2;
-        const yTop = yScale(centralValues[i] + upperErrors[i]) ?? 0;
-        const yBottom = yScale(centralValues[i] - lowerErrors[i]) ?? 0;
-        const yMid = yScale(centralValues[i]) ?? 0;
+        const cx = xScale(cat) + xScale.bandwidth() / 2;
+        const yTop = yScale(centralValues[i] + upperErrors[i]);
+        const yBottom = yScale(centralValues[i] - lowerErrors[i]);
+        const yMid = yScale(centralValues[i]);
 
         return (
           <g key={cat}>
@@ -164,11 +162,6 @@ function ErrorBars() {
     </g>
   );
 }
-
-const TITLE = "errorbar-asymmetric · javascript · muix · anyplot.ai";
-const TITLE_HEIGHT = 58;
-const SUBTITLE_HEIGHT = 42;
-const MARGIN = { top: 20, right: 56, bottom: 72, left: 96 };
 
 export default function Chart() {
   const chartWidth = window.ANYPLOT_SIZE.width;
@@ -221,7 +214,7 @@ export default function Chart() {
             }}
           />
           <Typography sx={{ color: t.ink, fontSize: 15, fontFamily: FONT }}>
-            {CENTRAL_LABEL}
+            {YIELD_GAIN}
           </Typography>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -247,7 +240,7 @@ export default function Chart() {
             scaleType: "band",
             data: categories,
             height: 60,
-            label: X_COL,
+            label: DOSE,
             labelStyle: { fontSize: 16, fontWeight: 600, fill: t.ink, fontFamily: FONT },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
             tickSize: 0,
@@ -259,7 +252,7 @@ export default function Chart() {
             min: yMin,
             max: yMax,
             width: 84,
-            label: Y_COL,
+            label: YIELD_GAIN,
             labelStyle: { fontSize: 16, fontWeight: 600, fill: t.ink, fontFamily: FONT },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
             tickSize: 0,
