@@ -3,118 +3,100 @@
 // Library: muix 7.29.1 | JavaScript 22.23.1
 // Quality: 91/100 | Created: 2026-07-25
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { useXScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
-const FONT = "Inter, system-ui, -apple-system, sans-serif";
 
-// Seeded LCG for deterministic data generation (no seeded RNG in browser)
-let seed = 42;
-function rand() {
-  seed = (Math.imul(1664525, seed) + 1013904223) | 0;
-  return (seed >>> 0) / 4294967296;
-}
-function randn() {
-  const u = Math.max(rand(), 1e-10);
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rand());
-}
+// Constants
+const TITLE = "Reaction Times by Session · rug-basic · javascript · muix · anyplot.ai";
+const TITLE_H = 60;
+const TICK_FRAC = 0.72;
+const NICE_STEP = 20;
 
-// Reaction times (ms) in a visual cognitive task, two testing sessions.
-// Each observation tracks whether it is a slow-trial "attention lapse" so the
-// tail can be emphasized visually rather than only in a code comment.
-const morning = Array.from({ length: 140 }, () => ({ v: 420 + 55 * randn(), outlier: false }));
-const evening = Array.from({ length: 140 }, () => ({ v: 458 + 70 * randn(), outlier: false }));
-morning.push({ v: 636, outlier: true });
-evening.push({ v: 688, outlier: true }, { v: 706, outlier: true }, { v: 727, outlier: true });
+// Columns: set these to your data's column names
+const SESSION = "Testing session"; // role: group
+const VALUES = "Reaction Time (ms)"; // role: values
 
-const LANES = [
-  { label: "Morning session", values: morning, color: t.palette[0], strokeLabel: false },
-  { label: "Evening session", values: evening, color: t.palette[1], strokeLabel: true },
+// Data: replace this block with your own records
+const SESSION_SPECS = [
+  { name: "Morning session", count: 140, mean: 420, std: 55, tail: [636] },
+  { name: "Evening session", count: 140, mean: 458, std: 70, tail: [688, 706, 727] },
 ];
 
-const allValues = LANES.flatMap((lane) => lane.values.map((d) => d.v));
-const X_MIN = Math.floor(Math.min(...allValues) / 20) * 20 - 20;
-const X_MAX = Math.ceil(Math.max(...allValues) / 20) * 20 + 20;
-
-const TITLE_H = 60;
-const NORMAL_TICK_FRAC = 0.72; // fraction of the lane band used by regular ticks
-const OUTLIER_TICK_FRAC = 0.92; // outlier ticks read taller, at a glance
-
-// One rug lane: a subtle tinted background band plus one semi-transparent
-// tick per observation. Overlapping trials (frequent near the distribution
-// centre) darken naturally. Outlier "attention lapse" trials are drawn
-// taller and more opaque so the tail reads at a glance, not just on close
-// reading.
-function RugLane({ values, color, top, laneHeight }) {
-  const xs = useXScale();
-  const { left, width } = useDrawingArea();
-  if (!xs) return null;
-  const baselineY = top + laneHeight;
-  const normalHeight = laneHeight * NORMAL_TICK_FRAC;
-  const outlierHeight = laneHeight * OUTLIER_TICK_FRAC;
-  return (
-    <g>
-      <rect x={left} y={top} width={width} height={laneHeight} fill={color} opacity={0.05} />
-      {values.map((d, i) => (
-        <line
-          key={i}
-          x1={xs(d.v)}
-          x2={xs(d.v)}
-          y1={baselineY}
-          y2={baselineY - (d.outlier ? outlierHeight : normalHeight)}
-          stroke={color}
-          strokeWidth={d.outlier ? 2.5 : 2}
-          strokeOpacity={d.outlier ? 0.85 : 0.42}
-          strokeLinecap="round"
-        />
-      ))}
-    </g>
-  );
+let seed = 42;
+const data = [];
+for (const spec of SESSION_SPECS) {
+  for (let i = 0; i < spec.count; i += 1) {
+    seed = (Math.imul(1664525, seed) + 1013904223) | 0;
+    const u1 = Math.max((seed >>> 0) / 4294967296, 1e-10);
+    seed = (Math.imul(1664525, seed) + 1013904223) | 0;
+    const u2 = (seed >>> 0) / 4294967296;
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    data.push({ [SESSION]: spec.name, [VALUES]: spec.mean + spec.std * z });
+  }
+  for (const tailVal of spec.tail) {
+    data.push({ [SESSION]: spec.name, [VALUES]: tailVal });
+  }
 }
 
-function LaneLabel({ text, top, color, strokeLabel }) {
-  const { left } = useDrawingArea();
-  return (
-    <text
-      x={left}
-      y={top + 20}
-      fontSize={16}
-      fontFamily={FONT}
-      fontWeight={600}
-      fill={color}
-      stroke={strokeLabel ? t.ink : "none"}
-      strokeWidth={strokeLabel ? 0.75 : 0}
-      paintOrder="stroke"
-    >
-      {text}
-    </text>
-  );
-}
+// Plot: reads only data and the constants above
+const sessionNames = Array.from(new Set(data.map((row) => String(row[SESSION]))));
+const lanes = sessionNames.map((label, idx) => ({
+  label,
+  values: data.filter((row) => String(row[SESSION]) === label).map((row) => Number(row[VALUES])),
+  color: t.palette[idx % t.palette.length],
+  strokeLabel: idx === 1,
+}));
 
-// Two rug lanes sharing one x-axis, evenly split within the drawing area.
-// Each lane gets its own faint tinted band instead of a dividing rule, so
-// the split reads without adding an extra line of visual clutter.
+const allValues = lanes.flatMap((lane) => lane.values);
+const xMin = Math.floor(Math.min(...allValues) / NICE_STEP) * NICE_STEP - NICE_STEP;
+const xMax = Math.ceil(Math.max(...allValues) / NICE_STEP) * NICE_STEP + NICE_STEP;
+
 function RugPlot() {
-  const { top, height } = useDrawingArea();
-  const laneHeight = height / 2;
-  const laneTops = [top, top + laneHeight];
+  const xs = useXScale();
+  const { left, top, width, height } = useDrawingArea();
+  const laneHeight = height / lanes.length;
+  const tickHeight = laneHeight * TICK_FRAC;
+
   return (
     <g>
-      {LANES.map((lane, i) => (
-        <RugLane key={lane.label} values={lane.values} color={lane.color} top={laneTops[i]} laneHeight={laneHeight} />
-      ))}
-      {LANES.map((lane, i) => (
-        <LaneLabel
-          key={lane.label}
-          text={lane.label}
-          top={laneTops[i]}
-          color={lane.color}
-          strokeLabel={lane.strokeLabel}
-        />
-      ))}
+      {lanes.map((lane, i) => {
+        const laneTop = top + i * laneHeight;
+        const baselineY = laneTop + laneHeight;
+        return (
+          <g key={lane.label}>
+            <rect x={left} y={laneTop} width={width} height={laneHeight} fill={lane.color} opacity={0.05} />
+            {lane.values.map((v, j) => (
+              <line
+                key={j}
+                x1={xs(v)}
+                x2={xs(v)}
+                y1={baselineY}
+                y2={baselineY - tickHeight}
+                stroke={lane.color}
+                strokeWidth={2}
+                strokeOpacity={0.45}
+                strokeLinecap="round"
+              />
+            ))}
+            <text
+              x={left}
+              y={laneTop + 20}
+              fontSize={16}
+              fontWeight={600}
+              fill={lane.color}
+              stroke={lane.strokeLabel ? t.ink : "none"}
+              strokeWidth={lane.strokeLabel ? 0.75 : 0}
+              paintOrder="stroke"
+            >
+              {lane.label}
+            </text>
+          </g>
+        );
+      })}
     </g>
   );
 }
@@ -131,7 +113,6 @@ export default function Chart() {
         display: "flex",
         flexDirection: "column",
         backgroundColor: t.pageBg,
-        fontFamily: FONT,
       }}
     >
       <div
@@ -145,26 +126,28 @@ export default function Chart() {
           letterSpacing: "-0.3px",
         }}
       >
-        Reaction Times by Session · rug-basic · javascript · muix · anyplot.ai
+        {TITLE}
       </div>
-      <ChartContainer
+      <ChartsContainer
         width={W}
         height={H - TITLE_H}
         skipAnimation
         series={[]}
-        margin={{ top: 24, right: 60, bottom: 100, left: 60 }}
+        margin={{ top: 24, right: 60, bottom: 32, left: 60 }}
         xAxis={[
           {
-            min: X_MIN,
-            max: X_MAX,
+            min: xMin,
+            max: xMax,
             scaleType: "linear",
-            label: "Reaction Time (ms)",
-            tickMinStep: 40,
+            height: 68,
+            label: VALUES,
+            tickMinStep: NICE_STEP * 2,
             valueFormatter: (v) => String(Math.round(v)),
             tickLabelStyle: { fontSize: 14 },
             labelStyle: { fontSize: 16 },
           },
         ]}
+        yAxis={[{ min: 0, max: 1, scaleType: "linear", position: "none" }]}
         sx={{
           "& .MuiChartsAxis-line": { stroke: t.inkSoft },
           "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
@@ -174,7 +157,7 @@ export default function Chart() {
         <ChartsGrid vertical />
         <RugPlot />
         <ChartsXAxis />
-      </ChartContainer>
+      </ChartsContainer>
     </div>
   );
 }
