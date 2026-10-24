@@ -15,6 +15,7 @@ const FILL_RATIO = 0.44;
 const PADDING = 5;
 const ATTRACTION = 0.032;
 const ITERATIONS = 420;
+const ANCHOR_SPREAD = 1.1; // pushes the group anchors outward from the centre of the drawing area
 const DARK_TEXT = "#1A1A17";
 const LIGHT_TEXT = "#FAF8F1";
 
@@ -65,9 +66,6 @@ const data = [
 
 // Plot: reads only data and the constants above
 const groups = Array.from(new Set(data.map((d) => d[GROUP])));
-const unitMatch = VALUE.match(/\(([^A-Za-z0-9]*)([A-Za-z0-9%]*)\)/);
-const unitPrefix = unitMatch ? unitMatch[1] : "";
-const unitSuffix = unitMatch ? unitMatch[2] : "";
 
 const groupMeta = Object.fromEntries(
   groups.map((g, i) => {
@@ -89,7 +87,7 @@ const groupMeta = Object.fromEntries(
 
 const totalValue = data.reduce((sum, d) => sum + d[VALUE], 0);
 const TITLE = "bubble-packed · javascript · muix · anyplot.ai";
-const SUBTITLE = `${data.length} ${LABEL.toLowerCase()}s across ${groups.length} ${GROUP.toLowerCase()}s · Total ${unitPrefix}${totalValue.toLocaleString()}${unitSuffix}`;
+const SUBTITLE = `${data.length} bubbles (${LABEL}) · ${groups.length} groups (${GROUP}) · Area ∝ ${VALUE}, total ${totalValue.toLocaleString("en-US")}`;
 
 function PackedBubblesLayer() {
   const { left, top, width, height } = useDrawingArea();
@@ -97,15 +95,15 @@ function PackedBubblesLayer() {
     (FILL_RATIO * width * height) / (Math.PI * (totalValue || 1)),
   );
 
-  const cols = Math.max(1, Math.ceil(Math.sqrt(groups.length)));
-  const rows = Math.max(1, Math.ceil(groups.length / cols));
+  const cols = Math.ceil(Math.sqrt(groups.length));
+  const rows = Math.ceil(groups.length / cols);
 
   const anchors = Object.fromEntries(
     groups.map((g, idx) => {
       const col = idx % cols;
       const row = Math.floor(idx / cols);
-      const ax = left + width * ((col + 0.54 - (col === 0 ? 0.06 : -0.06)) / cols);
-      const ay = top + height * ((row + 0.54 - (row === 0 ? 0.04 : -0.04)) / rows);
+      const ax = left + width * (0.5 + ((col + 0.5) / cols - 0.5) * ANCHOR_SPREAD);
+      const ay = top + height * (0.5 + ((row + 0.5) / rows - 0.5) * ANCHOR_SPREAD);
       return [g, { x: ax, y: ay }];
     }),
   );
@@ -163,7 +161,7 @@ function PackedBubblesLayer() {
     <g>
       {bubbles.map((b) => {
         const meta = groupMeta[b.group];
-        const valueStr = `${unitPrefix}${b.value}${unitSuffix}`;
+        const valueStr = b.value.toLocaleString("en-US");
         const words = b.label.split(" ");
         const singleLineFits = b.label.length * 8.4 + 20 <= b.r * 2 && b.r >= 52;
         const twoLines =
@@ -191,7 +189,9 @@ function PackedBubblesLayer() {
               fillOpacity={0.94}
               stroke={t.pageBg}
               strokeWidth={2}
-            />
+            >
+              <title>{`${b.label} (${b.group}) · ${VALUE}: ${valueStr}`}</title>
+            </circle>
             {showName &&
               nameLines.map((line, idx) => {
                 const baseOffset =
