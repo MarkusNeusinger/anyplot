@@ -1,7 +1,7 @@
 // anyplot.ai
 // facet-grid: Faceted Grid Plot
-// Library: muix 9.0.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-05
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 89/100 | Created: 2026-09-05
 
 import * as React from "react";
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
@@ -11,20 +11,31 @@ import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 
 const t = window.ANYPLOT_TOKENS;
-const FONT = "system-ui, -apple-system, 'Segoe UI', sans-serif";
-const TITLE = "facet-grid · javascript · muix · anyplot.ai";
 
 // Constants
-const X_COL = "Bill Length (mm)";
-const Y_COL = "Bill Depth (mm)";
-const ROW_FACET = "Sex";
-const COL_FACET = "Species";
+const FONT = "system-ui, -apple-system, 'Segoe UI', sans-serif";
+const TITLE = "facet-grid · javascript · muix · anyplot.ai";
 
 const AXIS_PAD_SHARE = 0.08;
 const MARKER_SIZE = 6.5;
 const MARKER_COLOR = `${t.palette[0]}CC`;
 
-// Data: penguin bill measurements across species and sex (6 facets × 45 observations = 270 rows)
+const TITLE_H = 68;
+const Y_LABEL_W = 38;
+const X_LABEL_H = 36;
+const COL_STRIP_H = 38;
+const ROW_STRIP_W = 42;
+const GAP = 10;
+const TICK_LABEL_STYLE = { fontSize: 14, fill: t.inkSoft, fontFamily: FONT };
+const PANEL_MARGIN = { left: 8, right: 16, top: 12, bottom: 8 };
+
+// Columns: set these to your data's column names
+const BILL_LENGTH = "Bill length (mm)"; // role: x
+const BILL_DEPTH = "Bill depth (mm)"; // role: y
+const SEX = "Sex"; // role: row_facet
+const SPECIES = "Species"; // role: col_facet
+
+// Data: replace this block with your own records
 const facetSpecs = [
   { col: "Adelie", row: "Female", xMean: 37.3, xStd: 1.6, yMean: 17.6, yStd: 0.9, n: 45 },
   { col: "Chinstrap", row: "Female", xMean: 46.6, xStd: 3.0, yMean: 17.6, yStd: 0.9, n: 45 },
@@ -36,10 +47,10 @@ const facetSpecs = [
 
 let lcgState = 42 >>> 0;
 const data: {
-  [X_COL]: number;
-  [Y_COL]: number;
-  [ROW_FACET]: string;
-  [COL_FACET]: string;
+  [BILL_LENGTH]: number;
+  [BILL_DEPTH]: number;
+  [SEX]: string;
+  [SPECIES]: string;
 }[] = [];
 
 for (const spec of facetSpecs) {
@@ -57,57 +68,45 @@ for (const spec of facetSpecs) {
     const zY = Math.sqrt(-2 * Math.log(u3)) * Math.cos(2 * Math.PI * u4);
 
     data.push({
-      [COL_FACET]: spec.col,
-      [ROW_FACET]: spec.row,
-      [X_COL]: Number((spec.xMean + spec.xStd * zX).toFixed(2)),
-      [Y_COL]: Number((spec.yMean + spec.yStd * zY).toFixed(2)),
+      [SPECIES]: spec.col,
+      [SEX]: spec.row,
+      [BILL_LENGTH]: Number((spec.xMean + spec.xStd * zX).toFixed(2)),
+      [BILL_DEPTH]: Number((spec.yMean + spec.yStd * zY).toFixed(2)),
     });
   }
 }
 
-// Derived facet levels in order of first appearance
+// Plot: reads only data and the constants above
 const colFacets: string[] = [];
 const rowFacets: string[] = [];
 for (const row of data) {
-  if (!colFacets.includes(row[COL_FACET])) colFacets.push(row[COL_FACET]);
-  if (!rowFacets.includes(row[ROW_FACET])) rowFacets.push(row[ROW_FACET]);
+  if (!colFacets.includes(row[SPECIES])) colFacets.push(row[SPECIES]);
+  if (!rowFacets.includes(row[SEX])) rowFacets.push(row[SEX]);
 }
 
-// Shared axis domain across all facets
-const allX = data.map((r) => r[X_COL]);
-const allY = data.map((r) => r[Y_COL]);
+const allX = data.map((r) => r[BILL_LENGTH]);
+const allY = data.map((r) => r[BILL_DEPTH]);
 const minX = Math.min(...allX);
 const maxX = Math.max(...allX);
 const minY = Math.min(...allY);
 const maxY = Math.max(...allY);
-const xPad = (maxX - minX || 1) * AXIS_PAD_SHARE;
-const yPad = (maxY - minY || 1) * AXIS_PAD_SHARE;
+const xPad = (maxX - minX) * AXIS_PAD_SHARE;
+const yPad = (maxY - minY) * AXIS_PAD_SHARE;
 const xDomainMin = minX - xPad;
 const xDomainMax = maxX + xPad;
 const yDomainMin = minY - yPad;
 const yDomainMax = maxY + yPad;
 
-// Grouped points per (rowFacet, colFacet) cell
 const facets = rowFacets.map((rowVal) =>
   colFacets.map((colVal) => {
-    const subset = data.filter((r) => r[ROW_FACET] === rowVal && r[COL_FACET] === colVal);
+    const subset = data.filter((r) => r[SEX] === rowVal && r[SPECIES] === colVal);
     return {
       rowVal,
       colVal,
-      points: subset.map((r, idx) => ({ id: idx, x: r[X_COL], y: r[Y_COL] })),
+      points: subset.map((r, idx) => ({ id: idx, x: r[BILL_LENGTH], y: r[BILL_DEPTH] })),
     };
   })
 );
-
-// Layout constants
-const TITLE_H = 68;
-const Y_LABEL_W = 38;
-const X_LABEL_H = 36;
-const COL_STRIP_H = 38;
-const ROW_STRIP_W = 42;
-const GAP = 10;
-const TICK_LABEL_STYLE = { fontSize: 14, fill: t.inkSoft, fontFamily: FONT };
-const PANEL_MARGIN = { left: 8, right: 16, top: 12, bottom: 8 };
 
 export default function Chart() {
   const { width: W, height: H } = window.ANYPLOT_SIZE;
@@ -144,7 +143,7 @@ export default function Chart() {
       >
         <span style={{ fontSize: 22, fontWeight: 600, color: t.ink }}>{TITLE}</span>
         <span style={{ fontSize: 14, color: t.inkSoft }}>
-          {X_COL} vs {Y_COL} · faceted by {COL_FACET} ({nCols}) × {ROW_FACET} ({nRows}), n = {data.length}
+          {BILL_LENGTH} vs {BILL_DEPTH} · faceted by {SPECIES} ({nCols}) × {SEX} ({nRows}), n = {data.length}
         </span>
       </div>
 
@@ -159,7 +158,7 @@ export default function Chart() {
               color: t.ink,
             }}
           >
-            {Y_COL}
+            {BILL_DEPTH}
           </span>
         </div>
 
@@ -191,7 +190,7 @@ export default function Chart() {
                 }}
               >
                 <span>
-                  {COL_FACET}: {colVal}
+                  {SPECIES}: {colVal}
                 </span>
               </div>
             ))}
@@ -240,20 +239,16 @@ export default function Chart() {
                           valueFormatter: (v: number) => (isLeftCol ? String(v) : ""),
                         },
                       ]}
-                      series={
-                        facet.points.length > 0
-                          ? [
-                              {
-                                id: `${colVal}-${rowVal}`,
-                                type: "scatter" as const,
-                                color: MARKER_COLOR,
-                                markerSize: MARKER_SIZE,
-                                data: facet.points,
-                              },
-                            ]
-                          : []
-                      }
-                      sx={{ "& .MuiScatter-mark": { stroke: t.pageBg, strokeWidth: 1 } }}
+                      series={[
+                        {
+                          id: `${colVal}-${rowVal}`,
+                          type: "scatter" as const,
+                          color: MARKER_COLOR,
+                          markerSize: MARKER_SIZE,
+                          data: facet.points,
+                        },
+                      ]}
+                      sx={{ "& .MuiScatterChart-marker": { stroke: t.pageBg, strokeWidth: 1 } }}
                     >
                       <ChartsGrid horizontal vertical sx={{ "& .MuiChartsGrid-line": { stroke: t.grid } }} />
                       <ScatterPlot />
@@ -283,14 +278,14 @@ export default function Chart() {
                 }}
               >
                 <span style={{ transform: "rotate(90deg)", whiteSpace: "nowrap" }}>
-                  {ROW_FACET}: {rowVal}
+                  {SEX}: {rowVal}
                 </span>
               </div>
             ))}
           </div>
 
           <div style={{ height: X_LABEL_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontSize: 16, fontWeight: 600, color: t.ink }}>{X_COL}</span>
+            <span style={{ fontSize: 16, fontWeight: 600, color: t.ink }}>{BILL_LENGTH}</span>
           </div>
         </div>
       </div>
