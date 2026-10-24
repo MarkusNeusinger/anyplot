@@ -55,11 +55,7 @@ const data = (() => {
 })();
 
 // Plot: reads only data and the constants above
-const rawCategories: string[] = [];
-for (const row of data) {
-  const c = String(row[CATEGORIES]);
-  if (!rawCategories.includes(c)) rawCategories.push(c);
-}
+const rawCategories = [...new Set(data.map((row) => String(row[CATEGORIES])))];
 
 const boxStats = rawCategories
   .map((title) => {
