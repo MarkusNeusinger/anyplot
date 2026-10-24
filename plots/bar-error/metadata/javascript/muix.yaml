@@ -2,55 +2,48 @@ library: muix
 language: javascript
 specification_id: bar-error
 created: '2026-09-02T12:08:59Z'
-updated: '2026-09-02T12:13:54Z'
-generated_by: claude-sonnet
-workflow_run: 33627884894
+updated: '2026-10-24T00:09:51Z'
+generated_by: gemini-4-argon
+adopted_from: a6754ae47632b531aec6e975e6a4b937aa81fea5 (a6754ae47632b531aec6e975e6a4b937aa81fea5)
+workflow_run: 40043200900
 issue: 2376
-language_version: 22.23.2
-library_version: 7.29.1
+language_version: 22.23.3
+library_version: 9.16.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/muix/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/muix/plot-dark.html
-quality_score: 90
+quality_score: 87
 review:
   strengths:
-  - Custom ErrorBars component reads useXScale/useYScale directly from the chart's
-    internal scale functions to draw whiskers and caps — an idiomatic MUI X composition-API
-    pattern that keeps the overlay pixel-accurate to the bars.
-  - The subtitle explicitly states the error convention ("Error bars show ±1 SD across
-    ~150 respondents per channel"), satisfying the spec's requirement for a legend/annotation
-    explaining the error bars without cluttering the chart.
-  - Vertical-only grid is correctly aligned to the value axis for the horizontal orientation,
-    paired with rounded bar corners and generous margins (110/90/190/90) for a polished,
-    uncluttered layout.
-  - Both renders keep identical data colors (#009E73 bars, ink-toned whiskers) with
-    fully theme-adaptive chrome (backgrounds, text, grid) — no legibility issues in
-    either theme.
-  - Horizontal layout is a well-justified choice given the longer channel labels ("Self-Service",
-    "Social Media"), keeping them on a single unrotated line as the spec suggests.
-  - Title fontsize is computed from the mandated-title length via a linear scaling
-    formula, avoiding overflow for the descriptive-prefixed title.
+  - Error bars drawn as a custom layer through useXScale/useYScale, so every whisker
+    and cap sits exactly at value ± SD in the chart's own scales
+  - Error-bar stroke uses the ink token, so it flips black/white with the theme and
+    stands out against both the green bars and the page
+  - Categories sorted by mean descending on horizontal bars from a zero baseline;
+    value axis 0–10 spans every error bar
+  - Header legend explicitly names the error bars as 'Standard deviation (±1 SD)'
+    with a capped-whisker glyph matching the marks
+  - Semibold 'mean ± SD' labels beside each upper cap give exact values without crowding
+    five bars
   weaknesses:
-  - Bars are left in input order and share a single uniform green with no visual emphasis
-    on the best/worst-performing channel — DE-03 stays at default since the viewer
-    must find the ranking themselves rather than being guided to an insight (e.g.
-    sorting by value, or a subtle marker/annotation on the top or bottom performer).
-  - All five error magnitudes are symmetric ±SD values; an asymmetric pair on at least
-    one category would more fully demonstrate the spec's optional asymmetric-error-bar
-    feature (not required, so not scored down elsewhere, but would strengthen DQ-01
-    feature coverage on a future pass).
+  - 'Suggestion: the y-axis band (width 140) leaves about 100 px between the ''Support
+    channel'' title and the tick labels; a narrower band would tighten the left edge.'
+  - 'Suggestion: tick marks every 0.5 on a 0–10 scale give 21 labels and grid lines;
+    a step of 1 would read calmer.'
+  - 'Suggestion: the bar swatch could come from the native ChartsLegend inside ChartsWrapper,
+    keeping only the error-bar glyph hand-drawn.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Customer Satisfaction by Support Channel · bar-error · javascript · muix · anyplot.ai" in bold dark ink, centered top; italic subtitle "Error bars show ±1 SD across ~150 respondents per channel" beneath it. X-axis label "Mean Satisfaction Score (0–10)" and tick labels (0.0–10.0 in 0.5 steps) in soft dark gray. Y-axis category labels (Email, Live Chat, Phone, Self-Service, Social Media) fully visible, unrotated, not clipped. Subtle vertical gridlines aligned to the value axis. All text clearly readable against the light background.
-      Data: Five horizontal bars in brand green (#009E73) with rounded corners, each with a horizontal whisker line and vertical end-caps in dark ink at ~0.75 opacity, clearly distinguishable from the bar fill and background.
+      Background: warm off-white #FAF8F1, not pure white.
+      Chrome: centered bold title "bar-error · javascript · muix · anyplot.ai", subtitle "Support channel: 5 · Respondents per channel: 150", header legend (green swatch "Mean satisfaction score (0–10)", capped-whisker glyph "Standard deviation (±1 SD)"). X axis 0–10 in 0.5 steps titled "Mean satisfaction score (0–10)"; y axis "Support channel" with Live Chat, Phone, Email, Social Media, Self-Service. Dark text throughout, subtle vertical grid. All readable.
+      Data: five horizontal #009E73 bars from zero, sorted descending (8.4, 7.8, 7.2, 6.9, 6.5), each with a near-black 3px error bar and caps through the bar end, labelled "8.4 ± 0.6" … "6.5 ± 1.1" right of the upper cap.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title/subtitle/axis labels/tick labels now rendered in light ink (title bright, subtitle/ticks softer light gray) — fully legible against the dark background. Vertical gridlines are still subtle and visible. Y-axis category labels unrotated and fully visible.
-      Data: Same five green (#009E73) bars — identical hue to the light render — with whisker lines now rendered in a light gray (theme-adaptive ink) that reads clearly against the green fill and dark background. No dark-on-dark or hard-to-read elements found.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: same layout; title, axis titles, ticks, subtitle and legend in light text; grid subtle dark gray. No dark-on-dark text.
+      Data: bars identical #009E73; error bars and legend glyph flip to light ink and remain clearly visible over green and page.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -62,76 +55,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title scaled by length formula, axis/tick
-          labelStyle); readable at full size and proportioned well in both themes.
+        comment: Explicit sizes (title 22px, axis titles 16px, ticks 14-15px, value
+          labels 14px semibold); all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render.
+        comment: No text collisions; value labels sit clear right of each upper cap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars and error-bar whiskers/caps are bold and clearly visible against
-          both backgrounds; sizing appropriate for only 5 categories.
+        comment: Five wide bars; error bars 3px ink strokes with caps, visible over
+          green and over the page in both themes; legend glyphs match marks
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Ink-toned whiskers have strong contrast against the green bars and
-          background in both themes; no red-green reliance.
+        comment: Single green series; ink error bars give strong contrast; no color-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a large, balanced portion of the canvas with generous,
-          even margins; nothing cut off.
+        comment: 3200x1800, plot fills canvas, balanced axis titles, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Mean Satisfaction Score (0–10)" is descriptive with an explicit
-          range; y-axis label correctly omitted since the title already states "by
-          Support Channel".'
+        comment: '''Mean satisfaction score (0–10)'' with scale, ''Support channel'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 in both renders; backgrounds and all chrome
-          are theme-correct.'
+        comment: 'Bars #009E73, backgrounds #FAF8F1 / #1A1A17, chrome from theme tokens;
+          error bars flip ink with theme'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Thoughtful subtitle providing statistical context, scaled typography
-          hierarchy, and deliberate single-brand-color use — clearly above library
-          defaults, though not a fully custom multi-element composition.
+        comment: 'Raised from 4: deliberate title/subtitle/legend hierarchy in a header
+          band and semibold ''8.4 ± 0.6'' value labels set apart from tick text'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Vertical-only grid correctly matched to orientation, rounded bar
-          corners, generous whitespace — good refinement, not maximally polished.
+        comment: 'Raised from 2: rounded bar corners and round line caps, value-axis-only
+          grid chosen for horizontal bars'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Bars kept in input order with uniform color and no emphasis technique
-          — viewer must find the ranking themselves.
+        passed: true
+        comment: 'Raised from 2: per-bar ''mean ± SD'' labels plus respondents-per-channel
+          subtitle let the reader judge overlap and precision directly'
     spec_compliance:
       score: 15
       max: 15
@@ -141,55 +130,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bar chart with error bars; horizontal orientation is a well-justified
-          variant given the spec's own suggestion for long labels.
+        comment: Horizontal bar chart with error bars, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible error-bar caps, explanatory subtitle for the error convention,
-          and consistent styling across all categories.
+        comment: Caps on both ends, legend names ±1 SD, consistent styling, bars from
+          zero, sorted by value
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Value on x-axis, category on y-axis for the horizontal layout; all
-          5 channels and their full data ranges are visible.
+        comment: Value axis 0–10 from zero, spans every error bar (max upper 9.0)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches "{Descriptive Title} · bar-error · javascript · muix
-          · anyplot.ai" exactly; legend correctly omitted for the single series.
+        comment: Title 'bar-error · javascript · muix · anyplot.ai'; legend entries
+          are reader text
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows varying means and varying error magnitudes (0.6–1.1) across
-          channels; only symmetric errors are demonstrated (asymmetric is optional
-          per spec).
+        comment: Error bars of clearly different lengths (0.6–1.1), overlapping neighboring
+          ranges
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer-support satisfaction-by-channel is a real, neutral business
-          scenario.
+        comment: Customer satisfaction by support channel — plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mean scores (6.5–8.4) and SDs (0.6–1.1) on a 0–10 satisfaction scale
-          are all realistic and internally consistent.
+        comment: Means 6.5–8.4 and SDs 0.6–1.1 on a 0–10 scale are plausible; no Check
+          values in spec
     code_quality:
       score: 10
       max: 10
@@ -199,63 +184,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data → two components (ErrorBars overlay + default-exported
-          Chart) — the minimum structure the framework requires.
+        comment: Flat data → plot flow; the ErrorBars component is required to use
+          the scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data.
+        comment: Deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import (ChartContainer, BarPlot, ChartsXAxis/YAxis, ChartsGrid,
-          useXScale/useYScale) is used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for a scale-synced custom overlay; no fake
-          functionality.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current composition API (ChartContainer/BarPlot), export default
-          component contract respected, skipAnimation set.
+        comment: Default-exported component sized to ANYPLOT_SIZE, skipAnimation,
+          v9 composition API
     library_mastery:
-      score: 9
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses the ChartContainer composition API plus proper axis/grid subcomponents
-          — the library's recommended pattern for custom overlays.
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale hooks driving a hand-drawn SVG overlay synced
-          to the chart's own scale functions is a genuinely MUI X-specific technique.
+        comment: 'Raised from 3: v9 composition (ChartsContainer + BarPlot + ChartsGrid
+          + axes) with a custom overlay layer'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: 'Raised from 1: useXScale/useYScale hooks place the error bars in
+          the chart''s own band/linear scales'
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
+  rendered_at: '2026-10-24T00:07:03Z'
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
+  - custom-legend
   - annotations
-  - error-bars
-  patterns:
-  - data-generation
-  - iteration-over-groups
+  - hover-tooltips
+  - html-export
+  patterns: []
   dataprep: []
   styling:
   - grid-styling
-  - publication-ready
