@@ -1,7 +1,7 @@
 // anyplot.ai
 // dot-matrix-proportional: Dot Matrix Chart for Proportional Counts
-// Library: muix 9.0.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-05
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 86/100 | Created: 2026-09-05
 //# anyplot-orientation: square
 
 import * as React from "react";
@@ -12,19 +12,14 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
 const t = window.ANYPLOT_TOKENS;
-const FONT = "system-ui, -apple-system, sans-serif";
-const TITLE = "dot-matrix-proportional · javascript · muix · anyplot.ai";
 
 // Constants
-const CATEGORY = "category";
-const COUNT = "count";
-const TOTAL = "total";
-
-const NEUTRAL_COLOR = window.ANYPLOT_THEME === "dark" ? "#A8A79F" : "#6B6A63";
+const FONT = "system-ui, -apple-system, sans-serif";
+const TITLE = "dot-matrix-proportional · javascript · muix · anyplot.ai";
 const SEMANTIC_COLORS: Record<string, string> = {
   Agreed: t.palette[0],
   Disagreed: t.palette[4],
-  "No opinion": NEUTRAL_COLOR,
+  "No opinion": t.inkSoft,
 };
 const REMAINDER_LABEL = "Remainder";
 const MARKER_CELL_SHARE = 0.38;
@@ -33,16 +28,21 @@ const RING_STROKE_SHARE = 0.16;
 const TITLE_HEIGHT = 76;
 const LEGEND_HEIGHT = 84;
 
-// Data: survey of 100 respondents on a workplace policy
+// Columns: set these to your data's column names
+const CATEGORY = "Response category"; // role: category
+const COUNT = "Respondent count"; // role: count
+const TOTAL = "Total population"; // role: total
+
+// Data: replace this block with your own records
 const data = [
   { [CATEGORY]: "Agreed", [COUNT]: 47, [TOTAL]: 100 },
   { [CATEGORY]: "Disagreed", [COUNT]: 35, [TOTAL]: 100 },
   { [CATEGORY]: "No opinion", [COUNT]: 18, [TOTAL]: 100 },
 ];
 
-// Derived grid geometry and category runs from data
-const listedSum = data.reduce((acc, r) => acc + r[COUNT], 0);
-const declaredTotal = Math.max(...data.map((r) => r[TOTAL]), listedSum);
+// Plot: reads only data and the constants above
+const listedSum = data.reduce((acc, r) => acc + Number(r[COUNT]), 0);
+const declaredTotal = Math.max(...data.map((r) => Number(r[TOTAL])), listedSum);
 const remainderCount = Math.max(0, declaredTotal - listedSum);
 
 const gridCols = Math.ceil(Math.sqrt(declaredTotal));
@@ -54,10 +54,10 @@ let fallbackIdx = 0;
 
 const categories = data.map((r) => {
   const label = String(r[CATEGORY]);
-  const count = r[COUNT];
+  const count = Number(r[COUNT]);
   let color = SEMANTIC_COLORS[label];
   if (!color) {
-    color = availablePalette[fallbackIdx] ?? t.inkSoft;
+    color = availablePalette[fallbackIdx];
     fallbackIdx += 1;
   }
   return { label, count, color, ringed: color === t.palette[4] };
