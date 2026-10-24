@@ -6,19 +6,47 @@
 import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
-// Data
-const TOP = "Top Depth (m)";
-const BOTTOM = "Bottom Depth (m)";
-const LITHOLOGY = "Lithology";
-const FORMATION = "Formation";
-const STAGE_AGE = "Stage Age";
-const PERIOD = "Geological Period";
-const PERIOD_SPAN = "Period Span";
-const UNCONFORMITY = "Unconformity";
-const SUBTITLE =
-  "Synthetic borehole section · Western Canada Sedimentary Basin · lithology symbols after FGDC/USGS";
+const t = window.ANYPLOT_TOKENS;
+const SIZE = window.ANYPLOT_SIZE;
 
-const RAW_LAYERS = [
+// Constants
+const TITLE = "column-stratigraphic · javascript · muix · anyplot.ai";
+const FONT =
+  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+const PATTERN_TYPES = ["stipple", "dash", "brick", "rhomb", "silt", "clasts"] as const;
+const LITHOLOGY_PATTERN_MAP: Record<string, (typeof PATTERN_TYPES)[number]> = {
+  Sandstone: "stipple",
+  Shale: "dash",
+  Limestone: "brick",
+  Dolomite: "rhomb",
+  Siltstone: "silt",
+  Conglomerate: "clasts",
+};
+
+const COL_LEFT = 4.25;
+const COL_RIGHT = 7.7;
+const COL_TOP_Y = 7.7;
+const COL_BOT_Y = 0.6;
+const AXIS_X = 4.05;
+const BRACKET_X = 2.95;
+const FORM_X = 7.95;
+const LEGEND_X = 11.3;
+const LEGEND_STEP = 0.72;
+const TICK_COUNT = 7;
+const WAVY_SAMPLES = 48;
+
+// Columns: set these to your data's column names
+const TOP = "Top depth (m)"; // role: top
+const BOTTOM = "Bottom depth (m)"; // role: bottom
+const LITHOLOGY = "Lithology"; // role: lithology
+const FORMATION = "Formation"; // role: formation
+const STAGE_AGE = "Stage age"; // role: age
+const PERIOD = "Geological period"; // role: extra
+const PERIOD_SPAN = "Period span"; // role: extra
+const UNCONFORMITY = "Unconformity"; // role: extra
+
+// Data: replace this block with your own records
+const data = [
   {
     [TOP]: 0,
     [BOTTOM]: 28,
@@ -26,7 +54,7 @@ const RAW_LAYERS = [
     [FORMATION]: "Horseshoe Canyon Fm",
     [STAGE_AGE]: "Maastrichtian",
     [PERIOD]: "Cretaceous",
-    [PERIOD_SPAN]: "100–66 Ma",
+    [PERIOD_SPAN]: "145–66 Ma",
     [UNCONFORMITY]: false,
   },
   {
@@ -36,7 +64,7 @@ const RAW_LAYERS = [
     [FORMATION]: "Bearpaw Shale",
     [STAGE_AGE]: "Campanian",
     [PERIOD]: "Cretaceous",
-    [PERIOD_SPAN]: "100–66 Ma",
+    [PERIOD_SPAN]: "145–66 Ma",
     [UNCONFORMITY]: false,
   },
   {
@@ -46,7 +74,7 @@ const RAW_LAYERS = [
     [FORMATION]: "Belly River Fm",
     [STAGE_AGE]: "Campanian",
     [PERIOD]: "Cretaceous",
-    [PERIOD_SPAN]: "100–66 Ma",
+    [PERIOD_SPAN]: "145–66 Ma",
     [UNCONFORMITY]: false,
   },
   {
@@ -111,61 +139,73 @@ const RAW_LAYERS = [
   },
 ];
 
-// Constants
-const t = window.ANYPLOT_TOKENS;
-const SIZE = window.ANYPLOT_SIZE;
-const TITLE = "column-stratigraphic · javascript · muix · anyplot.ai";
-const FONT =
-  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+// Plot: reads only data and the constants above
+const DEPTH_UNIT = TOP.match(/\(([^)]+)\)/)?.[1] ?? "";
+const depthUnitSuffix = DEPTH_UNIT ? ` ${DEPTH_UNIT}` : "";
+const DEPTH_AXIS_TITLE = TOP.replace(/^Top\s+/i, "").replace(/^d/, "D");
 
-const COL_LEFT = 4.25;
-const COL_RIGHT = 7.7;
-const COL_TOP_Y = 7.7;
-const COL_BOT_Y = 0.6;
-const AXIS_X = 4.05;
-const BRACKET_X = 2.95;
-const FORM_X = 7.95;
-const LEGEND_X = 11.3;
-const LEGEND_STEP = 0.72;
-const TICK_COUNT = 7;
-
-// Preparation
-const minDepth = Math.min(...RAW_LAYERS.map((d) => d[TOP]));
-const maxDepth = Math.max(...RAW_LAYERS.map((d) => d[BOTTOM]));
-const depthSpan = maxDepth - minDepth || 1;
+const minDepth = Math.min(...data.map((d) => Number(d[TOP])));
+const maxDepth = Math.max(...data.map((d) => Number(d[BOTTOM])));
+const depthSpan = maxDepth - minDepth;
 const worldSpan = COL_TOP_Y - COL_BOT_Y;
 
-const LITHO_NAMES = Array.from(new Set(RAW_LAYERS.map((d) => d[LITHOLOGY])));
+const LITHO_NAMES = Array.from(new Set(data.map((d) => String(d[LITHOLOGY]))));
 const LITHO_COLORS = Object.fromEntries(
-  LITHO_NAMES.map((name, idx) => [name, t.palette[idx]])
+  LITHO_NAMES.map((name, idx) => [name, t.palette[idx]]),
 );
 const LITHO_IDS = Object.fromEntries(
-  LITHO_NAMES.map((name) => [name, `lith-${name.toLowerCase()}`])
+  LITHO_NAMES.map((name, idx) => [name, `lith-${idx}`]),
 );
 
-const LAYERS = RAW_LAYERS.map((d) => {
-  const top = d[TOP];
-  const bottom = d[BOTTOM];
+const usedPatterns = new Set<string>(
+  LITHO_NAMES.map((name) => LITHOLOGY_PATTERN_MAP[name]).filter(Boolean),
+);
+const unusedPatterns = PATTERN_TYPES.filter((p) => !usedPatterns.has(p));
+let unusedIdx = 0;
+const LITHO_PATTERNS: Record<string, (typeof PATTERN_TYPES)[number]> = {};
+for (const name of LITHO_NAMES) {
+  const mapped = LITHOLOGY_PATTERN_MAP[name];
+  if (mapped) {
+    LITHO_PATTERNS[name] = mapped;
+  } else {
+    if (unusedIdx >= unusedPatterns.length) {
+      throw new Error(`Exceeded available lithology patterns (${PATTERN_TYPES.length})`);
+    }
+    LITHO_PATTERNS[name] = unusedPatterns[unusedIdx++];
+  }
+}
+
+const LAYERS = data.map((d) => {
+  const top = Number(d[TOP]);
+  const bottom = Number(d[BOTTOM]);
+  const litho = String(d[LITHOLOGY]);
   const yTopW = COL_TOP_Y - ((top - minDepth) / depthSpan) * worldSpan;
   const yBotW = COL_TOP_Y - ((bottom - minDepth) / depthSpan) * worldSpan;
   return {
     top,
     bottom,
     thickness: bottom - top,
-    litho: d[LITHOLOGY],
-    patternId: LITHO_IDS[d[LITHOLOGY]],
-    formation: d[FORMATION],
-    age: d[STAGE_AGE],
-    period: d[PERIOD],
-    periodSpan: d[PERIOD_SPAN],
-    unconf: d[UNCONFORMITY],
+    litho,
+    patternId: LITHO_IDS[litho],
+    formation: String(d[FORMATION]),
+    age: String(d[STAGE_AGE]),
+    period: String(d[PERIOD]),
+    periodSpan: String(d[PERIOD_SPAN]),
+    unconf: Boolean(d[UNCONFORMITY]),
     yTopW,
     yBotW,
     yMidW: (yTopW + yBotW) / 2,
   };
 });
 
-const PERIODS = [];
+const PERIODS: {
+  name: string;
+  age: string;
+  top: number;
+  bottom: number;
+  yTopW: number;
+  yBotW: number;
+}[] = [];
 for (const layer of LAYERS) {
   const prev = PERIODS[PERIODS.length - 1];
   if (prev && prev.name === layer.period) {
@@ -183,22 +223,24 @@ for (const layer of LAYERS) {
   }
 }
 
-const tickStep = Math.max(10, Math.round(depthSpan / TICK_COUNT / 10) * 10);
+const rawStep = depthSpan / TICK_COUNT;
+const stepMag = Math.pow(10, Math.floor(Math.log10(rawStep)));
+const stepNorm = rawStep / stepMag;
+const tickStep = (stepNorm <= 1.5 ? 1 : stepNorm <= 3.5 ? 2 : 5) * stepMag;
 const DEPTH_TICKS = [];
-for (let d = minDepth; d <= maxDepth; d += tickStep) {
+for (let d = Math.ceil(minDepth / tickStep) * tickStep; d <= maxDepth + 1e-9; d += tickStep) {
   DEPTH_TICKS.push({
-    depth: d,
+    depth: Number(d.toFixed(4)),
     yW: COL_TOP_Y - ((d - minDepth) / depthSpan) * worldSpan,
   });
 }
 
-const WAVY_SAMPLES = 48;
+const SUBTITLE = `${LAYERS.length} stratigraphic units (${minDepth}–${maxDepth}${depthUnitSuffix}) · ${LITHO_NAMES.length} ${LITHOLOGY} types across ${PERIODS.length} periods`;
 const WAVY_STEPS = Array.from({ length: WAVY_SAMPLES + 1 }, (_, i) => i / WAVY_SAMPLES);
 
 function StratigraphicLayer() {
-  const xs = useXScale();
-  const ys = useYScale();
-  if (!xs || !ys) return null;
+  const xs = useXScale() as any;
+  const ys = useYScale() as any;
 
   const xL = xs(COL_LEFT);
   const xR = xs(COL_RIGHT);
@@ -214,10 +256,11 @@ function StratigraphicLayer() {
   return (
     <g fontFamily={FONT}>
       <defs>
-        {LITHO_NAMES.map((name, idx) => {
+        {LITHO_NAMES.map((name) => {
           const color = LITHO_COLORS[name];
           const pid = LITHO_IDS[name];
-          if (idx === 0) {
+          const patType = LITHO_PATTERNS[name];
+          if (patType === "stipple") {
             return (
               <pattern key={pid} id={pid} patternUnits="userSpaceOnUse" width={24} height={24}>
                 <rect width={24} height={24} fill={color} fillOpacity={0.26} />
@@ -233,7 +276,7 @@ function StratigraphicLayer() {
               </pattern>
             );
           }
-          if (idx === 1) {
+          if (patType === "dash") {
             return (
               <pattern key={pid} id={pid} patternUnits="userSpaceOnUse" width={24} height={16}>
                 <rect width={24} height={16} fill={color} fillOpacity={0.26} />
@@ -243,7 +286,7 @@ function StratigraphicLayer() {
               </pattern>
             );
           }
-          if (idx === 2) {
+          if (patType === "brick") {
             return (
               <pattern key={pid} id={pid} patternUnits="userSpaceOnUse" width={28} height={18}>
                 <rect width={28} height={18} fill={color} fillOpacity={0.26} />
@@ -258,7 +301,7 @@ function StratigraphicLayer() {
               </pattern>
             );
           }
-          if (idx === 3) {
+          if (patType === "rhomb") {
             return (
               <pattern key={pid} id={pid} patternUnits="userSpaceOnUse" width={20} height={20}>
                 <rect width={20} height={20} fill={color} fillOpacity={0.26} />
@@ -271,7 +314,7 @@ function StratigraphicLayer() {
               </pattern>
             );
           }
-          if (idx === 4) {
+          if (patType === "silt") {
             return (
               <pattern key={pid} id={pid} patternUnits="userSpaceOnUse" width={26} height={26}>
                 <rect width={26} height={26} fill={color} fillOpacity={0.26} />
@@ -386,7 +429,7 @@ function StratigraphicLayer() {
         fontWeight={600}
         fill={t.ink}
       >
-        Depth (m)
+        {DEPTH_AXIS_TITLE}
       </text>
 
       {/* Geological periods */}
@@ -447,7 +490,7 @@ function StratigraphicLayer() {
               fontSize={14}
               fill={t.inkSoft}
             >
-              {`${L.age} · ${L.thickness} m`}
+              {`${L.age} · ${L.thickness}${depthUnitSuffix}`}
             </text>
           </g>
         );
