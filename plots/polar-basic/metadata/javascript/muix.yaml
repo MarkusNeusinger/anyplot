@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: polar-basic
 created: '2026-07-24T23:58:04Z'
-updated: '2026-10-24T11:51:28Z'
+updated: '2026-10-24T11:56:32Z'
 generated_by: gemini-4-argon
 adopted_from: 5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69 (5b2bcb3e5e4dc5b3685a669c07cf3ab1b9918f69)
 workflow_run: 40091275866
@@ -13,53 +13,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/polar-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/polar-basic/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - 'Composes a true polar coordinate system inside MUI X''s ChartsContainer: a custom
-    PolarLayer reads useXScale/useYScale so rings, spokes and the polygon share the
-    exact scales the native ScatterPlot markers use, keeping every one of the 24 points
-    at its own angle and radius'
-  - 'Clock convention fits the time-based data: midnight at the top, clockwise travel,
-    labels every 3 h (12 AM, 3 AM, 6 AM, ...), so the morning (8 AM) and evening (7
-    PM) peaks are easy to read in the correct directions'
-  - Radial scale starts at 0 with a computed round ring step (1 kWh up to 5 kWh),
-    so the 0.8-4.9 kWh range uses the full radius and the night-time low isn't crushed
-    into the center
-  - 'Clear chrome hierarchy: quarter-turn labels bold in ink and 3-hour labels lighter
-    in inkSoft, quarter spokes slightly stronger, outer ring heavier; ring labels
-    sit on page-colored pills so they stay readable over the fill'
-  - 'Theme tokens are threaded through every hand-drawn element (grid, ink, inkSoft,
-    pageBg marker halos), so the light and dark renders are equally legible with identical
-    #009E73 data color'
-  - skipAnimation and a default-exported component meet the harness contract; the
-    HTML keeps the native scatter tooltip
+  - Every hour sits exactly at its angle and radius (checked 00h 1.2, 06h 2.1, 12h
+    2.3, 18h 4.6 kWh against the rings), clockwise with midnight at the top
+  - 'Clock-face label hierarchy: bold ink quarter turns (12 AM, 6 AM, 12 PM, 6 PM)
+    over softer 3-hour labels'
+  - 'Graded grid: light rings and spokes with a heavier outer ring, readable yet behind
+    the data in both themes'
+  - Ring tick labels carry the kWh unit on page-colored pills, so they stay legible
+    over grid and fill
+  - 'Idiomatic MUI X v9 composition: ChartsContainer with hidden linear axes, useXScale/useYScale
+    for the custom polar layer, native ScatterPlot marks'
+  - Theme tokens threaded through every custom SVG element; data color identical in
+    both renders
   weaknesses:
-  - 'VQ-06 (both): the radial values carry only a unit (''1 kWh'' ... ''5 kWh'') and
-    the measured quantity ''Electricity Draw'' (the KWH column name) appears nowhere
-    in the render, so a reader cannot tell what is being plotted → name the quantity
-    on the chart, e.g. a radial-axis caption from KWH or the optional descriptive
-    title prefix. Likely cause: the series label is used only for the hidden legend
-    and tooltip, and the ring labels reuse just the unit parsed from KWH.'
-  - 'Suggestion: the ''1 kWh'' pill''s page-colored box cuts a small rectangle out
-    of the green fill near the 11 PM–1 AM edge; placing the ring labels along an empty
-    spoke (for example toward 3 AM, where the data stays near the center) would keep
-    the fill uninterrupted.'
+  - 'Suggestion: the default scatter tooltip in the HTML shows the internal Cartesian
+    x/y coordinates; a valueFormatter that reports the hour and kWh would make the
+    hover readable.'
+  - 'Suggestion: the 1 kWh tick pill covers a patch of the area fill near the 12 AM
+    spoke; a lower pill opacity or a placement on the outer side of the spoke would
+    keep the fill continuous.'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 across the full 2400x2400 square canvas.
-      Chrome: bold dark title "polar-basic · javascript · muix · anyplot.ai" centered at the top (~36% of width). Clock labels around the circle every 3 h: 12 AM (top), 6 AM (right), 12 PM (bottom), 6 PM (left) in bold dark ink; 3 AM, 9 AM, 3 PM, 9 PM in lighter grey. Five concentric rings labeled 1-5 kWh along the 12 AM spoke on small page-colored pills; light-grey rings and spokes, outer 5 kWh ring a bit heavier. All text readable.
-      Data: 24 hourly points as #009E73 circles with thin page-colored halos, joined in a closed straight-edged polygon with a translucent green fill. Lobes reach toward 7-8 AM (~3.4-3.8 kWh) and 6-7 PM (~4.6-4.9 kWh); the night minimum (~0.8-1.0 kWh) is near the center around 2-4 AM.
+      Background: warm off-white #FAF8F1 across the whole 2400x2400 canvas.
+      Chrome: bold dark title "polar-basic · javascript · muix · anyplot.ai" with a muted subtitle "Radius: Electricity Draw (kWh) · Angle: Hour of Day, midnight at top"; five light-grey concentric rings labelled 1-5 kWh on page-colored pills left of the 12 AM spoke; eight spokes every 3 h, quarter labels (12 AM top, 6 AM right, 12 PM bottom, 6 PM left) bold dark, 3/9 AM/PM labels softer grey. All text readable.
+      Data: 24 brand-green #009E73 markers with white halos joined by a closed green line over a translucent green fill; small values near midnight to 4 AM sit close to the center, peaks at 7-8 AM (~3.4-3.8 kWh) and 6-7 PM (~4.6-4.9 kWh).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: warm near-black #1A1A17.
-      Chrome: title and quarter labels in near-white, 3-hour labels and ring labels in light grey; rings and spokes in subtle dark grey that is still visible; ring-label pills in the dark page color. No dark-on-dark text.
-      Data: identical #009E73 points, line and translucent fill (darker-looking on the dark page); marker halos switch to the dark page color. Only the chrome flips.
+      Chrome: title in light ink, subtitle and minor labels in light grey, quarter labels bold light; rings and spokes dim grey but visible; tick pills dark page color with light text. No dark-on-dark text.
+      Data: identical #009E73 markers, line and translucent fill; marker halos switch to the dark page color.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -67,51 +57,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 22 px, clock labels 14-17 px, ring labels 14 px in the 1200-px
-          mount; all readable in both themes and at thumbnail size
+        comment: Explicit sizes (title 22 px, quarter labels 17 px bold, minor hour
+          labels and ring ticks 14 px CSS); all text readable in both themes, ring
+          labels on page-colored pills
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collides with text or marks; ring labels sit on page-colored
-          pills
+        comment: No text collides with text or data; ring-tick pills sit left of the
+          12 AM spoke clear of the markers
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 24 sparse points at a prominent 6.5 px radius with halos; the line
-          and fill are clear in both themes
+        comment: 24 sparse points drawn as prominent 6.5 px markers with a page-colored
+          halo; connecting line 3 px
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green series, high contrast on both surfaces
+        comment: Single series in brand green; contrast fine on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas, polar area centered and filling the frame, nothing
-          clipped, title ~36% of the width
+        comment: 2400x2400 square, circle centered, labels inside the canvas, balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: The radial values show the kWh unit, but the quantity (Electricity
-          Draw) is never named on the chart (defect line)
+        comment: Subtitle names radius 'Electricity Draw (kWh)' and angle 'Hour of
+          Day, midnight at top'; ring ticks carry the kWh unit
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series in #009E73; #FAF8F1 and #1A1A17 backgrounds; chrome
-          from theme tokens'
+        comment: 'Series in #009E73 identical in both renders; backgrounds #FAF8F1
+          / #1A1A17; chrome from theme tokens'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -119,21 +110,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Typographic hierarchy on the angular labels (bold ink for quarter
-          turns, lighter inkSoft for 3-hour steps) and pill-backed ring labels
+        comment: 'Typographic hierarchy chosen for the clock face: quarter-turn labels
+          bold ink at 17 px, intermediate hours inkSoft at 14 px, a muted subtitle
+          under the title'
       - id: DE-02
         name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Graded grid weights (outer ring heavier, quarter spokes stronger
+          than 3-hour spokes), page-colored pills behind the ring tick labels, halo
+          outline separating markers from the line
+      - id: DE-03
+        name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Graded grid weights (quarter spokes stronger, outer ring heavier,
-          inner rings faint) and page-colored marker halos
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: Data shown clearly; no focal point chosen beyond the spec
+        comment: 12-hour clock labels (12 AM / 6 AM / 12 PM / 6 PM) make the morning
+          and evening peaks readable as times of day at a glance; no further focal
+          point chosen
     spec_compliance:
       score: 15
       max: 15
@@ -143,29 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Polar chart with points joined by a connected line on a circular
-          axis; no unrequested layers
+        comment: Polar chart of points joined by a closed line, one color, no reference
+          lines, highlights or annotations
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Visible rings lighter than the data, standard 3-hour angular labels
-          starting at the top for time data, radial scale from 0 spreading the data;
-          all 'A good version shows' bullets met
+        comment: Visible but light concentric rings; angular labels every 3 h with
+          quarter turns emphasised; midnight at top, clockwise; radial scale 0-5 kWh
+          spreads the data
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Each point at its exact hour angle and kWh radius; straight segments,
-          no smoothing or displacement
+        comment: 'Checked on the render: 00h at 1.2, 06h at 2.1, 12h at 2.3, 18h at
+          4.6 kWh sit on their rings; straight segments, no smoothing'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title in the mandated format; legend N/A for a single series
+        comment: Title 'polar-basic · javascript · muix · anyplot.ai'; single series,
+          legend N/A
     data_quality:
       score: 15
       max: 15
@@ -175,21 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 24 points cover the full cycle, with two peaks, a night trough and
-          a lopsided outline that shows directional structure
+        comment: Full 24-hour cycle with night trough, morning and evening peaks shows
+          the cyclical pattern a polar chart is for
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Household electricity draw by hour of day, plausible and neutral
+        comment: Household electricity draw by hour of day; neutral and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0.8-4.9 kWh per hour with morning and evening peaks is realistic
-          for a household; no Check values in the spec
+        comment: 0.8-4.9 kWh per hour, a plausible all-electric household; no Check
+          values in the spec
     code_quality:
       score: 10
       max: 10
@@ -199,36 +195,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat module-level data prep; the only function besides the default
-          export is PolarLayer, a React component needed to call the scale hooks
+        comment: Module-level data prep; the PolarLayer component is the composition
+          pattern MUI X requires for scale hooks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data
+        comment: Hard-coded records
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ChartsContainer, ScatterPlot, useXScale and useYScale are all used
+        comment: ChartsContainer, ScatterPlot, useXScale, useYScale all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a polar layer the community package lacks;
-          no fake UI
+        comment: Nice ring-step computation is needed to fix the domain before the
+          scale exists; no available call replaces it
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation, sized from window.ANYPLOT_SIZE,
-          composed with v9 ChartsContainer
+        comment: Default-exported component, v9 ChartsContainer, skipAnimation, sized
+          from ANYPLOT_SIZE
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -236,31 +232,31 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses MUI X's composition API (ChartsContainer + native ScatterPlot
-          + hidden axes) instead of drawing everything by hand
+        comment: ChartsContainer composition with hidden linear axes and the native
+          ScatterPlot for the marks
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Custom SVG layer driven by the useXScale/useYScale hooks inside the
-          chart context
-  verdict: REJECTED
+        passed: true
+        comment: useXScale/useYScale hooks drive a custom SVG polar layer inside the
+          MUI X composition API
+  verdict: APPROVED
   model: claude-opus-5-5
   criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-f7283eb626
-  rendered_at: '2026-10-24T11:48:35Z'
+  rendered_at: '2026-10-24T11:53:34Z'
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
-  - layer-composition
+  - custom-svg-layer
   - manual-ticks
-  - hover-tooltips
-  - html-export
+  - theme-tokens
   patterns:
-  - data-generation
-  dataprep: []
+  - hardcoded-data
+  - component-composition
+  dataprep:
+  - coordinate-transform
   styling:
   - alpha-blending
-  - grid-styling
-  - minimal-chrome
+  - publication-ready
