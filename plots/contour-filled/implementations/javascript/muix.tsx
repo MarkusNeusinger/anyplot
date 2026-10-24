@@ -2,287 +2,362 @@
 // contour-filled: Filled Contour Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 84/100 | Updated: 2026-09-05
-//# anyplot-orientation: landscape
-// anyplot.ai
-// contour-filled: Filled Contour Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-04
 
-import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import { ChartsContainer } from "@mui/x-charts/ChartsContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
-import { ChartsText } from "@mui/x-charts/ChartsText";
-import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 
-const t = window.ANYPLOT_TOKENS;
-const SIZE = window.ANYPLOT_SIZE;
+// Data
+const X = "Zonal Offset (°)";
+const Y = "Meridional Offset (°)";
+const Z = "Temperature Anomaly (°C)";
+const SUBTITLE = "Sea-surface temperature anomaly field · Marching-triangles filled contour bands";
 
-// --- Grid setup (in-memory, deterministic) ----------------------------------
-const GRID = 36;
-const X_MIN = -3, X_MAX = 3, Y_MIN = -3, Y_MAX = 3;
-
-const xs = Array.from({ length: GRID }, (_, i) => X_MIN + (i / (GRID - 1)) * (X_MAX - X_MIN));
-const ys = Array.from({ length: GRID }, (_, j) => Y_MIN + (j / (GRID - 1)) * (Y_MAX - Y_MIN));
-
-// --- Scalar field: sea-surface temperature anomaly (warm patch + cool patch) ---
-// Two Gaussian bumps only — kept free of high-frequency terms so the grid
-// resolution below fully resolves every extremum (no sub-cell artifacts).
-function anomaly(x, y) {
-  const warmPatch = 2.0 * Math.exp(-((x - 1.3) * (x - 1.3) + (y - 0.9) * (y - 0.9)) * 0.55);
-  const coolPatch = -1.6 * Math.exp(-((x + 1.4) * (x + 1.4) + (y + 1.0) * (y + 1.0)) * 0.65);
-  return warmPatch + coolPatch;
+const SAMPLE_GRID = 36;
+const SAMPLE_SPAN = 6;
+const DATA = [];
+for (let j = 0; j < SAMPLE_GRID; j += 1) {
+  const y = -SAMPLE_SPAN / 2 + (j / (SAMPLE_GRID - 1)) * SAMPLE_SPAN;
+  for (let i = 0; i < SAMPLE_GRID; i += 1) {
+    const x = -SAMPLE_SPAN / 2 + (i / (SAMPLE_GRID - 1)) * SAMPLE_SPAN;
+    const warm = 2.0 * Math.exp(-((x - 1.3) * (x - 1.3) + (y - 0.9) * (y - 0.9)) * 0.55);
+    const cool = -1.6 * Math.exp(-((x + 1.4) * (x + 1.4) + (y + 1.0) * (y + 1.0)) * 0.65);
+    DATA.push({ [X]: x, [Y]: y, [Z]: warm + cool });
+  }
 }
 
-// zGrid[j][i] = z at (xs[i], ys[j])
-const zGrid = ys.map((y) => xs.map((x) => anomaly(x, y)));
-const allZ = zGrid.flat();
+// Constants
+const t = window.ANYPLOT_TOKENS;
+const SIZE = window.ANYPLOT_SIZE;
+const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+const NUM_BANDS = 10;
+
+// Preparation
+const xs = Array.from(new Set(DATA.map((d) => d[X]))).sort((a, b) => a - b);
+const ys = Array.from(new Set(DATA.map((d) => d[Y]))).sort((a, b) => a - b);
+const nX = xs.length;
+const nY = ys.length;
+const xMin = xs[0];
+const xMax = xs[nX - 1];
+const yMin = ys[0];
+const yMax = ys[nY - 1];
+
+const zGrid = Array.from({ length: nY }, () => new Array(nX).fill(0));
+const xIndex = new Map(xs.map((v, i) => [v, i]));
+const yIndex = new Map(ys.map((v, j) => [v, j]));
+for (const row of DATA) {
+  zGrid[yIndex.get(row[Y])][xIndex.get(row[X])] = row[Z];
+}
+
+const allZ = DATA.map((d) => d[Z]);
 const zMin = Math.min(...allZ);
 const zMax = Math.max(...allZ);
 const vAbs = Math.max(Math.abs(zMin), Math.abs(zMax));
 
-// --- Imprint diverging colormap: t.div = [red, midpoint, blue] -------------
-function hexToRgb(hex) {
-  const int = parseInt(hex.slice(1), 16);
-  return [(int >> 16) & 255, (int >> 8) & 255, int & 255];
-}
+const divStops = [t.div[2], t.div[1], t.div[0]].map((hex) => {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+});
 
-function lerpChannel(a, b, ratio) {
-  return Math.round(a + (b - a) * ratio);
-}
-
-function imprintDivInterpolator(stops) {
-  const [low, mid, high] = stops.map(hexToRgb);
-  return (position) => {
-    const [start, end, localRatio] =
-      position < 0.5 ? [low, mid, position / 0.5] : [mid, high, (position - 0.5) / 0.5];
-    const [r, g, b] = [0, 1, 2].map((channel) =>
-      lerpChannel(start[channel], end[channel], localRatio),
-    );
-    return `rgb(${r}, ${g}, ${b})`;
-  };
-}
-
-// Reversed so position 0 (coolest/lowest z) lands on the blue end and
-// position 1 (warmest/highest z) lands on the red end -- matching the
-// universal warm=red / cool=blue temperature-anomaly convention.
-const divColor = imprintDivInterpolator([...t.div].reverse());
-
-// --- Band levels: symmetric around zero so the midpoint band sits at anomaly=0 ---
-const NUM_BANDS = 10;
 const levels = Array.from({ length: NUM_BANDS }, (_, k) => -vAbs + (k * 2 * vAbs) / NUM_BANDS);
-const bandColors = Array.from({ length: NUM_BANDS }, (_, k) => divColor(k / (NUM_BANDS - 1)));
+const levelEdges = Array.from(
+  { length: NUM_BANDS + 1 },
+  (_, k) => -vAbs + (k * 2 * vAbs) / NUM_BANDS
+);
 
-// --- Marching-triangles filled-contour geometry -----------------------------
-// Each grid cell is split into 4 triangles around its centroid so every
-// super-level-set boundary resolves without the marching-squares saddle
-// ambiguity. Super-level sets are always nested (threshold_hi >= threshold_lo
-// implies region_hi ⊆ region_lo), so painting bands low-to-high with a
-// standard painter's algorithm produces correct filled contour bands
-// regardless of how many disjoint blobs the field has.
-function buildTriangles() {
-  const tris = [];
-  for (let j = 0; j < GRID - 1; j += 1) {
-    for (let i = 0; i < GRID - 1; i += 1) {
-      const sw = { x: xs[i], y: ys[j], z: zGrid[j][i] };
-      const se = { x: xs[i + 1], y: ys[j], z: zGrid[j][i + 1] };
-      const ne = { x: xs[i + 1], y: ys[j + 1], z: zGrid[j + 1][i + 1] };
-      const nw = { x: xs[i], y: ys[j + 1], z: zGrid[j + 1][i] };
-      const center = {
-        x: (sw.x + se.x) / 2,
-        y: (sw.y + nw.y) / 2,
-        z: (sw.z + se.z + ne.z + nw.z) / 4,
-      };
-      tris.push([sw, se, center], [se, ne, center], [ne, nw, center], [nw, sw, center]);
-    }
+const bandColors = Array.from({ length: NUM_BANDS }, (_, k) => {
+  const pos = k / (NUM_BANDS - 1);
+  const [start, end, ratio] =
+    pos < 0.5
+      ? [divStops[0], divStops[1], pos / 0.5]
+      : [divStops[1], divStops[2], (pos - 0.5) / 0.5];
+  const r = Math.round(start[0] + (end[0] - start[0]) * ratio);
+  const g = Math.round(start[1] + (end[1] - start[1]) * ratio);
+  const b = Math.round(start[2] + (end[2] - start[2]) * ratio);
+  return `rgb(${r}, ${g}, ${b})`;
+});
+
+const triangles = [];
+for (let j = 0; j < nY - 1; j += 1) {
+  for (let i = 0; i < nX - 1; i += 1) {
+    const sw = { x: xs[i], y: ys[j], z: zGrid[j][i] };
+    const se = { x: xs[i + 1], y: ys[j], z: zGrid[j][i + 1] };
+    const ne = { x: xs[i + 1], y: ys[j + 1], z: zGrid[j + 1][i + 1] };
+    const nw = { x: xs[i], y: ys[j + 1], z: zGrid[j + 1][i] };
+    const center = {
+      x: (sw.x + se.x) / 2,
+      y: (sw.y + nw.y) / 2,
+      z: (sw.z + se.z + ne.z + nw.z) / 4,
+    };
+    triangles.push([sw, se, center], [se, ne, center], [ne, nw, center], [nw, sw, center]);
   }
-  return tris;
 }
 
-const triangles = buildTriangles();
-
-// Filled sub-polygon(s) of one triangle lying at/above `threshold`, plus the
-// interpolated edge (if any) that traces the exact level curve through it.
-function triangleFill(a, b, c, threshold) {
-  const inA = a.z >= threshold, inB = b.z >= threshold, inC = c.z >= threshold;
-  const nIn = (inA ? 1 : 0) + (inB ? 1 : 0) + (inC ? 1 : 0);
-  const cross = (p, q) => {
-    const ratio = (threshold - p.z) / (q.z - p.z);
-    return { x: p.x + ratio * (q.x - p.x), y: p.y + ratio * (q.y - p.y) };
-  };
-
-  if (nIn === 0) return { polys: [], cut: null };
-  if (nIn === 3) return { polys: [[a, b, c]], cut: null };
-
-  if (nIn === 1) {
-    if (inA) { const ab = cross(a, b), ca = cross(c, a); return { polys: [[a, ab, ca]], cut: [ab, ca] }; }
-    if (inB) { const ab = cross(a, b), bc = cross(b, c); return { polys: [[b, bc, ab]], cut: [bc, ab] }; }
-    const ca = cross(c, a), bc = cross(b, c);
-    return { polys: [[c, ca, bc]], cut: [ca, bc] };
-  }
-
-  // nIn === 2 (exactly one vertex out)
-  if (!inC) { const bc = cross(b, c), ca = cross(c, a); return { polys: [[a, b, bc, ca]], cut: [ca, bc] }; }
-  if (!inA) { const ca = cross(c, a), ab = cross(a, b); return { polys: [[b, c, ca, ab]], cut: [ab, ca] }; }
-  const ab = cross(a, b), bc = cross(b, c);
-  return { polys: [[c, a, ab, bc]], cut: [bc, ab] };
-}
-
-// Bands k=1..NUM_BANDS-1 are computed from the triangulation; band k=0 is the
-// full domain rect (everything is above zMin), painted first as the base layer.
 const bandGeometry = [];
 const isolineGeometry = [];
 for (let k = 1; k < NUM_BANDS; k += 1) {
   const threshold = levels[k];
   const polys = [];
   const segments = [];
-  for (const tri of triangles) {
-    const { polys: p, cut } = triangleFill(tri[0], tri[1], tri[2], threshold);
-    if (p.length) polys.push(...p);
-    if (cut) segments.push(cut);
+  for (const [a, b, c] of triangles) {
+    const inA = a.z >= threshold;
+    const inB = b.z >= threshold;
+    const inC = c.z >= threshold;
+    const nIn = (inA ? 1 : 0) + (inB ? 1 : 0) + (inC ? 1 : 0);
+    if (nIn === 0) continue;
+    if (nIn === 3) {
+      polys.push([a, b, c]);
+      continue;
+    }
+    const rAB = b.z !== a.z ? (threshold - a.z) / (b.z - a.z) : 0.5;
+    const ab = { x: a.x + rAB * (b.x - a.x), y: a.y + rAB * (b.y - a.y) };
+    const rBC = c.z !== b.z ? (threshold - b.z) / (c.z - b.z) : 0.5;
+    const bc = { x: b.x + rBC * (c.x - b.x), y: b.y + rBC * (c.y - b.y) };
+    const rCA = a.z !== c.z ? (threshold - c.z) / (a.z - c.z) : 0.5;
+    const ca = { x: c.x + rCA * (a.x - c.x), y: c.y + rCA * (a.y - c.y) };
+
+    if (nIn === 1) {
+      if (inA) {
+        polys.push([a, ab, ca]);
+        segments.push([ab, ca]);
+      } else if (inB) {
+        polys.push([b, bc, ab]);
+        segments.push([bc, ab]);
+      } else {
+        polys.push([c, ca, bc]);
+        segments.push([ca, bc]);
+      }
+    } else if (!inC) {
+      polys.push([a, b, bc, ca]);
+      segments.push([ca, bc]);
+    } else if (!inA) {
+      polys.push([b, c, ca, ab]);
+      segments.push([ab, ca]);
+    } else {
+      polys.push([c, a, ab, bc]);
+      segments.push([bc, ab]);
+    }
   }
   bandGeometry.push(polys);
   isolineGeometry.push(segments);
 }
 
-// --- Custom SVG layer: filled bands + isolines, mapped through the chart's own scales ---
 function FilledContourLayer() {
-  const xScale = useXScale();
-  const yScale = useYScale();
-  const toSVG = (x, y) => [xScale(x), yScale(y)];
+  const xScale = useXScale("x");
+  const yScale = useYScale("y");
+  const { left, top, width, height } = useDrawingArea();
+  if (!xScale || !yScale) return null;
 
-  const polysToPath = (polys) =>
-    polys
-      .map((poly) => {
-        const pts = poly.map((p) => toSVG(p.x, p.y));
-        const head = `M ${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
-        const tail = pts.slice(1).map(([px, py]) => `L ${px.toFixed(1)},${py.toFixed(1)}`).join(" ");
-        return `${head} ${tail} Z`;
-      })
-      .join(" ");
-
-  const segmentsToPath = (segments) =>
-    segments
-      .map(([p0, p1]) => {
-        const [x0, y0] = toSVG(p0.x, p0.y);
-        const [x1, y1] = toSVG(p1.x, p1.y);
-        return `M ${x0.toFixed(1)},${y0.toFixed(1)} L ${x1.toFixed(1)},${y1.toFixed(1)}`;
-      })
-      .join(" ");
-
-  const [rx0, ry0] = toSVG(X_MIN, Y_MIN);
-  const [rx1, ry1] = toSVG(X_MAX, Y_MAX);
+  const rx0 = xScale(xMin) ?? 0;
+  const ry0 = yScale(yMin) ?? 0;
+  const rx1 = xScale(xMax) ?? 0;
+  const ry1 = yScale(yMax) ?? 0;
   const baseRect = `M ${rx0.toFixed(1)},${ry0.toFixed(1)} L ${rx1.toFixed(1)},${ry0.toFixed(1)} L ${rx1.toFixed(1)},${ry1.toFixed(1)} L ${rx0.toFixed(1)},${ry1.toFixed(1)} Z`;
 
+  const barX = left + width + 36;
+  const barW = 22;
+  const barH = height * 0.78;
+  const barTop = top + (height - barH) / 2;
+  const stepH = barH / NUM_BANDS;
+
   return (
-    <g>
-      {/* Base band: fills the whole domain, subsequent bands paint over it (painter's algorithm) */}
+    <g fontFamily={FONT}>
       <path d={baseRect} fill={bandColors[0]} stroke={bandColors[0]} strokeWidth={0.75} />
-      {bandGeometry.map((polys, idx) => (
-        <path
-          key={`band-${idx}`}
-          d={polysToPath(polys)}
-          fill={bandColors[idx + 1]}
-          stroke={bandColors[idx + 1]}
-          strokeWidth={0.75}
-        />
-      ))}
-      {isolineGeometry.map((segments, idx) => (
-        <path
-          key={`iso-${idx}`}
-          d={segmentsToPath(segments)}
-          stroke={t.ink}
-          strokeOpacity={0.28}
-          strokeWidth={1}
-          fill="none"
-        />
-      ))}
+      {bandGeometry.map((polys, idx) => {
+        const dPath = polys
+          .map((poly) =>
+            poly
+              .map((p, k) => {
+                const px = (xScale(p.x) ?? 0).toFixed(1);
+                const py = (yScale(p.y) ?? 0).toFixed(1);
+                return `${k === 0 ? "M" : "L"} ${px},${py}`;
+              })
+              .join(" ") + " Z"
+          )
+          .join(" ");
+        return (
+          <path
+            key={`band-${idx}`}
+            d={dPath}
+            fill={bandColors[idx + 1]}
+            stroke={bandColors[idx + 1]}
+            strokeWidth={0.75}
+          />
+        );
+      })}
+      {isolineGeometry.map((segments, idx) => {
+        const dPath = segments
+          .map(([p0, p1]) => {
+            const x0 = (xScale(p0.x) ?? 0).toFixed(1);
+            const y0 = (yScale(p0.y) ?? 0).toFixed(1);
+            const x1 = (xScale(p1.x) ?? 0).toFixed(1);
+            const y1 = (yScale(p1.y) ?? 0).toFixed(1);
+            return `M ${x0},${y0} L ${x1},${y1}`;
+          })
+          .join(" ");
+        return (
+          <path
+            key={`iso-${idx}`}
+            d={dPath}
+            stroke={t.ink}
+            strokeOpacity={0.28}
+            strokeWidth={1}
+            fill="none"
+          />
+        );
+      })}
+
+      {/* Discrete contour-band colorbar */}
+      {bandColors.map((col, k) => {
+        const y = barTop + (NUM_BANDS - 1 - k) * stepH;
+        return (
+          <rect
+            key={`cb-${k}`}
+            x={barX}
+            y={y}
+            width={barW}
+            height={stepH + 0.5}
+            fill={col}
+          />
+        );
+      })}
+      <rect
+        x={barX}
+        y={barTop}
+        width={barW}
+        height={barH}
+        fill="none"
+        stroke={t.inkSoft}
+        strokeWidth={1.2}
+      />
+      {levelEdges.map((val, k) => {
+        if (k % 2 !== 0) return null;
+        const y = barTop + (NUM_BANDS - k) * stepH;
+        return (
+          <g key={`cbt-${k}`}>
+            <line
+              x1={barX + barW}
+              y1={y}
+              x2={barX + barW + 6}
+              y2={y}
+              stroke={t.inkSoft}
+              strokeWidth={1.2}
+            />
+            <text
+              x={barX + barW + 10}
+              y={y}
+              dominantBaseline="central"
+              fontSize={14}
+              fill={t.inkSoft}
+            >
+              {val >= 0 ? `+${val.toFixed(1)}` : val.toFixed(1)}
+            </text>
+          </g>
+        );
+      })}
+      <text
+        x={barX + barW + 68}
+        y={barTop + barH / 2}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={15}
+        fontWeight={500}
+        fill={t.ink}
+        transform={`rotate(-90, ${barX + barW + 68}, ${barTop + barH / 2})`}
+      >
+        {Z}
+      </text>
     </g>
   );
 }
 
-// --- Chart (default-exported component — the harness mounts it) -------------
-const TITLE = "Sea-Surface Temperature Anomaly · contour-filled · javascript · muix · anyplot.ai";
-const TITLE_FONT_SIZE = Math.max(15, Math.round(22 * Math.min(1, 67 / TITLE.length)));
-const MARGIN = { top: 130, right: 200, bottom: 90, left: 115 };
-
-// ContinuousColorLegend anchors flush against the literal SVG width, ignoring
-// MARGIN.right entirely (its `position: "right"` offset is `svgWidth -
-// legendWidth`, ie. the very last canvas column) -- so the whole right-side
-// cluster (legend + its rotated axis title) is wrapped in this leftward shift
-// to keep tick-label glyphs off the true edge.
-const RIGHT_EDGE_INSET = 48;
-
 export default function Chart() {
+  const chartW = SIZE.width - 48;
+  const chartH = SIZE.height - 110;
+
   return (
-    <ChartContainer
-      width={SIZE.width}
-      height={SIZE.height}
-      series={[]}
-      margin={MARGIN}
-      skipAnimation
-      xAxis={[
-        {
-          scaleType: "linear",
-          min: X_MIN,
-          max: X_MAX,
-          label: "Zonal offset (°)",
-          labelStyle: { fontSize: 15, fill: t.ink },
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-        },
-      ]}
-      yAxis={[
-        {
-          scaleType: "linear",
-          min: Y_MIN,
-          max: Y_MAX,
-          label: "Meridional offset (°)",
-          labelStyle: { fontSize: 15, fill: t.ink },
-          tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-          // Push the rotated axis label further from the axis line than the
-          // library's default offset, which collides with wide tick digits
-          // like "-3.0" -- see ChartsYAxis's labelRefPoint formula.
-          slotProps: { axisLabel: { x: -62 } },
-        },
-      ]}
-      zAxis={[
-        {
-          colorMap: {
-            type: "continuous",
-            min: -vAbs,
-            max: vAbs,
-            color: divColor,
-          },
-        },
-      ]}
+    <Box
+      sx={{
+        width: SIZE.width,
+        height: SIZE.height,
+        bgcolor: t.pageBg,
+        color: t.ink,
+        fontFamily: FONT,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        pt: "18px",
+        px: "24px",
+        boxSizing: "border-box",
+      }}
     >
-      <FilledContourLayer />
-      <ChartsXAxis />
-      <ChartsYAxis />
-      <g transform={`translate(${-RIGHT_EDGE_INSET}, 0)`}>
-        <ContinuousColorLegend
-          position={{ horizontal: "right", vertical: "middle" }}
-          direction="column"
-          length="55%"
-          thickness={18}
-          labelStyle={{ fontSize: 13, fill: t.inkSoft }}
-          minLabel={({ value }) => value.toFixed(1)}
-          maxLabel={({ value }) => value.toFixed(1)}
-        />
-        <ChartsText
-          text="Temperature anomaly (°C)"
-          x={SIZE.width - 26}
-          y={SIZE.height / 2}
-          style={{ fontSize: 12, fill: t.inkSoft, textAnchor: "middle", angle: -90 }}
-        />
-      </g>
-      <ChartsText
-        text={TITLE}
-        x={SIZE.width / 2}
-        y={50}
-        style={{ fontSize: TITLE_FONT_SIZE, fontWeight: 500, fill: t.ink, textAnchor: "middle" }}
-      />
-    </ChartContainer>
+      <Typography
+        sx={{
+          fontSize: 22,
+          fontWeight: 700,
+          color: t.ink,
+          fontFamily: FONT,
+          textAlign: "center",
+          lineHeight: 1.2,
+        }}
+      >
+        contour-filled · javascript · muix · anyplot.ai
+      </Typography>
+      <Typography
+        sx={{
+          fontSize: 15,
+          color: t.inkSoft,
+          fontFamily: FONT,
+          textAlign: "center",
+          mt: "4px",
+          mb: "4px",
+        }}
+      >
+        {SUBTITLE}
+      </Typography>
+
+      <ChartsContainer
+        width={chartW}
+        height={chartH}
+        series={[]}
+        margin={{ top: 20, right: 160, bottom: 20, left: 20 }}
+        skipAnimation
+        xAxis={[
+          {
+            id: "x",
+            scaleType: "linear",
+            min: xMin,
+            max: xMax,
+            height: 60,
+            label: X,
+            labelStyle: { fontSize: 15, fill: t.ink, fontFamily: FONT },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
+          },
+        ]}
+        yAxis={[
+          {
+            id: "y",
+            scaleType: "linear",
+            min: yMin,
+            max: yMax,
+            width: 84,
+            label: Y,
+            labelStyle: { fontSize: 15, fill: t.ink, fontFamily: FONT },
+            tickLabelStyle: { fontSize: 14, fill: t.inkSoft, fontFamily: FONT },
+          },
+        ]}
+        sx={{
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+          "& .MuiChartsAxis-tick": { stroke: t.inkSoft },
+        }}
+      >
+        <FilledContourLayer />
+        <ChartsXAxis axisId="x" />
+        <ChartsYAxis axisId="y" />
+      </ChartsContainer>
+    </Box>
   );
 }
