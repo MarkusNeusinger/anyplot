@@ -34,6 +34,8 @@ const DIM_BOUNDS: Array<[number, number]> = [
   [60, 99],
   [5, 180],
 ];
+const BATCH_SIZES = [16, 32, 64, 128, 256];
+const DIM_DECIMALS = [0, 0, 1, 1, 1];
 const ARCH_PROFILES: Array<{ name: string; count: number; centers: number[] }> = [
   { name: "CNN", count: 10, centers: [0.35, 0.5, 0.25, 0.65, 0.4] },
   { name: "RNN", count: 10, centers: [0.25, 0.35, 0.55, 0.35, 0.7] },
@@ -51,7 +53,10 @@ for (const arch of ARCH_PROFILES) {
       const jitter = (rand - 0.5) * 0.36;
       const fraction = Math.min(1, Math.max(0, arch.centers[d] + jitter));
       const [bMin, bMax] = DIM_BOUNDS[d];
-      row[DIMENSIONS[d]] = Number((bMin + fraction * (bMax - bMin)).toFixed(2));
+      row[DIMENSIONS[d]] =
+        d === 0
+          ? BATCH_SIZES[Math.round(fraction * (BATCH_SIZES.length - 1))]
+          : Number((bMin + fraction * (bMax - bMin)).toFixed(DIM_DECIMALS[d]));
     }
     data.push(row);
   }
@@ -110,7 +115,7 @@ function ParallelCoordinatesOverlay() {
 
   return (
     <g fontFamily={FONT}>
-      <g fill="none" strokeWidth={1.8} strokeOpacity={0.58}>
+      <g fill="none" strokeWidth={1.8} strokeOpacity={0.75}>
         {data.map((row, i) => {
           const arch = String(row[ARCH]);
           const points = dimensions
