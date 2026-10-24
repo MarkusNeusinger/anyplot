@@ -8,6 +8,7 @@ import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 import { Box, Typography } from "@mui/material";
+import { decomposeColor } from "@mui/material/styles";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -18,6 +19,7 @@ const PITCH_PAD_SHARE = 0.08;
 const MIN_PITCH_PAD_SEMITONES = 2;
 const BEAT_PAD_SHARE = 0.012;
 const TIME_AXIS_TITLE = "Time (measures)";
+const PITCH_AXIS_TITLE = "Pitch (note)";
 const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const BLACK_SEMITONES = [1, 3, 6, 8, 10];
 
@@ -164,31 +166,23 @@ const velocitySpan = velocityMax - velocityMin;
 
 const beatPad = totalBeats * BEAT_PAD_SHARE;
 const measureTicks = Array.from({ length: measures }, (_, i) => i * BEATS_PER_MEASURE);
-const octaveTicks: number[] = [];
+const whiteKeyTicks: number[] = [];
 const blackKeyPitches: number[] = [];
 const noteNameByPitch: Record<number, string> = {};
 
 for (let p = Math.ceil(pitchAxisMin); p <= Math.floor(pitchAxisMax); p += 1) {
   const semitone = ((p % 12) + 12) % 12;
   noteNameByPitch[p] = `${NOTE_NAMES[semitone]}${Math.floor(p / 12) - 1}`;
-  if (semitone === 0) octaveTicks.push(p);
   if (BLACK_SEMITONES.includes(semitone)) blackKeyPitches.push(p);
+  else whiteKeyTicks.push(p);
 }
 
-const seq0Num = parseInt(t.seq[0].replace("#", ""), 16);
-const seq1Num = parseInt(t.seq[1].replace("#", ""), 16);
-const r0 = (seq0Num >> 16) & 255;
-const g0 = (seq0Num >> 8) & 255;
-const b0 = seq0Num & 255;
-const r1 = (seq1Num >> 16) & 255;
-const g1 = (seq1Num >> 8) & 255;
-const b1 = seq1Num & 255;
+const softRgb = decomposeColor(t.seq[0]).values;
+const loudRgb = decomposeColor(t.seq[1]).values;
 
 const noteFills = data.map((row) => {
   const ratio = (row[VELOCITY] - velocityMin) / velocitySpan;
-  const r = Math.round(r0 + (r1 - r0) * ratio);
-  const g = Math.round(g0 + (g1 - g0) * ratio);
-  const b = Math.round(b0 + (b1 - b0) * ratio);
+  const [r, g, b] = softRgb.map((c, k) => Math.round(c + (loudRgb[k] - c) * ratio));
   return `rgb(${r}, ${g}, ${b})`;
 });
 
@@ -328,10 +322,11 @@ export default function Chart() {
             min: pitchAxisMin,
             max: pitchAxisMax,
             width: 68,
-            tickInterval: octaveTicks,
+            tickInterval: whiteKeyTicks,
+            tickLabelInterval: () => true,
             valueFormatter: (pitch: number) => noteNameByPitch[Math.round(pitch)],
-            label: PITCH,
-            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+            label: PITCH_AXIS_TITLE,
+            tickLabelStyle: { fontSize: 13, fill: t.inkSoft },
             labelStyle: { fontSize: 15, fill: t.ink },
           },
         ]}
