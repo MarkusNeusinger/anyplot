@@ -497,6 +497,38 @@ class TestPlotGuardUnit:
         assert guard.blocked == "exec"
 
 
+class TestPlotModeHelpers:
+    """The helpers plot mode installs, called in this process (the render tests see them only through the sandbox)."""
+
+    def test_frame_for_readers_answers_the_caller_frame_or_none(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """`inspect.currentframe` in plot mode: the caller's frame while the guard lets `sys._getframe` through,
+        None when it refuses, because the callers expect a frame or None and never an error."""
+        frame = harness.frame_for_readers()
+        assert frame is not None and frame.f_code.co_name == "test_frame_for_readers_answers_the_caller_frame_or_none"
+
+        def refused(depth: int = 0) -> None:
+            raise PermissionError("blocked by the render sandbox: sys._getframe")
+
+        with monkeypatch.context() as patched:
+            patched.setattr(harness.sys, "_getframe", refused)
+            assert harness.frame_for_readers() is None
+
+    def test_the_probe_attaches_an_agg_canvas_to_a_bare_figure(self) -> None:
+        """plotnine saves a figure it built with `Figure()`, whose base canvas has no renderer: `_renderer` switches
+        it to Agg as `savefig` would, and leaves a figure that has an Agg canvas on it."""
+        from matplotlib.backends.backend_agg import FigureCanvasAgg, RendererAgg
+        from matplotlib.figure import Figure
+
+        bare = Figure()
+        assert not hasattr(bare.canvas, "get_renderer")
+        renderer = harness._renderer(bare)
+        assert isinstance(bare.canvas, FigureCanvasAgg) and isinstance(renderer, RendererAgg)
+
+        with_agg = Figure()
+        canvas = FigureCanvasAgg(with_agg)
+        assert harness._renderer(with_agg) is canvas.get_renderer() and with_agg.canvas is canvas
+
+
 class TestDataGuardCode:
     @pytest.mark.parametrize(
         "code",

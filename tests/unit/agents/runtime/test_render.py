@@ -1063,6 +1063,19 @@ class TestBackends:
         assert isinstance(remote, RemoteBackend) and remote.url == "https://anyplot-renderer.example.run.app"
         assert isinstance(remote.tokens, IdTokenSource) and remote.tokens.audience == remote.url
 
+    def test_the_local_factory_resolves_a_render_runtime_by_library(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """`make_backend` hands the local backend the registry's `runtime_for`, with the render timeout as the
+        CPU limit of every runtime it resolves; a library without a runtime is the registry's error."""
+        monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/docker")
+        local = make_backend(AgentSettings(renderer="local", environment="development", render_timeout_s=45))
+
+        assert isinstance(local, LocalDockerBackend) and local.runtime_for is not None
+        runtime = local.runtime_for("seaborn")
+        assert isinstance(runtime, PythonRuntime) and (runtime.library, runtime.cpu_seconds) == ("seaborn", 45)
+        assert isinstance(local.runtime, PythonRuntime) and local.runtime.cpu_seconds == 45  # the data runs' runtime
+        with pytest.raises(ValueError, match="no runtime for 'plotly'"):
+            local.runtime_for("plotly")
+
     def test_job_validation(self) -> None:
         with pytest.raises(ValueError):
             job(job_id="../escape")

@@ -9,6 +9,9 @@ import os
 import subprocess
 import sys
 
+import pytest
+
+from agents.anyplot.render import harness
 from agents.anyplot.render.runtimes.python import HARNESS_SOURCE
 from agents.renderer.commands import EXEC_FLAG
 from agents.renderer.executor import HARNESS_END, HARNESS_START
@@ -57,3 +60,47 @@ class TestExecMode:
         )
 
         assert done.returncode == 2 and "usage" in done.stderr
+
+
+class TestExecModeInProcess:
+    """The same contract through `harness.main` in this process, where the test run's coverage sees it. `set_limits`
+    is patched out: the limits it sets would stay on this test process."""
+
+    @pytest.fixture(autouse=True)
+    def no_limits(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(harness, "set_limits", lambda: None)
+
+    def run(self, *command: str) -> int:
+        return int(harness.main(["harness.py", EXEC_FLAG, "--", *command]))
+
+    def test_the_lines_frame_the_child_and_its_exit_code_is_the_harness_s(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        code = self.run(sys.executable, "-c", "import sys; sys.exit(3)")
+
+        lines = capsys.readouterr().out.splitlines()
+        assert code == 3 and lines[0] == HARNESS_START and lines[-1].startswith(HARNESS_END)
+        end = json.loads(lines[-1].split(" ", 1)[1])
+        assert end["event"] == "end" and end["max_rss_mb"] >= 0 and end["cpu_s"] >= 0
+
+    def test_a_signal_death_becomes_a_shell_exit_code(self, capsys: pytest.CaptureFixture[str]) -> None:
+        code = self.run(sys.executable, "-c", "import os, signal; os.kill(os.getpid(), signal.SIGKILL)")
+
+        out = capsys.readouterr().out
+        assert code == 137 and out.startswith(HARNESS_START) and HARNESS_END in out
+
+    def test_a_missing_command_is_127_after_the_start_line(self, capsys: pytest.CaptureFixture[str]) -> None:
+        code = self.run("/nonexistent/anyplot-runtime", "plot.x")
+
+        captured = capsys.readouterr()
+        assert code == 127 and captured.out.startswith(HARNESS_START) and HARNESS_END in captured.out
+        assert "cannot run /nonexistent/anyplot-runtime" in captured.err
+
+    @pytest.mark.parametrize("argv", [[EXEC_FLAG], [EXEC_FLAG, "--"]], ids=["no separator", "separator only"])
+    def test_no_command_is_a_usage_error_after_the_start_line(
+        self, argv: list[str], capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        code = harness.main(["harness.py", *argv])
+
+        captured = capsys.readouterr()
+        assert code == 2 and captured.out.splitlines() == [HARNESS_START] and "usage" in captured.err
