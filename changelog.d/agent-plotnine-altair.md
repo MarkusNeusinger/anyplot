@@ -14,3 +14,11 @@
   libraries, and the eval fixtures gain 120 cases for them. 264 of 321 plotnine and
   269 of 325 altair files are eligible; `AGENT_LIBRARIES` keeps its default
   `matplotlib,seaborn` until each library's eval matrix reaches 80 %.
+
+### Fixed
+
+- **The fence regex no longer backtracks quadratically on user text.** The tag
+  pattern `policy.fence` neutralises fence tags with put two blank runs around an
+  optional slash, one ambiguous run that backtracked quadratically on `<` followed
+  by a long run of blanks (CodeQL py/polynomial-redos). The blanks after the slash
+  now sit inside the slash's own group; the matches are the same.

@@ -306,8 +306,14 @@ class TestBounds:
         self, config: ExecutorConfig, launcher: FakeLauncher, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A sandbox's private /tmp counts as instance memory (S2), so the watchdog reads MemAvailable too."""
-        readings = iter([3000, 3000, 400])
-        executor = SandboxExecutor(replace(config, kill_mem_available_mb=512), memory=lambda: next(readings, 400))
+
+        def available() -> int:
+            # The floor is crossed once the launcher has logged its `do`: a kill before
+            # that line (a loaded machine starts the fake launcher slowly) would leave
+            # the launch out of the log this test compares the deletes with.
+            return 400 if launcher.launches() else 3000
+
+        executor = SandboxExecutor(replace(config, kill_mem_available_mb=512), memory=available)
 
         run = await executor.run_theme(job(SLEEPER), "light")
 
