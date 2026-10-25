@@ -537,6 +537,19 @@ class TestStatus:
         assert status.name == "anyplot-renderer" and status.version
         assert (status.in_flight, status.waiting, status.stuck) == (0, 0, 0)
         assert status.mem_available_mb == 3500 and status.sandbox is True
+        assert status.languages == {"python": True, "javascript": False, "r": False, "julia": False}
+
+    async def test_a_language_without_its_toolchain_is_refused_before_the_slot(
+        self, client: httpx.AsyncClient, fake: FakeExecutor
+    ) -> None:
+        response = await client.post("/render", json=body(language="r", library="ggplot2"), headers=auth())
+
+        assert response.status_code == 503 and response.json() == {"detail": "runtime_unavailable"}
+        assert fake.calls == []
+
+        fake.toolchains["r"] = True
+        response = await client.post("/render", json=body(language="r", library="ggplot2"), headers=auth())
+        assert response.status_code == 200 and fake.calls == [("job123", "light"), ("job123", "dark")]
 
     def test_the_default_renderer_uses_the_sandbox_executor(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("RENDERER_ALLOWED_CALLERS", f"{AGENTS_SA}, owner@example.com")

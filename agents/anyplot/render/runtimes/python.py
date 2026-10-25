@@ -6,8 +6,10 @@ debugging either, `harness.INTERPRETER_FLAGS`) and the probe harness in front. T
 backend, a writable matplotlib cache and `HOME` under `/tmp` (the root filesystem is
 read-only), and the harness's resource limits.
 
-`normalise`, `loader_block` and `validate` are the deterministic code modules in
-`agents/anyplot/code/`; this class only binds them to the runtime interface.
+`normalise`, `loader_block`, `validate` and the rest (`regions`, `readiness`, `security`,
+`adaptation`, `apply_plan`, `restore_protected`, `new_literals`, `error_summary`, `export`)
+are the deterministic code modules in `agents/anyplot/code/` and the error grammar of
+`render/gates.py`; this class only binds them to the runtime interface, for one library.
 """
 
 import json
@@ -16,10 +18,16 @@ from typing import Any
 
 from agents.renderer.wire import run_cpu_seconds
 
+from ...code.edits import AppliedPlan, apply_plan, new_literals, restore_protected
+from ...code.export import export_code
 from ...code.loader import to_run_form
 from ...code.normalise import normalise
-from ...code.validate import validate_security
+from ...code.readiness import Readiness, scan
+from ...code.regions import PLACEHOLDER, Regions, find_regions
+from ...code.validate import Finding, validate_adaptation, validate_security
+from ...schemas import AdaptPlan, CodeArtifact
 from ..contract import Theme
+from ..gates import error_summary
 from ..harness import CONVERT_FLAG, DATA_FLAG, INTERPRETER_FLAGS
 from ..png import MAX_PNG_BYTES, MAX_PROBE_BYTES, read_output
 
@@ -45,19 +53,28 @@ class PythonRuntime:
 
     language = "python"
     file_name = "plot.py"
+    code_artifact: CodeArtifact = "plot.py"
+    """The name the exported code downloads under (`schemas.CodeArtifact`)."""
+    placeholder = PLACEHOLDER
+    """The working form's data placeholder, which the loader replaces."""
 
     def __init__(
         self,
         *,
+        library: str = "matplotlib",
         python: str = IMAGE_PYTHON,
         harness: str = IMAGE_HARNESS,
         cpu_seconds: int = 60,
         mplconfig: str = "/tmp/mplconfig",
+        render_p95_s: float = 15.0,
     ) -> None:
+        self.library = library
         self.python = python
         self.harness = harness
         self.cpu_seconds = cpu_seconds
         self.mplconfig = mplconfig
+        self.render_p95_s = render_p95_s
+        """Seconds a repair attempt's render is budgeted at against the soft deadline (`commands.py`)."""
 
     def command(self, theme: Theme) -> list[str]:
         return [self.python, *INTERPRETER_FLAGS, self.harness, self.file_name]
@@ -121,3 +138,35 @@ class PythonRuntime:
         except ValueError, OSError:
             probe = None  # the probe is advisory; a broken one is simply absent
         return png, probe
+
+    # The code conventions of the language, for the pipeline (`agents/anyplot/code/`).
+
+    def regions(self, code: str) -> Regions:
+        return find_regions(code)
+
+    def readiness(self, normalised: str, *, spec_id: str, enabled_libraries: list[str]) -> Readiness:
+        return scan(normalised, spec_id=spec_id, library=self.library, enabled_libraries=enabled_libraries)
+
+    def security(self, code: str) -> list[Finding]:
+        return validate_security(code, library=self.library)
+
+    def adaptation(self, code: str, *, original_palette: list[str]) -> list[Finding]:
+        return validate_adaptation(code, original_palette=original_palette)
+
+    def apply_plan(self, working: str, plan: AdaptPlan) -> AppliedPlan:
+        return apply_plan(working, plan)
+
+    def restore_protected(self, base: str, code: str) -> str | None:
+        return restore_protected(base, code)
+
+    def new_literals(self, base: str, code: str) -> list[str]:
+        return new_literals(base, code)
+
+    def error_summary(self, stderr_tail: str) -> str:
+        """The exception class and the `plot.py` line of a failed render, never the message (`gates.error_summary`)."""
+        return error_summary(stderr_tail, code_file=self.file_name)
+
+    def export(self, run_form: str, *, spec_id: str, library_version: str | None, theme: str = "light") -> str:
+        return export_code(
+            run_form, spec_id=spec_id, library=self.library, library_version=library_version, theme=theme
+        )

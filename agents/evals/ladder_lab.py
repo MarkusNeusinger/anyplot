@@ -319,13 +319,13 @@ async def adapt_and_render(
     from agents.anyplot.policy import adapter_instruction
     from agents.anyplot.render.contract import RenderJob
     from agents.anyplot.render.gates import data_rows, evaluate
-    from agents.anyplot.render.runtimes.python import PythonRuntime
+    from agents.anyplot.render.runtimes import runtime_for
     from agents.anyplot.schemas import MAX_FEEDBACK, MAX_NOTES, AdaptPlan, AdaptRequest, repair_plan
     from agents.anyplot.settings import get_settings
 
     view, dataset = setup.view, setup.dataset
     settings = get_settings()
-    runtime = PythonRuntime(cpu_seconds=settings.render_timeout_s)
+    runtime = runtime_for(view.library, cpu_seconds=settings.render_timeout_s)
     columns = [column.name for column in dataset.profile.columns]
     misses: list[str] = []
     lines = [_line(line) for line in feedback if line.strip()]

@@ -48,7 +48,7 @@ Bounds: one adapter call and one render of one theme per attempt (two each by
 default), `MAX_REVIEWS` reviewer calls. The budget is checked before every model call
 (before a review with `REVIEW_RESERVE_TOKENS` left for it and the root's closing reply),
 the soft deadline (`AGENT_SOFT_DEADLINE_S`) before every attempt after the first (each
-needs `ADAPTER_P95_S` plus `RENDER_P95_S` left, so the first attempt has the rest of
+needs `ADAPTER_P95_S` plus the runtime's `render_p95_s` left, so the first attempt has the rest of
 the soft deadline) and for every render timeout;
 the request deadline is `abort_signal` on the run. A render waits in the `run` lane of the render slot
 (`render/serial.py`), ahead of every waiting theme toggle, so it waits for at most
@@ -119,17 +119,7 @@ from core.defects import DEFECT_RE, KNOWN_IDS
 
 from . import telemetry
 from .briefs import adapter_profile, profile_summary, spec_brief
-from .code.edits import (
-    MAX_CHANGE_LITERAL_CHARS,
-    MAX_NEW_LITERAL_CHARS,
-    REWRITE_LITERAL_FACTOR,
-    apply_plan,
-    new_literals,
-    restore_protected,
-)
-from .code.export import export_code
-from .code.regions import find_regions
-from .code.validate import validate_adaptation, validate_security
+from .code.edits import MAX_CHANGE_LITERAL_CHARS, MAX_NEW_LITERAL_CHARS, REWRITE_LITERAL_FACTOR
 from .data.bindings import check_bindings
 from .data.store import StoredDataset
 from .dataset_context import dataset_context, file_name_for_models
@@ -137,9 +127,9 @@ from .grounding import UNVERIFIED_LINE, drawn_texts, expected_misses, plot_texts
 from .language import DEFAULT_LANGUAGE, same_language
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, fence
-from .render.contract import RendererUnavailable, RenderJob, Theme
+from .render.contract import RendererUnavailable, RenderJob, RuntimeAdapter, Theme
 from .render.gates import data_rows, evaluate
-from .render.runtimes.python import PythonRuntime
+from .render.runtimes import runtime_for
 from .schemas import (
     EXPECTED_TEXT,
     MAX_CHANGE_CHARS,
@@ -219,7 +209,9 @@ ADAPTER_P95_S = 60.0
 Gemini's plan calls in spike X took about 62 s at the 95th percentile (Claude's whole
 runs about 25 s)."""
 RENDER_P95_S = 15.0
-"""Seconds a repair attempt's render is budgeted at when checking the soft deadline.
+"""Seconds a Python repair attempt's render is budgeted at when checking the soft deadline: the Python row's
+`render_p95_s` of the renderer's command table (`agents/renderer/commands.py`), which the runtime carries
+(`RuntimeAdapter.render_p95_s`); a browser or Julia runtime reserves more.
 
 Spike X measured renders at 5.5 s at the 95th percentile and 10.2 s at most. With
 `ADAPTER_P95_S` a repair attempt needs 75 s, which leaves the first attempt 65 s
@@ -950,8 +942,12 @@ def _check(
     rewrite: bool = False,
     origin: str | None = None,
     data_texts: frozenset[str] = frozenset(),
+    runtime: RuntimeAdapter | None = None,
 ) -> CheckResult:
     """Validate a working form against its base: may it render, the blocking lines, the adaptation defect lines.
+
+    The two validator profiles and the literal diff are the runtime's (`RuntimeAdapter.security`,
+    `adaptation`, `new_literals`); `runtime` defaults to the registry's for `library`.
 
     Besides the two validator profiles, the plan's new string literals (`edits.new_literals`)
     must fit `literal_budget`; on a `rewrite` (a change that writes the base's text in another
@@ -963,19 +959,20 @@ def _check(
     budget bounds how much text the model writes, not what it says: personal data the
     user asked for (a name, an address, an e-mail address) is ordinary plot text.
     """
-    security = validate_security(working, library=library)
-    adaptation = validate_adaptation(working, original_palette=palette)
+    runtime = runtime if runtime is not None else runtime_for(library)
+    security = runtime.security(working)
+    adaptation = runtime.adaptation(working, original_palette=palette)
     # Both profiles parse the code, so an unparseable file is one `syntax` finding, not two.
     blocking_findings = list(dict.fromkeys([*security, *(f for f in adaptation if f.rule in BLOCKING_RULES)]))
     blocking = [
         f"validator {f.rule}" + (f" (line {f.line})" if f.line else "") + f": {f.message}" for f in blocking_findings
     ]
     blocking_rules = [f.rule for f in blocking_findings]
-    literals = new_literals(base, working)
+    literals = runtime.new_literals(base, working)
     added = sum(len(text) for text in literals if text not in data_texts)
     if rewrite:
         # The base literals the plan no longer holds: the old-language text the translation replaces.
-        dropped = sum(len(text) for text in new_literals(working, base) if text not in data_texts)
+        dropped = sum(len(text) for text in runtime.new_literals(working, base) if text not in data_texts)
         literal_budget = min(MAX_NEW_LITERAL_CHARS, literal_budget + math.ceil(REWRITE_LITERAL_FACTOR * dropped))
     if added > literal_budget:
         blocking_rules.append("literal-budget")
@@ -985,7 +982,7 @@ def _check(
             "from df instead of writing them out. Likely cause: data or long text written into the code."
         )
     if origin is not None and origin != base:
-        total = sum(len(text) for text in new_literals(origin, working) if text not in data_texts)
+        total = sum(len(text) for text in runtime.new_literals(origin, working) if text not in data_texts)
         if total > MAX_NEW_LITERAL_CHARS:
             if "literal-budget" not in blocking_rules:
                 blocking_rules.append("literal-budget")
@@ -1102,7 +1099,7 @@ def finish(run: Run) -> PlotResult:
     return PlotResult(
         status="needs_attention" if residual else "ok",
         attempts=max(round_number(run, run.attempts), 1),
-        artifacts=artifact_names([run.theme]),
+        artifacts=artifact_names([run.theme], runtime_for(run.view.library).code_artifact),
         changes=changes,
         residual_defects=residual,
         # The shipped render may come from an earlier round than the last (a repair that failed its check).
@@ -1140,19 +1137,17 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
     snapshot = run.view.snapshot
     number = services.versions.next_number(session_id)
     result = PlotResult.model_validate({**result.model_dump(), "version": number})
+    runtime = runtime_for(run.view.library)
     services.versions.add(
         session_id,
         CodeVersion(
             number=number,
             working=shipped.working,
             run_form=shipped.run_form,
-            export=export_code(
-                shipped.run_form,
-                spec_id=snapshot.spec_id,
-                library=run.view.library,
-                library_version=snapshot.library_version,
-                theme=run.theme,
+            export=runtime.export(
+                shipped.run_form, spec_id=snapshot.spec_id, library_version=snapshot.library_version, theme=run.theme
             ),
+            code_artifact=runtime.code_artifact,
             data_csv=run.dataset.csv,
             render_id=render_id,
             result=result,
@@ -1475,7 +1470,7 @@ async def _attempts(
 ) -> AsyncGenerator[Event, None]:
     view, dataset = run.view, run.dataset
     ledger = ledger_for(ctx.invocation_id)
-    runtime = PythonRuntime(cpu_seconds=settings.render_timeout_s)
+    runtime = runtime_for(view.library, cpu_seconds=settings.render_timeout_s)
     deadline = SoftDeadline(settings.soft_deadline_s)
     previous = (
         services.versions.latest_rendered(ctx.session.id, library=view.library) if args.base == "previous" else None
@@ -1489,7 +1484,7 @@ async def _attempts(
     # that rewrites the text in another language keeps the change's budget plus the text it replaces (`_check`).
     budget = MAX_CHANGE_LITERAL_CHARS if previous is not None else MAX_NEW_LITERAL_CHARS
     data_texts = _data_texts(dataset.csv)
-    regions = find_regions(view.normalised)
+    regions = runtime.regions(view.normalised)
     palette = list(regions.imprint.entries) if regions.imprint else []
     hints = view.hints[:MAX_NOTES] if previous is None else []
     columns = [column.name for column in dataset.profile.columns]
@@ -1527,7 +1522,7 @@ async def _attempts(
         if not budget_allows(ledger, services.usage, settings, next_calls=2):
             run.reason, run.unreviewed_why, run.stage = "budget", "the usage limit was reached", "budget"
             return
-        if attempt > 1 and not deadline.allows(ADAPTER_P95_S + RENDER_P95_S):
+        if attempt > 1 and not deadline.allows(ADAPTER_P95_S + runtime.render_p95_s):
             run.reason, run.unreviewed_why, run.stage = "deadline", "the time limit was reached", "deadline"
             return
         run.attempts = attempt
@@ -1583,11 +1578,11 @@ async def _attempts(
 
         yield _status(run, "checking", attempt)
         started = time.monotonic()
-        applied = apply_plan(working, plan)
+        applied = runtime.apply_plan(working, plan)
         # Drift of the protected theme statements alone, once the round's retry is spent: put the base's
         # statements back and check the rest as usual (owner decision, 2026-10-16), instead of ending the round.
         restored = (
-            restore_protected(working, applied.drifted)
+            runtime.restore_protected(working, applied.drifted)
             if applied.code is None and applied.drifted is not None and not _retry_left(run)
             else None
         )
@@ -1617,6 +1612,7 @@ async def _attempts(
             rewrite=language_changed,
             origin=view.normalised,
             data_texts=data_texts,
+            runtime=runtime,
         )
         run.timed("check", time.monotonic() - started)
         adaptation_lines = check.defects
@@ -1668,7 +1664,14 @@ async def _attempts(
         rendered = await services.backend.render(job)
         render_s = time.monotonic() - started
         run.timed("render", render_s)
-        report = evaluate(rendered, themes=job.themes, library=view.library, rows=rows, plot_language=run.language)
+        report = evaluate(
+            rendered,
+            themes=job.themes,
+            library=view.library,
+            rows=rows,
+            plot_language=run.language,
+            summarise=runtime.error_summary,
+        )
         run.gate_ids.update(report.failed_gates)
         for theme_output in rendered.outputs.values():
             failure = telemetry.sandbox_failure(theme_output)

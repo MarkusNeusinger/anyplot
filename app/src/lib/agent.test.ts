@@ -5,6 +5,7 @@ import {
   agentFetch,
   browserLocale,
   caseListQuery,
+  codeArtifact,
   convertAnswer,
   countBucket,
   longSuggestion,
@@ -854,6 +855,12 @@ describe('helpers', () => {
   it('names the rendered themes from the artifacts', () => {
     expect(renderedThemes(['plot-dark.png', 'plot.py'])).toEqual(['dark']);
     expect(renderedThemes(['plot.py'])).toEqual([]);
+  });
+
+  it('names the code artifact from the artifacts, plot.py without one', () => {
+    expect(codeArtifact(['plot-light.png', 'plot.R', 'data.csv'])).toBe('plot.R');
+    expect(codeArtifact(['plot-light.png', 'plot.tsx', 'data.csv'])).toBe('plot.tsx');
+    expect(codeArtifact(['plot-light.png', 'data.csv'])).toBe('plot.py');
   });
 
   it('sends a locale the BFF accepts', () => {

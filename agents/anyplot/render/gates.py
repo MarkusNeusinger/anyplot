@@ -32,7 +32,7 @@ import builtins
 import math
 import re
 import unicodedata
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -269,12 +269,20 @@ def data_rows(data_csv: str) -> int:
 
 
 def evaluate(
-    result: RenderResult, *, themes: Sequence[Theme], library: str, rows: int, plot_language: str | None = None
+    result: RenderResult,
+    *,
+    themes: Sequence[Theme],
+    library: str,
+    rows: int,
+    plot_language: str | None = None,
+    summarise: Callable[[str], str] = error_summary,
 ) -> GateReport:
     """Run R1-R3 and the advisory gates over every theme of the job; a theme without an output fails R1.
 
     `plot_language` is the session language the plot text is written in; G12 checks the
     decimal mark of its numbers when the language has a number format (`language.NUMBER_FORMATS`).
+    `summarise` turns a failed render's stderr tail into the R1 line's error summary: the
+    runtime's error grammar (`RuntimeAdapter.error_summary`), Python's by default.
     """
     wanted = [theme for theme in THEMES if theme in themes]
     if not wanted:
@@ -305,7 +313,7 @@ def evaluate(
             if output.exit_code == 0:
                 reason = "the code ran but saved no plot-" + theme + ".png"
             else:
-                reason = f"the code failed with {error_summary(output.stderr_tail)}"
+                reason = f"the code failed with {summarise(output.stderr_tail)}"
             report.blocking.append(_line(f"render ({theme}): {reason}; fix the code so it runs on the user's data"))
             report.failed_gates.append("R1")
             report.passed_host_gates = False

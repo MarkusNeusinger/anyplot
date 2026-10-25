@@ -211,7 +211,7 @@ from agents.anyplot.run_queue import (
     RunQueue,
     Ticket,
 )
-from agents.anyplot.schemas import MAX_COLUMNS, MAX_MESSAGE_CHARS, Binding, DatasetProfile, Theme
+from agents.anyplot.schemas import CODE_ARTIFACTS, MAX_COLUMNS, MAX_MESSAGE_CHARS, Binding, DatasetProfile, Theme
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import (
     BINDINGS,
@@ -262,8 +262,14 @@ ARTIFACT_TYPES: dict[str, str] = {
     "plot-light.png": "image/png",
     "plot-dark.png": "image/png",
     "plot.py": "text/x-python; charset=utf-8",
+    "plot.R": "text/plain; charset=utf-8",
+    "plot.jl": "text/plain; charset=utf-8",
+    "plot.js": "text/javascript; charset=utf-8",
+    "plot.tsx": "text/plain; charset=utf-8",
     "data.csv": "text/csv; charset=utf-8",
 }
+"""Every artifact name a version can have (`schemas.ArtifactName`) with its media type; a version serves its
+exported code under its runtime's name only (`CodeVersion.code_artifact`), the other code names are `404`."""
 _USER = re.compile(USER_PATTERN)
 _NO_STORE = {"Cache-Control": "private, no-store"}
 OPERATIONS = TypeAdapter(list[Operation])
@@ -2039,8 +2045,8 @@ async def artifact(
     if version is None:
         raise AgentsError(404, "not_found")
     content: bytes | None
-    if name == "plot.py":
-        content = version.export.encode("utf-8")
+    if name in CODE_ARTIFACTS:
+        content = version.export.encode("utf-8") if name == version.code_artifact else None
     elif name == "data.csv":
         content = version.data_csv.encode("utf-8")
     elif version.render_id:
@@ -2118,6 +2124,7 @@ async def bundle(
                 "working": item.working,
                 "run_form": item.run_form,
                 "plot_py": item.export,
+                "code_artifact": item.code_artifact,
                 "plan": item.plan.model_dump(mode="json") if item.plan else None,
                 "result": item.result.model_dump(mode="json"),
                 "theme": item.theme,

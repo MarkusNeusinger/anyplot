@@ -50,7 +50,7 @@ from typing import Any, Literal, Protocol
 # The case id, object names and manifest schema are shared with the table and the sync CLI;
 # `CASE_ID_PATTERN` is re-exported for the routes, which validate ids against it.
 from core.agent_cases import CASE_ID_PATTERN as CASE_ID_PATTERN
-from core.agent_cases import CASE_PREFIX, MANIFEST_NAME, MANIFEST_SCHEMA, case_object
+from core.agent_cases import CASE_PREFIX, CODE_FILE_NAMES, MANIFEST_NAME, MANIFEST_SCHEMA, case_object
 
 
 CASE_STATUS_NEW = "new"
@@ -61,9 +61,15 @@ CASE_MEDIA_TYPES: dict[str, str] = {
     "plot-light.png": "image/png",
     "plot-dark.png": "image/png",
     "plot.py": "text/x-python; charset=utf-8",
+    "plot.R": "text/plain; charset=utf-8",
+    "plot.jl": "text/plain; charset=utf-8",
+    "plot.js": "text/javascript; charset=utf-8",
+    "plot.tsx": "text/plain; charset=utf-8",
     "data.csv": "text/csv; charset=utf-8",
 }
-"""Every file a case can hold, with the content type it is stored under."""
+"""Every file a case can hold, with the content type it is stored under. The exported code is stored under its
+language's name (`core.agent_cases.CODE_FILE_NAMES`: the bundle's `code_artifact`, `plot.py` for Python and for
+bundles from before 2026-10-24)."""
 
 _PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 _THEMES = ("light", "dark")
@@ -225,6 +231,13 @@ def _dict(value: Any) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def _code_file_name(version: dict[str, Any]) -> str:
+    """The name the version's exported code is stored under: the bundle's `code_artifact` when it is one of the
+    known code names, else `plot.py` (bundles from before the agents service sent one)."""
+    name = version.get("code_artifact")
+    return name if isinstance(name, str) and name in CODE_FILE_NAMES else "plot.py"
+
+
 def version_library(version: dict[str, Any], session: dict[str, Any]) -> str | None:
     """The library the version was adapted for.
 
@@ -308,7 +321,8 @@ def build_case(
             files.append(CaseFile(f"plot-{theme}.png", _png(images[theme], theme)))
     code = version.get("plot_py")
     if isinstance(code, str) and code:
-        files.append(CaseFile("plot.py", _utf8(code, "plot.py")))
+        code_name = _code_file_name(version)
+        files.append(CaseFile(code_name, _utf8(code, code_name)))
     if submission.include_data:
         data_csv = version.get("data_csv")
         # Asked for and absent is a malformed bundle: a manifest must never claim data the case lacks.

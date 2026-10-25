@@ -157,8 +157,10 @@ def test_write_case_uploads_in_order_and_stops_at_the_first_failure() -> None:
 
 
 def test_every_case_file_has_a_content_type() -> None:
-    assert set(CASE_MEDIA_TYPES) == {"manifest.json", "plot-light.png", "plot-dark.png", "plot.py", "data.csv"}
+    code_files = {"plot.py", "plot.R", "plot.jl", "plot.js", "plot.tsx"}
+    assert set(CASE_MEDIA_TYPES) == {"manifest.json", "plot-light.png", "plot-dark.png", "data.csv", *code_files}
     assert set(CASE_MEDIA_TYPES) == set(CASE_FILE_NAMES)
+    assert set(agent_cases.CODE_FILE_NAMES) == code_files
     assert CaseFile("data.csv", b"").content_type == "text/csv; charset=utf-8"
 
 
@@ -206,6 +208,36 @@ def test_the_case_carries_the_manifest_it_uploads() -> None:
     case = _case()
     assert case.files[-1].name == "manifest.json"
     assert case.manifest == json.loads(case.files[-1].data)
+
+
+def test_the_code_file_takes_the_bundles_artifact_name() -> None:
+    """An R version's code is stored as `plot.R`; a bundle without the name, or with an unknown one, keeps `plot.py`."""
+    names = [file.name for file in _case().files]
+    assert "plot.py" in names and not any(name.endswith((".R", ".js")) for name in names)
+    bundle = json.loads(json.dumps(BUNDLE))
+    bundle["versions"][0]["code_artifact"] = "plot.R"
+    case = build_case(
+        json.dumps(bundle).encode(),
+        Submission(reaction="bug", message=None, include_data=False, result_version=3),
+        case_id="20261012T143005Z-1a2b3c4d",
+        created_at=datetime(2026, 10, 12, 14, 30, 5, tzinfo=UTC),
+        bucket="anyplot-agent-cases",
+        user_hash="adm_0123456789abcdef",
+        session_id="S1abcdefgh",
+    )
+    assert [file.name for file in case.files if file.name.startswith("plot.")] == ["plot.R"]
+    assert next(file for file in case.files if file.name == "plot.R").content_type == "text/plain; charset=utf-8"
+    bundle["versions"][0]["code_artifact"] = "plot.exe"
+    case = build_case(
+        json.dumps(bundle).encode(),
+        Submission(reaction="bug", message=None, include_data=False, result_version=3),
+        case_id="20261012T143005Z-1a2b3c4d",
+        created_at=datetime(2026, 10, 12, 14, 30, 5, tzinfo=UTC),
+        bucket="anyplot-agent-cases",
+        user_hash="adm_0123456789abcdef",
+        session_id="S1abcdefgh",
+    )
+    assert [file.name for file in case.files if file.name.startswith("plot.")] == ["plot.py"]
 
 
 def test_the_bffs_manifest_maps_onto_a_row() -> None:

@@ -392,7 +392,8 @@ class TestFailures:
             transport=httpx.MockTransport(lambda r: calls.append(r) or httpx.Response(500)),
         )
 
-        with pytest.raises(RendererUnavailable, match="language"):
+        # A language the library is not filed under (matplotlib is Python) is outside the renderer's command table.
+        with pytest.raises(RendererUnavailable, match="contract"):
             await backend.render(render_job(language="r"))
         assert calls == []
         await backend.aclose()

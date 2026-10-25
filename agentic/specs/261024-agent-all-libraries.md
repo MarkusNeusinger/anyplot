@@ -1,5 +1,10 @@
 # Feature: "Use with my data" for all 15 catalogue libraries
 
+> **Status (2026-10-25):** plan, with step 1a (the runtime seam) built in the same PR.
+> Phase 1 serves matplotlib and seaborn; every other library in this document is
+> planned, not shipped, and `AGENT_LIBRARIES` keeps its default until a library's
+> matrix run passes.
+
 ## Metadata
 
 run_id: `session_01WbjVqBweiXjUZKp626ZFWm`
@@ -64,7 +69,7 @@ What the code does today, and what has to change:
 - `agents/anyplot/render/runtimes/__init__.py`: the registry (`runtime_for`,
   `RUNTIME_LIBRARIES`, `LANGUAGE_OF`).
 - `agents/anyplot/render/runtimes/python.py`: library-aware (`library` on the instance;
-  per-library env such as `BROWSER_PATH`, `BOKEH_RESOURCES=inline`, `SE_OFFLINE=true`;
+  a per-library environment where a library needs one, such as `BOKEH_RESOURCES=inline`;
   the validator and normaliser called with the library).
 - `agents/anyplot/render/contract.py`: `RuntimeAdapter` gains `regions`, `readiness`,
   `validate_adaptation`, `protected_drift`, `placeholder` and `export_run_line`, so the
@@ -83,7 +88,8 @@ What the code does today, and what has to change:
   table.
 - `agents/anyplot/code/validate.py`: `LIBRARY_IMPORTS` for plotnine (`plotnine`,
   `mizani`), altair (`altair`, `vl_convert`), pygal (`pygal`, `cairosvg`), lets-plot
-  (`lets_plot`), plotly (`plotly`, `kaleido`), bokeh (`bokeh`); the walk of their public
+  (`lets_plot`), plotly (`plotly`; never `kaleido`, which the run form does not call),
+  bokeh (`bokeh`); the walk of their public
   submodules for `UNSAFE_SUBMODULES` and `UNSAFE_HELPERS`, pinned by the existing test.
 - `agents/anyplot/code/regions.py`, `normalise.py`, `readiness.py`: the save statement
   per library (`write_image`, `chart.save`, `render_to_png`, `ggsave`, `plot.save`) next
@@ -91,8 +97,8 @@ What the code does today, and what has to change:
   matplotlib-only (plotnine through `ggsave(..., dpi=, width=, height=)` later).
 - `agents/anyplot/render/harness.py`: exec mode (`--exec`): start line, limits, run the
   language's command as a child, end line with the child's `rusage`; plot mode: the write
-  allowlist gains `plot-<theme>.html`; the spawn allowlist for one shipped Chromium path
-  (plotly's kaleido) and the bokeh screenshot path (owner question 9).
+  allowlist gains `plot-<theme>.html`. No spawn allowance: a browser never starts from
+  plot code (step 4 screenshots through the JavaScript harness instead).
 - `agents/anyplot/render/gates.py`: `CODE_FILE` per language for the error line;
   probe gates skipped without a probe.
 - `agents/anyplot/code/export.py`: the run line per language.
@@ -146,9 +152,10 @@ What the code does today, and what has to change:
 
 ## Implementation Plan
 
-IMPORTANT: Execute every step in order, top to bottom. Each numbered step is one PR
-(the Fable review of 2026-10-24 split the former step 1 and put R before JavaScript;
-see "Second opinion"). Steps 1b to 5 each end with the library's fixtures generated,
+IMPORTANT: Execute every step in order, top to bottom. Steps 1a to 5 are one PR each,
+seven PRs in all (the Fable review of 2026-10-24 split the former step 1 and put R
+before JavaScript; see "Second opinion"); step 6 lists the tests those PRs carry, not a
+PR of its own. Steps 1b to 5 each end with the library's fixtures generated,
 the eligibility sweep's numbers in the PR, and the matrix run documented as an owner
 task; a library is enabled in the deploy only after that run. For R, Julia and
 JavaScript the ten fixture specs must first carry the Data block (owner task per step:
@@ -375,7 +382,8 @@ Execute these commands to validate the feature:
 - `cd app && yarn lint && yarn fm:check && yarn type-check && yarn test`
 - `uv run python -m tools.changelog check --base origin/main`
 - Owner, per library, on Vertex: `uv run --extra agents python -m agents.evals.matrix
-  --model claude-haiku-5-5 --cases <library> --renderer remote --render-url <url>`; 80 %
+  --model claude-haiku-5-5 --cases '*-<library>-*' --renderer remote --render-url <url>`
+  (`--cases` takes `smoke`, `full`, `stress` or globs over case ids, `agents/evals/cases.py`); 80 %
   pass after at most one repair enables the library in `agents/cloudbuild.yaml`
   (`_LIBRARIES`).
 
@@ -383,10 +391,10 @@ Execute these commands to validate the feature:
 
 | Spike | Question | Where it decides |
 |---|---|---|
-| JS | Chromium under `--network none --read-only`: render time and peak RSS for chartjs, d3, echarts, highcharts, muix on `scatter-basic`; does a 1 GiB `RLIMIT_AS` kill it (expected yes) | step 2's limits |
-| Python extras | plotnine, altair, pygal, lets-plot under `harness.py` plot mode: which writes, spawns or imports the guard refuses | step 1's allowlists |
-| plotly, bokeh | kaleido with `BROWSER_PATH` and bokeh's HTML screenshot inside the guard | step 3's design |
-| R | image size with the setup-r package set; `Rscript` render time | step 4 |
+| JS | Chromium under `--network none --read-only`: render time and peak RSS for chartjs, d3, echarts, highcharts, muix on `scatter-basic`; does a 1 GiB `RLIMIT_AS` kill it (expected yes) | step 3's limits |
+| Python extras | plotnine, altair, pygal, lets-plot under `harness.py` plot mode: which writes, spawns or imports the guard refuses | steps 1b and 1c's allowlists |
+| plotly, bokeh | whether a browser started from plot code (kaleido, Selenium) survives the plot guard; the answer below is no, hence step 4's screenshot through the JavaScript harness | step 4's design |
+| R | image size with the setup-r package set; `Rscript` render time | step 2 |
 | Julia | depot size; cold `using CairoMakie` plus `save` at 2 vCPU | step 5, question 4 |
 
 Note: the cloud session has Docker (started in-session, overlay2) but no gcloud
@@ -447,6 +455,27 @@ the Posit snapshot 2026-10-20 plus readr; `--network none --read-only --tmpfs /t
 Consequence: R keeps the Python defaults (`RLIMIT_AS` 1 GiB, `RLIMIT_NPROC` 64) and is
 the cheapest pilot of the exec mode; `OPENBLAS_NUM_THREADS=1` changes nothing measurable.
 
+**Julia through `julia --project=/opt/julia`** (Docker, `julia:1.13` with the repository's
+`Project.toml` and `Manifest.toml` instantiated and precompiled into `/opt/julia-depot`
+under the pinned `JULIA_CPU_TARGET`, `JULIA_PKG_PRECOMPILE_AUTO=0`; at run time
+`JULIA_DEPOT_PATH=/tmp/depot:/opt/julia-depot`, `--network none --read-only --tmpfs /tmp`;
+4 CPUs, no other load):
+
+| Measurement | Result |
+|---|---|
+| Image, depot | 2.57 GB, of which the depot is 1.4 GB; instantiate 263 s, precompile 821 s (CairoMakie 0.15.16, Makie 0.24.16, CSV 0.10.17, DataFrames 1.8.2) |
+| Cold render, container start included | `scatter-basic` 10.0 to 10.8 s, `bar-grouped` 16.9 to 17.4 s, `heatmap-basic` 19.3 to 19.6 s; no precompilation at run time (the depot's pkgimages load) |
+| Peak RSS | 956 to 1,045 MiB |
+| `ulimit -v 1048576` (1 GiB) | `LLVM ERROR: out of memory`, exit 134 |
+| `ulimit -v 4194304` (4 GiB) and `ulimit -u 64` | renders as without a limit |
+| `julia -t 1` | no measurable change |
+
+Consequence: Julia ships synchronously (question 4: the cold render is well under 45 s on
+4 CPUs; at 2 vCPU expect roughly twice, still under the 60 s timeout, to be confirmed on
+the deployed renderer); `RLIMIT_AS` off for the Julia row, `RLIMIT_NPROC` 64 holds; the
+1 GiB peak sits inside the 4 GiB instance with one slot, above the 512 MiB watchdog floor,
+so no instance change for Julia alone.
+
 ## Second opinion (Fable, 2026-10-24)
 
 Verdict: sound with changes. Gemini 4 Argon could not run in the cloud session (no
@@ -488,7 +517,9 @@ Defaults apply until answered; each is marked where the plan uses it.
    exec-mode pilot, then JavaScript (five libraries, one runtime), then plotly and bokeh
    on that Chromium, then Julia. Default: this order.
 4. **Julia.** Ship it in this round only if the cold render fits 45 s; otherwise defer
-   it behind the submit-and-poll renderer change. Default: the spike decides.
+   it behind the submit-and-poll renderer change. The spike measured 10 to 20 s cold on
+   4 CPUs with the precompiled depot, so the default is now: ship synchronously, and
+   confirm the time at 2 vCPU on the deployed renderer before enabling.
 5. **Renderer memory.** If the spikes show Chromium or Julia near the 512 MiB
    `MemAvailable` floor on a 4 GiB instance, the renderer goes to 8 GiB (cost).
    Default: measure first.

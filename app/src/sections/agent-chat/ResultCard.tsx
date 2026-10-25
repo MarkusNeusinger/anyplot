@@ -14,8 +14,10 @@
  * - Copy image puts the PNG on the clipboard (`ClipboardItem`), or downloads
  *   it where the browser cannot; Download PNG and Open full size work on the
  *   theme on screen.
- * - The code is the exported `plot.py`, byte-identical to what rendered; it
- *   runs unchanged next to `data.csv`, so both download under those names.
+ * - The code is the export, byte-identical to what rendered, under its
+ *   language's name (`plot.py`, `plot.R`, `plot.js`, ...: the code artifact
+ *   among the version's artifacts); it runs unchanged next to `data.csv`, so
+ *   both download under those names.
  * - A copy or a download that succeeded calls `onOutcome` with the action and
  *   the version, the content-free usage beacon; nothing else travels.
  * - Below the code, the quick-feedback control (`ResultFeedback`) stores the
@@ -39,7 +41,14 @@ import Tooltip from '@mui/material/Tooltip';
 import type { FeedbackInput, PlotVersion } from 'src/hooks/useAgentSession';
 import { useCopyCode } from 'src/hooks/useCopyCode';
 import { useTheme } from 'src/hooks/useLayoutContext';
-import { type ArtifactName, type OutcomeAction, type Theme } from 'src/lib/agent';
+import {
+  type ArtifactName,
+  CODE_MEDIA_TYPES,
+  type CodeArtifact,
+  codeArtifact,
+  type OutcomeAction,
+  type Theme,
+} from 'src/lib/agent';
 import { copyImage, downloadBlob } from 'src/sections/agent-chat/files';
 import { IMAGE_FAILURE } from 'src/sections/agent-chat/messages';
 import { ResultFeedback } from 'src/sections/agent-chat/ResultFeedback';
@@ -51,6 +60,14 @@ import { colors, fontSize, overlayButtonSx, typography } from 'src/theme';
 const CodeHighlighter = lazy(() => import('src/components/CodeHighlighter'));
 
 const TOAST_MS = 1500;
+/** The code download button's label per code artifact; literal, so the root prompt's control list can name them. */
+const DOWNLOAD_CODE_LABELS: Record<CodeArtifact, string> = {
+  'plot.py': ".download('plot.py')",
+  'plot.R': ".download('plot.R')",
+  'plot.jl': ".download('plot.jl')",
+  'plot.js': ".download('plot.js')",
+  'plot.tsx': ".download('plot.tsx')",
+};
 /**
  * The image box's aspect before the PNG has loaded: a 3200x1800 render plus the
  * 64 px footer strip the agents service appends. Once loaded, the box takes the
@@ -184,17 +201,21 @@ export function ResultCard({
     if (naturalWidth > 0 && naturalHeight > 0) setAspect(`${naturalWidth}/${naturalHeight}`);
   };
 
-  const handleDownloadFile = async (name: 'plot.py' | 'data.csv') => {
+  // The exported code downloads under its language's name (`plot.py`, `plot.R`, `plot.js`, ...).
+  const codeName = codeArtifact(version.result.artifacts);
+  const downloadCodeLabel = DOWNLOAD_CODE_LABELS[codeName];
+
+  const handleDownloadFile = async (name: ArtifactName) => {
     setFileError(null);
     try {
       const blob =
-        name === 'plot.py' && version.code.state === 'ready'
-          ? new Blob([version.code.text], { type: 'text/x-python' })
+        name === codeName && version.code.state === 'ready'
+          ? new Blob([version.code.text], { type: CODE_MEDIA_TYPES[codeName] })
           : await onFetchArtifact(number, name);
       // The exported code reads `data.csv` from its own directory, so the pair
       // keeps exactly these names.
       downloadBlob(blob, name);
-      onOutcome?.(name === 'plot.py' ? 'downloaded_code' : 'downloaded_data', number);
+      onOutcome?.(name === codeName ? 'downloaded_code' : 'downloaded_data', number);
     } catch {
       setFileError(`could not download ${name}`);
     }
@@ -488,17 +509,17 @@ export function ResultCard({
               }}
             >
               <Box component="span" sx={{ ...labelSx, mr: 'auto' }}>
-                # plot.py runs next to data.csv
+                # {codeName} runs next to data.csv
               </Box>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, ml: -1.25 }}>
                 <Box
                   component="button"
                   type="button"
-                  onClick={() => handleDownloadFile('plot.py')}
-                  aria-label="Download plot.py"
+                  onClick={() => handleDownloadFile(codeName)}
+                  aria-label={`Download ${codeName}`}
                   sx={actionButtonSx}
                 >
-                  .download(&apos;plot.py&apos;)
+                  {downloadCodeLabel}
                 </Box>
                 <Box
                   component="button"
@@ -561,7 +582,7 @@ export function ResultCard({
                 </>
               ) : version.code.state === 'failed' ? (
                 <Box role="alert" sx={{ ...labelSx, color: colors.error }}>
-                  could not load plot.py
+                  could not load {codeName}
                 </Box>
               ) : (
                 <Skeleton variant="rounded" height={120} />

@@ -20,7 +20,9 @@ import json
 import math
 from typing import Annotated, Any, Literal, get_args
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from .commands import Language, command_for
 
 
 Theme = Literal["light", "dark"]
@@ -157,7 +159,7 @@ class RenderRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     job_id: str = Field(pattern=JOB_ID_PATTERN)
-    language: Literal["python"]
+    language: Language
     library: str = Field(pattern=LIBRARY_PATTERN)
     source: str = Field(min_length=1, max_length=MAX_SOURCE_CHARS)
     data_csv: str = Field(max_length=MAX_DATA_CSV_CHARS)
@@ -170,6 +172,12 @@ class RenderRequest(BaseModel):
         if len(set(value)) != len(value):
             raise ValueError("themes must be distinct")
         return value
+
+    @model_validator(mode="after")
+    def _known_command(self) -> "RenderRequest":
+        """The pair selects a row of the renderer's command table; any other pair is `422 invalid_job`."""
+        command_for(self.language, self.library)
+        return self
 
 
 class ThemeRun(BaseModel):
@@ -410,3 +418,6 @@ class RendererStatus(BaseModel):
     volume: bool | None = None
     """Whether `RENDERER_RUNS_DIR` is the size-limited volume it must be: checked on Cloud Run
     only (None elsewhere); while it is False, renders answer `503 volume_missing`."""
+    languages: dict[str, bool] = Field(default_factory=dict)
+    """Per language of the command table (`commands.LANGUAGES`), whether its toolchain is on the sandbox's
+    `PATH` in this image; a render in a language that is False answers `503 runtime_unavailable`."""

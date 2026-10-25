@@ -30,10 +30,27 @@ export const LANGUAGE_PATTERN = /^[A-Za-z][A-Za-z -]{0,39}$/;
 export const DEFAULT_AGENT_LIBRARIES = ['matplotlib', 'seaborn'] as const;
 
 export type Theme = 'light' | 'dark';
-export type ArtifactName = 'plot-light.png' | 'plot-dark.png' | 'plot.py' | 'data.csv';
+/** The exported code's download name: its language's (`plot.py` for Python, `plot.R`, `plot.jl`, `plot.js`, `plot.tsx`). */
+export type CodeArtifact = 'plot.py' | 'plot.R' | 'plot.jl' | 'plot.js' | 'plot.tsx';
+export type ArtifactName = 'plot-light.png' | 'plot-dark.png' | CodeArtifact | 'data.csv';
 export const PNG_ARTIFACT: Record<Theme, ArtifactName> = {
   light: 'plot-light.png',
   dark: 'plot-dark.png',
+};
+export const CODE_ARTIFACTS: readonly CodeArtifact[] = [
+  'plot.py',
+  'plot.R',
+  'plot.jl',
+  'plot.js',
+  'plot.tsx',
+];
+/** The media type of a downloaded code file, by its name. */
+export const CODE_MEDIA_TYPES: Record<CodeArtifact, string> = {
+  'plot.py': 'text/x-python',
+  'plot.R': 'text/plain',
+  'plot.jl': 'text/plain',
+  'plot.js': 'text/javascript',
+  'plot.tsx': 'text/plain',
 };
 
 // ============================================================================
@@ -1303,7 +1320,12 @@ export function longSuggestion(value: unknown): LongSuggestion | null {
   };
 }
 
-const ARTIFACT_NAMES = new Set<string>(['plot-light.png', 'plot-dark.png', 'plot.py', 'data.csv']);
+const ARTIFACT_NAMES = new Set<string>([
+  'plot-light.png',
+  'plot-dark.png',
+  ...CODE_ARTIFACTS,
+  'data.csv',
+]);
 const PLOT_STATUSES = new Set<string>(['ok', 'needs_attention', 'failed', 'not_ready']);
 
 /**
@@ -1399,6 +1421,11 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
 /** The theme a version rendered: the PNG among its artifacts (light wins a tie). */
 export function renderedThemes(artifacts: readonly string[]): Theme[] {
   return (['light', 'dark'] as const).filter(theme => artifacts.includes(PNG_ARTIFACT[theme]));
+}
+
+/** The name a version's exported code downloads under: the code artifact among its artifacts, `plot.py` without one. */
+export function codeArtifact(artifacts: readonly string[]): CodeArtifact {
+  return CODE_ARTIFACTS.find(name => artifacts.includes(name)) ?? 'plot.py';
 }
 
 /** A BCP 47 tag the BFF accepts (`^[A-Za-z]{2,3}([_-][A-Za-z0-9]{1,8}){0,3}$`, at most 16 chars). */

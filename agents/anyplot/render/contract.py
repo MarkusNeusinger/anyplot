@@ -16,12 +16,16 @@ NumPy) the page dropped; `convert` reads it in the same isolation with the harne
 convert mode and returns the CSV text (or JSON records) for the paste box
 (`ConvertOutput`). A backend without conversions raises `DataRunUnsupported` too.
 
-A `RuntimeAdapter` describes one language runtime: the file name the code is written
-to, the command (the CI command, with the probe harness in front for Python), the
-environment per theme, and the code transforms the pipeline applies before a render
-(`normalise`, `loader_block`, `validate`). Phase 1 has one runtime (Python, for
-matplotlib and seaborn, `runtimes/python.py`); later languages add runtimes, not
-backends.
+A `RuntimeAdapter` describes one language runtime for one library: the file name the
+code is written to, the command (the CI command, with the probe harness in front for
+Python and in exec mode for every other language), the environment per theme, the code
+transforms the pipeline applies before a render (`normalise`, `loader_block`,
+`validate`), and the language's code conventions the pipeline checks against
+(`regions`, `readiness`, `security`, `adaptation`, `apply_plan`, `restore_protected`,
+`new_literals`), its error grammar (`error_summary`) and its export (`export`,
+`code_artifact`). `runtimes/__init__.py` maps a library to its runtime; phase 1 has
+one runtime (Python, for matplotlib and seaborn, `runtimes/python.py`), and later
+languages add runtimes, not backends.
 
 No ADK import: the render layer is plain code.
 """
@@ -29,11 +33,19 @@ No ADK import: the render layer is plain code.
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from agents.renderer.wire import ConvertMeta
 
-from ..schemas import RENDER_ID_PATTERN, Theme
+from ..schemas import RENDER_ID_PATTERN, CodeArtifact, Theme
+
+
+if TYPE_CHECKING:
+    from ..code.edits import AppliedPlan
+    from ..code.readiness import Readiness
+    from ..code.regions import Regions
+    from ..code.validate import Finding
+    from ..schemas import AdaptPlan
 
 
 THEMES: tuple[Theme, Theme] = ("light", "dark")
@@ -202,10 +214,17 @@ class RenderBackend(Protocol):
 
 
 class RuntimeAdapter(Protocol):
-    """One language runtime: how its code is written, run, prepared and collected."""
+    """One language runtime for one library: how its code is written, run, prepared, checked and collected."""
 
     language: str
     file_name: str
+    library: str
+    code_artifact: CodeArtifact
+    """The exported code's download name (`schemas.CodeArtifact`): `plot.py`, `plot.R`, `plot.jl`, `plot.js`, ..."""
+    placeholder: str
+    """The working form's data placeholder statement, which `loader_block` replaces."""
+    render_p95_s: float
+    """Seconds a repair attempt's render is budgeted at against the pipeline's soft deadline."""
 
     def command(self, theme: Theme) -> list[str]:
         """The argv that renders the code file in the work directory (never a shell string)."""
@@ -246,4 +265,40 @@ class RuntimeAdapter(Protocol):
 
     def collect(self, run_dir: Path, theme: Theme) -> tuple[bytes | None, dict[str, Any] | None]:
         """The PNG and the probe one theme's run left in `run_dir`, read without following links."""
+        ...
+
+    def regions(self, code: str) -> "Regions":
+        """The catalogue conventions in `code`: the theme block, the tokens, the palette, the placeholder, the save."""
+        ...
+
+    def readiness(self, normalised: str, *, spec_id: str, enabled_libraries: list[str]) -> "Readiness":
+        """Whether the normalised catalogue original can be adapted (`blocked`, `coupled`, `clean`) and why."""
+        ...
+
+    def security(self, code: str) -> "list[Finding]":
+        """The SECURITY profile's findings on a working form (the fixed import surface, no I/O, one data source)."""
+        ...
+
+    def adaptation(self, code: str, *, original_palette: list[str]) -> "list[Finding]":
+        """The ADAPTATION profile's findings: one placeholder, no fabricated data, the palette prefix kept."""
+        ...
+
+    def apply_plan(self, working: str, plan: "AdaptPlan") -> "AppliedPlan":
+        """The adapter's edits applied to the working form, or the reasons they cannot be."""
+        ...
+
+    def restore_protected(self, base: str, code: str) -> str | None:
+        """`code` with the base's protected statements put back, or None when that is not possible."""
+        ...
+
+    def new_literals(self, base: str, code: str) -> list[str]:
+        """The string literals `code` holds and `base` does not (the literal budget)."""
+        ...
+
+    def error_summary(self, stderr_tail: str) -> str:
+        """The error class and code line of a failed render in this language, never the message."""
+        ...
+
+    def export(self, run_form: str, *, spec_id: str, library_version: str | None, theme: str = "light") -> str:
+        """The downloadable code: the run form under the language's attribution header and run line."""
         ...

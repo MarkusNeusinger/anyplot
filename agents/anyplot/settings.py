@@ -100,7 +100,7 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 from core.constants import SUPPORTED_LIBRARIES
 
 from .cli_transport import CLI_MODELS
-from .code.normalise import SUPPORTED_LIBRARIES as RUNTIME_LIBRARIES
+from .render.runtimes import RUNTIME_LIBRARIES
 from .schemas import MAX_ATTEMPTS
 
 
@@ -614,7 +614,7 @@ class AgentSettings(BaseSettings):
         if without_runtime:
             raise ValueError(
                 f"libraries with no runtime in AGENT_LIBRARIES: {', '.join(without_runtime)} "
-                f"(the phase-1 runtime serves {', '.join(sorted(RUNTIME_LIBRARIES))})"
+                f"(the runtime registry serves {', '.join(sorted(RUNTIME_LIBRARIES))})"
             )
         return list(dict.fromkeys(value))
 

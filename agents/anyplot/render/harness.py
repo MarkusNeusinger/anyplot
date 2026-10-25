@@ -205,6 +205,12 @@ backend's `PythonRuntime` commands): `-I` isolates it, and `-X disable-remote-de
 debugging, new in Python 3.14, through which `sys.remote_exec` makes another Python process, or this one, run a
 script file. `-I` ignores `PYTHON_DISABLE_REMOTE_DEBUG`, so only the option works here. The guards refuse
 `sys.remote_exec` and `cpython.remote_debugger_script` as well, for a harness started without the flag."""
+EXEC_FLAG = "--exec"
+"""Exec mode (`agents/renderer/commands.py`): `harness.py --exec -- <command...>` prints the start line, sets the
+limits and runs the language's own command (`Rscript plot.R`, `node render.mjs plot.js`, `julia plot.jl`) as a
+child with the limits inherited, then prints the end line from the child's rusage and exits with its code. The
+launcher retry, the host watchdog and the kill path then work for every language as for a Python plot; the
+plot guard and the probe are Python's and do not apply."""
 DATA_FLAG = "--data"
 DATA_OUT_FILE = "out.csv"
 DATA_STATUS_FILE = "status.json"
@@ -2068,7 +2074,48 @@ def run_conversion(path, guard, measure):
     return CONVERT_EXIT["ok"]
 
 
+def main_exec(command):
+    """Exec mode: run `command` (a language's own render command) as a child under the harness's limits.
+
+    The start line goes out before the child starts, so the renderer tells a launcher that
+    never ran the harness from a command that failed. The limits are set in this process
+    and inherited; `RLIMIT_AS` and `RLIMIT_NPROC` arrive only when the renderer's command
+    table applies them to the language. The child gets the sandbox's environment as it is
+    and the working directory, where the code file and `data.csv` lie. Its exit code is the
+    harness's; a signal death becomes 128 plus the signal, as a shell reports it.
+    """
+    import subprocess
+
+    if command and command[0] == "--":
+        command = command[1:]
+    _report("start")
+    if not command:
+        print(f"usage: harness.py {EXEC_FLAG} -- <command> [args...]", file=sys.stderr)
+        return 2
+    set_limits()
+    try:
+        # The command is a row of the renderer's own table (`agents/renderer/commands.py`), never the request's.
+        completed = subprocess.run(command, check=False)
+        code = completed.returncode
+    except OSError as exc:
+        print(f"{EXEC_FLAG}: cannot run {command[0]}: {type(exc).__name__}", file=sys.stderr)
+        code = 127
+    finally:
+        try:
+            _report("end", **_child_usage())
+        except Exception:
+            pass  # a closed stdout must not hide the command's own exit code
+    return code if code >= 0 else 128 - code
+
+
+def _child_usage():
+    usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+    return {"max_rss_mb": round(usage.ru_maxrss / 1024, 1), "cpu_s": round(usage.ru_utime + usage.ru_stime, 3)}
+
+
 def main(argv):
+    if len(argv) >= 2 and argv[1] == EXEC_FLAG:
+        return main_exec(argv[2:])
     if len(argv) == 3 and argv[1] == DATA_FLAG:
         return main_data(argv[2])
     if len(argv) == 3 and argv[1] == CONVERT_FLAG:

@@ -64,7 +64,7 @@ from agents.anyplot.pipeline import _check, render_adapt_request, render_review_
 from agents.anyplot.policy import FENCE_TAGS
 from agents.anyplot.render.contract import RenderBackend, RendererUnavailable, RenderJob
 from agents.anyplot.render.gates import data_rows, evaluate
-from agents.anyplot.render.runtimes.python import PythonRuntime
+from agents.anyplot.render.runtimes import runtime_for
 from agents.anyplot.schemas import MAX_NOTES, AdaptPlan, AdaptRequest, Binding, ReviewRequest
 from agents.anyplot.session_state import SessionView
 from agents.anyplot.settings import AgentSettings
@@ -419,7 +419,7 @@ async def _standin(
         record["status"] = "standin_rejected"
         return
     standin["check"] = "ok"
-    runtime = PythonRuntime(cpu_seconds=context.settings.render_timeout_s)
+    runtime = runtime_for(case.library, cpu_seconds=context.settings.render_timeout_s)
     columns = [column.name for column in parsed.profile.columns]
     run_form = runtime.loader_block(
         runtime.normalise(working, case.library),
