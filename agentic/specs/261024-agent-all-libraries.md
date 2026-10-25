@@ -1,9 +1,9 @@
 # Feature: "Use with my data" for all 15 catalogue libraries
 
-> **Status (2026-10-25):** plan, in progress. Step 1a (the runtime seam) is open as
-> PR #12404. Step 1b (plotnine and altair) is implemented on its branch and waits for
-> 1a's merge; see "What 1b built" under step 1b. The deploy serves matplotlib and seaborn:
-> plotnine and altair have runtimes after 1b, but `AGENT_LIBRARIES` keeps its default
+> **Status (2026-10-25):** plan, in progress. Steps 1a (the runtime seam) and 1b
+> (plotnine and altair) merged with PR #12404; see "What 1b built" under step 1b. Step 1c
+> (pygal and lets-plot) is in progress. The deploy serves matplotlib and seaborn:
+> plotnine and altair have runtimes, but `AGENT_LIBRARIES` keeps its default
 > `matplotlib,seaborn` until each one's matrix run passes. Every other library in this
 > document is planned, not shipped.
 
@@ -144,8 +144,9 @@ What the code does today, and what has to change:
   three deny lists share.
 - `agents/renderer/toolchain.Dockerfile` (owner question 1): Ubuntu 24.04 with R from
   rocker's layout and Posit binaries, Python 3.14 managed by uv, Node 22, Playwright
-  Chromium, Julia 1.13 and the precompiled depot; published to GHCR by a workflow that
-  runs on changes to the lock files.
+  Chromium, Julia 1.13 and the precompiled depot; built by a Cloud Build trigger on
+  changes to the lock files and pushed to the private Artifact Registry repository
+  `anyplot` in `europe-west4`, next to the renderer image (owner question 1).
 - `agents/evals/fixtures/cases/<spec>-<library>-<perturbation>/` for the 13 libraries
   (generated).
 - `tests/unit/agents/code/test_profiles_*.py`, `tests/unit/agents/renderer/test_commands.py`,
@@ -614,7 +615,7 @@ this plan:
 | `save` is banned as an attribute and a name, so altair's `chart.save`, plotnine's `plot.save` and bokeh's `save(p)` fail SECURITY today; altair's PIL block, the `plot-<theme>.html` saves and plotly's `include_plotlyjs='cdn'` need rules | Step 1 split into 1a (the seam, no behaviour change) and one PR per library pair, each with the eligibility sweep's numbers |
 | `RLIMIT_NPROC` counts threads; headless Chromium plus Node is past 64 | Measured: 77 tasks; `RLIMIT_NPROC` off for the JavaScript row |
 | Missed sites: `evals/matrix.py` preflight, `stress.py`, `ladder_lab.py`, the `pipeline.PythonRuntime` monkeypatch in `test_service_flow.py`; backends hold one runtime; `RENDER_P95_S` is the repair reserve | All in step 1a; backends resolve the runtime per job; the p95 is a runtime attribute |
-| Image: pin the GHCR base by digest; Highcharts in a public image is a redistribution question; bake `fc-cache`, `XDG_CACHE_HOME=/tmp`; Julia offline flags; `libcairo2` for cairosvg; the `ci-image.yml` change filter | Steps 1c, 2, 5 and question 11 |
+| Image: pin the base image by digest; Highcharts in a public image is a redistribution question; bake `fc-cache`, `XDG_CACHE_HOME=/tmp`; Julia offline flags; `libcairo2` for cairosvg; the `ci-image.yml` change filter | Steps 1c, 2, 5 and questions 1 and 11 (the base image is private, so it redistributes nothing) |
 | `render.mjs` takes the library from the file stem; MUI X imports are inlined by esbuild | `--library=` from the request against the closed set; a static-import allowlist for `.tsx` |
 | Deny lists are hygiene, not a boundary: `globalThis["fe"+"tch"]`, `[].constructor.constructor`, R `get("system")`, Julia `getfield(Base, Symbol(...))` pass any identifier list | The threat model is stated: the sandbox protects the service, the list protects the person who runs the export from accidental I/O by the model; the lists grew by the review's names, and Julia's `using`/`import` is an allowlist |
 | Order: R first as the smallest exec-mode pilot, then JavaScript, then plotly and bokeh on the proven Chromium path, then Julia | Adopted (question 3) |
@@ -628,10 +629,20 @@ cold start under gVisor.
 Defaults apply until answered; each is marked where the plan uses it.
 
 1. **Image layout.** (A) one `agents/renderer/Dockerfile` that builds every toolchain
-   (an hour-long build on each renderer change, a 20-minute CI job today), or (B) a
-   public toolchain base image on GHCR built by a workflow on lock-file changes, with
-   the renderer image `FROM` it (fast CI and deploys; everything in it is open source).
-   Default: B.
+   (fast only with a layer cache in CI and in Cloud Build, which builds the renderer
+   without one today, and with the layers ordered by how often they change; a cold
+   cache rebuilds every toolchain, and Julia's precompile alone took 18 minutes in the
+   spike), or (B) a toolchain base image built on lock-file changes, with the renderer
+   image `FROM` it by digest (fast CI and deploys).
+   **Decided (owner, 2026-10-25): B, with the base image private in Artifact Registry**
+   (the repository `anyplot` in `europe-west4`, where the renderer image already lives).
+   A Cloud Build trigger builds and pushes it with Cloud Build's own service account, and
+   the renderer's Cloud Build deploy pulls it the same way. The CI job `renderer-image` in
+   `ci-image.yml` pulls it through the Workload Identity Federation login that
+   `ci-tests.yml` already uses, which needs the Artifact Registry reader role on the
+   repository: an owner task when step 2 adds the base image. Not public on GHCR: a
+   public image is a redistribution (licence notices for everything in it, no
+   Highcharts), and its only gain was pulls without a credential.
 2. **Base distribution.** R's binaries from Posit exist for Ubuntu, not Debian, so the
    toolchain image is Ubuntu 24.04 (rocker's R layout) with Python 3.14 managed by uv
    instead of `python:3.14-slim`. Default: yes.
@@ -663,7 +674,7 @@ Defaults apply until answered; each is marked where the plan uses it.
     byte for byte the run form (agent-network.md, "Fencing and exported code").
     Default: accept the deviation for these two libraries and document it there.
 11. **Highcharts in a public toolchain image**: the free licence covers non-commercial
-    use, and a public GHCR image redistributes the bundle. Default: the image stays
-    private in Artifact Registry until decided (CI then needs a reader credential), or
-    Highcharts is installed in the renderer image's own layer from the lock file at
-    build time rather than shipped in the base.
+    use, and a public GHCR image redistributes the bundle. **Settled by question 1
+    (2026-10-25):** the base image is private in Artifact Registry, so it redistributes
+    nothing, and Highcharts can live in it. Whether users' plots may use Highcharts stays
+    question 6.
