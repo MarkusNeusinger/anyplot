@@ -39,6 +39,7 @@ import os
 import shutil
 import tempfile
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 from agents.renderer.wire import (
@@ -140,7 +141,17 @@ class LocalDockerBackend:
 
     name = "local"
 
-    def __init__(self, *, image: str, runtime: RuntimeAdapter, environment: str, docker: str | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        image: str,
+        runtime: RuntimeAdapter,
+        environment: str,
+        docker: str | None = None,
+        runtime_for: Callable[[str], RuntimeAdapter] | None = None,
+    ) -> None:
+        """`runtime` is the Python runtime, which data runs and conversions use; `runtime_for` resolves a render
+        job's runtime by its library (the registry's `runtime_for`), else every render uses `runtime`."""
         if environment == "production":
             raise RendererUnavailable("the local renderer refuses ENVIRONMENT=production")
         found = docker or shutil.which("docker")
@@ -149,13 +160,18 @@ class LocalDockerBackend:
         self.docker = found
         self.image = image
         self.runtime = runtime
+        self.runtime_for = runtime_for
+
+    def _runtime(self, library: str) -> RuntimeAdapter:
+        return self.runtime_for(library) if self.runtime_for is not None else self.runtime
 
     def argv(self, job: RenderJob, theme: Theme, run_dir: Path) -> list[str]:
         """The docker command of one theme; asserted to keep the network off."""
+        runtime = self._runtime(job.library)
         argv = self._isolation(f"r-{job.job_id}-{theme}", run_dir)
-        for key, value in self.runtime.env(theme).items():
+        for key, value in runtime.env(theme).items():
             argv += ["-e", f"{key}={value}"]
-        argv += [self.image, *self.runtime.command(theme)]
+        argv += [self.image, *runtime.command(theme)]
         if argv[argv.index("--network") + 1] != "none" or any("--network=" in part for part in argv):
             raise AssertionError("a render container must never have network access")
         return argv
@@ -216,7 +232,7 @@ class LocalDockerBackend:
             raise
         wall = time.monotonic() - started
         try:
-            png, probe = self.runtime.collect(run_dir, theme)
+            png, probe = self._runtime(job.library).collect(run_dir, theme)
         except PngRejected as exc:
             return ThemeOutput(theme, process.returncode, timed_out, None, None, str(exc), wall)
         tail = stderr.decode("utf-8", errors="replace")
@@ -338,7 +354,7 @@ class LocalDockerBackend:
         run_dir = Path(tempfile.mkdtemp(prefix=f"anyplot-run-{job.job_id}-"))
         try:
             os.chmod(run_dir, 0o700)
-            (run_dir / self.runtime.file_name).write_text(job.source, encoding="utf-8")
+            (run_dir / self._runtime(job.library).file_name).write_text(job.source, encoding="utf-8")
             (run_dir / "data.csv").write_text(job.data_csv, encoding="utf-8")
             outputs = await asyncio.gather(*(self._run_theme(job, theme, run_dir) for theme in job.themes))
             return RenderResult(job.job_id, {output.theme: output for output in outputs})

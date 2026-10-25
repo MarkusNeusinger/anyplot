@@ -32,12 +32,8 @@ from agents.anyplot.code.validate import (
 from agents.anyplot.schemas import MAX_CODE_CHARS
 from core.palette import IMPRINT
 
+from .conftest import CATALOGUE_FILES, CODE_LIBRARIES
 
-REPO_ROOT = Path(__file__).resolve().parents[4]
-PLOTS = REPO_ROOT / "plots"
-CATALOGUE = sorted(PLOTS.glob("*/implementations/python/matplotlib.py")) + sorted(
-    PLOTS.glob("*/implementations/python/seaborn.py")
-)
 
 HEADER = """import os
 
@@ -92,7 +88,7 @@ class TestInterface:
         assert validate_security(plot("import seaborn as sns\n"), library="seaborn") == []
         assert validate_adaptation(ADAPTED, original_palette=ORIGINAL) == []
 
-    @pytest.mark.parametrize("library", ["plotly", "altair", "ggplot2", "d3"])
+    @pytest.mark.parametrize("library", ["plotly", "bokeh", "ggplot2", "d3"])
     def test_library_without_profile_raises(self, library: str) -> None:
         with pytest.raises(ValueError, match="no validator profile"):
             validate_security(plot(), library=library)
@@ -1481,9 +1477,10 @@ class TestExecAndProcessRoutes:
 
 
 # Every public first-level submodule of a package the validator admits whole, as reviewed on 2026-10-14
-# (numpy 2.5, pandas 3.0, matplotlib 3.11, seaborn 0.13, scikit-learn 1.9, statsmodels 0.15): it is either
-# here, reviewed as computing and drawing only, or banned by name in the validator. A library upgrade that
-# adds a submodule fails `test_every_submodule_is_reviewed` until someone looks at it.
+# (numpy 2.5, pandas 3.0, matplotlib 3.11, seaborn 0.13, scikit-learn 1.9, statsmodels 0.15) and, by the
+# import-surface survey of 2026-10-24, plotnine 0.15, mizani 0.14 and altair 6.3: it is either here, reviewed as
+# computing and drawing only, or banned by name in the validator. A library upgrade that adds a submodule fails
+# `test_every_submodule_is_reviewed` until someone looks at it.
 REVIEWED_SUBMODULES: dict[str, frozenset[str]] = {
     "numpy": frozenset(
         "char core dtypes exceptions fft lib linalg ma matlib matrixlib polynomial random rec strings typing "
@@ -1528,6 +1525,15 @@ REVIEWED_SUBMODULES: dict[str, frozenset[str]] = {
         "api bandwidths kde kdetools kernel_density kernel_regression kernels kernels_asymmetric linbin "
         "smoothers_lowess smoothers_lowess_old".split()
     ),
+    # `animation` and `watermark` are banned by name. `data` reads plotnine's bundled CSVs: the name is too common
+    # to ban, so the validator refuses the module by its path (`DENIED_IMPORTS`, `TestPlotnineProfile`).
+    "plotnine": frozenset(
+        "composition coords data doctools exceptions facets geoms ggplot guides helpers iapi labels layer mapping "
+        "options positions scales stats themes typing".split()  # qplot is banned by name (it evaluates its arguments)
+    ),
+    "mizani": frozenset("bounds breaks formatters labels palettes scale transforms typing utils".split()),
+    # `datasets` (fetches over the network) and `jupyter` (re-exports `find_spec`) are banned by name.
+    "altair": frozenset("expr theme typing utils vegalite".split()),
 }
 
 
@@ -1542,11 +1548,486 @@ def test_every_submodule_is_reviewed(root: str) -> None:
     assert not REVIEWED_SUBMODULES[root] & banned
 
 
+# --- plotnine and altair (step 1b of agentic/specs/261024-agent-all-libraries.md) ------------------------------
+
+PLOTNINE_HEADER = """import os
+
+import pandas as pd
+from plotnine import aes, geom_point, ggplot, labs, theme
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+df = pd.DataFrame({"a": [1, 2, 3]})
+"""
+PLOTNINE_SAVE = 'plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)'
+PLOTNINE_FOOTER = (
+    '\nplot = ggplot(df, aes(x="a", y="a")) + geom_point() + labs(title="") + theme(figure_size=(8, 4.5))\n'
+    + PLOTNINE_SAVE
+    + "\n"
+)
+ALTAIR_HEADER = """import os
+
+import altair as alt
+import pandas as pd
+from PIL import Image
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+df = pd.DataFrame({"a": [1, 2, 3]})
+"""
+ALTAIR_CHART = 'chart = alt.Chart(df).mark_circle().encode(x="a:Q", y="a:Q").properties(width=620, height=320)\n'
+ALTAIR_PNG_SAVE = 'chart.save(f"plot-{THEME}.png", scale_factor=4.0)'
+ALTAIR_HTML_SAVE = 'chart.save(f"plot-{THEME}.html")'
+# The catalogue's padding block: vl-convert writes the PNG, PIL reopens it and centres it on the 3200 x 1800 canvas.
+ALTAIR_PADDING = """TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(f"altair produced {_w}x{_h}, more than {TW}x{TH}")
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+"""
+ALTAIR_FOOTER = "\n" + ALTAIR_CHART + ALTAIR_PNG_SAVE + "\n" + ALTAIR_PADDING + ALTAIR_HTML_SAVE + "\n"
+NO_PNG_SAVE = 'no save of f"plot-{THEME}.png" found'
+
+
+def plotnine_plot(body: str = "") -> str:
+    """A minimal valid plotnine file in the catalogue's shape, with `body` between the THEME block and the plot."""
+    return PLOTNINE_HEADER + body + PLOTNINE_FOOTER
+
+
+def altair_plot(body: str = "") -> str:
+    """A minimal valid altair file in the catalogue's shape, padding block included, with `body` before the chart."""
+    return ALTAIR_HEADER + body + ALTAIR_FOOTER
+
+
+def library_plot(library: str, body: str = "") -> str:
+    """The minimal valid file of a library with a profile, with `body` before its plot."""
+    if library == "plotnine":
+        return plotnine_plot(body)
+    if library == "altair":
+        return altair_plot(body)
+    return plot(("import seaborn as sns\n" if library == "seaborn" else "") + body)
+
+
+def rules_of(code: str, library: str) -> set[str]:
+    return {finding.rule for finding in validate_security(code, library=library)}
+
+
+def swapped(code: str, old: str, new: str) -> str:
+    """`code` with its one `old` replaced: an anchor that drifted fails here instead of testing the unchanged file."""
+    assert code.count(old) == 1, old
+    return code.replace(old, new)
+
+
+EXPRESSION_IMPORTS = "import numpy as np\nfrom plotnine import after_stat, facet_grid, facet_wrap, label_value\n"
+PLOTNINE_EXPRESSIONS = [
+    pytest.param('aes(x="factor(cyl)")', id="a call on a column"),
+    pytest.param('aes(y=after_stat("count"))', id="after_stat"),
+    pytest.param('aes(y="after_stat(count)")', id="after_stat inside the string"),
+    pytest.param('aes(x="day - 0.42")', id="arithmetic"),
+    pytest.param('aes(x="importance + std")', id="a sum, not a formula"),
+    pytest.param('facet_wrap("~panel")', id="one-sided formula"),
+    pytest.param('facet_grid("var_y ~ var_x")', id="two-sided formula"),
+    pytest.param('facet_grid("pane ~ .")', id="formula with a dot"),
+    pytest.param('aes(x="True Label")', id="column with a space"),
+    pytest.param('aes(x="x")', id="bare column"),
+    pytest.param('aes(x="np.log10(x)")', id="numpy function"),
+]
+PLOTNINE_EXPRESSION_ESCAPES = [
+    pytest.param("aes(x='open(\"/etc/passwd\").read()')", "aes", "banned-name", id="open"),
+    pytest.param("aes(x='os.getenv(\"X\")')", "aes", "os-use", id="os beyond THEME"),
+    pytest.param("aes(y=\"df.to_csv('x')\")", "aes", "banned-call", id="writer"),
+    pytest.param('aes(x="x.__class__")', "aes", "dunder", id="dunder"),
+    pytest.param("facet_wrap(\"~ open('x')\")", "facet_wrap", "banned-name", id="facet formula"),
+    pytest.param("facet_grid(\"a ~ open('x')\")", "facet_grid", "banned-name", id="right side of a facet formula"),
+    pytest.param("aes(x=\"np.testing.measure('1')\")", "aes", "banned-attribute", id="exec route"),
+    pytest.param("aes(**{'x': 'open(\"x\")'})", "aes", "banned-name", id="unpacked dict literal"),
+    pytest.param("aes(x=COLUMN)", "aes", "banned-name", id="a module-level name bound to the string"),
+]
+# Arguments plotnine would evaluate that the walk cannot read: a variable, a concatenation, an unpacked name.
+PLOTNINE_OPAQUE_ARGUMENTS = [
+    pytest.param("aes(x=columns[0])", id="subscript"),
+    pytest.param("aes(x='op' + 'en(\"x\")')", id="concatenation"),
+    pytest.param("aes(**mapping)", id="unpacked name"),
+    pytest.param("aes(x=f\"{'op'}en('x')\")", id="f-string"),
+    pytest.param("aes(x=LATER)", id="a name bound twice"),
+    pytest.param("facet_wrap(facets=columns)", id="facet name"),
+]
+EXPRESSION_BINDINGS = (
+    'COLUMN = \'open("/etc/passwd").read()\'\ncolumns = ["a"]\nmapping = {"x": "a"}\nLATER = "a"\nLATER = "b"\n'
+)
+
+
+class TestPlotnineProfile:
+    """plotnine: the matplotlib stack plus plotnine and mizani, three save calls and the expression strings."""
+
+    def test_minimal_file_has_no_findings(self) -> None:
+        assert validate_security(plotnine_plot(), library="plotnine") == []
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            "import plotnine\n",
+            "import mizani.formatters\n",
+            "from mizani.formatters import percent_format\n",
+            "from mizani.breaks import breaks_extended\n",
+            "import matplotlib.pyplot as plt\n",
+            "from plotnine import ggsave, theme_matplotlib\n",
+            "from scipy import stats\n",
+        ],
+    )
+    def test_allowed_import(self, body: str) -> None:
+        assert rules_of(plotnine_plot(body), "plotnine") == set()
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            "import plotnine.data\n",
+            "from plotnine.data import mtcars\n",
+            "from plotnine import data\n",
+            "import plotnine.watermark\n",
+            "from plotnine import watermark\n",
+            "import plotnine.animation\n",
+            "from plotnine.animation import PlotnineAnimation\n",
+            "import vl_convert\n",
+            "from PIL import Image\n",
+            "import altair as alt\n",
+        ],
+    )
+    def test_banned_import(self, body: str) -> None:
+        assert "banned-import" in rules_of(plotnine_plot(body), "plotnine")
+
+    @pytest.mark.parametrize(
+        "body", ["import plotnine\nd = plotnine.data.mtcars\n", "import plotnine as p9\nd = p9.data\n"]
+    )
+    def test_bundled_data_is_refused_by_its_path(self, body: str) -> None:
+        """`data` is listed in REVIEWED_SUBMODULES; the module is refused by path, not by name."""
+        assert rules_of(plotnine_plot(body), "plotnine") == {"banned-attribute"}
+
+    @pytest.mark.parametrize(
+        "save",
+        [
+            pytest.param('ggsave(plot, f"plot-{THEME}.png", dpi=300)', id="ggsave, file second"),
+            pytest.param('ggsave(plot, filename=f"plot-{THEME}.png", dpi=400)', id="ggsave filename="),
+            pytest.param('fig = plot.draw()\nfig.savefig(f"plot-{THEME}.png", dpi=300)', id="savefig after draw"),
+            pytest.param('plot.save(filename=f"plot-{THEME}.png", dpi=400)', id="save filename="),
+            pytest.param('plot.save(f"plot-{THEME}.png", format="png", limitsize=False)', id="format png"),
+        ],
+    )
+    def test_save_passes(self, save: str) -> None:
+        code = swapped(plotnine_plot("from plotnine import ggsave\n"), PLOTNINE_SAVE, save)
+        assert validate_security(code, library="plotnine") == []
+
+    @pytest.mark.parametrize(
+        "save",
+        [
+            pytest.param('plot.save("plot.png")', id="other file"),
+            pytest.param('plot.save(f"plot-{THEME}.png", path="out")', id="path joins a directory"),
+            pytest.param('plot.save(f"plot-{THEME}.png", format="svg")', id="format"),
+            pytest.param('kw = {}\nplot.save(f"plot-{THEME}.png", **kw)', id="unpacked keywords"),
+            pytest.param('plot.save(f"plot-{THEME}.png", dpi=400, facecolor="#fff")', id="savefig keyword via save"),
+            pytest.param('plot.save(f"plot-{THEME}.html")', id="the HTML is altair's"),
+            pytest.param('ggsave(plot, "plot.png")', id="ggsave other file"),
+            pytest.param('ggsave(f"plot-{THEME}.png", plot)', id="ggsave file first"),
+            pytest.param('fig = plot.draw()\nfig.savefig("plot.png")', id="savefig other file"),
+        ],
+    )
+    def test_other_save_is_a_finding(self, save: str) -> None:
+        code = swapped(plotnine_plot("from plotnine import ggsave\n"), PLOTNINE_SAVE, save)
+        assert rules_of(code, "plotnine") == {"savefig-target"}
+
+    def test_a_file_that_saves_no_png_is_a_finding(self) -> None:
+        code = swapped(plotnine_plot(), PLOTNINE_SAVE, 'plot.save(f"plot-{THEME}.html")')
+        assert [f.message for f in validate_security(code, library="plotnine") if f.line is None] == [NO_PNG_SAVE]
+
+    def test_a_save_bound_to_a_name_is_refused(self) -> None:
+        code = swapped(plotnine_plot(), PLOTNINE_SAVE, 'f = plot.save\nf(f"plot-{THEME}.png")')
+        assert {(f.rule, f.message) for f in validate_security(code, library="plotnine")} == {
+            ("banned-attribute", "'.save' may only be called directly"),
+            ("savefig-target", NO_PNG_SAVE),
+        }
+
+    def test_reopening_the_png_is_altairs_rule_only(self) -> None:
+        assert rules_of(plotnine_plot("img = Image.open(f'plot-{THEME}.png')\n"), "plotnine") == {"banned-call"}
+
+    @pytest.mark.parametrize(
+        "save",
+        [
+            pytest.param('plot.save(f"plot-{THEME}.png", None, "/tmp")', id="path as the third positional"),
+            pytest.param('plot.save(f"plot-{THEME}.png", "pgf")', id="format as the second positional"),
+            pytest.param('ggsave(plot, f"plot-{THEME}.png", "png", "/tmp")', id="ggsave path positional"),
+        ],
+    )
+    def test_path_and_format_as_positionals_are_findings(self, save: str) -> None:
+        """`save(filename, format, path, ...)`: the keyword allowlist does not see the same arguments by position."""
+        code = swapped(plotnine_plot("from plotnine import ggsave\n"), PLOTNINE_SAVE, save)
+        assert "savefig-target" in rules_of(code, "plotnine")
+
+    @pytest.mark.parametrize("expression", PLOTNINE_EXPRESSIONS)
+    def test_expression_string_passes(self, expression: str) -> None:
+        assert rules_of(plotnine_plot(EXPRESSION_IMPORTS + f"m = {expression}\n"), "plotnine") == set()
+
+    @pytest.mark.parametrize(("expression", "call", "rule"), PLOTNINE_EXPRESSION_ESCAPES)
+    def test_expression_string_is_walked_as_code(self, expression: str, call: str, rule: str) -> None:
+        body = EXPRESSION_IMPORTS + EXPRESSION_BINDINGS + f"m = {expression}\n"
+        findings = validate_security(plotnine_plot(body), library="plotnine")
+        assert any(f.rule == rule and f.message.startswith(f"in the {call} expression: ") for f in findings)
+
+    @pytest.mark.parametrize("expression", PLOTNINE_OPAQUE_ARGUMENTS)
+    def test_an_argument_the_walk_cannot_read_is_refused(self, expression: str) -> None:
+        body = EXPRESSION_IMPORTS + EXPRESSION_BINDINGS + f"m = {expression}\n"
+        findings = validate_security(plotnine_plot(body), library="plotnine")
+        opaque = ("as string literals, not as an expression", "takes ** only from a dict literal")
+        assert any(f.rule == "banned-call" and f.message.endswith(opaque) for f in findings), findings
+
+    def test_literal_arguments_the_walk_can_read_pass(self) -> None:
+        body = EXPRESSION_IMPORTS + (
+            'COLUMN = "a"\n'
+            'm = aes(x=COLUMN, y=after_stat("count"), size=3, alpha=None)\n'
+            'f = facet_wrap(["a", "b"], ncol=2, scales="free_y", labeller=label_value)\n'
+            'g = facet_grid(rows="a", cols="b", labeller=label_value)\n'
+            'h = aes(**{"x": "a", "y": "b"})\n'
+        )
+        assert rules_of(plotnine_plot(body), "plotnine") == set()
+
+    def test_qplot_is_banned_by_name(self) -> None:
+        body = "from plotnine import qplot\nm = qplot(x=\"eval('1')\", data=df)\n"
+        assert rules_of(plotnine_plot(body), "plotnine") == {"banned-attribute"}
+
+    @pytest.mark.parametrize(
+        "expression",
+        [
+            pytest.param("aes(x='np.save(\"x\", x)')", id="np.save"),
+            pytest.param("aes(x='plt.savefig(\"x.svg\")')", id="savefig"),
+            pytest.param("aes(x='df.info(buf=\"x\")')", id="buffer writer"),
+        ],
+    )
+    def test_expression_string_that_writes_is_refused(self, expression: str) -> None:
+        """plotnine evaluates the string at draw time; the walk runs no save or buffer-writer check inside it."""
+        body = EXPRESSION_IMPORTS + "import matplotlib.pyplot as plt\n" + f"m = {expression}\n"
+        findings = validate_security(plotnine_plot(body), library="plotnine")
+        assert any(f.message.startswith("in the aes expression: ") for f in findings)
+
+    @pytest.mark.parametrize(
+        ("library", "body"),
+        [
+            pytest.param(
+                "plotnine",
+                'from plotnine import geom_smooth\nm = geom_smooth(method="lm", formula="y ~ x")\n',
+                id="plotnine geom_smooth",
+            ),
+            pytest.param(
+                "plotnine", 'from plotnine import stat_quantile\nm = stat_quantile(formula="y ~ x")\n', id="stat"
+            ),
+            pytest.param("matplotlib", 'm = geom_smooth(method="lm", formula="y ~ x")\n', id="any call, any profile"),
+            pytest.param(
+                "matplotlib",
+                'import statsmodels.api as sm\nm = sm.OLS.from_formula(formula="y ~ x", data=df)\n',
+                id="statsmodels from_formula",
+            ),
+        ],
+    )
+    def test_formula_keyword_is_refused(self, library: str, body: str) -> None:
+        assert "banned-keyword" in rules_of(library_plot(library, body), library)
+
+    def test_formula_as_a_positional_is_refused(self) -> None:
+        """`from_formula(formula, data)`: patsy gets the same string by position, so the name is banned."""
+        body = 'import statsmodels.api as sm\nm = sm.OLS.from_formula("y ~ x", df)\n'
+        assert rules_of(library_plot("matplotlib", body), "matplotlib") == {"banned-attribute"}
+
+    def test_smooth_without_a_formula_passes(self) -> None:
+        body = 'from plotnine import geom_smooth\nm = geom_smooth(method="lm", se=True)\n'
+        assert rules_of(plotnine_plot(body), "plotnine") == set()
+
+    @pytest.mark.parametrize(
+        ("call", "expected"),
+        [
+            pytest.param('theme_matplotlib(fname="x")', {"rc-key"}, id="settings file"),
+            pytest.param('theme_matplotlib({"axes.grid": False}, "x.rc")', {"rc-key"}, id="settings file positional"),
+            pytest.param('theme_matplotlib({"text.usetex": True})', {"rc-key"}, id="LaTeX setting"),
+            pytest.param("theme_matplotlib(rc=settings)", {"rc-key"}, id="settings in a variable"),
+            pytest.param('theme_matplotlib(rc={"axes.grid": False})', set(), id="literal safe settings"),
+            pytest.param("theme_matplotlib()", set(), id="no settings"),
+        ],
+    )
+    def test_theme_matplotlib_is_a_settings_consumer(self, call: str, expected: set[str]) -> None:
+        body = f"from plotnine import theme_matplotlib\nsettings = {{}}\nt = {call}\n"
+        assert rules_of(plotnine_plot(body), "plotnine") == expected
+
+    @pytest.mark.parametrize(
+        ("body", "expected"),
+        [
+            pytest.param(
+                'from mizani.palettes import brewer_pal\np = brewer_pal(palette="Blues")\nb = p.bpal\n',
+                {"banned-attribute"},
+                id="brewer_pal's stored getattr",
+            ),
+            pytest.param(
+                'from mizani.palettes import brewer_pal\np = brewer_pal(palette="Blues")\n', set(), id="brewer_pal"
+            ),
+            pytest.param('import mizani\nv = mizani.version("numpy")\n', {"banned-attribute"}, id="mizani.version"),
+            pytest.param("from mizani import version\n", {"banned-attribute"}, id="from mizani import version"),
+            pytest.param(
+                "from mizani.formatters import percent_format\nf = percent_format()\n", set(), id="a formatter"
+            ),
+        ],
+    )
+    def test_mizani(self, body: str, expected: set[str]) -> None:
+        assert rules_of(plotnine_plot(body), "plotnine") == expected
+
+
+ALTAIR_ROUTES = [
+    pytest.param('t = alt.topo_feature("https://x", "y")\n', {"banned-attribute", "url-literal"}, id="topo_feature"),
+    pytest.param('alt.renderers.enable("browser")\n', {"banned-attribute"}, id="browser renderer"),
+    pytest.param("alt.Chart(df).serve()\n", {"banned-attribute"}, id="serve opens a port"),
+    pytest.param("alt.Chart(df).open_editor()\n", {"banned-attribute"}, id="open_editor starts a browser"),
+    pytest.param("j = alt.utils.jsonschema\n", {"banned-attribute"}, id="re-exported jsonschema"),
+    pytest.param('d = alt.UrlData("x.csv")\n', {"banned-attribute"}, id="UrlData"),
+    pytest.param("v = alt.version\n", {"banned-attribute"}, id="importlib version bound on the package"),
+    pytest.param("p = alt.utils.data.Path\n", {"banned-attribute"}, id="re-exported Path"),
+    pytest.param('alt.vegalite_compilers.enable("x")\n', {"banned-attribute"}, id="compiler plugin by name"),
+    pytest.param('alt.theme.enable("dark")\n', {"banned-attribute"}, id="a registry switch, altair's ban"),
+    pytest.param('alt.theme.register("x", lambda: {})\n', {"banned-attribute"}, id="a registry hook"),
+]
+ALTAIR_NEAR_ROUTES = [
+    pytest.param("alt.data_transformers.disable_max_rows()\n", id="disable_max_rows"),
+    # `to_url` encodes the spec into a Vega editor link in process (vl-convert): no network, no file, so not banned.
+    pytest.param("u = alt.Chart(df).to_url()\n", id="to_url"),
+    pytest.param("s = alt.Chart(df).to_dict()\n", id="to_dict"),
+]
+
+
+class TestAltairProfile:
+    """altair: altair and `PIL.Image` only, a PNG and an HTML save, and the PIL block that reopens the PNG."""
+
+    def test_minimal_file_has_no_findings(self) -> None:
+        assert validate_security(altair_plot(), library="altair") == []
+
+    @pytest.mark.parametrize(
+        "body", ["import altair\n", "import PIL.Image\n", "from altair import expr\n", "import numpy as np\n"]
+    )
+    def test_allowed_import(self, body: str) -> None:
+        assert rules_of(altair_plot(body), "altair") == set()
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            "from PIL import ImageDraw\n",
+            "import PIL.ImageDraw\n",
+            "import PIL\n",
+            "import vl_convert\n",
+            "import vl_convert as vlc\n",
+            "import altair.datasets\n",
+            "import altair.datasets as d\n",
+            "from altair import datasets\n",
+            "import altair.jupyter\n",
+            "import altair.utils.execeval\n",
+            "from altair.utils import execeval\n",
+            "import matplotlib.pyplot as plt\n",
+            "from plotnine import ggplot\n",
+        ],
+    )
+    def test_banned_import(self, body: str) -> None:
+        assert "banned-import" in rules_of(altair_plot(body), "altair")
+
+    @pytest.mark.parametrize(
+        ("old", "new"),
+        [
+            pytest.param(ALTAIR_PNG_SAVE, 'chart.save(fp=f"plot-{THEME}.png", ppi=200)', id="fp= and ppi="),
+            pytest.param(ALTAIR_PNG_SAVE, 'chart.save(f"plot-{THEME}.png", format="png")', id="format png"),
+            pytest.param(ALTAIR_HTML_SAVE, 'chart.save(f"plot-{THEME}.html", format="html")', id="format html"),
+            pytest.param(
+                ALTAIR_HTML_SAVE,
+                'chart.save(f"plot-{THEME}.html", inline=True, embed_options={"actions": False})',
+                id="HTML embedding",
+            ),
+        ],
+    )
+    def test_save_passes(self, old: str, new: str) -> None:
+        assert validate_security(swapped(altair_plot(), old, new), library="altair") == []
+
+    @pytest.mark.parametrize(
+        ("old", "new"),
+        [
+            pytest.param(ALTAIR_PNG_SAVE, 'chart.save("plot.png", scale_factor=4.0)', id="other file"),
+            pytest.param(ALTAIR_PNG_SAVE, 'chart.save(f"plot-{THEME}.svg")', id="other type"),
+            pytest.param(ALTAIR_HTML_SAVE, 'chart.save(f"plot-{THEME}.html", format="png")', id="format of the other"),
+            pytest.param(ALTAIR_PNG_SAVE, 'chart.save(f"plot-{THEME}.png", webdriver="chrome")', id="webdriver"),
+            pytest.param(ALTAIR_PNG_SAVE, 'chart.save(f"plot-{THEME}.png", engine="vl-convert")', id="engine"),
+            pytest.param('Image.open(f"plot-{THEME}.png")', 'Image.open("/etc/passwd")', id="reopen another file"),
+            pytest.param('Image.open(f"plot-{THEME}.png")', 'Image.open(f"plot-{THEME}.png", mode="r")', id="mode="),
+            pytest.param('_canvas.save(f"plot-{THEME}.png")', '_canvas.save("x.png")', id="PIL save elsewhere"),
+            pytest.param('_canvas.save(f"plot-{THEME}.png")', '_canvas.save(f"plot-{THEME}.png", **{})', id="PIL **"),
+        ],
+    )
+    def test_other_save_or_reopen_is_a_finding(self, old: str, new: str) -> None:
+        assert rules_of(swapped(altair_plot(), old, new), "altair") == {"savefig-target"}
+
+    def test_a_file_whose_only_save_is_the_html_saves_no_png(self) -> None:
+        findings = validate_security(ALTAIR_HEADER + ALTAIR_CHART + ALTAIR_HTML_SAVE + "\n", library="altair")
+        assert [(f.rule, f.message, f.line) for f in findings] == [("savefig-target", NO_PNG_SAVE, None)]
+
+    @pytest.mark.parametrize(("body", "name"), [("f = Image.open\n", "open"), ("s = alt.Chart(df).save\n", "save")])
+    def test_reopen_and_save_may_only_be_called_directly(self, body: str, name: str) -> None:
+        findings = validate_security(altair_plot(body), library="altair")
+        assert [(f.rule, f.message) for f in findings] == [
+            ("banned-attribute", f"'.{name}' may only be called directly")
+        ]
+
+    @pytest.mark.parametrize(
+        ("body", "expected"),
+        [
+            ("import matplotlib.pyplot as plt\nplt.savefig(f'plot-{THEME}.png')\n", {"banned-import", "banned-call"}),
+            ("fig.savefig(f'plot-{THEME}.png')\n", {"banned-call"}),
+        ],
+    )
+    def test_matplotlib_save_is_not_altairs(self, body: str, expected: set[str]) -> None:
+        findings = validate_security(altair_plot(body), library="altair")
+        assert {f.rule for f in findings} == expected
+        assert any(f.message.endswith("; the plot is saved with save") for f in findings if f.rule == "banned-call")
+
+    @pytest.mark.parametrize(("body", "expected"), ALTAIR_ROUTES)
+    def test_route_is_refused(self, body: str, expected: set[str]) -> None:
+        assert rules_of(altair_plot(body), "altair") == expected
+
+    @pytest.mark.parametrize("body", ALTAIR_NEAR_ROUTES)
+    def test_nearest_allowed_sibling_passes(self, body: str) -> None:
+        assert rules_of(altair_plot(body), "altair") == set()
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            pytest.param('alt.data_transformers.enable("json")\n', id="json transformer"),
+            pytest.param('alt.data_transformers.enable("csv", filename="x.csv")\n', id="csv transformer, file named"),
+        ],
+    )
+    def test_data_transformer_that_writes_a_file_is_refused(self, body: str) -> None:
+        """The `json` and `csv` transformers write the chart data to a file (`filename=` names it) on every save."""
+        assert rules_of(altair_plot(body), "altair") != set()
+
+
+# `np.save` shares its name with the `save` of plotnine and altair: the save rule resolves the receiver, and a
+# module outside the plotting library is never the plot's save (finding of the 1b review, 2026-10-25).
+@pytest.mark.parametrize("library", CODE_LIBRARIES)
+@pytest.mark.parametrize(
+    "body",
+    [
+        pytest.param("import numpy as np\nnp.save('x.npy', df)\n", id="np.save"),
+        pytest.param("import numpy as np\nnp.save(f'plot-{THEME}.png', df)\n", id="np.save on the plot's file"),
+        pytest.param("from numpy import save\n", id="from numpy import save"),
+    ],
+)
+def test_numpy_save_is_a_banned_call_in_every_profile(library: str, body: str) -> None:
+    assert "banned-call" in rules_of(library_plot(library, body), library)
+
+
 # --- the catalogue corpus ----------------------------------------------------------------------
 
 
-@pytest.mark.skipif(not CATALOGUE, reason="plots/ is absent")
-@pytest.mark.parametrize("path", CATALOGUE, ids=lambda p: f"{p.parts[-4]}/{p.stem}")
+@pytest.mark.skipif(not CATALOGUE_FILES, reason="plots/ is absent")
+@pytest.mark.parametrize("path", CATALOGUE_FILES, ids=lambda p: f"{p.parts[-4]}/{p.stem}")
 def test_catalogue_file_never_raises(path: Path) -> None:
     """The catalogue is not clean by design; the validator must still finish, fast, with sound findings."""
     started = time.perf_counter()
@@ -1557,13 +2038,13 @@ def test_catalogue_file_never_raises(path: Path) -> None:
         assert finding.line is None or finding.line >= 1
 
 
-@pytest.mark.skipif(not CATALOGUE, reason="plots/ is absent")
+@pytest.mark.skipif(not CATALOGUE_FILES, reason="plots/ is absent")
 def test_catalogue_summary() -> None:
-    """Per-rule finding counts over the corpus; visible with `pytest -s`."""
+    """Per-rule finding counts over the corpus, one block per library with a profile; visible with `pytest -s`."""
     started = time.perf_counter()
     lines = []
-    for library in ("matplotlib", "seaborn"):
-        files = [path for path in CATALOGUE if path.stem == library]
+    for library in CODE_LIBRARIES:
+        files = [path for path in CATALOGUE_FILES if path.stem == library]
         findings_per_rule: Counter[str] = Counter()
         files_per_rule: Counter[str] = Counter()
         clean = 0

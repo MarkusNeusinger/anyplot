@@ -49,6 +49,38 @@ def apply(*edits: tuple[str, str], working: str = WORKING) -> AppliedPlan:
     return result
 
 
+PLOTNINE_WORKING = source("""
+    import os
+
+    from plotnine import aes, geom_point, ggplot
+
+    THEME = os.getenv("ANYPLOT_THEME", "light")
+    PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+    IMPRINT = ["#009E73", "#C475FD"]
+
+    df = load_user_data()
+    plot = ggplot(df, aes(x="x", y="y")) + geom_point(color=IMPRINT[0])
+    plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
+""")
+
+
+def test_another_librarys_final_save_is_protected_through_its_rule() -> None:
+    """`library=` picks the save rule (`regions.SAVE_RULES`): plotnine's `plot.save` is the protected final save."""
+    drifted = PLOTNINE_WORKING.replace("dpi=400", "dpi=100")
+
+    applied = apply_plan(PLOTNINE_WORKING, AdaptPlan(full_code=drifted), library="plotnine")
+    assert applied.code is None and applied.kinds == ("drift:savefig",) and applied.drifted == drifted
+    assert protected_drift(PLOTNINE_WORKING, drifted, library="plotnine")[0].endswith("final savefig statement")
+    assert restore_protected(PLOTNINE_WORKING, drifted, library="plotnine") == PLOTNINE_WORKING
+
+    # Read with matplotlib's rule the `.save` call is no save call, so the same change is no drift.
+    assert protected_drift(PLOTNINE_WORKING, drifted) == []
+    assert apply_plan(PLOTNINE_WORKING, AdaptPlan(full_code=drifted)).code == drifted
+
+    edited = apply_plan(PLOTNINE_WORKING, plan(("dpi=400, width=8", "dpi=100, width=8")), library="plotnine")
+    assert edited.code is None and edited.kinds == ("protected:savefig",)
+
+
 def test_edits_apply_in_order() -> None:
     result = apply(
         ("ax.set_ylim(0, 100)\n", 'ax.set_ylim(0, df["y"].max())\n'), ('df["y"].max()', 'df["y"].max() * 1.1')

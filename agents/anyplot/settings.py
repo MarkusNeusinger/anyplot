@@ -29,7 +29,7 @@ another provider, model or location.
 | `AGENT_CLI_CALL_LOG` | unset | `claude-cli` only: a file each CLI call appends one JSON line to (model, effort, seconds, ok) |
 | `AGENT_LOCATION` | `eu` | Vertex AI location of every model call: `eu`, `us` or `global` |
 | `AGENT_PROJECT`, else `GOOGLE_CLOUD_PROJECT` | `anyplot` | Google Cloud project that serves (and bills) the model calls |
-| `AGENT_LIBRARIES` | `matplotlib,seaborn` | Enabled libraries; each needs a phase-1 runtime (`matplotlib`, `seaborn`) |
+| `AGENT_LIBRARIES` | `matplotlib,seaborn` | Enabled libraries; each needs a runtime in the registry (`RUNTIME_LIBRARIES`: `matplotlib`, `seaborn`, `plotnine`, `altair`). The default stays `matplotlib,seaborn`; plotnine and altair are enabled after their eval matrix passes |
 | `AGENT_RENDERER` | `remote` | Render backend: `remote` (the anyplot-renderer service, phase 1), `sandbox` (in-process sandboxes, not used in phase 1), `local` (development only) or `fake` (development and test only) |
 | `AGENT_RENDER_URL` | unset | The anyplot-renderer service URL the `remote` backend calls; `https://` outside development and test |
 | `AGENT_RENDER_TOKEN` | unset | Development only: an ID token for the renderer (`gcloud auth print-identity-token`); without it the backend mints one from Application Default Credentials |
@@ -100,7 +100,7 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 from core.constants import SUPPORTED_LIBRARIES
 
 from .cli_transport import CLI_MODELS
-from .code.normalise import SUPPORTED_LIBRARIES as RUNTIME_LIBRARIES
+from .render.runtimes import RUNTIME_LIBRARIES
 from .schemas import MAX_ATTEMPTS
 
 
@@ -614,7 +614,7 @@ class AgentSettings(BaseSettings):
         if without_runtime:
             raise ValueError(
                 f"libraries with no runtime in AGENT_LIBRARIES: {', '.join(without_runtime)} "
-                f"(the phase-1 runtime serves {', '.join(sorted(RUNTIME_LIBRARIES))})"
+                f"(the runtime registry serves {', '.join(sorted(RUNTIME_LIBRARIES))})"
             )
         return list(dict.fromkeys(value))
 

@@ -27,7 +27,9 @@ CASE_ID_PATTERN = r"^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{8}$"
 """What `api.agent_cases.new_case_id` makes, and what a submission's `replaces` must look like."""
 MANIFEST_NAME = "manifest.json"
 MANIFEST_SCHEMA = 1
-CASE_FILE_NAMES = ("plot-light.png", "plot-dark.png", "plot.py", "data.csv", MANIFEST_NAME)
+CODE_FILE_NAMES = ("plot.py", "plot.R", "plot.jl", "plot.js", "plot.tsx")
+"""The names a case's exported code can be stored under: its language's (the agents' `schemas.CodeArtifact`)."""
+CASE_FILE_NAMES = ("plot-light.png", "plot-dark.png", *CODE_FILE_NAMES, "data.csv", MANIFEST_NAME)
 """Every file a case can hold; a case's manifest lists the ones it has."""
 TAG_PATTERN = r"^[a-z0-9-]{1,40}$"
 """A triage tag: a lowercase slug, such as `legend-overlap`."""

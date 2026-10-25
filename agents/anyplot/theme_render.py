@@ -41,7 +41,7 @@ from typing import Any, Literal
 
 from .render.contract import RenderJob, Theme
 from .render.gates import data_rows, evaluate
-from .render.runtimes.python import PythonRuntime
+from .render.runtimes import runtime_for
 from .render.serial import RenderBusy
 from .schemas import ArtifactName
 from .services import PADDED_REASON, CodeVersion, Services, ThemeRender
@@ -89,7 +89,7 @@ async def render_theme(
     known = version.themes.get(theme)
     if known is not None and (known.rendered or known.tries >= MAX_THEME_TRIES):
         return ThemeResult(known.status, known.reason, version.artifacts())
-    runtime = PythonRuntime(cpu_seconds=settings.render_timeout_s)
+    runtime = runtime_for(version.library, cpu_seconds=settings.render_timeout_s)
     job = RenderJob(
         job_id=secrets.token_hex(8),
         language=runtime.language,
@@ -106,7 +106,13 @@ async def render_theme(
     except Exception as exc:  # no Docker, the sandbox stub: the class is logged, never the message
         logger.warning("theme render could not run: %s", type(exc).__name__)
         return ThemeResult("failed", "error", version.artifacts())
-    report = evaluate(result, themes=job.themes, library=version.library, rows=data_rows(version.data_csv))
+    report = evaluate(
+        result,
+        themes=job.themes,
+        library=version.library,
+        rows=data_rows(version.data_csv),
+        summarise=runtime.error_summary,
+    )
     if not report.passed_host_gates:
         record = ThemeRender("failed", "render", tries=(known.tries if known is not None else 0) + 1)
         version.themes[theme] = record

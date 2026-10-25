@@ -1,9 +1,9 @@
-"""Generate the synthetic spike-X fixture cases: 10 specs x matplotlib and seaborn x 6 perturbations.
+"""Generate the synthetic spike-X fixture cases: 10 specs x 4 Python libraries x 6 perturbations.
 
 Every dataset is invented and drawn from a seeded NumPy generator, so a rerun writes
 byte-identical files. Run it from the repository root:
 
-    uv run --extra agents python -m agents.evals.make_fixtures          # (re)write the 120 cases
+    uv run --extra agents python -m agents.evals.make_fixtures          # (re)write the 240 cases
     uv run --extra agents python -m agents.evals.make_fixtures --check  # exit 1 when a file is stale
 
 It writes `agents/evals/fixtures/cases/<spec>-<library>-<perturbation>/` with
@@ -11,25 +11,32 @@ It writes `agents/evals/fixtures/cases/<spec>-<library>-<perturbation>/` with
 hand-written cases `scatter-basic-matplotlib`, `bar-grouped-seaborn` and
 `scatter-basic-matplotlib-german-message` stay as they are). A NumPy upgrade that
 changes a random stream makes `--check` and the unit test fail; rerun the generator
-and commit the result.
+and commit the result. The libraries are matplotlib and seaborn (since the first
+fixtures) and plotnine and altair (since 2026-10-25, step 1b of
+`agentic/specs/261024-agent-all-libraries.md`); every library of a spec gets the same
+datasets and bindings, so only `library` and the case id differ between them.
 
 **The ten specs.** Each covers another plot family, and the readiness scan
-(`agents/anyplot/code/readiness.py`) marks both its matplotlib and its seaborn file
-`clean` or `coupled`, never `blocked` (`tests/unit/agents/evals/test_make_fixtures.py`
-asserts it):
+(`agents/anyplot/code/readiness.py`, through `opening.assess` with the four libraries
+enabled) marks each of its four files `clean` or `coupled`, never `blocked`
+(`tests/unit/agents/evals/test_make_fixtures.py` asserts it). The cells below were
+computed on 2026-10-25; the heatmap's matplotlib file, `clean` in the table's first
+version, is `coupled` now (`color-scale`: its `TwoSlopeNorm(vmin=-1, vmax=1)`).
+plotnine and altair size their canvas on the save, so their reasons also carry a
+`canvas:` note, which does not change the status:
 
-| Spec | Family | matplotlib | seaborn |
-|---|---|---|---|
-| `scatter-basic` | scatter | coupled | coupled |
-| `line-basic` | line (numeric x) | coupled | coupled |
-| `bar-grouped` | bar (grouped) | coupled | coupled |
-| `histogram-basic` | histogram | coupled | coupled |
-| `box-basic` | box | coupled | coupled |
-| `heatmap-basic` | heatmap | clean | coupled |
-| `area-basic` | area | coupled | coupled |
-| `violin-basic` | violin | coupled | coupled |
-| `pie-basic` | pie | coupled | clean |
-| `line-timeseries` | time series | coupled | coupled |
+| Spec | Family | matplotlib | seaborn | plotnine | altair |
+|---|---|---|---|---|---|
+| `scatter-basic` | scatter | coupled | coupled | coupled | coupled |
+| `line-basic` | line (numeric x) | coupled | coupled | coupled | coupled |
+| `bar-grouped` | bar (grouped) | coupled | coupled | coupled | coupled |
+| `histogram-basic` | histogram | coupled | coupled | coupled | coupled |
+| `box-basic` | box | coupled | coupled | coupled | coupled |
+| `heatmap-basic` | heatmap | coupled | coupled | coupled | coupled |
+| `area-basic` | area | coupled | coupled | coupled | coupled |
+| `violin-basic` | violin | coupled | coupled | coupled | coupled |
+| `pie-basic` | pie | coupled | clean | clean | clean |
+| `line-timeseries` | time series | coupled | coupled | coupled | coupled |
 
 **The six perturbations** (the datasets of the design's spike-X row):
 
@@ -46,6 +53,15 @@ The base data, which `renamed`, `x10`, `date` and `decimal-comma` share, is not 
 of its own. Every generated case expects `accepted`: each dataset is one a user could
 paste for that spec. No real people, organisations or politics: stores, products,
 customers and stations are invented.
+
+**The smoke cases.** The tag `smoke` marks one case per spec, cycling through the
+perturbations and alternating matplotlib and seaborn (`SMOKE_CYCLE`, as since the first
+fixtures), and one case for each library outside that cycle (`LIBRARY_SMOKE`):
+`scatter-basic-plotnine-renamed` and `scatter-basic-altair-renamed`. `scatter-basic`
+is the spec whose plotnine and altair files were rendered under the harness guard when
+step 1b landed; `renamed` puts headers with a dot (`Werbebudget in Tsd. CHF`) into the
+library's own column syntax: plotnine's `aes` strings, and altair's field strings, where
+Vega-Lite reads an unescaped `.` as nested access (`prompts/library/altair.md`).
 """
 
 import argparse
@@ -68,9 +84,16 @@ from agents.anyplot.schemas import MAX_COLUMN_NAME_CHARS, MAX_ROWS
 
 
 CASES_DIR = Path(__file__).resolve().parent / "fixtures" / "cases"
-LIBRARIES: tuple[str, ...] = ("matplotlib", "seaborn")
+LIBRARIES: tuple[str, ...] = ("matplotlib", "seaborn", "plotnine", "altair")
 PERTURBATIONS: tuple[str, ...] = ("renamed", "x10", "n12", "n5000", "date", "decimal-comma")
 SMOKE_TAG = "smoke"
+SMOKE_CYCLE: tuple[str, ...] = ("matplotlib", "seaborn")
+"""The libraries the per-spec smoke cycle alternates; it keeps the smoke cases it had before the other libraries."""
+LIBRARY_SMOKE: dict[str, tuple[str, str]] = {
+    "plotnine": ("scatter-basic", "renamed"),
+    "altair": ("scatter-basic", "renamed"),
+}
+"""The one smoke case `(spec, perturbation)` of each library outside `SMOKE_CYCLE` (module docstring)."""
 SOURCE = "synthetic: agents/evals/make_fixtures.py"
 
 Value = float | int | str | date | datetime
@@ -557,9 +580,17 @@ def _tags(spec: SpecFixture, perturbation: str, columns: list[Column], smoke: bo
     return tags
 
 
-def _is_smoke(index: int, library: str, perturbation: str) -> bool:
-    """One smoke case per spec, cycling through the perturbations and alternating the library."""
-    return perturbation == PERTURBATIONS[index % len(PERTURBATIONS)] and library == LIBRARIES[index % len(LIBRARIES)]
+def _is_smoke(index: int, spec_id: str, library: str, perturbation: str) -> bool:
+    """One smoke case per spec, cycling through the perturbations and alternating the cycle's libraries.
+
+    A library outside `SMOKE_CYCLE` has its one case in `LIBRARY_SMOKE` instead, so a new
+    library never moves the cycle's cases.
+    """
+    if library in LIBRARY_SMOKE:
+        return LIBRARY_SMOKE[library] == (spec_id, perturbation)
+    return (
+        perturbation == PERTURBATIONS[index % len(PERTURBATIONS)] and library == SMOKE_CYCLE[index % len(SMOKE_CYCLE)]
+    )
 
 
 def case_id(spec_id: str, library: str, perturbation: str) -> str:
@@ -583,7 +614,7 @@ def render_cases() -> dict[str, str]:
                     "perturbation": perturbation,
                     "bindings": bindings,
                     "expected": "accepted",
-                    "tags": _tags(spec, perturbation, columns, _is_smoke(index, library, perturbation)),
+                    "tags": _tags(spec, perturbation, columns, _is_smoke(index, spec.spec_id, library, perturbation)),
                     "source": f"{SOURCE} (seed {spec.seed}, {perturbation})",
                 }
                 directory = case_id(spec.spec_id, library, perturbation)

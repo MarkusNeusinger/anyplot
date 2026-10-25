@@ -27,7 +27,7 @@ from .render import make_backend
 from .render.contract import RenderBackend
 from .render.serial import SerialRenderer
 from .render.store import RenderStore
-from .schemas import AdaptPlan, ArtifactName, PlotResult, Theme, artifact_names
+from .schemas import DEFAULT_CODE_ARTIFACT, AdaptPlan, ArtifactName, CodeArtifact, PlotResult, Theme, artifact_names
 from .settings import get_settings
 
 
@@ -80,10 +80,13 @@ class CodeVersion:
     adapter and the reviewer as the user's standing decisions (`pipeline.standing_requests`)."""
     themes: dict[Theme, ThemeRender] = field(default_factory=dict)
     """Every theme rendered for the version, with its gate outcome; a rendered one has its PNG in the render."""
+    code_artifact: CodeArtifact = DEFAULT_CODE_ARTIFACT
+    """The name the exported code downloads under: the runtime's (`plot.py` for Python, `plot.R`, `plot.js`, ...)."""
 
     def artifacts(self) -> list[ArtifactName]:
-        """The version's artifacts: the PNG of every rendered theme, `plot.py` and `data.csv`."""
-        return artifact_names([theme for theme, record in self.themes.items() if record.rendered] or [self.theme])
+        """The version's artifacts: the PNG of every rendered theme, the code under its language's name, `data.csv`."""
+        rendered = [theme for theme, record in self.themes.items() if record.rendered] or [self.theme]
+        return artifact_names(rendered, self.code_artifact)
 
 
 MAX_KEPT_REFUSALS = 20

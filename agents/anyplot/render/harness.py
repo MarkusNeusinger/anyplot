@@ -52,13 +52,15 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    interpreter refuses every `exec` but the plot's own run, the module bodies of an import
    and `CODE_BUILDERS` (`namedtuple`, dataclasses, scipy's distributions), a code object or
    function built by hand or a `__code__` assignment, every `open` that writes anything but
-   `plot-<theme>.png` and `probe-<theme>.json`, `subprocess.*`, `os.system`, `os.exec*`,
+   `plot-<theme>.png`, `probe-<theme>.json` and `plot-<theme>.html` (altair's second
+   file, which stays in the sandbox), `subprocess.*`, `os.system`, `os.exec*`,
    `os.posix_spawn`, `os.spawn*`, `os.fork*`, `socket.*`, `ctypes.*` (but threadpoolctl's,
    `NATIVE_CALLERS`, and the `ctypes.cast` scipy makes while it is imported, `IMPORT_CTYPES_HELPERS`),
    `sys.remote_exec`, filesystem changes and `os.chdir`, and every frame (`gi_frame`,
    `cr_frame`, `ag_frame`, `tb_frame`, `sys._getframe`) while plot code is on the stack, but
    to `FRAME_READERS` and import bodies (Fable review of #12177; `hide_frames` makes
-   `inspect.currentframe` and `logging.currentframe` answer None first). Imports, reads and `compile` stay
+   `logging.currentframe` answer None and `inspect.currentframe` answer a frame to one of
+   `FRAME_READERS` only, `frame_for_readers`). Imports, reads and `compile` stay
    allowed, because the plot imports its libraries lazily and matplotlib reads fonts and
    style sheets and compiles colour strings while it draws; a refusal raises
    `PermissionError`. The validator review of 2026-10-14 found `np.testing.measure`, which
@@ -205,6 +207,12 @@ backend's `PythonRuntime` commands): `-I` isolates it, and `-X disable-remote-de
 debugging, new in Python 3.14, through which `sys.remote_exec` makes another Python process, or this one, run a
 script file. `-I` ignores `PYTHON_DISABLE_REMOTE_DEBUG`, so only the option works here. The guards refuse
 `sys.remote_exec` and `cpython.remote_debugger_script` as well, for a harness started without the flag."""
+EXEC_FLAG = "--exec"
+"""Exec mode (`agents/renderer/commands.py`): `harness.py --exec -- <command...>` prints the start line, sets the
+limits and runs the language's own command (`Rscript plot.R`, `node render.mjs plot.js`, `julia plot.jl`) as a
+child with the limits inherited, then prints the end line from the child's rusage and exits with its code. The
+launcher retry, the host watchdog and the kill path then work for every language as for a Python plot; the
+plot guard and the probe are Python's and do not apply."""
 DATA_FLAG = "--data"
 DATA_OUT_FILE = "out.csv"
 DATA_STATUS_FILE = "status.json"
@@ -346,13 +354,19 @@ CODE_BUILDERS = frozenset(
         ("collections/__init__.py", "namedtuple"),
         ("dataclasses.py", "add_fns_to_class"),
         ("scipy/stats/_distn_infrastructure.py", "_attach_argparser_methods"),
+        ("plotnine/mapping/_env.py", "eval"),
     }
 )
 """The `(file suffix, function)` pairs whose `exec` and `compile` both guards let through when they call them: each
 builds methods from a fixed template and names it checked as identifiers. `namedtuple` runs inside
 `DataFrame.itertuples()`, `add_fns_to_class` whenever a dataclass is created (`make_dataclass`), and scipy's
 `_attach_argparser_methods` whenever a distribution is created (`stats.rv_histogram`, `rv_discrete(values=...)`). The
-caller is the frame that called `exec`, which the code under test cannot forge without running code it compiled."""
+caller is the frame that called `exec`, which the code under test cannot forge without running code it compiled.
+plotnine's `Environment.eval` is the one entry that evaluates text the plot wrote: an aesthetic or facet string that
+is not a column name (`aes(fill="factor(g)")`, 7 of 273 eligible catalogue files, and the adapter's habit). The
+validator admits those strings only as literals it walked as code with every rule of the profile
+(`validate.EXPRESSION_CALLS`), and whatever the evaluated code reaches (writes, processes, sockets, frames) stays
+refused here; patsy's `exec` behind `formula=` has no entry, the keyword is a validator finding."""
 IMPORT_FRAME_FILES = ("<frozen importlib._bootstrap>", "<frozen importlib._bootstrap_external>")
 """The files of the frames that run an import. The plot guard lets an `exec` through when, walking up from its caller,
 it meets one of these frames before a frame of the plot: a module body the plot imports runs (and builds code: scipy's
@@ -449,6 +463,7 @@ FRAME_READERS = (
     (("statsmodels/graphics/utils.py", "_import_mpl"),),
     (("traceback.py", "extract_stack"),),
     (("traceback.py", "_walk_tb_with_full_positions"), ("traceback.py", "_extract_from_extended_frame_gen")),
+    (("plotnine/mapping/_env.py", "capture"),),
 )
 """The callers the plot guard hands a frame (`FRAME_EVENTS`, `FRAME_ATTRIBUTES`) while plot code is on the stack,
 each a chain of `(file suffix, function)` pairs that the caller's frame and the frames above it must match: each reads
@@ -457,10 +472,14 @@ when an inplace method or a `__setitem__` meets a temporary (`df["a"].fillna(0, 
 names the caller of every graphic (`qqplot`, `plot_acf`). `traceback.extract_stack` and `extract_tb` return file
 names and line numbers (`_walk_tb_with_full_positions` is a generator that yields frames, so it passes only while
 `extract_tb`'s summary builder consumes it): pyparsing calls both while matplotlib builds and runs its mathtext
-parser, on the first `$...$` a plot draws (30 of 572 eligible catalogue files). Library code that reads frames while
-an import runs (scipy's bunch types name their module) needs no entry: an import body gets its frame like its `exec`.
-The helpers that return the frame they read, `inspect.currentframe` and `logging.currentframe`, are replaced to
-answer None before the guard is armed (`hide_frames`)."""
+parser, on the first `$...$` a plot draws (30 of 572 eligible catalogue files). plotnine's `Environment.capture`
+walks from `inspect.currentframe()` to the plot's own frame and keeps its `f_locals` and `f_globals`, the namespace
+the plot has anyway, to look column names up in `aes("x")`; every plotnine file fails without it (the spike of
+2026-10-24: `call-stack is not that deep!`), and the validator parses every aes string that is not a column name as
+code. Library code that reads frames while an import runs (scipy's bunch types name their module) needs no entry: an
+import body gets its frame like its `exec`. The helpers that return the frame they read are replaced before the guard
+is armed (`hide_frames`): `logging.currentframe` answers None, `inspect.currentframe` answers its caller's frame to
+one of these readers and None to everyone else (`frame_for_readers`)."""
 DATA_PRELOAD = (
     "math",
     "statistics",
@@ -1233,10 +1252,20 @@ def _draw_recording_texts(figure):
     return drawn
 
 
+def _renderer(figure):
+    """The figure's Agg renderer. plotnine saves a figure it built with `Figure()`, whose canvas is the base class
+    and has no renderer; `savefig` to PNG switches it to Agg anyway, so the probe does the same first."""
+    if not hasattr(figure.canvas, "get_renderer"):
+        from matplotlib.backends.backend_agg import FigureCanvasAgg
+
+        FigureCanvasAgg(figure)
+    return figure.canvas.get_renderer()
+
+
 def probe(figure, dpi):
     """What the figure will look like on the canvas, measured before it is saved."""
+    renderer = _renderer(figure)  # before the recording draw: the base canvas's `draw` draws nothing (plotnine)
     drawn = _draw_recording_texts(figure)
-    renderer = figure.canvas.get_renderer()
     width_in, height_in = figure.get_size_inches()
     scale = (dpi or figure.dpi) / figure.dpi
     width_px, height_px = float(width_in) * float(dpi or figure.dpi), float(height_in) * float(dpi or figure.dpi)
@@ -1550,7 +1579,7 @@ def density_report(figure, dpi):
     import numpy as np
 
     scale = (dpi or figure.dpi) / figure.dpi
-    renderer = figure.canvas.get_renderer()
+    renderer = _renderer(figure)
     report = []
     for axes in figure.get_axes():
         if len(report) >= DENSITY_AXES_LIMIT:
@@ -1901,23 +1930,39 @@ def warm_scikit_learn(source):
 
 
 def hide_frames():
-    """Make the two stdlib helpers that hand out their caller's frame answer None, before the plot guard is armed.
+    """Replace the two stdlib helpers that hand out their caller's frame, before the plot guard is armed.
 
     The guard refuses a frame to plot code and to library code the plot called (`lets_frame_out`), so
     `inspect.currentframe()` and `logging.currentframe()` would raise where libraries expect a frame or None:
     pandas' `find_stack_level` walks frames before every warning, and every logging call looks up its caller.
     Both read None as "no frame support": pandas reports its warning at level 0, a log record names
-    "(unknown file)". The plot reaches neither module past the validator (both are banned imports).
+    "(unknown file)". `inspect.currentframe` answers its caller's frame to one of `FRAME_READERS` (plotnine's
+    `Environment.capture`, which needs the plot's namespace) and None to everyone else (`frame_for_readers`). The
+    plot reaches neither module past the validator (both are banned imports).
     """
     import inspect
 
-    inspect.currentframe = no_frame
+    inspect.currentframe = frame_for_readers
     logging.currentframe = no_frame
 
 
 def no_frame():
-    """What `inspect.currentframe` and `logging.currentframe` answer in plot mode: no frame (`hide_frames`)."""
+    """What `logging.currentframe` answers in plot mode: no frame (`hide_frames`)."""
     return None
+
+
+def frame_for_readers():
+    """What `inspect.currentframe` answers in plot mode: the caller's frame to one of `FRAME_READERS`, else None.
+
+    `sys._getframe` raises the audit event the plot guard decides on; the guard skips this helper's own frame
+    (`caller` walks past the harness file) and judges the chain above it, as it does for every other reader. A
+    refusal is swallowed here, because the callers of `inspect.currentframe` expect a frame or None, never an error
+    (pandas' `find_stack_level` before every warning).
+    """
+    try:
+        return sys._getframe(1)
+    except PermissionError:
+        return None
 
 
 def run_plot(path, guard):
@@ -2068,7 +2113,48 @@ def run_conversion(path, guard, measure):
     return CONVERT_EXIT["ok"]
 
 
+def main_exec(command):
+    """Exec mode: run `command` (a language's own render command) as a child under the harness's limits.
+
+    The start line goes out before the child starts, so the renderer tells a launcher that
+    never ran the harness from a command that failed. The limits are set in this process
+    and inherited; `RLIMIT_AS` and `RLIMIT_NPROC` arrive only when the renderer's command
+    table applies them to the language. The child gets the sandbox's environment as it is
+    and the working directory, where the code file and `data.csv` lie. Its exit code is the
+    harness's; a signal death becomes 128 plus the signal, as a shell reports it.
+    """
+    import subprocess
+
+    if command and command[0] == "--":
+        command = command[1:]
+    _report("start")
+    if not command:
+        print(f"usage: harness.py {EXEC_FLAG} -- <command> [args...]", file=sys.stderr)
+        return 2
+    set_limits()
+    try:
+        # The command is a row of the renderer's own table (`agents/renderer/commands.py`), never the request's.
+        completed = subprocess.run(command, check=False)
+        code = completed.returncode
+    except OSError as exc:
+        print(f"{EXEC_FLAG}: cannot run {command[0]}: {type(exc).__name__}", file=sys.stderr)
+        code = 127
+    finally:
+        try:
+            _report("end", **_child_usage())
+        except Exception:
+            pass  # a closed stdout must not hide the command's own exit code
+    return code if code >= 0 else 128 - code
+
+
+def _child_usage():
+    usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+    return {"max_rss_mb": round(usage.ru_maxrss / 1024, 1), "cpu_s": round(usage.ru_utime + usage.ru_stime, 3)}
+
+
 def main(argv):
+    if len(argv) >= 2 and argv[1] == EXEC_FLAG:
+        return main_exec(argv[2:])
     if len(argv) == 3 and argv[1] == DATA_FLAG:
         return main_data(argv[2])
     if len(argv) == 3 and argv[1] == CONVERT_FLAG:
@@ -2087,7 +2173,8 @@ def main(argv):
     install_glyph_capture()
     install_probe(theme)
     try:
-        run_plot(argv[1], PlotGuard((f"plot-{theme}.png", f"probe-{theme}.json")))
+        # The HTML is altair's second file (314 of 325 catalogue files); it stays in the sandbox, nothing collects it.
+        run_plot(argv[1], PlotGuard((f"plot-{theme}.png", f"probe-{theme}.json", f"plot-{theme}.html")))
     finally:
         try:
             _report("end", **_usage())

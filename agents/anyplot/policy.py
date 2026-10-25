@@ -71,8 +71,12 @@ FENCE_TAGS = (
     "plot_language",
     "user_notes",
 )
-_FENCE_TAG = re.compile(r"[<＜﹤]\s*([/／]?)\s*([\w＿]+)")
-"""A tag opening, closing or near-miss: `<`, `< /`, `</ ` and their fullwidth forms, then a name."""
+_FENCE_TAG = re.compile(r"[<＜﹤]\s*(?:([/／])\s*)?([\w＿]+)")
+"""A tag opening, closing or near-miss: `<`, `< /`, `</ ` and their fullwidth forms, then a name.
+
+The blanks after the slash are inside the slash's own group: two blank runs around an
+optional slash would be one ambiguous run, which backtracks quadratically on `<` and
+a long run of blanks (CodeQL py/polynomial-redos; the text is the user's)."""
 _FENCE_NAMES = frozenset(FENCE_TAGS)
 _HEADING = re.compile(r"^(#{1,6})\s")
 
@@ -314,7 +318,7 @@ def fence(tag: str, text: str) -> str:
 
     def neutral(match: re.Match[str]) -> str:
         name = unicodedata.normalize("NFKC", match.group(2)).lower()
-        return f"&lt;{match.group(1)}{match.group(2)}" if name in _FENCE_NAMES else match.group(0)
+        return f"&lt;{match.group(1) or ''}{match.group(2)}" if name in _FENCE_NAMES else match.group(0)
 
     return f"<{tag}>\n{_FENCE_TAG.sub(neutral, text)}\n</{tag}>"
 

@@ -539,10 +539,8 @@ async def preflight(cases: list["EvalCase"], services: "Services", echo: Callabl
     through `services.backend`, the same path as the pipeline's renders. It proves the
     backend renders at all: reachable, the caller accepted, the library in the image.
     """
-    from agents.anyplot.code.normalise import normalise
-    from agents.anyplot.render import PythonRuntime
     from agents.anyplot.render.contract import RendererUnavailable, RenderJob
-    from agents.anyplot.render.gates import error_summary
+    from agents.anyplot.render.runtimes import runtime_for
     from agents.anyplot.settings import get_settings
 
     firsts: dict[str, EvalCase] = {}
@@ -550,11 +548,12 @@ async def preflight(cases: list["EvalCase"], services: "Services", echo: Callabl
         firsts.setdefault(case.library, case)
     timeout = float(get_settings().render_timeout_s)
     for library, case in firsts.items():
+        runtime = runtime_for(library, cpu_seconds=int(timeout))
         job = RenderJob(
             job_id=secrets.token_hex(8),
-            language=PythonRuntime.language,
+            language=runtime.language,
             library=library,
-            source=normalise(case.snapshot().code, library=library),
+            source=runtime.normalise(case.snapshot().code, library),
             data_csv=PREFLIGHT_DATA,
             themes=("light",),
             timeout_s=timeout,
@@ -572,7 +571,7 @@ async def preflight(cases: list["EvalCase"], services: "Services", echo: Callabl
             if output is not None and output.timed_out:
                 why += ", timed out"
             if output is not None and output.stderr_tail:
-                why += f", {error_summary(output.stderr_tail)}"
+                why += f", {runtime.error_summary(output.stderr_tail)}"
             raise SetupError(f"preflight render of {case.spec_id} ({library}) failed: {why}")
         echo(f"preflight: {case.spec_id} ({library}) rendered in {time.monotonic() - started:.1f} s")
 
@@ -1600,6 +1599,14 @@ def _prepare_and_run(args: argparse.Namespace, settings: "AgentSettings", argv: 
         raise SetupError(str(exc)) from exc
     if not cases:
         raise SetupError(f"no case matches --cases {args.cases!r}")
+    # Since 2026-10-25 the smoke set holds a plotnine and an altair case, which the default `AGENT_LIBRARIES`
+    # (matplotlib and seaborn) blocks as `library-disabled`; the readiness scan reads the settings, not the case.
+    disabled = sorted({case.library for case in cases} - set(settings.libraries))
+    if disabled:
+        _echo(
+            f"settings: AGENT_LIBRARIES does not enable {', '.join(disabled)}; their cases will be blocked as "
+            f"library-disabled (export AGENT_LIBRARIES={','.join([*settings.libraries, *disabled])})"
+        )
     baseline_path: Path | None = None
     if not args.no_baseline:
         pinned = BASELINES_DIR / f"{AgentSettings.model_fields['model'].default}.json"

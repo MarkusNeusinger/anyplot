@@ -5,9 +5,13 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
-CATALOGUE_FILES = sorted(REPO_ROOT.glob("plots/*/implementations/python/matplotlib.py")) + sorted(
-    REPO_ROOT.glob("plots/*/implementations/python/seaborn.py")
-)
+CODE_LIBRARIES = ("matplotlib", "seaborn", "plotnine", "altair")
+"""The libraries with a Python code profile (`normalise.SUPPORTED_LIBRARIES`), in the corpus order."""
+CATALOGUE_FILES = [
+    path
+    for library in CODE_LIBRARIES
+    for path in sorted(REPO_ROOT.glob(f"plots/*/implementations/python/{library}.py"))
+]
 
 
 def source(text: str) -> str:

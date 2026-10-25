@@ -146,6 +146,8 @@ import {
   type AgentEvent,
   type ArtifactName,
   type Binding,
+  codeArtifact,
+  type CodeArtifact,
   type ConvertAnswer,
   countBucket,
   type DatasetChanged,
@@ -1361,10 +1363,10 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   );
 
   const loadCode = useCallback(
-    async (number: number) => {
+    async (number: number, name: CodeArtifact = 'plot.py') => {
       safeDispatch({ type: 'version_code', number, code: { state: 'loading' } });
       try {
-        const text = await (await fetchArtifact(number, 'plot.py')).text();
+        const text = await (await fetchArtifact(number, name)).text();
         safeDispatch({ type: 'version_code', number, code: { state: 'ready', text } });
       } catch (err) {
         handleFailure(err);
@@ -1455,7 +1457,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
       });
       addItem({ kind: 'plot', version: number });
       void loadImage(number, theme, result.status);
-      void loadCode(number);
+      void loadCode(number, codeArtifact(result.artifacts));
     },
     [specId, trackEvent, safeDispatch, addItem, loadImage, loadCode]
   );

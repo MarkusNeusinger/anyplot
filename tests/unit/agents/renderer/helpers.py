@@ -144,6 +144,10 @@ class FakeExecutor:
         self.error: Exception | None = None
         self.stuck = 0
         self.available = True
+        self.toolchains: dict[str, bool] = {"python": True, "javascript": False, "r": False, "julia": False}
+
+    def languages(self) -> dict[str, bool]:
+        return dict(self.toolchains)
 
     async def run_theme(self, job: RenderRequest, theme: Theme) -> ThemeRun:
         self.active += 1

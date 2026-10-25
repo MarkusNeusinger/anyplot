@@ -64,7 +64,7 @@ from agents.anyplot.pipeline import _check, render_adapt_request, render_review_
 from agents.anyplot.policy import FENCE_TAGS
 from agents.anyplot.render.contract import RenderBackend, RendererUnavailable, RenderJob
 from agents.anyplot.render.gates import data_rows, evaluate
-from agents.anyplot.render.runtimes.python import PythonRuntime
+from agents.anyplot.render.runtimes import runtime_for
 from agents.anyplot.schemas import MAX_NOTES, AdaptPlan, AdaptRequest, Binding, ReviewRequest
 from agents.anyplot.session_state import SessionView
 from agents.anyplot.settings import AgentSettings
@@ -127,14 +127,14 @@ def stress_spec(case: EvalCase) -> StressSpec:
     return StressSpec(bound, needs_model, static, render, marker, standin)
 
 
-def compose_standin(base: str, body: str) -> str:
+def compose_standin(base: str, body: str, *, library: str = "matplotlib") -> str:
     """A stand-in's working form: `base` up to its protected theme block, then `body`, then `base`'s final savefig.
 
     The stand-in keeps the catalogue file's imports and its protected regions verbatim,
     so `apply_plan`'s drift check passes whatever a regeneration changed in the rest of
     the file. ValueError for a base without a THEME assignment or a final savefig.
     """
-    regions = find_regions(base)
+    regions = find_regions(base, library=library)
     savefig = regions.savefig.statement if regions.savefig is not None else None
     if regions.theme is None or savefig is None:
         raise ValueError("the catalogue file has no THEME assignment or final savefig to keep")
@@ -401,7 +401,8 @@ async def _standin(
     """The stand-in as a full-code plan through the pipeline's check, then one light render and the host gates."""
     measured = record["static"]
     record["stage"] = "check"
-    applied = apply_plan(normalised, AdaptPlan(full_code=compose_standin(normalised, body)))
+    standin_code = compose_standin(normalised, body, library=case.library)
+    applied = apply_plan(normalised, AdaptPlan(full_code=standin_code), library=case.library)
     standin: dict[str, Any] = {"check": "rejected", "validator": [], "adaptation": []}
     measured["standin"] = standin
     if applied.code is None:
@@ -409,7 +410,7 @@ async def _standin(
         record["status"] = "standin_rejected"
         return
     working = applied.code
-    regions = find_regions(normalised)
+    regions = find_regions(normalised, library=case.library)
     palette = list(regions.imprint.entries) if regions.imprint else []
     check = _check(working, library=case.library, palette=palette, base=normalised)
     standin["literal_chars"] = new_literal_chars(normalised, working)
@@ -419,7 +420,7 @@ async def _standin(
         record["status"] = "standin_rejected"
         return
     standin["check"] = "ok"
-    runtime = PythonRuntime(cpu_seconds=context.settings.render_timeout_s)
+    runtime = runtime_for(case.library, cpu_seconds=context.settings.render_timeout_s)
     columns = [column.name for column in parsed.profile.columns]
     run_form = runtime.loader_block(
         runtime.normalise(working, case.library),

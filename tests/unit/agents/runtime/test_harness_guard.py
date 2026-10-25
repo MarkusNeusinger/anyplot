@@ -7,6 +7,8 @@ found (`np.testing.measure` compiles and execs its string), generalised: the har
 behind the validator, so these plots and snippets are written as if the validator had missed them.
 """
 
+import json
+import struct
 import subprocess
 import sys
 from pathlib import Path
@@ -26,7 +28,12 @@ DATA_EXIT = harness.DATA_EXIT
 
 def render(tmp_path: Path, body: str) -> tuple[int, str]:
     """Exit code and stderr of one plot-mode run of HEADER + body + SAVE in `tmp_path`."""
-    (tmp_path / "plot.py").write_text(HEADER + body + SAVE, encoding="utf-8")
+    return render_file(tmp_path, HEADER + body + SAVE)
+
+
+def render_file(tmp_path: Path, code: str) -> tuple[int, str]:
+    """Exit code and stderr of one plot-mode run of `code`, a whole plot file, in `tmp_path`."""
+    (tmp_path / "plot.py").write_text(code, encoding="utf-8")
     done = subprocess.run(
         [sys.executable, *harness.INTERPRETER_FLAGS, str(HARNESS_SOURCE), "plot.py"],
         cwd=tmp_path,
@@ -272,6 +279,80 @@ class TestPlotGuard:
         exit_code, stderr = render(tmp_path, body)
         assert exit_code == 0, stderr[-3000:]
 
+    def test_the_html_twin_may_be_written(self, tmp_path: Path) -> None:
+        """`plot-<theme>.html` (altair's second file) is the one write allowed beside the PNG and the probe."""
+        exit_code, stderr = render(tmp_path, "open('plot-light.html', 'w').write('<html></html>')\n")
+        assert exit_code == 0, stderr[-2000:]
+        assert (tmp_path / "plot-light.html").read_text(encoding="utf-8") == "<html></html>"
+        assert (tmp_path / "plot-light.png").exists() and (tmp_path / "probe-light.json").exists()
+
+    @pytest.mark.parametrize(
+        "name", [pytest.param("other.html", id="another name"), pytest.param("plot-dark.html", id="the other theme")]
+    )
+    def test_any_other_html_is_refused(self, tmp_path: Path, name: str) -> None:
+        exit_code, stderr = render(tmp_path, f"open('{name}', 'w').write('<html></html>')\n")
+        assert exit_code != 0
+        assert "blocked by the render sandbox" in stderr, stderr[-2000:]
+        assert not (tmp_path / name).exists()
+
+    def test_inspect_currentframe_answers_none_to_the_plot(self, tmp_path: Path) -> None:
+        """`hide_frames` replaces `inspect.currentframe` with `frame_for_readers`, which hands a frame to
+        `FRAME_READERS` alone: plot code gets None, not a refusal, so the run goes on."""
+        body = "import inspect\nassert inspect.currentframe() is None\n"
+        body += "def nested():\n    return inspect.currentframe()\nassert nested() is None\n"
+        exit_code, stderr = render(tmp_path, body)
+        assert exit_code == 0, stderr[-2000:]
+        assert "blocked by the" not in stderr
+        assert (tmp_path / "plot-light.png").exists()
+
+    def test_pandas_chained_assignment_on_a_copy_warns_and_renders(self, tmp_path: Path) -> None:
+        """pandas' check (`is_local_in_caller_frame`, a `FRAME_READERS` entry) reads the plot's frame, decides the
+        Series is a temporary and warns; the warning names the plot's line and the plot renders."""
+        body = "import pandas as pd\ndf = pd.DataFrame({'a': [1.0, None], 'b': [1, 2]})\nsub = df[df['b'] > 0]\n"
+        body += "sub['a'].fillna(0, inplace=True)\n"
+        exit_code, stderr = render(tmp_path, body)
+        assert exit_code == 0, stderr[-2000:]
+        assert "plot.py:8: ChainedAssignmentError" in stderr, stderr[-2000:]
+        assert "blocked by the" not in stderr
+        assert (tmp_path / "plot-light.png").exists() and (tmp_path / "probe-light.json").exists()
+
+    def test_plotnine_renders_and_probes(self, tmp_path: Path) -> None:
+        """plotnine's `Environment.capture` reads the plot's frame (`FRAME_READERS`) to look `aes("x", "y")` up, and
+        the probe measures the figure plotnine builds without a canvas (`_renderer` attaches Agg's)."""
+        pytest.importorskip("plotnine")
+        code = (
+            "import os\n\nimport pandas as pd\nfrom plotnine import aes, geom_point, ggplot\n\n"
+            "THEME = os.environ['ANYPLOT_THEME']\n"
+            "df = pd.DataFrame({'x': [1.0, 2.0, 3.0], 'y': [2.0, 1.0, 3.0]})\n"
+            "plot = ggplot(df, aes('x', 'y')) + geom_point()\n"
+            "plot.save(f'plot-{THEME}.png', dpi=100, width=4, height=3, units='in', verbose=False)\n"
+        )
+        exit_code, stderr = render_file(tmp_path, code)
+        assert exit_code == 0, stderr[-3000:]
+        assert "blocked by the" not in stderr
+        png = (tmp_path / "plot-light.png").read_bytes()
+        assert struct.unpack(">II", png[16:24]) == (400, 300)
+        probe = json.loads((tmp_path / "probe-light.json").read_text(encoding="utf-8"))
+        assert probe.get("canvas") == [400, 300] and probe.get("points") == 3, probe
+
+    def test_altair_renders_its_png_and_html(self, tmp_path: Path) -> None:
+        """altair draws through vl-convert, not a matplotlib figure, so the run writes no probe and needs none."""
+        pytest.importorskip("altair")
+        pytest.importorskip("vl_convert")
+        code = (
+            "import os\n\nimport altair as alt\nimport pandas as pd\n\n"
+            "THEME = os.environ['ANYPLOT_THEME']\n"
+            "df = pd.DataFrame({'x': ['a', 'b', 'c'], 'y': [1, 3, 2]})\n"
+            "chart = alt.Chart(df).mark_bar().encode(x='x:N', y='y:Q').properties(width=200, height=150)\n"
+            "chart.save(f'plot-{THEME}.png', scale_factor=2.0)\n"
+            "chart.save(f'plot-{THEME}.html')\n"
+        )
+        exit_code, stderr = render_file(tmp_path, code)
+        assert exit_code == 0, stderr[-3000:]
+        assert "blocked by the" not in stderr
+        assert (tmp_path / "plot-light.png").read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+        assert "<html" in (tmp_path / "plot-light.html").read_text(encoding="utf-8")
+
     def test_a_syntax_error_is_reported_before_the_guard(self, tmp_path: Path) -> None:
         exit_code, stderr = render(tmp_path, "x = (\n")
         assert exit_code != 0 and "SyntaxError" in stderr and 'plot.py", line' in stderr
@@ -296,19 +377,25 @@ CATALOGUE_UNDER_GUARD = [
     pytest.param("mosaic-categorical", "matplotlib", id="mosaic-categorical/matplotlib: a statsmodels graphic"),
     pytest.param("line-arrhenius", "matplotlib", id="line-arrhenius/matplotlib: mathtext"),
     pytest.param("silhouette-basic", "seaborn", id="silhouette-basic/seaborn: KMeans"),
+    pytest.param("scatter-basic", "plotnine", id="scatter-basic/plotnine: aes through Environment.capture"),
+    pytest.param("scatter-basic", "altair", id="scatter-basic/altair: vl-convert, PIL padding and the HTML"),
 ]
+LIBRARY_MODULES = {"seaborn": ("seaborn",), "plotnine": ("plotnine",), "altair": ("altair", "vl_convert")}
+"""The modules a library's catalogue case needs beyond matplotlib's stack; CI's test environment installs none."""
 
 
 @pytest.mark.parametrize(("spec_id", "library"), CATALOGUE_UNDER_GUARD)
 def test_catalogue_files_render_under_the_guard(tmp_path: Path, spec_id: str, library: str) -> None:
     """Real catalogue files, normalised as a session opening does, render under the plot guard: a guard change that
-    breaks scikit-learn, statsmodels or mathtext fails here. The seaborn case needs seaborn, which CI's test
-    environment does not install; the renderer-image job of `ci-image.yml` renders seaborn through the harness."""
+    breaks scikit-learn, statsmodels, mathtext, plotnine's frame read or altair's vl-convert fails here. The seaborn,
+    plotnine and altair cases need their libraries, which CI's test environment does not install; the renderer-image
+    job of `ci-image.yml` renders all three through the harness in the image. altair draws no matplotlib figure, so its
+    run writes no probe: the PNG and its HTML twin are what the case checks."""
     from agents.anyplot.code.normalise import normalise
     from core.utils import strip_noqa_comments
 
-    if library == "seaborn":
-        pytest.importorskip("seaborn")
+    for module in LIBRARY_MODULES.get(library, ()):
+        pytest.importorskip(module)
     source = REPO_ROOT / "plots" / spec_id / "implementations" / "python" / f"{library}.py"
     if not source.exists():
         pytest.skip(f"{spec_id}/{library} is absent")
@@ -331,7 +418,11 @@ def test_catalogue_files_render_under_the_guard(tmp_path: Path, spec_id: str, li
     )
     assert done.returncode == 0, done.stderr[-3000:]
     assert "blocked by the" not in done.stderr
-    assert (tmp_path / "plot-light.png").exists() and (tmp_path / "probe-light.json").exists()
+    assert (tmp_path / "plot-light.png").exists()
+    if library == "altair":
+        assert (tmp_path / "plot-light.html").exists()
+    else:
+        assert (tmp_path / "probe-light.json").exists()
 
 
 class TestPlotGuardUnit:
@@ -404,6 +495,38 @@ class TestPlotGuardUnit:
         with pytest.raises(PermissionError):
             guard("ctypes.dlopen", ("libc",))
         assert guard.blocked == "exec"
+
+
+class TestPlotModeHelpers:
+    """The helpers plot mode installs, called in this process (the render tests see them only through the sandbox)."""
+
+    def test_frame_for_readers_answers_the_caller_frame_or_none(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """`inspect.currentframe` in plot mode: the caller's frame while the guard lets `sys._getframe` through,
+        None when it refuses, because the callers expect a frame or None and never an error."""
+        frame = harness.frame_for_readers()
+        assert frame is not None and frame.f_code.co_name == "test_frame_for_readers_answers_the_caller_frame_or_none"
+
+        def refused(depth: int = 0) -> None:
+            raise PermissionError("blocked by the render sandbox: sys._getframe")
+
+        with monkeypatch.context() as patched:
+            patched.setattr(harness.sys, "_getframe", refused)
+            assert harness.frame_for_readers() is None
+
+    def test_the_probe_attaches_an_agg_canvas_to_a_bare_figure(self) -> None:
+        """plotnine saves a figure it built with `Figure()`, whose base canvas has no renderer: `_renderer` switches
+        it to Agg as `savefig` would, and leaves a figure that has an Agg canvas on it."""
+        from matplotlib.backends.backend_agg import FigureCanvasAgg, RendererAgg
+        from matplotlib.figure import Figure
+
+        bare = Figure()
+        assert not hasattr(bare.canvas, "get_renderer")
+        renderer = harness._renderer(bare)
+        assert isinstance(bare.canvas, FigureCanvasAgg) and isinstance(renderer, RendererAgg)
+
+        with_agg = Figure()
+        canvas = FigureCanvasAgg(with_agg)
+        assert harness._renderer(with_agg) is canvas.get_renderer() and with_agg.canvas is canvas
 
 
 class TestDataGuardCode:

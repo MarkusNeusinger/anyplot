@@ -48,6 +48,7 @@ from agents.anyplot.policy import refusal, scope_rubric
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
 from agents.anyplot.render.contract import RenderJob, Theme
 from agents.anyplot.render.png import size_of
+from agents.anyplot.render.runtimes.python import PythonRuntime
 from agents.anyplot.render.store import StoredRender
 from agents.anyplot.render.watermark import add_footer
 from agents.anyplot.run_queue import RunQueue
@@ -702,7 +703,7 @@ async def test_code_that_cannot_take_the_loader_is_repaired(
     client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
-    loader_block = pipeline.PythonRuntime.loader_block
+    loader_block = PythonRuntime.loader_block
     calls: list[str] = []
 
     def refuse_once(self: Any, working: str, **kwargs: Any) -> str:
@@ -711,7 +712,7 @@ async def test_code_that_cannot_take_the_loader_is_repaired(
             raise ValueError("the placeholder line is missing")
         return loader_block(self, working, **kwargs)
 
-    monkeypatch.setattr(pipeline.PythonRuntime, "loader_block", refuse_once)
+    monkeypatch.setattr(PythonRuntime, "loader_block", refuse_once)
     fake = swap_models("gemini", default_script(plans=[SCATTER_PLAN, {"edits": [], "changes": []}]))
     sid = await open_session(client)
 

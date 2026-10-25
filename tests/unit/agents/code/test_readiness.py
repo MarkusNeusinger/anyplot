@@ -56,6 +56,115 @@ def categories(result: Readiness) -> list[str]:
     return [reason.split(":")[0] for reason in result.reasons]
 
 
+ALL_ENABLED = ("matplotlib", "seaborn", "plotnine", "altair")
+PLOTNINE_HEAD = source("""
+    import os
+
+    import pandas as pd
+    from plotnine import aes, geom_point, ggplot
+
+    THEME = os.getenv("ANYPLOT_THEME", "light")
+    PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+    df = load_user_data()
+    plot = ggplot(df, aes(x="x", y="y")) + geom_point(color=PAGE_BG)
+""")
+PLOTNINE_SAVE = 'plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)\n'
+PLOTNINE_CANVAS = (
+    "canvas: plotnine sizes its canvas on the save, not through a matplotlib figure; "
+    "the render relies on the R3 canvas gate and padding"
+)
+ALTAIR = source("""
+    import os
+
+    import altair as alt
+    from PIL import Image
+
+    THEME = os.getenv("ANYPLOT_THEME", "light")
+    PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+    df = load_user_data()
+    chart = alt.Chart(df).mark_point().encode(x="x:Q", y="y:Q").properties(width=740, height=400, background=PAGE_BG)
+    chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+    _img = Image.open(f"plot-{THEME}.png").convert("RGB")
+    if _img.size != (3200, 1800):
+        _canvas = Image.new("RGB", (3200, 1800), PAGE_BG)
+        _canvas.paste(_img, (0, 0))
+        _canvas.save(f"plot-{THEME}.png")
+    chart.save(f"plot-{THEME}.html")
+""")
+
+
+class TestOtherPythonLibraries:
+    """plotnine and altair go through the same scan with their own save rule (`regions.SAVE_RULES`)."""
+
+    @pytest.mark.parametrize(
+        "save",
+        [PLOTNINE_SAVE, 'fig = plot.draw()\nfig.savefig(f"plot-{THEME}.png", dpi=300)\n'],
+        ids=["plot.save", "fig.savefig after draw"],
+    )
+    def test_plotnine_save_forms_are_clean(self, save: str) -> None:
+        result = scan(PLOTNINE_HEAD + save, spec_id="scatter-basic", library="plotnine", enabled_libraries=ALL_ENABLED)
+
+        assert result.status == "clean" and result.hints == []
+        assert result.reasons == [PLOTNINE_CANVAS]
+
+    def test_plotnine_blocks_like_matplotlib(self) -> None:
+        single = scan(
+            PLOTNINE_HEAD + 'plot.save("plot.png", dpi=300)\n',
+            spec_id="s",
+            library="plotnine",
+            enabled_libraries=ALL_ENABLED,
+        )
+        assert single.status == "blocked"
+        assert any(r.startswith("savefig-target: single-theme save target 'plot.png'") for r in single.reasons)
+        assert any(reason.startswith("security: savefig-target") for reason in single.reasons)
+
+        path = scan(
+            PLOTNINE_HEAD + 'plot.save(f"plot-{THEME}.png", path="out")\n',
+            spec_id="s",
+            library="plotnine",
+            enabled_libraries=ALL_ENABLED,
+        )
+        assert path.status == "blocked"
+        assert any(reason.endswith("save does not take 'path=' here") for reason in path.reasons), path.reasons
+
+        nested = scan(
+            PLOTNINE_HEAD + "if True:\n    " + PLOTNINE_SAVE,
+            spec_id="s",
+            library="plotnine",
+            enabled_libraries=ALL_ENABLED,
+        )
+        assert "savefig-target: the last save is not a module-level statement" in nested.reasons
+
+        disabled = scan(PLOTNINE_HEAD + PLOTNINE_SAVE, spec_id="s", library="plotnine", enabled_libraries=ENABLED)
+        assert disabled.status == "blocked" and disabled.reasons == ["library-disabled: plotnine is not enabled"]
+
+    def test_altair_file_with_the_pil_block_is_eligible(self) -> None:
+        result = scan(ALTAIR, spec_id="scatter-basic", library="altair", enabled_libraries=ALL_ENABLED)
+
+        assert result.status == "clean", result.reasons
+        assert result.reasons == [PLOTNINE_CANVAS.replace("plotnine", "altair")]
+
+        # Without the module-level PNG save the padding block's nested `_canvas.save` is the only writer of the PNG.
+        nested_only = ALTAIR.replace('chart.save(f"plot-{THEME}.png", scale_factor=4.0)\n', "")
+        blocked = scan(nested_only, spec_id="scatter-basic", library="altair", enabled_libraries=ALL_ENABLED)
+        assert blocked.status == "blocked"
+        assert blocked.reasons == ["savefig-target: the last save is not a module-level statement"]
+
+        html_only = ALTAIR.split("chart.save(")[0] + 'chart.save(f"plot-{THEME}.html")\n'
+        blocked = scan(html_only, spec_id="scatter-basic", library="altair", enabled_libraries=ALL_ENABLED)
+        assert blocked.status == "blocked"
+        assert blocked.reasons == ['security: savefig-target: no save of f"plot-{THEME}.png" found']
+
+    def test_an_unsupported_library_is_blocked_before_its_save_rule(self) -> None:
+        result = scan(PLOTNINE_HEAD + PLOTNINE_SAVE, spec_id="s", library="plotly", enabled_libraries=ALL_ENABLED)
+
+        assert result.status == "blocked"
+        assert result.reasons[:2] == [
+            "library-disabled: plotly is not enabled",
+            "unsupported-library: no normaliser for plotly",
+        ]
+
+
 def test_clean(validator_calls: list[str]) -> None:
     result = check('ax.plot(df["x"], df["y"], color=PAGE_BG)\nax.set_ylim(bottom=0)\nax.axhline(0)\n')
 
@@ -278,7 +387,7 @@ def test_crashing_validator_fails_closed(monkeypatch: pytest.MonkeyPatch) -> Non
     [
         (HEAD.replace('THEME = os.getenv("ANYPLOT_THEME", "light")', 'THEME = "light"') + SAVE, "no-theme"),
         (HEAD + 'plt.savefig("plot.png", dpi=400)\n', "savefig-target: single-theme savefig target 'plot.png'"),
-        (HEAD + 'plt.savefig(os.path.join(d, f"plot-{THEME}.png"))\n', "savefig-target: saves to os.path.join"),
+        (HEAD + 'plt.savefig(os.path.join(d, f"plot-{THEME}.png"))\n', "savefig-target: savefig saves to os.path.join"),
         (HEAD + "if True:\n    " + SAVE, "savefig-target: the last savefig is not a module-level statement"),
         (HEAD, "savefig-target: no savefig call"),
         (HEAD + 'fig.savefig("draft.png")\n' + SAVE, "savefig-target: single-theme savefig target 'draft.png'"),

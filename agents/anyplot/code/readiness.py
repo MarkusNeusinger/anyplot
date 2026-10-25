@@ -7,10 +7,12 @@
   yet (`unsupported-library`); the code does not parse (`syntax`); the SECURITY
   validator reports findings or fails (`security: <rule> ...`, quoting the validator's
   rule ids; it is asked only for a library with a normaliser); there is no module-level `THEME = os.getenv("ANYPLOT_THEME", ...)`
-  (`no-theme`); or a savefig saves anywhere but `f"plot-{THEME}.png"`, or the last one
-  is missing or not a module-level statement (`savefig-target`; a plain string such
-  as `"plot.png"` is reported as a single-theme savefig target). Every blocking reason
-  is listed; `hints` stays empty.
+  (`no-theme`); or a save call of the library's rule (`regions.SAVE_RULES`: `savefig`,
+  plotnine's `save` and `ggsave`, altair's `save`) writes anywhere but `f"plot-{THEME}.png"`
+  (altair also `f"plot-{THEME}.html"`), or the last save of the PNG is missing or not a
+  module-level statement (`savefig-target`; a plain string such as `"plot.png"` is
+  reported as a single-theme target). Every blocking reason is listed; `hints` stays
+  empty.
 * `coupled`: eligible, but the code holds literals that only fit the catalogue's own
   data. Each category becomes one hint for the adapter (a `Note` of at most 300
   characters that names the lines) and one `reasons` entry (`limits: 3 lines`).
@@ -80,7 +82,7 @@ from core.spec_roles import MAP_SPECS
 
 from ..schemas import MAX_NOTE_CHARS
 from .normalise import SUPPORTED_LIBRARIES, measure_canvas
-from .regions import IMPRINT_NAMES, dotted_name, find_regions
+from .regions import IMPRINT_NAMES, dotted_name, find_regions, save_rule
 from .validate import validate_security
 
 
@@ -210,23 +212,25 @@ def scan(normalised_code: str, *, spec_id: str, library: str, enabled_libraries:
         return Readiness("blocked", [*blocked, f"syntax: line {exc.lineno} does not parse"])
     if library in SUPPORTED_LIBRARIES:
         blocked.extend(_security(normalised_code, library))
-    regions = find_regions(normalised_code, tree)
+    code_library = library if library in SUPPORTED_LIBRARIES else "matplotlib"  # an unsupported one is blocked above
+    rule = save_rule(code_library)
+    regions = find_regions(normalised_code, tree, library=code_library)
     if regions.theme is None:
         blocked.append('no-theme: no module-level THEME = os.getenv("ANYPLOT_THEME", ...)')
     for call in regions.savefig_calls:
-        if call.standard_target:
+        if call.standard_target or (rule.html and call.html_target):
             continue
         where = call.span.lines()
         if call.literal_target is not None:
             target = _snippet(repr(call.literal_target))
-            blocked.append(f"savefig-target: single-theme savefig target {target} at {where}")
+            blocked.append(f"savefig-target: single-theme {call.name} target {target} at {where}")
         else:
             target = _snippet(call.target or "no file argument")
-            blocked.append(f'savefig-target: saves to {target} at {where}, not f"plot-{{THEME}}.png"')
+            blocked.append(f'savefig-target: {call.name} saves to {target} at {where}, not f"plot-{{THEME}}.png"')
     if not regions.savefig_calls:
-        blocked.append("savefig-target: no savefig call")
+        blocked.append(f"savefig-target: no {rule.verb} call")
     elif regions.savefig is None:
-        blocked.append("savefig-target: the last savefig is not a module-level statement")
+        blocked.append(f"savefig-target: the last {rule.verb} is not a module-level statement")
     if blocked:
         return Readiness("blocked", [_clip(reason) for reason in blocked])
 
@@ -240,7 +244,7 @@ def scan(normalised_code: str, *, spec_id: str, library: str, enabled_libraries:
         count = len(items)
         reasons.append(f"{category}: {count} line{'s' if count != 1 else ''}")
         hints.append(_hint(prefix, items, advice))
-    canvas = measure_canvas(normalised_code)
+    canvas = measure_canvas(normalised_code, library=library)
     if canvas.note is not None:
         reasons.append(_clip(f"canvas: {canvas.note}; the render relies on the R3 canvas gate and padding"))
     return Readiness("coupled" if hints else "clean", reasons, hints)

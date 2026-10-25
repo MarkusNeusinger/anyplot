@@ -107,10 +107,14 @@ ARTIFACT_MEDIA_TYPES: dict[str, str] = {
     "plot-light.png": "image/png",
     "plot-dark.png": "image/png",
     "plot.py": "text/x-python; charset=utf-8",
+    "plot.R": "text/plain; charset=utf-8",
+    "plot.jl": "text/plain; charset=utf-8",
+    "plot.js": "text/javascript; charset=utf-8",
+    "plot.tsx": "text/plain; charset=utf-8",
     "data.csv": "text/csv; charset=utf-8",
 }
-"""The only artifact names the BFF fetches. The media type is set here and the
-upstream one is never forwarded."""
+"""The only artifact names the BFF fetches (the agents' `schemas.ArtifactName`: the two PNGs, the exported
+code under its language's name, the data). The media type is set here and the upstream one is never forwarded."""
 
 MAX_BUNDLE_BYTES = 32 * 1024 * 1024
 """The cap of a session bundle the BFF relays: Cloud Run's 32 MiB limit on an HTTP/1 response that is
@@ -1372,7 +1376,7 @@ async def submit_feedback(
     `data.csv` only with `include_data`); `result_version` 0 is the feedback on a chat
     that made no plot, whose bundle is the conversation, the profile and bindings and,
     with `include_data`, the session's current data (`422 no_data` before any data was
-    pasted or computed), but no image and no `plot.py`; `api/agent_cases.py` splits it into the case
+    pasted or computed), but no image and no code file; `api/agent_cases.py` splits it into the case
     files and the manifest, which it uploads last, all in a worker thread. A later
     submission for the same version is a new case that names the earlier one in
     `replaces`, which supersedes that case's row for the same session hash and result

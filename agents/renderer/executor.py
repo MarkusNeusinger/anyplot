@@ -94,6 +94,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
+from .commands import EXEC_FLAG, LANGUAGES, RuntimeCommand, command_for, toolchains
 from .settings import RendererSettings
 from .wire import (
     CONVERT_INPUT_FILE,
@@ -400,8 +401,20 @@ def read_regular(path: Path, max_bytes: int) -> bytes | None:
     return bytes(chunks)
 
 
-def sandbox_env(config: ExecutorConfig, theme: Theme | None, cpu_s: int, *, convert: bool = False) -> dict[str, str]:
+def sandbox_env(
+    config: ExecutorConfig,
+    theme: Theme | None,
+    cpu_s: int,
+    *,
+    convert: bool = False,
+    command: RuntimeCommand | None = None,
+) -> dict[str, str]:
     """The complete environment inside the sandbox: nothing of the host's reaches it.
+
+    `command` is the render's row of the command table (`commands.py`): a Python row gets the
+    matplotlib settings, any other row its own environment, and a row that switches
+    `RLIMIT_AS` or `RLIMIT_NPROC` off (Node, Chromium, Julia) gets no such variable. Without a
+    row (a data run, a conversion, the tests' direct calls) the Python settings apply.
 
     A data run or a conversion (`theme` None) gets no theme and no matplotlib settings: it imports no plotting
     library. A conversion also gets Arrow's system allocator (`ARROW_DEFAULT_MEMORY_POOL=system`), so pyarrow's
@@ -410,7 +423,9 @@ def sandbox_env(config: ExecutorConfig, theme: Theme | None, cpu_s: int, *, conv
     limit.
     """
     plot: dict[str, str] = {}
-    if theme is not None:
+    if theme is not None and command is not None and not command.in_process:
+        plot = {"ANYPLOT_THEME": theme, **command.env}
+    elif theme is not None:
         plot = {
             "ANYPLOT_THEME": theme,
             "MPLBACKEND": "Agg",
@@ -431,18 +446,29 @@ def sandbox_env(config: ExecutorConfig, theme: Theme | None, cpu_s: int, *, conv
     }
     if convert:
         env["ARROW_DEFAULT_MEMORY_POOL"] = "system"
-    if config.rlimit_as_mb:
+    if config.rlimit_as_mb and (command is None or command.rlimit_as):
         env["ANYPLOT_RLIMIT_AS_MB"] = str(config.rlimit_as_mb)
-    if config.rlimit_nproc:
+    if config.rlimit_nproc and (command is None or command.rlimit_nproc):
         env["ANYPLOT_RLIMIT_NPROC"] = str(config.rlimit_nproc)
     return env
 
 
 def build_argv(
-    config: ExecutorConfig, name: str, run_dir: Path, theme: Theme | None, cpu_s: int, *, convert: bool = False
+    config: ExecutorConfig,
+    name: str,
+    run_dir: Path,
+    theme: Theme | None,
+    cpu_s: int,
+    *,
+    convert: bool = False,
+    command: RuntimeCommand | None = None,
 ) -> list[str]:
     """The `sandbox do` command of one theme, of a data run (`theme` None, the harness in data mode) or of a
-    conversion (`convert`, the harness in convert mode); asserted to carry neither `--write` nor `--allow-egress`."""
+    conversion (`convert`, the harness in convert mode); asserted to carry neither `--write` nor `--allow-egress`.
+
+    A theme's `command` is its row of the command table: a Python row runs the harness in plot mode on `plot.py`;
+    any other row runs the harness in exec mode (`EXEC_FLAG`) with the row's own argv and code file. The argv
+    comes from the table alone; the request only selected the row."""
     argv = [
         config.sandbox_binary,
         "do",
@@ -454,14 +480,18 @@ def build_argv(
     if config.bind_tmp:
         argv += ["--mount", f"type=bind,source={run_dir / 'tmp'},destination=/tmp"]
     argv += ["-w", WORKDIR]
-    for key, value in sandbox_env(config, theme, cpu_s, convert=convert).items():
+    for key, value in sandbox_env(config, theme, cpu_s, convert=convert, command=command).items():
         argv += ["--env", f"{key}={value}"]
     flags = list(argv)
     argv += ["--", config.python, *INTERPRETER_FLAGS, config.harness]
     if convert:
         argv += [CONVERT_FLAG, CONVERT_INPUT_FILE]
+    elif theme is None:
+        argv += [DATA_FLAG, SNIPPET_FILE]
+    elif command is not None and not command.in_process:
+        argv += [EXEC_FLAG, "--", *command.argv, command.code_file]
     else:
-        argv += [CODE_FILE] if theme is not None else [DATA_FLAG, SNIPPET_FILE]
+        argv += [command.code_file if command is not None else CODE_FILE]
     if any(part.split("=", 1)[0] in FORBIDDEN_FLAGS for part in flags):
         raise AssertionError("a sandbox must never get --write or --allow-egress")
     return argv
@@ -614,6 +644,8 @@ class Executor(Protocol):
     @property
     def available(self) -> bool: ...
 
+    def languages(self) -> dict[str, bool]: ...
+
     async def run_theme(self, job: RenderRequest, theme: Theme) -> ThemeRun: ...
 
     async def run_data(self, job: DataRunRequest) -> DataRun: ...
@@ -646,10 +678,23 @@ class SandboxExecutor:
     def available(self) -> bool:
         return os.access(self.config.sandbox_binary, os.X_OK)
 
+    def languages(self) -> dict[str, bool]:
+        """Per language of the command table, whether every binary of its toolchain is on the sandbox's `PATH`.
+
+        The sandbox sees this image's files, so the lookup runs here, on the host side of the
+        same filesystem. Python needs nothing beyond the configured interpreter.
+        """
+        needed = toolchains()
+        return {
+            language: all(shutil.which(binary, path=SANDBOX_PATH) is not None for binary in needed[language])
+            for language in LANGUAGES
+        }
+
     async def run_theme(self, job: RenderRequest, theme: Theme) -> ThemeRun:
         """Render one theme; a launcher failure before the harness started is retried once."""
-        files: dict[str, str | bytes] = {CODE_FILE: job.source, DATA_FILE: job.data_csv}
-        attempt, attempts = await self._launch(files, theme, job.timeout_s)
+        command = command_for(job.language, job.library)
+        files: dict[str, str | bytes] = {command.code_file: job.source, DATA_FILE: job.data_csv}
+        attempt, attempts = await self._launch(files, theme, job.timeout_s, command=command)
         return attempt.to_wire(theme, attempts)
 
     async def run_data(self, job: DataRunRequest) -> DataRun:
@@ -669,7 +714,13 @@ class SandboxExecutor:
         return attempt.to_convert_wire(attempts)
 
     async def _launch(
-        self, files: dict[str, str | bytes], theme: Theme | None, timeout_s: float, *, convert: bool = False
+        self,
+        files: dict[str, str | bytes],
+        theme: Theme | None,
+        timeout_s: float,
+        *,
+        convert: bool = False,
+        command: RuntimeCommand | None = None,
     ) -> tuple[Attempt, int]:
         """One run (a theme, a data run when `theme` is None, a conversion with `convert`) and its launches; one
         retry for a launcher failure."""
@@ -680,13 +731,13 @@ class SandboxExecutor:
         label = theme if theme is not None else CONVERT_LABEL if convert else DATA_LABEL
         cpu_s = run_cpu_seconds(self.config.rlimit_cpu_s, timeout_s)
         started = self.clock()
-        attempt = await self._attempt(files, theme, cpu_s, timeout_s, convert=convert)
+        attempt = await self._attempt(files, theme, cpu_s, timeout_s, convert=convert, command=command)
         attempts = 1
         if attempt.launcher_failed:
             remaining = timeout_s - (self.clock() - started)
             _log_attempt(attempt, label, retry=remaining >= MIN_RETRY_S)
             if remaining >= MIN_RETRY_S:
-                attempt = await self._attempt(files, theme, cpu_s, remaining, convert=convert)
+                attempt = await self._attempt(files, theme, cpu_s, remaining, convert=convert, command=command)
                 attempts = 2
             if attempt.launcher_failed:
                 attempt.reason = "launcher"
@@ -694,14 +745,21 @@ class SandboxExecutor:
         return attempt, attempts
 
     async def _attempt(
-        self, files: dict[str, str | bytes], theme: Theme | None, cpu_s: int, timeout_s: float, *, convert: bool = False
+        self,
+        files: dict[str, str | bytes],
+        theme: Theme | None,
+        cpu_s: int,
+        timeout_s: float,
+        *,
+        convert: bool = False,
+        command: RuntimeCommand | None = None,
     ) -> Attempt:
         label = theme if theme is not None else CONVERT_LABEL if convert else DATA_LABEL
         name = f"r-{secrets.token_hex(6)}-{label}"
         run_dir = self.config.runs_dir / name
         try:
             self._prepare(run_dir, files)
-            return await self._run(name, run_dir, theme, cpu_s, timeout_s, convert=convert)
+            return await self._run(name, run_dir, theme, cpu_s, timeout_s, convert=convert, command=command)
         except OSError as exc:
             # A full volume, a failed fork: the host could not run the job, which is
             # not the code's fault. `_run` has stopped any sandbox it started.
@@ -730,9 +788,17 @@ class SandboxExecutor:
                 (work / file_name).write_text(content, encoding="utf-8")
 
     async def _run(
-        self, name: str, run_dir: Path, theme: Theme | None, cpu_s: int, timeout_s: float, *, convert: bool = False
+        self,
+        name: str,
+        run_dir: Path,
+        theme: Theme | None,
+        cpu_s: int,
+        timeout_s: float,
+        *,
+        convert: bool = False,
+        command: RuntimeCommand | None = None,
     ) -> Attempt:
-        argv = build_argv(self.config, name, run_dir, theme, cpu_s, convert=convert)
+        argv = build_argv(self.config, name, run_dir, theme, cpu_s, convert=convert, command=command)
         started = self.clock()
         process = await asyncio.create_subprocess_exec(
             *argv,

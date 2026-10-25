@@ -144,19 +144,26 @@ FailureReason = Literal["validation", "render", "deadline", "budget", "error"]
 NotReadyReason = Literal["no_dataset", "incomplete_bindings", "data_unconfirmed"]
 """`data_unconfirmed`: the dataset and its bindings are there, but the user has not confirmed
 them in the data panel yet (step 1 of two, owner rule of 2026-10-11)."""
-ArtifactName = Literal["plot-light.png", "plot-dark.png", "plot.py", "data.csv"]
+ArtifactName = Literal[
+    "plot-light.png", "plot-dark.png", "plot.py", "plot.R", "plot.jl", "plot.js", "plot.tsx", "data.csv"
+]
+"""A version's downloadable files: the PNG per theme, the exported code under its language's name (the runtime's
+`code_artifact`: `plot.py` for Python, `plot.R`, `plot.jl`, `plot.js`, `plot.tsx`), and the data."""
+CodeArtifact = Literal["plot.py", "plot.R", "plot.jl", "plot.js", "plot.tsx"]
 
 FAILURE_REASONS: frozenset[str] = frozenset(get_args(FailureReason))
 NOT_READY_REASONS: frozenset[str] = frozenset(get_args(NotReadyReason))
+CODE_ARTIFACTS: frozenset[str] = frozenset(get_args(CodeArtifact))
 PNG_ARTIFACTS: dict[str, ArtifactName] = {"light": "plot-light.png", "dark": "plot-dark.png"}
 """The PNG artifact of each theme, in the order artifacts are listed."""
+DEFAULT_CODE_ARTIFACT: CodeArtifact = "plot.py"
 
 
-def artifact_names(themes: Iterable[str]) -> list[ArtifactName]:
-    """A version's artifacts: the PNG of every rendered theme (light first), then `plot.py` and `data.csv`."""
+def artifact_names(themes: Iterable[str], code_artifact: CodeArtifact = DEFAULT_CODE_ARTIFACT) -> list[ArtifactName]:
+    """A version's artifacts: the PNG of every rendered theme (light first), then the code and `data.csv`."""
     rendered = set(themes)
     names: list[ArtifactName] = [name for theme, name in PNG_ARTIFACTS.items() if theme in rendered]
-    code_and_data: list[ArtifactName] = ["plot.py", "data.csv"]
+    code_and_data: list[ArtifactName] = [code_artifact, "data.csv"]
     return names + code_and_data
 
 

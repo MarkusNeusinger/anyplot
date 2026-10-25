@@ -1,6 +1,8 @@
-"""The normaliser: catalogue code in, code that renders the exact canvas out (matplotlib and seaborn).
+"""The normaliser: catalogue code in, code that renders the exact canvas out.
 
-`normalise(code, library=...)` makes four rewrites, each only when it applies:
+`normalise(code, library=...)` serves every library with a save rule
+(`regions.SAVE_RULES`: matplotlib, seaborn, plotnine, altair) and makes four rewrites,
+each only when it applies:
 
 1. **Catalogue header and title.** The four-line module docstring that opens every
    catalogue file (lines `anyplot.ai`, `<spec-id>: <title>`, `Library: ...`,
@@ -11,11 +13,13 @@
    catalogue title rule does not apply to user plots. The call that shows it stays, so
    code that positions the title keeps working. A title the adapter wrote in its own
    words does not have that form and stays, and so does a title built by an f-string.
-2. **Savefig target.** A target that is a path whose file name is the theme f-string,
+2. **Save target.** A target that is a path whose file name is the theme f-string,
    such as `os.path.join(script_dir, f"plot-{THEME}.png")`, `OUT / f"plot-{THEME}.png"`,
    or a module-level name assigned one of those (`output_path`), becomes the literal
-   `f"plot-{THEME}.png"` in every savefig call, so the file lands next to the run form.
-   A single-theme target such as `"plot.png"` stays (the readiness scan blocks it).
+   `f"plot-{THEME}.png"` in every save call of the library's rule (`savefig`, plotnine's
+   `save` and `ggsave`, altair's `save`, also for its `f"plot-{THEME}.html"`), so the
+   file lands next to the run form. A single-theme target such as `"plot.png"` stays
+   (the readiness scan blocks it).
 3. **`sys.path` guard and file paths.** A file named `matplotlib.py` or `seaborn.py`
    shadows the installed package when run from its own directory, so 120 of 650
    catalogue files strip their directory from `sys.path` first. The run form is
@@ -48,7 +52,11 @@
    the single literal `figsize=`. The canvas rewrite is all or nothing: when the figure
    size is missing or not a literal, when its aspect reaches neither target within 16 px,
    or when a savefig takes `**kwargs`, `bbox_inches` and the dpi stay as they are and a
-   note says why (`readiness.scan` reports it as a `canvas:` reason).
+   note says why (`readiness.scan` reports it as a `canvas:` reason). The rewrite is
+   matplotlib's (`SaveRule.canvas`): plotnine sizes the canvas on its save (`width=`,
+   `height=`, `units=`, `dpi=`, 3200x1800 in most catalogue files) and altair through
+   its chart's `width` and `height` times `scale_factor`, padded by its PIL block, so
+   for those two the step only notes that the render relies on the R3 canvas gate.
 
 Each rewrite is checked with `ast.parse` and dropped with a note if it would not parse.
 The result is idempotent: `normalise(normalise(x)) == normalise(x)`.
@@ -60,8 +68,13 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from fractions import Fraction
+from functools import partial
 
 from .regions import (
+    HTML_SUFFIX,
+    HTML_TARGET,
+    PNG_SUFFIX,
+    SAVE_RULES,
     STANDARD_TARGET,
     Number,
     Regions,
@@ -71,11 +84,14 @@ from .regions import (
     as_number,
     dotted_name,
     find_regions,
-    is_standard_target,
+    is_theme_target,
+    save_rule,
+    save_target,
 )
 
 
-SUPPORTED_LIBRARIES = frozenset({"matplotlib", "seaborn"})
+SUPPORTED_LIBRARIES = frozenset(SAVE_RULES)
+"""The libraries the normaliser serves: every library with a save rule (`regions.SAVE_RULES`)."""
 # Modules whose import goes whenever nothing kept uses it: the guard family, all banned
 # by the SECURITY validator.
 GUARD_MODULES = frozenset({"sys", "importlib", "pathlib"})
@@ -149,10 +165,10 @@ def normalise_report(code: str, *, library: str) -> Normalised:
     notes: list[str] = []
     steps: tuple[tuple[str, Callable[[str], tuple[str, list[str], list[str]]]], ...] = (
         ("header", _strip_header),
-        ("savefig target", _rewrite_savefig_targets),
+        ("savefig target", partial(_rewrite_savefig_targets, library=library)),
         ("sys.path guard", _strip_path_guard),
         ("title", _strip_title),
-        ("canvas", _normalise_canvas),
+        ("canvas", partial(_normalise_canvas, library=library)),
     )
     for name, step in steps:
         new_code, step_changes, step_notes = step(code)
@@ -211,9 +227,17 @@ def effective_dpi(regions: Regions, call: SavefigCall) -> tuple[Number | None, s
     return DEFAULT_DPI, "matplotlib default"
 
 
-def measure_canvas(code: str) -> Canvas:
-    """The canvas `code` renders, judged from its literals; raises `SyntaxError` if it does not parse."""
-    regions = find_regions(code)
+def measure_canvas(code: str, *, library: str = "matplotlib") -> Canvas:
+    """The canvas `code` renders, judged from its literals; raises `SyntaxError` if it does not parse.
+
+    Only matplotlib's figure size times dpi can be read (`SaveRule.canvas`); for the other
+    libraries the canvas is a note that the render relies on the R3 gate.
+    """
+    if not save_rule(library).canvas:
+        return Canvas(
+            None, None, None, None, f"{library} sizes its canvas on the save, not through a matplotlib figure"
+        )
+    regions = find_regions(code, library=library)
     size, size_source = figure_size(regions)
     call = regions.savefig or (regions.savefig_calls[-1] if regions.savefig_calls else None)
     if call is None:
@@ -316,8 +340,11 @@ def _same_dpi(value: object, literal: str, size: tuple[Number, Number], target: 
     return number is not None and (number == float(literal) or _pixels(size, number) == target)
 
 
-def _normalise_canvas(code: str) -> tuple[str, list[str], list[str]]:
-    regions = find_regions(code)
+def _normalise_canvas(code: str, *, library: str) -> tuple[str, list[str], list[str]]:
+    if not save_rule(library).canvas:
+        note = f"canvas: {library} sizes its canvas on the save, not through a matplotlib figure; nothing to rewrite"
+        return code, [], [note]
+    regions = find_regions(code, library=library)
     index = SourceIndex(code)
     if not regions.savefig_calls:
         return code, [], ["canvas: no savefig call; nothing to normalise"]
@@ -547,20 +574,24 @@ def _computes_path(stmt: ast.stmt, path_names: set[str], os_names: set[str], pat
     return False
 
 
-def _theme_file_path(node: ast.expr) -> bool:
-    """A path whose file name is `f"plot-{THEME}.png"`: `os.path.join(d, f)`, `d / f`, `str(d / f)`."""
+def _theme_file_path(node: ast.expr, suffix: str = PNG_SUFFIX) -> bool:
+    """A path whose file name is `f"plot-{THEME}<suffix>"`: `os.path.join(d, f)`, `d / f`, `str(d / f)`."""
     if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
-        return is_standard_target(node.right)
+        return is_theme_target(node.right, suffix)
     if isinstance(node, ast.Call) and not node.keywords:
         callee = dotted_name(node.func) or ""
         if callee.endswith("path.join") and len(node.args) >= 2:
-            return is_standard_target(node.args[-1])
+            return is_theme_target(node.args[-1], suffix)
         if callee in ("str", "os.fspath") and len(node.args) == 1:
-            return _theme_file_path(node.args[0])
+            return _theme_file_path(node.args[0], suffix)
     return False
 
 
-def _rewrite_savefig_targets(code: str) -> tuple[str, list[str], list[str]]:
+def _rewrite_savefig_targets(code: str, *, library: str) -> tuple[str, list[str], list[str]]:
+    rule = save_rule(library)
+    suffixes = (
+        ((PNG_SUFFIX, STANDARD_TARGET), (HTML_SUFFIX, HTML_TARGET)) if rule.html else ((PNG_SUFFIX, STANDARD_TARGET),)
+    )
     tree = ast.parse(code)
     index = SourceIndex(code)
     assigned: dict[str, list[ast.Assign]] = {}
@@ -570,20 +601,26 @@ def _rewrite_savefig_targets(code: str) -> tuple[str, list[str], list[str]]:
     edits: list[TextEdit] = []
     changes: list[str] = []
     for node in ast.walk(tree):
-        if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "savefig"):
+        if not isinstance(node, ast.Call):
             continue
-        target = node.args[0] if node.args else next((kw.value for kw in node.keywords if kw.arg == "fname"), None)
-        if target is None or is_standard_target(target):
+        name = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", None)
+        if name not in rule.names:
+            continue
+        target = save_target(node, rule, name)
+        if target is None or any(is_theme_target(target, suffix) for suffix, _ in suffixes):
             continue
         value: ast.expr | None = target
         if isinstance(target, ast.Name):
             earlier = [stmt for stmt in assigned.get(target.id, []) if stmt.lineno < node.lineno]
             value = earlier[-1].value if earlier else None
-        if value is not None and _theme_file_path(value):
+        if value is None:
+            continue
+        literal = next((literal for suffix, literal in suffixes if _theme_file_path(value, suffix)), None)
+        if literal is not None:
             span = index.node_span(target)
-            edits.append((span.start, span.end, STANDARD_TARGET))
+            edits.append((span.start, span.end, literal))
             old = _WHITESPACE.sub(" ", code[span.start : span.end])
-            changes.append(f"savefig target {old} -> {STANDARD_TARGET} at {span.lines()}")
+            changes.append(f"{name} target {old} -> {literal} at {span.lines()}")
     if not edits:
         return code, [], []
     return _apply(code, edits), changes, []

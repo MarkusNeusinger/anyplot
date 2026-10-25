@@ -5,12 +5,17 @@ import ast
 import pytest
 
 from agents.anyplot.code.regions import (
+    HTML_SUFFIX,
+    SAVE_NAMES,
+    SAVE_RULES,
     SourceIndex,
     Span,
     dotted_name,
     find_regions,
     is_standard_target,
     is_theme_assignment,
+    is_theme_target,
+    save_rule,
 )
 from agents.anyplot.code.regions import tests_theme as value_tests_theme  # not named test* for pytest
 
@@ -127,20 +132,28 @@ def test_a_theme_token_picks_fixed_values_and_a_data_dependent_conditional_is_no
 
 
 @pytest.mark.skipif(not CATALOGUE_FILES, reason="plots/ is not checked out")
-def test_every_catalogue_theme_conditional_but_one_is_a_token() -> None:
-    """Measured on 2026-10-10: 2,745 theme-testing assignments in the 650 files, one of them data-dependent."""
+def test_every_catalogue_theme_conditional_but_five_is_a_token() -> None:
+    """Measured on 2026-10-10: 2,745 theme-testing assignments in the 650 matplotlib and seaborn files, one of them
+    data-dependent; on 2026-10-25, 5,438 in the 1,296 files of the four libraries, five of them (a colour taken from
+    a palette index or another plot colour, a tuple of channel arithmetic, a list of layers)."""
     narrowed = []
     for path in CATALOGUE_FILES:
         code = path.read_text(encoding="utf-8")
         tree = ast.parse(code)
-        tokens = {token.name for token in find_regions(code, tree).theme_tokens}
+        tokens = {token.name for token in find_regions(code, tree, library=path.stem).theme_tokens}
         for stmt in tree.body:
             if isinstance(stmt, ast.Assign) and len(stmt.targets) == 1 and isinstance(stmt.targets[0], ast.Name):
                 name = stmt.targets[0].id
                 if name != "THEME" and value_tests_theme(stmt.value) and name not in tokens:
                     narrowed.append(f"{path.parts[-4]}/{path.name}:{name}")
 
-    assert narrowed == ["box-basic/matplotlib.py:_tight_text_color"]
+    assert narrowed == [
+        "box-basic/matplotlib.py:_tight_text_color",
+        "energy-level-atomic/plotnine.py:BALMER_LABEL_COLOR",
+        "heatmap-cohort-retention/plotnine.py:RULE",
+        "slope-basic/altair.py:layers",
+        "span-basic/altair.py:WARNING_LABEL_COLOR",
+    ]
 
 
 @pytest.mark.parametrize(
@@ -186,7 +199,89 @@ def test_savefig_targets_fname_keyword_literal_and_nesting() -> None:
     first, second = regions.savefig_calls
     assert first.standard_target and first.statement is not None
     assert second.literal_target == "plot.png" and second.statement is None
-    assert regions.savefig is None  # the last savefig is not a module-level statement
+    assert regions.savefig is first  # the last module-level save of the PNG; the nested one writes elsewhere
+
+    nested = find_regions(
+        source("""
+        if True:
+            plt.savefig(f"plot-{THEME}.png")
+        plt.savefig("draft.png")
+    """)
+    )
+    assert [call.standard_target for call in nested.savefig_calls] == [True, False]
+    assert nested.savefig is None  # no module-level save of the PNG
+
+
+PLOTNINE = source("""
+    import os
+
+    import pandas as pd
+    from plotnine import aes, geom_point, ggplot, ggsave
+
+    THEME = os.getenv("ANYPLOT_THEME", "light")
+    PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+    df = load_user_data()
+    plot = ggplot(df, aes(x="x", y="y")) + geom_point()
+    ggsave(plot, filename=f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
+""")
+ALTAIR = source("""
+    import os
+
+    import altair as alt
+    from PIL import Image
+
+    THEME = os.getenv("ANYPLOT_THEME", "light")
+    PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+    df = load_user_data()
+    chart = alt.Chart(df).mark_point().encode(x="x:Q", y="y:Q").properties(width=740, height=400, background=PAGE_BG)
+    chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+    _img = Image.open(f"plot-{THEME}.png").convert("RGB")
+    if _img.size != (3200, 1800):
+        _canvas = Image.new("RGB", (3200, 1800), PAGE_BG)
+        _canvas.paste(_img, (0, 0))
+        _canvas.save(f"plot-{THEME}.png")
+    chart.save(f"plot-{THEME}.html")
+""")
+
+
+class TestSaveRules:
+    """One save rule per library (`SAVE_RULES`): which calls save, where the file is, what is protected."""
+
+    def test_every_rule_names_its_save_calls(self) -> None:
+        assert set(SAVE_RULES) == {"matplotlib", "seaborn", "plotnine", "altair"}
+        assert SAVE_NAMES == {"savefig", "save", "ggsave"}
+        assert save_rule("matplotlib").verb == "savefig" and save_rule("plotnine").verb == "save"
+        assert save_rule("altair").html and save_rule("altair").reopens and not save_rule("altair").canvas
+        assert save_rule("seaborn").canvas and not save_rule("plotnine").canvas
+        with pytest.raises(ValueError, match="no save rule"):
+            save_rule("plotly")
+
+    def test_plotnine_ggsave_takes_the_file_second(self) -> None:
+        regions = find_regions(PLOTNINE, library="plotnine")
+
+        (call,) = regions.savefig_calls
+        assert call.name == "ggsave" and call.standard_target and call.statement is not None
+        assert regions.savefig is call and call.dpi is not None and call.dpi.value == 400
+        positional = PLOTNINE.replace('filename=f"plot-{THEME}.png"', 'f"plot-{THEME}.png"')
+        assert find_regions(positional, library="plotnine").savefig_calls[0].standard_target
+        wrong_slot = PLOTNINE.replace('ggsave(plot, filename=f"plot-{THEME}.png"', 'ggsave(f"plot-{THEME}.png", plot')
+        assert not find_regions(wrong_slot, library="plotnine").savefig_calls[0].standard_target
+        # Read with matplotlib's rule the same code has no save call at all.
+        assert find_regions(PLOTNINE).savefig_calls == ()
+
+    def test_altair_protects_the_module_level_png_save(self) -> None:
+        regions = find_regions(ALTAIR, library="altair")
+
+        shapes = [(c.name, c.standard_target, c.html_target, c.statement is not None) for c in regions.savefig_calls]
+        assert shapes == [("save", True, False, True), ("save", True, False, False), ("save", False, True, True)]
+        assert regions.savefig is regions.savefig_calls[0]
+        assert [region.kind for region in regions.protected] == ["theme", "theme_token", "placeholder", "savefig"]
+        assert text(ALTAIR, regions.protected[-1].span) == 'chart.save(f"plot-{THEME}.png", scale_factor=4.0)\n'
+
+    def test_the_html_target_predicate(self) -> None:
+        html = ast.parse('f"plot-{THEME}.html"', mode="eval").body
+        assert is_theme_target(html, HTML_SUFFIX) and not is_theme_target(html) and not is_standard_target(html)
+        assert is_theme_target(ast.parse('f"plot-{THEME}.png"', mode="eval").body)
 
 
 def test_imprint_palette_name_and_palettes() -> None:

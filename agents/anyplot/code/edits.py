@@ -150,12 +150,15 @@ RESTORABLE_DRIFT: frozenset[str] = frozenset({"drift:theme", "drift:theme_token"
 """The drift kinds `restore_protected` may undo; a theme name bound again (`drift:rebind`) is never restored."""
 
 
-def apply_plan(working: str, plan: AdaptPlan) -> AppliedPlan:
-    """Apply `plan` to the working form `working`; see the module docstring."""
-    applied = _apply(working, plan)
+def apply_plan(working: str, plan: AdaptPlan, *, library: str = "matplotlib") -> AppliedPlan:
+    """Apply `plan` to the working form `working`; see the module docstring.
+
+    `library` picks the save rule (`regions.SAVE_RULES`) that finds the protected final save.
+    """
+    applied = _apply(working, plan, library)
     if applied.code is None:
         return applied
-    drift = _drift(working, applied.code)
+    drift = _drift(working, applied.code, library)
     if not drift:
         return applied
     lines = _with_drift_reminder([line for _, line in drift])
@@ -163,7 +166,7 @@ def apply_plan(working: str, plan: AdaptPlan) -> AppliedPlan:
     return AppliedPlan(None, lines[:MAX_FEEDBACK], kinds, applied.tolerant, drifted=applied.code)
 
 
-def restore_protected(base: str, code: str) -> str | None:
+def restore_protected(base: str, code: str, *, library: str = "matplotlib") -> str | None:
     """`code` with the base's text put back over every protected statement it changed, or None.
 
     Only when every drift of `code` against `base` is in `RESTORABLE_DRIFT`; a rebind,
@@ -173,14 +176,15 @@ def restore_protected(base: str, code: str) -> str | None:
     replaced region is a whole module-level statement's lines, so the splice keeps
     the code around it as the plan wrote it.
     """
-    drift = _drift(base, code)
+    drift = _drift(base, code, library)
     if not drift or not {kind for kind, _ in drift} <= RESTORABLE_DRIFT:
         return None
     try:
         before_tree, after_tree = ast.parse(base), ast.parse(code)
     except SyntaxError:
         return None
-    before, after = find_regions(base, before_tree), find_regions(code, after_tree)
+    before = find_regions(base, before_tree, library=library)
+    after = find_regions(code, after_tree, library=library)
     index = SourceIndex(code)
     assigned: dict[str, list[ast.stmt]] = {}
     for stmt in after_tree.body:
@@ -216,7 +220,7 @@ def restore_protected(base: str, code: str) -> str | None:
         ast.parse(restored)
     except SyntaxError:
         return None
-    return None if _drift(base, restored) else restored
+    return None if _drift(base, restored, library) else restored
 
 
 def _module_assignment(stmt: ast.stmt) -> str | None:
@@ -252,7 +256,7 @@ def _splice(code: str, splices: list[tuple[Span, str]]) -> str | None:
     return "".join(parts)
 
 
-def protected_drift(base: str, code: str) -> list[str]:
+def protected_drift(base: str, code: str, *, library: str = "matplotlib") -> list[str]:
     """Failure lines when `code` changed a protected region of `base` or binds a theme name again.
 
     The text checks per edit cannot see a `full_code` plan, nor an edit that adds
@@ -265,7 +269,7 @@ def protected_drift(base: str, code: str) -> list[str]:
     loop or `with` target, walrus, `except ... as`, match capture). A `code` that does
     not parse is left to the validator.
     """
-    return _with_drift_reminder([line for _, line in _drift(base, code)])
+    return _with_drift_reminder([line for _, line in _drift(base, code, library)])
 
 
 def _with_drift_reminder(lines: list[str]) -> list[str]:
@@ -275,14 +279,15 @@ def _with_drift_reminder(lines: list[str]) -> list[str]:
     return [*lines, _line(reminder)]
 
 
-def _drift(base: str, code: str) -> list[tuple[str, str]]:
+def _drift(base: str, code: str, library: str) -> list[tuple[str, str]]:
     """`protected_drift` without its closing reminder: one `(kind, failure line)` pair per drift."""
     try:
         before_tree = ast.parse(base)
         after_tree = ast.parse(code)
     except SyntaxError:
         return []
-    before, after = find_regions(base, before_tree), find_regions(code, after_tree)
+    before = find_regions(base, before_tree, library=library)
+    after = find_regions(code, after_tree, library=library)
     failures: list[tuple[str, str]] = []
 
     if before.theme is not None and (
@@ -382,11 +387,11 @@ def _string_literals(tree: ast.Module) -> Counter[str]:
     return counts
 
 
-def _apply(working: str, plan: AdaptPlan) -> AppliedPlan:
+def _apply(working: str, plan: AdaptPlan, library: str) -> AppliedPlan:
     if plan.full_code is not None:
         return AppliedPlan(plan.full_code)
     try:
-        regions = find_regions(working)
+        regions = find_regions(working, library=library)
     except SyntaxError as exc:
         line = f"the working form does not parse at line {exc.lineno}; no edit was applied"
         return AppliedPlan(None, [line], ("working_unparseable",))

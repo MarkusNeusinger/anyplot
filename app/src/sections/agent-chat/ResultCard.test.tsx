@@ -165,6 +165,17 @@ describe('ResultCard', () => {
     expect(onOutcome).not.toHaveBeenCalled();
   });
 
+  it('downloads the code under its language name when the version names another artifact', async () => {
+    const version = makeVersion();
+    version.result = { ...version.result, artifacts: ['plot-light.png', 'plot.R', 'data.csv'] };
+    const { onOutcome } = renderCard({ version });
+    expect(screen.getByText(".download('plot.R')")).toBeInTheDocument();
+    expect(screen.getByText('# plot.R runs next to data.csv')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Download plot.R' }));
+    await waitFor(() => expect(clicked.map(entry => entry.download)).toEqual(['plot.R']));
+    expect(onOutcome).toHaveBeenCalledWith('downloaded_code', 2);
+  });
+
   it('downloads plot.py and data.csv under the names the code expects', async () => {
     const { onFetchArtifact, onOutcome } = renderCard();
     await userEvent.click(screen.getByRole('button', { name: 'Download plot.py' }));

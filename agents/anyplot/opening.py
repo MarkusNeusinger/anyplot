@@ -34,13 +34,12 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field, replace
 from typing import Any
 
-from .code.normalise import SUPPORTED_LIBRARIES as NORMALISED_LIBRARIES
-from .code.normalise import normalise
 from .code.readiness import ReadinessStatus, scan
 from .data.bindings import default_bindings
 from .data.parse import ParsedDataset, display_copy, parse_dataset, with_constant_columns
 from .data.store import DatasetStore
 from .policy import fence
+from .render.runtimes import has_runtime, runtime_for
 from .schemas import MAX_FILE_NAME_CHARS, MAX_SAMPLE_ROWS, Binding, listed_values
 from .session_state import (
     BINDINGS,
@@ -69,10 +68,20 @@ class Eligibility:
 
 
 def assess(snapshot: CatalogueSnapshot, library: str, settings: AgentSettings) -> tuple[Eligibility, str]:
-    """Normalise and scan one catalogue pair: its eligibility and the normalised code."""
+    """Normalise and scan one catalogue pair: its eligibility and the normalised code.
+
+    The runtime of the library (`render.runtimes.runtime_for`) normalises and scans; a
+    library without a runtime keeps its code as it is and is blocked by the Python scan
+    as `unsupported-library`, which also reports whether it is enabled at all.
+    """
     code = snapshot.code
-    normalised = normalise(code, library=library) if library in NORMALISED_LIBRARIES else code
-    readiness = scan(normalised, spec_id=snapshot.spec_id, library=library, enabled_libraries=settings.libraries)
+    if has_runtime(library):
+        runtime = runtime_for(library)
+        normalised = runtime.normalise(code, library)
+        readiness = runtime.readiness(normalised, spec_id=snapshot.spec_id, enabled_libraries=settings.libraries)
+    else:
+        normalised = code
+        readiness = scan(normalised, spec_id=snapshot.spec_id, library=library, enabled_libraries=settings.libraries)
     eligibility = Eligibility(
         eligible=readiness.status != "blocked",
         status=readiness.status,

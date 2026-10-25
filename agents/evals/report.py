@@ -30,8 +30,9 @@ reviewer's pass) with a case's `expected` value; cases that expect `unknown` are
 out.
 
 **Diff.** `compare` measures both reports over the case ids they share (all repeats of
-each), so a smoke run is judged against the same 12 cases of a full baseline, not
-against the baseline's whole-matrix rate; each report's own full rate is an extra row.
+each), so a smoke run is judged against the same smoke cases of a full baseline (14 since
+2026-10-25), not against the baseline's whole-matrix rate; each report's own full rate is
+an extra row.
 
 Run as a module, it merges two reports into one blind gallery and scores the export:
 

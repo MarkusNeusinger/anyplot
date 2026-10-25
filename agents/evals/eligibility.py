@@ -1,4 +1,4 @@
-"""The catalogue's eligibility sweep: which matplotlib and seaborn files the agent network can adapt at all.
+"""The catalogue's eligibility sweep: which Python catalogue files the agent network can adapt at all.
 
 Spike X reports, besides the adaptation matrix, post-normaliser eligibility under the
 SECURITY profile and the files blocked for a missing `THEME` block or a non-literal
@@ -8,7 +8,7 @@ from the repository root:
     uv run --extra agents python -m agents.evals.eligibility
     uv run --extra agents python -m agents.evals.eligibility --out agents/evals/reports/spike-x
 
-For every `plots/<spec>/implementations/python/{matplotlib,seaborn}.py` it does what
+For every `plots/<spec>/implementations/python/<library>.py` of `LIBRARIES` it does what
 `POST /v1/sessions` does with a catalogue snapshot (`opening.assess`): strip the
 `# noqa` comments, normalise, and run the readiness scan, which applies the SECURITY
 validator, the `THEME` and savefig-target checks and the map-spec rule. It counts the
@@ -36,7 +36,8 @@ from typing import Any
 EVALS_DIR = Path(__file__).resolve().parent
 REPO_ROOT = EVALS_DIR.parents[1]
 DEFAULT_OUT = EVALS_DIR / "reports"
-LIBRARIES: tuple[str, ...] = ("matplotlib", "seaborn")
+LIBRARIES: tuple[str, ...] = ("matplotlib", "seaborn", "plotnine", "altair")
+"""The Python libraries with a code profile (`render.runtimes.PYTHON_LIBRARIES`, pinned by a test), in sweep order."""
 STATUSES: tuple[str, ...] = ("clean", "coupled", "blocked", "error")
 _SECURITY_RULE = re.compile(r"^security: ([a-z][a-z0-9-]*)(?: at line \d+)?:")
 
@@ -133,7 +134,7 @@ def markdown(result: dict[str, Any], date: str) -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -m agents.evals.eligibility",
-        description="Count the catalogue's matplotlib and seaborn files the agent network can adapt.",
+        description="Count the catalogue's Python files (matplotlib, seaborn, plotnine, altair) the agent network can adapt.",
     )
     parser.add_argument("--plots", type=Path, default=REPO_ROOT / "plots", help="the catalogue directory (plots/)")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="output directory (agents/evals/reports)")
