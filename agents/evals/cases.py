@@ -14,9 +14,10 @@ chip would; without it the session keeps its own default and detection. Two sour
   directory when it exists.
 
 `select_cases` takes the harness's `--cases` value: `smoke` (the cases tagged `smoke`:
-one generated case per spec plus the hand-written `scatter-basic-matplotlib` and
-`bar-grouped-seaborn`), `full` (every case except the stress cases: the 120 generated
-and the seven hand-written ones, 127 since 2026-10-15), `stress` (the
+one generated matplotlib or seaborn case per spec, one plotnine and one altair case since
+2026-10-25, plus the hand-written `scatter-basic-matplotlib` and `bar-grouped-seaborn`:
+14), `full` (every case except the stress cases: the 240 generated and the seven
+hand-written ones, 247 since 2026-10-25; 127 before plotnine and altair), `stress` (the
 cases tagged `stress`, from `make_stress.py`), or comma-separated shell globs over case
 ids (`*-seaborn-*`, `pie-basic-*`, `stress-compute-*`). The catalogue
 snapshot comes from `snapshot.json` or, without it, from `plots/<spec>/` in this

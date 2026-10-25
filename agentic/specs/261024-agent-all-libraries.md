@@ -1,9 +1,11 @@
 # Feature: "Use with my data" for all 15 catalogue libraries
 
-> **Status (2026-10-25):** plan, with step 1a (the runtime seam) built in the same PR.
-> Phase 1 serves matplotlib and seaborn; every other library in this document is
-> planned, not shipped, and `AGENT_LIBRARIES` keeps its default until a library's
-> matrix run passes.
+> **Status (2026-10-25):** plan, in progress. Step 1a (the runtime seam) is open as
+> PR #12404. Step 1b (plotnine and altair) is implemented on its branch and waits for
+> 1a's merge; see "What 1b built" under step 1b. The deploy serves matplotlib and seaborn:
+> plotnine and altair have runtimes after 1b, but `AGENT_LIBRARIES` keeps its default
+> `matplotlib,seaborn` until each one's matrix run passes. Every other library in this
+> document is planned, not shipped.
 
 ## Metadata
 
@@ -167,8 +169,9 @@ without the marker and the matrix would otherwise have a handful of cases.
 - Add `agents/renderer/commands.py` with the command table keyed by `(language,
   library)`: the code file name, the argv (`python`: the current command; `javascript`,
   `r`, `julia`: the CI commands through the harness exec mode), the environment, the
-  resource limits that differ from the defaults (`RLIMIT_AS` and `RLIMIT_NPROC` off for
-  Chromium, Node and Julia; a screenshot post-step for bokeh and plotly, step 4) and the
+  resource limits that differ from the defaults (`RLIMIT_AS` off for the JavaScript and
+  Julia rows, `RLIMIT_NPROC` off for the JavaScript row alone; a screenshot post-step for
+  bokeh and plotly, step 4) and the
   render p95 the repair reserve uses (`RENDER_P95_S` becomes a runtime attribute). The
   executor builds its argv from it; the library in the request is checked against the
   closed set of `core.constants` and only selects a row; the assertion that no `--write`
@@ -180,12 +183,13 @@ without the marker and the matrix would otherwise have a handful of cases.
   the host watchdog and the kill path keep working. Python plots keep the in-process
   plot mode and the probe.
 - Registry: `runtimes/__init__.py` maps every library of `core.constants` that has a
-  runtime to an instance; `runtime_for(library, settings)`; `RUNTIME_LIBRARIES` is its
-  key set (matplotlib and seaborn only in this step). The settings validator refuses a
-  library without a runtime, as today.
-- `RuntimeAdapter` grows: `placeholder`, `regions`, `readiness`, `validate_adaptation`,
-  `protected_drift`, `error_summary` (the per-language error grammar: class and line,
-  never the message), `export` (the run line and the artifact name) and `render_p95_s`.
+  runtime to an instance; `runtime_for(library, cpu_seconds=)`; `RUNTIME_LIBRARIES` is
+  its key set (matplotlib and seaborn only in this step). The settings validator refuses
+  a library without a runtime, as today.
+- `RuntimeAdapter` grows: `placeholder`, `regions`, `readiness`, `security`,
+  `adaptation`, `apply_plan`, `restore_protected`, `new_literals`, `error_summary` (the
+  per-language error grammar: class and line, never the message), `export` (the run
+  line), `code_artifact` (the artifact name) and `render_p95_s`.
   The pipeline's direct uses of the Python modules go through it; so do
   `agents/evals/matrix.py` (the preflight), `stress.py`, `ladder_lab.py`, and the
   `pipeline.PythonRuntime` monkeypatch in `tests/unit/agents/runtime/test_service_flow.py`.
@@ -193,7 +197,7 @@ without the marker and the matrix would otherwise have a handful of cases.
   `run_data` and `convert` stay on the Python runtime; the local Docker backend's argv
   and the sandbox stub follow.
 - The artifact name becomes a wire field: `schemas.ArtifactName` gains `plot.R`,
-  `plot.jl`, `plot.js` and `plot.tsx`, `artifact_names` takes the runtime,
+  `plot.jl`, `plot.js` and `plot.tsx`, `artifact_names` takes the runtime's code artifact,
   `ARTIFACT_MEDIA_TYPES` in `api/routers/agent.py` and `api/agent_cases.py` carry the
   media types, and `ResultCard.tsx` reads the name from the version instead of the
   literal `plot.py`; the download, the feedback bundle and `get_current_code` follow.
@@ -225,6 +229,121 @@ without the marker and the matrix would otherwise have a handful of cases.
   catalogue file per library through the harness.
 - Fixtures for both libraries; the eligibility sweep's numbers in the PR; the owner's
   matrix run as a Todoist task.
+
+#### What 1b built (2026-10-25)
+
+- **A save rule per library.** `regions.SAVE_RULES` holds one `SaveRule` per library:
+  matplotlib and seaborn `savefig`; plotnine `save`, `ggsave` (the file is its second
+  positional or `filename=`) and `savefig` after `fig = plot.draw()`; altair `save`
+  with `fp`, the keywords `scale_factor`, `ppi`, `inline`, `embed_options` and
+  `format`, a second allowed target `f"plot-{THEME}.html"` and `.open` of the PNG for
+  the PIL block. `find_regions`, the normaliser's save-target rewrite, the readiness
+  scan and `edits.apply_plan`, `restore_protected` and `protected_drift` take the
+  library. The protected final save is the last module-level statement that writes
+  the PNG, because altair's files end on the HTML save and pad the PNG inside an `if`.
+  `normalise.SUPPORTED_LIBRARIES` is the rules' key set, and `PythonRuntime` serves
+  `PYTHON_LIBRARIES`: matplotlib, seaborn, plotnine and altair.
+- **Validator.** `LIBRARY_IMPORTS` gains plotnine (the matplotlib stack, `plotnine`,
+  `mizani`) and altair (`altair`, `PIL.Image`). The walk of both public surfaces
+  (2026-10-24) and an adversarial pass over it (2026-10-25) added denied submodules
+  (`plotnine.data`, `watermark` and `animation`; `altair.datasets`, `jupyter`,
+  `utils.execeval`, `utils.server` and `utils.html`), re-exported modules (`quarto`,
+  jsonschema, narwhals, jinja2, vl_convert, pyarrow, polars and others), unsafe
+  helpers (plotnine's `save_as_pdf_pages`, `Environment` and every plot's
+  `.environment`; altair's image mark, `limit_rows`, `transformed_data`,
+  `topo_feature`, `UrlData` and the plugin and renderer registries), altair-only bans
+  (`from_dict`, `from_json`), the `pathlib.Path` and polars writers in `BANNED_IO`,
+  and `theme_matplotlib` as a settings consumer that reads no settings file.
+  `_check_save(rule)` replaces the savefig rule.
+- **Harness.** The write allowlist gains `plot-<theme>.html`. `FRAME_READERS` gains
+  plotnine's `Environment.capture`, and `inspect.currentframe` answers its caller's
+  frame to a reader and None to everyone else (`frame_for_readers`), so both options
+  of the spike's table are taken. The probe gives plotnine's canvas-less figure an Agg
+  canvas. altair draws no matplotlib figure and writes no probe, so the host gates
+  alone judge it.
+- **Renderer.** The image installs `lib-plotnine` and `lib-altair` and links
+  matplotlib's DejaVu Serif and DejaVu Sans Mono into `/usr/share/fonts`, which
+  vl-convert needs for `serif` and `monospace`; the altair row of the command table
+  runs without `RLIMIT_AS`; `ci-image.yml` renders a minimal plotnine and a minimal
+  altair plot through the harness in the built image.
+- **Evals.** `make_fixtures.py` writes the ten specs for plotnine and altair (240
+  generated cases in all); the smoke set gains `scatter-basic-plotnine-renamed` and
+  `scatter-basic-altair-renamed` (14 cases); `eligibility.py` sweeps all four
+  libraries. The readiness scan blocks none of the ten fixture specs for either
+  library.
+- **Verified by hand.** The normalised catalogue `scatter-basic` files of plotnine (a
+  3200x1800 PNG and the probe) and altair (the PNG and the HTML) render under the
+  guard with the test venv; `test_harness_guard.py` renders both where the libraries
+  are installed.
+
+#### Decisions that change or settle the text above
+
+| Text above | Built | Why |
+|---|---|---|
+| The normaliser drops altair's HTML save from the run form; the export keeps it | The HTML save stays in the run form: the validator admits exactly `f"plot-{THEME}.html"` as altair's second target, the harness allowlist takes the write, and the file stays in the sandbox, where nothing collects it | The export stays byte for byte the run form ("Fencing and exported code" in the design), which question 10 leaves to bokeh and plotly alone |
+| The PIL block's reads and writes are bound to the plot file by the harness's write allowlist; the normaliser keeps the block | The block is kept, not stripped, and admitted by rule as well: `PIL.Image` (the module, not `ImageDraw` or `ImageFont`) in altair's import surface, `.open` only in altair's profile and only on the PNG, and the second `.save` (`_canvas.save(f"plot-{THEME}.png")`) checked by the save rule | The exported code runs unguarded on the user's machine, so the validator, not only the sandbox, holds the block to the plot file |
+| Not covered | plotnine's expression strings are parsed and walked as code (every rule of the profile, the save and buffer-writer rules included): every string literal passed to `aes`, `after_stat`, `after_scale`, `stage`, `facet_wrap` or `facet_grid`, which take only literals the walk can read (a string, a number, a list of them, a nested expression call, a name bound once at module level to a string, `**` from a dict literal); `qplot` and `from_formula` are banned by name, `formula=` is a banned keyword on every call. The plot guard lets plotnine's `Environment.eval` run those strings (`CODE_BUILDERS`): what they reach stays refused there | plotnine evaluates a string that is not a column name with real builtins and the plot's namespace (survey of 2026-10-24), and patsy `exec`s Python while it parses a formula, which the plot guard would refuse anyway |
+| `save` leaves `BANNED_ATTRIBUTES` for a per-library rule | `save` left `BANNED_IO`, where it was; the save rule refuses a save name it does not list as a `banned-call`, so `np.save` is refused by the rule, not by the set | Every save name (`SAVE_NAMES`) is checked in every profile, allowed or not; the DATA profile refuses all of them |
+| Not covered | The probe attaches an Agg canvas to a figure that has none | plotnine builds its figure with `Figure()`, whose base canvas has no renderer; a PNG `savefig` switches it to Agg anyway, so the probe does the same first |
+| The canvas rewrite stays matplotlib's | As planned: `SaveRule.canvas` is off for plotnine and altair, their readiness reasons carry a `canvas:` note, and their renders rely on the R3 gate | plotnine sizes its canvas on the save and altair through the chart's size times `scale_factor`; plotnine's own rewrite is next |
+| `vl_convert` joins altair's import surface | `vl_convert` stays out | altair reaches it internally, and its own functions read files and open sockets for `<image>` hrefs |
+| Not covered | The adversarial pass over the import surveys (2026-10-25) closed four routes by name: an altair image mark whose `file://` href vl-convert's SVG renderer reads from disk in native code (`mark_image`, `Url*`, the `url=` keyword, `Chart.from_dict` and `from_json` in altair's profile); the narwhals frame `alt.limit_rows` hands out, whose `.implementation.to_native_namespace()` is the pyarrow module; VegaFusion's `transformed_data`; and plotnine's `.environment`, the captured namespace every plot carries, whose `.namespace["os"]` is the `os` module as a value. altair's `data_transformers.enable("json")` and the registries' `.register` are banned in its profile too; `np.save` is refused under every rule by its receiver; a save's `format` and `path` by position are findings | The surveys' walk missed them; each was shown live in the scratchpad before the ban |
+| Not covered (Python keeps the default limits) | altair's command row runs without `RLIMIT_AS` | vl-convert's embedded V8 aborts at start under any `RLIMIT_AS` up to 64 GiB (measured on 2026-10-25 through the harness); its resident set is about 270 MiB, and the `MemAvailable` watchdog, `RLIMIT_CPU`, `RLIMIT_FSIZE` and the byte budget remain |
+
+#### Eligibility after 1b
+
+`uv run --extra agents python -m agents.evals.eligibility` on 2026-10-25; matplotlib
+and seaborn are unchanged against main.
+
+| Library | Files | Eligible | Clean | Coupled | Blocked |
+|---|---|---|---|---|---|
+| matplotlib | 325 | 285 (87.7 %) | 15 | 270 | 40 |
+| seaborn | 325 | 287 (88.3 %) | 18 | 269 | 38 |
+| plotnine | 321 | 264 (82.2 %) | 58 | 206 | 57 |
+| altair | 325 | 269 (82.8 %) | 57 | 212 | 56 |
+
+Why the plotnine and altair files are blocked, counted in files from the readiness
+reasons (a file can have several causes):
+
+| Cause | plotnine | altair |
+|---|---|---|
+| One of the 13 map specs (altair's also carry URL literals and `topo_feature`) | 13 | 13 |
+| Old-form file: no `THEME` block and a single-theme `plot.png` (altair's also `plot.html`) | 8 | 11 |
+| A guard, path or `os` shape the normaliser does not strip yet: `sys.modules`, `importlib.util`, `import_module`, `SourceFileLoader`, a `pathlib` output directory or a target built from `__file__`, a bare `import sys`, `os` beyond `getenv` | 10 | 11 |
+| `sklearn.datasets` for the example data | 8 | 8 |
+| `.format` on a string | 4 | 5 |
+| A module outside the surface: `contourpy` (2 each, one a map spec), `qrcode`; for altair also `circlify`, `zlib`, `PIL.ImageColor`, `statsmodels.regression`, `stats` and `tools`, and `vega_datasets` (a map spec) | 3 | 8 |
+| A URL literal or `topo_feature` outside the map specs (`qrcode-basic`; altair's `chessboard-pieces` and `hexbin-map-geographic` too) | 1 | 3 |
+| A string literal over 200 characters | 2 | 1 |
+| `.query` | 1 | 1 |
+| `formula=` | 1 | 0 |
+| An aesthetic or facet argument the validator cannot read as a literal (a variable, a concatenation, `**mapping`; the adversarial pass of 2026-10-25) | 10 | 0 |
+| An image mark (`mark_image`, `url=`), in a map spec | 0 | 1 |
+
+#### Next
+
+- Normaliser rules for the guard shapes it does not strip yet (the third row above:
+  about 10 files per library).
+- plotnine's own canvas rewrite through `save(dpi=, width=, height=)` and `ggsave`, so
+  its canvas is exact before the R3 gate.
+- The readiness coupling scan knows only matplotlib's limit and tick calls: plotnine's
+  `coord_cartesian(xlim=, ylim=)`, `scale_*_continuous(limits=, breaks=)` and altair's
+  `alt.Scale(domain=)` and axis `values=` go unflagged, so the adapter gets no `limits`
+  hint for them (the `x10` fixture cases measure exactly this).
+- altair writes no probe, so the advisory gates (G3 to G12, the row-fidelity check G8
+  among them) never run for it; whether a row count read from the Vega spec's data
+  should replace G8 is open.
+- The normaliser blanks the catalogue title to `""`; code that divides by `len(title)`
+  (11 plotnine, 5 altair, 54 matplotlib files) fails a raw render with ZeroDivisionError
+  unless the adapter writes a new title. A non-empty placeholder would avoid it.
+- A `plot-<theme>.html` of an altair chart with `disable_max_rows()` can hit
+  `RLIMIT_FSIZE` (heatmap-mandelbrot: 50 MB); nothing collects the file, so the
+  normaliser could drop the HTML save after all.
+- `matrix.py` warns when `AGENT_LIBRARIES` does not enable a selected case's library
+  (the two new smoke cases need `AGENT_LIBRARIES=matplotlib,seaborn,plotnine,altair`);
+  whether the harness should enable the cases' libraries itself is open.
+- The owner's matrix run per library on Vertex (question 7), then `_LIBRARIES` in
+  `agents/cloudbuild.yaml`.
 
 ### 1c. pygal and lets-plot
 
@@ -374,16 +493,20 @@ Execute these commands to validate the feature:
 - `uv run mypy agents`
 - `uv run pytest tests/unit/agents -q -n auto`
 - `uv run --extra agents python -m agents.evals.make_fixtures --check`
-- `uv run --extra agents python -m agents.evals.eligibility --libraries all` (the sweep
-  prints eligible, coupled and blocked pairs per library)
+- `uv run --extra agents python -m agents.evals.eligibility` (the sweep prints
+  eligible, coupled and blocked pairs for every Python library with a code profile,
+  `eligibility.LIBRARIES`; it takes no library flag since 1b)
 - `docker build -f agents/renderer/Dockerfile -t anyplot-renderer:dev .` then, for one
   catalogue file per language, `AGENT_RENDERER=local` through
   `tests/image/render_smoke.py` (new; the local backend with `--network none`)
 - `cd app && yarn lint && yarn fm:check && yarn type-check && yarn test`
 - `uv run python -m tools.changelog check --base origin/main`
-- Owner, per library, on Vertex: `uv run --extra agents python -m agents.evals.matrix
-  --model claude-haiku-5-5 --cases '*-<library>-*' --renderer remote --render-url <url>`
-  (`--cases` takes `smoke`, `full`, `stress` or globs over case ids, `agents/evals/cases.py`); 80 %
+- Owner, per library, on Vertex: `AGENT_LIBRARIES=matplotlib,seaborn,<library>
+  uv run --extra agents python -m agents.evals.matrix --model claude-haiku-5-5
+  --cases '*-<library>-*' --renderer remote --render-url <url>` (the library must be
+  enabled in the harness's own process, or the readiness scan blocks every case as
+  `library-disabled`; `--cases` takes `smoke`, `full`, `stress` or globs over case ids,
+  `agents/evals/cases.py`); 80 %
   pass after at most one repair enables the library in `agents/cloudbuild.yaml`
   (`_LIBRARIES`).
 

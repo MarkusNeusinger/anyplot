@@ -6,7 +6,9 @@ A case is the agents service's bundle of one result version (`GET /v1/sessions/{
 
 * `plot-light.png`, `plot-dark.png`: the version's PNGs as the user saw them, footer strip
   included, decoded from the bundle's base64; a theme the version never rendered has none;
-* `plot.py`: the exported code;
+* the code file, named after the bundle's `code_artifact` (`plot.py` for a Python library; `plot.R`,
+  `plot.jl`, `plot.js` or `plot.tsx` for another language, `core.agent_cases.CODE_FILE_NAMES`): the
+  exported code;
 * `data.csv`: the version's data, only when the user ticked `# include data.csv`;
 * `manifest.json`: the case's row (`core.agent_cases.row_from_manifest` turns it into the
   `agent_feedback` row the route inserts, and the backfill of `sync_cases.py` into one for

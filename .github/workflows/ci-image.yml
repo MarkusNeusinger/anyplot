@@ -493,18 +493,19 @@ jobs:
   # runs in development. Without this job its first build ever would be the
   # bootstrap deploy, after the merge. `sandbox do` exists only on Cloud Run, so
   # the job checks the image the way the local backend uses it: the harness
-  # renders a seaborn plot under the deployed rlimits, with no network and a
-  # read-only root filesystem, then a multi-script fixture whose probe must
-  # report no missing glyph (and a DejaVu-only control whose probe must), and
-  # the service boots and reports itself. The event-shape handling is the API
-  # job's in short form.
+  # renders a seaborn, a plotnine and an altair plot under the deployed
+  # rlimits, with no network and a read-only root filesystem, then a
+  # multi-script fixture whose probe must report no missing glyph (and a
+  # DejaVu-only control whose probe must), and the service boots and reports
+  # itself. The event-shape handling is the API job's in short form.
   renderer-image:
     name: Build renderer image and render through the harness
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    # A cold build installs pandas, numpy, matplotlib and seaborn; 20 fails
-    # loudly instead of hanging on a slow package index.
+    # A cold build installs pandas, numpy, matplotlib, seaborn, plotnine and
+    # altair with vl-convert; 20 fails loudly instead of hanging on a slow
+    # package index.
     timeout-minutes: 20
 
     steps:
@@ -631,6 +632,106 @@ jobs:
           print(f"OK: plot-light.png {width}x{height}, {len(png)} bytes; probe written")
           EOF
           tail -n 1 harness.out
+
+      # plotnine (step 1b of agentic/specs/261024-agent-all-libraries.md) runs in process like
+      # seaborn, with the same flags. It reads the plot's frame to look `aes` names up
+      # (FRAME_READERS in harness.py) and saves a figure that has no canvas, which the probe
+      # gives an Agg one: the probe's canvas is the assert for both.
+      - name: Render a plotnine plot through the harness
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p work-plotnine
+          printf 'x,y\na,1\nb,3\nc,2\n' > work-plotnine/data.csv
+          cat > work-plotnine/plot.py <<'EOF'
+          import os
+
+          import pandas as pd
+          from plotnine import aes, geom_col, ggplot
+
+          THEME = os.environ["ANYPLOT_THEME"]
+          df = pd.read_csv("data.csv")
+          plot = ggplot(df) + aes(x="x", y="y") + geom_col()
+          plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
+          EOF
+          docker run --rm --network none --read-only --tmpfs /tmp \
+            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+            -v "$PWD/work-plotnine:/work" -w /work \
+            -e ANYPLOT_THEME=light -e MPLBACKEND=Agg -e MPLCONFIGDIR=/tmp/mpl -e ANYPLOT_MPL_SEED=/opt/mplconfig \
+            -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+            -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_RLIMIT_AS_MB=1024 \
+            anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py plot.py > work-plotnine/harness.out
+          grep -qxF 'HARNESS {"event": "start"}' work-plotnine/harness.out || { echo "::error::no HARNESS start line"; cat work-plotnine/harness.out; exit 1; }
+          grep -q '^HARNESS {"event": "end"' work-plotnine/harness.out || { echo "::error::no HARNESS end line"; cat work-plotnine/harness.out; exit 1; }
+          python3 - <<'EOF'
+          import json, struct
+          png = open("work-plotnine/plot-light.png", "rb").read()
+          assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
+          width, height = struct.unpack(">II", png[16:24])
+          assert (width, height) == (3200, 1800), (width, height)
+          probe = json.load(open("work-plotnine/probe-light.json"))
+          assert probe["canvas"] == [3200, 1800], probe.get("canvas")
+          print(f"OK: plotnine plot-light.png {width}x{height}, {len(png)} bytes; probe canvas {probe['canvas']}")
+          EOF
+          tail -n 1 work-plotnine/harness.out
+
+      # altair renders through vl-convert, a binary with an embedded V8 that reserves far
+      # more address space at start than it uses: it aborts under an RLIMIT_AS of 64 GiB
+      # and less (measured 2026-10-25, 1024 MB included). This run leaves
+      # ANYPLOT_RLIMIT_AS_MB out, as the altair row of agents/renderer/commands.py does;
+      # every other flag is the seaborn step's. The PIL block is the catalogue's padding
+      # to 3200 x 1800, which reopens the PNG. vl-convert draws no matplotlib figure, so
+      # the run writes no probe: the PNG's size and the HTML are the asserts.
+      - name: Render an altair plot through the harness
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p work-altair
+          printf 'x,y\na,1\nb,3\nc,2\n' > work-altair/data.csv
+          cat > work-altair/plot.py <<'EOF'
+          import os
+
+          import altair as alt
+          import pandas as pd
+          from PIL import Image
+
+          THEME = os.environ["ANYPLOT_THEME"]
+          df = pd.read_csv("data.csv")
+          chart = alt.Chart(df).mark_bar().encode(x="x:N", y="y:Q").properties(width=740, height=400)
+          chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+          TW, TH = 3200, 1800
+          _img = Image.open(f"plot-{THEME}.png").convert("RGB")
+          _w, _h = _img.size
+          if _w > TW or _h > TH:
+              raise SystemExit(f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}")
+          if _w < TW or _h < TH:
+              _canvas = Image.new("RGB", (TW, TH), "#FAF8F1")
+              _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+              _canvas.save(f"plot-{THEME}.png")
+
+          chart.save(f"plot-{THEME}.html")
+          EOF
+          docker run --rm --network none --read-only --tmpfs /tmp \
+            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+            -v "$PWD/work-altair:/work" -w /work \
+            -e ANYPLOT_THEME=light -e MPLBACKEND=Agg -e MPLCONFIGDIR=/tmp/mpl -e ANYPLOT_MPL_SEED=/opt/mplconfig \
+            -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+            -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 \
+            anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py plot.py > work-altair/harness.out
+          grep -qxF 'HARNESS {"event": "start"}' work-altair/harness.out || { echo "::error::no HARNESS start line"; cat work-altair/harness.out; exit 1; }
+          grep -q '^HARNESS {"event": "end"' work-altair/harness.out || { echo "::error::no HARNESS end line"; cat work-altair/harness.out; exit 1; }
+          python3 - <<'EOF'
+          import struct
+          png = open("work-altair/plot-light.png", "rb").read()
+          assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
+          width, height = struct.unpack(">II", png[16:24])
+          assert (width, height) == (3200, 1800), (width, height)
+          html = open("work-altair/plot-light.html", encoding="utf-8").read()
+          assert "vega" in html, "plot-light.html holds no Vega chart"
+          print(f"OK: altair plot-light.png {width}x{height}, {len(png)} bytes; plot-light.html {len(html)} characters")
+          EOF
+          tail -n 1 work-altair/harness.out
 
       # The file conversion inside the image (harness.py --convert): every format the
       # page sends, with the image's slimmed pyarrow (owner decision of 2026-10-15),

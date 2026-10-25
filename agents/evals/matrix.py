@@ -1599,6 +1599,14 @@ def _prepare_and_run(args: argparse.Namespace, settings: "AgentSettings", argv: 
         raise SetupError(str(exc)) from exc
     if not cases:
         raise SetupError(f"no case matches --cases {args.cases!r}")
+    # Since 2026-10-25 the smoke set holds a plotnine and an altair case, which the default `AGENT_LIBRARIES`
+    # (matplotlib and seaborn) blocks as `library-disabled`; the readiness scan reads the settings, not the case.
+    disabled = sorted({case.library for case in cases} - set(settings.libraries))
+    if disabled:
+        _echo(
+            f"settings: AGENT_LIBRARIES does not enable {', '.join(disabled)}; their cases will be blocked as "
+            f"library-disabled (export AGENT_LIBRARIES={','.join([*settings.libraries, *disabled])})"
+        )
     baseline_path: Path | None = None
     if not args.no_baseline:
         pinned = BASELINES_DIR / f"{AgentSettings.model_fields['model'].default}.json"

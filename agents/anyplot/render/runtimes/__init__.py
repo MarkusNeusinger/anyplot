@@ -9,9 +9,11 @@ Docker backend and the eval harness use alike. `RUNTIME_LIBRARIES` is the set th
 serves; the settings refuse any other library in `AGENT_LIBRARIES`, and the readiness scan
 blocks it as `unsupported-library`.
 
-Phase 1 serves matplotlib and seaborn through `PythonRuntime`. A later language adds a
-runtime module here and its libraries to `RUNTIME_LIBRARIES`; a later Python library adds
-its validator profile and save statement to the Python code modules and its id to
+`PythonRuntime` serves matplotlib, seaborn, plotnine and altair: each has a save rule
+(`code.regions.SAVE_RULES`) and a validator profile (`code.validate.LIBRARY_IMPORTS`),
+and the renderer image installs it. A later language adds a runtime module here and its
+libraries to `RUNTIME_LIBRARIES`; a later Python library (pygal, lets-plot) adds its
+validator profile and save rule to the Python code modules and its id to
 `PYTHON_LIBRARIES` (`agentic/specs/261024-agent-all-libraries.md`).
 """
 
@@ -23,7 +25,7 @@ from ..contract import RuntimeAdapter
 from .python import PythonRuntime
 
 
-PYTHON_LIBRARIES: frozenset[str] = frozenset({"matplotlib", "seaborn"})
+PYTHON_LIBRARIES: frozenset[str] = frozenset({"matplotlib", "seaborn", "plotnine", "altair"})
 """The Python libraries with a complete runtime profile (`code.normalise.SUPPORTED_LIBRARIES`, pinned equal)."""
 
 RUNTIME_LIBRARIES: frozenset[str] = PYTHON_LIBRARIES

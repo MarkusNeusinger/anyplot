@@ -34,6 +34,9 @@ class TestTable:
         row = command_for("python", "matplotlib")
         assert row.in_process and row.argv == () and row.toolchain == ()
         assert row.rlimit_as and row.rlimit_nproc and row.render_p95_s == 15.0
+        assert command_for("python", "plotnine").rlimit_as
+        altair = command_for("python", "altair")  # vl-convert's V8 reserves address space like Chromium's
+        assert altair.in_process and not altair.rlimit_as and altair.rlimit_nproc
 
     def test_the_other_languages_run_the_ci_command_through_exec_mode(self) -> None:
         js = command_for("javascript", "chartjs")

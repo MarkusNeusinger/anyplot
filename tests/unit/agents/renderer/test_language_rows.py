@@ -1,6 +1,5 @@
 """The renderer runs a job by its row of the command table: the argv, the environment, the limits, the toolchain check."""
 
-import shutil
 from dataclasses import replace
 from pathlib import Path
 
@@ -45,6 +44,9 @@ class TestRows:
         assert js["PLAYWRIGHT_BROWSERS_PATH"] == "/opt/pw-browsers" and js["ANYPLOT_RLIMIT_CPU_S"] == "60"
         julia = sandbox_env(limited, "dark", 60, command=command_for("julia", "makie"))
         assert "ANYPLOT_RLIMIT_AS_MB" not in julia and julia["ANYPLOT_RLIMIT_NPROC"] == "64"
+        altair = sandbox_env(limited, "dark", 60, command=command_for("python", "altair"))
+        assert "ANYPLOT_RLIMIT_AS_MB" not in altair and altair["ANYPLOT_RLIMIT_NPROC"] == "64"
+        assert altair["MPLBACKEND"] == "Agg"  # a Python row keeps the Python environment
         # Data runs and conversions never carry a row and keep every limit.
         data = sandbox_env(limited, None, 20)
         assert data["ANYPLOT_RLIMIT_AS_MB"] == "1024" and "ANYPLOT_THEME" not in data
@@ -80,7 +82,6 @@ class TestToolchains:
         languages = SandboxExecutor(config).languages()
 
         assert languages == {"python": True, "javascript": True, "r": False, "julia": True}
-        assert shutil.which is not executor_module.shutil.which or True  # the patch is module-local
 
     def test_the_status_carries_the_languages(self) -> None:
         status = RendererStatus(

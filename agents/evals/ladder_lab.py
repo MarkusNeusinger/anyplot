@@ -287,7 +287,7 @@ def open_case(case_id: str) -> Setup:
     dataset = datasets.get(ingested.dataset_id, session_id)
     if dataset is None:
         raise LabError(f"{case_id}: the dataset was not stored")
-    regions = find_regions(view.normalised)
+    regions = find_regions(view.normalised, library=view.library)
     palette = list(regions.imprint.entries) if regions.imprint else []
     bindings_json = json.dumps([binding.model_dump() for binding in view.bindings], ensure_ascii=False)
     return Setup(case_id, view, dataset, palette, bindings_json)
@@ -355,7 +355,7 @@ async def adapt_and_render(
             misses.append(f"schema: {str(exc)[:200]}")
             lines, previous_plan = [_line("the answer did not match the plan schema; answer with a valid plan")], None
             continue
-        applied = apply_plan(base, plan)
+        applied = apply_plan(base, plan, library=view.library)
         if applied.code is None:
             misses.append("edits: " + "; ".join(applied.failures)[:300])
             lines, previous_plan = [_line(line) for line in applied.failures], plan

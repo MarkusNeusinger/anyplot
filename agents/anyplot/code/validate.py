@@ -6,8 +6,8 @@ return an empty list for valid code and never raise on invalid code: a syntax er
 one only the compiler reports, such as a module-level `return`), an oversize file or a
 string that is not UTF-8 text is itself a `Finding`. Only `library` makes
 `validate_security` raise `ValueError`: an id outside the catalogue, or a catalogue
-library without a profile yet (phase 1 profiles matplotlib and seaborn), because that is
-a caller bug, not a property of the code.
+library without a profile yet (`LIBRARY_IMPORTS`: matplotlib, seaborn, plotnine and
+altair), because that is a caller bug, not a property of the code.
 
 The validator is one guardrail layer, not the boundary: the sandbox (no egress, read-only
 root, no environment) and the loader substitution are the others. Its job is to make the
@@ -19,7 +19,20 @@ Decisions this module takes where the design leaves room:
   cluster.hierarchy, spatial, optimize, special, integrate, ndimage, fft, linalg,
   constants}`, `sklearn` without `datasets`, `statsmodels.{api, nonparametric, tsa,
   graphics}`) plus, for matplotlib and seaborn, `matplotlib`, `seaborn` and the bundled
-  `mpl_toolkits.{mplot3d, axes_grid1, axisartist}`. The four extra scipy modules,
+  `mpl_toolkits.{mplot3d, axes_grid1, axisartist}`; for plotnine that matplotlib stack,
+  `plotnine` and `mizani` (its scales and formatters, which 6 catalogue files import);
+  for altair `altair` and `PIL.Image`, which 184 catalogue files use to pad the PNG
+  vl-convert wrote (the import surfaces were walked on 2026-10-24 and the walk was
+  adversarially checked on 2026-10-25, `agentic/specs/261024-agent-all-libraries.md`;
+  `vl_convert` itself stays out: altair reaches it internally, and its own functions read
+  files and open sockets for `<image>` hrefs). The checks' routes are closed by name: an
+  image mark (`mark_image`, `Url*`, the `url=` keyword, `Chart.from_dict` and `from_json`
+  in altair's profile, `LIBRARY_BANS`), whose `file://` href vl_convert's SVG renderer
+  reads from disk in native code the audit hook never sees; the narwhals frame
+  `alt.limit_rows` hands out, whose `.implementation.to_native_namespace()` is the pyarrow
+  module; VegaFusion's `transformed_data`; and plotnine's `.environment`, the captured
+  namespace every plot carries, whose `.namespace["os"]` is the `os` module as a value.
+  The four extra scipy modules,
   `statsmodels.graphics` and the toolkits were admitted after the readiness sweep showed
   them behind most of the catalogue's benign import blocks; each was walked for file or
   network helpers and has none. The pure computing modules of the standard library
@@ -121,9 +134,40 @@ Decisions this module takes where the design leaves room:
   by a non-space character, case-insensitively and at a word boundary, so a subtitle
   "Source data: 2024 survey" or the word "profile:" passes while `data:image/png;...`
   and `file:///etc/passwd` do not.
-* **savefig.** Every `savefig` call (not only the last) must target exactly the f-string
-  `f"plot-{THEME}.png"`, as the first positional argument or `fname=`; a file without a
-  savefig call is a finding too. A second savefig writing elsewhere is never wanted.
+* **The save (`savefig-target`).** Every call of a save name (`regions.SAVE_NAMES`:
+  `savefig`, `save`, `ggsave`), not only the last, is checked against the library's save
+  rule (`regions.SAVE_RULES`). A name the rule does not list is a `banned-call` (`np.save`
+  with matplotlib, `fig.savefig` with altair). The file argument (the rule's positional,
+  `fname=`, `filename=` or `fp=`; `ggsave` takes the plot first and the file second) must
+  be exactly the f-string `f"plot-{THEME}.png"`, for altair also `f"plot-{THEME}.html"`,
+  the second file its catalogue writes; `format=` is absent or the file's own type; there
+  are no `**arguments`; and plotnine's `save` and `ggsave` and altair's `save` take only
+  the keywords the rule lists (the size, the dpi, altair's `scale_factor`), so `path=`,
+  which joins a directory, `webdriver=` and `engine=`, which choose how altair makes the
+  PNG, are findings. A file without a save of the PNG is a finding too; a second save
+  writing elsewhere is never wanted. A save name may only be called where it is named
+  (`f = plot.save; f("x")` would hide the target), and so may `.open`, which only altair's
+  rule admits, on the PNG (the PIL block reopens it: `Image.open(f"plot-{THEME}.png")`).
+* **Expression strings (plotnine).** plotnine compiles and evaluates a string that is not
+  a column name wherever it takes an aesthetic or a facet (`aes`, `after_stat`,
+  `after_scale`, `stage`, `facet_wrap`, `facet_grid`, `qplot`), with real builtins and the
+  plot's namespace, so `aes(x='open("/etc/passwd").read()')` is code (survey of
+  2026-10-24). Every string literal passed to one of those calls (`EXPRESSION_CALLS`) is
+  parsed as a Python expression, each side of a facet formula (`~`, `+`) on its own, and
+  walked with the name, attribute, call, save and buffer-writer rules of this profile; a
+  finding keeps its rule id and names the call. A bare identifier (a column) and a text
+  that does not parse (a column such as "True Label", which plotnine can only look up)
+  pass; a text that parses may be a column too ("Revenue (kCHF)"), so it is walked, not
+  refused, and the render decides. The call's arguments are literals the walk can read:
+  strings, numbers, lists of them, a call of another expression function, a name bound
+  once at module level to a string literal, and `**` from a dict literal; a variable, a
+  concatenation or `aes(**mapping)` is a finding, because plotnine would evaluate a string
+  the walk never saw. `qplot`, which evaluates its aesthetics next to `data=` and labels,
+  is banned by name. A `formula=` keyword (`stat_smooth`, `stat_quantile`) is a
+  `banned-keyword` everywhere, and `from_formula` a banned name: statsmodels hands the
+  string to patsy, which `exec`s Python while it parses, and the render guard refuses
+  that. The guard lets plotnine's `Environment.eval` run the walked strings
+  (`harness.CODE_BUILDERS`); what they reach stays under the guard.
 * **`type()`** is allowed with exactly one plain positional argument; anything else
   (three arguments, starred arguments, keywords) is the class-creating form.
 * **String method names.** pandas resolves `df.agg("to_csv")`, `df.apply("eval")` and
@@ -191,7 +235,7 @@ before validation.
 Rule ids: `size`, `encoding`, `syntax`, `banned-import` (with `Finding.module`), `star-import`,
 `relative-import`, `os-use`, `module-value`, `banned-name`, `banned-call`, `banned-attribute`,
 `banned-keyword`, `rc-key`, `dunder`, `banned-statement`, `url-literal`, `string-length`, `savefig-target`
-(SECURITY; DATA without `savefig-target`);
+(SECURITY; DATA without `savefig-target`; a plotnine expression string's finding keeps the id of the rule it broke);
 `placeholder-count`, `placeholder-use`, `rng`, `literal-data`, `palette-prefix`
 (ADAPTATION); `data-frame` (DATA). Findings are sorted by line; messages never echo
 more than about 60 characters of code and never echo string literal contents.
@@ -211,6 +255,7 @@ from core.constants import SUPPORTED_LIBRARIES
 from core.palette import IMPRINT
 
 from ..schemas import MAX_CODE_CHARS
+from .regions import HTML_SUFFIX, SAVE_NAMES, SaveRule, is_theme_target, save_rule, save_target
 
 
 Profile = Literal["security", "adaptation", "data"]
@@ -318,19 +363,42 @@ SHARED_SCIENCE_IMPORTS: frozenset[str] = frozenset(
         "statsmodels.graphics",
     }
 )
-DENIED_IMPORTS: frozenset[str] = frozenset({"sklearn.datasets", "statsmodels.formula", "scipy.io", "scipy.datasets"})
+DENIED_IMPORTS: frozenset[str] = frozenset(
+    {
+        "sklearn.datasets",
+        "statsmodels.formula",
+        "scipy.io",
+        "scipy.datasets",
+        # plotnine (survey of 2026-10-24): `data` reads 18 bundled CSVs and hands out `pathlib.Path`,
+        # `watermark` draws any image file, `animation` starts ffmpeg.
+        "plotnine.data",
+        "plotnine.watermark",
+        "plotnine.animation",
+        # altair: `datasets` fetches over the network and caches under `~/.cache`, `jupyter` re-exports
+        # `find_spec`, `execeval` execs text, `server` opens a port, `html` holds the Jinja templates.
+        "altair.datasets",
+        "altair.jupyter",
+        "altair.utils.execeval",
+        "altair.utils.server",
+        "altair.utils.html",
+    }
+)
 # The three toolkits ship with matplotlib and do no I/O. Third-party plotting helpers
 # (cartopy, qrcode, wordcloud, matplotlib_venn, squarify, adjustText) stay banned: they
 # are not installed in the agents image, and admitting one is an owner decision.
 _MATPLOTLIB_STACK: frozenset[str] = frozenset(
     {"matplotlib", "mpl_toolkits.mplot3d", "mpl_toolkits.axes_grid1", "mpl_toolkits.axisartist"}
 )
-# Phase 1 enables matplotlib and seaborn. The other Python libraries save through
-# different calls (`write_image`, `ggsave`, `render_to_png`), so their profile needs
-# more than an import allowlist; until then they raise `ValueError`.
+# One profile per Python library with a save rule (`regions.SAVE_RULES`): plotnine draws
+# with matplotlib (5 catalogue files import it directly) and scales with mizani; altair's
+# catalogue pads the PNG with `PIL.Image` (the module, not the package: `ImageDraw`,
+# `ImageFont` and the rest stay out). The other Python libraries (plotly, bokeh, pygal,
+# lets-plot) have no profile yet and raise `ValueError`.
 LIBRARY_IMPORTS: dict[str, frozenset[str]] = {
     "matplotlib": _MATPLOTLIB_STACK,
     "seaborn": _MATPLOTLIB_STACK | {"seaborn"},
+    "plotnine": _MATPLOTLIB_STACK | {"plotnine", "mizani"},
+    "altair": frozenset({"altair", "PIL.Image"}),
 }
 # The DATA profile: no plotting stack, no sklearn (its `datasets` fetch over the network) and
 # no statsmodels (`statsmodels.api.datasets` and `webuse` read files and URLs). The standard
@@ -447,7 +515,8 @@ BANNED_IO: frozenset[str] = frozenset(
         "to_xml",
         "to_stata",
         "to_orc",
-        "save",
+        # `save` is not here: it is a save name (`regions.SAVE_NAMES`), checked by the library's save rule
+        # (`_check_save`), which refuses it where the rule does not list it (`np.save` with matplotlib).
         "savez",
         "savez_compressed",
         "savetxt",
@@ -471,6 +540,28 @@ BANNED_IO: frozenset[str] = frozenset(
         "reset_tzpath",
         "available_timezones",
         "from_file",
+        # `pathlib.Path` methods, reached through a module that re-exports `Path` (plotnine's `data` and
+        # `ggplot`, altair's `utils.data`), and polars' writers, which altair's narwhals layer could reach.
+        "write_text",
+        "write_bytes",
+        "write_csv",
+        "write_parquet",
+        "write_ipc",
+        "write_json",
+        "write_ndjson",
+        "scan_csv",
+        "scan_parquet",
+        "sink_parquet",
+        "sink_csv",
+        "sink_ipc",
+        "sink_ndjson",
+        "write_database",
+        "write_excel",
+        "write_delta",
+        "mkdir",
+        "touch",
+        "unlink",
+        "rmdir",
     }
 )
 # Banned as attributes on any object, as `from` imports and as an import path's component
@@ -601,6 +692,20 @@ ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
         "locale",
         "scipy",
         "statsmodels",
+        # Modules plotnine and altair re-export as attributes (survey of 2026-10-24): plotnine's
+        # `options.quarto` binds `os` and `sys` and reads the file an environment variable names; altair's
+        # `utils` and `vegalite.v6.api` hand out jsonschema, referencing, narwhals (`nw`), jinja2, uuid,
+        # vl_convert, pyarrow and polars.
+        "quarto",
+        "jsonschema",
+        "referencing",
+        "nw",
+        "narwhals",
+        "jinja2",
+        "uuid",
+        "vl_convert",
+        "pyarrow",
+        "polars",
     }
 )
 UNSAFE_SUBMODULES: frozenset[str] = frozenset(
@@ -628,6 +733,10 @@ UNSAFE_SUBMODULES: frozenset[str] = frozenset(
         "estimator_checks",
         "iolib",  # statsmodels' pickle save and load
         "smpickle",
+        "execeval",  # altair.utils.execeval compiles and execs text
+        "server",  # altair.utils.server opens a port and a browser; the attribute is the stdlib http.server
+        "html",  # altair.utils.html: Jinja templates built from text (`environment.from_string`)
+        "jupyter",  # altair.jupyter re-exports importlib's `find_spec`
     }
 )
 """Submodules of the allowed packages that test, build, start processes, run LaTeX or import by name (validator
@@ -672,13 +781,84 @@ UNSAFE_HELPERS: frozenset[str] = frozenset(
         "Memory",  # joblib's disk cache, `Memory(location)`; sklearn.datasets._lfw re-exports it
         "check_memory",  # sklearn.utils.validation turns a path into that cache: `check_memory("dir")`
         "Parallel",  # sklearn.utils.parallel: `temp_folder` is its eighth positional parameter
+        # plotnine (survey of 2026-10-24)
+        "save_as_pdf_pages",  # writes a multipage PDF to any path
+        "watermark",  # draws any image file the caller names (`matplotlib.image.imread`)
+        "PlotnineAnimation",  # an ArtistAnimation whose `save` starts ffmpeg
+        "Environment",  # plotnine.mapping.Environment: `eval` of text in a captured namespace
+        "bpal",  # mizani's brewer_pal stores an unchecked `getattr(module, name)`: the builtins dict by name
+        # altair (survey of 2026-10-24): exec, server, browser, plugin and import-by-name routes
+        "eval_block",
+        "serve",
+        "find_open_port",
+        "generate_handler",
+        "open_html_in_browser",
+        "browser_renderer",
+        "jupyter_renderer",
+        "open_editor",
+        "entry_points",  # importlib.metadata.entry_points: every installed entry point's `.load()`
+        "importlib_metadata_get",
+        "PluginRegistry",  # `.enable(<unregistered name>)` loads an entry point
+        "renderers",
+        "vegalite_compilers",
+        "find_spec",
+        "exec_module",
+        "import_vl_convert",
+        "import_vegafusion",
+        "import_pyarrow_interchange",
+        "register_font_directory",  # vl_convert reads every font file under a directory
+        "javascript_bundle",  # embeds caller JavaScript in the HTML artifact
+        "UrlData",  # a data URL the renderer fetches
+        "topo_feature",
+        # The adversarial pass over the surveys (2026-10-25): an image mark's `file://` href is read from disk by
+        # vl_convert's SVG renderer and drawn into the PNG, past the audit hook (native code) and the no-egress
+        # sandbox; `alt.limit_rows(df)` hands out a narwhals frame whose `.implementation.to_native_namespace()`
+        # is the pyarrow module (file reads and writes with no audit event); `transformed_data` evaluates the
+        # chart's datasets in VegaFusion, which loads `url` data from files.
+        "mark_image",
+        "Url",
+        "UrlValue",
+        "UrlDatum",
+        "limit_rows",
+        "to_eager_narwhals_dataframe",
+        "arrow_table_from_dfi_dataframe",
+        "to_native_namespace",
+        "transformed_data",
+        "JupyterChart",
+        "display",
+        # Every plotnine plot carries `.environment`, the Environment captured from the plot's frame, whose
+        # `.namespace["os"]` is the `os` module as a value (the same pass); banning the class name alone leaves
+        # the instance route open. `qplot` evaluates its aesthetics like `aes` and takes `data=` and labels
+        # next to them, so the expression rule cannot tell its arguments apart; `from_formula` hands its first
+        # positional to patsy like the banned `formula=` keyword (the validator-tests pass of 2026-10-25).
+        "environment",
+        "namespace",
+        "namespaces",
+        "qplot",
+        "from_formula",
     }
 )
 """Public functions and classes of the allowed modules that exec, start a process, import by name, fetch or write
 files (survey of 2026-10-14). Banned as attributes on any object and as `from` imports, like `BANNED_ATTRIBUTES`;
 `_UNSAFE_HELPER_PATTERN` adds the families `print_*` (a canvas writing any format to any path, past the savefig
 rule) and `x13_*` (statsmodels' X-13 runners)."""
-MODULE_ESCAPES: frozenset[str] = frozenset({"calendar.main", "random.main"})
+MODULE_ESCAPES: frozenset[str] = frozenset(
+    {
+        "calendar.main",
+        "random.main",
+        # `pathlib.Path` re-exported (plotnine's `data` and `ggplot` modules, altair's `utils.data` and
+        # `display`), a `Path` instance into the package, and `importlib.metadata.version` bound on the
+        # package (reads any installed distribution's metadata); `Path` and `version` are plausible names
+        # elsewhere (`matplotlib.path.Path`, `numpy.version`).
+        "plotnine.data.Path",
+        "plotnine.data.DATA_DIR",
+        "plotnine.ggplot.Path",
+        "altair.utils.data.Path",
+        "altair.vegalite.v6.display.Path",
+        "altair.version",
+        "mizani.version",
+    }
+)
 """Escapes banned only on their own module, because the bare name is plausible data: `calendar.main`
 sets the process locale through its `-L` option, while `df.main` is a column. Checked against the
 resolved attribute path, `from` imports and import paths; the `module-value` rule keeps the module
@@ -701,6 +881,9 @@ IMPORT_ALTERNATIVES: dict[str, str] = {
     "pytz": "use zoneinfo for time zones",
     "statsmodels.formula": "fit with statsmodels.api on arrays taken from df",
     "scipy": "import the scipy submodule itself, such as scipy.stats or scipy.fft",
+    "vl_convert": "altair writes the PNG itself through chart.save(); import nothing from vl_convert",
+    "plotnine.data": _DATA_FROM_DF,
+    "altair.datasets": _DATA_FROM_DF,
 }
 """What a `banned-import` repair line suggests instead, by module path or its longest known prefix."""
 DEFAULT_IMPORT_ALTERNATIVE = (
@@ -772,9 +955,13 @@ UNSAFE_TEXT_VALUES = frozenset({"TeX"})
 RC_NAMES = frozenset({"rcParams", "rcParamsDefault", "rcParamsOrig"})
 """matplotlib's settings dicts: written only through a literal key or `.update` with a dict literal (`_check_rc`)."""
 _RC_READERS = frozenset({"update", "get", "copy"})
-_RC_CONSUMERS = frozenset({"rc_context", "context"})
-"""Calls that take settings as a dict (`mpl.rc_context({...})`, `plt.style.context({...})`): literal keys only."""
-BANNED_KEYWORDS = frozenset({"usetex", "backend", "memory", "temp_folder", "cachedir"})
+_RC_CONSUMERS = frozenset({"rc_context", "context", "theme_matplotlib"})
+"""Calls that take settings as a dict (`mpl.rc_context({...})`, `plt.style.context({...})`, plotnine's
+`theme_matplotlib(rc={...})`): literal keys only."""
+_RC_FILE_READERS = frozenset({"rc_context", "theme_matplotlib"})
+"""`rc_context(rc, fname)` and plotnine's `theme_matplotlib(rc, fname)` load every setting from the file `fname`
+names (`rc_params_from_file`), whose keys the string rule never sees: no second positional, no `fname=`."""
+BANNED_KEYWORDS = frozenset({"usetex", "backend", "memory", "temp_folder", "cachedir", "formula", "url"})
 """Keyword arguments banned on any call: `usetex=True` sends a text through LaTeX (`ax.text`, `TextPath`, `plt.rc`),
 `backend=` imports a backend module by name (`savefig(backend="module://...")`). `memory=` is a joblib cache
 directory that scikit-learn writes fitted steps to (`Pipeline`, `make_pipeline`, `AgglomerativeClustering`,
@@ -782,8 +969,34 @@ directory that scikit-learn writes fitted steps to (`Pipeline`, `make_pipeline`,
 and `cachedir=` joblib's older name for a cache directory. The render guard refuses those writes in the sandbox; the
 keywords are banned so the exported code makes none on the machine that runs it (survey of the admitted libraries'
 public signatures, 2026-10-14: `location=` names joblib's cache directory too, but matplotlib's colorbar and secondary
-axes take it as a side, so joblib's `Memory` is banned by name instead, in `UNSAFE_HELPERS`)."""
+axes take it as a side, so joblib's `Memory` is banned by name instead, in `UNSAFE_HELPERS`). `formula=` (plotnine's
+`stat_smooth`, `stat_quantile` and `geom_smooth`, statsmodels' `from_formula`) hands a string to patsy, which
+`exec`s Python while it parses it; the render guard refuses that `exec`, so the keyword is refused first (no
+matplotlib or seaborn catalogue file uses it). `url=` names an image mark's href in altair (`encode(url=...)`,
+`MarkDef(url=...)`), which vl_convert reads from disk for a `file://` value, and matplotlib artists' SVG hyperlink,
+which a PNG never carries (one catalogue file, altair's image mark, uses it)."""
+LIBRARY_BANS: dict[str, frozenset[str]] = {
+    # `Chart.from_dict` and `from_json` build a chart from a spec the string rules cannot read (an image mark with
+    # a `file://` href); pandas' `DataFrame.from_dict` is ordinary with the other libraries, so the ban is altair's.
+    # `data_transformers.enable("json")` and `enable("csv", filename=...)` make every save write the chart's data
+    # to a file, and `.register(name, fn)` with `.enable(name)` is the plugin hook of every altair registry
+    # (renderers, themes, compilers); the catalogue only calls `data_transformers.disable_max_rows()`.
+    "altair": frozenset({"from_dict", "from_json", "enable", "register"})
+}
+"""Names banned as attributes and `from` imports in one library's profile only, like `UNSAFE_HELPERS` there."""
 _STRING_DISPATCH_METHODS = frozenset({"agg", "aggregate", "apply", "transform", "applymap"})
+EXPRESSION_CALLS = frozenset({"aes", "after_stat", "after_scale", "stage", "facet_wrap", "facet_grid"})
+"""plotnine calls whose string arguments it compiles and evaluates when they are not column names (module
+docstring, "Expression strings"); `qplot`, which evaluates its aesthetics the same way, is banned by name."""
+FACET_CALLS = frozenset({"facet_wrap", "facet_grid"})
+FACET_KEYWORDS = frozenset({"facets", "rows", "cols"})
+"""The facet calls' formula arguments; their other keywords (`ncol`, `scales`, `labeller`) are no expressions."""
+EXPRESSION_LIBRARIES = frozenset({"plotnine"})
+"""The profiles that check `EXPRESSION_CALLS`."""
+_FORMULA_SPLIT = re.compile(r"[~+]")
+"""A facet formula's sides and terms (`"pane ~ ."`, `"a + b ~ c"`), which plotnine evaluates one by one."""
+_DIRECT_CALL_ONLY = SAVE_NAMES | {"open"}
+"""Attributes that may only be called where they are named, so the save rule sees their target."""
 # Methods that return text without a target and write to one given as `buf`, with the position of
 # `buf` among their positional parameters (`DataFrame.info(verbose, buf, …)`).
 _BUFFER_WRITERS: dict[str, int] = {"to_string": 0, "info": 1}
@@ -888,7 +1101,7 @@ def validate_security(code: str, *, library: str) -> list[Finding]:
     if tree is None:
         return findings
     scan = _Scan(tree)
-    scan.security(library, COMMON_IMPORTS | SHARED_SCIENCE_IMPORTS | library_imports)
+    scan.security(library, COMMON_IMPORTS | SHARED_SCIENCE_IMPORTS | library_imports, save_rule(library))
     return scan.result()
 
 
@@ -1149,6 +1362,10 @@ class _Scan:
         self.findings: list[Finding] = []
         self.os_names: set[str] = set()
         self.allowed_imports: frozenset[str] = frozenset()
+        self.library_bans: frozenset[str] = frozenset()
+        """`LIBRARY_BANS` of the profile's library: banned as attributes and `from` imports in this scan."""
+        self.library_imports: frozenset[str] = frozenset()
+        """`LIBRARY_IMPORTS` of the profile's library: the modules whose save calls the save rule accepts."""
         self.import_bindings: dict[str, bool] = {}
         """Name bound by an import the rules permitted (`import scipy.stats` binds `scipy`) → True."""
         self.aliases: dict[str, str] = {}
@@ -1231,8 +1448,10 @@ class _Scan:
 
     # -- SECURITY ------------------------------------------------------------------------
 
-    def security(self, library: str, allowed_imports: frozenset[str]) -> None:
-        self._check_imports(library, allowed_imports)
+    def security(self, library: str, allowed_imports: frozenset[str], rule: SaveRule) -> None:
+        self.library_bans = LIBRARY_BANS.get(library, frozenset())
+        self.library_imports = LIBRARY_IMPORTS.get(library, frozenset())
+        self._check_imports(library, allowed_imports, rule)
         self._check_os_use()
         self._check_module_values()
         self._check_names()
@@ -1244,12 +1463,17 @@ class _Scan:
         self._check_buffer_writers()
         self._check_statements()
         self._check_strings()
-        self._check_savefig()
+        self._check_save(rule)
+        if library in EXPRESSION_LIBRARIES:
+            self._check_expression_strings()
 
     # -- DATA ----------------------------------------------------------------------------
 
     def data(self, allowed_imports: frozenset[str]) -> None:
-        """Every SECURITY check but savefig, then `df` at the top and no rows written out (module docstring)."""
+        """Every SECURITY check but the save target, then `df` at the top and no rows written out (module docstring).
+
+        A data snippet saves nothing: every save name and `.open` is a `banned-call` (`_check_save` without a rule).
+        """
         self._check_imports("data", allowed_imports)
         self._check_module_values()
         self._check_names()
@@ -1260,6 +1484,7 @@ class _Scan:
         self._check_settings()
         self._check_buffer_writers()
         self._check_statements()
+        self._check_save(None)
         self._check_strings()
         self._check_data_frame()
         self._check_data_literals()
@@ -1323,7 +1548,7 @@ class _Scan:
             child, parent = parent, self.parents.get(parent)
         return False
 
-    def _check_imports(self, library: str, allowed: frozenset[str]) -> None:
+    def _check_imports(self, library: str, allowed: frozenset[str], rule: SaveRule | None = None) -> None:
         def denied(path: str) -> bool:
             return _module_allowed(path, DENIED_IMPORTS)
 
@@ -1355,7 +1580,7 @@ class _Scan:
                     self.ban_import(path, f"is not allowed {where}", alias)
                 elif not module_banned:
                     self.import_bindings[alias.asname or alias.name] = True
-                self._check_function_name(alias.name, alias)
+                self._check_function_name(alias.name, alias, rule, from_node.module)
                 if path in MODULE_ESCAPES:
                     self.add("banned-attribute", f"'{path}' is not allowed", alias)
 
@@ -1368,6 +1593,8 @@ class _Scan:
         after `import scipy.fft._backend as backend` no `._backend`. The root itself is
         left to the allowlist, which keeps its message.
         """
+        if _module_allowed(path, DENIED_IMPORTS):
+            return False  # the allowlist reports a denied path with its own message (`sklearn.datasets`)
         escape = next((name for name in MODULE_ESCAPES if _module_allowed(path, [name])), None)
         if escape is not None:
             self.ban_import(path, f"reaches the banned name '{escape}'", node)
@@ -1376,7 +1603,8 @@ class _Scan:
             if part in BANNED_ATTRIBUTES or part in BANNED_IO or _BANNED_IO_PATTERN.match(part):
                 self.ban_import(path, f"reaches the banned name '{part}'", node)
                 return True
-            if position and part in _ANY_RECEIVER_ESCAPES:
+            # `import statsmodels.api.datasets as d` would spell no banned name afterwards (review of 2026-10-25).
+            if position and (part in _ANY_RECEIVER_ESCAPES or _is_unsafe_helper(part)):
                 self.ban_import(path, f"reaches the banned name '{part}'", node)
                 return True
             if position and part.startswith("_"):
@@ -1384,11 +1612,24 @@ class _Scan:
                 return True
         return False
 
-    def _check_function_name(self, name: str, node: ast.AST) -> None:
-        """A name reached by a `from` import: the attribute, escape and I/O sets apply, and no private name."""
-        if name in BANNED_ATTRIBUTES or name in _ANY_RECEIVER_ESCAPES or _is_unsafe_helper(name):
+    def _check_function_name(self, name: str, node: ast.AST, rule: SaveRule | None, module: str = "") -> None:
+        """A name reached by a `from` import: the attribute, escape and I/O sets apply, and no private name.
+
+        A save name is refused here unless the library's rule lists it and `module` is the plotting library's own
+        (`from plotnine import ggsave`, 16 catalogue files); `from numpy import save` is refused in every profile,
+        because its call would reach the save rule under the library's name.
+        """
+        foreign_save = name in SAVE_NAMES and (
+            rule is None or name not in rule.names or not _module_allowed(module, self.library_imports)
+        )
+        if (
+            name in BANNED_ATTRIBUTES
+            or name in _ANY_RECEIVER_ESCAPES
+            or name in self.library_bans
+            or _is_unsafe_helper(name)
+        ):
             self.add("banned-attribute", f"'{name}' is not allowed", node)
-        elif name in BANNED_IO or _BANNED_IO_PATTERN.match(name):
+        elif name in BANNED_IO or foreign_save or _BANNED_IO_PATTERN.match(name):
             self.add("banned-call", f"'{name}' is not allowed{self.io_hint(name)}", node)
         elif name.startswith("_") and not _DUNDER_NAME.match(name):
             self.add("banned-attribute", f"the private name '{name}' is not allowed", node)
@@ -1468,9 +1709,13 @@ class _Scan:
             elif (
                 attribute.attr in BANNED_ATTRIBUTES
                 or attribute.attr in _ANY_RECEIVER_ESCAPES
+                or attribute.attr in self.library_bans
                 or _is_unsafe_helper(attribute.attr)
             ):
                 self.add("banned-attribute", f"attribute '.{attribute.attr}' is not allowed", attribute)
+            elif attribute.attr in _DIRECT_CALL_ONLY and not self._is_called(attribute):
+                # `f = plot.save; f("x")` would hide the target from the save rule (`_check_save`).
+                self.add("banned-attribute", f"'.{attribute.attr}' may only be called directly", attribute)
             elif attribute.attr in BANNED_IO or _BANNED_IO_PATTERN.match(attribute.attr):
                 # `df.load` / `df.read_count`: a column reached as an attribute, not a module function.
                 column_like = self.resolve(attribute.value) is None and attribute.attr.startswith(("read_", "load"))
@@ -1568,8 +1813,9 @@ class _Scan:
             settings = [keyword.value for keyword in call.keywords if keyword.arg == "rc"]
             if name in _RC_CONSUMERS:
                 settings.extend(call.args)
-            # `rc_context(rc, fname)` loads every setting from the file `fname` names (#12177 review).
-            reads_file = name == "rc_context" and (
+            # `rc_context(rc, fname)` and `theme_matplotlib(rc, fname)` load every setting from the file `fname`
+            # names (#12177 review; plotnine survey of 2026-10-24).
+            reads_file = name in _RC_FILE_READERS and (
                 len(call.args) > 1 or any(keyword.arg == "fname" for keyword in call.keywords)
             )
             style = name == "context"
@@ -1663,7 +1909,13 @@ class _Scan:
     def _check_dispatch_name(self, name: str, method: str, node: ast.AST) -> None:
         """`df.agg("to_csv")` reaches the method by `getattr`: the name is checked as if written."""
         # A buffer writer counts too: `df.agg("to_string", buf="f")` forwards the target (#12167 review).
-        if name in BANNED_NAMES or name in BANNED_ATTRIBUTES or name in BANNED_IO or name in _BUFFER_WRITERS:
+        if (
+            name in BANNED_NAMES
+            or name in BANNED_ATTRIBUTES
+            or name in BANNED_IO
+            or name in _BUFFER_WRITERS
+            or name in SAVE_NAMES
+        ):
             self.add("banned-call", f"'{name}' is not allowed as a method name in .{method}()", node)
         elif match := _BANNED_IO_PATTERN.match(name):
             # The string is a literal, and the pattern takes any word after `read_`: only its family is named.
@@ -1694,8 +1946,16 @@ class _Scan:
             if isinstance(constant.value, str) and _is_unsafe_setting(text):
                 self.add("rc-key", f"string literal names a setting: {RC_KEY_MESSAGE}", constant)
 
-    def _check_savefig(self) -> None:
-        found = False
+    def _is_called(self, attribute: ast.Attribute) -> bool:
+        call = self.parents.get(attribute)
+        return isinstance(call, ast.Call) and call.func is attribute
+
+    def _check_save(self, rule: SaveRule | None) -> None:
+        """Every call of a save name against the library's save rule (module docstring, "The save").
+
+        Without a rule (the DATA profile) every save name and `.open` is a `banned-call`.
+        """
+        wrote_png = False
         for call in self.of(ast.Call):
             func = call.func
             if isinstance(func, ast.Attribute):
@@ -1704,21 +1964,147 @@ class _Scan:
                 name = func.id
             else:
                 continue
-            if name != "savefig":
+            if name == "open" and isinstance(func, ast.Attribute):
+                if rule is None or not rule.reopens:
+                    self.add("banned-call", f"'{_snippet(func)}' is not allowed{self.io_hint('open')}", call)
+                elif not call.args or not _is_theme_target(call.args[0]) or call.keywords or len(call.args) > 1:
+                    self.add("savefig-target", 'open may only reopen f"plot-{THEME}.png", with no other argument', call)
                 continue
-            found = True
-            target = call.args[0] if call.args else next((k.value for k in call.keywords if k.arg == "fname"), None)
-            if target is None or not _is_theme_target(target):
-                self.add("savefig-target", 'savefig target must be exactly f"plot-{THEME}.png"', call)
+            if name not in SAVE_NAMES:
+                continue
+            # `np.save` under a rule that lists `save`: the receiver resolves to a module outside the plotting
+            # library, so it is not the library's save (the validator-tests pass of 2026-10-25).
+            path = self.resolve(func) if isinstance(func, ast.Attribute) else None
+            foreign = path is not None and not _module_allowed(path, self.library_imports)
+            if rule is None or name not in rule.names or foreign:
+                hint = self.io_hint(name) if rule is None else f"; the plot is saved with {rule.verb}"
+                self.add("banned-call", f"'{_snippet(func)}' is not allowed{hint}", call)
+                continue
+            wrote_png |= self._check_save_call(call, rule, name)
+        if rule is not None and not wrote_png:
+            self.add("savefig-target", f'no {rule.verb} of f"plot-{{THEME}}.png" found', None)
+
+    def _check_save_call(self, call: ast.Call, rule: SaveRule, name: str) -> bool:
+        """The file, the format and the keywords of one save call; whether it writes the PNG."""
+        target = save_target(call, rule, name)
+        png = target is not None and _is_theme_target(target)
+        html = rule.html and target is not None and is_theme_target(target, HTML_SUFFIX)
+        if not (png or html):
+            files = 'f"plot-{THEME}.png"' + (' or f"plot-{THEME}.html"' if rule.html else "")
+            self.add("savefig-target", f"{name} target must be exactly {files}", call)
+        if len(call.args) > rule.target_position(name) + 1:
+            # `plot.save(f, None, "/tmp")` is `path=`, `plot.save(f, "pgf")` is `format=`, by position.
+            self.add("savefig-target", f"{name} takes only the file by position; the rest go by keyword", call)
+        allowed = rule.allowed_keywords(name)
+        for keyword in call.keywords:
+            # `format="ps"` with a distiller or `format="pgf"` would start Ghostscript or LaTeX, whatever the name.
+            fmt = keyword.value
+            expected = "html" if html else "png"
+            if keyword.arg == "format" and not (isinstance(fmt, ast.Constant) and fmt.value == expected):
+                self.add("savefig-target", f'{name} format must be "{expected}" or left out', keyword)
+            elif keyword.arg is None:
+                self.add("savefig-target", f"{name} takes no **arguments", keyword)
+            elif allowed is not None and keyword.arg not in allowed:
+                self.add("savefig-target", f"{name} does not take '{keyword.arg}=' here", keyword)
+        if any(isinstance(arg, ast.Starred) for arg in call.args):
+            self.add("savefig-target", f"{name} takes no *arguments", call)
+        return png
+
+    def _check_expression_strings(self) -> None:
+        """plotnine's expression arguments: literals the walk can read, each string walked as code (module docstring,
+        "Expression strings")."""
+        for call in self.of(ast.Call):
+            func = call.func
+            name = func.attr if isinstance(func, ast.Attribute) else func.id if isinstance(func, ast.Name) else ""
+            if name not in EXPRESSION_CALLS:
+                continue
+            facets = name in FACET_CALLS
+            arguments: list[ast.expr] = []
+            for position, argument in enumerate(call.args):
+                if isinstance(argument, ast.Starred):
+                    self.add("banned-call", f"{name} takes no *arguments", argument)
+                elif not facets or position == 0:
+                    arguments.append(argument)
             for keyword in call.keywords:
-                # `format="ps"` with a distiller or `format="pgf"` would start Ghostscript or LaTeX, whatever the name.
-                fmt = keyword.value
-                if keyword.arg == "format" and not (isinstance(fmt, ast.Constant) and fmt.value == "png"):
-                    self.add("savefig-target", 'savefig format must be "png" or left out', keyword)
-                elif keyword.arg is None:
-                    self.add("savefig-target", "savefig takes no **arguments", keyword)
-        if not found:
-            self.add("savefig-target", "no savefig call found", None)
+                if keyword.arg is None:
+                    # `aes(**mapping)` evaluates strings the walk cannot see (the adversarial pass of 2026-10-25).
+                    if isinstance(keyword.value, ast.Dict) and all(key is not None for key in keyword.value.keys):
+                        arguments.extend(keyword.value.values)
+                    else:
+                        self.add("banned-call", f"{name} takes ** only from a dict literal", keyword)
+                elif not facets or keyword.arg in FACET_KEYWORDS:
+                    arguments.append(keyword.value)
+            for argument in arguments:
+                self._check_expression_argument(argument, name)
+
+    def _check_expression_argument(self, node: ast.expr, name: str) -> None:
+        """One argument plotnine evaluates: a literal (a string walked as code, a number, None), a list or tuple of
+        them (`facet_wrap(["a", "b"])`), a call of another expression function (`aes(y=after_stat("count"))`), or a
+        name bound once at module level to a string literal (`col = "x"`, then `aes(x=col)`); anything else may
+        carry a string the walk cannot read."""
+        if isinstance(node, ast.Constant):
+            if isinstance(node.value, str):
+                self._check_expression(node.value, name, node)
+            return
+        if isinstance(node, ast.List | ast.Tuple):
+            for item in node.elts:
+                self._check_expression_argument(item, name)
+            return
+        if isinstance(node, ast.Call):
+            callee = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", "")
+            if callee in EXPRESSION_CALLS:
+                return  # checked as a call of its own
+        if isinstance(node, ast.Name):
+            literal = self._module_string(node.id)
+            if literal is not None and isinstance(literal.value, str):
+                self._check_expression(literal.value, name, literal)
+                return
+        self.add("banned-call", f"{name} takes its column names as string literals, not as an expression", node)
+
+    def _module_string(self, variable: str) -> ast.Constant | None:
+        """The string literal a module-level `variable = "..."` binds, when nothing else binds `variable`."""
+        stores = [name for name in self.of(ast.Name) if name.id == variable and isinstance(name.ctx, ast.Store)]
+        if len(stores) != 1 or any(parameter.arg == variable for parameter in self.of(ast.arg)):
+            return None
+        for stmt in self.tree.body:
+            target = _single_name_target(stmt)
+            if isinstance(stmt, ast.Assign) and target is not None and target.id == variable:
+                value = stmt.value
+                return value if isinstance(value, ast.Constant) and isinstance(value.value, str) else None
+        return None
+
+    def _check_expression(self, text: str, call_name: str, node: ast.Constant) -> None:
+        """One expression string: every parsable term walked with this profile's name, attribute, call, save and
+        buffer-writer rules. A bare identifier and a text that does not parse are column names plotnine looks up."""
+        for term in [text, *_FORMULA_SPLIT.split(text)]:
+            term = term.strip()
+            if not term or term == "." or term.isidentifier():
+                continue
+            try:
+                expression = ast.parse(term, mode="eval").body
+            except SyntaxError, ValueError:
+                continue  # plotnine can only evaluate what compiles: this is a column name such as "True Label"
+            inner = _Scan(ast.Module(body=[ast.Expr(expression)], type_ignores=[]))
+            inner.aliases = self.aliases
+            inner.import_bindings = self.import_bindings
+            inner.allowed_imports = self.allowed_imports
+            inner.library_imports = self.library_imports
+            inner.library_bans = self.library_bans
+            inner.os_names = self.os_names
+            inner._check_os_use()
+            inner._check_names()
+            inner._check_attributes()
+            inner._check_attribute_surface()
+            inner._check_calls()
+            inner._check_keywords()
+            inner._check_buffer_writers()
+            inner._check_statements()
+            inner._check_strings()
+            inner._check_save(None)
+            for finding in inner.findings:
+                self.add(finding.rule, f"in the {call_name} expression: {finding.message}", node)
+            if term == text:
+                break  # the whole string parsed: its terms are already in it
 
     # -- ADAPTATION ----------------------------------------------------------------------
 

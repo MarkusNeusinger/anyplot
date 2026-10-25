@@ -1,10 +1,28 @@
 """The code artifact's name follows the runtime's language (agents/anyplot/schemas.py, services.py)."""
 
+from typing import get_args
+
 import pytest
 from pydantic import ValidationError
 
-from agents.anyplot.schemas import CODE_ARTIFACTS, DEFAULT_CODE_ARTIFACT, PlotResult, artifact_names
+from agents.anyplot.schemas import CODE_ARTIFACTS, DEFAULT_CODE_ARTIFACT, ArtifactName, PlotResult, artifact_names
 from agents.anyplot.services import CodeVersion
+
+
+def test_every_copy_of_the_name_table_agrees() -> None:
+    """The artifact names live in five places (the wire schema, the agents service, the BFF route, the case files and
+    the case store); a name added to one must reach them all (review of PR #12404)."""
+    from agents.main import ARTIFACT_TYPES
+    from api.agent_cases import CASE_MEDIA_TYPES
+    from api.routers.agent import ARTIFACT_MEDIA_TYPES
+    from core.agent_cases import CASE_FILE_NAMES, CODE_FILE_NAMES, MANIFEST_NAME
+
+    names = set(get_args(ArtifactName))
+    assert set(ARTIFACT_TYPES) == names == set(ARTIFACT_MEDIA_TYPES)
+    assert ARTIFACT_TYPES == ARTIFACT_MEDIA_TYPES
+    assert set(CODE_FILE_NAMES) == CODE_ARTIFACTS
+    assert set(CASE_FILE_NAMES) == names | {MANIFEST_NAME} == set(CASE_MEDIA_TYPES)
+    assert {name: CASE_MEDIA_TYPES[name] for name in names} == ARTIFACT_TYPES
 
 
 class TestArtifactNames:

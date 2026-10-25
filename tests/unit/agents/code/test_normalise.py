@@ -56,6 +56,76 @@ def test_syntax_error_is_left_alone_with_a_note() -> None:
     assert report.notes and report.notes[0].startswith("syntax:")
 
 
+# --- the other Python libraries ----------------------------------------------------------
+
+
+PLOTNINE_CATALOGUE = source('''
+    """ anyplot.ai
+    scatter-demo: Demo Scatter
+    Library: plotnine 0.15.7 | Python 3.13.13
+    Quality: 90/100 | Updated: 2026-10-01
+    """
+
+    import os
+    import sys
+
+    import pandas as pd
+    from plotnine import aes, geom_point, ggplot, labs
+
+    # This file is named plotnine.py; drop its directory from sys.path.
+    _here = os.path.dirname(os.path.abspath(__file__))
+    sys.path = [p for p in sys.path if os.path.abspath(p) != _here]
+
+    THEME = os.getenv("ANYPLOT_THEME", "light")
+    PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+    df = pd.DataFrame({"x": [1, 2], "y": [3, 4]})
+    title = "scatter-demo · python · plotnine · anyplot.ai"
+    plot = ggplot(df, aes(x="x", y="y")) + geom_point(color=PAGE_BG) + labs(title=title)
+    plot.save(os.path.join(_here, f"plot-{THEME}.png"), dpi=400, width=8, height=4.5, units="in", verbose=False)
+''')
+
+
+def test_plotnine_file_is_normalised_without_a_canvas_rewrite() -> None:
+    report = normalise_report(PLOTNINE_CATALOGUE, library="plotnine")
+
+    assert report.code.startswith("import os\n")
+    assert 'plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)' in report.code
+    assert 'title = ""' in report.code and "sys.path" not in report.code and "_here" not in report.code
+    assert any(change.startswith("save target os.path.join(_here, ") for change in report.changes)
+    assert report.notes == (
+        "canvas: plotnine sizes its canvas on the save, not through a matplotlib figure; nothing to rewrite",
+    )
+    assert norm(PLOTNINE_CATALOGUE, "plotnine") == report.code
+    canvas = measure_canvas(report.code, library="plotnine")
+    assert canvas.pixels is None and not canvas.on_target
+    assert canvas.note == "plotnine sizes its canvas on the save, not through a matplotlib figure"
+
+
+def test_altair_rewrites_the_png_and_the_html_target() -> None:
+    code = source("""
+        import os
+
+        import altair as alt
+
+        THEME = os.getenv("ANYPLOT_THEME", "light")
+        out = os.path.dirname(os.path.abspath(__file__))
+        chart = alt.Chart().mark_point()
+        chart.save(os.path.join(out, f"plot-{THEME}.png"), scale_factor=4.0)
+        chart.save(os.path.join(out, f"plot-{THEME}.html"))
+    """)
+
+    report = normalise_report(code, library="altair")
+
+    assert 'chart.save(f"plot-{THEME}.png", scale_factor=4.0)\nchart.save(f"plot-{THEME}.html")\n' in report.code
+    assert "os.path.dirname" not in report.code  # `out` only served the targets, so the guard step dropped it
+    assert [change.split(" at ")[0] for change in report.changes if change.startswith("save target")] == [
+        'save target os.path.join(out, f"plot-{THEME}.png") -> f"plot-{THEME}.png"',
+        'save target os.path.join(out, f"plot-{THEME}.html") -> f"plot-{THEME}.html"',
+    ]
+    # Read with matplotlib's rule the `.save` calls are no save calls: the targets stay as they are.
+    assert "os.path.join(out," in normalise(code, library="matplotlib")
+
+
 # --- header ------------------------------------------------------------------------------
 
 
@@ -444,11 +514,11 @@ def test_catalogue_sweep(path: Path) -> None:
     result = normalise(original, library=path.stem)
 
     assert normalise(result, library=path.stem) == result
-    regions = find_regions(original)
+    regions = find_regions(original, library=path.stem)
     size, _ = figure_size(regions)
     call = regions.savefig or (regions.savefig_calls[-1] if regions.savefig_calls else None)
     dpi = effective_dpi(regions, call)[0] if call is not None else None
-    if size is not None and dpi is not None and not isinstance(plan_dpi(size), str):
-        canvas = measure_canvas(result)
+    canvas = measure_canvas(result, library=path.stem)  # figsize is None where the library sizes its own canvas
+    if canvas.figsize is not None and size is not None and dpi is not None and not isinstance(plan_dpi(size), str):
         assert canvas.pixels in (LANDSCAPE, SQUARE), canvas.note
         assert canvas.on_target, canvas.note

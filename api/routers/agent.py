@@ -1376,7 +1376,7 @@ async def submit_feedback(
     `data.csv` only with `include_data`); `result_version` 0 is the feedback on a chat
     that made no plot, whose bundle is the conversation, the profile and bindings and,
     with `include_data`, the session's current data (`422 no_data` before any data was
-    pasted or computed), but no image and no `plot.py`; `api/agent_cases.py` splits it into the case
+    pasted or computed), but no image and no code file; `api/agent_cases.py` splits it into the case
     files and the manifest, which it uploads last, all in a worker thread. A later
     submission for the same version is a new case that names the earlier one in
     `replaces`, which supersedes that case's row for the same session hash and result

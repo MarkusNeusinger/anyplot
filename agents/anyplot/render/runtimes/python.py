@@ -1,10 +1,13 @@
-"""The Python runtime (matplotlib and seaborn in phase 1).
+"""The Python runtime: matplotlib, seaborn, plotnine and altair (`runtimes.PYTHON_LIBRARIES`).
 
 The command is the catalogue's CI render command (`MPLBACKEND=Agg
 ANYPLOT_THEME=<theme> python plot.py`) with the isolated interpreter (no remote
 debugging either, `harness.INTERPRETER_FLAGS`) and the probe harness in front. The environment is complete, never inherited: the theme, the Agg
 backend, a writable matplotlib cache and `HOME` under `/tmp` (the root filesystem is
-read-only), and the harness's resource limits.
+read-only), and the harness's resource limits. The library picks the code conventions
+(`regions.SAVE_RULES`: the save call, altair's second `plot-<theme>.html` file and its
+PIL padding) and the validator profile; plotnine draws through matplotlib and so gets a
+probe, altair renders in vl-convert's V8 and gets none (the host gates still run).
 
 `normalise`, `loader_block`, `validate` and the rest (`regions`, `readiness`, `security`,
 `adaptation`, `apply_plan`, `restore_protected`, `new_literals`, `error_summary`, `export`)
@@ -49,7 +52,7 @@ backend's data runs apply as well."""
 
 
 class PythonRuntime:
-    """matplotlib and seaborn code, run as `plot.py` under the probe harness."""
+    """Python plot code (matplotlib, seaborn, plotnine, altair), run as `plot.py` under the probe harness."""
 
     language = "python"
     file_name = "plot.py"
@@ -142,7 +145,7 @@ class PythonRuntime:
     # The code conventions of the language, for the pipeline (`agents/anyplot/code/`).
 
     def regions(self, code: str) -> Regions:
-        return find_regions(code)
+        return find_regions(code, library=self.library)
 
     def readiness(self, normalised: str, *, spec_id: str, enabled_libraries: list[str]) -> Readiness:
         return scan(normalised, spec_id=spec_id, library=self.library, enabled_libraries=enabled_libraries)
@@ -154,10 +157,10 @@ class PythonRuntime:
         return validate_adaptation(code, original_palette=original_palette)
 
     def apply_plan(self, working: str, plan: AdaptPlan) -> AppliedPlan:
-        return apply_plan(working, plan)
+        return apply_plan(working, plan, library=self.library)
 
     def restore_protected(self, base: str, code: str) -> str | None:
-        return restore_protected(base, code)
+        return restore_protected(base, code, library=self.library)
 
     def new_literals(self, base: str, code: str) -> list[str]:
         return new_literals(base, code)

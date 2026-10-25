@@ -14,7 +14,16 @@ from agents.anyplot.opening import assess
 from agents.anyplot.schemas import Binding
 from agents.anyplot.settings import AgentSettings
 from agents.evals import make_fixtures
-from agents.evals.make_fixtures import LIBRARIES, PERTURBATIONS, SMOKE_TAG, SPECS, case_id, render_cases
+from agents.evals.make_fixtures import (
+    LIBRARIES,
+    LIBRARY_SMOKE,
+    PERTURBATIONS,
+    SMOKE_CYCLE,
+    SMOKE_TAG,
+    SPECS,
+    case_id,
+    render_cases,
+)
 from core.spec_roles import parse_roles
 
 
@@ -49,16 +58,30 @@ def test_check_mode_reports_a_stale_file(tmp_path, capsys: pytest.CaptureFixture
     assert "stale: pie-basic-seaborn-n12/data.csv" in capsys.readouterr().err
 
 
-def test_ten_specs_of_ten_families_times_two_libraries_times_six_perturbations(files: dict[str, str]) -> None:
+def test_ten_specs_of_ten_families_times_four_libraries_times_six_perturbations(files: dict[str, str]) -> None:
     assert len(SPECS) == 10 and {spec.family for spec in SPECS} == FAMILIES
+    assert LIBRARIES == ("matplotlib", "seaborn", "plotnine", "altair")
     ids = {name.split("/")[0] for name in files}
-    assert len(ids) == 120
+    assert len(ids) == 240
     assert ids == {
         case_id(spec.spec_id, library, perturbation)
         for spec in SPECS
         for library in LIBRARIES
         for perturbation in PERTURBATIONS
     }
+
+
+def test_the_libraries_of_a_spec_share_its_datasets_and_bindings(files: dict[str, str]) -> None:
+    """Only `library`, the smoke tag and the case id tell the libraries of one spec and perturbation apart."""
+    for spec in SPECS:
+        for perturbation in PERTURBATIONS:
+            directories = [case_id(spec.spec_id, library, perturbation) for library in LIBRARIES]
+            assert len({files[f"{directory}/data.csv"] for directory in directories}) == 1
+            cases = [json.loads(files[f"{directory}/case.json"]) for directory in directories]
+            for case in cases:
+                del case["library"]
+                case["tags"] = [tag for tag in case["tags"] if tag != SMOKE_TAG]
+            assert all(case == cases[0] for case in cases), (spec.spec_id, perturbation)
 
 
 def test_case_json_schema(files: dict[str, str]) -> None:
@@ -76,20 +99,48 @@ def test_case_json_schema(files: dict[str, str]) -> None:
         assert name.split("/")[0] == case_id(case["spec_id"], case["library"], case["perturbation"])
 
 
-def test_smoke_covers_every_perturbation_and_both_libraries(files: dict[str, str]) -> None:
+def test_smoke_covers_every_spec_perturbation_and_library(files: dict[str, str]) -> None:
     smoke = [json.loads(text) for name, text in files.items() if name.endswith("case.json")]
     smoke = [case for case in smoke if SMOKE_TAG in case["tags"]]
+    cycle = [case for case in smoke if case["library"] in SMOKE_CYCLE]
 
-    assert len(smoke) == len(SPECS)
-    assert {case["spec_id"] for case in smoke} == {spec.spec_id for spec in SPECS}
-    assert {case["perturbation"] for case in smoke} == set(PERTURBATIONS)
-    assert {case["library"] for case in smoke} == set(LIBRARIES)
+    assert len(smoke) == len(SPECS) + len(LIBRARY_SMOKE) == 12
+    assert set(SMOKE_CYCLE) | set(LIBRARY_SMOKE) == set(LIBRARIES) and not set(SMOKE_CYCLE) & set(LIBRARY_SMOKE)
+    assert len(cycle) == len(SPECS)
+    assert {case["spec_id"] for case in cycle} == {spec.spec_id for spec in SPECS}
+    assert {case["perturbation"] for case in cycle} == set(PERTURBATIONS)
+    assert {case["library"] for case in cycle} == set(SMOKE_CYCLE)
+    others = {case["library"]: (case["spec_id"], case["perturbation"]) for case in smoke if case not in cycle}
+    assert others == LIBRARY_SMOKE
+
+
+def test_a_new_library_never_moves_the_smoke_cycle(files: dict[str, str]) -> None:
+    """The ten cycle cases are the ones of `--cases smoke` before step 1b; plotnine and altair add one each."""
+    smoke = sorted(
+        name.split("/")[0]
+        for name, text in files.items()
+        if name.endswith("case.json") and SMOKE_TAG in json.loads(text)["tags"]
+    )
+    assert smoke == [
+        "area-basic-matplotlib-renamed",
+        "bar-grouped-matplotlib-n12",
+        "box-basic-matplotlib-date",
+        "heatmap-basic-seaborn-decimal-comma",
+        "histogram-basic-seaborn-n5000",
+        "line-basic-seaborn-x10",
+        "line-timeseries-seaborn-n5000",
+        "pie-basic-matplotlib-n12",
+        "scatter-basic-altair-renamed",
+        "scatter-basic-matplotlib-renamed",
+        "scatter-basic-plotnine-renamed",
+        "violin-basic-seaborn-x10",
+    ]
 
 
 @pytest.mark.parametrize("spec", SPECS, ids=lambda spec: spec.spec_id)
 def test_every_case_parses_binds_and_is_eligible(spec: make_fixtures.SpecFixture, files: dict[str, str]) -> None:
     """The cases test the adaptation, never the parser: no warning, complete bindings, an eligible pair."""
-    settings = AgentSettings()
+    settings = AgentSettings(libraries=list(LIBRARIES))  # the default enables matplotlib and seaborn only
     for library in LIBRARIES:
         snapshot = snapshot_from_repo(spec.spec_id, library)
         eligibility, _ = assess(snapshot, library, settings)

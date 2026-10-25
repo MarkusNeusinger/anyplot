@@ -1,7 +1,7 @@
 """Find the catalogue conventions in plot source by AST, as spans the other code modules work around.
 
-A catalogue implementation (`plots/*/implementations/python/{matplotlib,seaborn}.py`)
-follows conventions that the adapter must keep and the normaliser rewrites:
+A catalogue implementation (`plots/*/implementations/python/<library>.py`) follows
+conventions that the adapter must keep and the normaliser rewrites:
 
 * the theme block: `THEME = os.getenv("ANYPLOT_THEME", "light")`, then module-level
   tokens that pick a fixed value per theme, such as
@@ -15,8 +15,16 @@ follows conventions that the adapter must keep and the normaliser rewrites:
   (in the 650 matplotlib and seaborn files it is the only one of 2,745);
 * the Imprint palette list, `IMPRINT = [...]` (124 files) or `IMPRINT_PALETTE = [...]`
   (89 files);
-* one final `plt.savefig(f"plot-{THEME}.png", dpi=..., facecolor=PAGE_BG)` statement
-  (also `fig.savefig` and `g.figure.savefig`);
+* one final save statement that writes `f"plot-{THEME}.png"`: the library's save call
+  (`SAVE_RULES`): `plt.savefig(f"plot-{THEME}.png", dpi=..., facecolor=PAGE_BG)` for
+  matplotlib and seaborn (also `fig.savefig` and `g.figure.savefig`),
+  `plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")` or
+  `ggsave(plot, f"plot-{THEME}.png", ...)` for plotnine (the file is the second
+  positional of `ggsave`), `chart.save(f"plot-{THEME}.png", scale_factor=4.0)` for
+  altair, whose files also save `f"plot-{THEME}.html"` and reopen the PNG with PIL to
+  pad it (`_canvas.save(f"plot-{THEME}.png")`). Every call of the library's save names
+  is a save call; the protected final one is the last module-level statement among
+  those that write the PNG;
 * the canvas: `figsize=` and `dpi=` on the figure creation call (`plt.subplots`,
   `plt.figure`, `plt.subplot_mosaic`, `sns.clustermap`), `set_size_inches` and
   `set_dpi` on the figure of a seaborn grid, and `dpi=` on savefig;
@@ -31,7 +39,9 @@ before a node (the catalogue uses `·`, `→` and `≈`) does not shift a span.
 import ast
 import bisect
 import re
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import Literal
 
 
@@ -40,6 +50,9 @@ PLACEHOLDER_FUNC = "load_user_data"
 THEME_NAME = "THEME"
 THEME_ENV = "ANYPLOT_THEME"
 STANDARD_TARGET = 'f"plot-{THEME}.png"'
+HTML_TARGET = 'f"plot-{THEME}.html"'
+PNG_SUFFIX = ".png"
+HTML_SUFFIX = ".html"
 IMPRINT_NAMES = frozenset({"IMPRINT", "IMPRINT_PALETTE"})
 # Callees (last dotted component) that create a figure and may carry `dpi=` without `figsize=`.
 FIGURE_FUNCS = frozenset({"figure", "subplots", "subplot_mosaic"})
@@ -52,6 +65,82 @@ _NEWLINE = re.compile(r"\r\n|\r|\n")
 RegionKind = Literal["theme", "theme_token", "placeholder", "savefig"]
 SizeMethod = Literal["set_size_inches", "set_dpi"]
 Number = int | float
+
+
+@dataclass(frozen=True)
+class SaveRule:
+    """How one library's code writes the plot file (module docstring, "one final save statement").
+
+    `names` are the callee names (the last dotted component) that save the plot; the
+    file is the positional at `positions[name]` (0 unless listed) or one of
+    `target_keywords`. `keywords[name]` lists the keywords a save may take, None for any
+    (matplotlib's `savefig`, whose settings the validator checks one by one). `html`
+    admits a second save of exactly `f"plot-{THEME}.html"` next to the PNG, `reopens`
+    a `.open(...)` of the PNG (altair's PIL padding block), and `canvas` says whether the
+    normaliser's matplotlib canvas rewrite (figure size times dpi) applies.
+    """
+
+    names: frozenset[str]
+    target_keywords: frozenset[str]
+    positions: Mapping[str, int] = field(default_factory=lambda: MappingProxyType({}))
+    keywords: Mapping[str, frozenset[str] | None] = field(default_factory=lambda: MappingProxyType({}))
+    html: bool = False
+    reopens: bool = False
+    canvas: bool = True
+
+    @property
+    def verb(self) -> str:
+        """The save name a message uses for this library: `savefig` for matplotlib, `save` for the others."""
+        return "savefig" if "savefig" in self.names and len(self.names) == 1 else "save"
+
+    def target_position(self, name: str) -> int:
+        return self.positions.get(name, 0)
+
+    def allowed_keywords(self, name: str) -> frozenset[str] | None:
+        return self.keywords.get(name)
+
+
+_PLOTNINE_SAVE_KEYWORDS = frozenset({"filename", "format", "width", "height", "units", "dpi", "limitsize", "verbose"})
+"""`ggplot.save(filename, format, path, width, height, units, dpi, limitsize, verbose, **kwargs)` without `path=`
+(a directory joined onto the file) and without the `**kwargs` it hands to savefig."""
+_ALTAIR_SAVE_KEYWORDS = frozenset({"fp", "format", "scale_factor", "ppi", "inline", "embed_options"})
+"""`Chart.save(fp, format, override_data_transformer, scale_factor, mode, vegalite_version, vega_version,
+vegaembed_version, embed_options, json_kwds, webdriver, engine, inline, **kwargs)`: the size and the HTML embedding
+only; `webdriver=` and `engine=` choose how the PNG is made and stay with altair's default, vl-convert in process."""
+_MATPLOTLIB_SAVE = SaveRule(names=frozenset({"savefig"}), target_keywords=frozenset({"fname"}))
+SAVE_RULES: Mapping[str, SaveRule] = MappingProxyType(
+    {
+        "matplotlib": _MATPLOTLIB_SAVE,
+        "seaborn": _MATPLOTLIB_SAVE,
+        # `plot.save(...)`, `ggsave(plot, ...)` and, after `fig = plot.draw()`, matplotlib's `fig.savefig(...)`.
+        "plotnine": SaveRule(
+            names=frozenset({"save", "ggsave", "savefig"}),
+            target_keywords=frozenset({"filename", "fname"}),
+            positions=MappingProxyType({"ggsave": 1}),
+            keywords=MappingProxyType({"save": _PLOTNINE_SAVE_KEYWORDS, "ggsave": _PLOTNINE_SAVE_KEYWORDS}),
+            canvas=False,
+        ),
+        "altair": SaveRule(
+            names=frozenset({"save"}),
+            target_keywords=frozenset({"fp"}),
+            keywords=MappingProxyType({"save": _ALTAIR_SAVE_KEYWORDS}),
+            html=True,
+            reopens=True,
+            canvas=False,
+        ),
+    }
+)
+"""The save rule of every library with a Python code profile; `SUPPORTED_LIBRARIES` of the normaliser is its keys."""
+SAVE_NAMES: frozenset[str] = frozenset(name for rule in SAVE_RULES.values() for name in rule.names)
+"""Every save name of every rule: a call by one of them is a save call in every profile, allowed or not."""
+
+
+def save_rule(library: str) -> SaveRule:
+    """The save rule of `library`; `ValueError` for a library without a Python code profile."""
+    try:
+        return SAVE_RULES[library]
+    except KeyError:
+        raise ValueError(f"no save rule for library {library!r}; supported: {sorted(SAVE_RULES)}") from None
 
 
 @dataclass(frozen=True, slots=True)
@@ -184,13 +273,15 @@ class SizeCall:
 
 @dataclass(frozen=True, slots=True)
 class SavefigCall:
-    """A `savefig(...)` call.
+    """A save call: `savefig(...)`, or the library's own save (`SaveRule.names`).
 
     `statement` is the whole lines of the enclosing statement when the call is a
     module-level expression statement, else None. `target` is the source of the file
-    argument (first positional or `fname=`); `literal_target` its value when it is a
-    plain string such as `"plot.png"` (a single-theme target). `items` are the argument
-    spans in source order, so a keyword can be cut together with its separating comma.
+    argument (the rule's positional or keyword); `literal_target` its value when it is a
+    plain string such as `"plot.png"` (a single-theme target). `standard_target` is
+    exactly `f"plot-{THEME}.png"`, `html_target` exactly `f"plot-{THEME}.html"` (altair's
+    second file). `items` are the argument spans in source order, so a keyword can be cut
+    together with its separating comma.
     """
 
     func: str
@@ -203,6 +294,12 @@ class SavefigCall:
     keywords: tuple[Keyword, ...]
     items: tuple[Span, ...]
     has_splat: bool
+    html_target: bool = False
+
+    @property
+    def name(self) -> str:
+        """The callee's last dotted component: `savefig`, `save` or `ggsave`."""
+        return self.func.rsplit(".", 1)[-1]
 
 
 @dataclass(frozen=True, slots=True)
@@ -221,7 +318,7 @@ class Regions:
 
     @property
     def protected(self) -> tuple[Region, ...]:
-        """The regions an edit may not touch: THEME, the theme tokens, the placeholder, the final savefig.
+        """The regions an edit may not touch: THEME, the theme tokens, the placeholder, the final save statement.
 
         The Imprint palette is not protected: the adapter may extend it, and the
         ADAPTATION validator checks that its existing entries keep their order.
@@ -306,8 +403,8 @@ def is_placeholder(node: ast.AST) -> bool:
     )
 
 
-def is_standard_target(node: ast.expr) -> bool:
-    """Exactly `f"plot-{THEME}.png"`: no conversion, no format spec."""
+def is_theme_target(node: ast.expr, suffix: str = PNG_SUFFIX) -> bool:
+    """Exactly `f"plot-{THEME}<suffix>"`: no conversion, no format spec."""
     if not isinstance(node, ast.JoinedStr) or len(node.values) != 3:
         return False
     head, middle, tail = node.values
@@ -320,8 +417,21 @@ def is_standard_target(node: ast.expr) -> bool:
         and middle.conversion == -1
         and middle.format_spec is None
         and isinstance(tail, ast.Constant)
-        and tail.value == ".png"
+        and tail.value == suffix
     )
+
+
+def is_standard_target(node: ast.expr) -> bool:
+    """Exactly `f"plot-{THEME}.png"`: no conversion, no format spec."""
+    return is_theme_target(node, PNG_SUFFIX)
+
+
+def save_target(call: ast.Call, rule: SaveRule, name: str) -> ast.expr | None:
+    """The file argument of the save call `name` under `rule`: its positional, else one of the rule's keywords."""
+    position = rule.target_position(name)
+    if len(call.args) > position and not any(isinstance(arg, ast.Starred) for arg in call.args[: position + 1]):
+        return call.args[position]
+    return next((kw.value for kw in call.keywords if kw.arg in rule.target_keywords), None)
 
 
 def _assigned_names(stmt: ast.stmt) -> list[str] | None:
@@ -400,10 +510,10 @@ def _size_call(index: SourceIndex, call: ast.Call, method: SizeMethod) -> SizeCa
     )
 
 
-def _savefig_call(index: SourceIndex, call: ast.Call, statement: Span | None) -> SavefigCall:
+def _savefig_call(index: SourceIndex, call: ast.Call, statement: Span | None, rule: SaveRule, name: str) -> SavefigCall:
     keywords = tuple(_keyword(index, kw) for kw in call.keywords)
     items = sorted([index.node_span(arg) for arg in call.args] + [kw.span for kw in keywords], key=lambda s: s.start)
-    target_node = call.args[0] if call.args else next((kw.value for kw in call.keywords if kw.arg == "fname"), None)
+    target_node = save_target(call, rule, name)
     return SavefigCall(
         func=ast.unparse(call.func),
         span=index.node_span(call),
@@ -417,14 +527,17 @@ def _savefig_call(index: SourceIndex, call: ast.Call, statement: Span | None) ->
         keywords=keywords,
         items=tuple(items),
         has_splat=any(kw.arg is None for kw in call.keywords) or any(isinstance(a, ast.Starred) for a in call.args),
+        html_target=target_node is not None and is_theme_target(target_node, HTML_SUFFIX),
     )
 
 
-def find_regions(code: str, tree: ast.Module | None = None) -> Regions:
+def find_regions(code: str, tree: ast.Module | None = None, *, library: str = "matplotlib") -> Regions:
     """Locate the conventions in `code`; raises `SyntaxError` when it does not parse.
 
-    Pass `tree` when the caller already parsed exactly this `code`.
+    Pass `tree` when the caller already parsed exactly this `code`. `library` picks the
+    save rule (`SAVE_RULES`): which calls count as save calls and where their file is.
     """
+    rule = save_rule(library)
     if tree is None:
         tree = ast.parse(code)
     index = SourceIndex(code)
@@ -464,8 +577,8 @@ def find_regions(code: str, tree: ast.Module | None = None) -> Regions:
         if not isinstance(node, ast.Call):
             continue
         callee = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", None)
-        if callee == "savefig":
-            savefig_calls.append(_savefig_call(index, node, module_savefig.get(id(node))))
+        if callee in rule.names:
+            savefig_calls.append(_savefig_call(index, node, module_savefig.get(id(node)), rule, callee))
         elif callee in SIZE_METHODS:
             method: SizeMethod = "set_size_inches" if callee == "set_size_inches" else "set_dpi"
             size_calls.append(_size_call(index, node, method))
@@ -482,7 +595,11 @@ def find_regions(code: str, tree: ast.Module | None = None) -> Regions:
                 )
 
     by_start = sorted(savefig_calls, key=lambda call: call.span.start)
-    final = by_start[-1] if by_start else None
+    # The protected final save is the last module-level statement that writes the PNG: altair's files end on
+    # the HTML save and pad the PNG inside an `if` (`_canvas.save(...)`), after the save that is protected.
+    writers = [call for call in by_start if call.standard_target] or by_start
+    statements = [call for call in writers if call.statement is not None]
+    final = statements[-1] if statements else (writers[-1] if writers else None)
     return Regions(
         theme=theme,
         theme_tokens=tuple(tokens),

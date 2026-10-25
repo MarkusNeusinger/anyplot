@@ -19,7 +19,8 @@ from core.constants import SUPPORTED_LIBRARIES
 
 class TestRegistry:
     def test_the_registry_serves_exactly_the_normalised_python_libraries(self) -> None:
-        assert RUNTIME_LIBRARIES == PYTHON_LIBRARIES == NORMALISED_LIBRARIES == {"matplotlib", "seaborn"}
+        assert RUNTIME_LIBRARIES == PYTHON_LIBRARIES == NORMALISED_LIBRARIES
+        assert PYTHON_LIBRARIES == {"matplotlib", "seaborn", "plotnine", "altair"}
         assert RUNTIME_LIBRARIES <= SUPPORTED_LIBRARIES
 
     @pytest.mark.parametrize("library", sorted(RUNTIME_LIBRARIES))
@@ -84,3 +85,21 @@ class TestPythonRuntimeBindings:
         assert runtime.restore_protected(self.CODE, self.CODE) is None or isinstance(
             runtime.restore_protected(self.CODE, self.CODE), str
         )
+
+    PLOTNINE = (
+        "import os\nfrom plotnine import aes, geom_point, ggplot\n\n"
+        'THEME = os.getenv("ANYPLOT_THEME", "light")\ndf = load_user_data()\n'
+        'plot = ggplot(df, aes(x="x", y="y")) + geom_point()\n'
+        'plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")\n'
+    )
+
+    def test_plotnine_and_altair_runtimes_read_their_own_save_rule(self) -> None:
+        plotnine, altair = runtime_for("plotnine"), runtime_for("altair")
+        regions = plotnine.regions(self.PLOTNINE)
+        assert regions.savefig is not None and regions.savefig.name == "save" and regions.savefig.standard_target
+        assert plotnine.security(self.PLOTNINE) == []
+        assert altair.security(self.PLOTNINE) != []  # the plotnine import is refused with altair
+        assert runtime_for("matplotlib").regions(self.PLOTNINE).savefig_calls == ()  # `.save` is no save there
+        assert plotnine.file_name == altair.file_name == "plot.py" and altair.code_artifact == "plot.py"
+        changed = self.PLOTNINE.replace("dpi=400", "dpi=100")
+        assert plotnine.restore_protected(self.PLOTNINE, changed) == self.PLOTNINE

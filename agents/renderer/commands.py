@@ -21,10 +21,12 @@ sandbox with the probe harness in front:
 In exec mode (`EXEC_FLAG`) the harness prints its start line, sets the resource limits
 and runs the language's own command as a child, so the launcher retry, the host
 watchdog and the kill path work for every language alike. A row also says which limits
-differ from the Python defaults: V8, Chromium and Julia reserve address space far
-beyond their resident memory, and one Chromium render runs seven processes with 77
-tasks (spike of 2026-10-24), so `RLIMIT_AS` and `RLIMIT_NPROC` are off for those rows;
-the `MemAvailable` watchdog, `RLIMIT_CPU`, `RLIMIT_FSIZE` and the byte budget remain.
+differ from the Python defaults: V8, Chromium and Julia's LLVM reserve address space far
+beyond their resident memory, so `RLIMIT_AS` is off for the JavaScript and Julia rows
+and for altair's Python row (vl-convert embeds V8); one Chromium render runs seven
+processes with 77 tasks (spike of 2026-10-24), so `RLIMIT_NPROC` is off for the
+JavaScript row alone; the `MemAvailable` watchdog, `RLIMIT_CPU`, `RLIMIT_FSIZE` and the
+byte budget remain.
 `render_p95_s` is what the agents' pipeline reserves for a repair attempt's render
 when it checks its soft deadline.
 
@@ -115,7 +117,11 @@ class RuntimeCommand:
 def _row(language: Language, library: str) -> RuntimeCommand:
     code_file = CODE_FILE_OVERRIDES.get(library, CODE_FILES[language])
     if language == "python":
-        return RuntimeCommand(language, code_file, ())
+        # altair renders in vl-convert's embedded V8, which reserves address space the way the JavaScript
+        # row's Chromium does: under RLIMIT_AS up to 64 GiB it aborts at start ("Check failed: Start()",
+        # SIGTRAP), measured on 2026-10-25 through the harness; its resident set is about 270 MiB and the
+        # MemAvailable watchdog, RLIMIT_CPU, RLIMIT_FSIZE and the byte budget remain. plotnine fits 1 GiB.
+        return RuntimeCommand(language, code_file, (), rlimit_as=library != "altair")
     if language == "javascript":
         return RuntimeCommand(
             language,

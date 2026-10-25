@@ -32,13 +32,19 @@ ENV UV_PYTHON_DOWNLOADS=never
 COPY pyproject.toml uv.lock README.md ./
 
 # The base dependencies carry the service (fastapi, uvicorn, pydantic-settings) and
-# the two extras carry the phase-1 plotting stack. No ADK: nothing in the renderer
-# imports it. `--no-install-project` keeps the project itself out of the venv, so a
-# sandbox's interpreter finds no anyplot package on its path; the service imports
-# `agents.renderer` from the working directory, which uvicorn puts on `sys.path`.
+# the four `lib-*` extras carry the Python plotting stack the harness runs in process:
+# matplotlib and seaborn (phase 1), plotnine and altair (step 1b of
+# agentic/specs/261024-agent-all-libraries.md). altair renders through vl-convert,
+# a self-contained binary (V8 and resvg) that needs no browser and no system
+# library; its fonts are set up in the runtime stage below. No ADK: nothing in
+# the renderer imports it. `--no-install-project` keeps the project itself out
+# of the venv, so a sandbox's interpreter finds no anyplot package on its path;
+# the service imports `agents.renderer` from the working directory, which
+# uvicorn puts on `sys.path`.
 # The `convert` extra (python-calamine, pyarrow) is the file conversion's readers
 # (`harness.py --convert`, agents/anyplot/render/convert.py).
-RUN uv venv && uv sync --frozen --no-install-project --extra lib-matplotlib --extra lib-seaborn --extra convert
+RUN uv venv && uv sync --frozen --no-install-project --extra lib-matplotlib --extra lib-seaborn \
+    --extra lib-plotnine --extra lib-altair --extra convert
 
 # pyarrow ships far more than the converter reads (owner decision of 2026-10-15: slim it).
 # The conversion needs the core, compute, IPC, Feather and Parquet; it never touches
@@ -128,6 +134,21 @@ COPY agents/anyplot/render/convert.py /opt/anyplot/convert.py
 # directory is enough; it must be in place before the cache bake below.
 COPY --from=fonts /fonts/noto /usr/share/fonts/noto
 COPY --from=fonts /fonts/doc /usr/share/doc/fonts-noto
+
+# vl-convert (altair) needs no fontconfig: with no /etc/fonts/fonts.conf it scans
+# /usr/share/fonts, so the fallback fonts above reach it too, and it carries
+# Liberation Sans for `sans-serif`. `serif` and `monospace` (7 catalogue altair
+# files) resolve only to DejaVu Serif and DejaVu Sans Mono and draw no text at all
+# without them (measured 2026-10-25). matplotlib ships both, so they are linked
+# here, not copied: no new font file and no size. matplotlib still resolves every
+# family to its own mpl-data copy. `ls -L` fails the build on a dangling link.
+RUN d=/app/.venv/lib/python3.14/site-packages/matplotlib/mpl-data/fonts/ttf \
+    && mkdir -p /usr/share/fonts/dejavu \
+    && for f in DejaVuSerif DejaVuSerif-Bold DejaVuSerif-Italic DejaVuSerif-BoldItalic \
+        DejaVuSansMono DejaVuSansMono-Bold DejaVuSansMono-Oblique DejaVuSansMono-BoldOblique; do \
+        ln -s "$d/$f.ttf" "/usr/share/fonts/dejavu/$f.ttf"; \
+    done \
+    && ls -L /usr/share/fonts/dejavu/*.ttf > /dev/null
 
 # Bake the matplotlib font cache. A sandbox starts with an empty private /tmp, and
 # the harness copies this directory into MPLCONFIGDIR=/tmp/mpl before matplotlib
