@@ -7,6 +7,7 @@ found (`np.testing.measure` compiles and execs its string), generalised: the har
 behind the validator, so these plots and snippets are written as if the validator had missed them.
 """
 
+import importlib.util
 import json
 import struct
 import subprocess
@@ -52,6 +53,15 @@ def render_file(tmp_path: Path, code: str) -> tuple[int, str]:
     return done.returncode, done.stderr
 
 
+def import_or_skip(module: str) -> None:
+    """Skip the test unless `module` imports here: `pytest.importorskip` skips only an ImportError, but cairosvg's
+    import raises OSError when cairocffi finds no libcairo on the machine."""
+    try:
+        importlib.import_module(module)
+    except (ImportError, OSError) as exc:
+        pytest.skip(f"{module} does not import here: {type(exc).__name__}: {exc}")
+
+
 def run_data(tmp_path: Path, code: str) -> tuple[int, str | None, str]:
     """Exit code, `out.csv` (None when missing) and stderr of one data-mode run in `tmp_path`."""
     (tmp_path / "snippet.py").write_text(code, encoding="utf-8")
@@ -70,6 +80,26 @@ def run_data(tmp_path: Path, code: str) -> tuple[int, str | None, str]:
 # Each writes the marker file (or tries to) through a route the guard must refuse; the payload is text the
 # route compiles or runs, so a refusal leaves no marker behind.
 WRITE_MARKER = f"open('{MARKER}', 'w').write('x')"
+NO_CSSSELECT2 = pytest.mark.skipif(
+    importlib.util.find_spec("cssselect2") is None, reason="needs cssselect2 (lib-pygal)"
+)
+
+
+def forged_selector(payload: str) -> str:
+    """A plot body that hands cssselect2's compiler Python objects in place of tokens: a `dimension` whose `int_value`
+    is `payload` lands unquoted in the `eval` text `CompiledSelector.__init__` builds (`CODE_BUILDERS`), and the
+    lambda runs it when it tests an element (the pygal spike of 2026-10-26; without a guard it writes the marker)."""
+    return (
+        f"import cssselect2.compiler as compiler\nPAYLOAD = {payload!r}\n"
+        "class Token:\n    def __init__(self, **fields):\n        self.__dict__.update(fields)\n"
+        "    def __eq__(self, other):\n        return other == self.__dict__.get('eq')\n"
+        "dimension = Token(type='dimension', is_integer=True, lower_unit='n', int_value=PAYLOAD)\n"
+        "nth = Token(type='function', lower_name='nth-child', arguments=[dimension], value=None)\n"
+        "[selector] = compiler.compile_selector_list([Token(type='literal', value=':', eq=':'), nth])\n"
+        "class Element:\n    index = 0\nselector.test(Element())\n"
+    )
+
+
 PLOT_ROUTES = [
     pytest.param(f'np.testing.measure("{WRITE_MARKER}")\n', id="numpy.testing.measure (the reported case)"),
     pytest.param(f'np.testing.runstring("{WRITE_MARKER}", {{}})\n', id="numpy.testing.runstring"),
@@ -157,6 +187,22 @@ PLOT_ROUTES = [
         f"import gc\nfor o in gc.get_objects():\n    if hasattr(o, 'plot_file'):\n        o.armed = False\n"
         f"open('{MARKER}', 'w').write('x')\n",
         id="gc hands out the guard",
+    ),
+    # cssselect2's compiler is a `CODE_BUILDERS` entry (pygal's PNG export): an `__init__` anywhere else is not it,
+    # and code its `eval` built runs under the guard like the plot's own.
+    pytest.param(
+        f'class Builder:\n    def __init__(self):\n        exec("{WRITE_MARKER}")\nBuilder()\n',
+        id="exec from an __init__ that is not cssselect2's",
+    ),
+    pytest.param(
+        forged_selector(f"1) and {WRITE_MARKER} or (1"),
+        id="a forged cssselect2 token writes from the built lambda",
+        marks=NO_CSSSELECT2,
+    ),
+    pytest.param(
+        forged_selector(f'1) and exec("{WRITE_MARKER}") or (1'),
+        id="a forged cssselect2 token execs from the built lambda",
+        marks=NO_CSSSELECT2,
     ),
 ]
 # Fable review of #12181: a trace, profile or signal callback gets the real frame and walks `f_back` (no audit event)
@@ -353,6 +399,83 @@ class TestPlotGuard:
         assert (tmp_path / "plot-light.png").read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
         assert "<html" in (tmp_path / "plot-light.html").read_text(encoding="utf-8")
 
+    @pytest.mark.parametrize(
+        ("imports", "size", "save"),
+        [
+            pytest.param("", (400, 300), "chart.render_to_png(f'plot-{THEME}.png')\n", id="render_to_png"),
+            pytest.param(
+                "import cairosvg\n",
+                (600, 450),
+                "cairosvg.svg2png(bytestring=chart.render(), write_to=f'plot-{THEME}.png', output_width=400, "
+                "output_height=300)\n",
+                id="svg2png, the canvas rewrite's form",
+            ),
+        ],
+    )
+    def test_pygal_renders_its_png_and_html(
+        self, tmp_path: Path, imports: str, size: tuple[int, int], save: str
+    ) -> None:
+        """pygal's PNG goes through cairosvg: `warm_cairo` loads libcairo before the guard, and cssselect2 compiles the
+        chart's stylesheet into lambdas through `eval` (`CODE_BUILDERS`). No matplotlib figure, so no probe."""
+        pytest.importorskip("pygal")
+        import_or_skip("cairosvg")
+        code = (
+            f"import os\n\n{imports}import pygal\n\nTHEME = os.environ['ANYPLOT_THEME']\n"
+            f"chart = pygal.Bar(width={size[0]}, height={size[1]}, title='t')\nchart.add('y', [1, 3, 2])\n"
+            f"{save}chart.render_to_file(f'plot-{{THEME}}.html')\n"
+        )
+        exit_code, stderr = render_file(tmp_path, code)
+        assert exit_code == 0, stderr[-3000:]
+        assert "blocked by the" not in stderr
+        png = (tmp_path / "plot-light.png").read_bytes()
+        assert png[:8] == b"\x89PNG\r\n\x1a\n" and struct.unpack(">II", png[16:24]) == (400, 300)
+        assert "<svg" in (tmp_path / "plot-light.html").read_text(encoding="utf-8")
+        assert not (tmp_path / "probe-light.json").exists()
+
+    LETS_PLOT = (
+        "import os\n\nimport pandas as pd\nfrom lets_plot import LetsPlot, aes, geom_point, ggplot, ggsize\n"
+        "from lets_plot.export import ggsave\n\nLetsPlot.setup_html()\nTHEME = os.environ['ANYPLOT_THEME']\n"
+        "df = pd.DataFrame({'x': ['a', 'b', 'c'], 'y': [1.0, 3.0, 2.0]})\n"
+        "plot = ggplot(df, aes(x='x', y='y')) + geom_point() + ggsize(200, 150)\n"
+    )
+
+    def test_lets_plot_renders_its_png_and_html(self, tmp_path: Path) -> None:
+        """lets-plot rasterises in its native bridge, loaded at import: the guard needs no entry for it, and the two
+        files `path="."` names are the only writes. No matplotlib figure, so no probe."""
+        pytest.importorskip("lets_plot")
+        code = self.LETS_PLOT + (
+            "ggsave(plot, f'plot-{THEME}.png', path='.', scale=2)\nggsave(plot, f'plot-{THEME}.html', path='.')\n"
+        )
+        exit_code, stderr = render_file(tmp_path, code)
+        assert exit_code == 0, stderr[-3000:]
+        assert "blocked by the" not in stderr
+        png = (tmp_path / "plot-light.png").read_bytes()
+        assert png[:8] == b"\x89PNG\r\n\x1a\n" and struct.unpack(">II", png[16:24]) == (400, 300)
+        assert "data-lets-plot-script" in (tmp_path / "plot-light.html").read_text(encoding="utf-8")
+        assert not (tmp_path / "probe-light.json").exists()
+
+    def test_a_lets_plot_save_without_path_is_refused(self, tmp_path: Path) -> None:
+        """Without `path=`, `ggsave` creates `./lets-plot-images` (`os.mkdir`), which the guard refuses; the
+        normaliser adds `path="."` to every save."""
+        pytest.importorskip("lets_plot")
+        exit_code, stderr = render_file(tmp_path, self.LETS_PLOT + "ggsave(plot, f'plot-{THEME}.png', scale=2)\n")
+        assert exit_code != 0 and "blocked by the render sandbox: os.mkdir" in stderr, stderr[-2000:]
+        assert not (tmp_path / "lets-plot-images").exists() and not (tmp_path / "plot-light.png").exists()
+
+    def test_a_cssselect2_selector_compiles_and_runs_under_the_guard(self, tmp_path: Path) -> None:
+        """`CompiledSelector.__init__` builds each selector's test with `eval` (`CODE_BUILDERS`), and the lambda it
+        built runs under the guard like any plot code."""
+        pytest.importorskip("cssselect2")
+        body = (
+            "import xml.etree.ElementTree as ET\n\nimport cssselect2\n\n"
+            "[selector] = cssselect2.compile_selector_list('rect.a')\n"
+            "root = cssselect2.ElementWrapper.from_xml_root(ET.fromstring('<svg><rect class=\"a\"/><g/></svg>'))\n"
+            "assert [element.local_name for element in root.iter_subtree() if selector.test(element)] == ['rect']\n"
+        )
+        exit_code, stderr = render(tmp_path, body)
+        assert exit_code == 0, stderr[-3000:]
+        assert "blocked by the" not in stderr
+
     def test_a_syntax_error_is_reported_before_the_guard(self, tmp_path: Path) -> None:
         exit_code, stderr = render(tmp_path, "x = (\n")
         assert exit_code != 0 and "SyntaxError" in stderr and 'plot.py", line' in stderr
@@ -371,6 +494,18 @@ class TestPlotGuard:
         assert (tmp_path / "plot-light.png").exists()
 
 
+@pytest.mark.parametrize("error", [ModuleNotFoundError("No module named 'cairosvg'"), OSError("no library called")])
+def test_a_library_that_does_not_import_skips_its_case(monkeypatch: pytest.MonkeyPatch, error: Exception) -> None:
+    """A missing module and a missing libcairo under an installed cairosvg (cairocffi's OSError) both skip."""
+
+    def fail(name: str) -> None:
+        raise error
+
+    monkeypatch.setattr(importlib, "import_module", fail)
+    with pytest.raises(pytest.skip.Exception, match=type(error).__name__):
+        import_or_skip("cairosvg")
+
+
 REPO_ROOT = Path(__file__).resolve().parents[4]
 CATALOGUE_UNDER_GUARD = [
     pytest.param("ice-basic", "matplotlib", id="ice-basic/matplotlib: scikit-learn GradientBoostingRegressor"),
@@ -379,23 +514,37 @@ CATALOGUE_UNDER_GUARD = [
     pytest.param("silhouette-basic", "seaborn", id="silhouette-basic/seaborn: KMeans"),
     pytest.param("scatter-basic", "plotnine", id="scatter-basic/plotnine: aes through Environment.capture"),
     pytest.param("scatter-basic", "altair", id="scatter-basic/altair: vl-convert, PIL padding and the HTML"),
+    pytest.param("scatter-basic", "pygal", id="scatter-basic/pygal: cairosvg, cssselect2 and the HTML"),
+    pytest.param("line-basic", "pygal", id="line-basic/pygal: a 4800x2700 chart saved through svg2png at 3200x1800"),
+    pytest.param("scatter-basic", "letsplot", id="scatter-basic/letsplot: the native bridge and the HTML"),
 ]
-LIBRARY_MODULES = {"seaborn": ("seaborn",), "plotnine": ("plotnine",), "altair": ("altair", "vl_convert")}
+LIBRARY_MODULES = {
+    "seaborn": ("seaborn",),
+    "plotnine": ("plotnine",),
+    "altair": ("altair", "vl_convert"),
+    "pygal": ("pygal", "cairosvg"),
+    "letsplot": ("lets_plot",),
+}
 """The modules a library's catalogue case needs beyond matplotlib's stack; CI's test environment installs none."""
+WITHOUT_PROBE = frozenset({"altair", "pygal", "letsplot"})
+"""The libraries that draw no matplotlib figure, so their runs write no probe but an HTML twin."""
+ON_CANVAS = frozenset({"pygal", "letsplot"})
+"""The libraries whose cases the normaliser's canvas rewrite holds to 3200x1800 (the 1c decisions)."""
 
 
 @pytest.mark.parametrize(("spec_id", "library"), CATALOGUE_UNDER_GUARD)
 def test_catalogue_files_render_under_the_guard(tmp_path: Path, spec_id: str, library: str) -> None:
     """Real catalogue files, normalised as a session opening does, render under the plot guard: a guard change that
-    breaks scikit-learn, statsmodels, mathtext, plotnine's frame read or altair's vl-convert fails here. The seaborn,
-    plotnine and altair cases need their libraries, which CI's test environment does not install; the renderer-image
-    job of `ci-image.yml` renders all three through the harness in the image. altair draws no matplotlib figure, so its
-    run writes no probe: the PNG and its HTML twin are what the case checks."""
+    breaks scikit-learn, statsmodels, mathtext, plotnine's frame read, altair's vl-convert, pygal's cairosvg or
+    lets-plot's bridge fails here. The seaborn, plotnine, altair, pygal and lets-plot cases need their libraries, which
+    CI's test environment does not install; the renderer-image job of `ci-image.yml` renders all five through the
+    harness in the image. altair, pygal and lets-plot draw no matplotlib figure, so their runs write no probe: the PNG
+    and its HTML twin are what the case checks."""
     from agents.anyplot.code.normalise import normalise
     from core.utils import strip_noqa_comments
 
     for module in LIBRARY_MODULES.get(library, ()):
-        pytest.importorskip(module)
+        import_or_skip(module)
     source = REPO_ROOT / "plots" / spec_id / "implementations" / "python" / f"{library}.py"
     if not source.exists():
         pytest.skip(f"{spec_id}/{library} is absent")
@@ -419,10 +568,12 @@ def test_catalogue_files_render_under_the_guard(tmp_path: Path, spec_id: str, li
     assert done.returncode == 0, done.stderr[-3000:]
     assert "blocked by the" not in done.stderr
     assert (tmp_path / "plot-light.png").exists()
-    if library == "altair":
+    if library in WITHOUT_PROBE:
         assert (tmp_path / "plot-light.html").exists()
     else:
         assert (tmp_path / "probe-light.json").exists()
+    if library in ON_CANVAS:
+        assert struct.unpack(">II", (tmp_path / "plot-light.png").read_bytes()[16:24]) == (3200, 1800)
 
 
 class TestPlotGuardUnit:
@@ -479,6 +630,21 @@ class TestPlotGuardUnit:
         consumed = type("Frame", (), {"f_code": builder, "f_back": None})
         assert harness.reads_frames(type("Frame", (), {"f_code": walker, "f_back": consumed}))
         assert not harness.reads_frames(None)
+
+    def test_cssselect2s_compiler_builds_code_and_nothing_else_of_it_does(self) -> None:
+        """The entry is the compiler's `CompiledSelector.__init__` alone: another function of the file, an `__init__`
+        elsewhere and a directory that merely ends in the package name do not match."""
+
+        def frame(path: str, name: str) -> object:
+            code = type("Code", (), {"co_filename": path, "co_name": name})
+            return type("Frame", (), {"f_code": code, "f_back": None})
+
+        site = "/app/.venv/lib/python3.14/site-packages"
+        assert ("cssselect2/compiler.py", "__init__") in harness.CODE_BUILDERS
+        assert harness.builds_code(frame(f"{site}/cssselect2/compiler.py", "__init__"))
+        assert not harness.builds_code(frame(f"{site}/cssselect2/compiler.py", "compile_selector_list"))
+        assert not harness.builds_code(frame("plot.py", "__init__"))
+        assert not harness.builds_code(frame(f"{site}/not_cssselect2/compiler.py", "__init__"))
 
     def test_refuses_remote_debugging(self, tmp_path: Path) -> None:
         guard = self.guard(tmp_path)

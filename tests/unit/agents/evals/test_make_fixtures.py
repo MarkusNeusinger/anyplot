@@ -29,6 +29,12 @@ from core.spec_roles import parse_roles
 
 CASE_KEYS = {"spec_id", "library", "locale", "perturbation", "bindings", "expected", "tags", "source"}
 FAMILIES = {"scatter", "line", "bar", "histogram", "box", "heatmap", "area", "violin", "pie", "time-series"}
+BLOCKED = frozenset({("histogram-basic", "pygal"), ("line-timeseries", "pygal")})
+"""The `(spec, library)` files the readiness scan blocks for SECURITY findings; the generator's docstring says why.
+
+Their cases are written all the same. A change that makes one of them eligible fails the readiness test until
+the pair leaves this set and its cell in the docstring's table changes with it.
+"""
 
 
 @pytest.fixture(scope="module")
@@ -58,11 +64,11 @@ def test_check_mode_reports_a_stale_file(tmp_path, capsys: pytest.CaptureFixture
     assert "stale: pie-basic-seaborn-n12/data.csv" in capsys.readouterr().err
 
 
-def test_ten_specs_of_ten_families_times_four_libraries_times_six_perturbations(files: dict[str, str]) -> None:
+def test_ten_specs_of_ten_families_times_six_libraries_times_six_perturbations(files: dict[str, str]) -> None:
     assert len(SPECS) == 10 and {spec.family for spec in SPECS} == FAMILIES
-    assert LIBRARIES == ("matplotlib", "seaborn", "plotnine", "altair")
+    assert LIBRARIES == ("matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot")
     ids = {name.split("/")[0] for name in files}
-    assert len(ids) == 240
+    assert len(ids) == 360
     assert ids == {
         case_id(spec.spec_id, library, perturbation)
         for spec in SPECS
@@ -104,7 +110,7 @@ def test_smoke_covers_every_spec_perturbation_and_library(files: dict[str, str])
     smoke = [case for case in smoke if SMOKE_TAG in case["tags"]]
     cycle = [case for case in smoke if case["library"] in SMOKE_CYCLE]
 
-    assert len(smoke) == len(SPECS) + len(LIBRARY_SMOKE) == 12
+    assert len(smoke) == len(SPECS) + len(LIBRARY_SMOKE) == 14
     assert set(SMOKE_CYCLE) | set(LIBRARY_SMOKE) == set(LIBRARIES) and not set(SMOKE_CYCLE) & set(LIBRARY_SMOKE)
     assert len(cycle) == len(SPECS)
     assert {case["spec_id"] for case in cycle} == {spec.spec_id for spec in SPECS}
@@ -115,7 +121,7 @@ def test_smoke_covers_every_spec_perturbation_and_library(files: dict[str, str])
 
 
 def test_a_new_library_never_moves_the_smoke_cycle(files: dict[str, str]) -> None:
-    """The ten cycle cases are the ones of `--cases smoke` before step 1b; plotnine and altair add one each."""
+    """The ten cycle cases are the ones of `--cases smoke` before step 1b; every later library adds one."""
     smoke = sorted(
         name.split("/")[0]
         for name, text in files.items()
@@ -131,20 +137,29 @@ def test_a_new_library_never_moves_the_smoke_cycle(files: dict[str, str]) -> Non
         "line-timeseries-seaborn-n5000",
         "pie-basic-matplotlib-n12",
         "scatter-basic-altair-renamed",
+        "scatter-basic-letsplot-renamed",
         "scatter-basic-matplotlib-renamed",
         "scatter-basic-plotnine-renamed",
+        "scatter-basic-pygal-renamed",
         "violin-basic-seaborn-x10",
     ]
 
 
 @pytest.mark.parametrize("spec", SPECS, ids=lambda spec: spec.spec_id)
 def test_every_case_parses_binds_and_is_eligible(spec: make_fixtures.SpecFixture, files: dict[str, str]) -> None:
-    """The cases test the adaptation, never the parser: no warning, complete bindings, an eligible pair."""
+    """The cases test the adaptation, never the parser: no warning, complete bindings, an eligible pair.
+
+    The `BLOCKED` pairs are the exception: blocked, and for SECURITY findings, not for a disabled library.
+    """
     settings = AgentSettings(libraries=list(LIBRARIES))  # the default enables matplotlib and seaborn only
     for library in LIBRARIES:
         snapshot = snapshot_from_repo(spec.spec_id, library)
         eligibility, _ = assess(snapshot, library, settings)
-        assert eligibility.status in ("clean", "coupled"), (library, eligibility.reasons)
+        if (spec.spec_id, library) in BLOCKED:
+            assert eligibility.status == "blocked", (library, eligibility.reasons)
+            assert any(reason.startswith("security: ") for reason in eligibility.reasons), eligibility.reasons
+        else:
+            assert eligibility.status in ("clean", "coupled"), (library, eligibility.reasons)
         roles = parse_roles(snapshot.data_roles)
         for perturbation in PERTURBATIONS:
             directory = case_id(spec.spec_id, library, perturbation)

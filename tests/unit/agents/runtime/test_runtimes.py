@@ -20,7 +20,7 @@ from core.constants import SUPPORTED_LIBRARIES
 class TestRegistry:
     def test_the_registry_serves_exactly_the_normalised_python_libraries(self) -> None:
         assert RUNTIME_LIBRARIES == PYTHON_LIBRARIES == NORMALISED_LIBRARIES
-        assert PYTHON_LIBRARIES == {"matplotlib", "seaborn", "plotnine", "altair"}
+        assert PYTHON_LIBRARIES == {"matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot"}
         assert RUNTIME_LIBRARIES <= SUPPORTED_LIBRARIES
 
     @pytest.mark.parametrize("library", sorted(RUNTIME_LIBRARIES))
@@ -103,3 +103,48 @@ class TestPythonRuntimeBindings:
         assert plotnine.file_name == altair.file_name == "plot.py" and altair.code_artifact == "plot.py"
         changed = self.PLOTNINE.replace("dpi=400", "dpi=100")
         assert plotnine.restore_protected(self.PLOTNINE, changed) == self.PLOTNINE
+
+
+class TestRowEnvironment:
+    """The local Docker backend renders with the library's command row as the renderer's `sandbox_env` does (1c)."""
+
+    @pytest.mark.parametrize("library", sorted(RUNTIME_LIBRARIES))
+    def test_the_render_env_is_the_renderers_key_for_key(self, library: str) -> None:
+        """The deployed `sandbox_env` of the library's row, but for the two paths of the image's font cache, which a
+        local render names as the image does, and the process limit, which the container's `--pids-limit` replaces
+        (`PythonRuntime.env`): the PATH the delegate check reads, the file size, the threads and every row value."""
+        from agents.renderer.commands import command_for
+        from agents.renderer.executor import SANDBOX_PATH, ExecutorConfig, sandbox_env
+        from agents.renderer.settings import RendererSettings
+
+        row = command_for("python", library)
+        local = runtime_for(library, cpu_seconds=60).env("dark")
+        deployed = sandbox_env(ExecutorConfig.from_settings(RendererSettings()), "dark", 60, command=row)
+        own_paths = {"MPLCONFIGDIR", "ANYPLOT_MPL_SEED"}
+        deployed.pop("ANYPLOT_RLIMIT_NPROC", None)
+
+        assert set(local) == set(deployed)
+        assert {key: value for key, value in local.items() if key not in own_paths} == {
+            key: value for key, value in deployed.items() if key not in own_paths
+        }
+        assert local["PATH"] == SANDBOX_PATH and "ANYPLOT_RLIMIT_NPROC" not in local
+        assert ("ANYPLOT_RLIMIT_AS_MB" in local) is row.rlimit_as  # altair's V8 runs without one
+
+    def test_the_deployed_limits_are_the_renderers_defaults(self) -> None:
+        from agents.anyplot.render.runtimes.python import DATA_RLIMIT_AS_MB, DATA_RLIMIT_NPROC, RENDER_RLIMIT_FSIZE_MB
+        from agents.renderer.settings import RendererSettings
+
+        deployed = RendererSettings()
+        assert (DATA_RLIMIT_AS_MB, DATA_RLIMIT_NPROC, RENDER_RLIMIT_FSIZE_MB) == (
+            deployed.rlimit_as_mb,
+            deployed.rlimit_nproc,
+            deployed.rlimit_fsize_mb,
+        )
+
+    def test_lets_plot_gets_its_allocator_fontconfig_and_limit_locally(self) -> None:
+        env = runtime_for("letsplot", cpu_seconds=45).env("light")
+        assert env["ARROW_DEFAULT_MEMORY_POOL"] == "system" and env["FONTCONFIG_FILE"] == "/opt/anyplot/fonts.conf"
+        assert env["ANYPLOT_RLIMIT_AS_MB"] == "2048" and env["ANYPLOT_RLIMIT_CPU_S"] == "45"
+
+    def test_a_runtime_without_a_library_renders_as_matplotlib(self) -> None:
+        assert PythonRuntime().env("light") == runtime_for("matplotlib").env("light")

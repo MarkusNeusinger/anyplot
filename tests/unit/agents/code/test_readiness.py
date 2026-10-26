@@ -165,6 +165,176 @@ class TestOtherPythonLibraries:
         ]
 
 
+SIX_ENABLED = (*ALL_ENABLED, "pygal", "letsplot")
+PYGAL = source("""
+    import os
+
+    import pygal
+    from pygal.style import Style
+
+    THEME = os.getenv("ANYPLOT_THEME", "light")
+    PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+    df = load_user_data()
+    chart = pygal.XY(width=4800, height=2700, style=Style(background=PAGE_BG), js=[])
+    chart.add("a", list(zip(df["x"], df["y"])))
+    chart.render_to_png(f"plot-{THEME}.png")
+    with open(f"plot-{THEME}.html", "wb") as f:
+        f.write(chart.render())
+""")
+LETSPLOT = source("""
+    import os
+
+    from lets_plot import *
+
+    LetsPlot.setup_html()
+    THEME = os.getenv("ANYPLOT_THEME", "light")
+    PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+    df = load_user_data()
+    plot = ggplot(df, aes(x="x", y="y")) + geom_point(color=PAGE_BG) + ggsize(1600, 900)
+    ggsave(plot, f"plot-{THEME}.png", scale=3)
+    ggsave(plot, f"plot-{THEME}.html")
+""")
+
+
+def scan_normalised(code: str, library: str) -> Readiness:
+    return scan(
+        normalise(code, library=library), spec_id="scatter-basic", library=library, enabled_libraries=SIX_ENABLED
+    )
+
+
+class TestPygalAndLetsPlot:
+    """The catalogue shapes of pygal and lets-plot, normalised, and what the scan says where the normaliser stops."""
+
+    @pytest.mark.parametrize(("code", "library"), [(PYGAL, "pygal"), (LETSPLOT, "letsplot")])
+    def test_normalised_file_is_clean_and_on_the_canvas(self, code: str, library: str) -> None:
+        assert scan_normalised(code, library) == Readiness("clean", [], [])
+
+    @pytest.mark.parametrize(
+        ("code", "library", "reason"),
+        [
+            # an unknown size can land over R2's pixel cap: no padding is promised
+            (
+                PYGAL.replace("width=4800, height=2700", "width=W, height=H"),
+                "pygal",
+                "canvas: pygal canvas unknown: the chart's width= at line 9 is not a positive number or a module-level "
+                "name bound once to one; the PNG size shows only in the render, and R2 refuses one over its pixel cap",
+            ),
+            (
+                LETSPLOT.replace("ggsize(1600, 900)", "ggsize(800, 853)"),
+                "letsplot",
+                "canvas: lets-plot renders 2400x2559 from 800x853 (ggsize at line 16) at scale 3, target 2400x2400; the "
+                "render relies on the R3 canvas gate and padding",
+            ),
+            # a known size over the cap: R2 refuses it before R3 sees it
+            (
+                PYGAL.replace("width=4800, height=2700", "width=4800, height=3000"),
+                "pygal",
+                "canvas: pygal renders 4800x3000 (the saved chart at line 9), target 3200x1800; R2 refuses a PNG over "
+                "its pixel cap",
+            ),
+        ],
+    )
+    def test_a_canvas_the_normaliser_cannot_set_is_a_note(self, code: str, library: str, reason: str) -> None:
+        result = scan_normalised(code, library)
+
+        assert result.status == "clean" and result.reasons == [reason]
+
+    def test_a_hand_built_svg_gets_the_canvas(self) -> None:
+        """dendrogram-radial and three more pygal files draw their SVG at 4800x2700 or 3600x3600 by hand."""
+        code = source("""
+            import os
+
+            import cairosvg
+
+            THEME = os.getenv("ANYPLOT_THEME", "light")
+            PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+            df = load_user_data()
+            W, H = 4800, 2700
+            svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}"><rect fill="{PAGE_BG}"/></svg>'
+            cairosvg.svg2png(bytestring=svg.encode(), write_to=f"plot-{THEME}.png")
+        """)
+        before = scan(code, spec_id="scatter-basic", library="pygal", enabled_libraries=SIX_ENABLED)
+
+        assert before.reasons == [
+            "canvas: pygal renders 4800x2700 (the <svg> root at line 9), target 3200x1800; R2 refuses a PNG over its "
+            "pixel cap"
+        ]
+        assert scan_normalised(code, "pygal") == Readiness("clean", [], [])
+
+    @pytest.mark.parametrize(
+        ("save", "reason"),
+        [
+            (
+                'chart.render_to_file(f"plot-{THEME}.png")',  # SVG text in the PNG
+                "savefig-target: render_to_file writes only .html files, not f'plot-{THEME}.png' at line 11",
+            ),
+            (
+                'chart.render_to_png(f"plot-{THEME}.html")',  # a PNG in the HTML
+                "savefig-target: render_to_png writes only .png files, not f'plot-{THEME}.html' at line 11",
+            ),
+        ],
+    )
+    def test_a_save_name_that_writes_another_kind_of_file_is_blocked(self, save: str, reason: str) -> None:
+        code = PYGAL.replace('chart.render_to_png(f"plot-{THEME}.png")', save)
+        result = scan_normalised(code, "pygal")
+
+        assert result.status == "blocked" and reason in result.reasons, result.reasons
+
+    def test_a_letsplot_save_without_the_directory_is_blocked(self) -> None:
+        """Unnormalised: lets-plot would write into ./lets-plot-images, which the plot sandbox refuses."""
+        result = scan(LETSPLOT, spec_id="scatter-basic", library="letsplot", enabled_libraries=SIX_ENABLED)
+
+        assert result.status == "blocked"
+        assert 'savefig-target: ggsave at line 10 does not save with path="."' in result.reasons
+        assert 'savefig-target: ggsave at line 11 does not save with path="."' in result.reasons
+
+    @pytest.mark.parametrize(
+        ("code", "library", "reason"),
+        [
+            # a second star import: the normaliser keeps the lets-plot one, the validator refuses both
+            (
+                LETSPLOT.replace("from lets_plot import *", "from lets_plot import *\nfrom math import *"),
+                "letsplot",
+                "security: star-import at line 3: ",
+            ),
+            # the alias rename stops where the file binds `ggsave` itself
+            (
+                LETSPLOT.replace(
+                    "from lets_plot import *",
+                    "from lets_plot import *\nfrom lets_plot.export import ggsave as keep\nggsave = keep",
+                ),
+                "letsplot",
+                "security: banned-call at line ",
+            ),
+            # an epilogue statement that does more than move files
+            (LETSPLOT + 'print(os.listdir("lets-plot-images"))\n', "letsplot", "security: os-use at line 19: "),
+            # an SVG save whose file the code reads again
+            (
+                PYGAL.replace(
+                    'with open(f"plot-{THEME}.html", "wb") as f:\n    f.write(chart.render())',
+                    'chart.render_to_file(f"plot-{THEME}.svg")\nprint(f"plot-{THEME}.svg")',
+                ),
+                "pygal",
+                "savefig-target: render_to_file saves to f'plot-{THEME}.svg' at line 13",
+            ),
+            # a hand-built page whose file the code names again: the `open()` write stays
+            (
+                PYGAL.replace(
+                    'with open(f"plot-{THEME}.html", "wb") as f:\n    f.write(chart.render())',
+                    'with open(f"plot-{THEME}.html", "w") as f:\n    f.write("<html/>")\nprint(f"plot-{THEME}.html")',
+                ),
+                "pygal",
+                "security: banned-name at line 13: 'open'",
+            ),
+        ],
+    )
+    def test_what_the_normaliser_leaves_is_blocked(self, code: str, library: str, reason: str) -> None:
+        result = scan_normalised(code, library)
+
+        assert result.status == "blocked" and result.hints == []
+        assert any(r.startswith(reason) for r in result.reasons), result.reasons
+
+
 def test_clean(validator_calls: list[str]) -> None:
     result = check('ax.plot(df["x"], df["y"], color=PAGE_BG)\nax.set_ylim(bottom=0)\nax.axhline(0)\n')
 

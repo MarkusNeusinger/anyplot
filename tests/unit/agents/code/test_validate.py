@@ -17,9 +17,12 @@ from agents.anyplot.code.validate import (
     BANNED_ATTRIBUTES,
     BANNED_IO,
     ESCAPE_ATTRIBUTES,
+    LIBRARY_BANS,
     MAX_LITERAL_NUMBERS,
     MAX_STRING_CHARS,
+    MODULE_ESCAPES,
     PLACEHOLDER,
+    THEME_BINDING_MESSAGE,
     UNSAFE_HELPERS,
     UNSAFE_SUBMODULES,
     Finding,
@@ -44,6 +47,8 @@ import pandas as pd
 THEME = os.getenv("ANYPLOT_THEME", "light")
 df = pd.DataFrame({"a": [1, 2, 3]})
 """
+THEME_LINE = 'THEME = os.getenv("ANYPLOT_THEME", "light")'
+"""The theme block of every library's minimal file below."""
 FOOTER = """
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 plt.savefig(f"plot-{THEME}.png", dpi=400)
@@ -603,11 +608,16 @@ class TestOsUse:
         assert "os-use" in security_rules(body)
 
     def test_variable_named_os_without_the_import_is_not_os(self) -> None:
+        """Neither `os-use` nor `module-value` sees the variable; the theme block read through the alias is no theme
+        block (`regions.is_theme_assignment`), so its THEME is the one finding."""
         code = plot("os = np.ones(3)\ntotal = os.sum()\n").replace("import os\n", "import os as _o\n")
         code = code.replace(
             'THEME = os.getenv("ANYPLOT_THEME", "light")', 'THEME = _o.getenv("ANYPLOT_THEME", "light")'
         )
-        assert validate_security(code, library="matplotlib") == []
+        findings = validate_security(code, library="matplotlib")
+        assert [(f.rule, f.message, f.line) for f in findings] == [
+            ("savefig-target", THEME_BINDING_MESSAGE, HEADER.splitlines().index(THEME_LINE) + 1)
+        ]
 
 
 # --- names, calls, attributes ---------------------------------------------------------------
@@ -1478,8 +1488,9 @@ class TestExecAndProcessRoutes:
 
 # Every public first-level submodule of a package the validator admits whole, as reviewed on 2026-10-14
 # (numpy 2.5, pandas 3.0, matplotlib 3.11, seaborn 0.13, scikit-learn 1.9, statsmodels 0.15) and, by the
-# import-surface survey of 2026-10-24, plotnine 0.15, mizani 0.14 and altair 6.3: it is either here, reviewed as
-# computing and drawing only, or banned by name in the validator. A library upgrade that adds a submodule fails
+# import-surface survey of 2026-10-24, plotnine 0.15, mizani 0.14, altair 6.3, pygal 3.1.3, cairosvg 2.9.1 and
+# lets-plot 4.11.0: it is either here, reviewed as computing and drawing only, or banned by name in the validator (on
+# every receiver, or on its own module in `MODULE_ESCAPES`). A library upgrade that adds a submodule fails
 # `test_every_submodule_is_reviewed` until someone looks at it.
 REVIEWED_SUBMODULES: dict[str, frozenset[str]] = {
     "numpy": frozenset(
@@ -1534,14 +1545,30 @@ REVIEWED_SUBMODULES: dict[str, frozenset[str]] = {
     "mizani": frozenset("bounds breaks formatters labels palettes scale transforms typing utils".split()),
     # `datasets` (fetches over the network) and `jupyter` (re-exports `find_spec`) are banned by name.
     "altair": frozenset("expr theme typing utils vegalite".split()),
+    # Surveys of 2026-10-24 (pygal 3.1.3, cairosvg 2.9.1, lets-plot 4.11.0). pygal's `etree` (its ElementTree
+    # proxy) and `test` are banned by name; cairosvg's `css`, `features`, `image`, `parser`, `surface`, `url` and
+    # `test_api` on their module (`MODULE_ESCAPES`); lets-plot's `frontend_context`, `geo_data`, `settings_utils`,
+    # `tilesets` and the plot package's `geom_livemap_` by name. `lets_plot.plot` is pinned too: it holds the livemap.
+    "pygal": frozenset(
+        "adapters colors config formatters graph interpolate maps serie state stats style svg table util view".split()
+    ),
+    "cairosvg": frozenset("bounding_box colors defs helpers path shapes svg text".split()),
+    "lets_plot": frozenset("bistro export geo_data_internals mapping plot".split()),
+    "lets_plot.plot": frozenset(
+        "annotation coord core expand_limits_ facet font_features geom geom_extras geom_function_ geom_imshow_ "
+        "ggbunch_ ggdeck_ gggrid_ ggtb_ guide label marginal_layer plot pos sampling sandbox_ scale "
+        "scale_colormap_mpl scale_convenience scale_identity_ scale_position series_meta stat subplots "
+        "subplots_util theme_ theme_set tooltip util".split()
+    ),
 }
 
 
 @pytest.mark.parametrize("root", sorted(REVIEWED_SUBMODULES))
 def test_every_submodule_is_reviewed(root: str) -> None:
-    """A public submodule is reviewed as safe, or the validator bans its name on every receiver."""
+    """A public submodule is reviewed as safe, or the validator bans its name on every receiver or on its module."""
     package = pytest.importorskip(root)
-    banned = ESCAPE_ATTRIBUTES | UNSAFE_SUBMODULES | UNSAFE_HELPERS | BANNED_ATTRIBUTES | BANNED_IO
+    on_module = {path.rpartition(".")[2] for path in MODULE_ESCAPES if path.rpartition(".")[0] == root}
+    banned = ESCAPE_ATTRIBUTES | UNSAFE_SUBMODULES | UNSAFE_HELPERS | BANNED_ATTRIBUTES | BANNED_IO | on_module
     found = {info.name for info in pkgutil.iter_modules(package.__path__) if not info.name.startswith("_")}
     unreviewed = sorted(found - REVIEWED_SUBMODULES[root] - banned)
     assert not unreviewed, f"review these {root} submodules and add them to REVIEWED_SUBMODULES or ban them"
@@ -1608,6 +1635,10 @@ def library_plot(library: str, body: str = "") -> str:
         return plotnine_plot(body)
     if library == "altair":
         return altair_plot(body)
+    if library == "pygal":
+        return pygal_plot(body)
+    if library == "letsplot":
+        return letsplot_plot(body)
     return plot(("import seaborn as sns\n" if library == "seaborn" else "") + body)
 
 
@@ -1781,6 +1812,22 @@ class TestPlotnineProfile:
         findings = validate_security(plotnine_plot(body), library="plotnine")
         opaque = ("as string literals, not as an expression", "takes ** only from a dict literal")
         assert any(f.rule == "banned-call" and f.message.endswith(opaque) for f in findings), findings
+
+    @pytest.mark.parametrize(
+        "rebinding",
+        [
+            pytest.param("match 'open(\"x\").read()':\n    case COLUMN:\n        pass\n", id="match capture"),
+            pytest.param("for COLUMN in ['open(\"x\").read()']:\n    pass\n", id="loop target"),
+            pytest.param("from textwrap import dedent as COLUMN\n", id="import"),
+            pytest.param("def COLUMN():\n    return 1\n", id="function name"),
+        ],
+    )
+    def test_a_name_bound_twice_is_not_read_as_its_literal(self, rebinding: str) -> None:
+        """`COLUMN = "a"` and then `case COLUMN:` would hand plotnine the subject string, which the walk never saw
+        (the validator pass of 2026-10-26: the 1b rule counted only assignments and passed the match capture)."""
+        body = EXPRESSION_IMPORTS + 'COLUMN = "a"\n' + rebinding + "m = aes(x=COLUMN)\n"
+        findings = validate_security(plotnine_plot(body), library="plotnine")
+        assert any(f.message == "aes takes its column names as string literals, not as an expression" for f in findings)
 
     def test_literal_arguments_the_walk_can_read_pass(self) -> None:
         body = EXPRESSION_IMPORTS + (
@@ -2008,6 +2055,644 @@ class TestAltairProfile:
         assert rules_of(altair_plot(body), "altair") != set()
 
 
+# --- pygal and lets-plot (step 1c of agentic/specs/261024-agent-all-libraries.md) ------------------------------
+
+PYGAL_HEADER = """import os
+
+import pygal
+from pygal.style import Style
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+"""
+# The catalogue's chart: pygal's own stylesheets before an inline rule (14 files), no tooltip script (30 files).
+PYGAL_CSS = 'css=("file://style.css", "file://graph.css", "inline:.axis .line { stroke-opacity: .25; }")'
+PYGAL_CHART = (
+    "style = Style(background=PAGE_BG, plot_background=PAGE_BG, foreground=INK, colors=IMPRINT)\n"
+    'chart = pygal.XY(width=3200, height=1800, style=style, title="", js=[], '
+    + PYGAL_CSS
+    + ', value_formatter=lambda v: f"{v:.0f}%")\n'
+    'chart.add("a", [(1, 2), (3, 4)])\n'
+)
+PYGAL_PNG_SAVE = 'chart.render_to_png(f"plot-{THEME}.png")'
+PYGAL_HTML_SAVE = 'chart.render_to_file(f"plot-{THEME}.html")'
+PYGAL_FOOTER = "\n" + PYGAL_CHART + PYGAL_PNG_SAVE + "\n" + PYGAL_HTML_SAVE + "\n"
+SVG2PNG = 'cairosvg.svg2png(bytestring=chart.render(), write_to=f"plot-{THEME}.png")'
+LETSPLOT_HEADER = """import os
+
+import pandas as pd
+from lets_plot import LetsPlot, aes, geom_point, ggplot, ggsize, labs, layer_tooltips
+from lets_plot.export import ggsave
+
+LetsPlot.setup_html()
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+df = pd.DataFrame({"a": [1, 2, 3]})
+"""
+LETSPLOT_PLOT = (
+    'plot = ggplot(df, aes(x="a", y="a")) + geom_point(tooltips=layer_tooltips().line("@a").format("@a", ".1f"))'
+    ' + labs(title="") + ggsize(1600, 900)\n'
+)
+LETSPLOT_PNG_SAVE = 'ggsave(plot, f"plot-{THEME}.png", path=".", scale=2)'
+LETSPLOT_HTML_SAVE = 'ggsave(plot, f"plot-{THEME}.html", path=".")'
+LETSPLOT_FOOTER = "\n" + LETSPLOT_PLOT + LETSPLOT_PNG_SAVE + "\n" + LETSPLOT_HTML_SAVE + "\n"
+
+
+def pygal_plot(body: str = "") -> str:
+    """A minimal valid pygal file in the catalogue's shape, PNG and HTML saves included, with `body` before the chart."""
+    return PYGAL_HEADER + body + PYGAL_FOOTER
+
+
+def letsplot_plot(body: str = "") -> str:
+    """A minimal valid lets-plot file in the catalogue's normalised shape, with `body` before the plot."""
+    return LETSPLOT_HEADER + body + LETSPLOT_FOOTER
+
+
+PYGAL_ROUTES = [
+    pytest.param("t = chart.render_tree()\n", {"banned-attribute"}, id="render_tree hands out the live tree"),
+    pytest.param("chart.render_in_browser()\n", {"banned-attribute"}, id="render_in_browser"),
+    pytest.param("t = chart.render_table()\n", {"banned-attribute"}, id="render_table"),
+    pytest.param("r = chart.render_response()\n", {"banned-attribute"}, id="render_response"),
+    pytest.param("chart.add_xml_filter(lambda tree: tree)\n", {"banned-attribute"}, id="add_xml_filter"),
+    pytest.param('x = pygal.util.cut([IMPRINT], "copy")\n', {"banned-attribute"}, id="cut, a getattr by string"),
+    pytest.param("from pygal.util import template\n", {"banned-attribute"}, id="template, a str.format"),
+    pytest.param("e = pygal.entry_points\n", {"banned-attribute"}, id="plugin entry points"),
+    pytest.param("e = pygal.etree\n", {"banned-attribute"}, id="ElementTree proxy"),
+    pytest.param("e = pygal.svg.etree\n", {"banned-attribute"}, id="ElementTree proxy re-exported"),
+    pytest.param("from pygal.etree import etree\n", {"banned-import", "banned-attribute"}, id="from pygal.etree"),
+    pytest.param('chart.config._update({"js": ["x.js"]})\n', {"banned-attribute"}, id="config merge"),
+    pytest.param("import cairosvg\ns = cairosvg.SURFACES\n", {"banned-attribute"}, id="SURFACES"),
+    pytest.param(
+        'import cairosvg\ncairosvg.svg2pdf(bytestring=b"", write_to="x.pdf")\n', {"banned-attribute"}, id="svg2pdf"
+    ),
+    pytest.param("import cairosvg\nc = cairosvg.surface.cairo\n", {"banned-attribute"}, id="cairocffi in surface"),
+    pytest.param("import cairosvg\nf = cairosvg.helpers.cairo.ffi\n", {"banned-attribute"}, id="cairocffi in helpers"),
+    pytest.param("from cairosvg.surface import PNGSurface\n", {"banned-import", "banned-attribute"}, id="a surface"),
+    pytest.param("import cairosvg.parser\n", {"banned-import"}, id="parser import"),
+    pytest.param('import cairosvg\nb = cairosvg.url.fetch("x")\n', {"banned-attribute"}, id="url fetch"),
+    pytest.param('import cairosvg\np = cairosvg.Path("x")\n', {"banned-attribute"}, id="re-exported Path"),
+    pytest.param("import cairosvg\np = cairosvg.ROOT.parent\n", {"banned-attribute"}, id="ROOT, a Path instance"),
+    pytest.param("import cairosvg\ni = cairosvg.image.Image\n", {"banned-attribute"}, id="PIL in image"),
+    pytest.param("import cairosvg\nc = cairosvg.css.cssselect2\n", {"banned-attribute"}, id="cssselect2 in css"),
+    pytest.param("import cairosvg\nc = [cairosvg.colors][0].tinycss2\n", {"banned-attribute"}, id="tinycss2 by name"),
+    pytest.param("import cairosvg\nt = cairosvg.test_api\n", {"banned-attribute"}, id="test_api"),
+]
+# Each pygal save name writes one kind of file (`SaveRule.writes`; the correctness review of 2026-10-26): the name in
+# its own save's place passes, and the same name in the HTML save's place writing the other file is a finding.
+PYGAL_FILE_TYPES = [
+    pytest.param(
+        PYGAL_PNG_SAVE,
+        PYGAL_PNG_SAVE,
+        'chart.render_to_png(f"plot-{THEME}.html")',
+        'render_to_png writes only f"plot-{THEME}.png"',
+        id="render_to_png",
+    ),
+    pytest.param(
+        PYGAL_PNG_SAVE,
+        "import cairosvg\n" + SVG2PNG,
+        'cairosvg.svg2png(bytestring=chart.render(), write_to=f"plot-{THEME}.html")',
+        'svg2png writes only f"plot-{THEME}.png"',
+        id="svg2png",
+    ),
+    pytest.param(
+        PYGAL_HTML_SAVE,
+        PYGAL_HTML_SAVE,
+        'chart.render_to_file(f"plot-{THEME}.png")',
+        'render_to_file writes only f"plot-{THEME}.html"',
+        id="render_to_file",
+    ),
+]
+PYGAL_NEAR_ROUTES = [
+    pytest.param("svg = chart.render()\n", id="render"),
+    pytest.param("svg = chart.render(is_unicode=True)\n", id="render as text"),
+    pytest.param("uri = chart.render_data_uri()\n", id="render_data_uri"),
+    pytest.param('chart.x_labels = ["a", "b"]\n', id="labels"),
+    pytest.param('style2 = Style(font_family="DejaVu Sans, sans-serif")\n', id="a local font"),
+    pytest.param("from pygal.formatters import Significant\nf = Significant()\n", id="a formatter"),
+    pytest.param("import cairosvg\nv = cairosvg.VERSION\n", id="cairosvg's version string"),
+]
+PYGAL_CONFIG_ROUTES = [
+    pytest.param('c2 = pygal.Bar(js=["//cdn.example/x.js"])\n', {"banned-keyword"}, id="a script fetched"),
+    pytest.param('c2 = pygal.Bar(js=["file:///etc/passwd"])\n', {"banned-keyword", "url-literal"}, id="a script read"),
+    pytest.param('c2 = pygal.Bar(css=["file:///etc/passwd"])\n', {"banned-keyword", "url-literal"}, id="a file read"),
+    pytest.param('c2 = pygal.Bar(css=["fi" + "le:///etc/passwd"])\n', {"banned-keyword"}, id="a built entry"),
+    pytest.param('p = "x"\nc2 = pygal.Bar(css=[f"{p}inline:a"])\n', {"banned-keyword"}, id="f-string head"),
+    pytest.param('c2 = pygal.Bar(css="inline:a")\n', {"banned-keyword"}, id="not a list"),
+    pytest.param('C = ["inline:a"]\nC = ["x"]\nc2 = pygal.Bar(css=C)\n', {"banned-keyword"}, id="name bound twice"),
+    pytest.param(
+        'C = ["inline:a"]\nC.append("fi" + "le:///x")\nc2 = pygal.Bar(css=C)\n', {"banned-keyword"}, id="list mutated"
+    ),
+    pytest.param('c2 = pygal.Bar(defs=["<x/>"])\n', {"banned-keyword"}, id="defs"),
+    pytest.param('chart.defs = ["<x/>"]\n', {"banned-attribute"}, id="defs attribute"),
+    pytest.param('chart.css = ["fi" + "le:///x"]\n', {"banned-keyword"}, id="attribute with a built entry"),
+    pytest.param('chart.css += ["fi" + "le:///x"]\n', {"banned-attribute"}, id="augmented"),
+    pytest.param('chart.css.append("inline:a")\n', {"banned-attribute"}, id="mutator"),
+    pytest.param('chart.css[0] = "inline:a"\n', {"banned-attribute"}, id="item store"),
+    pytest.param("c = chart.css\n", {"banned-attribute"}, id="read"),
+    pytest.param("del chart.js\n", {"banned-attribute"}, id="delete"),
+    pytest.param("chart.js, n = [], 1\n", {"banned-attribute"}, id="unpacked target"),
+    pytest.param('o = {}\no["c" + "ss"] = ["x"]\nc2 = pygal.Bar(**o)\n', {"banned-keyword"}, id="** built"),
+    pytest.param('c2 = pygal.Bar(**{"css": ["fi" + "le:///x"]})\n', {"banned-keyword"}, id="** literal, bad css"),
+    pytest.param('c2 = pygal.Bar(**{"c" + "ss": ["x"]})\n', {"banned-keyword"}, id="** built key"),
+    pytest.param('O = {"width": 800}\nO["js"] = ["x"]\nc2 = pygal.Bar(**O)\n', {"banned-keyword"}, id="** mutated"),
+    pytest.param('c2 = pygal.Bar(**{**{"js": []}})\n', {"banned-keyword"}, id="** nested unpacking"),
+    pytest.param('cfg = pygal.Config(js=["x.js"])\n', {"banned-keyword"}, id="Config"),
+    pytest.param('c2 = chart(css=["x.css"])\n', {"banned-keyword"}, id="a chart called with options"),
+    pytest.param('s = Style(font_family="googlefont:Roboto")\n', {"url-literal"}, id="Google font"),
+    pytest.param('f = "Roboto"\ns = Style(title_font_family=f"googlefont:{f}")\n', {"url-literal"}, id="font f-string"),
+    pytest.param('s = "file://style.css"\n', {"url-literal"}, id="a package stylesheet outside a css list"),
+]
+PYGAL_CONFIG_SIBLINGS = [
+    pytest.param("c2 = pygal.Bar(js=())\n", id="js empty tuple"),
+    pytest.param('c2 = pygal.Bar(js=[], css=["inline:.a { fill: red; }"])\n', id="inline css"),
+    pytest.param(
+        'CSS = ("file://style.css", "file://graph.css", "inline:.a { fill: red; }")\n'
+        "c2 = pygal.Bar(js=[], css=CSS)\nc3 = pygal.Line(css=CSS)\n",
+        id="a css list bound once",
+    ),
+    pytest.param(
+        'EXTRA = "inline:.b { opacity: .5; }"\nc2 = pygal.Bar(css=["file://base.css", EXTRA])\n',
+        id="an entry bound once",
+    ),
+    pytest.param('x = 2\nc2 = pygal.Bar(css=[f"inline:.a {{ stroke-width: {x}; }}"])\n', id="inline f-string"),
+    pytest.param('chart.css = ["file://style.css", "inline:.c { fill: none; }"]\n', id="css attribute"),
+    pytest.param("chart.js = []\n", id="js attribute"),
+    pytest.param(
+        'OPTIONS = {"width": 3200, "height": 1800, "js": []}\nc2 = pygal.Bar(**OPTIONS, title="")\n'
+        "c3 = pygal.Line(**OPTIONS)\n",
+        id="** a dict bound once",
+    ),
+    pytest.param('c2 = pygal.Bar(**{"show_legend": False})\n', id="** a dict literal"),
+]
+SVG_NAMESPACE_LOOKALIKES = [
+    pytest.param("http://www.w3.org/2000/svgevil.example/x", id="name continued"),
+    pytest.param("http://www.w3.org/2000/svg/../x", id="path continued"),
+    pytest.param("http://www.w3.org/2000/svg http://evil.example", id="a second URL"),
+    pytest.param("https://www.w3.org/2000/svg", id="https"),
+    pytest.param("HTTP://WWW.W3.ORG/2000/SVG", id="upper case"),
+    pytest.param("{http://www.w3.org/2000/svg.x}a", id="Clark name continued"),
+    pytest.param("http://www.w3.org/1999/xlinks", id="xlink continued"),
+]
+
+
+class TestPygalProfile:
+    """pygal: pygal and cairosvg only, a PNG and an HTML save, pygal's config and its SVG namespaces."""
+
+    def test_minimal_file_has_no_findings(self) -> None:
+        assert validate_security(pygal_plot(), library="pygal") == []
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            "import cairosvg\n",
+            "from cairosvg import svg2png\n",
+            "import pygal.style\n",
+            "from pygal import formatters\n",
+            "import numpy as np\n",
+            "from scipy import stats\n",
+        ],
+    )
+    def test_allowed_import(self, body: str) -> None:
+        assert rules_of(pygal_plot(body), "pygal") == set()
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            "import xml.etree.ElementTree as ET\n",
+            "from xml.etree import ElementTree\n",
+            "from PIL import Image\n",
+            "import io\n",
+            "import cairocffi\n",
+            "import cssselect2\n",
+            "import matplotlib.colors\n",
+            "import pygal.etree\n",
+            "import cairosvg.url as url\n",
+            "from pygal_maps_world.maps import World\n",
+            "import lets_plot\n",
+        ],
+    )
+    def test_banned_import(self, body: str) -> None:
+        assert "banned-import" in rules_of(pygal_plot(body), "pygal")
+
+    @pytest.mark.parametrize(
+        ("old", "new"),
+        [
+            pytest.param(PYGAL_PNG_SAVE, 'chart.render_to_png(filename=f"plot-{THEME}.png", dpi=96)', id="filename="),
+            pytest.param(PYGAL_PNG_SAVE, "import cairosvg\n" + SVG2PNG, id="svg2png"),
+            pytest.param(
+                PYGAL_PNG_SAVE,
+                "import cairosvg\n"
+                'cairosvg.svg2png(bytestring=chart.render(), write_to=f"plot-{THEME}.png", output_width=3200, '
+                "output_height=1800, dpi=96, scale=1, background_color=PAGE_BG)",
+                id="svg2png sized",
+            ),
+            pytest.param(
+                PYGAL_PNG_SAVE,
+                'from cairosvg import svg2png\nsvg2png(bytestring=chart.render(), write_to=f"plot-{THEME}.png")',
+                id="svg2png imported",
+            ),
+            pytest.param(PYGAL_HTML_SAVE, 'chart.render_to_file(filename=f"plot-{THEME}.html")', id="HTML filename="),
+            pytest.param(PYGAL_HTML_SAVE, "", id="no HTML"),
+        ],
+    )
+    def test_save_passes(self, old: str, new: str) -> None:
+        assert validate_security(swapped(pygal_plot(), old, new), library="pygal") == []
+
+    @pytest.mark.parametrize(
+        ("old", "new"),
+        [
+            pytest.param(PYGAL_PNG_SAVE, 'chart.render_to_png("plot.png")', id="other file"),
+            pytest.param(PYGAL_PNG_SAVE, 'chart.render_to_png(f"plot-{THEME}.svg")', id="other type"),
+            pytest.param(PYGAL_PNG_SAVE, 'chart.render_to_png(f"plot-{THEME}.png", 300)', id="dpi by position"),
+            pytest.param(PYGAL_PNG_SAVE, 'chart.render_to_png(f"plot-{THEME}.png", width=800)', id="chart options"),
+            pytest.param(PYGAL_PNG_SAVE, 'chart.render_to_png(f"plot-{THEME}.png", **{})', id="unpacked keywords"),
+            pytest.param(PYGAL_PNG_SAVE, "data = chart.render_to_png()\n" + PYGAL_PNG_SAVE, id="bytes, no file"),
+            pytest.param(PYGAL_HTML_SAVE, 'chart.render_to_file(f"plot-{THEME}.svg")', id="SVG file"),
+            pytest.param(PYGAL_HTML_SAVE, 'chart.render_to_file(f"plot-{THEME}.html", pretty_print=True)', id="opts"),
+            pytest.param(
+                PYGAL_PNG_SAVE,
+                'import cairosvg\ncairosvg.svg2png(chart.render(), write_to=f"plot-{THEME}.png")',
+                id="svg2png by position",
+            ),
+            pytest.param(
+                PYGAL_PNG_SAVE, "import cairosvg\ncairosvg.svg2png(bytestring=chart.render())", id="svg2png bytes"
+            ),
+            pytest.param(
+                PYGAL_PNG_SAVE,
+                "import cairosvg\ncairosvg.svg2png(bytestring=chart.render(), write_to=handle)",
+                id="svg2png into a file object",
+            ),
+            pytest.param(
+                PYGAL_PNG_SAVE,
+                'import cairosvg\ncairosvg.svg2png(bytestring=chart.render(), write_to=f"plot-{THEME}.png", parent=1)',
+                id="svg2png keyword it does not list",
+            ),
+        ],
+    )
+    def test_other_save_is_a_finding(self, old: str, new: str) -> None:
+        assert rules_of(swapped(pygal_plot(), old, new), "pygal") == {"savefig-target"}
+
+    def test_svg2png_takes_no_positional(self) -> None:
+        new = 'import cairosvg\ncairosvg.svg2png(chart.render(), write_to=f"plot-{THEME}.png")'
+        findings = validate_security(swapped(pygal_plot(), PYGAL_PNG_SAVE, new), library="pygal")
+        assert [f.message for f in findings] == ["svg2png takes every argument by keyword"]
+
+    @pytest.mark.parametrize("keyword", ['url="plot.svg"', "file_obj=handle", "unsafe=True", "url_fetcher=fetcher"])
+    def test_svg2png_input_keywords_are_refused(self, keyword: str) -> None:
+        """`url=` and `file_obj=` read the main input from any path or URL, `unsafe=` and `url_fetcher=` open hrefs."""
+        new = f'import cairosvg\ncairosvg.svg2png(bytestring=chart.render(), write_to=f"plot-{{THEME}}.png", {keyword})'
+        assert rules_of(swapped(pygal_plot(), PYGAL_PNG_SAVE, new), "pygal") == {"banned-keyword", "savefig-target"}
+
+    def test_a_file_that_saves_no_png_is_a_finding(self) -> None:
+        findings = validate_security(swapped(pygal_plot(), PYGAL_PNG_SAVE, ""), library="pygal")
+        assert [(f.rule, f.message, f.line) for f in findings] == [("savefig-target", NO_PNG_SAVE, None)]
+
+    @pytest.mark.parametrize(("place", "right", "wrong", "message"), PYGAL_FILE_TYPES)
+    def test_a_save_name_writes_only_its_own_file_type(self, place: str, right: str, wrong: str, message: str) -> None:
+        code = swapped(pygal_plot(), place, right)
+        assert validate_security(code, library="pygal") == []
+        wrong_code = swapped(code, PYGAL_HTML_SAVE, wrong)
+        findings = validate_security(wrong_code, library="pygal")
+        line = wrong_code.splitlines().index(wrong) + 1
+        assert [(f.rule, f.message, f.line) for f in findings] == [("savefig-target", message, line)]
+
+    def test_svg_text_in_the_png_is_no_png_save(self) -> None:
+        """`render_to_file` writes SVG text, so a file whose one PNG save is `render_to_file` writes no PNG."""
+        new = 'chart.render_to_file(f"plot-{THEME}.png")'
+        findings = validate_security(swapped(pygal_plot(), PYGAL_PNG_SAVE, new), library="pygal")
+        assert [(f.rule, f.message) for f in findings] == [
+            ("savefig-target", 'render_to_file writes only f"plot-{THEME}.html"'),
+            ("savefig-target", NO_PNG_SAVE),
+        ]
+
+    @pytest.mark.parametrize(
+        ("body", "expected"),
+        [
+            ("import matplotlib.pyplot as plt\nplt.savefig(f'plot-{THEME}.png')\n", {"banned-import", "banned-call"}),
+            ("canvas.save(f'plot-{THEME}.png')\n", {"banned-call"}),
+        ],
+    )
+    def test_other_libraries_saves_are_banned_calls(self, body: str, expected: set[str]) -> None:
+        """PIL's `.save` pads the PNG in 13 catalogue files; with pygal it is no save of the plot."""
+        findings = validate_security(pygal_plot(body), library="pygal")
+        assert {f.rule for f in findings} == expected
+        assert any(f.message.endswith("; the plot is saved with save") for f in findings if f.rule == "banned-call")
+
+    @pytest.mark.parametrize(("body", "expected"), PYGAL_ROUTES)
+    def test_route_is_refused(self, body: str, expected: set[str]) -> None:
+        assert rules_of(pygal_plot(body), "pygal") == expected
+
+    @pytest.mark.parametrize("body", PYGAL_NEAR_ROUTES)
+    def test_nearest_allowed_sibling_passes(self, body: str) -> None:
+        assert rules_of(pygal_plot(body), "pygal") == set()
+
+    @pytest.mark.parametrize(("body", "expected"), PYGAL_CONFIG_ROUTES)
+    def test_config_that_reads_fetches_or_changes_later_is_refused(self, body: str, expected: set[str]) -> None:
+        assert rules_of(pygal_plot(body), "pygal") == expected
+
+    @pytest.mark.parametrize("body", PYGAL_CONFIG_SIBLINGS)
+    def test_config_the_rule_can_read_passes(self, body: str) -> None:
+        assert rules_of(pygal_plot(body), "pygal") == set()
+
+    def test_svg_namespaces_pass_in_pygal_only(self) -> None:
+        body = (
+            'NS = {"svg": "http://www.w3.org/2000/svg", "xlink": "http://www.w3.org/1999/xlink"}\n'
+            'TAG = "{http://www.w3.org/2000/svg}rect"\n'
+            "MARKUP = '<svg xmlns=\"http://www.w3.org/2000/svg\"/>'\n"
+        )
+        assert rules_of(pygal_plot(body), "pygal") == set()
+        assert rules_of(library_plot("matplotlib", body), "matplotlib") == {"url-literal"}
+
+    @pytest.mark.parametrize("text", SVG_NAMESPACE_LOOKALIKES)
+    def test_a_namespace_lookalike_is_a_url(self, text: str) -> None:
+        assert rules_of(pygal_plot(f"u = {text!r}\n"), "pygal") == {"url-literal"}
+
+    def test_cut_is_pandas_with_the_other_libraries(self) -> None:
+        """`cut` is banned in pygal's profile only: `pygal.util.cut` is a getattr by string, `pd.cut` bins values."""
+        body = 'bins = pd.cut(df["a"], 3)\n'
+        assert rules_of(library_plot("matplotlib", body), "matplotlib") == set()
+        assert rules_of(pygal_plot("import pandas as pd\n" + body), "pygal") == {"banned-attribute"}
+
+
+LETSPLOT_ROUTES = [
+    pytest.param('plot.to_png("x.png")\n', {"banned-attribute"}, id="to_png"),
+    pytest.param('plot.to_svg("x.svg")\n', {"banned-attribute"}, id="to_svg"),
+    pytest.param('plot.to_pdf("x.pdf")\n', {"banned-attribute"}, id="to_pdf"),
+    pytest.param('plot.to_html("x.html")\n', {"banned-call"}, id="to_html"),
+    pytest.param("plot.show()\n", {"banned-attribute"}, id="show"),
+    pytest.param("p = geom_point().props()\n", {"banned-attribute"}, id="props hands out the spec dict"),
+    pytest.param('LetsPlot.setup_show_ext(exec="sh -c id")\n', {"banned-attribute", "banned-call"}, id="browser"),
+    pytest.param('LetsPlot.set({"js_url_manual": "x"})\n', {"banned-attribute", "banned-call"}, id="LetsPlot.set"),
+    pytest.param("LetsPlot.set_theme(None)\n", {"banned-call"}, id="another LetsPlot method"),
+    pytest.param("LetsPlot.setup_html(offline=True)\n", {"banned-call"}, id="setup_html with arguments"),
+    pytest.param("lp = LetsPlot\n", {"banned-call"}, id="LetsPlot as a value"),
+    pytest.param("import lets_plot\n[lets_plot.LetsPlot][0].set({})\n", {"banned-call"}, id="LetsPlot in a list"),
+    pytest.param("import lets_plot\nc = lets_plot.cfg\n", {"banned-attribute"}, id="cfg"),
+    pytest.param("from lets_plot import cfg\n", {"banned-attribute"}, id="from lets_plot import cfg"),
+    pytest.param(
+        'import lets_plot.plot.core as core\nm = core.LazyModule("subprocess")\n', {"banned-attribute"}, id="LazyModule"
+    ),
+    pytest.param(
+        'import lets_plot.plot.geom_imshow_ as gi\nr = gi.png.Reader(filename="x")\n',
+        {"banned-attribute"},
+        id="png proxy",
+    ),
+    pytest.param(
+        "import lets_plot.plot.geom_imshow_ as gi\np = gi.palettable\n", {"banned-attribute"}, id="palettable"
+    ),
+    pytest.param("import lets_plot.plot.geom as g\np = g.geopandas\n", {"banned-attribute"}, id="geopandas proxy"),
+    pytest.param("import lets_plot\np = lets_plot.extend_path\n", {"banned-attribute"}, id="pkgutil.extend_path"),
+    pytest.param("from lets_plot import geom_livemap\n", {"banned-attribute"}, id="livemap"),
+    pytest.param("from lets_plot import maptiles_zxy\n", {"banned-attribute"}, id="map tiles"),
+    pytest.param("import lets_plot\ng = lets_plot.geo_data\n", {"banned-attribute"}, id="geo_data by attribute"),
+]
+LETSPLOT_NEAR_ROUTES = [
+    pytest.param('from lets_plot import scale_y_continuous\ns = scale_y_continuous(format="{.0f} %")\n', id="format="),
+    pytest.param(
+        'from lets_plot import layer_labels\nl = layer_labels().line("@a").format("@a", "d").size(10)\n', id="labels"
+    ),
+    pytest.param(
+        'from lets_plot import smooth_labels\nl = smooth_labels().eq(lhs="y").format("^R2", ".2f").label_x("left")\n',
+        id="smooth labels",
+    ),
+    pytest.param(
+        't = layer_tooltips(["a"]).format(field="@a", format=".0f").title("x").anchor("top_right").min_width(50)\n',
+        id="tooltips by keyword",
+    ),
+    pytest.param("d = layer_tooltips().as_dict()\n", id="as_dict"),
+    pytest.param('from lets_plot.mapping import as_discrete\nm = as_discrete("a")\n', id="mapping"),
+    pytest.param("from lets_plot import gggrid\ng = gggrid([ggplot(df)])\n", id="gggrid"),
+]
+LETSPLOT_FORMAT_ROUTES = [
+    pytest.param('t = "{0}".format(1)\n', id="a string's format"),
+    pytest.param('tt = layer_tooltips()\nt = tt.format("@a", ".1f")\n', id="a builder bound to a name"),
+    pytest.param('layer_tooltips = str\nt = layer_tooltips("{0}").format("@a")\n', id="the builder name rebound"),
+    pytest.param(
+        'match str:\n    case layer_tooltips:\n        pass\nt = layer_tooltips("{0}").format("@a")\n',
+        id="match capture",
+    ),
+    pytest.param('def f(layer_tooltips):\n    return layer_tooltips("{0}").format("@a")\n', id="parameter"),
+    pytest.param(
+        'import lets_plot\nlets_plot.layer_tooltips = str\nt = layer_tooltips("{0}").format("@a")\n',
+        id="the library's attribute replaced",
+    ),
+    pytest.param('v = "@a"\nt = layer_tooltips().format(v, ".1f")\n', id="a non-literal argument"),
+    pytest.param('t = layer_tooltips().format(*["@a"])\n', id="starred"),
+    pytest.param('t = layer_tooltips().format("@a", spec=".1f")\n', id="another keyword"),
+    pytest.param('t = layer_tooltips().as_dict().format("a")\n', id="as_dict in the chain"),
+    pytest.param('t = layer_tooltips().line("@a").upper().format("a")\n', id="a method outside the builder's"),
+    pytest.param('import lets_plot as lp\nt = lp.layer_tooltips().format("@a")\n', id="through the module"),
+    pytest.param(
+        'from lets_plot.plot.tooltip import layer_tooltips as lt\nt = lt().format("@a")\n', id="another import path"
+    ),
+    pytest.param('f = layer_tooltips().format\nt = f("@a")\n', id="not called"),
+]
+
+
+class TestLetsplotProfile:
+    """lets-plot: lets_plot only, `ggsave` into `.`, `LetsPlot.setup_html()`, the builders' `.format`."""
+
+    def test_minimal_file_has_no_findings(self) -> None:
+        assert validate_security(letsplot_plot(), library="letsplot") == []
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            "import lets_plot\n",
+            "from lets_plot import ggsave\n",
+            "from lets_plot.mapping import as_discrete\n",
+            "from lets_plot.bistro.corr import corr_plot\n",
+            "import numpy as np\n",
+            "from scipy import stats\n",
+        ],
+    )
+    def test_allowed_import(self, body: str) -> None:
+        assert rules_of(letsplot_plot(body), "letsplot") == set()
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            "from lets_plot.geo_data import geocode_countries\n",
+            "import lets_plot.geo_data\n",
+            "from lets_plot import tilesets\n",
+            "import lets_plot.settings_utils\n",
+            "import lets_plot.frontend_context\n",
+            "from lets_plot.plot.geom_livemap_ import geom_livemap\n",
+            "import matplotlib.pyplot as plt\n",
+            "from PIL import Image\n",
+            "import shutil\n",
+            "import pygal\n",
+        ],
+    )
+    def test_banned_import(self, body: str) -> None:
+        assert "banned-import" in rules_of(letsplot_plot(body), "letsplot")
+
+    def test_star_import_is_refused(self) -> None:
+        """The normaliser expands `from lets_plot import *` (151 catalogue files); left in, it is a finding."""
+        assert rules_of(letsplot_plot("from lets_plot import *\n"), "letsplot") == {"star-import"}
+
+    @pytest.mark.parametrize(
+        ("old", "new"),
+        [
+            pytest.param(
+                LETSPLOT_PNG_SAVE, 'ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=4)', id="file="
+            ),
+            pytest.param(
+                LETSPLOT_PNG_SAVE,
+                'ggsave(plot, f"plot-{THEME}.png", path=".", w=3200, h=1800, unit="px", dpi=96)',
+                id="pixel size",
+            ),
+            pytest.param(LETSPLOT_PNG_SAVE, 'ggsave(plot, f"plot-{THEME}.png", path=".")', id="no scale"),
+            pytest.param(LETSPLOT_HTML_SAVE, 'ggsave(plot, filename=f"plot-{THEME}.html", path=".")', id="HTML file="),
+            pytest.param(LETSPLOT_HTML_SAVE, "", id="no HTML"),
+        ],
+    )
+    def test_save_passes(self, old: str, new: str) -> None:
+        assert validate_security(swapped(letsplot_plot(), old, new), library="letsplot") == []
+
+    @pytest.mark.parametrize(
+        ("old", "new"),
+        [
+            pytest.param(LETSPLOT_PNG_SAVE, 'ggsave(plot, f"plot-{THEME}.png", scale=2)', id="no path"),
+            pytest.param(LETSPLOT_PNG_SAVE, 'ggsave(plot, f"plot-{THEME}.png", path="/tmp")', id="another path"),
+            pytest.param(LETSPLOT_PNG_SAVE, 'ggsave(plot, f"plot-{THEME}.png", path=str(d))', id="computed path"),
+            pytest.param(LETSPLOT_HTML_SAVE, 'ggsave(plot, f"plot-{THEME}.html")', id="HTML without a path"),
+            pytest.param(LETSPLOT_HTML_SAVE, 'ggsave(plot, f"plot-{THEME}.svg", path=".")', id="SVG"),
+            pytest.param(LETSPLOT_PNG_SAVE, 'ggsave(plot, "plot.png", path=".")', id="old-form file"),
+            pytest.param(LETSPLOT_PNG_SAVE, 'ggsave(plot, f"plot-{THEME}.png", ".")', id="path by position"),
+            pytest.param(LETSPLOT_HTML_SAVE, 'ggsave(plot, f"plot-{THEME}.html", path=".", iframe=False)', id="if"),
+            pytest.param(LETSPLOT_PNG_SAVE, 'ggsave(plot, f"plot-{THEME}.png", **{"path": "."})', id="unpacked"),
+            pytest.param(LETSPLOT_PNG_SAVE, 'ggsave(plot=plot, filename=f"plot-{THEME}.png", path=".")', id="plot="),
+        ],
+    )
+    def test_other_save_is_a_finding(self, old: str, new: str) -> None:
+        assert rules_of(swapped(letsplot_plot(), old, new), "letsplot") == {"savefig-target"}
+
+    def test_a_save_without_the_directory_names_it(self) -> None:
+        """Without `path=`, lets-plot creates `./lets-plot-images` and writes there (the render guard refuses it)."""
+        code = swapped(letsplot_plot(), LETSPLOT_PNG_SAVE, 'ggsave(plot, f"plot-{THEME}.png", scale=2)')
+        assert [f.message for f in validate_security(code, library="letsplot")] == ['ggsave must save with path="."']
+
+    def test_a_file_that_saves_no_png_is_a_finding(self) -> None:
+        findings = validate_security(swapped(letsplot_plot(), LETSPLOT_PNG_SAVE, ""), library="letsplot")
+        assert [(f.rule, f.message, f.line) for f in findings] == [("savefig-target", NO_PNG_SAVE, None)]
+
+    @pytest.mark.parametrize(("body", "expected"), LETSPLOT_ROUTES)
+    def test_route_is_refused(self, body: str, expected: set[str]) -> None:
+        assert rules_of(letsplot_plot(body), "letsplot") == expected
+
+    @pytest.mark.parametrize("body", LETSPLOT_NEAR_ROUTES)
+    def test_nearest_allowed_sibling_passes(self, body: str) -> None:
+        assert rules_of(letsplot_plot(body), "letsplot") == set()
+
+    @pytest.mark.parametrize("body", LETSPLOT_FORMAT_ROUTES)
+    def test_format_outside_a_builder_chain_is_refused(self, body: str) -> None:
+        findings = validate_security(letsplot_plot(body), library="letsplot")
+        assert ("banned-attribute", "attribute '.format' is not allowed") in {(f.rule, f.message) for f in findings}
+
+    def test_a_dunder_in_a_builder_format_still_fails(self) -> None:
+        body = 't = layer_tooltips().format("@a", "{0.__class__}")\n'
+        assert rules_of(letsplot_plot(body), "letsplot") == {"dunder"}
+
+    def test_the_builder_exemption_is_lets_plots(self) -> None:
+        """In another profile the same chain is an ordinary `.format`."""
+        body = 'from plotnine import labs as layer_tooltips\nt = layer_tooltips().format("@a", ".1f")\n'
+        assert "banned-attribute" in rules_of(plotnine_plot(body), "plotnine")
+
+
+# The save rule finds a save by its callee's name, so a save reached under another name escapes it: open in the 1b
+# plotnine profile (the lets-plot draft of 2026-10-26, alias_probe.py). One save name per profile, its import and
+# a call that writes elsewhere.
+SAVE_NAME_CASES = [
+    pytest.param("plotnine", "from plotnine import ggsave\n", "ggsave", 'plot, "/tmp/x.pdf"', id="plotnine"),
+    pytest.param(
+        "pygal", "from cairosvg import svg2png\n", "svg2png", 'bytestring=b"", write_to="/tmp/x.png"', id="pygal"
+    ),
+    pytest.param("letsplot", "", "ggsave", 'plot, "/tmp/x.pdf", path="/tmp"', id="letsplot"),
+]
+SAVE_NAME_ROUTES = [
+    pytest.param("from {module} import {name} as keep\nkeep({args})\n", {"banned-call"}, id="imported as"),
+    pytest.param("from textwrap import dedent as {name}\n", {"banned-call"}, id="imported under a save name"),
+    pytest.param("g = {name}\ng({args})\n", {"banned-call"}, id="assigned"),
+    pytest.param("[{name}][0]({args})\n", {"banned-call"}, id="in a list"),
+    pytest.param("import functools\nfunctools.partial({name})({args})\n", {"banned-call"}, id="partial"),
+    # The wrapper calls the save where it is named, so the save rule sees its starred target (pygal's profile also
+    # refuses a `**k` it cannot read, so the wrapper forwards positionals only).
+    pytest.param("w = lambda *a: {name}(*a)\nw({args})\n", {"savefig-target"}, id="lambda wrapper"),
+    pytest.param("g = getattr(df, '{name}')\n", {"banned-name"}, id="getattr"),
+]
+
+
+@pytest.mark.parametrize(("library", "imports", "name", "args"), SAVE_NAME_CASES)
+@pytest.mark.parametrize(("template", "expected"), SAVE_NAME_ROUTES)
+def test_a_save_reached_under_another_name_is_refused(
+    library: str, imports: str, name: str, args: str, template: str, expected: set[str]
+) -> None:
+    module = {"plotnine": "plotnine", "pygal": "cairosvg", "letsplot": "lets_plot.export"}[library]
+    body = imports + template.format(module=module, name=name, args=args)
+    assert rules_of(library_plot(library, body), library) == expected
+
+
+@pytest.mark.parametrize(
+    ("library", "body"),
+    [
+        pytest.param("plotnine", "from plotnine import ggsave as ggsave\n", id="plotnine, imported as itself"),
+        pytest.param(
+            "pygal",
+            'from cairosvg import svg2png\nsvg2png(bytestring=chart.render(), write_to=f"plot-{THEME}.png")\n',
+            id="pygal, called where named",
+        ),
+        pytest.param("letsplot", "from lets_plot import ggsave\n", id="letsplot, imported twice under its name"),
+    ],
+)
+def test_a_save_name_under_its_own_name_passes(library: str, body: str) -> None:
+    assert rules_of(library_plot(library, body), library) == set()
+
+
+def test_a_save_name_in_a_plotnine_expression_is_refused() -> None:
+    """plotnine evaluates the string in the plot's namespace, where `ggsave` is bound."""
+    body = "from plotnine import ggsave\nm = aes(x=\"(lambda g: g(df, '/tmp/x.pdf'))(ggsave)\")\n"
+    findings = validate_security(plotnine_plot(body), library="plotnine")
+    assert [(f.rule, f.message) for f in findings] == [
+        ("banned-call", "in the aes expression: 'ggsave' may only be called directly")
+    ]
+
+
+LIBRARY_ROOTS = {"altair": "altair", "pygal": "pygal", "letsplot": "lets_plot"}
+
+
+@pytest.mark.parametrize(
+    ("library", "name"), [(library, name) for library, names in sorted(LIBRARY_BANS.items()) for name in sorted(names)]
+)
+def test_a_library_ban_is_refused_on_any_receiver_and_as_an_import(library: str, name: str) -> None:
+    for body in (f"x = obj.{name}\n", f"from {LIBRARY_ROOTS[library]} import {name}\n"):
+        assert rules_of(library_plot(library, body), library) == {"banned-attribute"}, body
+
+
+LETSPLOT_HELPERS = (
+    "to_png to_svg to_pdf setup_show_ext WebBrHtmlPageContext LazyModule geom_livemap maptiles_zxy maptiles_lets_plot "
+    "maptiles_solid maptiles_chessboard geocoding_service geocode geocode_cities geocode_counties geocode_states "
+    "geocode_countries reverse_geocode get_geocodes get_centroids get_boundaries get_limits extend_path".split()
+)
+
+
+@pytest.mark.parametrize("library", ["letsplot", "matplotlib"])
+@pytest.mark.parametrize("name", LETSPLOT_HELPERS)
+def test_a_lets_plot_helper_is_refused_in_every_profile(library: str, name: str) -> None:
+    """No catalogue file of another library uses these names, so they are banned everywhere (`UNSAFE_HELPERS`)."""
+    assert rules_of(library_plot(library, f"x = obj.{name}\n"), library) == {"banned-attribute"}
+
+
+def test_a_save_name_as_a_value_is_refused_in_plot_and_data_code() -> None:
+    findings = validate_security(plot("s = savefig\n"), library="matplotlib")
+    assert [(f.rule, f.message) for f in findings] == [("banned-call", "'savefig' may only be called directly")]
+    assert ("banned-call", "'savefig' may only be called directly") in {
+        (f.rule, f.message) for f in validate_data_code("import pandas as pd\ns = savefig\ndf = pd.DataFrame()\n")
+    }
+
+
 # `np.save` shares its name with the `save` of plotnine and altair: the save rule resolves the receiver, and a
 # module outside the plotting library is never the plot's save (finding of the 1b review, 2026-10-25).
 @pytest.mark.parametrize("library", CODE_LIBRARIES)
@@ -2021,6 +2706,139 @@ class TestAltairProfile:
 )
 def test_numpy_save_is_a_banned_call_in_every_profile(library: str, body: str) -> None:
     assert "banned-call" in rules_of(library_plot(library, body), library)
+
+
+# THEME names every save's file, and libcairo writes pygal's PNG where the render guard never looks, so in every
+# profile the name keeps the theme block's value (the security review of 2026-10-26): a body that binds THEME, the
+# 1-based line of the binding in it, and the other rules the body breaks.
+THEME_BINDINGS = [
+    pytest.param('THEME = "../x"\n', 1, set(), id="a second assignment"),
+    pytest.param('THEME = os.getenv("ANYPLOT_THEME", "dark")\n', 1, set(), id="the theme block twice"),
+    pytest.param('THEME += "x"\n', 1, set(), id="augmented"),
+    pytest.param('THEME: str = "x"\n', 1, set(), id="annotated"),
+    pytest.param('THEME, n = "x", 1\n', 1, set(), id="unpacked"),
+    pytest.param('for THEME in ["x"]:\n    pass\n', 1, set(), id="for"),
+    pytest.param("import warnings\nwith warnings.catch_warnings() as THEME:\n    pass\n", 2, set(), id="with"),
+    pytest.param("try:\n    pass\nexcept ValueError as THEME:\n    pass\n", 3, set(), id="except"),
+    pytest.param('match "x":\n    case THEME:\n        pass\n', 2, set(), id="match capture"),
+    pytest.param('match ["x"]:\n    case [*THEME]:\n        pass\n', 2, set(), id="match star"),
+    pytest.param("match {}:\n    case {**THEME}:\n        pass\n", 2, set(), id="match rest"),
+    pytest.param('n = (THEME := "x")\n', 1, set(), id="walrus"),
+    pytest.param('names = [THEME for THEME in ["x"]]\n', 1, set(), id="comprehension"),
+    pytest.param("from textwrap import dedent as THEME\n", 1, set(), id="from import"),
+    pytest.param("import textwrap as THEME\n", 1, {"module-value"}, id="import"),
+    pytest.param('def THEME():\n    return "x"\n', 1, set(), id="def"),
+    pytest.param('def f(THEME="x"):\n    return THEME\n', 1, set(), id="parameter"),
+    pytest.param("f = lambda THEME: THEME\n", 1, set(), id="lambda parameter"),
+    pytest.param('def f():\n    THEME = "x"\n    return THEME\n', 2, set(), id="a local"),
+    pytest.param("def f():\n    global THEME\n", 2, {"banned-statement"}, id="global"),
+    pytest.param(
+        'def f():\n    THEME = "x"\n\n    def g():\n        nonlocal THEME\n', 5, {"banned-statement"}, id="nonlocal"
+    ),
+    pytest.param("del THEME\n", 1, set(), id="del"),
+    pytest.param("type THEME = str\n", 1, set(), id="type alias"),
+    pytest.param("def f[THEME]():\n    pass\n", 1, set(), id="type parameter"),
+]
+THEME_READS = [
+    pytest.param("upper = THEME.upper()\n", id="a read"),
+    pytest.param("def f(theme=THEME):\n    return theme\n", id="a default"),
+    pytest.param('d = dict(THEME="x")\n', id="a keyword"),
+    pytest.param('labels = {"THEME": THEME}\n', id="a dict key"),
+    pytest.param('THEME_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"\n', id="another name"),
+]
+# With `import os`, the name is bound by nothing else: each of these hands the theme block another object's `getenv`.
+OS_BINDINGS = [
+    pytest.param(
+        'import functools\n\n\ndef g():\n    pass\n\n\ng.getenv = lambda *a: "../x"\n\n\n'
+        '@functools.wraps(g, assigned=("getenv",), updated=())\ndef os():\n    pass\n',
+        12,
+        id="def under wraps",
+    ),
+    pytest.param("from textwrap import dedent as os\n", 1, id="from import"),
+    pytest.param("import textwrap as os\n", 1, id="import"),
+    pytest.param("try:\n    pass\nexcept ValueError as os:\n    pass\n", 3, id="except"),
+    pytest.param("def f(os):\n    return 1\n", 1, id="parameter"),
+    pytest.param('match "x":\n    case os:\n        pass\n', 2, id="match capture"),
+]
+
+
+def body_line(code: str, body: str, line: int) -> int:
+    """The line of `code` that is line `line` of `body`, which `code` holds once."""
+    assert code.count(body) == 1, body
+    return code.count("\n", 0, code.index(body)) + line
+
+
+@pytest.mark.parametrize("library", CODE_LIBRARIES)
+@pytest.mark.parametrize(("body", "line", "others"), THEME_BINDINGS)
+def test_a_binding_of_theme_is_refused_in_every_profile(library: str, body: str, line: int, others: set[str]) -> None:
+    code = library_plot(library, body)
+    findings = validate_security(code, library=library)
+    assert {f.rule for f in findings} == {"savefig-target"} | others
+    assert ("savefig-target", THEME_BINDING_MESSAGE, body_line(code, body, line)) in {
+        (f.rule, f.message, f.line) for f in findings
+    }
+
+
+@pytest.mark.parametrize("library", CODE_LIBRARIES)
+@pytest.mark.parametrize("body", THEME_READS)
+def test_a_read_of_theme_passes_in_every_profile(library: str, body: str) -> None:
+    assert rules_of(library_plot(library, body), library) == set()
+
+
+@pytest.mark.parametrize("library", CODE_LIBRARIES)
+@pytest.mark.parametrize(
+    "block",
+    [
+        pytest.param('THEME = os.environ.get("ANYPLOT_THEME", "light")', id="os.environ.get"),
+        pytest.param('THEME = os.getenv("ANYPLOT_THEME", "light").lower()', id="a call on the lookup"),
+        pytest.param('THEME = T = os.getenv("ANYPLOT_THEME", "light")', id="two targets"),
+    ],
+)
+def test_a_theme_block_of_another_shape_is_a_finding(library: str, block: str) -> None:
+    """The theme block is the shape `regions.is_theme_assignment` accepts, which readiness looks for too."""
+    code = swapped(library_plot(library), THEME_LINE, block)
+    findings = validate_security(code, library=library)
+    assert [(f.rule, f.message, f.line) for f in findings] == [
+        ("savefig-target", THEME_BINDING_MESSAGE, code.splitlines().index(block) + 1)
+    ]
+
+
+@pytest.mark.parametrize("library", CODE_LIBRARIES)
+@pytest.mark.parametrize(
+    "block",
+    [
+        pytest.param('THEME: str = os.getenv("ANYPLOT_THEME", "light")', id="annotated"),
+        pytest.param('THEME = os.getenv("ANYPLOT_THEME")', id="no default"),
+        pytest.param('THEME = os.getenv("ANYPLOT_THEME", default="light")', id="default by keyword"),
+    ],
+)
+def test_a_theme_block_regions_accepts_passes(library: str, block: str) -> None:
+    assert rules_of(swapped(library_plot(library), THEME_LINE, block), library) == set()
+
+
+@pytest.mark.parametrize("library", CODE_LIBRARIES)
+def test_the_theme_block_reads_the_imported_os(library: str) -> None:
+    """Without `import os`, `os` is a name the file binds, and its `getenv` returns what the file says."""
+    code = swapped(library_plot(library, "def os():\n    pass\n"), "import os\n", "")
+    findings = validate_security(code, library=library)
+    assert [(f.rule, f.message, f.line) for f in findings] == [
+        ("savefig-target", THEME_BINDING_MESSAGE, code.splitlines().index(THEME_LINE) + 1)
+    ]
+
+
+@pytest.mark.parametrize("library", CODE_LIBRARIES)
+@pytest.mark.parametrize(("body", "line"), OS_BINDINGS)
+def test_a_binding_of_the_imported_os_is_refused(library: str, body: str, line: int) -> None:
+    code = library_plot(library, body)
+    findings = validate_security(code, library=library)
+    assert [(f.rule, f.message, f.line) for f in findings] == [
+        ("os-use", "'os' may only be bound by import os", body_line(code, body, line))
+    ]
+
+
+def test_data_code_may_bind_theme() -> None:
+    """A data snippet saves nothing, so the THEME pin, a `savefig-target` rule, is no rule of the DATA profile."""
+    assert validate_data_code('import pandas as pd\nTHEME = "x"\nTHEME = "y"\ndf = pd.DataFrame()\n') == []
 
 
 # --- the catalogue corpus ----------------------------------------------------------------------

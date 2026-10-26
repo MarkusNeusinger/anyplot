@@ -16,6 +16,7 @@ from agents.anyplot.code.regions import (
     is_theme_assignment,
     is_theme_target,
     save_rule,
+    save_target,
 )
 from agents.anyplot.code.regions import tests_theme as value_tests_theme  # not named test* for pytest
 
@@ -132,10 +133,12 @@ def test_a_theme_token_picks_fixed_values_and_a_data_dependent_conditional_is_no
 
 
 @pytest.mark.skipif(not CATALOGUE_FILES, reason="plots/ is not checked out")
-def test_every_catalogue_theme_conditional_but_five_is_a_token() -> None:
+def test_every_catalogue_theme_conditional_but_the_listed_ones_is_a_token() -> None:
     """Measured on 2026-10-10: 2,745 theme-testing assignments in the 650 matplotlib and seaborn files, one of them
     data-dependent; on 2026-10-25, 5,438 in the 1,296 files of the four libraries, five of them (a colour taken from
-    a palette index or another plot colour, a tuple of channel arithmetic, a list of layers)."""
+    a palette index or another plot colour, a tuple of channel arithmetic, a list of layers); on 2026-10-26, 8,020
+    in the 1,946 files of the six libraries, eleven of them (lets-plot adds two `flavor_*()` calls, a theme call, a
+    tile set and two colours read from constants that test no theme)."""
     narrowed = []
     for path in CATALOGUE_FILES:
         code = path.read_text(encoding="utf-8")
@@ -153,6 +156,12 @@ def test_every_catalogue_theme_conditional_but_five_is_a_token() -> None:
         "heatmap-cohort-retention/plotnine.py:RULE",
         "slope-basic/altair.py:layers",
         "span-basic/altair.py:WARNING_LABEL_COLOR",
+        "bar-tornado-sensitivity/letsplot.py:flavor",
+        "column-stratigraphic/letsplot.py:flavor",
+        "heatmap-loss-triangle/letsplot.py:base_flavor",
+        "ks-test-comparison/letsplot.py:ribbon_color",
+        "map-tile-background/letsplot.py:map_tiles",
+        "nyquist-basic/letsplot.py:PM_LABEL_TEXT",
     ]
 
 
@@ -242,19 +251,69 @@ ALTAIR = source("""
         _canvas.save(f"plot-{THEME}.png")
     chart.save(f"plot-{THEME}.html")
 """)
+PYGAL = source("""
+    import os
+
+    import cairosvg
+    import pygal
+
+    THEME = os.getenv("ANYPLOT_THEME", "light")
+    PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+    df = load_user_data()
+    chart = pygal.XY(width=3200, height=1800, js=[])
+    chart.add("points", list(zip(df["x"], df["y"])))
+    cairosvg.svg2png(bytestring=chart.render(), write_to=f"plot-{THEME}.png", output_width=3200)
+    chart.render_to_png(f"plot-{THEME}.png")
+    chart.render_to_file(f"plot-{THEME}.html")
+""")
+LETSPLOT = source("""
+    import os
+
+    from lets_plot import LetsPlot, aes, geom_point, ggplot, ggsave, ggsize
+
+    LetsPlot.setup_html()
+    THEME = os.getenv("ANYPLOT_THEME", "light")
+    PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+    df = load_user_data()
+    plot = ggplot(df, aes(x="x", y="y")) + geom_point() + ggsize(1600, 900)
+    ggsave(plot, f"plot-{THEME}.png", path=".", scale=2)
+    ggsave(plot, filename=f"plot-{THEME}.html", path=".")
+""")
 
 
 class TestSaveRules:
     """One save rule per library (`SAVE_RULES`): which calls save, where the file is, what is protected."""
 
     def test_every_rule_names_its_save_calls(self) -> None:
-        assert set(SAVE_RULES) == {"matplotlib", "seaborn", "plotnine", "altair"}
-        assert SAVE_NAMES == {"savefig", "save", "ggsave"}
+        assert set(SAVE_RULES) == {"matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot"}
+        assert SAVE_NAMES == {"savefig", "save", "ggsave", "render_to_png", "render_to_file", "svg2png"}
         assert save_rule("matplotlib").verb == "savefig" and save_rule("plotnine").verb == "save"
-        assert save_rule("altair").html and save_rule("altair").reopens and not save_rule("altair").canvas
-        assert save_rule("seaborn").canvas and not save_rule("plotnine").canvas
+        assert save_rule("altair").html and save_rule("altair").reopens and save_rule("altair").canvas is None
+        assert save_rule("seaborn").canvas == "figure" and save_rule("plotnine").canvas is None
+        assert save_rule("pygal").canvas == "pygal" and save_rule("letsplot").canvas == "letsplot"
+        assert save_rule("letsplot").directory == "." and save_rule("pygal").directory is None
         with pytest.raises(ValueError, match="no save rule"):
             save_rule("plotly")
+
+    def test_pygal_svg2png_takes_the_file_by_keyword_only(self) -> None:
+        regions = find_regions(PYGAL, library="pygal")
+
+        shapes = [(c.name, c.standard_target, c.html_target) for c in regions.savefig_calls]
+        assert shapes == [("svg2png", True, False), ("render_to_png", True, False), ("render_to_file", False, True)]
+        assert regions.savefig is regions.savefig_calls[1]  # the last module-level save of the PNG
+        rule = save_rule("pygal")
+        assert rule.target_position("svg2png") == -1 and rule.target_position("render_to_png") == 0
+        # `svg2png`'s first positional is the SVG, never the file.
+        positional = ast.parse('cairosvg.svg2png(f"plot-{THEME}.png")', mode="eval").body
+        assert isinstance(positional, ast.Call) and save_target(positional, rule, "svg2png") is None
+
+    def test_letsplot_ggsave_takes_the_file_second(self) -> None:
+        regions = find_regions(LETSPLOT, library="letsplot")
+
+        shapes = [(c.name, c.standard_target, c.html_target) for c in regions.savefig_calls]
+        assert shapes == [("ggsave", True, False), ("ggsave", False, True)]
+        assert regions.savefig is regions.savefig_calls[0]
+        assert text(LETSPLOT, regions.protected[-1].span) == 'ggsave(plot, f"plot-{THEME}.png", path=".", scale=2)\n'
 
     def test_plotnine_ggsave_takes_the_file_second(self) -> None:
         regions = find_regions(PLOTNINE, library="plotnine")

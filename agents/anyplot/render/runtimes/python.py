@@ -1,13 +1,16 @@
-"""The Python runtime: matplotlib, seaborn, plotnine and altair (`runtimes.PYTHON_LIBRARIES`).
+"""The Python runtime: matplotlib, seaborn, plotnine, altair, pygal and lets-plot (`runtimes.PYTHON_LIBRARIES`).
 
 The command is the catalogue's CI render command (`MPLBACKEND=Agg
 ANYPLOT_THEME=<theme> python plot.py`) with the isolated interpreter (no remote
 debugging either, `harness.INTERPRETER_FLAGS`) and the probe harness in front. The environment is complete, never inherited: the theme, the Agg
 backend, a writable matplotlib cache and `HOME` under `/tmp` (the root filesystem is
-read-only), and the harness's resource limits. The library picks the code conventions
+read-only), the harness's resource limits, and the library's row of the renderer's command
+table (`agents/renderer/commands.py`): its own environment and its own `RLIMIT_AS` where it
+has one (lets-plot), as the renderer's `sandbox_env` passes them. The library picks the code conventions
 (`regions.SAVE_RULES`: the save call, altair's second `plot-<theme>.html` file and its
 PIL padding) and the validator profile; plotnine draws through matplotlib and so gets a
-probe, altair renders in vl-convert's V8 and gets none (the host gates still run).
+probe, altair renders in vl-convert's V8, pygal through cairosvg and lets-plot in its native
+bridge, and none of those three writes one (the host gates still run).
 
 `normalise`, `loader_block`, `validate` and the rest (`regions`, `readiness`, `security`,
 `adaptation`, `apply_plan`, `restore_protected`, `new_literals`, `error_summary`, `export`)
@@ -19,6 +22,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from agents.renderer.commands import command_for
+from agents.renderer.executor import SANDBOX_PATH
 from agents.renderer.wire import run_cpu_seconds
 
 from ...code.edits import AppliedPlan, apply_plan, new_literals, restore_protected
@@ -48,11 +53,14 @@ DATA_FILE_NAME = "snippet.py"
 DATA_RLIMIT_AS_MB = 1024
 DATA_RLIMIT_NPROC = 64
 """The renderer's deployed `RENDERER_RLIMIT_AS_MB` and `RENDERER_RLIMIT_NPROC` (pinned by a test), which the local
-backend's data runs apply as well."""
+backend's data runs apply as well, and its renders the address-space limit."""
+RENDER_RLIMIT_FSIZE_MB = 50
+"""The renderer's deployed `RENDERER_RLIMIT_FSIZE_MB` (pinned by a test), which the local backend's renders apply."""
 
 
 class PythonRuntime:
-    """Python plot code (matplotlib, seaborn, plotnine, altair), run as `plot.py` under the probe harness."""
+    """Python plot code (matplotlib, seaborn, plotnine, altair, pygal, lets-plot), run as `plot.py` under the probe
+    harness."""
 
     language = "python"
     file_name = "plot.py"
@@ -83,17 +91,37 @@ class PythonRuntime:
         return [self.python, *INTERPRETER_FLAGS, self.harness, self.file_name]
 
     def env(self, theme: Theme) -> dict[str, str]:
-        return {
+        """A render's environment in the local Docker backend, its one caller: the renderer's `sandbox_env` for the
+        library's command row under the deployed limits, key for key (pinned by a test). The matplotlib settings,
+        then the row's own variables, then the fixed keys no row replaces: `PATH` is the sandbox's, the path the
+        image build's delegate check reads (`agents/renderer/delegates.py`), and the limits are the deployed ones,
+        the row's own `RLIMIT_AS` where it has one and none where the row switches it off (altair).
+
+        One limit stays out: the container runs as the developer's user (`--user`), and Linux counts that user's
+        processes on the whole machine against `RLIMIT_NPROC`, so 64 would stop lets-plot's threads on a busy
+        desktop; the container's `--pids-limit` bounds the processes instead. Until 2026-10-26 a local render also
+        kept the image's `PATH`, no `RLIMIT_AS` and the harness's default file size (the Copilot review of #12405).
+        """
+        row = command_for(self.language, self.library)
+        env = {
             "ANYPLOT_THEME": theme,
             "MPLBACKEND": "Agg",
             "MPLCONFIGDIR": self.mplconfig,
             # The renderer image's baked font cache; the harness copies it into
             # MPLCONFIGDIR and skips the copy where the directory does not exist.
             "ANYPLOT_MPL_SEED": MPL_SEED,
+            **row.env,
+            "PATH": SANDBOX_PATH,
             "HOME": "/tmp",
             "PYTHONDONTWRITEBYTECODE": "1",
+            "OPENBLAS_NUM_THREADS": "1",
+            "OMP_NUM_THREADS": "1",
             "ANYPLOT_RLIMIT_CPU_S": str(self.cpu_seconds),
+            "ANYPLOT_RLIMIT_FSIZE_MB": str(RENDER_RLIMIT_FSIZE_MB),
         }
+        if row.rlimit_as:
+            env["ANYPLOT_RLIMIT_AS_MB"] = str(row.rlimit_as_mb or DATA_RLIMIT_AS_MB)
+        return env
 
     def data_command(self) -> list[str]:
         return [self.python, *INTERPRETER_FLAGS, self.harness, DATA_FLAG, DATA_FILE_NAME]

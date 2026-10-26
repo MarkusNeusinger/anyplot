@@ -1,9 +1,10 @@
 # Feature: "Use with my data" for all 15 catalogue libraries
 
-> **Status (2026-10-25):** plan, in progress. Step 1a (the runtime seam) is open as
-> PR #12404. Step 1b (plotnine and altair) is implemented on its branch and waits for
-> 1a's merge; see "What 1b built" under step 1b. The deploy serves matplotlib and seaborn:
-> plotnine and altair have runtimes after 1b, but `AGENT_LIBRARIES` keeps its default
+> **Status (2026-10-26):** plan, in progress. Steps 1a (the runtime seam) and 1b
+> (plotnine and altair) merged with PR #12404; see "What 1b built" under step 1b. Step 1c
+> (pygal and lets-plot) is implemented on its branch, and its PR follows; see "What 1c
+> built" under step 1c. The deploy serves matplotlib and seaborn: plotnine, altair, pygal
+> and lets-plot have runtimes, but `AGENT_LIBRARIES` keeps its default
 > `matplotlib,seaborn` until each one's matrix run passes. Every other library in this
 > document is planned, not shipped.
 
@@ -144,8 +145,9 @@ What the code does today, and what has to change:
   three deny lists share.
 - `agents/renderer/toolchain.Dockerfile` (owner question 1): Ubuntu 24.04 with R from
   rocker's layout and Posit binaries, Python 3.14 managed by uv, Node 22, Playwright
-  Chromium, Julia 1.13 and the precompiled depot; published to GHCR by a workflow that
-  runs on changes to the lock files.
+  Chromium, Julia 1.13 and the precompiled depot; built by a Cloud Build trigger on
+  changes to the lock files and pushed to the private Artifact Registry repository
+  `anyplot` in `europe-west4`, next to the renderer image (owner question 1).
 - `agents/evals/fixtures/cases/<spec>-<library>-<perturbation>/` for the 13 libraries
   (generated).
 - `tests/unit/agents/code/test_profiles_*.py`, `tests/unit/agents/renderer/test_commands.py`,
@@ -353,6 +355,310 @@ reasons (a file can have several causes):
   `shutil.move`/`rmtree` of its `lets-plot-images` directory (24 catalogue files) is
   rewritten by the normaliser to `ggsave(..., path=".")`, the form the other 301 use.
   The slim image needs `libcairo2` for cairosvg.
+
+#### What 1c built (2026-10-26)
+
+- **Two more save rules.** `regions.SAVE_RULES` gains pygal: `render_to_png` (the file
+  as its positional or `filename=`, plus `dpi=`), `render_to_file` for the HTML twin
+  (`filename` only), and `cairosvg.svg2png`, which takes every argument by keyword
+  (`SaveRule.keyword_only`: the file is `write_to=`). lets-plot saves through `ggsave`
+  with the file second and `path="."` on every save (`SaveRule.directory`, the one
+  literal every save passes). `SaveRule.writes` pairs a save name with the one file
+  type it writes (pygal: `render_to_png` and `svg2png` only the PNG, `render_to_file`
+  only the HTML; `SaveRule.writes_suffix`), which the validator, the readiness scan and
+  the canvas step check. `SaveRule.canvas` names each library's canvas rewrite
+  (`figure`, `pygal`, `letsplot`, or none for plotnine and altair). `SAVE_NAMES` gains
+  `render_to_png`, `render_to_file` and `svg2png` in every profile, and `PythonRuntime`
+  serves `PYTHON_LIBRARIES`: matplotlib, seaborn, plotnine, altair, pygal and
+  `letsplot`.
+- **Validator.** `LIBRARY_IMPORTS` gains pygal (`pygal`, `cairosvg`) and lets-plot
+  (`lets_plot`), after a walk of both public surfaces that `REVIEWED_SUBMODULES` pins
+  (pygal 3.1.3, cairosvg 2.9.1, lets-plot 4.11.0, `lets_plot.plot` included).
+  - pygal: `cssselect2`, `tinycss2`, `webencodings` and `cairocffi` are unreachable,
+    and so are cairosvg's `Path`, `parser`, `surface`, `url`, `image`, `css`,
+    `features`, `test_api` and `ROOT`; pygal's `etree` is an unsafe submodule;
+    `LIBRARY_BANS["pygal"]` holds the browser, pyquery and tree renderers,
+    `add_xml_filter`, cairosvg's PDF, PS, EPS and SVG exporters, the cairo surfaces,
+    the fetchers, `cut` and `_update` (which merges any dict into the chart's config).
+    The config rule: `defs=` is refused, `js=` takes only `[]` or `()`, `css=` takes
+    only inline entries and pygal's three package stylesheets (exempt from the URL rule
+    at that node only), `.css` and `.js` are only ever the single target of a plain
+    assignment, every `**` is a dict literal with string keys or a name bound once and
+    used only as `**name`, and a `googlefont:` string is a URL literal. The SVG namespace names are exempt from the
+    URL rule in pygal's profile only. `file_obj`, `unsafe` and `url_fetcher` are banned
+    keywords on every call.
+  - lets-plot: `geo_data`, `tilesets`, `settings_utils`, `frontend_context` and
+    `plot.geom_livemap_` are denied, its 23 helpers (geocoding, map tiles, `to_png`,
+    `to_svg`, `to_pdf`, `setup_show_ext`, `LazyModule` and others) are unsafe
+    everywhere, and `LetsPlot.set`, `setup_show_ext` and `cfg` are module escapes.
+    `LetsPlot` is only ever the receiver of a `setup_html()` with no arguments, and
+    `.props` is banned. The `.format` exemption for builder chains is described in the
+    table below.
+  - Every profile: the save-name rule (`_check_save_names`), also inside plotnine's
+    expression strings and in the DATA profile; plotnine's expression rule counts a
+    name's bindings strictly (`_bindings`, match captures included). The SECURITY
+    profile of every library pins `THEME` to its theme block and `os` to its import
+    (`_check_theme_bindings`; see the table below), and a pygal save whose name does
+    not write its target's file type is a `savefig-target` finding.
+- **Normaliser.** Four guard rules for every library (`importlib.util.find_spec`
+  tests, a `try` whose `finally` only restores `sys.path`, `del sys.modules[...]` and
+  `sys.dont_write_bytecode` in a guard, `import_module("m").ATTR`). For pygal: the
+  html-open rewrite (158 files), html-drop with its feeder cleanup (103 files, feeders
+  in 41) and the canvas rewrite (94 files: 76 `render_to_png` saves become `svg2png`
+  with `import cairosvg` added, 13 `svg2png` saves get the output size, and 5 hand-built
+  SVGs get it from their root `<svg>`; 89 land at 3200x1800 and 5 at 2400x2400). A
+  chart's size and an output size may be a module-level name bound once to a number; a
+  size set after the constructor leaves the save alone with a note. For lets-plot:
+  the `export_ggsave` alias rename (17 files), the star-import expansion (151 files,
+  from `letsplot_names.py`, a static copy of `lets_plot.__all__` 4.11.0 that a test
+  pins, in ruff's natural import order; a name the file may read before it binds it
+  keeps the star import with a note), `path="."` on 62 saves in 31 files, 25 epilogues
+  removed, one returned path unwrapped, the `f"{d}/plot-{THEME}.png"` target form, and
+  the scale-only canvas rewrite (117 files; mosaic-categorical fits inside the target
+  at 3000x1800 with `scale=1.875`, and three grids and two aspects keep a note). The
+  header step strips every catalogue header at the top, because three lets-plot files
+  carry two. The readiness scan reports a missing `path="."` and a save name that does
+  not write its target's file type as `savefig-target` reasons, and for a pygal or
+  lets-plot canvas of unknown size says that R2 refuses a PNG over its pixel cap
+  instead of promising R3's padding. The normalised matplotlib and seaborn output is
+  byte-identical to main on all 650 files, and all 1,946 catalogue files of the six
+  libraries normalise idempotently.
+- **Harness.** `warm_cairo` imports cairosvg before the guard is armed when the plot
+  names pygal or cairosvg. `CODE_BUILDERS` gains `("cssselect2/compiler.py",
+  "__init__")`, the compiler that turns each CSS selector of a pygal SVG into one
+  `eval("lambda el: ...")` (87 per chart) and quotes every string the CSS controls with
+  `repr`; its docstring holds the security argument. lets-plot needed no harness change:
+  its native bridge loads at import, and its guarded renders wrote only the two
+  allowlisted files.
+- **Renderer.** `RuntimeCommand.rlimit_as_mb` is a row's own `RLIMIT_AS` in place of
+  the configured one; it refuses to exist unless `rlimit_as` is on and the size is
+  positive, and a configured limit of 0 still switches the limit off for every row.
+  The letsplot row sets 2048 MiB, `ARROW_DEFAULT_MEMORY_POOL=system`,
+  `FONTCONFIG_FILE=/opt/anyplot/fonts.conf` and `render_p95_s` 15. The pygal row keeps
+  the Python defaults (its heaviest catalogue render, bifurcation-basic, peaks at
+  682 MB resident; the guarded wall p95 is 3.75 s). `executor.sandbox_env` passes an
+  in-process row's environment and own limit after the matplotlib keys and before
+  `PATH`, `HOME` and the limit variables, which a row can no longer replace, and
+  `PythonRuntime.env` gives the local Docker backend the same. The image installs
+  `lib-pygal`, `lib-letsplot` and `libcairo2` (without recommends), links DejaVu Sans
+  next to Serif and Mono, and copies `agents/renderer/fonts.conf` to
+  `/opt/anyplot/fonts.conf`: 1,174,874,816 bytes, 49.2 MB (4.4 %) more than 1b's.
+  `ci-image.yml` renders a pygal plot in both save forms (`render_to_png` at 3200x1800,
+  and a 4800x2700 chart through `svg2png` at 3200x1800, the canvas rewrite's form) and
+  a lets-plot plot through the harness in the image; the lets-plot step takes its
+  environment and limit from the command table's row and also fails on "Fontconfig
+  error" in stderr. The image build itself fails when any of 39 programs (those the
+  bridge's ImageMagick delegates to, such as `gs`, `curl`, `soffice` and `ffmpeg`,
+  ImageMagick's own tools, `fc-list`, `fc-match`, `java` and `node`;
+  `agents/renderer/delegates.py`) is on the sandbox's `PATH` (`executor.SANDBOX_PATH`),
+  so the Cloud Build deploy enforces it as well as the CI job, which runs the check once
+  more in the built image (the Copilot review of #12405: a CI-only check would let a
+  base-image change reach production unseen).
+- **Host gates.** R2's blank check refuses a canvas that is 99.7 % one colour, not 98 %,
+  for every library (see the table below).
+- **Evals.** `eligibility.py` sweeps all six libraries. `make_fixtures.py` writes the
+  ten specs for pygal and lets-plot (360 generated cases in all, 367 in a full run); the
+  smoke set gains `scatter-basic-pygal-renamed` and `scatter-basic-letsplot-renamed`
+  (16 cases). pygal has no column syntax, so its `renamed` case tests the axis titles
+  the adaptation must pass itself. The readiness scan blocks two of the ten pygal
+  fixture files, which `test_make_fixtures.py` pins: `histogram-basic` composites an
+  annotation layer onto the PNG with PIL (`io`, `PIL.Image`, `ImageDraw`,
+  `ImageFont`), and `line-timeseries` draws its random walk with the standard `random`
+  module, which no plot profile admits and none will: the adapter must not fabricate
+  data, which the ADAPTATION rules enforce. Their 12 cases are written anyway and open
+  blocked sessions until the catalogue files change; every lets-plot fixture file is
+  eligible.
+- **Verified by hand.** The literal `ci-image.yml` steps against the 1c image: the
+  seaborn, plotnine and altair PNGs, the altair HTML and the multi-script render are
+  byte-identical to the 1b image's; pygal renders in 1.6 to 1.8 s at 185 to 189 MB, and
+  lets-plot in 5.0 to 5.3 s at 663 to 667 MB with an empty stderr. Through the local
+  Docker backend, the normalised `scatter-basic` of pygal (1.4 s per theme) and of
+  lets-plot (6.0 s per theme) render both themes at 3200x1800, and pygal's
+  `line-basic`, a 4800x2700 chart, renders at 3200x1800. `test_harness_guard.py`
+  renders the same three files under the guard where the libraries are installed. After
+  the review fixes, every renderer-image step of `ci-image.yml` passed three times
+  against the rebuilt image with the round-one PNG sizes (the pygal `svg2png` form
+  3200x1800 too), and the normalised hand-built-SVG files (dendrogram-radial,
+  histogram-2d, upset-basic, ternary-density), heatmap-basic and lets-plot's
+  mosaic-categorical render at their target in both themes, which R2 accepts.
+
+#### Decisions that change or settle the text above
+
+| Text above | Built | Why |
+|---|---|---|
+| The canvas rewrite stays matplotlib's (1b) | Canvas rewrites for both libraries. pygal: a chart at another literal size with the target's aspect (in the catalogue only 4800x2700 and 3600x3600) saves through `cairosvg.svg2png(bytestring=chart.render(), write_to=f"plot-{THEME}.png", output_width=3200, output_height=1800)` or 2400 by 2400, the chart itself unchanged. lets-plot: only `scale=` on the PNG save changes (the PNG is the `ggsize` times the scale, floored) | R2's pixel cap (`MAX_IMAGE_PIXELS`, 11.52 MP) refuses a 4800x2700 or 3600x3600 PNG outright, and R2 is blocking: 123 of the 322 lets-plot files that render (108 of the 284 eligible) and about a third of the pygal files are that size, and lets-plot's scale sits in the protected save, out of the adapter's reach. After the rewrite 268 of 273 lets-plot renders are on target and none is over R2's pixel cap, and the guarded wall p95 falls from 25.9 s to 12.5 s; `svg2png` gives pygal's exact canvas with the same layout |
+| lets-plot's `shutil.move`/`rmtree` (24 catalogue files) is rewritten to `ggsave(..., path=".")`, the form the other 301 use | `path="."` is added to 62 saves in 31 files, one computed `path=` becomes `"."`, 25 epilogues are removed and one returned path is unwrapped; the save rule requires `path="."` on every `ggsave` (`SaveRule.directory`), and readiness reports its absence | 31 files save without `path=`, not 24, and 292 pass `path="."`, not 301: 21 files move their outputs afterwards, 4 pass `path="."` and keep a dead `rmtree`, and others write straight into `./lets-plot-images` or compute the directory. Without `path=`, `ggsave` creates that directory, which the guard refuses (`os.mkdir`) |
+| Not covered | The star import (`from lets_plot import *`) becomes one explicit import of the names the file uses, from the static list in `letsplot_names.py` | 151 files use it, not the survey's 158 (counted by AST and by grep). The validator refuses star imports; the expansion alone unlocks 132 files. A static list keeps the normaliser from importing lets-plot (the agents image does not install it, and an import runs its side effects); a test fails an upgrade that changes `__all__` |
+| `render_to_png` and `ggsave` as save statements | pygal's rule also lists `render_to_file` (the HTML twin, `filename` only) and `cairosvg.svg2png` with a keyword-only `write_to=` and without `url=`, `file_obj=` and `unsafe=`; `render_to_png` takes only `filename` and `dpi` | 87 catalogue files end on `svg2png`. libcairo writes the PNG with its own `fopen`, which the audit hook never sees, so the static pin is the only thing that holds the path. `render_to_png` and `render_to_file` hand their `**kwargs` to the chart's config (`css=`, `js=`, `defs=`), and `svg2png`'s `url=` and `file_obj=` read through cairosvg's unrestricted fetcher |
+| `pygal`, `cairosvg` and `cairocffi` in the import surface | `pygal` and `cairosvg` only; `cairocffi`, `cssselect2`, `tinycss2` and `webencodings` are unreachable. `xml.etree` and `Graph` subclasses stay out of pygal's profile, and PIL out of both | cffi's library loads and calls into libcairo raise no audit event. A forged token handed to cssselect2's selector compiler is the one route to an unquoted slot in the lambda it builds, so the CSS stack stays out of reach. `xml.etree`, class definitions and PIL change the security surface and wait for the owner ("Next"): `xml.etree` and `Graph` subclasses block 45 pygal files, PIL 4 lets-plot files |
+| Not covered | `CODE_BUILDERS` gains cssselect2's `CompiledSelector.__init__` | Every pygal PNG export compiles the chart's stylesheet into one `eval("lambda el: ...")` per selector. The spike fed 339 selectors with quotes, escapes, newlines and Python text through every pygal channel: the generated source only compares `el`'s name, classes, id, attributes and `lang` |
+| Not covered (pygal's HTML writes) | html-open: a write of exactly the chart's `render()` output to `f"plot-{THEME}.html"` becomes `chart.render_to_file(f"plot-{THEME}.html")` (158 files). html-drop: every other module-level HTML or SVG write (hand-built pages, post-processed SVG, `.svg` files) is removed with the assignments that only fed it (103 files) | Dropping alone would unlock the same files; the rewrite is chosen for the export: its HTML and PNG are byte-identical to the catalogue file's on all 156 runnable files (apart from pygal's generation-date comment), and `render_to_file` is a save name the validator pins while `open` stays banned. The dropped writes have no pinnable form, and the guard refuses `.svg` writes anyway; the export loses those pages |
+| Not covered (Python keeps the default limits) | lets-plot's row has its own `RLIMIT_AS` of 2048 MiB (`RuntimeCommand.rlimit_as_mb`) with Arrow's system allocator and a minimal fontconfig file in its environment; not the Python default and not off as for altair | lets-plot rasterises in its Kotlin/Native bridge with ImageMagick linked in. An allocation it cannot make kills the process ("Out of memory trying to allocate"): SIGABRT (exit 134) on a developer machine, SIGSEGV (exit 139) in the renderer image, with either Arrow pool. pyarrow's default pool reserves another 1 GiB arena on the first pandas string column, which kills even a minimal 3200x1800 chart at 1024 and 1536 MiB; with the system allocator 18 of the 42 spike renders still die at 1024 MiB. With it, 2048 MiB held all 42 spike renders up to 4800x2700 and 3600x3600 (peak 1697 MiB) and still stops a 6400x3600 export (2580 MiB). No catalogue file renders at 6400x3600: the `ggsize(1600, 900)` files use `scale=3`, so the survey's worst case does not occur. Off, a runaway scale would meet only the `MemAvailable` watchdog |
+| The slim image needs `libcairo2` | As planned, without recommends (a 13.8 MB layer), plus DejaVu Sans linked next to Serif and Mono and `/opt/anyplot/fonts.conf` | lets-plot draws its default text in DejaVu Sans and falls back to a Noto Sans face without it; its bridge's own fontconfig finds no configuration in the image and writes "Fontconfig error" on every export. `libcairo2` brings Debian's DejaVu faces and `/etc/fonts`, which left every seaborn, plotnine and altair render of `ci-image.yml` byte-identical |
+| Not covered | In every profile a save name imported under another name, anything imported under a save name, and a bare save name that is not a call's callee are a `banned-call`; a `match` capture counts as a binding of a plotnine expression name | Both routes passed the shipped plotnine profile with no finding: `from plotnine import ggsave as keep` (or `g = ggsave`, `[ggsave][0]`, `functools.partial(ggsave, plot)`) reaches any path in the exported code, and `COLUMN = "x"` followed by `match '<code>': case COLUMN: pass` hands plotnine code to evaluate in `aes(x=COLUMN)`. The normaliser renames the `export_ggsave` alias in 17 lets-plot files; no eligible file is lost, and the raw findings of the four shipped libraries are unchanged |
+| Not covered (`.format` is a banned attribute) | lets-plot's profile exempts a `.format` with string-literal arguments (positional, `field=`, `format=`) at the end of a chain of builder methods (`LETSPLOT_BUILDER_METHODS`, each checked to return the builder in 4.11.0) whose root is `layer_tooltips()`, `layer_labels()` or `smooth_labels()`, imported from `lets_plot` under a name bound once whose attributes are never stored | 59 catalogue files use it 128 times, and the exemption is worth 53 eligible files (284 instead of 231). `str.format` stays refused, and so do a builder held in a variable, a rebound builder name, a non-literal argument and `lets_plot.layer_tooltips = str` |
+| Not covered (R2's blank check refuses a canvas 98 % one colour, since phase 1) | `MAX_BACKGROUND_RATIO` is 0.997 for every library: R2 refuses a canvas that is 99.7 % one colour, and its message gives the share to one decimal | Measured on 2026-10-26 with `core.canvas.dominant_color`: the sparsest eligible pygal render (network-directed) is 99.44 % one colour, 33 of the 195 eligible pygal renders are at 98 % or more, and lets-plot's point-basic is at 98.38 %, so 0.98 refused about one pygal plot in six on every render. A pygal chart with only a title is 99.78 % and a bare pygal canvas 99.93 %. A pygal chart with axes and guides but no data is 98.62 % and passes; R2 never caught empty axes, because matplotlib's stay under 98 % too. A higher threshold refuses nothing that 0.98 accepted |
+| `render_to_png` and `ggsave` as save statements (pygal's three save names, the row above) | `SaveRule.writes` gives each pygal save name the one file type it writes: `render_to_png` and `svg2png` the PNG, `render_to_file` the HTML. The validator reports a mismatch as `savefig-target` (`render_to_file writes only f"plot-{THEME}.html"`), and a PNG save under the wrong name does not count as the PNG save; the readiness scan reports it through `SaveRule.writes_suffix`, and the canvas step and `measure_canvas` leave such a save alone | The rule took any of the three names with either target, so `chart.render_to_file(f"plot-{THEME}.png")` wrote SVG text into the PNG and `render_to_png(f"plot-{THEME}.html")` a PNG into the HTML, both with no finding, and the canvas rewrite turned the first into `svg2png` (correctness review of 2026-10-26). No catalogue file changes |
+| Not covered (`THEME` is a protected region, not a pinned name) | The SECURITY profile of every library pins `THEME` (rule `savefig-target`): its one binding is the first module-level theme block that `regions.is_theme_assignment` accepts, after `import os`. Every other binding is a finding at its own line: a second, augmented or annotated assignment, an unpacking, a `for`, `with`, `except`, `match`, walrus or comprehension target, an import, a `def` or parameter, `del`, a type alias and a `global` or `nonlocal` declaration. Once `import os` binds `os`, any other binding of `os` is an `os-use` finding | Every save target is `f"plot-{THEME}..."`, so a rebound `THEME` moves the write. The security review of 2026-10-26 passed the validator with `THEME` reassigned to a traversal literal before `svg2png`, whose native write the guard never sees; it failed only because no `plot-` directory existed. The pin refuses three theme blocks the validator passed (`os.environ.get`, an `os` alias, `.lower()`), which the readiness scan already blocked as `no-theme`. No catalogue file binds `THEME` twice, eligibility is unchanged, and only heatmap-polar (pygal, already blocked) gains a finding. The block's default value stays unpinned ("Next") |
+| html-drop removes the HTML and SVG writes with the assignments that only fed them (the HTML row above) | html-drop also removes a module-level `with open(...)` of the theme's `.html` or `.svg` target whose body assigns names that nothing outside it reads and whose values hold no save call, as long as it writes at least once; html-open still rewrites only a single-write body | heatmap-basic writes its hand-built page from a two-statement body (`pygal_svg = chart.render(...)`, then `fout.write(...)`), which left `open` and a 216-character literal in the run form and blocked the file and its six fixture cases. The extension unlocks exactly that file (blocked to coupled); no other catalogue file's output changes |
+| The pygal canvas rewrite reads the chart's literal size (the first row) | Where the `svg2png` bytestring traces to no chart, the normaliser reads the root `<svg>`'s `width=` and `height=` from the string literals that build the bytestring (through names, `+=`, `.append`, `.extend` and `.insert`), as numbers, `px` lengths or module-level names bound once, and sets the output size as for a traced chart. Several `<svg>` tags, a computed or `%` size, or a name bound twice leave a note. A size set after the constructor (`.width` or `.height` stores, `chart.config(...)`, `config=`, a positional `pygal.Config`, a `render()` keyword) makes the size unknown: a note, no rewrite, and no fallback to pygal's 800x600 | Four eligible pygal files (dendrogram-radial, histogram-2d, upset-basic, ternary-density) pass a hand-built 4800x2700 or 3600x3600 SVG to `svg2png` with no output size, so R2's pixel cap refused every render while the readiness reason promised R3's padding. They now render at 3200x1800 or 2400x2400 in both themes, and heatmap-adjacency gets the same rewrite but stays blocked by a function-level guard. Module-level size names turned 6 of the 7 unknown-size notes on eligible pygal files into known on-target sizes; heatmap-stripes-climate (`**_base`) keeps its note. No eligible pygal or lets-plot file now has a known size over the cap |
+
+#### Eligibility after 1c
+
+`uv run --extra agents python -m agents.evals.eligibility` on 2026-10-26; matplotlib
+and seaborn are unchanged against main. plotnine and altair gain seven files from 1c's
+library-agnostic rules: plotnine's bar-horizontal and spiral-timeseries and altair's
+chessboard-basic, voronoi-basic, waffle-basic and scatter-ashby-material through the
+guard rules, and plotnine's candlestick-volume through the `f"{d}/plot-{THEME}.png"`
+target form. The review fixes moved one file: html-drop's extension makes pygal's
+heatmap-basic eligible (208 before). The `THEME` pin and the save-name pairing change
+no status.
+
+| Library | Files | Eligible | Clean | Coupled | Blocked |
+|---|---|---|---|---|---|
+| matplotlib | 325 | 285 (87.7 %) | 15 | 270 | 40 |
+| seaborn | 325 | 287 (88.3 %) | 18 | 269 | 38 |
+| plotnine | 321 | 267 (83.2 %) | 59 | 208 | 54 |
+| altair | 325 | 273 (84.0 %) | 58 | 215 | 52 |
+| pygal | 325 | 209 (64.3 %) | 64 | 145 | 116 |
+| lets-plot | 325 | 284 (87.4 %) | 53 | 231 | 41 |
+
+Why the pygal and lets-plot files are blocked, first cause per file (each column sums to
+its blocked count):
+
+| Cause | pygal | lets-plot |
+|---|---|---|
+| One of the 13 map specs | 13 | 13 |
+| `xml.etree` post-processing of the SVG | 23 | 0 |
+| A subclass of pygal's `Graph` (a class definition) | 18 | 0 |
+| Old-form file: no `THEME` block and a single-theme `plot.png` | 13 | 7 |
+| `io` or PIL compositing of the PNG | 12 | 4 |
+| `sklearn.datasets` for the example data | 6 | 10 |
+| `.format` on a string (lets-plot: hex colours) | 6 | 4 |
+| matplotlib, outside pygal's surface | 4 | 0 |
+| A guard shape the normaliser does not strip | 3 | 0 |
+| A string literal over 200 characters | 3 | 1 |
+| `.query` | 0 | 1 |
+| `qrcode` and a URL literal | 0 | 1 |
+| Other one-offs | 15 | 0 |
+
+By SECURITY rule (a file can have several): pygal `banned-import` 62, `savefig-target`
+30, `banned-statement` 22, `dunder` 22, `banned-keyword` 19, `banned-attribute` 16,
+`string-length` 12, `banned-call` 7, `os-use` 6, `banned-name` 5, `url-literal` 2;
+lets-plot `banned-import` 18, `banned-call` 11, `savefig-target` 8, `banned-attribute`
+7, `url-literal` 1, `string-length` 1. 216 normalised pygal files and 293 lets-plot
+files pass SECURITY; the map specs and the files without a `THEME` block make up the
+rest of the gap. The static count includes files that fail their first render anyway:
+13 pygal and 10 lets-plot files divide by the length of the emptied title,
+waveform-audio (pygal) runs past `RLIMIT_CPU` in cairosvg's path parser, and two
+lets-plot files do not render with lets-plot 4.11.0: calibration-curve raises a
+MagickWand error in the export, and line-confidence writes an almost fully transparent
+PNG, which R2 refuses as 100 % one colour. R2's blank check, at 99.7 %, passes every
+eligible pygal render measured (the sparsest is 99.44 %).
+
+#### Next
+
+Settled by 1c: normaliser rules for the guard shapes of 1b's third blocked row. The four
+library-agnostic rules and the new target form took plotnine from 264 to 267 and altair
+from 269 to 273. The rest of that row stays, altair's two `"site-packages" in X.origin`
+loaders among it, which the find-spec rule leaves alone. Also settled: the fixtures and
+smoke cases for pygal and lets-plot ("What 1c built"), and the review of the lets-plot
+bridge (the owner questions below). What stays from 1b's list, and what 1c adds:
+
+- plotnine's own canvas rewrite through `save(dpi=, width=, height=)` and `ggsave`.
+  plotnine and altair are now the only Python libraries whose canvas rests on the R3
+  gate.
+- The readiness coupling scan knows only matplotlib's limit and tick calls: plotnine's
+  `coord_cartesian(xlim=, ylim=)` and `scale_*_continuous(limits=, breaks=)`, altair's
+  `alt.Scale(domain=)` and axis `values=`, pygal's `range=` (111 files) and `xrange=`
+  (75 files), and lets-plot's literal `limits=` and `breaks=` (126 files, of which the
+  scan flags 10) go unflagged, so the adapter gets no `limits` hint for them.
+- altair, pygal and lets-plot write no probe, so the advisory gates (G3 to G12, the
+  row-fidelity check G8 among them) never run for them; whether a row count read from
+  the chart's own spec should replace G8 is open.
+- The normaliser blanks the catalogue title to `""`; code that divides by `len(title)`
+  (11 plotnine, 5 altair and 54 matplotlib files, and among the eligible files 13 pygal
+  and 10 lets-plot ones) fails a raw render with ZeroDivisionError unless the adapter
+  writes a new title. A non-empty placeholder would avoid it.
+- HTML saves stay in the run form, uncollected: altair's `disable_max_rows()` heatmap
+  writes 50 MB and can hit `RLIMIT_FSIZE`, and pygal's and lets-plot's reach 25 MB
+  (lets-plot's heatmap-mandelbrot 25.3 MB, about 40 % of the 64 MiB run budget; pygal's
+  ice-basic 21.7 MB). The normaliser could drop the HTML save after all.
+- `matrix.py` warns when `AGENT_LIBRARIES` does not enable a selected case's library;
+  whether the harness should enable the cases' libraries itself is open.
+- Arrow's system allocator for every plot row: pyarrow's default pool reserves a 1 GiB
+  address-space arena on the first pandas string column, which counts against
+  `RLIMIT_AS` in every Python row, and only lets-plot's row and the conversions avoid
+  it. The CI lets-plot step takes its variables from the command table's row but cannot
+  tell whether the allocator took effect, because its minimal chart passes at 2048 MiB
+  with either pool; only unit tests pin it. A second run at 1536 MiB would tell (the
+  system pool exits 0, the default pool 139).
+- A resource-error grammar for lets-plot: under `RLIMIT_AS` the bridge dies by a signal
+  after "Out of memory trying to allocate" (SIGABRT, exit 134, on a developer machine;
+  SIGSEGV, exit 139, in the renderer image) or raises a MagickWand `ValueError` from the
+  export, and `gates.error_summary` hands that `ValueError` to the repair as a code
+  error on the `ggsave` line. All three should read as resource errors.
+- Three eligible files always fail R2's pixel cap: matplotlib's dot-matrix-proportional
+  and timeseries-decomposition and seaborn's heatmap-clustered crop a 4800x3000 or
+  4800x3600 canvas with `bbox_inches="tight"` at an aspect that no dpi brings onto a
+  target. Their readiness reason says so since 2026-10-26. A fit inside the target, as
+  lets-plot's rewrite does, or blocking a known over-cap canvas in the readiness scan
+  would change what matplotlib and seaborn do today.
+- pygal's cairo writes a fontconfig cache of about 184 KB (7 files) into
+  `$HOME/.cache/fontconfig`, the sandbox's private `/tmp`, on every render: native
+  writes the guard cannot see, inside the sandbox boundary and at no measurable time.
+  Accept it, or bake a cache, which needs Debian's `fontconfig` package (`fc-cache`) in
+  the image.
+- Validator questions from the build: no rule refuses an attribute store on an imported
+  module (`np.x = ...`; closed only where the builder exemption depends on it); the
+  SECURITY profile bans a private attribute only on a receiver that resolves through an
+  import (`chart.config._update(...)` passed until `_update` was banned by name in
+  pygal's profile; the DATA profile bans every private attribute); and the URL rule
+  does not match `javascript:` URLs, which pygal's value metadata (`xlink` hrefs) and
+  altair's href channel can put into the exported HTML (the sandbox is not affected).
+  The `THEME` pin leaves the theme block's default unpinned:
+  `regions.is_theme_assignment` accepts any second argument to `os.getenv`. The
+  renderer always sets `ANYPLOT_THEME`, so the default never reaches a render, but an
+  exported file run without the variable names its files from it.
+- Owner questions:
+  - The 80 % matrix gate for pygal: 12 of its 60 generated cases (the `histogram-basic`
+    and `line-timeseries` files) open blocked sessions, so pygal reaches at most 48 of
+    60, exactly the gate, and only if every eligible case passes. Count only the
+    eligible pairs in the gate, regenerate the two catalogue files through the pipeline
+    (the annotation drawn by pygal instead of PIL, `np.random.default_rng` instead of
+    `random`), or accept it.
+  - pygal's `xml.etree` post-processing (26 files) and `Graph` subclasses (23 files),
+    45 blocked files as the groundwork counted the first cause. Admitting `xml.etree`
+    with a ban list on its readers and writers would unlock 14; a class definition is
+    refused in every profile today.
+  - PIL for lets-plot: 4 files post-process the PNG with PIL (chord-basic,
+    heatmap-chromagram, rose-basic, windrose-basic); altair's reopen rule could extend
+    to them.
+  - CJK and Arabic text in pygal: cairo's toy font API resolves one face per text run
+    and never falls back per glyph, and cairosvg takes only the first family of
+    `font-family`, so such text in user data draws as DejaVu's empty boxes; the
+    harness's fallback families and G10 are matplotlib's. Accept it, or have the
+    adapter put `Noto Sans CJK JP` or `Noto Sans` first when the data's script needs it.
+  - The lets-plot native bridge before enabling: it imports `execvp`, `fork`, `popen`,
+    `system` and `mkstemp` (ImageMagick's delegates and temp files), which the audit
+    hook cannot see. The adversarial security review of 2026-10-26 (real renders under
+    the harness with `strace -f`) found no escape and no validator bypass with an effect:
+    titles, labels and font families with ImageMagick coder prefixes (`@`, `caption:`,
+    `label:`, `msl:`) never reach a coder, and `geom_imshow` builds an in-memory
+    `data:` href from an array and reads no file, so admitted code cannot steer the
+    native layer. The bridge's native process starts are bounded by the image's `PATH`,
+    `RLIMIT_NPROC` and the sandbox, and since 2026-10-26 every build of the renderer
+    image, the Cloud Build deploy included, fails when any of 39 delegate programs is on
+    the sandbox's `PATH` (`agents/renderer/delegates.py`). No ImageMagick policy ships:
+    the bridge's ImageMagick is a zero-configuration build that reads no `policy.xml`
+    and no `MAGICK_*` variable (a policy denying every coder and delegate changed no
+    export, on the host or in the image). The two `fc-list` starts in the review's
+    traces come from matplotlib's font manager, not the bridge, whose plain export
+    started no process in a host trace; the image has no `fc-list`. Accept this containment, or add a
+    seccomp filter that denies `execve` in the render container before lets-plot is
+    enabled.
+- The owner's matrix run per library on Vertex (question 7), then `_LIBRARIES` in
+  `agents/cloudbuild.yaml`.
 
 ### 2. R: ggplot2 (the exec-mode pilot)
 
@@ -614,7 +920,7 @@ this plan:
 | `save` is banned as an attribute and a name, so altair's `chart.save`, plotnine's `plot.save` and bokeh's `save(p)` fail SECURITY today; altair's PIL block, the `plot-<theme>.html` saves and plotly's `include_plotlyjs='cdn'` need rules | Step 1 split into 1a (the seam, no behaviour change) and one PR per library pair, each with the eligibility sweep's numbers |
 | `RLIMIT_NPROC` counts threads; headless Chromium plus Node is past 64 | Measured: 77 tasks; `RLIMIT_NPROC` off for the JavaScript row |
 | Missed sites: `evals/matrix.py` preflight, `stress.py`, `ladder_lab.py`, the `pipeline.PythonRuntime` monkeypatch in `test_service_flow.py`; backends hold one runtime; `RENDER_P95_S` is the repair reserve | All in step 1a; backends resolve the runtime per job; the p95 is a runtime attribute |
-| Image: pin the GHCR base by digest; Highcharts in a public image is a redistribution question; bake `fc-cache`, `XDG_CACHE_HOME=/tmp`; Julia offline flags; `libcairo2` for cairosvg; the `ci-image.yml` change filter | Steps 1c, 2, 5 and question 11 |
+| Image: pin the base image by digest; Highcharts in a public image is a redistribution question; bake `fc-cache`, `XDG_CACHE_HOME=/tmp`; Julia offline flags; `libcairo2` for cairosvg; the `ci-image.yml` change filter | Steps 1c, 2, 5 and questions 1 and 11 (the base image is private, so it redistributes nothing) |
 | `render.mjs` takes the library from the file stem; MUI X imports are inlined by esbuild | `--library=` from the request against the closed set; a static-import allowlist for `.tsx` |
 | Deny lists are hygiene, not a boundary: `globalThis["fe"+"tch"]`, `[].constructor.constructor`, R `get("system")`, Julia `getfield(Base, Symbol(...))` pass any identifier list | The threat model is stated: the sandbox protects the service, the list protects the person who runs the export from accidental I/O by the model; the lists grew by the review's names, and Julia's `using`/`import` is an allowlist |
 | Order: R first as the smallest exec-mode pilot, then JavaScript, then plotly and bokeh on the proven Chromium path, then Julia | Adopted (question 3) |
@@ -628,10 +934,20 @@ cold start under gVisor.
 Defaults apply until answered; each is marked where the plan uses it.
 
 1. **Image layout.** (A) one `agents/renderer/Dockerfile` that builds every toolchain
-   (an hour-long build on each renderer change, a 20-minute CI job today), or (B) a
-   public toolchain base image on GHCR built by a workflow on lock-file changes, with
-   the renderer image `FROM` it (fast CI and deploys; everything in it is open source).
-   Default: B.
+   (fast only with a layer cache in CI and in Cloud Build, which builds the renderer
+   without one today, and with the layers ordered by how often they change; a cold
+   cache rebuilds every toolchain, and Julia's precompile alone took 18 minutes in the
+   spike), or (B) a toolchain base image built on lock-file changes, with the renderer
+   image `FROM` it by digest (fast CI and deploys).
+   **Decided (owner, 2026-10-25): B, with the base image private in Artifact Registry**
+   (the repository `anyplot` in `europe-west4`, where the renderer image already lives).
+   A Cloud Build trigger builds and pushes it with Cloud Build's own service account, and
+   the renderer's Cloud Build deploy pulls it the same way. The CI job `renderer-image` in
+   `ci-image.yml` pulls it through the Workload Identity Federation login that
+   `ci-tests.yml` already uses, which needs the Artifact Registry reader role on the
+   repository: an owner task when step 2 adds the base image. Not public on GHCR: a
+   public image is a redistribution (licence notices for everything in it, no
+   Highcharts), and its only gain was pulls without a credential.
 2. **Base distribution.** R's binaries from Posit exist for Ubuntu, not Debian, so the
    toolchain image is Ubuntu 24.04 (rocker's R layout) with Python 3.14 managed by uv
    instead of `python:3.14-slim`. Default: yes.
@@ -663,7 +979,7 @@ Defaults apply until answered; each is marked where the plan uses it.
     byte for byte the run form (agent-network.md, "Fencing and exported code").
     Default: accept the deviation for these two libraries and document it there.
 11. **Highcharts in a public toolchain image**: the free licence covers non-commercial
-    use, and a public GHCR image redistributes the bundle. Default: the image stays
-    private in Artifact Registry until decided (CI then needs a reader credential), or
-    Highcharts is installed in the renderer image's own layer from the lock file at
-    build time rather than shipped in the base.
+    use, and a public GHCR image redistributes the bundle. **Settled by question 1
+    (2026-10-25):** the base image is private in Artifact Registry, so it redistributes
+    nothing, and Highcharts can live in it. Whether users' plots may use Highcharts stays
+    question 6.

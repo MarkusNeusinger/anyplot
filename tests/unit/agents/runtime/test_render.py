@@ -139,6 +139,26 @@ class TestPng:
         with pytest.raises(PngRejected, match=message):
             harden(data)
 
+    @staticmethod
+    def sparse_png(drawn_pixels: int) -> bytes:
+        """A 1000x100 background with `drawn_pixels` of ink in one strip of 10 rows: 100,000 pixels in all."""
+        image = Image.new("RGB", (1000, 100), "#FAF8F1")
+        image.paste((0, 158, 115), (0, 0, drawn_pixels // 10, 10))
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        return buffer.getvalue()
+
+    def test_a_sparse_render_passes_the_blank_check(self) -> None:
+        """99.5 % one colour, as sparse as the sparsest eligible pygal render (network-directed, 99.44 %): drawn."""
+        hardened = harden(self.sparse_png(500))
+
+        assert (hardened.width, hardened.height) == (1000, 100)
+
+    def test_a_canvas_with_only_a_title_is_blank(self) -> None:
+        """99.8 % one colour, the share of a pygal chart with only its title (99.78 %): nothing was drawn."""
+        with pytest.raises(PngRejected, match=r"99\.8% one colour \(#FAF8F1\)"):
+            harden(self.sparse_png(200))
+
     def test_read_output_refuses_symlinks_and_size(self, tmp_path: Path) -> None:
         target = tmp_path / "secret.txt"
         target.write_text("host file")

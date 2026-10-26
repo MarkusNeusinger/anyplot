@@ -412,9 +412,17 @@ def sandbox_env(
     """The complete environment inside the sandbox: nothing of the host's reaches it.
 
     `command` is the render's row of the command table (`commands.py`): a Python row gets the
-    matplotlib settings, any other row its own environment, and a row that switches
-    `RLIMIT_AS` or `RLIMIT_NPROC` off (Node, Chromium, Julia) gets no such variable. Without a
-    row (a data run, a conversion, the tests' direct calls) the Python settings apply.
+    matplotlib settings and then its own environment (lets-plot's allocator and fontconfig file), any
+    other row its own environment alone, and a row that switches `RLIMIT_AS` or `RLIMIT_NPROC` off
+    (Node, Chromium, Julia, altair) gets no such variable. A row with an address-space limit of its own
+    (`RuntimeCommand.rlimit_as_mb`, lets-plot) gets that value in place of the configured one, as long as
+    the configured one is on. Without a row (a data run, a conversion, the tests' direct calls) the
+    Python settings and the configured limits apply.
+
+    A row's value replaces a matplotlib setting but never a fixed key, which come after it: `PATH`
+    stays `SANDBOX_PATH`, the path the toolchain check and the image's delegate check (ci-image.yml)
+    read, and `HOME`, the bytecode switch, the BLAS threads and the limit variables stay the
+    renderer's, as in the local backend (`PythonRuntime.env`).
 
     A data run or a conversion (`theme` None) gets no theme and no matplotlib settings: it imports no plotting
     library. A conversion also gets Arrow's system allocator (`ARROW_DEFAULT_MEMORY_POOL=system`), so pyarrow's
@@ -431,11 +439,12 @@ def sandbox_env(
             "MPLBACKEND": "Agg",
             "MPLCONFIGDIR": config.mplconfig,
             "ANYPLOT_MPL_SEED": config.mpl_seed,
+            **(command.env if command is not None else {}),
         }
     env = {
+        **plot,
         "PATH": SANDBOX_PATH,
         "HOME": "/tmp",
-        **plot,
         "PYTHONDONTWRITEBYTECODE": "1",
         # One BLAS thread: Agg renders on one core, and every thread reserves address
         # space under RLIMIT_AS and counts toward RLIMIT_NPROC.
@@ -447,7 +456,8 @@ def sandbox_env(
     if convert:
         env["ARROW_DEFAULT_MEMORY_POOL"] = "system"
     if config.rlimit_as_mb and (command is None or command.rlimit_as):
-        env["ANYPLOT_RLIMIT_AS_MB"] = str(config.rlimit_as_mb)
+        own = command.rlimit_as_mb if command is not None else None
+        env["ANYPLOT_RLIMIT_AS_MB"] = str(own or config.rlimit_as_mb)
     if config.rlimit_nproc and (command is None or command.rlimit_nproc):
         env["ANYPLOT_RLIMIT_NPROC"] = str(config.rlimit_nproc)
     return env
