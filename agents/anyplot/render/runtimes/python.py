@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from agents.renderer.commands import command_for
+from agents.renderer.executor import SANDBOX_PATH
 from agents.renderer.wire import run_cpu_seconds
 
 from ...code.edits import AppliedPlan, apply_plan, new_literals, restore_protected
@@ -52,7 +53,9 @@ DATA_FILE_NAME = "snippet.py"
 DATA_RLIMIT_AS_MB = 1024
 DATA_RLIMIT_NPROC = 64
 """The renderer's deployed `RENDERER_RLIMIT_AS_MB` and `RENDERER_RLIMIT_NPROC` (pinned by a test), which the local
-backend's data runs apply as well."""
+backend's data runs apply as well, and its renders the address-space limit."""
+RENDER_RLIMIT_FSIZE_MB = 50
+"""The renderer's deployed `RENDERER_RLIMIT_FSIZE_MB` (pinned by a test), which the local backend's renders apply."""
 
 
 class PythonRuntime:
@@ -88,9 +91,17 @@ class PythonRuntime:
         return [self.python, *INTERPRETER_FLAGS, self.harness, self.file_name]
 
     def env(self, theme: Theme) -> dict[str, str]:
-        """A render's environment. The library's command row adds its own variables after the matplotlib settings
-        and its own address-space limit, as the renderer's `sandbox_env` does; a render here otherwise keeps no
-        `RLIMIT_AS`, so a row without a limit of its own gets none."""
+        """A render's environment in the local Docker backend, its one caller: the renderer's `sandbox_env` for the
+        library's command row under the deployed limits, key for key (pinned by a test). The matplotlib settings,
+        then the row's own variables, then the fixed keys no row replaces: `PATH` is the sandbox's, the path the
+        image build's delegate check reads (`agents/renderer/delegates.py`), and the limits are the deployed ones,
+        the row's own `RLIMIT_AS` where it has one and none where the row switches it off (altair).
+
+        One limit stays out: the container runs as the developer's user (`--user`), and Linux counts that user's
+        processes on the whole machine against `RLIMIT_NPROC`, so 64 would stop lets-plot's threads on a busy
+        desktop; the container's `--pids-limit` bounds the processes instead. Until 2026-10-26 a local render also
+        kept the image's `PATH`, no `RLIMIT_AS` and the harness's default file size (the Copilot review of #12405).
+        """
         row = command_for(self.language, self.library)
         env = {
             "ANYPLOT_THEME": theme,
@@ -100,12 +111,16 @@ class PythonRuntime:
             # MPLCONFIGDIR and skips the copy where the directory does not exist.
             "ANYPLOT_MPL_SEED": MPL_SEED,
             **row.env,
+            "PATH": SANDBOX_PATH,
             "HOME": "/tmp",
             "PYTHONDONTWRITEBYTECODE": "1",
+            "OPENBLAS_NUM_THREADS": "1",
+            "OMP_NUM_THREADS": "1",
             "ANYPLOT_RLIMIT_CPU_S": str(self.cpu_seconds),
+            "ANYPLOT_RLIMIT_FSIZE_MB": str(RENDER_RLIMIT_FSIZE_MB),
         }
-        if row.rlimit_as_mb is not None:
-            env["ANYPLOT_RLIMIT_AS_MB"] = str(row.rlimit_as_mb)
+        if row.rlimit_as:
+            env["ANYPLOT_RLIMIT_AS_MB"] = str(row.rlimit_as_mb or DATA_RLIMIT_AS_MB)
         return env
 
     def data_command(self) -> list[str]:
