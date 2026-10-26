@@ -27,9 +27,15 @@ from core.canvas import PNG_SIGNATURE, dominant_color
 MAX_PNG_BYTES = 10 * 1024 * 1024
 MAX_PROBE_BYTES = 256 * 1024
 MAX_IMAGE_PIXELS = 3200 * 1800 * 2  # twice the canvas leaves room for a drifted size, not for a bomb
-# R2 fails only a canvas that is 98 % one colour. The rubric's AR-04 uses 95 %, which
-# sparse dark renders reach legitimately (core/canvas.py), so R2 stays more permissive.
-MAX_BACKGROUND_RATIO = 0.98
+# R2 fails only a canvas that is 99.7 % one colour: the background alone, or a title on it.
+# Measured on 2026-10-26 with core.canvas.dominant_color: the sparsest eligible pygal
+# render (network-directed) is 99.44 % one colour, 33 of the 195 eligible pygal renders
+# reach 98 % or more, and lets-plot's point-basic is 98.38 %, while a pygal chart with
+# only a title is 99.78 % and a bare pygal canvas 99.93 %. A pygal chart with axes and
+# guides but no data passes (98.62 %); R2 never caught empty axes, since matplotlib's
+# stay under 98 % too. So R2 refuses a canvas with nothing drawn, not a chart without
+# data, and the rubric's AR-04 judges sparse renders at 95 % (core/canvas.py).
+MAX_BACKGROUND_RATIO = 0.997
 
 
 class PngRejected(ValueError):
@@ -108,7 +114,7 @@ def harden(data: bytes) -> HardenedPng:
     (red, green, blue), ratio = dominant_color(rgb)
     if ratio >= MAX_BACKGROUND_RATIO:
         raise PngRejected(
-            f"the image is {ratio * 100:.0f}% one colour (#{red:02X}{green:02X}{blue:02X}); nothing was drawn"
+            f"the image is {ratio * 100:.1f}% one colour (#{red:02X}{green:02X}{blue:02X}); nothing was drawn"
         )
     buffer = io.BytesIO()
     rgb.save(buffer, format="PNG", optimize=False)

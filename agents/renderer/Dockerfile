@@ -40,11 +40,15 @@ COPY pyproject.toml uv.lock README.md ./
 # loads libcairo through cairocffi: the runtime stage installs `libcairo2`.
 # lets-plot rasterises in its own native bridge (Kotlin/Native with ImageMagick
 # and fontconfig linked in), which needs only the libraries the slim image has.
-# Their fonts are set up in the runtime stage below. No ADK: nothing in
-# the renderer imports it. `--no-install-project` keeps the project itself out
-# of the venv, so a sandbox's interpreter finds no anyplot package on its path;
-# the service imports `agents.renderer` from the working directory, which
-# uvicorn puts on `sys.path`.
+# Their fonts are set up in the runtime stage below. The bridge's ImageMagick is a
+# zero-configuration build: it reads no policy.xml from any path (MAGICK_CONFIGURE_PATH,
+# MAGICK_HOME and $HOME included, 2026-10-26), so no policy file can narrow it, and
+# its compiled-in delegates run gs, curl, soffice, ffmpeg and others by name. This
+# image installs none of them; ci-image.yml fails when one is on the sandbox's PATH.
+# No ADK: nothing in the renderer imports it. `--no-install-project` keeps the
+# project itself out of the venv, so a sandbox's interpreter finds no anyplot
+# package on its path; the service imports `agents.renderer` from the working
+# directory, which uvicorn puts on `sys.path`.
 # The `convert` extra (python-calamine, pyarrow) is the file conversion's readers
 # (`harness.py --convert`, agents/anyplot/render/convert.py).
 RUN uv venv && uv sync --frozen --no-install-project --extra lib-matplotlib --extra lib-seaborn \

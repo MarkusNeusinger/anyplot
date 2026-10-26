@@ -738,12 +738,43 @@ jobs:
       # defaults. Its PNG is cairosvg's: libcairo from the image's apt layer, loaded before the
       # guard (warm_cairo in harness.py), and cssselect2's selector lambdas (CODE_BUILDERS).
       # The HTML twin is the chart's SVG, written by render_to_file; pygal writes no probe.
+      # Two forms: render_to_png on a 3200x1800 chart, and the form the normaliser's canvas
+      # rewrite gives oversized charts (agents/anyplot/code/normalise.py; 94 catalogue files
+      # on 2026-10-26, 89 of them 4800x2700): the plot itself imports cairosvg and calls
+      # svg2png at 3200x1800.
       - name: Render a pygal plot through the harness
         if: steps.check.outputs.should_build == 'true'
         run: |
           set -euo pipefail
-          mkdir -p work-pygal
+          render() {  # $1: work dir with plot.py and data.csv
+            local work=$1
+            docker run --rm --network none --read-only --tmpfs /tmp \
+              --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+              -v "$PWD/$work:/work" -w /work \
+              -e ANYPLOT_THEME=light -e MPLBACKEND=Agg -e MPLCONFIGDIR=/tmp/mpl -e ANYPLOT_MPL_SEED=/opt/mplconfig \
+              -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+              -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_RLIMIT_AS_MB=1024 \
+              anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py plot.py > "$work/harness.out"
+            grep -qxF 'HARNESS {"event": "start"}' "$work/harness.out" || { echo "::error::no HARNESS start line in $work"; cat "$work/harness.out"; exit 1; }
+            grep -q '^HARNESS {"event": "end"' "$work/harness.out" || { echo "::error::no HARNESS end line in $work"; cat "$work/harness.out"; exit 1; }
+            python3 - "$work" <<'EOF'
+          import struct
+          import sys
+
+          work = sys.argv[1]
+          png = open(f"{work}/plot-light.png", "rb").read()
+          assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
+          width, height = struct.unpack(">II", png[16:24])
+          assert (width, height) == (3200, 1800), (width, height)
+          html = open(f"{work}/plot-light.html", encoding="utf-8").read()
+          assert "pygal-chart" in html, "plot-light.html holds no pygal chart"
+          print(f"OK: {work} plot-light.png {width}x{height}, {len(png)} bytes; plot-light.html {len(html)} characters")
+          EOF
+            tail -n 1 "$work/harness.out"
+          }
+          mkdir -p work-pygal work-pygal-canvas
           printf 'x,y\na,1\nb,3\nc,2\n' > work-pygal/data.csv
+          cp work-pygal/data.csv work-pygal-canvas/data.csv
           cat > work-pygal/plot.py <<'EOF'
           import os
 
@@ -758,39 +789,50 @@ jobs:
           chart.render_to_png(f"plot-{THEME}.png")
           chart.render_to_file(f"plot-{THEME}.html")
           EOF
-          docker run --rm --network none --read-only --tmpfs /tmp \
-            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
-            -v "$PWD/work-pygal:/work" -w /work \
-            -e ANYPLOT_THEME=light -e MPLBACKEND=Agg -e MPLCONFIGDIR=/tmp/mpl -e ANYPLOT_MPL_SEED=/opt/mplconfig \
-            -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
-            -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_RLIMIT_AS_MB=1024 \
-            anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py plot.py > work-pygal/harness.out
-          grep -qxF 'HARNESS {"event": "start"}' work-pygal/harness.out || { echo "::error::no HARNESS start line"; cat work-pygal/harness.out; exit 1; }
-          grep -q '^HARNESS {"event": "end"' work-pygal/harness.out || { echo "::error::no HARNESS end line"; cat work-pygal/harness.out; exit 1; }
-          python3 - <<'EOF'
-          import struct
-          png = open("work-pygal/plot-light.png", "rb").read()
-          assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
-          width, height = struct.unpack(">II", png[16:24])
-          assert (width, height) == (3200, 1800), (width, height)
-          html = open("work-pygal/plot-light.html", encoding="utf-8").read()
-          assert "pygal-chart" in html, "plot-light.html holds no pygal chart"
-          print(f"OK: pygal plot-light.png {width}x{height}, {len(png)} bytes; plot-light.html {len(html)} characters")
+          cat > work-pygal-canvas/plot.py <<'EOF'
+          import os
+
+          import cairosvg
+          import pandas as pd
+          import pygal
+
+          THEME = os.environ["ANYPLOT_THEME"]
+          df = pd.read_csv("data.csv")
+          chart = pygal.Bar(width=4800, height=2700, title="pygal", x_title="x", y_title="y")
+          chart.x_labels = list(df["x"])
+          chart.add("y", [float(value) for value in df["y"]])
+          cairosvg.svg2png(bytestring=chart.render(), write_to=f"plot-{THEME}.png", output_width=3200, output_height=1800)
+          chart.render_to_file(f"plot-{THEME}.html")
           EOF
-          tail -n 1 work-pygal/harness.out
+          render work-pygal
+          render work-pygal-canvas
 
       # lets-plot (step 1c) rasterises in its native bridge, which needs more address space
       # than the Python default: its row of agents/renderer/commands.py sets RLIMIT_AS to
       # 2048 MiB with Arrow's system allocator, and points the bridge's own fontconfig at the
-      # image's /opt/anyplot/fonts.conf. This run passes exactly that row's environment and
-      # limit (1024 MB aborts the export: "Out of memory trying to allocate"); every other
-      # flag is the seaborn step's. Without the fontconfig file every export writes
+      # image's /opt/anyplot/fonts.conf. This run takes that row's environment and limit from
+      # the command table itself (commands.py imports only the standard library, so the
+      # runner's Python reads it), in the order the sandbox's environment has them. Every
+      # other flag is the seaborn step's. Without the fontconfig file every export writes
       # "Fontconfig error" to stderr, which is the extra assert. No probe.
       - name: Render a lets-plot plot through the harness
         if: steps.check.outputs.should_build == 'true'
         run: |
           set -euo pipefail
           mkdir -p work-letsplot
+          python3 - > work-letsplot/row.flags <<'EOF'
+          from agents.renderer.commands import command_for
+
+          row = command_for("python", "letsplot")
+          flags = [f"{key}={value}" for key, value in row.env.items()]
+          if row.rlimit_as:
+              flags.append(f"ANYPLOT_RLIMIT_AS_MB={row.rlimit_as_mb or 1024}")
+          for flag in flags:
+              print(f"-e\n{flag}")
+          EOF
+          mapfile -t ROW_FLAGS < work-letsplot/row.flags
+          test "${#ROW_FLAGS[@]}" -gt 0 || { echo "::error::the letsplot row of commands.py gave no flags"; exit 1; }
+          echo "the letsplot row: ${ROW_FLAGS[*]}"
           printf 'x,y\na,1\nb,3\nc,2\n' > work-letsplot/data.csv
           cat > work-letsplot/plot.py <<'EOF'
           import os
@@ -811,9 +853,9 @@ jobs:
             --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
             -v "$PWD/work-letsplot:/work" -w /work \
             -e ANYPLOT_THEME=light -e MPLBACKEND=Agg -e MPLCONFIGDIR=/tmp/mpl -e ANYPLOT_MPL_SEED=/opt/mplconfig \
-            -e ARROW_DEFAULT_MEMORY_POOL=system -e FONTCONFIG_FILE=/opt/anyplot/fonts.conf \
+            "${ROW_FLAGS[@]}" \
             -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
-            -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_RLIMIT_AS_MB=2048 \
+            -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 \
             anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py plot.py \
             > work-letsplot/harness.out 2> work-letsplot/harness.err \
             || { echo "::error::the lets-plot render failed"; cat work-letsplot/harness.out work-letsplot/harness.err; exit 1; }
@@ -833,6 +875,41 @@ jobs:
           print(f"OK: lets-plot plot-light.png {width}x{height}, {len(png)} bytes; plot-light.html {len(html)} characters")
           EOF
           tail -n 1 work-letsplot/harness.out
+
+      # Native code the audit hook cannot see finds no program to run. lets-plot's bridge links
+      # ImageMagick with a compiled-in delegate map that runs programs by name through /bin/sh
+      # (gs, curl, soffice, ffmpeg, rsvg-convert, inkscape and the rest listed below). That
+      # ImageMagick is a zero-configuration build: it reads no policy.xml, so no policy file can
+      # switch the delegates off (an export with a policy denying PNG under MAGICK_CONFIGURE_PATH
+      # still wrote its PNG, 2026-10-26). matplotlib calls fc-list when it finds it. So the
+      # sandbox's PATH (SANDBOX_PATH of agents/renderer/executor.py, read in the image) must
+      # carry none of them, next to RLIMIT_NPROC and the sandbox itself. node stays on the list
+      # until the JavaScript runtime (step 3 of agentic/specs/261024-agent-all-libraries.md)
+      # installs it as its row's toolchain.
+      - name: No delegate program on the sandbox PATH
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          docker run --rm --network none anyplot-renderer:ci /app/.venv/bin/python -c '
+          import shutil
+          import sys
+
+          from agents.renderer.executor import SANDBOX_PATH
+
+          PROGRAMS = (
+              "gs", "ghostscript", "curl", "wget", "soffice", "libreoffice", "ffmpeg", "inkscape", "rsvg-convert",
+              "fc-list", "fc-match", "magick", "convert", "identify", "dot", "java", "node",
+              # The other programs of the delegate map.
+              "bpgdec", "bpgenc", "xdg-open", "uniconvertor", "ufraw-batch", "dvips", "xterm", "hp2xx", "html2ps",
+              "ilbmtoppm", "ppmtoilbm", "lepton", "JxrDecApp", "JxrEncApp", "pcl6", "gxps", "xclip", "cwebp", "dwebp",
+              "lpr", "mrsidgeodecode", "gimp",
+          )
+          found = {name: shutil.which(name, path=SANDBOX_PATH) for name in PROGRAMS}
+          found = {name: path for name, path in found.items() if path is not None}
+          if found:
+              sys.exit(f"on the sandbox PATH {SANDBOX_PATH}: {found}")
+          print(f"OK: none of {len(PROGRAMS)} delegate programs on {SANDBOX_PATH}")
+          '
 
       # The file conversion inside the image (harness.py --convert): every format the
       # page sends, with the image's slimmed pyarrow (owner decision of 2026-10-15),

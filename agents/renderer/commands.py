@@ -106,7 +106,8 @@ class RuntimeCommand:
     """The language's command, run by the harness in exec mode with `code_file` appended; empty for Python,
     whose plot the harness runs in process."""
     env: Mapping[str, str] = field(default_factory=lambda: MappingProxyType({}))
-    """The row's own environment, on top of `PATH`, `HOME`, `ANYPLOT_THEME` and the limit variables."""
+    """The row's own environment, after `ANYPLOT_THEME` and a Python row's matplotlib settings, whose values it may
+    replace, and before `PATH`, `HOME` and the limit variables, which it never replaces (`executor.sandbox_env`)."""
     toolchain: tuple[str, ...] = ()
     """Binaries the image must carry on `SANDBOX_PATH` for the row to run."""
     rlimit_as: bool = True
@@ -134,13 +135,17 @@ def _row(language: Language, library: str) -> RuntimeCommand:
     code_file = CODE_FILE_OVERRIDES.get(library, CODE_FILES[language])
     if language == "python":
         if library == "letsplot":
-            # lets-plot rasterises in its Kotlin/Native bridge (ImageMagick linked in): under the configured
-            # 1 GiB every 3200x1800 export aborts ("Out of memory trying to allocate", SIGABRT). pyarrow's
-            # mimalloc pool reserves a 1 GiB arena on the first pandas string column, so the row takes Arrow's
-            # system allocator, as conversions do; then 2048 MiB held all 42 renders of the spike of 2026-10-26
-            # up to 4800x2700 and 3600x3600 (VmPeak 1697 MiB) and still stops a 6400x3600 one (2580 MiB). In
-            # the renderer image with this row the canvas-size renders took a wall p95 of 7.69 s (max 15.5 s);
-            # the guarded host sweep of the 284 eligible catalogue files, canvas rewrite applied, 12.5 s.
+            # lets-plot rasterises in its Kotlin/Native bridge (ImageMagick linked in). An allocation it cannot
+            # make under RLIMIT_AS kills the process ("Out of memory trying to allocate ... Aborting."): by
+            # SIGABRT (exit 134) on a developer machine and by SIGSEGV (exit 139) in the renderer image, with
+            # either Arrow pool (measured on 2026-10-26). pyarrow's mimalloc pool reserves a 1 GiB arena on the
+            # first pandas string column, which kills even a minimal 3200x1800 chart at 1024 and 1536 MiB, so
+            # the row takes Arrow's system allocator, as conversions do. With it, 18 of the spike's 42
+            # canvas-size renders still die at the configured 1 GiB; 2048 MiB held all 42 renders of the spike
+            # of 2026-10-26 up to 4800x2700 and 3600x3600 (VmPeak 1697 MiB) and still stops a 6400x3600 one
+            # (2580 MiB). In the renderer image with this row the canvas-size renders took a wall p95 of 7.69 s
+            # (max 15.5 s); the guarded host sweep of the 284 eligible catalogue files, canvas rewrite applied,
+            # 12.5 s.
             return RuntimeCommand(
                 language,
                 code_file,

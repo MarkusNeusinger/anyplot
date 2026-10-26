@@ -11,10 +11,12 @@
   plotnine's `save` and `ggsave`, altair's `save`, pygal's `render_to_png`,
   `render_to_file` and `svg2png`, lets-plot's `ggsave`) writes anywhere but
   `f"plot-{THEME}.png"` (altair, pygal and lets-plot also `f"plot-{THEME}.html"`), a
-  save of a library with a save directory (`SaveRule.directory`: lets-plot's
-  `path="."`) does not pass it, or the last save of the PNG is missing or not a
-  module-level statement (`savefig-target`; a plain string such as `"plot.png"` is
-  reported as a single-theme target). Every blocking reason is listed; `hints` stays
+  save name writes another kind of file than its target (`SaveRule.writes_suffix`:
+  pygal's `render_to_file` writes SVG text, so only the HTML; `render_to_png` and
+  `svg2png` only the PNG), a save of a library with a save directory
+  (`SaveRule.directory`: lets-plot's `path="."`) does not pass it, or the last save of
+  the PNG is missing or not a module-level statement (`savefig-target`; a plain string
+  such as `"plot.png"` is reported as a single-theme target). Every blocking reason is listed; `hints` stays
   empty. What the normaliser leaves in place reaches the scan this way: a lets-plot
   star import or save alias it could not rewrite, a pygal `open()` write it kept and
   a guard it did not strip are SECURITY findings; a pygal theme `.svg` save it kept is
@@ -62,10 +64,13 @@ The coupling heuristics, all static and deliberately simple:
 `reasons` can also carry one `canvas:` entry for any status that is not blocked: the
 normaliser could not put the canvas on 3200x1800 or 2400x2400 (`normalise.measure_canvas`:
 matplotlib's figure size is not a literal or has another aspect, a pygal chart's size is
-computed or not 16:9 or 1:1, a lets-plot grid has no `ggsize` of its own or no scale
-reaches either canvas; plotnine and altair size their canvas on the save, which the
-normaliser does not read), so the render relies on the R3 canvas gate and its padding
-fallback. It does not change the status.
+computed, set after its constructor or not 16:9 or 1:1, a lets-plot grid has no `ggsize`
+of its own or no scale reaches either canvas; plotnine and altair size their canvas on
+the save, which the normaliser does not read). The entry says what the render meets: a
+PNG of a known size over R2's pixel cap is refused by R2; any other relies on the R3
+canvas gate and its padding fallback, except a pygal or lets-plot PNG of unknown size
+(`UNKNOWN_SIZE_CANVASES`), which can land over the cap, so no padding is promised. It
+does not change the status.
 
 The 13 map specs are the specs tagged both `plot_type: map` and
 `data_type: geospatial` in their `specification.yaml`: bubble-map-geographic,
@@ -90,14 +95,17 @@ from core.palette import IMPRINT
 from core.spec_roles import MAP_SPECS
 
 from ..schemas import MAX_NOTE_CHARS
-from .normalise import SUPPORTED_LIBRARIES, measure_canvas
-from .regions import IMPRINT_NAMES, dotted_name, find_regions, save_rule
+from .normalise import MAX_IMAGE_PIXELS, SUPPORTED_LIBRARIES, Canvas, measure_canvas
+from .regions import HTML_SUFFIX, IMPRINT_NAMES, PNG_SUFFIX, dotted_name, find_regions, save_rule
 from .validate import validate_security
 
 
 ReadinessStatus = Literal["blocked", "coupled", "clean"]
 
 MIN_PALETTE_ENTRIES = 6
+UNKNOWN_SIZE_CANVASES = frozenset({"pygal", "letsplot"})
+"""The canvas rewrites (`SaveRule.canvas`) whose unknown size can be anything: pygal's and lets-plot's catalogue
+charts render 4800x2700 or more, over R2's pixel cap, unless the normaliser sets their size."""
 MAX_SECURITY_REASONS = 5
 MAX_SNIPPET_CHARS = 48
 MAX_LINE_SNIPPET_CHARS = 2 * MAX_SNIPPET_CHARS
@@ -227,9 +235,16 @@ def scan(normalised_code: str, *, spec_id: str, library: str, enabled_libraries:
     if regions.theme is None:
         blocked.append('no-theme: no module-level THEME = os.getenv("ANYPLOT_THEME", ...)')
     for call in regions.savefig_calls:
-        if call.standard_target or (rule.html and call.html_target):
-            continue
         where = call.span.lines()
+        suffix = PNG_SUFFIX if call.standard_target else HTML_SUFFIX if rule.html and call.html_target else None
+        if suffix is not None:
+            if not rule.writes_suffix(call.name, suffix):
+                writes = rule.writes.get(call.name, "")
+                blocked.append(
+                    f"savefig-target: {call.name} writes only {writes} files, not {_snippet(call.target or '')} "
+                    f"at {where}"
+                )
+            continue
         if call.literal_target is not None:
             target = _snippet(repr(call.literal_target))
             blocked.append(f"savefig-target: single-theme {call.name} target {target} at {where}")
@@ -261,8 +276,19 @@ def scan(normalised_code: str, *, spec_id: str, library: str, enabled_libraries:
         hints.append(_hint(prefix, items, advice))
     canvas = measure_canvas(normalised_code, library=library)
     if canvas.note is not None:
-        reasons.append(_clip(f"canvas: {canvas.note}; the render relies on the R3 canvas gate and padding"))
+        reasons.append(_canvas_reason(canvas, library))
     return Readiness("coupled" if hints else "clean", reasons, hints)
+
+
+def _canvas_reason(canvas: Canvas, library: str) -> str:
+    """The `canvas:` reason: the note and what the render meets; R3's padding only for a PNG under R2's pixel cap."""
+    if canvas.pixels is not None and canvas.pixels[0] * canvas.pixels[1] > MAX_IMAGE_PIXELS:
+        outcome = "R2 refuses a PNG over its pixel cap"
+    elif canvas.pixels is None and save_rule(library).canvas in UNKNOWN_SIZE_CANVASES:
+        outcome = "the PNG size shows only in the render, and R2 refuses one over its pixel cap"
+    else:
+        outcome = "the render relies on the R3 canvas gate and padding"
+    return _clip(f"canvas: {canvas.note}; {outcome}")
 
 
 def _security(code: str, library: str) -> list[str]:

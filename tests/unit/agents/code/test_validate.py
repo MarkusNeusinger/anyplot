@@ -22,6 +22,7 @@ from agents.anyplot.code.validate import (
     MAX_STRING_CHARS,
     MODULE_ESCAPES,
     PLACEHOLDER,
+    THEME_BINDING_MESSAGE,
     UNSAFE_HELPERS,
     UNSAFE_SUBMODULES,
     Finding,
@@ -46,6 +47,8 @@ import pandas as pd
 THEME = os.getenv("ANYPLOT_THEME", "light")
 df = pd.DataFrame({"a": [1, 2, 3]})
 """
+THEME_LINE = 'THEME = os.getenv("ANYPLOT_THEME", "light")'
+"""The theme block of every library's minimal file below."""
 FOOTER = """
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 plt.savefig(f"plot-{THEME}.png", dpi=400)
@@ -605,11 +608,16 @@ class TestOsUse:
         assert "os-use" in security_rules(body)
 
     def test_variable_named_os_without_the_import_is_not_os(self) -> None:
+        """Neither `os-use` nor `module-value` sees the variable; the theme block read through the alias is no theme
+        block (`regions.is_theme_assignment`), so its THEME is the one finding."""
         code = plot("os = np.ones(3)\ntotal = os.sum()\n").replace("import os\n", "import os as _o\n")
         code = code.replace(
             'THEME = os.getenv("ANYPLOT_THEME", "light")', 'THEME = _o.getenv("ANYPLOT_THEME", "light")'
         )
-        assert validate_security(code, library="matplotlib") == []
+        findings = validate_security(code, library="matplotlib")
+        assert [(f.rule, f.message, f.line) for f in findings] == [
+            ("savefig-target", THEME_BINDING_MESSAGE, HEADER.splitlines().index(THEME_LINE) + 1)
+        ]
 
 
 # --- names, calls, attributes ---------------------------------------------------------------
@@ -2131,6 +2139,31 @@ PYGAL_ROUTES = [
     pytest.param("import cairosvg\nc = [cairosvg.colors][0].tinycss2\n", {"banned-attribute"}, id="tinycss2 by name"),
     pytest.param("import cairosvg\nt = cairosvg.test_api\n", {"banned-attribute"}, id="test_api"),
 ]
+# Each pygal save name writes one kind of file (`SaveRule.writes`; the correctness review of 2026-10-26): the name in
+# its own save's place passes, and the same name in the HTML save's place writing the other file is a finding.
+PYGAL_FILE_TYPES = [
+    pytest.param(
+        PYGAL_PNG_SAVE,
+        PYGAL_PNG_SAVE,
+        'chart.render_to_png(f"plot-{THEME}.html")',
+        'render_to_png writes only f"plot-{THEME}.png"',
+        id="render_to_png",
+    ),
+    pytest.param(
+        PYGAL_PNG_SAVE,
+        "import cairosvg\n" + SVG2PNG,
+        'cairosvg.svg2png(bytestring=chart.render(), write_to=f"plot-{THEME}.html")',
+        'svg2png writes only f"plot-{THEME}.png"',
+        id="svg2png",
+    ),
+    pytest.param(
+        PYGAL_HTML_SAVE,
+        PYGAL_HTML_SAVE,
+        'chart.render_to_file(f"plot-{THEME}.png")',
+        'render_to_file writes only f"plot-{THEME}.html"',
+        id="render_to_file",
+    ),
+]
 PYGAL_NEAR_ROUTES = [
     pytest.param("svg = chart.render()\n", id="render"),
     pytest.param("svg = chart.render(is_unicode=True)\n", id="render as text"),
@@ -2315,6 +2348,24 @@ class TestPygalProfile:
     def test_a_file_that_saves_no_png_is_a_finding(self) -> None:
         findings = validate_security(swapped(pygal_plot(), PYGAL_PNG_SAVE, ""), library="pygal")
         assert [(f.rule, f.message, f.line) for f in findings] == [("savefig-target", NO_PNG_SAVE, None)]
+
+    @pytest.mark.parametrize(("place", "right", "wrong", "message"), PYGAL_FILE_TYPES)
+    def test_a_save_name_writes_only_its_own_file_type(self, place: str, right: str, wrong: str, message: str) -> None:
+        code = swapped(pygal_plot(), place, right)
+        assert validate_security(code, library="pygal") == []
+        wrong_code = swapped(code, PYGAL_HTML_SAVE, wrong)
+        findings = validate_security(wrong_code, library="pygal")
+        line = wrong_code.splitlines().index(wrong) + 1
+        assert [(f.rule, f.message, f.line) for f in findings] == [("savefig-target", message, line)]
+
+    def test_svg_text_in_the_png_is_no_png_save(self) -> None:
+        """`render_to_file` writes SVG text, so a file whose one PNG save is `render_to_file` writes no PNG."""
+        new = 'chart.render_to_file(f"plot-{THEME}.png")'
+        findings = validate_security(swapped(pygal_plot(), PYGAL_PNG_SAVE, new), library="pygal")
+        assert [(f.rule, f.message) for f in findings] == [
+            ("savefig-target", 'render_to_file writes only f"plot-{THEME}.html"'),
+            ("savefig-target", NO_PNG_SAVE),
+        ]
 
     @pytest.mark.parametrize(
         ("body", "expected"),
@@ -2655,6 +2706,139 @@ def test_a_save_name_as_a_value_is_refused_in_plot_and_data_code() -> None:
 )
 def test_numpy_save_is_a_banned_call_in_every_profile(library: str, body: str) -> None:
     assert "banned-call" in rules_of(library_plot(library, body), library)
+
+
+# THEME names every save's file, and libcairo writes pygal's PNG where the render guard never looks, so in every
+# profile the name keeps the theme block's value (the security review of 2026-10-26): a body that binds THEME, the
+# 1-based line of the binding in it, and the other rules the body breaks.
+THEME_BINDINGS = [
+    pytest.param('THEME = "../x"\n', 1, set(), id="a second assignment"),
+    pytest.param('THEME = os.getenv("ANYPLOT_THEME", "dark")\n', 1, set(), id="the theme block twice"),
+    pytest.param('THEME += "x"\n', 1, set(), id="augmented"),
+    pytest.param('THEME: str = "x"\n', 1, set(), id="annotated"),
+    pytest.param('THEME, n = "x", 1\n', 1, set(), id="unpacked"),
+    pytest.param('for THEME in ["x"]:\n    pass\n', 1, set(), id="for"),
+    pytest.param("import warnings\nwith warnings.catch_warnings() as THEME:\n    pass\n", 2, set(), id="with"),
+    pytest.param("try:\n    pass\nexcept ValueError as THEME:\n    pass\n", 3, set(), id="except"),
+    pytest.param('match "x":\n    case THEME:\n        pass\n', 2, set(), id="match capture"),
+    pytest.param('match ["x"]:\n    case [*THEME]:\n        pass\n', 2, set(), id="match star"),
+    pytest.param("match {}:\n    case {**THEME}:\n        pass\n", 2, set(), id="match rest"),
+    pytest.param('n = (THEME := "x")\n', 1, set(), id="walrus"),
+    pytest.param('names = [THEME for THEME in ["x"]]\n', 1, set(), id="comprehension"),
+    pytest.param("from textwrap import dedent as THEME\n", 1, set(), id="from import"),
+    pytest.param("import textwrap as THEME\n", 1, {"module-value"}, id="import"),
+    pytest.param('def THEME():\n    return "x"\n', 1, set(), id="def"),
+    pytest.param('def f(THEME="x"):\n    return THEME\n', 1, set(), id="parameter"),
+    pytest.param("f = lambda THEME: THEME\n", 1, set(), id="lambda parameter"),
+    pytest.param('def f():\n    THEME = "x"\n    return THEME\n', 2, set(), id="a local"),
+    pytest.param("def f():\n    global THEME\n", 2, {"banned-statement"}, id="global"),
+    pytest.param(
+        'def f():\n    THEME = "x"\n\n    def g():\n        nonlocal THEME\n', 5, {"banned-statement"}, id="nonlocal"
+    ),
+    pytest.param("del THEME\n", 1, set(), id="del"),
+    pytest.param("type THEME = str\n", 1, set(), id="type alias"),
+    pytest.param("def f[THEME]():\n    pass\n", 1, set(), id="type parameter"),
+]
+THEME_READS = [
+    pytest.param("upper = THEME.upper()\n", id="a read"),
+    pytest.param("def f(theme=THEME):\n    return theme\n", id="a default"),
+    pytest.param('d = dict(THEME="x")\n', id="a keyword"),
+    pytest.param('labels = {"THEME": THEME}\n', id="a dict key"),
+    pytest.param('THEME_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"\n', id="another name"),
+]
+# With `import os`, the name is bound by nothing else: each of these hands the theme block another object's `getenv`.
+OS_BINDINGS = [
+    pytest.param(
+        'import functools\n\n\ndef g():\n    pass\n\n\ng.getenv = lambda *a: "../x"\n\n\n'
+        '@functools.wraps(g, assigned=("getenv",), updated=())\ndef os():\n    pass\n',
+        12,
+        id="def under wraps",
+    ),
+    pytest.param("from textwrap import dedent as os\n", 1, id="from import"),
+    pytest.param("import textwrap as os\n", 1, id="import"),
+    pytest.param("try:\n    pass\nexcept ValueError as os:\n    pass\n", 3, id="except"),
+    pytest.param("def f(os):\n    return 1\n", 1, id="parameter"),
+    pytest.param('match "x":\n    case os:\n        pass\n', 2, id="match capture"),
+]
+
+
+def body_line(code: str, body: str, line: int) -> int:
+    """The line of `code` that is line `line` of `body`, which `code` holds once."""
+    assert code.count(body) == 1, body
+    return code.count("\n", 0, code.index(body)) + line
+
+
+@pytest.mark.parametrize("library", CODE_LIBRARIES)
+@pytest.mark.parametrize(("body", "line", "others"), THEME_BINDINGS)
+def test_a_binding_of_theme_is_refused_in_every_profile(library: str, body: str, line: int, others: set[str]) -> None:
+    code = library_plot(library, body)
+    findings = validate_security(code, library=library)
+    assert {f.rule for f in findings} == {"savefig-target"} | others
+    assert ("savefig-target", THEME_BINDING_MESSAGE, body_line(code, body, line)) in {
+        (f.rule, f.message, f.line) for f in findings
+    }
+
+
+@pytest.mark.parametrize("library", CODE_LIBRARIES)
+@pytest.mark.parametrize("body", THEME_READS)
+def test_a_read_of_theme_passes_in_every_profile(library: str, body: str) -> None:
+    assert rules_of(library_plot(library, body), library) == set()
+
+
+@pytest.mark.parametrize("library", CODE_LIBRARIES)
+@pytest.mark.parametrize(
+    "block",
+    [
+        pytest.param('THEME = os.environ.get("ANYPLOT_THEME", "light")', id="os.environ.get"),
+        pytest.param('THEME = os.getenv("ANYPLOT_THEME", "light").lower()', id="a call on the lookup"),
+        pytest.param('THEME = T = os.getenv("ANYPLOT_THEME", "light")', id="two targets"),
+    ],
+)
+def test_a_theme_block_of_another_shape_is_a_finding(library: str, block: str) -> None:
+    """The theme block is the shape `regions.is_theme_assignment` accepts, which readiness looks for too."""
+    code = swapped(library_plot(library), THEME_LINE, block)
+    findings = validate_security(code, library=library)
+    assert [(f.rule, f.message, f.line) for f in findings] == [
+        ("savefig-target", THEME_BINDING_MESSAGE, code.splitlines().index(block) + 1)
+    ]
+
+
+@pytest.mark.parametrize("library", CODE_LIBRARIES)
+@pytest.mark.parametrize(
+    "block",
+    [
+        pytest.param('THEME: str = os.getenv("ANYPLOT_THEME", "light")', id="annotated"),
+        pytest.param('THEME = os.getenv("ANYPLOT_THEME")', id="no default"),
+        pytest.param('THEME = os.getenv("ANYPLOT_THEME", default="light")', id="default by keyword"),
+    ],
+)
+def test_a_theme_block_regions_accepts_passes(library: str, block: str) -> None:
+    assert rules_of(swapped(library_plot(library), THEME_LINE, block), library) == set()
+
+
+@pytest.mark.parametrize("library", CODE_LIBRARIES)
+def test_the_theme_block_reads_the_imported_os(library: str) -> None:
+    """Without `import os`, `os` is a name the file binds, and its `getenv` returns what the file says."""
+    code = swapped(library_plot(library, "def os():\n    pass\n"), "import os\n", "")
+    findings = validate_security(code, library=library)
+    assert [(f.rule, f.message, f.line) for f in findings] == [
+        ("savefig-target", THEME_BINDING_MESSAGE, code.splitlines().index(THEME_LINE) + 1)
+    ]
+
+
+@pytest.mark.parametrize("library", CODE_LIBRARIES)
+@pytest.mark.parametrize(("body", "line"), OS_BINDINGS)
+def test_a_binding_of_the_imported_os_is_refused(library: str, body: str, line: int) -> None:
+    code = library_plot(library, body)
+    findings = validate_security(code, library=library)
+    assert [(f.rule, f.message, f.line) for f in findings] == [
+        ("os-use", "'os' may only be bound by import os", body_line(code, body, line))
+    ]
+
+
+def test_data_code_may_bind_theme() -> None:
+    """A data snippet saves nothing, so the THEME pin, a `savefig-target` rule, is no rule of the DATA profile."""
+    assert validate_data_code('import pandas as pd\nTHEME = "x"\nTHEME = "y"\ndf = pd.DataFrame()\n') == []
 
 
 # --- the catalogue corpus ----------------------------------------------------------------------

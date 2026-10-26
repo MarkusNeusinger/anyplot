@@ -145,8 +145,11 @@ Decisions this module takes where the design leaves room:
   by `import os [as X]` must be the receiver of `X.getenv("ANYPLOT_THEME", ...)` or
   `X.environ.get("ANYPLOT_THEME", ...)` with the literal first argument, at most two
   positional arguments and no keyword other than `default`. `from os import ...` is a
-  banned import. Note `__file__` is a dunder, so the catalogue's `sys.path` guard fails
-  twice (`sys` and `__file__`); the normaliser strips that guard before eligibility.
+  banned import, and nothing else binds a name `import os` binds (`def os` under
+  `functools.wraps`, `import textwrap as os`, an `except` or `match` capture, a
+  parameter): each would hand the theme block another object's `getenv`. Note `__file__`
+  is a dunder, so the catalogue's `sys.path` guard fails twice (`sys` and `__file__`); the
+  normaliser strips that guard before eligibility.
 * **Dunders and strings.** Every identifier matching `^__\\w+__$` (names, attributes,
   keywords, parameters, function names) and every string or bytes literal containing a
   dunder identifier is a finding; `__name__ == "__main__"` guards therefore fail, which
@@ -170,7 +173,9 @@ Decisions this module takes where the design leaves room:
   `filename=`, `fp=` or `write_to=`; `ggsave` takes the plot first and the file second,
   `cairosvg.svg2png` takes every argument by keyword) must be exactly the f-string
   `f"plot-{THEME}.png"`, for altair, pygal and lets-plot also `f"plot-{THEME}.html"`,
-  the second file their catalogues write; `format=` is absent or the file's own type;
+  the second file their catalogues write, and a pygal save writes its own kind of file
+  (`SaveRule.writes`: `render_to_png` and `svg2png` the PNG, `render_to_file`, which
+  writes SVG text, the HTML); `format=` is absent or the file's own type;
   there are no `**arguments`; and the saves of plotnine, altair, pygal and lets-plot take
   only the keywords the rule lists (the size, the dpi, altair's `scale_factor`, svg2png's
   input and output size), so `path=` with plotnine, which joins a directory, `webdriver=`
@@ -188,7 +193,16 @@ Decisions this module takes where the design leaves room:
   callee of a call (`g = ggsave`, `[ggsave][0](...)` and `partial(ggsave, plot)` are
   `banned-call` findings in every profile): the rule matches calls by their callee's
   name, so a save reached under another name would write anywhere (the lets-plot draft
-  of 2026-10-26 showed it in the plotnine profile).
+  of 2026-10-26 showed it in the plotnine profile). `THEME` keeps the value of the theme
+  block, because every file name above is built from it and libcairo writes pygal's PNG
+  where the render guard never looks (the security review of 2026-10-26): the one
+  binding of the name is the first module-level `THEME = os.getenv("ANYPLOT_THEME", ...)`
+  (the shapes `regions.is_theme_assignment` accepts, after `import os`), and every other
+  is a `savefig-target` finding where it stands: a second, augmented or annotated
+  assignment, a `for`, `with`, `except`, `match`, walrus or comprehension target, an
+  import, a `def`, a parameter, a type alias or parameter, a `del`, and a `global` or
+  `nonlocal` declaration (also a `banned-statement`). plotnine's expression strings need
+  no such rule: their assignments land in plotnine's own lookup dict, never in the module.
 * **Expression strings (plotnine).** plotnine compiles and evaluates a string that is not
   a column name wherever it takes an aesthetic or a facet (`aes`, `after_stat`,
   `after_scale`, `stage`, `facet_wrap`, `facet_grid`, `qplot`), with real builtins and the
@@ -308,7 +322,7 @@ Rule ids: `size`, `encoding`, `syntax`, `banned-import` (with `Finding.module`),
 `relative-import`, `os-use`, `module-value`, `banned-name`, `banned-call`, `banned-attribute`,
 `banned-keyword`, `rc-key`, `dunder`, `banned-statement`, `url-literal`, `string-length`, `savefig-target`
 (SECURITY; DATA without `savefig-target`; a plotnine expression string's finding keeps the id of the rule it broke;
-pygal's config and lets-plot's rules use the ids above);
+pygal's config and lets-plot's rules use the ids above, the THEME pin `savefig-target`);
 `placeholder-count`, `placeholder-use`, `rng`, `literal-data`, `palette-prefix`
 (ADAPTATION); `data-frame` (DATA). Findings are sorted by line; messages never echo
 more than about 60 characters of code and never echo string literal contents.
@@ -328,7 +342,17 @@ from core.constants import SUPPORTED_LIBRARIES
 from core.palette import IMPRINT
 
 from ..schemas import MAX_CODE_CHARS
-from .regions import HTML_SUFFIX, SAVE_NAMES, SaveRule, is_theme_target, save_rule, save_target
+from .regions import (
+    HTML_SUFFIX,
+    PNG_SUFFIX,
+    SAVE_NAMES,
+    THEME_NAME,
+    SaveRule,
+    is_theme_assignment,
+    is_theme_target,
+    save_rule,
+    save_target,
+)
 
 
 Profile = Literal["security", "adaptation", "data"]
@@ -342,6 +366,10 @@ MAX_MESSAGE_CHARS = 300
 MAX_SNIPPET_CHARS = 60
 PLACEHOLDER = "df = load_user_data()"
 THEME_VARIABLE = "ANYPLOT_THEME"
+THEME_BINDING_MESSAGE = (
+    'THEME may only be bound by the theme block, THEME = os.getenv("ANYPLOT_THEME", ...) after import os: '
+    'every save writes f"plot-{THEME}..."'
+)
 
 # The pure standard modules from `warnings` on were admitted by the owner (2026-10-10).
 # Each was walked for public names that read, load, save, open, fetch or evaluate, and
@@ -1732,6 +1760,7 @@ class _Scan:
         self._check_strings()
         self._check_save(rule)
         self._check_save_names()
+        self._check_theme_bindings()
         if library in EXPRESSION_LIBRARIES:
             self._check_expression_strings()
 
@@ -1907,6 +1936,16 @@ class _Scan:
         for name in self.of(ast.Name):
             if name.id in self.os_names and not self._is_theme_lookup(name):
                 self.add("os-use", f"'{name.id}' may only be used as {name.id}.getenv('{THEME_VARIABLE}', ...)", name)
+        # A store of the name is a `Name` above; `def os(): ...` under `@functools.wraps(g, assigned=("getenv",))` or
+        # `from textwrap import dedent as os` would hand the theme block another object's `getenv`.
+        for variable in sorted(self.os_names):
+            for node in self._binding_nodes(variable):
+                if not isinstance(node, ast.Name) and not self._is_os_import(node):
+                    self.add("os-use", f"'{variable}' may only be bound by import os", node)
+
+    def _is_os_import(self, node: ast.AST) -> bool:
+        """`node` is the alias of an `import os [as X]`."""
+        return isinstance(node, ast.alias) and node.name == "os" and isinstance(self.parents.get(node), ast.Import)
 
     def _check_module_values(self) -> None:
         """A name bound by `import X [as Y]` only as the receiver of an attribute (module docstring).
@@ -2260,13 +2299,21 @@ class _Scan:
             self.add("savefig-target", f'no {rule.verb} of f"plot-{{THEME}}.png" found', None)
 
     def _check_save_call(self, call: ast.Call, rule: SaveRule, name: str) -> bool:
-        """The file, the format and the keywords of one save call; whether it writes the PNG."""
+        """The file, the format and the keywords of one save call; whether it writes the PNG.
+
+        A save of the PNG by a name that writes only the HTML (`render_to_file(f"plot-{THEME}.png")` writes SVG text
+        into the PNG) writes no PNG, so a file with no other PNG save also gets the missing-save finding.
+        """
         target = save_target(call, rule, name)
         png = target is not None and _is_theme_target(target)
         html = rule.html and target is not None and is_theme_target(target, HTML_SUFFIX)
         if not (png or html):
             files = 'f"plot-{THEME}.png"' + (' or f"plot-{THEME}.html"' if rule.html else "")
             self.add("savefig-target", f"{name} target must be exactly {files}", call)
+        elif not rule.writes_suffix(name, PNG_SUFFIX if png else HTML_SUFFIX):
+            # pygal's names each write one kind of file (`SaveRule.writes`; the correctness review of 2026-10-26).
+            self.add("savefig-target", f'{name} writes only f"plot-{{THEME}}{rule.writes[name]}"', call)
+            png = False
         position = rule.target_position(name)
         if position < 0 and call.args:
             # `svg2png(bytestring, ...)`: the keyword-only save names its file with `write_to=` alone.
@@ -2315,6 +2362,24 @@ class _Scan:
                 parent = self.parents.get(name)
                 if not (isinstance(parent, ast.Call) and parent.func is name):
                     self.add("banned-call", f"'{name.id}' may only be called directly", name)
+
+    def _check_theme_bindings(self) -> None:
+        """`THEME` keeps the value of the theme block (module docstring, "The save").
+
+        The one binding allowed is the target of the first module-level `THEME = os.getenv("ANYPLOT_THEME", ...)`
+        (`regions.is_theme_assignment`), and only after `import os`; every other binding of the name, and a `global` or
+        `nonlocal` declaration of it, is a finding where it stands.
+        """
+        block = next((statement for statement in self.tree.body if is_theme_assignment(statement)), None)
+        allowed: ast.AST | None = None
+        if "os" in self.os_names and isinstance(block, ast.Assign):
+            allowed = block.targets[0]
+        elif "os" in self.os_names and isinstance(block, ast.AnnAssign):
+            allowed = block.target
+        declarations: list[ast.Global | ast.Nonlocal] = [*self.of(ast.Global), *self.of(ast.Nonlocal)]
+        for node in [*self._binding_nodes(THEME_NAME), *(node for node in declarations if THEME_NAME in node.names)]:
+            if node is not allowed:
+                self.add("savefig-target", THEME_BINDING_MESSAGE, node)
 
     def _check_expression_strings(self) -> None:
         """plotnine's expression arguments: literals the walk can read, each string walked as code (module docstring,
@@ -2389,14 +2454,20 @@ class _Scan:
         return None
 
     def _bindings(self, variable: str) -> int:
-        """How many places bind `variable`: a store or a deletion of the name, a parameter, an import, a function or
+        """How many places bind `variable` (`_binding_nodes`)."""
+        return len(self._binding_nodes(variable))
+
+    def _binding_nodes(self, variable: str) -> list[ast.AST]:
+        """The places that bind `variable`: a store or a deletion of the name, a parameter, an import, a function or
         class name, an exception or `match` capture, a type parameter. A `case x:` would rebind a name the walk
         checked as a literal (`match "open('x')": case COLUMN: ...`), so every kind counts."""
-        count = sum(1 for name in self.of(ast.Name) if name.id == variable and not isinstance(name.ctx, ast.Load))
-        count += sum(1 for parameter in self.of(ast.arg) if parameter.arg == variable)
+        nodes: list[ast.AST] = [
+            name for name in self.of(ast.Name) if name.id == variable and not isinstance(name.ctx, ast.Load)
+        ]
+        nodes.extend(parameter for parameter in self.of(ast.arg) if parameter.arg == variable)
         imports: list[ast.Import | ast.ImportFrom] = [*self.of(ast.Import), *self.of(ast.ImportFrom)]
-        count += sum(
-            1 for node in imports for alias in node.names if (alias.asname or alias.name.split(".")[0]) == variable
+        nodes.extend(
+            alias for node in imports for alias in node.names if (alias.asname or alias.name.split(".")[0]) == variable
         )
         named: list[ast.AST] = [
             *self.of(ast.FunctionDef),
@@ -2409,9 +2480,9 @@ class _Scan:
             *self.of(ast.ParamSpec),
             *self.of(ast.TypeVarTuple),
         ]
-        count += sum(1 for node in named if getattr(node, "name", None) == variable)
-        count += sum(1 for node in self.of(ast.MatchMapping) if node.rest == variable)
-        return count
+        nodes.extend(node for node in named if getattr(node, "name", None) == variable)
+        nodes.extend(node for node in self.of(ast.MatchMapping) if node.rest == variable)
+        return nodes
 
     def _check_expression(self, text: str, call_name: str, node: ast.Constant) -> None:
         """One expression string: every parsable term walked with this profile's name, attribute, call, save and

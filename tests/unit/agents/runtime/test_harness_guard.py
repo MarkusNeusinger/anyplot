@@ -53,6 +53,15 @@ def render_file(tmp_path: Path, code: str) -> tuple[int, str]:
     return done.returncode, done.stderr
 
 
+def import_or_skip(module: str) -> None:
+    """Skip the test unless `module` imports here: `pytest.importorskip` skips only an ImportError, but cairosvg's
+    import raises OSError when cairocffi finds no libcairo on the machine."""
+    try:
+        importlib.import_module(module)
+    except (ImportError, OSError) as exc:
+        pytest.skip(f"{module} does not import here: {type(exc).__name__}: {exc}")
+
+
 def run_data(tmp_path: Path, code: str) -> tuple[int, str | None, str]:
     """Exit code, `out.csv` (None when missing) and stderr of one data-mode run in `tmp_path`."""
     (tmp_path / "snippet.py").write_text(code, encoding="utf-8")
@@ -409,7 +418,7 @@ class TestPlotGuard:
         """pygal's PNG goes through cairosvg: `warm_cairo` loads libcairo before the guard, and cssselect2 compiles the
         chart's stylesheet into lambdas through `eval` (`CODE_BUILDERS`). No matplotlib figure, so no probe."""
         pytest.importorskip("pygal")
-        pytest.importorskip("cairosvg")
+        import_or_skip("cairosvg")
         code = (
             f"import os\n\n{imports}import pygal\n\nTHEME = os.environ['ANYPLOT_THEME']\n"
             f"chart = pygal.Bar(width={size[0]}, height={size[1]}, title='t')\nchart.add('y', [1, 3, 2])\n"
@@ -485,6 +494,18 @@ class TestPlotGuard:
         assert (tmp_path / "plot-light.png").exists()
 
 
+@pytest.mark.parametrize("error", [ModuleNotFoundError("No module named 'cairosvg'"), OSError("no library called")])
+def test_a_library_that_does_not_import_skips_its_case(monkeypatch: pytest.MonkeyPatch, error: Exception) -> None:
+    """A missing module and a missing libcairo under an installed cairosvg (cairocffi's OSError) both skip."""
+
+    def fail(name: str) -> None:
+        raise error
+
+    monkeypatch.setattr(importlib, "import_module", fail)
+    with pytest.raises(pytest.skip.Exception, match=type(error).__name__):
+        import_or_skip("cairosvg")
+
+
 REPO_ROOT = Path(__file__).resolve().parents[4]
 CATALOGUE_UNDER_GUARD = [
     pytest.param("ice-basic", "matplotlib", id="ice-basic/matplotlib: scikit-learn GradientBoostingRegressor"),
@@ -523,7 +544,7 @@ def test_catalogue_files_render_under_the_guard(tmp_path: Path, spec_id: str, li
     from core.utils import strip_noqa_comments
 
     for module in LIBRARY_MODULES.get(library, ()):
-        pytest.importorskip(module)
+        import_or_skip(module)
     source = REPO_ROOT / "plots" / spec_id / "implementations" / "python" / f"{library}.py"
     if not source.exists():
         pytest.skip(f"{spec_id}/{library} is absent")

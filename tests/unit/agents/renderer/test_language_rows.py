@@ -67,6 +67,30 @@ class TestRows:
         assert pygal == sandbox_env(limited, "light", 60, command=command_for("python", "matplotlib"))
         assert pygal["ANYPLOT_RLIMIT_AS_MB"] == "1024" and "ARROW_DEFAULT_MEMORY_POOL" not in pygal
 
+    def test_an_in_process_row_env_comes_after_the_matplotlib_keys_and_before_the_fixed_ones(
+        self, config: ExecutorConfig
+    ) -> None:
+        """The merge order `sandbox_env` states: a row's own value replaces a matplotlib setting, and never `PATH`,
+        `HOME`, the bytecode switch or a limit variable."""
+        limited = replace(config, rlimit_as_mb=1024)
+        row = replace(
+            command_for("python", "pygal"),
+            env={
+                "MPLBACKEND": "svg",
+                "PATH": "/opt/row/bin",
+                "HOME": "/opt/row",
+                "PYTHONDONTWRITEBYTECODE": "0",
+                "ANYPLOT_RLIMIT_AS_MB": "0",
+                "ANYPLOT_RLIMIT_CPU_S": "0",
+            },
+        )
+        values = sandbox_env(limited, "light", 60, command=row)
+
+        assert values["MPLBACKEND"] == "svg" and values["MPLCONFIGDIR"] == config.mplconfig
+        assert values["PATH"] == SANDBOX_PATH and values["HOME"] == "/tmp"
+        assert values["PYTHONDONTWRITEBYTECODE"] == "1"
+        assert values["ANYPLOT_RLIMIT_AS_MB"] == "1024" and values["ANYPLOT_RLIMIT_CPU_S"] == "60"
+
     def test_a_row_limit_never_switches_a_configured_off_limit_on(self, config: ExecutorConfig) -> None:
         """`RENDERER_RLIMIT_AS_MB=0` turns address-space limits off for every row, lets-plot's own value included."""
         unlimited = sandbox_env(config, "dark", 60, command=command_for("python", "letsplot"))

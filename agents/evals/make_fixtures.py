@@ -1,42 +1,60 @@
-"""Generate the synthetic spike-X fixture cases: 10 specs x 4 Python libraries x 6 perturbations.
+"""Generate the synthetic spike-X fixture cases: 10 specs x 6 Python libraries x 6 perturbations.
 
 Every dataset is invented and drawn from a seeded NumPy generator, so a rerun writes
 byte-identical files. Run it from the repository root:
 
-    uv run --extra agents python -m agents.evals.make_fixtures          # (re)write the 240 cases
+    uv run --extra agents python -m agents.evals.make_fixtures          # (re)write the 360 cases
     uv run --extra agents python -m agents.evals.make_fixtures --check  # exit 1 when a file is stale
 
 It writes `agents/evals/fixtures/cases/<spec>-<library>-<perturbation>/` with
-`case.json` and `data.csv` and leaves every other case directory alone (the three
-hand-written cases `scatter-basic-matplotlib`, `bar-grouped-seaborn` and
-`scatter-basic-matplotlib-german-message` stay as they are). A NumPy upgrade that
+`case.json` and `data.csv` and leaves every other case directory alone (the seven
+hand-written cases, such as `scatter-basic-matplotlib` and `bar-grouped-seaborn`, and
+the stress cases of `make_stress.py` stay as they are). A NumPy upgrade that
 changes a random stream makes `--check` and the unit test fail; rerun the generator
 and commit the result. The libraries are matplotlib and seaborn (since the first
-fixtures) and plotnine and altair (since 2026-10-25, step 1b of
-`agentic/specs/261024-agent-all-libraries.md`); every library of a spec gets the same
-datasets and bindings, so only `library` and the case id differ between them.
+fixtures), plotnine and altair (since 2026-10-25, step 1b of
+`agentic/specs/261024-agent-all-libraries.md`), and pygal and lets-plot (`letsplot`,
+since 2026-10-26, step 1c); every library of a spec gets the same datasets and
+bindings, so only `library` and the case id differ between them. A new library adds
+case directories and changes none that exist.
 
 **The ten specs.** Each covers another plot family, and the readiness scan
-(`agents/anyplot/code/readiness.py`, through `opening.assess` with the four libraries
-enabled) marks each of its four files `clean` or `coupled`, never `blocked`
-(`tests/unit/agents/evals/test_make_fixtures.py` asserts it). The cells below were
-computed on 2026-10-25; the heatmap's matplotlib file, `clean` in the table's first
-version, is `coupled` now (`color-scale`: its `TwoSlopeNorm(vmin=-1, vmax=1)`).
-plotnine and altair size their canvas on the save, so their reasons also carry a
-`canvas:` note, which does not change the status:
+(`agents/anyplot/code/readiness.py`, through `opening.assess` with the six libraries
+enabled) marks each of its six files `clean` or `coupled`, except two pygal files
+that it blocks (`tests/unit/agents/evals/test_make_fixtures.py` asserts both and names
+the two). The cells below were computed on 2026-10-26; the first four columns are
+unchanged since 2026-10-25. The heatmap's matplotlib file, `clean` in the table's first
+version, is `coupled` now (`color-scale`: its `TwoSlopeNorm(vmin=-1, vmax=1)`). The
+heatmap's pygal file writes a hand-built HTML page from a `with open(...)` body that
+also assigns a name nothing else reads; the normaliser's HTML rule drops such a body,
+so the file is `coupled`, not `blocked`. plotnine and altair size their canvas on the save, so their reasons also carry a
+`canvas:` note, which does not change the status; the normaliser rewrites the canvas of
+pygal and lets-plot, so theirs carry none:
 
-| Spec | Family | matplotlib | seaborn | plotnine | altair |
-|---|---|---|---|---|---|
-| `scatter-basic` | scatter | coupled | coupled | coupled | coupled |
-| `line-basic` | line (numeric x) | coupled | coupled | coupled | coupled |
-| `bar-grouped` | bar (grouped) | coupled | coupled | coupled | coupled |
-| `histogram-basic` | histogram | coupled | coupled | coupled | coupled |
-| `box-basic` | box | coupled | coupled | coupled | coupled |
-| `heatmap-basic` | heatmap | coupled | coupled | coupled | coupled |
-| `area-basic` | area | coupled | coupled | coupled | coupled |
-| `violin-basic` | violin | coupled | coupled | coupled | coupled |
-| `pie-basic` | pie | coupled | clean | clean | clean |
-| `line-timeseries` | time series | coupled | coupled | coupled | coupled |
+| Spec | Family | matplotlib | seaborn | plotnine | altair | pygal | letsplot |
+|---|---|---|---|---|---|---|---|
+| `scatter-basic` | scatter | coupled | coupled | coupled | coupled | coupled | coupled |
+| `line-basic` | line (numeric x) | coupled | coupled | coupled | coupled | clean | coupled |
+| `bar-grouped` | bar (grouped) | coupled | coupled | coupled | coupled | clean | coupled |
+| `histogram-basic` | histogram | coupled | coupled | coupled | coupled | blocked | coupled |
+| `box-basic` | box | coupled | coupled | coupled | coupled | coupled | coupled |
+| `heatmap-basic` | heatmap | coupled | coupled | coupled | coupled | coupled | coupled |
+| `area-basic` | area | coupled | coupled | coupled | coupled | clean | coupled |
+| `violin-basic` | violin | coupled | coupled | coupled | coupled | coupled | coupled |
+| `pie-basic` | pie | coupled | clean | clean | clean | clean | clean |
+| `line-timeseries` | time series | coupled | coupled | coupled | coupled | blocked | coupled |
+
+The two blocked pygal files have shapes that step 1c does not adapt, so the readiness
+scan blocks the session of each of their 12 cases until the catalogue file changes:
+
+- `histogram-basic` draws an annotation layer over the chart's PNG bytes with PIL
+  (`io`, `PIL.Image`, `ImageDraw` and `ImageFont`, and a `render_to_png()` with no
+  target).
+- `line-timeseries` draws its random walk with the standard `random` module, which no
+  plot profile admits.
+
+The cases are written for both anyway: the datasets are the same for every library,
+and the cases need no change once the files are eligible.
 
 **The six perturbations** (the datasets of the design's spike-X row):
 
@@ -57,11 +75,17 @@ customers and stations are invented.
 **The smoke cases.** The tag `smoke` marks one case per spec, cycling through the
 perturbations and alternating matplotlib and seaborn (`SMOKE_CYCLE`, as since the first
 fixtures), and one case for each library outside that cycle (`LIBRARY_SMOKE`):
-`scatter-basic-plotnine-renamed` and `scatter-basic-altair-renamed`. `scatter-basic`
-is the spec whose plotnine and altair files were rendered under the harness guard when
-step 1b landed; `renamed` puts headers with a dot (`Werbebudget in Tsd. CHF`) into the
-library's own column syntax: plotnine's `aes` strings, and altair's field strings, where
-Vega-Lite reads an unescaped `.` as nested access (`prompts/library/altair.md`).
+`scatter-basic-<library>-renamed` for plotnine and altair (since step 1b) and for pygal
+and letsplot (since step 1c). `scatter-basic` is the spec whose files of each of these
+libraries were rendered under the harness guard when the library's step landed, and it
+is eligible for all four. `renamed` puts headers with spaces and a dot
+(`Werbebudget in Tsd. CHF`) into the library's own column syntax: plotnine's `aes`
+strings; altair's field strings, where Vega-Lite reads an unescaped `.` as nested access
+(`prompts/library/altair.md`); and lets-plot's `aes` strings and tooltip lines, where a
+variable name with spaces needs braces (`@{...}`). pygal has no column syntax: it takes
+plain lists and never titles an axis from a column name (`prompts/library/pygal.md`), so
+its case asks the adaptation to build the `(x, y)` points from the renamed columns and to
+pass the headers to `x_title` and `y_title` itself.
 """
 
 import argparse
@@ -84,7 +108,7 @@ from agents.anyplot.schemas import MAX_COLUMN_NAME_CHARS, MAX_ROWS
 
 
 CASES_DIR = Path(__file__).resolve().parent / "fixtures" / "cases"
-LIBRARIES: tuple[str, ...] = ("matplotlib", "seaborn", "plotnine", "altair")
+LIBRARIES: tuple[str, ...] = ("matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot")
 PERTURBATIONS: tuple[str, ...] = ("renamed", "x10", "n12", "n5000", "date", "decimal-comma")
 SMOKE_TAG = "smoke"
 SMOKE_CYCLE: tuple[str, ...] = ("matplotlib", "seaborn")
@@ -92,6 +116,8 @@ SMOKE_CYCLE: tuple[str, ...] = ("matplotlib", "seaborn")
 LIBRARY_SMOKE: dict[str, tuple[str, str]] = {
     "plotnine": ("scatter-basic", "renamed"),
     "altair": ("scatter-basic", "renamed"),
+    "pygal": ("scatter-basic", "renamed"),
+    "letsplot": ("scatter-basic", "renamed"),
 }
 """The one smoke case `(spec, perturbation)` of each library outside `SMOKE_CYCLE` (module docstring)."""
 SOURCE = "synthetic: agents/evals/make_fixtures.py"

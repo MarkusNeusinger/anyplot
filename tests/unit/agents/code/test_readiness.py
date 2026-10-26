@@ -212,11 +212,12 @@ class TestPygalAndLetsPlot:
     @pytest.mark.parametrize(
         ("code", "library", "reason"),
         [
+            # an unknown size can land over R2's pixel cap: no padding is promised
             (
                 PYGAL.replace("width=4800, height=2700", "width=W, height=H"),
                 "pygal",
-                "canvas: pygal canvas unknown: the chart's width= at line 9 is not a positive numeric literal; the "
-                "render relies on the R3 canvas gate and padding",
+                "canvas: pygal canvas unknown: the chart's width= at line 9 is not a positive number or a module-level "
+                "name bound once to one; the PNG size shows only in the render, and R2 refuses one over its pixel cap",
             ),
             (
                 LETSPLOT.replace("ggsize(1600, 900)", "ggsize(800, 853)"),
@@ -224,12 +225,60 @@ class TestPygalAndLetsPlot:
                 "canvas: lets-plot renders 2400x2559 from 800x853 (ggsize at line 16) at scale 3, target 2400x2400; the "
                 "render relies on the R3 canvas gate and padding",
             ),
+            # a known size over the cap: R2 refuses it before R3 sees it
+            (
+                PYGAL.replace("width=4800, height=2700", "width=4800, height=3000"),
+                "pygal",
+                "canvas: pygal renders 4800x3000 (the saved chart at line 9), target 3200x1800; R2 refuses a PNG over "
+                "its pixel cap",
+            ),
         ],
     )
     def test_a_canvas_the_normaliser_cannot_set_is_a_note(self, code: str, library: str, reason: str) -> None:
         result = scan_normalised(code, library)
 
         assert result.status == "clean" and result.reasons == [reason]
+
+    def test_a_hand_built_svg_gets_the_canvas(self) -> None:
+        """dendrogram-radial and three more pygal files draw their SVG at 4800x2700 or 3600x3600 by hand."""
+        code = source("""
+            import os
+
+            import cairosvg
+
+            THEME = os.getenv("ANYPLOT_THEME", "light")
+            PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+            df = load_user_data()
+            W, H = 4800, 2700
+            svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}"><rect fill="{PAGE_BG}"/></svg>'
+            cairosvg.svg2png(bytestring=svg.encode(), write_to=f"plot-{THEME}.png")
+        """)
+        before = scan(code, spec_id="scatter-basic", library="pygal", enabled_libraries=SIX_ENABLED)
+
+        assert before.reasons == [
+            "canvas: pygal renders 4800x2700 (the <svg> root at line 9), target 3200x1800; R2 refuses a PNG over its "
+            "pixel cap"
+        ]
+        assert scan_normalised(code, "pygal") == Readiness("clean", [], [])
+
+    @pytest.mark.parametrize(
+        ("save", "reason"),
+        [
+            (
+                'chart.render_to_file(f"plot-{THEME}.png")',  # SVG text in the PNG
+                "savefig-target: render_to_file writes only .html files, not f'plot-{THEME}.png' at line 11",
+            ),
+            (
+                'chart.render_to_png(f"plot-{THEME}.html")',  # a PNG in the HTML
+                "savefig-target: render_to_png writes only .png files, not f'plot-{THEME}.html' at line 11",
+            ),
+        ],
+    )
+    def test_a_save_name_that_writes_another_kind_of_file_is_blocked(self, save: str, reason: str) -> None:
+        code = PYGAL.replace('chart.render_to_png(f"plot-{THEME}.png")', save)
+        result = scan_normalised(code, "pygal")
+
+        assert result.status == "blocked" and reason in result.reasons, result.reasons
 
     def test_a_letsplot_save_without_the_directory_is_blocked(self) -> None:
         """Unnormalised: lets-plot would write into ./lets-plot-images, which the plot sandbox refuses."""

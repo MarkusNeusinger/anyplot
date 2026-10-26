@@ -86,8 +86,11 @@ class SaveRule:
     validator checks one by one). `html` admits a second save of exactly
     `f"plot-{THEME}.html"` next to the PNG, `reopens` a `.open(...)` of the PNG (altair's
     PIL padding block), `directory` the one literal every save passes as `path=`
-    (lets-plot, whose `ggsave` writes into `./lets-plot-images` without it), and `canvas`
-    names the normaliser's canvas rewrite for the library, None where it has none yet.
+    (lets-plot, whose `ggsave` writes into `./lets-plot-images` without it), `writes[name]`
+    the one suffix a save name may write where the names each write one kind of file
+    (pygal: `render_to_file` writes SVG text, so only the HTML; a name not listed writes any
+    target of the rule), and `canvas` names the normaliser's canvas rewrite for the library,
+    None where it has none yet.
     """
 
     names: frozenset[str]
@@ -98,6 +101,7 @@ class SaveRule:
     html: bool = False
     reopens: bool = False
     directory: str | None = None
+    writes: Mapping[str, str] = field(default_factory=lambda: MappingProxyType({}))
     canvas: CanvasRewrite | None = "figure"
 
     @property
@@ -113,6 +117,11 @@ class SaveRule:
 
     def allowed_keywords(self, name: str) -> frozenset[str] | None:
         return self.keywords.get(name)
+
+    def writes_suffix(self, name: str, suffix: str) -> bool:
+        """Whether the save name `name` may write a file ending in `suffix` (`PNG_SUFFIX` or `HTML_SUFFIX`)."""
+        only = self.writes.get(name)
+        return only is None or only == suffix
 
 
 _PLOTNINE_SAVE_KEYWORDS = frozenset({"filename", "format", "width", "height", "units", "dpi", "limitsize", "verbose"})
@@ -185,10 +194,14 @@ SAVE_RULES: Mapping[str, SaveRule] = MappingProxyType(
             keywords=_PYGAL_SAVE_KEYWORDS,
             keyword_only=frozenset({"svg2png"}),
             html=True,
+            writes=MappingProxyType(
+                {"render_to_png": PNG_SUFFIX, "svg2png": PNG_SUFFIX, "render_to_file": HTML_SUFFIX}
+            ),
             canvas="pygal",
         ),
-        # `ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)` and the same call for the HTML, in every one of the
-        # 325 catalogue files; the file is the second positional or `filename=`.
+        # `ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)` and the same call for the HTML: every one of the 325
+        # catalogue files saves both, the file as the second positional or `filename=`; 292 pass `path="."`, and the
+        # normaliser adds it to the other saves.
         "letsplot": SaveRule(
             names=frozenset({"ggsave"}),
             target_keywords=frozenset({"filename"}),

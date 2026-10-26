@@ -419,6 +419,11 @@ def sandbox_env(
     the configured one is on. Without a row (a data run, a conversion, the tests' direct calls) the
     Python settings and the configured limits apply.
 
+    A row's value replaces a matplotlib setting but never a fixed key, which come after it: `PATH`
+    stays `SANDBOX_PATH`, the path the toolchain check and the image's delegate check (ci-image.yml)
+    read, and `HOME`, the bytecode switch, the BLAS threads and the limit variables stay the
+    renderer's, as in the local backend (`PythonRuntime.env`).
+
     A data run or a conversion (`theme` None) gets no theme and no matplotlib settings: it imports no plotting
     library. A conversion also gets Arrow's system allocator (`ARROW_DEFAULT_MEMORY_POOL=system`), so pyarrow's
     buffers come from the same `malloc` as everything else under the address-space limit; with the bundled
@@ -437,9 +442,9 @@ def sandbox_env(
             **(command.env if command is not None else {}),
         }
     env = {
+        **plot,
         "PATH": SANDBOX_PATH,
         "HOME": "/tmp",
-        **plot,
         "PYTHONDONTWRITEBYTECODE": "1",
         # One BLAS thread: Agg renders on one core, and every thread reserves address
         # space under RLIMIT_AS and counts toward RLIMIT_NPROC.

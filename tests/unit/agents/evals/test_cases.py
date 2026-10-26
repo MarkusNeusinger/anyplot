@@ -30,7 +30,7 @@ def test_every_committed_case_loads() -> None:
     cases = load_cases(promoted_dir=Path("/nonexistent"))
 
     stress = [case for case in cases if "stress" in case.tags]
-    assert len(cases) - len(stress) == 247  # 240 generated plus the seven hand-written cases
+    assert len(cases) - len(stress) == 367  # 360 generated plus the seven hand-written cases
     assert len(stress) == 23 and all(case.case_id.startswith("stress-") for case in stress)
     assert [case.case_id for case in cases] == sorted(case.case_id for case in cases)
     assert {case.origin for case in cases} == {"fixtures"}
@@ -72,15 +72,15 @@ def test_selection_by_smoke_full_and_globs() -> None:
     cases = load_cases(promoted_dir=Path("/nonexistent"))
 
     smoke = select_cases(cases, "smoke")
-    assert len(smoke) == 14 and all("smoke" in case.tags for case in smoke)
+    assert len(smoke) == 16 and all("smoke" in case.tags for case in smoke)
     full = select_cases(cases, "full")
-    assert len(full) == 247 and full == [case for case in cases if "stress" not in case.tags]
+    assert len(full) == 367 and full == [case for case in cases if "stress" not in case.tags]
     stress = select_cases(cases, "stress")
     assert len(stress) == 23 and all("stress" in case.tags for case in stress)
     assert len(select_cases(cases, "stress-compute-*")) == 3
     assert len(select_cases(cases, "*-seaborn-n5000")) == 10
     picked = select_cases(cases, "pie-basic-*, scatter-basic-matplotlib")
-    assert len(picked) == 25 and picked[-1].case_id == "scatter-basic-matplotlib"  # 24 pie-basic cases, four libraries
+    assert len(picked) == 37 and picked[-1].case_id == "scatter-basic-matplotlib"  # 36 pie-basic cases, six libraries
     assert select_cases(cases, "nothing-*") == []
 
 

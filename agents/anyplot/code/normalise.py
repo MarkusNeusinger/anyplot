@@ -22,9 +22,12 @@ these rewrites, in the order `_steps` runs them, each only when it applies:
    files) becomes one parenthesised `from lets_plot import (...)` of exactly the names the
    module looks up as globals and does not bind itself (`symtable`), taken from
    `letsplot_names.LETS_PLOT_NAMES` without importing lets_plot, in ruff's
-   order-by-type. A second star import, a `global` statement or a lets-plot name read
-   before the file binds it leaves the star import in place with a note (0 catalogue
-   files, 2026-10-26).
+   order-by-type (natural order, `scale_x_log2` before `scale_x_log10`). The star import
+   stays in place with a note when it is not a module-level statement or shares its line
+   with other code, when the file has a second star import or a `global` statement, or
+   when a lets-plot name the file binds itself may be read before that binding has surely
+   run: above it, in the binding statement itself (`labs = labs(...)`), or outside the
+   `if`, loop or `try` block that binds it (0 catalogue files, 2026-10-26).
 3. **Save target.** A target that is a path whose file name is the theme f-string,
    such as `os.path.join(script_dir, f"plot-{THEME}.png")`, `OUT / f"plot-{THEME}.png"`,
    `f"{script_dir}/plot-{THEME}.png"`, or a module-level name assigned one of those
@@ -43,8 +46,8 @@ these rewrites, in the order `_steps` runs them, each only when it applies:
    `ggsave` return value), is made only of `if`, `for`, `try` (each `except` only
    `pass`), expressions, assignments and `import shutil` or `pathlib`, and calls only
    `EPILOGUE_CALLS` and `EPILOGUE_METHODS` goes, with the names bound to the directory and
-   an `import shutil` that nothing kept uses; `png_path = ggsave(...)` whose name only fed
-   the epilogue becomes the bare save. Any other statement that mentions the directory
+   an `import shutil` that nothing kept uses; every `png_path = ggsave(...)` whose name
+   only fed the epilogue becomes the bare save. Any other statement that mentions the directory
    stays with a note, and the SECURITY validator blocks the file.
 5. **HTML and SVG writes** (pygal only). A module-level `with open(<f"plot-{THEME}.html"
    or a path to it>, "wb" | "w") as f:` whose one statement writes `X.render()` (mode
@@ -52,20 +55,25 @@ these rewrites, in the order `_steps` runs them, each only when it applies:
    becomes `X.render_to_file(f"plot-{THEME}.html")`, which writes the same bytes (158
    catalogue files; the HTML and the PNG were byte-identical on all 156 that run,
    2026-10-25). Every other module-level `open()` write of the theme `.html` or `.svg`
-   file (a hand-built page, a post-processed SVG) and every `X.render_to_file(<theme
-   .svg>)` goes, unless the same target is named again elsewhere in the file, and so do
-   the module-level assignments that only fed a removed write, repeated until none is
-   left (never one that holds a save call). The SECURITY validator has no pinnable form
-   for an `open()` write, and the plot sandbox refuses `.svg` files.
+   file (a hand-built page, a post-processed SVG; besides its writes, the body may assign
+   names that nothing outside it reads, as heatmap-basic's `pygal_svg = chart.render(...)`
+   does) and every `X.render_to_file(<theme .svg>)` goes, unless the same target is named
+   again elsewhere in the file, and so do the module-level assignments that only fed a
+   removed write, repeated until none is left (never one that holds a save call). The
+   step then runs again until it changes nothing, because a removed feeder can free a
+   target that was named again. The SECURITY validator has no pinnable form for an
+   `open()` write, and the plot sandbox refuses `.svg` files.
 6. **Guards.** A file named `matplotlib.py`, `seaborn.py` or `pygal.py` shadows the
    installed package when run from its own directory, so many catalogue files strip
    their directory from `sys.path` first. The run form is `plot.py`, so the guard goes,
    in three steps. `X = importlib.util.find_spec("pkg")` followed by
    `if X and X.origin != __file__:` whose branch holds only imports becomes those imports
    (the branch the run form takes), and `X` goes once unused. A module-level `try:` of
-   imports only, with no `except` or `else`, whose `finally:` only changes `sys.path`,
-   becomes its imports. Then every module-level statement that only changes `sys.path`
-   or `sys.modules` (an assignment to `sys.path`, `sys.dont_write_bytecode = ...`, a
+   imports only, with no `except` or `else`, whose `finally:` holds only guard statements
+   (the ones the next step removes: a change of `sys.path` or `sys.modules`, or
+   `sys.dont_write_bytecode = ...`), becomes its imports. Then every module-level
+   statement that only changes `sys.path` or `sys.modules` (an assignment to
+   `sys.path`, `sys.dont_write_bytecode = ...`, a
    `sys.path.*()` or `sys.modules.*()` call, `del sys.modules[...]`, or an `if`, `for`,
    `while` or `try` holding only such statements, private helper assignments and
    `pass`), whatever `sys` is imported as, goes. Then every module-level assignment that
@@ -99,17 +107,25 @@ these rewrites, in the order `_steps` runs them, each only when it applies:
      target within 16 px, or when a savefig takes `**kwargs`, `bbox_inches` and the dpi
      stay as they are and a note says why.
    * pygal (`pygal`): the PNG is the chart's `width` x `height` (pygal's 800x600 when
-     neither is set), or the output size of a `cairosvg.svg2png` save. 98 catalogue
+     neither is set), or the output size of a `cairosvg.svg2png` save (a literal, or a
+     module-level name bound once to one, as in ecg-twelve-lead). 98 catalogue
      charts are 4800x2700 and 4 are 3600x3600 (files from May 2026), over R2's pixel cap.
      A chart whose literal size has exactly the 16:9 or 1:1 aspect keeps its size, so the
      layout stays, and its protected save renders the target instead:
      `X.render_to_png(f"plot-{THEME}.png")` becomes `cairosvg.svg2png(bytestring=
      X.render(), write_to=f"plot-{THEME}.png", output_width=3200, output_height=1800)`
-     (with `import cairosvg` added where the file lacks it), and an `svg2png` save gets
-     the two keywords. The chart is the one the save renders (traced through `render`,
-     `encode`, `decode`, `replace` and module-level names bound to them), else the
-     file's only chart; a computed size, another aspect or several charts leave the save
-     alone with a note.
+     (with `import cairosvg` added where the file imports none above the save), and an
+     `svg2png` save gets the two keywords. The chart is the one the save renders (traced
+     through `render`, `encode`, `decode`, `replace` and module-level names bound to
+     them). An `svg2png` whose bytestring traces to no chart renders the root `<svg>` its
+     string literals build, sized by `width=` and `height=` literals or by module-level
+     numbers they interpolate (dendrogram-radial, histogram-2d, upset-basic and
+     ternary-density draw their SVG by hand at 4800x2700 or 3600x3600); failing both,
+     the file's only chart. A computed size, a size set after the constructor (a store to
+     `chart.width` or `chart.height`, a `chart.config(...)` call, a `pygal.Config`
+     argument, a `render()` keyword), another aspect, several charts or a save that
+     writes no PNG leave the save alone with a note, and the size is then unknown, never
+     pygal's 800x600.
    * lets-plot (`letsplot`): only `scale=` on the protected PNG save changes, never
      `ggsize` or `w`/`h`, so text and ticks keep their size relative to the plot. The
      size is the literal `ggsize` in the saved plot's `+` chain, else the file's only
@@ -117,9 +133,13 @@ these rewrites, in the order `_steps` runs them, each only when it applies:
      `ggbunch` without a `ggsize` of their own size themselves from their panels and are
      left alone with a note. lets-plot renders `floor(size * scale)` (scale 2 by default,
      1 with `w`/`h` or `dpi=`; `w`/`h` in px, or in `unit` at `dpi`, 300 by default).
+     The model is exact for px, for `dpi=` and for the default scale; `w`/`h` in a
+     physical unit can land one pixel short of it (lets-plot 4.11.0 renders
+     `w=16, h=9, unit="in", dpi=100, scale=2` at 3200x1799, within the 16 px).
      The scale is the shortest decimal that renders the target exactly, else one within
      16 px; when none does and the render is over R2's pixel cap, the shortest decimal
-     that fits it inside the nearer target (R3 pads the rest).
+     that fits it inside the nearer target, the largest of its length (mosaic-categorical:
+     1.875, 3000x1800; R3 pads the rest).
    * plotnine and altair (None): plotnine sizes the canvas on its save (`width=`,
      `height=`, `units=`, `dpi=`, 3200x1800 in most catalogue files) and altair through
      its chart's `width` and `height` times `scale_factor`, padded by its PIL block, so
@@ -184,6 +204,9 @@ PYGAL_PASSTHROUGH = frozenset({"render", "encode", "decode", "replace"})
 catalogue file's `replace` on the SVG text touches its `viewBox` or a size (2026-10-26)."""
 PYGAL_NOT_CHARTS = frozenset({"Config"})
 """Capitalised names of the pygal module that are no chart class (`pygal.Config` carries settings)."""
+PYGAL_RENDER_KEYWORDS = frozenset({"is_unicode"})
+"""The one `render()` keyword that leaves the chart's config alone; every other one goes into it (`width=`)."""
+PYGAL_SIZE_ATTRIBUTES = frozenset({"width", "height"})
 CAIROSVG = "cairosvg"
 
 LETSPLOT_SAVE = "ggsave"
@@ -223,8 +246,12 @@ EPILOGUE_MODULES = frozenset({"shutil", "pathlib"})
 
 _MODULE_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*")
 _COMMA_GAP = re.compile(r"\s*,\s*")
+_DIGITS = re.compile(r"(\d+)")
 _LINE_TAIL = re.compile(r"\s*,?\s*(?:#.*)?")
 _WHITESPACE = re.compile(r"\s+")
+_SVG_START_TAG = re.compile(r"<svg(?=[\s/>])([^>]*)>")  # an `<svg ...>` start tag and its attributes
+_SVG_PIXELS = re.compile(r"\s*(\d+(?:\.\d+)?)\s*(?:px)?\s*")
+_SVG_HOLE = re.compile(r"\s*\x00(\d+)\x00\s*(?:px)?\s*")  # a `{W}` of an f-string, as `_template` marks it
 # `[<descriptive> · ]<spec-id> · [<language> · ]<library> · anyplot.ai`, also with the
 # legacy `pyplots.ai`, or with the descriptive part ended by a newline instead of ` · `.
 _CATALOGUE_TITLE = re.compile(
@@ -251,11 +278,11 @@ class Canvas:
     """The canvas a source renders, as far as its literals tell.
 
     `pixels` is what the library writes: for matplotlib `figsize` at `dpi`, each side
-    truncated to whole pixels as `RendererAgg` does; for pygal the chart's size or the
-    `svg2png` output size, rounded as cairosvg does; for lets-plot the plot size times
-    the scale, floored. `figsize` and `dpi` are matplotlib's only. `target` is the nearer
-    of the two canvases (the impl-review.yml rule). `note` is None exactly when
-    `pixels == target`.
+    truncated to whole pixels as `RendererAgg` does; for pygal the chart's or the root
+    `<svg>`'s size, or the `svg2png` output size, rounded as cairosvg does; for lets-plot
+    the plot size times the scale, floored. `figsize` and `dpi` are matplotlib's only.
+    `target` is the nearer of the two canvases (the impl-review.yml rule). `note` is None
+    exactly when `pixels == target`.
     """
 
     figsize: tuple[Number, Number] | None
@@ -488,6 +515,22 @@ def _nicest(low: Fraction, high: Fraction, accept: Callable[[float], bool]) -> s
     return None
 
 
+def _nicest_up_to(low: Fraction, high: Fraction, accept: Callable[[float], bool]) -> str | None:
+    """The shortest decimal literal in `[low, high]` that `accept`s, the largest of its length (`high` itself when
+    it is short enough), an integer first."""
+    for decimals in range(MAX_DPI_DECIMALS + 1):
+        scale = 10**decimals
+        numerator = math.floor(high * scale)
+        if Fraction(numerator, scale) < low:
+            continue
+        literal = str(numerator) if decimals == 0 else f"{numerator // scale}.{numerator % scale:0{decimals}d}"
+        if decimals and literal.endswith("0"):
+            continue  # the same value was tried with fewer decimals
+        if accept(float(literal)):
+            return literal
+    return None
+
+
 def _size_value(value: object) -> tuple[Number, Number] | None:
     if not isinstance(value, tuple | list) or len(value) != 2:
         return None
@@ -675,14 +718,30 @@ def _last_assignment(body: list[ast.stmt], name: str, before: int) -> ast.expr |
     return values[-1] if values else None
 
 
-def _pygal_size(tree: ast.Module, call: ast.Call, name: str) -> tuple[tuple[Number, Number] | None, str]:
-    """The size of the chart the PNG save renders and where it came from, or None and why not."""
+@dataclass(frozen=True, slots=True)
+class _PygalSize:
+    """The size the PNG save renders before any output size: `subject` is what has it, `source` where it is set."""
+
+    size: tuple[Number, Number]
+    subject: str  # "pygal chart" or "hand-built SVG"
+    source: str  # "the saved chart at line 9", "the <svg> root at line 244"
+
+
+def _pygal_size(tree: ast.Module, call: ast.Call, name: str) -> _PygalSize | str:
+    """The size of what the PNG save renders and where it came from, or why it is not known.
+
+    The chart is traced from the save through `PYGAL_PASSTHROUGH` and module-level names.
+    An `svg2png` whose bytestring traces to no chart takes the size of the root `<svg>`
+    that its string literals build (`_svg_root_size`); failing that, the file's only
+    chart is the one it renders.
+    """
     aliases = _pygal_aliases(tree)
     node: ast.expr | None = None
     if name == "render_to_png" and isinstance(call.func, ast.Attribute):
         node = call.func.value
     elif name == "svg2png":
         node = next((kw.value for kw in call.keywords if kw.arg == "bytestring"), None)
+    start = node
     seen: set[str] = set()
     chart: ast.Call | None = None
     while node is not None:
@@ -690,6 +749,8 @@ def _pygal_size(tree: ast.Module, call: ast.Call, name: str) -> tuple[tuple[Numb
             chart = node
             break
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in PYGAL_PASSTHROUGH:
+            if node.func.attr == "render" and any(kw.arg not in PYGAL_RENDER_KEYWORDS for kw in node.keywords):
+                return f"the render at line {node.lineno} takes keywords that may set the chart's size"
             node = node.func.value
         elif isinstance(node, ast.Name) and node.id not in seen:
             seen.add(node.id)
@@ -698,42 +759,255 @@ def _pygal_size(tree: ast.Module, call: ast.Call, name: str) -> tuple[tuple[Numb
             node = None
     source = "the saved chart"
     if chart is None:
+        if name == "svg2png" and start is not None:
+            root = _svg_root_size(tree, start, call.lineno)
+            if root is not None:
+                return root
         charts = [node for node in ast.walk(tree) if _is_pygal_chart(node, aliases) and isinstance(node, ast.Call)]
         if len(charts) != 1:
-            return None, f"{len(charts)} pygal charts in the file, none traced from the save at line {call.lineno}"
+            others = f" (the file has {len(charts)})" if charts else ""
+            return f"no pygal chart traced from the save at line {call.lineno}{others}"
         chart, source = charts[0], "the file's only chart"
     if chart.args or any(kw.arg is None for kw in chart.keywords):
-        return None, f"the chart at line {chart.lineno} takes positional arguments or **kwargs"
+        return f"the chart at line {chart.lineno} takes positional arguments (a pygal.Config) or **kwargs"
+    late = _pygal_late_size(tree, chart)
+    if late is not None:
+        return late
     sides: list[Number] = []
     for side, default in zip(("width", "height"), PYGAL_DEFAULT_SIZE, strict=True):
         keyword = next((kw for kw in chart.keywords if kw.arg == side), None)
         value = as_number(_keyword_literal(keyword)[0]) if keyword is not None else default
+        if value is None and keyword is not None and isinstance(keyword.value, ast.Name):
+            value = _module_number(tree, keyword.value.id)  # contour-basic's `width=CANVAS_W`
         if value is None or value <= 0:
-            return None, f"the chart's {side}= at line {chart.lineno} is not a positive numeric literal"
+            return (
+                f"the chart's {side}= at line {chart.lineno} is not a positive number or a module-level name bound "
+                "once to one"
+            )
         sides.append(value)
-    return (sides[0], sides[1]), f"{source} at line {chart.lineno}"
+    return _PygalSize((sides[0], sides[1]), "pygal chart", f"{source} at line {chart.lineno}")
 
 
-def _pygal_pixels(call: ast.Call, name: str, size: tuple[Number, Number]) -> tuple[int, int] | str:
-    """The PNG size the save writes for a chart of `size` (cairosvg's `int(round(...))`), or why it is not known."""
-    width, height = float(size[0]), float(size[1])
-    if name != "svg2png":
-        return round(width), round(height)
+def _pygal_late_size(tree: ast.Module, chart: ast.Call) -> str | None:
+    """Why the chart's size may not be its constructor's, or None: a `config=` (a `pygal.Config`), a store to its
+    `width` or `height` (also through `.config`), or a call of its `config(...)`. pygal reads them all at render."""
+    if any(kw.arg == "config" for kw in chart.keywords):
+        return f"the chart at line {chart.lineno} takes a pygal.Config, which may set its size"
+    names = {
+        target.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Assign) and node.value is chart
+        for target in node.targets
+        if isinstance(target, ast.Name)
+    }
+    grown = bool(names)
+    while grown:  # `c = chart`
+        aliases = {
+            target.id
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Assign) and isinstance(node.value, ast.Name) and node.value.id in names
+            for target in node.targets
+            if isinstance(target, ast.Name)
+        }
+        grown = not aliases <= names
+        names |= aliases
+
+    def is_chart(node: ast.expr) -> bool:
+        if isinstance(node, ast.Attribute) and node.attr == "config":
+            node = node.value
+        return isinstance(node, ast.Name) and node.id in names
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Store) and node.attr in PYGAL_SIZE_ATTRIBUTES:
+            if is_chart(node.value):
+                return f"{ast.unparse(node)} at line {node.lineno} sets the chart's size after its constructor"
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "config":
+            if is_chart(node.func.value):
+                call = f"{ast.unparse(node.func)}(...)"
+                return f"{call} at line {node.lineno} may set the chart's size after its constructor"
+    return None
+
+
+def _svg_root_size(tree: ast.Module, start: ast.expr, before: int) -> _PygalSize | str | None:
+    """The size of the root `<svg>` that the string literals feeding `start` build, or why it cannot be read.
+
+    None when no literal holds an `<svg` start tag. The tag must be the only one among
+    the literals and lie within one of them; its `width=` and `height=` must be numbers
+    (`px` allowed) or interpolate a module-level name bound once to a number
+    (dendrogram-radial's `W, H = 4800, 2700`). cairosvg renders that size when the save
+    sets no output size.
+    """
+    literals = _svg_literals(tree, start, before)
+    tags: list[tuple[ast.expr, str, list[ast.FormattedValue]]] = []
+    for literal in literals:
+        template, holes = _template(literal)
+        tags += [(literal, match.group(1), holes) for match in _SVG_START_TAG.finditer(template)]
+    if not tags:
+        return None
+    if len(tags) > 1:
+        lines = ", ".join(str(line) for line in sorted({literal.lineno for literal, _, _ in tags}))
+        return f"no pygal chart traced from the save at line {before}, and {len(tags)} <svg> tags at line {lines}"
+    literal, attributes, holes = tags[0]
+    where = f"the <svg> root at line {literal.lineno}"
+    sides: list[Number] = []
+    for side in ("width", "height"):
+        match = re.search(rf"(?<![\w:-]){side}\s*=\s*([\"'])(.*?)\1", attributes)
+        value = _svg_length(tree, match.group(2), holes) if match else None
+        if value is None:
+            return f"{where} has no {side}= of a number or a module-level name bound once to one"
+        sides.append(value)
+    return _PygalSize((sides[0], sides[1]), "hand-built SVG", where)
+
+
+def _svg_literals(tree: ast.Module, start: ast.expr, before: int) -> list[ast.expr]:
+    """The string literals (`str` constants and f-strings) that build the text `start` evaluates to.
+
+    They are `start`'s own and, for every name it reads, those of the statements above
+    line `before` (outside function and class bodies) that bind the name or extend it
+    (`svg = ...`, `svg += ...`, `parts.append(...)`, `.extend`, `.insert`), transitively.
+    A `PYGAL_PASSTHROUGH` call hands on its receiver only.
+    """
+    statements: list[ast.stmt] = []
+    pending: list[ast.stmt] = list(tree.body)
+    while pending:
+        stmt = pending.pop()
+        if isinstance(stmt, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) or stmt.lineno >= before:
+            continue
+        statements.append(stmt)
+        pending.extend(child for child in ast.iter_child_nodes(stmt) if isinstance(child, ast.stmt))
+        if isinstance(stmt, ast.Try):
+            pending.extend(inner for handler in stmt.handlers for inner in handler.body)
+
+    def feeders(name: str) -> list[ast.expr]:
+        values: list[ast.expr] = []
+        for stmt in statements:
+            if isinstance(stmt, ast.Assign) and any(_binds_name(target, name) for target in stmt.targets):
+                values.append(stmt.value)
+            elif isinstance(stmt, ast.AnnAssign | ast.AugAssign) and stmt.value is not None:
+                if _binds_name(stmt.target, name):
+                    values.append(stmt.value)
+            elif isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
+                func = stmt.value.func
+                if isinstance(func, ast.Attribute) and func.attr in ("append", "extend", "insert"):
+                    if isinstance(func.value, ast.Name) and func.value.id == name:
+                        values.extend(stmt.value.args)
+        return values
+
+    found: list[ast.expr] = []
+    seen: set[str] = set()
+    stack: list[ast.AST] = [start]
+    while stack:
+        node = stack.pop()
+        if isinstance(node, ast.Constant):
+            if isinstance(node.value, str):
+                found.append(node)
+        elif isinstance(node, ast.JoinedStr):
+            found.append(node)
+            stack.extend(part.value for part in node.values if isinstance(part, ast.FormattedValue))
+        elif (
+            isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in PYGAL_PASSTHROUGH
+        ):
+            stack.append(node.func.value)
+        elif isinstance(node, ast.Name):
+            if node.id not in seen:
+                seen.add(node.id)
+                stack.extend(feeders(node.id))
+        elif not isinstance(node, ast.Lambda):
+            stack.extend(ast.iter_child_nodes(node))
+    return found
+
+
+def _binds_name(target: ast.expr, name: str) -> bool:
+    """Whether an assignment target binds `name`, also inside a tuple or list target."""
+    if isinstance(target, ast.Tuple | ast.List):
+        return any(_binds_name(element, name) for element in target.elts)
+    return isinstance(target, ast.Name) and target.id == name
+
+
+def _template(literal: ast.expr) -> tuple[str, list[ast.FormattedValue]]:
+    """A string literal's text with each `{...}` of an f-string as a `\\x00<n>\\x00` hole, and the holes."""
+    if isinstance(literal, ast.Constant):
+        return str(literal.value), []
+    parts: list[str] = []
+    holes: list[ast.FormattedValue] = []
+    for part in literal.values if isinstance(literal, ast.JoinedStr) else []:
+        if isinstance(part, ast.FormattedValue):
+            parts.append(f"\x00{len(holes)}\x00")
+            holes.append(part)
+        elif isinstance(part, ast.Constant):
+            parts.append(str(part.value))
+    return "".join(parts), holes
+
+
+def _svg_length(tree: ast.Module, text: str, holes: list[ast.FormattedValue]) -> Number | None:
+    """An `<svg>` width or height in px: `4800`, `4800px`, or `{W}` (and `{W}px`) of a module-level number."""
+    plain = _SVG_PIXELS.fullmatch(text)
+    if plain:
+        value: Number | None = float(plain.group(1)) if "." in plain.group(1) else int(plain.group(1))
+        return value if value else None
+    hole = _SVG_HOLE.fullmatch(text)
+    if hole is None:
+        return None
+    part = holes[int(hole.group(1))]
+    if part.conversion != -1 or part.format_spec is not None or not isinstance(part.value, ast.Name):
+        return None
+    return _module_number(tree, part.value.id)
+
+
+def _module_number(tree: ast.Module, name: str) -> Number | None:
+    """The positive number a module-level `name = <literal>` (also `a, name = <literals>` or `a = name = <literal>`)
+    binds, when that is the only binding of `name` in the file."""
+    sites = [node for bound, _, node in _binding_sites(tree) if bound == name]
+    if len(sites) != 1:
+        return None
+    for stmt in tree.body:
+        if not isinstance(stmt, ast.Assign):
+            continue
+        value = stmt.value
+        for target in stmt.targets:  # also `W = H = 2400`
+            if isinstance(target, ast.Tuple) and isinstance(value, ast.Tuple) and len(target.elts) == len(value.elts):
+                pairs = list(zip(target.elts, value.elts, strict=True))
+            else:
+                pairs = [(target, value)]
+            for element, literal in pairs:
+                if element is sites[0]:
+                    number = as_number(_literal_value(literal))
+                    return number if number is not None and number > 0 else None
+    return None
+
+
+def _pygal_output(tree: ast.Module, call: ast.Call, name: str) -> dict[str, Number] | str:
+    """`svg2png`'s `output_width=`, `output_height=` and `scale=` (numeric literals, or module-level names bound once
+    to one: ecg-twelve-lead's `WIDTH, HEIGHT = 3200, 1800`), or why one is neither."""
     values: dict[str, Number] = {}
+    if name != "svg2png":
+        return values
     for keyword in call.keywords:
         if keyword.arg in ("output_width", "output_height", "scale"):
             value = as_number(_keyword_literal(keyword)[0])
+            if value is None and isinstance(keyword.value, ast.Name):
+                value = _module_number(tree, keyword.value.id)
             if value is None:
-                return f"svg2png {keyword.arg}= at line {keyword.lineno} is not a numeric literal"
+                where = f"svg2png {keyword.arg}= at line {keyword.lineno}"
+                return f"{where} is not a number or a module-level name bound once to one"
             values[keyword.arg] = value
-    out_width, out_height = values.get("output_width"), values.get("output_height")
+    return values
+
+
+def _pygal_pixels(output: dict[str, Number], size: tuple[Number, Number] | None) -> tuple[int, int] | None:
+    """The PNG size the save writes (cairosvg's `int(round(...))`): both output sizes, else `size` scaled by the one
+    output size or by `scale=`; None when that needs `size` and it is not known."""
+    out_width, out_height = output.get("output_width"), output.get("output_height")
     if out_width and out_height:
         return round(out_width), round(out_height)
+    if size is None:
+        return None
+    width, height = float(size[0]), float(size[1])
     if out_width:
         return round(out_width), round(height * out_width / width)
     if out_height:
         return round(width * out_height / height), round(out_height)
-    scale = values.get("scale", 1)
+    scale = output.get("scale", 1)
     return round(width * scale), round(height * scale)
 
 
@@ -743,30 +1017,45 @@ def _exact_target(size: tuple[Number, Number]) -> tuple[int, int] | None:
     return next((target for target in TARGETS if aspect == Fraction(*target)), None)
 
 
-def _measure_pygal(code: str) -> Canvas:
+def _pygal_save(code: str) -> tuple[ast.Module, SourceIndex, SavefigCall, ast.Call] | str:
+    """The protected PNG save and its call, or why there is none that renders a PNG."""
     tree = ast.parse(code)
     index = SourceIndex(code)
-    regions = find_regions(code, tree, library="pygal")
-    save = regions.savefig
+    save = find_regions(code, tree, library="pygal").savefig
     call = _save_call(tree, index, save) if save is not None and save.standard_target else None
     if save is None or call is None:
-        return Canvas(None, None, None, None, 'no module-level save of f"plot-{THEME}.png"')
-    size, source = _pygal_size(tree, call, save.name)
-    if size is None:
-        return Canvas(None, None, None, None, f"pygal canvas unknown: {source}")
-    pixels = _pygal_pixels(call, save.name, size)
-    if isinstance(pixels, str):
-        return Canvas(None, None, None, None, f"pygal canvas unknown: {pixels}")
+        return 'no module-level save of f"plot-{THEME}.png"'
+    if not save_rule("pygal").writes_suffix(save.name, PNG_SUFFIX):
+        return f"the {save.name} at {save.span.lines()} writes no PNG"
+    return tree, index, save, call
+
+
+def _measure_pygal(code: str) -> Canvas:
+    found = _pygal_save(code)
+    if isinstance(found, str):
+        return Canvas(None, None, None, None, found)
+    tree, _, save, call = found
+    measured = _pygal_size(tree, call, save.name)
+    output = _pygal_output(tree, call, save.name)
+    if isinstance(output, str):
+        return Canvas(None, None, None, None, f"pygal canvas unknown: {output}")
+    pixels = _pygal_pixels(output, measured.size if isinstance(measured, _PygalSize) else None)
+    if pixels is None:
+        return Canvas(None, None, None, None, f"pygal canvas unknown: {measured}")
     target = _nearest_target(pixels)
     if pixels == target:
         return Canvas(None, None, pixels, target, None)
+    source = measured.source if isinstance(measured, _PygalSize) else "the svg2png output size"
     note = f"pygal renders {pixels[0]}x{pixels[1]} ({source}), target {target[0]}x{target[1]}"
     return Canvas(None, None, pixels, target, note)
 
 
-def _svg2png_callee(tree: ast.Module) -> str | None:
-    """How the file names cairosvg's `svg2png` (`cairosvg.svg2png`, `_cairosvg.svg2png`, `svg2png`), if it does."""
+def _svg2png_callee(tree: ast.Module, before: int) -> str | None:
+    """How the file names cairosvg's `svg2png` (`cairosvg.svg2png`, `_cairosvg.svg2png`, `svg2png`) above line
+    `before`, if it does; an import below the save would come too late for it."""
     for stmt in tree.body:
+        if stmt.lineno >= before:
+            break
         if isinstance(stmt, ast.Import):
             for alias in stmt.names:
                 if alias.name == CAIROSVG:
@@ -821,22 +1110,21 @@ def _import_insertion(tree: ast.Module, index: SourceIndex, module: str) -> tupl
 
 
 def _pygal_canvas(code: str) -> StepResult:
-    tree = ast.parse(code)
-    index = SourceIndex(code)
-    regions = find_regions(code, tree, library="pygal")
-    save = regions.savefig
-    call = _save_call(tree, index, save) if save is not None and save.standard_target else None
-    if save is None or call is None:
-        return code, [], ['canvas: no module-level save of f"plot-{THEME}.png"; nothing to normalise']
-    size, source = _pygal_size(tree, call, save.name)
-    if size is None:
-        return code, [], [f"canvas: {source}; the PNG size is left as it is"]
-    pixels = _pygal_pixels(call, save.name, size)
-    if isinstance(pixels, str):
-        return code, [], [f"canvas: {pixels}; the PNG size is left as it is"]
+    found = _pygal_save(code)
+    if isinstance(found, str):
+        return code, [], [f"canvas: {found}; nothing to normalise"]
+    tree, index, save, call = found
+    measured = _pygal_size(tree, call, save.name)
+    output = _pygal_output(tree, call, save.name)
+    if isinstance(output, str):
+        return code, [], [f"canvas: {output}; the PNG size is left as it is"]
+    pixels = _pygal_pixels(output, measured.size if isinstance(measured, _PygalSize) else None)
     if pixels in TARGETS:
         return code, [], []
-    chart = f"pygal chart {size[0]:g}x{size[1]:g} ({source})"
+    if pixels is None or not isinstance(measured, _PygalSize):
+        return code, [], [f"canvas: {measured}; the PNG size is left as it is"]
+    size = measured.size
+    chart = f"{measured.subject} {size[0]:g}x{size[1]:g} ({measured.source})"
     target = _exact_target(size)
     if target is None:
         return code, [], [f"canvas: {chart} has another aspect than 16:9 or 1:1; the PNG size is left as it is"]
@@ -845,7 +1133,7 @@ def _pygal_canvas(code: str) -> StepResult:
         return code, [], [f"canvas: the save at {save.span.lines()} takes *args or **kwargs; left unchanged"]
     edits: list[TextEdit] = []
     changes: list[str] = []
-    callee = _svg2png_callee(tree)
+    callee = _svg2png_callee(tree, call.lineno)
     if save.name == "svg2png":
         sizes = {"output_width": tw, "output_height": th}
         for keyword in call.keywords:
@@ -992,7 +1280,11 @@ def _letsplot_raster(tree: ast.Module, call: ast.Call) -> tuple[tuple[Fraction, 
 
 
 def _letsplot_pixels(size: tuple[Fraction, Fraction], scale: float) -> tuple[int, int]:
-    """lets-plot's raster: each side times the scale, floored (formula probes of 2026-10-26)."""
+    """lets-plot's raster: each side times the scale, floored (formula probes of 2026-10-26).
+
+    Exact for px, `dpi=` and the default scale; for `w`/`h` in a physical unit lets-plot
+    can write one pixel less (3200x1799 for `w=16, h=9, unit="in", dpi=100, scale=2`).
+    """
     return math.floor(float(size[0]) * scale), math.floor(float(size[1]) * scale)
 
 
@@ -1048,7 +1340,12 @@ def _letsplot_canvas(code: str) -> StepResult:
             note = f"canvas: {rendered}; no scale renders 3200x1800 or 2400x2400, so the render relies on the R3 gate"
             return code, [], [note]
         fit = min(Fraction(target[0]) / size[0], Fraction(target[1]) / size[1])
-        literal = _nicest(fit * Fraction(999, 1000), fit, lambda _: True) or str(float(fit))
+
+        def inside(scale: float, t: tuple[int, int] = target) -> bool:
+            pw, ph = _letsplot_pixels(size, scale)
+            return pw <= t[0] and ph <= t[1]
+
+        literal = _nicest_up_to(fit * Fraction(999, 1000), fit, inside) or str(float(fit))
         how = f", inside {target[0]}x{target[1]} under R2's pixel cap"
     keyword = next((kw for kw in call.keywords if kw.arg == "scale"), None)
     if keyword is not None:
@@ -1190,47 +1487,86 @@ def _global_lookups(code: str) -> tuple[set[str], set[str]]:
     return looked_up, bound
 
 
-def _module_bindings(tree: ast.Module) -> dict[str, int]:
-    """The first line on which the module scope binds each name (nested function, class and lambda bodies aside)."""
-    first: dict[str, int] = {}
+def _reads_before_binding(tree: ast.Module, names: set[str]) -> set[str]:
+    """The `names` the module may read where it has not surely bound them yet.
 
-    def bind(name: str, line: int) -> None:
-        first[name] = min(first.get(name, line), line)
+    The statements run in order, and a read is safe once a statement that always runs
+    before it has bound the name: an assignment (also to a tuple or a starred target), an
+    import, a `def` or a `class`, at the module level or earlier in the same block. A
+    statement's own reads come first (`theme = theme(...)`), a function body counts where
+    the function is defined, and a binding inside an `if`, a loop, a `try` or a `match`
+    holds only inside its block (column-stratigraphic binds `margin` in a loop and reads
+    it there); a `with` body always runs. A `:=` binds nothing here.
+    """
+    early: set[str] = set()
 
-    nodes: list[ast.AST] = list(tree.body)
-    while nodes:
-        node = nodes.pop()
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
-            bind(node.name, node.lineno)
-            nodes.extend(node.decorator_list)
-            if isinstance(node, ast.ClassDef):
-                nodes.extend([*node.bases, *node.keywords])
+    def read(node: ast.AST, bound: set[str]) -> None:
+        early.update(
+            n.id
+            for n in ast.walk(node)
+            if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load) and n.id in names and n.id not in bound
+        )
+
+    def targets(node: ast.expr | None) -> set[str]:
+        if isinstance(node, ast.Name):
+            return {node.id}
+        if isinstance(node, ast.Tuple | ast.List):
+            return set().union(*(targets(element) for element in node.elts))
+        return targets(node.value) if isinstance(node, ast.Starred) else set()
+
+    def block(statements: list[ast.stmt], bound: set[str]) -> set[str]:
+        bound = set(bound)
+        for stmt in statements:
+            if isinstance(stmt, ast.If | ast.While):
+                read(stmt.test, bound)
+                block(stmt.body, bound)
+                block(stmt.orelse, bound)
+            elif isinstance(stmt, ast.For | ast.AsyncFor):
+                read(stmt.iter, bound)
+                block(stmt.body, bound | targets(stmt.target))
+                block(stmt.orelse, bound)
+            elif isinstance(stmt, ast.With | ast.AsyncWith):
+                for item in stmt.items:
+                    read(item.context_expr, bound)
+                    bound |= targets(item.optional_vars)
+                bound = block(stmt.body, bound)
+            elif isinstance(stmt, ast.Try | ast.TryStar):
+                after_body = block(stmt.body, bound)
+                for handler in stmt.handlers:
+                    if handler.type is not None:
+                        read(handler.type, bound)
+                    block(handler.body, bound | ({handler.name} if handler.name else set()))
+                block(stmt.orelse, after_body)
+                block(stmt.finalbody, bound)
+            elif isinstance(stmt, ast.Match):
+                read(stmt.subject, bound)
+                for case in stmt.cases:
+                    read(case.pattern, bound)
+                    if case.guard is not None:
+                        read(case.guard, bound)
+                    block(case.body, bound)
             else:
-                nodes.extend([*node.args.defaults, *(d for d in node.args.kw_defaults if d is not None)])
-            continue
-        if isinstance(node, ast.Lambda):
-            nodes.extend([*node.args.defaults, *(d for d in node.args.kw_defaults if d is not None)])
-            continue
-        if isinstance(node, ast.ListComp | ast.SetComp | ast.DictComp | ast.GeneratorExp):
-            nodes.extend(n.target for n in ast.walk(node) if isinstance(n, ast.NamedExpr))  # `:=` binds outside
-            nodes.append(node.generators[0].iter)
-            continue
-        if isinstance(node, ast.Name) and not isinstance(node.ctx, ast.Load):
-            bind(node.id, node.lineno)
-        elif isinstance(node, ast.alias) and node.name != "*":
-            bind((node.asname or node.name).split(".")[0], node.lineno)
-        elif isinstance(node, ast.ExceptHandler | ast.MatchAs | ast.MatchStar) and node.name:
-            bind(node.name, node.lineno)
-        elif isinstance(node, ast.MatchMapping) and node.rest:
-            bind(node.rest, node.lineno)
-        nodes.extend(ast.iter_child_nodes(node))
-    return first
+                read(stmt, bound)
+                if isinstance(stmt, ast.Assign):
+                    bound |= set().union(*(targets(target) for target in stmt.targets))
+                elif isinstance(stmt, ast.AnnAssign | ast.AugAssign) and stmt.value is not None:
+                    bound |= targets(stmt.target)
+                elif isinstance(stmt, ast.Import | ast.ImportFrom):
+                    bound |= {(alias.asname or alias.name).split(".")[0] for alias in stmt.names if alias.name != "*"}
+                elif isinstance(stmt, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
+                    bound.add(stmt.name)
+        return bound
+
+    block(tree.body, set())
+    return early
 
 
-def _import_order(name: str) -> tuple[int, str, str]:
-    """ruff's isort order-by-type: CONSTANT_CASE, then CamelCase, then the rest, case-insensitive within each."""
+def _import_order(name: str) -> tuple[int, list[str | int], str]:
+    """ruff's isort order-by-type: CONSTANT_CASE, then CamelCase, then the rest, each case-insensitive in natural
+    order (`scale_x_log2` before `scale_x_log10`)."""
     group = 0 if name.isupper() and len(name) > 1 else 1 if name[:1].isupper() else 2
-    return group, name.lower(), name
+    natural: list[str | int] = [int(part) if part.isdigit() else part for part in _DIGITS.split(name.lower())]
+    return group, natural, name
 
 
 def _expand_star_import(code: str) -> StepResult:
@@ -1255,20 +1591,9 @@ def _expand_star_import(code: str) -> StepResult:
         looked_up, bound = _global_lookups(code)
     except SyntaxError as exc:
         return code, [], [f"star import: symtable refuses line {exc.lineno}; {where}"]
-    first = _module_bindings(tree)
-    early = sorted(
-        {
-            node.id
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Name)
-            and isinstance(node.ctx, ast.Load)
-            and node.id in LETS_PLOT_NAMES
-            and node.id in bound
-            and node.lineno < first.get(node.id, math.inf)
-        }
-    )
+    early = sorted(_reads_before_binding(tree, bound & LETS_PLOT_NAMES))
     if early:
-        return code, [], [f"star import: {', '.join(early)} is read before the file binds it; {where}"]
+        return code, [], [f"star import: {', '.join(early)} may be read before the file binds it; {where}"]
     index = SourceIndex(code)
     span = index.lines_span(star)
     statement = index.node_span(star)
@@ -1386,12 +1711,12 @@ def _strip_letsplot_epilogue(code: str) -> StepResult:
         return True
 
     images: set[str] = set()  # names bound to the directory or to a path inside it
-    returned: dict[str, ast.Assign] = {}  # `png_path = ggsave(...)`
+    returned: dict[str, list[ast.Assign]] = {}  # every `png_path = ggsave(...)` of each name
     for stmt in body:
         if isinstance(stmt, ast.Assign) and len(stmt.targets) == 1 and isinstance(stmt.targets[0], ast.Name):
             name = stmt.targets[0].id
             if isinstance(stmt.value, ast.Call) and _callee_name(stmt.value.func) in rule.names:
-                returned[name] = stmt
+                returned.setdefault(name, []).append(stmt)
             elif mentions(stmt.value, images) and only_moves(stmt):
                 images.add(name)
     removed: set[int] = set()
@@ -1418,7 +1743,7 @@ def _strip_letsplot_epilogue(code: str) -> StepResult:
                 removed.add(id(stmt))
                 names_gone.append(stmt)
                 grown = True
-    unwrapped = [stmt for name, stmt in returned.items() if name not in kept_loads(stmt)]
+    unwrapped = [stmt for name, stmts in returned.items() for stmt in stmts if name not in kept_loads(stmt)]
     imports_gone = [
         stmt
         for stmt in body
@@ -1550,11 +1875,15 @@ def _pygal_html_once(code: str) -> StepResult:
                 remove |= _with_comments(index, span)
                 changes.append(f"removed the SVG save at {span.lines()}")
             continue
-        write = _theme_write(stmt)
+        if not isinstance(stmt, ast.With):
+            continue
+        read_elsewhere = set().union(*(_loads(other) for other in tree.body if other is not stmt))
+        write = _theme_write(stmt, read_elsewhere, rule.names)
         if write is None:
             continue
-        target, suffix, mode, utf8, values = write
-        receiver = _render_receiver(values[0], mode) if suffix == HTML_SUFFIX and len(values) == 1 and utf8 else None
+        target, suffix, mode, utf8, values, assignments = write
+        single = len(values) == 1 and not assignments
+        receiver = _render_receiver(values[0], mode) if suffix == HTML_SUFFIX and single and utf8 else None
         kind = suffix.removeprefix(".").upper()
         if receiver is not None:
             name = code[index.node_span(receiver).start : index.node_span(receiver).end]
@@ -1603,9 +1932,13 @@ def _pygal_html_once(code: str) -> StepResult:
     return _rewrite_lines(code, remove, replace), changes, notes
 
 
-def _theme_write(stmt: ast.stmt) -> tuple[ast.expr, str, str, bool, list[ast.expr]] | None:
-    """`(target, suffix, mode, utf8, values)` for `with open(<theme .html or .svg path>, "w"|"wb") as f:` whose body
-    only writes to `f` (`values` are what it writes), else None."""
+def _theme_write(
+    stmt: ast.stmt, read_elsewhere: set[str], saves: frozenset[str]
+) -> tuple[ast.expr, str, str, bool, list[ast.expr], int] | None:
+    """`(target, suffix, mode, utf8, values, assignments)` for `with open(<theme .html or .svg path>, "w"|"wb") as f:`
+    whose body writes to `f` (`values` are what it writes) and otherwise only assigns names that no statement outside
+    it reads (`read_elsewhere`) with values that hold no save call (`saves`), such as heatmap-basic's
+    `pygal_svg = chart.render(...)` before the write; else None."""
     if not (isinstance(stmt, ast.With) and len(stmt.items) == 1):
         return None
     item = stmt.items[0]
@@ -1621,7 +1954,19 @@ def _theme_write(stmt: ast.stmt) -> tuple[ast.expr, str, str, bool, list[ast.exp
     if suffix is None or mode not in ("w", "wb") or handle is None:
         return None
     values: list[ast.expr] = []
+    assignments = 0
     for inner in stmt.body:
+        names = _assigned(inner) or (
+            {inner.target.id} if isinstance(inner, ast.AugAssign) and isinstance(inner.target, ast.Name) else set()
+        )
+        if names:
+            value = inner.value if isinstance(inner, ast.Assign | ast.AnnAssign | ast.AugAssign) else None
+            if handle in names or names & read_elsewhere or value is None:
+                return None
+            if any(isinstance(n, ast.Call) and _callee_name(n.func) in saves for n in ast.walk(value)):
+                return None
+            assignments += 1
+            continue
         if not (isinstance(inner, ast.Expr) and _is_call(inner.value, "write") and isinstance(inner.value, ast.Call)):
             return None
         write = inner.value
@@ -1630,9 +1975,11 @@ def _theme_write(stmt: ast.stmt) -> tuple[ast.expr, str, str, bool, list[ast.exp
         if write.func.value.id != handle or len(write.args) != 1 or write.keywords:
             return None
         values.append(write.args[0])
+    if not values:
+        return None
     encodings = [kw.value for kw in call.keywords if kw.arg == "encoding"]
     utf8 = all(isinstance(e, ast.Constant) and str(e.value).lower() in ("utf-8", "utf8") for e in encodings)
-    return target, suffix, mode, utf8, values
+    return target, suffix, mode, utf8, values, assignments
 
 
 # --- guards and file paths ---------------------------------------------------------------

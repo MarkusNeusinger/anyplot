@@ -722,6 +722,65 @@ def test_pygal_feeder_with_a_save_call_stays() -> None:
     assert "png = chart.render_to_png()" in result and "open(" not in result
 
 
+def test_pygal_html_page_that_assigns_inside_its_block_goes() -> None:
+    """heatmap-basic renders the chart into a name inside the `with` and writes a page around it."""
+    code = pygal_code("""
+        chart = pygal.XY(width=3200, height=1800)
+        chart.render_to_png(f"plot-{THEME}.png")
+        with open(f"plot-{THEME}.html", "w", encoding="utf-8") as fout:
+            pygal_svg = chart.render(is_unicode=True)
+            fout.write(f"<html><body>{pygal_svg}</body></html>")
+    """)
+    report = normalise_report(code, library="pygal")
+
+    assert report.code.endswith('chart.render_to_png(f"plot-{THEME}.png")\n')
+    assert report.changes == ("removed the HTML write through open() at lines 11-13",)
+    assert norm(code, "pygal") == report.code
+
+
+@pytest.mark.parametrize(
+    "block",
+    [
+        # the name is read after the block
+        'with open(f"plot-{THEME}.html", "w") as f:\n    page = "<html/>"\n    f.write(page)\nprint(page)',
+        # the assignment holds a save call
+        'with open(f"plot-{THEME}.html", "w") as f:\n    png = chart.render_to_png()\n    f.write(str(png))',
+        # a tuple target, and a statement that is neither a write nor an assignment
+        'with open(f"plot-{THEME}.html", "w") as f:\n    a, b = "<", ">"\n    f.write(a + b)',
+        'with open(f"plot-{THEME}.html", "w") as f:\n    print("page")\n    f.write("<html/>")',
+        # nothing written
+        'with open(f"plot-{THEME}.html", "w") as f:\n    page = "<html/>"',
+    ],
+)
+def test_pygal_html_block_that_does_more_stays(block: str) -> None:
+    code = pygal_code('chart = pygal.XY(width=3200, height=1800)\nchart.render_to_png(f"plot-{THEME}.png")\n') + (
+        block + "\n"
+    )
+    assert norm(code, "pygal") == code
+
+
+def test_pygal_html_step_repeats_once_a_removed_feeder_frees_a_target() -> None:
+    """A hand-built page's target is named again in a feeder of the SVG write; once that goes, the page goes too."""
+    code = pygal_code("""
+        chart = pygal.XY(width=3200, height=1800)
+        chart.render_to_png(f"plot-{THEME}.png")
+        link = f"plot-{THEME}.html"
+        with open(f"plot-{THEME}.svg", "w") as f:
+            f.write(link)
+        with open(f"plot-{THEME}.html", "w") as f:
+            f.write("<html/>")
+    """)
+    report = normalise_report(code, library="pygal")
+
+    assert report.code.endswith('chart.render_to_png(f"plot-{THEME}.png")\n')
+    assert report.changes == (
+        "removed the SVG write through open() at lines 12-13",
+        "removed link, which only fed a removed write, at line 11",
+        "removed the HTML write through open() at lines 11-12",
+    )
+    assert report.notes == ()  # the first pass's "named again" note is gone with the name
+
+
 def test_html_writes_stay_for_the_other_libraries() -> None:
     code = THEME_BLOCK + 'with open(f"plot-{THEME}.html", "w") as f:\n    f.write(chart.render(is_unicode=True))\n'
     assert norm(code) == code
@@ -829,8 +888,9 @@ def test_pygal_from_import_of_svg2png_is_used() -> None:
     ("body", "note", "pixels"),
     [
         (
-            'chart = pygal.XY(width=size, height=size)\nchart.render_to_png(f"plot-{THEME}.png")',
-            "canvas: the chart's width= at line 10 is not a positive numeric literal; the PNG size is left as it is",
+            'chart = pygal.XY(width=size * 2, height=size)\nchart.render_to_png(f"plot-{THEME}.png")',
+            "canvas: the chart's width= at line 10 is not a positive number or a module-level name bound once to "
+            "one; the PNG size is left as it is",
             None,
         ),
         (
@@ -848,7 +908,53 @@ def test_pygal_from_import_of_svg2png_is_used() -> None:
         (
             "a = pygal.XY(width=4800, height=2700)\nb = pygal.Bar(width=4800, height=2700)\n"
             'cairosvg.svg2png(bytestring=merge(a, b), write_to=f"plot-{THEME}.png")',
-            "canvas: 2 pygal charts in the file, none traced from the save at line 12; the PNG size is left as it is",
+            "canvas: no pygal chart traced from the save at line 12 (the file has 2); the PNG size is left as it is",
+            None,
+        ),
+        (
+            'cairosvg.svg2png(bytestring=build(size).encode(), write_to=f"plot-{THEME}.png")',
+            "canvas: no pygal chart traced from the save at line 10; the PNG size is left as it is",
+            None,
+        ),
+        # sizes pygal reads at render, after the constructor: never its 800x600 then
+        (
+            'chart = pygal.Bar()\nchart.width = 4800\nchart.height = 2700\nchart.render_to_png(f"plot-{THEME}.png")',
+            "canvas: chart.width at line 11 sets the chart's size after its constructor; the PNG size is left as it is",
+            None,
+        ),
+        (
+            'chart = pygal.Bar()\nc = chart\nc.config.height = 2700\nchart.render_to_png(f"plot-{THEME}.png")',
+            "canvas: c.config.height at line 12 sets the chart's size after its constructor; the PNG size is left as "
+            "it is",
+            None,
+        ),
+        (
+            'chart = pygal.Bar()\nchart.config(width=4800, height=2700)\nchart.render_to_png(f"plot-{THEME}.png")',
+            "canvas: chart.config(...) at line 11 may set the chart's size after its constructor; the PNG size is "
+            "left as it is",
+            None,
+        ),
+        (
+            'cfg = pygal.Config()\nchart = pygal.Bar(config=cfg)\nchart.render_to_png(f"plot-{THEME}.png")',
+            "canvas: the chart at line 11 takes a pygal.Config, which may set its size; the PNG size is left as it is",
+            None,
+        ),
+        (
+            'chart = pygal.Bar(pygal.Config)\nchart.render_to_png(f"plot-{THEME}.png")',
+            "canvas: the chart at line 10 takes positional arguments (a pygal.Config) or **kwargs; the PNG size is "
+            "left as it is",
+            None,
+        ),
+        (
+            "chart = pygal.Bar()\n"
+            'cairosvg.svg2png(bytestring=chart.render(width=size, height=2700), write_to=f"plot-{THEME}.png")',
+            "canvas: the render at line 11 takes keywords that may set the chart's size; the PNG size is left as it is",
+            None,
+        ),
+        # a save that writes no PNG: the readiness scan blocks it, the canvas step leaves it alone
+        (
+            'chart = pygal.Bar(width=4800, height=2700)\nchart.render_to_file(f"plot-{THEME}.png")',
+            "canvas: the render_to_file at line 11 writes no PNG; nothing to normalise",
             None,
         ),
     ],
@@ -867,6 +973,141 @@ def test_pygal_canvas_already_on_target_is_kept() -> None:
     code = pygal_code('chart = pygal.XY(width=3200, height=1800)\nchart.render_to_png(f"plot-{THEME}.png")\n')
     assert norm(code, "pygal") == code
     assert measure_canvas(code, library="pygal").pixels == LANDSCAPE
+
+
+@pytest.mark.parametrize(
+    ("build", "size", "line", "target"),
+    [
+        # dendrogram-radial: implicitly joined f-strings and the module constants they interpolate
+        (
+            """
+            W, H = 4800, 2700
+            svg = (
+                '<?xml version="1.0" encoding="utf-8"?>\\n'
+                f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}">\\n'
+                f'<rect width="{W}" height="{H}" fill="{PAGE_BG}"/>\\n' + "\\n".join(elems) + "</svg>"
+            )
+            """,
+            "4800x2700",
+            14,
+            LANDSCAPE,
+        ),
+        # histogram-2d: the root tag in a list the file appends to and joins
+        (
+            """
+            svg_parts = []
+            svg_parts.append('<svg width="4800" height="2700" viewBox="0 0 4800 2700">')
+            for elem in elems:
+                svg_parts.append(f'<g width="{elem}"/>')
+            svg_parts.append("</svg>")
+            svg = "\\n".join(svg_parts)
+            """,
+            "4800x2700",
+            13,
+            LANDSCAPE,
+        ),
+        # ternary-density: one triple-quoted f-string, px units and another name for the size
+        (
+            '''
+            chart_width = 3600
+            chart_height = 3600
+            title_svg = f'<text x="{chart_width / 2}">t</text>'
+            svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="{chart_width}px" height="{chart_height}px">
+            {title_svg}
+            </svg>"""
+            ''',
+            "3600x3600",
+            15,
+            SQUARE,
+        ),
+    ],
+)
+def test_pygal_hand_built_svg_renders_the_canvas(build: str, size: str, line: int, target: tuple[int, int]) -> None:
+    """Four catalogue files draw their own SVG at 4800x2700 or 3600x3600 and convert it with svg2png."""
+    code = pygal_code(
+        "import cairosvg\n\nelems = []\n"
+        + source(build)
+        + 'cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=f"plot-{THEME}.png")\n'
+    )
+    report = normalise_report(code, library="pygal")
+
+    width, height = target
+    assert report.code.endswith(
+        f'cairosvg.svg2png(bytestring=svg.encode("utf-8"), write_to=f"plot-{{THEME}}.png", output_width={width}, '
+        f"output_height={height})\n"
+    )
+    assert report.changes == (
+        f"canvas: hand-built SVG {size} (the <svg> root at line {line}) renders {size}; the save renders "
+        f"{width}x{height} through cairosvg.svg2png(output_width={width}, output_height={height})",
+    )
+    before = measure_canvas(code, library="pygal")
+    assert before.pixels == tuple(int(side) for side in size.split("x"))
+    assert (before.note or "").startswith(f"pygal renders {size} (the <svg> root at line {line}), target ")
+    assert measure_canvas(report.code, library="pygal").pixels == target
+    assert norm(code, "pygal") == report.code
+
+
+@pytest.mark.parametrize(
+    ("build", "note"),
+    [
+        (
+            'svg = f\'<svg width="{W * 2}" height="2700"></svg>\'',
+            "the <svg> root at line 12 has no width= of a number or a module-level name bound once to one",
+        ),
+        (
+            'W = 3200\nsvg = f\'<svg width="{W}" height="1800"></svg>\'',  # W is bound twice
+            "the <svg> root at line 13 has no width= of a number or a module-level name bound once to one",
+        ),
+        (
+            'svg = \'<svg width="4800" height="100%"></svg>\'',
+            "the <svg> root at line 12 has no height= of a number or a module-level name bound once to one",
+        ),
+        (
+            'inner = \'<svg width="800" height="600"/>\'\nsvg = \'<svg width="4800" height="2700">\' + inner',
+            "no pygal chart traced from the save at line 14, and 2 <svg> tags at line 12, 13",
+        ),
+    ],
+)
+def test_pygal_hand_built_svg_of_unknown_size_is_left_alone(build: str, note: str) -> None:
+    code = pygal_code("import cairosvg\n\nW = 4800\n" + build + "\n") + (
+        'cairosvg.svg2png(bytestring=svg.encode(), write_to=f"plot-{THEME}.png")\n'
+    )
+    report = normalise_report(code, library="pygal")
+
+    assert report.code == code
+    assert f"canvas: {note}; the PNG size is left as it is" in report.notes, report.notes
+    canvas = measure_canvas(code, library="pygal")
+    assert canvas.pixels is None and canvas.note == f"pygal canvas unknown: {note}"
+
+
+def test_pygal_output_size_names_are_read() -> None:
+    """chord-basic and ecg-twelve-lead size the PNG through module constants; `W = H = 2400` binds both once."""
+    code = pygal_code("""
+        import cairosvg
+
+        W = H = 2400
+        chart = pygal.XY(width=W, height=H)
+        cairosvg.svg2png(bytestring=chart.render(), write_to=f"plot-{THEME}.png", output_width=W, output_height=H)
+    """)
+    assert measure_canvas(code, library="pygal").pixels == SQUARE
+    assert norm(code, "pygal") == code
+
+
+def test_pygal_import_below_the_save_is_not_used() -> None:
+    """An `import cairosvg` after the save would come too late for the rewritten save; one goes into the imports."""
+    code = pygal_code("""
+        chart = pygal.Bar(width=4800, height=2700)
+        chart.render_to_png(f"plot-{THEME}.png")
+        import cairosvg
+    """)
+    result = norm(code, "pygal")
+    lines = result.splitlines()
+
+    assert lines.index("import cairosvg") < next(i for i, line in enumerate(lines) if "cairosvg.svg2png(" in line)
+    assert result.endswith(
+        'cairosvg.svg2png(bytestring=chart.render(), write_to=f"plot-{THEME}.png", output_width=3200, '
+        "output_height=1800)\nimport cairosvg\n"
+    )
 
 
 # --- lets-plot -----------------------------------------------------------------------------
@@ -1008,11 +1249,25 @@ def test_letsplot_star_import_lists_the_names_the_module_reads() -> None:
         ),
         (
             "from lets_plot import *\nplot = ggplot() + theme(legend_position='top')\ntheme = None\n",
-            "star import: theme is read before the file binds it; the star import at line 1 stays",
+            "star import: theme may be read before the file binds it; the star import at line 1 stays",
+        ),
+        # the statement reads the name before it binds it
+        (
+            "from lets_plot import *\nlabs = labs(title='t')\nplot = ggplot() + labs\n",
+            "star import: labs may be read before the file binds it; the star import at line 1 stays",
+        ),
+        # bound only when the condition holds: without the star import the read would raise NameError
+        (
+            "import os\nfrom lets_plot import *\nif os.getenv('X'):\n    labs = None\nplot = labs(title='t')\n",
+            "star import: labs may be read before the file binds it; the star import at line 2 stays",
         ),
         (
             "try:\n    from lets_plot import *\nexcept ImportError:\n    pass\n",
             "star import: it is not a module-level statement; the star import at line 2 stays",
+        ),
+        (
+            "from lets_plot import *; plot = ggplot()\n",
+            "star import: it shares its line with other code; the star import at line 1 stays",
         ),
     ],
 )
@@ -1021,6 +1276,31 @@ def test_letsplot_star_import_refusals_keep_it_with_a_note(code: str, note: str)
 
     assert "from lets_plot import *" in report.code
     assert note in report.notes, report.notes
+
+
+def test_letsplot_star_import_names_bound_where_they_are_read() -> None:
+    """column-stratigraphic binds `margin` (a lets-plot name) in a loop and reads it there; a `with` body always
+    runs."""
+    code = source("""
+        import os
+
+        from lets_plot import *
+
+        THEME = os.getenv("ANYPLOT_THEME", "light")
+        for row in range(2):
+            margin = 0.03
+            print(row + margin)
+        with open(os.devnull) as handle:
+            labs = handle.name
+        plot = ggplot() + geom_point(size=len(labs)) + scale_x_log10() + scale_x_log2()
+        plot += GGBunch() + LetsPlot.setup_html()
+    """)
+    result = norm(code, "letsplot")
+
+    assert result.startswith(
+        "import os\n\nfrom lets_plot import (\n    GGBunch,\n    LetsPlot,\n    geom_point,\n    ggplot,\n"
+        "    scale_x_log2,\n    scale_x_log10,\n)\n"
+    )  # ruff's order-by-type: classes first, then natural order
 
 
 def test_letsplot_unused_star_import_goes() -> None:
@@ -1169,6 +1449,16 @@ def test_letsplot_returned_path_becomes_the_save() -> None:
     assert measure_canvas(report.code, library="letsplot").pixels == LANDSCAPE
 
 
+def test_letsplot_every_returned_path_of_a_name_becomes_the_save() -> None:
+    """A name bound to two ggsave returns: one pass unwraps both, so a second pass changes nothing."""
+    saves = 'png_path = ggsave(plot, f"plot-{THEME}.png", path=".", scale=2)\nshutil.move(png_path, "out.png")\n'
+    code = "import shutil\n" + LETSPLOT_HEAD + "plot = ggplot(df) + geom_point() + ggsize(1600, 900)\n" + saves * 2
+    result = norm(code, "letsplot")
+
+    assert "png_path" not in result and "shutil" not in result
+    assert result.count('ggsave(plot, f"plot-{THEME}.png", path=".", scale=2)\n') == 2
+
+
 def test_letsplot_statement_that_does_more_than_move_stays_with_a_note() -> None:
     code = LETSPLOT_HEAD + source("""
         lp_dir = "lets-plot-images"
@@ -1193,8 +1483,11 @@ def test_letsplot_statement_that_does_more_than_move_stays_with_a_note() -> None
         ("ggsize(900, 900)", "scale=3", "scale=2.667", SQUARE),
         ("ggsize(800, 450)", "", ", scale=4", LANDSCAPE),  # lets-plot's default scale is 2
         ("ggsize(800, 450)", "dpi=150", "dpi=150, scale=2.56", LANDSCAPE),  # dpi= scales by dpi / 96
-        ("ggsize(1600, 900)", "w=16, h=9, unit='in', dpi=100", "dpi=100, scale=2", LANDSCAPE),
-        ("ggsize(1600, 960)", "scale=3", "scale=1.874", (2998, 1799)),  # tier 2: inside the canvas, under R2's cap
+        # w= and h= in px; in a physical unit lets-plot can render one pixel short of the model
+        ("ggsize(1600, 900)", "w=1600, h=900, unit='px'", "unit='px', scale=2", LANDSCAPE),
+        # tier 2: inside the canvas, under R2's cap; the exact fit is as short as the decimal below it
+        ("ggsize(1600, 960)", "scale=3", "scale=1.875", (3000, 1800)),
+        ("ggsize(1600, 970)", "scale=3", "scale=1.855", (2968, 1799)),  # the fit 1.85567... is longer
     ],
 )
 def test_letsplot_canvas_changes_only_the_scale(plot: str, save: str, scale: str, pixels: tuple[int, int]) -> None:
