@@ -133,7 +133,7 @@ lib-letsplot = ["lets-plot>=4.11.0", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-l
 # `google-adk[eval]` extra: the evals under agents/evals/ run on this one, and
 # ADK's eval stack pulled in litellm and nltk, two security alerts for code that
 # nothing here ran.
-agents = ["google-adk==2.11.0", "anthropic[vertex]>=1.8.0"]
+agents = ["google-adk==2.13.0", "anthropic[vertex]>=1.8.0"]
 all = [
     "anyplot[test,dev,plotting,typecheck]",
 ]
