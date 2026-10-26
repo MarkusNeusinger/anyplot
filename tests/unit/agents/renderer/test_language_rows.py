@@ -51,6 +51,56 @@ class TestRows:
         data = sandbox_env(limited, None, 20)
         assert data["ANYPLOT_RLIMIT_AS_MB"] == "1024" and "ANYPLOT_THEME" not in data
 
+    def test_an_in_process_row_brings_its_environment_and_its_own_limit(self, config: ExecutorConfig) -> None:
+        """lets-plot's row: the matplotlib settings, then Arrow's system allocator and the fontconfig file, and its
+        2048 MiB in place of the configured `RLIMIT_AS` (spike of 2026-10-26)."""
+        limited = replace(config, rlimit_as_mb=1024, rlimit_nproc=64)
+        letsplot = sandbox_env(limited, "light", 60, command=command_for("python", "letsplot"))
+
+        assert letsplot["ANYPLOT_RLIMIT_AS_MB"] == "2048" and letsplot["ANYPLOT_RLIMIT_NPROC"] == "64"
+        assert letsplot["ARROW_DEFAULT_MEMORY_POOL"] == "system"
+        assert letsplot["FONTCONFIG_FILE"] == "/opt/anyplot/fonts.conf"
+        assert letsplot["MPLBACKEND"] == "Agg" and letsplot["ANYPLOT_THEME"] == "light"
+        assert letsplot["PATH"] == SANDBOX_PATH and letsplot["HOME"] == "/tmp"
+        # pygal keeps the Python defaults: the same environment as matplotlib's, the configured limit included.
+        pygal = sandbox_env(limited, "light", 60, command=command_for("python", "pygal"))
+        assert pygal == sandbox_env(limited, "light", 60, command=command_for("python", "matplotlib"))
+        assert pygal["ANYPLOT_RLIMIT_AS_MB"] == "1024" and "ARROW_DEFAULT_MEMORY_POOL" not in pygal
+
+    def test_a_row_limit_never_switches_a_configured_off_limit_on(self, config: ExecutorConfig) -> None:
+        """`RENDERER_RLIMIT_AS_MB=0` turns address-space limits off for every row, lets-plot's own value included."""
+        unlimited = sandbox_env(config, "dark", 60, command=command_for("python", "letsplot"))
+
+        assert config.rlimit_as_mb == 0 and "ANYPLOT_RLIMIT_AS_MB" not in unlimited
+        assert unlimited["ARROW_DEFAULT_MEMORY_POOL"] == "system"
+
+    def test_data_runs_and_conversions_are_unchanged_by_the_python_rows(self, config: ExecutorConfig) -> None:
+        limited = replace(config, rlimit_as_mb=1024, rlimit_nproc=64)
+
+        data = sandbox_env(limited, None, 20)
+        assert data["ANYPLOT_RLIMIT_AS_MB"] == "1024" and "ARROW_DEFAULT_MEMORY_POOL" not in data
+        assert "FONTCONFIG_FILE" not in data and "MPLBACKEND" not in data
+        convert = sandbox_env(limited, None, 20, convert=True)
+        assert convert["ANYPLOT_RLIMIT_AS_MB"] == "1024" and convert["ARROW_DEFAULT_MEMORY_POOL"] == "system"
+        assert "FONTCONFIG_FILE" not in convert
+
+    def test_the_lets_plot_row_runs_the_plot_mode_command(self, config: ExecutorConfig, tmp_path: Path) -> None:
+        limited = replace(config, rlimit_as_mb=1024)
+        argv = build_argv(limited, "r-a-light", tmp_path, "light", 60, command=command_for("python", "letsplot"))
+
+        assert argv[argv.index("--") :] == [
+            "--",
+            config.python,
+            "-I",
+            "-X",
+            "disable-remote-debug",
+            config.harness,
+            "plot.py",
+        ]
+        values = envs(argv)
+        assert values["ANYPLOT_RLIMIT_AS_MB"] == "2048" and values["ARROW_DEFAULT_MEMORY_POOL"] == "system"
+        assert EXEC_FLAG not in argv
+
     def test_the_muix_row_writes_a_tsx_file(self, config: ExecutorConfig, tmp_path: Path) -> None:
         argv = build_argv(config, "r-a-light", tmp_path, "light", 60, command=command_for("javascript", "muix"))
 

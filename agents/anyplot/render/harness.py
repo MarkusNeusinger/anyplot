@@ -50,7 +50,9 @@ copies it to `/opt/anyplot/harness.py`. In order it:
 5. compiles the plot file and runs it as `__main__` (`run_plot`, which `runpy.run_path`
    did before) under `PlotGuard`, an audit hook armed just before: from there on the
    interpreter refuses every `exec` but the plot's own run, the module bodies of an import
-   and `CODE_BUILDERS` (`namedtuple`, dataclasses, scipy's distributions), a code object or
+   and `CODE_BUILDERS` (`namedtuple`, dataclasses, scipy's distributions, plotnine's
+   expression strings, and cssselect2's selector compiler, which pygal's PNG export runs for
+   every CSS rule of the chart), a code object or
    function built by hand or a `__code__` assignment, every `open` that writes anything but
    `plot-<theme>.png`, `probe-<theme>.json` and `plot-<theme>.html` (altair's second
    file, which stays in the sandbox), `subprocess.*`, `os.system`, `os.exec*`,
@@ -355,6 +357,7 @@ CODE_BUILDERS = frozenset(
         ("dataclasses.py", "add_fns_to_class"),
         ("scipy/stats/_distn_infrastructure.py", "_attach_argparser_methods"),
         ("plotnine/mapping/_env.py", "eval"),
+        ("cssselect2/compiler.py", "__init__"),
     }
 )
 """The `(file suffix, function)` pairs whose `exec` and `compile` both guards let through when they call them: each
@@ -366,7 +369,19 @@ plotnine's `Environment.eval` is the one entry that evaluates text the plot wrot
 is not a column name (`aes(fill="factor(g)")`, 7 of 273 eligible catalogue files, and the adapter's habit). The
 validator admits those strings only as literals it walked as code with every rule of the profile
 (`validate.EXPRESSION_CALLS`), and whatever the evaluated code reaches (writes, processes, sockets, frames) stays
-refused here; patsy's `exec` behind `formula=` has no entry, the keyword is a validator finding."""
+refused here; patsy's `exec` behind `formula=` has no entry, the keyword is a validator finding. cssselect2's
+`CompiledSelector.__init__` turns every CSS selector of an SVG `<style>` block into one `eval("lambda el: ...")`
+(87 per pygal chart: cairosvg's `css.parse_stylesheets`, which `render_to_png` and `svg2png` run on the chart's
+own stylesheet and on anything the plot adds through `Style`, `css=["inline:..."]` or `defs=`). The source is built
+from the parsed selector tree: every string the CSS text controls (type, class, id, attribute name and value,
+namespace, `:lang()` argument) is interpolated with `repr`, the only other values are the two integers of an `An+B`
+argument (`tinycss2.nth.parse_nth`), and every other token raises `SelectorError`. The spike of 2026-10-26 fed 339
+selectors with quotes, backslashes, CSS escapes, newlines, `{`/`}` and Python text to the compiler, and the same
+payloads through every pygal channel, and read the generated source back with `ast`: it compares `el`'s name,
+classes, id, attributes and `lang`, nothing else. Only Python objects handed to `compile_selector_list` in place of
+tokens (a forged `dimension` token whose `int_value` is a string) reach an unquoted slot; the validator admits neither
+`cssselect2` nor `tinycss2` nor `cairosvg.css`/`cairosvg.parser`, and a lambda the compiler built runs under the same
+guard as the plot (no write, process, socket or frame)."""
 IMPORT_FRAME_FILES = ("<frozen importlib._bootstrap>", "<frozen importlib._bootstrap_external>")
 """The files of the frames that run an import. The plot guard lets an `exec` through when, walking up from its caller,
 it meets one of these frames before a frame of the plot: a module body the plot imports runs (and builds code: scipy's
@@ -1929,6 +1944,32 @@ def warm_scikit_learn(source):
         pass
 
 
+def warm_cairo(source):
+    """Import cairosvg before the plot guard is armed, when the plot names pygal or cairosvg.
+
+    pygal's `render_to_png` imports cairosvg lazily, and cairosvg's import loads libcairo through
+    cairocffi, which first asks `ctypes.util.find_library` for three library names: each runs
+    `ldconfig -p`, then `gcc` through a temporary file and `ld` where they are installed. On the
+    spike's developer machine (Python 3.14.6) `ctypes.util`'s own module body also opens libc
+    (`ctypes.dlopen`), which the guard refuses, so every pygal render failed there (2026-10-24).
+    In the renderer image (Python 3.14.9, no compiler) the import raises no `ctypes.dlopen`,
+    `find_library` swallows the refused `ldconfig` as an `OSError`, and cairocffi then opens
+    `libcairo.so.2` by name; the import here keeps a render from depending on refused process
+    starts, at no cost the measurement could tell from noise (five renders each way, 2026-10-26).
+    cffi's `dlopen` and its calls into libcairo raise no audit event, so the one import serves the
+    render. A missing package (a developer machine without the `lib-pygal` extra, or without
+    libcairo) is skipped, and the plot's own `import cairosvg` reports it under the guard.
+    """
+    if b"pygal" not in source and b"cairosvg" not in source:
+        return
+    import importlib
+
+    try:
+        importlib.import_module("cairosvg")
+    except Exception:
+        pass
+
+
 def hide_frames():
     """Replace the two stdlib helpers that hand out their caller's frame, before the plot guard is armed.
 
@@ -1972,7 +2013,9 @@ def run_plot(path, guard):
     that code object run once: every other `exec` the plot reaches is refused. `ctypes` is
     loaded first, because its import opens a library (`ctypes.dlopen`) and numpy, pandas and
     matplotlib reach it lazily; `warm_scikit_learn` runs the process lookups scikit-learn
-    would otherwise make under the guard. No bytecode is written: the guard refuses the writes.
+    would otherwise make under the guard, and `warm_cairo` imports cairosvg (libcairo through
+    cairocffi, with the same `ldconfig` lookups) when the plot names pygal or cairosvg. No
+    bytecode is written: the guard refuses the writes.
     The plot's frames carry the path as given, as under `runpy`, so a traceback still names
     `plot.py`.
     """
@@ -1984,6 +2027,7 @@ def run_plot(path, guard):
         source = handle.read()
     code = compile(source, path, "exec", dont_inherit=True)
     warm_scikit_learn(source)
+    warm_cairo(source)
     hide_frames()
     namespace = {
         "__name__": "__main__",

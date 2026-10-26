@@ -32,11 +32,15 @@ ENV UV_PYTHON_DOWNLOADS=never
 COPY pyproject.toml uv.lock README.md ./
 
 # The base dependencies carry the service (fastapi, uvicorn, pydantic-settings) and
-# the four `lib-*` extras carry the Python plotting stack the harness runs in process:
+# the six `lib-*` extras carry the Python plotting stack the harness runs in process:
 # matplotlib and seaborn (phase 1), plotnine and altair (step 1b of
-# agentic/specs/261024-agent-all-libraries.md). altair renders through vl-convert,
-# a self-contained binary (V8 and resvg) that needs no browser and no system
-# library; its fonts are set up in the runtime stage below. No ADK: nothing in
+# agentic/specs/261024-agent-all-libraries.md), pygal and lets-plot (step 1c).
+# altair renders through vl-convert, a self-contained binary (V8 and resvg) that
+# needs no browser and no system library. pygal's PNG export is cairosvg, which
+# loads libcairo through cairocffi: the runtime stage installs `libcairo2`.
+# lets-plot rasterises in its own native bridge (Kotlin/Native with ImageMagick
+# and fontconfig linked in), which needs only the libraries the slim image has.
+# Their fonts are set up in the runtime stage below. No ADK: nothing in
 # the renderer imports it. `--no-install-project` keeps the project itself out
 # of the venv, so a sandbox's interpreter finds no anyplot package on its path;
 # the service imports `agents.renderer` from the working directory, which
@@ -44,7 +48,7 @@ COPY pyproject.toml uv.lock README.md ./
 # The `convert` extra (python-calamine, pyarrow) is the file conversion's readers
 # (`harness.py --convert`, agents/anyplot/render/convert.py).
 RUN uv venv && uv sync --frozen --no-install-project --extra lib-matplotlib --extra lib-seaborn \
-    --extra lib-plotnine --extra lib-altair --extra convert
+    --extra lib-plotnine --extra lib-altair --extra lib-pygal --extra lib-letsplot --extra convert
 
 # pyarrow ships far more than the converter reads (owner decision of 2026-10-15: slim it).
 # The conversion needs the core, compute, IPC, Feather and Parquet; it never touches
@@ -118,6 +122,18 @@ FROM python:3.14-slim
 
 WORKDIR /app
 
+# libcairo for cairosvg, pygal's PNG export (cairocffi finds it with `ldconfig -p`;
+# the harness loads it before the plot guard is armed, `warm_cairo`). Without the
+# recommends it brings libfontconfig1, fontconfig-config (which writes
+# /etc/fonts/fonts.conf), fonts-dejavu-core and fonts-dejavu-mono (DejaVu Sans,
+# Serif and Sans Mono, Regular and Bold, under /usr/share/fonts/truetype/dejavu),
+# libfreetype6, libpixman-1-0, libpng16-16t64 and the X11 client libraries
+# cairo links. No `fontconfig` package, so no `fc-list` for matplotlib to call.
+# DL3008 is declined for the reason the `fonts` stage gives.
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends libcairo2 \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /app/.venv ./.venv
 
 # Only the renderer package and the package marker of `agents/`: the rest of
@@ -135,20 +151,34 @@ COPY agents/anyplot/render/convert.py /opt/anyplot/convert.py
 COPY --from=fonts /fonts/noto /usr/share/fonts/noto
 COPY --from=fonts /fonts/doc /usr/share/doc/fonts-noto
 
-# vl-convert (altair) needs no fontconfig: with no /etc/fonts/fonts.conf it scans
-# /usr/share/fonts, so the fallback fonts above reach it too, and it carries
-# Liberation Sans for `sans-serif`. `serif` and `monospace` (7 catalogue altair
-# files) resolve only to DejaVu Serif and DejaVu Sans Mono and draw no text at all
-# without them (measured 2026-10-25). matplotlib ships both, so they are linked
-# here, not copied: no new font file and no size. matplotlib still resolves every
-# family to its own mpl-data copy. `ls -L` fails the build on a dangling link.
+# vl-convert (altair) scans /usr/share/fonts, so the fallback fonts above reach it
+# too, and it carries Liberation Sans for `sans-serif`. `serif` and `monospace` (7
+# catalogue altair files) resolve only to DejaVu Serif and DejaVu Sans Mono and draw
+# no text at all without them (measured 2026-10-25). lets-plot's bridge draws its
+# default text in DejaVu Sans and falls back to a Noto Sans face without it; with
+# it, a render in this image is byte-identical to one on a developer machine
+# (spike of 2026-10-26). matplotlib ships all three families in four styles, so
+# they are linked here, not copied: no new font file and no size. matplotlib still
+# resolves every family to its own mpl-data copy, which comes first in its font
+# list: Debian's builds of the Regular and Bold faces that libcairo2 brings (other
+# bytes, same names) changed none of ci-image.yml's seaborn, plotnine, altair and
+# multi-script renders against the image without them (2026-10-26). `ls -L` fails
+# the build on a dangling link.
 RUN d=/app/.venv/lib/python3.14/site-packages/matplotlib/mpl-data/fonts/ttf \
     && mkdir -p /usr/share/fonts/dejavu \
-    && for f in DejaVuSerif DejaVuSerif-Bold DejaVuSerif-Italic DejaVuSerif-BoldItalic \
+    && for f in DejaVuSans DejaVuSans-Bold DejaVuSans-Oblique DejaVuSans-BoldOblique \
+        DejaVuSerif DejaVuSerif-Bold DejaVuSerif-Italic DejaVuSerif-BoldItalic \
         DejaVuSansMono DejaVuSansMono-Bold DejaVuSansMono-Oblique DejaVuSansMono-BoldOblique; do \
         ln -s "$d/$f.ttf" "/usr/share/fonts/dejavu/$f.ttf"; \
     done \
     && ls -L /usr/share/fonts/dejavu/*.ttf > /dev/null
+
+# lets-plot's bridge links its own fontconfig, which finds no configuration in this
+# image's layout and writes "Fontconfig error: Cannot load default config file" to
+# stderr on every export. Its command row points FONTCONFIG_FILE here
+# (agents/renderer/commands.py): one <dir> and no <cachedir>, so it scans the fonts
+# above and never writes a cache (the root filesystem is read-only anyway).
+COPY agents/renderer/fonts.conf /opt/anyplot/fonts.conf
 
 # Bake the matplotlib font cache. A sandbox starts with an empty private /tmp, and
 # the harness copies this directory into MPLCONFIGDIR=/tmp/mpl before matplotlib

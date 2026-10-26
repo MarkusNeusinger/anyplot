@@ -8,11 +8,17 @@
   validator reports findings or fails (`security: <rule> ...`, quoting the validator's
   rule ids; it is asked only for a library with a normaliser); there is no module-level `THEME = os.getenv("ANYPLOT_THEME", ...)`
   (`no-theme`); or a save call of the library's rule (`regions.SAVE_RULES`: `savefig`,
-  plotnine's `save` and `ggsave`, altair's `save`) writes anywhere but `f"plot-{THEME}.png"`
-  (altair also `f"plot-{THEME}.html"`), or the last save of the PNG is missing or not a
+  plotnine's `save` and `ggsave`, altair's `save`, pygal's `render_to_png`,
+  `render_to_file` and `svg2png`, lets-plot's `ggsave`) writes anywhere but
+  `f"plot-{THEME}.png"` (altair, pygal and lets-plot also `f"plot-{THEME}.html"`), a
+  save of a library with a save directory (`SaveRule.directory`: lets-plot's
+  `path="."`) does not pass it, or the last save of the PNG is missing or not a
   module-level statement (`savefig-target`; a plain string such as `"plot.png"` is
   reported as a single-theme target). Every blocking reason is listed; `hints` stays
-  empty.
+  empty. What the normaliser leaves in place reaches the scan this way: a lets-plot
+  star import or save alias it could not rewrite, a pygal `open()` write it kept and
+  a guard it did not strip are SECURITY findings; a pygal theme `.svg` save it kept is
+  a `savefig-target`.
 * `coupled`: eligible, but the code holds literals that only fit the catalogue's own
   data. Each category becomes one hint for the adapter (a `Note` of at most 300
   characters that names the lines) and one `reasons` entry (`limits: 3 lines`).
@@ -54,9 +60,12 @@ The coupling heuristics, all static and deliberately simple:
   profile bans importing it, so such code is already blocked.
 
 `reasons` can also carry one `canvas:` entry for any status that is not blocked: the
-normaliser could not put the canvas on 3200x1800 or 2400x2400 (the figure size is
-not a literal or has another aspect), so the render relies on the R3 canvas gate and
-its padding fallback. It does not change the status.
+normaliser could not put the canvas on 3200x1800 or 2400x2400 (`normalise.measure_canvas`:
+matplotlib's figure size is not a literal or has another aspect, a pygal chart's size is
+computed or not 16:9 or 1:1, a lets-plot grid has no `ggsize` of its own or no scale
+reaches either canvas; plotnine and altair size their canvas on the save, which the
+normaliser does not read), so the render relies on the R3 canvas gate and its padding
+fallback. It does not change the status.
 
 The 13 map specs are the specs tagged both `plot_type: map` and
 `data_type: geospatial` in their `specification.yaml`: bubble-map-geographic,
@@ -227,6 +236,12 @@ def scan(normalised_code: str, *, spec_id: str, library: str, enabled_libraries:
         else:
             target = _snippet(call.target or "no file argument")
             blocked.append(f'savefig-target: {call.name} saves to {target} at {where}, not f"plot-{{THEME}}.png"')
+    if rule.directory is not None:
+        directory = f'path="{rule.directory}"'
+        for call in regions.savefig_calls:
+            path = next((keyword for keyword in call.keywords if keyword.name == "path"), None)
+            if path is None or not (path.literal and path.value == rule.directory):
+                blocked.append(f"savefig-target: {call.name} at {call.span.lines()} does not save with {directory}")
     if not regions.savefig_calls:
         blocked.append(f"savefig-target: no {rule.verb} call")
     elif regions.savefig is None:

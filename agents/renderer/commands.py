@@ -26,7 +26,12 @@ beyond their resident memory, so `RLIMIT_AS` is off for the JavaScript and Julia
 and for altair's Python row (vl-convert embeds V8); one Chromium render runs seven
 processes with 77 tasks (spike of 2026-10-24), so `RLIMIT_NPROC` is off for the
 JavaScript row alone; the `MemAvailable` watchdog, `RLIMIT_CPU`, `RLIMIT_FSIZE` and the
-byte budget remain.
+byte budget remain. lets-plot's Python row keeps a bound of its own instead
+(`rlimit_as_mb`, 2048 MiB, with Arrow's system allocator in its environment), because
+its native rasteriser needs more than the configured 1 GiB but a runaway scale must
+still stop (spike of 2026-10-26). An in-process row's environment and limit reach the
+sandbox like an exec-mode row's (`executor.sandbox_env`) and the local Docker backend
+(`PythonRuntime.env`).
 `render_p95_s` is what the agents' pipeline reserves for a repair attempt's render
 when it checks its soft deadline.
 
@@ -86,6 +91,9 @@ JULIA_DEPOT = "/opt/julia-depot"
 """The precompiled depot; a sandbox stacks a writable `/tmp/depot` in front of it."""
 JULIA_CPU_TARGET = "generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(1)"
 """The CPU target the depot was precompiled for; the same value at run time, or Julia recompiles."""
+FONTCONFIG_FILE = "/opt/anyplot/fonts.conf"
+"""The image's minimal fontconfig file (`agents/renderer/fonts.conf`: one font directory, no cache directory) for
+the fontconfig that lets-plot's native bridge links, which finds no configuration of its own in the image."""
 
 
 @dataclass(frozen=True)
@@ -103,10 +111,18 @@ class RuntimeCommand:
     """Binaries the image must carry on `SANDBOX_PATH` for the row to run."""
     rlimit_as: bool = True
     """Whether the configured `RLIMIT_AS` applies; off where the runtime reserves address space it never uses."""
+    rlimit_as_mb: int | None = None
+    """The row's own `RLIMIT_AS` in MiB, in place of the configured one, where the runtime needs more address space
+    than the configured limit gives yet still a bound; None keeps the configured one. The renderer's switch still
+    rules: a configured limit of 0 (off) keeps the row unlimited too."""
     rlimit_nproc: bool = True
     """Whether the configured `RLIMIT_NPROC` applies; off where one render runs more tasks than its value."""
     render_p95_s: float = 15.0
     """Seconds a repair attempt's render is budgeted at (`pipeline.RENDER_P95_S` before 2026-10-24)."""
+
+    def __post_init__(self) -> None:
+        if self.rlimit_as_mb is not None and (not self.rlimit_as or self.rlimit_as_mb <= 0):
+            raise ValueError("a row's own RLIMIT_AS needs rlimit_as on and a positive size")
 
     @property
     def in_process(self) -> bool:
@@ -117,10 +133,29 @@ class RuntimeCommand:
 def _row(language: Language, library: str) -> RuntimeCommand:
     code_file = CODE_FILE_OVERRIDES.get(library, CODE_FILES[language])
     if language == "python":
+        if library == "letsplot":
+            # lets-plot rasterises in its Kotlin/Native bridge (ImageMagick linked in): under the configured
+            # 1 GiB every 3200x1800 export aborts ("Out of memory trying to allocate", SIGABRT). pyarrow's
+            # mimalloc pool reserves a 1 GiB arena on the first pandas string column, so the row takes Arrow's
+            # system allocator, as conversions do; then 2048 MiB held all 42 renders of the spike of 2026-10-26
+            # up to 4800x2700 and 3600x3600 (VmPeak 1697 MiB) and still stops a 6400x3600 one (2580 MiB). In
+            # the renderer image with this row the canvas-size renders took a wall p95 of 7.69 s (max 15.5 s);
+            # the guarded host sweep of the 284 eligible catalogue files, canvas rewrite applied, 12.5 s.
+            return RuntimeCommand(
+                language,
+                code_file,
+                (),
+                env=MappingProxyType({"ARROW_DEFAULT_MEMORY_POOL": "system", "FONTCONFIG_FILE": FONTCONFIG_FILE}),
+                rlimit_as_mb=2048,
+                render_p95_s=15.0,
+            )
         # altair renders in vl-convert's embedded V8, which reserves address space the way the JavaScript
         # row's Chromium does: under RLIMIT_AS up to 64 GiB it aborts at start ("Check failed: Start()",
         # SIGTRAP), measured on 2026-10-25 through the harness; its resident set is about 270 MiB and the
-        # MemAvailable watchdog, RLIMIT_CPU, RLIMIT_FSIZE and the byte budget remain. plotnine fits 1 GiB.
+        # MemAvailable watchdog, RLIMIT_CPU, RLIMIT_FSIZE and the byte budget remain. plotnine fits 1 GiB,
+        # and so does pygal: its heaviest catalogue render (bifurcation-basic) peaks at 682 MB resident, and
+        # cairo reserves no address space beyond its resident set; the 273 catalogue files that rendered under
+        # the guard took a wall p95 of 3.75 s and a p99 of 13.95 s (spike of 2026-10-26).
         return RuntimeCommand(language, code_file, (), rlimit_as=library != "altair")
     if language == "javascript":
         return RuntimeCommand(

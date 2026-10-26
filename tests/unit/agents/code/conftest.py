@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
-CODE_LIBRARIES = ("matplotlib", "seaborn", "plotnine", "altair")
+CODE_LIBRARIES = ("matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot")
 """The libraries with a Python code profile (`normalise.SUPPORTED_LIBRARIES`), in the corpus order."""
 CATALOGUE_FILES = [
     path

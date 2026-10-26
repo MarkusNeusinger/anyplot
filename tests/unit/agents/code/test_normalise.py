@@ -1,4 +1,4 @@
-"""Tests for agents/anyplot/code/normalise.py: header, guard, savefig target and canvas rewrites."""
+"""Tests for agents/anyplot/code/normalise.py: header, guards, save target, pygal and lets-plot rewrites, canvas."""
 
 import ast
 from pathlib import Path
@@ -7,6 +7,7 @@ import pytest
 
 from agents.anyplot.code.normalise import (
     LANDSCAPE,
+    MAX_IMAGE_PIXELS,
     SQUARE,
     TOLERANCE,
     effective_dpi,
@@ -132,6 +133,20 @@ def test_altair_rewrites_the_png_and_the_html_target() -> None:
 def test_only_the_catalogue_docstring_goes() -> None:
     other = '"""My own module docstring."""\n\n' + THEME_BLOCK
     assert norm(other) == other
+
+
+def test_a_second_catalogue_header_goes_too() -> None:
+    """lets-plot's indicator-bollinger, parliament-basic and probability-weibull open with two headers."""
+    header = '""" anyplot.ai\nscatter-demo: Demo Scatter\nLibrary: letsplot 4.9.0\nQuality: 92/100\n"""\n'
+    code = header + "# ruff: noqa: F405\n" + header.replace(" anyplot.ai", "anyplot.ai") + "\n" + THEME_BLOCK
+    report = normalise_report(code, library="matplotlib")
+
+    assert report.code == "# ruff: noqa: F405\n\n" + THEME_BLOCK
+    assert report.changes[:2] == (
+        "removed the catalogue header at lines 1-5",
+        "removed the catalogue header at lines 7-11",
+    )
+    assert norm(code) == report.code
 
 
 # --- title ---------------------------------------------------------------------------------
@@ -339,6 +354,906 @@ def test_path_used_for_something_else_is_not_a_target_rewrite() -> None:
     assert "plt.savefig(out" in norm(code)
 
 
+@pytest.mark.parametrize(
+    ("setup", "save", "expected"),
+    [
+        # lets-plot's shap-summary
+        (
+            "_plot_dir = os.path.dirname(os.path.abspath(__file__))",
+            'ggsave(plot, f"{_plot_dir}/plot-{THEME}.png", scale=3)',
+            'ggsave(plot, f"plot-{THEME}.png", scale=3)',
+        ),
+        # plotnine's candlestick-volume
+        (
+            'script_dir = __file__[: __file__.rfind("/")]',
+            'ggsave(plot, f"{script_dir}/plot-{THEME}.png", dpi=300)',
+            'ggsave(plot, f"plot-{THEME}.png", dpi=300)',
+        ),
+    ],
+)
+def test_a_formatted_directory_in_front_of_the_theme_file_is_a_target_rewrite(
+    setup: str, save: str, expected: str
+) -> None:
+    code = source(f"""
+        import os
+
+        from plotnine import ggsave
+
+        THEME = os.getenv("ANYPLOT_THEME", "light")
+        {setup}
+        {save}
+    """)
+    result = norm(code, "plotnine")
+
+    assert expected in result and "__file__" not in result
+    # Only a formatted directory: a literal one stays, as does a file name other than the theme's.
+    for other in ('f"out/plot-{THEME}.png"', 'f"{d}/plot-{THEME}-raw.png"'):
+        kept = THEME_BLOCK + f"plt.savefig({other})\n"
+        assert other in norm(kept)
+
+
+# --- guards of every library --------------------------------------------------------------
+
+
+def test_find_spec_guard_becomes_its_imports() -> None:
+    """pygal's waveform-audio and nine more files; the rule applies to every library."""
+    code = source("""
+        import importlib.util
+        import os
+        import sys
+
+        import numpy as np
+
+
+        # Prevent this file (pygal.py) from shadowing the installed pygal package
+        _pygal_spec = importlib.util.find_spec("pygal")
+        if _pygal_spec and _pygal_spec.origin != __file__:
+            import pygal
+            from pygal.style import Style
+        else:
+            _cwd = sys.path.pop(0)
+            import pygal
+            from pygal.style import Style
+
+            sys.path.insert(0, _cwd)
+
+        THEME = os.getenv("ANYPLOT_THEME", "light")
+    """)
+    expected = source("""
+        import os
+
+        import numpy as np
+
+
+        import pygal
+        from pygal.style import Style
+
+        THEME = os.getenv("ANYPLOT_THEME", "light")
+    """)
+
+    for library in ("pygal", "matplotlib"):
+        report = normalise_report(code, library=library)
+        assert report.code == expected, library
+        assert report.changes[:2] == (
+            "replaced the find_spec guard at lines 10-18 with its imports",
+            "removed the unused find_spec result _pygal_spec at line 9",
+        )
+
+
+@pytest.mark.parametrize(
+    ("guard", "note"),
+    [
+        # altair's indicator-macd: the branch loads the module by hand, and the test is another one
+        (
+            """
+            spec = importlib.util.find_spec("altair")
+            if spec and spec.origin and "site-packages" in spec.origin:
+                alt = importlib.util.module_from_spec(spec)
+            else:
+                import altair as alt
+            """,
+            None,
+        ),
+        (
+            """
+            spec = importlib.util.find_spec("pygal")
+            if spec and spec.origin != __file__:
+                import pygal
+                print(pygal)
+            """,
+            "find_spec guard: the if at lines 5-7 holds more than imports; left in place",
+        ),
+    ],
+)
+def test_other_find_spec_shapes_stay(guard: str, note: str | None) -> None:
+    code = "import importlib.util\nimport os\n\n" + source(guard) + '\nTHEME = os.getenv("ANYPLOT_THEME", "light")\n'
+    report = normalise_report(code, library="pygal")
+
+    assert "find_spec" in report.code and "if spec" in report.code
+    assert (note in report.notes) if note else not any(n.startswith("find_spec") for n in report.notes)
+
+
+def test_try_finally_guard_becomes_its_imports() -> None:
+    """altair's voronoi-basic: the snapshot, the filter and the try/finally all serve the guard."""
+    code = source("""
+        import os
+        import sys
+
+
+        # Remove current directory from path to avoid shadowing altair library
+        _current_dir = os.path.dirname(os.path.abspath(__file__))
+        _sys_path_backup = sys.path.copy()
+        sys.path = [p for p in sys.path if os.path.abspath(p) != _current_dir]
+
+        try:
+            import altair as alt
+        finally:
+            sys.path = _sys_path_backup
+
+        THEME = os.getenv("ANYPLOT_THEME", "light")
+    """)
+    report = normalise_report(code, library="altair")
+
+    assert report.code == 'import os\n\n\nimport altair as alt\n\nTHEME = os.getenv("ANYPLOT_THEME", "light")\n'
+    assert report.changes[0] == "replaced the try/finally sys.path guard at lines 10-13 with its imports"
+    assert "removed an unused sys.path snapshot at line 7" in report.changes
+    # A try with an `except`, or a finally that does more, is no guard.
+    other = code.replace("finally:\n    sys.path = _sys_path_backup", "except ImportError:\n    alt = None")
+    assert "try:" in normalise(other, library="altair")
+
+
+def test_sys_modules_deletion_and_bytecode_flag_are_guard_statements() -> None:
+    """pygal's indicator-rsi: `del sys.modules[...]` in an if, then a try/finally guard."""
+    code = source("""
+        import os
+        import sys
+
+        import numpy as np
+
+
+        # Clear the local module from sys.modules if it was somehow loaded
+        if "pygal" in sys.modules and "implementations" in sys.modules["pygal"].__file__:
+            del sys.modules["pygal"]
+
+        # Remove current directory from path to prevent local file from being imported
+        _original_path = sys.path[:]
+        sys.path = [p for p in sys.path if p not in ("", ".", os.getcwd())]
+        sys.dont_write_bytecode = True
+
+        try:
+            import pygal
+            from pygal.style import Style
+        finally:
+            # Restore path
+            sys.path = _original_path
+
+        # Theme tokens
+        THEME = os.getenv("ANYPLOT_THEME", "light")
+    """)
+    expected = source("""
+        import os
+
+        import numpy as np
+
+
+        import pygal
+        from pygal.style import Style
+
+        # Theme tokens
+        THEME = os.getenv("ANYPLOT_THEME", "light")
+    """)
+
+    assert norm(code, "pygal") == expected
+
+
+def test_unused_sys_path_snapshot_goes_and_a_used_one_stays() -> None:
+    """pygal's ohlc-bar keeps `_cwd = sys.path[0] if ...` that nothing reads."""
+    snapshot = '_cwd = sys.path[0] if sys.path and sys.path[0] == "" or sys.path[0] == "." else None\n'
+    code = "import os\nimport sys\n\n" + snapshot + "sys.path.pop(0)\n\n" + THEME_BLOCK.removeprefix("import os\n")
+    result = norm(code)
+
+    assert "sys" not in result.replace("os.getenv", "")
+    used = code + "print(_cwd)\n"
+    assert snapshot in norm(used)
+
+
+@pytest.mark.parametrize(
+    ("line", "statement"),
+    [
+        ('Style = importlib.import_module("pygal.style").Style', "from pygal.style import Style"),
+        ('_Style = importlib.import_module("pygal.style").Style', "from pygal.style import Style as _Style"),
+        ('pygal = importlib.import_module("pygal")', "import pygal"),
+        ('mpatches = importlib.import_module("matplotlib.patches")', "import matplotlib.patches as mpatches"),
+    ],
+)
+def test_import_module_attribute_becomes_a_from_import(line: str, statement: str) -> None:
+    code = f"import importlib\nimport os\n\n{line}\n\n" + THEME_BLOCK.removeprefix("import os\n")
+    report = normalise_report(code, library="pygal")
+
+    assert f"\n{statement}\n" in report.code and "importlib" not in report.code
+    assert any(change.endswith(f"-> {statement} at line 4") for change in report.changes)
+
+
+def test_import_module_imported_from_importlib() -> None:
+    """plotnine's bar-horizontal: `from importlib import import_module`, then `pn = import_module("plotnine")`."""
+    code = source("""
+        import os
+        import sys
+        from importlib import import_module
+
+
+        remove_paths = {os.path.dirname(os.path.abspath(__file__)), os.getcwd()}
+        sys.path[:] = [p for p in sys.path if os.path.abspath(p) not in remove_paths]
+
+        import pandas as pd
+
+
+        pn = import_module("plotnine")
+        Style = import_module("pygal.style").Style
+        aes = pn.aes
+
+        THEME = os.getenv("ANYPLOT_THEME", "light")
+    """)
+    result = norm(code, "plotnine")
+
+    assert "import plotnine as pn\nfrom pygal.style import Style\naes = pn.aes\n" in result
+    assert "import_module" not in result and "sys" not in result
+
+
+# --- pygal -----------------------------------------------------------------------------------
+
+
+PYGAL_HEAD = source("""
+    import os
+
+    import numpy as np
+    import pygal
+    from pygal.style import Style
+
+    THEME = os.getenv("ANYPLOT_THEME", "light")
+    PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+""")
+
+
+def pygal_code(body: str) -> str:
+    return PYGAL_HEAD + source(body)
+
+
+@pytest.mark.parametrize(
+    "write",
+    [
+        'with open(f"plot-{THEME}.html", "wb") as f:\n    f.write(chart.render())',
+        'with open(f"plot-{THEME}.html", "w") as f:\n    f.write(chart.render(is_unicode=True))',
+        'with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:\n    f.write(chart.render().decode())',
+        'with open(os.path.join(out, f"plot-{THEME}.html"), "wb") as f:\n    f.write(chart.render())',
+    ],
+)
+def test_pygal_html_write_becomes_render_to_file(write: str) -> None:
+    """158 catalogue files write `chart.render()` through `open()`; `render_to_file` writes the same bytes."""
+    body = "out = os.path.dirname(os.path.abspath(__file__))\nchart = pygal.XY(width=3200, height=1800)\n"
+    code = PYGAL_HEAD + body + 'chart.render_to_png(f"plot-{THEME}.png")\n' + write + "\n"
+    report = normalise_report(code, library="pygal")
+
+    assert report.code.endswith(
+        'chart.render_to_png(f"plot-{THEME}.png")\nchart.render_to_file(f"plot-{THEME}.html")\n'
+    )
+    assert "open(" not in report.code and "__file__" not in report.code
+    assert report.changes[0].startswith("the HTML write through open() at lines 12-13 -> chart.render_to_file(")
+    assert norm(code, "pygal") == report.code
+
+
+def test_pygal_other_html_and_svg_writes_go_with_what_fed_them() -> None:
+    """contour-filled: an SVG file and a hand-built HTML page around the post-processed SVG."""
+    code = pygal_code('''
+        chart = pygal.XY(width=3200, height=1800)
+        base_svg = chart.render(is_unicode=True)
+
+        # Insert custom contour SVG before the closing </svg> tag
+        output_svg = base_svg.replace("</svg>", "<g/>\\n</svg>")
+
+        with open(f"plot-{THEME}.svg", "w", encoding="utf-8") as f:
+            f.write(output_svg)
+
+        # Convert to PNG using cairosvg
+        cairosvg.svg2png(bytestring=output_svg.encode("utf-8"), write_to=f"plot-{THEME}.png")
+
+        # Save HTML
+        html_content = f"""<!DOCTYPE html>
+        <html><body>{output_svg}</body></html>"""
+
+        with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+            f.write(html_content)
+    ''')
+    report = normalise_report(code, library="pygal")
+
+    assert report.code.endswith(
+        '\n\n# Convert to PNG using cairosvg\ncairosvg.svg2png(bytestring=output_svg.encode("utf-8"), '
+        'write_to=f"plot-{THEME}.png")\n'
+    )
+    assert "open(" not in report.code and "html_content" not in report.code and '.svg"' not in report.code
+    assert "output_svg = base_svg.replace(" in report.code  # it also feeds the PNG
+    assert report.changes[:3] == (
+        "removed the SVG write through open() at lines 15-16",
+        "removed the HTML write through open() at lines 25-26",
+        "removed html_content, which only fed a removed write, at lines 22-23",
+    )
+
+
+def test_pygal_svg_save_goes() -> None:
+    """network-basic and nine more files also save the theme SVG, which the plot sandbox refuses."""
+    code = pygal_code("""
+        chart = pygal.XY(width=3200, height=1800)
+        chart.render_to_png(f"plot-{THEME}.png")
+        # The SVG for the web
+        chart.render_to_file(f"plot-{THEME}.svg")
+    """)
+    report = normalise_report(code, library="pygal")
+
+    assert report.code.endswith('chart.render_to_png(f"plot-{THEME}.png")\n')
+    assert report.changes == ("removed the SVG save at line 12",)
+
+
+def test_pygal_write_whose_target_is_read_again_stays() -> None:
+    """network-hierarchical renders the SVG file and converts it with `svg2png(url=...)`."""
+    code = pygal_code("""
+        chart = pygal.XY(width=3200, height=1800)
+        chart.render_to_file(f"plot-{THEME}.svg")
+        with open(f"plot-{THEME}.svg", "w") as f:
+            f.write(chart.render(is_unicode=True))
+        cairosvg.svg2png(url=f"plot-{THEME}.svg", write_to=f"plot-{THEME}.png")
+    """)
+    report = normalise_report(code, library="pygal")
+
+    assert report.code == code
+    assert "html: the SVG save at line 10 is read again elsewhere; left in place" in report.notes
+    assert "html: the SVG write through open() at lines 11-12 is read again elsewhere; left in place" in report.notes
+
+
+def test_pygal_feeder_with_a_save_call_stays() -> None:
+    code = pygal_code("""
+        chart = pygal.XY(width=3200, height=1800)
+        png = chart.render_to_png()
+        with open(f"plot-{THEME}.html", "w") as f:
+            f.write(f"<img src='{png}'>")
+        chart.render_to_png(f"plot-{THEME}.png")
+    """)
+    result = norm(code, "pygal")
+
+    assert "png = chart.render_to_png()" in result and "open(" not in result
+
+
+def test_html_writes_stay_for_the_other_libraries() -> None:
+    code = THEME_BLOCK + 'with open(f"plot-{THEME}.html", "w") as f:\n    f.write(chart.render(is_unicode=True))\n'
+    assert norm(code) == code
+
+
+def test_pygal_html_open_writes_the_same_bytes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The rewrite's claim, for the three write forms: pygal's `render_to_file` writes what `open()` wrote."""
+    pytest.importorskip("pygal")
+    import pygal.graph.base
+
+    monkeypatch.setattr(pygal.graph.base, "uuid4", lambda: "00000000-0000-0000-0000-000000000000")
+    monkeypatch.setenv("ANYPLOT_THEME", "light")
+    chart = "chart = pygal.Bar(width=320, height=180, js=[])\nchart.add('a', [1, 3, 2])\n"
+    for number, write in enumerate(
+        [
+            'with open(f"plot-{THEME}.html", "wb") as f:\n    f.write(chart.render())',
+            'with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:\n    f.write(chart.render(is_unicode=True))',
+            'with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:\n    f.write(chart.render().decode("utf-8"))',
+        ]
+    ):
+        original = 'import os\n\nimport pygal\n\nTHEME = os.getenv("ANYPLOT_THEME", "light")\n' + chart + write + "\n"
+        normalised = normalise(original, library="pygal")
+        assert "render_to_file" in normalised
+        written = []
+        for form, code in (("original", original), ("normalised", normalised)):
+            directory = tmp_path / f"{number}-{form}"
+            directory.mkdir()
+            monkeypatch.chdir(directory)
+            exec(compile(code, "plot.py", "exec"), {"__name__": "__main__"})
+            written.append((directory / "plot-light.html").read_bytes())
+        assert written[0] == written[1], write
+
+
+@pytest.mark.parametrize(
+    ("chart", "size", "target"),
+    [
+        ("pygal.StackedLine(width=4800, height=2700, js=[])", "4800x2700", LANDSCAPE),
+        ("pygal.Pie(width=3600, height=3600)", "3600x3600", SQUARE),
+    ],
+)
+def test_pygal_large_chart_renders_the_canvas_through_svg2png(chart: str, size: str, target: tuple[int, int]) -> None:
+    """98 catalogue charts are 4800x2700 and 4 are 3600x3600; the layout stays, the PNG gets the canvas size."""
+    code = pygal_code(f"""
+        chart = {chart}
+        chart.add("a", [1, 2, 3])
+        chart.render_to_png(f"plot-{{THEME}}.png")
+    """)
+    report = normalise_report(code, library="pygal")
+
+    width, height = target
+    assert report.code.startswith("import os\n\nimport cairosvg\nimport numpy as np\nimport pygal\n")
+    assert report.code.endswith(
+        f'cairosvg.svg2png(bytestring=chart.render(), write_to=f"plot-{{THEME}}.png", output_width={width}, '
+        f"output_height={height})\n"
+    )
+    assert f"chart = {chart}" in report.code
+    assert report.changes == (
+        "added import cairosvg at line 3",
+        f"canvas: pygal chart {size} (the saved chart at line 9) renders {size}; the save renders {width}x{height} "
+        f"through cairosvg.svg2png(output_width={width}, output_height={height}) in place of render_to_png",
+    )
+    canvas = measure_canvas(report.code, library="pygal")
+    assert canvas.on_target and canvas.pixels == target
+    assert not measure_canvas(code, library="pygal").on_target
+    assert norm(code, "pygal") == report.code
+
+
+def test_pygal_svg2png_save_gets_the_output_size() -> None:
+    """Traced through `render`, `replace`, `encode` and names; an existing `import cairosvg as _cairosvg` is used."""
+    code = pygal_code("""
+        import cairosvg as _cairosvg
+
+        chart = pygal.XY(width=3600, height=3600)
+        svg = chart.render(is_unicode=True)
+        marked = svg.replace("</svg>", "<g/></svg>")
+        _cairosvg.svg2png(bytestring=marked.encode("utf-8"), write_to=f"plot-{THEME}.png", output_width=4800)
+    """)
+    report = normalise_report(code, library="pygal")
+
+    assert report.code.endswith(
+        '_cairosvg.svg2png(bytestring=marked.encode("utf-8"), write_to=f"plot-{THEME}.png", output_width=2400, '
+        "output_height=2400)\n"
+    )
+    assert report.changes[-1].startswith("canvas: pygal chart 3600x3600 (the saved chart at line 11) renders 4800x4800")
+    assert measure_canvas(report.code, library="pygal").pixels == SQUARE
+
+
+def test_pygal_from_import_of_svg2png_is_used() -> None:
+    code = pygal_code("""
+        from cairosvg import svg2png
+
+        chart = pygal.XY(width=4800, height=2700)
+        chart.render_to_png(filename=f"plot-{THEME}.png", dpi=96)
+    """)
+    result = norm(code, "pygal")
+
+    assert result.endswith(
+        'svg2png(bytestring=chart.render(), write_to=f"plot-{THEME}.png", dpi=96, output_width=3200, '
+        "output_height=1800)\n"
+    )
+    assert "import cairosvg" not in result
+
+
+@pytest.mark.parametrize(
+    ("body", "note", "pixels"),
+    [
+        (
+            'chart = pygal.XY(width=size, height=size)\nchart.render_to_png(f"plot-{THEME}.png")',
+            "canvas: the chart's width= at line 10 is not a positive numeric literal; the PNG size is left as it is",
+            None,
+        ),
+        (
+            'chart = pygal.XY(width=4800, height=3600)\nchart.render_to_png(f"plot-{THEME}.png")',
+            "canvas: pygal chart 4800x3600 (the saved chart at line 10) has another aspect than 16:9 or 1:1; the PNG "
+            "size is left as it is",
+            (4800, 3600),
+        ),
+        (
+            'chart = pygal.XY()\nchart.render_to_png(f"plot-{THEME}.png")',
+            "canvas: pygal chart 800x600 (the saved chart at line 10) has another aspect than 16:9 or 1:1; the PNG "
+            "size is left as it is",
+            (800, 600),
+        ),
+        (
+            "a = pygal.XY(width=4800, height=2700)\nb = pygal.Bar(width=4800, height=2700)\n"
+            'cairosvg.svg2png(bytestring=merge(a, b), write_to=f"plot-{THEME}.png")',
+            "canvas: 2 pygal charts in the file, none traced from the save at line 12; the PNG size is left as it is",
+            None,
+        ),
+    ],
+)
+def test_pygal_canvas_left_alone_with_a_note(body: str, note: str, pixels: tuple[int, int] | None) -> None:
+    code = PYGAL_HEAD + "size = 4800\n" + body + "\n"
+    report = normalise_report(code, library="pygal")
+
+    assert report.code == code
+    assert note in report.notes, report.notes
+    canvas = measure_canvas(code, library="pygal")
+    assert not canvas.on_target and canvas.pixels == pixels
+
+
+def test_pygal_canvas_already_on_target_is_kept() -> None:
+    code = pygal_code('chart = pygal.XY(width=3200, height=1800)\nchart.render_to_png(f"plot-{THEME}.png")\n')
+    assert norm(code, "pygal") == code
+    assert measure_canvas(code, library="pygal").pixels == LANDSCAPE
+
+
+# --- lets-plot -----------------------------------------------------------------------------
+
+
+LETSPLOT_HEAD = source("""
+    import os
+
+    import pandas as pd
+    from lets_plot import LetsPlot, aes, geom_point, ggplot, ggsave, ggsize
+
+    LetsPlot.setup_html()
+    THEME = os.getenv("ANYPLOT_THEME", "light")
+    df = pd.DataFrame({"x": [1, 2], "y": [3, 4]})
+""")
+
+
+def test_letsplot_catalogue_shape_in_miniature() -> None:
+    """A star import, the `export_ggsave` alias, saves without `path=` and the lets-plot-images epilogue."""
+    code = source("""
+        import os
+        import shutil
+
+        import pandas as pd
+        from lets_plot import *  # noqa: F403
+        from lets_plot.export import ggsave as export_ggsave
+
+        LetsPlot.setup_html()
+        THEME = os.getenv("ANYPLOT_THEME", "light")
+        df = pd.DataFrame({"x": [1, 2], "y": [3, 4]})
+        plot = ggplot(df, aes(x="x", y="y")) + geom_point() + ggsize(1600, 900)
+
+        export_ggsave(plot, f"plot-{THEME}.png", scale=3)
+        export_ggsave(plot, filename=f"plot-{THEME}.html")
+
+        # Move files from lets-plot-images to current directory
+        if os.path.exists("lets-plot-images"):
+            for f in [f"plot-{THEME}.png", f"plot-{THEME}.html"]:
+                src = os.path.join("lets-plot-images", f)
+                if os.path.exists(src):
+                    shutil.move(src, f)
+            if not os.listdir("lets-plot-images"):
+                shutil.rmtree("lets-plot-images")
+    """)
+    expected = source("""
+        import os
+
+        import pandas as pd
+        from lets_plot import (
+            LetsPlot,
+            aes,
+            geom_point,
+            ggplot,
+            ggsize,
+        )
+        from lets_plot.export import ggsave
+
+        LetsPlot.setup_html()
+        THEME = os.getenv("ANYPLOT_THEME", "light")
+        df = pd.DataFrame({"x": [1, 2], "y": [3, 4]})
+        plot = ggplot(df, aes(x="x", y="y")) + geom_point() + ggsize(1600, 900)
+
+        ggsave(plot, f"plot-{THEME}.png", path=".", scale=2)
+        ggsave(plot, filename=f"plot-{THEME}.html", path=".")
+    """)
+    report = normalise_report(code, library="letsplot")
+
+    assert report.code == expected
+    assert report.notes == ()
+    assert report.changes == (
+        "import ggsave as export_ggsave -> import ggsave at line 6",
+        "export_ggsave -> ggsave at line 13, 14",
+        "from lets_plot import * -> 5 names at line 5",
+        'added path="." to ggsave at line 19',
+        'added path="." to ggsave at line 20',
+        "removed the unused `import shutil` at line 2",
+        "removed the lets-plot-images epilogue at lines 23-29",
+        "canvas: 1600x900 (ggsize at line 16) at scale 3 renders 4800x2700; scale=2 renders 3200x1800",
+    )
+    assert norm(code, "letsplot") == expected
+    assert measure_canvas(expected, library="letsplot").pixels == LANDSCAPE
+
+
+@pytest.mark.parametrize(
+    "clash", ["ggsave = None", "def save(export_ggsave):\n    return export_ggsave", "from plotnine import ggsave"]
+)
+def test_letsplot_save_alias_stays_when_a_name_is_bound_again(clash: str) -> None:
+    code = LETSPLOT_HEAD.replace(", ggsave,", ",") + "from lets_plot.export import ggsave as export_ggsave\n\n"
+    code += clash + '\nexport_ggsave(ggplot(), f"plot-{THEME}.png", path=".", scale=2)\n'
+    report = normalise_report(code, library="letsplot")
+
+    assert "import ggsave as export_ggsave" in report.code
+    assert any(
+        note.startswith("save alias: ") and note.endswith("export_ggsave left unchanged") for note in report.notes
+    )
+
+
+def test_letsplot_star_import_lists_the_names_the_module_reads() -> None:
+    """renko-basic, with an explicit import kept, a name the file assigns (column-stratigraphic's `margin`) and a
+    name read only inside a function."""
+    code = source("""
+        import os
+
+        from lets_plot import *
+        from lets_plot import element_blank, theme
+
+        THEME = os.getenv("ANYPLOT_THEME", "light")
+        margin = 16
+        LetsPlot.setup_html()
+
+
+        def styled(plot):
+            return plot + theme_minimal() + theme(panel_grid=element_blank())
+
+
+        plot = styled(ggplot() + geom_tile(aes(x="x"), size=margin) + scale_fill_manual(values=["#009E73"]))
+        plot += ggsize(1600, 900) + labs(title="")
+        ggsave(plot, f"plot-{THEME}.png", path=".", scale=2)
+    """)
+    result = norm(code, "letsplot")
+
+    assert result.startswith(
+        "import os\n\nfrom lets_plot import (\n    LetsPlot,\n    aes,\n    geom_tile,\n    ggplot,\n    ggsave,\n"
+        "    ggsize,\n    labs,\n    scale_fill_manual,\n    theme_minimal,\n)\n"
+        "from lets_plot import element_blank, theme\n"
+    )
+
+
+@pytest.mark.parametrize(
+    ("code", "note"),
+    [
+        (
+            "from lets_plot import *\nfrom math import *\nplot = ggplot() + geom_point(size=pi)\n",
+            "star import: the file has 2 star imports; the star import at line 1 stays",
+        ),
+        (
+            "from lets_plot import *\n\n\ndef keep():\n    global plot\n    plot = ggplot()\n",
+            "star import: a global statement at line 5; the star import at line 1 stays",
+        ),
+        (
+            "from lets_plot import *\nplot = ggplot() + theme(legend_position='top')\ntheme = None\n",
+            "star import: theme is read before the file binds it; the star import at line 1 stays",
+        ),
+        (
+            "try:\n    from lets_plot import *\nexcept ImportError:\n    pass\n",
+            "star import: it is not a module-level statement; the star import at line 2 stays",
+        ),
+    ],
+)
+def test_letsplot_star_import_refusals_keep_it_with_a_note(code: str, note: str) -> None:
+    report = normalise_report(code, library="letsplot")
+
+    assert "from lets_plot import *" in report.code
+    assert note in report.notes, report.notes
+
+
+def test_letsplot_unused_star_import_goes() -> None:
+    code = 'import os\nfrom lets_plot import *\n\nTHEME = os.getenv("ANYPLOT_THEME", "light")\n'
+    report = normalise_report(code, library="letsplot")
+
+    assert report.code == 'import os\n\nTHEME = os.getenv("ANYPLOT_THEME", "light")\n'
+    assert report.changes[0] == "removed the unused `from lets_plot import *` at line 2"
+
+
+@pytest.mark.parametrize(
+    ("saves", "expected"),
+    [
+        # hive-basic: no path=, so lets-plot writes into ./lets-plot-images (the sandbox refuses the os.mkdir)
+        (
+            'ggsave(plot, f"plot-{THEME}.png", scale=3)\nggsave(plot, filename=f"plot-{THEME}.html")',
+            'ggsave(plot, f"plot-{THEME}.png", path=".", scale=2)\nggsave(plot, filename=f"plot-{THEME}.html", path=".")',
+        ),
+        # scatter-annotated: a computed directory, and lets-plot's default spelled out
+        (
+            "_script_dir = Path(__file__).parent\n"
+            'ggsave(plot, f"plot-{THEME}.png", path=str(_script_dir), scale=3)\n'
+            'ggsave(plot, f"plot-{THEME}.html", path=None)',
+            'ggsave(plot, f"plot-{THEME}.png", path=".", scale=2)\nggsave(plot, f"plot-{THEME}.html", path=".")',
+        ),
+        # gain-curve: the shared target rewrite first, then the directory
+        (
+            "output_dir = os.getcwd()\n"
+            'ggsave(plot, os.path.join(output_dir, f"plot-{THEME}.png"), scale=3)\n'
+            'ggsave(plot, os.path.join(output_dir, f"plot-{THEME}.html"))',
+            'ggsave(plot, f"plot-{THEME}.png", path=".", scale=2)\nggsave(plot, f"plot-{THEME}.html", path=".")',
+        ),
+    ],
+)
+def test_letsplot_saves_get_the_directory(saves: str, expected: str) -> None:
+    code = "from pathlib import Path\n\n" + LETSPLOT_HEAD + "plot = ggplot(df) + geom_point() + ggsize(1600, 900)\n"
+    result = norm(code + saves + "\n", "letsplot")
+
+    assert result.endswith(expected + "\n")
+    assert "Path" not in result.replace("LetsPlot", "") and "output_dir" not in result
+
+
+def test_letsplot_other_literal_directory_stays_with_a_note() -> None:
+    code = (
+        LETSPLOT_HEAD + 'plot = ggplot() + ggsize(1600, 900)\nggsave(plot, f"plot-{THEME}.png", path="out", scale=2)\n'
+    )
+    report = normalise_report(code, library="letsplot")
+
+    assert 'path="out"' in report.code
+    assert "save directory: the ggsave at line 10 saves into path='out'; left unchanged" in report.notes
+
+
+@pytest.mark.parametrize(
+    "epilogue",
+    [
+        # chessboard-pieces: one guarded move per file, then the directory
+        """
+        # Move files from lets-plot-images to current directory
+        if os.path.exists(f"lets-plot-images/plot-{THEME}.png"):
+            shutil.move(f"lets-plot-images/plot-{THEME}.png", f"plot-{THEME}.png")
+        if os.path.exists("lets-plot-images"):
+            shutil.rmtree("lets-plot-images")
+        """,
+        # histogram-overlapping: a listing loop
+        """
+        if os.path.exists("lets-plot-images"):
+            for file in os.listdir("lets-plot-images"):
+                src = os.path.join("lets-plot-images", file)
+                if os.path.isfile(src):
+                    shutil.move(src, file)
+            shutil.rmtree("lets-plot-images")
+        """,
+        # line-3d-trajectory: pathlib names and a copy
+        """
+        lpi_dir = pathlib.Path("lets-plot-images")
+        if lpi_dir.exists():
+            for ext in ["png", "html"]:
+                src = lpi_dir / f"plot-{THEME}.{ext}"
+                dst = pathlib.Path(f"plot-{THEME}.{ext}")
+                if src.exists() and not dst.exists():
+                    shutil.copy(src, dst)
+        """,
+        # line-loss-training: a glob over the directory
+        """
+        images_dir = Path("lets-plot-images")
+        if images_dir.exists():
+            for file in images_dir.glob(f"plot-{THEME}.*"):
+                shutil.move(str(file), str(file.name))
+        """,
+        # spectrum-basic: a cleanup that swallows OSError
+        """
+        try:
+            if not os.listdir("lets-plot-images"):
+                os.rmdir("lets-plot-images")
+        except OSError:
+            pass
+        """,
+        # swimmer-clinical-timeline: a dead cleanup with its own import
+        """
+        if os.path.exists("lets-plot-images"):
+            import shutil
+
+            shutil.rmtree("lets-plot-images")
+        """,
+    ],
+)
+def test_letsplot_images_epilogue_goes(epilogue: str) -> None:
+    saves = source("""
+        plot = ggplot(df) + geom_point() + ggsize(1600, 900)
+        ggsave(plot, f"plot-{THEME}.png", path=".", scale=2)
+        ggsave(plot, f"plot-{THEME}.html", path=".")
+    """)
+    code = "import pathlib\nimport shutil\nfrom pathlib import Path\n" + LETSPLOT_HEAD + saves + "\n" + source(epilogue)
+    report = normalise_report(code, library="letsplot")
+
+    assert report.code == LETSPLOT_HEAD + saves
+    assert any(change.startswith("removed the lets-plot-images epilogue") for change in report.changes)
+    assert report.notes == ()
+
+
+def test_letsplot_returned_path_becomes_the_save() -> None:
+    """line-confidence moves the path ggsave returns; the save then sizes in pixels, so only the scale changes."""
+    code = (
+        "import shutil\n"
+        + LETSPLOT_HEAD
+        + source("""
+        plot = ggplot(df) + geom_point() + ggsize(1600, 900)
+
+        # Save as PNG (4800 x 2700 px)
+        png_path = ggsave(plot, f"plot-{THEME}.png", w=4800, h=2700, unit="px", dpi=100)
+        shutil.move(png_path, f"plot-{THEME}.png")
+
+        # Save as HTML
+        html_path = ggsave(plot, f"plot-{THEME}.html")
+        shutil.move(html_path, f"plot-{THEME}.html")
+    """)
+    )
+    report = normalise_report(code, library="letsplot")
+
+    assert report.code.endswith(
+        "# Save as PNG (4800 x 2700 px)\n"
+        'ggsave(plot, f"plot-{THEME}.png", path=".", w=4800, h=2700, unit="px", dpi=100, scale=0.6667)\n\n'
+        '# Save as HTML\nggsave(plot, f"plot-{THEME}.html", path=".")\n'
+    )
+    assert "png_path = ggsave(...) -> ggsave(...) at line 13" in report.changes
+    assert measure_canvas(report.code, library="letsplot").pixels == LANDSCAPE
+
+
+def test_letsplot_statement_that_does_more_than_move_stays_with_a_note() -> None:
+    code = LETSPLOT_HEAD + source("""
+        lp_dir = "lets-plot-images"
+        plot = ggplot(df) + ggsize(1600, 900)
+        ggsave(plot, f"plot-{THEME}.png", path=".", scale=2)
+        print(os.listdir(lp_dir))
+        if os.path.exists(lp_dir):
+            os.rmdir(lp_dir)
+    """)
+    report = normalise_report(code, library="letsplot")
+
+    assert 'lp_dir = "lets-plot-images"' in report.code and "print(os.listdir(lp_dir))" in report.code
+    assert "os.rmdir" not in report.code
+    assert "save epilogue: the statement at line 12 uses lets-plot-images in other ways; left in place" in report.notes
+
+
+@pytest.mark.parametrize(
+    ("plot", "save", "scale", "pixels"),
+    [
+        ("ggsize(1600, 900)", "scale=3", "scale=2", LANDSCAPE),  # 106 catalogue files rendered 4800x2700
+        ("ggsize(1200, 1200)", "scale=3", "scale=2", SQUARE),
+        ("ggsize(900, 900)", "scale=3", "scale=2.667", SQUARE),
+        ("ggsize(800, 450)", "", ", scale=4", LANDSCAPE),  # lets-plot's default scale is 2
+        ("ggsize(800, 450)", "dpi=150", "dpi=150, scale=2.56", LANDSCAPE),  # dpi= scales by dpi / 96
+        ("ggsize(1600, 900)", "w=16, h=9, unit='in', dpi=100", "dpi=100, scale=2", LANDSCAPE),
+        ("ggsize(1600, 960)", "scale=3", "scale=1.874", (2998, 1799)),  # tier 2: inside the canvas, under R2's cap
+    ],
+)
+def test_letsplot_canvas_changes_only_the_scale(plot: str, save: str, scale: str, pixels: tuple[int, int]) -> None:
+    keywords = f", {save}" if save else ""
+    code = (
+        LETSPLOT_HEAD
+        + f'plot = ggplot(df) + geom_point() + {plot}\nggsave(plot, f"plot-{{THEME}}.png", path="."{keywords})\n'
+    )
+    report = normalise_report(code, library="letsplot")
+
+    assert plot in report.code and scale in report.code.splitlines()[-1]
+    assert measure_canvas(report.code, library="letsplot").pixels == pixels
+    assert norm(code, "letsplot") == report.code
+
+
+@pytest.mark.parametrize(
+    ("plot", "note"),
+    [
+        # candlestick-volume: a grid sizes itself from its panels
+        (
+            "top = ggplot() + ggsize(1600, 630)\nbottom = ggplot() + ggsize(1600, 270)\nplot = gggrid([top, bottom])",
+            "canvas: gggrid at line 11 has no ggsize of its own; the render relies on the R3 canvas gate",
+        ),
+        # an aspect no scale reaches, under R2's cap
+        (
+            "plot = ggplot() + ggsize(800, 853)",
+            "canvas: 800x853 (ggsize at line 9) at scale 3 renders 2400x2559; no scale renders 3200x1800 or "
+            "2400x2400, so the render relies on the R3 gate",
+        ),
+    ],
+)
+def test_letsplot_canvas_left_alone_with_a_note(plot: str, note: str) -> None:
+    code = LETSPLOT_HEAD.replace("ggsave, ggsize", "ggsave, gggrid, ggsize") + plot + "\n"
+    code += 'ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)\n'
+    report = normalise_report(code, library="letsplot")
+
+    assert report.code == code
+    assert note in report.notes, report.notes
+    assert not measure_canvas(code, library="letsplot").on_target
+
+
+def test_letsplot_plot_size_falls_back_to_the_file_and_the_default() -> None:
+    added = (
+        LETSPLOT_HEAD
+        + 'plot = ggplot(df) + geom_point()\nplot += ggsize(1600, 900)\nggsave(plot, f"plot-{THEME}.png", path=".", scale=3)\n'
+    )
+    assert measure_canvas(added, library="letsplot").note == (
+        "lets-plot renders 4800x2700 from 1600x900 (the file's only ggsize) at scale 3, target 3200x1800"
+    )
+    default = LETSPLOT_HEAD + 'plot = ggplot(df) + geom_point()\nggsave(plot, f"plot-{THEME}.png", path=".")\n'
+    assert measure_canvas(default, library="letsplot").pixels == (1200, 800)  # 600x400 at the default scale 2
+
+
+def test_max_image_pixels_is_r2s_cap() -> None:
+    from agents.anyplot.render.png import MAX_IMAGE_PIXELS as R2_CAP
+
+    assert MAX_IMAGE_PIXELS == R2_CAP
+
+
 # --- canvas ------------------------------------------------------------------------------
 
 
@@ -511,9 +1426,15 @@ def test_measure_canvas_and_effective_dpi() -> None:
 @pytest.mark.parametrize("path", CATALOGUE_FILES, ids=lambda p: f"{p.parts[-4]}-{p.stem}")
 def test_catalogue_sweep(path: Path) -> None:
     original = path.read_text(encoding="utf-8")
-    result = normalise(original, library=path.stem)
+    report = normalise_report(original, library=path.stem)
+    result = report.code
 
     assert normalise(result, library=path.stem) == result
+    if any(change.startswith("canvas:") for change in report.changes) and path.stem in ("pygal", "letsplot"):
+        rendered = measure_canvas(result, library=path.stem)
+        assert rendered.pixels is not None and rendered.target is not None, rendered.note
+        assert all(side <= limit + TOLERANCE for side, limit in zip(rendered.pixels, rendered.target, strict=True))
+        assert rendered.pixels[0] * rendered.pixels[1] <= MAX_IMAGE_PIXELS
     regions = find_regions(original, library=path.stem)
     size, _ = figure_size(regions)
     call = regions.savefig or (regions.savefig_calls[-1] if regions.savefig_calls else None)

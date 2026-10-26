@@ -20,7 +20,7 @@ from core.constants import SUPPORTED_LIBRARIES
 class TestRegistry:
     def test_the_registry_serves_exactly_the_normalised_python_libraries(self) -> None:
         assert RUNTIME_LIBRARIES == PYTHON_LIBRARIES == NORMALISED_LIBRARIES
-        assert PYTHON_LIBRARIES == {"matplotlib", "seaborn", "plotnine", "altair"}
+        assert PYTHON_LIBRARIES == {"matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot"}
         assert RUNTIME_LIBRARIES <= SUPPORTED_LIBRARIES
 
     @pytest.mark.parametrize("library", sorted(RUNTIME_LIBRARIES))
@@ -103,3 +103,43 @@ class TestPythonRuntimeBindings:
         assert plotnine.file_name == altair.file_name == "plot.py" and altair.code_artifact == "plot.py"
         changed = self.PLOTNINE.replace("dpi=400", "dpi=100")
         assert plotnine.restore_protected(self.PLOTNINE, changed) == self.PLOTNINE
+
+
+class TestRowEnvironment:
+    """The local Docker backend renders with the library's command row as the renderer's `sandbox_env` does (1c)."""
+
+    @pytest.mark.parametrize("library", sorted(RUNTIME_LIBRARIES))
+    def test_the_render_env_carries_the_row_env_and_its_own_limit(self, library: str) -> None:
+        from agents.renderer.commands import command_for
+        from agents.renderer.executor import ExecutorConfig, sandbox_env
+        from agents.renderer.settings import RendererSettings
+
+        row = command_for("python", library)
+        local = runtime_for(library).env("dark")
+        deployed = sandbox_env(ExecutorConfig.from_settings(RendererSettings()), "dark", 60, command=row)
+        for key, value in row.env.items():
+            assert local[key] == deployed[key] == value, key
+        if row.rlimit_as_mb is not None:
+            assert local["ANYPLOT_RLIMIT_AS_MB"] == deployed["ANYPLOT_RLIMIT_AS_MB"] == str(row.rlimit_as_mb)
+        else:
+            assert "ANYPLOT_RLIMIT_AS_MB" not in local  # a local render keeps no configured limit, as before 1c
+        assert local["ANYPLOT_THEME"] == "dark" and local["MPLBACKEND"] == "Agg" and local["HOME"] == "/tmp"
+
+    def test_lets_plot_gets_its_allocator_fontconfig_and_limit_locally(self) -> None:
+        env = runtime_for("letsplot", cpu_seconds=45).env("light")
+        assert env["ARROW_DEFAULT_MEMORY_POOL"] == "system" and env["FONTCONFIG_FILE"] == "/opt/anyplot/fonts.conf"
+        assert env["ANYPLOT_RLIMIT_AS_MB"] == "2048" and env["ANYPLOT_RLIMIT_CPU_S"] == "45"
+
+    def test_the_other_python_libraries_keep_the_render_env_they_had(self) -> None:
+        keys = {
+            "ANYPLOT_THEME",
+            "MPLBACKEND",
+            "MPLCONFIGDIR",
+            "ANYPLOT_MPL_SEED",
+            "HOME",
+            "PYTHONDONTWRITEBYTECODE",
+            "ANYPLOT_RLIMIT_CPU_S",
+        }
+        for library in ("matplotlib", "seaborn", "plotnine", "altair", "pygal"):
+            assert set(runtime_for(library).env("light")) == keys, library
+        assert set(PythonRuntime().env("light")) == keys

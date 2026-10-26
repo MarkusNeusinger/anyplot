@@ -6,8 +6,8 @@ return an empty list for valid code and never raise on invalid code: a syntax er
 one only the compiler reports, such as a module-level `return`), an oversize file or a
 string that is not UTF-8 text is itself a `Finding`. Only `library` makes
 `validate_security` raise `ValueError`: an id outside the catalogue, or a catalogue
-library without a profile yet (`LIBRARY_IMPORTS`: matplotlib, seaborn, plotnine and
-altair), because that is a caller bug, not a property of the code.
+library without a profile yet (`LIBRARY_IMPORTS`: matplotlib, seaborn, plotnine, altair,
+pygal and letsplot), because that is a caller bug, not a property of the code.
 
 The validator is one guardrail layer, not the boundary: the sandbox (no egress, read-only
 root, no environment) and the loader substitution are the others. Its job is to make the
@@ -32,7 +32,29 @@ Decisions this module takes where the design leaves room:
   `alt.limit_rows` hands out, whose `.implementation.to_native_namespace()` is the pyarrow
   module; VegaFusion's `transformed_data`; and plotnine's `.environment`, the captured
   namespace every plot carries, whose `.namespace["os"]` is the `os` module as a value.
-  The four extra scipy modules,
+  pygal gets `pygal` and `cairosvg` (its PNG writer, which 98 catalogue files import
+  directly), lets-plot gets `lets_plot` (surveys of 2026-10-24, drafts and spikes of
+  2026-10-26, `agentic/specs/261024-agent-all-libraries.md`, step 1c); `xml.etree`, PIL
+  and cairocffi stay out of pygal's surface and PIL out of lets-plot's, so the catalogue
+  files that post-process the SVG or composite the PNG stay blocked. libcairo writes
+  pygal's PNG with its own `fopen`, which the render guard never sees, so the closures
+  matter more there: cairosvg's modules that read any path or URL or write any file
+  (`parser`, `surface`, `url`, `image`, `css`, `features`, `test_api`, the re-exported
+  `Path` and the `ROOT` instance, banned on their module in `MODULE_ESCAPES`), cairocffi
+  reached as `.cairo` with its `ffi`, `dlopen` and file surfaces, cairosvg's other
+  writers (`svg2pdf`, `svg2ps`, `svg2eps`, `svg2svg`, `SURFACES`) and fetchers, and
+  pygal's renderers that open a browser or hand out the live tree, its `getattr` by
+  string (`cut`), its `str.format` (`template`) and its config merge (`_update`), all in
+  pygal's `LIBRARY_BANS`; `etree`, pygal's ElementTree proxy, is banned on every
+  receiver (`UNSAFE_SUBMODULES`), and so are `cssselect2`, `tinycss2`, `webencodings` and
+  `cairocffi` (`ESCAPE_ATTRIBUTES`): cssselect2 `eval`s the selectors it compiles, and a
+  forged token object handed to its compiler reaches an unquoted slot of that code (the
+  pygal spike of 2026-10-26). lets-plot's geocoding, map tiles, settings and browser
+  launcher are denied imports and banned submodules, its writers (`to_png`, `to_svg`,
+  `to_pdf`), browser hook (`setup_show_ext`), import-by-name proxy (`LazyModule`) and
+  geocoders are `UNSAFE_HELPERS`, the proxies it hands out (`png`, `palettable`,
+  `geopandas`) `ESCAPE_ATTRIBUTES`, and `LetsPlot.set`, `LetsPlot.setup_show_ext` and
+  `lets_plot.cfg` `MODULE_ESCAPES`. The four extra scipy modules,
   `statsmodels.graphics` and the toolkits were admitted after the readiness sweep showed
   them behind most of the catalogue's benign import blocks; each was walked for file or
   network helpers and has none. The pure computing modules of the standard library
@@ -109,7 +131,8 @@ Decisions this module takes where the design leaves room:
   URLs; `.io` and `ExcelWriter` are added for `pandas.io.common.get_handle` and the
   Excel writer, and `open_memmap`, `imsave`, `to_filehandle`, `open_file_cm`,
   `rc_params_from_file` and the rarer pandas writers for the remaining file paths of
-  numpy, matplotlib and pandas; the design's list names none of them.
+  numpy, matplotlib and pandas; the design's list names none of them. The one exception
+  is lets-plot's spec builders ("lets-plot" below).
 * **Import paths are checked component by component** against the same name sets, so
   an alias cannot drop a banned component: `import pandas.io.common as common` and
   `import numpy.lib.format as fmt` are findings although `common.get_handle` and
@@ -133,21 +156,39 @@ Decisions this module takes where the design leaves room:
 * **URL literals** match `http://`, `https://`, `ftp://`, and `file:`/`data:` followed
   by a non-space character, case-insensitively and at a word boundary, so a subtitle
   "Source data: 2024 survey" or the word "profile:" passes while `data:image/png;...`
-  and `file:///etc/passwd` do not.
+  and `file:///etc/passwd` do not. pygal's profile lets two kinds pass: the SVG and XLink
+  namespace names, exactly `http://www.w3.org/2000/svg` and
+  `http://www.w3.org/1999/xlink`, also in Clark notation (`{...}rect`), followed by a
+  quote, `}`, whitespace or the end of the string (an XML parser compares them and never
+  fetches them; 31 catalogue files write or match SVG markup), and pygal's own
+  stylesheets in a `css=` list ("pygal's config" below).
 * **The save (`savefig-target`).** Every call of a save name (`regions.SAVE_NAMES`:
-  `savefig`, `save`, `ggsave`), not only the last, is checked against the library's save
-  rule (`regions.SAVE_RULES`). A name the rule does not list is a `banned-call` (`np.save`
-  with matplotlib, `fig.savefig` with altair). The file argument (the rule's positional,
-  `fname=`, `filename=` or `fp=`; `ggsave` takes the plot first and the file second) must
-  be exactly the f-string `f"plot-{THEME}.png"`, for altair also `f"plot-{THEME}.html"`,
-  the second file its catalogue writes; `format=` is absent or the file's own type; there
-  are no `**arguments`; and plotnine's `save` and `ggsave` and altair's `save` take only
-  the keywords the rule lists (the size, the dpi, altair's `scale_factor`), so `path=`,
-  which joins a directory, `webdriver=` and `engine=`, which choose how altair makes the
-  PNG, are findings. A file without a save of the PNG is a finding too; a second save
-  writing elsewhere is never wanted. A save name may only be called where it is named
+  `savefig`, `save`, `ggsave`, `render_to_png`, `render_to_file`, `svg2png`), not only the
+  last, is checked against the library's save rule (`regions.SAVE_RULES`). A name the rule
+  does not list is a `banned-call` (`np.save` with matplotlib, `fig.savefig` with altair,
+  PIL's `.save` with pygal). The file argument (the rule's positional, `fname=`,
+  `filename=`, `fp=` or `write_to=`; `ggsave` takes the plot first and the file second,
+  `cairosvg.svg2png` takes every argument by keyword) must be exactly the f-string
+  `f"plot-{THEME}.png"`, for altair, pygal and lets-plot also `f"plot-{THEME}.html"`,
+  the second file their catalogues write; `format=` is absent or the file's own type;
+  there are no `**arguments`; and the saves of plotnine, altair, pygal and lets-plot take
+  only the keywords the rule lists (the size, the dpi, altair's `scale_factor`, svg2png's
+  input and output size), so `path=` with plotnine, which joins a directory, `webdriver=`
+  and `engine=`, which choose how altair makes the PNG, a pygal save's chart options and
+  svg2png's `url=`, `file_obj=` and `unsafe=`, which read any path or URL, are findings.
+  lets-plot's `ggsave` passes exactly `path="."` (`SaveRule.directory`): without it,
+  lets-plot writes into a `lets-plot-images` directory it creates. A file without a save
+  of the PNG is a finding too, and so is a save without a file (pygal's
+  `render_to_png()` returns bytes) or with a file object; a second save writing
+  elsewhere is never wanted. A save name may only be called where it is named
   (`f = plot.save; f("x")` would hide the target), and so may `.open`, which only altair's
   rule admits, on the PNG (the PIL block reopens it: `Image.open(f"plot-{THEME}.png")`).
+  A save name is never imported under another name (`from plotnine import ggsave as
+  keep`), nothing is imported under a save name, and a bare save name is only ever the
+  callee of a call (`g = ggsave`, `[ggsave][0](...)` and `partial(ggsave, plot)` are
+  `banned-call` findings in every profile): the rule matches calls by their callee's
+  name, so a save reached under another name would write anywhere (the lets-plot draft
+  of 2026-10-26 showed it in the plotnine profile).
 * **Expression strings (plotnine).** plotnine compiles and evaluates a string that is not
   a column name wherever it takes an aesthetic or a facet (`aes`, `after_stat`,
   `after_scale`, `stage`, `facet_wrap`, `facet_grid`, `qplot`), with real builtins and the
@@ -168,6 +209,37 @@ Decisions this module takes where the design leaves room:
   string to patsy, which `exec`s Python while it parses, and the render guard refuses
   that. The guard lets plotnine's `Environment.eval` run the walked strings
   (`harness.CODE_BUILDERS`); what they reach stays under the guard.
+* **pygal's config.** A `css` or `js` entry that starts with `file://` is read from any
+  path and inlined into the SVG, any other entry but `inline:...` becomes a stylesheet or
+  script the HTML fetches, `defs` is raw SVG markup, and a `googlefont:` font makes the
+  SVG load Google Fonts (pygal 3.1.3, surveyed 2026-10-24). So `js=` takes only an empty
+  list or tuple (30 catalogue files pass `js=[]`), `css=` takes a list or tuple of
+  `inline:` texts (a string or an f-string whose text starts with it) and pygal's own
+  `file://style.css`, `file://graph.css` and `file://base.css`, `defs` is refused, all
+  three as keywords on any call and as `.css = [...]` and `.js = [...]` assignments; a
+  list or a text may be a name bound once at module level, used nowhere but where the
+  rule reads it. The attributes are never read, augmented, subscripted or deleted, so a
+  list cannot change after the check (`chart.css += [...]`, `chart.css.append(...)`), and
+  every `**` argument is a dict literal with string keys, or a name bound once at module
+  level to one and used only as `**name` (3 catalogue files share their chart options
+  that way), whose `css`, `js` and `defs` keys are checked the same way. A string that
+  contains `googlefont:` is a `url-literal`. Findings are `banned-keyword` for a value and
+  `banned-attribute` for an attribute.
+* **lets-plot.** `LetsPlot` is used only as `LetsPlot.setup_html()` without arguments
+  (every one of the 325 catalogue files; `set` points the HTML's script at any URL and
+  `setup_show_ext` starts a browser), and `.props`, which hands out a layer's spec dict
+  for rewriting after the check (an image layer's `href` included), is banned in its
+  profile (`LIBRARY_BANS`; the spike of 2026-10-26). The `.format` ban has one exception
+  here: lets-plot's tooltip and label builders set a field's format with `.format(field,
+  format)` (128 uses in 59 catalogue files), so `.format` passes when its receiver is a
+  chain of builder method calls (`LETSPLOT_BUILDER_METHODS`, each of which returns the
+  builder) rooted in a call of `layer_tooltips`, `layer_labels` or `smooth_labels`
+  imported with `from lets_plot import ...`, bound nowhere else and never assigned as an
+  attribute (`lets_plot.layer_tooltips = str` before the import), and when it takes only
+  string literals (positional, or `field=` and `format=`). `"{0}".format(...)`, a builder
+  bound to a name (`tt = layer_tooltips(); tt.format(...)`) and a builder name bound
+  twice stay findings. The `format=` keyword (`scale_y_continuous(format=...)`) is
+  no attribute and passes everywhere.
 * **`type()`** is allowed with exactly one plain positional argument; anything else
   (three arguments, starred arguments, keywords) is the class-creating form.
 * **String method names.** pandas resolves `df.agg("to_csv")`, `df.apply("eval")` and
@@ -235,7 +307,8 @@ before validation.
 Rule ids: `size`, `encoding`, `syntax`, `banned-import` (with `Finding.module`), `star-import`,
 `relative-import`, `os-use`, `module-value`, `banned-name`, `banned-call`, `banned-attribute`,
 `banned-keyword`, `rc-key`, `dunder`, `banned-statement`, `url-literal`, `string-length`, `savefig-target`
-(SECURITY; DATA without `savefig-target`; a plotnine expression string's finding keeps the id of the rule it broke);
+(SECURITY; DATA without `savefig-target`; a plotnine expression string's finding keeps the id of the rule it broke;
+pygal's config and lets-plot's rules use the ids above);
 `placeholder-count`, `placeholder-use`, `rng`, `literal-data`, `palette-prefix`
 (ADAPTATION); `data-frame` (DATA). Findings are sorted by line; messages never echo
 more than about 60 characters of code and never echo string literal contents.
@@ -247,7 +320,7 @@ import ast
 import re
 import sys
 from collections import defaultdict
-from collections.abc import Container, Iterable
+from collections.abc import Callable, Container, Iterable
 from dataclasses import dataclass
 from typing import Literal, TypeVar
 
@@ -381,6 +454,14 @@ DENIED_IMPORTS: frozenset[str] = frozenset(
         "altair.utils.execeval",
         "altair.utils.server",
         "altair.utils.html",
+        # lets-plot (survey of 2026-10-24): `geo_data` geocodes over urllib, `tilesets`, `settings_utils` and the
+        # livemap geom put tile and geocoder URLs into the spec, `frontend_context` writes a temporary HTML file and
+        # starts a browser.
+        "lets_plot.geo_data",
+        "lets_plot.tilesets",
+        "lets_plot.settings_utils",
+        "lets_plot.frontend_context",
+        "lets_plot.plot.geom_livemap_",
     }
 )
 # The three toolkits ship with matplotlib and do no I/O. Third-party plotting helpers
@@ -392,13 +473,19 @@ _MATPLOTLIB_STACK: frozenset[str] = frozenset(
 # One profile per Python library with a save rule (`regions.SAVE_RULES`): plotnine draws
 # with matplotlib (5 catalogue files import it directly) and scales with mizani; altair's
 # catalogue pads the PNG with `PIL.Image` (the module, not the package: `ImageDraw`,
-# `ImageFont` and the rest stay out). The other Python libraries (plotly, bokeh, pygal,
-# lets-plot) have no profile yet and raise `ValueError`.
+# `ImageFont` and the rest stay out); pygal renders its PNG through cairosvg, which 98
+# catalogue files also import directly (`cairocffi`, `PIL`, `xml.etree` and matplotlib stay
+# out, and so do the 23 catalogue files that subclass pygal's `Graph`: a class definition
+# is refused in every profile); lets-plot needs nothing else (no catalogue file imports
+# matplotlib with it; the 4 that draw on the PNG with PIL stay out). The other Python
+# libraries (plotly, bokeh) have no profile yet and raise `ValueError`.
 LIBRARY_IMPORTS: dict[str, frozenset[str]] = {
     "matplotlib": _MATPLOTLIB_STACK,
     "seaborn": _MATPLOTLIB_STACK | {"seaborn"},
     "plotnine": _MATPLOTLIB_STACK | {"plotnine", "mizani"},
     "altair": frozenset({"altair", "PIL.Image"}),
+    "pygal": frozenset({"pygal", "cairosvg"}),
+    "letsplot": frozenset({"lets_plot"}),
 }
 # The DATA profile: no plotting stack, no sklearn (its `datasets` fetch over the network) and
 # no statsmodels (`statsmodels.api.datasets` and `webuse` read files and URLs). The standard
@@ -706,6 +793,18 @@ ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
         "vl_convert",
         "pyarrow",
         "polars",
+        # cairosvg's `css` and `parser` hand out cssselect2, whose selector compiler `eval`s the code it builds: a
+        # forged token object reaches an unquoted slot of it (the pygal spike of 2026-10-26); tinycss2 and
+        # webencodings are its parser, cairocffi the C binding behind `.cairo` (survey of 2026-10-24).
+        "cssselect2",
+        "tinycss2",
+        "webencodings",
+        "cairocffi",
+        # lets-plot's `LazyModule` proxies import their module by name on the first attribute access:
+        # `geom_imshow_.png.Reader(filename=...)` reads any file (survey of 2026-10-24, its refute pass).
+        "geopandas",
+        "png",
+        "palettable",
     }
 )
 UNSAFE_SUBMODULES: frozenset[str] = frozenset(
@@ -737,13 +836,24 @@ UNSAFE_SUBMODULES: frozenset[str] = frozenset(
         "server",  # altair.utils.server opens a port and a browser; the attribute is the stdlib http.server
         "html",  # altair.utils.html: Jinja templates built from text (`environment.from_string`)
         "jupyter",  # altair.jupyter re-exports importlib's `find_spec`
+        # pygal and cairosvg (surveys of 2026-10-24): pygal's ElementTree proxy, re-exported as `pygal.svg.etree` and
+        # `pygal.graph.map.etree` (`parse`, `ElementTree(root).write(path)`); cairosvg's pytest module.
+        "etree",
+        "test_api",
+        # lets-plot (survey of 2026-10-24): the browser launcher, geocoding, tile and geocoder URLs, the livemap geom.
+        "frontend_context",
+        "geo_data",
+        "settings_utils",
+        "tilesets",
+        "geom_livemap_",
     }
 )
 """Submodules of the allowed packages that test, build, start processes, run LaTeX or import by name (validator
 review of 2026-10-14: `np.testing.measure` compiles and execs its string). Banned like `ESCAPE_ATTRIBUTES`: as an
 attribute on any object, as a `from` import and as an import path component below its root. A test pins that every
-public first-level submodule of numpy, pandas, matplotlib, seaborn and scikit-learn is either reviewed as safe or
-in this set, so a library upgrade that adds one fails until someone looks at it."""
+public first-level submodule of numpy, pandas, matplotlib, seaborn, scikit-learn and the plotting libraries is
+either reviewed as safe or banned by name (here, or on its own module in `MODULE_ESCAPES`), so a library upgrade
+that adds one fails until someone looks at it."""
 UNSAFE_HELPERS: frozenset[str] = frozenset(
     {
         "test",  # np.test, pd.test, mpl.test, scipy's and statsmodels' `test()` run pytest
@@ -836,6 +946,33 @@ UNSAFE_HELPERS: frozenset[str] = frozenset(
         "namespaces",
         "qplot",
         "from_formula",
+        # lets-plot (survey of 2026-10-24): the writers next to `ggsave` (`to_html` is in `BANNED_IO`, `show` in
+        # `BANNED_ATTRIBUTES`), the browser hook and its page context, import by name (`LazyModule("subprocess")`),
+        # the livemap geom and its tile configs, the geocoders and the requests they send, and `pkgutil.extend_path`
+        # left on the package root. No catalogue file of another library uses any of these names.
+        "to_png",
+        "to_svg",
+        "to_pdf",
+        "setup_show_ext",
+        "WebBrHtmlPageContext",
+        "LazyModule",
+        "geom_livemap",
+        "maptiles_zxy",
+        "maptiles_lets_plot",
+        "maptiles_solid",
+        "maptiles_chessboard",
+        "geocoding_service",
+        "geocode",
+        "geocode_cities",
+        "geocode_counties",
+        "geocode_states",
+        "geocode_countries",
+        "reverse_geocode",
+        "get_geocodes",
+        "get_centroids",
+        "get_boundaries",
+        "get_limits",
+        "extend_path",
     }
 )
 """Public functions and classes of the allowed modules that exec, start a process, import by name, fetch or write
@@ -857,6 +994,26 @@ MODULE_ESCAPES: frozenset[str] = frozenset(
         "altair.vegalite.v6.display.Path",
         "altair.version",
         "mizani.version",
+        # cairosvg (surveys of 2026-10-24): `parser` reads the main input from any path or URL with an unrestricted
+        # fetcher, `surface` writes any path through libcairo and hands out cairocffi, `url` is urlopen, `image`
+        # hands out PIL's `Image` and `ImageOps`, `css` cssselect2, `features` the locale module, `test_api` runs
+        # pytest; `Path` is pathlib's class and `ROOT` a `Path` instance (the package directory). Each name is
+        # plausible elsewhere (`matplotlib.image`, `matplotlib.path.Path`, a `url` column).
+        "cairosvg.Path",
+        "cairosvg.ROOT",
+        "cairosvg.parser",
+        "cairosvg.surface",
+        "cairosvg.url",
+        "cairosvg.image",
+        "cairosvg.css",
+        "cairosvg.features",
+        "cairosvg.test_api",
+        # lets-plot: `LetsPlot.set` points the HTML's script and the geocoder at any URL, `setup_show_ext` installs
+        # the browser launcher, `cfg` is the private configuration module under a public name (the survey's refute
+        # pass: banned by path, because `cfg` is a common name).
+        "lets_plot.LetsPlot.set",
+        "lets_plot.LetsPlot.setup_show_ext",
+        "lets_plot.cfg",
     }
 )
 """Escapes banned only on their own module, because the bare name is plausible data: `calendar.main`
@@ -884,6 +1041,7 @@ IMPORT_ALTERNATIVES: dict[str, str] = {
     "vl_convert": "altair writes the PNG itself through chart.save(); import nothing from vl_convert",
     "plotnine.data": _DATA_FROM_DF,
     "altair.datasets": _DATA_FROM_DF,
+    "lets_plot.geo_data": _DATA_FROM_DF,
 }
 """What a `banned-import` repair line suggests instead, by module path or its longest known prefix."""
 DEFAULT_IMPORT_ALTERNATIVE = (
@@ -901,6 +1059,10 @@ THIRD_PARTY_MODULES: frozenset[str] = frozenset(
         "qrcode",
         "squarify",
         "wordcloud",
+        "pygal_maps_world",
+        "cairocffi",
+        "cssselect2",
+        "tinycss2",
         "altair",
         "bokeh",
         "highcharts_core",
@@ -961,7 +1123,9 @@ _RC_CONSUMERS = frozenset({"rc_context", "context", "theme_matplotlib"})
 _RC_FILE_READERS = frozenset({"rc_context", "theme_matplotlib"})
 """`rc_context(rc, fname)` and plotnine's `theme_matplotlib(rc, fname)` load every setting from the file `fname`
 names (`rc_params_from_file`), whose keys the string rule never sees: no second positional, no `fname=`."""
-BANNED_KEYWORDS = frozenset({"usetex", "backend", "memory", "temp_folder", "cachedir", "formula", "url"})
+BANNED_KEYWORDS = frozenset(
+    {"usetex", "backend", "memory", "temp_folder", "cachedir", "formula", "url", "file_obj", "unsafe", "url_fetcher"}
+)
 """Keyword arguments banned on any call: `usetex=True` sends a text through LaTeX (`ax.text`, `TextPath`, `plt.rc`),
 `backend=` imports a backend module by name (`savefig(backend="module://...")`). `memory=` is a joblib cache
 directory that scikit-learn writes fitted steps to (`Pipeline`, `make_pipeline`, `AgglomerativeClustering`,
@@ -974,14 +1138,67 @@ axes take it as a side, so joblib's `Memory` is banned by name instead, in `UNSA
 `exec`s Python while it parses it; the render guard refuses that `exec`, so the keyword is refused first (no
 matplotlib or seaborn catalogue file uses it). `url=` names an image mark's href in altair (`encode(url=...)`,
 `MarkDef(url=...)`), which vl_convert reads from disk for a `file://` value, and matplotlib artists' SVG hyperlink,
-which a PNG never carries (one catalogue file, altair's image mark, uses it)."""
+which a PNG never carries (one catalogue file, altair's image mark, uses it); cairosvg's `svg2png` reads its main
+input from any path or URL with `url=` (2 pygal catalogue files) and from a file object with `file_obj=`,
+`unsafe=True` lets the SVG's entities and hrefs read files and fetch, and `url_fetcher=` replaces the fetcher that
+keeps hrefs to `data:` URLs (survey of 2026-10-24; no catalogue file passes any of the three)."""
 LIBRARY_BANS: dict[str, frozenset[str]] = {
     # `Chart.from_dict` and `from_json` build a chart from a spec the string rules cannot read (an image mark with
     # a `file://` href); pandas' `DataFrame.from_dict` is ordinary with the other libraries, so the ban is altair's.
     # `data_transformers.enable("json")` and `enable("csv", filename=...)` make every save write the chart's data
     # to a file, and `.register(name, fn)` with `.enable(name)` is the plugin hook of every altair registry
     # (renderers, themes, compilers); the catalogue only calls `data_transformers.disable_max_rows()`.
-    "altair": frozenset({"from_dict", "from_json", "enable", "register"})
+    "altair": frozenset({"from_dict", "from_json", "enable", "register"}),
+    # pygal and cairosvg (surveys of 2026-10-24, the pygal draft of 2026-10-26): pygal's renderers that open a
+    # browser or import pyquery, lxml, flask or django, and the live ElementTree (`render_tree`, `add_xml_filter`,
+    # `xml_filters`); `pygal.util.cut`, an unchecked `getattr` by string (`cut([obj], "ctypes")`), and `template`,
+    # `str.format` on a caller string; the plugin entry points and their import hook; `Config._update`, which merges
+    # any dict into a chart's options past the `css`/`js` rule. cairosvg's other writers and its surfaces, which
+    # libcairo opens natively, its parser and fetchers; cairocffi as `.cairo`, its `ffi`, `dlopen` and
+    # `find_library` (which runs ldconfig and gcc), the pycairo shim and the file readers and writers of its
+    # surfaces. `cut` is pandas' binning function with the other libraries, the rest are plausible names there.
+    "pygal": frozenset(
+        {
+            "render_in_browser",
+            "render_pyquery",
+            "render_table",
+            "render_response",
+            "render_django_response",
+            "render_tree",
+            "add_xml_filter",
+            "xml_filters",
+            "cut",
+            "template",
+            "entry_points",
+            "PluginImportFixer",
+            "_update",
+            "svg2pdf",
+            "svg2ps",
+            "svg2eps",
+            "svg2svg",
+            "SURFACES",
+            "Tree",
+            "fetch",
+            "safe_fetch",
+            "read_url",
+            "fetch_url",
+            "cairo",
+            "ffi",
+            "dlopen",
+            "find_library",
+            "install_as_pycairo",
+            "write_to_png",
+            "create_from_png",
+            "PDFSurface",
+            "PSSurface",
+            "SVGSurface",
+            "PNGSurface",
+            "EPSSurface",
+        }
+    ),
+    # `LayerSpec.props()` hands out the spec's own dict, so code could rewrite a field the native bridge reads (an
+    # image layer's `href`) after the check (the lets-plot spike of 2026-10-26); `props` is a plausible name elsewhere.
+    "letsplot": frozenset({"props"}),
 }
 """Names banned as attributes and `from` imports in one library's profile only, like `UNSAFE_HELPERS` there."""
 _STRING_DISPATCH_METHODS = frozenset({"agg", "aggregate", "apply", "transform", "applymap"})
@@ -995,6 +1212,37 @@ EXPRESSION_LIBRARIES = frozenset({"plotnine"})
 """The profiles that check `EXPRESSION_CALLS`."""
 _FORMULA_SPLIT = re.compile(r"[~+]")
 """A facet formula's sides and terms (`"pane ~ ."`, `"a + b ~ c"`), which plotnine evaluates one by one."""
+PYGAL_CONFIG_KEYS = frozenset({"css", "js", "defs"})
+"""pygal's chart options that read files or embed markup (module docstring, "pygal's config")."""
+PYGAL_PACKAGE_CSS = frozenset({"file://style.css", "file://graph.css", "file://base.css"})
+"""pygal's own stylesheets (`Config.css` defaults and `base.css`), which a `css=` list repeats before its `inline:`
+rules (14 catalogue files); pygal reads them from its package's `css` directory."""
+_INLINE_CSS = "inline:"
+_GOOGLE_FONT = "googlefont:"
+_SVG_NAMESPACE = re.compile(r"\{?http://www\.w3\.org/(?:2000/svg|1999/xlink)(?=[\"'}\s]|$)")
+"""The SVG and XLink namespace names, also in Clark notation (`{...}rect`), followed by a quote, `}`, whitespace or the
+end; an XML parser compares them and never fetches them, so pygal's URL rule drops them before it looks."""
+LETSPLOT_BUILDERS = frozenset({"lets_plot.layer_tooltips", "lets_plot.layer_labels", "lets_plot.smooth_labels"})
+"""lets-plot's tooltip and label builders, whose `.format(field, format)` sets a spec field (module docstring)."""
+LETSPLOT_BUILDER_METHODS = frozenset(
+    {
+        "line",
+        "format",
+        "title",
+        "anchor",
+        "min_width",
+        "disable_splitting",
+        "color",
+        "size",
+        "inherit_color",
+        "eq",
+        "label_x",
+        "label_y",
+    }
+)
+"""The builders' methods, each of which returns the builder itself (lets-plot 4.11.0, `plot/tooltip.py` and
+`plot/annotation.py`), so a chain of them never reaches a string's `format`."""
+_LETSPLOT_OBJECT = "lets_plot.LetsPlot"
 _DIRECT_CALL_ONLY = SAVE_NAMES | {"open"}
 """Attributes that may only be called where they are named, so the save rule sees their target."""
 # Methods that return text without a target and write to one given as `buf`, with the position of
@@ -1226,6 +1474,16 @@ def _is_none(node: ast.expr) -> bool:
     return isinstance(node, ast.Constant) and node.value is None
 
 
+def _is_text(node: ast.expr) -> bool:
+    return isinstance(node, ast.Constant) and isinstance(node.value, str)
+
+
+def _is_inline_css(node: ast.expr) -> bool:
+    """A pygal `css` entry that pygal inlines as CSS text: a string or an f-string whose literal start is `inline:`."""
+    head = node.values[0] if isinstance(node, ast.JoinedStr) and node.values else node
+    return isinstance(head, ast.Constant) and isinstance(head.value, str) and head.value.startswith(_INLINE_CSS)
+
+
 def _text(node: ast.Constant) -> str | None:
     """The textual content of a string or bytes literal, or None for other constants."""
     if isinstance(node.value, str):
@@ -1361,6 +1619,10 @@ class _Scan:
                 self.parents[child] = node
         self.findings: list[Finding] = []
         self.os_names: set[str] = set()
+        self.library = ""
+        """The profile's library id; empty in the DATA profile."""
+        self.url_exempt: set[ast.AST] = set()
+        """String literals the URL rule lets pass: pygal's own stylesheets in a `css=` list (`_check_pygal_config`)."""
         self.allowed_imports: frozenset[str] = frozenset()
         self.library_bans: frozenset[str] = frozenset()
         """`LIBRARY_BANS` of the profile's library: banned as attributes and `from` imports in this scan."""
@@ -1449,6 +1711,7 @@ class _Scan:
     # -- SECURITY ------------------------------------------------------------------------
 
     def security(self, library: str, allowed_imports: frozenset[str], rule: SaveRule) -> None:
+        self.library = library
         self.library_bans = LIBRARY_BANS.get(library, frozenset())
         self.library_imports = LIBRARY_IMPORTS.get(library, frozenset())
         self._check_imports(library, allowed_imports, rule)
@@ -1462,8 +1725,13 @@ class _Scan:
         self._check_settings()
         self._check_buffer_writers()
         self._check_statements()
+        if library == "pygal":
+            self._check_pygal_config()  # before the strings: it marks pygal's own stylesheets for the URL rule
+        if library == "letsplot":
+            self._check_letsplot_object()
         self._check_strings()
         self._check_save(rule)
+        self._check_save_names()
         if library in EXPRESSION_LIBRARIES:
             self._check_expression_strings()
 
@@ -1485,6 +1753,7 @@ class _Scan:
         self._check_buffer_writers()
         self._check_statements()
         self._check_save(None)
+        self._check_save_names()
         self._check_strings()
         self._check_data_frame()
         self._check_data_literals()
@@ -1706,6 +1975,8 @@ class _Scan:
         for attribute in self.of(ast.Attribute):
             if _DUNDER_NAME.match(attribute.attr):
                 self.add("dunder", f"dunder attribute '.{attribute.attr}' is not allowed", attribute)
+            elif attribute.attr == "format" and self.library == "letsplot" and self._is_builder_format(attribute):
+                continue  # lets-plot's tooltip and label builders (module docstring, "lets-plot")
             elif (
                 attribute.attr in BANNED_ATTRIBUTES
                 or attribute.attr in _ANY_RECEIVER_ESCAPES
@@ -1940,7 +2211,11 @@ class _Scan:
                 self.add("string-length", message, constant)
             if _DUNDER_IN_TEXT.search(text):
                 self.add("dunder", "string literal contains a dunder identifier", constant)
-            if _URL_IN_TEXT.search(text):
+            pygal = self.library == "pygal"
+            if pygal and isinstance(constant.value, str) and _GOOGLE_FONT in text:
+                self.add("url-literal", "string literal names a Google font, which the chart fetches", constant)
+            urls = _SVG_NAMESPACE.sub("", text) if pygal else text
+            if _URL_IN_TEXT.search(urls) and constant not in self.url_exempt:
                 hint = f" → {DATA_IO_MESSAGE}" if self.data_profile else ""
                 self.add("url-literal", f"string literal contains a URL or a file:/data: scheme{hint}", constant)
             if isinstance(constant.value, str) and _is_unsafe_setting(text):
@@ -1992,9 +2267,18 @@ class _Scan:
         if not (png or html):
             files = 'f"plot-{THEME}.png"' + (' or f"plot-{THEME}.html"' if rule.html else "")
             self.add("savefig-target", f"{name} target must be exactly {files}", call)
-        if len(call.args) > rule.target_position(name) + 1:
+        position = rule.target_position(name)
+        if position < 0 and call.args:
+            # `svg2png(bytestring, ...)`: the keyword-only save names its file with `write_to=` alone.
+            self.add("savefig-target", f"{name} takes every argument by keyword", call)
+        elif len(call.args) > position + 1:
             # `plot.save(f, None, "/tmp")` is `path=`, `plot.save(f, "pgf")` is `format=`, by position.
             self.add("savefig-target", f"{name} takes only the file by position; the rest go by keyword", call)
+        if rule.directory is not None:
+            # lets-plot's `ggsave` writes into `./lets-plot-images`, which it creates, unless `path=` names a directory.
+            directory = next((keyword.value for keyword in call.keywords if keyword.arg == "path"), None)
+            if not (isinstance(directory, ast.Constant) and directory.value == rule.directory):
+                self.add("savefig-target", f'{name} must save with path="{rule.directory}"', call)
         allowed = rule.allowed_keywords(name)
         for keyword in call.keywords:
             # `format="ps"` with a distiller or `format="pgf"` would start Ghostscript or LaTeX, whatever the name.
@@ -2009,6 +2293,28 @@ class _Scan:
         if any(isinstance(arg, ast.Starred) for arg in call.args):
             self.add("savefig-target", f"{name} takes no *arguments", call)
         return png
+
+    def _check_save_names(self) -> None:
+        """A save name keeps its own name and is reached only by calling it (module docstring, "The save").
+
+        The save rule finds a save by its callee's name, so `from plotnine import ggsave as keep`, `g = ggsave`,
+        `[ggsave][0](...)` and `partial(ggsave, plot)` would each write wherever their arguments say; `.save` and the
+        other save attributes have the same rule in `_check_attributes`.
+        """
+        for from_node in self.of(ast.ImportFrom):
+            for alias in from_node.names:
+                bound = alias.asname or alias.name
+                if bound == alias.name:
+                    continue
+                if alias.name in SAVE_NAMES:
+                    self.add("banned-call", f"'{alias.name}' may only be imported under its own name", alias)
+                elif bound in SAVE_NAMES:
+                    self.add("banned-call", f"nothing may be imported under the save name '{bound}'", alias)
+        for name in self.of(ast.Name):
+            if name.id in SAVE_NAMES and isinstance(name.ctx, ast.Load):
+                parent = self.parents.get(name)
+                if not (isinstance(parent, ast.Call) and parent.func is name):
+                    self.add("banned-call", f"'{name.id}' may only be called directly", name)
 
     def _check_expression_strings(self) -> None:
         """plotnine's expression arguments: literals the walk can read, each string walked as code (module docstring,
@@ -2063,15 +2369,49 @@ class _Scan:
 
     def _module_string(self, variable: str) -> ast.Constant | None:
         """The string literal a module-level `variable = "..."` binds, when nothing else binds `variable`."""
-        stores = [name for name in self.of(ast.Name) if name.id == variable and isinstance(name.ctx, ast.Store)]
-        if len(stores) != 1 or any(parameter.arg == variable for parameter in self.of(ast.arg)):
+        value = self._module_value(variable)
+        return value if isinstance(value, ast.Constant) and isinstance(value.value, str) else None
+
+    def _module_value(self, variable: str, read: Callable[[ast.Name], bool] | None = None) -> ast.expr | None:
+        """The value a module-level `variable = value` binds, when nothing else in the file binds `variable`; with
+        `read`, only when every read of the name passes it too (a list or a dict nothing can change after the check).
+        """
+        if self._bindings(variable) != 1:
             return None
-        for stmt in self.tree.body:
-            target = _single_name_target(stmt)
-            if isinstance(stmt, ast.Assign) and target is not None and target.id == variable:
-                value = stmt.value
-                return value if isinstance(value, ast.Constant) and isinstance(value.value, str) else None
+        for statement in self.tree.body:
+            target = _single_name_target(statement)
+            if not isinstance(statement, ast.Assign | ast.AnnAssign) or target is None or target.id != variable:
+                continue
+            reads = [name for name in self.of(ast.Name) if name.id == variable and isinstance(name.ctx, ast.Load)]
+            if read is not None and not all(read(name) for name in reads):
+                return None
+            return statement.value
         return None
+
+    def _bindings(self, variable: str) -> int:
+        """How many places bind `variable`: a store or a deletion of the name, a parameter, an import, a function or
+        class name, an exception or `match` capture, a type parameter. A `case x:` would rebind a name the walk
+        checked as a literal (`match "open('x')": case COLUMN: ...`), so every kind counts."""
+        count = sum(1 for name in self.of(ast.Name) if name.id == variable and not isinstance(name.ctx, ast.Load))
+        count += sum(1 for parameter in self.of(ast.arg) if parameter.arg == variable)
+        imports: list[ast.Import | ast.ImportFrom] = [*self.of(ast.Import), *self.of(ast.ImportFrom)]
+        count += sum(
+            1 for node in imports for alias in node.names if (alias.asname or alias.name.split(".")[0]) == variable
+        )
+        named: list[ast.AST] = [
+            *self.of(ast.FunctionDef),
+            *self.of(ast.AsyncFunctionDef),
+            *self.of(ast.ClassDef),
+            *self.of(ast.ExceptHandler),
+            *self.of(ast.MatchAs),
+            *self.of(ast.MatchStar),
+            *self.of(ast.TypeVar),
+            *self.of(ast.ParamSpec),
+            *self.of(ast.TypeVarTuple),
+        ]
+        count += sum(1 for node in named if getattr(node, "name", None) == variable)
+        count += sum(1 for node in self.of(ast.MatchMapping) if node.rest == variable)
+        return count
 
     def _check_expression(self, text: str, call_name: str, node: ast.Constant) -> None:
         """One expression string: every parsable term walked with this profile's name, attribute, call, save and
@@ -2101,10 +2441,150 @@ class _Scan:
             inner._check_statements()
             inner._check_strings()
             inner._check_save(None)
+            inner._check_save_names()  # `aes(x="(lambda g: g(p, 'x.pdf'))(ggsave)")` reaches the plot's namespace
             for finding in inner.findings:
                 self.add(finding.rule, f"in the {call_name} expression: {finding.message}", node)
             if term == text:
                 break  # the whole string parsed: its terms are already in it
+
+    # -- pygal and lets-plot -------------------------------------------------------------
+
+    def _check_pygal_config(self) -> None:
+        """pygal's `css`, `js` and `defs` options as keywords, `**` arguments and attributes (module docstring,
+        "pygal's config")."""
+        for keyword in self.of(ast.keyword):
+            if keyword.arg in PYGAL_CONFIG_KEYS:
+                self._check_pygal_option(keyword.arg, keyword.value, keyword)
+            elif keyword.arg is None:
+                self._check_pygal_options(keyword)
+        for attribute in self.of(ast.Attribute):
+            if attribute.attr not in PYGAL_CONFIG_KEYS:
+                continue
+            parent = self.parents.get(attribute)
+            if attribute.attr == "defs":
+                self.add("banned-attribute", "'.defs' is not allowed: it is raw SVG markup", attribute)
+            elif (
+                isinstance(attribute.ctx, ast.Store)
+                and isinstance(parent, ast.Assign)
+                and len(parent.targets) == 1
+                and parent.targets[0] is attribute
+            ):
+                self._check_pygal_option(attribute.attr, parent.value, parent)
+            else:
+                # `chart.css += [...]`, `chart.css.append(...)`, `chart.css[0] = ...` or `x = chart.css`: the list
+                # would change after the check.
+                message = f"'.{attribute.attr}' may only be assigned a whole list, as in .{attribute.attr} = [...]"
+                self.add("banned-attribute", message, attribute)
+
+    def _check_pygal_option(self, key: str, value: ast.expr, node: ast.AST) -> None:
+        """One `css`, `js` or `defs` value: `defs` never, `js` an empty list, `css` a list of `inline:` texts and
+        pygal's own stylesheets, which the URL rule then lets pass."""
+        if key == "defs":
+            self.add("banned-keyword", "the keyword 'defs=' is not allowed: it is raw SVG markup", node)
+            return
+        if isinstance(value, ast.Name):
+            value = self._module_value(value.id, self._is_option_read) or value
+        if not isinstance(value, ast.List | ast.Tuple):
+            self.add("banned-keyword", f"{key}= takes a list literal, or a name bound once to one", node)
+            return
+        if key == "js":
+            if value.elts:
+                self.add("banned-keyword", "js= takes only [] (an entry is a script file read or fetched)", node)
+            return
+        for item in value.elts:
+            if isinstance(item, ast.Name):
+                item = self._module_value(item.id) or item
+            if isinstance(item, ast.Constant) and item.value in PYGAL_PACKAGE_CSS:
+                self.url_exempt.add(item)
+            elif not _is_inline_css(item):
+                message = "css= takes only 'inline:...' texts and pygal's own file://style.css, graph.css and base.css"
+                self.add("banned-keyword", message, node)
+
+    def _is_option_read(self, name: ast.Name) -> bool:
+        """`name` is read only where the config rule checks it: as a `css=` or `js=` value, or assigned to `.css` or
+        `.js`."""
+        parent = self.parents.get(name)
+        if isinstance(parent, ast.keyword):
+            return parent.arg in ("css", "js")
+        return (
+            isinstance(parent, ast.Assign)
+            and parent.value is name
+            and len(parent.targets) == 1
+            and isinstance(parent.targets[0], ast.Attribute)
+            and parent.targets[0].attr in ("css", "js")
+        )
+
+    def _check_pygal_options(self, keyword: ast.keyword) -> None:
+        """A `**` argument: a dict literal with string keys, or a name bound once at module level to one and used only
+        as `**name`, whose `css`, `js` and `defs` keys are checked like keywords."""
+        value: ast.expr | None = keyword.value
+        if isinstance(value, ast.Name):
+            value = self._module_value(value.id, self._is_unpacked)
+        if not (
+            isinstance(value, ast.Dict)
+            and all(isinstance(key, ast.Constant) and isinstance(key.value, str) for key in value.keys)
+        ):
+            message = "** takes only a dict literal with string keys, or a name bound once to one and only unpacked"
+            self.add("banned-keyword", message, keyword)
+            return
+        for key, item in zip(value.keys, value.values, strict=True):
+            if isinstance(key, ast.Constant) and key.value in PYGAL_CONFIG_KEYS:
+                self._check_pygal_option(key.value, item, key)
+
+    def _is_unpacked(self, name: ast.Name) -> bool:
+        parent = self.parents.get(name)
+        return isinstance(parent, ast.keyword) and parent.arg is None
+
+    def _check_letsplot_object(self) -> None:
+        """`LetsPlot` only as `LetsPlot.setup_html()` without arguments (module docstring, "lets-plot")."""
+        nodes: list[ast.Name | ast.Attribute] = [*self.of(ast.Name), *self.of(ast.Attribute)]
+        for node in nodes:
+            if not isinstance(node.ctx, ast.Load) or self.resolve(node) != _LETSPLOT_OBJECT:
+                continue
+            attribute = self.parents.get(node)
+            call = self.parents.get(attribute) if attribute is not None else None
+            if not (
+                isinstance(attribute, ast.Attribute)
+                and attribute.value is node
+                and attribute.attr == "setup_html"
+                and isinstance(call, ast.Call)
+                and call.func is attribute
+                and not call.args
+                and not call.keywords
+            ):
+                self.add("banned-call", "LetsPlot may only be used as LetsPlot.setup_html(), without arguments", node)
+
+    def _is_builder_format(self, attribute: ast.Attribute) -> bool:
+        """`layer_tooltips().line("@x").format("@x", ".1f")`: `.format` called with string literals on a chain of
+        builder methods rooted in a call of a lets-plot builder bound only by its `from` import."""
+        call = self.parents.get(attribute)
+        if not (isinstance(call, ast.Call) and call.func is attribute):
+            return False
+        if not all(_is_text(argument) for argument in call.args):
+            return False
+        if not all(keyword.arg in ("field", "format") and _is_text(keyword.value) for keyword in call.keywords):
+            return False
+        node = attribute.value
+        while isinstance(node, ast.Call):
+            func = node.func
+            if isinstance(func, ast.Attribute) and func.attr in LETSPLOT_BUILDER_METHODS:
+                node = func.value
+                continue
+            return isinstance(func, ast.Name) and self._is_builder_name(func.id)
+        return False
+
+    def _is_builder_name(self, variable: str) -> bool:
+        """`variable` is bound once, by `from lets_plot import layer_tooltips [as variable]` or another builder, and
+        no attribute of that name is ever assigned: `lets_plot.layer_tooltips = str` before the import would hand the
+        import another callable."""
+        if self._bindings(variable) != 1:
+            return False
+        for node in self.of(ast.ImportFrom):
+            for alias in node.names if node.module and not node.level else []:
+                if f"{node.module}.{alias.name}" in LETSPLOT_BUILDERS and (alias.asname or alias.name) == variable:
+                    stores = self.of(ast.Attribute)
+                    return not any(store.attr == alias.name and not isinstance(store.ctx, ast.Load) for store in stores)
+        return False
 
     # -- ADAPTATION ----------------------------------------------------------------------
 

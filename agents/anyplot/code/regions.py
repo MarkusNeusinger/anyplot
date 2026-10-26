@@ -22,12 +22,16 @@ conventions that the adapter must keep and the normaliser rewrites:
   `ggsave(plot, f"plot-{THEME}.png", ...)` for plotnine (the file is the second
   positional of `ggsave`), `chart.save(f"plot-{THEME}.png", scale_factor=4.0)` for
   altair, whose files also save `f"plot-{THEME}.html"` and reopen the PNG with PIL to
-  pad it (`_canvas.save(f"plot-{THEME}.png")`). Every call of the library's save names
-  is a save call; the protected final one is the last module-level statement among
-  those that write the PNG;
+  pad it (`_canvas.save(f"plot-{THEME}.png")`), `chart.render_to_png(f"plot-{THEME}.png")`
+  or `cairosvg.svg2png(bytestring=..., write_to=f"plot-{THEME}.png")` for pygal (with
+  `chart.render_to_file(f"plot-{THEME}.html")`), and
+  `ggsave(plot, f"plot-{THEME}.png", path=".", scale=2)` for lets-plot (with the HTML
+  save). Every call of the library's save names is a save call; the protected final one
+  is the last module-level statement among those that write the PNG;
 * the canvas: `figsize=` and `dpi=` on the figure creation call (`plt.subplots`,
   `plt.figure`, `plt.subplot_mosaic`, `sns.clustermap`), `set_size_inches` and
-  `set_dpi` on the figure of a seaborn grid, and `dpi=` on savefig;
+  `set_dpi` on the figure of a seaborn grid, and `dpi=` on savefig (the other libraries
+  size their canvas elsewhere, `SaveRule.canvas`);
 * in an adapted working form, the placeholder statement `df = load_user_data()`.
 
 Lines are 1-based and inclusive; offsets are 0-based character offsets into the
@@ -64,6 +68,9 @@ _NEWLINE = re.compile(r"\r\n|\r|\n")
 
 RegionKind = Literal["theme", "theme_token", "placeholder", "savefig"]
 SizeMethod = Literal["set_size_inches", "set_dpi"]
+CanvasRewrite = Literal["figure", "pygal", "letsplot"]
+"""How the normaliser sets a library's canvas: matplotlib's figure size times dpi (`figure`), pygal's chart size
+through the PNG save's output size (`pygal`), lets-plot's `scale=` on the PNG save (`letsplot`)."""
 Number = int | float
 
 
@@ -73,20 +80,25 @@ class SaveRule:
 
     `names` are the callee names (the last dotted component) that save the plot; the
     file is the positional at `positions[name]` (0 unless listed) or one of
-    `target_keywords`. `keywords[name]` lists the keywords a save may take, None for any
-    (matplotlib's `savefig`, whose settings the validator checks one by one). `html`
-    admits a second save of exactly `f"plot-{THEME}.html"` next to the PNG, `reopens`
-    a `.open(...)` of the PNG (altair's PIL padding block), and `canvas` says whether the
-    normaliser's matplotlib canvas rewrite (figure size times dpi) applies.
+    `target_keywords`; a name in `keyword_only` takes its file by keyword alone
+    (`cairosvg.svg2png`, whose first positional is the SVG). `keywords[name]` lists the
+    keywords a save may take, None for any (matplotlib's `savefig`, whose settings the
+    validator checks one by one). `html` admits a second save of exactly
+    `f"plot-{THEME}.html"` next to the PNG, `reopens` a `.open(...)` of the PNG (altair's
+    PIL padding block), `directory` the one literal every save passes as `path=`
+    (lets-plot, whose `ggsave` writes into `./lets-plot-images` without it), and `canvas`
+    names the normaliser's canvas rewrite for the library, None where it has none yet.
     """
 
     names: frozenset[str]
     target_keywords: frozenset[str]
     positions: Mapping[str, int] = field(default_factory=lambda: MappingProxyType({}))
     keywords: Mapping[str, frozenset[str] | None] = field(default_factory=lambda: MappingProxyType({}))
+    keyword_only: frozenset[str] = frozenset()
     html: bool = False
     reopens: bool = False
-    canvas: bool = True
+    directory: str | None = None
+    canvas: CanvasRewrite | None = "figure"
 
     @property
     def verb(self) -> str:
@@ -94,6 +106,9 @@ class SaveRule:
         return "savefig" if "savefig" in self.names and len(self.names) == 1 else "save"
 
     def target_position(self, name: str) -> int:
+        """The position of the file argument of `name`; -1 for a save that takes its file by keyword only."""
+        if name in self.keyword_only:
+            return -1
         return self.positions.get(name, 0)
 
     def allowed_keywords(self, name: str) -> frozenset[str] | None:
@@ -107,6 +122,38 @@ _ALTAIR_SAVE_KEYWORDS = frozenset({"fp", "format", "scale_factor", "ppi", "inlin
 """`Chart.save(fp, format, override_data_transformer, scale_factor, mode, vegalite_version, vega_version,
 vegaembed_version, embed_options, json_kwds, webdriver, engine, inline, **kwargs)`: the size and the HTML embedding
 only; `webdriver=` and `engine=` choose how the PNG is made and stay with altair's default, vl-convert in process."""
+_PYGAL_SVG2PNG_KEYWORDS = frozenset(
+    {
+        "bytestring",
+        "write_to",
+        "dpi",
+        "scale",
+        "output_width",
+        "output_height",
+        "parent_width",
+        "parent_height",
+        "background_color",
+        "negate_colors",
+        "invert_images",
+    }
+)
+"""`cairosvg.svg2png(bytestring, *, file_obj, url, dpi, parent_width, parent_height, scale, unsafe,
+background_color, negate_colors, invert_images, write_to, output_width, output_height)` without `url=` and
+`file_obj=`, which read the main input through cairosvg's unrestricted fetcher (any path, any URL), and `unsafe=`
+(external entities and hrefs)."""
+_PYGAL_SAVE_KEYWORDS: Mapping[str, frozenset[str] | None] = MappingProxyType(
+    {
+        # `render_to_png(filename=None, dpi=72, **kwargs)` and `render_to_file(filename, **kwargs)` hand their
+        # `**kwargs` to `render()` and from there into the chart's config (`css=`, `js=`, `defs=`), so a save takes
+        # none of them.
+        "render_to_png": frozenset({"filename", "dpi"}),
+        "render_to_file": frozenset({"filename"}),
+        "svg2png": _PYGAL_SVG2PNG_KEYWORDS,
+    }
+)
+_LETSPLOT_SAVE_KEYWORDS = frozenset({"filename", "path", "scale", "w", "h", "unit", "dpi"})
+"""`ggsave(plot, filename, *, path=None, iframe=True, scale=None, w=None, h=None, unit=None, dpi=None)`: the file, the
+directory (`SaveRule.directory`) and the raster size; `iframe=` shapes only the HTML and no catalogue file passes it."""
 _MATPLOTLIB_SAVE = SaveRule(names=frozenset({"savefig"}), target_keywords=frozenset({"fname"}))
 SAVE_RULES: Mapping[str, SaveRule] = MappingProxyType(
     {
@@ -118,7 +165,7 @@ SAVE_RULES: Mapping[str, SaveRule] = MappingProxyType(
             target_keywords=frozenset({"filename", "fname"}),
             positions=MappingProxyType({"ggsave": 1}),
             keywords=MappingProxyType({"save": _PLOTNINE_SAVE_KEYWORDS, "ggsave": _PLOTNINE_SAVE_KEYWORDS}),
-            canvas=False,
+            canvas=None,
         ),
         "altair": SaveRule(
             names=frozenset({"save"}),
@@ -126,7 +173,30 @@ SAVE_RULES: Mapping[str, SaveRule] = MappingProxyType(
             keywords=MappingProxyType({"save": _ALTAIR_SAVE_KEYWORDS}),
             html=True,
             reopens=True,
-            canvas=False,
+            canvas=None,
+        ),
+        # `chart.render_to_png(f"plot-{THEME}.png")` (220 of 325 catalogue files end on it),
+        # `cairosvg.svg2png(bytestring=chart.render(), write_to=f"plot-{THEME}.png", ...)` (92) and
+        # `chart.render_to_file(f"plot-{THEME}.html")`. libcairo writes the PNG with its own `fopen`, which the
+        # harness's audit hook never sees, so the file rests on this rule alone (survey of 2026-10-24).
+        "pygal": SaveRule(
+            names=frozenset({"render_to_png", "render_to_file", "svg2png"}),
+            target_keywords=frozenset({"filename", "write_to"}),
+            keywords=_PYGAL_SAVE_KEYWORDS,
+            keyword_only=frozenset({"svg2png"}),
+            html=True,
+            canvas="pygal",
+        ),
+        # `ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)` and the same call for the HTML, in every one of the
+        # 325 catalogue files; the file is the second positional or `filename=`.
+        "letsplot": SaveRule(
+            names=frozenset({"ggsave"}),
+            target_keywords=frozenset({"filename"}),
+            positions=MappingProxyType({"ggsave": 1}),
+            keywords=MappingProxyType({"ggsave": _LETSPLOT_SAVE_KEYWORDS}),
+            html=True,
+            directory=".",
+            canvas="letsplot",
         ),
     }
 )
@@ -429,7 +499,11 @@ def is_standard_target(node: ast.expr) -> bool:
 def save_target(call: ast.Call, rule: SaveRule, name: str) -> ast.expr | None:
     """The file argument of the save call `name` under `rule`: its positional, else one of the rule's keywords."""
     position = rule.target_position(name)
-    if len(call.args) > position and not any(isinstance(arg, ast.Starred) for arg in call.args[: position + 1]):
+    if (
+        position >= 0
+        and len(call.args) > position
+        and not any(isinstance(arg, ast.Starred) for arg in call.args[: position + 1])
+    ):
         return call.args[position]
     return next((kw.value for kw in call.keywords if kw.arg in rule.target_keywords), None)
 

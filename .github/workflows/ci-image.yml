@@ -503,9 +503,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    # A cold build installs pandas, numpy, matplotlib, seaborn, plotnine and
-    # altair with vl-convert; 20 fails loudly instead of hanging on a slow
-    # package index.
+    # A cold build installs pandas, numpy, matplotlib, seaborn, plotnine,
+    # altair with vl-convert, pygal with cairosvg and lets-plot, plus libcairo
+    # from apt; 20 fails loudly instead of hanging on a slow package index.
     timeout-minutes: 20
 
     steps:
@@ -733,6 +733,107 @@ jobs:
           EOF
           tail -n 1 work-altair/harness.out
 
+      # pygal (step 1c of agentic/specs/261024-agent-all-libraries.md) runs in process with the
+      # seaborn step's flags, as its row of agents/renderer/commands.py keeps the Python
+      # defaults. Its PNG is cairosvg's: libcairo from the image's apt layer, loaded before the
+      # guard (warm_cairo in harness.py), and cssselect2's selector lambdas (CODE_BUILDERS).
+      # The HTML twin is the chart's SVG, written by render_to_file; pygal writes no probe.
+      - name: Render a pygal plot through the harness
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p work-pygal
+          printf 'x,y\na,1\nb,3\nc,2\n' > work-pygal/data.csv
+          cat > work-pygal/plot.py <<'EOF'
+          import os
+
+          import pandas as pd
+          import pygal
+
+          THEME = os.environ["ANYPLOT_THEME"]
+          df = pd.read_csv("data.csv")
+          chart = pygal.Bar(width=3200, height=1800, title="pygal", x_title="x", y_title="y")
+          chart.x_labels = list(df["x"])
+          chart.add("y", [float(value) for value in df["y"]])
+          chart.render_to_png(f"plot-{THEME}.png")
+          chart.render_to_file(f"plot-{THEME}.html")
+          EOF
+          docker run --rm --network none --read-only --tmpfs /tmp \
+            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+            -v "$PWD/work-pygal:/work" -w /work \
+            -e ANYPLOT_THEME=light -e MPLBACKEND=Agg -e MPLCONFIGDIR=/tmp/mpl -e ANYPLOT_MPL_SEED=/opt/mplconfig \
+            -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+            -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_RLIMIT_AS_MB=1024 \
+            anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py plot.py > work-pygal/harness.out
+          grep -qxF 'HARNESS {"event": "start"}' work-pygal/harness.out || { echo "::error::no HARNESS start line"; cat work-pygal/harness.out; exit 1; }
+          grep -q '^HARNESS {"event": "end"' work-pygal/harness.out || { echo "::error::no HARNESS end line"; cat work-pygal/harness.out; exit 1; }
+          python3 - <<'EOF'
+          import struct
+          png = open("work-pygal/plot-light.png", "rb").read()
+          assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
+          width, height = struct.unpack(">II", png[16:24])
+          assert (width, height) == (3200, 1800), (width, height)
+          html = open("work-pygal/plot-light.html", encoding="utf-8").read()
+          assert "pygal-chart" in html, "plot-light.html holds no pygal chart"
+          print(f"OK: pygal plot-light.png {width}x{height}, {len(png)} bytes; plot-light.html {len(html)} characters")
+          EOF
+          tail -n 1 work-pygal/harness.out
+
+      # lets-plot (step 1c) rasterises in its native bridge, which needs more address space
+      # than the Python default: its row of agents/renderer/commands.py sets RLIMIT_AS to
+      # 2048 MiB with Arrow's system allocator, and points the bridge's own fontconfig at the
+      # image's /opt/anyplot/fonts.conf. This run passes exactly that row's environment and
+      # limit (1024 MB aborts the export: "Out of memory trying to allocate"); every other
+      # flag is the seaborn step's. Without the fontconfig file every export writes
+      # "Fontconfig error" to stderr, which is the extra assert. No probe.
+      - name: Render a lets-plot plot through the harness
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p work-letsplot
+          printf 'x,y\na,1\nb,3\nc,2\n' > work-letsplot/data.csv
+          cat > work-letsplot/plot.py <<'EOF'
+          import os
+
+          import pandas as pd
+          from lets_plot import LetsPlot, aes, geom_bar, ggplot, ggsize, labs
+          from lets_plot.export import ggsave
+
+          LetsPlot.setup_html()
+
+          THEME = os.environ["ANYPLOT_THEME"]
+          df = pd.read_csv("data.csv")
+          plot = ggplot(df, aes(x="x", y="y")) + geom_bar(stat="identity") + labs(title="lets-plot") + ggsize(800, 450)
+          ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+          ggsave(plot, f"plot-{THEME}.html", path=".")
+          EOF
+          docker run --rm --network none --read-only --tmpfs /tmp \
+            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+            -v "$PWD/work-letsplot:/work" -w /work \
+            -e ANYPLOT_THEME=light -e MPLBACKEND=Agg -e MPLCONFIGDIR=/tmp/mpl -e ANYPLOT_MPL_SEED=/opt/mplconfig \
+            -e ARROW_DEFAULT_MEMORY_POOL=system -e FONTCONFIG_FILE=/opt/anyplot/fonts.conf \
+            -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+            -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_RLIMIT_AS_MB=2048 \
+            anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py plot.py \
+            > work-letsplot/harness.out 2> work-letsplot/harness.err \
+            || { echo "::error::the lets-plot render failed"; cat work-letsplot/harness.out work-letsplot/harness.err; exit 1; }
+          grep -qxF 'HARNESS {"event": "start"}' work-letsplot/harness.out || { echo "::error::no HARNESS start line"; cat work-letsplot/harness.out; exit 1; }
+          grep -q '^HARNESS {"event": "end"' work-letsplot/harness.out || { echo "::error::no HARNESS end line"; cat work-letsplot/harness.out; exit 1; }
+          if grep -q 'Fontconfig error' work-letsplot/harness.err; then
+            echo "::error::lets-plot's fontconfig found no configuration"; cat work-letsplot/harness.err; exit 1
+          fi
+          python3 - <<'EOF'
+          import struct
+          png = open("work-letsplot/plot-light.png", "rb").read()
+          assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
+          width, height = struct.unpack(">II", png[16:24])
+          assert (width, height) == (3200, 1800), (width, height)
+          html = open("work-letsplot/plot-light.html", encoding="utf-8").read()
+          assert "data-lets-plot-script" in html, "plot-light.html holds no lets-plot chart"
+          print(f"OK: lets-plot plot-light.png {width}x{height}, {len(png)} bytes; plot-light.html {len(html)} characters")
+          EOF
+          tail -n 1 work-letsplot/harness.out
+
       # The file conversion inside the image (harness.py --convert): every format the
       # page sends, with the image's slimmed pyarrow (owner decision of 2026-10-15),
       # its calamine and NumPy, the guard's preload, and the sandbox's environment.
@@ -820,7 +921,8 @@ jobs:
           EOF
 
       # The numbers the font set costs, for the PR and the deploy notes: the image
-      # size, the base release, the installed files and their package versions.
+      # size, the base release, the installed files and their package versions,
+      # libcairo's apt layer (pygal) among them.
       - name: Image size, base release and installed fonts
         if: steps.check.outputs.should_build == 'true'
         run: |
@@ -828,6 +930,7 @@ jobs:
           echo "image size: $(docker image inspect --format '{{.Size}}' anyplot-renderer:ci) bytes"
           docker run --rm anyplot-renderer:ci du -sh /app/.venv/lib/python3.14/site-packages/pyarrow
           docker run --rm anyplot-renderer:ci sh -c 'grep PRETTY_NAME /etc/os-release; cat /usr/share/doc/fonts-noto/versions.txt; ls -l /usr/share/fonts/noto; du -sh /usr/share/fonts/noto; head -n 5 /usr/share/doc/fonts-noto/fonts-noto-core.copyright'
+          docker run --rm anyplot-renderer:ci dpkg-query -W libcairo2 libfontconfig1 fontconfig-config fonts-dejavu-core fonts-dejavu-mono
 
       # Also after a failed assert, so the PNGs show what went wrong.
       - name: Upload the multi-script render

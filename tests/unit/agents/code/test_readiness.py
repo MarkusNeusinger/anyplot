@@ -165,6 +165,127 @@ class TestOtherPythonLibraries:
         ]
 
 
+SIX_ENABLED = (*ALL_ENABLED, "pygal", "letsplot")
+PYGAL = source("""
+    import os
+
+    import pygal
+    from pygal.style import Style
+
+    THEME = os.getenv("ANYPLOT_THEME", "light")
+    PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+    df = load_user_data()
+    chart = pygal.XY(width=4800, height=2700, style=Style(background=PAGE_BG), js=[])
+    chart.add("a", list(zip(df["x"], df["y"])))
+    chart.render_to_png(f"plot-{THEME}.png")
+    with open(f"plot-{THEME}.html", "wb") as f:
+        f.write(chart.render())
+""")
+LETSPLOT = source("""
+    import os
+
+    from lets_plot import *
+
+    LetsPlot.setup_html()
+    THEME = os.getenv("ANYPLOT_THEME", "light")
+    PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+    df = load_user_data()
+    plot = ggplot(df, aes(x="x", y="y")) + geom_point(color=PAGE_BG) + ggsize(1600, 900)
+    ggsave(plot, f"plot-{THEME}.png", scale=3)
+    ggsave(plot, f"plot-{THEME}.html")
+""")
+
+
+def scan_normalised(code: str, library: str) -> Readiness:
+    return scan(
+        normalise(code, library=library), spec_id="scatter-basic", library=library, enabled_libraries=SIX_ENABLED
+    )
+
+
+class TestPygalAndLetsPlot:
+    """The catalogue shapes of pygal and lets-plot, normalised, and what the scan says where the normaliser stops."""
+
+    @pytest.mark.parametrize(("code", "library"), [(PYGAL, "pygal"), (LETSPLOT, "letsplot")])
+    def test_normalised_file_is_clean_and_on_the_canvas(self, code: str, library: str) -> None:
+        assert scan_normalised(code, library) == Readiness("clean", [], [])
+
+    @pytest.mark.parametrize(
+        ("code", "library", "reason"),
+        [
+            (
+                PYGAL.replace("width=4800, height=2700", "width=W, height=H"),
+                "pygal",
+                "canvas: pygal canvas unknown: the chart's width= at line 9 is not a positive numeric literal; the "
+                "render relies on the R3 canvas gate and padding",
+            ),
+            (
+                LETSPLOT.replace("ggsize(1600, 900)", "ggsize(800, 853)"),
+                "letsplot",
+                "canvas: lets-plot renders 2400x2559 from 800x853 (ggsize at line 16) at scale 3, target 2400x2400; the "
+                "render relies on the R3 canvas gate and padding",
+            ),
+        ],
+    )
+    def test_a_canvas_the_normaliser_cannot_set_is_a_note(self, code: str, library: str, reason: str) -> None:
+        result = scan_normalised(code, library)
+
+        assert result.status == "clean" and result.reasons == [reason]
+
+    def test_a_letsplot_save_without_the_directory_is_blocked(self) -> None:
+        """Unnormalised: lets-plot would write into ./lets-plot-images, which the plot sandbox refuses."""
+        result = scan(LETSPLOT, spec_id="scatter-basic", library="letsplot", enabled_libraries=SIX_ENABLED)
+
+        assert result.status == "blocked"
+        assert 'savefig-target: ggsave at line 10 does not save with path="."' in result.reasons
+        assert 'savefig-target: ggsave at line 11 does not save with path="."' in result.reasons
+
+    @pytest.mark.parametrize(
+        ("code", "library", "reason"),
+        [
+            # a second star import: the normaliser keeps the lets-plot one, the validator refuses both
+            (
+                LETSPLOT.replace("from lets_plot import *", "from lets_plot import *\nfrom math import *"),
+                "letsplot",
+                "security: star-import at line 3: ",
+            ),
+            # the alias rename stops where the file binds `ggsave` itself
+            (
+                LETSPLOT.replace(
+                    "from lets_plot import *",
+                    "from lets_plot import *\nfrom lets_plot.export import ggsave as keep\nggsave = keep",
+                ),
+                "letsplot",
+                "security: banned-call at line ",
+            ),
+            # an epilogue statement that does more than move files
+            (LETSPLOT + 'print(os.listdir("lets-plot-images"))\n', "letsplot", "security: os-use at line 19: "),
+            # an SVG save whose file the code reads again
+            (
+                PYGAL.replace(
+                    'with open(f"plot-{THEME}.html", "wb") as f:\n    f.write(chart.render())',
+                    'chart.render_to_file(f"plot-{THEME}.svg")\nprint(f"plot-{THEME}.svg")',
+                ),
+                "pygal",
+                "savefig-target: render_to_file saves to f'plot-{THEME}.svg' at line 13",
+            ),
+            # a hand-built page whose file the code names again: the `open()` write stays
+            (
+                PYGAL.replace(
+                    'with open(f"plot-{THEME}.html", "wb") as f:\n    f.write(chart.render())',
+                    'with open(f"plot-{THEME}.html", "w") as f:\n    f.write("<html/>")\nprint(f"plot-{THEME}.html")',
+                ),
+                "pygal",
+                "security: banned-name at line 13: 'open'",
+            ),
+        ],
+    )
+    def test_what_the_normaliser_leaves_is_blocked(self, code: str, library: str, reason: str) -> None:
+        result = scan_normalised(code, library)
+
+        assert result.status == "blocked" and result.hints == []
+        assert any(r.startswith(reason) for r in result.reasons), result.reasons
+
+
 def test_clean(validator_calls: list[str]) -> None:
     result = check('ax.plot(df["x"], df["y"], color=PAGE_BG)\nax.set_ylim(bottom=0)\nax.axhline(0)\n')
 
