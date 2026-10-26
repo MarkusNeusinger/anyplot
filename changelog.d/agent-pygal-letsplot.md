@@ -21,7 +21,7 @@
   pygal and 284 of 325 lets-plot files are eligible. The eval fixtures cover both
   libraries: 120 more generated cases (360 in all) and one smoke case each (16 in the
   smoke set). `AGENT_LIBRARIES` keeps its default `matplotlib,seaborn` until each
-  library's eval matrix reaches 80 %.
+  library's eval matrix reaches 80 %. (#12405)
 
 ### Changed
 
@@ -30,7 +30,7 @@
   sparse but complete charts: 33 of the 195 eligible pygal renders and lets-plot's
   point-basic (98.38 %) are 98 % one colour or more, the sparsest pygal one 99.44 %.
   A bare canvas (99.93 %) or a title alone (99.78 %) still fails. The cutoff holds
-  for every library, and it refuses nothing the old one accepted.
+  for every library, and it refuses nothing the old one accepted. (#12405)
 
 ### Fixed
 
@@ -45,4 +45,4 @@
   plotnine's expression rule read as a fixed string, handing plotnine code to
   evaluate. Every profile now refuses the first as a `banned-call` and any binding of
   `THEME` but its theme block as a `savefig-target`, and the expression rule counts a
-  match capture as a binding.
+  match capture as a binding. (#12405)
