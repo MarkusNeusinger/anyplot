@@ -149,6 +149,13 @@ COPY --from=builder /app/VERSION ./agents/renderer/VERSION
 COPY agents/anyplot/render/harness.py /opt/anyplot/harness.py
 COPY agents/anyplot/render/convert.py /opt/anyplot/convert.py
 
+# lets-plot's native ImageMagick starts its delegate programs (Ghostscript, curl,
+# ffmpeg, ...) by name from PATH, where the plot guard's audit hook cannot see a
+# process start, and it reads no policy that could forbid them. The build fails when
+# one of them is on the sandbox's PATH (agents/renderer/delegates.py), so every build
+# of this file enforces it: the Cloud Build deploy as well as the CI image job.
+RUN .venv/bin/python -m agents.renderer.delegates
+
 # The fallback fonts and their OFL notices. matplotlib scans /usr/share/fonts
 # recursively without fontconfig (font_manager.findSystemFonts), so one
 # directory is enough; it must be in place before the cache bake below.

@@ -447,10 +447,13 @@ reasons (a file can have several causes):
   and a 4800x2700 chart through `svg2png` at 3200x1800, the canvas rewrite's form) and
   a lets-plot plot through the harness in the image; the lets-plot step takes its
   environment and limit from the command table's row and also fails on "Fontconfig
-  error" in stderr. A new step fails when any of 39 programs (those the bridge's
-  ImageMagick delegates to, such as `gs`, `curl`, `soffice` and `ffmpeg`, ImageMagick's
-  own tools, `fc-list`, `fc-match`, `java` and `node`) is on the sandbox's `PATH`, read
-  from `executor.SANDBOX_PATH` in the image.
+  error" in stderr. The image build itself fails when any of 39 programs (those the
+  bridge's ImageMagick delegates to, such as `gs`, `curl`, `soffice` and `ffmpeg`,
+  ImageMagick's own tools, `fc-list`, `fc-match`, `java` and `node`;
+  `agents/renderer/delegates.py`) is on the sandbox's `PATH` (`executor.SANDBOX_PATH`),
+  so the Cloud Build deploy enforces it as well as the CI job, which runs the check once
+  more in the built image (the Copilot review of #12405: a CI-only check would let a
+  base-image change reach production unseen).
 - **Host gates.** R2's blank check refuses a canvas that is 99.7 % one colour, not 98 %,
   for every library (see the table below).
 - **Evals.** `eligibility.py` sweeps all six libraries. `make_fixtures.py` writes the
@@ -644,8 +647,9 @@ bridge (the owner questions below). What stays from 1b's list, and what 1c adds:
     `label:`, `msl:`) never reach a coder, and `geom_imshow` builds an in-memory
     `data:` href from an array and reads no file, so admitted code cannot steer the
     native layer. The bridge's native process starts are bounded by the image's `PATH`,
-    `RLIMIT_NPROC` and the sandbox, and since 2026-10-26 `ci-image.yml` fails when any
-    of 39 delegate programs is on the sandbox's `PATH`. No ImageMagick policy ships:
+    `RLIMIT_NPROC` and the sandbox, and since 2026-10-26 every build of the renderer
+    image, the Cloud Build deploy included, fails when any of 39 delegate programs is on
+    the sandbox's `PATH` (`agents/renderer/delegates.py`). No ImageMagick policy ships:
     the bridge's ImageMagick is a zero-configuration build that reads no `policy.xml`
     and no `MAGICK_*` variable (a policy denying every coder and delegate changed no
     export, on the host or in the image). The two `fc-list` starts in the review's

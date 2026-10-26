@@ -878,38 +878,21 @@ jobs:
 
       # Native code the audit hook cannot see finds no program to run. lets-plot's bridge links
       # ImageMagick with a compiled-in delegate map that runs programs by name through /bin/sh
-      # (gs, curl, soffice, ffmpeg, rsvg-convert, inkscape and the rest listed below). That
-      # ImageMagick is a zero-configuration build: it reads no policy.xml, so no policy file can
-      # switch the delegates off (an export with a policy denying PNG under MAGICK_CONFIGURE_PATH
-      # still wrote its PNG, 2026-10-26). matplotlib calls fc-list when it finds it. So the
-      # sandbox's PATH (SANDBOX_PATH of agents/renderer/executor.py, read in the image) must
-      # carry none of them, next to RLIMIT_NPROC and the sandbox itself. node stays on the list
-      # until the JavaScript runtime (step 3 of agentic/specs/261024-agent-all-libraries.md)
-      # installs it as its row's toolchain.
+      # (gs, curl, soffice, ffmpeg, rsvg-convert, inkscape and the rest that
+      # agents/renderer/delegates.py lists). That ImageMagick is a zero-configuration build: it
+      # reads no policy.xml, so no policy file can switch the delegates off (an export with a
+      # policy denying PNG under MAGICK_CONFIGURE_PATH still wrote its PNG, 2026-10-26).
+      # matplotlib calls fc-list when it finds it. So the sandbox's PATH (SANDBOX_PATH of
+      # agents/renderer/executor.py) must carry none of them, next to RLIMIT_NPROC and the
+      # sandbox itself. node stays on the list until the JavaScript runtime (step 3 of
+      # agentic/specs/261024-agent-all-libraries.md) installs it as its row's toolchain.
       - name: No delegate program on the sandbox PATH
         if: steps.check.outputs.should_build == 'true'
         run: |
           set -euo pipefail
-          docker run --rm --network none anyplot-renderer:ci /app/.venv/bin/python -c '
-          import shutil
-          import sys
-
-          from agents.renderer.executor import SANDBOX_PATH
-
-          PROGRAMS = (
-              "gs", "ghostscript", "curl", "wget", "soffice", "libreoffice", "ffmpeg", "inkscape", "rsvg-convert",
-              "fc-list", "fc-match", "magick", "convert", "identify", "dot", "java", "node",
-              # The other programs of the delegate map.
-              "bpgdec", "bpgenc", "xdg-open", "uniconvertor", "ufraw-batch", "dvips", "xterm", "hp2xx", "html2ps",
-              "ilbmtoppm", "ppmtoilbm", "lepton", "JxrDecApp", "JxrEncApp", "pcl6", "gxps", "xclip", "cwebp", "dwebp",
-              "lpr", "mrsidgeodecode", "gimp",
-          )
-          found = {name: shutil.which(name, path=SANDBOX_PATH) for name in PROGRAMS}
-          found = {name: path for name, path in found.items() if path is not None}
-          if found:
-              sys.exit(f"on the sandbox PATH {SANDBOX_PATH}: {found}")
-          print(f"OK: none of {len(PROGRAMS)} delegate programs on {SANDBOX_PATH}")
-          '
+          # The image build ran the same check (agents/renderer/Dockerfile); this runs it
+          # once more in the image the job just built, as the sandbox would see it.
+          docker run --rm --network none anyplot-renderer:ci /app/.venv/bin/python -m agents.renderer.delegates
 
       # The file conversion inside the image (harness.py --convert): every format the
       # page sends, with the image's slimmed pyarrow (owner decision of 2026-10-15),
