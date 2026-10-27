@@ -61,4 +61,22 @@ describe('NavBar', () => {
     });
     expect(navigate).toHaveBeenCalledWith('/plots?focus=search');
   });
+
+  it('navigates to debug on 5 clicks and stays there on 6', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<NavBar />);
+
+    // 5 clicks
+    for (let i = 0; i < 5; i++) {
+      await user.click(container.querySelector('a[href="/"]')!);
+    }
+    expect(navigate).toHaveBeenCalledWith('/debug');
+    navigate.mockClear();
+
+    // 1 more click (6 total) within the time window
+    await user.click(container.querySelector('a[href="/"]')!);
+
+    // should still navigate to debug, preventing default link to /
+    expect(navigate).toHaveBeenCalledWith('/debug');
+  });
 });
