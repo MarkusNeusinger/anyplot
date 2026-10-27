@@ -349,8 +349,8 @@ export function FeedbackWidget() {
                 color: 'var(--ink)',
                 borderColor: 'var(--rule)',
                 '&.Mui-selected': {
-                  bgcolor: 'var(--bg-surface)',
-                  '&:hover': { bgcolor: 'var(--bg-surface)' },
+                  bgcolor: 'color-mix(in srgb, var(--ink) 10%, var(--bg-elevated))',
+                  '&:hover': { bgcolor: 'color-mix(in srgb, var(--ink) 10%, var(--bg-elevated))' },
                 },
               },
             },
