@@ -102,8 +102,6 @@ export function NavBar() {
       }, DEBUG_CLICK_WINDOW_MS);
       if (clickCountRef.current >= DEBUG_CLICK_COUNT) {
         e.preventDefault();
-        clickCountRef.current = 0;
-        if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
         navigate(paths.debug);
       }
     },
