@@ -28,9 +28,6 @@ vi.mock('src/global-config', async importOriginal => {
   };
 });
 
-vi.mock('react-helmet-async', () => ({
-  Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
 
 // Stable identities, like the real hook (effects depend on them).
 const analytics = vi.hoisted(() => ({ trackEvent: vi.fn(), trackPageview: vi.fn() }));

@@ -18,9 +18,6 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
-vi.mock('react-helmet-async', () => ({
-  Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
 
 // The real useAnalytics returns useCallback-stable functions. Rebuilding them
 // per render here would give every consumer a fresh identity, which turns any

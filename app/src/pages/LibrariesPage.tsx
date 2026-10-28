@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 
-import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -71,7 +70,7 @@ export function LibrariesPage() {
 
   return (
     <>
-      <Helmet>
+
         <title>libraries | anyplot.ai</title>
         <meta
           name="description"
@@ -83,7 +82,7 @@ export function LibrariesPage() {
           content="Fifteen plotting libraries across Python, R, Julia, and JavaScript — same specs, every library."
         />
         <link rel="canonical" href="https://anyplot.ai/libraries" />
-      </Helmet>
+
 
       <Box sx={{ maxWidth: 'var(--max-catalog, 2200px)', mx: 'auto', pt: { xs: 2, md: 3 }, pb: 6 }}>
         <SectionHeader prompt="❯" title={<em>libraries</em>} />

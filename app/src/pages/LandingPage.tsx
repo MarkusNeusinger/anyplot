@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 
-import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -37,14 +36,14 @@ export function LandingPage() {
 
   return (
     <>
-      <Helmet>
+
         <title>any.plot() — any library.</title>
         <meta
           name="description"
           content="any library. get inspired. grab the code. make it yours. human ideas, ai builds the rest. 15 plotting libraries across python, r, julia & javascript, colorblind-safe, open source."
         />
         <link rel="canonical" href="https://anyplot.ai/" />
-      </Helmet>
+
 
       {/* Hero — fills the viewport so the fold shows only the hero */}
       <Box

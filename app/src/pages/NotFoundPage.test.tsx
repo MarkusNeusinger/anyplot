@@ -5,10 +5,6 @@ import { render, screen } from 'src/test-utils';
 
 const mockTrackEvent = vi.fn();
 
-// Mock react-helmet-async to avoid provider requirement
-vi.mock('react-helmet-async', () => ({
-  Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
 
 vi.mock('src/hooks/useAnalytics', () => ({
   useAnalytics: () => ({

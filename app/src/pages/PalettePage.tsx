@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Helmet } from 'react-helmet-async';
-
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
@@ -732,7 +730,7 @@ export function PalettePage() {
 
   return (
     <>
-      <Helmet>
+
         <title>imprint palette | anyplot.ai</title>
         <meta
           name="description"
@@ -744,7 +742,7 @@ export function PalettePage() {
           content="imprint — anyplot's colorblind-safe categorical palette: 8 hues plus 3 semantic anchors."
         />
         <link rel="canonical" href="https://anyplot.ai/palette" />
-      </Helmet>
+
 
       <Box sx={{ pb: 4 }}>
         {/* 1. HERO — short lede + a compact hue–chroma wheel. Click the wheel to

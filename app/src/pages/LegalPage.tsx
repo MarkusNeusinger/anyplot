@@ -1,7 +1,5 @@
 import { useEffect } from 'react';
 
-import { Helmet } from 'react-helmet-async';
-
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Table from '@mui/material/Table';
@@ -136,7 +134,7 @@ export function LegalPage() {
 
   return (
     <>
-      <Helmet>
+
         <title>legal | anyplot.ai</title>
         <meta
           name="description"
@@ -148,7 +146,7 @@ export function LegalPage() {
           content="legal notice, privacy policy, and transparency information"
         />
         <link rel="canonical" href="https://anyplot.ai/legal" />
-      </Helmet>
+
 
       <Box sx={{ pb: 4 }}>
         {/* Legal Notice */}

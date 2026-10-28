@@ -6,9 +6,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MapPage } from 'src/pages/MapPage';
 import { act, render, screen, waitFor } from 'src/test-utils';
 
-vi.mock('react-helmet-async', () => ({
-  Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
 
 const mockNavigate = vi.fn();
 const mockTrackEvent = vi.fn();
