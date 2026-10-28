@@ -63,6 +63,8 @@ export interface AgentStatus {
   provider?: string;
   waiting?: number;
   in_flight?: number;
+  /** `AGENT_USER_MAX_RUNS`: one user's sandbox runs queued or running at once; absent from an older server. */
+  user_max_runs?: number;
   enabled: boolean;
 }
 

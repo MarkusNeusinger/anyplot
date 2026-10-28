@@ -204,7 +204,11 @@ const SPECS = {
     ],
   },
 };
-const AGENT_LIBRARIES = ['matplotlib', 'seaborn'];
+/** The enabled libraries, as the deploy's `AGENT_LIBRARIES` (comma-separated) would name them. */
+const AGENT_LIBRARIES = process.env.AGENT_LIBRARIES?.split(',').filter(Boolean) ?? [
+  'matplotlib',
+  'seaborn',
+];
 const MAX_DATASET_BYTES = 1024 * 1024;
 /** What the agents service stores as the user's message of an action turn (`ACTION_MESSAGES`). */
 const ACTION_MESSAGES = {
@@ -1599,6 +1603,7 @@ async function route(req, res) {
         version: 'mock',
         waiting: waitingTurns,
         in_flight: runsInFlight,
+        user_max_runs: 3,
         enabled: true,
       },
       ref

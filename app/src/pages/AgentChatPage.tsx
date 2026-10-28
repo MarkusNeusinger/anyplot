@@ -38,6 +38,12 @@
  * it shows only what the line does not (a `create_plot` run, a queue position,
  * pipeline steps), and the data card says why its controls wait.
  *
+ * `.plot_all()`, under the composer in step 2, is the admin's test run: the
+ * table as it was pasted or opened, with the confirmed bindings, plotted in
+ * every library of the header at once (`FanOut`), a session per library, at
+ * most `AGENT_USER_MAX_RUNS` plots running, each through the normal run queue.
+ * Data the assistant changed or computed is not offered (no upload to replay).
+ *
  * Gates, outermost first:
  * 1. `CONFIG.features.agentChat` (build-time `VITE_ENABLE_AGENT_CHAT`): off, the
  *    route renders the 404 page and this chunk is not even built.
@@ -59,7 +65,12 @@ import Box from '@mui/material/Box';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { LIB_TO_LANG, LIBRARIES } from 'src/constants';
 import { CONFIG } from 'src/global-config';
-import { sessionBusy, useAgentSession } from 'src/hooks/useAgentSession';
+import {
+  type BindingMap,
+  type DatasetUpload,
+  sessionBusy,
+  useAgentSession,
+} from 'src/hooks/useAgentSession';
 import { useAnalytics } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { agentApi, browserLocale, DEFAULT_AGENT_LIBRARIES, MAX_MESSAGE_CHARS } from 'src/lib/agent';
@@ -69,6 +80,8 @@ import { paths, specPath } from 'src/routes/paths';
 import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
 import { DATA_SUMMARY_ID, DataPanel } from 'src/sections/agent-chat/DataPanel';
+import { FanOut } from 'src/sections/agent-chat/FanOut';
+import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
 import { ERROR_TEXT } from 'src/sections/agent-chat/messages';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
@@ -219,6 +232,15 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   const [draft, setDraft] = useState('');
   const [title, setTitle] = useState<string | null>(null);
   const [libraries, setLibraries] = useState<string[]>([...DEFAULT_AGENT_LIBRARIES]);
+  // `.plot_all()`: the server's run limit, and what the open fan-out replays in every library.
+  const [maxRuns, setMaxRuns] = useState(DEFAULT_USER_MAX_RUNS);
+  // Both answers below are in (or failed): before that, the libraries and the limit are fallbacks.
+  const [listsSettled, setListsSettled] = useState(false);
+  const [fanOut, setFanOut] = useState<{
+    upload: DatasetUpload;
+    bindings: BindingMap;
+    libraries: string[];
+  } | null>(null);
   const tailRef = useRef<HTMLDivElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const createRef = useRef<HTMLButtonElement>(null);
@@ -243,6 +265,11 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
       const base = enabled ?? [...DEFAULT_AGENT_LIBRARIES];
       setLibraries(implemented ? base.filter(lib => implemented!.includes(lib)) : base);
     };
+    let pending = 2;
+    const settle = () => {
+      pending -= 1;
+      if (pending === 0 && !controller.signal.aborted) setListsSettled(true);
+    };
     apiGet<{ title: string; implementations: { library_id: string }[] }>(endpoints.spec(specId), {
       signal: controller.signal,
     })
@@ -252,7 +279,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
         implemented = spec.implementations.map(impl => impl.library_id);
         publish();
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(settle);
     agentApi
       .status(token)
       .then(status => {
@@ -260,8 +288,12 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
           enabled = status.libraries;
           publish();
         }
+        if (typeof status.user_max_runs === 'number' && status.user_max_runs > 0) {
+          setMaxRuns(status.user_max_runs);
+        }
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(settle);
     return () => controller.abort();
   }, [specId, token]);
 
@@ -298,6 +330,12 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   // text in the box goes with it; the pipeline counts versions per library too.
   const hasPlot = Object.values(state.versions).some(version => version.library === state.library);
   const firstPlot = step2 && !hasPlot;
+  // `.plot_all()`: the stored upload, as it was posted, plotted in every library at once. Data
+  // the assistant changed or computed has no upload, so the fan-out never plots other data.
+  const upload = state.dataset?.upload;
+  // Only once the libraries and the limit are the server's: a snapshot of the fallbacks would
+  // leave libraries out or start more runs than the server takes (`run_limit`).
+  const offerFanOut = listsSettled && step2 && !!upload && libraries.length > 1 && !fanOut;
   // The notice before the confirmation is done once the data is confirmed or a turn starts.
   // Adjusted while rendering, React's pattern for state that follows other state.
   if (gateShown && (step2 || running)) setGateShown(false);
@@ -789,6 +827,36 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 {draft.length} / {MAX_MESSAGE_CHARS}
               </Box>
             )}
+            {offerFanOut && upload && (
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  columnGap: 1,
+                  rowGap: 0.75,
+                }}
+              >
+                <Box id="agent-plot-all-line" sx={{ ...labelSx, flex: '1 1 220px' }}>
+                  # admin · this table in all {libraries.length} libraries at once, at most{' '}
+                  {maxRuns} running
+                </Box>
+                <Box
+                  component="button"
+                  type="button"
+                  onClick={() =>
+                    setFanOut({ upload, bindings: state.bindings, libraries: [...libraries] })
+                  }
+                  disabled={!canCreate}
+                  aria-label="Plot in all libraries"
+                  aria-describedby="agent-plot-all-line"
+                  sx={actionButtonSx}
+                >
+                  .plot_all()
+                </Box>
+              </Box>
+            )}
             {/* A chat without a plot has no result card to report on: its own control. Not while a
                 turn runs, which may still bring the plot; a sent record stays in view. */}
             {(state.chatFeedback ||
@@ -803,6 +871,18 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             )}
           </Box>
         </Box>
+        {fanOut && (
+          <FanOut
+            specId={specId}
+            libraries={fanOut.libraries}
+            locale={locale}
+            token={token}
+            upload={fanOut.upload}
+            bindings={fanOut.bindings}
+            maxRuns={maxRuns}
+            onClose={() => setFanOut(null)}
+          />
+        )}
       </Box>
     </>
   );

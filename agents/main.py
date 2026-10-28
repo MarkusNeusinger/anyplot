@@ -8,7 +8,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 
 | Route | Body | Result | Errors |
 |---|---|---|---|
-| `GET /v1/status` | | `{libraries, model, location, version, provider, waiting, in_flight}` | |
+| `GET /v1/status` | | `{libraries, model, location, version, provider, waiting, in_flight, user_max_runs}` (`user_max_runs`: `AGENT_USER_MAX_RUNS`) | |
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
@@ -798,7 +798,10 @@ def _stamp(ledger: RequestLedger, view: SessionView | None, session: Session) ->
 
 @app.get("/v1/status", dependencies=v1_dependencies)
 async def status(runtime: RuntimeDep) -> dict[str, Any]:
-    """The service's configuration, plus the run queue: `waiting` entries and runs `in_flight`."""
+    """The service's configuration, plus the run queue: `waiting` entries and runs `in_flight`.
+
+    `user_max_runs` is `AGENT_USER_MAX_RUNS`, which the admin chat's fan-out over every library keeps to.
+    """
     settings = get_settings()
     queue = runtime.run_queue()
     queue.pump()
@@ -810,6 +813,7 @@ async def status(runtime: RuntimeDep) -> dict[str, Any]:
         "version": _version(),
         "waiting": queue.waiting_count,
         "in_flight": queue.in_flight,
+        "user_max_runs": settings.user_max_runs,
     }
 
 
