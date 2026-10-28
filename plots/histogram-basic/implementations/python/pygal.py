@@ -44,7 +44,9 @@ df = pd.DataFrame({SCORE: rng.beta(a=5, b=2, size=500) * 60 + 35})
 
 # Plot: reads only df and the constants above
 counts, bin_edges = np.histogram(df[SCORE].dropna(), bins=N_BINS)
-hist_data = [(int(count), float(lo), float(hi)) for count, lo, hi in zip(counts, bin_edges[:-1], bin_edges[1:])]
+hist_data = [
+    (int(count), float(lo), float(hi)) for count, lo, hi in zip(counts, bin_edges[:-1], bin_edges[1:], strict=True)
+]
 
 # Style: thin bin edges in the page color keep neighboring bars distinguishable without gaps
 custom_style = Style(
