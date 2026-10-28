@@ -234,6 +234,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   const [libraries, setLibraries] = useState<string[]>([...DEFAULT_AGENT_LIBRARIES]);
   // `.plot_all()`: the server's run limit, and what the open fan-out replays in every library.
   const [maxRuns, setMaxRuns] = useState(DEFAULT_USER_MAX_RUNS);
+  // Both answers below are in (or failed): before that, the libraries and the limit are fallbacks.
+  const [listsSettled, setListsSettled] = useState(false);
   const [fanOut, setFanOut] = useState<{
     upload: DatasetUpload;
     bindings: BindingMap;
@@ -263,6 +265,11 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
       const base = enabled ?? [...DEFAULT_AGENT_LIBRARIES];
       setLibraries(implemented ? base.filter(lib => implemented!.includes(lib)) : base);
     };
+    let pending = 2;
+    const settle = () => {
+      pending -= 1;
+      if (pending === 0 && !controller.signal.aborted) setListsSettled(true);
+    };
     apiGet<{ title: string; implementations: { library_id: string }[] }>(endpoints.spec(specId), {
       signal: controller.signal,
     })
@@ -272,7 +279,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
         implemented = spec.implementations.map(impl => impl.library_id);
         publish();
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(settle);
     agentApi
       .status(token)
       .then(status => {
@@ -284,7 +292,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
           setMaxRuns(status.user_max_runs);
         }
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
+      .finally(settle);
     return () => controller.abort();
   }, [specId, token]);
 
@@ -324,7 +333,9 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   // `.plot_all()`: the stored upload, as it was posted, plotted in every library at once. Data
   // the assistant changed or computed has no upload, so the fan-out never plots other data.
   const upload = state.dataset?.upload;
-  const offerFanOut = step2 && !!upload && libraries.length > 1 && !fanOut;
+  // Only once the libraries and the limit are the server's: a snapshot of the fallbacks would
+  // leave libraries out or start more runs than the server takes (`run_limit`).
+  const offerFanOut = listsSettled && step2 && !!upload && libraries.length > 1 && !fanOut;
   // The notice before the confirmation is done once the data is confirmed or a turn starts.
   // Adjusted while rendering, React's pattern for state that follows other state.
   if (gateShown && (step2 || running)) setGateShown(false);

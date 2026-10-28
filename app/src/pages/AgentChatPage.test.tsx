@@ -1232,15 +1232,22 @@ describe('AgentChatPage .plot_all()', () => {
       input: string,
       init?: RequestInit
     ) => Promise<Response>;
+    // The status answer waits: until it is in, the libraries and the limit are fallbacks.
+    let releaseStatus!: () => void;
+    const status = new Promise<void>(resolve => (releaseStatus = resolve));
     fetchMock.mockImplementation((input: string, init?: RequestInit) =>
       input.endsWith('/debug/agent/status')
-        ? json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true, user_max_runs: 4 })
+        ? status.then(() =>
+            json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true, user_max_runs: 4 })
+          )
         : base(input, init)
     );
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
     await parseAndConfirm();
+    expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
+    releaseStatus();
 
     const plotAll = await screen.findByRole('button', { name: 'Plot in all libraries' });
     expect(

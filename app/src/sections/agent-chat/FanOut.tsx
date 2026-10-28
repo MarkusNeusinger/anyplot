@@ -35,6 +35,7 @@ import {
   ghostButtonSx,
   labelSx,
   panelSx,
+  visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
 import { colors } from 'src/theme';
 
@@ -125,7 +126,15 @@ function FanOutRun({
         }}
       >
         <Box sx={{ ...labelSx, color: 'var(--ink)' }}>{library}</Box>
-        <Box data-testid="fanout-status" sx={{ ...labelSx, color: TONE_COLOR[status.tone] }}>
+        {/* A polite live region of its own: the panel's line announces only the done count. */}
+        <Box
+          role="status"
+          data-testid="fanout-status"
+          sx={{ ...labelSx, color: TONE_COLOR[status.tone] }}
+        >
+          <Box component="span" sx={visuallyHiddenSx}>
+            {library}:{' '}
+          </Box>
           {status.text}
         </Box>
       </Box>
