@@ -168,6 +168,7 @@ class TestRefusals:
         ("output", "code", "fragment"),
         [
             (DataOutput(exit_code=DATA_EXIT["blocked"]), "run_failed", "native code, files, processes"),
+            (DataOutput(exit_code=DATA_EXIT["exec_deny"]), "run_failed", "no fault of the code"),
             (DataOutput(exit_code=DATA_EXIT["no_frame"]), "run_failed", "assign a pandas DataFrame to df"),
             (DataOutput(exit_code=DATA_EXIT["too_many_rows"]), "run_failed", "20,000 rows"),
             (DataOutput(exit_code=None, timed_out=True), "timeout", "longer than the sandbox allows"),

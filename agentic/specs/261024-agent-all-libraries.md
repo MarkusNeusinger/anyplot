@@ -663,13 +663,13 @@ bridge (the owner questions below). What stays from 1b's list, and what 1c adds:
     row requires it (`ANYPLOT_DENY_EXEC=required`: without it the render stops before
     the plot, exit code 3); every other row renders on without it and reports it in the
     end line, which the renderer logs per launch (`exec_deny`). Docker's default seccomp
-    profile admits it, and `ci-image.yml` checks the routes in the built image. Open:
-    whether Cloud Run's `sandbox do` lets the process add the filter, which the first
-    production render's log line answers, and a lets-plot render in the live chat proves
-    (it succeeds only under the filter; a local gVisor run was not possible from the
-    cloud session). Once it holds there, every in-process (Python) row can require it;
-    exec-mode rows (R, JavaScript, Julia) start their toolchain with `execve` and need
-    another design.
+    profile admits it, and `ci-image.yml` checks the routes in the built image. On
+    2026-10-28 a lets-plot render in the live chat succeeded, which it does only under
+    the filter, so Cloud Run's `sandbox do` admits it, and on the owner's decision every
+    in-process run now requires it (`RENDERER_EXEC_DENY=required`, with `optional` as
+    the switch back): a data run without it ends as `exec_deny`, a conversion as
+    `503 convert_unavailable`. Exec-mode rows (R, JavaScript, Julia) start their
+    toolchain with `execve` and need another design.
 - The owner's matrix run per library on Vertex (question 7), now the gate for the public
   release of all four libraries of steps 1b and 1c: since 2026-10-28 `_LIBRARIES` in
   `agents/cloudbuild.yaml` names all six Python libraries, because only the admin

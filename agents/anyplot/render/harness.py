@@ -76,9 +76,11 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    2026-10-28) under which the kernel refuses every `execve` and `execveat` of the process,
    its threads and its children, so native code the hook cannot see (lets-plot's
    ImageMagick delegates) starts no program either; with `ANYPLOT_DENY_EXEC=required`
-   (lets-plot's command row) a filter that is not in place stops the run before the plot
-   starts, with exit code `EXEC_DENY_EXIT` and a stderr line that names it (Cloud Run's
-   launcher reports every non-zero exit as -13), and without it the run goes on;
+   (every run the renderer and the local backend start, since 2026-10-28) a filter that is
+   not in place stops the run before the plot starts, with exit code `EXEC_DENY_EXIT` and a
+   stderr line that names it (Cloud Run's launcher reports every non-zero exit as -13; data
+   and convert mode return `exec_deny` through `status.json`), and without it the run goes
+   on;
 6. prints `HARNESS {"event": "end", "max_rss_mb": ..., "cpu_s": ..., "exec_deny": ...}`
    when the plot file returns or raises (`exec_deny`: `on`, `unavailable`, `unsupported`,
    or `off` when the guard was never armed); an exception still propagates, so its
@@ -240,10 +242,12 @@ DATA_EXIT = {
     "too_many_columns": 6,
     "too_large": 7,
     "blocked": 8,
+    "exec_deny": 9,
 }
 """Exit codes of data mode: `error` is an exception in the snippet (its traceback on stderr), `no_frame` no `df`
 or one that is no DataFrame, `frame_shape` MultiIndex columns or an index that cannot become columns,
-`blocked` an operation `DataGuard` refused."""
+`blocked` an operation `DataGuard` refused, `exec_deny` a required kernel filter that is not in place (the snippet
+never ran)."""
 CONVERT_FLAG = "--convert"
 CONVERT_MODULE_FILE = "convert.py"
 """The converter (`agents/anyplot/render/convert.py`), next to the harness in the image and in the checkout."""
@@ -279,10 +283,12 @@ CONVERT_EXIT = {
     "error": 1,
     "usage": 2,
     "blocked": 8,
+    "exec_deny": 9,
     **{reason: 10 + index for index, reason in enumerate(CONVERT_REFUSALS)},
 }
 """Exit codes of convert mode: `error` an exception in the reader (its class on stderr), `blocked` an operation the
-guard refused (a reader that tried to import, open or run code), the rest a refused file."""
+guard refused (a reader that tried to import, open or run code), `exec_deny` a required kernel filter that is not in
+place (no file was read), the rest a refused file."""
 CONVERT_AST_READERS = (
     ("ast.py", "parse"),
     ("ast.py", "literal_eval"),
@@ -644,9 +650,10 @@ def ctypes_helper_addresses():
 
 
 EXEC_DENY_ENV = "ANYPLOT_DENY_EXEC"
-"""`required` (lets-plot's row of `agents/renderer/commands.py`) makes arming the plot guard fail when the kernel
-filter is not in place (`ExecDenyUnavailable`); unset, and in data and convert mode, which never get a row's
-environment, a guard installs it where it can and reports where it cannot."""
+"""`required` makes arming fail when the kernel filter is not in place (`ExecDenyUnavailable`): the renderer's
+`sandbox_env` and the local backend set it for every in-process run (`RENDERER_EXEC_DENY`, since 2026-10-28, lets-plot's
+row alone before). Unset, as in a test that runs the harness directly, a guard installs it where it can and reports
+where it cannot."""
 EXEC_DENY_EXIT = 3
 """Plot mode's exit code when `ANYPLOT_DENY_EXEC=required` and the filter is not in place: the plot never ran."""
 EXEC_PROBE_PATH = "/nonexistent/anyplot-exec-probe"
@@ -765,7 +772,8 @@ class DataGuard:
     error is refused all the same. `paused()` lets the harness itself read frames while it
     prints a traceback, when no snippet code runs. `exec_deny` is the kernel filter's state
     for the end line (`install_exec_deny`): `off` until `arm` installs it; `exec_deny_required`
-    makes `arm` refuse to run without it (the plot guard's, from `ANYPLOT_DENY_EXEC`).
+    (`ANYPLOT_DENY_EXEC=required`, read when the guard is built, before any code under test runs)
+    makes `arm` refuse to run without it.
     """
 
     def __init__(self):
@@ -774,7 +782,7 @@ class DataGuard:
         self.paused_depth = 0
         self.entry = None  # the code object `arm` lets run once
         self.exec_deny = "off"
-        self.exec_deny_required = False
+        self.exec_deny_required = os.environ.get(EXEC_DENY_ENV) == "required"
 
     def refuses(self, event, args):
         """Whether `event` with `args` is one the armed guard refuses."""
@@ -865,7 +873,6 @@ class PlotGuard(DataGuard):
         self.outputs = frozenset(os.path.realpath(path) for path in outputs)
         self.plot_file = None
         self.import_ctypes_helpers = ctypes_helper_addresses()
-        self.exec_deny_required = os.environ.get(EXEC_DENY_ENV) == "required"
 
     def arm(self, entry=None):
         self.plot_file = entry.co_filename if entry is not None else None
@@ -2019,7 +2026,11 @@ def run_data_snippet(path, guard, measure):
         return DATA_EXIT["error"]
     namespace = {"__name__": "__main__", "__builtins__": builtins}
     with open(DATA_OUT_FILE, "w", encoding="utf-8", newline="") as out:
-        guard.arm(code)
+        try:
+            guard.arm(code)
+        except ExecDenyUnavailable as exc:
+            print(f"the sandbox could not refuse process starts ({exc}), which every run requires", file=sys.stderr)
+            return DATA_EXIT["exec_deny"]
         try:
             exec(code, namespace)
         except BaseException as exc:  # SystemExit included: the snippet never chooses the exit code
@@ -2253,7 +2264,11 @@ def run_conversion(path, guard, measure):
         open(DATA_OUT_FILE, "w", encoding="utf-8", newline="") as out,
         open(CONVERT_META_FILE, "w", encoding="utf-8") as meta,
     ):
-        guard.arm()
+        try:
+            guard.arm()
+        except ExecDenyUnavailable as exc:
+            print(f"the sandbox could not refuse process starts ({exc}), which every run requires", file=sys.stderr)
+            return CONVERT_EXIT["exec_deny"]
         try:
             result = converter.convert(data, sheet)
             text = result.csv_text
@@ -2352,7 +2367,7 @@ def main(argv):
     try:
         run_plot(argv[1], guard)
     except ExecDenyUnavailable as exc:
-        print(f"the sandbox could not refuse process starts ({exc}), which this library requires", file=sys.stderr)
+        print(f"the sandbox could not refuse process starts ({exc}), which every run requires", file=sys.stderr)
         return EXEC_DENY_EXIT
     finally:
         try:

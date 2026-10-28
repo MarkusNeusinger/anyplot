@@ -855,7 +855,7 @@ jobs:
             -e ANYPLOT_THEME=light -e MPLBACKEND=Agg -e MPLCONFIGDIR=/tmp/mpl -e ANYPLOT_MPL_SEED=/opt/mplconfig \
             "${ROW_FLAGS[@]}" \
             -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
-            -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 \
+            -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_DENY_EXEC=required \
             anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py plot.py \
             > work-letsplot/harness.out 2> work-letsplot/harness.err \
             || { echo "::error::the lets-plot render failed"; cat work-letsplot/harness.out work-letsplot/harness.err; exit 1; }
@@ -875,8 +875,9 @@ jobs:
           print(f"OK: lets-plot plot-light.png {width}x{height}, {len(png)} bytes; plot-light.html {len(html)} characters")
           EOF
           tail -n 1 work-letsplot/harness.out
-          # The row requires the harness's kernel filter against program starts (ANYPLOT_DENY_EXEC);
-          # a render without it exits with 3 before the plot runs, so this one ran under it.
+          # Every in-process run requires the harness's kernel filter against program starts
+          # (ANYPLOT_DENY_EXEC=required, which executor.sandbox_env sets); a render without it exits
+          # with 3 before the plot runs, so this one ran under it.
           tail -n 1 work-letsplot/harness.out | grep -qF '"exec_deny": "on"' \
             || { echo "::error::the lets-plot render ran without the exec filter"; exit 1; }
 
