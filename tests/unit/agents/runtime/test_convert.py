@@ -53,6 +53,12 @@ def npy(array: np.ndarray, *, allow_pickle: bool = False) -> bytes:
     return buffer.getvalue()
 
 
+def npz(**arrays: np.ndarray) -> bytes:
+    buffer = io.BytesIO()
+    np.savez(buffer, allow_pickle=True, **arrays)
+    return buffer.getvalue()
+
+
 class TestPins:
     def test_refusals_and_caps_agree_across_converter_harness_and_wire(self) -> None:
         assert convert.REFUSALS == harness.CONVERT_REFUSALS == wire.CONVERT_REASONS
@@ -324,8 +330,47 @@ class TestNumpy:
         array = np.zeros(2, dtype=[("t", "datetime64[s]"), ("v", "f8")])
         assert convert.convert(npy(array)).csv_text.startswith("t,v\n1970-01-01T00:00:00,0\n")
 
-    def test_a_1d_array_is_refused(self) -> None:
-        assert refused(npy(np.arange(3))).reason == "array_shape"
+    def test_a_1d_array_is_one_value_column(self) -> None:
+        """A histogram, a box plot or a line over the index needs one series (owner decision of 2026-10-28)."""
+        assert convert.convert(npy(np.arange(3))).csv_text == "value\n0\n1\n2\n"
+        dates = np.array(["2026-01-01", "NaT"], dtype="datetime64[D]")
+        assert convert.convert(npy(dates)).csv_text == "value\n2026-01-01\nNaN\n"
+        result = convert.convert(npy(np.array([0.5, np.nan], dtype=np.float32)))
+        assert (result.csv_text, result.rows, result.columns, result.sheets) == ("value\n0.5\nNaN\n", 2, 1, [])
+
+    @pytest.mark.parametrize(
+        "array",
+        [
+            pytest.param(np.array([1.0, np.nan, np.nan, 4.0]), id="numbers"),
+            pytest.param(np.array(["2026-01-01", "NaT", "2026-01-03"], dtype="datetime64[D]"), id="dates"),
+            pytest.param(np.array(["a", "", "c"]), id="text"),
+            pytest.param(np.array([[1.0, np.nan], [np.nan, np.nan], [3.0, 4.0]]), id="2-D"),
+        ],
+    )
+    def test_a_row_of_missing_values_keeps_its_place_through_the_paste(self, array: np.ndarray) -> None:
+        """The paste parser skips a blank line: a gap in a line over the index would close, so the converter writes
+        the row's first cell as `NaN`, which the parser reads as missing and reports."""
+        result = convert.convert(npy(array))
+        parsed = parse_dataset(result.csv_text)
+        assert parsed.profile.rows == result.rows == len(array)
+        assert any("read as missing ('NaN')" in warning for warning in parsed.warnings)
+
+    @pytest.mark.parametrize(
+        "array",
+        [np.zeros(0), np.array([np.nan, np.nan]), np.array(["", " "]), np.zeros((0, 2))],
+        ids=["no rows", "all NaN", "all blank", "2-D without rows"],
+    )
+    def test_an_array_without_a_value_is_empty(self, array: np.ndarray) -> None:
+        assert refused(npy(array)).reason == "empty"
+
+    @pytest.mark.parametrize("shape", [(), (2, 2, 2)], ids=["0-D", "3-D"])
+    def test_an_array_of_another_shape_is_refused(self, shape: tuple[int, ...]) -> None:
+        error = refused(npy(np.zeros(shape)))
+        assert (error.reason, error.measured, error.limit) == ("array_shape", len(shape), 2)
+
+    def test_a_1d_array_past_the_row_cap_is_refused(self) -> None:
+        error = refused(npy(np.zeros(MAX_ROWS + 1)))
+        assert (error.reason, error.measured) == ("too_many_rows", MAX_ROWS + 1)
 
     def test_an_object_array_is_never_unpickled(self) -> None:
         assert refused(npy(np.array([1, "a"], dtype=object), allow_pickle=True)).reason == "object_array"
@@ -346,6 +391,72 @@ class TestNumpy:
         only = io.BytesIO()
         np.savez(only, obj=np.array([None], dtype=object))
         assert refused(only.getvalue()).reason == "object_array"
+        flat = convert.convert(data, "flat")  # a chosen 1-D array is the column of its name
+        assert (flat.csv_text, flat.sheet) == ("flat\n0\n1\n2\n", "flat")
+
+    def test_npz_series_of_one_length_are_one_table(self) -> None:
+        """What `np.savez(path, x=x, y=y)` writes: a column per array, in the archive's order, and no array to pick."""
+        result = convert.convert(npz(x=np.arange(3), y=np.array([0.5, 1.5, 2.5]), label=np.array(["a", "b", "c"])))
+        assert result.csv_text == "x,y,label\n0,0.5,a\n1,1.5,b\n2,2.5,c\n"
+        assert (result.kind, result.sheet, result.sheets, result.sheet_count) == ("npz", None, [], 3)
+        assert result.meta()["sheets"] == [] and result.meta()["columns"] == 3
+
+    def test_npz_series_of_different_lengths_are_read_one_at_a_time(self) -> None:
+        data = npz(x=np.arange(3), y=np.arange(4))
+        result = convert.convert(data)
+        assert (result.csv_text, result.sheet, result.sheets) == ("x\n0\n1\n2\n", "x", ["x", "y"])
+        assert convert.convert(data, "y").csv_text == "y\n0\n1\n2\n3\n"
+
+    def test_npz_prefers_a_table_over_an_earlier_series(self) -> None:
+        result = convert.convert(npz(a=np.arange(2), grid=np.ones((2, 2)), b=np.arange(2)))
+        assert (result.sheet, result.csv_text) == ("grid", "column_1,column_2\n1,1\n1,1\n")
+
+    def test_one_npz_series_is_its_own_sheet(self) -> None:
+        result = convert.convert(npz(arr_0=np.arange(2)))
+        assert (result.csv_text, result.sheet, result.sheets) == ("arr_0\n0\n1\n", "arr_0", ["arr_0"])
+
+    @pytest.mark.parametrize("name", ["2023", "1.5", "-x", "2024-01-01"])
+    def test_an_array_named_like_a_value_is_the_value_column(self, name: str) -> None:
+        """The paste parser would take a one-column table's header `2023` for its first value; the sheet keeps it."""
+        result = convert.convert(npz(**{name: np.arange(2), "longer": np.arange(3)}))
+        assert (result.csv_text, result.sheet) == ("value\n0\n1\n", name)
+        assert parse_dataset(result.csv_text).profile.rows == 2
+
+    def test_npz_scalars_beside_the_series_are_left_out_and_named(self) -> None:
+        """`np.savez(path, t=t, y=y, dt=0.01)`: the step is no column; the page names what was left out."""
+        result = convert.convert(npz(t=np.arange(3), dt=np.float64(0.01), y=np.arange(3) * 2))
+        assert (result.csv_text, result.sheet, result.sheets) == ("t,y\n0,0\n1,2\n2,4\n", None, [])
+        assert result.dropped == ["dt"] and result.warnings == {"dropped_columns": 1}
+
+    def test_a_name_the_zip_repeats_counts_once_and_reads_its_last_entry(self) -> None:
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as archive:
+            archive.writestr("x.npy", npy(np.arange(3)))
+            archive.writestr("y.npy", npy(np.arange(2)))
+            with pytest.warns(UserWarning, match="Duplicate name"):
+                archive.writestr("x.npy", npy(np.arange(2) + 10))
+        result = convert.convert(buffer.getvalue())
+        assert (result.csv_text, result.sheet_count) == ("x,y\n10,0\n11,1\n", 2)
+
+    def test_npz_series_without_a_value_are_empty(self) -> None:
+        assert refused(npz(x=np.zeros(0), y=np.zeros(0))).reason == "empty"
+
+    def test_npz_series_past_the_caps_are_refused(self) -> None:
+        wide = refused(npz(**{f"c{index}": np.arange(2) for index in range(MAX_COLUMNS + 1)}))
+        assert (wide.reason, wide.measured, wide.limit) == ("too_many_columns", MAX_COLUMNS + 1, MAX_COLUMNS)
+        long = refused(npz(x=np.zeros(MAX_ROWS + 1), y=np.zeros(MAX_ROWS + 1)))
+        assert (long.reason, long.measured) == ("too_many_rows", MAX_ROWS + 1)
+
+    def test_a_pickled_or_broken_member_keeps_the_npz_out_of_one_table(self) -> None:
+        with_object = npz(x=np.arange(2), obj=np.array([None, None], dtype=object), y=np.arange(2))
+        result = convert.convert(with_object)
+        assert (result.csv_text, result.sheet) == ("x\n0\n1\n", "x")
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as archive:
+            archive.writestr("x.npy", npy(np.arange(2)))
+            archive.writestr("y.npy", b"\x93NUMPY broken")
+        error = refused(buffer.getvalue())
+        assert (error.reason, error.damage) == ("corrupt", "npy_header")
 
 
 def run_harness(tmp_path: Path, data: bytes, sheet: str | None = None) -> tuple[int, dict[str, object], str | None]:

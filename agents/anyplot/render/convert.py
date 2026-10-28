@@ -44,9 +44,15 @@ The format comes from the first bytes, never from the file's name or type:
   (one row per value, a `record_id` column, thinning to its row cap), the owner's list
   rule of 2026-10-15 (#12191), so there is one implementation of it (`list_columns`).
 * **NumPy** `.npy` and `.npz` with `allow_pickle=False`: an object array (a pickle
-  inside) is refused, and so is any array that is neither 2-D nor a structured 1-D
-  array. The header's shape is checked against the bytes that are there before an
-  array is allocated. An `.npz` is a zip of `.npy` members, each a "sheet".
+  inside) is refused, and so is a 0-D array, an array of three or more dimensions and a
+  structured array of more than one. A plain 1-D array is one column (`value`, since
+  2026-10-28), a 2-D array numbered columns, a structured 1-D array its fields; an array
+  with no value is `empty`, and a row whose cells are all missing is written `NaN`, so
+  the paste keeps it. The header's shape is checked against the bytes that are there
+  before an array is allocated. An `.npz` is a zip of `.npy` members, each a "sheet";
+  one of two or more plain 1-D arrays of one length (`np.savez(path, t=t, y=y)`) is one
+  table instead, a column per array named after it, its 0-D members left out and named,
+  and offers no sheet.
 * **Never**: pickle and joblib (loading one runs code) and HDF5; anything else is
   `unsupported`.
 
@@ -79,6 +85,10 @@ MAX_INPUT_BYTES = 5 * 1024 * 1024
 """The largest file converted: the BFF's and the agents service's raw cap (base64 in JSON, about 6.7 MB)."""
 MAX_ROWS = 20_000  # agents/anyplot/schemas.py MAX_ROWS (the harness's DATA_MAX_ROWS)
 MAX_COLUMNS = 50  # agents/anyplot/schemas.py MAX_COLUMNS
+ARRAY_COLUMN = "value"
+"""The one column of a plain 1-D `.npy` array; an `.npz` array's column takes the array's name (`_column_name`)."""
+MISSING_MARK = "NaN"
+"""The first cell of an array row whose cells are all missing (`_array_table`), which the paste parser reads as missing."""
 ROW_SLACK = 200
 """Raw spreadsheet rows past `MAX_ROWS`: a title, notes and a header above the table, totals and footnotes below."""
 MAX_GRID_ROWS = MAX_ROWS + ROW_SLACK
@@ -1009,19 +1019,31 @@ def _npy_array(raw):
 
 
 def _array_shape_ok(array):
-    return array.ndim == 2 and array.dtype.names is None or array.ndim == 1 and array.dtype.names is not None
+    """A plain 1-D or 2-D array, or a structured 1-D one. A 1-D array is one column (owner decision of 2026-10-28:
+    a histogram, a box plot or a line over the index needs one series), so only 0-D and 3-D and up are refused."""
+    if array.dtype.names is not None:
+        return array.ndim == 1
+    return array.ndim in (1, 2)
 
 
-def _array_columns(array, warnings):
-    """A 2-D array's columns (`column_1`, ...) or a structured array's fields, as cell texts."""
+def _plain_1d(array):
+    return array.ndim == 1 and array.dtype.names is None
+
+
+def _array_columns(array, warnings, name=ARRAY_COLUMN):
+    """A plain 1-D array as the one column `name`, a 2-D array's columns (`column_1`, ...) or a structured array's
+    fields, as cell texts."""
     import numpy as np
 
     if array.dtype.names is None:
         if array.shape[0] > MAX_ROWS:
             raise Refused("too_many_rows", array.shape[0], MAX_ROWS)
-        if array.shape[1] > MAX_COLUMNS:
-            raise Refused("too_many_columns", array.shape[1], MAX_COLUMNS)
-        fields = [(f"column_{index + 1}", array[:, index]) for index in range(array.shape[1])]
+        if array.ndim == 1:
+            fields = [(name, array)]
+        else:
+            if array.shape[1] > MAX_COLUMNS:
+                raise Refused("too_many_columns", array.shape[1], MAX_COLUMNS)
+            fields = [(f"column_{index + 1}", array[:, index]) for index in range(array.shape[1])]
     else:
         if array.shape[0] > MAX_ROWS:
             raise Refused("too_many_rows", array.shape[0], MAX_ROWS)
@@ -1038,7 +1060,7 @@ def _array_columns(array, warnings):
         if values.dtype.kind == "M":
             texts = ["" if np.isnat(value) else str(np.datetime_as_string(value)) for value in values]
         elif values.dtype.kind == "m":
-            texts = ["" if np.isnat(value) else str(value) for value in values]  # a 2-D array of durations
+            texts = ["" if np.isnat(value) else str(value) for value in values]  # a plain array of durations
         elif values.dtype.kind == "f" and values.dtype.itemsize < 8:
             texts = [_float_text(value) for value in values]
         else:
@@ -1048,24 +1070,84 @@ def _array_columns(array, warnings):
     return names, columns
 
 
+def _series(archive, labels):
+    """The plain 1-D arrays of an `.npz` as `(label, array)` pairs and the labels of its 0-D members, when there are
+    two or more 1-D arrays, all of one length, and nothing else but 0-D members (what `np.savez(path, t=t, y=y,
+    dt=0.01)` writes): one table's columns, the scalars left out. None for any other archive, which is read one array
+    at a time; so does a member the reader would refuse (a pickle, a broken one), which the reader then reports.
+    Reading stops at the first member that does not fit."""
+    if len(labels) < 2:
+        return None
+    series, scalars = [], []
+    for label in labels:
+        try:
+            array = _npy_array(archive.read(label + ".npy"))
+        except zipfile.BadZipFile, OSError, ValueError, EOFError, KeyError, Refused:
+            return None
+        if array.ndim == 0 and array.dtype.names is None:
+            scalars.append(label)
+            continue
+        if not _plain_1d(array) or (series and len(array) != len(series[0][1])):
+            return None
+        series.append((label, array))
+    return (series, scalars) if len(series) >= 2 else None
+
+
+def _column_name(label):
+    """An `.npz` array's name as the column of its 1-D array, or `ARRAY_COLUMN` where the name could read as a value
+    (a year such as `2024`, a number, a date): the paste parser would take a one-column table's header for its first
+    value."""
+    return label if label and not (label[0].isdigit() or label[0] in "+-.") else ARRAY_COLUMN
+
+
+def _array_table(names, columns, kind, warnings, sheet=None, sheets=(), sheet_count=0):
+    """`_table` for arrays: an array with no value at all is `empty`, as a sheet without cells is, and a row whose
+    cells are all missing keeps its place. The paste parser skips a blank line, so without `MISSING_MARK` the row
+    would vanish (a gap in a line over the index would close and move every later value); it reads `NaN` as missing
+    and says so."""
+    if not any(cell.strip() for column in columns for cell in column):
+        raise Refused("empty")
+    for index in range(len(columns[0])):
+        if not any(column[index].strip() for column in columns):
+            columns[0][index] = MISSING_MARK
+    return _table(names, columns, kind, warnings, sheet, sheets, sheet_count)
+
+
 def read_numpy(data, kind, sheet_name, warnings):
-    """An `.npy` array, or one array of an `.npz` (the chosen one, else the first 2-D or structured one)."""
+    """An `.npy` array; an `.npz` of plain 1-D arrays of one length as one table, one column per array (`_series`);
+    else one array of an `.npz`: the chosen one, else the first 2-D or structured one, else the first 1-D one."""
     if kind == "npy":
         array = _npy_array(data)
         if not _array_shape_ok(array):
             raise Refused("array_shape", array.ndim, 2)
         names, columns = _array_columns(array, warnings)
-        return _table(names, columns, kind, warnings)
+        return _array_table(names, columns, kind, warnings)
     with _open_zip(data) as archive:
         members = [info.filename for info in archive.infolist()]
-        labels = [member[: -len(".npy")] for member in members]
+        # A name the zip repeats reads its last entry, as `np.load` does, and counts once.
+        labels = list(dict.fromkeys(member[: -len(".npy")] for member in members))
         if sheet_name is not None:
             if sheet_name not in labels:
                 raise Refused("sheet_not_found")
             candidates = [sheet_name]
         else:
             candidates = labels
+            found = _series(archive, labels)
+            if found is not None:
+                series, scalars = found
+                if len(series) > MAX_COLUMNS:
+                    raise Refused("too_many_columns", len(series), MAX_COLUMNS)
+                names, columns = [], []
+                for label, array in series:
+                    (name,), (column,) = _array_columns(array, warnings, label)
+                    names.append(name)
+                    columns.append(column)
+                for label in scalars:
+                    dropped(warnings, label)  # a single value is no column
+                # One table holds every array, so the page offers no array to choose (`sheets` stays empty).
+                return _array_table(distinct_names(names, warnings), columns, kind, warnings, sheet_count=len(labels))
         refused = None
+        first_1d = None
         for label in candidates:
             try:
                 raw = archive.read(label + ".npy")
@@ -1081,9 +1163,20 @@ def read_numpy(data, kind, sheet_name, warnings):
             if not _array_shape_ok(array):
                 refused = refused or Refused("array_shape", array.ndim, 2)
                 continue
-            names, columns = _array_columns(array, warnings)
-            return _table(names, columns, kind, warnings, _named(label), _listed(labels), len(labels))
+            if _plain_1d(array) and sheet_name is None:
+                first_1d = first_1d or (label, array)  # a 2-D or structured array later in the archive comes first
+                continue
+            return _numpy_sheet(label, array, labels, kind, warnings)
+        if first_1d is not None:
+            return _numpy_sheet(*first_1d, labels, kind, warnings)
     raise refused or Refused("empty")
+
+
+def _numpy_sheet(label, array, labels, kind, warnings):
+    """One array of an `.npz` as the table, named as the sheet read; a plain 1-D one is the column of its name
+    (`_column_name`)."""
+    names, columns = _array_columns(array, warnings, _column_name(label))
+    return _array_table(names, columns, kind, warnings, _named(label), _listed(labels), len(labels))
 
 
 # --- Entry ----------------------------------------------------------------------------------

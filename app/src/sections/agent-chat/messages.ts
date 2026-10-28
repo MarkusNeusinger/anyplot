@@ -151,7 +151,8 @@ export const CONVERT_FAILURE: Record<string, string> = {
   file_too_large: 'gives more than 1 MB of text; filter it, or copy a range and paste it',
   file_empty: 'has no cells with values',
   file_sheet_not_found: 'no longer has that sheet; drop the file again',
-  file_array_shape: 'holds no 2-D or structured array; save the data as a 2-D array or a table',
+  file_array_shape:
+    'holds no array a table can be read from (1-D, 2-D or a 1-D structured array); save the data as one of those or as a table',
   file_formulas_only:
     'contains only formulas without saved values; open it in Excel and save it once',
   file_object_array:

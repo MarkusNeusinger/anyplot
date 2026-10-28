@@ -133,9 +133,22 @@ def main():
         frame_bytes(lambda array, buffer: np.save(buffer, array), np.arange(4).reshape(2, 2)),
         text="column_1,column_2\n0,1\n2,3\n",
     )
+    expect(
+        "npy 1-D, a missing value kept",
+        frame_bytes(lambda array, buffer: np.save(buffer, array), np.array([1.5, np.nan, 3.0])),
+        text="value\n1.5\nNaN\n3\n",
+    )
     npz = io.BytesIO()
     np.savez_compressed(npz, grid=np.ones((1, 2)))
     expect("npz", npz.getvalue(), text="column_1,column_2\n1,1\n")
+    series = io.BytesIO()
+    np.savez(series, t=np.arange(2), dt=np.float64(0.5), y=np.array([0.5, 1.5]))
+    expect(
+        "npz series as one table",
+        series.getvalue(),
+        text="t,y\n0,0.5\n1,1.5\n",
+        check=lambda text, meta: assert_equal((meta["sheet"], meta["sheets"], meta["dropped"]), (None, [], ["dt"])),
+    )
     expect("pickle", b"\x80\x04K\x01.", reason="pickle")
     print("all conversions passed in the image")
 
