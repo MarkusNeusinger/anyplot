@@ -8,4 +8,4 @@
   code runs. The deploy builds and pushes it to Artifact Registry only when the hash
   of its inputs is new, and the CI job pulls it or builds it. The Python renders of
   all six libraries stay byte-identical; R is not served yet (step 2 of the
-  all-libraries plan, revised after a second opinion).
+  all-libraries plan, revised after a second opinion). (#12423)
