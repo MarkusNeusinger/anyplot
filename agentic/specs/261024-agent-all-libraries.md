@@ -723,21 +723,35 @@ design.
 - Builds (owner decision of 2026-10-28, after the second opinion): the deploy builds the
   toolchain when it needs one, with no trigger of its own and no lock file to bump.
   `deploy-renderer` (its `includedFiles` already cover `agents/renderer/**`) hashes the
-  toolchain's inputs, asks Artifact Registry for `anyplot-toolchain:<hash>`, builds and
-  pushes it only when it is missing (with `buildx --cache-from type=registry`, because
-  Cloud Build keeps no layer cache: an R package bump must not rerun Julia's precompile),
-  and builds the renderer with `--build-arg TOOLCHAIN_REF=<image>@<digest>` of that tag.
-  The renderer's Dockerfile reads `ARG TOOLCHAIN_REF` and starts `FROM ${TOOLCHAIN_REF}`;
-  a deploy that changes the toolchain takes longer (R about 5 minutes, with Julia's
-  precompile about 20), and the build's machine type is raised if Julia's precompile
-  needs it.
+  toolchain's inputs (`agents/renderer/toolchain.py`), asks Artifact Registry for
+  `anyplot-toolchain:<hash>`, builds and pushes it only when it is missing, and builds
+  the renderer with `--build-arg TOOLCHAIN_IMAGE=<repository>` and
+  `--build-arg TOOLCHAIN_TAG=<hash>@<digest>`. The renderer's Dockerfile starts
+  `FROM ${TOOLCHAIN_IMAGE}:${TOOLCHAIN_TAG}` (two arguments rather than one reference, so
+  the FROM line names a tag, which hadolint's DL3006 asks for; the digest rides in the
+  tag, `name:tag@digest`), and both its builder and its runtime stage build on it, so the
+  venv and the runtime see one Python. A deploy that changes the toolchain takes longer
+  (R about 2 minutes, measured locally on 2026-10-29). With Julia (step 5) the build gains
+  a registry cache (`buildx --cache-from type=registry`, because Cloud Build keeps no
+  layer cache and an R package bump must not rerun Julia's precompile) and, if the
+  precompile needs it, a larger machine type.
 - CI (`ci-image.yml`, job `renderer-image`): the job computes the same hash; when the tag
   exists it pulls it through the Workload Identity Federation login that `ci-tests.yml`
   uses (pool `github-actions`, the job gains `id-token: write`), which needs
   `roles/artifactregistry.reader` on the repository for the repository's principal set;
   when the tag is missing (a PR that changes a toolchain input) or no login is possible
-  (Dependabot runs without secrets), it builds the toolchain itself and passes its local
-  tag as `TOOLCHAIN_REF`.
+  (Dependabot runs without secrets), it builds the toolchain itself into a local registry
+  (`localhost:5000`, the builder on the host network) and the renderer FROM it.
+- Verified on 2026-10-29 with the first toolchain (R 4.6.1 and its packages, 312 MB):
+  the renderer image grows from about 1.17 GB to 1.35 GB, and a seaborn, a plotnine, an
+  altair, a pygal and a lets-plot render through the harness are byte-identical to the
+  main branch's image, non-ASCII titles included. R's package's dependencies were
+  replaced by the runtime libraries `ldd` asks for: its Depends pull in compilers, `-dev`
+  packages, Tcl/Tk and X11, and Pango's dependency on the `fontconfig` package would put
+  `fc-list` and `fc-match` on the sandbox's `PATH` (the delegates check refused it), so
+  grDevices' cairo devices go with Pango (every catalogue file saves through ragg).
+  Dependabot bumps the base's digest (docker ecosystem, digest and patch releases only),
+  which changes the hash, so the base's security updates reach the next deploy.
 - Owner task, named with its exact command before it runs (CLAUDE.md, external writes):
   the reader binding for CI. The first toolchain build is the first deploy's.
 
@@ -826,9 +840,10 @@ of the language's own program. Instead:
 #### 2d. Order of the PRs
 
 1. The toolchain image with the R stage and the preload library, the deploy's
-   build-if-missing step, the renderer `FROM ${TOOLCHAIN_REF}` and the CI path (pull the
-   tag, or build it); the R row is not served yet. Before the merge, the owner-approved
-   reader binding; the merge's deploy builds and pushes the first toolchain.
+   build-if-missing step, the renderer `FROM ${TOOLCHAIN_IMAGE}:${TOOLCHAIN_TAG}` and the
+   CI path (pull the tag, or build it); the R row is not served yet. Before the merge,
+   the owner-approved reader binding; the merge's deploy builds and pushes the first
+   toolchain.
 2. The R command row, the exec mode's child environment, preload and pipe, the
    `exec_deny` field, the CI checks in the built image (an R render, the refused
    `system()`); the first deployed R smoke proves `KILL_PROCESS` under gVisor; the
@@ -1119,7 +1134,7 @@ adopted; the claims about the code were checked, and the critical one was reprod
 | R's direct binary needs `R_HOME`, `LD_LIBRARY_PATH` and a UTF-8 locale | both | In the R row (2b); `LANG=C.UTF-8` for Julia too |
 | Installing `fontconfig` for `fc-cache` puts `fc-list` and `fc-match` on `SANDBOX_PATH`, which `delegates.py` refuses | Gemini | `fc-cache` in a builder stage |
 | The `renderer-image` job has no `id-token` permission, and Dependabot runs without secrets | Gemini | `id-token: write`; build the toolchain when no login is possible |
-| A literal `FROM image@sha256:` cannot take a toolchain CI built itself | both | `ARG TOOLCHAIN_REF` |
+| A literal `FROM image@sha256:` cannot take a toolchain CI built itself | both | `FROM ${TOOLCHAIN_IMAGE}:${TOOLCHAIN_TAG}`, the digest in the tag |
 | The trigger and lock-bump flow races the deploy and costs a PR per toolchain change | Fable | Owner decision of 2026-10-28: the deploy builds the toolchain when its hash tag is missing, with a registry cache |
 | `setup-r`'s snapshot note is parsed by `core/library_versions.py` | Gemini | The note stays; a test pins the toolchain's URL to it |
 | `Base.compilecache` spawns a worker on any cache miss | both | `--compiled-modules=existing`; the spawn fails fast under the filter (measured) |

@@ -503,10 +503,19 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # The toolchain image (agents/renderer/toolchain.Dockerfile) lives in the private
+      # Artifact Registry repository; the job pulls it through Workload Identity
+      # Federation, whose principal has roles/artifactregistry.reader on it.
+      id-token: write
+    env:
+      # Empty where the job gets no secrets (Dependabot): it builds the toolchain itself.
+      WIF_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
     # A cold build installs pandas, numpy, matplotlib, seaborn, plotnine,
     # altair with vl-convert, pygal with cairosvg and lets-plot, plus libcairo
-    # from apt; 20 fails loudly instead of hanging on a slow package index.
-    timeout-minutes: 20
+    # from apt, and builds the toolchain (R and its packages, about 2 minutes)
+    # when its tag is missing; 25 fails loudly instead of hanging on a slow
+    # package index.
+    timeout-minutes: 25
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -571,9 +580,79 @@ jobs:
             echo "should_build=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # network=host lets the builder reach the local registry a toolchain built in this
+      # job is pushed to (below).
       - name: Set up Buildx
         if: steps.check.outputs.should_build == 'true'
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4.4.1
+        with:
+          driver-opts: network=host
+
+      - name: Authenticate to GCP
+        id: gcp-auth
+        if: steps.check.outputs.should_build == 'true' && env.WIF_PROVIDER != '' && github.actor != 'dependabot[bot]'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3
+        with:
+          project_id: anyplot
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+
+      - name: Set up Cloud SDK
+        if: steps.gcp-auth.outcome == 'success'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db  # v3
+
+      # The renderer builds FROM the toolchain image of its inputs' hash
+      # (agents/renderer/toolchain.py), as the deploy does: pulled from Artifact
+      # Registry by digest when the tag exists, built here when it is missing (a
+      # PR that changes a toolchain input) or when the job has no login.
+      - name: Look up the toolchain image
+        id: toolchain
+        if: steps.check.outputs.should_build == 'true'
+        env:
+          LOGGED_IN: ${{ steps.gcp-auth.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          IMAGE=$(python3 agents/renderer/toolchain.py image)
+          echo "toolchain image: $IMAGE"
+          if [[ "$LOGGED_IN" == "true" ]]; then
+            gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
+            if DIGEST=$(docker buildx imagetools inspect "$IMAGE" --format '{{json .Manifest.Digest}}' 2>inspect.err); then
+              # The renderer's FROM takes the repository and the tag with its digest, as the deploy passes them.
+              {
+                echo "image=${IMAGE%:*}"
+                echo "tag=${IMAGE##*:}@$(tr -d '"' <<< "$DIGEST")"
+                echo "build=false"
+              } >> "$GITHUB_OUTPUT"
+              exit 0
+            elif grep -qiE 'not found|manifest unknown' inspect.err; then
+              echo "::notice::$IMAGE is not in Artifact Registry yet: building the toolchain in this job"
+            else
+              cat inspect.err
+              exit 1
+            fi
+          else
+            echo "::notice::no Artifact Registry login (no secrets): building the toolchain in this job"
+          fi
+          {
+            echo "image=localhost:5000/anyplot-toolchain"
+            echo "tag=ci"
+            echo "build=true"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Start a local registry for the toolchain
+        if: steps.toolchain.outputs.build == 'true'
+        run: docker run -d --name registry -p 5000:5000 registry:3
+
+      # Its own cache scope: the toolchain changes rarely and independently of the renderer.
+      - name: Build the toolchain image
+        if: steps.toolchain.outputs.build == 'true'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7.4.0
+        with:
+          context: .
+          file: agents/renderer/toolchain.Dockerfile
+          push: true
+          tags: ${{ steps.toolchain.outputs.image }}:${{ steps.toolchain.outputs.tag }}
+          cache-from: type=gha,scope=toolchain-image
+          cache-to: type=gha,mode=max,scope=toolchain-image
 
       # Its own cache scope, like the app image: no layer is shared with the API.
       - name: Build the renderer image
@@ -582,6 +661,9 @@ jobs:
         with:
           context: .
           file: agents/renderer/Dockerfile
+          build-args: |
+            TOOLCHAIN_IMAGE=${{ steps.toolchain.outputs.image }}
+            TOOLCHAIN_TAG=${{ steps.toolchain.outputs.tag }}
           push: false
           load: true
           tags: anyplot-renderer:ci
@@ -1137,6 +1219,13 @@ jobs:
         uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387  # v3.5.0
         with:
           dockerfile: agents/renderer/Dockerfile
+          failure-threshold: warning
+
+      - name: Hadolint (agents/renderer/toolchain.Dockerfile)
+        if: steps.check.outputs.should_build == 'true'
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387  # v3.5.0
+        with:
+          dockerfile: agents/renderer/toolchain.Dockerfile
           failure-threshold: warning
 
       - name: Skip notice

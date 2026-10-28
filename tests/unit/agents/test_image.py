@@ -358,7 +358,7 @@ class TestRendererImage:
             for start, end in zip(starts, [*starts[1:], len(instructions)], strict=True)
         }
         fonts = " ".join(arguments for keyword, arguments in stages["python:3.14-slim AS fonts"] if keyword == "RUN")
-        runtime = stages["python:3.14-slim"]
+        runtime = stages["toolchain"]
 
         # The file stem of each family: `Noto Sans CJK JP` is a face of NotoSansCJK-*.ttc.
         stems = [name.replace(" ", "").removesuffix("JP") for name in harness.FALLBACK_FAMILIES]
@@ -371,6 +371,20 @@ class TestRendererImage:
         bake = next(index for index, (keyword, arguments) in enumerate(runtime) if "harness.check_fonts()" in arguments)
         assert copy < bake and runtime[bake][0] == "RUN"
         assert ("COPY", "--from=fonts /fonts/doc /usr/share/doc/fonts-noto") in runtime
+
+    def test_the_builder_and_the_runtime_build_from_the_toolchain(self) -> None:
+        """One Python for the venv and the runtime: both stages start from the toolchain image (step 2a), whose
+        repository and tag the deploy and the CI job pass; the defaults are a local toolchain build."""
+        instructions = _instructions(RENDERER_DOCKERFILE.read_text(encoding="utf-8"))
+        assert [arguments for keyword, arguments in instructions if keyword == "FROM"] == [
+            "${TOOLCHAIN_IMAGE}:${TOOLCHAIN_TAG} AS toolchain",
+            "toolchain AS builder",
+            "python:3.14-slim AS fonts",
+            "toolchain",
+        ]
+        first_from = next(index for index, (keyword, _) in enumerate(instructions) if keyword == "FROM")
+        assert ("ARG", "TOOLCHAIN_IMAGE=anyplot-toolchain") in instructions[:first_from]
+        assert ("ARG", "TOOLCHAIN_TAG=dev") in instructions[:first_from]
 
 
 # --- Cloud Build -------------------------------------------------------------------------
@@ -605,3 +619,92 @@ class TestDeployStep:
 
         assert code != 0 and message in output, output
         assert deployed is None
+
+
+# --- The renderer deploy's toolchain steps (agents/renderer/cloudbuild.yaml, step 2a) -----------------
+
+FAKE_ARTIFACTS_GCLOUD = """#!/bin/sh
+if [ "$1 $2 $3 $4" = "artifacts docker images describe" ]; then
+  case "$FAKE_DESCRIBE" in
+    present) echo "sha256:$FAKE_DIGEST"; exit 0 ;;
+    missing) echo "ERROR: (gcloud.artifacts.docker.images.describe) NOT_FOUND: Requested entity was not found." >&2; exit 1 ;;
+    *) echo "ERROR: (gcloud.artifacts.docker.images.describe) PERMISSION_DENIED: denied" >&2; exit 1 ;;
+  esac
+fi
+echo "unexpected gcloud call: $*" >&2
+exit 2
+"""
+DIGEST = "a" * 64
+
+
+def _run_renderer_step(workdir: Path, step_id: str, describe: str) -> tuple[int, str]:
+    """Run a renderer deploy step's script in `workdir` (Cloud Build's /workspace) against a fake gcloud."""
+    config = _config(RENDERER_CLOUDBUILD)
+    step = next(step for step in config["steps"] if step.get("id") == step_id)
+    values = {**config["substitutions"], "PROJECT_ID": "anyplot", "BUILD_ID": "build-1"}
+    bin_dir = workdir / "bin"
+    bin_dir.mkdir(exist_ok=True)
+    gcloud = bin_dir / "gcloud"
+    gcloud.write_text(FAKE_ARTIFACTS_GCLOUD, encoding="utf-8")
+    gcloud.chmod(0o755)
+    env = {"PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}", "FAKE_DESCRIBE": describe, "FAKE_DIGEST": DIGEST}
+    result = subprocess.run(
+        [step["entrypoint"], *(_substituted(arg, values) for arg in step["args"])],
+        cwd=workdir,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    return result.returncode, result.stdout + result.stderr
+
+
+@pytest.fixture
+def workspace(tmp_path: Path) -> Path:
+    """Cloud Build's /workspace: the repository's toolchain inputs and its tag script, under their own paths."""
+    (tmp_path / "agents").mkdir()
+    (tmp_path / "agents" / "renderer").symlink_to(REPO_ROOT / "agents" / "renderer", target_is_directory=True)
+    return tmp_path
+
+
+class TestRendererToolchainSteps:
+    def test_a_present_toolchain_is_not_built_and_is_pinned_by_digest(self, workspace: Path) -> None:
+        code, output = _run_renderer_step(workspace, "toolchain-tag", "present")
+        assert code == 0, output
+        image = (workspace / "toolchain.image").read_text(encoding="utf-8").strip()
+        repository, tag = image.rsplit(":", 1)
+        assert repository == "europe-west4-docker.pkg.dev/anyplot/anyplot/anyplot-toolchain"
+        assert re.fullmatch(r"t-[0-9a-f]{16}", tag)
+        assert not (workspace / "toolchain.missing").exists()
+
+        code, output = _run_renderer_step(workspace, "toolchain-ref", "present")
+        assert code == 0, output
+        assert (workspace / "toolchain.repository").read_text(encoding="utf-8").strip() == repository
+        assert (workspace / "toolchain.pin").read_text(encoding="utf-8").strip() == f"{tag}@sha256:{DIGEST}"
+
+    def test_a_missing_toolchain_is_marked_for_the_build(self, workspace: Path) -> None:
+        code, output = _run_renderer_step(workspace, "toolchain-tag", "missing")
+        assert code == 0, output
+        assert (workspace / "toolchain.missing").exists()
+
+    def test_any_other_describe_failure_stops_the_build(self, workspace: Path) -> None:
+        code, output = _run_renderer_step(workspace, "toolchain-tag", "denied")
+        assert code != 0 and "PERMISSION_DENIED" in output
+        assert not (workspace / "toolchain.missing").exists()
+
+    def test_the_build_steps_build_only_a_missing_toolchain_and_the_renderer_from_its_pin(self) -> None:
+        config = _config(RENDERER_CLOUDBUILD)
+        order = [step.get("id") for step in config["steps"]]
+        assert order[:4] == ["toolchain-tag", "toolchain-build", "toolchain-ref", "build-image"]
+        build = _step(config, "toolchain-build")
+        assert "if [ -f toolchain.missing ]" in build
+        assert "-f agents/renderer/toolchain.Dockerfile" in build
+        renderer = _step(config, "build-image")
+        assert '--build-arg "TOOLCHAIN_IMAGE=$$(cat toolchain.repository)"' in renderer
+        assert '--build-arg "TOOLCHAIN_TAG=$$(cat toolchain.pin)"' in renderer
+        assert "-f agents/renderer/Dockerfile" in renderer
+
+    def test_the_hand_over_files_stay_out_of_every_build_context(self) -> None:
+        for name in ("toolchain.image", "toolchain.missing", "toolchain.repository", "toolchain.pin", "describe.err"):
+            assert not dockerignore_admits(name), name
