@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-timeseries: Time Series Line Plot
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-09
@@ -6,18 +6,11 @@ Quality: 85/100 | Updated: 2026-05-09
 
 import os
 import random
-import sys
 from datetime import datetime, timedelta
 
-
-# Ensure site-packages is in path before current directory to avoid shadowing
-site_packages = next((p for p in sys.path if "site-packages" in p), None)
-if site_packages and sys.path[0] == os.path.dirname(__file__):
-    sys.path.remove(sys.path[0])
-    sys.path.insert(0, site_packages)
-
-import pygal  # noqa: E402
-from pygal.style import Style  # noqa: E402
+import pandas as pd
+import pygal
+from pygal.style import Style
 
 
 # Theme tokens
@@ -26,74 +19,60 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette
-IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
+# Imprint palette: all eight positions in canonical order
+IMPRINT_PALETTE = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
-# Seed for reproducibility
+# Columns: set these to your table's column names
+DATE = "Date"  # role: date
+PRICE = "Stock Price (USD)"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("prices.csv", parse_dates=[DATE])
 random.seed(42)
-
-# Generate realistic daily stock price data for one year
-start_date = datetime(2024, 1, 1)
-dates = [start_date + timedelta(days=i) for i in range(365)]
-
-# Simulate stock price with trend and volatility
 price = 150.0
 prices = []
 for _ in range(365):
-    change = random.gauss(0.1, 2.5)
-    price = max(100, price + change)
+    price = max(100, price + random.gauss(0.1, 2.5))
     prices.append(round(price, 2))
+df = pd.DataFrame({DATE: [datetime(2024, 1, 1) + timedelta(days=i) for i in range(365)], PRICE: prices})
 
-# Custom style for 4800x2700 canvas
+# Plot
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=6,
+    colors=IMPRINT_PALETTE,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=5,
 )
 
-# Create line chart
 chart = pygal.Line(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
     title="line-timeseries · pygal · anyplot.ai",
-    x_title="Date",
-    y_title="Stock Price (USD)",
+    x_title=DATE,
+    y_title=PRICE,
     show_x_guides=True,
     show_y_guides=True,
     x_label_rotation=45,
-    show_legend=True,
-    legend_at_bottom=True,
-    truncate_legend=-1,
+    show_legend=False,
     show_dots=False,
-    margin=100,
 )
 
-# Add data series
-chart.add("ACME Corp Stock", prices)
+chart.add(PRICE, df[PRICE].tolist())
 
-# Set x-axis labels - show first of each month only
-x_labels = []
-x_labels_major = []
-for d in dates:
-    if d.day == 1:
-        x_labels.append(d.strftime("%b %Y"))
-        x_labels_major.append(d.strftime("%b %Y"))
-    else:
-        x_labels.append("")
+# Label only the first day of each month; the other days stay blank
+is_month_start = df[DATE].dt.day == 1
+month_labels = df[DATE].dt.strftime("%b %Y").where(is_month_start, "").tolist()
+chart.x_labels = month_labels
+chart.x_labels_major = [label for label in month_labels if label]
 
-chart.x_labels = x_labels
-chart.x_labels_major = x_labels_major
-
-# Save as PNG and HTML
+# Save
 chart.render_to_file(f"plot-{THEME}.html")
 chart.render_to_png(f"plot-{THEME}.png")
