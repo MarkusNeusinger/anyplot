@@ -1,12 +1,14 @@
 # Feature: "Use with my data" for all 15 catalogue libraries
 
-> **Status (2026-10-26):** plan, in progress. Steps 1a (the runtime seam) and 1b
+> **Status (2026-10-28):** plan, in progress. Steps 1a (the runtime seam) and 1b
 > (plotnine and altair) merged with PR #12404; see "What 1b built" under step 1b. Step 1c
-> (pygal and lets-plot) is implemented on its branch, and its PR follows; see "What 1c
-> built" under step 1c. The deploy serves matplotlib and seaborn: plotnine, altair, pygal
-> and lets-plot have runtimes, but `AGENT_LIBRARIES` keeps its default
-> `matplotlib,seaborn` until each one's matrix run passes. Every other library in this
-> document is planned, not shipped.
+> (pygal and lets-plot) merged with PR #12405; see "What 1c built" under step 1c. The
+> harness's kernel filter against program starts, which lets-plot's row requires, is
+> implemented on its branch (step 1c, "Next"). With it the deploy serves all six Python
+> libraries for the admin's live tests, because only the admin reaches the chat yet
+> (owner decision of 2026-10-28); `AGENT_LIBRARIES` keeps its default
+> `matplotlib,seaborn`, and each library's matrix run gates the public release. Every
+> other library in this document is planned, not shipped.
 
 ## Metadata
 
@@ -344,8 +346,8 @@ reasons (a file can have several causes):
 - `matrix.py` warns when `AGENT_LIBRARIES` does not enable a selected case's library
   (the two new smoke cases need `AGENT_LIBRARIES=matplotlib,seaborn,plotnine,altair`);
   whether the harness should enable the cases' libraries itself is open.
-- The owner's matrix run per library on Vertex (question 7), then `_LIBRARIES` in
-  `agents/cloudbuild.yaml`.
+- The owner's matrix run per library on Vertex (question 7); since 2026-10-28 it gates
+  the public release, and `_LIBRARIES` already names both (see step 1c, "Next").
 
 ### 1c. pygal and lets-plot
 
@@ -654,11 +656,24 @@ bridge (the owner questions below). What stays from 1b's list, and what 1c adds:
     and no `MAGICK_*` variable (a policy denying every coder and delegate changed no
     export, on the host or in the image). The two `fc-list` starts in the review's
     traces come from matplotlib's font manager, not the bridge, whose plain export
-    started no process in a host trace; the image has no `fc-list`. Accept this containment, or add a
-    seccomp filter that denies `execve` in the render container before lets-plot is
-    enabled.
-- The owner's matrix run per library on Vertex (question 7), then `_LIBRARIES` in
-  `agents/cloudbuild.yaml`.
+    started no process in a host trace; the image has no `fc-list`. Decided by the owner
+    on 2026-10-26: add the seccomp filter. Since 2026-10-28 the harness arms every
+    in-process run with a filter under which the kernel refuses every `execve` and
+    `execveat` (`install_exec_deny`, every thread and child included), and lets-plot's
+    row requires it (`ANYPLOT_DENY_EXEC=required`: without it the render stops before
+    the plot, exit code 3); every other row renders on without it and reports it in the
+    end line, which the renderer logs per launch (`exec_deny`). Docker's default seccomp
+    profile admits it, and `ci-image.yml` checks the routes in the built image. Open:
+    whether Cloud Run's `sandbox do` lets the process add the filter, which the first
+    production render's log line answers, and a lets-plot render in the live chat proves
+    (it succeeds only under the filter; a local gVisor run was not possible from the
+    cloud session). Once it holds there, every in-process (Python) row can require it;
+    exec-mode rows (R, JavaScript, Julia) start their toolchain with `execve` and need
+    another design.
+- The owner's matrix run per library on Vertex (question 7), now the gate for the public
+  release of all four libraries of steps 1b and 1c: since 2026-10-28 `_LIBRARIES` in
+  `agents/cloudbuild.yaml` names all six Python libraries, because only the admin
+  reaches the chat yet (owner decision), so the admin tests each one live.
 
 ### 2. R: ggplot2 (the exec-mode pilot)
 
