@@ -288,7 +288,7 @@ CONVERT_EXIT = {
 }
 """Exit codes of convert mode: `error` an exception in the reader (its class on stderr), `blocked` an operation the
 guard refused (a reader that tried to import, open or run code), `exec_deny` a required kernel filter that is not in
-place (no file was read), the rest a refused file."""
+place (the reader never ran on the file), the rest a refused file."""
 CONVERT_AST_READERS = (
     ("ast.py", "parse"),
     ("ast.py", "literal_eval"),

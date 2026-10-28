@@ -24,6 +24,7 @@ the deployed values, so an unset variable never weakens a limit.
 | `RENDERER_RLIMIT_FSIZE_MB` | `50` | Largest file the sandboxed process may write |
 | `RENDERER_RLIMIT_AS_MB` | `1024` | Address space of the sandboxed process; 0 leaves it unset |
 | `RENDERER_RLIMIT_NPROC` | `64` | Processes and threads of the sandboxed process; 0 leaves it unset |
+| `RENDERER_EXEC_DENY` | `required` | Every in-process run needs the harness's kernel filter against program starts and stops before its code without it; `optional` runs on without it and only reports it, the switch for a platform that stops admitting the filter |
 | `RENDERER_KILL_GRACE_S` | `10` | How long to wait for the launcher process to exit after a kill |
 | `RENDERER_BIND_TMP` | `false` | Bind a directory of the run over the sandbox's `/tmp`, so `/tmp` counts toward the run budget (spike S2, untested) |
 | `ENVIRONMENT` | `production` | `development` skips the caller check and is refused on Cloud Run |

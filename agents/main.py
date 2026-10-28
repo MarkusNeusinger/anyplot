@@ -1067,7 +1067,7 @@ async def _convert(
         runtime.converting.discard(sid)
     if output.exit_code == CONVERT_EXEC_DENY_EXIT:
         # The sandbox could not install the harness's kernel filter against program starts, which every run requires:
-        # no file was read, and none will be until the renderer can (`RENDERER_EXEC_DENY`).
+        # the reader never ran on the file, and none will until the renderer can (`RENDERER_EXEC_DENY`).
         attribution("data_convert", ledger, outcome="unavailable", reason="exec_deny", bytes=len(data))
         raise AgentsError(503, "convert_unavailable")
     kind = output.meta.kind if output.meta is not None else None

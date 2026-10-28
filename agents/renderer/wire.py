@@ -364,7 +364,8 @@ class ConvertMeta(BaseModel):
 
 CONVERT_EXEC_DENY_EXIT = 9
 """Convert mode's exit code when the sandbox could not install the harness's required kernel filter against program
-starts (`harness.CONVERT_EXIT["exec_deny"]`): no file was read, and the renderer cannot convert until it can."""
+starts (`harness.CONVERT_EXIT["exec_deny"]`): the reader never ran on the file, and the renderer cannot convert until
+it can."""
 CONVERT_HARNESS_EXITS = frozenset(
     {0, 1, 2, 8, CONVERT_EXEC_DENY_EXIT, *range(CONVERT_REFUSAL_BASE, CONVERT_REFUSAL_BASE + len(CONVERT_REASONS))}
 )

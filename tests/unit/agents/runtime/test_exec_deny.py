@@ -217,6 +217,42 @@ class TestArming:
         monkeypatch.delenv(harness.EXEC_DENY_ENV)
         assert harness.DataGuard().exec_deny_required is False
 
+    def test_a_data_run_that_cannot_arm_ends_as_exec_deny_in_its_status(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """In process: a guard whose arm refuses, as a required filter that is not in place makes it."""
+
+        class Refusing(harness.DataGuard):
+            def arm(self, entry: object = None) -> None:
+                raise harness.ExecDenyUnavailable("unavailable")
+
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(harness, "set_limits", lambda: None)
+        (tmp_path / "snippet.py").write_text("import pandas as pd\ndf = pd.DataFrame({'a': [1]})\n", encoding="utf-8")
+
+        assert harness.main_data("snippet.py", Refusing()) == harness.DATA_EXIT["exec_deny"]
+        assert json.loads((tmp_path / harness.DATA_STATUS_FILE).read_text(encoding="utf-8"))["exit"] == 9
+        assert (tmp_path / harness.DATA_OUT_FILE).read_text(encoding="utf-8") == ""
+
+    def test_a_conversion_that_cannot_arm_ends_as_exec_deny_in_its_status(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        import numpy as np
+
+        class Refusing(harness.ConvertGuard):
+            def arm(self, entry: object = None) -> None:
+                raise harness.ExecDenyUnavailable("unsupported")
+
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(harness, "set_limits", lambda: None)
+        buffer = io.BytesIO()
+        np.save(buffer, np.ones((2, 2)))
+        (tmp_path / "input.bin").write_bytes(buffer.getvalue())
+
+        assert harness.main_convert("input.bin", Refusing()) == harness.CONVERT_EXIT["exec_deny"]
+        assert json.loads((tmp_path / harness.DATA_STATUS_FILE).read_text(encoding="utf-8"))["exit"] == 9
+        assert (tmp_path / harness.DATA_OUT_FILE).read_text(encoding="utf-8") == ""
+
 
 KERNEL_CHECK = """
 import ctypes, importlib.util, os, subprocess, sys, threading

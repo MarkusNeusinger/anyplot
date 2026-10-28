@@ -102,6 +102,15 @@ class TestCommand:
         assert EXEC_DENY_ENV not in sandbox_env(optional, None, 20)
         assert ExecutorConfig.from_settings(RendererSettings(exec_deny="optional")).exec_deny == "optional"
 
+    def test_the_exec_filter_switch_is_read_from_its_variable_and_takes_only_its_two_values(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("RENDERER_EXEC_DENY", "optional")
+        assert RendererSettings().exec_deny == "optional"
+        monkeypatch.setenv("RENDERER_EXEC_DENY", "off")
+        with pytest.raises(ValueError, match="exec_deny"):
+            RendererSettings()
+
     def test_bind_tmp_mounts_a_run_directory_over_tmp(self, config: ExecutorConfig, tmp_path: Path) -> None:
         argv = build_argv(replace(config, bind_tmp=True), "r-abc-light", tmp_path / "r", "light", 60)
 
