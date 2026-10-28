@@ -281,6 +281,22 @@ export interface DatasetState {
    * a stored paste carries it, so a failed parse never replaces it.
    */
   paste?: { text: string; source?: string };
+  /**
+   * The upload this version was stored from, exactly as it was posted, for the
+   * admin fan-out (`replayData`), which stores the same table in a session per
+   * library. Only the parse's own version carries it: data the assistant changed
+   * or computed, and an undo, have no upload to replay.
+   */
+  upload?: DatasetUpload;
+}
+
+/** A `POST .../dataset` body as the page sent it: the text, and how the server should read it. */
+export interface DatasetUpload {
+  text: string;
+  /** A confirmed transcription: the server keeps every row and skips its free-text fallback. */
+  confirmed: boolean;
+  source?: string;
+  table?: number;
 }
 
 /**
@@ -400,6 +416,7 @@ type Action =
       parsed: DatasetParsed;
       bytes: number;
       paste?: { text: string; source?: string };
+      upload?: DatasetUpload;
     }
   /** `formula` is the refused text of a `422 formula` or `422 code`, which is no error to show. */
   | { type: 'parse_failed'; failure: Failure; formula?: string; formulaKind?: FormulaKind }
@@ -762,6 +779,7 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
           parsed: { ...action.parsed, version: versionOf(action.parsed.version) },
           bytes: action.bytes,
           ...(action.paste ? { paste: action.paste } : {}),
+          ...(action.upload ? { upload: action.upload } : {}),
         },
         dataChange: null,
         undoError: null,
@@ -1300,6 +1318,81 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     }
   }, [token, safeDispatch, handleFailure, trackEvent, busy]);
 
+  /**
+   * The admin fan-out (`FanOut`): store another session's upload in this one,
+   * bind the columns as that session had them and confirm, all without the
+   * summary turn a paste asks for (`parseData`), so a library costs one chat
+   * turn, its `create_plot`, against the user's message limits. Resolves to the
+   * failure that stopped it, or `null` once the data is confirmed.
+   */
+  const replayData = useCallback(
+    async (upload: DatasetUpload, bindings: BindingMap): Promise<Failure | null> => {
+      const sid = stateRef.current.sessionId;
+      if (!sid || busy()) return { code: 'run_active', ref: null };
+      parseRef.current = true;
+      safeDispatch({ type: 'parse_start' });
+      try {
+        const parsed = await agentApi.uploadDataset(
+          token,
+          sid,
+          upload.text,
+          upload.confirmed,
+          upload.source,
+          upload.table
+        );
+        // The source session stored this text as a table; reading it as free text now is a failure.
+        if (isTranscribed(parsed)) {
+          const failure = { code: 'unparseable', ref: null };
+          safeDispatch({ type: 'parse_failed', failure });
+          return failure;
+        }
+        safeDispatch({ type: 'parse_done', parsed, bytes: utf8Bytes(upload.text), upload });
+      } catch (err) {
+        const failure = handleFailure(err);
+        safeDispatch({ type: 'parse_failed', failure });
+        return failure;
+      } finally {
+        parseRef.current = false;
+      }
+      bindingsRef.current = true;
+      safeDispatch({ type: 'bindings_start', bindings });
+      try {
+        const payload: Binding[] = Object.entries(bindings).map(([role, column]) => ({
+          role,
+          column,
+        }));
+        const applied = await agentApi.putBindings(token, sid, payload);
+        safeDispatch({
+          type: 'bindings_done',
+          bindings: toMap(applied.bindings),
+          complete: applied.complete,
+          missingRoles: applied.missing_roles,
+        });
+        if (!applied.complete) return { code: 'bindings_incomplete', ref: null };
+      } catch (err) {
+        const failure = handleFailure(err);
+        safeDispatch({ type: 'bindings_failed', bindings: {}, failure });
+        return failure;
+      } finally {
+        bindingsRef.current = false;
+      }
+      confirmRef.current = true;
+      safeDispatch({ type: 'confirm_start' });
+      try {
+        await agentApi.confirmDataset(token, sid);
+        safeDispatch({ type: 'confirm_done' });
+        return null;
+      } catch (err) {
+        const failure = handleFailure(err);
+        safeDispatch({ type: 'confirm_failed', failure });
+        return failure;
+      } finally {
+        confirmRef.current = false;
+      }
+    },
+    [token, safeDispatch, handleFailure, busy]
+  );
+
   // ---------------------------------------------------------------- versions
 
   const fetchArtifact = useCallback(
@@ -1640,6 +1733,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
           bytes,
           // The text of a paste the table picker may read again (a confirmed transcription is never split).
           ...(confirmed ? {} : { paste: { text, ...(source ? { source } : {}) } }),
+          upload: { text, confirmed, ...(source ? { source } : {}), ...(table ? { table } : {}) },
         });
         // A paste before any typed message may set the session language from its notes or headers.
         const pastedLanguage = readPlotLanguage(parsed.language);
@@ -1914,6 +2008,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     state,
     toLongData,
     parseData,
+    replayData,
     confirmTranscription,
     discardTranscription,
     sendFormula,

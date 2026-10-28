@@ -1225,3 +1225,39 @@ describe('AgentChatPage working states', () => {
     }
   });
 });
+
+describe('AgentChatPage .plot_all()', () => {
+  it('offers the confirmed table in every library at the server limit, and closes again', async () => {
+    const base = fetchMock.getMockImplementation() as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    fetchMock.mockImplementation((input: string, init?: RequestInit) =>
+      input.endsWith('/debug/agent/status')
+        ? json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true, user_max_runs: 4 })
+        : base(input, init)
+    );
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
+    await parseAndConfirm();
+
+    const plotAll = await screen.findByRole('button', { name: 'Plot in all libraries' });
+    expect(
+      screen.getByText(/this table in all 2 libraries at once, at most 4 running/)
+    ).toBeInTheDocument();
+    fireEvent.click(plotAll);
+    const panel = await screen.findByRole('region', { name: 'All libraries' });
+    expect(
+      within(panel)
+        .getAllByRole('article')
+        .map(card => card.getAttribute('aria-label'))
+    ).toEqual(['matplotlib', 'seaborn']);
+    expect(within(panel).getByText(/at most 4 at a time/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
+
+    fireEvent.click(within(panel).getByRole('button', { name: 'Close all libraries' }));
+    expect(screen.queryByRole('region', { name: 'All libraries' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Plot in all libraries' })).toBeInTheDocument();
+  });
+});

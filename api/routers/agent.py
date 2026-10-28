@@ -1071,8 +1071,8 @@ async def open_message_stream(
 async def agent_status(ctx: Ctx, client: Client) -> dict[str, Any]:
     """The agents service's status plus `enabled`.
 
-    Upstream fields: `libraries`, `model`, `location`, `version`, `provider`, and the
-    run queue's `waiting` entries and `in_flight` runs.
+    Upstream fields: `libraries`, `model`, `location`, `version`, `provider`, the
+    run queue's `waiting` entries and `in_flight` runs, and `user_max_runs`.
     """
     upstream = await _call_upstream(client, ctx, "GET", "/status")
     return {**(upstream if isinstance(upstream, dict) else {}), "enabled": True}

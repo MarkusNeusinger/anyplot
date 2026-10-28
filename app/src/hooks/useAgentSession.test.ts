@@ -735,6 +735,111 @@ describe('useAgentSession: confirming the data (step 1)', () => {
   });
 });
 
+describe('useAgentSession: replaying an upload (the admin fan-out)', () => {
+  const TEXT = 'Student,Study Hours,Exam Score\nS01,1.5,52\n';
+  const BOUND = { x: 'Study Hours', y: 'Exam Score' };
+
+  it('records the upload a parse stored, and drops it with the next data version', async () => {
+    const routes = baseRoutes();
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData(TEXT, false, 'scores.csv', 2));
+    expect(result.current.state.dataset?.upload).toEqual({
+      text: TEXT,
+      confirmed: false,
+      source: 'scores.csv',
+      table: 2,
+    });
+
+    // The assistant changed the data: that version has no upload a replay could post.
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([['done', { llm_calls: 1, bindings: PREPARED.bindings, dataset: PREPARED }]]);
+    await act(() => result.current.sendMessage('read the hours as minutes'));
+    expect(result.current.state.dataset?.parsed.version).toBe(2);
+    expect(result.current.state.dataset?.upload).toBeUndefined();
+  });
+
+  it('stores, binds and confirms the upload without the summary turn', async () => {
+    const { result } = await openSession(baseRoutes());
+    let failure: unknown = 'pending';
+    await act(async () => {
+      failure = await result.current.replayData(
+        { text: TEXT, confirmed: true, source: 'scores.csv' },
+        BOUND
+      );
+    });
+    expect(failure).toBeNull();
+    expect(calls.map(call => `${call.method} ${call.path}`)).toEqual([
+      'POST /sessions',
+      'POST /sessions/S1/dataset',
+      'PUT /sessions/S1/bindings',
+      'POST /sessions/S1/dataset/confirm',
+    ]);
+    expect(calls[1].body).toEqual({ text: TEXT, confirmed: true, source: 'scores.csv' });
+    expect(calls[2].body).toEqual([
+      { role: 'x', column: 'Study Hours' },
+      { role: 'y', column: 'Exam Score' },
+    ]);
+    expect(result.current.state.dataConfirmed).toBe(true);
+    expect(result.current.state.bindings).toEqual(BOUND);
+    expect(result.current.state.items).toEqual([]);
+  });
+
+  it('stops at the step that failed and says why', async () => {
+    const refused = baseRoutes();
+    refused['POST /sessions/S1/dataset'] = () => json(429, { detail: 'rate_limited', ref: 'r-p' });
+    const first = await openSession(refused);
+    let failure: unknown;
+    await act(async () => {
+      failure = await first.result.current.replayData({ text: TEXT, confirmed: false }, BOUND);
+    });
+    expect(failure).toEqual({ code: 'rate_limited', ref: 'r-p' });
+    expect(calls.some(call => call.method === 'PUT')).toBe(false);
+    first.unmount();
+
+    // The table now reads as free text: the source session stored it as a table, so this is a failure.
+    const transcribed = baseRoutes();
+    transcribed['POST /sessions/S1/dataset'] = () => json(200, TRANSCRIBED);
+    const second = await openSession(transcribed);
+    await act(async () => {
+      failure = await second.result.current.replayData({ text: TEXT, confirmed: false }, BOUND);
+    });
+    expect(failure).toEqual({ code: 'unparseable', ref: null });
+    second.unmount();
+
+    // A binding the server cannot complete: nothing is confirmed.
+    const incomplete = baseRoutes();
+    incomplete['PUT /sessions/S1/bindings'] = () =>
+      json(200, { bindings: [], complete: false, missing_roles: ['x', 'y'] });
+    const third = await openSession(incomplete);
+    await act(async () => {
+      failure = await third.result.current.replayData({ text: TEXT, confirmed: false }, BOUND);
+    });
+    expect(failure).toEqual({ code: 'bindings_incomplete', ref: null });
+    expect(calls.some(call => call.path.endsWith('/dataset/confirm'))).toBe(false);
+    third.unmount();
+
+    // The bindings route and the confirmation route refuse.
+    const unbound = baseRoutes();
+    unbound['PUT /sessions/S1/bindings'] = () => json(422, { detail: 'invalid', ref: 'r-b' });
+    const fourth = await openSession(unbound);
+    await act(async () => {
+      failure = await fourth.result.current.replayData({ text: TEXT, confirmed: false }, BOUND);
+    });
+    expect(failure).toEqual(expect.objectContaining({ code: 'invalid', ref: 'r-b' }));
+    fourth.unmount();
+
+    const unconfirmed = baseRoutes();
+    unconfirmed['POST /sessions/S1/dataset/confirm'] = () =>
+      json(422, { detail: 'no_dataset', ref: 'r-c' });
+    const fifth = await openSession(unconfirmed);
+    await act(async () => {
+      failure = await fifth.result.current.replayData({ text: TEXT, confirmed: false }, BOUND);
+    });
+    expect(failure).toEqual({ code: 'no_dataset', ref: 'r-c' });
+    expect(fifth.result.current.state.confirmError).toEqual({ code: 'no_dataset', ref: 'r-c' });
+  });
+});
+
 describe('useAgentSession: the step-1 summary and data changes', () => {
   const turnBodies = () => calls.filter(call => call.path.endsWith('/messages')).map(c => c.body);
   const undoCalls = () => calls.filter(call => call.path.endsWith('/dataset/undo'));
