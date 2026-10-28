@@ -186,14 +186,12 @@ export function PlotsPage() {
 
   return (
     <Box onClick={handleContainerClick}>
-      <>
-        <title>{filterParts ? `${filterParts} | plots | anyplot.ai` : 'plots | anyplot.ai'}</title>
-        <meta
-          name="description"
-          content="Browse and filter 2,600+ visualization examples across 15 libraries in Python, R, Julia, and JavaScript. Search by plot type, domain, features, and more."
-        />
-        <link rel="canonical" href="https://anyplot.ai/plots" />
-      </>
+      <title>{filterParts ? `${filterParts} | plots | anyplot.ai` : 'plots | anyplot.ai'}</title>
+      <meta
+        name="description"
+        content="Browse and filter 2,600+ visualization examples across 15 libraries in Python, R, Julia, and JavaScript. Search by plot type, domain, features, and more."
+      />
+      <link rel="canonical" href="https://anyplot.ai/plots" />
 
       {error && (
         <Alert severity="error" sx={{ mb: 4, maxWidth: 500, mx: 'auto' }}>

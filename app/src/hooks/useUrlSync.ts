@@ -1,7 +1,7 @@
 /**
  * Hook for URL synchronization with filter state.
  *
- * Handles URL parsing, and building.
+ * Handles URL parsing and building.
  */
 
 import { useEffect } from 'react';
