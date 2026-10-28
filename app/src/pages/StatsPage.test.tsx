@@ -12,10 +12,6 @@ const darkThemeValue: ThemeContextValue = {
   cycle: vi.fn(),
 };
 
-vi.mock('react-helmet-async', () => ({
-  Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
 const mockTrackEvent = vi.fn();
 
 vi.mock('src/hooks', () => ({

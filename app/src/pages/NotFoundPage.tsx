@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 
-import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -38,10 +37,10 @@ export function NotFoundPage({ source = 'catch_all' }: NotFoundPageProps = {}) {
 
   return (
     <>
-      <Helmet>
+      <>
         <title>page not found | anyplot.ai</title>
         <meta name="robots" content="noindex, follow" />
-      </Helmet>
+      </>
       <Box sx={{ textAlign: 'center', py: 12 }}>
         <Typography
           variant="h4"

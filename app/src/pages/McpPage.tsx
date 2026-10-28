@@ -1,7 +1,5 @@
 import { useEffect } from 'react';
 
-import { Helmet } from 'react-helmet-async';
-
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Table from '@mui/material/Table';
@@ -44,7 +42,7 @@ export function McpPage() {
 
   return (
     <>
-      <Helmet>
+      <>
         <title>mcp | anyplot.ai</title>
         <meta
           name="description"
@@ -56,7 +54,7 @@ export function McpPage() {
           content="configure Claude Code to access anyplot data via MCP"
         />
         <link rel="canonical" href="https://anyplot.ai/mcp" />
-      </Helmet>
+      </>
 
       <Box sx={{ pb: 4 }}>
         {/* What is MCP */}

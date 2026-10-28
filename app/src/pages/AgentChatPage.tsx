@@ -51,7 +51,6 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -525,10 +524,10 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
 
   return (
     <>
-      <Helmet>
+      <>
         <title>{`agent · ${specId} | anyplot.ai`}</title>
         <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
+      </>
       {/* `colorScheme` gives the native controls (scrollbars, select menus) the site theme. */}
       <Box
         sx={{

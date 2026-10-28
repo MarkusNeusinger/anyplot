@@ -24,10 +24,6 @@ vi.mock('src/global-config', async importOriginal => {
   };
 });
 
-vi.mock('react-helmet-async', () => ({
-  Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
 const analytics = vi.hoisted(() => ({ trackEvent: vi.fn(), trackPageview: vi.fn() }));
 vi.mock('src/hooks/useAnalytics', () => ({ useAnalytics: () => analytics }));
 

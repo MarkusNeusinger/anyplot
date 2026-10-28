@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -23,10 +22,6 @@ vi.mock('src/hooks', async () => {
     }),
   };
 });
-
-vi.mock('react-helmet-async', () => ({
-  Helmet: ({ children }: { children: ReactNode }) => <div data-testid="helmet">{children}</div>,
-}));
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');

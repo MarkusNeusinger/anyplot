@@ -57,12 +57,6 @@ vi.mock('src/sections/landing/NumbersStrip', () => ({
   NumbersStrip: () => <div data-testid="numbers" />,
 }));
 
-vi.mock('react-helmet-async', () => ({
-  Helmet: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="helmet">{children}</div>
-  ),
-}));
-
 import { LandingPage } from 'src/pages/LandingPage';
 
 describe('LandingPage', () => {
