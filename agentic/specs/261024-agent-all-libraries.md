@@ -628,7 +628,11 @@ bridge (the owner questions below). What stays from 1b's list, and what 1c adds:
     60, exactly the gate, and only if every eligible case passes. Count only the
     eligible pairs in the gate, regenerate the two catalogue files through the pipeline
     (the annotation drawn by pygal instead of PIL, `np.random.default_rng` instead of
-    `random`), or accept it.
+    `random`), or accept it. Decided by the owner on 2026-10-28: regenerate. Both
+    regenerations merged the same day with the change request in the generator's prompt:
+    `histogram-basic` (#12416) draws with pygal alone and is `coupled` now, while
+    `line-timeseries` (#12415) kept `random` and stays blocked, so pygal can reach 54 of
+    60 (90 %).
   - pygal's `xml.etree` post-processing (26 files) and `Graph` subclasses (23 files),
     45 blocked files as the groundwork counted the first cause. Admitting `xml.etree`
     with a ban list on its readers and writers would unlock 14; a class definition is
