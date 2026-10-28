@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-basic: Basic Histogram
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-05-28
+Library: pygal 3.1.3 | Python 3.14.9
+Quality: 83/100 | Updated: 2026-10-28
 """
 
 import sys
