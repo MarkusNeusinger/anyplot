@@ -4,7 +4,7 @@
   `agents/cloudbuild.yaml` now names plotnine, altair, pygal and lets-plot next to
   matplotlib and seaborn, so the admin can test each one in the live chat; only the
   admin reaches the chat yet. Each library's 80 % eval matrix now gates the public
-  release. `AGENT_LIBRARIES` keeps its default `matplotlib,seaborn`.
+  release. `AGENT_LIBRARIES` keeps its default `matplotlib,seaborn`. (#12410)
 
 ### Security
 
@@ -19,4 +19,4 @@
   (`ANYPLOT_DENY_EXEC=required`): without the filter, its render stops before the
   plot. Every other run goes on and reports the filter's state in the harness's end
   line, which the renderer logs with every launch. `ci-image.yml` checks the routes in
-  the built image.
+  the built image. (#12410)
