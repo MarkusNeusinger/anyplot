@@ -20,10 +20,10 @@ case directories and changes none that exist.
 
 **The ten specs.** Each covers another plot family, and the readiness scan
 (`agents/anyplot/code/readiness.py`, through `opening.assess` with the six libraries
-enabled) marks each of its six files `clean` or `coupled`, except two pygal files
-that it blocks (`tests/unit/agents/evals/test_make_fixtures.py` asserts both and names
-the two). The cells below were computed on 2026-10-26; the first four columns are
-unchanged since 2026-10-25. The heatmap's matplotlib file, `clean` in the table's first
+enabled) marks each of its six files `clean` or `coupled`, except one pygal file
+that it blocks (`tests/unit/agents/evals/test_make_fixtures.py` asserts it and names
+it). The cells below were computed on 2026-10-26, pygal's `histogram-basic` on
+2026-10-28; the first four columns are unchanged since 2026-10-25. The heatmap's matplotlib file, `clean` in the table's first
 version, is `coupled` now (`color-scale`: its `TwoSlopeNorm(vmin=-1, vmax=1)`). The
 heatmap's pygal file writes a hand-built HTML page from a `with open(...)` body that
 also assigns a name nothing else reads; the normaliser's HTML rule drops such a body,
@@ -36,7 +36,7 @@ pygal and lets-plot, so theirs carry none:
 | `scatter-basic` | scatter | coupled | coupled | coupled | coupled | coupled | coupled |
 | `line-basic` | line (numeric x) | coupled | coupled | coupled | coupled | clean | coupled |
 | `bar-grouped` | bar (grouped) | coupled | coupled | coupled | coupled | clean | coupled |
-| `histogram-basic` | histogram | coupled | coupled | coupled | coupled | blocked | coupled |
+| `histogram-basic` | histogram | coupled | coupled | coupled | coupled | coupled | coupled |
 | `box-basic` | box | coupled | coupled | coupled | coupled | coupled | coupled |
 | `heatmap-basic` | heatmap | coupled | coupled | coupled | coupled | coupled | coupled |
 | `area-basic` | area | coupled | coupled | coupled | coupled | clean | coupled |
@@ -44,17 +44,16 @@ pygal and lets-plot, so theirs carry none:
 | `pie-basic` | pie | coupled | clean | clean | clean | clean | clean |
 | `line-timeseries` | time series | coupled | coupled | coupled | coupled | blocked | coupled |
 
-The two blocked pygal files have shapes that step 1c does not adapt, so the readiness
-scan blocks the session of each of their 12 cases until the catalogue file changes:
+The blocked pygal file has a shape that step 1c does not adapt, so the readiness scan
+blocks the session of each of its 6 cases until the catalogue file changes:
+`line-timeseries` draws its random walk with the standard `random` module, which no
+plot profile admits. Its regeneration of 2026-10-28 (#12415), asked to draw it with
+`np.random.default_rng` instead, kept `random`. pygal's `histogram-basic`, blocked until
+then for an annotation layer composited onto the PNG with PIL, is `coupled` since its
+regeneration of the same day (#12416), which draws the chart with pygal alone.
 
-- `histogram-basic` draws an annotation layer over the chart's PNG bytes with PIL
-  (`io`, `PIL.Image`, `ImageDraw` and `ImageFont`, and a `render_to_png()` with no
-  target).
-- `line-timeseries` draws its random walk with the standard `random` module, which no
-  plot profile admits.
-
-The cases are written for both anyway: the datasets are the same for every library,
-and the cases need no change once the files are eligible.
+The cases are written for the blocked file anyway: the datasets are the same for every
+library, and the cases need no change once the file is eligible.
 
 **The six perturbations** (the datasets of the design's spike-X row):
 
