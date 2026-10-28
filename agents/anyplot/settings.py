@@ -29,7 +29,7 @@ another provider, model or location.
 | `AGENT_CLI_CALL_LOG` | unset | `claude-cli` only: a file each CLI call appends one JSON line to (model, effort, seconds, ok) |
 | `AGENT_LOCATION` | `eu` | Vertex AI location of every model call: `eu`, `us` or `global` |
 | `AGENT_PROJECT`, else `GOOGLE_CLOUD_PROJECT` | `anyplot` | Google Cloud project that serves (and bills) the model calls |
-| `AGENT_LIBRARIES` | `matplotlib,seaborn` | Enabled libraries; each needs a runtime in the registry (`RUNTIME_LIBRARIES`: `matplotlib`, `seaborn`, `plotnine`, `altair`, `pygal`, `letsplot`). The default stays `matplotlib,seaborn`; plotnine, altair, pygal and lets-plot are each enabled after its eval matrix passes |
+| `AGENT_LIBRARIES` | `matplotlib,seaborn` | Enabled libraries; each needs a runtime in the registry (`RUNTIME_LIBRARIES`: `matplotlib`, `seaborn`, `plotnine`, `altair`, `pygal`, `letsplot`). The default stays `matplotlib,seaborn`; the deploy (`agents/cloudbuild.yaml` `_LIBRARIES`) names all six for the admin's live tests since 2026-10-28, and each library's eval matrix gates the public release |
 | `AGENT_RENDERER` | `remote` | Render backend: `remote` (the anyplot-renderer service, phase 1), `sandbox` (in-process sandboxes, not used in phase 1), `local` (development only) or `fake` (development and test only) |
 | `AGENT_RENDER_URL` | unset | The anyplot-renderer service URL the `remote` backend calls; `https://` outside development and test |
 | `AGENT_RENDER_TOKEN` | unset | Development only: an ID token for the renderer (`gcloud auth print-identity-token`); without it the backend mints one from Application Default Credentials |

@@ -53,8 +53,21 @@ class TestTable:
         row = command_for("python", "letsplot")
         assert row.in_process and row.argv == () and row.code_file == "plot.py" and row.toolchain == ()
         assert row.rlimit_as and row.rlimit_as_mb == 2048 and row.rlimit_nproc and row.render_p95_s == 15.0
-        assert dict(row.env) == {"ARROW_DEFAULT_MEMORY_POOL": "system", "FONTCONFIG_FILE": "/opt/anyplot/fonts.conf"}
+        assert dict(row.env) == {
+            "ARROW_DEFAULT_MEMORY_POOL": "system",
+            "FONTCONFIG_FILE": "/opt/anyplot/fonts.conf",
+            "ANYPLOT_DENY_EXEC": "required",
+        }
         assert commands.FONTCONFIG_FILE == "/opt/anyplot/fonts.conf"
+
+    def test_lets_plot_runs_only_under_the_harness_s_filter_against_program_starts(self) -> None:
+        """The bridge's ImageMagick starts its delegates from native code, which the audit hook cannot see."""
+        from agents.anyplot.render import harness
+
+        assert commands.EXEC_DENY_ENV == harness.EXEC_DENY_ENV
+        python = [library for library, language in LIBRARY_LANGUAGES.items() if language == "python"]
+        rows = {library: command_for("python", library).env.get(commands.EXEC_DENY_ENV) for library in python}
+        assert rows == {library: "required" if library == "letsplot" else None for library in python}
 
     @pytest.mark.parametrize(
         ("rlimit_as", "rlimit_as_mb"),

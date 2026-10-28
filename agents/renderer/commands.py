@@ -94,6 +94,9 @@ JULIA_CPU_TARGET = "generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(
 FONTCONFIG_FILE = "/opt/anyplot/fonts.conf"
 """The image's minimal fontconfig file (`agents/renderer/fonts.conf`: one font directory, no cache directory) for
 the fontconfig that lets-plot's native bridge links, which finds no configuration of its own in the image."""
+EXEC_DENY_ENV = "ANYPLOT_DENY_EXEC"
+"""With `required`, the harness refuses to run an in-process row's code when its kernel filter against program
+starts is not in place (`harness.EXEC_DENY_ENV`, `install_exec_deny`); every Python run installs it where it can."""
 
 
 @dataclass(frozen=True)
@@ -145,12 +148,19 @@ def _row(language: Language, library: str) -> RuntimeCommand:
             # of 2026-10-26 up to 4800x2700 and 3600x3600 (VmPeak 1697 MiB) and still stops a 6400x3600 one
             # (2580 MiB). In the renderer image with this row the canvas-size renders took a wall p95 of 7.69 s
             # (max 15.5 s); the guarded host sweep of the 284 eligible catalogue files, canvas rewrite applied,
-            # 12.5 s.
+            # 12.5 s. The bridge's ImageMagick starts its delegates from native code, which the audit hook cannot
+            # see, so the row runs only under the harness's kernel filter against program starts (2026-10-28).
             return RuntimeCommand(
                 language,
                 code_file,
                 (),
-                env=MappingProxyType({"ARROW_DEFAULT_MEMORY_POOL": "system", "FONTCONFIG_FILE": FONTCONFIG_FILE}),
+                env=MappingProxyType(
+                    {
+                        "ARROW_DEFAULT_MEMORY_POOL": "system",
+                        "FONTCONFIG_FILE": FONTCONFIG_FILE,
+                        EXEC_DENY_ENV: "required",
+                    }
+                ),
                 rlimit_as_mb=2048,
                 render_p95_s=15.0,
             )

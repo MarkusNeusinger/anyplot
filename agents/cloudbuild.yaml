@@ -107,7 +107,10 @@ substitutions:
   _PROVIDER: anthropic-vertex
   _MODEL: claude-haiku-5-5
   _JUDGE_MODEL: claude-haiku-5-5
-  _LIBRARIES: matplotlib,seaborn
+  # Every library with a runtime (owner decision of 2026-10-28): only the admin reaches the
+  # chat yet, so the deploy serves all six for live testing, and each one's 80 % eval matrix
+  # gates the public release instead. AGENT_LIBRARIES' default stays matplotlib,seaborn.
+  _LIBRARIES: matplotlib,seaborn,plotnine,altair,pygal,letsplot
   # "1" keeps an instance warm; "0" scales to zero between sessions (and so
   # forgets every in-memory session, which the client shows as "session expired").
   _MIN_INSTANCES: "0"

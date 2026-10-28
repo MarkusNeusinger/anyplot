@@ -149,6 +149,8 @@ CONVERT_LABEL = "convert"
 LAUNCHER_FAILURE = "failed to exec in container"
 HARNESS_START = 'HARNESS {"event": "start"}'
 HARNESS_END = 'HARNESS {"event": "end"'
+EXEC_DENY_STATES = frozenset({"on", "off", "unavailable", "unsupported"})
+"""The values of the end line's `exec_deny` (`harness.install_exec_deny`; `off`: the guard was never armed)."""
 STDERR_LIMIT = 64 * 1024
 STDOUT_HEAD = 4 * 1024
 STDOUT_TAIL = 4 * 1024
@@ -554,12 +556,9 @@ class Attempt:
         """The launcher failed before the harness printed its start line: worth one retry."""
         return self.exit_code not in (0, None) and self.reason is None and not self.harness_started
 
-    def usage(self) -> dict[str, float]:
-        """The harness's own peak memory and CPU time, from its last end line (advisory).
-
-        The code under test shares stdout and can print a forged end line, so only a
-        finite number between 0 and `MAX_USAGE` is taken; anything else is left out.
-        """
+    def end_report(self) -> dict[str, object]:
+        """The harness's last end line as a dict (advisory), or an empty one: the code under test shares stdout and
+        can print a forged end line, so every reader checks each value it takes."""
         for line in reversed(self.stdout_tail.splitlines()):
             if not line.startswith(HARNESS_END):
                 continue
@@ -567,21 +566,32 @@ class Attempt:
                 report = json.loads(line.split(" ", 1)[1])
             except ValueError, IndexError, RecursionError:
                 return {}
-            if not isinstance(report, dict):
-                return {}
-            usage: dict[str, float] = {}
-            for key in ("max_rss_mb", "cpu_s"):
-                value = report.get(key)
-                if isinstance(value, bool) or not isinstance(value, int | float):
-                    continue
-                try:
-                    number = float(value)
-                except OverflowError:
-                    continue
-                if math.isfinite(number) and 0.0 <= number <= MAX_USAGE:
-                    usage[key] = number
-            return usage
+            return report if isinstance(report, dict) else {}
         return {}
+
+    def usage(self) -> dict[str, float]:
+        """The harness's own peak memory and CPU time, from its last end line (advisory): only a finite number between
+        0 and `MAX_USAGE` is taken; anything else is left out."""
+        report = self.end_report()
+        usage: dict[str, float] = {}
+        for key in ("max_rss_mb", "cpu_s"):
+            value = report.get(key)
+            if isinstance(value, bool) or not isinstance(value, int | float):
+                continue
+            try:
+                number = float(value)
+            except OverflowError:
+                continue
+            if math.isfinite(number) and 0.0 <= number <= MAX_USAGE:
+                usage[key] = number
+        return usage
+
+    def exec_deny(self) -> str | None:
+        """The state of the harness's kernel filter against program starts, from its last end line (advisory): one of
+        `EXEC_DENY_STATES`, else None. Logged per launch, so a production render shows whether Cloud Run's sandbox
+        lets the process add the filter."""
+        state = self.end_report().get("exec_deny")
+        return state if isinstance(state, str) and state in EXEC_DENY_STATES else None
 
     def to_wire(self, theme: Theme, attempts: int) -> ThemeRun:
         usage = self.usage()
@@ -991,6 +1001,7 @@ def _log_attempt(attempt: Attempt, theme: str, *, retry: bool) -> None:
                 "measured": attempt.measured,
                 "limit": attempt.limit,
                 "harness_started": attempt.harness_started,
+                "exec_deny": attempt.exec_deny(),
                 "launcher_message": LAUNCHER_FAILURE in attempt.stderr,
                 "retry": retry,
                 "wall_s": round(attempt.wall_s, 3),

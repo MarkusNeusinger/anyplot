@@ -875,6 +875,10 @@ jobs:
           print(f"OK: lets-plot plot-light.png {width}x{height}, {len(png)} bytes; plot-light.html {len(html)} characters")
           EOF
           tail -n 1 work-letsplot/harness.out
+          # The row requires the harness's kernel filter against program starts (ANYPLOT_DENY_EXEC);
+          # a render without it exits with 3 before the plot runs, so this one ran under it.
+          tail -n 1 work-letsplot/harness.out | grep -qF '"exec_deny": "on"' \
+            || { echo "::error::the lets-plot render ran without the exec filter"; exit 1; }
 
       # Native code the audit hook cannot see finds no program to run. lets-plot's bridge links
       # ImageMagick with a compiled-in delegate map that runs programs by name through /bin/sh
@@ -893,6 +897,82 @@ jobs:
           # The image build ran the same check (agents/renderer/Dockerfile); this runs it
           # once more in the image the job just built, as the sandbox would see it.
           docker run --rm --network none anyplot-renderer:ci /app/.venv/bin/python -m agents.renderer.delegates
+
+      # And the kernel refuses every program start once a guard is armed, whatever is on PATH:
+      # the harness installs a seccomp filter against execve and execveat (install_exec_deny in
+      # agents/anyplot/render/harness.py, since 2026-10-28) on every thread, the running ones
+      # included, and every child. This loads the image's harness under the sandbox's flags and
+      # checks these routes: the probe before the filter (ENOENT, the path lookup), the filter, a
+      # thread started before it, libc's system() (what native code calls), subprocess, fexecve
+      # (execveat) and a forked child, which still forks but cannot exec; x32 and int 0x80 calls
+      # are the unit tests' (tests/unit/agents/runtime/test_exec_deny.py). Docker's default seccomp profile lets a
+      # process add its own filter; whether Cloud Run's sandbox does is checked on the deployed
+      # renderer (agentic/specs/261024-agent-all-libraries.md, step 1c, "Next").
+      - name: The kernel refuses program starts under the harness
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p work-execdeny
+          cat > work-execdeny/check.py <<'EOF'
+          import ctypes, importlib.util, os, subprocess, sys, threading
+
+          spec = importlib.util.spec_from_file_location("harness", "/opt/anyplot/harness.py")
+          harness = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(harness)
+
+
+          def probe():
+              try:
+                  os.execv(harness.EXEC_PROBE_PATH, [harness.EXEC_PROBE_PATH])
+              except OSError as exc:
+                  return type(exc).__name__
+
+
+          ready, go, seen = threading.Event(), threading.Event(), {}
+
+
+          def worker():
+              ready.set()
+              go.wait()
+              seen["thread"] = probe()
+
+
+          thread = threading.Thread(target=worker)
+          thread.start()
+          ready.wait()
+          print(probe())
+          print(harness.install_exec_deny())
+          go.set()
+          thread.join()
+          print(seen["thread"])
+          print(ctypes.CDLL(None).system(b"exit 0") != 0)
+          try:
+              subprocess.run(["true"], check=False)
+              print("ran")
+          except PermissionError:
+              print("PermissionError")
+          descriptor = os.open("/bin/true", os.O_RDONLY)
+          try:
+              os.execve(descriptor, ["true"], {})  # fexecve: execveat on the descriptor
+          except PermissionError:
+              print("PermissionError")
+          pid = os.fork()
+          if pid == 0:
+              try:
+                  os.execv("/bin/true", ["true"])
+              except PermissionError:
+                  os._exit(7)
+              os._exit(9)
+          print(os.waitstatus_to_exitcode(os.waitpid(pid, 0)[1]))
+          EOF
+          docker run --rm --network none --read-only --tmpfs /tmp \
+            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+            -v "$PWD/work-execdeny:/work:ro" -w /work \
+            anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /work/check.py \
+            > work-execdeny/check.out
+          cat work-execdeny/check.out
+          printf 'FileNotFoundError\non\nPermissionError\nTrue\nPermissionError\nPermissionError\n7\n' | diff - work-execdeny/check.out \
+            || { echo "::error::the harness's exec filter did not refuse every program start"; exit 1; }
 
       # The file conversion inside the image (harness.py --convert): every format the
       # page sends, with the image's slimmed pyarrow (owner decision of 2026-10-15),

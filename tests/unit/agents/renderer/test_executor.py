@@ -6,6 +6,7 @@ probe harness with this interpreter, so every run here is a real subprocess.
 
 import asyncio
 import base64
+import json
 import os
 import resource
 import signal
@@ -424,6 +425,30 @@ class TestBounds:
             "max_rss_mb": 150.5,
             "cpu_s": 2.0,
         }
+
+    @pytest.mark.parametrize(
+        ("report", "state"),
+        [
+            ('{"event": "end", "max_rss_mb": 1, "exec_deny": "on"}', "on"),
+            ('{"event": "end", "exec_deny": "unavailable"}', "unavailable"),
+            ('{"event": "end", "exec_deny": "yes"}', None),
+            ('{"event": "end", "exec_deny": ["on"]}', None),
+            ('{"event": "end"}', None),
+            ('{"event": "end", "exec_deny": ' + "[" * 5000 + "]" * 5000 + "}", None),
+        ],
+    )
+    def test_the_exec_filter_s_state_is_taken_from_the_end_line_and_logged(
+        self, caplog: pytest.LogCaptureFixture, report: str, state: str | None
+    ) -> None:
+        """One production render then shows whether Cloud Run's sandbox lets the harness add its seccomp filter."""
+        caplog.set_level("INFO", logger=executor_module.__name__)
+        attempt = Attempt("r", exit_code=0, stdout_tail=f"HARNESS {report}\n")
+
+        executor_module._log_attempt(attempt, "light", retry=False)
+
+        assert attempt.exec_deny() == state
+        (line,) = [record.getMessage() for record in caplog.records if '"event": "sandbox"' in record.getMessage()]
+        assert json.loads(line)["exec_deny"] == state
 
 
 class TestDataRun:

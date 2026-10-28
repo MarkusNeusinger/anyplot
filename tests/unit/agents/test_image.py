@@ -34,6 +34,7 @@ import yaml
 
 from agents.anyplot import policy
 from agents.anyplot.render import harness, watermark
+from agents.anyplot.render.runtimes import RUNTIME_LIBRARIES
 from agents.anyplot.settings import AgentSettings
 
 
@@ -477,10 +478,14 @@ class TestCloudBuild:
             "_PROVIDER": defaults["provider"].default,
             "_MODEL": defaults["model"].default,
             "_JUDGE_MODEL": defaults["judge_model"].default,
-            "_LIBRARIES": ",".join(defaults["libraries"].default),
+            # Every library with a runtime for the admin's live tests (owner, 2026-10-28), not the settings default.
+            "_LIBRARIES": "matplotlib,seaborn,plotnine,altair,pygal,letsplot",
             "_MIN_INSTANCES": "0",
             "_SMOKE_AUTH": "true",
         }
+        deployed = _config(CLOUDBUILD)["substitutions"]["_LIBRARIES"].split(",")
+        assert AgentSettings(libraries=deployed).libraries == deployed  # each has a runtime; the smoke keeps the order
+        assert set(deployed) == RUNTIME_LIBRARIES  # a new runtime is a deliberate deploy decision
 
     @pytest.mark.parametrize("path", [CLOUDBUILD, RENDERER_CLOUDBUILD], ids=["agents", "renderer"])
     def test_every_reference_is_a_substitution_or_a_builtin(self, path: Path) -> None:

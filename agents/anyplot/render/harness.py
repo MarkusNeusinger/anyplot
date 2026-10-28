@@ -72,10 +72,17 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    `chdir`, `load_dataset`). With the frame refusals, a sweep of the 572 files the
    readiness scan admits rendered the same 565 as before, with no refusal logged;
    the seven failures are the plots' own (each divides by the length of a title the
-   normaliser emptied);
-6. prints `HARNESS {"event": "end", "max_rss_mb": ..., "cpu_s": ...}` when the plot
-   file returns or raises; an exception still propagates, so its traceback reaches
-   stderr and the exit code stays non-zero.
+   normaliser emptied). Arming first installs a seccomp filter (`install_exec_deny`, since
+   2026-10-28) under which the kernel refuses every `execve` and `execveat` of the process,
+   its threads and its children, so native code the hook cannot see (lets-plot's
+   ImageMagick delegates) starts no program either; with `ANYPLOT_DENY_EXEC=required`
+   (lets-plot's command row) a filter that is not in place stops the run before the plot
+   starts, with exit code `EXEC_DENY_EXIT` and a stderr line that names it (Cloud Run's
+   launcher reports every non-zero exit as -13), and without it the run goes on;
+6. prints `HARNESS {"event": "end", "max_rss_mb": ..., "cpu_s": ..., "exec_deny": ...}`
+   when the plot file returns or raises (`exec_deny`: `on`, `unavailable`, `unsupported`,
+   or `off` when the guard was never armed); an exception still propagates, so its
+   traceback reaches stderr and the exit code stays non-zero.
 
 **Data mode** (`python -I -X disable-remote-debug /opt/anyplot/harness.py --data snippet.py`, the renderer's
 `POST /run-data`): the harness runs a data-generating snippet (`run_data_code`,
@@ -83,7 +90,7 @@ copies it to `/opt/anyplot/harness.py`. In order it:
 same limits, imports everything the validator's DATA profile allows (`DATA_PRELOAD`, every
 module of `pandas.core`, `pandas.tseries` and `pandas.api`, which pandas would otherwise
 load lazily, and every time zone), reads and compiles the snippet, opens `out.csv` for
-writing, and only then arms `DataGuard` with `sys.addaudithook`: from there on the
+writing, and only then arms `DataGuard`, the kernel filter of step 5 first, with `sys.addaudithook`: from there on the
 interpreter refuses every `open` (reading too) and every `import`, `ctypes.*`,
 `sys.remote_exec`, `os.system`, `os.exec*`, `os.posix_spawn`, `os.spawn*`, `os.fork*`, `subprocess.*`,
 `socket.*`, every filesystem change and listing (`os.remove`, `os.listdir`,
@@ -121,6 +128,7 @@ stdout, so the host reads them as hints (a retry decision, a memory figure), nev
 as a verdict.
 """
 
+import errno
 import functools
 import io
 import itertools
@@ -635,6 +643,107 @@ def ctypes_helper_addresses():
     return frozenset(getattr(_ctypes, name) for name in IMPORT_CTYPES_HELPERS if hasattr(_ctypes, name))
 
 
+EXEC_DENY_ENV = "ANYPLOT_DENY_EXEC"
+"""`required` (lets-plot's row of `agents/renderer/commands.py`) makes arming the plot guard fail when the kernel
+filter is not in place (`ExecDenyUnavailable`); unset, and in data and convert mode, which never get a row's
+environment, a guard installs it where it can and reports where it cannot."""
+EXEC_DENY_EXIT = 3
+"""Plot mode's exit code when `ANYPLOT_DENY_EXEC=required` and the filter is not in place: the plot never ran."""
+EXEC_PROBE_PATH = "/nonexistent/anyplot-exec-probe"
+"""The program `install_exec_deny` tries to start once the filter is installed: with the filter the kernel refuses the
+call with EPERM before it looks the path up, without it the path does not exist (ENOENT), so no probe starts a program."""
+PR_SET_NO_NEW_PRIVS = 38
+SECCOMP_SET_MODE_FILTER = 1
+SECCOMP_FILTER_FLAG_TSYNC = 1
+SECCOMP_RET_ALLOW = 0x7FFF0000
+SECCOMP_RET_ERRNO = 0x00050000
+SECCOMP_DATA_NR = 0  # offsetof(struct seccomp_data, nr)
+SECCOMP_DATA_ARCH = 4  # offsetof(struct seccomp_data, arch)
+BPF_LD_W_ABS = 0x20
+BPF_JEQ_K = 0x15
+BPF_JGE_K = 0x35
+BPF_RET_K = 0x06
+X32_SYSCALL_BIT = 0x40000000
+EXEC_DENY_MACHINES = {
+    # machine: (AUDIT_ARCH_*, the seccomp syscall, execve and execveat, whether the x32 ABI exists)
+    "x86_64": (0xC000003E, 317, (59, 322), True),
+    "aarch64": (0xC00000B7, 277, (221, 281), False),
+}
+"""The syscall numbers of the two machines the renderer image is built for (linux/audit.h, the kernel's syscall
+tables); another machine gets no filter (`unsupported`)."""
+
+
+class ExecDenyUnavailable(Exception):
+    """`ANYPLOT_DENY_EXEC=required`, and the filter could not be installed: the code must not run."""
+
+
+def exec_deny_program(arch, denied, x32):
+    """The classic BPF program of the filter as `(code, jt, jf, k)` instructions: `execve` and `execveat` fail with
+    EPERM, as does every syscall of another architecture (a 32-bit `int 0x80` on x86_64) and every x32 syscall, which
+    carry other numbers for the same calls; every other syscall is allowed."""
+    checks = ([(BPF_JGE_K, X32_SYSCALL_BIT)] if x32 else []) + [(BPF_JEQ_K, number) for number in denied]
+    program = [
+        (BPF_LD_W_ABS, 0, 0, SECCOMP_DATA_ARCH),
+        (BPF_JEQ_K, 0, len(checks) + 2, arch),  # another architecture: past the checks and the allow, to the refusal
+        (BPF_LD_W_ABS, 0, 0, SECCOMP_DATA_NR),
+    ]
+    # A matching check jumps past the checks after it and the allow, to the refusal.
+    program += [(code, len(checks) - index, 0, value) for index, (code, value) in enumerate(checks)]
+    program += [(BPF_RET_K, 0, 0, SECCOMP_RET_ALLOW), (BPF_RET_K, 0, 0, SECCOMP_RET_ERRNO | errno.EPERM)]
+    return program
+
+
+def install_exec_deny():
+    """Install a seccomp filter that refuses every `execve` and `execveat` of this process for good, its threads and
+    every child included, and return `on`; or `unsupported` (not Linux on a machine of `EXEC_DENY_MACHINES`) or
+    `unavailable` (the kernel or the sandbox refused the filter, or it did not take).
+
+    The audit hook sees a process start from Python only; native code calls the kernel directly: lets-plot's
+    Kotlin/Native bridge links an ImageMagick whose delegates start programs through `/bin/sh` and reads no policy
+    file. With the filter the kernel refuses every such start with EPERM, whatever is on `PATH`. `fork` and threads
+    stay allowed. `PR_SET_NO_NEW_PRIVS` lets an unprivileged process install it and keeps a later `execve` from
+    gaining privileges; `SECCOMP_FILTER_FLAG_TSYNC` puts it on every thread already running (BLAS, Arrow and the
+    bridge start some at import). A filter cannot be removed, and one the code adds later can only refuse more. It
+    runs before the audit hook is added, which refuses its `ctypes` calls and the probe's `execv`.
+    """
+    import ctypes
+    import platform
+
+    machine = EXEC_DENY_MACHINES.get(platform.machine())
+    if machine is None or not sys.platform.startswith("linux"):
+        return "unsupported"
+    arch, seccomp_number, denied, x32 = machine
+    program = exec_deny_program(arch, denied, x32)
+
+    class SockFilter(ctypes.Structure):
+        _fields_ = [("code", ctypes.c_ushort), ("jt", ctypes.c_ubyte), ("jf", ctypes.c_ubyte), ("k", ctypes.c_uint)]
+
+    class SockFprog(ctypes.Structure):
+        _fields_ = [("len", ctypes.c_ushort), ("filter", ctypes.POINTER(SockFilter))]
+
+    instructions = (SockFilter * len(program))(*(SockFilter(*instruction) for instruction in program))
+    fprog = SockFprog(len(program), ctypes.cast(instructions, ctypes.POINTER(SockFilter)))
+    try:
+        libc = ctypes.CDLL(None, use_errno=True)
+        libc.prctl.restype = ctypes.c_int
+        libc.prctl.argtypes = [ctypes.c_int, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong, ctypes.c_ulong]
+        libc.syscall.restype = ctypes.c_long
+        libc.syscall.argtypes = [ctypes.c_long, ctypes.c_uint, ctypes.c_uint, ctypes.c_void_p]
+    except OSError, AttributeError:
+        return "unavailable"
+    if libc.prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != 0:
+        return "unavailable"
+    # TSYNC answers a positive thread id when a thread cannot take the filter; only 0 installed it everywhere.
+    if libc.syscall(seccomp_number, SECCOMP_SET_MODE_FILTER, SECCOMP_FILTER_FLAG_TSYNC, ctypes.byref(fprog)) != 0:
+        return "unavailable"
+    try:
+        os.execv(EXEC_PROBE_PATH, [EXEC_PROBE_PATH])
+    except OSError as exc:
+        # Only the filter's EPERM proves it: ENOENT (or an EACCES on the path) means the call reached the lookup.
+        return "on" if exc.errno == errno.EPERM else "unavailable"
+    return "unavailable"
+
+
 class DataGuard:
     """The audit hook of data mode: once armed, refuses every `open` and every `import`, native code, processes,
     sockets, filesystem changes and listings, every route to a frame, and every `exec` and `compile` but the
@@ -642,7 +751,9 @@ class DataGuard:
 
     `blocked` keeps the first refused event's family, so a run whose snippet caught the
     error is refused all the same. `paused()` lets the harness itself read frames while it
-    prints a traceback, when no snippet code runs.
+    prints a traceback, when no snippet code runs. `exec_deny` is the kernel filter's state
+    for the end line (`install_exec_deny`): `off` until `arm` installs it; `exec_deny_required`
+    makes `arm` refuse to run without it (the plot guard's, from `ANYPLOT_DENY_EXEC`).
     """
 
     def __init__(self):
@@ -650,6 +761,8 @@ class DataGuard:
         self.blocked = None
         self.paused_depth = 0
         self.entry = None  # the code object `arm` lets run once
+        self.exec_deny = "off"
+        self.exec_deny_required = False
 
     def refuses(self, event, args):
         """Whether `event` with `args` is one the armed guard refuses."""
@@ -695,10 +808,15 @@ class DataGuard:
     def arm(self, entry=None):
         """Install the hook (it can never be removed) and let `entry`, the compiled code, run once under it.
 
-        The calls that change the filesystem or start a process without raising an audit event are
-        replaced first (`disable_unaudited_calls`), because the hook cannot see them.
+        The kernel filter that refuses every program start goes in first (`install_exec_deny`; where
+        `exec_deny_required` is set, a filter that is not in place raises `ExecDenyUnavailable`, and
+        nothing runs), then the calls that change the filesystem or start a process without raising an
+        audit event are replaced (`disable_unaudited_calls`), because the hook cannot see them.
         """
         self.entry = entry
+        self.exec_deny = install_exec_deny()
+        if self.exec_deny != "on" and self.exec_deny_required:
+            raise ExecDenyUnavailable(self.exec_deny)
         disable_unaudited_calls()
         sys.addaudithook(self)
         self.armed = True
@@ -735,6 +853,7 @@ class PlotGuard(DataGuard):
         self.outputs = frozenset(os.path.realpath(path) for path in outputs)
         self.plot_file = None
         self.import_ctypes_helpers = ctypes_helper_addresses()
+        self.exec_deny_required = os.environ.get(EXEC_DENY_ENV) == "required"
 
     def arm(self, entry=None):
         self.plot_file = entry.co_filename if entry is not None else None
@@ -1896,7 +2015,7 @@ def run_data_snippet(path, guard, measure):
             return DATA_EXIT["blocked"] if guard.blocked else DATA_EXIT["error"]
         finally:
             try:
-                _report("end", **_usage())
+                _report("end", **_usage(), exec_deny=guard.exec_deny)
             except Exception:
                 pass
         if guard.blocked:
@@ -2147,7 +2266,7 @@ def run_conversion(path, guard, measure):
             return CONVERT_EXIT["blocked"] if guard.blocked else CONVERT_EXIT["error"]
         finally:
             try:
-                _report("end", **_usage())
+                _report("end", **_usage(), exec_deny=guard.exec_deny)
             except Exception:
                 pass
         if guard.blocked:
@@ -2216,12 +2335,16 @@ def main(argv):
     install_fallback_fonts()
     install_glyph_capture()
     install_probe(theme)
+    # The HTML is altair's second file (314 of 325 catalogue files); it stays in the sandbox, nothing collects it.
+    guard = PlotGuard((f"plot-{theme}.png", f"probe-{theme}.json", f"plot-{theme}.html"))
     try:
-        # The HTML is altair's second file (314 of 325 catalogue files); it stays in the sandbox, nothing collects it.
-        run_plot(argv[1], PlotGuard((f"plot-{theme}.png", f"probe-{theme}.json", f"plot-{theme}.html")))
+        run_plot(argv[1], guard)
+    except ExecDenyUnavailable as exc:
+        print(f"the sandbox could not refuse process starts ({exc}), which this library requires", file=sys.stderr)
+        return EXEC_DENY_EXIT
     finally:
         try:
-            _report("end", **_usage())
+            _report("end", **_usage(), exec_deny=guard.exec_deny)
         except Exception:
             pass  # a closed stdout must not hide the plot's own exception
     return 0
