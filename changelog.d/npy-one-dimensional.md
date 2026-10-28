@@ -8,7 +8,7 @@
   after it; scalars saved next to them are left out and named. Any other `.npz` is
   still read one array at a time: a 2-D or structured array before a 1-D one. Still
   refused are 0-D arrays, arrays of three or more dimensions and structured arrays of
-  more than one.
+  more than one. (#12413)
 
 ### Fixed
 
@@ -16,4 +16,4 @@
   were all missing reached the paste box as a blank line, which the parser skips, so
   every later value moved up one row. The converter now writes such a row as `NaN`,
   which the parser reads as missing and reports. An array without any value is now
-  refused as `file_empty` instead of failing later in the paste.
+  refused as `file_empty` instead of failing later in the paste. (#12413)
