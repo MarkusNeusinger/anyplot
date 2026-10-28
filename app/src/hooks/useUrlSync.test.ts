@@ -91,14 +91,13 @@ describe('useUrlSync', () => {
     window.history.replaceState({}, '', '/');
   });
 
-  it('updates URL and document title', () => {
+  it('updates URL', () => {
     const onTrackPageview = vi.fn();
     const filters: ActiveFilters = [{ category: 'lib', values: ['matplotlib'] }];
 
     renderHook(() => useUrlSync({ activeFilters: filters, onTrackPageview }));
 
     expect(window.location.search).toBe('?lib=matplotlib');
-    expect(document.title).toBe('lib:matplotlib | anyplot.ai');
     expect(onTrackPageview).toHaveBeenCalled();
   });
 
@@ -106,7 +105,5 @@ describe('useUrlSync', () => {
     const onTrackPageview = vi.fn();
 
     renderHook(() => useUrlSync({ activeFilters: [], onTrackPageview }));
-
-    expect(document.title).toBe('anyplot.ai');
   });
 });

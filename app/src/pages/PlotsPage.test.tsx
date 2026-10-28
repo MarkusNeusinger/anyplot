@@ -131,6 +131,12 @@ describe('PlotsPage', () => {
     expect(document.title).toBe('plots | anyplot.ai');
   });
 
+  it('renders filter string in document title for SEO when filters are active', () => {
+    state.activeFilters = [{ category: 'lib', values: ['matplotlib'] }];
+    render(<PlotsPage />);
+    expect(document.title).toBe('lib:matplotlib | plots | anyplot.ai');
+  });
+
   it('renders the shared scroll-to-top button', () => {
     render(<PlotsPage />);
     expect(screen.getByLabelText(/scroll to top/i)).toBeInTheDocument();

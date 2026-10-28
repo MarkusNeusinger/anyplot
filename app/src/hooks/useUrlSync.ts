@@ -1,7 +1,7 @@
 /**
  * Hook for URL synchronization with filter state.
  *
- * Handles URL parsing, building, and document title updates.
+ * Handles URL parsing, and building.
  */
 
 import { useEffect } from 'react';
@@ -56,20 +56,13 @@ interface UseUrlSyncOptions {
 }
 
 /**
- * Hook to synchronize active filters with URL and document title.
+ * Hook to synchronize active filters with URL.
  */
 export function useUrlSync({ activeFilters, onTrackPageview }: UseUrlSyncOptions): void {
   useEffect(() => {
     const newUrl = buildFilterUrl(activeFilters);
     window.history.replaceState({}, '', newUrl);
 
-    // Update document title
-    const filterParts = activeFilters
-      .filter(f => f.values.length > 0)
-      .map(f => `${f.category}:${f.values.join(',')}`)
-      .join(' ');
-
-    document.title = filterParts ? `${filterParts} | anyplot.ai` : 'anyplot.ai';
     onTrackPageview();
   }, [activeFilters, onTrackPageview]);
 }
