@@ -469,7 +469,8 @@ reasons (a file can have several causes):
   module, which no plot profile admits and none will: the adapter must not fabricate
   data, which the ADAPTATION rules enforce. Their 12 cases are written anyway and open
   blocked sessions until the catalogue files change; every lets-plot fixture file is
-  eligible.
+  eligible. Since the regenerations of 2026-10-28 only `line-timeseries` is blocked
+  (6 cases); `histogram-basic` is `coupled` (see the pygal gate under "Next").
 - **Verified by hand.** The literal `ci-image.yml` steps against the 1c image: the
   seaborn, plotnine and altair PNGs, the altair HTML and the multi-script render are
   byte-identical to the 1b image's; pygal renders in 1.6 to 1.8 s at 185 to 189 MB, and
