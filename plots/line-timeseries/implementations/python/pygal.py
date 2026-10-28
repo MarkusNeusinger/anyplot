@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-timeseries: Time Series Line Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-05-09
+Library: pygal 3.1.3 | Python 3.14.8
+Quality: 80/100 | Updated: 2026-10-28
 """
 
 import os
