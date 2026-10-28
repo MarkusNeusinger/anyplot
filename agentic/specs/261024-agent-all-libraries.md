@@ -701,12 +701,14 @@ design.
     from the Posit Package Manager snapshot `__linux__/trixie/2026-10-20` as binaries
     (checked on 2026-10-28: the same ggplot2 4.0.3 and ragg 1.5.2 builds exist for
     trixie, noble and resolute, as compiled binaries), into a site library that the
-    renderer mounts read-only. The package list moves into one file,
-    `agents/renderer/toolchain/r-packages.txt`, which `setup-r` reads too, so the
-    pipeline and the renderer cannot drift. The snapshot URL and its `# Snapshot <date>
-    ships ggplot2 <version>.` note stay in `setup-r`, which `core/library_versions.py`
-    parses; the toolchain reads the same URL from its own file, and a unit test fails
-    when the two differ.
+    renderer mounts read-only. The toolchain's package list is
+    `agents/renderer/toolchain/r-packages.txt`; `setup-r` keeps its own
+    `install.packages(c(...))` list, and `tests/unit/agents/renderer/test_toolchain.py`
+    fails when the toolchain's list is not exactly setup-r's plus `readr`, so the
+    pipeline and the renderer cannot drift unnoticed. The snapshot URL and its
+    `# Snapshot <date> ships ggplot2 <version>.` note stay in `setup-r`, which
+    `core/library_versions.py` parses; the toolchain reads the same date from its own
+    file (`r-repos.txt`), and the same test fails when the two differ.
   - The runtime libraries the trixie binaries link (among them `libtiff6`,
     `libjpeg62-turbo`, `libharfbuzz0b`, `libfribidi0`, `libicu76`, `libgomp1`), which
     `python:3.14-slim` lacks; the build fails when `ldd` of R's binary or of any
