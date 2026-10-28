@@ -29,7 +29,7 @@ from core.spec_roles import parse_roles
 
 CASE_KEYS = {"spec_id", "library", "locale", "perturbation", "bindings", "expected", "tags", "source"}
 FAMILIES = {"scatter", "line", "bar", "histogram", "box", "heatmap", "area", "violin", "pie", "time-series"}
-BLOCKED = frozenset({("histogram-basic", "pygal"), ("line-timeseries", "pygal")})
+BLOCKED = frozenset({("line-timeseries", "pygal")})
 """The `(spec, library)` files the readiness scan blocks for SECURITY findings; the generator's docstring says why.
 
 Their cases are written all the same. A change that makes one of them eligible fails the readiness test until
