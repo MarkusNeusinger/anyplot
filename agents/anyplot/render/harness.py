@@ -650,8 +650,9 @@ environment, a guard installs it where it can and reports where it cannot."""
 EXEC_DENY_EXIT = 3
 """Plot mode's exit code when `ANYPLOT_DENY_EXEC=required` and the filter is not in place: the plot never ran."""
 EXEC_PROBE_PATH = "/nonexistent/anyplot-exec-probe"
-"""The program `install_exec_deny` tries to start once the filter is installed: with the filter the kernel refuses the
-call with EPERM before it looks the path up, without it the path does not exist (ENOENT), so no probe starts a program."""
+"""The program `install_exec_deny` tries to start before and after it installs the filter (`exec_probe`): with the filter
+the kernel refuses the call with EPERM before it looks the path up, without it the path does not exist (ENOENT), so no
+probe starts a program."""
 PR_SET_NO_NEW_PRIVS = 38
 SECCOMP_SET_MODE_FILTER = 1
 SECCOMP_FILTER_FLAG_TSYNC = 1
@@ -705,6 +706,10 @@ def install_exec_deny():
     gaining privileges; `SECCOMP_FILTER_FLAG_TSYNC` puts it on every thread already running (BLAS, Arrow and the
     bridge start some at import). A filter cannot be removed, and one the code adds later can only refuse more. It
     runs before the audit hook is added, which refuses its `ctypes` calls and the probe's `execv`.
+
+    `on` needs the probe to change from ENOENT before the filter to EPERM after it (`exec_probe`): a policy of the
+    sandbox that refuses `execve` already would answer EPERM without this filter, which then proves nothing (the
+    Copilot review of #12410), and a filter the kernel accepted but does not enforce leaves ENOENT.
     """
     import ctypes
     import platform
@@ -712,6 +717,8 @@ def install_exec_deny():
     machine = EXEC_DENY_MACHINES.get(platform.machine())
     if machine is None or not sys.platform.startswith("linux"):
         return "unsupported"
+    if exec_probe() != errno.ENOENT:
+        return "unavailable"
     arch, seccomp_number, denied, x32 = machine
     program = exec_deny_program(arch, denied, x32)
 
@@ -736,12 +743,17 @@ def install_exec_deny():
     # TSYNC answers a positive thread id when a thread cannot take the filter; only 0 installed it everywhere.
     if libc.syscall(seccomp_number, SECCOMP_SET_MODE_FILTER, SECCOMP_FILTER_FLAG_TSYNC, ctypes.byref(fprog)) != 0:
         return "unavailable"
+    # Only the filter's EPERM proves it: ENOENT (or an EACCES on the path) means the call reached the lookup.
+    return "on" if exec_probe() == errno.EPERM else "unavailable"
+
+
+def exec_probe():
+    """The errno of an `execv` of `EXEC_PROBE_PATH`, a path that cannot exist, so the call never starts a program and
+    only ever returns by raising."""
     try:
         os.execv(EXEC_PROBE_PATH, [EXEC_PROBE_PATH])
     except OSError as exc:
-        # Only the filter's EPERM proves it: ENOENT (or an EACCES on the path) means the call reached the lookup.
-        return "on" if exc.errno == errno.EPERM else "unavailable"
-    return "unavailable"
+        return exc.errno
 
 
 class DataGuard:

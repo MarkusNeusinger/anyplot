@@ -2,7 +2,8 @@
 
 The filter cannot be removed, so every case that installs it runs the harness, or a script that loads it, in a
 subprocess of its own. The cases that need the kernel run on Linux on the two machines the renderer image is built
-for; the BPF program itself is checked everywhere by a small interpreter.
+for; the BPF program itself is checked everywhere by a small interpreter, and the install's decisions in process,
+with libc, `execv` and the audit hook stood in.
 """
 
 import errno
@@ -12,6 +13,7 @@ import platform
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -84,6 +86,133 @@ def test_every_x32_syscall_fails_on_x86_64() -> None:
     assert x32 and not harness.EXEC_DENY_MACHINES["aarch64"][3]
     for number in (0, 59, 520, 545):
         assert run_filter(program, arch, harness.X32_SYSCALL_BIT | number) == DENY
+
+
+class FakeLibc:
+    """libc's `prctl` and `syscall` as `install_exec_deny` calls them: each answers what the case sets, and every call
+    is recorded. Nothing reaches the kernel."""
+
+    class Call:
+        def __init__(self, calls: list[tuple[str, tuple[object, ...]]], name: str, answer: int) -> None:
+            self.calls, self.name, self.answer = calls, name, answer
+
+        def __call__(self, *args: object) -> int:
+            self.calls.append((self.name, args))
+            return self.answer
+
+    def __init__(self, *, prctl: int = 0, seccomp: int = 0) -> None:
+        self.calls: list[tuple[str, tuple[object, ...]]] = []
+        self.prctl = self.Call(self.calls, "prctl", prctl)
+        self.syscall = self.Call(self.calls, "syscall", seccomp)
+
+
+class TestInstallDecisions:
+    """Every way `install_exec_deny` answers, in process: libc, the probe's `execv` and the machine are stood in."""
+
+    def install(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        *,
+        machine: str = "x86_64",
+        probes: tuple[int, ...] = (errno.ENOENT, errno.EPERM),
+        libc: FakeLibc | None = None,
+        cdll_error: Exception | None = None,
+    ) -> tuple[str, FakeLibc, list[str]]:
+        answers, tried, fake = iter(probes), [], libc or FakeLibc()
+
+        def execv(path: str, args: list[str]) -> None:
+            tried.append(path)
+            raise OSError(next(answers), "probe")
+
+        def cdll(*args: object, **kwargs: object) -> FakeLibc:
+            if cdll_error is not None:
+                raise cdll_error
+            return fake
+
+        monkeypatch.setattr(harness.os, "execv", execv)
+        monkeypatch.setattr("platform.machine", lambda: machine)
+        monkeypatch.setattr(sys, "platform", "linux")
+        monkeypatch.setattr("ctypes.CDLL", cdll)
+        return harness.install_exec_deny(), fake, tried
+
+    def test_on_takes_the_probe_from_enoent_to_eperm(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        state, libc, tried = self.install(monkeypatch)
+        assert state == "on" and tried == [harness.EXEC_PROBE_PATH] * 2
+        (prctl, prctl_args), (syscall, syscall_args) = libc.calls
+        assert (prctl, prctl_args) == ("prctl", (harness.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0))
+        assert syscall == "syscall" and syscall_args[:3] == (317, 1, 1)  # seccomp(SET_MODE_FILTER, TSYNC, &prog)
+
+    def test_aarch64_calls_its_own_seccomp(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        state, libc, _ = self.install(monkeypatch, machine="aarch64")
+        assert state == "on" and libc.calls[1][1][0] == 277
+
+    def test_another_machine_is_unsupported_and_untouched(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        state, libc, tried = self.install(monkeypatch, machine="riscv64")
+        assert (state, libc.calls, tried) == ("unsupported", [], [])
+
+    def test_a_sandbox_that_refuses_execve_already_proves_nothing(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """The probe answers EPERM before the filter: a policy of the sandbox, not this filter (Copilot, #12410)."""
+        state, libc, tried = self.install(monkeypatch, probes=(errno.EPERM,))
+        assert (state, libc.calls, len(tried)) == ("unavailable", [], 1)
+
+    @pytest.mark.parametrize(
+        ("options", "calls"),
+        [
+            pytest.param({"cdll_error": OSError("no libc")}, 0, id="no libc"),
+            pytest.param({"libc": FakeLibc(prctl=-1)}, 1, id="prctl refused"),
+            pytest.param({"libc": FakeLibc(seccomp=-1)}, 2, id="seccomp refused"),
+            pytest.param({"libc": FakeLibc(seccomp=4242)}, 2, id="a thread refused TSYNC"),
+            pytest.param({"probes": (errno.ENOENT, errno.ENOENT)}, 2, id="accepted but not enforced"),
+            pytest.param({"probes": (errno.ENOENT, errno.EACCES)}, 2, id="EACCES is no proof"),
+        ],
+    )
+    def test_anything_short_of_the_change_is_unavailable(
+        self, monkeypatch: pytest.MonkeyPatch, options: dict[str, Any], calls: int
+    ) -> None:
+        state, libc, _ = self.install(monkeypatch, **options)
+        assert state == "unavailable" and len(libc.calls) == calls
+
+
+class TestArming:
+    """`DataGuard.arm` installs the filter before the hook and, where it is required, refuses to arm without it. The
+    hook and the replaced calls are stood in, so this process keeps both."""
+
+    @pytest.fixture
+    def hooks(self, monkeypatch: pytest.MonkeyPatch) -> list[object]:
+        added: list[object] = []
+        monkeypatch.setattr(harness, "disable_unaudited_calls", lambda: None)
+        monkeypatch.setattr(sys, "addaudithook", added.append)
+        return added
+
+    @pytest.mark.parametrize(
+        ("required", "state", "armed"),
+        [
+            (False, "on", True),
+            (False, "unavailable", True),
+            (True, "on", True),
+            (True, "unavailable", False),
+            (True, "unsupported", False),
+        ],
+    )
+    def test_the_filter_comes_first_and_a_required_one_is_not_skipped(
+        self, monkeypatch: pytest.MonkeyPatch, hooks: list[object], required: bool, state: str, armed: bool
+    ) -> None:
+        monkeypatch.setattr(harness, "install_exec_deny", lambda: state)
+        guard = harness.DataGuard()
+        guard.exec_deny_required = required
+        if armed:
+            guard.arm()
+        else:
+            with pytest.raises(harness.ExecDenyUnavailable, match=state):
+                guard.arm()
+        assert (guard.exec_deny, guard.armed, hooks) == (state, armed, [guard] if armed else [])
+
+    def test_the_plot_guard_reads_the_requirement_from_its_environment(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv(harness.EXEC_DENY_ENV, "required")
+        assert harness.PlotGuard(()).exec_deny_required is True
+        monkeypatch.setenv(harness.EXEC_DENY_ENV, "no")
+        assert harness.PlotGuard(()).exec_deny_required is False
+        assert harness.DataGuard().exec_deny_required is False
 
 
 KERNEL_CHECK = """
@@ -178,6 +307,27 @@ def test_a_filter_the_kernel_accepted_but_does_not_enforce_is_not_on() -> None:
     )
     assert done.returncode == 0, done.stderr
     assert done.stdout.splitlines() == ["unavailable"]
+
+
+@KERNEL
+def test_a_filter_already_in_place_is_not_taken_for_this_one() -> None:
+    """A second install meets EPERM before its own filter, as under a sandbox policy that refuses `execve`."""
+    code = (
+        "import importlib.util, sys\n"
+        "spec = importlib.util.spec_from_file_location('harness', sys.argv[1])\n"
+        "harness = importlib.util.module_from_spec(spec)\n"
+        "spec.loader.exec_module(harness)\n"
+        "print(harness.install_exec_deny())\n"
+        "print(harness.install_exec_deny())\n"
+    )
+    done = subprocess.run(
+        [sys.executable, *harness.INTERPRETER_FLAGS, "-c", code, str(HARNESS_SOURCE)],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert done.returncode == 0, done.stderr
+    assert done.stdout.splitlines() == ["on", "unavailable"]
 
 
 def run_harness(tmp_path: Path, argv: list[str], env: dict[str, str], *, state: str | None = None):
