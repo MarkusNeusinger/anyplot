@@ -101,9 +101,12 @@ describe('useUrlSync', () => {
     expect(onTrackPageview).toHaveBeenCalled();
   });
 
-  it('sets default title for no filters', () => {
+  it('clears the query string when no filters are active', () => {
     const onTrackPageview = vi.fn();
 
     renderHook(() => useUrlSync({ activeFilters: [], onTrackPageview }));
+
+    expect(window.location.search).toBe('');
+    expect(onTrackPageview).toHaveBeenCalled();
   });
 });
