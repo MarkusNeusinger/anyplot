@@ -669,14 +669,20 @@ class TestDisplayNameMaps:
     """The registry-derived name maps must cover the full canonical registry."""
 
     def test_language_names_cover_registry(self) -> None:
-        from api.routers.seo import _LANGUAGE_NAMES
+        from api.routers.seo import LANGUAGE_NAMES
+        from core.constants import LANGUAGE_NAMES as CORE_LANGUAGE_NAMES
 
-        assert set(_LANGUAGE_NAMES) == {lang["id"] for lang in LANGUAGES_METADATA}
+        assert LANGUAGE_NAMES is CORE_LANGUAGE_NAMES
+
+        assert set(LANGUAGE_NAMES) == {lang["id"] for lang in LANGUAGES_METADATA}
 
     def test_library_names_cover_registry(self) -> None:
-        from api.routers.seo import _LIBRARY_NAMES
+        from api.routers.seo import LIBRARY_NAMES
+        from core.constants import LIBRARY_NAMES as CORE_LIBRARY_NAMES
 
-        assert set(_LIBRARY_NAMES) == {lib["id"] for lib in LIBRARIES_METADATA}
+        assert LIBRARY_NAMES is CORE_LIBRARY_NAMES
+
+        assert set(LIBRARY_NAMES) == {lib["id"] for lib in LIBRARIES_METADATA}
 
 
 class TestMetaDescription:
