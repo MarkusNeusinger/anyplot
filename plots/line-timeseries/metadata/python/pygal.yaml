@@ -2,52 +2,61 @@ library: pygal
 language: python
 specification_id: line-timeseries
 created: '2025-12-26T08:31:00Z'
-updated: '2026-05-09T03:40:13Z'
-generated_by: claude-haiku
-workflow_run: 25590470019
+updated: '2026-10-28T20:04:58Z'
+generated_by: claude-sonnet
+workflow_run: 40759115192
 issue: 2006
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.14.8
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/python/pygal/plot-dark.html
-quality_score: 85
+quality_score: 80
 review:
   strengths:
-  - 'Perfect visual quality: all text explicitly sized, readable in both themes, no
-    overlap, proper palette compliance'
-  - Correct time-series implementation with realistic stock price data and meaningful
-    date range (full year)
-  - 'Theme adaptation is flawless: no dark-on-dark or light-on-light failures in either
-    render'
-  - Clean, reproducible code following project guidelines with deterministic seed
-  - Intelligent x-axis label formatting (month-year with 45-degree rotation prevents
-    overlap)
+  - 'Canvas, typography and stroke width are sized for the 3200x1800 canvas: title,
+    axis titles and ticks all read clearly in both themes and at thumbnail size'
+  - 'Theme tokens threaded through the pygal Style object: chrome flips cleanly between
+    #FAF8F1 and #1A1A17 while the #009E73 line stays identical'
+  - Month-year tick labels at calendar month starts via x_labels_major, rotated 45
+    degrees so none collide
+  - y axis spans the data (about 142-270 USD) rather than being forced to zero, so
+    the trend and the drawdowns stay visible
+  - 'Adaptable-code layout: column constants with role comments and one Data block
+    ending in a tidy df, lists built below it with .tolist()'
+  - Interactive HTML output with pygal's native hover tooltips for each daily value
   weaknesses:
-  - 'Design excellence is conservative: correct but no distinctive aesthetic choices
-    beyond well-configured defaults'
-  - 'Visual refinement could improve: spines not removed, grid not customized beyond
-    default appearance'
-  - 'Data storytelling is minimal: no visual emphasis or hierarchy to highlight the
-    upward trend or volatility pattern'
-  - 'Library mastery is competent but not exceptional: could leverage more pygal-specific
-    interactive or styling features'
+  - 'SC-02 (light): show_x_guides draws a dashed vertical guide for each of the 365
+    daily x labels, so the light render is covered by a dense grey hatch that competes
+    with the data line instead of staying subordinate (C3); the dark render hides
+    it only because the dashes are near-black → vertical guides at the 12 month starts
+    only, with the y guides unchanged. Likely cause: show_x_guides=True with an x_labels
+    entry (an empty string) for every day; pygal.DateTimeLine with month-start x_labels
+    draws one guide per month.'
+  - 'VQ-05 (both): tick labels are unbalanced: the y minor ticks (160, 170, ...) render
+    at 56 px while the x month ticks and the y major ticks 150/200/250 render at 44
+    px, so the major ticks look smaller than the minor ones → one tick size on both
+    axes, about 44-48 px (y minor −8 to −12 px). Likely cause: label_font_size=56
+    vs major_label_font_size=44 in Style.'
+  - 'Suggestion: pygal.DateTimeLine with (datetime, value) points would give a true
+    date axis, so uneven spacing in the data would show as uneven spacing along the
+    axis.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and visually appealing
-      Chrome: Title "line-timeseries · pygal · anyplot.ai", axis labels "Date" and "Stock Price (USD)", legend "ACME Corp Stock" all rendered in dark text, clearly visible and readable against light background
-      Data: Line in brand green (#009E73) showing stock price over 365 days; x-axis displays month-year labels at 45 degrees for readability; y-axis shows price range 100-160 USD; grid lines subtle but visible
-      Legibility verdict: PASS - All text readable, no collisions, data clearly distinguishable from background
+      Background: warm off-white #FAF8F1, correct.
+      Chrome: title 'line-timeseries · pygal · anyplot.ai' centred at the top in dark ink; y title 'Stock Price (USD)' rotated on the left, x title 'Date' at the bottom; y ticks 150-270 in steps of 10 (150/200/250 noticeably smaller than the others); x ticks 'Jan 2024' ... 'Dec 2024' rotated 45 degrees. All text dark on light and readable. The 365 daily vertical guides plus the y guides form a dense dashed grey hatch over the whole plot area.
+      Data: one #009E73 line about 5 px wide, 365 daily prices rising from about 150 to 270 USD with a February dip to about 142 and a September peak about 263; no legend (single series).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and consistent with light render
-      Chrome: All text elements (title, labels, legend) rendered in light colors, fully readable against dark background; no dark-on-dark failures detected
-      Data: Line identical to light render in #009E73 green - perfect theme consistency; grid lines equally subtle; legend and axis labels properly light-colored
-      Legibility verdict: PASS - All text readable, no theme-adaptation failures, data colors identical to light render (only chrome adapted)
+      Background: warm near-black #1A1A17, correct.
+      Chrome: same title, axis titles and ticks in light ink (#F0EFE8 / muted), all readable; no dark-on-dark text. The daily guides are near-black dashes and read only as a faint texture; the y guides are faint but visible.
+      Data: the same #009E73 line, identical to the light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -55,50 +64,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All sizes explicitly set: title=28px, labels=22px, major_label=18px;
-          perfectly readable in both renders'
+        comment: Title 66 px, axis titles 56 px, ticks 44/56 px on the 3200x1800 canvas;
+          all text readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis rotation prevents label collision; all text fully readable
+        comment: Month tick labels rotated 45 degrees, no text collisions anywhere
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line thickness optimal (stroke_width=6); clearly visible against
+        comment: 365 points drawn as a 5 px line without dots, clearly visible on
           both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; strong contrast between data and background
+        comment: Single brand-green series with strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Plot fills 60-70% of canvas; balanced margins (margin=100); well-proportioned
-          layout
+        passed: false
+        comment: 'Canvas 3200x1800 correct and plot fills the canvas well, but tick
+          labels are unbalanced: y minor ticks at 56 px, x month ticks and y majors
+          150/200/250 at 44 px (defect line)'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Labels are descriptive with units: ''Stock Price (USD)'' and ''Date'''
+        comment: '''Date'' and ''Stock Price (USD)'' are descriptive and carry the
+          unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds correct (#FAF8F1 light, #1A1A17
-          dark); theme tokens (foreground, foreground_subtle) applied correctly; both
-          renders theme-correct'
+        comment: 'Line is #009E73; backgrounds #FAF8F1 / #1A1A17; chrome flips correctly,
+          data colour identical in both renders'
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -106,24 +116,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults with intentional theming; solid but not
-          exceptional
+        comment: 'Style-guide baseline: theme tokens, explicit font sizes; nothing
+          beyond it'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Grid present and rotated labels added; could remove spines or further
-          refine grid
+        comment: Both-axis grid as the Notes ask; no refinement beyond the baseline
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Realistic trend data but no visual emphasis or hierarchy highlighting
-          insights
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -131,25 +139,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart for time series
+        comment: Single line time series
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: 'All spec features: date formatting, grid, readable layout'
+        passed: false
+        comment: Month-year labels at calendar intervals, rotated, grid on both axes,
+          y not forced to zero; but the 365 daily vertical guides form a dense hatch
+          in the light render instead of staying subordinate to the line (C3, defect
+          line)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis dates (365 points), Y-axis prices (100-160 USD)
+        comment: Dates on x in order, price on y, every point at its value; y axis
+          spans 142-270
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend shows series name
+        comment: Title 'line-timeseries · pygal · anyplot.ai' matches the required
+          format; no legend for a single series (N/A, permitted by the spec)
     data_quality:
       score: 15
       max: 15
@@ -159,19 +172,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Year-long data with realistic trend and volatility
+        comment: A year of daily data with trend, noise and drawdowns shows all aspects
+          of a time series
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price scenario is real-world plausible and neutral
+        comment: Daily stock closing prices, a neutral and plausible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range and growth trajectory realistic
+        comment: Prices 142-270 USD with daily moves of a few dollars are sensible;
+          no Check values in the spec
     code_quality:
       score: 10
       max: 10
@@ -181,55 +196,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, styling, chart, save'
+        comment: Linear script with Data and Plot blocks, column constants, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42; deterministic generation
+        comment: random.seed(42) makes the series deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous dependencies
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity
+        comment: Compact; month labels built with a vectorised strftime/where
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-light.png, plot-dark.png, .html files'
+        comment: Writes plot-{THEME}.png and plot-{THEME}.html with the current pygal
+          3 API
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: false
-        comment: Good use of Style object; x_labels_major is idiomatic but could leverage
-          more
+        comment: Style object and x_labels_major used as intended; baseline idiomatic
+          use
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Interactive HTML output + custom Style; reasonable but not exceptionally
-          distinctive
+        comment: Interactive HTML output only; nothing beyond what the library prompt
+          mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-9afec7eaef
+  rendered_at: '2026-10-28T20:01:08Z'
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - html-export
+  - hover-tooltips
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - time-series
   styling: []
