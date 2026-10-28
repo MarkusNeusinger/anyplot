@@ -146,5 +146,18 @@ class TestRowEnvironment:
         assert env["ARROW_DEFAULT_MEMORY_POOL"] == "system" and env["FONTCONFIG_FILE"] == "/opt/anyplot/fonts.conf"
         assert env["ANYPLOT_RLIMIT_AS_MB"] == "2048" and env["ANYPLOT_RLIMIT_CPU_S"] == "45"
 
+    def test_every_local_run_requires_the_exec_filter_as_the_renderer_does(self) -> None:
+        """Renders, data runs and conversions in the local Docker backend, as the deployed `RENDERER_EXEC_DENY`."""
+        from agents.renderer.commands import EXEC_DENY_ENV
+        from agents.renderer.settings import RendererSettings
+
+        runtime = runtime_for("matplotlib")
+        assert RendererSettings().exec_deny == "required"
+        assert {
+            runtime.env("dark")[EXEC_DENY_ENV],
+            runtime.data_env()[EXEC_DENY_ENV],
+            runtime.convert_env()[EXEC_DENY_ENV],
+        } == {"required"}
+
     def test_a_runtime_without_a_library_renders_as_matplotlib(self) -> None:
         assert PythonRuntime().env("light") == runtime_for("matplotlib").env("light")

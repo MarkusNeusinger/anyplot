@@ -659,16 +659,16 @@ bridge (the owner questions below). What stays from 1b's list, and what 1c adds:
     started no process in a host trace; the image has no `fc-list`. Decided by the owner
     on 2026-10-26: add the seccomp filter. Since 2026-10-28 the harness arms every
     in-process run with a filter under which the kernel refuses every `execve` and
-    `execveat` (`install_exec_deny`, every thread and child included), and lets-plot's
-    row requires it (`ANYPLOT_DENY_EXEC=required`: without it the render stops before
-    the plot, exit code 3); every other row renders on without it and reports it in the
-    end line, which the renderer logs per launch (`exec_deny`). Docker's default seccomp
-    profile admits it, and `ci-image.yml` checks the routes in the built image. Open:
-    whether Cloud Run's `sandbox do` lets the process add the filter, which the first
-    production render's log line answers, and a lets-plot render in the live chat proves
-    (it succeeds only under the filter; a local gVisor run was not possible from the
-    cloud session). Once it holds there, every in-process (Python) row can require it;
-    exec-mode rows (R, JavaScript, Julia) start their toolchain with `execve` and need
+    `execveat` (`install_exec_deny`, every thread and child included), and the end line
+    reports it, which the renderer logs per launch (`exec_deny`). Cloud Run's
+    `sandbox do` admits it: the first renderer revision with the filter logged
+    `exec_deny: on` (gcloud check of 2026-10-28). On the owner's decision every
+    in-process run requires it (`ANYPLOT_DENY_EXEC=required` from `executor.sandbox_env`
+    while `RENDERER_EXEC_DENY` is `required`, with `optional` as the switch back): a
+    render without it stops before the plot (exit code 3), a data run ends as
+    `exec_deny`, a conversion as `503 convert_unavailable`. Docker's default seccomp
+    profile admits it, and `ci-image.yml` checks the routes in the built image.
+    Exec-mode rows (R, JavaScript, Julia) start their toolchain with `execve` and need
     another design.
 - The owner's matrix run per library on Vertex (question 7), now the gate for the public
   release of all four libraries of steps 1b and 1c: since 2026-10-28 `_LIBRARIES` in

@@ -22,7 +22,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from agents.renderer.commands import command_for
+from agents.renderer.commands import EXEC_DENY_ENV, command_for
 from agents.renderer.executor import SANDBOX_PATH
 from agents.renderer.wire import run_cpu_seconds
 
@@ -118,6 +118,7 @@ class PythonRuntime:
             "OMP_NUM_THREADS": "1",
             "ANYPLOT_RLIMIT_CPU_S": str(self.cpu_seconds),
             "ANYPLOT_RLIMIT_FSIZE_MB": str(RENDER_RLIMIT_FSIZE_MB),
+            EXEC_DENY_ENV: "required",  # the deployed `RENDERER_EXEC_DENY`
         }
         if row.rlimit_as:
             env["ANYPLOT_RLIMIT_AS_MB"] = str(row.rlimit_as_mb or DATA_RLIMIT_AS_MB)
@@ -140,6 +141,7 @@ class PythonRuntime:
             "ANYPLOT_RLIMIT_CPU_S": str(cpu_seconds),
             "ANYPLOT_RLIMIT_AS_MB": str(DATA_RLIMIT_AS_MB),
             "ANYPLOT_RLIMIT_NPROC": str(DATA_RLIMIT_NPROC),
+            EXEC_DENY_ENV: "required",
         }
 
     def convert_command(self) -> list[str]:

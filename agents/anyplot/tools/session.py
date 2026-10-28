@@ -514,6 +514,10 @@ RUN_FAILURES: dict[str, str] = {
     "too_large": "df's CSV is over 2 MB: compute fewer rows or round the values",
     "blocked": "the code tried to reach native code, files, processes or the network, which the sandbox refuses",
     "usage": "the sandbox could not start the code",
+    "exec_deny": (
+        "the sandbox could not set up its protection against program starts, so it ran no code: this is no fault of "
+        "the code, and no change to it helps; tell the user that computing data is unavailable right now"
+    ),
 }
 """Fixed messages for the harness's data-mode exit codes (`harness.DATA_EXIT`) other than `ok` and `error`."""
 CANONICAL_TOO_LARGE = (

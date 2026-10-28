@@ -24,13 +24,14 @@ the deployed values, so an unset variable never weakens a limit.
 | `RENDERER_RLIMIT_FSIZE_MB` | `50` | Largest file the sandboxed process may write |
 | `RENDERER_RLIMIT_AS_MB` | `1024` | Address space of the sandboxed process; 0 leaves it unset |
 | `RENDERER_RLIMIT_NPROC` | `64` | Processes and threads of the sandboxed process; 0 leaves it unset |
+| `RENDERER_EXEC_DENY` | `required` | Every in-process run needs the harness's kernel filter against program starts and stops before its code without it; `optional` runs on without it and only reports it, the switch for a platform that stops admitting the filter |
 | `RENDERER_KILL_GRACE_S` | `10` | How long to wait for the launcher process to exit after a kill |
 | `RENDERER_BIND_TMP` | `false` | Bind a directory of the run over the sandbox's `/tmp`, so `/tmp` counts toward the run budget (spike S2, untested) |
 | `ENVIRONMENT` | `production` | `development` skips the caller check and is refused on Cloud Run |
 """
 
 from functools import lru_cache
-from typing import Annotated, Any, Self
+from typing import Annotated, Any, Literal, Self
 
 from pydantic import Field, NonNegativeInt, PositiveFloat, PositiveInt, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
@@ -81,6 +82,10 @@ class RendererSettings(BaseSettings):
     rlimit_fsize_mb: PositiveInt = 50
     rlimit_as_mb: NonNegativeInt = 1024
     rlimit_nproc: NonNegativeInt = 64
+    exec_deny: Literal["required", "optional"] = "required"
+    """Whether a run may go on without the harness's kernel filter against program starts (`RENDERER_EXEC_DENY`):
+    `required` (since 2026-10-28) stops every in-process run whose filter is not in place before its code runs;
+    `optional` lets it run without and only reports it, the switch for a platform that stops admitting the filter."""
     kill_grace_s: PositiveFloat = 10.0
     bind_tmp: bool = False
 

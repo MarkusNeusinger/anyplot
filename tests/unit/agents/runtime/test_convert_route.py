@@ -15,6 +15,7 @@ import httpx
 import pytest
 
 from agents.anyplot.plugins.ledger import MESSAGE_WINDOW_S, UsageBook
+from agents.anyplot.render import harness
 from agents.anyplot.render.backends.fake import FakeBackend
 from agents.anyplot.render.contract import ConvertJob, ConvertOutput, DataRunUnsupported
 from agents.anyplot.services import Services
@@ -142,6 +143,17 @@ class TestConvertRoute:
             raise DataRunUnsupported("no /convert route")
 
         backend.convert_script = unsupported
+        sid = await open_session(client, with_data=False)
+
+        response = await convert(client, sid)
+
+        assert (response.status_code, response.json()) == (503, {"detail": "convert_unavailable"})
+
+    async def test_a_sandbox_without_the_exec_filter_is_convert_unavailable(
+        self, client: httpx.AsyncClient, backend: FakeBackend
+    ) -> None:
+        """The harness read no file (`CONVERT_EXIT["exec_deny"]`): no fault of the file, so no `file_` refusal."""
+        backend.convert_script = lambda job: ConvertOutput(exit_code=harness.CONVERT_EXIT["exec_deny"])
         sid = await open_session(client, with_data=False)
 
         response = await convert(client, sid)

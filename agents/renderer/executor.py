@@ -94,7 +94,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from .commands import EXEC_FLAG, LANGUAGES, RuntimeCommand, command_for, toolchains
+from .commands import EXEC_DENY_ENV, EXEC_FLAG, LANGUAGES, RuntimeCommand, command_for, toolchains
 from .settings import RendererSettings
 from .wire import (
     CONVERT_INPUT_FILE,
@@ -312,6 +312,8 @@ class ExecutorConfig:
     bind_tmp: bool
     kill_mem_available_mb: int = 0
     """The watchdog's `MemAvailable` floor in MiB; 0 switches the memory check off."""
+    exec_deny: str = "required"
+    """`RendererSettings.exec_deny`: `required` puts `ANYPLOT_DENY_EXEC=required` into every in-process run."""
 
     @classmethod
     def from_settings(cls, settings: RendererSettings) -> "ExecutorConfig":
@@ -331,6 +333,7 @@ class ExecutorConfig:
             kill_grace_s=settings.kill_grace_s,
             bind_tmp=settings.bind_tmp,
             kill_mem_available_mb=settings.kill_mem_available_mb,
+            exec_deny=settings.exec_deny,
         )
 
 
@@ -462,6 +465,10 @@ def sandbox_env(
         env["ANYPLOT_RLIMIT_AS_MB"] = str(own or config.rlimit_as_mb)
     if config.rlimit_nproc and (command is None or command.rlimit_nproc):
         env["ANYPLOT_RLIMIT_NPROC"] = str(config.rlimit_nproc)
+    if config.exec_deny == "required" and (command is None or command.in_process):
+        # Every run whose code the harness runs itself needs its kernel filter against program starts; an exec-mode
+        # row starts its toolchain with execve and never arms a guard.
+        env[EXEC_DENY_ENV] = "required"
     return env
 
 

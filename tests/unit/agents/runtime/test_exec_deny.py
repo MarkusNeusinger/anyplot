@@ -207,12 +207,51 @@ class TestArming:
                 guard.arm()
         assert (guard.exec_deny, guard.armed, hooks) == (state, armed, [guard] if armed else [])
 
-    def test_the_plot_guard_reads_the_requirement_from_its_environment(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_every_guard_reads_the_requirement_from_its_environment(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv(harness.EXEC_DENY_ENV, "required")
-        assert harness.PlotGuard(()).exec_deny_required is True
+        assert all(
+            guard.exec_deny_required for guard in (harness.PlotGuard(()), harness.DataGuard(), harness.ConvertGuard())
+        )
         monkeypatch.setenv(harness.EXEC_DENY_ENV, "no")
         assert harness.PlotGuard(()).exec_deny_required is False
+        monkeypatch.delenv(harness.EXEC_DENY_ENV)
         assert harness.DataGuard().exec_deny_required is False
+
+    def test_a_data_run_that_cannot_arm_ends_as_exec_deny_in_its_status(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        """In process: a guard whose arm refuses, as a required filter that is not in place makes it."""
+
+        class Refusing(harness.DataGuard):
+            def arm(self, entry: object = None) -> None:
+                raise harness.ExecDenyUnavailable("unavailable")
+
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(harness, "set_limits", lambda: None)
+        (tmp_path / "snippet.py").write_text("import pandas as pd\ndf = pd.DataFrame({'a': [1]})\n", encoding="utf-8")
+
+        assert harness.main_data("snippet.py", Refusing()) == harness.DATA_EXIT["exec_deny"]
+        assert json.loads((tmp_path / harness.DATA_STATUS_FILE).read_text(encoding="utf-8"))["exit"] == 9
+        assert (tmp_path / harness.DATA_OUT_FILE).read_text(encoding="utf-8") == ""
+
+    def test_a_conversion_that_cannot_arm_ends_as_exec_deny_in_its_status(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        import numpy as np
+
+        class Refusing(harness.ConvertGuard):
+            def arm(self, entry: object = None) -> None:
+                raise harness.ExecDenyUnavailable("unsupported")
+
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(harness, "set_limits", lambda: None)
+        buffer = io.BytesIO()
+        np.save(buffer, np.ones((2, 2)))
+        (tmp_path / "input.bin").write_bytes(buffer.getvalue())
+
+        assert harness.main_convert("input.bin", Refusing()) == harness.CONVERT_EXIT["exec_deny"]
+        assert json.loads((tmp_path / harness.DATA_STATUS_FILE).read_text(encoding="utf-8"))["exit"] == 9
+        assert (tmp_path / harness.DATA_OUT_FILE).read_text(encoding="utf-8") == ""
 
 
 KERNEL_CHECK = """
@@ -428,14 +467,43 @@ def test_a_conversion_is_armed_with_the_filter_too(tmp_path: Path) -> None:
     assert end_line(done.stdout)["exec_deny"] == "on"
 
 
-def test_the_requirement_binds_the_plot_guard_only(tmp_path: Path) -> None:
-    """Data runs and conversions never get a row's environment (`executor.sandbox_env`), so the variable alone does
-    not stop them: they arm, report the missing filter and run."""
-    (tmp_path / "snippet.py").write_text("import pandas as pd\ndf = pd.DataFrame({'a': [1]})\n", encoding="utf-8")
+def test_a_required_filter_that_is_not_in_place_stops_a_data_run_before_the_snippet(tmp_path: Path) -> None:
+    """The code reaches the host through `status.json`, which Cloud Run's launcher (-13 for every exit) cannot lose."""
+    (tmp_path / "snippet.py").write_text(
+        "import pandas as pd\ndf = pd.DataFrame({'a': [1]})\nprint('snippet ran')\n", encoding="utf-8"
+    )
     done = run_harness(
         tmp_path, [harness.DATA_FLAG, "snippet.py"], {harness.EXEC_DENY_ENV: "required"}, state="unavailable"
     )
+    assert done.returncode == harness.DATA_EXIT["exec_deny"] == 9
+    assert "could not refuse process starts (unavailable)" in done.stderr and "snippet ran" not in done.stdout
+    status = json.loads((tmp_path / harness.DATA_STATUS_FILE).read_text(encoding="utf-8"))
+    assert status["exit"] == harness.DATA_EXIT["exec_deny"]
+    assert (tmp_path / harness.DATA_OUT_FILE).read_text(encoding="utf-8") == ""
+
+
+def test_a_required_filter_that_is_not_in_place_stops_a_conversion_before_the_reader(tmp_path: Path) -> None:
+    import numpy as np
+
+    from agents.renderer import wire
+
+    buffer = io.BytesIO()
+    np.save(buffer, np.ones((2, 2)))
+    (tmp_path / "input.bin").write_bytes(buffer.getvalue())
+    done = run_harness(
+        tmp_path,
+        [harness.CONVERT_FLAG, "input.bin"],
+        {"ARROW_DEFAULT_MEMORY_POOL": "system", harness.EXEC_DENY_ENV: "required"},
+        state="unsupported",
+    )
+    assert done.returncode == harness.CONVERT_EXIT["exec_deny"] == wire.CONVERT_EXEC_DENY_EXIT
+    assert json.loads((tmp_path / harness.DATA_STATUS_FILE).read_text(encoding="utf-8"))["exit"] == 9
+    assert (tmp_path / harness.DATA_OUT_FILE).read_text(encoding="utf-8") == ""
+
+
+def test_without_the_requirement_a_data_run_goes_on_and_reports_the_missing_filter(tmp_path: Path) -> None:
+    """A test or a developer running the harness directly sets no requirement."""
+    (tmp_path / "snippet.py").write_text("import pandas as pd\ndf = pd.DataFrame({'a': [1]})\n", encoding="utf-8")
+    done = run_harness(tmp_path, [harness.DATA_FLAG, "snippet.py"], {}, state="unavailable")
     assert done.returncode == harness.DATA_EXIT["ok"], done.stderr
     assert end_line(done.stdout)["exec_deny"] == "unavailable"
-    assert harness.PlotGuard(()).exec_deny_required is False  # this process has no ANYPLOT_DENY_EXEC
-    assert harness.DataGuard().exec_deny_required is False
