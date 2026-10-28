@@ -1,4 +1,3 @@
-
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { render, screen, userEvent } from 'src/test-utils';
@@ -22,7 +21,6 @@ vi.mock('src/hooks', async () => {
     }),
   };
 });
-
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom');

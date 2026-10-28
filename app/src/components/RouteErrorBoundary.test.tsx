@@ -7,7 +7,6 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 import { RouteErrorBoundary } from 'src/components/RouteErrorBoundary';
 
-
 const theme = createTheme();
 
 function renderWithRouter(thrown: unknown) {

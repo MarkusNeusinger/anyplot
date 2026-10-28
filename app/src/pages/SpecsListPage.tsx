@@ -147,19 +147,14 @@ export function SpecsListPage() {
 
   return (
     <>
-
-        <title>specs | anyplot.ai</title>
-        <meta
-          name="description"
-          content="Browse all Python plotting specifications alphabetically"
-        />
-        <meta property="og:title" content="specs | anyplot.ai" />
-        <meta
-          property="og:description"
-          content="Browse all Python plotting specifications alphabetically"
-        />
-        <link rel="canonical" href="https://anyplot.ai/specs" />
-
+      <title>specs | anyplot.ai</title>
+      <meta name="description" content="Browse all Python plotting specifications alphabetically" />
+      <meta property="og:title" content="specs | anyplot.ai" />
+      <meta
+        property="og:description"
+        content="Browse all Python plotting specifications alphabetically"
+      />
+      <link rel="canonical" href="https://anyplot.ai/specs" />
 
       <Box sx={{ pt: { xs: 2, md: 3 }, pb: 4 }}>
         <SectionHeader prompt="❯" title={<em>specs</em>} />

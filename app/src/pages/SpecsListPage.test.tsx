@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SpecsListPage } from 'src/pages/SpecsListPage';
 import { render, screen, waitFor } from 'src/test-utils';
 
-
 vi.mock('src/hooks', () => ({
   useAnalytics: () => ({
     trackPageview: vi.fn(),

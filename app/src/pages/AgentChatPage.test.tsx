@@ -28,7 +28,6 @@ vi.mock('src/global-config', async importOriginal => {
   };
 });
 
-
 // Stable identities, like the real hook (effects depend on them).
 const analytics = vi.hoisted(() => ({ trackEvent: vi.fn(), trackPageview: vi.fn() }));
 vi.mock('src/hooks/useAnalytics', () => ({ useAnalytics: () => analytics }));

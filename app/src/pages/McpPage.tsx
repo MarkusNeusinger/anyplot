@@ -42,19 +42,17 @@ export function McpPage() {
 
   return (
     <>
-
-        <title>mcp | anyplot.ai</title>
-        <meta
-          name="description"
-          content="configure Claude Code to access anyplot data via the Model Context Protocol (MCP) server."
-        />
-        <meta property="og:title" content="mcp | anyplot.ai" />
-        <meta
-          property="og:description"
-          content="configure Claude Code to access anyplot data via MCP"
-        />
-        <link rel="canonical" href="https://anyplot.ai/mcp" />
-
+      <title>mcp | anyplot.ai</title>
+      <meta
+        name="description"
+        content="configure Claude Code to access anyplot data via the Model Context Protocol (MCP) server."
+      />
+      <meta property="og:title" content="mcp | anyplot.ai" />
+      <meta
+        property="og:description"
+        content="configure Claude Code to access anyplot data via MCP"
+      />
+      <link rel="canonical" href="https://anyplot.ai/mcp" />
 
       <Box sx={{ pb: 4 }}>
         {/* What is MCP */}

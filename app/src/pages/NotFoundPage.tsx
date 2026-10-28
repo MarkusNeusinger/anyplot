@@ -37,9 +37,8 @@ export function NotFoundPage({ source = 'catch_all' }: NotFoundPageProps = {}) {
 
   return (
     <>
-
-        <title>page not found | anyplot.ai</title>
-        <meta name="robots" content="noindex, follow" />
+      <title>page not found | anyplot.ai</title>
+      <meta name="robots" content="noindex, follow" />
 
       <Box sx={{ textAlign: 'center', py: 12 }}>
         <Typography

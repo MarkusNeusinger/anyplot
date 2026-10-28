@@ -5,7 +5,6 @@ import { render, screen } from 'src/test-utils';
 
 const mockTrackEvent = vi.fn();
 
-
 vi.mock('src/hooks/useAnalytics', () => ({
   useAnalytics: () => ({
     trackPageview: vi.fn(),

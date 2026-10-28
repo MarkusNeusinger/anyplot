@@ -492,23 +492,21 @@ export function SpecPage() {
 
   return (
     <>
-
-        <title>{`${specData.title}${titleSuffix} | anyplot.ai`}</title>
-        <meta name="description" content={specData.description} />
-        <meta property="og:title" content={`${specData.title}${titleSuffix} | anyplot.ai`} />
-        <meta property="og:description" content={specData.description} />
-        {currentImpl?.preview_url && <meta property="og:image" content={currentImpl.preview_url} />}
-        <meta property="og:url" content={canonical} />
-        <link rel="canonical" href={canonical} />
+      <title>{`${specData.title}${titleSuffix} | anyplot.ai`}</title>
+      <meta name="description" content={specData.description} />
+      <meta property="og:title" content={`${specData.title}${titleSuffix} | anyplot.ai`} />
+      <meta property="og:description" content={specData.description} />
+      {currentImpl?.preview_url && <meta property="og:image" content={currentImpl.preview_url} />}
+      <meta property="og:url" content={canonical} />
+      <link rel="canonical" href={canonical} />
+      <script type="application/ld+json">
+        {JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')}
+      </script>
+      {softwareSourceJsonLd && (
         <script type="application/ld+json">
-          {JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')}
+          {JSON.stringify(softwareSourceJsonLd).replace(/</g, '\\u003c')}
         </script>
-        {softwareSourceJsonLd && (
-          <script type="application/ld+json">
-            {JSON.stringify(softwareSourceJsonLd).replace(/</g, '\\u003c')}
-          </script>
-        )}
-
+      )}
 
       <Box sx={{ pt: 1.5, pb: 4 }}>
         {mode === 'hub' && (

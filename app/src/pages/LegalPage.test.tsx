@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { LegalPage } from 'src/pages/LegalPage';
 import { render, screen } from 'src/test-utils';
 
-
 const trackEvent = vi.fn();
 vi.mock('src/hooks', () => ({
   useAnalytics: () => ({

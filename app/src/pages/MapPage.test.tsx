@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MapPage } from 'src/pages/MapPage';
 import { act, render, screen, waitFor } from 'src/test-utils';
 
-
 const mockNavigate = vi.fn();
 const mockTrackEvent = vi.fn();
 

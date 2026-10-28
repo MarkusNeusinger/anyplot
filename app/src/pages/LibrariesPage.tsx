@@ -70,19 +70,17 @@ export function LibrariesPage() {
 
   return (
     <>
-
-        <title>libraries | anyplot.ai</title>
-        <meta
-          name="description"
-          content="Fifteen plotting libraries across Python, R, Julia, and JavaScript — matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, lets-plot, ggplot2, Makie.jl, Chart.js, D3.js, ECharts, Highcharts, MUI X Charts. Same specs, every library."
-        />
-        <meta property="og:title" content="libraries | anyplot.ai" />
-        <meta
-          property="og:description"
-          content="Fifteen plotting libraries across Python, R, Julia, and JavaScript — same specs, every library."
-        />
-        <link rel="canonical" href="https://anyplot.ai/libraries" />
-
+      <title>libraries | anyplot.ai</title>
+      <meta
+        name="description"
+        content="Fifteen plotting libraries across Python, R, Julia, and JavaScript — matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, lets-plot, ggplot2, Makie.jl, Chart.js, D3.js, ECharts, Highcharts, MUI X Charts. Same specs, every library."
+      />
+      <meta property="og:title" content="libraries | anyplot.ai" />
+      <meta
+        property="og:description"
+        content="Fifteen plotting libraries across Python, R, Julia, and JavaScript — same specs, every library."
+      />
+      <link rel="canonical" href="https://anyplot.ai/libraries" />
 
       <Box sx={{ maxWidth: 'var(--max-catalog, 2200px)', mx: 'auto', pt: { xs: 2, md: 3 }, pb: 6 }}>
         <SectionHeader prompt="❯" title={<em>libraries</em>} />

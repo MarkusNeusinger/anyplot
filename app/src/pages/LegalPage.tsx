@@ -134,19 +134,17 @@ export function LegalPage() {
 
   return (
     <>
-
-        <title>legal | anyplot.ai</title>
-        <meta
-          name="description"
-          content="legal notice, privacy policy, and transparency information for anyplot.ai"
-        />
-        <meta property="og:title" content="legal | anyplot.ai" />
-        <meta
-          property="og:description"
-          content="legal notice, privacy policy, and transparency information"
-        />
-        <link rel="canonical" href="https://anyplot.ai/legal" />
-
+      <title>legal | anyplot.ai</title>
+      <meta
+        name="description"
+        content="legal notice, privacy policy, and transparency information for anyplot.ai"
+      />
+      <meta property="og:title" content="legal | anyplot.ai" />
+      <meta
+        property="og:description"
+        content="legal notice, privacy policy, and transparency information"
+      />
+      <link rel="canonical" href="https://anyplot.ai/legal" />
 
       <Box sx={{ pb: 4 }}>
         {/* Legal Notice */}

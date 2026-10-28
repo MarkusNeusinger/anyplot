@@ -343,12 +343,11 @@ export function MapPage() {
 
   return (
     <>
-
-        <title>map() — anyplot</title>
-        <meta
-          name="description"
-          content="Interactive map of all anyplot specifications, clustered by tag similarity."
-        />
+      <title>map() — anyplot</title>
+      <meta
+        name="description"
+        content="Interactive map of all anyplot specifications, clustered by tag similarity."
+      />
 
       <Box
         ref={containerRef}

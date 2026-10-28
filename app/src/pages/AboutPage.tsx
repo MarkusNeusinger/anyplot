@@ -49,19 +49,17 @@ export function AboutPage() {
 
   return (
     <>
-
-        <title>about | anyplot.ai</title>
-        <meta
-          name="description"
-          content="a catalogue of plotting examples across fifteen libraries in python, r, julia, and javascript. plot ideas come from humans; ai drafts the spec, generates code for every library, and reviews each implementation."
-        />
-        <meta property="og:title" content="about | anyplot.ai" />
-        <meta
-          property="og:description"
-          content="humans submit ideas. ai drafts specs, generates code, reviews. humans approve."
-        />
-        <link rel="canonical" href="https://anyplot.ai/about" />
-
+      <title>about | anyplot.ai</title>
+      <meta
+        name="description"
+        content="a catalogue of plotting examples across fifteen libraries in python, r, julia, and javascript. plot ideas come from humans; ai drafts the spec, generates code for every library, and reviews each implementation."
+      />
+      <meta property="og:title" content="about | anyplot.ai" />
+      <meta
+        property="og:description"
+        content="humans submit ideas. ai drafts specs, generates code, reviews. humans approve."
+      />
+      <link rel="canonical" href="https://anyplot.ai/about" />
 
       <Box sx={{ pb: 4 }}>
         {/* About (lede) */}

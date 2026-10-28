@@ -12,7 +12,6 @@ const darkThemeValue: ThemeContextValue = {
   cycle: vi.fn(),
 };
 
-
 const mockTrackEvent = vi.fn();
 
 vi.mock('src/hooks', () => ({

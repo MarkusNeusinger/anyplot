@@ -524,9 +524,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
 
   return (
     <>
-
-        <title>{`agent · ${specId} | anyplot.ai`}</title>
-        <meta name="robots" content="noindex, nofollow" />
+      <title>{`agent · ${specId} | anyplot.ai`}</title>
+      <meta name="robots" content="noindex, nofollow" />
 
       {/* `colorScheme` gives the native controls (scrollbars, select menus) the site theme. */}
       <Box

@@ -118,12 +118,10 @@ const router = createBrowserRouter([
 
 export function AppRouter() {
   return (
-
-      <ErrorBoundary>
-        <AppDataProvider>
-          <RouterProvider router={router} />
-        </AppDataProvider>
-      </ErrorBoundary>
-
+    <ErrorBoundary>
+      <AppDataProvider>
+        <RouterProvider router={router} />
+      </AppDataProvider>
+    </ErrorBoundary>
   );
 }

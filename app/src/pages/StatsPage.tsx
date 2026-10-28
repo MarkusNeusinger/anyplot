@@ -206,14 +206,12 @@ export function StatsPage() {
 
   return (
     <>
-
-        <title>stats | anyplot.ai</title>
-        <meta
-          name="description"
-          content="Platform statistics for anyplot.ai — plot counts, quality scores, library coverage, and more."
-        />
-        <link rel="canonical" href="https://anyplot.ai/stats" />
-
+      <title>stats | anyplot.ai</title>
+      <meta
+        name="description"
+        content="Platform statistics for anyplot.ai — plot counts, quality scores, library coverage, and more."
+      />
+      <link rel="canonical" href="https://anyplot.ai/stats" />
 
       <Box sx={{ pt: { xs: 2, md: 3 }, pb: 4 }}>
         {/* Summary Counters */}

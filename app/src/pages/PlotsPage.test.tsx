@@ -47,7 +47,6 @@ vi.mock('src/hooks', () => ({
   useTheme: () => ({ isDark: false, toggle: vi.fn() }),
 }));
 
-
 vi.mock('src/sections/plots-gallery/FilterBar', () => ({
   FilterBar: () => <div data-testid="filterbar">FilterBar</div>,
 }));

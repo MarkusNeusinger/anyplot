@@ -57,7 +57,6 @@ vi.mock('src/sections/landing/NumbersStrip', () => ({
   NumbersStrip: () => <div data-testid="numbers" />,
 }));
 
-
 import { LandingPage } from 'src/pages/LandingPage';
 
 describe('LandingPage', () => {
