@@ -682,10 +682,86 @@ bridge (the owner questions below). What stays from 1b's list, and what 1c adds:
 
 ### 2. R: ggplot2 (the exec-mode pilot)
 
+Revised on 2026-10-28 (draft for the owner and the second opinion): the toolchain image
+of owner decision B, the base distribution, and the exec filter for exec-mode rows, which
+#12414 made mandatory for every in-process run. The image and the filter are built so
+that Julia (step 5) and JavaScript (step 3) add a stage and a command row, not a new
+design.
+
+#### 2a. The toolchain base image (owner decision B, 2026-10-25)
+
+- `agents/renderer/toolchain.Dockerfile` builds `anyplot-toolchain` into the private
+  Artifact Registry repository `anyplot` (`europe-west4`). Its base is the renderer's own
+  `python:3.14-slim`, pinned by digest: Debian 13 (trixie), glibc 2.41, measured on
+  2026-10-28 (see question 2 for the comparison with Ubuntu). One stage per toolchain,
+  each into its own prefix, so a later toolchain adds a stage and a `COPY`:
+  - R (this step): Posit's R 4.6.1 build for `debian-13` (`cdn.posit.co/r/debian-13`)
+    under `/opt/R/4.6.1`, and the packages of `.github/actions/setup-r` plus `readr`
+    from the Posit Package Manager snapshot `__linux__/trixie/2026-10-20` as binaries
+    (checked on 2026-10-28: the same ggplot2 4.0.3 and ragg 1.5.2 builds exist for
+    trixie, noble and resolute, as compiled binaries), into a site library that the
+    renderer mounts read-only. The package list moves into one file,
+    `agents/renderer/toolchain/r-packages.txt`, which `setup-r` reads too, so the
+    pipeline and the renderer cannot drift; the snapshot date stays in one place.
+  - Julia (step 5), Node with Playwright's Chromium (step 3): later stages, unchanged
+    in shape.
+  - The exec filter's preload library (2b), compiled in a builder stage with `gcc`, which
+    the final image does not carry.
+- Builds: a Cloud Build trigger `build-toolchain` (region `europe-west4`, push to
+  `main`, `includedFiles` the toolchain Dockerfile, `agents/renderer/toolchain/**` and
+  `.github/actions/setup-r/**`; config `agents/renderer/toolchain.cloudbuild.yaml`;
+  the deploy triggers' service account) pushes `anyplot-toolchain:<content hash of the
+  inputs>` and `:latest`. The renderer's Dockerfile starts `FROM` the toolchain by digest,
+  pinned in `agents/renderer/toolchain.lock` (image and digest), which a follow-up PR
+  bumps after the trigger ran, like a lock file. `deploy-renderer` pulls it with the
+  build's own service account.
+- CI (`ci-image.yml`, job `renderer-image`): when a PR changes a toolchain input, the job
+  builds the toolchain image itself and the renderer on top (slow, rare); otherwise it
+  pulls the pinned digest through the Workload Identity Federation login that
+  `ci-tests.yml` uses (pool `github-actions`), which needs
+  `roles/artifactregistry.reader` on the repository for the repository's principal set.
+- Owner tasks, each named with its exact command before it runs (CLAUDE.md, external
+  writes): create the trigger; add the reader binding; run the first toolchain build.
+
+#### 2b. The exec filter for exec-mode rows
+
+The plot, data and conversion modes install the filter in the harness's own process
+(`install_exec_deny`); exec mode cannot, because the filter would also refuse the start
+of the language's own program. Instead:
+
+- `agents/renderer/execdeny/execdeny.c` (about 60 lines) is a preload library whose
+  constructor installs the same BPF program as `exec_deny_program` (x86-64 and aarch64,
+  the x32 bit, `execve` and `execveat` answer `EPERM`, `PR_SET_NO_NEW_PRIVS` first) in
+  the new program before its `main` runs, that is before any user code. It reads
+  `ANYPLOT_DENY_EXEC`: unset, it does nothing; `required` and the install fails, it
+  ends the process with exit code 3 before `main` (the plot mode's code). It writes its
+  state (`on`, `unavailable`, `unsupported`) to the file descriptor named in
+  `ANYPLOT_EXEC_DENY_FD`, a pipe the harness opens, so the end line reports the child's
+  `exec_deny` as the plot mode's does.
+- The command row runs the language's binary directly, with `LD_PRELOAD` set to the
+  library, so that no wrapper needs a second exec: for R the `exec/R` binary with
+  `--no-echo --no-restore --no-save --file=plot.R` and the variables R's own `bin/R`
+  script sets (`R_HOME`, `R_SHARE_DIR`, `R_INCLUDE_DIR`, `R_DOC_DIR`, the `ldpaths`
+  library path), not `Rscript`, which execs `bin/R`, a shell script, which execs the
+  binary.
+- `system()`, `system2()`, `pipe()` and every later `execve` in the R process and its
+  threads fail with `EPERM`; `ci-image.yml` asserts it in the built image (a plot whose
+  `system("true")` returns an error and that still writes its PNG), next to the existing
+  kernel exec-refusal check.
+- A statically linked program ignores `LD_PRELOAD`; R and Julia are dynamically linked,
+  and the image build fails if `ldd` of either binary says otherwise.
+- JavaScript (step 3) is the exception to name there: Node starts Chromium and Chromium
+  starts its renderer and GPU processes, so the row cannot refuse `execve`; user code runs
+  inside the page, which has no process API. The row runs with the filter off, and the
+  renderer's `RENDERER_EXEC_DENY` check treats the JavaScript row as exempt by name.
+
+#### 2c. The R runtime
+
 - Toolchain: R 4.6.1 as in `.github/actions/setup-r` (Posit snapshot 2026-10-20, the same
-  package list plus `readr`), `Rscript plot.R` through the exec mode;
+  package list plus `readr`), the `exec/R` binary through the exec mode (2b);
   `R_LIBS_SITE` read-only from the image; `HOME=/tmp` for R's temp files; a baked
-  `fc-cache` and `XDG_CACHE_HOME=/tmp` for ragg on the read-only root.
+  `fc-cache` and `XDG_CACHE_HOME=/tmp` for ragg on the read-only root. The spike's limits
+  hold: `RLIMIT_AS` 1 GiB and `RLIMIT_NPROC` 64 (renders peaked at 294 MiB).
 - Profile: placeholder `df <- load_user_data()`, loader `readr::read_csv("data.csv",
   col_types = cols(...), na = c(""), show_col_types = FALSE)` with the dtype map;
   protected regions: `THEME <- Sys.getenv("ANYPLOT_THEME", "light")`, the token
@@ -697,8 +773,20 @@ bridge (the owner questions below). What stays from 1b's list, and what 1c adds:
   `get`, `do.call`, `match.fun`, `eval(parse(...))`, `.Internal`, `dyn.load`,
   `requireNamespace`, `loadNamespace`, `::`/`:::` on `base` and `utils`, `library()`
   outside the image's set, `file.*` writes, `readLines` on a URL.
-- Fixtures (after the owner regenerates the ten specs' R files under the Data block),
-  the matrix, docs.
+- Fixtures (after the owner regenerates the ten specs' R files under the Data block: on
+  2026-10-28 4 of the 10 ggplot2 files carry it, `line-basic`, `bar-grouped`,
+  `box-basic`, `area-basic`, `pie-basic` and `line-timeseries` do not), the matrix, docs.
+
+#### 2d. Order of the PRs
+
+1. The toolchain image with the R stage and the preload library, its Cloud Build config
+   and the CI path that builds it from source; the renderer unchanged. After the merge,
+   the owner-approved trigger, binding and first build.
+2. The renderer `FROM` the pinned toolchain, the R command row, the exec mode's preload
+   and pipe, the CI checks in the built image (an R render, the refused `system()`); the
+   deploy keeps `AGENT_LIBRARIES` as it is.
+3. The R runtime and code profile (2c), fixtures, docs; ggplot2 joins the admin deploy's
+   `_LIBRARIES` for the live test; the matrix gates the public release.
 
 ### 3. JavaScript: Chart.js, D3, ECharts, Highcharts and MUI X
 
@@ -767,13 +855,29 @@ bridge (the owner questions below). What stays from 1b's list, and what 1c adds:
 
 ### 5. Julia: Makie
 
-- Toolchain: Julia 1.13 under `/opt/julia`, the repository's `Project.toml` and
-  `Manifest.toml` instantiated and precompiled into `/opt/julia-depot` with
+Revised on 2026-10-28 with step 2: Julia is the toolchain image's next stage and the
+second user of the preload filter; it needs no other image or filter design.
+
+- Toolchain: a Julia stage in `agents/renderer/toolchain.Dockerfile` (2a): the official
+  Julia 1.13 binary for generic Linux under `/opt/julia` (it brings its own libraries as
+  JLL artifacts, freetype, harfbuzz and cairo among them, so the base distribution does
+  not change its renders), the repository's `Project.toml` and `Manifest.toml`
+  instantiated and precompiled into `/opt/julia-depot` with
   `JULIA_CPU_TARGET="generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(1)"`,
   a stacked `JULIA_DEPOT_PATH=/tmp/depot:/opt/julia-depot` so the sandbox can write
   its own compiled cache nowhere but `/tmp`; `JULIA_PKG_OFFLINE=true` and
   `JULIA_PKG_PRECOMPILE_AUTO=0`, so a cache miss fails in seconds instead of compiling
   for minutes under the timeout; `julia --project=/opt/julia plot.jl`; `RLIMIT_AS` off.
+  The precompile (821 s in the spike) runs only when the trigger `build-toolchain` sees
+  a changed `Project.toml` or `Manifest.toml`, which join its `includedFiles` with this
+  step; a renderer change never waits for it. The stage is added to the same image so
+  that the renderer keeps one pinned base; whether the image grows too large for Cloud
+  Run's cold start is the measurement of the next bullet.
+- Exec filter: the row runs the `julia` binary with `LD_PRELOAD` set to the preload
+  library (2b). A precompile worker, `run`, backtick commands and `Distributed`'s
+  workers would each need an `execve` and fail with `EPERM`; with a precompiled depot
+  and `JULIA_PKG_PRECOMPILE_AUTO=0` a render starts no process (to confirm in the image:
+  the CI step renders `scatter-basic` under the filter).
 - The spike measures the cold `using CairoMakie` plus first `save` at 2 vCPU. Under
   45 s it ships synchronously under the 60 s timeout; above it, the design's
   submit-and-poll (`POST /render` answering `202` with a poll URL) is a renderer
@@ -968,9 +1072,25 @@ Defaults apply until answered; each is marked where the plan uses it.
    repository: an owner task when step 2 adds the base image. Not public on GHCR: a
    public image is a redistribution (licence notices for everything in it, no
    Highcharts), and its only gain was pulls without a credential.
-2. **Base distribution.** R's binaries from Posit exist for Ubuntu, not Debian, so the
-   toolchain image is Ubuntu 24.04 (rocker's R layout) with Python 3.14 managed by uv
-   instead of `python:3.14-slim`. Default: yes.
+2. **Base distribution.** Its premise no longer holds: on 2026-10-28 Posit serves
+   R 4.6.1 for `debian-13`, `ubuntu-2404` and `ubuntu-2604`, and the Package Manager
+   snapshot 2026-10-20 has the same compiled binaries (ggplot2 4.0.3, ragg 1.5.2) for
+   trixie, noble and resolute, so every option installs the pipeline's package versions.
+   What differs is the system's font stack, which ragg uses and Python's renders already
+   live with:
+
+   | | Debian 13 (`python:3.14-slim`, the renderer today) | Ubuntu 26.04 (the catalogue's CI runner) |
+   |---|---|---|
+   | freetype, harfbuzz, fontconfig, cairo | 2.13.3, 10.2.0, 2.15.0, 1.18.4 | 2.14.2, 12.3.2, 2.17.1, 1.18.4 |
+   | Python stack | unchanged: the six libraries' image steps, the lets-plot bridge's fontconfig, the delegates check and the matrix results stay valid | moves to a uv-managed Python 3.14; every Python image step and each library's matrix run again |
+   | R renders against the catalogue's | close, not identical (text shaping and hinting can move a label by a pixel) | the same system libraries as the runner that rendered the catalogue |
+   | Julia, JavaScript | the same either way: Julia's JLLs and Chromium bring their own libraries | the same |
+   | Recipes | Posit and Package Manager support Debian 13; rocker and most R Docker recipes are Ubuntu | rocker's layout and `setup-r` apply almost verbatim |
+
+   Recommendation (2026-10-28): stay on Debian 13. The agent re-renders and the host gates
+   judge the render, not its closeness to the catalogue's PNG; moving the Python stack
+   would cost a full re-verification for a pixel-level gain in R alone. Open for the
+   owner (asked on 2026-10-28; the second opinion first).
 3. **Order.** The design lists plotly and bokeh before JavaScript; this plan takes the
    seam first, then plotnine and altair, pygal and lets-plot, then R as the smallest
    exec-mode pilot, then JavaScript (five libraries, one runtime), then plotly and bokeh
