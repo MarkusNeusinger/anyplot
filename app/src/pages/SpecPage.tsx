@@ -1,6 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -493,7 +492,7 @@ export function SpecPage() {
 
   return (
     <>
-      <Helmet>
+      <>
         <title>{`${specData.title}${titleSuffix} | anyplot.ai`}</title>
         <meta name="description" content={specData.description} />
         <meta property="og:title" content={`${specData.title}${titleSuffix} | anyplot.ai`} />
@@ -509,7 +508,7 @@ export function SpecPage() {
             {JSON.stringify(softwareSourceJsonLd).replace(/</g, '\\u003c')}
           </script>
         )}
-      </Helmet>
+      </>
 
       <Box sx={{ pt: 1.5, pb: 4 }}>
         {mode === 'hub' && (

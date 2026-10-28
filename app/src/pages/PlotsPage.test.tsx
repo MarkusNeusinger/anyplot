@@ -47,12 +47,6 @@ vi.mock('src/hooks', () => ({
   useTheme: () => ({ isDark: false, toggle: vi.fn() }),
 }));
 
-vi.mock('react-helmet-async', () => ({
-  Helmet: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="helmet">{children}</div>
-  ),
-}));
-
 vi.mock('src/sections/plots-gallery/FilterBar', () => ({
   FilterBar: () => <div data-testid="filterbar">FilterBar</div>,
 }));
@@ -132,9 +126,9 @@ describe('PlotsPage', () => {
     expect(screen.getByTestId('images-grid')).toBeInTheDocument();
   });
 
-  it('renders Helmet for SEO', () => {
+  it('renders document title for SEO', () => {
     render(<PlotsPage />);
-    expect(screen.getByTestId('helmet')).toBeInTheDocument();
+    expect(document.title).toBe('plots | anyplot.ai');
   });
 
   it('renders the shared scroll-to-top button', () => {

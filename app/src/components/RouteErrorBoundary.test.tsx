@@ -7,10 +7,6 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 import { RouteErrorBoundary } from 'src/components/RouteErrorBoundary';
 
-vi.mock('react-helmet-async', () => ({
-  Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
 const theme = createTheme();
 
 function renderWithRouter(thrown: unknown) {
