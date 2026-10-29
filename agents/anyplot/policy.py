@@ -3,7 +3,13 @@
 Every static instruction is assembled from files and never from paraphrased copies:
 
 * the agent's own prompt in `agents/anyplot/prompts/` (`root.md`, `adapter.md`,
-  `reviewer.md`, `scope_judge.md`, `data_judge.md`);
+  `reviewer.md`, `scope_judge.md`, `data_judge.md`); `adapter.md` holds the rules every
+  language shares, with a `{{slot}}` wherever the language's code differs (the data
+  statement and its typing, how columns are read, the protected lines, the palette's
+  literal form, number and date formatting, the safe-code list), and the language's
+  runtime prompt (`adapter_python.md`, `adapter_r.md`, `RUNTIME_PROMPTS`) fills the slots
+  (`adapter_prompt`, since 2026-10-29: one place for each shared rule, and the Python
+  prompt byte for byte what it was, which a test pins);
 * the catalogue's prompt sources, read verbatim from the repository's `prompts/`
   directory: `default-style-guide.md`, `library/<library>.md`, and excerpts cut
   out by heading, so they follow every edit of their source: "Which weaknesses to
@@ -79,6 +85,13 @@ optional slash would be one ambiguous run, which backtracks quadratically on `<`
 a long run of blanks (CodeQL py/polynomial-redos; the text is the user's)."""
 _FENCE_NAMES = frozenset(FENCE_TAGS)
 _HEADING = re.compile(r"^(#{1,6})\s")
+
+ADAPTER_TEMPLATE = "adapter.md"
+RUNTIME_PROMPTS: dict[str, str] = {"python": "adapter_python.md", "r": "adapter_r.md"}
+"""The runtime prompt of each language with a runtime (`render.runtimes.RUNTIME_CLASSES`), whose slots fill
+`adapter.md`."""
+_SLOT = re.compile(r"\{\{([a-z_]+)\}\}")
+_SLOT_START = re.compile(r"^<!-- slot: ([a-z_]+) -->$")
 
 DEFAULT_LANG = "en"
 RefusalTable = dict[str, dict[str, str]]
@@ -259,8 +272,60 @@ def adapter_rubric() -> str:
 
 
 @lru_cache(maxsize=None)
+def runtime_slots(language: str) -> dict[str, str]:
+    """The passages of one language's runtime prompt (`RUNTIME_PROMPTS`), by slot name.
+
+    A slot starts at a line `<!-- slot: <name> -->` and runs to the next such line or the end of
+    the file; its text is kept verbatim, without the blank lines around it. What comes before the
+    first slot is a comment for maintainers and reaches no model. A language without a runtime
+    prompt, a file without a slot and a slot named twice raise `PromptSourceError`.
+    """
+    name = RUNTIME_PROMPTS.get(language)
+    if name is None:
+        raise PromptSourceError(f"no runtime prompt for the language {language!r}")
+    slots: dict[str, str] = {}
+    current: str | None = None
+    lines: list[str] = []
+    for line in [*_read(PROMPTS_DIR / name).splitlines(), "<!-- slot: _end -->"]:
+        start = _SLOT_START.match(line)
+        if start is None:
+            lines.append(line)
+            continue
+        if current is not None:
+            slots[current] = "\n".join(lines).strip("\n")
+        current, lines = start.group(1), []
+        if current in slots:
+            raise PromptSourceError(f"{name}: the slot {current!r} is named twice")
+    if not slots:
+        raise PromptSourceError(f"{name} holds no slot")
+    return slots
+
+
+@lru_cache(maxsize=None)
+def adapter_prompt(language: str) -> str:
+    """`adapter.md` with every `{{slot}}` filled from the language's runtime prompt (`runtime_slots`).
+
+    A slot the template names and the runtime prompt lacks, or a passage of the runtime prompt the
+    template never names, raises `PromptSourceError`, so a renamed slot breaks the build instead of
+    leaving `{{...}}` in a prompt or a rule out of it.
+    """
+    template = own_prompt(ADAPTER_TEMPLATE)
+    slots = runtime_slots(language)
+    named = set(_SLOT.findall(template))
+    missing, unused = sorted(named - set(slots)), sorted(set(slots) - named)
+    if missing or unused:
+        raise PromptSourceError(
+            f"{RUNTIME_PROMPTS[language]} does not fit {ADAPTER_TEMPLATE}: missing slots {missing}, unused {unused}"
+        )
+    return _SLOT.sub(lambda match: slots[match.group(1)], template)
+
+
+@lru_cache(maxsize=None)
 def adapter_instruction(library: str) -> str:
-    """The adapter's static instruction for one library (≈8-10k tokens, a stable cache prefix)."""
+    """The adapter's static instruction for one library (≈8-10k tokens, a stable cache prefix): the adapter prompt in
+    the library's language (`adapter_prompt`), then the sources every language shares and the library's rules."""
+    from core.constants import LIBRARY_LANGUAGES
+
     from .settings import get_settings
 
     weaknesses, sizing = repair_excerpts()
@@ -268,7 +333,7 @@ def adapter_instruction(library: str) -> str:
     highlights = own_prompt("adapter_highlights.md") if settings.highlights == "data" else ""
     # The rubric holds the VQ-03 marker-size and alpha table (`vq03_table`), so it is not repeated.
     return _join(
-        own_prompt("adapter.md"),
+        adapter_prompt(LIBRARY_LANGUAGES[library]),
         "## Number formats by plot language\n\n" + number_format_table(),
         highlights,
         "## Excerpt: which weaknesses to fix\n\n" + weaknesses,

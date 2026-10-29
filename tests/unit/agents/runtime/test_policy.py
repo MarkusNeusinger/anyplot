@@ -1,6 +1,8 @@
 """Tests for agents/anyplot/policy.py: instructions composed from verbatim sources, refusals, fences."""
 
+import hashlib
 import re
+from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import pytest
@@ -57,15 +59,21 @@ class TestAdapterInstruction:
     def test_braces_survive_because_the_instruction_is_static(self) -> None:
         assert "{THEME}" in policy.adapter_instruction("matplotlib")
 
-    def test_the_palette_section_matches_core_palette(self) -> None:
+    @pytest.mark.parametrize(
+        ("language", "muted"),
+        [
+            ("python", 'INK_MUTED = "{light}" if THEME == "light" else "{dark}"'),
+            ("r", 'INK_MUTED <- if (THEME == "light") "{light}" else "{dark}"'),
+        ],
+    )
+    def test_the_palette_section_matches_core_palette(self, language: str, muted: str) -> None:
         """The prompt writes the palette out (the adapter cannot import core), so it must not drift from it."""
-        prompt = source("agents/anyplot/prompts/adapter.md")
+        prompt = policy.adapter_prompt(language)
         section = prompt.split("## The palette", 1)[1].split("\n## ", 1)[0]
         order = section.split("in this order:", 1)[1].split(".", 1)[0]
 
         assert re.findall(r"#[0-9A-Fa-f]{6}", order) == IMPRINT
-        muted = f'INK_MUTED = "{muted_for("light")}" if THEME == "light" else "{muted_for("dark")}"'
-        assert muted in section
+        assert muted.format(light=muted_for("light"), dark=muted_for("dark")) in section
 
     def test_the_many_groups_rule_says_it_replaces_the_style_guides_small_multiples(self) -> None:
         """Both instructions carry the style guide's 9+ row; each says which rule wins, so no model weighs two."""
@@ -74,6 +82,149 @@ class TestAdapterInstruction:
         )
         for text in (policy.adapter_instruction("matplotlib"), policy.reviewer_instruction()):
             assert "replaces the style guide's" in text and "small multiples" in text and "nine or more series" in text
+
+
+class TestAdapterPromptPerLanguage:
+    """`adapter.md` holds the shared rules, each language's runtime prompt fills its slots (2026-10-29)."""
+
+    PYTHON_SHA256 = "1c27b0afb55a1a82993d05d2c928fd8a2986c08488be60273a4e6010a81eeeef"
+    """SHA-256 of `adapter.md` as `own_prompt` read it before the split (51ceaac6c, stripped, 18,703 characters)."""
+
+    def test_the_python_adapter_prompt_is_byte_identical_to_the_one_before_the_split(self) -> None:
+        """Golden: the Python libraries' adapters read exactly what they read before R joined. A deliberate change of
+        a shared rule or a Python passage updates the hash in the same commit."""
+        prompt = policy.adapter_prompt("python")
+
+        assert hashlib.sha256(prompt.encode("utf-8")).hexdigest() == self.PYTHON_SHA256, (
+            "the Python adapter prompt changed; if that is intended, pin its new SHA-256 here"
+        )
+        assert len(prompt) == 18_703 and "{{" not in prompt
+
+    @pytest.mark.parametrize("library", ["matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot"])
+    def test_every_python_library_reads_the_python_prompt_first(self, library: str) -> None:
+        assert policy.adapter_instruction(library).startswith(
+            policy.adapter_prompt("python") + "\n\n## Number formats by plot language\n\n"
+        )
+
+    def test_ggplot2_reads_the_r_prompt_the_shared_rules_and_its_library_rules(self) -> None:
+        text = policy.adapter_instruction("ggplot2")
+        prompt = policy.adapter_prompt("r")
+
+        assert text.startswith(prompt + "\n\n## Number formats by plot language\n\n")
+        assert source("prompts/library/ggplot2.md").strip() in text  # `.data[[...]]` and the Data block, verbatim
+        assert policy.adapter_rubric() in text and source(STYLE).strip() in text
+        shared = (
+            "## Change requests",
+            "**Keep the plot.**",
+            "not bound: compute it in the plot code from the bound data",
+        )
+        assert all(rule in prompt for rule in shared)
+        for r_rule in ("df <- load_user_data()", ".data[[REVENUE]]", "dataset package", "palmerpenguins", "ggsave()"):
+            assert r_rule in prompt, r_rule
+        for python in ("pandas", "np.random", "savefig", "FuncFormatter", "f-string", "df = load_user_data()"):
+            assert python not in prompt, python
+
+    def test_each_shared_rule_is_written_once(self) -> None:
+        """No runtime prompt repeats a paragraph of `adapter.md`: a shared rule changes in one place."""
+        template = policy.own_prompt(policy.ADAPTER_TEMPLATE)
+        paragraphs = {part.strip() for part in template.split("\n\n") if len(part.strip()) > 80 and "{{" not in part}
+        for language in policy.RUNTIME_PROMPTS:
+            passages = "\n\n".join(policy.runtime_slots(language).values())
+            assert not [paragraph for paragraph in paragraphs if paragraph in passages], language
+
+    def test_every_runtime_language_has_a_prompt_and_every_prompt_fills_the_template(self) -> None:
+        from agents.anyplot.render.runtimes import RUNTIME_CLASSES
+
+        assert set(policy.RUNTIME_PROMPTS) == set(RUNTIME_CLASSES)
+        names = set(re.findall(r"\{\{([a-z_]+)\}\}", policy.own_prompt(policy.ADAPTER_TEMPLATE)))
+        for language in policy.RUNTIME_PROMPTS:
+            assert set(policy.runtime_slots(language)) == names, language
+
+    @pytest.fixture
+    def fresh_prompts(self) -> Iterator[None]:
+        """The prompt caches are emptied before and after, so a test's files never leak into another test."""
+        caches = (policy.own_prompt, policy.runtime_slots, policy.adapter_prompt)
+        for cache in caches:
+            cache.cache_clear()
+        yield
+        for cache in caches:
+            cache.cache_clear()
+
+    @pytest.mark.parametrize(
+        ("case", "edit"),
+        [
+            ("missing", lambda text: text.replace("<!-- slot: dates -->", "<!-- slot: dates_typo -->")),
+            ("doubled", lambda text: text + "\n<!-- slot: dates -->\nagain\n"),
+            ("empty", lambda text: "<!-- only a comment -->\n"),
+        ],
+    )
+    def test_a_missing_unused_or_doubled_slot_breaks_the_build(
+        self,
+        case: str,
+        edit: Callable[[str], str],
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        fresh_prompts: None,
+    ) -> None:
+        (tmp_path / "adapter.md").write_text(source("agents/anyplot/prompts/adapter.md"), encoding="utf-8")
+        (tmp_path / "adapter_r.md").write_text(edit(source("agents/anyplot/prompts/adapter_r.md")), encoding="utf-8")
+        monkeypatch.setattr(policy, "PROMPTS_DIR", tmp_path)
+
+        with pytest.raises(policy.PromptSourceError):
+            policy.adapter_prompt("r")
+
+    def test_a_language_without_a_runtime_prompt_is_refused(self) -> None:
+        with pytest.raises(policy.PromptSourceError, match="no runtime prompt"):
+            policy.adapter_prompt("julia")
+
+    def test_the_r_prompts_idioms_pass_the_r_validator(self) -> None:
+        """What the R prompt tells the adapter to write is code the R validator admits, the ADAPTATION profile too."""
+        from agents.anyplot.code.profiles.r.validate import validate_adaptation, validate_security
+
+        code = "\n".join(
+            [
+                "library(ggplot2)",
+                "library(dplyr)",
+                'THEME <- Sys.getenv("ANYPLOT_THEME", "light")',
+                'PAGE_BG <- if (THEME == "light") "#FAF8F1" else "#1A1A17"',
+                'INK <- if (THEME == "light") "#1A1A17" else "#F0EFE8"',
+                'IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3")',
+                'INK_MUTED <- if (THEME == "light") "#6B6A63" else "#A8A79F"',
+                'DECIMAL <- ","',
+                'THOUSANDS <- "."',
+                'MONTH <- "Month"  # role: x',
+                'REVENUE <- "Revenue (EUR)"  # role: y',
+                'REGION <- "Region"  # role: group',
+                "df <- load_user_data()",
+                "df <- df |> mutate(across(all_of(c(REGION)), \\(v) factor(v, levels = unique(v))))",
+                "groups <- unique(df[[REGION]])",
+                "colors <- setNames(IMPRINT_PALETTE[seq_along(groups)], groups)",
+                'note <- paste0("r = ", scales::number(cor(as.numeric(df[[MONTH]]), df[[REVENUE]], '
+                'use = "complete.obs"), accuracy = 0.01, decimal.mark = DECIMAL))',
+                "p <- ggplot(df, aes(x = .data[[MONTH]], y = .data[[REVENUE]], color = .data[[REGION]])) +",
+                "  geom_line() +",
+                "  scale_color_manual(values = colors) +",
+                "  scale_x_date(breaks = scales::breaks_pretty(), labels = scales::label_date_short()) +",
+                "  scale_y_continuous(labels = scales::label_number(accuracy = 0.01, decimal.mark = DECIMAL, "
+                "big.mark = THOUSANDS)) +",
+                "  facet_wrap(vars(.data[[REGION]])) +",
+                '  labs(title = "Umsatz", subtitle = note, x = MONTH, y = REVENUE) +',
+                "  theme_minimal(base_size = 8)",
+                "ggsave(",
+                '  filename = sprintf("plot-%s.png", THEME),',
+                "  plot     = p,",
+                "  device   = ragg::agg_png,",
+                "  width    = 8,",
+                "  height   = 4.5,",
+                '  units    = "in",',
+                "  dpi      = 400",
+                ")",
+                "",
+            ]
+        )
+
+        assert validate_security(code) == []
+        assert validate_adaptation(code, original_palette=["#009E73", "#C475FD", "#4467A3"]) == []
 
 
 class TestOtherInstructions:
