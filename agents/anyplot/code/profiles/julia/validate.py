@@ -60,7 +60,14 @@ SECURITY rules (rule ids in parentheses):
   plotting packages and the standard libraries the catalogue uses) or a dataset package
   (`DATASET_PACKAGES`, RDatasets and PalmerPenguins, which ADAPTATION refuses instead);
   never `CSV` or `TimeZones`, which only the loader uses, and never under another name
-  (`import X as Y`, `using X: y as z`) or relative to a module (`using .X`).
+  (`import X as Y`, `using X: y as z`) or relative to a module (`using .X`). A path has
+  one component, the package's own name: `using CairoMakie.Cairo`, `import Makie.FileIO:
+  load` and `import Base.Filesystem.rm` reach into a package and are refused (Copilot
+  review of #12459; the 325 catalogue files load no dotted path). The names a selected
+  import brings in (`using A: x, y`) are checked like any name: a denied one (`using
+  Base: run`) or a module outside the roots (`import Makie: GridLayoutBase`) is a
+  `banned-name`, a macro must be one of `MACROS` (`using Base: @eval`), and an operator
+  (`import Base: +`, which would let the plot redefine `+`) is refused.
 * **Callees and macros** (`banned-call`): a call names its function: a name, an operator,
   `Module.name` over a package or `Base`, or a type (`Vector{Float64}(undef, n)`).
   Refused callees: a parenthesised value (`(f)(x)`, a function literal called at once,
@@ -769,6 +776,14 @@ class _Scan:
             if text.startswith("."):
                 self.add("banned-import", "a relative using or import is not allowed", node)
                 continue
+            path = jl_named(child)[0] if child.type == "selected_import" and jl_named(child) else child
+            parts = [part for part in jl_named(path) if part.type == "identifier"] if path.type == "import_path" else []
+            if len(parts) > 1:
+                # Copilot review of #12459: `using CairoMakie.Cairo` loaded a submodule past every name rule.
+                root = self.source.text(parts[0])
+                label = root if root in LOGGED_PACKAGES else UNKNOWN_PACKAGE
+                message = f"'{self.source.text(path)}' reaches into a package; load a package by its own name"
+                self.add("banned-import", message, node, module=label)
         for package in loaded_packages(self.source, node):
             label = package if package in LOGGED_PACKAGES else UNKNOWN_PACKAGE
             if package in LOADER_PACKAGES:
@@ -781,8 +796,18 @@ class _Scan:
             names = jl_named(child)[1:] if child.type == "selected_import" else []
             for name in names:
                 text = self.source.text(name)
-                if denied(text):
+                if name.type == "macro_identifier":
+                    if text not in MACROS:
+                        self.add(
+                            "banned-call", f"the macro {text} is not allowed; only {', '.join(sorted(MACROS))}", name
+                        )
+                elif name.type != "identifier":
+                    message = "an operator imported from a package can be redefined for every caller; use it unimported"
+                    self.add("banned-import", message, name)
+                elif denied(text):
                     self.add("banned-name", f"'{text}' is not allowed: {self.reason(text)}", name)
+                elif text in MODULE_NAMES and text not in MODULE_ROOTS:
+                    self.add("banned-name", f"'{text}' is a module the plot may not reach", name)
 
     def check_string(self, node: Node) -> None:
         if self.in_theme_statement(node):

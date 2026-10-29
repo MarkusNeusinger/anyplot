@@ -274,6 +274,39 @@ def test_a_module_outside_the_roots_in_a_catalogue_file_is_refused() -> None:
 
 
 @pytest.mark.parametrize(
+    ("body", "rule"),
+    [
+        ("using CairoMakie.Cairo", "banned-import"),
+        ("using Makie.FileIO", "banned-import"),
+        ("using Makie.GridLayoutBase", "banned-import"),
+        ("import Makie.FileIO: load", "banned-import"),
+        ("import Makie.FileIO: query", "banned-import"),
+        ("import Base.Filesystem.rm", "banned-import"),
+        ("using Statistics, Makie.FileIO", "banned-import"),
+        ("import Makie.FileIO as F", "banned-import"),
+        ("using ..Parent", "banned-import"),
+        ("using .Local: helper", "banned-import"),
+        ("using Base: run", "banned-name"),
+        ("import Makie: FileIO", "banned-name"),
+        ("import Makie: GridLayoutBase", "banned-name"),
+        ("using Statistics: mean, open", "banned-name"),
+        ("using Base: @eval", "banned-call"),
+        ("import Base: +", "banned-import"),
+    ],
+)
+def test_every_component_of_an_import_is_checked(body: str, rule: str) -> None:
+    """Copilot review of #12459: the import rule read only a path's first name, so `using CairoMakie.Cairo` passed
+    when the submodule was never named again. A path is one package name; what a selected import brings in is checked
+    like any name."""
+    assert rule in rules(security(body)), body
+
+
+def test_the_catalogues_imports_are_single_names() -> None:
+    """The 325 catalogue files load packages by their own name only; one selects a name (`using Statistics: mean`)."""
+    assert security("using Statistics: mean\nusing Dates\nimport LinearAlgebra\nusing Printf: @sprintf") == []
+
+
+@pytest.mark.parametrize(
     "body",
     [
         "f = Unlisted.dangerous\nf()",

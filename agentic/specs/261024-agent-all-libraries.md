@@ -1432,7 +1432,12 @@ the row's flags and environment, `--network none`, 2 CPUs and 4 GiB).
   name, measured in the image (`MODULE_NAMES`: `names(Main)` after the catalogue's
   `using` lines and the module members of every root), is refused as a value and as a
   member. All 2,145 dotted names of the catalogue start at a root or a name bound above;
-  the split did not change.
+  the split did not change. Its second round found that the import rule read only a
+  path's first name (`using CairoMakie.Cairo` passed): an import path is now one package
+  name, which every catalogue import is (the 325 files load single names; one selects
+  `using Statistics: mean`), and the names a selected import brings in are checked like
+  any name (denied names, modules outside the roots, macros outside `MACROS`, operators).
+  The split did not change.
 - **Readiness.** 0 clean, 308 coupled, 17 blocked: the 13 map specs, qrcode-basic and the
   3 `with_theme` saves (area-mountain-panorama, bifurcation-basic, scatter-lag). Every
   eligible file carries the `data-block` hint; 16 carry `deprecated-api` (`arrows!`).

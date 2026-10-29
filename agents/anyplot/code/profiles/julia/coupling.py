@@ -202,7 +202,8 @@ def base_name(name: str | None) -> str:
 
 
 def loaded_packages(source: Source, node: Node) -> list[str]:
-    """The packages a `using` or `import` statement loads (`using A, B: c`, `import A.B`), by their first name."""
+    """The packages a `using` or `import` statement loads (`using A, B: c`, `import A.B`), by their first name; the
+    validator refuses a path of more than one name on its own."""
     if node.type not in ("using_statement", "import_statement"):
         return []
     found: list[str] = []
