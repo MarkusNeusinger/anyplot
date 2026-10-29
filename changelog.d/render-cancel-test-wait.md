@@ -6,3 +6,4 @@
   could fail with a misleading "only one container killed" assertion. It now
   waits up to 25 s and raises a clear timeout error when the containers never
   start. Written by Google Jules; the race could not be reproduced locally.
+  (#12449)
