@@ -1,6 +1,7 @@
 """Tests for agents/anyplot/code/treesitter.py: the pinned grammar, syntax problems, positions and R helpers."""
 
 import ast
+import re
 import tomllib
 from importlib.metadata import version
 from typing import cast
@@ -33,6 +34,28 @@ def test_versions_are_pinned_in_the_agents_extra_and_installed() -> None:
     assert f"tree-sitter-language-pack=={treesitter.LANGUAGE_PACK_VERSION}" in agents
     assert version("tree-sitter") == treesitter.TREE_SITTER_VERSION
     assert version("tree-sitter-language-pack") == treesitter.LANGUAGE_PACK_VERSION
+
+
+def test_every_image_with_the_agents_extra_keeps_exactly_the_profiles_grammars() -> None:
+    """The pack bundles about 170 grammars (184 MB); an image that installs the `agents` extra prunes all but the
+    grammars the code profiles load (`GRAMMARS`), owner decision of 2026-10-29. A new profile adds its grammar to
+    `GRAMMARS` and to the image's `TREE_SITTER_GRAMMARS` together, or this fails."""
+    patterns = ("Dockerfile", "*/Dockerfile", "*/*/Dockerfile", "*/*.Dockerfile", "*/*/*.Dockerfile")
+    dockerfiles = sorted(
+        {
+            path
+            for pattern in patterns
+            for path in REPO_ROOT.glob(pattern)
+            if not any(part.startswith(".") for part in path.relative_to(REPO_ROOT).parts)
+        }
+    )
+    with_agents = [path for path in dockerfiles if "--extra agents" in path.read_text(encoding="utf-8")]
+
+    assert REPO_ROOT / "agents" / "Dockerfile" in with_agents
+    for path in with_agents:
+        match = re.search(r'^ARG TREE_SITTER_GRAMMARS="([^"]*)"$', path.read_text(encoding="utf-8"), re.MULTILINE)
+        assert match is not None, f"{path} installs the agents extra without pruning the grammars"
+        assert sorted(match.group(1).split()) == sorted(treesitter.GRAMMARS), path
 
 
 def test_only_the_served_grammars_load() -> None:

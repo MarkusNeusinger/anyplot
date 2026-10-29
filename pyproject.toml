@@ -136,7 +136,8 @@ lib-letsplot = ["lets-plot>=4.11.0", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-l
 # agents/anyplot/code/treesitter.py); both are pinned EXACTLY (owner decision of
 # 2026-10-29): tree-sitter-language-pack 0.13.0 bundles its grammars in the wheel
 # (the R grammar is r-lib's, MIT), while 1.x downloads them at run time, which the
-# service must never do. tests/unit/agents/code/test_treesitter.py pins both.
+# service must never do. tests/unit/agents/code/test_treesitter.py pins both, and
+# agents/Dockerfile keeps only the grammars the code profiles load.
 agents = [
     "google-adk==2.11.0",
     "anthropic[vertex]>=1.8.0",
