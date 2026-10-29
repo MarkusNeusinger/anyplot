@@ -11,7 +11,9 @@ Python profile (`code/readiness.py`):
   them the sample is built among the plot code, which the adapter rewrites into
   `df <- load_user_data()` (owner decision of 2026-10-29: a missing marker never blocks).
 * `synthetic-data`: `set.seed`, the random draws (`rnorm`, `runif`, ...), `data()`, a
-  built-in dataset read by name, and a `c(...)` of more than 20 numbers. Inside the
+  built-in dataset read by name, a dataset package attached (`library(gapminder)`,
+  `library(palmerpenguins)`; owner decision of 2026-10-29: an ADAPTATION finding, never a
+  block), and a `c(...)` of more than 20 numbers. Inside the
   `# Data` block of a file with column constants they are the block the adapter swaps,
   so they count only outside it, and a `set.seed` there counts not at all (it fabricates
   nothing by itself; box-basic seeds above its block); with a marker but no constants the
@@ -47,6 +49,7 @@ from core.palette import IMPRINT
 
 from ...treesitter import (
     Source,
+    Visit,
     first_line,
     r_arguments,
     r_callee,
@@ -138,6 +141,10 @@ DATASETS = frozenset(
 )
 """Datasets read by name (base R, ggplot2, palmerpenguins and gapminder): the validator's list (`validate.DATASETS`)
 narrowed to the catalogue's, plus the two dataset packages."""
+DATASET_PACKAGES = frozenset({"gapminder", "palmerpenguins"})
+"""Data-only packages of the toolchain image (owner decision of 2026-10-29): attaching one is synthetic data, a
+coupling hint here and an ADAPTATION finding (`dataset-package`) in the validator, never a SECURITY one."""
+LIBRARY_CALLS = frozenset({"library", "require"})
 LIMIT_CALLS = frozenset({"xlim", "ylim", "lims", "expand_limits"})
 COORD_LIMITS = frozenset({"xlim", "ylim"})
 SCALE_LIMITS = frozenset({"limits", "breaks"})
@@ -258,9 +265,11 @@ def coupling(code: str | Source, regions: Regions | None = None) -> Coupling:
                 synthetic = True
             elif callee == "c" and _numbers(source, node) > MAX_LITERAL_NUMBERS:
                 synthetic = True
+            elif callee in LIBRARY_CALLS and _attached(source, node) in DATASET_PACKAGES:
+                synthetic = True
             _limits(source, node, callee, flag)
         elif node.type == "identifier" and r_is_lookup(visit) and r_identifier(source, node) in DATASETS:
-            synthetic = True
+            synthetic = not is_package_argument(source, visit)
         elif node.type in ("float", "integer"):
             value = r_number(source, node)
             if value is not None and value in CRITICAL_VALUES:
@@ -367,6 +376,23 @@ def _literal_values(source: Source, value: Node, *, strings: bool) -> list[float
         elif callee in RANGE_CALLS:
             stack.extend(arguments)
     return found
+
+
+def is_package_argument(source: Source, visit: Visit) -> bool:
+    """Whether an identifier names the package of `library(pkg)` or `require(pkg)` (`library(gapminder)` attaches
+    a package; the dataset of the same name is read elsewhere)."""
+    arguments = visit.parent.parent if visit.parent is not None and visit.parent.type == "argument" else None
+    call = arguments.parent if arguments is not None else None
+    return call is not None and call.type == "call" and r_callee(source, call) in LIBRARY_CALLS
+
+
+def _attached(source: Source, call: Node) -> str | None:
+    """The package `library(pkg)` or `require("pkg")` attaches, else None."""
+    arguments = r_arguments(source, call)
+    if not arguments or arguments[0].value is None:
+        return None
+    value = r_unwrap(arguments[0].value)
+    return r_identifier(source, value) or r_string_value(source, value)
 
 
 def _strings_only(source: Source, value: Node) -> bool:

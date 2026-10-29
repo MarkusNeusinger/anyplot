@@ -157,14 +157,100 @@ def test_allowed(body: str) -> None:
     assert validate_security(program(body)) == []
 
 
-def test_a_column_called_source_is_refused_as_the_design_names_it() -> None:
-    """The denied-name rule covers strings equal to a denied name, so a column constant for a flow's `source`
-    column is refused (7 catalogue files; a finding for the owner, 2026-10-29)."""
-    findings = validate_security(program('SOURCE <- "source"  # role: source'))
+@pytest.mark.parametrize(
+    "body",
+    [
+        # a user's column named like a denied function is data (owner decision of 2026-10-29)
+        'SOURCE <- "source"  # role: source\nd <- dplyr::filter(d, .data[[SOURCE]] == "A")',
+        'cols <- c("file", "load", "options", "body")',
+        'd <- tibble::tribble(~source, ~target, ~value, "A", "B", 3)',
+        "d <- dplyr::mutate(d, origin = source, n = dplyr::n())",
+        "d <- dplyr::group_by(d, source)",
+        "d <- dplyr::arrange(d, match(source, order))",
+        "p <- ggplot(d, aes(x = file, y = load, fill = body))",
+        "p <- p + facet_wrap(vars(source))",
+        'p <- p + facet_wrap("source")',
+        "d <- tidyr::pivot_longer(d, -source)",
+        "m <- lm(value ~ source, data = d)",
+        'm <- lm("value ~ load", data = d)',
+        "x <- d$source",
+        'x <- list(source = 1, options = "a")',
+        'by <- c("source" = "node")',
+        "s <- subset(d, source == 'A')",
+    ],
+)
+def test_denied_words_as_data_pass(body: str) -> None:
+    assert validate_security(program(body)) == []
 
-    assert [(finding.rule, finding.message) for finding in findings] == [
-        ("banned-name", "a string equal to the denied name 'source'")
-    ]
+
+@pytest.mark.parametrize(
+    ("body", "message"),
+    [
+        # a denied name as a callee or a function-valued argument, also inside a data mask
+        ("d <- dplyr::mutate(d, x = source(1))", "'source' is not allowed"),
+        ("d <- dplyr::mutate(d, x = sapply(y, source))", "'source' is not allowed"),
+        ("p <- ggplot(d, aes(x = system('id')))", "'system' is not allowed"),
+        ('d <- dplyr::summarise(d, x = lapply(y, "system"))', "names the denied function 'system'"),
+        # a denied name as a value outside a data mask
+        ("x <- source", "'source' is not allowed"),
+        ("x <- list(load)", "'load' is not allowed"),
+        ("x <- c(get)", "'get' is not allowed"),
+        ("f <- function() return(file)", "'file' is not allowed"),
+        ("x <- identity(parse)", "'parse' is not allowed"),
+        ("source <- 1", "'source' is not allowed"),
+        # strings that become functions
+        ('x <- outer(1, 2, "system")', "names the denied function 'system'"),
+        ('x <- Map("source", 1)', "names the denied function 'source'"),
+        ('p <- p + stat_summary(fun = "load")', "names the denied function 'load'"),
+        ('x <- purrr_like <- lapply(1, list("get"))', "names the denied function 'get'"),
+        ('p <- p + facet_wrap("~system()")', "in a code string: 'system' is not allowed"),
+    ],
+)
+def test_denied_words_as_functions_are_refused(body: str, message: str) -> None:
+    findings = validate_security(program(body))
+
+    assert any(message in finding.message for finding in findings), findings
+
+
+@pytest.mark.parametrize(
+    ("body", "allowed"),
+    [
+        ("m <- lm(y ~ x, data = d)", True),
+        ('m <- lm("y ~ x", data = d)', True),
+        ("fml <- y ~ x\nm <- glm(fml, data = d)", True),
+        ('fml <- "y ~ x"\nm <- nls(fml, data = d)', True),
+        ("p <- p + geom_smooth(method = 'lm', formula = y ~ poly(x, 2))", True),
+        ("a <- aggregate(d$v, by = list(d$g), FUN = sum)", True),
+        ("a <- aggregate(v ~ g, data = d, FUN = mean)", True),
+        ("p <- prcomp(X, scale. = TRUE)", True),
+        ("t <- t.test(d$a, d$b)", True),
+        ('m <- lm(paste0("y ~ ", x), data = d)', False),
+        ('m <- lm(sprintf("%s ~ x", y), data = d)', False),
+        ('fml <- paste("y", "~ x")\nm <- glm(fml, data = d)', False),
+        ("m <- lm(f, data = d)", False),
+        ("fml <- y ~ x\nfml <- y ~ z\nm <- lm(fml, data = d)", False),
+        ('a <- aggregate(paste("v ~", g), data = d, FUN = sum)', False),
+        ('fml <- format("v ~ g")\nt <- t.test(fml, data = d)', False),
+        ('p <- p + geom_smooth(formula = paste0("y", "~x"))', False),
+        ("p <- p + geom_smooth(formula = make_formula())", False),
+    ],
+)
+def test_formula_positions(body: str, allowed: bool) -> None:
+    findings = validate_security(program(body))
+
+    assert (findings == []) is allowed, findings
+    assert allowed or {finding.rule for finding in findings} == {"banned-call"}
+
+
+def test_dataset_packages_are_adaptation_findings_not_security() -> None:
+    """gapminder and palmerpenguins are in the toolchain image: their sample data is for the adapter to replace
+    (owner decision of 2026-10-29), so SECURITY passes them and ADAPTATION names them (`dataset-package`)."""
+    code = program("library(palmerpenguins)\nd <- penguins\ng <- gapminder::gapminder")
+
+    assert validate_security(code) == []
+    findings = validate_adaptation(code, original_palette=[])
+    assert {finding.rule for finding in findings} >= {"dataset-package", "literal-data"}
+    assert [finding.line for finding in findings if finding.rule == "dataset-package"] == [3, 5]
 
 
 def test_the_protected_save_is_pinned() -> None:
@@ -328,12 +414,11 @@ def test_adaptation_allows(line: str) -> None:
 
 
 def test_catalogue_corpus() -> None:
-    """SECURITY over the 325 normalised catalogue files (2026-10-29): 15 files have findings. The 4 map specs that
-    install or load geodata packages (flowmap-origin-destination, heatmap-geographic, map-connection-lines,
-    map-projections; the other 9 map specs pass SECURITY and are blocked by name), qrcode-basic (a URL and the
-    qrcode package), the dataset packages gapminder (dendrogram-basic) and palmerpenguins (scatter-categorical),
-    maze-circular's `<<-`, and 7 files with a `source` column or variable (area-stacked-confidence, chord-basic,
-    circos-basic, heatmap-adjacency, network-bipartite, network-weighted, sankey-basic)."""
+    """SECURITY over the 325 normalised catalogue files (2026-10-29, after the owner's narrowing of the denied-name
+    rule): 6 files have findings. The 4 map specs that install or load geodata packages
+    (flowmap-origin-destination, heatmap-geographic, map-connection-lines, map-projections; the other 9 map specs
+    pass SECURITY and are blocked by name), qrcode-basic (a URL and the qrcode package) and maze-circular's `<<-`.
+    The 7 flow files that name a column `source` and the 2 dataset-package files pass SECURITY now."""
     flagged: dict[str, Counter[str]] = {}
     for path in R_CATALOGUE_FILES:
         findings = validate_security(normalise(path.read_text(encoding="utf-8")))
@@ -341,21 +426,12 @@ def test_catalogue_corpus() -> None:
             flagged[path.parts[-4]] = Counter(finding.rule for finding in findings)
 
     assert sorted(flagged) == [
-        "area-stacked-confidence",
-        "chord-basic",
-        "circos-basic",
-        "dendrogram-basic",
         "flowmap-origin-destination",
-        "heatmap-adjacency",
         "heatmap-geographic",
         "map-connection-lines",
         "map-projections",
         "maze-circular",
-        "network-bipartite",
-        "network-weighted",
         "qrcode-basic",
-        "sankey-basic",
-        "scatter-categorical",
     ]
     assert set(flagged["maze-circular"]) == {"banned-statement"}
     assert set(flagged["qrcode-basic"]) == {"banned-import", "url-literal"}

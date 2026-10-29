@@ -158,12 +158,12 @@ def test_structure_reasons_of_a_good_file_are_empty() -> None:
 def test_catalogue_corpus() -> None:
     """The split over the 325 normalised ggplot2 files (2026-10-29, owner rule: a missing marker never blocks):
     4 clean (area-basic, box-basic, line-basic, line-timeseries: both markers and role-commented column
-    constants), 297 coupled, 24 blocked. Blocked: the 13 map specs; qrcode-basic (the qrcode package and a URL);
-    7 files that name a flow's origin `source`, a denied name (area-stacked-confidence, chord-basic, circos-basic,
-    heatmap-adjacency, network-bipartite, network-weighted, sankey-basic); the dataset packages gapminder
-    (dendrogram-basic) and palmerpenguins (scatter-categorical), which the allowlist leaves out; and
-    maze-circular's `<<-`. Hints: data-block 297, synthetic-data 271, limits 130, annotations 71, palette 38,
-    statistics 18, color-scale 10; no canvas reason, because the normaliser puts every canvas on target."""
+    constants), 306 coupled, 15 blocked. Blocked: the 13 map specs, qrcode-basic (the qrcode package and a URL)
+    and maze-circular (`<<-`, owner decision of 2026-10-29). The 7 flow files with a `source` column and the 2
+    dataset-package files (dendrogram-basic, scatter-categorical: a synthetic-data hint) are coupled since the
+    owner narrowed the denied-name rule. Hints: data-block 306, synthetic-data 279, limits 134, annotations 71,
+    palette 39, statistics 18, color-scale 10; no canvas reason, because the normaliser puts every canvas on
+    target."""
     status: Counter[str] = Counter()
     blocked: list[str] = []
     clean: list[str] = []
@@ -178,7 +178,7 @@ def test_catalogue_corpus() -> None:
             clean.append(spec_id)
         categories.update(reason.split(":")[0] for reason in readiness.reasons if readiness.status != "blocked")
 
-    assert status == Counter({"coupled": 297, "blocked": 24, "clean": 4})
+    assert status == Counter({"coupled": 306, "blocked": 15, "clean": 4})
     assert clean == ["area-basic", "box-basic", "line-basic", "line-timeseries"]
     assert sorted(blocked) == sorted(
         [
@@ -198,29 +198,29 @@ def test_catalogue_corpus() -> None:
                 "scatter-map-geographic",
             ),
             "qrcode-basic",
-            "area-stacked-confidence",
-            "chord-basic",
-            "circos-basic",
-            "heatmap-adjacency",
-            "network-bipartite",
-            "network-weighted",
-            "sankey-basic",
-            "dendrogram-basic",
-            "scatter-categorical",
             "maze-circular",
         ]
     )
     assert categories == Counter(
         {
-            "data-block": 297,
-            "synthetic-data": 271,
-            "limits": 130,
+            "data-block": 306,
+            "synthetic-data": 279,
+            "limits": 134,
             "annotations": 71,
-            "palette": 38,
+            "palette": 39,
             "statistics": 18,
             "color-scale": 10,
         }
     )
+
+
+@pytest.mark.parametrize("spec_id", ["dendrogram-basic", "scatter-categorical"])
+def test_a_dataset_package_is_a_synthetic_data_hint(spec_id: str) -> None:
+    path = next(path for path in R_CATALOGUE_FILES if path.parts[-4] == spec_id)
+    readiness = scan(normalise(path.read_text(encoding="utf-8")), spec_id=spec_id, enabled_libraries=ENABLED)
+
+    assert readiness.status == "coupled"
+    assert any("library(" in hint for hint in readiness.hints if hint.startswith("Synthetic data"))
 
 
 def test_the_detection_stays_inside_the_core_boundary() -> None:

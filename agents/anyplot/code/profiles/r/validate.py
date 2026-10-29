@@ -19,21 +19,36 @@ SECURITY rules (rule ids in parentheses):
 
 * **Denied names** (`banned-name`): `DENIED_NAMES` and the families of `DENIED_PATTERN`
   (`socket*`, `eval*`, `read.*`, `write*`, `file.*`, `dev.*`, `sys.*`, `Sys.*` except
-  `Sys.time` and `Sys.Date`) as identifiers anywhere, a binding included, but not as an
-  argument's name or the field after `$` or `@`; and every string literal equal to one of
-  them. The list holds process starts, connections, file and network I/O, sourcing and
-  evaluation, every route from a string to a function (`get`, `match.fun`, `.env`,
-  environments), attribute and binding tricks, the graphics devices other than the
-  protected save (`png`, `svg`, ragg's `agg_*`; only `pdf(NULL)`, which 2 catalogue files
-  open for measuring grobs, is allowed), `aes_string`, glue and formula builders.
-  `Sys.getenv` appears only in the theme statement. Beyond the design's list, names that
-  read or write files, start an editor or reach environments joined it (2026-10-29), but
-  words common as variable or column names stay out (`dir`, `zip`, `browser`, `windows`,
-  `debug`, `edit`): the string rule refuses a column constant whose column has such a
-  name. The design's own words stay, so a column called `source` or `load` refuses its
-  file (7 catalogue files use `source` for a flow's origin).
+  `Sys.time` and `Sys.Date`). The list holds process starts, connections, file and network
+  I/O, sourcing and evaluation, every route from a string to a function (`get`,
+  `match.fun`, `.env`, environments), attribute and binding tricks, the graphics devices
+  other than the protected save (`png`, `svg`, ragg's `agg_*`; only `pdf(NULL)`, which 2
+  catalogue files open for measuring grobs, is allowed), `aes_string`, glue and formula
+  builders. `Sys.getenv` appears only in the theme statement. Beyond the design's list,
+  names that read or write files, start an editor or reach environments joined it, but
+  words common as variable names stay out (`dir`, `zip`, `browser`, `windows`, `debug`,
+  `edit`). Where a denied name counts (owner decision of 2026-10-29, after the first pass
+  refused every `source` column):
+  - a bare name is refused as a callee and as a function-valued argument everywhere, and
+    as any other value (an assignment's value or target, a return value, an element of
+    `list()` or `c()`, an argument of an ordinary call) outside a data mask;
+  - it is a column, and allowed, anywhere inside the arguments of a data-masking or
+    tidy-select call (`DATA_MASK_CALLS`: `aes`, `vars`, the facets, the dplyr and tidyr
+    verbs, base R's `with` and `subset`) and in the operands of `~` (formulas, a tribble's
+    `~source` header, lambdas), and in the pure name positions: an argument's name and
+    the field after `$` or `@`;
+  - a string equal to a denied name is refused only where a string becomes a function: as
+    a callee, as a function-valued argument, and inside a code string (below). Everywhere
+    else a string is data, so a user's column called `source`, `file`, `load`, `options`
+    or `body` passes.
+  The residual we accept: inside a data mask a function object can be stored in a column
+  (`mutate(d, f = list(system))`) and called through a lambda's parameter
+  (`purrr`-style `~ .x[[1]]("id")` is no call of a denied name). The sandbox and the
+  exec filter are the boundary, and this check is hygiene.
 * **Packages** (`banned-import`): `library()` and `require()` take one package of
-  `LIBRARY_ALLOWLIST`, by name or as a string, and no other argument (`character.only`).
+  `LIBRARY_ALLOWLIST` or a dataset package (`DATASET_PACKAGES`, gapminder and
+  palmerpenguins, which ADAPTATION refuses instead), by name or as a string, and no other
+  argument (`character.only`).
   `pkg::name` takes a package of that list or `utils` and `tools`, with per-package rules
   (`NAMESPACE_FUNCTIONS`: `utils::head`, `tools::toTitleCase`,
   `gridExtra::arrangeGrob` only, owner decision of 2026-10-29; `ragg::agg_png` only as the
@@ -60,10 +75,15 @@ SECURITY rules (rule ids in parentheses):
   (`facet_wrap("~x")`, `facets`, `rows`, `cols`) and R a string formula as code, so every
   string literal in those positions, every string a facet argument names through a column
   constant, and every string that holds a `~` is parsed as R and walked with these rules
-  when it parses; a facet argument the walk cannot read (a call other than `vars()`, a
-  computed name) is a `banned-call`. A `formula =` argument is a `~` formula, a name or a
-  string. Known gap: a computed string handed to a modelling function's formula
-  (`lm(paste0("y ~ ", x))`) is not traced.
+  as a data mask when it parses; a facet argument the walk cannot read (a call other than
+  `vars()`, a computed name) is a `banned-call`. A formula position (`formula =` on any
+  call, and the first positional of `FORMULA_FIRST`: `lm`, `glm`, `loess`, `nls`, `aov`,
+  `model.frame`, `model.matrix`, `xtabs`, `formula` and the MASS and survival models)
+  takes only a `~` literal, a string literal or a name bound once to one of them; the first
+  positional of `FORMULA_OR_DATA_FIRST` (`aggregate`, the `*.test` functions, `boxplot`,
+  `prcomp`, ...), whose data method takes a table, refuses only a string built at run
+  time (`STRING_BUILDERS`: `paste0`, `sprintf`, `format`, `glue`, ..., or a name bound to
+  one), because R parses a formula string and evaluates its names in the data.
 * **Statements and keywords**: `<<-` and `->>` (`banned-statement`); the keyword `file =`
   on every call (`banned-keyword`; `cat(file =)`, `capture.output(file =)`), except
   `pdf(file = NULL)`.
@@ -81,7 +101,8 @@ ADAPTATION rules, with the Python profile's ids: exactly one `df <- load_user_da
 draws (`rng`: `rnorm`, `rpois` and the other `r*` draws, `MASS::mvrnorm`; `set.seed`,
 `sample`, `runif` and `jitter` stay allowed for jitter and subsampling); no data from
 memory (`literal-data`: a `c(...)` with more than `MAX_LITERAL_NUMBERS` numbers, `data()`,
-a built-in dataset of `DATASETS` read by name); the palette prefix kept
+a built-in dataset of `DATASETS` read by name; `dataset-package`: `library()` or `pkg::` of
+gapminder or palmerpenguins, owner decision of 2026-10-29); the palette prefix kept
 (`palette-prefix`: `IMPRINT_PALETTE` or `IMPRINT` assigned once, as a `c()` of colour
 strings that keeps the original entries in order and adds only the next Imprint
 positions, and never written through a replacement form such as `IMPRINT_PALETTE[9] <-`).
@@ -120,6 +141,7 @@ from ...treesitter import (
     visits,
 )
 from ...validate import MAX_LITERAL_NUMBERS, MAX_MESSAGE_CHARS, MAX_STRING_CHARS, Finding
+from .coupling import DATASET_PACKAGES, LIBRARY_CALLS, is_package_argument
 from .regions import (
     IMPRINT_NAMES,
     PLACEHOLDER,
@@ -367,7 +389,6 @@ names), `write`, `write.*`, `writeLines`, `file.*`, `dev.*`, `sys.*` and `Sys.*`
 ALLOWED_SYS = frozenset({"Sys.time", "Sys.Date"})
 SYS_GETENV = "Sys.getenv"
 
-LIBRARY_CALLS = frozenset({"library", "require"})
 DO_CALL = "do.call"
 DO_CALL_FUNCTIONS = frozenset({"rbind", "cbind", "c"})
 FUNCTION_ARGUMENTS = frozenset(
@@ -407,6 +428,10 @@ FUNCTION_POSITIONS: dict[str, tuple[int, ...]] = {
     "group_modify": (1,),
     "trans_new": (1, 2),
     "new_transform": (1, 2),
+    # purrr's map family: not attachable here (purrr is off the allowlist), but a function slot wherever it appears
+    **dict.fromkeys(("map", "map_dbl", "map_chr", "map_int", "map_lgl", "map_dfr", "map_dfc", "map_vec"), (1,)),
+    **dict.fromkeys(("imap", "pmap", "walk", "keep", "discard", "detect", "reduce", "accumulate", "modify"), (1,)),
+    **dict.fromkeys(("map2", "map2_dbl", "map2_chr", "map2_int", "map2_lgl", "walk2"), (2,)),
 }
 """The positional slots (counting positional arguments only) that take a function."""
 FUNCTION_FACTORIES = frozenset({"list", "c", "Negate", "Vectorize"})
@@ -420,6 +445,137 @@ FACET_CALLS: dict[str, tuple[tuple[int, ...], frozenset[str]]] = {
     "facet_grid": ((0, 1), frozenset({"rows", "cols", "facets"})),
 }
 """Where ggplot2 reads a facet, which `parse_expr` turns into code when it is a string."""
+DATA_MASK_CALLS = frozenset(
+    {
+        # ggplot2: aesthetics, facets and their helpers
+        "aes",
+        "vars",
+        "facet_wrap",
+        "facet_grid",
+        "after_stat",
+        "after_scale",
+        "stage",
+        # dplyr verbs, tidy selection and the helpers that evaluate inside them
+        "mutate",
+        "transmute",
+        "summarise",
+        "summarize",
+        "reframe",
+        "filter",
+        "arrange",
+        "select",
+        "rename",
+        "relocate",
+        "group_by",
+        "count",
+        "add_count",
+        "tally",
+        "distinct",
+        "pull",
+        "slice_min",
+        "slice_max",
+        "across",
+        "if_any",
+        "if_all",
+        "c_across",
+        "pick",
+        "case_when",
+        "case_match",
+        "join_by",
+        # tidyr verbs
+        "pivot_longer",
+        "pivot_wider",
+        "separate",
+        "separate_wider_delim",
+        "unite",
+        "nest",
+        "unnest",
+        "complete",
+        "expand",
+        "fill",
+        "drop_na",
+        "uncount",
+        "extract",
+        "gather",
+        "spread",
+        # base R's data-masking functions
+        "with",
+        "within",
+        "subset",
+        "transform",
+    }
+)
+"""Calls whose arguments R evaluates in a data mask, where a bare name is a column: a denied name there is data
+(a flow's `source` column), except as a callee or a function-valued argument. The operands of `~` are a mask too
+(formulas, a tribble's `~source` header, lambdas). Fixed in code, owner decision of 2026-10-29."""
+FORMULA_FIRST = frozenset(
+    {
+        "lm",
+        "glm",
+        "loess",
+        "nls",
+        "aov",
+        "model.frame",
+        "model.matrix",
+        "xtabs",
+        "formula",
+        "survfit",
+        "coxph",
+        "survreg",
+        "rlm",
+        "lda",
+        "qda",
+        "glm.nb",
+        "polr",
+        "ppr",
+        "lqs",
+        "loglm",
+    }
+)
+"""Modelling functions whose first positional argument is always a formula (stats, MASS, survival)."""
+FORMULA_OR_DATA_FIRST = frozenset(
+    {
+        "aggregate",
+        "t.test",
+        "wilcox.test",
+        "kruskal.test",
+        "cor.test",
+        "var.test",
+        "bartlett.test",
+        "fligner.test",
+        "ansari.test",
+        "mood.test",
+        "friedman.test",
+        "boxplot",
+        "prcomp",
+        "princomp",
+        "ftable",
+    }
+)
+"""Functions with a formula method and a data method: their first positional is checked only for a computed string."""
+STRING_BUILDERS = frozenset(
+    {
+        "paste",
+        "paste0",
+        "sprintf",
+        "gettextf",
+        "format",
+        "formatC",
+        "prettyNum",
+        "toString",
+        "as.character",
+        "deparse",
+        "sub",
+        "gsub",
+        "trimws",
+        "tolower",
+        "toupper",
+        "str_c",
+        "str_glue",
+        "glue",
+    }
+)
+"""Calls that build a string at run time: never a formula, which R would parse and evaluate in the data."""
 GLUE_KEYWORDS = frozenset({".names", "names_glue"})
 GLUE_FIELDS = frozenset({".col", ".fn"})
 BANNED_KEYWORDS = frozenset({"file"})
@@ -518,10 +674,13 @@ DATASETS = frozenset(
         "Cars93",
         "Animals",
         "geyser",
+        "gapminder",
+        "penguins",
+        "penguins_raw",
     }
 )
-"""Built-in datasets of base R, ggplot2 and MASS read by name; ambiguous words (`cars`, `women`, `pressure`, `trees`,
-`rock`, `sleep`) are left out, because a user's column may carry them."""
+"""Built-in datasets of base R, ggplot2, MASS and the dataset packages read by name; ambiguous words (`cars`, `women`,
+`pressure`, `trees`, `rock`, `sleep`) are left out, because a user's column may carry them."""
 
 _URL_IN_TEXT = re.compile(r"(?i)(?:https?|ftp)://|\b(?:file|data):\S")
 """The Python profile's URL rule (`validate._URL_IN_TEXT`)."""
@@ -610,15 +769,29 @@ class _Binding:
 
 
 class _Scan:
-    """One validation pass over a parsed R source; `line_offset` places a code string's findings on its line."""
+    """One validation pass over a parsed R source.
 
-    def __init__(self, source: Source, *, depth: int = 0, line: int | None = None) -> None:
+    A code string's scan (`depth` > 0) places its findings on the string's `line`, and
+    with `masked` reads the whole string as a data mask, because ggplot2 evaluates a
+    facet string and R a formula's variables in the data.
+    """
+
+    def __init__(self, source: Source, *, depth: int = 0, line: int | None = None, masked: bool = False) -> None:
         self.source = source
         self.depth = depth
         self.fixed_line = line
         self.findings: list[Finding] = []
         self.visits = list(visits(source.root))
         self.regions: Regions = find_regions(source)
+        self.masks: list[tuple[int, int]] = [(source.root.start_byte, source.root.end_byte)] if masked else []
+        for visit in self.visits:
+            node = visit.node
+            if node.type == "call" and (r_callee(source, node) or "").rsplit("::", 1)[-1] in DATA_MASK_CALLS:
+                arguments = node.child_by_field_name("arguments")
+                if arguments is not None:
+                    self.masks.append((arguments.start_byte, arguments.end_byte))
+            elif node.type in ("unary_operator", "binary_operator") and r_operator(source, node) == "~":
+                self.masks.append((node.start_byte, node.end_byte))
         self.bindings: dict[str, list[_Binding]] = {}
         for name, node in r_bindings(source, source.root):
             value = node.child_by_field_name("rhs") if node.type == "binary_operator" else None
@@ -663,6 +836,10 @@ class _Scan:
 
     def in_theme_statement(self, node: Node) -> bool:
         return self.theme_bytes is not None and self.theme_bytes[0] <= node.start_byte < self.theme_bytes[1]
+
+    def in_mask(self, node: Node) -> bool:
+        """Whether `node` lies in the arguments of a data-masking call (`DATA_MASK_CALLS`) or in a `~` operand."""
+        return any(start <= node.start_byte < end for start, end in self.masks)
 
     def snippet(self, node: Node) -> str:
         return _snippet(self.source, node)
@@ -719,7 +896,8 @@ class _Scan:
         if name is None:
             self.add("syntax", "a backtick name R cannot read", node)
             return
-        if name == SAVE_NAME and not (parent.type == "call" and field == "function") and r_is_lookup(visit):
+        callee = parent.type == "call" and field == "function"
+        if name == SAVE_NAME and not callee and r_is_lookup(visit):
             self.add("savefig-target", "ggsave is only ever called where it is named, as the final save", node)
         if not denied(name):
             return
@@ -727,6 +905,8 @@ class _Scan:
             return
         if name == "pdf" and self.is_null_device(visit):
             return
+        if not callee and self.in_mask(node):
+            return  # a column of the data: `aes(y = source)`, `group_by(source)`, `~source` (function slots: below)
         self.add("banned-name", f"'{name}' is not allowed: {self.reason(name)}", node)
 
     def is_null_device(self, callee: Visit) -> bool:
@@ -764,13 +944,12 @@ class _Scan:
             )
         if _URL_IN_TEXT.search(value):
             self.add("url-literal", "URL or file literal; the plot reads only df", node)
-        if denied(value):
-            self.add("banned-name", f"a string equal to the denied name '{value}'", node)
         if "~" in value:
             self.walk_code_string(value, node)
 
     def walk_code_string(self, value: str, node: Node) -> None:
-        """Parse a string R would read as code and walk it with these rules; text that does not parse stays text."""
+        """Parse a string R would read as code and walk it with these rules, as a data mask (a facet's or formula's
+        names are columns); text that does not parse stays text."""
         if len(value) > MAX_CODE_CHARS:
             return
         inner = Source(value, "r")
@@ -779,7 +958,7 @@ class _Scan:
         if self.depth >= MAX_CODE_STRING_DEPTH:
             self.add("banned-call", "code strings nested this deep are not allowed", node)
             return
-        nested = _Scan(inner, depth=self.depth + 1, line=self.fixed_line or first_line(node))
+        nested = _Scan(inner, depth=self.depth + 1, line=self.fixed_line or first_line(node), masked=True)
         nested.security()
         self.findings.extend(nested.findings)
 
@@ -797,7 +976,7 @@ class _Scan:
                 "banned-import", "':::' reaches a package's internals; use its exported functions", node, module=label
             )
             return
-        if package not in NAMESPACES:
+        if package not in NAMESPACES and package not in DATASET_PACKAGES:
             allowed = ", ".join(sorted(LIBRARY_ALLOWLIST))
             self.add("banned-import", f"package '{package}' is not available → use {allowed}", node, module=label)
             return
@@ -858,7 +1037,11 @@ class _Scan:
             if name in GLUE_KEYWORDS:
                 self.check_glue(argument.value, name)
             if name == "formula":
-                self.check_formula(argument.value)
+                self.check_formula(argument.value, strict=True)
+        if base in FORMULA_FIRST or base in FORMULA_OR_DATA_FIRST:
+            first = r_argument(arguments, "\0", 0)
+            if first is not None and first.value is not None and not any(arg.name == "formula" for arg in arguments):
+                self.check_formula(first.value, strict=base in FORMULA_FIRST)
         if base in FUNCTION_POSITIONS:
             for position in FUNCTION_POSITIONS[base]:
                 slot = r_argument(arguments, "\0", position)
@@ -882,7 +1065,7 @@ class _Scan:
         if package is None:
             self.add("banned-import", f"{callee}() takes one package name and nothing else", node)
             return
-        if package not in LIBRARY_ALLOWLIST:
+        if package not in LIBRARY_ALLOWLIST and package not in DATASET_PACKAGES:
             label = package if package in LOGGED_PACKAGES else UNKNOWN_PACKAGE
             allowed = ", ".join(sorted(LIBRARY_ALLOWLIST))
             self.add("banned-import", f"package '{package}' is not available → use {allowed}", node, module=label)
@@ -904,7 +1087,13 @@ class _Scan:
         while stack:
             node = r_unwrap(stack.pop())
             kind = node.type
-            if kind in ("function_definition", "string", "namespace_operator") or kind in R_LITERALS:
+            if kind == "string":
+                # A string here is a function's name for `match.fun`: one equal to a denied name is that function.
+                text = r_string_value(self.source, node) or ""
+                if denied(text):
+                    self.add("banned-name", f"{where} names the denied function '{text}'", node)
+                continue
+            if kind in ("function_definition", "namespace_operator") or kind in R_LITERALS:
                 continue
             if kind == "unary_operator" and (
                 r_operator(self.source, node) == "~" or r_number(self.source, node) is not None
@@ -912,6 +1101,9 @@ class _Scan:
                 continue  # a `~` lambda, or a negative number
             if kind == "identifier":
                 name = r_identifier(self.source, node) or ""
+                if denied(name):
+                    self.add("banned-name", f"'{name}' is not allowed: {self.reason(name)}", node)
+                    continue
                 bound = self.bindings.get(name, [])
                 if all(binding.function for binding in bound):
                     continue
@@ -943,16 +1135,46 @@ class _Scan:
         if not fields_ok or "{" in rest or "}" in rest:
             self.add("banned-keyword", f"{keyword} takes a string whose braces are only {{.col}} and {{.fn}}", value)
 
-    def check_formula(self, value: Node) -> None:
+    def check_formula(self, value: Node, *, strict: bool) -> None:
+        """A formula position: a `~` literal, a string literal (parsed and walked) or a name bound once to one of them.
+
+        R parses a string formula and evaluates its variables in the data, so a string built
+        at run time (`STRING_BUILDERS`, or a name bound to one) is refused everywhere. With
+        `strict` (`formula =`, `FORMULA_FIRST`) nothing else is a formula either; without it
+        (`FORMULA_OR_DATA_FIRST`, whose data method takes a table) any other value passes.
+        """
         node = r_unwrap(value)
-        if node.type in ("unary_operator", "binary_operator") and r_operator(self.source, node) == "~":
-            return
-        if node.type == "string":
-            self.walk_code_string(r_string_value(self.source, node) or "", node)
+        if self.is_formula_literal(node):
+            if node.type == "string":
+                self.walk_code_string(r_string_value(self.source, node) or "", node)
             return
         if node.type == "identifier":
+            bound = self.bindings.get(r_identifier(self.source, node) or "", [])
+            bound_value = r_unwrap(bound[0].value) if len(bound) == 1 and bound[0].value is not None else None
+            if bound_value is not None and self.is_formula_literal(bound_value):
+                if bound_value.type == "string":
+                    self.walk_code_string(r_string_value(self.source, bound_value) or "", node)
+                return
+            built = any(binding.value is not None and self.builds_string(binding.value) for binding in bound)
+            if not strict and not built:
+                return
+        elif not strict and not self.builds_string(node):
             return
-        self.add("banned-call", "formula = takes a formula such as y ~ x", value)
+        self.add(
+            "banned-call",
+            f"a formula is y ~ x, a string or a name bound once to one, never a computed value '{self.snippet(node)}'",
+            value,
+        )
+
+    def is_formula_literal(self, node: Node) -> bool:
+        if node.type == "string":
+            return True
+        return node.type in ("unary_operator", "binary_operator") and r_operator(self.source, node) == "~"
+
+    def builds_string(self, value: Node) -> bool:
+        """A call of `STRING_BUILDERS` (`paste0(...)`, `sprintf(...)`)."""
+        node = r_unwrap(value)
+        return node.type == "call" and (r_callee(self.source, node) or "").rsplit("::", 1)[-1] in STRING_BUILDERS
 
     def check_facet(self, value: Node, call: str) -> None:
         node = r_unwrap(value)
@@ -1079,7 +1301,24 @@ class _Scan:
         self.check_placeholder()
         self.check_rng()
         self.check_literal_data()
+        self.check_dataset_packages()
         self.check_palette(original_palette)
+
+    def check_dataset_packages(self) -> None:
+        """`library(gapminder)` or `palmerpenguins::penguins`: the sample data of a package, never the user's."""
+        for visit in self.visits:
+            node = visit.node
+            package: str | None = None
+            if node.type == "call" and r_callee(self.source, node) in LIBRARY_CALLS:
+                arguments = r_arguments(self.source, node)
+                value = r_unwrap(arguments[0].value) if arguments and arguments[0].value is not None else None
+                package = (r_identifier(self.source, value) or r_string_value(self.source, value)) if value else None
+            elif node.type == "namespace_operator":
+                lhs = node.child_by_field_name("lhs")
+                package = r_identifier(self.source, lhs) if lhs is not None else None
+            if package in DATASET_PACKAGES:
+                message = f"'{package}' is a dataset package; the data comes from df <- load_user_data()"
+                self.add("dataset-package", message, node)
 
     def check_placeholder(self) -> None:
         statements = [visit.node for visit in self.visits if is_placeholder(self.source, visit.node)]
@@ -1124,7 +1363,7 @@ class _Scan:
                     if count > MAX_LITERAL_NUMBERS:
                         message = f"literal with {count} numeric values; the limit is {MAX_LITERAL_NUMBERS}, data comes from df"
                         self.add("literal-data", message, node)
-            elif node.type == "identifier" and r_is_lookup(visit):
+            elif node.type == "identifier" and r_is_lookup(visit) and not is_package_argument(self.source, visit):
                 name = r_identifier(self.source, node) or ""
                 if name in DATASETS and name not in self.bindings:
                     self.add("literal-data", f"'{name}' is a built-in dataset; the data comes from df", node)
