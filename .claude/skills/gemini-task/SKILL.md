@@ -93,7 +93,9 @@ Gemini pushes and updates the draft PR after each, before the next session.
 
   The folder lies outside both checkouts (owner, 2026-10-29): Gemini cannot
   commit a brief by accident, and the Acceptance Claude reviews against is not
-  in the tree Gemini edits.
+  in the tree Gemini edits. The read-only bit only guards against an
+  accidental edit: agy runs as the same Unix user and could restore it, so the
+  rule that Gemini never edits a brief (section 2) carries the rest.
 - **An issue instead, only when the owner asks for one**, for example for a
   task that should wait in the public backlog. Same template without the title
   line; put the body in a private temp file and create it with

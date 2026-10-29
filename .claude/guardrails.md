@@ -44,9 +44,11 @@ larger packages with less ceremony. A second opinion (Fable and Gemini 4
 Argon) rejected a pasted work order: it exists nowhere durable until Gemini's
 first push, and Claude's review would read Acceptance from Gemini's own PR
 text. So Claude writes a read-only brief file into `~/projects/anyplot-briefs/`,
-outside both checkouts, so Gemini can neither commit it nor edit the Acceptance
-it is judged against; the draft PR carries a copy, and Claude deletes the file
-after the merge. An issue remains for a task the owner wants in the public
+outside both checkouts: Gemini cannot commit it by accident, and the Acceptance
+it is judged against is not in the tree it edits. The read-only bit only stops
+an accidental edit, since agy runs as the same Unix user (Copilot on #12458);
+the skill's rule that Gemini never edits a brief carries the rest. The draft PR
+carries a copy, and Claude deletes the file after the merge. An issue remains for a task the owner wants in the public
 backlog. Both reviewers also found that the skill fed every issue comment to
 Gemini, while it already filtered PR comments to the owner's; issue comments
 are filtered the same way now. Packages stay at 20 to 25 files per fresh
