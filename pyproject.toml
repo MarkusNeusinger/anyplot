@@ -132,8 +132,17 @@ lib-letsplot = ["lets-plot>=4.11.0", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-l
 # whose `output_config` carries the `effort` that module sends. There is no
 # `google-adk[eval]` extra: the evals under agents/evals/ run on this one, and
 # ADK's eval stack pulled in litellm and nltk, two security alerts for code that
-# nothing here ran.
-agents = ["google-adk==2.11.0", "anthropic[vertex]>=1.8.0"]
+# nothing here ran. tree-sitter parses the non-Python catalogue code (R first,
+# agents/anyplot/code/treesitter.py); both are pinned EXACTLY (owner decision of
+# 2026-10-29): tree-sitter-language-pack 0.13.0 bundles its grammars in the wheel
+# (the R grammar is r-lib's, MIT), while 1.x downloads them at run time, which the
+# service must never do. tests/unit/agents/code/test_treesitter.py pins both.
+agents = [
+    "google-adk==2.11.0",
+    "anthropic[vertex]>=1.8.0",
+    "tree-sitter==0.26.0",
+    "tree-sitter-language-pack==0.13.0",
+]
 all = [
     "anyplot[test,dev,plotting,typecheck]",
 ]

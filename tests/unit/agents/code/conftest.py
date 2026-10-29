@@ -12,6 +12,8 @@ CATALOGUE_FILES = [
     for library in CODE_LIBRARIES
     for path in sorted(REPO_ROOT.glob(f"plots/*/implementations/python/{library}.py"))
 ]
+R_CATALOGUE_FILES = sorted(REPO_ROOT.glob("plots/*/implementations/r/ggplot2.R"))
+"""The ggplot2 catalogue files, which the R profile (`agents/anyplot/code/profiles/r/`) reads."""
 
 
 def source(text: str) -> str:
