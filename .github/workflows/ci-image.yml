@@ -1511,7 +1511,7 @@ jobs:
       # carries no plots/, is normalised and scanned by the R runtime as POST /v1/sessions does
       # (opening.assess), with ggplot2 enabled: scatter-basic is coupled in the corpus tests, so
       # anything but clean or coupled, a SECURITY finding or a missing palette fails the step.
-      # The app container runs in development, so no caller check or model is involved.
+      # The scan runs in the smoke's development container: no caller check, no model call.
       - name: The R grammar loads and an R readiness scan runs
         if: steps.check.outputs.should_build == 'true'
         run: |
