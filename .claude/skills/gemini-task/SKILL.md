@@ -179,10 +179,22 @@ downloads, history rewrites, GitHub writes beyond the own draft PR, and
 `chmod` and writes to the brief folder, so a brief stays read-only for
 Gemini's tools as well. Rules are word-by-word prefixes; deny wins over ask,
 ask over allow, and anything unlisted asks. Shell wrappers (`bash -c`, `sh`,
-`env`, `xargs`, `eval`) stay unlisted on purpose: a deny rule only matches the
-start of a command, so a wrapper would carry a denied command past it. Claude
-edits the settings file only when the owner asks, and touches nothing else in
-that folder: the agy login lives there.
+`env`, `xargs`, `eval`) stay unlisted, because a deny rule only matches the
+start of a command.
+
+**These rules are guardrails against accidental use, not a security
+boundary.** An allowed command can still reach what a deny names: `cat` reads
+any file the owner can read, the main checkout's `.env` included (the
+`read_file` denies bind only Gemini's file tool), and `uv run`, `node`, or
+`yarn` can start any program, `gcloud` included. agy's terminal sandbox
+(`agy --sandbox`, `toolPermission: proceed-in-sandbox`) is no fix either: in a
+probe on 2026-10-15 (agy 1.3.5, WSL) it still showed the `gcloud` and `gh`
+configuration and allowed writes outside the project, while it blocked the
+network and writes inside the project, which the gates and the push need. What holds is the clone without `.env`, `env -i`,
+the rules in this skill, and the owner's trust in Gemini (2026-10-22); the
+permission list only stops the prompts and the obvious slips. Claude edits
+the settings file only when the owner asks, and touches nothing else in that
+folder: the agy login lives there.
 
 On a new machine, merge the rules in once (this replaces the `permissions`
 lists and keeps every other setting):
