@@ -44,6 +44,7 @@ class TestRegistry:
         assert runtime.file_name == "plot.py" and runtime.code_artifact == "plot.py" in CODE_ARTIFACTS
         assert runtime.placeholder == PLACEHOLDER and runtime.cpu_seconds == 45 and runtime.render_p95_s == 15.0
         assert runtime.blocking_rules == BLOCKING_RULES and runtime.adaptation_targets == PYTHON_TARGETS
+        assert runtime.review_texts is False  # the requested texts stay the probe's to check
         assert has_runtime(library)
 
     def test_the_r_runtime_is_bound_to_ggplot2(self) -> None:
@@ -56,6 +57,7 @@ class TestRegistry:
         assert runtime.cpu_seconds == 45 and runtime.render_p95_s == 15.0
         assert runtime.blocking_rules == BLOCKING_RULES | {"dataset-package"}
         assert set(runtime.adaptation_targets) == set(PYTHON_TARGETS)
+        assert runtime.review_texts is True  # no probe: the review finds the requested texts in the image
         assert has_runtime("ggplot2")
         with pytest.raises(ValueError, match="python library"):
             RRuntime(library="matplotlib")

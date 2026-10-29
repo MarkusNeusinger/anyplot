@@ -18,7 +18,7 @@ another provider, model or location.
 | `AGENT_STATUS_BAR` | `0.95` | `catalogue` reviews: the ship bar; a shipped render at or above it, with no measured gate or validator finding left, shows without notes (`ok`) |
 | `AGENT_STATUS_SCORE` | `0` | `catalogue` reviews: the review score (0 to 100) a shipped render also needs for `ok`; 0 turns the condition off (owner decision pending) |
 | `AGENT_GATE_REPAIR` | `review` | When measured findings of a render (advisory gate lines, ADAPTATION findings) start a repair: `review` (they go to the self-review and, as gate notes, to the review, and a round whose render still has them after its review is repaired with them) or `first` (straight to the repair round, skipping the self-review and the review; live before 2026-10-14) |
-| `AGENT_EXPECT_CHECK` | `repair` | A text or number format the user asked for (the root's `expected_texts`) that the render's drawn texts do not show: `repair` (a measured finding: the repair round gets it, and an unfixed miss is a residual line), `note` (the residual line only) or `off` (owner decision pending) |
+| `AGENT_EXPECT_CHECK` | `repair` | A text or number format the user asked for (the root's `expected_texts`) that the render's drawn texts do not show, or, for a render without drawn texts on a runtime whose reviewer checks them (R), that the review cannot find in the image: `repair` (a finding the repair round gets, and an unfixed miss is a residual line), `note` (the residual line only) or `off` (owner decision pending) |
 | `AGENT_SHIP_CLEAN_MARGIN` | `3` | `catalogue` reviews with `AGENT_SHIP_BEST`: a render without measured findings ships over a higher-scored one with them when it meets the ship bar or is at most this many points below it |
 | `AGENT_REPAIR_SELF_REVIEW` | `false` | With `AGENT_SELF_REVIEW` on, whether a repair round proofreads its render too, not only the first round |
 | `AGENT_SHIP_BEST` | `true` | `catalogue` reviews: review every render and ship the best-scored version, not the last |
@@ -232,13 +232,16 @@ class AgentSettings(BaseSettings):
 
     expect_check: Literal["repair", "note", "off"] = "repair"
     """What a requested text or number format the render does not show does (`AGENT_EXPECT_CHECK`,
-    `grounding.expected_misses` over the root's `expected_texts`).
+    `grounding.expected_misses` over the root's `expected_texts`, or `grounding.reviewed_misses` when a
+    render without drawn texts hands them to its review, `RuntimeAdapter.review_texts`).
 
     `repair`: it is a measured finding like an advisory gate line: the self-review and the review see
     it, a round whose render still misses it is repaired with it, and a shipped render that still
-    misses it carries it as a residual line (`needs_attention`). `note`: only the residual line, no
-    repair round for it. `off`: no check. The choice between `repair` and `note` is a product
-    decision left to the owner: a repair round costs about 40 s, a false miss would spend it."""
+    misses it carries it as a residual line (`needs_attention`); a miss the review reports sends its
+    round to the repair whatever the points, as a visible defect does. `note`: only the residual line,
+    no repair round for it. `off`: no check, and no texts for the review. The choice between `repair`
+    and `note` is a product decision left to the owner: a repair round costs about 40 s, a false miss
+    would spend it."""
 
     repair_self_review: bool = False
     """`AGENT_REPAIR_SELF_REVIEW`: whether a repair round proofreads its render before the review, as the

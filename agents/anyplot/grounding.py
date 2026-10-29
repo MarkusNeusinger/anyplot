@@ -22,6 +22,13 @@ Two measurements, both code:
   label or ticks draw it) must use its decimal mark, dates and three-digit groups aside.
   Each miss becomes a residual line, so the result says it honestly, and with
   `AGENT_EXPECT_CHECK=repair` a measured finding the repair round gets.
+
+A render without drawn texts (R today, whose renderer writes no probe) is checked by the
+reviewer instead where its runtime says so (`RuntimeAdapter.review_texts`, owner decision of
+2026-10-29): the review request carries the requested texts, the reviewer reports each one it
+cannot find in the image as a defect line under `EXPECT_LINE_ID` that quotes it, and
+`reviewed_misses` reads those lines back. Only a render no readable review answered for keeps
+`UNVERIFIED_LINE`.
 """
 
 import re
@@ -29,6 +36,8 @@ import unicodedata
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
+
+from core.defects import DEFECT_RE
 
 from .schemas import MAX_SHOWN_TEXT_CHARS, ShownGroup
 
@@ -56,9 +65,12 @@ UNVERIFIED_LINE = (
     "SC-04 ({theme}): the requested texts could not be checked, since the renderer reported no drawn texts "
     "→ compare them with the image. Likely cause: a renderer without the probe's text report."
 )
-"""The residual line of a render with requested texts but no `labels` in its probe: never a silent pass."""
+"""The residual line of a render with requested texts but no `labels` in its probe, unless a readable review
+answered for them (`reviewed_misses`): never a silent pass."""
 EXPECT_LINE_ID = {"text": "SC-04", "format": "SC-02"}
 """The rubric id a missing requested text (title, legend, label) or number format is reported under."""
+_QUOTED = re.compile(r'["“”„«»]([^"“”„«»\n]+)["“”„«»]')
+"""A passage of a reviewer's line in straight or typographic double quotes or guillemets."""
 _MATH_SPACE = re.compile(r"\\[,;:! ]|\\q?quad\b")
 """Mathtext that draws a space: read as a space."""
 MATH_SYMBOLS: dict[str, str] = {
@@ -347,4 +359,31 @@ def expected_misses(expected: Sequence[str], drawn: DrawnTexts | None) -> list[E
         wrong = None if mark is None else ("." if mark == "," else ",")
         if (not applies and drawn.complete) or (wrong is not None and any(_wrong_mark(t, wrong) for t in applies)):
             misses.append(ExpectMiss(token, "format", _observed(shown, "format")))
+    return misses
+
+
+def reviewed_misses(expected: Sequence[str], lines: Sequence[str]) -> list[tuple[str, str]]:
+    """The requested texts a review reports missing from the image, each with the first defect line that does.
+
+    For a render without drawn texts the reviewer gets the requested texts and reports each one
+    it cannot find as a defect line under `EXPECT_LINE_ID` (SC-04, or SC-02 for a number format)
+    that quotes it. A line names a requested text when one of its quoted passages reads as that
+    text (`_norm`: case, spacing, quotes and dashes aside), so a quoted `Temperatur (°C)` never
+    names a requested `Temperatur`; a line without quotes names every requested text it holds
+    whole (`_contains`). Any other line, and a text no line names, is no miss: the reviewer found
+    it.
+    """
+    misses: list[tuple[str, str]] = []
+    for token in dict.fromkeys(" ".join(item.split()) for item in expected):
+        wanted = _norm(token)
+        if not wanted:
+            continue
+        for line in lines:
+            match = DEFECT_RE.match(line)
+            if match is None or not set(EXPECT_LINE_ID.values()) & set(match["ids"].split(", ")):
+                continue
+            quoted = [_norm(passage) for passage in _QUOTED.findall(line)]
+            if (wanted in quoted) if quoted else _contains(_norm(line), wanted):
+                misses.append((token, line))
+                break
     return misses

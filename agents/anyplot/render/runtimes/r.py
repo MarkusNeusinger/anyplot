@@ -25,7 +25,10 @@ prove it with a preflight before the code runs. As for Python, the local backend
 
 **Outputs.** R writes `plot-<theme>.png` and no probe: the host gates R1 to R3 judge the
 render, and the advisory gates (G3 to G12) have nothing to read, as for altair, pygal
-and lets-plot.
+and lets-plot. Nor are there drawn texts to check the user's requested texts against, so
+the reviewer finds them in the image instead (`review_texts`, owner decision of
+2026-10-29): a run that asks for a text is `needs_attention` only when the review cannot
+find it, or when no readable review answered for it.
 
 **Data runs and conversions** stay Python's: `run_data_code` runs the Python the root
 translated, whatever the plot's language, and a conversion reads a dropped file with the
@@ -107,6 +110,8 @@ class RRuntime:
     """The working form's data placeholder, `df <- load_user_data()`, which the loader replaces."""
     blocking_rules: frozenset[str] = BLOCKING_RULES | {DATASET_PACKAGE_RULE}
     adaptation_targets: Mapping[str, str] = ADAPTATION_TARGETS
+    review_texts = True
+    """R writes no probe, so the reviewer finds the requested texts in the image (module docstring, "Outputs")."""
 
     def __init__(
         self,

@@ -97,6 +97,10 @@ class PythonRuntime:
     """The working form's data placeholder, which the loader replaces."""
     blocking_rules: frozenset[str] = BLOCKING_RULES
     adaptation_targets: Mapping[str, str] = ADAPTATION_TARGETS
+    review_texts = False
+    """The requested texts are checked against the probe's drawn texts, as before 2026-10-29: matplotlib, seaborn
+    and plotnine draw through matplotlib's probe. altair, pygal and lets-plot write no probe either, so a request
+    for a text keeps the `UNVERIFIED_LINE` note there until the owner moves them to the reviewer's check too."""
 
     def __init__(
         self,
