@@ -18,62 +18,61 @@ IMPRINT_PALETTE <- c(
   "#AE3030", "#2ABCCD", "#954477", "#99B314"
 )
 
-# Annual budget allocation by department (millions USD)
-budget <- tibble::tibble(
-  department = c("R&D", "Marketing", "Operations", "Sales", "HR", "IT"),
-  amount     = c(32, 22, 18, 14, 10, 4)
+# Columns: set these to your table's column names
+DEPARTMENT <- "Department"            # role: category
+BUDGET     <- "Budget (million USD)"  # role: value
+
+# Data: replace this block with your own table, for example df <- read.csv("budget.csv", check.names = FALSE)
+df <- tibble::tibble(
+  !!DEPARTMENT := c("R&D", "Marketing", "Operations", "Sales", "HR", "IT"),
+  !!BUDGET     := c(32, 22, 18, 14, 10, 4)
 )
 
-budget <- budget |>
-  arrange(desc(amount)) |>
+# Plot: reads only df and the constants above
+EXPLODE_OFFSET <- 0.12  # radial shift of the largest slice
+LABEL_MIN_PCT  <- 5     # narrower slices get their label outside the pie
+
+df <- df |>
+  arrange(desc(.data[[BUDGET]])) |>
   mutate(
-    department = factor(department, levels = department),
-    pct        = amount / sum(amount) * 100,
-    label      = if_else(pct >= 5, sprintf("%.0f%%", pct), "")
+    category = factor(.data[[DEPARTMENT]], levels = unique(.data[[DEPARTMENT]])),
+    value    = .data[[BUDGET]],
+    pct      = value / sum(value) * 100,
+    label    = sprintf("%.0f%%", pct),
+    inside   = pct >= LABEL_MIN_PCT,
+    # coord_polar stacks the last level first
+    ymax     = rev(cumsum(rev(value))),
+    ymin     = ymax - value,
+    ymid     = (ymin + ymax) / 2,
+    shift    = if_else(value == max(value), EXPLODE_OFFSET, 0),
+    xmin     = shift,
+    xmax     = 1 + shift,
+    xlabel   = if_else(inside, shift + 0.65, xmax + 0.1)
   )
 
-# Pre-compute cumulative y positions (coord_polar stacks last-level-first).
-budget <- budget |>
-  mutate(
-    ymax = rev(cumsum(rev(amount))),
-    ymin = ymax - amount,
-    ymid = (ymin + ymax) / 2
-  )
+palette_named <- setNames(IMPRINT_PALETTE[seq_len(nrow(df))], levels(df$category))
 
-# Explode largest slice (R&D 32%) outward by shifting its x range.
-# Using geom_rect with explicit xmin/xmax avoids position_stack limitations.
-EXPLODE_OFFSET <- 0.12
-budget <- budget |>
-  mutate(
-    xmin = if_else(department == "R&D", 0.5 + EXPLODE_OFFSET, 0.5),
-    xmax = if_else(department == "R&D", 1.5 + EXPLODE_OFFSET, 1.5),
-    xmid = (xmin + xmax) / 2
-  )
-
-palette_named <- setNames(
-  IMPRINT_PALETTE[seq_len(nrow(budget))],
-  levels(budget$department)
-)
-
-p <- ggplot(budget) +
+p <- ggplot(df) +
   geom_rect(
-    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = department),
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = category),
     color     = PAGE_BG,
     linewidth = 0.8
   ) +
   geom_text(
-    aes(x = xmid, y = ymid, label = label),
-    color    = "#FAF8F1",
+    aes(x = xlabel, y = ymid, label = label, color = inside),
+
     size     = 3.8,
-    fontface = "bold"
+    fontface = "bold",
+    show.legend = FALSE
   ) +
-  scale_x_continuous(limits = c(0.5, 1.65), expand = c(0, 0)) +
-  scale_y_continuous(limits = c(0, 100), expand = c(0, 0)) +
+  scale_color_manual(values = c("TRUE" = "#FAF8F1", "FALSE" = INK)) +
+  scale_x_continuous(limits = c(0, 1.45), expand = c(0, 0)) +
+  scale_y_continuous(limits = c(0, sum(df$value)), expand = c(0, 0)) +
   coord_polar(theta = "y", start = 0) +
   scale_fill_manual(values = palette_named) +
   labs(
     title = "pie-basic · r · ggplot2 · anyplot.ai",
-    fill  = "Department"
+    fill  = DEPARTMENT
   ) +
   theme_void() +
   theme(
