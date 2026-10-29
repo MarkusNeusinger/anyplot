@@ -33,10 +33,9 @@ second opinions call Gemini through Vertex AI instead (`/zweitmeinung`).
 ## 1. Claude: write the task
 
 **Good Gemini tasks** need no credentials and no production access, can be
-verified by commands that run locally, and are worth an hour of work or more.
-A mechanically verifiable task that fits a roughly 30-minute cloud run goes to
-Google Jules instead (`/jules-task`); a large refactor that must keep behaviour
-identical stays here. Claude does a quick fix directly; the hand-over costs more
+verified by commands that run locally, and are worth an hour of work or more,
+up to a large refactor that must keep behaviour identical (section 3, step 3
+says how to prove that). Claude does a quick fix directly; the hand-over costs more
 than it saves there. Propose this route yourself: when planning turns up a
 longer task that fits, offer it to the owner as an option (owner, 2026-10-22).
 The longer Gemini is to run, the more planning goes in first: for a large task,
@@ -288,6 +287,40 @@ This section is for the Gemini agent in the owner's agy session.
    - Add Fable for high-risk diffs: security, production data, sandboxing,
      privacy.
    - Gemini never reviews its own work.
+   - **A refactor that must keep behaviour identical needs proof**, and green CI
+     is not proof: on 2026-10-29 a Jules split of DebugPage passed CI and a
+     browser comparison and still changed visible text. Run the checks yourself,
+     outside the subagent:
+     - **jsdom snapshot with the existing test's mocks**, the strongest check.
+       Copy the mock data and fetch stubs of the page's existing test into a
+       temporary test file (not committed), fix the clock
+       (`vi.setSystemTime`), render the page, wait for its data, and write
+       `container.innerHTML` with React ids (`:r…:`) and emotion class hashes
+       (`css-…`) normalised. Run it in a worktree of the base and of the
+       branch and diff: the kept split had 0 differing lines, the rejected one
+       206.
+     - **Browser comparison** for pages whose data comes from the API: build
+       base and branch with `VITE_API_URL=https://api.anyplot.ai` (a plain
+       local build points at `localhost:8000` and renders error states), serve
+       each with `yarn vite preview --port <p>`, and compare the normalised
+       text and tag sequence of `<main>` per route, loading the base twice to
+       measure noise. Pages behind the admin token show only their locked
+       state there.
+     - **Canvas code** (the map's ForceGraph2D paint callbacks) is invisible to
+       both: diff the moved callback bodies against the original.
+     - Loading, error, and empty states are invisible to a check of the
+       finished page: snapshot them too, with a fetch stub that never resolves
+       and one that fails. On 2026-10-29 a change lost the page title in
+       exactly those states.
+     - Stop a preview server by the PID that listens on its port, never with
+       `pkill -f` or `pgrep -f` on a pattern that also appears in your own
+       command, which kills the calling shell:
+
+       ```bash
+       pid=$(ss -ltnpH "sport = :<p>" | grep -o 'pid=[0-9]*' | head -1 | cut -d= -f2)
+       [ -n "$pid" ] && kill "$pid"
+       ```
+
 4. **Fix or send back.** Fix small defects yourself in the worktree and push
    them to the branch; Gemini pulls them before it continues. Larger ones go
    back as a PR comment (`gh pr comment`), and the owner tells Gemini to
