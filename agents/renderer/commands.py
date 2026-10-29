@@ -46,8 +46,9 @@ sandbox like an exec-mode row's (`executor.sandbox_env`) and the local Docker ba
 `render_p95_s` is what the agents' pipeline reserves for a repair attempt's render
 when it checks its soft deadline.
 
-A row's `toolchain` names the binaries the image must carry on `SANDBOX_PATH` for the
-row to run; the renderer checks them at startup, reports them in `GET /status` and
+A row's `toolchain` names the binaries the image must carry for the row to run, each a
+name on `SANDBOX_PATH` or an absolute path (R's and Julia's binaries, which `shutil.which`
+checks as they stand); the renderer checks them at startup, reports them in `GET /status` and
 refuses a job whose language lacks them (`503 runtime_unavailable`). The Python row
 needs none beyond the interpreter the settings name.
 
@@ -182,7 +183,7 @@ class RuntimeCommand:
     """The row's own environment, after `ANYPLOT_THEME` and a Python row's matplotlib settings, whose values it may
     replace, and before `PATH`, `HOME` and the limit variables, which it never replaces (`executor.sandbox_env`)."""
     toolchain: tuple[str, ...] = ()
-    """Binaries the image must carry on `SANDBOX_PATH` for the row to run."""
+    """Binaries the image must carry for the row to run: names on `SANDBOX_PATH`, or absolute paths."""
     rlimit_as: bool = True
     """Whether the configured `RLIMIT_AS` applies; off where the runtime reserves address space it never uses."""
     rlimit_as_mb: int | None = None
@@ -308,7 +309,8 @@ def code_file(language: str, library: str) -> str:
 
 
 def toolchains() -> dict[Language, tuple[str, ...]]:
-    """The binaries each language needs on `SANDBOX_PATH`, for the renderer's startup check."""
+    """The binaries each language needs (on `SANDBOX_PATH`, or by an absolute path), for the renderer's startup
+    check."""
     return {language: _row(language, _first_library(language)).toolchain for language in LANGUAGES}
 
 
