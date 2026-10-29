@@ -275,8 +275,9 @@ This section is for the Gemini agent in the owner's agy session.
      unpushed work is lost). Its final message names its last commit, the
      gate results, and its open questions.
    - Watch them in `/agents`; approvals of a subagent show there too.
-   - **Integrate** when all have finished: on `gemini/<slug>` (from
-     `origin/main`, or the existing branch), merge each package with
+   - **Integrate** when all have finished. Fetch, then switch to the task
+     branch: `git switch -c gemini/<slug> origin/main` the first time,
+     `git switch gemini/<slug>` once it exists. Merge each package with
      `git merge --no-ff origin/gemini/<slug>-<k>`, the only merge you make.
      Disjoint packages merge without conflicts; a conflict means two packages
      touched the same file, so stop and tell the owner. Run every package's
