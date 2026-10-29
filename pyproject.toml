@@ -139,7 +139,7 @@ lib-letsplot = ["lets-plot>=4.11.0", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-l
 # service must never do. tests/unit/agents/code/test_treesitter.py pins both, and
 # agents/Dockerfile keeps only the grammars the code profiles load.
 agents = [
-    "google-adk==2.11.0",
+    "google-adk==2.13.0",
     "anthropic[vertex]>=1.8.0",
     "tree-sitter==0.26.0",
     "tree-sitter-language-pack==0.13.0",
