@@ -1,5 +1,6 @@
 """Tests for agents/anyplot/code/profiles/r/normalise.py: header, save target, title and canvas."""
 
+import math
 import re
 from collections import Counter
 from fractions import Fraction
@@ -148,15 +149,23 @@ def test_a_split_title_and_a_format_title_get_notes() -> None:
         ((7, 7), (2400, 2400), "342.9"),
     ],
 )
-def test_plan_dpi_hits_the_target_whether_ragg_truncates_or_rounds(
+def test_plan_dpi_hits_the_target_as_ragg_truncates(
     size: tuple[float, float], target: tuple[int, int], literal: str
 ) -> None:
+    """ragg renders floor(inches * dpi) per side (measured in the toolchain image on 2026-10-29)."""
     plan = plan_dpi(size)
 
     assert plan is not None and plan[:2] == (target, literal) and plan[2]
     for side, pixels in zip(size, target, strict=True):
-        assert pixels <= side * float(literal) < pixels + 0.5
-        assert Fraction(pixels) <= Fraction(side) * Fraction(literal) < pixels + Fraction(1, 2)
+        assert math.floor(side * float(literal)) == pixels
+        assert Fraction(pixels) <= Fraction(side) * Fraction(literal) < pixels + 1
+
+
+def test_the_measured_truncation() -> None:
+    """13.333 in at 240 dpi rendered 3199 px in the toolchain image: the model says so too."""
+    canvas = measure_canvas(save(width="13.333", height="7.5", dpi="240"))
+
+    assert canvas.pixels == (3199, 1800) and not canvas.on_target
 
 
 def test_plan_dpi_lands_within_the_tolerance_for_a_hair_off_aspect() -> None:
@@ -235,7 +244,8 @@ def test_code_with_syntax_problems_is_left_alone() -> None:
 def test_catalogue_corpus() -> None:
     """All 325 files normalise idempotently onto 3200x1800 (251) or 2400x2400 (74), with these changes (2026-10-29):
     325 headers and 325 titles removed, 34 dpi rewrites, 1 inlined target; 6 title notes (5 split over `paste0`,
-    one of them a map spec, and 1 `sprintf` format)."""
+    one of them a map spec, and 1 `sprintf` format). For every rewritten save the test computes the PNG itself from
+    the save's literals as ragg does, floor(inches * dpi) per side, independent of the normaliser's model."""
     changes: Counter[str] = Counter()
     notes: Counter[str] = Counter()
     canvases: Counter[tuple[int, int] | None] = Counter()
@@ -247,6 +257,13 @@ def test_catalogue_corpus() -> None:
         canvas = measure_canvas(report.code)
         assert canvas.on_target, (path, canvas.note)
         canvases[canvas.pixels] += 1
+        if any("dpi" in change for change in report.changes):
+            saved = find_regions(report.code).save
+            assert saved is not None
+            width, height, dpi, units = (saved.argument(name) for name in ("width", "height", "dpi", "units"))
+            assert width and height and dpi and units and units.text == '"in"', path
+            pixels = (math.floor(float(width.text) * float(dpi.text)), math.floor(float(height.text) * float(dpi.text)))
+            assert pixels == canvas.target, (path, pixels)
 
     assert changes == Counter(
         {

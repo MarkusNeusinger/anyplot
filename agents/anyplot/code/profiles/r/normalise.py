@@ -27,12 +27,14 @@ order `_STEPS` runs them, each only when it applies:
 4. **Canvas**, last: only `dpi =` of the protected save changes, so the PNG lands on
    3200x1800 or 2400x2400 while the layout in inches stays (the counterpart of lets-plot's
    scale-only rewrite, owner decision of 2026-10-29). ggsave hands `width` and `height`
-   in inches and `res = dpi` to `ragg::agg_png`, which renders `inches * dpi` pixels per
-   side; the dpi is the shortest decimal for which `inches * dpi` lies in `[t, t + 0.5)`
-   for the target `t`, so the canvas is exact whether ragg truncates or rounds. In the
-   catalogue 219 saves are 8 x 4.5 in at 400 dpi and 72 are 6 x 6 at 400 (both on target
-   already), 32 are 16 x 9 at 300 (4800x2700, rewritten to 200), and one each 9 x 9 and
-   12 x 12 at 300 (2700x2700 and 3600x3600, rewritten to 266.6667 and 200). Width or
+   in inches and `res = dpi` to `ragg::agg_png`, which renders `floor(inches * dpi)`
+   pixels per side: ragg truncates (measured on 2026-10-29 in the toolchain image, R 4.6.1:
+   13.333 in at 240 dpi gives 3199 px, 16 x 9 in at 200 dpi exactly 3200x1800). The dpi is
+   the shortest decimal for which `inches * dpi`, in R's double arithmetic, lies in
+   `[t, t + 1)` for the target `t`. In the catalogue 219 saves are 8 x 4.5 in at 400 dpi
+   and 72 are 6 x 6 at 400 (both on target already), 32 are 16 x 9 at 300 (4800x2700,
+   rewritten to 200), and one each 9 x 9 and 12 x 12 at 300 (2700x2700 and 3600x3600,
+   rewritten to 266.7 and 200). Width or
    height not a number literal, `units = "px"` (whose pixels no dpi changes), an aspect
    no dpi brings within 16 px of a target, or a save that is not the protected one leave
    the save alone with a note, which `measure_canvas` and the readiness scan report.
@@ -267,12 +269,9 @@ def _canvas_inputs(source: Source, save: SaveCall) -> tuple[tuple[float, float],
     return size, named, dpi_argument.text
 
 
-def _pixels(size: tuple[float, float], dpi: float) -> tuple[int, int] | None:
-    """`inches * dpi` per side (R's double arithmetic) as whole pixels when truncating and rounding agree, else None."""
-    sides = [side * dpi for side in size]
-    if any(side - math.floor(side) >= 0.5 for side in sides):
-        return None
-    return math.floor(sides[0]), math.floor(sides[1])
+def _pixels(size: tuple[float, float], dpi: float) -> tuple[int, int]:
+    """`inches * dpi` per side in R's double arithmetic, truncated as ragg truncates (module docstring, step 4)."""
+    return math.floor(size[0] * dpi), math.floor(size[1] * dpi)
 
 
 def _nearest_target(size: tuple[float, float]) -> tuple[int, int]:
@@ -302,11 +301,11 @@ def plan_dpi(size: tuple[float, float]) -> tuple[tuple[int, int], str, bool] | N
 
     An exact hit on both sides is preferred; failing that, a dpi that renders one side
     exactly and the other within `TOLERANCE`. The search runs on exact fractions of the
-    sides and checks each candidate in floating point, as R multiplies.
+    sides, for `t <= inches * dpi < t + 1` (ragg truncates), and checks each candidate in
+    floating point, as R multiplies.
     """
     ordered = sorted(TARGETS, key=lambda target: target != _nearest_target(size))
     width, height = Fraction(size[0]), Fraction(size[1])
-    half = Fraction(1, 2)
     for target in ordered:
         tw, th = target
 
@@ -314,7 +313,7 @@ def plan_dpi(size: tuple[float, float]) -> tuple[tuple[int, int], str, bool] | N
             return _pixels(size, dpi) == t
 
         low = max(tw / width, th / height)
-        high = min((tw + half) / width, (th + half) / height)
+        high = min((tw + 1) / width, (th + 1) / height)
         literal = _shortest(low, high, exact)
         if literal is not None:
             return target, literal, True
@@ -322,10 +321,10 @@ def plan_dpi(size: tuple[float, float]) -> tuple[tuple[int, int], str, bool] | N
 
         def near(dpi: float, t: tuple[int, int] = target) -> bool:
             pixels = _pixels(size, dpi)
-            return pixels is not None and abs(pixels[0] - t[0]) <= TOLERANCE and abs(pixels[1] - t[1]) <= TOLERANCE
+            return abs(pixels[0] - t[0]) <= TOLERANCE and abs(pixels[1] - t[1]) <= TOLERANCE
 
         for side, pixels in ((width, target[0]), (height, target[1])):
-            literal = _shortest(pixels / side, (pixels + half) / side, near)
+            literal = _shortest(pixels / side, (pixels + 1) / side, near)
             if literal is not None:
                 return target, literal, False
     return None
@@ -343,9 +342,6 @@ def measure_canvas(code: str) -> Canvas:
     size, dpi, _ = inputs
     target = _nearest_target(size)
     pixels = _pixels(size, dpi)
-    if pixels is None:
-        sides = f"{size[0] * dpi:g}x{size[1] * dpi:g}"
-        return Canvas(size, dpi, None, target, f"the save renders {sides} px, which ragg may round either way")
     if pixels == target:
         return Canvas(size, dpi, pixels, target, None)
     over = " (over R2's pixel cap)" if pixels[0] * pixels[1] > MAX_IMAGE_PIXELS else ""
@@ -387,7 +383,7 @@ def _normalise_canvas(code: str) -> StepResult:
             return code, [], ["canvas: the save has no arguments; the dpi was left alone"]
         edit = (last.end, last.end, f", dpi = {literal}")
     rendered = _pixels(size, float(literal))
-    shown = f"{rendered[0]}x{rendered[1]}" if rendered is not None else f"{target[0]}x{target[1]}"
+    shown = f"{rendered[0]}x{rendered[1]}"
     change = f"set the save's dpi from {dpi_text} to {literal}: {inches} renders {shown}"
     notes = [] if exact else [f"canvas: {inches} renders {shown}, within {TOLERANCE} px of {target[0]}x{target[1]}"]
     return _apply(code, [edit]), [change], notes

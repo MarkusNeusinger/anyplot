@@ -5,7 +5,7 @@ import pytest
 from agents.anyplot.code.profiles.r.loader import loader_statement, r_literal, to_run_form
 from agents.anyplot.code.profiles.r.validate import validate_security
 from agents.anyplot.code.treesitter import Source, r_string, syntax_problems
-from agents.anyplot.data.kinds import INT32_MAX, column_kinds
+from agents.anyplot.data.kinds import DOUBLE_EXACT_MAX, INT32_MAX, column_kinds, read_kinds
 from agents.anyplot.data.parse import parse_dataset
 
 from .conftest import source
@@ -133,6 +133,21 @@ def test_kinds_from_a_parsed_dataset() -> None:
         "Share": "number",
         "Open": "boolean",
     }
+
+
+def test_integer_cells_beyond_two_to_the_53_are_counted_per_column() -> None:
+    """col_double() reads 9007199254740993 as …992 (toolchain image, 2026-10-29): the owner's data-fidelity rule
+    wants such cells announced with counts, so the kinds expose them."""
+    csv = (
+        "id,small,ok\n"
+        f"{DOUBLE_EXACT_MAX + 1},1,{DOUBLE_EXACT_MAX}\n"
+        f"{-(DOUBLE_EXACT_MAX + 3)},2,{-DOUBLE_EXACT_MAX}\n"
+        ",3,4\n"
+    )
+    kinds = read_kinds(csv, {"id": "integer", "small": "integer", "ok": "integer"})
+
+    assert kinds.kinds == {"id": "big-integer", "small": "integer", "ok": "big-integer"}
+    assert kinds.inexact == {"id": 2}
 
 
 def test_the_int32_edge_and_missing_cells() -> None:

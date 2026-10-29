@@ -19,17 +19,24 @@ The R counterpart of `code/loader.py`. The working form holds exactly one
 with a relative path, so the exported `plot.R` runs next to the downloaded `data.csv`.
 Every column is typed from its kind (`data/kinds.py`, read from the canonical CSV):
 `integer` is `col_integer()`, an integer column past 32 bits (`big-integer`)
-`col_double()`, which holds integers exactly up to 2^53, `number` `col_double()`,
-`boolean` `col_logical()` (`data.csv` writes `True` and `False`), `text`
-`col_character()` (a text column stays text, also when its cells look like numbers),
-`date` `col_date(format = "%Y-%m-%d")` when every cell is a plain ISO date, and
-`datetime` `col_datetime()`, readr's ISO 8601 reader, which turns an offset into UTC and
-reads a time without one as UTC. `data.csv` writes a missing cell as an empty cell and
-nothing else, so `na = ""` makes only that one missing, and a text cell such as `NA`
-(Namibia) stays a value. One thread, no progress bar and an eager read keep the render's
-process and output quiet. readr is in the toolchain image for this read alone; the
-validator does not admit it for the plot code (`validate.LIBRARY_ALLOWLIST`), and the
-run form is never validated, only the working form.
+`col_double()`, which holds integers exactly up to 2^53 only (`ColumnKinds.inexact` counts
+the cells beyond, for the caller to announce), `number` `col_double()`, `boolean`
+`col_logical()` (`data.csv` writes `True` and `False`), `text` `col_character()` (a text
+column stays text, also when its cells look like numbers), `date`
+`col_date(format = "%Y-%m-%d")` when every cell is a plain ISO date, and `datetime`
+`col_datetime()`, readr's ISO 8601 reader, which turns an offset into UTC and reads a time
+without one as UTC. `data.csv` writes a missing cell as an empty cell and nothing else,
+so `na = ""` makes only that one missing, and a text cell such as `NA` (Namibia) stays a
+value. One thread, no progress bar and an eager read keep the render's process and
+output quiet. readr is in the toolchain image for this read alone; the validator does not
+admit it for the plot code (`validate.LIBRARY_ALLOWLIST`), and the run form is never
+validated, only the working form.
+
+Measured with these options in the toolchain image (R 4.6.1, readr; 2026-10-29):
+`col_logical()` reads `True` and `False`; `col_datetime()` keeps microseconds, turns
+`+02:00` into UTC and reads a space separator and `Z`; the text cells `NA` and `001` stay
+text and an empty cell becomes `NA`; `col_double()` reads 9007199254740993 as
+9007199254740992.
 """
 
 import json
