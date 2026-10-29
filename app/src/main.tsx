@@ -8,6 +8,9 @@ import ReactDOM from 'react-dom/client';
 
 import { reportWebVitals } from 'src/analytics/reportWebVitals';
 import { App } from 'src/app';
+import { removeShellDefaults } from 'src/utils/shellMetadata';
+
+removeShellDefaults();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
