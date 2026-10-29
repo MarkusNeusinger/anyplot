@@ -1015,14 +1015,20 @@ qrcode-basic and maze-circular; by SECURITY rule `banned-import` 3, `url-literal
 
 - The owner's matrix run for ggplot2 on Vertex (60 cases), the gate for the public release,
   and with it R's render p95 for the reserve.
-- The scope judge's rubric (`prompts/scope_judge.md`) still names matplotlib and seaborn
-  as the two libraries the assistant adapts and lists ggplot2 and R as `other_library`; it
-  does not see the session's library, so in a ggplot2 session "how does this R code work?"
-  can be refused. Owner question: pass the session's library to the judge, or word the
-  rubric by library.
-- Shared sentences that only matplotlib makes true: the VQ-03 and VQ-06 gate lines (no
-  probe in R) and the polar hint's `ax.set_rlabel_position`; `adapter_highlights.md`
-  (`AGENT_HIGHLIGHTS=data`) has Python examples only.
+- Settled in the same PR: the scope judge's rubric named matplotlib and seaborn as the
+  only libraries the assistant adapts, so since 2026-10-25 plotnine, altair, pygal and
+  lets-plot, and now ggplot2 and questions about R code, could be refused as
+  `other_library`. `scope_judge.md` now has one injected passage
+  (`policy.libraries_passage`): the served libraries from `AGENT_LIBRARIES` and the
+  catalogue's others, grouped by language; a request for this plot in a served library is
+  `in_scope`. The sentences only matplotlib's probe makes true (the VQ-03 and VQ-06 gate
+  lines, the drawn-text check of requested texts, the polar hint) moved into the Python
+  slots, and R's slots say that the host gates judge an R render without a probe;
+  `adapter_highlights.md` has a slot for its code example too (`highlights_prompt`).
+  Both Python prompts stay byte-identical.
+- The fixed `other_library` refusal (`refusals.yaml`, eleven hand-written languages)
+  still says the assistant adapts "only in Python, with matplotlib or seaborn". Owner
+  question: its new wording, written by hand in every language.
 - The 67 catalogue files that size the title font from `nchar(title)` (3a, known issue).
 
 #### 2d. Order of the PRs

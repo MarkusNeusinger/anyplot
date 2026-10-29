@@ -27,6 +27,15 @@
 
 ### Fixed
 
+- **The scope judge refused served libraries as another library.** Its
+  rubric named matplotlib and seaborn as the only libraries the assistant
+  adapts, so this plot in plotnine, altair, pygal, lets-plot or ggplot2, all
+  served to the admin, could get the `other_library` pointer. The rubric now
+  gets the served libraries from `AGENT_LIBRARIES` and the catalogue's others,
+  grouped by language, and a question about the session's code is in scope in
+  any served language. The adapter prompt's sentences that only matplotlib's
+  probe makes true moved into the Python passages, so the R prompt says that
+  the host gates judge an R render without a probe.
 - **Agent result code highlighted in the wrong language.** The result card
   highlighted every version in the page's current language, so after a
   library switch a matplotlib version showed as R; it now takes the language
