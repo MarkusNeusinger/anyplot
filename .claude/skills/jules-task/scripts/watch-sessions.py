@@ -37,19 +37,26 @@ API = "https://jules.googleapis.com/v1alpha/sessions/"
 SETTLED = {"COMPLETED", "FAILED", "AWAITING_PLAN_APPROVAL", "AWAITING_USER_FEEDBACK", "PAUSED"}
 
 
+def fail(message: str) -> None:
+    """Exit 2, the code that tells the caller not to re-arm (`sys.exit(str)` would exit 1)."""
+    print(message, file=sys.stderr, flush=True)
+    sys.exit(2)
+
+
 def api_key() -> str:
     key = os.environ.get("JULES_API_KEY", "").strip()
     if key:
         return key
     common = subprocess.run(
-        ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], capture_output=True, text=True, check=True
+        ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"], capture_output=True, text=True
     ).stdout.strip()
-    env_file = Path(common).parent / ".env"
-    if env_file.is_file():
+    env_file = Path(common).parent / ".env" if common else None
+    if env_file is not None and env_file.is_file():
         for line in env_file.read_text().splitlines():
             if line.startswith("JULES_API_KEY="):
                 return line.split("=", 1)[1].strip().strip('"').strip("'")
-    sys.exit("JULES_API_KEY is neither exported nor in the main checkout's .env")
+    fail("JULES_API_KEY is neither exported nor in the main checkout's .env")
+    return ""
 
 
 def fetch_session(key: str, session_id: str) -> dict | None:
@@ -84,7 +91,8 @@ def pr_files(url: str) -> str:
         capture_output=True,
         text=True,
     )
-    return result.stdout.strip() if result.returncode == 0 else ""
+    # rstrip only the line end: strip() would also eat the tab before an empty base.
+    return result.stdout.rstrip("\r\n") if result.returncode == 0 else ""
 
 
 def main() -> int:
@@ -95,12 +103,12 @@ def main() -> int:
     if "--base" in args:
         position = args.index("--base")
         if position + 1 >= len(args):
-            sys.exit(__doc__)
+            fail(__doc__ or "usage error")
         expected_base = args[position + 1]
         del args[position : position + 2]
-    ids = args
+    ids = list(dict.fromkeys(args))  # a repeated ID would otherwise never let the watch settle
     if not ids:
-        sys.exit(__doc__)
+        fail(__doc__ or "usage error")
     key = api_key()
     poll = int(os.environ.get("POLL_SECONDS", "45"))
     deadline = time.monotonic() + 60 * int(os.environ.get("MAX_MINUTES", "28"))

@@ -28,6 +28,14 @@ concurrency:
   group: ci-tests-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Authors whose code runs here before anyone has read it get no GCP login, no
+  # Cloud SQL proxy, no database password, and no Codecov token, only unit and
+  # integration tests: Dependabot, and Google Jules (`/jules-task`), whose PRs
+  # open straight from its cloud session. The PR author is the reliable signal;
+  # `github.actor` on a Jules branch is often the repository owner.
+  UNTRUSTED_AUTHOR: ${{ github.actor == 'dependabot[bot]' || github.event.pull_request.user.login == 'google-labs-jules[bot]' }}
+
 jobs:
   test:
     name: Run Tests
@@ -38,12 +46,6 @@ jobs:
 
     env:
       ENVIRONMENT: test
-      # Authors whose code runs here before anyone has read it get no GCP login,
-      # no Cloud SQL proxy, and no database password, only unit and integration
-      # tests: Dependabot, and Google Jules (`/jules-task`), whose PRs open
-      # straight from its cloud session. The PR author is the reliable signal;
-      # `github.actor` on a Jules branch is often the repository owner.
-      UNTRUSTED_AUTHOR: ${{ github.actor == 'dependabot[bot]' || github.event.pull_request.user.login == 'google-labs-jules[bot]' }}
 
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -296,8 +298,8 @@ jobs:
       run: yarn test --coverage
 
     - name: Upload frontend coverage to Codecov
-      # No Codecov token after a Jules PR's code ran (see UNTRUSTED_AUTHOR in the test job).
-      if: steps.check.outputs.should_test == 'true' && github.event.pull_request.user.login != 'google-labs-jules[bot]'
+      # No Codecov token after unread code ran (UNTRUSTED_AUTHOR at the top).
+      if: steps.check.outputs.should_test == 'true' && env.UNTRUSTED_AUTHOR != 'true'
       uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5  # v7.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
