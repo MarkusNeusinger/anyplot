@@ -98,11 +98,40 @@ class TestTable:
         assert r.toolchain == (commands.R_BINARY,) and r.rlimit_as and r.rlimit_nproc and r.exec_deny
         assert r.env["R_HOME"] == commands.R_HOME and r.env["LD_LIBRARY_PATH"] == f"{commands.R_HOME}/lib"
         assert r.env["LANG"] == "C.UTF-8"
-        julia = command_for("julia", "makie")
-        assert julia.argv == ("julia", f"--project={commands.JULIA_PROJECT}") and julia.toolchain == ("julia",)
-        assert not julia.rlimit_as and julia.rlimit_nproc  # LLVM dies under 1 GiB of address space
-        assert julia.env["JULIA_DEPOT_PATH"].startswith("/tmp/depot:") and julia.env["JULIA_PKG_OFFLINE"] == "true"
         assert EXEC_FLAG == "--exec"
+
+    def test_julia_runs_its_launcher_under_the_exec_filter_with_strict_package_images(self) -> None:
+        """Step 5 after the second opinion of 2026-10-29: the launcher by its path (not on `SANDBOX_PATH`), the
+        preloaded exec filter, and `--compiled-modules=strict`, which fails a cache miss in about a second where
+        `existing` would load the package from source for minutes with exit 0."""
+        julia = command_for("julia", "makie")
+        assert commands.JULIA_BINARY == f"{commands.JULIA_HOME}/bin/julia" and commands.JULIA_BINARY.startswith("/")
+        assert julia.argv == (
+            commands.JULIA_BINARY,
+            f"--project={commands.JULIA_PROJECT}",
+            "--startup-file=no",
+            "--history-file=no",
+            "--compiled-modules=strict",
+            "--heap-size-hint=1536M",
+        )
+        assert not any(
+            flag.startswith("--compiled-modules=") and flag != "--compiled-modules=strict" for flag in julia.argv
+        )
+        assert julia.code_file == "plot.jl" and julia.code_flag == ""
+        assert julia.render_p95_s == 25.0  # J1's sweep: wall p95 20.6 s at 2 CPUs
+        assert julia.toolchain == (commands.JULIA_BINARY,) and julia.exec_deny
+        assert not julia.rlimit_as and julia.rlimit_as_mb is None and julia.rlimit_nproc  # LLVM dies under 1 GiB
+        assert dict(julia.env) == {
+            "LANG": "C.UTF-8",
+            "XDG_CACHE_HOME": "/tmp",
+            "JULIA_NUM_THREADS": "1",
+            "OPENBLAS_NUM_THREADS": "1",
+            "JULIA_DEPOT_PATH": f"/tmp/depot:{commands.JULIA_DEPOT}",
+            "JULIA_CPU_TARGET": commands.JULIA_CPU_TARGET,
+            "JULIA_PKG_OFFLINE": "true",
+            "JULIA_PKG_PRECOMPILE_AUTO": "0",
+        }
+        assert "LD_PRELOAD" not in julia.env  # the harness hands the preload to the child alone
 
     def test_a_pair_outside_the_table_is_refused(self) -> None:
         with pytest.raises(ValueError, match="no runtime command"):
@@ -116,7 +145,7 @@ class TestTable:
         needed = toolchains()
         assert set(needed) == set(LANGUAGES)
         assert needed["python"] == () and needed["r"] == (commands.R_BINARY,)
-        assert needed["javascript"] == ("node",) and needed["julia"] == ("julia",)
+        assert needed["javascript"] == ("node",) and needed["julia"] == (commands.JULIA_BINARY,)
 
     def test_rows_are_frozen(self) -> None:
         row = command_for("r", "ggplot2")

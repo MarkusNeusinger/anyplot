@@ -78,15 +78,43 @@ steps:
         fi
     id: "toolchain-tag"
 
+  # A missing toolchain is built with BuildKit's registry cache (step 5 of
+  # agentic/specs/261024-agent-all-libraries.md): Cloud Build keeps no layer cache between
+  # builds, and without one an R package bump would rerun Julia's precompile, the slow
+  # stage. Each toolchain is a stage of its own `FROM base`, so with `mode=max` every
+  # stage's layers land under one fixed ref in the toolchain's own repository and package,
+  # and the next build reuses the stages whose inputs did not change. The ref is written
+  # with the rights this build already uses for the `t-<hash>` tags and for moving the
+  # renderer's `:latest`. The registry cache needs BuildKit's docker-container driver (the
+  # builder image's buildx 0.23; the daemon's own builder exports no cache), which pushes
+  # the image itself; `--provenance=false` keeps it one image manifest, no index with an
+  # attestation. A cache that cannot be read is a cold build, and one that cannot be
+  # written (`ignore-error`) only a warning: the image and its push still decide the step.
+  # Checked in local Docker with this builder image against a local registry (2026-10-29):
+  # cold in 420 s on 8 CPUs; after an R-only change, with a fresh builder, Julia's stage
+  # came from the cache and the build took 70 s.
   - name: "gcr.io/cloud-builders/docker"
     entrypoint: "bash"
     args:
       - "-ceu"
       - |
         IMAGE=$$(cat toolchain.image)
+        CACHE="$${IMAGE%:*}:buildcache"
         if [ -f toolchain.missing ]; then
-          docker build -t "$$IMAGE" -f agents/renderer/toolchain.Dockerfile .
-          docker push "$$IMAGE"
+          # The first deploy with the cache is its first run against Artifact Registry: should
+          # BuildKit's builder or its push fail there, the build falls back to the daemon's own
+          # builder and push (the path before 2026-10-29), cold but never blocked.
+          if docker buildx create --name toolchain --driver docker-container --use \
+            && docker buildx build --provenance=false --push -t "$$IMAGE" \
+              --cache-from "type=registry,ref=$$CACHE" \
+              --cache-to "type=registry,ref=$$CACHE,mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true" \
+              -f agents/renderer/toolchain.Dockerfile .; then
+            echo "toolchain built with the registry cache"
+          else
+            echo "WARNING: the BuildKit build with the registry cache failed; building the toolchain without it"
+            docker build -t "$$IMAGE" -f agents/renderer/toolchain.Dockerfile .
+            docker push "$$IMAGE"
+          fi
         fi
     id: "toolchain-build"
     waitFor: ["toolchain-tag"]
@@ -260,6 +288,29 @@ steps:
             -H "Content-Type: application/json" --data @job.json -o render.json "$$URL/render" \
             || { echo "the smoke render request failed"; exit 1; }
           python3 -c "import json; r=json.load(open('render.json')); o=r['outputs']['light']; assert o['exit_code']==0 and o['png_base64'], {k: o[k] for k in ('exit_code','reason','attempts','wall_s')}; print('OK: smoke render', o['wall_s'], 's,', o['attempts'], 'attempt(s)')"
+          # 2b. A Makie render through the Julia row (step 5 of
+          #     agentic/specs/261024-agent-all-libraries.md): the depot's package images
+          #     load under gVisor with --compiled-modules=strict and the preloaded exec
+          #     filter, or the render fails within seconds and nothing is promoted. The
+          #     first Julia render of a fresh instance, so its wall time is the cold one.
+          python3 - <<'EOF'
+        import json
+        source = "\n".join([
+            "using CairoMakie",
+            "THEME = get(ENV, \"ANYPLOT_THEME\", \"light\")",
+            "fig = Figure(size = (1600, 900))",
+            "ax = Axis(fig[1, 1], title = \"Größe – smoke\")",
+            "lines!(ax, [1, 2, 3, 4], [3, 1, 4, 2], linewidth = 6)",
+            "save(\"plot-$$(THEME).png\", fig; px_per_unit = 2)",
+        ])
+        job = {"job_id": "smoke-makie", "language": "julia", "library": "makie", "source": source,
+               "data_csv": "x\n1\n", "themes": ["light"], "timeout_s": 90}
+        json.dump(job, open("makie_job.json", "w"))
+        EOF
+          curl -fsS --retry 3 --retry-delay 10 --retry-all-errors --max-time 240 -H "Authorization: Bearer $$TOKEN" \
+            -H "Content-Type: application/json" --data @makie_job.json -o makie.json "$$URL/render" \
+            || { echo "the Makie smoke render request failed"; exit 1; }
+          python3 -c "import json; r=json.load(open('makie.json')); o=r['outputs']['light']; assert o['exit_code']==0 and o['png_base64'], {k: o[k] for k in ('exit_code','reason','attempts','wall_s','stderr_tail')}; print('OK: Makie smoke render', o['wall_s'], 's wall,', o['cpu_s'], 's CPU,', o['max_rss_mb'], 'MiB,', o['attempts'], 'attempt(s)')"
           # 3. A real data run (POST /run-data, run_data_code): the harness in
           #    data mode with its audit-hook guard armed returns a 2-row table.
           python3 - <<'EOF'
@@ -318,9 +369,18 @@ images:
   - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID"
   - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest"
 
+# The whole deploy runs on 8 vCPUs (owner decision of 2026-10-29, step 5 of
+# agentic/specs/261024-agent-all-libraries.md): Julia's precompile in the toolchain build
+# runs packages in parallel, one per core (821 s on 4 CPUs in the spike of 2026-10-24,
+# about twice that on the default machine's two). A deploy with the toolchain present
+# builds and deploys in minutes on any machine.
 options:
   logging: CLOUD_LOGGING_ONLY
+  machineType: E2_HIGHCPU_8
 
-# 1200 s before the toolchain joined the build; a deploy that builds a new toolchain adds
-# a few minutes (R's packages are binaries, about 2 minutes cold).
-timeout: "1800s"
+# 1200 s before the toolchain joined the build, 1800 s with R alone (about 2 minutes cold).
+# A cold toolchain with Julia took 420 s on 8 pinned CPUs in local Docker, the cache export
+# and push included (2026-10-29); with the renderer's build, the pushes of about 4 GB,
+# the deploy and the smoke, a deploy that builds the toolchain should take about 20
+# minutes. 3600 s leaves room for a slower worker and registry.
+timeout: "3600s"

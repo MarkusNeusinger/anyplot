@@ -708,7 +708,8 @@ class SandboxExecutor:
         return os.access(self.config.sandbox_binary, os.X_OK)
 
     def languages(self) -> dict[str, bool]:
-        """Per language of the command table, whether every binary of its toolchain is on the sandbox's `PATH`.
+        """Per language of the command table, whether every binary of its toolchain is on the sandbox's `PATH`, or,
+        for one named by an absolute path (R, Julia), executable there.
 
         The sandbox sees this image's files, so the lookup runs here, on the host side of the
         same filesystem. Python needs nothing beyond the configured interpreter.

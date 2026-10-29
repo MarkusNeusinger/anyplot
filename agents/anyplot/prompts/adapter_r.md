@@ -14,7 +14,7 @@ the blank lines around it are not part of it. This comment never reaches a model
 a scales labeller such as `scales::label_number(scale = 1e-6, accuracy = 0.1, decimal.mark = ",", big.mark = ".", suffix = " Mio.")` that writes the decimal comma and the unit
 
 <!-- slot: requested_check -->
-An R render has no probe, so the server cannot read its drawn texts back: the result marks the requested texts as not checked, and only your code makes them right.
+An R render has no probe, so the server cannot read its drawn texts back: the reviewer looks for each requested text in the image instead, and reports one it cannot find, which then comes back to you as a finding.
 
 <!-- slot: measured_hints -->
 An R render has no probe, so no hint is ever a target measured on a render: every hint quotes the code.

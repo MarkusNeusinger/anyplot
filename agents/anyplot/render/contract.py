@@ -256,6 +256,13 @@ class RuntimeAdapter(Protocol):
     """The target of each soft ADAPTATION finding's defect line, in the language's own code; a rule without one gets
     the pipeline's default."""
 
+    @property
+    def review_texts(self) -> bool:
+        """Whether the reviewer checks the user's requested texts in the image when a render reports no drawn texts
+        (owner decision of 2026-10-29, for a library without the text probe): False leaves such a render with the
+        `grounding.UNVERIFIED_LINE` note, True hands the texts to its review (`grounding.reviewed_misses`)."""
+        ...
+
     def command(self, theme: Theme) -> list[str]:
         """The argv that renders the code file in the work directory (never a shell string)."""
         ...

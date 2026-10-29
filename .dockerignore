@@ -35,6 +35,11 @@
 !prompts/quality-criteria.md
 !prompts/workflow-prompts/impl-repair-claude.md
 !prompts/workflow-prompts/ai-quality-review.md
+# The renderer's toolchain image (agents/renderer/toolchain.Dockerfile) instantiates and
+# precompiles the catalogue's Julia project, the same two files the pipeline's setup-julia
+# reads, so the renderer runs the pipeline's package versions.
+!Project.toml
+!Manifest.toml
 # The eval harness (agents/evals/) is not service code: its fixture cases are
 # about 3 MB, its local reports hold renders and galleries, and its promoted
 # feedback cases (agents/evals/.cases) hold users' data, which must never reach

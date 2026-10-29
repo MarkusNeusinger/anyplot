@@ -392,6 +392,10 @@ class ReviewRequest(_ServerContract):
     """The screened notes pasted with the data and the source of a computed table (`dataset_context.py`)."""
     file_name: str = Field(default="", max_length=MAX_FILE_NAME_CHARS)
     """The screened name of the dropped file, as for `AdaptRequest.file_name`."""
+    expected_texts: list[ExpectedText] = Field(default_factory=list, max_length=MAX_EXPECTED_TEXTS)
+    """The texts and number formats the user asked to see, for the reviewer to find in the image: set only for a
+    render without drawn texts on a runtime whose reviewer checks them (`RuntimeAdapter.review_texts`), so every
+    other review request stays as it was."""
 
 
 class Defect(_ModelOutput):
