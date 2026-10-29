@@ -87,11 +87,13 @@ is the bold title, so only a new title is an added bullet — and a
 fragment never ships the bare `(#NNNNN)` placeholder. Locally:
 `uv run python -m tools.changelog check --base origin/main`.
 
-**Gemini Flash check (owner, 2026-10-28):** before the PR opens, run
-`/zweitmeinung` in its routine mode, Gemini 3.8 Flash alone on the branch diff
-(`--diff-base origin/main`), and fix what it finds that is real. Copilot gets
-one round per PR, so the point is that this round finds nothing. Skip it only
-for a diff entirely under `plots/` and for Dependabot bumps.
+**Gemini Flash check (owner, 2026-10-28 and 2026-10-29):** before a code PR
+opens, run `/zweitmeinung` in its routine mode, Gemini 3.8 Flash alone on the
+branch diff (`--diff-base origin/main`), and fix what it finds that is real.
+Copilot gets one round per PR, so the point is that this round finds nothing.
+Skip it for a diff made only of docs, instruction files (`CLAUDE.md`,
+`.github/copilot-instructions.md`, skills, commands), changelog fragments, or
+`plots/`, for a diff under about 20 lines, and for Dependabot bumps.
 
 Then the local CI equivalents — the same commands the pipeline runs.
 **Hard gate: do not open the PR while any of these is red.**

@@ -18,6 +18,22 @@
   a `feature/*` branch it leads; every merge into `main` stays with the owner.
   The guardrails record the Gemini 3 Pro against Flash comparison that made
   Flash the Jules model.
-- **Gemini Flash checks every PR before it opens.** `/open-pr` now runs
-  `/zweitmeinung` with Gemini 3.8 Flash on the branch diff before the PR
-  opens, so Copilot's single round ideally finds nothing.
+- **Gemini Flash checks every code PR before it opens.** `/open-pr` now runs
+  `/zweitmeinung` with Gemini 3.8 Flash on the branch diff before a code PR
+  opens, so Copilot's single round ideally finds nothing. Diffs made only of
+  docs, instruction files, changelog fragments, or `plots/`, and diffs under
+  about 20 lines, skip it.
+- **Lint and tests run on pull requests into `feature/**`.** `ci-lint` and
+  `ci-tests` now also run for PRs into a feature branch, so every Jules
+  sub-PR is checked before Claude merges it. Image builds, migrations,
+  CodeQL, and the changelog check stay on PRs into `main`.
+
+### Security
+
+- **Jules PRs run CI without secrets.** A PR opened by
+  `google-labs-jules[bot]` now takes the Dependabot path in `ci-tests.yml`
+  (no GCP login, no Cloud SQL proxy, no database password, no e2e, no Codecov
+  token) and builds without the Artifact Registry login in `ci-image.yml`.
+  Before, a Jules PR ran its tests with production database access the moment
+  it opened, before anyone had read the code. The check uses the PR author,
+  because `github.actor` on Jules branches is often the repository owner.

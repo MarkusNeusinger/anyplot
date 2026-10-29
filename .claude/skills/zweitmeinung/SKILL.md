@@ -1,6 +1,6 @@
 ---
 name: zweitmeinung
-description: Get an outside second opinion on the current plan, design or diff from Google Gemini through Vertex AI (4 Argon for second opinions the owner asks for, 3.8 Flash for the check of every PR Claude opens; read-only tools over the repository), optionally side by side with a Fable subagent, and compare it with your own view. For Claude only; Gemini in agy never runs it. Use when the owner asks for a "Zweitmeinung", a second opinion, a Gemini or Google opinion, or a Fable and Gemini review of a plan, and for the Flash check before Claude opens a PR. Never implements anything by itself.
+description: Get an outside second opinion on the current plan, design or diff from Google Gemini through Vertex AI (4 Argon for second opinions the owner asks for, 3.8 Flash for the check of every code PR Claude opens; read-only tools over the repository), optionally side by side with a Fable subagent, and compare it with your own view. For Claude only; Gemini in agy never runs it. Use when the owner asks for a "Zweitmeinung", a second opinion, a Gemini or Google opinion, or a Fable and Gemini review of a plan, and for the Flash check before Claude opens a PR. Never implements anything by itself.
 ---
 
 # Zweitmeinung (second opinion)
@@ -44,7 +44,9 @@ $GR check
   (`gemini-4-argon`, the default, thinking `high`: the owner wants it to think), both in
   parallel. Only when he asks (owner, 2026-10-28): a plan does not get one by default, so
   offer it for a large plan instead of running it.
-- **Every PR Claude opens, before it opens** (`/open-pr` section 1, nobody asks): Gemini
+- **Every code PR Claude opens, before it opens** (`/open-pr` section 1 names the
+  exceptions: docs, instruction files, changelog fragments, `plots/`, under about 20
+  lines, Dependabot; nobody asks): Gemini
   3.8 Flash alone (`--model gemini-3.8-flash`; Flex PayGo turns on by itself, half
   price), so that Copilot's one round finds nothing. Flash is on probation, see step 4.
   Fable joins only for high-risk changes (security, prod data, sandbox, privacy,

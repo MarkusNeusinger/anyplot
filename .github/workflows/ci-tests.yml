@@ -13,6 +13,9 @@ on:
       - develop
       - 'specification/**'
       - 'implementation/**'
+      # Jules sub-PRs into a feature branch (/jules-task) get tests before Claude
+      # merges them; they run without secrets (UNTRUSTED_AUTHOR below).
+      - 'feature/**'
   merge_group:
   workflow_dispatch:
     inputs:
@@ -35,6 +38,12 @@ jobs:
 
     env:
       ENVIRONMENT: test
+      # Authors whose code runs here before anyone has read it get no GCP login,
+      # no Cloud SQL proxy, and no database password, only unit and integration
+      # tests: Dependabot, and Google Jules (`/jules-task`), whose PRs open
+      # straight from its cloud session. The PR author is the reliable signal;
+      # `github.actor` on a Jules branch is often the repository owner.
+      UNTRUSTED_AUTHOR: ${{ github.actor == 'dependabot[bot]' || github.event.pull_request.user.login == 'google-labs-jules[bot]' }}
 
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -132,19 +141,21 @@ jobs:
       if: steps.check.outputs.should_test == 'true'
       run: uv sync --extra test --extra agents
 
-    # Dependabot PRs run from forks and cannot access repository secrets,
-    # so skip GCP auth + Cloud SQL Proxy + Codecov upload. Only unit and
-    # integration tests run for Dependabot (no e2e — those need real Postgres).
+    # Dependabot PRs run from forks and cannot access repository secrets, and
+    # Jules PRs carry code nobody has read yet (UNTRUSTED_AUTHOR), so both skip
+    # GCP auth + Cloud SQL Proxy + Codecov upload. Only unit and integration
+    # tests run for them (no e2e — those need real Postgres); a Jules change
+    # gets e2e on the push its merge makes.
 
     - name: Authenticate to GCP
-      if: steps.check.outputs.should_test == 'true' && github.actor != 'dependabot[bot]'
+      if: steps.check.outputs.should_test == 'true' && env.UNTRUSTED_AUTHOR != 'true'
       uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3
       with:
         project_id: anyplot
         workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
 
     - name: Start Cloud SQL Proxy
-      if: steps.check.outputs.should_test == 'true' && github.actor != 'dependabot[bot]'
+      if: steps.check.outputs.should_test == 'true' && env.UNTRUSTED_AUTHOR != 'true'
       run: |
         # Download Cloud SQL Proxy
         curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.3/cloud-sql-proxy.linux.amd64
@@ -168,7 +179,7 @@ jobs:
         echo "DATABASE_URL=postgresql+asyncpg://${{ secrets.DB_USER }}:${{ secrets.DB_PASS }}@localhost:5432/${{ secrets.DB_NAME }}" >> $GITHUB_ENV
 
     - name: Run all tests with coverage
-      if: steps.check.outputs.should_test == 'true' && github.actor != 'dependabot[bot]'
+      if: steps.check.outputs.should_test == 'true' && env.UNTRUSTED_AUTHOR != 'true'
       run: |
         uv run pytest tests/unit tests/integration tests/e2e \
           -v --tb=short \
@@ -181,13 +192,13 @@ jobs:
       # - Integration tests: SQLite in-memory for repository layer
       # - E2E tests: Real PostgreSQL with separate 'test' database
 
-    - name: Run unit + integration tests (Dependabot)
-      if: steps.check.outputs.should_test == 'true' && github.actor == 'dependabot[bot]'
+    - name: Run unit + integration tests (Dependabot, Jules)
+      if: steps.check.outputs.should_test == 'true' && env.UNTRUSTED_AUTHOR == 'true'
       run: |
         uv run pytest tests/unit tests/integration -v --tb=short -n 4 --dist worksteal
 
     - name: Upload coverage to GitHub Artifacts
-      if: steps.check.outputs.should_test == 'true' && github.actor != 'dependabot[bot]' && always()
+      if: steps.check.outputs.should_test == 'true' && env.UNTRUSTED_AUTHOR != 'true' && always()
       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
       with:
         name: coverage-report
@@ -195,7 +206,7 @@ jobs:
         retention-days: 30
 
     - name: Upload coverage to Codecov
-      if: steps.check.outputs.should_test == 'true' && github.actor != 'dependabot[bot]'
+      if: steps.check.outputs.should_test == 'true' && env.UNTRUSTED_AUTHOR != 'true'
       uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5  # v7.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -285,7 +296,8 @@ jobs:
       run: yarn test --coverage
 
     - name: Upload frontend coverage to Codecov
-      if: steps.check.outputs.should_test == 'true'
+      # No Codecov token after a Jules PR's code ran (see UNTRUSTED_AUTHOR in the test job).
+      if: steps.check.outputs.should_test == 'true' && github.event.pull_request.user.login != 'google-labs-jules[bot]'
       uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5  # v7.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}

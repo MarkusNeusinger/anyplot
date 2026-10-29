@@ -31,7 +31,7 @@ work that Google's quota can do goes there first.
 | High-risk reviews (security, prod data, sandbox, privacy); genuinely hard reasoning | Fable | About 2.5 times Opus per token at API prices, so only where it pays |
 | Credential-free implementation that fits a roughly 30-minute cloud run | Google Jules through its MCP server (`/jules-task`), model chosen in the Jules account (Flash since 2026-10-28) | 300 tasks a day on Ultra, each counted once whatever it consumes; Claude spends tokens only on the prompt and the review |
 | Larger steps and long refactors, and the main driver once Claude tokens run low late in the week | Gemini, in the owner's interactive agy session, through a `gemini`-labelled issue (`/gemini-task`) | The owner decides what runs without asking; Gemini pushes a `gemini/*` branch and opens a draft PR; Claude reviews it, marks it ready, and follows it through |
-| Check of every PR Claude opens, before it opens | Gemini 3.8 Flash through Vertex AI in project `anyplot`, location `global`, on Flex PayGo (`/zweitmeinung`) | Copilot gets one round per PR, so its findings should already be fixed; half price on Flex, $0.07–0.28 per review |
+| Check of every code PR Claude opens, before it opens; not for diffs only of docs, instruction files, changelog fragments, or `plots/`, under about 20 lines, or Dependabot (owner, 2026-10-29) | Gemini 3.8 Flash through Vertex AI in project `anyplot`, location `global`, on Flex PayGo (`/zweitmeinung`) | Copilot gets one round per PR, so its findings should already be fixed; half price on Flex, $0.07–0.28 per review |
 | Second opinion, only when the owner asks for one | Fable and Gemini 4 Argon side by side, Argon on the same Vertex route with thinking high | Stronger across files; $0.57–1.16 per Argon run. Both Gemini lanes are paid per token and covered by the $100 monthly Google Cloud credit that comes with Google AI Ultra; Gemini reads tracked repository files, prefetched data, and the public API through read-only tools, with no shell and no credentials |
 
 The pipeline's model choices are separate. Sonnet's lane is narrow on purpose:
@@ -52,11 +52,24 @@ which signs in with that login, for the same reason it never runs `agy`.
 **Jules's merge rule (owner, 2026-10-28).** With up to 300 Jules PRs a day the
 owner cannot read each one. So Claude merges the sub-PRs Jules opens into a
 `feature/*` branch the session leads, after reading the diff, and the owner
-reviews once, when that branch goes to `main`. CI runs on pushes to
-`feature/**` but not on pull requests into it, so the merge is gated by
-Jules's own verification and Claude's reading, and CI checks the result right
-after. Copilot's ruleset covers only PRs into `main`, so the sub-PRs cost no
-Copilot round.
+reviews once, when that branch goes to `main`. Since 2026-10-29 `ci-lint` and
+`ci-tests` also run on pull requests into `feature/**`, so each sub-PR is
+linted and tested before Claude merges it; image builds, migrations, CodeQL,
+and the changelog check stay on PRs into `main`. Copilot's ruleset covers only
+PRs into `main`, so the sub-PRs cost no Copilot round.
+
+**Jules PRs run CI without secrets (2026-10-29).** The Fable second opinion
+on the lane found that `ci-tests.yml` logged in to GCP, started the Cloud SQL
+proxy, and put the database password into the environment for every PR author
+but Dependabot. A Jules PR therefore ran its tests with production database
+access the moment it opened, before Claude had read a line, and Jules reads a
+public repository where an issue can carry a prompt injection. Jules PRs now
+take the Dependabot path: unit and integration tests without a login, no e2e,
+no Codecov token; `ci-image.yml` builds without the Artifact Registry login.
+The condition is the PR author (`google-labs-jules[bot]`), not `github.actor`:
+on Jules branches most runs showed the repository owner as the actor. The
+credentialed e2e run happens on the push Claude's merge makes, after the diff
+was read.
 
 **Gemini 3 Pro against Flash in Jules (2026-10-28).** The same two prompts
 (#9636, a three-file dedup; #9629, a 29-file migration) ran on both. Flash
