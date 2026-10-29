@@ -34,19 +34,23 @@ from agents.anyplot.dataset_versions import push_version
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.grounding import (
     GROUP_LIMITS,
+    REQUESTED_MARK,
     UNVERIFIED_LINE,
     drawn_texts,
     expected_misses,
     format_unit,
     plot_texts,
+    reviewed_misses,
 )
 from agents.anyplot.pipeline import (
     CONTEXT_HEADING,
     EXPECTED_HEADING,
+    REVIEW_EXPECTED_HEADING,
     Candidate,
     Run,
     finish,
     render_adapt_request,
+    render_review_request,
     render_score_request,
 )
 from agents.anyplot.plugins.tool_safety import (
@@ -381,6 +385,29 @@ class TestShows:
         assert (result.status, result.residual_defects) == ("needs_attention", [note])
         assert result.shows is not None and result.shows.requested_not_found == []
 
+    def test_requested_texts_the_review_confirmed_need_no_note(self) -> None:
+        """A render without drawn texts whose review answered and named no miss (R, live test of 2026-10-29)."""
+        result = finish(run_shipping(expect_review=True, reviewed_ok=True, status_ok=True))
+
+        assert (result.status, result.residual_defects) == ("ok", [])
+        assert result.shows is not None and (result.shows.texts, result.shows.requested_not_found) == (None, [])
+
+    def test_a_requested_text_the_review_missed_is_its_line(self) -> None:
+        line = 'SC-04 (light): the plot does not show the requested text "Temperatur (°C)" → write it. Likely cause: x.'
+
+        result = finish(
+            run_shipping(
+                expect_review=True,
+                expect_lines=[line],
+                expect_misses=["Temperatur (°C)"],
+                reviewed_ok=False,
+                status_ok=True,
+            )
+        )
+
+        assert (result.status, result.residual_defects) == ("needs_attention", [line])
+        assert result.shows is not None and result.shows.requested_not_found == ["Temperatur (°C)"]
+
     @pytest.mark.parametrize("char", ["x", "ä"])
     def test_the_tool_cap_holds_a_result_at_its_schema_maximum(self, char: str) -> None:
         """Every list at its maximum length, every text at its character cap, in one- and two-byte UTF-8."""
@@ -441,6 +468,69 @@ class TestShows:
             PipelineArgs(expected_texts=["a"] * 6)
         with pytest.raises(ValueError):
             PipelineArgs(expected_texts=["x" * 121])
+
+
+class TestReviewedMisses:
+    """The review's own lines for a render without drawn texts (`grounding.reviewed_misses`)."""
+
+    MISS = 'SC-04 (light): the plot does not show the requested text "{}" (it reads "Temp") → add it. Likely cause: x.'
+
+    def test_a_line_names_the_text_it_quotes(self) -> None:
+        line = self.MISS.format("Temperatur (°C)")
+
+        assert reviewed_misses(["Temperatur (°C)", "Messreihe 2024"], [line]) == [("Temperatur (°C)", line)]
+
+    def test_a_quoted_longer_text_is_no_miss_of_a_shorter_one(self) -> None:
+        assert reviewed_misses(["Temperatur"], [self.MISS.format("Temperatur (°C)")]) == []
+
+    def test_typographic_quotes_case_and_spacing_are_aside(self) -> None:
+        line = "SC-04 (dark): the title „umsatz  NACH filiale“ is missing → add it. Likely cause: ggtitle()."
+
+        assert reviewed_misses(["Umsatz nach Filiale"], [line]) == [("Umsatz nach Filiale", line)]
+
+    def test_a_number_format_is_named_under_sc02_and_a_line_without_quotes_by_its_text(self) -> None:
+        line = "SC-02 (light): the y tick labels read 0.12 instead of 12 % → percent labels. Likely cause: scale."
+
+        assert reviewed_misses(["12 %"], [line]) == [("12 %", line)]
+
+    def test_a_cited_text_with_quotes_of_its_own_is_named_whole(self) -> None:
+        line = self.MISS.format('Zone "A"')
+
+        assert reviewed_misses(['Zone "A"', "Zone"], [line]) == [('Zone "A"', line)]
+
+    def test_a_passage_quoted_for_what_the_image_shows_names_nothing(self) -> None:
+        line = 'SC-04 (light): the plot does not show the requested text "Temperatur (°C)" (the y axis reads "Score")'
+
+        assert reviewed_misses(["Score", "Temperatur (°C)"], [line]) == [("Temperatur (°C)", line)]
+
+    def test_a_number_format_is_named_when_the_line_quotes_only_the_number_it_saw(self) -> None:
+        line = 'SC-02 (light): the y tick labels read "0.12" instead of 12 % → percent labels. Likely cause: scale.'
+
+        assert reviewed_misses(["12 %"], [line]) == [("12 %", line)]
+
+    def test_the_heading_prescribes_the_form_the_lines_are_read_in(self) -> None:
+        assert 'requested text "<text>"' in REVIEW_EXPECTED_HEADING
+        assert REQUESTED_MARK == 'requested text "'
+
+    def test_lines_under_other_ids_and_lines_outside_the_grammar_name_nothing(self) -> None:
+        lines = [
+            'VQ-01 (light): the label "Temperatur (°C)" is faint → INK. Likely cause: the colour.',
+            'the plot does not show the requested text "Temperatur (°C)"',
+        ]
+
+        assert reviewed_misses(["Temperatur (°C)"], lines) == []
+
+    def test_the_reviewer_gets_the_texts_only_when_the_request_carries_them(self) -> None:
+        request = ReviewRequest(render_id="r1", code="x = 1", bindings=[], profile_summary="2 rows", spec_brief="b")
+        texted = request.model_copy(update={"expected_texts": ["Temperatur (°C)", "12 %"]})
+        fenced = "<user_message>\nTemperatur (°C)\n12 %\n</user_message>"
+
+        catalogue, checklist = render_score_request(texted), render_review_request(texted)
+
+        assert f"{REVIEW_EXPECTED_HEADING.format(ids='SC-04 (SC-02 for a number format)')}\n\n{fenced}" in catalogue
+        assert f"{REVIEW_EXPECTED_HEADING.format(ids='SC-04')}\n{fenced}" in checklist
+        for text in (render_score_request(request), render_review_request(request)):
+            assert "Temperatur" not in text and REVIEW_EXPECTED_HEADING[:60] not in text
 
 
 class TestHarnessLabels:

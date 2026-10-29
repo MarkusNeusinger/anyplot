@@ -241,15 +241,15 @@ def scan(normalised_code: str, *, spec_id: str, library: str, enabled_libraries:
             if not rule.writes_suffix(call.name, suffix):
                 writes = rule.writes.get(call.name, "")
                 blocked.append(
-                    f"savefig-target: {call.name} writes only {writes} files, not {_snippet(call.target or '')} "
+                    f"savefig-target: {call.name} writes only {writes} files, not {snippet_of(call.target or '')} "
                     f"at {where}"
                 )
             continue
         if call.literal_target is not None:
-            target = _snippet(repr(call.literal_target))
+            target = snippet_of(repr(call.literal_target))
             blocked.append(f"savefig-target: single-theme {call.name} target {target} at {where}")
         else:
-            target = _snippet(call.target or "no file argument")
+            target = snippet_of(call.target or "no file argument")
             blocked.append(f'savefig-target: {call.name} saves to {target} at {where}, not f"plot-{{THEME}}.png"')
     if rule.directory is not None:
         directory = f'path="{rule.directory}"'
@@ -262,7 +262,7 @@ def scan(normalised_code: str, *, spec_id: str, library: str, enabled_libraries:
     elif regions.savefig is None:
         blocked.append(f"savefig-target: the last {rule.verb} is not a module-level statement")
     if blocked:
-        return Readiness("blocked", [_clip(reason) for reason in blocked])
+        return Readiness("blocked", [clip_reason(reason) for reason in blocked])
 
     findings = _coupling(normalised_code, tree)
     reasons: list[str] = []
@@ -273,7 +273,7 @@ def scan(normalised_code: str, *, spec_id: str, library: str, enabled_libraries:
             continue
         count = len(items)
         reasons.append(f"{category}: {count} line{'s' if count != 1 else ''}")
-        hints.append(_hint(prefix, items, advice))
+        hints.append(format_hint(prefix, items, advice))
     canvas = measure_canvas(normalised_code, library=library)
     if canvas.note is not None:
         reasons.append(_canvas_reason(canvas, library))
@@ -288,7 +288,7 @@ def _canvas_reason(canvas: Canvas, library: str) -> str:
         outcome = "the PNG size shows only in the render, and R2 refuses one over its pixel cap"
     else:
         outcome = "the render relies on the R3 canvas gate and padding"
-    return _clip(f"canvas: {canvas.note}; {outcome}")
+    return clip_reason(f"canvas: {canvas.note}; {outcome}")
 
 
 def _security(code: str, library: str) -> list[str]:
@@ -304,9 +304,9 @@ def _security(code: str, library: str) -> list[str]:
     except Exception as exc:  # fail closed: a crashing validator never passes code
         return [f"security: the validator failed ({type(exc).__name__})"]
     reasons = [
-        _clip(f"security: {finding.rule} at line {finding.line}: {finding.message}")
+        clip_reason(f"security: {finding.rule} at line {finding.line}: {finding.message}")
         if finding.line is not None
-        else _clip(f"security: {finding.rule}: {finding.message}")
+        else clip_reason(f"security: {finding.rule}: {finding.message}")
         for finding in findings[:MAX_SECURITY_REASONS]
     ]
     if len(findings) > MAX_SECURITY_REASONS:
@@ -364,8 +364,8 @@ def _coupling(code: str, tree: ast.Module) -> dict[str, list[tuple[int, str]]]:
     for category, lines in found.items():
         for line, parts in lines.items():
             ordered = sorted(parts, key=lambda part: (part.col_offset, part.end_col_offset or 0))
-            texts = [_snippet(ast.get_source_segment(code, part) or ast.unparse(part)) for part in ordered]
-            snippets[category][line] = _snippet(", ".join(dict.fromkeys(texts)), MAX_LINE_SNIPPET_CHARS)
+            texts = [snippet_of(ast.get_source_segment(code, part) or ast.unparse(part)) for part in ordered]
+            snippets[category][line] = snippet_of(", ".join(dict.fromkeys(texts)), MAX_LINE_SNIPPET_CHARS)
     regions = find_regions(code, tree)
     for palette in regions.palettes:
         is_imprint = palette.name in IMPRINT_NAMES or palette.entries[0].upper() == _IMPRINT_GREEN
@@ -548,19 +548,21 @@ def _annotation_literal(node: ast.Call, method: str) -> bool:
     return _has_literal(nodes)
 
 
-# --- formatting ----------------------------------------------------------------------------
+# --- formatting (shared with the R profile's scan, `profiles/r/readiness.py`) -------------------
 
 
-def _snippet(text: str, limit: int = MAX_SNIPPET_CHARS) -> str:
+def snippet_of(text: str, limit: int = MAX_SNIPPET_CHARS) -> str:
+    """`text` on one line, whitespace collapsed, at most `limit` characters."""
     text = _WHITESPACE.sub(" ", text).strip()
     return text if len(text) <= limit else text[: limit - 1] + "…"
 
 
-def _clip(text: str) -> str:
+def clip_reason(text: str) -> str:
+    """A reason or hint cut to `MAX_NOTE_CHARS`."""
     return text if len(text) <= MAX_NOTE_CHARS else text[: MAX_NOTE_CHARS - 1] + "…"
 
 
-def _hint(prefix: str, items: list[tuple[int, str]], advice: str) -> str:
+def format_hint(prefix: str, items: list[tuple[int, str]], advice: str) -> str:
     """`<prefix> line 12 `x`; line 14 `y` and 3 more: <advice>`, at most `MAX_NOTE_CHARS`."""
     shown: list[str] = []
     for position, (line, snippet) in enumerate(items):
@@ -572,4 +574,4 @@ def _hint(prefix: str, items: list[tuple[int, str]], advice: str) -> str:
         shown = candidate
     rest = len(items) - len(shown)
     more = f" and {rest} more" if rest else ""
-    return _clip(f"{prefix} {'; '.join(shown)}{more}: {advice}")
+    return clip_reason(f"{prefix} {'; '.join(shown)}{more}: {advice}")

@@ -1063,12 +1063,18 @@ class TestAvailablePackages:
             "KernSmooth",
         }
 
+    # In Project.toml for the agent renderer's data loader, not for catalogue plot code: TimeZones.jl turns the
+    # user's datetimes with offsets into UTC (owner decision of 2026-10-29, step 5 of
+    # agentic/specs/261024-agent-all-libraries.md). The block does not advertise it to the generator or the reviewer.
+    JULIA_LOADER_ONLY = frozenset({"TimeZones"})
+
     def test_julia_block_matches_project_toml(self, blocks: dict[str, str]) -> None:
         deps = set(tomllib.loads((REPO_ROOT / "Project.toml").read_text())["deps"])
+        assert self.JULIA_LOADER_ONLY <= deps  # a loader-only package that left the project leaves this list too
         lead = blocks["Julia"].splitlines()[1]
         packages, stdlibs = lead.split(", plus the standard libraries ")
         named = set(re.findall(r"\b[A-Z][A-Za-z]+\b", packages.split(". Examples")[0]))
-        assert deps == named, sorted(deps ^ named)
+        assert deps - self.JULIA_LOADER_ONLY == named, sorted((deps - self.JULIA_LOADER_ONLY) ^ named)
         assert set(re.findall(r"\b[A-Z][A-Za-z]+\b", stdlibs.split(". Examples")[0])) <= {
             "LinearAlgebra",
             "Dates",

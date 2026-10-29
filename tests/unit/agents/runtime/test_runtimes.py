@@ -1,47 +1,79 @@
 """The runtime registry (agents/anyplot/render/runtimes): a library's runtime, and what it binds."""
 
+from pathlib import Path
+
 import pytest
 
+from agents.anyplot.code import edits
 from agents.anyplot.code.normalise import SUPPORTED_LIBRARIES as NORMALISED_LIBRARIES
+from agents.anyplot.code.profiles.r import regions as r_regions
 from agents.anyplot.code.regions import PLACEHOLDER
+from agents.anyplot.data.kinds import read_kinds
+from agents.anyplot.render.contract import BLOCKING_RULES
 from agents.anyplot.render.runtimes import (
     PYTHON_LIBRARIES,
+    R_LIBRARIES,
+    RUNTIME_CLASSES,
     RUNTIME_LIBRARIES,
     PythonRuntime,
+    RRuntime,
     has_runtime,
     language_of,
     runtime_for,
 )
-from agents.anyplot.schemas import CODE_ARTIFACTS
+from agents.anyplot.render.runtimes.python import ADAPTATION_TARGETS as PYTHON_TARGETS
+from agents.anyplot.schemas import CODE_ARTIFACTS, AdaptPlan, Edit
 from agents.anyplot.settings import AgentSettings
 from core.constants import SUPPORTED_LIBRARIES
+from tests.unit.agents.code.conftest import R_CATALOGUE, R_CATALOGUE_NORMALISED
 
 
 class TestRegistry:
-    def test_the_registry_serves_exactly_the_normalised_python_libraries(self) -> None:
-        assert RUNTIME_LIBRARIES == PYTHON_LIBRARIES == NORMALISED_LIBRARIES
+    def test_the_registry_serves_the_python_and_the_r_libraries(self) -> None:
+        assert PYTHON_LIBRARIES == NORMALISED_LIBRARIES
         assert PYTHON_LIBRARIES == {"matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot"}
-        assert RUNTIME_LIBRARIES <= SUPPORTED_LIBRARIES
+        assert R_LIBRARIES == edits.R_LIBRARIES == {"ggplot2"}
+        assert RUNTIME_LIBRARIES == PYTHON_LIBRARIES | R_LIBRARIES <= SUPPORTED_LIBRARIES
+        assert {language_of(library) for library in RUNTIME_LIBRARIES} == set(RUNTIME_CLASSES) == {"python", "r"}
 
-    @pytest.mark.parametrize("library", sorted(RUNTIME_LIBRARIES))
-    def test_a_runtime_is_bound_to_its_library(self, library: str) -> None:
+    @pytest.mark.parametrize("library", sorted(PYTHON_LIBRARIES))
+    def test_a_python_runtime_is_bound_to_its_library(self, library: str) -> None:
         runtime = runtime_for(library, cpu_seconds=45)
         assert isinstance(runtime, PythonRuntime)
         assert runtime.library == library and runtime.language == "python" == language_of(library)
         assert runtime.file_name == "plot.py" and runtime.code_artifact == "plot.py" in CODE_ARTIFACTS
         assert runtime.placeholder == PLACEHOLDER and runtime.cpu_seconds == 45 and runtime.render_p95_s == 15.0
+        assert runtime.blocking_rules == BLOCKING_RULES and runtime.adaptation_targets == PYTHON_TARGETS
+        # matplotlib's probe reports the drawn texts; the libraries that render without it hand them to the review
+        assert runtime.review_texts is (library in {"altair", "pygal", "letsplot"})
         assert has_runtime(library)
 
+    def test_the_r_runtime_is_bound_to_ggplot2(self) -> None:
+        """Dispatched by the library's language (`RUNTIME_CLASSES`), with the R row's reserve (`commands.py`)."""
+        runtime = runtime_for("ggplot2", cpu_seconds=45)
+        assert isinstance(runtime, RRuntime)
+        assert runtime.library == "ggplot2" and runtime.language == "r" == language_of("ggplot2")
+        assert runtime.file_name == "plot.R" and runtime.code_artifact == "plot.R" in CODE_ARTIFACTS
+        assert runtime.placeholder == r_regions.PLACEHOLDER == "df <- load_user_data()"
+        assert runtime.cpu_seconds == 45 and runtime.render_p95_s == 15.0
+        assert runtime.blocking_rules == BLOCKING_RULES | {"dataset-package"}
+        assert set(runtime.adaptation_targets) == set(PYTHON_TARGETS)
+        assert runtime.review_texts is True  # no probe: the review finds the requested texts in the image
+        assert has_runtime("ggplot2")
+        with pytest.raises(ValueError, match="python library"):
+            RRuntime(library="matplotlib")
+
     def test_a_library_without_a_runtime_is_refused_but_known(self) -> None:
-        assert language_of("ggplot2") == "r" and not has_runtime("ggplot2")
-        with pytest.raises(ValueError, match="no runtime for 'ggplot2'"):
-            runtime_for("ggplot2")
+        assert language_of("makie") == "julia" and not has_runtime("makie")
+        with pytest.raises(ValueError, match="no runtime for 'makie'"):
+            runtime_for("makie")
         with pytest.raises(ValueError, match="unknown library"):
             language_of("excel")
 
-    def test_the_settings_refuse_a_library_the_registry_does_not_serve(self) -> None:
+    def test_the_settings_accept_ggplot2_and_refuse_a_library_the_registry_does_not_serve(self) -> None:
+        assert AgentSettings(libraries=["matplotlib", "ggplot2"]).libraries == ["matplotlib", "ggplot2"]
         with pytest.raises(ValueError, match="no runtime"):
-            AgentSettings(libraries=["matplotlib", "ggplot2"])
+            AgentSettings(libraries=["matplotlib", "makie"])
 
 
 class TestPythonRuntimeBindings:
@@ -105,6 +137,130 @@ class TestPythonRuntimeBindings:
         assert plotnine.restore_protected(self.PLOTNINE, changed) == self.PLOTNINE
 
 
+class TestRRuntimeBindings:
+    """The R runtime hands the pipeline the R code profile of PR 3a, for ggplot2 (step 2c, PR 3b)."""
+
+    WORKING = R_CATALOGUE_NORMALISED.replace(
+        "set.seed(42)\ndf <- tibble::tibble(!!SPEND := runif(50, 5, 150), !!REVENUE := rnorm(50, 300, 40))\n",
+        "df <- load_user_data()\n",
+    )
+
+    def test_the_working_form_has_one_placeholder(self) -> None:
+        assert self.WORKING.count("df <- load_user_data()") == 1 and "rnorm" not in self.WORKING
+
+    def test_normalise_regions_security_and_adaptation_are_the_r_profiles(self) -> None:
+        runtime = runtime_for("ggplot2")
+        assert runtime.normalise(R_CATALOGUE, "ggplot2") == R_CATALOGUE_NORMALISED
+        regions = runtime.regions(self.WORKING)
+        assert regions.imprint is not None and list(regions.imprint.entries)[:2] == ["#009E73", "#C475FD"]
+        assert runtime.security(self.WORKING) == [] and runtime.validate(self.WORKING, "ggplot2") == []
+        palette = list(regions.imprint.entries)
+        assert runtime.adaptation(self.WORKING, original_palette=palette) == []
+        assert "banned-name" in {f.rule for f in runtime.security('system("id")\n')}
+
+    def test_a_dataset_package_is_a_blocking_adaptation_finding(self) -> None:
+        """gapminder passes SECURITY and is `dataset-package`, which the R runtime's blocking set holds: the pipeline
+        refuses the working form, while the readiness scan of a catalogue file with it stays `coupled`."""
+        runtime = runtime_for("ggplot2")
+        code = self.WORKING.replace("library(ragg)\n", "library(ragg)\nlibrary(gapminder)\n")
+        assert runtime.security(code) == []
+        rules = {f.rule for f in runtime.adaptation(code, original_palette=["#009E73"])}
+        assert "dataset-package" in rules and rules <= runtime.blocking_rules
+        assert "dataset-package" not in runtime_for("matplotlib").blocking_rules
+
+    def test_readiness_and_export_follow_the_r_profile(self) -> None:
+        runtime = runtime_for("ggplot2")
+        readiness = runtime.readiness(R_CATALOGUE_NORMALISED, spec_id="scatter-demo", enabled_libraries=["ggplot2"])
+        assert readiness.status in ("clean", "coupled")
+        blocked = runtime.readiness(R_CATALOGUE_NORMALISED, spec_id="scatter-demo", enabled_libraries=["matplotlib"])
+        assert blocked.status == "blocked" and blocked.reasons[0].startswith("library-disabled: ggplot2")
+        export = runtime.export("print(1)\n", spec_id="scatter-basic", library_version="4.0.3", theme="dark")
+        assert export.startswith("# Adapted by anyplot.ai from scatter-basic (ggplot2 4.0.3) for your data.csv;\n")
+        assert "# run: ANYPLOT_THEME=dark Rscript plot.R\n" in export
+
+    def test_the_loader_reads_data_csv_typed_from_the_kinds(self) -> None:
+        runtime = runtime_for("ggplot2")
+        run_form = runtime.loader_block(
+            self.WORKING,
+            columns=["Spend (k USD)", "Revenue (k USD)"],
+            dtypes={"Spend (k USD)": "number", "Revenue (k USD)": "integer"},
+            parse_dates=[],
+            kinds={"Spend (k USD)": "number", "Revenue (k USD)": "integer"},
+        )
+        assert "load_user_data" not in run_form and 'df <- readr::read_csv(\n  "data.csv",' in run_form
+        assert '"Revenue (k USD)" = readr::col_integer()' in run_form
+        with pytest.raises(ValueError, match="no kind"):
+            runtime.loader_block(self.WORKING, columns=["Spend (k USD)"], dtypes={}, parse_dates=[], kinds={})
+
+    def test_loader_notes_count_the_integers_r_reads_inexactly_per_column(self) -> None:
+        """Owner rule of 2026-10-15: no silent loss; `col_double()` is exact only up to 2^53."""
+        csv_text = "id,code,n\n9007199254740993,9007199254740995,1\n-9007199254740999,12,2\n9007199254740992,13,3\n"
+        kinds = read_kinds(csv_text, {"id": "integer", "code": "integer", "n": "integer"})
+        assert kinds.inexact == {"id": 2, "code": 1}
+        (line,) = runtime_for("ggplot2").loader_notes(kinds)
+        assert line == (
+            "R reads 3 integers past ±2^53 as the nearest double, so the plot can show them a unit or more off: "
+            "2 in 'id', 1 in 'code'"
+        )
+        assert runtime_for("matplotlib").loader_notes(kinds) == []
+        assert runtime_for("ggplot2").loader_notes(read_kinds("n\n1\n", {"n": "integer"})) == []
+        one = read_kinds("id\n9007199254740993\n", {"id": "integer"})
+        assert runtime_for("ggplot2").loader_notes(one)[0].startswith("R reads 1 integer past ±2^53")
+
+    def test_the_loader_note_is_a_change_note_and_names_what_fits(self) -> None:
+        """A "what changed" entry holds `MAX_CHANGE_CHARS` (owner decision of 2026-10-29): the columns that fit are
+        named with their counts, the rest counted; the first column always fits, also at the name and count caps."""
+        from agents.anyplot.schemas import MAX_CHANGE_CHARS, MAX_COLUMN_NAME_CHARS
+
+        header = ",".join(f"c{index}" for index in range(7))
+        csv_text = header + "\n" + ",".join(["9007199254740993"] * 7) + "\n"
+        kinds = read_kinds(csv_text, {f"c{index}": "integer" for index in range(7)})
+        (line,) = runtime_for("ggplot2").loader_notes(kinds)
+        assert line.startswith("R reads 7 integers") and line.endswith("1 in 'c6'") and len(line) <= MAX_CHANGE_CHARS
+
+        names = [chr(ord("a") + index) * MAX_COLUMN_NAME_CHARS for index in range(50)]
+        wide = read_kinds(
+            ",".join(names) + "\n" + ",".join(["9007199254740993"] * 50) + "\n", dict.fromkeys(names, "integer")
+        )
+        (crowded,) = runtime_for("ggplot2").loader_notes(wide)
+        assert len(crowded) <= MAX_CHANGE_CHARS and f"1 in '{names[0]}'" in crowded
+        assert crowded.endswith(", and 49 more columns")
+
+    def test_edits_literals_and_errors_use_the_r_dialect(self) -> None:
+        runtime = runtime_for("ggplot2")
+        plan = AdaptPlan(edits=[Edit(find='labs(title = "",', replace='labs(title = "Umsatz",')])
+        applied = runtime.apply_plan(self.WORKING, plan)
+        assert applied.code is not None and 'labs(title = "Umsatz",' in applied.code
+        assert runtime.new_literals(self.WORKING, applied.code) == ["Umsatz"]
+        drifted = self.WORKING.replace("dpi      = 200", "dpi      = 300")
+        assert runtime.restore_protected(self.WORKING, drifted) == self.WORKING
+        tail = "Error in `geom_point()`:\n! Problem while computing aesthetics.\nCalls: ggsave -> print -> plot\n"
+        assert runtime.error_summary(tail) == "error in geom_point(); calls: ggsave -> print -> plot"
+
+    def test_the_command_is_the_renderers_r_row_in_exec_mode(self) -> None:
+        """The argv `executor.build_argv` runs after `sandbox do --`: the harness, `--exec --`, R's own binary."""
+        from agents.renderer.commands import R_BINARY, command_for
+        from agents.renderer.executor import ExecutorConfig, build_argv
+        from agents.renderer.settings import RendererSettings
+
+        local = runtime_for("ggplot2").command("light")
+        assert local[-7:] == ["--exec", "--", R_BINARY, "--no-echo", "--no-restore", "--no-save", "--file=plot.R"]
+        config = ExecutorConfig.from_settings(RendererSettings())
+        deployed = build_argv(config, "r-x", Path("/runs/x"), "light", 60, command=command_for("r", "ggplot2"))
+        assert deployed[-7:] == local[-7:]
+
+    def test_data_runs_and_conversions_stay_pythons(self) -> None:
+        runtime, python = runtime_for("ggplot2", cpu_seconds=45), PythonRuntime(cpu_seconds=45)
+        assert runtime.data_command() == python.data_command() and runtime.data_env(20) == python.data_env(20)
+        assert runtime.convert_command() == python.convert_command() and runtime.convert_env() == python.convert_env()
+
+    def test_collect_reads_the_png_and_no_probe(self, tmp_path: Path) -> None:
+        (tmp_path / "plot-dark.png").write_bytes(b"\x89PNG data")
+        (tmp_path / "probe-dark.json").write_text('{"texts": []}')
+        assert runtime_for("ggplot2").collect(tmp_path, "dark") == (b"\x89PNG data", None)
+        assert runtime_for("ggplot2").collect(tmp_path, "light") == (None, None)
+
+
 class TestRowEnvironment:
     """The local Docker backend renders with the library's command row as the renderer's `sandbox_env` does (1c)."""
 
@@ -112,12 +268,13 @@ class TestRowEnvironment:
     def test_the_render_env_is_the_renderers_key_for_key(self, library: str) -> None:
         """The deployed `sandbox_env` of the library's row, but for the two paths of the image's font cache, which a
         local render names as the image does, and the process limit, which the container's `--pids-limit` replaces
-        (`PythonRuntime.env`): the PATH the delegate check reads, the file size, the threads and every row value."""
+        (`PythonRuntime.env`, `RRuntime.env`): the PATH the delegate check reads, the file size, the threads and every
+        row value, R's own variables and the exec filter's switch included."""
         from agents.renderer.commands import command_for
         from agents.renderer.executor import SANDBOX_PATH, ExecutorConfig, sandbox_env
         from agents.renderer.settings import RendererSettings
 
-        row = command_for("python", library)
+        row = command_for(language_of(library), library)
         local = runtime_for(library, cpu_seconds=60).env("dark")
         deployed = sandbox_env(ExecutorConfig.from_settings(RendererSettings()), "dark", 60, command=row)
         own_paths = {"MPLCONFIGDIR", "ANYPLOT_MPL_SEED"}

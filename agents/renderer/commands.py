@@ -16,7 +16,7 @@ sandbox with the probe harness in front:
 | `python` | `plot.py` | `python -I -X disable-remote-debug harness.py plot.py`: the harness runs the plot in process, with the plot guard and the savefig probe |
 | `javascript` | `plot.js` (`plot.tsx` for MUI X) | `harness.py --exec -- node /opt/anyplot/js-render/render.mjs --library=<library> plot.js` |
 | `r` | `plot.R` | `harness.py --exec -- /opt/R/4.6.1/lib/R/bin/exec/R --no-echo --no-restore --no-save --file=plot.R` |
-| `julia` | `plot.jl` | `harness.py --exec -- julia --project=/opt/julia plot.jl` |
+| `julia` | `plot.jl` | `harness.py --exec -- /opt/julia-1.13.2/bin/julia --project=/opt/julia-project --startup-file=no --history-file=no --compiled-modules=strict --heap-size-hint=1536M plot.jl` |
 
 In exec mode (`EXEC_FLAG`) the harness prints its start line, sets the resource limits
 and runs the language's own command as a child, so the launcher retry, the host
@@ -24,6 +24,9 @@ watchdog and the kill path work for every language alike. R runs its binary dire
 with the environment R's `bin/R` script would set (`R_ENV`), not `Rscript`, which starts
 that shell script, which starts the binary: under the exec filter (`exec_deny`) every
 start after the first is killed (step 2b of agentic/specs/261024-agent-all-libraries.md).
+Julia runs its launcher by path too (`JULIA_BINARY`), with the precompiled depot loaded
+under `--compiled-modules=strict` (`JULIA_FLAGS`, step 5), so a package image that does
+not load fails the render at once instead of compiling under its timeout.
 A row with `exec_deny` gets `ANYPLOT_DENY_EXEC=required` while `RENDERER_EXEC_DENY` is
 `required` (`executor.sandbox_env`): a Python row's harness installs the filter itself,
 an exec-mode row's harness preloads it into the child (`harness.EXEC_DENY_PRELOAD`). The
@@ -43,8 +46,9 @@ sandbox like an exec-mode row's (`executor.sandbox_env`) and the local Docker ba
 `render_p95_s` is what the agents' pipeline reserves for a repair attempt's render
 when it checks its soft deadline.
 
-A row's `toolchain` names the binaries the image must carry on `SANDBOX_PATH` for the
-row to run; the renderer checks them at startup, reports them in `GET /status` and
+A row's `toolchain` names the binaries the image must carry for the row to run, each a
+name on `SANDBOX_PATH` or an absolute path (R's and Julia's binaries, which `shutil.which`
+checks as they stand); the renderer checks them at startup, reports them in `GET /status` and
 refuses a job whose language lacks them (`503 runtime_unavailable`). The Python row
 needs none beyond the interpreter the settings name.
 
@@ -93,12 +97,48 @@ CODE_FILE_OVERRIDES: Mapping[str, str] = MappingProxyType({"muix": "plot.tsx"})
 
 JS_HARNESS = "/opt/anyplot/js-render/render.mjs"
 """The catalogue's browser render harness (`automation/js-render/render.mjs`) inside the image."""
-JULIA_PROJECT = "/opt/julia"
-"""The image's Julia project (`Project.toml` and `Manifest.toml`), instantiated at build time."""
+JULIA_HOME = "/opt/julia-1.13.2"
+"""Julia's install in the toolchain image: the official 1.13.2 build for generic Linux (agents/renderer/toolchain.Dockerfile),
+the version `Manifest.toml` was resolved with."""
+JULIA_BINARY = f"{JULIA_HOME}/bin/julia"
+"""Julia's launcher, which the row runs by its path: it is not on `SANDBOX_PATH`, like R's binary."""
+JULIA_PROJECT = "/opt/julia-project"
+"""The image's Julia project: the repository's `Project.toml` and `Manifest.toml`, instantiated at build time."""
 JULIA_DEPOT = "/opt/julia-depot"
 """The precompiled depot; a sandbox stacks a writable `/tmp/depot` in front of it."""
 JULIA_CPU_TARGET = "generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(1)"
-"""The CPU target the depot was precompiled for; the same value at run time, or Julia recompiles."""
+"""The CPU target the depot was precompiled for (the toolchain Dockerfile's `JULIA_CPU_TARGET`); the same value at
+run time."""
+JULIA_FLAGS = (
+    f"--project={JULIA_PROJECT}",
+    "--startup-file=no",
+    "--history-file=no",
+    "--compiled-modules=strict",
+    "--heap-size-hint=1536M",
+)
+"""The launcher's flags. `--compiled-modules=strict` loads every package from the depot's precompiled images or fails
+within a second with "Precompiled image ... not available with flags CacheFlags(...)"; `existing` would load a missed
+package from its source in process, with exit 0 and no message, for minutes in CairoMakie's case, and the default `yes`
+would start a compile worker, which the exec filter kills (step 5 of agentic/specs/261024-agent-all-libraries.md,
+second opinion of 2026-10-29). `--heap-size-hint` makes the collector work before the 4 GiB instance runs short, since
+the row has no `RLIMIT_AS`."""
+JULIA_ENV: Mapping[str, str] = MappingProxyType(
+    {
+        # The sandbox sets no locale; the catalogue's runner renders under C.UTF-8, as for R.
+        "LANG": "C.UTF-8",
+        "XDG_CACHE_HOME": "/tmp",
+        "JULIA_NUM_THREADS": "1",
+        # `sandbox_env` sets it for every run; the row names it because Julia's LinearAlgebra otherwise starts one
+        # BLAS thread per core, each counted by RLIMIT_NPROC.
+        "OPENBLAS_NUM_THREADS": "1",
+        # Only /tmp is writable in a sandbox: logs and any scratch space go to the first depot.
+        "JULIA_DEPOT_PATH": f"/tmp/depot:{JULIA_DEPOT}",
+        "JULIA_CPU_TARGET": JULIA_CPU_TARGET,
+        "JULIA_PKG_OFFLINE": "true",
+        "JULIA_PKG_PRECOMPILE_AUTO": "0",
+    }
+)
+"""The Julia row's environment: the locale, the caches, one thread, the stacked depot and the offline switches."""
 R_HOME = "/opt/R/4.6.1/lib/R"
 """R's home in the toolchain image (Posit's build for Debian 13, agents/renderer/toolchain.Dockerfile)."""
 R_BINARY = f"{R_HOME}/bin/exec/R"
@@ -143,7 +183,7 @@ class RuntimeCommand:
     """The row's own environment, after `ANYPLOT_THEME` and a Python row's matplotlib settings, whose values it may
     replace, and before `PATH`, `HOME` and the limit variables, which it never replaces (`executor.sandbox_env`)."""
     toolchain: tuple[str, ...] = ()
-    """Binaries the image must carry on `SANDBOX_PATH` for the row to run."""
+    """Binaries the image must carry for the row to run: names on `SANDBOX_PATH`, or absolute paths."""
     rlimit_as: bool = True
     """Whether the configured `RLIMIT_AS` applies; off where the runtime reserves address space it never uses."""
     rlimit_as_mb: int | None = None
@@ -223,7 +263,9 @@ def _row(language: Language, library: str) -> RuntimeCommand:
         )
     if language == "r":
         # The spike's renders (scatter, bar, heatmap) peaked at 294 MiB and passed under the Python defaults,
-        # RLIMIT_AS 1 GiB and RLIMIT_NPROC 64, as root and as an unprivileged user (2026-10-24).
+        # RLIMIT_AS 1 GiB and RLIMIT_NPROC 64, as root and as an unprivileged user (2026-10-24). The repair reserve
+        # is Python's 15 s: the first deployed R render took 5.7 s of wall time on Cloud Run (2026-10-29), about the
+        # Python p95 of spike X (5.5 s), with R and ggplot2 loaded fresh each time; the eval matrix measures R's p95.
         return RuntimeCommand(
             language,
             code_file,
@@ -231,22 +273,23 @@ def _row(language: Language, library: str) -> RuntimeCommand:
             code_flag="--file=",
             env=R_ENV,
             toolchain=(R_BINARY,),
+            render_p95_s=15.0,
         )
+    # Julia's launcher directly, with the exec filter preloaded like R's (the launcher is dynamically linked, which the
+    # toolchain build checks). LLVM reserves address space far beyond the resident set (`LLVM ERROR: out of memory`
+    # under 1 GiB in the spike of 2026-10-24), so RLIMIT_AS is off and `--heap-size-hint` bounds the heap instead;
+    # RLIMIT_NPROC 64 holds with one thread. The repair reserve is 25 s: the 320 catalogue files that rendered in the
+    # toolchain image at 2 CPUs and 4 GiB took a wall p95 of 20.6 s (p50 10.2 s, four renders at a time, container
+    # start included; peak RSS p95 1,137 MiB), and the slowest load RDatasets, which an adaptation removes (J1,
+    # 2026-10-29). The deployed cold and warm times of the plan's measurement stage revise it.
     return RuntimeCommand(
         language,
         code_file,
-        ("julia", f"--project={JULIA_PROJECT}"),
-        env=MappingProxyType(
-            {
-                "JULIA_DEPOT_PATH": f"/tmp/depot:{JULIA_DEPOT}",
-                "JULIA_CPU_TARGET": JULIA_CPU_TARGET,
-                "JULIA_PKG_OFFLINE": "true",
-                "JULIA_PKG_PRECOMPILE_AUTO": "0",
-            }
-        ),
-        toolchain=("julia",),
+        (JULIA_BINARY, *JULIA_FLAGS),
+        env=JULIA_ENV,
+        toolchain=(JULIA_BINARY,),
         rlimit_as=False,
-        render_p95_s=45.0,
+        render_p95_s=25.0,
     )
 
 
@@ -266,7 +309,8 @@ def code_file(language: str, library: str) -> str:
 
 
 def toolchains() -> dict[Language, tuple[str, ...]]:
-    """The binaries each language needs on `SANDBOX_PATH`, for the renderer's startup check."""
+    """The binaries each language needs (on `SANDBOX_PATH`, or by an absolute path), for the renderer's startup
+    check."""
     return {language: _row(language, _first_library(language)).toolchain for language in LANGUAGES}
 
 

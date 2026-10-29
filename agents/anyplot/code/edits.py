@@ -63,16 +63,33 @@ Failure lines are repair feedback (`Line`): one line each, at most `MAX_LINE_CHA
 characters, quoting at most `MAX_QUOTE_CHARS` characters of code. Next to them,
 `AppliedPlan.kinds` names each failure by a fixed, content-free kind (`FAILURE_KINDS`)
 for the attribution log, which never sees the lines because they quote code.
+
+**Languages** (2026-10-29). Matching, the overlap check, drift and restoring are one
+language-neutral core; what depends on the language is a `Dialect`, picked by the
+library (`dialect_for`). Python's reads the code with `ast` and the regions of
+`regions.py`, compares meanings as `ast.dump`, and its literals are `'`, `"` and their
+triple forms, each ending with its line unless a backslash continues it. R's
+(`ggplot2`) reads it with tree-sitter and `profiles/r/regions.py`, compares meanings as
+the token stream with string values decoded (so `'a'` and `"a"` agree, a comment does
+not count), its placeholder is `df <- load_user_data()`, its save `ggsave`, and its
+literals are `'`, `"` and backtick names, which may span lines, and raw strings
+`r"(...)"`. The Python behaviour is byte for byte what it was (its tests are
+unchanged).
 """
 
 import ast
+import dataclasses
 import re
 from collections import Counter
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, Protocol
 
 from ..schemas import MAX_FEEDBACK, MAX_LINE_CHARS, AdaptPlan
-from .regions import PLACEHOLDER, PLACEHOLDER_FUNC, THEME_NAME, Region, SourceIndex, Span, find_regions
+from . import regions as python_regions
+from .profiles.r import regions as r_regions
+from .regions import PLACEHOLDER, PLACEHOLDER_FUNC, THEME_NAME, SourceIndex, find_regions
+from .treesitter import Source, r_assignment, r_bindings, r_string, r_string_value, statements, syntax_problems, walk
 
 
 MAX_QUOTE_CHARS = 80
@@ -95,14 +112,19 @@ switching the language does not let a paragraph of new text in with it."""
 _PLACEHOLDER_LINE = re.compile(
     rf"^[ \t]*df[ \t]*=[ \t]*{PLACEHOLDER_FUNC}\(\)[ \t]*(?:#[^\r\n]*)?(?:\r\n|\r|\n|$)", re.M
 )
+_R_PLACEHOLDER_LINE = re.compile(
+    rf"^[ \t]*df[ \t]*(?:<-|=)[ \t]*{r_regions.PLACEHOLDER_FUNC}\(\)[ \t]*(?:#[^\r\n]*)?(?:\r\n|\r|\n|$)", re.M
+)
 _NEWLINE = re.compile(r"\r\n|\r|\n")
 _LINE_END_BLANKS = " \t"
+_R_RAW_OPENER = re.compile(r"[rR](['\"])(-*)([(\[{])")
+_RAW_CLOSERS = {"(": ")", "[": "]", "{": "}"}
 
 _KIND_NAMES = {
     "theme": "THEME assignment",
     "theme_token": "theme token",
     "placeholder": "placeholder line",
-    "savefig": "final savefig statement",
+    "savefig": "final {save} statement",
 }
 FAILURE_KINDS: frozenset[str] = frozenset(
     {
@@ -125,6 +147,238 @@ after the plan applied (`drift:*`), or a working form that does not parse."""
 MatchTier = Literal["exact", "trailing_whitespace", "whitespace"]
 TOLERANT_TIERS: tuple[MatchTier, ...] = ("trailing_whitespace", "whitespace")
 """The tiers after `exact`, in the order they are tried (the module docstring, "Matching")."""
+
+
+# --- dialects --------------------------------------------------------------------------------
+
+
+class SpanLike(Protocol):
+    """`regions.Span` or `treesitter.Span`: the two have the same fields."""
+
+    @property
+    def first_line(self) -> int: ...
+    @property
+    def last_line(self) -> int: ...
+    @property
+    def start(self) -> int: ...
+    @property
+    def end(self) -> int: ...
+    def overlaps(self, start: int, end: int) -> bool: ...
+
+
+class ProtectedRegion(Protocol):
+    """A protected statement of either language: `regions.Region` or `profiles.r.regions.Region`."""
+
+    @property
+    def kind(self) -> str: ...
+    @property
+    def name(self) -> str: ...
+    @property
+    def span(self) -> SpanLike: ...
+
+
+@dataclass(frozen=True, slots=True)
+class CodeView:
+    """What the core reads from a parsed source: the protected statements, bindings and top-level assignments.
+
+    `theme` and `save` are the whole lines of the THEME statement and of the protected
+    save, `tokens` each theme token's name and lines, `regions` every protected region
+    (placeholders included), `bindings` counts how often the code binds each name, and
+    `assignments` the lines of each top-level assignment by the names it binds (joined
+    as `Region.name` joins them).
+    """
+
+    theme: SpanLike | None
+    tokens: tuple[tuple[str, SpanLike], ...]
+    save: SpanLike | None
+    regions: tuple[ProtectedRegion, ...]
+    bindings: Callable[[set[str]], Counter[str]]
+    assignments: Callable[[], dict[str, list[SpanLike]]]
+
+
+@dataclass(frozen=True, slots=True)
+class LiteralSyntax:
+    """How the whitespace tier finds string literals in a line (`_line_words`)."""
+
+    quotes: str
+    triple: bool
+    multiline: bool
+    raw: bool
+
+
+@dataclass(frozen=True, slots=True)
+class Dialect:
+    """What the edit core needs from a language (module docstring, "Languages").
+
+    `read` parses the code and raises `SyntaxError` (with `lineno`) when it does not;
+    `meaning` gives a protected statement's text a form that ignores spacing, quotes and
+    comments; `single_statement` tells whether whole lines hold exactly one statement;
+    `string_literals` counts the string values of a parsed source.
+    """
+
+    placeholder: str
+    placeholder_line: re.Pattern[str]
+    save_word: str
+    literals: LiteralSyntax
+    read: Callable[[str], CodeView]
+    meaning: Callable[[str], str]
+    single_statement: Callable[[str], bool]
+    string_literals: Callable[[str], Counter[str]]
+
+
+def _python_read(library: str) -> Callable[[str], CodeView]:
+    def read(code: str) -> CodeView:
+        tree = ast.parse(code)
+        found = find_regions(code, tree, library=library)
+        save = found.savefig.statement if found.savefig is not None else None
+        index = SourceIndex(code)
+
+        def assignments() -> dict[str, list[SpanLike]]:
+            assigned: dict[str, list[SpanLike]] = {}
+            for stmt in tree.body:
+                names = _module_assignment(stmt)
+                if names is not None:
+                    assigned.setdefault(names, []).append(index.lines_span(stmt))
+            return assigned
+
+        return CodeView(
+            theme=found.theme.span if found.theme is not None else None,
+            tokens=tuple((region.name, region.span) for region in found.theme_tokens),
+            save=save,
+            regions=found.protected,
+            bindings=lambda names: _bindings(tree, names),
+            assignments=assignments,
+        )
+
+    return read
+
+
+def _python_meaning(text: str) -> str:
+    try:
+        return ast.dump(ast.parse(text))
+    except SyntaxError:
+        return text.strip()
+
+
+def _python_single_statement(text: str) -> bool:
+    """Whether whole lines hold exactly one statement, so replacing them drops nothing else."""
+    try:
+        return len(ast.parse(text).body) == 1
+    except SyntaxError:
+        return False
+
+
+def _python_string_literals(code: str) -> Counter[str]:
+    return _string_literals(ast.parse(code))
+
+
+def _r_source(code: str) -> Source:
+    """The code parsed as R; `SyntaxError` with the first problem's line when tree-sitter cannot read it."""
+    source = Source(code, "r")
+    problems = syntax_problems(source.tree, limit=1)
+    if problems:
+        error = SyntaxError(problems[0].message())
+        error.lineno = problems[0].line
+        raise error
+    return source
+
+
+def _r_read(code: str) -> CodeView:
+    source = _r_source(code)
+    found = r_regions.find_regions(source)
+    save = found.save.statement if found.save is not None else None
+
+    def bindings(names: set[str]) -> Counter[str]:
+        return Counter(name for name, _ in r_bindings(source, source.root) if name in names)
+
+    def assignments() -> dict[str, list[SpanLike]]:
+        assigned: dict[str, list[SpanLike]] = {}
+        for node in statements(source.root):
+            assignment = r_assignment(source, node)
+            if assignment is not None and assignment.name is not None and assignment.target.type == "identifier":
+                assigned.setdefault(assignment.name, []).append(source.lines_span(node))
+        return assigned
+
+    return CodeView(
+        theme=found.theme.span if found.theme is not None else None,
+        tokens=tuple((region.name, region.span) for region in found.theme_tokens),
+        save=save,
+        regions=found.protected,
+        bindings=bindings,
+        assignments=assignments,
+    )
+
+
+def _r_meaning(text: str) -> str:
+    """The token stream of an R statement: leaf tokens with string values decoded, comments left out."""
+    source = Source(text, "r")
+    if syntax_problems(source.tree, limit=1):
+        return text.strip()
+    tokens: list[str] = []
+    stack = [source.root]
+    while stack:
+        node = stack.pop()
+        if node.type == "comment":
+            continue
+        if node.type == "string":
+            tokens.append(f"string:{r_string_value(source, node)!r}")
+            continue
+        if not node.children:
+            tokens.append(f"{node.type}:{source.text(node)}")
+            continue
+        stack.extend(reversed(node.children))
+    return "\x00".join(tokens)
+
+
+def _r_single_statement(text: str) -> bool:
+    source = Source(text, "r")
+    return not syntax_problems(source.tree, limit=1) and len(statements(source.root)) == 1
+
+
+def _r_string_literals(code: str) -> Counter[str]:
+    source = _r_source(code)
+    counts: Counter[str] = Counter()
+    for node in walk(source.root):
+        if node.type == "string":
+            value = r_string(source.text(node))
+            if value is not None:
+                counts[value] += 1
+    return counts
+
+
+_PYTHON_LITERALS = LiteralSyntax(quotes="'\"", triple=True, multiline=False, raw=False)
+_R_LITERALS = LiteralSyntax(quotes="'\"`", triple=False, multiline=True, raw=True)
+R_LIBRARIES = frozenset({"ggplot2"})
+"""The libraries whose code is R (the R profile, `profiles/r/`)."""
+
+
+def dialect_for(library: str) -> Dialect:
+    """The dialect of `library`'s code: R for ggplot2, else Python with the library's save rule."""
+    if library in R_LIBRARIES:
+        return Dialect(
+            placeholder=r_regions.PLACEHOLDER,
+            placeholder_line=_R_PLACEHOLDER_LINE,
+            save_word="ggsave",
+            literals=_R_LITERALS,
+            read=_r_read,
+            meaning=_r_meaning,
+            single_statement=_r_single_statement,
+            string_literals=_r_string_literals,
+        )
+    python_regions.save_rule(library)  # a library without a profile is a caller bug: ValueError
+    return Dialect(
+        placeholder=PLACEHOLDER,
+        placeholder_line=_PLACEHOLDER_LINE,
+        save_word="savefig",
+        literals=_PYTHON_LITERALS,
+        read=_python_read(library),
+        meaning=_python_meaning,
+        single_statement=_python_single_statement,
+        string_literals=_python_string_literals,
+    )
+
+
+# --- the applier -----------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,15 +407,17 @@ RESTORABLE_DRIFT: frozenset[str] = frozenset({"drift:theme", "drift:theme_token"
 def apply_plan(working: str, plan: AdaptPlan, *, library: str = "matplotlib") -> AppliedPlan:
     """Apply `plan` to the working form `working`; see the module docstring.
 
-    `library` picks the save rule (`regions.SAVE_RULES`) that finds the protected final save.
+    `library` picks the dialect (`dialect_for`): the language, and for Python the save
+    rule (`regions.SAVE_RULES`) that finds the protected final save.
     """
-    applied = _apply(working, plan, library)
+    dialect = dialect_for(library)
+    applied = _apply(working, plan, dialect)
     if applied.code is None:
         return applied
-    drift = _drift(working, applied.code, library)
+    drift = _drift(base=working, code=applied.code, dialect=dialect)
     if not drift:
         return applied
-    lines = _with_drift_reminder([line for _, line in drift])
+    lines = _with_drift_reminder([line for _, line in drift], dialect)
     kinds = tuple(kind for kind, _ in drift)
     return AppliedPlan(None, lines[:MAX_FEEDBACK], kinds, applied.tolerant, drifted=applied.code)
 
@@ -176,39 +432,37 @@ def restore_protected(base: str, code: str, *, library: str = "matplotlib") -> s
     replaced region is a whole module-level statement's lines, so the splice keeps
     the code around it as the plan wrote it.
     """
-    drift = _drift(base, code, library)
+    dialect = dialect_for(library)
+    drift = _drift(base, code, dialect)
     if not drift or not {kind for kind, _ in drift} <= RESTORABLE_DRIFT:
         return None
     try:
-        before_tree, after_tree = ast.parse(base), ast.parse(code)
+        before, after = dialect.read(base), dialect.read(code)
     except SyntaxError:
         return None
-    before = find_regions(base, before_tree, library=library)
-    after = find_regions(code, after_tree, library=library)
-    index = SourceIndex(code)
-    assigned: dict[str, list[ast.stmt]] = {}
-    for stmt in after_tree.body:
-        names = _module_assignment(stmt)
-        if names is not None:
-            assigned.setdefault(names, []).append(stmt)
+    assigned = after.assignments()
 
-    def statement(names: str) -> Span | None:
+    def statement(names: str) -> SpanLike | None:
         found = assigned.get(names, [])
-        return index.lines_span(found[0]) if len(found) == 1 else None
+        return found[0] if len(found) == 1 else None
 
-    splices: list[tuple[Span, str]] = []
-    pairs: list[tuple[Span, Span | None]] = []
+    splices: list[tuple[SpanLike, str]] = []
+    pairs: list[tuple[SpanLike, SpanLike | None]] = []
     if before.theme is not None:
-        pairs.append((before.theme.span, statement(THEME_NAME)))
-    pairs += [(region.span, statement(region.name)) for region in before.theme_tokens]
-    if before.savefig is not None and before.savefig.statement is not None:
-        pairs.append((before.savefig.statement, after.savefig.statement if after.savefig is not None else None))
+        pairs.append((before.theme, statement(THEME_NAME)))
+    pairs += [(span, statement(name)) for name, span in before.tokens]
+    if before.save is not None:
+        pairs.append((before.save, after.save))
     for base_span, target in pairs:
-        if target is not None and _meaning(base, base_span) == _meaning(code, target):
+        if target is not None and _meaning(dialect, base, base_span) == _meaning(dialect, code, target):
             continue
         text = base[base_span.start : base_span.end]
         # Both sides must be one statement on their lines: a line shared on either side would drop or copy another.
-        if target is None or not _single_statement(code[target.start : target.end]) or not _single_statement(text):
+        if (
+            target is None
+            or not dialect.single_statement(code[target.start : target.end])
+            or not dialect.single_statement(text)
+        ):
             return None
         if not text.endswith(("\n", "\r")) and target.end < len(code):
             text += "\n"  # the base's statement ended the file; here code follows it
@@ -217,10 +471,10 @@ def restore_protected(base: str, code: str, *, library: str = "matplotlib") -> s
     if restored is None:
         return None
     try:
-        ast.parse(restored)
+        dialect.read(restored)
     except SyntaxError:
         return None
-    return None if _drift(base, restored, library) else restored
+    return None if _drift(base, restored, dialect) else restored
 
 
 def _module_assignment(stmt: ast.stmt) -> str | None:
@@ -236,15 +490,7 @@ def _module_assignment(stmt: ast.stmt) -> str | None:
     return ", ".join(target.id for target in targets if isinstance(target, ast.Name))
 
 
-def _single_statement(text: str) -> bool:
-    """Whether whole lines hold exactly one statement, so replacing them drops nothing else."""
-    try:
-        return len(ast.parse(text).body) == 1
-    except SyntaxError:
-        return False
-
-
-def _splice(code: str, splices: list[tuple[Span, str]]) -> str | None:
+def _splice(code: str, splices: list[tuple[SpanLike, str]]) -> str | None:
     """`code` with each span replaced by its text; None when two spans overlap."""
     cursor, parts = 0, []
     for span, replacement in sorted(splices, key=lambda splice: splice[0].start):
@@ -266,51 +512,53 @@ def protected_drift(base: str, code: str, *, library: str = "matplotlib") -> lis
     in other quotes, spacing, line breaks or comment passes, any other value does not.
     THEME and the token names may be bound no more often than in `base` (assignment,
     augmented assignment, `del`, `global`, import alias, function, class, parameter,
-    loop or `with` target, walrus, `except ... as`, match capture). A `code` that does
+    loop or `with` target, walrus, `except ... as`, match capture; in R an assignment of
+    any arrow, a replacement form, a parameter or a `for` variable). A `code` that does
     not parse is left to the validator.
     """
-    return _with_drift_reminder([line for _, line in _drift(base, code, library)])
+    dialect = dialect_for(library)
+    return _with_drift_reminder([line for _, line in _drift(base, code, dialect)], dialect)
 
 
-def _with_drift_reminder(lines: list[str]) -> list[str]:
+def _with_drift_reminder(lines: list[str], dialect: Dialect) -> list[str]:
     if not lines:
         return []
-    reminder = "keep the THEME assignment, the theme tokens and the final savefig exactly as in the current code"
+    reminder = (
+        f"keep the THEME assignment, the theme tokens and the final {dialect.save_word} exactly as in the current code"
+    )
     return [*lines, _line(reminder)]
 
 
-def _drift(base: str, code: str, library: str) -> list[tuple[str, str]]:
+def _drift(base: str, code: str, dialect: Dialect) -> list[tuple[str, str]]:
     """`protected_drift` without its closing reminder: one `(kind, failure line)` pair per drift."""
     try:
-        before_tree = ast.parse(base)
-        after_tree = ast.parse(code)
+        before = dialect.read(base)
+        after = dialect.read(code)
     except SyntaxError:
         return []
-    before = find_regions(base, before_tree, library=library)
-    after = find_regions(code, after_tree, library=library)
     failures: list[tuple[str, str]] = []
 
     if before.theme is not None and (
-        after.theme is None or _meaning(base, before.theme.span) != _meaning(code, after.theme.span)
+        after.theme is None or _meaning(dialect, base, before.theme) != _meaning(dialect, code, after.theme)
     ):
         failures.append(("drift:theme", "the plan changes or removes the protected THEME assignment"))
-    after_tokens = {region.name: _meaning(code, region.span) for region in after.theme_tokens}
-    for region in before.theme_tokens:
-        if after_tokens.get(region.name) != _meaning(base, region.span):
+    after_tokens = {name: _meaning(dialect, code, span) for name, span in after.tokens}
+    for name, span in before.tokens:
+        if after_tokens.get(name) != _meaning(dialect, base, span):
             failures.append(
                 (
                     "drift:theme_token",
-                    f"the plan changes or removes the protected theme token {region.name}; "
+                    f"the plan changes or removes the protected theme token {name}; "
                     "copy its line unchanged from the current code",
                 )
             )
-    if before.savefig is not None and before.savefig.statement is not None:
-        after_savefig = after.savefig.statement if after.savefig is not None else None
-        if after_savefig is None or _meaning(base, before.savefig.statement) != _meaning(code, after_savefig):
-            failures.append(("drift:savefig", "the plan changes or removes the protected final savefig statement"))
+    if before.save is not None:
+        if after.save is None or _meaning(dialect, base, before.save) != _meaning(dialect, code, after.save):
+            line = f"the plan changes or removes the protected final {dialect.save_word} statement"
+            failures.append(("drift:savefig", line))
 
-    names = {THEME_NAME, *(name for region in before.theme_tokens for name in region.name.split(", "))}
-    counts_before, counts_after = _bindings(before_tree, names), _bindings(after_tree, names)
+    names = {THEME_NAME, *(part for name, _ in before.tokens for part in name.split(", "))}
+    counts_before, counts_after = before.bindings(names), after.bindings(names)
     for name in sorted(names):
         if counts_after.get(name, 0) > counts_before.get(name, 0):
             line = f"the plan binds {name} a second time; the theme names are set once, on their protected line"
@@ -318,17 +566,13 @@ def _drift(base: str, code: str, library: str) -> list[tuple[str, str]]:
     return [(kind, _line(failure)) for kind, failure in failures]
 
 
-def _meaning(source: str, span: Span) -> str:
+def _meaning(dialect: Dialect, source: str, span: SpanLike) -> str:
     """A protected statement as its syntax tree without positions: comments, spacing and quotes do not count.
 
     Every protected region is a whole module-level statement, so its lines parse on
     their own; the stripped text stands in should they ever not.
     """
-    text = source[span.start : span.end]
-    try:
-        return ast.dump(ast.parse(text))
-    except SyntaxError:
-        return text.strip()
+    return dialect.meaning(source[span.start : span.end])
 
 
 def _bindings(tree: ast.Module, names: set[str]) -> Counter[str]:
@@ -354,26 +598,27 @@ def _bindings(tree: ast.Module, names: set[str]) -> Counter[str]:
     return counts
 
 
-def new_literals(base: str, code: str) -> list[str]:
+def new_literals(base: str, code: str, *, library: str = "matplotlib") -> list[str]:
     """The string literals of `code` that `base` does not already hold (as a multiset), each as often as it is new.
 
     A `code` or `base` that does not parse has none; the validator reports the syntax error.
     """
+    dialect = dialect_for(library)
     try:
-        before, after = _string_literals(ast.parse(base)), _string_literals(ast.parse(code))
+        before, after = dialect.string_literals(base), dialect.string_literals(code)
     except SyntaxError:
         return []
     return [text for text, count in sorted((after - before).items()) for _ in range(count)]
 
 
-def new_literal_chars(base: str, code: str) -> int:
+def new_literal_chars(base: str, code: str, *, library: str = "matplotlib") -> int:
     """Characters of string literals in `code` that `base` does not already hold (as a multiset).
 
     The plan's literal budget (`MAX_NEW_LITERAL_CHARS`, `MAX_CHANGE_LITERAL_CHARS` on a
     change turn): an adaptation renames titles and labels, it does not write out data
     or long text. A `code` or `base` that does not parse counts as 0.
     """
-    return sum(len(text) for text in new_literals(base, code))
+    return sum(len(text) for text in new_literals(base, code, library=library))
 
 
 def _string_literals(tree: ast.Module) -> Counter[str]:
@@ -387,16 +632,20 @@ def _string_literals(tree: ast.Module) -> Counter[str]:
     return counts
 
 
-def _apply(working: str, plan: AdaptPlan, library: str) -> AppliedPlan:
+def _apply(working: str, plan: AdaptPlan, dialect: Dialect) -> AppliedPlan:
     if plan.full_code is not None:
         return AppliedPlan(plan.full_code)
     try:
-        regions = find_regions(working, library=library)
+        view = dialect.read(working)
     except SyntaxError as exc:
         line = f"the working form does not parse at line {exc.lineno}; no edit was applied"
         return AppliedPlan(None, [line], ("working_unparseable",))
     # Placeholders are found as text on every step instead (see _PLACEHOLDER_LINE).
-    protected = [region for region in regions.protected if region.kind != "placeholder"]
+    protected = [
+        _Protected(region.kind, region.name, region.span.start, region.span.end)
+        for region in view.regions
+        if region.kind != "placeholder"
+    ]
 
     text = working
     failures: list[str] = []
@@ -405,8 +654,8 @@ def _apply(working: str, plan: AdaptPlan, library: str) -> AppliedPlan:
     total = len(plan.edits)
     for number, edit in enumerate(plan.edits, start=1):
         label = f"edit {number}/{total}"
-        tier, matches = _locate(text, edit.find, edit.replace)
-        if not matches and text != working and len(_locate(working, edit.find, edit.replace)[1]) == 1:
+        tier, matches = _locate(text, edit.find, edit.replace, dialect.literals)
+        if not matches and text != working and len(_locate(working, edit.find, edit.replace, dialect.literals)[1]) == 1:
             failures.append(_stale_failure(label, edit.find))
             kinds.append("stale_match")
             continue
@@ -415,9 +664,9 @@ def _apply(working: str, plan: AdaptPlan, library: str) -> AppliedPlan:
             kinds.append("zero_match" if not matches else "multi_match")
             continue
         start, end, replace = matches[0]
-        hit = next((r for r in [*protected, *_placeholders(text)] if r.span.overlaps(start, end)), None)
+        hit = next((r for r in [*protected, *_placeholders(text, dialect)] if r.overlaps(start, end)), None)
         if hit is not None:
-            failures.append(_protected_failure(label, text, start, end, hit))
+            failures.append(_protected_failure(label, text, start, end, hit, dialect))
             kinds.append(f"protected:{hit.kind}")
             continue
         text = text[:start] + replace + text[end:]
@@ -438,7 +687,9 @@ Match = tuple[int, int, str]
 """One place `find` matched: its start and end in the text, and the replacement to put there."""
 
 
-def _locate(text: str, find: str, replace: str) -> tuple[MatchTier, list[Match]]:
+def _locate(
+    text: str, find: str, replace: str, literals: LiteralSyntax = _PYTHON_LITERALS
+) -> tuple[MatchTier, list[Match]]:
     """The matches of `find` in the first tier that has any (module docstring, "Matching"), with that tier."""
     exact = [(start, start + len(find), replace) for start in _occurrences(text, find)]
     if exact:
@@ -446,7 +697,7 @@ def _locate(text: str, find: str, replace: str) -> tuple[MatchTier, list[Match]]
     trailing = _trailing_whitespace_matches(text, find, replace)
     if trailing:
         return "trailing_whitespace", trailing
-    return "whitespace", _whitespace_matches(text, find, replace)
+    return "whitespace", _whitespace_matches(text, find, replace, literals)
 
 
 def _occurrences(text: str, find: str) -> list[int]:
@@ -504,17 +755,17 @@ def _trailing_whitespace_matches(text: str, find: str, replace: str) -> list[Mat
     ]
 
 
-def _whitespace_matches(text: str, find: str, replace: str) -> list[Match]:
+def _whitespace_matches(text: str, find: str, replace: str, literals: LiteralSyntax) -> list[Match]:
     """Tier 3: whole lines whose words agree, with `replace` moved by the one indentation shift between them."""
     find_lines = _NEWLINE.split(find)
     ends_with_break = len(find_lines) > 1 and find_lines[-1] == ""
     if ends_with_break:
         find_lines.pop()
-    find_words, _ = _line_words(find_lines)
+    find_words, _ = _line_words(find_lines, literals)
     if not any(find_words):
         return []
     text_lines = _line_spans(text)
-    text_words, in_literal = _line_words([text[start:content_end] for start, content_end, _ in text_lines])
+    text_words, in_literal = _line_words([text[start:content_end] for start, content_end, _ in text_lines], literals)
     count = len(find_lines)
     matches: list[Match] = []
     for first in range(len(text_lines) - count + 1):
@@ -539,19 +790,21 @@ def _whitespace_matches(text: str, find: str, replace: str) -> list[Match]:
     return matches
 
 
-def _line_words(lines: list[str]) -> tuple[list[str], list[bool]]:
+def _line_words(lines: list[str], literals: LiteralSyntax = _PYTHON_LITERALS) -> tuple[list[str], list[bool]]:
     """Each line's words for the whitespace tier, and whether the line starts inside a string literal.
 
     Outside string literals, indentation and trailing blanks go and every run of blanks
     becomes one space, as `" ".join(line.split())` would; a comment collapses the same
     way. A literal's text, quotes included, stays verbatim, so two lines that differ in
     the blanks inside a string do not agree. The scan carries an open literal from one
-    line to the next (a triple-quoted one, or a quoted one continued by a backslash),
-    which marks the lines that start inside it.
+    line to the next (a triple-quoted one, or a quoted one continued by a backslash; in
+    R any quoted one, which may span lines), which marks the lines that start inside it.
+    An R raw string (`r"(...)"`) ends only at its own closing delimiter and has no escapes.
     """
     words: list[str] = []
     starts_inside: list[bool] = []
-    quote: str | None = None  # the open literal's delimiter: ', ", ''' or """
+    quote: str | None = None  # the open literal's delimiter: ', ", ''' or """ (R: also ` and a raw closer)
+    raw = False
     for line in lines:
         starts_inside.append(quote is not None)
         kept: list[str] = []
@@ -560,13 +813,14 @@ def _line_words(lines: list[str]) -> tuple[list[str], list[bool]]:
         while position < len(line):
             char = line[position]
             if quote is not None:
-                if char == "\\":
+                if char == "\\" and not raw:
                     kept.append(line[position : position + 2])
                     position += 2
                 elif line.startswith(quote, position):
                     kept.append(quote)
                     position += len(quote)
                     quote = None
+                    raw = False
                 else:
                     kept.append(char)
                     position += 1
@@ -581,14 +835,21 @@ def _line_words(lines: list[str]) -> tuple[list[str], list[bool]]:
             if char == "#":
                 kept.append(" ".join(line[position:].split()))
                 break
-            if char in "'\"":
-                quote = char * 3 if line.startswith(char * 3, position) else char
+            opener = _R_RAW_OPENER.match(line, position) if literals.raw and char in "rR" else None
+            if opener is not None:
+                quote = _RAW_CLOSERS[opener.group(3)] + opener.group(2) + opener.group(1)
+                raw = True
+                kept.append(opener.group(0))
+                position = opener.end()
+                continue
+            if char in literals.quotes:
+                quote = char * 3 if literals.triple and line.startswith(char * 3, position) else char
                 kept.append(quote)
                 position += len(quote)
                 continue
             kept.append(char)
             position += 1
-        if quote is not None and len(quote) == 1 and not line.endswith("\\"):
+        if quote is not None and len(quote) == 1 and not literals.multiline and not line.endswith("\\"):
             quote = None  # a one-quote literal ends with its line unless a backslash continues it
         words.append("".join(kept))
     return words, starts_inside
@@ -633,26 +894,37 @@ def _reindent(replace: str, indents: list[tuple[str, str]]) -> str | None:
     return "".join(moved)
 
 
-def _placeholders(text: str) -> list[Region]:
-    index = SourceIndex(text)
-    regions = []
-    for match in _PLACEHOLDER_LINE.finditer(text):
-        first = index.line_of(match.start())
-        regions.append(Region("placeholder", "df = load_user_data()", Span(first, first, match.start(), match.end())))
-    return regions
+@dataclass(frozen=True, slots=True)
+class _Protected:
+    """A protected region while a plan applies: its kind, name and characters `[start, end)` in the current text."""
+
+    kind: str
+    name: str
+    start: int
+    end: int
+
+    def overlaps(self, start: int, end: int) -> bool:
+        """Whether the half-open character range `[start, end)` shares a character with this region."""
+        return start < self.end and self.start < end
 
 
-def _shift(regions: list[Region], after: int, delta: int) -> list[Region]:
+def _placeholders(text: str, dialect: Dialect) -> list[_Protected]:
+    return [
+        _Protected("placeholder", dialect.placeholder, match.start(), match.end())
+        for match in dialect.placeholder_line.finditer(text)
+    ]
+
+
+def _shift(regions: list[_Protected], after: int, delta: int) -> list[_Protected]:
     """Move the regions that start at or after `after` by `delta` characters (lines are not tracked)."""
     if not delta:
         return regions
-    shifted = []
-    for region in regions:
-        span = region.span
-        if span.start >= after:
-            span = Span(span.first_line, span.last_line, span.start + delta, span.end + delta)
-        shifted.append(Region(region.kind, region.name, span))
-    return shifted
+    return [
+        dataclasses.replace(region, start=region.start + delta, end=region.end + delta)
+        if region.start >= after
+        else region
+        for region in regions
+    ]
 
 
 def _quote(code: str) -> str:
@@ -681,30 +953,32 @@ def _stale_failure(label: str, find: str) -> str:
     )
 
 
-def _protected_failure(label: str, text: str, start: int, end: int, region: Region) -> str:
+def _protected_failure(label: str, text: str, start: int, end: int, region: _Protected, dialect: Dialect) -> str:
     index = SourceIndex(text)
     first, last = index.line_of(start), index.line_of(max(start, end - 1))
     where = f"line {first}" if first == last else f"lines {first}-{last}"
-    region_line = index.line_of(region.span.start)
+    region_line = index.line_of(region.start)
     if region.kind == "placeholder":
         return _line(
-            f"{label}: find ({where}) overlaps {_placeholder_advice(index, region)} find = {_quote(text[start:end])}"
+            f"{label}: find ({where}) overlaps {_placeholder_advice(index, region, dialect)} "
+            f"find = {_quote(text[start:end])}"
         )
-    what = _KIND_NAMES[region.kind]
+    what = _KIND_NAMES[region.kind].format(save=dialect.save_word)
     name = "" if region.kind == "theme" else f" {region.name}"
     return _line(
         f"{label}: find ({where}) overlaps the protected {what}{name} at line {region_line}; "
-        "the THEME assignment, the theme tokens, the df = load_user_data() line and the final savefig "
+        f"the THEME assignment, the theme tokens, the {dialect.placeholder} line and the final {dialect.save_word} "
         f"stay unchanged, so anchor the edit on other lines. find = {_quote(text[start:end])}"
     )
 
 
-def _placeholder_advice(index: SourceIndex, region: Region) -> str:
+def _placeholder_advice(index: SourceIndex, region: _Protected, dialect: Dialect) -> str:
     """How to work around the placeholder: name the line below it, which an insertion anchors on."""
-    line = index.line_of(region.span.start)
+    line = index.line_of(region.start)
     below = next((number for number in range(line + 1, index.line_count + 1) if index.line_text(number).strip()), None)
     head = (
-        f"the protected {PLACEHOLDER} line at line {line}; keep that line exactly as it is and out of find and replace"
+        f"the protected {dialect.placeholder} line at line {line}; keep that line exactly as it is and out of find "
+        "and replace"
     )
     if below is None:  # never in a working form, where the final savefig follows
         return f"{head}."

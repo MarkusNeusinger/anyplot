@@ -38,6 +38,7 @@ import IconButton from '@mui/material/IconButton';
 import Skeleton from '@mui/material/Skeleton';
 import Tooltip from '@mui/material/Tooltip';
 
+import { LIB_TO_LANG } from 'src/constants';
 import type { FeedbackInput, PlotVersion } from 'src/hooks/useAgentSession';
 import { useCopyCode } from 'src/hooks/useCopyCode';
 import { useTheme } from 'src/hooks/useLayoutContext';
@@ -86,6 +87,7 @@ const STATUS_LABEL: Record<string, string> = {
 export interface ResultCardProps {
   version: PlotVersion;
   specId: string;
+  /** The page's language; the code is highlighted in its version's library's language when the app knows it. */
   language: string;
   /** Whether this is the newest version: only it starts expanded. */
   latest: boolean;
@@ -204,6 +206,9 @@ export function ResultCard({
   // The exported code downloads under its language's name (`plot.py`, `plot.R`, `plot.js`, ...).
   const codeName = codeArtifact(version.result.artifacts);
   const downloadCodeLabel = DOWNLOAD_CODE_LABELS[codeName];
+  // Highlighted in the version's own language: after a library switch the thread holds versions of several
+  // languages (a matplotlib plot above a ggplot2 one), while `language` follows the page's library.
+  const codeLanguage = LIB_TO_LANG[library] ?? language;
 
   const handleDownloadFile = async (name: ArtifactName) => {
     setFileError(null);
@@ -574,7 +579,7 @@ export function ResultCard({
                     >
                       <CodeHighlighter
                         code={version.code.text}
-                        language={language}
+                        language={codeLanguage}
                         library={library}
                       />
                     </Suspense>

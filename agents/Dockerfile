@@ -36,6 +36,22 @@ COPY pyproject.toml uv.lock README.md ./
 # distribution's metadata (`importlib.metadata.version("anyplot")`).
 RUN uv venv && uv sync --frozen --extra agents
 
+# tree-sitter-language-pack 0.13.0 bundles about 170 compiled grammars, 184 MB
+# installed, so that nothing is downloaded at run time. The service reads only the
+# grammars of its code profiles (`GRAMMARS` in agents/anyplot/code/treesitter.py:
+# R today; each later profile adds its own here), so every other one goes, and the
+# build fails when a kept grammar no longer loads. The pack's own imports
+# (tree_sitter_c_sharp, _yaml, _embedded_template) stay: it imports them on load.
+# tests/unit/agents/code/test_treesitter.py ties this list to `GRAMMARS`.
+ARG TREE_SITTER_GRAMMARS="r"
+RUN bindings=.venv/lib/python3.14/site-packages/tree_sitter_language_pack/bindings \
+    && for library in "$bindings"/*.so; do \
+         grammar="$(basename "$library")"; \
+         case " $TREE_SITTER_GRAMMARS " in *" ${grammar%%.*} "*) ;; *) rm "$library" ;; esac; \
+       done \
+    && .venv/bin/python -c "import sys, tree_sitter_language_pack as pack; [pack.get_language(g) for g in sys.argv[1:]]" \
+         $TREE_SITTER_GRAMMARS
+
 
 FROM python:3.14-slim
 
@@ -82,10 +98,13 @@ RUN .venv/bin/python -m compileall -q agents core
 # (`scoring.system_prompt`: `prompts/scorer.md` plus sections cut by heading from the
 # catalogue rubric, with the experiment's highlight rule), and both reviewer
 # instructions: the agent imports with one mode and switches at runtime
-# (`AGENT_REVIEWER_MODE`), and the experiment prompts for highlights. None of it needs credentials or
+# (`AGENT_REVIEWER_MODE`), and the experiment prompts for highlights. The import builds the
+# adapters of the default libraries only, so the check composes one adapter instruction per
+# language with a runtime (`policy.RUNTIME_PROMPTS`: matplotlib for Python, ggplot2 for R), which
+# reads that language's runtime prompt and the library rules. None of it needs credentials or
 # makes a network call. tests/unit/agents/test_image.py runs this command and
 # holds it against every file the service reads.
-RUN .venv/bin/python -c "import agents.main; from agents.anyplot import policy, scoring; policy.scope_rubric(); policy.data_rubric(); policy.transcribe_rubric(); scoring.system_prompt(highlights=True); policy.catalogue_reviewer_instruction(); policy.reviewer_instruction(); policy.own_prompt('adapter_highlights.md')"
+RUN .venv/bin/python -c "import agents.main; from agents.anyplot import policy, scoring; policy.scope_rubric(); policy.data_rubric(); policy.transcribe_rubric(); scoring.system_prompt(highlights=True); policy.catalogue_reviewer_instruction(); policy.reviewer_instruction(); policy.highlights_prompt('python'); policy.highlights_prompt('r'); policy.adapter_instruction('matplotlib'); policy.adapter_instruction('ggplot2')"
 
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080

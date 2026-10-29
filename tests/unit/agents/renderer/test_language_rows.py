@@ -7,7 +7,7 @@ import pytest
 from pydantic import ValidationError
 
 from agents.renderer import executor as executor_module
-from agents.renderer.commands import EXEC_FLAG, LANGUAGES, R_BINARY, command_for
+from agents.renderer.commands import EXEC_FLAG, JULIA_BINARY, LANGUAGES, R_BINARY, command_for
 from agents.renderer.executor import SANDBOX_PATH, ExecutorConfig, SandboxExecutor, build_argv, sandbox_env
 from agents.renderer.wire import RendererStatus, RenderRequest
 
@@ -46,8 +46,14 @@ class TestRows:
         assert "LD_PRELOAD" not in values
 
     def test_a_row_without_a_code_flag_gets_the_bare_code_file(self, config: ExecutorConfig, tmp_path: Path) -> None:
-        argv = build_argv(config, "r-a-light", tmp_path, "light", 60, command=command_for("julia", "makie"))
-        assert argv[-1] == "plot.jl"
+        row = command_for("julia", "makie")
+        argv = build_argv(config, "r-a-light", tmp_path, "light", 60, command=row)
+        assert argv[argv.index(config.harness) :] == [config.harness, EXEC_FLAG, "--", *row.argv, "plot.jl"]
+        assert row.argv[0] == JULIA_BINARY and "--compiled-modules=strict" in argv
+        values = envs(argv)
+        assert values["JULIA_DEPOT_PATH"] == "/tmp/depot:/opt/julia-depot" and values["LANG"] == "C.UTF-8"
+        assert values["ANYPLOT_DENY_EXEC"] == "required" and "LD_PRELOAD" not in values
+        assert values["PATH"] == SANDBOX_PATH and values["HOME"] == "/tmp" and "MPLBACKEND" not in values
 
     def test_a_row_switches_the_limits_it_cannot_live_under(self, config: ExecutorConfig) -> None:
         limited = replace(config, rlimit_as_mb=1024, rlimit_nproc=64)
@@ -161,7 +167,7 @@ class TestToolchains:
     def test_a_language_is_available_when_its_binaries_are_on_the_sandbox_path(
         self, config: ExecutorConfig, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        present = {"node", "julia"}
+        present = {"node", JULIA_BINARY}
         monkeypatch.setattr(
             executor_module.shutil,
             "which",

@@ -22,10 +22,14 @@ themes and both share the finding.
 
 The probe is written inside the sandbox by code under test, so G-gates only ever add
 feedback lines; they never fail a render. Feedback lines use the defect grammar of
-`core/defects.py` where they name a criterion. A render error is summarised as the
-exception class and the line of the code file that raised it, never the message: code
-under test can raise `ValueError(df["secret"].iloc[0])`, so the message may be a cell
-of the user's data.
+`core/defects.py` where they name a criterion. A render error is summarised by the
+runtime's error grammar (`RuntimeAdapter.error_summary`), never by its message: code
+under test can raise `ValueError(df["secret"].iloc[0])` or `stop(df$secret[1])`, so the
+message may be a cell of the user's data. Python's grammar (`error_summary` here) names
+the exception class and the line of `plot.py` that raised it; R's
+(`code/profiles/r/errors.py`) the erroring function, its cause and its last calls,
+because R prints no line numbers for a script. Only R1 to R3 judge a render without a
+probe (R, altair, pygal, lets-plot): the G-gates then have nothing to read.
 """
 
 import builtins
@@ -91,7 +95,7 @@ GLYPH_LINE_PREFIX = "VQ-01 ("  # only G10 writes VQ-01
 G10_TARGET = "in text the code writes, use characters the fonts cover; a user's column name stays"
 G10_MATH_TARGET = "keep non-Latin text outside $…$ math strings; a user's column name stays"
 CODE_FILE = "plot.py"
-"""The file the Python runtime writes the code to; its frames give the error line."""
+"""The file the Python runtime writes the code to; its frames give the error line of Python's grammar."""
 ERROR_CLASSES = frozenset(
     {
         "pandas.errors.ParserError",
@@ -257,8 +261,8 @@ def limit_line(theme: Theme, reason: str | None, measured: int | None, limit: in
                 "catalogue canvas size. Likely cause: a high dpi or a very large figure size."
             )
         return (
-            f'render ({theme}): {png} is not a regular file → save the figure with fig.savefig("{png}"), never a '
-            "link or a special file."
+            f"render ({theme}): {png} is not a regular file → save the plot to {png} with the code's own final save "
+            "statement, never a link or a special file."
         )
     return None
 

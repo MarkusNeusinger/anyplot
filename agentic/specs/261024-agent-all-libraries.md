@@ -9,7 +9,11 @@
 > 2026-10-28); `AGENT_LIBRARIES` keeps its default `matplotlib,seaborn`, and each
 > library's matrix run gates the public release (lets-plot: 60 of 60 on 2026-10-28).
 > Steps 2 (R) and 5 (Julia) were revised on 2026-10-28 after a second opinion (the
-> section at the end); every other library in this document is planned, not shipped.
+> section at the end). Step 2 serves ggplot2 since 2026-10-29 (PR 3b, "What PR 3b built"
+> under 2c), and the admin deploy names it with the six Python libraries; every other
+> library in this document is planned, not shipped. Step 5 (Julia) was revised on
+> 2026-10-29 after a second opinion on it; its first PR, J1 (the toolchain stage and the
+> command row, Makie not served), is built ("What J1 built" under step 5).
 
 ## Metadata
 
@@ -164,10 +168,14 @@ seven PRs in all (the Fable review of 2026-10-24 split the former step 1 and put
 before JavaScript; see "Second opinion"); step 6 lists the tests those PRs carry, not a
 PR of its own. Steps 1b to 5 each end with the library's fixtures generated,
 the eligibility sweep's numbers in the PR, and the matrix run documented as an owner
-task; a library is enabled in the deploy only after that run. For R, Julia and
+task; a library is enabled in the deploy only after that run. ~~For R, Julia and
 JavaScript the ten fixture specs must first carry the Data block (owner task per step:
 regenerate them through the pipeline's regen), because the readiness scan blocks a file
-without the marker and the matrix would otherwise have a handful of cases.
+without the marker and the matrix would otherwise have a handful of cases.~~
+Superseded by the owner decision of 2026-10-29: in every language a file without the
+`# Data` marker is `coupled`, never `blocked`, so the adapter rewrites its data creation
+with the readiness hints. Regenerations under the Data block remain useful for the eval
+fixtures, but no language step waits for them.
 
 ### 1a. Foundation: the runtime seam, with no behaviour change
 
@@ -733,10 +741,11 @@ design.
   the FROM line names a tag, which hadolint's DL3006 asks for; the digest rides in the
   tag, `name:tag@digest`), and both its builder and its runtime stage build on it, so the
   venv and the runtime see one Python. A deploy that changes the toolchain takes longer
-  (R about 2 minutes, measured locally on 2026-10-29). With Julia (step 5) the build gains
-  a registry cache (`buildx --cache-from type=registry`, because Cloud Build keeps no
-  layer cache and an R package bump must not rerun Julia's precompile) and, if the
-  precompile needs it, a larger machine type.
+  (R about 2 minutes, measured locally on 2026-10-29). With Julia (step 5, J1) the
+  toolchain build gained a registry cache (`buildx --cache-from type=registry`, because
+  Cloud Build keeps no layer cache and an R package bump must not rerun Julia's
+  precompile), and the whole deploy runs on `E2_HIGHCPU_8` with a 3600 s timeout (owner
+  decision of 2026-10-29, 5b).
 - CI (`ci-image.yml`, job `renderer-image`): the job computes the same hash; when the tag
   exists it pulls it through the Workload Identity Federation login that `ci-tests.yml`
   uses (pool `github-actions`, the job gains `id-token: write`), which needs
@@ -849,6 +858,186 @@ of the language's own program. Instead:
 - Fixtures (after the owner regenerates the ten specs' R files under the Data block: on
   2026-10-28 4 of the 10 ggplot2 files carry it, `line-basic`, `bar-grouped`,
   `box-basic`, `area-basic`, `pie-basic` and `line-timeseries` do not), the matrix, docs.
+  The regeneration is no prerequisite any more (owner decision of 2026-10-29, see the
+  plan's introduction): a file without the marker is `coupled`.
+
+#### What PR 3a built (2026-10-29): the R code profile, not served yet
+
+PR 3 is split: 3a builds the deterministic modules, 3b the `RRuntime`, the registry entry,
+the pipeline and policy changes, the fixtures and the admin deploy. Nothing in 3a is
+served.
+
+- **Parser.** `tree-sitter` 0.26.0 and `tree-sitter-language-pack` 0.13.0, pinned
+  exactly in the `agents` extra (owner decision of 2026-10-29: 0.13.0 bundles r-lib's R
+  grammar, MIT, and downloads nothing; 1.x downloads grammars at run time).
+  `agents/anyplot/code/treesitter.py` parses, lists ERROR and MISSING nodes, walks without
+  recursion and holds the R helpers (strings with escapes and raw strings, backtick names,
+  callees, arguments, assignments, bindings). All 325 catalogue files parse with no error
+  node. The pack's `Point.row` and `.column` free an int past 256 under Python 3.14 (a
+  segfault at the next collection), so the code indexes the point and a test refuses the
+  attribute form. `agents/Dockerfile` keeps only the grammars the profiles load
+  (`TREE_SITTER_GRAMMARS`, R alone; 184 MB down to 0.6 MB), and a test ties that list to
+  `GRAMMARS`. The renderer image does not install the `agents` extra.
+- **Regions and normaliser** (`code/profiles/r/`). The protected regions are the exact
+  theme statement (its default pinned to `"light"`), 1,322 theme tokens, the palette, the
+  final `ggsave` with `sprintf("plot-%s.png", THEME)` and `ragg::agg_png`, the placeholder
+  `df <- load_user_data()`, the loosely matched markers (both in 247 files) and column
+  constants with a role comment (4 files). The normaliser strips the roxygen header, inlines
+  logistic-regression's `output_file`, blanks the catalogue title with the Python rule
+  (`normalise.is_catalogue_title`; 5 `paste0` splits and 1 `sprintf` format get a note; 67
+  files size the title font from `nchar(title)`, a known issue) and rewrites only the save's
+  dpi: ragg truncates (measured in the toolchain image: 13.333 in at 240 dpi gives 3199 px),
+  so the dpi is the shortest decimal with `t <= inches * dpi < t + 1`. 34 saves are
+  rewritten; all 325 files land on 3200x1800 (251) or 2400x2400 (74), and the corpus test
+  recomputes `floor(inches * dpi)` from every rewritten save.
+- **Validator.** SECURITY over tree-sitter with the Python profile's rule ids and the named
+  bypasses of the design pass as tests. Owner decisions of 2026-10-29 on the first pass's
+  findings: a denied name is refused as a callee and as a function-valued argument
+  everywhere, and as any other value outside a data mask; inside the arguments of the
+  data-masking and tidy-select calls (`DATA_MASK_CALLS`) and in the operands of `~` it is
+  a column; a string equal to a denied name is refused only where a string becomes a
+  function (a callee, a function-valued argument, a parsed code string), so a user's
+  column called `source`, `file` or `load` passes. After the Fable and Gemini review of
+  2026-10-29, `with` and `within` are no mask, every protected statement is bound once and
+  alone on its lines (by node, so `THEME <- ...; THEME <- "dark"` is refused), and the
+  call shapes that would run a function held in a mask are refused: a function literal
+  called at once, an index or field as callee, a call to a parameter, `do.call` as a value
+  and a call's result unless it is a builder such as `colorRampPalette(...)(n)` (catalogue:
+  0, 1 in plotmath, 0 and 12 builders). The residual left, a function that calls a value
+  it receives through an argument the list does not name (a condition handler), is
+  documented in `validate.py`; the sandbox and the exec filter are the boundary. A formula position takes only a `~`
+  literal, a string literal or a name bound once to one, so a formula built with `paste0`
+  or `sprintf` is refused. gapminder and palmerpenguins pass SECURITY and are the
+  ADAPTATION finding `dataset-package`. `<<-` stays refused.
+- **Readiness.** `coupling.py` (stdlib, tree-sitter, `core.*` and the R regions only, so
+  the regen gate's adapt route can use it from `core/` later) and `readiness.py`: blocked
+  only for real reasons, a missing marker is `coupled`. Over the 325 normalised files: 4
+  clean (area-basic, box-basic, line-basic, line-timeseries), 306 coupled, 15 blocked (the
+  13 map specs, qrcode-basic, maze-circular's `<<-`).
+- **Loader, kinds, errors, edits, export.** `readr::read_csv` typed from the column kinds
+  of `data/kinds.py` (`col_integer`, `col_double` past 32 bits, `col_logical`,
+  `col_character`, `col_date`, `col_datetime` in UTC; `na = ""`), measured in the
+  toolchain image: `True`/`False`, microseconds and offsets read correctly, text `NA` and
+  `001` stay text. `col_double()` is exact only to 2^53, so `read_kinds` counts the
+  integer cells beyond it per column for 3b to announce (data-fidelity rule). The error
+  grammar reads R's stderr only (the erroring function, rlang's cause and layer, the last
+  `Calls:` names, memory, recursion, a missing package), never the message. The edit
+  applier is one core with a `Dialect` per language, and the export takes the run command
+  (`Rscript plot.R`); Python's output is byte-identical.
+
+Open for 3b: `dataset-package` is an ADAPTATION finding, which the pipeline treats as a
+defect line, not a refusal (`pipeline.BLOCKING_RULES`); for the adapter's working form to
+be refused while it keeps a dataset package, 3b adds the rule to the R runtime's blocking
+set. Settled by 3b (next section).
+
+#### What PR 3b built (2026-10-29): ggplot2 served
+
+- **Runtime.** `agents/anyplot/render/runtimes/r.py`, `RRuntime`, implements the whole
+  `RuntimeAdapter` contract with the 3a modules: `plot.R`, the renderer's R row as the
+  command (the harness in exec mode in front of `exec/R --no-echo --no-restore --no-save
+  --file=plot.R`), the row's environment key for key as `sandbox_env` builds it (`R_ENV`,
+  the deployed limits, `ANYPLOT_DENY_EXEC=required`; the local backend leaves
+  `RLIMIT_NPROC` to the container's `--pids-limit`, as for Python), the R normaliser,
+  loader, validator, readiness scan and error grammar, the edit applier's R dialect, the
+  PNG and no probe, and the export with `Rscript plot.R`. Data runs and conversions stay
+  Python's, because `run_data_code` runs Python whatever the plot's language. The repair
+  reserve is 15 s, set in the R row of `commands.py`.
+- **Registry and contract.** `RUNTIME_LIBRARIES` is `PYTHON_LIBRARIES | R_LIBRARIES` and
+  `runtime_for` picks the class by the library's language (`RUNTIME_CLASSES`);
+  `render/__init__.py` lost its Python-only assert. `RuntimeAdapter` gained
+  `blocking_rules` (the shared `contract.BLOCKING_RULES`; R adds `dataset-package`),
+  `adaptation_targets` (Python's moved from the pipeline unchanged; R's are written in R),
+  `kinds` on `loader_block` and `loader_notes`; `regions` returns a `CodeRegions` protocol
+  (the Imprint palette), which both languages' `Regions` satisfy.
+- **Pipeline.** The column kinds are read once per run (`column_kinds_of`) and handed to
+  every runtime's loader. `loader_notes` comes first in the shipped version's "what
+  changed" list: R reads integer cells beyond ±2^53 as the nearest double, and the line
+  counts them per column (the columns that fit a 200-character change note, the rest
+  counted), and `root.md` has the root name it in every reply to that result. Owner
+  decision of 2026-10-29: "what changed", not a residual note, so the status stays the
+  render's (`ok` stays `ok`). A working form that keeps gapminder or palmerpenguins is refused as
+  `validator dataset-package`, while the readiness scan still calls such a catalogue file
+  `coupled`.
+- **Prompts.** `adapter.md` keeps every rule the languages share and names a slot
+  (`{{data_statement}}`, `{{protected_lines}}`, `{{safe_code}}` and 13 more) wherever the
+  code differs; `adapter_python.md` and `adapter_r.md` fill them (`policy.adapter_prompt`,
+  which refuses a missing, unused or doubled slot). The Python prompt is byte for byte the
+  one before the split (a test pins its SHA-256, and another that no runtime prompt repeats
+  a shared paragraph). The R passages tell the adapter the placeholder and how readr types
+  each column, the column constants read through `.data[[...]]`, the protected statements,
+  the packages it may attach, that dataset packages and `readr` stay out, and what the
+  validator refuses; a test runs those idioms through both R validator profiles.
+  `root.md` names `plot.R` next to `plot.py`, and `gates.py` lost `fig.savefig` from a
+  feedback line. The agents image's build check composes one adapter instruction per
+  language.
+- **Python-only paths.** `dev_fixture.snapshot_from_repo` and the eligibility sweep find a
+  file under its language with its extension; the sweep scans through the runtime. The
+  admin deploy's `_LIBRARIES` names ggplot2.
+- **Evals.** `make_fixtures.py` writes the ten specs for ggplot2 (60 cases, 420 in all,
+  427 in a full run) with the smoke case `scatter-basic-ggplot2-renamed` (17 smoke cases).
+  Four of the ten ggplot2 files are `clean` and six `coupled`.
+- **App.** The result card highlights each version in its library's language; before, a
+  thread with versions of two libraries (after a library switch) highlighted all of them in
+  the page's current language. The download name, `.download('plot.R')` and `.plot_all()`
+  needed no change.
+- **CI.** The agents-image job loads every kept grammar in the built image and runs the R
+  runtime's readiness scan on the catalogue's `scatter-basic` ggplot2 file, piped in from
+  the checkout.
+- **Verified locally, without a model.** A scripted identity adaptation of
+  `line-basic-ggplot2-renamed` (the column constants set to `t [min]` and `T_tank [°C]`,
+  the data block replaced by the placeholder, a German title) passed the pipeline's check,
+  took the readr loader and rendered through `LocalDockerBackend` on the renderer image of
+  #12428: 3200x1800 in both themes, 1.5 s of wall time per theme, R1 to R3 passed. The same
+  container with its stdout kept reported `exec_deny: on`, 0.85 s of CPU and 177 MiB.
+
+| Text above | Built | Why |
+|---|---|---|
+| A runtime section per language in `policy.py` and `adapter.md` (the table at the top) | Slots in `adapter.md`, filled per language | Appending an R section would leave the Python rules in the R prompt for the adapter to override; slots keep one copy of each shared rule and a Python prompt that does not change |
+| The session announces R's inexact integers | The first entry of the shipped version's "what changed" list, from `RuntimeAdapter.loader_notes`, which the root names in its reply; the status stays the render's | The parser's warnings, where other data changes are announced, belong to the dataset, which a session keeps across a library switch, while the pipeline's lists are per render and reach the page and the root. The first build put the line among the residual notes, which made every such plot `needs_attention`; the owner decided on 2026-10-29 for "what changed", with the status left as the render earns it |
+| The R row keeps the Python defaults (2b) | `render_p95_s` 15 s, written into the row | One Cloud Run measurement (5.7 s) is close to the Python p95 of spike X (5.5 s); the matrix run measures R's p95 |
+
+#### Eligibility after 3b
+
+`uv run --extra agents python -m agents.evals.eligibility` on 2026-10-29: the sweep covers
+all seven libraries; the six Python rows are those of 1c, pygal with `histogram-basic`
+regenerated.
+
+| Library | Files | Eligible | Clean | Coupled | Blocked |
+|---|---|---|---|---|---|
+| matplotlib | 325 | 285 (87.7 %) | 15 | 270 | 40 |
+| seaborn | 325 | 287 (88.3 %) | 18 | 269 | 38 |
+| plotnine | 321 | 267 (83.2 %) | 59 | 208 | 54 |
+| altair | 325 | 273 (84.0 %) | 58 | 215 | 52 |
+| pygal | 325 | 210 (64.6 %) | 64 | 146 | 115 |
+| lets-plot | 325 | 284 (87.4 %) | 53 | 231 | 41 |
+| ggplot2 | 325 | 310 (95.4 %) | 4 | 306 | 15 |
+
+ggplot2's 15 blocked files are the 13 map specs (four of them with SECURITY findings too),
+qrcode-basic and maze-circular; by SECURITY rule `banned-import` 3, `url-literal` 2,
+`banned-name` 2, `banned-statement` 1. `test_eligibility.py` pins the ggplot2 counts.
+
+#### Next
+
+- The owner's matrix run for ggplot2 on Vertex (60 cases), the gate for the public release,
+  and with it R's render p95 for the reserve.
+- Settled in the same PR: the scope judge's rubric named matplotlib and seaborn as the
+  only libraries the assistant adapts, so since 2026-10-25 plotnine, altair, pygal and
+  lets-plot, and now ggplot2 and questions about R code, could be refused as
+  `other_library`. `scope_judge.md` now has one injected passage
+  (`policy.libraries_passage`): the served libraries from `AGENT_LIBRARIES` and the
+  catalogue's others, grouped by language; a request for this plot in a served library is
+  `in_scope`. The sentences only matplotlib's probe makes true (the VQ-03 and VQ-06 gate
+  lines, the drawn-text check of requested texts, the polar hint) moved into the Python
+  slots, and R's slots say that the host gates judge an R render without a probe;
+  `adapter_highlights.md` has a slot for its code example too (`highlights_prompt`).
+  Both Python prompts stay byte-identical.
+- Also settled in the same PR (owner's request of 2026-10-29): the fixed `other_library`
+  reply (`refusals.yaml`, eleven hand-written languages) said the assistant adapts "only
+  in Python, with matplotlib or seaborn". Each translation now carries a `{{libraries}}`
+  slot in place of that clause, filled with the served libraries by name from the scope
+  judge's source (`policy.refusals_for`, `adapted_names`); the rest of each text is
+  unchanged.
+- The 67 catalogue files that size the title font from `nchar(title)` (3a, known issue).
 
 #### 2d. Order of the PRs
 
@@ -875,7 +1064,9 @@ of the language's own program. Instead:
    command that never started keeps 127). In the built image the CI step renders a ggplot2 plot with a
    non-ASCII title at 3200x1800 in 0.85 s of CPU and 180 MiB with `exec_deny: on`.
 3. The R runtime and code profile (2c), fixtures, docs; ggplot2 joins the admin deploy's
-   `_LIBRARIES` for the live test; the matrix gates the public release.
+   `_LIBRARIES` for the live test; the matrix gates the public release. Built on
+   2026-10-29 as two PRs: 3a the code profile (#12443), 3b the runtime, the prompts, the
+   fixtures and the deploy ("What PR 3b built" under 2c).
 
 ### 3. JavaScript: Chart.js, D3, ECharts, Highcharts and MUI X
 
@@ -944,50 +1135,231 @@ of the language's own program. Instead:
 
 ### 5. Julia: Makie
 
-Revised on 2026-10-28 with step 2: Julia is the toolchain image's next stage and the
-second user of the preload filter; it needs no other image or filter design.
+Revised on 2026-10-29 after the second opinion on step 5 (Gemini 4 Argon and Fable; the
+section at the end) and the owner's decisions of the same day, which the text below
+carries. Julia is the toolchain image's next stage and the second user of the preload
+filter; it needs no other image or filter design. Four PRs: J1 (the toolchain stage, the
+command row, the build and deploy changes; built, see "What J1 built"), the measurement
+stage, J2a (the Julia code profile) and J2b (the runtime, the prompts, the fixtures and the
+admin deploy). Makie is not served before J2b: J1 leaves `AGENT_LIBRARIES`,
+`RUNTIME_LIBRARIES` and the admin deploy's `_LIBRARIES` (`agents/cloudbuild.yaml`) as they
+are; the renderer can render a Makie job, and the agents service sends none.
 
-- Toolchain: a Julia stage in `agents/renderer/toolchain.Dockerfile` (2a): the official
-  Julia 1.13 binary for generic Linux under `/opt/julia` (it brings its own libraries as
-  JLL artifacts, freetype, harfbuzz and cairo among them, so the base distribution does
-  not change its renders), the repository's `Project.toml` and `Manifest.toml`
-  instantiated and precompiled into `/opt/julia-depot` with
-  `JULIA_CPU_TARGET="generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(1)"`,
-  a stacked `JULIA_DEPOT_PATH=/tmp/depot:/opt/julia-depot` so the sandbox can write
-  its own compiled cache nowhere but `/tmp`; `JULIA_PKG_OFFLINE=true` and
-  `JULIA_PKG_PRECOMPILE_AUTO=0`, so a cache miss fails in seconds instead of compiling
-  for minutes under the timeout; `julia --project=/opt/julia plot.jl`; `RLIMIT_AS` off.
-  The precompile (821 s in the spike) runs only when the toolchain's hash changes, which
-  `Project.toml` and `Manifest.toml` join with this step (they move into the deploy
-  trigger's `includedFiles`); the registry cache keeps it from rerunning for a change
-  to another stage. The stage is added to the same image so that the renderer keeps one
-  base; before it joins, the cold start of the R image on Cloud Run is measured (the
-  first render after a scale from zero), because Cloud Run's image streaming under
-  gVisor is what keeps a larger image's cold start in bounds (unverified).
-- Exec filter: the row runs the `julia` binary with the preload library (2b), with
-  `--startup-file=no --compiled-modules=existing`, `LANG=C.UTF-8` and
-  `XDG_CACHE_HOME=/tmp`. `Base.compilecache` spawns a `julia` worker on any cache miss,
-  whatever `JULIA_PKG_PRECOMPILE_AUTO` says (that flag governs only `Pkg`); under the
-  filter the spawn fails in about 2 s (measured on 2026-10-28), the fail-fast this step
-  wants. `run`, backtick commands and `Distributed`'s workers fail the same way;
+#### 5a. The toolchain stage (J1)
+
+- A `julia` stage in `agents/renderer/toolchain.Dockerfile` (2a), `FROM base` like R's, so
+  a Julia change never rebuilds R's packages and an R change never reruns Julia's
+  precompile. It downloads the official Julia 1.13.2 build for generic Linux on x86-64
+  (the version `Manifest.toml` was resolved with) and checks it against the SHA-256 that
+  julialang publishes next to its downloads
+  (`https://julialang-s3.julialang.org/bin/checksums/julia-1.13.2.sha256`), under
+  `/opt/julia-1.13.2`. Julia brings its own libraries and CairoMakie's JLL artifacts theirs
+  (FreeType, HarfBuzz, Cairo, Fontconfig), so the base distribution does not change a
+  render.
+- The project is the repository's `Project.toml` and `Manifest.toml`, the pipeline's own
+  (`.github/actions/setup-julia`), under `/opt/julia-project`, instantiated and
+  precompiled (`Pkg.precompile(strict = true)`) into `/opt/julia-depot` with
+  `JULIA_CPU_TARGET="generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(1)"`;
+  the registries go after the precompile, because nothing at run time resolves a package.
+  A test pins the Dockerfile's version and CPU target to the Manifest's `julia_version`
+  and to the row's values.
+- The final stage copies the install, the project and the depot after R's lines, checks
+  that the launcher is dynamically linked (a static one would ignore `LD_PRELOAD`), and
+  runs `agents/renderer/toolchain/smoke.jl` exactly as the row will: the launcher by its
+  path, the row's flags (`--compiled-modules=strict` among them) and environment, the
+  preload filter in required mode. The smoke loads every package of `Project.toml`, sees
+  ``success(`true`)`` false, reads a fixed offset through TimeZones offline, and writes a PNG
+  with a non-ASCII title; a package image that does not load fails the build, which then
+  reruns the load with `JULIA_DEBUG=loading` and prints the rejected images.
+
+#### 5b. Build inputs, CI and the deploy (J1)
+
+- `Project.toml` and `Manifest.toml` join the toolchain's hash (`toolchain.py`, `INPUTS`),
+  the root `.dockerignore` (an allowlist, which lacked them, so the stage's `COPY` would
+  have failed) and the `renderer-image` job's change filter (`RENDERER_CHANGES` in
+  `ci-image.yml`); a test fails when the toolchain Dockerfile copies a context file that no
+  input covers, and another when the `.dockerignore` keeps an input out. The job's
+  `timeout-minutes` goes from 25 to 60, sized from the cold toolchain build (the numbers
+  are in "What J1 built"), and before it builds a toolchain itself the job removes the
+  runner's unused SDKs, because Julia's 2.5 GB sit in the builder, the local registry, the
+  cache export and the loaded renderer image at once.
+- The `deploy-renderer` trigger's included files lack `Project.toml` and `Manifest.toml`:
+  an owner task, because the trigger's configuration lives in GCP. Until then a
+  Manifest-only change (a Makie bump) reaches the renderer with its next deploy, not its
+  own.
+- Cloud Build (owner decision of 2026-10-29): the whole renderer deploy runs on
+  `E2_HIGHCPU_8` with a 3600 s timeout, not a nested toolchain build on a larger machine.
+  The toolchain build uses BuildKit's registry cache: `docker buildx` with the
+  docker-container driver (the builder image ships buildx 0.23; the daemon's own builder
+  exports no cache), `--cache-from` and `--cache-to type=registry,mode=max` on the fixed
+  ref `anyplot-toolchain:buildcache` in the toolchain's own repository and package,
+  `ignore-error=true` on the export (a cache that cannot be written is a warning, never a
+  failed deploy), and `--provenance=false`, so the image stays one image manifest and the
+  digest the renderer pins names it, not an index with an attestation. Writing that ref needs the rights the build already uses for the
+  `t-<hash>` tags and for moving the renderer's `:latest`; no IAM change.
+- The candidate smoke renders a Makie plot through the Julia row after the matplotlib
+  one and prints its wall time, CPU time and peak memory, so the first deploy proves that
+  the depot's package images load under gVisor with `--compiled-modules=strict` and the
+  preloaded filter, or nothing is promoted.
+- CI (`renderer-image`): the built image renders the catalogue's `scatter-basic` Makie
+  file through the harness in exec mode with the row's argv and environment
+  (`exec_deny: on`, 3200x1800), and a forced cache miss (the row plus
+  `--check-bounds=yes`, one of the cache flags) must fail with "not available with flags"
+  within 30 s.
+
+#### 5c. The command row (J1)
+
+- `JULIA_BINARY` (`/opt/julia-1.13.2/bin/julia`) by its path: `SANDBOX_PATH` does not
+  carry it, as it does not carry `R_BINARY`. Flags: `--project=/opt/julia-project
+  --startup-file=no --history-file=no --compiled-modules=strict --heap-size-hint=1536M`.
+  Environment: `LANG=C.UTF-8`, `XDG_CACHE_HOME=/tmp`, `JULIA_NUM_THREADS=1`,
+  `OPENBLAS_NUM_THREADS=1`, `JULIA_DEPOT_PATH=/tmp/depot:/opt/julia-depot` (the sandbox
+  writes logs and scratch spaces nowhere but `/tmp`), the pinned `JULIA_CPU_TARGET`,
+  `JULIA_PKG_OFFLINE=true`, `JULIA_PKG_PRECOMPILE_AUTO=0`.
+- The exec filter is preloaded as for R (2b): the launcher is dynamically linked, so
+  `LD_PRELOAD` applies, and Julia starts no program before `main`. `run`, backtick
+  commands and `Distributed`'s workers die with `SIGSYS` (`ProcessSignaled(31)`);
   `Sys.which` is pure Julia, and CairoMakie's JLLs exec nothing.
-- The spike measures the cold `using CairoMakie` plus first `save` at 2 vCPU. Under
-  45 s it ships synchronously under the 60 s timeout; above it, the design's
-  submit-and-poll (`POST /render` answering `202` with a poll URL) is a renderer
-  change of its own and this step waits for it (owner question 4). The first load of
-  a multi-GB image under gVisor's gofer is a cold-start question local Docker cannot
-  answer; `_MIN_INSTANCES=1` is the fallback.
-- Profile: placeholder `df = load_user_data()`, loader `CSV.read("data.csv", DataFrame;
-  types = Dict(...), dateformat = "yyyy-mm-dd")`; protected regions: `THEME =
-  get(ENV, "ANYPLOT_THEME", "light")`, the tokens, `save("plot-$(THEME).png", fig; ...)`;
-  error grammar: the exception type and the `at /work/plot.jl:<line>` frame; an
-  allowlist for `using`/`import` (the Manifest's packages, never `Downloads`, `Sockets`,
-  `Distributed`, `Libdl`, `Mmap`, `Pkg`), and a deny list: `run`, backtick `Cmd`
-  literals, `download`, `Base.eval`, `eval`, `@eval`, `include`, `include_string`,
-  `Meta.parse`, `ccall`, `@ccall`, `@cfunction`, `unsafe_*`, `getfield`, `invokelatest`,
-  `open` for writing, `ENV` writes.
-- Fixtures (after the owner regenerates the ten specs' Julia files under the Data
-  block), the matrix, docs.
+- `--compiled-modules=strict`, never `existing` (verified on 2026-10-29): on a cache miss
+  `existing` loads the package from its source in process, with exit 0 and no message,
+  for minutes in CairoMakie's case; `strict` fails in about a second with "Precompiled
+  image ... not available with flags CacheFlags(...)". The 2 s spawn kill under the filter
+  that the 2026-10-28 text measured belongs to the default `yes`, which starts a compile
+  worker. `JULIA_PKG_PRECOMPILE_AUTO` governs only `Pkg`.
+- `RLIMIT_AS` off (LLVM reserves address space far beyond its resident set and dies
+  under 1 GiB, spike of 2026-10-24); `--heap-size-hint` makes the collector work before
+  the 4 GiB instance runs short. `RLIMIT_NPROC` 64 holds with one thread.
+  `render_p95_s` is 25 s, from J1's sweep (below).
+
+#### 5d. Data and the code profile (J2a)
+
+- Datetimes (owner decision of 2026-10-29): Julia's `DateTime(s)` refuses microseconds,
+  `+01:00`, `Z` and a space separator (verified in julia:1.13.2). Datetimes go through
+  TimeZones.jl: offsets to UTC as readr does, microseconds truncated to milliseconds and
+  announced with counts in the version's "what changed" list, the status staying the
+  render's (R's 2^53 precedent). TimeZones 1.22.3 was a transitive dependency; J1 makes it
+  a direct one in `Project.toml` (`[deps]`, and `[compat]` at the Manifest's version;
+  `Pkg` changed the Manifest's `project_hash` and nothing else), so the toolchain
+  precompiles it, and the build's smoke parses an offset offline under `strict`. The
+  catalogue prompts' Julia blocks do not name it (`tests/unit/prompts/test_prompts.py`
+  lists it as loader-only). The loader itself is J2a.
+- Loader: placeholder `df = load_user_data()`; `CSV.read("data.csv", DataFrame; types =
+  Dict(...), missingstring = "", strict = true, truestrings = [...], falsestrings = [...],
+  normalizenames = false, pool = false)` typed from `data/kinds.py`, the true and false
+  strings named explicitly (the canonical CSV's `True` and `False`). `integer` and
+  `big-integer` read as `Int64`, exact to 2^63, so Julia needs no integer note (R's 2^53
+  line has no Julia counterpart). `missingstring = ""` keeps a text `NA` (Namibia) as text.
+  No catalogue Makie file builds its data with DataFrames (they build vectors), so the
+  adapter must introduce the column access `df[!, COL]` in every adaptation, which
+  `adapter_julia.md` teaches.
+- Validator (tree-sitter-julia from the pinned `tree-sitter-language-pack` 0.13.0): it
+  refuses by shape, as R's does: a call through a computed value (a callee that is not a
+  name or a dotted name), `getfield` and `getproperty` on a module, every `import … as`
+  and `using … : x as y`, string interpolation walked as code (`"$(run(cmd))"` runs when
+  the string is built), broadcast calls (`f.(x)`) checked like calls, `Core.eval`,
+  `Base.Libc` and file writes (`open` with a write mode, `write`, `rm`, `cp`, `mv`,
+  `mkdir`, `touch`). On top, the 2026-10-28 deny list (`run`, backtick `Cmd` literals,
+  `download`, `eval`, `@eval`, `include`, `include_string`, `Meta.parse`, `ccall`,
+  `@ccall`, `@cfunction`, `unsafe_*`, `invokelatest`, `ENV` writes) and the
+  `using`/`import` allowlist (never `Downloads`, `Sockets`, `Distributed`, `Libdl`,
+  `Mmap`, `Pkg`). RDatasets and PalmerPenguins stay in the project, because the catalogue
+  and the pipeline load them, and the adaptation refuses them as the finding
+  `dataset-package`, in the Julia runtime's blocking set like R's.
+- Error grammar, from stderr only: the first `ERROR: LoadError:` line, the first frame in
+  the plot (`@ Main /work/plot.jl:N` inside a function, `@ /work/plot.jl:N` at the top
+  level, measured in J1), and the last `in expression starting at /work/plot.jl:N` line.
+- Regions and normaliser: `THEME` and the tokens as `const` or plain assignments (both
+  forms are in the catalogue), the final `save("plot-$(THEME).png", fig; ...)`, and the
+  four saves through `joinpath(@__DIR__, ...)` rewritten to the plain file name.
+
+#### 5e. Measurement stage between J1 and J2a
+
+- A render sweep of all 325 catalogue Makie files in the J1 image (run locally with J1;
+  the numbers are in "What J1 built"), so J2a knows which files fail under Makie 0.24
+  before it writes a normaliser rule or a readiness hint.
+- On the deployed J1, through the renderer's `POST /render`: `using CairoMakie`, the
+  first `save` and a second `save` timed, cold (the first render after a scale from zero)
+  and warm. The probe is a plot that prints `time()` deltas to stderr, which the response's
+  `stderr_tail` returns; the deploy's candidate smoke prints the first cold render. Above
+  about 25 s for a cold render at 2 vCPU, a `PrecompileTools` workload of the catalogue's
+  common calls joins the project (Gemini's fallback); the 45 s line of question 4 stays
+  the gate for submit-and-poll.
+
+#### 5f. Fixtures, matrix, docs (J2b)
+
+- `JuliaRuntime`, `adapter_julia.md` filling `adapter.md`'s slots, the ten specs'
+  fixtures (60 cases), the admin deploy's `_LIBRARIES` gains `makie`, the docs, and the
+  owner's matrix run for the public release.
+
+#### Order of the PRs
+
+J1 → the measurement stage → J2a → J2b. J1's deploy is the first that builds the Julia
+toolchain (its tag is missing); the owner task for the trigger's included files can land
+any time.
+
+#### What J1 built (2026-10-29)
+
+Everything in 5a to 5c; nothing served. Measured in local Docker on the developer machine
+(32 CPUs, WSL 2, kernel 6.18), the renders with `--network none --read-only`, `--cpus 2
+--memory 4g` as on Cloud Run, an unprivileged user with `RLIMIT_NPROC` 64, the sandbox's
+environment from `executor.sandbox_env` and the harness in exec mode with the Julia row's
+argv:
+
+| Measurement | Result |
+|---|---|
+| Julia stage, all 32 CPUs | download and check 20 s, instantiate 59 s, precompile 198 s (311 packages; Makie 115 s, CairoMakie 41 s); the final stage's copies, launcher check and smoke 16 s |
+| The whole toolchain, cold, 8 pinned CPUs (`E2_HIGHCPU_8`), the deploy's buildx command | 420 s with R, the registry cache's export and the push; instantiate 73 s, precompile 245 s (Makie's chain is the critical path, so 32 CPUs gain little) |
+| Sizes | Julia's install 1.1 GB, the depot 1.4 GB; the toolchain image 312 MB → 2.74 GB, the renderer image 1.35 → 3.78 GB |
+| The build's smoke (every package, `strict`, the filter, TimeZones, a PNG) | 12 s |
+| `scatter-basic`, `bar-grouped`, `heatmap-basic`, container start included | 4.7, 7.5 and 8.6 s of wall time (two runs each, within 0.1 s); 4.5 to 8.5 s of CPU; peak RSS 942, 1,021 and 1,008 MiB; 3200x1800 (174 KB, 102 KB) and 2400x2400 (228 KB); `exec_deny: on` |
+| `using CairoMakie`, first `save`, second `save` (one process, the probe of 5e) | 2.4 s, 1.3 s and 0.14 s (three runs within 0.1 s); 4.5 s of wall time with the container's start and the harness |
+| A forced cache miss (`--check-bounds=yes`) | `strict`: exit 1 in 1.4 s, container start included, "Precompiled image ... CairoMakie not available with flags CacheFlags(...)"; the same miss under `existing` was still loading, silently, after 60 s |
+| ``run(`ls /`)`` in a plot | the child dies with `SIGSYS` before it lists anything, the plot fails with ``failed process: Process(`ls /`, ProcessSignaled(31))`` at `plot.jl:4`, the end line says `exec_deny: on` |
+
+**The render sweep** (5e): every catalogue Makie file once, as `plot.jl` and unchanged,
+through the same path, four renders at a time at 2 CPUs each (15 minutes in all):
+
+| | Result |
+|---|---|
+| Rendered | 320 of 325, every one with `exec_deny: on`; 252 at 3200x1800 and 68 at 2400x2400 |
+| Wall time, container start included | p50 10.2 s, p95 20.6 s, max 36.8 s (`biplot-pca`); four at a time cost up to twice the time of one alone (`bar-grouped` 15.4 s against 7.5 s) |
+| The eight slowest, one at a time | 12.8 to 30.7 s; five of them (`biplot-pca`, `contour-decision-boundary`, `scatter-matrix`, `contour-density`, `dendrogram-basic`) load RDatasets, which J2a refuses in an adapted plot |
+| Peak RSS | p50 1,035 MiB, p95 1,137 MiB, max 1,439 MiB |
+| Failed: Makie 0.24 changed the API the file was written for | `area-mountain-panorama` and `line-parametric` (`rowgap!`/`colgap!` on a gap the 0.24 layout does not have: "Can't set size of invalid row gap 1"), `circos-basic` ("Failed to construct plot: No plot arguments given"), `feynman-basic` (a recipe over `arrows`: "no method matching `_is_3d_arrows`") |
+| Failed: a package the project does not carry | `qrcode-basic` (QRCoders, which the generator prompt lists as not loadable) |
+| Warnings that still render | `arrows` deprecated in favour of `arrows2d`/`arrows3d` (16 files), `resolution` in the theme (122 files), `arrowsize`, `linecolor`, `arrowcolor` renamed; `map-tile-background` loads `Downloads` and renders without its tiles offline (J2a's allowlist refuses `Downloads`) |
+
+For J2a: the four API failures are regeneration candidates or `blocked` with a reason, and
+`resolution` and `arrows` are readiness hints the adapter can apply, as Gemini proposed.
+The raw table stays out of the repository.
+
+Also found:
+
+- Loading touches every package image it reads (Julia records cache use); in the
+  read-only depot of a sandbox the touch fails silently, and in the build it leaves a
+  1.3 MB layer of copied `.ji` files.
+- Cairo's fontconfig (Fontconfig_jll) scans `/usr/share/fonts` with its cache in
+  `/var/cache/fontconfig`, which the build's smoke wrote and now removes: the renderer adds
+  fonts after the toolchain, and a sandbox cannot write there. No render baked a font cache
+  before Julia either (ragg and lets-plot scan too); a baked cache for the renderer's fonts
+  is a possible later gain, not measured.
+- `Pkg` changed nothing in `Manifest.toml` but its `project_hash` when TimeZones became a
+  direct dependency; the edit is byte-identical to what `Pkg.add` with
+  `preserve = PRESERVE_ALL` writes. The pipeline's Julia depot cache (`julia-actions/cache`,
+  keyed on both files) misses once.
+- The registry cache of 5b, run with the deploy's own builder image
+  (`gcr.io/cloud-builders/docker`: Docker CLI 20.10.24, buildx 0.23.0) and the step's
+  exact `buildx` flags against a local registry: the cold build exported a 1.74 GB cache
+  manifest (29 layers) next to the image; after an R-only change a fresh builder, as Cloud
+  Build starts every build with one, took Julia's whole stage from the cache and finished
+  in 70 s. The image goes out as one OCI image manifest. In Artifact Registry the cache
+  ref is unverified until J1's deploy; a refused export only warns.
+
+| Text above (2026-10-28) | Built | Why |
+|---|---|---|
+| `julia --project=/opt/julia` with `--compiled-modules=existing` | The launcher by its path (`/opt/julia-1.13.2/bin/julia`), the project under `/opt/julia-project`, `--compiled-modules=strict` | `SANDBOX_PATH` lacks the launcher; `/opt/julia` was the project's name and now names nothing, so the install, the project and the depot are three named siblings under `/opt`; `existing` hides a cache miss (5c) |
+| The build check runs `ldd` on every library | The launcher, `libjulia` and `libjulia-internal`/`-codegen` | The system image and Julia's own test libraries name libraries the running process provides (`libjulia.so.1.13`, `libccalllazyfoo.so`), so `ldd` reports them missing in any install |
+| `render_p95_s` 45 s | 25 s | The sweep's wall p95 of 20.6 s, rounded up; the slowest files load RDatasets, which an adaptation removes, and the measurement stage's deployed numbers revise it |
 
 ### 6. Add Tests
 
@@ -1171,6 +1543,27 @@ Cloud Build machine Julia's precompile needs. A later simplification to keep in 
 (Fable): embedding R through `libR` in the harness would put R under the in-process
 filter with no preload at all.
 
+## Second opinion on step 5 (Gemini 4 Argon and Fable, 2026-10-29)
+
+Both: sound with changes. The owner approved the corrections and took the decisions
+below on 2026-10-29; step 5 above carries them, and J1 built the first part. Each row
+names who raised it; "verified" marks a claim reproduced in `julia:1.13.2` that day.
+
+| Finding | From | Change |
+|---|---|---|
+| The root `.dockerignore` (an allowlist), `toolchain.py`'s `INPUTS` and `ci-image.yml`'s `RENDERER_CHANGES` lack `Project.toml` and `Manifest.toml`, so the Julia stage's `COPY` fails and a Manifest change skips the image job; the job's 25 minutes do not fit a cold toolchain build | Gemini | All four fixed in J1 (5b); the job has 60 minutes |
+| The deploy builds the toolchain on the default machine within 1800 s and without a layer cache, so an R change reruns Julia's precompile | both (Fable proposed a nested toolchain build, Gemini a larger machine for the whole deploy) | Owner decision: the whole deploy on `E2_HIGHCPU_8` with 3600 s, not a nested toolchain build; a BuildKit registry cache on the fixed ref `anyplot-toolchain:buildcache` (5b) |
+| `--compiled-modules=existing` (the 2026-10-28 text, and Gemini's proposal) loads a missed package from its source in process, with exit 0 and no message; the 2 s spawn kill under the filter belongs to the default `yes` | Fable (verified) | `--compiled-modules=strict`, which fails in about a second (5c); CI forces a miss and checks it |
+| The row runs `julia` by name, which `SANDBOX_PATH` lacks, and carries neither the startup flags nor the thread and locale settings; under a 4 GiB cgroup Julia sizes its heap against the whole instance (verified) and its OpenBLAS starts a thread per core | Gemini, Fable | `JULIA_BINARY` by its path, the flags and environment of 5c; `--heap-size-hint=1536M` (Fable's value; Gemini proposed 2G) and `OPENBLAS_NUM_THREADS=1` |
+| Nothing proves before traffic that the depot's package images load under gVisor | Gemini | A Makie render in the deploy's candidate smoke, with its wall time (5b) |
+| `DateTime(s)` refuses microseconds, `+01:00`, `Z` and a space separator, and TimeZones.jl is only a transitive dependency | both (verified) | Owner decision: TimeZones as a direct dependency, offsets to UTC, microseconds truncated to milliseconds and announced with counts, the status the render's (5d) |
+| Reading `big-integer` as `Float64` would lose digits Julia need not lose; `CSV.read` takes `NA` as missing by default | Gemini | Both integer kinds as `Int64`, exact to 2^63, so no integer note; `missingstring = ""`, explicit true and false strings, `strict = true`, `normalizenames = false`, `pool = false` (5d) |
+| An identifier list misses string interpolation, broadcast calls, `Core.eval`, `Base.Libc`, `getproperty`, `import … as` and file writes | both | The validator refuses by shape, as R's does (5d) |
+| RDatasets and PalmerPenguins (PalmerPenguins downloads at run time) | both | Kept in the project, one lockfile with the pipeline; refused as the adaptation finding `dataset-package` (5d) |
+| The catalogue was written for Makie 0.21 and 0.22 and runs on 0.24 (`arrows!`, `NoShading`); four files save through `joinpath(@__DIR__, ...)`; `THEME` is `const` in some files; all 325 parse with tree-sitter-julia, none uses DataFrames, `qrcode-basic` needs a package outside the project and `map-tile-background` downloads | both (Fable parsed the 325 files) | J1 renders all 325 files ("What J1 built"); the normaliser takes both `THEME` forms and rewrites the four saves (5d) |
+| A cold render at 2 vCPU may come close to the 60 s timeout | Gemini | Measured locally at 2 CPUs in J1; the measurement stage times it on Cloud Run, and a `PrecompileTools` workload joins only above about 25 s (5e) |
+| The error grammar and the column access need a Julia form | Fable (verified) | The first `ERROR: LoadError:` line, the first plot frame and the last `in expression starting at` line; the adapter introduces `df[!, COL]` (5d) |
+
 ## Open questions for the owner
 
 Defaults apply until answered; each is marked where the plan uses it.
@@ -1220,6 +1613,13 @@ Defaults apply until answered; each is marked where the plan uses it.
    it behind the submit-and-poll renderer change. The spike measured 10 to 20 s cold on
    4 CPUs with the precompiled depot, so the default is now: ship synchronously, and
    confirm the time at 2 vCPU on the deployed renderer before enabling.
+   Measured on 2026-10-29 with J1's toolchain (local Docker, 2 CPUs, `strict`): see
+   "What J1 built" under step 5; the deployed cold and warm numbers are the measurement
+   stage's (5e). **Decided with the second opinion on step 5 (owner, 2026-10-29):**
+   `--compiled-modules=strict`; datetimes through TimeZones.jl (offsets to UTC,
+   microseconds truncated to milliseconds and announced, the status the render's); the
+   whole renderer deploy on `E2_HIGHCPU_8` with a longer timeout rather than a nested
+   toolchain build.
 5. **Renderer memory.** If the spikes show Chromium or Julia near the 512 MiB
    `MemAvailable` floor on a 4 GiB instance, the renderer goes to 8 GiB (cost).
    Default: measure first.

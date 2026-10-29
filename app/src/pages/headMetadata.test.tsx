@@ -6,7 +6,19 @@ import { LandingPage } from 'src/pages/LandingPage';
 import { LegalPage } from 'src/pages/LegalPage';
 import { PlotsPage } from 'src/pages/PlotsPage';
 import { render } from 'src/test-utils';
-import { removeShellDefaults } from 'src/utils/shellMetadata';
+import { syncShellDefaults } from 'src/utils/shellMetadata';
+
+// The six shell defaults as index.html marks them; filled in beforeEach.
+let defaults: Element[] = [];
+
+/** Run the sync main.tsx's observer runs after every head change, then count the tags. */
+function headAfterSync(): { titles: string[]; descriptions: number } {
+  syncShellDefaults(document.head, defaults);
+  return {
+    titles: Array.from(document.head.querySelectorAll('title')).map(t => t.textContent ?? ''),
+    descriptions: document.head.querySelectorAll('meta[name="description"]').length,
+  };
+}
 
 vi.mock('src/hooks/useLayoutContext', async () => {
   const actual = await vi.importActual<typeof import('src/hooks/useLayoutContext')>(
@@ -167,74 +179,40 @@ describe('head metadata deduplication', () => {
       }
       document.head.appendChild(el);
     });
+    defaults = Array.from(document.head.querySelectorAll('[data-shell-default]'));
   });
 
   afterEach(() => {
     document.head.innerHTML = '';
   });
 
-  it('LandingPage deduplicates head tags', () => {
-    removeShellDefaults();
-    const { unmount } = render(<LandingPage />);
-
-    const titles = document.head.querySelectorAll('title');
-    expect(titles.length).toBe(1);
-    expect(titles[0].textContent).toBe('any.plot() — any library.');
-
-    const descs = document.head.querySelectorAll('meta[name="description"]');
-    expect(descs.length).toBeLessThanOrEqual(1);
+  it.each([
+    ['LandingPage', () => <LandingPage />, 'any.plot() — any library.'],
+    ['PlotsPage', () => <PlotsPage />, 'plots | anyplot.ai'],
+    ['AboutPage', () => <AboutPage />, 'about | anyplot.ai'],
+    ['LegalPage', () => <LegalPage />, 'legal | anyplot.ai'],
+  ])('%s leaves exactly one title and one description, its own', (_name, page, title) => {
+    const { unmount } = render(page());
+    expect(headAfterSync()).toEqual({ titles: [title], descriptions: 1 });
+    expect(
+      document.head.querySelector('meta[name="description"]')?.hasAttribute('data-shell-default')
+    ).toBe(false);
     unmount();
   });
 
-  it('PlotsPage deduplicates head tags', () => {
-    removeShellDefaults();
-    const { unmount } = render(<PlotsPage />);
-
-    const titles = document.head.querySelectorAll('title');
-    expect(titles.length).toBe(1);
-    expect(titles[0].textContent).toBe('plots | anyplot.ai');
-
-    const descs = document.head.querySelectorAll('meta[name="description"]');
-    expect(descs.length).toBeLessThanOrEqual(1);
-    unmount();
-  });
-
-  it('AboutPage deduplicates head tags', () => {
-    removeShellDefaults();
-    const { unmount } = render(<AboutPage />);
-
-    const titles = document.head.querySelectorAll('title');
-    expect(titles.length).toBe(1);
-    expect(titles[0].textContent).toBe('about | anyplot.ai');
-
-    const descs = document.head.querySelectorAll('meta[name="description"]');
-    expect(descs.length).toBeLessThanOrEqual(1);
-    unmount();
-  });
-
-  it('LegalPage deduplicates head tags', () => {
-    removeShellDefaults();
-    const { unmount } = render(<LegalPage />);
-
-    const titles = document.head.querySelectorAll('title');
-    expect(titles.length).toBe(1);
-    expect(titles[0].textContent).toBe('legal | anyplot.ai');
-
-    const descs = document.head.querySelectorAll('meta[name="description"]');
-    expect(descs.length).toBeLessThanOrEqual(1);
-    unmount();
-  });
-
-  it('DebugPage deduplicates head tags', () => {
-    removeShellDefaults();
+  it('DebugPage shows its own title and keeps the shell description it has none of', () => {
     const { unmount } = render(<DebugPage />);
-
-    const titles = document.head.querySelectorAll('title');
-    expect(titles.length).toBe(1);
-    expect(titles[0].textContent).toBe('debug | anyplot.ai');
-
-    const descs = document.head.querySelectorAll('meta[name="description"]');
-    expect(descs.length).toBeLessThanOrEqual(1);
+    expect(headAfterSync()).toEqual({ titles: ['debug | anyplot.ai'], descriptions: 1 });
+    expect(
+      document.head.querySelector('meta[name="description"]')?.hasAttribute('data-shell-default')
+    ).toBe(true);
     unmount();
+  });
+
+  it('brings the shell title back when the page that replaced it is gone', () => {
+    const { unmount } = render(<AboutPage />);
+    expect(headAfterSync().titles).toEqual(['about | anyplot.ai']);
+    unmount();
+    expect(headAfterSync()).toEqual({ titles: ['shell title'], descriptions: 1 });
   });
 });

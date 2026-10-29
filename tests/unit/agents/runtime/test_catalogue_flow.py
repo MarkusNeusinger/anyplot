@@ -12,14 +12,15 @@ import httpx
 import pytest
 
 from agents.anyplot.grounding import UNVERIFIED_LINE
-from agents.anyplot.pipeline import EARLIER_REQUESTS_HEADING, SELF_REVIEW_LINE
+from agents.anyplot.pipeline import EARLIER_REQUESTS_HEADING, REVIEW_EXPECTED_HEADING, SELF_REVIEW_LINE
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
+from agents.anyplot.render.runtimes import PythonRuntime
 from agents.anyplot.scoring import DE_DEFAULTS, SCORED
 from agents.anyplot.services import get_services
 from agents.anyplot.settings import get_settings
 
 from .conftest import CHECKLIST_FLOW
-from .fakes import ROOT_REPLY, SCATTER_PLAN, default_script
+from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK, default_script
 from .test_service_flow import (
     HEADERS,
     adapter_inputs,
@@ -561,6 +562,8 @@ async def test_a_requested_format_the_render_misses_goes_to_the_repair(
     assert miss in inputs[1] and miss in inputs[2]  # the proofread and the repair
     closing = root_inputs(fake)[-1]
     assert "6,0 Mio." in closing and "requested_not_found" in closing
+    # With the probe the review request is as before 2026-10-29: the texts are checked against the drawn ones.
+    assert not any(REVIEW_TASK in text for text in reviewer_inputs(fake))
 
 
 @pytest.mark.parametrize("mode", ["repair", "note"])
@@ -598,7 +601,7 @@ async def test_a_renderer_without_drawn_texts_leaves_a_note_and_no_repair(
     script["root"] = [{"call": "plot_pipeline", "args": {"expected_texts": ["6,5 Mio."]}}, {"text": ROOT_REPLY}]
     script["reviewer"] = [{"json": score()}]
     backend.script = lambda job, theme: FakeOutcome(probe={"texts": [], "tick_overlaps": 0, "points": 0})
-    swap_models("gemini", script)
+    fake = swap_models("gemini", script)
     sid = await open_session(client)
 
     events = await create_plot(client, sid)
@@ -606,3 +609,178 @@ async def test_a_renderer_without_drawn_texts_leaves_a_note_and_no_repair(
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["residual_defects"]) == ("needs_attention", [UNVERIFIED_LINE.format(theme="light")])
     assert len(plot["rounds"]) == 1
+    # The Python runtime keeps the old path: its review request carries no requested texts.
+    assert REVIEW_TASK not in reviewer_inputs(fake)[0]
+
+
+TEMPERATURE = "Temperatur (°C)"
+MISS_LINE = (
+    f'SC-04 (light): the plot does not show the requested text "{TEMPERATURE}" (the y axis reads "Exam Score") '
+    "→ write it exactly as the user asked. Likely cause: the y axis label."
+)
+REVIEW_TASK = "look for each one in the attached render yourself"
+"""A phrase of `REVIEW_EXPECTED_HEADING`: the review request carries the requested texts."""
+
+
+def missing(line: str = MISS_LINE) -> dict[str, Any]:
+    """A catalogue review that cannot find the requested text: one SC-04 point lost, so the points still pass."""
+    return {**score(**{"SC-04": 1}), "defects": [line]}
+
+
+@pytest.fixture
+def reviewer_checks_texts(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The fixture session's matplotlib runtime as R's (`RRuntime.review_texts`): no drawn texts (the fake's probe
+    has no `labels`, as R writes no probe), so the review finds the requested texts in the image."""
+    monkeypatch.setattr(PythonRuntime, "review_texts", True)
+
+
+def ask_for(script: dict[str, list[Any]], *texts: str) -> None:
+    script["root"] = [{"call": "plot_pipeline", "args": {"expected_texts": list(texts)}}, {"text": ROOT_REPLY}]
+
+
+@pytest.mark.usefixtures("reviewer_checks_texts")
+async def test_without_drawn_texts_a_text_the_review_confirms_needs_no_note(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """Live test of 2026-10-29: ggplot2 drew the requested y axis label, and the plot still needed attention."""
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN])
+    ask_for(script, TEMPERATURE)
+    script["reviewer"] = [{"json": score()}]
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["residual_defects"]) == ("ok", [])
+    assert [(r["attempt"], r["outcome"]) for r in plot["rounds"]] == [(1, "ok")]
+    (review,) = reviewer_inputs(fake)
+    heading = REVIEW_EXPECTED_HEADING.format(ids="SC-04 (SC-02 for a number format)")
+    assert f"{heading}\n\n<user_message>\n{TEMPERATURE}\n</user_message>" in review
+
+
+@pytest.mark.usefixtures("reviewer_checks_texts")
+async def test_without_drawn_texts_a_text_the_review_misses_goes_to_the_repair(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """A miss the review reports is repaired as the probe's is, although its points pass the review bar."""
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN])
+    ask_for(script, TEMPERATURE)
+    script["reviewer"] = [{"json": missing()}, {"json": score()}]
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["residual_defects"]) == ("ok", [])
+    assert [(r["attempt"], r["outcome"], r["shipped"]) for r in plot["rounds"]] == [
+        (1, "review", False),
+        (2, "ok", True),
+    ]
+    assert "does not show the requested text" in adapter_inputs(fake)[2]  # the repair gets the review's line
+    assert all(REVIEW_TASK in text for text in reviewer_inputs(fake))  # the repaired render's review checks again
+
+
+@pytest.mark.usefixtures("reviewer_checks_texts")
+@pytest.mark.parametrize("mode", ["repair", "note"])
+async def test_without_drawn_texts_a_miss_no_round_fixes_ships_as_the_reviewers_line(
+    client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch, mode: str
+) -> None:
+    monkeypatch.setenv("AGENT_EXPECT_CHECK", mode)
+    get_settings.cache_clear()
+    plans = [SCATTER_PLAN, EMPTY_PLAN, SECOND_PLAN] if mode == "repair" else [SCATTER_PLAN, EMPTY_PLAN]
+    script = default_script(plans=plans)
+    ask_for(script, TEMPERATURE, "12 %")
+    script["reviewer"] = [{"json": missing()}, {"json": missing()}]
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["residual_defects"]) == ("needs_attention", [MISS_LINE])
+    assert len(plot["rounds"]) == (2 if mode == "repair" else 1)
+    # The review named only the label: the format it found is no miss.
+    shipped = get_services().versions.get(sid)
+    assert shipped is not None and shipped.result.shows is not None
+    assert (shipped.result.shows.texts, shipped.result.shows.requested_not_found) == (None, [TEMPERATURE])
+    assert "requested_not_found" in root_inputs(fake)[-1]
+
+
+@pytest.mark.usefixtures("reviewer_checks_texts")
+async def test_without_drawn_texts_an_unread_review_keeps_the_note(client: httpx.AsyncClient, swap_models) -> None:
+    """Never a silent pass: no readable review answered for the requested texts."""
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN])
+    ask_for(script, TEMPERATURE)
+    unreadable = {"items": [], "defects": [], "suggestions": [], "description": ""}
+    script["reviewer"] = [{"json": unreadable}, {"json": unreadable}]
+    swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert plot["status"] == "needs_attention"
+    assert UNVERIFIED_LINE.format(theme="light") in plot["residual_defects"]
+
+
+CHECKLIST_MISS: dict[str, Any] = {
+    "ok": False,
+    "defects": [
+        {
+            "id": "SC-04",
+            "theme": "light",
+            "observed": f'the plot does not show the requested text "{TEMPERATURE}" (the y axis reads "Exam Score")',
+            "target": "write it exactly as the user asked",
+            "likely_cause": "the y axis label",
+        }
+    ],
+}
+"""A checklist verdict that cannot find the requested text: its own `Verdict` schema, rendered into a defect line."""
+
+
+@pytest.fixture
+def checklist_flow(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The checklist reviewer (`AGENT_REVIEWER_MODE=checklist`) with the rest of the runtime conftest's flow."""
+    for name, value in CHECKLIST_FLOW.items():
+        monkeypatch.setenv(name, value)
+    get_settings.cache_clear()
+
+
+@pytest.mark.usefixtures("reviewer_checks_texts", "checklist_flow")
+@pytest.mark.parametrize(
+    ("answers", "plans", "status", "rounds"),
+    [
+        pytest.param([VERDICT_OK], [SCATTER_PLAN], "ok", 1, id="confirmed"),
+        pytest.param([CHECKLIST_MISS, VERDICT_OK], [SCATTER_PLAN, SECOND_PLAN], "ok", 2, id="miss-repaired"),
+        # A rejection without defects is no verdict (`Verdict._ok_matches_defects`).
+        pytest.param([{"ok": False}, {"ok": False}], [SCATTER_PLAN], "needs_attention", 1, id="unreadable"),
+    ],
+)
+async def test_without_drawn_texts_the_checklist_reviewer_answers_for_the_texts(
+    client: httpx.AsyncClient,
+    swap_models,
+    answers: list[dict[str, Any]],
+    plans: list[dict[str, Any]],
+    status: str,
+    rounds: int,
+) -> None:
+    """The checklist path end to end (Copilot's review of #12454): its `Verdict` defects are read as the catalogue
+    reviewer's lines, a miss goes to the repair, and an answer that is not a verdict keeps the note."""
+    script = default_script(plans=plans)
+    ask_for(script, TEMPERATURE)
+    script["reviewer"] = [{"json": answer} for answer in answers]
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], len(plot["rounds"])) == (status, rounds)
+    reviews = reviewer_inputs(fake)
+    assert reviews and all(f"{REVIEW_EXPECTED_HEADING.format(ids='SC-04')}\n<user_message>" in text for text in reviews)
+    if rounds == 2:
+        assert "does not show the requested text" in adapter_inputs(fake)[1]  # the repair gets the reviewer's line
+    unverified = UNVERIFIED_LINE.format(theme="light")
+    assert (unverified in plot["residual_defects"]) is (status == "needs_attention")
