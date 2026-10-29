@@ -86,6 +86,9 @@ every package's brief up front, so one start line covers the whole task.
   and a sample in its test, because an autouse fixture in
   `tests/unit/agents/data/conftest.py` fails every test that emits an unknown
   warning. A "change only" list without them contradicts the gates.
+- Write each Acceptance check as one plain command (`yarn test`, a `grep` that
+  must print nothing, `wc -l <file>` with the limit in words), never a chain
+  with `( … )`, `$( … )`, or `|| true`: agy asks the owner for every chain.
 - Name it with a short kebab-case slug that no open brief or `gemini/*` branch
   uses yet; packages of one task get `<slug>-1`, `<slug>-2`, and so on.
 - Write it with the Write tool to `~/projects/anyplot-briefs/<slug>.md`, then
