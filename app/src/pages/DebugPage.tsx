@@ -541,6 +541,7 @@ export function DebugPage() {
 
   return (
     <Box sx={{ pt: { xs: 2, md: 3 }, pb: 4 }}>
+      <title>debug | anyplot.ai</title>
       {/* Header */}
       <SectionHeader prompt="❯" title={<em>debug</em>} />
 
