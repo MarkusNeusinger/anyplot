@@ -507,7 +507,10 @@ jobs:
     # opened never runs here: Jules opens PRs only into feature/* branches, which
     # this workflow does not cover, and this guards the one that lands on main by mistake.
     # A push to a feature/ branch never runs it either: Jules's own branches live there.
-    if: github.event.pull_request.user.login != 'google-labs-jules[bot]' && !startsWith(github.ref, 'refs/heads/feature/')
+    if: >-
+      github.event.pull_request.user.login != 'google-labs-jules[bot]' &&
+      !startsWith(github.ref, 'refs/heads/feature/') &&
+      !startsWith(github.event.merge_group.base_ref, 'refs/heads/feature/')
     runs-on: ubuntu-latest
     permissions:
       contents: read

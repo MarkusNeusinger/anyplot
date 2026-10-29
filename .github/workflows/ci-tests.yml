@@ -198,6 +198,7 @@ jobs:
       needs.test.outputs.should_test == 'true' &&
       !startsWith(github.ref, 'refs/heads/feature/') &&
       !startsWith(github.base_ref, 'feature/') &&
+      !startsWith(github.event.merge_group.base_ref, 'refs/heads/feature/') &&
       github.actor != 'dependabot[bot]' &&
       !contains(fromJSON('["dependabot[bot]", "google-labs-jules[bot]"]'), github.event.pull_request.user.login)
     runs-on: ubuntu-latest

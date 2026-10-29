@@ -7,5 +7,6 @@
   GCP login before the run was cancelled. `ci-lint`, `ci-tests`,
   `ci-migrations`, and `ci-image` no longer run on pushes to `feature/**`;
   feature branches get CI through their pull requests. `Run E2E Tests` and
-  `renderer-image` also refuse any `feature/` ref at job level, and the e2e
-  job any PR into a feature branch. (#12441)
+  `renderer-image` also refuse to run for any `feature/` ref, a merge queue
+  into a feature branch, and, for the e2e job, any PR into a feature branch.
+  (#12441)
