@@ -866,7 +866,7 @@ class TestBackends:
 
         task = asyncio.create_task(backend.render(job(job_id="cancelme")))
         # Cancel once both theme containers run: a fixed sleep lost the race on a loaded CI runner.
-        for _ in range(200):
+        for _ in range(500):
             if started.exists() and len(started.read_text().split()) == 2:
                 break
             await asyncio.sleep(0.05)
