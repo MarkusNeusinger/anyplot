@@ -168,46 +168,36 @@ agy-work() {
 owner's shell never reaches `core/database/connection.py` in a child command.
 In this mode file edits are accepted without asking, and commands ask him
 unless a rule allows them. So the owner's agy settings
-(`~/.gemini/antigravity-cli/settings.json`, merged into the file if it exists)
-allow the gates, local Git, and GitHub reads once, ask only for the steps that
-leave the machine, and deny what Gemini must never do (owner, 2026-10-29: he
-does not want a prompt for every gate). Rules are word-by-word prefixes; deny
-wins over ask, ask over allow. Claude never edits this file: it sits next to
-the agy login.
+(`~/.gemini/antigravity-cli/settings.json`) carry the permission rules in
+[`agy-permissions.json`](agy-permissions.json) next to this skill (owner,
+2026-10-29: Gemini may do most things without a prompt, except cloud and
+production access). Allowed: the toolchains (`yarn`, `npm`, `node`, `uv`,
+`python`), file tools, local Git, pushes to `gemini/*`, GitHub reads, and its
+own draft PR. Denied: everything the "Never" list in section 2 forbids, cloud
+CLIs (`gcloud`, `gsutil`, `bq`, `psql`, the Cloud SQL proxy), network
+downloads, history rewrites, GitHub writes beyond the own draft PR, and
+`chmod` and writes to the brief folder, so a brief stays read-only for
+Gemini's tools as well. Rules are word-by-word prefixes; deny wins over ask,
+ask over allow, and anything unlisted asks. Shell wrappers (`bash -c`, `sh`,
+`env`, `xargs`, `eval`) stay unlisted on purpose: a deny rule only matches the
+start of a command, so a wrapper would carry a denied command past it. Claude
+edits the settings file only when the owner asks, and touches nothing else in
+that folder: the agy login lives there.
 
-```json
-{
-  "permissions": {
-    "allow": [
-      "command(cd)", "command(ls)", "command(cat)", "command(grep)", "command(wc)",
-      "command(head)", "command(tail)", "command(find)",
-      "command(yarn)",
-      "command(uv sync)", "command(uv run)", "command(PYTHON_DOTENV_DISABLED=1 uv run)",
-      "command(git status)", "command(git diff)", "command(git log)", "command(git show)",
-      "command(git branch)", "command(git fetch)", "command(git switch)", "command(git add)",
-      "command(git commit)", "command(git pull --ff-only)",
-      "command(gh issue view)", "command(gh issue list)", "command(gh pr view)",
-      "command(gh pr list)", "command(gh pr diff)",
-      "read_file(/home/<user>/projects/anyplot-briefs)"
-    ],
-    "ask": ["command(git push)", "command(gh pr create)", "command(gh api)"],
-    "deny": [
-      "command(gcloud)", "command(sudo)", "command(rm -rf)",
-      "command(git push --force)", "command(git push -f)", "command(git push origin main)",
-      "write_file(/home/<user>/projects/anyplot-briefs)",
-      "write_file(.git/)",
-      "read_file(/home/<user>/projects/anyplot/.env)"
-    ]
-  }
-}
+On a new machine, merge the rules in once (this replaces the `permissions`
+lists and keeps every other setting):
+
+```bash
+f=~/.gemini/antigravity-cli/settings.json
+mkdir -p "$(dirname "$f")"; [ -f "$f" ] || echo '{}' > "$f"
+cp -p "$f" "$f.bak-$(date +%Y%m%d-%H%M%S)"
+sed "s|/home/<user>|$HOME|g" ~/projects/anyplot-agy/.claude/skills/gemini-task/agy-permissions.json \
+  | jq -s '.[0] * .[1]' "$f" - > "$f.new" && mv "$f.new" "$f"
 ```
 
-`git push` and `gh pr create` stay on ask: they are the hand-over, about one
-prompt per package, and the owner's admin bypass would let a push to `main`
-skip the branch rules. The `write_file` deny makes a brief read-only for
-Gemini's file tools as well. Then, for each package in a fresh session, he
-runs `agy-work` and types the start line. `/gemini-task` without an argument
-lists the open briefs and issues.
+Then, for each package in a fresh session, he runs `agy-work` and types the
+start line. `/gemini-task` without an argument lists the open briefs and
+issues.
 
 ## 2. Gemini: work the task
 
