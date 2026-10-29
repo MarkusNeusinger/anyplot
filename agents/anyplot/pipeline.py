@@ -37,9 +37,9 @@ eval harness may set one or three):
    (`MAX_REVIEWS` reviewer calls in all, every round with `AGENT_SHIP_BEST`); the
    reviewer agent sees the rendered theme's PNG, so each of its image defects is
    filed under that theme, whatever theme the reviewer named. A render without drawn
-   texts on a runtime whose reviewer checks them (`RuntimeAdapter.review_texts`: R)
-   hands the review the requested texts, and each one it cannot find in the image is a
-   miss like the probe's (`grounding.reviewed_misses`), in the same call;
+   texts on a runtime whose reviewer checks them (`RuntimeAdapter.review_texts`: R,
+   altair, pygal and lets-plot) hands the review the requested texts, and each one it
+   cannot find in the image is a miss like the probe's (`grounding.reviewed_misses`), in the same call;
 5. **repair**: when an attempt left feedback (an answer that missed the schema or was
    cut off at the output limit, each with its own line, failed edits, validator
    findings, a failed render, a missed canvas, reviewer defects, and measured

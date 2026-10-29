@@ -23,7 +23,7 @@ Two measurements, both code:
   Each miss becomes a residual line, so the result says it honestly, and with
   `AGENT_EXPECT_CHECK=repair` a measured finding the repair round gets.
 
-A render without drawn texts (R today, whose renderer writes no probe) is checked by the
+A render without drawn texts (R, altair, pygal and lets-plot, which write no probe) is checked by the
 reviewer instead where its runtime says so (`RuntimeAdapter.review_texts`, owner decision of
 2026-10-29): the review request carries the requested texts, the reviewer reports each one it
 cannot find in the image as a defect line under `EXPECT_LINE_ID` that quotes it, and

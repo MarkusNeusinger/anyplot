@@ -85,6 +85,11 @@ computed palette list, the fix the old shared target ("derive it from df and the
 Imprint palette") suggested."""
 
 
+TEXTLESS_LIBRARIES = frozenset({"altair", "pygal", "letsplot"})
+"""The Python libraries that render without matplotlib and so write no probe: no drawn texts to check the user's
+requested texts against (`PythonRuntime.review_texts`)."""
+
+
 class PythonRuntime:
     """Python plot code (matplotlib, seaborn, plotnine, altair, pygal, lets-plot), run as `plot.py` under the probe
     harness."""
@@ -97,10 +102,13 @@ class PythonRuntime:
     """The working form's data placeholder, which the loader replaces."""
     blocking_rules: frozenset[str] = BLOCKING_RULES
     adaptation_targets: Mapping[str, str] = ADAPTATION_TARGETS
-    review_texts = False
-    """The requested texts are checked against the probe's drawn texts, as before 2026-10-29: matplotlib, seaborn
-    and plotnine draw through matplotlib's probe. altair, pygal and lets-plot write no probe either, so a request
-    for a text keeps the `UNVERIFIED_LINE` note there until the owner moves them to the reviewer's check too."""
+
+    @property
+    def review_texts(self) -> bool:
+        """matplotlib, seaborn and plotnine draw through matplotlib's probe, which reports the drawn texts the
+        requested ones are checked against, as before 2026-10-29. altair, pygal and lets-plot write no probe, as R
+        does not, so their reviewer finds the requested texts in the image (`TEXTLESS_LIBRARIES`)."""
+        return self.library in TEXTLESS_LIBRARIES
 
     def __init__(
         self,
