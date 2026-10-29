@@ -12,19 +12,19 @@
   the version's "what changed" list names the columns and counts the cells,
   so no value changes unannounced and the plot's status stays its own.
   A scripted identity adaptation of a fixture renders 3200x1800 in both themes
-  through the local Docker backend with `exec_deny: on`.
+  through the local Docker backend with `exec_deny: on`. (#12448)
 - **An adapter prompt per language.** `adapter.md` keeps the rules every
   language shares and names a slot wherever the code differs;
   `adapter_python.md` and `adapter_r.md` fill them. The R prompt teaches the
   placeholder `df <- load_user_data()`, column constants read through
   `.data[[...]]`, the protected statements, the packages the adapter may
   attach and what the validator refuses. The Python prompt is byte for byte
-  the one before, which a test pins by its SHA-256.
+  the one before, which a test pins by its SHA-256. (#12448)
 - **ggplot2 eval fixtures.** The ten matrix specs for ggplot2 (60 cases, 420
   generated in all) with the smoke case `scatter-basic-ggplot2-renamed`; the
   eligibility sweep and the development fixture seed find each library's
   files under its language (325 ggplot2 files: 4 clean, 306 coupled, 15
-  blocked).
+  blocked). (#12448)
 
 ### Fixed
 
@@ -38,8 +38,8 @@
   libraries in each of its eleven languages instead of "only in Python, with
   matplotlib or seaborn". The adapter prompt's sentences that only matplotlib's
   probe makes true moved into the Python passages, so the R prompt says that
-  the host gates judge an R render without a probe.
+  the host gates judge an R render without a probe. (#12448)
 - **Agent result code highlighted in the wrong language.** The result card
   highlighted every version in the page's current language, so after a
   library switch a matplotlib version showed as R; it now takes the language
-  of the version's own library.
+  of the version's own library. (#12448)
