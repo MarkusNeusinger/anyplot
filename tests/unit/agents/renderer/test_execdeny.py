@@ -7,9 +7,7 @@ Compiled with the host's gcc and loaded into `/bin/sh`, which starts a program t
 from __future__ import annotations
 
 import os
-import platform
 import resource
-import shutil
 import signal
 import subprocess
 import sys
@@ -18,27 +16,13 @@ from pathlib import Path
 import pytest
 
 
-SOURCE = Path(__file__).resolve().parents[4] / "agents" / "renderer" / "execdeny" / "execdeny.c"
 KILLED_BY_THE_FILTER = 128 + signal.SIGSYS
 
-pytestmark = pytest.mark.skipif(
-    not sys.platform.startswith("linux")
-    or platform.machine() not in ("x86_64", "aarch64")
-    or shutil.which("gcc") is None
-    or not Path("/bin/sh").exists(),
-    reason="the library is Linux-only (x86-64, aarch64) and needs gcc to build",
-)
 
-
-@pytest.fixture(scope="module")
-def library(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    built = tmp_path_factory.mktemp("execdeny") / "libexecdeny.so"
-    subprocess.run(
-        ["gcc", "-O2", "-Wall", "-Wextra", "-Werror", "-shared", "-fPIC", "-o", str(built), str(SOURCE)],
-        check=True,
-        capture_output=True,
-    )
-    return built
+@pytest.fixture
+def library(execdeny_library: Path) -> Path:
+    """The library built once per session (`conftest.execdeny_library`; skipped where it cannot be built)."""
+    return execdeny_library
 
 
 def run(library: Path, script: str, mode: str | None, *, nproc: int | None = None) -> tuple[int, str, str]:
@@ -79,6 +63,34 @@ def test_any_other_mode_installs_it_too(library: Path) -> None:
     assert run(library, "/bin/true; echo $?", "optional")[1:] == (str(KILLED_BY_THE_FILTER), "on")
 
 
+def test_the_preflight_ends_the_program_before_its_main(library: Path) -> None:
+    """`ANYPLOT_EXEC_DENY_PREFLIGHT`: the library installs and reports, then ends the program before its code runs,
+    with 0 when the filter is on (the harness's check before any user code, `harness.main_exec`)."""
+    read_end, write_end = os.pipe()
+    env = {
+        "PATH": "/usr/bin:/bin",
+        "LD_PRELOAD": str(library),
+        "ANYPLOT_DENY_EXEC": "required",
+        "ANYPLOT_EXEC_DENY_FD": str(write_end),
+        "ANYPLOT_EXEC_DENY_PREFLIGHT": "1",
+    }
+    try:
+        result = subprocess.run(
+            ["/bin/sh", "-c", "echo ran"],
+            env=env,
+            pass_fds=(write_end,),
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    finally:
+        os.close(write_end)
+    with os.fdopen(read_end, "rb") as reader:
+        state = reader.read().decode()
+    assert (result.returncode, result.stdout, state) == (0, "", "on")
+
+
 def test_without_the_variable_nothing_changes(library: Path) -> None:
     assert run(library, "/bin/true; echo $?", None) == (0, "0", "")
     assert run(library, "/bin/true; echo $?", "") == (0, "0", "")
@@ -92,6 +104,35 @@ def test_the_pipe_is_closed_and_named_nowhere_before_user_code(library: Path) ->
     assert state == "on"
     assert output.splitlines() == ["unset", "refused"]
     assert code == 0
+
+
+def test_the_program_is_not_dumpable_so_a_killed_child_dumps_no_core(library: Path) -> None:
+    """Before Linux 5.16 a core dump kills every process sharing the dumping one's memory, so the SIGSYS of a vfork
+    child (R's popen and system()) took R with it; the first Cloud Build of the toolchain died that way. Not
+    dumpable, the child dumps no core and dies alone on every kernel (PR_GET_DUMPABLE is 3)."""
+    read_end, write_end = os.pipe()
+    probe = "import ctypes; print(ctypes.CDLL(None, use_errno=True).prctl(3, 0, 0, 0, 0))"
+    env = {
+        "PATH": "/usr/bin:/bin",
+        "LD_PRELOAD": str(library),
+        "ANYPLOT_DENY_EXEC": "required",
+        "ANYPLOT_EXEC_DENY_FD": str(write_end),
+    }
+    try:
+        result = subprocess.run(
+            [sys.executable, "-I", "-c", probe],
+            env=env,
+            pass_fds=(write_end,),
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    finally:
+        os.close(write_end)
+    with os.fdopen(read_end, "rb") as reader:
+        state = reader.read().decode()
+    assert (result.returncode, result.stdout.strip(), state) == (0, "0", "on"), result.stderr
 
 
 @pytest.mark.skipif(os.geteuid() == 0, reason="RLIMIT_NPROC does not bind root")

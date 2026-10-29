@@ -16,6 +16,8 @@
  *   R sees a dead child: system("true") returns 159 and every package loads.
  * - SECCOMP_FILTER_FLAG_TSYNC puts the filter on the threads a linked library's
  *   constructor (which runs before a preload's) may have started already.
+ * - The process is made non-dumpable first (PR_SET_DUMPABLE 0): a killed vfork child that
+ *   dumped core would take its parent with it on kernels before 5.16 (see install).
  * - The probe forks: an execve of a path that cannot exist exits the child with ENOENT
  *   before the filter and kills it with SIGSYS after it, so no probe starts a program.
  *
@@ -25,6 +27,13 @@
  * written to the file descriptor ANYPLOT_EXEC_DENY_FD names, which is then closed and
  * dropped from the environment, so user code can neither forge nor reuse it. The
  * harness refuses the run unless it read "on".
+ *
+ * ANYPLOT_EXEC_DENY_PREFLIGHT set: the harness's preflight (harness.main_exec). The
+ * constructor installs and reports as always, then ends the process before its main,
+ * with 0 when the filter is on and 3 when not, so the harness proves that the library
+ * loads into exactly this program and takes before it lets the program read any user
+ * code (the Copilot review of #12428: a preload ld.so cannot load, or a static binary
+ * that ignores it, would otherwise run the code unfiltered and be refused only after).
  */
 #define _GNU_SOURCE
 #include <errno.h>
@@ -99,6 +108,11 @@ static const char *install(void) {
         .len = (unsigned short)(sizeof(program) / sizeof(program[0])),
         .filter = program,
     };
+    /* Not dumpable, so a killed child never dumps core. A popen or system() child is a vfork (CLONE_VM) child of
+     * R, and before Linux 5.16 a core dump kills every process that shares the dumping one's memory: the
+     * child's SIGSYS took R down with it (the first Cloud Build of the toolchain, 2026-10-29), where newer
+     * kernels kill the child alone. Without a dump the child dies alone on every kernel. */
+    if (prctl(PR_SET_DUMPABLE, 0, 0, 0, 0) != 0) return "unavailable";
     if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != 0) return "unavailable";
     /* TSYNC answers a positive thread id when a thread cannot take the filter; only 0 installed it everywhere. */
     if (syscall(SYS_seccomp, SECCOMP_SET_MODE_FILTER, SECCOMP_FILTER_FLAG_TSYNC, &fprog) != 0) {
@@ -125,8 +139,13 @@ static void report(const char *state) {
 __attribute__((constructor)) static void anyplot_exec_deny(void) {
     const char *mode = getenv("ANYPLOT_DENY_EXEC");
     if (mode == NULL || mode[0] == '\0') return;
+    const char *preflight = getenv("ANYPLOT_EXEC_DENY_PREFLIGHT");
+    int preflighting = preflight != NULL && preflight[0] != '\0';
     const char *state = install();
+    int on = strcmp(state, "on") == 0;
     int required = strcmp(mode, "required") == 0;
     report(state);
-    if (required && strcmp(state, "on") != 0) _exit(REQUIRED_EXIT);
+    /* The harness's preflight: the same program, ended here, before its main reads any code. */
+    if (preflighting) _exit(on ? 0 : REQUIRED_EXIT);
+    if (required && !on) _exit(REQUIRED_EXIT);
 }

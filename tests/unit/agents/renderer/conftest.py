@@ -2,6 +2,9 @@
 
 import json
 import os
+import platform
+import shutil
+import subprocess
 import sys
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -96,3 +99,27 @@ def config(tmp_path: Path, launcher: FakeLauncher) -> ExecutorConfig:
 @pytest.fixture
 def executor(config: ExecutorConfig) -> SandboxExecutor:
     return SandboxExecutor(config)
+
+
+EXECDENY_SOURCE = Path(__file__).resolve().parents[4] / "agents" / "renderer" / "execdeny" / "execdeny.c"
+CAN_BUILD_EXECDENY = (
+    sys.platform.startswith("linux")
+    and platform.machine() in ("x86_64", "aarch64")
+    and shutil.which("gcc") is not None
+    and Path("/bin/sh").exists()
+)
+"""The exec filter's preload library is Linux-only (x86-64, aarch64) and needs gcc to build."""
+
+
+@pytest.fixture(scope="session")
+def execdeny_library(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """`agents/renderer/execdeny/execdeny.c` built with the flags of the toolchain image (`-Werror` included)."""
+    if not CAN_BUILD_EXECDENY:
+        pytest.skip("the exec filter's library is Linux-only (x86-64, aarch64) and needs gcc to build")
+    built = tmp_path_factory.mktemp("execdeny") / "libexecdeny.so"
+    subprocess.run(
+        ["gcc", "-O2", "-Wall", "-Wextra", "-Werror", "-shared", "-fPIC", "-o", str(built), str(EXECDENY_SOURCE)],
+        check=True,
+        capture_output=True,
+    )
+    return built
