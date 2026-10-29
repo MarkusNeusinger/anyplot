@@ -36,6 +36,8 @@ from agents.anyplot import policy
 from agents.anyplot.render import harness, watermark
 from agents.anyplot.render.runtimes import RUNTIME_LIBRARIES
 from agents.anyplot.settings import AgentSettings
+from agents.renderer import toolchain
+from agents.renderer.wire import RenderRequest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -263,7 +265,15 @@ class TestDockerignoreMatcher:
 
     @pytest.mark.parametrize(
         "relative",
-        ["agents/main.py", "core/palette.py", "prompts/library/seaborn.md", "prompts/quality-criteria.md", "uv.lock"],
+        [
+            "agents/main.py",
+            "core/palette.py",
+            "prompts/library/seaborn.md",
+            "prompts/quality-criteria.md",
+            "uv.lock",
+            "Project.toml",
+            "Manifest.toml",
+        ],
     )
     def test_admits(self, relative: str) -> None:
         assert dockerignore_admits(relative)
@@ -709,3 +719,48 @@ class TestRendererToolchainSteps:
     def test_the_hand_over_files_stay_out_of_every_build_context(self) -> None:
         for name in ("toolchain.image", "toolchain.missing", "toolchain.repository", "toolchain.pin", "describe.err"):
             assert not dockerignore_admits(name), name
+
+    def test_every_toolchain_input_reaches_the_build_context(self) -> None:
+        """The root `.dockerignore` is an allowlist: an input it keeps out fails the toolchain's COPY in the deploy
+        (Project.toml and Manifest.toml joined with Julia, step 5)."""
+        root = REPO_ROOT.resolve()
+        files = [path.relative_to(root).as_posix() for path in toolchain.input_files(root)]
+        assert {"Project.toml", "Manifest.toml", "agents/renderer/toolchain/smoke.jl"} <= set(files)
+        assert not [path for path in files if not dockerignore_admits(path)]
+
+    def test_a_missing_toolchain_is_built_with_the_registry_cache(self) -> None:
+        """Cloud Build keeps no layer cache, so every stage's layers go to one fixed ref in the toolchain's own
+        package (`mode=max`), and an R change does not rerun Julia's precompile; a cache that cannot be written is
+        only a warning, and the image still goes out as one plain manifest. Should BuildKit's builder or its push fail,
+        the daemon's own build and push (the path before the cache) still deliver the image."""
+        build = _step(_config(RENDERER_CLOUDBUILD), "toolchain-build")
+        assert 'CACHE="$${IMAGE%:*}:buildcache"' in build
+        assert "docker buildx create --name toolchain --driver docker-container --use" in build
+        assert "docker buildx build --provenance=false --push" in build
+        assert '--cache-from "type=registry,ref=$$CACHE"' in build
+        assert "type=registry,ref=$$CACHE,mode=max," in build and "ignore-error=true" in build
+        cached, fallback = build.split("else", 1)
+        assert "docker push" not in cached  # buildx pushes the image itself
+        assert "WARNING" in fallback and 'docker push "$$IMAGE"' in fallback
+
+    def test_the_deploy_runs_on_eight_vcpus_with_an_hour(self) -> None:
+        """Owner decision of 2026-10-29: the whole deploy gets the larger machine, not a nested toolchain build."""
+        config = _config(RENDERER_CLOUDBUILD)
+        assert config["options"] == {"logging": "CLOUD_LOGGING_ONLY", "machineType": "E2_HIGHCPU_8"}
+        assert int(config["timeout"].removesuffix("s")) >= 3600
+
+    def test_the_smoke_renders_makie_through_the_julia_row(self, workspace: Path) -> None:
+        """The first deploy proves the depot's package images load under gVisor with `--compiled-modules=strict`."""
+        smoke = _step(_config(RENDERER_CLOUDBUILD), "smoke")
+        assert '"language": "julia", "library": "makie"' in smoke
+        assert "--data @makie_job.json -o makie.json" in smoke
+        assert "OK: Makie smoke render" in smoke and "o['wall_s']" in smoke
+        # The job the heredoc writes is a valid request, with Julia's `$(THEME)` once Cloud Build unescapes `$$`.
+        values = {**_config(RENDERER_CLOUDBUILD)["substitutions"], "PROJECT_ID": "anyplot", "BUILD_ID": "build-1"}
+        heredocs = re.findall(r"<<'EOF'\n(.*?)\nEOF\n", _substituted(smoke, values), re.DOTALL)
+        makie = next(heredoc for heredoc in heredocs if "smoke-makie" in heredoc)
+        subprocess.run([sys.executable, "-c", makie], cwd=workspace, check=True, timeout=30)
+        job = RenderRequest.model_validate_json((workspace / "makie_job.json").read_text(encoding="utf-8"))
+        assert (job.language, job.library, job.themes) == ("julia", "makie", ["light"])
+        assert 'save("plot-$(THEME).png", fig; px_per_unit = 2)' in job.source
+        assert "Größe" in job.source
