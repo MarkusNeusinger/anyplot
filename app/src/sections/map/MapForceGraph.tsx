@@ -6,14 +6,18 @@ export interface ForceGraphInstance {
   refresh?: () => void;
   centerAt?: (x: number, y: number, z: number) => void;
   zoom?: ((z: number, ms: number) => void) & (() => number);
-  graph2ScreenCoords?: (x: number, y: number) => { x: number, y: number };
+  graph2ScreenCoords?: (x: number, y: number) => { x: number; y: number };
   d3Force: (force: string, args?: unknown) => unknown;
   d3ReheatSimulation?: () => void;
   __forcesWired?: boolean;
 }
 
-
-import { colorFor, type MapForceConfig, type MapGraphData, NODE_SIZE } from 'src/hooks/useForceGraphSimulation';
+import {
+  colorFor,
+  type MapForceConfig,
+  type MapGraphData,
+  NODE_SIZE,
+} from 'src/hooks/useForceGraphSimulation';
 import {
   ensureNodeTier,
   fitToBox,
@@ -206,7 +210,10 @@ export function MapForceGraph({
         if (!fg || fg.__forcesWired) return;
         // @ts-expect-error D3 force types are missing
         fg.d3Force('charge')?.strength(forceConfig.chargeStrength);
-        const linkForce = fg.d3Force('link') as { distance: (d: unknown) => void; strength: (s: unknown) => void; };
+        const linkForce = fg.d3Force('link') as {
+          distance: (d: unknown) => void;
+          strength: (s: unknown) => void;
+        };
         if (linkForce) {
           linkForce.distance(forceConfig.linkDistance);
           linkForce.strength(forceConfig.linkStrength);
