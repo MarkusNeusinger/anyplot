@@ -275,8 +275,10 @@ This section is for the Gemini agent in the owner's agy session.
      `origin/main`, or the existing branch), merge each package with
      `git merge --no-ff origin/gemini/<slug>-<k>`, the only merge you make.
      Disjoint packages merge without conflicts; a conflict means two packages
-     touched the same file, so stop and tell the owner. Run the acceptance
-     commands of every package and the gates on the merged result, add one
+     touched the same file, so stop and tell the owner. Run every package's
+     gates and test commands on the merged result; its path checks (which
+     files may change) hold per package, so run those on its package branch
+     (`git diff --name-only origin/main...origin/gemini/<slug>-<k>`). Add one
      changelog fragment for the task, push, and open one draft PR (step 7)
      whose `## Plan` lists each package with its merge commit. A package that
      failed stays out; name it under open steps.
