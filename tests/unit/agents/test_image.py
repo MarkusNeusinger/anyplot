@@ -533,6 +533,9 @@ class TestCloudBuild:
             "--execution-environment=gen2",
             "--no-allow-unauthenticated",
             "--service-account=${_SERVICE_ACCOUNT}",
+            # 1 vCPU and 2 GiB since 2026-10-29 (owner decision; the sizing note in agents/cloudbuild.yaml)
+            "--cpu=1",
+            "--memory=2Gi",
             "--min-instances=${_MIN_INSTANCES}",
             "--max-instances=1",
             "--concurrency=20",

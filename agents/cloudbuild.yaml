@@ -157,8 +157,12 @@ steps:
   # this build's revision (`b` prefix: the suffix must start with a letter).
   #
   # The flags: gen2; no --sandbox-launcher, because this service runs no user code
-  # (every render goes to anyplot-renderer); 2 vCPU and 4 GiB (a smaller instance
-  # is an open decision in the design); ONE instance, because sessions, datasets,
+  # (every render goes to anyplot-renderer); 1 vCPU and 2 GiB (owner decision of
+  # 2026-10-29: over the 14 days before, the hourly p99 peaked at 0.46 of a core and
+  # 370 MiB on the 2 vCPU and 4 GiB sized for the sandboxes it no longer hosts; the
+  # worst case is about 1.1 GiB: the dataset and render stores' 256 MiB caps, the
+  # process, a 1 MB paste's parse and the PNG gates, and an out-of-memory kill would
+  # lose every session in memory, hence 2 GiB); ONE instance, because sessions, datasets,
   # renders and the run queue live in memory; concurrency 20 and a 1200 s timeout
   # because of the run queue, not the CPU: every queued run holds an open stream,
   # so the instance must take the queue's 10 waiting streams, the run in flight
@@ -208,8 +212,8 @@ steps:
           --execution-environment=gen2 \
           --no-allow-unauthenticated \
           --service-account=${_SERVICE_ACCOUNT} \
-          --cpu=2 \
-          --memory=4Gi \
+          --cpu=1 \
+          --memory=2Gi \
           --min-instances=${_MIN_INSTANCES} \
           --max-instances=1 \
           --concurrency=20 \

@@ -29,7 +29,7 @@ DEFAULT_MAX_BYTES = 256 * 1024 * 1024
 """The store's byte cap (64 MiB before 2026-10-14). A version is accounted at its canonical CSV and profile,
 and since the caps rose a canonical CSV may reach 4 MiB (`parse.MAX_CANONICAL_BYTES`): with the current
 version and five undo versions a session can take about 25 MiB at worst, so 256 MiB holds about ten such
-sessions, the same as the render store's cap, inside the service's 4 GiB."""
+sessions, the same as the render store's cap, inside the service's 2 GiB (4 GiB before 2026-10-29)."""
 
 
 class StoreFull(Exception):
