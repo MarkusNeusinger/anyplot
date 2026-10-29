@@ -16,7 +16,7 @@ from api.routers.stats import _compute_stats, _refresh_stats
 from api.schemas import StatsResponse
 from core import palette
 from core.config import settings
-from core.constants import LANGUAGES_METADATA, LIBRARIES_METADATA
+from core.constants import LANGUAGE_NAMES, LANGUAGES_METADATA, LIBRARIES_METADATA, LIBRARY_NAMES
 from core.database import ImplRepository, SpecRepository
 from core.database.connection import get_db_context
 from core.utils import strip_noqa_comments
@@ -169,16 +169,11 @@ DEFAULT_HOME_IMAGE = "https://api.anyplot.ai/og/home.png"
 DEFAULT_PLOTS_IMAGE = "https://api.anyplot.ai/og/plots.png"
 DEFAULT_DESCRIPTION = "library-agnostic, ai-powered plotting."
 
-# Display names derived from the canonical registry — never hand-maintain
-# name maps in routers (that is how the 9-library-era drift happened).
-_LANGUAGE_NAMES = {lang["id"]: str(lang["name"]) for lang in LANGUAGES_METADATA}
-_LIBRARY_NAMES = {lib["id"]: str(lib["name"]) for lib in LIBRARIES_METADATA}
-
 # Counts and lists for homepage copy, derived from the registry so the text
 # can never drift from the actual catalog.
 _LIBRARY_COUNT = len(LIBRARIES_METADATA)
-_LANGUAGE_LIST = ", ".join(_LANGUAGE_NAMES.values())
-_LIBRARY_LIST = ", ".join(_LIBRARY_NAMES.values())
+_LANGUAGE_LIST = ", ".join(LANGUAGE_NAMES.values())
+_LIBRARY_LIST = ", ".join(LIBRARY_NAMES.values())
 
 # Homepage copy sized for SERP display: title ~50-60 chars, description
 # ~150 chars. The previous 10-char title / 39-char description read as a
@@ -213,8 +208,8 @@ _HOME_JSONLD = {
                 "name": "Markus Neusinger",
                 "url": "https://www.linkedin.com/in/markus-neusinger/",
             },
-            "keywords": [name.lower() for name in _LANGUAGE_NAMES.values()]
-            + [name.lower() for name in _LIBRARY_NAMES.values()]
+            "keywords": [name.lower() for name in LANGUAGE_NAMES.values()]
+            + [name.lower() for name in LIBRARY_NAMES.values()]
             + ["plotting", "data visualization", "charts", "code examples", "colorblind-safe", "imprint palette"],
             "isAccessibleForFree": True,
         },
@@ -360,7 +355,7 @@ def _render_bot_html(
 def _impl_display_names(impl) -> tuple[str, str]:
     """(library display name, language display name) for an impl, falling back to raw ids."""
     language_id = impl.library.language if impl.library else ""
-    return _LIBRARY_NAMES.get(impl.library_id, impl.library_id), _LANGUAGE_NAMES.get(language_id, language_id)
+    return LIBRARY_NAMES.get(impl.library_id, impl.library_id), LANGUAGE_NAMES.get(language_id, language_id)
 
 
 # Registry order (Python, R, Julia, JavaScript), not alphabetical: the language
@@ -399,7 +394,7 @@ def _library_groups(impls: list, first_language: str | None = None) -> str:
         lib_name, lang_name = _impl_display_names(impl)
         groups.setdefault(impl.library.language, []).append(lib_name)
     order = sorted(groups, key=lambda language: language != first_language)
-    return "; ".join(f"{_LANGUAGE_NAMES.get(language, language)}: {', '.join(groups[language])}" for language in order)
+    return "; ".join(f"{LANGUAGE_NAMES.get(language, language)}: {', '.join(groups[language])}" for language in order)
 
 
 def _hub_heading(spec) -> str:
@@ -413,7 +408,7 @@ def _hub_heading(spec) -> str:
     languages = list(dict.fromkeys(i.library.language for i in _sorted_impls(spec)))
     if not languages:
         return str(spec.title)
-    return f"{spec.title} in {_join_en([_LANGUAGE_NAMES.get(language, language) for language in languages])}"
+    return f"{spec.title} in {_join_en([LANGUAGE_NAMES.get(language, language) for language in languages])}"
 
 
 def _impl_heading(spec, lib_name: str, lang_name: str) -> str:
