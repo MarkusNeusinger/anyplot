@@ -871,6 +871,9 @@ class TestBackends:
                 break
             await asyncio.sleep(0.05)
         else:
+            # Do not leave the render task and its fake containers to event-loop teardown.
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
             raise RuntimeError("Timed out waiting for containers to start")
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
