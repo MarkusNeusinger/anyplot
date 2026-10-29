@@ -947,10 +947,12 @@ set. Settled by 3b (next section).
   `kinds` on `loader_block` and `loader_notes`; `regions` returns a `CodeRegions` protocol
   (the Imprint palette), which both languages' `Regions` satisfy.
 - **Pipeline.** The column kinds are read once per run (`column_kinds_of`) and handed to
-  every runtime's loader. `loader_notes` comes first among a shipped plot's notes: R reads
-  integer cells beyond ±2^53 as the nearest double, and the line counts them per column
-  (at most five columns named), so such a plot is `needs_attention` and the root names the
-  note. A working form that keeps gapminder or palmerpenguins is refused as
+  every runtime's loader. `loader_notes` comes first in the shipped version's "what
+  changed" list: R reads integer cells beyond ±2^53 as the nearest double, and the line
+  counts them per column (the columns that fit a 200-character change note, the rest
+  counted), and `root.md` has the root name it in every reply to that result. Owner
+  decision of 2026-10-29: "what changed", not a residual note, so the status stays the
+  render's (`ok` stays `ok`). A working form that keeps gapminder or palmerpenguins is refused as
   `validator dataset-package`, while the readiness scan still calls such a catalogue file
   `coupled`.
 - **Prompts.** `adapter.md` keeps every rule the languages share and names a slot
@@ -988,7 +990,7 @@ set. Settled by 3b (next section).
 | Text above | Built | Why |
 |---|---|---|
 | A runtime section per language in `policy.py` and `adapter.md` (the table at the top) | Slots in `adapter.md`, filled per language | Appending an R section would leave the Python rules in the R prompt for the adapter to override; slots keep one copy of each shared rule and a Python prompt that does not change |
-| The session announces R's inexact integers | A note first among the shipped plot's residual notes, from `RuntimeAdapter.loader_notes` | The parser's warnings, where other data changes are announced, belong to the dataset, which a session keeps across a library switch; the pipeline's notes are per render, reach the page's "notes" box and the root, and cannot be cut by the notes cap |
+| The session announces R's inexact integers | The first entry of the shipped version's "what changed" list, from `RuntimeAdapter.loader_notes`, which the root names in its reply; the status stays the render's | The parser's warnings, where other data changes are announced, belong to the dataset, which a session keeps across a library switch, while the pipeline's lists are per render and reach the page and the root. The first build put the line among the residual notes, which made every such plot `needs_attention`; the owner decided on 2026-10-29 for "what changed", with the status left as the render earns it |
 | The R row keeps the Python defaults (2b) | `render_p95_s` 15 s, written into the row | One Cloud Run measurement (5.7 s) is close to the Python p95 of spike X (5.5 s); the matrix run measures R's p95 |
 
 #### Eligibility after 3b

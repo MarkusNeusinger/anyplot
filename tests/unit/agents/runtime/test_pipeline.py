@@ -37,6 +37,7 @@ from agents.anyplot.pipeline import (
 )
 from agents.anyplot.policy import DATA_PREAMBLE
 from agents.anyplot.schemas import (
+    MAX_CHANGES,
     MAX_LINE_CHARS,
     MAX_USER_REQUESTS,
     MAX_USER_REQUESTS_CHARS,
@@ -843,16 +844,31 @@ class TestRCheck:
 
 
 class TestLoaderNotes:
-    def test_the_loaders_notes_come_first_and_ship_as_needs_attention(self) -> None:
-        """Owner rule of 2026-10-15: a value the plot shows changed is announced, with its counts."""
-        note = "R reads 2 integers beyond ±2^53 (9,007,199,254,740,992) as the nearest double: 2 in 'id'"
-        run = run_with(reviewed_ok=True, advisory_lines=["AR-09 (light): clipped"])
-        run.loader_notes = [note]
+    NOTE = (
+        "R reads 2 integers past ±2^53 as the nearest double, so the plot can show them a unit or more off: 2 in 'id'"
+    )
+
+    def test_the_loaders_note_comes_first_in_what_changed_and_keeps_an_ok_plot_ok(self) -> None:
+        """Owner rule of 2026-10-15: a value the plot shows changed is announced, with its counts; owner decision of
+        2026-10-29: in "what changed", so the status is the render's."""
+        run = run_with(reviewed_ok=True)
+        run.loader_notes = [self.NOTE]
 
         result = finish(run)
 
-        assert result.status == "needs_attention"
-        assert result.residual_defects == [note, "AR-09 (light): clipped"]
+        assert (result.status, result.residual_defects) == ("ok", [])
+        assert result.changes == [self.NOTE, "c"]
+
+    def test_the_cap_drops_adapter_notes_before_the_loaders(self) -> None:
+        notes = [f"note {index}" for index in range(8)]
+        run = run_with(reviewed_ok=True, changes=notes)
+        run.loader_notes = [self.NOTE]
+
+        changes = finish(run).changes
+
+        assert len(changes) == MAX_CHANGES and changes[0] == self.NOTE
+        assert changes[1:] == ["note 0", "note 1", "note 2", "note 7"]  # the first ones and the latest
+        assert summarise_changes(notes, limit=0) == [] and summarise_changes(notes, limit=1) == ["note 0"]
 
     def test_column_kinds_of_reads_the_stored_dataset(self) -> None:
         store = DatasetStore()

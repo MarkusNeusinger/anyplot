@@ -195,19 +195,33 @@ class TestRRuntimeBindings:
         kinds = read_kinds(csv_text, {"id": "integer", "code": "integer", "n": "integer"})
         assert kinds.inexact == {"id": 2, "code": 1}
         (line,) = runtime_for("ggplot2").loader_notes(kinds)
-        assert line.startswith("R reads 3 integers beyond ±2^53 (9,007,199,254,740,992) as the nearest double")
-        assert "2 in 'id', 1 in 'code'" in line and "read such a column as text" in line
+        assert line == (
+            "R reads 3 integers past ±2^53 as the nearest double, so the plot can show them a unit or more off: "
+            "2 in 'id', 1 in 'code'"
+        )
         assert runtime_for("matplotlib").loader_notes(kinds) == []
         assert runtime_for("ggplot2").loader_notes(read_kinds("n\n1\n", {"n": "integer"})) == []
+        one = read_kinds("id\n9007199254740993\n", {"id": "integer"})
+        assert runtime_for("ggplot2").loader_notes(one)[0].startswith("R reads 1 integer past ±2^53")
 
-    def test_loader_notes_name_at_most_five_columns(self) -> None:
+    def test_the_loader_note_is_a_change_note_and_names_what_fits(self) -> None:
+        """A "what changed" entry holds `MAX_CHANGE_CHARS` (owner decision of 2026-10-29): the columns that fit are
+        named with their counts, the rest counted; the first column always fits, also at the name and count caps."""
+        from agents.anyplot.schemas import MAX_CHANGE_CHARS, MAX_COLUMN_NAME_CHARS
+
         header = ",".join(f"c{index}" for index in range(7))
         csv_text = header + "\n" + ",".join(["9007199254740993"] * 7) + "\n"
         kinds = read_kinds(csv_text, {f"c{index}": "integer" for index in range(7)})
         (line,) = runtime_for("ggplot2").loader_notes(kinds)
-        assert line.startswith("R reads 7 integers") and "1 in 'c4', and 2 more columns;" in line
-        one = read_kinds("id\n9007199254740993\n", {"id": "integer"})
-        assert runtime_for("ggplot2").loader_notes(one)[0].startswith("R reads 1 integer beyond")
+        assert line.startswith("R reads 7 integers") and line.endswith("1 in 'c6'") and len(line) <= MAX_CHANGE_CHARS
+
+        names = [chr(ord("a") + index) * MAX_COLUMN_NAME_CHARS for index in range(50)]
+        wide = read_kinds(
+            ",".join(names) + "\n" + ",".join(["9007199254740993"] * 50) + "\n", dict.fromkeys(names, "integer")
+        )
+        (crowded,) = runtime_for("ggplot2").loader_notes(wide)
+        assert len(crowded) <= MAX_CHANGE_CHARS and f"1 in '{names[0]}'" in crowded
+        assert crowded.endswith(", and 49 more columns")
 
     def test_edits_literals_and_errors_use_the_r_dialect(self) -> None:
         runtime = runtime_for("ggplot2")

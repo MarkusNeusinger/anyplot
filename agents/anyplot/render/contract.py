@@ -297,8 +297,10 @@ class RuntimeAdapter(Protocol):
         ...
 
     def loader_notes(self, kinds: "ColumnKinds") -> list[str]:
-        """What the loader changes when it reads `data.csv`, one line per finding with its counts; empty when it reads
-        every cell exactly (owner rule of 2026-10-15: no silent loss)."""
+        """What the loader changes when it reads `data.csv`, one line per finding with its counts, each a change note
+        (at most `schemas.MAX_CHANGE_CHARS`) that the pipeline puts first in the shipped version's `changes`; empty when
+        it reads every cell exactly (owner rule of 2026-10-15: no silent loss; owner decision of 2026-10-29: "what
+        changed", never a residual note, so the status stays as the render earns it)."""
         ...
 
     def validate(self, code: str, library: str) -> list[str]:

@@ -59,16 +59,13 @@ code (`plot.py`, `plot.R`) names the rendered theme in its run line.
 
 Every path that is not cancelled yields exactly one `Event(output=PlotResult)` as a
 JSON dict. `ok` means the shipped render passed the host gates on the exact canvas,
-has no measured finding left (no advisory gate line, no ADAPTATION finding, no cell the
-loader read inexactly), and the
+has no measured finding left (no advisory gate line, no ADAPTATION finding), and the
 reviewer passed exactly that render (in `catalogue` mode: at or above the ship bar,
 `AGENT_STATUS_BAR` and `AGENT_STATUS_SCORE`); `needs_attention` ships a render with
 residual defect lines (reviewer lines that no reviewed render fixed, adaptation
 findings, every advisory gate line of the shipped render, such as clipped or
-overlapping text, which no review score erases, a padded canvas, no review because
-the budget or the deadline ran out, or the runtime's `loader_notes`: R reads integers
-beyond ±2^53 as the nearest double, and the first note says how many per column, owner
-rule of 2026-10-15);
+overlapping text, which no review score erases, a padded canvas, or no review because
+the budget or the deadline ran out);
 `failed` names its reason; `not_ready` comes before any model call and before the run
 queue. A ready run first takes the turn's run-queue slot (`ledger.run_slot`, set by the
 `/messages` route), so only a turn that renders waits in the queue; the soft deadline
@@ -76,7 +73,11 @@ starts after that wait. An `ok` or
 `needs_attention` result is stored as the session's next version before it is
 yielded, and carries that number as `version`. Its `changes` are the notes of every
 adapter call up to the shipped render whose plan changed the code (`note_changes`), so
-a proofread that changed nothing never replaces them. Each version keeps the change
+a proofread that changed nothing never replaces them. The runtime's `loader_notes` come
+first among them: R reads integers beyond ±2^53 as the nearest double, and the note
+names each column with its count (owner rule of 2026-10-15, no silent loss). Owner
+decision of 2026-10-29: the note goes into "what changed", not into the residual notes,
+so it leaves the status as it is (`ok` stays `ok`). Each version keeps the change
 requests it carries out (`CodeVersion.requests`); a change of it hands them to every
 adapter call (adaptation, retry, proofread, repair) and to the reviewer as
 `user_requests`, the user's standing decisions, which the prompts say to keep and never
@@ -468,7 +469,8 @@ class Run:
     """Seconds spent in `adapt`, `check`, `render` and `review`, summed over the attempts."""
     loader_notes: list[str] = field(default_factory=list)
     """What the runtime's loader changes when it reads the run's `data.csv` (`RuntimeAdapter.loader_notes`): the first
-    notes of every shipped render, so a value the plot shows rounded is never unannounced."""
+    `changes` of every shipped render, so a value the plot shows rounded is never unannounced; never a residual note,
+    so the status stays as the render earns it (owner decision of 2026-10-29)."""
 
     def timed(self, stage: str, seconds: float) -> None:
         self.stage_s[stage] = self.stage_s.get(stage, 0.0) + seconds
@@ -876,17 +878,20 @@ def note_changes(run: Run, plan: AdaptPlan, *, changed: bool, proofread: bool) -
     run.changes = list(dict.fromkeys([*run.changes, *(" ".join(note.split()) for note in plan.changes)]))
 
 
-def summarise_changes(notes: Sequence[str]) -> list[str]:
-    """At most `MAX_CHANGES` notes: the first ones (the adaptation that carried out the request) and the latest.
+def summarise_changes(notes: Sequence[str], limit: int = MAX_CHANGES) -> list[str]:
+    """At most `limit` notes: the first ones (the adaptation that carried out the request) and the latest.
 
     A run's calls may write more notes than `PlotResult` holds; keeping only the earliest would hide what a
     later repair or proofread changed in the shipped code (#12170 review), keeping only the latest would hide
-    the request itself. The notes in between are left out.
+    the request itself. The notes in between are left out. `limit` is below `MAX_CHANGES` when the runtime's
+    loader notes take places first (`finish`).
     """
-    if len(notes) <= MAX_CHANGES:
+    if limit <= 0:
+        return []
+    if len(notes) <= limit:
         return list(notes)
-    head = MAX_CHANGES // 2 + 1
-    return [*notes[:head], *notes[len(notes) - (MAX_CHANGES - head) :]]
+    head = limit // 2 + 1
+    return [*notes[:head], *notes[len(notes) - (limit - head) :]]
 
 
 def _columns_json(bindings: list[Binding], loader_columns: list[str] | None = None) -> str:
@@ -1071,8 +1076,7 @@ def finish(run: Run) -> PlotResult:
         return PlotResult(
             status="failed", reason=reason, attempts=round_number(run, run.attempts), rounds=list(run.rounds)
         )
-    # The loader's own changes to the data come first, so the cap never drops them (owner rule of 2026-10-15).
-    residual: list[str] = list(run.loader_notes)
+    residual: list[str] = []
     if shipped.padded:
         residual.append(PADDED_LINE.format(theme=run.theme))
         if shipped.canvas_line:
@@ -1109,8 +1113,11 @@ def finish(run: Run) -> PlotResult:
             # measured findings after a passing review, whose own review was unreadable or skipped.
             residual.append(NOT_REVIEWED_LINE.format(why=run.unreviewed_why or "the repair round left defects"))
     residual = list(dict.fromkeys(_line(line) for line in residual))[:MAX_RESIDUAL_DEFECTS]
-    # The shipped render's own notes: every call up to it that changed the code, never a no-op proofread's.
-    changes = [change[:MAX_CHANGE_CHARS] for change in summarise_changes(shipped.changes)]
+    # The shipped render's own notes: every call up to it that changed the code, never a no-op proofread's. The
+    # loader's notes come first, so the cap never drops them (owner decision of 2026-10-29: "what changed").
+    loader = run.loader_notes[:MAX_CHANGES]
+    adapted = summarise_changes(shipped.changes, limit=MAX_CHANGES - len(loader))
+    changes = [change[:MAX_CHANGE_CHARS] for change in [*loader, *adapted]]
     return PlotResult(
         status="needs_attention" if residual else "ok",
         attempts=max(round_number(run, run.attempts), 1),

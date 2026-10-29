@@ -33,10 +33,11 @@ harness's Python reader. This runtime hands them to a `PythonRuntime` with the s
 limit.
 
 **The loader** is `readr::read_csv` typed from the column kinds (`profiles/r/loader.py`).
-`col_double()` holds integers exactly up to 2^53 only, so `loader_notes` names every
-column with integer cells beyond it and their count, which the pipeline puts first among
-a shipped plot's notes (owner rule of 2026-10-15: no silent loss, every change announced
-with counts).
+`col_double()` holds integers exactly up to 2^53 only, so `loader_notes` names the
+columns with integer cells beyond it and their counts, which the pipeline puts first in
+the shipped version's "what changed" list (owner rule of 2026-10-15: no silent loss,
+every change announced with counts). Owner decision of 2026-10-29: "what changed", not
+a residual note, so the note leaves the plot's status as it is (`ok` stays `ok`).
 
 **ADAPTATION.** A dataset package (gapminder, palmerpenguins) brings the package's
 sample data instead of the user's, so `dataset-package` joins the rules that reject the
@@ -70,8 +71,8 @@ from ...code.profiles.r.regions import PLACEHOLDER, Regions, find_regions
 from ...code.profiles.r.validate import validate_adaptation, validate_security
 from ...code.readiness import Readiness
 from ...code.validate import Finding
-from ...data.kinds import DOUBLE_EXACT_MAX, ColumnKinds
-from ...schemas import AdaptPlan, CodeArtifact
+from ...data.kinds import ColumnKinds
+from ...schemas import MAX_CHANGE_CHARS, AdaptPlan, CodeArtifact
 from ..contract import BLOCKING_RULES, Theme
 from ..harness import INTERPRETER_FLAGS
 from ..png import MAX_PNG_BYTES, read_output
@@ -93,8 +94,6 @@ ADAPTATION_TARGETS: Mapping[str, str] = MappingProxyType(
     }
 )
 """The target of each soft ADAPTATION finding's defect line, in R (`runtimes.python.ADAPTATION_TARGETS` in Python)."""
-MAX_NAMED_COLUMNS = 5
-"""Columns the loader's note names with their counts; more are counted as `and N more columns`."""
 
 
 class RRuntime:
@@ -184,20 +183,24 @@ class RRuntime:
         return to_run_form(working, columns=columns, kinds=kinds)
 
     def loader_notes(self, kinds: ColumnKinds) -> list[str]:
-        """One line for the integer cells beyond ±2^53, which `col_double()` reads as the nearest double, with the
-        count per column (at most `MAX_NAMED_COLUMNS` named); none when there are no such cells."""
+        """One "what changed" line for the integer cells beyond ±2^53, which `col_double()` reads as the nearest
+        double: the total, then each column with its count, as many as fit a change note (`MAX_CHANGE_CHARS`) and
+        the rest counted as `and N more columns`; none when there are no such cells. The first column always fits:
+        a column name has at most 64 characters and a count at most six."""
         if not kinds.inexact:
             return []
         total = sum(kinds.inexact.values())
-        named = [f"{count:,} in '{name}'" for name, count in list(kinds.inexact.items())[:MAX_NAMED_COLUMNS]]
-        more = len(kinds.inexact) - len(named)
-        if more:
-            named.append(f"and {more} more column{'s' if more != 1 else ''}")
         whole, them = ("integer", "it") if total == 1 else ("integers", "them")
-        return [
-            f"R reads {total:,} {whole} beyond ±2^53 ({DOUBLE_EXACT_MAX:,}) as the nearest double, so the plot can "
-            f"show {them} off by a unit or more: {', '.join(named)}; read such a column as text when every digit counts"
-        ]
+        head = f"R reads {total:,} {whole} past ±2^53 as the nearest double, so the plot can show {them} a unit or more off: "
+        items = [f"{count:,} in '{name}'" for name, count in kinds.inexact.items()]
+        line = head + items[0]
+        for shown in range(len(items), 0, -1):
+            more = len(items) - shown
+            rest = f", and {more} more column{'s' if more != 1 else ''}" if more else ""
+            line = head + ", ".join(items[:shown]) + rest
+            if len(line) <= MAX_CHANGE_CHARS:
+                break
+        return [line]
 
     def validate(self, code: str, library: str) -> list[str]:
         return [f"{finding.rule}: {finding.message}" for finding in validate_security(code)]

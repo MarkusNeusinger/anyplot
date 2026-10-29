@@ -8,8 +8,9 @@
   language. The admin deploy names ggplot2 next to the six Python libraries,
   and its 80 % eval matrix gates the public release. ADAPTATION refuses a
   working form that keeps a dataset package (gapminder, palmerpenguins), and
-  when R reads integers beyond 2^53 as the nearest double, the plot's first
-  note names the columns and counts the cells, so no value changes unannounced.
+  when R reads integers beyond 2^53 as the nearest double, the first entry of
+  the version's "what changed" list names the columns and counts the cells,
+  so no value changes unannounced and the plot's status stays its own.
   A scripted identity adaptation of a fixture renders 3200x1800 in both themes
   through the local Docker backend with `exec_deny: on`.
 - **An adapter prompt per language.** `adapter.md` keeps the rules every
