@@ -729,6 +729,9 @@ class TestRendererToolchainSteps:
         root = REPO_ROOT.resolve()
         files = [path.relative_to(root).as_posix() for path in toolchain.input_files(root)]
         assert {"Project.toml", "Manifest.toml", "agents/renderer/toolchain/smoke.jl"} <= set(files)
+        assert {"agents/renderer/toolchain/warmup.jl", "agents/renderer/toolchain/AnyplotWarmup/Project.toml"} <= set(
+            files
+        )  # the precompile workload (J1.1)
         assert not [path for path in files if not dockerignore_admits(path)]
 
     def test_a_missing_toolchain_is_built_with_the_registry_cache(self) -> None:

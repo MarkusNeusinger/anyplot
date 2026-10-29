@@ -4,6 +4,10 @@
 # fixed offset into UTC offline; and CairoMakie writes a PNG with a non-ASCII title.
 import TOML
 
+# The row loads the precompile workload with `-L warmup.jl` before the program, as it does before a plot.
+@assert isdefined(Main, :AnyplotWarmup) "the precompile workload was not loaded before the program"
+@assert endswith(PROGRAM_FILE, "smoke.jl")
+
 for name in sort!(collect(keys(TOML.parsefile(Base.active_project())["deps"])))
     Core.eval(Main, :(using $(Symbol(name))))
 end

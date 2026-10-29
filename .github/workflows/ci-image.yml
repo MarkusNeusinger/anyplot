@@ -1060,20 +1060,23 @@ jobs:
       # Julia (step 5 of agentic/specs/261024-agent-all-libraries.md) runs in exec mode like R:
       # the launcher by its path with the row's flags and environment, the exec filter preloaded,
       # and every package loaded from the toolchain's precompiled depot under
-      # --compiled-modules=strict. A catalogue file renders unchanged, then a forced cache miss
-      # (another --check-bounds, one of the cache flags) must fail within seconds: under strict a
-      # package image that does not match is an error, never a compile under the render's timeout.
+      # --compiled-modules=strict, the precompile workload first (`-L warmup.jl`, J1.1). A catalogue
+      # file renders unchanged, then a forced cache miss (another --check-bounds, one of the cache
+      # flags) must fail within seconds: under strict a package image that does not match is an
+      # error, never a compile under the render's timeout. The miss fails on the workload's image,
+      # the first that `-L` loads.
       - name: Render a Makie plot through the harness in exec mode
         if: steps.check.outputs.should_build == 'true'
         run: |
           set -euo pipefail
           mkdir -p work-jl
           python3 - > work-jl/row.flags <<'EOF'
-          from agents.renderer.commands import command_for
+          from agents.renderer.commands import JULIA_WARMUP, command_for
 
           row = command_for("julia", "makie")
           assert row.exec_deny and not row.rlimit_as, "the Julia row runs under the exec filter, without RLIMIT_AS"
           assert "--compiled-modules=strict" in row.argv, row.argv
+          assert row.argv[-2:] == ("-L", JULIA_WARMUP), row.argv
           for key, value in row.env.items():
               print(f"-e\n{key}={value}")
           EOF

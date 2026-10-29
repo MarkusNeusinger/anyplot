@@ -1211,7 +1211,9 @@ are; the renderer can render a Makie job, and the agents service sends none.
 
 - `JULIA_BINARY` (`/opt/julia-1.13.2/bin/julia`) by its path: `SANDBOX_PATH` does not
   carry it, as it does not carry `R_BINARY`. Flags: `--project=/opt/julia-project
-  --startup-file=no --history-file=no --compiled-modules=strict --heap-size-hint=1536M`.
+  --startup-file=no --history-file=no --compiled-modules=strict --heap-size-hint=1536M`,
+  and since J1.1 `-L /opt/anyplot/toolchain/warmup.jl` before `plot.jl` (the precompile
+  workload, "What J1.1 built").
   Environment: `LANG=C.UTF-8`, `XDG_CACHE_HOME=/tmp`, `JULIA_NUM_THREADS=1`,
   `OPENBLAS_NUM_THREADS=1`, `JULIA_DEPOT_PATH=/tmp/depot:/opt/julia-depot` (the sandbox
   writes logs and scratch spaces nowhere but `/tmp`), the pinned `JULIA_CPU_TARGET`,
@@ -1511,6 +1513,102 @@ Found for J2b and the toolchain:
 | The four `joinpath(@__DIR__, ...)` saves rewritten | Rewritten, and `resolution =` renamed to `size =` | The deprecation warning on 122 files would fill the stderr tail the repair reads; Makie maps the one to the other unchanged |
 | `getfield` and `getproperty` refused on a module | Refused on any value, with `setfield!`, `setproperty!`, `getglobal` and `setglobal!` | Whether a value is a module is unknown statically; no catalogue file calls them |
 | `` `qrcode-basic` `` and the map specs blocked | Also the three saves inside `with_theme(...) do` | The protected save must be a top-level statement of its own lines; the regeneration list above |
+
+#### What J1.1 built (2026-10-29): the precompile workload
+
+The deployed J1 took 12 to 21 s for the three test files on Cloud Run, wall about equal to
+CPU time: Julia compiled Makie's calls in every fresh process. Owner decision of the same
+day: a `PrecompileTools` workload, shipped only if it clearly helps; a sysimage only if the
+workload is not enough. It helps, and no sysimage was built.
+
+- **The package.** `agents/renderer/toolchain/AnyplotWarmup` runs one `@compile_workload`
+  at precompile time. It makes the calls the catalogue's Makie files make most (a survey of
+  the 325 files: `Figure`, `Axis` with the theme's keywords, `Label`, `scatter!`, `lines!`,
+  `band!`, `hlines!`/`vlines!`, `text!`, `poly!`, `barplot!` dodged, `heatmap!` with a
+  `Colorbar`, `hist!`, `density!`, `boxplot!`, `violin!`, `errorbars!`, `stairs!`,
+  `contour!`/`contourf!`, `pie!`, legends, layout calls, `save` to PNG with
+  `px_per_unit = 2`), Statistics and Random calls, and J2a's loader statement verbatim
+  (`agents/anyplot/code/profiles/julia/loader.py`, PR #12459: every column kind, datetimes
+  with and without offsets, `parse(Int64, ...)`), then plots from the table's columns,
+  DateTime and Date axes included. If the loader changes its keywords, a render recompiles
+  only the outer call.
+- **Where it lives.** The Julia stage copies it into the image's project, develops it
+  offline with `PRESERVE_ALL` after the catalogue's precompile, precompiles it, and only
+  then removes the registries. The image's `Manifest.toml` differs from the repository's
+  by the package's entry and `project_hash`, its `Project.toml` by the package's `[deps]`
+  and `[sources]` lines; the repository's files, which
+  `.github/actions/setup-julia` shares, do not change. Its files sit under
+  `agents/renderer/toolchain/`, so they are toolchain inputs (`toolchain.py`, `INPUTS`).
+- **How a render loads it.** The workload's native code is stored in its own package image
+  and used only while that package is loaded. The row adds `-L
+  /opt/anyplot/toolchain/warmup.jl` (`import AnyplotWarmup`) before `plot.jl`. Verified
+  against J1's image: `PROGRAM_FILE` stays `plot.jl`, the error frames (`@ Main
+  /work/plot.jl:3`, `@ /work/plot.jl:6`, `in expression starting at /work/plot.jl:N`), a
+  `ParseError`'s position and the exit codes (1, and 3 for `exit(3)`) are unchanged, and
+  ``run(`ls /`)`` still dies with `SIGSYS` under `exec_deny: on`. A forced cache miss
+  under `strict` still fails in 1.8 s with "not available with flags", now on the
+  workload's image, which `-L` loads first. The only visible difference is a binding
+  `AnyplotWarmup` in `Main`. The build's smoke and the CI step run the row's exact argv.
+- **Why the workload loads CSV, DataFrames and TimeZones itself.** Each of them pulls in
+  InlineStrings, whose methods invalidate much of Makie's precompiled code: in J1's image,
+  loading any of them made a catalogue Makie render 5 to 6 s slower (CSV +5.8 s,
+  TimeZones +4.9 s, InlineStrings alone +5.9 s), and the typed read compiled for another
+  2.2 s. An adapted render always loads them, so the workload is compiled in that world.
+  A Makie-only variant of the workload was 0.6 s faster on unchanged catalogue files but
+  barely helped once CSV and DataFrames loaded (`scatter-basic` 10.1 s against 10.9 s
+  without any workload).
+
+Measured in local Docker as J1 measured (`--cpus 2 --memory 4g --network none`, the harness
+in exec mode with the row's argv and environment), on J1's image with and without the
+workload. The host was shared with another agent's builds, so each file ran before, after,
+after, before, and the table keeps the faster run of each; the first five rows ran on a
+quiet host (load about 1.1). An adapted render is the catalogue file with J2a's loader in
+place of its data block, reading a CSV with a datetime column with offsets (`scatter-basic`
+with 150 rows, `line-basic` with 24 hourly readings on a DateTime axis).
+
+| File | Before: wall, CPU, peak RSS | After | Change |
+|---|---|---|---|
+| `scatter-basic`, adapted | 15.9 s, 15.6 s, 1,234 MiB | 5.0 s, 4.9 s, 1,001 MiB | -68 % |
+| `line-basic`, adapted | 18.0 s, 17.9 s, 1,263 MiB | 5.1 s, 4.9 s, 998 MiB | -72 % |
+| `scatter-basic` | 5.3 s, 5.1 s, 922 MiB | 4.9 s, 4.6 s, 995 MiB | -9 % |
+| `bar-grouped` | 8.5 s, 8.3 s, 997 MiB | 4.9 s, 4.7 s, 1,001 MiB | -42 % |
+| `heatmap-basic` | 9.8 s, 9.7 s, 984 MiB | 5.3 s, 5.2 s, 1,014 MiB | -46 % |
+| 20 more catalogue files, median | 11.3 s | 7.1 s | -37 % |
+
+The 20 files are `line-basic`, `area-basic`, `histogram-basic`, `box-basic`,
+`violin-basic`, `pie-basic`, `contour-basic`, `density-basic`, `errorbar-basic`,
+`step-basic`, `bar-stacked`, `scatter-color-mapped`, `bubble-basic`, `lollipop-basic`,
+`hexbin-basic`, `polar-basic`, `treemap-basic`, `waterfall-basic`, `line-timeseries` and
+`subplot-grid`; they gained between 6 % (`line-timeseries`) and 63 % (`violin-basic`), none
+got slower, and the peak RSS stayed at or below 1,118 MiB. With J1's loader approximation
+prepended to all 23 files, the median went from 16.2 to 5.5 s. After the workload, about
+0.9 s of compiling remains in an adapted render; 0.24 s of it is the loader's own `utc`
+broadcast, which is new code in every render.
+
+The target was a third off each of the three files. The catalogue's `scatter-basic` misses
+it, and the miss is accepted: about 3.9 s of its 4.9 s is a fixed cost no workload reaches
+(0.5 s for the container and Julia's start, 2.4 s to load CairoMakie's package images,
+0.9 s for CSV, DataFrames, TimeZones and the workload's image), and the agent never renders
+a catalogue file unchanged. Only a sysimage would cut the load.
+
+Cost: the workload's step adds 70 s to the Julia stage on 32 CPUs (64 s of it the one
+package's precompile, so about the same on Cloud Build's 8), and the catalogue's precompile
+reruns once, because the registries now go in a later step; the cold toolchain build took
+339 s locally. The depot grows by 101 MB (the workload's image), the toolchain and
+renderer images by 104 MB each. The real images rendered as the prototype did (adapted
+`scatter-basic` 5.1 s, `bar-grouped` 5.0 s), and the CI step's forced cache miss failed in
+2 s. `render_p95_s` stays 25 s: the deployed renderer ran about 2.5 times slower than local
+Docker, and no deployed sweep with the workload exists yet.
+
+Found for J2b's adapter prompt (Makie 0.24.16, in J1's image):
+
+- A Date column with a missing cell reads as a `SentinelVector{Date}`, which Makie cannot
+  plot: `MethodError: no method matching create_dim_conversion(::Type{Union{Missing,
+  Dates.Date}})`. A Float64 column with a missing cell plots.
+- `vspan!` with DateTime bounds registers a conversion that a following `lines!` refuses:
+  "Plotting unit Float64 into axis with type Dates.DateTime not supported".
+- `barplot!` refuses String x values ("Conversion failed for BarPlot ... Tuple{Vector{String},
+  Vector{Float64}}"): categories need integer positions and `xticks`, as the catalogue does.
 
 ### 6. Add Tests
 

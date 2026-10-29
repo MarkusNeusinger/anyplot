@@ -16,6 +16,7 @@ from agents.renderer import commands, toolchain
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SETUP_R = REPO_ROOT / ".github" / "actions" / "setup-r" / "action.yml"
 TOOLCHAIN_DIR = REPO_ROOT / "agents" / "renderer" / "toolchain"
+WARMUP_DIR = TOOLCHAIN_DIR / "AnyplotWarmup"
 TOOLCHAIN_DOCKERFILE = REPO_ROOT / "agents" / "renderer" / "toolchain.Dockerfile"
 PROJECT = REPO_ROOT / "Project.toml"
 MANIFEST = REPO_ROOT / "Manifest.toml"
@@ -80,6 +81,9 @@ class TestTag:
             "agents/renderer/toolchain/r-packages.txt",
             "agents/renderer/toolchain/r-repos.txt",
             "agents/renderer/toolchain/smoke.jl",
+            "agents/renderer/toolchain/warmup.jl",
+            "agents/renderer/toolchain/AnyplotWarmup/Project.toml",
+            "agents/renderer/toolchain/AnyplotWarmup/src/AnyplotWarmup.jl",
             "agents/renderer/execdeny/execdeny.c",
             "Project.toml",
             "Manifest.toml",
@@ -182,7 +186,8 @@ class TestJulia:
         assert stages["julia"].startswith("FROM base AS julia\n") and stages["r"].startswith("FROM base AS r\n")
         assert "--from=" not in stages["julia"] and "julia" not in stages["r"].lower()
         assert re.findall(r"^COPY (?!--from=)(.+)$", stages["julia"], re.MULTILINE) == [
-            f"Project.toml Manifest.toml {commands.JULIA_PROJECT}/"
+            f"Project.toml Manifest.toml {commands.JULIA_PROJECT}/",
+            f"agents/renderer/toolchain/AnyplotWarmup {commands.JULIA_PROJECT}/AnyplotWarmup",
         ]
         assert f"JULIA_DEPOT_PATH={commands.JULIA_DEPOT}" in stages["julia"]
         assert "Pkg.precompile(strict = true" in stages["julia"]
@@ -217,8 +222,55 @@ class TestJulia:
         assert "/opt/anyplot/toolchain/smoke.jl" in smoke and "JULIA_DEBUG=loading" in smoke
         assert "ldd \"$j/bin/julia\" | grep 'libc\\.so'" in final  # a static launcher would ignore LD_PRELOAD
 
+    def test_the_precompile_workload_is_a_hashed_input(self) -> None:
+        """J1.1: a change to the workload must change the toolchain's tag, or the deploy would keep the old image."""
+        files = {path.relative_to(REPO_ROOT).as_posix() for path in toolchain.input_files()}
+        assert {
+            "agents/renderer/toolchain/warmup.jl",
+            "agents/renderer/toolchain/AnyplotWarmup/Project.toml",
+            "agents/renderer/toolchain/AnyplotWarmup/src/AnyplotWarmup.jl",
+        } <= files
+
+    def test_the_workload_joins_the_images_project_never_the_repositorys(self) -> None:
+        """The catalogue pipeline shares the root Project.toml and Manifest.toml (`.github/actions/setup-julia`):
+        the workload is developed into the image's copy after the catalogue's precompile, offline and with
+        PRESERVE_ALL, so it moves no version, and the registries go only after that `develop` has resolved."""
+        package = tomllib.loads((WARMUP_DIR / "Project.toml").read_text(encoding="utf-8"))
+        assert package["name"] == "AnyplotWarmup"
+        assert "AnyplotWarmup" not in PROJECT.read_text(encoding="utf-8")
+        assert package["uuid"] not in MANIFEST.read_text(encoding="utf-8")
+        julia = _stages(TOOLCHAIN_DOCKERFILE.read_text(encoding="utf-8"))["julia"]
+        develop = julia.index(
+            f'Pkg.develop(path = "{commands.JULIA_PROJECT}/AnyplotWarmup"; preserve = Pkg.PRESERVE_ALL)'
+        )
+        assert julia.index("Pkg.precompile(strict = true") < julia.index("COPY agents/renderer/toolchain/AnyplotWarmup")
+        assert julia.index("COPY agents/renderer/toolchain/AnyplotWarmup") < develop
+        assert develop < julia.index("rm -rf /opt/julia-depot/registries") and julia.count("registries") == 1
+        assert "JULIA_PKG_OFFLINE=true" in julia[julia.rindex("\nRUN ", 0, develop) : develop]
+
+    def test_the_workloads_dependencies_are_the_manifests(self) -> None:
+        """Every package the workload loads is already in the catalogue's Manifest under the same UUID, so the
+        `develop` adds one entry and resolves nothing else."""
+        deps = tomllib.loads((WARMUP_DIR / "Project.toml").read_text(encoding="utf-8"))["deps"]
+        manifest = tomllib.loads(MANIFEST.read_text(encoding="utf-8"))["deps"]
+        assert {name: manifest[name][0]["uuid"] for name in deps if name in manifest} == deps
+        assert {"CairoMakie", "CSV", "DataFrames", "TimeZones", "PrecompileTools"} <= set(deps)
+
+    def test_the_row_loads_the_workload_the_image_carries(self) -> None:
+        """`warmup.jl` imports the package, and the final stage puts it where the row's `-L` names it."""
+        assert "import AnyplotWarmup" in (TOOLCHAIN_DIR / "warmup.jl").read_text(encoding="utf-8")
+        assert commands.JULIA_WARMUP == "/opt/anyplot/toolchain/warmup.jl"
+        final = _stages(TOOLCHAIN_DOCKERFILE.read_text(encoding="utf-8"))["final"]
+        assert (
+            "COPY agents/renderer/toolchain/smoke.jl agents/renderer/toolchain/warmup.jl /opt/anyplot/toolchain/"
+            in final
+        )
+        workload = (WARMUP_DIR / "src" / "AnyplotWarmup.jl").read_text(encoding="utf-8")
+        assert "@compile_workload" in workload and "agents/anyplot/code/profiles/julia/loader.py" in workload
+
     def test_the_smoke_loads_every_package_and_sees_a_program_start_refused(self) -> None:
         script = (TOOLCHAIN_DIR / "smoke.jl").read_text(encoding="utf-8")
+        assert "@assert isdefined(Main, :AnyplotWarmup)" in script  # `-L warmup.jl` ran before the program
         assert 'TOML.parsefile(Base.active_project())["deps"]' in script
         assert "@assert !success(`true`)" in script
         assert "ZonedDateTime(" in script and "DateTime(zoned, UTC)" in script

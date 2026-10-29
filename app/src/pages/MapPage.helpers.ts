@@ -14,6 +14,14 @@
 
 import { selectPreviewUrl } from 'src/utils/themedPreview';
 
+/**
+ * ForceGraph2D's imperative instance (zoom, centerAt, d3Force, refresh, ...).
+ * react-force-graph-2d types it only loosely, so the map's ref stays untyped
+ * in this one place and every consumer shares the alias.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ForceGraphHandle = any;
+
 /** Backend response shape from GET /api/specs/map. Mirrors api/schemas.py::SpecMapItem. */
 export interface SpecMapItem {
   id: string;
