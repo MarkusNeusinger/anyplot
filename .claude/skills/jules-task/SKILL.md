@@ -227,7 +227,10 @@ Open the pull request against `feature/<slug>`, never `main`; the description en
   opened into `main`; a PR Claude opens gets it as usual.
 - **Losers and duplicates** of a comparison: first tell the session
   `Stop here. Do not commit or push again; this pull request is closed in
-  favour of #<n>.`, and wait until the watcher reports it settled. Closing a
+  favour of #<n>.`, and wait until
+  `watch-sessions.py --follow-up <session-id>` reports it settled: without
+  `--follow-up`, a session that was already `COMPLETED` counts as settled
+  before it has read the message. Closing a
   PR wakes its session: on 2026-10-29 a session whose PR had been closed
   pushed a new commit and recreated its deleted branch. Then Claude closes
   the PR with a comment naming the PR that stays, and deletes its branch
