@@ -20,7 +20,7 @@ from agents.anyplot.services import get_services
 from agents.anyplot.settings import get_settings
 
 from .conftest import CHECKLIST_FLOW
-from .fakes import ROOT_REPLY, SCATTER_PLAN, default_script
+from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK, default_script
 from .test_service_flow import (
     HEADERS,
     adapter_inputs,
@@ -723,3 +723,64 @@ async def test_without_drawn_texts_an_unread_review_keeps_the_note(client: httpx
     plot = next(data for name, data in events if name == "plot")
     assert plot["status"] == "needs_attention"
     assert UNVERIFIED_LINE.format(theme="light") in plot["residual_defects"]
+
+
+CHECKLIST_MISS: dict[str, Any] = {
+    "ok": False,
+    "defects": [
+        {
+            "id": "SC-04",
+            "theme": "light",
+            "observed": f'the plot does not show the requested text "{TEMPERATURE}" (the y axis reads "Exam Score")',
+            "target": "write it exactly as the user asked",
+            "likely_cause": "the y axis label",
+        }
+    ],
+}
+"""A checklist verdict that cannot find the requested text: its own `Verdict` schema, rendered into a defect line."""
+
+
+@pytest.fixture
+def checklist_flow(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The checklist reviewer (`AGENT_REVIEWER_MODE=checklist`) with the rest of the runtime conftest's flow."""
+    for name, value in CHECKLIST_FLOW.items():
+        monkeypatch.setenv(name, value)
+    get_settings.cache_clear()
+
+
+@pytest.mark.usefixtures("reviewer_checks_texts", "checklist_flow")
+@pytest.mark.parametrize(
+    ("answers", "plans", "status", "rounds"),
+    [
+        pytest.param([VERDICT_OK], [SCATTER_PLAN], "ok", 1, id="confirmed"),
+        pytest.param([CHECKLIST_MISS, VERDICT_OK], [SCATTER_PLAN, SECOND_PLAN], "ok", 2, id="miss-repaired"),
+        # A rejection without defects is no verdict (`Verdict._ok_matches_defects`).
+        pytest.param([{"ok": False}, {"ok": False}], [SCATTER_PLAN], "needs_attention", 1, id="unreadable"),
+    ],
+)
+async def test_without_drawn_texts_the_checklist_reviewer_answers_for_the_texts(
+    client: httpx.AsyncClient,
+    swap_models,
+    answers: list[dict[str, Any]],
+    plans: list[dict[str, Any]],
+    status: str,
+    rounds: int,
+) -> None:
+    """The checklist path end to end (Copilot's review of #12454): its `Verdict` defects are read as the catalogue
+    reviewer's lines, a miss goes to the repair, and an answer that is not a verdict keeps the note."""
+    script = default_script(plans=plans)
+    ask_for(script, TEMPERATURE)
+    script["reviewer"] = [{"json": answer} for answer in answers]
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], len(plot["rounds"])) == (status, rounds)
+    reviews = reviewer_inputs(fake)
+    assert reviews and all(f"{REVIEW_EXPECTED_HEADING.format(ids='SC-04')}\n<user_message>" in text for text in reviews)
+    if rounds == 2:
+        assert "does not show the requested text" in adapter_inputs(fake)[1]  # the repair gets the reviewer's line
+    unverified = UNVERIFIED_LINE.format(theme="light")
+    assert (unverified in plot["residual_defects"]) is (status == "needs_attention")
