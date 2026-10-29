@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "jules": {
+      "command": "sh",
+      "args": [
+        "-c",
+        "JULES_API_KEY=\"$(sed -n 's/^JULES_API_KEY=//p' \"$(git rev-parse --path-format=absolute --git-common-dir)/../.env\")\" exec npx -y @google/jules-mcp@0.2.0"
+      ]
+    }
+  }
+}

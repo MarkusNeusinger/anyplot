@@ -1,6 +1,6 @@
 ---
 name: zweitmeinung
-description: Get an outside second opinion on the current plan, design or diff from Google Gemini through Vertex AI (4 Argon for plans and second opinions, 3.8 Flash for routine first reviews of PRs; read-only tools over the repository), optionally side by side with a Fable subagent, and compare it with your own view. For Claude only; Gemini in agy never runs it. Use when the owner asks for a "Zweitmeinung", a second opinion, a Gemini or Google opinion, or a Fable and Gemini review of a plan, and for the routine first review of a Claude-authored PR. Never implements anything by itself.
+description: Get an outside second opinion on the current plan, design or diff from Google Gemini through Vertex AI (4 Argon for second opinions the owner asks for, 3.8 Flash for the check of every PR Claude opens; read-only tools over the repository), optionally side by side with a Fable subagent, and compare it with your own view. For Claude only; Gemini in agy never runs it. Use when the owner asks for a "Zweitmeinung", a second opinion, a Gemini or Google opinion, or a Fable and Gemini review of a plan, and for the Flash check before Claude opens a PR. Never implements anything by itself.
 ---
 
 # Zweitmeinung (second opinion)
@@ -38,19 +38,23 @@ $GR check
 
 ## 2. Who reviews
 
-**The owner's standing rules (2026-10-15, 2026-10-21 and 2026-10-22), without asking:**
+**The owner's standing rules (2026-10-15, 2026-10-21, 2026-10-22 and 2026-10-28):**
 
-- **The owner asks for a "Zweitmeinung" or a second opinion, or a plan is reviewed:**
-  Fable and Gemini 4 Argon (`gemini-4-argon`, the default, thinking `high`: the owner
-  wants it to think), both in parallel.
-- **Routine first review of a normal Claude-authored PR** (nobody asked explicitly):
-  Gemini 3.8 Flash alone (`--model gemini-3.8-flash`; Flex PayGo turns on by itself, half
-  price). Flash is on probation, see step 4. Fable joins only for high-risk changes
-  (security, prod data, sandbox, privacy, credentials) or when Gemini reports something
-  serious.
-- **A diff Gemini wrote** (`/gemini-task`): no Gemini review of its own work. A fresh
-  Opus subagent reviews it from the diff and the acceptance criteria alone; Fable for high
-  risk.
+- **The owner asks for a "Zweitmeinung" or a second opinion:** Fable and Gemini 4 Argon
+  (`gemini-4-argon`, the default, thinking `high`: the owner wants it to think), both in
+  parallel. Only when he asks (owner, 2026-10-28): a plan does not get one by default, so
+  offer it for a large plan instead of running it.
+- **Every PR Claude opens, before it opens** (`/open-pr` section 1, nobody asks): Gemini
+  3.8 Flash alone (`--model gemini-3.8-flash`; Flex PayGo turns on by itself, half
+  price), so that Copilot's one round finds nothing. Flash is on probation, see step 4.
+  Fable joins only for high-risk changes (security, prod data, sandbox, privacy,
+  credentials) or when Gemini reports something serious.
+- **A diff Gemini wrote** (`/gemini-task`, `/jules-task`): a Gemini review never counts
+  as the independent review of Gemini's work. For `/gemini-task`, a fresh Opus subagent
+  reviews the diff from the acceptance criteria alone; for `/jules-task`, Claude's own
+  reading of every sub-PR is that review, because Claude wrote only the prompt. The Flash
+  check before the PR into `main` still runs, as a check of the integrated diff. Fable for
+  high risk.
 - Copilot reviews every PR last, whatever ran before.
 
 Only when the owner names other models, or explicitly asks to choose, propose 2–3 Gemini

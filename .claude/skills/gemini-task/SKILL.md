@@ -34,12 +34,13 @@ second opinions call Gemini through Vertex AI instead (`/zweitmeinung`).
 
 **Good Gemini tasks** need no credentials and no production access, can be
 verified by commands that run locally, and are worth an hour of work or more.
-Claude does a quick fix directly; the hand-over costs more than it saves there.
-Propose this route yourself: when planning turns up a longer task that fits,
-offer it to the owner as an option (owner, 2026-10-22).
+A task that fits a roughly 30-minute cloud run goes to Google Jules instead
+(`/jules-task`), and Claude does a quick fix directly; the hand-over costs more
+than it saves there. Propose this route yourself: when planning turns up a
+longer task that fits, offer it to the owner as an option (owner, 2026-10-22).
 The longer Gemini is to run, the more planning goes in first: for a large task,
-get a second opinion on the plan (`/zweitmeinung`) and write the owner's
-decisions into the issue. Examples:
+offer the owner a second opinion on the plan (`/zweitmeinung` runs only when
+he asks) and write his decisions into the issue. Examples:
 
 - a bug fix with a reproducer,
 - a refactor across many files with existing coverage,

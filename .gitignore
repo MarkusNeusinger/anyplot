@@ -298,3 +298,5 @@ agents/evals/.import-*/
 # ADK's local session and artifact store (`adk web` without the `memory://` flags): users'
 # messages and datasets. Ignoring it here also keeps it out of a `gcloud builds submit` upload.
 .adk/
+# The Jules MCP server's local cache of sessions and activities (`.mcp.json`, `/jules-task`).
+.jules/

@@ -14,29 +14,53 @@ Sections follow the order in which `CLAUDE.md` states the rules.
 
 ---
 
-## Delegated agents run on Opus by default
+## Pick the agent by the work, and spend Claude tokens last
 
-Owner directive, 2026-08-11, refined 2026-08-16 and 2026-10-21.
+Owner directive, 2026-08-11, refined 2026-08-16, 2026-10-21, and 2026-10-28.
 
-Pass `model: opus` when spawning subagents or workflows. Opus is the default
-answer, and it is the only tier that changes state outside its own worktree.
-
-**The lanes (2026-10-21).** The Anthropic weekly limit runs out long before
-the owner's Google AI Ultra quota, so the work is split by what it needs.
+**The lanes (2026-10-28).** The Anthropic weekly limit runs out long before
+the owner's Google AI Ultra quota, so the work is split by what it needs, and
+work that Google's quota can do goes there first.
 
 | Work | Who | Why |
 |---|---|---|
-| Changes state: `gcloud`, `gh` writes, labels, merges, prod | Opus | Owner: he does not trust Haiku with writes |
+| The main session | Opus; Fable when the owner starts a planning session on it | Fable plans; execution then runs in an Opus session |
+| Subagent that changes state outside its worktree (`gcloud`, `gh` writes, labels, merges, prod) or makes judgment calls | Opus | Owner: he does not trust the smaller models with writes |
+| Subagent with bounded work inside its own worktree, verified by a command it runs | Sonnet | Cheaper for work whose result a command checks; never writes outside its worktree |
 | Reads or polls with credentials (CI, deploys, `gh`/`gcloud` state); creates Todoist tasks | Haiku | Cheap; never changes state |
 | High-risk reviews (security, prod data, sandbox, privacy); genuinely hard reasoning | Fable | About 2.5 times Opus per token at API prices, so only where it pays |
-| First review of a normal PR | Gemini 3.8 Flash through Vertex AI in project `anyplot`, location `global`, on Flex PayGo (`/zweitmeinung`) | Half price on Flex, $0.07–0.28 per review; on probation since 2026-10-22, measured against Copilot's findings on real PRs |
-| Plans, second opinions, analysis of briefings and fetched files | Gemini 4 Argon on the same route, thinking high, next to Fable for a second opinion | Stronger across files; $0.57–1.16 per run. Both Gemini lanes are paid per token and covered by the $100 monthly Google Cloud credit that comes with Google AI Ultra; Gemini reads tracked repository files, prefetched data, and the public API through read-only tools, with no shell and no credentials |
-| Credential-free implementation worth an hour or more, including long refactors | Gemini, in the owner's interactive agy session, through a `gemini`-labelled issue (`/gemini-task`) | The owner decides what runs without asking; Gemini pushes a `gemini/*` branch and opens a draft PR; Claude reviews it, marks it ready, and follows it through |
+| Credential-free implementation that fits a roughly 30-minute cloud run | Google Jules through its MCP server (`/jules-task`), model chosen in the Jules account (Flash since 2026-10-28) | 300 tasks a day on Ultra, each counted once whatever it consumes; Claude spends tokens only on the prompt and the review |
+| Larger steps and long refactors, and the main driver once Claude tokens run low late in the week | Gemini, in the owner's interactive agy session, through a `gemini`-labelled issue (`/gemini-task`) | The owner decides what runs without asking; Gemini pushes a `gemini/*` branch and opens a draft PR; Claude reviews it, marks it ready, and follows it through |
+| Check of every PR Claude opens, before it opens | Gemini 3.8 Flash through Vertex AI in project `anyplot`, location `global`, on Flex PayGo (`/zweitmeinung`) | Copilot gets one round per PR, so its findings should already be fixed; half price on Flex, $0.07–0.28 per review |
+| Second opinion, only when the owner asks for one | Fable and Gemini 4 Argon side by side, Argon on the same Vertex route with thinking high | Stronger across files; $0.57–1.16 per Argon run. Both Gemini lanes are paid per token and covered by the $100 monthly Google Cloud credit that comes with Google AI Ultra; Gemini reads tracked repository files, prefetched data, and the public API through read-only tools, with no shell and no credentials |
 
-Sonnet has no lane in interactive sessions; Gemini covers that work, and the
-pipeline's model choices are separate. Planning or architecture sessions may
-run on Fable as the main model when the owner starts them that way; execution
-then runs in an Opus session.
+The pipeline's model choices are separate. Sonnet's lane is narrow on purpose:
+it never runs `gh` writes or `gcloud`, and a task whose result no command can
+check goes to Opus.
+
+**Why Jules is allowed when agy is not (2026-10-28).** Jules has an official
+REST API (`jules.googleapis.com`) authenticated by an API key from the Jules
+settings page, which Google documents for embedding Jules in other tools, and
+the MCP server comes from Google Labs (`@google/jules-mcp`). Nothing touches
+the owner's Google login. Claude never runs the `jules` command-line tool,
+which signs in with that login, for the same reason it never runs `agy`.
+
+**Jules's merge rule (owner, 2026-10-28).** With up to 300 Jules PRs a day the
+owner cannot read each one. So Claude merges the sub-PRs Jules opens into a
+`feature/*` branch the session leads, after reading the diff, and the owner
+reviews once, when that branch goes to `main`. CI runs on pushes to
+`feature/**` but not on pull requests into it, so the merge is gated by
+Jules's own verification and Claude's reading, and CI checks the result right
+after. Copilot's ruleset covers only PRs into `main`, so the sub-PRs cost no
+Copilot round.
+
+**Gemini 3 Pro against Flash in Jules (2026-10-28).** The same two prompts
+(#9636, a three-file dedup; #9629, a 29-file migration) ran on both. Flash
+opened correct PRs in 23 and 17 minutes. Pro opened an empty commit for the
+first, failed after 27 minutes on the second, and spent 74 minutes on a
+follow-up in which it committed four helper scripts and rewrote a meta
+description nobody had asked about. Flash is the account setting until a
+newer Pro model beats it on the same prompts.
 
 **Why not headless Gemini implementation.** Measured on 2026-10-21:
 
