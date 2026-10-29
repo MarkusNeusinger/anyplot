@@ -7,6 +7,7 @@
   `feature/*` branch, and best-of-N comparisons when the approach is open, and
   bundles a session watcher that flags empty PRs. The Ultra plan allows 300
   tasks a day, each counted once, so this work no longer costs Claude tokens.
+  (#12429)
 
 ### Changed
 
@@ -17,16 +18,16 @@
   when the owner asks for a second opinion. Claude merges Jules's sub-PRs into
   a `feature/*` branch it leads; every merge into `main` stays with the owner.
   The guardrails record the Gemini 3 Pro against Flash comparison that made
-  Flash the Jules model.
+  Flash the Jules model. (#12429)
 - **Gemini Flash checks every code PR before it opens.** `/open-pr` now runs
   `/zweitmeinung` with Gemini 3.8 Flash on the branch diff before a code PR
   opens, so Copilot's single round ideally finds nothing. Diffs made only of
   docs, instruction files, changelog fragments, or `plots/`, and diffs under
-  about 20 lines, skip it.
+  about 20 lines, skip it. (#12429)
 - **Lint and tests run on pull requests into `feature/**`.** `ci-lint` and
   `ci-tests` now also run for PRs into a feature branch, so every Jules
   sub-PR is checked before Claude merges it. Image builds, migrations,
-  CodeQL, and the changelog check stay on PRs into `main`.
+  CodeQL, and the changelog check stay on PRs into `main`. (#12429)
 
 ### Security
 
@@ -37,3 +38,4 @@
   Before, a Jules PR ran its tests with production database access the moment
   it opened, before anyone had read the code. The check uses the PR author,
   because `github.actor` on Jules branches is often the repository owner.
+  (#12429)
