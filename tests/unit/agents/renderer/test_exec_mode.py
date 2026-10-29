@@ -134,8 +134,10 @@ class TestExecModeFilter:
         assert KILLED in done.stdout
         assert end_line(done.stdout)["exec_deny"] == "on"
 
-    def test_a_preload_that_does_not_load_fails_the_run_closed(self, tmp_path: Path) -> None:
-        """ld.so only warns about a missing preload object and runs the child unfiltered: the run must not count."""
+    def test_a_preload_that_does_not_load_stops_before_the_code_runs(self, tmp_path: Path) -> None:
+        """ld.so only warns about a missing preload object and would run the program unfiltered: the preflight
+        (the program alone, ended by the library before its main) proves the filter first, so the code never runs
+        (the Copilot review of #12428)."""
         done = run_exec(
             "/bin/sh",
             "-c",
@@ -144,9 +146,9 @@ class TestExecModeFilter:
         )
 
         assert done.returncode == harness.EXEC_DENY_EXIT
-        assert "status:0" in done.stdout  # it ran unfiltered, which is why the result is refused
+        assert "status:" not in done.stdout  # the code never ran
         assert end_line(done.stdout)["exec_deny"] == "unavailable"
-        assert "the exec filter is not in place (unavailable)" in done.stderr
+        assert "the exec filter does not take in /bin/sh (unavailable); the code did not run" in done.stderr
 
     def test_without_the_variable_the_child_runs_unfiltered_and_the_end_line_says_off(self) -> None:
         done = run_exec("/bin/sh", "-c", STARTS_A_PROGRAM)
@@ -174,17 +176,47 @@ class TestExecModeFilterInProcess:
         assert code == 4 and KILLED in out and end_line(out)["exec_deny"] == "on"
         assert harness.EXEC_DENY_FD_ENV not in os.environ and "LD_PRELOAD" not in os.environ
 
-    def test_a_silent_child_is_unavailable_and_refused(
+    def test_a_preflight_without_the_filter_stops_before_the_code(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capfd: pytest.CaptureFixture[str]
     ) -> None:
         monkeypatch.setenv(harness.EXEC_DENY_ENV, "required")
         monkeypatch.setenv(harness.EXEC_DENY_PRELOAD_ENV, str(tmp_path / "missing.so"))
 
+        code = harness.main(["harness.py", EXEC_FLAG, "--", "/bin/sh", "-c", "echo ran"])
+
+        captured = capfd.readouterr()
+        assert code == harness.EXEC_DENY_EXIT and end_line(captured.out)["exec_deny"] == "unavailable"
+        assert "ran" not in captured.out and "does not take in /bin/sh" in captured.err
+
+    def test_a_preflight_that_outlives_its_constructor_is_killed(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capfd: pytest.CaptureFixture[str]
+    ) -> None:
+        """Only a program that ignored the preload runs past its constructor; the preflight does not wait for it."""
+        program = tmp_path / "runtime"
+        program.write_text("#!/bin/sh\nsleep 30\n", encoding="utf-8")
+        program.chmod(0o755)
+        monkeypatch.setenv(harness.EXEC_DENY_ENV, "required")
+        monkeypatch.setenv(harness.EXEC_DENY_PRELOAD_ENV, str(tmp_path / "missing.so"))
+        monkeypatch.setattr(harness, "EXEC_DENY_PREFLIGHT_TIMEOUT_S", 0.5)
+
+        code = harness.main(["harness.py", EXEC_FLAG, "--", str(program), "plot.x"])
+
+        captured = capfd.readouterr()
+        assert code == harness.EXEC_DENY_EXIT and end_line(captured.out)["exec_deny"] == "unavailable"
+
+    def test_a_run_whose_filter_did_not_report_on_is_refused_after_a_passing_preflight(
+        self, monkeypatch: pytest.MonkeyPatch, capfd: pytest.CaptureFixture[str]
+    ) -> None:
+        """The second check: the run's own report counts too, whatever the preflight said."""
+        monkeypatch.setenv(harness.EXEC_DENY_ENV, "required")
+        reports = iter([(0, "on"), (0, "unavailable")])
+        monkeypatch.setattr(harness, "_run_child", lambda command, **_: next(reports))
+
         code = harness.main(["harness.py", EXEC_FLAG, "--", "/bin/sh", "-c", "exit 0"])
 
         captured = capfd.readouterr()
         assert code == harness.EXEC_DENY_EXIT and end_line(captured.out)["exec_deny"] == "unavailable"
-        assert "not in place" in captured.err
+        assert "the exec filter is not in place (unavailable); the run does not count" in captured.err
 
     def test_a_command_that_never_started_keeps_127_under_the_filter(
         self, monkeypatch: pytest.MonkeyPatch, capfd: pytest.CaptureFixture[str]

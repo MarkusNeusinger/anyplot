@@ -63,6 +63,34 @@ def test_any_other_mode_installs_it_too(library: Path) -> None:
     assert run(library, "/bin/true; echo $?", "optional")[1:] == (str(KILLED_BY_THE_FILTER), "on")
 
 
+def test_the_preflight_ends_the_program_before_its_main(library: Path) -> None:
+    """`ANYPLOT_EXEC_DENY_PREFLIGHT`: the library installs and reports, then ends the program before its code runs,
+    with 0 when the filter is on (the harness's check before any user code, `harness.main_exec`)."""
+    read_end, write_end = os.pipe()
+    env = {
+        "PATH": "/usr/bin:/bin",
+        "LD_PRELOAD": str(library),
+        "ANYPLOT_DENY_EXEC": "required",
+        "ANYPLOT_EXEC_DENY_FD": str(write_end),
+        "ANYPLOT_EXEC_DENY_PREFLIGHT": "1",
+    }
+    try:
+        result = subprocess.run(
+            ["/bin/sh", "-c", "echo ran"],
+            env=env,
+            pass_fds=(write_end,),
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    finally:
+        os.close(write_end)
+    with os.fdopen(read_end, "rb") as reader:
+        state = reader.read().decode()
+    assert (result.returncode, result.stdout, state) == (0, "", "on")
+
+
 def test_without_the_variable_nothing_changes(library: Path) -> None:
     assert run(library, "/bin/true; echo $?", None) == (0, "0", "")
     assert run(library, "/bin/true; echo $?", "") == (0, "0", "")

@@ -235,6 +235,11 @@ EXEC_DENY_PRELOAD_ENV = "ANYPLOT_EXEC_DENY_PRELOAD"
 it, and the sandbox's environment comes from the renderer alone."""
 EXEC_DENY_FD_ENV = "ANYPLOT_EXEC_DENY_FD"
 """The descriptor the preload library writes its state to (`on`, `unavailable`, `unsupported`), then closes."""
+EXEC_DENY_PREFLIGHT_ENV = "ANYPLOT_EXEC_DENY_PREFLIGHT"
+"""Set for the preflight start of the language's program (`main_exec`): the library reports and ends the process
+before its `main`, so no user code is read."""
+EXEC_DENY_PREFLIGHT_TIMEOUT_S = 30
+"""The preflight ends in its library's constructor; a program that outlives this ignored the preload."""
 DATA_FLAG = "--data"
 DATA_OUT_FILE = "out.csv"
 DATA_STATUS_FILE = "status.json"
@@ -2325,16 +2330,22 @@ def main_exec(command):
 
     With `ANYPLOT_DENY_EXEC=required` (every row whose `RuntimeCommand.exec_deny` is set, when
     `RENDERER_EXEC_DENY` is `required`) the child alone gets `LD_PRELOAD` with the exec filter's
-    library and the write end of a pipe (`EXEC_DENY_FD_ENV`); in this process's environment they
-    would load the library into the harness too and refuse its own start of the child. After
-    the child ends, the pipe's content is the end line's `exec_deny`, read without blocking, and
-    anything but `on` makes the run `EXEC_DENY_EXIT` whatever the child returned: a preload
-    object `ld.so` cannot load is only a warning to it, and a static binary ignores it, so the
-    child would have run unfiltered (fail closed; second opinion of 2026-10-28). Without the
-    variable the child runs unfiltered, and `exec_deny` is `off`.
-    """
-    import subprocess
+    library and the write end of a pipe (`EXEC_DENY_FD_ENV`, `_run_child`); in this process's
+    environment they would load the library into the harness too and refuse its own start of the
+    child. Two checks, both fail closed:
 
+    1. A preflight before any user code: the language's program alone (no arguments, stdin empty),
+       with the library and `EXEC_DENY_PREFLIGHT_ENV`, so the library's constructor installs the
+       filter, reports it and ends the process before its `main`. Anything but `on` stops here
+       with `EXEC_DENY_EXIT`, and the code is never read: a preload object `ld.so` cannot load is
+       only a warning to it, and a static binary ignores the preload, so the program would run
+       unfiltered (the Copilot review of #12428).
+    2. The run itself: after the child ends, the pipe's content is the end line's `exec_deny`,
+       read without blocking, and anything but `on` makes the run `EXEC_DENY_EXIT` whatever the
+       child returned (second opinion of 2026-10-28).
+
+    Without the variable the child runs unfiltered, and `exec_deny` is `off`.
+    """
     if command and command[0] == "--":
         command = command[1:]
     _report("start")
@@ -2342,35 +2353,25 @@ def main_exec(command):
         print(f"usage: harness.py {EXEC_FLAG} -- <command> [args...]", file=sys.stderr)
         return 2
     required = os.environ.get(EXEC_DENY_ENV) == "required"
-    env = None
-    read_end = write_end = None
-    if required:
-        read_end, write_end = os.pipe()
-        os.set_blocking(read_end, False)
-        env = {
-            **os.environ,
-            "LD_PRELOAD": os.environ.get(EXEC_DENY_PRELOAD_ENV, EXEC_DENY_PRELOAD),
-            EXEC_DENY_FD_ENV: str(write_end),
-        }
     set_limits()
     state = "off"
     started = False
     try:
         # The command is a row of the renderer's own table (`agents/renderer/commands.py`), never the request's.
-        try:
-            child = subprocess.Popen(command, env=env, pass_fds=() if write_end is None else (write_end,))
-        finally:
-            # Only the child holds the write end, so the pipe ends with the child (or with the library's close).
-            if write_end is not None:
-                os.close(write_end)
+        if required:
+            _, state = _run_child(command[:1], preload=True, preflight=True)
+            if state != "on":
+                print(
+                    f"{EXEC_FLAG}: the exec filter does not take in {command[0]} ({state}); the code did not run",
+                    file=sys.stderr,
+                )
+                return EXEC_DENY_EXIT
+        code, state = _run_child(command, preload=required)
         started = True
-        code = child.wait()
     except OSError as exc:
         print(f"{EXEC_FLAG}: cannot run {command[0]}: {type(exc).__name__}", file=sys.stderr)
         code = 127
     finally:
-        if read_end is not None:
-            state = _exec_deny_report(read_end)
         try:
             _report("end", **_child_usage(), exec_deny=state)
         except Exception:
@@ -2380,6 +2381,48 @@ def main_exec(command):
         print(f"{EXEC_FLAG}: the exec filter is not in place ({state}); the run does not count", file=sys.stderr)
         return EXEC_DENY_EXIT
     return code if code >= 0 else 128 - code
+
+
+def _run_child(command, *, preload, preflight=False):
+    """Run `command` to its end; its exit code and the exec filter's state (`_exec_deny_report`; `off` without
+    `preload`). With `preload` the child alone gets the library, its pipe and, for the preflight, the variable
+    that ends it in the library's constructor; the preflight reads no stdin and is killed after
+    `EXEC_DENY_PREFLIGHT_TIMEOUT_S`, since only a program that ignored the preload outlives its constructor.
+    `OSError` when the command cannot start."""
+    import subprocess
+
+    env = None
+    read_end = write_end = None
+    if preload:
+        read_end, write_end = os.pipe()
+        os.set_blocking(read_end, False)
+        env = {
+            **os.environ,
+            "LD_PRELOAD": os.environ.get(EXEC_DENY_PRELOAD_ENV, EXEC_DENY_PRELOAD),
+            EXEC_DENY_FD_ENV: str(write_end),
+        }
+        if preflight:
+            env[EXEC_DENY_PREFLIGHT_ENV] = "1"
+    try:
+        try:
+            child = subprocess.Popen(
+                command,
+                env=env,
+                pass_fds=() if write_end is None else (write_end,),
+                stdin=subprocess.DEVNULL if preflight else None,
+            )
+        finally:
+            # Only the child holds the write end, so the pipe ends with the child (or with the library's close).
+            if write_end is not None:
+                os.close(write_end)
+        try:
+            code = child.wait(timeout=EXEC_DENY_PREFLIGHT_TIMEOUT_S if preflight else None)
+        except subprocess.TimeoutExpired:
+            child.kill()
+            code = child.wait()
+    finally:
+        state = "off" if read_end is None else _exec_deny_report(read_end)
+    return code, state
 
 
 def _exec_deny_report(read_end):

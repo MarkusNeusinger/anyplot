@@ -866,9 +866,13 @@ of the language's own program. Instead:
    `R_BINARY` with `R_ENV` (`R_HOME`, the share, include and doc directories,
    `LD_LIBRARY_PATH`, `LANG=C.UTF-8`, the caches); `executor.sandbox_env` sets
    `ANYPLOT_DENY_EXEC=required` for every row with `exec_deny`, and `harness.main_exec`
-   hands `LD_PRELOAD` and the pipe to the child alone, reads the pipe without blocking after
-   the child ended and returns `EXEC_DENY_EXIT` unless it said `on` (a command that never
-   started keeps 127). In the built image the CI step renders a ggplot2 plot with a
+   hands `LD_PRELOAD` and the pipe to the child alone. Before any user code it runs a
+   preflight: the language's program alone, with `ANYPLOT_EXEC_DENY_PREFLIGHT`, which the
+   library's constructor ends before `main` after it reported, so a library `ld.so` cannot
+   load or a static binary stops the run before the code is read (the Copilot review of
+   #12428: checking only after the run let the code run unfiltered first). After the run it
+   reads the pipe without blocking and returns `EXEC_DENY_EXIT` unless it said `on` (a
+   command that never started keeps 127). In the built image the CI step renders a ggplot2 plot with a
    non-ASCII title at 3200x1800 in 0.85 s of CPU and 180 MiB with `exec_deny: on`.
 3. The R runtime and code profile (2c), fixtures, docs; ggplot2 joins the admin deploy's
    `_LIBRARIES` for the live test; the matrix gates the public release.

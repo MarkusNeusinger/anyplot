@@ -27,6 +27,13 @@
  * written to the file descriptor ANYPLOT_EXEC_DENY_FD names, which is then closed and
  * dropped from the environment, so user code can neither forge nor reuse it. The
  * harness refuses the run unless it read "on".
+ *
+ * ANYPLOT_EXEC_DENY_PREFLIGHT set: the harness's preflight (harness.main_exec). The
+ * constructor installs and reports as always, then ends the process before its main,
+ * with 0 when the filter is on and 3 when not, so the harness proves that the library
+ * loads into exactly this program and takes before it lets the program read any user
+ * code (the Copilot review of #12428: a preload ld.so cannot load, or a static binary
+ * that ignores it, would otherwise run the code unfiltered and be refused only after).
  */
 #define _GNU_SOURCE
 #include <errno.h>
@@ -132,8 +139,13 @@ static void report(const char *state) {
 __attribute__((constructor)) static void anyplot_exec_deny(void) {
     const char *mode = getenv("ANYPLOT_DENY_EXEC");
     if (mode == NULL || mode[0] == '\0') return;
+    const char *preflight = getenv("ANYPLOT_EXEC_DENY_PREFLIGHT");
+    int preflighting = preflight != NULL && preflight[0] != '\0';
     const char *state = install();
+    int on = strcmp(state, "on") == 0;
     int required = strcmp(mode, "required") == 0;
     report(state);
-    if (required && strcmp(state, "on") != 0) _exit(REQUIRED_EXIT);
+    /* The harness's preflight: the same program, ended here, before its main reads any code. */
+    if (preflighting) _exit(on ? 0 : REQUIRED_EXIT);
+    if (required && !on) _exit(REQUIRED_EXIT);
 }
