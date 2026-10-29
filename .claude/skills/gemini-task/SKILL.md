@@ -313,7 +313,11 @@ This section is for the Gemini agent in the owner's agy session.
    make you change as well, such as a registry a test fixture enforces, is in
    scope even when the task's Constraints miss it; name it in the hand-over.
 5. **Run the acceptance commands, the convention checks, and the gates for
-   what you changed**, the convention checks before every commit:
+   what you changed**, the convention checks before every commit. Run each
+   command on its own, from the clone root or `app/`: agy matches its
+   permission rules per command, so a plain `yarn test` or `grep …` runs
+   without a prompt, while a chain with `( … )`, `$( … )`, or `|| true` asks
+   the owner every time (2026-10-30).
 
    ```bash
    PYTHON_DOTENV_DISABLED=1 uv run ruff check . && uv run ruff format --check .
