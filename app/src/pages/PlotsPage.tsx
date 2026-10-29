@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 
 import Alert from '@mui/material/Alert';
@@ -163,6 +162,15 @@ export function PlotsPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleRandom, handleRemoveGroup, activeFilters.length]);
 
+  const filterParts = useMemo(
+    () =>
+      activeFilters
+        .filter(f => f.values.length > 0)
+        .map(f => `${f.category}:${f.values.join(',')}`)
+        .join(' '),
+    [activeFilters]
+  );
+
   const specFilter = activeFilters.find(f => f.category === 'spec');
   const selectedSpec = specFilter?.values[0] || '';
   // The gallery filtered to one spec shows the same implementations as that
@@ -178,14 +186,12 @@ export function PlotsPage() {
 
   return (
     <Box onClick={handleContainerClick}>
-      <Helmet>
-        <title>plots | anyplot.ai</title>
-        <meta
-          name="description"
-          content="Browse and filter 2,600+ visualization examples across 15 libraries in Python, R, Julia, and JavaScript. Search by plot type, domain, features, and more."
-        />
-        <link rel="canonical" href="https://anyplot.ai/plots" />
-      </Helmet>
+      <title>{filterParts ? `${filterParts} | plots | anyplot.ai` : 'plots | anyplot.ai'}</title>
+      <meta
+        name="description"
+        content="Browse and filter 2,600+ visualization examples across 15 libraries in Python, R, Julia, and JavaScript. Search by plot type, domain, features, and more."
+      />
+      <link rel="canonical" href="https://anyplot.ai/plots" />
 
       {error && (
         <Alert severity="error" sx={{ mb: 4, maxWidth: 500, mx: 'auto' }}>

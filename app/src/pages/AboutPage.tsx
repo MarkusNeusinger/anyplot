@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 
-import { Helmet } from 'react-helmet-async';
 import { Link as RouterLink } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -50,7 +49,7 @@ export function AboutPage() {
 
   return (
     <>
-      <Helmet>
+      <>
         <title>about | anyplot.ai</title>
         <meta
           name="description"
@@ -62,7 +61,7 @@ export function AboutPage() {
           content="humans submit ideas. ai drafts specs, generates code, reviews. humans approve."
         />
         <link rel="canonical" href="https://anyplot.ai/about" />
-      </Helmet>
+      </>
 
       <Box sx={{ pb: 4 }}>
         {/* About (lede) */}

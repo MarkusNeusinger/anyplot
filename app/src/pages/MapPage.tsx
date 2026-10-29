@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import ForceGraph2D from 'react-force-graph-2d';
-import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -344,13 +343,13 @@ export function MapPage() {
 
   return (
     <>
-      <Helmet>
+      <>
         <title>map() — anyplot</title>
         <meta
           name="description"
           content="Interactive map of all anyplot specifications, clustered by tag similarity."
         />
-      </Helmet>
+      </>
       <Box
         ref={containerRef}
         // Negative margins cancel RootLayout's container px so the canvas goes full-bleed.

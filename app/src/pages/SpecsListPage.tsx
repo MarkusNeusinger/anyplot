@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -148,7 +147,7 @@ export function SpecsListPage() {
 
   return (
     <>
-      <Helmet>
+      <>
         <title>specs | anyplot.ai</title>
         <meta
           name="description"
@@ -160,7 +159,7 @@ export function SpecsListPage() {
           content="Browse all Python plotting specifications alphabetically"
         />
         <link rel="canonical" href="https://anyplot.ai/specs" />
-      </Helmet>
+      </>
 
       <Box sx={{ pt: { xs: 2, md: 3 }, pb: 4 }}>
         <SectionHeader prompt="❯" title={<em>specs</em>} />

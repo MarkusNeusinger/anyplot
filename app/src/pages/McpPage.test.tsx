@@ -3,10 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { McpPage } from 'src/pages/McpPage';
 import { render, screen } from 'src/test-utils';
 
-vi.mock('react-helmet-async', () => ({
-  Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
 vi.mock('src/hooks', () => ({
   useAnalytics: () => ({
     trackPageview: vi.fn(),

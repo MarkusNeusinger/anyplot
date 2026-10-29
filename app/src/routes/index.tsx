@@ -1,4 +1,3 @@
-import { HelmetProvider } from 'react-helmet-async';
 import { createBrowserRouter, Navigate, RouterProvider, useParams } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
@@ -119,12 +118,10 @@ const router = createBrowserRouter([
 
 export function AppRouter() {
   return (
-    <HelmetProvider>
-      <ErrorBoundary>
-        <AppDataProvider>
-          <RouterProvider router={router} />
-        </AppDataProvider>
-      </ErrorBoundary>
-    </HelmetProvider>
+    <ErrorBoundary>
+      <AppDataProvider>
+        <RouterProvider router={router} />
+      </AppDataProvider>
+    </ErrorBoundary>
   );
 }
