@@ -15,4 +15,4 @@
   `AGENT_EXPECT_CHECK=repair` it sends the round to the repair whatever the
   points, and if no round fixes it, the plot ships with the line and the text in
   `requested_not_found`. The "could not be checked" note now appears only when
-  no readable review answered for the texts.
+  no readable review answered for the texts. (#12454)
