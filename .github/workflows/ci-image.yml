@@ -500,6 +500,10 @@ jobs:
   # itself. The event-shape handling is the API job's in short form.
   renderer-image:
     name: Build renderer image and render through the harness
+    # The job holds `id-token: write`, and PR code runs in it, so a PR Google Jules
+    # opened never runs here: Jules opens PRs only into feature/* branches, which
+    # this workflow does not cover, and this guards the one that lands on main by mistake.
+    if: github.event.pull_request.user.login != 'google-labs-jules[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -590,7 +594,12 @@ jobs:
 
       - name: Authenticate to GCP
         id: gcp-auth
-        if: steps.check.outputs.should_build == 'true' && env.WIF_PROVIDER != '' && github.actor != 'dependabot[bot]'
+        # No login for a PR by Dependabot or Google Jules, keyed on the PR author, which a
+        # re-run cannot change: the job then builds the toolchain itself without one.
+        if: >-
+          steps.check.outputs.should_build == 'true' && env.WIF_PROVIDER != '' &&
+          github.actor != 'dependabot[bot]' &&
+          !contains(fromJSON('["dependabot[bot]", "google-labs-jules[bot]"]'), github.event.pull_request.user.login)
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3
         with:
           project_id: anyplot
