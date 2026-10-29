@@ -1,24 +1,28 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { Link as RouterLink } from 'react-router-dom';
-
-import CheckIcon from '@mui/icons-material/Check';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import Link from '@mui/material/Link';
-import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
 import { SectionHeader } from 'src/components/SectionHeader';
-import { DEBUG_API_URL, LIB_ABBREV, LIB_TO_LANG, LIBRARIES } from 'src/constants';
-import { useAnalytics, useCopyCode } from 'src/hooks';
+import { DEBUG_API_URL, LIBRARIES } from 'src/constants';
+import { useAnalytics } from 'src/hooks';
 import { fetchWithAuth } from 'src/lib/api';
-import { specPath } from 'src/routes/paths';
 import { AgentCasesSection } from 'src/sections/debug/AgentCasesSection';
 import { AgentUsageSection } from 'src/sections/debug/AgentUsageSection';
-import { timeAgo } from 'src/sections/debug/format';
+import { CommonWeaknesses } from 'src/sections/debug/CommonWeaknesses';
+import type { FeedbackMessageFilter, FeedbackStatus } from 'src/sections/debug/constants';
+import { DailyActivityChart, type DailyImplPoint } from 'src/sections/debug/DailyActivityChart';
+import { countImpls } from 'src/sections/debug/debugFormat';
+import { FeedbackSection } from 'src/sections/debug/FeedbackSection';
+import type { FeedbackTopPage } from 'src/sections/debug/FeedbackTopList';
+import { KPIGrid } from 'src/sections/debug/KPIGrid';
+import { LibraryCoverage, type LibraryStats } from 'src/sections/debug/LibraryCoverage';
+import { ProblemAreas, type ProblemSpec } from 'src/sections/debug/ProblemAreas';
+import { RecentActivity, type RecentActivityData } from 'src/sections/debug/RecentActivity';
+import type { SortDir } from 'src/sections/debug/SortableHeader';
+import { SpecMatrix, SpecStatus } from 'src/sections/debug/SpecMatrix';
 import { debugControlSx } from 'src/sections/debug/styles';
+import { SystemHealthRow } from 'src/sections/debug/SystemHealthRow';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import {
   clearAccessReloadGuard,
@@ -28,52 +32,10 @@ import {
   setAdminHint,
   writeAdminToken,
 } from 'src/utils/adminAuth';
-import { buildClaudePrompt } from 'src/utils/claudePrompt';
 
 // ============================================================================
 // Types
 // ============================================================================
-
-interface SpecStatus {
-  id: string;
-  title: string;
-  updated: string | null;
-  avg_score: number | null;
-  // One score field per library in LIBRARIES — keep in sync with the registry
-  // (the matrix renders a column for every LIBRARIES entry and indexes this by
-  // id, so a missing field would read as undefined and miscount).
-  altair: number | null;
-  bokeh: number | null;
-  chartjs: number | null;
-  d3: number | null;
-  echarts: number | null;
-  ggplot2: number | null;
-  highcharts: number | null;
-  letsplot: number | null;
-  makie: number | null;
-  matplotlib: number | null;
-  muix: number | null;
-  plotly: number | null;
-  plotnine: number | null;
-  pygal: number | null;
-  seaborn: number | null;
-}
-
-interface LibraryStats {
-  id: string;
-  name: string;
-  impl_count: number;
-  avg_score: number | null;
-  min_score: number | null;
-  max_score: number | null;
-}
-
-interface ProblemSpec {
-  id: string;
-  title: string;
-  issue: string;
-  value: string | null;
-}
 
 interface SystemHealth {
   database_connected: boolean;
@@ -83,38 +45,13 @@ interface SystemHealth {
   total_impls_in_db: number;
 }
 
-interface DailyImplPoint {
-  date: string;
-  impls_updated: number;
-}
-
-interface RecentActivity {
-  spec_id: string;
-  spec_title: string;
-  library_id: string;
-  language_id: string;
-  quality_score: number | null;
-  generated_by: string | null;
-  updated: string;
-}
-
 interface WeaknessCount {
   text: string;
   count: number;
 }
 
-interface FeedbackTopPage {
-  path: string;
-  count: number;
-  last_seen: string | null;
-}
-
-type FeedbackStatus = 'new' | 'in_progress' | 'done' | 'wont_solve';
-const FEEDBACK_STATUS_OPTIONS: FeedbackStatus[] = ['new', 'in_progress', 'done', 'wont_solve'];
-
 // "" → all statuses, "open" → new + in_progress (server-side pseudo-filter).
 // Default view shows the open queue so resolved entries don't drown out triage.
-type FeedbackMessageFilter = '' | 'open' | FeedbackStatus;
 const DEFAULT_MESSAGE_FILTER: FeedbackMessageFilter = 'open';
 
 interface FeedbackMessageItem {
@@ -139,14 +76,13 @@ interface DebugStatus {
   missing_preview_specs: ProblemSpec[];
   missing_tags_specs: ProblemSpec[];
   daily_impls: DailyImplPoint[];
-  recent_activity: RecentActivity[];
+  recent_activity: RecentActivityData[];
   common_weaknesses: WeaknessCount[];
   system: SystemHealth;
   specs: SpecStatus[];
 }
 
-type SortKey = 'updated' | 'id' | 'title' | 'avg_score';
-type SortDir = 'asc' | 'desc';
+type SortKey = keyof SpecStatus | 'coverage';
 
 // ============================================================================
 // Helpers
@@ -154,37 +90,12 @@ type SortDir = 'asc' | 'desc';
 
 const LOW_SCORE_THRESHOLD = 90;
 
-function scoreColor(score: number | null): string {
-  if (score === null) return 'var(--ink-muted)';
-  if (score >= 90) return colors.success;
-  if (score >= 75) return colors.warning;
-  return colors.error;
-}
-
-function formatNum(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return n.toLocaleString();
-}
-
-function formatDateShort(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
 // ============================================================================
 // Component
 // ============================================================================
 
 const PING_INTERVAL_MS = 2000;
 const PING_HISTORY = 30;
-
-function pingColor(ms: number): string {
-  if (ms < 75) return colors.success;
-  if (ms < 200) return colors.warning;
-  return colors.error;
-}
 
 // Admin auth for /debug endpoints (require_admin in api/routers/debug.py).
 // Two paths:
@@ -338,10 +249,12 @@ export function DebugPage() {
     };
   }, [adminToken, authRequired, reloadCounter, feedbackStatusFilter]);
 
-  const updateFeedbackStatus = async (id: string, newStatus: FeedbackStatus) => {
+  const updateFeedbackStatus = async (id: string, newStatus: string) => {
     // Optimistic update — revert on failure so the dropdown stays truthful.
     const prev = feedbackMessages;
-    setFeedbackMessages(prev.map(m => (m.id === id ? { ...m, status: newStatus } : m)));
+    setFeedbackMessages(
+      prev.map(m => (m.id === id ? { ...m, status: newStatus as FeedbackStatus } : m))
+    );
     try {
       const r = await fetchWithAuth(`${DEBUG_API_URL}/debug/feedback/${id}`, adminToken, {
         method: 'PATCH',
@@ -367,9 +280,6 @@ export function DebugPage() {
     setAdminToken('');
     setReloadCounter(c => c + 1);
   };
-
-  const countImpls = (spec: SpecStatus): number =>
-    LIBRARIES.filter(lib => spec[lib as keyof SpecStatus] !== null).length;
 
   const hasLowScore = (spec: SpecStatus): boolean =>
     LIBRARIES.some(lib => {
@@ -526,10 +436,6 @@ export function DebugPage() {
   );
   const avgQuality = totalImplsWithScore > 0 ? weightedScoreSum / totalImplsWithScore : null;
 
-  const maxDaily = Math.max(...data.daily_impls.map(p => p.impls_updated), 1);
-  const maxLibCount = Math.max(...data.library_stats.map(l => l.impl_count), 1);
-  const maxWeakness = Math.max(...data.common_weaknesses.map(w => w.count), 1);
-
   const kpis: Array<{ label: string; value: number | null; suffix?: string }> = [
     { label: 'specs', value: data.total_specs },
     { label: 'impls', value: data.total_implementations },
@@ -539,763 +445,33 @@ export function DebugPage() {
     { label: 'stale specs', value: data.oldest_specs.length },
   ];
 
-  const firstDate = data.daily_impls[0]?.date ?? '';
-  const lastDate = data.daily_impls[data.daily_impls.length - 1]?.date ?? '';
-
   return (
     <Box sx={{ pt: { xs: 2, md: 3 }, pb: 4 }}>
       <title>debug | anyplot.ai</title>
       {/* Header */}
       <SectionHeader prompt="❯" title={<em>debug</em>} />
 
-      {/* System health row */}
-      {(() => {
-        const latest = pings[pings.length - 1];
-        const okPings = pings.filter(p => p.ok);
-        const currentOk = latest ? latest.ok : data.system.database_connected;
-        const currentMs = latest ? latest.ms : data.system.api_response_time_ms;
-        const avgMs =
-          okPings.length > 0 ? okPings.reduce((a, p) => a + p.ms, 0) / okPings.length : null;
-        const maxMs = Math.max(...pings.map(p => p.ms), 1);
-        return (
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              alignItems: 'center',
-              gap: { xs: 1.5, md: 3 },
-              mt: -2,
-              mb: 3,
-              fontSize: fontSize.xs,
-              fontFamily: typography.fontFamily,
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  bgcolor: currentOk ? colors.success : colors.error,
-                }}
-              />
-              <Typography
-                component="span"
-                sx={{
-                  fontFamily: typography.fontFamily,
-                  fontSize: fontSize.xs,
-                  color: 'var(--ink-soft)',
-                }}
-              >
-                database {currentOk ? 'connected' : 'down'}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Tooltip
-                title={
-                  avgMs !== null
-                    ? `avg ${avgMs.toFixed(0)}ms · max ${maxMs.toFixed(0)}ms · ${pings.length} samples`
-                    : 'measuring...'
-                }
-                arrow
-              >
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'flex-end',
-                    gap: '1px',
-                    height: 18,
-                    width: PING_HISTORY * 4,
-                    borderBottom: '1px solid var(--rule)',
-                    px: 0.25,
-                  }}
-                >
-                  {Array.from({ length: PING_HISTORY }).map((_, i) => {
-                    const idx = pings.length - PING_HISTORY + i;
-                    const p = idx >= 0 ? pings[idx] : null;
-                    if (!p) return <Box key={i} sx={{ flex: 1 }} />;
-                    return (
-                      <Box
-                        key={i}
-                        sx={{
-                          flex: 1,
-                          height: p.ok ? `${Math.max((p.ms / maxMs) * 100, 8)}%` : '100%',
-                          bgcolor: p.ok ? pingColor(p.ms) : colors.error,
-                          opacity: 0.7,
-                        }}
-                      />
-                    );
-                  })}
-                </Box>
-              </Tooltip>
-              <Typography
-                component="span"
-                sx={{
-                  fontFamily: typography.fontFamily,
-                  fontSize: fontSize.xs,
-                  color: currentOk ? pingColor(currentMs) : colors.error,
-                  fontWeight: 600,
-                  minWidth: 52,
-                }}
-              >
-                {currentMs.toFixed(0)}ms
-              </Typography>
-              {avgMs !== null && (
-                <Typography
-                  component="span"
-                  sx={{
-                    fontFamily: typography.fontFamily,
-                    fontSize: fontSize.xxs,
-                    color: semanticColors.mutedText,
-                  }}
-                >
-                  avg {avgMs.toFixed(0)}
-                </Typography>
-              )}
-            </Box>
-            <Typography
-              component="span"
-              sx={{
-                fontFamily: typography.fontFamily,
-                fontSize: fontSize.xs,
-                color: semanticColors.mutedText,
-              }}
-            >
-              updated {new Date(data.system.timestamp).toLocaleTimeString()}
-            </Typography>
-          </Box>
-        );
-      })()}
-
-      {/* KPI Grid */}
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(6, 1fr)' },
-          gap: 2,
-          mb: 4,
-        }}
-      >
-        {kpis.map(item => (
-          <Box
-            key={item.label}
-            sx={{ textAlign: 'center', p: 2, border: '1px solid var(--rule)', borderRadius: 1 }}
-          >
-            <Typography
-              sx={{
-                fontFamily: typography.serif,
-                fontSize: '2rem',
-                fontWeight: 300,
-                color: 'var(--ink)',
-                lineHeight: 1.2,
-              }}
-            >
-              {typeof item.value === 'number'
-                ? `${formatNum(item.value)}${item.suffix ?? ''}`
-                : '—'}
-            </Typography>
-            <Typography
-              sx={{
-                fontFamily: typography.fontFamily,
-                fontSize: fontSize.xs,
-                color: semanticColors.mutedText,
-                mt: 0.5,
-              }}
-            >
-              {item.label}
-            </Typography>
-          </Box>
-        ))}
-      </Box>
-
-      {/* Daily Activity Bar Chart */}
-      <SectionHeader prompt="❯" title={<em>daily activity</em>} />
-      <Typography
-        sx={{
-          fontFamily: typography.fontFamily,
-          fontSize: fontSize.xs,
-          color: semanticColors.mutedText,
-          mb: 1,
-        }}
-      >
-        implementation updates · last 30 days
-      </Typography>
-      <Box
-        sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.25, height: 70, overflow: 'hidden' }}
-      >
-        {data.daily_impls.map(point => (
-          <Tooltip key={point.date} title={`${point.date}: ${point.impls_updated} impls`} arrow>
-            <Box
-              sx={{
-                flex: 1,
-                height: `${Math.max((point.impls_updated / maxDaily) * 100, point.impls_updated > 0 ? 3 : 0)}%`,
-                bgcolor: colors.primaryDark,
-                opacity: 0.5,
-                borderRadius: '2px 2px 0 0',
-                minHeight: point.impls_updated > 0 ? 2 : 0,
-                '&:hover': { opacity: 0.8 },
-                transition: 'opacity 0.15s ease',
-              }}
-            />
-          </Tooltip>
-        ))}
-      </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.25 }}>
-        <Typography
-          sx={{
-            fontFamily: typography.fontFamily,
-            fontSize: fontSize.micro,
-            color: semanticColors.mutedText,
-          }}
-        >
-          {firstDate}
-        </Typography>
-        <Typography
-          sx={{
-            fontFamily: typography.fontFamily,
-            fontSize: fontSize.micro,
-            color: semanticColors.mutedText,
-          }}
-        >
-          {lastDate}
-        </Typography>
-      </Box>
-
-      {/* Library Coverage */}
-      <Box sx={{ mt: 4 }}>
-        <SectionHeader prompt="❯" title={<em>libraries</em>} />
-      </Box>
-      <Typography
-        sx={{
-          fontFamily: typography.fontFamily,
-          fontSize: fontSize.xs,
-          color: semanticColors.mutedText,
-          mb: 1,
-        }}
-      >
-        impl count · avg · min–max
-      </Typography>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {[...data.library_stats]
-          .sort((a, b) => b.impl_count - a.impl_count)
-          .map(lib => (
-            <Box
-              key={lib.id}
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: '80px 1fr 40px 40px 70px',
-                gap: 1.5,
-                alignItems: 'center',
-                fontFamily: typography.fontFamily,
-                fontSize: fontSize.xxs,
-              }}
-            >
-              <Typography
-                sx={{
-                  fontFamily: typography.fontFamily,
-                  fontSize: fontSize.xs,
-                  color: semanticColors.mutedText,
-                  textAlign: 'right',
-                }}
-              >
-                {lib.name}
-              </Typography>
-              <Box
-                sx={{
-                  height: 10,
-                  bgcolor: 'var(--bg-elevated)',
-                  borderRadius: '2px',
-                  overflow: 'hidden',
-                }}
-              >
-                <Box
-                  sx={{
-                    width: `${(lib.impl_count / maxLibCount) * 100}%`,
-                    height: '100%',
-                    bgcolor: colors.primaryDark,
-                    opacity: 0.5,
-                  }}
-                />
-              </Box>
-              <Typography
-                sx={{
-                  fontFamily: typography.fontFamily,
-                  fontSize: fontSize.xxs,
-                  color: 'var(--ink-soft)',
-                  fontWeight: 600,
-                  textAlign: 'right',
-                }}
-              >
-                {lib.impl_count}
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: typography.fontFamily,
-                  fontSize: fontSize.xxs,
-                  color: scoreColor(lib.avg_score),
-                  fontWeight: 600,
-                  textAlign: 'right',
-                }}
-              >
-                {lib.avg_score ?? '—'}
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: typography.fontFamily,
-                  fontSize: fontSize.xxs,
-                  color: semanticColors.mutedText,
-                  textAlign: 'right',
-                }}
-              >
-                {lib.min_score?.toFixed(0) ?? '—'}–{lib.max_score?.toFixed(0) ?? '—'}
-              </Typography>
-            </Box>
-          ))}
-      </Box>
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: '80px 1fr 40px 40px 70px',
-          gap: 1.5,
-          mt: 0.5,
-          fontFamily: typography.fontFamily,
-          fontSize: fontSize.micro,
-          color: semanticColors.mutedText,
-        }}
-      >
-        <span />
-        <span />
-        <Box component="span" sx={{ textAlign: 'right' }}>
-          count
-        </Box>
-        <Box component="span" sx={{ textAlign: 'right' }}>
-          avg
-        </Box>
-        <Box component="span" sx={{ textAlign: 'right' }}>
-          min–max
-        </Box>
-      </Box>
-
-      {/* Recent Activity */}
-      {data.recent_activity.length > 0 && (
-        <>
-          <Box sx={{ mt: 4 }}>
-            <SectionHeader prompt="❯" title={<em>recent activity</em>} />
-          </Box>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            {data.recent_activity.map((act, idx) => (
-              <Link
-                key={`${act.spec_id}-${act.library_id}-${idx}`}
-                component={RouterLink}
-                to={specPath(act.spec_id, act.language_id, act.library_id)}
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: {
-                    xs: '55px 1fr 30px',
-                    sm: '65px 90px minmax(0, 1fr) 30px 130px',
-                  },
-                  gap: { xs: 1, sm: 1.5 },
-                  alignItems: 'center',
-                  textDecoration: 'none',
-                  color: 'inherit',
-                  py: 0.5,
-                  borderBottom: '1px solid var(--rule)',
-                  '&:hover': { bgcolor: 'var(--bg-surface)' },
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontFamily: typography.fontFamily,
-                    fontSize: fontSize.xs,
-                    color: semanticColors.mutedText,
-                  }}
-                >
-                  {timeAgo(act.updated)}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: typography.fontFamily,
-                    fontSize: fontSize.xs,
-                    color: 'var(--ink-soft)',
-                    display: { xs: 'none', sm: 'block' },
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {act.library_id}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: typography.fontFamily,
-                    fontSize: fontSize.xs,
-                    color: 'var(--ink)',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    minWidth: 0,
-                  }}
-                >
-                  <Box
-                    component="span"
-                    sx={{
-                      display: { xs: 'inline', sm: 'none' },
-                      color: semanticColors.mutedText,
-                      mr: 0.5,
-                    }}
-                  >
-                    {act.library_id} ·
-                  </Box>
-                  {act.spec_title}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: typography.fontFamily,
-                    fontSize: fontSize.xs,
-                    color: scoreColor(act.quality_score),
-                    fontWeight: 600,
-                    textAlign: 'right',
-                  }}
-                >
-                  {act.quality_score !== null ? Math.round(act.quality_score) : '—'}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: typography.fontFamily,
-                    fontSize: fontSize.xxs,
-                    color: semanticColors.mutedText,
-                    display: { xs: 'none', sm: 'block' },
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    textAlign: 'right',
-                  }}
-                >
-                  {act.generated_by ?? '—'}
-                </Typography>
-              </Link>
-            ))}
-          </Box>
-        </>
-      )}
-
-      {/* Common Weaknesses */}
-      {data.common_weaknesses.length > 0 && (
-        <>
-          <Box sx={{ mt: 4 }}>
-            <SectionHeader prompt="❯" title={<em>common weaknesses</em>} />
-          </Box>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, alignItems: 'baseline' }}>
-            {data.common_weaknesses.map(w => {
-              const ratio = w.count / maxWeakness;
-              const size =
-                ratio >= 0.8
-                  ? fontSize.md
-                  : ratio >= 0.5
-                    ? fontSize.sm
-                    : ratio >= 0.25
-                      ? fontSize.xs
-                      : fontSize.xxs;
-              const weight = ratio >= 0.5 ? 600 : 400;
-              const opacity = ratio >= 0.8 ? 1 : ratio >= 0.5 ? 0.85 : ratio >= 0.25 ? 0.7 : 0.55;
-              return (
-                <Box
-                  key={w.text}
-                  sx={{
-                    fontFamily: typography.fontFamily,
-                    fontSize: size,
-                    fontWeight: weight,
-                    color: 'var(--ink-soft)',
-                    opacity,
-                    px: 0.75,
-                    py: 0.25,
-                    borderRadius: 0.5,
-                    bgcolor: 'var(--bg-surface)',
-                    border: '1px solid var(--rule)',
-                  }}
-                >
-                  {w.text}
-                  <Box
-                    component="span"
-                    sx={{ fontSize: fontSize.micro, color: semanticColors.mutedText, ml: 0.5 }}
-                  >
-                    {w.count}
-                  </Box>
-                </Box>
-              );
-            })}
-          </Box>
-        </>
-      )}
-
-      {/* Problem Areas */}
-      <Box sx={{ mt: 4 }}>
-        <SectionHeader prompt="❯" title={<em>problem areas</em>} />
-      </Box>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        {[
-          { title: `low scores (avg < ${LOW_SCORE_THRESHOLD})`, items: data.low_score_specs },
-          { title: 'missing previews', items: data.missing_preview_specs },
-          { title: 'missing tags', items: data.missing_tags_specs },
-          { title: 'oldest specs', items: data.oldest_specs },
-        ].map(section => (
-          <Box
-            key={section.title}
-            component="details"
-            sx={{
-              border: '1px solid var(--rule)',
-              borderRadius: 1,
-              p: 0,
-              '& > summary': { cursor: 'pointer', listStyle: 'none' },
-              '& > summary::-webkit-details-marker': { display: 'none' },
-            }}
-          >
-            <Box
-              component="summary"
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                px: 1.5,
-                py: 1,
-                fontFamily: typography.fontFamily,
-                fontSize: fontSize.xs,
-                color: 'var(--ink-soft)',
-              }}
-            >
-              <Box component="span" sx={{ color: semanticColors.mutedText }}>
-                ▸
-              </Box>
-              <Box component="span" sx={{ fontWeight: 600 }}>
-                {section.title}
-              </Box>
-              <Box component="span" sx={{ color: semanticColors.mutedText }}>
-                {section.items.length}
-              </Box>
-            </Box>
-            {section.items.length > 0 && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  borderTop: '1px solid var(--rule)',
-                }}
-              >
-                {section.items.map((item, idx) => (
-                  <Link
-                    key={`${item.id}-${idx}`}
-                    component={RouterLink}
-                    to={specPath(item.id)}
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: { xs: '1fr auto', sm: 'minmax(140px, 200px) 1fr auto' },
-                      gap: 1,
-                      px: 1.5,
-                      py: 0.75,
-                      alignItems: 'center',
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      fontFamily: typography.fontFamily,
-                      fontSize: fontSize.xs,
-                      borderTop: idx > 0 ? '1px solid var(--rule)' : 'none',
-                      '&:hover': { bgcolor: 'var(--bg-surface)' },
-                    }}
-                  >
-                    <Box
-                      component="span"
-                      sx={{
-                        color: colors.primary,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {item.id}
-                    </Box>
-                    <Box
-                      component="span"
-                      sx={{
-                        color: semanticColors.mutedText,
-                        display: { xs: 'none', sm: 'inline' },
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {item.issue}
-                    </Box>
-                    {item.value && (
-                      <Box
-                        component="span"
-                        sx={{ color: colors.error, whiteSpace: 'nowrap', textAlign: 'right' }}
-                      >
-                        {item.value}
-                      </Box>
-                    )}
-                  </Link>
-                ))}
-              </Box>
-            )}
-          </Box>
-        ))}
-      </Box>
-
-      {/* Feedback: top pages + messages with triage (issue #5662) */}
-      <Box sx={{ mt: 4 }}>
-        <SectionHeader prompt="❯" title={<em>feedback · top pages</em>} />
-      </Box>
-      <Typography
-        sx={{
-          fontFamily: typography.fontFamily,
-          fontSize: fontSize.xs,
-          color: semanticColors.mutedText,
-          mb: 1,
-        }}
-      >
-        grouped by URL — clickable
-      </Typography>
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
-        <FeedbackTopList title="👍 thumbs up" items={topThumbsUp} accent={colors.success} />
-        <FeedbackTopList title="👎 thumbs down" items={topThumbsDown} accent={colors.error} />
-      </Box>
-
-      <Box sx={{ mt: 4, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-        <SectionHeader prompt="❯" title={<em>feedback · messages</em>} />
-        <Box
-          component="select"
-          value={feedbackStatusFilter}
-          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-            setFeedbackStatusFilter(e.target.value as FeedbackMessageFilter)
-          }
-          sx={{ ...debugControlSx, cursor: 'pointer', ml: 'auto' }}
-        >
-          <option value="open">open (new + in progress)</option>
-          <option value="">all statuses</option>
-          {FEEDBACK_STATUS_OPTIONS.map(s => (
-            <option key={s} value={s}>
-              {s.replace('_', ' ')}
-            </option>
-          ))}
-        </Box>
-      </Box>
-      {feedbackMessages.length === 0 ? (
-        <Typography
-          sx={{
-            fontFamily: typography.fontFamily,
-            fontSize: fontSize.xs,
-            color: semanticColors.mutedText,
-            py: 2,
-          }}
-        >
-          no messages{feedbackStatusFilter ? ` with status "${feedbackStatusFilter}"` : ''}
-        </Typography>
-      ) : (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 4 }}>
-          {feedbackMessages.map(m => (
-            <Box
-              key={m.id}
-              sx={{
-                border: '1px solid var(--rule)',
-                borderRadius: 1,
-                p: 1.5,
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'auto 1fr auto' },
-                columnGap: 1.5,
-                rowGap: 0.5,
-                alignItems: 'start',
-                bgcolor: m.status === 'new' ? 'var(--bg-surface)' : 'transparent',
-              }}
-            >
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, minWidth: 90 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Box component="span" sx={{ fontSize: 14 }}>
-                    {m.reaction === 'thumbs_up'
-                      ? '👍'
-                      : m.reaction === 'thumbs_down'
-                        ? '👎'
-                        : m.reaction === 'idea'
-                          ? '💡'
-                          : m.reaction === 'bug'
-                            ? '🪲'
-                            : '—'}
-                  </Box>
-                  <Typography
-                    sx={{
-                      fontFamily: typography.fontFamily,
-                      fontSize: fontSize.xxs,
-                      color: semanticColors.mutedText,
-                    }}
-                  >
-                    {timeAgo(m.created_at)}
-                  </Typography>
-                </Box>
-                {m.path && (
-                  <Link
-                    component={RouterLink}
-                    to={m.path}
-                    sx={{
-                      fontFamily: typography.fontFamily,
-                      fontSize: fontSize.xxs,
-                      color: colors.primary,
-                      textDecoration: 'none',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                      '&:hover': { textDecoration: 'underline' },
-                    }}
-                  >
-                    {m.path}
-                  </Link>
-                )}
-              </Box>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography
-                  sx={{
-                    fontFamily: typography.fontFamily,
-                    fontSize: fontSize.xs,
-                    color: 'var(--ink)',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                  }}
-                >
-                  {m.message}
-                </Typography>
-                {m.contact && (
-                  <Typography
-                    sx={{
-                      fontFamily: typography.fontFamily,
-                      fontSize: fontSize.xxs,
-                      color: semanticColors.mutedText,
-                      mt: 0.5,
-                    }}
-                  >
-                    contact: {m.contact}
-                  </Typography>
-                )}
-              </Box>
-              <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'start' }}>
-                {m.message && (
-                  <CopyClaudePromptButton message={m.message} path={m.path} reaction={m.reaction} />
-                )}
-                <Box
-                  component="select"
-                  value={m.status}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                    updateFeedbackStatus(m.id, e.target.value as FeedbackStatus)
-                  }
-                  sx={{ ...debugControlSx, cursor: 'pointer', alignSelf: 'start' }}
-                >
-                  {FEEDBACK_STATUS_OPTIONS.map(s => (
-                    <option key={s} value={s}>
-                      {s.replace('_', ' ')}
-                    </option>
-                  ))}
-                </Box>
-              </Box>
-            </Box>
-          ))}
-        </Box>
-      )}
+      <SystemHealthRow pings={pings} systemData={data.system} pingHistory={PING_HISTORY} />
+      <KPIGrid kpis={kpis} />
+      <DailyActivityChart data={data.daily_impls} />
+      <LibraryCoverage stats={data.library_stats} />
+      <RecentActivity activity={data.recent_activity} />
+      <CommonWeaknesses weaknesses={data.common_weaknesses} />
+      <ProblemAreas
+        lowScoreThreshold={LOW_SCORE_THRESHOLD}
+        lowScoreSpecs={data.low_score_specs}
+        missingPreviewSpecs={data.missing_preview_specs}
+        missingTagsSpecs={data.missing_tags_specs}
+        oldestSpecs={data.oldest_specs}
+      />
+      <FeedbackSection
+        topThumbsUp={topThumbsUp}
+        topThumbsDown={topThumbsDown}
+        feedbackStatusFilter={feedbackStatusFilter}
+        setFeedbackStatusFilter={setFeedbackStatusFilter}
+        feedbackMessages={feedbackMessages}
+        handleStatusChange={updateFeedbackStatus}
+      />
 
       {/* Agent usage: the agent chat's content-free telemetry, 7 or 30 days */}
       <AgentUsageSection token={adminToken} reloadCounter={reloadCounter} />
@@ -1303,551 +479,23 @@ export function DebugPage() {
       {/* Agent cases: the triage of the agent chat's quick feedback */}
       <AgentCasesSection token={adminToken} reloadCounter={reloadCounter} />
 
-      {/* Spec Matrix */}
-      <Box sx={{ mt: 4 }}>
-        <SectionHeader prompt="❯" title={<em>specs</em>} />
-      </Box>
-
-      {/* Filter Bar */}
-      <Box
-        sx={{
-          display: 'flex',
-          gap: 1,
-          mb: 2,
-          flexWrap: { xs: 'nowrap', sm: 'wrap' },
-          overflowX: { xs: 'auto', sm: 'visible' },
-          pb: { xs: 0.5, sm: 0 },
-        }}
-      >
-        <Box
-          component="input"
-          type="search"
-          placeholder="search spec id or title..."
-          value={searchText}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchText(e.target.value)}
-          sx={{ ...debugControlSx, flex: { xs: '0 0 180px', sm: '1 1 220px' } }}
-        />
-        <Box
-          component="button"
-          type="button"
-          onClick={() => setShowIncomplete(v => !v)}
-          sx={{
-            ...debugControlSx,
-            cursor: 'pointer',
-            flexShrink: 0,
-            bgcolor: showIncomplete ? colors.highlight.bg : 'var(--bg-surface)',
-            color: showIncomplete ? colors.highlight.text : 'var(--ink-soft)',
-            borderColor: showIncomplete ? colors.primary : 'var(--rule)',
-          }}
-        >
-          incomplete {'<'}
-          {LIBRARIES.length}
-        </Box>
-        <Box
-          component="button"
-          type="button"
-          onClick={() => setShowLowScores(v => !v)}
-          sx={{
-            ...debugControlSx,
-            cursor: 'pointer',
-            flexShrink: 0,
-            bgcolor: showLowScores ? colors.highlight.bg : 'var(--bg-surface)',
-            color: showLowScores ? colors.highlight.text : 'var(--ink-soft)',
-            borderColor: showLowScores ? colors.primary : 'var(--rule)',
-          }}
-        >
-          low scores {'<'}90
-        </Box>
-        <Box
-          component="select"
-          value={missingLibrary}
-          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setMissingLibrary(e.target.value)}
-          sx={{ ...debugControlSx, cursor: 'pointer', flexShrink: 0 }}
-        >
-          <option value="">missing library: any</option>
-          {LIBRARIES.map(lib => (
-            <option key={lib} value={lib}>
-              missing: {lib}
-            </option>
-          ))}
-        </Box>
-        <Typography
-          sx={{
-            fontFamily: typography.fontFamily,
-            fontSize: fontSize.xs,
-            color: semanticColors.mutedText,
-            alignSelf: 'center',
-            flexShrink: 0,
-            ml: { xs: 0, sm: 'auto' },
-          }}
-        >
-          {filteredSpecs.length} / {data.total_specs}
-        </Typography>
-      </Box>
-
-      {/* Desktop: grid matrix */}
-      <Box sx={{ display: { xs: 'none', md: 'block' }, overflowX: 'auto' }}>
-        <Box sx={{ minWidth: 780 }}>
-          {/* Header row */}
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: `180px minmax(180px, 1fr) 50px 50px repeat(${LIBRARIES.length}, 40px) 80px`,
-              gap: 0,
-              alignItems: 'center',
-              position: 'sticky',
-              top: 0,
-              zIndex: 1,
-              bgcolor: 'var(--bg-page)',
-              borderBottom: '1px solid var(--rule)',
-              py: 1,
-            }}
-          >
-            <SortableHeader
-              label="spec id"
-              active={sortKey === 'id'}
-              dir={sortDir}
-              onClick={() => handleSort('id')}
-            />
-            <SortableHeader
-              label="title"
-              active={sortKey === 'title'}
-              dir={sortDir}
-              onClick={() => handleSort('title')}
-            />
-            <HeaderCell>#</HeaderCell>
-            <SortableHeader
-              label="avg"
-              active={sortKey === 'avg_score'}
-              dir={sortDir}
-              onClick={() => handleSort('avg_score')}
-              center
-            />
-            {LIBRARIES.map(lib => (
-              <HeaderCell key={lib} center>
-                {LIB_ABBREV[lib] ?? lib.slice(0, 3)}
-              </HeaderCell>
-            ))}
-            <SortableHeader
-              label="updated"
-              active={sortKey === 'updated'}
-              dir={sortDir}
-              onClick={() => handleSort('updated')}
-            />
-          </Box>
-
-          {/* Body rows */}
-          {filteredSpecs.map(spec => {
-            const implCount = countImpls(spec);
-            return (
-              <Box
-                key={spec.id}
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: `180px minmax(180px, 1fr) 50px 50px repeat(${LIBRARIES.length}, 40px) 80px`,
-                  gap: 0,
-                  alignItems: 'center',
-                  py: 0.5,
-                  borderBottom: '1px solid var(--rule)',
-                  '&:hover': { bgcolor: 'var(--bg-surface)' },
-                }}
-              >
-                <Link
-                  component={RouterLink}
-                  to={specPath(spec.id)}
-                  sx={{
-                    fontFamily: typography.fontFamily,
-                    fontSize: fontSize.xs,
-                    color: colors.primary,
-                    textDecoration: 'none',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    '&:hover': { textDecoration: 'underline' },
-                  }}
-                >
-                  {spec.id}
-                </Link>
-                <Typography
-                  sx={{
-                    fontFamily: typography.fontFamily,
-                    fontSize: fontSize.xs,
-                    color: semanticColors.labelText,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    pr: 1,
-                  }}
-                >
-                  {spec.title}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: typography.fontFamily,
-                    fontSize: fontSize.xs,
-                    fontWeight: 600,
-                    color:
-                      implCount === LIBRARIES.length
-                        ? colors.success
-                        : implCount > 0
-                          ? semanticColors.mutedText
-                          : 'var(--ink-muted)',
-                    textAlign: 'center',
-                  }}
-                >
-                  {implCount}/{LIBRARIES.length}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: typography.fontFamily,
-                    fontSize: fontSize.xs,
-                    fontWeight: 600,
-                    color: scoreColor(spec.avg_score),
-                    textAlign: 'center',
-                  }}
-                >
-                  {spec.avg_score !== null ? spec.avg_score.toFixed(1) : '—'}
-                </Typography>
-                {LIBRARIES.map(lib => {
-                  const score = spec[lib as keyof SpecStatus] as number | null;
-                  if (score === null) {
-                    return (
-                      <Box
-                        key={lib}
-                        sx={{
-                          textAlign: 'center',
-                          fontFamily: typography.fontFamily,
-                          fontSize: fontSize.xs,
-                          color: 'var(--ink-muted)',
-                        }}
-                      >
-                        —
-                      </Box>
-                    );
-                  }
-                  return (
-                    <Link
-                      key={lib}
-                      component={RouterLink}
-                      to={specPath(spec.id, LIB_TO_LANG[lib] ?? 'python', lib)}
-                      sx={{
-                        textAlign: 'center',
-                        textDecoration: 'none',
-                        fontFamily: typography.fontFamily,
-                        fontSize: fontSize.xs,
-                        fontWeight: 600,
-                        color: scoreColor(score),
-                        '&:hover': { opacity: 0.7 },
-                      }}
-                    >
-                      {Math.round(score)}
-                    </Link>
-                  );
-                })}
-                <Typography
-                  sx={{
-                    fontFamily: typography.fontFamily,
-                    fontSize: fontSize.xxs,
-                    color: semanticColors.mutedText,
-                  }}
-                >
-                  {spec.updated ? formatDateShort(spec.updated) : '—'}
-                </Typography>
-              </Box>
-            );
-          })}
-        </Box>
-      </Box>
-
-      {/* Mobile: card list */}
-      <Box sx={{ display: { xs: 'flex', md: 'none' }, flexDirection: 'column', gap: 1.5 }}>
-        {filteredSpecs.map(spec => (
-          <Box
-            key={spec.id}
-            sx={{
-              border: '1px solid var(--rule)',
-              borderRadius: 1,
-              p: 1.5,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 1,
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
-              <Link
-                component={RouterLink}
-                to={specPath(spec.id)}
-                sx={{
-                  flex: 1,
-                  fontFamily: typography.fontFamily,
-                  fontSize: fontSize.sm,
-                  color: 'var(--ink)',
-                  textDecoration: 'none',
-                  fontWeight: 500,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  '&:hover': { color: colors.primary },
-                }}
-              >
-                {spec.title}
-              </Link>
-              <Typography
-                sx={{
-                  fontFamily: typography.fontFamily,
-                  fontSize: fontSize.xs,
-                  color: scoreColor(spec.avg_score),
-                  fontWeight: 600,
-                  flexShrink: 0,
-                }}
-              >
-                avg {spec.avg_score !== null ? spec.avg_score.toFixed(0) : '—'}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-              {LIBRARIES.map(lib => {
-                const score = spec[lib as keyof SpecStatus] as number | null;
-                const missing = score === null;
-                const abbrev = LIB_ABBREV[lib] ?? lib.slice(0, 3);
-                const commonSx = {
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  px: 0.75,
-                  py: 0.25,
-                  borderRadius: 0.5,
-                  fontFamily: typography.fontFamily,
-                  fontSize: fontSize.xxs,
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  bgcolor: missing ? 'var(--bg-elevated)' : `${scoreColor(score)}22`,
-                  color: missing ? 'var(--ink-muted)' : scoreColor(score),
-                };
-                if (missing) {
-                  return (
-                    <Box key={lib} sx={commonSx}>
-                      <Box component="span">{abbrev}</Box>
-                      <Box component="span">—</Box>
-                    </Box>
-                  );
-                }
-                return (
-                  <Link
-                    key={lib}
-                    component={RouterLink}
-                    to={specPath(spec.id, LIB_TO_LANG[lib] ?? 'python', lib)}
-                    sx={{ ...commonSx, '&:hover': { opacity: 0.75 } }}
-                  >
-                    <Box component="span">{abbrev}</Box>
-                    <Box component="span">{Math.round(score)}</Box>
-                  </Link>
-                );
-              })}
-            </Box>
-            <Box
-              sx={{
-                display: 'flex',
-                gap: 1,
-                fontFamily: typography.fontFamily,
-                fontSize: fontSize.xxs,
-                color: semanticColors.mutedText,
-              }}
-            >
-              <Box component="span" sx={{ color: colors.primary }}>
-                {spec.id}
-              </Box>
-              <Box component="span">·</Box>
-              <Box component="span">{spec.updated ? timeAgo(spec.updated) : 'no activity'}</Box>
-            </Box>
-          </Box>
-        ))}
-      </Box>
+      <SpecMatrix
+        searchText={searchText}
+        setSearchText={setSearchText}
+        showIncomplete={showIncomplete}
+        setShowIncomplete={setShowIncomplete}
+        showLowScores={showLowScores}
+        setShowLowScores={setShowLowScores}
+        missingLibrary={missingLibrary}
+        setMissingLibrary={setMissingLibrary}
+        filteredSpecs={filteredSpecs}
+        totalSpecs={data.total_specs}
+        sortCol={sortKey}
+        sortDir={sortDir}
+        handleSort={handleSort}
+      />
     </Box>
   );
 }
 
 // ============================================================================
-// Sortable header helpers
-// ============================================================================
-
-function FeedbackTopList({
-  title,
-  items,
-  accent,
-}: {
-  title: string;
-  items: FeedbackTopPage[];
-  accent: string;
-}) {
-  return (
-    <Box sx={{ border: '1px solid var(--rule)', borderRadius: 1, p: 1.5 }}>
-      <Typography
-        sx={{
-          fontFamily: typography.fontFamily,
-          fontSize: fontSize.xs,
-          fontWeight: 600,
-          color: 'var(--ink-soft)',
-          mb: 1,
-        }}
-      >
-        {title}
-      </Typography>
-      {items.length === 0 ? (
-        <Typography
-          sx={{
-            fontFamily: typography.fontFamily,
-            fontSize: fontSize.xxs,
-            color: semanticColors.mutedText,
-          }}
-        >
-          no entries yet
-        </Typography>
-      ) : (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-          {items.map(it => (
-            <Box
-              key={it.path}
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: '32px 1fr auto',
-                gap: 1,
-                alignItems: 'baseline',
-                py: 0.4,
-                borderBottom: '1px solid var(--rule)',
-                '&:last-of-type': { borderBottom: 'none' },
-              }}
-            >
-              <Typography
-                sx={{
-                  fontFamily: typography.fontFamily,
-                  fontSize: fontSize.xxs,
-                  color: accent,
-                  fontWeight: 600,
-                  textAlign: 'right',
-                }}
-              >
-                {it.count}
-              </Typography>
-              <Link
-                component={RouterLink}
-                to={it.path}
-                sx={{
-                  fontFamily: typography.fontFamily,
-                  fontSize: fontSize.xs,
-                  color: colors.primary,
-                  textDecoration: 'none',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  '&:hover': { textDecoration: 'underline' },
-                }}
-              >
-                {it.path}
-              </Link>
-              <Typography
-                sx={{
-                  fontFamily: typography.fontFamily,
-                  fontSize: fontSize.micro,
-                  color: semanticColors.mutedText,
-                }}
-              >
-                {it.last_seen ? timeAgo(it.last_seen) : ''}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-      )}
-    </Box>
-  );
-}
-
-function CopyClaudePromptButton({
-  message,
-  path,
-  reaction,
-}: {
-  message: string;
-  path: string | null;
-  reaction: string | null;
-}) {
-  const { copied, copyToClipboard } = useCopyCode();
-  return (
-    <Tooltip title={copied ? 'copied — paste into Claude Code' : 'copy prompt for Claude Code'}>
-      <IconButton
-        onClick={() => copyToClipboard(buildClaudePrompt(message, path, reaction))}
-        aria-label="Copy Claude Code prompt"
-        size="small"
-        sx={{
-          alignSelf: 'start',
-          color: copied ? colors.success : 'var(--ink-muted)',
-          border: '1px solid var(--rule)',
-          borderRadius: 1,
-          '&:hover': { bgcolor: 'var(--bg-surface)', color: colors.primary },
-        }}
-      >
-        {copied ? <CheckIcon fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
-      </IconButton>
-    </Tooltip>
-  );
-}
-
-function HeaderCell({ children, center }: { children: React.ReactNode; center?: boolean }) {
-  return (
-    <Typography
-      sx={{
-        fontFamily: typography.fontFamily,
-        fontSize: fontSize.xs,
-        fontWeight: 600,
-        color: 'var(--ink-soft)',
-        textAlign: center ? 'center' : 'left',
-      }}
-    >
-      {children}
-    </Typography>
-  );
-}
-
-function SortableHeader({
-  label,
-  active,
-  dir,
-  onClick,
-  center,
-}: {
-  label: string;
-  active: boolean;
-  dir: SortDir;
-  onClick: () => void;
-  center?: boolean;
-}) {
-  return (
-    <Box
-      component="button"
-      type="button"
-      onClick={onClick}
-      sx={{
-        background: 'none',
-        border: 'none',
-        p: 0,
-        cursor: 'pointer',
-        fontFamily: typography.fontFamily,
-        fontSize: fontSize.xs,
-        fontWeight: 600,
-        color: active ? colors.primary : 'var(--ink-soft)',
-        textAlign: center ? 'center' : 'left',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 0.25,
-        justifyContent: center ? 'center' : 'flex-start',
-        '&:hover': { color: colors.primaryDark },
-      }}
-    >
-      {label}
-      {active && (
-        <Box component="span" sx={{ fontSize: fontSize.micro }}>
-          {dir === 'asc' ? '▲' : '▼'}
-        </Box>
-      )}
-    </Box>
-  );
-}
