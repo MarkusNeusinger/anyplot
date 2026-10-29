@@ -113,6 +113,8 @@ class TestTable:
             "--history-file=no",
             "--compiled-modules=strict",
             "--heap-size-hint=1536M",
+            "-L",
+            commands.JULIA_WARMUP,
         )
         assert not any(
             flag.startswith("--compiled-modules=") and flag != "--compiled-modules=strict" for flag in julia.argv
@@ -132,6 +134,14 @@ class TestTable:
             "JULIA_PKG_PRECOMPILE_AUTO": "0",
         }
         assert "LD_PRELOAD" not in julia.env  # the harness hands the preload to the child alone
+
+    def test_julia_loads_the_precompile_workload_right_before_the_plot(self) -> None:
+        """J1.1: the workload's native code is used only while its package is loaded, so `-L` loads it before the
+        plot, which stays the program (`julia ... -L warmup.jl plot.jl`), from the toolchain's own directory."""
+        julia = command_for("julia", "makie")
+        assert julia.argv[-2:] == ("-L", commands.JULIA_WARMUP) and julia.argv.count("-L") == 1
+        assert commands.JULIA_WARMUP == "/opt/anyplot/toolchain/warmup.jl"
+        assert julia.code_flag == "" and julia.code_file == "plot.jl"
 
     def test_a_pair_outside_the_table_is_refused(self) -> None:
         with pytest.raises(ValueError, match="no runtime command"):
