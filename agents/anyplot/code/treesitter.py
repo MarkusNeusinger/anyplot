@@ -225,25 +225,6 @@ def walk(node: Node) -> Iterator[Node]:
         stack.extend(reversed(current.children))
 
 
-def ancestors(node: Node) -> Iterator[Node]:
-    """The nodes above `node`, nearest first."""
-    parent = node.parent
-    while parent is not None:
-        yield parent
-        parent = parent.parent
-
-
-def field_of(node: Node) -> str | None:
-    """The field name `node` has in its parent (`lhs`, `value`, `function`, ...), None at the root or for none."""
-    parent = node.parent
-    if parent is None:
-        return None
-    for index, child in enumerate(parent.children):
-        if child.id == node.id:
-            return parent.field_name_for_child(index)
-    return None
-
-
 @dataclass(frozen=True, slots=True)
 class Visit:
     """A node met by `visits`, with its parent and its field name in that parent (None for none)."""
