@@ -20,11 +20,13 @@ mechanical check, a short review. Three test rounds showed where that fails:
   Claude.
 - Almost every session asked for confirmation at least once, also with
   `interactive: false`. Hence the prompt rules in section 3.
-- Large refactors that must keep behaviour identical went badly: of the first
-  seven page-split variants to finish or fail, one rendered the page
-  unchanged; the others changed visible text, dropped sections, broke an
-  aria-label, or failed. They belong to `/gemini-task` or to Claude until a
-  stronger model runs in Jules.
+- Large refactors that must keep behaviour identical are expensive: of nine
+  page-split variants (three pages, best-of-3), three kept their page
+  unchanged, so DebugPage and MapPage got a usable split and PalettePage none.
+  The others changed visible text, dropped sections, broke an aria-label, or
+  failed, and steering all nine took many Claude turns. Such refactors go to
+  `/gemini-task` or to Claude; if one runs here, then only as best-of-3 with
+  the behaviour checks in section 4.
 
 So Jules takes mechanical, verifiable work: codemods, dependency migrations,
 tests for a module, lint and type findings, small fixes with a reproducer.
@@ -326,7 +328,7 @@ Monitor events Claude woke up for.
 |---|---|---|
 | Duplicate head tags, best-of-2 | 2 | both removed duplicates; the winner kept a fallback but lost the title in loading and error states, which Claude fixed (#12442) |
 | Flaky cancellation test | 3 (one stuck 70+ min) | a 2-line test change; root cause claimed, not reproduced (#12449) |
-| Split DebugPage, PalettePage, MapPage, best-of-3 each | 9 | 1 usable (DebugPage, identical HTML); others changed text, dropped sections, broke an aria-label, or failed |
+| Split DebugPage, PalettePage, MapPage, best-of-3 each | 9 | 3 kept their page unchanged: DebugPage (sections; identical jsdom HTML), MapPage (hooks first, 1,291 to 265 lines; and a second one that touched a shared hook against the rules). PalettePage none: dropped sections, string-sliced JSX, two sessions failed twice |
 
 Benchmark prompts for the next model: the session prompts of
 `7833155130236717733` (#9636), `18012900471928884410` (#9629), and the three
