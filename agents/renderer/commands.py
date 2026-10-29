@@ -15,12 +15,20 @@ sandbox with the probe harness in front:
 |---|---|---|
 | `python` | `plot.py` | `python -I -X disable-remote-debug harness.py plot.py`: the harness runs the plot in process, with the plot guard and the savefig probe |
 | `javascript` | `plot.js` (`plot.tsx` for MUI X) | `harness.py --exec -- node /opt/anyplot/js-render/render.mjs --library=<library> plot.js` |
-| `r` | `plot.R` | `harness.py --exec -- Rscript plot.R` |
+| `r` | `plot.R` | `harness.py --exec -- /opt/R/4.6.1/lib/R/bin/exec/R --no-echo --no-restore --no-save --file=plot.R` |
 | `julia` | `plot.jl` | `harness.py --exec -- julia --project=/opt/julia plot.jl` |
 
 In exec mode (`EXEC_FLAG`) the harness prints its start line, sets the resource limits
 and runs the language's own command as a child, so the launcher retry, the host
-watchdog and the kill path work for every language alike. A row also says which limits
+watchdog and the kill path work for every language alike. R runs its binary directly
+with the environment R's `bin/R` script would set (`R_ENV`), not `Rscript`, which starts
+that shell script, which starts the binary: under the exec filter (`exec_deny`) every
+start after the first is killed (step 2b of agentic/specs/261024-agent-all-libraries.md).
+A row with `exec_deny` gets `ANYPLOT_DENY_EXEC=required` while `RENDERER_EXEC_DENY` is
+`required` (`executor.sandbox_env`): a Python row's harness installs the filter itself,
+an exec-mode row's harness preloads it into the child (`harness.EXEC_DENY_PRELOAD`). The
+JavaScript row has it off: Node starts Chromium and Chromium starts its own processes,
+while the plot code runs in the page, which has no process API. A row also says which limits
 differ from the Python defaults: V8, Chromium and Julia's LLVM reserve address space far
 beyond their resident memory, so `RLIMIT_AS` is off for the JavaScript and Julia rows
 and for altair's Python row (vl-convert embeds V8); one Chromium render runs seven
@@ -91,6 +99,26 @@ JULIA_DEPOT = "/opt/julia-depot"
 """The precompiled depot; a sandbox stacks a writable `/tmp/depot` in front of it."""
 JULIA_CPU_TARGET = "generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(1)"
 """The CPU target the depot was precompiled for; the same value at run time, or Julia recompiles."""
+R_HOME = "/opt/R/4.6.1/lib/R"
+"""R's home in the toolchain image (Posit's build for Debian 13, agents/renderer/toolchain.Dockerfile)."""
+R_BINARY = f"{R_HOME}/bin/exec/R"
+"""R's own binary, which the row runs directly: `Rscript` and `bin/R` would each need another program start."""
+R_ENV: Mapping[str, str] = MappingProxyType(
+    {
+        "R_HOME": R_HOME,
+        "R_SHARE_DIR": f"{R_HOME}/share",
+        "R_INCLUDE_DIR": f"{R_HOME}/include",
+        "R_DOC_DIR": f"{R_HOME}/doc",
+        # Posit's layout puts libR.so on no system path (`etc/ldpaths`).
+        "LD_LIBRARY_PATH": f"{R_HOME}/lib",
+        # The sandbox sets no locale, and R, unlike Python, does not coerce C to UTF-8: ragg would draw non-ASCII
+        # labels wrong. The catalogue's runner renders under C.UTF-8 too.
+        "LANG": "C.UTF-8",
+        "XDG_CACHE_HOME": "/tmp",
+        "R_LIBS_USER": "/tmp/R",
+    }
+)
+"""What R's `bin/R` script would set before it starts the binary, plus the locale and the caches."""
 FONTCONFIG_FILE = "/opt/anyplot/fonts.conf"
 """The image's minimal fontconfig file (`agents/renderer/fonts.conf`: one font directory, no cache directory) for
 the fontconfig that lets-plot's native bridge links, which finds no configuration of its own in the image."""
@@ -107,8 +135,10 @@ class RuntimeCommand:
     language: Language
     code_file: str
     argv: tuple[str, ...]
-    """The language's command, run by the harness in exec mode with `code_file` appended; empty for Python,
-    whose plot the harness runs in process."""
+    """The language's command, run by the harness in exec mode with `code_flag` and `code_file` appended as one
+    argument; empty for Python, whose plot the harness runs in process."""
+    code_flag: str = ""
+    """What precedes the code file in its argument: `--file=` for R's binary, which takes no bare file name."""
     env: Mapping[str, str] = field(default_factory=lambda: MappingProxyType({}))
     """The row's own environment, after `ANYPLOT_THEME` and a Python row's matplotlib settings, whose values it may
     replace, and before `PATH`, `HOME` and the limit variables, which it never replaces (`executor.sandbox_env`)."""
@@ -124,6 +154,10 @@ class RuntimeCommand:
     """Whether the configured `RLIMIT_NPROC` applies; off where one render runs more tasks than its value."""
     render_p95_s: float = 15.0
     """Seconds a repair attempt's render is budgeted at (`pipeline.RENDER_P95_S` before 2026-10-24)."""
+    exec_deny: bool = True
+    """Whether the run needs the exec filter (`ANYPLOT_DENY_EXEC=required` while `RENDERER_EXEC_DENY` is
+    `required`): in the harness's process for an in-process row, preloaded into the child for an exec-mode row.
+    Off for the JavaScript row alone, whose Node and Chromium start their own processes."""
 
     def __post_init__(self) -> None:
         if self.rlimit_as_mb is not None and (not self.rlimit_as or self.rlimit_as_mb <= 0):
@@ -185,14 +219,18 @@ def _row(language: Language, library: str) -> RuntimeCommand:
             rlimit_as=False,
             rlimit_nproc=False,
             render_p95_s=20.0,
+            exec_deny=False,
         )
     if language == "r":
+        # The spike's renders (scatter, bar, heatmap) peaked at 294 MiB and passed under the Python defaults,
+        # RLIMIT_AS 1 GiB and RLIMIT_NPROC 64, as root and as an unprivileged user (2026-10-24).
         return RuntimeCommand(
             language,
             code_file,
-            ("Rscript",),
-            env=MappingProxyType({"XDG_CACHE_HOME": "/tmp", "R_LIBS_USER": "/tmp/R"}),
-            toolchain=("Rscript",),
+            (R_BINARY, "--no-echo", "--no-restore", "--no-save"),
+            code_flag="--file=",
+            env=R_ENV,
+            toolchain=(R_BINARY,),
         )
     return RuntimeCommand(
         language,

@@ -86,19 +86,23 @@ class TestCommand:
         assert values["ANYPLOT_RLIMIT_AS_MB"] == "1024" and values["ANYPLOT_RLIMIT_NPROC"] == "64"
         assert values["MPLCONFIGDIR"] == "/tmp/mpl" and values["ANYPLOT_MPL_SEED"] == "/opt/mplconfig"
 
-    def test_every_in_process_run_requires_the_exec_filter_and_the_switch_lifts_it(self) -> None:
-        """Renders of every Python row, data runs and conversions; an exec-mode row starts its toolchain with
-        `execve` and never arms a guard. `RENDERER_EXEC_DENY=optional` is the switch for a platform that stops
-        admitting the filter."""
+    def test_every_run_but_javascript_requires_the_exec_filter_and_the_switch_lifts_it(self) -> None:
+        """Renders of every Python row, data runs, conversions and the R and Julia rows (whose harness preloads the
+        filter into the child, since 2026-10-29); the JavaScript row has `exec_deny` off. `RENDERER_EXEC_DENY=
+        optional` is the switch for a platform that stops admitting the filter."""
         config = ExecutorConfig.from_settings(RendererSettings())
         assert config.exec_deny == "required" == RendererSettings().exec_deny
-        python = [library for library, language in LIBRARY_LANGUAGES.items() if language == "python"]
-        runs = [sandbox_env(config, "dark", 60, command=command_for("python", library)) for library in python]
+        filtered = [library for library, language in LIBRARY_LANGUAGES.items() if language != "javascript"]
+        runs = [
+            sandbox_env(config, "dark", 60, command=command_for(LIBRARY_LANGUAGES[library], library))
+            for library in filtered
+        ]
         runs += [sandbox_env(config, None, 20), sandbox_env(config, None, 10, convert=True)]
         assert all(run[EXEC_DENY_ENV] == "required" for run in runs)
-        assert EXEC_DENY_ENV not in sandbox_env(config, "dark", 60, command=command_for("r", "ggplot2"))
+        assert EXEC_DENY_ENV not in sandbox_env(config, "dark", 60, command=command_for("javascript", "d3"))
         optional = replace(config, exec_deny="optional")
         assert EXEC_DENY_ENV not in sandbox_env(optional, "dark", 60, command=command_for("python", "letsplot"))
+        assert EXEC_DENY_ENV not in sandbox_env(optional, "dark", 60, command=command_for("r", "ggplot2"))
         assert EXEC_DENY_ENV not in sandbox_env(optional, None, 20)
         assert ExecutorConfig.from_settings(RendererSettings(exec_deny="optional")).exec_deny == "optional"
 

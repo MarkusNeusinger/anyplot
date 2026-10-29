@@ -1,13 +1,11 @@
 #' anyplot.ai
 #' area-basic: Basic Area Chart
-#' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 90/100 | Created: 2026-05-28
+#' Library: ggplot2 4.0.3 | R 4.6.1
+#' Quality: 83/100 | Updated: 2026-10-29
 
 library(ggplot2)
 library(scales)
 library(ragg)
-
-set.seed(42)
 
 # --- Theme tokens -----------------------------------------------------------
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
@@ -22,63 +20,44 @@ IMPRINT_PALETTE <- c(
   "#AE3030", "#2ABCCD", "#954477", "#99B314"
 )
 
-# --- Data -------------------------------------------------------------------
+# Columns: set these to your table's column names
+DATE     <- "Date (2023)"        # role: x
+VISITORS <- "Daily visitors"     # role: y
+
+# Data: replace this block with your own table, for example df <- read.csv("visitors.csv", check.names = FALSE)
 # Daily website visitors (thousands) over 13 weeks starting Monday Jan 2 2023
+set.seed(42)
 days <- seq.Date(as.Date("2023-01-02"), by = "day", length.out = 91)
-day_num <- seq_along(days)
-day_of_week <- as.integer(format(days, "%u"))  # 1=Mon ... 7=Sun
-weekend <- day_of_week %in% c(6L, 7L)
+weekend <- as.integer(format(days, "%u")) >= 6L
+base_visitors <- 8.5 + 0.04 * seq_along(days)
+weekly_effect <- ifelse(weekend, -2.5, 0.8)
+visitors_k <- round(pmax(1, base_visitors + weekly_effect + rnorm(length(days), 0, 0.5)), 1)
 
-base_visitors  <- 8.5 + 0.04 * day_num
-weekly_effect  <- ifelse(weekend, -2.5, 0.8)
-noise          <- rnorm(91, 0, 0.5)
-visitors_k     <- round(pmax(1, base_visitors + weekly_effect + noise), 1)
+df <- tibble::tibble(
+  !!DATE     := days,
+  !!VISITORS := visitors_k
+)
 
-df <- data.frame(date = days, visitors = visitors_k)
-avg_visitors   <- mean(df$visitors)
-
-# --- Plot -------------------------------------------------------------------
+# Plot: reads only df and the constants above
 plot_title <- "area-basic · r · ggplot2 · anyplot.ai"
 
-p <- ggplot(df, aes(x = date, y = visitors)) +
-  # Period average reference — drawn first so area fill sits above it
-  geom_hline(
-    yintercept = avg_visitors,
-    color      = INK_SOFT,
-    linewidth  = 0.45,
-    linetype   = "dashed",
-    alpha      = 0.7
-  ) +
+p <- ggplot(df, aes(x = .data[[DATE]], y = .data[[VISITORS]])) +
   geom_area(fill = IMPRINT_PALETTE[1], alpha = FILL_ALPHA) +
   geom_line(color = IMPRINT_PALETTE[1], linewidth = 0.9) +
-  # Loess trend line — makes the underlying upward growth arc explicit
-  geom_smooth(
-    method    = "loess",
-    formula   = y ~ x,
-    se        = FALSE,
-    color     = INK_SOFT,
-    linewidth = 0.8,
-    linetype  = "solid",
-    span      = 0.65
-  ) +
   scale_x_date(date_labels = "%b %d", date_breaks = "2 weeks") +
   scale_y_continuous(
     labels = label_comma(suffix = "K", accuracy = 1),
     limits = c(0, NA),
     expand = expansion(mult = c(0, 0.08))
   ) +
-  labs(
-    title = plot_title,
-    x     = "Date (2023)",
-    y     = "Daily Visitors"
-  ) +
+  labs(title = plot_title, x = DATE, y = VISITORS) +
   theme_minimal(base_size = 8) +
   theme(
     plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background   = element_rect(fill = PAGE_BG, color = NA),
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_line(color = INK, linewidth = 0.2),
+    panel.grid.major.y = element_line(color = alpha(INK, 0.15), linewidth = 0.3),
     panel.grid.minor.y = element_blank(),
     panel.border       = element_blank(),
     axis.line.x        = element_line(color = INK_SOFT, linewidth = 0.4),

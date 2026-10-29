@@ -1,0 +1,17 @@
+# The R packages of the toolchain image (agents/renderer/toolchain.Dockerfile), one per line.
+# The same set as .github/actions/setup-r, which the catalogue pipeline renders with, plus readr,
+# which the agent's loader reads data.csv with (agentic/specs/261024-agent-all-libraries.md, step 2).
+# tests/unit/agents/renderer/test_toolchain.py fails when the two lists drift apart.
+ggplot2
+ragg
+tidyr
+dplyr
+viridis
+palmerpenguins
+gapminder
+tibble
+scales
+systemfonts
+textshaping
+patchwork
+readr

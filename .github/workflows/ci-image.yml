@@ -500,13 +500,26 @@ jobs:
   # itself. The event-shape handling is the API job's in short form.
   renderer-image:
     name: Build renderer image and render through the harness
+    # The job holds `id-token: write`, and PR code runs in it, so a PR Google Jules
+    # opened never runs here: Jules opens PRs only into feature/* branches, which
+    # this workflow does not cover, and this guards the one that lands on main by mistake.
+    if: github.event.pull_request.user.login != 'google-labs-jules[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      # The toolchain image (agents/renderer/toolchain.Dockerfile) lives in the private
+      # Artifact Registry repository; the job pulls it through Workload Identity
+      # Federation, whose principal has roles/artifactregistry.reader on it.
+      id-token: write
+    env:
+      # Empty where the job gets no secrets (Dependabot): it builds the toolchain itself.
+      WIF_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
     # A cold build installs pandas, numpy, matplotlib, seaborn, plotnine,
     # altair with vl-convert, pygal with cairosvg and lets-plot, plus libcairo
-    # from apt; 20 fails loudly instead of hanging on a slow package index.
-    timeout-minutes: 20
+    # from apt, and builds the toolchain (R and its packages, about 2 minutes)
+    # when its tag is missing; 25 fails loudly instead of hanging on a slow
+    # package index.
+    timeout-minutes: 25
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -571,9 +584,84 @@ jobs:
             echo "should_build=false" >> "$GITHUB_OUTPUT"
           fi
 
+      # network=host lets the builder reach the local registry a toolchain built in this
+      # job is pushed to (below).
       - name: Set up Buildx
         if: steps.check.outputs.should_build == 'true'
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069  # v4.4.1
+        with:
+          driver-opts: network=host
+
+      - name: Authenticate to GCP
+        id: gcp-auth
+        # No login for a PR by Dependabot or Google Jules, keyed on the PR author, which a
+        # re-run cannot change: the job then builds the toolchain itself without one.
+        if: >-
+          steps.check.outputs.should_build == 'true' && env.WIF_PROVIDER != '' &&
+          github.actor != 'dependabot[bot]' &&
+          !contains(fromJSON('["dependabot[bot]", "google-labs-jules[bot]"]'), github.event.pull_request.user.login)
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3
+        with:
+          project_id: anyplot
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+
+      - name: Set up Cloud SDK
+        if: steps.gcp-auth.outcome == 'success'
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db  # v3
+
+      # The renderer builds FROM the toolchain image of its inputs' hash
+      # (agents/renderer/toolchain.py), as the deploy does: pulled from Artifact
+      # Registry by digest when the tag exists, built here when it is missing (a
+      # PR that changes a toolchain input) or when the job has no login.
+      - name: Look up the toolchain image
+        id: toolchain
+        if: steps.check.outputs.should_build == 'true'
+        env:
+          LOGGED_IN: ${{ steps.gcp-auth.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          IMAGE=$(python3 agents/renderer/toolchain.py image)
+          echo "toolchain image: $IMAGE"
+          if [[ "$LOGGED_IN" == "true" ]]; then
+            gcloud auth configure-docker europe-west4-docker.pkg.dev --quiet
+            if DIGEST=$(docker buildx imagetools inspect "$IMAGE" --format '{{json .Manifest.Digest}}' 2>inspect.err); then
+              # The renderer's FROM takes the repository and the tag with its digest, as the deploy passes them.
+              {
+                echo "image=${IMAGE%:*}"
+                echo "tag=${IMAGE##*:}@$(tr -d '"' <<< "$DIGEST")"
+                echo "build=false"
+              } >> "$GITHUB_OUTPUT"
+              exit 0
+            elif grep -qiE 'not found|manifest unknown' inspect.err; then
+              echo "::notice::$IMAGE is not in Artifact Registry yet: building the toolchain in this job"
+            else
+              cat inspect.err
+              exit 1
+            fi
+          else
+            echo "::notice::no Artifact Registry login (no secrets): building the toolchain in this job"
+          fi
+          {
+            echo "image=localhost:5000/anyplot-toolchain"
+            echo "tag=ci"
+            echo "build=true"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Start a local registry for the toolchain
+        if: steps.toolchain.outputs.build == 'true'
+        run: docker run -d --name registry -p 5000:5000 registry:3
+
+      # Its own cache scope: the toolchain changes rarely and independently of the renderer.
+      - name: Build the toolchain image
+        if: steps.toolchain.outputs.build == 'true'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc  # v7.4.0
+        with:
+          context: .
+          file: agents/renderer/toolchain.Dockerfile
+          push: true
+          tags: ${{ steps.toolchain.outputs.image }}:${{ steps.toolchain.outputs.tag }}
+          cache-from: type=gha,scope=toolchain-image
+          cache-to: type=gha,mode=max,scope=toolchain-image
 
       # Its own cache scope, like the app image: no layer is shared with the API.
       - name: Build the renderer image
@@ -582,6 +670,9 @@ jobs:
         with:
           context: .
           file: agents/renderer/Dockerfile
+          build-args: |
+            TOOLCHAIN_IMAGE=${{ steps.toolchain.outputs.image }}
+            TOOLCHAIN_TAG=${{ steps.toolchain.outputs.tag }}
           push: false
           load: true
           tags: anyplot-renderer:ci
@@ -881,6 +972,70 @@ jobs:
           tail -n 1 work-letsplot/harness.out | grep -qF '"exec_deny": "on"' \
             || { echo "::error::the lets-plot render ran without the exec filter"; exit 1; }
 
+      # R (step 2 of agentic/specs/261024-agent-all-libraries.md) runs in exec mode: the harness
+      # starts R's binary with the command table's argv and environment and preloads the exec
+      # filter into it (harness.main_exec). The plot's own system() is killed by the filter, a
+      # non-ASCII title goes through ragg under the row's UTF-8 locale, and the end line must say
+      # the filter was on: the harness refuses (exit 3) a run whose filter did not report on.
+      - name: Render an R plot through the harness in exec mode
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p work-r
+          python3 - > work-r/row.flags <<'EOF'
+          from agents.renderer.commands import command_for
+
+          row = command_for("r", "ggplot2")
+          assert row.exec_deny, "the R row must run under the exec filter"
+          flags = [f"{key}={value}" for key, value in row.env.items()]
+          if row.rlimit_as:
+              flags.append(f"ANYPLOT_RLIMIT_AS_MB={row.rlimit_as_mb or 1024}")
+          for flag in flags:
+              print(f"-e\n{flag}")
+          EOF
+          python3 - > work-r/row.argv <<'EOF'
+          from agents.renderer.commands import command_for
+
+          row = command_for("r", "ggplot2")
+          print("\n".join([*row.argv, f"{row.code_flag}{row.code_file}"]))
+          EOF
+          mapfile -t ROW_FLAGS < work-r/row.flags
+          mapfile -t ROW_ARGV < work-r/row.argv
+          echo "the R row: ${ROW_ARGV[*]}"
+          printf 'x,y\na,1\nb,3\nc,2\n' > work-r/data.csv
+          cat > work-r/plot.R <<'EOF'
+          library(ggplot2)
+
+          THEME <- Sys.getenv("ANYPLOT_THEME", "light")
+          df <- readr::read_csv("data.csv", show_col_types = FALSE)
+          # Under the exec filter a started program dies before it runs: a status, never an output.
+          stopifnot(system("true") != 0)
+          plot <- ggplot(df, aes(x, y)) + geom_col() + labs(title = "Gr\u00f6\u00dfe \u2013 \u00dcberblick")
+          ggsave(sprintf("plot-%s.png", THEME), plot, device = ragg::agg_png, width = 16, height = 9, dpi = 200)
+          EOF
+          docker run --rm --network none --read-only --tmpfs /tmp \
+            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+            -v "$PWD/work-r:/work" -w /work \
+            -e ANYPLOT_THEME=light "${ROW_FLAGS[@]}" \
+            -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+            -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_DENY_EXEC=required \
+            anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py \
+            --exec -- "${ROW_ARGV[@]}" \
+            > work-r/harness.out 2> work-r/harness.err \
+            || { echo "::error::the R render failed"; cat work-r/harness.out work-r/harness.err; exit 1; }
+          grep -qxF 'HARNESS {"event": "start"}' work-r/harness.out || { echo "::error::no HARNESS start line"; cat work-r/harness.out; exit 1; }
+          tail -n 1 work-r/harness.out | grep -qF '"exec_deny": "on"' \
+            || { echo "::error::the R render ran without the exec filter"; cat work-r/harness.out work-r/harness.err; exit 1; }
+          python3 - <<'EOF'
+          import struct
+          png = open("work-r/plot-light.png", "rb").read()
+          assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
+          width, height = struct.unpack(">II", png[16:24])
+          assert (width, height) == (3200, 1800), (width, height)
+          print(f"OK: R plot-light.png {width}x{height}, {len(png)} bytes")
+          EOF
+          tail -n 1 work-r/harness.out
+
       # Native code the audit hook cannot see finds no program to run. lets-plot's bridge links
       # ImageMagick with a compiled-in delegate map that runs programs by name through /bin/sh
       # (gs, curl, soffice, ffmpeg, rsvg-convert, inkscape and the rest that
@@ -1137,6 +1292,13 @@ jobs:
         uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387  # v3.5.0
         with:
           dockerfile: agents/renderer/Dockerfile
+          failure-threshold: warning
+
+      - name: Hadolint (agents/renderer/toolchain.Dockerfile)
+        if: steps.check.outputs.should_build == 'true'
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387  # v3.5.0
+        with:
+          dockerfile: agents/renderer/toolchain.Dockerfile
           failure-threshold: warning
 
       - name: Skip notice

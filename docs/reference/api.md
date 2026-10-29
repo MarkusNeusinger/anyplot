@@ -482,7 +482,7 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 
 | Route | Request | Response |
 |---|---|---|
-| `GET /status` | None | The service's `{libraries, model, location, version, provider, waiting, in_flight}` plus `"enabled": true`; `waiting` counts the turns in the agents service's run queue and `in_flight` the runs it is running |
+| `GET /status` | None | The service's `{libraries, model, location, version, provider, waiting, in_flight, user_max_runs}` plus `"enabled": true`; `waiting` counts the turns in the agents service's run queue, `in_flight` the runs it is running, and `user_max_runs` is how many sandbox runs one user may have queued or running at once (`AGENT_USER_MAX_RUNS`) |
 | `GET /eligibility?spec=&library=` | Spec id and library id | The agents service's answer, passed through |
 | `POST /sessions` | `{spec_id, library, locale}` | `{session_id, eligibility}`; `404 not_found` when the spec has no implementation for the library |
 | `POST /sessions/{sid}/library` | `{spec_id, library}` | Switches the library; the dataset and bindings stay |
