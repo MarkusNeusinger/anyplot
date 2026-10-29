@@ -56,10 +56,11 @@ he asks) and write his decisions into the brief. Examples:
 - changes whose only verification is a live deploy.
 
 **Cut large work into packages.** A package changes at most 20 to 25 files, or
-takes about two hours, and gets its own brief and a fresh agy session. On
-2026-10-24 Gemini kept a code convention for about 22 files of a long session
-and then silently dropped it for 76 more, while every render still passed; a
-fresh session per package fixed it. Acceptance names a mechanical check for
+takes about two hours, and gets its own brief and a fresh agent: an agy
+subagent, which starts without the coordinator's conversation. On 2026-10-24
+Gemini kept a code convention for about 22 files of a long session and then
+silently dropped it for 76 more, while every render still passed; a fresh
+session per package fixed it. Acceptance names a mechanical check for
 every convention the package must keep (a `grep` that must find nothing), so
 the drift fails locally. A task ends in one draft PR on `gemini/<slug>`, however
 many packages it has (owner, 2026-10-30: every PR costs a Copilot round, a
@@ -67,8 +68,9 @@ changelog fragment, CI, a merge, and a deploy). Packages that touch disjoint
 files are `independent`: Gemini works them in parallel, each on its own
 package branch `gemini/<slug>-<k>`, and merges them into `gemini/<slug>`
 (section 2, step 1). Packages that build on each other are `coupled`: Gemini
-works them one after another on `gemini/<slug>` and pushes after each. Write
-every package's brief up front, so one start line covers the whole task.
+works them one after another on `gemini/<slug>`, one fresh subagent each, and
+pushes after each. Write every package's brief up front, so one start line
+covers the whole task.
 
 **Write the brief** in English and in Google style.
 
@@ -117,7 +119,7 @@ every package's brief up front, so one start line covers the whole task.
 ```markdown
 # <imperative summary>
 
-Branch `gemini/<slug>` · package <k> of <n> · independent | coupled
+Branch `gemini/<slug>-<k>` (independent) | `gemini/<slug>` (coupled, or a single package) · package <k> of <n>
 
 ## Goal
 One paragraph: the outcome, and why.
@@ -216,9 +218,11 @@ sed "s|/home/<user>|$HOME|g" ~/projects/anyplot-agy/.claude/skills/gemini-task/a
   | jq -s '.[0] * .[1]' "$f" - > "$f.new" && mv "$f.new" "$f"
 ```
 
-Then, for each package in a fresh session, he runs `agy-work` and types the
-start line. `/gemini-task` without an argument lists the open briefs and
-issues.
+Then he runs `agy-work` and types the start line, once per task: that session
+is the coordinator and starts the package agents itself. Only if it ends
+before the task does, he starts a new session with the same line, and Gemini
+resumes from the branches (section 2, step 2). `/gemini-task` without an
+argument lists the open briefs and issues.
 
 ## 2. Gemini: work the task
 
@@ -228,7 +232,8 @@ This section is for the Gemini agent in the owner's agy session.
    - **A slug** is a brief: `cat ~/projects/anyplot-briefs/<slug>.md` (a shell
      read works even where your file tools stay inside the workspace). When no
      such file exists, the slug names a task in packages:
-     `ls ~/projects/anyplot-briefs/<slug>-*.md`, and read each. Never edit,
+     `ls ~/projects/anyplot-briefs/<slug>-[0-9]*.md` (the digit keeps
+     another task's `<slug>-other.md` out), and read each. Never edit,
      move, or delete a brief.
    - **A number** is an issue: `gh issue view <number> --json title,body`
      (without `--json` it fails on this repository: Projects classic), and only
@@ -245,12 +250,14 @@ This section is for the Gemini agent in the owner's agy session.
    else.
 
    **Scale out when there is work for several agents (owner, 2026-10-30).**
-   When two or more open packages of the task say `independent`, you are the
-   coordinator: start one subagent per package (`invoke_subagent`), at most
-   eight at a time, the next one as a slot frees up (owner, 2026-10-30: he
-   says when the quota runs short). Work coupled packages yourself, one after
-   another, as below.
-   - Give each subagent an isolated Git worktree (the `branch` workspace
+   For a task in packages you are the coordinator. Independent packages: one
+   subagent each (`invoke_subagent`), at most eight at a time, the next one as
+   a slot frees up (owner, 2026-10-30: he says when the quota runs short).
+   Coupled packages: one subagent at a time in your own workspace (the
+   `inherit` mode), each on `gemini/<slug>` and pushing before it ends, so
+   every package still starts fresh. A single package you work yourself, as
+   below.
+   - Give each independent package's subagent an isolated Git worktree (the `branch` workspace
      mode), write access, and the shell. If your agy version cannot isolate a
      subagent in its own worktree, do not run packages in parallel in the
      shared clone: two agents there overwrite each other's files and Git
@@ -493,7 +500,7 @@ This section is for the Gemini agent in the owner's agy session.
 6. **Clean up.** After the merge, remove your worktree and the local branch,
    as `/open-pr` §4 describes; GitHub has already deleted the remote branch.
    Delete the brief (`rm -f ~/projects/anyplot-briefs/<slug>.md`, or every
-   `<slug>-*.md` of a task in packages); the merged PR keeps its copy. Delete
+   `<slug>-[0-9]*.md` of a task in packages); the merged PR keeps its copy. Delete
    the package branches the merge left behind:
    `git push origin --delete gemini/<slug>-1 gemini/<slug>-2 …`. The branch in
    the owner's clone
