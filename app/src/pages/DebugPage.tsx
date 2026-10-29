@@ -426,6 +426,7 @@ export function DebugPage() {
   if (authRequired) {
     return (
       <Box sx={{ py: 4, maxWidth: 420, mx: 'auto' }}>
+        <title>debug | anyplot.ai</title>
         <SectionHeader prompt="❯" title={<em>debug · admin auth</em>} />
         <Typography
           sx={{
@@ -495,6 +496,7 @@ export function DebugPage() {
   if (loading) {
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
+        <title>debug | anyplot.ai</title>
         <Typography sx={{ fontFamily: typography.fontFamily, color: semanticColors.mutedText }}>
           loading debug data...
         </Typography>
@@ -505,6 +507,7 @@ export function DebugPage() {
   if (error || !data) {
     return (
       <Box sx={{ py: 4, textAlign: 'center' }}>
+        <title>debug | anyplot.ai</title>
         <Typography sx={{ fontFamily: typography.fontFamily, color: colors.error }}>
           failed to load{error ? `: ${error}` : ''}
         </Typography>
@@ -541,6 +544,7 @@ export function DebugPage() {
 
   return (
     <Box sx={{ pt: { xs: 2, md: 3 }, pb: 4 }}>
+      <title>debug | anyplot.ai</title>
       {/* Header */}
       <SectionHeader prompt="❯" title={<em>debug</em>} />
 
