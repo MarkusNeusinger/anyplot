@@ -84,3 +84,89 @@ CATALOGUE_NORMALISED = source("""
     ax.set_title("", color=INK)
     plt.savefig(f"plot-{THEME}.png", dpi=200, facecolor=PAGE_BG)
 """)
+
+# A ggplot2 catalogue file in miniature: roxygen header, theme block, palette, column
+# constants, the Data and Plot markers, synthetic data, the title and a 4800x2700 save.
+R_CATALOGUE = source("""
+    #' anyplot.ai
+    #' scatter-demo: Demo Scatter
+    #' Library: ggplot2 4.0.3 | R 4.6.1
+    #' Quality: 90/100 | Updated: 2026-10-29
+
+    library(ggplot2)
+    library(ragg)
+
+    # Theme tokens
+    THEME    <- Sys.getenv("ANYPLOT_THEME", "light")
+    PAGE_BG  <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+    INK      <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
+    ALPHA    <- if (THEME == "light") 0.4 else 0.6
+    IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                         "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+    # Columns: set these to your table's column names
+    SPEND   <- "Spend (k USD)"    # role: x
+    REVENUE <- "Revenue (k USD)"  # role: y
+
+    # Data: replace this block with your own table
+    set.seed(42)
+    df <- tibble::tibble(!!SPEND := runif(50, 5, 150), !!REVENUE := rnorm(50, 300, 40))
+
+    # Plot: reads only df and the constants above
+    p <- ggplot(df, aes(x = .data[[SPEND]], y = .data[[REVENUE]])) +
+      geom_point(color = IMPRINT_PALETTE[1], alpha = ALPHA) +
+      labs(title = "scatter-demo · r · ggplot2 · anyplot.ai", x = SPEND, y = REVENUE) +
+      theme_minimal(base_size = 8) +
+      theme(plot.background = element_rect(fill = PAGE_BG, color = PAGE_BG))
+
+    # Save
+    ggsave(
+      filename = sprintf("plot-%s.png", THEME),
+      plot     = p,
+      device   = ragg::agg_png,
+      width    = 16,
+      height   = 9,
+      units    = "in",
+      dpi      = 300
+    )
+""")
+
+# The same file after normalisation: header and title gone, dpi 200.
+R_CATALOGUE_NORMALISED = source("""
+    library(ggplot2)
+    library(ragg)
+
+    # Theme tokens
+    THEME    <- Sys.getenv("ANYPLOT_THEME", "light")
+    PAGE_BG  <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+    INK      <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
+    ALPHA    <- if (THEME == "light") 0.4 else 0.6
+    IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
+                         "#AE3030", "#2ABCCD", "#954477", "#99B314")
+
+    # Columns: set these to your table's column names
+    SPEND   <- "Spend (k USD)"    # role: x
+    REVENUE <- "Revenue (k USD)"  # role: y
+
+    # Data: replace this block with your own table
+    set.seed(42)
+    df <- tibble::tibble(!!SPEND := runif(50, 5, 150), !!REVENUE := rnorm(50, 300, 40))
+
+    # Plot: reads only df and the constants above
+    p <- ggplot(df, aes(x = .data[[SPEND]], y = .data[[REVENUE]])) +
+      geom_point(color = IMPRINT_PALETTE[1], alpha = ALPHA) +
+      labs(title = "", x = SPEND, y = REVENUE) +
+      theme_minimal(base_size = 8) +
+      theme(plot.background = element_rect(fill = PAGE_BG, color = PAGE_BG))
+
+    # Save
+    ggsave(
+      filename = sprintf("plot-%s.png", THEME),
+      plot     = p,
+      device   = ragg::agg_png,
+      width    = 16,
+      height   = 9,
+      units    = "in",
+      dpi      = 200
+    )
+""")

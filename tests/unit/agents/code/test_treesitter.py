@@ -3,6 +3,7 @@
 import ast
 import tomllib
 from importlib.metadata import version
+from typing import cast
 
 import pytest
 
@@ -37,7 +38,7 @@ def test_versions_are_pinned_in_the_agents_extra_and_installed() -> None:
 def test_only_the_served_grammars_load() -> None:
     assert treesitter.language("r") is treesitter.language("r")
     with pytest.raises(ValueError, match="no tree-sitter grammar"):
-        treesitter.language("python")  # type: ignore[arg-type]
+        treesitter.language(cast(treesitter.Grammar, "python"))
 
 
 def test_the_catalogue_has_325_r_files() -> None:
@@ -212,3 +213,20 @@ def test_module_imports_only_the_standard_library_and_tree_sitter() -> None:
         "tree_sitter",
         "tree_sitter_language_pack",
     }
+
+
+def test_no_module_reads_a_points_row_or_column_attribute() -> None:
+    """tree-sitter 0.26.0's `Point.row` and `.column` free an int past 256 under Python 3.14 (segfault at the next
+    collection, 2026-10-29); the modules index the point (`first_line`, `last_line`, `column`)."""
+    paths = [
+        REPO_ROOT / "agents/anyplot/code/treesitter.py",
+        *(REPO_ROOT / "agents/anyplot/code/profiles").rglob("*.py"),
+    ]
+    found = [
+        f"{path.name}:{node.lineno}"
+        for path in paths
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8")))
+        if isinstance(node, ast.Attribute) and node.attr in ("row", "column")
+    ]
+
+    assert found == []

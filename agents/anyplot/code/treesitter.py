@@ -30,6 +30,13 @@ The module has three layers, and only the last one knows a grammar's node names:
 This module imports only the standard library and tree-sitter (2026-10-29): the R region
 and readiness detection built on it is meant to move to `core/` later, so the regen
 gate's adapt route can run the same R checks as the agent.
+
+A point's `.row` and `.column` are never read (`first_line`, `last_line` and `column`
+index the point instead). Under Python 3.14 the attribute getters of tree-sitter
+0.26.0's `Point` hand out an int it does not own: `node.start_point.row` past 256 (the
+interpreter's cached small ints) frees the int while it is in use, and the process
+segfaults at the next garbage collection (found on 2026-10-29 with the catalogue's
+line 271; `point[0]` is safe). A test refuses the attribute form in this package.
 """
 
 import bisect
@@ -65,6 +72,21 @@ def language(grammar: Grammar) -> Language:
 def parse(code: str, grammar: Grammar) -> Tree:
     """`code` parsed as `grammar`. tree-sitter never fails: unreadable code shows as ERROR and MISSING nodes."""
     return Parser(language(grammar)).parse(code.encode("utf-8"))
+
+
+def first_line(node: Node) -> int:
+    """The 1-based line `node` starts on (the module docstring says why the point is indexed)."""
+    return node.start_point[0] + 1
+
+
+def last_line(node: Node) -> int:
+    """The 1-based line `node` ends on."""
+    return node.end_point[0] + 1
+
+
+def column(node: Node) -> int:
+    """The UTF-8 byte column `node` starts at; 0 for a node at the start of its line."""
+    return node.start_point[1]
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,13 +176,11 @@ class Source:
 
     def node_span(self, node: Node) -> Span:
         """The exact characters of `node`."""
-        return Span(
-            node.start_point.row + 1, node.end_point.row + 1, self.char(node.start_byte), self.char(node.end_byte)
-        )
+        return Span(first_line(node), last_line(node), self.char(node.start_byte), self.char(node.end_byte))
 
     def lines_span(self, node: Node) -> Span:
         """The whole lines of `node`, newline of its last line included."""
-        first, last = node.start_point.row + 1, node.end_point.row + 1
+        first, last = first_line(node), last_line(node)
         return Span(first, last, self.line_start(first), self.line_end(last))
 
 
@@ -188,9 +208,9 @@ def syntax_problems(tree: Tree, limit: int = MAX_SYNTAX_PROBLEMS) -> list[Syntax
     while stack and len(problems) < limit:
         node = stack.pop()
         if node.is_missing:
-            problems.append(SyntaxProblem(node.start_point.row + 1, node.type))
+            problems.append(SyntaxProblem(first_line(node), node.type))
         elif node.is_error:
-            problems.append(SyntaxProblem(node.start_point.row + 1))
+            problems.append(SyntaxProblem(first_line(node)))
         else:
             stack.extend(reversed([child for child in node.children if child.has_error or child.is_missing]))
     return problems
@@ -222,6 +242,33 @@ def field_of(node: Node) -> str | None:
         if child.id == node.id:
             return parent.field_name_for_child(index)
     return None
+
+
+@dataclass(frozen=True, slots=True)
+class Visit:
+    """A node met by `visits`, with its parent and its field name in that parent (None for none)."""
+
+    node: Node
+    parent: Node | None
+    field: str | None
+
+
+def visits(root: Node) -> Iterator[Visit]:
+    """Every node below and including `root` in source order, with its parent and field, without recursion.
+
+    The rules of a profile ask where a node stands (an argument's name or its value, the
+    callee of a call, the right side of `$`), and `Node.parent` walks down from the root
+    on every call, so one pass hands the context along instead.
+    """
+    stack: list[Visit] = [Visit(root, None, None)]
+    while stack:
+        visit = stack.pop()
+        yield visit
+        node = visit.node
+        children = node.children
+        stack.extend(
+            Visit(children[index], node, node.field_name_for_child(index)) for index in reversed(range(len(children)))
+        )
 
 
 def statements(root: Node) -> list[Node]:
@@ -529,22 +576,67 @@ def r_operator(source: Source, node: Node) -> str | None:
 
 def r_number(source: Source, node: Node) -> float | None:
     """The value of a numeric literal (`3`, `4.5`, `1e3`, `0x10`, `2L`), a signed one, or None."""
+    sign = 1.0
     node = r_unwrap(node)
-    if node.type == "unary_operator":
+    while node.type == "unary_operator":
         operator = r_operator(source, node)
         operand = node.child_by_field_name("rhs")
-        if operator in ("-", "+") and operand is not None:
-            value = r_number(source, operand)
-            if value is None:
-                return None
-            return -value if operator == "-" else value
-        return None
+        if operator not in ("-", "+") or operand is None:
+            return None
+        sign = -sign if operator == "-" else sign
+        node = r_unwrap(operand)
     if node.type not in ("float", "integer"):
         return None
     text = source.text(node).rstrip("L")
     try:
-        if text.lower().startswith("0x"):
-            return float(int(text, 16))
-        return float(text)
+        value = float(int(text, 16)) if text.lower().startswith("0x") else float(text)
     except ValueError:
         return None
+    return sign * value
+
+
+def r_is_lookup(visit: Visit) -> bool:
+    """Whether an `identifier` reads a variable or function: not an argument's or a parameter's name, not the
+    field after `$` or `@`, not a side of `pkg::name`, and not the plain target of an assignment or a `for`."""
+    parent, field = visit.parent, visit.field
+    if visit.node.type != "identifier" or parent is None:
+        return False
+    if parent.type in ("argument", "parameter") and field == "name":
+        return False
+    if parent.type == "extract_operator" and field == "rhs":
+        return False
+    if parent.type == "namespace_operator":
+        return False
+    if parent.type == "for_statement" and field == "variable":
+        return False
+    if parent.type == "binary_operator":
+        operator = parent.child_by_field_name("operator")
+        text = operator.type if operator is not None else ""
+        if text in R_LEFT_ASSIGNMENTS and field == "lhs":
+            return False
+        if text in R_ASSIGNMENTS - R_LEFT_ASSIGNMENTS and field == "rhs":
+            return False
+    return True
+
+
+def r_bindings(source: Source, root: Node) -> list[tuple[str, Node]]:
+    """Every place below `root` that binds a name: an assignment (any of the five operators, replacement forms by
+    their root name), a function parameter and a `for` variable; `(name, node)` in source order."""
+    found: list[tuple[str, Node]] = []
+    for visit in visits(root):
+        node = visit.node
+        if node.type == "binary_operator":
+            assignment = r_assignment(source, node)
+            if assignment is not None and assignment.name is not None:
+                found.append((assignment.name, node))
+        elif node.type == "parameter":
+            name = node.child_by_field_name("name")
+            text = r_identifier(source, name) if name is not None else None
+            if text is not None:
+                found.append((text, node))
+        elif node.type == "for_statement":
+            variable = node.child_by_field_name("variable")
+            text = r_identifier(source, variable) if variable is not None else None
+            if text is not None:
+                found.append((text, node))
+    return found
