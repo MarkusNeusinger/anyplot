@@ -31,11 +31,13 @@
 
 ### Security
 
-- **Jules PRs run CI without secrets.** A PR opened by
-  `google-labs-jules[bot]` now takes the Dependabot path in `ci-tests.yml`
-  (no GCP login, no Cloud SQL proxy, no database password, no e2e, no Codecov
-  token) and builds without the Artifact Registry login in `ci-image.yml`.
-  Before, a Jules PR ran its tests with production database access the moment
-  it opened, before anyone had read the code. The check uses the PR author,
-  because `github.actor` on Jules branches is often the repository owner.
-  (#12429)
+- **Jules and Dependabot PRs run CI without secrets or an OIDC token.**
+  `ci-tests.yml` splits into `Run Tests` (unit and integration, no
+  `id-token` permission, every author) and `Run E2E Tests`, the only job that
+  logs in to GCP, starts the Cloud SQL proxy, and holds the database password;
+  it runs after `Run Tests` and skips PRs by `dependabot[bot]` and
+  `google-labs-jules[bot]`. `ci-image.yml`'s `renderer-image` skips Jules PRs,
+  and Jules opens PRs only into `feature/*`. Before, a Jules PR ran its tests
+  with production database access the moment it opened. Every condition uses
+  the PR author, because `github.actor` on Jules branches is often the
+  repository owner and a re-run can change it. (#12429)

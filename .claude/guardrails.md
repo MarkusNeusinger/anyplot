@@ -55,21 +55,37 @@ owner cannot read each one. So Claude merges the sub-PRs Jules opens into a
 reviews once, when that branch goes to `main`. Since 2026-10-29 `ci-lint` and
 `ci-tests` also run on pull requests into `feature/**`, so each sub-PR is
 linted and tested before Claude merges it; image builds, migrations, CodeQL,
-and the changelog check stay on PRs into `main`. Copilot's ruleset covers only
+and the changelog check stay on PRs into `main`. Jules never opens a PR into
+`main`, not even for a single task (owner, 2026-10-29), so the final PR into
+`main` is always one Claude opens. Copilot's ruleset covers only
 PRs into `main`, so the sub-PRs cost no Copilot round.
 
-**Jules PRs run CI without secrets (2026-10-29).** The Fable second opinion
+**Jules PRs run CI without secrets or an OIDC token (2026-10-29).** The Fable second opinion
 on the lane found that `ci-tests.yml` logged in to GCP, started the Cloud SQL
 proxy, and put the database password into the environment for every PR author
 but Dependabot. A Jules PR therefore ran its tests with production database
 access the moment it opened, before Claude had read a line, and Jules reads a
-public repository where an issue can carry a prompt injection. Jules PRs now
-take the Dependabot path: unit and integration tests without a login, no e2e,
-no Codecov token; `ci-image.yml` builds without the Artifact Registry login.
-The condition is the PR author (`google-labs-jules[bot]`), not `github.actor`:
-on Jules branches most runs showed the repository owner as the actor. The
-credentialed e2e run happens on the push Claude's merge makes, after the diff
-was read.
+public repository where an issue can carry a prompt injection.
+
+Skipping the login steps was not enough, as Copilot's review of #12429
+pointed out: a job with `id-token: write` lets any code in it mint a GitHub
+OIDC token and trade it at the Workload Identity provider itself. So the fix
+moves the permission, not just the steps:
+
+- `ci-tests.yml` runs unit and integration tests in `Run Tests`, which has no
+  `id-token` permission, for every author. Every GCP step (login, Cloud SQL
+  proxy, database password, e2e tests) sits in a separate `Run E2E Tests` job
+  that runs after it, and only when the PR author is neither Dependabot nor
+  Jules. The Codecov token is withheld from both untrusted authors too.
+- `ci-image.yml`'s `renderer-image`, the only other job with `id-token`, never
+  runs for a Jules PR, and its Artifact Registry login skips Dependabot PRs.
+- Jules opens PRs only into `feature/*`, which `ci-image.yml` does not cover.
+  The renderer guard protects against the one that lands on `main` by mistake.
+
+Every condition uses the PR author, not `github.actor`: on Jules branches most
+runs showed the repository owner as the actor, and a re-run can change who
+triggered it. A Jules change gets its e2e run on the push Claude's merge
+makes and on the PR into `main`, both after the diff was read.
 
 **Gemini 3 Pro against Flash in Jules (2026-10-28).** The same two prompts
 (#9636, a three-file dedup; #9629, a 29-file migration) ran on both. Flash

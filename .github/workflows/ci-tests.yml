@@ -29,20 +29,25 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Authors whose code runs here before anyone has read it get no GCP login, no
-  # Cloud SQL proxy, no database password, and no Codecov token, only unit and
-  # integration tests: Dependabot, and Google Jules (`/jules-task`), whose PRs
-  # open straight from its cloud session. The PR author is the reliable signal;
-  # `github.actor` on a Jules branch is often the repository owner.
-  UNTRUSTED_AUTHOR: ${{ github.actor == 'dependabot[bot]' || github.event.pull_request.user.login == 'google-labs-jules[bot]' }}
+  # Authors whose code runs here before anyone has read it get no Codecov token,
+  # and the e2e job, the only one that can reach GCP, skips them: Dependabot, and
+  # Google Jules (`/jules-task`), whose PRs open straight from its cloud session.
+  # The PR author is the reliable signal: `github.actor` on a Jules branch is
+  # often the repository owner, and a re-run can change who triggered it.
+  # test-e2e repeats this expression, because a job-level `if` cannot read `env`.
+  UNTRUSTED_AUTHOR: ${{ github.actor == 'dependabot[bot]' || contains(fromJSON('["dependabot[bot]", "google-labs-jules[bot]"]'), github.event.pull_request.user.login) }}
 
 jobs:
+  # No `id-token: write` here: unread PR code runs in this job, and with that
+  # permission it could mint a GitHub OIDC token and trade it at the Workload
+  # Identity provider for GCP access. Everything that needs GCP is in test-e2e.
   test:
     name: Run Tests
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write  # Required for Workload Identity Federation
+    outputs:
+      should_test: ${{ steps.check.outputs.should_test }}
 
     env:
       ENVIRONMENT: test
@@ -143,21 +148,76 @@ jobs:
       if: steps.check.outputs.should_test == 'true'
       run: uv sync --extra test --extra agents
 
-    # Dependabot PRs run from forks and cannot access repository secrets, and
-    # Jules PRs carry code nobody has read yet (UNTRUSTED_AUTHOR), so both skip
-    # GCP auth + Cloud SQL Proxy + Codecov upload. Only unit and integration
-    # tests run for them (no e2e — those need real Postgres); a Jules change
-    # gets e2e on the push its merge makes.
+    # Unit tests (mocked dependencies) and integration tests (SQLite in memory)
+    # for every author; the e2e tests against real PostgreSQL are in test-e2e.
+    - name: Run unit + integration tests with coverage
+      if: steps.check.outputs.should_test == 'true'
+      run: |
+        uv run pytest tests/unit tests/integration \
+          -v --tb=short \
+          -n 4 --dist worksteal --durations=25 \
+          --cov=core --cov=api --cov=automation --cov=agentic/workflows/modules --cov=agents \
+          --cov-report=term-missing \
+          --cov-report=xml
+
+    - name: Upload coverage to GitHub Artifacts
+      if: steps.check.outputs.should_test == 'true' && env.UNTRUSTED_AUTHOR != 'true' && always()
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
+      with:
+        name: coverage-report
+        path: coverage.xml
+        retention-days: 30
+
+    - name: Upload coverage to Codecov
+      if: steps.check.outputs.should_test == 'true' && env.UNTRUSTED_AUTHOR != 'true'
+      uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5  # v7.1.1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.xml
+        flags: backend
+        fail_ci_if_error: false
+
+    - name: Skip notice
+      if: steps.check.outputs.should_test == 'false'
+      run: echo "::notice::Tests skipped - no testable Python changes (only plots/ or non-Python files); the spec characteristic-section check still ran"
+
+  # The only job that can reach GCP: it logs in through Workload Identity
+  # Federation, starts the Cloud SQL proxy, and runs the e2e tests against real
+  # PostgreSQL (a separate 'test' database). It runs after test, and only for
+  # authors whose code has been read (UNTRUSTED_AUTHOR at the top, repeated here
+  # because a job-level `if` cannot read `env`). A Jules change gets it on the
+  # push its merge makes, and on the PR into main.
+  test-e2e:
+    name: Run E2E Tests
+    needs: test
+    if: >-
+      needs.test.outputs.should_test == 'true' &&
+      github.actor != 'dependabot[bot]' &&
+      !contains(fromJSON('["dependabot[bot]", "google-labs-jules[bot]"]'), github.event.pull_request.user.login)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # Required for Workload Identity Federation
+
+    env:
+      ENVIRONMENT: test
+
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
+
+    - name: Install dependencies
+      run: uv sync --extra test --extra agents
 
     - name: Authenticate to GCP
-      if: steps.check.outputs.should_test == 'true' && env.UNTRUSTED_AUTHOR != 'true'
       uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3
       with:
         project_id: anyplot
         workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
 
     - name: Start Cloud SQL Proxy
-      if: steps.check.outputs.should_test == 'true' && env.UNTRUSTED_AUTHOR != 'true'
       run: |
         # Download Cloud SQL Proxy
         curl -o cloud-sql-proxy https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.3/cloud-sql-proxy.linux.amd64
@@ -180,45 +240,21 @@ jobs:
         # Set DATABASE_URL for tests
         echo "DATABASE_URL=postgresql+asyncpg://${{ secrets.DB_USER }}:${{ secrets.DB_PASS }}@localhost:5432/${{ secrets.DB_NAME }}" >> $GITHUB_ENV
 
-    - name: Run all tests with coverage
-      if: steps.check.outputs.should_test == 'true' && env.UNTRUSTED_AUTHOR != 'true'
+    - name: Run e2e tests with coverage
       run: |
-        uv run pytest tests/unit tests/integration tests/e2e \
-          -v --tb=short \
-          -n 4 --dist worksteal --durations=25 \
+        uv run pytest tests/e2e \
+          -v --tb=short --durations=25 \
           --cov=core --cov=api --cov=automation --cov=agentic/workflows/modules --cov=agents \
           --cov-report=term-missing \
           --cov-report=xml
-      # Tests include:
-      # - Unit tests: Fast, mocked dependencies
-      # - Integration tests: SQLite in-memory for repository layer
-      # - E2E tests: Real PostgreSQL with separate 'test' database
 
-    - name: Run unit + integration tests (Dependabot, Jules)
-      if: steps.check.outputs.should_test == 'true' && env.UNTRUSTED_AUTHOR == 'true'
-      run: |
-        uv run pytest tests/unit tests/integration -v --tb=short -n 4 --dist worksteal
-
-    - name: Upload coverage to GitHub Artifacts
-      if: steps.check.outputs.should_test == 'true' && env.UNTRUSTED_AUTHOR != 'true' && always()
-      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7
-      with:
-        name: coverage-report
-        path: coverage.xml
-        retention-days: 30
-
-    - name: Upload coverage to Codecov
-      if: steps.check.outputs.should_test == 'true' && env.UNTRUSTED_AUTHOR != 'true'
+    - name: Upload e2e coverage to Codecov
       uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5  # v7.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         files: ./coverage.xml
         flags: backend
         fail_ci_if_error: false
-
-    - name: Skip notice
-      if: steps.check.outputs.should_test == 'false'
-      run: echo "::notice::Tests skipped - no testable Python changes (only plots/ or non-Python files); the spec characteristic-section check still ran"
 
   test-frontend:
     name: Run Frontend Tests

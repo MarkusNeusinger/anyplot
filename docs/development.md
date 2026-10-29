@@ -83,13 +83,18 @@ uv run pytest tests/unit tests/integration --cov --cov-report=html
 uv run pytest tests/unit tests/integration -n auto
 ```
 
-The CI job "Run Tests" (`.github/workflows/ci-tests.yml`) runs the suite on the
-four CPUs of the hosted runner:
+The CI job "Run Tests" (`.github/workflows/ci-tests.yml`) runs the unit and
+integration tests on the four CPUs of the hosted runner:
 
 ```bash
-uv run pytest tests/unit tests/integration tests/e2e -n 4 --dist worksteal --durations=25 \
+uv run pytest tests/unit tests/integration -n 4 --dist worksteal --durations=25 \
   --cov=core --cov=api --cov=automation --cov=agentic/workflows/modules --cov=agents
 ```
+
+The e2e tests run in a separate job, "Run E2E Tests", after it: that job is
+the only one that logs in to GCP and reaches the Cloud SQL `test` database,
+and it skips PRs by Dependabot and Google Jules, whose code nobody has read
+yet.
 
 `-n` is not in the pytest defaults, so a single file or test still runs in one
 process. For a full run, add `-n auto` (one worker per CPU): on four CPUs the
