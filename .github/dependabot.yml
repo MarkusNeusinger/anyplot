@@ -109,6 +109,25 @@ updates:
           - "patch"
 
   # GitHub Actions
+  # The renderer's toolchain base (agents/renderer/toolchain.Dockerfile) is pinned by
+  # digest; a bump changes the toolchain's input hash, so the next renderer deploy
+  # rebuilds the toolchain with the base's security updates (agents/renderer/toolchain.py).
+  - package-ecosystem: "docker"
+    directory: "/agents/renderer"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 2
+    # The digest (Debian's security updates) and patch releases only: a new Python minor
+    # moves with .python-version, deliberately, not as a base-image bump.
+    ignore:
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps(docker):"
+
   - package-ecosystem: "github-actions"
     # "/" only scans .github/workflows — the composite actions' own `uses:`
     # pins (now SHA-pinned like the workflows) need their directories listed

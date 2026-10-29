@@ -10,16 +10,30 @@
 # multi-script fallback fonts the harness appends to every lookup. The local
 # Docker backend (AGENT_RENDERER=local, development only) runs this image too:
 #
+#   docker build -f agents/renderer/toolchain.Dockerfile -t anyplot-toolchain:dev .
 #   docker build -f agents/renderer/Dockerfile -t anyplot-renderer:dev .
+#
+# The base is the toolchain image (agents/renderer/toolchain.Dockerfile, step 2a of
+# agentic/specs/261024-agent-all-libraries.md): python:3.14-slim with the language
+# toolchains of the exec-mode rows and the exec filter's preload library.
+# TOOLCHAIN_IMAGE and TOOLCHAIN_TAG name it; the deploy and the CI job pass the
+# repository and the tag of the toolchain's input hash with its digest
+# (`t-<hash>@sha256:<digest>`, agents/renderer/toolchain.py), and the defaults are the
+# local build above. Two arguments rather than one reference, so the FROM line names a
+# tag.
 #
 # The builder and the runtime stage have the two-stage shape of api/Dockerfile
 # (read its comments for the uv pin, the bytecode trade and why the stages share
-# one base image); the `fonts` stage between them only stages font files. The
-# build CONTEXT is the repo root, and the root `.dockerignore` is an allowlist:
-# `agents`, `pyproject.toml`, `uv.lock` and `README.md` are in it, so the COPYs
-# below see them.
+# one base image: here both are the toolchain); the `fonts` stage between them only
+# stages font files. The build CONTEXT is the repo root, and the root
+# `.dockerignore` is an allowlist: `agents`, `pyproject.toml`, `uv.lock` and
+# `README.md` are in it, so the COPYs below see them.
+ARG TOOLCHAIN_IMAGE=anyplot-toolchain
+ARG TOOLCHAIN_TAG=dev
 
-FROM python:3.14-slim AS builder
+FROM ${TOOLCHAIN_IMAGE}:${TOOLCHAIN_TAG} AS toolchain
+
+FROM toolchain AS builder
 
 WORKDIR /app
 
@@ -122,7 +136,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && dpkg-query -W fonts-noto-core fonts-noto-cjk > /fonts/doc/versions.txt
 
 
-FROM python:3.14-slim
+FROM toolchain
 
 WORKDIR /app
 

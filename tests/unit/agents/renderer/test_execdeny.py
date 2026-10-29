@@ -1,0 +1,103 @@
+"""The exec filter's preload library of the exec-mode rows (agents/renderer/execdeny/execdeny.c, step 2b).
+
+Compiled with the host's gcc and loaded into `/bin/sh`, which starts a program the way R's `system()` and
+`popen` do. The toolchain image's build runs the same library under R (agents/renderer/toolchain/smoke.R).
+"""
+
+from __future__ import annotations
+
+import os
+import platform
+import resource
+import shutil
+import signal
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+
+SOURCE = Path(__file__).resolve().parents[4] / "agents" / "renderer" / "execdeny" / "execdeny.c"
+KILLED_BY_THE_FILTER = 128 + signal.SIGSYS
+
+pytestmark = pytest.mark.skipif(
+    not sys.platform.startswith("linux")
+    or platform.machine() not in ("x86_64", "aarch64")
+    or shutil.which("gcc") is None
+    or not Path("/bin/sh").exists(),
+    reason="the library is Linux-only (x86-64, aarch64) and needs gcc to build",
+)
+
+
+@pytest.fixture(scope="module")
+def library(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    built = tmp_path_factory.mktemp("execdeny") / "libexecdeny.so"
+    subprocess.run(
+        ["gcc", "-O2", "-Wall", "-Wextra", "-Werror", "-shared", "-fPIC", "-o", str(built), str(SOURCE)],
+        check=True,
+        capture_output=True,
+    )
+    return built
+
+
+def run(library: Path, script: str, mode: str | None, *, nproc: int | None = None) -> tuple[int, str, str]:
+    """Run `/bin/sh -c script` with the library preloaded; the exit code, its output and what the pipe said."""
+    read_end, write_end = os.pipe()
+    env = {"PATH": "/usr/bin:/bin", "LD_PRELOAD": str(library), "ANYPLOT_EXEC_DENY_FD": str(write_end)}
+    if mode is not None:
+        env["ANYPLOT_DENY_EXEC"] = mode
+
+    def limit() -> None:
+        if nproc is not None:
+            resource.setrlimit(resource.RLIMIT_NPROC, (nproc, nproc))
+
+    try:
+        result = subprocess.run(
+            ["/bin/sh", "-c", script.replace("{fd}", str(write_end))],
+            env=env,
+            pass_fds=(write_end,),
+            preexec_fn=limit,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    finally:
+        os.close(write_end)
+    with os.fdopen(read_end, "rb") as reader:
+        state = reader.read().decode()
+    return result.returncode, result.stdout.strip(), state
+
+
+def test_required_kills_every_program_start_and_reports_on(library: Path) -> None:
+    code, output, state = run(library, "/bin/true; echo $?", "required")
+    assert (code, output, state) == (0, str(KILLED_BY_THE_FILTER), "on")
+
+
+def test_any_other_mode_installs_it_too(library: Path) -> None:
+    assert run(library, "/bin/true; echo $?", "optional")[1:] == (str(KILLED_BY_THE_FILTER), "on")
+
+
+def test_without_the_variable_nothing_changes(library: Path) -> None:
+    assert run(library, "/bin/true; echo $?", None) == (0, "0", "")
+    assert run(library, "/bin/true; echo $?", "") == (0, "0", "")
+
+
+def test_the_pipe_is_closed_and_named_nowhere_before_user_code(library: Path) -> None:
+    """User code can neither forge the state on the descriptor nor find its number."""
+    # A subshell: a failed redirection ends a non-interactive POSIX shell.
+    script = 'echo "${ANYPLOT_EXEC_DENY_FD-unset}"; (echo forged >&{fd}) 2>/dev/null && echo written || echo refused'
+    code, output, state = run(library, script, "required")
+    assert state == "on"
+    assert output.splitlines() == ["unset", "refused"]
+    assert code == 0
+
+
+@pytest.mark.skipif(os.geteuid() == 0, reason="RLIMIT_NPROC does not bind root")
+def test_required_stops_the_program_when_the_filter_cannot_be_proven(library: Path) -> None:
+    """With no process left to fork, the probe cannot prove the filter: required ends the program with exit code 3
+    before its main, so the script never runs; without required it runs and the pipe says why."""
+    code, output, state = run(library, "echo ran", "required", nproc=1)
+    assert (code, output, state) == (3, "", "unavailable")
+    assert run(library, "echo ran", "optional", nproc=1) == (0, "ran", "unavailable")
