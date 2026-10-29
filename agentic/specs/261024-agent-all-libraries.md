@@ -892,9 +892,15 @@ served.
   data-masking and tidy-select calls (`DATA_MASK_CALLS`) and in the operands of `~` it is
   a column; a string equal to a denied name is refused only where a string becomes a
   function (a callee, a function-valued argument, a parsed code string), so a user's
-  column called `source`, `file` or `load` passes. The accepted residual (a function object
-  stored in a column inside a mask and called through a lambda's parameter) is documented;
-  the sandbox and the exec filter are the boundary. A formula position takes only a `~`
+  column called `source`, `file` or `load` passes. After the Fable and Gemini review of
+  2026-10-29, `with` and `within` are no mask, every protected statement is bound once and
+  alone on its lines (by node, so `THEME <- ...; THEME <- "dark"` is refused), and the
+  call shapes that would run a function held in a mask are refused: a function literal
+  called at once, an index or field as callee, a call to a parameter, `do.call` as a value
+  and a call's result unless it is a builder such as `colorRampPalette(...)(n)` (catalogue:
+  0, 1 in plotmath, 0 and 12 builders). The residual left, a function that calls a value
+  it receives through an argument the list does not name (a condition handler), is
+  documented in `validate.py`; the sandbox and the exec filter are the boundary. A formula position takes only a `~`
   literal, a string literal or a name bound once to one, so a formula built with `paste0`
   or `sprintf` is refused. gapminder and palmerpenguins pass SECURITY and are the
   ADAPTATION finding `dataset-package`. `<<-` stays refused.

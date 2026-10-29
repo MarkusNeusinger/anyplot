@@ -52,6 +52,7 @@ from ...treesitter import (
     Visit,
     first_line,
     r_arguments,
+    r_bindings,
     r_callee,
     r_identifier,
     r_is_lookup,
@@ -246,6 +247,7 @@ def coupling(code: str | Source, regions: Regions | None = None) -> Coupling:
     block = data_block(regions)
     complete = block is not None and bool(regions.columns)
     block_synthetic = False
+    bound = {name for name, _ in r_bindings(source, source.root)}
 
     def flag(category: str, node: Node) -> None:
         texts = found[category].setdefault(first_line(node), [])
@@ -268,8 +270,10 @@ def coupling(code: str | Source, regions: Regions | None = None) -> Coupling:
             elif callee in LIBRARY_CALLS and _attached(source, node) in DATASET_PACKAGES:
                 synthetic = True
             _limits(source, node, callee, flag)
-        elif node.type == "identifier" and r_is_lookup(visit) and r_identifier(source, node) in DATASETS:
-            synthetic = not is_package_argument(source, visit)
+        elif node.type == "identifier" and r_is_lookup(visit):
+            name = r_identifier(source, node)
+            # A dataset's name the file binds itself (`iris <- ...`) is its own variable, as the validator reads it.
+            synthetic = name in DATASETS and name not in bound and not is_package_argument(source, visit)
         elif node.type in ("float", "integer"):
             value = r_number(source, node)
             if value is not None and value in CRITICAL_VALUES:

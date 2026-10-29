@@ -110,6 +110,7 @@ def test_coupling_categories(line: str, category: str, snippet: str) -> None:
         "p <- p + annotate('text', x = Inf, y = -Inf, label = 'note')",
         'label <- sprintf("r = %.2f", r)',
         "p <- p + scale_y_continuous(limits = range(df$y))",
+        "iris <- df[df$y > 0, ]\nn <- nrow(iris)",  # a local variable named like a dataset, as the validator reads it
     ],
 )
 def test_computed_or_baseline_values_are_not_coupling(line: str) -> None:
