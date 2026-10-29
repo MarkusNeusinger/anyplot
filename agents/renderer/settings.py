@@ -83,9 +83,11 @@ class RendererSettings(BaseSettings):
     rlimit_as_mb: NonNegativeInt = 1024
     rlimit_nproc: NonNegativeInt = 64
     exec_deny: Literal["required", "optional"] = "required"
-    """Whether a run may go on without the harness's kernel filter against program starts (`RENDERER_EXEC_DENY`):
-    `required` (since 2026-10-28) stops every in-process run whose filter is not in place before its code runs;
-    `optional` lets it run without and only reports it, the switch for a platform that stops admitting the filter."""
+    """Whether a run may go on without the kernel filter against program starts (`RENDERER_EXEC_DENY`): `required`
+    (since 2026-10-28) stops every in-process run whose filter is not in place before its code runs, and (since
+    2026-10-29) refuses an exec-mode run whose preloaded filter did not report `on` (exit 3, the JavaScript row
+    exempt); `optional` lets both run without and only reports it, the switch for a platform that stops admitting
+    the filter."""
     kill_grace_s: PositiveFloat = 10.0
     bind_tmp: bool = False
 

@@ -89,9 +89,15 @@ class TestTable:
         js = command_for("javascript", "chartjs")
         assert js.argv == ("node", commands.JS_HARNESS, "--library=chartjs") and js.toolchain == ("node",)
         assert not js.rlimit_as and not js.rlimit_nproc  # V8 reservations; 77 tasks per render (spike 2026-10-24)
+        assert not js.exec_deny  # Node starts Chromium, Chromium its own processes
         assert command_for("javascript", "muix").code_file == "plot.tsx"
         r = command_for("r", "ggplot2")
-        assert r.argv == ("Rscript",) and r.toolchain == ("Rscript",) and r.rlimit_as and r.rlimit_nproc
+        # R's binary directly: Rscript starts bin/R, a shell script, which starts the binary, and the exec filter
+        # kills every program start after the first.
+        assert r.argv == (commands.R_BINARY, "--no-echo", "--no-restore", "--no-save") and r.code_flag == "--file="
+        assert r.toolchain == (commands.R_BINARY,) and r.rlimit_as and r.rlimit_nproc and r.exec_deny
+        assert r.env["R_HOME"] == commands.R_HOME and r.env["LD_LIBRARY_PATH"] == f"{commands.R_HOME}/lib"
+        assert r.env["LANG"] == "C.UTF-8"
         julia = command_for("julia", "makie")
         assert julia.argv == ("julia", f"--project={commands.JULIA_PROJECT}") and julia.toolchain == ("julia",)
         assert not julia.rlimit_as and julia.rlimit_nproc  # LLVM dies under 1 GiB of address space
@@ -109,7 +115,7 @@ class TestTable:
     def test_toolchains_name_one_binary_set_per_language(self) -> None:
         needed = toolchains()
         assert set(needed) == set(LANGUAGES)
-        assert needed["python"] == () and needed["r"] == ("Rscript",)
+        assert needed["python"] == () and needed["r"] == (commands.R_BINARY,)
         assert needed["javascript"] == ("node",) and needed["julia"] == ("julia",)
 
     def test_rows_are_frozen(self) -> None:

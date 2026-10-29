@@ -1,0 +1,1 @@
+https://packagemanager.posit.co/cran/__linux__/trixie/2026-10-20

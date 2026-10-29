@@ -49,17 +49,78 @@ substitutions:
   _MIN_INSTANCES: "0"
 
 steps:
-  - name: "gcr.io/cloud-builders/docker"
+  # The toolchain image the renderer builds FROM (agents/renderer/toolchain.Dockerfile,
+  # step 2a of agentic/specs/261024-agent-all-libraries.md; owner decision of
+  # 2026-10-28: the deploy builds it when it needs one). Its tag is the hash of its
+  # inputs (agents/renderer/toolchain.py, standard library only, so the builder's
+  # python3 runs it), and only a missing tag is built and pushed: an unchanged
+  # toolchain costs this deploy one `describe`. A describe that fails for any other
+  # reason than a missing image stops the build, as the deploy step's describe does.
+  # Two deploys that miss the same tag at once both build it; the later push wins, and
+  # both images come from the same inputs. The steps hand the image on in files of the
+  # shared working directory (/workspace), which the root `.dockerignore` keeps out of
+  # every build context.
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
     args:
-      - "build"
-      - "-t"
-      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID"
-      - "-t"
-      - "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest"
-      - "-f"
-      - "agents/renderer/Dockerfile"
-      - "."
+      - "-ceu"
+      - |
+        IMAGE=$$(python3 agents/renderer/toolchain.py image)
+        echo "$$IMAGE" > toolchain.image
+        if gcloud artifacts docker images describe "$$IMAGE" --format="value(image_summary.digest)" > /dev/null 2>describe.err; then
+          echo "toolchain present: $$IMAGE"
+        elif grep -qiE "not found|NOT_FOUND" describe.err; then
+          echo "toolchain missing: $$IMAGE"
+          touch toolchain.missing
+        else
+          cat describe.err
+          exit 1
+        fi
+    id: "toolchain-tag"
+
+  - name: "gcr.io/cloud-builders/docker"
+    entrypoint: "bash"
+    args:
+      - "-ceu"
+      - |
+        IMAGE=$$(cat toolchain.image)
+        if [ -f toolchain.missing ]; then
+          docker build -t "$$IMAGE" -f agents/renderer/toolchain.Dockerfile .
+          docker push "$$IMAGE"
+        fi
+    id: "toolchain-build"
+    waitFor: ["toolchain-tag"]
+
+  # With its digest, never by tag alone: the renderer image records exactly the toolchain
+  # it was built on. The tag carries it (`t-<hash>@sha256:<digest>`), the form the
+  # renderer's `FROM ${TOOLCHAIN_IMAGE}:${TOOLCHAIN_TAG}` takes.
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args:
+      - "-ceu"
+      - |
+        IMAGE=$$(cat toolchain.image)
+        DIGEST=$$(gcloud artifacts docker images describe "$$IMAGE" --format="value(image_summary.digest)")
+        case "$$DIGEST" in sha256:*) ;; *) echo "no digest for $$IMAGE: '$$DIGEST'"; exit 1 ;; esac
+        echo "$${IMAGE%:*}" > toolchain.repository
+        echo "$${IMAGE##*:}@$$DIGEST" > toolchain.pin
+        echo "toolchain: $$(cat toolchain.repository):$$(cat toolchain.pin)"
+    id: "toolchain-ref"
+    waitFor: ["toolchain-build"]
+
+  - name: "gcr.io/cloud-builders/docker"
+    entrypoint: "bash"
+    args:
+      - "-ceu"
+      - |
+        docker build \
+          --build-arg "TOOLCHAIN_IMAGE=$$(cat toolchain.repository)" \
+          --build-arg "TOOLCHAIN_TAG=$$(cat toolchain.pin)" \
+          -t "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID" \
+          -t "europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest" \
+          -f agents/renderer/Dockerfile .
     id: "build-image"
+    waitFor: ["toolchain-ref"]
 
   - name: "gcr.io/cloud-builders/docker"
     args:
@@ -260,4 +321,6 @@ images:
 options:
   logging: CLOUD_LOGGING_ONLY
 
-timeout: "1200s"
+# 1200 s before the toolchain joined the build; a deploy that builds a new toolchain adds
+# a few minutes (R's packages are binaries, about 2 minutes cold).
+timeout: "1800s"

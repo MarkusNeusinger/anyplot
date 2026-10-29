@@ -13,6 +13,8 @@ on:
       - develop
       - 'specification/**'
       - 'implementation/**'
+      # Jules sub-PRs into a feature branch (/jules-task) get linted before Claude merges them.
+      - 'feature/**'
   merge_group:
 
 concurrency:
