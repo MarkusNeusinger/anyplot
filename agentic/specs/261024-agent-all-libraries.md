@@ -164,10 +164,14 @@ seven PRs in all (the Fable review of 2026-10-24 split the former step 1 and put
 before JavaScript; see "Second opinion"); step 6 lists the tests those PRs carry, not a
 PR of its own. Steps 1b to 5 each end with the library's fixtures generated,
 the eligibility sweep's numbers in the PR, and the matrix run documented as an owner
-task; a library is enabled in the deploy only after that run. For R, Julia and
+task; a library is enabled in the deploy only after that run. ~~For R, Julia and
 JavaScript the ten fixture specs must first carry the Data block (owner task per step:
 regenerate them through the pipeline's regen), because the readiness scan blocks a file
-without the marker and the matrix would otherwise have a handful of cases.
+without the marker and the matrix would otherwise have a handful of cases.~~
+Superseded by the owner decision of 2026-10-29: in every language a file without the
+`# Data` marker is `coupled`, never `blocked`, so the adapter rewrites its data creation
+with the readiness hints. Regenerations under the Data block remain useful for the eval
+fixtures, but no language step waits for them.
 
 ### 1a. Foundation: the runtime seam, with no behaviour change
 
@@ -849,6 +853,71 @@ of the language's own program. Instead:
 - Fixtures (after the owner regenerates the ten specs' R files under the Data block: on
   2026-10-28 4 of the 10 ggplot2 files carry it, `line-basic`, `bar-grouped`,
   `box-basic`, `area-basic`, `pie-basic` and `line-timeseries` do not), the matrix, docs.
+  The regeneration is no prerequisite any more (owner decision of 2026-10-29, see the
+  plan's introduction): a file without the marker is `coupled`.
+
+#### What PR 3a built (2026-10-29): the R code profile, not served yet
+
+PR 3 is split: 3a builds the deterministic modules, 3b the `RRuntime`, the registry entry,
+the pipeline and policy changes, the fixtures and the admin deploy. Nothing in 3a is
+served.
+
+- **Parser.** `tree-sitter` 0.26.0 and `tree-sitter-language-pack` 0.13.0, pinned
+  exactly in the `agents` extra (owner decision of 2026-10-29: 0.13.0 bundles r-lib's R
+  grammar, MIT, and downloads nothing; 1.x downloads grammars at run time).
+  `agents/anyplot/code/treesitter.py` parses, lists ERROR and MISSING nodes, walks without
+  recursion and holds the R helpers (strings with escapes and raw strings, backtick names,
+  callees, arguments, assignments, bindings). All 325 catalogue files parse with no error
+  node. The pack's `Point.row` and `.column` free an int past 256 under Python 3.14 (a
+  segfault at the next collection), so the code indexes the point and a test refuses the
+  attribute form. `agents/Dockerfile` keeps only the grammars the profiles load
+  (`TREE_SITTER_GRAMMARS`, R alone; 184 MB down to 0.6 MB), and a test ties that list to
+  `GRAMMARS`. The renderer image does not install the `agents` extra.
+- **Regions and normaliser** (`code/profiles/r/`). The protected regions are the exact
+  theme statement (its default pinned to `"light"`), 1,322 theme tokens, the palette, the
+  final `ggsave` with `sprintf("plot-%s.png", THEME)` and `ragg::agg_png`, the placeholder
+  `df <- load_user_data()`, the loosely matched markers (both in 247 files) and column
+  constants with a role comment (4 files). The normaliser strips the roxygen header, inlines
+  logistic-regression's `output_file`, blanks the catalogue title with the Python rule
+  (`normalise.is_catalogue_title`; 5 `paste0` splits and 1 `sprintf` format get a note; 67
+  files size the title font from `nchar(title)`, a known issue) and rewrites only the save's
+  dpi: ragg truncates (measured in the toolchain image: 13.333 in at 240 dpi gives 3199 px),
+  so the dpi is the shortest decimal with `t <= inches * dpi < t + 1`. 34 saves are
+  rewritten; all 325 files land on 3200x1800 (251) or 2400x2400 (74), and the corpus test
+  recomputes `floor(inches * dpi)` from every rewritten save.
+- **Validator.** SECURITY over tree-sitter with the Python profile's rule ids and the named
+  bypasses of the design pass as tests. Owner decisions of 2026-10-29 on the first pass's
+  findings: a denied name is refused as a callee and as a function-valued argument
+  everywhere, and as any other value outside a data mask; inside the arguments of the
+  data-masking and tidy-select calls (`DATA_MASK_CALLS`) and in the operands of `~` it is
+  a column; a string equal to a denied name is refused only where a string becomes a
+  function (a callee, a function-valued argument, a parsed code string), so a user's
+  column called `source`, `file` or `load` passes. The accepted residual (a function object
+  stored in a column inside a mask and called through a lambda's parameter) is documented;
+  the sandbox and the exec filter are the boundary. A formula position takes only a `~`
+  literal, a string literal or a name bound once to one, so a formula built with `paste0`
+  or `sprintf` is refused. gapminder and palmerpenguins pass SECURITY and are the
+  ADAPTATION finding `dataset-package`. `<<-` stays refused.
+- **Readiness.** `coupling.py` (stdlib, tree-sitter, `core.*` and the R regions only, so
+  the regen gate's adapt route can use it from `core/` later) and `readiness.py`: blocked
+  only for real reasons, a missing marker is `coupled`. Over the 325 normalised files: 4
+  clean (area-basic, box-basic, line-basic, line-timeseries), 306 coupled, 15 blocked (the
+  13 map specs, qrcode-basic, maze-circular's `<<-`).
+- **Loader, kinds, errors, edits, export.** `readr::read_csv` typed from the column kinds
+  of `data/kinds.py` (`col_integer`, `col_double` past 32 bits, `col_logical`,
+  `col_character`, `col_date`, `col_datetime` in UTC; `na = ""`), measured in the
+  toolchain image: `True`/`False`, microseconds and offsets read correctly, text `NA` and
+  `001` stay text. `col_double()` is exact only to 2^53, so `read_kinds` counts the
+  integer cells beyond it per column for 3b to announce (data-fidelity rule). The error
+  grammar reads R's stderr only (the erroring function, rlang's cause and layer, the last
+  `Calls:` names, memory, recursion, a missing package), never the message. The edit
+  applier is one core with a `Dialect` per language, and the export takes the run command
+  (`Rscript plot.R`); Python's output is byte-identical.
+
+Open for 3b: `dataset-package` is an ADAPTATION finding, which the pipeline treats as a
+defect line, not a refusal (`pipeline.BLOCKING_RULES`); for the adapter's working form to
+be refused while it keeps a dataset package, 3b adds the rule to the R runtime's blocking
+set.
 
 #### 2d. Order of the PRs
 
