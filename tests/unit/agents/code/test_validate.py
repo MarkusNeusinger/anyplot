@@ -2847,10 +2847,14 @@ def test_data_code_may_bind_theme() -> None:
 @pytest.mark.skipif(not CATALOGUE_FILES, reason="plots/ is absent")
 @pytest.mark.parametrize("path", CATALOGUE_FILES, ids=lambda p: f"{p.parts[-4]}/{p.stem}")
 def test_catalogue_file_never_raises(path: Path) -> None:
-    """The catalogue is not clean by design; the validator must still finish, fast, with sound findings."""
-    started = time.perf_counter()
+    """The catalogue is not clean by design; the validator must still finish, fast, with sound findings.
+
+    "Fast" is the process's CPU time, not the wall clock: a file takes under 10 ms, and a busy CI runner once
+    stalled a worker for 1.2 s of wall time on one of them (#12456), while a pathological validator burns CPU.
+    """
+    started = time.process_time()
     findings = validate_security(path.read_text(encoding="utf-8"), library=path.stem)
-    assert time.perf_counter() - started < 1.0
+    assert time.process_time() - started < 1.0
     for finding in findings:
         assert finding.rule and "\n" not in finding.message and len(finding.message) <= 300
         assert finding.line is None or finding.line >= 1
@@ -2858,8 +2862,9 @@ def test_catalogue_file_never_raises(path: Path) -> None:
 
 @pytest.mark.skipif(not CATALOGUE_FILES, reason="plots/ is absent")
 def test_catalogue_summary() -> None:
-    """Per-rule finding counts over the corpus, one block per library with a profile; visible with `pytest -s`."""
-    started = time.perf_counter()
+    """Per-rule finding counts over the corpus, one block per library with a profile; visible with `pytest -s`.
+    The bound is CPU time, as in `test_catalogue_file_never_raises`."""
+    started = time.process_time()
     lines = []
     for library in CODE_LIBRARIES:
         files = [path for path in CATALOGUE_FILES if path.stem == library]
@@ -2874,6 +2879,6 @@ def test_catalogue_summary() -> None:
         lines.append(f"{library}: {len(files)} files, {clean} clean under SECURITY")
         for rule, count in findings_per_rule.most_common():
             lines.append(f"  {rule:<18} {count:>5} findings in {files_per_rule[rule]:>4} files")
-    elapsed = time.perf_counter() - started
-    print("\n" + "\n".join(lines) + f"\n({elapsed:.2f}s)")
+    elapsed = time.process_time() - started
+    print("\n" + "\n".join(lines) + f"\n({elapsed:.2f}s CPU)")
     assert elapsed < 20.0
