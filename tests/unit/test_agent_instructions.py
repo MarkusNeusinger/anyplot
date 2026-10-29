@@ -422,7 +422,7 @@ GUARDRAIL_SECTION_ANCHORS = {
         "claude merges jules's sub-prs into a `feature/*` branch it leads",
         "`/gemini-task`",
         "claude never runs `agy` itself",
-        "checks every pr claude opens before it opens (gemini 3.8 flash)",
+        "checks every pr claude opens before it opens (gemini 3.8 flash;",
         "runs only when the owner asks for one",
         "gemini pushes only its `gemini/*` branch and opens only draft prs",
         "never extract, copy, or proxy the agy login",

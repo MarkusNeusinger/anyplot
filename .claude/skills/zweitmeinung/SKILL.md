@@ -135,7 +135,10 @@ of `origin/main`, or the current branch's worktree, which the tools only read.
 - **Flash is on probation.** The owner's decision on 2026-10-22: measure it on real PRs,
   with no extra test runs. On every PR Flash reviewed, once Copilot's review is in, add
   `copilot_findings` (the real ones) and `matched_copilot` (how many of those Flash also
-  had) to that run's ledger line. After about 10 PRs, report the balance to the owner.
+  had) to that run's ledger line. Since 2026-10-28 Flash runs before the PR opens and its
+  findings are fixed first, so `copilot_findings` counts what Copilot still raises after a
+  Flash pass, and `flash_fixed` how many Flash findings were fixed before the PR opened.
+  After about 10 PRs, report the balance to the owner.
 - **Ledger:** append one JSON line to `~/.claude/team-ledger.jsonl`: `date`, `repo`,
   `task`, `lane` (`gemini-review` or `fable-review`), `model`, `gemini_tokens` (prompt +
   output + thoughts), `est_cost_usd`, `claude_tokens`, `findings` (count),

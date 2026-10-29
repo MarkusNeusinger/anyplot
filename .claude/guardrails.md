@@ -35,8 +35,12 @@ work that Google's quota can do goes there first.
 | Second opinion, only when the owner asks for one | Fable and Gemini 4 Argon side by side, Argon on the same Vertex route with thinking high | Stronger across files; $0.57–1.16 per Argon run. Both Gemini lanes are paid per token and covered by the $100 monthly Google Cloud credit that comes with Google AI Ultra; Gemini reads tracked repository files, prefetched data, and the public API through read-only tools, with no shell and no credentials |
 
 The pipeline's model choices are separate. Sonnet's lane is narrow on purpose:
-it never runs `gh` writes or `gcloud`, and a task whose result no command can
-check goes to Opus.
+it never runs `gh` writes, `git push`, or `gcloud`, and a task whose result no
+command can check goes to Opus. Sonnet and Jules both take bounded,
+command-verified work. Jules wins whenever the work can start from a pushed
+branch; Sonnet keeps the work that needs unpushed local state or a local
+service (browser, Docker renderer, throwaway Postgres), or that takes under
+about ten minutes, where a 15- to 30-minute cloud run would stall the session.
 
 **Why Jules is allowed when agy is not (2026-10-28).** Jules has an official
 REST API (`jules.googleapis.com`) authenticated by an API key from the Jules
@@ -59,8 +63,9 @@ Copilot round.
 opened correct PRs in 23 and 17 minutes. Pro opened an empty commit for the
 first, failed after 27 minutes on the second, and spent 74 minutes on a
 follow-up in which it committed four helper scripts and rewrote a meta
-description nobody had asked about. Flash is the account setting until a
-newer Pro model beats it on the same prompts.
+description nobody had asked about. Two tasks are thin evidence, so the choice
+is provisional: Flash is the account setting until a newer Pro model beats it
+on the same prompts.
 
 **Why not headless Gemini implementation.** Measured on 2026-10-21:
 
