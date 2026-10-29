@@ -34,7 +34,7 @@ import {
   TAG_CATEGORIES,
   type TagCategory,
   topCategoryValues,
-} from 'src/pages/MapPage.helpers';
+} from 'src/sections/map/MapPage.helpers';
 
 export const NODE_SIZE = 60; // graph-space size of a node — large enough to read the thumbnail without hovering
 const COOLDOWN_TICKS = 300; // simulation lifetime in ticks; the engine cap and alpha-decay below both derive from this so they stop together

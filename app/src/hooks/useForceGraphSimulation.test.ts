@@ -11,7 +11,7 @@ import {
   type MapNode,
   TAG_CATEGORIES,
   type TagCategory,
-} from 'src/pages/MapPage.helpers';
+} from 'src/sections/map/MapPage.helpers';
 
 vi.mock('src/hooks/useLayoutContext', () => ({
   useTheme: () => ({ isDark: false }),
