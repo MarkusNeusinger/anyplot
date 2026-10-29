@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 
@@ -58,6 +58,15 @@ export function PlotsPage() {
     onTrackPageview: trackPageview,
     onTrackEvent: trackEvent,
   });
+
+  const filterParts = useMemo(() => {
+    return activeFilters
+      .filter(f => f.values.length > 0)
+      .map(f => `${f.category}:${f.values.join(',')}`)
+      .join(' ');
+  }, [activeFilters]);
+
+  const pageTitle = filterParts ? `${filterParts} | plots | anyplot.ai` : 'plots | anyplot.ai';
 
   const { loadMoreRef } = useInfiniteScroll({
     allImages,
@@ -177,12 +186,14 @@ export function PlotsPage() {
 
   return (
     <Box onClick={handleContainerClick}>
-      <title>plots | anyplot.ai</title>
-      <meta
-        name="description"
-        content="Browse and filter 2,600+ visualization examples across 15 libraries in Python, R, Julia, and JavaScript. Search by plot type, domain, features, and more."
-      />
-      <link rel="canonical" href="https://anyplot.ai/plots" />
+      <>
+        <title>{pageTitle}</title>
+        <meta
+          name="description"
+          content="Browse the largest collection of AI-generated plots across Python, R, JavaScript, and Julia."
+        />
+        <link rel="canonical" href={`${window.location.origin}/plots`} />
+      </>
 
       {error && (
         <Alert severity="error" sx={{ mb: 4, maxWidth: 500, mx: 'auto' }}>

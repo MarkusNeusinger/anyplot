@@ -47,6 +47,12 @@ vi.mock('src/hooks', () => ({
   useTheme: () => ({ isDark: false, toggle: vi.fn() }),
 }));
 
+vi.mock('react-helmet-async', () => ({
+  Helmet: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="helmet">{children}</div>
+  ),
+}));
+
 vi.mock('src/sections/plots-gallery/FilterBar', () => ({
   FilterBar: () => <div data-testid="filterbar">FilterBar</div>,
 }));
@@ -131,66 +137,72 @@ describe('PlotsPage', () => {
     expect(document.title).toBe('plots | anyplot.ai');
   });
 
-  it('renders the shared scroll-to-top button', () => {
+  it('renders document metadata with filters', () => {
+    state.activeFilters = [{ category: 'lib', values: ['matplotlib'] }];
     render(<PlotsPage />);
-    expect(screen.getByLabelText(/scroll to top/i)).toBeInTheDocument();
+    expect(document.title).toBe('lib:matplotlib | plots | anyplot.ai');
+  });
+});
+
+it('renders the shared scroll-to-top button', () => {
+  render(<PlotsPage />);
+  expect(screen.getByLabelText(/scroll to top/i)).toBeInTheDocument();
+});
+
+describe('global keyboard shortcuts', () => {
+  it('triggers random navigation on Space when nothing interactive is focused', () => {
+    render(<PlotsPage />);
+    fireEvent.keyDown(document.body, { key: ' ' });
+    expect(mockHandleRandom).toHaveBeenCalledWith('space');
   });
 
-  describe('global keyboard shortcuts', () => {
-    it('triggers random navigation on Space when nothing interactive is focused', () => {
-      render(<PlotsPage />);
-      fireEvent.keyDown(document.body, { key: ' ' });
-      expect(mockHandleRandom).toHaveBeenCalledWith('space');
-    });
-
-    it('does not fire when a focusable card owns the keystroke', () => {
-      render(<PlotsPage />);
-      const card = document.createElement('div');
-      card.setAttribute('role', 'button');
-      card.tabIndex = 0;
-      document.body.appendChild(card);
-      try {
-        fireEvent.keyDown(card, { key: ' ' });
-        expect(mockHandleRandom).not.toHaveBeenCalled();
-      } finally {
-        card.remove();
-      }
-    });
-
-    it('does not fire when a native button owns the keystroke', () => {
-      render(<PlotsPage />);
-      const button = document.createElement('button');
-      document.body.appendChild(button);
-      try {
-        fireEvent.keyDown(button, { key: ' ' });
-        expect(mockHandleRandom).not.toHaveBeenCalled();
-      } finally {
-        button.remove();
-      }
-    });
+  it('does not fire when a focusable card owns the keystroke', () => {
+    render(<PlotsPage />);
+    const card = document.createElement('div');
+    card.setAttribute('role', 'button');
+    card.tabIndex = 0;
+    document.body.appendChild(card);
+    try {
+      fireEvent.keyDown(card, { key: ' ' });
+      expect(mockHandleRandom).not.toHaveBeenCalled();
+    } finally {
+      card.remove();
+    }
   });
 
-  describe('scrollRestoration', () => {
-    const original = history.scrollRestoration;
+  it('does not fire when a native button owns the keystroke', () => {
+    render(<PlotsPage />);
+    const button = document.createElement('button');
+    document.body.appendChild(button);
+    try {
+      fireEvent.keyDown(button, { key: ' ' });
+      expect(mockHandleRandom).not.toHaveBeenCalled();
+    } finally {
+      button.remove();
+    }
+  });
+});
 
-    afterEach(() => {
-      history.scrollRestoration = original;
-    });
+describe('scrollRestoration', () => {
+  const original = history.scrollRestoration;
 
-    it("sets scrollRestoration to 'manual' on mount and restores the previous value on unmount", () => {
-      history.scrollRestoration = 'auto';
-      const { unmount } = render(<PlotsPage />);
-      expect(history.scrollRestoration).toBe('manual');
-      unmount();
-      expect(history.scrollRestoration).toBe('auto');
-    });
+  afterEach(() => {
+    history.scrollRestoration = original;
+  });
 
-    it('restores a non-default previous value on unmount instead of forcing auto', () => {
-      history.scrollRestoration = 'manual';
-      const { unmount } = render(<PlotsPage />);
-      expect(history.scrollRestoration).toBe('manual');
-      unmount();
-      expect(history.scrollRestoration).toBe('manual');
-    });
+  it("sets scrollRestoration to 'manual' on mount and restores the previous value on unmount", () => {
+    history.scrollRestoration = 'auto';
+    const { unmount } = render(<PlotsPage />);
+    expect(history.scrollRestoration).toBe('manual');
+    unmount();
+    expect(history.scrollRestoration).toBe('auto');
+  });
+
+  it('restores a non-default previous value on unmount instead of forcing auto', () => {
+    history.scrollRestoration = 'manual';
+    const { unmount } = render(<PlotsPage />);
+    expect(history.scrollRestoration).toBe('manual');
+    unmount();
+    expect(history.scrollRestoration).toBe('manual');
   });
 });

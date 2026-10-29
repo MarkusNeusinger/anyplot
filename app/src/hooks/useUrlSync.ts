@@ -62,8 +62,6 @@ export function useUrlSync({ activeFilters, onTrackPageview }: UseUrlSyncOptions
   useEffect(() => {
     const newUrl = buildFilterUrl(activeFilters);
     window.history.replaceState({}, '', newUrl);
-
-    // Update document title
     const filterParts = activeFilters
       .filter(f => f.values.length > 0)
       .map(f => `${f.category}:${f.values.join(',')}`)
