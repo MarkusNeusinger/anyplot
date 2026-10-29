@@ -26,8 +26,8 @@ other write outside the machine stays with Claude.
 Nobody automates around the agy login. Only the owner starts agy, and he works
 it himself. Claude never runs `agy`, not even read-only: Google's Antigravity
 FAQ forbids running it from third-party coding agents such as Claude Code under
-a consumer login, and a Google staff reply of 2026-10-16 confirmed that for the
-unmodified binary. Nothing extracts, copies, or proxies the agy token, and
+a consumer login, which a forum reply of 2026-10-16 (not marked as Google
+staff) applied to the unmodified binary as well. Nothing extracts, copies, or proxies the agy token, and
 nothing calls Google endpoints with it (Antigravity terms, section 6). Claude's
 second opinions call Gemini through Vertex AI instead (`/zweitmeinung`).
 
@@ -61,9 +61,12 @@ takes about two hours, and gets its own brief and a fresh agy session. On
 and then silently dropped it for 76 more, while every render still passed; a
 fresh session per package fixed it. Acceptance names a mechanical check for
 every convention the package must keep (a `grep` that must find nothing), so
-the drift fails locally. Packages that can merge on their own get their own
-branch and draft PR. Packages that only make sense together share one branch:
-Gemini pushes and updates the draft PR after each, before the next session.
+the drift fails locally. Packages that can merge on their own are
+`independent`: each gets its own branch (`gemini/<slug>-<k>`) and draft PR, and
+Gemini works them in parallel (section 2, step 1). Packages that only make
+sense together are `coupled` and share one branch: Gemini works them one after
+another, pushes, and updates the draft PR after each, before the next session.
+Write every package's brief up front, so one start line covers the whole task.
 
 **Write the brief** in English and in Google style.
 
@@ -109,7 +112,7 @@ Gemini pushes and updates the draft PR after each, before the next session.
 ```markdown
 # <imperative summary>
 
-Branch `gemini/<slug>` · package <k> of <n>
+Branch `gemini/<slug>` · package <k> of <n> · independent | coupled
 
 ## Goal
 One paragraph: the outcome, and why.
@@ -135,7 +138,8 @@ instead of guessing.
 ```
 
 Give the owner the start line to copy, `/gemini-task <slug>` (or
-`/gemini-task <number>` for an issue), one per package. He works in a
+`/gemini-task <number>` for an issue). For packages `<slug>-1`, `<slug>-2`, …
+the same `/gemini-task <slug>` starts all of them. He works in a
 dedicated clone, never in the checkout Claude uses. Two things keep production
 out of that session:
 
@@ -217,8 +221,10 @@ This section is for the Gemini agent in the owner's agy session.
 
 1. **Read the task.**
    - **A slug** is a brief: `cat ~/projects/anyplot-briefs/<slug>.md` (a shell
-     read works even where your file tools stay inside the workspace). Never
-     edit, move, or delete a brief.
+     read works even where your file tools stay inside the workspace). When no
+     such file exists, the slug names a task in packages:
+     `ls ~/projects/anyplot-briefs/<slug>-*.md`, and read each. Never edit,
+     move, or delete a brief.
    - **A number** is an issue: `gh issue view <number> --json title,body`
      (without `--json` it fails on this repository: Projects classic), and only
      the owner's comments on it:
@@ -232,6 +238,29 @@ This section is for the Gemini agent in the owner's agy session.
    Reading GitHub is fine. Your only writes are your own branch and your own
    draft PR (step 7); never create, edit, comment on, label, or close anything
    else.
+
+   **Scale out when there is work for several agents (owner, 2026-10-30).**
+   When two or more open packages of the task say `independent`, you are the
+   coordinator: start one subagent per package (`invoke_subagent`), at most
+   four at a time, the next one as a slot frees up. Work coupled packages
+   yourself, one after another, as below.
+   - Give each subagent an isolated Git worktree (the `branch` workspace
+     mode), write access, and the shell. If your agy version cannot isolate a
+     subagent in its own worktree, do not run packages in parallel in the
+     shared clone: two agents there overwrite each other's files and Git
+     state. Work them one after another instead, and tell the owner.
+   - A subagent starts without your conversation, so its prompt names
+     everything: the brief to `cat`, its branch `gemini/<slug>-<k>` from
+     `origin/main`, that section 2 of `.agents/skills/gemini-task/SKILL.md`
+     applies, and that it pushes its branch and opens or updates its own draft
+     PR before it finishes. Antigravity deletes a subagent's worktree when it
+     ends, so unpushed work is lost.
+   - Watch them in `/agents`; approvals of a subagent show there too. When all
+     have finished, check that every package has its draft PR
+     (`gh pr list --draft --label gemini --json number,headRefName`), and tell
+     the owner the PR numbers.
+   - Do not use `/teamwork` for this repository: it builds in its own folder
+     (`~/teamwork_projects/<project>`) without branches or PRs.
 2. **Work in the dedicated clone on your own branch.** That clone is
    `~/projects/anyplot-agy`; if you find yourself in any other checkout, stop
    and tell the owner. Use absolute paths throughout. Your branch is

@@ -93,7 +93,27 @@
       "command(gh pr comment)",
       "command(gh run list)",
       "command(gh run view)",
-      "read_file(/home/<user>/projects/anyplot-briefs)"
+      "read_file(/home/<user>/projects/anyplot-briefs)",
+      "command(git -C /home/<user>/projects/anyplot-agy status)",
+      "command(git -C /home/<user>/projects/anyplot-agy fetch)",
+      "command(git -C /home/<user>/projects/anyplot-agy log)",
+      "command(git -C /home/<user>/projects/anyplot-agy diff)",
+      "command(git -C /home/<user>/projects/anyplot-agy show)",
+      "command(git -C /home/<user>/projects/anyplot-agy branch)",
+      "command(git -C /home/<user>/projects/anyplot-agy switch)",
+      "command(git -C /home/<user>/projects/anyplot-agy rev-parse)",
+      "command(git -C /home/<user>/projects/anyplot-agy ls-files)",
+      "command(git -C /home/<user>/projects/anyplot-agy grep)",
+      "command(git -C /home/<user>/projects/anyplot-agy blame)",
+      "command(git -C /home/<user>/projects/anyplot-agy add)",
+      "command(git -C /home/<user>/projects/anyplot-agy commit)",
+      "command(git -C /home/<user>/projects/anyplot-agy restore)",
+      "command(git -C /home/<user>/projects/anyplot-agy mv)",
+      "command(git -C /home/<user>/projects/anyplot-agy rm)",
+      "command(git -C /home/<user>/projects/anyplot-agy pull --ff-only)",
+      "command(git -C /home/<user>/projects/anyplot-agy remote -v)",
+      "command(git -C /home/<user>/projects/anyplot-agy push -u origin gemini/)",
+      "command(git -C /home/<user>/projects/anyplot-agy push origin gemini/)"
     ],
     "deny": [
       "command(gcloud)",
@@ -159,7 +179,20 @@
       "read_file(/home/<user>/projects/anyplot/.env)",
       "write_file(/home/<user>/projects/anyplot-agy/.git)",
       "write_file(/home/<user>/projects/anyplot-agy/.env)",
-      "write_file(/home/<user>/projects/anyplot-briefs)"
+      "write_file(/home/<user>/projects/anyplot-briefs)",
+      "command(git -C /home/<user>/projects/anyplot-agy push --force)",
+      "command(git -C /home/<user>/projects/anyplot-agy push -f)",
+      "command(git -C /home/<user>/projects/anyplot-agy push origin main)",
+      "command(git -C /home/<user>/projects/anyplot-agy push -u origin main)",
+      "command(git -C /home/<user>/projects/anyplot-agy push origin HEAD:main)",
+      "command(git -C /home/<user>/projects/anyplot-agy reset --hard)",
+      "command(git -C /home/<user>/projects/anyplot-agy rebase)",
+      "command(git -C /home/<user>/projects/anyplot-agy merge)",
+      "command(git -C /home/<user>/projects/anyplot-agy stash)",
+      "command(git -C /home/<user>/projects/anyplot-agy checkout)",
+      "command(git -C /home/<user>/projects/anyplot-agy clean)",
+      "command(git -C /home/<user>/projects/anyplot-agy filter-branch)",
+      "command(git -C /home/<user>/projects/anyplot-agy config)"
     ]
   }
 }
