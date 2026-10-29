@@ -113,8 +113,17 @@ RUN /opt/R/${R_VERSION}/bin/Rscript -e ' \
 # two minutes), and this stage is the only one that reruns it. The sandbox stacks a writable /tmp/depot in front of the depot
 # and loads with --compiled-modules=strict, so a package image that does not match fails in
 # about a second instead of compiling under the render's timeout; the final stage's smoke
-# proves that every package loads that way. The registries go after the precompile: nothing
-# at run time resolves a package (JULIA_PKG_OFFLINE).
+# proves that every package loads that way.
+#
+# The precompile workload (J1.1): agents/renderer/toolchain/AnyplotWarmup is developed into
+# this image's copy of the project, never the repository's, and precompiled after the
+# catalogue's packages, so a change to the workload reruns only its own precompile (64 s on
+# 32 CPUs, 2026-10-29) and the image's Manifest differs from the repository's by the
+# package's entry and project_hash alone (its Project.toml by the package's [deps] and
+# [sources] lines). `develop` resolves against the registry that
+# `instantiate` installed, offline and with PRESERVE_ALL, so it fails rather than move any
+# version; the registries go after it, because nothing at run time resolves a package
+# (JULIA_PKG_OFFLINE). The renderer's Julia row loads the package with `-L` before the plot.
 FROM base AS julia
 ARG JULIA_VERSION
 ARG JULIA_CPU_TARGET
@@ -137,9 +146,12 @@ ENV JULIA_DEPOT_PATH=/opt/julia-depot \
 RUN "/opt/julia-${JULIA_VERSION}/bin/julia" --project=/opt/julia-project --startup-file=no \
     -e 'using Pkg; Pkg.instantiate()'
 RUN "/opt/julia-${JULIA_VERSION}/bin/julia" --project=/opt/julia-project --startup-file=no \
-    -e 'using Pkg; Pkg.precompile(strict = true, timing = true)' \
+    -e 'using Pkg; Pkg.precompile(strict = true, timing = true)'
+COPY agents/renderer/toolchain/AnyplotWarmup /opt/julia-project/AnyplotWarmup
+RUN JULIA_PKG_OFFLINE=true "/opt/julia-${JULIA_VERSION}/bin/julia" --project=/opt/julia-project --startup-file=no \
+    -e 'using Pkg; Pkg.develop(path = "/opt/julia-project/AnyplotWarmup"; preserve = Pkg.PRESERVE_ALL); Pkg.precompile(strict = true, timing = true)' \
     && rm -rf /opt/julia-depot/registries /opt/julia-depot/logs \
-    && du -sh "/opt/julia-${JULIA_VERSION}" /opt/julia-depot
+    && du -sh "/opt/julia-${JULIA_VERSION}" /opt/julia-depot /opt/julia-depot/compiled/v*/AnyplotWarmup
 
 
 FROM base
@@ -187,7 +199,7 @@ WORKDIR /
 COPY --from=julia /opt/julia-${JULIA_VERSION} /opt/julia-${JULIA_VERSION}
 COPY --from=julia /opt/julia-project /opt/julia-project
 COPY --from=julia /opt/julia-depot /opt/julia-depot
-COPY agents/renderer/toolchain/smoke.jl /opt/anyplot/toolchain/smoke.jl
+COPY agents/renderer/toolchain/smoke.jl agents/renderer/toolchain/warmup.jl /opt/anyplot/toolchain/
 
 # Julia's launcher is dynamically linked (a static one would ignore LD_PRELOAD and run
 # without the exec filter), and it and the runtime libraries it loads resolve every
@@ -205,9 +217,11 @@ RUN j="/opt/julia-${JULIA_VERSION}" \
 # the julia binary directly with the row's flags and environment, under the exec filter in
 # required mode. --compiled-modules=strict makes a package image the depot holds but this run
 # cannot load (other cache flags, another CPU target, a stale source) an error within a second,
-# so a depot that would compile at run time fails the build here. smoke.jl loads every package
-# of Project.toml, sees a program start refused, reads a fixed offset through TimeZones and
-# writes a PNG with a non-ASCII title. On a failure the loading log names the rejected image.
+# so a depot that would compile at run time fails the build here. Like a render, it loads the
+# precompile workload with `-L warmup.jl` first; smoke.jl checks that it did, loads every
+# package of the image's Project.toml, sees a program start refused, reads a fixed offset
+# through TimeZones and writes a PNG with a non-ASCII title. On a failure the loading log
+# names the rejected image.
 # Cairo's fontconfig (Fontconfig_jll) caches the font directories it scanned in
 # /var/cache/fontconfig, writable only here: those caches go, since the renderer image adds
 # fonts after this stage and a sandbox's root filesystem is read-only.
@@ -219,7 +233,8 @@ RUN j="/opt/julia-${JULIA_VERSION}" \
            "JULIA_CPU_TARGET=${JULIA_CPU_TARGET}" JULIA_PKG_OFFLINE=true JULIA_PKG_PRECOMPILE_AUTO=0 \
            LD_PRELOAD=/opt/anyplot/libexecdeny.so ANYPLOT_DENY_EXEC=required \
            "$j/bin/julia" --project=/opt/julia-project --startup-file=no --history-file=no \
-           --compiled-modules=strict --heap-size-hint=1536M /opt/anyplot/toolchain/smoke.jl; \
+           --compiled-modules=strict --heap-size-hint=1536M -L /opt/anyplot/toolchain/warmup.jl \
+           /opt/anyplot/toolchain/smoke.jl; \
        } \
     && if ! run; then \
          run JULIA_DEBUG=loading 2>&1 | grep -iE 'reject|not available|stale|error' | head -n 60; \

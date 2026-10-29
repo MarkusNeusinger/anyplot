@@ -16,7 +16,7 @@ sandbox with the probe harness in front:
 | `python` | `plot.py` | `python -I -X disable-remote-debug harness.py plot.py`: the harness runs the plot in process, with the plot guard and the savefig probe |
 | `javascript` | `plot.js` (`plot.tsx` for MUI X) | `harness.py --exec -- node /opt/anyplot/js-render/render.mjs --library=<library> plot.js` |
 | `r` | `plot.R` | `harness.py --exec -- /opt/R/4.6.1/lib/R/bin/exec/R --no-echo --no-restore --no-save --file=plot.R` |
-| `julia` | `plot.jl` | `harness.py --exec -- /opt/julia-1.13.2/bin/julia --project=/opt/julia-project --startup-file=no --history-file=no --compiled-modules=strict --heap-size-hint=1536M plot.jl` |
+| `julia` | `plot.jl` | `harness.py --exec -- /opt/julia-1.13.2/bin/julia --project=/opt/julia-project --startup-file=no --history-file=no --compiled-modules=strict --heap-size-hint=1536M -L /opt/anyplot/toolchain/warmup.jl plot.jl` |
 
 In exec mode (`EXEC_FLAG`) the harness prints its start line, sets the resource limits
 and runs the language's own command as a child, so the launcher retry, the host
@@ -26,7 +26,8 @@ that shell script, which starts the binary: under the exec filter (`exec_deny`) 
 start after the first is killed (step 2b of agentic/specs/261024-agent-all-libraries.md).
 Julia runs its launcher by path too (`JULIA_BINARY`), with the precompiled depot loaded
 under `--compiled-modules=strict` (`JULIA_FLAGS`, step 5), so a package image that does
-not load fails the render at once instead of compiling under its timeout.
+not load fails the render at once instead of compiling under its timeout, and loads the
+image's precompile workload with `-L` before the plot (`JULIA_WARMUP`, J1.1).
 A row with `exec_deny` gets `ANYPLOT_DENY_EXEC=required` while `RENDERER_EXEC_DENY` is
 `required` (`executor.sandbox_env`): a Python row's harness installs the filter itself,
 an exec-mode row's harness preloads it into the child (`harness.EXEC_DENY_PRELOAD`). The
@@ -109,19 +110,29 @@ JULIA_DEPOT = "/opt/julia-depot"
 JULIA_CPU_TARGET = "generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(1)"
 """The CPU target the depot was precompiled for (the toolchain Dockerfile's `JULIA_CPU_TARGET`); the same value at
 run time."""
+JULIA_WARMUP = "/opt/anyplot/toolchain/warmup.jl"
+"""The file the row loads with `-L` before the plot (`agents/renderer/toolchain/warmup.jl`): `import AnyplotWarmup`,
+the toolchain's precompile workload, whose package image holds the native code of the calls a plot makes most and of
+the data loader's read, compiled with CSV, DataFrames and TimeZones loaded. That code is used only while the package
+is loaded; `-L` loads it without the plot naming it and keeps `plot.jl` the program, so `PROGRAM_FILE`, the error
+frames and the exit code stay the plot's. Measured on 2026-10-29 at 2 CPUs: an adapted render 15.9 to 5.0 s, the
+catalogue's `bar-grouped` 8.5 to 4.9 s (J1.1, step 5)."""
 JULIA_FLAGS = (
     f"--project={JULIA_PROJECT}",
     "--startup-file=no",
     "--history-file=no",
     "--compiled-modules=strict",
     "--heap-size-hint=1536M",
+    "-L",
+    JULIA_WARMUP,
 )
 """The launcher's flags. `--compiled-modules=strict` loads every package from the depot's precompiled images or fails
 within a second with "Precompiled image ... not available with flags CacheFlags(...)"; `existing` would load a missed
 package from its source in process, with exit 0 and no message, for minutes in CairoMakie's case, and the default `yes`
 would start a compile worker, which the exec filter kills (step 5 of agentic/specs/261024-agent-all-libraries.md,
 second opinion of 2026-10-29). `--heap-size-hint` makes the collector work before the 4 GiB instance runs short, since
-the row has no `RLIMIT_AS`."""
+the row has no `RLIMIT_AS`. `-L` loads the precompile workload (`JULIA_WARMUP`) before the code file the harness
+appends."""
 JULIA_ENV: Mapping[str, str] = MappingProxyType(
     {
         # The sandbox sets no locale; the catalogue's runner renders under C.UTF-8, as for R.
@@ -281,7 +292,9 @@ def _row(language: Language, library: str) -> RuntimeCommand:
     # RLIMIT_NPROC 64 holds with one thread. The repair reserve is 25 s: the 320 catalogue files that rendered in the
     # toolchain image at 2 CPUs and 4 GiB took a wall p95 of 20.6 s (p50 10.2 s, four renders at a time, container
     # start included; peak RSS p95 1,137 MiB), and the slowest load RDatasets, which an adaptation removes (J1,
-    # 2026-10-29). The deployed cold and warm times of the plan's measurement stage revise it.
+    # 2026-10-29). The deployed cold and warm times of the plan's measurement stage revise it. The precompile workload
+    # (J1.1) cut an adapted render from 15.9 to 5.0 s locally, but the deployed renderer ran 2.5 times slower than
+    # local Docker and no deployed sweep with the workload exists yet, so the reserve stays until one does.
     return RuntimeCommand(
         language,
         code_file,
