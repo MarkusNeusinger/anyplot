@@ -34,7 +34,8 @@ on:
     branches:
       - main
       - develop
-      - 'feature/**'
+      # No `feature/**` here, as in ci-tests.yml: Jules's own branches live under
+      # `feature/`. Feature branches get CI through their PRs.
   pull_request:
     branches:
       - main

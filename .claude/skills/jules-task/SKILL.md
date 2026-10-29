@@ -70,11 +70,12 @@ the code.
   `feature/<slug>` from `origin/main`, push it, and start one session per
   sub-task with that branch as the starting branch. The `feature/` prefix
   matters: `ci-lint` and `ci-tests` run on pull requests into `feature/**`
-  and on pushes to it (section 4). Sub-tasks that touch different files run in
-  parallel; a sub-task that builds on another starts after that one is merged,
-  from the updated branch. The first push of a new branch builds every image
-  once, because the workflows cannot diff a range that starts at zero; that
-  costs runner time, not money.
+  (section 4). A push to `feature/**` runs no CI at all: Jules names its own
+  branch `feature/<slug>-<session id>`, and a push run has no PR author to
+  recognise it by, so before 2026-10-29 such a push ran the GCP login on
+  unread Jules code. Sub-tasks that touch different files run in parallel; a
+  sub-task that builds on another starts after that one is merged, from the
+  updated branch.
 - **At most 10 sessions in flight** per Claude session (owner, 2026-10-29).
   Sessions can take 15 to 30 minutes, so ten keep the quota busy without ten
   settled sessions landing in one context at once; more work goes to a second
@@ -195,7 +196,7 @@ Open the pull request against `feature/<slug>`, never `main`; the description en
       skipped. Every Jules PR runs without secrets and without an OIDC token,
       like a Dependabot PR: `Run Tests` has no `id-token` permission, and the
       job that can reach GCP skips Jules and Dependabot PRs. The e2e tests run
-      on the push the merge makes and on the final PR into `main`.
+      on the final PR into `main`, after the code was read.
    5. Known flaky test: `test_local_backend_kills_the_container_on_cancellation`
       failed once on a frontend-only PR; rerun the failed job.
 
@@ -209,10 +210,8 @@ Open the pull request against `feature/<slug>`, never `main`; the description en
 
 - **A sub-PR into a feature branch this session leads:** Claude squash-merges
   it (`gh pr merge <n> --squash`) once the review in section 4 is done and its
-  checks are green. Owner's rule of 2026-10-28. The push the merge makes runs
-  CI again, with e2e; a push run can be cancelled by the next merge's push and
-  checks only `HEAD~1..HEAD`, so treat it as a bonus, not as the gate. A red
-  push run gets a fix-forward task or a revert before the next merge.
+  checks are green. Owner's rule of 2026-10-28. The merge's push runs no CI;
+  the PR into `main` checks the combined result, with e2e.
 - **Before each merge, check the base.** When
   `gh pr view <n> --json mergeStateStatus` says `BEHIND` or `DIRTY`, ask the
   session to merge `origin/feature/<slug>` into its branch and rerun its

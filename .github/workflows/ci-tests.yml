@@ -6,7 +6,10 @@ on:
     branches:
       - main
       - develop
-      - 'feature/**'
+      # No `feature/**` here: Google Jules pushes its own branches under the
+      # feature branch it works on (`feature/<slug>-<session id>`), and a push run
+      # has no PR author, so the e2e job would treat unread Jules code as trusted
+      # and give it the GCP login. Feature branches get CI through their PRs.
   pull_request:
     branches:
       - main
@@ -192,6 +195,7 @@ jobs:
     needs: test
     if: >-
       needs.test.outputs.should_test == 'true' &&
+      !startsWith(github.ref, 'refs/heads/feature/') &&
       github.actor != 'dependabot[bot]' &&
       !contains(fromJSON('["dependabot[bot]", "google-labs-jules[bot]"]'), github.event.pull_request.user.login)
     runs-on: ubuntu-latest
