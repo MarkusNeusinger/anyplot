@@ -963,6 +963,70 @@ jobs:
           tail -n 1 work-letsplot/harness.out | grep -qF '"exec_deny": "on"' \
             || { echo "::error::the lets-plot render ran without the exec filter"; exit 1; }
 
+      # R (step 2 of agentic/specs/261024-agent-all-libraries.md) runs in exec mode: the harness
+      # starts R's binary with the command table's argv and environment and preloads the exec
+      # filter into it (harness.main_exec). The plot's own system() is killed by the filter, a
+      # non-ASCII title goes through ragg under the row's UTF-8 locale, and the end line must say
+      # the filter was on: the harness refuses (exit 3) a run whose filter did not report on.
+      - name: Render an R plot through the harness in exec mode
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p work-r
+          python3 - > work-r/row.flags <<'EOF'
+          from agents.renderer.commands import command_for
+
+          row = command_for("r", "ggplot2")
+          assert row.exec_deny, "the R row must run under the exec filter"
+          flags = [f"{key}={value}" for key, value in row.env.items()]
+          if row.rlimit_as:
+              flags.append(f"ANYPLOT_RLIMIT_AS_MB={row.rlimit_as_mb or 1024}")
+          for flag in flags:
+              print(f"-e\n{flag}")
+          EOF
+          python3 - > work-r/row.argv <<'EOF'
+          from agents.renderer.commands import command_for
+
+          row = command_for("r", "ggplot2")
+          print("\n".join([*row.argv, f"{row.code_flag}{row.code_file}"]))
+          EOF
+          mapfile -t ROW_FLAGS < work-r/row.flags
+          mapfile -t ROW_ARGV < work-r/row.argv
+          echo "the R row: ${ROW_ARGV[*]}"
+          printf 'x,y\na,1\nb,3\nc,2\n' > work-r/data.csv
+          cat > work-r/plot.R <<'EOF'
+          library(ggplot2)
+
+          THEME <- Sys.getenv("ANYPLOT_THEME", "light")
+          df <- readr::read_csv("data.csv", show_col_types = FALSE)
+          # Under the exec filter a started program dies before it runs: a status, never an output.
+          stopifnot(system("true") != 0)
+          plot <- ggplot(df, aes(x, y)) + geom_col() + labs(title = "Gr\u00f6\u00dfe \u2013 \u00dcberblick")
+          ggsave(sprintf("plot-%s.png", THEME), plot, device = ragg::agg_png, width = 16, height = 9, dpi = 200)
+          EOF
+          docker run --rm --network none --read-only --tmpfs /tmp \
+            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+            -v "$PWD/work-r:/work" -w /work \
+            -e ANYPLOT_THEME=light "${ROW_FLAGS[@]}" \
+            -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+            -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_DENY_EXEC=required \
+            anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py \
+            --exec -- "${ROW_ARGV[@]}" \
+            > work-r/harness.out 2> work-r/harness.err \
+            || { echo "::error::the R render failed"; cat work-r/harness.out work-r/harness.err; exit 1; }
+          grep -qxF 'HARNESS {"event": "start"}' work-r/harness.out || { echo "::error::no HARNESS start line"; cat work-r/harness.out; exit 1; }
+          tail -n 1 work-r/harness.out | grep -qF '"exec_deny": "on"' \
+            || { echo "::error::the R render ran without the exec filter"; cat work-r/harness.out work-r/harness.err; exit 1; }
+          python3 - <<'EOF'
+          import struct
+          png = open("work-r/plot-light.png", "rb").read()
+          assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
+          width, height = struct.unpack(">II", png[16:24])
+          assert (width, height) == (3200, 1800), (width, height)
+          print(f"OK: R plot-light.png {width}x{height}, {len(png)} bytes")
+          EOF
+          tail -n 1 work-r/harness.out
+
       # Native code the audit hook cannot see finds no program to run. lets-plot's bridge links
       # ImageMagick with a compiled-in delegate map that runs programs by name through /bin/sh
       # (gs, curl, soffice, ffmpeg, rsvg-convert, inkscape and the rest that

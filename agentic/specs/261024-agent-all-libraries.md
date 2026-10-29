@@ -856,11 +856,24 @@ of the language's own program. Instead:
    build-if-missing step, the renderer `FROM ${TOOLCHAIN_IMAGE}:${TOOLCHAIN_TAG}` and the
    CI path (pull the tag, or build it); the R row is not served yet. Before the merge,
    the owner-approved reader binding; the merge's deploy builds and pushes the first
-   toolchain.
+   toolchain. Merged as #12423 on 2026-10-29; its first deploy failed in the toolchain's
+   R check on Cloud Build's 5.10 kernel (2b, "Found by the first deploy"), fixed by #12427.
 2. The R command row, the exec mode's child environment, preload and pipe, the
    `exec_deny` field, the CI checks in the built image (an R render, the refused
    `system()`); the first deployed R smoke proves `KILL_PROCESS` under gVisor; the
-   deploy keeps `AGENT_LIBRARIES` as it is.
+   deploy keeps `AGENT_LIBRARIES` as it is. Built on 2026-10-29: `RuntimeCommand` gains
+   `exec_deny` (off for JavaScript alone) and `code_flag` (`--file=` for R); the R row runs
+   `R_BINARY` with `R_ENV` (`R_HOME`, the share, include and doc directories,
+   `LD_LIBRARY_PATH`, `LANG=C.UTF-8`, the caches); `executor.sandbox_env` sets
+   `ANYPLOT_DENY_EXEC=required` for every row with `exec_deny`, and `harness.main_exec`
+   hands `LD_PRELOAD` and the pipe to the child alone. Before any user code it runs a
+   preflight: the language's program alone, with `ANYPLOT_EXEC_DENY_PREFLIGHT`, which the
+   library's constructor ends before `main` after it reported, so a library `ld.so` cannot
+   load or a static binary stops the run before the code is read (the Copilot review of
+   #12428: checking only after the run let the code run unfiltered first). After the run it
+   reads the pipe without blocking and returns `EXEC_DENY_EXIT` unless it said `on` (a
+   command that never started keeps 127). In the built image the CI step renders a ggplot2 plot with a
+   non-ASCII title at 3200x1800 in 0.85 s of CPU and 180 MiB with `exec_deny: on`.
 3. The R runtime and code profile (2c), fixtures, docs; ggplot2 joins the admin deploy's
    `_LIBRARIES` for the live test; the matrix gates the public release.
 

@@ -7,7 +7,7 @@ import pytest
 from pydantic import ValidationError
 
 from agents.renderer import executor as executor_module
-from agents.renderer.commands import EXEC_FLAG, LANGUAGES, command_for
+from agents.renderer.commands import EXEC_FLAG, LANGUAGES, R_BINARY, command_for
 from agents.renderer.executor import SANDBOX_PATH, ExecutorConfig, SandboxExecutor, build_argv, sandbox_env
 from agents.renderer.wire import RendererStatus, RenderRequest
 
@@ -29,10 +29,25 @@ class TestRows:
     def test_a_non_python_row_runs_its_command_through_exec_mode(self, config: ExecutorConfig, tmp_path: Path) -> None:
         argv = build_argv(config, "r-a-light", tmp_path, "light", 60, command=command_for("r", "ggplot2"))
 
-        assert argv[argv.index(config.harness) :] == [config.harness, EXEC_FLAG, "--", "Rscript", "plot.R"]
+        assert argv[argv.index(config.harness) :] == [
+            config.harness,
+            EXEC_FLAG,
+            "--",
+            R_BINARY,
+            "--no-echo",
+            "--no-restore",
+            "--no-save",
+            "--file=plot.R",
+        ]
         values = envs(argv)
         assert values["ANYPLOT_THEME"] == "light" and values["PATH"] == SANDBOX_PATH
         assert "MPLBACKEND" not in values and values["XDG_CACHE_HOME"] == "/tmp"
+        # The preload library goes to the child alone (`harness.main_exec`), never into the sandbox's environment.
+        assert "LD_PRELOAD" not in values
+
+    def test_a_row_without_a_code_flag_gets_the_bare_code_file(self, config: ExecutorConfig, tmp_path: Path) -> None:
+        argv = build_argv(config, "r-a-light", tmp_path, "light", 60, command=command_for("julia", "makie"))
+        assert argv[-1] == "plot.jl"
 
     def test_a_row_switches_the_limits_it_cannot_live_under(self, config: ExecutorConfig) -> None:
         limited = replace(config, rlimit_as_mb=1024, rlimit_nproc=64)

@@ -313,7 +313,8 @@ class ExecutorConfig:
     kill_mem_available_mb: int = 0
     """The watchdog's `MemAvailable` floor in MiB; 0 switches the memory check off."""
     exec_deny: str = "required"
-    """`RendererSettings.exec_deny`: `required` puts `ANYPLOT_DENY_EXEC=required` into every in-process run."""
+    """`RendererSettings.exec_deny`: `required` puts `ANYPLOT_DENY_EXEC=required` into every run whose row has
+    `exec_deny` (all but JavaScript's), in process and in exec mode."""
 
     @classmethod
     def from_settings(cls, settings: RendererSettings) -> "ExecutorConfig":
@@ -465,9 +466,10 @@ def sandbox_env(
         env["ANYPLOT_RLIMIT_AS_MB"] = str(own or config.rlimit_as_mb)
     if config.rlimit_nproc and (command is None or command.rlimit_nproc):
         env["ANYPLOT_RLIMIT_NPROC"] = str(config.rlimit_nproc)
-    if config.exec_deny == "required" and (command is None or command.in_process):
-        # Every run whose code the harness runs itself needs its kernel filter against program starts; an exec-mode
-        # row starts its toolchain with execve and never arms a guard.
+    if config.exec_deny == "required" and (command is None or command.exec_deny):
+        # Every run needs the kernel filter against program starts: the harness installs it in its own process for
+        # code it runs itself, and preloads it into an exec-mode row's program (`harness.main_exec`). The JavaScript
+        # row alone has it off (`RuntimeCommand.exec_deny`): Node and Chromium start their own processes.
         env[EXEC_DENY_ENV] = "required"
     return env
 
@@ -508,7 +510,7 @@ def build_argv(
     elif theme is None:
         argv += [DATA_FLAG, SNIPPET_FILE]
     elif command is not None and not command.in_process:
-        argv += [EXEC_FLAG, "--", *command.argv, command.code_file]
+        argv += [EXEC_FLAG, "--", *command.argv, f"{command.code_flag}{command.code_file}"]
     else:
         argv += [command.code_file if command is not None else CODE_FILE]
     if any(part.split("=", 1)[0] in FORBIDDEN_FLAGS for part in flags):
