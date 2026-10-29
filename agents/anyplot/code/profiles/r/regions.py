@@ -99,20 +99,27 @@ MarkerKind = Literal["data", "plot"]
 
 @dataclass(frozen=True, slots=True)
 class Region:
-    """A protected statement; `span` covers its whole lines."""
+    """A protected statement; `span` covers its whole lines, `statement` its exact characters.
+
+    The validator tells the statement from another one on the same line by `statement`
+    (review of 2026-10-29: `THEME <- ...; THEME <- "dark"` shares the theme line).
+    """
 
     kind: RegionKind
     name: str
     span: Span
+    statement: Span | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class Palette:
-    """A top-level `NAME <- c("#...", ...)` of colour strings; `span` covers its whole lines."""
+    """A top-level `NAME <- c("#...", ...)` of colour strings; `span` covers its whole lines, `statement` the
+    assignment's exact characters."""
 
     name: str
     entries: tuple[str, ...]
     span: Span
+    statement: Span | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -323,7 +330,7 @@ def find_regions(code: str | Source) -> Regions:
     top_ids = {node.id for node in top}
     for node in top:
         if theme is None and is_theme_statement(source, node):
-            theme = Region("theme", THEME_NAME, source.lines_span(node))
+            theme = Region("theme", THEME_NAME, source.lines_span(node), source.node_span(node))
             continue
         assignment = r_assignment(source, node)
         if assignment is None or assignment.operator not in LEFT_ASSIGNMENTS or assignment.target.type != "identifier":
@@ -333,7 +340,7 @@ def find_regions(code: str | Source) -> Regions:
             continue
         if name != THEME_NAME and tests_theme(source, assignment.value):
             if is_theme_constant(source, assignment.value, known):
-                tokens.append(Region("theme_token", name, source.lines_span(node)))
+                tokens.append(Region("theme_token", name, source.lines_span(node), source.node_span(node)))
                 known.add(name)
         palette = _palette(source, node, name, assignment.value)
         if palette is not None:
@@ -346,7 +353,7 @@ def find_regions(code: str | Source) -> Regions:
     saves: list[SaveCall] = []
     for node in walk(source.root):
         if is_placeholder(source, node):
-            placeholders.append(Region("placeholder", PLACEHOLDER, source.lines_span(node)))
+            placeholders.append(Region("placeholder", PLACEHOLDER, source.lines_span(node), source.node_span(node)))
         elif is_save_call(source, node):
             saves.append(_save_call(source, node, node.id in top_ids))
 
@@ -391,7 +398,7 @@ def _palette(source: Source, node: Node, name: str, value: Node) -> Palette | No
     entries = _strings(source, value)
     if entries is None:
         return None
-    return Palette(name=name, entries=entries, span=source.lines_span(node))
+    return Palette(name=name, entries=entries, span=source.lines_span(node), statement=source.node_span(node))
 
 
 def _save_call(source: Source, call: Node, top_level: bool) -> SaveCall:

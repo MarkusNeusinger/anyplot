@@ -52,7 +52,7 @@ def test_a_minimal_program_passes() -> None:
         ('x <- .env[["system"]]', "banned-name"),
         ('x <- `system`("id")', "banned-name"),
         ('x <- (paste0("sys", "tem"))("id")', "banned-call"),
-        ('x <- do.call("rbind", parts)', "banned-call"),
+        ('x <- do.call("merge", parts)', "banned-call"),
         ('x <- do.call(paste0("rb", "ind"), parts)', "banned-call"),
         ("f <- function(g) lapply(1, g)", "banned-call"),
         ('h <- paste0("sys", "tem")\nx <- sapply(1, h)', "banned-call"),
@@ -240,6 +240,89 @@ def test_formula_positions(body: str, allowed: bool) -> None:
 
     assert (findings == []) is allowed, findings
     assert allowed or {finding.rule for finding in findings} == {"banned-call"}
+
+
+THEME_LINE = 'THEME <- Sys.getenv("ANYPLOT_THEME", "light")'
+TOKEN_LINE = 'INK <- if (THEME == "light") "#1A1A17" else "#F0EFE8"'
+
+
+@pytest.mark.parametrize(
+    ("code", "rule", "message"),
+    [
+        # review of 2026-10-29: a binding on the protected line passed the line comparison
+        (f'{THEME_LINE}; THEME <- "dark"\n{SAVE}', "savefig-target", "THEME is bound only by"),
+        (f'{THEME_LINE}\n{TOKEN_LINE}; INK <- "#FF00FF"\n{SAVE}', "banned-statement", "INK is bound only by its own"),
+        (f"{THEME_LINE}\ndf <- load_user_data(); df <- iris\n{SAVE}", "banned-statement", "the placeholder shares"),
+        (f"{THEME_LINE}\n{SAVE.rstrip()}; x <- 1\n", "savefig-target", "the final ggsave shares"),
+        (f"{THEME_LINE}; x <- 1\n{SAVE}", "savefig-target", "the THEME statement shares"),
+        (f'{THEME_LINE}\nIMPRINT_PALETTE <- c("#009E73", "#C475FD"); y <- 2\n{SAVE}', "banned-statement", "palette"),
+    ],
+)
+def test_protected_statements_are_bound_once_and_alone_on_their_lines(code: str, rule: str, message: str) -> None:
+    findings = validate_security(code)
+
+    assert any(finding.rule == rule and message in finding.message for finding in findings), findings
+
+
+def test_a_trailing_comment_and_a_placeholder_in_a_function_body_are_fine() -> None:
+    code = f"{THEME_LINE}  # the theme\nf <- function() {{\n  df <- load_user_data()\n  df\n}}\n{SAVE}"
+
+    assert validate_security(code) == []
+
+
+@pytest.mark.parametrize(
+    ("body", "message"),
+    [
+        # the two routes of the security review of 2026-10-29
+        ('x <- with(d, (function(f) f("id"))(system))', "called where it is written"),
+        ('d <- dplyr::mutate(d, g = list(system), out = g[[1]]("id"))', "taken out of a value"),
+        # the shapes behind them
+        ('x <- (\\(f) f("id"))(1)', "called where it is written"),
+        ('y <- x$f("id")', "taken out of a value"),
+        ('y <- x[1]("id")', "taken out of a value"),
+        ('h <- function(g) g("x")', "'g' is a parameter"),
+        ("h <- \\(g) g(1)", "'g' is a parameter"),
+        ('d <- dplyr::mutate(d, x = identity(system)("id"))', "called at once"),
+        ('d <- dplyr::summarise(d, x = dplyr::first(fns)("id"))', "called at once"),
+        ('d <- dplyr::mutate(d, r = lapply(list(system), do.call, list("id")))', "do.call is only ever called"),
+        ('d <- dplyr::mutate(d, r = .mapply(system, list("id"), NULL))', "'system' is not allowed"),
+        ('x <- with(d, system("id"))', "'system' is not allowed"),
+        ("x <- with(d, list(source))", "'source' is not allowed"),
+    ],
+)
+def test_calls_that_would_run_a_held_function_are_refused(body: str, message: str) -> None:
+    findings = validate_security(program(body))
+
+    assert any(finding.rule in ("banned-call", "banned-name") and message in finding.message for finding in findings)
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        'x <- colorRampPalette(c("#000000", "#FFFFFF"))(5)',
+        "y <- scales::label_percent()(0.5)",
+        "z <- scales::hue_pal()(3)",
+        "w <- ecdf(v)(2)",
+        "p <- p + labs(y = expression(-log[10](italic(p))))",
+        "p <- p + scale_y_continuous(transform = scales::transform_log())",
+        "p <- p + scale_x_continuous(transform = log10_trans())",
+        "p <- p + scale_y_continuous(transform = scales::trans_new('sq', function(x) x^2, function(x) sqrt(x)))",
+        'a <- do.call("rbind", parts)',
+        'b <- do.call("cbind", parts)',
+        "c2 <- do.call(paste0, parts)",
+        "c3 <- do.call(paste, parts)",
+        "f <- function(x) round(x, 2)\ny <- f(1.234)",
+    ],
+)
+def test_builders_and_named_calls_stay_allowed(body: str) -> None:
+    assert validate_security(program(body)) == []
+
+
+@pytest.mark.parametrize(
+    "body", ['x <- textConnection("a")', "x <- rawConnection(raw(0))", 'x <- do.call("system", l)']
+)
+def test_connections_and_other_do_call_targets_are_refused(body: str) -> None:
+    assert validate_security(program(body)) != []
 
 
 def test_dataset_packages_are_adaptation_findings_not_security() -> None:

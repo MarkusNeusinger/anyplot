@@ -34,17 +34,27 @@ SECURITY rules (rule ids in parentheses):
     `list()` or `c()`, an argument of an ordinary call) outside a data mask;
   - it is a column, and allowed, anywhere inside the arguments of a data-masking or
     tidy-select call (`DATA_MASK_CALLS`: `aes`, `vars`, the facets, the dplyr and tidyr
-    verbs, base R's `with` and `subset`) and in the operands of `~` (formulas, a tribble's
-    `~source` header, lambdas), and in the pure name positions: an argument's name and
-    the field after `$` or `@`;
+    verbs, base R's `subset` and `transform`; not the general evaluators `with`, `within`
+    and `local`) and in the operands of `~` (formulas, a tribble's `~source` header,
+    lambdas), and in the pure name positions: an argument's name and the field after `$`
+    or `@`;
   - a string equal to a denied name is refused only where a string becomes a function: as
     a callee, as a function-valued argument, and inside a code string (below). Everywhere
     else a string is data, so a user's column called `source`, `file`, `load`, `options`
     or `body` passes.
-  The residual we accept: inside a data mask a function object can be stored in a column
-  (`mutate(d, f = list(system))`) and called through a lambda's parameter
-  (`purrr`-style `~ .x[[1]]("id")` is no call of a denied name). The sandbox and the
-  exec filter are the boundary, and this check is hygiene.
+  What still passes, honestly (review of 2026-10-29): inside a data mask a denied function
+  can still be held as a value, as in `mutate(d, g = list(system))`, because a bare name
+  there is read as a column. Every call shape the walk can see that would then run it is
+  refused (next bullet): by its name, as a function literal called at once, through an
+  index or a field (`g[[1]]("id")`, `x$f()`), through a parameter (`function(g) g("x")`),
+  through `do.call` as a value, through a call that is no known builder
+  (`identity(g)("id")`), or handed to a function-valued argument. What the walk cannot see
+  is a function that calls a value it receives without naming it a function argument we
+  list, such as a condition handler (`tryCatch(expr, error = g)`) or a package's internal
+  callback; such a call gets that function's own arguments (a condition object, not a
+  command), and the sandbox (no egress, a read-only root) and the exec filter (any
+  process start kills the child) contain whatever it does. The check is hygiene for the
+  exported `plot.R`, not the boundary.
 * **Packages** (`banned-import`): `library()` and `require()` take one package of
   `LIBRARY_ALLOWLIST` or a dataset package (`DATASET_PACKAGES`, gapminder and
   palmerpenguins, which ADAPTATION refuses instead), by name or as a string, and no other
@@ -53,19 +63,27 @@ SECURITY rules (rule ids in parentheses):
   (`NAMESPACE_FUNCTIONS`: `utils::head`, `tools::toTitleCase`,
   `gridExtra::arrangeGrob` only, owner decision of 2026-10-29; `ragg::agg_png` only as the
   protected save's device), and its name passes the denied-name rule; `:::` is refused.
-* **Callees and functions** (`banned-call`): a string callee (`"system"("id")`, which R's
-  parser turns into a call of `system`) and a parenthesised value as callee are refused;
-  a call, an index or a field as callee (`colorRampPalette(...)(n)`, 26 catalogue calls)
-  stays, because a value can only be called once it is a function, and every route from
-  a string to a function is denied. `do.call` takes only a bare `rbind`, `cbind` or `c`
-  (55 catalogue uses). A function-valued argument (`FUNCTION_ARGUMENTS`: `FUN`, `fun` and
+* **Callees and functions** (`banned-call`): a call names its function. Refused callees
+  (review of 2026-10-29, after measuring the catalogue): a string (`"system"("id")`, which
+  R's parser turns into a call of `system`), a parenthesised value, a function literal
+  called at once (`(function(f) f("id"))(x)`, `(\\(f) ...)(x)`; 0 catalogue calls), an
+  index or a field (`f[[1]](...)`, `x$f(...)`, `x[i](...)`; 1 catalogue call, plotmath
+  inside `expression()`, which `INERT_CALLS` exempts), a parameter of an enclosing
+  function literal (`function(g) g("x")`; 0 catalogue calls), and a call's result unless
+  the call is a builder of `CALLABLE_FACTORIES` (`colorRampPalette(...)(n)`,
+  `scales::label_percent()(x)`, `hue_pal()(n)`; the catalogue's 12 such callees are all
+  builders). `do.call` takes `rbind`, `cbind`, `c`, `paste` or `paste0` by name, or
+  `"rbind"`, `"cbind"` or `"c"` as a string, and is never a value (`lapply(fns, do.call,
+  args)` would call anything). A function-valued argument (`FUNCTION_ARGUMENTS`: `FUN`, `fun` and
   `fun.*` without `fun.args`, `.f`, `.fn`, `.fns`, `.funs`, `f`, `fn`, `method`,
   `labeller`, `transform`, `inverse`, and the positional function of the apply family,
   `FUNCTION_POSITIONS`) is a function literal, `\\(x)`, a `~` lambda, a literal (a
   method's name, a number for `lowess(f = )`), `pkg::name`, a name the file binds only to
   function literals or not at all, or a function factory (`FUNCTION_FACTORIES`: `list`,
-  `c`, `Negate`, `Vectorize` over such values, and ggplot2's labellers): never a computed
-  value such as `paste0("sys", "tem")`, which `match.fun` would resolve.
+  `c`, `Negate`, `Vectorize` over such values; ggplot2's labellers for `labeller =`, and
+  scales' transformations, `transform_*()`, `*_trans()`, `trans_new()`, for `transform =`
+  and `inverse =`): never a computed value such as `paste0("sys", "tem")`, which
+  `match.fun` would resolve.
 * **Tidy evaluation** (`banned-call`, `banned-keyword`): `!!` and `!!!` only on a column
   constant (a top-level name bound once to a string or a `c()` of strings); the left side
   of `:=` only `!!` of such a constant, a name, or a string without braces; `.names =`
@@ -124,8 +142,10 @@ from ...treesitter import (
     R_LITERALS,
     Argument,
     Source,
+    Span,
     Visit,
     first_line,
+    last_line,
     r_argument,
     r_arguments,
     r_assignment,
@@ -246,6 +266,8 @@ DENIED_NAMES = frozenset(
         "unz",
         "fifo",
         "gzcon",
+        "textConnection",
+        "rawConnection",
         "download.file",
         "browseURL",
         "nsl",
@@ -390,7 +412,9 @@ ALLOWED_SYS = frozenset({"Sys.time", "Sys.Date"})
 SYS_GETENV = "Sys.getenv"
 
 DO_CALL = "do.call"
-DO_CALL_FUNCTIONS = frozenset({"rbind", "cbind", "c"})
+DO_CALL_FUNCTIONS = frozenset({"rbind", "cbind", "c", "paste", "paste0"})
+"""What `do.call` may call: one of these by name, or `"rbind"`, `"cbind"` or `"c"` as a string (`DO_CALL_STRINGS`)."""
+DO_CALL_STRINGS = frozenset({"rbind", "cbind", "c"})
 FUNCTION_ARGUMENTS = frozenset(
     {"FUN", "fun", ".f", ".fn", ".fns", ".funs", "f", "fn", "method", "labeller", "transform", "inverse"}
 )
@@ -428,6 +452,10 @@ FUNCTION_POSITIONS: dict[str, tuple[int, ...]] = {
     "group_modify": (1,),
     "trans_new": (1, 2),
     "new_transform": (1, 2),
+    ".mapply": (0,),
+    "forceAndCall": (1,),
+    "nlm": (0,),
+    "nlminb": (1,),
     # purrr's map family: not attachable here (purrr is off the allowlist), but a function slot wherever it appears
     **dict.fromkeys(("map", "map_dbl", "map_chr", "map_int", "map_lgl", "map_dfr", "map_dfc", "map_vec"), (1,)),
     **dict.fromkeys(("imap", "pmap", "walk", "keep", "discard", "detect", "reduce", "accumulate", "modify"), (1,)),
@@ -440,6 +468,20 @@ LABELLERS = frozenset(
     {"labeller", "as_labeller", "label_wrap_gen", "label_both", "label_value", "label_parsed", "label_context"}
 )
 """ggplot2's labeller builders: a labeller value may be one of these calls (2 catalogue files)."""
+TRANSFORM_ARGUMENTS = frozenset({"transform", "inverse"})
+TRANSFORM_BUILDERS = re.compile(r"^(?:transform_\w+|\w+_trans|trans_new|new_transform)$")
+"""scales' transformation objects, which `transform =` and `inverse =` also take (`scale_y_continuous(transform =
+scales::transform_log())`); `trans_new` and `new_transform` have their own function slots (`FUNCTION_POSITIONS`)."""
+CALLABLE_FACTORIES = re.compile(
+    r"^(?:colorRampPalette|colorRamp|label_\w+|\w+_format|\w+_pal|breaks_\w+|pretty_breaks|extended_breaks"
+    r"|col_numeric|col_factor|col_bin|col_quantile|rescale_\w+|ecdf|approxfun|splinefun|Vectorize|Negate)$"
+)
+"""Builders whose result a call may call at once: palettes, scales' labels and breaks, `ecdf` and the
+interpolators (`colorRampPalette(...)(n)`, `scales::label_percent()(x)`, `hue_pal()(n)`; the catalogue uses
+`colorRampPalette` 8 times and `label_comma` and `label_number` 4). Any other call as a callee is refused, because
+`identity(fn)("id")` or `dplyr::first(fns)("id")` would call whatever function a value holds."""
+INERT_CALLS = frozenset({"expression", "quote"})
+"""Calls whose arguments R never evaluates: plotmath such as `expression(-log[10](p))` may index a callee there."""
 FACET_CALLS: dict[str, tuple[tuple[int, ...], frozenset[str]]] = {
     "facet_wrap": ((0,), frozenset({"facets"})),
     "facet_grid": ((0, 1), frozenset({"rows", "cols", "facets"})),
@@ -498,16 +540,16 @@ DATA_MASK_CALLS = frozenset(
         "extract",
         "gather",
         "spread",
-        # base R's data-masking functions
-        "with",
-        "within",
+        # base R's data-masking verbs (the counterparts of filter and mutate)
         "subset",
         "transform",
     }
 )
 """Calls whose arguments R evaluates in a data mask, where a bare name is a column: a denied name there is data
 (a flow's `source` column), except as a callee or a function-valued argument. The operands of `~` are a mask too
-(formulas, a tribble's `~source` header, lambdas). Fixed in code, owner decision of 2026-10-29."""
+(formulas, a tribble's `~source` header, lambdas). Fixed in code, owner decision of 2026-10-29. The general
+evaluators `with`, `within` and `local`, whose argument is any expression rather than a column, are no mask
+(review of 2026-10-29)."""
 FORMULA_FIRST = frozenset(
     {
         "lm",
@@ -784,14 +826,31 @@ class _Scan:
         self.visits = list(visits(source.root))
         self.regions: Regions = find_regions(source)
         self.masks: list[tuple[int, int]] = [(source.root.start_byte, source.root.end_byte)] if masked else []
+        self.inert: list[tuple[int, int]] = []
+        self.parameters: list[tuple[int, int, frozenset[str]]] = []
+        """Each function literal's byte range and the names of its parameters."""
         for visit in self.visits:
             node = visit.node
-            if node.type == "call" and (r_callee(source, node) or "").rsplit("::", 1)[-1] in DATA_MASK_CALLS:
+            if node.type == "call":
+                base = (r_callee(source, node) or "").rsplit("::", 1)[-1]
                 arguments = node.child_by_field_name("arguments")
-                if arguments is not None:
+                if arguments is not None and base in DATA_MASK_CALLS:
                     self.masks.append((arguments.start_byte, arguments.end_byte))
+                elif arguments is not None and base in INERT_CALLS:
+                    self.inert.append((arguments.start_byte, arguments.end_byte))
             elif node.type in ("unary_operator", "binary_operator") and r_operator(source, node) == "~":
                 self.masks.append((node.start_byte, node.end_byte))
+            elif node.type == "function_definition":
+                parameters = node.child_by_field_name("parameters")
+                names = frozenset(
+                    name
+                    for parameter in (parameters.named_children if parameters is not None else [])
+                    if parameter.type == "parameter"
+                    for name in [r_identifier(source, parameter.child_by_field_name("name") or parameter)]
+                    if name is not None
+                )
+                if names:
+                    self.parameters.append((node.start_byte, node.end_byte, names))
         self.bindings: dict[str, list[_Binding]] = {}
         for name, node in r_bindings(source, source.root):
             value = node.child_by_field_name("rhs") if node.type == "binary_operator" else None
@@ -806,21 +865,7 @@ class _Scan:
                 )
             )
         theme = self.regions.theme
-        self.theme_bytes: tuple[int, int] | None = None
-        if theme is not None:
-            statement = next(
-                (
-                    visit.node
-                    for visit in self.visits
-                    if visit.parent is not None
-                    and visit.parent.type == "program"
-                    and first_line(visit.node) == theme.span.first_line
-                    and visit.node.type == "binary_operator"
-                ),
-                None,
-            )
-            if statement is not None:
-                self.theme_bytes = (statement.start_byte, statement.end_byte)
+        self.theme_chars = (theme.statement.start, theme.statement.end) if theme and theme.statement else None
 
     # -- bookkeeping ---------------------------------------------------------------------
 
@@ -835,7 +880,21 @@ class _Scan:
         return sorted(unique, key=lambda f: (f.line is None, f.line or 0, f.rule, f.message))
 
     def in_theme_statement(self, node: Node) -> bool:
-        return self.theme_bytes is not None and self.theme_bytes[0] <= node.start_byte < self.theme_bytes[1]
+        if self.theme_chars is None:
+            return False
+        return self.theme_chars[0] <= self.source.char(node.start_byte) < self.theme_chars[1]
+
+    def starts_at(self, node: Node, span: Span | None) -> bool:
+        """Whether `node` is the statement `span` holds: the same first character (identity, not the same line)."""
+        return span is not None and self.source.char(node.start_byte) == span.start
+
+    def in_inert(self, node: Node) -> bool:
+        """Whether `node` lies in the arguments of a call R never evaluates (`INERT_CALLS`: plotmath)."""
+        return any(start <= node.start_byte < end for start, end in self.inert)
+
+    def is_parameter(self, node: Node, name: str) -> bool:
+        """Whether `name` is a parameter of a function literal that encloses `node`."""
+        return any(start <= node.start_byte < end and name in names for start, end, names in self.parameters)
 
     def in_mask(self, node: Node) -> bool:
         """Whether `node` lies in the arguments of a data-masking call (`DATA_MASK_CALLS`) or in a `~` operand."""
@@ -899,6 +958,9 @@ class _Scan:
         callee = parent.type == "call" and field == "function"
         if name == SAVE_NAME and not callee and r_is_lookup(visit):
             self.add("savefig-target", "ggsave is only ever called where it is named, as the final save", node)
+        if name == DO_CALL and not callee and r_is_lookup(visit):
+            # `lapply(fns, do.call, args)` would call any function a value holds, past the do.call rule
+            self.add("banned-call", "do.call is only ever called where it is named", node)
         if not denied(name):
             return
         if name == SYS_GETENV and self.in_theme_statement(node):
@@ -1013,8 +1075,24 @@ class _Scan:
         unwrapped = r_unwrap(function)
         if unwrapped.type == "string":
             self.add("banned-call", "a string as the function of a call; name the function", node)
-        elif function.type == "parenthesized_expression" and unwrapped.type != "function_definition":
+        elif unwrapped.type == "function_definition":
+            self.add("banned-call", "a function literal called where it is written; name it, then call it", node)
+        elif function.type == "parenthesized_expression":
             self.add("banned-call", f"a computed function '{self.snippet(function)}'; name the function", node)
+        elif unwrapped.type in ("subset", "subset2", "extract_operator") and not self.in_inert(node):
+            self.add(
+                "banned-call", f"a function taken out of a value '{self.snippet(function)}'; call it by name", node
+            )
+        elif unwrapped.type == "call" and not self.in_inert(node):
+            factory = (r_callee(self.source, unwrapped) or "").rsplit("::", 1)[-1]
+            if CALLABLE_FACTORIES.fullmatch(factory) is None:
+                message = f"the result of '{self.snippet(unwrapped)}' called at once; call a named function"
+                self.add("banned-call", message, node)
+        elif unwrapped.type == "identifier":
+            called = r_identifier(self.source, unwrapped) or ""
+            if self.is_parameter(node, called):
+                message = f"'{called}' is a parameter: a function never calls the function it is handed"
+                self.add("banned-call", message, node)
         callee = r_callee(self.source, node)
         base = callee.rsplit("::", 1)[-1] if callee is not None else None
         arguments = r_arguments(self.source, node)
@@ -1033,7 +1111,10 @@ class _Scan:
                     "banned-keyword", f"the keyword '{name} =' writes a file; the plot writes only through ggsave", node
                 )
             if name in FUNCTION_ARGUMENTS or (name.startswith("fun.") and name != "fun.args"):
-                self.check_function_value(argument.value, f"{name} =", labeller=name == "labeller")
+                builders = (
+                    LABELLERS if name == "labeller" else TRANSFORM_BUILDERS if name in TRANSFORM_ARGUMENTS else None
+                )
+                self.check_function_value(argument.value, f"{name} =", builders=builders or frozenset())
             if name in GLUE_KEYWORDS:
                 self.check_glue(argument.value, name)
             if name == "formula":
@@ -1072,17 +1153,25 @@ class _Scan:
 
     def check_do_call(self, node: Node, arguments: list[Argument]) -> None:
         what = r_argument(arguments, "what", 0)
-        name = r_identifier(self.source, r_unwrap(what.value)) if what is not None and what.value is not None else None
-        if name not in DO_CALL_FUNCTIONS:
-            self.add("banned-call", "do.call() takes only a bare rbind, cbind or c", node)
+        value = r_unwrap(what.value) if what is not None and what.value is not None else None
+        name = r_identifier(self.source, value) if value is not None else None
+        text = r_string_value(self.source, value) if value is not None else None
+        if name not in DO_CALL_FUNCTIONS and text not in DO_CALL_STRINGS:
+            self.add(
+                "banned-call", 'do.call() takes only rbind, cbind, c, paste or paste0 (or "rbind", "cbind", "c")', node
+            )
 
     def is_protected_save(self, node: Node) -> bool:
         save = self.regions.save
         return save is not None and self.depth == 0 and save.span.start == self.source.char(node.start_byte)
 
-    def check_function_value(self, value: Node, where: str, *, labeller: bool = False) -> None:
+    def check_function_value(
+        self, value: Node, where: str, *, builders: frozenset[str] | re.Pattern[str] = frozenset()
+    ) -> None:
         """A function-valued argument: a function literal, a lambda, a literal, `pkg::name`, a name bound only to
-        function literals, or a factory over such values; never a computed value `match.fun` would resolve."""
+        function literals, a factory over such values, or a call of one of `builders` (the argument's own object
+        builders: ggplot2's labellers for `labeller =`, scales' transformations for `transform =`); never a computed
+        value `match.fun` would resolve."""
         stack = [value]
         while stack:
             node = r_unwrap(stack.pop())
@@ -1119,7 +1208,8 @@ class _Scan:
                 if base in FUNCTION_FACTORIES:
                     stack.extend(argument.value for argument in r_arguments(self.source, node) if argument.value)
                     continue
-                if labeller and base in LABELLERS:
+                built = builders.fullmatch(base) is not None if isinstance(builders, re.Pattern) else base in builders
+                if built:
                     continue
             self.add(
                 "banned-call",
@@ -1275,11 +1365,18 @@ class _Scan:
             self.add("savefig-target", f"the final ggsave renders through device = {SAVE_DEVICE}", line_node)
 
     def check_bindings(self) -> None:
+        """THEME and each token bound by their own statement alone, the save's names never; by node, not by line.
+
+        Until the review of 2026-10-29 a binding passed when it started on the protected
+        line, so `THEME <- Sys.getenv("ANYPLOT_THEME", "light"); THEME <- "dark"` moved the
+        save. Now only the protected statement itself counts, and every protected statement
+        must also stand alone on its lines (`check_alone`).
+        """
         theme = self.regions.theme
         if theme is None:
             self.add("savefig-target", 'no THEME <- Sys.getenv("ANYPLOT_THEME", "light") at the top level', None)
         for binding in self.bindings.get(THEME_NAME, []):
-            if theme is None or first_line(binding.node) != theme.span.first_line or not binding.top_level:
+            if theme is None or not self.starts_at(binding.node, theme.statement):
                 self.add(
                     "savefig-target",
                     'THEME is bound only by THEME <- Sys.getenv("ANYPLOT_THEME", "light"): the save writes '
@@ -1291,9 +1388,48 @@ class _Scan:
                 self.add("savefig-target", f"'{name}' may not be bound: the final save and THEME use it", binding.node)
         for token in self.regions.theme_tokens:
             for binding in self.bindings.get(token.name, []):
-                if not (binding.top_level and first_line(binding.node) == token.span.first_line):
-                    message = f"the theme token {token.name} is bound only by its own line"
+                if not self.starts_at(binding.node, token.statement):
+                    message = f"the theme token {token.name} is bound only by its own statement"
                     self.add("banned-statement", message, binding.node)
+        self.check_alone()
+
+    def check_alone(self) -> None:
+        """Every protected statement (theme, tokens, palette, placeholder, save) has its lines to itself.
+
+        Another statement on the same line would ride inside the protected region: the edit
+        applier protects whole lines, and the loader replaces only the placeholder statement,
+        so `df <- load_user_data(); df <- iris` would keep the sample. A trailing comment is fine.
+        """
+        regions = self.regions
+        protected: list[tuple[str, str, Span | None]] = []
+        if regions.theme is not None:
+            protected.append(("savefig-target", "the THEME statement", regions.theme.statement))
+        protected += [
+            ("banned-statement", f"the theme token {token.name}", token.statement) for token in regions.theme_tokens
+        ]
+        if regions.imprint is not None:
+            protected.append(("banned-statement", f"the palette {regions.imprint.name}", regions.imprint.statement))
+        protected += [("banned-statement", "the placeholder", region.statement) for region in regions.placeholders]
+        if regions.save is not None and regions.save.statement is not None:
+            protected.append(("savefig-target", "the final ggsave", regions.save.span))
+        statements = [
+            visit.node
+            for visit in self.visits
+            if visit.parent is not None
+            and visit.parent.type in ("program", "braced_expression")
+            and visit.node.is_named
+            and visit.node.type != "comment"
+        ]
+        for rule, what, span in protected:
+            if span is None:
+                continue
+            for node in statements:
+                start, end = self.source.char(node.start_byte), self.source.char(node.end_byte)
+                if start <= span.start < end or span.start <= start < span.end:
+                    continue  # the statement itself, a statement around it (a function body) or one inside it
+                if first_line(node) <= span.last_line and last_line(node) >= span.first_line:
+                    self.add(rule, f"{what} shares its line with other code; give it lines of its own", node)
+                    break
 
     # -- ADAPTATION ----------------------------------------------------------------------
 
