@@ -11,7 +11,7 @@
   timeout, which the image build, CI and the deploy's candidate smoke each
   check with a Makie render. The agent chat does not offer Makie yet.
   TimeZones.jl becomes a direct dependency of the Julia project, for the
-  loader that turns datetimes with offsets into UTC.
+  loader that turns datetimes with offsets into UTC. (#12455)
 
 ### Changed
 
@@ -20,4 +20,4 @@
   timeout and builds a missing toolchain with BuildKit's registry cache, so a
   change to one toolchain no longer rebuilds the others; `Project.toml` and
   `Manifest.toml` join the toolchain's hash, the build context and the CI
-  image job's change filter.
+  image job's change filter. (#12455)
