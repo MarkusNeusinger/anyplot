@@ -10,4 +10,4 @@
   TimeZones invalidate much of Makie's precompiled code, so an adapted Makie render
   took 16 to 18 s locally at 2 CPUs; with the workload it takes 5 s, and catalogue
   files gain 6 to 63 %. The repository's `Project.toml` and `Manifest.toml` do not
-  change; the images grow by about 100 MB.
+  change; the images grow by about 100 MB. (#12460)
