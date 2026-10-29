@@ -1,22 +1,30 @@
 #!/usr/bin/env python3
 """Watch Jules sessions until each one needs Claude, and print one line per change.
 
-Usage: watch-sessions.py [--follow-up] [--base <branch>] <session-id> [<session-id> ...]
+Usage: watch-sessions.py [--follow-up] [--changes-only] [--base <branch>]
+                         [--allow <path prefix> ...] <session-id> [<session-id> ...]
 
-Run it under the Monitor tool (each stdout line is one event). It polls the Jules REST
-API every POLL_SECONDS (default 45) and prints a line whenever a session's state or pull
-request changes. When a session's pull request appears, it asks GitHub for the PR's base
-branch and file count and warns about an empty one (a Jules PR once carried a single
-commit with zero files), and it warns when a session opens a second pull request.
+Run it under the Monitor tool (each stdout line is one event, and each event costs Claude
+a turn). It polls the Jules REST API every POLL_SECONDS (default 45) and prints a line
+whenever a session's state or pull request changes. When a session's pull request
+appears, it asks GitHub for the PR's base branch and files, warns about an empty PR (a
+Jules PR once carried a single commit with zero files), and warns when a session opens a
+second pull request.
 
 It exits 0 once every session has settled in a state that needs Claude (completed,
 failed, awaiting plan approval, awaiting feedback, paused), 1 after MAX_MINUTES (default
-28, under the Monitor's 30-minute cap) so the caller re-arms it, and 2 at once when the
-API rejects the key or a session ID. After a follow-up message, pass --follow-up: a
-session that is still in its old settled state then counts only once it has left that
-state, so the watch does not end before Jules has picked the message up. With
---base, a pull request into any other branch gets a WARNING line: a sub-task's PR that
-lands on `main` instead of its feature branch would skip the whole merge rule.
+28, under the Monitor's 30-minute cap) so the caller re-arms it, and 2 at once on a usage
+error or when the API rejects the key or a session ID.
+
+--follow-up    after a follow-up message: a session still in its old settled state counts
+               only once it has left that state, so the watch does not end before Jules has
+               picked the message up.
+--changes-only print nothing for a session's first sighting unless it has already settled
+               or opened a PR; a re-armed watch then stays quiet about sessions still running.
+--base         a pull request into any other branch gets a WARNING line: a sub-task's PR
+               that lands on `main` instead of its feature branch would skip the merge rule.
+--allow        repeatable; every changed path outside these prefixes gets a WARNING line
+               (scratch scripts such as fix_*.py at the repository root, PR text files).
 
 The API key comes from JULES_API_KEY or from the `JULES_API_KEY=` line of the main
 checkout's `.env`; it is never printed. GitHub calls go through `gh` from the current
@@ -84,31 +92,65 @@ def pr_urls(session: dict) -> list[str]:
     return [o["pullRequest"].get("url", "") for o in session.get("outputs", []) if "pullRequest" in o]
 
 
-def pr_files(url: str) -> str:
+def gh_lines(path: str, jq: str) -> list[str] | None:
+    result = subprocess.run(["gh", "api", "--paginate", path, "--jq", jq], capture_output=True, text=True)
+    # rstrip only the line end: strip() would also eat a tab before an empty field.
+    return result.stdout.rstrip("\r\n").splitlines() if result.returncode == 0 else None
+
+
+def parse_args(argv: list[str]) -> tuple[bool, bool, str, list[str], list[str]]:
+    follow_up = changes_only = False
+    base, allow, ids = "", [], []
+    i = 0
+    while i < len(argv):
+        arg = argv[i]
+        if arg == "--follow-up":
+            follow_up = True
+        elif arg == "--changes-only":
+            changes_only = True
+        elif arg in ("--base", "--allow"):
+            if i + 1 >= len(argv):
+                fail(__doc__ or "usage error")
+            if arg == "--base":
+                base = argv[i + 1]
+            else:
+                allow.append(argv[i + 1])
+            i += 1
+        elif arg.startswith("--"):
+            fail(__doc__ or "usage error")
+        else:
+            ids.append(arg)
+        i += 1
+    # A repeated ID would otherwise never let the watch settle.
+    ids = list(dict.fromkeys(ids))
+    if not ids:
+        fail(__doc__ or "usage error")
+    return follow_up, changes_only, base, allow, ids
+
+
+def report_pr(session_id: str, url: str, expected_base: str, allow: list[str]) -> bool:
+    """Print the PR line and its warnings; False when GitHub could not be asked yet."""
     number = url.rstrip("/").rsplit("/", 1)[-1]
-    result = subprocess.run(
-        ["gh", "api", f"repos/{{owner}}/{{repo}}/pulls/{number}", "--jq", "[.changed_files, .base.ref] | @tsv"],
-        capture_output=True,
-        text=True,
-    )
-    # rstrip only the line end: strip() would also eat the tab before an empty base.
-    return result.stdout.rstrip("\r\n") if result.returncode == 0 else ""
+    head = gh_lines(f"repos/{{owner}}/{{repo}}/pulls/{number}", "[.changed_files, .base.ref] | @tsv")
+    if not head:
+        return False
+    files, base = head[0].split("\t")
+    if files == "0":
+        print(f"WARNING {session_id}: {url} has no changed files (empty commit)", flush=True)
+    else:
+        print(f"{session_id} PR {url} into {base}: {files} files", flush=True)
+    if expected_base and base != expected_base:
+        print(f"WARNING {session_id}: {url} targets {base}, not {expected_base}", flush=True)
+    if allow:
+        paths = gh_lines(f"repos/{{owner}}/{{repo}}/pulls/{number}/files", ".[].filename") or []
+        outside = [p for p in paths if not any(p.startswith(prefix) for prefix in allow)]
+        if outside:
+            print(f"WARNING {session_id}: {url} changes paths outside {allow}: {outside[:8]}", flush=True)
+    return True
 
 
 def main() -> int:
-    args = sys.argv[1:]
-    follow_up = "--follow-up" in args
-    args = [a for a in args if a != "--follow-up"]
-    expected_base = ""
-    if "--base" in args:
-        position = args.index("--base")
-        if position + 1 >= len(args):
-            fail(__doc__ or "usage error")
-        expected_base = args[position + 1]
-        del args[position : position + 2]
-    ids = list(dict.fromkeys(args))  # a repeated ID would otherwise never let the watch settle
-    if not ids:
-        fail(__doc__ or "usage error")
+    follow_up, changes_only, expected_base, allow, ids = parse_args(sys.argv[1:])
     key = api_key()
     poll = int(os.environ.get("POLL_SECONDS", "45"))
     deadline = time.monotonic() + 60 * int(os.environ.get("MAX_MINUTES", "28"))
@@ -125,23 +167,16 @@ def main() -> int:
             if previous is not None and previous[0] != state:
                 moved.add(session_id)
             if previous != (state, urls):
-                title = (session.get("title") or "")[:70]
-                print(f"{session_id} {state} {urls[-1] if urls else '-'} {title}", flush=True)
+                quiet = changes_only and previous is None and state not in SETTLED and not urls
+                if not quiet:
+                    title = (session.get("title") or "")[:70]
+                    print(f"{session_id} {state} {urls[-1] if urls else '-'} {title}", flush=True)
                 if len(urls) > 1 and (previous is None or len(previous[1]) < len(urls)):
                     print(f"WARNING {session_id}: a second pull request {urls[-1]}; close the duplicate", flush=True)
                 last[session_id] = (state, urls)
             for url in urls:
-                if url not in checked_prs and state in SETTLED:
-                    info = pr_files(url)
-                    if info:
-                        checked_prs.add(url)
-                        files, base = info.split("\t")
-                        if files == "0":
-                            print(f"WARNING {session_id}: {url} has no changed files (empty commit)", flush=True)
-                        else:
-                            print(f"{session_id} PR {url} into {base}: {files} files", flush=True)
-                        if expected_base and base != expected_base:
-                            print(f"WARNING {session_id}: {url} targets {base}, not {expected_base}", flush=True)
+                if url not in checked_prs and state in SETTLED and report_pr(session_id, url, expected_base, allow):
+                    checked_prs.add(url)
 
         def settled(session_id: str) -> bool:
             state = last[session_id][0]

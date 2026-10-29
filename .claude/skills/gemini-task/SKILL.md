@@ -34,8 +34,9 @@ second opinions call Gemini through Vertex AI instead (`/zweitmeinung`).
 
 **Good Gemini tasks** need no credentials and no production access, can be
 verified by commands that run locally, and are worth an hour of work or more.
-A task that fits a roughly 30-minute cloud run goes to Google Jules instead
-(`/jules-task`), and Claude does a quick fix directly; the hand-over costs more
+A mechanically verifiable task that fits a roughly 30-minute cloud run goes to
+Google Jules instead (`/jules-task`); a large refactor that must keep behaviour
+identical stays here. Claude does a quick fix directly; the hand-over costs more
 than it saves there. Propose this route yourself: when planning turns up a
 longer task that fits, offer it to the owner as an option (owner, 2026-10-22).
 The longer Gemini is to run, the more planning goes in first: for a large task,
