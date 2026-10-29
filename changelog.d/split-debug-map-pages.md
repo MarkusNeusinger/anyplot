@@ -6,4 +6,4 @@
   lines: its selection, search, and resize logic moves into hooks with tests,
   and the canvas, legend, hover panel, search pill, and weights panel into
   `app/src/sections/map/`. Both pages render the same markup as before.
-  PalettePage stays as it is for now.
+  PalettePage stays as it is for now. (#12457)
