@@ -6,8 +6,10 @@ child that reports the limits it inherited.
 
 import json
 import os
+import signal
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -104,3 +106,112 @@ class TestExecModeInProcess:
 
         captured = capsys.readouterr()
         assert code == 2 and captured.out.splitlines() == [HARNESS_START] and "usage" in captured.err
+
+
+def end_line(stdout: str) -> dict[str, object]:
+    line = next(line for line in stdout.splitlines() if line.startswith(HARNESS_END))
+    return json.loads(line.split(" ", 1)[1])
+
+
+# `/bin/sh` starts a program the way R's `system()` and `popen` do; the filter kills that start (128 + SIGSYS).
+STARTS_A_PROGRAM = "/bin/true; echo status:$?"
+KILLED = f"status:{128 + signal.SIGSYS}"
+
+
+class TestExecModeFilter:
+    """`ANYPLOT_DENY_EXEC=required`: the child alone gets the exec filter's preload library, and the run counts only
+    when the library reported `on` (step 2b of agentic/specs/261024-agent-all-libraries.md)."""
+
+    def test_the_child_runs_under_the_filter_and_the_end_line_says_on(self, execdeny_library: Path) -> None:
+        done = run_exec(
+            "/bin/sh",
+            "-c",
+            STARTS_A_PROGRAM,
+            env={harness.EXEC_DENY_ENV: "required", harness.EXEC_DENY_PRELOAD_ENV: str(execdeny_library)},
+        )
+
+        assert done.returncode == 0, done.stderr
+        assert KILLED in done.stdout
+        assert end_line(done.stdout)["exec_deny"] == "on"
+
+    def test_a_preload_that_does_not_load_fails_the_run_closed(self, tmp_path: Path) -> None:
+        """ld.so only warns about a missing preload object and runs the child unfiltered: the run must not count."""
+        done = run_exec(
+            "/bin/sh",
+            "-c",
+            STARTS_A_PROGRAM,
+            env={harness.EXEC_DENY_ENV: "required", harness.EXEC_DENY_PRELOAD_ENV: str(tmp_path / "missing.so")},
+        )
+
+        assert done.returncode == harness.EXEC_DENY_EXIT
+        assert "status:0" in done.stdout  # it ran unfiltered, which is why the result is refused
+        assert end_line(done.stdout)["exec_deny"] == "unavailable"
+        assert "the exec filter is not in place (unavailable)" in done.stderr
+
+    def test_without_the_variable_the_child_runs_unfiltered_and_the_end_line_says_off(self) -> None:
+        done = run_exec("/bin/sh", "-c", STARTS_A_PROGRAM)
+
+        assert done.returncode == 0 and "status:0" in done.stdout
+        assert end_line(done.stdout)["exec_deny"] == "off"
+
+
+class TestExecModeFilterInProcess:
+    """The filter's paths through `harness.main` in this process, where the coverage sees them."""
+
+    @pytest.fixture(autouse=True)
+    def no_limits(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(harness, "set_limits", lambda: None)
+
+    def test_on_counts_and_passes_the_child_s_code(
+        self, execdeny_library: Path, monkeypatch: pytest.MonkeyPatch, capfd: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setenv(harness.EXEC_DENY_ENV, "required")
+        monkeypatch.setenv(harness.EXEC_DENY_PRELOAD_ENV, str(execdeny_library))
+
+        code = harness.main(["harness.py", EXEC_FLAG, "--", "/bin/sh", "-c", f"{STARTS_A_PROGRAM}; exit 4"])
+
+        out = capfd.readouterr().out
+        assert code == 4 and KILLED in out and end_line(out)["exec_deny"] == "on"
+        assert harness.EXEC_DENY_FD_ENV not in os.environ and "LD_PRELOAD" not in os.environ
+
+    def test_a_silent_child_is_unavailable_and_refused(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capfd: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setenv(harness.EXEC_DENY_ENV, "required")
+        monkeypatch.setenv(harness.EXEC_DENY_PRELOAD_ENV, str(tmp_path / "missing.so"))
+
+        code = harness.main(["harness.py", EXEC_FLAG, "--", "/bin/sh", "-c", "exit 0"])
+
+        captured = capfd.readouterr()
+        assert code == harness.EXEC_DENY_EXIT and end_line(captured.out)["exec_deny"] == "unavailable"
+        assert "not in place" in captured.err
+
+    def test_a_command_that_never_started_keeps_127_under_the_filter(
+        self, monkeypatch: pytest.MonkeyPatch, capfd: pytest.CaptureFixture[str]
+    ) -> None:
+        monkeypatch.setenv(harness.EXEC_DENY_ENV, "required")
+
+        code = harness.main(["harness.py", EXEC_FLAG, "--", "/nonexistent/anyplot-runtime", "plot.x"])
+
+        captured = capfd.readouterr()
+        assert code == 127 and "cannot run /nonexistent/anyplot-runtime" in captured.err
+
+    @pytest.mark.parametrize(
+        ("written", "state"),
+        [(b"on", "on"), (b"unsupported", "unsupported"), (b"unavailable", "unavailable"), (b"", "unavailable")],
+    )
+    def test_the_pipe_s_content_is_the_state(self, written: bytes, state: str) -> None:
+        read_end, write_end = os.pipe()
+        os.set_blocking(read_end, False)
+        os.write(write_end, written)
+        os.close(write_end)
+        assert harness._exec_deny_report(read_end) == state
+
+    def test_a_pipe_still_open_and_empty_is_unavailable(self) -> None:
+        """A grandchild of an unfiltered child could keep the write end: the read must not block."""
+        read_end, write_end = os.pipe()
+        os.set_blocking(read_end, False)
+        try:
+            assert harness._exec_deny_report(read_end) == "unavailable"
+        finally:
+            os.close(write_end)

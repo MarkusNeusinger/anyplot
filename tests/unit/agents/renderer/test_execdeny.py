@@ -7,38 +7,21 @@ Compiled with the host's gcc and loaded into `/bin/sh`, which starts a program t
 from __future__ import annotations
 
 import os
-import platform
 import resource
-import shutil
 import signal
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
 
 
-SOURCE = Path(__file__).resolve().parents[4] / "agents" / "renderer" / "execdeny" / "execdeny.c"
 KILLED_BY_THE_FILTER = 128 + signal.SIGSYS
 
-pytestmark = pytest.mark.skipif(
-    not sys.platform.startswith("linux")
-    or platform.machine() not in ("x86_64", "aarch64")
-    or shutil.which("gcc") is None
-    or not Path("/bin/sh").exists(),
-    reason="the library is Linux-only (x86-64, aarch64) and needs gcc to build",
-)
 
-
-@pytest.fixture(scope="module")
-def library(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    built = tmp_path_factory.mktemp("execdeny") / "libexecdeny.so"
-    subprocess.run(
-        ["gcc", "-O2", "-Wall", "-Wextra", "-Werror", "-shared", "-fPIC", "-o", str(built), str(SOURCE)],
-        check=True,
-        capture_output=True,
-    )
-    return built
+@pytest.fixture
+def library(execdeny_library: Path) -> Path:
+    """The library built once per session (`conftest.execdeny_library`; skipped where it cannot be built)."""
+    return execdeny_library
 
 
 def run(library: Path, script: str, mode: str | None, *, nproc: int | None = None) -> tuple[int, str, str]:
