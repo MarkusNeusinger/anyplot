@@ -97,6 +97,11 @@ _MATH_MARKUP = re.compile(r"[\\{}_^]")
 """Mathtext markup characters left after the commands: dropped, so `CO$_2$` reads `CO2`."""
 _DOLLAR = re.compile(r"(?<!\\)\$")
 _QUOTES = str.maketrans(dict.fromkeys("\"'„“”«»‚‘’`", ""))
+_QUOTE_MARKS = str.maketrans(dict.fromkeys("\"'„“”«»‚‘’`", '"'))
+"""Every quotation mark as `"`, for the comparison that keeps them (`_norm(quotes=True)`)."""
+REQUESTED_MARK = 'requested text "'
+"""How a review line cites a requested text it cannot find in the image, as the reviewer's heading prescribes
+(`pipeline.REVIEW_EXPECTED_HEADING`), read after `_norm(quotes=True)`."""
 _DASHES = str.maketrans({"−": "-", "–": "-", "—": "-", " ": " ", " ": " ", "\xa0": " "})
 _NUMBER = r"[+\-−]?\d(?:[\d.,'’ ]*\d)?"
 _FORMAT = re.compile(
@@ -199,15 +204,16 @@ def plot_texts(drawn: DrawnTexts | None) -> dict[ShownGroup, list[str]] | None:
     }
 
 
-def _norm(text: str) -> str:
+def _norm(text: str, *, quotes: bool = False) -> str:
     """A text as the comparison reads it: NFKC, case-folded, without quotes and mathtext markup, one space.
 
     Mathtext is read as matplotlib draws it: a text with an even number of unescaped `$`
     is math, whose delimiters draw nothing, a command that draws one character
     (`MATH_SYMBOLS`) is that character, a spacing command is a space, and an escaped `\\$`
-    is a dollar sign; a lone `$` is a dollar sign too.
+    is a dollar sign; a lone `$` is a dollar sign too. With `quotes`, every quotation mark
+    stays, as `"`, so a quoted passage keeps its ends (`reviewed_misses`).
     """
-    text = unicodedata.normalize("NFKC", text).translate(_DASHES).translate(_QUOTES)
+    text = unicodedata.normalize("NFKC", text).translate(_DASHES).translate(_QUOTE_MARKS if quotes else _QUOTES)
     delimiters = len(_DOLLAR.findall(text))
     if delimiters and delimiters % 2 == 0:
         text = _DOLLAR.sub("", text)
@@ -367,23 +373,34 @@ def reviewed_misses(expected: Sequence[str], lines: Sequence[str]) -> list[tuple
 
     For a render without drawn texts the reviewer gets the requested texts and reports each one
     it cannot find as a defect line under `EXPECT_LINE_ID` (SC-04, or SC-02 for a number format)
-    that quotes it. A line names a requested text when one of its quoted passages reads as that
-    text (`_norm`: case, spacing, quotes and dashes aside), so a quoted `Temperatur (°C)` never
-    names a requested `Temperatur`; a line without quotes names every requested text it holds
-    whole (`_contains`). Any other line, and a text no line names, is no miss: the reviewer found
-    it.
+    in the form its heading prescribes, `the requested text "<text>"`. A line in that form names
+    exactly the texts it cites so, compared with every quotation mark kept (`_norm(quotes=True)`:
+    case, spacing and dashes aside), so a cited `Temperatur (°C)` never names a requested
+    `Temperatur`, a text with quotes of its own (`Zone "A"`) is still named whole, and a passage
+    the line quotes for what the image shows instead names nothing. A line in another form names
+    a text when one of its quoted passages reads as that text; when it quotes none, or the text
+    has quotes of its own or is a number format (a line may quote only the number it saw), when it
+    holds the text whole (`_contains`). Any other line, and a text no line names, is no miss: the
+    reviewer found it.
     """
     misses: list[tuple[str, str]] = []
     for token in dict.fromkeys(" ".join(item.split()) for item in expected):
         wanted = _norm(token)
         if not wanted:
             continue
+        cited = f'{REQUESTED_MARK}{_norm(token, quotes=True)}"'
+        loose = token.translate(_QUOTES) != token or format_unit(token) is not None
         for line in lines:
             match = DEFECT_RE.match(line)
             if match is None or not set(EXPECT_LINE_ID.values()) & set(match["ids"].split(", ")):
                 continue
-            quoted = [_norm(passage) for passage in _QUOTED.findall(line)]
-            if (wanted in quoted) if quoted else _contains(_norm(line), wanted):
+            marked = _norm(line, quotes=True)
+            if REQUESTED_MARK in marked:
+                named = cited in marked
+            else:
+                quoted = [_norm(passage) for passage in _QUOTED.findall(line)]
+                named = wanted in quoted or ((loose or not quoted) and _contains(_norm(line), wanted))
+            if named:
                 misses.append((token, line))
                 break
     return misses
