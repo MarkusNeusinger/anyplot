@@ -167,10 +167,49 @@ agy-work() {
 `INSTANCE_CONNECTION_NAME`, or `GOOGLE_APPLICATION_CREDENTIALS` exported in the
 owner's shell never reaches `core/database/connection.py` in a child command.
 In this mode file edits are accepted without asking, and commands ask him
-unless he allows them; for a long task he allows the acceptance commands and
-the gates. Then, for each package in a fresh session, he runs `agy-work` and
-types the start line. `/gemini-task` without an argument lists the open briefs
-and issues.
+unless a rule allows them. So the owner's agy settings
+(`~/.gemini/antigravity-cli/settings.json`) carry the permission rules in
+[`agy-permissions.json`](agy-permissions.json) next to this skill (owner,
+2026-10-29: Gemini may do most things without a prompt, except cloud and
+production access). Allowed: the toolchains (`yarn`, `npm`, `node`, `uv`,
+`python`), file tools, local Git, pushes to `gemini/*`, GitHub reads, and its
+own draft PR. Denied: everything the "Never" list in section 2 forbids, cloud
+CLIs (`gcloud`, `gsutil`, `bq`, `psql`, the Cloud SQL proxy), network
+downloads, history rewrites, GitHub writes beyond the own draft PR, and
+`chmod` and writes to the brief folder, so a brief stays read-only for
+Gemini's tools as well. Rules are word-by-word prefixes; deny wins over ask,
+ask over allow, and anything unlisted asks. Shell wrappers (`bash -c`, `sh`,
+`env`, `xargs`, `eval`) stay unlisted, because a deny rule only matches the
+start of a command.
+
+**These rules are guardrails against accidental use, not a security
+boundary.** An allowed command can still reach what a deny names: `cat` reads
+any file the owner can read, the main checkout's `.env` included (the
+`read_file` denies bind only Gemini's file tool), and `uv run`, `node`, or
+`yarn` can start any program, `gcloud` included. agy's terminal sandbox
+(`agy --sandbox`, `toolPermission: proceed-in-sandbox`) is no fix either: in a
+probe on 2026-10-15 (agy 1.3.5, WSL) it still showed the `gcloud` and `gh`
+configuration and allowed writes outside the project, while it blocked the
+network and writes inside the project, which the gates and the push need. What holds is the clone without `.env`, `env -i`,
+the rules in this skill, and the owner's trust in Gemini (2026-10-22); the
+permission list only stops the prompts and the obvious slips. Claude edits
+the settings file only when the owner asks, and touches nothing else in that
+folder: the agy login lives there.
+
+On a new machine, merge the rules in once (this replaces the `permissions`
+lists and keeps every other setting):
+
+```bash
+f=~/.gemini/antigravity-cli/settings.json
+mkdir -p "$(dirname "$f")"; [ -f "$f" ] || echo '{}' > "$f"
+cp -p "$f" "$f.bak-$(date +%Y%m%d-%H%M%S)"
+sed "s|/home/<user>|$HOME|g" ~/projects/anyplot-agy/.claude/skills/gemini-task/agy-permissions.json \
+  | jq -s '.[0] * .[1]' "$f" - > "$f.new" && mv "$f.new" "$f"
+```
+
+Then, for each package in a fresh session, he runs `agy-work` and types the
+start line. `/gemini-task` without an argument lists the open briefs and
+issues.
 
 ## 2. Gemini: work the task
 
