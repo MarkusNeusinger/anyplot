@@ -10,4 +10,4 @@
   edits, a budget for stuck sessions, and a REST fallback for messages. It
   records how to prove unchanged behaviour (a jsdom snapshot with the existing
   test's mocks, a browser comparison against the production API) and that a
-  branch cut before a CI change keeps its old workflow triggers.
+  branch cut before a CI change keeps its old workflow triggers. (#12453)
