@@ -13,6 +13,15 @@ the blank lines around it are not part of it. This comment never reaches a model
 <!-- slot: request_formatter -->
 a scales labeller such as `scales::label_number(scale = 1e-6, accuracy = 0.1, decimal.mark = ",", big.mark = ".", suffix = " Mio.")` that writes the decimal comma and the unit
 
+<!-- slot: requested_check -->
+An R render has no probe, so the server cannot read its drawn texts back: the result marks the requested texts as not checked, and only your code makes them right.
+
+<!-- slot: measured_hints -->
+An R render has no probe, so no hint is ever a target measured on a render: every hint quotes the code.
+
+<!-- slot: density_check -->
+An R render has no probe, so no gate counts the labels for you: the host gates judge only its output, the PNG and its canvas, so count the marks from `df` yourself.
+
 <!-- slot: data_statement -->
 The code is R. The data comes from exactly one statement at the top level:
 
@@ -59,7 +68,7 @@ INK_MUTED <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 R's `sprintf()`, `format()` and `round()` write `.` for decimals: format through scales, which takes both marks,
 
 <!-- slot: number_output -->
-`en`: `"."` and `","`): `scales::label_number(accuracy = 0.01, decimal.mark = DECIMAL, big.mark = THOUSANDS)` as the `labels =` of an axis scale, and `scales::number(x, accuracy = 0.01, decimal.mark = DECIMAL, big.mark = THOUSANDS)` for value labels and annotations, never `sprintf("%.2f", x)`, which always writes a point. Years, dates, identifiers and the cells of the user's data stay as they are. A plot language the table does not list keeps the catalogue's formats.
+`en`: `"."` and `","`): `scales::label_number(accuracy = 0.01, decimal.mark = DECIMAL, big.mark = THOUSANDS)` as the `labels =` of an axis scale, and `scales::number(x, accuracy = 0.01, decimal.mark = DECIMAL, big.mark = THOUSANDS)` for value labels and annotations, never `sprintf("%.2f", x)`, which always writes a point. Years, dates, identifiers and the cells of the user's data stay as they are. A plot language the table does not list keeps the catalogue's formats. No gate checks the decimal marks of an R render, which has no probe, so the code alone keeps them right.
 
 <!-- slot: dates -->
 Use `scale_x_date()` (`scale_x_datetime()` for timestamps) with `breaks = scales::breaks_pretty()` and `labels = scales::label_date_short()` instead of fixed breaks or a fixed `date_breaks`, unless the change request asks for specific ones.
@@ -69,3 +78,6 @@ Attach only the packages the code already has, plus, when needed, `ggplot2`, `dp
 
 <!-- slot: placeholder -->
 df <- load_user_data()
+
+<!-- slot: highlight_compute -->
+`idx <- which.max(df[[Y]])`, `scales::number(max(df[[Y]], na.rm = TRUE), accuracy = 1, big.mark = THOUSANDS)`

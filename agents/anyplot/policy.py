@@ -6,10 +6,13 @@ Every static instruction is assembled from files and never from paraphrased copi
   `reviewer.md`, `scope_judge.md`, `data_judge.md`); `adapter.md` holds the rules every
   language shares, with a `{{slot}}` wherever the language's code differs (the data
   statement and its typing, how columns are read, the protected lines, the palette's
-  literal form, number and date formatting, the safe-code list), and the language's
-  runtime prompt (`adapter_python.md`, `adapter_r.md`, `RUNTIME_PROMPTS`) fills the slots
-  (`adapter_prompt`, since 2026-10-29: one place for each shared rule, and the Python
-  prompt byte for byte what it was, which a test pins);
+  literal form, number and date formatting, the safe-code list, and every sentence about a
+  gate that only matplotlib's probe makes true), and the language's runtime prompt
+  (`adapter_python.md`, `adapter_r.md`, `RUNTIME_PROMPTS`) fills the slots, also the one
+  of `adapter_highlights.md` (`adapter_prompt`, `highlights_prompt`, since 2026-10-29: one
+  place for each shared rule, and the Python prompts byte for byte what they were, which
+  tests pin); `scope_judge.md` gets one injected passage, the libraries the assistant
+  adapts (`AGENT_LIBRARIES`) and the catalogue's others (`scope_rubric`);
 * the catalogue's prompt sources, read verbatim from the repository's `prompts/`
   directory: `default-style-guide.md`, `library/<library>.md`, and excerpts cut
   out by heading, so they follow every edit of their source: "Which weaknesses to
@@ -41,6 +44,7 @@ around the slash (`< /user_message>`) and in fullwidth forms (`＜／ｕｓｅ�
 
 import re
 import unicodedata
+from collections.abc import Sequence
 from functools import lru_cache
 from pathlib import Path
 
@@ -87,9 +91,15 @@ _FENCE_NAMES = frozenset(FENCE_TAGS)
 _HEADING = re.compile(r"^(#{1,6})\s")
 
 ADAPTER_TEMPLATE = "adapter.md"
+HIGHLIGHTS_TEMPLATE = "adapter_highlights.md"
+ADAPTER_TEMPLATES = (ADAPTER_TEMPLATE, HIGHLIGHTS_TEMPLATE)
+"""The adapter's templates whose `{{slot}}`s a runtime prompt fills; every slot of a runtime prompt fills one of them."""
 RUNTIME_PROMPTS: dict[str, str] = {"python": "adapter_python.md", "r": "adapter_r.md"}
 """The runtime prompt of each language with a runtime (`render.runtimes.RUNTIME_CLASSES`), whose slots fill
-`adapter.md`."""
+`adapter.md` and `adapter_highlights.md`."""
+SCOPE_JUDGE = "scope_judge.md"
+LIBRARIES_SLOT = "libraries"
+"""The one slot of `scope_judge.md`: which libraries the assistant adapts here and which it does not (`scope_rubric`)."""
 _SLOT = re.compile(r"\{\{([a-z_]+)\}\}")
 _SLOT_START = re.compile(r"^<!-- slot: ([a-z_]+) -->$")
 
@@ -301,23 +311,36 @@ def runtime_slots(language: str) -> dict[str, str]:
     return slots
 
 
-@lru_cache(maxsize=None)
-def adapter_prompt(language: str) -> str:
-    """`adapter.md` with every `{{slot}}` filled from the language's runtime prompt (`runtime_slots`).
+def _filled(template_name: str, language: str) -> str:
+    """One adapter template with every `{{slot}}` filled from the language's runtime prompt (`runtime_slots`).
 
-    A slot the template names and the runtime prompt lacks, or a passage of the runtime prompt the
-    template never names, raises `PromptSourceError`, so a renamed slot breaks the build instead of
-    leaving `{{...}}` in a prompt or a rule out of it.
+    A slot a template names and the runtime prompt lacks, or a passage of the runtime prompt that no
+    template of `ADAPTER_TEMPLATES` names, raises `PromptSourceError`, so a renamed slot breaks the build
+    instead of leaving `{{...}}` in a prompt or a rule out of it.
     """
-    template = own_prompt(ADAPTER_TEMPLATE)
+    template = own_prompt(template_name)
     slots = runtime_slots(language)
-    named = set(_SLOT.findall(template))
-    missing, unused = sorted(named - set(slots)), sorted(set(slots) - named)
+    named = {name for each in ADAPTER_TEMPLATES for name in _SLOT.findall(own_prompt(each))}
+    missing = sorted(set(_SLOT.findall(template)) - set(slots))
+    unused = sorted(set(slots) - named)
     if missing or unused:
         raise PromptSourceError(
-            f"{RUNTIME_PROMPTS[language]} does not fit {ADAPTER_TEMPLATE}: missing slots {missing}, unused {unused}"
+            f"{RUNTIME_PROMPTS[language]} does not fit {template_name}: missing slots {missing}, unused {unused}"
         )
     return _SLOT.sub(lambda match: slots[match.group(1)], template)
+
+
+@lru_cache(maxsize=None)
+def adapter_prompt(language: str) -> str:
+    """`adapter.md` with its slots filled from the language's runtime prompt (`_filled`)."""
+    return _filled(ADAPTER_TEMPLATE, language)
+
+
+@lru_cache(maxsize=None)
+def highlights_prompt(language: str) -> str:
+    """`adapter_highlights.md` (the experiment `AGENT_HIGHLIGHTS=data`) with its slot filled for the language: how to
+    compute a highlight's target and text from `df` in that language's code (since 2026-10-29)."""
+    return _filled(HIGHLIGHTS_TEMPLATE, language)
 
 
 @lru_cache(maxsize=None)
@@ -330,10 +353,11 @@ def adapter_instruction(library: str) -> str:
 
     weaknesses, sizing = repair_excerpts()
     settings = get_settings()
-    highlights = own_prompt("adapter_highlights.md") if settings.highlights == "data" else ""
+    language = LIBRARY_LANGUAGES[library]
+    highlights = highlights_prompt(language) if settings.highlights == "data" else ""
     # The rubric holds the VQ-03 marker-size and alpha table (`vq03_table`), so it is not repeated.
     return _join(
-        adapter_prompt(LIBRARY_LANGUAGES[library]),
+        adapter_prompt(language),
         "## Number formats by plot language\n\n" + number_format_table(),
         highlights,
         "## Excerpt: which weaknesses to fix\n\n" + weaknesses,
@@ -363,8 +387,71 @@ def catalogue_reviewer_instruction() -> str:
     return _join(own_prompt("reviewer_catalogue.md"), system_prompt())
 
 
-def scope_rubric() -> str:
-    return own_prompt("scope_judge.md")
+def scope_rubric(libraries: Sequence[str] | None = None) -> str:
+    """The scope judge's instruction: `scope_judge.md` with the libraries the assistant adapts here in its one slot.
+
+    `libraries` defaults to the served set (`AGENT_LIBRARIES`), so a request for this plot in any of them is
+    `in_scope` and only a library or language outside it is `other_library`. Until 2026-10-29 the rubric named
+    matplotlib and seaborn as the only two, which refused plotnine, altair, pygal and lets-plot as other libraries
+    once the deploy served them. The judge never sees the session's library: the user may switch between the
+    served ones, so the whole served set is in scope.
+    """
+    if libraries is None:
+        from .settings import get_settings
+
+        libraries = get_settings().libraries
+    return _scope_rubric(tuple(libraries))
+
+
+@lru_cache(maxsize=8)
+def _scope_rubric(libraries: tuple[str, ...]) -> str:
+    template = own_prompt(SCOPE_JUDGE)
+    named = _SLOT.findall(template)
+    if named != [LIBRARIES_SLOT]:
+        raise PromptSourceError(f"{SCOPE_JUDGE} must name the slot {LIBRARIES_SLOT!r} exactly once, names {named}")
+    passage = libraries_passage(libraries)
+    return _SLOT.sub(lambda _match: passage, template)
+
+
+def _listed(items: Sequence[str]) -> str:
+    """`a`, `a and b`, `a, b and c`."""
+    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
+
+
+def _by_language(libraries: Sequence[str]) -> str:
+    """The display names of `libraries` grouped by their language, in the catalogue's order: `A and B (Python) and C (R)`."""
+    from core.constants import LANGUAGES_METADATA, LIBRARIES_METADATA
+
+    groups = []
+    for language in LANGUAGES_METADATA:
+        names = [
+            str(entry["name"])
+            for entry in LIBRARIES_METADATA
+            if entry["language_id"] == language["id"] and entry["id"] in libraries
+        ]
+        if names:
+            groups.append(f"{_listed(names)} ({language['name']})")
+    return _listed(groups)
+
+
+def libraries_passage(served: Sequence[str]) -> str:
+    """The scope judge's sentences on which catalogue libraries the assistant adapts here and which it does not.
+
+    Display names grouped by language, in the catalogue's order whatever the order of `served`, so the
+    rubric (and its hash in the scope eval) depends on the set alone.
+    """
+    from core.constants import LIBRARIES_METADATA
+
+    adapted = [str(entry["id"]) for entry in LIBRARIES_METADATA if entry["id"] in set(served)]
+    others = [str(entry["id"]) for entry in LIBRARIES_METADATA if entry["id"] not in set(served)]
+    if not adapted:
+        raise ValueError("the assistant adapts at least one library")
+    text = f"The libraries the assistant adapts here are {_by_language(adapted)}."
+    if others:
+        text += f" The catalogue's other libraries, which it does not adapt here, are {_by_language(others)}."
+    else:
+        text += " It adapts every library of the catalogue, so only a tool outside the catalogue is another library."
+    return text
 
 
 def data_rubric() -> str:

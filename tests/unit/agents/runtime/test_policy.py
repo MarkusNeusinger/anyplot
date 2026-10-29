@@ -100,6 +100,46 @@ class TestAdapterPromptPerLanguage:
         )
         assert len(prompt) == 18_703 and "{{" not in prompt
 
+    HIGHLIGHTS_SHA256 = "b810744bed4b986e2a76d4480f72ee986c69b12d12f964f0d988d815141d3567"
+    """SHA-256 of `adapter_highlights.md` as `own_prompt` read it before its slot (51ceaac6c, 1,058 characters)."""
+
+    def test_the_python_highlights_prompt_is_byte_identical_too(self) -> None:
+        prompt = policy.highlights_prompt("python")
+
+        assert hashlib.sha256(prompt.encode("utf-8")).hexdigest() == self.HIGHLIGHTS_SHA256
+        assert len(prompt) == 1_058 and "{{" not in prompt
+
+    def test_the_highlights_follow_the_librarys_language(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """`AGENT_HIGHLIGHTS=data` adds the highlights section in the library's language."""
+        from agents.anyplot.settings import get_settings
+
+        monkeypatch.setenv("AGENT_HIGHLIGHTS", "data")
+        get_settings.cache_clear()
+        policy.adapter_instruction.cache_clear()
+        try:
+            assert policy.highlights_prompt("python") in policy.adapter_instruction("seaborn")
+            ggplot2 = policy.adapter_instruction("ggplot2")
+            assert policy.highlights_prompt("r") in ggplot2 and "idxmax" not in ggplot2
+        finally:
+            monkeypatch.delenv("AGENT_HIGHLIGHTS")
+            get_settings.cache_clear()
+            policy.adapter_instruction.cache_clear()
+
+    def test_r_reads_no_sentence_that_only_matplotlibs_probe_makes_true(self) -> None:
+        """The probe's gate lines (VQ-03 density, VQ-06 decimal marks), its drawn-text check and the polar hint are
+        matplotlib's; R renders without a probe, and its prompt says what the host gates judge instead."""
+        python, r = policy.adapter_prompt("python"), policy.adapter_prompt("r")
+        probe_only = (
+            "ax.set_rlabel_position",
+            "a `VQ-03` gate line",
+            "a `VQ-06` gate line",
+            "The server checks the drawn texts",
+        )
+        for sentence in probe_only:
+            assert sentence in python and sentence not in r, sentence
+        assert r.count("An R render has no probe") == 3 and "has no probe" in r.split("**Numbers.**", 1)[1]
+        assert "the host gates judge only its output, the PNG and its canvas" in r
+
     @pytest.mark.parametrize("library", ["matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot"])
     def test_every_python_library_reads_the_python_prompt_first(self, library: str) -> None:
         assert policy.adapter_instruction(library).startswith(
@@ -136,14 +176,20 @@ class TestAdapterPromptPerLanguage:
         from agents.anyplot.render.runtimes import RUNTIME_CLASSES
 
         assert set(policy.RUNTIME_PROMPTS) == set(RUNTIME_CLASSES)
-        names = set(re.findall(r"\{\{([a-z_]+)\}\}", policy.own_prompt(policy.ADAPTER_TEMPLATE)))
+        names = {
+            name
+            for template in policy.ADAPTER_TEMPLATES
+            for name in re.findall(r"\{\{([a-z_]+)\}\}", policy.own_prompt(template))
+        }
+        assert "highlight_compute" in names and "measured_hints" in names
         for language in policy.RUNTIME_PROMPTS:
             assert set(policy.runtime_slots(language)) == names, language
+            assert "{{" not in policy.adapter_prompt(language) + policy.highlights_prompt(language)
 
     @pytest.fixture
     def fresh_prompts(self) -> Iterator[None]:
         """The prompt caches are emptied before and after, so a test's files never leak into another test."""
-        caches = (policy.own_prompt, policy.runtime_slots, policy.adapter_prompt)
+        caches = (policy.own_prompt, policy.runtime_slots, policy.adapter_prompt, policy.highlights_prompt)
         for cache in caches:
             cache.cache_clear()
         yield
@@ -166,19 +212,35 @@ class TestAdapterPromptPerLanguage:
         monkeypatch: pytest.MonkeyPatch,
         fresh_prompts: None,
     ) -> None:
-        (tmp_path / "adapter.md").write_text(source("agents/anyplot/prompts/adapter.md"), encoding="utf-8")
+        for template in policy.ADAPTER_TEMPLATES:
+            (tmp_path / template).write_text(source(f"agents/anyplot/prompts/{template}"), encoding="utf-8")
         (tmp_path / "adapter_r.md").write_text(edit(source("agents/anyplot/prompts/adapter_r.md")), encoding="utf-8")
         monkeypatch.setattr(policy, "PROMPTS_DIR", tmp_path)
 
         with pytest.raises(policy.PromptSourceError):
             policy.adapter_prompt("r")
 
+    def test_a_slot_only_the_highlights_template_names_is_still_a_missing_slot(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fresh_prompts: None
+    ) -> None:
+        for template in policy.ADAPTER_TEMPLATES:
+            (tmp_path / template).write_text(source(f"agents/anyplot/prompts/{template}"), encoding="utf-8")
+        runtime = source("agents/anyplot/prompts/adapter_r.md")
+        (tmp_path / "adapter_r.md").write_text(runtime.split("<!-- slot: highlight_compute -->")[0], encoding="utf-8")
+        monkeypatch.setattr(policy, "PROMPTS_DIR", tmp_path)
+
+        assert "df <- load_user_data()" in policy.adapter_prompt("r")
+        with pytest.raises(policy.PromptSourceError, match="highlight_compute"):
+            policy.highlights_prompt("r")
+
     def test_a_language_without_a_runtime_prompt_is_refused(self) -> None:
         with pytest.raises(policy.PromptSourceError, match="no runtime prompt"):
             policy.adapter_prompt("julia")
 
     def test_the_r_prompts_idioms_pass_the_r_validator(self) -> None:
-        """What the R prompt tells the adapter to write is code the R validator admits, the ADAPTATION profile too."""
+        """What the R prompts tell the adapter to write (the adapter prompt and the highlights section) is code the R
+        validator admits, the ADAPTATION profile too."""
+        assert "`idx <- which.max(df[[Y]])`" in policy.highlights_prompt("r")
         from agents.anyplot.code.profiles.r.validate import validate_adaptation, validate_security
 
         code = "\n".join(
@@ -199,10 +261,14 @@ class TestAdapterPromptPerLanguage:
                 "df <- df |> mutate(across(all_of(c(REGION)), \\(v) factor(v, levels = unique(v))))",
                 "groups <- unique(df[[REGION]])",
                 "colors <- setNames(IMPRINT_PALETTE[seq_along(groups)], groups)",
+                # The highlights section's idioms (`highlight_compute`).
+                "idx <- which.max(df[[REVENUE]])",
+                "peak <- scales::number(max(df[[REVENUE]], na.rm = TRUE), accuracy = 1, big.mark = THOUSANDS)",
                 'note <- paste0("r = ", scales::number(cor(as.numeric(df[[MONTH]]), df[[REVENUE]], '
                 'use = "complete.obs"), accuracy = 0.01, decimal.mark = DECIMAL))',
                 "p <- ggplot(df, aes(x = .data[[MONTH]], y = .data[[REVENUE]], color = .data[[REGION]])) +",
                 "  geom_line() +",
+                '  annotate("text", x = df[[MONTH]][idx], y = df[[REVENUE]][idx], label = peak, color = INK) +',
                 "  scale_color_manual(values = colors) +",
                 "  scale_x_date(breaks = scales::breaks_pretty(), labels = scales::label_date_short()) +",
                 "  scale_y_continuous(labels = scales::label_number(accuracy = 0.01, decimal.mark = DECIMAL, "
@@ -282,8 +348,9 @@ class TestOtherInstructions:
         assert "Text meant for use outside the plot" in rubric and "newsletters" in rubric
         # 15 since 2026-10-14: a data-generating snippet (in scope) and code that reaches the system (an attack);
         # 18 the same day: data code that reads a URL (needs_data), the live Chart.js request (other_library) and
-        # its neighbour, another chart in another library (out_of_scope).
-        assert 6 <= len(examples) <= 18
+        # its neighbour, another chart in another library (out_of_scope); 19 since 2026-10-29: a question about R
+        # code (in scope), since the session's code can be any served library's.
+        assert 6 <= len(examples) <= 19
         assert {verdict for _, verdict in examples} == {
             "in_scope",
             "out_of_scope",
@@ -323,9 +390,65 @@ class TestOtherInstructions:
         assert "`attack`, `out_of_scope`, `needs_data`, `other_library`, `in_scope`" in rubric
         assert "A request for another plot, or for code that is not this plot, is not `other_library`" in rubric
         assert "[message withheld by scope policy: other_library]" in rubric
-        # The judge never sees the session's library: matplotlib and seaborn are both adapted, so neither is "other".
-        assert "any other tool than matplotlib and seaborn" in rubric
+        # The judge never sees the session's library: every served library is adapted, so none of them is "other".
         assert "is `in_scope`, whichever of them the session uses now" in rubric
+        assert "A question about how this session's plot code works stays `in_scope`" in rubric
+        assert examples["What does `aes(x = .data[[SPEND]])` in the code mean?"] == "in_scope"
+
+
+class TestScopeRubricLibraries:
+    """The libraries the assistant adapts reach the scope judge from the settings (2026-10-29); until then the rubric
+    named matplotlib and seaborn alone, and refused the other served libraries as `other_library`."""
+
+    SERVED = ["matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot", "ggplot2"]
+
+    def adapted_and_others(self, rubric: str) -> tuple[str, str]:
+        """The two lists of the injected passage; a sentence ends at a point and a space (`Makie.jl` has a point)."""
+        adapted = rubric.split("The libraries the assistant adapts here are ", 1)[1].split(". ", 1)[0]
+        others = rubric.split("which it does not adapt here, are ", 1)[1].split(". ", 1)[0]
+        return adapted, others
+
+    def test_the_rubric_names_the_served_libraries_by_language(self) -> None:
+        rubric = policy.scope_rubric(self.SERVED)
+        adapted, others = self.adapted_and_others(rubric)
+
+        assert adapted == "Altair, lets-plot, Matplotlib, plotnine, Pygal and Seaborn (Python) and ggplot2 (R)"
+        assert (
+            others
+            == "Bokeh and Plotly (Python), Makie.jl (Julia) and Chart.js, D3.js, Apache ECharts, Highcharts and MUI X Charts (JavaScript)"
+        )
+        assert "{{" not in rubric and "matplotlib and seaborn" not in rubric
+
+    def test_ggplot2_is_another_library_only_while_it_is_not_served(self) -> None:
+        served = self.adapted_and_others(policy.scope_rubric(["matplotlib", "ggplot2"]))
+        default = self.adapted_and_others(policy.scope_rubric(["matplotlib", "seaborn"]))
+
+        assert "ggplot2 (R)" in served[0] and "ggplot2" not in served[1] and "Seaborn" in served[1]
+        assert "ggplot2" not in default[0] and "ggplot2 (R)" in default[1]
+
+    def test_the_default_comes_from_the_settings_and_the_order_never_matters(self) -> None:
+        from agents.anyplot.settings import get_settings
+
+        assert policy.scope_rubric() == policy.scope_rubric(get_settings().libraries)
+        assert policy.scope_rubric(["seaborn", "matplotlib"]) == policy.scope_rubric(["matplotlib", "seaborn"])
+
+    def test_the_other_library_examples_name_no_library_the_registry_serves(self) -> None:
+        """Chart.js and Plotly stand for another library in the rubric's examples; a step that serves either has to
+        change them (JavaScript in step 3, plotly in step 4 of the all-libraries plan)."""
+        from agents.anyplot.render.runtimes import RUNTIME_LIBRARIES
+
+        _, others = self.adapted_and_others(policy.scope_rubric(sorted(RUNTIME_LIBRARIES)))
+        rubric = policy.scope_rubric(sorted(RUNTIME_LIBRARIES))
+        assert "Chart.js" in others and "Plotly" in others
+        assert '("How would I do this plot in JavaScript with Chart.js? Give me the code.", "Gibt es das auch' in rubric
+
+    def test_a_catalogue_served_in_full_leaves_only_outside_tools(self) -> None:
+        from core.constants import LIBRARIES_METADATA
+
+        rubric = policy.scope_rubric([str(entry["id"]) for entry in LIBRARIES_METADATA])
+        assert "It adapts every library of the catalogue" in rubric and "does not adapt here, are" not in rubric
+        with pytest.raises(ValueError, match="at least one library"):
+            policy.libraries_passage([])
 
     def test_the_judges_refuse_by_intent_never_for_personal_data(self) -> None:
         scope, data, root = policy.scope_rubric(), policy.data_rubric(), policy.root_instruction()

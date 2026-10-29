@@ -10,6 +10,15 @@ reaches a model.
 <!-- slot: request_formatter -->
 a `FuncFormatter` that writes the decimal comma and the unit
 
+<!-- slot: requested_check -->
+The server checks the drawn texts of the render for each of them.
+
+<!-- slot: measured_hints -->
+On a repair attempt a hint can also be a target the server measured on the last render, such as the angle for a polar plot's radial tick labels (`ax.set_rlabel_position(...)`): apply it with exactly that value, never one of your own.
+
+<!-- slot: density_check -->
+The server measures this (a `VQ-03` gate line counts the labels, the decorations and the pixels each label has).
+
 <!-- slot: data_statement -->
 The data comes from exactly one statement at module level:
 
@@ -63,3 +72,6 @@ Use only the imports the code already has, plus, when needed, `numpy`, `pandas`,
 
 <!-- slot: placeholder -->
 df = load_user_data()
+
+<!-- slot: highlight_compute -->
+`idx = df[y].idxmax()`, `f"{df[y].max():,.0f}"`
