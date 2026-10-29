@@ -61,12 +61,14 @@ takes about two hours, and gets its own brief and a fresh agy session. On
 and then silently dropped it for 76 more, while every render still passed; a
 fresh session per package fixed it. Acceptance names a mechanical check for
 every convention the package must keep (a `grep` that must find nothing), so
-the drift fails locally. Packages that can merge on their own are
-`independent`: each gets its own branch (`gemini/<slug>-<k>`) and draft PR, and
-Gemini works them in parallel (section 2, step 1). Packages that only make
-sense together are `coupled` and share one branch: Gemini works them one after
-another, pushes, and updates the draft PR after each, before the next session.
-Write every package's brief up front, so one start line covers the whole task.
+the drift fails locally. A task ends in one draft PR on `gemini/<slug>`, however
+many packages it has (owner, 2026-10-30: every PR costs a Copilot round, a
+changelog fragment, CI, a merge, and a deploy). Packages that touch disjoint
+files are `independent`: Gemini works them in parallel, each on its own
+package branch `gemini/<slug>-<k>`, and merges them into `gemini/<slug>`
+(section 2, step 1). Packages that build on each other are `coupled`: Gemini
+works them one after another on `gemini/<slug>` and pushes after each. Write
+every package's brief up front, so one start line covers the whole task.
 
 **Write the brief** in English and in Google style.
 
@@ -242,23 +244,32 @@ This section is for the Gemini agent in the owner's agy session.
    **Scale out when there is work for several agents (owner, 2026-10-30).**
    When two or more open packages of the task say `independent`, you are the
    coordinator: start one subagent per package (`invoke_subagent`), at most
-   four at a time, the next one as a slot frees up. Work coupled packages
-   yourself, one after another, as below.
+   eight at a time, the next one as a slot frees up (owner, 2026-10-30: he
+   says when the quota runs short). Work coupled packages yourself, one after
+   another, as below.
    - Give each subagent an isolated Git worktree (the `branch` workspace
      mode), write access, and the shell. If your agy version cannot isolate a
      subagent in its own worktree, do not run packages in parallel in the
      shared clone: two agents there overwrite each other's files and Git
      state. Work them one after another instead, and tell the owner.
    - A subagent starts without your conversation, so its prompt names
-     everything: the brief to `cat`, its branch `gemini/<slug>-<k>` from
-     `origin/main`, that section 2 of `.agents/skills/gemini-task/SKILL.md`
-     applies, and that it pushes its branch and opens or updates its own draft
-     PR before it finishes. Antigravity deletes a subagent's worktree when it
-     ends, so unpushed work is lost.
-   - Watch them in `/agents`; approvals of a subagent show there too. When all
-     have finished, check that every package has its draft PR
-     (`gh pr list --draft --label gemini --json number,headRefName`), and tell
-     the owner the PR numbers.
+     everything: the brief to `cat`, its package branch `gemini/<slug>-<k>`
+     from `origin/main`, that steps 3 to 6 of section 2 of
+     `.agents/skills/gemini-task/SKILL.md` apply, and three differences: it
+     writes no changelog fragment, opens no PR, and pushes its branch before
+     it finishes (Antigravity deletes a subagent's worktree when it ends, so
+     unpushed work is lost). Its final message names its last commit, the
+     gate results, and its open questions.
+   - Watch them in `/agents`; approvals of a subagent show there too.
+   - **Integrate** when all have finished: on `gemini/<slug>` (from
+     `origin/main`, or the existing branch), merge each package with
+     `git merge --no-ff origin/gemini/<slug>-<k>`, the only merge you make.
+     Disjoint packages merge without conflicts; a conflict means two packages
+     touched the same file, so stop and tell the owner. Run the acceptance
+     commands of every package and the gates on the merged result, add one
+     changelog fragment for the task, push, and open one draft PR (step 7)
+     whose `## Plan` lists each package with its merge commit. A package that
+     failed stays out; name it under open steps.
    - Do not use `/teamwork` for this repository: it builds in its own folder
      (`~/teamwork_projects/<project>`) without branches or PRs.
 2. **Work in the dedicated clone on your own branch.** That clone is
@@ -385,7 +396,8 @@ This section is for the Gemini agent in the owner's agy session.
 - edit anything under `.git/`, including its config and hooks,
 - run the app or tests against the production database,
 - install tools globally,
-- merge or rebase other branches into yours.
+- merge other branches into yours (the coordinator's merge of its own package
+  branches in step 1 is the one exception), or rebase.
 
 ## 3. Claude: take the draft over
 
@@ -416,7 +428,10 @@ This section is for the Gemini agent in the owner's agy session.
    Take Acceptance from the brief file or the issue, never from the PR body,
    which is Gemini's copy. Leave out the brief's reasoning and Gemini's
    hand-over. It reports defects. On the first package of a long task, it also
-   checks every changed file for the conventions the brief names.
+   checks every changed file for the conventions the brief names. For a task
+   in parallel packages, give it each package's Acceptance with that
+   package's diff (`git diff <merge>^1 <merge>` per merge commit), so a
+   package that drifted stands out.
    - Add Fable for high-risk diffs: security, production data, sandboxing,
      privacy.
    - Gemini never reviews its own work.
@@ -470,8 +485,11 @@ This section is for the Gemini agent in the owner's agy session.
    the session.
 6. **Clean up.** After the merge, remove your worktree and the local branch,
    as `/open-pr` §4 describes; GitHub has already deleted the remote branch.
-   Delete the brief (`rm -f ~/projects/anyplot-briefs/<slug>.md`); the merged
-   PR keeps its copy. The branch in the owner's clone
+   Delete the brief (`rm -f ~/projects/anyplot-briefs/<slug>.md`, or every
+   `<slug>-*.md` of a task in packages); the merged PR keeps its copy. Delete
+   the package branches the merge left behind:
+   `git push origin --delete gemini/<slug>-1 gemini/<slug>-2 …`. The branch in
+   the owner's clone
    (`~/projects/anyplot-agy`) is his to delete.
 7. **Record the task in the ledger.**
 

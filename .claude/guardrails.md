@@ -64,9 +64,12 @@ to the parent; agy deletes that worktree when the subagent ends. `/teamwork`
 runs a fixed team of roles (coordinator, orchestrator, workers, critics,
 auditors) on paid plans, but in its own folder `~/teamwork_projects/<project>`,
 with no branches or PRs in its docs, so it does not fit work on this
-repository. So independent packages go to one subagent each, at most four at a
-time (the docs give no concurrency limit and no quota figures), each on its own
-`gemini/<slug>-<k>` branch, pushing and opening its draft PR before it ends.
+repository. So independent packages go to one subagent each, at most eight at
+a time (the docs give no concurrency limit and no quota figures; the owner
+says when the quota runs short), each pushing its own `gemini/<slug>-<k>`
+branch before it ends. The coordinator merges them into one branch and opens
+one draft PR per task, not one per package: every PR costs a Copilot round, a
+changelog fragment, CI, a merge, and a deploy (owner, 2026-10-30).
 Running agents in parallel inside the owner's own agy session is a documented
 product feature; what Google's FAQ forbids is a third-party agent such as
 Claude Code driving agy under the consumer login.
