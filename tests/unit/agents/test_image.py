@@ -731,14 +731,17 @@ class TestRendererToolchainSteps:
     def test_a_missing_toolchain_is_built_with_the_registry_cache(self) -> None:
         """Cloud Build keeps no layer cache, so every stage's layers go to one fixed ref in the toolchain's own
         package (`mode=max`), and an R change does not rerun Julia's precompile; a cache that cannot be written is
-        only a warning, and the image still goes out as one plain manifest."""
+        only a warning, and the image still goes out as one plain manifest. Should BuildKit's builder or its push fail,
+        the daemon's own build and push (the path before the cache) still deliver the image."""
         build = _step(_config(RENDERER_CLOUDBUILD), "toolchain-build")
         assert 'CACHE="$${IMAGE%:*}:buildcache"' in build
         assert "docker buildx create --name toolchain --driver docker-container --use" in build
         assert "docker buildx build --provenance=false --push" in build
         assert '--cache-from "type=registry,ref=$$CACHE"' in build
         assert "type=registry,ref=$$CACHE,mode=max," in build and "ignore-error=true" in build
-        assert "docker push" not in build  # buildx pushes the image itself
+        cached, fallback = build.split("else", 1)
+        assert "docker push" not in cached  # buildx pushes the image itself
+        assert "WARNING" in fallback and 'docker push "$$IMAGE"' in fallback
 
     def test_the_deploy_runs_on_eight_vcpus_with_an_hour(self) -> None:
         """Owner decision of 2026-10-29: the whole deploy gets the larger machine, not a nested toolchain build."""

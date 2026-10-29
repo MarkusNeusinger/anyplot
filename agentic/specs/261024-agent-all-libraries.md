@@ -1545,25 +1545,24 @@ filter with no preload at all.
 
 ## Second opinion on step 5 (Gemini 4 Argon and Fable, 2026-10-29)
 
-Gemini's verdict: sound with changes. The owner approved the corrections and took the
-decisions below on 2026-10-29; step 5 above carries them, and J1 built the first part.
-Rows marked *Gemini* are in Gemini's answer; rows marked *review* came from the rest of
-the round (Fable's review and the checks run in julia:1.13.2 that day).
+Both: sound with changes. The owner approved the corrections and took the decisions
+below on 2026-10-29; step 5 above carries them, and J1 built the first part. Each row
+names who raised it; "verified" marks a claim reproduced in `julia:1.13.2` that day.
 
 | Finding | From | Change |
 |---|---|---|
 | The root `.dockerignore` (an allowlist), `toolchain.py`'s `INPUTS` and `ci-image.yml`'s `RENDERER_CHANGES` lack `Project.toml` and `Manifest.toml`, so the Julia stage's `COPY` fails and a Manifest change skips the image job; the job's 25 minutes do not fit a cold toolchain build | Gemini | All four fixed in J1 (5b); the job has 60 minutes |
-| The deploy builds the toolchain on the default machine within 1800 s and without a layer cache, so an R change reruns Julia's precompile | Gemini | Owner decision: the whole deploy on `E2_HIGHCPU_8` with 3600 s, not a nested toolchain build; a BuildKit registry cache on the fixed ref `anyplot-toolchain:buildcache` (5b) |
-| `--compiled-modules=existing` (the 2026-10-28 text, and Gemini's proposal) loads a missed package from its source in process, with exit 0 and no message; the 2 s spawn kill under the filter belongs to the default `yes` | review | `--compiled-modules=strict`, which fails in about a second (5c); CI forces a miss and checks it |
-| The row runs `julia` by name, which `SANDBOX_PATH` lacks, and carries neither the startup flags nor the thread and locale settings | Gemini | `JULIA_BINARY` by its path, the flags and environment of 5c; `--heap-size-hint=1536M` (Gemini proposed 2G; the owner set 1536M) and `OPENBLAS_NUM_THREADS=1` |
+| The deploy builds the toolchain on the default machine within 1800 s and without a layer cache, so an R change reruns Julia's precompile | both (Fable proposed a nested toolchain build, Gemini a larger machine for the whole deploy) | Owner decision: the whole deploy on `E2_HIGHCPU_8` with 3600 s, not a nested toolchain build; a BuildKit registry cache on the fixed ref `anyplot-toolchain:buildcache` (5b) |
+| `--compiled-modules=existing` (the 2026-10-28 text, and Gemini's proposal) loads a missed package from its source in process, with exit 0 and no message; the 2 s spawn kill under the filter belongs to the default `yes` | Fable (verified) | `--compiled-modules=strict`, which fails in about a second (5c); CI forces a miss and checks it |
+| The row runs `julia` by name, which `SANDBOX_PATH` lacks, and carries neither the startup flags nor the thread and locale settings; under a 4 GiB cgroup Julia sizes its heap against the whole instance (verified) and its OpenBLAS starts a thread per core | Gemini, Fable | `JULIA_BINARY` by its path, the flags and environment of 5c; `--heap-size-hint=1536M` (Fable's value; Gemini proposed 2G) and `OPENBLAS_NUM_THREADS=1` |
 | Nothing proves before traffic that the depot's package images load under gVisor | Gemini | A Makie render in the deploy's candidate smoke, with its wall time (5b) |
-| `DateTime(s)` refuses microseconds, `+01:00`, `Z` and a space separator, and TimeZones.jl is only a transitive dependency | Gemini (unverified there), review (verified) | Owner decision: TimeZones as a direct dependency, offsets to UTC, microseconds truncated to milliseconds and announced with counts, the status the render's (5d) |
+| `DateTime(s)` refuses microseconds, `+01:00`, `Z` and a space separator, and TimeZones.jl is only a transitive dependency | both (verified) | Owner decision: TimeZones as a direct dependency, offsets to UTC, microseconds truncated to milliseconds and announced with counts, the status the render's (5d) |
 | Reading `big-integer` as `Float64` would lose digits Julia need not lose; `CSV.read` takes `NA` as missing by default | Gemini | Both integer kinds as `Int64`, exact to 2^63, so no integer note; `missingstring = ""`, explicit true and false strings, `strict = true`, `normalizenames = false`, `pool = false` (5d) |
-| An identifier list misses string interpolation, broadcast calls, `Core.eval`, `Base.Libc`, `getproperty`, `import … as` and file writes | Gemini, review | The validator refuses by shape, as R's does (5d) |
-| RDatasets and PalmerPenguins (PalmerPenguins downloads at run time) | Gemini | Kept in the project, one lockfile with the pipeline; refused as the adaptation finding `dataset-package` (5d) |
-| The catalogue was written for Makie 0.21 and 0.22 and runs on 0.24 (`arrows!`, `NoShading`); four files save through `joinpath(@__DIR__, ...)`; `THEME` is `const` in some files | Gemini | J1 renders all 325 files ("What J1 built"); the normaliser takes both `THEME` forms and rewrites the four saves (5d) |
+| An identifier list misses string interpolation, broadcast calls, `Core.eval`, `Base.Libc`, `getproperty`, `import … as` and file writes | both | The validator refuses by shape, as R's does (5d) |
+| RDatasets and PalmerPenguins (PalmerPenguins downloads at run time) | both | Kept in the project, one lockfile with the pipeline; refused as the adaptation finding `dataset-package` (5d) |
+| The catalogue was written for Makie 0.21 and 0.22 and runs on 0.24 (`arrows!`, `NoShading`); four files save through `joinpath(@__DIR__, ...)`; `THEME` is `const` in some files; all 325 parse with tree-sitter-julia, none uses DataFrames, `qrcode-basic` needs a package outside the project and `map-tile-background` downloads | both (Fable parsed the 325 files) | J1 renders all 325 files ("What J1 built"); the normaliser takes both `THEME` forms and rewrites the four saves (5d) |
 | A cold render at 2 vCPU may come close to the 60 s timeout | Gemini | Measured locally at 2 CPUs in J1; the measurement stage times it on Cloud Run, and a `PrecompileTools` workload joins only above about 25 s (5e) |
-| The error grammar and the column access need a Julia form | review | The first `ERROR: LoadError:` line, the first plot frame and the last `in expression starting at` line; the adapter introduces `df[!, COL]` (5d) |
+| The error grammar and the column access need a Julia form | Fable (verified) | The first `ERROR: LoadError:` line, the first plot frame and the last `in expression starting at` line; the adapter introduces `df[!, COL]` (5d) |
 
 ## Open questions for the owner
 

@@ -101,11 +101,20 @@ steps:
         IMAGE=$$(cat toolchain.image)
         CACHE="$${IMAGE%:*}:buildcache"
         if [ -f toolchain.missing ]; then
-          docker buildx create --name toolchain --driver docker-container --use
-          docker buildx build --provenance=false --push -t "$$IMAGE" \
-            --cache-from "type=registry,ref=$$CACHE" \
-            --cache-to "type=registry,ref=$$CACHE,mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true" \
-            -f agents/renderer/toolchain.Dockerfile .
+          # The first deploy with the cache is its first run against Artifact Registry: should
+          # BuildKit's builder or its push fail there, the build falls back to the daemon's own
+          # builder and push (the path before 2026-10-29), cold but never blocked.
+          if docker buildx create --name toolchain --driver docker-container --use \
+            && docker buildx build --provenance=false --push -t "$$IMAGE" \
+              --cache-from "type=registry,ref=$$CACHE" \
+              --cache-to "type=registry,ref=$$CACHE,mode=max,image-manifest=true,oci-mediatypes=true,ignore-error=true" \
+              -f agents/renderer/toolchain.Dockerfile .; then
+            echo "toolchain built with the registry cache"
+          else
+            echo "WARNING: the BuildKit build with the registry cache failed; building the toolchain without it"
+            docker build -t "$$IMAGE" -f agents/renderer/toolchain.Dockerfile .
+            docker push "$$IMAGE"
+          fi
         fi
     id: "toolchain-build"
     waitFor: ["toolchain-tag"]
