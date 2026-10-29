@@ -30,13 +30,28 @@ work that Google's quota can do goes there first.
 | Subagent with bounded work inside its own worktree, verified by a command it runs | Sonnet | Cheaper for work whose result a command checks; never writes outside its worktree |
 | Reads or polls with credentials (CI, deploys, `gh`/`gcloud` state); creates Todoist tasks | Haiku | Cheap; never changes state |
 | High-risk reviews (security, prod data, sandbox, privacy); genuinely hard reasoning | Fable | About 2.5 times Opus per token at API prices, so only where it pays |
-| Larger steps and long refactors, and the main driver once Claude tokens run low late in the week | Gemini, in the owner's interactive agy session, through a `gemini`-labelled issue (`/gemini-task`) | The owner decides what runs without asking; Gemini pushes a `gemini/*` branch and opens a draft PR; Claude reviews it, marks it ready, and follows it through |
+| Larger steps and long refactors, and the main driver once Claude tokens run low late in the week | Gemini, in the owner's interactive agy session, through a brief file in `~/projects/anyplot-briefs/`, one package of at most 20 to 25 files per fresh session (`/gemini-task`) | The owner decides what runs without asking; Gemini pushes a `gemini/*` branch and opens a draft PR; Claude reviews it, marks it ready, and follows it through |
 | Check of every code PR Claude opens, before it opens; not for diffs only of docs, instruction files, changelog fragments, or `plots/`, under about 20 lines, or Dependabot (owner, 2026-10-29) | Gemini 3.8 Flash through Vertex AI in project `anyplot`, location `global`, on Flex PayGo (`/zweitmeinung`) | Copilot gets one round per PR, so its findings should already be fixed; half price on Flex, $0.07–0.28 per review |
 | Second opinion, only when the owner asks for one | Fable and Gemini 4 Argon side by side, Argon on the same Vertex route with thinking high | Stronger across files; $0.57–1.16 per Argon run. Both Gemini lanes are paid per token and covered by the $100 monthly Google Cloud credit that comes with Google AI Ultra; Gemini reads tracked repository files, prefetched data, and the public API through read-only tools, with no shell and no credentials |
 
 The pipeline's model choices are separate. Sonnet's lane is narrow on purpose:
 it never runs `gh` writes, `git push`, or `gcloud`, and a task whose result no
 command can check goes to Opus.
+
+**Briefs instead of issues for Gemini (owner, 2026-10-29).** Every Gemini task
+used to need its own `gemini`-labelled issue; the owner wanted to hand over
+larger packages with less ceremony. A second opinion (Fable and Gemini 4
+Argon) rejected a pasted work order: it exists nowhere durable until Gemini's
+first push, and Claude's review would read Acceptance from Gemini's own PR
+text. So Claude writes a read-only brief file into `~/projects/anyplot-briefs/`,
+outside both checkouts, so Gemini can neither commit it nor edit the Acceptance
+it is judged against; the draft PR carries a copy, and Claude deletes the file
+after the merge. An issue remains for a task the owner wants in the public
+backlog. Both reviewers also found that the skill fed every issue comment to
+Gemini, while it already filtered PR comments to the owner's; issue comments
+are filtered the same way now. Packages stay at 20 to 25 files per fresh
+session because of the 2026-10-24 drift (a convention dropped for 76 files
+after about 22).
 
 **Google Jules, 2026-10-28 to 2026-10-29 (retired).** For two days Google
 Jules took credential-free tasks of about 30 minutes through its official MCP

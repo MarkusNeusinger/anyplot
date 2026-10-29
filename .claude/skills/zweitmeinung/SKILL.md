@@ -20,7 +20,7 @@ no token access. The Gemini part therefore runs through `gemini_review.py` in th
 directory: Gemini on Vertex AI in project `anyplot`, location `global` (the owner's choice
 on 2026-10-21; the site's own agents stay on `eu`), billed to the anyplot billing account,
 where the Google AI Ultra Cloud credit ($100 a month) applies. Implementation work for
-Gemini goes through `gemini` issues the owner works in his own interactive agy session
+Gemini goes through briefs the owner works in his own interactive agy session
 (`/gemini-task`).
 
 ## 1. Check the setup
