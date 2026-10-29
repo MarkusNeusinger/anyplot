@@ -16,6 +16,8 @@
  *   R sees a dead child: system("true") returns 159 and every package loads.
  * - SECCOMP_FILTER_FLAG_TSYNC puts the filter on the threads a linked library's
  *   constructor (which runs before a preload's) may have started already.
+ * - The process is made non-dumpable first (PR_SET_DUMPABLE 0): a killed vfork child that
+ *   dumped core would take its parent with it on kernels before 5.16 (see install).
  * - The probe forks: an execve of a path that cannot exist exits the child with ENOENT
  *   before the filter and kills it with SIGSYS after it, so no probe starts a program.
  *
@@ -99,6 +101,11 @@ static const char *install(void) {
         .len = (unsigned short)(sizeof(program) / sizeof(program[0])),
         .filter = program,
     };
+    /* Not dumpable, so a killed child never dumps core. A popen or system() child is a vfork (CLONE_VM) child of
+     * R, and before Linux 5.16 a core dump kills every process that shares the dumping one's memory: the
+     * child's SIGSYS took R down with it (the first Cloud Build of the toolchain, 2026-10-29), where newer
+     * kernels kill the child alone. Without a dump the child dies alone on every kernel. */
+    if (prctl(PR_SET_DUMPABLE, 0, 0, 0, 0) != 0) return "unavailable";
     if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != 0) return "unavailable";
     /* TSYNC answers a positive thread id when a thread cannot take the filter; only 0 installed it everywhere. */
     if (syscall(SYS_seccomp, SECCOMP_SET_MODE_FILTER, SECCOMP_FILTER_FLAG_TSYNC, &fprog) != 0) {
