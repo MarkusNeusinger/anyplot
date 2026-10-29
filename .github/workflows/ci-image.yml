@@ -1594,13 +1594,14 @@ jobs:
           echo "non-root OK: uid $uid"
 
       # The R code profile in the built image (PR 3b of the R pilot, 2026-10-29): the builder
-      # stage keeps only the grammars of TREE_SITTER_GRAMMARS, and the service reads R code only
-      # through them. A catalogue ggplot2 file, piped in from the checkout because the image
+      # stage keeps only the grammars of TREE_SITTER_GRAMMARS (R and Julia), and the service
+      # reads that code only through them; the loop loads every kept grammar. A catalogue
+      # ggplot2 file, piped in from the checkout because the image
       # carries no plots/, is normalised and scanned by the R runtime as POST /v1/sessions does
       # (opening.assess), with ggplot2 enabled: scatter-basic is coupled in the corpus tests, so
       # anything but clean or coupled, a SECURITY finding or a missing palette fails the step.
       # The scan runs in the smoke's development container: no caller check, no model call.
-      - name: The R grammar loads and an R readiness scan runs
+      - name: The kept grammars load and an R readiness scan runs
         if: steps.check.outputs.should_build == 'true'
         run: |
           set -euo pipefail
@@ -1622,6 +1623,30 @@ jobs:
           PY
           )
           docker exec -i agents .venv/bin/python -c "$script" < plots/scatter-basic/implementations/r/ggplot2.R
+
+      # The Julia code profile in the built image (J2a of step 5, 2026-10-29): the same pruned
+      # grammars, read by the profile's normaliser, validator and readiness scan on a catalogue
+      # Makie file piped in from the checkout. Nothing serves Makie yet (J2b adds the runtime),
+      # so the step calls the profile's modules directly; scatter-basic is coupled in the
+      # corpus tests, so anything but clean or coupled, or a SECURITY finding, fails the step.
+      - name: A Julia readiness scan runs
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          script=$(cat <<'PY'
+          import sys
+          from agents.anyplot.code.profiles.julia import normalise, readiness, regions, validate
+
+          normalised = normalise.normalise(sys.stdin.read())
+          result = readiness.scan(normalised, spec_id="scatter-basic", enabled_libraries=["makie"])
+          assert result.status in ("clean", "coupled"), (result.status, result.reasons)
+          assert validate.validate_security(normalised) == [], validate.validate_security(normalised)
+          found = regions.find_regions(normalised)
+          assert found.theme is not None and found.save is not None, "no THEME statement or no protected save"
+          print("OK: scatter-basic (makie) is", result.status, result.reasons)
+          PY
+          )
+          docker exec -i agents .venv/bin/python -c "$script" < plots/scatter-basic/implementations/julia/makie.jl
 
       - name: Container logs on failure
         if: failure() && steps.check.outputs.should_build == 'true'

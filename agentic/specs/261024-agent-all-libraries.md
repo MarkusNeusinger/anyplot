@@ -1363,6 +1363,157 @@ Also found:
 | The build check runs `ldd` on every library | The launcher, `libjulia` and `libjulia-internal`/`-codegen` | The system image and Julia's own test libraries name libraries the running process provides (`libjulia.so.1.13`, `libccalllazyfoo.so`), so `ldd` reports them missing in any install |
 | `render_p95_s` 45 s | 25 s | The sweep's wall p95 of 20.6 s, rounded up; the slowest files load RDatasets, which an adaptation removes, and the measurement stage's deployed numbers revise it |
 
+#### What J2a built (2026-10-29): the Julia code profile, not served yet
+
+Everything in 5d; `AGENT_LIBRARIES`, the runtime registry, the prompts and `_LIBRARIES`
+are untouched, as for R's PR 3a. Measured in the J1 images (`anyplot-renderer:julia`,
+the row's flags and environment, `--network none`, 2 CPUs and 4 GiB).
+
+- **Parser.** `GRAMMARS` is `("r", "julia")`; `agents/Dockerfile` keeps `r julia`
+  (`TREE_SITTER_GRAMMARS`, 0.6 MB and 2.7 MB), and the agents-image job of
+  `ci-image.yml` loads every kept grammar and runs the Julia readiness scan on the
+  catalogue's `scatter-basic` Makie file through the profile's modules. `treesitter.py`
+  gained the Julia helpers (string values with Julia's escapes, `None` for an
+  interpolated or triple-quoted string; string macros; dotted names; positional and
+  keyword arguments; assignments and every binding site); all 325 catalogue files parse
+  with no ERROR or MISSING node, and the comment types of both languages are skipped.
+- **Regions** (`profiles/julia/regions.py`). The theme statement in both forms (281
+  `const`, 44 plain), 1,213 theme tokens over the catalogue (a token's branches are
+  literals, `colorant"..."`, symbols, tuples, THEME and earlier tokens; the 12 that call
+  `RGBAf(...)` are plot code), the palette in 196 files, the top-level save with the
+  standard target in 322 (the other three save inside `with_theme(...) do`), the markers
+  matched loosely as in R (both in 218 files), no column constants anywhere, and the
+  placeholder at the top level only, because the loader that replaces it imports
+  packages.
+- **Normaliser.** Header (325), title (325, the shared `is_catalogue_title`), the four
+  `joinpath(@__DIR__, ...)` saves, `resolution =` renamed to `size =` (122; Makie 0.24
+  accepts `resolution` and renders the same 3200x1800 but warns on every run, which would
+  fill the stderr tail), and the canvas, decided like R's dpi: only `px_per_unit` of the
+  protected save changes, never the figure's size, so the layout in Makie's units stays.
+  Measured: CairoMakie rounds the figure size to whole units and then `size *
+  px_per_unit` to whole pixels (`(1600, 900)` at 1.9999 gives 3200x1800, at 2.0004
+  3201x1800; `(1000, 562.5)` at 3.2 gives 3200x1798), and a save without `px_per_unit`
+  renders at 2. The step changes no catalogue file: of the 325 normalised files, 250
+  measure 3200x1800 and 69 2400x2400 at 2, and 6 have no static canvas (3 saves in
+  `with_theme`, one `set_theme!`, one `resize_to_layout!`, one computed size); J1's
+  sweep rendered 252 and 68 of the 320 that render. Idempotent over the corpus. The review found that
+  `Figure(; resolution)`, the keyword shorthand, raised `IndexError`: it becomes
+  `Figure(; size = resolution)`, the same value, and a test runs the normaliser over 242
+  odd but valid shapes (shorthands, splats, a size under one unit or infinite, a zero,
+  negative or infinite `px_per_unit`, and after the Copilot review of #12459 integer
+  literals of hundreds and thousands of digits, `big"..."`, hex and underscored
+  literals), which leave notes, never exceptions; a side past 100,000 units or a
+  `px_per_unit` past 1,000 is left alone with a note.
+- **Validator.** Refuses by shape (module docstring of `profiles/julia/validate.py`): a
+  denied name wherever it is read, also as the member after a `.` on a module or any
+  value (`x.Base.run`, `Base.:run`); a package as a value; calls through a parenthesised
+  value, an index, a field of a value, a `var"..."` name or a call's result (except
+  `cgrad`, `Fix1`, `Fix2`, `Returns`, `ComposedFunction`); macros outside `MACROS` and
+  string macros outside `colorant`, `L` (without `%$`), `dateformat`, `r`, `raw`;
+  command literals; `macro` and `module` definitions; `import ... as`; any `using` or
+  `import` outside the plotting packages and the catalogue's standard libraries. `CSV`
+  and `TimeZones` are refused in the plot code too: they are the loader's alone, and the
+  adapter never imports them. `getfield`, `getproperty`, `setfield!`, `setproperty!`, `getglobal` and
+  `setglobal!` are refused on any value (a superset of "on modules"; no catalogue file
+  calls them). One exception keeps histogram-capability eligible: a lowercase denied
+  name the file makes its own variable by one top-level assignment before any other
+  mention (its `cp`, the process capability index) may be read, never called. SECURITY
+  finds something in 5 of the 325 normalised files: the 3 `with_theme` saves,
+  qrcode-basic (QRCoders) and map-tile-background (Downloads, PNGFiles, `mktempdir`, a
+  URL). 121 named bypasses are tests; three tests run the admitted idioms, the loader and
+  the working miniature in the J1 image (skipped without Docker and the image). The
+  review of the same day (Gemini 3.8 Flash and Fable) found that a dotted callee passed
+  with any root of the attribution vocabulary (`FileWatching.watch_file(...)`): a root
+  now comes from `MODULE_ROOTS`, called or handed on; `invoke`, `atexit`, `finalizer`
+  and the file-touching submodules `Cairo`, `FileIO`, `TOML` and `CoreLogging` joined
+  the denied names. The split did not change. The Copilot review of #12459 found that an
+  alias still carried such a member (`f = Unlisted.dangerous; f()`): a dotted name now
+  starts at a root of `MODULE_ROOTS` or at a name the file binds above it (after an
+  assignment, from a parameter, a loop, `let`, `do` or `catch` variable, from the start
+  of a comprehension for its `for` variable), and every other module a plot reaches by a
+  name, measured in the image (`MODULE_NAMES`: `names(Main)` after the catalogue's
+  `using` lines and the module members of every root), is refused as a value and as a
+  member. All 2,145 dotted names of the catalogue start at a root or a name bound above;
+  the split did not change. Its second round found that the import rule read only a
+  path's first name (`using CairoMakie.Cairo` passed): an import path is now one package
+  name, which every catalogue import is (the 325 files load single names; one selects
+  `using Statistics: mean`), and the names a selected import brings in are checked like
+  any name (denied names, modules outside the roots, macros outside `MACROS`, operators).
+  The split did not change.
+- **Readiness.** 0 clean, 308 coupled, 17 blocked: the 13 map specs, qrcode-basic and the
+  3 `with_theme` saves (area-mountain-panorama, bifurcation-basic, scatter-lag). Every
+  eligible file carries the `data-block` hint; 16 carry `deprecated-api` (`arrows!`).
+- **Loader.** `import CSV, DataFrames[, Dates[, TimeZones]]` and `CSV.read(...;
+  types = Dict(...), missingstring = "", truestrings = ["True"], falsestrings =
+  ["False"], strict = true, normalizenames = false, pool = false, stringtype = String,
+  ntasks = 1)`; a `big-integer` or `datetime` column is read as `String` and converted
+  in a `let` block. Measured: `Float64` exact on 249,964 values against Julia's
+  `parse`; `Int64` wrong on exactly 8 values, -9223372036854775807 to
+  -9223372036854775800, which CSV.jl 0.10.17 (Parsers 2.8.8) reads as positive (of
+  200,782 boundary and random values), so wide integers go through `parse(Int64, ...)`,
+  which reads them exactly (the image test pins two of them);
+  `Dates.DateTime(s)` refuses a space separator, `Z`, `+01:00` and more than three
+  fraction digits, so a cell is rewritten to `yyyy-mm-ddTHH:MM:SS.sss` (the fraction
+  truncated) and an offset or `Z` read with TimeZones' `zzzz` (`+01:00`, `-05:30`,
+  `+0100`, `+01`, `Z`) and converted to UTC; `T` and space, minutes without seconds,
+  year 1 with an offset (year 0 in UTC), `NA`, `001`, blanks, quotes and a column name
+  with `$`, `"`, `\`, a line break and non-ASCII letters all read back exactly.
+  `ColumnKinds.submillisecond` counts the cells per column whose truncated digits are
+  not all zero; there is no integer count for Julia.
+- **Errors.** The first `ERROR:` line's exception type from a closed list (with an
+  `UndefVarError`'s variable and a `MethodError`'s function when they are names), the
+  innermost plot frame's line and the function the plot called there, and the last `in
+  expression starting at` line; fixed texts for the exec filter's kill, a strict cache
+  miss, memory, recursion and a missing package. Corpus-tested with real stderr of the
+  J1 image: a MethodError, an UndefVarError, a BoundsError in a function, `error()`, a
+  missing DataFrame column, a strict CSV read, the loader's datetime, a ParseError, the
+  exec filter's kill (through the harness) and a deep Makie failure.
+- **Edits and export.** The edit applier's Julia dialect (meaning as R's token stream,
+  `const` counted; literals `"`, triple quotes and commands, never `'`), Python's and
+  R's tests unchanged. The export's run line is the catalogue's own convention,
+  `julia --project=. plot.jl` (`prompts/library/makie.md`, the landing page's terminal);
+  without a `Project.toml` next to the file, Julia falls back to the default environment
+  (checked in the image with a stacked load path).
+- **Verified end to end, without a model.** Scripted identity adaptations of
+  `line-basic` (a timestamp x axis with `+01:00` and `-05:30` offsets and microseconds,
+  16 cells counted below the millisecond, column constants `Zeit · $Messung "lokal"`
+  and `Temperatur (°C)`, the literal ticks, span and x limit dropped) and `scatter-basic`
+  (`Größe (cm)` and `Gewicht "kg" — $`, an unplotted timestamp column, 59 cells
+  counted) passed both validator profiles and the drift check, took the loader and
+  rendered through the harness in exec mode in the renderer image: 3200x1800 in both
+  themes, `exec_deny: on`, 15.2 to 17.2 s of wall time and 1,234 to 1,249 MiB peak.
+
+Found for J2b and the toolchain:
+
+- **Loading DataFrames, CSV or TimeZones costs a Makie render about 5 s.** A plot that
+  loads any of them (in either order) recompiles Makie's first save: `using CairoMakie`
+  and a `lines!` save took 3.8 s alone and 8.5 to 9.4 s with one of them loaded; the
+  typed `CSV.read` takes another 2.2 s and the first TimeZones parse 1.3 s. An adapted
+  render (the loader and `df[!, COL]`) therefore takes about 15 s at 2 CPUs where the
+  catalogue file took 4.7 s, which the 25 s repair reserve and the J1 sweep's p95 of
+  20.6 s do not leave room for on the slow files. A precompile workload in the toolchain
+  that loads CairoMakie with DataFrames, CSV and TimeZones together and runs a typed read
+  and a save (a small package in the project with `PrecompileTools`, or a system image)
+  would keep that code compiled; J2b measures and decides it before the matrix.
+- **The stderr tail may lose the `ERROR:` line.** A deep Makie failure printed 7,551
+  characters; the renderer keeps the last 2,000, so the summary reads "an error (the tail
+  cut off its first line) at line N; in text!()". Keeping Julia's first error line next
+  to the tail would name the exception.
+- **Line numbers count the run form.** The loader replaces one placeholder line with 15
+  lines plus one per column, and 12 more with a timestamp column, so the error summary's
+  lines after the placeholder lie that far behind the working form's; the runtime can
+  subtract the statement's line count (Python's loader shifts lines too, less).
+- **Regeneration candidates**: the 4 files Makie 0.24 rejects (J1's sweep) and the 3 that
+  save inside `with_theme`; none is blocked by a list, so a regenerated file becomes
+  eligible without a code change.
+
+| Text above (5d) | Built | Why |
+|---|---|---|
+| `integer` and `big-integer` read as `Int64` | `integer` as `Int64`; `big-integer` read as text and converted with `parse(Int64, ...)` | CSV.jl's typed read drops the sign of eight values next to -2^63 (measured); a 32-bit column cannot hold them |
+| The four `joinpath(@__DIR__, ...)` saves rewritten | Rewritten, and `resolution =` renamed to `size =` | The deprecation warning on 122 files would fill the stderr tail the repair reads; Makie maps the one to the other unchanged |
+| `getfield` and `getproperty` refused on a module | Refused on any value, with `setfield!`, `setproperty!`, `getglobal` and `setglobal!` | Whether a value is a module is unknown statically; no catalogue file calls them |
+| `` `qrcode-basic` `` and the map specs blocked | Also the three saves inside `with_theme(...) do` | The protected save must be a top-level statement of its own lines; the regeneration list above |
+
 #### What J1.1 built (2026-10-29): the precompile workload
 
 The deployed J1 took 12 to 21 s for the three test files on Cloud Run, wall about equal to

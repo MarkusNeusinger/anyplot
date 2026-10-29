@@ -1,0 +1,104 @@
+ERROR: LoadError: Failed to resolve arg1:
+[ComputeEdge] arg1 = compute_identity((linesgments_shifted, ), changed, cached)
+  @ /opt/julia-depot/packages/ComputePipeline/E2l50/src/ComputePipeline.jl:743
+[ComputeEdge] linesgments_shifted = (::MapFunctionWrapper(#tex_linesegments!##0))((linesegments, lineindices, preprojection, model_f32c, positions_transformed_f32c, model_clip_planes, space, ), changed, cached)
+  @ unknown method location
+[ComputeEdge] glyphcollections, glyphindices, font_per_char, glyph_origins, glyph_extents, text_blocks, text_color, text_rotation, text_scales, text_strokewidth, text_strokecolor, linesegments, linewidths, linecolors, lineindices = #compute_glyph_collections!##0((input_text, fontsize, selected_font, align, rotation, justification, lineheight, word_wrap_width, offset, fonts, computed_color, strokecolor, strokewidth, ), changed, cached)
+  @ /opt/julia-depot/packages/Makie/dVJIx/src/basic_recipes/text.jl:343
+[Input] align = (::InputFunctionWrapper(:align, AttributeConvert{align, text}))(center)
+  @ /opt/julia-depot/packages/Makie/dVJIx/src/basic_recipes/text.jl:14
+Due to ERROR: Text align must be a two-element tuple, got :center
+Stacktrace:
+  [1] error(s::String)
+    @ Base ./error.jl:44
+  [2] validate_text_align(al::Symbol)
+    @ Makie /opt/julia-depot/packages/Makie/dVJIx/src/basic_recipes/text.jl:34
+  [3] convert_attribute(align::Symbol, ::Makie.Key{:align}, ::Makie.Key{:text})
+    @ Makie /opt/julia-depot/packages/Makie/dVJIx/src/basic_recipes/text.jl:15
+  [4] (::Makie.AttributeConvert{:align, :text})(::Symbol, value::Symbol)
+    @ Makie /opt/julia-depot/packages/Makie/dVJIx/src/compute-plots.jl:608
+  [5] (::ComputePipeline.InputFunctionWrapper{Makie.AttributeConvert{:align, :text}})(v::Symbol)
+    @ ComputePipeline /opt/julia-depot/packages/ComputePipeline/E2l50/src/ComputePipeline.jl:713
+  [6] resolve!(input::ComputePipeline.Input{ComputePipeline.ComputeGraph})
+    @ ComputePipeline /opt/julia-depot/packages/ComputePipeline/E2l50/src/ComputePipeline.jl:425
+  [7] _resolve!(computed::ComputePipeline.Computed)
+    @ ComputePipeline /opt/julia-depot/packages/ComputePipeline/E2l50/src/ComputePipeline.jl:658
+  [8] foreach
+    @ ./abstractarray.jl:3212 [inlined]
+  [9] (::ComputePipeline.var"#resolve!##4#resolve!##5"{ComputePipeline.ComputeEdge{ComputePipeline.ComputeGraph}})()
+    @ ComputePipeline /opt/julia-depot/packages/ComputePipeline/E2l50/src/ComputePipeline.jl:667
+ [10] lock(f::ComputePipeline.var"#resolve!##4#resolve!##5"{ComputePipeline.ComputeEdge{ComputePipeline.ComputeGraph}}, l::ReentrantLock)
+    @ Base ./lock.jl:335
+ [11] resolve!(edge::ComputePipeline.ComputeEdge{ComputePipeline.ComputeGraph})
+    @ ComputePipeline /opt/julia-depot/packages/ComputePipeline/E2l50/src/ComputePipeline.jl:665
+ [12] _resolve!(computed::ComputePipeline.Computed)
+    @ ComputePipeline /opt/julia-depot/packages/ComputePipeline/E2l50/src/ComputePipeline.jl:658
+ [13] foreach
+    @ ./abstractarray.jl:3212 [inlined]
+ [14] (::ComputePipeline.var"#resolve!##4#resolve!##5"{ComputePipeline.ComputeEdge{ComputePipeline.ComputeGraph}})()
+    @ ComputePipeline /opt/julia-depot/packages/ComputePipeline/E2l50/src/ComputePipeline.jl:667
+ [15] lock(f::ComputePipeline.var"#resolve!##4#resolve!##5"{ComputePipeline.ComputeEdge{ComputePipeline.ComputeGraph}}, l::ReentrantLock)
+    @ Base ./lock.jl:335
+ [16] resolve!(edge::ComputePipeline.ComputeEdge{ComputePipeline.ComputeGraph})
+    @ ComputePipeline /opt/julia-depot/packages/ComputePipeline/E2l50/src/ComputePipeline.jl:665
+ [17] _resolve!(computed::ComputePipeline.Computed)
+    @ ComputePipeline /opt/julia-depot/packages/ComputePipeline/E2l50/src/ComputePipeline.jl:658
+ [18] foreach
+    @ ./abstractarray.jl:3212 [inlined]
+ [19] (::ComputePipeline.var"#resolve!##4#resolve!##5"{ComputePipeline.ComputeEdge{ComputePipeline.ComputeGraph}})()
+    @ ComputePipeline /opt/julia-depot/packages/ComputePipeline/E2l50/src/ComputePipeline.jl:667
+ [20] lock(f::ComputePipeline.var"#resolve!##4#resolve!##5"{ComputePipeline.ComputeEdge{ComputePipeline.ComputeGraph}}, l::ReentrantLock)
+    @ Base ./lock.jl:335
+ [21] resolve!(edge::ComputePipeline.ComputeEdge{ComputePipeline.ComputeGraph})
+    @ ComputePipeline /opt/julia-depot/packages/ComputePipeline/E2l50/src/ComputePipeline.jl:665
+ [22] _resolve!(computed::ComputePipeline.Computed)
+    @ ComputePipeline /opt/julia-depot/packages/ComputePipeline/E2l50/src/ComputePipeline.jl:658
+ [23] resolve!(computed::ComputePipeline.Computed)
+    @ ComputePipeline /opt/julia-depot/packages/ComputePipeline/E2l50/src/ComputePipeline.jl:650
+ [24] getindex
+    @ /opt/julia-depot/packages/ComputePipeline/E2l50/src/ComputePipeline.jl:563 [inlined]
+ [25] #_register_expand_arguments!##0
+    @ /opt/julia-depot/packages/Makie/dVJIx/src/compute-plots.jl:413 [inlined]
+ [26] iterate
+    @ ./generator.jl:48 [inlined]
+ [27] _collect(c::Vector{Symbol}, itr::Base.Generator{Vector{Symbol}, Makie.var"#_register_expand_arguments!##0#_register_expand_arguments!##1"{ComputePipeline.ComputeGraph}}, ::Base.EltypeUnknown, isz::Base.HasShape{1})
+    @ Base ./array.jl:848
+ [28] collect_similar
+    @ ./array.jl:763 [inlined]
+ [29] map
+    @ ./abstractarray.jl:3396 [inlined]
+ [30] _register_expand_arguments!(::Type{LineSegments}, attr::ComputePipeline.ComputeGraph, inputs::Vector{Symbol}, is_merged::Bool)
+    @ Makie /opt/julia-depot/packages/Makie/dVJIx/src/compute-plots.jl:413
+ [31] _register_expand_arguments!
+    @ /opt/julia-depot/packages/Makie/dVJIx/src/compute-plots.jl:409 [inlined]
+ [32] register_arguments!
+    @ /opt/julia-depot/packages/Makie/dVJIx/src/compute-plots.jl:387 [inlined]
+ [33] (LineSegments)(user_args::Tuple{ComputePipeline.Computed}, user_attributes::Dict{Symbol, Any})
+    @ Makie /opt/julia-depot/packages/Makie/dVJIx/src/compute-plots.jl:797
+ [34] _create_plot!(F::Function, attributes::Dict{Symbol, Any}, scene::Makie.Text{Tuple{Vector{Point{2, Float64}}}}, args::ComputePipeline.Computed)
+    @ Makie /opt/julia-depot/packages/Makie/dVJIx/src/figureplotting.jl:555
+ [35] linesegments!(::Makie.Text{Tuple{Vector{Point{2, Float64}}}}, ::Vararg{Any}; kw::@Kwargs{linewidth::ComputePipeline.Computed, color::ComputePipeline.Computed, space::ComputePipeline.Computed})
+    @ Makie /opt/julia-depot/packages/Makie/dVJIx/src/recipes.jl:550
+ [36] tex_linesegments!(plot::Makie.Text{Tuple{Vector{Point{2, Float64}}}})
+    @ Makie /opt/julia-depot/packages/Makie/dVJIx/src/basic_recipes/text.jl:463
+ [37] calculated_attributes!
+    @ /opt/julia-depot/packages/Makie/dVJIx/src/basic_recipes/text.jl:442 [inlined]
+ [38] connect_plot!(parent::Scene, plot::Makie.Text{Tuple{Vector{Point{2, Float64}}}})
+    @ Makie /opt/julia-depot/packages/Makie/dVJIx/src/compute-plots.jl:875
+ [39] plot!
+    @ /opt/julia-depot/packages/Makie/dVJIx/src/interfaces.jl:211 [inlined]
+ [40] plot!(ax::Axis, plot::Makie.Text{Tuple{Vector{Point{2, Float64}}}})
+    @ Makie /opt/julia-depot/packages/Makie/dVJIx/src/figureplotting.jl:576
+ [41] _create_plot!(::Function, ::Dict{Symbol, Any}, ::Axis, ::Int64, ::Vararg{Int64})
+    @ Makie /opt/julia-depot/packages/Makie/dVJIx/src/figureplotting.jl:546
+ [42] text!(::Axis, ::Vararg{Any}; kw::@Kwargs{text::String, align::Symbol})
+    @ Makie /opt/julia-depot/packages/Makie/dVJIx/src/recipes.jl:550
+ [43] top-level scope
+    @ /work/plot.jl:4
+ [44] include(mod::Module, _path::String)
+    @ Base ./Base.jl:309
+ [45] exec_options(opts::Base.JLOptions)
+    @ Base ./client.jl:344
+ [46] _start()
+    @ Base ./client.jl:577
+in expression starting at /work/plot.jl:4

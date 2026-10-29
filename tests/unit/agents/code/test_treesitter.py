@@ -59,7 +59,9 @@ def test_every_image_with_the_agents_extra_keeps_exactly_the_profiles_grammars()
 
 
 def test_only_the_served_grammars_load() -> None:
+    assert treesitter.GRAMMARS == ("r", "julia")
     assert treesitter.language("r") is treesitter.language("r")
+    assert treesitter.language("julia") is not treesitter.language("r")
     with pytest.raises(ValueError, match="no tree-sitter grammar"):
         treesitter.language(cast(treesitter.Grammar, "python"))
 

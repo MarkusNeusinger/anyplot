@@ -26,10 +26,18 @@ The module has three layers, and only the last one knows a grammar's node names:
   `r"(...)"`), backtick names, callee names (`fn`, `pkg::fn`, `pkg:::fn`), the arguments
   of a call or subset with their names and positions, and assignments (`<-`, `=`, `->`,
   `<<-`, `->>`) with the name they bind.
+* **Julia** (J2a of step 5, 2026-10-29; tree-sitter-julia from the same pack, which reads
+  all 325 catalogue Makie files without an ERROR or MISSING node). Julia's string literals
+  decoded to their value (escapes, line continuations; `None` for a string with an
+  interpolation or a triple-quoted one), the prefix and text of a string macro
+  (`colorant"#009E73"`), dotted names (`Random.seed!`, `Base.Filesystem.rm`), the
+  positional and keyword arguments of a call, assignments with the names they bind, and
+  every binding site (assignments, parameters, loop and `let` variables, functions,
+  types). The grammar names few fields, so the helpers read children by position.
 
-This module imports only the standard library and tree-sitter (2026-10-29): the R region
-and readiness detection built on it is meant to move to `core/` later, so the regen
-gate's adapt route can run the same R checks as the agent.
+This module imports only the standard library and tree-sitter (2026-10-29): the R and
+Julia region and readiness detection built on it is meant to move to `core/` later, so
+the regen gate's adapt route can run the same checks as the agent.
 
 A point's `.row` and `.column` are never read (`first_line`, `last_line` and `column`
 index the point instead). Under Python 3.14 the attribute getters of tree-sitter
@@ -53,9 +61,11 @@ TREE_SITTER_VERSION = "0.26.0"
 LANGUAGE_PACK_VERSION = "0.13.0"
 """The pinned versions (`pyproject.toml`, the `agents` extra); a test compares them with the installed ones."""
 
-Grammar = Literal["r"]
-GRAMMARS: tuple[Grammar, ...] = ("r",)
-"""The grammars this code reads; JavaScript and Julia join with their steps of the plan."""
+Grammar = Literal["r", "julia"]
+GRAMMARS: tuple[Grammar, ...] = ("r", "julia")
+"""The grammars this code reads; JavaScript joins with its step of the plan."""
+COMMENTS = frozenset({"comment", "line_comment", "block_comment"})
+"""The comment node types: R's `comment`, Julia's `line_comment` (`# ...`) and `block_comment` (`#= ... =#`)."""
 
 MAX_SYNTAX_PROBLEMS = 20
 """`syntax_problems` stops after this many: the first one is what a repair needs."""
@@ -254,12 +264,12 @@ def visits(root: Node) -> Iterator[Visit]:
 
 def statements(root: Node) -> list[Node]:
     """The top-level statements of a program: its named children that are not comments."""
-    return [child for child in root.named_children if child.type != "comment"]
+    return [child for child in root.named_children if child.type not in COMMENTS]
 
 
 def comments(root: Node) -> list[Node]:
     """Every comment node, in source order."""
-    return [node for node in walk(root) if node.type == "comment"]
+    return [node for node in walk(root) if node.type in COMMENTS]
 
 
 # --- R ---------------------------------------------------------------------------------------
@@ -621,3 +631,480 @@ def r_bindings(source: Source, root: Node) -> list[tuple[str, Node]]:
             if text is not None:
                 found.append((text, node))
     return found
+
+
+# --- Julia -----------------------------------------------------------------------------------
+
+JL_LITERALS = frozenset({"integer_literal", "float_literal", "boolean_literal", "character_literal"})
+"""The Julia grammar's literal node types besides strings."""
+JL_STRINGS = frozenset({"string_literal", "prefixed_string_literal", "command_literal", "prefixed_command_literal"})
+JL_ASSIGNMENTS = frozenset({"assignment", "compound_assignment_expression"})
+_JL_SIMPLE_ESCAPES = {
+    "n": "\n",
+    "t": "\t",
+    "r": "\r",
+    "a": "\a",
+    "b": "\b",
+    "f": "\f",
+    "v": "\v",
+    "e": "\x1b",
+    "\\": "\\",
+    '"': '"',
+    "'": "'",
+    "$": "$",
+}
+_JL_LINE_BLANKS = " \t"
+
+
+def jl_string(source: Source, node: Node) -> str | None:
+    """The value of a plain `"..."` string literal, or None.
+
+    None for any other node, for a triple-quoted string (Julia dedents it), for a string
+    with an interpolation (`"$x"`, whose value exists only at run time) and for one Julia
+    would refuse or that holds a raw byte (`\\xff`). Escapes: the single letters,
+    `\\$`, octal `\\ooo`, `\\xhh`, `\\uhhhh` and `\\Uhhhhhhhh`, and a backslash before a
+    line break, which drops the break and the next line's leading blanks.
+    """
+    if node.type != "string_literal" or any(child.type == "string_interpolation" for child in node.children):
+        return None
+    text = source.text(node)
+    if text.startswith('"""') or len(text) < 2 or not text.endswith('"'):
+        return None
+    return _jl_unescape(text[1:-1])
+
+
+def _jl_unescape(body: str) -> str | None:
+    out: list[str] = []
+    position = 0
+    while position < len(body):
+        char = body[position]
+        if char != "\\":
+            out.append(char)
+            position += 1
+            continue
+        if position + 1 >= len(body):
+            return None
+        code = body[position + 1]
+        if code in _JL_SIMPLE_ESCAPES:
+            out.append(_JL_SIMPLE_ESCAPES[code])
+            position += 2
+            continue
+        if code in "\r\n":  # a line continuation: the break and the next line's leading blanks go
+            position += 3 if body.startswith("\r\n", position + 1) else 2
+            while position < len(body) and body[position] in _JL_LINE_BLANKS:
+                position += 1
+            continue
+        value: int | None
+        if code in _OCTAL:
+            end = position + 1
+            while end < len(body) and end < position + 4 and body[end] in _OCTAL:
+                end += 1
+            value = int(body[position + 1 : end], 8)
+            position = end
+            if value > 0x7F:
+                return None  # a raw byte, no character
+        elif code in "xuU":
+            value, position = _r_hex_escape(body, position + 2, {"x": 2, "u": 4, "U": 8}[code], False)
+            if value is not None and code == "x" and value > 0x7F:
+                return None
+        else:
+            return None  # Julia: "invalid escape sequence"
+        if value is None or value > 0x10FFFF or 0xD800 <= value <= 0xDFFF:
+            return None
+        out.append(chr(value))
+    return "".join(out)
+
+
+def jl_macro_string(source: Source, node: Node) -> tuple[str, str] | None:
+    """`(prefix, text)` of a string macro such as `colorant"#009E73"` (the text between the quotes, unescaped as the
+    macro receives it, so `\\"` stays two characters); None for any other node or a computed prefix."""
+    if node.type not in ("prefixed_string_literal", "prefixed_command_literal"):
+        return None
+    prefix = node.child_by_field_name("prefix")
+    if prefix is None or prefix.type != "identifier":
+        return None
+    name = source.text(prefix)
+    rest = source.data[prefix.end_byte : node.end_byte].decode("utf-8")
+    suffix = node.child_by_field_name("suffix")
+    if suffix is not None:
+        rest = rest[: len(rest) - len(source.text(suffix))]
+    for quote in ('"""', '"', "```", "`"):
+        if rest.startswith(quote) and rest.endswith(quote) and len(rest) >= 2 * len(quote):
+            return name, rest[len(quote) : len(rest) - len(quote)]
+    return None
+
+
+def jl_unwrap(node: Node) -> Node:
+    """`node` without enclosing parentheses: `((x))` is `x`."""
+    while node.type == "parenthesized_expression":
+        inner = [child for child in node.named_children if child.type not in COMMENTS]
+        if len(inner) != 1:
+            return node
+        node = inner[0]
+    return node
+
+
+def jl_named(node: Node) -> list[Node]:
+    """The named children of `node` without comments."""
+    return [child for child in node.named_children if child.type not in COMMENTS]
+
+
+def _jl_member(source: Source, node: Node) -> str | None:
+    """The member name after a `.`: `name`, or an operator quoted as `:+` (`Base.:+`)."""
+    if node.type == "identifier":
+        return source.text(node)
+    if node.type == "quote_expression":
+        inner = jl_named(node)
+        if len(inner) == 1 and inner[0].type in ("identifier", "operator"):
+            return source.text(inner[0])
+    return None
+
+
+def jl_dotted(source: Source, node: Node) -> str | None:
+    """`name` or `Module.Sub.name` for an identifier or a chain of fields over names; None for anything else."""
+    parts: list[str] = []
+    for _ in range(1000):  # a chain of fields; the bound only guards a pathological file
+        if node.type != "field_expression":
+            break
+        named = jl_named(node)
+        if len(named) != 2:
+            return None
+        member = _jl_member(source, named[1])
+        if member is None:
+            return None
+        parts.append(member)
+        node = named[0]
+    if node.type != "identifier":
+        return None
+    parts.append(source.text(node))
+    return ".".join(reversed(parts))
+
+
+def jl_root(node: Node) -> Node:
+    """The value a chain of fields, indexes and calls starts from: `x` in `x.a[1].b`."""
+    for _ in range(1000):
+        if node.type in ("field_expression", "index_expression", "call_expression", "broadcast_call_expression"):
+            named = jl_named(node)
+            if not named:
+                return node
+            node = named[0]
+        elif node.type in ("parenthesized_expression", "typed_expression"):
+            named = jl_named(node)
+            if not named:
+                return node
+            node = named[0]
+        else:
+            return node
+    return node
+
+
+def jl_callee(source: Source, call: Node) -> str | None:
+    """The function a `call_expression` or `broadcast_call_expression` names: `f`, `Module.f` or an operator (`-`);
+    None for any other callee (a call, an index, a parenthesised value)."""
+    if call.type not in ("call_expression", "broadcast_call_expression") or not call.children:
+        return None
+    function = call.children[0]
+    if function.type == "operator":
+        return source.text(function)
+    return jl_dotted(source, function)
+
+
+def jl_macro_name(source: Source, node: Node) -> str | None:
+    """`@name` or `Module.@name` of a `macrocall_expression`; None for any other node."""
+    if node.type != "macrocall_expression" or not node.children:
+        return None
+    head = node.children[0]
+    if head.type == "macro_identifier":
+        return source.text(head)
+    if head.type == "field_expression":
+        named = jl_named(head)
+        if len(named) == 2 and named[1].type == "macro_identifier":
+            module = jl_dotted(source, named[0])
+            return f"{module}.{source.text(named[1])}" if module is not None else None
+    return None
+
+
+@dataclass(frozen=True, slots=True)
+class JlArgument:
+    """One argument of a Julia call, in source order.
+
+    `position` counts the positional arguments only (None for a keyword); `name` is a
+    keyword's name (`f(x; k = 1)`, `f(x, k = 1)`, and `f(; k)`, which passes the variable
+    `k` as `k = k`); `splat` marks `xs...`.
+    """
+
+    position: int | None
+    name: str | None
+    value: Node
+    node: Node
+    splat: bool
+
+
+def jl_argument_list(call: Node) -> Node | None:
+    """The `argument_list` of a call, broadcast call or macro call, else None."""
+    return next((child for child in call.children if child.type in ("argument_list", "macro_argument_list")), None)
+
+
+def jl_arguments(source: Source, call: Node) -> list[JlArgument]:
+    """The arguments of a call's parentheses (a `do` block is not among them); [] for any other node."""
+    arguments = jl_argument_list(call)
+    if arguments is None:
+        return []
+    found: list[JlArgument] = []
+    keywords = False
+    position = 0
+    for child in arguments.children:
+        if child.type == ";":
+            keywords = True
+            continue
+        if not child.is_named or child.type in COMMENTS:
+            continue
+        splat = child.type == "splat_expression"
+        if child.type == "assignment" and arguments.type == "argument_list":
+            named = jl_named(child)
+            if len(named) >= 2 and named[0].type == "identifier":
+                found.append(JlArgument(None, source.text(named[0]), named[-1], child, False))
+                continue
+        if keywords and child.type == "identifier":
+            found.append(JlArgument(None, source.text(child), child, child, False))
+            continue
+        if keywords:
+            found.append(JlArgument(None, None, child, child, splat))
+            continue
+        found.append(JlArgument(position, None, child, child, splat))
+        position += 1
+    return found
+
+
+def jl_argument(arguments: list[JlArgument], name: str, position: int | None = None) -> JlArgument | None:
+    """The keyword argument `name`, else the positional one at `position`."""
+    named = next((argument for argument in arguments if argument.name == name), None)
+    if named is not None or position is None:
+        return named
+    return next((argument for argument in arguments if argument.position == position), None)
+
+
+@dataclass(frozen=True, slots=True)
+class JlAssignment:
+    """A Julia assignment (`x = v`, `x += v`, `x .= v`, `const x = v`, `f(x) = body`).
+
+    `names` are the variables it binds: the target's names (`a, b = ...` binds both, `x::T
+    = v` binds `x`); for a store into a value (`x[1] = v`, `x.a = v`, `x .= v`) the name at
+    its root, which the store changes (`mutation`); for a short function definition
+    (`f(x) = ...`) the function's name (`function`).
+    """
+
+    node: Node
+    operator: str
+    target: Node
+    value: Node
+    names: tuple[str, ...]
+    mutation: bool
+    function: bool
+
+
+def jl_assignment(source: Source, node: Node) -> JlAssignment | None:
+    """The assignment `node` is, or None for any other node."""
+    if node.type not in JL_ASSIGNMENTS:
+        return None
+    named = jl_named(node)
+    operator = next((child for child in named if child.type == "operator"), None)
+    if len(named) < 3 or operator is None:
+        return None
+    target, value = named[0], named[-1]
+    text = source.text(operator)
+    names, kind = _jl_target(source, target)
+    mutation = kind == "mutation" or (node.type == "compound_assignment_expression" and text.startswith("."))
+    return JlAssignment(node, text, target, value, tuple(names), mutation, kind == "function")
+
+
+def _jl_target(source: Source, target: Node) -> tuple[list[str], str]:
+    """The names an assignment target binds and how: `bind`, `mutation` (a store into a value) or `function`."""
+    node = jl_unwrap(target)
+    kind = node.type
+    if kind == "identifier":
+        return [source.text(node)], "bind"
+    if kind == "typed_expression":
+        named = jl_named(node)
+        return _jl_target(source, named[0]) if named else ([], "bind")
+    if kind in ("open_tuple", "tuple_expression"):
+        names: list[str] = []
+        for item in jl_named(node):
+            if item.type == "assignment":  # `(; a = b) = ...` is not valid; a named tuple element binds nothing
+                continue
+            names += _jl_target(source, item)[0]
+        return names, "bind"
+    if kind == "splat_expression":
+        named = jl_named(node)
+        return _jl_target(source, named[0]) if named else ([], "bind")
+    if kind in ("index_expression", "field_expression"):
+        root = jl_root(node)
+        return ([source.text(root)] if root.type == "identifier" else []), "mutation"
+    if kind == "where_expression":
+        named = jl_named(node)
+        return _jl_target(source, named[0]) if named else ([], "function")
+    if kind == "call_expression":
+        name = jl_callee(source, node)
+        return ([name] if name is not None else []), "function"
+    return [], "bind"
+
+
+def jl_parameters(source: Source, node: Node) -> list[tuple[str, Node]]:
+    """The parameters a function form binds: a `function` definition, a short definition (`f(x) = ...`), an arrow
+    function (`x -> ...`, `(a, b) -> ...`) or a `do` block (`do a, b`); [] for any other node."""
+    if node.type == "function_definition":
+        signature = next((child for child in node.named_children if child.type == "signature"), None)
+        head = jl_named(signature)[0] if signature is not None and jl_named(signature) else None
+        while head is not None and head.type in ("where_expression", "typed_expression"):
+            inner = jl_named(head)
+            head = inner[0] if inner else None
+        if head is None:
+            return []
+        if head.type == "call_expression":
+            head = jl_argument_list(head)
+        return _jl_parameter_names(source, head) if head is not None else []
+    if node.type in JL_ASSIGNMENTS:
+        assignment = jl_assignment(source, node)
+        if assignment is None or not assignment.function:
+            return []
+        head = jl_unwrap(assignment.target)
+        while head.type in ("where_expression", "typed_expression"):
+            inner = jl_named(head)
+            if not inner:
+                return []
+            head = inner[0]
+        arguments = jl_argument_list(head) if head.type == "call_expression" else None
+        return _jl_parameter_names(source, arguments) if arguments is not None else []
+    if node.type == "arrow_function_expression":
+        named = jl_named(node)
+        return _jl_parameter_names(source, named[0]) if named else []
+    if node.type == "do_clause":
+        found: list[tuple[str, Node]] = []
+        for child in jl_named(node):
+            if child.type == "block":
+                break
+            found += _jl_parameter_names(source, child)
+        return found
+    return []
+
+
+def _jl_parameter_names(source: Source, node: Node) -> list[tuple[str, Node]]:
+    """The names a parameter or a list of them binds: `x`, `x::T`, `x = 1`, `xs...`, `(a, b)` and `; k = 1`."""
+    found: list[tuple[str, Node]] = []
+    stack = [node]
+    while stack:
+        current = jl_unwrap(stack.pop())
+        kind = current.type
+        if kind == "identifier":
+            found.append((source.text(current), current))
+        elif kind in ("argument_list", "tuple_expression", "open_tuple"):
+            stack.extend(reversed(jl_named(current)))
+        elif kind in ("typed_expression", "splat_expression", "assignment"):
+            named = jl_named(current)
+            if named and not (kind == "typed_expression" and source.text(current).startswith("::")):
+                stack.append(named[0])
+    return found
+
+
+def jl_bindings(source: Source, root: Node) -> list[tuple[str, Node]]:
+    """Every place below `root` that binds a name, `(name, node)` in source order: an assignment (stores into a
+    value by their root name, short function definitions by the function's name), a compound assignment, a function,
+    macro, type or module definition, a parameter, a loop, comprehension, `let` or `catch` variable, `global x` and
+    `local x`, and a name `using X: y` or `import` brings in.
+
+    A keyword argument (`f(k = 1)`) and a named tuple's field (`(a = 1,)`) bind nothing.
+    """
+    found: list[tuple[str, Node]] = []
+    for visit in visits(root):
+        node, parent = visit.node, visit.parent
+        kind = node.type
+        if kind in JL_ASSIGNMENTS:
+            if parent is not None and parent.type in ("argument_list", "tuple_expression", "macro_argument_list"):
+                continue  # a keyword argument, a named tuple's field, a parameter's default (below)
+            assignment = jl_assignment(source, node)
+            if assignment is not None:
+                found += [(name, node) for name in assignment.names]
+                found += jl_parameters(source, node)
+        elif kind == "function_definition":
+            signature = next((child for child in node.named_children if child.type == "signature"), None)
+            head = jl_named(signature)[0] if signature is not None and jl_named(signature) else None
+            while head is not None and head.type in ("where_expression", "typed_expression"):
+                inner = jl_named(head)
+                head = inner[0] if inner else None
+            name = jl_callee(source, head) if head is not None and head.type == "call_expression" else None
+            if name is not None:
+                found.append((name, node))
+            found += jl_parameters(source, node)
+        elif kind in ("arrow_function_expression", "do_clause"):
+            found += jl_parameters(source, node)
+        elif kind == "for_binding":
+            named = jl_named(node)
+            if named:
+                found += [(name, node) for name in _jl_target(source, named[0])[0]]
+        elif kind == "catch_clause":
+            named = jl_named(node)
+            if named and named[0].type == "identifier":
+                found.append((source.text(named[0]), node))
+        elif kind in ("global_statement", "local_statement"):
+            found += [(source.text(child), node) for child in jl_named(node) if child.type == "identifier"]
+        elif kind in ("struct_definition", "abstract_definition", "primitive_definition"):
+            head = next((child for child in node.named_children if child.type == "type_head"), None)
+            first = jl_root(jl_named(head)[0]) if head is not None and jl_named(head) else None
+            while first is not None and first.type in ("binary_expression", "parametrized_type_expression"):
+                first = jl_named(first)[0] if jl_named(first) else None
+            if first is not None and first.type == "identifier":
+                found.append((source.text(first), node))
+        elif kind in ("macro_definition", "module_definition"):
+            for child in jl_named(node):
+                target = child
+                if target.type == "signature":
+                    inner = jl_named(target)
+                    target = inner[0] if inner else target
+                if target.type == "call_expression":
+                    callee = jl_callee(source, target)
+                    if callee is not None:
+                        found.append((callee, node))
+                    break
+                if target.type == "identifier":
+                    found.append((source.text(target), node))
+                    break
+        elif kind == "selected_import":
+            found += [(source.text(child), node) for child in jl_named(node)[1:] if child.type == "identifier"]
+        elif kind == "import_alias":
+            named = jl_named(node)
+            if named and named[-1].type == "identifier":
+                found.append((source.text(named[-1]), node))
+        elif kind in ("using_statement", "import_statement"):
+            for child in jl_named(node):
+                if child.type == "identifier":
+                    found.append((source.text(child), node))
+                elif child.type == "import_path":
+                    parts = [part for part in jl_named(child) if part.type == "identifier"]
+                    if parts:
+                        found.append((source.text(parts[-1]), node))
+    return found
+
+
+def jl_number(source: Source, node: Node) -> float | None:
+    """The value of a numeric literal (`3`, `4.5`, `1e3`, `1.5f0`, `0x10`, `1_000`), a signed one, or None."""
+    sign = 1.0
+    node = jl_unwrap(node)
+    while node.type == "unary_expression":
+        named = jl_named(node)
+        operator = next((child for child in node.children if child.type == "operator"), None)
+        text = source.text(operator) if operator is not None else ""
+        if text not in ("-", "+") or len(named) != 2:
+            return None
+        sign = -sign if text == "-" else sign
+        node = jl_unwrap(named[-1])
+    text = source.text(node).replace("_", "")
+    try:
+        if node.type == "integer_literal":
+            return sign * float(int(text, 0))
+        if node.type == "float_literal":
+            if text.lower().startswith("0x"):
+                return sign * float.fromhex(text)
+            return sign * float(text.replace("f", "e"))
+    except ValueError, OverflowError:  # past Python's 4,300 digits, or an integer or hex float past a double
+        return None
+    return None
