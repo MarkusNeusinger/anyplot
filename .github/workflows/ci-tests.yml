@@ -6,7 +6,10 @@ on:
     branches:
       - main
       - develop
-      - 'feature/**'
+      # No `feature/**` here: Google Jules pushes its own branches under the
+      # feature branch it works on (`feature/<slug>-<session id>`), and a push run
+      # has no PR author, so the e2e job would treat unread Jules code as trusted
+      # and give it the GCP login. Feature branches get CI through their PRs.
   pull_request:
     branches:
       - main
@@ -185,13 +188,17 @@ jobs:
   # Federation, starts the Cloud SQL proxy, and runs the e2e tests against real
   # PostgreSQL (a separate 'test' database). It runs after test, and only for
   # authors whose code has been read (UNTRUSTED_AUTHOR at the top, repeated here
-  # because a job-level `if` cannot read `env`). A Jules change gets it on the
-  # push its merge makes, and on the PR into main.
+  # because a job-level `if` cannot read `env`). It never runs for a feature
+  # branch, neither for a ref under it nor for a PR into it, so a Jules change
+  # gets it on the PR into main, after the diff was read.
   test-e2e:
     name: Run E2E Tests
     needs: test
     if: >-
       needs.test.outputs.should_test == 'true' &&
+      !startsWith(github.ref, 'refs/heads/feature/') &&
+      !startsWith(github.base_ref, 'feature/') &&
+      !startsWith(github.event.merge_group.base_ref, 'refs/heads/feature/') &&
       github.actor != 'dependabot[bot]' &&
       !contains(fromJSON('["dependabot[bot]", "google-labs-jules[bot]"]'), github.event.pull_request.user.login)
     runs-on: ubuntu-latest

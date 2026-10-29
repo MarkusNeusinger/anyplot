@@ -31,7 +31,10 @@ on:
     branches:
       - main
       - develop
-      - 'feature/**'
+      # No `feature/**` here: Google Jules pushes its own branches under the
+      # feature branch it works on (`feature/<slug>-<session id>`), and a push run
+      # has no PR author, so `renderer-image` would hand unread Jules code its
+      # GCP login and OIDC token. Feature branches get CI through their PRs.
   pull_request:
     branches:
       - main
@@ -503,7 +506,11 @@ jobs:
     # The job holds `id-token: write`, and PR code runs in it, so a PR Google Jules
     # opened never runs here: Jules opens PRs only into feature/* branches, which
     # this workflow does not cover, and this guards the one that lands on main by mistake.
-    if: github.event.pull_request.user.login != 'google-labs-jules[bot]'
+    # A push to a feature/ branch never runs it either: Jules's own branches live there.
+    if: >-
+      github.event.pull_request.user.login != 'google-labs-jules[bot]' &&
+      !startsWith(github.ref, 'refs/heads/feature/') &&
+      !startsWith(github.event.merge_group.base_ref, 'refs/heads/feature/')
     runs-on: ubuntu-latest
     permissions:
       contents: read
