@@ -7,4 +7,4 @@
   filter did not report `on` is refused with exit code 3 (`RENDERER_EXEC_DENY=optional`
   stays the switch). Each row now says whether it needs the filter; only the
   JavaScript row, whose Node and Chromium start their own processes, has it off. The
-  agents service does not send R jobs yet.
+  agents service does not send R jobs yet. (#12428)
