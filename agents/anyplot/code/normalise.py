@@ -1384,6 +1384,11 @@ def _strip_header(code: str) -> StepResult:
     return _rewrite_lines(code, lines, {}), [f"removed the catalogue header at {span.lines()}" for span in spans], []
 
 
+def is_catalogue_title(text: str) -> bool:
+    """Whether a string's value is in the catalogue title form (module docstring, step 1); the R profile's too."""
+    return _CATALOGUE_TITLE.fullmatch(text) is not None
+
+
 def _strip_title(code: str) -> StepResult:
     tree = ast.parse(code)
     in_fstrings = {id(part) for node in ast.walk(tree) if isinstance(node, ast.JoinedStr) for part in node.values}
@@ -1395,7 +1400,7 @@ def _strip_title(code: str) -> StepResult:
             if isinstance(node, ast.Constant)
             and isinstance(node.value, str)
             and id(node) not in in_fstrings
-            and _CATALOGUE_TITLE.fullmatch(node.value)
+            and is_catalogue_title(node.value)
         ),
         key=lambda span: span.start,
     )
