@@ -6,6 +6,7 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 
 import pytest
+import yaml
 
 from agents.anyplot import policy
 from core.palette import IMPRINT, muted_for
@@ -666,6 +667,43 @@ class TestRefusals:
         for texts in policy.refusals().values():
             for text in texts.values():
                 assert "http" not in text and "](" not in text and "<" not in text
+
+    def test_every_other_library_reply_carries_the_slot_and_renders_the_served_list(self) -> None:
+        """Since 2026-10-29 the reply names the libraries the assistant adapts, from the scope judge's source, instead
+        of "only in Python, with matplotlib or seaborn"; library names need no translation."""
+        raw = yaml.safe_load(source("agents/anyplot/prompts/refusals.yaml"))
+        served = ["matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot", "ggplot2"]
+        listed = "Altair, lets-plot, Matplotlib, plotnine, Pygal, Seaborn, ggplot2"
+
+        assert set(raw["other_library"]) == REFUSAL_LANGS
+        assert policy.adapted_names(served) == listed.split(", ")
+        rendered = policy.refusals_for(served)["other_library"]
+        for lang, text in raw["other_library"].items():
+            assert text.count("{{libraries}}") == 1 and "seaborn" not in text, lang
+            assert listed in rendered[lang] and "{{" not in rendered[lang], lang
+        assert rendered["en"].startswith(f"Here I adapt this plot only with {listed}. For another library")
+        assert policy.refusals_for(["seaborn", "matplotlib"])["other_library"]["de"].startswith(
+            "Hier passe ich diesen Plot nur mit Matplotlib, Seaborn an."
+        )
+        assert not any(
+            "{{" in text for texts in raw.values() for text in texts.values() if texts is not raw["other_library"]
+        )
+
+    def test_the_served_list_comes_from_the_settings(self) -> None:
+        from agents.anyplot.settings import get_settings
+
+        assert policy.refusals() == policy.refusals_for(get_settings().libraries)
+        assert ", ".join(policy.adapted_names(get_settings().libraries)) in policy.refusal("other_library", "fr")
+
+    def test_an_unknown_slot_in_a_refusal_breaks_the_build(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        text = 'out_of_scope:\n  en: "x {{nope}}"\nneeds_data:\n  en: "y"\n'
+        (tmp_path / "refusals.yaml").write_text(text, encoding="utf-8")
+        monkeypatch.setattr(policy, "PROMPTS_DIR", tmp_path)
+
+        with pytest.raises(policy.PromptSourceError, match="nope"):
+            policy.refusals_for(["matplotlib"])
 
 
 class TestFence:

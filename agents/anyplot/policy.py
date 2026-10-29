@@ -28,7 +28,8 @@ breaks the build instead of silently shrinking a prompt.
 
 The root's refusals come from `prompts/refusals.yaml` (English, German, French,
 Spanish, Italian, Portuguese, Dutch, Polish, Chinese, Vietnamese and Russian, written
-by hand; English for every other language); the scope guard sends the same texts without any model call. The
+by hand; English for every other language; the `other_library` reply's `{{libraries}}` is the served
+libraries by name, `refusals_for`); the scope guard sends the same texts without any model call. The
 root's instruction lists the two it may send itself, `out_of_scope` and `needs_data`
 (`ROOT_REFUSALS`), in every language, as its backup when a message got past the judge;
 root.md tells it to use the English line for any other language, never a translation
@@ -196,16 +197,36 @@ ROOT_REFUSALS: tuple[tuple[str, str], ...] = (
 
 @lru_cache(maxsize=1)
 def refusals() -> RefusalTable:
-    """The fixed replies by reason and language."""
+    """The fixed replies by reason and language, with the served libraries (`AGENT_LIBRARIES`) filled in."""
+    from .settings import get_settings
+
+    return refusals_for(get_settings().libraries)
+
+
+def refusals_for(libraries: Sequence[str]) -> RefusalTable:
+    """The fixed replies by reason and language, every `{{libraries}}` filled with `libraries` by name.
+
+    Since 2026-10-29 the `other_library` reply names the libraries the assistant adapts from the
+    same source as the scope judge's passage (`AGENT_LIBRARIES`, display names in the catalogue's
+    order, `adapted_names`), instead of "only in Python, with matplotlib or seaborn". Library names
+    need no translation, so the list is a plain comma-separated one in every language; each
+    hand-written translation keeps its own words around it. Any other `{{slot}}` is a build error.
+    """
     data = yaml.safe_load(_read(PROMPTS_DIR / "refusals.yaml"))
     missing = [reason for reason, _ in ROOT_REFUSALS if not isinstance(data, dict) or reason not in data]
     if missing:
         raise PromptSourceError(f"refusals.yaml needs entries for {', '.join(missing)}")
+    listed = ", ".join(adapted_names(libraries))
     table: RefusalTable = {}
     for reason, texts in data.items():
         if not isinstance(texts, dict) or DEFAULT_LANG not in texts:
             raise PromptSourceError(f"refusals.yaml: {reason!r} needs an English text")
-        table[str(reason)] = {str(lang): str(text).strip() for lang, text in texts.items()}
+        table[str(reason)] = {}
+        for lang, text in texts.items():
+            unknown = sorted(set(_SLOT.findall(str(text))) - {LIBRARIES_SLOT})
+            if unknown:
+                raise PromptSourceError(f"refusals.yaml: {reason}/{lang} names unknown slots {unknown}")
+            table[str(reason)][str(lang)] = _SLOT.sub(lambda _match: listed, str(text)).strip()
     return table
 
 
@@ -418,8 +439,9 @@ def _listed(items: Sequence[str]) -> str:
     return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
 
 
-def _by_language(libraries: Sequence[str]) -> str:
-    """The display names of `libraries` grouped by their language, in the catalogue's order: `A and B (Python) and C (R)`."""
+def _names_by_language(libraries: Sequence[str]) -> list[tuple[str, list[str]]]:
+    """The display names of `libraries` per language, languages and libraries in the catalogue's order
+    (`core.constants`), whatever the order of `libraries`."""
     from core.constants import LANGUAGES_METADATA, LIBRARIES_METADATA
 
     groups = []
@@ -430,8 +452,19 @@ def _by_language(libraries: Sequence[str]) -> str:
             if entry["language_id"] == language["id"] and entry["id"] in libraries
         ]
         if names:
-            groups.append(f"{_listed(names)} ({language['name']})")
-    return _listed(groups)
+            groups.append((str(language["name"]), names))
+    return groups
+
+
+def adapted_names(libraries: Sequence[str]) -> list[str]:
+    """The display names of `libraries` in the order of `_names_by_language`, with no word between them: the list the
+    `other_library` reply names in every language (`refusals_for`)."""
+    return [name for _, names in _names_by_language(libraries) for name in names]
+
+
+def _by_language(libraries: Sequence[str]) -> str:
+    """The display names of `libraries` grouped by their language: `A and B (Python) and C (R)` (the scope judge)."""
+    return _listed([f"{_listed(names)} ({language})" for language, names in _names_by_language(libraries)])
 
 
 def libraries_passage(served: Sequence[str]) -> str:

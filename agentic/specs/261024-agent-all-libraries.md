@@ -1028,9 +1028,12 @@ qrcode-basic and maze-circular; by SECURITY rule `banned-import` 3, `url-literal
   slots, and R's slots say that the host gates judge an R render without a probe;
   `adapter_highlights.md` has a slot for its code example too (`highlights_prompt`).
   Both Python prompts stay byte-identical.
-- The fixed `other_library` refusal (`refusals.yaml`, eleven hand-written languages)
-  still says the assistant adapts "only in Python, with matplotlib or seaborn". Owner
-  question: its new wording, written by hand in every language.
+- Also settled in the same PR (owner's request of 2026-10-29): the fixed `other_library`
+  reply (`refusals.yaml`, eleven hand-written languages) said the assistant adapts "only
+  in Python, with matplotlib or seaborn". Each translation now carries a `{{libraries}}`
+  slot in place of that clause, filled with the served libraries by name from the scope
+  judge's source (`policy.refusals_for`, `adapted_names`); the rest of each text is
+  unchanged.
 - The 67 catalogue files that size the title font from `nchar(title)` (3a, known issue).
 
 #### 2d. Order of the PRs

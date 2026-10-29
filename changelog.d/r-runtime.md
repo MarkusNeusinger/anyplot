@@ -34,7 +34,9 @@
   served to the admin, could get the `other_library` pointer. The rubric now
   gets the served libraries from `AGENT_LIBRARIES` and the catalogue's others,
   grouped by language, and a question about the session's code is in scope in
-  any served language. The adapter prompt's sentences that only matplotlib's
+  any served language. The fixed `other_library` reply names the served
+  libraries in each of its eleven languages instead of "only in Python, with
+  matplotlib or seaborn". The adapter prompt's sentences that only matplotlib's
   probe makes true moved into the Python passages, so the R prompt says that
   the host gates judge an R render without a probe.
 - **Agent result code highlighted in the wrong language.** The result card
