@@ -1,25 +1,32 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { colorFor, NODE_SIZE } from 'src/hooks/useForceGraphSimulation';
+import { colorFor, type MapGraphData, NODE_SIZE } from 'src/hooks/useForceGraphSimulation';
 import {
   buildVariantUrl,
   fitToBox,
+  type ForceGraphHandle,
   type MapNode,
   nodeAspectRatio,
 } from 'src/pages/MapPage.helpers';
 import { colors } from 'src/theme';
+
+/** What the hover panel shows for the hovered or pinned node. */
+export interface MapPanelData {
+  title: string;
+  plotType: string | null;
+  chipColor: string | null;
+  tags: string[];
+  previewUrl: string | null;
+}
 
 export function useMapSelection({
   graphData,
   nodeById,
   fgRef,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  graphData: any;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  nodeById: Map<string, any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fgRef: React.RefObject<any>;
+  graphData: MapGraphData;
+  nodeById: Map<string, MapNode>;
+  fgRef: React.RefObject<ForceGraphHandle>;
 }) {
   const [hoverId, setHoverId] = useState<string | null>(null);
   const lastPanelNodeIdRef = useRef<string | null>(null);
@@ -33,11 +40,28 @@ export function useMapSelection({
   const panelNodeId = hoverId ?? pinnedId ?? lastPanelNodeIdRef.current;
   if (panelNodeId !== null) lastPanelNodeIdRef.current = panelNodeId;
 
+  // ForceGraph2D's onNodeHover, debounced by 100 ms. Lives here, next to the
+  // timer it owns, so the unmount cleanup below covers every timer it sets.
+  const handleNodeHover = (n: MapNode | null) => {
+    if (hoverTimerRef.current != null) {
+      window.clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+    if (n) {
+      hoverTimerRef.current = window.setTimeout(() => {
+        setHoverId(n.id);
+        hoverTimerRef.current = null;
+      }, 100);
+    } else {
+      setHoverId(null);
+    }
+  };
+
+  // Clean up any pending hover-debounce timer on unmount.
   useEffect(() => {
-    const timer = hoverTimerRef.current;
     return () => {
-      if (timer != null) {
-        window.clearTimeout(timer);
+      if (hoverTimerRef.current != null) {
+        window.clearTimeout(hoverTimerRef.current);
       }
     };
   }, []);
@@ -76,7 +100,7 @@ export function useMapSelection({
     return () => cancelAnimationFrame(raf);
   }, [pinnedId, graphData, nodeById, fgRef]);
 
-  const panelData = useMemo(() => {
+  const panelData = useMemo((): MapPanelData | null => {
     if (!panelNodeId) return null;
     const node = nodeById.get(panelNodeId);
     if (!node) return null;
@@ -113,7 +137,7 @@ export function useMapSelection({
     pinScreen,
     hoverType,
     setHoverType,
-    hoverTimerRef,
+    handleNodeHover,
     panelNodeId,
     panelData,
     pinColor,

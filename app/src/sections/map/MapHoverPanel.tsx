@@ -1,13 +1,13 @@
 import Box from '@mui/material/Box';
 
 import { useTheme } from 'src/hooks/useLayoutContext';
+import type { MapPanelData } from 'src/sections/map/useMapSelection';
 import { fontSize, typography } from 'src/theme';
 
 interface MapHoverPanelProps {
   hoverId: string | null;
   pinnedId: string | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  panelData: any;
+  panelData: MapPanelData | null;
 }
 
 export function MapHoverPanel({ hoverId, pinnedId, panelData }: MapHoverPanelProps) {

@@ -10,13 +10,16 @@ import { fetchWithAuth } from 'src/lib/api';
 import { AgentCasesSection } from 'src/sections/debug/AgentCasesSection';
 import { AgentUsageSection } from 'src/sections/debug/AgentUsageSection';
 import { CommonWeaknesses } from 'src/sections/debug/CommonWeaknesses';
-import type { FeedbackMessageFilter } from 'src/sections/debug/constants';
-import { DailyActivityChart } from 'src/sections/debug/DailyActivityChart';
+import type { FeedbackMessageFilter, FeedbackStatus } from 'src/sections/debug/constants';
+import { DailyActivityChart, type DailyImplPoint } from 'src/sections/debug/DailyActivityChart';
+import { countImpls } from 'src/sections/debug/debugFormat';
 import { FeedbackSection } from 'src/sections/debug/FeedbackSection';
+import type { FeedbackTopPage } from 'src/sections/debug/FeedbackTopList';
 import { KPIGrid } from 'src/sections/debug/KPIGrid';
-import { LibraryCoverage } from 'src/sections/debug/LibraryCoverage';
-import { ProblemAreas } from 'src/sections/debug/ProblemAreas';
-import { RecentActivity } from 'src/sections/debug/RecentActivity';
+import { LibraryCoverage, type LibraryStats } from 'src/sections/debug/LibraryCoverage';
+import { ProblemAreas, type ProblemSpec } from 'src/sections/debug/ProblemAreas';
+import { RecentActivity, type RecentActivityData } from 'src/sections/debug/RecentActivity';
+import type { SortDir } from 'src/sections/debug/SortableHeader';
 import { SpecMatrix, SpecStatus } from 'src/sections/debug/SpecMatrix';
 import { debugControlSx } from 'src/sections/debug/styles';
 import { SystemHealthRow } from 'src/sections/debug/SystemHealthRow';
@@ -34,22 +37,6 @@ import {
 // Types
 // ============================================================================
 
-interface LibraryStats {
-  id: string;
-  name: string;
-  impl_count: number;
-  avg_score: number | null;
-  min_score: number | null;
-  max_score: number | null;
-}
-
-interface ProblemSpec {
-  id: string;
-  title: string;
-  issue: string;
-  value: string | null;
-}
-
 interface SystemHealth {
   database_connected: boolean;
   api_response_time_ms: number;
@@ -58,33 +45,10 @@ interface SystemHealth {
   total_impls_in_db: number;
 }
 
-interface DailyImplPoint {
-  date: string;
-  impls_updated: number;
-}
-
-interface RecentActivityData {
-  spec_id: string;
-  spec_title: string;
-  library_id: string;
-  language_id: string;
-  quality_score: number | null;
-  generated_by: string | null;
-  updated: string;
-}
-
 interface WeaknessCount {
   text: string;
   count: number;
 }
-
-interface FeedbackTopPage {
-  path: string;
-  count: number;
-  last_seen: string | null;
-}
-
-export type FeedbackStatus = 'new' | 'in_progress' | 'done' | 'wont_solve';
 
 // "" → all statuses, "open" → new + in_progress (server-side pseudo-filter).
 // Default view shows the open queue so resolved entries don't drown out triage.
@@ -119,7 +83,6 @@ interface DebugStatus {
 }
 
 type SortKey = keyof SpecStatus | 'coverage';
-type SortDir = 'asc' | 'desc';
 
 // ============================================================================
 // Helpers
@@ -317,9 +280,6 @@ export function DebugPage() {
     setAdminToken('');
     setReloadCounter(c => c + 1);
   };
-
-  const countImpls = (spec: SpecStatus): number =>
-    LIBRARIES.filter(lib => spec[lib as keyof SpecStatus] !== null).length;
 
   const hasLowScore = (spec: SpecStatus): boolean =>
     LIBRARIES.some(lib => {

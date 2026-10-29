@@ -9,7 +9,7 @@ import Typography from '@mui/material/Typography';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { LIB_ABBREV, LIB_TO_LANG, LIBRARIES } from 'src/constants';
 import { specPath } from 'src/routes/paths';
-import { formatDateShort, scoreColor } from 'src/sections/debug/debugFormat';
+import { countImpls, formatDateShort, scoreColor } from 'src/sections/debug/debugFormat';
 import { timeAgo } from 'src/sections/debug/format';
 import { HeaderCell } from 'src/sections/debug/HeaderCell';
 import { SortableHeader, SortDir } from 'src/sections/debug/SortableHeader';
@@ -204,11 +204,7 @@ export function SpecMatrix({
 
           {/* Body rows */}
           {filteredSpecs.map(spec => {
-            const implCount = ((spec: SpecStatus) => {
-              let c = 0;
-              for (const lib of LIBRARIES) if (spec[lib as keyof SpecStatus] !== null) c++;
-              return c;
-            })(spec);
+            const implCount = countImpls(spec);
             return (
               <Box
                 key={spec.id}

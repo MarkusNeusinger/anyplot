@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { type MapNode, type SpecMapItem } from 'src/pages/MapPage.helpers';
+import type { useAnalytics } from 'src/hooks';
+import { type ForceGraphHandle, type MapNode, type SpecMapItem } from 'src/pages/MapPage.helpers';
 
 export function useMapSearch({
   nodeById,
@@ -10,15 +11,12 @@ export function useMapSearch({
   setSearchQuery,
   trackEvent,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  nodeById: Map<string, any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fgRef: React.RefObject<any>;
+  nodeById: Map<string, MapNode>;
+  fgRef: React.RefObject<ForceGraphHandle>;
   setHoverId: (id: string | null) => void;
   setPinnedId: (id: string | null) => void;
   setSearchQuery: (q: string) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  trackEvent: (event: string, properties?: any) => void;
+  trackEvent: ReturnType<typeof useAnalytics>['trackEvent'];
 }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchIdx, setSearchIdx] = useState(0);

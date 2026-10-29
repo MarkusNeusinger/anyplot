@@ -7,7 +7,7 @@ describe('useMapSelection', () => {
   it('initializes state correctly', () => {
     const { result } = renderHook(() =>
       useMapSelection({
-        graphData: { idf: new Map(), topTypes: [] },
+        graphData: { nodes: [], links: [], topTypes: [], typeCounts: new Map(), idf: new Map() },
         nodeById: new Map(),
         fgRef: { current: null },
       })

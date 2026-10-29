@@ -2,12 +2,11 @@ import { useState } from 'react';
 
 import Box from '@mui/material/Box';
 
-import { CLUSTER_COLORS } from 'src/hooks/useForceGraphSimulation';
+import { CLUSTER_COLORS, type MapGraphData } from 'src/hooks/useForceGraphSimulation';
 import { fontSize, typography } from 'src/theme';
 
 interface MapLegendProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  graphData: any;
+  graphData: MapGraphData;
   activeCategory: string;
   hoverType: string | null;
   setHoverType: (type: string | null) => void;

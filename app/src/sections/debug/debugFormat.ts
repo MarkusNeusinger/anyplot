@@ -1,4 +1,9 @@
+import { LIBRARIES } from 'src/constants';
+import type { SpecStatus } from 'src/sections/debug/SpecMatrix';
 import { colors } from 'src/theme';
+
+export const countImpls = (spec: SpecStatus): number =>
+  LIBRARIES.filter(lib => spec[lib as keyof SpecStatus] !== null).length;
 
 export function scoreColor(score: number | null): string {
   if (score === null) return 'var(--ink-muted)';

@@ -122,22 +122,17 @@ export function MapWeights({
               </Box>
             </Box>
           ))}
-
-          {/* Separation line for threshold control */}
-          <Box
-            sx={{
-              height: '1px',
-              bgcolor: 'var(--rule)',
-              my: { xs: 0.25, sm: 0.5 },
-              mx: -0.5,
-            }}
-          />
-
+          {/* Edge-threshold slider — controls KNN_MIN_SIM, the cutoff
+              below which a candidate KNN edge is dropped. Lower = denser
+              graph (more cross-cluster bridges); higher = sparser graph
+              (cleaner clusters but more isolated outliers). */}
           <Box
             sx={{
               display: 'flex',
               alignItems: 'center',
               gap: { xs: 1, sm: 1.5 },
+              pt: { xs: 0.25, sm: 0.5 },
+              borderTop: '1px dashed var(--rule)',
             }}
           >
             <Box

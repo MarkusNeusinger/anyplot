@@ -3,12 +3,13 @@ import { useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
 import { useAnalytics } from 'src/hooks';
 import { useForceGraphSimulation } from 'src/hooks/useForceGraphSimulation';
-import { type MapNode } from 'src/pages/MapPage.helpers';
+import { type ForceGraphHandle, type MapNode } from 'src/pages/MapPage.helpers';
 import { specPath } from 'src/routes/paths';
 import {
   MapCanvas,
@@ -41,8 +42,7 @@ export function MapPage() {
   const navigate = useNavigate();
 
   // refs
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const fgRef = useRef<any>(null);
+  const fgRef = useRef<ForceGraphHandle>(null);
 
   // 1. page view
   useEffect(() => {
@@ -84,7 +84,7 @@ export function MapPage() {
     pinScreen,
     hoverType,
     setHoverType,
-    hoverTimerRef,
+    handleNodeHover,
     panelData,
     pinColor,
   } = useMapSelection({
@@ -214,6 +214,20 @@ export function MapPage() {
 
         <MapHoverPanel hoverId={hoverId} pinnedId={pinnedId} panelData={panelData} />
 
+        {/* Loading / error states */}
+        {!specs && !error && (
+          <Box
+            sx={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <CircularProgress size={28} />
+          </Box>
+        )}
         {error && (
           <Box
             sx={{
@@ -245,7 +259,7 @@ export function MapPage() {
           onNodeClick={onNodeClick}
           setPinnedId={setPinnedId}
           setHoverId={setHoverId}
-          hoverTimerRef={hoverTimerRef}
+          onNodeHover={handleNodeHover}
           markSettled={markSettled}
           handleEngineTick={handleEngineTick}
           settled={settled}

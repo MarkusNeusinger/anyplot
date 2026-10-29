@@ -3,11 +3,17 @@ import ForceGraph2D from 'react-force-graph-2d';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 
-import { colorFor, NODE_SIZE } from 'src/hooks/useForceGraphSimulation';
+import {
+  colorFor,
+  type MapForceConfig,
+  type MapGraphData,
+  NODE_SIZE,
+} from 'src/hooks/useForceGraphSimulation';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import {
   ensureNodeTier,
   fitToBox,
+  type ForceGraphHandle,
   type MapLink,
   type MapNode,
   nodeAspectRatio,
@@ -19,22 +25,18 @@ import { colors, fontSize, typography } from 'src/theme';
 
 interface MapCanvasProps {
   ready: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fgRef: React.RefObject<any>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  graphData: any;
+  fgRef: React.RefObject<ForceGraphHandle>;
+  graphData: MapGraphData;
   size: { w: number; h: number };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  forceConfig: any;
+  forceConfig: MapForceConfig;
   hoverId: string | null;
   hoverType: string | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  nodeById: Map<string, any>;
+  nodeById: Map<string, MapNode>;
   neighbors: Map<string, Set<string>>;
   onNodeClick: (node: MapNode) => void;
   setPinnedId: (id: string | null) => void;
   setHoverId: (id: string | null) => void;
-  hoverTimerRef: React.MutableRefObject<number | null>;
+  onNodeHover: (n: MapNode | null) => void;
   markSettled: () => void;
   handleEngineTick: () => void;
   settled: boolean;
@@ -76,7 +78,7 @@ export function MapCanvas({
   onNodeClick,
   setPinnedId,
   setHoverId,
-  hoverTimerRef,
+  onNodeHover,
   markSettled,
   handleEngineTick,
   settled,
@@ -206,20 +208,7 @@ export function MapCanvas({
             setPinnedId(null);
             setHoverId(null);
           }}
-          onNodeHover={(n: MapNode | null) => {
-            if (hoverTimerRef.current != null) {
-              window.clearTimeout(hoverTimerRef.current);
-              hoverTimerRef.current = null;
-            }
-            if (n) {
-              hoverTimerRef.current = window.setTimeout(() => {
-                setHoverId(n.id);
-                hoverTimerRef.current = null;
-              }, 100);
-            } else {
-              setHoverId(null);
-            }
-          }}
+          onNodeHover={onNodeHover}
           cooldownTicks={forceConfig.cooldownTicks}
           // Frame the dense cluster to ~80% of the viewport — instantly
           // (0 ms), so the camera move happens behind the still-active
