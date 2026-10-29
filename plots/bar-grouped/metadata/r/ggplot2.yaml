@@ -12,40 +12,34 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-grouped/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 85
 review:
   strengths:
-  - 'Both weaknesses from Attempt 1 are directly and correctly fixed: gridlines now
-    use a baked-in ~20% alpha tint (paste0(INK, "33")) instead of solid ink, landing
-    squarely in the style guide''s 15-25% subtle target'
-  - Regions are now ordered by descending total revenue (region_order computed via
-    group_by/summarise/arrange), turning the chart into a ranking rather than an arbitrary
-    list
-  - New geom_text() value labels use the same position_dodge(width = 0.75) as the
-    bars, so labels stay correctly centered over their bar even though this is easy
-    to get misaligned
-  - Correct Imprint palette in canonical order, identical across light/dark renders;
-    fully theme-adaptive chrome
-  - Clean KISS-structured R code with set.seed(42) and realistic case_when()-based
-    per-product revenue distributions
+  - geom_col and geom_text share position_dodge(width = 0.75), so every value label
+    is centered over its own bar with no collisions, even in the near-tied Central
+    6.2/6.3 pair
+  - Regions ordered by descending total revenue via group_by/summarise/arrange, giving
+    a meaningful ranking order (C4)
+  - 'Correct Imprint order (#009E73, #C475FD, #4467A3), identical across themes, with
+    theme-correct chrome and a subtle ~20% grid tint'
+  - Page-colored bar outlines and a zero-anchored y expansion keep the bars crisp
+    on the baseline with headroom for labels
+  - Clean top-down R script with set.seed(42) and case_when()-based per-product revenue
+    distributions
   weaknesses:
-  - No explicit annotation or callout highlights a specific insight (e.g., Central
-    being the only region where Hardware revenue exceeds Software) - the ordering
-    adds hierarchy but the storytelling is still implicit rather than pointed
-  - Grouped-dodge-bar-with-labels is still a fairly standard recipe; a more library-distinctive
-    flourish (e.g. geom_text() color/weight varying by series total, or a subtle annotate()
-    marking the top region) would push Library Mastery further
+  - 'Suggestion: a slightly heavier value-label weight would help the 2.4 mm labels
+    read better in the 400 px thumbnail.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
-      Chrome: Bold dark title fully legible; "Region" and "Revenue ($M)" axis titles in dark ink; tick labels in softer gray; gridlines now a subtle low-alpha tint (fixed from Attempt 1's solid-ink issue); borderless top-left legend with three swatches. All readable.
-      Data: First series (Software) = #009E73 brand green, second (Hardware) = #C475FD lavender, third (Services) = #4467A3 blue - correct Imprint canonical order. Bars dodge-grouped per region, background-colored bar edges for separation, dodge-aligned value labels above each bar. Regions ordered Central > West > North > East > South by descending total revenue.
+      Background: Warm off-white #FAF8F1, not pure white.
+      Chrome: Bold dark title 'Revenue by Product Line · bar-grouped · r · ggplot2 · anyplot.ai' at top-left; top-left legend 'Product Line' with Software/Hardware/Services swatches; axis titles 'Region' and 'Revenue ($M)' in dark ink; tick labels 0-6 and region names in soft gray; subtle horizontal gridlines; L-shaped axis lines. All readable.
+      Data: Five region clusters ordered Central, West, North, East, South (descending total), three dodged bars each: Software #009E73, Hardware #C475FD, Services #4467A3; one-decimal value labels above every bar, no collisions.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
-      Chrome: Title, axis labels, and tick labels render in light ink, fully legible. Gridlines are faint light lines at the same subtle weight as the light render. No dark-on-dark failures observed.
-      Data: Colors confirmed identical to light render (#009E73 / #C475FD / #4467A3) - only chrome flipped. Value labels remain legible in the softer ink-soft tone.
+      Background: Warm near-black #1A1A17, not pure black.
+      Chrome: Title and axis titles in light ink, ticks/legend text in soft light gray, faint light gridlines; no dark-on-dark text anywhere.
+      Data: Bar colors identical to the light render; only chrome flipped. Value labels legible in soft light ink.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -57,70 +51,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes, well-proportioned, readable in both themes and
-          at mobile scale
+        comment: Explicit sizes (title 12 pt bold, axis titles 10, ticks/legend 8,
+          value labels 2.4 mm); every text readable in both themes and at thumbnail
+          scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between text, bars, or labels
+        comment: 'No collisions: dodge-matched value labels sit above their own bars
+          with clear gaps, even the Central 6.2/6.3 pair'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars and value labels clearly visible and appropriately sized
+        comment: 15 bars well sized; legend swatches filled and visible in both themes;
+          one label per bar fits its bar
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe, not reliant on red-green
+        comment: Green/lavender/blue differ in hue and lightness; no red-green sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot fills a healthy share of the canvas, legend
-          near plot
+        comment: 3200x1800 canvas, balanced margins, title about 80% width (expected
+          for the mandated title), legend top-left, nothing overflows
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Revenue ($M))
+        comment: '''Region'' and ''Revenue ($M)'' are descriptive and carry the unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct Imprint canonical order, theme-correct chrome in both renders
+        comment: 'Imprint order #009E73, #C475FD, #4467A3; backgrounds #FAF8F1 / #1A1A17;
+          chrome flips correctly'
     design_excellence:
-      score: 15
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Correct palette, bold title hierarchy, dodge-aligned labels, background-colored
-          bar edges - clearly above defaults
+        comment: 'Beyond baseline: bold title over regular-weight axis titles, INK
+          vs INK_SOFT hierarchy for titles vs ticks/labels, value labels in soft ink
+          so they recede behind the bars'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: Gridline opacity fixed to subtle ~20% tint, L-shaped frame, generous
-          whitespace, borderless legend
+        comment: 'Beyond baseline: vertical grid removed for a categorical x-axis,
+          page-colored bar outlines separate adjacent bars, zero-padded y expansion
+          so bars sit on the axis with headroom for labels'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Descending-total ordering gives a ranking narrative; no explicit
-          annotation on a specific insight
+        comment: Ranking by total is what the spec's Notes ask for; no further hierarchy
+          chosen
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped bar chart
+        comment: Correct grouped (dodged) bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, clear legend, consistent bar widths/spacing, meaningful
-          ordering, value labels
+        comment: Distinct colors with legend, consistent widths, wider gaps between
+          clusters, meaningful order (C4), zero baseline (C1), labels above bars (C5)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=region, y=revenue, fill=product - correct mapping, all data visible
+        comment: x=Region, y=Revenue, fill=Product Line; bars at their values from
+          zero
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels match
-          data exactly
+        comment: Title 'Revenue by Product Line · bar-grouped · r · ggplot2 · anyplot.ai'
+          correct; legend 'Product Line' with readable entries
     data_quality:
       score: 15
       max: 15
@@ -160,19 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows variation across regions and product lines
+        comment: 5 categories x 3 groups, rank swaps (Hardware beats Software in Central;
+          Services beats Hardware in South)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral business revenue scenario
+        comment: Neutral, plausible regional revenue by product line
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue values in $M plausible for a multi-region company
+        comment: Revenue of 2-7 $M per region and product line is plausible; labels
+          match bar heights on the axis
     code_quality:
       score: 10
       max: 10
@@ -182,7 +186,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, top-down script
+        comment: Flat top-down script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -200,15 +204,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI or over-engineering
+        comment: Appropriate complexity, nothing an available call replaces
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{theme}.png via ragg::agg_png
+        comment: ggsave plot-{THEME}.png via ragg::agg_png at 8x4.5 in, 400 dpi
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -216,15 +220,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct dodge-matched geom_col + geom_text, scale_fill_manual, theme_minimal
+        comment: 'Idiomatic: geom_col + geom_text sharing position_dodge(width = 0.75),
+          scale_fill_manual, expansion(mult = c(0, 0.14)), theme_minimal + theme()
+          overrides'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
         passed: false
-        comment: Dodge-aware geom_text value labels are a genuine ggplot2-idiomatic
-          touch, but overall recipe remains fairly standard
+        comment: Nothing beyond what the library prompt shows
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-195cdba0ef
 impl_tags:
   dependencies: []
   techniques:
