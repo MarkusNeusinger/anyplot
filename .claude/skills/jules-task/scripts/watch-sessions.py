@@ -46,7 +46,12 @@ SETTLED = {"COMPLETED", "FAILED", "AWAITING_PLAN_APPROVAL", "AWAITING_USER_FEEDB
 
 
 def fail(message: str) -> None:
-    """Exit 2, the code that tells the caller not to re-arm (`sys.exit(str)` would exit 1)."""
+    """Exit 2, the code that tells the caller not to re-arm (`sys.exit(str)` would exit 1).
+
+    The ERROR line goes to stdout as well: behind `| grep ... ^ERROR` with pipefail, a
+    pipeline whose grep matched nothing would report grep's 1 instead of this 2.
+    """
+    print(f"ERROR {message.strip().splitlines()[0]}", flush=True)
     print(message, file=sys.stderr, flush=True)
     sys.exit(2)
 
