@@ -115,6 +115,8 @@ export function PaletteContrast() {
           </Box>
         </Box>
       </Box>
+
+
     </>
   );
 }
