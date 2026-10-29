@@ -184,6 +184,7 @@ otherwise open the PR and explain any doubt in its description.
    Claude:
 
    ```bash
+   set -o pipefail  # keep the watcher's exit code (1 re-arm, 2 stop) behind the grep
    python3 .claude/skills/jules-task/scripts/watch-sessions.py --changes-only \
      --base feature/<slug> --allow app/src/<folder>/ <session-id> [...] \
      | grep --line-buffered -E " (COMPLETED|FAILED|AWAITING_USER_FEEDBACK|AWAITING_PLAN_APPROVAL|PAUSED) | PR |^WARNING|^ALL|^TIMEOUT|^ERROR"
@@ -204,6 +205,7 @@ otherwise open the PR and explain any doubt in its description.
      directly:
 
      ```bash
+     set -o pipefail
      KEY="$(sed -n 's/^JULES_API_KEY=//p' "$(git rev-parse --path-format=absolute --git-common-dir)/../.env")"
      python3 -I -c 'import json,sys; print(json.dumps({"prompt": sys.argv[1]}))' "<message>" \
        | curl -s -o /dev/null -w "%{http_code}\n" -X POST -H "Content-Type: application/json" \

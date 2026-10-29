@@ -109,7 +109,8 @@ def parse_args(argv: list[str]) -> tuple[bool, bool, str, list[str], list[str]]:
         elif arg == "--changes-only":
             changes_only = True
         elif arg in ("--base", "--allow"):
-            if i + 1 >= len(argv):
+            # A missing value, or another option where the value belongs, is a usage error.
+            if i + 1 >= len(argv) or argv[i + 1].startswith("-"):
                 fail(__doc__ or "usage error")
             if arg == "--base":
                 base = argv[i + 1]
