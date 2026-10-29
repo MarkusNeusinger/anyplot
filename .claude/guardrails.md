@@ -84,8 +84,20 @@ moves the permission, not just the steps:
 
 Every condition uses the PR author, not `github.actor`: on Jules branches most
 runs showed the repository owner as the actor, and a re-run can change who
-triggered it. A Jules change gets its e2e run on the push Claude's merge
-makes and on the PR into `main`, both after the diff was read.
+triggered it. A Jules change gets its e2e run on the PR into `main`, after the
+diff was read.
+
+**No CI on pushes to `feature/**` (2026-10-29).** The PR-author conditions had
+a gap the first feature-branch run exposed within the hour. Jules names its
+own branch after the one it starts from (`feature/head-metadata-dedup-<session
+id>`), and `ci-lint`, `ci-tests`, `ci-migrations`, and `ci-image` also ran on
+every push to `feature/**`. A push run has no PR, so no author, and the
+pusher is the repository owner, because Jules pushes with the owner's GitHub
+grant. The `renderer-image` job of that push run got its GCP login before
+Claude cancelled it; only code Jules had not touched ran with it. Since then
+`feature/**` is gone from every push trigger, so a feature branch and Jules's
+branches under it get CI only through pull requests, and `Run E2E Tests` and
+`renderer-image` also refuse any ref under refs/heads/feature at job level.
 
 **Gemini 3 Pro against Flash in Jules (2026-10-28).** The same two prompts
 (#9636, a three-file dedup; #9629, a 29-file migration) ran on both. Flash
