@@ -94,6 +94,35 @@ def test_the_pipe_is_closed_and_named_nowhere_before_user_code(library: Path) ->
     assert code == 0
 
 
+def test_the_program_is_not_dumpable_so_a_killed_child_dumps_no_core(library: Path) -> None:
+    """Before Linux 5.16 a core dump kills every process sharing the dumping one's memory, so the SIGSYS of a vfork
+    child (R's popen and system()) took R with it; the first Cloud Build of the toolchain died that way. Not
+    dumpable, the child dumps no core and dies alone on every kernel (PR_GET_DUMPABLE is 3)."""
+    read_end, write_end = os.pipe()
+    probe = "import ctypes; print(ctypes.CDLL(None, use_errno=True).prctl(3, 0, 0, 0, 0))"
+    env = {
+        "PATH": "/usr/bin:/bin",
+        "LD_PRELOAD": str(library),
+        "ANYPLOT_DENY_EXEC": "required",
+        "ANYPLOT_EXEC_DENY_FD": str(write_end),
+    }
+    try:
+        result = subprocess.run(
+            [sys.executable, "-I", "-c", probe],
+            env=env,
+            pass_fds=(write_end,),
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    finally:
+        os.close(write_end)
+    with os.fdopen(read_end, "rb") as reader:
+        state = reader.read().decode()
+    assert (result.returncode, result.stdout.strip(), state) == (0, "0", "on"), result.stderr
+
+
 @pytest.mark.skipif(os.geteuid() == 0, reason="RLIMIT_NPROC does not bind root")
 def test_required_stops_the_program_when_the_filter_cannot_be_proven(library: Path) -> None:
     """With no process left to fork, the probe cannot prove the filter: required ends the program with exit code 3
