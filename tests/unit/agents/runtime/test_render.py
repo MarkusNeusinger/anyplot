@@ -870,6 +870,8 @@ class TestBackends:
             if started.exists() and len(started.read_text().split()) == 2:
                 break
             await asyncio.sleep(0.05)
+        else:
+            raise RuntimeError("Timed out waiting for containers to start")
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task
