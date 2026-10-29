@@ -21,9 +21,11 @@ from agents.anyplot.pipeline import (
     PADDED_LINE,
     RENDER_P95_S,
     Candidate,
+    CheckResult,
     Run,
     SoftDeadline,
     _check,
+    column_kinds_of,
     finish,
     render_adapt_request,
     render_review_request,
@@ -49,6 +51,7 @@ from agents.anyplot.schemas import (
 from agents.anyplot.services import CodeVersion, VersionStore
 from agents.anyplot.session_state import SessionView
 from agents.anyplot.settings import AgentSettings, get_settings
+from tests.unit.agents.code.conftest import R_CATALOGUE_NORMALISED
 
 from .fakes import gemini_call_s
 
@@ -801,3 +804,62 @@ class TestCheck:
 
     def test_a_clean_check_names_no_module(self) -> None:
         assert _check("x = 1\n", library="matplotlib", palette=[], base="x = 1\n").banned_imports == []
+
+
+class TestRCheck:
+    """ggplot2 through the same check, with the R runtime's validators, blocking rules and targets (PR 3b)."""
+
+    BASE = R_CATALOGUE_NORMALISED.replace(
+        "set.seed(42)\ndf <- tibble::tibble(!!SPEND := runif(50, 5, 150), !!REVENUE := rnorm(50, 300, 40))\n",
+        "df <- load_user_data()\n",
+    )
+    PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+    def check(self, code: str) -> CheckResult:
+        return _check(code, library="ggplot2", palette=self.PALETTE, base=self.BASE)
+
+    def test_the_working_form_may_render(self) -> None:
+        check = self.check(self.BASE)
+        assert check.may_render and check.blocking == [] and check.defects == []
+
+    def test_a_kept_dataset_package_refuses_the_working_form(self) -> None:
+        """The readiness scan calls such a catalogue file `coupled`; the adapted working form must drop it."""
+        code = self.BASE.replace("library(ragg)\n", "library(ragg)\nlibrary(palmerpenguins)\n")
+
+        check = self.check(code)
+
+        assert not check.may_render and check.blocking_rules == ["dataset-package"]
+        assert check.blocking[0].startswith("validator dataset-package (line 3): 'palmerpenguins' is a dataset package")
+
+    def test_a_soft_finding_gets_its_r_target(self) -> None:
+        code = self.BASE.replace("df <- load_user_data()\n", "df <- load_user_data()\nnoise <- rnorm(10)\n")
+
+        check = self.check(code)
+
+        assert check.may_render and check.adaptation_rules == ["rng"]
+        assert check.defects[0].startswith("DQ-03 (code): random data generation 'rnorm' is not allowed")
+        assert "set.seed() with sample(), runif() or jitter()" in check.defects[0]
+        assert "np.random" not in check.defects[0]
+
+
+class TestLoaderNotes:
+    def test_the_loaders_notes_come_first_and_ship_as_needs_attention(self) -> None:
+        """Owner rule of 2026-10-15: a value the plot shows changed is announced, with its counts."""
+        note = "R reads 2 integers beyond ±2^53 (9,007,199,254,740,992) as the nearest double: 2 in 'id'"
+        run = run_with(reviewed_ok=True, advisory_lines=["AR-09 (light): clipped"])
+        run.loader_notes = [note]
+
+        result = finish(run)
+
+        assert result.status == "needs_attention"
+        assert result.residual_defects == [note, "AR-09 (light): clipped"]
+
+    def test_column_kinds_of_reads_the_stored_dataset(self) -> None:
+        store = DatasetStore()
+        dataset = store.get(store.put("s", parse_dataset("id,n\n9007199254740993,1\n2,2\n")), "s")
+        assert dataset is not None
+
+        kinds = column_kinds_of(dataset)
+
+        assert kinds is not None and kinds.kinds == {"id": "big-integer", "n": "integer"}
+        assert kinds.inexact == {"id": 1}

@@ -315,7 +315,7 @@ async def adapt_and_render(
 ) -> tuple[Rendered | None, list[str]]:
     """Adapt `base` with `feedback` until one render passes the host gates; the render and the misses."""
     from agents.anyplot.code.edits import apply_plan
-    from agents.anyplot.pipeline import _check, _data_texts, _line, render_adapt_request
+    from agents.anyplot.pipeline import _check, _data_texts, _line, column_kinds_of, render_adapt_request
     from agents.anyplot.policy import adapter_instruction
     from agents.anyplot.render.contract import RenderJob
     from agents.anyplot.render.gates import data_rows, evaluate
@@ -327,6 +327,7 @@ async def adapt_and_render(
     settings = get_settings()
     runtime = runtime_for(view.library, cpu_seconds=settings.render_timeout_s)
     columns = [column.name for column in dataset.profile.columns]
+    kinds = column_kinds_of(dataset)
     misses: list[str] = []
     lines = [_line(line) for line in feedback if line.strip()]
     previous_plan: AdaptPlan | None = None
@@ -378,6 +379,7 @@ async def adapt_and_render(
                 columns=columns,
                 dtypes=dict(dataset.column_dtypes),
                 parse_dates=list(dataset.parse_dates),
+                kinds=dict(kinds.kinds) if kinds is not None else {},
             )
         except ValueError as exc:
             misses.append(f"loader: {exc}")

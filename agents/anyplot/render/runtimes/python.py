@@ -16,10 +16,18 @@ bridge, and none of those three writes one (the host gates still run).
 `adaptation`, `apply_plan`, `restore_protected`, `new_literals`, `error_summary`, `export`)
 are the deterministic code modules in `agents/anyplot/code/` and the error grammar of
 `render/gates.py`; this class only binds them to the runtime interface, for one library.
+pandas reads every cell of `data.csv` exactly (`code/loader.py`), so `loader_notes` has
+nothing to say; the column kinds `loader_block` takes are R's (`runtimes/r.py`).
+
+The ADAPTATION rules that reject the code (`contract.BLOCKING_RULES`) and the targets of
+the soft ones (`ADAPTATION_TARGETS`) were the pipeline's until 2026-10-29, when R brought
+its own; the Python values are unchanged.
 """
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 from agents.renderer.commands import EXEC_DENY_ENV, command_for
@@ -33,8 +41,9 @@ from ...code.normalise import normalise
 from ...code.readiness import Readiness, scan
 from ...code.regions import PLACEHOLDER, Regions, find_regions
 from ...code.validate import Finding, validate_adaptation, validate_security
+from ...data.kinds import ColumnKinds
 from ...schemas import AdaptPlan, CodeArtifact
-from ..contract import Theme
+from ..contract import BLOCKING_RULES, Theme
 from ..gates import error_summary
 from ..harness import CONVERT_FLAG, DATA_FLAG, INTERPRETER_FLAGS
 from ..png import MAX_PNG_BYTES, MAX_PROBE_BYTES, read_output
@@ -56,6 +65,24 @@ DATA_RLIMIT_NPROC = 64
 backend's data runs apply as well, and its renders the address-space limit."""
 RENDER_RLIMIT_FSIZE_MB = 50
 """The renderer's deployed `RENDERER_RLIMIT_FSIZE_MB` (pinned by a test), which the local backend's renders apply."""
+ADAPTATION_TARGETS: Mapping[str, str] = MappingProxyType(
+    {
+        "rng": "take the values from df; a seeded np.random.default_rng(<int>) is only for jitter or subsampling",
+        "literal-data": "take the values from df instead of writing them out",
+        "palette-prefix": (
+            "keep the Imprint palette one literal list of colour strings, assigned once: the original entries in "
+            "order, then only the next Imprint positions written out; pick colours from it under a new name "
+            "(colors = IMPRINT[: len(groups)]); with more than eight groups draw all but the seven largest in "
+            'INK_MUTED as "Other"'
+        ),
+    }
+)
+"""The target of each soft ADAPTATION finding's defect line, matching the rule the validator checks.
+
+The palette rule wants a literal list (`code/validate.py`, "Palette"), so its target
+never says "derive it": in spike X, 9 of Claude's 14 palette-prefix lines reported a
+computed palette list, the fix the old shared target ("derive it from df and the
+Imprint palette") suggested."""
 
 
 class PythonRuntime:
@@ -68,6 +95,8 @@ class PythonRuntime:
     """The name the exported code downloads under (`schemas.CodeArtifact`)."""
     placeholder = PLACEHOLDER
     """The working form's data placeholder, which the loader replaces."""
+    blocking_rules: frozenset[str] = BLOCKING_RULES
+    adaptation_targets: Mapping[str, str] = ADAPTATION_TARGETS
 
     def __init__(
         self,
@@ -155,8 +184,15 @@ class PythonRuntime:
     def normalise(self, code: str, library: str) -> str:
         return normalise(code, library=library)
 
-    def loader_block(self, working: str, *, columns: list[str], dtypes: dict[str, str], parse_dates: list[str]) -> str:
+    def loader_block(
+        self, working: str, *, columns: list[str], dtypes: dict[str, str], parse_dates: list[str], kinds: dict[str, str]
+    ) -> str:
+        """pandas' `read_csv` from the parser's dtypes; the kinds are for typed readers of other languages."""
         return to_run_form(working, columns=columns, dtypes=dtypes, parse_dates=parse_dates)
+
+    def loader_notes(self, kinds: ColumnKinds) -> list[str]:
+        """None: `Int64`, `float64` with `float_precision="round_trip"` and the parsed datetimes keep every cell."""
+        return []
 
     def validate(self, code: str, library: str) -> list[str]:
         return [f"{finding.rule}: {finding.message}" for finding in validate_security(code, library=library)]

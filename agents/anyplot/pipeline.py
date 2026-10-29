@@ -20,13 +20,15 @@ eval harness may set one or three):
    literal budget (more than `MAX_NEW_LITERAL_CHARS` of new string literals, or
    `MAX_CHANGE_LITERAL_CHARS` on a change of a previous version, or more than
    `MAX_NEW_LITERAL_CHARS` against the catalogue code over all versions, rejects the
-   code; dataset headers and cells are free) and the ADAPTATION validator (a
-   placeholder finding rejects the code; the other findings become defect lines but
-   the code still renders); a change whose base version was written in another
+   code; dataset headers and cells are free) and the ADAPTATION validator (a finding
+   of the runtime's `blocking_rules` rejects the code: a placeholder rule in every
+   language, and in R a dataset package too; the other findings become defect lines
+   with the runtime's targets but the code still renders); a change whose base version was written in another
    language than the session language (`language_changed`) rewrites every title,
    label and annotation, so its budget grows by `REWRITE_LITERAL_FACTOR` times the
    literal text the plan replaces, up to `MAX_NEW_LITERAL_CHARS`;
-3. **render**: `normalise`, the loader substitution (`to_run_form`), then the one
+3. **render**: `normalise`, the loader substitution (the runtime's `loader_block`, typed
+   from the parser's dtypes and the column kinds), then the one
    theme the call asks for (`PipelineArgs.theme`, light by default) through the
    render backend, and the host gates (`render/gates.py`) on exactly that theme;
 4. **review**: on the first render that passes the host gates on the exact canvas
@@ -53,17 +55,20 @@ the soft deadline) and for every render timeout;
 the request deadline is `abort_signal` on the run. A render waits in the `run` lane of the render slot
 (`render/serial.py`), ahead of every waiting theme toggle, so it waits for at most
 the render in progress; its clamped timeout starts when it runs. The exported
-`plot.py` names the rendered theme in its run line.
+code (`plot.py`, `plot.R`) names the rendered theme in its run line.
 
 Every path that is not cancelled yields exactly one `Event(output=PlotResult)` as a
 JSON dict. `ok` means the shipped render passed the host gates on the exact canvas,
-has no measured finding left (no advisory gate line, no ADAPTATION finding), and the
+has no measured finding left (no advisory gate line, no ADAPTATION finding, no cell the
+loader read inexactly), and the
 reviewer passed exactly that render (in `catalogue` mode: at or above the ship bar,
 `AGENT_STATUS_BAR` and `AGENT_STATUS_SCORE`); `needs_attention` ships a render with
 residual defect lines (reviewer lines that no reviewed render fixed, adaptation
 findings, every advisory gate line of the shipped render, such as clipped or
-overlapping text, which no review score erases, a padded canvas, or no review because
-the budget or the deadline ran out);
+overlapping text, which no review score erases, a padded canvas, no review because
+the budget or the deadline ran out, or the runtime's `loader_notes`: R reads integers
+beyond ±2^53 as the nearest double, and the first note says how many per column, owner
+rule of 2026-10-15);
 `failed` names its reason; `not_ready` comes before any model call and before the run
 queue. A ready run first takes the turn's run-queue slot (`ledger.run_slot`, set by the
 `/messages` route), so only a turn that renders waits in the queue; the soft deadline
@@ -121,6 +126,7 @@ from . import telemetry
 from .briefs import adapter_profile, profile_summary, spec_brief
 from .code.edits import MAX_CHANGE_LITERAL_CHARS, MAX_NEW_LITERAL_CHARS, REWRITE_LITERAL_FACTOR
 from .data.bindings import check_bindings
+from .data.kinds import ColumnKinds, read_kinds
 from .data.store import StoredDataset
 from .dataset_context import dataset_context, file_name_for_models
 from .grounding import UNVERIFIED_LINE, drawn_texts, expected_misses, plot_texts
@@ -256,26 +262,15 @@ a heatmap after the first try with its axis label at the right edge and a cramme
 them. Such a render is not clean for `AGENT_SHIP_BEST` (`_clean`), so a clean repair a few points lower ships
 over it, and a render that ships with such lines carries them as notes (`needs_attention`) at any score, like a
 measured finding (review of #12204: the forced repair had been dropped silently for a 96 that clipped a label)."""
-BLOCKING_RULES = frozenset({"placeholder-count", "placeholder-use", "syntax", "size", "encoding"})
-"""ADAPTATION findings that keep the code from running: without one placeholder there is no loader."""
 ADAPTATION_IDS = {"rng": "DQ-03", "literal-data": "DQ-03", "palette-prefix": "VQ-07"}
-"""The rubric id an ADAPTATION finding is reported under as a defect line."""
-ADAPTATION_TARGETS = {
-    "rng": "take the values from df; a seeded np.random.default_rng(<int>) is only for jitter or subsampling",
-    "literal-data": "take the values from df instead of writing them out",
-    "palette-prefix": (
-        "keep the Imprint palette one literal list of colour strings, assigned once: the original entries in "
-        "order, then only the next Imprint positions written out; pick colours from it under a new name "
-        "(colors = IMPRINT[: len(groups)]); with more than eight groups draw all but the seven largest in "
-        'INK_MUTED as "Other"'
-    ),
-}
-"""The target of each soft ADAPTATION finding's defect line, matching the rule the validator checks.
+"""The rubric id an ADAPTATION finding is reported under as a defect line.
 
-The palette rule wants a literal list (`code/validate.py`, "Palette"), so its target
-never says "derive it": in spike X, 9 of Claude's 14 palette-prefix lines reported a
-computed palette list, the fix the old shared target ("derive it from df and the
-Imprint palette") suggested."""
+Which findings reject the code (`RuntimeAdapter.blocking_rules`) and the target of each soft
+one (`RuntimeAdapter.adaptation_targets`) are the runtime's since 2026-10-29: the Python
+values moved unchanged to `runtimes/python.py`, and R adds `dataset-package` to the blocking
+set and writes its targets in R."""
+DEFAULT_ADAPTATION_TARGET = "derive it from df"
+"""The target of a soft ADAPTATION finding the runtime gives none."""
 # Feedback only ever reaches a repair attempt (attempt 2 or later), and each allows a full file, so the lines say so.
 SCHEMA_MISS_LINE = (
     "the previous answer did not match the plan schema → answer with one JSON object: edits or full_code "
@@ -471,6 +466,9 @@ class Run:
     (`edits.restore_protected`) after the round's check retry was spent."""
     stage_s: dict[str, float] = field(default_factory=dict)
     """Seconds spent in `adapt`, `check`, `render` and `review`, summed over the attempts."""
+    loader_notes: list[str] = field(default_factory=list)
+    """What the runtime's loader changes when it reads the run's `data.csv` (`RuntimeAdapter.loader_notes`): the first
+    notes of every shipped render, so a value the plot shows rounded is never unannounced."""
 
     def timed(self, stage: str, seconds: float) -> None:
         self.stage_s[stage] = self.stage_s.get(stage, 0.0) + seconds
@@ -932,6 +930,19 @@ def _data_texts(data_csv: str) -> frozenset[str]:
     return frozenset(cell for row in csv.reader(io.StringIO(data_csv)) for cell in row if cell)
 
 
+def column_kinds_of(dataset: StoredDataset) -> ColumnKinds | None:
+    """The value kinds of a dataset's canonical `data.csv` (`data.kinds.read_kinds`), read once per run.
+
+    None when the CSV does not fit its own typing, which the parser never writes: the Python
+    loader reads the dtypes alone and runs as before, and R's loader, which needs the kinds,
+    refuses the run form, so the attempt ends as `loader`.
+    """
+    try:
+        return read_kinds(dataset.csv, dataset.column_dtypes, dataset.parse_dates)
+    except ValueError:
+        return None
+
+
 def _check(
     working: str,
     *,
@@ -946,8 +957,9 @@ def _check(
 ) -> CheckResult:
     """Validate a working form against its base: may it render, the blocking lines, the adaptation defect lines.
 
-    The two validator profiles and the literal diff are the runtime's (`RuntimeAdapter.security`,
-    `adaptation`, `new_literals`); `runtime` defaults to the registry's for `library`.
+    The two validator profiles, the literal diff, the ADAPTATION rules that reject the code and the
+    targets of the others are the runtime's (`RuntimeAdapter.security`, `adaptation`, `new_literals`,
+    `blocking_rules`, `adaptation_targets`); `runtime` defaults to the registry's for `library`.
 
     Besides the two validator profiles, the plan's new string literals (`edits.new_literals`)
     must fit `literal_budget`; on a `rewrite` (a change that writes the base's text in another
@@ -962,8 +974,9 @@ def _check(
     runtime = runtime if runtime is not None else runtime_for(library)
     security = runtime.security(working)
     adaptation = runtime.adaptation(working, original_palette=palette)
+    rejecting = runtime.blocking_rules
     # Both profiles parse the code, so an unparseable file is one `syntax` finding, not two.
-    blocking_findings = list(dict.fromkeys([*security, *(f for f in adaptation if f.rule in BLOCKING_RULES)]))
+    blocking_findings = list(dict.fromkeys([*security, *(f for f in adaptation if f.rule in rejecting)]))
     blocking = [
         f"validator {f.rule}" + (f" (line {f.line})" if f.line else "") + f": {f.message}" for f in blocking_findings
     ]
@@ -992,11 +1005,12 @@ def _check(
                 "all versions together → shorten or drop text added earlier instead of adding more. "
                 "Likely cause: text added turn by turn."
             )
-    soft = [f for f in adaptation if f.rule not in BLOCKING_RULES]
+    soft = [f for f in adaptation if f.rule not in rejecting]
+    targets = runtime.adaptation_targets
     defects = [
         f"{ADAPTATION_IDS.get(f.rule, 'SC-03')} (code): {f.message}"
         + (f" at line {f.line}" if f.line else "")
-        + f" → {ADAPTATION_TARGETS.get(f.rule, 'derive it from df')}. Likely cause: the adaptation ({f.rule})."
+        + f" → {targets.get(f.rule, DEFAULT_ADAPTATION_TARGET)}. Likely cause: the adaptation ({f.rule})."
         for f in soft
     ]
     modules = list(dict.fromkeys(f.module for f in blocking_findings if f.rule == "banned-import" and f.module))
@@ -1057,7 +1071,8 @@ def finish(run: Run) -> PlotResult:
         return PlotResult(
             status="failed", reason=reason, attempts=round_number(run, run.attempts), rounds=list(run.rounds)
         )
-    residual: list[str] = []
+    # The loader's own changes to the data come first, so the cap never drops them (owner rule of 2026-10-15).
+    residual: list[str] = list(run.loader_notes)
     if shipped.padded:
         residual.append(PADDED_LINE.format(theme=run.theme))
         if shipped.canvas_line:
@@ -1488,6 +1503,8 @@ async def _attempts(
     palette = list(regions.imprint.entries) if regions.imprint else []
     hints = view.hints[:MAX_NOTES] if previous is None else []
     columns = [column.name for column in dataset.profile.columns]
+    kinds = column_kinds_of(dataset)
+    run.loader_notes = runtime.loader_notes(kinds) if kinds is not None else []
     feedback: list[str] = []
     previous_plan: AdaptPlan | None = None
     rows = data_rows(dataset.csv)
@@ -1643,6 +1660,7 @@ async def _attempts(
                 columns=columns,
                 dtypes=dict(dataset.column_dtypes),
                 parse_dates=list(dataset.parse_dates),
+                kinds=dict(kinds.kinds) if kinds is not None else {},
             )
         except ValueError as exc:
             attribution("pipeline_check", ledger, attempt=attempt, outcome="loader_failed", edit_failures=0)

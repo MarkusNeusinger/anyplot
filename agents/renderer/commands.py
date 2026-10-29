@@ -223,7 +223,9 @@ def _row(language: Language, library: str) -> RuntimeCommand:
         )
     if language == "r":
         # The spike's renders (scatter, bar, heatmap) peaked at 294 MiB and passed under the Python defaults,
-        # RLIMIT_AS 1 GiB and RLIMIT_NPROC 64, as root and as an unprivileged user (2026-10-24).
+        # RLIMIT_AS 1 GiB and RLIMIT_NPROC 64, as root and as an unprivileged user (2026-10-24). The repair reserve
+        # is Python's 15 s: the first deployed R render took 5.7 s of wall time on Cloud Run (2026-10-29), about the
+        # Python p95 of spike X (5.5 s), with R and ggplot2 loaded fresh each time; the eval matrix measures R's p95.
         return RuntimeCommand(
             language,
             code_file,
@@ -231,6 +233,7 @@ def _row(language: Language, library: str) -> RuntimeCommand:
             code_flag="--file=",
             env=R_ENV,
             toolchain=(R_BINARY,),
+            render_p95_s=15.0,
         )
     return RuntimeCommand(
         language,

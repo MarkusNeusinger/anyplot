@@ -57,6 +57,7 @@ from agents.anyplot.code.edits import apply_plan, new_literal_chars
 from agents.anyplot.code.loader import ISO_DATES, ROUND_TRIP, loader_arguments, na_values, round_trip
 from agents.anyplot.code.regions import find_regions
 from agents.anyplot.data.bindings import check_bindings, default_bindings
+from agents.anyplot.data.kinds import column_kinds
 from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParsedDataset, ParseError, parse_dataset
 from agents.anyplot.data.transcribe import looks_like_free_text, transcribable
 from agents.anyplot.opening import assess, dataset_judge_inputs
@@ -427,6 +428,7 @@ async def _standin(
         columns=columns,
         dtypes=dict(parsed.column_dtypes),
         parse_dates=list(parsed.parse_dates),
+        kinds=dict(column_kinds(parsed.csv, parsed.column_dtypes, parsed.parse_dates)),
     )
     job = RenderJob(
         job_id=secrets.token_hex(8),

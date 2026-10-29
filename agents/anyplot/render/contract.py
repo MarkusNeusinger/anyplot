@@ -22,15 +22,18 @@ Python and in exec mode for every other language), the environment per theme, th
 transforms the pipeline applies before a render (`normalise`, `loader_block`,
 `validate`), and the language's code conventions the pipeline checks against
 (`regions`, `readiness`, `security`, `adaptation`, `apply_plan`, `restore_protected`,
-`new_literals`), its error grammar (`error_summary`) and its export (`export`,
-`code_artifact`). `runtimes/__init__.py` maps a library to its runtime; phase 1 has
-one runtime (Python, for matplotlib and seaborn, `runtimes/python.py`), and later
-languages add runtimes, not backends.
+`new_literals`, the ADAPTATION rules that keep the code from running, `blocking_rules`,
+and the target of each other one, `adaptation_targets`), what its loader changes when
+it reads `data.csv` (`loader_notes`), its error grammar (`error_summary`) and its export
+(`export`, `code_artifact`). `runtimes/__init__.py` maps a library to the runtime of its
+language: Python (`runtimes/python.py`) for six libraries and R (`runtimes/r.py`) for
+ggplot2 since 2026-10-29; later languages add runtimes, not backends.
 
 No ADK import: the render layer is plain code.
 """
 
 import re
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
@@ -43,8 +46,8 @@ from ..schemas import RENDER_ID_PATTERN, CodeArtifact, Theme
 if TYPE_CHECKING:
     from ..code.edits import AppliedPlan
     from ..code.readiness import Readiness
-    from ..code.regions import Regions
     from ..code.validate import Finding
+    from ..data.kinds import ColumnKinds
     from ..schemas import AdaptPlan
 
 
@@ -52,6 +55,27 @@ THEMES: tuple[Theme, Theme] = ("light", "dark")
 """Every theme, in the order artifacts and reviewer images are listed."""
 MAX_STDERR_CHARS = 2_000
 _RENDER_ID = re.compile(RENDER_ID_PATTERN)
+BLOCKING_RULES: frozenset[str] = frozenset({"placeholder-count", "placeholder-use", "syntax", "size", "encoding"})
+"""ADAPTATION findings that keep the code of every language from running: without one placeholder there is no
+loader. A runtime's `blocking_rules` holds these and may add its own (R: `dataset-package`)."""
+
+
+class PaletteRegion(Protocol):
+    """The Imprint palette a runtime's regions found: `regions.Palette` or `profiles.r.regions.Palette`."""
+
+    @property
+    def entries(self) -> Sequence[str]: ...
+
+
+class CodeRegions(Protocol):
+    """What the pipeline reads from a runtime's regions: `regions.Regions` or `profiles.r.regions.Regions`.
+
+    Only the Imprint palette, whose original entries the ADAPTATION check keeps in order; the
+    edit applier and the validators read their own language's regions themselves.
+    """
+
+    @property
+    def imprint(self) -> PaletteRegion | None: ...
 
 
 class RendererUnavailable(RuntimeError):
@@ -225,6 +249,12 @@ class RuntimeAdapter(Protocol):
     """The working form's data placeholder statement, which `loader_block` replaces."""
     render_p95_s: float
     """Seconds a repair attempt's render is budgeted at against the pipeline's soft deadline."""
+    blocking_rules: frozenset[str]
+    """The ADAPTATION rule ids whose finding rejects the code, as a SECURITY finding does (`BLOCKING_RULES` and the
+    language's own); every other ADAPTATION finding becomes a defect line and the code still renders."""
+    adaptation_targets: Mapping[str, str]
+    """The target of each soft ADAPTATION finding's defect line, in the language's own code; a rule without one gets
+    the pipeline's default."""
 
     def command(self, theme: Theme) -> list[str]:
         """The argv that renders the code file in the work directory (never a shell string)."""
@@ -255,8 +285,20 @@ class RuntimeAdapter(Protocol):
         """The canvas and catalogue-header normaliser of this runtime."""
         ...
 
-    def loader_block(self, working: str, *, columns: list[str], dtypes: dict[str, str], parse_dates: list[str]) -> str:
-        """The working form with its data placeholder replaced by the `data.csv` loader."""
+    def loader_block(
+        self, working: str, *, columns: list[str], dtypes: dict[str, str], parse_dates: list[str], kinds: dict[str, str]
+    ) -> str:
+        """The working form with its data placeholder replaced by the `data.csv` loader.
+
+        `dtypes` and `parse_dates` are the parser's typing, which pandas reads; `kinds` the finer
+        value kinds of every column (`data.kinds.read_kinds`), which a typed reader of another
+        language needs (R's `readr::cols`). Each runtime reads what its loader takes.
+        """
+        ...
+
+    def loader_notes(self, kinds: "ColumnKinds") -> list[str]:
+        """What the loader changes when it reads `data.csv`, one line per finding with its counts; empty when it reads
+        every cell exactly (owner rule of 2026-10-15: no silent loss)."""
         ...
 
     def validate(self, code: str, library: str) -> list[str]:
@@ -267,7 +309,7 @@ class RuntimeAdapter(Protocol):
         """The PNG and the probe one theme's run left in `run_dir`, read without following links."""
         ...
 
-    def regions(self, code: str) -> "Regions":
+    def regions(self, code: str) -> CodeRegions:
         """The catalogue conventions in `code`: the theme block, the tokens, the palette, the placeholder, the save."""
         ...
 
