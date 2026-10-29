@@ -1,6 +1,71 @@
 import matrixData from 'src/data/paletteMatrices.json';
+import type { CompPalette } from 'src/sections/palette/types';
 
 export const [DE_T_BAD, DE_T_WARN, DE_T_OK] = matrixData.thresholds; // 5 / 10 / 15 (Petroff 2021)
+
+const OKABE_ITO: CompPalette = {
+  id: 'okabe',
+  name: 'Okabe-Ito',
+  href: 'https://jfly.uni-koeln.de/color/',
+  hexes: [
+    { hex: '#009E73', L: 0.62, C: 0.13, H: 165.5 },
+    { hex: '#D55E00', L: 0.621, C: 0.17, H: 47.5 },
+    { hex: '#0072B2', L: 0.532, C: 0.131, H: 244.0 },
+    { hex: '#CC79A7', L: 0.679, C: 0.118, H: 346.3 },
+    { hex: '#E69F00', L: 0.753, C: 0.158, H: 76.8 },
+    { hex: '#56B4E9', L: 0.735, C: 0.117, H: 236.2 },
+    { hex: '#F0E442', L: 0.902, C: 0.172, H: 105.0 },
+  ],
+};
+
+const TOL_MUTED: CompPalette = {
+  id: 'tol',
+  name: 'Tol muted',
+  href: 'https://personal.sron.nl/~pault/',
+  hexes: [
+    { hex: '#332288', L: 0.347, C: 0.159, H: 281.8 },
+    { hex: '#88CCEE', L: 0.812, C: 0.084, H: 230.8 },
+    { hex: '#44AA99', L: 0.674, C: 0.098, H: 180.4 },
+    { hex: '#117733', L: 0.499, C: 0.135, H: 148.6 },
+    { hex: '#999933', L: 0.663, C: 0.123, H: 109.3 },
+    { hex: '#DDCC77', L: 0.841, C: 0.108, H: 98.3 },
+    { hex: '#CC6677', L: 0.635, C: 0.13, H: 11.0 },
+    { hex: '#882255', L: 0.432, C: 0.145, H: 354.5 },
+    { hex: '#AA4499', L: 0.553, C: 0.167, H: 334.6 },
+  ],
+};
+
+const SET2: CompPalette = {
+  id: 'set2',
+  name: 'ColorBrewer Set2',
+  href: 'https://colorbrewer2.org',
+  hexes: [
+    { hex: '#66C2A5', L: 0.749, C: 0.099, H: 170.8 },
+    { hex: '#FC8D62', L: 0.755, C: 0.147, H: 41.5 },
+    { hex: '#8DA0CB', L: 0.707, C: 0.067, H: 266.1 },
+    { hex: '#E78AC3', L: 0.748, C: 0.132, H: 343.3 },
+    { hex: '#A6D854', L: 0.821, C: 0.169, H: 127.3 },
+    { hex: '#FFD92F', L: 0.892, C: 0.173, H: 95.2 },
+    { hex: '#E5C494', L: 0.837, C: 0.073, H: 76.8 },
+    { hex: '#B3B3B3', L: 0.767, C: 0.0, H: 89.9 },
+  ],
+};
+
+const ANYPLOT_PREV: CompPalette = {
+  id: 'prev',
+  name: 'anyplot v1 (previous live)',
+  hexes: [
+    { hex: '#009E73', L: 0.62, C: 0.13, H: 165.5 },
+    { hex: '#9418DB', L: 0.529, C: 0.259, H: 307.4 },
+    { hex: '#B71D27', L: 0.503, C: 0.187, H: 24.7 },
+    { hex: '#16B8F3', L: 0.735, C: 0.145, H: 231.0 },
+    { hex: '#99B314', L: 0.722, C: 0.167, H: 119.8 },
+    { hex: '#D359A7', L: 0.643, C: 0.176, H: 344.0 },
+    { hex: '#BA843E', L: 0.654, C: 0.109, H: 70.8 },
+  ],
+};
+
+export const COMPARISONS: CompPalette[] = [OKABE_ITO, TOL_MUTED, SET2, ANYPLOT_PREV];
 
 /** OKLCH (L 0..1, C, H°) → sRGB [r,g,b] 0..255, clamped to gamut.
  *  Björn Ottosson's OKLab→linear-sRGB matrices. Used to paint the wheel disk
@@ -72,3 +137,10 @@ export const tooltipSlotProps = {
     },
   },
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Layout
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const sectionSx = { py: { xs: 2, md: 3 } };
+export const proseColumnSx = { maxWidth: 880, mx: 'auto' };
