@@ -9,4 +9,4 @@
   clients without JavaScript, a route whose chunk is loading, the error
   boundary, and pages without a description of their own; `/debug` has its
   own title. Built from the better of two Google Jules variants, measured on
-  the built pages; the other deleted the shell defaults outright.
+  the built pages; the other deleted the shell defaults outright. (#12442)
