@@ -57,3 +57,18 @@ export function deltaECellBg(v: number): string {
   if (v < DE_T_OK) return 'rgba(221, 204, 119, 0.18)'; // <15 acceptable
   return 'transparent'; // >=15 comfortable
 }
+
+// Theme-adaptive tooltip. MUI's default tooltip is a fixed dark grey that
+// ignores the page's light/dark mode, so paint it from the design tokens —
+// they cascade from :root / [data-theme="dark"] on <html> into the portal.
+export const tooltipSlotProps = {
+  tooltip: {
+    sx: {
+      bgcolor: 'var(--bg-elevated)',
+      color: 'var(--ink)',
+      border: '1px solid var(--rule)',
+      boxShadow: '0 6px 24px rgba(0, 0, 0, 0.18)',
+      maxWidth: 320,
+    },
+  },
+};
