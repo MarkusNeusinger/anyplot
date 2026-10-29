@@ -116,7 +116,7 @@ def parse_args(argv: list[str]) -> tuple[bool, bool, str, list[str], list[str]]:
             else:
                 allow.append(argv[i + 1])
             i += 1
-        elif arg.startswith("--"):
+        elif arg.startswith("-"):
             fail(__doc__ or "usage error")
         else:
             ids.append(arg)
@@ -179,8 +179,11 @@ def main() -> int:
                     checked_prs.add(url)
 
         def settled(session_id: str) -> bool:
-            state = last[session_id][0]
-            return state in SETTLED and (not follow_up or session_id in moved)
+            # A PR whose check failed on a GitHub hiccup keeps the watch open for the next poll.
+            state, urls = last[session_id]
+            return (
+                state in SETTLED and all(url in checked_prs for url in urls) and (not follow_up or session_id in moved)
+            )
 
         if len(last) == len(ids) and all(settled(i) for i in ids):
             print("ALL SESSIONS SETTLED: " + ", ".join(f"{i}={s}" for i, (s, _) in last.items()), flush=True)

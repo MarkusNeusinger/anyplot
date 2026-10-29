@@ -186,7 +186,7 @@ otherwise open the PR and explain any doubt in its description.
    ```bash
    python3 .claude/skills/jules-task/scripts/watch-sessions.py --changes-only \
      --base feature/<slug> --allow app/src/<folder>/ <session-id> [...] \
-     | grep --line-buffered -E " (COMPLETED|FAILED|AWAITING_USER_FEEDBACK|AWAITING_PLAN_APPROVAL|PAUSED) |^WARNING|^ALL|^TIMEOUT|^ERROR"
+     | grep --line-buffered -E " (COMPLETED|FAILED|AWAITING_USER_FEEDBACK|AWAITING_PLAN_APPROVAL|PAUSED) | PR |^WARNING|^ALL|^TIMEOUT|^ERROR"
    ```
 
    `--changes-only` keeps a re-armed watch quiet about sessions still running,
@@ -205,10 +205,10 @@ otherwise open the PR and explain any doubt in its description.
 
      ```bash
      KEY="$(sed -n 's/^JULES_API_KEY=//p' "$(git rev-parse --path-format=absolute --git-common-dir)/../.env")"
-     python3 -I -c 'import json,sys; print(json.dumps({"prompt": sys.argv[1]}))' "<message>" > "$D/msg.json"
-     curl -s -o /dev/null -w "%{http_code}\n" -X POST -H "Content-Type: application/json" \
-       -H "X-Goog-Api-Key: $KEY" --data @"$D/msg.json" \
-       "https://jules.googleapis.com/v1alpha/sessions/<id>:sendMessage"
+     python3 -I -c 'import json,sys; print(json.dumps({"prompt": sys.argv[1]}))' "<message>" \
+       | curl -s -o /dev/null -w "%{http_code}\n" -X POST -H "Content-Type: application/json" \
+           -H "X-Goog-Api-Key: $KEY" --data @- \
+           "https://jules.googleapis.com/v1alpha/sessions/<id>:sendMessage"
      ```
 
      A pending plan is approved the same way with `:approvePlan` and `{}`.
@@ -224,7 +224,8 @@ otherwise open the PR and explain any doubt in its description.
 4. **Check every PR before anything else happens to it.** The PR description
    is not evidence: one claimed "no temporary scripts were committed" next to
    five committed `fix_*.py`.
-   1. The watcher's lines: files > 0, base right, no path outside `--allow`.
+   1. The watcher's lines: a `PR … into <base>: <n> files` line and no
+      `WARNING` for that PR (empty commit, wrong base, path outside `--allow`).
    2. For a PR of more than 15 files, a Haiku subagent does the mechanical pass
       (owner, 2026-10-29): file list against the prompt, scratch files,
       dependency files, base branch, result lines in the description, existing
@@ -259,9 +260,14 @@ otherwise open the PR and explain any doubt in its description.
      both: diff the moved callback bodies against the original.
    - Loading, error, and empty states are invisible to a check of the finished
      page; the Flash check on the PR into `main` found a missing title there.
-   - Stop preview servers by port (`ss -ltnpH "sport = :<p>"`), never with
+   - Stop a preview server by the PID that listens on its port, never with
      `pkill -f` or `pgrep -f` on a pattern that also appears in your own
      command: that kills the calling shell.
+
+     ```bash
+     pid=$(ss -ltnpH "sport = :<p>" | grep -o 'pid=[0-9]*' | head -1 | cut -d= -f2)
+     [ -n "$pid" ] && kill "$pid"
+     ```
 
 6. **Send follow-ups** with one finding per message and `push to the SAME
    branch <branch>; do not open a second pull request`. Flash applied two of
