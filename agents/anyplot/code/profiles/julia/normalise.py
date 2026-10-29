@@ -35,14 +35,16 @@ rewrites, in the order `_STEPS` runs them, each only when it applies:
    `(1600, 900)` at 1.9999 gives 3200x1800, at 2.0004 3201x1800, `(1066.6667, 600)` at 3
    gives 3201x1800, `(1000, 562.5)` at 3.2 gives 3200x1798, and a save without
    `px_per_unit` renders at 2). The new `px_per_unit` is the shortest decimal that renders
-   the target exactly, else one within 16 px. All 325 catalogue figures are `(1600, 900)`
-   or `(1200, 1200)` at `px_per_unit = 2` already (the J1 sweep rendered 252 at 3200x1800
-   and 68 at 2400x2400 of the 320 that render), so the step changes no catalogue file; it
-   stands for the files a regeneration brings. A figure size that is not one literal
-   tuple on the file's only `Figure(...)` call (also when a theme or `resize_to_layout!`
-   sizes the figure), an aspect no `px_per_unit` brings within 16 px of a target, or a
-   save that is not the protected one leave the save alone with a note, which
-   `measure_canvas` and the readiness scan report.
+   the target exactly, else one within 16 px. The step changes no catalogue file (the
+   corpus test): of the 325 normalised files, 250 measure 3200x1800 and 69 2400x2400 at
+   `px_per_unit = 2`, and 6 have no static canvas (the 3 saves inside `with_theme`, one
+   `set_theme!`, one `resize_to_layout!`, one computed size); it stands for the files a
+   regeneration brings. A figure size that is not one literal tuple on the file's only
+   `Figure(...)` call (also when a theme or `resize_to_layout!` sizes the figure), a side
+   past `MAX_SIDE_UNITS` or a `px_per_unit` past `MAX_SCALE` (a literal of hundreds of
+   digits is no number to the arithmetic), an aspect no `px_per_unit` brings within 16 px
+   of a target, or a save that is not the protected one leave the save alone with a note,
+   which `measure_canvas` and the readiness scan report.
 
 Each step is checked with tree-sitter and dropped with a note when its result has a
 syntax problem the input did not have; code with syntax problems is returned unchanged.
@@ -82,6 +84,10 @@ DEFAULT_SIZE = (600.0, 450.0)
 DEFAULT_PX_PER_UNIT = 2.0
 """CairoMakie 0.15's `px_per_unit` when the save passes none (measured: `(1600, 900)` renders 3200x1800)."""
 MAX_SCALE_DECIMALS = 6
+MAX_SIDE_UNITS = 100_000
+MAX_SCALE = 1_000
+"""Bounds past which the canvas is left alone with a note: the arithmetic stays exact and finite (a literal of hundreds
+of digits would overflow a double), and no PNG either bound allows would pass R2's pixel cap anyway."""
 
 TextEdit = tuple[int, int, str]  # replace code[start:end] with the text
 StepResult = tuple[str, list[str], list[str]]  # the code, the changes made, the notes on what was left alone
@@ -246,15 +252,18 @@ def _figure_size(source: Source) -> tuple[float, float] | str:
             return "the Figure takes splatted keywords, so the canvas is unknown"
         return DEFAULT_SIZE
     value = jl_unwrap(size.value)
+    shown = _shown(source.text(size.value))
     items = jl_named(value) if value.type == "tuple_expression" else []
     numbers = [jl_number(source, item) for item in items]
     if len(numbers) != 2 or any(number is None for number in numbers):
-        return f"the Figure's size ({source.text(size.value)}) is not a tuple of two number literals"
+        return f"the Figure's size ({shown}) is not a tuple of two number literals"
     width, height = (number for number in numbers if number is not None)
     if not (width > 0 and height > 0 and math.isfinite(width) and math.isfinite(height)):
-        return f"the Figure's size ({source.text(size.value)}) is not a positive size"
+        return f"the Figure's size ({shown}) is not a positive size"
+    if max(width, height) > MAX_SIDE_UNITS:
+        return f"the Figure's size ({shown}) is past {MAX_SIDE_UNITS:,} units"
     if min(units((width, height))) < 1:
-        return f"the Figure's size ({source.text(size.value)}) rounds to less than one unit"
+        return f"the Figure's size ({shown}) rounds to less than one unit"
     return width, height
 
 
@@ -263,11 +272,17 @@ def _scale(save: SaveCall) -> float | str:
     if save.px_per_unit is None:
         return DEFAULT_PX_PER_UNIT
     number = save.px_per_unit_number
+    shown = _shown(save.px_per_unit)
     if number is None:
-        return f"the save's px_per_unit ({save.px_per_unit}) is not a number literal"
-    if not (number > 0 and math.isfinite(number)):
-        return f"the save's px_per_unit ({save.px_per_unit}) is not a positive number"
+        return f"the save's px_per_unit ({shown}) is not a number literal"
+    if not (0 < number <= MAX_SCALE and math.isfinite(number)):
+        return f"the save's px_per_unit ({shown}) is not a number between 0 and {MAX_SCALE:,}"
     return number
+
+
+def _shown(text: str) -> str:
+    """At most 40 characters of a literal in a note: a size can be an integer of hundreds of digits."""
+    return text if len(text) <= 40 else text[:39] + "…"
 
 
 def units(size: tuple[float, float]) -> tuple[int, int]:

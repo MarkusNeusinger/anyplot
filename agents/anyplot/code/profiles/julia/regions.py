@@ -16,9 +16,10 @@ the adapter must keep and the normaliser rewrites:
 * the Imprint palette, `const IMPRINT_PALETTE = [colorant"#009E73", ...]` (or `IMPRINT`),
   as `colorant` strings or plain hex strings;
 * one protected save: the top-level `save("plot-$(THEME).png", fig; px_per_unit = 2)`,
-  the last statement of the catalogue files (318 with that spacing, 4 through
-  `joinpath(@__DIR__, ...)`, which the normaliser rewrites, and 3 inside a
-  `with_theme(...) do` block, which stay `blocked`). Every call of `save` is a save call;
+  the last statement of the catalogue files (318 at the top level, 11 of them spaced
+  `px_per_unit=2`; 4 more through `joinpath(@__DIR__, ...)`, which the normaliser
+  rewrites, so 322 after it; and 3 inside a `with_theme(...) do` block, which stay
+  `blocked`). Every call of `save` is a save call;
   the protected one is the last top-level statement among those that write the standard
   target;
 * the markers of the adaptable-code convention (`prompts/adaptable-code.md`): `# Data`

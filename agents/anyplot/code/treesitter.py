@@ -1105,6 +1105,6 @@ def jl_number(source: Source, node: Node) -> float | None:
             if text.lower().startswith("0x"):
                 return sign * float.fromhex(text)
             return sign * float(text.replace("f", "e"))
-    except ValueError:
+    except ValueError, OverflowError:  # past Python's 4,300 digits, or an integer or hex float past a double
         return None
     return None

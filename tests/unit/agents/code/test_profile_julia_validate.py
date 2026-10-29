@@ -276,6 +276,55 @@ def test_a_module_outside_the_roots_in_a_catalogue_file_is_refused() -> None:
 @pytest.mark.parametrize(
     "body",
     [
+        "f = Unlisted.dangerous\nf()",
+        "(f,) = (Unlisted.dangerous,)\nf()",
+        "a, f = 1, Unlisted.dangerous\nf()",
+        "let f = Unlisted.dangerous\n    f()\nend",
+        "map(Unlisted.dangerous, xs)",
+        "foreach(Unlisted.dangerous, xs)",
+        "const F = Unlisted.dangerous\nF()",
+        "g = x -> Unlisted.dangerous(x)",
+        "h(f = Unlisted.dangerous) = f()",
+        "f = Foo.bar\nFoo = (bar = 1,)",
+        "m = Tables\nf = m.columns",
+        "k = Keyboard",
+        "Makie.ImageIO.save(io, img)",
+        "w = Makie.FilePaths",
+    ],
+)
+def test_the_world_of_dotted_names_is_closed(body: str) -> None:
+    """Copilot review of #12459: `f = Unlisted.dangerous; f()` passed, because the binding is no call and `f()` an
+    ordinary one. A dotted name starts at a package root or a name bound above it, and no other module is a value or
+    a member, so no alias, tuple, `let`, `const`, default or function argument carries such a member."""
+    assert "banned-name" in rules(security(body)), body
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        'ax = Axis(fig[1, 1])\nax.title = "x"',
+        "s = fig.scene",
+        "df = (col = [1, 2],)\nv = df.col",
+        "for p in points\n    lines!(fig.scene, p.x, p.y)\nend",
+        "xs = [p.x for p in points]",
+        "xs = (p.x for p in points)",
+        "xs = map(points) do p\n    p.x\nend",
+        "getx(p) = p.x",
+        "getx = p -> p.x",
+        "function getx(p)\n    return p.x\nend",
+        "let q = (x = 1,)\n    v = q.x\nend",
+        "a, b = pairs_\nv = a.first",
+        'c = colorant"#009E73"\nv = c.r',
+        "try\n    f()\ncatch err\n    m = err.msg\nend",
+    ],
+)
+def test_fields_of_values_the_file_binds_keep_passing(body: str) -> None:
+    assert security(body) == [], body
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
         "invoke(f, Tuple{Int}, 1)",
         "Base.invoke(f, Tuple{Int}, 1)",
         "atexit(() -> nothing)",

@@ -47,10 +47,15 @@ SECURITY rules (rule ids in parentheses):
   then resolves it to the variable, never to `Base`'s function, and calling it stays refused.
 * **Modules** (`banned-name`): a package or `Base` is only ever the prefix of a member
   (`Random.seed!`), never a value (`getfield(Base, :run)`, `m = Base`) or a binding. A
-  dotted name starts at one of `MODULE_ROOTS`; a known module outside them as a root
-  (`FileWatching.watch_file(...)`, `Logging.global_logger`, `Test.@test`) is a
-  `banned-import`, called or not (review of 2026-10-29: the callee rule had accepted any
-  module of `LOGGED_PACKAGES`, the attribution vocabulary).
+  dotted name starts at one of `MODULE_ROOTS` or at a name the file binds above it
+  (`ax.title`, `INK.r`, `p.x` inside `for p in points` or `[p.x for p in points]`), a
+  closed world (Copilot review of #12459: `f = Unlisted.dangerous; f()` passed): a known
+  module outside the roots (`FileWatching.watch_file(...)`, `Logging.global_logger`,
+  `Test.@test`) is a `banned-import`, called or not, and any other root a `banned-name`,
+  so no alias, tuple, `let`, `const` or function argument can carry such a member. Every
+  other module a plot can reach by a name (`MODULE_NAMES`, measured) is refused as a value
+  (`m = Tables`) and as a member (`Makie.ImageIO`). All 2,145 dotted names of the
+  catalogue start at a root or a name bound above (2026-10-29).
 * **Packages** (`banned-import`): `using` and `import` load only `PACKAGES` (the project's
   plotting packages and the standard libraries the catalogue uses) or a dataset package
   (`DATASET_PACKAGES`, RDatasets and PalmerPenguins, which ADAPTATION refuses instead);
@@ -173,7 +178,29 @@ the catalogue uses (2026-10-29: CairoMakie in 325 files, Colors 321, Random 260,
 LOADER_PACKAGES = frozenset({"CSV", "TimeZones"})
 """The packages only the loader uses (`loader.py`): the plot code reads `df`, never a file."""
 MODULE_ROOTS = PACKAGES | DATASET_PACKAGES | frozenset({"Base", "Iterators"})
-"""The names a dotted callee or member may start with (`Random.seed!`, `Base.Fix2`, `Iterators.flatten`)."""
+"""The modules a dotted name may start with (`Random.seed!`, `Base.Fix2`, `Iterators.flatten`); any other root must be
+a name the file binds above it (`ax.title`, `INK.r`, `p.x` in `for p in points`)."""
+MODULE_NAMES = frozenset(
+    """
+    Aggregation Animations Ann AnnotatedDisplay BLAS Base BaseDocs BinaryPlatforms BlasFlag Broadcast BuildSettings
+    CRC32c Cairo CairoMakie Cartesian Checked ColorSchemes ColorTypes ColorVectorSpace Colors Compiler Contours
+    ContoursHygiene Core CoreDocs CoreLogging DSFMT DataAPI DataFrames Dates DelTri Distributions Docs Enums Experimental
+    FT FTA FastMath FileIO FilePaths Filesystem Format Formatters GC GMP GridLayoutBase HAMT HashArrayMappedTries IR
+    IRShow ImageIO InlineStrings InverseFunctions InvertedIndices Isoband Iterators IteratorsMD JuliaSyntax
+    KernelDensity Keyboard LAPACK Libc Libdl LightType LinearAlgebra Linking MPFR MacroTools Main MainInclude Makie Math
+    MathConstants Meta Missings Mouse MouseEventTypes Multimedia MultiplicativeInverses Order PCRE PalmerPenguins Partr
+    PermutedDimsArrays PolygonOps Precompilation PrecompileTools PrettyTables Printf RDatasets REPL Random Rounding Ryu
+    ScopedValues SentinelArrays SimdLoop Sort SparseArrays StackTraces Statistics StatsBase Sys TOML Tables Terminals
+    Threads TriplotBase Unicode UnicodeFun Unitful UsesBaseOnly XoshiroSimd
+    """.split()
+)
+"""Every module a plot can reach by a name, measured in the J1 image (Julia 1.13.2, the project's Manifest) on
+2026-10-29: the module names `Main` resolves after the catalogue's `using` lines (`names(Main; imported = true, usings =
+true)`: Base's exports such as `Docs`, `Threads` and `MathConstants`, and the packages' such as `Tables`, `Keyboard` and
+`PrettyTables`) and the module-valued members of every root, one level (`Makie.FileIO`, `CairoMakie.Cairo`,
+`Base.Filesystem`). A name of this set outside `MODULE_ROOTS` is refused as a value and as a member, so a module
+reaches no variable (`m = Tables`) and no chain (`Makie.ImageIO.save`); a Manifest change can add modules, which a
+re-measurement adds here."""
 LOGGED_PACKAGES = (
     MODULE_ROOTS
     | LOADER_PACKAGES
@@ -462,6 +489,19 @@ def string_text(source: Source, node: Node) -> str:
     return "".join(source.text(child) for child in node.children if child.type in ("content", "escape_sequence"))
 
 
+def _bound_from(node: Node) -> int:
+    """The byte from which a binding site's name holds the file's value: after an assignment (its value is read
+    first, so `Foo = Foo.bar` still reads the outer `Foo`), from the start of a comprehension or generator for its
+    `for` variable (`[p.x for p in points]`), and from the binding site itself for a parameter, a loop, `let`, `do`
+    or `catch` variable, a definition or an import."""
+    if node.type in ("assignment", "compound_assignment_expression"):
+        return node.end_byte
+    parent = node.parent
+    if node.type == "for_binding" and parent is not None and parent.type == "for_clause" and parent.parent is not None:
+        return parent.parent.start_byte
+    return node.start_byte
+
+
 class _Scan:
     """One validation pass over a parsed Julia source."""
 
@@ -471,11 +511,17 @@ class _Scan:
         self.visits = list(visits(source.root))
         self.regions: Regions = find_regions(source)
         self.bindings: dict[str, list[Node]] = {}
+        self.bound_at: dict[str, list[int]] = {}
         for name, node in jl_bindings(source, source.root):
             self.bindings.setdefault(name, []).append(node)
+            self.bound_at.setdefault(name, []).append(_bound_from(node))
         theme = self.regions.theme
         self.theme_chars = (theme.statement.start, theme.statement.end) if theme and theme.statement else None
         self.own_variables = self.find_own_variables()
+
+    def bound_before(self, name: str, node: Node) -> bool:
+        """Whether the file binds `name` above `node` (`_bound_from`): then `node` reads the file's own value."""
+        return any(position <= node.start_byte for position in self.bound_at.get(name, []))
 
     def find_own_variables(self) -> frozenset[str]:
         """Denied function names the file makes its own variable: bound once, by a top-level `name = value` that is
@@ -597,6 +643,15 @@ class _Scan:
                 return
             if name in LOGGED_PACKAGES and name not in MODULE_ROOTS:
                 self.unavailable(name, node)  # `FileWatching.watch_file`, called or handed on
+            elif name not in MODULE_ROOTS and not self.bound_before(name, node) and not denied(name):
+                # The closed world of dotted names (Copilot review of #12459): `f = Unlisted.dangerous; f()` passed.
+                message = (
+                    f"'{name}' is neither a package of the plot nor a name bound above; a dotted name starts at one"
+                )
+                self.add("banned-name", message, node)
+        elif name in MODULE_NAMES and name not in MODULE_ROOTS and not denied(name):
+            if position == "member" or not self.bound_before(name, node):
+                self.add("banned-name", f"'{name}' is a module the plot may not reach", node)
         if name == ENV_NAME and self.in_theme_statement(node):
             return
         called = node if position == "lookup" else visit.parent

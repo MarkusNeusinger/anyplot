@@ -109,6 +109,15 @@ def test_the_resolution_shorthand_passes_the_same_value_as_size() -> None:
         "fig = Figure(size = (1600, 900))\ns = save",
         "fig = Figure(Figure()...)",
         'ax = Axis(fig[1, 1]; title = """scatter-basic · julia · makie · anyplot.ai""")',
+        # integer literals past a double, past Python's 4,300 digits, BigInt strings, hex and underscores
+        f"fig = Figure(size = ({'9' * 400}, 900))",
+        f"fig = Figure(size = (1600, {'1' * 5000}))",
+        "fig = Figure(size = (1e308, 1e308))",
+        "fig = Figure(size = (0x1p1100, 900))",
+        'fig = Figure(size = (big"1600", 900))',
+        "fig = Figure(size = (0x640, 0x384))",
+        "fig = Figure(size = (1_600, 9_00))",
+        "fig = Figure(size = (0b11001000000, 900))",
     ],
 )
 @pytest.mark.parametrize(
@@ -119,6 +128,10 @@ def test_the_resolution_shorthand_passes_the_same_value_as_size() -> None:
         'save("plot-$(THEME).png", fig; px_per_unit = 1e400)',
         'save("plot-$(THEME).png", fig; px_per_unit = 0)',
         'save("plot-$(THEME).png", fig; px_per_unit = -2)',
+        f'save("plot-$(THEME).png", fig; px_per_unit = {"7" * 400})',
+        'save("plot-$(THEME).png", fig; px_per_unit = 1e300)',
+        'save("plot-$(THEME).png", fig; px_per_unit = big"2")',
+        'save("plot-$(THEME).png", fig; px_per_unit = 0x2)',
         'save("plot-$(THEME).png"; px_per_unit = 2)',
         "save()",
     ],
@@ -131,6 +144,15 @@ def test_the_normaliser_never_raises_on_valid_julia(body: str, save: str) -> Non
 
     assert normalise(report.code) == report.code
     measure_canvas(report.code)
+
+
+def test_hex_and_underscored_sizes_read_as_their_value() -> None:
+    """`0x640` and `1_600` are 1600 to Julia, so the canvas measures 3200x1800; a literal past a double is no number."""
+    for size in ("(0x640, 0x384)", "(1_600, 9_00)"):
+        code = f'{THEME}fig = Figure(size = {size})\nsave("plot-$(THEME).png", fig; px_per_unit = 2)\n'
+        assert measure_canvas(code).pixels == (3200, 1800)
+    huge = f'{THEME}fig = Figure(size = ({"9" * 400}, 900))\nsave("plot-$(THEME).png", fig; px_per_unit = 2)\n'
+    assert measure_canvas(huge).note is not None and len(measure_canvas(huge).note or "") < 200
 
 
 @pytest.mark.parametrize(

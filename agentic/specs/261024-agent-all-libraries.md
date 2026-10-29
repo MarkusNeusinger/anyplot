@@ -1391,23 +1391,27 @@ the row's flags and environment, `--network none`, 2 CPUs and 4 GiB).
   Measured: CairoMakie rounds the figure size to whole units and then `size *
   px_per_unit` to whole pixels (`(1600, 900)` at 1.9999 gives 3200x1800, at 2.0004
   3201x1800; `(1000, 562.5)` at 3.2 gives 3200x1798), and a save without `px_per_unit`
-  renders at 2. All 325 figures are `(1600, 900)` or `(1200, 1200)` at 2 already: 250
-  measure 3200x1800 and 69 2400x2400, and 6 have no static canvas (3 saves in
-  `with_theme`, one `set_theme!`, one `resize_to_layout!`, one computed size), which
-  matches the J1 sweep's renders. Idempotent over the corpus. The review found that
+  renders at 2. The step changes no catalogue file: of the 325 normalised files, 250
+  measure 3200x1800 and 69 2400x2400 at 2, and 6 have no static canvas (3 saves in
+  `with_theme`, one `set_theme!`, one `resize_to_layout!`, one computed size); J1's
+  sweep rendered 252 and 68 of the 320 that render. Idempotent over the corpus. The review found that
   `Figure(; resolution)`, the keyword shorthand, raised `IndexError`: it becomes
-  `Figure(; size = resolution)`, the same value, and a test runs the normaliser over 98
+  `Figure(; size = resolution)`, the same value, and a test runs the normaliser over 242
   odd but valid shapes (shorthands, splats, a size under one unit or infinite, a zero,
-  negative or infinite `px_per_unit`), which leave notes, never exceptions.
+  negative or infinite `px_per_unit`, and after the Copilot review of #12459 integer
+  literals of hundreds and thousands of digits, `big"..."`, hex and underscored
+  literals), which leave notes, never exceptions; a side past 100,000 units or a
+  `px_per_unit` past 1,000 is left alone with a note.
 - **Validator.** Refuses by shape (module docstring of `profiles/julia/validate.py`): a
   denied name wherever it is read, also as the member after a `.` on a module or any
   value (`x.Base.run`, `Base.:run`); a package as a value; calls through a parenthesised
   value, an index, a field of a value, a `var"..."` name or a call's result (except
   `cgrad`, `Fix1`, `Fix2`, `Returns`, `ComposedFunction`); macros outside `MACROS` and
   string macros outside `colorant`, `L` (without `%$`), `dateformat`, `r`, `raw`;
-  command literals; `macro` and `module` definitions; `import ... as`; `using` outside
-  the plotting packages and the catalogue's standard libraries, `CSV` and `TimeZones`
-  included. `getfield`, `getproperty`, `setfield!`, `setproperty!`, `getglobal` and
+  command literals; `macro` and `module` definitions; `import ... as`; any `using` or
+  `import` outside the plotting packages and the catalogue's standard libraries. `CSV`
+  and `TimeZones` are refused in the plot code too: they are the loader's alone, and the
+  adapter never imports them. `getfield`, `getproperty`, `setfield!`, `setproperty!`, `getglobal` and
   `setglobal!` are refused on any value (a superset of "on modules"; no catalogue file
   calls them). One exception keeps histogram-capability eligible: a lowercase denied
   name the file makes its own variable by one top-level assignment before any other
@@ -1420,7 +1424,15 @@ the row's flags and environment, `--network none`, 2 CPUs and 4 GiB).
   with any root of the attribution vocabulary (`FileWatching.watch_file(...)`): a root
   now comes from `MODULE_ROOTS`, called or handed on; `invoke`, `atexit`, `finalizer`
   and the file-touching submodules `Cairo`, `FileIO`, `TOML` and `CoreLogging` joined
-  the denied names. The split did not change.
+  the denied names. The split did not change. The Copilot review of #12459 found that an
+  alias still carried such a member (`f = Unlisted.dangerous; f()`): a dotted name now
+  starts at a root of `MODULE_ROOTS` or at a name the file binds above it (after an
+  assignment, from a parameter, a loop, `let`, `do` or `catch` variable, from the start
+  of a comprehension for its `for` variable), and every other module a plot reaches by a
+  name, measured in the image (`MODULE_NAMES`: `names(Main)` after the catalogue's
+  `using` lines and the module members of every root), is refused as a value and as a
+  member. All 2,145 dotted names of the catalogue start at a root or a name bound above;
+  the split did not change.
 - **Readiness.** 0 clean, 308 coupled, 17 blocked: the 13 map specs, qrcode-basic and the
   3 `with_theme` saves (area-mountain-panorama, bifurcation-basic, scatter-lag). Every
   eligible file carries the `data-block` hint; 16 carry `deprecated-api` (`arrows!`).
