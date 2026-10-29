@@ -6,7 +6,9 @@ on:
     branches:
       - main
       - develop
-      - 'feature/**'
+      # No `feature/**` here: Google Jules pushes its own branches under the
+      # feature branch it works on (`feature/<slug>-<session id>`), and a push run
+      # has no PR author to recognise it by. Feature branches get CI through their PRs.
   pull_request:
     branches:
       - main
