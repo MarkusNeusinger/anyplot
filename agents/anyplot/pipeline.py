@@ -20,13 +20,15 @@ eval harness may set one or three):
    literal budget (more than `MAX_NEW_LITERAL_CHARS` of new string literals, or
    `MAX_CHANGE_LITERAL_CHARS` on a change of a previous version, or more than
    `MAX_NEW_LITERAL_CHARS` against the catalogue code over all versions, rejects the
-   code; dataset headers and cells are free) and the ADAPTATION validator (a
-   placeholder finding rejects the code; the other findings become defect lines but
-   the code still renders); a change whose base version was written in another
+   code; dataset headers and cells are free) and the ADAPTATION validator (a finding
+   of the runtime's `blocking_rules` rejects the code: a placeholder rule in every
+   language, and in R a dataset package too; the other findings become defect lines
+   with the runtime's targets but the code still renders); a change whose base version was written in another
    language than the session language (`language_changed`) rewrites every title,
    label and annotation, so its budget grows by `REWRITE_LITERAL_FACTOR` times the
    literal text the plan replaces, up to `MAX_NEW_LITERAL_CHARS`;
-3. **render**: `normalise`, the loader substitution (`to_run_form`), then the one
+3. **render**: `normalise`, the loader substitution (the runtime's `loader_block`, typed
+   from the parser's dtypes and the column kinds), then the one
    theme the call asks for (`PipelineArgs.theme`, light by default) through the
    render backend, and the host gates (`render/gates.py`) on exactly that theme;
 4. **review**: on the first render that passes the host gates on the exact canvas
@@ -53,7 +55,7 @@ the soft deadline) and for every render timeout;
 the request deadline is `abort_signal` on the run. A render waits in the `run` lane of the render slot
 (`render/serial.py`), ahead of every waiting theme toggle, so it waits for at most
 the render in progress; its clamped timeout starts when it runs. The exported
-`plot.py` names the rendered theme in its run line.
+code (`plot.py`, `plot.R`) names the rendered theme in its run line.
 
 Every path that is not cancelled yields exactly one `Event(output=PlotResult)` as a
 JSON dict. `ok` means the shipped render passed the host gates on the exact canvas,
@@ -71,7 +73,11 @@ starts after that wait. An `ok` or
 `needs_attention` result is stored as the session's next version before it is
 yielded, and carries that number as `version`. Its `changes` are the notes of every
 adapter call up to the shipped render whose plan changed the code (`note_changes`), so
-a proofread that changed nothing never replaces them. Each version keeps the change
+a proofread that changed nothing never replaces them. The runtime's `loader_notes` come
+first among them: R reads integers beyond ±2^53 as the nearest double, and the note
+names each column with its count (owner rule of 2026-10-15, no silent loss). Owner
+decision of 2026-10-29: the note goes into "what changed", not into the residual notes,
+so it leaves the status as it is (`ok` stays `ok`). Each version keeps the change
 requests it carries out (`CodeVersion.requests`); a change of it hands them to every
 adapter call (adaptation, retry, proofread, repair) and to the reviewer as
 `user_requests`, the user's standing decisions, which the prompts say to keep and never
@@ -121,6 +127,7 @@ from . import telemetry
 from .briefs import adapter_profile, profile_summary, spec_brief
 from .code.edits import MAX_CHANGE_LITERAL_CHARS, MAX_NEW_LITERAL_CHARS, REWRITE_LITERAL_FACTOR
 from .data.bindings import check_bindings
+from .data.kinds import ColumnKinds, read_kinds
 from .data.store import StoredDataset
 from .dataset_context import dataset_context, file_name_for_models
 from .grounding import UNVERIFIED_LINE, drawn_texts, expected_misses, plot_texts
@@ -256,26 +263,15 @@ a heatmap after the first try with its axis label at the right edge and a cramme
 them. Such a render is not clean for `AGENT_SHIP_BEST` (`_clean`), so a clean repair a few points lower ships
 over it, and a render that ships with such lines carries them as notes (`needs_attention`) at any score, like a
 measured finding (review of #12204: the forced repair had been dropped silently for a 96 that clipped a label)."""
-BLOCKING_RULES = frozenset({"placeholder-count", "placeholder-use", "syntax", "size", "encoding"})
-"""ADAPTATION findings that keep the code from running: without one placeholder there is no loader."""
 ADAPTATION_IDS = {"rng": "DQ-03", "literal-data": "DQ-03", "palette-prefix": "VQ-07"}
-"""The rubric id an ADAPTATION finding is reported under as a defect line."""
-ADAPTATION_TARGETS = {
-    "rng": "take the values from df; a seeded np.random.default_rng(<int>) is only for jitter or subsampling",
-    "literal-data": "take the values from df instead of writing them out",
-    "palette-prefix": (
-        "keep the Imprint palette one literal list of colour strings, assigned once: the original entries in "
-        "order, then only the next Imprint positions written out; pick colours from it under a new name "
-        "(colors = IMPRINT[: len(groups)]); with more than eight groups draw all but the seven largest in "
-        'INK_MUTED as "Other"'
-    ),
-}
-"""The target of each soft ADAPTATION finding's defect line, matching the rule the validator checks.
+"""The rubric id an ADAPTATION finding is reported under as a defect line.
 
-The palette rule wants a literal list (`code/validate.py`, "Palette"), so its target
-never says "derive it": in spike X, 9 of Claude's 14 palette-prefix lines reported a
-computed palette list, the fix the old shared target ("derive it from df and the
-Imprint palette") suggested."""
+Which findings reject the code (`RuntimeAdapter.blocking_rules`) and the target of each soft
+one (`RuntimeAdapter.adaptation_targets`) are the runtime's since 2026-10-29: the Python
+values moved unchanged to `runtimes/python.py`, and R adds `dataset-package` to the blocking
+set and writes its targets in R."""
+DEFAULT_ADAPTATION_TARGET = "derive it from df"
+"""The target of a soft ADAPTATION finding the runtime gives none."""
 # Feedback only ever reaches a repair attempt (attempt 2 or later), and each allows a full file, so the lines say so.
 SCHEMA_MISS_LINE = (
     "the previous answer did not match the plan schema → answer with one JSON object: edits or full_code "
@@ -471,6 +467,10 @@ class Run:
     (`edits.restore_protected`) after the round's check retry was spent."""
     stage_s: dict[str, float] = field(default_factory=dict)
     """Seconds spent in `adapt`, `check`, `render` and `review`, summed over the attempts."""
+    loader_notes: list[str] = field(default_factory=list)
+    """What the runtime's loader changes when it reads the run's `data.csv` (`RuntimeAdapter.loader_notes`): the first
+    `changes` of every shipped render, so a value the plot shows rounded is never unannounced; never a residual note,
+    so the status stays as the render earns it (owner decision of 2026-10-29)."""
 
     def timed(self, stage: str, seconds: float) -> None:
         self.stage_s[stage] = self.stage_s.get(stage, 0.0) + seconds
@@ -878,17 +878,20 @@ def note_changes(run: Run, plan: AdaptPlan, *, changed: bool, proofread: bool) -
     run.changes = list(dict.fromkeys([*run.changes, *(" ".join(note.split()) for note in plan.changes)]))
 
 
-def summarise_changes(notes: Sequence[str]) -> list[str]:
-    """At most `MAX_CHANGES` notes: the first ones (the adaptation that carried out the request) and the latest.
+def summarise_changes(notes: Sequence[str], limit: int = MAX_CHANGES) -> list[str]:
+    """At most `limit` notes: the first ones (the adaptation that carried out the request) and the latest.
 
     A run's calls may write more notes than `PlotResult` holds; keeping only the earliest would hide what a
     later repair or proofread changed in the shipped code (#12170 review), keeping only the latest would hide
-    the request itself. The notes in between are left out.
+    the request itself. The notes in between are left out. `limit` is below `MAX_CHANGES` when the runtime's
+    loader notes take places first (`finish`).
     """
-    if len(notes) <= MAX_CHANGES:
+    if limit <= 0:
+        return []
+    if len(notes) <= limit:
         return list(notes)
-    head = MAX_CHANGES // 2 + 1
-    return [*notes[:head], *notes[len(notes) - (MAX_CHANGES - head) :]]
+    head = limit // 2 + 1
+    return [*notes[:head], *notes[len(notes) - (limit - head) :]]
 
 
 def _columns_json(bindings: list[Binding], loader_columns: list[str] | None = None) -> str:
@@ -932,6 +935,19 @@ def _data_texts(data_csv: str) -> frozenset[str]:
     return frozenset(cell for row in csv.reader(io.StringIO(data_csv)) for cell in row if cell)
 
 
+def column_kinds_of(dataset: StoredDataset) -> ColumnKinds | None:
+    """The value kinds of a dataset's canonical `data.csv` (`data.kinds.read_kinds`), read once per run.
+
+    None when the CSV does not fit its own typing, which the parser never writes: the Python
+    loader reads the dtypes alone and runs as before, and R's loader, which needs the kinds,
+    refuses the run form, so the attempt ends as `loader`.
+    """
+    try:
+        return read_kinds(dataset.csv, dataset.column_dtypes, dataset.parse_dates)
+    except ValueError:
+        return None
+
+
 def _check(
     working: str,
     *,
@@ -946,8 +962,9 @@ def _check(
 ) -> CheckResult:
     """Validate a working form against its base: may it render, the blocking lines, the adaptation defect lines.
 
-    The two validator profiles and the literal diff are the runtime's (`RuntimeAdapter.security`,
-    `adaptation`, `new_literals`); `runtime` defaults to the registry's for `library`.
+    The two validator profiles, the literal diff, the ADAPTATION rules that reject the code and the
+    targets of the others are the runtime's (`RuntimeAdapter.security`, `adaptation`, `new_literals`,
+    `blocking_rules`, `adaptation_targets`); `runtime` defaults to the registry's for `library`.
 
     Besides the two validator profiles, the plan's new string literals (`edits.new_literals`)
     must fit `literal_budget`; on a `rewrite` (a change that writes the base's text in another
@@ -962,8 +979,9 @@ def _check(
     runtime = runtime if runtime is not None else runtime_for(library)
     security = runtime.security(working)
     adaptation = runtime.adaptation(working, original_palette=palette)
+    rejecting = runtime.blocking_rules
     # Both profiles parse the code, so an unparseable file is one `syntax` finding, not two.
-    blocking_findings = list(dict.fromkeys([*security, *(f for f in adaptation if f.rule in BLOCKING_RULES)]))
+    blocking_findings = list(dict.fromkeys([*security, *(f for f in adaptation if f.rule in rejecting)]))
     blocking = [
         f"validator {f.rule}" + (f" (line {f.line})" if f.line else "") + f": {f.message}" for f in blocking_findings
     ]
@@ -992,11 +1010,12 @@ def _check(
                 "all versions together → shorten or drop text added earlier instead of adding more. "
                 "Likely cause: text added turn by turn."
             )
-    soft = [f for f in adaptation if f.rule not in BLOCKING_RULES]
+    soft = [f for f in adaptation if f.rule not in rejecting]
+    targets = runtime.adaptation_targets
     defects = [
         f"{ADAPTATION_IDS.get(f.rule, 'SC-03')} (code): {f.message}"
         + (f" at line {f.line}" if f.line else "")
-        + f" → {ADAPTATION_TARGETS.get(f.rule, 'derive it from df')}. Likely cause: the adaptation ({f.rule})."
+        + f" → {targets.get(f.rule, DEFAULT_ADAPTATION_TARGET)}. Likely cause: the adaptation ({f.rule})."
         for f in soft
     ]
     modules = list(dict.fromkeys(f.module for f in blocking_findings if f.rule == "banned-import" and f.module))
@@ -1094,8 +1113,11 @@ def finish(run: Run) -> PlotResult:
             # measured findings after a passing review, whose own review was unreadable or skipped.
             residual.append(NOT_REVIEWED_LINE.format(why=run.unreviewed_why or "the repair round left defects"))
     residual = list(dict.fromkeys(_line(line) for line in residual))[:MAX_RESIDUAL_DEFECTS]
-    # The shipped render's own notes: every call up to it that changed the code, never a no-op proofread's.
-    changes = [change[:MAX_CHANGE_CHARS] for change in summarise_changes(shipped.changes)]
+    # The shipped render's own notes: every call up to it that changed the code, never a no-op proofread's. The
+    # loader's notes come first, so the cap never drops them (owner decision of 2026-10-29: "what changed").
+    loader = run.loader_notes[:MAX_CHANGES]
+    adapted = summarise_changes(shipped.changes, limit=MAX_CHANGES - len(loader))
+    changes = [change[:MAX_CHANGE_CHARS] for change in [*loader, *adapted]]
     return PlotResult(
         status="needs_attention" if residual else "ok",
         attempts=max(round_number(run, run.attempts), 1),
@@ -1488,6 +1510,8 @@ async def _attempts(
     palette = list(regions.imprint.entries) if regions.imprint else []
     hints = view.hints[:MAX_NOTES] if previous is None else []
     columns = [column.name for column in dataset.profile.columns]
+    kinds = column_kinds_of(dataset)
+    run.loader_notes = runtime.loader_notes(kinds) if kinds is not None else []
     feedback: list[str] = []
     previous_plan: AdaptPlan | None = None
     rows = data_rows(dataset.csv)
@@ -1643,6 +1667,7 @@ async def _attempts(
                 columns=columns,
                 dtypes=dict(dataset.column_dtypes),
                 parse_dates=list(dataset.parse_dates),
+                kinds=dict(kinds.kinds) if kinds is not None else {},
             )
         except ValueError as exc:
             attribution("pipeline_check", ledger, attempt=attempt, outcome="loader_failed", edit_failures=0)

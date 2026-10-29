@@ -10,7 +10,7 @@ from .backends.fake import FakeBackend
 from .backends.local import LocalDockerBackend
 from .backends.remote import IdTokenSource, RemoteBackend
 from .backends.sandbox import SandboxBackend
-from .contract import RenderBackend, RendererUnavailable
+from .contract import RenderBackend, RendererUnavailable, RuntimeAdapter
 from .runtimes import runtime_for
 from .runtimes.python import PythonRuntime
 
@@ -31,16 +31,15 @@ def make_backend(settings: "AgentSettings") -> RenderBackend:
     `AGENT_RENDER_CONCURRENCY` is enforced.
 
     The `local` and `sandbox` backends resolve a render job's runtime by its library
-    (`runtime_for`, with the render timeout as the CPU limit); data runs and
-    conversions always run on the Python runtime.
+    (`runtime_for`, with the render timeout as the CPU limit): the Python runtime or the
+    R runtime, by the library's language. Data runs and conversions always run on the
+    Python runtime, whatever the plot's language.
     """
     # Imported here: `settings` imports this package's registry for its library check.
     from ..settings import FAKE_RENDERER_ENVIRONMENTS
 
-    def resolve(library: str) -> PythonRuntime:
-        runtime = runtime_for(library, cpu_seconds=settings.render_timeout_s)
-        assert isinstance(runtime, PythonRuntime)  # the registry's only runtime class in phase 1
-        return runtime
+    def resolve(library: str) -> RuntimeAdapter:
+        return runtime_for(library, cpu_seconds=settings.render_timeout_s)
 
     python_runtime = PythonRuntime(cpu_seconds=settings.render_timeout_s)
     if settings.renderer == "fake":

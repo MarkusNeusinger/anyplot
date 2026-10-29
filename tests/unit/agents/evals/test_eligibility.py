@@ -4,7 +4,15 @@ import json
 import shutil
 from pathlib import Path
 
-from agents.evals.eligibility import main, markdown, reason_category, security_rule, sweep
+from agents.evals.eligibility import (
+    LIBRARIES,
+    implementation_glob,
+    main,
+    markdown,
+    reason_category,
+    security_rule,
+    sweep,
+)
 
 
 REPO_PLOTS = Path(__file__).resolve().parents[4] / "plots"
@@ -72,6 +80,37 @@ def test_main_writes_the_report(tmp_path: Path) -> None:
     assert report["by_library"]["matplotlib"]["files"] == 2
     assert report_path.with_suffix(".md").read_text().startswith("# Catalogue eligibility")
     assert main(["--plots", str(tmp_path / "missing"), "--out", str(tmp_path / "out")]) == 2
+
+
+def test_the_sweep_covers_every_library_with_a_runtime() -> None:
+    from agents.anyplot.render.runtimes import RUNTIME_LIBRARIES
+
+    assert set(LIBRARIES) == RUNTIME_LIBRARIES and len(LIBRARIES) == len(RUNTIME_LIBRARIES)
+    assert implementation_glob("matplotlib") == "*/implementations/python/matplotlib.py"
+    assert implementation_glob("ggplot2") == "*/implementations/r/ggplot2.R"
+
+
+def test_the_ggplot2_sweep_over_the_real_catalogue() -> None:
+    """The R runtime over all 325 ggplot2 files (2026-10-29, PR 3b; the owner rule of the same day: a missing marker
+    is `coupled`, never `blocked`): 4 clean, 306 coupled, 15 blocked, which are the 13 map specs, qrcode-basic (the
+    qrcode package and a URL) and maze-circular (`<<-`). Four map specs carry SECURITY findings too."""
+    result = sweep(REPO_PLOTS, ("ggplot2",))
+
+    ggplot2 = result["by_library"]["ggplot2"]
+    assert (ggplot2["files"], ggplot2["eligible"]) == (325, 310)
+    assert ggplot2["statuses"] == {"clean": 4, "coupled": 306, "blocked": 15, "error": 0}
+    assert ggplot2["blocked_by_category"] == {"map-spec": 13, "security": 6}
+    assert ggplot2["security_rules"] == {"banned-import": 3, "banned-name": 2, "banned-statement": 1, "url-literal": 2}
+    security = sorted(item["spec_id"] for item in result["blocked"] if "security" in item["categories"])
+    assert security == [
+        "flowmap-origin-destination",
+        "heatmap-geographic",
+        "map-connection-lines",
+        "map-projections",
+        "maze-circular",
+        "qrcode-basic",
+    ]
+    assert markdown(result, "2026-10-29").splitlines()[4] == "| ggplot2 | 325 | 310 (95.4 %) | 4 | 306 | 15 | 0 |"
 
 
 def test_the_real_catalogue_keeps_most_pairs_eligible(tmp_path: Path) -> None:

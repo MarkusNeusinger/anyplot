@@ -9,7 +9,9 @@
 > 2026-10-28); `AGENT_LIBRARIES` keeps its default `matplotlib,seaborn`, and each
 > library's matrix run gates the public release (lets-plot: 60 of 60 on 2026-10-28).
 > Steps 2 (R) and 5 (Julia) were revised on 2026-10-28 after a second opinion (the
-> section at the end); every other library in this document is planned, not shipped.
+> section at the end). Step 2 serves ggplot2 since 2026-10-29 (PR 3b, "What PR 3b built"
+> under 2c), and the admin deploy names it with the six Python libraries; every other
+> library in this document is planned, not shipped.
 
 ## Metadata
 
@@ -923,7 +925,116 @@ served.
 Open for 3b: `dataset-package` is an ADAPTATION finding, which the pipeline treats as a
 defect line, not a refusal (`pipeline.BLOCKING_RULES`); for the adapter's working form to
 be refused while it keeps a dataset package, 3b adds the rule to the R runtime's blocking
-set.
+set. Settled by 3b (next section).
+
+#### What PR 3b built (2026-10-29): ggplot2 served
+
+- **Runtime.** `agents/anyplot/render/runtimes/r.py`, `RRuntime`, implements the whole
+  `RuntimeAdapter` contract with the 3a modules: `plot.R`, the renderer's R row as the
+  command (the harness in exec mode in front of `exec/R --no-echo --no-restore --no-save
+  --file=plot.R`), the row's environment key for key as `sandbox_env` builds it (`R_ENV`,
+  the deployed limits, `ANYPLOT_DENY_EXEC=required`; the local backend leaves
+  `RLIMIT_NPROC` to the container's `--pids-limit`, as for Python), the R normaliser,
+  loader, validator, readiness scan and error grammar, the edit applier's R dialect, the
+  PNG and no probe, and the export with `Rscript plot.R`. Data runs and conversions stay
+  Python's, because `run_data_code` runs Python whatever the plot's language. The repair
+  reserve is 15 s, set in the R row of `commands.py`.
+- **Registry and contract.** `RUNTIME_LIBRARIES` is `PYTHON_LIBRARIES | R_LIBRARIES` and
+  `runtime_for` picks the class by the library's language (`RUNTIME_CLASSES`);
+  `render/__init__.py` lost its Python-only assert. `RuntimeAdapter` gained
+  `blocking_rules` (the shared `contract.BLOCKING_RULES`; R adds `dataset-package`),
+  `adaptation_targets` (Python's moved from the pipeline unchanged; R's are written in R),
+  `kinds` on `loader_block` and `loader_notes`; `regions` returns a `CodeRegions` protocol
+  (the Imprint palette), which both languages' `Regions` satisfy.
+- **Pipeline.** The column kinds are read once per run (`column_kinds_of`) and handed to
+  every runtime's loader. `loader_notes` comes first in the shipped version's "what
+  changed" list: R reads integer cells beyond ±2^53 as the nearest double, and the line
+  counts them per column (the columns that fit a 200-character change note, the rest
+  counted), and `root.md` has the root name it in every reply to that result. Owner
+  decision of 2026-10-29: "what changed", not a residual note, so the status stays the
+  render's (`ok` stays `ok`). A working form that keeps gapminder or palmerpenguins is refused as
+  `validator dataset-package`, while the readiness scan still calls such a catalogue file
+  `coupled`.
+- **Prompts.** `adapter.md` keeps every rule the languages share and names a slot
+  (`{{data_statement}}`, `{{protected_lines}}`, `{{safe_code}}` and 13 more) wherever the
+  code differs; `adapter_python.md` and `adapter_r.md` fill them (`policy.adapter_prompt`,
+  which refuses a missing, unused or doubled slot). The Python prompt is byte for byte the
+  one before the split (a test pins its SHA-256, and another that no runtime prompt repeats
+  a shared paragraph). The R passages tell the adapter the placeholder and how readr types
+  each column, the column constants read through `.data[[...]]`, the protected statements,
+  the packages it may attach, that dataset packages and `readr` stay out, and what the
+  validator refuses; a test runs those idioms through both R validator profiles.
+  `root.md` names `plot.R` next to `plot.py`, and `gates.py` lost `fig.savefig` from a
+  feedback line. The agents image's build check composes one adapter instruction per
+  language.
+- **Python-only paths.** `dev_fixture.snapshot_from_repo` and the eligibility sweep find a
+  file under its language with its extension; the sweep scans through the runtime. The
+  admin deploy's `_LIBRARIES` names ggplot2.
+- **Evals.** `make_fixtures.py` writes the ten specs for ggplot2 (60 cases, 420 in all,
+  427 in a full run) with the smoke case `scatter-basic-ggplot2-renamed` (17 smoke cases).
+  Four of the ten ggplot2 files are `clean` and six `coupled`.
+- **App.** The result card highlights each version in its library's language; before, a
+  thread with versions of two libraries (after a library switch) highlighted all of them in
+  the page's current language. The download name, `.download('plot.R')` and `.plot_all()`
+  needed no change.
+- **CI.** The agents-image job loads every kept grammar in the built image and runs the R
+  runtime's readiness scan on the catalogue's `scatter-basic` ggplot2 file, piped in from
+  the checkout.
+- **Verified locally, without a model.** A scripted identity adaptation of
+  `line-basic-ggplot2-renamed` (the column constants set to `t [min]` and `T_tank [°C]`,
+  the data block replaced by the placeholder, a German title) passed the pipeline's check,
+  took the readr loader and rendered through `LocalDockerBackend` on the renderer image of
+  #12428: 3200x1800 in both themes, 1.5 s of wall time per theme, R1 to R3 passed. The same
+  container with its stdout kept reported `exec_deny: on`, 0.85 s of CPU and 177 MiB.
+
+| Text above | Built | Why |
+|---|---|---|
+| A runtime section per language in `policy.py` and `adapter.md` (the table at the top) | Slots in `adapter.md`, filled per language | Appending an R section would leave the Python rules in the R prompt for the adapter to override; slots keep one copy of each shared rule and a Python prompt that does not change |
+| The session announces R's inexact integers | The first entry of the shipped version's "what changed" list, from `RuntimeAdapter.loader_notes`, which the root names in its reply; the status stays the render's | The parser's warnings, where other data changes are announced, belong to the dataset, which a session keeps across a library switch, while the pipeline's lists are per render and reach the page and the root. The first build put the line among the residual notes, which made every such plot `needs_attention`; the owner decided on 2026-10-29 for "what changed", with the status left as the render earns it |
+| The R row keeps the Python defaults (2b) | `render_p95_s` 15 s, written into the row | One Cloud Run measurement (5.7 s) is close to the Python p95 of spike X (5.5 s); the matrix run measures R's p95 |
+
+#### Eligibility after 3b
+
+`uv run --extra agents python -m agents.evals.eligibility` on 2026-10-29: the sweep covers
+all seven libraries; the six Python rows are those of 1c, pygal with `histogram-basic`
+regenerated.
+
+| Library | Files | Eligible | Clean | Coupled | Blocked |
+|---|---|---|---|---|---|
+| matplotlib | 325 | 285 (87.7 %) | 15 | 270 | 40 |
+| seaborn | 325 | 287 (88.3 %) | 18 | 269 | 38 |
+| plotnine | 321 | 267 (83.2 %) | 59 | 208 | 54 |
+| altair | 325 | 273 (84.0 %) | 58 | 215 | 52 |
+| pygal | 325 | 210 (64.6 %) | 64 | 146 | 115 |
+| lets-plot | 325 | 284 (87.4 %) | 53 | 231 | 41 |
+| ggplot2 | 325 | 310 (95.4 %) | 4 | 306 | 15 |
+
+ggplot2's 15 blocked files are the 13 map specs (four of them with SECURITY findings too),
+qrcode-basic and maze-circular; by SECURITY rule `banned-import` 3, `url-literal` 2,
+`banned-name` 2, `banned-statement` 1. `test_eligibility.py` pins the ggplot2 counts.
+
+#### Next
+
+- The owner's matrix run for ggplot2 on Vertex (60 cases), the gate for the public release,
+  and with it R's render p95 for the reserve.
+- Settled in the same PR: the scope judge's rubric named matplotlib and seaborn as the
+  only libraries the assistant adapts, so since 2026-10-25 plotnine, altair, pygal and
+  lets-plot, and now ggplot2 and questions about R code, could be refused as
+  `other_library`. `scope_judge.md` now has one injected passage
+  (`policy.libraries_passage`): the served libraries from `AGENT_LIBRARIES` and the
+  catalogue's others, grouped by language; a request for this plot in a served library is
+  `in_scope`. The sentences only matplotlib's probe makes true (the VQ-03 and VQ-06 gate
+  lines, the drawn-text check of requested texts, the polar hint) moved into the Python
+  slots, and R's slots say that the host gates judge an R render without a probe;
+  `adapter_highlights.md` has a slot for its code example too (`highlights_prompt`).
+  Both Python prompts stay byte-identical.
+- Also settled in the same PR (owner's request of 2026-10-29): the fixed `other_library`
+  reply (`refusals.yaml`, eleven hand-written languages) said the assistant adapts "only
+  in Python, with matplotlib or seaborn". Each translation now carries a `{{libraries}}`
+  slot in place of that clause, filled with the served libraries by name from the scope
+  judge's source (`policy.refusals_for`, `adapted_names`); the rest of each text is
+  unchanged.
+- The 67 catalogue files that size the title font from `nchar(title)` (3a, known issue).
 
 #### 2d. Order of the PRs
 
@@ -950,7 +1061,9 @@ set.
    command that never started keeps 127). In the built image the CI step renders a ggplot2 plot with a
    non-ASCII title at 3200x1800 in 0.85 s of CPU and 180 MiB with `exec_deny: on`.
 3. The R runtime and code profile (2c), fixtures, docs; ggplot2 joins the admin deploy's
-   `_LIBRARIES` for the live test; the matrix gates the public release.
+   `_LIBRARIES` for the live test; the matrix gates the public release. Built on
+   2026-10-29 as two PRs: 3a the code profile (#12443), 3b the runtime, the prompts, the
+   fixtures and the deploy ("What PR 3b built" under 2c).
 
 ### 3. JavaScript: Chart.js, D3, ECharts, Highcharts and MUI X
 

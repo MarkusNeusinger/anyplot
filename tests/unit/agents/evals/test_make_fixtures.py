@@ -64,11 +64,14 @@ def test_check_mode_reports_a_stale_file(tmp_path, capsys: pytest.CaptureFixture
     assert "stale: pie-basic-seaborn-n12/data.csv" in capsys.readouterr().err
 
 
-def test_ten_specs_of_ten_families_times_six_libraries_times_six_perturbations(files: dict[str, str]) -> None:
+def test_ten_specs_of_ten_families_times_seven_libraries_times_six_perturbations(files: dict[str, str]) -> None:
+    from agents.anyplot.render.runtimes import RUNTIME_LIBRARIES
+
     assert len(SPECS) == 10 and {spec.family for spec in SPECS} == FAMILIES
-    assert LIBRARIES == ("matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot")
+    assert LIBRARIES == ("matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot", "ggplot2")
+    assert set(LIBRARIES) == RUNTIME_LIBRARIES  # every library the registry serves has its 60 cases
     ids = {name.split("/")[0] for name in files}
-    assert len(ids) == 360
+    assert len(ids) == 420
     assert ids == {
         case_id(spec.spec_id, library, perturbation)
         for spec in SPECS
@@ -110,7 +113,7 @@ def test_smoke_covers_every_spec_perturbation_and_library(files: dict[str, str])
     smoke = [case for case in smoke if SMOKE_TAG in case["tags"]]
     cycle = [case for case in smoke if case["library"] in SMOKE_CYCLE]
 
-    assert len(smoke) == len(SPECS) + len(LIBRARY_SMOKE) == 14
+    assert len(smoke) == len(SPECS) + len(LIBRARY_SMOKE) == 15
     assert set(SMOKE_CYCLE) | set(LIBRARY_SMOKE) == set(LIBRARIES) and not set(SMOKE_CYCLE) & set(LIBRARY_SMOKE)
     assert len(cycle) == len(SPECS)
     assert {case["spec_id"] for case in cycle} == {spec.spec_id for spec in SPECS}
@@ -137,6 +140,7 @@ def test_a_new_library_never_moves_the_smoke_cycle(files: dict[str, str]) -> Non
         "line-timeseries-seaborn-n5000",
         "pie-basic-matplotlib-n12",
         "scatter-basic-altair-renamed",
+        "scatter-basic-ggplot2-renamed",
         "scatter-basic-letsplot-renamed",
         "scatter-basic-matplotlib-renamed",
         "scatter-basic-plotnine-renamed",

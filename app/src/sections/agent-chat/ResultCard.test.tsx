@@ -4,6 +4,15 @@ import type { PlotVersion } from 'src/hooks/useAgentSession';
 import { ResultCard, type ResultCardProps } from 'src/sections/agent-chat/ResultCard';
 import { fireEvent, render, screen, userEvent, waitFor } from 'src/test-utils';
 
+// The lazy-loaded highlighter, reduced to the code and the grammar it was asked for.
+vi.mock('src/components/CodeHighlighter', () => ({
+  default: ({ code, language }: { code: string; language?: string }) => (
+    <pre data-testid="code-highlighter" data-language={language}>
+      {code}
+    </pre>
+  ),
+}));
+
 const pngBlob = new Blob(['png'], { type: 'image/png' });
 
 const makeVersion = (overrides: Partial<PlotVersion> = {}): PlotVersion => ({
@@ -163,6 +172,24 @@ describe('ResultCard', () => {
     const { onOutcome } = renderCard();
     await userEvent.click(screen.getByRole('button', { name: 'Copy code' }));
     expect(onOutcome).not.toHaveBeenCalled();
+  });
+
+  it('highlights the code in its version library language, not the page language', async () => {
+    const version = makeVersion({
+      library: 'ggplot2',
+      code: { state: 'ready', text: 'df <- readr::read_csv("data.csv")\n' },
+    });
+    version.result = { ...version.result, artifacts: ['plot-light.png', 'plot.R', 'data.csv'] };
+    renderCard({ version, language: 'python' });
+    expect(await screen.findByTestId('code-highlighter')).toHaveAttribute('data-language', 'r');
+  });
+
+  it('keeps the page language for a library the app does not know', async () => {
+    renderCard({ version: makeVersion({ library: 'unknown-lib' }), language: 'python' });
+    expect(await screen.findByTestId('code-highlighter')).toHaveAttribute(
+      'data-language',
+      'python'
+    );
   });
 
   it('downloads the code under its language name when the version names another artifact', async () => {
