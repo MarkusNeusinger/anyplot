@@ -1394,7 +1394,11 @@ the row's flags and environment, `--network none`, 2 CPUs and 4 GiB).
   renders at 2. All 325 figures are `(1600, 900)` or `(1200, 1200)` at 2 already: 250
   measure 3200x1800 and 69 2400x2400, and 6 have no static canvas (3 saves in
   `with_theme`, one `set_theme!`, one `resize_to_layout!`, one computed size), which
-  matches the J1 sweep's renders. Idempotent over the corpus.
+  matches the J1 sweep's renders. Idempotent over the corpus. The review found that
+  `Figure(; resolution)`, the keyword shorthand, raised `IndexError`: it becomes
+  `Figure(; size = resolution)`, the same value, and a test runs the normaliser over 98
+  odd but valid shapes (shorthands, splats, a size under one unit or infinite, a zero,
+  negative or infinite `px_per_unit`), which leave notes, never exceptions.
 - **Validator.** Refuses by shape (module docstring of `profiles/julia/validate.py`): a
   denied name wherever it is read, also as the member after a `.` on a module or any
   value (`x.Base.run`, `Base.:run`); a package as a value; calls through a parenthesised
@@ -1411,7 +1415,12 @@ the row's flags and environment, `--network none`, 2 CPUs and 4 GiB).
   finds something in 5 of the 325 normalised files: the 3 `with_theme` saves,
   qrcode-basic (QRCoders) and map-tile-background (Downloads, PNGFiles, `mktempdir`, a
   URL). 121 named bypasses are tests; three tests run the admitted idioms, the loader and
-  the working miniature in the J1 image (skipped without Docker and the image).
+  the working miniature in the J1 image (skipped without Docker and the image). The
+  review of the same day (Gemini 3.8 Flash and Fable) found that a dotted callee passed
+  with any root of the attribution vocabulary (`FileWatching.watch_file(...)`): a root
+  now comes from `MODULE_ROOTS`, called or handed on; `invoke`, `atexit`, `finalizer`
+  and the file-touching submodules `Cairo`, `FileIO`, `TOML` and `CoreLogging` joined
+  the denied names. The split did not change.
 - **Readiness.** 0 clean, 308 coupled, 17 blocked: the 13 map specs, qrcode-basic and the
   3 `with_theme` saves (area-mountain-panorama, bifurcation-basic, scatter-lag). Every
   eligible file carries the `data-block` hint; 16 carry `deprecated-api` (`arrows!`).

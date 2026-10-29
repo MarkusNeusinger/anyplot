@@ -29,8 +29,11 @@ SECURITY rules (rule ids in parentheses):
   `mktemp`, `mktempdir`, `tempname`, `cd`, `readdir`, `walkdir`, `symlink`, `hardlink`,
   `chmod`, `chown`, `download`, the file tests), the modules that reach the system
   (`Filesystem`, `Libc`, `Sys`, `Libdl`, `Downloads`, `Sockets`, `Core`, `Main`, `Meta`,
-  `MainInclude`, `Docs`, `InteractiveUtils`), evaluation and loading (`eval`, `evalfile`,
-  `include`, `include_string`, `require`, `invokelatest`), reflection that turns a symbol
+  `MainInclude`, `Docs`, `InteractiveUtils`, and the submodules an admitted root hands out
+  that touch files or process-wide state: `Cairo`, `FileIO`, `TOML`, `CoreLogging`),
+  evaluation and loading (`eval`, `evalfile`, `include`, `include_string`, `require`,
+  `invoke`, `invokelatest`), code that runs later (`atexit`, `finalizer`; no plot needs
+  them, review of 2026-10-29), reflection that turns a symbol
   or a type into a function or a module (`getfield`, `getproperty`, `setfield!`,
   `setproperty!`, `getglobal`, `setglobal!`, `parentmodule`, `module` as a member,
   `which`, `methods`), native code (`ccall`, `cglobal`, `llvmcall`, `pointer`), and the
@@ -43,7 +46,11 @@ SECURITY rules (rule ids in parentheses):
   mention (histogram-capability's `cp`, the process capability index), may be read; Julia
   then resolves it to the variable, never to `Base`'s function, and calling it stays refused.
 * **Modules** (`banned-name`): a package or `Base` is only ever the prefix of a member
-  (`Random.seed!`), never a value (`getfield(Base, :run)`, `m = Base`) or a binding.
+  (`Random.seed!`), never a value (`getfield(Base, :run)`, `m = Base`) or a binding. A
+  dotted name starts at one of `MODULE_ROOTS`; a known module outside them as a root
+  (`FileWatching.watch_file(...)`, `Logging.global_logger`, `Test.@test`) is a
+  `banned-import`, called or not (review of 2026-10-29: the callee rule had accepted any
+  module of `LOGGED_PACKAGES`, the attribution vocabulary).
 * **Packages** (`banned-import`): `using` and `import` load only `PACKAGES` (the project's
   plotting packages and the standard libraries the catalogue uses) or a dataset package
   (`DATASET_PACKAGES`, RDatasets and PalmerPenguins, which ADAPTATION refuses instead);
@@ -195,6 +202,13 @@ LOGGED_PACKAGES = (
             "SharedArrays",
             "Profile",
             "Test",
+            "Tar",
+            "LibGit2",
+            "LibCURL",
+            "Artifacts",
+            "LazyArtifacts",
+            "TOML",
+            "HTTP",
         }
     )
 )
@@ -285,15 +299,24 @@ DENIED_NAMES = frozenset(
         "Docs",
         "InteractiveUtils",
         "Threads",
-        # evaluation, loading and reflection
+        # submodules an admitted root hands out that read or write files or set process-wide state
+        # (`CairoMakie.Cairo.CairoPDFSurface`, `Makie.FileIO.query`, `Base.TOML.parsefile`, `Base.CoreLogging`)
+        "Cairo",
+        "FileIO",
+        "TOML",
+        "CoreLogging",
+        # evaluation, loading and reflection; code that runs later or elsewhere
         "eval",
         "evalfile",
         "include",
         "include_string",
         "include_dependency",
         "require",
+        "invoke",
         "invokelatest",
         "invoke_in_world",
+        "atexit",
+        "finalizer",
         "getfield",
         "getproperty",
         "setfield!",
@@ -572,6 +595,8 @@ class _Scan:
         if position == "module-root":
             if name in MODULE_ROOTS and self.dataset_member(visit):
                 return
+            if name in LOGGED_PACKAGES and name not in MODULE_ROOTS:
+                self.unavailable(name, node)  # `FileWatching.watch_file`, called or handed on
         if name == ENV_NAME and self.in_theme_statement(node):
             return
         called = node if position == "lookup" else visit.parent
@@ -590,6 +615,15 @@ class _Scan:
             return
         if name in MODULE_ROOTS and position == "lookup":
             self.add("banned-name", f"the package '{name}' is only ever a prefix, as in {name}.name", node)
+
+    def unavailable(self, package: str, node: Node) -> None:
+        """A module outside `MODULE_ROOTS` as the root of a dotted name: the same finding from the call and the name
+        rule, so the two collapse into one."""
+        if package in LOADER_PACKAGES:
+            message = f"'{package}' is the loader's; the data comes from df = load_user_data()"
+        else:
+            message = f"package '{package}' is not available → use {', '.join(sorted(PACKAGES))}"
+        self.add("banned-import", message, node, module=package if package in LOGGED_PACKAGES else UNKNOWN_PACKAGE)
 
     def dataset_member(self, visit: Visit) -> bool:
         """Whether an identifier is part of `RDatasets.x` or `PalmerPenguins.x`."""
@@ -619,7 +653,10 @@ class _Scan:
             self.add("banned-call", message, node)
         elif kind == "field_expression":
             root = jl_root(unwrapped)
-            if not (root.type == "identifier" and self.source.text(root) in LOGGED_PACKAGES):
+            name = self.source.text(root) if root.type == "identifier" else None
+            if name is not None and name in LOGGED_PACKAGES and name not in MODULE_ROOTS:
+                self.unavailable(name, root)  # FileWatching.watch_file(...): a module the plot may not reach
+            elif name not in MODULE_ROOTS:
                 message = f"a function taken out of a value '{self.snippet(function)}'; call it by name"
                 self.add("banned-call", message, node)
         elif kind in ("call_expression", "broadcast_call_expression"):

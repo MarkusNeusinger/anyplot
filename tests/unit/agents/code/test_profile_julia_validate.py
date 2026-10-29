@@ -13,7 +13,7 @@ from agents.anyplot.code.profiles.julia.regions import find_regions
 from agents.anyplot.code.profiles.julia.validate import validate_adaptation, validate_security
 from agents.anyplot.code.validate import Finding
 
-from .conftest import JULIA_CATALOGUE_FILES, JULIA_CATALOGUE_NORMALISED, JULIA_WORKING
+from .conftest import JULIA_CATALOGUE_FILES, JULIA_CATALOGUE_NORMALISED, JULIA_WORKING, REPO_ROOT
 
 
 HEAD = 'using CairoMakie\nconst THEME = get(ENV, "ANYPLOT_THEME", "light")\nfig = Figure(size = (1600, 900))\n'
@@ -244,6 +244,56 @@ def test_the_import_label_is_a_closed_vocabulary() -> None:
 
 
 @pytest.mark.parametrize(
+    ("body", "module"),
+    [
+        ('x = FileWatching.watch_file("data.csv")', "FileWatching"),
+        ("w = FileWatching.watch_file", "FileWatching"),
+        ("Logging.global_logger(logger)", "Logging"),
+        ("REPL.x()", "REPL"),
+        ("Test.@test x == 1", "Test"),
+        ('Tar.extract("a.tar")', "Tar"),
+        ('rows = CSV.read("data.csv", DataFrame)', "CSV"),
+    ],
+)
+def test_a_dotted_name_starts_at_an_admitted_root(body: str, module: str) -> None:
+    """Review of 2026-10-29: the callee rule accepted any root of the attribution vocabulary (`LOGGED_PACKAGES`), so
+    `FileWatching.watch_file(...)` passed; a root comes from `MODULE_ROOTS` now, called or handed on."""
+    findings = security(body)
+
+    assert any(finding.rule == "banned-import" and finding.module == module for finding in findings), findings
+
+
+def test_a_module_outside_the_roots_in_a_catalogue_file_is_refused() -> None:
+    code = normalise((REPO_ROOT / "plots/scatter-basic/implementations/julia/makie.jl").read_text(encoding="utf-8"))
+    assert validate_security(code) == []
+    tampered = code.replace("# Regression line\n", '# Regression line\nx = FileWatching.watch_file("data.csv")\n')
+
+    assert [(finding.rule, finding.module) for finding in validate_security(tampered)] == [
+        ("banned-import", "FileWatching")
+    ]
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        "invoke(f, Tuple{Int}, 1)",
+        "Base.invoke(f, Tuple{Int}, 1)",
+        "atexit(() -> nothing)",
+        "finalizer(x -> nothing, obj)",
+        "g = invoke",
+        'surface = CairoMakie.Cairo.CairoPDFSurface("x.pdf", 10, 10)',
+        'kind = Makie.FileIO.query("x.png")',
+        'settings = Base.TOML.parsefile("x.toml")',
+        "Base.CoreLogging.global_logger(logger)",
+    ],
+)
+def test_defence_in_depth_names(body: str) -> None:
+    """No plot needs code that runs later or elsewhere, nor the file-touching submodules an admitted root hands out
+    (both reviewers, 2026-10-29)."""
+    assert "banned-name" in rules(security(body)), body
+
+
+@pytest.mark.parametrize(
     "code",
     [
         'const THEME = get(ENV, "ANYPLOT_THEME", "light"); THEME = "dark"\n' + SAVE,
@@ -302,7 +352,8 @@ def test_catalogue_corpus() -> None:
     for spec in ("area-mountain-panorama", "bifurcation-basic", "scatter-lag"):
         assert flagged[spec] == {"savefig-target": 2}  # the save inside with_theme(...) do
     assert flagged["qrcode-basic"]["banned-import"] == 1  # QRCoders, outside the project
-    assert flagged["map-tile-background"]["banned-import"] == 2  # Downloads and PNGFiles
+    # Downloads and PNGFiles, each at its `using` and as the root of a call (`Downloads.download`, `PNGFiles.load`)
+    assert flagged["map-tile-background"]["banned-import"] == 4
 
 
 # --- ADAPTATION ------------------------------------------------------------------------------

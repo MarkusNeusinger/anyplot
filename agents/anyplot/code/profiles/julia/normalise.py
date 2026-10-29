@@ -23,8 +23,10 @@ rewrites, in the order `_STEPS` runs them, each only when it applies:
    on every run ("The `resolution` keyword for `Scene`s and `Figure`s has been
    deprecated", measured in the J1 image on 2026-10-29), which would fill the render's
    stderr tail that the repair reads; Makie maps the one to the other unchanged, and the
-   catalogue prompt (`prompts/library/makie.md`) asks for `size`. A call that already
-   passes `size` keeps both with a note.
+   catalogue prompt (`prompts/library/makie.md`) asks for `size`. The keyword shorthand
+   `Figure(; resolution)`, which passes the variable `resolution`, becomes
+   `Figure(; size = resolution)`, the same value (review of 2026-10-29: it raised before).
+   A call that already passes `size` keeps both with a note.
 5. **Canvas**, last: only `px_per_unit` of the protected save changes, never the
    figure's `size`, so the layout in Makie's units (font sizes, line widths, which
    `px_per_unit` scales) stays, as R's dpi and lets-plot's scale rewrites do (owner
@@ -67,7 +69,7 @@ from ...treesitter import (
     syntax_problems,
     walk,
 )
-from .regions import STANDARD_TARGET, find_regions, is_save_call, is_standard_target
+from .regions import STANDARD_TARGET, SaveCall, find_regions, is_save_call, is_standard_target
 
 
 HEADER_FIRST_LINE = "# anyplot.ai"
@@ -203,9 +205,17 @@ def _resolution_to_size(code: str) -> StepResult:
         if "size" in names:
             notes.append(f"resolution: the Figure at {span.lines()} passes size and resolution; both stay")
             continue
-        key = jl_named(resolution.node)[0]
-        key_span = source.node_span(key)
-        edits.append((key_span.start, key_span.end, "size"))
+        if resolution.node.type == "identifier":
+            # `Figure(; resolution)` passes the variable as `resolution = resolution`: the same value under `size`
+            key_span = source.node_span(resolution.node)
+            edits.append((key_span.start, key_span.end, "size = resolution"))
+        else:
+            named = jl_named(resolution.node)
+            if not named:
+                notes.append(f"resolution: the Figure at {span.lines()} passes resolution in a form left alone")
+                continue
+            key_span = source.node_span(named[0])
+            edits.append((key_span.start, key_span.end, "size"))
         changes.append(f"renamed the Figure's deprecated resolution keyword to size at {key_span.lines()}")
     return _apply(code, edits), changes, notes
 
@@ -243,7 +253,21 @@ def _figure_size(source: Source) -> tuple[float, float] | str:
     width, height = (number for number in numbers if number is not None)
     if not (width > 0 and height > 0 and math.isfinite(width) and math.isfinite(height)):
         return f"the Figure's size ({source.text(size.value)}) is not a positive size"
+    if min(units((width, height))) < 1:
+        return f"the Figure's size ({source.text(size.value)}) rounds to less than one unit"
     return width, height
+
+
+def _scale(save: SaveCall) -> float | str:
+    """The protected save's `px_per_unit` (CairoMakie's 2 without one), or a note why it is unknown."""
+    if save.px_per_unit is None:
+        return DEFAULT_PX_PER_UNIT
+    number = save.px_per_unit_number
+    if number is None:
+        return f"the save's px_per_unit ({save.px_per_unit}) is not a number literal"
+    if not (number > 0 and math.isfinite(number)):
+        return f"the save's px_per_unit ({save.px_per_unit}) is not a positive number"
+    return number
 
 
 def units(size: tuple[float, float]) -> tuple[int, int]:
@@ -325,10 +349,9 @@ def measure_canvas(code: str) -> Canvas:
     size = _figure_size(source)
     if isinstance(size, str):
         return Canvas(None, None, None, None, size)
-    save = regions.save
-    if save.px_per_unit is not None and save.px_per_unit_number is None:
-        return Canvas(size, None, None, None, f"the save's px_per_unit ({save.px_per_unit}) is not a number literal")
-    scale = save.px_per_unit_number if save.px_per_unit_number is not None else DEFAULT_PX_PER_UNIT
+    scale = _scale(regions.save)
+    if isinstance(scale, str):
+        return Canvas(size, None, None, None, scale)
     target = _nearest_target(size)
     rendered = pixels(size, scale)
     if rendered == target:
@@ -347,9 +370,9 @@ def _normalise_canvas(code: str) -> StepResult:
     size = _figure_size(source)
     if isinstance(size, str):
         return code, [], [f"canvas: {size}; px_per_unit was left alone"]
-    if save.px_per_unit is not None and save.px_per_unit_number is None:
-        return code, [], [f"canvas: the save's px_per_unit ({save.px_per_unit}) is not a number literal; left alone"]
-    scale = save.px_per_unit_number if save.px_per_unit_number is not None else DEFAULT_PX_PER_UNIT
+    scale = _scale(save)
+    if isinstance(scale, str):
+        return code, [], [f"canvas: {scale}; left alone"]
     shown_size = f"({size[0]:g}, {size[1]:g})"
     plan = plan_scale(size)
     if plan is None:

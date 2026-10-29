@@ -81,6 +81,58 @@ def test_resolution_and_size_together_stay_with_a_note() -> None:
     assert any("passes size and resolution" in note for note in report.notes)
 
 
+def test_the_resolution_shorthand_passes_the_same_value_as_size() -> None:
+    """`Figure(; resolution)` passes the variable `resolution` (review of 2026-10-29: the rename raised IndexError)."""
+    code = f'{THEME}resolution = (1600, 900)\nfig = Figure(; resolution)\nsave("plot-$(THEME).png", fig; px_per_unit = 2)\n'
+    report = normalise_report(code)
+
+    assert "fig = Figure(; size = resolution)\n" in report.code
+    assert report.changes == ("renamed the Figure's deprecated resolution keyword to size at line 3",)
+    assert normalise(report.code) == report.code
+    assert measure_canvas(report.code).note == "the Figure's size (resolution) is not a tuple of two number literals"
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        "fig = Figure(; resolution)",
+        "fig = Figure(resolution...)",
+        "fig = Figure(; kw...)",
+        "fig = Figure(; resolution = r, size)",
+        "fig = Figure(size = (0.4, 0.3))",
+        "fig = Figure(size = (1e400, 900))",
+        "fig = Figure(size = (1e300, 1e300))",
+        "fig = Figure(size = (-1600, 900))",
+        "fig = Figure(size = (1600, 900)); fig2 = Figure(; resolution)",
+        "fig = Figure(size = (1600, 900))\nsave(joinpath(@__DIR__), fig)",
+        'fig = Figure(size = (1600, 900))\nsave(joinpath(@__DIR__(), "plot-$(THEME).png"), fig)',
+        "fig = Figure(size = (1600, 900))\ns = save",
+        "fig = Figure(Figure()...)",
+        'ax = Axis(fig[1, 1]; title = """scatter-basic · julia · makie · anyplot.ai""")',
+    ],
+)
+@pytest.mark.parametrize(
+    "save",
+    [
+        'save("plot-$(THEME).png", fig; px_per_unit = 2)',
+        'save("plot-$(THEME).png", fig; px_per_unit)',
+        'save("plot-$(THEME).png", fig; px_per_unit = 1e400)',
+        'save("plot-$(THEME).png", fig; px_per_unit = 0)',
+        'save("plot-$(THEME).png", fig; px_per_unit = -2)',
+        'save("plot-$(THEME).png"; px_per_unit = 2)',
+        "save()",
+    ],
+)
+def test_the_normaliser_never_raises_on_valid_julia(body: str, save: str) -> None:
+    """A normaliser must never raise on code that parses: odd but valid shapes leave notes, never exceptions."""
+    code = f"{THEME}{body}\n{save}\n"
+    assert syntax_problems(Source(code, "julia").tree) == []
+    report = normalise_report(code)
+
+    assert normalise(report.code) == report.code
+    measure_canvas(report.code)
+
+
 @pytest.mark.parametrize(
     ("size", "target", "scale", "exact"),
     [
