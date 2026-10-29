@@ -53,7 +53,6 @@
       "command([)",
       "command(true)",
       "command(false)",
-      "command(cd ..)",
       "command(cd /home/<user>/projects/anyplot-agy)",
       "command(cd /home/<user>/projects/anyplot-agy/app)",
       "command(yarn)",

@@ -232,8 +232,10 @@ This section is for the Gemini agent in the owner's agy session.
    - **A slug** is a brief: `cat ~/projects/anyplot-briefs/<slug>.md` (a shell
      read works even where your file tools stay inside the workspace). When no
      such file exists, the slug names a task in packages:
-     `ls ~/projects/anyplot-briefs/<slug>-[0-9]*.md` (the digit keeps
-     another task's `<slug>-other.md` out), and read each. Never edit,
+     `find ~/projects/anyplot-briefs -maxdepth 1 -regex '.*/<slug>-[0-9]+\.md'`
+     (a number and nothing else after the slug, so another task's
+     `<slug>-other.md` or `<slug>-1-other.md` stays out), and read each.
+     Never edit,
      move, or delete a brief.
    - **A number** is an issue: `gh issue view <number> --json title,body`
      (without `--json` it fails on this repository: Projects classic), and only
@@ -263,8 +265,10 @@ This section is for the Gemini agent in the owner's agy session.
      shared clone: two agents there overwrite each other's files and Git
      state. Work them one after another instead, and tell the owner.
    - A subagent starts without your conversation, so its prompt names
-     everything: the brief to `cat`, its package branch `gemini/<slug>-<k>`
-     from `origin/main`, that steps 3 to 6 of section 2 of
+     everything: the brief to `cat`; its branch, which for an independent
+     package is a new `gemini/<slug>-<k>` from `origin/main`, and for a
+     coupled package the current tip of `gemini/<slug>` with the previous
+     packages' commits on it; that steps 3 to 6 of section 2 of
      `.agents/skills/gemini-task/SKILL.md` apply, and three differences: it
      writes no changelog fragment, opens no PR, and pushes its branch before
      it finishes (Antigravity deletes a subagent's worktree when it ends, so
@@ -332,12 +336,15 @@ This section is for the Gemini agent in the owner's agy session.
    the owner every time (2026-10-30).
 
    ```bash
-   PYTHON_DOTENV_DISABLED=1 uv run ruff check . && uv run ruff format --check .
+   PYTHON_DOTENV_DISABLED=1 uv run ruff check .
+   PYTHON_DOTENV_DISABLED=1 uv run ruff format --check .
    PYTHON_DOTENV_DISABLED=1 uv run --extra typecheck mypy api core --pretty     # Python changes
    PYTHON_DOTENV_DISABLED=1 uv run pytest tests/unit tests/integration -n auto  # or the narrower set the task names
    PYTHON_DOTENV_DISABLED=1 uv run python -m tools.changelog check --base origin/main  # after committing the fragment
-   cd app && yarn lint && yarn fm:check && yarn type-check && yarn test && yarn build   # app/ changes
    ```
+
+   For `app/` changes, from `app/`, one command each: `yarn lint`,
+   `yarn fm:check`, `yarn type-check`, `yarn test`, `yarn build`.
 
    The changelog check reads `origin/main...HEAD`, as CI does, so it fails
    until the fragment is committed; staging it is not enough.
@@ -501,8 +508,10 @@ This section is for the Gemini agent in the owner's agy session.
    the session.
 6. **Clean up.** After the merge, remove your worktree and the local branch,
    as `/open-pr` §4 describes; GitHub has already deleted the remote branch.
-   Delete the brief (`rm -f ~/projects/anyplot-briefs/<slug>.md`, or every
-   `<slug>-[0-9]*.md` of a task in packages); the merged PR keeps its copy. Delete
+   Delete the brief (`rm -f ~/projects/anyplot-briefs/<slug>.md`, or for a
+   task in packages
+   `find ~/projects/anyplot-briefs -maxdepth 1 -regex '.*/<slug>-[0-9]+\.md' -delete`);
+   the merged PR keeps its copy. Delete
    the package branches the merge left behind:
    `git push origin --delete gemini/<slug>-1 gemini/<slug>-2 …`. The branch in
    the owner's clone
