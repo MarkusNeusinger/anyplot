@@ -816,6 +816,17 @@ of the language's own program. Instead:
   R render shows it; if gVisor refuses it, the fallback keeps the kernel filter at
   `EPERM` and adds `popen` and `system` interposers in the preload library for the
   cooperative callers.
+- Found by the first deploy (2026-10-29, build `6bf765c6`): the toolchain's R check died
+  with "Bad system call" in Cloud Build, though it passed locally and in GitHub Actions.
+  R's `popen` and `system()` start their child with `vfork` (`CLONE_VM`), the filter
+  kills that child with `SIGSYS`, whose default action dumps core, and before Linux 5.16
+  a core dump kills every process sharing the dumping one's memory, R included (Cloud
+  Build's workers run 5.10.0-32-cloud-amd64; the developer machine's 6.18 and the
+  Actions runners kill the child alone). The library now makes the process non-dumpable
+  (`PR_SET_DUMPABLE` 0) before it installs the filter, so the child dumps no core and
+  dies alone on every kernel; the test pins it (`PR_GET_DUMPABLE` is 0 under the filter),
+  and an owner-approved diagnostic Cloud Build of the toolchain with the fix (build
+  `f079a4e4`, no push) passed the R check on that 5.10 kernel.
 
 #### 2c. The R runtime
 
