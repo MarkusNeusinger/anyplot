@@ -225,11 +225,18 @@ Open the pull request against `feature/<slug>`, never `main`; the description en
 - **Copilot** reviews only PRs into `main`, by ruleset, so Jules's sub-PRs cost
   no round. On 2026-10-28 it did not start by itself on two PRs Jules had
   opened into `main`; a PR Claude opens gets it as usual.
-- **Losers and duplicates** of a comparison: Claude closes them with a comment
-  naming the PR that stays, then deletes their branch (owner, 2026-10-29). A
-  closed PR keeps its branch; only merged ones are deleted by GitHub
-  (`delete_branch_on_merge`). Delete only the branch of a PR that is closed and
-  unmerged:
+- **Losers and duplicates** of a comparison: first tell the session
+  `Stop here. Do not commit or push again; this pull request is closed in
+  favour of #<n>.`, and wait until
+  `watch-sessions.py --follow-up <session-id>` reports it settled: without
+  `--follow-up`, a session that was already `COMPLETED` counts as settled
+  before it has read the message. Closing a
+  PR wakes its session: on 2026-10-29 a session whose PR had been closed
+  pushed a new commit and recreated its deleted branch. Then Claude closes
+  the PR with a comment naming the PR that stays, and deletes its branch
+  (owner, 2026-10-29). A closed PR keeps its branch; only merged ones are
+  deleted by GitHub (`delete_branch_on_merge`). Delete only the branch of a
+  PR that is closed and unmerged, and check again later that it stayed gone:
 
   ```bash
   gh pr list --state closed --author app/google-labs-jules --json number,headRefName,mergedAt \
