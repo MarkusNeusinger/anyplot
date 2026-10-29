@@ -73,8 +73,12 @@ triple forms, each ending with its line unless a backslash continues it. R's
 the token stream with string values decoded (so `'a'` and `"a"` agree, a comment does
 not count), its placeholder is `df <- load_user_data()`, its save `ggsave`, and its
 literals are `'`, `"` and backtick names, which may span lines, and raw strings
-`r"(...)"`. The Python behaviour is byte for byte what it was (its tests are
-unchanged).
+`r"(...)"`. Julia's (`makie`, J2a of 2026-10-29) reads it with tree-sitter and
+`profiles/julia/regions.py`, compares meanings as R's does (the token stream with string
+values decoded, comments left out, so `const THEME = ...` and `THEME = ...` differ), its
+placeholder is `df = load_user_data()` as in Python, its save `save`, and its literals are
+`"`, its triple-quoted strings and backtick commands, which may span lines. The Python and
+R behaviour is byte for byte what it was (their tests are unchanged).
 """
 
 import ast
@@ -87,9 +91,23 @@ from typing import Literal, Protocol
 
 from ..schemas import MAX_FEEDBACK, MAX_LINE_CHARS, AdaptPlan
 from . import regions as python_regions
+from .profiles.julia import regions as julia_regions
 from .profiles.r import regions as r_regions
 from .regions import PLACEHOLDER, PLACEHOLDER_FUNC, THEME_NAME, SourceIndex, find_regions
-from .treesitter import Source, r_assignment, r_bindings, r_string, r_string_value, statements, syntax_problems, walk
+from .treesitter import (
+    COMMENTS,
+    Grammar,
+    Source,
+    jl_bindings,
+    jl_string,
+    r_assignment,
+    r_bindings,
+    r_string,
+    r_string_value,
+    statements,
+    syntax_problems,
+    walk,
+)
 
 
 MAX_QUOTE_CHARS = 80
@@ -272,9 +290,9 @@ def _python_string_literals(code: str) -> Counter[str]:
     return _string_literals(ast.parse(code))
 
 
-def _r_source(code: str) -> Source:
-    """The code parsed as R; `SyntaxError` with the first problem's line when tree-sitter cannot read it."""
-    source = Source(code, "r")
+def _tree_source(code: str, grammar: Grammar) -> Source:
+    """The code parsed as `grammar`; `SyntaxError` with the first problem's line when tree-sitter cannot read it."""
+    source = Source(code, grammar)
     problems = syntax_problems(source.tree, limit=1)
     if problems:
         error = SyntaxError(problems[0].message())
@@ -284,7 +302,7 @@ def _r_source(code: str) -> Source:
 
 
 def _r_read(code: str) -> CodeView:
-    source = _r_source(code)
+    source = _tree_source(code, "r")
     found = r_regions.find_regions(source)
     save = found.save.statement if found.save is not None else None
 
@@ -336,7 +354,7 @@ def _r_single_statement(text: str) -> bool:
 
 
 def _r_string_literals(code: str) -> Counter[str]:
-    source = _r_source(code)
+    source = _tree_source(code, "r")
     counts: Counter[str] = Counter()
     for node in walk(source.root):
         if node.type == "string":
@@ -346,14 +364,100 @@ def _r_string_literals(code: str) -> Counter[str]:
     return counts
 
 
+def _julia_read(code: str) -> CodeView:
+    source = _tree_source(code, "julia")
+    found = julia_regions.find_regions(source)
+    save = found.save.statement if found.save is not None else None
+
+    def bindings(names: set[str]) -> Counter[str]:
+        return Counter(name for name, _ in jl_bindings(source, source.root) if name in names)
+
+    def assignments() -> dict[str, list[SpanLike]]:
+        assigned: dict[str, list[SpanLike]] = {}
+        for node in statements(source.root):
+            top = julia_regions.top_assignment(source, node)
+            if top is not None:
+                assigned.setdefault(top[1], []).append(source.lines_span(node))
+        return assigned
+
+    return CodeView(
+        theme=found.theme.span if found.theme is not None else None,
+        tokens=tuple((region.name, region.span) for region in found.theme_tokens),
+        save=save,
+        regions=found.protected,
+        bindings=bindings,
+        assignments=assignments,
+    )
+
+
+def _julia_meaning(text: str) -> str:
+    """The token stream of a Julia statement: leaf tokens with plain string values decoded, comments left out."""
+    source = Source(text, "julia")
+    if syntax_problems(source.tree, limit=1):
+        return text.strip()
+    tokens: list[str] = []
+    stack = [source.root]
+    while stack:
+        node = stack.pop()
+        if node.type in COMMENTS:
+            continue
+        if node.type == "string_literal":
+            value = jl_string(source, node)
+            if value is not None:
+                tokens.append(f"string:{value!r}")
+                continue
+        if not node.children:
+            tokens.append(f"{node.type}:{source.text(node)}")
+            continue
+        stack.extend(reversed(node.children))
+    return "\x00".join(tokens)
+
+
+def _julia_single_statement(text: str) -> bool:
+    source = Source(text, "julia")
+    return not syntax_problems(source.tree, limit=1) and len(statements(source.root)) == 1
+
+
+def _julia_string_literals(code: str) -> Counter[str]:
+    """The text of every string literal: a plain string's value, else its literal parts (an interpolated string's
+    text between the interpolations, a string macro's text such as a `colorant` colour)."""
+    source = _tree_source(code, "julia")
+    counts: Counter[str] = Counter()
+    for node in walk(source.root):
+        if node.type == "string_literal":
+            value = jl_string(source, node)
+            if value is None:
+                value = "".join(source.text(child) for child in node.children if child.type == "content")
+            counts[value] += 1
+        elif node.type == "prefixed_string_literal":
+            counts["".join(source.text(child) for child in node.children if child.type == "content")] += 1
+    return counts
+
+
 _PYTHON_LITERALS = LiteralSyntax(quotes="'\"", triple=True, multiline=False, raw=False)
 _R_LITERALS = LiteralSyntax(quotes="'\"`", triple=False, multiline=True, raw=True)
+_JULIA_LITERALS = LiteralSyntax(quotes='"`', triple=True, multiline=True, raw=False)
+"""Julia's strings (`"..."` and the triple-quoted form) and commands may span lines; `'` is a character or the
+adjoint operator (`x'`), so it opens no literal."""
 R_LIBRARIES = frozenset({"ggplot2"})
 """The libraries whose code is R (the R profile, `profiles/r/`)."""
+JULIA_LIBRARIES = frozenset({"makie"})
+"""The libraries whose code is Julia (the Julia profile, `profiles/julia/`)."""
 
 
 def dialect_for(library: str) -> Dialect:
-    """The dialect of `library`'s code: R for ggplot2, else Python with the library's save rule."""
+    """The dialect of `library`'s code: R for ggplot2, Julia for Makie, else Python with the library's save rule."""
+    if library in JULIA_LIBRARIES:
+        return Dialect(
+            placeholder=julia_regions.PLACEHOLDER,
+            placeholder_line=_PLACEHOLDER_LINE,
+            save_word="save",
+            literals=_JULIA_LITERALS,
+            read=_julia_read,
+            meaning=_julia_meaning,
+            single_statement=_julia_single_statement,
+            string_literals=_julia_string_literals,
+        )
     if library in R_LIBRARIES:
         return Dialect(
             placeholder=r_regions.PLACEHOLDER,

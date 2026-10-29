@@ -14,8 +14,12 @@ one, so `export_code` is idempotent. The spec id, library, version and theme are
 checked against strict patterns, because they become source code.
 
 The command after the theme is the language's (2026-10-29): `python plot.py` for
-Python, `Rscript plot.R` for R, one of `RUN_COMMANDS`; R reads `#` comments too, so the
-header is the same two lines.
+Python, `Rscript plot.R` for R, `julia --project=. plot.jl` for Julia, one of
+`RUN_COMMANDS`; R and Julia read `#` comments too, so the header is the same two lines.
+Julia's is the catalogue's own convention (`prompts/library/makie.md`, the landing page's
+terminal): `--project=.` activates a `Project.toml` next to the file when the user keeps
+one there, and without one Julia falls back to the default environment, where the user's
+`CairoMakie`, `CSV`, `DataFrames` and `TimeZones` are installed.
 """
 
 import re
@@ -25,7 +29,8 @@ HEADER_PREFIX = "# Adapted by anyplot.ai from "
 RUN_LINE = "# run: ANYPLOT_THEME={theme} {command}"
 PYTHON_RUN = "python plot.py"
 R_RUN = "Rscript plot.R"
-RUN_COMMANDS = frozenset({PYTHON_RUN, R_RUN})
+JULIA_RUN = "julia --project=. plot.jl"
+RUN_COMMANDS = frozenset({PYTHON_RUN, R_RUN, JULIA_RUN})
 """The run commands a header may name: each language's command for its code artifact."""
 EXPORT_THEMES = ("light", "dark")
 

@@ -14,6 +14,8 @@ CATALOGUE_FILES = [
 ]
 R_CATALOGUE_FILES = sorted(REPO_ROOT.glob("plots/*/implementations/r/ggplot2.R"))
 """The ggplot2 catalogue files, which the R profile (`agents/anyplot/code/profiles/r/`) reads."""
+JULIA_CATALOGUE_FILES = sorted(REPO_ROOT.glob("plots/*/implementations/julia/makie.jl"))
+"""The Makie catalogue files, which the Julia profile (`agents/anyplot/code/profiles/julia/`) reads."""
 
 
 def source(text: str) -> str:
@@ -169,4 +171,110 @@ R_CATALOGUE_NORMALISED = source("""
       units    = "in",
       dpi      = 200
     )
+""")
+
+# A Makie catalogue file in miniature: header, theme block (const and plain), palette, column
+# constants, the Data and Plot markers, synthetic data, the title, `resolution =` and the save.
+JULIA_CATALOGUE = source("""
+    # anyplot.ai
+    # scatter-demo: Demo Scatter
+    # Library: makie 0.24.16 | Julia 1.13.2
+    # Quality: 90/100 | Updated: 2026-10-29
+
+    using CairoMakie
+    using Colors
+    using Random
+
+    # Theme tokens
+    const THEME    = get(ENV, "ANYPLOT_THEME", "light")
+    const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
+    INK            = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
+    const ALPHA    = THEME == "light" ? 0.4 : 0.6
+    const IMPRINT_PALETTE = [
+        colorant"#009E73", colorant"#C475FD", colorant"#4467A3", colorant"#BD8233",
+        colorant"#AE3030", colorant"#2ABCCD", colorant"#954477", colorant"#99B314",
+    ]
+
+    # Columns: set these to your table's column names
+    const SPEND   = "Spend (k USD)"    # role: x
+    const REVENUE = "Revenue (k USD)"  # role: y
+
+    # Data: replace this block with your own table
+    Random.seed!(42)
+    spend = 5 .+ 145 .* rand(50)
+    revenue = 300 .+ 40 .* randn(50)
+
+    # Plot: reads only the data above
+    fig = Figure(resolution = (1600, 900), fontsize = 14, backgroundcolor = PAGE_BG)
+    ax = Axis(fig[1, 1]; title = "scatter-demo · julia · makie · anyplot.ai", xlabel = SPEND, ylabel = REVENUE)
+    scatter!(ax, spend, revenue; color = (IMPRINT_PALETTE[1], ALPHA))
+
+    # Save
+    save("plot-$(THEME).png", fig; px_per_unit = 2)
+""")
+
+# The same file after normalisation: header and title gone, `resolution` renamed to `size`.
+JULIA_CATALOGUE_NORMALISED = source("""
+    using CairoMakie
+    using Colors
+    using Random
+
+    # Theme tokens
+    const THEME    = get(ENV, "ANYPLOT_THEME", "light")
+    const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
+    INK            = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
+    const ALPHA    = THEME == "light" ? 0.4 : 0.6
+    const IMPRINT_PALETTE = [
+        colorant"#009E73", colorant"#C475FD", colorant"#4467A3", colorant"#BD8233",
+        colorant"#AE3030", colorant"#2ABCCD", colorant"#954477", colorant"#99B314",
+    ]
+
+    # Columns: set these to your table's column names
+    const SPEND   = "Spend (k USD)"    # role: x
+    const REVENUE = "Revenue (k USD)"  # role: y
+
+    # Data: replace this block with your own table
+    Random.seed!(42)
+    spend = 5 .+ 145 .* rand(50)
+    revenue = 300 .+ 40 .* randn(50)
+
+    # Plot: reads only the data above
+    fig = Figure(size = (1600, 900), fontsize = 14, backgroundcolor = PAGE_BG)
+    ax = Axis(fig[1, 1]; title = "", xlabel = SPEND, ylabel = REVENUE)
+    scatter!(ax, spend, revenue; color = (IMPRINT_PALETTE[1], ALPHA))
+
+    # Save
+    save("plot-$(THEME).png", fig; px_per_unit = 2)
+""")
+
+# The miniature adapted: the sample replaced by the placeholder, the columns read from df.
+JULIA_WORKING = source("""
+    using CairoMakie
+    using Colors
+    using DataFrames
+
+    # Theme tokens
+    const THEME    = get(ENV, "ANYPLOT_THEME", "light")
+    const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
+    INK            = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
+    const ALPHA    = THEME == "light" ? 0.4 : 0.6
+    const IMPRINT_PALETTE = [
+        colorant"#009E73", colorant"#C475FD", colorant"#4467A3", colorant"#BD8233",
+        colorant"#AE3030", colorant"#2ABCCD", colorant"#954477", colorant"#99B314",
+    ]
+
+    # Columns: set these to your table's column names
+    const SPEND   = "Ausgaben (k €)"   # role: x
+    const REVENUE = "Umsatz \\$ (k)"   # role: y
+
+    # Data: replace this block with your own table
+    df = load_user_data()
+
+    # Plot: reads only df and the constants above
+    fig = Figure(size = (1600, 900), fontsize = 14, backgroundcolor = PAGE_BG)
+    ax = Axis(fig[1, 1]; title = "Umsatz nach Ausgaben", xlabel = SPEND, ylabel = REVENUE)
+    scatter!(ax, df[!, SPEND], df[!, REVENUE]; color = (IMPRINT_PALETTE[1], ALPHA))
+
+    # Save
+    save("plot-$(THEME).png", fig; px_per_unit = 2)
 """)
