@@ -410,17 +410,20 @@ def test_guardrails_split_stays_subordinate() -> None:
 # deleted from CLAUDE.md and left living only in the companion file — exactly
 # the drift these tests exist to catch.
 GUARDRAIL_SECTION_ANCHORS = {
-    "Delegated agents run on Opus by default": [
-        "opus by default",
+    "Pick the agent by the work, and spend Claude tokens last": [
+        "pick the agent by the work, and spend claude tokens last",
         "all `git` stays inside the agent's own worktree",
         "repo files are modified only with edit/write",
-        "haiku only reads or polls",
-        "interactive sessions do not delegate to sonnet",
+        "a subagent runs on opus (`model: opus`) when it changes state outside its own worktree",
+        "on sonnet for bounded work inside its own worktree that a command verifies",
+        "on haiku only to read or poll",
         "escalate to fable for high-risk reviews",
+        "`/jules-task`",
+        "claude merges jules's sub-prs into a `feature/*` branch it leads",
         "`/gemini-task`",
         "claude never runs `agy` itself",
-        "gemini 3.8 flash for first reviews of normal prs",
-        "gemini 4 argon for plans and second opinions",
+        "checks every pr claude opens before it opens (gemini 3.8 flash)",
+        "runs only when the owner asks for one",
         "gemini pushes only its `gemini/*` branch and opens only draft prs",
         "never extract, copy, or proxy the agy login",
     ],
