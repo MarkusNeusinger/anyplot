@@ -7,8 +7,6 @@ library(ggplot2)
 library(dplyr)
 library(ragg)
 
-set.seed(42)
-
 # --- Theme tokens -----------------------------------------------------------
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
@@ -20,32 +18,41 @@ GRID_COLOR  <- paste0(INK, "33")
 IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 
-# --- Data ---------------------------------------------------------------
-regions  <- c("North", "South", "East", "West", "Central")
-products <- c("Software", "Hardware", "Services")
+# Columns: set these to your table's column names
+REGION  <- "Region"        # role: category
+PRODUCT <- "Product Line"  # role: group
+REVENUE <- "Revenue ($M)"  # role: value
 
-df <- expand.grid(region = regions, product = products) %>%
+# Data: replace this block with your own table, for example df <- read.csv("revenue.csv", check.names = FALSE)
+set.seed(42)
+grid <- expand.grid(region = c("North", "South", "East", "West", "Central"),
+                    product = c("Software", "Hardware", "Services"),
+                    stringsAsFactors = FALSE)
+df <- tibble::tibble(
+  !!REGION  := grid$region,
+  !!PRODUCT := grid$product,
+  !!REVENUE := case_when(
+    grid$product == "Software" ~ round(rnorm(nrow(grid), mean = 5.8, sd = 0.9), 1),
+    grid$product == "Hardware" ~ round(rnorm(nrow(grid), mean = 4.2, sd = 1.1), 1),
+    TRUE                       ~ round(rnorm(nrow(grid), mean = 3.0, sd = 0.6), 1)
+  )
+)
+
+# Plot: reads only df and the constants above
+# Order regions by total revenue (descending) so the chart reads as a ranking;
+# products keep the data's order.
+region_order <- df %>%
+  group_by(.data[[REGION]]) %>%
+  summarise(total = sum(.data[[REVENUE]], na.rm = TRUE), .groups = "drop") %>%
+  arrange(desc(total)) %>%
+  pull(1)
+df <- df %>%
   mutate(
-    product = factor(product, levels = products),
-    revenue = case_when(
-      product == "Software" ~ round(rnorm(n(), mean = 5.8, sd = 0.9), 1),
-      product == "Hardware" ~ round(rnorm(n(), mean = 4.2, sd = 1.1), 1),
-      TRUE                  ~ round(rnorm(n(), mean = 3.0, sd = 0.6), 1)
-    )
+    !!REGION  := factor(.data[[REGION]], levels = region_order),
+    !!PRODUCT := factor(.data[[PRODUCT]], levels = unique(.data[[PRODUCT]]))
   )
 
-# Order regions by total revenue (descending) so the chart reads as a ranking
-# rather than an arbitrary list.
-region_order <- df %>%
-  group_by(region) %>%
-  summarise(total = sum(revenue), .groups = "drop") %>%
-  arrange(desc(total)) %>%
-  pull(region)
-
-df <- df %>% mutate(region = factor(region, levels = region_order))
-
-# --- Plot -----------------------------------------------------------------
-p <- ggplot(df, aes(x = region, y = revenue, fill = product)) +
+p <- ggplot(df, aes(x = .data[[REGION]], y = .data[[REVENUE]], fill = .data[[PRODUCT]])) +
   geom_col(
     position = position_dodge(width = 0.75),
     width = 0.68,
@@ -53,18 +60,19 @@ p <- ggplot(df, aes(x = region, y = revenue, fill = product)) +
     linewidth = 0.4
   ) +
   geom_text(
-    aes(label = sprintf("%.1f", revenue)),
+    aes(label = sprintf("%.1f", .data[[REVENUE]])),
     position = position_dodge(width = 0.75),
     vjust = -0.5,
     size = 2.4,
     color = INK_SOFT
   ) +
-  scale_fill_manual(values = IMPRINT_PALETTE[1:3], name = "Product Line") +
+  scale_fill_manual(values = IMPRINT_PALETTE) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.14))) +
   labs(
     title = "Revenue by Product Line · bar-grouped · r · ggplot2 · anyplot.ai",
-    x = "Region",
-    y = "Revenue ($M)"
+    x = REGION,
+    y = REVENUE,
+    fill = PRODUCT
   ) +
   theme_minimal(base_size = 8) +
   theme(
