@@ -8,6 +8,11 @@ import ReactDOM from 'react-dom/client';
 
 import { reportWebVitals } from 'src/analytics/reportWebVitals';
 import { App } from 'src/app';
+import { watchShellDefaults } from 'src/utils/shellMetadata';
+
+// The shell's default title and description stay as the fallback for every state in which a
+// route renders none of its own, and step aside while one does.
+watchShellDefaults();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

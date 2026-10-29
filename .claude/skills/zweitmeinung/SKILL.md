@@ -51,12 +51,9 @@ $GR check
   price), so that Copilot's one round finds nothing. Flash is on probation, see step 4.
   Fable joins only for high-risk changes (security, prod data, sandbox, privacy,
   credentials) or when Gemini reports something serious.
-- **A diff Gemini wrote** (`/gemini-task`, `/jules-task`): a Gemini review never counts
-  as the independent review of Gemini's work. For `/gemini-task`, a fresh Opus subagent
-  reviews the diff from the acceptance criteria alone; for `/jules-task`, Claude's own
-  reading of every sub-PR is that review, because Claude wrote only the prompt. The Flash
-  check before the PR into `main` still runs, as a check of the integrated diff. Fable for
-  high risk.
+- **A diff Gemini wrote** (`/gemini-task`): a Gemini review never counts as the
+  independent review of Gemini's work. A fresh Opus subagent reviews the diff from the
+  acceptance criteria alone. Fable for high risk.
 - Copilot reviews every PR last, whatever ran before.
 
 Only when the owner names other models, or explicitly asks to choose, propose 2–3 Gemini

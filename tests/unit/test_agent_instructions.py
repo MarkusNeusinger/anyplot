@@ -418,8 +418,6 @@ GUARDRAIL_SECTION_ANCHORS = {
         "on sonnet for bounded work inside its own worktree that a command verifies",
         "on haiku only to read or poll",
         "escalate to fable for high-risk reviews",
-        "`/jules-task`",
-        "claude merges jules's sub-prs into a `feature/*` branch it leads",
         "`/gemini-task`",
         "claude never runs `agy` itself",
         "checks every code pr claude opens before it opens (gemini 3.8 flash;",

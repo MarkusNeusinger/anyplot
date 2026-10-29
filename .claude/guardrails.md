@@ -16,7 +16,8 @@ Sections follow the order in which `CLAUDE.md` states the rules.
 
 ## Pick the agent by the work, and spend Claude tokens last
 
-Owner directive, 2026-08-11, refined 2026-08-16, 2026-10-21, and 2026-10-28.
+Owner directive, 2026-08-11, refined 2026-08-16, 2026-10-21, 2026-10-28, and
+2026-10-29.
 
 **The lanes (2026-10-28).** The Anthropic weekly limit runs out long before
 the owner's Google AI Ultra quota, so the work is split by what it needs, and
@@ -29,36 +30,26 @@ work that Google's quota can do goes there first.
 | Subagent with bounded work inside its own worktree, verified by a command it runs | Sonnet | Cheaper for work whose result a command checks; never writes outside its worktree |
 | Reads or polls with credentials (CI, deploys, `gh`/`gcloud` state); creates Todoist tasks | Haiku | Cheap; never changes state |
 | High-risk reviews (security, prod data, sandbox, privacy); genuinely hard reasoning | Fable | About 2.5 times Opus per token at API prices, so only where it pays |
-| Credential-free implementation that fits a roughly 30-minute cloud run | Google Jules through its MCP server (`/jules-task`), model chosen in the Jules account (Flash since 2026-10-28) | 300 tasks a day on Ultra, each counted once whatever it consumes; Claude spends tokens only on the prompt and the review |
 | Larger steps and long refactors, and the main driver once Claude tokens run low late in the week | Gemini, in the owner's interactive agy session, through a `gemini`-labelled issue (`/gemini-task`) | The owner decides what runs without asking; Gemini pushes a `gemini/*` branch and opens a draft PR; Claude reviews it, marks it ready, and follows it through |
 | Check of every code PR Claude opens, before it opens; not for diffs only of docs, instruction files, changelog fragments, or `plots/`, under about 20 lines, or Dependabot (owner, 2026-10-29) | Gemini 3.8 Flash through Vertex AI in project `anyplot`, location `global`, on Flex PayGo (`/zweitmeinung`) | Copilot gets one round per PR, so its findings should already be fixed; half price on Flex, $0.07–0.28 per review |
 | Second opinion, only when the owner asks for one | Fable and Gemini 4 Argon side by side, Argon on the same Vertex route with thinking high | Stronger across files; $0.57–1.16 per Argon run. Both Gemini lanes are paid per token and covered by the $100 monthly Google Cloud credit that comes with Google AI Ultra; Gemini reads tracked repository files, prefetched data, and the public API through read-only tools, with no shell and no credentials |
 
 The pipeline's model choices are separate. Sonnet's lane is narrow on purpose:
 it never runs `gh` writes, `git push`, or `gcloud`, and a task whose result no
-command can check goes to Opus. Sonnet and Jules both take bounded,
-command-verified work. Jules wins whenever the work can start from a pushed
-branch; Sonnet keeps the work that needs unpushed local state or a local
-service (browser, Docker renderer, throwaway Postgres), or that takes under
-about ten minutes, where a 15- to 30-minute cloud run would stall the session.
+command can check goes to Opus.
 
-**Why Jules is allowed when agy is not (2026-10-28).** Jules has an official
-REST API (`jules.googleapis.com`) authenticated by an API key from the Jules
-settings page, which Google documents for embedding Jules in other tools, and
-the MCP server comes from Google Labs (`@google/jules-mcp`). Nothing touches
-the owner's Google login. Claude never runs the `jules` command-line tool,
-which signs in with that login, for the same reason it never runs `agy`.
-
-**Jules's merge rule (owner, 2026-10-28).** With up to 300 Jules PRs a day the
-owner cannot read each one. So Claude merges the sub-PRs Jules opens into a
-`feature/*` branch the session leads, after reading the diff, and the owner
-reviews once, when that branch goes to `main`. Since 2026-10-29 `ci-lint` and
-`ci-tests` also run on pull requests into `feature/**`, so each sub-PR is
-linted and tested before Claude merges it; image builds, migrations, CodeQL,
-and the changelog check stay on PRs into `main`. Jules never opens a PR into
-`main`, not even for a single task (owner, 2026-10-29), so the final PR into
-`main` is always one Claude opens. Copilot's ruleset covers only
-PRs into `main`, so the sub-PRs cost no Copilot round.
+**Google Jules, 2026-10-28 to 2026-10-29 (retired).** For two days Google
+Jules took credential-free tasks of about 30 minutes through its official MCP
+server: 300 tasks a day on Ultra, each counted once whatever it consumed, PRs
+only into a `feature/*` branch, which Claude merged. The tasks paid off only
+when a command could verify them. Claude's share was the prompt, every watch
+event (each one a Claude turn), and the review, and on 2026-10-29 only three of
+nine page-split variants kept their page unchanged. Flash beat Gemini 3 Pro on
+the same prompts, Pro opening an empty commit and committing helper scripts.
+The same day Google announced that Jules takes no new sessions after
+2026-11-11 and shuts down on 2026-12-31, and the owner removed the lane. Two
+things outlast it: the CI split below, and the checks that prove a refactor
+left behaviour unchanged, now in `/gemini-task`.
 
 **Jules PRs run CI without secrets or an OIDC token (2026-10-29).** The Fable second opinion
 on the lane found that `ci-tests.yml` logged in to GCP, started the Cloud SQL
@@ -79,13 +70,15 @@ moves the permission, not just the steps:
   Jules. The Codecov token is withheld from both untrusted authors too.
 - `ci-image.yml`'s `renderer-image`, the only other job with `id-token`, never
   runs for a Jules PR, and its Artifact Registry login skips Dependabot PRs.
-- Jules opens PRs only into `feature/*`, which `ci-image.yml` does not cover.
-  The renderer guard protects against the one that lands on `main` by mistake.
+- Jules opened PRs only into `feature/*`, which `ci-image.yml` does not cover.
+  The renderer guard protected against one landing on `main` by mistake.
 
 Every condition uses the PR author, not `github.actor`: on Jules branches most
 runs showed the repository owner as the actor, and a re-run can change who
-triggered it. A Jules change gets its e2e run on the PR into `main`, after the
-diff was read.
+triggered it. A Jules change got its e2e run on the PR into `main`, after the
+diff was read. The Jules conditions stay in the workflows until Jules stops
+taking sessions on 2026-11-11, because closing a Jules PR wakes its session,
+which can push again.
 
 **No CI on pushes to `feature/**` (2026-10-29).** The PR-author conditions had
 a gap the first feature-branch run exposed within the hour. Jules names its
@@ -98,15 +91,6 @@ Claude cancelled it; only code Jules had not touched ran with it. Since then
 `feature/**` is gone from every push trigger, so a feature branch and Jules's
 branches under it get CI only through pull requests, and `Run E2E Tests` and
 `renderer-image` also refuse any ref under refs/heads/feature at job level.
-
-**Gemini 3 Pro against Flash in Jules (2026-10-28).** The same two prompts
-(#9636, a three-file dedup; #9629, a 29-file migration) ran on both. Flash
-opened correct PRs in 23 and 17 minutes. Pro opened an empty commit for the
-first, failed after 27 minutes on the second, and spent 74 minutes on a
-follow-up in which it committed four helper scripts and rewrote a meta
-description nobody had asked about. Two tasks are thin evidence, so the choice
-is provisional: Flash is the account setting until a newer Pro model beats it
-on the same prompts.
 
 **Why not headless Gemini implementation.** Measured on 2026-10-21:
 
