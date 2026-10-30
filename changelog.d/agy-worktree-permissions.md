@@ -9,3 +9,4 @@
   agy login and settings closed, and leaves only `worktrees/` open, with
   `regex:` rules for `cd` and `git -C` into it that refuse `..`. The three
   push deny rules also match when agy compares a whole command against them.
+  (#12467)
