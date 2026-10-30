@@ -544,6 +544,18 @@ class TestSnapshot:
         assert sent["locale"] == "de-CH"
         assert sent["snapshot"]["code"] == "import numpy as np\nx = 1\n"
 
+    def test_create_session_forwards_the_fanout_source_only(self, client, upstream, db_with_spec) -> None:
+        """The admin fan-out's sessions are marked `fanout` for the usage telemetry; no other value passes."""
+        upstream.handler = lambda request: httpx.Response(200, json={"session_id": "s1", "eligibility": "clean"})
+        body = {"spec_id": "scatter-basic", "library": "matplotlib", "locale": "en"}
+        response = client.post("/debug/agent/sessions", json={**body, "source": "fanout"}, headers=CLIENT_HEADERS)
+        assert response.status_code == 200
+        assert upstream.last_json["source"] == "fanout"
+        for source in ("live", "harness", "Fanout"):
+            refused = client.post("/debug/agent/sessions", json={**body, "source": source}, headers=CLIENT_HEADERS)
+            assert refused.status_code == 422, source
+        assert len(upstream.requests) == 1
+
     def test_create_session_404_without_snapshot(self, client, upstream, db_with_spec) -> None:
         db_with_spec.get_by_id_with_code.return_value = None
         response = client.post(

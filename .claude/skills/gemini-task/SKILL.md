@@ -88,6 +88,18 @@ covers the whole task.
   and a sample in its test, because an autouse fixture in
   `tests/unit/agents/data/conftest.py` fails every test that emits an unknown
   warning. A "change only" list without them contradicts the gates.
+- For tests, Constraints name the files where the behavior lives and allow
+  test files next to them, and Acceptance carries a mutation table: per
+  behavior, one deliberate break in the real code (file and change) that must
+  turn a test red, plus one harmless refactor that must stay green. Gemini
+  runs the table on a clean tree after committing the step (section 2, step
+  6), so `git restore <file>` drops only the break: it applies each row, runs
+  the tests, restores, and reports the result per row. Green gates do not show what a test would
+  catch: on 2026-10-30 the section-tests briefs allowed new files only under
+  `app/src/sections/`, while the state those sections show lives in
+  `app/src/pages/*.tsx`. Gemini copied the page logic into test harnesses,
+  every gate passed, and breaks in the real pages went unnoticed until the
+  review applied them.
 - Write each Acceptance check as one plain command (`yarn test`, a `grep` that
   must print nothing, `wc -l <file>` with the limit in words), never a chain
   with `( … )`, `$( … )`, or `|| true`: agy asks the owner for every chain.
@@ -136,8 +148,8 @@ well, and the repository rules that matter most here.
 
 ## Acceptance
 The exact commands that must pass, the convention checks that must find
-nothing, the cases where the existing rules must still win, and the behavior to
-check by hand, if any.
+nothing, the cases where the existing rules must still win, for tests the
+mutation table, and the behavior to check by hand, if any.
 
 ## Decide yourself / report back
 The routine choices Gemini makes and documents, and the questions it returns
@@ -261,7 +273,7 @@ This section is for the Gemini agent in the owner's agy session.
      to take.
 
    Reading GitHub is fine. Your only writes are your own branch and your own
-   draft PR (step 7); never create, edit, comment on, label, or close anything
+   draft PR (step 8); never create, edit, comment on, label, or close anything
    else.
 
    **Scale out when there is work for several agents (owner, 2026-10-30).**
@@ -301,9 +313,20 @@ This section is for the Gemini agent in the owner's agy session.
      gates and test commands on the merged result; its path checks (which
      files may change) hold per package, so run those on its package branch
      (`git diff --name-only origin/main...origin/gemini/<slug>-<k>`). Add one
-     changelog fragment for the task, push, and open one draft PR (step 7)
-     whose `## Plan` lists each package with its merge commit. A package that
-     failed stays out; name it under open steps.
+     changelog fragment for the task, push, have the whole task reviewed
+     (step 7), and open one draft PR (step 8) whose `## Plan` lists each
+     package with its merge commit. A package that failed stays out; name it
+     under open steps.
+   - **A review round** is an owner's comment on the draft PR that lists
+     packages the way briefs do (section 3, step 4). Work it as above, with
+     these differences: round `<n>`'s packages branch from
+     `origin/gemini/<slug>` as `gemini/<slug>-r<n>-<k>` and merge back into
+     `gemini/<slug>` the same way; path checks diff against
+     `origin/gemini/<slug>` instead of `origin/main`; and the fragment and the
+     draft PR exist already, so update the fragment only if the round changes
+     what it says. After the push, have the round reviewed (step 7), then
+     comment on the PR with each package's merge commit, the result of every
+     mutation-table row, and the self-review's findings.
    - Do not use `/teamwork` for this repository: it builds in its own folder
      (`~/teamwork_projects/<project>`) without branches or PRs.
 2. **Work in the dedicated clone on your own branch.** That clone is
@@ -380,7 +403,34 @@ This section is for the Gemini agent in the owner's agy session.
    Co-Authored-By: Antigravity (<your current model name>) <noreply@google.com>
    ```
 
-7. **Hand over** when you finish or stop, whether on a blocker or at the end of
+7. **Have the finished work reviewed before you hand it over** (owner,
+   2026-10-30: code quality comes before saving tokens). This holds for every
+   task, a single brief as much as one in packages. When every step is done
+   (for packages: after the integration in step 1) and the gates pass, push
+   the branch and start one fresh subagent as the reviewer, in its own
+   worktree (the `branch` mode) on a detached checkout of
+   `origin/gemini/<id>`. Its prompt names only:
+   - the Constraints and Acceptance sections of each brief, to `cat` itself,
+     or of the issue;
+   - the diff: `git diff origin/main...origin/gemini/<id>`, or for a review
+     round only the round's changes,
+     `git diff <tip before the round>...origin/gemini/<id>`;
+   - its job: read the whole diff for defects (bugs, missed edge cases,
+     changes outside the Constraints, broken conventions, tests that
+     would stay green against a broken implementation); run the mutation
+     table, if Acceptance has one, and add two or three breaks of its own in
+     the code the change claims to cover; report each finding with
+     `path:line`, severity, and a concrete fix; commit and push nothing.
+
+   Leave out your plan and your notes, so the reviewer judges the code and
+   not your intent. Fix the findings that hold up, in commits of their own,
+   run the gates again, and push. The PR body lists every finding under
+   `## Self-review`, fixed with its commit or declined with the reason. A
+   hand-over on a blocker skips this step. The self-review does not replace
+   Claude's review (section 3, step 3): a reviewer of the same model shares
+   the author's blind spots, so Claude's stays the independent one.
+
+8. **Hand over** when you finish or stop, whether on a blocker or at the end of
    the session. Push your branch and open a draft PR, or update the one you
    opened before. Write the body into a temp file first, in the repository's
    PR format, so Claude can ship it without rewriting it:
@@ -404,6 +454,11 @@ This section is for the Gemini agent in the owner's agy session.
 
    ## Decisions
    - The choices the task left to you, and what you chose.
+
+   ## Self-review
+   - Each finding of the review subagent (step 7): fixed in <commit>, or
+     declined and why. On a blocker hand-over: "Not run: hand-over on a
+     blocker."
 
    ## Open steps and questions
    - The steps still open and your questions, or "None".
@@ -475,7 +530,14 @@ This section is for the Gemini agent in the owner's agy session.
    package that drifted stands out.
    - Add Fable for high-risk diffs: security, production data, sandboxing,
      privacy.
-   - Gemini never reviews its own work.
+   - Gemini's self-review (section 2, step 7) does not replace this one, and
+     the subagent never sees it. Afterwards, judge each finding the
+     self-review declined in the PR body yourself.
+   - **New tests need their mutation table run** by the subagent: apply each
+     row to the real code, check that a test turns red, and revert; add a
+     break or two of its own in the logic the tests claim to cover. On
+     2026-10-30 this found copied page logic in two of three packages that had
+     passed every gate.
    - **A refactor that must keep behaviour identical needs proof**, and green CI
      is not proof: on 2026-10-29 a Jules split of DebugPage passed CI and a
      browser comparison and still changed visible text. Run the checks yourself,
@@ -512,12 +574,19 @@ This section is for the Gemini agent in the owner's agy session.
 
 4. **Fix or send back.** Fix small defects yourself in the worktree and push
    them to the branch; Gemini pulls them before it continues. Larger ones go
-   back as a PR comment (`gh pr comment`), and the owner tells Gemini to
-   continue. Bring in a newer `origin/main` by merging it into the branch, never
-   by rebasing a pushed branch.
+   back as a review round: one PR comment (`gh pr comment --body-file`) that
+   reads like a set of briefs, with one section per package naming its files,
+   the fixes, its mutation table, its path check, and whether it is
+   `independent` or `coupled`. The owner starts Gemini with
+   `/gemini-task <slug>` and tells it to work the comment; Gemini runs the
+   packages from the task branch and comments with the results (section 2,
+   step 1). Review the round as in step 3, per merge commit. Keep the PR a
+   draft until the last round is in, because marking it ready starts its one
+   Copilot review. Bring in a newer `origin/main` by merging it into the
+   branch, never by rebasing a pushed branch.
 5. **Ship.** Run the open-pr gates, add the PR number to the changelog
    fragment, and add one Summary bullet to the PR body, which Gemini wrote in
-   the repository's format (section 2, step 7): the change was implemented by
+   the repository's format (section 2, step 8): the change was implemented by
    Gemini 4 Argon in the owner's interactive agy session and reviewed by
    Claude, with the defects the review found and the commits that fixed them.
    This is provenance for the reviewer, not a "Generated with" footer. Then
@@ -529,11 +598,17 @@ This section is for the Gemini agent in the owner's agy session.
    Delete the brief (`rm -f ~/projects/anyplot-briefs/<slug>.md`, or for a
    task in packages
    `find ~/projects/anyplot-briefs -maxdepth 1 -regex '.*/<slug>-[0-9]+\.md' -delete`);
-   the merged PR keeps its copy. Delete
-   the package branches the merge left behind:
-   `git push origin --delete gemini/<slug>-1 gemini/<slug>-2 …`. The branch in
-   the owner's clone
-   (`~/projects/anyplot-agy`) is his to delete.
+   the merged PR keeps its copy. The package branches the merge left behind,
+   review rounds' `gemini/<slug>-r<n>-<k>` included, go only with the owner's
+   OK, because only the PR's own worktree and local branch go without asking
+   (`CLAUDE.md`). Run `git fetch --prune origin` first, so no stale ref hides
+   a newer commit, then check that each is part of the merged head
+   (`git merge-base --is-ancestor origin/<branch> <merged head>`) and ask
+   with the branch names in the question:
+   `git push origin --delete gemini/<slug>-1 gemini/<slug>-2 …`. On
+   2026-10-30 a general OK to the cleanup plan did not get past the permission
+   classifier; if it refuses, give the owner the command to run with `!`. The
+   branch in the owner's clone (`~/projects/anyplot-agy`) is his to delete.
 7. **Record the task in the ledger.**
 
 ## Ledger

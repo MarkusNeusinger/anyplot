@@ -110,6 +110,12 @@ describe('LegalPage', () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/there is no session database/)).toBeInTheDocument();
     expect(screen.getByText(/pseudonymous, not\s+anonymous/)).toBeInTheDocument();
+    // The language is about the user: named, and only as a code with rare ones folded into "other".
+    expect(
+      screen.getByText(
+        /language as a code \(one of a dozen common languages, any\s+other only as "other"\)/
+      )
+    ).toBeInTheDocument();
     expect(screen.getByText(/up to 180 days/)).toBeInTheDocument();
     expect(screen.getByText(/keyed hash \(HMAC\)/)).toBeInTheDocument();
     // Unticking the box drops data.csv only; the profile sample stays.

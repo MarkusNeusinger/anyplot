@@ -79,6 +79,14 @@ def test_the_settings_models_are_priced() -> None:
         assert fields[name].default in price_rows(), name
 
 
+def test_the_score_view_leaves_out_active_sessions() -> None:
+    """Review of #12477: the view's contract says a version shows up once its session ended; its own join says so."""
+    text = (VIEWS / "06_score_outcomes.sql").read_text()
+    body = text.split("CREATE OR REPLACE VIEW", 1)[1]
+    assert body.rstrip().endswith("WHERE sessions.state != 'active';")
+    assert "LEFT JOIN `anyplot.agent_telemetry.sessions`" not in body
+
+
 def test_the_views_name_one_project_and_dataset() -> None:
     """The views are created as written (`docs/reference/agent-telemetry.md`): one project, two datasets."""
     names = set()

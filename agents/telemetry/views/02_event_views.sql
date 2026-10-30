@@ -1,5 +1,11 @@
 -- Typed views of the four telemetry events, one column per field of `agents/anyplot/telemetry.py`.
 -- Run after 01_events.sql. Each statement is its own view; `bq query` runs the script as one job.
+--
+-- A field added to a line later (schema 1 grows by optional fields only) reads NULL on the lines written before it:
+-- unknown, not "none" or false. Only a field whose absence has one meaning gets a default here (`drift_restored`:
+-- no restore). The fields of 2026-10-30 (`plot_language`, `stages`, `round_scores`, `version`, `shipped_score`,
+-- `readiness`, `loader_notes`, `edit_failures`, `validator_rules`, `adaptation_rules`, the pipeline configuration and
+-- prompt hashes, and `thoughts` in `steps`) are NULL before that day.
 
 CREATE OR REPLACE VIEW `anyplot.agent_telemetry.data_inputs` AS
 SELECT
@@ -48,6 +54,7 @@ SELECT
   JSON_VALUE(payload.error) AS error,
   LAX_BOOL(payload.reply_reasked) AS reply_reasked,
   JSON_VALUE(payload.language_source) AS language_source,
+  JSON_VALUE(payload.plot_language) AS plot_language,
   LAX_INT64(payload.llm_calls) AS llm_calls,
   payload.steps AS steps,
   LAX_INT64(payload.latency_ms) AS latency_ms
@@ -69,12 +76,36 @@ SELECT
   JSON_VALUE(payload.score_round2) AS score_round2,
   LAX_INT64(payload.shipped_attempt) AS shipped_attempt,
   LAX_INT64(payload.shipped_round) AS shipped_round,
+  -- The session's number of the shipped version, the one `outcomes.version` names (`score_outcomes` joins them).
+  LAX_INT64(payload.version) AS version,
+  JSON_VALUE(payload.shipped_score) AS shipped_score,
   JSON_VALUE_ARRAY(payload.forced_repair) AS forced_repair,
   JSON_VALUE_ARRAY(payload.gates_failed) AS gates_failed,
   JSON_VALUE_ARRAY(payload.reviewer_defects) AS reviewer_defects,
   JSON_VALUE_ARRAY(payload.residual_defects) AS residual_defects,
   JSON_VALUE_ARRAY(payload.sandbox_failures) AS sandbox_failures,
   IFNULL(LAX_BOOL(payload.drift_restored), FALSE) AS drift_restored,
+  -- The stage that ended each attempt, in order; `adapter_truncations` counts the answers cut off at the output limit.
+  JSON_VALUE_ARRAY(payload.stages) AS stages,
+  IF(
+    payload.stages IS NULL,
+    NULL,
+    (SELECT COUNTIF(stage = 'adapter_truncated') FROM UNNEST(JSON_VALUE_ARRAY(payload.stages)) AS stage)
+  ) AS adapter_truncations,
+  -- Position n is round n; `unscored` for a round without a review score.
+  JSON_VALUE_ARRAY(payload.round_scores) AS round_scores,
+  JSON_VALUE(payload.plot_language) AS plot_language,
+  JSON_VALUE(payload.readiness) AS readiness,
+  JSON_VALUE_ARRAY(payload.loader_notes) AS loader_notes,
+  JSON_VALUE_ARRAY(payload.edit_failures) AS edit_failures,
+  JSON_VALUE_ARRAY(payload.validator_rules) AS validator_rules,
+  JSON_VALUE_ARRAY(payload.adaptation_rules) AS adaptation_rules,
+  JSON_VALUE(payload.reviewer_mode) AS reviewer_mode,
+  LAX_BOOL(payload.ship_best) AS ship_best,
+  LAX_BOOL(payload.self_review) AS self_review,
+  LAX_BOOL(payload.repair_self_review) AS repair_self_review,
+  JSON_VALUE(payload.adapter_prompt) AS adapter_prompt,
+  JSON_VALUE(payload.reviewer_prompt) AS reviewer_prompt,
   LAX_INT64(payload.adapt_ms) AS adapt_ms,
   LAX_INT64(payload.check_ms) AS check_ms,
   LAX_INT64(payload.render_ms) AS render_ms,

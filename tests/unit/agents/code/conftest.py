@@ -16,6 +16,14 @@ R_CATALOGUE_FILES = sorted(REPO_ROOT.glob("plots/*/implementations/r/ggplot2.R")
 """The ggplot2 catalogue files, which the R profile (`agents/anyplot/code/profiles/r/`) reads."""
 JULIA_CATALOGUE_FILES = sorted(REPO_ROOT.glob("plots/*/implementations/julia/makie.jl"))
 """The Makie catalogue files, which the Julia profile (`agents/anyplot/code/profiles/julia/`) reads."""
+JS_CATALOGUE_FILES = sorted(REPO_ROOT.glob("plots/*/implementations/javascript/*.*"))
+"""The Chart.js, D3, ECharts, Highcharts (`.js`) and MUI X (`.tsx`) catalogue files, which the JavaScript profile
+(`agents/anyplot/code/profiles/javascript/`) reads."""
+
+
+def js_library(path: Path) -> str:
+    """The library of a JavaScript catalogue file: its stem (`chartjs`, `muix`)."""
+    return path.stem
 
 
 def source(text: str) -> str:
@@ -365,4 +373,122 @@ JULIA_PROMPT_IDIOMS = source(r"""
 
     # Save
     save("plot-$(THEME).png", fig; px_per_unit = 2)
+""")
+
+# A Chart.js catalogue file in miniature: header, a square directive, token lines (one per global, a theme test),
+# column constants, the Data and Plot markers, synthetic data, a `#` in a string and the title.
+JS_CATALOGUE = source("""
+    // anyplot.ai
+    // scatter-demo: Demo Scatter
+    // Library: chartjs 4.4.7 | JavaScript 22.23.0
+    // Quality: 90/100 | Updated: 2026-10-30
+
+    //# anyplot-orientation: square
+
+    const t = window.ANYPLOT_TOKENS;
+    const { width, height } = window.ANYPLOT_SIZE;
+    const isDark = window.ANYPLOT_THEME === "dark";
+    const MUTED = isDark ? "#A8A79F" : "#6B6A63";
+
+    // Columns: set these to your data's column names
+    const SPEND = "Spend (k USD)";  // role: x
+    const REVENUE = "Revenue (k USD)";  // role: y
+
+    // Data: replace this block with your own records, one object per row
+    const data = Array.from({ length: 50 }, (_, i) => ({ [SPEND]: 5 + i * 3, [REVENUE]: 300 + Math.random() * 40 }));
+
+    // Plot: reads only data and the constants above
+    const canvas = document.createElement("canvas");
+    document.getElementById("container").appendChild(canvas);
+    new Chart(canvas, {
+      type: "scatter",
+      data: { datasets: [{ data: data.map((d) => ({ x: d[SPEND], y: d[REVENUE] })), backgroundColor: t.palette[0] }] },
+      options: {
+        animation: false,
+        plugins: { title: { display: true, text: "scatter-demo · javascript · chartjs · anyplot.ai", color: t.ink } },
+        scales: {
+          x: { title: { display: true, text: SPEND }, grid: { color: "#00000022" } },
+          y: { title: { display: true, text: REVENUE }, ticks: { color: MUTED } },
+        },
+      },
+    });
+""")
+
+# The same file after normalisation: header and title gone, the directive on the first line.
+JS_CATALOGUE_NORMALISED = source("""
+    //# anyplot-orientation: square
+
+    const t = window.ANYPLOT_TOKENS;
+    const { width, height } = window.ANYPLOT_SIZE;
+    const isDark = window.ANYPLOT_THEME === "dark";
+    const MUTED = isDark ? "#A8A79F" : "#6B6A63";
+
+    // Columns: set these to your data's column names
+    const SPEND = "Spend (k USD)";  // role: x
+    const REVENUE = "Revenue (k USD)";  // role: y
+
+    // Data: replace this block with your own records, one object per row
+    const data = Array.from({ length: 50 }, (_, i) => ({ [SPEND]: 5 + i * 3, [REVENUE]: 300 + Math.random() * 40 }));
+
+    // Plot: reads only data and the constants above
+    const canvas = document.createElement("canvas");
+    document.getElementById("container").appendChild(canvas);
+    new Chart(canvas, {
+      type: "scatter",
+      data: { datasets: [{ data: data.map((d) => ({ x: d[SPEND], y: d[REVENUE] })), backgroundColor: t.palette[0] }] },
+      options: {
+        animation: false,
+        plugins: { title: { display: true, text: "", color: t.ink } },
+        scales: {
+          x: { title: { display: true, text: SPEND }, grid: { color: "#00000022" } },
+          y: { title: { display: true, text: REVENUE }, ticks: { color: MUTED } },
+        },
+      },
+    });
+""")
+
+# The miniature adapted: the sample replaced by the placeholder, the columns renamed.
+JS_WORKING = (
+    JS_CATALOGUE_NORMALISED.replace(
+        "const data = Array.from({ length: 50 }, (_, i) => ({ [SPEND]: 5 + i * 3, [REVENUE]: 300 + Math.random() * 40 }));",
+        "const data = loadUserData();",
+    )
+    .replace('"Spend (k USD)"', '"Ausgaben (k €)"')
+    .replace('text: "", color', 'text: "Umsatz nach Ausgaben", color')
+)
+
+# A MUI X module in miniature, after normalisation: imports, token lines, constants, markers, and the component.
+MUIX_WORKING = source("""
+    //# anyplot-orientation: landscape
+    import { ScatterChart } from "@mui/x-charts/ScatterChart";
+    import Typography from "@mui/material/Typography";
+
+    const t = window.ANYPLOT_TOKENS;
+    const { width, height } = window.ANYPLOT_SIZE;
+
+    // Columns: set these to your data's column names
+    const X: string = "Ausgaben (k €)";  // role: x
+    const Y = "Umsatz";  // role: y
+
+    // Data: replace this block with your own records, one object per row
+    const data = loadUserData();
+
+    // Plot: reads only data and the constants above
+    const points = data.map((d: Record<string, number>, id: number) => ({ id, x: d[X], y: d[Y] }));
+
+    export default function Chart() {
+      return (
+        <div>
+          <Typography sx={{ color: t.ink }}>Umsatz nach Ausgaben</Typography>
+          <ScatterChart
+            width={width}
+            height={height - 40}
+            series={[{ data: points, color: t.palette[0] }]}
+            xAxis={[{ label: X }]}
+            yAxis={[{ label: Y }]}
+            skipAnimation
+          />
+        </div>
+      );
+    }
 """)

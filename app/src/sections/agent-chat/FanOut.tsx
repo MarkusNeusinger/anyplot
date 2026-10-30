@@ -74,6 +74,7 @@ function FanOutRun({
     library,
     locale,
     token,
+    fanout: true,
   });
   const [dataFailure, setDataFailure] = useState<Failure | null>(null);
   const replayed = useRef(false);

@@ -119,8 +119,8 @@ import secrets
 import time
 from collections import Counter
 from collections.abc import AsyncGenerator, Callable, Sequence
-from dataclasses import dataclass, field
-from typing import Any, Literal
+from dataclasses import dataclass, field, replace
+from typing import Any, Literal, get_args
 
 from google.adk import Context, Event
 from google.adk.agents.llm.task._finish_task_tool import FINISH_TASK_SUCCESS_RESULT, FINISH_TASK_TOOL_NAME
@@ -141,7 +141,7 @@ from .dataset_context import dataset_context, file_name_for_models
 from .grounding import EXPECT_LINE_ID, UNVERIFIED_LINE, drawn_texts, expected_misses, plot_texts, reviewed_misses
 from .language import DEFAULT_LANGUAGE, same_language
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
-from .policy import DATA_PREAMBLE, fence
+from .policy import DATA_PREAMBLE, adapter_instruction, fence, prompt_hash
 from .render.contract import RendererUnavailable, RenderJob, RuntimeAdapter, Theme
 from .render.gates import data_rows, evaluate
 from .render.runtimes import runtime_for
@@ -189,7 +189,7 @@ from .session_state import (
 )
 from .settings import AgentSettings, get_settings
 from .sub_agents.adapter import ADAPTERS, adapter_name
-from .sub_agents.reviewer import REVIEWER_NAME, use_reviewer_mode
+from .sub_agents.reviewer import REVIEWER_MODES, REVIEWER_NAME, use_reviewer_mode
 
 
 logger = logging.getLogger(__name__)
@@ -484,6 +484,15 @@ class Run:
     """What the runtime's loader changes when it reads the run's `data.csv` (`RuntimeAdapter.loader_notes`): the first
     `changes` of every shipped render, so a value the plot shows rounded is never unannounced; never a residual note,
     so the status stays as the render earns it (owner decision of 2026-10-29)."""
+    loader_codes: list[str] = field(default_factory=list)
+    """The kinds of cells behind `loader_notes` (`loader_codes`), for the usage telemetry: never the notes, which name
+    columns and counts."""
+    edit_failures: set[str] = field(default_factory=set)
+    """The `edits.FAILURE_KINDS` of every plan whose edits failed and ended its attempt."""
+    validator_rules: set[str] = field(default_factory=set)
+    """The rule ids that rejected a plan's code in any check of the run (`CheckResult.blocking_rules`)."""
+    adaptation_rules: set[str] = field(default_factory=set)
+    """The soft ADAPTATION rule ids of any check of the run (`CheckResult.adaptation_rules`)."""
 
     def timed(self, stage: str, seconds: float) -> None:
         self.stage_s[stage] = self.stage_s.get(stage, 0.0) + seconds
@@ -986,6 +995,27 @@ def column_kinds_of(dataset: StoredDataset) -> ColumnKinds | None:
         return None
 
 
+LOADER_CODES: tuple[str, ...] = ("inexact", "submillisecond", "offset")
+"""The `ColumnKinds` fields of the cells a loader may change (`telemetry.LoaderNote`), in the order the line lists them."""
+
+
+def loader_codes(runtime: RuntimeAdapter, kinds: ColumnKinds | None) -> list[str]:
+    """The kinds of cells the runtime's loader changes when it reads this data, for the usage telemetry.
+
+    The runtime is asked, not a table: each kind the data holds goes alone to `RuntimeAdapter.loader_notes`, and the
+    kind counts when the runtime announces a note for it (R: `inexact`, `offset`; Julia: `submillisecond`, `offset`;
+    Python: none). Only the code leaves this function, never the note, which names columns and counts.
+    """
+    if kinds is None:
+        return []
+    empty: dict[str, dict[str, int]] = {code: {} for code in LOADER_CODES}
+    return [
+        code
+        for code in LOADER_CODES
+        if getattr(kinds, code) and runtime.loader_notes(replace(kinds, **{**empty, code: getattr(kinds, code)}))
+    ]
+
+
 def _check(
     working: str,
     *,
@@ -1385,6 +1415,8 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
             base=node_input.base,
             status="not_ready",
             reason=not_ready or "no_dataset",
+            plot_language=telemetry.plot_language(view.language) if view is not None else None,
+            readiness=telemetry.readiness(view.readiness) if view is not None else None,
         )
         yield _result_event(PlotResult.not_ready(not_ready or "no_dataset", request_kept=kept))
         return
@@ -1489,10 +1521,15 @@ def _telemetry_run(
     """The usage telemetry's `pipeline_run` line (`telemetry.py`): ids, buckets, counts and times, never text.
 
     One line per run: `run_index` is the session's run number for this invocation, so a node ADK re-runs
-    writes the same idempotency key and the BigQuery base view keeps one row.
+    writes the same idempotency key and the BigQuery base view keeps one row. The stages, rule ids and failure kinds
+    are closed by `telemetry.closed`, `closed_list` and `closed_set` (`other` for an id the closed set does not know
+    yet), so a new stage or rule never drops the line.
     """
     shipped = shipped_candidate(run) if result.status in ("ok", "needs_attention") else None
     index = telemetry.run_index(session_id, invocation_id)
+    settings = get_settings()
+    rule_ids = get_args(telemetry.ValidatorRule)
+    stage_ids = get_args(telemetry.PipelineStage)
     telemetry.write(
         telemetry.PipelineRun,
         ledger,
@@ -1501,7 +1538,7 @@ def _telemetry_run(
         base=run.base,
         status=result.status,
         reason=result.reason,
-        stage=run.stage,
+        stage=telemetry.closed(run.stage, stage_ids),
         attempts=run.attempts,  # every adapter call, retries and proofreads included; `rounds` is what the page shows
         rounds=len(run.rounds),
         reviews=run.reviews,
@@ -1509,12 +1546,27 @@ def _telemetry_run(
         score_round2=telemetry.score_bucket(run.round_scores.get(2)),
         shipped_attempt=shipped.attempt if shipped else None,
         shipped_round=round_number(run, shipped.attempt) if shipped else None,
+        version=telemetry.version_number(result.version),
+        shipped_score=telemetry.score_bucket(shipped.review_score) if shipped else None,
         forced_repair=sorted(run.forced_ids),
         gates_failed=sorted(run.gate_ids),
         reviewer_defects=sorted(run.review_ids),
         residual_defects=_defect_ids(result.residual_defects),
         sandbox_failures=sorted(run.sandbox_failures),
         drift_restored=run.drift_restored,
+        stages=telemetry.closed_list(run.stages, stage_ids),
+        round_scores=_round_scores(run),
+        plot_language=telemetry.plot_language(run.language),
+        readiness=telemetry.readiness(run.view.readiness),
+        loader_notes=list(run.loader_codes),
+        edit_failures=telemetry.closed_set(run.edit_failures, get_args(telemetry.EditFailure)),
+        validator_rules=telemetry.closed_set(run.validator_rules, rule_ids),
+        adaptation_rules=telemetry.closed_set(run.adaptation_rules, rule_ids),
+        reviewer_mode=settings.reviewer_mode,
+        ship_best=settings.ship_best,
+        self_review=settings.self_review,
+        repair_self_review=settings.repair_self_review,
+        **_prompt_hashes(run.view.library, settings.reviewer_mode),
         adapt_ms=telemetry.ms(run.stage_s.get("adapt", 0.0)),
         check_ms=telemetry.ms(run.stage_s.get("check", 0.0)),
         render_ms=telemetry.ms(run.stage_s.get("render", 0.0)),
@@ -1522,6 +1574,27 @@ def _telemetry_run(
         total_ms=telemetry.ms(seconds),
         steps=telemetry.step_tokens(ledger.steps, steps=("adapter", "reviewer")),
     )
+
+
+def _round_scores(run: Run) -> list[str]:
+    """The bucket of every round's latest review score, round 1 first, `unscored` for a round without one; up to the
+    last round that ended or was scored, so position `n - 1` is round `n`."""
+    last = max(len(run.rounds), max(run.round_scores, default=0))
+    return [telemetry.score_bucket(run.round_scores.get(number)) or "unscored" for number in range(1, last + 1)]
+
+
+def _prompt_hashes(library: str, reviewer_mode: str) -> dict[str, str]:
+    """The hashes of the run's adapter and reviewer instructions (`policy.prompt_hash`), as the telemetry line's
+    `adapter_prompt` and `reviewer_prompt`; none when an instruction cannot be built, since telemetry never breaks
+    a run."""
+    try:
+        return {
+            "adapter_prompt": prompt_hash(adapter_instruction(library)),
+            "reviewer_prompt": prompt_hash(REVIEWER_MODES[reviewer_mode]["instruction"]()),
+        }
+    except Exception as exc:
+        logger.warning("telemetry prompt hashes skipped: %s", type(exc).__name__)
+        return {}
 
 
 def close_scope(scope: str) -> Event:
@@ -1566,6 +1639,7 @@ async def _attempts(
     columns = [column.name for column in dataset.profile.columns]
     kinds = column_kinds_of(dataset)
     run.loader_notes = runtime.loader_notes(kinds) if kinds is not None else []
+    run.loader_codes = loader_codes(runtime, kinds)
     feedback: list[str] = []
     previous_plan: AdaptPlan | None = None
     rows = data_rows(dataset.csv)
@@ -1669,6 +1743,7 @@ async def _attempts(
         code = applied.code if applied.code is not None else restored
         if code is None:
             run.timed("check", time.monotonic() - started)
+            run.edit_failures.update(applied.kinds)
             attribution(
                 "pipeline_check",
                 ledger,
@@ -1693,6 +1768,8 @@ async def _attempts(
             runtime=runtime,
         )
         run.timed("check", time.monotonic() - started)
+        run.validator_rules.update(check.blocking_rules)
+        run.adaptation_rules.update(check.adaptation_rules)
         adaptation_lines = check.defects
         # A restored plan is logged once, by the drift kinds it had: `drift_restored`, or `rejected` when the
         # restored code then failed the validator.

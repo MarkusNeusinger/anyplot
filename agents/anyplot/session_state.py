@@ -47,6 +47,10 @@ SNAPSHOT = PREFIX + "snapshot"
 NORMALISED = PREFIX + "normalised"
 HINTS = PREFIX + "hints"
 READINESS = PREFIX + "readiness"
+TELEMETRY_SOURCE = PREFIX + "telemetry_source"
+"""`fanout` for a session the admin's "plot in all libraries" fan-out opened (`POST /v1/sessions` with
+`source: fanout`), absent otherwise: every usage-telemetry line of the session carries that source (`telemetry.emit`).
+Written once at the opening; a library switch keeps it."""
 DATASET_ID = PREFIX + "dataset_id"
 DATASET_HISTORY = PREFIX + "dataset_history"
 """The ids of the dataset versions before the current one, oldest first, at most
@@ -137,6 +141,9 @@ class SessionView:
     """The session language (`LANGUAGE`), validated: a value outside the pattern reads as `en`."""
     language_source: LanguageSource = "default"
     """How the session language was set (`LANGUAGE_SOURCE`): `default`, `pasted`, `detected` or `chosen`."""
+    readiness: str | None = None
+    """The readiness status of the catalogue file the session's library opened with (`READINESS`), for the usage
+    telemetry; None when the state holds none."""
 
     @property
     def data_confirmed(self) -> bool:
@@ -238,6 +245,8 @@ def read_session(state: Any) -> SessionView | None:
     language_source: LanguageSource = "default"
     if raw_source in SOURCES and language == raw_language:
         language_source = raw_source
+    raw_readiness = state.get(READINESS)
+    status = raw_readiness.get("status") if isinstance(raw_readiness, dict) else None
     return SessionView(
         spec_id=str(spec_id),
         library=str(library),
@@ -254,6 +263,7 @@ def read_session(state: Any) -> SessionView | None:
         dataset_version=max(1, int(state.get(DATASET_VERSION) or 1)),
         language=language,
         language_source=language_source,
+        readiness=status if isinstance(status, str) else None,
     )
 
 

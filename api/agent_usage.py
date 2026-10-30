@@ -5,7 +5,7 @@ Cloud Logging sink routes them into a log bucket that BigQuery reads through a l
 (`docs/reference/agent-telemetry.md`). This module runs one query and answers aggregates only:
 counts, two rates and the five most frequent specs, input formats and refusal codes, every key
 an id or a code from a closed set. Live sessions only (`source = 'live'`): the eval harnesses
-tag theirs `harness`.
+tag theirs `harness`, and the sessions the admin's "plot in all libraries" opens tag theirs `fanout`.
 
 Cost. The query reads the linked log dataset `<dataset>_logs` (`agent_telemetry_logs` for
 `AGENT_TELEMETRY_DATASET=anyplot.agent_telemetry`) directly, not the `events` view: the view

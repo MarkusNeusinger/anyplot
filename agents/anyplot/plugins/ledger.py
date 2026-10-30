@@ -68,6 +68,8 @@ class StepUsage:
     cached: int = 0
     cache_write: int = 0
     model: str | None = None
+    thoughts: int = 0
+    """The thinking tokens among `output`, a part of it (the usage telemetry's `StepTokens.thoughts`)."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,6 +147,9 @@ class RequestLedger:
     turn: int = 0
     """The session's spec, library and user turn, set once by the `/v1` route from session state, for the
     usage telemetry's envelope (`telemetry.py`); never set per call site."""
+    fanout: bool = False
+    """The session was opened by the admin's "plot in all libraries" fan-out (`session_state.TELEMETRY_SOURCE`), set
+    with the envelope: its telemetry lines carry the source `fanout` instead of `live`."""
     steps: dict[str, StepUsage] = field(default_factory=dict)
     """Calls and tokens by agent name (`book_step`), and the judges' under `judge` (`book_judge`)."""
     tools: list[str] = field(default_factory=list)
@@ -160,6 +165,7 @@ class RequestLedger:
         step.calls += 1
         step.input += usage.get("prompt", 0) + usage.get("tool_use_prompt", 0)
         step.output += usage.get("candidates", 0) + usage.get("thoughts", 0)
+        step.thoughts += usage.get("thoughts", 0)
         step.cached += cached
         step.cache_write += usage.get("cache_write", 0)
         if model:
