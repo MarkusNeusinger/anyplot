@@ -404,17 +404,19 @@ This section is for the Gemini agent in the owner's agy session.
    ```
 
 7. **Have the finished work reviewed before you hand it over** (owner,
-   2026-10-30: code quality comes before saving tokens). When every step is
-   done, for a task in packages after the integration in step 1, and the
-   gates pass, push the branch and start one fresh subagent as the reviewer,
-   in its own worktree (the `branch` mode) on a detached checkout of
+   2026-10-30: code quality comes before saving tokens). This holds for every
+   task, a single brief as much as one in packages. When every step is done
+   (for packages: after the integration in step 1) and the gates pass, push
+   the branch and start one fresh subagent as the reviewer, in its own
+   worktree (the `branch` mode) on a detached checkout of
    `origin/gemini/<id>`. Its prompt names only:
-   - the Acceptance section of each brief, to `cat` itself, or of the issue;
+   - the Constraints and Acceptance sections of each brief, to `cat` itself,
+     or of the issue;
    - the diff: `git diff origin/main...origin/gemini/<id>`, or for a review
      round only the round's changes,
      `git diff <tip before the round>...origin/gemini/<id>`;
    - its job: read the whole diff for defects (bugs, missed edge cases,
-     behavior the brief does not ask for, broken conventions, tests that
+     changes outside the Constraints, broken conventions, tests that
      would stay green against a broken implementation); run the mutation
      table, if Acceptance has one, and add two or three breaks of its own in
      the code the change claims to cover; report each finding with
@@ -455,7 +457,8 @@ This section is for the Gemini agent in the owner's agy session.
 
    ## Self-review
    - Each finding of the review subagent (step 7): fixed in <commit>, or
-     declined and why.
+     declined and why. On a blocker hand-over: "Not run: hand-over on a
+     blocker."
 
    ## Open steps and questions
    - The steps still open and your questions, or "None".
