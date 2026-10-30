@@ -232,8 +232,10 @@ class LiteralSyntax:
     """How the whitespace tier finds string literals and comments in a line (`_line_words`).
 
     `comment` opens a comment to the end of the line, `block_comment` is the opener and
-    closer of one that may span lines (JavaScript's `/* */`), and `spans_lines` names the
-    quotes whose literal may span lines when `multiline` is off (JavaScript's template).
+    closer of one that may span lines (JavaScript's `/* */`), `spans_lines` names the
+    quotes whose literal may span lines when `multiline` is off (JavaScript's template), and
+    `regex` reads a JavaScript regular expression literal (`/a"b/g`) as one verbatim word,
+    so a quote inside it opens no string.
     """
 
     quotes: str
@@ -243,6 +245,7 @@ class LiteralSyntax:
     comment: str = "#"
     block_comment: tuple[str, str] | None = None
     spans_lines: str = ""
+    regex: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -573,10 +576,21 @@ _JULIA_LITERALS = LiteralSyntax(quotes='"`', triple=True, multiline=True, raw=Fa
 """Julia's strings (`"..."` and the triple-quoted form) and commands may span lines; `'` is a character or the
 adjoint operator (`x'`), so it opens no literal."""
 _JAVASCRIPT_LITERALS = LiteralSyntax(
-    quotes="'\"`", triple=False, multiline=False, raw=False, comment="//", block_comment=("/*", "*/"), spans_lines="`"
+    quotes="'\"`",
+    triple=False,
+    multiline=False,
+    raw=False,
+    comment="//",
+    block_comment=("/*", "*/"),
+    spans_lines="`",
+    regex=True,
 )
-"""JavaScript's strings end with their line (a backslash continues one), its templates may span lines, and its
-comments are `//` and `/* */`; a `#` is text (a CSS colour inside a string, a private field `#x`)."""
+"""JavaScript's strings end with their line (a backslash continues one), its templates may span lines, its comments are
+`//` and `/* */`, and a regular expression literal is one word; a `#` is text (a CSS colour inside a string, a private
+field `#x`)."""
+_REGEX_AFTER = frozenset("(,=:[!&|?{};+-*%<>~^")
+"""The characters after which a `/` starts a regular expression literal, not a division."""
+_REGEX_KEYWORDS = ("return", "typeof", "case", "of", "in", "void", "delete", "throw", "yield", "await")
 _JAVASCRIPT_PLACEHOLDER_LINE = re.compile(
     rf"^[ \t]*const[ \t]+{javascript_regions.DATA_NAME}[ \t]*=[ \t]*{javascript_regions.PLACEHOLDER_FUNC}\(\)[ \t]*;?"
     r"[ \t]*(?://[^\r\n]*)?(?:\r\n|\r|\n|$)",
@@ -1071,7 +1085,9 @@ def _line_words(lines: list[str], literals: LiteralSyntax = _PYTHON_LITERALS) ->
     R any quoted one, which may span lines; in JavaScript a template), which marks the
     lines that start inside it. An R raw string (`r"(...)"`) ends only at its own closing
     delimiter and has no escapes. A JavaScript block comment (`/* */`) may span lines too;
-    its words collapse like code, and a quote inside it opens no literal.
+    its words collapse like code, and a quote inside it opens no literal. A JavaScript
+    regular expression literal (`/a"b/g`, where a `/` cannot divide) is one verbatim word,
+    so its quote opens no string either (review of JS-3).
     """
     words: list[str] = []
     starts_inside: list[bool] = []
@@ -1119,6 +1135,13 @@ def _line_words(lines: list[str], literals: LiteralSyntax = _PYTHON_LITERALS) ->
             if line.startswith(literals.comment, position):
                 kept.append(" ".join(line[position:].split()))
                 break
+            regex_end = (
+                _regex_end(line, position) if literals.regex and char == "/" and _regex_may_start(kept) else None
+            )
+            if regex_end is not None:
+                kept.append(line[position:regex_end])
+                position = regex_end
+                continue
             opener = _R_RAW_OPENER.match(line, position) if literals.raw and char in "rR" else None
             if opener is not None:
                 quote = _RAW_CLOSERS[opener.group(3)] + opener.group(2) + opener.group(1)
@@ -1143,6 +1166,41 @@ def _line_words(lines: list[str], literals: LiteralSyntax = _PYTHON_LITERALS) ->
             quote = None  # a one-quote literal ends with its line unless a backslash continues it
         words.append("".join(kept))
     return words, starts_inside
+
+
+def _regex_may_start(kept: list[str]) -> bool:
+    """Whether a `/` after the words kept so far starts a regular expression: at the line's start, after an operator or
+    an opening bracket, or after a keyword such as `return`; after a name, a number or `)` it divides."""
+    before = "".join(kept).rstrip()
+    if not before:
+        return True
+    if before[-1] in _REGEX_AFTER:
+        return True
+    word = before.rsplit(None, 1)[-1]
+    return word in _REGEX_KEYWORDS
+
+
+def _regex_end(line: str, start: int) -> int | None:
+    """The offset after a regular expression literal that opens at `start` (its flags included), or None when the line
+    does not close it, which a regular expression cannot span."""
+    position = start + 1
+    in_class = False
+    while position < len(line):
+        char = line[position]
+        if char == "\\":
+            position += 2
+            continue
+        if char == "[":
+            in_class = True
+        elif char == "]":
+            in_class = False
+        elif char == "/" and not in_class:
+            position += 1
+            while position < len(line) and line[position].isalpha():
+                position += 1
+            return position
+        position += 1
+    return None
 
 
 def _indent(line: str) -> str:

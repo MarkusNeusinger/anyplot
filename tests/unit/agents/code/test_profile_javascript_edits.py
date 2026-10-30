@@ -87,6 +87,20 @@ def test_a_block_comment_across_lines_opens_no_literal() -> None:
     assert applied.code is not None and "/* x */\n// Plot" in applied.code
 
 
+def test_a_quote_in_a_regular_expression_opens_no_string() -> None:
+    """Review of JS-3 (Fable): `/a"b/` read as a string from its quote kept the rest of the line verbatim, so a find
+    with other spacing after it matched nothing; a `/` after a name still divides."""
+    code = WORKING.replace(
+        "// Plot: reads only", 'const re = /a"b/g;   const half = 4 / 2;  // a  note\n// Plot: reads only'
+    )
+    applied = apply_plan(
+        code, plan(('const re = /a"b/g; const half = 4 / 2; // a note\n', "const re = /c/;\n")), library=LIBRARY
+    )
+
+    assert applied.failures == [] and applied.tolerant == ("whitespace",)
+    assert applied.code is not None and "const re = /c/;\n// Plot" in applied.code
+
+
 def test_a_template_spans_lines_in_the_whitespace_tier() -> None:
     code = WORKING.replace('text: "Umsatz nach Ausgaben"', "text: `Umsatz  nach\nAusgaben`")
     applied = apply_plan(

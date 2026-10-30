@@ -202,6 +202,55 @@ def test_the_head_alone_passes() -> None:
         # imports in a classic script
         'import fs from "fs";',
         "export const a = 1;",
+        # the review of JS-3 (Fable and Gemini 3.8 Flash): `this` that may be the window
+        "function g() { return this; }\nconst w = g();",
+        "const g = function () { return this; };\ng();",
+        "(function () { const w = this; })();",
+        "const all = [1].map(function () { return this; });",
+        "function g() { return this; }\nsetTimeout(g, 0);",
+        "function g() { return { ...this }; }\ng();",
+        "function g() { const { fetch: h } = this; }\ng();",
+        'function g() { return this["fe" + "tch"]; }\ng();',
+        "function g() { return this[name]; }\ng();",
+        "d3.select(el).call(function () { f(this); });",
+        "function g() { return this; }\nconst h = g;",
+        "function g() { return this; }\nconst bound = g.bind(null);",
+        # computed keys built from strings
+        'const k = "con" + "structor";\nconst c = [][k];',
+        'const c = []["con" + "structor"];',
+        "const c = [][`con${name}`];",
+        "const c = []['__pro' + `to__`];",
+        'const c = [][["con", "structor"].join("")];',
+        "const c = [][String.fromCharCode(99)];",
+        "const c = [][atob(name)];",
+        'const { ["con" + "structor"]: C } = f;',
+        "let k2 = 'a';\nk2 = 'con' + name;\nconst c = [][k2];",
+        'el["hr" + "ef"] = name;',
+        # URLs, writes that load or navigate
+        'el.src = "//example.org/p?" + name;',
+        'const u = "//cdn.example.org/lib.js";',
+        "el.src = name;",
+        "el.href = name;",
+        "el.location = name;",
+        'el.cookie = "a=b";',
+        "el.action = name;",
+        "const c = document.documentElement.parentNode.cookie;",
+        'document.documentElement.parentNode.cookie = "a";',
+        'el.ownerDocument.write("<p>");',
+        'x.writeln("<p>");',
+        'el.setAttribute("href", name);',
+        'el.setAttribute("src", name);',
+        'el.setAttribute("action", name);',
+        'el.setAttributeNS(null, "href", name);',
+        'd3.select(el).append("a").attr("href", name);',
+        'd3.select(el).append("image").attr("xlink:href", name);',
+        # tags handed on by a name or written as a string
+        'const tag2 = "iframe";\nd3.select("body").append(tag2);',
+        'const tag2 = "link";\nd3.select("body").append(tag2);',
+        'const tag2 = name ? "object" : "g";\nd3.select("body").append(tag2);',
+        'const s = "IFRAME";',
+        'const s = "svg:script";',
+        'const s = " embed ";',
     ],
 )
 def test_refused(body: str) -> None:
@@ -232,6 +281,12 @@ def test_refused(body: str) -> None:
         'const Bad = () => <iframe src="about:blank" />;',
         "const Bad = () => <div dangerouslySetInnerHTML={{ __html: '<b>' }} />;",
         'const Bad = () => <a href="https://example.org">x</a>;',
+        "const p = { dangerouslySetInnerHTML: { __html: 'x' } };\nconst Bad = () => <div {...p} />;",
+        "const p = { 'dangerouslySetInnerHTML': { __html: 'x' } };",
+        'import React from "react";\nconst Bad = () => React.createElement("script", null, "go()");',
+        'import { createElement } from "react";\nconst Bad = () => createElement("iframe");',
+        'import { jsx } from "react/jsx-runtime";\nconst Bad = () => jsx("object", {});',
+        'import React from "react";\nconst tag = "embed";\nconst Bad = () => React.createElement(tag);',
     ],
 )
 def test_refused_in_a_muix_module(body: str) -> None:
@@ -281,9 +336,69 @@ def test_a_banned_import_carries_a_closed_label() -> None:
         ("chartjs", "function shadow(t) { t = 1; return t; }"),
         ("muix", 'import Box from "@mui/material/Box";\nconst B = () => <Box sx={{ p: 1 }}><svg><rect /></svg></Box>;'),
         ("muix", 'import { useMemo } from "react";\nexport default function Chart() { return useMemo(() => 1, []); }'),
+        # the review of JS-3: `this` where a library sets it, as the catalogue uses it
+        ("d3", 'd3.select(el).each(function () { d3.select(this).attr("x", 1); });'),
+        ("d3", 'd3.select(el).on("click", function (event) { const p = d3.pointer(event, this); });'),
+        ("highcharts", "const o = { chart: { events: { load: function () { const chart = this; } } } };"),
+        (
+            "highcharts",
+            "function drawAll() { const chart = this; }\nconst o = { events: { load: drawAll, render: drawAll } };",
+        ),
+        ("highcharts", "const drawV = function () { const c = this; };\nconst o = { events: { load: drawV } };"),
+        ("highcharts", "function drawAll() { const chart = this; }\nconst o = { events: { drawAll } };"),
+        ("highcharts", "const o = { events: { load() { [1].forEach(() => f(this)); } } };"),
+        ("chartjs", "const o = { f() { return this; } };"),
+        ("chartjs", "class K { m() { return this; } }"),
+        ("chartjs", "function g() { return this.y; }\ng();"),
+        ("chartjs", "function never() { return this; }"),
+        # timers with a function the file declares (Gemini 3.8 Flash)
+        ("chartjs", "function draw() {}\nsetTimeout(draw, 0);"),
+        ("chartjs", "const draw = () => {};\nsetInterval(draw, 10);"),
+        # keys the catalogue builds (andrews-curves, chernoff-basic, parallel-categories-basic, chessboard-pieces)
+        ("chartjs", 'const r = { a: 1 };\nconst v = r[name + "Norm"];'),
+        ("chartjs", "const w = {};\nconst v = w[`z_${name}`];\nw[`z_${name}`] = 1;"),
+        ("chartjs", "const v = {}[`${name}|${tag}`];"),
+        ("chartjs", "const v = {}[`${name}${tag}`];"),
+        ("chartjs", "const v = [1, 2][Math.floor(f())];"),
+        ("chartjs", "const v = {}[String(name)];"),
+        # data URLs the code drew (heatmap-mandelbrot and recurrence-basic in D3)
+        ("d3", 'const url = el.toDataURL("image/png");\nd3.select(el).append("image").attr("href", url);'),
+        ("d3", 'd3.select(el).append("image").attr("href", document.createElement("canvas").toDataURL());'),
+        ("chartjs", 'const img = document.createElement("img");\nimg.src = el.toDataURL();'),
+        ("chartjs", 'el.setAttribute("d", "M0 0L1 1");'),
+        # words that are tags only where a tag is made
+        ("d3", 'const s = "link";\nconst b2 = "base";\nconst o = "object";\nd3.selectAll(".link");'),
+        ("chartjs", "const loc = { location: 'Berlin' };\nconst where = loc.location;"),
+        # Gemini 3.8 Flash: `undefined` is no free name, and binding forms it asked for
+        ("chartjs", "const y = undefined;"),
+        ("chartjs", "function g({ a = 1, b: [c = 2] = [] } = {}) { return a + c; }\ng();"),
+        ("chartjs", "try { f(); } catch ({ message }) { el.textContent = message; }"),
+        (
+            "muix",
+            "const T = () => (\n  <>\n    <>\n      <svg><g /></svg>\n    </>\n    <span>{[1].map((v) => <b key={v}>{v}</b>)}</span>\n  </>\n);",
+        ),
     ],
 )
 def test_admitted(library: str, body: str) -> None:
+    assert security(body, library) == [], security(body, library)
+
+
+@pytest.mark.parametrize(
+    ("library", "body"),
+    [
+        ("chartjs", "function key() { return name; }\nconst v = el[key()];"),
+        ("chartjs", "function put(o, k, v) { o[k] = v; }\nput(el, name, name);"),
+        ("chartjs", "const o = { m: function () { return this; } };\nconst g = o.m;\nconst w = g();"),
+        ("chartjs", 'el.innerHTML = "<img src=x on" + "error=go()>";'),
+        ("muix", "const B = ({ url }: { url: string }) => <img src={url} />;"),
+        ("highcharts", "const chart = Highcharts.chart(el, {});\nchart.renderer.image(name, 0, 0, 10, 10).add();"),
+    ],
+)
+def test_still_passes_contained_by_the_sandbox(library: str, body: str) -> None:
+    """The hygiene line, pinned (module docstring, "What still passes"): a key a function returns or a parameter
+    carries, a method called off its object, markup assembled at run time, a URL a JSX attribute or a library's image
+    call takes. The renderer's page rules and gVisor contain them; the exported page carries JS-4's content security
+    policy. A rule that starts refusing one of them moves it to `test_refused`."""
     assert security(body, library) == [], security(body, library)
 
 

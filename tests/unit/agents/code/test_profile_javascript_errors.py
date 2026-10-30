@@ -83,6 +83,13 @@ def test_a_thrown_value_without_a_frame_drops_the_wrappers_line() -> None:
 
 
 @pytest.mark.parametrize(
+    ("line_count", "summary"), [(6, "TypeError"), (7, "TypeError at line 7"), (40, "TypeError at line 7")]
+)
+def test_line_count_drops_only_a_line_past_the_codes_end(line_count: int, summary: str) -> None:
+    assert error_summary("render: error: page TypeError plot.js:7: x\n", line_count=line_count) == summary
+
+
+@pytest.mark.parametrize(
     ("stderr", "summary"),
     [
         ("", NO_ERROR_OUTPUT),
