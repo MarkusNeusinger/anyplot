@@ -38,11 +38,15 @@
  * it shows only what the line does not (a `create_plot` run, a queue position,
  * pipeline steps), and the data card says why its controls wait.
  *
- * `.plot_all()`, under the composer in step 2, is the admin's test run: the
- * table as it was pasted or opened, with the confirmed bindings, plotted in
- * every library of the header at once (`FanOut`), a session per library, at
- * most `AGENT_USER_MAX_RUNS` plots running, each through the normal run queue.
- * Data the assistant changed or computed is not offered (no upload to replay).
+ * The header's `all` pill, after the library pills, is the admin's test run.
+ * While it is pressed, the composer's create action is `.plot_all()`: the table
+ * as it was pasted or opened, with the confirmed bindings, plotted in every
+ * library of the header at once (`FanOut`), a session per library, at most
+ * `AGENT_USER_MAX_RUNS` plots running, each through the normal run queue. This
+ * session stays the data session, the message box waits (typed text would not
+ * go along), and any library pill turns `all` off again. Data the assistant
+ * changed or computed has no upload to replay, so `.plot_all()` waits for a
+ * pasted or opened table and says so.
  *
  * Gates, outermost first:
  * 1. `CONFIG.features.agentChat` (build-time `VITE_ENABLE_AGENT_CHAT`): off, the
@@ -109,6 +113,20 @@ const COLUMN_MAX_WIDTH = 960;
 /** What `.start_over()` does, unlike `.send()` beside it (the owner could not tell the two apart). */
 const START_OVER_HELP = 'new from the catalogue plot, without your changes';
 const START_OVER_HELP_ID = 'agent-start-over-help';
+/** Why `.plot_all()` waits: the fan-out replays the upload, which only a paste or a file leaves. */
+const PLOT_ALL_HINT =
+  '.plot_all() takes a table as it was pasted or opened, not one the assistant changed or computed';
+const PLOT_ALL_HINT_ID = 'agent-plot-all-hint';
+
+/** A pill of the header's library group: a library, or `all` after them. */
+const pillSx = (pressed: boolean) => ({
+  ...actionButtonSx,
+  border: '1px solid',
+  borderColor: pressed ? 'var(--ink-muted)' : 'var(--rule)',
+  color: pressed ? 'var(--ink)' : 'var(--ink-soft)',
+  bgcolor: pressed ? 'var(--bg-elevated)' : 'transparent',
+  '&:disabled': { cursor: 'default', opacity: pressed ? 1 : 0.45 },
+});
 
 /** What a click on `.create_plot()` before the confirmation asks for first. */
 type CreateGate = 'confirm' | 'transcription';
@@ -240,6 +258,12 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
     bindings: BindingMap;
     libraries: string[];
   } | null>(null);
+  // The header's `all` pill: page state only, never in the URL.
+  const [allPressed, setAllPressed] = useState(false);
+  const allRef = useRef<HTMLButtonElement>(null);
+  const fanOutRef = useRef<HTMLElement>(null);
+  // Set by a key press on `.plot_all()`: the panel it opens takes the focus, once.
+  const fanOutFocus = useRef(false);
   const tailRef = useRef<HTMLDivElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const createRef = useRef<HTMLButtonElement>(null);
@@ -332,9 +356,10 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   // `.plot_all()`: the stored upload, as it was posted, plotted in every library at once. Data
   // the assistant changed or computed has no upload, so the fan-out never plots other data.
   const upload = state.dataset?.upload;
-  // Only once the libraries and the limit are the server's: a snapshot of the fallbacks would
-  // leave libraries out or start more runs than the server takes (`run_limit`).
-  const offerFanOut = listsSettled && step2 && !!upload && libraries.length > 1 && !fanOut;
+  // The `all` pill only once the libraries and the limit are the server's: a snapshot of the
+  // fallbacks would leave libraries out or start more runs than the server takes (`run_limit`).
+  const offerAll = listsSettled && libraries.length > 1 && !reopen;
+  const plotAll = allPressed && offerAll;
   // The notice before the confirmation is done once the data is confirmed or a turn starts.
   // Adjusted while rendering, React's pattern for state that follows other state.
   if (gateShown && (step2 || running)) setGateShown(false);
@@ -350,21 +375,30 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
     : null;
 
   // The user's own `.confirm()` collapsed the card and took its focused button
-  // away. Before the first plot the keyboard continues at `.create_plot()`, the
-  // step's next action (a button, so a phone opens no keyboard); after it at the
-  // pinned header's toggle, since a fresh run must not be one key press away by
-  // accident; it is in view where it sticks, so the focus scrolls nothing. Only
-  // for that confirmation, and only while nothing else holds the focus: a step 2
-  // that a turn's sync brings back never takes it from the composer. A layout
-  // effect, so the focus has moved by the time the button shows.
+  // away. Before the first plot the keyboard continues at `.create_plot()` (or
+  // `.plot_all()`), the step's next action (a button, so a phone opens no
+  // keyboard), unless it waits; otherwise at the pinned header's toggle, since
+  // a fresh run must not be one key press away by accident; it is in view where
+  // it sticks, so the focus scrolls nothing. Only for that confirmation, and
+  // only while nothing else holds the focus: a step 2 that a turn's sync brings
+  // back never takes it from the composer. A layout effect, so the focus has
+  // moved by the time the button shows.
   useLayoutEffect(() => {
     if (!confirmFocus.current || state.confirmBusy) return;
     confirmFocus.current = false;
     const active = document.activeElement;
     if (!step2 || (active && active !== document.body)) return;
-    if (firstPlot) createRef.current?.focus();
+    if (firstPlot && !createRef.current?.disabled) createRef.current?.focus();
     else toggleRef.current?.focus({ preventScroll: true });
   }, [state.confirmBusy, step2, firstPlot]);
+
+  // A key press on `.plot_all()` continues in the panel it opened: the button waits while
+  // the panel is open, and the panel is where the plots come in.
+  useEffect(() => {
+    if (!fanOut || !fanOutFocus.current) return;
+    fanOutFocus.current = false;
+    fanOutRef.current?.focus();
+  }, [fanOut]);
 
   /**
    * A key press on a composer button that a run replaces with `.stop()` (Enter
@@ -380,12 +414,13 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
    * The composer's action. The first plot: an empty box starts it as it is
    * (`create_plot`), text goes as the user's turn, and the assistant makes the
    * plot with that change. Otherwise the text is a turn about the data or the plot.
+   * While `all` is pressed nothing goes: the fan-out takes no text.
    */
   const handleSend = useCallback(
     (event?: React.FormEvent) => {
       event?.preventDefault();
       const text = draft.trim();
-      if (busy) return;
+      if (busy || plotAll) return;
       if (firstPlot && !text) {
         if (canCreate) void session.createPlot();
         return;
@@ -394,7 +429,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
       void session.sendMessage(text);
       setDraft('');
     },
-    [draft, busy, firstPlot, canCreate, session]
+    [draft, busy, plotAll, firstPlot, canCreate, session]
   );
 
   const handleLibrary = useCallback(
@@ -403,6 +438,38 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
     },
     [session, onLibraryChange]
   );
+
+  /**
+   * A library pill. While `all` is pressed, any pill turns it off: the session's
+   * own library only that, and the keyboard continues at `all`, since the pill
+   * pressed now is disabled; another library switches as it would without it.
+   */
+  const handlePill = (next: string) => {
+    if (plotAll) {
+      setAllPressed(false);
+      if (next === state.library) {
+        allRef.current?.focus();
+        return;
+      }
+    }
+    void handleLibrary(next);
+  };
+
+  /**
+   * `.plot_all()`, the composer's action while `all` is pressed: the stored
+   * upload with the confirmed bindings, in every library of the header at once.
+   * Before the confirmation it calls nothing and shows the notice, as the quiet
+   * `.create_plot()` does.
+   */
+  const handlePlotAll = (event: React.MouseEvent) => {
+    if (!step2) {
+      setGateShown(true);
+      return;
+    }
+    if (!upload) return;
+    fanOutFocus.current = event.detail === 0;
+    setFanOut({ upload, bindings: state.bindings, libraries: [...libraries] });
+  };
 
   /**
    * The quiet `.create_plot()` before the confirmation: no call, the server
@@ -478,14 +545,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
           </Box>
           {libraries.map(lib => {
             const active = lib === state.library;
-            const pillSx = {
-              ...actionButtonSx,
-              border: '1px solid',
-              borderColor: active ? 'var(--ink-muted)' : 'var(--rule)',
-              color: active ? 'var(--ink)' : 'var(--ink-soft)',
-              bgcolor: active ? 'var(--bg-elevated)' : 'transparent',
-              '&:disabled': { cursor: 'default', opacity: active ? 1 : 0.45 },
-            };
+            // While `all` is pressed it shows as the pressed pill; the session stays this one's.
+            const pressed = active && !plotAll;
             // No session to switch: another library opens the page anew, with
             // its own session (a full navigation, like the `.adapt()` button).
             if (!active && reopen) {
@@ -494,7 +555,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                   key={lib}
                   component="a"
                   href={paths.agentChat(specId, lib, language)}
-                  sx={{ ...pillSx, textDecoration: 'none' }}
+                  sx={{ ...pillSx(false), textDecoration: 'none' }}
                 >
                   {lib}
                 </Box>
@@ -505,15 +566,29 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 key={lib}
                 component="button"
                 type="button"
-                aria-pressed={active}
-                disabled={active || busy || state.phase !== 'ready'}
-                onClick={() => void handleLibrary(lib)}
-                sx={pillSx}
+                aria-pressed={pressed}
+                disabled={pressed || busy || state.phase !== 'ready'}
+                onClick={() => handlePill(lib)}
+                sx={pillSx(pressed)}
               >
                 {lib}
               </Box>
             );
           })}
+          {offerAll && (
+            <Box
+              component="button"
+              type="button"
+              ref={allRef}
+              aria-pressed={plotAll}
+              aria-label="All libraries"
+              disabled={busy || !!fanOut || state.phase !== 'ready'}
+              onClick={() => setAllPressed(!plotAll)}
+              sx={pillSx(plotAll)}
+            >
+              all
+            </Box>
+          )}
         </Box>
         {/* The session language of the replies and the plot text; without a session there is none. */}
         {!reopen && (
@@ -664,7 +739,9 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
 
             {firstPlot && (
               <Box id="agent-create-line" sx={{ ...labelSx, color: 'var(--ink-soft)', mb: -1 }}>
-                # step 2 — create the plot as it is, or say first what it should do differently
+                {plotAll
+                  ? `# step 2 — plot the table as it is in all ${libraries.length} libraries at once`
+                  : '# step 2 — create the plot as it is, or say first what it should do differently'}
               </Box>
             )}
             <Box
@@ -678,19 +755,22 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 aria-label="Message"
                 placeholder={
                   // Step 1 talks about the data, step 2 about the plot. Without
-                  // data, the chat is the other way to get some: a formula.
-                  !state.dataset
-                    ? 'ask for a curve: "y = sin(x), x from -pi to pi"'
-                    : !step2
-                      ? 'ask about your data, or for a fix: "sum per month"'
-                      : firstPlot
-                        ? 'optional: what the first plot should do differently'
-                        : 'ask about this plot, or ask for a change'
+                  // data, the chat is the other way to get some: a formula. While
+                  // `all` is pressed the box waits: the fan-out takes no text.
+                  plotAll
+                    ? 'all libraries: the table goes as it is · turn all off to chat'
+                    : !state.dataset
+                      ? 'ask for a curve: "y = sin(x), x from -pi to pi"'
+                      : !step2
+                        ? 'ask about your data, or for a fix: "sum per month"'
+                        : firstPlot
+                          ? 'optional: what the first plot should do differently'
+                          : 'ask about this plot, or ask for a change'
                 }
                 value={draft}
                 maxLength={MAX_MESSAGE_CHARS}
                 rows={2}
-                disabled={state.phase !== 'ready'}
+                disabled={state.phase !== 'ready' || plotAll}
                 onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
                   setDraft(event.target.value)
                 }
@@ -724,6 +804,44 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 >
                   {state.run?.stopping ? '.stop() …' : '.stop()'}
                 </Box>
+              ) : plotAll ? (
+                <>
+                  {/* The create action of the branch below, for every library at once: the CTA
+                      before the first plot, the quiet button otherwise, and before the
+                      confirmation a click shows the notice. It waits while the panel is open. */}
+                  {state.dataset && (
+                    <Box
+                      key="plot-all"
+                      component="button"
+                      type="button"
+                      ref={createRef}
+                      onClick={handlePlotAll}
+                      disabled={
+                        !upload ||
+                        !!fanOut ||
+                        (step2 ? !canCreate : state.phase !== 'ready' || busy)
+                      }
+                      aria-label="Plot in all libraries"
+                      aria-describedby={
+                        [
+                          step2 ? DATA_SUMMARY_ID : gate ? 'agent-create-gate' : null,
+                          firstPlot ? 'agent-create-line' : null,
+                          upload ? null : PLOT_ALL_HINT_ID,
+                        ]
+                          .filter(Boolean)
+                          .join(' ') || undefined
+                      }
+                      sx={firstPlot ? ctaButtonSx : actionButtonSx}
+                    >
+                      .plot_all()
+                    </Box>
+                  )}
+                  {!firstPlot && (
+                    <Box component="button" type="button" disabled sx={ghostButtonSx}>
+                      .send()
+                    </Box>
+                  )}
+                </>
               ) : firstPlot ? (
                 <Box
                   key="create"
@@ -784,6 +902,15 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 </>
               )}
             </Box>
+            {plotAll && state.dataset && !upload && (
+              <Box
+                id={PLOT_ALL_HINT_ID}
+                data-testid="plot-all-hint"
+                sx={{ ...labelSx, color: 'var(--ink-soft)', mt: -1 }}
+              >
+                # {PLOT_ALL_HINT}
+              </Box>
+            )}
             {/* No role on the visible notice: the status box below speaks it, once. */}
             {gate && (
               <Box
@@ -826,36 +953,6 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 {draft.length} / {MAX_MESSAGE_CHARS}
               </Box>
             )}
-            {offerFanOut && upload && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  columnGap: 1,
-                  rowGap: 0.75,
-                }}
-              >
-                <Box id="agent-plot-all-line" sx={{ ...labelSx, flex: '1 1 220px' }}>
-                  # admin · this table in all {libraries.length} libraries at once, at most{' '}
-                  {maxRuns} running
-                </Box>
-                <Box
-                  component="button"
-                  type="button"
-                  onClick={() =>
-                    setFanOut({ upload, bindings: state.bindings, libraries: [...libraries] })
-                  }
-                  disabled={!canCreate}
-                  aria-label="Plot in all libraries"
-                  aria-describedby="agent-plot-all-line"
-                  sx={actionButtonSx}
-                >
-                  .plot_all()
-                </Box>
-              </Box>
-            )}
             {/* A chat without a plot has no result card to report on: its own control. Not while a
                 turn runs, which may still bring the plot; a sent record stays in view. */}
             {(state.chatFeedback ||
@@ -872,6 +969,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
         </Box>
         {fanOut && (
           <FanOut
+            panelRef={fanOutRef}
             specId={specId}
             libraries={fanOut.libraries}
             locale={locale}

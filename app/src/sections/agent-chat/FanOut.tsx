@@ -187,9 +187,12 @@ export interface FanOutProps {
   /** How many plots run at once (`AGENT_USER_MAX_RUNS`). */
   maxRuns: number;
   onClose: () => void;
+  /** The panel, which takes the focus when a key press on `.plot_all()` opened it. */
+  panelRef?: React.Ref<HTMLElement>;
 }
 
 export function FanOut({
+  panelRef,
   specId,
   libraries,
   locale,
@@ -218,8 +221,17 @@ export function FanOut({
   return (
     <Box
       component="section"
+      ref={panelRef}
+      tabIndex={-1}
       aria-label="All libraries"
-      sx={{ ...panelSx, mt: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}
+      sx={{
+        ...panelSx,
+        mt: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1.5,
+        '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 2 },
+      }}
     >
       <Box
         sx={{
