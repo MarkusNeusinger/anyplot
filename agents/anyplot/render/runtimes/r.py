@@ -41,6 +41,8 @@ columns with integer cells beyond it and their counts, which the pipeline puts f
 the shipped version's "what changed" list (owner rule of 2026-10-15: no silent loss,
 every change announced with counts). Owner decision of 2026-10-29: "what changed", not
 a residual note, so the note leaves the plot's status as it is (`ok` stays `ok`).
+`col_datetime()` reads a timestamp with a UTC offset in UTC, so a second line names the
+columns with offsets other than zero (owner decision of 2026-10-30).
 
 **ADAPTATION.** A dataset package (gapminder, palmerpenguins) brings the package's
 sample data instead of the user's, so `dataset-package` joins the rules that reject the
@@ -79,7 +81,7 @@ from ...schemas import AdaptPlan, CodeArtifact
 from ..contract import BLOCKING_RULES, Theme
 from ..harness import INTERPRETER_FLAGS
 from ..png import MAX_PNG_BYTES, read_output
-from .notes import counted_note
+from .notes import counted_note, offset_note
 from .python import DATA_RLIMIT_AS_MB, IMAGE_HARNESS, IMAGE_PYTHON, RENDER_RLIMIT_FSIZE_MB, PythonRuntime
 
 
@@ -192,13 +194,20 @@ class RRuntime:
         """One "what changed" line for the integer cells beyond ±2^53, which `col_double()` reads as the nearest
         double: the total, then each column with its count, as many as fit a change note (`MAX_CHANGE_CHARS`) and
         the rest counted as `and N more columns`; none when there are no such cells. The first column always fits:
-        a column name has at most 64 characters and a count at most six."""
-        if not kinds.inexact:
-            return []
-        total = sum(kinds.inexact.values())
-        whole, them = ("integer", "it") if total == 1 else ("integers", "them")
-        head = f"R reads {total:,} {whole} past ±2^53 as the nearest double, so the plot can show {them} a unit or more off: "
-        return [counted_note(head, kinds.inexact)]
+        a column name has at most 64 characters and a count at most six. A second line for the timestamps with a
+        UTC offset other than zero, which `col_datetime()` reads in UTC (`notes.offset_note`)."""
+        notes: list[str] = []
+        if kinds.inexact:
+            total = sum(kinds.inexact.values())
+            whole, them = ("integer", "it") if total == 1 else ("integers", "them")
+            head = (
+                f"R reads {total:,} {whole} past ±2^53 as the nearest double, so the plot can show {them} a unit or "
+                "more off: "
+            )
+            notes.append(counted_note(head, kinds.inexact))
+        if kinds.offset:
+            notes.append(offset_note("R", kinds.offset))
+        return notes
 
     def validate(self, code: str, library: str) -> list[str]:
         return [f"{finding.rule}: {finding.message}" for finding in validate_security(code)]
