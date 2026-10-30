@@ -34,7 +34,8 @@ an exec-mode row's harness preloads it into the child (`harness.EXEC_DENY_PRELOA
 JavaScript row has it off: Node starts Chromium and Chromium starts its own processes,
 while the plot code runs in the page, which has no process API. Node runs by its path as well
 (`NODE_BINARY`), with the harness's packages, the headless shell and the row's fonts named in
-its environment (`JS_ENV`, JS-1 of step 3). A row also says which limits
+its environment (`JS_ENV`, JS-1 of step 3), and the harness's sandbox mode switched on there
+(JS-2: the page rules, the closed imports, the bounded console, the final error line). A row also says which limits
 differ from the Python defaults: V8, Chromium and Julia's LLVM reserve address space far
 beyond their resident memory, so `RLIMIT_AS` is off for the JavaScript and Julia rows
 and for altair's Python row (vl-convert embeds V8); one Chromium render runs seven
@@ -116,6 +117,9 @@ JS_FONTCONFIG_FILE = "/opt/anyplot/js-fonts.conf"
 """The JavaScript row's fontconfig file (`agents/renderer/toolchain/js-fonts.conf`): the system configuration plus the
 Liberation fonts under `/opt/anyplot/js-fonts`, which the catalogue's page font stack (Helvetica, Arial) resolves to
 through fontconfig's metric aliases, as on the pipeline's runner. No other row reads that directory."""
+JS_IMPORT_ALLOWLIST = "/opt/anyplot/js-render/import-allowlist.json"
+"""The bare specifiers a MUI X snippet may import (`agents/renderer/toolchain/import_allowlist.py`, built from the
+installed packages' `exports` maps), which the harness's resolve plugin reads in sandbox mode."""
 JS_ENV: Mapping[str, str] = MappingProxyType(
     {
         "PLAYWRIGHT_BROWSERS_PATH": PLAYWRIGHT_BROWSERS,
@@ -127,9 +131,15 @@ JS_ENV: Mapping[str, str] = MappingProxyType(
         # Only /tmp is writable in a sandbox: Chromium's and fontconfig's caches and settings go there.
         "XDG_CACHE_HOME": "/tmp",
         "XDG_CONFIG_HOME": "/tmp",
+        # The harness's sandbox mode (JS-2): the page rules, the closed MUI X imports, the bounded console and the
+        # final error line; no interactive page, which nothing in the sandbox reads.
+        "ANYPLOT_SANDBOX": "1",
+        "ANYPLOT_NO_HTML": "1",
+        "ANYPLOT_IMPORT_ALLOWLIST": JS_IMPORT_ALLOWLIST,
     }
 )
-"""The JavaScript row's environment: the browser, the packages, the fonts, the zone, the locale and the caches."""
+"""The JavaScript row's environment: the browser, the packages, the fonts, the zone, the locale, the caches and the
+harness's sandbox mode. A job's `data.json` adds `ANYPLOT_DATA_JSON` (`executor.sandbox_env`)."""
 JULIA_HOME = "/opt/julia-1.13.2"
 """Julia's install in the toolchain image: the official 1.13.2 build for generic Linux (agents/renderer/toolchain.Dockerfile),
 the version `Manifest.toml` was resolved with."""
@@ -298,9 +308,10 @@ def _row(language: Language, library: str) -> RuntimeCommand:
         # Node by its path runs the catalogue's harness, which starts Playwright's Chromium headless shell; the
         # library comes from the request's closed set, never from the file name. No exec filter: Node starts
         # esbuild's service and Chromium, and Chromium its own processes. The plot code runs in the page, which has
-        # no process API; the boundary is gVisor (no network, a read-only root, the run's own /tmp) and, with JS-2,
-        # the harness's page rules (no request leaves the page, no WebSocket, no popup, a bounded console, a closed
-        # import list for MUI X; step 3 of agentic/specs/261024-agent-all-libraries.md). V8 and Chromium reserve
+        # no process API; the boundary is gVisor (no network, a read-only root, the run's own /tmp) and the
+        # harness's sandbox mode (JS_ENV, JS-2): every request aborted, every WebSocket closed, no popup, no WebRTC,
+        # a content security policy, a V8 heap cap, a bounded console and a closed import list for MUI X (step 3 of
+        # agentic/specs/261024-agent-all-libraries.md). V8 and Chromium reserve
         # address space far beyond their resident memory, and one render runs about 7 processes with 77 tasks
         # (spike of 2026-10-24), so RLIMIT_AS and RLIMIT_NPROC are off; the MemAvailable watchdog, RLIMIT_CPU,
         # RLIMIT_FSIZE and the byte budget remain. The repair reserve is Python's and R's 15 s: the 1,565 catalogue

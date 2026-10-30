@@ -134,6 +134,10 @@ FORBIDDEN_FLAGS = ("--allow-egress", "--write")
 WORKDIR = "/work"
 CODE_FILE = "plot.py"
 DATA_FILE = "data.csv"
+DATA_JSON_FILE = "data.json"
+"""A JavaScript job's typed table (`RenderRequest.data_json`), next to the code file when the job carries one."""
+DATA_JSON_ENV = "ANYPLOT_DATA_JSON"
+"""The harness's variable naming that file (`automation/js-render/render.mjs`, sandbox mode)."""
 SNIPPET_FILE = "snippet.py"
 """A data run's code file; the agents' error summary looks for its frames by this name."""
 OUT_FILE = "out.csv"
@@ -447,6 +451,7 @@ def sandbox_env(
     *,
     convert: bool = False,
     command: RuntimeCommand | None = None,
+    data_json: bool = False,
 ) -> dict[str, str]:
     """The complete environment inside the sandbox: nothing of the host's reaches it.
 
@@ -468,10 +473,15 @@ def sandbox_env(
     buffers come from the same `malloc` as everything else under the address-space limit; with the bundled
     jemalloc pool, a test run on a developer machine logged a failed background-thread start under the process
     limit.
+
+    `data_json` says the run directory holds the job's `data.json` (`RenderRequest.data_json`): a JavaScript row
+    then names it in `ANYPLOT_DATA_JSON`, which the harness injects as `window.ANYPLOT_DATA`; no other row reads it.
     """
     plot: dict[str, str] = {}
     if theme is not None and command is not None and not command.in_process:
         plot = {"ANYPLOT_THEME": theme, **command.env}
+        if data_json and command.language == "javascript":
+            plot[DATA_JSON_ENV] = f"{WORKDIR}/{DATA_JSON_FILE}"
     elif theme is not None:
         plot = {
             "ANYPLOT_THEME": theme,
@@ -516,13 +526,14 @@ def build_argv(
     *,
     convert: bool = False,
     command: RuntimeCommand | None = None,
+    data_json: bool = False,
 ) -> list[str]:
     """The `sandbox do` command of one theme, of a data run (`theme` None, the harness in data mode) or of a
     conversion (`convert`, the harness in convert mode); asserted to carry neither `--write` nor `--allow-egress`.
 
     A theme's `command` is its row of the command table: a Python row runs the harness in plot mode on `plot.py`;
     any other row runs the harness in exec mode (`EXEC_FLAG`) with the row's own argv and code file. The argv
-    comes from the table alone; the request only selected the row."""
+    comes from the table alone; the request only selected the row. `data_json`: see `sandbox_env`."""
     argv = [
         config.sandbox_binary,
         "do",
@@ -534,7 +545,7 @@ def build_argv(
     if config.bind_tmp:
         argv += ["--mount", f"type=bind,source={run_dir / 'tmp'},destination=/tmp"]
     argv += ["-w", WORKDIR]
-    for key, value in sandbox_env(config, theme, cpu_s, convert=convert, command=command).items():
+    for key, value in sandbox_env(config, theme, cpu_s, convert=convert, command=command, data_json=data_json).items():
         argv += ["--env", f"{key}={value}"]
     flags = list(argv)
     argv += ["--", config.python, *INTERPRETER_FLAGS, config.harness]
@@ -758,6 +769,8 @@ class SandboxExecutor:
         """Render one theme; a launcher failure before the harness started is retried once."""
         command = command_for(job.language, job.library)
         files: dict[str, str | bytes] = {command.code_file: job.source, DATA_FILE: job.data_csv}
+        if job.data_json is not None:
+            files[DATA_JSON_FILE] = job.data_json
         attempt, attempts = await self._launch(files, theme, job.timeout_s, command=command)
         return attempt.to_wire(theme, attempts, stderr_head=command.stderr_head)
 
@@ -823,7 +836,16 @@ class SandboxExecutor:
         run_dir = self.config.runs_dir / name
         try:
             self._prepare(run_dir, files)
-            return await self._run(name, run_dir, theme, cpu_s, timeout_s, convert=convert, command=command)
+            return await self._run(
+                name,
+                run_dir,
+                theme,
+                cpu_s,
+                timeout_s,
+                convert=convert,
+                command=command,
+                data_json=DATA_JSON_FILE in files,
+            )
         except OSError as exc:
             # A full volume, a failed fork: the host could not run the job, which is
             # not the code's fault. `_run` has stopped any sandbox it started.
@@ -861,8 +883,11 @@ class SandboxExecutor:
         *,
         convert: bool = False,
         command: RuntimeCommand | None = None,
+        data_json: bool = False,
     ) -> Attempt:
-        argv = build_argv(self.config, name, run_dir, theme, cpu_s, convert=convert, command=command)
+        argv = build_argv(
+            self.config, name, run_dir, theme, cpu_s, convert=convert, command=command, data_json=data_json
+        )
         started = self.clock()
         process = await asyncio.create_subprocess_exec(
             *argv,

@@ -155,6 +155,10 @@ class TestTable:
             "LANG": "C.UTF-8",
             "XDG_CACHE_HOME": "/tmp",
             "XDG_CONFIG_HOME": "/tmp",
+            # JS-2: the harness's sandbox mode, no interactive page, the image's import allowlist.
+            "ANYPLOT_SANDBOX": "1",
+            "ANYPLOT_NO_HTML": "1",
+            "ANYPLOT_IMPORT_ALLOWLIST": "/opt/anyplot/js-render/import-allowlist.json",
         }
         # The sandbox's fixed keys come after a row's environment and win (`executor.sandbox_env`).
         assert not {"PATH", "HOME", "LD_PRELOAD", "NODE_OPTIONS"} & set(commands.JS_ENV)
@@ -186,6 +190,21 @@ class TestTable:
         assert (
             'const NODE_MODULES = process.env.ANYPLOT_NODE_MODULES || path.join(REPO_ROOT, "node_modules");' in harness
         )
+
+    def test_the_harness_reads_the_sandbox_switches_the_row_sets(self) -> None:
+        """JS-2: each switch of the row's environment is one variable the harness reads, off unless set, so the
+        catalogue pipeline, which sets none, renders as before (`tests/unit/automation/test_js_render_sandbox.py`
+        renders both ways); the allowlist the row names is where the toolchain puts it."""
+        harness = (Path(commands.__file__).parents[2] / "automation" / "js-render" / "render.mjs").read_text(
+            encoding="utf-8"
+        )
+        assert 'const SANDBOX = process.env.ANYPLOT_SANDBOX === "1";' in harness
+        assert 'const NO_HTML = process.env.ANYPLOT_NO_HTML === "1";' in harness
+        assert "const DATA_JSON = process.env.ANYPLOT_DATA_JSON || null;" in harness
+        assert "process.env.ANYPLOT_IMPORT_ALLOWLIST" in harness
+        dockerfile = (Path(commands.__file__).parent / "toolchain.Dockerfile").read_text(encoding="utf-8")
+        assert f"> {commands.JS_IMPORT_ALLOWLIST}" in dockerfile
+        assert f"COPY --from=node {commands.JS_IMPORT_ALLOWLIST} {commands.JS_IMPORT_ALLOWLIST}" in dockerfile
 
     def test_julia_loads_the_precompile_workload_right_before_the_plot(self) -> None:
         """J1.1: the workload's native code is used only while its package is loaded, so `-L` loads it before the

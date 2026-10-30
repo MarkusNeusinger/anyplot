@@ -16,8 +16,17 @@ from agents.renderer.commands import (
     R_BINARY,
     command_for,
 )
-from agents.renderer.executor import SANDBOX_PATH, ExecutorConfig, SandboxExecutor, build_argv, sandbox_env
-from agents.renderer.wire import RendererStatus, RenderRequest
+from agents.renderer.executor import (
+    DATA_JSON_ENV,
+    DATA_JSON_FILE,
+    SANDBOX_PATH,
+    WORKDIR,
+    ExecutorConfig,
+    SandboxExecutor,
+    build_argv,
+    sandbox_env,
+)
+from agents.renderer.wire import MAX_DATA_CSV_CHARS, MAX_DATA_JSON_CHARS, RendererStatus, RenderRequest
 
 from .helpers import job
 
@@ -165,6 +174,41 @@ class TestRows:
         assert values["TZ"] == "UTC" and values["FONTCONFIG_FILE"] == "/opt/anyplot/js-fonts.conf"
         assert values["PATH"] == SANDBOX_PATH and values["HOME"] == "/tmp" and "MPLBACKEND" not in values
 
+    def test_a_javascript_job_with_data_json_names_the_file_for_the_harness(
+        self, config: ExecutorConfig, tmp_path: Path
+    ) -> None:
+        """JS-2: the typed table reaches the harness as `ANYPLOT_DATA_JSON`, for a JavaScript row only, and only when
+        the job carries one; the row's sandbox mode is on either way."""
+        row = command_for("javascript", "chartjs")
+        with_data = envs(build_argv(config, "r-a-light", tmp_path, "light", 60, command=row, data_json=True))
+        without = envs(build_argv(config, "r-a-light", tmp_path, "light", 60, command=row))
+        assert with_data[DATA_JSON_ENV] == f"{WORKDIR}/{DATA_JSON_FILE}" == "/work/data.json"
+        assert DATA_JSON_ENV not in without
+        assert with_data["ANYPLOT_SANDBOX"] == without["ANYPLOT_SANDBOX"] == "1"
+        assert without["ANYPLOT_NO_HTML"] == "1"
+        assert without["ANYPLOT_IMPORT_ALLOWLIST"] == "/opt/anyplot/js-render/import-allowlist.json"
+        for language, library in (("python", "matplotlib"), ("r", "ggplot2"), ("julia", "makie")):
+            values = sandbox_env(config, "light", 60, command=command_for(language, library), data_json=True)
+            assert DATA_JSON_ENV not in values and "ANYPLOT_SANDBOX" not in values, language
+
+    async def test_the_executor_writes_data_json_next_to_the_code_file(
+        self, config: ExecutorConfig, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        seen: list[tuple[list[str], bool]] = []
+
+        async def run(self: SandboxExecutor, name: str, run_dir: Path, *args: object, **kwargs: object) -> object:
+            seen.append((sorted(path.name for path in (run_dir / "work").iterdir()), bool(kwargs["data_json"])))
+            return executor_module.Attempt(name=name, exit_code=0)
+
+        monkeypatch.setattr(SandboxExecutor, "_run", run)
+        executor = SandboxExecutor(config)
+        payload = {**job().model_dump(), "language": "javascript", "library": "muix"}
+        await executor.run_theme(
+            RenderRequest.model_validate({**payload, "data_json": '{"columns":[],"data":[]}'}), "light"
+        )
+        await executor.run_theme(RenderRequest.model_validate(payload), "light")
+        assert seen == [(["data.csv", "data.json", "plot.tsx"], True), (["data.csv", "plot.tsx"], False)]
+
     def test_the_forbidden_flags_assertion_holds_for_every_row(self, config: ExecutorConfig, tmp_path: Path) -> None:
         for language, library in (("python", "matplotlib"), ("javascript", "d3"), ("r", "ggplot2"), ("julia", "makie")):
             argv = build_argv(config, "r-a-light", tmp_path, "light", 60, command=command_for(language, library))
@@ -218,3 +262,14 @@ class TestWire:
                 RenderRequest.model_validate({**job().model_dump(), "language": language, "library": library})
         with pytest.raises(ValidationError):
             RenderRequest.model_validate({**job().model_dump(), "language": "cobol"})
+
+    def test_data_json_is_optional_capped_and_for_javascript_only(self) -> None:
+        """JS-2: the field is optional (no agent sends it before JS-4), so every request of today stays valid."""
+        assert job().data_json is None and "data_json" not in job().model_fields_set
+        javascript = {**job().model_dump(), "language": "javascript", "library": "d3"}
+        assert RenderRequest.model_validate({**javascript, "data_json": "{}"}).data_json == "{}"
+        with pytest.raises(ValidationError, match="javascript job only"):
+            RenderRequest.model_validate({**job().model_dump(), "data_json": "{}"})
+        with pytest.raises(ValidationError):
+            RenderRequest.model_validate({**javascript, "data_json": "x" * (MAX_DATA_JSON_CHARS + 1)})
+        assert MAX_DATA_JSON_CHARS == 4 * MAX_DATA_CSV_CHARS == 16 * 1024 * 1024

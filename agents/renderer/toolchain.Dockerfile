@@ -361,19 +361,22 @@ RUN ldconfig \
     && rm /tmp/missing
 
 # The check of the toolchain as the renderer's JavaScript row will run it
-# (agents/renderer/commands.py): Node by its path with the row's environment, the harness on a
-# Chart.js chart and on a MUI X component (esbuild bundles it from the image's packages), each a
-# 3200x1800 PNG. The fontconfig caches the shell writes under XDG_CACHE_HOME go with /tmp.
+# (agents/renderer/commands.py): Node by its path with the row's environment, the harness in its
+# sandbox mode (the page rules, the import allowlist, no interactive page) on a Chart.js chart
+# and on a MUI X component (esbuild bundles it from the image's packages), each a 3200x1800 PNG.
+# The fontconfig caches the shell writes under XDG_CACHE_HOME go with /tmp.
 WORKDIR /tmp
 RUN smoke() { \
       env -i PATH=/usr/bin:/bin HOME=/tmp ANYPLOT_THEME=light \
         PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers ANYPLOT_NODE_MODULES=/opt/anyplot/node_modules \
         FONTCONFIG_FILE=/opt/anyplot/js-fonts.conf TZ=UTC LANG=C.UTF-8 XDG_CACHE_HOME=/tmp XDG_CONFIG_HOME=/tmp \
+        ANYPLOT_SANDBOX=1 ANYPLOT_NO_HTML=1 ANYPLOT_IMPORT_ALLOWLIST=/opt/anyplot/js-render/import-allowlist.json \
         /opt/node/bin/node /opt/anyplot/js-render/render.mjs "--library=$1" "/opt/anyplot/toolchain/$2" \
       && python3 -I -c "import struct, sys; png = open('plot-light.png', 'rb').read(); \
            assert png[1:4] == b'PNG' and struct.unpack('>II', png[16:24]) == (3200, 1800), sys.argv[1]; \
            print(sys.argv[1], 'plot-light.png 3200x1800,', len(png), 'bytes')" "$1" \
-      && rm plot-light.png plot-light.html; \
+      && test ! -e plot-light.html \
+      && rm plot-light.png; \
     } \
     && smoke chartjs smoke.js \
     && smoke muix smoke.tsx \

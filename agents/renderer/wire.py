@@ -35,6 +35,11 @@ MAX_DATA_CSV_CHARS = 4 * 1024 * 1024
 """The canonical `data.csv`: the agents' parser refuses a parse whose canonical CSV is larger
 (`data/parse.py` `MAX_CANONICAL_BYTES`, pinned equal), so every stored dataset fits. Pastes take at
 most 1 MiB and computed data 2 MiB (until 2026-10-14 this cap was 2 MiB and the paste cap 200 KB)."""
+MAX_DATA_JSON_CHARS = 4 * MAX_DATA_CSV_CHARS
+"""The canonical data as typed JSON (`agents/anyplot/data/typed_json.py`), which a JavaScript job carries next to
+`data_csv`: every text cell quoted, a missing one `null`, a backslash or a tab escaped. At the parser's 20,000 rows and
+50 columns the worst cases measure 9.04 million characters (three backslashes in every cell, a CSV of 4.0 million) and
+5.04 million (every cell missing) (`test_typed_json.py`), under this 16 MiB."""
 MAX_TIMEOUT_S = 120.0
 MAX_PNG_BYTES = 10 * 1024 * 1024
 """Largest PNG the renderer returns; the agents' R2 gate (`render/png.py`) applies the same cap."""
@@ -165,6 +170,11 @@ class RenderRequest(BaseModel):
     data_csv: str = Field(max_length=MAX_DATA_CSV_CHARS)
     themes: list[Theme] = Field(min_length=1, max_length=2)
     timeout_s: float = Field(gt=0, le=MAX_TIMEOUT_S)
+    data_json: str | None = Field(default=None, max_length=MAX_DATA_JSON_CHARS)
+    """The same table as typed JSON (`agents/anyplot/data/typed_json.py`), for a JavaScript job only: the renderer
+    writes it as `data.json` next to the code file and names it in `ANYPLOT_DATA_JSON`, which the harness injects as
+    `window.ANYPLOT_DATA` (step 3d of agentic/specs/261024-agent-all-libraries.md). Optional, and no agent sends it
+    before the JavaScript runtime (JS-4)."""
 
     @field_validator("themes")
     @classmethod
@@ -175,8 +185,11 @@ class RenderRequest(BaseModel):
 
     @model_validator(mode="after")
     def _known_command(self) -> "RenderRequest":
-        """The pair selects a row of the renderer's command table; any other pair is `422 invalid_job`."""
+        """The pair selects a row of the renderer's command table; any other pair is `422 invalid_job`, and so is
+        `data_json` on a job in another language, whose code reads `data.csv` itself."""
         command_for(self.language, self.library)
+        if self.data_json is not None and self.language != "javascript":
+            raise ValueError("data_json is for a javascript job only")
         return self
 
 

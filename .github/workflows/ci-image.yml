@@ -1194,7 +1194,68 @@ jobs:
           print(f"OK: {sys.argv[2]} plot-light.png {width}x{height}, {len(png)} bytes")
           EOF
             tail -n 1 "work-js/$library/harness.out"
+            # The row's environment switches the harness's sandbox mode on (JS-2): no interactive page.
+            test ! -e "work-js/$library/plot-light.html" \
+              || { echo "::error::the $library render wrote plot-light.html in sandbox mode"; exit 1; }
           done
+
+          # The sandbox mode's own checks, through the same row (JS-2): the typed data reaches the page
+          # as window.ANYPLOT_DATA with a cell that would close a script, the route aborts a navigation,
+          # and the import plugin refuses an image file, each failure ending stderr with the final error line.
+          sandboxed() {
+            local library=$1 dir=$2 data=$3
+            mapfile -t ROW_ARGV < "work-js/$library.argv"
+            printf 'x\n1\n' > "$dir/data.csv"
+            local extra=()
+            if [ -n "$data" ]; then extra=(-e ANYPLOT_DATA_JSON=/work/data.json); fi
+            docker run --rm --network none --read-only --tmpfs /tmp \
+              --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+              -v "$PWD/$dir:/work" -w /work \
+              -e ANYPLOT_THEME=light "${ROW_FLAGS[@]}" "${extra[@]}" \
+              -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+              -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 \
+              anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py \
+              --exec -- "${ROW_ARGV[@]}" > "$dir/harness.out" 2> "$dir/harness.err"
+          }
+          mkdir -p work-js/data work-js/navigate work-js/refused
+          printf '%s\n' '{"columns":["label","value"],"data":[["</script><script>window.pwned=1</script>",1.5],[null,2]]}' \
+            > work-js/data/data.json
+          cat > work-js/data/plot.js <<'EOF'
+          const data = window.ANYPLOT_DATA;
+          if (data.length !== 2 || data[0].label !== "</script><script>window.pwned=1</script>" || data[1].label !== null
+              || data[0].value !== 1.5 || data.columns.join() !== "label,value" || window.pwned) {
+            throw new Error("ANYPLOT_DATA is " + JSON.stringify(data));
+          }
+          const canvas = document.createElement("canvas");
+          document.getElementById("container").appendChild(canvas);
+          new Chart(canvas, { type: "bar", options: { animation: false },
+            data: { labels: data.map((row) => String(row.label)), datasets: [{ data: data.map((row) => row.value) }] } });
+          EOF
+          sandboxed chartjs work-js/data data \
+            || { echo "::error::the data render failed"; cat work-js/data/harness.err; exit 1; }
+          test -s work-js/data/plot-light.png || { echo "::error::the data render wrote no PNG"; exit 1; }
+          echo "OK: window.ANYPLOT_DATA reached the page intact"
+          # The policy does not govern a top-level navigation; the route aborts it, Chromium's error
+          # page replaces the plot, and the render fails as one that drew nothing. The comment names
+          # the ready signal, so the harness waits for it and the error page is in place.
+          printf '%s\n' 'const c = document.createElement("canvas");' 'document.getElementById("container").appendChild(c);' \
+            '// window.__anyplotReady stays unset' 'location.href = "http://example.com/";' > work-js/navigate/plot.js
+          if sandboxed chartjs work-js/navigate ""; then
+            echo "::error::the navigation render drew a plot"; cat work-js/navigate/harness.err; exit 1
+          fi
+          grep -qxF 'render: refused 1 request(s) and 0 WebSocket(s)' work-js/navigate/harness.err \
+            && test "$(tail -n 1 work-js/navigate/harness.err)" = 'render: error: draw NoOutput -: snippet did not draw into #container (no <canvas>/<svg> mounted).' \
+            || { echo "::error::the route did not abort the navigation"; cat work-js/navigate/harness.err; exit 1; }
+          echo "OK: the route aborted the page's navigation"
+          printf '%s\n' 'import text from "/etc/os-release";' 'export default function Chart() {' \
+            '  return <svg><text>{String(text)}</text></svg>;' '}' > work-js/refused/plot.tsx
+          if sandboxed muix work-js/refused ""; then
+            echo "::error::a MUI X snippet bundled an image file"; exit 1
+          fi
+          last=$(tail -n 1 work-js/refused/harness.err)
+          test "$last" = 'render: error: import ImportRefused plot.tsx:1: import "/etc/os-release" refused: relative, absolute, node: and URL imports are refused' \
+            || { echo "::error::unexpected final line: $last"; cat work-js/refused/harness.err; exit 1; }
+          echo "OK: $last"
           docker run --rm --network none anyplot-renderer:ci /app/.venv/bin/python -c "
           import os, shutil
           from agents.renderer.commands import NODE_BINARY
