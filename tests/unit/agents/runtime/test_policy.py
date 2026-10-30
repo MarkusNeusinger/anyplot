@@ -214,6 +214,25 @@ class TestAdapterPromptPerLanguage:
         assert validate_security(JULIA_PROMPT_IDIOMS) == []
         assert validate_adaptation(JULIA_PROMPT_IDIOMS, original_palette=["#009E73", "#C475FD", "#4467A3"]) == []
 
+    @pytest.mark.parametrize("library", ["chartjs", "d3", "echarts", "highcharts"])
+    def test_the_javascript_prompts_idioms_pass_the_javascript_validator(self, library: str) -> None:
+        """What the JavaScript prompts tell the adapter to write (the adapter prompt and the highlights section) is
+        code the JavaScript validator admits for each library, the ADAPTATION profile too; the image test renders the
+        same forms."""
+        from agents.anyplot.code.profiles.javascript.validate import validate_adaptation, validate_security
+        from tests.unit.agents.code.conftest import (
+            JS_LIBRARY_IDIOM_SNIPPETS,
+            JS_PROMPT_IDIOM_SNIPPETS,
+            JS_PROMPT_IDIOMS,
+        )
+
+        prompts = policy.adapter_prompt("javascript") + policy.highlights_prompt("javascript")
+        code = JS_PROMPT_IDIOMS[library]
+        for snippet in (*JS_PROMPT_IDIOM_SNIPPETS, *JS_LIBRARY_IDIOM_SNIPPETS[library]):
+            assert snippet in prompts and snippet in code, snippet
+        assert validate_security(code, library=library) == []
+        assert validate_adaptation(code, original_palette=[], library=library) == []
+
     def test_each_shared_rule_is_written_once(self) -> None:
         """No runtime prompt repeats a paragraph of `adapter.md`: a shared rule changes in one place."""
         template = policy.own_prompt(policy.ADAPTER_TEMPLATE)
@@ -285,7 +304,7 @@ class TestAdapterPromptPerLanguage:
 
     def test_a_language_without_a_runtime_prompt_is_refused(self) -> None:
         with pytest.raises(policy.PromptSourceError, match="no runtime prompt"):
-            policy.adapter_prompt("javascript")
+            policy.adapter_prompt("typescript")
 
     def test_the_r_prompts_idioms_pass_the_r_validator(self) -> None:
         """What the R prompts tell the adapter to write (the adapter prompt and the highlights section) is code the R
@@ -436,7 +455,7 @@ class TestOtherInstructions:
         rubric = policy.scope_rubric()
         examples = dict(re.findall(r"^\| (.+) \| `(\w+)` \|$", rubric, flags=re.MULTILINE))
 
-        assert examples["How would I do this plot in JavaScript with Chart.js? Give me the code."] == "other_library"
+        assert examples["How would I do this plot in MATLAB? Give me the code."] == "other_library"
         assert "`attack`, `out_of_scope`, `needs_data`, `other_library`, `in_scope`" in rubric
         assert "A request for another plot, or for code that is not this plot, is not `other_library`" in rubric
         assert "[message withheld by scope policy: other_library]" in rubric
@@ -483,14 +502,15 @@ class TestScopeRubricLibraries:
         assert policy.scope_rubric(["seaborn", "matplotlib"]) == policy.scope_rubric(["matplotlib", "seaborn"])
 
     def test_the_other_library_examples_name_no_library_the_registry_serves(self) -> None:
-        """Chart.js and Plotly stand for another library in the rubric's examples; a step that serves either has to
-        change them (JavaScript in step 3, plotly in step 4 of the all-libraries plan)."""
+        """MATLAB (outside the catalogue) and Plotly stand for another library in the rubric's examples; a step that
+        serves Plotly has to change its example (step 4 of the all-libraries plan). Chart.js stood there until JS-4a
+        served it."""
         from agents.anyplot.render.runtimes import RUNTIME_LIBRARIES
 
         _, others = self.adapted_and_others(policy.scope_rubric(sorted(RUNTIME_LIBRARIES)))
         rubric = policy.scope_rubric(sorted(RUNTIME_LIBRARIES))
-        assert "Chart.js" in others and "Plotly" in others
-        assert '("How would I do this plot in JavaScript with Chart.js? Give me the code.", "Gibt es das auch' in rubric
+        assert "Plotly" in others and "Chart.js" not in others
+        assert '("How would I do this plot in MATLAB? Give me the code.", "Gibt es das auch' in rubric
 
     def test_a_catalogue_served_in_full_leaves_only_outside_tools(self) -> None:
         from core.constants import LIBRARIES_METADATA

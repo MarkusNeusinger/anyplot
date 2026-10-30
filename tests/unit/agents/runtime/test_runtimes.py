@@ -6,17 +6,20 @@ import pytest
 
 from agents.anyplot.code import edits
 from agents.anyplot.code.normalise import SUPPORTED_LIBRARIES as NORMALISED_LIBRARIES
+from agents.anyplot.code.profiles.javascript import regions as js_regions
 from agents.anyplot.code.profiles.julia import regions as jl_regions
 from agents.anyplot.code.profiles.r import regions as r_regions
 from agents.anyplot.code.regions import PLACEHOLDER
-from agents.anyplot.data.kinds import read_kinds
-from agents.anyplot.render.contract import BLOCKING_RULES
+from agents.anyplot.data.kinds import ColumnKinds, read_kinds
+from agents.anyplot.render.contract import BLOCKING_RULES, RenderJob
 from agents.anyplot.render.runtimes import (
+    JAVASCRIPT_LIBRARIES,
     JULIA_LIBRARIES,
     PYTHON_LIBRARIES,
     R_LIBRARIES,
     RUNTIME_CLASSES,
     RUNTIME_LIBRARIES,
+    JavaScriptRuntime,
     JuliaRuntime,
     PythonRuntime,
     RRuntime,
@@ -29,23 +32,35 @@ from agents.anyplot.schemas import CODE_ARTIFACTS, AdaptPlan, Edit
 from agents.anyplot.settings import AgentSettings
 from core.constants import SUPPORTED_LIBRARIES
 from tests.unit.agents.code.conftest import (
+    JS_CATALOGUE,
+    JS_CATALOGUE_NORMALISED,
+    JS_WORKING,
     JULIA_CATALOGUE,
     JULIA_CATALOGUE_NORMALISED,
     JULIA_WORKING,
+    MUIX_WORKING,
     R_CATALOGUE,
     R_CATALOGUE_NORMALISED,
 )
 
 
 class TestRegistry:
-    def test_the_registry_serves_the_python_the_r_and_the_julia_libraries(self) -> None:
+    def test_the_registry_serves_the_python_r_julia_and_javascript_libraries(self) -> None:
         assert PYTHON_LIBRARIES == NORMALISED_LIBRARIES
         assert PYTHON_LIBRARIES == {"matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot"}
         assert R_LIBRARIES == edits.R_LIBRARIES == {"ggplot2"}
         assert JULIA_LIBRARIES == edits.JULIA_LIBRARIES == {"makie"}
-        assert RUNTIME_LIBRARIES == PYTHON_LIBRARIES | R_LIBRARIES | JULIA_LIBRARIES <= SUPPORTED_LIBRARIES
+        # MUI X has the profile and the runtime class, and the registry serves it once its fixtures exist.
+        assert (
+            JAVASCRIPT_LIBRARIES == edits.JAVASCRIPT_LIBRARIES - {"muix"} == {"chartjs", "d3", "echarts", "highcharts"}
+        )
+        assert (
+            RUNTIME_LIBRARIES
+            == PYTHON_LIBRARIES | R_LIBRARIES | JULIA_LIBRARIES | JAVASCRIPT_LIBRARIES
+            <= SUPPORTED_LIBRARIES
+        )
         languages = {language_of(library) for library in RUNTIME_LIBRARIES}
-        assert languages == set(RUNTIME_CLASSES) == {"python", "r", "julia"}
+        assert languages == set(RUNTIME_CLASSES) == {"python", "r", "julia", "javascript"}
 
     @pytest.mark.parametrize("library", sorted(PYTHON_LIBRARIES))
     def test_a_python_runtime_is_bound_to_its_library(self, library: str) -> None:
@@ -89,22 +104,47 @@ class TestRegistry:
         with pytest.raises(ValueError, match="r library"):
             JuliaRuntime(library="ggplot2")
 
+    @pytest.mark.parametrize("library", sorted(JAVASCRIPT_LIBRARIES))
+    def test_the_javascript_runtime_is_bound_to_its_library(self, library: str) -> None:
+        """Dispatched by the library's language (`RUNTIME_CLASSES`), with the JavaScript row's reserve."""
+        runtime = runtime_for(library, cpu_seconds=45)
+        assert isinstance(runtime, JavaScriptRuntime)
+        assert runtime.library == library and runtime.language == "javascript" == language_of(library)
+        assert runtime.file_name == "plot.js" and runtime.code_artifact == "plot.js" in CODE_ARTIFACTS
+        assert runtime.placeholder == js_regions.PLACEHOLDER == "const data = loadUserData();"
+        assert runtime.cpu_seconds == 45 and runtime.render_p95_s == 15.0
+        assert runtime.blocking_rules == BLOCKING_RULES | {"unavailable-import"}
+        assert set(runtime.adaptation_targets) == set(PYTHON_TARGETS)
+        assert runtime.review_texts is True  # no probe: the review finds the requested texts in the image
+        assert has_runtime(library)
+        with pytest.raises(ValueError, match="r library"):
+            JavaScriptRuntime(library="ggplot2")
+
+    def test_the_javascript_runtime_class_takes_muix_as_tsx(self) -> None:
+        """MUI X is not served yet, but the class writes and exports it as TSX (`commands.CODE_FILE_OVERRIDES`)."""
+        runtime = JavaScriptRuntime(library="muix")
+        assert runtime.file_name == "plot.tsx" and runtime.code_artifact == "plot.tsx" in CODE_ARTIFACTS
+        assert runtime.command("light")[-1] == "plot.tsx"
+        assert runtime.security(MUIX_WORKING) == []
+
     def test_a_library_without_a_runtime_is_refused_but_known(self) -> None:
         assert language_of("plotly") == "python" and not has_runtime("plotly")
-        assert language_of("d3") == "javascript" and not has_runtime("d3")
-        with pytest.raises(ValueError, match="no runtime for 'd3'"):
-            runtime_for("d3")
+        assert language_of("muix") == "javascript" and not has_runtime("muix")
+        with pytest.raises(ValueError, match="no runtime for 'muix'"):
+            runtime_for("muix")
         with pytest.raises(ValueError, match="unknown library"):
             language_of("excel")
 
-    def test_the_settings_accept_makie_and_refuse_a_library_the_registry_does_not_serve(self) -> None:
-        assert AgentSettings(libraries=["matplotlib", "ggplot2", "makie"]).libraries == [
+    def test_the_settings_accept_the_served_libraries_and_refuse_one_the_registry_does_not_serve(self) -> None:
+        assert AgentSettings(libraries=["matplotlib", "ggplot2", "makie", "d3", "highcharts"]).libraries == [
             "matplotlib",
             "ggplot2",
             "makie",
+            "d3",
+            "highcharts",
         ]
         with pytest.raises(ValueError, match="no runtime"):
-            AgentSettings(libraries=["matplotlib", "d3"])
+            AgentSettings(libraries=["matplotlib", "muix"])
 
 
 class TestPythonRuntimeBindings:
@@ -466,6 +506,170 @@ class TestJuliaRuntimeBindings:
         (tmp_path / "probe-dark.json").write_text('{"texts": []}')
         assert runtime_for("makie").collect(tmp_path, "dark") == (b"\x89PNG data", None)
         assert runtime_for("makie").collect(tmp_path, "light") == (None, None)
+
+
+class TestJavaScriptRuntimeBindings:
+    """The JavaScript runtime hands the pipeline the JavaScript code profile of JS-3 (step 3, JS-4a)."""
+
+    def test_normalise_regions_security_and_adaptation_are_the_javascript_profiles(self) -> None:
+        runtime = runtime_for("chartjs")
+        assert runtime.normalise(JS_CATALOGUE, "chartjs") == JS_CATALOGUE_NORMALISED
+        assert runtime.regions(JS_WORKING).placeholders
+        assert runtime.security(JS_WORKING) == [] and runtime.validate(JS_WORKING, "chartjs") == []
+        assert runtime.adaptation(JS_WORKING, original_palette=[]) == []
+        assert "banned-name" in {f.rule for f in runtime.security('fetch("x");\n')}  # the JS profile, not a crash
+
+    def test_an_import_the_image_lacks_is_a_blocking_adaptation_finding(self) -> None:
+        """A MUI X 7 module fails the bundle step, so `unavailable-import` rejects the code before a render."""
+        runtime = JavaScriptRuntime(library="muix")
+        code = MUIX_WORKING.replace(
+            'import Typography from "@mui/material/Typography";',
+            'import Typography from "@mui/material/Typography";\n'
+            'import { ChartContainer } from "@mui/x-charts/ChartContainer";',
+        )
+        assert runtime.security(code) == []
+        rules = {f.rule for f in runtime.adaptation(code, original_palette=[])}
+        assert "unavailable-import" in rules and rules <= runtime.blocking_rules
+
+    def test_readiness_and_export_follow_the_javascript_profile(self) -> None:
+        runtime = runtime_for("chartjs")
+        readiness = runtime.readiness(JS_CATALOGUE_NORMALISED, spec_id="scatter-demo", enabled_libraries=["chartjs"])
+        assert readiness.status in ("clean", "coupled")
+        blocked = runtime.readiness(JS_CATALOGUE_NORMALISED, spec_id="scatter-demo", enabled_libraries=["d3"])
+        assert blocked.status == "blocked" and blocked.reasons[0].startswith("library-disabled: chartjs")
+        export = runtime.export("const x = 1;\n", spec_id="scatter-basic", library_version="4.5.1", theme="dark")
+        assert export.startswith("// Adapted by anyplot.ai from scatter-basic (chartjs 4.5.1) for your data.csv;\n")
+        assert (
+            "// run: open plot.html in a browser, which runs this code with the chart library, the dark theme" in export
+        )
+
+    def test_the_loader_is_the_one_line_read_of_the_page_table(self) -> None:
+        runtime = runtime_for("d3")
+        run_form = runtime.loader_block(JS_WORKING, columns=["a"], dtypes={}, parse_dates=[], kinds={"a": "number"})
+        assert run_form == JS_WORKING.replace("const data = loadUserData();", "const data = window.ANYPLOT_DATA;")
+        assert len(run_form.splitlines()) == len(JS_WORKING.splitlines())
+        with pytest.raises(ValueError, match="column types"):
+            runtime.loader_block(JS_WORKING, columns=["a"], dtypes={}, parse_dates=[], kinds={})
+
+    def test_data_json_is_the_typed_table_and_none_without_kinds(self) -> None:
+        runtime = runtime_for("echarts")
+        csv = "Tag,Wert,Gruppe\n2024-01-31,1.5,a\n,,b\n"
+        kinds = read_kinds(csv, {"Tag": "datetime", "Wert": "number", "Gruppe": "text"}, ["Tag"])
+        assert runtime.data_json(csv, kinds) == (
+            '{"columns":["Tag","Wert","Gruppe"],"data":[["2024-01-31",1.5,"a"],[null,null,"b"]]}'
+        )
+        assert runtime.data_json(csv, None) is None
+        # A timestamp that UTC moves before year 1 has no typed form: the page gets no table, the run goes on.
+        early = "ts\n0001-01-01T00:30:00+01:00\n"
+        assert runtime.data_json(early, read_kinds(early, {"ts": "datetime"}, ["ts"])) is None
+        assert runtime_for("matplotlib").data_json(csv, kinds) is None
+        assert (
+            runtime_for("ggplot2").data_json(csv, kinds) is None and runtime_for("makie").data_json(csv, kinds) is None
+        )
+
+    def test_a_render_job_carries_data_json_for_javascript_only(self) -> None:
+        job = RenderJob("a" * 16, "javascript", "d3", "x", "a\n1\n", data_json='{"columns":["a"],"data":[[1]]}')
+        assert job.data_json is not None
+        with pytest.raises(ValueError, match="javascript job only"):
+            RenderJob("a" * 16, "python", "matplotlib", "x", "a\n1\n", data_json="{}")
+
+    def test_loader_notes_count_what_the_typing_changes_per_column(self) -> None:
+        """Integers past ±2^53, timestamps cut to the millisecond and timestamps converted to UTC, each one change
+        note with its counts (owner rule of 2026-10-15), in that order; none for a table it reads exactly."""
+        runtime = runtime_for("highcharts")
+        kinds = ColumnKinds(
+            kinds={}, inexact={"Kunden-ID": 2}, submillisecond={"Zeit": 3, "Ende": 1}, offset={"Zeit": 4}
+        )
+        assert runtime.loader_notes(kinds) == [
+            "JavaScript reads 2 integers past ±2^53 as the nearest double, so the plot can show them a unit or more "
+            "off: 2 in 'Kunden-ID'",
+            "JavaScript keeps time to the millisecond, so the plot cuts the digits below it from 4 timestamps: "
+            "3 in 'Zeit', 1 in 'Ende'",
+            "JavaScript converts 4 timestamps with a time-zone offset to UTC, so the plot shows their UTC clock time: "
+            "4 in 'Zeit'",
+        ]
+        assert runtime.loader_notes(ColumnKinds(kinds={})) == []
+
+    def test_error_lines_name_the_loader_and_drop_the_wrapper(self) -> None:
+        """The run form's loader is one line for one line, so a line maps to itself; a line on the loader is the data
+        loader's, and a line past the code's end (a thrown value that is no `Error`) is the harness's wrapper."""
+        runtime = runtime_for("chartjs")
+        run_form = runtime.loader_block(JS_WORKING, columns=["a"], dtypes={}, parse_dates=[], kinds={"a": "number"})
+        loader = run_form.splitlines().index("const data = window.ANYPLOT_DATA;") + 1
+        tail = "console: 2 errors\nrender: error: page TypeError plot.js:{line}: x is undefined\n"
+        assert runtime.error_summary(tail.format(line=20), run_form=run_form) == "TypeError at line 20"
+        assert (
+            runtime.error_summary(tail.format(line=loader), run_form=run_form)
+            == f"TypeError at line {loader} (the data loader)"
+        )
+        past = len(run_form.splitlines()) + 3
+        assert runtime.error_summary(tail.format(line=past), run_form=run_form) == "TypeError"
+        assert runtime.error_summary(tail.format(line=past)) == f"TypeError at line {past}"
+
+    def test_edits_literals_and_protected_lines_use_the_javascript_dialect(self) -> None:
+        runtime = runtime_for("chartjs")
+        plan = AdaptPlan(edits=[Edit(find='text: "Umsatz nach Ausgaben"', replace='text: "Neuer Titel"')])
+        applied = runtime.apply_plan(JS_WORKING, plan)
+        assert applied.code is not None and 'text: "Neuer Titel"' in applied.code
+        assert runtime.new_literals(JS_WORKING, applied.code) == ["Neuer Titel"]
+        drifted = JS_WORKING.replace('isDark ? "#A8A79F" : "#6B6A63"', 'isDark ? "#000000" : "#6B6A63"')
+        assert drifted != JS_WORKING and runtime.restore_protected(JS_WORKING, drifted) == JS_WORKING
+
+    def test_the_command_is_the_renderers_javascript_row_in_exec_mode(self) -> None:
+        """The argv `executor.build_argv` runs after `sandbox do --`: the harness, `--exec --`, Node and render.mjs."""
+        from agents.renderer.commands import JS_HARNESS, NODE_BINARY, command_for
+        from agents.renderer.executor import ExecutorConfig, build_argv
+        from agents.renderer.settings import RendererSettings
+
+        local = runtime_for("echarts").command("light")
+        expected = ["--exec", "--", NODE_BINARY, JS_HARNESS, "--library=echarts", "plot.js"]
+        assert local[-len(expected) :] == expected
+        config = ExecutorConfig.from_settings(RendererSettings())
+        deployed = build_argv(
+            config, "r-x", Path("/runs/x"), "light", 60, command=command_for("javascript", "echarts"), data_json=True
+        )
+        assert deployed[-len(expected) :] == expected
+
+    async def test_the_theme_toggle_renders_the_other_theme_from_the_stored_table(self) -> None:
+        """A version keeps its typed table, so the other theme renders from the same job as the first (Gemini's
+        point about `theme_render.py` in the second opinion of 2026-10-30)."""
+        from agents.anyplot.render.backends.fake import FakeBackend
+        from agents.anyplot.schemas import PlotResult
+        from agents.anyplot.services import CodeVersion, Services
+        from agents.anyplot.theme_render import render_theme
+
+        backend = FakeBackend()
+        services = Services(backend_factory=lambda: backend)
+        table = '{"columns":["a"],"data":[[1]]}'
+        version = CodeVersion(
+            number=1,
+            working="",
+            run_form="const data = window.ANYPLOT_DATA;\n",
+            export="",
+            data_csv="a\n1\n",
+            data_json=table,
+            render_id=services.renders.put("s1", {"light": b"\x89PNG"}),
+            result=PlotResult(status="ok", attempts=1, artifacts=["plot-light.png", "plot.js", "data.csv"]),
+            library="d3",
+            code_artifact="plot.js",
+        )
+
+        await render_theme(services, AgentSettings(), "s1", version, "dark")
+
+        job = backend.jobs[-1]
+        assert (job.language, job.library, job.themes) == ("javascript", "d3", ("dark",))
+        assert job.data_json == table and job.source == version.run_form
+
+    def test_data_runs_and_conversions_stay_pythons(self) -> None:
+        runtime, python = runtime_for("d3", cpu_seconds=45), PythonRuntime(cpu_seconds=45)
+        assert runtime.data_command() == python.data_command() and runtime.data_env(20) == python.data_env(20)
+        assert runtime.convert_command() == python.convert_command() and runtime.convert_env() == python.convert_env()
+
+    def test_collect_reads_the_png_and_no_probe(self, tmp_path: Path) -> None:
+        (tmp_path / "plot-dark.png").write_bytes(b"\x89PNG data")
+        (tmp_path / "probe-dark.json").write_text('{"texts": []}')
+        assert runtime_for("d3").collect(tmp_path, "dark") == (b"\x89PNG data", None)
+        assert runtime_for("d3").collect(tmp_path, "light") == (None, None)
 
 
 class TestRowEnvironment:

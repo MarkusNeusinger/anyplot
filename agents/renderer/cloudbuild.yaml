@@ -312,34 +312,34 @@ steps:
             || { echo "the Makie smoke render request failed"; exit 1; }
           python3 -c "import json; r=json.load(open('makie.json')); o=r['outputs']['light']; assert o['exit_code']==0 and o['png_base64'], {k: o[k] for k in ('exit_code','reason','attempts','wall_s','stderr_tail')}; print('OK: Makie smoke render', o['wall_s'], 's wall,', o['cpu_s'], 's CPU,', o['max_rss_mb'], 'MiB,', o['attempts'], 'attempt(s)')"
           # 2c. A Chart.js render through the JavaScript row (JS-1 of step 3): Node by its path
-          #     starts Chromium's headless shell, so the first deploy with Node measures a cold
-          #     Chromium under gVisor, which no local run can. No agent sends a JavaScript job
-          #     before JS-4, so a failure here is a warning in this log, never a refused
-          #     promotion; JS-4, which serves JavaScript, makes it a gate like the Makie render.
+          #     starts Chromium's headless shell under gVisor, which no local run can, and the
+          #     page reads the job's typed table (`data_json`, `window.ANYPLOT_DATA`), as every
+          #     agent job does. A gate like the Makie render since JS-4a served JavaScript: a
+          #     failure refuses the promotion, and the revision serving now keeps serving.
           python3 - <<'EOF'
         import json
         source = "\n".join([
             "const t = window.ANYPLOT_TOKENS;",
+            "const data = window.ANYPLOT_DATA;",
             "const canvas = document.createElement('canvas');",
             "document.getElementById('container').appendChild(canvas);",
             "new Chart(canvas, {",
             "  type: 'bar',",
-            "  data: {labels: ['a', 'b', 'c'], datasets: [{data: [3, 1, 2], backgroundColor: t.palette[0]}]},",
+            "  data: {labels: data.map((d) => d.Gruppe), datasets: [{data: data.map((d) => d.Wert), backgroundColor: t.palette[0]}]},",
             "  options: {responsive: true, maintainAspectRatio: false, animation: false,",
             "    plugins: {title: {display: true, text: 'Größe – smoke', color: t.ink}}},",
             "});",
         ])
+        table = {"columns": ["Gruppe", "Wert"], "data": [["a", 3], ["b", 1], ["c", 2]]}
         job = {"job_id": "smoke-chartjs", "language": "javascript", "library": "chartjs", "source": source,
-               "data_csv": "x\n1\n", "themes": ["light"], "timeout_s": 60}
+               "data_csv": "Gruppe,Wert\na,3\nb,1\nc,2\n", "data_json": json.dumps(table),
+               "themes": ["light"], "timeout_s": 60}
         json.dump(job, open("chartjs_job.json", "w"))
         EOF
-          if curl -fsS --retry 3 --retry-delay 10 --retry-all-errors --max-time 200 -H "Authorization: Bearer $$TOKEN" \
-            -H "Content-Type: application/json" --data @chartjs_job.json -o chartjs.json "$$URL/render"; then
-            python3 -c "import json; r=json.load(open('chartjs.json')); o=r['outputs']['light']; assert o['exit_code']==0 and o['png_base64'], {k: o[k] for k in ('exit_code','reason','attempts','wall_s','stderr_tail')}; print('OK: Chart.js smoke render', o['wall_s'], 's wall,', o['cpu_s'], 's CPU,', o['max_rss_mb'], 'MiB,', o['attempts'], 'attempt(s)')" \
-              || echo "WARNING: the Chart.js smoke render failed (above); JavaScript is not served yet, so the deploy goes on"
-          else
-            echo "WARNING: the Chart.js smoke render request failed; JavaScript is not served yet, so the deploy goes on"
-          fi
+          curl -fsS --retry 3 --retry-delay 10 --retry-all-errors --max-time 200 -H "Authorization: Bearer $$TOKEN" \
+            -H "Content-Type: application/json" --data @chartjs_job.json -o chartjs.json "$$URL/render" \
+            || { echo "the Chart.js smoke render request failed"; exit 1; }
+          python3 -c "import json; r=json.load(open('chartjs.json')); o=r['outputs']['light']; assert o['exit_code']==0 and o['png_base64'], {k: o[k] for k in ('exit_code','reason','attempts','wall_s','stderr_tail')}; print('OK: Chart.js smoke render', o['wall_s'], 's wall,', o['cpu_s'], 's CPU,', o['max_rss_mb'], 'MiB,', o['attempts'], 'attempt(s)')"
           # 3. A real data run (POST /run-data, run_data_code): the harness in
           #    data mode with its audit-hook guard armed returns a 2-row table.
           python3 - <<'EOF'

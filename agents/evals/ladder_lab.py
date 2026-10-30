@@ -394,6 +394,7 @@ async def adapt_and_render(
             data_csv=dataset.csv,
             themes=("light",),
             timeout_s=settings.render_timeout_s,
+            data_json=runtime.data_json(dataset.csv, kinds),
         )
         async with render_lock:
             result = await backend.render(job)

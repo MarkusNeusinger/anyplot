@@ -98,6 +98,7 @@ async def render_theme(
         data_csv=version.data_csv,
         themes=(theme,),
         timeout_s=settings.render_timeout_s,
+        data_json=version.data_json,
     )
     try:
         result = await services.backend.render(job, lane="toggle", wait_s=slot_wait_s(settings))

@@ -487,6 +487,9 @@ class Run:
     loader_codes: list[str] = field(default_factory=list)
     """The kinds of cells behind `loader_notes` (`loader_codes`), for the usage telemetry: never the notes, which name
     columns and counts."""
+    data_json: str | None = None
+    """The run's table as typed JSON for a runtime whose code reads no `data.csv` (`RuntimeAdapter.data_json`:
+    JavaScript), built once per run; every render job of the run and the shipped version carry it."""
     edit_failures: set[str] = field(default_factory=set)
     """The `edits.FAILURE_KINDS` of every plan whose edits failed and ended its attempt."""
     validator_rules: set[str] = field(default_factory=set)
@@ -1239,6 +1242,7 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
             ),
             code_artifact=runtime.code_artifact,
             data_csv=run.dataset.csv,
+            data_json=run.data_json,
             render_id=render_id,
             result=result,
             plan=shipped.plan,
@@ -1640,6 +1644,7 @@ async def _attempts(
     kinds = column_kinds_of(dataset)
     run.loader_notes = runtime.loader_notes(kinds) if kinds is not None else []
     run.loader_codes = loader_codes(runtime, kinds)
+    run.data_json = runtime.data_json(dataset.csv, kinds)
     feedback: list[str] = []
     previous_plan: AdaptPlan | None = None
     rows = data_rows(dataset.csv)
@@ -1815,6 +1820,7 @@ async def _attempts(
             data_csv=dataset.csv,
             themes=(run.theme,),
             timeout_s=deadline.clamp(settings.render_timeout_s),
+            data_json=run.data_json,
         )
         started = time.monotonic()
         rendered = await services.backend.render(job)

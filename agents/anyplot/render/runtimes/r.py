@@ -209,6 +209,10 @@ class RRuntime:
             notes.append(offset_note("R", kinds.offset))
         return notes
 
+    def data_json(self, csv_text: str, kinds: ColumnKinds | None) -> str | None:
+        """None: the run form's `readr::read_csv` reads `data.csv` itself."""
+        return None
+
     def validate(self, code: str, library: str) -> list[str]:
         return [f"{finding.rule}: {finding.message}" for finding in validate_security(code)]
 

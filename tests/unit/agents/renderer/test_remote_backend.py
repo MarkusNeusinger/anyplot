@@ -170,6 +170,21 @@ class TestRoundTrip:
             "timeout_s",
         }
 
+    async def test_a_javascript_job_sends_its_typed_table(self) -> None:
+        """JS-4a: the pipeline's `data_json` reaches the renderer, which writes it as `data.json` for the page."""
+        bodies: list[dict[str, Any]] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            bodies.append(json.loads(request.content))
+            return httpx.Response(200, json=answer_json())
+
+        backend = mocked(handler)
+        table = '{"columns":["x","y"],"data":[[1,2]]}'
+        await backend.render(render_job(language="javascript", library="d3", source="x", data_json=table))
+        await backend.aclose()
+
+        assert bodies and bodies[0]["data_json"] == table and bodies[0]["data_csv"] == "x,y\n1,2\n"
+
     async def test_end_to_end_with_the_real_executor_and_harness(
         self, overrides: None, settings: RendererSettings, config: ExecutorConfig
     ) -> None:

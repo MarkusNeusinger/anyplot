@@ -509,8 +509,9 @@ class TestCloudBuild:
             "_MODEL": defaults["model"].default,
             "_JUDGE_MODEL": defaults["judge_model"].default,
             # Every library with a runtime for the admin's live tests (owner, 2026-10-28), not the settings default:
-            # the six Python libraries, ggplot2 on the R runtime (2026-10-29) and Makie on the Julia runtime (2026-10-30).
-            "_LIBRARIES": "matplotlib,seaborn,plotnine,altair,pygal,letsplot,ggplot2,makie",
+            # the six Python libraries, ggplot2 on the R runtime (2026-10-29), Makie on the Julia runtime and Chart.js,
+            # D3, ECharts and Highcharts on the JavaScript runtime (2026-10-30).
+            "_LIBRARIES": "matplotlib,seaborn,plotnine,altair,pygal,letsplot,ggplot2,makie,chartjs,d3,echarts,highcharts",
             "_MIN_INSTANCES": "0",
             "_SMOKE_AUTH": "true",
         }
@@ -778,9 +779,9 @@ class TestRendererToolchainSteps:
         assert 'save("plot-$(THEME).png", fig; px_per_unit = 2)' in job.source
         assert "Größe" in job.source
 
-    def test_the_smoke_measures_chartjs_through_the_javascript_row_without_gating(self, workspace: Path) -> None:
-        """JS-1: the first deploy with Node measures a cold Chromium under gVisor. JavaScript is not served before
-        JS-4, so a failed render is a warning in the log, never a refused promotion."""
+    def test_the_smoke_renders_chartjs_from_its_typed_table_as_a_gate(self, workspace: Path) -> None:
+        """JS-1 measured a cold Chromium under gVisor with a warning only; JS-4a serves JavaScript, so a failed
+        render refuses the promotion like the Makie render, and the page reads the job's typed table."""
         smoke = _step(_config(RENDERER_CLOUDBUILD), "smoke")
         values = {**_config(RENDERER_CLOUDBUILD)["substitutions"], "PROJECT_ID": "anyplot", "BUILD_ID": "build-1"}
         heredocs = re.findall(r"<<'EOF'\n(.*?)\nEOF\n", _substituted(smoke, values), re.DOTALL)
@@ -789,9 +790,11 @@ class TestRendererToolchainSteps:
         job = RenderRequest.model_validate_json((workspace / "chartjs_job.json").read_text(encoding="utf-8"))
         assert (job.language, job.library, job.themes) == ("javascript", "chartjs", ["light"])
         assert "new Chart(canvas" in job.source and "window.ANYPLOT_TOKENS" in job.source
+        assert "const data = window.ANYPLOT_DATA;" in job.source and job.data_json is not None
+        assert json.loads(job.data_json)["columns"] == job.data_csv.splitlines()[0].split(",")
         assert "--data @chartjs_job.json -o chartjs.json" in smoke
         assert "OK: Chart.js smoke render" in smoke and "o['cpu_s']" in smoke and "o['max_rss_mb']" in smoke
         javascript = smoke[smoke.index("--data @chartjs_job.json") : smoke.index("# 3. A real data run")]
-        assert javascript.count("WARNING: the Chart.js smoke render") == 2 and "exit 1" not in javascript
-        # Between the Makie render and the data run, which both still gate the promotion.
+        assert "WARNING" not in javascript and 'the Chart.js smoke render request failed"; exit 1' in javascript
+        # Between the Makie render and the data run, which all gate the promotion.
         assert smoke.index("smoke-makie") < smoke.index("smoke-chartjs") < smoke.index("smoke-data")

@@ -16,7 +16,10 @@ in `AGENT_LIBRARIES`, and the readiness scan blocks it as `unsupported-library`.
 ggplot2 since 2026-10-29 (PR 3b of the R pilot): the R code profile
 (`code/profiles/r/`) and the renderer's R row in exec mode. `JuliaRuntime` serves Makie
 since 2026-10-30 (J2b of step 5): the Julia code profile (`code/profiles/julia/`) and the
-renderer's Julia row in exec mode. A later language adds a
+renderer's Julia row in exec mode. `JavaScriptRuntime` serves Chart.js, D3, ECharts and
+Highcharts since 2026-10-30 (JS-4a of step 3): the JavaScript code profile
+(`code/profiles/javascript/`) and the renderer's JavaScript row in exec mode; it takes
+MUI X too, which the registry serves once its fixtures exist. A later language adds a
 runtime module here, its class to `RUNTIME_CLASSES` and its libraries to
 `RUNTIME_LIBRARIES`; a later Python library (plotly, bokeh) adds its validator profile
 and save rule to the Python code modules and its id to `PYTHON_LIBRARIES`
@@ -29,6 +32,7 @@ from types import MappingProxyType
 from agents.renderer.commands import LIBRARY_LANGUAGES, command_for
 
 from ..contract import RuntimeAdapter
+from .javascript import JavaScriptRuntime
 from .julia import JuliaRuntime
 from .python import PythonRuntime
 from .r import RRuntime
@@ -42,13 +46,17 @@ equal)."""
 JULIA_LIBRARIES: frozenset[str] = frozenset({"makie"})
 """The Julia libraries with a complete runtime profile (`code.edits.JULIA_LIBRARIES`, the edit applier's Julia dialect,
 pinned equal)."""
+JAVASCRIPT_LIBRARIES: frozenset[str] = frozenset({"chartjs", "d3", "echarts", "highcharts"})
+"""The JavaScript libraries the registry serves: `code.edits.JAVASCRIPT_LIBRARIES` (the edit applier's JavaScript
+dialect) without MUI X, which follows once its fixtures exist (the plan's order). Highcharts is served under its
+non-commercial licence (owner decision of 2026-10-30, the plan's question 6)."""
 
-RUNTIME_LIBRARIES: frozenset[str] = PYTHON_LIBRARIES | R_LIBRARIES | JULIA_LIBRARIES
+RUNTIME_LIBRARIES: frozenset[str] = PYTHON_LIBRARIES | R_LIBRARIES | JULIA_LIBRARIES | JAVASCRIPT_LIBRARIES
 """Every library the registry serves; a library of `core.constants.SUPPORTED_LIBRARIES` outside it has no runtime yet."""
 
-RuntimeClass = type[PythonRuntime] | type[RRuntime] | type[JuliaRuntime]
+RuntimeClass = type[PythonRuntime] | type[RRuntime] | type[JuliaRuntime] | type[JavaScriptRuntime]
 RUNTIME_CLASSES: Mapping[str, RuntimeClass] = MappingProxyType(
-    {"python": PythonRuntime, "r": RRuntime, "julia": JuliaRuntime}
+    {"python": PythonRuntime, "r": RRuntime, "julia": JuliaRuntime, "javascript": JavaScriptRuntime}
 )
 """The runtime class of each language with one; `runtime_for` builds it for the library."""
 
@@ -83,11 +91,13 @@ def runtime_for(library: str, *, cpu_seconds: int = 60) -> RuntimeAdapter:
 
 
 __all__ = [
+    "JAVASCRIPT_LIBRARIES",
     "JULIA_LIBRARIES",
     "PYTHON_LIBRARIES",
     "RUNTIME_CLASSES",
     "RUNTIME_LIBRARIES",
     "R_LIBRARIES",
+    "JavaScriptRuntime",
     "JuliaRuntime",
     "PythonRuntime",
     "RRuntime",

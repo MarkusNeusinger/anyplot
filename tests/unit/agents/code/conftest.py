@@ -492,3 +492,192 @@ MUIX_WORKING = source("""
       );
     }
 """)
+
+# What the JavaScript prompts (`agents/anyplot/prompts/adapter_javascript.md` and its highlights slot) tell the adapter
+# to write, as one working form per library: the column constants with an escaped quote and backslash, `null` dropped
+# before a statistic, the plot language's marks through `fmt` on every value axis, the time axes kept in UTC, and the
+# palette read from `t.palette`. `JS_PROMPT_IDIOM_SNIPPETS` stand verbatim in the prompt and in every library's form,
+# `JS_LIBRARY_IDIOM_SNIPPETS` in the prompt and in their library's form (the policy test holds each form against both
+# validator profiles, the image test renders it from a table with missing cells).
+JS_PROMPT_IDIOM_SNIPPETS = (
+    "const data = loadUserData();",
+    "[...new Set(data.map((d) => d[GROUP]))]",
+    "[...data].sort(",
+    "data.filter((d) => d[Y] != null)",
+    'const fmt = (v, digits = 2) => { const [whole, frac] = Math.abs(v).toFixed(digits).split("."); '
+    'return (v < 0 ? "-" : "") + whole.replace(/\\B(?=(\\d{3})+(?!\\d))/g, THOUSANDS) + (frac ? DECIMAL + frac : ""); };',
+    '"r = " + fmt(r, 2)',
+    'const INK_MUTED = window.ANYPLOT_THEME === "dark" ? "#A8A79F" : "#6B6A63";',
+    "const peak = data.filter((d) => d[Y] != null).reduce((best, d) => (d[Y] > best[Y] ? d : best))",
+    "fmt(peak[Y], 0)",
+    "t.palette[i]",
+)
+JS_LIBRARY_IDIOM_SNIPPETS: dict[str, tuple[str, ...]] = {
+    "chartjs": (
+        "ticks: { callback: (v) => fmt(v, 1) }",
+        '(v) => fmt(v / 1e6, 1) + " Mio."',
+        'd[DAY].split("-").reverse().join(".")',
+        "new Date(d[DAY]).getTime()",
+        "new Date(v).toISOString().slice(0, 10)",
+        "responsive: true",
+        "maintainAspectRatio: false",
+    ),
+    "d3": (
+        ".tickFormat((v) => fmt(v, 1))",
+        "d3.scaleUtc()",
+        'd3.utcFormat("%d.%m.%Y")',
+        "d3.line().defined((d) => d[Y] != null)",
+        "d3.scaleOrdinal().domain(groups).range(t.palette)",
+        "window.ANYPLOT_SIZE",
+    ),
+    "echarts": (
+        "axisLabel: { formatter: (v) => fmt(v, 1) }",
+        "useUTC: true",
+        "[new Date(d[DAY]).getTime(), d[Y]]",
+        "color: t.palette",
+        'echarts.init(document.getElementById("container"))',
+    ),
+    "highcharts": (
+        "labels: { formatter() { return fmt(this.value, 1); } }",
+        'labels: { format: "{value:%d.%m.%Y}" }',
+        "[new Date(d[DAY]).getTime(), d[Y]]",
+        "colors: t.palette",
+    ),
+}
+_JS_IDIOM_HEAD = source(r"""
+    //# anyplot-orientation: landscape
+    const t = window.ANYPLOT_TOKENS;
+    const { width, height } = window.ANYPLOT_SIZE;
+    const INK_MUTED = window.ANYPLOT_THEME === "dark" ? "#A8A79F" : "#6B6A63";
+
+    // Columns: set these to your data's column names
+    const DAY = "Tag \"lokal\"";  // role: x
+    const X = "Ausgaben (k €)";  // role: size
+    const Y = "Umsatz\\Netto";  // role: y
+    const GROUP = "Region";  // role: group
+
+    // Data: replace this block with your own records, one object per row
+    const data = loadUserData();
+
+    // Plot: reads only data and the constants above
+    const DECIMAL = ",";
+    const THOUSANDS = ".";
+    const fmt = (v, digits = 2) => { const [whole, frac] = Math.abs(v).toFixed(digits).split("."); return (v < 0 ? "-" : "") + whole.replace(/\B(?=(\d{3})+(?!\d))/g, THOUSANDS) + (frac ? DECIMAL + frac : ""); };
+    const groups = [...new Set(data.map((d) => d[GROUP]))];
+    const colors = groups.map((g, i) => t.palette[i]);
+    const dated = data.filter((d) => d[DAY] != null);
+    const pairs = data.filter((d) => d[X] != null && d[Y] != null);
+    const ranked = [...data].sort((a, b) => (b[X] ?? 0) - (a[X] ?? 0));
+    const mean = (values) => values.reduce((sum, v) => sum + v, 0) / values.length;
+    const mx = mean(pairs.map((d) => d[X]));
+    const my = mean(pairs.map((d) => d[Y]));
+    const spread = (key, m) => Math.sqrt(pairs.reduce((sum, d) => sum + (d[key] - m) ** 2, 0));
+    const r = pairs.reduce((sum, d) => sum + (d[X] - mx) * (d[Y] - my), 0) / (spread(X, mx) * spread(Y, my));
+    const note = "r = " + fmt(r, 2);
+    const peak = data.filter((d) => d[Y] != null).reduce((best, d) => (d[Y] > best[Y] ? d : best));
+    const title = "Umsatz bis " + fmt(peak[Y], 0) + ", " + note + ", zuerst " + ranked[0][GROUP];
+""")
+JS_PROMPT_IDIOMS: dict[str, str] = {
+    "chartjs": _JS_IDIOM_HEAD
+    + source(r"""
+        const upper = document.createElement("div");
+        const lower = document.createElement("div");
+        upper.style.height = "50%";
+        lower.style.height = "50%";
+        const container = document.getElementById("container");
+        container.appendChild(upper);
+        container.appendChild(lower);
+        const first = document.createElement("canvas");
+        const second = document.createElement("canvas");
+        upper.appendChild(first);
+        lower.appendChild(second);
+        new Chart(first, {
+          type: "line",
+          data: {
+            labels: dated.map((d) => d[DAY].split("-").reverse().join(".")),
+            datasets: groups.map((g, i) => ({
+              label: g,
+              data: dated.map((d) => (d[GROUP] === g ? d[Y] : null)),
+              borderColor: t.palette[i],
+              backgroundColor: colors[i],
+            })),
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            plugins: { title: { display: true, text: title, color: t.ink } },
+            scales: { y: { ticks: { callback: (v) => fmt(v, 1) } } },
+          },
+        });
+        new Chart(second, {
+          type: "scatter",
+          data: {
+            datasets: [{ label: Y, data: dated.map((d) => ({ x: new Date(d[DAY]).getTime(), y: d[Y] })), backgroundColor: INK_MUTED }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            scales: {
+              x: { type: "linear", ticks: { callback: (v) => new Date(v).toISOString().slice(0, 10) } },
+              y: { ticks: { callback: (v) => fmt(v / 1e6, 1) + " Mio." } },
+            },
+          },
+        });
+    """),
+    "d3": _JS_IDIOM_HEAD
+    + source(r"""
+        const margin = { top: 70, right: 40, bottom: 60, left: 110 };
+        const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
+        const x = d3.scaleUtc().domain(d3.extent(dated, (d) => new Date(d[DAY]))).range([margin.left, width - margin.right]);
+        const y = d3.scaleLinear().domain(d3.extent(pairs, (d) => d[Y])).nice().range([height - margin.bottom, margin.top]);
+        const color = d3.scaleOrdinal().domain(groups).range(t.palette);
+        svg.append("g").attr("transform", `translate(0,${height - margin.bottom})`)
+          .call(d3.axisBottom(x).ticks(6).tickFormat(d3.utcFormat("%d.%m.%Y")));
+        svg.append("g").attr("transform", `translate(${margin.left},0)`).call(d3.axisLeft(y).tickFormat((v) => fmt(v, 1)));
+        for (const g of groups) {
+          svg.append("path")
+            .datum(dated.filter((d) => d[GROUP] === g))
+            .attr("fill", "none")
+            .attr("stroke", color(g))
+            .attr("stroke-width", 3)
+            .attr("d", d3.line().defined((d) => d[Y] != null).x((d) => x(new Date(d[DAY]))).y((d) => y(d[Y])));
+        }
+        svg.append("text").attr("x", width / 2).attr("y", 36).attr("text-anchor", "middle").attr("fill", t.ink).text(title);
+    """),
+    "echarts": _JS_IDIOM_HEAD
+    + source(r"""
+        const chart = echarts.init(document.getElementById("container"));
+        chart.setOption({
+          animation: false,
+          useUTC: true,
+          color: t.palette,
+          title: { text: title, left: "center", textStyle: { color: t.ink } },
+          xAxis: { type: "time", axisLabel: { color: t.inkSoft } },
+          yAxis: { type: "value", axisLabel: { formatter: (v) => fmt(v, 1) } },
+          series: groups.map((g) => ({
+            type: "line",
+            name: g,
+            data: dated.filter((d) => d[GROUP] === g).map((d) => [new Date(d[DAY]).getTime(), d[Y]]),
+          })),
+        });
+    """),
+    "highcharts": _JS_IDIOM_HEAD
+    + source(r"""
+        Highcharts.chart("container", {
+          chart: { backgroundColor: t.pageBg, animation: false },
+          credits: { enabled: false },
+          colors: t.palette,
+          title: { text: title, style: { color: t.ink } },
+          xAxis: { type: "datetime", labels: { format: "{value:%d.%m.%Y}" } },
+          yAxis: { title: { text: Y }, labels: { formatter() { return fmt(this.value, 1); } } },
+          plotOptions: { series: { animation: false } },
+          series: groups.map((g) => ({
+            type: "line",
+            name: g,
+            data: dated.filter((d) => d[GROUP] === g).map((d) => [new Date(d[DAY]).getTime(), d[Y]]),
+          })),
+        });
+    """),
+}

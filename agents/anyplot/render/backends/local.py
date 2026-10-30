@@ -16,7 +16,9 @@ under development. On timeout the container is killed by name. The run directory
 a fresh temporary directory that is removed afterwards. stdout is discarded and stderr
 is read while the container runs, keeping only its last `STDERR_LIMIT` bytes: the
 code under test writes it, so it can be arbitrarily large. A theme's stderr tail is then
-cut as the renderer cuts it (`executor.stderr_tail` with the row's `stderr_head`).
+cut as the renderer cuts it (`executor.stderr_tail` with the row's `stderr_head`). A
+JavaScript job's typed table (`RenderJob.data_json`) is written as `data.json` next to
+the code file and named in `ANYPLOT_DATA_JSON`, as the renderer's executor does.
 
 The backend holds no semaphore: `SerialRenderer` (`render/serial.py`), which
 `Services.backend` puts in front of every backend, hands it one theme at a time.
@@ -44,7 +46,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from agents.renderer.commands import command_for
-from agents.renderer.executor import stderr_tail
+from agents.renderer.executor import DATA_JSON_ENV, DATA_JSON_FILE, WORKDIR, stderr_tail
 from agents.renderer.wire import (
     CONVERT_META_FILE,
     CONVERT_REQUEST_FILE,
@@ -174,6 +176,9 @@ class LocalDockerBackend:
         argv = self._isolation(f"r-{job.job_id}-{theme}", run_dir)
         for key, value in runtime.env(theme).items():
             argv += ["-e", f"{key}={value}"]
+        if job.data_json is not None:
+            # The page's table, which `render()` wrote next to the code file (`executor.sandbox_env`).
+            argv += ["-e", f"{DATA_JSON_ENV}={WORKDIR}/{DATA_JSON_FILE}"]
         argv += [self.image, *runtime.command(theme)]
         if argv[argv.index("--network") + 1] != "none" or any("--network=" in part for part in argv):
             raise AssertionError("a render container must never have network access")
@@ -362,6 +367,8 @@ class LocalDockerBackend:
             os.chmod(run_dir, 0o700)
             (run_dir / self._runtime(job.library).file_name).write_text(job.source, encoding="utf-8")
             (run_dir / "data.csv").write_text(job.data_csv, encoding="utf-8")
+            if job.data_json is not None:
+                (run_dir / DATA_JSON_FILE).write_text(job.data_json, encoding="utf-8")
             outputs = await asyncio.gather(*(self._run_theme(job, theme, run_dir) for theme in job.themes))
             return RenderResult(job.job_id, {output.theme: output for output in outputs})
         finally:

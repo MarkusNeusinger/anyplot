@@ -1,9 +1,9 @@
-"""Generate the synthetic spike-X fixture cases: 10 specs x 8 libraries x 6 perturbations.
+"""Generate the synthetic spike-X fixture cases: 10 specs x 12 libraries x 6 perturbations.
 
 Every dataset is invented and drawn from a seeded NumPy generator, so a rerun writes
 byte-identical files. Run it from the repository root:
 
-    uv run --extra agents python -m agents.evals.make_fixtures          # (re)write the 480 cases
+    uv run --extra agents python -m agents.evals.make_fixtures          # (re)write the 720 cases
     uv run --extra agents python -m agents.evals.make_fixtures --check  # exit 1 when a file is stale
 
 It writes `agents/evals/fixtures/cases/<spec>-<library>-<perturbation>/` with
@@ -15,14 +15,16 @@ and commit the result. The libraries are matplotlib and seaborn (since the first
 fixtures), plotnine and altair (since 2026-10-25, step 1b of
 `agentic/specs/261024-agent-all-libraries.md`), pygal and lets-plot (`letsplot`,
 since 2026-10-26, step 1c), ggplot2 (since 2026-10-29, step 2c, PR 3b: the first
-library of another language, R, whose files the R runtime scans) and Makie (`makie`,
-since 2026-10-30, J2b of step 5: Julia, whose files the Julia runtime scans); every
+library of another language, R, whose files the R runtime scans), Makie (`makie`,
+since 2026-10-30, J2b of step 5: Julia, whose files the Julia runtime scans) and Chart.js,
+D3, ECharts and Highcharts (`chartjs`, `d3`, `echarts`, `highcharts`, since 2026-10-30,
+JS-4a of step 3: JavaScript, whose files the JavaScript runtime scans); every
 library of a spec gets the same datasets and bindings, so only `library` and the case id
 differ between them. A new library adds case directories and changes none that exist.
 
 **The ten specs.** Each covers another plot family, and the readiness scan
 (`RuntimeAdapter.readiness` of the library's runtime, through `opening.assess` with the
-eight libraries enabled) marks each of its eight files `clean` or `coupled`, except one
+twelve libraries enabled) marks each of its twelve files `clean` or `coupled`, except one
 pygal file that it blocks (`tests/unit/agents/evals/test_make_fixtures.py` asserts it and names
 it). The cells below were computed on 2026-10-26, pygal's `histogram-basic` on
 2026-10-28, the ggplot2 column on 2026-10-29 and the makie column on 2026-10-30; the first four columns are unchanged since 2026-10-25. The heatmap's matplotlib file, `clean` in the table's first
@@ -36,7 +38,9 @@ pygal, lets-plot and ggplot2, so theirs carry none. Four ggplot2 files are `clea
 line-timeseries); the other six carry no `# Data` marker in the convention's form and
 are `coupled` with a `data-block` hint, which the owner decision of 2026-10-29 makes
 eligible in every language. All ten Makie files are `coupled` (no catalogue Makie file
-carries column constants, so every one has the `data-block` hint):
+carries column constants, so every one has the `data-block` hint), and so are all forty
+Chart.js, D3, ECharts and Highcharts files (2026-10-30; no file of the four is `clean` in
+the whole catalogue, so the table leaves their columns out):
 
 | Spec | Family | matplotlib | seaborn | plotnine | altair | pygal | letsplot | ggplot2 | makie |
 |---|---|---|---|---|---|---|---|---|---|
@@ -82,9 +86,10 @@ customers and stations are invented.
 perturbations and alternating matplotlib and seaborn (`SMOKE_CYCLE`, as since the first
 fixtures), and one case for each library outside that cycle (`LIBRARY_SMOKE`):
 `scatter-basic-<library>-renamed` for plotnine and altair (since step 1b), for pygal
-and letsplot (since step 1c), for ggplot2 (since PR 3b) and for makie (since J2b).
-`scatter-basic` is the spec whose files of each of these libraries were rendered when the
-library's step landed, and it is eligible for all six. `renamed` puts headers with spaces and a dot
+and letsplot (since step 1c), for ggplot2 (since PR 3b), for makie (since J2b) and for
+chartjs, d3, echarts and highcharts (since JS-4a). `scatter-basic` is the spec whose files
+of each of these libraries were rendered when the library's step landed, and it is
+eligible for all ten. `renamed` puts headers with spaces and a dot
 (`Werbebudget in Tsd. CHF`) into the library's own column syntax: plotnine's `aes`
 strings; altair's field strings, where Vega-Lite reads an unescaped `.` as nested access
 (`prompts/library/altair.md`); and lets-plot's `aes` strings and tooltip lines, where a
@@ -96,7 +101,10 @@ through a column constant in `.data[[...]]` (`prompts/library/ggplot2.md`, "Data
 a bare name in `aes()` breaks on the spaces and the dot. Makie reads it only as
 `df[!, COL]` through a column constant (`prompts/library/makie.md`, "Data block"), where a
 field (`df.Werbebudget`) breaks on the same characters, and its catalogue file builds plain
-vectors, so the case also checks that the adaptation introduces the DataFrame access.
+vectors, so the case also checks that the adaptation introduces the DataFrame access. The
+JavaScript libraries read it only as `d[COL]` through a column constant (the "Data block"
+of `prompts/library/<library>.md`), where a property (`d.Werbebudget`) breaks on the same
+characters, and their catalogue files keep the example values in variables of their own.
 """
 
 import argparse
@@ -119,7 +127,20 @@ from agents.anyplot.schemas import MAX_COLUMN_NAME_CHARS, MAX_ROWS
 
 
 CASES_DIR = Path(__file__).resolve().parent / "fixtures" / "cases"
-LIBRARIES: tuple[str, ...] = ("matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot", "ggplot2", "makie")
+LIBRARIES: tuple[str, ...] = (
+    "matplotlib",
+    "seaborn",
+    "plotnine",
+    "altair",
+    "pygal",
+    "letsplot",
+    "ggplot2",
+    "makie",
+    "chartjs",
+    "d3",
+    "echarts",
+    "highcharts",
+)
 PERTURBATIONS: tuple[str, ...] = ("renamed", "x10", "n12", "n5000", "date", "decimal-comma")
 SMOKE_TAG = "smoke"
 SMOKE_CYCLE: tuple[str, ...] = ("matplotlib", "seaborn")
@@ -131,6 +152,10 @@ LIBRARY_SMOKE: dict[str, tuple[str, str]] = {
     "letsplot": ("scatter-basic", "renamed"),
     "ggplot2": ("scatter-basic", "renamed"),
     "makie": ("scatter-basic", "renamed"),
+    "chartjs": ("scatter-basic", "renamed"),
+    "d3": ("scatter-basic", "renamed"),
+    "echarts": ("scatter-basic", "renamed"),
+    "highcharts": ("scatter-basic", "renamed"),
 }
 """The one smoke case `(spec, perturbation)` of each library outside `SMOKE_CYCLE` (module docstring)."""
 SOURCE = "synthetic: agents/evals/make_fixtures.py"
