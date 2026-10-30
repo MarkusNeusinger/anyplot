@@ -10,4 +10,4 @@
   and merges back. In the first parallel run, the section tests passed every
   gate while two of three packages tested copies of the page logic instead of
   the pages. Cleanup now asks before deleting package branches, as
-  `CLAUDE.md` requires.
+  `CLAUDE.md` requires. (#12474)
