@@ -8,4 +8,4 @@
   finding in a new `## Self-review` section of the PR body, as fixed or
   declined. Claude's independent Opus review stays, because a reviewer of
   the same model shares the author's blind spots. The owner's reason: code
-  quality comes before saving tokens.
+  quality comes before saving tokens. (#12476)
