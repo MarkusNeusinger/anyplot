@@ -144,6 +144,13 @@ JS_ENV: Mapping[str, str] = MappingProxyType(
 )
 """The JavaScript row's environment: the browser, the packages, the fonts, the zone, the locale, the caches and the
 harness's sandbox mode. A job's `data.json` adds `ANYPLOT_DATA_JSON` (`executor.sandbox_env`)."""
+JS_DIAGNOSIS_DEBUG: Mapping[str, str | None] = MappingProxyType(
+    {"d3": None, "echarts": "pw:process", "highcharts": "pw:nothing-logs-here"}
+)
+"""Temporary experiment (2026-10-30): with `DEBUG=pw:process,pw:browser` every JavaScript render on Cloud Run ends
+as it should, without it every one loses its output after Chromium closes. One deploy tells the cause apart: D3
+runs without the variable (the control), ECharts with Playwright's few process lines only, Highcharts with the
+variable set to a namespace nothing logs to; Chart.js and MUI X keep the full log. Removed with the fix."""
 JULIA_HOME = "/opt/julia-1.13.2"
 """Julia's install in the toolchain image: the official 1.13.2 build for generic Linux (agents/renderer/toolchain.Dockerfile),
 the version `Manifest.toml` was resolved with."""
@@ -275,6 +282,17 @@ class RuntimeCommand:
         return not self.argv
 
 
+def _diagnosis_env(library: str) -> Mapping[str, str]:
+    """`JS_ENV` with the library's `DEBUG` variant of the temporary experiment (`JS_DIAGNOSIS_DEBUG`)."""
+    if library not in JS_DIAGNOSIS_DEBUG:
+        return JS_ENV
+    env = {key: value for key, value in JS_ENV.items() if key != "DEBUG"}
+    variant = JS_DIAGNOSIS_DEBUG[library]
+    if variant is not None:
+        env["DEBUG"] = variant
+    return MappingProxyType(env)
+
+
 def _row(language: Language, library: str) -> RuntimeCommand:
     code_file = CODE_FILE_OVERRIDES.get(library, CODE_FILES[language])
     if language == "python":
@@ -327,7 +345,7 @@ def _row(language: Language, library: str) -> RuntimeCommand:
             language,
             code_file,
             (NODE_BINARY, JS_HARNESS, f"--library={library}"),
-            env=JS_ENV,
+            env=_diagnosis_env(library),
             toolchain=(NODE_BINARY,),
             rlimit_as=False,
             rlimit_nproc=False,
