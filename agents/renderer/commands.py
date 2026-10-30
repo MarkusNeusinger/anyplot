@@ -14,7 +14,7 @@ sandbox with the probe harness in front:
 | Language | Code file | Command |
 |---|---|---|
 | `python` | `plot.py` | `python -I -X disable-remote-debug harness.py plot.py`: the harness runs the plot in process, with the plot guard and the savefig probe |
-| `javascript` | `plot.js` (`plot.tsx` for MUI X) | `harness.py --exec -- node /opt/anyplot/js-render/render.mjs --library=<library> plot.js` |
+| `javascript` | `plot.js` (`plot.tsx` for MUI X) | `harness.py --exec -- /opt/node/bin/node /opt/anyplot/js-render/render.mjs --library=<library> plot.js` |
 | `r` | `plot.R` | `harness.py --exec -- /opt/R/4.6.1/lib/R/bin/exec/R --no-echo --no-restore --no-save --file=plot.R` |
 | `julia` | `plot.jl` | `harness.py --exec -- /opt/julia-1.13.2/bin/julia --project=/opt/julia-project --startup-file=no --history-file=no --compiled-modules=strict --heap-size-hint=1536M -L /opt/anyplot/toolchain/warmup.jl plot.jl` |
 
@@ -32,7 +32,9 @@ A row with `exec_deny` gets `ANYPLOT_DENY_EXEC=required` while `RENDERER_EXEC_DE
 `required` (`executor.sandbox_env`): a Python row's harness installs the filter itself,
 an exec-mode row's harness preloads it into the child (`harness.EXEC_DENY_PRELOAD`). The
 JavaScript row has it off: Node starts Chromium and Chromium starts its own processes,
-while the plot code runs in the page, which has no process API. A row also says which limits
+while the plot code runs in the page, which has no process API. Node runs by its path as well
+(`NODE_BINARY`), with the harness's packages, the headless shell and the row's fonts named in
+its environment (`JS_ENV`, JS-1 of step 3). A row also says which limits
 differ from the Python defaults: V8, Chromium and Julia's LLVM reserve address space far
 beyond their resident memory, so `RLIMIT_AS` is off for the JavaScript and Julia rows
 and for altair's Python row (vl-convert embeds V8); one Chromium render runs seven
@@ -50,7 +52,7 @@ of the stderr tail (`executor.stderr_tail`): the Julia row's `ERROR:` line, whic
 long stacks push out of the last 2,000 characters; every other row returns the plain tail.
 
 A row's `toolchain` names the binaries the image must carry for the row to run, each a
-name on `SANDBOX_PATH` or an absolute path (R's and Julia's binaries, which `shutil.which`
+name on `SANDBOX_PATH` or an absolute path (R's, Julia's and Node's binaries, which `shutil.which`
 checks as they stand); the renderer checks them at startup, reports them in `GET /status` and
 refuses a job whose language lacks them (`503 runtime_unavailable`). The Python row
 needs none beyond the interpreter the settings name.
@@ -98,8 +100,36 @@ CODE_FILES: Mapping[Language, str] = MappingProxyType(
 CODE_FILE_OVERRIDES: Mapping[str, str] = MappingProxyType({"muix": "plot.tsx"})
 """MUI X is authored as TSX (`core.constants.LIBRARY_FILE_EXTENSION_OVERRIDES`)."""
 
+NODE_HOME = "/opt/node"
+"""Node's install in the toolchain image: the official 22.x build for Linux on x86-64 (agents/renderer/toolchain.Dockerfile),
+the major the catalogue pipeline renders with (`.github/actions/setup-node`)."""
+NODE_BINARY = f"{NODE_HOME}/bin/node"
+"""Node, which the row runs by its path: `SANDBOX_PATH` does not carry it, and `delegates.py` refuses a `node` there."""
 JS_HARNESS = "/opt/anyplot/js-render/render.mjs"
 """The catalogue's browser render harness (`automation/js-render/render.mjs`) inside the image."""
+JS_NODE_MODULES = "/opt/anyplot/node_modules"
+"""The harness's packages, the repository's `package-lock.json` installed with `npm ci`; the harness finds them through
+`ANYPLOT_NODE_MODULES`, since it does not sit two levels below them as in a checkout."""
+PLAYWRIGHT_BROWSERS = "/opt/pw-browsers"
+"""Where Playwright finds its Chromium headless shell (`PLAYWRIGHT_BROWSERS_PATH`)."""
+JS_FONTCONFIG_FILE = "/opt/anyplot/js-fonts.conf"
+"""The JavaScript row's fontconfig file (`agents/renderer/toolchain/js-fonts.conf`): the system configuration plus the
+Liberation fonts under `/opt/anyplot/js-fonts`, which the catalogue's page font stack (Helvetica, Arial) resolves to
+through fontconfig's metric aliases, as on the pipeline's runner. No other row reads that directory."""
+JS_ENV: Mapping[str, str] = MappingProxyType(
+    {
+        "PLAYWRIGHT_BROWSERS_PATH": PLAYWRIGHT_BROWSERS,
+        "ANYPLOT_NODE_MODULES": JS_NODE_MODULES,
+        "FONTCONFIG_FILE": JS_FONTCONFIG_FILE,
+        # A page's `new Date("2026-03-01T00:00")` is local time: UTC, whatever the host's zone.
+        "TZ": "UTC",
+        "LANG": "C.UTF-8",
+        # Only /tmp is writable in a sandbox: Chromium's and fontconfig's caches and settings go there.
+        "XDG_CACHE_HOME": "/tmp",
+        "XDG_CONFIG_HOME": "/tmp",
+    }
+)
+"""The JavaScript row's environment: the browser, the packages, the fonts, the zone, the locale and the caches."""
 JULIA_HOME = "/opt/julia-1.13.2"
 """Julia's install in the toolchain image: the official 1.13.2 build for generic Linux (agents/renderer/toolchain.Dockerfile),
 the version `Manifest.toml` was resolved with."""
@@ -265,22 +295,28 @@ def _row(language: Language, library: str) -> RuntimeCommand:
         # the guard took a wall p95 of 3.75 s and a p99 of 13.95 s (spike of 2026-10-26).
         return RuntimeCommand(language, code_file, (), rlimit_as=library != "altair")
     if language == "javascript":
+        # Node by its path runs the catalogue's harness, which starts Playwright's Chromium headless shell; the
+        # library comes from the request's closed set, never from the file name. No exec filter: Node starts
+        # esbuild's service and Chromium, and Chromium its own processes. The plot code runs in the page, which has
+        # no process API; the boundary is gVisor (no network, a read-only root, the run's own /tmp) and, with JS-2,
+        # the harness's page rules (no request leaves the page, no WebSocket, no popup, a bounded console, a closed
+        # import list for MUI X; step 3 of agentic/specs/261024-agent-all-libraries.md). V8 and Chromium reserve
+        # address space far beyond their resident memory, and one render runs about 7 processes with 77 tasks
+        # (spike of 2026-10-24), so RLIMIT_AS and RLIMIT_NPROC are off; the MemAvailable watchdog, RLIMIT_CPU,
+        # RLIMIT_FSIZE and the byte budget remain. The repair reserve is Python's and R's 15 s: the 1,565 catalogue
+        # files that rendered in the toolchain image at 2 CPUs and 4 GiB took a wall p95 of 2.4 s (p99 3.9 s, max
+        # 10.1 s, four at a time, container start included; the whole container's memory peak p95 440 MiB, max
+        # 1,178 MiB; JS-1, 2026-10-30), but the deployed renderer ran Julia 2.5 times slower than local Docker and
+        # Chromium's cold start under gVisor is measured only by the first deploy's smoke.
         return RuntimeCommand(
             language,
             code_file,
-            ("node", JS_HARNESS, f"--library={library}"),
-            env=MappingProxyType(
-                {
-                    "PLAYWRIGHT_BROWSERS_PATH": "/opt/pw-browsers",
-                    "ANYPLOT_NODE_MODULES": "/opt/anyplot/node_modules",
-                    "ANYPLOT_NO_HTML": "1",
-                    "XDG_CACHE_HOME": "/tmp",
-                }
-            ),
-            toolchain=("node",),
+            (NODE_BINARY, JS_HARNESS, f"--library={library}"),
+            env=JS_ENV,
+            toolchain=(NODE_BINARY,),
             rlimit_as=False,
             rlimit_nproc=False,
-            render_p95_s=20.0,
+            render_p95_s=15.0,
             exec_deny=False,
         )
     if language == "r":

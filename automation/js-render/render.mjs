@@ -47,8 +47,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // automation/js-render/render.mjs → repo root is two levels up. node_modules is
 // resolved relative to the harness so it works regardless of the snippet's cwd
 // (Claude runs the render from plots/{spec}/implementations/javascript).
+// ANYPLOT_NODE_MODULES names it where the harness does not sit in a checkout: the
+// agents' renderer image keeps the harness at /opt/anyplot/js-render/ and the
+// packages at /opt/anyplot/node_modules (agents/renderer/toolchain.Dockerfile).
 const REPO_ROOT = path.resolve(__dirname, "..", "..");
-const NODE_MODULES = path.join(REPO_ROOT, "node_modules");
+const NODE_MODULES = process.env.ANYPLOT_NODE_MODULES || path.join(REPO_ROOT, "node_modules");
 
 // -----------------------------------------------------------------------------
 // Canvas sizes — the two canonical pairs, no third aspect ratio.

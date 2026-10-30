@@ -1070,67 +1070,276 @@ qrcode-basic and maze-circular; by SECURITY rule `banned-import` 3, `url-literal
 
 ### 3. JavaScript: Chart.js, D3, ECharts, Highcharts and MUI X
 
-- Toolchain: Node 22 under `/opt/node`, the repository's `package-lock.json` installed
-  to `/opt/anyplot/node_modules`, Playwright's Chromium under `/opt/pw-browsers`
-  (`PLAYWRIGHT_BROWSERS_PATH`), the harness at `/opt/anyplot/js-render/render.mjs`.
-- `render.mjs` sandbox mode, every change behind an environment variable so the CI
-  pipeline sees no difference: `ANYPLOT_DATA_CSV` (path) parsed to typed records as
-  `window.ANYPLOT_DATA` (numbers, ISO dates, `null` for a missing cell, the dtype map
-  from the profile passed as `ANYPLOT_DATA_TYPES`); `page.route("**/*", deny)` so the
-  page can load nothing but the inlined bundle; `ANYPLOT_NO_HTML=1` leaves the
-  interactive page out; `ANYPLOT_NODE_MODULES`; a hard cap on the snippet's console
-  output (`consoleErrors` bounded). Chromium runs with `--no-sandbox` already (gVisor
-  as uid 0). The sandbox file is `plot.js` or `plot.tsx`, so the command carries
-  `--library=<library>` from the request, checked against the closed set.
-- `RLIMIT_AS` and `RLIMIT_NPROC` off for `javascript` in the commands table: V8 and
-  Chromium reserve virtual memory far beyond use, and one render runs 7 processes with
-  77 tasks (processes plus threads), over the 64 of `RLIMIT_NPROC`, which counts
-  threads on Linux. `RLIMIT_CPU` is per process after exec, so the host's wall clock is
-  the real bound; the `MemAvailable` watchdog stays the memory control, and
-  `RLIMIT_DATA` is a candidate for a bound that lets reservations pass (unverified
-  under gVisor).
-- Profile: placeholder `const data = loadUserData();`, loader
-  `const data = window.ANYPLOT_DATA;`; protected regions: the token lines that read
-  `window.ANYPLOT_TOKENS`/`window.ANYPLOT_THEME`, the `//# anyplot-orientation`
-  directive; the deny list over tree-sitter (hygiene, not the boundary, see "Second
-  opinion"): `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`, `Worker`,
-  `navigator.*`, `window.open`, `new Image().src`, `import()`/`require`, `eval`,
-  `Function`, `.constructor`/`__proto__`, computed access on `window`, `globalThis`,
-  `self`, `document` and `navigator`, `document.cookie`, `localStorage`, `postMessage`,
-  `<script>`/`<iframe>` creation, `setTimeout` with a string; the readiness scan on the
-  `// Data` and `// Plot` markers and a snippet that reads the tokens; the error
-  grammar: the page error's class and the line in the snippet, which the harness
-  reports with the scaffold's offset subtracted.
-- MUI X (`.tsx`): the same profile with the TypeScript grammar, plus a static-import
-  allowlist (`react`, `@mui/*`): esbuild inlines whatever a snippet imports, a JSON file
-  of the image included.
-- Adapter: the runtime section says the data is `window.ANYPLOT_DATA`, an array of
-  records keyed by the column constants, and that the snippet never saves.
-- Fixtures for the five libraries on the ten specs (after the owner regenerates their
-  JavaScript files under the Data block); the owner's matrix run; docs; the Highcharts
-  licence question stays open (owner question 6).
+Revised on 2026-10-30 after the second opinion on steps 3 and 4 (Gemini 4 Argon and Fable;
+the section at the end): the corrections both reviewers agree on, and those Fable
+verified, are in the text below; two owner decisions are open (questions 12 and 13), and
+nothing before JS-4 depends on them. Four PRs, none of which serves a library before
+JS-4: JS-1 (the toolchain stage, the command row, the build inputs, the smokes and the
+render sweep; built, see "What JS-1 built"), JS-2 (the harness's sandbox mode), JS-3
+(the code profile) and JS-4 (the runtime, the registry, the fixtures and the admin
+deploy). `AGENT_LIBRARIES`, `RUNTIME_LIBRARIES` and the admin deploy's `_LIBRARIES` stay
+as they are until JS-4; the renderer can render a JavaScript job, and the agents service
+sends none.
+
+#### 3a. The toolchain stage (JS-1)
+
+- A `node` stage in `agents/renderer/toolchain.Dockerfile`, `FROM base` like R's and
+  Julia's, so a Node change rebuilds neither of them and the registry cache keeps their
+  stages. It downloads the official Node 22 build for Linux on x86-64 (22 is the major
+  the catalogue pipeline renders with, `.github/actions/setup-node`, which a test pins;
+  `package.json` says `>=22`) and checks it against the SHA-256 that nodejs.org
+  publishes next to its downloads, under `/opt/node`. npm, npx, corepack, the headers
+  and the docs leave the install once the packages are in.
+- The packages are the repository's `package.json` and `package-lock.json`, installed
+  with `npm ci --ignore-scripts` into `/opt/anyplot/node_modules`: the whole lock,
+  because the harness's own esbuild and Playwright are its `devDependencies`, so
+  `--omit=dev` would drop them; no install script runs (esbuild's, the lock's only one,
+  checks its binary, which esbuild's API finds without it). Type declarations and
+  source maps go (98 MB of 262 MB).
+- Playwright's CLI from that install puts the Chromium headless shell alone under
+  `/opt/pw-browsers` (`--only-shell`; a headless launch runs the shell, 273 MB against
+  403 MB with the full Chromium), at the revision the lock's `playwright-core` pins.
+  The final stage installs the libraries the shell links, found with `ldd`
+  (`NODE_RUNTIME_LIBS`), none of which brings the `fontconfig` package or Pango, and a
+  build check fails on any library Node, the shell or the shell's own libraries cannot
+  resolve. libgbm is unpacked from its package without its dependencies: the package
+  depends on Mesa's drivers and LLVM (about 200 MB), which only its backend module
+  links, and a headless page never opens a GBM device.
+- The harness, `automation/js-render/` (the pipeline's own; `render.mjs` is its only
+  file), is copied to `/opt/anyplot/js-render/`. It finds the packages through
+  `ANYPLOT_NODE_MODULES`, the one harness change of JS-1: in a checkout they sit two
+  levels above it, in the image they do not, and without the variable the pipeline's
+  behaviour is unchanged.
+- The import allowlist of MUI X snippets (second opinion, finding 1):
+  `agents/renderer/toolchain/import_allowlist.py` derives it at build from the
+  `exports` maps of the installed `react`, `react-dom`, `@mui/material` and
+  `@mui/x-charts` into `/opt/anyplot/js-render/import-allowlist.json`, the one file the
+  bundle step's resolve plugin (JS-2) and the validator (JS-3) read:
+  `{"schema": 1, "packages": {name: version}, "specifiers": [...]}`, sorted, the package
+  name for the key `.`, the name and path for `./<path>`, without `./package.json` and
+  null targets. A package that exports a pattern (`./*`) or has no `exports` map fails
+  the build, because a list cannot close it. A test pins the shape.
+- Fonts: the catalogue's page font stack asks for Helvetica and Arial, which the
+  pipeline's runner resolves to Liberation Sans through fontconfig's metric aliases
+  (`playwright install --with-deps` installs `fonts-liberation`); the image has DejaVu
+  and Noto only. Installed system-wide, Liberation changes Python renders that name
+  Arial (measured, "What JS-1 built"), so the stage copies Liberation Sans, Serif and
+  Mono with their copyright notice to `/opt/anyplot/js-fonts`, which only the
+  JavaScript row's fontconfig file names (`agents/renderer/toolchain/js-fonts.conf`: the
+  system configuration and that directory).
+- The final stage copies Node's lines after Julia's, so a Node change reruns only its
+  own lines there, and renders a Chart.js chart and a MUI X component through the
+  harness with the row's binary and environment (`smoke.js`, `smoke.tsx`), each a
+  3200x1800 PNG.
+
+#### 3b. Build inputs, CI and the deploy (JS-1)
+
+- `package.json`, `package-lock.json` and `automation/js-render/` join the toolchain's
+  hash (`toolchain.py`, `INPUTS`), the root `.dockerignore` (root-anchored, so
+  `app/package.json` stays out) and the `renderer-image` job's change filter
+  (`RENDERER_CHANGES`); tests fail when an input misses the hash, the build context or
+  the filter. A lock bump by Dependabot therefore rebuilds the toolchain, as a
+  Manifest bump does.
+- The `deploy-renderer` trigger's included files live in GCP and were not read; they
+  likely lack the three as they lacked `Project.toml` and `Manifest.toml`, so the owner
+  task of step 5b covers them too. Until then a lock-only change reaches the renderer
+  with its next deploy.
+- CI (`renderer-image`): the built image renders the catalogue's `scatter-basic` Chart.js
+  file and `bar-basic` MUI X file (written for MUI X 9.16) through the harness in exec
+  mode with the row's argv and environment at 3200x1800, and checks that Node is in the
+  image and not on `SANDBOX_PATH`.
+- The deploy's candidate smoke renders a Chart.js chart after the Makie one and prints
+  its wall time, CPU time and peak memory, so the first deploy with Node measures a
+  cold Chromium under gVisor, which no local run can. No agent sends a JavaScript job
+  before JS-4, so a failed render there is a warning in the build log, not a refused
+  promotion; JS-4 makes it a gate like the Makie render.
+
+#### 3c. The command row (JS-1)
+
+- `NODE_BINARY` (`/opt/node/bin/node`) by its path, as `R_BINARY` and `JULIA_BINARY`:
+  `SANDBOX_PATH` does not carry it, and `agents/renderer/delegates.py` keeps refusing a
+  `node` there. Argv: `NODE_BINARY /opt/anyplot/js-render/render.mjs --library=<library>`
+  and the code file (`plot.js`, `plot.tsx` for MUI X); the library comes from the
+  request's closed set, never from the file name.
+- Environment (`JS_ENV`): `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers`,
+  `ANYPLOT_NODE_MODULES=/opt/anyplot/node_modules`,
+  `FONTCONFIG_FILE=/opt/anyplot/js-fonts.conf`, `TZ=UTC`, `LANG=C.UTF-8`,
+  `XDG_CACHE_HOME=/tmp` and `XDG_CONFIG_HOME=/tmp`; `HOME=/tmp` and `PATH` are the
+  sandbox's fixed keys. No `NODE_OPTIONS`: Node runs only the harness, and the snippet
+  runs in Chromium's V8.
+- `exec_deny` off: Node starts esbuild's service and Chromium, and Chromium starts its
+  own processes. The plot code runs in the page, which has no process API; the
+  boundary is gVisor (no network, a read-only root, the run's own `/tmp`) and, with
+  JS-2, the harness's page rules.
+- `RLIMIT_AS` and `RLIMIT_NPROC` off: V8 and Chromium reserve virtual memory far beyond
+  use, and one render runs 7 processes with 77 tasks (processes plus threads), over the
+  64 of `RLIMIT_NPROC`, which counts threads on Linux. `RLIMIT_CPU` is per process after
+  exec, so the host's wall clock is the real bound; the `MemAvailable` watchdog stays the
+  memory control (the whole container peaked at 1,178 MiB in the sweep).
+- `render_p95_s` 15 s, from JS-1's sweep ("What JS-1 built").
+
+#### 3d. The harness's sandbox mode (JS-2)
+
+Every change sits behind an environment variable, so the catalogue pipeline sees no
+difference.
+
+- Data: Python writes the table as typed JSON from the canonical CSV and its
+  `ColumnKinds`, so the canonical CSV keeps one reader (adopted from Fable; Gemini
+  proposed a JavaScript parser baked into the source); `render.mjs` injects it as
+  `window.ANYPLOT_DATA` with `<` escaped, so a cell cannot close the script; a missing
+  cell is `null`. The job carries the JSON next to `data_csv`, so a second theme
+  renders from the stored job as for the other languages (Gemini's point about
+  `theme_render.py`); the field and its writer are JS-4's.
+- Time: `newPage({timezoneId: "UTC"})`, since `new Date("2026-03-01T00:00")` is local
+  midnight otherwise (the row's `TZ=UTC` since JS-1).
+- Boundary: `page.route("**/*")` aborts every request before `setContent`, `sendBeacon`
+  included; `page.routeWebSocket("**", ws => ws.close())`, because the route does not
+  see WebSockets; Chromium's `--block-new-web-contents`, so `window.open` returns null
+  instead of a popup outside the route. Blob workers and `import("data:...")` still run
+  inside the page, which has no network. Gemini's content security policy and
+  Chromium flags (`--disable-dev-shm-usage`, `--disable-gpu`, a V8 heap cap) are
+  measured against the sweep before any is adopted; the deploy smoke of JS-1 measures
+  Chromium under gVisor first.
+- Console: page errors and console errors are capped in count and bytes (the
+  unbounded list reached 4.2 MB for 20,000 lines), and the bounded tail is printed on
+  failure too, not only on success.
+- Imports: an esbuild `onResolve` plugin admits only the allowlist's bare specifiers,
+  resolved under `ANYPLOT_NODE_MODULES`, and refuses every relative and absolute path,
+  because esbuild otherwise bundles any file of the image (`import x from
+  "/etc/os-release"`, Fable, verified).
+- `ANYPLOT_NO_HTML=1`: no interactive page in the sandbox.
+
+#### 3e. The code profile (JS-3, not served)
+
+- tree-sitter's JavaScript, TypeScript and TSX grammars from the pinned
+  `tree-sitter-language-pack`, as for R and Julia.
+- Placeholder `const data = loadUserData();`, loader `const data = window.ANYPLOT_DATA;`;
+  protected regions: the token lines that read `window.ANYPLOT_TOKENS`,
+  `window.ANYPLOT_THEME` and `window.ANYPLOT_SIZE`, and the `//# anyplot-orientation`
+  directive, which the edits' drift check must keep although it is a comment; the edit
+  applier's JavaScript dialect reads `//` and `/* */` as comments and a `#` inside a
+  string (CSS colours, SVG) as text (Gemini).
+- The deny list over tree-sitter (hygiene, not the boundary, see "Second opinion"):
+  `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`, `Worker`, `navigator.*`,
+  `window.open`, `new Image().src`, `import()`/`require`, `eval`, `Function`,
+  `.constructor`/`__proto__`, computed access on `window`, `globalThis`, `self`,
+  `document` and `navigator`, `document.cookie`, `localStorage`, `postMessage`,
+  `<script>`/`<iframe>` creation, `setTimeout` with a string. MUI X's static imports
+  are checked against the image's import allowlist; the agents image has no
+  `node_modules`, so JS-3 carries a copy of the JSON that CI compares with the
+  renderer image's.
+- The readiness scan on the `// Data` and `// Plot` markers and a snippet that reads
+  the tokens.
+- The error grammar: the page error's class and line, numbered within the snippet's own
+  `<script>`, whose offset is exactly 1 (the `try {` line; measured by Fable, where
+  Gemini expected the bundle's lines in front); MUI X's bundle is minified, so its
+  errors name the class only, and esbuild's compile errors name `plot.tsx:<line>`.
+- Export: the header in `//` comments for JavaScript and TSX, because `#` is a syntax
+  error there (Gemini); the run line follows question 12.
+
+#### 3f. The runtime, the registry and the fixtures (JS-4)
+
+- `JavaScriptRuntime`, `adapter_javascript.md` filling `adapter.md`'s slots
+  (`adapter.md` itself does not change, Gemini), `review_texts` on, as for R and the
+  Python libraries without the text probe (a JavaScript render writes no probe, so the
+  reviewer checks the requested texts in the image), and the deploy smoke's Chart.js
+  render as a gate.
+- Data notes as R's: integers past 2^53 counted in the version's "what changed" list
+  (JavaScript numbers are doubles), booleans as `true`/`false`, dates as `YYYY-MM-DD`
+  strings, datetimes as UTC ISO strings with the truncated sub-milliseconds counted,
+  and the adapter prompt warns that `+null === 0` (Gemini).
+- Fixtures on the ten specs for Chart.js, D3 and ECharts first; MUI X after its
+  regeneration or per question 13; Highcharts behind the `AGENT_LIBRARIES` switch until
+  question 6 is decided. The owner's matrix run gates each library; docs.
+
+#### Order of the PRs
+
+JS-1 → JS-2 → JS-3 → JS-4; PB-1 and PB-2 (step 4) follow JS-2, whose harness they reuse.
+
+#### What JS-1 built (2026-10-30)
+
+Everything in 3a to 3c; nothing served. Measured in local Docker on the developer machine
+(32 CPUs, WSL 2, kernel 6.18, the host shared with another agent's Julia tests), the
+renders with `--network none --read-only`, `--cpus 2 --memory 4g` as on Cloud Run, an
+unprivileged user, the sandbox's environment and the harness in exec mode with the
+JavaScript row's argv:
+
+| Measurement | Result |
+|---|---|
+| Node stage, cold | 21 s for the whole toolchain build with R's and Julia's stages cached: Node's download and check, `npm ci` with the headless shell's download (11 s), libgbm, the allowlist; the final stage's libraries, copies, `ldd` check and smoke |
+| Sizes | Node 120 MB, `node_modules` 164 MB, the headless shell 273 MB; the toolchain image 2.84 → 3.41 GB, the renderer image 3.89 → 4.45 GB (+565 MB each) |
+| The build's smoke (Chart.js and MUI X through the harness, the row's environment) | 0.8 and 0.7 s |
+| The CI step's renders, container start included | `scatter-basic` Chart.js 1.1 s, `bar-basic` MUI X 1.1 s; 0.6 s of CPU each; the largest process 151 and 153 MiB; 3200x1800 |
+| The import allowlist | 219 specifiers: `@mui/material` 155, `@mui/x-charts` 47, `react` 4, `react-dom` 13 (Fable's 156, 48, 5 and 14 with `./package.json`) |
+| Chromium's font matching with the row's file (canvas `measureText`) | the catalogue's stack, Helvetica, Arial and `sans-serif` measure as Liberation Sans, `serif` as Liberation Serif; without the file, Helvetica and Arial match no installed face and the stack falls through to another `sans-serif` face (309 against 296 px for the probe text); `new Date("2026-03-01T00:00")` is midnight UTC |
+| Liberation installed system-wide, 66 sampled catalogue files rendered in the image with and without it (the changed ones twice more) | 3 of the 40 Python renders change, every time: pygal `band-basic` and `heatmap-adjacency` (of 18 that render) and altair `spectrum-nmr` (of 10), each naming Arial or Helvetica; none of the 12 matplotlib, seaborn, plotnine and lets-plot renders, the 20 ggplot2 and the 4 Makie renders changes (one ggplot2 file draws unseeded random numbers and differs run to run in either image) |
+| The R and Makie CI steps in this image | unchanged: `exec_deny: on` for both, the strict cache miss fails in 1 s; the six Python steps, the conversions, the delegate check and the kernel's refusal of program starts pass |
+
+**The render sweep**: every catalogue JavaScript file once, unchanged, through the same
+path, four renders at a time at 2 CPUs each (under 10 minutes in all):
+
+| | Result |
+|---|---|
+| Rendered | 1,565 of 1,617: Chart.js 321 of 321, D3 325 of 325, ECharts 325 of 325, Highcharts 323 of 323, MUI X 271 of 323; every PNG 3200x1800 (1,201) or 2400x2400 (364) |
+| MUI X by the version the file was written for | 9.16.0: 127 of 127; 7.29.1: 144 of 196 |
+| Failed | 52, all MUI X 7.29.1 files: 51 import `@mui/x-charts/ChartContainer`, which 9.16 no longer exports (`Could not resolve`), and 1 imports `ChartContainer` from the package root (`No matching export`) |
+| Wall time, container start included | p50 1.2 s, p95 2.4 s, p99 3.9 s, max 10.1 s (MUI X `heatmap-geographic`); per library p95 2.0 to 3.7 s (ECharts the slowest) |
+| CPU time (the harness's children) | p50 0.7 s, p95 1.1 s, max 2.3 s |
+| Memory | the whole container (harness, Node, Chromium) p50 372 MiB, p95 440 MiB, max 1,178 MiB (MUI X `bifurcation-basic`); the largest single process p95 159 MiB |
+
+For question 13: the 52 failures are the MUI X 7.29 files that a hint derived from the
+allowlist would name (`@mui/x-charts/ChartContainer` is not in it); the other 144 of 196
+7.29 files render under 9.16 unchanged. The raw table stays out of the repository.
+
+Also found:
+
+- Playwright validates the shell's libraries with `ldd` over a `chrome-linux` directory
+  that the headless shell does not have, so the check costs nothing at launch, and its
+  marker file is written at install; no environment variable is needed to skip it.
+- The renderer's font-cache step ran `chmod -R` over `/opt/anyplot`, which would have
+  copied the toolchain's 164 MB of packages into another layer; it now names the
+  renderer's own files there.
+- Chromium writes its fontconfig cache to `/tmp/fontconfig` in every render, as R's and
+  Julia's fontconfig do; a baked cache (Gemini) was not measured.
+
+| Text above (2026-10-24) | Built | Why |
+|---|---|---|
+| `node` by name, `toolchain=("node",)` | `NODE_BINARY` by its path | `delegates.py` refuses a `node` on `SANDBOX_PATH` (both reviewers) |
+| Playwright's Chromium | the headless shell alone, libgbm unpacked without Mesa | 273 against 403 MB, and about 200 MB of Mesa and LLVM that nothing loads |
+| `ANYPLOT_NODE_MODULES` and `ANYPLOT_NO_HTML` in the row, the harness unchanged | `ANYPLOT_NODE_MODULES` read by the harness since JS-1; `ANYPLOT_NO_HTML` with JS-2 | the harness at `/opt/anyplot/js-render/` finds no packages two levels up; a variable the harness ignores would only mislead |
+| No font change | Liberation for the JavaScript row alone | the catalogue's stack names Helvetica and Arial; system-wide, the fonts change pygal's and altair's renders |
+| `render_p95_s` 20 s | 15 s | the sweep's wall p95 of 2.4 s; the deployed factor and Chromium's cold start under gVisor are the first deploy's to measure |
 
 ### 4. plotly and bokeh (through the JavaScript harness's Chromium)
 
+Revised on 2026-10-30 after the second opinion on steps 3 and 4. Two PRs after JS-2: PB-1
+(the two-step exec mode) and PB-2 (the profiles, the normaliser rules and the fixtures).
+
 - No browser from plot code: the plot guard replaces `fork_exec` before it is armed,
   so a spawn allowance would reopen it, kaleido's temp profile and choreographer's
-  socket pair are refused too, and Selenium talks HTTP to chromedriver. The run form
-  writes a page instead and a second child of the exec mode screenshots it:
-  `node render.mjs --screenshot plot-<theme>.html` (the same Chromium, outside the
-  Python guard, under the JavaScript row's limits).
-- bokeh: the normaliser rewrites the catalogue's `export_png(...)` (plots/scatter-basic
-  bokeh.py:96) or Selenium block (prompts/library/bokeh.md:99-130) to
-  `output_file(f"plot-{THEME}.html"); save(p)` with `BOKEH_RESOURCES=inline`; the
-  Jinja `exec` of bokeh's own templates gets a `CODE_BUILDERS` entry after a review
-  (`file_html(template=...)` with a caller's template is banned by keyword).
-- plotly: the normaliser rewrites `fig.write_image(...)` to
-  `fig.write_html(f"plot-{THEME}.html", include_plotlyjs=True)` (never `cdn`) and
-  `_plotly_utils/basevalidators.py: __init__` gets a `CODE_BUILDERS` entry after a
-  review of the validator classes it builds; MathJax off.
+  socket pair are refused too, and Selenium talks HTTP to chromedriver.
+- No exec after the plot either (both reviewers): arming the guard installs the kernel
+  filter against program starts (`install_exec_deny`, with `SECCOMP_FILTER_FLAG_TSYNC`)
+  on the harness's process and every later child, so the 2026-10-24 text's "second child
+  of the exec mode" cannot start once the plot ran. PB-1 adds a two-step exec mode: the
+  harness forks the plot's child before anything is armed; the child arms its guard and
+  filter, runs the plot and writes the figure; the parent, never armed, then runs
+  `render.mjs --screenshot` under the JavaScript row's limits and environment.
+- What the plot writes: the figure as JSON, `fig.write_json` for plotly and
+  `bokeh.embed.json_item` for bokeh, from which the harness builds the page with the
+  vendored `plotly.min.js` or BokehJS inside `#container` at the canonical canvas (the
+  spike of 2026-10-24 and Gemini). That needs no `CODE_BUILDERS` entry for bokeh's Jinja
+  templates, which would give any path to `jinja2.Template` an `exec` under the guard,
+  puts no model-written HTML in front of the unfiltered Chromium, and fixes the canvas
+  that the catalogue's bokeh files set to 4800x2700, past R2's pixel cap. bokeh's
+  `CustomJS` is refused by the validator. PB-2 measures the route on the catalogue
+  before it writes the normaliser rules.
+- plotly: `_plotly_utils/basevalidators.py: __init__` gets a `CODE_BUILDERS` entry after
+  a review of the validator classes it builds; MathJax off.
 - Deviation to name for the owner (question 10): for these two libraries the exported
   code is not byte for byte the run form (agent-network.md, "Fencing and exported
   code"): the export keeps the catalogue's own save block and runs unchanged on the
-  user's machine; the run form carries the sandbox's HTML save instead.
+  user's machine; the run form carries the sandbox's JSON save instead.
 - Fixtures, matrix, docs.
 
 ### 5. Julia: Makie
@@ -1936,6 +2145,37 @@ names who raised it; "verified" marks a claim reproduced in `julia:1.13.2` that 
 | A cold render at 2 vCPU may come close to the 60 s timeout | Gemini | Measured locally at 2 CPUs in J1; the measurement stage times it on Cloud Run, and a `PrecompileTools` workload joins only above about 25 s (5e) |
 | The error grammar and the column access need a Julia form | Fable (verified) | The first `ERROR: LoadError:` line, the first plot frame and the last `in expression starting at` line; the adapter introduces `df[!, COL]` (5d) |
 
+## Second opinion on steps 3 and 4 (Gemini 4 Argon and Fable, 2026-10-30)
+
+Both: sound with changes. The owner was asleep; the corrections both reviewers agree on,
+and those Fable verified, are adopted in steps 3 and 4 above, and two decisions are open
+(questions 12 and 13). Each row names who raised it; "verified" marks a claim Fable
+reproduced that night, and "measured" one that JS-1 measured.
+
+| Finding | From | Change |
+|---|---|---|
+| esbuild bundles any file a `.tsx` snippet imports, image files included (`import x from "/etc/os-release"`) | both (Fable verified) | JS-2's `onResolve` plugin admits only allowlisted bare specifiers resolved under `ANYPLOT_NODE_MODULES`; the allowlist is derived at image build from the installed packages' `exports` maps (JS-1 built it: 219 specifiers) |
+| `node` by name contradicts `delegates.py`, which refuses `node` on `SANDBOX_PATH` | both (Fable verified) | `NODE_BINARY` by its path (3c); the delegate list does not change |
+| Chromium's packages bring `libpango-1.0-0` and with it `fc-list` and `fc-match` | Gemini (unverified); Fable: the headless shell links neither | The headless shell alone (273 against 403 MB, Fable verified); its libraries found with `ldd`, none brings the `fontconfig` package or Pango (measured), libgbm unpacked without Mesa (3a) |
+| The plot-mode harness cannot start a program once its guard is armed, so a screenshot child after the plot is impossible | both | PB-1: a two-step exec mode that forks the plot's child before arming (step 4) |
+| plotly and bokeh: the old text's HTML save needs Jinja's `exec` under the guard and puts model-written HTML in front of the unfiltered Chromium; the catalogue's bokeh canvas is past R2's cap | Gemini | The spike's JSON route as PB-2's default (`write_json`, `json_item`, the page built by the harness at the canonical canvas, `CustomJS` refused); PB-2 measures it first |
+| The data: types in an environment variable break the wire contract and `theme_render.py`, and a downloaded file would run untyped | Gemini proposed the raw CSV in the page and a JavaScript parser baked into the source; Fable proposed typed JSON written by Python | They disagreed. Adopted: Fable's, because it keeps one reader of the canonical CSV; the job carries the JSON, which answers Gemini's wire and theme points (3d, JS-4) |
+| `window.ANYPLOT_DATA` must escape `<`; `new Date("2026-03-01T00:00")` is local midnight | Fable (verified) | `<` escaped and `timezoneId: "UTC"` (3d); the row's `TZ=UTC` since JS-1 (measured) |
+| Error lines: Gemini expected the inlined bundle to shift the snippet's line numbers and proposed `//# sourceURL`; MUI X's bundle is minified | Gemini; Fable measured an offset of exactly 1 (the snippet has its own `<script>`, its first line `try {`) | They disagreed. Adopted: Fable's offset of 1; MUI X errors name the class (3e) |
+| Errors after the ready signal still reach `pageerror`; console errors print only on success and are unbounded (20,000 lines, 4.2 MB) | Fable (verified) | Caps on count and bytes, and the bounded tail on failure too (3d) |
+| `page.route` misses WebSockets, and `window.open` popups bypass it; blob workers and `import("data:...")` run | Fable (verified) | `routeWebSocket` closes every socket and `--block-new-web-contents` nulls `window.open`; workers and data imports stay inside a page without network (3d) |
+| A content security policy, Chromium flags (`--disable-dev-shm-usage`, `--disable-gpu`), V8 and Node heap caps | Gemini (unverified) | Measured against the sweep in JS-2 before any is adopted; Node runs only the harness, so no `NODE_OPTIONS` (3c) |
+| The toolchain's hash, the `.dockerignore` and `RENDERER_CHANGES` lack `package.json`, `package-lock.json` and `automation/js-render/` | both (Fable verified) | All three added in JS-1, with tests (3b) |
+| The catalogue's page font stack names Helvetica and Arial, and the image has only DejaVu and Noto | Fable (verified) | Liberation for the JavaScript row alone through its own fontconfig file, because system-wide it changes 3 of 40 sampled Python renders (measured, 3a) |
+| `export.py` writes `#` headers, a syntax error in JavaScript and TSX | Gemini | `//` headers for JavaScript (3e); the run line follows question 12 |
+| The edit applier's dialect: the token lines, the orientation directive, `//` comments, `#` inside CSS and SVG strings | Gemini | JS-3's JavaScript dialect (3e) |
+| `adapter.md` hard-codes `df` outside its slots, and its prompt hash is pinned; `review_texts` | Gemini | `adapter_javascript.md` fills the slots and `adapter.md` stays; `review_texts` on (3f) |
+| Data fidelity: integers past 2^53, booleans, dates, datetimes with offsets, `+null === 0` | Gemini | R's precedent: counted notes, UTC ISO strings, a prompt warning (3f) |
+| The MUI X files written for 7.29 | Gemini: normalise the mechanical renames, regenerate the fixture specs, block the rest; Fable: serve them `coupled` with a hint derived from the exports allowlist | They disagreed: question 13. JS-1's sweep: 52 of the 196 fail, all on `ChartContainer` (3, "What JS-1 built") |
+| The export cannot be `plot.js` alone | Fable | Question 12 |
+| Renders take 0.5 to 0.7 s; all 1,617 files in about 20 minutes; the image grows by 0.6 to 0.7 GB | Fable | Measured in JS-1: wall p50 1.2 s with the container's start, under 10 minutes four at a time, +565 MB |
+| Bake a fontconfig cache after the renderer's fonts | Gemini | Not measured; Chromium, R and Julia scan the fonts in every render today |
+
 ## Open questions for the owner
 
 Defaults apply until answered; each is marked where the plan uses it.
@@ -2006,13 +2246,34 @@ Defaults apply until answered; each is marked where the plan uses it.
 9. **bokeh and plotly screenshots** through the JavaScript harness's Chromium as a
    second exec-mode child, after the plot code wrote the page; not Selenium with a
    shipped chromedriver (the design's note), and not Playwright for Python (it spawns
-   a Node driver under the guard). Default: the harness child.
+   a Node driver under the guard). Default: the harness child. **Revised by the second
+   opinion on steps 3 and 4 (2026-10-30):** an armed harness cannot start that child, so
+   PB-1 forks the plot's child before arming and screenshots from the unarmed parent,
+   and the plot writes JSON, not a page (step 4).
 10. **Exported code for bokeh and plotly** keeps the catalogue's own save block while
-    the run form saves HTML for the sandbox: the one place where the export is not
-    byte for byte the run form (agent-network.md, "Fencing and exported code").
-    Default: accept the deviation for these two libraries and document it there.
+    the run form saves the figure for the sandbox (JSON since the revision of
+    2026-10-30): the one place where the export is not byte for byte the run form
+    (agent-network.md, "Fencing and exported code"). Default: accept the deviation for
+    these two libraries and document it there.
 11. **Highcharts in a public toolchain image**: the free licence covers non-commercial
     use, and a public GHCR image redistributes the bundle. **Settled by question 1
     (2026-10-25):** the base image is private in Artifact Registry, so it redistributes
     nothing, and Highcharts can live in it. Whether users' plots may use Highcharts stays
     question 6.
+12. **The JavaScript export.** The catalogue's snippet does not run by itself: it needs the
+    harness's page, its tokens and the library bundle, so a downloaded `plot.js` next to
+    `data.csv` does not open anywhere (second opinion of 2026-10-30, Fable). (A) export a
+    self-contained `plot.html` (the bundle, the tokens, the data and the snippet inlined,
+    the page the harness already writes for the catalogue's interactive view), which opens
+    in any browser; or (B) export `plot.js` (or `plot.tsx`) alone with a header that names
+    the harness (`node render.mjs --library=<library> plot.js`), which runs only in a
+    checkout of the repository. Open; JS-1 to JS-3 do not depend on it, JS-4 does (the
+    export's artifact name and run line).
+13. **The 196 MUI X files written for 7.29.1.** The lock pins MUI X 9.16; JS-1's sweep
+    rendered 144 of them unchanged and failed 52, all on `ChartContainer`, which 9.16 no
+    longer exports. (A) serve them `coupled`, with a readiness hint derived from the
+    image's import allowlist that names each import 9.16 does not export, and let the
+    adapter rewrite it (Fable); (B) normalise the mechanical 7.29 to 9.16 renames and mark
+    what remains `blocked` until regenerated (Gemini); or (C) wait for the running MUI X
+    regeneration and serve MUI X only after it. Open; JS-4 enables MUI X last, after
+    Chart.js, D3 and ECharts, whatever the answer.

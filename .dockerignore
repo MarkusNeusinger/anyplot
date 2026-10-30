@@ -40,6 +40,12 @@
 # reads, so the renderer runs the pipeline's package versions.
 !Project.toml
 !Manifest.toml
+# Its Node stage installs the catalogue's JavaScript render harness the way the
+# pipeline's setup-node does: the root package.json and package-lock.json (npm ci)
+# and the harness itself. Root-anchored, so app/package.json stays out.
+!package.json
+!package-lock.json
+!automation/js-render
 # The eval harness (agents/evals/) is not service code: its fixture cases are
 # about 3 MB, its local reports hold renders and galleries, and its promoted
 # feedback cases (agents/evals/.cases) hold users' data, which must never reach

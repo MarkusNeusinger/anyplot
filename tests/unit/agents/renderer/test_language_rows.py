@@ -7,7 +7,15 @@ import pytest
 from pydantic import ValidationError
 
 from agents.renderer import executor as executor_module
-from agents.renderer.commands import EXEC_FLAG, JULIA_BINARY, JULIA_WARMUP, LANGUAGES, R_BINARY, command_for
+from agents.renderer.commands import (
+    EXEC_FLAG,
+    JULIA_BINARY,
+    JULIA_WARMUP,
+    LANGUAGES,
+    NODE_BINARY,
+    R_BINARY,
+    command_for,
+)
 from agents.renderer.executor import SANDBOX_PATH, ExecutorConfig, SandboxExecutor, build_argv, sandbox_env
 from agents.renderer.wire import RendererStatus, RenderRequest
 
@@ -150,7 +158,12 @@ class TestRows:
     def test_the_muix_row_writes_a_tsx_file(self, config: ExecutorConfig, tmp_path: Path) -> None:
         argv = build_argv(config, "r-a-light", tmp_path, "light", 60, command=command_for("javascript", "muix"))
 
-        assert argv[-4:] == ["node", "/opt/anyplot/js-render/render.mjs", "--library=muix", "plot.tsx"]
+        assert argv[-4:] == [NODE_BINARY, "/opt/anyplot/js-render/render.mjs", "--library=muix", "plot.tsx"]
+        values = envs(argv)
+        # No exec filter for Node and Chromium; the row's own environment, and the sandbox's fixed PATH and HOME.
+        assert "ANYPLOT_DENY_EXEC" not in values and "LD_PRELOAD" not in values
+        assert values["TZ"] == "UTC" and values["FONTCONFIG_FILE"] == "/opt/anyplot/js-fonts.conf"
+        assert values["PATH"] == SANDBOX_PATH and values["HOME"] == "/tmp" and "MPLBACKEND" not in values
 
     def test_the_forbidden_flags_assertion_holds_for_every_row(self, config: ExecutorConfig, tmp_path: Path) -> None:
         for language, library in (("python", "matplotlib"), ("javascript", "d3"), ("r", "ggplot2"), ("julia", "makie")):
@@ -168,7 +181,7 @@ class TestToolchains:
     def test_a_language_is_available_when_its_binaries_are_on_the_sandbox_path(
         self, config: ExecutorConfig, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        present = {"node", JULIA_BINARY}
+        present = {NODE_BINARY, JULIA_BINARY}
         monkeypatch.setattr(
             executor_module.shutil,
             "which",

@@ -15,6 +15,7 @@ from agents.renderer.commands import (
     command_for,
     toolchains,
 )
+from agents.renderer.executor import SANDBOX_PATH
 from core.constants import LIBRARY_LANGUAGES as CATALOGUE_LANGUAGES
 from core.constants import SUPPORTED_LANGUAGES, SUPPORTED_LIBRARIES, library_file_extension
 
@@ -87,7 +88,8 @@ class TestTable:
 
     def test_the_other_languages_run_the_ci_command_through_exec_mode(self) -> None:
         js = command_for("javascript", "chartjs")
-        assert js.argv == ("node", commands.JS_HARNESS, "--library=chartjs") and js.toolchain == ("node",)
+        assert js.argv == (commands.NODE_BINARY, commands.JS_HARNESS, "--library=chartjs")
+        assert js.toolchain == (commands.NODE_BINARY,)
         assert not js.rlimit_as and not js.rlimit_nproc  # V8 reservations; 77 tasks per render (spike 2026-10-24)
         assert not js.exec_deny  # Node starts Chromium, Chromium its own processes
         assert command_for("javascript", "muix").code_file == "plot.tsx"
@@ -135,6 +137,56 @@ class TestTable:
         }
         assert "LD_PRELOAD" not in julia.env  # the harness hands the preload to the child alone
 
+    def test_javascript_runs_node_by_its_path_with_the_rows_environment(self) -> None:
+        """JS-1 of step 3: Node by its path (`delegates.py` refuses a `node` on `SANDBOX_PATH`), the library from the
+        closed set, and an environment that names the packages, the headless shell, the row's fonts and UTC."""
+        assert commands.NODE_BINARY == f"{commands.NODE_HOME}/bin/node" == "/opt/node/bin/node"
+        assert commands.NODE_HOME not in SANDBOX_PATH.split(":") and f"{commands.NODE_HOME}/bin" not in SANDBOX_PATH
+        for library in ("chartjs", "d3", "echarts", "highcharts", "muix"):
+            row = command_for("javascript", library)
+            assert row.argv == (commands.NODE_BINARY, commands.JS_HARNESS, f"--library={library}"), library
+            assert row.code_flag == "" and row.env is commands.JS_ENV
+            assert row.render_p95_s == 15.0  # JS-1's sweep: wall p95 2.4 s at 2 CPUs; Python's and R's reserve
+        assert dict(commands.JS_ENV) == {
+            "PLAYWRIGHT_BROWSERS_PATH": "/opt/pw-browsers",
+            "ANYPLOT_NODE_MODULES": "/opt/anyplot/node_modules",
+            "FONTCONFIG_FILE": "/opt/anyplot/js-fonts.conf",
+            "TZ": "UTC",
+            "LANG": "C.UTF-8",
+            "XDG_CACHE_HOME": "/tmp",
+            "XDG_CONFIG_HOME": "/tmp",
+        }
+        # The sandbox's fixed keys come after a row's environment and win (`executor.sandbox_env`).
+        assert not {"PATH", "HOME", "LD_PRELOAD", "NODE_OPTIONS"} & set(commands.JS_ENV)
+
+    def test_the_image_carries_the_javascript_rows_fonts_and_harness(self) -> None:
+        """The toolchain copies the row's fontconfig file and the harness where the row names them; the file adds
+        the Liberation directory to the system configuration and nothing else, so no other row sees those fonts."""
+        renderer = Path(commands.__file__).parent
+        conf = (renderer / "toolchain" / "js-fonts.conf").read_text(encoding="utf-8")
+        assert re.findall(r"<dir>([^<]*)</dir>", conf) == ["/opt/anyplot/js-fonts"]
+        assert re.findall(r"<include[^>]*>([^<]*)</include>", conf) == ["/etc/fonts/fonts.conf"]
+        dockerfile = (renderer / "toolchain.Dockerfile").read_text(encoding="utf-8")
+        assert f"COPY agents/renderer/toolchain/js-fonts.conf {commands.JS_FONTCONFIG_FILE}\n" in dockerfile
+        assert "COPY --from=node /opt/anyplot/js-fonts /opt/anyplot/js-fonts\n" in dockerfile
+        assert "COPY automation/js-render/ /opt/anyplot/js-render/\n" in dockerfile
+        assert commands.JS_HARNESS == "/opt/anyplot/js-render/render.mjs"
+        assert f"COPY --from=node {commands.JS_NODE_MODULES} {commands.JS_NODE_MODULES}\n" in dockerfile
+        assert f"COPY --from=node {commands.PLAYWRIGHT_BROWSERS} {commands.PLAYWRIGHT_BROWSERS}\n" in dockerfile
+        assert f"COPY --from=node {commands.NODE_HOME} {commands.NODE_HOME}\n" in dockerfile
+        # No other row's font path reaches the directory: lets-plot's file names /usr/share/fonts alone.
+        assert "/opt/anyplot/js-fonts" not in (renderer / "fonts.conf").read_text(encoding="utf-8")
+
+    def test_the_harness_reads_the_packages_from_the_rows_variable(self) -> None:
+        """In a checkout the harness finds node_modules two levels up; in the image only `ANYPLOT_NODE_MODULES`
+        names it, and without the variable the pipeline's behaviour is unchanged."""
+        harness = (Path(commands.__file__).parents[2] / "automation" / "js-render" / "render.mjs").read_text(
+            encoding="utf-8"
+        )
+        assert (
+            'const NODE_MODULES = process.env.ANYPLOT_NODE_MODULES || path.join(REPO_ROOT, "node_modules");' in harness
+        )
+
     def test_julia_loads_the_precompile_workload_right_before_the_plot(self) -> None:
         """J1.1: the workload's native code is used only while its package is loaded, so `-L` loads it before the
         plot, which stays the program (`julia ... -L warmup.jl plot.jl`), from the toolchain's own directory."""
@@ -155,7 +207,7 @@ class TestTable:
         needed = toolchains()
         assert set(needed) == set(LANGUAGES)
         assert needed["python"] == () and needed["r"] == (commands.R_BINARY,)
-        assert needed["javascript"] == ("node",) and needed["julia"] == (commands.JULIA_BINARY,)
+        assert needed["javascript"] == (commands.NODE_BINARY,) and needed["julia"] == (commands.JULIA_BINARY,)
 
     def test_rows_are_frozen(self) -> None:
         row = command_for("r", "ggplot2")
