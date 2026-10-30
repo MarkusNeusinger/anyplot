@@ -305,6 +305,16 @@ QUALITY_THRESHOLD_APPROVAL = 90  # Minimum score for immediate approval (Review 
 QUALITY_THRESHOLD_FINAL_APPROVAL = 50  # Minimum score for approval after 4 repair attempts (Review 5)
 
 # =============================================================================
+# AGENT CHAT
+# =============================================================================
+
+MAX_AGENT_VERSION = 999
+"""The highest plot version number of a chat session that a route or a telemetry line takes: the agents service's
+render, artifact, bundle and outcome routes, the BFF's, the feedback case's `result_version`, and the usage
+telemetry's `outcome.version` and `pipeline_run.version` (a run past it writes no version rather than no line).
+One limit, so a version a route serves is always one an outcome and a run can name."""
+
+# =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
 

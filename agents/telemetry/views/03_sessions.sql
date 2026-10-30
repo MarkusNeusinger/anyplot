@@ -1,5 +1,6 @@
 -- One row per chat session (salted session hash and source): its funnel, its plots and how it ended.
--- Run after 02_event_views.sql.
+-- Run after 02_event_views.sql. The source keeps the admin's "plot in all libraries" test sessions (`fanout`, one per
+-- library, none of which ever keeps a plot) and the eval harness's (`harness`) apart from `live` ones.
 --
 -- `kept` (owner rule of 2026-10-16) is true when the user took a result away and was content with it:
 --   * after the session's last pipeline run (so after its last shipped plot, and with no plot turn after it),

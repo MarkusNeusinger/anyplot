@@ -1017,6 +1017,8 @@ export interface UseAgentSessionOptions {
   library: string;
   locale: string;
   token: string;
+  /** The session is one of the admin fan-out's (`FanOut`): its telemetry is filed as `fanout`, not `live`. */
+  fanout?: boolean;
 }
 
 const GUARDRAIL_REASONS = new Set([
@@ -1057,7 +1059,13 @@ function failureOf(err: unknown): Failure {
 
 const isAbort = (err: unknown) => err instanceof DOMException && err.name === 'AbortError';
 
-export function useAgentSession({ specId, library, locale, token }: UseAgentSessionOptions) {
+export function useAgentSession({
+  specId,
+  library,
+  locale,
+  token,
+  fanout = false,
+}: UseAgentSessionOptions) {
   const [state, dispatch] = useReducer(agentReducer, library, initialAgentState);
   const { trackEvent } = useAnalytics();
 
@@ -1123,6 +1131,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   // time, later switches go through `switchLibrary`. The page remounts this
   // hook (a `key`) for another spec or token, so the state starts fresh.
   const initialLibrary = useRef(library);
+  const openedForFanOut = useRef(fanout);
   useEffect(() => {
     mounted.current = true;
     let cancelled = false;
@@ -1152,7 +1161,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     window.addEventListener('pageshow', onPageShow);
 
     agentApi
-      .openSession(token, specId, initialLibrary.current, locale)
+      .openSession(token, specId, initialLibrary.current, locale, openedForFanOut.current)
       .then(result => {
         if (cancelled) {
           void agentApi.deleteSession(token, result.session_id).catch(() => undefined);

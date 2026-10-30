@@ -274,12 +274,13 @@ export function LegalPage() {
             <Typography sx={textStyle}>
               <strong>usage telemetry.</strong> to see how the assistant is used and where it fails,
               it writes content-free lines: event types, data formats, size buckets, the plot type
-              and library, attempts, review defect ids, statuses, latencies and token counts. a line
-              never holds your text, your data, your column names or your file names. the lines of
-              one session share a salted hash of the session, whose salt lives only as long as the
-              server instance, and they carry no user id — pseudonymous, not anonymous. they are
-              kept for up to 180 days in a Google Cloud Logging bucket in the Netherlands
-              (europe-west4) and read through BigQuery.
+              and library, the plot&apos;s language as a code (one of a dozen common languages, any
+              other only as &quot;other&quot;), attempts, review defect ids, statuses, latencies and
+              token counts. a line never holds your text, your data, your column names or your file
+              names. the lines of one session share a salted hash of the session, whose salt lives
+              only as long as the server instance, and they carry no user id — pseudonymous, not
+              anonymous. they are kept for up to 180 days in a Google Cloud Logging bucket in the
+              Netherlands (europe-west4) and read through BigQuery.
             </Typography>
             <Typography sx={textStyle}>
               <strong>attribution and rate limits.</strong> the assistant&apos;s own log lines,

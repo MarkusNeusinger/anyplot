@@ -44,6 +44,7 @@ neutralised inside the text, so a cell or a code comment cannot close a fence ea
 around the slash (`< /user_message>`) and in fullwidth forms (`＜／ｕｓｅｒ＿ｍｅｓｓａｇｅ＞`).
 """
 
+import hashlib
 import re
 import unicodedata
 from collections.abc import Sequence
@@ -407,6 +408,12 @@ def catalogue_reviewer_instruction() -> str:
     from .scoring import system_prompt
 
     return _join(own_prompt("reviewer_catalogue.md"), system_prompt())
+
+
+def prompt_hash(text: str) -> str:
+    """A static instruction's version stamp: the first 16 hex characters of its SHA-256 (the feedback bundle's
+    `prompt_hashes`, the usage telemetry's `adapter_prompt` and `reviewer_prompt`)."""
+    return hashlib.sha256(text.encode()).hexdigest()[:16]
 
 
 def scope_rubric(libraries: Sequence[str] | None = None) -> str:

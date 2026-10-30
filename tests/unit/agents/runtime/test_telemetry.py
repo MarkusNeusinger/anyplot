@@ -1,9 +1,12 @@
 """The usage telemetry (`agents/anyplot/telemetry.py`): content-free lines, closed sets, dedupe keys, the beacon."""
 
+import ast
 import json
 import logging
+import re
 from collections.abc import AsyncIterator, Iterator
-from typing import Any, get_args
+from pathlib import Path
+from typing import Any, cast, get_args
 
 import httpx
 import pytest
@@ -52,20 +55,36 @@ def telemetry_lines(caplog: pytest.LogCaptureFixture) -> list[dict[str, Any]]:
     return [json.loads(r.getMessage()) for r in caplog.records if r.name == telemetry.TELEMETRY_LOGGER]
 
 
-async def open_session(client: httpx.AsyncClient) -> str:
-    response = await client.post(
-        "/v1/sessions",
-        headers=HEADERS,
-        json={
-            "user": USER,
-            "spec_id": "scatter-basic",
-            "library": "matplotlib",
-            "locale": "en",
-            "snapshot": snapshot_from_repo("scatter-basic", "matplotlib").model_dump(),
-        },
-    )
+def session_body(**extra: Any) -> dict[str, Any]:
+    return {
+        "user": USER,
+        "spec_id": "scatter-basic",
+        "library": "matplotlib",
+        "locale": "en",
+        "snapshot": snapshot_from_repo("scatter-basic", "matplotlib").model_dump(),
+        **extra,
+    }
+
+
+async def open_session(client: httpx.AsyncClient, **extra: Any) -> str:
+    response = await client.post("/v1/sessions", headers=HEADERS, json=session_body(**extra))
     assert response.status_code == 200, response.text
     return str(response.json()["session_id"])
+
+
+async def plot_session(client: httpx.AsyncClient, **extra: Any) -> str:
+    """A session with the canary table pasted, the default bindings confirmed and one plot asked for."""
+    sid = await open_session(client, **extra)
+    pasted = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": CANARY_DATA})
+    assert pasted.status_code == 200, pasted.text
+    assert (await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)).status_code == 200
+    turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "create_plot"})
+    assert turn.status_code == 200, turn.text
+    return sid
+
+
+def lines_of(caplog: pytest.LogCaptureFixture, event: str) -> list[dict[str, Any]]:
+    return [line for line in telemetry_lines(caplog) if line["event"] == event]
 
 
 async def test_a_whole_session_writes_the_four_events_and_none_of_its_content(
@@ -121,9 +140,36 @@ async def test_a_whole_session_writes_the_four_events_and_none_of_its_content(
     assert data_input["spec_fit"] == "direct" and data_input["turn"] == 0
     assert run["run_index"] == 1 and run["status"] == "ok" and run["turn"] == 1
     assert [step["step"] for step in run["steps"]] == ["adapter", "reviewer"]
+    # The fields of 2026-10-30, in the conftest's checklist flow (no self-review, no ship-best, no score).
+    assert (run["stages"], run["round_scores"], run["plot_language"], run["readiness"]) == (
+        ["reviewer_ok"],
+        ["unscored"],
+        "en",
+        "coupled",  # the catalogue file draws its own sample data, which the adapter replaces
+    )
+    assert (run["loader_notes"], run["edit_failures"], run["validator_rules"], run["adaptation_rules"]) == (
+        [],
+        [],
+        [],
+        [],
+    )
+    assert (run["reviewer_mode"], run["ship_best"], run["self_review"], run["repair_self_review"]) == (
+        "checklist",
+        False,
+        False,
+        False,
+    )
+    assert re.fullmatch(r"[0-9a-f]{16}", run["adapter_prompt"]) and re.fullmatch(
+        r"[0-9a-f]{16}", run["reviewer_prompt"]
+    )
+    assert all(isinstance(step["thoughts"], int) for step in run["steps"])
+    assert (run["version"], run["shipped_score"]) == (1, None)  # the checklist review gives no score
     assert chat_turn["kind"] == "plot" and chat_turn["action"] == "text" and chat_turn["turn"] == 1
     assert chat_turn["tools"] == ["plot_pipeline"] and chat_turn["manual_binding_changed"] is True
     assert {step["step"] for step in chat_turn["steps"]} >= {"root", "adapter", "reviewer"}
+    # The turn's first typed message had its language detected (the fake judge's `en`): read after the run, the
+    # line says so; read before it, it said `default`.
+    assert chat_turn["plot_language"] == "en" and chat_turn["language_source"] == "detected"
     assert outcome["action"] == "copied_code" and outcome["version"] == 1 and outcome["turn"] == 1
     assert len({line["idempotency_key"] for line in lines}) == 5
 
@@ -445,3 +491,400 @@ def test_the_harness_source_is_restored_after_a_failure() -> None:
         raise RuntimeError("the eval run failed")
     record = telemetry.write(telemetry.Outcome, ledger, action="saved_session")
     assert record is not None and record["source"] == "live"
+
+
+# --- The fields of 2026-10-30 ---------------------------------------------------------------
+
+
+async def test_every_line_of_a_fanout_session_is_filed_as_fanout(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    """The admin's fan-out marks the session at its opening; every event of it carries the source, so each
+    `source = 'live'` filter (the views, the /debug card) leaves the test sessions out."""
+    caplog.set_level(logging.INFO)
+    swap_models("gemini", default_script())
+    sid = await plot_session(client, source="fanout")
+    assert (
+        await client.post(f"/v1/sessions/{sid}/outcome", headers=HEADERS, json={"action": "copied_code"})
+    ).is_success
+    live = await open_session(client)
+    assert (
+        await client.post(f"/v1/sessions/{live}/outcome", headers=HEADERS, json={"action": "copied_code"})
+    ).is_success
+
+    lines = telemetry_lines(caplog)
+    fanout, (plain,) = lines[:-1], lines[-1:]
+    assert [line["event"] for line in fanout] == ["data_input", "pipeline_run", "chat_turn", "outcome"]
+    assert {line["source"] for line in fanout} == {"fanout"} and plain["source"] == "live"
+    # The harness keeps its own source, also for a fan-out session.
+    ledger = RequestLedger(session_id="s1", spec_id="scatter-basic", library="matplotlib", fanout=True)
+    with telemetry.harness():
+        record = telemetry.write(telemetry.Outcome, ledger, action="saved_session")
+    assert record is not None and record["source"] == "harness"
+
+
+@pytest.mark.parametrize("source", ["live", "harness", "Fanout", MESSAGE_CANARY, ""])
+async def test_the_session_source_is_a_closed_set(client: httpx.AsyncClient, source: str) -> None:
+    response = await client.post("/v1/sessions", headers=HEADERS, json=session_body(source=source))
+    assert response.status_code == 422
+
+
+async def test_the_turn_records_the_language_it_detected(
+    client: httpx.AsyncClient, swap_models, judge, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Review of 2026-10-30: the line read the language before the run, so the turn that detected German said
+    `en`/`default`. Read after the run, it names what the turn set; a later choice outside the table is `other`."""
+    from agents.anyplot.models import JudgeVerdict
+
+    caplog.set_level(logging.INFO)
+    swap_models("gemini", {"root": [{"text": "Gern."}, {"text": "Okay."}, {"text": "Okay."}]})
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de"), JudgeVerdict(verdict="in_scope", lang="en")]
+    sid = await open_session(client)
+    assert (await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "Mach es"})).is_success
+    chosen = await client.put(f"/v1/sessions/{sid}/language", headers=HEADERS, json={"language": "Swedish"})
+    assert chosen.status_code == 200
+    assert (await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "go on"})).is_success
+
+    first, second = lines_of(caplog, "chat_turn")
+    assert (first["plot_language"], first["language_source"]) == ("de", "detected")
+    assert (second["plot_language"], second["language_source"]) == ("other", "chosen")
+    assert "Swedish" not in json.dumps(telemetry_lines(caplog))
+
+
+@pytest.mark.parametrize(
+    ("language", "code"),
+    [("en", "en"), ("Deutsch", "de"), ("German", "de"), ("JA", "ja"), ("Polski", "pl"), ("sv", "other"), (None, None)],
+)
+def test_the_plot_language_is_a_closed_code(language: str | None, code: str | None) -> None:
+    assert telemetry.plot_language(language) == code
+    assert telemetry.plot_language(f"Klingon {MESSAGE_CANARY}"[:40]) == "other"
+
+
+def test_the_plot_languages_are_the_named_languages() -> None:
+    from agents.anyplot.language import COMMON_LANGUAGES, ENGLISH_NAMES
+
+    assert set(get_args(telemetry.PlotLanguage)) == {*ENGLISH_NAMES, "other"}
+    assert set(COMMON_LANGUAGES) <= set(get_args(telemetry.PlotLanguage))
+
+
+async def test_a_run_records_its_attempts_and_their_causes_without_their_text(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An edit that matches nothing, then a banned import, then the plan that works: the stages in order, the
+    failure kind and the rule id, and none of the plan's text."""
+    from agents.anyplot.settings import get_settings
+
+    from .fakes import SCATTER_PLAN
+
+    monkeypatch.setenv("AGENT_MAX_ATTEMPTS", "3")
+    get_settings.cache_clear()
+    caplog.set_level(logging.INFO)
+    missing = {**SCATTER_PLAN, "edits": [{"find": f"{MESSAGE_CANARY} not in the code", "replace": "x"}]}
+    first, *rest = SCATTER_PLAN["edits"]
+    importing = {**first, "replace": f"import subprocess  # {CELL_CANARY}\n{first['replace']}"}
+    banned = {**SCATTER_PLAN, "edits": [importing, *rest]}
+    swap_models("gemini", default_script(plans=[missing, banned, SCATTER_PLAN]))
+    await plot_session(client)
+
+    (run,) = lines_of(caplog, "pipeline_run")
+    assert run["status"] == "ok"
+    assert run["stages"] == ["edit_apply", "validator", "reviewer_ok"]
+    assert (run["edit_failures"], run["validator_rules"]) == (["zero_match"], ["banned-import"])
+    assert run["round_scores"] == ["unscored", "unscored", "unscored"]
+    raw = json.dumps(telemetry_lines(caplog))
+    for canary in (MESSAGE_CANARY, CELL_CANARY, "subprocess", COLUMN_CANARY):
+        assert canary not in raw, canary
+
+
+def test_round_scores_keep_the_round_number_by_position() -> None:
+    from agents.anyplot.pipeline import Run, _round_scores
+    from agents.anyplot.schemas import Round
+
+    run = Run(view=cast(Any, None), dataset=cast(Any, None))
+    run.rounds = [Round(attempt=1, outcome="render_failed"), Round(attempt=2, outcome="ok")]
+    run.round_scores = {2: 86}
+    assert _round_scores(run) == ["unscored", "80_89"]
+    run.round_scores = {1: 72, 2: 93}
+    assert _round_scores(run) == ["70_79", "90_plus"]
+
+
+def test_unknown_ids_are_other_and_never_drop_a_line() -> None:
+    rules = telemetry.closed_set(
+        ["banned-import", f"new-rule-{MESSAGE_CANARY}", "banned-import"], get_args(telemetry.ValidatorRule)
+    )
+    assert rules == ["banned-import", "other"]
+    assert telemetry.build(telemetry.PipelineRun, run_index=1, base="catalogue", status="ok", validator_rules=rules)
+    assert telemetry.readiness("blocked") is None and telemetry.readiness("coupled") == "coupled"
+    # A sequence keeps its order and its repeats; only the unknown entry becomes `other`.
+    stages = telemetry.closed_list(
+        ["adapter_truncated", f"new_stage_{MESSAGE_CANARY}", "adapter_truncated", "reviewer_ok"],
+        get_args(telemetry.PipelineStage),
+    )
+    assert stages == ["adapter_truncated", "other", "adapter_truncated", "reviewer_ok"]
+    assert telemetry.build(telemetry.PipelineRun, run_index=1, base="catalogue", status="ok", stages=stages)
+
+
+def test_the_stages_are_the_pipeline_stages() -> None:
+    """Every stage the pipeline can end an attempt or a run with (`pipeline.Stage`, the type of `Run.stage` and
+    `Run.stages`) is a telemetry stage; an unknown one is `other`."""
+    from agents.anyplot import pipeline
+
+    assert set(get_args(telemetry.PipelineStage)) == {*get_args(pipeline.Stage), "other"}
+    assert set(pipeline.ROUND_OUTCOMES) == set(get_args(pipeline.Stage))  # the page's table names each one
+
+
+async def test_a_library_switch_keeps_the_fanout_source(
+    client: httpx.AsyncClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    """The mark is written once at the opening; a library switch writes the opening state again, which must not drop
+    it: the lines after the switch stay `fanout`, under the new library."""
+    caplog.set_level(logging.INFO)
+    sid = await open_session(client, source="fanout")
+    switched = await client.post(
+        f"/v1/sessions/{sid}/library",
+        headers=HEADERS,
+        json={"library": "seaborn", "snapshot": snapshot_from_repo("scatter-basic", "seaborn").model_dump()},
+    )
+    assert switched.status_code == 200, switched.text
+    assert (await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": CANARY_DATA})).is_success
+    assert (
+        await client.post(f"/v1/sessions/{sid}/outcome", headers=HEADERS, json={"action": "saved_session"})
+    ).is_success
+
+    lines = telemetry_lines(caplog)
+    assert [(line["event"], line["library"], line["source"]) for line in lines] == [
+        ("data_input", "seaborn", "fanout"),
+        ("outcome", "seaborn", "fanout"),
+    ]
+
+
+async def test_a_cancelled_turn_records_the_language_the_turn_set(
+    runtime: Runtime, client: httpx.AsyncClient, swap_models, judge, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A client that goes mid-turn closes the stream (Starlette closes the body generator): the line is still
+    written, as `cancelled`, and its language fields come from the session after the turn's work, so the detection
+    that turn made is in it."""
+    from agents.anyplot.models import JudgeVerdict
+    from agents.main import MessageBody, post_message
+
+    caplog.set_level(logging.INFO)
+    swap_models("gemini", {"root": [{"text": "Gern gemacht."}]})
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+    sid = await open_session(client)
+
+    response = await post_message(sid, MessageBody(text="Mach die Punkte größer"), USER, runtime, "req-cancelled")
+    stream = cast(AsyncIterator[str], response.body_iterator)
+    chunks = []
+    async for chunk in stream:
+        chunks.append(chunk)
+        if "Gern gemacht." in chunk:  # the reply streamed: the detection ran before the root's call
+            break
+    await stream.aclose()  # the client went before `done`
+
+    assert not any("event: done" in chunk for chunk in chunks)
+    (turn,) = lines_of(caplog, "chat_turn")
+    assert turn["error"] == "cancelled" and turn["kind"] == "error"
+    assert (turn["plot_language"], turn["language_source"]) == ("de", "detected")
+    assert sid not in runtime.active  # the run is released at once
+
+
+def test_the_edit_failures_are_the_edit_failure_kinds() -> None:
+    from agents.anyplot.code.edits import FAILURE_KINDS
+
+    assert set(get_args(telemetry.EditFailure)) == {*FAILURE_KINDS, "other"}
+
+
+VALIDATORS = [
+    Path(__file__).resolve().parents[4] / "agents" / "anyplot" / "code" / "validate.py",
+    *sorted((Path(__file__).resolve().parents[4] / "agents" / "anyplot" / "code" / "profiles").glob("*/validate.py")),
+]
+
+
+def validator_rule_ids() -> set[str]:
+    """Every rule id a validator writes: the first argument of each `add(...)` and `Finding(...)` that is a string, and
+    the values of the `protected` tables whose rule goes to `add` by name."""
+    ids: set[str] = set()
+    for path in VALIDATORS:
+        for node in ast.walk(ast.parse(path.read_text())):
+            if not isinstance(node, ast.Call) or not node.args:
+                continue
+            name = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", None)
+            first = node.args[0]
+            if name in ("add", "Finding") and isinstance(first, ast.Constant) and isinstance(first.value, str):
+                ids.add(first.value)
+            elif isinstance(node.func, ast.Attribute) and node.func.attr == "append" and isinstance(first, ast.Tuple):
+                head = first.elts[0] if first.elts else None
+                if isinstance(head, ast.Constant) and isinstance(head.value, str) and "-" in head.value:
+                    ids.add(head.value)
+    return ids - {""}
+
+
+def test_the_validator_rules_are_the_validators_rule_ids() -> None:
+    """A rule a validator adds without the telemetry knowing it reads `other`: this names it."""
+    found = validator_rule_ids() | {"literal-budget"}
+    assert len(VALIDATORS) >= 4 and {"banned-import", "dataset-package", "markup-code"} <= found
+    assert set(get_args(telemetry.ValidatorRule)) == {*found, "other"}
+
+
+def test_the_reviewer_modes_and_readiness_are_the_settings() -> None:
+    from agents.anyplot.code.readiness import ReadinessStatus
+    from agents.anyplot.settings import ReviewerMode
+    from agents.anyplot.sub_agents.reviewer import REVIEWER_MODES
+
+    assert set(get_args(telemetry.ReviewerMode)) == set(get_args(ReviewerMode)) == set(REVIEWER_MODES)
+    assert set(get_args(telemetry.Readiness)) == set(get_args(ReadinessStatus)) - {"blocked"}
+
+
+def test_the_loader_codes_are_the_column_kinds() -> None:
+    from dataclasses import fields
+
+    from agents.anyplot.data.kinds import ColumnKinds
+    from agents.anyplot.pipeline import LOADER_CODES
+
+    assert LOADER_CODES == get_args(telemetry.LoaderNote)
+    assert {item.name for item in fields(ColumnKinds)} - {"kinds"} == set(LOADER_CODES)
+
+
+@pytest.mark.parametrize(
+    ("library", "codes"),
+    [("matplotlib", []), ("ggplot2", ["inexact", "offset"]), ("makie", ["submillisecond", "offset"])],
+)
+def test_the_loader_codes_ask_the_runtime_and_name_no_column(library: str, codes: list[str]) -> None:
+    """Each runtime says which of the data's cells its loader changes; the line gets the codes, never the notes."""
+    from agents.anyplot.data.kinds import ColumnKinds
+    from agents.anyplot.pipeline import loader_codes
+    from agents.anyplot.render.runtimes import runtime_for
+
+    kinds = ColumnKinds(
+        kinds={COLUMN_CANARY: "big-integer", "When": "datetime"},
+        inexact={COLUMN_CANARY: 4},
+        submillisecond={"When": 2},
+        offset={"When": 7},
+    )
+    found = loader_codes(runtime_for(library), kinds)
+    assert found == codes
+    record = telemetry.build(telemetry.PipelineRun, run_index=1, base="catalogue", status="ok", loader_notes=found)
+    assert record is not None and COLUMN_CANARY not in record.model_dump_json()
+    assert loader_codes(runtime_for(library), ColumnKinds(kinds={"x": "integer"})) == []
+    assert loader_codes(runtime_for(library), None) == []
+
+
+def test_thoughts_are_a_part_of_the_output_and_unknown_for_the_judges() -> None:
+    ledger = RequestLedger()
+    ledger.book_step("adapter_matplotlib", model="gemini-3.8-flash", usage={"candidates": 40, "thoughts": 60}, cached=0)
+    ledger.book_judge(100, 5)
+    adapter, judge = telemetry.step_tokens(
+        ledger.steps, steps=("adapter", "judge"), judge_model="gemini-3.5-flash-lite"
+    )
+    assert (adapter["output"], adapter["thoughts"]) == (100, 60)
+    assert (judge["output"], judge["thoughts"]) == (5, None)
+    assert telemetry.StepTokens(**adapter).thoughts == 60
+
+
+def plot_events(text: str) -> list[dict[str, Any]]:
+    """The data of every `plot` event of an SSE answer."""
+    blocks = [dict(line.split(": ", 1) for line in block.splitlines() if ": " in line) for block in text.split("\n\n")]
+    return [json.loads(block["data"]) for block in blocks if block.get("event") == "plot"]
+
+
+async def test_a_run_names_the_version_its_outcomes_name(
+    client: httpx.AsyncClient, swap_models, services: Services, caplog: pytest.LogCaptureFixture
+) -> None:
+    """`pipeline_run.version` is the version store's number: the one the `plot` event hands the page and the page
+    sends back as `outcome.version`, so a review score joins exactly the version a user took away. A run that ships
+    nothing names none."""
+    from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK
+
+    caplog.set_level(logging.INFO)
+    swap_models(
+        "gemini",
+        {
+            # Three plot turns: the one before the data, then two that ship.
+            "root": [{"call": "plot_pipeline", "args": {}}, {"text": ROOT_REPLY}] * 3,
+            "adapter": [{"json": SCATTER_PLAN}] * 2,
+            "reviewer": [{"json": VERDICT_OK}] * 2,
+        },
+    )
+    sid = await open_session(client)
+    # Asked before the data is there: a run that ships nothing.
+    assert (
+        await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "create_plot"})
+    ).is_success
+    assert (await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": CANARY_DATA})).is_success
+    assert (await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)).is_success
+    shown = []
+    for _ in range(2):
+        turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "create_plot"})
+        shown += [plot["version"] for plot in plot_events(turn.text)]
+    beacon = await client.post(
+        f"/v1/sessions/{sid}/outcome", headers=HEADERS, json={"action": "downloaded_png", "version": shown[-1]}
+    )
+    assert beacon.status_code == 204
+
+    not_ready, *runs = lines_of(caplog, "pipeline_run")
+    assert (not_ready["status"], not_ready["version"]) == ("not_ready", None)
+    assert [run["version"] for run in runs] == shown == [1, 2]
+    assert [version.number for version in services.versions.all(sid)] == shown
+    (outcome,) = lines_of(caplog, "outcome")
+    assert outcome["version"] == runs[-1]["version"] and outcome["library"] == runs[-1]["library"]
+    assert outcome["session"] == runs[-1]["session"]
+
+
+def test_one_version_limit_and_a_run_past_it_still_writes_its_line(caplog: pytest.LogCaptureFixture) -> None:
+    """Review of #12477: `outcome.version` and the routes stop at `MAX_AGENT_VERSION`, so `pipeline_run.version` does
+    too; a run that shipped a version past it (no route or outcome could name it) writes its line without a version
+    rather than no line."""
+    from types import SimpleNamespace
+
+    from agents.anyplot.pipeline import Run, _telemetry_run
+    from agents.anyplot.schemas import PlotResult
+    from agents.main import OutcomeBody
+    from core.constants import MAX_AGENT_VERSION
+
+    for model in (telemetry.Outcome, OutcomeBody):
+        assert model(action="copied_code", version=MAX_AGENT_VERSION).version == MAX_AGENT_VERSION
+        with pytest.raises(ValidationError):
+            model(action="copied_code", version=MAX_AGENT_VERSION + 1)
+    assert [telemetry.version_number(n) for n in (None, 0, 1, MAX_AGENT_VERSION, MAX_AGENT_VERSION + 1)] == [
+        None,
+        None,
+        1,
+        MAX_AGENT_VERSION,
+        None,
+    ]
+    assert (
+        telemetry.build(
+            telemetry.PipelineRun, run_index=1, base="catalogue", status="ok", version=MAX_AGENT_VERSION + 1
+        )
+        is None
+    )  # the field itself is bounded: the pipeline maps first
+
+    caplog.set_level(logging.INFO)
+    view = SimpleNamespace(library="matplotlib", readiness="clean")
+    run = Run(view=cast(Any, view), dataset=cast(Any, None))
+    ledger = RequestLedger(session_id="s-big", spec_id="scatter-basic", library="matplotlib", turn=1)
+    result = PlotResult(status="ok", attempts=1, version=MAX_AGENT_VERSION + 1)
+    _telemetry_run(ledger, "s-big", "inv-big", run, result, 1.0)
+    (line,) = lines_of(caplog, "pipeline_run")
+    assert (line["status"], line["version"]) == ("ok", None)
+    telemetry.forget("s-big")
+
+
+async def test_the_run_prompt_hashes_are_the_bundle_hashes(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A run's `adapter_prompt` and `reviewer_prompt` are the feedback bundle's hashes of the same instructions, and
+    the bundle hashes both reviewer modes (`reviewer_catalogue` since 2026-10-30), so a catalogue rubric change shows
+    in a case's `prompt_hash` too."""
+    from agents.anyplot.pipeline import _prompt_hashes as run_hashes
+    from agents.main import _prompt_hashes as bundle_hashes
+
+    caplog.set_level(logging.INFO)
+    swap_models("gemini", default_script())
+    sid = await plot_session(client)
+    bundle = (await client.get(f"/v1/sessions/{sid}/bundle", headers=HEADERS)).json()["config"]["prompt_hashes"]
+    (run,) = lines_of(caplog, "pipeline_run")
+    assert run["adapter_prompt"] == bundle["adapter_matplotlib"]
+    assert run["reviewer_prompt"] == bundle["reviewer"]  # the conftest's checklist mode
+    assert run_hashes("matplotlib", "catalogue")["reviewer_prompt"] == bundle_hashes()["reviewer_catalogue"]
+    assert bundle["reviewer_catalogue"] != bundle["reviewer"]
