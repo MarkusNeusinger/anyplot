@@ -3,9 +3,9 @@
 --
 -- A field added to a line later (schema 1 grows by optional fields only) reads NULL on the lines written before it:
 -- unknown, not "none" or false. Only a field whose absence has one meaning gets a default here (`drift_restored`:
--- no restore). The fields of 2026-10-30 (`plot_language`, `stages`, `round_scores`, `readiness`, `loader_notes`,
--- `edit_failures`, `validator_rules`, `adaptation_rules`, the pipeline configuration and prompt hashes, and
--- `thoughts` in `steps`) are NULL before that day.
+-- no restore). The fields of 2026-10-30 (`plot_language`, `stages`, `round_scores`, `version`, `shipped_score`,
+-- `readiness`, `loader_notes`, `edit_failures`, `validator_rules`, `adaptation_rules`, the pipeline configuration and
+-- prompt hashes, and `thoughts` in `steps`) are NULL before that day.
 
 CREATE OR REPLACE VIEW `anyplot.agent_telemetry.data_inputs` AS
 SELECT
@@ -76,6 +76,9 @@ SELECT
   JSON_VALUE(payload.score_round2) AS score_round2,
   LAX_INT64(payload.shipped_attempt) AS shipped_attempt,
   LAX_INT64(payload.shipped_round) AS shipped_round,
+  -- The session's number of the shipped version, the one `outcomes.version` names (`score_outcomes` joins them).
+  LAX_INT64(payload.version) AS version,
+  JSON_VALUE(payload.shipped_score) AS shipped_score,
   JSON_VALUE_ARRAY(payload.forced_repair) AS forced_repair,
   JSON_VALUE_ARRAY(payload.gates_failed) AS gates_failed,
   JSON_VALUE_ARRAY(payload.reviewer_defects) AS reviewer_defects,

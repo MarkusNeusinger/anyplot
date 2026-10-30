@@ -163,6 +163,7 @@ async def test_a_whole_session_writes_the_four_events_and_none_of_its_content(
         r"[0-9a-f]{16}", run["reviewer_prompt"]
     )
     assert all(isinstance(step["thoughts"], int) for step in run["steps"])
+    assert (run["version"], run["shipped_score"]) == (1, None)  # the checklist review gives no score
     assert chat_turn["kind"] == "plot" and chat_turn["action"] == "text" and chat_turn["turn"] == 1
     assert chat_turn["tools"] == ["plot_pipeline"] and chat_turn["manual_binding_changed"] is True
     assert {step["step"] for step in chat_turn["steps"]} >= {"root", "adapter", "reviewer"}
@@ -707,3 +708,52 @@ def test_thoughts_are_a_part_of_the_output_and_unknown_for_the_judges() -> None:
     assert (adapter["output"], adapter["thoughts"]) == (100, 60)
     assert (judge["output"], judge["thoughts"]) == (5, None)
     assert telemetry.StepTokens(**adapter).thoughts == 60
+
+
+def plot_events(text: str) -> list[dict[str, Any]]:
+    """The data of every `plot` event of an SSE answer."""
+    blocks = [dict(line.split(": ", 1) for line in block.splitlines() if ": " in line) for block in text.split("\n\n")]
+    return [json.loads(block["data"]) for block in blocks if block.get("event") == "plot"]
+
+
+async def test_a_run_names_the_version_its_outcomes_name(
+    client: httpx.AsyncClient, swap_models, services: Services, caplog: pytest.LogCaptureFixture
+) -> None:
+    """`pipeline_run.version` is the version store's number: the one the `plot` event hands the page and the page
+    sends back as `outcome.version`, so a review score joins exactly the version a user took away. A run that ships
+    nothing names none."""
+    from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK
+
+    caplog.set_level(logging.INFO)
+    swap_models(
+        "gemini",
+        {
+            # Three plot turns: the one before the data, then two that ship.
+            "root": [{"call": "plot_pipeline", "args": {}}, {"text": ROOT_REPLY}] * 3,
+            "adapter": [{"json": SCATTER_PLAN}] * 2,
+            "reviewer": [{"json": VERDICT_OK}] * 2,
+        },
+    )
+    sid = await open_session(client)
+    # Asked before the data is there: a run that ships nothing.
+    assert (
+        await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "create_plot"})
+    ).is_success
+    assert (await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": CANARY_DATA})).is_success
+    assert (await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)).is_success
+    shown = []
+    for _ in range(2):
+        turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "create_plot"})
+        shown += [plot["version"] for plot in plot_events(turn.text)]
+    beacon = await client.post(
+        f"/v1/sessions/{sid}/outcome", headers=HEADERS, json={"action": "downloaded_png", "version": shown[-1]}
+    )
+    assert beacon.status_code == 204
+
+    not_ready, *runs = lines_of(caplog, "pipeline_run")
+    assert (not_ready["status"], not_ready["version"]) == ("not_ready", None)
+    assert [run["version"] for run in runs] == shown == [1, 2]
+    assert [version.number for version in services.versions.all(sid)] == shown
+    (outcome,) = lines_of(caplog, "outcome")
+    assert outcome["version"] == runs[-1]["version"] and outcome["library"] == runs[-1]["library"]
+    assert outcome["session"] == runs[-1]["session"]

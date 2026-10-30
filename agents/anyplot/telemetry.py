@@ -459,6 +459,12 @@ class PipelineRun(_Event):
     score_round2: ScoreBucket | None = None
     shipped_attempt: Count | None = None
     shipped_round: Count | None = None
+    version: Annotated[int, Field(ge=1, le=10_000)] | None = None
+    """The session's number of the version this run shipped (`PlotResult.version`, the number the page sends back as
+    `outcome.version`), so an outcome joins the run that made its plot; None when the run shipped nothing."""
+    shipped_score: ScoreBucket | None = None
+    """The bucket of the shipped render's own review score; None when it shipped unscored (a checklist review, no
+    review left) or shipped nothing."""
     forced_repair: list[DefectId] = _list()
     """Review ids that forced a repair whatever the score (`pipeline.VISIBLE_DEFECT_IDS`)."""
     gates_failed: list[GateId] = _list()

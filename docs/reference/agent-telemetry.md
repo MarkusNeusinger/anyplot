@@ -35,7 +35,7 @@ The agents service writes one wide JSON line per event to stdout on its own logg
 |---|---|---|
 | `data_input` | A paste or a dropped file reaches the dataset route, or the file conversion refuses a file | `format`, `entry` (`paste` or `file`), `outcome`, `cause`, `size_bucket`, `rows_bucket`, `cols_bucket`, column counts by type, `max_categories_bucket`, `missing_bucket`, `warnings` (codes), `tables`, `sheets`, `notes` and `file_name` (booleans), `spec_fit`, judge tokens, `latency_ms` |
 | `chat_turn` | A `/messages` turn ends, refused ones included; `manual_binding_changed` counts only a `PUT /bindings` whose bindings differ from the ones the session held, because the page echoes the parse's defaults after every paste | `kind` (`plot`, `prep`, `formula`, `code`, `talk`, `refused`, `error`), `action`, `asked_question`, `tools`, `prep_ops`, `undo`, `to_long`, `manual_binding_changed`, `binding_warnings`, `refusal`, `error`, `reply_reasked`, `language_source` and `plot_language` (both as the turn left them), `steps` (calls, tokens, thinking tokens and model per agent), `latency_ms` |
-| `pipeline_run` | A `plot_pipeline` run ends, or the root asked for one before the data was ready (`status: not_ready` with its reason) | `run_index` (1 is the session's first plot), `base`, `status`, `reason`, `stage`, `stages`, `attempts`, `rounds`, `round_scores`, `score_round1`, `score_round2` (buckets), `shipped_attempt`, `forced_repair`, `gates_failed`, `reviewer_defects`, `residual_defects`, `sandbox_failures` (`syntax`, `name`, `key`, `value`, `type`, `timeout`, `memory`, `other`), `drift_restored` (true when a plan that only changed the protected theme statements had them restored after the round's check retry), `plot_language`, `readiness`, `loader_notes`, `edit_failures`, `validator_rules`, `adaptation_rules`, the pipeline configuration and prompt hashes, time per stage, `steps` |
+| `pipeline_run` | A `plot_pipeline` run ends, or the root asked for one before the data was ready (`status: not_ready` with its reason) | `run_index` (1 is the session's first plot), `base`, `status`, `reason`, `stage`, `stages`, `attempts`, `rounds`, `round_scores`, `score_round1`, `score_round2` (buckets), `shipped_attempt`, `version` (the shipped version's number, which `outcome.version` names), `shipped_score`, `forced_repair`, `gates_failed`, `reviewer_defects`, `residual_defects`, `sandbox_failures` (`syntax`, `name`, `key`, `value`, `type`, `timeout`, `memory`, `other`), `drift_restored` (true when a plan that only changed the protected theme statements had them restored after the round's check retry), `plot_language`, `readiness`, `loader_notes`, `edit_failures`, `validator_rules`, `adaptation_rules`, the pipeline configuration and prompt hashes, time per stage, `steps` |
 | `outcome` | The page's beacon after a copy, a download, a session save, or a feedback send | `action` (`copied_code`, `copied_image`, `downloaded_png`, `downloaded_code`, `downloaded_data`, `saved_session`, `feedback`), `version`, `reaction` |
 
 Every line carries the same envelope:
@@ -111,6 +111,8 @@ not know yet becomes `other`, so a new rule never drops a line.
 | `chat_turn`, `pipeline_run` | `steps[].thoughts` | The thinking tokens among `output`. `output` stays candidates plus thoughts, as both providers bill them, so the cost view prices `output` as before; `thoughts` is a part of it, never added to it. `null` for the judges, which book a plain total |
 | `pipeline_run` | `stages` | The stage that ended each attempt, in order (`pipeline.Run.stages`): retries after a failed check, proofreads, repairs and their causes. `adapter_truncated` counts the adapter answers cut off at the output limit. `stage` stays what stopped the run, also a limit before the next attempt |
 | `pipeline_run` | `round_scores` | The bucket of each round's latest review score in round order, `unscored` for a round without one (a failed render, a checklist review). `score_round1` and `score_round2` repeat the first two |
+| `pipeline_run` | `version` | The session's number of the version the run shipped (`PlotResult.version`): the number the `plot` event hands the page and the page sends back as `outcome.version`, counted per session across its libraries (`services.VersionStore`). `null` when the run shipped nothing. See [Score and outcome](#score-and-outcome) |
+| `pipeline_run` | `shipped_score` | The bucket of the shipped render's own review score; `null` when it shipped unscored (a checklist review, no review left) |
 | `pipeline_run` | `plot_language` | The run's plot language, as the closed code above |
 | `pipeline_run` | `readiness` | `clean` or `coupled`: the readiness of the catalogue file the session adapts, as the session opened it for its library |
 | `pipeline_run` | `loader_notes` | `inexact` (integers past ±2^53 read as the nearest double), `submillisecond` (timestamps cut to the millisecond), `offset` (timestamps with a UTC offset read in UTC): the kinds of cells the runtime's loader changed reading the run's data. The pipeline asks the runtime for each kind alone (`pipeline.loader_codes`): R reports `inexact` and `offset`, Julia `submillisecond` and `offset`, Python none. Never the note's sentence, which names columns and counts |
@@ -121,8 +123,9 @@ not know yet becomes `other`, so a new rule never drops a line.
 | `pipeline_run` | `adapter_prompt`, `reviewer_prompt` | The first 16 hex characters of the SHA-256 of the run's adapter instruction and of the reviewer instruction in its mode (`policy.prompt_hash`, the hash of the feedback bundle's `prompt_hashes`). `adapter_prompt` equals the bundle's `adapter_<library>`; the bundle's `reviewer` hashes the checklist instruction in either mode, so in `catalogue` mode `reviewer_prompt` differs from it |
 
 Tests pin each closed set to its source: the language table, `FAILURE_KINDS`, the rule ids that the validators of
-every language write (collected from their sources), `ColumnKinds`, the reviewer modes and the readiness statuses
-(`tests/unit/agents/runtime/test_telemetry.py`).
+every language write (collected from their sources), `ColumnKinds`, the reviewer modes and the readiness statuses.
+Another test pins `pipeline_run.version` to the number of the `plot` event, the version store and the
+`outcome.version` the page sends back (`tests/unit/agents/runtime/test_telemetry.py`).
 
 ## Where the lines go
 
@@ -156,9 +159,54 @@ and dataset names written out.
 | `03_sessions.sql` | `sessions` | One row per session: data inputs, transcription offers, turns, runs, `not_ready` asks, shipped plots, `turns_to_first_plot`, keeps (copies and downloads), saves, feedback, rejections (feedback with `thumbs_down` or `bug`), `kept`, `funnel_last_step` (from `outcome_only` and `data_refused` through `transcription_offered`, `data_ok`, `chatted`, `plot_not_ready`, `plot_run` and `plot_shipped` to `kept`), and `state` under a 30-minute inactivity rule (`active`, `rejected`, `kept`, `saved`, `refined`, `abandoned_after_plot`, `abandoned_before_plot`). A session is `kept` when, after its last pipeline run, the user copied or downloaded a result (`copied_code`, `copied_image`, `downloaded_png`, `downloaded_code`, `downloaded_data`) and sent no feedback with `thumbs_down` or `bug`. A saved session is never a keep, because users also save a session to report a plot they did not like: a session whose only take-away is a save ends `saved`, and one with a `thumbs_down` or `bug` ends `rejected`. The view's header lists example sessions and how each is classified. A transcription writes two `data_input` rows, the offer (outcome `transcribed`) and the confirmed paste; every view counts the input once and the offers apart. `not_ready` runs are never counted as runs or in the repair rate |
 | `04_usage_failures.sql` | `usage`, `input_formats`, `failures`, `attempts` | Usage by day, spec and library (each line under the library it was written under, so a library switch splits a session's runs correctly; `sessions_kept` counts each session the `sessions` view calls `kept` once, under the day, spec and library of its last shipped run, so run it after `03_sessions.sql`); data inputs by format and entry, each input under its own format; one row per failure with its kind and closed code (since 2026-10-30 also the kinds `edit` and `validator`); one row per adapter attempt of a run with the stage that ended it |
 | `05_prices_cost.sql` | `model_prices`, `cost` | The `eu` list prices of `agents/evals/pricing.py` (a test keeps both equal) and the cost of every turn step and data-input judge call, with `thoughts_tokens`, the thinking part of `output_tokens` |
+| `06_score_outcomes.sql` | `score_outcomes` | One row per shipped plot version with its review score and what the user did with exactly that version; see [Score and outcome](#score-and-outcome). Run it after `03_sessions.sql` |
 
 The cost view prices the `chat_turn` and `data_input` lines only: `pipeline_run.steps` repeats the adapter's
 and the reviewer's share of its turn for per-run analysis.
+
+### Score and outcome
+
+The `score_outcomes` view answers whether the reviewer's score predicts what users do with a plot. Each shipped
+`pipeline_run` names the version it shipped (`version`), and every outcome beacon names the version the user acted
+on (`outcome.version`). Both are the session's version number, so the view joins them exactly, within the session
+and its source. Runs written before 2026-10-30 carry no version and are left out.
+
+| Column | Meaning |
+|---|---|
+| `ts`, `source`, `session`, `spec_id`, `library`, `version` | The run that shipped the version, and its envelope |
+| `versions_before` | The plots the session shipped before this one, across its libraries: its refinement rounds so far (`version` minus 1, since only a shipped run stores a version) |
+| `base`, `status`, `shipped_score`, `round_scores`, `stages`, `rounds`, `shipped_round`, `attempts`, `reviewer_mode`, `plot_language` | The run, as `pipeline_runs` has it |
+| `copies`, `downloads`, `feedback`, `reaction` | What the user did with this version: copies of the code or the image, downloads of the PNG, the code or the data, feedback sent on it, and the latest reaction |
+| `taken`, `rejected`, `kept` | `taken`: copied or downloaded. `rejected`: a feedback on this version reacted `thumbs_down` or `bug`. `kept`: taken and not rejected |
+| `s_plot_to_take`, `s_first_plot_to_take`, `s_first_plot_to_feedback` | Seconds to the first copy or download of this version from its own run, and from the session's first shipped plot; seconds to the first feedback on it from the session's first shipped plot. `NULL` when the user never did it |
+| `session_state` | The session's `state` from the `sessions` view |
+
+A version's `kept` differs from the session's `kept` in the `sessions` view: it judges one version, so a copy of
+version 1 counts for version 1 even when the session went on to version 2. A saved session and feedback on the chat
+carry version 0 and belong to no version. Leave out sessions whose state is `active`: their versions may still be
+taken.
+
+For example, to see the keep rate per score bucket and library over the last 30 days of live use:
+
+```sql
+SELECT
+  library,
+  IFNULL(shipped_score, 'unscored') AS score,
+  COUNT(*) AS versions,
+  COUNTIF(kept) AS kept,
+  ROUND(SAFE_DIVIDE(COUNTIF(kept), COUNT(*)), 2) AS keep_rate,
+  APPROX_QUANTILES(s_first_plot_to_take, 2)[OFFSET(1)] AS median_s_to_take,
+  ROUND(AVG(versions_before), 1) AS avg_versions_before
+FROM `anyplot.agent_telemetry.score_outcomes`
+WHERE source = 'live'
+  AND session_state != 'active'
+  AND ts > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY)
+GROUP BY library, score
+ORDER BY library, score;
+```
+
+The counts stay small for months on live traffic. Read a rate with its count, and compare libraries on the eval
+matrix rather than on a handful of sessions.
 
 ## Set up the BigQuery side
 

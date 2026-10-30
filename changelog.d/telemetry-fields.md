@@ -9,6 +9,12 @@
   `output`, which stays inclusive so the cost view and the older rows keep their meaning. All values come from
   closed sets pinned to their sources by tests; an unknown id is `other`, never a dropped line. The views get a
   typed column per field, an `attempts` view and `edit` and `validator` failure kinds.
+- **Agent telemetry: the review score joins what users do with the plot.** `pipeline_run` names the version
+  it shipped (`version`, the number the page sends back with every outcome) and the shipped render's own score
+  bucket (`shipped_score`). The new `score_outcomes` view lists every shipped version with its score, rounds and
+  attempt stages beside the copies, downloads and reaction on exactly that version, the plots the session shipped
+  before it, and the seconds from the first plot to the take-away, so the keep rate can be read per score bucket
+  and library.
 - **Agent telemetry: the plot language, as a code.** `chat_turn` and `pipeline_run` record the session
   language as one of twelve codes or `other`, never the free-text value; the legal page names it.
 - **Agent telemetry: the admin's fan-out sessions are filed apart.** The sessions "plot in all libraries"
