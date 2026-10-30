@@ -941,21 +941,9 @@ async function main() {
       if (CONTEXT.pageError === null) CONTEXT.pageError = err;
     });
 
-    await page.setContent(html, { waitUntil: "load" });
-
-    // Wait for a render-complete signal. A snippet MAY set window.__anyplotReady
-    // (e.g. ECharts `chart.on('finished', ...)`) for precise timing; otherwise we
-    // fall back to fonts-ready + a double rAF, which is sufficient for the
-    // animation:false static renders the library prompts mandate. This is the
-    // page.waitForFunction(...) signal the design calls for — never a time.sleep.
-    // The signal can only arrive from a snippet whose source names it or from
-    // the React entry (which sets it after fonts + three rAFs), so every other
-    // snippet settles directly instead of idling through the timeout.
-    // Playwright's signature is (pageFunction, arg, options): the options object
-    // must sit in the third slot, or it becomes the page function's argument
-    // and the wait runs to the 30 s default timeout.
-    // Sandbox mode bounds every answer the page gives from here on by one deadline
-    // (SETTLE_TIMEOUT_MS): a page that never settles fails as `timeout`.
+    // Sandbox mode bounds every answer the page gives by one deadline
+    // (SETTLE_TIMEOUT_MS), loading the page included: a snippet whose inline
+    // script never returns, or a page that never settles, fails as `timeout`.
     const deadline = Date.now() + SETTLE_TIMEOUT_MS;
     const bounded = (promise) => {
       if (!SANDBOX) return promise;
@@ -968,6 +956,20 @@ async function main() {
       });
       return Promise.race([promise, late]).finally(() => clearTimeout(timer));
     };
+
+    await bounded(page.setContent(html, { waitUntil: "load" }));
+
+    // Wait for a render-complete signal. A snippet MAY set window.__anyplotReady
+    // (e.g. ECharts `chart.on('finished', ...)`) for precise timing; otherwise we
+    // fall back to fonts-ready + a double rAF, which is sufficient for the
+    // animation:false static renders the library prompts mandate. This is the
+    // page.waitForFunction(...) signal the design calls for — never a time.sleep.
+    // The signal can only arrive from a snippet whose source names it or from
+    // the React entry (which sets it after fonts + three rAFs), so every other
+    // snippet settles directly instead of idling through the timeout.
+    // Playwright's signature is (pageFunction, arg, options): the options object
+    // must sit in the third slot, or it becomes the page function's argument
+    // and the wait runs to the 30 s default timeout.
     const settle = () =>
       bounded(
         page.evaluate(async () => {

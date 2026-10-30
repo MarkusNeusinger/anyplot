@@ -7,6 +7,7 @@ launcher and the real harness.
 """
 
 import asyncio
+import json
 from collections.abc import AsyncIterator, Callable, Iterator
 from typing import Any
 
@@ -146,6 +147,28 @@ class TestRoundTrip:
 
         assert set(result.outputs) == {"light", "dark"}
         assert isinstance(backend.tokens, StaticTokens) and backend.tokens.calls == 2
+
+    async def test_an_empty_optional_field_stays_out_of_the_body(self) -> None:
+        """A renderer deployed before `data_json` existed forbids unknown fields: a `null` would fail every render."""
+        bodies: list[dict[str, Any]] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            bodies.append(json.loads(request.content))
+            return httpx.Response(200, json=answer_json())
+
+        backend = mocked(handler)
+        await backend.render(render_job())
+        await backend.aclose()
+
+        assert bodies and set(bodies[0]) == {
+            "job_id",
+            "language",
+            "library",
+            "source",
+            "data_csv",
+            "themes",
+            "timeout_s",
+        }
 
     async def test_end_to_end_with_the_real_executor_and_harness(
         self, overrides: None, settings: RendererSettings, config: ExecutorConfig

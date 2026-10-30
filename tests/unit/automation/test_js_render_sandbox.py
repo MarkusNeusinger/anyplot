@@ -20,6 +20,7 @@ import socket
 import struct
 import subprocess
 import threading
+import time
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -380,6 +381,17 @@ def test_a_page_that_never_settles_times_out(harness: Harness, tmp_path: Path) -
     run = harness.render(tmp_path, CANVAS + "window.requestAnimationFrame = () => 0;\n")
     message = _assert_final_line(run, "timeout", "TimeoutError", "-")
     assert message == "the page did not settle within 15 s"
+
+
+def test_a_script_that_never_returns_times_out_while_the_page_loads(harness: Harness, tmp_path: Path) -> None:
+    """The deadline covers loading the page too: an inline script that never returns holds `setContent`, which would
+    otherwise wait for Playwright's 30 s default."""
+    start = time.monotonic()
+    run = harness.render(tmp_path, CANVAS + "while (true) {}\n")
+    took = time.monotonic() - start
+    message = _assert_final_line(run, "timeout", "TimeoutError", "-")
+    assert message == "the page did not settle within 15 s"
+    assert took < 28, took
 
 
 def test_dates_are_utc_whatever_the_hosts_zone(harness: Harness, tmp_path: Path) -> None:
