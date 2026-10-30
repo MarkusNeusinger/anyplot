@@ -224,15 +224,14 @@ class JavaScriptRuntime:
 
     def data_json(self, csv_text: str, kinds: ColumnKinds | None) -> str | None:
         """The canonical CSV as typed JSON (`data/typed_json.py`), which the harness injects as `window.ANYPLOT_DATA`;
-        None without the kinds, where `loader_block` refuses the run form. A cell the typing cannot hold, which a
-        canonical CSV never has (a timestamp that UTC moves outside the years 1 to 9999), leaves the page without a
-        table too: the render then fails on `data` and its summary says so, rather than the run."""
+        None without the kinds, where `loader_block` refuses the run form. Raises `ValueError` for a cell the typing
+        cannot hold, which a canonical CSV never has (a timestamp that UTC moves outside the years 1 to 9999): the
+        pipeline then drops the kinds, so the loader refuses the run form with a line that says why, instead of a
+        page without a table whose first `data.map` the repair would blame on the plot code (second opinion of
+        2026-10-30)."""
         if kinds is None:
             return None
-        try:
-            return typed_json(csv_text, kinds)
-        except ValueError:
-            return None
+        return typed_json(csv_text, kinds)
 
     def validate(self, code: str, library: str) -> list[str]:
         return [f"{finding.rule}: {finding.message}" for finding in validate_security(code, library=self.library)]

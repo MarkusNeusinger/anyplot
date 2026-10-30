@@ -1560,6 +1560,74 @@ async def test_theme_toggle_renders_the_other_theme_without_a_model_call(
     assert images == {"light": light.content, "dark": dark.content}
 
 
+D3_PLAN: dict[str, Any] = {
+    "edits": [
+        {
+            "find": (
+                "const data = Array.from({ length: 100 }, () => {\n"
+                "  const spend = 10 + lcgRand() * 140;\n"
+                "  const sales = Math.max(0.3, 0.8 + spend * 0.035 + lcgRandn() * 1.2);\n"
+                "  return { x: spend, y: sales };\n"
+                "});\n"
+            ),
+            "replace": "const data = loadUserData();\n",
+        }
+    ],
+    "title": "Exam Score by Study Hours",
+    "changes": ["Plotted Exam Score against Study Hours from your data"],
+}
+"""A D3 adaptation of scatter-basic in its smallest form: the sample replaced by the placeholder (JS-4a)."""
+
+
+async def test_a_javascript_plot_renders_and_toggles_from_its_typed_table(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, services: Services, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """JS-4a: the pipeline types the table once per run; the render job, the shipped version and the theme toggle's
+    job carry the same `data_json`, whose columns are the dataset's, and the run form reads it."""
+    from agents.anyplot.models import make_content_config
+    from agents.anyplot.settings import AgentSettings
+    from agents.anyplot.sub_agents.adapter import make_adapter
+
+    monkeypatch.setenv("AGENT_LIBRARIES", "matplotlib,d3")
+    get_settings.cache_clear()
+    fake = swap_models("gemini", default_script(plans=[D3_PLAN]))
+    adapter = make_adapter("d3")  # built at import for the default libraries only, so not among the swapped agents
+    adapter.model = fake
+    adapter.generate_content_config = make_content_config(
+        "adapter", AgentSettings(provider="gemini", model="gemini-3.8-flash", judge_model="gemini-3.5-flash-lite")
+    )
+    monkeypatch.setitem(ADAPTERS, "d3", adapter)
+    opened = await client.post(
+        "/v1/sessions",
+        headers=HEADERS,
+        json={
+            "user": USER,
+            "spec_id": "scatter-basic",
+            "library": "d3",
+            "locale": "en",
+            "snapshot": snapshot_body(library="d3"),
+        },
+    )
+    assert opened.status_code == 200 and opened.json()["eligibility"]["eligible"] is True, opened.text
+    sid = opened.json()["session_id"]
+    data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
+    loaded = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": data})
+    assert loaded.status_code == 200, loaded.text
+    await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
+
+    plot = next(payload for name, payload in await create_plot(client, sid) if name == "plot")
+    toggled = await render_theme(client, sid, "dark")
+
+    assert plot["status"] == "ok" and "plot.js" in plot["artifacts"], plot
+    assert toggled.status_code == 200 and toggled.json()["artifacts"][-2:] == ["plot.js", "data.csv"]
+    first, toggle = backend.jobs[0], backend.jobs[-1]
+    assert (first.language, first.library, toggle.themes) == ("javascript", "d3", ("dark",))
+    assert first.data_json is not None and toggle.data_json == first.data_json
+    assert json.loads(first.data_json)["columns"] == first.data_csv.splitlines()[0].split(",")
+    assert "const data = window.ANYPLOT_DATA;" in first.source and "loadUserData" not in first.source
+    assert services.versions.latest_rendered(sid, library="d3").data_json == first.data_json
+
+
 async def test_theme_toggle_pads_an_off_canvas_theme(
     client: httpx.AsyncClient, swap_models, backend: FakeBackend
 ) -> None:

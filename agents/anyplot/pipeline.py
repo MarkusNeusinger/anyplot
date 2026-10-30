@@ -1644,7 +1644,11 @@ async def _attempts(
     kinds = column_kinds_of(dataset)
     run.loader_notes = runtime.loader_notes(kinds) if kinds is not None else []
     run.loader_codes = loader_codes(runtime, kinds)
-    run.data_json = runtime.data_json(dataset.csv, kinds)
+    try:
+        run.data_json = runtime.data_json(dataset.csv, kinds)
+    except ValueError:
+        # A cell the typed table cannot hold: without the kinds the loader refuses the run form and says why.
+        kinds = None
     feedback: list[str] = []
     previous_plan: AdaptPlan | None = None
     rows = data_rows(dataset.csv)

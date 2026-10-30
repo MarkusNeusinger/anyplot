@@ -795,6 +795,9 @@ class TestRendererToolchainSteps:
         assert "--data @chartjs_job.json -o chartjs.json" in smoke
         assert "OK: Chart.js smoke render" in smoke and "o['cpu_s']" in smoke and "o['max_rss_mb']" in smoke
         javascript = smoke[smoke.index("--data @chartjs_job.json") : smoke.index("# 3. A real data run")]
-        assert "WARNING" not in javascript and 'the Chart.js smoke render request failed"; exit 1' in javascript
+        assert "WARNING" not in javascript and 'the Chart.js smoke render failed twice"; exit 1' in javascript
+        # A render that fails answers 200, which curl's retries never see: the render itself gets a second try.
+        retried = smoke[smoke.index("chartjs_ok") : smoke.index("# 3. A real data run")]
+        assert "for try in 1 2; do" in retried and "sleep 30" in retried and "--data @chartjs_job.json" in retried
         # Between the Makie render and the data run, which all gate the promotion.
         assert smoke.index("smoke-makie") < smoke.index("smoke-chartjs") < smoke.index("smoke-data")

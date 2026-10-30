@@ -504,12 +504,14 @@ JS_PROMPT_IDIOM_SNIPPETS = (
     "[...new Set(data.map((d) => d[GROUP]))]",
     "[...data].sort(",
     "data.filter((d) => d[Y] != null)",
-    'const fmt = (v, digits = 2) => { const [whole, frac] = Math.abs(v).toFixed(digits).split("."); '
-    'return (v < 0 ? "-" : "") + whole.replace(/\\B(?=(\\d{3})+(?!\\d))/g, THOUSANDS) + (frac ? DECIMAL + frac : ""); };',
+    "const fmt = (v, digits = 2) => { const r = Number(v.toFixed(digits)); "
+    'const [whole, frac] = Math.abs(r).toFixed(digits).split("."); '
+    'return (r < 0 ? "-" : "") + whole.replace(/\\B(?=(\\d{3})+(?!\\d))/g, THOUSANDS) + (frac ? DECIMAL + frac : ""); };',
     '"r = " + fmt(r, 2)',
     'const INK_MUTED = window.ANYPLOT_THEME === "dark" ? "#A8A79F" : "#6B6A63";',
-    "const peak = data.filter((d) => d[Y] != null).reduce((best, d) => (d[Y] > best[Y] ? d : best))",
+    "const peak = data.filter((d) => d[Y] != null).reduce((best, d) => (best === null || d[Y] > best[Y] ? d : best), null)",
     "fmt(peak[Y], 0)",
+    "const dated = data.filter((d) => d[DAY] != null);",
     "t.palette[i]",
 )
 JS_LIBRARY_IDIOM_SNIPPETS: dict[str, tuple[str, ...]] = {
@@ -563,7 +565,7 @@ _JS_IDIOM_HEAD = source(r"""
     // Plot: reads only data and the constants above
     const DECIMAL = ",";
     const THOUSANDS = ".";
-    const fmt = (v, digits = 2) => { const [whole, frac] = Math.abs(v).toFixed(digits).split("."); return (v < 0 ? "-" : "") + whole.replace(/\B(?=(\d{3})+(?!\d))/g, THOUSANDS) + (frac ? DECIMAL + frac : ""); };
+    const fmt = (v, digits = 2) => { const r = Number(v.toFixed(digits)); const [whole, frac] = Math.abs(r).toFixed(digits).split("."); return (r < 0 ? "-" : "") + whole.replace(/\B(?=(\d{3})+(?!\d))/g, THOUSANDS) + (frac ? DECIMAL + frac : ""); };
     const groups = [...new Set(data.map((d) => d[GROUP]))];
     const colors = groups.map((g, i) => t.palette[i]);
     const dated = data.filter((d) => d[DAY] != null);
@@ -575,7 +577,7 @@ _JS_IDIOM_HEAD = source(r"""
     const spread = (key, m) => Math.sqrt(pairs.reduce((sum, d) => sum + (d[key] - m) ** 2, 0));
     const r = pairs.reduce((sum, d) => sum + (d[X] - mx) * (d[Y] - my), 0) / (spread(X, mx) * spread(Y, my));
     const note = "r = " + fmt(r, 2);
-    const peak = data.filter((d) => d[Y] != null).reduce((best, d) => (d[Y] > best[Y] ? d : best));
+    const peak = data.filter((d) => d[Y] != null).reduce((best, d) => (best === null || d[Y] > best[Y] ? d : best), null);
     const title = "Umsatz bis " + fmt(peak[Y], 0) + ", " + note + ", zuerst " + ranked[0][GROUP];
 """)
 JS_PROMPT_IDIOMS: dict[str, str] = {

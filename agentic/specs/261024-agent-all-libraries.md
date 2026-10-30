@@ -1757,8 +1757,10 @@ fixtures.
   remote backend sends it, the local backend writes `data.json` and sets
   `ANYPLOT_DATA_JSON` as the renderer's executor does, and the eval harness's own render
   jobs (`ladder_lab`, `stress`) carry it too. Without the kinds the loader refuses the run
-  form, as R's does; a cell the typing cannot hold leaves the page without a table, so the
-  render fails on `data` rather than the run.
+  form, as R's does, and so it does for a cell the typing cannot hold: `data_json` raises,
+  the pipeline drops the kinds, and the attempt ends as `loader` with the reason (the first
+  draft left the page without a table, so the repair blamed the plot code's first
+  `data.map`; second opinion below).
 - **Notes.** Up to three "what changed" lines with counts per column, first in the list,
   the status left as the render earns it: integers past 2^53, timestamps cut to the
   millisecond, timestamps converted to UTC (`notes.offset_note`).
@@ -2668,6 +2670,30 @@ reproduced that night, and "measured" one that JS-1 measured.
 | The export cannot be `plot.js` alone | Fable | Question 12 |
 | Renders take 0.5 to 0.7 s; all 1,617 files in about 20 minutes; the image grows by 0.6 to 0.7 GB | Fable | Measured in JS-1: wall p50 1.2 s with the container's start, under 10 minutes four at a time, +565 MB |
 | Bake a fontconfig cache after the renderer's fonts | Gemini | Not measured; Chromium, R and Julia scan the fonts in every render today |
+
+## Second opinion on JS-4a (Gemini 4 Argon and Fable, 2026-10-30)
+
+The owner asked for JS-4 "mit Zweitmeinung"; both reviewed the JS-4a diff before its PR.
+Both: sound with changes, nothing that widens the boundary, the data path correct in
+every render path. Each finding was checked against the code before it was adopted.
+
+| Finding | From | Change |
+|---|---|---|
+| A JavaScript loader note passes the 200-character change-note cap with 64-character column names (measured 201 to 208), which `PlotResult.changes` refuses | Gemini | `counted_note` cuts the first column's name with an ellipsis when even it does not fit, for every language; a test at the limits for R, Julia and JavaScript |
+| A cell the typing cannot hold left the page without a table, and the repair blamed the plot code's first `data.map` | both | `data_json` raises, the pipeline drops the kinds, the loader refuses the run form with its reason |
+| The shared palette paragraph tells the adapter to append to a list that catalogue JavaScript does not have, and to put `INK_MUTED` after it | both | `palette_literal` states the closed case (`t.palette` holds all eight, never a list of your own, `INK_MUTED` after the token lines); a shared palette slot is left for the next `adapter.md` revision |
+| `new Date(null)` is 1970 and a string method throws on `null`; the date idioms map before filtering | Gemini | The `null` list names both, and the dates slot filters `d[DAY] != null` first |
+| Text from the data into `innerHTML` or an HTML tooltip runs as markup in the exported page | Gemini | The safe-code slot sends data text to `textContent` or the library's plain text |
+| The deploy gate is right, but a failed render answers 200, which curl's retries never see | both | A second try 30 s later; each failure prints the exit code, the reason, the attempts and the stderr tail |
+| `fmt(-0.001, 2)` writes `-0,00`; `reduce` without a start throws on an empty table | Gemini; Fable | `fmt` rounds before the sign; the highlight's `reduce` starts at `null` |
+| The root prompt names the R and Julia "converts" notes nowhere | Gemini | One line for "R converts", "Julia converts" and "JavaScript converts" |
+| The pipeline leg (`_attempts` to the job, the version and the toggle) had no test | Fable | A service-flow test with a D3 session through the fake backend |
+| Not adopted: `normalise` and `validate` ignore their `library` argument | Gemini | The runtime is bound to its library, as `JuliaRuntime` is |
+| Not adopted: the image checks name one library file per language | Gemini | The Dockerfile copies `prompts/library/` whole; one file per language is the existing pattern |
+| Open until JS-4b: the export header and the root prompt name `plot.html`, which JS-4a does not ship | Fable | Admin-only until then; JS-4b is next |
+
+Cost: Gemini 4 Argon $1.45 (5 turns, 881,600 input tokens, 647,916 cached); Fable about
+157,000 tokens.
 
 ## Open questions for the owner
 

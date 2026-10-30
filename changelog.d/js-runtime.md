@@ -39,6 +39,12 @@
   path every agent job takes.
 - **The scope judge's example of another library is MATLAB.** It was "this
   plot in JavaScript with Chart.js", which the chat now adapts.
+- **The assistant names the time-zone notes of every language.** A "what
+  changed" line that says R, Julia or JavaScript converted timestamps with an
+  offset to UTC is now named in the reply, like the other loader notes.
+- **A loader note never passes the 200-character limit.** With very long
+  column names and many changed cells, the first column's name in a note is
+  now cut with an ellipsis instead of failing the result.
 
 ### Fixed
 

@@ -559,9 +559,11 @@ class TestJavaScriptRuntimeBindings:
             '{"columns":["Tag","Wert","Gruppe"],"data":[["2024-01-31",1.5,"a"],[null,null,"b"]]}'
         )
         assert runtime.data_json(csv, None) is None
-        # A timestamp that UTC moves before year 1 has no typed form: the page gets no table, the run goes on.
+        # A timestamp that UTC moves before year 1 has no typed form: the pipeline drops the kinds, so the loader
+        # refuses the run form with its reason instead of a page without a table (second opinion of 2026-10-30).
         early = "ts\n0001-01-01T00:30:00+01:00\n"
-        assert runtime.data_json(early, read_kinds(early, {"ts": "datetime"}, ["ts"])) is None
+        with pytest.raises(ValueError):
+            runtime.data_json(early, read_kinds(early, {"ts": "datetime"}, ["ts"]))
         assert runtime_for("matplotlib").data_json(csv, kinds) is None
         assert (
             runtime_for("ggplot2").data_json(csv, kinds) is None and runtime_for("makie").data_json(csv, kinds) is None
@@ -572,6 +574,21 @@ class TestJavaScriptRuntimeBindings:
         assert job.data_json is not None
         with pytest.raises(ValueError, match="javascript job only"):
             RenderJob("a" * 16, "python", "matplotlib", "x", "a\n1\n", data_json="{}")
+
+    @pytest.mark.parametrize("library", ["ggplot2", "makie", "chartjs"])
+    @pytest.mark.parametrize("columns", [1, 2, 50])
+    def test_every_loader_note_fits_a_change_note_at_the_limits(self, library: str, columns: int) -> None:
+        """64-character column names (`MAX_COLUMN_NAME_CHARS`) at 20,000 cells each (`MAX_ROWS`): the head grows with
+        the total and the language's name, so the first column's name is cut with an ellipsis where it must be;
+        JavaScript's heads reached 201 to 208 characters before (second opinion of 2026-10-30)."""
+        from agents.anyplot.schemas import MAX_CHANGE_CHARS, MAX_COLUMN_NAME_CHARS, MAX_ROWS
+
+        counts = {f"{index:02d}".ljust(MAX_COLUMN_NAME_CHARS, "x"): MAX_ROWS for index in range(columns)}
+        notes = runtime_for(library).loader_notes(
+            ColumnKinds(kinds={}, inexact=counts, submillisecond=counts, offset=counts)
+        )
+        assert notes and all(len(note) <= MAX_CHANGE_CHARS for note in notes), [len(note) for note in notes]
+        assert all("20,000 in '00" in note for note in notes)
 
     def test_loader_notes_count_what_the_typing_changes_per_column(self) -> None:
         """Integers past ±2^53, timestamps cut to the millisecond and timestamps converted to UTC, each one change
