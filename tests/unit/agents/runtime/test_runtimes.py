@@ -412,6 +412,18 @@ class TestJuliaRuntimeBindings:
         both = read_kinds("n,t\n9007199254740993,2024-01-31T08:00:00+01:00\n", {"n": "integer", "t": "datetime"})
         assert [note.split()[1] for note in runtime_for("ggplot2").loader_notes(both)] == ["reads", "converts"]
 
+    def test_the_offset_note_is_a_change_note_and_names_what_fits(self) -> None:
+        """The offset note's head is the longest of the loader notes: at the caps the first column still fits."""
+        from agents.anyplot.schemas import MAX_CHANGE_CHARS, MAX_COLUMN_NAME_CHARS
+
+        names = [chr(ord("a") + index) * MAX_COLUMN_NAME_CHARS for index in range(50)]
+        cells = ",".join(["2024-01-31T08:00:00+01:00"] * 50)
+        wide = read_kinds(",".join(names) + "\n" + cells + "\n", dict.fromkeys(names, "datetime"))
+        for library in ("ggplot2", "makie"):
+            (crowded,) = runtime_for(library).loader_notes(wide)
+            assert len(crowded) <= MAX_CHANGE_CHARS and f"1 in '{names[0]}'" in crowded
+            assert crowded.endswith(", and 49 more columns")
+
     def test_the_loader_note_is_a_change_note_and_names_what_fits(self) -> None:
         from agents.anyplot.schemas import MAX_CHANGE_CHARS, MAX_COLUMN_NAME_CHARS
 

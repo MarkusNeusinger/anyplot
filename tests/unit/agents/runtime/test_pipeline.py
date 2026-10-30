@@ -903,6 +903,11 @@ class TestLoaderNotes:
         assert changes[1:] == ["note 0", "note 1", "note 2", "note 7"]  # the first ones and the latest
         assert summarise_changes(notes, limit=0) == [] and summarise_changes(notes, limit=1) == ["note 0"]
 
+        run = run_with(reviewed_ok=True, changes=notes)
+        run.loader_notes = [self.NOTE, "R converts 1 timestamp with a time-zone offset to UTC"]
+        both = finish(run).changes
+        assert len(both) == MAX_CHANGES and both[:2] == run.loader_notes  # both loader notes first, then three
+
     def test_column_kinds_of_reads_the_stored_dataset(self) -> None:
         store = DatasetStore()
         dataset = store.get(store.put("s", parse_dataset("id,n\n9007199254740993,1\n2,2\n")), "s")
@@ -912,3 +917,18 @@ class TestLoaderNotes:
 
         assert kinds is not None and kinds.kinds == {"id": "big-integer", "n": "integer"}
         assert kinds.inexact == {"id": 1}
+
+    def test_only_a_kept_offset_counts_the_parser_announces_mixed_ones(self) -> None:
+        """The parser keeps one offset per column and writes a column of several in UTC with its own note
+        (`parse.py`), so the loaders' offset note counts only the cells that still carry an offset."""
+        store = DatasetStore()
+        kept = store.get(
+            store.put("s", parse_dataset("t,n\n2024-01-31T08:00:00+01:00,1\n2024-02-01T09:30:00+01:00,2\n")), "s"
+        )
+        mixed = store.get(
+            store.put("m", parse_dataset("t,n\n2024-01-31T08:00:00+01:00,1\n2024-06-30T08:00:00+02:00,2\n")), "m"
+        )
+        assert kept is not None and mixed is not None
+
+        assert (kinds := column_kinds_of(kept)) is not None and kinds.offset == {"t": 2}
+        assert (kinds := column_kinds_of(mixed)) is not None and kinds.offset == {}
