@@ -9,3 +9,4 @@
   client sets its own 300-second timeout, because the Anthropic SDK refuses a
   non-streaming request that large otherwise. An answer that needs fewer tokens
   costs and takes what it did before; the root and the reviewer keep their caps.
+  (#12475)
