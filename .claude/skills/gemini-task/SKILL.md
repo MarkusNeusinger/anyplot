@@ -188,10 +188,17 @@ own draft PR. Denied: everything the "Never" list in section 2 forbids, cloud
 CLIs (`gcloud`, `gsutil`, `bq`, `psql`, the Cloud SQL proxy), network
 downloads, history rewrites, GitHub writes beyond the own draft PR, and
 `chmod` and writes to the brief folder, so a brief stays read-only for
-Gemini's tools as well. Rules are word-by-word prefixes; deny wins over ask,
-ask over allow, and anything unlisted asks. Shell wrappers (`bash -c`, `sh`,
-`env`, `xargs`, `eval`) stay unlisted, because a deny rule only matches the
-start of a command.
+Gemini's tools as well. Gemini's file tools stay out of `~/.gemini`, where
+the agy login lives, entry by entry: agy creates each subagent's worktree in
+`~/.gemini/antigravity-cli/worktrees/`, and one deny on the whole folder also
+blocked the file tools there, so the first parallel run fell back to one
+package after another (2026-10-30). Only `worktrees/` stays open, and `cd` and
+`git -C` into it are allowed by `regex:` rules that refuse `..`. After an agy
+update, compare `ls -A ~/.gemini ~/.gemini/antigravity-cli` with the deny list
+and add any new entry. Rules are word-by-word prefixes unless they start with
+`regex:`; deny wins over ask, ask over allow, and anything unlisted asks.
+Shell wrappers (`bash -c`, `sh`, `env`, `xargs`, `eval`) stay unlisted,
+because a deny rule only matches the start of a command.
 
 **These rules are guardrails against accidental use, not a security
 boundary.** An allowed command can still reach what a deny names: `cat` reads
@@ -263,7 +270,11 @@ This section is for the Gemini agent in the owner's agy session.
      mode), write access, and the shell. If your agy version cannot isolate a
      subagent in its own worktree, do not run packages in parallel in the
      shared clone: two agents there overwrite each other's files and Git
-     state. Work them one after another instead, and tell the owner.
+     state. Work them one after another instead, and tell the owner. The same
+     holds when a subagent's file tool hits a deny rule inside
+     `~/.gemini/antigravity-cli/worktrees/`: the owner's settings predate the
+     current `agy-permissions.json`, so tell him to merge it in again
+     (section 1) before the next task.
    - A subagent starts without your conversation, so its prompt names
      everything: the brief to `cat`; its branch, which for an independent
      package is a new `gemini/<slug>-<k>` from `origin/main`, and for a
