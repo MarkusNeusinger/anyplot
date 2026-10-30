@@ -13,4 +13,4 @@
   service from the canonical CSV (`agents/anyplot/data/typed_json.py`) and carried
   by a new optional `data_json` field of the render request. Every catalogue
   JavaScript file that rendered before renders the same way in sandbox mode. The
-  agent chat does not offer JavaScript yet.
+  agent chat does not offer JavaScript yet. (#12466)
