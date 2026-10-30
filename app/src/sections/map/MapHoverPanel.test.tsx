@@ -78,7 +78,7 @@ describe('MapHoverPanel', () => {
     expect(aside.querySelector('img')).toBeNull();
   });
 
-  it('omits the plot type row when plotType is null and renders in dark mode with a preview', () => {
+  it('omits the plot type row when plotType is null', () => {
     mockIsDark.current = true;
     const panelData = makePanelData({
       title: 'Custom Chart',
