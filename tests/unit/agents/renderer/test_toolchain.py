@@ -416,8 +416,6 @@ class TestNode:
         row = commands.command_for("javascript", "chartjs")
         assert f'{commands.NODE_BINARY} {commands.JS_HARNESS} "--library=$1"' in smoke
         for key, value in row.env.items():
-            if key == "DEBUG":
-                continue  # the temporary diagnosis on Cloud Run (commands.JS_ENV); the build's smoke runs without it
             assert f"{key}={value}" in smoke, key
         assert "env -i PATH=/usr/bin:/bin HOME=/tmp ANYPLOT_THEME=light" in smoke
         assert "(3200, 1800)" in smoke
