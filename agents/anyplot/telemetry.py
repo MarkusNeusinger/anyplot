@@ -58,7 +58,7 @@ from typing import TYPE_CHECKING, Annotated, Any, Literal, cast, get_args
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
-from core.constants import SUPPORTED_LIBRARIES
+from core.constants import MAX_AGENT_VERSION, SUPPORTED_LIBRARIES
 
 from .data.warning_codes import BindingWarningCode, WarningCode, binding_warning_codes, warning_codes
 from .language import canonical
@@ -366,6 +366,8 @@ Reaction = Literal["thumbs_up", "thumbs_down", "bug", "idea"]
 
 Count = Annotated[int, Field(ge=0, le=10_000_000)]
 Ms = Annotated[int, Field(ge=0, le=86_400_000)]
+Version = Annotated[int, Field(ge=0, le=MAX_AGENT_VERSION)]
+"""A plot version number as the routes take it (`core.constants.MAX_AGENT_VERSION`); 0 is the session itself."""
 
 
 def _list() -> Any:
@@ -462,9 +464,10 @@ class PipelineRun(_Event):
     score_round2: ScoreBucket | None = None
     shipped_attempt: Count | None = None
     shipped_round: Count | None = None
-    version: Annotated[int, Field(ge=1, le=10_000)] | None = None
+    version: Version | None = None
     """The session's number of the version this run shipped (`PlotResult.version`, the number the page sends back as
-    `outcome.version`), so an outcome joins the run that made its plot; None when the run shipped nothing."""
+    `outcome.version`), so an outcome joins the run that made its plot; None when the run shipped nothing, or a
+    version past `MAX_AGENT_VERSION`, which no outcome can name (`version_number`)."""
     shipped_score: ScoreBucket | None = None
     """The bucket of the shipped render's own review score; None when it shipped unscored (a checklist review, no
     review left) or shipped nothing."""
@@ -517,7 +520,7 @@ class PipelineRun(_Event):
 class Outcome(_Event):
     event: Literal["outcome"] = "outcome"
     action: OutcomeAction
-    version: Annotated[int, Field(ge=0, le=999)] = 0
+    version: Version = 0
     reaction: Reaction | None = None
 
 
@@ -899,6 +902,12 @@ def plot_language(language: str | None) -> PlotLanguage | None:
     if language is None:
         return None
     return cast(PlotLanguage, closed(canonical(language), get_args(PlotLanguage)))
+
+
+def version_number(number: int | None) -> int | None:
+    """A shipped version's number for `pipeline_run.version`: None past `MAX_AGENT_VERSION` (and for none), so a
+    session that somehow shipped more versions than any route or outcome can name still writes its run lines."""
+    return number if number is not None and 1 <= number <= MAX_AGENT_VERSION else None
 
 
 def readiness(status: str | None) -> Readiness | None:

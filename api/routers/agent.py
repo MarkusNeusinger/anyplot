@@ -71,7 +71,7 @@ from core.agent_cases import (
     row_from_manifest,
 )
 from core.config import settings
-from core.constants import SUPPORTED_LIBRARIES
+from core.constants import MAX_AGENT_VERSION, SUPPORTED_LIBRARIES
 from core.database import FEEDBACK_REACTIONS, AgentFeedback, AgentFeedbackRepository, ImplRepository, SpecRepository
 from core.utils import strip_noqa_comments
 
@@ -590,7 +590,7 @@ class OutcomeBody(_StrictBody):
     # The page's content-free outcome beacon: a closed action, the version it was on (0 for the session),
     # and with `feedback` the reaction. Nothing the user wrote or the result held ever travels here.
     action: OutcomeAction
-    version: Annotated[int, Field(strict=True, ge=0, le=999)] = 0
+    version: Annotated[int, Field(strict=True, ge=0, le=MAX_AGENT_VERSION)] = 0
     reaction: Annotated[str, AfterValidator(_check_reaction)] | None = None
 
     @model_validator(mode="after")
@@ -618,7 +618,7 @@ class FeedbackBody(_StrictBody):
     # store a case the client never meant (`true` is version 1).
     include_data: Annotated[bool, Field(strict=True)]
     # The result version the feedback is about; 0 is the chat itself, for a session that made no plot.
-    result_version: Annotated[int, Field(ge=0, le=999, strict=True)]
+    result_version: Annotated[int, Field(ge=0, le=MAX_AGENT_VERSION, strict=True)]
     # The case id of the earlier submission for this version, when this one is an edit of it.
     replaces: Annotated[str | None, Field(pattern=CASE_ID_PATTERN)] = None
 
@@ -1299,7 +1299,11 @@ async def post_outcome(sid: SessionId, body: OutcomeBody, ctx: Ctx, client: Clie
 
 @router.post("/sessions/{sid}/versions/{version}/render")
 async def render_version_theme(
-    sid: SessionId, version: Annotated[int, Path(ge=0, le=999)], body: RenderThemeBody, ctx: Ctx, client: Client
+    sid: SessionId,
+    version: Annotated[int, Path(ge=0, le=MAX_AGENT_VERSION)],
+    body: RenderThemeBody,
+    ctx: Ctx,
+    client: Client,
 ) -> Any:
     """The theme toggle: render the other theme of a finished version (0 is the latest), with no model call.
 
@@ -1311,7 +1315,11 @@ async def render_version_theme(
 
 @router.get("/sessions/{sid}/artifacts/{name}")
 async def get_artifact(
-    sid: SessionId, name: str, ctx: Ctx, client: Client, v: Annotated[int | None, Query(ge=0, le=999)] = None
+    sid: SessionId,
+    name: str,
+    ctx: Ctx,
+    client: Client,
+    v: Annotated[int | None, Query(ge=0, le=MAX_AGENT_VERSION)] = None,
 ) -> Response:
     """Stream one result file; only the four allowlisted names exist."""
     media_type = ARTIFACT_MEDIA_TYPES.get(name)
@@ -1337,7 +1345,7 @@ async def get_bundle(
     request: Request,
     ctx: Ctx,
     client: Client,
-    version: Annotated[int | None, Query(ge=0, le=999)] = None,
+    version: Annotated[int | None, Query(ge=0, le=MAX_AGENT_VERSION)] = None,
     include_data: bool = False,
 ) -> Response:
     """The session's feedback case as a JSON file to save: the page's `.save()`.

@@ -187,7 +187,9 @@ and the reviewer's share of its turn for per-run analysis.
 The `score_outcomes` view answers whether the reviewer's score predicts what users do with a plot. Each shipped
 `pipeline_run` names the version it shipped (`version`), and every outcome beacon names the version the user acted
 on (`outcome.version`). Both are the session's version number, so the view joins them exactly, within the session
-and its source. Runs written before 2026-10-30 carry no version and are left out.
+and its source. Runs written before 2026-10-30 carry no version and are left out, and so are the versions of
+sessions whose state is `active` (a line in the last 30 minutes): they may still be taken, so a version appears
+once its session ended.
 
 | Column | Meaning |
 |---|---|
@@ -197,12 +199,11 @@ and its source. Runs written before 2026-10-30 carry no version and are left out
 | `copies`, `downloads`, `feedback`, `reaction` | What the user did with this version: copies of the code or the image, downloads of the PNG, the code or the data, feedback sent on it, and the latest reaction |
 | `taken`, `rejected`, `kept` | `taken`: copied or downloaded. `rejected`: a feedback on this version reacted `thumbs_down` or `bug`. `kept`: taken and not rejected |
 | `s_plot_to_take`, `s_first_plot_to_take`, `s_first_plot_to_feedback` | Seconds to the first copy or download of this version from its own run, and from the session's first shipped plot; seconds to the first feedback on it from the session's first shipped plot. `NULL` when the user never did it |
-| `session_state` | The session's `state` from the `sessions` view |
+| `session_state` | How the session ended: its `state` from the `sessions` view, never `active` here |
 
 A version's `kept` differs from the session's `kept` in the `sessions` view: it judges one version, so a copy of
 version 1 counts for version 1 even when the session went on to version 2. A saved session and feedback on the chat
-carry version 0 and belong to no version. Leave out sessions whose state is `active`: their versions may still be
-taken.
+carry version 0 and belong to no version.
 
 For example, to see the keep rate per score bucket and library over the last 30 days of live use:
 
@@ -217,7 +218,6 @@ SELECT
   ROUND(AVG(versions_before), 1) AS avg_versions_before
 FROM `anyplot.agent_telemetry.score_outcomes`
 WHERE source = 'live'
-  AND session_state != 'active'
   AND ts > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY)
 GROUP BY library, score
 ORDER BY library, score;

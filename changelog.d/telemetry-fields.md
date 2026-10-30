@@ -14,7 +14,8 @@
   bucket (`shipped_score`). The new `score_outcomes` view lists every shipped version with its score, rounds and
   attempt stages beside the copies, downloads and reaction on exactly that version, the plots the session shipped
   before it, and the seconds from the first plot to the take-away, so the keep rate can be read per score bucket
-  and library. (#12477)
+  and library, once each session has ended. One limit, `MAX_AGENT_VERSION` (999), now bounds every version
+  number the routes and the telemetry take. (#12477)
 - **Feedback cases: the catalogue reviewer's prompt has its own hash.** The bundle's `prompt_hashes` gain
   `reviewer_catalogue`: `reviewer` hashed the checklist instruction only, so a change of the catalogue rubric the
   live reviewer runs changed no hash. Every case's combined `prompt_hash` shifts once with this release without any

@@ -830,6 +830,46 @@ async def test_a_run_names_the_version_its_outcomes_name(
     assert outcome["session"] == runs[-1]["session"]
 
 
+def test_one_version_limit_and_a_run_past_it_still_writes_its_line(caplog: pytest.LogCaptureFixture) -> None:
+    """Review of #12477: `outcome.version` and the routes stop at `MAX_AGENT_VERSION`, so `pipeline_run.version` does
+    too; a run that shipped a version past it (no route or outcome could name it) writes its line without a version
+    rather than no line."""
+    from types import SimpleNamespace
+
+    from agents.anyplot.pipeline import Run, _telemetry_run
+    from agents.anyplot.schemas import PlotResult
+    from agents.main import OutcomeBody
+    from core.constants import MAX_AGENT_VERSION
+
+    for model in (telemetry.Outcome, OutcomeBody):
+        assert model(action="copied_code", version=MAX_AGENT_VERSION).version == MAX_AGENT_VERSION
+        with pytest.raises(ValidationError):
+            model(action="copied_code", version=MAX_AGENT_VERSION + 1)
+    assert [telemetry.version_number(n) for n in (None, 0, 1, MAX_AGENT_VERSION, MAX_AGENT_VERSION + 1)] == [
+        None,
+        None,
+        1,
+        MAX_AGENT_VERSION,
+        None,
+    ]
+    assert (
+        telemetry.build(
+            telemetry.PipelineRun, run_index=1, base="catalogue", status="ok", version=MAX_AGENT_VERSION + 1
+        )
+        is None
+    )  # the field itself is bounded: the pipeline maps first
+
+    caplog.set_level(logging.INFO)
+    view = SimpleNamespace(library="matplotlib", readiness="clean")
+    run = Run(view=cast(Any, view), dataset=cast(Any, None))
+    ledger = RequestLedger(session_id="s-big", spec_id="scatter-basic", library="matplotlib", turn=1)
+    result = PlotResult(status="ok", attempts=1, version=MAX_AGENT_VERSION + 1)
+    _telemetry_run(ledger, "s-big", "inv-big", run, result, 1.0)
+    (line,) = lines_of(caplog, "pipeline_run")
+    assert (line["status"], line["version"]) == ("ok", None)
+    telemetry.forget("s-big")
+
+
 async def test_the_run_prompt_hashes_are_the_bundle_hashes(
     client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
 ) -> None:

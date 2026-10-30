@@ -236,7 +236,7 @@ from agents.renderer.wire import (
     MAX_SHEET_NAME_CHARS,
 )
 from agents.stream import MAX_DONE_ROLES, Translator
-from core.constants import SUPPORTED_LIBRARIES
+from core.constants import MAX_AGENT_VERSION, SUPPORTED_LIBRARIES
 from core.spec_roles import MAP_SPECS, DataRole
 
 
@@ -2023,7 +2023,11 @@ class RenderThemeBody(_Body):
 
 @app.post("/v1/sessions/{sid}/versions/{version}/render", dependencies=v1_dependencies)
 async def render_version_theme(
-    sid: SessionId, version: Annotated[int, Path(ge=0, le=999)], body: RenderThemeBody, user: User, runtime: RuntimeDep
+    sid: SessionId,
+    version: Annotated[int, Path(ge=0, le=MAX_AGENT_VERSION)],
+    body: RenderThemeBody,
+    user: User,
+    runtime: RuntimeDep,
 ) -> JSONResponse:
     """The theme toggle: render `theme` of a finished version from its stored run form, with no model call.
 
@@ -2072,7 +2076,11 @@ async def _served_png(services: Services, sid: str, render_id: str, theme: Theme
 
 @app.get("/v1/sessions/{sid}/artifacts/{name}", dependencies=v1_dependencies)
 async def artifact(
-    sid: SessionId, name: str, user: User, runtime: RuntimeDep, v: Annotated[int | None, Query(ge=0, le=999)] = None
+    sid: SessionId,
+    name: str,
+    user: User,
+    runtime: RuntimeDep,
+    v: Annotated[int | None, Query(ge=0, le=MAX_AGENT_VERSION)] = None,
 ) -> Response:
     """One artifact of a version; the PNGs carry the footer strip (`AGENT_WATERMARK`), the code and data do not."""
     media_type = ARTIFACT_TYPES.get(name)
@@ -2124,7 +2132,7 @@ async def bundle(
     sid: SessionId,
     user: User,
     runtime: RuntimeDep,
-    version: Annotated[int | None, Query(ge=0, le=999)] = None,
+    version: Annotated[int | None, Query(ge=0, le=MAX_AGENT_VERSION)] = None,
     include_data: bool = False,
 ) -> JSONResponse:
     """The feedback case: transcript, code versions, plans, results, profile, bindings, PNGs, config.
@@ -2222,7 +2230,7 @@ class OutcomeBody(_Body):
     """The page's outcome beacon: what the user did with a result, never what it held."""
 
     action: telemetry.OutcomeAction
-    version: int = Field(default=0, strict=True, ge=0, le=999)
+    version: int = Field(default=0, strict=True, ge=0, le=MAX_AGENT_VERSION)
     """The result version the action was on; 0 for a session-level action (`saved_session`, feedback on the chat)."""
     reaction: telemetry.Reaction | None = None
 

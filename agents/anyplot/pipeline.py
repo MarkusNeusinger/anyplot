@@ -1008,7 +1008,7 @@ def loader_codes(runtime: RuntimeAdapter, kinds: ColumnKinds | None) -> list[str
     """
     if kinds is None:
         return []
-    empty = {code: {} for code in LOADER_CODES}
+    empty: dict[str, dict[str, int]] = {code: {} for code in LOADER_CODES}
     return [
         code
         for code in LOADER_CODES
@@ -1546,7 +1546,7 @@ def _telemetry_run(
         score_round2=telemetry.score_bucket(run.round_scores.get(2)),
         shipped_attempt=shipped.attempt if shipped else None,
         shipped_round=round_number(run, shipped.attempt) if shipped else None,
-        version=result.version,
+        version=telemetry.version_number(result.version),
         shipped_score=telemetry.score_bucket(shipped.review_score) if shipped else None,
         forced_repair=sorted(run.forced_ids),
         gates_failed=sorted(run.gate_ids),

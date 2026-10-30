@@ -13,7 +13,8 @@
 -- version 1 counts for version 1 even when the session went on to version 2. A saved session and a feedback on the
 -- chat carry version 0 and belong to no version. `reaction` is the latest reaction on this version. The seconds run
 -- to the first take-away (and the first feedback) from this version's run and from the session's first shipped plot.
--- `session_state` is the session's (03_sessions.sql): leave out `active` sessions, whose versions may still be taken.
+-- The view leaves out sessions whose state is `active` (03_sessions.sql: a line in the last 30 minutes), whose
+-- versions may still be taken: a version shows up once its session ended. `session_state` is how it ended.
 CREATE OR REPLACE VIEW `anyplot.agent_telemetry.score_outcomes` AS
 WITH firsts AS (
   SELECT session, source, MIN(ts) AS first_shipped_at
@@ -79,5 +80,6 @@ JOIN firsts
   ON firsts.session = shipped.session AND firsts.source = shipped.source
 LEFT JOIN acted
   ON acted.session = shipped.session AND acted.source = shipped.source AND acted.version = shipped.version
-LEFT JOIN `anyplot.agent_telemetry.sessions` AS sessions
-  ON sessions.session = shipped.session AND sessions.source = shipped.source;
+JOIN `anyplot.agent_telemetry.sessions` AS sessions
+  ON sessions.session = shipped.session AND sessions.source = shipped.source
+WHERE sessions.state != 'active';
