@@ -615,6 +615,77 @@ def test_unknown_ids_are_other_and_never_drop_a_line() -> None:
     assert rules == ["banned-import", "other"]
     assert telemetry.build(telemetry.PipelineRun, run_index=1, base="catalogue", status="ok", validator_rules=rules)
     assert telemetry.readiness("blocked") is None and telemetry.readiness("coupled") == "coupled"
+    # A sequence keeps its order and its repeats; only the unknown entry becomes `other`.
+    stages = telemetry.closed_list(
+        ["adapter_truncated", f"new_stage_{MESSAGE_CANARY}", "adapter_truncated", "reviewer_ok"],
+        get_args(telemetry.PipelineStage),
+    )
+    assert stages == ["adapter_truncated", "other", "adapter_truncated", "reviewer_ok"]
+    assert telemetry.build(telemetry.PipelineRun, run_index=1, base="catalogue", status="ok", stages=stages)
+
+
+def test_the_stages_are_the_pipeline_stages() -> None:
+    """Every stage the pipeline can end an attempt or a run with (`pipeline.Stage`, the type of `Run.stage` and
+    `Run.stages`) is a telemetry stage; an unknown one is `other`."""
+    from agents.anyplot import pipeline
+
+    assert set(get_args(telemetry.PipelineStage)) == {*get_args(pipeline.Stage), "other"}
+    assert set(pipeline.ROUND_OUTCOMES) == set(get_args(pipeline.Stage))  # the page's table names each one
+
+
+async def test_a_library_switch_keeps_the_fanout_source(
+    client: httpx.AsyncClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    """The mark is written once at the opening; a library switch writes the opening state again, which must not drop
+    it: the lines after the switch stay `fanout`, under the new library."""
+    caplog.set_level(logging.INFO)
+    sid = await open_session(client, source="fanout")
+    switched = await client.post(
+        f"/v1/sessions/{sid}/library",
+        headers=HEADERS,
+        json={"library": "seaborn", "snapshot": snapshot_from_repo("scatter-basic", "seaborn").model_dump()},
+    )
+    assert switched.status_code == 200, switched.text
+    assert (await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": CANARY_DATA})).is_success
+    assert (
+        await client.post(f"/v1/sessions/{sid}/outcome", headers=HEADERS, json={"action": "saved_session"})
+    ).is_success
+
+    lines = telemetry_lines(caplog)
+    assert [(line["event"], line["library"], line["source"]) for line in lines] == [
+        ("data_input", "seaborn", "fanout"),
+        ("outcome", "seaborn", "fanout"),
+    ]
+
+
+async def test_a_cancelled_turn_records_the_language_the_turn_set(
+    runtime: Runtime, client: httpx.AsyncClient, swap_models, judge, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A client that goes mid-turn closes the stream (Starlette closes the body generator): the line is still
+    written, as `cancelled`, and its language fields come from the session after the turn's work, so the detection
+    that turn made is in it."""
+    from agents.anyplot.models import JudgeVerdict
+    from agents.main import MessageBody, post_message
+
+    caplog.set_level(logging.INFO)
+    swap_models("gemini", {"root": [{"text": "Gern gemacht."}]})
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+    sid = await open_session(client)
+
+    response = await post_message(sid, MessageBody(text="Mach die Punkte größer"), USER, runtime, "req-cancelled")
+    stream = cast(AsyncIterator[str], response.body_iterator)
+    chunks = []
+    async for chunk in stream:
+        chunks.append(chunk)
+        if "Gern gemacht." in chunk:  # the reply streamed: the detection ran before the root's call
+            break
+    await stream.aclose()  # the client went before `done`
+
+    assert not any("event: done" in chunk for chunk in chunks)
+    (turn,) = lines_of(caplog, "chat_turn")
+    assert turn["error"] == "cancelled" and turn["kind"] == "error"
+    assert (turn["plot_language"], turn["language_source"]) == ("de", "detected")
+    assert sid not in runtime.active  # the run is released at once
 
 
 def test_the_edit_failures_are_the_edit_failure_kinds() -> None:

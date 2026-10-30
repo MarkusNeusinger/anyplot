@@ -1521,14 +1521,15 @@ def _telemetry_run(
     """The usage telemetry's `pipeline_run` line (`telemetry.py`): ids, buckets, counts and times, never text.
 
     One line per run: `run_index` is the session's run number for this invocation, so a node ADK re-runs
-    writes the same idempotency key and the BigQuery base view keeps one row. The rule ids, failure kinds and
-    loader codes are closed by `telemetry.closed_set` (`other` for an id the closed set does not know yet), so a
-    new rule never drops the line.
+    writes the same idempotency key and the BigQuery base view keeps one row. The stages, rule ids and failure kinds
+    are closed by `telemetry.closed`, `closed_list` and `closed_set` (`other` for an id the closed set does not know
+    yet), so a new stage or rule never drops the line.
     """
     shipped = shipped_candidate(run) if result.status in ("ok", "needs_attention") else None
     index = telemetry.run_index(session_id, invocation_id)
     settings = get_settings()
     rule_ids = get_args(telemetry.ValidatorRule)
+    stage_ids = get_args(telemetry.PipelineStage)
     telemetry.write(
         telemetry.PipelineRun,
         ledger,
@@ -1537,7 +1538,7 @@ def _telemetry_run(
         base=run.base,
         status=result.status,
         reason=result.reason,
-        stage=run.stage,
+        stage=telemetry.closed(run.stage, stage_ids),
         attempts=run.attempts,  # every adapter call, retries and proofreads included; `rounds` is what the page shows
         rounds=len(run.rounds),
         reviews=run.reviews,
@@ -1553,7 +1554,7 @@ def _telemetry_run(
         residual_defects=_defect_ids(result.residual_defects),
         sandbox_failures=sorted(run.sandbox_failures),
         drift_restored=run.drift_restored,
-        stages=list(run.stages),
+        stages=telemetry.closed_list(run.stages, stage_ids),
         round_scores=_round_scores(run),
         plot_language=telemetry.plot_language(run.language),
         readiness=telemetry.readiness(run.view.readiness),

@@ -285,7 +285,10 @@ PipelineStage = Literal[
     "reviewer_defects",
     "reviewer_ok",
     "self_review",
+    "other",
 ]
+"""`pipeline.Stage` (pinned equal by a test), `other` for a stage added there first: `stage` and `stages` go through
+`closed` and `closed_list`, so a new stage never drops the line."""
 RoundScore = ScoreBucket | Literal["unscored"]
 """A round's review score bucket in `round_scores`; `unscored` for a round no review scored (a failed render, a
 checklist review, a review the deadline skipped), so the list's position stays the round's number."""
@@ -882,6 +885,12 @@ def closed_set(values: Iterable[str], allowed: Iterable[str]) -> list[str]:
     """The distinct `values`, each `closed` (`other` outside `allowed`), sorted."""
     known = set(allowed)
     return sorted({value if value in known else "other" for value in values})
+
+
+def closed_list(values: Iterable[str], allowed: Iterable[str]) -> list[str]:
+    """Every one of `values` in its order, each `closed` (`other` outside `allowed`): a sequence such as `stages`."""
+    known = set(allowed)
+    return [value if value in known else "other" for value in values]
 
 
 def plot_language(language: str | None) -> PlotLanguage | None:
