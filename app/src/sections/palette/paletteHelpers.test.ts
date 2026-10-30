@@ -7,11 +7,8 @@ import {
   DE_T_WARN,
   deltaECellBg,
   oklchToRgb,
-  proseColumnSx,
-  sectionSx,
   starPoints,
   textOn,
-  tooltipSlotProps,
 } from 'src/sections/palette/paletteHelpers';
 
 describe('paletteHelpers', () => {
@@ -112,14 +109,6 @@ describe('paletteHelpers', () => {
       expect(deltaECellBg(DE_T_WARN - 0.01)).toBe('rgba(189, 130, 51, 0.22)');
       expect(deltaECellBg(DE_T_WARN)).toBe('rgba(221, 204, 119, 0.18)');
       expect(deltaECellBg(DE_T_OK - 0.01)).toBe('rgba(221, 204, 119, 0.18)');
-    });
-  });
-
-  describe('layout and tooltip style constants', () => {
-    it('defines tooltip slot props and section layout sx objects', () => {
-      expect(tooltipSlotProps.tooltip.sx.maxWidth).toBe(320);
-      expect(sectionSx).toEqual({ py: { xs: 2, md: 3 } });
-      expect(proseColumnSx).toEqual({ maxWidth: 880, mx: 'auto' });
     });
   });
 });
