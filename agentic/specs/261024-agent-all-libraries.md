@@ -1072,12 +1072,13 @@ qrcode-basic and maze-circular; by SECURITY rule `banned-import` 3, `url-literal
 
 Revised on 2026-10-30 after the second opinion on steps 3 and 4 (Gemini 4 Argon and Fable;
 the section at the end): the corrections both reviewers agree on, and those Fable
-verified, are in the text below; two owner decisions are open (questions 12 and 13), and
-nothing before JS-4 depends on them. Four PRs, none of which serves a library before
-JS-4: JS-1 (the toolchain stage, the command row, the build inputs, the smokes and the
-render sweep; built, see "What JS-1 built"), JS-2 (the harness's sandbox mode; built, see
-"What JS-2 built"), JS-3
-(the code profile) and JS-4 (the runtime, the registry, the fixtures and the admin
+verified, are in the text below; the two owner decisions it left open were taken on
+2026-10-30 (questions 12 and 13: the export carries the PNG, the self-contained page and
+the code file; MUI X files written for 7.29 are served coupled with a note). Four PRs, none
+of which serves a library before JS-4: JS-1 (the toolchain stage, the command row, the
+build inputs, the smokes and the render sweep; built, see "What JS-1 built"), JS-2 (the
+harness's sandbox mode; built, see "What JS-2 built"), JS-3 (the code profile; built, see
+"What JS-3 built") and JS-4 (the runtime, the registry, the fixtures and the admin
 deploy). `AGENT_LIBRARIES`, `RUNTIME_LIBRARIES` and the admin deploy's `_LIBRARIES` stay
 as they are until JS-4; the renderer can render a JavaScript job, and the agents service
 sends none.
@@ -1492,6 +1493,246 @@ the plugin's refusal of `/etc/os-release`.
 | 3d: console errors capped in count and bytes | capped in the page as well | the harness's cap alone left Node at 1.3 GB |
 | 3e: the snippet's offset is exactly 1; MUI X errors name the class only | the offset is 2, and the harness subtracts it; MUI X errors name the snippet's line through the source map | measured; JS-3 reads `<file>:<line>` as printed |
 | 3d: `window.ANYPLOT_DATA` with `<` escaped | the split orientation in a JSON element, one object per row with `.columns` in the page | the column names travel once, not in every row, and no `__proto__` key becomes a prototype |
+
+#### What JS-3 built (2026-10-30): the JavaScript code profile, not served yet
+
+Everything in 3e; `AGENT_LIBRARIES`, `RUNTIME_LIBRARIES`, the runtime registry, the
+prompts and `_LIBRARIES` are untouched, as for J2a. The profile lives in
+`agents/anyplot/code/profiles/javascript/` (regions, normalise, coupling, validate,
+readiness, loader, errors, and `allowlist.py` with its JSON copy), takes the library
+everywhere (`regions.grammar_for`: `tsx` for MUI X, `javascript` for the other four) and
+mirrors the Julia profile's modules, names and test layout
+(`tests/unit/agents/code/test_profile_javascript_*.py`, `test_treesitter_javascript.py`;
+2,064 cases, 1,617 of them the parse of every catalogue file).
+
+- **Parser.** `GRAMMARS` is `("r", "julia", "javascript", "tsx")`; `agents/Dockerfile`
+  keeps `r julia javascript tsx` (0.5 MB and 1.6 MB more) and still prunes the pack's
+  `typescript` grammar, TypeScript without JSX, which no catalogue file needs. All 1,617
+  files parse with no ERROR or MISSING node. `treesitter.py` gained the JavaScript
+  helpers: string and template values (escapes, surrogate pairs, `None` for a template with
+  a substitution, a legacy octal or a lone surrogate), numbers (hex, binary, octal,
+  separators, BigInt; `None` past a double), dotted callees, and the scopes: every binding
+  with the node it is visible in (`var` its function, `let`, `const`, classes and function
+  declarations their block, parameters their function, imports the program, a function
+  expression's name itself), so `js_references` resolves each identifier to the innermost
+  binding around it or calls it free. TSX's type positions are skipped.
+- **Regions.** The token lines, 2,342 over the catalogue (`const t =
+  window.ANYPLOT_TOKENS;` in 1,602 files; destructured sizes, `THEME`, `isDark`, `MUTED`,
+  ...), at the top level: a value built only from literals, the three globals' members,
+  earlier tokens, comparisons, arithmetic, `||`, `&&`, `??`, `!` and ternaries, which reads
+  a global itself or tests an earlier token. The orientation directive as the harness reads
+  it (`orientationFromSource`: the first line anywhere that matches, after any JavaScript
+  line terminator); it is the protected `savefig` region. The markers (`// Data` in 1,344
+  files, `// Plot` in 134, loosely as in R and Julia), column constants (121 files), the
+  placeholder, a written-out Imprint palette (none in the catalogue: it reads
+  `t.palette`), and MUI X's imports with the names each brings in.
+- **Normaliser.** Header (1,617), one directive in the canonical form on the first line
+  (723 files carry one right after the header, violin-split's Highcharts file at line 14,
+  and the 893 without one get `landscape`, the harness's default, written out), the
+  catalogue title (1,614; JSX text becomes `{""}`; three titles in a template with a
+  substitution stay, as Python's f-strings do). No rewrite reads a number, so none can
+  overflow; idempotent and parsing over the corpus. `measure_canvas` is the harness's:
+  3200x1800, or 2400x2400 for `square`. No MUI X 7.29 to 9 rewrite (question 13).
+- **Validator.** Refuses by shape (module docstring of `profiles/javascript/validate.py`).
+  The deny list of 3e stands on a closed world: a free name must be one of `GLOBALS` (the
+  catalogue's 33, the four library globals among them, and built-ins of the same kind) or
+  the file's own library global, so
+  anything a list forgets is refused too, read or written, through an alias (`const f =
+  fetch`), a shorthand property (`{ fetch }`) or optional chaining; `DENIED_NAMES` gives
+  the reason. `window` and `document` are only the object of a named member from a short
+  list (`window.ANYPLOT_*`, `__anyplotReady` the only write, listeners, `devicePixelRatio`;
+  `document.getElementById`, `createElement`, `head`, `body`, ...), never a value and never
+  indexed by code; a literal index reads as the member. `constructor`, `__proto__`, the
+  accessor helpers, `defaultView`, `ownerDocument`, `contentWindow` and the like are
+  refused on any value, as a literal index, a destructured key and a string of their own;
+  `Object` lends only `keys`, `entries`, `fromEntries`, `assign` and their kind; D3's file
+  loaders and Highcharts' AJAX helpers are refused. Also `import()`, `import.meta`,
+  `setTimeout`/`setInterval` without a function literal, elements that run or load
+  (`script`, `iframe`, `object`, `embed`, `link`, `base`, `form`, ...) created by
+  `document.createElement` (only with a literal tag), `createElementNS`, `d3.create`, a
+  selection's `append` and `insert` or JSX, `dangerouslySetInnerHTML`, `with`, top-level
+  `this`, URLs (the XML namespaces excepted), markup that runs in a string (an opening
+  `<script` or a tag with an inline handler; a user's column name with `</script>` passes),
+  strings past 200 characters, a second or a misplaced directive, writes to the tokens
+  (by name, member, mutating method or `Object.assign`) and imports in a classic script. A
+  parameter or local that shadows a token name inside a function is no rebinding (D3's
+  callbacks name `t` freely). MUI X imports: a module outside the four packages is SECURITY
+  (`banned-import`, labelled from a closed vocabulary), a module of them that the image does
+  not export, or a name of `allowlist.REMOVED_EXPORTS`, is the ADAPTATION finding
+  `unavailable-import`, which JS-4 puts in the runtime's blocking set. SECURITY finds
+  something in 7 of the 1,617 normalised files: qrcode-basic in all five libraries (the
+  encoded `https://anyplot.ai`), line-parametric's Chart.js legend (a 683-character HTML
+  string) and the MUI X flowmap-origin-destination, a map spec (coastlines as long
+  strings). After the review below, 205 named bypasses (182 in a script, 23 in a MUI X
+  module), 61 admitted idioms and 6 pinned escapes are tests.
+- **Readiness.** Per library, of the normalised files:
+
+  | Library | Clean | Coupled | Blocked | Blocked for |
+  |---|---|---|---|---|
+  | Chart.js | 0 | 306 | 15 | 13 map specs, qrcode-basic (`url-literal`), line-parametric (`string-length`) |
+  | D3 | 0 | 311 | 14 | 13 map specs, qrcode-basic |
+  | ECharts | 0 | 311 | 14 | 13 map specs, qrcode-basic |
+  | Highcharts | 0 | 310 | 13 | 12 map specs, qrcode-basic |
+  | MUI X | 93 | 218 | 12 | 11 map specs, qrcode-basic |
+
+  The 93 clean files are MUI X files regenerated for 9.16 with both markers and column
+  constants. Hints: `data-block` 1,434, `synthetic-data` 815 (`Math.random`, D3's random
+  sources and the hand-written generators' constants, `1664525` in 470 files), `limits`
+  549, `annotations` 153, `statistics` 90, `color-scale` 23, `deprecated-api` 51 (MUI X),
+  `palette` 1. No file is blocked for a missing marker, its token style or its MUI X
+  version.
+- **Loader.** `const data = window.ANYPLOT_DATA;` for the placeholder, one line for one
+  line, so error lines need no shift; `loader_span` names it as the data loader in a
+  summary.
+- **Errors.** Only the last line on stderr counts, the harness's final error line: the
+  kind, the class (`page` errors name a class of `PAGE_CLASSES`, ECMAScript's and the
+  DOM's; a class of the snippet's own is "an error") and the line in `plot.js` or
+  `plot.tsx`; fixed texts for the other kinds. Corpus-tested with the final lines of real
+  failed renders through the harness's sandbox mode (Node 24, the lock's packages and the
+  headless shell): a `TypeError` and a `ReferenceError` in a script, a script that does not
+  parse, a class of the snippet's own (`Berlin4711`), nothing drawn, an import off the
+  allowlist, a name MUI X 9 lacks, a TSX syntax error, a MUI X `TypeError` mapped through the
+  source map, a broken data file and a page that never settles; the console summary above
+  the last line, which the snippet can fill with lines that look final, is never read.
+- **Edits and export.** The edit applier's JavaScript dialect: the token lines, the
+  placeholder and the directive protected (the directive as the orientation it picks in the
+  drift check's meaning, so a respelling passes and `landscape` for `square` is
+  `drift:savefig`, which `restore_protected` puts back); only top-level bindings count as a
+  rebind, and `THEME` is no special name; `//` and `/* */` are comments, a block comment may
+  span lines and opens no literal, templates span lines, and a `#` in a string is text. The
+  literal budget counts JSX text. Python's, R's and Julia's behaviour and tests are
+  unchanged. The export's header is two `//` comments with the run line of question 12.
+- **The allowlist copy.** `profiles/javascript/import-allowlist.json` is byte for byte the
+  image's file (the script's `json.dump(..., indent=1)`). A unit test regenerates the list
+  with the image's own script from the repository's `node_modules` and compares it (skipped
+  without `npm ci`), and a second one imports every allowlisted `@mui/x-charts` module in
+  Node and checks that every name a catalogue MUI X file imports exists, but the names of
+  `REMOVED_EXPORTS`, which none exports (`ChartContainer`, `ResponsiveChartContainer`,
+  `DefaultChartsLegend`). The `renderer-image` job of `ci-image.yml` compares the built
+  image's file with the copy (`cmp`, the regeneration command in the error), and the copy
+  joined its change filter; the same step feeds the profile's error grammar the final lines
+  of its sandbox checks. The `agents-image` job runs the readiness scan on the catalogue's
+  scatter-basic Chart.js and bar-basic MUI X files through the pruned grammars.
+- **Verified end to end, without a model.** Two scripted identity adaptations passed both
+  validator profiles and the drift check, took the loader and rendered through the harness
+  in sandbox mode with the typed data (`typed_json`), Node 24 and the headless shell, in
+  both themes: MUI X `lollipop-basic` (the data block swapped for the placeholder, the
+  column constants renamed to `Genre · Sorte "A" — </script><b>` and `Umsatz (Mio. €)`, a
+  row with both cells missing) at 3200x1800 in 0.9 s, and the tests' Chart.js miniature
+  (square) at 2400x2400 in 0.5 s, wall time with Chromium's start.
+- **The review of JS-3 (Fable and Gemini 3.8 Flash, 2026-10-30).** The exported `plot.html`
+  runs in the user's own browser, where a content security policy stops a request but not
+  a top-level navigation, so the validator was tightened where a review found an escape,
+  each rule narrowed until no catalogue file changed status (the split above is the one
+  after the review; the shapes the reviewers proposed literally would have blocked 63, 7 and
+  11 more files):
+  - `this` as a value (returned, assigned, passed, spread, destructured) or read by a
+    computed key only where it is known not to be the window: a method or class member, an
+    object's value (Highcharts' `load` and `formatter`), a callback of D3's `each` and `on`
+    (`THIS_BINDING_METHODS`), or a function the file only hands to those. Refusing it in
+    every plain function, as proposed, would block 63 files (47 D3 callbacks pass `this` to
+    `d3.select`, 41 Highcharts handlers keep the chart); `function g() { return this } g()`,
+    an array's `map`, a timer and D3's `call` are refused.
+  - A computed key built from strings is refused when its written fragments could spell a
+    member of `DENIED_MEMBER_STRINGS` (`[]["con" + "structor"]`, and through a name given
+    such a value), and a key a string builder returns (`.join()`, `String.fromCharCode`,
+    `atob`). Refusing every concatenated, templated or called key would block 7 files
+    (andrews-curves, chernoff-basic, area-stacked-confidence, parallel-categories-basic,
+    psychrometric-basic) for the template keys and 121 for the call results (`Math.floor`,
+    `indexOf`); a template of substitutions alone (chessboard-pieces' `` `${f}${r}` ``) is
+    as opaque as a name and passes. A written key also must not spell a URL or navigation
+    member (`el["hr" + "ef"] = url`).
+  - Protocol-relative URLs (`"//example.org/p?" + x`) are `url-literal`; `src` and `href`
+    are written (by assignment, `setAttribute`, `setAttributeNS`, D3's `attr`) only with a
+    data URL the code drew (`canvas.toDataURL()` or a `const` of one: heatmap-mandelbrot's
+    and recurrence-basic's rasters), and `location`, `action`, `cookie`, `srcdoc`,
+    `formAction` never; `.write()` and `.writeln()` on any receiver, and `cookie` read on any
+    receiver, are refused. JSX attributes (`<img src={url} />`, contour-decision-boundary's
+    raster through a helper) and a library's own image calls stay, pinned below.
+  - Tags: `script`, `iframe`, `frame`, `frameset`, `embed`, `applet` and `portal` are
+    refused as a string literal anywhere; the full `DENIED_TAGS` (with `object`, `link`,
+    `base`, `meta`, `form`, words the catalogue writes as text in 11 files: D3's `"link"`
+    class, a waterfall's `"base"`) only where a tag is made, as a literal, a ternary of
+    literals or a `const` of one, by any receiver's `append`, `insert` or `createElement`
+    (React's too) and React's `jsx` runtime. `dangerouslySetInnerHTML` is refused as an
+    object's key, so a spread `<div {...p} />` cannot carry it.
+  - `setTimeout(draw, 0)` passes when `draw` is a function the file declares and never
+    writes again (Flash).
+  - The edit applier reads a JavaScript regular expression literal as one word, so its quote
+    (`/a"b/`) opens no string (Fable; a find failed to match, nothing was corrupted).
+  - Still passing and pinned as tests (`test_still_passes_contained_by_the_sandbox`): a key a
+    function returns or a parameter carries, a method called off its object (its `this` is
+    the window), markup assembled at run time, a URL a JSX attribute or a library's image
+    call takes. Flash's "`undefined` is no global" was a false positive (`undefined` is a
+    literal of the grammar; a test keeps it allowed).
+  - The Copilot review of #12473: a call through a literal index (`d3["create"]("script")`,
+    `el["setAttribute"]("href", u)`, `x["write"](...)`) is read as the named call by the
+    tag, attribute and write rules; a setter's attribute name is checked for every literal a
+    ternary can give it, and a computed name is refused (none in the catalogue); where `this`
+    may be the window, `this.document` and `this.window` are refused; `arguments` left the
+    globals and is bound only inside a function that is no arrow; and a directive's span is
+    its JavaScript line, which a lone `\r`, U+2028 or U+2029 ends, not tree-sitter's `\n`
+    line, so moving it no longer takes the code that shares that line. The split did not
+    change.
+  - Its second round: the names a write may not set are checked on every object that
+    writes onto an element (`Object.assign` sources whose target is no fresh `{}`, a `const`
+    holding one, spread objects, Highcharts' `attr({...})`), where `innerHTML`, `outerHTML`
+    and an inline handler without a function written in place are refused too, and an
+    inline handler attribute is never set; `this.window`, `this.document`, the window-only
+    names and `this[...]` are refused on `this` in every context, since a method handed to
+    a browser callback runs with the window as `this`; a computed key, also an object
+    literal's, must not spell `dangerouslySetInnerHTML`, a write-checked name or (by a written
+    `on` start) a handler, and a key the literals decide (`["con", "structor"].join("")`,
+    `String.fromCharCode(...)` of numbers) is read as the string it is. Three files forced the
+    narrowings: chernoff-basic's `r[m + "Norm"]` (an unknown start is no handler) and the
+    `sx` selectors of andrews-curves and bar-diverging-likert in MUI X (an object's key from
+    a builder the run decides passes; pinned). The split did not change.
+
+  The validator is defence in depth over source text and will always have spellings left:
+  two Copilot rounds found eight. The exported page's boundary is JS-4's: a content
+  security policy without network; the preview iframe with `sandbox="allow-scripts"` and
+  neither `allow-same-origin`, `allow-top-navigation` nor `allow-popups`; and for the
+  downloaded `plot.html`, a page that itself loads the plot into such a sandboxed `srcdoc`
+  iframe under a parent policy that restricts `frame-src` and navigation, because a content
+  security policy does not stop a page's own top-level navigation. JS-4 verifies that
+  design with a probe like JS-2's.
+
+Found for JS-4:
+
+- **The exported page needs its own boundary.** `plot.html` (question 12) runs in the
+  user's browser and in the chat's preview: it must carry a content security policy without
+  network (the harness's sandbox policy: `default-src 'none'`, no `connect-src`, images and
+  fonts from `data:` only, no `'unsafe-eval'`), and the preview iframe
+  `sandbox="allow-scripts"` without `allow-same-origin`. A policy does not stop a top-level
+  navigation, which is why the validator refuses `location`, `open` and the URL and
+  navigation writes above. JS-4 should also consider wrapping the exported script in a
+  function with `"use strict"`: a plain function called without a receiver would then see
+  `undefined`, not the window, as `this`. Not the harness: the catalogue pipeline renders
+  through it, and a directive inside its `try` block has no effect.
+
+- **`+null === 0` in the catalogue's own code.** The lollipop's all-missing row drew as a
+  category `null` at 0.0: the file converts with `String(...)` and `Number(...)`, as many
+  catalogue files do. The adapter prompt's warning (3f) should name both conversions and
+  ask for a filter on `null` before them.
+- **A thrown value that is no `Error` names the harness's wrapper.** `throw "text"` in a
+  three-line snippet ends with `page Error plot.js:7`: without a stack the window's error
+  event points at the wrapper's `throw err`. `error_summary` takes `line_count` and drops a
+  line past the code's end; the runtime passes the run form's line count with
+  `loader=loader_span(run_form, library=...)`.
+- **Titles in a template.** Three catalogue titles are templates with a substitution
+  (`${SYMBOL} · indicator-sma · javascript · muix · anyplot.ai`) and stay; the adapter
+  retitles them like any other title.
+
+| Text above (3e) | Built | Why |
+|---|---|---|
+| tree-sitter's JavaScript, TypeScript and TSX grammars | `javascript` and `tsx`; `typescript` pruned | no catalogue file is `.ts`; `tsx` is TypeScript with JSX |
+| The deny list over tree-sitter | the deny list as reasons over a closed world of free names, with real scopes | a list misses what it does not name; the catalogue reads 33 globals, and scopes keep a local `open`, `top` or `window` (indicator-bollinger's moving window) from being refused |
+| Protected: the token lines that read the three globals | also a line that tests the theme through an earlier token; a line that also reads another name is plot code | `const MUTED = isDark ? ... : ...` is a token as Julia's `THEME == "light" ? ...` is; `CELL_W = (window.ANYPLOT_SIZE.width - MARGIN) / N_COLS` depends on the data's shape |
+| The directive kept by the drift check | the normaliser writes one on the first line of every file | 893 files had none, and a directive the adapter adds later would change the canvas past a check that compares nothing |
+| `new Image().src` refused | `Image` refused as a name; `img` and SVG `image` elements allowed | five catalogue files draw a canvas raster through them with a data URL the code computes; a literal URL is refused anyway |
+| MUI X imports checked against the allowlist | outside the four packages SECURITY, a module or name of them that MUI X 9 lacks ADAPTATION | question 13: a 7.29 file is coupled with a note, never blocked for its version |
+| The run line follows question 12 | `// run: open plot.html in a browser, ...` | decided on 2026-10-30 |
+| A snippet that reads the tokens | `no-theme` blocks a file that reads neither `ANYPLOT_TOKENS` nor `ANYPLOT_THEME` | the counterpart of Julia's missing theme statement; no catalogue file is blocked by it |
 
 ### 4. plotly and bokeh (through the JavaScript harness's Chromium)
 
@@ -2450,13 +2691,22 @@ Defaults apply until answered; each is marked where the plan uses it.
     the page the harness already writes for the catalogue's interactive view), which opens
     in any browser; or (B) export `plot.js` (or `plot.tsx`) alone with a header that names
     the harness (`node render.mjs --library=<library> plot.js`), which runs only in a
-    checkout of the repository. Open; JS-1 to JS-3 do not depend on it, JS-4 does (the
-    export's artifact name and run line).
+    checkout of the repository. **Decided (owner, 2026-10-30): both, and the PNG.** A
+    JavaScript plot offers the PNG, the self-contained interactive `plot.html` and the code
+    file (`plot.js`, `plot.tsx` for MUI X), each viewable and downloadable. The code file's
+    header is two `//` comments, and its run line names the page, not Node: `// run: open
+    plot.html in a browser, which runs this code with the chart library, the light theme
+    and your data` (JS-3, `code/export.py`); the page and its artifact are JS-4's.
 13. **The 196 MUI X files written for 7.29.1.** The lock pins MUI X 9.16; JS-1's sweep
     rendered 144 of them unchanged and failed 52, all on `ChartContainer`, which 9.16 no
     longer exports. (A) serve them `coupled`, with a readiness hint derived from the
     image's import allowlist that names each import 9.16 does not export, and let the
     adapter rewrite it (Fable); (B) normalise the mechanical 7.29 to 9.16 renames and mark
     what remains `blocked` until regenerated (Gemini); or (C) wait for the running MUI X
-    regeneration and serve MUI X only after it. Open; JS-4 enables MUI X last, after
-    Chart.js, D3 and ECharts, whatever the answer.
+    regeneration and serve MUI X only after it. **Decided (owner, 2026-10-30): A.** The
+    7.29 files are served like the rest, `coupled` with a precise note, never blocked for
+    their version alone; blocked stays for what the validator refuses. JS-3 built the note
+    (`deprecated-api`: the 51 files that import `@mui/x-charts/ChartContainer`, which the
+    allowlist does not hold, and `ChartContainer` imported by name from the package root);
+    the other 144 render unchanged and get no version note. JS-4 still enables MUI X last,
+    after Chart.js, D3 and ECharts.

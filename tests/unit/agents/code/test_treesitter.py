@@ -59,11 +59,13 @@ def test_every_image_with_the_agents_extra_keeps_exactly_the_profiles_grammars()
 
 
 def test_only_the_served_grammars_load() -> None:
-    assert treesitter.GRAMMARS == ("r", "julia")
+    assert treesitter.GRAMMARS == ("r", "julia", "javascript", "tsx")
     assert treesitter.language("r") is treesitter.language("r")
     assert treesitter.language("julia") is not treesitter.language("r")
-    with pytest.raises(ValueError, match="no tree-sitter grammar"):
-        treesitter.language(cast(treesitter.Grammar, "python"))
+    assert treesitter.language("tsx") is not treesitter.language("javascript")
+    for grammar in ("python", "typescript"):
+        with pytest.raises(ValueError, match="no tree-sitter grammar"):
+            treesitter.language(cast(treesitter.Grammar, grammar))
 
 
 def test_the_catalogue_has_325_r_files() -> None:
@@ -232,6 +234,7 @@ def test_module_imports_only_the_standard_library_and_tree_sitter() -> None:
     assert imported <= {
         "bisect",
         "functools",
+        "math",
         "collections",
         "dataclasses",
         "typing",

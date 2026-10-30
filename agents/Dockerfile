@@ -39,11 +39,13 @@ RUN uv venv && uv sync --frozen --extra agents
 # tree-sitter-language-pack 0.13.0 bundles about 170 compiled grammars, 184 MB
 # installed, so that nothing is downloaded at run time. The service reads only the
 # grammars of its code profiles (`GRAMMARS` in agents/anyplot/code/treesitter.py:
-# R and Julia today, 0.6 MB and 2.7 MB; each later profile adds its own here), so every
-# other one goes, and the build fails when a kept grammar no longer loads. The pack's own
-# imports (tree_sitter_c_sharp, _yaml, _embedded_template) stay: it imports them on load.
+# R and Julia, 0.6 MB and 2.7 MB, and since JS-3 JavaScript and TSX for the five
+# JavaScript libraries, 0.5 MB and 1.6 MB; each later profile adds its own here), so every
+# other one goes, `typescript` (TypeScript without JSX) among them, and the build fails
+# when a kept grammar no longer loads. The pack's own imports (tree_sitter_c_sharp, _yaml,
+# _embedded_template) stay: it imports them on load.
 # tests/unit/agents/code/test_treesitter.py ties this list to `GRAMMARS`.
-ARG TREE_SITTER_GRAMMARS="r julia"
+ARG TREE_SITTER_GRAMMARS="r julia javascript tsx"
 RUN bindings=.venv/lib/python3.14/site-packages/tree_sitter_language_pack/bindings \
     && for library in "$bindings"/*.so; do \
          grammar="$(basename "$library")"; \
