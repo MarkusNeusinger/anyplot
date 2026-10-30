@@ -63,6 +63,15 @@ function makeNode(
   };
 }
 
+const collideForceSentinel: ReturnType<MapForceConfig['createCollideForce']> = {
+  initialize: () => {},
+  radius: () => collideForceSentinel,
+  iterations: () => collideForceSentinel,
+  strength: () => collideForceSentinel,
+  distance: () => collideForceSentinel,
+};
+const outlierSquashSentinel = Object.assign(() => {}, { initialize: () => {} });
+
 function makeForceConfig(): MapForceConfig {
   return {
     cooldownTicks: 300,
@@ -73,8 +82,8 @@ function makeForceConfig(): MapForceConfig {
     linkDistance: () => 80,
     linkStrength: () => 0.2,
     centerGravity: 0.04,
-    createCollideForce: vi.fn(),
-    createOutlierSquashForce: vi.fn(),
+    createCollideForce: vi.fn(() => collideForceSentinel),
+    createOutlierSquashForce: vi.fn(() => outlierSquashSentinel),
   };
 }
 
@@ -180,12 +189,24 @@ describe('MapCanvas', () => {
     expect(captured.graphData).toBe(props.graphData);
     expect(captured.width).toBe(800);
     expect(captured.height).toBe(600);
-    expect(captured.onNodeClick).toBe(props.onNodeClick);
-    expect(captured.onNodeHover).toBe(props.onNodeHover);
-    expect(captured.onEngineTick).toBe(props.handleEngineTick);
+
+    const firstNode = props.graphData.nodes[0];
+    const onNodeHover = captured.onNodeHover as (n: MapNode | null) => void;
+    onNodeHover(firstNode);
+    expect(props.onNodeHover).toHaveBeenCalledWith(firstNode);
+    onNodeHover(null);
+    expect(props.onNodeHover).toHaveBeenCalledWith(null);
+
+    const onNodeClick = captured.onNodeClick as (n: MapNode) => void;
+    onNodeClick(firstNode);
+    expect(props.onNodeClick).toHaveBeenCalledWith(firstNode);
+
+    const onEngineTick = captured.onEngineTick as () => void;
+    onEngineTick();
+    expect(props.handleEngineTick).toHaveBeenCalledTimes(1);
 
     const nodeLabel = captured.nodeLabel as (n: MapNode) => string;
-    expect(nodeLabel(props.graphData.nodes[0])).toBe('Basic Scatter Plot');
+    expect(nodeLabel(firstNode)).toBe('Basic Scatter Plot');
 
     const onBackgroundClick = captured.onBackgroundClick as () => void;
     onBackgroundClick();
@@ -201,17 +222,17 @@ describe('MapCanvas', () => {
     const onEngineStop = captured.onEngineStop as () => void;
     onEngineStop();
 
-    expect(fgInstance.centerAt).toHaveBeenCalledWith(expect.any(Number), expect.any(Number), 0);
-    expect(fgInstance.zoom).toHaveBeenCalledWith(expect.any(Number), 0);
+    expect(fgInstance.centerAt).toHaveBeenCalledWith(60, 70, 0);
+    expect(fgInstance.zoom).toHaveBeenCalledWith(4.8, 0);
     expect(props.markSettled).toHaveBeenCalledTimes(1);
 
     const onRenderFramePre = captured.onRenderFramePre as () => void;
     onRenderFramePre();
     expect(fgInstance.d3Force).toHaveBeenCalledWith('charge');
     expect(fgInstance.d3Force).toHaveBeenCalledWith('link');
-    expect(fgInstance.d3Force).toHaveBeenCalledWith('collide', undefined);
+    expect(fgInstance.d3Force).toHaveBeenCalledWith('collide', collideForceSentinel);
     expect(fgInstance.d3Force).toHaveBeenCalledWith('center');
-    expect(fgInstance.d3Force).toHaveBeenCalledWith('outlier-squash', undefined);
+    expect(fgInstance.d3Force).toHaveBeenCalledWith('outlier-squash', outlierSquashSentinel);
     expect(fgInstance.d3ReheatSimulation).toHaveBeenCalledTimes(1);
 
     // Second frame is a no-op because __forcesWired is now true

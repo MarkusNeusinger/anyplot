@@ -71,10 +71,15 @@ describe('MapSearchPill', () => {
   });
 
   it('renders the search input and hides the dropdown when closed or when query is blank', () => {
-    render(<SearchPillHarness initialQuery="scatter" initialOpen={false} />);
+    const { unmount } = render(<SearchPillHarness initialQuery="scatter" initialOpen={false} />);
 
     const input = screen.getByPlaceholderText('specs.search()');
     expect(input).toHaveValue('scatter');
+    expect(screen.queryByText('Basic Scatter Plot')).not.toBeInTheDocument();
+    unmount();
+
+    render(<SearchPillHarness initialQuery="   " initialOpen={true} />);
+    expect(screen.getByPlaceholderText('specs.search()')).toHaveValue('   ');
     expect(screen.queryByText('Basic Scatter Plot')).not.toBeInTheDocument();
   });
 
@@ -104,6 +109,7 @@ describe('MapSearchPill', () => {
   });
 
   it('navigates results with ArrowDown/ArrowUp, selects with Enter, and clears with Escape', () => {
+    vi.useFakeTimers();
     const selectMatch = vi.fn();
     render(
       <SearchPillHarness
@@ -142,6 +148,7 @@ describe('MapSearchPill', () => {
     fireEvent.keyDown(input, { key: 'Escape' });
     expect(input).toHaveValue('');
     expect(document.activeElement).not.toBe(input);
+    expect(screen.queryByText('Basic Scatter Plot')).not.toBeInTheDocument();
   });
 
   it('selects a result on mouseDown and updates active index on mouseEnter', () => {

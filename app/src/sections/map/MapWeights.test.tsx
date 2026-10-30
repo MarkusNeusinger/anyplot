@@ -77,6 +77,7 @@ describe('MapWeights', () => {
     // First slider corresponds to plot_type (first entry in TAG_CATEGORIES)
     fireEvent.change(sliders[0], { target: { value: '3.5' } });
     expect(setWeightsSpy).toHaveBeenCalled();
+    expect(sliders[0]).toHaveAttribute('aria-valuenow', '3.5');
     expect(screen.getByText('3.5')).toBeInTheDocument();
 
     // Last slider corresponds to the edge threshold
