@@ -7,4 +7,4 @@
   page's own session stays the data session; in step 2 the message box waits,
   since the fan-out takes no typed text, while the chat about the data in step 1
   goes on. Any library pill turns `all` off again. Data the assistant changed or
-  computed keeps `.plot_all()` disabled, with a line that says why.
+  computed keeps `.plot_all()` disabled, with a line that says why. (#12478)
