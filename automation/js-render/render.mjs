@@ -111,7 +111,7 @@ const PAGE_HEAP_MB = 1024;
 // requestAnimationFrame or document.fonts would otherwise hold the render to the
 // job's timeout. The catalogue's slowest render took 6.1 s in all.
 const SETTLE_TIMEOUT_MS = 15000;
-const PAGE_ERROR_CHARS = 10000; // the page's own error record, cut in the page
+const PAGE_ERROR_CHARS = 10000; // the page's own error record, cut in the page; the first uncaught error's message and frames, cut in Node
 // A proxy nothing listens on (the discard port): Chromium's WebRTC may connect
 // only through a proxy in sandbox mode, so it connects nowhere.
 const DEAD_PROXY = "http://127.0.0.1:9";
@@ -733,6 +733,19 @@ function oneLine(text, limit) {
   return flat.length > limit ? `${flat.slice(0, limit - 1)}…` : flat;
 }
 
+// The page's error as Node received it can be any size (`throw new Error("x".repeat(5e7))`):
+// sandbox mode keeps its name, at most PAGE_ERROR_CHARS of its message and of its frames,
+// and the stack's first line rebuilt from the cut message, before anything copies it.
+function cappedPageError(err) {
+  const name = String(err?.name ?? "Error").slice(0, 64);
+  const message = String(err?.message ?? err ?? "");
+  const stack = typeof err?.stack === "string" ? err.stack : "";
+  const head = `${name}: ${message}`;
+  const frames = stack.startsWith(head) ? stack.slice(head.length) : stack.slice(stack.indexOf("\n") + 1 || stack.length);
+  const cut = message.slice(0, PAGE_ERROR_CHARS);
+  return { name, message: cut, stack: `${name}: ${cut}${frames.startsWith("\n") ? "" : "\n"}${frames.slice(0, PAGE_ERROR_CHARS)}` };
+}
+
 function errorClass(name, fallback) {
   return typeof name === "string" && /^[A-Za-z_$][\w$]{0,63}$/.test(name) ? name : fallback;
 }
@@ -937,8 +950,9 @@ async function main() {
     });
     let pageError = null;
     page.on("pageerror", (err) => {
-      pageError = err;
-      if (CONTEXT.pageError === null) CONTEXT.pageError = err;
+      const kept = SANDBOX ? cappedPageError(err) : err;
+      pageError = kept;
+      if (CONTEXT.pageError === null) CONTEXT.pageError = kept;
     });
 
     // Sandbox mode bounds every answer the page gives by one deadline
@@ -980,7 +994,7 @@ async function main() {
     const expectsReadySignal = bundleInfo.framework === "react" || snippetSource.includes("__anyplotReady");
     if (expectsReadySignal) {
       try {
-        await page.waitForFunction(() => window.__anyplotReady === true, null, { timeout: 2500 });
+        await bounded(page.waitForFunction(() => window.__anyplotReady === true, null, { timeout: 2500 }));
       } catch {
         // The signal never came (a guarded `finished` handler, say) — settle instead.
         await settle();

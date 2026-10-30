@@ -598,6 +598,14 @@ def test_a_huge_error_record_is_cut_in_the_page(harness: Harness, tmp_path: Path
     assert len(message) == 200 and len(run.stderr) < 2_000
 
 
+def test_a_huge_thrown_error_is_cut_when_it_reaches_node(harness: Harness, tmp_path: Path) -> None:
+    """A thrown error of 20 million characters is cut to 10,000 as Node receives it, before any copy, and its frames
+    still name the snippet's line."""
+    run = harness.render(tmp_path, CANVAS + 'throw new TypeError("x".repeat(20000000));\n')
+    message = _assert_final_line(run, "page", "TypeError", "plot.js:3")
+    assert len(message) == 200 and len(run.stderr) < 2_000
+
+
 def test_nothing_drawn_and_a_long_message(harness: Harness, tmp_path: Path) -> None:
     run = harness.render(tmp_path, "const t = window.ANYPLOT_TOKENS;\n")
     _assert_final_line(run, "draw", "NoOutput", "-")
