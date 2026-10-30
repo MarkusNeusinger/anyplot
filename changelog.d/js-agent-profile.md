@@ -22,4 +22,4 @@
   applier gains a JavaScript dialect (`//` and `/* */` comments, a `#` in a
   string stays text) and the export a `//` header that names the exported
   `plot.html`, with the other languages' output unchanged; the runtime, the
-  prompts and the fixtures follow in JS-4.
+  prompts and the fixtures follow in JS-4. (#12473)
