@@ -337,7 +337,7 @@ INSERT INTO libraries (id, name, version, documentation_url) VALUES
 - `reaction`, `message`, `include_data`, `result_version`, `replaces` - What the admin sent; `include_data` says whether the case holds `data.csv`. `result_version` 0 (since 2026-10-12) is feedback on the chat itself, from a session that made no plot: such a case has no image and no `plot.py`, no pipeline status, and cannot be promoted
 - `user_hash`, `session_hash` - Hashed ids; the table holds no email address and no session id
 - `locale` - The session's UI locale, the manifest's `language`; unlike `feedback.language`, which holds a programming language
-- `model`, `model_version`, `judge_model`, `prompt_hash`, `pipeline_status`, `attempts`, `tokens`, `cost_estimate` - The run's metadata from the case manifest; `model_version`, `tokens` and `cost_estimate` are `null` until the agents service stamps them
+- `model`, `model_version`, `judge_model`, `prompt_hash`, `pipeline_status`, `attempts`, `tokens`, `cost_estimate` - The run's metadata from the case manifest; `model_version`, `tokens` and `cost_estimate` are `null` until the agents service stamps them. `prompt_hash` is one hash over the bundle's per-instruction hashes; since 2026-10-30 they include the catalogue reviewer's (`reviewer_catalogue`), so every case's `prompt_hash` shifted once on that day without any prompt changing
 - `status` - The triage state, the same four values as `feedback.status`; `done` and `wont_solve` retire a case
 - `tags` - Failure classes, lowercase slugs that match `^[a-z0-9-]{1,40}$`, at most 10
 - `promoted_at`, `expected` - When the case was promoted to the regression harness, and the outcome the harness expects (`accepted` or `rejected`); `agents/evals/sync_cases.py` reads both

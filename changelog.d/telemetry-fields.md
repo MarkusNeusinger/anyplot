@@ -15,6 +15,13 @@
   attempt stages beside the copies, downloads and reaction on exactly that version, the plots the session shipped
   before it, and the seconds from the first plot to the take-away, so the keep rate can be read per score bucket
   and library.
+- **Feedback cases: the catalogue reviewer's prompt has its own hash.** The bundle's `prompt_hashes` gain
+  `reviewer_catalogue`: `reviewer` hashed the checklist instruction only, so a change of the catalogue rubric the
+  live reviewer runs changed no hash. Every case's combined `prompt_hash` shifts once with this release without any
+  prompt changing; the cases before it are all admin test cases. The same deploy shifts three telemetry numbers a
+  report sees: `language_source` reads the turn's own detection, `failures` gains the kinds `edit` and `validator`,
+  and the fan-out's sessions leave `live` (`docs/reference/agent-telemetry.md`, "Shifts a report notices on
+  2026-10-30").
 - **Agent telemetry: the plot language, as a code.** `chat_turn` and `pipeline_run` record the session
   language as one of twelve codes or `other`, never the free-text value; the legal page names it.
 - **Agent telemetry: the admin's fan-out sessions are filed apart.** The sessions "plot in all libraries"

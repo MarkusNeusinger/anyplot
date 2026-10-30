@@ -2102,11 +2102,18 @@ async def artifact(
 
 
 def _prompt_hashes() -> dict[str, str]:
+    """The version stamp of every static instruction (`policy.prompt_hash`), for the feedback case's config.
+
+    Both reviewer modes have a key: `reviewer` is the checklist instruction, `reviewer_catalogue` the catalogue one
+    (the live mode). Before 2026-10-30 only `reviewer` was there, so a change of the catalogue rubric changed no
+    hash; adding the key shifted every case's combined `prompt_hash` once.
+    """
     from agents.anyplot import policy
 
     texts = {
         "root": policy.root_instruction(),
         "reviewer": policy.reviewer_instruction(),
+        "reviewer_catalogue": policy.catalogue_reviewer_instruction(),
         **{f"adapter_{library}": policy.adapter_instruction(library) for library in agent_module.ADAPTERS},
     }
     return {name: policy.prompt_hash(text) for name, text in texts.items()}

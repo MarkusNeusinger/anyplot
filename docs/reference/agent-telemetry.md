@@ -120,12 +120,30 @@ not know yet becomes `other`, so a new rule never drops a line.
 | `pipeline_run` | `validator_rules` | The distinct rule ids that rejected a plan's code in any check of the run: SECURITY findings, the blocking ADAPTATION rules and `literal-budget` |
 | `pipeline_run` | `adaptation_rules` | The distinct soft ADAPTATION rule ids of any check of the run: defect lines, the code still rendered |
 | `pipeline_run` | `reviewer_mode`, `ship_best`, `self_review`, `repair_self_review` | The pipeline configuration as set (`AGENT_REVIEWER_MODE`, `AGENT_SHIP_BEST`, `AGENT_SELF_REVIEW`, `AGENT_REPAIR_SELF_REVIEW`). `ship_best` takes effect with `reviewer_mode` `catalogue` only. `null` on a `not_ready` line |
-| `pipeline_run` | `adapter_prompt`, `reviewer_prompt` | The first 16 hex characters of the SHA-256 of the run's adapter instruction and of the reviewer instruction in its mode (`policy.prompt_hash`, the hash of the feedback bundle's `prompt_hashes`). `adapter_prompt` equals the bundle's `adapter_<library>`; the bundle's `reviewer` hashes the checklist instruction in either mode, so in `catalogue` mode `reviewer_prompt` differs from it |
+| `pipeline_run` | `adapter_prompt`, `reviewer_prompt` | The first 16 hex characters of the SHA-256 of the run's adapter instruction and of the reviewer instruction in its mode (`policy.prompt_hash`, the hash of the feedback bundle's `prompt_hashes`). `adapter_prompt` equals the bundle's `adapter_<library>`, and `reviewer_prompt` the bundle's `reviewer_catalogue` in `catalogue` mode or its `reviewer` in `checklist` mode (a test pins both) |
 
 Tests pin each closed set to its source: the language table, `FAILURE_KINDS`, the rule ids that the validators of
 every language write (collected from their sources), `ColumnKinds`, the reviewer modes and the readiness statuses.
 Another test pins `pipeline_run.version` to the number of the `plot` event, the version store and the
 `outcome.version` the page sends back (`tests/unit/agents/runtime/test_telemetry.py`).
+
+#### Shifts a report notices on 2026-10-30
+
+The same deploy changes the meaning of a few existing numbers. A Looker Studio chart that spans the day shows a
+step that is not a change in use:
+
+- **`chat_turn.language_source`.** It is read after the turn's run now. The turn that detects the language, or
+  sets it with `set_language`, records `detected` or `chosen`, where earlier lines recorded the value from before
+  the turn (`default`, or `pasted`). Expect more `detected` and fewer `default` from that day.
+- **`failures`.** The view gains the kinds `edit` and `validator`. A chart that counts all its rows without a filter
+  on `kind` counts more from that day; filter on `kind` to compare with earlier weeks.
+- **`source`.** The admin's fan-out sessions are `fanout` from that day. Before, they were `live`: one session per
+  library, none of them kept (for example the fan-out of `scatter-basic` on 2026-10-28 at 23:41: 7 sessions in 6
+  libraries within minutes, the page's own session included). Live sessions, data inputs and the kept rate before
+  that day still include them.
+- **The feedback case's `prompt_hash`.** The bundle's `prompt_hashes` gain `reviewer_catalogue`, the hash of the
+  catalogue reviewer's instruction, which the live reviewer runs. The combined `prompt_hash` of every case shifts
+  once on that day without any prompt changing; every case before it is an admin test case.
 
 ## Where the lines go
 

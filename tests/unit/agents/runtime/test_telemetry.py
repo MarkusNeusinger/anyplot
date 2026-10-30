@@ -757,3 +757,23 @@ async def test_a_run_names_the_version_its_outcomes_name(
     (outcome,) = lines_of(caplog, "outcome")
     assert outcome["version"] == runs[-1]["version"] and outcome["library"] == runs[-1]["library"]
     assert outcome["session"] == runs[-1]["session"]
+
+
+async def test_the_run_prompt_hashes_are_the_bundle_hashes(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A run's `adapter_prompt` and `reviewer_prompt` are the feedback bundle's hashes of the same instructions, and
+    the bundle hashes both reviewer modes (`reviewer_catalogue` since 2026-10-30), so a catalogue rubric change shows
+    in a case's `prompt_hash` too."""
+    from agents.anyplot.pipeline import _prompt_hashes as run_hashes
+    from agents.main import _prompt_hashes as bundle_hashes
+
+    caplog.set_level(logging.INFO)
+    swap_models("gemini", default_script())
+    sid = await plot_session(client)
+    bundle = (await client.get(f"/v1/sessions/{sid}/bundle", headers=HEADERS)).json()["config"]["prompt_hashes"]
+    (run,) = lines_of(caplog, "pipeline_run")
+    assert run["adapter_prompt"] == bundle["adapter_matplotlib"]
+    assert run["reviewer_prompt"] == bundle["reviewer"]  # the conftest's checklist mode
+    assert run_hashes("matplotlib", "catalogue")["reviewer_prompt"] == bundle_hashes()["reviewer_catalogue"]
+    assert bundle["reviewer_catalogue"] != bundle["reviewer"]
