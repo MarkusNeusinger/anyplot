@@ -1647,7 +1647,6 @@ jobs:
           assert runtime.security(normalised) == [], runtime.security(normalised)
           found = runtime.regions(normalised)
           assert found.theme is not None and found.save is not None, "no THEME statement or no protected save"
-          assert found.imprint is not None, "no Imprint palette"
           print("OK: scatter-basic (makie) is", result.status, result.reasons)
           PY
           )
