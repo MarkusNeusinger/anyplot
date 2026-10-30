@@ -145,12 +145,7 @@ class TestTable:
         for library in ("chartjs", "d3", "echarts", "highcharts", "muix"):
             row = command_for("javascript", library)
             assert row.argv == (commands.NODE_BINARY, commands.JS_HARNESS, f"--library={library}"), library
-            assert row.code_flag == ""
-            # The temporary experiment varies `DEBUG` per library (`JS_DIAGNOSIS_DEBUG`); everything else is JS_ENV's.
-            assert {k: v for k, v in row.env.items() if k != "DEBUG"} == {
-                k: v for k, v in commands.JS_ENV.items() if k != "DEBUG"
-            }
-            assert row.env.get("DEBUG") == commands.JS_DIAGNOSIS_DEBUG.get(library, "pw:process,pw:browser"), library
+            assert row.code_flag == "" and row.env is commands.JS_ENV
             assert row.render_p95_s == 15.0  # JS-1's sweep: wall p95 2.4 s at 2 CPUs; Python's and R's reserve
         assert dict(commands.JS_ENV) == {
             "PLAYWRIGHT_BROWSERS_PATH": "/opt/pw-browsers",
@@ -164,8 +159,6 @@ class TestTable:
             "ANYPLOT_SANDBOX": "1",
             "ANYPLOT_NO_HTML": "1",
             "ANYPLOT_IMPORT_ALLOWLIST": "/opt/anyplot/js-render/import-allowlist.json",
-            # Temporary: Playwright's process log, to find where Cloud Run's JavaScript renders stop.
-            "DEBUG": "pw:process,pw:browser",
         }
         # The sandbox's fixed keys come after a row's environment and win (`executor.sandbox_env`).
         assert not {"PATH", "HOME", "LD_PRELOAD", "NODE_OPTIONS"} & set(commands.JS_ENV)
