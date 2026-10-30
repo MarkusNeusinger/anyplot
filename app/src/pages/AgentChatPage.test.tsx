@@ -1264,13 +1264,14 @@ describe('AgentChatPage .plot_all()', () => {
     const plotAll = plotAllButton();
     expect(plotAll).toHaveTextContent('.plot_all()');
     expect(plotAll).toBeEnabled();
-    expect(plotAll).toHaveAccessibleDescription(
-      expect.stringContaining('# step 2 — plot the table as it is in all 2 libraries at once')
-    );
+    const line =
+      '# step 2 — plot the table as it is in all 2 libraries at once · turn all off to chat';
+    expect(plotAll).toHaveAccessibleDescription(expect.stringContaining(line));
     expect(screen.queryByTestId('plot-all-hint')).not.toBeInTheDocument();
-    // The fan-out takes no text: the message box waits while `all` is pressed.
+    // The fan-out takes no text: in step 2 the message box waits, and the line says why.
     const box = screen.getByLabelText('Message');
     expect(box).toBeDisabled();
+    expect(box).toHaveAccessibleDescription(line);
     expect(box).toHaveAttribute(
       'placeholder',
       'all libraries: the table goes as it is · turn all off to chat'
@@ -1286,15 +1287,24 @@ describe('AgentChatPage .plot_all()', () => {
     expect(within(panel).getByText(/at most 4 at a time/)).toBeInTheDocument();
     // A pointer click moves no focus.
     expect(panel).not.toHaveFocus();
-    // While the panel is open, neither starts another fan-out; `all` stays pressed.
+    // While the panel is open, nothing starts another fan-out or changes the library, whose
+    // session the panel's sessions replayed; `all` stays pressed.
     expect(plotAllButton()).toBeDisabled();
     expect(all).toBeDisabled();
     expect(all).toHaveAttribute('aria-pressed', 'true');
+    expect(libraryPill('matplotlib')).toBeDisabled();
+    expect(libraryPill('seaborn')).toBeDisabled();
 
-    fireEvent.click(within(panel).getByRole('button', { name: 'Close all libraries' }));
+    // `.close()` goes with the panel: the focus returns to `.plot_all()`, which opened it.
+    const close = within(panel).getByRole('button', { name: 'Close all libraries' });
+    close.focus();
+    fireEvent.click(close);
     expect(screen.queryByRole('region', { name: 'All libraries' })).not.toBeInTheDocument();
     expect(plotAllButton()).toBeEnabled();
+    expect(plotAllButton()).toHaveFocus();
     expect(all).toBeEnabled();
+    expect(libraryPill('matplotlib')).toBeEnabled();
+    expect(libraryPill('seaborn')).toBeEnabled();
 
     // A key press (a click with `detail` 0) continues in the panel it opened.
     fireEvent.click(plotAllButton(), { detail: 0 });
@@ -1336,6 +1346,16 @@ describe('AgentChatPage .plot_all()', () => {
     const all = await screen.findByRole('button', { name: 'All libraries' });
     fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'log scale on y' } });
 
+    // `all` itself is a toggle: a second click turns it off again.
+    fireEvent.click(all);
+    expect(screen.getByLabelText('Message')).toBeDisabled();
+    fireEvent.click(all);
+    expect(all).toHaveAttribute('aria-pressed', 'false');
+    expect(libraryPill('matplotlib')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Create plot' })).toHaveTextContent('.create_plot()');
+    expect(screen.getByLabelText('Message')).toBeEnabled();
+    expect(screen.getByLabelText('Message')).not.toHaveAccessibleDescription();
+
     fireEvent.click(all);
     fireEvent.click(libraryPill('matplotlib'));
     expect(all).toHaveAttribute('aria-pressed', 'false');
@@ -1357,6 +1377,50 @@ describe('AgentChatPage .plot_all()', () => {
     );
     expect(libraryPill('seaborn')).toHaveAttribute('aria-pressed', 'true');
     expect(libraryPill('matplotlib')).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('leaves the chat about the data usable with all pressed, before data and in step 1', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    const all = await screen.findByRole('button', { name: 'All libraries' });
+    await waitFor(() => expect(all).toBeEnabled());
+
+    // Without data: nothing to plot yet, and the box asks for a curve as without `all`.
+    fireEvent.click(all);
+    expect(all).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
+    const box = screen.getByLabelText('Message');
+    expect(box).toBeEnabled();
+    expect(box).toHaveAttribute('placeholder', 'ask for a curve: "y = sin(x), x from -pi to pi"');
+    expect(box).not.toHaveAccessibleDescription();
+
+    // Step 1: `.plot_all()` waits for the confirmation, and a question about the data goes.
+    fireEvent.change(screen.getByLabelText(/# your data/), {
+      target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
+    await turnEnded();
+    expect(currentStep()).toEqual(['1 data']);
+    expect(plotAllButton()).toBeEnabled();
+    expect(screen.getByLabelText('Message')).toBeEnabled();
+    expect(screen.getByLabelText('Message')).toHaveAttribute(
+      'placeholder',
+      'ask about your data, or for a fix: "sum per month"'
+    );
+    sendFromComposer('what is the mean score?');
+    expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
+    await turnEnded();
+    expect(lastTurn()).toEqual({ text: 'what is the mean score?' });
+    expect(all).toHaveAttribute('aria-pressed', 'true');
+
+    // Confirmed, step 2 is where `.plot_all()` is the action: the box waits from here.
+    const confirm = screen.getByRole('button', { name: '.confirm()' });
+    await waitFor(() => expect(confirm).toBeEnabled());
+    fireEvent.click(confirm);
+    await waitFor(() => expect(currentStep()).toEqual(['·2 plot']));
+    expect(screen.getByLabelText('Message')).toBeDisabled();
+    expect(plotAllButton()).toBeEnabled();
   });
 
   it('leads to .confirm() first, like .create_plot()', async () => {
