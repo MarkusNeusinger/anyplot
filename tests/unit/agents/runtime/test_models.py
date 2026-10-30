@@ -16,9 +16,11 @@ from google.genai import types
 from agents.anyplot import models
 from agents.anyplot.models import (
     ADAPTER_FULL_MAX_OUTPUT_TOKENS,
+    CLAUDE_REQUEST_TIMEOUT_S,
     GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS,
     GEMINI_ADAPTER_MAX_OUTPUT_TOKENS,
     JUDGE_MAX_OUTPUT_TOKENS,
+    MAX_OUTPUT_TOKENS,
     AnswerCutOff,
     AnthropicJudge,
     FakeJudge,
@@ -68,7 +70,7 @@ class TestFactories:
             "anyplot-eval",
             "global",
         )
-        assert model.max_tokens == {"root": 4096, "adapter": 8192, "reviewer": 8192}[kind]
+        assert model.max_tokens == {"root": 4096, "adapter": 40_960, "reviewer": 8192}[kind]
 
     @pytest.mark.parametrize("kind", ["root", "adapter", "reviewer"])
     def test_gemini_model_comes_from_the_settings(self, kind: str) -> None:
@@ -123,8 +125,8 @@ class TestFactories:
 
         assert gemini == {"root": 4096, "adapter": GEMINI_ADAPTER_MAX_OUTPUT_TOKENS, "reviewer": 8192}
         assert GEMINI_ADAPTER_MAX_OUTPUT_TOKENS == 8_192  # bounded by the soft deadline, not by the answers
-        assert claude == {"root": 4096, "adapter": 8192, "reviewer": 8192}  # the catalogue reviewer writes more
-        assert make_model("adapter", CLAUDE).max_tokens == 8192
+        assert claude == {"root": 4096, "adapter": 40_960, "reviewer": 8192}  # the catalogue reviewer writes more
+        assert make_model("adapter", CLAUDE).max_tokens == 40_960
         assert JUDGE_MAX_OUTPUT_TOKENS == 256
 
     def test_allow_full_file_on_gemini_lowers_thinking_without_touching_the_agent_config(self) -> None:
@@ -150,7 +152,7 @@ class TestFactories:
         assert request.config.thinking_config is not None
         assert request.config.thinking_config.thinking_budget == 0
         assert request.config.thinking_config.thinking_level is None
-        assert agent_config.max_output_tokens == 8192
+        assert agent_config.max_output_tokens == 40_960
 
     def test_claude_defaults_think_adaptively_with_the_budgets_added_to_the_caps(self) -> None:
         """Since 2026-10-11 the root thinks with 1,024 extra output tokens and the adapter too; since
@@ -162,7 +164,7 @@ class TestFactories:
 
         assert {kind: config.max_output_tokens for kind, config in configs.items()} == {
             "root": 4096 + 1024,
-            "adapter": 8192 + 8192,
+            "adapter": 40_960 + 8192,
             "reviewer": 8192 + 4096,
         }
         assert {kind: config.effort for kind, config in configs.items()} == {
@@ -171,7 +173,7 @@ class TestFactories:
             "reviewer": "high",
         }
         assert all(config.thinking_config.thinking_budget == ADAPTIVE_THINKING for config in configs.values())
-        assert make_model("adapter", CLAUDE_DEFAULTS).max_tokens == 8192 + 8192
+        assert make_model("adapter", CLAUDE_DEFAULTS).max_tokens == 40_960 + 8192
         request = LlmRequest(config=configs["adapter"].model_copy())
         allow_full_file(request.config)
         assert request.config.max_output_tokens == ADAPTER_FULL_MAX_OUTPUT_TOKENS + 8192
@@ -347,7 +349,7 @@ class TestThinkingMeasurement:
 
         assert {kind: config.max_output_tokens for kind, config in configs.items()} == {
             "root": 4096 + 2048,
-            "adapter": 8192 + 4096,
+            "adapter": 40_960 + 4096,
             "reviewer": 8192,
         }
         assert {kind: config.thinking_config.thinking_budget for kind, config in configs.items()} == {
@@ -355,16 +357,29 @@ class TestThinkingMeasurement:
             "adapter": -1,
             "reviewer": 0,
         }
-        assert make_model("adapter", THINKING).max_tokens == 8192 + 4096
+        assert make_model("adapter", THINKING).max_tokens == 40_960 + 4096
 
-    def test_a_full_file_keeps_the_thinking_room_below_the_sdk_limit(self) -> None:
+    def test_a_full_file_keeps_the_thinking_room_and_never_less_than_an_edit(self) -> None:
         request = LlmRequest(config=make_content_config("adapter", THINKING).model_copy())
 
         allow_full_file(request.config, THINKING)
 
         assert request.config.max_output_tokens == ADAPTER_FULL_MAX_OUTPUT_TOKENS + 4096
         assert request.config.thinking_config is not None and request.config.thinking_config.thinking_budget == -1
-        assert ADAPTER_FULL_MAX_OUTPUT_TOKENS + MAX_THINKING_BUDGET < NON_STREAMING_LIMIT
+        assert ADAPTER_FULL_MAX_OUTPUT_TOKENS >= MAX_OUTPUT_TOKENS["adapter"]
+
+    def test_the_vertex_client_has_its_own_timeout_so_the_sdk_sends_the_large_cap(self) -> None:
+        """The structured answer never streams; the SDK refuses a non-streaming `max_tokens` past about 21,333
+        unless the client sets its own timeout (owner, 2026-10-30: about 50,000 for the adapter)."""
+        from anthropic._constants import DEFAULT_TIMEOUT
+
+        largest = ADAPTER_FULL_MAX_OUTPUT_TOKENS + MAX_THINKING_BUDGET
+        assert NON_STREAMING_LIMIT < largest <= 128_000  # past the SDK's default limit, within Haiku 5.5's
+
+        client = make_model("adapter", CLAUDE_DEFAULTS)._anthropic_client
+
+        assert client.timeout != DEFAULT_TIMEOUT
+        assert client.timeout.read == CLAUDE_REQUEST_TIMEOUT_S >= 2 * (0.8 + 0.0029 * largest)
 
     async def test_the_adapter_thinks_before_its_structured_answer(self) -> None:
         client = FakeAnthropic({"unknown": [{"thought": "plan the edits first", "json": SCATTER_PLAN}]})
@@ -386,7 +401,7 @@ class TestThinkingMeasurement:
             "display": "summarized",
             "block_binding": {"prefix_mismatch_behavior": "drop_block"},  # a rebound block is dropped, not a 400
         }
-        assert call["max_tokens"] == 8192 + 4096
+        assert call["max_tokens"] == 40_960 + 4096
         assert call["output_config"]["effort"] == "medium" and call["output_config"]["format"]["type"] == "json_schema"
         parts = responses[0].content.parts
         assert parts[0].thought and parts[0].text == "plan the edits first"
@@ -633,8 +648,9 @@ class TestJudge:
         assert caught.value.failure == "cut_off"
 
     def test_adapter_full_cap(self) -> None:
-        """Claude's full-file cap holds a plan at the schema's 24 KB limit; Gemini's is bounded by the deadline."""
-        assert ADAPTER_FULL_MAX_OUTPUT_TOKENS == 12_288
+        """Claude's full-file cap holds a plan at the schema's 24 KB limit (since 2026-10-30 the edit cap);
+        Gemini's is bounded by the deadline."""
+        assert ADAPTER_FULL_MAX_OUTPUT_TOKENS == 40_960
         assert GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS == 12_288
         assert MAX_FULL_CODE_CHARS / 2.5 < ADAPTER_FULL_MAX_OUTPUT_TOKENS  # 2.5 characters per Haiku 5.5 token
 
