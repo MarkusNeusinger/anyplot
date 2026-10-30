@@ -10,4 +10,4 @@
   time: 3 in 'Ankunft', 1 in 'Abfahrt'"). `Z`, `+00:00` and a timestamp without
   an offset keep their clock time and are not counted. The status stays as the
   render earns it, as with the other loader notes. The JavaScript runtime will
-  use the same count and wording.
+  use the same count and wording. (#12468)
