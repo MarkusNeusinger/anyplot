@@ -193,7 +193,9 @@ the agy login lives, entry by entry: agy creates each subagent's worktree in
 `~/.gemini/antigravity-cli/worktrees/`, and one deny on the whole folder also
 blocked the file tools there, so the first parallel run fell back to one
 package after another (2026-10-30). Only `worktrees/` stays open, and `cd` and
-`git -C` into it are allowed by `regex:` rules that refuse `..`. After an agy
+`git -C` into it are allowed by `regex:` rules that refuse `..` and the shell
+characters `;`, `&`, `|`, `$`, `<`, `>`, and the backtick, so nothing can be
+chained onto them. After an agy
 update, compare `ls -A ~/.gemini ~/.gemini/antigravity-cli` with the deny list
 and add any new entry. Rules are word-by-word prefixes unless they start with
 `regex:`, and a word matches only whole: `git push origin gemini/` never
