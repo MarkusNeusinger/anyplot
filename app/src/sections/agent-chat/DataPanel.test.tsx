@@ -1285,7 +1285,8 @@ describe('DataPanel file drop', () => {
       '# read "sales.csv" as utf-8 · 3 lines · check it, then .parse()'
     );
     const parse = screen.getByRole('button', { name: '.parse()' });
-    expect(parse).toHaveFocus();
+    // The focus follows the fill in an effect after its render, so wait for it.
+    await waitFor(() => expect(parse).toHaveFocus());
     expect(onTrack).toHaveBeenCalledWith('agent_data_file', {
       kind: 'text',
       encoding: 'utf-8',
@@ -1306,7 +1307,10 @@ describe('DataPanel file drop', () => {
 
     const group = await screen.findByTestId('file-replace');
     expect(group).toHaveTextContent('replace the text in the box with "sales.csv" (3 lines)?');
-    expect(within(group).getByRole('button', { name: '.replace()' })).toHaveFocus();
+    // As with the fill: the focus moves in an effect after the render that shows the group.
+    await waitFor(() =>
+      expect(within(group).getByRole('button', { name: '.replace()' })).toHaveFocus()
+    );
     await userEvent.click(within(group).getByRole('button', { name: '.keep()' }));
     expect(box()).toHaveValue('a,b');
     expect(box()).toHaveFocus(); // not left on the page's body
