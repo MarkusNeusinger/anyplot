@@ -8,8 +8,8 @@ Every static instruction is assembled from files and never from paraphrased copi
   statement and its typing, how columns are read, the protected lines, the palette's
   literal form, number and date formatting, the safe-code list, and every sentence about a
   gate that only matplotlib's probe makes true), and the language's runtime prompt
-  (`adapter_python.md`, `adapter_r.md`, `adapter_julia.md` since 2026-10-30,
-  `RUNTIME_PROMPTS`) fills the slots, also the one
+  (`adapter_python.md`, `adapter_r.md`, `adapter_julia.md` and `adapter_javascript.md`
+  since 2026-10-30, `RUNTIME_PROMPTS`) fills the slots, also the one
   of `adapter_highlights.md` (`adapter_prompt`, `highlights_prompt`, since 2026-10-29: one
   place for each shared rule, and the Python prompts byte for byte what they were, which
   tests pin); `scope_judge.md` gets one injected passage, the libraries the assistant
@@ -97,7 +97,12 @@ ADAPTER_TEMPLATE = "adapter.md"
 HIGHLIGHTS_TEMPLATE = "adapter_highlights.md"
 ADAPTER_TEMPLATES = (ADAPTER_TEMPLATE, HIGHLIGHTS_TEMPLATE)
 """The adapter's templates whose `{{slot}}`s a runtime prompt fills; every slot of a runtime prompt fills one of them."""
-RUNTIME_PROMPTS: dict[str, str] = {"python": "adapter_python.md", "r": "adapter_r.md", "julia": "adapter_julia.md"}
+RUNTIME_PROMPTS: dict[str, str] = {
+    "python": "adapter_python.md",
+    "r": "adapter_r.md",
+    "julia": "adapter_julia.md",
+    "javascript": "adapter_javascript.md",
+}
 """The runtime prompt of each language with a runtime (`render.runtimes.RUNTIME_CLASSES`), whose slots fill
 `adapter.md` and `adapter_highlights.md`."""
 SCOPE_JUDGE = "scope_judge.md"

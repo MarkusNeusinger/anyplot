@@ -969,6 +969,42 @@ class TestBackends:
         ]
         assert "ANYPLOT_THEME=light" in argv
 
+    async def test_local_backend_hands_a_javascript_job_its_typed_table(self, tmp_path: Path) -> None:
+        """JS-4a: `data.json` next to the code file and `ANYPLOT_DATA_JSON` naming it, as the renderer's executor does;
+        a job without the table gets neither."""
+        from agents.anyplot.render.runtimes import runtime_for
+
+        record = tmp_path / "record.txt"
+        docker = tmp_path / "docker"
+        docker.write_text(
+            "#!/bin/sh\n"
+            'if [ "$1" = kill ]; then exit 0; fi\n'
+            'prev=""; for arg in "$@"; do\n'
+            '  if [ "$prev" = "-v" ]; then case "$arg" in *:/work) work="${arg%:/work}";; esac; fi\n'
+            '  prev="$arg"\n'
+            "done\n"
+            f'cat "$work/data.json" > {record}; echo >> {record}; ls "$work" >> {record}\n'
+            "exit 1\n"
+        )
+        docker.chmod(0o755)
+        backend = LocalDockerBackend(
+            image="anyplot-renderer:js",
+            runtime=PythonRuntime(),
+            environment="development",
+            docker=str(docker),
+            runtime_for=runtime_for,
+        )
+        table = '{"columns":["a"],"data":[[1]]}'
+        js = job(language="javascript", library="d3", source="const x = 1;", data_json=table, themes=("light",))
+
+        argv = backend.argv(js, "light", Path("/tmp/run"))
+        await backend.render(js)
+
+        assert "ANYPLOT_DATA_JSON=/work/data.json" in argv and argv[-1] == "plot.js"
+        assert record.read_text().splitlines() == [table, "data.csv", "data.json", "plot.js"]
+        plain = backend.argv(job(language="javascript", library="d3", source="x"), "light", Path("/tmp/run"))
+        assert not any(part.startswith("ANYPLOT_DATA_JSON") for part in plain)
+
     def test_local_backend_data_command_keeps_the_network_off_and_has_no_theme(self) -> None:
         backend = LocalDockerBackend(
             image="anyplot-agents:dev", runtime=PythonRuntime(), environment="development", docker="/usr/bin/docker"

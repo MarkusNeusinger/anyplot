@@ -329,6 +329,11 @@ async def adapt_and_render(
     runtime = runtime_for(view.library, cpu_seconds=settings.render_timeout_s)
     columns = [column.name for column in dataset.profile.columns]
     kinds = column_kinds_of(dataset)
+    try:
+        data_json = runtime.data_json(dataset.csv, kinds)
+    except ValueError:
+        # As the pipeline: a cell the typed table cannot hold drops the kinds, so the loader refuses with its reason.
+        data_json, kinds = None, None
     misses: list[str] = []
     lines = [_line(line) for line in feedback if line.strip()]
     previous_plan: AdaptPlan | None = None
@@ -394,6 +399,7 @@ async def adapt_and_render(
             data_csv=dataset.csv,
             themes=("light",),
             timeout_s=settings.render_timeout_s,
+            data_json=data_json,
         )
         async with render_lock:
             result = await backend.render(job)

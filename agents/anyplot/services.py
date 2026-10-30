@@ -82,6 +82,9 @@ class CodeVersion:
     """Every theme rendered for the version, with its gate outcome; a rendered one has its PNG in the render."""
     code_artifact: CodeArtifact = DEFAULT_CODE_ARTIFACT
     """The name the exported code downloads under: the runtime's (`plot.py` for Python, `plot.R`, `plot.js`, ...)."""
+    data_json: str | None = None
+    """The version's table as typed JSON for a JavaScript plot (`RenderJob.data_json`), so the theme toggle renders the
+    other theme from the same job; None for every other language, whose code reads `data_csv`."""
 
     def artifacts(self) -> list[ArtifactName]:
         """The version's artifacts: the PNG of every rendered theme, the code under its language's name, `data.csv`."""

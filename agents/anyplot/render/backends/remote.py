@@ -272,6 +272,7 @@ class RemoteBackend:
                     "library": job.library,
                     "source": job.source,
                     "data_csv": job.data_csv,
+                    "data_json": job.data_json,
                     "themes": list(job.themes),
                     "timeout_s": job.timeout_s,
                 }

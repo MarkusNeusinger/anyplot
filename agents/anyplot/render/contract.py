@@ -1,7 +1,8 @@
 """The render contract: what a render job is, what comes back, and the two protocols around it.
 
-A `RenderJob` carries the run form of one code version, the canonical `data.csv` and
-the themes to render (a pipeline run asks for one, the theme toggle for the other);
+A `RenderJob` carries the run form of one code version, the canonical `data.csv` (and,
+for JavaScript, the same table as typed JSON, `data_json`) and the themes to render (a
+pipeline run asks for one, the theme toggle for the other);
 a `RenderBackend` runs it once per theme in isolation and returns raw outputs (exit
 status, the PNG bytes as written, the savefig probe, a stderr tail). The host gates
 (`gates.py`) judge those outputs; the backend never does.
@@ -24,10 +25,12 @@ transforms the pipeline applies before a render (`normalise`, `loader_block`,
 (`regions`, `readiness`, `security`, `adaptation`, `apply_plan`, `restore_protected`,
 `new_literals`, the ADAPTATION rules that keep the code from running, `blocking_rules`,
 and the target of each other one, `adaptation_targets`), what its loader changes when
-it reads `data.csv` (`loader_notes`), its error grammar (`error_summary`) and its export
-(`export`, `code_artifact`). `runtimes/__init__.py` maps a library to the runtime of its
-language: Python (`runtimes/python.py`) for six libraries, R (`runtimes/r.py`) for
-ggplot2 since 2026-10-29 and Julia (`runtimes/julia.py`) for Makie since 2026-10-30;
+it reads `data.csv` (`loader_notes`), the typed table a language without a reader of its
+own takes (`data_json`), its error grammar (`error_summary`) and its export (`export`,
+`code_artifact`). `runtimes/__init__.py` maps a library to the runtime of its language:
+Python (`runtimes/python.py`) for six libraries, R (`runtimes/r.py`) for ggplot2 since
+2026-10-29, Julia (`runtimes/julia.py`) for Makie since 2026-10-30 and JavaScript
+(`runtimes/javascript.py`) for Chart.js, D3, ECharts and Highcharts since 2026-10-30;
 later languages add runtimes, not backends.
 
 No ADK import: the render layer is plain code.
@@ -96,10 +99,15 @@ class RenderJob:
     data_csv: str
     themes: tuple[Theme, ...] = THEMES
     timeout_s: float = 60.0
+    data_json: str | None = None
+    """The same table as typed JSON (`RuntimeAdapter.data_json`), for a JavaScript job only: the backend writes it as
+    `data.json` next to the code file, which the harness injects as `window.ANYPLOT_DATA`."""
 
     def __post_init__(self) -> None:
         if not _RENDER_ID.fullmatch(self.job_id):
             raise ValueError("job_id must match the render id pattern")
+        if self.data_json is not None and self.language != "javascript":
+            raise ValueError("data_json is for a javascript job only")
         if not self.themes or any(theme not in THEMES for theme in self.themes):
             raise ValueError("themes must be light and/or dark")
         if self.timeout_s <= 0:
@@ -313,6 +321,12 @@ class RuntimeAdapter(Protocol):
         changed", never a residual note, so the status stays as the render earns it)."""
         ...
 
+    def data_json(self, csv_text: str, kinds: "ColumnKinds | None") -> str | None:
+        """The canonical `csv_text` as typed JSON for a render job (`RenderJob.data_json`), for a runtime whose code
+        reads no `data.csv` itself (JavaScript: `data/typed_json.py`); None for every other runtime, and None when
+        the CSV does not fit its own typing (`kinds` None), where the runtime's loader then refuses the run form."""
+        ...
+
     def validate(self, code: str, library: str) -> list[str]:
         """SECURITY findings on code, one line each; empty when the code may run."""
         ...
@@ -354,7 +368,9 @@ class RuntimeAdapter(Protocol):
 
         `run_form` is the code that ran. A runtime whose loader shifts the lines by many (Julia's, 15 lines and
         more for the one placeholder line) reads it to name the working form's line, which the adapter edits;
-        Python's and R's summaries leave it unread (Python's line counts the run form, R's grammar names none)."""
+        JavaScript's reads it to name a line on the loader as the data loader and to drop a line past the code's
+        end (the harness's wrapper); Python's and R's summaries leave it unread (Python's line counts the run
+        form, R's grammar names none)."""
         ...
 
     def export(self, run_form: str, *, spec_id: str, library_version: str | None, theme: str = "light") -> str:

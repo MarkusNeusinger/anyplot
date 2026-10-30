@@ -1739,6 +1739,7 @@ jobs:
             agents/anyplot/prompts/adapter_python.md \
             agents/anyplot/prompts/adapter_r.md \
             agents/anyplot/prompts/adapter_julia.md \
+            agents/anyplot/prompts/adapter_javascript.md \
             agents/anyplot/prompts/reviewer.md \
             agents/anyplot/prompts/scope_judge.md \
             agents/anyplot/prompts/data_judge.md \
@@ -1750,6 +1751,7 @@ jobs:
             prompts/library/seaborn.md \
             prompts/library/ggplot2.md \
             prompts/library/makie.md \
+            prompts/library/chartjs.md \
             prompts/workflow-prompts/impl-repair-claude.md \
             prompts/workflow-prompts/ai-quality-review.md; do
             docker exec agents test -f "/app/$path" || { echo "::error::/app/$path is missing from the image"; exit 1; }
@@ -1824,30 +1826,29 @@ jobs:
           )
           docker exec -i agents .venv/bin/python -c "$script" < plots/scatter-basic/implementations/julia/makie.jl
 
-      # The JavaScript code profile in the built image (JS-3 of step 3, 2026-10-30; no runtime
-      # before JS-4, so the profile's modules directly): the pruned javascript and tsx grammars
-      # read a catalogue Chart.js file and a MUI X file written for 9.16, piped in from the
-      # checkout, through the normaliser, the validator and the readiness scan; both are coupled
-      # in the corpus tests, so anything but clean or coupled, a SECURITY finding, or a missing
-      # token line or directive fails the step. The MUI X scan also reads the package's copy of
-      # the import allowlist, which the image must carry.
+      # The JavaScript runtime in the built image (JS-3 of step 3 for the profile, JS-4a on
+      # 2026-10-30 for the runtime): the pruned javascript and tsx grammars read a catalogue
+      # Chart.js file and a MUI X file written for 9.16, piped in from the checkout, through the
+      # JavaScript runtime's normaliser, validator and readiness scan, as POST /v1/sessions does
+      # with the library enabled (MUI X has the runtime class but is not served yet); both are
+      # coupled in the corpus tests, so anything but clean or coupled, a SECURITY finding, or a
+      # missing token line or directive fails the step. The MUI X scan also reads the package's
+      # copy of the import allowlist, which the image must carry.
       - name: A JavaScript readiness scan runs
         if: steps.check.outputs.should_build == 'true'
         run: |
           set -euo pipefail
           script=$(cat <<'PY'
           import sys
-          from agents.anyplot.code.profiles.javascript.normalise import normalise
-          from agents.anyplot.code.profiles.javascript.readiness import scan
-          from agents.anyplot.code.profiles.javascript.regions import LIBRARIES, find_regions
-          from agents.anyplot.code.profiles.javascript.validate import validate_security
+          from agents.anyplot.render.runtimes import JavaScriptRuntime
 
           library = sys.argv[1]
-          normalised = normalise(sys.stdin.read(), library=library)
-          result = scan(normalised, spec_id=sys.argv[2], enabled_libraries=LIBRARIES, library=library)
+          runtime = JavaScriptRuntime(library=library)
+          normalised = runtime.normalise(sys.stdin.read(), library)
+          result = runtime.readiness(normalised, spec_id=sys.argv[2], enabled_libraries=[library])
           assert result.status in ("clean", "coupled"), (result.status, result.reasons)
-          assert validate_security(normalised, library=library) == [], validate_security(normalised, library=library)
-          found = find_regions(normalised, library=library)
+          assert runtime.security(normalised) == [], runtime.security(normalised)
+          found = runtime.regions(normalised)
           assert found.theme_tokens and found.save is not None, "no token line or no orientation directive"
           print(f"OK: {sys.argv[2]} ({library}) is", result.status, result.reasons)
           PY

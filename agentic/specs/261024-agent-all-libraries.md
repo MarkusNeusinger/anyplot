@@ -1253,6 +1253,11 @@ difference.
 - Fixtures on the ten specs for Chart.js, D3 and ECharts first; MUI X after its
   regeneration or per question 13; Highcharts behind the `AGENT_LIBRARIES` switch until
   question 6 is decided. The owner's matrix run gates each library; docs.
+- JS-4 is two PRs (2026-10-30): JS-4a, the runtime, the registry, the prompt, the
+  fixtures and the admin deploy of Chart.js, D3, ECharts and Highcharts (question 6
+  decided the same day), with the PNG and the code file; JS-4b, the export's `plot.html`
+  with its sandboxed preview and its download (question 12, "Found for JS-4" under JS-3).
+  MUI X follows them with its fixtures.
 
 #### Order of the PRs
 
@@ -1733,6 +1738,72 @@ Found for JS-4:
 | MUI X imports checked against the allowlist | outside the four packages SECURITY, a module or name of them that MUI X 9 lacks ADAPTATION | question 13: a 7.29 file is coupled with a note, never blocked for its version |
 | The run line follows question 12 | `// run: open plot.html in a browser, ...` | decided on 2026-10-30 |
 | A snippet that reads the tokens | `no-theme` blocks a file that reads neither `ANYPLOT_TOKENS` nor `ANYPLOT_THEME` | the counterpart of Julia's missing theme statement; no catalogue file is blocked by it |
+
+#### What JS-4a built (2026-10-30): Chart.js, D3, ECharts and Highcharts served for the admin
+
+3f without the export's page, which is JS-4b's, and without MUI X, which follows with its
+fixtures.
+
+- **Runtime.** `JavaScriptRuntime` (`agents/anyplot/render/runtimes/javascript.py`)
+  mirrors `JuliaRuntime` on JS-3's profile: the command and the environment are the
+  renderer's JavaScript row's, key for key (no `RLIMIT_AS`, no `RLIMIT_NPROC`, no exec
+  filter); the file name and the code artifact come from the row, so the class takes MUI X
+  as `plot.tsx`; `review_texts` is on; `unavailable-import` joins the blocking rules; the
+  soft findings get JavaScript targets; the export is JS-3's. `JAVASCRIPT_LIBRARIES` holds
+  the four libraries, and the admin deploy's `_LIBRARIES` names them.
+- **Data.** `RuntimeAdapter.data_json` (None on every other runtime) types the canonical
+  CSV once per run; `RenderJob.data_json` carries it (refused on another language's job, as
+  the wire refuses it) and `CodeVersion.data_json` keeps it for the theme toggle. The
+  remote backend sends it, the local backend writes `data.json` and sets
+  `ANYPLOT_DATA_JSON` as the renderer's executor does, and the eval harness's own render
+  jobs (`ladder_lab`, `stress`) carry it too. Without the kinds the loader refuses the run
+  form, as R's does, and so it does for a cell the typing cannot hold: `data_json` raises,
+  the pipeline drops the kinds, and the attempt ends as `loader` with the reason (the first
+  draft left the page without a table, so the repair blamed the plot code's first
+  `data.map`; second opinion below).
+- **Notes.** Up to three "what changed" lines with counts per column, first in the list,
+  the status left as the render earns it: integers past 2^53, timestamps cut to the
+  millisecond, timestamps converted to UTC (`notes.offset_note`).
+- **Errors.** `error_summary` with the run form names a line on the loader as the data
+  loader and drops a line past the code's end (JS-3's findings).
+- **Prompt.** `prompts/adapter_javascript.md` fills every slot. Measured in the JS-2
+  renderer image before it was written: D3's `scaleUtc` with `utcFormat`, ECharts'
+  `useUTC` with a `time` axis and Highcharts' `datetime` axis show the dates in UTC (the
+  exported page runs in the user's time zone); the page has no Chart.js date adapter, so a
+  `type: "time"` axis fails the render and the prompt puts dates on a category or linear
+  axis, the category labels sliced from the cell (`slice(0, 10)`, `slice(11, 16)`),
+  because a timestamp cell is the whole ISO string (the end-to-end check below found
+  `01T07:00:00.000Z.01.2025` where the first draft reversed the cell's parts); Highcharts writes `8k` and a space for thousands unless its labels go through the
+  `fmt` helper, which every value axis uses. The idioms pass both validator profiles per
+  library and render 3200x1800 in both themes from a table with missing cells and a column
+  name with a quote and a backslash (`test_profile_javascript_image.py`, skipped without
+  the image).
+- **Scope judge.** Its `other_library` example was "JavaScript with Chart.js", which the
+  chat now adapts: it is MATLAB now, outside the catalogue (the test said the step that
+  serves Chart.js changes it).
+- **Fixtures.** 240 cases (`*-chartjs-*`, `*-d3-*`, `*-echarts-*`, `*-highcharts-*`) and
+  one smoke case each; all forty matrix files are `coupled`. Across the catalogue 306 of
+  321 Chart.js, 311 of 325 D3, 311 of 325 ECharts and 310 of 323 Highcharts files are
+  eligible, none `clean`.
+- **Deploy.** The renderer's candidate smoke renders a Chart.js chart from a typed table
+  and refuses the promotion when it fails, like the Makie render. The agents image's CI
+  step scans through the runtime and the image carries `adapter_javascript.md`.
+- **Docs.** `docs/concepts/agent-network.md` lost J2b's eight lines about Makie in the
+  merge of JS-1 (#12465); JS-4a restores them with its own.
+- **End to end without a model** (2026-10-30, the JS-2 renderer image through the local
+  Docker backend): a pasted table of 60 rows with a text group, two number columns with a
+  gap, a timestamp column with `+01:00`, microseconds and two gaps, and an integer column
+  past 2^53, through the parser, each library's prompt-idiom form, the loader, the typed
+  table and the host gates: all four libraries pass R1 to R3 in both themes, 3200x1864
+  with the footer strip, 1.2 to 1.6 s per two-theme job; the notes count 60 integers, 57
+  cut timestamps and 58 converted ones.
+
+| Text above (3f) | Built | Why |
+|---|---|---|
+| Fixtures for Chart.js, D3 and ECharts first; Highcharts behind the switch | all four libraries | question 6 decided on 2026-10-30 |
+| The deploy smoke's Chart.js render as a gate | a gate, and the page reads the job's typed table | the deploy proves the data path every agent job takes |
+| `+null === 0` warned in the prompt | `+null`, `Number(null)`, `null * 2`, `String(null)` and `Math.max` named, with the filter before any conversion | JS-3's lollipop finding |
+| Not in the text | time axes in UTC; Chart.js on a category or linear axis | measured: the exported page runs in the user's zone, and the page has no date adapter |
 
 ### 4. plotly and bokeh (through the JavaScript harness's Chromium)
 
@@ -2600,6 +2671,30 @@ reproduced that night, and "measured" one that JS-1 measured.
 | Renders take 0.5 to 0.7 s; all 1,617 files in about 20 minutes; the image grows by 0.6 to 0.7 GB | Fable | Measured in JS-1: wall p50 1.2 s with the container's start, under 10 minutes four at a time, +565 MB |
 | Bake a fontconfig cache after the renderer's fonts | Gemini | Not measured; Chromium, R and Julia scan the fonts in every render today |
 
+## Second opinion on JS-4a (Gemini 4 Argon and Fable, 2026-10-30)
+
+The owner asked for JS-4 "mit Zweitmeinung"; both reviewed the JS-4a diff before its PR.
+Both: sound with changes, nothing that widens the boundary, the data path correct in
+every render path. Each finding was checked against the code before it was adopted.
+
+| Finding | From | Change |
+|---|---|---|
+| A JavaScript loader note passes the 200-character change-note cap with 64-character column names (measured 201 to 208), which `PlotResult.changes` refuses | Gemini | `counted_note` cuts the first column's name with an ellipsis when even it does not fit, for every language; a test at the limits for R, Julia and JavaScript |
+| A cell the typing cannot hold left the page without a table, and the repair blamed the plot code's first `data.map` | both | `data_json` raises, the pipeline drops the kinds, the loader refuses the run form with its reason |
+| The shared palette paragraph tells the adapter to append to a list that catalogue JavaScript does not have, and to put `INK_MUTED` after it | both | `palette_literal` states the closed case (`t.palette` holds all eight, never a list of your own, `INK_MUTED` after the token lines); a shared palette slot is left for the next `adapter.md` revision |
+| `new Date(null)` is 1970 and a string method throws on `null`; the date idioms map before filtering | Gemini | The `null` list names both, and the dates slot filters `d[DAY] != null` first |
+| Text from the data into `innerHTML` or an HTML tooltip runs as markup in the exported page | Gemini | The safe-code slot sends data text to `textContent` or the library's plain text |
+| The deploy gate is right, but a failed render answers 200, which curl's retries never see | both | A second try 30 s later; each failure prints the exit code, the reason, the attempts and the stderr tail |
+| `fmt(-0.001, 2)` writes `-0,00`; `reduce` without a start throws on an empty table | Gemini; Fable | `fmt` rounds before the sign; the highlight's `reduce` starts at `null` |
+| The root prompt names the R and Julia "converts" notes nowhere | Gemini | One line for "R converts", "Julia converts" and "JavaScript converts" |
+| The pipeline leg (`_attempts` to the job, the version and the toggle) had no test | Fable | A service-flow test with a D3 session through the fake backend |
+| Not adopted: `normalise` and `validate` ignore their `library` argument | Gemini | The runtime is bound to its library, as `JuliaRuntime` is |
+| Not adopted: the image checks name one library file per language | Gemini | The Dockerfile copies `prompts/library/` whole; one file per language is the existing pattern |
+| Open until JS-4b: the export header and the root prompt name `plot.html`, which JS-4a does not ship | Fable | Admin-only until then; JS-4b is next |
+
+Cost: Gemini 4 Argon $1.45 (5 turns, 881,600 input tokens, 647,916 cached); Fable about
+157,000 tokens.
+
 ## Open questions for the owner
 
 Defaults apply until answered; each is marked where the plan uses it.
@@ -2661,7 +2756,10 @@ Defaults apply until answered; each is marked where the plan uses it.
    Default: measure first.
 6. **Highcharts licence** for user plots is an open decision in the design; admin-only
    use stays as today. Default: Highcharts ships behind the same `AGENT_LIBRARIES`
-   switch and is not enabled until decided.
+   switch and is not enabled until decided. **Decided (owner, 2026-10-30): Highcharts is
+   served like the other libraries**, under Highcharts' non-commercial licence, as long as
+   the site charges nothing; the decision is revisited before any revenue (advertising, a
+   sponsorship, a paid tier). JS-4a enables it with Chart.js, D3 and ECharts.
 7. **The 80 % matrix gate** per library needs the owner's Vertex run (Todoist task per
    library). Default: the gate stays.
 8. **Non-Python validator** as a tree-sitter deny list (four grammar wheels in the

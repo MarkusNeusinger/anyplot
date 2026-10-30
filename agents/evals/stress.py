@@ -57,7 +57,7 @@ from agents.anyplot.code.edits import apply_plan, new_literal_chars
 from agents.anyplot.code.loader import ISO_DATES, ROUND_TRIP, loader_arguments, na_values, round_trip
 from agents.anyplot.code.regions import find_regions
 from agents.anyplot.data.bindings import check_bindings, default_bindings
-from agents.anyplot.data.kinds import column_kinds
+from agents.anyplot.data.kinds import read_kinds
 from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParsedDataset, ParseError, parse_dataset
 from agents.anyplot.data.transcribe import looks_like_free_text, transcribable
 from agents.anyplot.opening import assess, dataset_judge_inputs
@@ -423,13 +423,20 @@ async def _standin(
     standin["check"] = "ok"
     runtime = runtime_for(case.library, cpu_seconds=context.settings.render_timeout_s)
     columns = [column.name for column in parsed.profile.columns]
-    run_form = runtime.loader_block(
-        runtime.normalise(working, case.library),
-        columns=columns,
-        dtypes=dict(parsed.column_dtypes),
-        parse_dates=list(parsed.parse_dates),
-        kinds=dict(column_kinds(parsed.csv, parsed.column_dtypes, parsed.parse_dates)),
-    )
+    try:
+        kinds = read_kinds(parsed.csv, parsed.column_dtypes, parsed.parse_dates)
+        # A cell the typed table cannot hold raises here, as in the pipeline, where the loader then refuses.
+        data_json = runtime.data_json(parsed.csv, kinds)
+        run_form = runtime.loader_block(
+            runtime.normalise(working, case.library),
+            columns=columns,
+            dtypes=dict(parsed.column_dtypes),
+            parse_dates=list(parsed.parse_dates),
+            kinds=dict(kinds.kinds),
+        )
+    except ValueError:
+        record["status"] = "loader_failed"
+        return
     job = RenderJob(
         job_id=secrets.token_hex(8),
         language=runtime.language,
@@ -438,6 +445,7 @@ async def _standin(
         data_csv=parsed.csv,
         themes=("light",),
         timeout_s=float(context.settings.render_timeout_s),
+        data_json=data_json,
     )
     record["stage"] = "render"
     started = time.monotonic()

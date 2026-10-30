@@ -206,6 +206,10 @@ class PythonRuntime:
         """None: `Int64`, `float64` with `float_precision="round_trip"` and the parsed datetimes keep every cell."""
         return []
 
+    def data_json(self, csv_text: str, kinds: ColumnKinds | None) -> str | None:
+        """None: the plot code reads `data.csv` itself."""
+        return None
+
     def validate(self, code: str, library: str) -> list[str]:
         return [f"{finding.rule}: {finding.message}" for finding in validate_security(code, library=library)]
 
