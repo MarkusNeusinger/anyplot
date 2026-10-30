@@ -7,7 +7,7 @@ import { LibraryCoverage } from 'src/sections/debug/LibraryCoverage';
 import { ProblemAreas } from 'src/sections/debug/ProblemAreas';
 import { RecentActivity } from 'src/sections/debug/RecentActivity';
 import { SystemHealthRow } from 'src/sections/debug/SystemHealthRow';
-import { render, screen } from 'src/test-utils';
+import { render, screen, userEvent, within } from 'src/test-utils';
 
 describe('SystemHealthRow', () => {
   afterEach(() => {
@@ -90,7 +90,8 @@ describe('KPIGrid', () => {
 });
 
 describe('DailyActivityChart', () => {
-  it('renders activity header, date range endpoints, and handles empty data', () => {
+  it('renders activity header, date range endpoints, bar tooltip on hover, and handles empty data', async () => {
+    const user = userEvent.setup();
     const { rerender } = render(
       <DailyActivityChart
         data={[
@@ -106,8 +107,14 @@ describe('DailyActivityChart', () => {
     expect(screen.getByText('2026-05-01')).toBeInTheDocument();
     expect(screen.getByText('2026-05-30')).toBeInTheDocument();
 
+    const bar = screen.getByLabelText('2026-05-02: 12 impls');
+    await user.hover(bar);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('2026-05-02: 12 impls');
+
     rerender(<DailyActivityChart data={[]} />);
-    expect(screen.getByText('daily activity')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/impls$/)).not.toBeInTheDocument();
+    expect(screen.queryByText('2026-05-01')).not.toBeInTheDocument();
+    expect(screen.queryByText('2026-05-30')).not.toBeInTheDocument();
   });
 });
 
@@ -251,10 +258,21 @@ describe('ProblemAreas', () => {
     );
 
     expect(screen.getByText('problem areas')).toBeInTheDocument();
-    expect(screen.getByText('low scores (avg < 90)')).toBeInTheDocument();
-    expect(screen.getByText('missing previews')).toBeInTheDocument();
-    expect(screen.getByText('missing tags')).toBeInTheDocument();
-    expect(screen.getByText('oldest specs')).toBeInTheDocument();
+    const lowScoresSection = screen.getByText('low scores (avg < 90)').closest('summary');
+    expect(lowScoresSection).not.toBeNull();
+    expect(within(lowScoresSection as HTMLElement).getByText('2')).toBeInTheDocument();
+
+    const missingPreviewsSection = screen.getByText('missing previews').closest('summary');
+    expect(missingPreviewsSection).not.toBeNull();
+    expect(within(missingPreviewsSection as HTMLElement).getByText('0')).toBeInTheDocument();
+
+    const missingTagsSection = screen.getByText('missing tags').closest('summary');
+    expect(missingTagsSection).not.toBeNull();
+    expect(within(missingTagsSection as HTMLElement).getByText('1')).toBeInTheDocument();
+
+    const oldestSpecsSection = screen.getByText('oldest specs').closest('summary');
+    expect(oldestSpecsSection).not.toBeNull();
+    expect(within(oldestSpecsSection as HTMLElement).getByText('0')).toBeInTheDocument();
 
     const scatterLink = screen.getByRole('link', { name: /scatter-basic/ });
     expect(scatterLink).toHaveAttribute('href', '/scatter-basic');
