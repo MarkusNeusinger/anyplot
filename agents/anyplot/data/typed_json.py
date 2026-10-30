@@ -25,11 +25,11 @@ The value of a cell follows its column's kind:
 * `date`: the cell verbatim, `YYYY-MM-DD`.
 * `datetime`: an ISO string in UTC with milliseconds, `2024-01-31T07:00:00.000Z`, which
   `new Date(...)` reads as the same instant everywhere. A cell with an offset or `Z` is
-  converted to UTC (`ColumnKinds.offset` counts the cells that moves to another clock
-  time); a cell without one is read as written, as UTC, as R's and Julia's
+  converted to UTC (`ColumnKinds.offset` counts the cells the conversion moves to another
+  clock time); a cell without one is read as written, as UTC, as R's and Julia's
   loaders read it; a plain date in a timestamp column is its midnight. The fraction is
   truncated to milliseconds, which a JavaScript `Date` holds; `ColumnKinds.submillisecond`
-  counts the cells that changes. A cell that UTC would move outside the years 1 to 9999
+  counts the cells the truncation changes. A cell that UTC would move outside the years 1 to 9999
   (`0001-01-01T00:30:00+01:00`) raises `ValueError`, which no parse writes in practice.
 * A missing cell (the empty cell, whatever the kind): `null`.
 
