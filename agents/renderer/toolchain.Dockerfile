@@ -345,8 +345,8 @@ COPY --from=node /opt/node /opt/node
 COPY --from=node /opt/pw-browsers /opt/pw-browsers
 COPY --from=node /opt/anyplot/node_modules /opt/anyplot/node_modules
 COPY --from=node /opt/anyplot/js-fonts /opt/anyplot/js-fonts
-COPY --from=node /opt/anyplot/js-render/import-allowlist.json /opt/anyplot/js-render/import-allowlist.json
 COPY automation/js-render/ /opt/anyplot/js-render/
+COPY --from=node /opt/anyplot/js-render/import-allowlist.json /opt/anyplot/js-render/import-allowlist.json
 COPY agents/renderer/toolchain/js-fonts.conf /opt/anyplot/js-fonts.conf
 COPY agents/renderer/toolchain/smoke.js agents/renderer/toolchain/smoke.tsx /opt/anyplot/toolchain/
 

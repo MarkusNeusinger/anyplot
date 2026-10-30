@@ -40,6 +40,18 @@ class AllowlistError(ValueError):
     """A package whose `exports` map cannot be turned into a closed list of specifiers."""
 
 
+def _blocked(target: object) -> bool:
+    """An export target that resolves to nothing under every condition: `null`, or conditions or a fallback array
+    whose every branch is blocked (`{"default": null}`), so the subpath is not importable and stays off the list."""
+    if target is None:
+        return True
+    if isinstance(target, dict):
+        return all(_blocked(value) for value in target.values())
+    if isinstance(target, list):
+        return all(_blocked(value) for value in target)
+    return False
+
+
 def specifiers(name: str, manifest: dict) -> list[str]:
     """The bare specifiers one package's `exports` map admits, sorted."""
     exports = manifest.get("exports")
@@ -55,7 +67,7 @@ def specifiers(name: str, manifest: dict) -> list[str]:
             raise AllowlistError(f"{name} mixes conditions and paths in its exports map ({key!r})")
         if "*" in key:
             raise AllowlistError(f"{name} exports the pattern {key!r}, which a list cannot close")
-        if target is None or key == "./package.json":
+        if _blocked(target) or key == "./package.json":
             continue
         if key == ".":
             found.append(name)

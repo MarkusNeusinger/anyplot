@@ -489,6 +489,18 @@ class TestImportAllowlist:
     def test_one_entry_point(self, exports: object, expected: list[str]) -> None:
         assert _allowlist_module().specifiers("pkg", {"exports": exports}) == expected
 
+    def test_a_subpath_blocked_under_every_condition_is_not_importable(self) -> None:
+        """A `null` target, or conditions and fallback arrays whose every branch is `null`, resolve to nothing."""
+        exports = {
+            ".": "./index.js",
+            "./internal": None,
+            "./hidden": {"default": None},
+            "./nested": {"import": {"default": None}, "require": None},
+            "./fallback": [None, {"default": None}],
+            "./node-only": {"node": "./node.js", "default": None},
+        }
+        assert _allowlist_module().specifiers("pkg", {"exports": exports}) == ["pkg", "pkg/node-only"]
+
     @pytest.mark.parametrize(
         ("manifest", "message"),
         [
