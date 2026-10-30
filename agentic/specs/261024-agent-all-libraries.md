@@ -1075,7 +1075,8 @@ the section at the end): the corrections both reviewers agree on, and those Fabl
 verified, are in the text below; two owner decisions are open (questions 12 and 13), and
 nothing before JS-4 depends on them. Four PRs, none of which serves a library before
 JS-4: JS-1 (the toolchain stage, the command row, the build inputs, the smokes and the
-render sweep; built, see "What JS-1 built"), JS-2 (the harness's sandbox mode), JS-3
+render sweep; built, see "What JS-1 built"), JS-2 (the harness's sandbox mode; built, see
+"What JS-2 built"), JS-3
 (the code profile) and JS-4 (the runtime, the registry, the fixtures and the admin
 deploy). `AGENT_LIBRARIES`, `RUNTIME_LIBRARIES` and the admin deploy's `_LIBRARIES` stay
 as they are until JS-4; the renderer can render a JavaScript job, and the agents service
@@ -1309,6 +1310,188 @@ Also found:
 | `ANYPLOT_NODE_MODULES` and `ANYPLOT_NO_HTML` in the row, the harness unchanged | `ANYPLOT_NODE_MODULES` read by the harness since JS-1; `ANYPLOT_NO_HTML` with JS-2 | the harness at `/opt/anyplot/js-render/` finds no packages two levels up; a variable the harness ignores would only mislead |
 | No font change | Liberation for the JavaScript row alone | the catalogue's stack names Helvetica and Arial; system-wide, the fonts change pygal's and altair's renders |
 | `render_p95_s` 20 s | 15 s | the sweep's wall p95 of 2.4 s; the deployed factor and Chromium's cold start under gVisor are the first deploy's to measure |
+
+#### What JS-2 built (2026-10-30)
+
+Everything in 3d; nothing served. The harness's sandbox mode sits behind environment
+variables that only the JavaScript row sets (`JS_ENV`); the catalogue pipeline sets none
+and renders as before (measured below).
+
+| Variable | What it switches on |
+|---|---|
+| `ANYPLOT_SANDBOX=1` | the page rules, the import plugin, the console guard and the final error line |
+| `ANYPLOT_NO_HTML=1` | no `plot-<theme>.html` |
+| `ANYPLOT_DATA_JSON=<path>` | the typed table as `window.ANYPLOT_DATA`; the executor sets it to `/work/data.json` for a JavaScript job that carries `data_json` |
+| `ANYPLOT_IMPORT_ALLOWLIST=<path>` | the allowlist the import plugin reads (`/opt/anyplot/js-render/import-allowlist.json`, the default next to the harness) |
+
+- **Data.** `agents/anyplot/data/typed_json.py` writes the canonical CSV as
+  `{"columns": [...], "data": [[...], ...]}` (pandas' split orientation; records would
+  repeat every column name in every row), each cell typed by its column's kind: integers
+  as written, numbers as floats, `true` and `false`, text verbatim, dates `YYYY-MM-DD`,
+  datetimes as UTC ISO strings with milliseconds (offsets converted, a cell without one
+  read as UTC as in R and Julia, the fraction truncated), `null` for a missing cell. The
+  counts the runtime announces stay `ColumnKinds.inexact` (JavaScript's `JSON.parse` reads
+  `9007199254740993` as `9007199254740992`) and `ColumnKinds.submillisecond`, which a test
+  pins to the cells the truncation changes. The harness parses the file in Node (a broken
+  one fails as `data DataError` before the browser starts), puts the text into a
+  `<script type="application/json">` element with `<`, U+2028 and U+2029 escaped, and
+  builds one object per row with `.columns` in the page, the shape `d3.csvParse` returns;
+  `Object.fromEntries` keeps a column named `__proto__` an own property. The wire's
+  `RenderRequest.data_json` is optional, at most 16 MiB (`MAX_DATA_JSON_CHARS`, four times
+  the CSV cap; the worst tables at the parser's 20,000 rows and 50 columns measure 9.04
+  million characters), and `422` on a job in another language; the executor writes it as
+  `data.json` next to the code file. The agents side that fills it is JS-4's.
+- **Page rules.** `page.context().route("**/*")` aborts every request,
+  `routeWebSocket("**")` closes every socket, `--block-new-web-contents` makes
+  `window.open` return null, the context has `timezoneId: "UTC"` and blocks service
+  workers, whose requests no route sees. The content security policy is adopted as
+  proposed, with `form-action 'none'; base-uri 'none'` added (Gemini Flash's review of
+  JS-2: neither falls back to `default-src`): every catalogue file renders under it (the
+  sweep), so no library needs `'unsafe-eval'` or `blob:` workers; a blob worker cannot
+  start under it (`worker-src` falls back to `script-src`). The route still matters where
+  the policy does not apply: a top-level navigation (`location.href`) passes the policy
+  and is aborted by the route, after which Chromium's error page replaces the plot and
+  the render fails as `draw NoOutput` (the CI step and a test check it). A page the
+  snippet writes into a `blob:` URL and navigates to passes no route but inherits the
+  policy (hygiene, tested). Preconnect and DNS prefetch hints reach no listener (the
+  closed proxy). From the page's load on, every answer the harness waits for shares one
+  15 s deadline, so a snippet that replaces `requestAnimationFrame` or `document.fonts`
+  fails as `timeout TimeoutError` instead of holding the job to its timeout; the page's
+  own error records cross into Node cut in the page (10,000 characters, the location as
+  two scalars).
+- **WebRTC (found).** Neither the route nor the policy sees WebRTC: a page's
+  `RTCPeerConnection` reached a local STUN server over UDP and a TURN server over TCP.
+  `--force-webrtc-ip-handling-policy=disable_non_proxied_udp` with a proxy on a closed
+  port (`--proxy-server=http://127.0.0.1:9 --proxy-bypass-list=<-loopback>`, the last
+  because a proxy otherwise skips the loopback) leaves no candidate and no connection.
+  Under gVisor there is no network either way; the flags keep the page's rules whole.
+- **Console (found).** Playwright keeps a page's recent console messages in Node whether
+  or not a listener reads them, so a cap on the harness's own list did not bound Node:
+  400,000 one-line errors held 1.3 GB in Node and took 18 s, and 100 errors of 10 MB each
+  ended Node with "Invalid string length" inside Playwright's close handler, after the
+  harness's own output. A guard in the page (the context script for the main frame, an
+  init script for every child frame, one counter on the top window) lets the first five
+  `console.error` calls leave the page, each argument cut to 300 characters, counts the
+  rest and silences the other console methods: both floods take 1.4 s and 150 MiB.
+  Chromium's `console.context()` returned a fresh console past the guard (20 of 20 of its
+  errors reached Node, found after Gemini Flash's review asked whether the guard could be
+  bypassed); it now returns the guarded console. The console's prototype is empty, so
+  `delete console.error` leaves nothing to call; the console is not frozen, since a
+  library may assign its methods. The guard and the page's error listeners run before
+  `window.ANYPLOT_DATA` is built, so a failure there is caught like the snippet's.
+  Messages the browser writes itself pass by it: 200,000 refused `fetch` calls took 20 s
+  (Node 194 MiB, Chromium 721 MiB), which the timeout and the watchdog bound. The
+  summary prints at most five messages and the count, on success and on failure.
+- **Memory flags, measured** (the toolchain image, 2 CPUs, 4 GiB, the row's environment):
+
+  | Runaway in the page | `--js-flags=--max-old-space-size=1024` | without |
+  |---|---|---|
+  | an array of arrays | `crash PageCrashed` after 3.8 s, container peak 1,620 MiB | crash after 8.4 s, 3,345 MiB |
+  | strings | `crash PageCrashed` after 15.6 s, 1,235 MiB | 4,096 MiB (the container's limit), then `setContent`'s 30 s timeout |
+  | typed arrays | `page RangeError` (array buffer allocation failed) after 2.1 s, 214 MiB | the same |
+
+  Adopted: 1,024 MiB for the page, which ends a runaway of JavaScript objects well
+  before the renderer's `MemAvailable` floor (512 MiB of 4 GiB) and holds the catalogue's
+  heaviest render (MUI X `bifurcation-basic`, 1,108 MiB for the whole container). It
+  bounds the V8 heap only: Fable's review allocated 3 GiB of `ArrayBuffer`s under it, so
+  the watchdog stays the bound on the run's memory. Not adopted: Node's
+  `--max-old-space-size`. At 256 MiB Node aborted the console flood with a core dump
+  (exit 134) and no final line, and with the guard Node stays near 150 MiB, because it
+  runs only the harness. `--disable-dev-shm-usage` and `--disable-gpu` are not adopted
+  either: no render in the sweep needed them, and the headless shell draws without a GPU;
+  JS-1's deploy smoke measures Chromium under gVisor first.
+- **esbuild.** An `onResolve` plugin admits from the snippet only the allowlist's bare
+  specifiers, resolved from the packages, and refuses relative, absolute, `node:` and URL
+  imports, `require` calls and literal dynamic imports included (`import ImportRefused
+  plot.tsx:<line>`). The packages' own imports resolve as before (a nested
+  `build.resolve` per import cost 2.5 s for one chart's 3,391 imports). An `onLoad` hook
+  sees every file esbuild would read and refuses any outside `ANYPLOT_NODE_MODULES` before
+  it is read: Fable's review showed that an import with a template
+  (``import(`../etc/${name}`)``) matches a directory's files without the resolve hook, so
+  esbuild read every file under `/etc`, and the build error quoted a file's first word.
+  The metafile check of every bundled file stays as the backstop, and an esbuild error
+  about a file outside the snippet and the packages no longer quotes its text. The hook
+  also hands esbuild the snippet without its `sourceMappingURL` comments, lines kept:
+  with the bundle's source map on, esbuild reads an input's own map, and
+  `//# sourceMappingURL=/dev/zero` held a render for 32 s (Fable). Unused imports are
+  dropped by esbuild before resolution, so only an import the snippet uses is refused. `absWorkingDir` and `resolveDir` are the
+  packages' parent where `ANYPLOT_NODE_MODULES` is set (`/opt/anyplot`, no longer `/opt`;
+  the Gemini Flash finding on #12465). The bundle stays minified; an external source map,
+  no comment in the bundle, maps a MUI X error's frame back to the snippet's line.
+- **The final error line**, the last line on stderr after the bounded summary, for JS-3's
+  error profile: `render: error: <kind> <Class> <file>:<line>: <message>`, or `-` without
+  a line in the snippet. `<kind>` is one of `page` (an uncaught error in the page),
+  `import` (`ImportRefused`, `ImportNotFound`: esbuild's "Could not resolve" and "No
+  matching export"), `build` (`SyntaxError` in the snippet, `BuildError` elsewhere),
+  `draw` (`NoOutput`), `crash` (`PageCrashed`), `data` (`DataError`), `timeout`
+  (`TimeoutError`) and `harness` (anything else, `UsageError`, `AllowlistError`);
+  `<Class>` an identifier, the error's own name for `page`; `<file>` the code file's name
+  (`plot.js`, `plot.tsx`); `<message>` at most 200 characters on one line, which can
+  quote the user's data, so the profile reads the kind, the class and the line. Measured:
+  the snippet's `<script>` starts two lines before it (a line break and `try {`), so a
+  throw on line 4 is reported at line 6, not at 5 as 3e says; the harness subtracts the
+  offset, names the script's frames with `//# sourceURL=plot.js` apart from the bundle's,
+  and takes a snippet that does not parse from the window's error event (setContent
+  writes the page with `document.write`, which names `about:blank` and prefixes the
+  message). An uncaught exception outside the render's chain (Playwright's own) ends with
+  the line too.
+
+**The sweep in sandbox mode**: all 1,617 catalogue JavaScript files through the row of
+the built image, its environment with the sandbox variables, no data injection, four at a
+time at 2 CPUs and 4 GiB, compared file by file with JS-1's sweep:
+
+| | JS-1 | JS-2 |
+|---|---|---|
+| Rendered | 1,565 of 1,617 | the same 1,565 (Chart.js 321, D3 325, ECharts 325, Highcharts 323, MUI X 271) |
+| Failed | 52 MUI X 7.29 files | the same 52, now `import ImportRefused plot.tsx:<line>` for the 51 that import `@mui/x-charts/ChartContainer` (not on the allowlist) and `import ImportNotFound` for the one that imports it from the root |
+| PNG byte for byte as JS-1's | | 1,560 of 1,565; the other 5 are ECharts files whose PNG varies between renders in one image (below) |
+| Wall time, container start included | p50 1.18 s, p95 2.44 s, max 10.1 s | p50 1.17 s, p95 1.82 s, p99 3.73 s, max 6.1 s (MUI X `contour-filled`); per library p95 1.2 to 1.3 s, ECharts 3.7 s, MUI X 2.0 s |
+| CPU time | p50 0.7 s, p95 1.1 s | p50 0.72 s, p95 0.93 s |
+| Memory | the container p50 372 MiB, p95 440 MiB, max 1,178 MiB; the largest process p95 159 MiB | the container p50 372 MiB, p95 507 MiB, max 1,104 MiB (MUI X `bifurcation-basic`); the largest process p95 184 MiB |
+
+The five ECharts files differ between renders in either image: rendered three times in
+each, `network-force-directed` (the force layout starts from random positions) gave a new
+PNG every time, and `eye-diagram-basic`, `manhattan-gwas`, `spectrogram-mel` and
+`treemap-basic` one or two PNGs each, the same in both images. No library needs a change
+of the page rules or the policy, and no new failure appeared. The whole sweep ran with
+the import plugin's first form, a nested resolve per import, which took MUI X's wall p50
+from 1.5 to 4.3 s; MUI X's 323 files ran again with the metafile check (the numbers
+above): the same 271 renders and 52 failures, every PNG as JS-1's. After the reviews'
+fixes (the `onLoad` gate, the policy's `form-action` and `base-uri`) they ran a third
+time: the same 271 renders and 52 failures, every PNG as JS-1's, wall p50 1.78 s and
+p95 2.01 s. No catalogue file has a form or a `<base>`, which alone the policy's addition
+could touch.
+
+**The pipeline without the variables**: 50 catalogue files (10 per library, a seeded
+sample with two of the MUI X 7.29 failures) rendered by JS-1's harness and by this one
+with no variable set: the 48 HTML pages and PNGs byte for byte the same, the two failures
+the same failures, and the output on stdout and stderr the same once the temporary
+directory's name and the harness's own line numbers are normalised. The host test module
+pins it byte for byte: without a variable, the page for the build smoke's Chart.js file
+equals the page JS-1's harness wrote, stored with the bundle and the snippet as
+placeholders (`tests/unit/automation/fixtures/js-render-page-light.html`).
+
+**Tests**: `tests/unit/agents/data/test_typed_json.py` (28 cases),
+`tests/unit/automation/test_js_render_sandbox.py` (32 cases, rendered through Node and
+Chromium, skipped where `node`, the lock's packages or the browser are missing: a clean
+Chart.js and MUI X render, the pipeline's page byte for byte, every way out of the page
+against a local HTTP and UDP listener with and without the sandbox mode, preconnect and
+DNS prefetch included, a navigation, a `blob:` navigation, a page that never settles,
+UTC, the console cap and `console.context`, the import refusals, an import with a
+template over a sibling directory, a source map comment, the data round trip with
+`</script>` and the line separators in a cell, a huge error record, the final error
+line), the renderer's row, wire and executor tests, and the CI step in
+`ci-image.yml`, which renders through the row in the built image: the two catalogue files
+without an interactive page, the data injection, the route's abort of a navigation and
+the plugin's refusal of `/etc/os-release`.
+
+| Text above | Built | Why |
+|---|---|---|
+| 3d: Gemini's policy and flags measured before any is adopted | the policy and `--js-flags=--max-old-space-size=1024` adopted; Node's heap cap, `--disable-dev-shm-usage` and `--disable-gpu` not | every catalogue file renders under the policy; the measurements above |
+| 3d: the route, `routeWebSocket` and `--block-new-web-contents` | also the WebRTC policy with a closed proxy, blocked service workers, a console guard in the page, an `onLoad` gate on every file esbuild reads and one deadline for the page's answers | WebRTC passes the route and the policy, Playwright buffers console messages in Node, an import with a template reads files without the resolve hook (measured; the last two by the reviews of JS-2) |
+| 3d: console errors capped in count and bytes | capped in the page as well | the harness's cap alone left Node at 1.3 GB |
+| 3e: the snippet's offset is exactly 1; MUI X errors name the class only | the offset is 2, and the harness subtracts it; MUI X errors name the snippet's line through the source map | measured; JS-3 reads `<file>:<line>` as printed |
+| 3d: `window.ANYPLOT_DATA` with `<` escaped | the split orientation in a JSON element, one object per row with `.columns` in the page | the column names travel once, not in every row, and no `__proto__` key becomes a prototype |
 
 ### 4. plotly and bokeh (through the JavaScript harness's Chromium)
 

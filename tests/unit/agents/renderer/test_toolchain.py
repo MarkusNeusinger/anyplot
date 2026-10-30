@@ -422,6 +422,19 @@ class TestNode:
         for name in ("smoke.js", "smoke.tsx"):
             assert (TOOLCHAIN_DIR / name).is_file(), name
         assert '"@mui/x-charts/BarChart"' in (TOOLCHAIN_DIR / "smoke.tsx").read_text(encoding="utf-8")
+        assert "&& test ! -e plot-light.html" in smoke  # the row's ANYPLOT_NO_HTML
+
+    def test_ci_renders_through_the_sandbox_mode_in_the_built_image(self) -> None:
+        """JS-2: the image's CI step renders through the row, whose environment switches the sandbox mode on, and
+        checks the data injection, the route and the import plugin there, where no host test can."""
+        workflow = (REPO_ROOT / ".github" / "workflows" / "ci-image.yml").read_text(encoding="utf-8")
+        step = workflow[workflow.index("- name: Render Chart.js and MUI X plots through the harness in exec mode") :]
+        step = step[: step.index("\n      - name:", 1)]
+        assert 'test ! -e "work-js/$library/plot-light.html"' in step
+        assert "-e ANYPLOT_DATA_JSON=/work/data.json" in step and "window.ANYPLOT_DATA" in step
+        assert "grep -qxF 'render: refused 1 request(s) and 0 WebSocket(s)'" in step
+        assert 'import text from "/etc/os-release";' in step
+        assert "render: error: import ImportRefused plot.tsx:1:" in step
 
 
 def _allowlist_module():

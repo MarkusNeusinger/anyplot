@@ -275,7 +275,9 @@ class RemoteBackend:
                     "themes": list(job.themes),
                     "timeout_s": job.timeout_s,
                 }
-            ).model_dump(mode="json")
+            ).model_dump(mode="json", exclude_none=True)
+            # An optional field left empty stays out of the body: the agents service deploys before the renderer, whose
+            # request model forbids fields it does not know yet, so a `"data_json": null` would fail every render there.
         except ValidationError as exc:
             fields = ",".join(sorted({str(error["loc"][0]) for error in exc.errors() if error["loc"]}))
             raise _unavailable(f"the job does not fit the renderer contract ({fields})") from None
