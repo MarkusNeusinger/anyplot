@@ -568,3 +568,311 @@ describe('DebugPage agent usage', () => {
     ]);
   });
 });
+
+describe('DebugPage spec matrix and feedback triage', () => {
+  const TRIAGE_SPECS = [
+    {
+      id: 'bar-grouped',
+      title: 'Zebra Bar Chart',
+      updated: '2026-02-20T12:00:00',
+      avg_score: 84.5,
+      altair: 95,
+      bokeh: 95,
+      chartjs: 95,
+      d3: 95,
+      echarts: 95,
+      ggplot2: 95,
+      highcharts: 95,
+      letsplot: 95,
+      makie: 95,
+      matplotlib: 95,
+      muix: 95,
+      plotly: 95,
+      plotnine: 95,
+      pygal: 95,
+      seaborn: 78,
+    },
+    {
+      id: 'heatmap-annotated',
+      title: 'Alpha Heatmap',
+      updated: '2026-03-10T12:00:00',
+      avg_score: 91.0,
+      altair: null,
+      bokeh: null,
+      chartjs: null,
+      d3: null,
+      echarts: null,
+      ggplot2: null,
+      highcharts: null,
+      letsplot: null,
+      makie: null,
+      matplotlib: 91,
+      muix: null,
+      plotly: null,
+      plotnine: null,
+      pygal: null,
+      seaborn: null,
+    },
+    {
+      id: 'scatter-basic',
+      title: 'Middle Scatter',
+      updated: '2026-01-15T12:00:00',
+      avg_score: 96.0,
+      altair: 96,
+      bokeh: 96,
+      chartjs: 96,
+      d3: 96,
+      echarts: 96,
+      ggplot2: 96,
+      highcharts: 96,
+      letsplot: 96,
+      makie: 96,
+      matplotlib: 96,
+      muix: 96,
+      plotly: 96,
+      plotnine: 96,
+      pygal: 96,
+      seaborn: 96,
+    },
+  ];
+
+  const TRIAGE_MESSAGES = [
+    {
+      id: 'fb-1',
+      message: 'Axis labels overlap on mobile',
+      reaction: 'bug',
+      contact: 'alice@example.com',
+      path: '/scatter-basic',
+      spec_id: 'scatter-basic',
+      viewport: '375x812',
+      status: 'new' as const,
+      created_at: '2026-05-21T09:00:00',
+    },
+  ];
+
+  beforeEach(({ onTestFinished }) => {
+    vi.clearAllMocks();
+    sessionStorage.clear();
+    onTestFinished(() => {
+      sessionStorage.clear();
+      vi.useRealTimers();
+      vi.unstubAllGlobals();
+    });
+  });
+
+  function renderedSpecOrder(): string[] {
+    const knownIds = new Set(TRIAGE_SPECS.map(s => s.id));
+    return screen
+      .getAllByRole('link')
+      .map(link => link.textContent ?? '')
+      .filter(text => knownIds.has(text));
+  }
+
+  function expectSortState(
+    activeCol: 'spec id' | 'title' | 'avg' | 'updated',
+    dir: 'asc' | 'desc',
+    expectedOrder: string[]
+  ) {
+    expect(renderedSpecOrder()).toEqual(expectedOrder);
+    const arrow = dir === 'asc' ? '▲' : '▼';
+    for (const label of ['spec id', 'title', 'avg', 'updated'] as const) {
+      const btn = screen.getByRole('button', { name: new RegExp(`^${label}`) });
+      if (label === activeCol) {
+        expect(btn).toHaveTextContent(arrow);
+      } else {
+        expect(btn).not.toHaveTextContent(/[▲▼]/);
+      }
+    }
+  }
+
+  function stubPageFetch(options?: { patchStatus?: () => number }) {
+    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
+      if (url.includes('/debug/ping')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              database_connected: true,
+              response_time_ms: 10,
+              timestamp: '2026-05-21T12:00:00',
+            }),
+        });
+      }
+      if (url.includes('/debug/agent-usage')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              status: 'not_configured',
+              days: 7,
+              sessions: 0,
+              plots_shipped: 0,
+              kept_rate: null,
+              kept_sessions: 0,
+              shipped_sessions: 0,
+              repair_rate: null,
+              repaired_runs: 0,
+              runs: 0,
+              top_specs: [],
+              top_formats: [],
+              top_refusals: [],
+              generated_at: '2026-05-21T12:00:00',
+            }),
+        });
+      }
+      if (url.includes('/debug/agent/cases')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ items: [], has_more: false }),
+        });
+      }
+      if (url.includes('/debug/feedback/messages')) {
+        const parsed = new URL(url, 'https://api.anyplot.ai');
+        const status = parsed.searchParams.get('status');
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(status === 'open' ? TRIAGE_MESSAGES : []),
+        });
+      }
+      if (url.includes('/debug/feedback/top')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }
+      if (init?.method === 'PATCH') {
+        const status = options?.patchStatus?.() ?? 200;
+        return Promise.resolve({
+          ok: status >= 200 && status < 300,
+          status,
+          json: () => Promise.resolve({ status: 'ok' }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            ...mockDebugData,
+            total_specs: TRIAGE_SPECS.length,
+            specs: TRIAGE_SPECS,
+          }),
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return fetchMock;
+  }
+
+  it('sorts specs by each sortable header with per-column default direction and toggles on second click', async () => {
+    stubPageFetch();
+    render(<DebugPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('3 / 3')).toBeInTheDocument();
+    });
+
+    // Initial sort is updated descending
+    expectSortState('updated', 'desc', ['heatmap-annotated', 'bar-grouped', 'scatter-basic']);
+
+    // Second click on updated toggles to ascending
+    fireEvent.click(screen.getByRole('button', { name: /^updated/ }));
+    expectSortState('updated', 'asc', ['scatter-basic', 'bar-grouped', 'heatmap-annotated']);
+
+    // Clicking spec id defaults to ascending, second click toggles to descending
+    fireEvent.click(screen.getByRole('button', { name: /^spec id/ }));
+    expectSortState('spec id', 'asc', ['bar-grouped', 'heatmap-annotated', 'scatter-basic']);
+
+    fireEvent.click(screen.getByRole('button', { name: /^spec id/ }));
+    expectSortState('spec id', 'desc', ['scatter-basic', 'heatmap-annotated', 'bar-grouped']);
+
+    // Clicking title defaults to ascending, second click toggles to descending
+    fireEvent.click(screen.getByRole('button', { name: /^title/ }));
+    expectSortState('title', 'asc', ['heatmap-annotated', 'scatter-basic', 'bar-grouped']);
+
+    fireEvent.click(screen.getByRole('button', { name: /^title/ }));
+    expectSortState('title', 'desc', ['bar-grouped', 'scatter-basic', 'heatmap-annotated']);
+
+    // Clicking avg defaults to descending, second click toggles to ascending
+    fireEvent.click(screen.getByRole('button', { name: /^avg/ }));
+    expectSortState('avg', 'desc', ['scatter-basic', 'heatmap-annotated', 'bar-grouped']);
+
+    fireEvent.click(screen.getByRole('button', { name: /^avg/ }));
+    expectSortState('avg', 'asc', ['bar-grouped', 'heatmap-annotated', 'scatter-basic']);
+
+    // Clicking updated from another column defaults to descending
+    fireEvent.click(screen.getByRole('button', { name: /^updated/ }));
+    expectSortState('updated', 'desc', ['heatmap-annotated', 'bar-grouped', 'scatter-basic']);
+  });
+
+  it('narrows rows with incomplete and low-score filters and restores them on second click', async () => {
+    stubPageFetch();
+    render(<DebugPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('3 / 3')).toBeInTheDocument();
+    });
+
+    const incompleteBtn = screen.getByRole('button', { name: /incomplete <15/i });
+    fireEvent.click(incompleteBtn);
+    expect(screen.getByText('1 / 3')).toBeInTheDocument();
+    expect(renderedSpecOrder()).toEqual(['heatmap-annotated']);
+
+    fireEvent.click(incompleteBtn);
+    expect(screen.getByText('3 / 3')).toBeInTheDocument();
+    expect(renderedSpecOrder()).toEqual(['heatmap-annotated', 'bar-grouped', 'scatter-basic']);
+
+    const lowScoresBtn = screen.getByRole('button', { name: /low scores <90/i });
+    fireEvent.click(lowScoresBtn);
+    expect(screen.getByText('1 / 3')).toBeInTheDocument();
+    expect(renderedSpecOrder()).toEqual(['bar-grouped']);
+
+    fireEvent.click(lowScoresBtn);
+    expect(screen.getByText('3 / 3')).toBeInTheDocument();
+    expect(renderedSpecOrder()).toEqual(['heatmap-annotated', 'bar-grouped', 'scatter-basic']);
+  });
+
+  it('patches feedback status with X-Admin-Token, reverts on 500, and refetches when status filter changes', async () => {
+    sessionStorage.setItem('anyplot.adminToken', 'admin-secret');
+    let nextPatchStatus = 200;
+    const fetchMock = stubPageFetch({ patchStatus: () => nextPatchStatus });
+
+    render(<DebugPage />);
+
+    const msgText = await screen.findByText('Axis labels overlap on mobile');
+    const msgRow = msgText.parentElement?.parentElement;
+    expect(msgRow).not.toBeNull();
+    const statusSelect = within(msgRow as HTMLElement).getByRole('combobox');
+    expect(statusSelect).toHaveValue('new');
+
+    fireEvent.change(statusSelect, { target: { value: 'done' } });
+    expect(statusSelect).toHaveValue('done');
+
+    await waitFor(() => {
+      const patchCalls = fetchMock.mock.calls.filter(call => call[1]?.method === 'PATCH');
+      expect(patchCalls).toHaveLength(1);
+    });
+    const [patchUrl, patchInit] = fetchMock.mock.calls.find(call => call[1]?.method === 'PATCH')!;
+    expect(patchUrl).toMatch(/\/debug\/feedback\/fb-1$/);
+    expect(patchInit?.body).toBe(JSON.stringify({ status: 'done' }));
+    expect((patchInit?.headers as Record<string, string>)?.['X-Admin-Token']).toBe('admin-secret');
+
+    // When PATCH answers 500, the select reverts to the previous status
+    nextPatchStatus = 500;
+    fireEvent.change(statusSelect, { target: { value: 'wont_solve' } });
+    await waitFor(() => {
+      expect(statusSelect).toHaveValue('done');
+    });
+
+    // Choosing a status filter refetches .../debug/feedback/messages?status=<status>&limit=50
+    const messagesHeaderBar = screen.getByRole('heading', { name: 'feedback · messages' })
+      .parentElement?.parentElement;
+    expect(messagesHeaderBar).not.toBeNull();
+    const filterSelect = within(messagesHeaderBar as HTMLElement).getByRole('combobox');
+    fireEvent.change(filterSelect, { target: { value: 'done' } });
+
+    await waitFor(() => {
+      const messageUrls = fetchMock.mock.calls
+        .map(call => call[0])
+        .filter(url => url.includes('/debug/feedback/messages'));
+      expect(messageUrls).toContainEqual(
+        expect.stringMatching(/\/debug\/feedback\/messages\?status=done&limit=50$/)
+      );
+    });
+  });
+});

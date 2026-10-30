@@ -15,7 +15,7 @@ function makeSpec(overrides: Partial<SpecStatus> = {}): SpecStatus {
   return {
     id: 'scatter-basic',
     title: 'Basic Scatter',
-    updated: '2026-01-15T12:00:00Z',
+    updated: '2026-01-15T12:00:00',
     avg_score: null,
     altair: null,
     bokeh: null,
@@ -74,7 +74,7 @@ describe('debugFormat', () => {
 
   describe('formatDateShort', () => {
     it('formats valid ISO dates as short US month and day and returns invalid strings unchanged', () => {
-      expect(formatDateShort('2026-01-15T12:00:00Z')).toBe('Jan 15');
+      expect(formatDateShort('2026-01-15T12:00:00')).toBe('Jan 15');
       expect(formatDateShort('not-a-date')).toBe('not-a-date');
     });
   });

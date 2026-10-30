@@ -1,18 +1,10 @@
-import { useEffect, useState } from 'react';
-
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { DEBUG_API_URL } from 'src/constants';
-import { fetchWithAuth } from 'src/lib/api';
-import {
-  FEEDBACK_STATUS_OPTIONS,
-  type FeedbackMessageFilter,
-  type FeedbackStatus,
-} from 'src/sections/debug/constants';
+import { FEEDBACK_STATUS_OPTIONS } from 'src/sections/debug/constants';
 import { CopyClaudePromptButton } from 'src/sections/debug/CopyClaudePromptButton';
 import { type FeedbackMessage, FeedbackSection } from 'src/sections/debug/FeedbackSection';
 import { FeedbackTopList, type FeedbackTopPage } from 'src/sections/debug/FeedbackTopList';
-import { act, fireEvent, render, screen, userEvent, waitFor } from 'src/test-utils';
+import { act, fireEvent, render, screen, userEvent, within } from 'src/test-utils';
 import { colors } from 'src/theme';
 
 const TOP_UP: FeedbackTopPage[] = [
@@ -72,58 +64,6 @@ const INITIAL_MESSAGES: FeedbackMessage[] = [
   },
 ];
 
-function StatefulFeedbackHarness({ token = 'test-admin-token' }: { token?: string }) {
-  const [filter, setFilter] = useState<FeedbackMessageFilter>('open');
-  const [messages, setMessages] = useState<FeedbackMessage[]>([]);
-  const [topUp, setTopUp] = useState<FeedbackTopPage[]>([]);
-  const [topDown, setTopDown] = useState<FeedbackTopPage[]>([]);
-
-  useEffect(() => {
-    const qs = filter ? `?status=${filter}&limit=50` : '?limit=50';
-    Promise.all([
-      fetchWithAuth(`${DEBUG_API_URL}/debug/feedback/top?reaction=thumbs_up&limit=15`, token).then(
-        r => (r.ok ? (r.json() as Promise<FeedbackTopPage[]>) : [])
-      ),
-      fetchWithAuth(
-        `${DEBUG_API_URL}/debug/feedback/top?reaction=thumbs_down&limit=15`,
-        token
-      ).then(r => (r.ok ? (r.json() as Promise<FeedbackTopPage[]>) : [])),
-      fetchWithAuth(`${DEBUG_API_URL}/debug/feedback/messages${qs}`, token).then(r =>
-        r.ok ? (r.json() as Promise<FeedbackMessage[]>) : []
-      ),
-    ]).then(([up, down, msgs]) => {
-      setTopUp(up);
-      setTopDown(down);
-      setMessages(msgs);
-    });
-  }, [filter, token]);
-
-  const handleStatusChange = async (id: string, newStatus: string) => {
-    const prev = messages;
-    setMessages(prev.map(m => (m.id === id ? { ...m, status: newStatus as FeedbackStatus } : m)));
-    try {
-      const r = await fetchWithAuth(`${DEBUG_API_URL}/debug/feedback/${id}`, token, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: newStatus }),
-      });
-      if (!r.ok) throw new Error(`${r.status}`);
-    } catch {
-      setMessages(prev);
-    }
-  };
-
-  return (
-    <FeedbackSection
-      topThumbsUp={topUp}
-      topThumbsDown={topDown}
-      feedbackStatusFilter={filter}
-      setFeedbackStatusFilter={setFilter}
-      feedbackMessages={messages}
-      handleStatusChange={handleStatusChange}
-    />
-  );
-}
-
 describe('Feedback constants', () => {
   it('lists the four feedback triage statuses in order', () => {
     expect(FEEDBACK_STATUS_OPTIONS).toEqual(['new', 'in_progress', 'done', 'wont_solve']);
@@ -159,28 +99,27 @@ describe('FeedbackTopList', () => {
 
 describe('CopyClaudePromptButton', () => {
   const originalLocation = window.location;
-  const originalClipboard = navigator.clipboard;
+  const originalClipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
 
   afterEach(() => {
     Object.defineProperty(window, 'location', {
       configurable: true,
       value: originalLocation,
     });
-    Object.defineProperty(navigator, 'clipboard', {
-      configurable: true,
-      value: originalClipboard,
-    });
+    if (originalClipboardDescriptor) {
+      Object.defineProperty(navigator, 'clipboard', originalClipboardDescriptor);
+    } else {
+      Reflect.deleteProperty(navigator, 'clipboard');
+    }
+    vi.restoreAllMocks();
     vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
   it('copies a formatted Claude Code prompt to the clipboard and resets feedback after timeout', async () => {
     vi.useFakeTimers();
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(navigator, 'clipboard', {
-      configurable: true,
-      value: { writeText },
-    });
+    userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue(undefined);
     Object.defineProperty(window, 'location', {
       configurable: true,
       value: {
@@ -230,42 +169,23 @@ describe('FeedbackSection', () => {
     vi.unstubAllGlobals();
   });
 
-  it('renders messages with reactions, contact info, status filter changes, and status updates via fetchWithAuth', async () => {
+  it('renders messages with reactions and contact info and forwards status and filter changes', async () => {
     const user = userEvent.setup();
-    let patchShouldFail = false;
+    const setFeedbackStatusFilter = vi.fn();
+    const handleStatusChange = vi.fn();
 
-    const fetchMock = vi.fn((url: string, init?: RequestInit) => {
-      if (url.includes('/debug/feedback/top?reaction=thumbs_up')) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve(TOP_UP) });
-      }
-      if (url.includes('/debug/feedback/top?reaction=thumbs_down')) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve(TOP_DOWN) });
-      }
-      if (url.includes('/debug/feedback/messages')) {
-        const parsed = new URL(url, 'https://api.anyplot.ai');
-        const status = parsed.searchParams.get('status');
-        if (status === 'open') {
-          return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve(INITIAL_MESSAGES),
-          });
-        }
-        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
-      }
-      if (init?.method === 'PATCH') {
-        if (patchShouldFail) {
-          return Promise.resolve({ ok: false, status: 500 });
-        }
-        return Promise.resolve({ ok: true, json: () => Promise.resolve({ status: 'ok' }) });
-      }
-      return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
-    });
-    vi.stubGlobal('fetch', fetchMock);
+    const { rerender } = render(
+      <FeedbackSection
+        topThumbsUp={TOP_UP}
+        topThumbsDown={TOP_DOWN}
+        feedbackStatusFilter="open"
+        setFeedbackStatusFilter={setFeedbackStatusFilter}
+        feedbackMessages={INITIAL_MESSAGES}
+        handleStatusChange={handleStatusChange}
+      />
+    );
 
-    render(<StatefulFeedbackHarness />);
-
-    // Wait for initial messages to render
-    expect(await screen.findByText('Axis labels overlap on mobile')).toBeInTheDocument();
+    expect(screen.getByText('Axis labels overlap on mobile')).toBeInTheDocument();
     expect(screen.getByText('contact: alice@example.com')).toBeInTheDocument();
     expect(screen.getByText('Add dark mode export')).toBeInTheDocument();
     expect(screen.getByText('Colors are hard to distinguish')).toBeInTheDocument();
@@ -278,33 +198,45 @@ describe('FeedbackSection', () => {
     expect(screen.getByText('👎')).toBeInTheDocument();
     expect(screen.getByText('—')).toBeInTheDocument();
 
-    // Change the status of the first message (fb-1) from 'new' to 'done'
-    const selects = screen.getAllByRole('combobox');
-    // selects[0] is the section filter; selects[1] is fb-1's status select
-    const firstMsgSelect = selects[1];
-    expect(firstMsgSelect).toHaveValue('new');
+    // Find fb-1's status select within its message row instead of by index
+    const fb1Message = screen.getByText('Axis labels overlap on mobile');
+    const fb1Row = fb1Message.parentElement?.parentElement;
+    expect(fb1Row).not.toBeNull();
+    const fb1StatusSelect = within(fb1Row as HTMLElement).getByRole('combobox');
+    expect(fb1StatusSelect).toHaveValue('new');
 
-    await user.selectOptions(firstMsgSelect, 'done');
-    expect(firstMsgSelect).toHaveValue('done');
+    await user.selectOptions(fb1StatusSelect, 'done');
+    expect(handleStatusChange).toHaveBeenCalledWith('fb-1', 'done');
 
-    const patchCall = fetchMock.mock.calls.find(call => call[1]?.method === 'PATCH');
-    expect(patchCall?.[0]).toContain('/debug/feedback/fb-1');
-    expect(patchCall?.[1]?.body).toBe(JSON.stringify({ status: 'done' }));
-
-    // Failed PATCH reverts optimistic status update
-    patchShouldFail = true;
-    await user.selectOptions(firstMsgSelect, 'wont_solve');
-    await waitFor(() => {
-      expect(firstMsgSelect).toHaveValue('done');
-    });
-
-    // Filtering by a status with no messages shows the status-specific empty message
-    const filterSelect = selects[0];
+    // Status filter select calls its setter
+    const filterSelect = screen.getByDisplayValue('open (new + in progress)');
     await user.selectOptions(filterSelect, 'done');
-    expect(await screen.findByText('no messages with status "done"')).toBeInTheDocument();
+    expect(setFeedbackStatusFilter).toHaveBeenCalledWith('done');
 
-    // Filtering by all statuses ('') with no messages shows generic empty message
-    await user.selectOptions(filterSelect, '');
-    expect(await screen.findByText('no messages')).toBeInTheDocument();
+    // Empty state with specific status filter
+    rerender(
+      <FeedbackSection
+        topThumbsUp={TOP_UP}
+        topThumbsDown={TOP_DOWN}
+        feedbackStatusFilter="done"
+        setFeedbackStatusFilter={setFeedbackStatusFilter}
+        feedbackMessages={[]}
+        handleStatusChange={handleStatusChange}
+      />
+    );
+    expect(screen.getByText('no messages with status "done"')).toBeInTheDocument();
+
+    // Empty state with all statuses ('')
+    rerender(
+      <FeedbackSection
+        topThumbsUp={TOP_UP}
+        topThumbsDown={TOP_DOWN}
+        feedbackStatusFilter=""
+        setFeedbackStatusFilter={setFeedbackStatusFilter}
+        feedbackMessages={[]}
+        handleStatusChange={handleStatusChange}
+      />
+    );
+    expect(screen.getByText('no messages')).toBeInTheDocument();
   });
 });
