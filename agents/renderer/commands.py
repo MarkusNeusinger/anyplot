@@ -136,6 +136,10 @@ JS_ENV: Mapping[str, str] = MappingProxyType(
         "ANYPLOT_SANDBOX": "1",
         "ANYPLOT_NO_HTML": "1",
         "ANYPLOT_IMPORT_ALLOWLIST": JS_IMPORT_ALLOWLIST,
+        # Temporary diagnosis (2026-10-30): on Cloud Run every JavaScript render ends non-zero with nothing on stderr
+        # after its PNG is written, while local gVisor renders cleanly; Playwright's process log shows on stderr where
+        # the run stops (launch, graceful close, Chromium's exit, cleanup). Removed with the fix.
+        "DEBUG": "pw:process,pw:browser",
     }
 )
 """The JavaScript row's environment: the browser, the packages, the fonts, the zone, the locale, the caches and the

@@ -159,6 +159,8 @@ class TestTable:
             "ANYPLOT_SANDBOX": "1",
             "ANYPLOT_NO_HTML": "1",
             "ANYPLOT_IMPORT_ALLOWLIST": "/opt/anyplot/js-render/import-allowlist.json",
+            # Temporary: Playwright's process log, to find where Cloud Run's JavaScript renders stop.
+            "DEBUG": "pw:process,pw:browser",
         }
         # The sandbox's fixed keys come after a row's environment and win (`executor.sandbox_env`).
         assert not {"PATH", "HOME", "LD_PRELOAD", "NODE_OPTIONS"} & set(commands.JS_ENV)
