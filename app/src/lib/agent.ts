@@ -864,8 +864,17 @@ export const agentApi = {
       token,
       { signal }
     ),
-  openSession: (token: string, specId: string, library: string, locale: string) =>
-    agentJson<SessionOpened>('/sessions', token, post({ spec_id: specId, library, locale })),
+  /**
+   * `fanout` marks a session the admin's `.plot_all()` opens: the server files
+   * its usage telemetry under the source `fanout` instead of `live`. Sent only
+   * when set.
+   */
+  openSession: (token: string, specId: string, library: string, locale: string, fanout = false) =>
+    agentJson<SessionOpened>(
+      '/sessions',
+      token,
+      post({ spec_id: specId, library, locale, ...(fanout ? { source: 'fanout' } : {}) })
+    ),
   switchLibrary: (token: string, sid: string, specId: string, library: string) =>
     agentJson<SessionOpened>(
       `${sessionPath(sid)}/library`,

@@ -10,7 +10,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 |---|---|---|---|
 | `GET /v1/status` | | `{libraries, model, location, version, provider, waiting, in_flight, user_max_runs}` (`user_max_runs`: `AGENT_USER_MAX_RUNS`) | |
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
-| `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
+| `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot, source?}` (`source`: `fanout` for a session the admin's "plot in all libraries" opens; its telemetry lines carry that source) | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
 | `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn, a theme toggle or another paste in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
 | `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings, dropped}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), every value with the precision it came with, the sheet read and at most 10 visible ones with cells (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`, `utc_timestamps`, `renamed_columns`), `dropped` the names of the columns left out; nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex` (also a reader that died without its `status.json`), `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the daily token budgets), `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, one without `/convert`, or a sandbox without the harness's required exec filter) |
@@ -108,7 +108,6 @@ import asyncio
 import base64
 import binascii
 import contextlib
-import hashlib
 import importlib.metadata
 import json
 import logging
@@ -118,7 +117,7 @@ import secrets
 import sys
 import time
 from collections.abc import AsyncIterator, Callable
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from typing import Annotated, Any, Literal, TextIO, get_args
 
 from fastapi import Body, Depends, FastAPI, Header, Path, Query, Request
@@ -217,6 +216,7 @@ from agents.anyplot.session_state import (
     BINDINGS,
     CONFIRMED,
     PENDING_BINDINGS,
+    TELEMETRY_SOURCE,
     CatalogueSnapshot,
     SessionView,
     apply_bindings,
@@ -725,6 +725,9 @@ class CreateSessionBody(_Body):
     library: str
     locale: str = Field(max_length=16, pattern=LOCALE_PATTERN)
     snapshot: CatalogueSnapshot
+    source: Literal["fanout"] | None = None
+    """`fanout`: the admin's "plot in all libraries" opened the session, and every usage-telemetry line of it carries
+    that source instead of `live` (`session_state.TELEMETRY_SOURCE`). A closed set: any other value is `422`."""
 
 
 class SwitchLibraryBody(_Body):
@@ -785,11 +788,12 @@ def _library(library: str, settings: AgentSettings) -> str:
 
 
 def _stamp(ledger: RequestLedger, view: SessionView | None, session: Session) -> RequestLedger:
-    """The ledger with the session's spec, library and user turns so far: the usage telemetry's envelope
-    (`telemetry.py`), set once per request from session state, never per call site."""
+    """The ledger with the session's spec, library, user turns so far and whether the fan-out opened it: the usage
+    telemetry's envelope (`telemetry.py`), set once per request from session state, never per call site."""
     if view is not None:
         ledger.spec_id, ledger.library = view.spec_id, view.library
     ledger.turn = telemetry.user_turns(session.events)
+    ledger.fanout = session.state.get(TELEMETRY_SOURCE) == "fanout"
     return ledger
 
 
@@ -862,6 +866,8 @@ async def create_session(body: CreateSessionBody, user: User, runtime: RuntimeDe
         eligibility=result,
     )
     state.update(_fixture_seed(body.spec_id, library, session_id, body.snapshot, settings))
+    if body.source is not None:
+        state[TELEMETRY_SOURCE] = body.source
     await runtime.session_service.create_session(app_name=APP_NAME, user_id=user, state=state, session_id=session_id)
     return JSONResponse({"session_id": session_id, "eligibility": result.public()}, headers=_NO_STORE)
 
@@ -1741,11 +1747,29 @@ async def _session_sync(
 @dataclass(frozen=True)
 class TurnFacts:
     """What the `chat_turn` telemetry line needs from the route besides the ledger: the action, the session
-    language's source before the turn, and the turn's stopwatch."""
+    language and its source (read before the turn, and again after its run, `_after_turn`), and the turn's
+    stopwatch."""
 
     action: Action | None
     language_source: str | None
+    language: str | None = None
     clock: telemetry.Clock = field(default_factory=telemetry.Clock)
+
+
+async def _after_turn(runtime: Runtime, user: str, sid: str, facts: TurnFacts) -> TurnFacts:
+    """`facts` with the session language and its source as the turn left them.
+
+    The scope guard's detection and the root's `set_language` set them inside the run (`_produce`), so the turn
+    that detects or switches the language records the new value, not the one it started with. The values from
+    before the turn stay when the session is gone.
+    """
+    try:
+        view = read_session((await runtime.session(user, sid)).state)
+    except Exception:  # expired or purged while the turn ran: the line keeps what the turn started with
+        return facts
+    if view is None:
+        return facts
+    return replace(facts, language=view.language, language_source=view.language_source)
 
 
 def _telemetry_turn(ledger: RequestLedger, facts: TurnFacts, failure: str | None = None) -> None:
@@ -1769,6 +1793,7 @@ def _telemetry_turn(ledger: RequestLedger, facts: TurnFacts, failure: str | None
         error=telemetry.closed(error, get_args(telemetry.ErrorCode)),
         reply_reasked=ledger.reply_reasked,
         language_source=telemetry.closed(facts.language_source, get_args(telemetry.LanguageSource), "default"),
+        plot_language=telemetry.plot_language(facts.language),
         llm_calls=ledger.llm_calls,
         steps=telemetry.step_tokens(
             ledger.steps, steps=("root", "adapter", "reviewer", "judge"), judge_model=get_settings().judge_model
@@ -1857,7 +1882,11 @@ async def post_message(
     )
     _stamp(ledger, view, session)
     ledger.turn += 1  # this turn's number: the user turns before it, plus one
-    facts = TurnFacts(action=body.action, language_source=view.language_source if view else None)
+    facts = TurnFacts(
+        action=body.action,
+        language_source=view.language_source if view else None,
+        language=view.language if view else None,
+    )
     translator = Translator(ledger, run_id=secrets.token_hex(8), spec_id=view.spec_id if view else None)
     # The fixed refusals sent before the scope judge, so none of these turns costs a model call.
     # A closed session answers `session_closed` first: its third `attack` refusal also reaches the strike lockout,
@@ -1948,7 +1977,10 @@ async def post_message(
             CURRENT_LEDGER.reset(token)
             if closed_early:
                 # The client went: the turn's line still books what it spent, once, after the producer stopped.
-                _telemetry_turn(ledger, facts, "cancelled")
+                after = facts
+                with contextlib.suppress(BaseException):  # the original exit goes on after the line
+                    after = await _after_turn(runtime, user, sid, facts)
+                _telemetry_turn(ledger, after, "cancelled")
         try:
             if ledger.error is not None:
                 failure = ledger.error
@@ -1956,7 +1988,7 @@ async def post_message(
                 failure = "deadline"
             attribution("run", ledger, model_versions=sorted(ledger.model_versions), kind=ledger.kind)
             # Written before anything else is yielded: a client that goes during the error event loses no line.
-            _telemetry_turn(ledger, facts, failure)
+            _telemetry_turn(ledger, await _after_turn(runtime, user, sid, facts), failure)
             if failure is not None:
                 for chunk in translator.error(failure):
                     yield chunk
@@ -2077,7 +2109,7 @@ def _prompt_hashes() -> dict[str, str]:
         "reviewer": policy.reviewer_instruction(),
         **{f"adapter_{library}": policy.adapter_instruction(library) for library in agent_module.ADAPTERS},
     }
-    return {name: hashlib.sha256(text.encode()).hexdigest()[:16] for name, text in texts.items()}
+    return {name: policy.prompt_hash(text) for name, text in texts.items()}
 
 
 @app.get("/v1/sessions/{sid}/bundle", dependencies=v1_dependencies)

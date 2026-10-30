@@ -151,6 +151,16 @@ describe('FanOut', () => {
     renderFanOut(['matplotlib', 'seaborn', 'altair'], 2);
 
     await waitFor(() => expect(plotTurns()).toHaveLength(2));
+    // Every session is opened as a fan-out one, so its telemetry stays out of the live numbers.
+    const opens = calls.filter(call => call.method === 'POST' && call.path === '/sessions');
+    expect(opens.map(call => call.body)).toEqual(
+      ['matplotlib', 'seaborn', 'altair'].map(library => ({
+        spec_id: 'scatter-basic',
+        library,
+        locale: 'en',
+        source: 'fanout',
+      }))
+    );
     // Every library stored the same upload with the same bindings, and no summary turn ran.
     for (const library of ['matplotlib', 'seaborn', 'altair']) {
       const upload = calls.find(call => call.path === `/sessions/S-${library}/dataset`);

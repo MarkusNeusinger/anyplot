@@ -1,9 +1,10 @@
 # Agent usage telemetry
 
-> **Status (2026-10-16):** the agents service writes the four events, the BFF forwards the page's outcome
-> beacon, the views and the `/debug` card are in the repository. The log bucket, the sink, the linked dataset,
-> the views dataset and the IAM grants are not created yet: run [Set up the BigQuery side](#set-up-the-bigquery-side)
-> once. Until then the card shows `not configured`.
+> **Status (2026-10-30):** the agents service writes the four events, the BFF forwards the page's outcome
+> beacon, and the BigQuery side is set up: the views hold lines since 2026-10-16. The fields added on 2026-10-30
+> (see [Fields added on 2026-10-30](#fields-added-on-2026-10-30)) are written once the agents service is
+> deployed, and reach the typed views after you create the views again (step 6 of
+> [Set up the BigQuery side](#set-up-the-bigquery-side)).
 
 The admin-only agent chat ("Use with my data") records how it is used, without recording what anyone
 used it for. This page lists what is recorded, where it goes, how long it stays, and how to read it.
@@ -33,8 +34,8 @@ The agents service writes one wide JSON line per event to stdout on its own logg
 | Event | When | Main fields |
 |---|---|---|
 | `data_input` | A paste or a dropped file reaches the dataset route, or the file conversion refuses a file | `format`, `entry` (`paste` or `file`), `outcome`, `cause`, `size_bucket`, `rows_bucket`, `cols_bucket`, column counts by type, `max_categories_bucket`, `missing_bucket`, `warnings` (codes), `tables`, `sheets`, `notes` and `file_name` (booleans), `spec_fit`, judge tokens, `latency_ms` |
-| `chat_turn` | A `/messages` turn ends, refused ones included; `manual_binding_changed` counts only a `PUT /bindings` whose bindings differ from the ones the session held, because the page echoes the parse's defaults after every paste | `kind` (`plot`, `prep`, `formula`, `code`, `talk`, `refused`, `error`), `action`, `asked_question`, `tools`, `prep_ops`, `undo`, `to_long`, `manual_binding_changed`, `binding_warnings`, `refusal`, `error`, `reply_reasked`, `language_source`, `steps` (calls, tokens and model per agent), `latency_ms` |
-| `pipeline_run` | A `plot_pipeline` run ends, or the root asked for one before the data was ready (`status: not_ready` with its reason) | `run_index` (1 is the session's first plot), `base`, `status`, `reason`, `stage`, `attempts`, `rounds`, `score_round1`, `score_round2` (buckets), `shipped_attempt`, `forced_repair`, `gates_failed`, `reviewer_defects`, `residual_defects`, `sandbox_failures` (`syntax`, `name`, `key`, `value`, `type`, `timeout`, `memory`, `other`), `drift_restored` (true when a plan that only changed the protected theme statements had them restored after the round's check retry), time per stage, `steps` |
+| `chat_turn` | A `/messages` turn ends, refused ones included; `manual_binding_changed` counts only a `PUT /bindings` whose bindings differ from the ones the session held, because the page echoes the parse's defaults after every paste | `kind` (`plot`, `prep`, `formula`, `code`, `talk`, `refused`, `error`), `action`, `asked_question`, `tools`, `prep_ops`, `undo`, `to_long`, `manual_binding_changed`, `binding_warnings`, `refusal`, `error`, `reply_reasked`, `language_source` and `plot_language` (both as the turn left them), `steps` (calls, tokens, thinking tokens and model per agent), `latency_ms` |
+| `pipeline_run` | A `plot_pipeline` run ends, or the root asked for one before the data was ready (`status: not_ready` with its reason) | `run_index` (1 is the session's first plot), `base`, `status`, `reason`, `stage`, `stages`, `attempts`, `rounds`, `round_scores`, `score_round1`, `score_round2` (buckets), `shipped_attempt`, `forced_repair`, `gates_failed`, `reviewer_defects`, `residual_defects`, `sandbox_failures` (`syntax`, `name`, `key`, `value`, `type`, `timeout`, `memory`, `other`), `drift_restored` (true when a plan that only changed the protected theme statements had them restored after the round's check retry), `plot_language`, `readiness`, `loader_notes`, `edit_failures`, `validator_rules`, `adaptation_rules`, the pipeline configuration and prompt hashes, time per stage, `steps` |
 | `outcome` | The page's beacon after a copy, a download, a session save, or a feedback send | `action` (`copied_code`, `copied_image`, `downloaded_png`, `downloaded_code`, `downloaded_data`, `saved_session`, `feedback`), `version`, `reaction` |
 
 Every line carries the same envelope:
@@ -45,7 +46,7 @@ Every line carries the same envelope:
 | `schema` | The line format's version, `1`. A renamed or removed field is a new schema; an added field is not |
 | `event` | One of the four events |
 | `service`, `revision` | Cloud Run's `K_SERVICE` and `K_REVISION` |
-| `source` | `live`, or `harness` for the eval harnesses (`agents/evals/matrix.py`, `agents/evals/prep.py`); the card counts `live` only |
+| `source` | `live`; `fanout` for every line of a session the admin's "plot in all libraries" fan-out opened; or `harness` for the eval harnesses (`agents/evals/matrix.py`, `agents/evals/prep.py`). The card and the `source = 'live'` filters count `live` only. See [Fan-out sessions](#fan-out-sessions) |
 | `session` | An HMAC-SHA256 of the session id under a random per-process salt, 16 hex characters |
 | `spec_id`, `library` | The session's spec and library, set once per request from session state |
 | `turn` | The session's user turns so far; a `chat_turn` carries its own number |
@@ -61,6 +62,13 @@ is salted with the same per-process salt under another domain (`agents/anyplot/p
 so it cannot be joined to the request log either, and the two hashes of one session differ: telemetry rows
 cannot be joined to the attribution lines, which carry the user id.
 
+The hash does not prevent a join by time. Cloud Run's request logs (the session id in the URL, the client IP
+address) and the attribution lines (the HMAC user id) stay in the project's `_Default` log bucket for 30 days. For
+those 30 days, someone with read access to both buckets can match a telemetry line to a request or an attribution
+line by its timestamp and its kind of request (a paste, a turn, a beacon). After 30 days only the telemetry lines are left, and the join is gone. This
+is why the lines stay pseudonymous rather than anonymous, and it holds for every field, not only the ones added
+later.
+
 ### No user id
 
 The attribution lines (one per plugin hook, for debugging) carry the HMAC user id for the rate limits and
@@ -75,6 +83,46 @@ action succeeded. The BFF accepts only the closed fields and forwards them to
 session hash. The agents service limits the beacon to 30 per user per minute and 2,000 per day
 (`OUTCOMES_PER_MINUTE`, `OUTCOMES_PER_DAY` in `agents/anyplot/plugins/ledger.py`); the page ignores every
 error the beacon gets.
+
+### Fan-out sessions
+
+The admin's "plot in all libraries" (`.plot_all()`, `app/src/sections/agent-chat/FanOut.tsx`) opens one session
+per library, replays the upload in each and runs `create_plot` in each. None of these sessions ever keeps a plot,
+so counted as `live` they would multiply sessions and data inputs and push the kept rate down. The page marks each
+session it opens for the fan-out (`useAgentSession` with `fanout`, `POST /debug/agent/sessions` with
+`source: "fanout"`), the BFF forwards the value, and the agents service accepts `fanout` only (any other value is
+`422`). The service keeps the mark in session state (`anyplot.telemetry_source`), and every line of the session,
+whatever its event, carries `source = "fanout"` instead of `live`. Every existing `source = 'live'` filter (the
+`/debug` card, `api/agent_usage.py`) leaves them out, and the views keep them apart by `source`.
+
+Only an admin can open the chat today, so the value labels the owner's own test sessions. Once the chat is
+public, a user who sends the mark by hand only files their own lines as tests.
+
+### Fields added on 2026-10-30
+
+Schema 1 grows by optional fields only: a line written before 2026-10-30 lacks these fields, and the views read
+them as `NULL` (unknown), not as an empty list or `false`. Every value comes from a closed set; an id the set does
+not know yet becomes `other`, so a new rule never drops a line.
+
+| Event | Field | Meaning |
+|---|---|---|
+| `chat_turn` | `plot_language` | The session language as the turn left it, as a code: `en`, `de`, `fr`, `es`, `it`, `pt`, `nl`, `pl`, `zh`, `vi`, `ru`, `ja` (the languages `agents/anyplot/language.py` names in `ENGLISH_NAMES`), and `other` for every other language. The session language itself is free text (`Swedish`), and a rare language could single a user out, so it never reaches a line |
+| `chat_turn` | `language_source` | Since 2026-10-30 read after the turn's run, like `plot_language`: the turn whose message the scope judge detected, or that called `set_language`, records the new value. Before, it recorded the value from before the turn |
+| `chat_turn`, `pipeline_run` | `steps[].thoughts` | The thinking tokens among `output`. `output` stays candidates plus thoughts, as both providers bill them, so the cost view prices `output` as before; `thoughts` is a part of it, never added to it. `null` for the judges, which book a plain total |
+| `pipeline_run` | `stages` | The stage that ended each attempt, in order (`pipeline.Run.stages`): retries after a failed check, proofreads, repairs and their causes. `adapter_truncated` counts the adapter answers cut off at the output limit. `stage` stays what stopped the run, also a limit before the next attempt |
+| `pipeline_run` | `round_scores` | The bucket of each round's latest review score in round order, `unscored` for a round without one (a failed render, a checklist review). `score_round1` and `score_round2` repeat the first two |
+| `pipeline_run` | `plot_language` | The run's plot language, as the closed code above |
+| `pipeline_run` | `readiness` | `clean` or `coupled`: the readiness of the catalogue file the session adapts, as the session opened it for its library |
+| `pipeline_run` | `loader_notes` | `inexact` (integers past ±2^53 read as the nearest double), `submillisecond` (timestamps cut to the millisecond), `offset` (timestamps with a UTC offset read in UTC): the kinds of cells the runtime's loader changed reading the run's data. The pipeline asks the runtime for each kind alone (`pipeline.loader_codes`): R reports `inexact` and `offset`, Julia `submillisecond` and `offset`, Python none. Never the note's sentence, which names columns and counts |
+| `pipeline_run` | `edit_failures` | The distinct kinds (`agents/anyplot/code/edits.py` `FAILURE_KINDS`) of the edit failures that ended an attempt. A plan restored after drift is `drift_restored`, not here |
+| `pipeline_run` | `validator_rules` | The distinct rule ids that rejected a plan's code in any check of the run: SECURITY findings, the blocking ADAPTATION rules and `literal-budget` |
+| `pipeline_run` | `adaptation_rules` | The distinct soft ADAPTATION rule ids of any check of the run: defect lines, the code still rendered |
+| `pipeline_run` | `reviewer_mode`, `ship_best`, `self_review`, `repair_self_review` | The pipeline configuration as set (`AGENT_REVIEWER_MODE`, `AGENT_SHIP_BEST`, `AGENT_SELF_REVIEW`, `AGENT_REPAIR_SELF_REVIEW`). `ship_best` takes effect with `reviewer_mode` `catalogue` only. `null` on a `not_ready` line |
+| `pipeline_run` | `adapter_prompt`, `reviewer_prompt` | The first 16 hex characters of the SHA-256 of the run's adapter instruction and of the reviewer instruction in its mode (`policy.prompt_hash`, the hash of the feedback bundle's `prompt_hashes`). `adapter_prompt` equals the bundle's `adapter_<library>`; the bundle's `reviewer` hashes the checklist instruction in either mode, so in `catalogue` mode `reviewer_prompt` differs from it |
+
+Tests pin each closed set to its source: the language table, `FAILURE_KINDS`, the rule ids that the validators of
+every language write (collected from their sources), `ColumnKinds`, the reviewer modes and the readiness statuses
+(`tests/unit/agents/runtime/test_telemetry.py`).
 
 ## Where the lines go
 
@@ -104,10 +152,10 @@ and dataset names written out.
 | File | Views | Content |
 |---|---|---|
 | `01_events.sql` | `events` | One row per line, deduplicated by `idempotency_key` (`QUALIFY ROW_NUMBER()`), with the envelope as columns and the line as `payload` |
-| `02_event_views.sql` | `data_inputs`, `chat_turns`, `pipeline_runs`, `outcomes` | One typed column per field |
+| `02_event_views.sql` | `data_inputs`, `chat_turns`, `pipeline_runs`, `outcomes` | One typed column per field, `NULL` where a line predates the field; `pipeline_runs` also has `adapter_truncations`, the count of `adapter_truncated` in `stages` |
 | `03_sessions.sql` | `sessions` | One row per session: data inputs, transcription offers, turns, runs, `not_ready` asks, shipped plots, `turns_to_first_plot`, keeps (copies and downloads), saves, feedback, rejections (feedback with `thumbs_down` or `bug`), `kept`, `funnel_last_step` (from `outcome_only` and `data_refused` through `transcription_offered`, `data_ok`, `chatted`, `plot_not_ready`, `plot_run` and `plot_shipped` to `kept`), and `state` under a 30-minute inactivity rule (`active`, `rejected`, `kept`, `saved`, `refined`, `abandoned_after_plot`, `abandoned_before_plot`). A session is `kept` when, after its last pipeline run, the user copied or downloaded a result (`copied_code`, `copied_image`, `downloaded_png`, `downloaded_code`, `downloaded_data`) and sent no feedback with `thumbs_down` or `bug`. A saved session is never a keep, because users also save a session to report a plot they did not like: a session whose only take-away is a save ends `saved`, and one with a `thumbs_down` or `bug` ends `rejected`. The view's header lists example sessions and how each is classified. A transcription writes two `data_input` rows, the offer (outcome `transcribed`) and the confirmed paste; every view counts the input once and the offers apart. `not_ready` runs are never counted as runs or in the repair rate |
-| `04_usage_failures.sql` | `usage`, `input_formats`, `failures` | Usage by day, spec and library (each line under the library it was written under, so a library switch splits a session's runs correctly; `sessions_kept` counts each session the `sessions` view calls `kept` once, under the day, spec and library of its last shipped run, so run it after `03_sessions.sql`); data inputs by format and entry, each input under its own format; one row per failure with its kind and closed code |
-| `05_prices_cost.sql` | `model_prices`, `cost` | The `eu` list prices of `agents/evals/pricing.py` (a test keeps both equal) and the cost of every turn step and data-input judge call |
+| `04_usage_failures.sql` | `usage`, `input_formats`, `failures`, `attempts` | Usage by day, spec and library (each line under the library it was written under, so a library switch splits a session's runs correctly; `sessions_kept` counts each session the `sessions` view calls `kept` once, under the day, spec and library of its last shipped run, so run it after `03_sessions.sql`); data inputs by format and entry, each input under its own format; one row per failure with its kind and closed code (since 2026-10-30 also the kinds `edit` and `validator`); one row per adapter attempt of a run with the stage that ended it |
+| `05_prices_cost.sql` | `model_prices`, `cost` | The `eu` list prices of `agents/evals/pricing.py` (a test keeps both equal) and the cost of every turn step and data-input judge call, with `thoughts_tokens`, the thinking part of `output_tokens` |
 
 The cost view prices the `chat_turn` and `data_input` lines only: `pipeline_run.steps` repeats the adapter's
 and the reviewer's share of its turn for per-run analysis.
@@ -165,6 +213,9 @@ Run these steps once, as a project owner. They write nothing but the resources n
      bq query --project_id=anyplot --location=europe-west4 --use_legacy_sql=false < "$file"
    done
    ```
+
+   Run this step again after a change to the views merges: each statement replaces its view
+   (`CREATE OR REPLACE VIEW`), and the lines in the bucket stay as they are.
 
 7. Let the API read them. Find the API's runtime identity:
 

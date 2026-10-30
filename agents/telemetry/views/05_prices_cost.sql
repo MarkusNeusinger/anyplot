@@ -15,7 +15,9 @@ SELECT * FROM UNNEST([
 
 -- One row per step of a turn (root, adapter, reviewer, judge) and per data input's judge calls, priced.
 -- `input` counts cached and cache-write tokens too (agents/anyplot/plugins/ledger.py `StepUsage`): cached ones
--- cost 0.1 and cache writes 1.25 of the input price, as `pricing.py` prices them. The cost comes from the
+-- cost 0.1 and cache writes 1.25 of the input price, as `pricing.py` prices them. `output` counts the thinking
+-- tokens too, and both providers bill them at the output price; `thoughts_tokens` says how many of `output_tokens`
+-- were thinking (since 2026-10-30; NULL before, and for the judges, which book no split). The cost comes from the
 -- `chat_turn` and `data_input` lines only: `pipeline_run.steps` repeats the adapter's and the reviewer's share
 -- of its turn for per-run analysis and is left out here, so no token is priced twice. A model without a price
 -- row has a NULL cost (add the row above).
@@ -29,14 +31,15 @@ WITH steps AS (
     IFNULL(LAX_INT64(step.input), 0) AS input_tokens,
     IFNULL(LAX_INT64(step.output), 0) AS output_tokens,
     IFNULL(LAX_INT64(step.cached), 0) AS cached_tokens,
-    IFNULL(LAX_INT64(step.cache_write), 0) AS cache_write_tokens
+    IFNULL(LAX_INT64(step.cache_write), 0) AS cache_write_tokens,
+    LAX_INT64(step.thoughts) AS thoughts_tokens
   FROM `anyplot.agent_telemetry.chat_turns` AS turns, UNNEST(JSON_QUERY_ARRAY(turns.steps)) AS step
   UNION ALL
   SELECT
     ts, source, session, spec_id, library, 'data_input', 'judge',
     REGEXP_REPLACE(judge_model, r'(@.*|-[0-9]{8})$', ''),
     IF(judge_input + judge_output > 0, 1, 0),
-    judge_input, judge_output, 0, 0
+    judge_input, judge_output, 0, 0, CAST(NULL AS INT64)
   FROM `anyplot.agent_telemetry.data_inputs`
   WHERE judge_input + judge_output > 0
 )

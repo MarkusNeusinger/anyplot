@@ -512,6 +512,9 @@ class CreateSessionBody(_StrictBody):
     spec_id: SpecId
     library: LibraryId
     locale: Locale
+    # The admin's "plot in all libraries" fan-out marks the sessions it opens, so the usage telemetry
+    # files their lines under the source `fanout` instead of `live`; a closed set, forwarded only when set.
+    source: Literal["fanout"] | None = None
 
 
 class SwitchLibraryBody(_StrictBody):
@@ -1102,6 +1105,8 @@ async def create_session(
         "locale": body.locale,
         "snapshot": snapshot.model_dump(),
     }
+    if body.source is not None:
+        payload["source"] = body.source
     return await _call_upstream(client, ctx, "POST", "/sessions", json_body=payload)
 
 
