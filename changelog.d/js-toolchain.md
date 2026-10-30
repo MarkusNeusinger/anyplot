@@ -16,7 +16,7 @@
   image unchanged (wall p95 2.4 s at 2 CPUs); the 52 that fail are MUI X files
   written for 7.29. The image build, CI and the deploy's candidate smoke each
   render through the row; the agent chat does not offer JavaScript yet. The
-  images grow by 565 MB.
+  images grow by 565 MB. (#12465)
 
 ### Changed
 
@@ -25,4 +25,4 @@
   itself in a checkout, so the pipeline renders as before; the renderer image,
   where the harness sits elsewhere, names the directory. `package.json`,
   `package-lock.json` and `automation/js-render/` join the toolchain's hash, the
-  build context and the CI image job's change filter.
+  build context and the CI image job's change filter. (#12465)
