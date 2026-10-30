@@ -10,7 +10,9 @@
   ADAPTATION validator that resolves scopes and admits a closed world of
   global names (the network, storage, frames, workers, `eval`, `Function`,
   `import()`, `require`, `.constructor`, string timers, elements that load,
-  aliasing and computed access on `window` are refused, with the named
+  aliasing and computed access on `window`, `this` where it may be the window,
+  keys built to spell `constructor`, protocol-relative URLs and writes that
+  navigate or load a URL the code did not draw are refused, with the named
   bypasses as tests), MUI X imports checked against a copy of the renderer
   image's import allowlist that a test and CI compare with the image's, the
   readiness scan (93 clean, 1,456 coupled, 68 blocked; MUI X files written

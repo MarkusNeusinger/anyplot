@@ -1563,8 +1563,8 @@ mirrors the Julia profile's modules, names and test layout
   something in 7 of the 1,617 normalised files: qrcode-basic in all five libraries (the
   encoded `https://anyplot.ai`), line-parametric's Chart.js legend (a 683-character HTML
   string) and the MUI X flowmap-origin-destination, a map spec (coastlines as long
-  strings). 154 named bypasses (137 in a script, 17 in a MUI X module) and 32 admitted
-  idioms are tests.
+  strings). After the review below, 205 named bypasses (182 in a script, 23 in a MUI X
+  module), 61 admitted idioms and 6 pinned escapes are tests.
 - **Readiness.** Per library, of the normalised files:
 
   | Library | Clean | Coupled | Blocked | Blocked for |
@@ -1620,8 +1620,64 @@ mirrors the Julia profile's modules, names and test layout
   column constants renamed to `Genre · Sorte "A" — </script><b>` and `Umsatz (Mio. €)`, a
   row with both cells missing) at 3200x1800 in 0.9 s, and the tests' Chart.js miniature
   (square) at 2400x2400 in 0.5 s, wall time with Chromium's start.
+- **The review of JS-3 (Fable and Gemini 3.8 Flash, 2026-10-30).** The exported `plot.html`
+  runs in the user's own browser, where a content security policy stops a request but not
+  a top-level navigation, so the validator was tightened where a review found an escape,
+  each rule narrowed until no catalogue file changed status (the split above is the one
+  after the review; the shapes the reviewers proposed literally would have blocked 63, 7 and
+  11 more files):
+  - `this` as a value (returned, assigned, passed, spread, destructured) or read by a
+    computed key only where it is known not to be the window: a method or class member, an
+    object's value (Highcharts' `load` and `formatter`), a callback of D3's `each` and `on`
+    (`THIS_BINDING_METHODS`), or a function the file only hands to those. Refusing it in
+    every plain function, as proposed, would block 63 files (47 D3 callbacks pass `this` to
+    `d3.select`, 41 Highcharts handlers keep the chart); `function g() { return this } g()`,
+    an array's `map`, a timer and D3's `call` are refused.
+  - A computed key built from strings is refused when its written fragments could spell a
+    member of `DENIED_MEMBER_STRINGS` (`[]["con" + "structor"]`, and through a name given
+    such a value), and a key a string builder returns (`.join()`, `String.fromCharCode`,
+    `atob`). Refusing every concatenated, templated or called key would block 7 files
+    (andrews-curves, chernoff-basic, area-stacked-confidence, parallel-categories-basic,
+    psychrometric-basic) for the template keys and 121 for the call results (`Math.floor`,
+    `indexOf`); a template of substitutions alone (chessboard-pieces' `` `${f}${r}` ``) is
+    as opaque as a name and passes. A written key also must not spell a URL or navigation
+    member (`el["hr" + "ef"] = url`).
+  - Protocol-relative URLs (`"//example.org/p?" + x`) are `url-literal`; `src` and `href`
+    are written (by assignment, `setAttribute`, `setAttributeNS`, D3's `attr`) only with a
+    data URL the code drew (`canvas.toDataURL()` or a `const` of one: heatmap-mandelbrot's
+    and recurrence-basic's rasters), and `location`, `action`, `cookie`, `srcdoc`,
+    `formAction` never; `.write()` and `.writeln()` on any receiver, and `cookie` read on any
+    receiver, are refused. JSX attributes (`<img src={url} />`, contour-decision-boundary's
+    raster through a helper) and a library's own image calls stay, pinned below.
+  - Tags: `script`, `iframe`, `frame`, `frameset`, `embed`, `applet` and `portal` are
+    refused as a string literal anywhere; the full `DENIED_TAGS` (with `object`, `link`,
+    `base`, `meta`, `form`, words the catalogue writes as text in 11 files: D3's `"link"`
+    class, a waterfall's `"base"`) only where a tag is made, as a literal, a ternary of
+    literals or a `const` of one, by any receiver's `append`, `insert` or `createElement`
+    (React's too) and React's `jsx` runtime. `dangerouslySetInnerHTML` is refused as an
+    object's key, so a spread `<div {...p} />` cannot carry it.
+  - `setTimeout(draw, 0)` passes when `draw` is a function the file declares and never
+    writes again (Flash).
+  - The edit applier reads a JavaScript regular expression literal as one word, so its quote
+    (`/a"b/`) opens no string (Fable; a find failed to match, nothing was corrupted).
+  - Still passing and pinned as tests (`test_still_passes_contained_by_the_sandbox`): a key a
+    function returns or a parameter carries, a method called off its object (its `this` is
+    the window), markup assembled at run time, a URL a JSX attribute or a library's image
+    call takes. Flash's "`undefined` is no global" was a false positive (`undefined` is a
+    literal of the grammar; a test keeps it allowed).
 
 Found for JS-4:
+
+- **The exported page needs its own boundary.** `plot.html` (question 12) runs in the
+  user's browser and in the chat's preview: it must carry a content security policy without
+  network (the harness's sandbox policy: `default-src 'none'`, no `connect-src`, images and
+  fonts from `data:` only, no `'unsafe-eval'`), and the preview iframe
+  `sandbox="allow-scripts"` without `allow-same-origin`. A policy does not stop a top-level
+  navigation, which is why the validator refuses `location`, `open` and the URL and
+  navigation writes above. JS-4 should also consider wrapping the exported script in a
+  function with `"use strict"`: a plain function called without a receiver would then see
+  `undefined`, not the window, as `this`. Not the harness: the catalogue pipeline renders
+  through it, and a directive inside its `try` block has no effect.
 
 - **`+null === 0` in the catalogue's own code.** The lollipop's all-missing row drew as a
   category `null` at 0.0: the file converts with `String(...)` and `Number(...)`, as many
