@@ -65,6 +65,7 @@ class TestAdapterInstruction:
         [
             ("python", 'INK_MUTED = "{light}" if THEME == "light" else "{dark}"'),
             ("r", 'INK_MUTED <- if (THEME == "light") "{light}" else "{dark}"'),
+            ("julia", 'const INK_MUTED = THEME == "light" ? colorant"{light}" : colorant"{dark}"'),
         ],
     )
     def test_the_palette_section_matches_core_palette(self, language: str, muted: str) -> None:
@@ -121,15 +122,20 @@ class TestAdapterPromptPerLanguage:
             assert policy.highlights_prompt("python") in policy.adapter_instruction("seaborn")
             ggplot2 = policy.adapter_instruction("ggplot2")
             assert policy.highlights_prompt("r") in ggplot2 and "idxmax" not in ggplot2
+            makie = policy.adapter_instruction("makie")
+            assert policy.highlights_prompt("julia") in makie and "idxmax" not in makie and "which.max" not in makie
         finally:
             monkeypatch.delenv("AGENT_HIGHLIGHTS")
             get_settings.cache_clear()
             policy.adapter_instruction.cache_clear()
 
-    def test_r_reads_no_sentence_that_only_matplotlibs_probe_makes_true(self) -> None:
+    @pytest.mark.parametrize(("language", "render"), [("r", "An R render"), ("julia", "A Julia render")])
+    def test_r_and_julia_read_no_sentence_that_only_matplotlibs_probe_makes_true(
+        self, language: str, render: str
+    ) -> None:
         """The probe's gate lines (VQ-03 density, VQ-06 decimal marks), its drawn-text check and the polar hint are
-        matplotlib's; R renders without a probe, and its prompt says what the host gates judge instead."""
-        python, r = policy.adapter_prompt("python"), policy.adapter_prompt("r")
+        matplotlib's; R and Julia render without a probe, and their prompts say what the host gates judge instead."""
+        python, other = policy.adapter_prompt("python"), policy.adapter_prompt(language)
         probe_only = (
             "ax.set_rlabel_position",
             "a `VQ-03` gate line",
@@ -137,9 +143,9 @@ class TestAdapterPromptPerLanguage:
             "The server checks the drawn texts",
         )
         for sentence in probe_only:
-            assert sentence in python and sentence not in r, sentence
-        assert r.count("An R render has no probe") == 3 and "has no probe" in r.split("**Numbers.**", 1)[1]
-        assert "the host gates judge only its output, the PNG and its canvas" in r
+            assert sentence in python and sentence not in other, sentence
+        assert other.count(f"{render} has no probe") == 3 and "has no probe" in other.split("**Numbers.**", 1)[1]
+        assert "the host gates judge only its output, the PNG and its canvas" in other
 
     @pytest.mark.parametrize("library", ["matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot"])
     def test_every_python_library_reads_the_python_prompt_first(self, library: str) -> None:
@@ -164,6 +170,49 @@ class TestAdapterPromptPerLanguage:
             assert r_rule in prompt, r_rule
         for python in ("pandas", "np.random", "savefig", "FuncFormatter", "f-string", "df = load_user_data()"):
             assert python not in prompt, python
+
+    def test_makie_reads_the_julia_prompt_the_shared_rules_and_its_library_rules(self) -> None:
+        text = policy.adapter_instruction("makie")
+        prompt = policy.adapter_prompt("julia")
+
+        assert text.startswith(prompt + "\n\n## Number formats by plot language\n\n")
+        assert source("prompts/library/makie.md").strip() in text  # `df[!, QUARTER]` and the Data block, verbatim
+        assert policy.adapter_rubric() in text and source(STYLE).strip() in text
+        for julia_rule in (
+            "df = load_user_data()",
+            "df[!, REVENUE]",
+            "never load `CSV` or `TimeZones`",
+            "dropmissing(df, [X, Y])",
+            "create_dim_conversion(::Type{Union{Missing, Dates.Date}})",
+            "`barplot!` refuses text as x",
+            "`vspan!`, `hspan!`, `vlines!`, `band!`",
+            "RDatasets",
+            "px_per_unit",
+            "`DECIMAL` and `THOUSANDS`",
+        ):
+            assert julia_rule in prompt, julia_rule
+        for other in (
+            "pandas",
+            "np.random",
+            "savefig",
+            "FuncFormatter",
+            "f-string",
+            "df <- load_user_data()",
+            ".data[[",
+        ):
+            assert other not in prompt, other
+
+    def test_the_julia_prompts_idioms_pass_the_julia_validator(self) -> None:
+        """What the Julia prompts tell the adapter to write (the adapter prompt and the highlights section) is code the
+        Julia validator admits, the ADAPTATION profile too; the image test renders the same form."""
+        from agents.anyplot.code.profiles.julia.validate import validate_adaptation, validate_security
+        from tests.unit.agents.code.conftest import JULIA_PROMPT_IDIOM_SNIPPETS, JULIA_PROMPT_IDIOMS
+
+        prompts = policy.adapter_prompt("julia") + policy.highlights_prompt("julia")
+        for snippet in JULIA_PROMPT_IDIOM_SNIPPETS:
+            assert snippet in prompts and snippet in JULIA_PROMPT_IDIOMS, snippet
+        assert validate_security(JULIA_PROMPT_IDIOMS) == []
+        assert validate_adaptation(JULIA_PROMPT_IDIOMS, original_palette=["#009E73", "#C475FD", "#4467A3"]) == []
 
     def test_each_shared_rule_is_written_once(self) -> None:
         """No runtime prompt repeats a paragraph of `adapter.md`: a shared rule changes in one place."""
@@ -236,7 +285,7 @@ class TestAdapterPromptPerLanguage:
 
     def test_a_language_without_a_runtime_prompt_is_refused(self) -> None:
         with pytest.raises(policy.PromptSourceError, match="no runtime prompt"):
-            policy.adapter_prompt("julia")
+            policy.adapter_prompt("javascript")
 
     def test_the_r_prompts_idioms_pass_the_r_validator(self) -> None:
         """What the R prompts tell the adapter to write (the adapter prompt and the highlights section) is code the R

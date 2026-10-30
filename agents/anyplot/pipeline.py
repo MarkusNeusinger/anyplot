@@ -22,7 +22,7 @@ eval harness may set one or three):
    `MAX_NEW_LITERAL_CHARS` against the catalogue code over all versions, rejects the
    code; dataset headers and cells are free) and the ADAPTATION validator (a finding
    of the runtime's `blocking_rules` rejects the code: a placeholder rule in every
-   language, and in R a dataset package too; the other findings become defect lines
+   language, and in R and Julia a dataset package too; the other findings become defect lines
    with the runtime's targets but the code still renders); a change whose base version was written in another
    language than the session language (`language_changed`) rewrites every title,
    label and annotation, so its budget grows by `REWRITE_LITERAL_FACTOR` times the
@@ -30,14 +30,17 @@ eval harness may set one or three):
 3. **render**: `normalise`, the loader substitution (the runtime's `loader_block`, typed
    from the parser's dtypes and the column kinds), then the one
    theme the call asks for (`PipelineArgs.theme`, light by default) through the
-   render backend, and the host gates (`render/gates.py`) on exactly that theme;
+   render backend, and the host gates (`render/gates.py`) on exactly that theme; a failed
+   render's summary is the runtime's error grammar over the code that ran
+   (`RuntimeAdapter.error_summary` with the run form, so Julia's names the working form's
+   line past its 15-line loader);
 4. **review**: on the first render that passes the host gates on the exact canvas
    (with `AGENT_GATE_REPAIR=first`: and either left no feedback or came from the last
    allowed attempt), and once more on the repaired render after a rejection
    (`MAX_REVIEWS` reviewer calls in all, every round with `AGENT_SHIP_BEST`); the
    reviewer agent sees the rendered theme's PNG, so each of its image defects is
    filed under that theme, whatever theme the reviewer named. A render without drawn
-   texts on a runtime whose reviewer checks them (`RuntimeAdapter.review_texts`: R,
+   texts on a runtime whose reviewer checks them (`RuntimeAdapter.review_texts`: R, Julia,
    altair, pygal and lets-plot) hands the review the requested texts, and each one it
    cannot find in the image is a miss like the probe's (`grounding.reviewed_misses`), in the same call;
 5. **repair**: when an attempt left feedback (an answer that missed the schema or was
@@ -58,7 +61,7 @@ the soft deadline) and for every render timeout;
 the request deadline is `abort_signal` on the run. A render waits in the `run` lane of the render slot
 (`render/serial.py`), ahead of every waiting theme toggle, so it waits for at most
 the render in progress; its clamped timeout starts when it runs. The exported
-code (`plot.py`, `plot.R`) names the rendered theme in its run line.
+code (`plot.py`, `plot.R`, `plot.jl`) names the rendered theme in its run line.
 
 Every path that is not cancelled yields exactly one `Event(output=PlotResult)` as a
 JSON dict. `ok` means the shipped render passed the host gates on the exact canvas,
@@ -77,8 +80,9 @@ starts after that wait. An `ok` or
 yielded, and carries that number as `version`. Its `changes` are the notes of every
 adapter call up to the shipped render whose plan changed the code (`note_changes`), so
 a proofread that changed nothing never replaces them. The runtime's `loader_notes` come
-first among them: R reads integers beyond ±2^53 as the nearest double, and the note
-names each column with its count (owner rule of 2026-10-15, no silent loss). Owner
+first among them: R reads integers beyond ±2^53 as the nearest double and Julia keeps a
+timestamp to the millisecond, and the note names each column with its count (owner rule
+of 2026-10-15, no silent loss). Owner
 decision of 2026-10-29: the note goes into "what changed", not into the residual notes,
 so it leaves the status as it is (`ok` stays `ok`). Each version keeps the change
 requests it carries out (`CodeVersion.requests`); a change of it hands them to every
@@ -106,6 +110,7 @@ keeps its public vocabulary; the stage is only in the attribution line.
 """
 
 import csv
+import functools
 import io
 import json
 import logging
@@ -1744,7 +1749,8 @@ async def _attempts(
             library=view.library,
             rows=rows,
             plot_language=run.language,
-            summarise=runtime.error_summary,
+            # The adapter edits the working form: a runtime whose loader shifts the lines maps them back.
+            summarise=functools.partial(runtime.error_summary, run_form=run_form),
         )
         run.gate_ids.update(report.failed_gates)
         for theme_output in rendered.outputs.values():

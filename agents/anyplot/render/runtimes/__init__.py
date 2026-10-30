@@ -14,7 +14,9 @@ in `AGENT_LIBRARIES`, and the readiness scan blocks it as `unsupported-library`.
 (`letsplot`): each has a save rule (`code.regions.SAVE_RULES`) and a validator profile
 (`code.validate.LIBRARY_IMPORTS`), and the renderer image installs it. `RRuntime` serves
 ggplot2 since 2026-10-29 (PR 3b of the R pilot): the R code profile
-(`code/profiles/r/`) and the renderer's R row in exec mode. A later language adds a
+(`code/profiles/r/`) and the renderer's R row in exec mode. `JuliaRuntime` serves Makie
+since 2026-10-30 (J2b of step 5): the Julia code profile (`code/profiles/julia/`) and the
+renderer's Julia row in exec mode. A later language adds a
 runtime module here, its class to `RUNTIME_CLASSES` and its libraries to
 `RUNTIME_LIBRARIES`; a later Python library (plotly, bokeh) adds its validator profile
 and save rule to the Python code modules and its id to `PYTHON_LIBRARIES`
@@ -27,6 +29,7 @@ from types import MappingProxyType
 from agents.renderer.commands import LIBRARY_LANGUAGES, command_for
 
 from ..contract import RuntimeAdapter
+from .julia import JuliaRuntime
 from .python import PythonRuntime
 from .r import RRuntime
 
@@ -36,12 +39,17 @@ PYTHON_LIBRARIES: frozenset[str] = frozenset({"matplotlib", "seaborn", "plotnine
 R_LIBRARIES: frozenset[str] = frozenset({"ggplot2"})
 """The R libraries with a complete runtime profile (`code.edits.R_LIBRARIES`, the edit applier's R dialect, pinned
 equal)."""
+JULIA_LIBRARIES: frozenset[str] = frozenset({"makie"})
+"""The Julia libraries with a complete runtime profile (`code.edits.JULIA_LIBRARIES`, the edit applier's Julia dialect,
+pinned equal)."""
 
-RUNTIME_LIBRARIES: frozenset[str] = PYTHON_LIBRARIES | R_LIBRARIES
+RUNTIME_LIBRARIES: frozenset[str] = PYTHON_LIBRARIES | R_LIBRARIES | JULIA_LIBRARIES
 """Every library the registry serves; a library of `core.constants.SUPPORTED_LIBRARIES` outside it has no runtime yet."""
 
-RuntimeClass = type[PythonRuntime] | type[RRuntime]
-RUNTIME_CLASSES: Mapping[str, RuntimeClass] = MappingProxyType({"python": PythonRuntime, "r": RRuntime})
+RuntimeClass = type[PythonRuntime] | type[RRuntime] | type[JuliaRuntime]
+RUNTIME_CLASSES: Mapping[str, RuntimeClass] = MappingProxyType(
+    {"python": PythonRuntime, "r": RRuntime, "julia": JuliaRuntime}
+)
 """The runtime class of each language with one; `runtime_for` builds it for the library."""
 
 RuntimeResolver = Callable[[str], RuntimeAdapter]
@@ -75,10 +83,12 @@ def runtime_for(library: str, *, cpu_seconds: int = 60) -> RuntimeAdapter:
 
 
 __all__ = [
+    "JULIA_LIBRARIES",
     "PYTHON_LIBRARIES",
     "RUNTIME_CLASSES",
     "RUNTIME_LIBRARIES",
     "R_LIBRARIES",
+    "JuliaRuntime",
     "PythonRuntime",
     "RRuntime",
     "RuntimeResolver",

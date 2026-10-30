@@ -243,8 +243,9 @@ class PythonRuntime:
     def new_literals(self, base: str, code: str) -> list[str]:
         return new_literals(base, code)
 
-    def error_summary(self, stderr_tail: str) -> str:
-        """The exception class and the `plot.py` line of a failed render, never the message (`gates.error_summary`)."""
+    def error_summary(self, stderr_tail: str, *, run_form: str | None = None) -> str:
+        """The exception class and the `plot.py` line of a failed render, never the message (`gates.error_summary`).
+        The line counts the run form, as it always has; the run form goes unread."""
         return error_summary(stderr_tail, code_file=self.file_name)
 
     def export(self, run_form: str, *, spec_id: str, library_version: str | None, theme: str = "light") -> str:

@@ -39,10 +39,19 @@ package image that does not match the run's flags (`--compiled-modules=strict`'s
 (`StackOverflowError`) and a package that is not installed (with its name when it is a
 Julia name).
 
-Makie's stacks are long: a deep failure printed 7,674 characters, so the renderer's
-2,000-character `stderr_tail` (`render/contract.MAX_STDERR_CHARS`) loses the `ERROR:`
-line and keeps the plot's frame and the expression line (measured; the corpus test
-reads both the whole stderr and its tail). Names pass only when they are Julia names
+Makie's stacks are long: a deep failure printed 7,674 characters, so the last 2,000
+(`render/contract.MAX_STDERR_CHARS`) lose the `ERROR:` line and keep the plot's frame and
+the expression line (measured; the corpus test reads both the whole stderr and its tail).
+Since J2b the Julia row keeps that line in front of the tail (`RuntimeCommand.stderr_head`,
+`agents/renderer/executor.stderr_tail`), so "the tail cut off its first line" is left for a
+stderr past the renderer's 64 KiB read.
+
+The lines count the run form, where the loader replaced the working form's one
+placeholder line with 15 or more (`loader.loader_span`). Given the loader's span
+(`loader`), the summary names the working form's lines, which the adapter edits, and a
+line inside the loader as the placeholder's, "the data loader".
+
+Names pass only when they are Julia names
 (`_NAME`), so neither the message, which can quote a cell or a column of the user's
 data, nor anything else of the error text reaches the repair.
 """
@@ -60,6 +69,8 @@ RECURSION = "recursion too deep"
 MISSING_PACKAGE = "a package that is not installed"
 PROCESS_STARTED = "a process start, which the sandbox refuses"
 CACHE_MISS = "a precompiled package image that does not match the run's flags (a toolchain fault, not the code)"
+LOADER = "the data loader"
+"""What a line in the loader is called: the server's read of `data.csv`, which stands for the placeholder line."""
 MAX_NAME_CHARS = 60
 
 EXCEPTION_TYPES = frozenset(
@@ -162,9 +173,32 @@ def _plot_frame(lines: list[str], code_file: str) -> tuple[int, str | None] | No
     return None
 
 
-def error_summary(stderr_tail: str, *, code_file: str = CODE_FILE) -> str:
+def working_line(line: int, loader: tuple[int, int] | None) -> tuple[int, bool]:
+    """The working form's line for a run-form `line`, and whether it falls in the loader.
+
+    `loader` is the loader's first line and line count in the run form (`loader.loader_span`), which replaced the
+    working form's one placeholder line: a line before it stays, a line in it is the placeholder's, a line after it
+    moves up by the count minus one. Without `loader` the line stays as it is.
+    """
+    if loader is None:
+        return line, False
+    first, count = loader
+    if line < first:
+        return line, False
+    if line < first + count:
+        return first, True
+    return line - count + 1, False
+
+
+def _at(line: int, loader: tuple[int, int] | None) -> str:
+    shown, inside = working_line(line, loader)
+    return f"{shown} ({LOADER})" if inside else str(shown)
+
+
+def error_summary(stderr_tail: str, *, code_file: str = CODE_FILE, loader: tuple[int, int] | None = None) -> str:
     """Where a Julia render failed: the exception type, the plot's line and the function it called; never the
-    message."""
+    message. With `loader` (`loader.loader_span` of the run form) the lines are the working form's, which the
+    adapter edits, and a line in the loader is the placeholder's, named as the data loader."""
     lines = [line.strip() for line in stderr_tail.splitlines() if line.strip()]
     if not lines:
         return NO_ERROR_OUTPUT
@@ -189,9 +223,9 @@ def error_summary(stderr_tail: str, *, code_file: str = CODE_FILE) -> str:
     parts = [kind or CUT_OFF]
     line = frame[0] if frame is not None else expression
     if line is not None:
-        parts[0] += f" at line {line}"
+        parts[0] += f" at line {_at(line, loader)}"
     if frame is not None and frame[1] is not None:
         parts.append(f"in {frame[1]}()")
-    if expression is not None and expression != line:
-        parts.append(f"the statement starts at line {expression}")
+    if expression is not None and line is not None and _at(expression, loader) != _at(line, loader):
+        parts.append(f"the statement starts at line {_at(expression, loader)}")
     return "; ".join(parts)

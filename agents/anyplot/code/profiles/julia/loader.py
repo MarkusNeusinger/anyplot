@@ -65,11 +65,13 @@ what the validator refuses in plot code (`CSV`, `TimeZones`, `parse`).
 
 import json
 
-from ...treesitter import Source, syntax_problems
+from ...treesitter import Source, first_line, last_line, statements, syntax_problems
 from .regions import find_regions
 
 
 DATA_FILE = "data.csv"
+LOADER_IMPORT = "import CSV, DataFrames"
+"""The start of the loader's first line, whatever modules follow (`loader_statement`)."""
 INDENT = "    "
 """Julia's customary four spaces, as the catalogue indents."""
 JULIA_TYPES: dict[str, str] = {
@@ -160,6 +162,24 @@ def _read(target: str, columns: list[str], kinds: dict[str, str]) -> list[str]:
         lines += [f"{INDENT}types = Dict(", *entries, f"{INDENT}),"]
     lines += [f"{INDENT}{option}," for option in READ_OPTIONS]
     return [*lines, ")"]
+
+
+def loader_span(run_form: str) -> tuple[int, int] | None:
+    """Where `to_run_form` put the loader in `run_form`: its first line (1-based) and its number of lines, or None
+    when `run_form` holds no loader statement.
+
+    The loader is the top-level `import CSV, DataFrames...` line and the statement after it (`df = CSV.read(...)` or
+    `df = let ... end`); the plot code never imports `CSV` (`validate.LOADER_PACKAGES`), so the first such import is
+    the loader's. It replaced the one line of the working form's placeholder, so a run-form line after it lies the
+    loader's line count minus one behind the working form's, which the adapter edits (`errors.error_summary`).
+    """
+    source = Source(run_form, "julia")
+    top = statements(source.tree.root_node)
+    for index, node in enumerate(top[:-1]):
+        if node.type == "import_statement" and source.text(node).startswith(LOADER_IMPORT):
+            first = first_line(node)
+            return first, last_line(top[index + 1]) - first + 1
+    return None
 
 
 def to_run_form(working: str, *, columns: list[str], kinds: dict[str, str]) -> str:

@@ -47,7 +47,9 @@ still stop (spike of 2026-10-26). An in-process row's environment and limit reac
 sandbox like an exec-mode row's (`executor.sandbox_env`) and the local Docker backend
 (`PythonRuntime.env`).
 `render_p95_s` is what the agents' pipeline reserves for a repair attempt's render
-when it checks its soft deadline.
+when it checks its soft deadline. `stderr_head` keeps the first line with a prefix in front
+of the stderr tail (`executor.stderr_tail`): the Julia row's `ERROR:` line, which Makie's
+long stacks push out of the last 2,000 characters; every other row returns the plain tail.
 
 A row's `toolchain` names the binaries the image must carry for the row to run, each a
 name on `SANDBOX_PATH` or an absolute path (R's, Julia's and Node's binaries, which `shutil.which`
@@ -180,6 +182,10 @@ JULIA_ENV: Mapping[str, str] = MappingProxyType(
     }
 )
 """The Julia row's environment: the locale, the caches, one thread, the stacked depot and the offline switches."""
+JULIA_ERROR_HEAD = "ERROR:"
+"""The start of the line Julia prints first for an uncaught error (`ERROR: LoadError: MethodError: ...`), which the
+Julia row's stderr tail keeps (`RuntimeCommand.stderr_head`) and the agents' Julia error grammar reads the exception
+type from (`agents/anyplot/code/profiles/julia/errors.py`)."""
 R_HOME = "/opt/R/4.6.1/lib/R"
 """R's home in the toolchain image (Posit's build for Debian 13, agents/renderer/toolchain.Dockerfile)."""
 R_BINARY = f"{R_HOME}/bin/exec/R"
@@ -239,6 +245,11 @@ class RuntimeCommand:
     """Whether the run needs the exec filter (`ANYPLOT_DENY_EXEC=required` while `RENDERER_EXEC_DENY` is
     `required`): in the harness's process for an in-process row, preloaded into the child for an exec-mode row.
     Off for the JavaScript row alone, whose Node and Chromium start their own processes."""
+    stderr_head: str = ""
+    """A line prefix whose first line the stderr tail keeps in front of the last characters, within the same bound
+    (`executor.stderr_tail`); empty for a row whose tail is the plain last `MAX_STDERR_CHARS` characters. Julia's
+    `ERROR:`: a deep Makie failure prints about 7,500 characters of stack, so the last 2,000 lose the line that
+    names the exception (J2a, 2026-10-29)."""
 
     def __post_init__(self) -> None:
         if self.rlimit_as_mb is not None and (not self.rlimit_as or self.rlimit_as_mb <= 0):
@@ -331,6 +342,8 @@ def _row(language: Language, library: str) -> RuntimeCommand:
     # 2026-10-29). The deployed cold and warm times of the plan's measurement stage revise it. The precompile workload
     # (J1.1) cut an adapted render from 15.9 to 5.0 s locally, but the deployed renderer ran 2.5 times slower than
     # local Docker and no deployed sweep with the workload exists yet, so the reserve stays until one does.
+    # Julia prints an uncaught error as one `ERROR: LoadError: <Type>: ...` line and then the whole stack, which
+    # Makie makes long, so the stderr tail keeps that first line in front (`stderr_head`, J2b).
     return RuntimeCommand(
         language,
         code_file,
@@ -339,6 +352,7 @@ def _row(language: Language, library: str) -> RuntimeCommand:
         toolchain=(JULIA_BINARY,),
         rlimit_as=False,
         render_p95_s=25.0,
+        stderr_head=JULIA_ERROR_HEAD,
     )
 
 

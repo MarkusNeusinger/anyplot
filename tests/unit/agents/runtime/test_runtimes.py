@@ -6,15 +6,18 @@ import pytest
 
 from agents.anyplot.code import edits
 from agents.anyplot.code.normalise import SUPPORTED_LIBRARIES as NORMALISED_LIBRARIES
+from agents.anyplot.code.profiles.julia import regions as jl_regions
 from agents.anyplot.code.profiles.r import regions as r_regions
 from agents.anyplot.code.regions import PLACEHOLDER
 from agents.anyplot.data.kinds import read_kinds
 from agents.anyplot.render.contract import BLOCKING_RULES
 from agents.anyplot.render.runtimes import (
+    JULIA_LIBRARIES,
     PYTHON_LIBRARIES,
     R_LIBRARIES,
     RUNTIME_CLASSES,
     RUNTIME_LIBRARIES,
+    JuliaRuntime,
     PythonRuntime,
     RRuntime,
     has_runtime,
@@ -25,16 +28,24 @@ from agents.anyplot.render.runtimes.python import ADAPTATION_TARGETS as PYTHON_T
 from agents.anyplot.schemas import CODE_ARTIFACTS, AdaptPlan, Edit
 from agents.anyplot.settings import AgentSettings
 from core.constants import SUPPORTED_LIBRARIES
-from tests.unit.agents.code.conftest import R_CATALOGUE, R_CATALOGUE_NORMALISED
+from tests.unit.agents.code.conftest import (
+    JULIA_CATALOGUE,
+    JULIA_CATALOGUE_NORMALISED,
+    JULIA_WORKING,
+    R_CATALOGUE,
+    R_CATALOGUE_NORMALISED,
+)
 
 
 class TestRegistry:
-    def test_the_registry_serves_the_python_and_the_r_libraries(self) -> None:
+    def test_the_registry_serves_the_python_the_r_and_the_julia_libraries(self) -> None:
         assert PYTHON_LIBRARIES == NORMALISED_LIBRARIES
         assert PYTHON_LIBRARIES == {"matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot"}
         assert R_LIBRARIES == edits.R_LIBRARIES == {"ggplot2"}
-        assert RUNTIME_LIBRARIES == PYTHON_LIBRARIES | R_LIBRARIES <= SUPPORTED_LIBRARIES
-        assert {language_of(library) for library in RUNTIME_LIBRARIES} == set(RUNTIME_CLASSES) == {"python", "r"}
+        assert JULIA_LIBRARIES == edits.JULIA_LIBRARIES == {"makie"}
+        assert RUNTIME_LIBRARIES == PYTHON_LIBRARIES | R_LIBRARIES | JULIA_LIBRARIES <= SUPPORTED_LIBRARIES
+        languages = {language_of(library) for library in RUNTIME_LIBRARIES}
+        assert languages == set(RUNTIME_CLASSES) == {"python", "r", "julia"}
 
     @pytest.mark.parametrize("library", sorted(PYTHON_LIBRARIES))
     def test_a_python_runtime_is_bound_to_its_library(self, library: str) -> None:
@@ -63,17 +74,37 @@ class TestRegistry:
         with pytest.raises(ValueError, match="python library"):
             RRuntime(library="matplotlib")
 
+    def test_the_julia_runtime_is_bound_to_makie(self) -> None:
+        """Dispatched by the library's language (`RUNTIME_CLASSES`), with the Julia row's reserve (`commands.py`)."""
+        runtime = runtime_for("makie", cpu_seconds=45)
+        assert isinstance(runtime, JuliaRuntime)
+        assert runtime.library == "makie" and runtime.language == "julia" == language_of("makie")
+        assert runtime.file_name == "plot.jl" and runtime.code_artifact == "plot.jl" in CODE_ARTIFACTS
+        assert runtime.placeholder == jl_regions.PLACEHOLDER == "df = load_user_data()"
+        assert runtime.cpu_seconds == 45 and runtime.render_p95_s == 25.0
+        assert runtime.blocking_rules == BLOCKING_RULES | {"dataset-package"}
+        assert set(runtime.adaptation_targets) == set(PYTHON_TARGETS)
+        assert runtime.review_texts is True  # no probe: the review finds the requested texts in the image
+        assert has_runtime("makie")
+        with pytest.raises(ValueError, match="r library"):
+            JuliaRuntime(library="ggplot2")
+
     def test_a_library_without_a_runtime_is_refused_but_known(self) -> None:
-        assert language_of("makie") == "julia" and not has_runtime("makie")
-        with pytest.raises(ValueError, match="no runtime for 'makie'"):
-            runtime_for("makie")
+        assert language_of("plotly") == "python" and not has_runtime("plotly")
+        assert language_of("d3") == "javascript" and not has_runtime("d3")
+        with pytest.raises(ValueError, match="no runtime for 'd3'"):
+            runtime_for("d3")
         with pytest.raises(ValueError, match="unknown library"):
             language_of("excel")
 
-    def test_the_settings_accept_ggplot2_and_refuse_a_library_the_registry_does_not_serve(self) -> None:
-        assert AgentSettings(libraries=["matplotlib", "ggplot2"]).libraries == ["matplotlib", "ggplot2"]
+    def test_the_settings_accept_makie_and_refuse_a_library_the_registry_does_not_serve(self) -> None:
+        assert AgentSettings(libraries=["matplotlib", "ggplot2", "makie"]).libraries == [
+            "matplotlib",
+            "ggplot2",
+            "makie",
+        ]
         with pytest.raises(ValueError, match="no runtime"):
-            AgentSettings(libraries=["matplotlib", "makie"])
+            AgentSettings(libraries=["matplotlib", "d3"])
 
 
 class TestPythonRuntimeBindings:
@@ -259,6 +290,145 @@ class TestRRuntimeBindings:
         (tmp_path / "probe-dark.json").write_text('{"texts": []}')
         assert runtime_for("ggplot2").collect(tmp_path, "dark") == (b"\x89PNG data", None)
         assert runtime_for("ggplot2").collect(tmp_path, "light") == (None, None)
+
+
+class TestJuliaRuntimeBindings:
+    """The Julia runtime hands the pipeline the Julia code profile of J2a, for Makie (step 5, J2b)."""
+
+    COLUMNS = ["Ausgaben (k €)", "Umsatz $ (k)", "Zeit"]
+    KINDS = {"Ausgaben (k €)": "number", "Umsatz $ (k)": "integer", "Zeit": "datetime"}
+
+    def run_form(self) -> str:
+        return runtime_for("makie").loader_block(
+            JULIA_WORKING, columns=self.COLUMNS, dtypes={}, parse_dates=[], kinds=self.KINDS
+        )
+
+    def test_normalise_regions_security_and_adaptation_are_the_julia_profiles(self) -> None:
+        runtime = runtime_for("makie")
+        assert runtime.normalise(JULIA_CATALOGUE, "makie") == JULIA_CATALOGUE_NORMALISED
+        regions = runtime.regions(JULIA_WORKING)
+        assert regions.imprint is not None and list(regions.imprint.entries)[:2] == ["#009E73", "#C475FD"]
+        assert runtime.security(JULIA_WORKING) == [] and runtime.validate(JULIA_WORKING, "makie") == []
+        assert runtime.adaptation(JULIA_WORKING, original_palette=list(regions.imprint.entries)) == []
+        assert "banned-name" in {f.rule for f in runtime.security("run(`ls`)\n")}  # the Julia profile, not a crash
+
+    def test_a_dataset_package_is_a_blocking_adaptation_finding(self) -> None:
+        """RDatasets passes SECURITY and is `dataset-package`, which the Julia runtime's blocking set holds, as R's."""
+        runtime = runtime_for("makie")
+        code = JULIA_WORKING.replace("using DataFrames\n", "using DataFrames\nusing RDatasets\n")
+        assert runtime.security(code) == []
+        rules = {f.rule for f in runtime.adaptation(code, original_palette=["#009E73"])}
+        assert "dataset-package" in rules and rules <= runtime.blocking_rules
+
+    def test_readiness_and_export_follow_the_julia_profile(self) -> None:
+        runtime = runtime_for("makie")
+        readiness = runtime.readiness(JULIA_CATALOGUE_NORMALISED, spec_id="scatter-demo", enabled_libraries=["makie"])
+        assert readiness.status in ("clean", "coupled")
+        blocked = runtime.readiness(JULIA_CATALOGUE_NORMALISED, spec_id="scatter-demo", enabled_libraries=["ggplot2"])
+        assert blocked.status == "blocked" and blocked.reasons[0].startswith("library-disabled: makie")
+        export = runtime.export("x = 1\n", spec_id="scatter-basic", library_version="0.24.16", theme="dark")
+        assert export.startswith("# Adapted by anyplot.ai from scatter-basic (makie 0.24.16) for your data.csv;\n")
+        assert "# run: ANYPLOT_THEME=dark julia --project=. plot.jl\n" in export
+
+    def test_the_loader_reads_data_csv_typed_from_the_kinds(self) -> None:
+        run_form = self.run_form()
+        assert "load_user_data" not in run_form and "import CSV, DataFrames, Dates, TimeZones\n" in run_form
+        assert '"Umsatz \\$ (k)" => Int64,' in run_form and '"Zeit" => String,' in run_form
+        with pytest.raises(ValueError, match="no kind"):
+            runtime_for("makie").loader_block(JULIA_WORKING, columns=["x"], dtypes={}, parse_dates=[], kinds={})
+
+    def test_error_lines_are_the_working_forms(self) -> None:
+        """The loader replaces one placeholder line with many; the summary takes them off again with the run form,
+        and a line inside the loader is the placeholder's (J2a's finding, J2b)."""
+        runtime = runtime_for("makie")
+        run_form = self.run_form()
+        working_lines, run_lines = JULIA_WORKING.splitlines(), run_form.splitlines()
+        placeholder = working_lines.index("df = load_user_data()") + 1
+        at_working = next(i for i, line in enumerate(working_lines, 1) if line.startswith("scatter!("))
+        at_run = next(i for i, line in enumerate(run_lines, 1) if line.startswith("scatter!("))
+        assert at_run - at_working > 20  # the timestamp loader is long
+
+        def tail(line: int) -> str:
+            return (
+                "ERROR: LoadError: MethodError: no method matching scatter!(::Axis)\nStacktrace:\n"
+                f" [1] top-level scope\n   @ /work/plot.jl:{line}\nin expression starting at /work/plot.jl:{line}\n"
+            )
+
+        assert (
+            runtime.error_summary(tail(at_run), run_form=run_form) == f"MethodError for scatter!() at line {at_working}"
+        )
+        assert runtime.error_summary(tail(at_run)) == f"MethodError for scatter!() at line {at_run}"  # no run form
+        inside = runtime.error_summary(tail(placeholder + 5), run_form=run_form)
+        assert inside == f"MethodError for scatter!() at line {placeholder} (the data loader)"
+        before = runtime.error_summary(tail(placeholder - 1), run_form=run_form)
+        assert before == f"MethodError for scatter!() at line {placeholder - 1}"
+        # Python and R take the run form and leave it unread: their summaries are as before.
+        python_tail = 'Traceback (most recent call last):\n  File "plot.py", line 40, in <module>\nKeyError: "x"\n'
+        assert runtime_for("matplotlib").error_summary(python_tail, run_form="x\n" * 50) == "KeyError at line 40"
+
+    def test_loader_notes_count_the_timestamps_cut_to_the_millisecond_per_column(self) -> None:
+        """Owner decision of 2026-10-29: Julia keeps milliseconds; the cut cells are announced with counts."""
+        csv_text = (
+            "Zeit,Start,n\n"
+            "2024-01-31T08:00:00.123456,2024-01-31T08:00:00.120000,1\n"
+            "2024-01-31T08:00:00.000001+01:00,2024-01-31 08:00:00.123456789Z,2\n"
+            "2024-01-31T08:00:00.5,,3\n"
+        )
+        kinds = read_kinds(csv_text, {"Zeit": "datetime", "Start": "datetime", "n": "integer"})
+        assert kinds.submillisecond == {"Zeit": 2, "Start": 1}
+        (line,) = runtime_for("makie").loader_notes(kinds)
+        assert line == (
+            "Julia keeps time to the millisecond, so the plot cuts the digits below it from 3 timestamps: "
+            "2 in 'Zeit', 1 in 'Start'"
+        )
+        assert runtime_for("ggplot2").loader_notes(kinds) == [] and runtime_for("matplotlib").loader_notes(kinds) == []
+        one = read_kinds("t\n2024-01-31T08:00:00.0000001\n", {"t": "datetime"})
+        assert runtime_for("makie").loader_notes(one)[0].endswith("from 1 timestamp: 1 in 't'")
+        whole = read_kinds("t,n\n2024-01-31T08:00:00.123,9007199254740993\n", {"t": "datetime", "n": "integer"})
+        assert runtime_for("makie").loader_notes(whole) == []  # milliseconds fit; Julia reads every integer exactly
+
+    def test_the_loader_note_is_a_change_note_and_names_what_fits(self) -> None:
+        from agents.anyplot.schemas import MAX_CHANGE_CHARS, MAX_COLUMN_NAME_CHARS
+
+        names = [chr(ord("a") + index) * MAX_COLUMN_NAME_CHARS for index in range(50)]
+        cells = ",".join(["2024-01-31T08:00:00.1234"] * 50)
+        wide = read_kinds(",".join(names) + "\n" + cells + "\n", dict.fromkeys(names, "datetime"))
+        (crowded,) = runtime_for("makie").loader_notes(wide)
+        assert len(crowded) <= MAX_CHANGE_CHARS and f"1 in '{names[0]}'" in crowded
+        assert crowded.endswith(", and 49 more columns")
+
+    def test_edits_literals_and_protected_lines_use_the_julia_dialect(self) -> None:
+        runtime = runtime_for("makie")
+        plan = AdaptPlan(edits=[Edit(find='title = "Umsatz nach Ausgaben"', replace='title = "Neuer Titel"')])
+        applied = runtime.apply_plan(JULIA_WORKING, plan)
+        assert applied.code is not None and 'title = "Neuer Titel"' in applied.code
+        assert runtime.new_literals(JULIA_WORKING, applied.code) == ["Neuer Titel"]
+        drifted = JULIA_WORKING.replace("px_per_unit = 2", "px_per_unit = 3")
+        assert runtime.restore_protected(JULIA_WORKING, drifted) == JULIA_WORKING
+
+    def test_the_command_is_the_renderers_julia_row_in_exec_mode(self) -> None:
+        """The argv `executor.build_argv` runs after `sandbox do --`: the harness, `--exec --`, Julia's launcher."""
+        from agents.renderer.commands import JULIA_BINARY, JULIA_FLAGS, command_for
+        from agents.renderer.executor import ExecutorConfig, build_argv
+        from agents.renderer.settings import RendererSettings
+
+        local = runtime_for("makie").command("light")
+        expected = ["--exec", "--", JULIA_BINARY, *JULIA_FLAGS, "plot.jl"]
+        assert local[-len(expected) :] == expected
+        config = ExecutorConfig.from_settings(RendererSettings())
+        deployed = build_argv(config, "r-x", Path("/runs/x"), "light", 60, command=command_for("julia", "makie"))
+        assert deployed[-len(expected) :] == expected
+
+    def test_data_runs_and_conversions_stay_pythons(self) -> None:
+        runtime, python = runtime_for("makie", cpu_seconds=45), PythonRuntime(cpu_seconds=45)
+        assert runtime.data_command() == python.data_command() and runtime.data_env(20) == python.data_env(20)
+        assert runtime.convert_command() == python.convert_command() and runtime.convert_env() == python.convert_env()
+
+    def test_collect_reads_the_png_and_no_probe(self, tmp_path: Path) -> None:
+        (tmp_path / "plot-dark.png").write_bytes(b"\x89PNG data")
+        (tmp_path / "probe-dark.json").write_text('{"texts": []}')
+        assert runtime_for("makie").collect(tmp_path, "dark") == (b"\x89PNG data", None)
+        assert runtime_for("makie").collect(tmp_path, "light") == (None, None)
 
 
 class TestRowEnvironment:

@@ -88,6 +88,7 @@ def test_the_sweep_covers_every_library_with_a_runtime() -> None:
     assert set(LIBRARIES) == RUNTIME_LIBRARIES and len(LIBRARIES) == len(RUNTIME_LIBRARIES)
     assert implementation_glob("matplotlib") == "*/implementations/python/matplotlib.py"
     assert implementation_glob("ggplot2") == "*/implementations/r/ggplot2.R"
+    assert implementation_glob("makie") == "*/implementations/julia/makie.jl"
 
 
 def test_the_ggplot2_sweep_over_the_real_catalogue() -> None:
@@ -111,6 +112,22 @@ def test_the_ggplot2_sweep_over_the_real_catalogue() -> None:
         "qrcode-basic",
     ]
     assert markdown(result, "2026-10-29").splitlines()[4] == "| ggplot2 | 325 | 310 (95.4 %) | 4 | 306 | 15 | 0 |"
+
+
+def test_the_makie_sweep_over_the_real_catalogue() -> None:
+    """The Julia runtime over all 325 Makie files (J2b, 2026-10-30): J2a's split through the runtime, 0 clean, 308
+    coupled, 17 blocked: the 13 map specs, qrcode-basic (QRCoders, a URL) and the three saves inside a
+    `with_theme(...) do` block (area-mountain-panorama, bifurcation-basic, scatter-lag)."""
+    result = sweep(REPO_PLOTS, ("makie",))
+
+    makie = result["by_library"]["makie"]
+    assert (makie["files"], makie["eligible"]) == (325, 308)
+    assert makie["statuses"] == {"clean": 0, "coupled": 308, "blocked": 17, "error": 0}
+    assert makie["blocked_by_category"] == {"map-spec": 13, "savefig-target": 3, "security": 5}
+    assert makie["security_rules"] == {"banned-import": 2, "banned-name": 1, "savefig-target": 3, "url-literal": 2}
+    saves = sorted(item["spec_id"] for item in result["blocked"] if "savefig-target" in item["categories"])
+    assert saves == ["area-mountain-panorama", "bifurcation-basic", "scatter-lag"]
+    assert markdown(result, "2026-10-30").splitlines()[4] == "| makie | 325 | 308 (94.8 %) | 0 | 308 | 17 | 0 |"
 
 
 def test_the_real_catalogue_keeps_most_pairs_eligible(tmp_path: Path) -> None:

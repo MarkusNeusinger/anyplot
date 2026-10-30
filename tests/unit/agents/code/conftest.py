@@ -278,3 +278,91 @@ JULIA_WORKING = source("""
     # Save
     save("plot-$(THEME).png", fig; px_per_unit = 2)
 """)
+
+# What the Julia adapter prompt tells the adapter to write (`agents/anyplot/prompts/adapter_julia.md` and its highlights
+# slot), in one working form: the column constants read as `df[!, ...]`, `dropmissing`, the number formatter with both
+# marks, categories as integer positions, a span on a time axis as numeric offsets. `JULIA_PROMPT_IDIOM_SNIPPETS` stand
+# verbatim in the prompt and in the form (the policy test holds the form against both validator profiles, the image
+# test renders it from a `data.csv` with missing cells).
+JULIA_PROMPT_IDIOM_SNIPPETS = (
+    "dropmissing(df, [X, Y])",
+    r'fmt(v; digits = 2) = (v < 0 ? "-" : "") * replace(@sprintf("%.*f", digits, abs(v)), '
+    r'r"(?<=\d)(?=(?:\d{3})+(?:\.|$))" => THOUSANDS, "." => DECIMAL)',
+    "unique(df[!, GROUP])",
+    "[findfirst(==(g), groups) for g in df[!, GROUP]]",
+    "colors = IMPRINT_PALETTE[1:length(groups)]",
+    "groupby(df, GROUP; sort = false)",
+    "peak, idx = findmax(skipmissing(df[!, Y]))",
+    '"r = " * fmt(cor(df[!, X], df[!, Y]))',
+    "days = Dates.value.(df[!, DAY] .- first(df[!, DAY]))",
+    'xticks = (days[1:step:end], Dates.format.(df[!, DAY][1:step:end], "yyyy-mm-dd"))',
+    "ytickformat = values -> fmt.(values)",
+    "fmt(peak; digits = 0)",
+    'ytickformat = values -> [fmt(v / 1e6; digits = 1) * " Mio." for v in values]',
+    "xticks = (1:length(groups), groups)",
+    'const INK_MUTED = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"',
+)
+JULIA_PROMPT_IDIOMS = source(r"""
+    using CairoMakie
+    using Colors
+    using DataFrames
+    using Dates
+    using Printf
+    using Statistics
+
+    # Theme tokens
+    const THEME = get(ENV, "ANYPLOT_THEME", "light")
+    const PAGE_BG = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
+    const INK = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
+    const IMPRINT_PALETTE = [colorant"#009E73", colorant"#C475FD", colorant"#4467A3"]
+    const INK_MUTED = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
+    const DECIMAL = ","
+    const THOUSANDS = "."
+
+    # Columns: set these to your table's column names
+    const DAY = "Tag"               # role: x
+    const X = "Ausgaben (k €)"      # role: size
+    const Y = "Umsatz \$ (k)"       # role: y
+    const GROUP = "Region"          # role: group
+
+    # Data: replace this block with your own table
+    df = load_user_data()
+
+    # Plot: reads only df and the constants above
+    df = dropmissing(df, [X, Y])
+    df = dropmissing(df, [DAY, GROUP])
+    fmt(v; digits = 2) = (v < 0 ? "-" : "") * replace(@sprintf("%.*f", digits, abs(v)), r"(?<=\d)(?=(?:\d{3})+(?:\.|$))" => THOUSANDS, "." => DECIMAL)
+    groups = unique(df[!, GROUP])
+    group = [findfirst(==(g), groups) for g in df[!, GROUP]]
+    colors = IMPRINT_PALETTE[1:length(groups)]
+    totals = combine(groupby(df, GROUP; sort = false), Y => sum => Y)
+    peak, idx = findmax(skipmissing(df[!, Y]))
+    note = "r = " * fmt(cor(df[!, X], df[!, Y]))
+    days = Dates.value.(df[!, DAY] .- first(df[!, DAY]))
+    step = max(1, length(days) ÷ 6)
+    fig = Figure(size = (1600, 900), backgroundcolor = PAGE_BG)
+    ax = Axis(
+        fig[1, 1];
+        title = "Umsatz nach Tag",
+        xlabel = DAY,
+        ylabel = Y,
+        xticks = (days[1:step:end], Dates.format.(df[!, DAY][1:step:end], "yyyy-mm-dd")),
+        ytickformat = values -> fmt.(values),
+    )
+    lines!(ax, days, df[!, Y]; color = IMPRINT_PALETTE[group])
+    vspan!(ax, days[1], days[2]; color = (INK_MUTED, 0.2))
+    text!(ax, days[idx], peak; text = fmt(peak; digits = 0), color = INK)
+    text!(ax, days[1], peak; text = note, color = INK)
+    ax2 = Axis(
+        fig[1, 2];
+        xticks = (1:length(groups), groups),
+        ytickformat = values -> [fmt(v / 1e6; digits = 1) * " Mio." for v in values],
+    )
+    barplot!(ax2, 1:length(groups), totals[!, Y]; color = colors)
+    ax3 = Axis(fig[2, 1]; xlabel = DAY, ylabel = Y)
+    scatter!(ax3, df[!, DAY], df[!, Y]; color = IMPRINT_PALETTE[1])
+    Legend(fig[1, 3], [PolyElement(color = colors[i]) for i in eachindex(groups)], groups, GROUP)
+
+    # Save
+    save("plot-$(THEME).png", fig; px_per_unit = 2)
+""")
