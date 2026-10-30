@@ -92,8 +92,9 @@ covers the whole task.
   test files next to them, and Acceptance carries a mutation table: per
   behavior, one deliberate break in the real code (file and change) that must
   turn a test red, plus one harmless refactor that must stay green. Gemini
-  applies each row, runs the tests, reverts with `git restore <file>`, and
-  reports the result per row. Green gates do not show what a test would
+  runs the table on a clean tree after committing the step (section 2, step
+  6), so `git restore <file>` drops only the break: it applies each row, runs
+  the tests, restores, and reports the result per row. Green gates do not show what a test would
   catch: on 2026-10-30 the section-tests briefs allowed new files only under
   `app/src/sections/`, while the state those sections show lives in
   `app/src/pages/*.tsx`. Gemini copied the page logic into test harnesses,
@@ -564,8 +565,9 @@ This section is for the Gemini agent in the owner's agy session.
    the merged PR keeps its copy. The package branches the merge left behind,
    review rounds' `gemini/<slug>-r<n>-<k>` included, go only with the owner's
    OK, because only the PR's own worktree and local branch go without asking
-   (`CLAUDE.md`). Check that each is part of the merged head
-   (`git merge-base --is-ancestor origin/<branch> <merged head>`), then ask
+   (`CLAUDE.md`). Run `git fetch --prune origin` first, so no stale ref hides
+   a newer commit, then check that each is part of the merged head
+   (`git merge-base --is-ancestor origin/<branch> <merged head>`) and ask
    with the branch names in the question:
    `git push origin --delete gemini/<slug>-1 gemini/<slug>-2 …`. On
    2026-10-30 a general OK to the cleanup plan did not get past the permission
