@@ -70,6 +70,17 @@ def test_the_first_directive_decides_and_the_others_go() -> None:
     assert normalise(code) == "//# anyplot-orientation: square\nconst a = 1;\n"
 
 
+@pytest.mark.parametrize("separator", ["\r", "\r\n", chr(0x2028)])
+def test_moving_a_directive_keeps_the_code_on_its_source_line(separator: str) -> None:
+    """The directive after a lone `\\r` or U+2028 moves alone; the code that shares its `Source` line stays (Copilot
+    review of #12473: the span was the whole `\\n` line)."""
+    code = f"const a = 1;{separator}//# anyplot-orientation: square{separator}const b = 2;\n"
+    newline = "\r\n" if separator == "\r\n" else "\n"  # the file's own line ending, where it uses `\r\n`
+
+    assert normalise(code) == f"//# anyplot-orientation: square{newline}const a = 1;{separator}const b = 2;\n"
+    assert normalise(normalise(code)) == normalise(code)
+
+
 def test_a_directive_in_a_string_is_left_alone_with_a_note() -> None:
     code = "const s = `\n//# anyplot-orientation: square\n`;\n"
     report = normalise_report(code)

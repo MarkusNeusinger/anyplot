@@ -1665,6 +1665,15 @@ mirrors the Julia profile's modules, names and test layout
     the window), markup assembled at run time, a URL a JSX attribute or a library's image
     call takes. Flash's "`undefined` is no global" was a false positive (`undefined` is a
     literal of the grammar; a test keeps it allowed).
+  - The Copilot review of #12473: a call through a literal index (`d3["create"]("script")`,
+    `el["setAttribute"]("href", u)`, `x["write"](...)`) is read as the named call by the
+    tag, attribute and write rules; a setter's attribute name is checked for every literal a
+    ternary can give it, and a computed name is refused (none in the catalogue); where `this`
+    may be the window, `this.document` and `this.window` are refused; `arguments` left the
+    globals and is bound only inside a function that is no arrow; and a directive's span is
+    its JavaScript line, which a lone `\r`, U+2028 or U+2029 ends, not tree-sitter's `\n`
+    line, so moving it no longer takes the code that shares that line. The split did not
+    change.
 
 Found for JS-4:
 

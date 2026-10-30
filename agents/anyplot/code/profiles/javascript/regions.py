@@ -422,16 +422,33 @@ def is_placeholder(source: Source, node: Node) -> bool:
     )
 
 
+def js_line(code: str, offset: int) -> tuple[int, int]:
+    """The JavaScript line around the character at `offset`: from after the line terminator before it to after the one
+    that ends it (`\\r\\n` as one), or the code's end.
+
+    JavaScript ends a line at `\\n`, `\\r`, U+2028 and U+2029, `Source` (tree-sitter's rows)
+    at `\\n` alone, so a directive after a lone `\\r` shares a `Source` line with the code
+    before it; its span is this line, never the `Source` line, so the normaliser and the edit
+    applier touch only the directive (Copilot review of #12473).
+    """
+    start = max(code.rfind(mark, 0, offset) for mark in ("\n", "\r", *JS_LINE_SEPARATORS)) + 1
+    ends = [found for mark in ("\n", "\r", *JS_LINE_SEPARATORS) if (found := code.find(mark, offset)) != -1]
+    if not ends:
+        return start, len(code)
+    end = min(ends)
+    return start, end + (2 if code.startswith("\r\n", end) else 1)
+
+
 def find_directives(source: Source) -> tuple[Directive, ...]:
-    """Every place the harness would read as the orientation directive, in order (module docstring)."""
+    """Every place the harness would read as the orientation directive, in order (module docstring); each span is the
+    directive's JavaScript line (`js_line`)."""
     code = source.code
     own_lines = {
         source.char(node.start_byte)
         for node in source.root.children
         if node.type == "comment"
-        and first_line(node) == last_line(node)
         and source.text(node).startswith("//")
-        and not code[source.line_start(first_line(node)) : source.char(node.start_byte)].strip()
+        and not code[js_line(code, source.char(node.start_byte))[0] : source.char(node.start_byte)].strip()
     }
     found: list[Directive] = []
     seen: set[int] = set()
@@ -440,10 +457,10 @@ def find_directives(source: Source) -> tuple[Directive, ...]:
         if hit is None or hit.start(1) in seen:
             continue  # a match after blank lines is found from each of them
         seen.add(hit.start(1))
-        line = source.line_of(hit.start(1))
         orientation: Orientation = "square" if hit.group(2).lower() == "square" else "landscape"
-        span = Span(line, line, source.line_start(line), source.line_end(line))
-        found.append(Directive(orientation, line, span, hit.start(1) in own_lines, hit.group(1)))
+        line_start, line_end = js_line(code, hit.start(1))
+        span = Span(source.line_of(line_start), source.line_of(max(line_start, line_end - 1)), line_start, line_end)
+        found.append(Directive(orientation, span.first_line, span, hit.start(1) in own_lines, hit.group(1)))
     return tuple(found)
 
 

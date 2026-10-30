@@ -122,7 +122,7 @@ def _one_directive(source: Source) -> StepResult:
     orientation: Orientation = directives[0].orientation if directives else "landscape"
     canonical = DIRECTIVE.format(orientation=orientation)
     own = [directive for directive in directives if directive.comment]
-    if len(own) == 1 and own[0].line == 1 and own[0].text == canonical and len(directives) == 1:
+    if len(own) == 1 and own[0].span.start == 0 and own[0].text == canonical and len(directives) == 1:
         return code, [], []
     edits: list[TextEdit] = [(directive.span.start, directive.span.end, "") for directive in own]
     body = _apply(code, edits)

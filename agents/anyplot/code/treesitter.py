@@ -1395,8 +1395,9 @@ class JsBinding:
     """One name a JavaScript file binds: the node that names it, the node whose range it is visible in, and how.
 
     `kind` is `var`, `let`, `const`, `using`, `function`, `class`, `parameter`, `catch`,
-    `import`, `enum` or `namespace`; `declaration` is the statement or declarator it comes
-    from (a `variable_declarator`, a function, an `import_statement`, ...).
+    `import`, `enum`, `namespace` or `arguments`; `declaration` is the statement or declarator
+    it comes from (a `variable_declarator`, a function, an `import_statement`, ...). Every
+    function but an arrow binds `arguments` implicitly: its binding's node is the function.
     """
 
     name: str
@@ -1458,7 +1459,8 @@ def js_bindings(source: Source, root: Node) -> list[JsBinding]:
     function declaration in their block (a function declaration in a block as in strict
     code, the smaller of the two scopes a script may give it), a parameter in its function,
     a `catch` parameter in its clause, a `for` head's `let` or `const` in its loop, an
-    import in the program, and the name of a function or class expression inside itself.
+    import in the program, the name of a function or class expression inside itself, and
+    `arguments` in every function but an arrow (at the top level it is no name at all).
     """
     found: list[JsBinding] = []
 
@@ -1467,6 +1469,8 @@ def js_bindings(source: Source, root: Node) -> list[JsBinding]:
 
     for node in walk(root):
         kind = node.type
+        if kind in JS_FUNCTIONS and kind != "arrow_function":  # `arguments`, which an arrow reads from around it
+            found.append(JsBinding("arguments", node, node, "arguments", node))
         if kind == "variable_declarator":
             name = node.child_by_field_name("name")
             declaration = node.parent

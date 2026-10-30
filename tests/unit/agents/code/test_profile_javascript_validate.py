@@ -251,6 +251,26 @@ def test_the_head_alone_passes() -> None:
         'const s = "IFRAME";',
         'const s = "svg:script";',
         'const s = " embed ";',
+        # the Copilot review of #12473: a literal index calls the member it names
+        'd3["create"]("script");',
+        'el["setAttribute"]("href", name);',
+        'x["write"]("<p>");',
+        'el.ownerDocument["writeln"]("<p>");',
+        'document["createElement"]("iframe");',
+        'document["createElement"](tag);',
+        'd3.select(el)["append"]("object");',
+        # every name a ternary may give an attribute, and a name code computes
+        'el.setAttribute(name ? "x" : "href", name);',
+        'el.setAttribute(name ? "action" : "x", name);',
+        "el.setAttribute(name, name);",
+        "d3.select(el).attr(tag, name);",
+        # the page's objects through a `this` that may be the window
+        "function g() { return this.document.body; }\ng();",
+        "function g() { return this.window; }\ng();",
+        "const all = [1].map(function () { return this.document.cookie; });",
+        # `arguments` is no name at the top level
+        "const a = arguments;",
+        "const a = () => arguments[0];",
     ],
 )
 def test_refused(body: str) -> None:
@@ -373,6 +393,14 @@ def test_a_banned_import_carries_a_closed_label() -> None:
         ("chartjs", "const y = undefined;"),
         ("chartjs", "function g({ a = 1, b: [c = 2] = [] } = {}) { return a + c; }\ng();"),
         ("chartjs", "try { f(); } catch ({ message }) { el.textContent = message; }"),
+        # the Copilot review of #12473: what the narrowed rules keep
+        ("chartjs", 'el.setAttribute(name ? "x" : "y", 1);'),
+        ("chartjs", 'el["setAttribute"]("d", "M0 0");'),
+        ("highcharts", "const o = { tooltip: { formatter() { return this.point.y + this.series.name; } } };"),
+        ("highcharts", "const o = { events: { load: function () { const c = this.chart; } } };"),
+        ("chartjs", "function total() { return arguments.length; }\ntotal(1, 2);"),
+        ("chartjs", "function outer() { return () => arguments[0]; }\nouter(1);"),
+        ("chartjs", "const o = { m() { return arguments.length; } };"),
         (
             "muix",
             "const T = () => (\n  <>\n    <>\n      <svg><g /></svg>\n    </>\n    <span>{[1].map((v) => <b key={v}>{v}</b>)}</span>\n  </>\n);",

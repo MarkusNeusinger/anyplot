@@ -115,6 +115,20 @@ def test_directives_as_the_harness_reads_them(code: str, found: list[tuple[str, 
     assert [(directive.orientation, directive.line, directive.comment) for directive in directives] == found
 
 
+@pytest.mark.parametrize("separator", ["\r", chr(0x2028), chr(0x2029)])
+def test_a_directive_spans_its_javascript_line_alone(separator: str) -> None:
+    """A lone `\\r`, U+2028 or U+2029 ends a JavaScript line but no `Source` line: the directive's span is its own
+    JavaScript line, so the code before and after it on the same `Source` line stays (Copilot review of #12473)."""
+    code = f"const a = 1;{separator}//# anyplot-orientation: square{separator}const b = 2;\n"
+    source = Source(code, "javascript")
+    (directive,) = find_directives(source)
+
+    assert directive.comment and directive.orientation == "square" and directive.line == 1
+    assert code[directive.span.start : directive.span.end] == f"//# anyplot-orientation: square{separator}"
+    regions = find_regions(source)
+    assert regions.save is not None and regions.save.span == directive.span
+
+
 def test_a_directive_after_a_line_separator_is_read_as_the_harness_does() -> None:
     """JavaScript's multi-line `^` matches after U+2028 too, so a directive there counts."""
     code = 'const s = "a' + chr(0x2028) + '//# anyplot-orientation: square";\n'

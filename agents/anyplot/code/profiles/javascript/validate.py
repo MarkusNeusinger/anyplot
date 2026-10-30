@@ -36,7 +36,9 @@ SECURITY rules (rule ids in parentheses):
   (`fetch?.(url)`) and a call through a value (`(0, eval)(s)`) are refused like the name.
   A binding the file makes shadows a global as JavaScript does (`const open = d.open` in a
   candlestick plot); `window`, `document` and the library global may not be bound at the
-  top level, where the token lines read them.
+  top level, where the token lines read them. `arguments` is a name only inside a function
+  that is no arrow (`treesitter.js_bindings` binds it there); at the top level it is refused
+  like any unknown name (Copilot review of #12473).
 * **The page's objects** (`banned-name`): `window` and `document` are only ever the object
   of a member access with a name (`window.ANYPLOT_TOKENS`, `document.getElementById`), never
   a value (`const w = window`, `f(document)`, `{ ...window }`, `const { fetch } = window`)
@@ -77,7 +79,8 @@ SECURITY rules (rule ids in parentheses):
   passed, spread, destructured) or read by a computed key only where it is known
   (`_Scan.this_is_known`: a method or class member, an object's value such as Highcharts'
   `load` and `formatter`, a callback of D3's `each` and `on`, or a function the file only
-  hands to those; 47 catalogue callbacks pass `this` to `d3.select`).
+  hands to those; 47 catalogue callbacks pass `this` to `d3.select`). Where it is not known,
+  `this.document` and `this.window` are refused too (`this.point` and `this.chart` stay).
 * **Code from strings and elements that load** (`banned-call`): `import(...)` and
   `import.meta`; `setTimeout` and `setInterval` with anything but a function literal or a
   function the file declares and never writes again (a string runs as code); an element
@@ -89,13 +92,17 @@ SECURITY rules (rule ids in parentheses):
   tags of `DENIED_TAG_STRINGS` (`script`, `iframe`, `embed`, ...) as a string literal
   anywhere; `dangerouslySetInnerHTML` as a JSX attribute or an object's key (a spread
   `<div {...p} />` carries it); `.write()` and `.writeln()` on any receiver; and the
-  `with` statement (`banned-statement`), which turns an object into scope.
+  `with` statement (`banned-statement`), which turns an object into scope. A call through a
+  literal index calls the member it names (`d3["create"]("script")`,
+  `el["setAttribute"](...)`), so these rules read it as the named call (`callee_name`).
 * **Writes that load or navigate** (`banned-statement`, `banned-call`): a member `src` or
   `href` is written, by assignment or by `setAttribute`, `setAttributeNS` or D3's `attr`,
   only with a data URL the code drew (`canvas.toDataURL()` or a `const` declared with one:
   the catalogue's raster heatmaps), and `location`, `action`, `cookie`, `srcdoc` and
-  `formAction` are never written. In the exported page a content security policy stops a
-  request but not a top-level navigation.
+  `formAction` are never written. A setter's attribute name is checked for every literal it
+  can be (`flag ? "x" : "href"`), and a name code computes is refused (no catalogue file
+  computes one). In the exported page a content security policy stops a request but not a
+  top-level navigation.
 * **Imports** (`banned-import`): a Chart.js, D3, ECharts or Highcharts snippet is a
   classic script inside the harness's `try` block, so it imports and exports nothing (the
   library is the page's global). A MUI X module imports, and re-exports, only bare
@@ -214,7 +221,6 @@ GLOBALS = frozenset(
         "encodeURI",
         "decodeURI",
         "structuredClone",
-        "arguments",
         "Object",
         "Array",
         "Number",
@@ -959,7 +965,7 @@ class _Scan:
         return False
 
     def check_call(self, node: Node) -> None:
-        name = js_callee(self.source, node) or ""
+        name = self.callee_name(node)
         arguments = js_arguments(node)
         method = self.method_of(node)
         if name in TIMERS:
@@ -978,7 +984,7 @@ class _Scan:
                 self.add("banned-call", "an element that runs code, loads a resource or submits is not allowed", node)
         if method in WRITE_METHODS and name != method:
             self.add("banned-call", f".{method}() writes markup that runs; build the elements instead", node)
-        if method in ATTRIBUTE_SETTERS and arguments:
+        if method in ATTRIBUTE_SETTERS and arguments and name != method:  # a member's setter, not a function `attr`
             self.check_attribute_write(node, method, arguments)
         if name in MUTATING_OBJECT_CALLS and arguments and self.token_root(arguments[0]) is not None:
             token = self.token_root(arguments[0])
@@ -1003,7 +1009,32 @@ class _Scan:
             return None
         if unwrapped.type == "identifier":
             return self.source.text(unwrapped)
-        return js_property(self.source, unwrapped) if unwrapped.type == "member_expression" else None
+        # `el["setAttribute"](...)` calls the member it names, as `el.setAttribute(...)` does (Copilot review of #12473)
+        if unwrapped.type in ("member_expression", "subscript_expression"):
+            return js_property(self.source, unwrapped)
+        return None
+
+    def callee_name(self, call: Node) -> str:
+        """The dotted name a call or `new` calls, a literal index read as the member it names (`d3["create"]` is
+        `d3.create`, `document["createElement"]` is `document.createElement`); `""` for a callee code computes."""
+        name = js_callee(self.source, call)
+        if name is not None:
+            return name
+        function = call.child_by_field_name("function" if call.type == "call_expression" else "constructor")
+        parts: list[str] = []
+        current = js_unwrap(function) if function is not None else None
+        for _ in range(1000):  # a chain of members; the bound only guards a pathological file
+            if current is None or current.type not in ("member_expression", "subscript_expression"):
+                break
+            member = js_property(self.source, current)
+            inner = js_object(current)
+            if member is None or inner is None:
+                return ""
+            parts.append(member)
+            current = js_unwrap(inner)
+        if current is None or current.type != "identifier":
+            return ""
+        return ".".join([self.source.text(current), *reversed(parts)])
 
     def binding_value(self, node: Node) -> Node | None:
         """The value a name was declared with (`const tag = "iframe"`), for a name that resolves to a declarator."""
@@ -1094,13 +1125,17 @@ class _Scan:
         position = 1 if method == "setAttributeNS" else 0
         if len(arguments) <= position + 1:
             return
-        names = self.literal_values(arguments[position])
-        attribute = next((text.strip().lower() for text in names), None)
-        if attribute in NAVIGATION_ATTRIBUTES:
+        names = {text.strip().lower() for text in self.literal_values(arguments[position])}
+        if not names:
+            # A name code computes could be any of them; no catalogue file computes one (Copilot review of #12473).
+            self.add("banned-call", f"{method} takes the attribute's name as a literal", node)
+            return
+        for attribute in sorted(names & NAVIGATION_ATTRIBUTES):  # every name a ternary may pick, not only the first
             self.add("banned-call", f"the attribute '{attribute}' is never set: it submits or holds a document", node)
-        elif attribute in URL_ATTRIBUTES and not self.drawn_url(arguments[position + 1]):
-            message = f"the attribute '{attribute}' takes only a data URL the code drew (canvas.toDataURL())"
-            self.add("banned-call", message, node)
+        for attribute in sorted(names & URL_ATTRIBUTES):
+            if not self.drawn_url(arguments[position + 1]):
+                message = f"the attribute '{attribute}' takes only a data URL the code drew (canvas.toDataURL())"
+                self.add("banned-call", message, node)
 
     def check_computed_key(self, index: Node, node: Node) -> None:
         """A key that code builds from strings must not be able to spell a member of `DENIED_MEMBER_STRINGS`, and a key
@@ -1188,6 +1223,10 @@ class _Scan:
                 self.add("banned-name", f"'this.{name}' is not allowed: the plot reaches no {DENIED_NAMES[name]}", node)
             elif name is None and not self.this_is_known(node):
                 self.add("banned-name", "this[...] here may read the window by a computed key; name the member", node)
+            elif name in PAGE_OBJECTS and not self.this_is_known(node):
+                # `function g() { return this.document.body; } g()` (Copilot review of #12473); `this.point` stays
+                message = f"'this.{name}' here may read the page's {name} past its rules; name what you read"
+                self.add("banned-name", message, node)
         elif not self.this_is_known(node):
             message = "'this' here may be the window (a function called without a receiver); pass what you need"
             self.add("banned-name", message, node)
@@ -1399,7 +1438,7 @@ class _Scan:
         self.check_placeholder()
         for node in walk(self.source.root):
             if node.type in ("call_expression", "new_expression"):
-                name = js_callee(self.source, node) or ""
+                name = self.callee_name(node)
                 if RNG_DRAWS.match(name):
                     self.add("rng", f"random data generation '{name}' is not allowed; the data comes from data", node)
             elif node.type == "array" and (node.parent is None or node.parent.type != "array"):
