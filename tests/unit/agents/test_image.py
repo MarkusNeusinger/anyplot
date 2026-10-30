@@ -503,8 +503,8 @@ class TestCloudBuild:
             "_MODEL": defaults["model"].default,
             "_JUDGE_MODEL": defaults["judge_model"].default,
             # Every library with a runtime for the admin's live tests (owner, 2026-10-28), not the settings default:
-            # the six Python libraries and ggplot2 on the R runtime (2026-10-29).
-            "_LIBRARIES": "matplotlib,seaborn,plotnine,altair,pygal,letsplot,ggplot2",
+            # the six Python libraries, ggplot2 on the R runtime (2026-10-29) and Makie on the Julia runtime (2026-10-30).
+            "_LIBRARIES": "matplotlib,seaborn,plotnine,altair,pygal,letsplot,ggplot2,makie",
             "_MIN_INSTANCES": "0",
             "_SMOKE_AUTH": "true",
         }

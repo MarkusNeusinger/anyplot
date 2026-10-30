@@ -100,11 +100,11 @@ RUN .venv/bin/python -m compileall -q agents core
 # instructions: the agent imports with one mode and switches at runtime
 # (`AGENT_REVIEWER_MODE`), and the experiment prompts for highlights. The import builds the
 # adapters of the default libraries only, so the check composes one adapter instruction per
-# language with a runtime (`policy.RUNTIME_PROMPTS`: matplotlib for Python, ggplot2 for R), which
-# reads that language's runtime prompt and the library rules. None of it needs credentials or
-# makes a network call. tests/unit/agents/test_image.py runs this command and
+# language with a runtime (`policy.RUNTIME_PROMPTS`: matplotlib for Python, ggplot2 for R, Makie
+# for Julia), which reads that language's runtime prompt and the library rules. None of it needs
+# credentials or makes a network call. tests/unit/agents/test_image.py runs this command and
 # holds it against every file the service reads.
-RUN .venv/bin/python -c "import agents.main; from agents.anyplot import policy, scoring; policy.scope_rubric(); policy.data_rubric(); policy.transcribe_rubric(); scoring.system_prompt(highlights=True); policy.catalogue_reviewer_instruction(); policy.reviewer_instruction(); policy.highlights_prompt('python'); policy.highlights_prompt('r'); policy.adapter_instruction('matplotlib'); policy.adapter_instruction('ggplot2')"
+RUN .venv/bin/python -c "import agents.main; from agents.anyplot import policy, scoring; policy.scope_rubric(); policy.data_rubric(); policy.transcribe_rubric(); scoring.system_prompt(highlights=True); policy.catalogue_reviewer_instruction(); policy.reviewer_instruction(); policy.highlights_prompt('python'); policy.highlights_prompt('r'); policy.highlights_prompt('julia'); policy.adapter_instruction('matplotlib'); policy.adapter_instruction('ggplot2'); policy.adapter_instruction('makie')"
 
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080

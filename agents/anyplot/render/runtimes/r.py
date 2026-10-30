@@ -75,10 +75,11 @@ from ...code.profiles.r.validate import validate_adaptation, validate_security
 from ...code.readiness import Readiness
 from ...code.validate import Finding
 from ...data.kinds import ColumnKinds
-from ...schemas import MAX_CHANGE_CHARS, AdaptPlan, CodeArtifact
+from ...schemas import AdaptPlan, CodeArtifact
 from ..contract import BLOCKING_RULES, Theme
 from ..harness import INTERPRETER_FLAGS
 from ..png import MAX_PNG_BYTES, read_output
+from .notes import counted_note
 from .python import DATA_RLIMIT_AS_MB, IMAGE_HARNESS, IMAGE_PYTHON, RENDER_RLIMIT_FSIZE_MB, PythonRuntime
 
 
@@ -197,15 +198,7 @@ class RRuntime:
         total = sum(kinds.inexact.values())
         whole, them = ("integer", "it") if total == 1 else ("integers", "them")
         head = f"R reads {total:,} {whole} past ±2^53 as the nearest double, so the plot can show {them} a unit or more off: "
-        items = [f"{count:,} in '{name}'" for name, count in kinds.inexact.items()]
-        line = head + items[0]
-        for shown in range(len(items), 0, -1):
-            more = len(items) - shown
-            rest = f", and {more} more column{'s' if more != 1 else ''}" if more else ""
-            line = head + ", ".join(items[:shown]) + rest
-            if len(line) <= MAX_CHANGE_CHARS:
-                break
-        return [line]
+        return [counted_note(head, kinds.inexact)]
 
     def validate(self, code: str, library: str) -> list[str]:
         return [f"{finding.rule}: {finding.message}" for finding in validate_security(code)]
@@ -237,8 +230,9 @@ class RRuntime:
     def new_literals(self, base: str, code: str) -> list[str]:
         return new_literals(base, code, library=self.library)
 
-    def error_summary(self, stderr_tail: str) -> str:
-        """The erroring function, its cause and layer and the last calls of a failed R render, never the message."""
+    def error_summary(self, stderr_tail: str, *, run_form: str | None = None) -> str:
+        """The erroring function, its cause and layer and the last calls of a failed R render, never the message.
+        R's grammar names no line, so the run form, which tells where the loader shifted the lines, goes unread."""
         return error_summary(stderr_tail)
 
     def export(self, run_form: str, *, spec_id: str, library_version: str | None, theme: str = "light") -> str:

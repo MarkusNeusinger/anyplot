@@ -1610,6 +1610,129 @@ Found for J2b's adapter prompt (Makie 0.24.16, in J1's image):
 - `barplot!` refuses String x values ("Conversion failed for BarPlot ... Tuple{Vector{String},
   Vector{Float64}}"): categories need integer positions and `xticks`, as the catalogue does.
 
+#### What J2b built (2026-10-30): Makie served
+
+Everything in 5f, on J2a's profile and J1.1's image, as PR 3b did for ggplot2.
+
+- **Runtime.** `agents/anyplot/render/runtimes/julia.py`, `JuliaRuntime`, implements the
+  whole `RuntimeAdapter` contract with J2a's modules: `plot.jl`, the renderer's Julia row
+  as the command (the harness in exec mode in front of the launcher with `JULIA_FLAGS`,
+  `-L` and the workload included), the row's environment key for key as `sandbox_env`
+  builds it (`JULIA_ENV`, no `RLIMIT_AS`, `ANYPLOT_DENY_EXEC=required`; locally
+  `RLIMIT_NPROC` left to `--pids-limit`), the Julia normaliser, loader, validator,
+  readiness scan and error grammar, the edit applier's Julia dialect, the PNG and no
+  probe (`review_texts`), the export with `julia --project=. plot.jl`, and Python's data
+  runs and conversions. `blocking_rules` adds `dataset-package` as R's does, and the
+  `adaptation_targets` are written in Julia. `render_p95_s` is the row's 25 s.
+  The registry gains `JULIA_LIBRARIES = {"makie"}` (pinned equal to
+  `edits.JULIA_LIBRARIES`) and `RUNTIME_CLASSES["julia"]`.
+- **The loader note.** `loader_notes` writes one "what changed" line from
+  `ColumnKinds.submillisecond`: "Julia keeps time to the millisecond, so the plot cuts the
+  digits below it from N timestamps: n in '<column>', ...", the columns that fit 200
+  characters and the rest counted. The fitting is R's, moved into
+  `runtimes/notes.counted_note`, which both runtimes call (R's line is unchanged, its tests
+  pin it). The pipeline puts it first and leaves the status alone, as for R; `root.md`
+  has the root name it in every reply to that result, as it names R's.
+- **The stderr tail.** `RuntimeCommand.stderr_head` (empty for every row but Julia's,
+  `"ERROR:"`) and `executor.stderr_tail`: the last 2,000 characters, and with a head the
+  first line that starts with it, cut to 300 characters, in front of them when the tail
+  lost its start, with the tail shortened by that line, so the answer stays within
+  `MAX_STDERR_CHARS` and `wire.py` is unchanged. `run_theme` passes the job's row, and
+  the local Docker backend cuts by the runtime's row in the same function. A row without a
+  head, a stderr within 2,000 characters, a head line inside the tail and a stderr
+  without one all give the plain tail, byte for byte what every row returned before; a
+  test pins that only the Julia row has a head. Safe for Python and R because their
+  rows carry no head, and for Julia because the line is the run's own output, which the
+  tail already carried, and the grammar reads it in a closed shape.
+- **Line numbers.** R's grammar names no line, so R has no offset to take off; Python's
+  names the run form's line, a few lines past the working form's after its loader. Julia's
+  loader adds 15 lines plus one per column, and about 12 more with a timestamp column (30
+  in the end-to-end run below), which would send the repair to the wrong statement. So
+  `RuntimeAdapter.error_summary` takes the run form as a keyword (`run_form`), which the
+  pipeline passes; Python's and R's summaries leave it unread. The Julia runtime finds the
+  loader's span in the run form (`loader.loader_span`: the top-level `import CSV,
+  DataFrames...` line, which plot code cannot contain, and the statement after it) and
+  the grammar names the working form's lines; a line inside the loader is the
+  placeholder's, "(the data loader)". The theme toggle and the eval report keep the run
+  form's lines, which no adapter reads.
+- **Prompts.** `adapter_julia.md` fills every slot of `adapter.md` and the highlights
+  slot: the placeholder and the loader's types (`CSV` and `TimeZones` never imported),
+  column constants as Julia strings (`\$` for a dollar sign) read as `df[!, COL]`, the
+  rewrite of the catalogue's plain vectors, `using DataFrames` for its functions, the
+  protected statements, `save`/`get` never bound, the canvas (`size`, `px_per_unit`, no
+  `resolution`, no `resize_to_layout!`), the palette as colour literals, the package
+  allowlist and the validator's refusals in short, `dropmissing` (never `filter`, which
+  keeps the `Union{Missing, Date}` type Makie refuses), categories as integer positions
+  with `xticks`, a number formatter with `DECIMAL` and `THOUSANDS` (Julia's `Printf` has no
+  grouping flag: measured, `%'.2f` is an `InvalidFormatStringError`), time axes and
+  English month names. The library rules (`prompts/library/makie.md`) are appended
+  verbatim, as for every library. `tests/unit/agents/runtime/test_policy.py` runs the
+  prompt's idioms through both Julia validator profiles (`JULIA_PROMPT_IDIOMS`), and
+  `test_profile_julia_image.py` renders them from a `data.csv` with missing cells. The
+  Python prompt is byte-identical (its SHA-256 pin holds). The agents image's build check
+  composes the Julia adapter instruction and highlights section; `ci-image.yml` checks
+  `adapter_julia.md` and `makie.md` in the image and runs the readiness scan through the
+  runtime. The scope judge and the `other_library` reply already read `AGENT_LIBRARIES`
+  (no change).
+- **Evals.** `make_fixtures.py` writes the ten specs for Makie (60 cases, 480 generated,
+  487 in a full run) with the smoke case `scatter-basic-makie-renamed` (18 smoke cases);
+  all ten Makie files are `coupled`. `eligibility.py` sweeps Makie; `dev_fixture`,
+  `matrix.py` and `stress.py` needed nothing beyond 3b's generalisation. `ladder_lab.py`
+  summarised a failed render with Python's grammar for every library; it now uses the
+  runtime's, as the pipeline does.
+- **Deploy and app.** `agents/cloudbuild.yaml` `_LIBRARIES` gains `makie`;
+  `AGENT_LIBRARIES`' default stays `matplotlib,seaborn`. The app already mapped `makie` to
+  Julia, highlights Julia, has `.download('plot.jl')` and lays out `.plot_all()` for any
+  number of libraries: no change.
+- **Verified locally, without a model.** A scripted identity adaptation of
+  `scatter-basic-makie-renamed` (the data block replaced by the placeholder and two column
+  constants, the vectors read from `df`, a German title) with an added timestamp column
+  `Erfasst am` (offsets `+01:00`, `-05:30`, `+02:00`, `Z`, microseconds and missing cells)
+  passed the pipeline's check, took the Julia loader and rendered through
+  `LocalDockerBackend` on `anyplot-renderer:julia` (J1.1's workload): 3200x1800 in both
+  themes, 3200x1864 with the footer strip, R1 to R3 passed, 5.7 s of wall time per theme
+  (both themes at once); the same container with its stdout kept reported `exec_deny: on`,
+  6.1 s of CPU and 1,014 MiB. The kinds counted 60 timestamps below the millisecond, the
+  note named them first in "what changed" and the result stayed `ok`. Two forced failures
+  after the loader (30 lines past the working form's):
+
+| Forced failure | stderr | Summary before J2b | After |
+|---|---|---|---|
+| `Legend(fig[1, 2], sqrt)` | 2,039 characters | "an error (the tail cut off its first line) at line 116; in Legend()" | "MethodError for initialize_block!() at line 86; in Legend()" |
+| `text!(ax, ...; text = 1.5)` | 10,608 characters | "an error (the tail cut off its first line) at line 116; in text!()" | "an error at line 86; in text!()" |
+
+Makie's compute pipeline reports a deep failure as "Failed to resolve ...", which names
+no Base exception type, so the second stays "an error"; it no longer claims a cut tail.
+
+| Text above | Built | Why |
+|---|---|---|
+| `vspan!` with DateTime bounds breaks a following `lines!` (J1.1) | The prompt says spans, bands and vertical lines (`vspan!`, `hspan!`, `vlines!`, `band!`) fail on a time axis in any order, and the plot then puts time on the axis as numeric offsets with ticks from the data, as the catalogue's `line-timeseries` does | Measured in J1.1's image: `vspan!` after `lines!` fails too ("Cannot change dim conversion"), and `hspan!`, `vlines!` and `band!` fail the same way; `lines!`, `scatter!`, `barplot!`, `text!` and `hlines!` take a `Date` or `DateTime` axis |
+| The runtime subtracts the loader's line count (J2a) | `error_summary(stderr_tail, *, run_form=None)` on the contract; the pipeline passes the run form | The summary sees only the stderr tail; the loader's span depends on the columns, and the run form is what ran. A keyword leaves Python's and R's summaries as they were |
+| R's note in `RRuntime.loader_notes` | The fitting moved to `runtimes/notes.counted_note`, which R and Julia call | One copy of the 200-character fitting; R's output is unchanged |
+
+#### Eligibility after J2b
+
+`uv run --extra agents python -m agents.evals.eligibility` on 2026-10-30: the seven rows
+of 3b unchanged, and Makie through its runtime:
+
+| Library | Files | Eligible | Clean | Coupled | Blocked |
+|---|---|---|---|---|---|
+| makie | 325 | 308 (94.8 %) | 0 | 308 | 17 |
+
+Makie's 17 blocked files are the 13 map specs, qrcode-basic (QRCoders and a URL) and the
+three saves inside `with_theme(...) do`; `test_eligibility.py` pins the counts.
+
+#### Next
+
+- The owner's matrix run for Makie on Vertex (60 cases), the gate for the public release;
+  `AGENT_LIBRARIES=...,ggplot2,makie` for a smoke or full run.
+- A deployed sweep with the workload, which revises `render_p95_s` (25 s).
+- Python's error line still counts the run form, a few lines past the working form's
+  after its loader; the same keyword would let it name the working form's line, a change
+  of Python's feedback the owner decides.
+- The owner task for the `deploy-renderer` trigger's included files (`Project.toml`,
+  `Manifest.toml`) stays open.
+
 ### 6. Add Tests
 
 - `tests/unit/agents/renderer/`: the executor builds the argv of each language from the

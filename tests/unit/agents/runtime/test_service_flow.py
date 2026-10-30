@@ -1363,6 +1363,29 @@ async def test_failed_render_twice_is_a_failed_result(
     assert (result["stage"], result["stages"]) == ("render", ["render", "render"])
 
 
+async def test_a_failed_render_is_summarised_over_the_code_that_ran(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The runtime's error grammar gets the run form, so a runtime whose loader shifts many lines (Julia, J2b) names
+    the working form's line in the repair's feedback; Python's summary leaves it unread."""
+    seen: list[str | None] = []
+    summary = PythonRuntime.error_summary
+
+    def recording(self: PythonRuntime, stderr_tail: str, *, run_form: str | None = None) -> str:
+        seen.append(run_form)
+        return summary(self, stderr_tail, run_form=run_form)
+
+    monkeypatch.setattr(PythonRuntime, "error_summary", recording)
+    backend.script = lambda job, theme: FakeOutcome(exit_code=1, stderr_tail="KeyError: 'Exam Score'\n")
+    fake = swap_models("gemini", default_script(plans=[SCATTER_PLAN, {"edits": [], "changes": []}]))
+    sid = await open_session(client)
+
+    await create_plot(client, sid)
+
+    assert seen == [job.source for job in backend.jobs] and len(seen) == 2
+    assert "the code failed with KeyError; fix the code" in adapter_inputs(fake)[1]
+
+
 async def test_canvas_miss_is_repaired_then_padded(
     client: httpx.AsyncClient, swap_models, backend: FakeBackend, caplog: pytest.LogCaptureFixture
 ) -> None:

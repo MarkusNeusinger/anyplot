@@ -909,6 +909,36 @@ class TestBackends:
             assert output.exit_code == 1
             assert output.stderr_tail.endswith("ValueError: TAIL-MARKER\n")
 
+    async def test_local_backend_cuts_the_stderr_as_the_renderer_does(self, tmp_path: Path) -> None:
+        """The Julia row keeps its first `ERROR:` line in front of the tail (`executor.stderr_tail`), locally too."""
+        from agents.anyplot.render.runtimes import runtime_for
+
+        docker = tmp_path / "docker"
+        docker.write_text(
+            "#!/bin/sh\n"
+            "printf 'ERROR: LoadError: MethodError: no method matching f(::Int64)\\n' >&2\n"
+            "head -c 9000 /dev/zero | tr '\\000' x >&2\n"
+            "printf '\\nin expression starting at /work/plot.jl:4\\n' >&2\n"
+            "exit 1\n"
+        )
+        docker.chmod(0o755)
+        backend = LocalDockerBackend(
+            image="anyplot-renderer:julia",
+            runtime=PythonRuntime(),
+            environment="development",
+            docker=str(docker),
+            runtime_for=runtime_for,
+        )
+
+        julia = await backend.render(job(job_id="jl1", language="julia", library="makie"))
+        python = await backend.render(job(job_id="py1"))
+
+        for theme in ("light", "dark"):
+            kept = julia.outputs[theme].stderr_tail
+            assert len(kept) == 2_000 and kept.startswith("ERROR: LoadError: MethodError")
+            assert kept.endswith("plot.jl:4\n")
+            assert python.outputs[theme].stderr_tail.startswith("x")
+
     async def test_read_tail_keeps_the_last_bytes(self) -> None:
         stream = asyncio.StreamReader()
         stream.feed_data(b"a" * 300_000)

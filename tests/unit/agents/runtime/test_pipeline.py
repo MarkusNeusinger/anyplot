@@ -52,7 +52,7 @@ from agents.anyplot.schemas import (
 from agents.anyplot.services import CodeVersion, VersionStore
 from agents.anyplot.session_state import SessionView
 from agents.anyplot.settings import AgentSettings, get_settings
-from tests.unit.agents.code.conftest import R_CATALOGUE_NORMALISED
+from tests.unit.agents.code.conftest import JULIA_WORKING, R_CATALOGUE_NORMALISED
 
 from .fakes import gemini_call_s
 
@@ -841,6 +841,39 @@ class TestRCheck:
         assert check.defects[0].startswith("DQ-03 (code): random data generation 'rnorm' is not allowed")
         assert "set.seed() with sample(), runif() or jitter()" in check.defects[0]
         assert "np.random" not in check.defects[0]
+
+
+class TestJuliaCheck:
+    """Makie through the same check, with the Julia runtime's validators, blocking rules and targets (J2b)."""
+
+    PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+    def check(self, code: str) -> CheckResult:
+        return _check(code, library="makie", palette=self.PALETTE, base=JULIA_WORKING)
+
+    def test_the_working_form_may_render(self) -> None:
+        check = self.check(JULIA_WORKING)
+        assert check.may_render and check.blocking == [] and check.defects == []
+
+    def test_a_kept_dataset_package_refuses_the_working_form(self) -> None:
+        code = JULIA_WORKING.replace("using DataFrames\n", "using DataFrames\nusing PalmerPenguins\n")
+
+        check = self.check(code)
+
+        assert not check.may_render and check.blocking_rules == ["dataset-package"]
+
+    def test_a_loader_package_in_the_plot_is_a_security_refusal(self) -> None:
+        check = self.check(JULIA_WORKING.replace("using DataFrames\n", "using DataFrames\nusing CSV\n"))
+        assert not check.may_render and check.blocking_rules == ["banned-import"]
+
+    def test_a_soft_finding_gets_its_julia_target(self) -> None:
+        code = JULIA_WORKING.replace("df = load_user_data()\n", "df = load_user_data()\nnoise = randn(10)\n")
+
+        check = self.check(code)
+
+        assert check.may_render and check.adaptation_rules == ["rng"]
+        assert "Random.seed! with rand, shuffle or randperm" in check.defects[0]
+        assert "np.random" not in check.defects[0] and "set.seed" not in check.defects[0]
 
 
 class TestLoaderNotes:

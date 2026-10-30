@@ -9,7 +9,8 @@ from the repository root:
     uv run --extra agents python -m agents.evals.eligibility --out agents/evals/reports/spike-x
 
 For every implementation file of `LIBRARIES`, found under its language with its
-extension (`plots/<spec>/implementations/python/<library>.py`, `.../r/ggplot2.R`), it does
+extension (`plots/<spec>/implementations/python/<library>.py`, `.../r/ggplot2.R`,
+`.../julia/makie.jl`), it does
 what `POST /v1/sessions` does with a catalogue snapshot (`opening.assess`): strip the
 `# noqa` comments, normalise, and run the readiness scan of the library's runtime
 (`render.runtimes.runtime_for`), which applies the SECURITY validator, the `THEME` and
@@ -38,9 +39,9 @@ from typing import Any
 EVALS_DIR = Path(__file__).resolve().parent
 REPO_ROOT = EVALS_DIR.parents[1]
 DEFAULT_OUT = EVALS_DIR / "reports"
-LIBRARIES: tuple[str, ...] = ("matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot", "ggplot2")
+LIBRARIES: tuple[str, ...] = ("matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot", "ggplot2", "makie")
 """The libraries with a runtime (`render.runtimes.RUNTIME_LIBRARIES`, pinned by a test), in sweep order: the six
-Python libraries, then ggplot2 (R, since 2026-10-29)."""
+Python libraries, then ggplot2 (R, since 2026-10-29) and Makie (Julia, since 2026-10-30)."""
 STATUSES: tuple[str, ...] = ("clean", "coupled", "blocked", "error")
 _SECURITY_RULE = re.compile(r"^security: ([a-z][a-z0-9-]*)(?: at line \d+)?:")
 

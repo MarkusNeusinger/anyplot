@@ -6,7 +6,13 @@ without Docker and the image); these tests pin the statement's text and shape.
 
 import pytest
 
-from agents.anyplot.code.profiles.julia.loader import JULIA_TYPES, julia_literal, loader_statement, to_run_form
+from agents.anyplot.code.profiles.julia.loader import (
+    JULIA_TYPES,
+    julia_literal,
+    loader_span,
+    loader_statement,
+    to_run_form,
+)
 from agents.anyplot.code.profiles.julia.validate import validate_security
 from agents.anyplot.code.treesitter import Source, jl_string, syntax_problems, walk
 from agents.anyplot.data.kinds import read_kinds
@@ -130,6 +136,27 @@ def test_the_run_form_is_not_what_the_validator_admits() -> None:
 
     assert any(finding.rule == "banned-import" for finding in validate_security(run_form))
     assert validate_security(JULIA_WORKING) == []
+
+
+@pytest.mark.parametrize(
+    "kinds",
+    [{"x": "number"}, {"x": "number", "t": "datetime"}, {"x": "big-integer", "t": "datetime", "d": "date"}],
+    ids=["plain", "timestamps", "every-conversion"],
+)
+def test_the_loader_span_is_where_the_placeholder_was(kinds: dict[str, str]) -> None:
+    """The loader replaces the one placeholder line: its span starts there, and every line after it moves down by
+    the span's length minus one (J2b, the error summary's working-form lines)."""
+    run_form = to_run_form(JULIA_WORKING, columns=list(kinds), kinds=kinds)
+    working, run = JULIA_WORKING.splitlines(), run_form.splitlines()
+    placeholder = working.index("df = load_user_data()") + 1
+
+    span = loader_span(run_form)
+    assert span is not None
+    first, count = span
+    assert first == placeholder and run[first - 1].startswith("import CSV, DataFrames")
+    assert count == len(run) - len(working) + 1 and run[first - 1 + count] == working[placeholder]
+    assert run[first + count - 2] in (")", "end")
+    assert loader_span(JULIA_WORKING) is None
 
 
 # --- data/kinds.py: the Julia counts --------------------------------------------------------
