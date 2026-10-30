@@ -423,14 +423,20 @@ async def _standin(
     standin["check"] = "ok"
     runtime = runtime_for(case.library, cpu_seconds=context.settings.render_timeout_s)
     columns = [column.name for column in parsed.profile.columns]
-    kinds = read_kinds(parsed.csv, parsed.column_dtypes, parsed.parse_dates)
-    run_form = runtime.loader_block(
-        runtime.normalise(working, case.library),
-        columns=columns,
-        dtypes=dict(parsed.column_dtypes),
-        parse_dates=list(parsed.parse_dates),
-        kinds=dict(kinds.kinds),
-    )
+    try:
+        kinds = read_kinds(parsed.csv, parsed.column_dtypes, parsed.parse_dates)
+        # A cell the typed table cannot hold raises here, as in the pipeline, where the loader then refuses.
+        data_json = runtime.data_json(parsed.csv, kinds)
+        run_form = runtime.loader_block(
+            runtime.normalise(working, case.library),
+            columns=columns,
+            dtypes=dict(parsed.column_dtypes),
+            parse_dates=list(parsed.parse_dates),
+            kinds=dict(kinds.kinds),
+        )
+    except ValueError:
+        record["status"] = "loader_failed"
+        return
     job = RenderJob(
         job_id=secrets.token_hex(8),
         language=runtime.language,
@@ -439,7 +445,7 @@ async def _standin(
         data_csv=parsed.csv,
         themes=("light",),
         timeout_s=float(context.settings.render_timeout_s),
-        data_json=runtime.data_json(parsed.csv, kinds),
+        data_json=data_json,
     )
     record["stage"] = "render"
     started = time.monotonic()
