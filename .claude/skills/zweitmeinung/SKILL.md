@@ -12,8 +12,8 @@ opinions; it never implements a suggestion on its own. The owner decides.
 This skill is for Claude. Gemini in the owner's agy session sees it through
 `.agents/skills/` but never runs it: it would be asking itself.
 
-**Never run `agy` from Claude.** Google's Antigravity FAQ and a staff reply of 2026-10-16
-(discuss.ai.google.dev/t/189905) say that running the Antigravity CLI from a third-party
+**Never run `agy` from Claude.** Google's Antigravity FAQ, and a forum reply of 2026-10-16
+not marked as Google staff (discuss.ai.google.dev/t/189905), say that running the Antigravity CLI from a third-party
 coding agent such as Claude Code under a consumer login (the owner's Google AI Ultra)
 breaks the terms and can get the account suspended, even with the unmodified binary and
 no token access. The Gemini part therefore runs through `gemini_review.py` in this

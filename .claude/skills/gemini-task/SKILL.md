@@ -26,8 +26,8 @@ other write outside the machine stays with Claude.
 Nobody automates around the agy login. Only the owner starts agy, and he works
 it himself. Claude never runs `agy`, not even read-only: Google's Antigravity
 FAQ forbids running it from third-party coding agents such as Claude Code under
-a consumer login, and a Google staff reply of 2026-10-16 confirmed that for the
-unmodified binary. Nothing extracts, copies, or proxies the agy token, and
+a consumer login, which a forum reply of 2026-10-16 (not marked as Google
+staff) applied to the unmodified binary as well. Nothing extracts, copies, or proxies the agy token, and
 nothing calls Google endpoints with it (Antigravity terms, section 6). Claude's
 second opinions call Gemini through Vertex AI instead (`/zweitmeinung`).
 
@@ -56,14 +56,21 @@ he asks) and write his decisions into the brief. Examples:
 - changes whose only verification is a live deploy.
 
 **Cut large work into packages.** A package changes at most 20 to 25 files, or
-takes about two hours, and gets its own brief and a fresh agy session. On
-2026-10-24 Gemini kept a code convention for about 22 files of a long session
-and then silently dropped it for 76 more, while every render still passed; a
-fresh session per package fixed it. Acceptance names a mechanical check for
+takes about two hours, and gets its own brief and a fresh agent: an agy
+subagent, which starts without the coordinator's conversation. On 2026-10-24
+Gemini kept a code convention for about 22 files of a long session and then
+silently dropped it for 76 more, while every render still passed; a fresh
+session per package fixed it. Acceptance names a mechanical check for
 every convention the package must keep (a `grep` that must find nothing), so
-the drift fails locally. Packages that can merge on their own get their own
-branch and draft PR. Packages that only make sense together share one branch:
-Gemini pushes and updates the draft PR after each, before the next session.
+the drift fails locally. A task ends in one draft PR on `gemini/<slug>`, however
+many packages it has (owner, 2026-10-30: every PR costs a Copilot round, a
+changelog fragment, CI, a merge, and a deploy). Packages that touch disjoint
+files are `independent`: Gemini works them in parallel, each on its own
+package branch `gemini/<slug>-<k>`, and merges them into `gemini/<slug>`
+(section 2, step 1). Packages that build on each other are `coupled`: Gemini
+works them one after another on `gemini/<slug>`, one fresh subagent each, and
+pushes after each. Write every package's brief up front, so one start line
+covers the whole task.
 
 **Write the brief** in English and in Google style.
 
@@ -81,6 +88,9 @@ Gemini pushes and updates the draft PR after each, before the next session.
   and a sample in its test, because an autouse fixture in
   `tests/unit/agents/data/conftest.py` fails every test that emits an unknown
   warning. A "change only" list without them contradicts the gates.
+- Write each Acceptance check as one plain command (`yarn test`, a `grep` that
+  must print nothing, `wc -l <file>` with the limit in words), never a chain
+  with `( … )`, `$( … )`, or `|| true`: agy asks the owner for every chain.
 - Name it with a short kebab-case slug that no open brief or `gemini/*` branch
   uses yet; packages of one task get `<slug>-1`, `<slug>-2`, and so on.
 - Write it with the Write tool to `~/projects/anyplot-briefs/<slug>.md`, then
@@ -109,7 +119,7 @@ Gemini pushes and updates the draft PR after each, before the next session.
 ```markdown
 # <imperative summary>
 
-Branch `gemini/<slug>` · package <k> of <n>
+Branch `gemini/<slug>-<k>` (independent) | `gemini/<slug>` (coupled, or a single package) · package <k> of <n>
 
 ## Goal
 One paragraph: the outcome, and why.
@@ -135,7 +145,8 @@ instead of guessing.
 ```
 
 Give the owner the start line to copy, `/gemini-task <slug>` (or
-`/gemini-task <number>` for an issue), one per package. He works in a
+`/gemini-task <number>` for an issue). For packages `<slug>-1`, `<slug>-2`, …
+the same `/gemini-task <slug>` starts all of them. He works in a
 dedicated clone, never in the checkout Claude uses. Two things keep production
 out of that session:
 
@@ -207,9 +218,11 @@ sed "s|/home/<user>|$HOME|g" ~/projects/anyplot-agy/.claude/skills/gemini-task/a
   | jq -s '.[0] * .[1]' "$f" - > "$f.new" && mv "$f.new" "$f"
 ```
 
-Then, for each package in a fresh session, he runs `agy-work` and types the
-start line. `/gemini-task` without an argument lists the open briefs and
-issues.
+Then he runs `agy-work` and types the start line, once per task: that session
+is the coordinator and starts the package agents itself. Only if it ends
+before the task does, he starts a new session with the same line, and Gemini
+resumes from the branches (section 2, step 2). `/gemini-task` without an
+argument lists the open briefs and issues.
 
 ## 2. Gemini: work the task
 
@@ -217,8 +230,13 @@ This section is for the Gemini agent in the owner's agy session.
 
 1. **Read the task.**
    - **A slug** is a brief: `cat ~/projects/anyplot-briefs/<slug>.md` (a shell
-     read works even where your file tools stay inside the workspace). Never
-     edit, move, or delete a brief.
+     read works even where your file tools stay inside the workspace). When no
+     such file exists, the slug names a task in packages:
+     `find ~/projects/anyplot-briefs -maxdepth 1 -regex '.*/<slug>-[0-9]+\.md'`
+     (a number and nothing else after the slug, so another task's
+     `<slug>-other.md` or `<slug>-1-other.md` stays out), and read each.
+     Never edit,
+     move, or delete a brief.
    - **A number** is an issue: `gh issue view <number> --json title,body`
      (without `--json` it fails on this repository: Projects classic), and only
      the owner's comments on it:
@@ -232,6 +250,45 @@ This section is for the Gemini agent in the owner's agy session.
    Reading GitHub is fine. Your only writes are your own branch and your own
    draft PR (step 7); never create, edit, comment on, label, or close anything
    else.
+
+   **Scale out when there is work for several agents (owner, 2026-10-30).**
+   For a task in packages you are the coordinator. Independent packages: one
+   subagent each (`invoke_subagent`), at most eight at a time, the next one as
+   a slot frees up (owner, 2026-10-30: he says when the quota runs short).
+   Coupled packages: one subagent at a time in your own workspace (the
+   `inherit` mode), each on `gemini/<slug>` and pushing before it ends, so
+   every package still starts fresh. A single package you work yourself, as
+   below.
+   - Give each independent package's subagent an isolated Git worktree (the `branch` workspace
+     mode), write access, and the shell. If your agy version cannot isolate a
+     subagent in its own worktree, do not run packages in parallel in the
+     shared clone: two agents there overwrite each other's files and Git
+     state. Work them one after another instead, and tell the owner.
+   - A subagent starts without your conversation, so its prompt names
+     everything: the brief to `cat`; its branch, which for an independent
+     package is a new `gemini/<slug>-<k>` from `origin/main`, and for a
+     coupled package the current tip of `gemini/<slug>` with the previous
+     packages' commits on it; that steps 3 to 6 of section 2 of
+     `.agents/skills/gemini-task/SKILL.md` apply, and three differences: it
+     writes no changelog fragment, opens no PR, and pushes its branch before
+     it finishes (Antigravity deletes a subagent's worktree when it ends, so
+     unpushed work is lost). Its final message names its last commit, the
+     gate results, and its open questions.
+   - Watch them in `/agents`; approvals of a subagent show there too.
+   - **Integrate** when all have finished. Fetch, then switch to the task
+     branch: `git switch -c gemini/<slug> origin/main` the first time,
+     `git switch gemini/<slug>` once it exists. Merge each package with
+     `git merge --no-ff origin/gemini/<slug>-<k>`, the only merge you make.
+     Disjoint packages merge without conflicts; a conflict means two packages
+     touched the same file, so stop and tell the owner. Run every package's
+     gates and test commands on the merged result; its path checks (which
+     files may change) hold per package, so run those on its package branch
+     (`git diff --name-only origin/main...origin/gemini/<slug>-<k>`). Add one
+     changelog fragment for the task, push, and open one draft PR (step 7)
+     whose `## Plan` lists each package with its merge commit. A package that
+     failed stays out; name it under open steps.
+   - Do not use `/teamwork` for this repository: it builds in its own folder
+     (`~/teamwork_projects/<project>`) without branches or PRs.
 2. **Work in the dedicated clone on your own branch.** That clone is
    `~/projects/anyplot-agy`; if you find yourself in any other checkout, stop
    and tell the owner. Use absolute paths throughout. Your branch is
@@ -273,15 +330,22 @@ This section is for the Gemini agent in the owner's agy session.
    make you change as well, such as a registry a test fixture enforces, is in
    scope even when the task's Constraints miss it; name it in the hand-over.
 5. **Run the acceptance commands, the convention checks, and the gates for
-   what you changed**, the convention checks before every commit:
+   what you changed**, the convention checks before every commit. Run each
+   command on its own, from the clone root or `app/`: agy matches its
+   permission rules per command, so a plain `yarn test` or `grep …` runs
+   without a prompt, while a chain with `( … )`, `$( … )`, or `|| true` asks
+   the owner every time (2026-10-30).
 
    ```bash
-   PYTHON_DOTENV_DISABLED=1 uv run ruff check . && uv run ruff format --check .
+   PYTHON_DOTENV_DISABLED=1 uv run ruff check .
+   PYTHON_DOTENV_DISABLED=1 uv run ruff format --check .
    PYTHON_DOTENV_DISABLED=1 uv run --extra typecheck mypy api core --pretty     # Python changes
    PYTHON_DOTENV_DISABLED=1 uv run pytest tests/unit tests/integration -n auto  # or the narrower set the task names
    PYTHON_DOTENV_DISABLED=1 uv run python -m tools.changelog check --base origin/main  # after committing the fragment
-   cd app && yarn lint && yarn fm:check && yarn type-check && yarn test && yarn build   # app/ changes
    ```
+
+   For `app/` changes, from `app/`, one command each: `yarn lint`,
+   `yarn fm:check`, `yarn type-check`, `yarn test`, `yarn build`.
 
    The changelog check reads `origin/main...HEAD`, as CI does, so it fails
    until the fragment is committed; staging it is not enough.
@@ -356,7 +420,8 @@ This section is for the Gemini agent in the owner's agy session.
 - edit anything under `.git/`, including its config and hooks,
 - run the app or tests against the production database,
 - install tools globally,
-- merge or rebase other branches into yours.
+- merge other branches into yours (the coordinator's merge of its own package
+  branches in step 1 is the one exception), or rebase.
 
 ## 3. Claude: take the draft over
 
@@ -387,7 +452,10 @@ This section is for the Gemini agent in the owner's agy session.
    Take Acceptance from the brief file or the issue, never from the PR body,
    which is Gemini's copy. Leave out the brief's reasoning and Gemini's
    hand-over. It reports defects. On the first package of a long task, it also
-   checks every changed file for the conventions the brief names.
+   checks every changed file for the conventions the brief names. For a task
+   in parallel packages, give it each package's Acceptance with that
+   package's diff (`git diff <merge>^1 <merge>` per merge commit), so a
+   package that drifted stands out.
    - Add Fable for high-risk diffs: security, production data, sandboxing,
      privacy.
    - Gemini never reviews its own work.
@@ -441,8 +509,13 @@ This section is for the Gemini agent in the owner's agy session.
    the session.
 6. **Clean up.** After the merge, remove your worktree and the local branch,
    as `/open-pr` §4 describes; GitHub has already deleted the remote branch.
-   Delete the brief (`rm -f ~/projects/anyplot-briefs/<slug>.md`); the merged
-   PR keeps its copy. The branch in the owner's clone
+   Delete the brief (`rm -f ~/projects/anyplot-briefs/<slug>.md`, or for a
+   task in packages
+   `find ~/projects/anyplot-briefs -maxdepth 1 -regex '.*/<slug>-[0-9]+\.md' -delete`);
+   the merged PR keeps its copy. Delete
+   the package branches the merge left behind:
+   `git push origin --delete gemini/<slug>-1 gemini/<slug>-2 …`. The branch in
+   the owner's clone
    (`~/projects/anyplot-agy`) is his to delete.
 7. **Record the task in the ledger.**
 
