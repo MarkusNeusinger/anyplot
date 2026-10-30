@@ -196,7 +196,9 @@ package after another (2026-10-30). Only `worktrees/` stays open, and `cd` and
 `git -C` into it are allowed by `regex:` rules that refuse `..`. After an agy
 update, compare `ls -A ~/.gemini ~/.gemini/antigravity-cli` with the deny list
 and add any new entry. Rules are word-by-word prefixes unless they start with
-`regex:`; deny wins over ask, ask over allow, and anything unlisted asks.
+`regex:`, and a word matches only whole: `git push origin gemini/` never
+matched `git push origin gemini/<slug>`, so the push allow is a `regex:` rule
+(2026-10-30). Deny wins over ask, ask over allow, and anything unlisted asks.
 Shell wrappers (`bash -c`, `sh`, `env`, `xargs`, `eval`) stay unlisted,
 because a deny rule only matches the start of a command.
 

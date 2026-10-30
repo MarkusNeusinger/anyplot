@@ -7,6 +7,8 @@
   fell back to one package after another. `agy-permissions.json` now denies
   each entry of `~/.gemini` and `~/.gemini/antigravity-cli` by name, keeps the
   agy login and settings closed, and leaves only `worktrees/` open, with
-  `regex:` rules for `cd` and `git -C` into it that refuse `..`. The three
-  push deny rules also match when agy compares a whole command against them.
-  (#12467)
+  `regex:` rules for `cd` and `git -C` into it that refuse `..`. Pushes to
+  `gemini/<slug>` no longer prompt: agy matches each word of a rule whole, so
+  the old `git push origin gemini/` allow never matched a real branch, and a
+  `regex:` rule replaces it. The three push deny rules also match when agy
+  compares a whole command against them. (#12467)
