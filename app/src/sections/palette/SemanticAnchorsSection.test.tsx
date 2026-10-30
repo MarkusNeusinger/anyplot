@@ -1,34 +1,11 @@
-import { useState } from 'react';
-
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { SemanticAnchorsSection } from 'src/sections/palette/SemanticAnchorsSection';
-import { act, fireEvent, render, screen } from 'src/test-utils';
-
-function StatefulAnchors() {
-  const [copiedHex, setCopiedHex] = useState<string | null>(null);
-  const copyHex = (hex: string) => {
-    void navigator.clipboard
-      .writeText(hex)
-      .then(() => {
-        setCopiedHex(hex);
-        setTimeout(() => setCopiedHex(c => (c === hex ? null : c)), 1500);
-      })
-      .catch(() => {});
-  };
-
-  return <SemanticAnchorsSection copiedHex={copiedHex} copyHex={copyHex} />;
-}
+import { fireEvent, render, screen } from 'src/test-utils';
 
 describe('SemanticAnchorsSection', () => {
-  afterEach(() => {
-    vi.useRealTimers();
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
-  });
-
   it('renders amber, adaptive neutral, and adaptive muted anchors with their swatch buttons', () => {
-    render(<StatefulAnchors />);
+    render(<SemanticAnchorsSection copiedHex={null} copyHex={vi.fn()} />);
 
     expect(screen.getByRole('heading', { name: /semantic anchors/i })).toBeInTheDocument();
     expect(screen.getByText('palette.amber')).toBeInTheDocument();
@@ -52,29 +29,23 @@ describe('SemanticAnchorsSection', () => {
     ).toBeInTheDocument();
   });
 
-  it('copies an anchor swatch and resets the copied feedback after 1500 ms', async () => {
-    vi.useFakeTimers();
-    const writeText = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal('navigator', { clipboard: { writeText } });
-
-    render(<StatefulAnchors />);
+  it('calls copyHex with the clicked anchor hex and shows copied ✓ only on the matching swatch', () => {
+    const copyHex = vi.fn();
+    const { rerender } = render(<SemanticAnchorsSection copiedHex={null} copyHex={copyHex} />);
 
     const amberSwatch = screen.getByRole('button', {
       name: 'Copy #DDCC77 (amber) to clipboard',
     });
     expect(amberSwatch).toHaveTextContent('#DDCC77');
 
-    await act(async () => {
-      fireEvent.click(amberSwatch);
-    });
+    fireEvent.click(amberSwatch);
+    expect(copyHex).toHaveBeenCalledWith('#DDCC77');
 
-    expect(writeText).toHaveBeenCalledWith('#DDCC77');
+    rerender(<SemanticAnchorsSection copiedHex="#DDCC77" copyHex={copyHex} />);
     expect(amberSwatch).toHaveTextContent('copied ✓');
-
-    act(() => {
-      vi.advanceTimersByTime(1500);
-    });
-
-    expect(amberSwatch).toHaveTextContent('#DDCC77');
+    expect(screen.getAllByText('copied ✓')).toHaveLength(1);
+    expect(
+      screen.getByRole('button', { name: 'Copy #1A1A17 (neutral) to clipboard' })
+    ).toHaveTextContent('#1A1A17');
   });
 });
