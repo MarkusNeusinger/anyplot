@@ -16,6 +16,7 @@ from agents.anyplot.code.profiles.julia.errors import (
     OUT_OF_MEMORY,
     RECURSION,
     error_summary,
+    working_line,
 )
 from agents.anyplot.render.contract import MAX_STDERR_CHARS
 
@@ -178,6 +179,50 @@ def test_a_deep_makie_failure_keeps_the_plot_line_in_the_tail() -> None:
     assert (
         error_summary(stderr[-MAX_STDERR_CHARS:]) == "an error (the tail cut off its first line) at line 4; in text!()"
     )
+
+
+@pytest.mark.parametrize(
+    ("line", "expected"), [(9, (9, False)), (10, (10, True)), (25, (10, True)), (26, (11, False)), (40, (25, False))]
+)
+def test_run_form_lines_map_to_the_working_form(line: int, expected: tuple[int, bool]) -> None:
+    """A loader of 16 lines at line 10 stands for the one placeholder line: lines after it move up by 15."""
+    assert working_line(line, (10, 16)) == expected
+    assert working_line(line, None) == (line, False)
+
+
+def test_the_summary_names_the_working_forms_lines() -> None:
+    stderr = (
+        "ERROR: LoadError: BoundsError: attempt to access 2-element Vector{Int64} at index [5]\nStacktrace:\n"
+        " [1] getindex\n   @ ./essentials.jl:974 [inlined]\n [2] g(v::Vector{Int64})\n   @ Main /work/plot.jl:30\n"
+        " [3] top-level scope\n   @ /work/plot.jl:40\nin expression starting at /work/plot.jl:40\n"
+    )
+    assert error_summary(stderr) == "BoundsError at line 30; in getindex(); the statement starts at line 40"
+    assert (
+        error_summary(stderr, loader=(10, 16))
+        == "BoundsError at line 15; in getindex(); the statement starts at line 25"
+    )
+    in_loader = stderr.replace("plot.jl:30", "plot.jl:12").replace("plot.jl:40", "plot.jl:11")
+    assert error_summary(in_loader, loader=(10, 16)) == "BoundsError at line 10 (the data loader); in getindex()"
+
+
+def test_the_julia_rows_tail_keeps_the_error_line_in_front() -> None:
+    """Since J2b the renderer keeps the Julia row's first `ERROR:` line in front of the tail (`stderr_head`), within
+    the same 2,000 characters, so the summary names what it names on the whole stderr."""
+    from agents.renderer.commands import command_for
+    from agents.renderer.executor import stderr_tail
+
+    stderr = (Path(__file__).parent / "fixtures" / "julia_makie_text_align.stderr").read_text(encoding="utf-8")
+    head = command_for("julia", "makie").stderr_head
+    kept = stderr_tail(stderr, head)
+
+    assert len(kept) == MAX_STDERR_CHARS and kept.startswith("ERROR: LoadError: Failed to resolve arg1:\n")
+    assert error_summary(kept) == error_summary(stderr) == "an error at line 4; in text!()"
+    typed = stderr.replace(
+        "ERROR: LoadError: Failed to resolve arg1:",
+        "ERROR: LoadError: MethodError: no method matching create_dim_conversion(::Type{Union{Missing, Dates.Date}})",
+        1,
+    )
+    assert error_summary(stderr_tail(typed, head)) == "MethodError for create_dim_conversion() at line 4; in text!()"
 
 
 @pytest.mark.parametrize(

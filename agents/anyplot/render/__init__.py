@@ -31,8 +31,8 @@ def make_backend(settings: "AgentSettings") -> RenderBackend:
     `AGENT_RENDER_CONCURRENCY` is enforced.
 
     The `local` and `sandbox` backends resolve a render job's runtime by its library
-    (`runtime_for`, with the render timeout as the CPU limit): the Python runtime or the
-    R runtime, by the library's language. Data runs and conversions always run on the
+    (`runtime_for`, with the render timeout as the CPU limit): the Python, the R or the
+    Julia runtime, by the library's language. Data runs and conversions always run on the
     Python runtime, whatever the plot's language.
     """
     # Imported here: `settings` imports this package's registry for its library check.

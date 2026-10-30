@@ -26,8 +26,9 @@ transforms the pipeline applies before a render (`normalise`, `loader_block`,
 and the target of each other one, `adaptation_targets`), what its loader changes when
 it reads `data.csv` (`loader_notes`), its error grammar (`error_summary`) and its export
 (`export`, `code_artifact`). `runtimes/__init__.py` maps a library to the runtime of its
-language: Python (`runtimes/python.py`) for six libraries and R (`runtimes/r.py`) for
-ggplot2 since 2026-10-29; later languages add runtimes, not backends.
+language: Python (`runtimes/python.py`) for six libraries, R (`runtimes/r.py`) for
+ggplot2 since 2026-10-29 and Julia (`runtimes/julia.py`) for Makie since 2026-10-30;
+later languages add runtimes, not backends.
 
 No ADK import: the render layer is plain code.
 """
@@ -57,18 +58,20 @@ MAX_STDERR_CHARS = 2_000
 _RENDER_ID = re.compile(RENDER_ID_PATTERN)
 BLOCKING_RULES: frozenset[str] = frozenset({"placeholder-count", "placeholder-use", "syntax", "size", "encoding"})
 """ADAPTATION findings that keep the code of every language from running: without one placeholder there is no
-loader. A runtime's `blocking_rules` holds these and may add its own (R: `dataset-package`)."""
+loader. A runtime's `blocking_rules` holds these and may add its own (R and Julia: `dataset-package`)."""
 
 
 class PaletteRegion(Protocol):
-    """The Imprint palette a runtime's regions found: `regions.Palette` or `profiles.r.regions.Palette`."""
+    """The Imprint palette a runtime's regions found: `regions.Palette` or a profile's (`profiles.r.regions.Palette`,
+    `profiles.julia.regions.Palette`)."""
 
     @property
     def entries(self) -> Sequence[str]: ...
 
 
 class CodeRegions(Protocol):
-    """What the pipeline reads from a runtime's regions: `regions.Regions` or `profiles.r.regions.Regions`.
+    """What the pipeline reads from a runtime's regions: `regions.Regions` or a profile's (`profiles.r.regions.Regions`,
+    `profiles.julia.regions.Regions`).
 
     Only the Imprint palette, whose original entries the ADAPTATION check keeps in order; the
     edit applier and the validators read their own language's regions themselves.
@@ -346,8 +349,12 @@ class RuntimeAdapter(Protocol):
         """The string literals `code` holds and `base` does not (the literal budget)."""
         ...
 
-    def error_summary(self, stderr_tail: str) -> str:
-        """The error class and code line of a failed render in this language, never the message."""
+    def error_summary(self, stderr_tail: str, *, run_form: str | None = None) -> str:
+        """The error class and code line of a failed render in this language, never the message.
+
+        `run_form` is the code that ran. A runtime whose loader shifts the lines by many (Julia's, 15 lines and
+        more for the one placeholder line) reads it to name the working form's line, which the adapter edits;
+        Python's and R's summaries leave it unread (Python's line counts the run form, R's grammar names none)."""
         ...
 
     def export(self, run_form: str, *, spec_id: str, library_version: str | None, theme: str = "light") -> str:

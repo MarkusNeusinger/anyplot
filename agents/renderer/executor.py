@@ -45,7 +45,9 @@ Each rule below comes from spike S or S2 (docs/concepts/agent-network.md, "Rende
   output. A render whose harness started failed in the plot code and is not retried;
   a second launcher failure is reported with reason `launcher`.
 * **Bounded output.** stderr keeps its last `STDERR_LIMIT` bytes and stdout its first
-  and last few KiB, however much the code writes. Output files are read without
+  and last few KiB, however much the code writes; a theme returns the last
+  `MAX_STDERR_CHARS` characters of stderr, with the first line of the row's
+  `stderr_head` in front of them for the Julia row (`stderr_tail`). Output files are read without
   following links (`O_NOFOLLOW`, then `fstat`) and under the wire caps, and the probe
   is cleaned (`wire.clean_probe`) before it reaches the response.
 * **Host errors are refusals.** An `OSError` on the host (the run directory cannot be
@@ -152,6 +154,9 @@ HARNESS_END = 'HARNESS {"event": "end"'
 EXEC_DENY_STATES = frozenset({"on", "off", "unavailable", "unsupported"})
 """The values of the end line's `exec_deny` (`harness.install_exec_deny`; `off`: the guard was never armed)."""
 STDERR_LIMIT = 64 * 1024
+STDERR_HEAD_CHARS = 300
+"""The most of a kept head line (`stderr_tail`): a Julia error's exception type and the name an `UndefVarError` or a
+`MethodError` gives fit in its first 100 characters; a type signature beyond them is cut."""
 STDOUT_HEAD = 4 * 1024
 STDOUT_TAIL = 4 * 1024
 READ_CHUNK = 64 * 1024
@@ -238,6 +243,34 @@ async def read_tail(stream: asyncio.StreamReader | None, limit: int) -> bytes:
         if len(tail) > limit:
             del tail[:-limit]
     return bytes(tail)
+
+
+def stderr_tail(stderr: str, head: str = "", limit: int = MAX_STDERR_CHARS) -> str:
+    """What a theme returns of its stderr: the last `limit` characters, and with `head` (the row's
+    `RuntimeCommand.stderr_head`) the first line that starts with it in front when those characters lost its start.
+
+    The kept line is cut to `STDERR_HEAD_CHARS` and the tail gives up its length plus the line break, so the
+    result never exceeds `limit` (the wire's cap and the agents' `ThemeOutput` cut both stay as they are). An
+    empty `head`, a stderr within `limit`, a line that starts inside the tail and a stderr without such a line
+    all give the plain tail, byte for byte what every row returned before J2b. The line is the run's own output,
+    as the tail is: a plot that prints an `ERROR:` line of its own gets that one kept, which the agents' error
+    grammars read in a closed shape like the rest of the tail.
+    """
+    tail = stderr[-limit:]
+    if not head or len(stderr) <= limit:
+        return tail
+    if stderr.startswith(head):
+        start = 0
+    else:
+        found = stderr.find("\n" + head)
+        if found == -1:
+            return tail
+        start = found + 1
+    if start >= len(stderr) - limit:
+        return tail
+    end = stderr.find("\n", start)
+    line = stderr[start : end if end != -1 else len(stderr)][:STDERR_HEAD_CHARS]
+    return line + "\n" + stderr[-(limit - len(line) - 1) :]
 
 
 async def read_head_tail(stream: asyncio.StreamReader | None, head: int, tail: int) -> tuple[bytes, bytes]:
@@ -602,7 +635,8 @@ class Attempt:
         state = self.end_report().get("exec_deny")
         return state if isinstance(state, str) and state in EXEC_DENY_STATES else None
 
-    def to_wire(self, theme: Theme, attempts: int) -> ThemeRun:
+    def to_wire(self, theme: Theme, attempts: int, *, stderr_head: str = "") -> ThemeRun:
+        """The theme's wire answer; `stderr_head` is the row's (`stderr_tail`)."""
         usage = self.usage()
         return ThemeRun(
             theme=theme,
@@ -610,7 +644,7 @@ class Attempt:
             timed_out=self.timed_out,
             png_base64=None if self.png is None else _b64(self.png),
             probe=self.probe,
-            stderr_tail=self.stderr[-MAX_STDERR_CHARS:],
+            stderr_tail=stderr_tail(self.stderr, stderr_head),
             wall_s=round(self.wall_s, 3),
             attempts=attempts,
             reason=self.reason,
@@ -725,7 +759,7 @@ class SandboxExecutor:
         command = command_for(job.language, job.library)
         files: dict[str, str | bytes] = {command.code_file: job.source, DATA_FILE: job.data_csv}
         attempt, attempts = await self._launch(files, theme, job.timeout_s, command=command)
-        return attempt.to_wire(theme, attempts)
+        return attempt.to_wire(theme, attempts, stderr_head=command.stderr_head)
 
     async def run_data(self, job: DataRunRequest) -> DataRun:
         """Run one data snippet with the harness in data mode; the same retry, watchdog and kill path as a theme."""

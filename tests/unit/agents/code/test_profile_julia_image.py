@@ -20,7 +20,7 @@ from agents.anyplot.code.profiles.julia.validate import validate_adaptation, val
 from agents.anyplot.data.kinds import read_kinds
 from agents.renderer.commands import command_for
 
-from .conftest import JULIA_WORKING, source
+from .conftest import JULIA_PROMPT_IDIOMS, JULIA_WORKING, source
 
 
 IMAGE = os.environ.get("ANYPLOT_JULIA_IMAGE", "anyplot-renderer:julia")
@@ -202,3 +202,56 @@ def test_the_working_miniature_renders_from_data_csv(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr[-2000:]
     assert png_size(tmp_path / "plot-dark.png") == (3200, 1800)
+
+
+def test_the_adapter_prompts_idioms_render_with_missing_cells(tmp_path: Path) -> None:
+    """What `adapter_julia.md` tells the adapter to write renders (J2b): `dropmissing` before a Date axis whose column
+    has a missing cell, the formatter with both marks, categories as integer positions and a span on numeric day
+    offsets; without `dropmissing` the same data fails as the prompt says."""
+    columns = ["Tag", "Ausgaben (k €)", "Umsatz $ (k)", "Region"]
+    regions = ["Nord", "Süd", "West"]
+    rows = [
+        f"2026-03-{1 + index:02d},{10 + index},{1_000_000 + 37_000 * index},{regions[index % 3]}" for index in range(24)
+    ]
+    rows += [",50,7,Nord", "2026-03-30,,8,Süd"]
+    (tmp_path / "data.csv").write_text("\n".join([",".join(columns), *rows]) + "\n", encoding="utf-8")
+    kinds = {"Tag": "date", "Ausgaben (k €)": "integer", "Umsatz $ (k)": "integer", "Region": "text"}
+    (tmp_path / "plot.jl").write_text(to_run_form(JULIA_PROMPT_IDIOMS, columns=columns, kinds=kinds), encoding="utf-8")
+
+    result = julia(tmp_path, "plot.jl")
+
+    assert result.returncode == 0, result.stderr[-2000:]
+    assert png_size(tmp_path / "plot-light.png") == (3200, 1800)
+
+    # Without `dropmissing` the Date column keeps its missing cell, and Makie refuses it, as the prompt says; the
+    # Julia runtime's summary of the real stderr, cut as the renderer cuts it, names the working form's line.
+    from agents.anyplot.render.runtimes import runtime_for
+    from agents.renderer.executor import stderr_tail
+
+    unguarded = source("""
+        using CairoMakie
+        using DataFrames
+
+        const THEME = get(ENV, "ANYPLOT_THEME", "light")
+        const DAY = "Tag"              # role: x
+        const Y = "Umsatz \\$ (k)"     # role: y
+
+        df = load_user_data()
+        fig = Figure(size = (1600, 900))
+        ax = Axis(fig[1, 1])
+        scatter!(ax, df[!, DAY], df[!, Y])
+        save("plot-$(THEME).png", fig; px_per_unit = 2)
+    """)
+    assert validate_security(unguarded) == []
+    run_form = to_run_form(unguarded, columns=columns, kinds=kinds)
+    (tmp_path / "plot.jl").write_text(run_form, encoding="utf-8")
+
+    failed = julia(tmp_path, "plot.jl")
+
+    assert failed.returncode != 0 and "create_dim_conversion" in failed.stderr
+    runtime = runtime_for("makie")
+    tail = stderr_tail(failed.stderr, command_for("julia", "makie").stderr_head)
+    line = unguarded.splitlines().index("scatter!(ax, df[!, DAY], df[!, Y])") + 1
+    assert runtime.error_summary(tail, run_form=run_form).startswith(
+        f"MethodError for create_dim_conversion() at line {line}"
+    )

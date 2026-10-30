@@ -37,6 +37,7 @@ it stopped. The reports directory is git-ignored.
 
 import argparse
 import asyncio
+import functools
 import json
 import os
 import secrets
@@ -396,7 +397,14 @@ async def adapt_and_render(
         )
         async with render_lock:
             result = await backend.render(job)
-        report = evaluate(result, themes=job.themes, library=view.library, rows=data_rows(dataset.csv))
+        report = evaluate(
+            result,
+            themes=job.themes,
+            library=view.library,
+            rows=data_rows(dataset.csv),
+            # The runtime's error grammar, as the pipeline's: R's and Julia's stderr is not a Python traceback.
+            summarise=functools.partial(runtime.error_summary, run_form=run_form),
+        )
         if not report.passed_host_gates:
             misses.append("render: " + "; ".join(report.blocking)[:300])
             lines, previous_plan = [_line(line) for line in report.blocking], None

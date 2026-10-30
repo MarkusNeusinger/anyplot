@@ -15,7 +15,8 @@ is mounted read-only from this checkout, so a render uses the harness of the cod
 under development. On timeout the container is killed by name. The run directory is
 a fresh temporary directory that is removed afterwards. stdout is discarded and stderr
 is read while the container runs, keeping only its last `STDERR_LIMIT` bytes: the
-code under test writes it, so it can be arbitrarily large.
+code under test writes it, so it can be arbitrarily large. A theme's stderr tail is then
+cut as the renderer cuts it (`executor.stderr_tail` with the row's `stderr_head`).
 
 The backend holds no semaphore: `SerialRenderer` (`render/serial.py`), which
 `Services.backend` puts in front of every backend, hands it one theme at a time.
@@ -42,6 +43,8 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
+from agents.renderer.commands import command_for
+from agents.renderer.executor import stderr_tail
 from agents.renderer.wire import (
     CONVERT_META_FILE,
     CONVERT_REQUEST_FILE,
@@ -231,11 +234,14 @@ class LocalDockerBackend:
             await asyncio.shield(self._kill(f"r-{job.job_id}-{theme}", process))
             raise
         wall = time.monotonic() - started
+        runtime = self._runtime(job.library)
         try:
-            png, probe = self._runtime(job.library).collect(run_dir, theme)
+            png, probe = runtime.collect(run_dir, theme)
         except PngRejected as exc:
             return ThemeOutput(theme, process.returncode, timed_out, None, None, str(exc), wall)
-        tail = stderr.decode("utf-8", errors="replace")
+        # The renderer's cut of the stderr, the row's head line included (Julia's `ERROR:` line).
+        head = command_for(runtime.language, runtime.library).stderr_head
+        tail = stderr_tail(stderr.decode("utf-8", errors="replace"), head)
         return ThemeOutput(theme, None if timed_out else process.returncode, timed_out, png, probe, tail, wall)
 
     async def _kill(self, name: str, process: asyncio.subprocess.Process) -> None:
