@@ -79,9 +79,9 @@ another provider, model or location.
 
 The output caps of the model calls are constants in `models.py`, not settings, each with
 ample headroom above the measured answers: root and reviewer 4,096 tokens, the adapter
-8,192 for an edit-only call and 16,384 when a full file is allowed (12,288 on Gemini,
-which the soft deadline bounds), and the judge 256. A thinking measurement on Claude adds
-its `AGENT_*_THINKING_BUDGET` to the cap of its kind.
+40,960 on Claude for edit-only and full-file calls since 2026-10-30 (8,192 and 12,288 on
+Gemini, which the soft deadline bounds), and the judge 256. A thinking measurement on
+Claude adds its `AGENT_*_THINKING_BUDGET` to the cap of its kind.
 
 No `.env` file is read here: the service runs on Cloud Run environment variables only,
 and the tests stay hermetic. `adk web` is different: it walks up from the agent
@@ -149,9 +149,10 @@ FIXTURE_PATTERN = r"^[a-z0-9][a-z0-9-]{0,79}$"
 MAX_THINKING_BUDGET = 8_192
 """The most output room thinking may add to a Claude cap (`AGENT_*_THINKING_BUDGET`).
 
-It keeps the adapter's full-file cap (12,288 plus 8,192) below the Anthropic SDK's limit
-for a request that does not stream (about 21,300 tokens), and a full-file call that uses
-all of it at about 60 s, the `pipeline.ADAPTER_P95_S` the deadline reserves."""
+Since 2026-10-30 the adapter's cap with this room (40,960 plus 8,192) is past the Anthropic
+SDK's limit for a request that does not stream (about 21,300 tokens), which the Vertex client's
+own timeout lifts (`models.CLAUDE_REQUEST_TIMEOUT_S`); a call that uses all of it takes about
+143 s, which the soft deadline holds."""
 
 
 def _split_list(value: Any) -> Any:
