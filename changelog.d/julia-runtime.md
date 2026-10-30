@@ -13,7 +13,7 @@
   the version's "what changed" list names the columns and counts the cells,
   and the plot's status stays its own. A scripted identity adaptation of the
   smoke fixture renders 3200x1800 in both themes through the local Docker
-  backend in about 5.7 s with `exec_deny: on`.
+  backend in about 5.7 s with `exec_deny: on`. (#12464)
 - **A Julia adapter prompt.** `adapter_julia.md` fills the shared adapter
   prompt's slots for Julia: the placeholder `df = load_user_data()` and how the
   loader types each column, column constants read as `df[!, COL]`, the
@@ -22,11 +22,11 @@
   0.24 refuses that the catalogue never meets (a date column with a missing
   cell, spans and bands on a time axis, text as `barplot!`'s x). A test runs
   its idioms through both Julia validator profiles, and an image test renders
-  them. Python's prompt is unchanged, and its SHA-256 pin holds.
+  them. Python's prompt is unchanged, and its SHA-256 pin holds. (#12464)
 - **Makie eval fixtures.** The ten matrix specs for Makie (60 cases, 480
   generated in all) with the smoke case `scatter-basic-makie-renamed`; the
   eligibility sweep covers Makie (325 files: 0 clean, 308 coupled, 17
-  blocked).
+  blocked). (#12464)
 
 ### Fixed
 
@@ -37,4 +37,4 @@
   tail within the same 2,000 characters (`RuntimeCommand.stderr_head`), and
   every other row's tail is unchanged. The Julia error summary also names the
   line of the code the adapter edits, not the line of the code that ran, which
-  the loader shifts by 15 lines and more.
+  the loader shifts by 15 lines and more. (#12464)
