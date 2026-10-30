@@ -27,7 +27,7 @@ SECURITY rules (rule ids in parentheses):
   compute (`Math`, `Date`, `Array`, `Intl`, the typed arrays, ...), the page's `window`
   and `document`, the animation and timer functions, and the file's own library global
   (`Chart`, `d3`, `echarts`, `Highcharts`; MUI X imports its names). A closed world: the
-  catalogue's 1,617 files read 34 such names (2026-10-30). Everything else is refused,
+  catalogue's 1,617 files read 33 such names (2026-10-30). Everything else is refused,
   read or written, with the reason of `DENIED_NAMES` where it has one (`fetch`,
   `XMLHttpRequest`, `WebSocket`, `EventSource`, `Worker`, `navigator`, `localStorage`,
   `postMessage`, `eval`, `Function`, `require`, `globalThis`, `self`, `top`, `parent`,
@@ -244,7 +244,7 @@ GLOBALS = frozenset(
         PLACEHOLDER_FUNC,
     }
 )
-"""The free names a snippet may read (module docstring, "Free names"): the catalogue's 34 on 2026-10-30 (`Math`,
+"""The free names a snippet may read (module docstring, "Free names"): the catalogue's 33 on 2026-10-30 (`Math`,
 `window`, `document`, `Array`, `parseInt`, `Number`, `Date`, `String`, `Infinity`, `Map`, `Set`, `Object`, the typed
 arrays, `Intl`, `requestAnimationFrame`, `JSON`, `Error`, `TextEncoder`, ... and the four library globals) and the
 built-ins of the same kind; the file's own library global is added per library (`LIBRARY_GLOBALS`)."""
@@ -478,7 +478,9 @@ RNG_DRAWS = re.compile(
 
 _URL_IN_TEXT = re.compile(r"(?i)(?:https?|ftp|wss?)://|\b(?:file|data|blob|javascript):\S")
 """The Python profile's URL rule (`validate._URL_IN_TEXT`) with the browser's schemes."""
-_MARKUP = re.compile(r"(?i)<\s*(?:script|iframe|frame|object|embed|link|meta|base|form|portal)\b|<[a-z][^>]*\son[a-z]+\s*=")
+_MARKUP = re.compile(
+    r"(?i)<\s*(?:script|iframe|frame|object|embed|link|meta|base|form|portal)\b|<[a-z][^>]*\son[a-z]+\s*="
+)
 """An opening tag of `DENIED_TAGS` or a tag with an inline `on…=` handler; a closing `</script>` (a user's column name
 can hold one) and plain text such as `onset = 3` run nothing."""
 _DIRECTIVE_TEXT = re.compile(r"(?i)anyplot-orientation")

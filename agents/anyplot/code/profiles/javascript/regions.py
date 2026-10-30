@@ -32,7 +32,7 @@ adapter must keep and the normaliser rewrites:
   of the files on 2026-10-30;
 * column constants: `const SALES = "Sales (k USD)";  // role: value`, a top-level
   declaration of a string (or an array of strings) with a `// role:` comment on its lines
-  (124 MUI X files);
+  (121 MUI X files; 3 more carry a role comment on a declaration of another shape);
 * in an adapted working form, the placeholder statement `const data = loadUserData();`,
   at the top level only, which the loader replaces with `const data = window.ANYPLOT_DATA;`;
 * the Imprint palette: the harness hands it out as `window.ANYPLOT_TOKENS.palette`, and
