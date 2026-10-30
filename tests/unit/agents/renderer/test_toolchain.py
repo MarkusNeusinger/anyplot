@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import importlib.util
+import json
+import os
 import re
 import shutil
 import tomllib
@@ -85,8 +88,15 @@ class TestTag:
             "agents/renderer/toolchain/AnyplotWarmup/Project.toml",
             "agents/renderer/toolchain/AnyplotWarmup/src/AnyplotWarmup.jl",
             "agents/renderer/execdeny/execdeny.c",
+            "agents/renderer/toolchain/import_allowlist.py",
+            "agents/renderer/toolchain/js-fonts.conf",
+            "agents/renderer/toolchain/smoke.js",
+            "agents/renderer/toolchain/smoke.tsx",
             "Project.toml",
             "Manifest.toml",
+            "package.json",
+            "package-lock.json",
+            "automation/js-render/render.mjs",
         ],
     )
     def test_any_changed_input_changes_the_tag(self, inputs: Path, path: str) -> None:
@@ -112,13 +122,26 @@ class TestTag:
         sources = [
             source for line in re.findall(r"^COPY (?!--from=)(.+)$", text, re.MULTILINE) for source in line.split()[:-1]
         ]
-        assert {"Project.toml", "Manifest.toml"} <= set(sources)
+        assert {"Project.toml", "Manifest.toml", "package.json", "package-lock.json", "automation/js-render/"} <= set(
+            sources
+        )
         uncovered = [
             source
             for source in sources
             if not any(source == name or source.startswith(f"{name}/") for name in toolchain.INPUTS)
         ]
         assert not uncovered, uncovered
+
+    def test_every_input_reaches_the_ci_jobs_change_filter(self) -> None:
+        """A change to an input that `RENDERER_CHANGES` misses would skip the image job, and its first build would be
+        the deploy's (finding 8 of the second opinion on step 3)."""
+        workflow = (REPO_ROOT / ".github" / "workflows" / "ci-image.yml").read_text(encoding="utf-8")
+        match = re.search(r"RENDERER_CHANGES=\$\(echo \"\$CHANGED_FILES\" \| grep -E '([^']+)'", workflow)
+        assert match, "ci-image.yml filters the renderer job's changes with one grep -E"
+        pattern = re.compile(match.group(1))
+        files = [path.relative_to(REPO_ROOT).as_posix() for path in toolchain.input_files()]
+        assert not [path for path in files if not pattern.search(path)]
+        assert not pattern.search("app/package.json") and not pattern.search("automation/scripts/x.py")
 
     def test_the_command_line(self, capsys: pytest.CaptureFixture[str]) -> None:
         assert toolchain.main(["tag"]) == 0
@@ -305,5 +328,210 @@ class TestDockerfile:
         text = TOOLCHAIN_DOCKERFILE.read_text(encoding="utf-8")
         final = text[text.rindex("\nFROM base\n") :]
         assert not re.search(r"\b(gcc|make|fontconfig|libpango)\b", final.split("COPY", 1)[0])
-        libs = re.search(r'ARG R_RUNTIME_LIBS="([^"]+)"', text)
-        assert libs and "pango" not in libs.group(1)
+        for name in ("R_RUNTIME_LIBS", "NODE_RUNTIME_LIBS"):
+            libs = re.search(rf'ARG {name}="([^"]+)"', text)
+            assert libs and "pango" not in libs.group(1), name
+            assert not re.search(r"(^|\s)(fontconfig|libgbm1|mesa\S*|libllvm\S*)(\s|$)", libs.group(1)), name
+        # Every apt line of the final stage installs one of the two lists and nothing else.
+        installs = re.findall(r"apt-get install -y --no-install-recommends (.+?) \\", final)
+        assert installs == ["${R_RUNTIME_LIBS}", "${NODE_RUNTIME_LIBS}"]
+
+
+def _node_stage() -> str:
+    return _stages(TOOLCHAIN_DOCKERFILE.read_text(encoding="utf-8"))["node"]
+
+
+class TestNode:
+    """The Node stage (JS-1 of step 3) installs what the JavaScript row runs: the pipeline's Node major, the
+    repository's lock, the headless shell alone, the row's fonts, and the import allowlist."""
+
+    def test_the_node_major_is_the_pipelines(self) -> None:
+        action = yaml.safe_load((REPO_ROOT / ".github" / "actions" / "setup-node" / "action.yml").read_text())
+        major = str(action["inputs"]["node-version"]["default"])
+        (version,) = re.findall(r"^ARG NODE_VERSION=(\S+)$", TOOLCHAIN_DOCKERFILE.read_text(encoding="utf-8"), re.M)
+        assert version.split(".")[0] == major
+        engines = json.loads((REPO_ROOT / "package.json").read_text(encoding="utf-8"))["engines"]["node"]
+        assert engines == ">=22" and int(version.split(".")[0]) >= 22
+
+    def test_the_download_is_the_official_tarball_checked_against_its_sha256(self) -> None:
+        text = TOOLCHAIN_DOCKERFILE.read_text(encoding="utf-8")
+        node = _node_stage()
+        (version,) = re.findall(r"^ARG NODE_VERSION=(\S+)$", node, re.M)
+        assert re.search(r"^ARG NODE_SHA256=[0-9a-f]{64}$", node, re.MULTILINE)
+        assert f"https://nodejs.org/dist/v{version}/SHASUMS256.txt" in text  # where the checksum came from
+        assert "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" in node
+        assert 'echo "${NODE_SHA256}  /tmp/node.tar.xz" | sha256sum -c -' in node
+        assert f"{commands.NODE_HOME}" in node and commands.NODE_BINARY == "/opt/node/bin/node"
+
+    def test_the_stage_stays_independent_of_r_and_julia(self) -> None:
+        stages = _stages(TOOLCHAIN_DOCKERFILE.read_text(encoding="utf-8"))
+        node = stages["node"]
+        assert node.startswith("FROM base AS node\n") and "--from=" not in node
+        assert "node" not in stages["r"].lower() and "node" not in stages["julia"].lower()
+        assert re.findall(r"^COPY (?!--from=)(.+)$", node, re.MULTILINE) == [
+            "package.json package-lock.json /opt/anyplot/",
+            "agents/renderer/toolchain/import_allowlist.py /opt/anyplot/toolchain/import_allowlist.py",
+        ]
+        final = stages["final"]
+        assert final.index("COPY --from=julia /opt/julia-depot") < final.index("COPY --from=node")
+
+    def test_the_install_is_the_locks_and_runs_no_install_script(self) -> None:
+        node = _node_stage()
+        assert 'PATH="/opt/node/bin:$PATH" npm ci --ignore-scripts' in node
+        assert "--omit" not in node  # the harness's esbuild and playwright are devDependencies of the lock
+        dev = json.loads((REPO_ROOT / "package.json").read_text(encoding="utf-8"))["devDependencies"]
+        assert {"esbuild", "playwright"} <= set(dev)
+        assert "playwright/cli.js install --only-shell chromium" in node
+        assert f"PLAYWRIGHT_BROWSERS_PATH={commands.PLAYWRIGHT_BROWSERS}" in node
+        assert "/opt/node/lib/node_modules" in node and "/opt/node/bin/npm" in node  # npm leaves the install
+        assert "/opt/pw-browsers/ffmpeg-*" in node
+
+    def test_libgbm_is_unpacked_without_mesa(self) -> None:
+        """libgbm1's package depends on Mesa's drivers and LLVM (about 200 MB); the library alone links libdrm and
+        libexpat, which NODE_RUNTIME_LIBS installs."""
+        text = TOOLCHAIN_DOCKERFILE.read_text(encoding="utf-8")
+        node = _node_stage()
+        assert "apt-get download libgbm1" in node and "dpkg-deb -x libgbm1_*.deb" in node
+        assert "libgbm.so.1*" in node and "dri_gbm" not in node
+        libs = re.search(r'ARG NODE_RUNTIME_LIBS="([^"]+)"', text)
+        assert libs and {"libdrm2", "libexpat1", "libnss3"} <= set(libs.group(1).split())
+        assert "COPY --from=node /opt/gbm/lib/ /usr/lib/x86_64-linux-gnu/" in text
+
+    def test_the_liberation_fonts_stay_out_of_the_system_font_directories(self) -> None:
+        """Installed system-wide they changed pygal's and altair's renders of files that name Arial (2026-10-30)."""
+        text = TOOLCHAIN_DOCKERFILE.read_text(encoding="utf-8")
+        node = _node_stage()
+        assert "cp /usr/share/doc/fonts-liberation/copyright /opt/anyplot/js-fonts/doc/" in node
+        final = _stages(text)["final"]
+        assert "fonts-liberation" not in final.split("COPY --from=node", 1)[0]
+        assert "/usr/share/fonts" not in final.split("COPY --from=node", 1)[1].split("RUN ldconfig", 1)[0]
+
+    def test_the_build_checks_the_libraries_and_renders_as_the_row(self) -> None:
+        """The final stage resolves every library of Node and the shell and renders through the harness with the
+        row's binary and environment, so a missing library or a broken bundle fails the build, not a render."""
+        final = _stages(TOOLCHAIN_DOCKERFILE.read_text(encoding="utf-8"))["final"]
+        assert 'for f in /opt/node/bin/node "$shell/chrome-headless-shell" "$shell"/*.so*' in final
+        smoke = final[final.index("RUN smoke() {") :]
+        assert "&& smoke chartjs smoke.js" in smoke and "&& smoke muix smoke.tsx" in smoke
+        row = commands.command_for("javascript", "chartjs")
+        assert f'{commands.NODE_BINARY} {commands.JS_HARNESS} "--library=$1"' in smoke
+        for key, value in row.env.items():
+            assert f"{key}={value}" in smoke, key
+        assert "env -i PATH=/usr/bin:/bin HOME=/tmp ANYPLOT_THEME=light" in smoke
+        assert "(3200, 1800)" in smoke
+        for name in ("smoke.js", "smoke.tsx"):
+            assert (TOOLCHAIN_DIR / name).is_file(), name
+        assert '"@mui/x-charts/BarChart"' in (TOOLCHAIN_DIR / "smoke.tsx").read_text(encoding="utf-8")
+
+
+def _allowlist_module():
+    spec = importlib.util.spec_from_file_location("import_allowlist", TOOLCHAIN_DIR / "import_allowlist.py")
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _package(root: Path, name: str, version: str, exports: object) -> None:
+    folder = root / name
+    folder.mkdir(parents=True)
+    manifest: dict[str, object] = {"name": name, "version": version}
+    if exports is not None:
+        manifest["exports"] = exports
+    (folder / "package.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+
+class TestImportAllowlist:
+    """The import allowlist (finding 1 of the second opinion on step 3): one JSON file, generated at image build from
+    the installed packages' exports maps, which the bundle step's resolve plugin (JS-2) and the validator (JS-3)
+    read. Its shape is pinned here."""
+
+    def test_the_shape(self, tmp_path: Path) -> None:
+        module = _allowlist_module()
+        _package(
+            tmp_path,
+            "react",
+            "19.3.1",
+            {
+                ".": {"default": "./index.js"},
+                "./package.json": "./package.json",
+                "./jsx-runtime": {"default": "./jsx-runtime.js"},
+            },
+        )
+        _package(tmp_path, "react-dom", "19.3.1", {".": "./index.js", "./client": "./client.js"})
+        _package(tmp_path, "@mui/material", "9.5.0", {".": "./index.js", "./Box": "./Box/index.js", "./internal": None})
+        _package(tmp_path, "@mui/x-charts", "9.16.0", {"./BarChart": "./BarChart/index.js", ".": "./index.js"})
+        result = module.allowlist(tmp_path)
+        assert result == {
+            "schema": 1,
+            "packages": {"@mui/material": "9.5.0", "@mui/x-charts": "9.16.0", "react": "19.3.1", "react-dom": "19.3.1"},
+            "specifiers": [
+                "@mui/material",
+                "@mui/material/Box",
+                "@mui/x-charts",
+                "@mui/x-charts/BarChart",
+                "react",
+                "react-dom",
+                "react-dom/client",
+                "react/jsx-runtime",
+            ],
+        }
+        assert module.PACKAGES == ("@mui/material", "@mui/x-charts", "react", "react-dom")
+
+    @pytest.mark.parametrize(
+        ("exports", "expected"),
+        [
+            pytest.param("./index.js", ["pkg"], id="a string"),
+            pytest.param({"import": "./index.mjs", "require": "./index.cjs"}, ["pkg"], id="conditions only"),
+            pytest.param({".": "./index.js", "./package.json": "./package.json"}, ["pkg"], id="package.json is data"),
+        ],
+    )
+    def test_one_entry_point(self, exports: object, expected: list[str]) -> None:
+        assert _allowlist_module().specifiers("pkg", {"exports": exports}) == expected
+
+    @pytest.mark.parametrize(
+        ("manifest", "message"),
+        [
+            pytest.param({}, "no exports map", id="no exports map"),
+            pytest.param({"exports": {"./*": "./*.js"}}, "pattern", id="a pattern"),
+            pytest.param({"exports": {".": "./a.js", "import": "./b.js"}}, "mixes", id="paths and conditions"),
+            pytest.param({"exports": {".x": "./a.js"}}, "malformed", id="a malformed key"),
+        ],
+    )
+    def test_an_open_or_malformed_map_fails_the_build(self, manifest: dict, message: str) -> None:
+        module = _allowlist_module()
+        with pytest.raises(module.AllowlistError, match=message):
+            module.specifiers("pkg", manifest)
+
+    def test_a_missing_package_fails_and_the_command_line(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        module = _allowlist_module()
+        assert module.main([str(tmp_path)]) == 1
+        assert "is not installed" in capsys.readouterr().err
+        assert module.main([]) == 2
+
+    def test_the_build_writes_it_next_to_the_harness(self) -> None:
+        node = _node_stage()
+        assert (
+            "python3 -I /opt/anyplot/toolchain/import_allowlist.py /opt/anyplot/node_modules"
+            " > /opt/anyplot/js-render/import-allowlist.json" in node
+        )
+        final = _stages(TOOLCHAIN_DOCKERFILE.read_text(encoding="utf-8"))["final"]
+        assert (
+            "COPY --from=node /opt/anyplot/js-render/import-allowlist.json /opt/anyplot/js-render/import-allowlist.json"
+            in final
+        )
+
+    def test_the_installed_packages_when_present(self) -> None:
+        """Against a real install (`ANYPLOT_NODE_MODULES`, or the checkout's node_modules after `npm ci`): the counts
+        of 2026-10-30 (Fable's second opinion counted the same keys, `./package.json` included)."""
+        root = Path(os.environ.get("ANYPLOT_NODE_MODULES", REPO_ROOT / "node_modules"))
+        if not (root / "@mui" / "x-charts" / "package.json").is_file():
+            pytest.skip("no installed node_modules")
+        result = _allowlist_module().allowlist(root)
+        lock = json.loads((REPO_ROOT / "package-lock.json").read_text(encoding="utf-8"))["packages"]
+        if result["packages"] != {name: lock[f"node_modules/{name}"]["version"] for name in result["packages"]}:
+            pytest.skip("the installed node_modules is not the lock's")
+        assert "@mui/x-charts/BarChart" in result["specifiers"] and "react/jsx-runtime" in result["specifiers"]
+        assert len(result["specifiers"]) == len(set(result["specifiers"]))

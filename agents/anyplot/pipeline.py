@@ -221,7 +221,7 @@ runs about 25 s)."""
 RENDER_P95_S = 15.0
 """Seconds a Python repair attempt's render is budgeted at when checking the soft deadline: the Python row's
 `render_p95_s` of the renderer's command table (`agents/renderer/commands.py`), which the runtime carries
-(`RuntimeAdapter.render_p95_s`); a browser or Julia runtime reserves more.
+(`RuntimeAdapter.render_p95_s`); the Julia runtime reserves more.
 
 Spike X measured renders at 5.5 s at the 95th percentile and 10.2 s at most. With
 `ADAPTER_P95_S` a repair attempt needs 75 s, which leaves the first attempt 65 s

@@ -524,10 +524,11 @@ jobs:
     # A cold build installs pandas, numpy, matplotlib, seaborn, plotnine,
     # altair with vl-convert, pygal with cairosvg and lets-plot, plus libcairo
     # from apt, and builds the toolchain when its tag is missing: R and its
-    # packages (about 2 minutes) and Julia's instantiate and precompile of the
+    # packages (about 2 minutes), Julia's instantiate and precompile of the
     # catalogue's project (a cold toolchain took 7 minutes on 8 CPUs locally on
-    # 2026-10-29, the precompile 4 of them; a 4-vCPU runner takes longer). 60 fails
-    # loudly instead of hanging on a slow package index.
+    # 2026-10-29, the precompile 4 of them; a 4-vCPU runner takes longer) and Node
+    # with the harness's packages and Chromium's headless shell (under a minute,
+    # 2026-10-30). 60 fails loudly instead of hanging on a slow package index.
     timeout-minutes: 60
 
     steps:
@@ -580,8 +581,10 @@ jobs:
           # What the image is built from: its Dockerfile, the service package,
           # the harness it copies, the dependency lock, README.md (copied next
           # to pyproject.toml), the catalogue's Julia project (the toolchain's
-          # Julia stage precompiles it) and the root .dockerignore (the build context).
-          RENDERER_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(agents/renderer/|agents/__init__\.py$|agents/anyplot/render/harness\.py$|agents/anyplot/render/convert\.py$|tests/image/|tests/unit/agents/runtime/convert_fixtures\.py$|pyproject\.toml$|uv\.lock$|README\.md$|Project\.toml$|Manifest\.toml$|\.dockerignore$|\.github/workflows/ci-image\.yml$)' || true)
+          # Julia stage precompiles it), the catalogue's JavaScript harness and its
+          # lock (the toolchain's Node stage installs them) and the root .dockerignore
+          # (the build context).
+          RENDERER_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(agents/renderer/|agents/__init__\.py$|agents/anyplot/render/harness\.py$|agents/anyplot/render/convert\.py$|tests/image/|tests/unit/agents/runtime/convert_fixtures\.py$|pyproject\.toml$|uv\.lock$|README\.md$|Project\.toml$|Manifest\.toml$|package\.json$|package-lock\.json$|automation/js-render/|\.dockerignore$|\.github/workflows/ci-image\.yml$)' || true)
 
           if [[ "$EVENT_NAME" == "workflow_dispatch" && "$FORCE_RUN" == "true" ]]; then
             echo "Manual trigger with force_run=true, will build the renderer image"
@@ -657,9 +660,9 @@ jobs:
             echo "build=true"
           } >> "$GITHUB_OUTPUT"
 
-      # A toolchain built in the job holds Julia's install and precompiled depot (2.7 GB
-      # unpacked) several times over: in the builder, in the local registry, in the cache
-      # export and in the renderer image loaded below (3.8 GB). The runner's preinstalled
+      # A toolchain built in the job holds Julia's install and precompiled depot and Node
+      # with Chromium (3.4 GB unpacked) several times over: in the builder, in the local
+      # registry, in the cache export and in the renderer image loaded below (4.5 GB). The runner's preinstalled
       # SDKs this job never uses make the room.
       - name: Free disk space for the toolchain build
         if: steps.toolchain.outputs.build == 'true'
@@ -1131,6 +1134,76 @@ jobs:
           test "$took" -le 30 || { echo "::error::the cache miss took ${took} s; strict must fail fast"; exit 1; }
           echo "OK: a cache miss fails under strict in ${took} s: $(grep -m1 'not available with flags' work-jl/miss.out)"
 
+      # JavaScript (step 3 of agentic/specs/261024-agent-all-libraries.md, JS-1) runs in exec mode
+      # too, without the exec filter: Node by its path, with the row's environment, runs the
+      # catalogue's harness, which starts Playwright's Chromium headless shell. A catalogue Chart.js
+      # file and a catalogue MUI X file written for MUI X 9.16 (esbuild bundles it from the image's
+      # packages) render unchanged at 3200x1800, and Node is in the image but not on the sandbox's
+      # PATH, where agents/renderer/delegates.py refuses it.
+      - name: Render Chart.js and MUI X plots through the harness in exec mode
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p work-js/chartjs work-js/muix
+          python3 - > work-js/row.flags <<'EOF'
+          from agents.renderer.commands import NODE_BINARY, command_for
+
+          row = command_for("javascript", "chartjs")
+          assert not (row.exec_deny or row.rlimit_as or row.rlimit_nproc), "the JavaScript row runs without the exec filter, RLIMIT_AS and RLIMIT_NPROC"
+          assert row.argv[0] == NODE_BINARY and row.toolchain == (NODE_BINARY,), row.argv
+          assert command_for("javascript", "muix").env == row.env
+          for key, value in row.env.items():
+              print(f"-e\n{key}={value}")
+          EOF
+          python3 - <<'EOF'
+          from agents.renderer.commands import command_for
+
+          for library in ("chartjs", "muix"):
+              row = command_for("javascript", library)
+              with open(f"work-js/{library}.argv", "w") as handle:
+                  handle.write("\n".join([*row.argv, f"{row.code_flag}{row.code_file}"]) + "\n")
+          EOF
+          mapfile -t ROW_FLAGS < work-js/row.flags
+          for case in "chartjs scatter-basic chartjs.js" "muix bar-basic muix.tsx"; do
+            read -r library spec file <<< "$case"
+            mapfile -t ROW_ARGV < "work-js/$library.argv"
+            echo "the JavaScript row: ${ROW_ARGV[*]}"
+            cp "plots/$spec/implementations/javascript/$file" "work-js/$library/${ROW_ARGV[-1]}"
+            printf 'x\n1\n' > "work-js/$library/data.csv"
+            start=$(date +%s.%N)
+            docker run --rm --network none --read-only --tmpfs /tmp \
+              --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+              -v "$PWD/work-js/$library:/work" -w /work \
+              -e ANYPLOT_THEME=light "${ROW_FLAGS[@]}" \
+              -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+              -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 \
+              anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py \
+              --exec -- "${ROW_ARGV[@]}" \
+              > "work-js/$library/harness.out" 2> "work-js/$library/harness.err" \
+              || { echo "::error::the $library render failed"; cat "work-js/$library/harness.out" "work-js/$library/harness.err"; exit 1; }
+            echo "wall time: $(python3 -c "import sys; print(round(float(sys.argv[2]) - float(sys.argv[1]), 1))" "$start" "$(date +%s.%N)") s"
+            grep -qxF 'HARNESS {"event": "start"}' "work-js/$library/harness.out" \
+              || { echo "::error::no HARNESS start line"; cat "work-js/$library/harness.out"; exit 1; }
+            python3 - "work-js/$library/plot-light.png" "$library" <<'EOF'
+          import struct, sys
+
+          png = open(sys.argv[1], "rb").read()
+          assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
+          width, height = struct.unpack(">II", png[16:24])
+          assert (width, height) == (3200, 1800), (width, height)
+          print(f"OK: {sys.argv[2]} plot-light.png {width}x{height}, {len(png)} bytes")
+          EOF
+            tail -n 1 "work-js/$library/harness.out"
+          done
+          docker run --rm --network none anyplot-renderer:ci /app/.venv/bin/python -c "
+          import os, shutil
+          from agents.renderer.commands import NODE_BINARY
+          from agents.renderer.executor import SANDBOX_PATH
+          assert os.access(NODE_BINARY, os.X_OK), NODE_BINARY
+          assert shutil.which('node', path=SANDBOX_PATH) is None, shutil.which('node', path=SANDBOX_PATH)
+          print(f'OK: {NODE_BINARY} is in the image, and no node is on {SANDBOX_PATH}')
+          "
+
       # Native code the audit hook cannot see finds no program to run. lets-plot's bridge links
       # ImageMagick with a compiled-in delegate map that runs programs by name through /bin/sh
       # (gs, curl, soffice, ffmpeg, rsvg-convert, inkscape and the rest that
@@ -1139,8 +1212,8 @@ jobs:
       # policy denying PNG under MAGICK_CONFIGURE_PATH still wrote its PNG, 2026-10-26).
       # matplotlib calls fc-list when it finds it. So the sandbox's PATH (SANDBOX_PATH of
       # agents/renderer/executor.py) must carry none of them, next to RLIMIT_NPROC and the
-      # sandbox itself. node stays on the list until the JavaScript runtime (step 3 of
-      # agentic/specs/261024-agent-all-libraries.md) installs it as its row's toolchain.
+      # sandbox itself. node stays on the list: the JavaScript row (step 3 of
+      # agentic/specs/261024-agent-all-libraries.md) runs /opt/node/bin/node by its path.
       - name: No delegate program on the sandbox PATH
         if: steps.check.outputs.should_build == 'true'
         run: |

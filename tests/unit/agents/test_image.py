@@ -273,6 +273,9 @@ class TestDockerignoreMatcher:
             "uv.lock",
             "Project.toml",
             "Manifest.toml",
+            "package.json",
+            "package-lock.json",
+            "automation/js-render/render.mjs",
         ],
     )
     def test_admits(self, relative: str) -> None:
@@ -291,6 +294,9 @@ class TestDockerignoreMatcher:
             ".env",
             "agents/.env",
             "app/package.json",
+            "app/package-lock.json",
+            "automation/scripts/sync_to_postgres.py",
+            "node_modules/react/index.js",
         ],
     )
     def test_refuses(self, relative: str) -> None:
@@ -732,6 +738,7 @@ class TestRendererToolchainSteps:
         assert {"agents/renderer/toolchain/warmup.jl", "agents/renderer/toolchain/AnyplotWarmup/Project.toml"} <= set(
             files
         )  # the precompile workload (J1.1)
+        assert {"package.json", "package-lock.json", "automation/js-render/render.mjs"} <= set(files)  # Node (JS-1)
         assert not [path for path in files if not dockerignore_admits(path)]
 
     def test_a_missing_toolchain_is_built_with_the_registry_cache(self) -> None:
@@ -770,3 +777,21 @@ class TestRendererToolchainSteps:
         assert (job.language, job.library, job.themes) == ("julia", "makie", ["light"])
         assert 'save("plot-$(THEME).png", fig; px_per_unit = 2)' in job.source
         assert "Größe" in job.source
+
+    def test_the_smoke_measures_chartjs_through_the_javascript_row_without_gating(self, workspace: Path) -> None:
+        """JS-1: the first deploy with Node measures a cold Chromium under gVisor. JavaScript is not served before
+        JS-4, so a failed render is a warning in the log, never a refused promotion."""
+        smoke = _step(_config(RENDERER_CLOUDBUILD), "smoke")
+        values = {**_config(RENDERER_CLOUDBUILD)["substitutions"], "PROJECT_ID": "anyplot", "BUILD_ID": "build-1"}
+        heredocs = re.findall(r"<<'EOF'\n(.*?)\nEOF\n", _substituted(smoke, values), re.DOTALL)
+        chartjs = next(heredoc for heredoc in heredocs if "smoke-chartjs" in heredoc)
+        subprocess.run([sys.executable, "-c", chartjs], cwd=workspace, check=True, timeout=30)
+        job = RenderRequest.model_validate_json((workspace / "chartjs_job.json").read_text(encoding="utf-8"))
+        assert (job.language, job.library, job.themes) == ("javascript", "chartjs", ["light"])
+        assert "new Chart(canvas" in job.source and "window.ANYPLOT_TOKENS" in job.source
+        assert "--data @chartjs_job.json -o chartjs.json" in smoke
+        assert "OK: Chart.js smoke render" in smoke and "o['cpu_s']" in smoke and "o['max_rss_mb']" in smoke
+        javascript = smoke[smoke.index("--data @chartjs_job.json") : smoke.index("# 3. A real data run")]
+        assert javascript.count("WARNING: the Chart.js smoke render") == 2 and "exit 1" not in javascript
+        # Between the Makie render and the data run, which both still gate the promotion.
+        assert smoke.index("smoke-makie") < smoke.index("smoke-chartjs") < smoke.index("smoke-data")

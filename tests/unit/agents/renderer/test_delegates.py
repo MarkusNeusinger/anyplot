@@ -41,6 +41,16 @@ def test_the_list_covers_the_review_s_programs() -> None:
     assert len(set(delegates.DELEGATE_PROGRAMS)) == len(delegates.DELEGATE_PROGRAMS)
 
 
+def test_node_stays_refused_and_the_javascript_row_runs_it_by_its_path() -> None:
+    """JS-1 of step 3 ships Node in the image, outside `SANDBOX_PATH`: the row names its absolute path, so a `node`
+    found by name on the sandbox's PATH is still a delegate to refuse."""
+    from agents.renderer.commands import NODE_BINARY, command_for
+
+    assert "node" in delegates.DELEGATE_PROGRAMS
+    assert NODE_BINARY.startswith("/") and NODE_BINARY.rsplit("/", 1)[0] not in SANDBOX_PATH.split(":")
+    assert command_for("javascript", "d3").argv[0] == NODE_BINARY
+
+
 def test_every_build_of_the_image_runs_the_check() -> None:
     """The Dockerfile runs it, so the Cloud Build deploy enforces it as well as the CI job, which runs it again."""
     dockerfile = (REPO_ROOT / "agents" / "renderer" / "Dockerfile").read_text(encoding="utf-8")

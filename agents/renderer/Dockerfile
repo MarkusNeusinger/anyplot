@@ -210,9 +210,14 @@ COPY agents/renderer/fonts.conf /opt/anyplot/fonts.conf
 # loads (spike S: faster than rebuilding the cache in every render). The same
 # import builds the cache, and `check_fonts` fails the build when DejaVu Sans or
 # a family of FALLBACK_FAMILIES is not in it (a renamed or dropped font file).
+# The `chmod` names this file's own entries under /opt/anyplot: the toolchain's
+# (the exec filter, the JavaScript row's packages, fonts and harness) are
+# world-readable already, and a recursive `chmod` would copy all 170 MB of them into
+# this layer.
 RUN mkdir -p /opt/mplconfig \
     && MPLCONFIGDIR=/opt/mplconfig .venv/bin/python -I -c "import sys; sys.path.insert(0, '/opt/anyplot'); import harness; harness.check_fonts()" \
-    && chmod -R a+rX /opt/mplconfig /opt/anyplot /usr/share/fonts/noto /usr/share/doc/fonts-noto
+    && chmod -R a+rX /opt/mplconfig /opt/anyplot/harness.py /opt/anyplot/convert.py /opt/anyplot/fonts.conf \
+       /usr/share/fonts/noto /usr/share/doc/fonts-noto
 
 RUN .venv/bin/python -m compileall -q agents
 

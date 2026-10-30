@@ -311,6 +311,35 @@ steps:
             -H "Content-Type: application/json" --data @makie_job.json -o makie.json "$$URL/render" \
             || { echo "the Makie smoke render request failed"; exit 1; }
           python3 -c "import json; r=json.load(open('makie.json')); o=r['outputs']['light']; assert o['exit_code']==0 and o['png_base64'], {k: o[k] for k in ('exit_code','reason','attempts','wall_s','stderr_tail')}; print('OK: Makie smoke render', o['wall_s'], 's wall,', o['cpu_s'], 's CPU,', o['max_rss_mb'], 'MiB,', o['attempts'], 'attempt(s)')"
+          # 2c. A Chart.js render through the JavaScript row (JS-1 of step 3): Node by its path
+          #     starts Chromium's headless shell, so the first deploy with Node measures a cold
+          #     Chromium under gVisor, which no local run can. No agent sends a JavaScript job
+          #     before JS-4, so a failure here is a warning in this log, never a refused
+          #     promotion; JS-4, which serves JavaScript, makes it a gate like the Makie render.
+          python3 - <<'EOF'
+        import json
+        source = "\n".join([
+            "const t = window.ANYPLOT_TOKENS;",
+            "const canvas = document.createElement('canvas');",
+            "document.getElementById('container').appendChild(canvas);",
+            "new Chart(canvas, {",
+            "  type: 'bar',",
+            "  data: {labels: ['a', 'b', 'c'], datasets: [{data: [3, 1, 2], backgroundColor: t.palette[0]}]},",
+            "  options: {responsive: true, maintainAspectRatio: false, animation: false,",
+            "    plugins: {title: {display: true, text: 'Größe – smoke', color: t.ink}}},",
+            "});",
+        ])
+        job = {"job_id": "smoke-chartjs", "language": "javascript", "library": "chartjs", "source": source,
+               "data_csv": "x\n1\n", "themes": ["light"], "timeout_s": 60}
+        json.dump(job, open("chartjs_job.json", "w"))
+        EOF
+          if curl -fsS --retry 3 --retry-delay 10 --retry-all-errors --max-time 200 -H "Authorization: Bearer $$TOKEN" \
+            -H "Content-Type: application/json" --data @chartjs_job.json -o chartjs.json "$$URL/render"; then
+            python3 -c "import json; r=json.load(open('chartjs.json')); o=r['outputs']['light']; assert o['exit_code']==0 and o['png_base64'], {k: o[k] for k in ('exit_code','reason','attempts','wall_s','stderr_tail')}; print('OK: Chart.js smoke render', o['wall_s'], 's wall,', o['cpu_s'], 's CPU,', o['max_rss_mb'], 'MiB,', o['attempts'], 'attempt(s)')" \
+              || echo "WARNING: the Chart.js smoke render failed (above); JavaScript is not served yet, so the deploy goes on"
+          else
+            echo "WARNING: the Chart.js smoke render request failed; JavaScript is not served yet, so the deploy goes on"
+          fi
           # 3. A real data run (POST /run-data, run_data_code): the harness in
           #    data mode with its audit-hook guard armed returns a 2-row table.
           python3 - <<'EOF'

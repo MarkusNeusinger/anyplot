@@ -6,8 +6,9 @@ It is built only when this tag is missing from the private Artifact Registry rep
 (`agents/renderer/cloudbuild.yaml`) and the CI job (`ci-image.yml`, `renderer-image`) ask for
 `anyplot-toolchain:<tag>`, build and push it when it is not there, and build the renderer FROM it, passing
 `TOOLCHAIN_IMAGE` (the repository) and `TOOLCHAIN_TAG` (the tag with its digest). A change to any input (the
-Dockerfile with its pinned base digest and its R and Julia versions, a package list, the exec filter's source, the
-catalogue's `Project.toml` and `Manifest.toml`) is a new tag, so a deploy rebuilds the toolchain exactly when it has
+Dockerfile with its pinned base digest and its R, Julia and Node versions, a package list, the exec filter's source,
+the catalogue's `Project.toml` and `Manifest.toml`, its `package.json`, `package-lock.json` and
+`automation/js-render/`) is a new tag, so a deploy rebuilds the toolchain exactly when it has
 to and never otherwise.
 
 Standard library only: the Cloud Build step runs it with the builder image's `python3`, which has none of the
@@ -33,10 +34,14 @@ INPUTS = (
     "agents/renderer/execdeny",
     "Project.toml",
     "Manifest.toml",
+    "package.json",
+    "package-lock.json",
+    "automation/js-render",
 )
 """The files and directories the toolchain build reads from its context, relative to the repository root: the
-Dockerfile, the toolchain's own files, the exec filter's source and the catalogue's Julia project, which the Julia
-stage instantiates and precompiles."""
+Dockerfile, the toolchain's own files, the exec filter's source, the catalogue's Julia project, which the Julia
+stage instantiates and precompiles, and the catalogue's JavaScript render harness with its lock, which the Node
+stage installs (step 3)."""
 ROOT = Path(__file__).resolve().parents[2]
 
 
