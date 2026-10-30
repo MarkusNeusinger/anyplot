@@ -1674,6 +1674,28 @@ mirrors the Julia profile's modules, names and test layout
     its JavaScript line, which a lone `\r`, U+2028 or U+2029 ends, not tree-sitter's `\n`
     line, so moving it no longer takes the code that shares that line. The split did not
     change.
+  - Its second round: the names a write may not set are checked on every object that
+    writes onto an element (`Object.assign` sources whose target is no fresh `{}`, a `const`
+    holding one, spread objects, Highcharts' `attr({...})`), where `innerHTML`, `outerHTML`
+    and an inline handler without a function written in place are refused too, and an
+    inline handler attribute is never set; `this.window`, `this.document`, the window-only
+    names and `this[...]` are refused on `this` in every context, since a method handed to
+    a browser callback runs with the window as `this`; a computed key, also an object
+    literal's, must not spell `dangerouslySetInnerHTML`, a write-checked name or (by a written
+    `on` start) a handler, and a key the literals decide (`["con", "structor"].join("")`,
+    `String.fromCharCode(...)` of numbers) is read as the string it is. Three files forced the
+    narrowings: chernoff-basic's `r[m + "Norm"]` (an unknown start is no handler) and the
+    `sx` selectors of andrews-curves and bar-diverging-likert in MUI X (an object's key from
+    a builder the run decides passes; pinned). The split did not change.
+
+  The validator is defence in depth over source text and will always have spellings left:
+  two Copilot rounds found eight. The exported page's boundary is JS-4's: a content
+  security policy without network; the preview iframe with `sandbox="allow-scripts"` and
+  neither `allow-same-origin`, `allow-top-navigation` nor `allow-popups`; and for the
+  downloaded `plot.html`, a page that itself loads the plot into such a sandboxed `srcdoc`
+  iframe under a parent policy that restricts `frame-src` and navigation, because a content
+  security policy does not stop a page's own top-level navigation. JS-4 verifies that
+  design with a probe like JS-2's.
 
 Found for JS-4:
 

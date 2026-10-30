@@ -68,9 +68,15 @@ SECURITY rules (rule ids in parentheses):
   must not be able to spell a member of `DENIED_MEMBER_STRINGS` once the run fills in its
   unknown parts (`[]["con" + "structor"]`; the catalogue's `` w[`z_${v}`] `` and
   `r[m + "Norm"]` cannot), and a key a string builder returns (`.join()`,
-  `String.fromCharCode(...)`, `atob(...)`) is refused; a written key also must not be able
-  to spell a URL or navigation member (`el["hr" + "ef"] = url`). Names, literals, numbers
-  and lookups (`d[QUARTER]`, `arr[Math.floor(i)]`) stay.
+  `String.fromCharCode(...)`, `atob(...)`) is refused unless its literals decide it
+  (`fold_string`: `["con", "structor"].join("")` is `constructor`); a written key, and an
+  object literal's computed key, which `Object.assign` or a spread can write onto an
+  element, also must not be able to spell `dangerouslySetInnerHTML`, a name of
+  `WRITE_CHECKED` (`href`, `src`, `srcdoc`, `action`, `location`, `cookie`, `innerHTML`, ...)
+  or, by its written `on` start, an inline handler (`el["hr" + "ef"] = url`,
+  `{ ["dangerously" + "SetInnerHTML"]: x }`; Copilot review of #12473). Names, literals,
+  numbers and lookups (`d[QUARTER]`, `arr[Math.floor(i)]`) stay, and so do two MUI X `sx`
+  selectors a `.join()` builds as an object's key.
 * **`this`** (`banned-name`): outside a function that binds its own (`this` at the top
   level, or in an arrow function there) it is the window and is refused, and so is
   `this.<name>` for a name of `DENIED_NAMES`. Inside a plain function a classic script
@@ -79,8 +85,12 @@ SECURITY rules (rule ids in parentheses):
   passed, spread, destructured) or read by a computed key only where it is known
   (`_Scan.this_is_known`: a method or class member, an object's value such as Highcharts'
   `load` and `formatter`, a callback of D3's `each` and `on`, or a function the file only
-  hands to those; 47 catalogue callbacks pass `this` to `d3.select`). Where it is not known,
-  `this.document` and `this.window` are refused too (`this.point` and `this.chart` stay).
+  hands to those; 47 catalogue callbacks pass `this` to `d3.select`). In every context,
+  known or not, `this.window`, `this.document`, the window-only names of `DENIED_NAMES`
+  (`this.open`, `this.top`, ...) and `this[...]` by a computed key are refused, because a
+  method handed to a browser callback (`addEventListener("load", o.m)`, a timer) runs with
+  the window as `this` (Copilot review of #12473); `this.chart`, `this.point` and `this.x`
+  stay, and no catalogue file reads one of the refused.
 * **Code from strings and elements that load** (`banned-call`): `import(...)` and
   `import.meta`; `setTimeout` and `setInterval` with anything but a function literal or a
   function the file declares and never writes again (a string runs as code); an element
@@ -100,9 +110,14 @@ SECURITY rules (rule ids in parentheses):
   only with a data URL the code drew (`canvas.toDataURL()` or a `const` declared with one:
   the catalogue's raster heatmaps), and `location`, `action`, `cookie`, `srcdoc` and
   `formAction` are never written. A setter's attribute name is checked for every literal it
-  can be (`flag ? "x" : "href"`), and a name code computes is refused (no catalogue file
-  computes one). In the exported page a content security policy stops a request but not a
-  top-level navigation.
+  can be (`flag ? "x" : "href"`), a name code computes is refused (no catalogue file
+  computes one), and an inline handler attribute (`setAttribute("onerror", ...)`, any case)
+  is refused, because the attribute compiles its text. The same names are checked on an
+  object that writes them onto an element (`check_written_source`): every `Object.assign`
+  source whose target is no fresh `{}`, a `const` holding one, the objects spread into it,
+  and Highcharts' `attr({...})`, where `innerHTML`, `outerHTML` and a handler property
+  without a function written in place are refused too (Copilot review of #12473). In the
+  exported page a content security policy stops a request but not a top-level navigation.
 * **Imports** (`banned-import`): a Chart.js, D3, ECharts or Highcharts snippet is a
   classic script inside the harness's `try` block, so it imports and exports nothing (the
   library is the page's global). A MUI X module imports, and re-exports, only bare
@@ -127,8 +142,11 @@ SECURITY rules (rule ids in parentheses):
 What still passes, honestly (each a test, `test_still_passes_contained_by_the_sandbox`): a
 key that a function of the file returns, or one passed in as a parameter, reaches whatever
 it names (`el[key()]`, `o[k] = v`), because the catalogue reads every column and index that
-way; an object's method taken off its object and called alone sees the window as `this`;
-markup assembled from pieces at run time (`"<img on" + "error=...>"`) runs as `innerHTML`
+way, also as an object's key written onto an element (`Object.assign(o, { [k]: v })`); an
+object's method taken off its object, or handed to a browser callback, sees the window as
+`this` and may pass it on as a value; an object's key a builder the run decides returns
+(`{ [parts.map(f).join("")]: v }`); markup assembled from pieces at run time
+(`"<img on" + "error=...>"`) runs as `innerHTML`
 does, and so does markup the libraries take as text (an ECharts tooltip's HTML); a JSX
 attribute (`<img src={url} />`) and a library's own image call
 (`chart.renderer.image(url, ...)`) take a URL that code computes. None of them reaches a
@@ -502,6 +520,17 @@ NAVIGATION_MEMBERS = frozenset({"location", "action", "cookie", "srcdoc", "formA
 """Members never written: a navigation, a form's target, a cookie, a frame's document."""
 URL_ATTRIBUTES = frozenset({"src", "href", "xlink:href"})
 NAVIGATION_ATTRIBUTES = frozenset({"action", "formaction", "srcdoc"})
+MARKUP_MEMBERS = frozenset({"innerHTML", "outerHTML"})
+"""Members a direct write may set (line-parametric's Chart.js legend) but a key that hides its name may not
+(`Object.assign(el, { innerHTML })`, `el["inner" + "HTML"] = s`), since the hiding is the evasion."""
+REACT_MARKUP = "dangerouslySetInnerHTML"
+WRITE_CHECKED = URL_MEMBERS | NAVIGATION_MEMBERS | URL_ATTRIBUTES | NAVIGATION_ATTRIBUTES | MARKUP_MEMBERS
+"""The names a write must not reach through a key that hides them: an object handed to `Object.assign` or to an
+attribute setter, a key built from strings (Copilot review of #12473, second round)."""
+HANDLER = re.compile(r"on[a-z]+", re.I)
+"""An inline event handler's name (`onerror`), whose attribute compiles its string as code; a property of that name
+takes only a function. The catalogue's chart options carry such keys (`onZero` 34, `onClick` 16 times), so they are
+checked only where they are written onto an element."""
 ATTRIBUTE_SETTERS = frozenset({"attr", "setAttribute", "setAttributeNS"})
 """D3's `attr` and the DOM's setters, which write an attribute by its name (the name is the first argument, the second
 for `setAttributeNS`)."""
@@ -785,6 +814,48 @@ def could_spell(parts: list[str | None], names: frozenset[str]) -> bool:
     return any(pattern.fullmatch(name) for name in names)
 
 
+def could_be_handler(parts: list[str | None]) -> bool:
+    """Whether a key built from `parts` spells an inline handler's name, `on` and letters (`HANDLER`), by its written
+    fragments: they are letters only and begin with `on` (`"on" + name`). A key whose start only the run knows
+    (chernoff-basic's `r[m + "Norm"]`) is no handler by its fragments."""
+    if any(part is not None and not re.fullmatch(r"[A-Za-z]*", part) for part in parts):
+        return False
+    head = "".join(part for part in parts[: parts.index(None)] if part is not None) if None in parts else ""
+    if None not in parts:
+        return HANDLER.fullmatch("".join(part for part in parts if part is not None)) is not None
+    return head.lower().startswith("on")
+
+
+def fold_string(source: Source, node: Node) -> str | None:
+    """The string a key is when its literals decide it: a string, a `+` chain of strings and numbers, `[...].join(...)`
+    of strings with a written separator, `String.fromCharCode(...)` of numbers; None when the run decides it."""
+    node = js_unwrap(node)
+    text = js_string(source, node)
+    if text is not None:
+        return text
+    if node.type == "binary_expression":
+        parts = key_parts(source, node)
+        return "".join(part for part in parts if part is not None) if parts and None not in parts else None
+    if node.type != "call_expression":
+        return None
+    function = js_unwrap(node.child_by_field_name("function") or node)
+    method = js_property(source, function) if function.type in ("member_expression", "subscript_expression") else None
+    arguments = js_arguments(node)
+    receiver = js_object(function)
+    if method == "join" and receiver is not None and js_unwrap(receiver).type == "array" and len(arguments) <= 1:
+        items = [fold_string(source, item) for item in js_named(js_unwrap(receiver))]
+        separator = fold_string(source, arguments[0]) if arguments else ","
+        if separator is None or any(item is None for item in items):
+            return None
+        return separator.join(item for item in items if item is not None)
+    if method in ("fromCharCode", "fromCodePoint") and receiver is not None and source.text(receiver) == "String":
+        codes = [js_number(source, item) for item in arguments]
+        if any(code is None or not 0 <= code <= 0x10FFFF or code != int(code) for code in codes):
+            return None
+        return "".join(chr(int(code)) for code in codes if code is not None)
+    return None
+
+
 class _Scan:
     """One validation pass over a parsed JavaScript or TSX source."""
 
@@ -985,7 +1056,13 @@ class _Scan:
         if method in WRITE_METHODS and name != method:
             self.add("banned-call", f".{method}() writes markup that runs; build the elements instead", node)
         if method in ATTRIBUTE_SETTERS and arguments and name != method:  # a member's setter, not a function `attr`
-            self.check_attribute_write(node, method, arguments)
+            if len(arguments) == 1:  # Highcharts' `el.attr({ href: url })` sets every key as an attribute
+                self.check_written_source(arguments[0], node, attribute=True)
+            else:
+                self.check_attribute_write(node, method, arguments)
+        if name == "Object.assign" and arguments and js_unwrap(arguments[0]).type != "object":
+            for written in arguments[1:]:  # onto an existing value, maybe an element; a fresh `{}` target is data
+                self.check_written_source(written, node, attribute=False)
         if name in MUTATING_OBJECT_CALLS and arguments and self.token_root(arguments[0]) is not None:
             token = self.token_root(arguments[0])
             self.add("banned-statement", f"the theme token {token} is read only; copy it before changing it", node)
@@ -1125,22 +1202,88 @@ class _Scan:
         position = 1 if method == "setAttributeNS" else 0
         if len(arguments) <= position + 1:
             return
-        names = {text.strip().lower() for text in self.literal_values(arguments[position])}
+        names = self.literal_values(arguments[position])
         if not names:
             # A name code computes could be any of them; no catalogue file computes one (Copilot review of #12473).
             self.add("banned-call", f"{method} takes the attribute's name as a literal", node)
             return
-        for attribute in sorted(names & NAVIGATION_ATTRIBUTES):  # every name a ternary may pick, not only the first
-            self.add("banned-call", f"the attribute '{attribute}' is never set: it submits or holds a document", node)
-        for attribute in sorted(names & URL_ATTRIBUTES):
-            if not self.drawn_url(arguments[position + 1]):
-                message = f"the attribute '{attribute}' takes only a data URL the code drew (canvas.toDataURL())"
+        for name in sorted(set(names)):  # every name a ternary may pick, not only the first
+            self.check_written_name(name, arguments[position + 1], node, attribute=True)
+
+    def check_written_name(self, name: str, value: Node | None, node: Node, *, attribute: bool) -> None:
+        """One name a write sets on an element, as an attribute (`setAttribute`, D3's and Highcharts' `attr`, any case)
+        or as a property (`Object.assign(el, {...})`): a navigation, a form's target, a cookie or a frame's document
+        never; a URL only as a data URL the code drew; markup by a hidden name never; an inline handler never as an
+        attribute, which compiles its string, and as a property only with a function written in place."""
+        key = name.strip()
+        folded = key.lower()
+        if (
+            folded in NAVIGATION_ATTRIBUTES
+            or key in NAVIGATION_MEMBERS
+            or (attribute and folded in {"location", "cookie"})
+        ):
+            self.add(
+                "banned-call", f"'{key}' is never set: it navigates, submits, sets a cookie or holds a document", node
+            )
+        elif folded in URL_ATTRIBUTES or key in URL_MEMBERS:
+            if value is None or not self.drawn_url(value):
+                message = f"'{key}' takes only a data URL the code drew (canvas.toDataURL())"
                 self.add("banned-call", message, node)
+        elif key in MARKUP_MEMBERS or key == REACT_MARKUP:
+            self.add("banned-call", f"'{key}' set through an object writes markup that runs; write the elements", node)
+        elif attribute and HANDLER.fullmatch(key):
+            self.add("banned-call", f"the attribute '{key}' compiles its text as code; add a listener instead", node)
+        elif not attribute and re.fullmatch(r"on[a-z]+", key):
+            literal = value is not None and js_unwrap(value).type in FUNCTION_LITERALS
+            if not literal:
+                self.add("banned-call", f"'{key}' takes only a function written in place", node)
+
+    def check_written_source(self, source: Node, node: Node, *, attribute: bool) -> None:
+        """The names an object writes onto an element: an `Object.assign` source or a Highcharts `attr({...})` object, a
+        `const` that holds one, and the objects spread into it (Copilot review of #12473: `Object.assign(el, { href:
+        url })` set what `el.href = url` may not)."""
+        stack = [source]
+        for _ in range(100):  # objects lead to objects; the bound only guards a pathological file
+            if not stack:
+                return
+            current = js_unwrap(stack.pop())
+            if current.type == "identifier" and self.is_const(current):
+                value = self.binding_value(current)
+                if value is not None:
+                    stack.append(value)
+                continue
+            if current.type != "object":
+                continue
+            for part in js_named(current):
+                if part.type == "spread_element":
+                    stack += js_named(part)[:1]
+                elif part.type == "shorthand_property_identifier":
+                    self.check_written_name(self.source.text(part), part, node, attribute=attribute)
+                elif part.type == "method_definition":
+                    method_name = part.child_by_field_name("name")
+                    if method_name is not None and method_name.type == "property_identifier":
+                        self.check_written_name(self.source.text(method_name), part, node, attribute=attribute)
+                elif part.type == "pair":
+                    key, value = part.child_by_field_name("key"), part.child_by_field_name("value")
+                    if key is None:
+                        continue
+                    if key.type == "computed_property_name":
+                        inner = js_named(key)
+                        names = self.literal_values(inner[0]) if inner else []
+                    elif key.type == "property_identifier":
+                        names = [self.source.text(key)]
+                    else:
+                        names = [text] if (text := js_string(self.source, key)) is not None else []
+                    for name in names:
+                        self.check_written_name(name, value, node, attribute=attribute)
 
     def check_computed_key(self, index: Node, node: Node) -> None:
-        """A key that code builds from strings must not be able to spell a member of `DENIED_MEMBER_STRINGS`, and a key
-        that a string builder returns (`.join()`, `String.fromCharCode(...)`) is refused (review of JS-3). A name used as
-        the key is judged by the values the file gives it (`const k = "con" + "structor"; [][k]`)."""
+        """A key that code builds from strings must not be able to spell a member of `DENIED_MEMBER_STRINGS` or React's
+        `dangerouslySetInnerHTML`, and a key that a string builder returns (`.join()`, `String.fromCharCode(...)`) is
+        refused (review of JS-3). A written key (`el[k] = v`) and an object literal's computed key (`{ [k]: v }`, which
+        `Object.assign` or a spread can write onto an element) must not be able to spell a name of `WRITE_CHECKED` or an
+        inline handler either (Copilot review of #12473). A name used as the key is judged by the values the file gives
+        it (`const k = "con" + "structor"; [][k]`)."""
         unwrapped = js_unwrap(index)
         values: list[Node | None] = [unwrapped]
         binding = self.resolved.get(unwrapped.id) if unwrapped.type == "identifier" else None
@@ -1150,16 +1293,20 @@ class _Scan:
                 left = write.child_by_field_name("left") if write.type == "assignment_expression" else None
                 if left is not None and self.resolved.get(js_unwrap(left).id) is binding:
                     values.append(write.child_by_field_name("right"))
-        written = node.type == "subscript_expression" and self.is_written(node)
+        pair = node.type == "pair"
+        written = pair or (node.type == "subscript_expression" and self.is_written(node))
         for value in (js_unwrap(value) for value in values if value is not None):
-            parts = key_parts(self.source, value)
-            if parts is not None and could_spell(parts, DENIED_MEMBER_STRINGS):
+            folded = fold_string(self.source, value)  # also a `const` key's literal (`const k = "href"; el[k] = u`)
+            parts: list[str | None] | None = [folded] if folded is not None else key_parts(self.source, value)
+            if parts is not None and could_spell(parts, DENIED_MEMBER_STRINGS | {REACT_MARKUP}):
                 message = "a key built from strings could name a member that leads to code; name the key"
                 self.add("banned-name", message, node)
-            elif written and parts is not None and could_spell(parts, URL_MEMBERS | NAVIGATION_MEMBERS):
-                message = "a write by a key built from strings could set a URL or navigate; name the member"
+            elif written and parts is not None and (could_spell(parts, WRITE_CHECKED) or could_be_handler(parts)):
+                message = "a write by a key built from strings could set a URL, markup or a handler; name the member"
                 self.add("banned-statement", message, node)
-            elif value.type == "call_expression" and self.method_of(value) in STRING_BUILDERS:
+            elif not pair and folded is None and self.method_of(value) in STRING_BUILDERS:
+                # An object literal's key from a builder the run decides passes: two MUI X files build `sx` selectors
+                # that way (andrews-curves, bar-diverging-likert); its fragments are checked where they are written.
                 self.add("banned-name", "a key a string builder returns could name any member; name the key", node)
 
     def token_root(self, node: Node) -> str | None:
@@ -1218,14 +1365,16 @@ class _Scan:
         holder = _holder(node)
         if _is_object_of(node, holder):
             assert holder is not None
+            # In every context, known or not: a method handed to a browser callback (`addEventListener("load", o.m)`, a
+            # timer, a promise) runs with the window as `this` (Copilot review of #12473, second round). No catalogue
+            # file reads a window-only member or a computed key on `this`; `this.chart`, `this.point` and `this.x` stay.
             name = js_property(self.source, holder)
             if name in DENIED_NAMES:
                 self.add("banned-name", f"'this.{name}' is not allowed: the plot reaches no {DENIED_NAMES[name]}", node)
-            elif name is None and not self.this_is_known(node):
-                self.add("banned-name", "this[...] here may read the window by a computed key; name the member", node)
-            elif name in PAGE_OBJECTS and not self.this_is_known(node):
-                # `function g() { return this.document.body; } g()` (Copilot review of #12473); `this.point` stays
-                message = f"'this.{name}' here may read the page's {name} past its rules; name what you read"
+            elif name is None:
+                self.add("banned-name", "this[...] may read the window by a computed key; name the member", node)
+            elif name in PAGE_OBJECTS:
+                message = f"'this.{name}' may read the page's {name} past its rules; name what you read"
                 self.add("banned-name", message, node)
         elif not self.this_is_known(node):
             message = "'this' here may be the window (a function called without a receiver); pass what you need"
@@ -1291,9 +1440,14 @@ class _Scan:
     def check_pair(self, node: Node) -> None:
         key = node.child_by_field_name("key")
         text = None
+        if key is not None and key.type == "computed_property_name":
+            inner = js_named(key)
+            if inner:  # `{ ["dangerously" + "SetInnerHTML"]: ... }` (Copilot review of #12473)
+                self.check_computed_key(inner[0], node)
+            return
         if key is not None:
             text = self.source.text(key) if key.type == "property_identifier" else js_string(self.source, key)
-        if text == "dangerouslySetInnerHTML":
+        if text == REACT_MARKUP:
             self.add("banned-call", "dangerouslySetInnerHTML runs markup from a string; write the elements", node)
 
     def check_jsx_element(self, node: Node) -> None:
