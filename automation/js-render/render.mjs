@@ -55,7 +55,7 @@
 // page (an uncaught error in the page), import (an import refused or not found),
 // build (esbuild could not compile the snippet), draw (nothing drawn), crash (the
 // page died, out of memory most likely), data (the data file), timeout (the page
-// never finished loading) or harness (anything else); <Class> an identifier
+// never finished loading or never settled) or harness (anything else); <Class> an identifier
 // (TypeError, ImportRefused, ...); <file> the code file's own name (plot.js,
 // plot.tsx), <line> its line; <message> at most 200 characters on one line.
 // Only the bounded console summary comes before it, so the renderer's
@@ -93,15 +93,25 @@ const NO_HTML = process.env.ANYPLOT_NO_HTML === "1";
 const DATA_JSON = process.env.ANYPLOT_DATA_JSON || null;
 const IMPORT_ALLOWLIST = process.env.ANYPLOT_IMPORT_ALLOWLIST || path.join(__dirname, "import-allowlist.json");
 // Nothing but the inlined page: no request, no socket, no frame, no worker from a
-// URL, no eval. Images and fonts only from data: and blob: URLs. Every catalogue
-// file renders under it (the JS-2 sweep).
+// URL, no eval, no form submission, no <base>. Images and fonts only from data:
+// and blob: URLs. form-action and base-uri do not fall back to default-src, so
+// they are named. Every catalogue file renders under it (the JS-2 sweep).
 const CONTENT_SECURITY_POLICY =
-  "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:";
-// The page's V8 heap: a runaway array ends the page at this size, as a crash the
-// final error line names, before the renderer's MemAvailable watchdog (512 MiB
-// left of 4 GiB) kills the whole run. The catalogue's heaviest render peaked at
-// 1,178 MiB for the whole container (JS-1).
+  "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; " +
+  "form-action 'none'; base-uri 'none'";
+// The page's V8 heap: a runaway of JavaScript objects (arrays, strings) ends the
+// page at this size, as a crash the final error line names. It does not bound
+// memory outside the heap (3 GiB of ArrayBuffers were allocated under it,
+// measured by the security review of JS-2): the renderer's MemAvailable watchdog
+// (512 MiB left of 4 GiB) bounds the run's memory. The catalogue's heaviest render
+// peaked at 1,178 MiB for the whole container (JS-1).
 const PAGE_HEAP_MB = 1024;
+// Sandbox mode: how long the page may take to settle after it loaded, and to
+// answer the harness's questions after that. A snippet that replaces
+// requestAnimationFrame or document.fonts would otherwise hold the render to the
+// job's timeout. The catalogue's slowest render took 6.1 s in all.
+const SETTLE_TIMEOUT_MS = 15000;
+const PAGE_ERROR_CHARS = 10000; // the page's own error record, cut in the page
 // A proxy nothing listens on (the discard port): Chromium's WebRTC may connect
 // only through a proxy in sandbox mode, so it connects nowhere.
 const DEAD_PROXY = "http://127.0.0.1:9";
@@ -160,6 +170,12 @@ function consoleGuard(keep, chars) {
       console[name] = quiet;
     },
   );
+  // Chromium's console.context() returns a fresh console whose error() passes by
+  // the guard (measured: 20 of 20 messages reached Node); it returns this one.
+  // The console's prototype is empty, so a deleted method leaves nothing to call.
+  console.context = function () {
+    return console;
+  };
   console.error = function () {
     if (!slot()) return;
     error(
@@ -427,12 +443,45 @@ function sandboxImports(snippetPath, allowed) {
           return resolveInside(args.path, args, BUILD_ROOT);
         }
         // A package's own import: esbuild's resolution, without a nested resolve per
-        // import (3,391 of them for one MUI X chart took 2.5 s); checkInputs refuses
-        // the bundle unless every file in it lies inside the packages.
+        // import (3,391 of them for one MUI X chart took 2.5 s); the load hook below
+        // reads no file outside the packages, and checkInputs refuses the bundle
+        // unless every file in it lies inside them.
         return undefined;
+      });
+      // Every file esbuild loads passes here, also those an import with a template
+      // (`import(\`../etc/${name}\`)`) matches without an onResolve call (the
+      // security review read every file under /etc that way): a file outside the
+      // packages is refused before esbuild reads it. The snippet is read here,
+      // without its sourceMappingURL comments, which would make esbuild read the
+      // named file as an input source map (`/dev/zero` until it died).
+      const prefix = modules + path.sep;
+      build.onLoad({ filter: /.*/ }, async (args) => {
+        if (args.namespace !== "file") return undefined;
+        if (args.path.startsWith(prefix)) {
+          const file = realpath(args.path);
+          if (file !== null && under(modules, file)) return undefined;
+        } else if (realpath(args.path) === snippet) {
+          const source = await readFile(snippet, "utf-8");
+          return { contents: withoutSourceMapComments(source), loader: loaderFor(snippet) };
+        }
+        return refuse("an import refused: it reaches a file outside the image's packages");
       });
     },
   };
+}
+
+// esbuild's own loader for the snippet's extension (plot.tsx in the renderer).
+function loaderFor(file) {
+  const loaders = { ".tsx": "tsx", ".ts": "ts", ".jsx": "jsx", ".js": "js", ".mjs": "js", ".cjs": "js" };
+  return loaders[path.extname(file).toLowerCase()] || "tsx";
+}
+
+// A `//# sourceMappingURL=` or `/*# sourceMappingURL= */` comment (`@` for `#`
+// too) is blanked, its line breaks kept, so every other line keeps its number.
+function withoutSourceMapComments(source) {
+  return source
+    .replace(/\/\/[#@][ \t]*sourceMappingURL=[^\n\r]*/g, "")
+    .replace(/\/\*[#@][ \t]*sourceMappingURL=[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n\r]/g, ""));
 }
 
 // Every file the bundle read lies inside the packages, or is the snippet or the
@@ -451,11 +500,18 @@ function checkInputs(metafile, snippetPath) {
 function buildFailure(err, snippetPath) {
   // esbuild's BuildFailure carries `errors`; the first one names the cause.
   const first = Array.isArray(err?.errors) ? err.errors[0] : null;
-  if (!first) return failure(`render: esbuild failed: ${err?.message || err}`, "build", "BuildError");
+  if (!first) return failure("render: esbuild failed", "build", "BuildError");
   const location = first.location;
   const inSnippet = location && path.resolve(BUILD_ROOT, location.file) === path.resolve(snippetPath);
   const where = inSnippet ? { file: path.basename(snippetPath), line: location.line } : null;
-  const text = String(first.text || "");
+  // The text can quote the file it is about; it is passed on only when that file
+  // is the snippet or a package's, or when the text is the plugin's own.
+  const located = location ? realpath(path.resolve(BUILD_ROOT, location.file)) : null;
+  const known =
+    inSnippet ||
+    first.detail === "ImportRefused" ||
+    (located !== null && under(realpathSync(NODE_MODULES), located));
+  const text = known ? String(first.text || "") : "esbuild failed on a file outside the snippet and the image's packages";
   let kind = "build";
   let cls = inSnippet ? "SyntaxError" : "BuildError";
   if (first.detail === "ImportRefused" || first.pluginName === "anyplot-sandbox-imports") {
@@ -583,10 +639,10 @@ ${dataElement}<script>
   window.ANYPLOT_THEME = ${JSON.stringify(tokens.theme)};
   window.ANYPLOT_TOKENS = ${JSON.stringify(tokens)};
   // Exact-pixel mount size, in case a snippet wants to size a canvas explicitly.
-  window.ANYPLOT_SIZE = { width: ${css.cssWidth}, height: ${css.cssHeight} };${dataGlobal}
+  window.ANYPLOT_SIZE = { width: ${css.cssWidth}, height: ${css.cssHeight} };
   window.__anyplotError = null;
   window.addEventListener("error", (e) => { window.__anyplotError = String(e.error || e.message); });
-  window.addEventListener("unhandledrejection", (e) => { window.__anyplotError = String(e.reason); });${errorAt}
+  window.addEventListener("unhandledrejection", (e) => { window.__anyplotError = String(e.reason); });${errorAt}${dataGlobal}
 </script>
 <script>
 ${bundleSource.replace(/<\/script/gi, "<\\/script")}${bundleName}
@@ -898,11 +954,27 @@ async function main() {
     // Playwright's signature is (pageFunction, arg, options): the options object
     // must sit in the third slot, or it becomes the page function's argument
     // and the wait runs to the 30 s default timeout.
-    const settle = () =>
-      page.evaluate(async () => {
-        await (document.fonts ? document.fonts.ready : Promise.resolve());
-        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    // Sandbox mode bounds every answer the page gives from here on by one deadline
+    // (SETTLE_TIMEOUT_MS): a page that never settles fails as `timeout`.
+    const deadline = Date.now() + SETTLE_TIMEOUT_MS;
+    const bounded = (promise) => {
+      if (!SANDBOX) return promise;
+      let timer;
+      const late = new Promise((_, reject) => {
+        timer = setTimeout(
+          () => reject(failure(`the page did not settle within ${SETTLE_TIMEOUT_MS / 1000} s`, "timeout", "TimeoutError")),
+          Math.max(0, deadline - Date.now()),
+        );
       });
+      return Promise.race([promise, late]).finally(() => clearTimeout(timer));
+    };
+    const settle = () =>
+      bounded(
+        page.evaluate(async () => {
+          await (document.fonts ? document.fonts.ready : Promise.resolve());
+          await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+        }),
+      );
     const expectsReadySignal = bundleInfo.framework === "react" || snippetSource.includes("__anyplotReady");
     if (expectsReadySignal) {
       try {
@@ -919,11 +991,41 @@ async function main() {
     // render so the pipeline retries, never ship silently. Throw (don't
     // process.exit) so the `finally` below still closes the browser; the outer
     // main().catch turns the throw into a non-zero exit.
-    const inPageError = await page.evaluate(() => window.__anyplotError);
+    // Sandbox mode reads the page's own records cut in the page, as scalars, since
+    // the snippet can write them.
+    const inPageError = SANDBOX
+      ? await bounded(
+          page.evaluate((limit) => {
+            try {
+              const value = window.__anyplotError;
+              return value == null ? null : String(value).slice(0, limit);
+            } catch (e) {
+              return "an error record that cannot be read";
+            }
+          }, PAGE_ERROR_CHARS),
+        )
+      : await page.evaluate(() => window.__anyplotError);
     if (SANDBOX) {
-      CONTEXT.errorAt = await page.evaluate(() => window.__anyplotErrorAt);
+      CONTEXT.errorAt = await bounded(
+        page.evaluate(() => {
+          try {
+            const at = window.__anyplotErrorAt;
+            return at ? { file: String(at.file).slice(0, 200), line: Number(at.line) | 0 } : null;
+          } catch (e) {
+            return null;
+          }
+        }),
+      );
       // The console.error calls the guard kept in the page count too.
-      const seen = await page.evaluate(() => (window.__anyplotConsoleSeen ? window.__anyplotConsoleSeen() : 0));
+      const seen = await bounded(
+        page.evaluate(() => {
+          try {
+            return Number(window.__anyplotConsoleSeen()) || 0;
+          } catch (e) {
+            return 0;
+          }
+        }),
+      );
       CONTEXT.console.total += Math.max(0, seen - CONSOLE_KEEP);
     }
     if (pageError || inPageError) {
@@ -937,16 +1039,18 @@ async function main() {
     // (D3); an empty mount means the snippet rendered nothing and we must fail
     // rather than ship a blank PNG.
     const container = page.locator("#container");
-    const drewSomething = await page.evaluate(() => {
-      const el = document.getElementById("container");
-      return !!el && el.querySelector("canvas, svg, img") !== null;
-    });
+    const drewSomething = await bounded(
+      page.evaluate(() => {
+        const el = document.getElementById("container");
+        return !!el && el.querySelector("canvas, svg, img") !== null;
+      }),
+    );
     if (!drewSomething) {
       throw failure("render: snippet did not draw into #container (no <canvas>/<svg> mounted).", "draw", "NoOutput");
     }
 
     const pngOut = path.resolve(process.cwd(), `plot-${theme}.png`);
-    await container.screenshot({ path: pngOut });
+    await bounded(container.screenshot({ path: pngOut }));
 
     if (consoleErrors.length) {
       console.warn(`render: ${consoleErrors.length} console error(s) during render:`);

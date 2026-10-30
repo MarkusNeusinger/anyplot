@@ -184,6 +184,21 @@ def test_without_the_variables_the_harness_is_the_pipelines(harness: Harness, tm
     assert "Error: render: the snippet threw while drawing:" in failed.stderr and "render: error:" not in failed.stderr
 
 
+def test_without_the_variables_the_page_is_byte_for_byte_the_pipelines(harness: Harness, tmp_path: Path) -> None:
+    """The page JS-1's harness wrote for the build smoke's Chart.js file (`fixtures/js-render-page-light.html`, the
+    library bundle and the snippet left as placeholders, so a lock bump or a smoke edit does not move it): the harness
+    without any variable writes exactly that page."""
+    snippet = (REPO_ROOT / "agents" / "renderer" / "toolchain" / "smoke.js").read_text(encoding="utf-8")
+    run = harness.render(tmp_path, snippet, sandbox=False)
+    assert run.returncode == 0, run.stderr
+    bundle = (harness.root / "node_modules" / "chart.js" / "dist" / "chart.umd.js").read_text(encoding="utf-8")
+    template = (Path(__file__).parent / "fixtures" / "js-render-page-light.html").read_text(encoding="utf-8")
+    expected = template.replace("{{SNIPPET}}", snippet).replace(
+        "{{BUNDLE}}", re.sub("</script", lambda _: "<\\/script", bundle, flags=re.IGNORECASE)
+    )
+    assert (run.work / "plot-light.html").read_bytes() == expected.encode("utf-8")
+
+
 # --- The page rules ----------------------------------------------------------------------------
 
 
@@ -275,6 +290,9 @@ note("worker", new Promise((resolve, reject) => {{
 note("eventsource", event(new EventSource(base + "/events"), "onopen", "onerror"));
 const style = document.createElement("link"); style.rel = "stylesheet"; style.href = base + "/style";
 note("style", event(style, "onload", "onerror")); document.head.appendChild(style);
+for (const rel of ["preconnect", "dns-prefetch"]) {{  // no outcome in the page; the closed proxy stops them
+  const hint = document.createElement("link"); hint.rel = rel; hint.href = base + "/" + rel; document.head.appendChild(hint);
+}}
 note("webrtc", new Promise((resolve, reject) => {{
   const pc = new RTCPeerConnection({{ iceServers: [{{ urls: "stun:127.0.0.1:{udp_port}" }},
     {{ urls: "turn:127.0.0.1:{http_port}?transport=tcp", username: "u", credential: "p" }}] }});
@@ -340,6 +358,30 @@ def test_a_top_level_navigation_is_aborted_by_the_route(
     assert hits == []
 
 
+def test_a_blob_navigation_keeps_the_policy(
+    harness: Harness, tmp_path: Path, listener: tuple[int, int, list[str]]
+) -> None:
+    """Hygiene: a page the snippet writes into a blob: URL and navigates to passes no route, but it inherits the
+    content security policy (a local scheme), so its request is refused too; the render draws nothing either way."""
+    http_port, _, hits = listener
+    page = f"<script>fetch('http://127.0.0.1:{http_port}/blob')<\\/script>"
+    source = (
+        CANVAS + "// window.__anyplotReady stays unset\n"
+        f'location.href = URL.createObjectURL(new Blob(["{page}"], {{ type: "text/html" }}));\n'
+    )
+    run = harness.render(tmp_path, source)
+    assert run.returncode == 0 or ERROR_LINE.match(run.last_line), run.stderr
+    assert hits == []
+
+
+def test_a_page_that_never_settles_times_out(harness: Harness, tmp_path: Path) -> None:
+    """A snippet that replaces requestAnimationFrame would hold the render to the job's timeout; the harness's own
+    deadline ends it after 15 s with the final line."""
+    run = harness.render(tmp_path, CANVAS + "window.requestAnimationFrame = () => 0;\n")
+    message = _assert_final_line(run, "timeout", "TimeoutError", "-")
+    assert message == "the page did not settle within 15 s"
+
+
 def test_dates_are_utc_whatever_the_hosts_zone(harness: Harness, tmp_path: Path) -> None:
     source = (
         CANVAS + 'const local = new Date("2026-03-01T00:00").toISOString();\n'
@@ -364,6 +406,22 @@ def test_the_console_is_capped_in_count_and_size(harness: Harness, tmp_path: Pat
     kept = [line for line in lines if line.startswith("  error ")]
     assert [line.split()[1] for line in kept] == ["0", "1", "2", "3", "4"]
     assert all(len(line) <= 2 + 300 for line in kept) and "log 1" not in run.stderr
+
+
+def test_no_console_passes_by_the_guard(harness: Harness, tmp_path: Path) -> None:
+    """Chromium's console.context() returned a fresh console past the guard (review of JS-2); now it returns the
+    guarded one, a child frame's console is guarded too, and a deleted method leaves nothing to call."""
+    source = (
+        CANVAS + 'if (console.context("x") !== console) throw new Error("console.context escapes the guard");\n'
+        'const frame = document.body.appendChild(document.createElement("iframe"));\n'
+        'for (let i = 0; i < 20; i++) console.context("x").error("context " + i + " " + "z".repeat(1000000));\n'
+        'for (let i = 0; i < 20; i++) frame.contentWindow.console.error("frame " + i + " " + "z".repeat(1000000));\n'
+        'delete console.error;\nif (typeof console.error !== "undefined") throw new Error("a console.error survived");\n'
+    )
+    run = harness.render(tmp_path, source)
+    assert run.returncode == 0, run.stderr
+    assert "render: 40 console error(s) during render, the first 5:" in run.stderr
+    assert len(run.stderr) < 2_000
 
 
 # --- MUI X's imports ---------------------------------------------------------------------------
@@ -419,6 +477,29 @@ def test_a_require_and_a_dynamic_import_are_checked_too(harness: Harness, tmp_pa
     _assert_final_line(run, "import", "ImportRefused", "plot.tsx:5")
     run = harness.render(tmp_path, _muix('const fs = require("fs");', "console.log(fs);"), library="muix")
     _assert_final_line(run, "import", "ImportRefused", "plot.tsx:1")
+
+
+def test_an_import_with_a_template_reads_no_file_outside_the_packages(harness: Harness, tmp_path: Path) -> None:
+    """``import(`../etc/${name}`)`` makes esbuild match every file of the directory without asking the resolve hook
+    (the review read /etc that way, and the build error quoted a file's first word); the load hook refuses each
+    such file before esbuild reads it, and the final line quotes nothing of it."""
+    secrets = tmp_path / "etc"
+    secrets.mkdir()
+    (secrets / "README").write_text("SECRETTOKEN first line\n", encoding="utf-8")
+    (secrets / "conf.js").write_text('export default "SECRETTOKEN js";\n', encoding="utf-8")
+    source = _muix("", 'const name = "README"; void import(`../etc/${name}`);')
+    run = harness.render(tmp_path, source, library="muix")
+    message = _assert_final_line(run, "import", "ImportRefused", "plot.tsx:5")
+    assert message == "an import refused: it reaches a file outside the image's packages"
+    assert "SECRETTOKEN" not in run.stderr + run.stdout
+
+
+@pytest.mark.parametrize("comment", ["//# sourceMappingURL=/dev/zero", "/*@ sourceMappingURL=/dev/zero */"])
+def test_a_source_map_comment_in_the_snippet_is_not_read(harness: Harness, tmp_path: Path, comment: str) -> None:
+    """With the bundle's source map on, esbuild reads an input's own map: `/dev/zero` until it died (32 s, review of
+    JS-2). The load hook hands esbuild the snippet without such comments, lines kept, so the render is a plain one."""
+    run = harness.render(tmp_path, _muix(comment, "const v = (undefined as any).x; void v;"), library="muix")
+    _assert_final_line(run, "page", "TypeError", "plot.tsx:5")
 
 
 def test_a_missing_export_and_a_syntax_error_name_their_line(harness: Harness, tmp_path: Path) -> None:
@@ -495,6 +576,14 @@ def test_a_syntax_error_names_its_line(harness: Harness, tmp_path: Path) -> None
 def test_a_muix_runtime_error_names_the_snippets_line_through_the_source_map(harness: Harness, tmp_path: Path) -> None:
     run = harness.render(tmp_path, _muix("", "const v = (undefined as any).x; void v;"), library="muix")
     _assert_final_line(run, "page", "TypeError", "plot.tsx:5")
+
+
+def test_a_huge_error_record_is_cut_in_the_page(harness: Harness, tmp_path: Path) -> None:
+    """The snippet can write the page's own error record; 50 million characters of it leave the page as 10,000 and
+    the final line as 200."""
+    run = harness.render(tmp_path, CANVAS + 'window.__anyplotError = "x".repeat(50000000);\n')
+    message = _assert_final_line(run, "page", "Error", "-")
+    assert len(message) == 200 and len(run.stderr) < 2_000
 
 
 def test_nothing_drawn_and_a_long_message(harness: Harness, tmp_path: Path) -> None:
