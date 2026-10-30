@@ -376,16 +376,41 @@ class TestJuliaRuntimeBindings:
         )
         kinds = read_kinds(csv_text, {"Zeit": "datetime", "Start": "datetime", "n": "integer"})
         assert kinds.submillisecond == {"Zeit": 2, "Start": 1}
-        (line,) = runtime_for("makie").loader_notes(kinds)
+        line, shifted = runtime_for("makie").loader_notes(kinds)
         assert line == (
             "Julia keeps time to the millisecond, so the plot cuts the digits below it from 3 timestamps: "
             "2 in 'Zeit', 1 in 'Start'"
         )
-        assert runtime_for("ggplot2").loader_notes(kinds) == [] and runtime_for("matplotlib").loader_notes(kinds) == []
+        assert shifted.startswith("Julia converts 1 timestamp with a time-zone offset")  # the +01:00 cell; Z is UTC
+        assert [note.split()[0] for note in runtime_for("ggplot2").loader_notes(kinds)] == ["R"]
+        assert runtime_for("matplotlib").loader_notes(kinds) == []
         one = read_kinds("t\n2024-01-31T08:00:00.0000001\n", {"t": "datetime"})
         assert runtime_for("makie").loader_notes(one)[0].endswith("from 1 timestamp: 1 in 't'")
         whole = read_kinds("t,n\n2024-01-31T08:00:00.123,9007199254740993\n", {"t": "datetime", "n": "integer"})
         assert runtime_for("makie").loader_notes(whole) == []  # milliseconds fit; Julia reads every integer exactly
+
+    def test_loader_notes_count_the_timestamps_read_in_utc_per_column(self) -> None:
+        """Owner decision of 2026-10-30: R and Julia read a timestamp with an offset in UTC, so its clock time moves;
+        the cells with an offset other than zero are announced with counts, in the same words for both."""
+        csv_text = (
+            "Ankunft,Abfahrt,Tag\n"
+            "2024-01-31T08:00:00+01:00,2024-01-31 08:00-0500,2024-01-31\n"
+            "2024-01-31T08:00:00.5-03:30,2024-01-31T08:00:00Z,2024-02-01\n"
+            "2024-01-31T08:00:00+05,2024-01-31T08:00:00+00:00,\n"
+            "2024-01-31T08:00:00,2024-01-31T08:00:00-00:00,2024-02-02\n"
+        )
+        kinds = read_kinds(csv_text, {"Ankunft": "datetime", "Abfahrt": "datetime", "Tag": "datetime"})
+        assert kinds.offset == {"Ankunft": 3, "Abfahrt": 1}  # Z, ±00:00, no offset and plain dates keep their time
+        expected = "converts 4 timestamps with a time-zone offset to UTC, so the plot shows their UTC clock time: "
+        assert runtime_for("ggplot2").loader_notes(kinds) == [f"R {expected}3 in 'Ankunft', 1 in 'Abfahrt'"]
+        assert runtime_for("makie").loader_notes(kinds) == [f"Julia {expected}3 in 'Ankunft', 1 in 'Abfahrt'"]
+        assert runtime_for("matplotlib").loader_notes(kinds) == []  # pandas keeps the offset
+        one = read_kinds("t\n2024-01-31T08:00:00+01:00\n", {"t": "datetime"})
+        assert runtime_for("ggplot2").loader_notes(one) == [
+            "R converts 1 timestamp with a time-zone offset to UTC, so the plot shows its UTC clock time: 1 in 't'"
+        ]
+        both = read_kinds("n,t\n9007199254740993,2024-01-31T08:00:00+01:00\n", {"n": "integer", "t": "datetime"})
+        assert [note.split()[1] for note in runtime_for("ggplot2").loader_notes(both)] == ["reads", "converts"]
 
     def test_the_loader_note_is_a_change_note_and_names_what_fits(self) -> None:
         from agents.anyplot.schemas import MAX_CHANGE_CHARS, MAX_COLUMN_NAME_CHARS

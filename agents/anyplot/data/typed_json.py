@@ -25,7 +25,8 @@ The value of a cell follows its column's kind:
 * `date`: the cell verbatim, `YYYY-MM-DD`.
 * `datetime`: an ISO string in UTC with milliseconds, `2024-01-31T07:00:00.000Z`, which
   `new Date(...)` reads as the same instant everywhere. A cell with an offset or `Z` is
-  converted to UTC; a cell without one is read as written, as UTC, as R's and Julia's
+  converted to UTC (`ColumnKinds.offset` counts the cells that moves to another clock
+  time); a cell without one is read as written, as UTC, as R's and Julia's
   loaders read it; a plain date in a timestamp column is its midnight. The fraction is
   truncated to milliseconds, which a JavaScript `Date` holds; `ColumnKinds.submillisecond`
   counts the cells that changes. A cell that UTC would move outside the years 1 to 9999
@@ -44,15 +45,7 @@ import re
 from collections.abc import Callable
 from datetime import datetime, timedelta
 
-from .kinds import MILLISECOND_DIGITS, ColumnKind, ColumnKinds
-
-
-_TIMESTAMP = re.compile(
-    r"([0-9]{4})-([0-9]{2})-([0-9]{2})"
-    r"(?:[T ]([0-9]{2}):([0-9]{2})(?::([0-9]{2}))?(?:[.,]([0-9]+))?)?"
-    r"(Z|[+-][0-9]{2}(?::?[0-9]{2})?)?"
-)
-"""A canonical timestamp cell: `2024-01-31T08:00:00.123456+01:00`, `2024-01-31 08:00`, `2024-01-31` (midnight)."""
+from .kinds import MILLISECOND_DIGITS, TIMESTAMP, ColumnKind, ColumnKinds
 
 
 def typed_json(csv_text: str, kinds: ColumnKinds) -> str:
@@ -96,7 +89,7 @@ def _date(cell: str) -> str:
 
 def _datetime(cell: str) -> str:
     """The cell as `YYYY-MM-DDTHH:MM:SS.sssZ`: in UTC, the fraction truncated to milliseconds."""
-    match = _TIMESTAMP.fullmatch(cell)
+    match = TIMESTAMP.fullmatch(cell)
     if match is None:
         raise ValueError(f"not an ISO timestamp: {cell!r}")
     year, month, day, hour, minute, second, fraction, offset = match.groups()

@@ -26,8 +26,15 @@ Julia's `DateTime` holds milliseconds: the Julia loader truncates the rest
 counts, per column, the cells with a digit below the millisecond that is not zero, the
 cells the truncation changes (`.123456` does, `.120000` does not).
 
+A timestamp cell may carry a UTC offset (`+01:00`), which R's, Julia's and JavaScript's
+readers convert to UTC: the instant stays exact, but the plot shows the UTC clock time
+(`07:00` for `08:00+01:00`). `ColumnKinds.offset` counts, per column, the cells whose offset
+is not zero, the cells that conversion shows at another clock time (`Z`, `+00:00` and a
+cell without an offset do not count).
+
 The owner's data-fidelity rule allows no silent precision loss, so the caller announces
-those counts (R: PR 3b; Julia: J2b); nothing here changes a value.
+those counts (R: PR 3b; Julia: J2b; the offsets: owner decision of 2026-10-30); nothing
+here changes a value.
 """
 
 import csv
@@ -50,12 +57,20 @@ _FRACTION = re.compile(r"[T ][0-9]{2}:[0-9]{2}(?::[0-9]{2})?[.,]([0-9]+)")
 """The fraction of a second of a timestamp cell (`2024-01-31T08:00:00.123456+01:00` has `123456`)."""
 MILLISECOND_DIGITS = 3
 """The fraction digits Julia's `DateTime` holds."""
+TIMESTAMP = re.compile(
+    r"([0-9]{4})-([0-9]{2})-([0-9]{2})"
+    r"(?:[T ]([0-9]{2}):([0-9]{2})(?::([0-9]{2}))?(?:[.,]([0-9]+))?)?"
+    r"(Z|[+-][0-9]{2}(?::?[0-9]{2})?)?"
+)
+"""A canonical timestamp cell: `2024-01-31T08:00:00.123456+01:00`, `2024-01-31 08:00`, `2024-01-31` (midnight); the
+last group is the offset."""
 
 
 @dataclass(frozen=True, slots=True)
 class ColumnKinds:
-    """The kind of every column in `data.csv` order; per column the integer cells beyond ±2^53 (`inexact`) and the
-    timestamps with digits below the millisecond (`submillisecond`)."""
+    """The kind of every column in `data.csv` order; per column the integer cells beyond ±2^53 (`inexact`), the
+    timestamps with digits below the millisecond (`submillisecond`) and those with a UTC offset other than zero
+    (`offset`)."""
 
     kinds: dict[str, ColumnKind]
     inexact: dict[str, int] = field(default_factory=dict)
@@ -64,6 +79,9 @@ class ColumnKinds:
     submillisecond: dict[str, int] = field(default_factory=dict)
     """Datetime columns with cells whose fraction has a non-zero digit below the millisecond, which a millisecond
     clock (Julia's `DateTime`) truncates, and how many; a column without such cells is absent."""
+    offset: dict[str, int] = field(default_factory=dict)
+    """Datetime columns with cells whose UTC offset is not zero, which a reader converting to UTC (readr, TimeZones,
+    the typed JSON) shows at another clock time, and how many; a column without such cells is absent."""
 
 
 def read_kinds(csv_text: str, column_dtypes: Mapping[str, ColumnDtype], parse_dates: Iterable[str] = ()) -> ColumnKinds:
@@ -87,6 +105,7 @@ def read_kinds(csv_text: str, column_dtypes: Mapping[str, ColumnDtype], parse_da
     timed: set[str] = set()
     inexact: dict[str, int] = {}
     submillisecond: dict[str, int] = {}
+    offset: dict[str, int] = {}
     for row in rows:
         for name, cell in zip(header, row, strict=False):
             if not cell:
@@ -104,6 +123,10 @@ def read_kinds(csv_text: str, column_dtypes: Mapping[str, ColumnDtype], parse_da
                 fraction = _FRACTION.search(cell)
                 if fraction is not None and fraction.group(1)[MILLISECOND_DIGITS:].strip("0"):
                     submillisecond[name] = submillisecond.get(name, 0) + 1
+                stamp = TIMESTAMP.fullmatch(cell)
+                zone = stamp.group(8) if stamp is not None else None
+                if zone and zone != "Z" and zone[1:].replace(":", "").strip("0"):
+                    offset[name] = offset.get(name, 0) + 1
     kinds: dict[str, ColumnKind] = {}
     for name in header:
         dtype = dtypes[name]
@@ -117,6 +140,7 @@ def read_kinds(csv_text: str, column_dtypes: Mapping[str, ColumnDtype], parse_da
         kinds,
         {name: inexact[name] for name in header if name in inexact},
         {name: submillisecond[name] for name in header if name in submillisecond},
+        {name: offset[name] for name in header if name in offset},
     )
 
 

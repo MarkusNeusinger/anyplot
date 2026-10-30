@@ -42,7 +42,9 @@ Julia's `DateTime` holds milliseconds, so the loader cuts a timestamp's digits b
 millisecond (owner decision of 2026-10-29), and `loader_notes` names the columns with such
 cells and their counts, which the pipeline puts first in the shipped version's "what
 changed" list, with the status left as the render earns it (R's 2^53 precedent). Julia
-reads both integer kinds as `Int64`, exactly, so it has no integer note.
+reads both integer kinds as `Int64`, exactly, so it has no integer note. The loader reads a
+timestamp with a UTC offset in UTC, as readr does, so a second line names the columns with
+offsets other than zero (owner decision of 2026-10-30).
 
 **ADAPTATION.** A dataset package (RDatasets, PalmerPenguins) brings the package's sample
 data instead of the user's, so `dataset-package` joins the rules that reject the working
@@ -77,7 +79,7 @@ from ...schemas import AdaptPlan, CodeArtifact
 from ..contract import BLOCKING_RULES, Theme
 from ..harness import INTERPRETER_FLAGS
 from ..png import MAX_PNG_BYTES, read_output
-from .notes import counted_note
+from .notes import counted_note, offset_note
 from .python import DATA_RLIMIT_AS_MB, IMAGE_HARNESS, IMAGE_PYTHON, RENDER_RLIMIT_FSIZE_MB, PythonRuntime
 
 
@@ -192,13 +194,18 @@ class JuliaRuntime:
     def loader_notes(self, kinds: ColumnKinds) -> list[str]:
         """One "what changed" line for the timestamps whose digits below the millisecond the loader cuts: the total,
         then each column with its count, as many as fit a change note and the rest counted (`notes.counted_note`);
-        none when no cell has such digits. Julia reads every integer exactly, so `kinds.inexact` stays unread."""
-        if not kinds.submillisecond:
-            return []
-        total = sum(kinds.submillisecond.values())
-        noun = "timestamp" if total == 1 else "timestamps"
-        head = f"Julia keeps time to the millisecond, so the plot cuts the digits below it from {total:,} {noun}: "
-        return [counted_note(head, kinds.submillisecond)]
+        none when no cell has such digits. Julia reads every integer exactly, so `kinds.inexact` stays unread. A
+        second line for the timestamps with a UTC offset other than zero, which the loader reads in UTC through
+        TimeZones (`notes.offset_note`)."""
+        notes: list[str] = []
+        if kinds.submillisecond:
+            total = sum(kinds.submillisecond.values())
+            noun = "timestamp" if total == 1 else "timestamps"
+            head = f"Julia keeps time to the millisecond, so the plot cuts the digits below it from {total:,} {noun}: "
+            notes.append(counted_note(head, kinds.submillisecond))
+        if kinds.offset:
+            notes.append(offset_note("Julia", kinds.offset))
+        return notes
 
     def validate(self, code: str, library: str) -> list[str]:
         return [f"{finding.rule}: {finding.message}" for finding in validate_security(code)]

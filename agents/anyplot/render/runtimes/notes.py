@@ -3,7 +3,9 @@
 R reads integer cells past ±2^53 as the nearest double (`runtimes/r.py`) and Julia keeps a timestamp to the
 millisecond (`runtimes/julia.py`). Each announces the cells it changed in one change note with the counts per
 column (owner rule of 2026-10-15: no silent loss, every change announced with counts), which the pipeline puts
-first in the shipped version's "what changed" list (owner decision of 2026-10-29).
+first in the shipped version's "what changed" list (owner decision of 2026-10-29). Both also read a timestamp
+with a UTC offset in UTC, which shows it at another clock time: `offset_note` words that for every such runtime
+alike (owner decision of 2026-10-30).
 """
 
 from collections.abc import Mapping
@@ -28,3 +30,13 @@ def counted_note(head: str, counts: Mapping[str, int]) -> str:
         if len(line) <= MAX_CHANGE_CHARS:
             break
     return line
+
+
+def offset_note(language: str, counts: Mapping[str, int]) -> str:
+    """The change note of a loader that reads timestamps with a UTC offset in UTC (`ColumnKinds.offset`): the
+    instant stays exact, the clock time the plot shows moves (`08:00+01:00` shows as `07:00`). `counts` holds at
+    least one column."""
+    total = sum(counts.values())
+    noun, pronoun = ("timestamp", "its") if total == 1 else ("timestamps", "their")
+    head = f"{language} converts {total:,} {noun} with a time-zone offset to UTC, so the plot shows {pronoun} UTC clock time: "
+    return counted_note(head, counts)
