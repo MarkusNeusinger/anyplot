@@ -263,5 +263,6 @@ describe('SpecMatrix', () => {
       />
     );
     expect(screen.getByDisplayValue('scatter')).toBeInTheDocument();
+    expect(screen.getByRole('combobox')).toHaveValue('matplotlib');
   });
 });

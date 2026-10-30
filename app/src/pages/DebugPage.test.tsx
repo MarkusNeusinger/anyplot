@@ -606,7 +606,9 @@ describe('DebugPage spec matrix and feedback triage', () => {
       highcharts: null,
       letsplot: null,
       makie: null,
-      matplotlib: 91,
+      // One library below 90 while the average stays at 91.0: the low-score
+      // filter must look at each library, not at the average.
+      matplotlib: 85,
       muix: null,
       plotly: null,
       plotnine: null,
@@ -819,8 +821,8 @@ describe('DebugPage spec matrix and feedback triage', () => {
 
     const lowScoresBtn = screen.getByRole('button', { name: /low scores <90/i });
     fireEvent.click(lowScoresBtn);
-    expect(screen.getByText('1 / 3')).toBeInTheDocument();
-    expect(renderedSpecOrder()).toEqual(['bar-grouped']);
+    expect(screen.getByText('2 / 3')).toBeInTheDocument();
+    expect(renderedSpecOrder()).toEqual(['heatmap-annotated', 'bar-grouped']);
 
     fireEvent.click(lowScoresBtn);
     expect(screen.getByText('3 / 3')).toBeInTheDocument();

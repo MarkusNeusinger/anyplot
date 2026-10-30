@@ -5,14 +5,13 @@ import { paths } from 'src/routes/paths';
 import { act, fireEvent, render, screen, within } from 'src/test-utils';
 
 const mockTrackPageview = vi.fn();
-const mockIsDark = { current: false };
 
 vi.mock('src/hooks', () => ({
   useAnalytics: () => ({
     trackPageview: mockTrackPageview,
   }),
   useTheme: () => ({
-    isDark: mockIsDark.current,
+    isDark: false,
   }),
 }));
 
@@ -42,7 +41,6 @@ describe('PalettePage', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     mockTrackPageview.mockReset();
-    mockIsDark.current = false;
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
   });
 
@@ -135,7 +133,6 @@ describe('PalettePage', () => {
   });
 
   it('wires wheel expansion, comparison palette selection, language tabs, and the OKLCH switch through page state', () => {
-    mockIsDark.current = true;
     render(<PalettePage />);
 
     const expandWheel = screen.getByRole('button', {
