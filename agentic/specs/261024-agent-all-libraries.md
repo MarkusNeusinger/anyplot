@@ -1769,7 +1769,9 @@ fixtures.
   `useUTC` with a `time` axis and Highcharts' `datetime` axis show the dates in UTC (the
   exported page runs in the user's time zone); the page has no Chart.js date adapter, so a
   `type: "time"` axis fails the render and the prompt puts dates on a category or linear
-  axis; Highcharts writes `8k` and a space for thousands unless its labels go through the
+  axis, the category labels sliced from the cell (`slice(0, 10)`, `slice(11, 16)`),
+  because a timestamp cell is the whole ISO string (the end-to-end check below found
+  `01T07:00:00.000Z.01.2025` where the first draft reversed the cell's parts); Highcharts writes `8k` and a space for thousands unless its labels go through the
   `fmt` helper, which every value axis uses. The idioms pass both validator profiles per
   library and render 3200x1800 in both themes from a table with missing cells and a column
   name with a quote and a backslash (`test_profile_javascript_image.py`, skipped without
@@ -1786,6 +1788,13 @@ fixtures.
   step scans through the runtime and the image carries `adapter_javascript.md`.
 - **Docs.** `docs/concepts/agent-network.md` lost J2b's eight lines about Makie in the
   merge of JS-1 (#12465); JS-4a restores them with its own.
+- **End to end without a model** (2026-10-30, the JS-2 renderer image through the local
+  Docker backend): a pasted table of 60 rows with a text group, two number columns with a
+  gap, a timestamp column with `+01:00`, microseconds and two gaps, and an integer column
+  past 2^53, through the parser, each library's prompt-idiom form, the loader, the typed
+  table and the host gates: all four libraries pass R1 to R3 in both themes, 3200x1864
+  with the footer strip, 1.2 to 1.6 s per two-theme job; the notes count 60 integers, 57
+  cut timestamps and 58 converted ones.
 
 | Text above (3f) | Built | Why |
 |---|---|---|

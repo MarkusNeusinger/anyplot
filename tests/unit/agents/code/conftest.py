@@ -516,7 +516,8 @@ JS_LIBRARY_IDIOM_SNIPPETS: dict[str, tuple[str, ...]] = {
     "chartjs": (
         "ticks: { callback: (v) => fmt(v, 1) }",
         '(v) => fmt(v / 1e6, 1) + " Mio."',
-        'd[DAY].split("-").reverse().join(".")',
+        'd[DAY].slice(0, 10).split("-").reverse().join(".")',
+        "d[DAY].slice(11, 16)",
         "new Date(d[DAY]).getTime()",
         "new Date(v).toISOString().slice(0, 10)",
         "responsive: true",
@@ -594,7 +595,7 @@ JS_PROMPT_IDIOMS: dict[str, str] = {
         new Chart(first, {
           type: "line",
           data: {
-            labels: dated.map((d) => d[DAY].split("-").reverse().join(".")),
+            labels: dated.map((d) => d[DAY].slice(0, 10).split("-").reverse().join(".") + " " + d[DAY].slice(11, 16)),
             datasets: groups.map((g, i) => ({
               label: g,
               data: dated.map((d) => (d[GROUP] === g ? d[Y] : null)),
