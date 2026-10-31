@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-timeseries: Time Series Line Plot
-// Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-05
+// Library: highcharts 13.1.1 | JavaScript 22.23.4
+// Quality: 87/100 | Updated: 2026-10-31
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
