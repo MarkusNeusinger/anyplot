@@ -857,6 +857,14 @@ class TestStrings:
             "'wss://example.org/feed'",
             "'blob:abc'",
             "'javascript:alert(1)'",
+            # A protocol-relative URL to any host (Copilot's review of #12490).
+            "'//host/x'",
+            "'//localhost/x'",
+            "'//127.0.0.1:8080/x'",
+            "'//[::1]/x'",
+            "'///example.org/x'",
+            "'//%65xample.org/x'",
+            "'see //intranet'",
         ],
     )
     def test_url_literal(self, literal: str) -> None:
@@ -871,10 +879,24 @@ class TestStrings:
             "'www.example.com'",
             "'data:'",
             "'Data: n = 3'",
+            "'///'",  # a matplotlib hatch
+            "'//'",
+            "'a // b'",
+            "'Q1//Q2'",
         ],
     )
     def test_prose_with_a_colon_passes(self, literal: str) -> None:
         assert security_rules(f"s = {literal}\n") == set()
+
+    def test_every_profile_reads_urls_with_one_rule(self) -> None:
+        """R, Julia and JavaScript read their string literals with the Python profile's URL rule, so a host form one
+        profile refuses no other admits (Copilot's review of #12490)."""
+        from agents.anyplot.code.profiles.javascript import validate as javascript
+        from agents.anyplot.code.profiles.julia import validate as julia
+        from agents.anyplot.code.profiles.r import validate as r
+
+        for profile in (r, julia, javascript):
+            assert profile._URL_IN_TEXT.pattern == validate._URL_IN_TEXT.pattern, profile.__name__
 
     def test_string_length(self) -> None:
         assert security_rules(f"s = '{'x' * MAX_STRING_CHARS}'\n") == set()

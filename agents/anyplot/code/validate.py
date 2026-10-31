@@ -392,10 +392,10 @@ from __future__ import annotations
 import ast
 import re
 import sys
-from collections import defaultdict
+from collections import defaultdict, deque
 from collections.abc import Callable, Container, Iterable
 from dataclasses import dataclass
-from typing import Literal, TypeVar
+from typing import Literal, TypeVar, cast
 
 from core.constants import SUPPORTED_LIBRARIES
 from core.palette import IMPRINT
@@ -1642,13 +1642,15 @@ _BUFFER_WRITERS: dict[str, int] = {"to_string": 0, "info": 1}
 _DUNDER_NAME = re.compile(r"^__\w+__$")
 _DUNDER_IN_TEXT = re.compile(r"__\w+__")
 _URL_IN_TEXT = re.compile(
-    r"(?i)(?:https?|ftp|wss?)://|\b(?:file|data|blob|javascript):\S"
-    r"|(?:^|[\s\"'(=,])//[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?:[/:?#]|$)"
+    r"(?i)(?:https?|ftp|wss?)://|\b(?:file|data|blob|javascript):\S|(?:^|[\s\"'(=,])/{2,}[a-z0-9_\[%]"
 )
 """A URL in a string: a scheme the plot never loads from (`http`, `https`, `ftp`, `ws`, `wss`, followed by `//`;
-`file:`, `data:`, `blob:`, `javascript:` followed by text), or a protocol-relative `//host/...`, which a page reads with
-its own scheme (since PB-2a, 2026-10-31, as the JavaScript profile has since JS-3; no catalogue file of any library
-holds one)."""
+`file:`, `data:`, `blob:`, `javascript:` followed by text), or a protocol-relative one, which a page reads with its own
+scheme: two or more slashes at the start of the string or after a space, a quote, `(`, `=` or `,`, then the first
+character of any host (`//host/x`, `//localhost`, `//127.0.0.1:8080`, `//[::1]`, `///example.org`, which a browser reads
+as `//example.org`, a percent-encoded name). A matplotlib hatch (`"///"`) and `a // b` are no URL. Since PB-2a, the same
+rule in every profile (Copilot's review of #12490 widened the host from a dotted name); no catalogue file of any of the
+15 libraries holds one."""
 
 _BANNED_STATEMENTS: dict[type[ast.AST], str] = {
     ast.ClassDef: "class definition",
@@ -2082,8 +2084,15 @@ def _is_literal_settings(node: ast.AST | None, *, style_names: bool = False) -> 
     )
 
 
-def _module_allowed(path: str, allowed: Iterable[str]) -> bool:
-    return any(path == prefix or path.startswith(prefix + ".") for prefix in allowed)
+def _module_allowed(path: str, allowed: Container[str]) -> bool:
+    """`path` is an entry of `allowed` or inside one (`numpy.random` under `numpy`): one membership test per dotted
+    prefix of `path`, not one comparison per entry, since the walk asks it about every name of every file."""
+    end = path.find(".")
+    while end != -1:
+        if path[:end] in allowed:
+            return True
+        end = path.find(".", end + 1)
+    return path in allowed
 
 
 def _is_placeholder(node: ast.AST | None) -> bool:
@@ -2140,10 +2149,14 @@ class _Scan:
         """The DATA profile: its own messages (no `load_user_data()`), no `os` exception, no private attribute."""
         self.by_type: defaultdict[type[ast.AST], list[ast.AST]] = defaultdict(list)
         self.parents: dict[ast.AST, ast.AST] = {}
-        for node in ast.walk(tree):
+        # `ast.walk`'s breadth-first order, with each node's children listed once for the walk and the parents alike.
+        pending: deque[ast.AST] = deque([tree])
+        while pending:
+            node = pending.popleft()
             self.by_type[type(node)].append(node)
             for child in ast.iter_child_nodes(node):
                 self.parents[child] = node
+                pending.append(child)
         self.findings: list[Finding] = []
         self.os_names: set[str] = set()
         self.library = ""
@@ -2185,7 +2198,9 @@ class _Scan:
         return sorted(unique, key=lambda f: (f.line is None, f.line or 0, f.rule, f.message))
 
     def of(self, node_type: type[_Node]) -> list[_Node]:
-        return [node for node in self.by_type[node_type] if isinstance(node, node_type)]
+        """The nodes of exactly `node_type`, in walk order: `by_type` is keyed by each node's own type, so its list
+        needs no filter, only a copy a caller may change."""
+        return cast("list[_Node]", list(self.by_type[node_type]))
 
     def _line(self, node: ast.AST | None) -> int | None:
         while node is not None:

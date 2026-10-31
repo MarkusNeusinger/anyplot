@@ -635,11 +635,11 @@ RNG_DRAWS = re.compile(
 `d3.randomLcg` and `d3.shuffle` stay allowed for jitter and subsampling (R's and Julia's precedent)."""
 
 _URL_IN_TEXT = re.compile(
-    r"(?i)(?:https?|ftp|wss?)://|\b(?:file|data|blob|javascript):\S"
-    r"|(?:^|[\s\"'(=,])//[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?:[/:?#]|$)"
+    r"(?i)(?:https?|ftp|wss?)://|\b(?:file|data|blob|javascript):\S|(?:^|[\s\"'(=,])/{2,}[a-z0-9_\[%]"
 )
 """The Python profile's URL rule (`validate._URL_IN_TEXT`) with the browser's schemes, and a protocol-relative URL
-(`"//example.org/p?" + x`, which a page reads with its own scheme; review of JS-3)."""
+(`"//example.org/p?" + x`, which a page reads with its own scheme; review of JS-3) to any host since PB-2a
+(`"//localhost/x"`, `"//127.0.0.1/x"`)."""
 _MARKUP = re.compile(
     r"(?i)<\s*(?:script|iframe|frame|object|embed|link|meta|base|form|portal)\b|<[a-z][^>]*\son[a-z]+\s*="
 )

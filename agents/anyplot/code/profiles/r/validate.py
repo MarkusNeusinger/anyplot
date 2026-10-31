@@ -725,10 +725,10 @@ DATASETS = frozenset(
 `pressure`, `trees`, `rock`, `sleep`) are left out, because a user's column may carry them."""
 
 _URL_IN_TEXT = re.compile(
-    r"(?i)(?:https?|ftp|wss?)://|\b(?:file|data|blob|javascript):\S"
-    r"|(?:^|[\s\"'(=,])//[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?:[/:?#]|$)"
+    r"(?i)(?:https?|ftp|wss?)://|\b(?:file|data|blob|javascript):\S|(?:^|[\s\"'(=,])/{2,}[a-z0-9_\[%]"
 )
-"""The Python profile's URL rule (`validate._URL_IN_TEXT`), protocol-relative URLs included since PB-2a."""
+"""The Python profile's URL rule (`validate._URL_IN_TEXT`), protocol-relative URLs to any host included since PB-2a.
+It reads string literals only, so a comment is never matched."""
 _GLUE_FIELD = re.compile(r"\{([^{}]*)\}")
 _HEX = re.compile(r"#[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?")
 _WHITESPACE = re.compile(r"\s+")

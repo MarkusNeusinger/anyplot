@@ -92,6 +92,8 @@ def test_a_minimal_program_passes() -> None:
         ("options(warn = 2)", "banned-name"),
         ('x <- "https://example.com"', "url-literal"),
         ('x <- "//cdn.example.com/x.png"', "url-literal"),
+        ('x <- "//localhost/x"', "url-literal"),
+        ('x <- "//127.0.0.1:8080/x"', "url-literal"),
         ('x <- "' + "a" * 201 + '"', "string-length"),
         # packages
         ("library(readr)", "banned-import"),
