@@ -452,13 +452,20 @@ on `origin`, most of them left by older sessions:
 ```bash
 remote=$(git -C "$MAIN" ls-remote --heads origin | sed 's#.*refs/heads/##')
 git -C "$MAIN" worktree list --porcelain |
-  awk '/^worktree /{sub(/^worktree /, ""); w=$0} /^branch /{sub(/^branch refs\/heads\//, ""); print $0 "\t" w}' |
-  while IFS=$'\t' read -r b w; do grep -qxF "$b" <<<"$remote" || echo "no origin/$b: $w"; done
+  awk '/^worktree /{sub(/^worktree /, ""); w=$0}
+       /^branch /{sub(/^branch refs\/heads\//, ""); print $0 "\t" w}
+       /^detached/{print "-\t" w}' |
+  while IFS=$'\t' read -r b w; do
+    if [ "$b" = - ]; then echo "detached: $w"   # no branch name starts with "-"
+    else grep -qxF "$b" <<<"$remote" || echo "no origin/$b: $w"; fi
+  done
 ```
 
 `ls-remote` asks `origin` itself, so a remote-tracking ref that a fetch
 without `--prune` left behind does not hide a deleted branch. A branch
-that was never pushed shows up too; say which ones in the report.
+that was never pushed shows up too, and so does every detached worktree,
+such as a review worktree a run left behind; say which is which in the
+report.
 
 ## Gotchas
 

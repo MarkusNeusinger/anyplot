@@ -100,7 +100,8 @@ into every turn that the run can end on its input budget before it answers: on
 2026-10-31 a 90,000-character diff cost $0.30 and returned "no answer: input budget" at
 about 99k tokens per turn. Leave `--diff-base` out, write the diff without fixtures, docs
 and changelog fragments to `$D/data/<slug>.diff`, attach it, and tell Gemini in the
-briefing to review from it with at most six tool calls:
+briefing to review from it with at most six tool calls. Run it from the repository root,
+since the pathspecs are relative to the current directory:
 
 ```bash
 git diff origin/main...<ref> -- . ':(exclude)docs' ':(exclude)changelog.d' ':(exclude,glob)**/fixtures/**' \
