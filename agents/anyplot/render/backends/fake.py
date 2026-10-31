@@ -4,9 +4,12 @@
 page colour with a few bars, so R2 sees a non-blank image) and a probe without
 findings, unless the test scripts something else: an exit code, a timeout, a stderr
 tail, a canvas size, a PNG of its own, or a probe. Every job it receives is kept in
-`jobs`, so a test can read what the pipeline asked to render.
+`jobs`, so a test can read what the pipeline asked to render. A page build returns
+`fixture_page` (a deterministic stub of the harness's page, which runs nothing) unless
+`page_script` decides.
 """
 
+import html
 import io
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -17,7 +20,17 @@ from PIL import Image, ImageDraw
 from agents.renderer.wire import ConvertMeta
 from core.palette import IMPRINT
 
-from ..contract import ConvertJob, ConvertOutput, DataJob, DataOutput, RenderJob, RenderResult, Theme, ThemeOutput
+from ..contract import (
+    ConvertJob,
+    ConvertOutput,
+    DataJob,
+    DataOutput,
+    PageJob,
+    RenderJob,
+    RenderResult,
+    Theme,
+    ThemeOutput,
+)
 
 
 BACKGROUNDS: dict[Theme, str] = {"light": "#FAF8F1", "dark": "#1A1A17"}
@@ -54,11 +67,23 @@ class FakeOutcome:
     no_png: bool = False
 
 
+def fixture_page(job: PageJob) -> str:
+    """A deterministic stand-in for the harness's page of `job`: the theme's background, the library named, no
+    script, so a test can tell the page apart by theme and library without a browser."""
+    return (
+        '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8" />\n<title>anyplot</title>\n'
+        f"<style>html, body {{ margin: 0; background: {BACKGROUNDS[job.theme]}; }}</style>\n</head>\n"
+        f'<body>\n<div id="container" data-library="{html.escape(job.library)}" data-theme="{job.theme}"></div>\n'
+        "</body>\n</html>"
+    )
+
+
 Script = Callable[[RenderJob, Theme], FakeOutcome]
 FIXTURE_CSV = "x,y\n0,0\n1,1\n2,4\n3,9\n"
 """What a fake data run returns by default: the table a snippet computing `y = x**2` for 0 to 3 writes."""
 DataScript = Callable[[DataJob], DataOutput]
 ConvertScript = Callable[[ConvertJob], ConvertOutput]
+PageScript = Callable[[PageJob], str]
 
 
 @dataclass
@@ -66,8 +91,9 @@ class FakeBackend:
     """Fixture renders; `script(job, theme)` decides the outcome (default: a clean render).
 
     A data run returns `FIXTURE_CSV` with exit code 0 unless `data_script(job)` decides,
-    and so does a conversion (as a one-sheet workbook) unless `convert_script(job)` does;
-    no code runs either way, so the fake is for tests and offline development only.
+    and so does a conversion (as a one-sheet workbook) unless `convert_script(job)` does,
+    and a page build `fixture_page(job)` unless `page_script(job)` does; no code runs
+    either way, so the fake is for tests and offline development only.
     """
 
     script: Script | None = None
@@ -77,6 +103,15 @@ class FakeBackend:
     data_jobs: list[DataJob] = field(default_factory=list)
     convert_script: ConvertScript | None = None
     convert_jobs: list[ConvertJob] = field(default_factory=list)
+    page_script: PageScript | None = None
+    """Decides a page build's answer, or raises (`PageUnsupported`, `PageFailed`) to script a failure."""
+    page_jobs: list[PageJob] = field(default_factory=list)
+
+    async def page(self, job: PageJob) -> str:
+        self.page_jobs.append(job)
+        if self.page_script is not None:
+            return self.page_script(job)
+        return fixture_page(job)
 
     async def convert(self, job: ConvertJob) -> ConvertOutput:
         self.convert_jobs.append(job)

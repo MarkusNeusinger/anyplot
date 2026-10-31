@@ -32,7 +32,13 @@ export const DEFAULT_AGENT_LIBRARIES = ['matplotlib', 'seaborn'] as const;
 export type Theme = 'light' | 'dark';
 /** The exported code's download name: its language's (`plot.py` for Python, `plot.R`, `plot.jl`, `plot.js`, `plot.tsx`). */
 export type CodeArtifact = 'plot.py' | 'plot.R' | 'plot.jl' | 'plot.js' | 'plot.tsx';
-export type ArtifactName = 'plot-light.png' | 'plot-dark.png' | CodeArtifact | 'data.csv';
+/**
+ * A JavaScript plot's self-contained interactive page: built by the server on
+ * demand in the theme asked for, and only downloaded, never shown here.
+ */
+export const PAGE_ARTIFACT = 'plot.html';
+export type ArtifactName =
+  'plot-light.png' | 'plot-dark.png' | CodeArtifact | typeof PAGE_ARTIFACT | 'data.csv';
 export const PNG_ARTIFACT: Record<Theme, ArtifactName> = {
   light: 'plot-light.png',
   dark: 'plot-dark.png',
@@ -1001,8 +1007,16 @@ export const agentApi = {
       token,
       post({ theme })
     ),
-  artifact: async (token: string, sid: string, name: ArtifactName, version: number) => {
-    const response = await agentFetch(`${sessionPath(sid)}/artifacts/${name}?v=${version}`, token);
+  /** One file of a version; `theme` picks the theme of `plot.html`, which the server builds on demand. */
+  artifact: async (
+    token: string,
+    sid: string,
+    name: ArtifactName,
+    version: number,
+    theme?: Theme
+  ) => {
+    const query = theme ? `?v=${version}&theme=${theme}` : `?v=${version}`;
+    const response = await agentFetch(`${sessionPath(sid)}/artifacts/${name}${query}`, token);
     return response.blob();
   },
   /**
@@ -1335,6 +1349,7 @@ const ARTIFACT_NAMES = new Set<string>([
   'plot-light.png',
   'plot-dark.png',
   ...CODE_ARTIFACTS,
+  PAGE_ARTIFACT,
   'data.csv',
 ]);
 const PLOT_STATUSES = new Set<string>(['ok', 'needs_attention', 'failed', 'not_ready']);
@@ -1437,6 +1452,11 @@ export function renderedThemes(artifacts: readonly string[]): Theme[] {
 /** The name a version's exported code downloads under: the code artifact among its artifacts, `plot.py` without one. */
 export function codeArtifact(artifacts: readonly string[]): CodeArtifact {
   return CODE_ARTIFACTS.find(name => artifacts.includes(name)) ?? 'plot.py';
+}
+
+/** Whether a version offers the interactive page: a JavaScript plot, whose code runs only in it. */
+export function hasPage(artifacts: readonly string[]): boolean {
+  return artifacts.includes(PAGE_ARTIFACT);
 }
 
 /** A BCP 47 tag the BFF accepts (`^[A-Za-z]{2,3}([_-][A-Za-z0-9]{1,8}){0,3}$`, at most 16 chars). */

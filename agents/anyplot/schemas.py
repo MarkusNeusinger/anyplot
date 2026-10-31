@@ -145,10 +145,11 @@ NotReadyReason = Literal["no_dataset", "incomplete_bindings", "data_unconfirmed"
 """`data_unconfirmed`: the dataset and its bindings are there, but the user has not confirmed
 them in the data panel yet (step 1 of two, owner rule of 2026-10-11)."""
 ArtifactName = Literal[
-    "plot-light.png", "plot-dark.png", "plot.py", "plot.R", "plot.jl", "plot.js", "plot.tsx", "data.csv"
+    "plot-light.png", "plot-dark.png", "plot.py", "plot.R", "plot.jl", "plot.js", "plot.tsx", "plot.html", "data.csv"
 ]
 """A version's downloadable files: the PNG per theme, the exported code under its language's name (the runtime's
-`code_artifact`: `plot.py` for Python, `plot.R`, `plot.jl`, `plot.js`, `plot.tsx`), and the data."""
+`code_artifact`: `plot.py` for Python, `plot.R`, `plot.jl`, `plot.js`, `plot.tsx`), for a JavaScript plot the
+self-contained interactive page (`plot.html`, built on demand in the theme asked for, JS-4b), and the data."""
 CodeArtifact = Literal["plot.py", "plot.R", "plot.jl", "plot.js", "plot.tsx"]
 
 FAILURE_REASONS: frozenset[str] = frozenset(get_args(FailureReason))
@@ -157,14 +158,21 @@ CODE_ARTIFACTS: frozenset[str] = frozenset(get_args(CodeArtifact))
 PNG_ARTIFACTS: dict[str, ArtifactName] = {"light": "plot-light.png", "dark": "plot-dark.png"}
 """The PNG artifact of each theme, in the order artifacts are listed."""
 DEFAULT_CODE_ARTIFACT: CodeArtifact = "plot.py"
+PAGE_ARTIFACT: ArtifactName = "plot.html"
+PAGE_CODE_ARTIFACTS: frozenset[str] = frozenset({"plot.js", "plot.tsx"})
+"""The code artifacts of the JavaScript runtime, whose versions also offer `PAGE_ARTIFACT`: the code runs only in it."""
+MAX_ARTIFACTS = 5
+"""Two PNGs, the code, the page and the data: a JavaScript version with both themes rendered."""
 
 
 def artifact_names(themes: Iterable[str], code_artifact: CodeArtifact = DEFAULT_CODE_ARTIFACT) -> list[ArtifactName]:
-    """A version's artifacts: the PNG of every rendered theme (light first), then the code and `data.csv`."""
+    """A version's artifacts: the PNG of every rendered theme (light first), then the code, for a JavaScript plot its
+    page, and `data.csv`."""
     rendered = set(themes)
     names: list[ArtifactName] = [name for theme, name in PNG_ARTIFACTS.items() if theme in rendered]
-    code_and_data: list[ArtifactName] = [code_artifact, "data.csv"]
-    return names + code_and_data
+    page: list[ArtifactName] = [PAGE_ARTIFACT] if code_artifact in PAGE_CODE_ARTIFACTS else []
+    data: list[ArtifactName] = ["data.csv"]
+    return [*names, code_artifact, *page, *data]
 
 
 # ROLE_PATTERN (imported above) lives with the role parser in core/spec_roles.py.
@@ -672,7 +680,7 @@ class PlotResult(_ServerContract):
     status: PlotStatus
     reason: FailureReason | NotReadyReason | None = None
     attempts: int = Field(default=0, ge=0, le=MAX_ATTEMPTS)
-    artifacts: list[ArtifactName] = Field(default_factory=list, max_length=4)
+    artifacts: list[ArtifactName] = Field(default_factory=list, max_length=MAX_ARTIFACTS)
     changes: list[ChangeNote] = Field(default_factory=list, max_length=MAX_CHANGES)
     residual_defects: list[Line] = Field(default_factory=list, max_length=MAX_RESIDUAL_DEFECTS)
     version: int | None = Field(default=None, ge=1)

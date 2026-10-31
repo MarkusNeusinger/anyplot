@@ -1405,10 +1405,10 @@ export function useAgentSession({
   // ---------------------------------------------------------------- versions
 
   const fetchArtifact = useCallback(
-    async (number: number, name: ArtifactName): Promise<Blob> => {
+    async (number: number, name: ArtifactName, theme?: Theme): Promise<Blob> => {
       const sid = stateRef.current.sessionId;
       if (!sid) throw new AgentApiError(0, 'no_session');
-      return agentApi.artifact(token, sid, name, number);
+      return agentApi.artifact(token, sid, name, number, theme);
     },
     [token]
   );

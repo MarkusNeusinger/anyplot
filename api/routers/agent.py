@@ -111,10 +111,23 @@ ARTIFACT_MEDIA_TYPES: dict[str, str] = {
     "plot.jl": "text/plain; charset=utf-8",
     "plot.js": "text/javascript; charset=utf-8",
     "plot.tsx": "text/plain; charset=utf-8",
+    "plot.html": "text/html; charset=utf-8",
     "data.csv": "text/csv; charset=utf-8",
 }
 """The only artifact names the BFF fetches (the agents' `schemas.ArtifactName`: the two PNGs, the exported
-code under its language's name, the data). The media type is set here and the upstream one is never forwarded."""
+code under its language's name, a JavaScript plot's page, the data). The media type is set here and the upstream
+one is never forwarded."""
+PAGE_ARTIFACT = "plot.html"
+PAGE_HEADERS: dict[str, str] = {
+    "Content-Disposition": 'attachment; filename="plot.html"',
+    "Content-Security-Policy": "sandbox",
+    "X-Content-Type-Options": "nosniff",
+    "Cache-Control": "private, no-store",
+    "Referrer-Policy": "no-referrer",
+}
+"""The headers of a JavaScript plot's `plot.html`, set here and never forwarded: a download, never a page of this
+origin (the agents service's `PAGE_HEADERS`, copied because the API image does not ship the agents package; pinned
+equal by a test). The file opened from disk carries its own policy and sandboxed frame."""
 
 MAX_BUNDLE_BYTES = 32 * 1024 * 1024
 """The cap of a session bundle the BFF relays: Cloud Run's 32 MiB limit on an HTTP/1 response that is
@@ -235,6 +248,8 @@ _UPSTREAM_CODES = frozenset(
         "locked_out",
         "session_closed",
         "convert_unavailable",
+        "page_unavailable",
+        "page_failed",
         *CONVERT_REFUSAL_CODES,
     }
 )
@@ -1320,21 +1335,34 @@ async def get_artifact(
     ctx: Ctx,
     client: Client,
     v: Annotated[int | None, Query(ge=0, le=MAX_AGENT_VERSION)] = None,
+    theme: Literal["light", "dark"] | None = None,
 ) -> Response:
-    """Stream one result file; only the four allowlisted names exist."""
+    """Stream one result file; only the allowlisted names exist.
+
+    `plot.html`, a JavaScript plot's self-contained page, is built by the agents service in `theme` (default: the
+    version's own) and answered as an attachment with `PAGE_HEADERS`; `theme` is forwarded for it alone.
+    """
     media_type = ARTIFACT_MEDIA_TYPES.get(name)
     if media_type is None:
         raise AgentHTTPError(404, "not_found", ctx.request_id)
     path = f"/sessions/{sid}/artifacts/{name}"
+    params: dict[str, str | int] = {}
+    if v is not None:
+        params["v"] = v
+    if name == PAGE_ARTIFACT and theme is not None:
+        params["theme"] = theme
     try:
-        response = await _open_stream(client, ctx, "GET", path, params={"v": v} if v is not None else None)
+        response = await _open_stream(client, ctx, "GET", path, params=params or None)
     except _UNREACHABLE as exc:
         _log_unreachable(ctx, "GET", path, exc)
         raise AgentHTTPError(502, "upstream", ctx.request_id) from exc
+    headers = (
+        PAGE_HEADERS if name == PAGE_ARTIFACT else {"Cache-Control": _NO_STORE, "X-Content-Type-Options": "nosniff"}
+    )
     return StreamingResponse(
         response.aiter_bytes(),
         media_type=media_type,
-        headers={"Cache-Control": _NO_STORE, "X-Content-Type-Options": "nosniff", "X-Request-Id": ctx.request_id},
+        headers={**headers, "X-Request-Id": ctx.request_id},
         background=BackgroundTask(response.aclose),
     )
 

@@ -1,12 +1,14 @@
-"""The renderer's JSON contract: the bodies of `POST /render` and `POST /run-data` and their answers.
+"""The renderer's JSON contract: the bodies of `POST /render`, `POST /run-data` and `POST /page` and their answers.
 
 The render request is the agents' `RenderJob` (`agents/anyplot/render/contract.py`)
 field for field; the answer is its `RenderResult`, one `ThemeRun` per theme, with the
 PNG as base64 and the timings added. The data run request is the agents' `DataJob`
 (a snippet that computes a table, `run_data_code`); its answer is `DataRunResponse`,
-with the `out.csv` the harness wrote as text. The renderer service (`main.py`)
-validates requests with these models and the `remote` backend parses answers with
-them, so both sides read one definition.
+with the `out.csv` the harness wrote as text. The page request is the agents' `PageJob`
+(a JavaScript version's self-contained page in one theme, JS-4b); a built page is
+answered as `text/html` itself, a build that left none as `PageFailure`. The renderer
+service (`main.py`) validates requests with these models and the `remote` backend parses
+answers with them, so both sides read one definition.
 
 No ADK and no `agents.anyplot` import: importing that package loads ADK, which the
 renderer image does not install. The limits that also exist on the agents side
@@ -243,6 +245,91 @@ class RenderResponse(BaseModel):
     version: str
     mem_available_mb: int | None = None
     """`MemAvailable` of the renderer instance after the job, in MiB (None where unreadable)."""
+
+
+MAX_PAGE_BYTES = 24 * 1024 * 1024
+"""The largest `plot-<theme>.html` a page build returns (`POST /page`). The page is the library bundle (ECharts' 1.1 MB is
+the largest), the snippet (at most `MAX_SOURCE_CHARS`) and the typed table (at most `MAX_DATA_JSON_CHARS` on the wire;
+the worst tables at the parser's caps measure 9.04 million characters), with every `<` of the table written as
+`\\u003c` by the harness. 24 MiB holds all of it with room, and stays 8 MiB under Cloud Run's 32 MiB cap on an HTTP/1
+response, which the renderer's answer is (it is not streamed). A larger page is `output_rejected` with its size."""
+PAGE_FILE = "plot-{theme}.html"
+"""The page the harness writes in page-only mode (`automation/js-render/render.mjs`, `ANYPLOT_PAGE_ONLY`)."""
+PAGE_ONLY_ENV = "ANYPLOT_PAGE_ONLY"
+"""The harness's switch for a page build: the page as a render would build it, written, and no browser started."""
+
+
+class PageRequest(BaseModel):
+    """A JavaScript version's self-contained page in one theme (`POST /page`): the harness builds it in a sandbox with
+    the JavaScript row, `ANYPLOT_PAGE_ONLY=1` added, and starts no browser, so the code does not run on the renderer.
+
+    The fields are the render request's for one theme; `data_json` is required, because a JavaScript run form reads
+    `window.ANYPLOT_DATA`. Another language is `422 invalid_job`.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    job_id: str = Field(pattern=JOB_ID_PATTERN)
+    language: Language
+    library: str = Field(pattern=LIBRARY_PATTERN)
+    source: str = Field(min_length=1, max_length=MAX_SOURCE_CHARS)
+    data_json: str = Field(max_length=MAX_DATA_JSON_CHARS)
+    theme: Theme
+    timeout_s: float = Field(gt=0, le=MAX_TIMEOUT_S)
+
+    @model_validator(mode="after")
+    def _javascript(self) -> "PageRequest":
+        if self.language != "javascript":
+            raise ValueError("a page is built for a javascript job only")
+        command_for(self.language, self.library)
+        return self
+
+
+class PageRun(BaseModel):
+    """What one page build's sandbox left: the page as UTF-8 text after exit code 0, or the reasons there is none."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    exit_code: int | None
+    """The sandboxed process's exit code; None when the renderer killed it."""
+    timed_out: bool = False
+    reason: RunReason | None = None
+    measured: int | None = None
+    limit: int | None = None
+    html: str | None = Field(default=None, repr=False)
+    """`plot-<theme>.html`, read only after an exit code of 0, at most `MAX_PAGE_BYTES` bytes, as strict UTF-8."""
+    stderr_tail: str = Field(default="", max_length=MAX_STDERR_CHARS)
+    """The harness's stderr: its final error line on a failure (`render: error: <kind> <Class> ...`)."""
+    wall_s: float = Field(default=0.0, ge=0)
+    attempts: int = Field(default=1, ge=1, le=2)
+
+
+class PageResponse(PageRun):
+    """`POST /page` inside the renderer: the run, with the job id, the timings and the instance's figures added. The
+    route answers `html` as the body when there is one, and everything else as `PageFailure`."""
+
+    job_id: str = Field(pattern=JOB_ID_PATTERN)
+    timings: RenderTimings
+    version: str
+    mem_available_mb: int | None = None
+
+
+class PageFailure(BaseModel):
+    """`POST /page`'s answer to a build that ran and left no page: `422 {"detail": "page_failed", ...}`, with the
+    harness's exit code, the run reason with the measured value and the limit, and the stderr tail."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    detail: Literal["page_failed"] = "page_failed"
+    job_id: str = Field(pattern=JOB_ID_PATTERN)
+    exit_code: int | None
+    timed_out: bool = False
+    reason: RunReason | None = None
+    measured: int | None = None
+    limit: int | None = None
+    stderr_tail: str = Field(default="", max_length=MAX_STDERR_CHARS)
+    wall_s: float = Field(default=0.0, ge=0)
+    attempts: int = Field(default=1, ge=1, le=2)
 
 
 class DataRunRequest(BaseModel):

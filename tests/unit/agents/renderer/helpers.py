@@ -13,6 +13,8 @@ from agents.renderer.wire import (
     ConvertRun,
     DataRun,
     DataRunRequest,
+    PageRequest,
+    PageRun,
     RenderRequest,
     Theme,
     ThemeRun,
@@ -145,6 +147,8 @@ class FakeExecutor:
         self.stuck = 0
         self.available = True
         self.toolchains: dict[str, bool] = {"python": True, "javascript": False, "r": False, "julia": False}
+        self.page: PageRun | None = None
+        """A page build's answer; None builds a small page that names the library and the theme."""
 
     def languages(self) -> dict[str, bool]:
         return dict(self.toolchains)
@@ -199,6 +203,37 @@ class FakeExecutor:
             return ConvertRun(exit_code=0, text="x,y\n1,2\n", meta=meta, wall_s=0.2)
         finally:
             self.active -= 1
+
+    async def run_page(self, job: PageRequest) -> PageRun:
+        self.active += 1
+        self.max_active = max(self.max_active, self.active)
+        try:
+            if self.error is not None:
+                raise self.error
+            if self.gate is not None:
+                await self.gate.wait()
+            await asyncio.sleep(0.01)
+            self.calls.append((job.job_id, f"page-{job.theme}"))
+            if self.page is not None:
+                return self.page
+            return PageRun(exit_code=0, html=f"<!doctype html><p>{job.library} {job.theme} ü</p>", wall_s=0.2)
+        finally:
+            self.active -= 1
+
+
+PAGE_SNIPPET = 'const data = window.ANYPLOT_DATA;\nnew Chart(document.createElement("canvas"), {});\n'
+
+
+def page_job(*, theme: Theme = "light", job_id: str = "page123", source: str = PAGE_SNIPPET) -> PageRequest:
+    return PageRequest(
+        job_id=job_id,
+        language="javascript",
+        library="chartjs",
+        source=source,
+        data_json='{"columns":["x"],"data":[[1]]}',
+        theme=theme,
+        timeout_s=30.0,
+    )
 
 
 def convert_job(

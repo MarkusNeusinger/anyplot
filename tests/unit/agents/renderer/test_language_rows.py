@@ -1,5 +1,6 @@
 """The renderer runs a job by its row of the command table: the argv, the environment, the limits, the toolchain check."""
 
+import sys
 from dataclasses import replace
 from pathlib import Path
 
@@ -26,9 +27,16 @@ from agents.renderer.executor import (
     build_argv,
     sandbox_env,
 )
-from agents.renderer.wire import MAX_DATA_CSV_CHARS, MAX_DATA_JSON_CHARS, RendererStatus, RenderRequest
+from agents.renderer.wire import (
+    MAX_DATA_CSV_CHARS,
+    MAX_DATA_JSON_CHARS,
+    PAGE_ONLY_ENV,
+    PageRequest,
+    RendererStatus,
+    RenderRequest,
+)
 
-from .helpers import job
+from .helpers import PAGE_SNIPPET, job, page_job
 
 
 def envs(argv: list[str]) -> dict[str, str]:
@@ -209,6 +217,69 @@ class TestRows:
         await executor.run_theme(RenderRequest.model_validate(payload), "light")
         assert seen == [(["data.csv", "data.json", "plot.tsx"], True), (["data.csv", "plot.tsx"], False)]
 
+    def test_a_page_build_switches_the_harness_to_page_only_for_the_javascript_row(
+        self, config: ExecutorConfig, tmp_path: Path
+    ) -> None:
+        """JS-4b: `ANYPLOT_PAGE_ONLY=1` joins the JavaScript row's environment for a page build, never another row's
+        and never a render's; the argv stays the row's."""
+        row = command_for("javascript", "d3")
+        page = build_argv(config, "r-a-page", tmp_path, "dark", 60, command=row, data_json=True, page=True)
+        render = build_argv(config, "r-a-dark", tmp_path, "dark", 60, command=row, data_json=True)
+        assert envs(page) == {**envs(render), PAGE_ONLY_ENV: "1"}
+        assert page[page.index("--") :] == render[render.index("--") :]
+        for language, library in (("python", "matplotlib"), ("r", "ggplot2"), ("julia", "makie")):
+            values = sandbox_env(config, "light", 60, command=command_for(language, library), page=True)
+            assert PAGE_ONLY_ENV not in values, language
+
+    async def test_a_page_build_writes_the_code_and_the_table_and_reads_the_page(
+        self, config: ExecutorConfig, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Through the fake launcher and the real harness in exec mode, with a stand-in for Node that writes the page
+        the way `render.mjs` does in page-only mode."""
+        stand_in = tmp_path / "page_only.py"
+        stand_in.write_text(
+            "import json, os, pathlib, sys\n"
+            "assert os.environ['ANYPLOT_PAGE_ONLY'] == '1' and os.environ['ANYPLOT_DATA_JSON'] == '/work/data.json'\n"
+            "assert not pathlib.Path('data.csv').exists()\n"
+            "columns = json.loads(pathlib.Path('data.json').read_text())['columns']\n"
+            "code = pathlib.Path(sys.argv[1]).read_text()\n"
+            "if 'FAIL' in code:\n"
+            "    print('render: error: data DataError -: the data file is unreadable', file=sys.stderr)\n"
+            "    sys.exit(1)\n"
+            "theme = os.environ['ANYPLOT_THEME']\n"
+            "pathlib.Path(f'plot-{theme}.html').write_text(f'<p>{theme} {columns} ü</p>' + 'x' * len(code))\n",
+            encoding="utf-8",
+        )
+        row = replace(command_for("javascript", "chartjs"), argv=(sys.executable, str(stand_in)), env={})
+        monkeypatch.setattr(executor_module, "command_for", lambda language, library: row)
+        executor = SandboxExecutor(config)
+
+        built = await executor.run_page(page_job(theme="dark"))
+        failed = await executor.run_page(page_job(source="FAIL\n"))
+        monkeypatch.setattr(executor_module, "MAX_PAGE_BYTES", 30)
+        too_large = await executor.run_page(page_job(source="y" * 100))
+
+        assert (built.exit_code, built.reason, built.html) == (0, None, f"<p>dark ['x'] ü</p>{'x' * len(PAGE_SNIPPET)}")
+        assert failed.html is None and failed.exit_code == 1
+        assert failed.stderr_tail.splitlines()[-1] == "render: error: data DataError -: the data file is unreadable"
+        assert (too_large.html, too_large.reason, too_large.limit) == (None, "output_rejected", 30)
+        assert too_large.measured is not None and too_large.measured > 30
+
+    def test_a_page_that_is_no_utf8_is_refused(self, config: ExecutorConfig, tmp_path: Path) -> None:
+        work = tmp_path / "work"
+        work.mkdir()
+        (work / "plot-light.html").write_bytes(b"<p>\xff</p>")
+        attempt = executor_module.Attempt(name="r-a-page", exit_code=0)
+
+        SandboxExecutor(config)._collect_page(attempt, work, "light")
+
+        assert (attempt.html, attempt.reason) == (None, "output_rejected")
+        (work / "plot-light.html").unlink()
+        (work / "plot-light.html").symlink_to("/etc/hostname")
+        refused = executor_module.Attempt(name="r-a-page", exit_code=0)
+        SandboxExecutor(config)._collect_page(refused, work, "light")
+        assert (refused.html, refused.reason) == (None, "output_rejected")
+
     def test_the_forbidden_flags_assertion_holds_for_every_row(self, config: ExecutorConfig, tmp_path: Path) -> None:
         for language, library in (("python", "matplotlib"), ("javascript", "d3"), ("r", "ggplot2"), ("julia", "makie")):
             argv = build_argv(config, "r-a-light", tmp_path, "light", 60, command=command_for(language, library))
@@ -273,3 +344,19 @@ class TestWire:
         with pytest.raises(ValidationError):
             RenderRequest.model_validate({**javascript, "data_json": "x" * (MAX_DATA_JSON_CHARS + 1)})
         assert MAX_DATA_JSON_CHARS == 4 * MAX_DATA_CSV_CHARS == 16 * 1024 * 1024
+
+    def test_a_page_is_for_a_javascript_job_with_its_table(self) -> None:
+        """JS-4b: `PageRequest` is the render request for one theme with `data_json` required; another language, an
+        unknown field (`themes`) and a table over the cap are refused."""
+        page = page_job().model_dump()
+        assert PageRequest.model_validate(page).theme == "light"
+        for bad in (
+            {**page, "language": "python", "library": "matplotlib"},
+            {**page, "language": "r", "library": "ggplot2"},
+            {**page, "library": "matplotlib"},
+            {**page, "themes": ["light"]},
+            {**page, "data_json": "x" * (MAX_DATA_JSON_CHARS + 1)},
+            {key: value for key, value in page.items() if key != "data_json"},
+        ):
+            with pytest.raises(ValidationError):
+                PageRequest.model_validate(bad)

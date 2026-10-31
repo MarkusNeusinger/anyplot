@@ -446,6 +446,10 @@ class RecordingBackend:
         """A file conversion is no plot attempt either: passed through unrecorded."""
         return await self.backend.convert(job)
 
+    async def page(self, job: Any) -> Any:
+        """A page build (the `plot.html` download) runs no plot code: passed through unrecorded."""
+        return await self.backend.page(job)
+
     async def aclose(self) -> None:
         close = getattr(self.backend, "aclose", None)
         if close is not None:

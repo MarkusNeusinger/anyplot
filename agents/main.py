@@ -23,7 +23,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
-| `GET /v1/sessions/{sid}/artifacts/{name}?v=` | | the file | `404` |
+| `GET /v1/sessions/{sid}/artifacts/{name}?v=&theme=` | | the file; `plot.html` (a JavaScript version only) is the self-contained interactive page in `theme` (default: the version's), built on demand and answered as an attachment | `404`; for `plot.html` also `409 run_active`, `503 capacity`, `503 page_unavailable` (a renderer without `POST /page`), `500 page_failed` |
 | `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle: every version, or the one numbered `version`, or with `version=0` the conversation alone (no version; `data_csv`, the current data, with `include_data`); with `AGENT_KEEP_REFUSALS` also `refusals`, the session's refused messages `[{verdict, lang, text, at}]` | `404` |
 | `DELETE /v1/sessions/{sid}` | | `204` | |
 
@@ -186,6 +186,7 @@ from agents.anyplot.opening import (
     source_name,
     store_dataset,
 )
+from agents.anyplot.page_export import NoPage, page_download
 from agents.anyplot.plugins.ledger import (
     ATTRIBUTION_LOGGER,
     CURRENT_LEDGER,
@@ -196,7 +197,7 @@ from agents.anyplot.plugins.ledger import (
 )
 from agents.anyplot.plugins.scope_guard import LOCKED_OUT, SESSION_CLOSED, scope_refusals
 from agents.anyplot.policy import fence, file_name_block, refusal, scope_rubric, transcribe_rubric, user_notes_block
-from agents.anyplot.render.contract import ConvertJob, RendererUnavailable
+from agents.anyplot.render.contract import ConvertJob, PageFailed, PageUnsupported, RendererUnavailable
 from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import RenderStoreFull
 from agents.anyplot.render.watermark import add_footer
@@ -210,8 +211,16 @@ from agents.anyplot.run_queue import (
     RunQueue,
     Ticket,
 )
-from agents.anyplot.schemas import CODE_ARTIFACTS, MAX_COLUMNS, MAX_MESSAGE_CHARS, Binding, DatasetProfile, Theme
-from agents.anyplot.services import Services, get_services
+from agents.anyplot.schemas import (
+    CODE_ARTIFACTS,
+    MAX_COLUMNS,
+    MAX_MESSAGE_CHARS,
+    PAGE_ARTIFACT,
+    Binding,
+    DatasetProfile,
+    Theme,
+)
+from agents.anyplot.services import CodeVersion, Services, get_services
 from agents.anyplot.session_state import (
     BINDINGS,
     CONFIRMED,
@@ -267,10 +276,22 @@ ARTIFACT_TYPES: dict[str, str] = {
     "plot.jl": "text/plain; charset=utf-8",
     "plot.js": "text/javascript; charset=utf-8",
     "plot.tsx": "text/plain; charset=utf-8",
+    "plot.html": "text/html; charset=utf-8",
     "data.csv": "text/csv; charset=utf-8",
 }
 """Every artifact name a version can have (`schemas.ArtifactName`) with its media type; a version serves its
-exported code under its runtime's name only (`CodeVersion.code_artifact`), the other code names are `404`."""
+exported code under its runtime's name only (`CodeVersion.code_artifact`), the other code names are `404`, and
+`plot.html` only for a JavaScript version."""
+PAGE_HEADERS: dict[str, str] = {
+    "Content-Disposition": 'attachment; filename="plot.html"',
+    "Content-Security-Policy": "sandbox",
+    "X-Content-Type-Options": "nosniff",
+    "Cache-Control": "private, no-store",
+    "Referrer-Policy": "no-referrer",
+}
+"""The headers of `plot.html`, which the BFF sets the same (`api/routers/agent.py`, pinned by a test): a download,
+never a page of this origin. A browser that renders it anyway gives it an opaque origin without scripts; the file
+opened from disk carries its own policy and frame (`render/page.py`)."""
 _USER = re.compile(USER_PATTERN)
 _NO_STORE = {"Cache-Control": "private, no-store"}
 OPERATIONS = TypeAdapter(list[Operation])
@@ -2081,8 +2102,13 @@ async def artifact(
     user: User,
     runtime: RuntimeDep,
     v: Annotated[int | None, Query(ge=0, le=MAX_AGENT_VERSION)] = None,
+    theme: Theme | None = None,
 ) -> Response:
-    """One artifact of a version; the PNGs carry the footer strip (`AGENT_WATERMARK`), the code and data do not."""
+    """One artifact of a version; the PNGs carry the footer strip (`AGENT_WATERMARK`), the code and data do not.
+
+    `plot.html` (a JavaScript version only) is built on demand in `theme` (default: the version's own) and answered
+    as an attachment (`PAGE_HEADERS`); see `_page`. `theme` is read for it alone.
+    """
     media_type = ARTIFACT_TYPES.get(name)
     if media_type is None:
         raise AgentsError(404, "not_found")
@@ -2094,19 +2120,53 @@ async def artifact(
     version = services.versions.get(sid, v or None)
     if version is None:
         raise AgentsError(404, "not_found")
+    if name == PAGE_ARTIFACT:
+        return await _page(runtime, services, user, sid, version, theme or version.theme, view.spec_id)
     content: bytes | None
     if name in CODE_ARTIFACTS:
         content = version.export.encode("utf-8") if name == version.code_artifact else None
     elif name == "data.csv":
         content = version.data_csv.encode("utf-8")
     elif version.render_id:
-        theme: Theme = "light" if name == "plot-light.png" else "dark"
-        content = await _served_png(services, sid, version.render_id, theme, view.spec_id)
+        png_theme: Theme = "light" if name == "plot-light.png" else "dark"
+        content = await _served_png(services, sid, version.render_id, png_theme, view.spec_id)
     else:
         content = None
     if content is None:
         raise AgentsError(404, "not_found")
     return Response(content, media_type=media_type, headers={**_NO_STORE, "X-Content-Type-Options": "nosniff"})
+
+
+async def _page(
+    runtime: Runtime, services: Services, user: str, sid: str, version: CodeVersion, theme: Theme, spec_id: str
+) -> Response:
+    """A JavaScript version's `plot.html` in `theme`, built now (`page_export.page_download`), never stored.
+
+    Like the theme toggle it builds in the render slot's `toggle` lane and holds the session's
+    registry entry while it builds, so it and a turn, a paste or a toggle of the same session
+    refuse each other with `409 run_active`. `404 not_found` for a version without a page,
+    `503 capacity` when no slot came free in time, `503 page_unavailable` when the renderer
+    builds no pages (one deployed before `POST /page`, or none reachable), `500 page_failed`
+    when the build left none (its kind, class and line are logged, never its message).
+    """
+    if PAGE_ARTIFACT not in version.artifacts():
+        raise AgentsError(404, "not_found")
+    _active(runtime, sid)
+    build = ActiveRun(abort=asyncio.Event(), user=user, started=runtime.now())
+    runtime.active[sid] = build  # no await since the check above, so nothing slipped in between
+    try:
+        content = await page_download(services, get_settings(), version, theme, spec_id=spec_id)
+    except NoPage:
+        raise AgentsError(404, "not_found") from None
+    except RenderBusy:
+        raise AgentsError(503, "capacity") from None
+    except PageUnsupported, RendererUnavailable:
+        raise AgentsError(503, "page_unavailable") from None
+    except PageFailed:
+        raise AgentsError(500, "page_failed") from None
+    finally:
+        runtime.finish(sid, build)
+    return Response(content, media_type=ARTIFACT_TYPES[PAGE_ARTIFACT], headers=PAGE_HEADERS)
 
 
 def _prompt_hashes() -> dict[str, str]:

@@ -17,6 +17,12 @@ NumPy) the page dropped; `convert` reads it in the same isolation with the harne
 convert mode and returns the CSV text (or JSON records) for the paste box
 (`ConvertOutput`). A backend without conversions raises `DataRunUnsupported` too.
 
+A `PageJob` is a JavaScript version's self-contained page in one theme (JS-4b, the
+downloadable `plot.html`); `page` builds it in the same isolation with the browser
+harness in page-only mode, so no browser starts, and returns the page's text. A backend
+that cannot (a renderer deployed before `POST /page`) raises `PageUnsupported`; a build
+that ran and left no page raises `PageFailed`.
+
 A `RuntimeAdapter` describes one language runtime for one library: the file name the
 code is written to, the command (the CI command, with the probe harness in front for
 Python and in exec mode for every other language), the environment per theme, the code
@@ -235,9 +241,51 @@ class ConvertOutput:
     wall_s: float = 0.0
 
 
+class PageUnsupported(RendererUnavailable):
+    """The backend builds no pages: a renderer deployed before `POST /page` (404), or a backend without one."""
+
+
+class PageFailed(RuntimeError):
+    """A page build ran and left no page: the harness's exit code, the run reason (`output_rejected` for a page over
+    the cap, `timeout`, ...) and the stderr tail with its final error line. Callers log the error summary, never the
+    tail, which can quote the user's data."""
+
+    def __init__(
+        self, *, exit_code: int | None, reason: str | None = None, stderr_tail: str = "", wall_s: float = 0.0
+    ) -> None:
+        super().__init__(f"the page build left no page (exit {exit_code}, reason {reason})")
+        self.exit_code = exit_code
+        self.reason = reason
+        self.stderr_tail = stderr_tail[-MAX_STDERR_CHARS:]
+        self.wall_s = wall_s
+
+
+@dataclass(frozen=True)
+class PageJob:
+    """A JavaScript version's page in one theme: the run form, the library and the typed table it renders from."""
+
+    job_id: str
+    library: str
+    source: str
+    data_json: str
+    theme: Theme
+    timeout_s: float = 60.0
+    language: str = "javascript"
+
+    def __post_init__(self) -> None:
+        if not _RENDER_ID.fullmatch(self.job_id):
+            raise ValueError("job_id must match the render id pattern")
+        if self.language != "javascript":
+            raise ValueError("a page is built for a javascript job only")
+        if self.theme not in THEMES:
+            raise ValueError("theme must be light or dark")
+        if self.timeout_s <= 0:
+            raise ValueError("timeout_s must be positive")
+
+
 class RenderBackend(Protocol):
     """Runs a job's code once per theme in isolation and collects the raw outputs; runs data snippets and file
-    conversions the same way."""
+    conversions the same way, and builds a JavaScript version's page."""
 
     name: str
 
@@ -246,6 +294,8 @@ class RenderBackend(Protocol):
     async def run_data(self, job: DataJob) -> DataOutput: ...
 
     async def convert(self, job: ConvertJob) -> ConvertOutput: ...
+
+    async def page(self, job: PageJob) -> str: ...
 
 
 class RuntimeAdapter(Protocol):

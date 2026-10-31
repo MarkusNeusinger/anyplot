@@ -1312,11 +1312,48 @@ class TestArtifacts:
         assert response.headers["X-Content-Type-Options"] == "nosniff"
         assert str(upstream.requests[0].url) == f"{SERVICE_URL}/v1/sessions/s1/artifacts/{name}?v=2"
 
-    @pytest.mark.parametrize("name", ["plot.html", "secret.txt", "plot-light.PNG", "..%2Fstatus"])
+    @pytest.mark.parametrize("name", ["index.html", "secret.txt", "plot-light.PNG", "plot.HTML", "..%2Fstatus"])
     def test_other_names_are_404_without_upstream_call(self, client, upstream, name) -> None:
         response = client.get(f"/debug/agent/sessions/s1/artifacts/{name}")
         assert response.status_code == 404
         assert upstream.requests == []
+
+    def test_the_page_downloads_in_the_theme_asked_for_with_headers_of_its_own(self, client, upstream) -> None:
+        """JS-4b: `plot.html` is an attachment the browser never renders as a page of this origin; the upstream's
+        headers are not forwarded, the theme is."""
+        upstream.handler = lambda request: httpx.Response(
+            200,
+            content=b"<!doctype html><p>page</p>",
+            headers={"Content-Type": "text/plain", "Content-Disposition": "inline", "Set-Cookie": "a=b"},
+        )
+        response = client.get("/debug/agent/sessions/s1/artifacts/plot.html?v=2&theme=dark")
+        assert response.status_code == 200
+        assert response.content == b"<!doctype html><p>page</p>"
+        assert response.headers["content-type"] == "text/html; charset=utf-8"
+        assert response.headers["Content-Disposition"] == 'attachment; filename="plot.html"'
+        assert response.headers["Content-Security-Policy"] == "sandbox"
+        assert response.headers["X-Content-Type-Options"] == "nosniff"
+        assert response.headers["Cache-Control"] == "private, no-store"
+        assert response.headers["Referrer-Policy"] == "no-referrer"
+        assert "set-cookie" not in response.headers
+        assert str(upstream.requests[0].url) == f"{SERVICE_URL}/v1/sessions/s1/artifacts/plot.html?v=2&theme=dark"
+
+    def test_the_theme_is_forwarded_for_the_page_alone(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(200, content=b"x")
+        assert client.get("/debug/agent/sessions/s1/artifacts/data.csv?v=2&theme=dark").status_code == 200
+        assert client.get("/debug/agent/sessions/s1/artifacts/plot.html").status_code == 200
+        assert [str(request.url) for request in upstream.requests] == [
+            f"{SERVICE_URL}/v1/sessions/s1/artifacts/data.csv?v=2",
+            f"{SERVICE_URL}/v1/sessions/s1/artifacts/plot.html",
+        ]
+        assert client.get("/debug/agent/sessions/s1/artifacts/plot.html?theme=sepia").status_code == 422
+
+    @pytest.mark.parametrize(("status", "code"), [(503, "page_unavailable"), (500, "page_failed"), (503, "capacity")])
+    def test_a_page_the_service_cannot_build_keeps_its_code(self, client, upstream, status, code) -> None:
+        upstream.handler = lambda request: httpx.Response(status, json={"detail": code})
+        response = client.get("/debug/agent/sessions/s1/artifacts/plot.html?v=1")
+        assert response.status_code == status
+        assert response.json() == {"detail": code, "ref": response.headers["X-Request-Id"]}
 
     def test_missing_artifact_maps_upstream_404(self, client, upstream) -> None:
         upstream.handler = lambda request: httpx.Response(404, json={"detail": "session_expired"})

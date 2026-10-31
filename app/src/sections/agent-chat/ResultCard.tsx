@@ -17,7 +17,11 @@
  * - The code is the export, byte-identical to what rendered, under its
  *   language's name (`plot.py`, `plot.R`, `plot.js`, ...: the code artifact
  *   among the version's artifacts); it runs unchanged next to `data.csv`, so
- *   both download under those names.
+ *   both download under those names. A JavaScript plot's code runs only in
+ *   its page: such a version also offers `plot.html`, the self-contained
+ *   interactive page, which the server builds in the theme on screen when it
+ *   is asked for (so the button waits while the session is busy, like a theme
+ *   that still has to render).
  * - A copy or a download that succeeded calls `onOutcome` with the action and
  *   the version, the content-free usage beacon; nothing else travels.
  * - Below the code, the quick-feedback control (`ResultFeedback`) stores the
@@ -47,7 +51,9 @@ import {
   CODE_MEDIA_TYPES,
   type CodeArtifact,
   codeArtifact,
+  hasPage,
   type OutcomeAction,
+  PAGE_ARTIFACT,
   type Theme,
 } from 'src/lib/agent';
 import { copyImage, downloadBlob } from 'src/sections/agent-chat/files';
@@ -98,7 +104,8 @@ export interface ResultCardProps {
    */
   busy: boolean;
   onRequestTheme: (version: number, theme: Theme) => void;
-  onFetchArtifact: (version: number, name: ArtifactName) => Promise<Blob>;
+  /** One file of the version; `theme` picks the theme of `plot.html`, which the server builds on demand. */
+  onFetchArtifact: (version: number, name: ArtifactName, theme?: Theme) => Promise<Blob>;
   onTrack: (event: string, props?: Record<string, string | undefined>) => void;
   /**
    * The usage beacon, called once a copy or a download succeeded, with the
@@ -129,6 +136,7 @@ export function ResultCard({
   const [shownTheme, setShownTheme] = useState<Theme>(version.theme);
   const [toast, setToast] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [buildingPage, setBuildingPage] = useState(false);
   const [aspect, setAspect] = useState(PLACEHOLDER_ASPECT);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(null);
 
@@ -206,6 +214,8 @@ export function ResultCard({
   // The exported code downloads under its language's name (`plot.py`, `plot.R`, `plot.js`, ...).
   const codeName = codeArtifact(version.result.artifacts);
   const downloadCodeLabel = DOWNLOAD_CODE_LABELS[codeName];
+  // A JavaScript plot's code runs only in its page, which the version offers as `plot.html`.
+  const page = hasPage(version.result.artifacts);
   // Highlighted in the version's own language: after a library switch the thread holds versions of several
   // languages (a matplotlib plot above a ggplot2 one), while `language` follows the page's library.
   const codeLanguage = LIB_TO_LANG[library] ?? language;
@@ -223,6 +233,26 @@ export function ResultCard({
       onOutcome?.(name === codeName ? 'downloaded_code' : 'downloaded_data', number);
     } catch {
       setFileError(`could not download ${name}`);
+    }
+  };
+
+  /**
+   * The interactive page in the theme on screen, built by the server now; the
+   * beacon counts it as the code download (`downloaded_code`), since the
+   * telemetry's closed action set has no action of its own for it.
+   */
+  const handleDownloadPage = async () => {
+    if (busy || buildingPage) return;
+    setFileError(null);
+    setBuildingPage(true);
+    try {
+      const blob = await onFetchArtifact(number, PAGE_ARTIFACT, shownTheme);
+      downloadBlob(blob, PAGE_ARTIFACT);
+      onOutcome?.('downloaded_code', number);
+    } catch {
+      setFileError(`could not download ${PAGE_ARTIFACT}`);
+    } finally {
+      setBuildingPage(false);
     }
   };
 
@@ -514,7 +544,9 @@ export function ResultCard({
               }}
             >
               <Box component="span" sx={{ ...labelSx, mr: 'auto' }}>
-                # {codeName} runs next to data.csv
+                {page
+                  ? `# ${codeName} runs in ${PAGE_ARTIFACT}`
+                  : `# ${codeName} runs next to data.csv`}
               </Box>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, ml: -1.25 }}>
                 <Box
@@ -526,6 +558,19 @@ export function ResultCard({
                 >
                   {downloadCodeLabel}
                 </Box>
+                {page && (
+                  <Box
+                    component="button"
+                    type="button"
+                    onClick={handleDownloadPage}
+                    disabled={busy || buildingPage}
+                    aria-label={`Download ${PAGE_ARTIFACT}, ${shownTheme} theme`}
+                    aria-busy={buildingPage}
+                    sx={actionButtonSx}
+                  >
+                    .download(&apos;plot.html&apos;){buildingPage ? ' …' : ''}
+                  </Box>
+                )}
                 <Box
                   component="button"
                   type="button"
