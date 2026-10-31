@@ -438,3 +438,301 @@ class TestMain:
         (tmp_path / "plots").mkdir()
         result, _, _ = run_main(tmp_path, {}, count, "--attempt-window-days", window)
         assert result.returncode == 1 and "::error::" in result.stdout
+
+
+# --- the same paths in process ------------------------------------------------
+
+
+class FakeRunner:
+    """Stands in for ``subprocess.run``: answers each ``gh`` call the picker makes from ``data``.
+
+    The keys are ``prs``, ``kept``, ``issues`` and ``comments-<issue>``; a value
+    that is an exception is raised, and a missing key fails like an API error.
+    """
+
+    def __init__(self, data: dict[str, str | BaseException]):
+        self.data = data
+        self.calls: list[list[str]] = []
+
+    @staticmethod
+    def key(args: list[str]) -> str:
+        joined = " ".join(args)
+        if "head:implementation/" in joined:
+            return "prs"
+        if "regen:kept" in joined:
+            return "kept"
+        if args[1:3] == ["issue", "list"]:
+            return "issues"
+        if args[1:3] == ["api", "--paginate"] and "/comments" in args[3]:
+            return "comments-" + args[3].split("/issues/")[1].split("/")[0]
+        return "unknown"
+
+    def __call__(self, args: list[str], **kwargs) -> subprocess.CompletedProcess:
+        assert args[0] == "gh" and kwargs == {"check": True, "capture_output": True, "text": True}
+        self.calls.append(args)
+        value = self.data.get(self.key(args))
+        if value is None:
+            raise subprocess.CalledProcessError(1, args, stderr="HTTP 502")
+        if isinstance(value, BaseException):
+            raise value
+        return subprocess.CompletedProcess(args, 0, stdout=value, stderr="")
+
+
+@pytest.fixture
+def runner(monkeypatch):
+    def install(data: dict[str, str | BaseException]) -> FakeRunner:
+        fake = FakeRunner(data)
+        monkeypatch.setattr(rp.subprocess, "run", fake)
+        return fake
+
+    return install
+
+
+def pr(branch: str, state: str, number: int = 1, labels: tuple[str, ...] = (), **times: str) -> dict:
+    return {"number": number, "headRefName": branch, "state": state, "labels": [{"name": n} for n in labels], **times}
+
+
+class TestLoadCandidatesEdges:
+    @pytest.mark.parametrize(
+        "spec_yaml",
+        [
+            None,  # no specification.yaml at all
+            "issue: [unclosed\n",  # not YAML
+            "- a list\n",  # YAML, but no mapping
+            "issue: '7'\n",  # not a number
+        ],
+    )
+    def test_a_spec_without_a_readable_issue_number_is_still_a_candidate(self, tmp_path, spec_yaml):
+        write_spec(tmp_path, "a", {"altair": {"updated": ts(10)}}, issue=7)
+        if spec_yaml is None:
+            (tmp_path / "a" / "specification.yaml").unlink()
+        else:
+            (tmp_path / "a" / "specification.yaml").write_text(spec_yaml, encoding="utf-8")
+        cands, issues = rp.load_candidates(tmp_path, LIBS)
+        assert [c.library for c in cands] == ["altair"] and issues == {}
+
+    def test_unreadable_metadata_and_stray_entries_are_skipped(self, tmp_path):
+        write_spec(tmp_path, "a", {"altair": "updated: [unclosed\n", "plotly": {"updated": ts(10)}})
+        (tmp_path / ".hidden").mkdir()
+        (tmp_path / ".hidden" / "specification.md").write_text("# s\n", encoding="utf-8")
+        (tmp_path / "README.md").write_text("not a spec\n", encoding="utf-8")
+        assert [(c.spec, c.library) for c in rp.load_candidates(tmp_path, LIBS)[0]] == [("a", "plotly")]
+
+
+class TestFoldPullsEdges:
+    def test_other_states_and_unnumbered_pauses(self):
+        recs = records()
+        rp.fold_pulls(
+            [
+                pr("implementation/a/altair", "DRAFT", closedAt=ts(1)),  # neither open nor done
+                {"headRefName": "implementation/a/plotly", "state": "OPEN", "labels": [{"name": "ai-review-paused"}]},
+                pr("implementation/b/plotly", "OPEN", 9, ("ai-repair-paused", "ai-attempt-x")),
+                {"headRefName": None, "state": "MERGED"},
+                pr("implementation/c/plotly", "MERGED", 3),  # no timestamp: no attempt
+            ],
+            recs,
+        )
+        assert recs.attempts == {}
+        assert recs.open_pairs == {("a", "plotly"), ("b", "plotly")}
+        # The unnumbered pause blocks its pair but can't be resumed; a malformed
+        # attempt label falls back to attempt 1, a missing time to ANCIENT.
+        assert recs.paused == [rp.Resume(9, "repair", "b", "plotly", 1, rp.ANCIENT)]
+
+    def test_both_pause_labels_resume_the_repair(self):
+        """PAUSED_LABELS lists the repair first; a resumed repair reviews again anyway."""
+        recs = records()
+        rp.fold_pulls([pr("implementation/a/plotly", "OPEN", 5, ("ai-review-paused", "ai-repair-paused"))], recs)
+        assert [r.kind for r in recs.paused] == ["repair"]
+
+
+class TestGhJson:
+    def test_a_list_comes_back(self, runner):
+        fake = runner({"issues": '[{"number": 1}]'})
+        assert rp._gh_json(["issue", "list"], "issues") == [{"number": 1}]
+        assert fake.calls == [["gh", "issue", "list"]]
+
+    @pytest.mark.parametrize(
+        "answer",
+        [None, "not json", FileNotFoundError("gh"), subprocess.CalledProcessError(1, ["gh"], stderr="HTTP 502")],
+    )
+    def test_a_failure_warns_and_yields_none(self, runner, capsys, answer):
+        runner({} if answer is None else {"issues": answer})
+        assert rp._gh_json(["issue", "list"], "issues") is None
+        assert capsys.readouterr().out.startswith("::warning::Could not list issues (")
+
+    def test_a_non_list_yields_none(self, runner, capsys):
+        runner({"issues": '{"message": "Not Found"}'})
+        assert rp._gh_json(["issue", "list"], "issues") is None
+        assert capsys.readouterr().out == ""
+
+
+class TestReadRecords:
+    def test_folds_every_listing(self, runner, capsys):
+        fake = runner(
+            {
+                "prs": json.dumps(
+                    [
+                        pr("implementation/a/altair", "MERGED", closedAt=ts(9)),
+                        pr("implementation/a/plotly", "OPEN", 7, ("ai-review-paused",), updatedAt=ts(1)),
+                    ]
+                ),
+                "kept": json.dumps([pr("implementation/b/altair", "CLOSED", 8, ("regen:kept",), closedAt=ts(200))]),
+                "issues": json.dumps([{"number": 11, "updatedAt": ts(2)}]),
+            }
+        )
+        recs = rp.read_records("o/r")
+        assert set(recs.attempts) == {("a", "altair"), ("b", "altair")}
+        assert recs.attempts[("b", "altair")][1] == "kept PR"
+        assert recs.open_pairs == {("a", "plotly")} and [r.pr for r in recs.paused] == [7]
+        assert set(recs.issue_activity) == {11}
+        assert (
+            "Attempt records for 2 pair(s), 1 open PR(s) (1 paused), activity for 1 issue(s)" in capsys.readouterr().out
+        )
+        prs_call, kept_call, issues_call = fake.calls
+        assert prs_call[prs_call.index("--json") + 1] == "number,headRefName,state,updatedAt,closedAt,labels"
+        assert prs_call[prs_call.index("--state") + 1] == "all" and "--repo" in prs_call and "o/r" in prs_call
+        assert kept_call[kept_call.index("--state") + 1] == "closed"
+        assert issues_call[issues_call.index("--json") + 1] == "number,updatedAt"
+
+    @pytest.mark.parametrize("prs", [None, '{"message": "rate limited"}'])
+    def test_no_implementation_prs_is_an_error(self, runner, prs):
+        fake = runner({"kept": "[]", "issues": "[]"} | ({} if prs is None else {"prs": prs}))
+        with pytest.raises(rp.ListingError, match="implementation PRs could not be listed"):
+            rp.read_records("o/r")
+        assert len(fake.calls) == 1  # nothing else is read
+
+    def test_the_other_listings_are_best_effort(self, runner, capsys):
+        runner({"prs": json.dumps([pr("implementation/a/altair", "CLOSED", closedAt=ts(5))])})
+        recs = rp.read_records("o/r")
+        assert recs.attempts == {("a", "altair"): (at(5), "closed PR")} and recs.issue_activity == {}
+        out = capsys.readouterr().out
+        assert "Could not list kept regenerations" in out and "Could not list issues" in out
+
+
+class TestIssueFailures:
+    def test_reads_the_spec_issue_once_per_call(self, runner):
+        comments = [
+            fail_comment("a", "altair", 4),
+            fail_comment("a", "plotly", 2, infra=True),
+            fail_comment("b", "altair", 1),
+        ]
+        fake = runner({"comments-11": "\n".join(json.dumps(c) for c in comments) + "\n\n"})
+        failures = rp.issue_failures("o/r", {"a": 11})
+        assert failures("a") == {"altair": at(4)}
+        (call,) = fake.calls
+        assert call[3] == "repos/o/r/issues/11/comments?per_page=100"
+        assert '"<!-- impl-fail:"' in call[call.index("--jq") + 1]
+
+    def test_a_spec_without_an_issue_has_no_failures(self, runner):
+        fake = runner({})
+        assert rp.issue_failures("o/r", {})("a") == {}
+        assert fake.calls == []
+
+    @pytest.mark.parametrize("answer", [None, "{not json", OSError("gh")])
+    def test_an_unreadable_issue_yields_none(self, runner, capsys, answer):
+        runner({} if answer is None else {"comments-11": answer})
+        assert rp.issue_failures("o/r", {"a": 11})("a") is None
+        assert capsys.readouterr().out.startswith("::warning::Could not read the comments of issue #11 (")
+
+
+class TestSummaryTable:
+    def test_resumes_then_picks(self):
+        resumed = [rp.Resume(22, "repair", "b", "altair", 2, at(3))]
+        picks = [rp.Pick("a", "plotly", rp.ANCIENT, "none"), rp.Pick("a", "altair", at(40), "kept PR")]
+        assert rp.summary_table(resumed, picks, 9, 3).splitlines() == [
+            "### Pair mode: 1 resumed, 2 new pair(s) of 3 (9 eligible)",
+            "",
+            "| Resume | PR | Spec | Library |",
+            "|--------|----|------|---------|",
+            "| repair | #22 | `b` | `altair` |",
+            "",
+            "| # | Spec | Library | Last touched | From |",
+            "|---|------|---------|--------------|------|",
+            "| 1 | `a` | `plotly` | never | none |",
+            f"| 2 | `a` | `altair` | {ts(40)} | kept PR |",
+        ]
+
+    def test_no_resumes_no_resume_table(self):
+        table = rp.summary_table([], [], 0, 5)
+        assert table.startswith("### Pair mode: 0 resumed, 0 new pair(s) of 5 (0 eligible)\n")
+        assert "| Resume |" not in table
+
+
+class TestMainInProcess:
+    ARGS = ["--count", "3", "--min-age-hours", "20", "--repo", "o/r", "--libraries", " ".join(LIBS)]
+
+    def _plots(self, tmp_path: Path) -> Path:
+        now = datetime.now(timezone.utc)
+        plots = tmp_path / "plots"
+        write_spec(plots, "a-spec", {"altair": {"updated": ts(190, now)}, "plotly": {"updated": ts(160, now)}}, 11)
+        write_spec(plots, "b-spec", {"altair": {"updated": ts(180, now)}}, 12)
+        return plots
+
+    def _env(self, monkeypatch, tmp_path: Path, summary: bool = True) -> Path:
+        out = tmp_path / "out"
+        monkeypatch.setenv("GITHUB_OUTPUT", str(out))
+        if summary:
+            monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(tmp_path / "summary"))
+        else:
+            monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+        return out
+
+    def _outputs(self, out: Path) -> dict[str, str]:
+        return dict(line.split("=", 1) for line in out.read_text(encoding="utf-8").splitlines())
+
+    def test_writes_resumes_pairs_and_summary(self, tmp_path, monkeypatch, runner, capsys):
+        plots = self._plots(tmp_path)
+        out = self._env(monkeypatch, tmp_path)
+        paused = pr("implementation/a-spec/plotly", "OPEN", 21, ("ai-review-paused",), updatedAt=ts(2))
+        runner({"prs": json.dumps([paused]), "kept": "[]", "issues": "[]", "comments-11": "", "comments-12": ""})
+        assert rp.main([*self.ARGS, "--plots", str(plots)]) == 0
+        outputs = self._outputs(out)
+        assert outputs["resume_json"] == '[{"pr":21,"kind":"review","spec":"a-spec","library":"plotly","attempt":1}]'
+        assert outputs["resume_count"] == "1" and outputs["count"] == "2"
+        assert json.loads(outputs["pairs_json"]) == [
+            {"spec": "a-spec", "library": "altair"},
+            {"spec": "b-spec", "library": "altair"},
+        ]
+        assert outputs["specs"] == "a-spec b-spec" and json.loads(outputs["specs_json"]) == ["a-spec", "b-spec"]
+        assert "Pair mode: 1 resumed, 2 new pair(s) of 3" in (tmp_path / "summary").read_text(encoding="utf-8")
+        log = capsys.readouterr().out
+        assert "::notice::Resumed: ['#21 review']" in log and "a-spec/altair" in log
+
+    def test_no_summary_file_without_the_variable(self, tmp_path, monkeypatch, runner):
+        plots = self._plots(tmp_path)
+        out = self._env(monkeypatch, tmp_path, summary=False)
+        runner({"prs": "[]", "kept": "[]", "issues": "[]", "comments-11": "", "comments-12": ""})
+        assert rp.main([*self.ARGS, "--plots", str(plots)]) == 0
+        assert self._outputs(out)["count"] == "3" and not (tmp_path / "summary").exists()
+
+    def test_the_listing_error_stops_before_any_output(self, tmp_path, monkeypatch, runner, capsys):
+        plots = self._plots(tmp_path)
+        out = self._env(monkeypatch, tmp_path)
+        runner({})
+        assert rp.main([*self.ARGS, "--plots", str(plots)]) == 1
+        assert "::error::Pair mode stops: the implementation PRs could not be listed" in capsys.readouterr().out
+        assert not out.exists()
+
+    @pytest.mark.parametrize(
+        "args",
+        [
+            ["--count", "0", "--min-age-hours", "20", "--repo", "o/r", "--libraries", "altair"],
+            ["--count", "1", "--min-age-hours", "20", "--repo", "o/r", "--libraries", "altair"]
+            + ["--attempt-window-days", "-1"],
+            ["--count", "1", "--min-age-hours", "20", "--repo", "o/r", "--libraries", "  "],
+        ],
+    )
+    def test_bad_arguments_stop_before_any_read(self, tmp_path, monkeypatch, runner, capsys, args):
+        self._env(monkeypatch, tmp_path)
+        fake = runner({})
+        assert rp.main([*args, "--plots", str(tmp_path)]) == 1
+        assert capsys.readouterr().out.startswith("::error::--count must be at least 1")
+        assert fake.calls == []
+
+    def test_the_max_issue_reads_argument_reaches_the_pick(self, tmp_path, monkeypatch, runner, capsys):
+        plots = self._plots(tmp_path)
+        self._env(monkeypatch, tmp_path)
+        fake = runner({"prs": "[]", "kept": "[]", "issues": "[]", "comments-11": "", "comments-12": ""})
+        assert rp.main([*self.ARGS, "--plots", str(plots), "--max-issue-reads", "1"]) == 0
+        assert sum(1 for c in fake.calls if c[1] == "api") == 1
+        assert "::warning::Read the failed generations of 1 specs" in capsys.readouterr().out
