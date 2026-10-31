@@ -91,20 +91,20 @@ uv run pytest tests/unit/api/test_routers.py::test_get_specs
 
 **Both linting and formatting must pass for CI.**
 
-**IMPORTANT: Always run `uv run ruff check <files> && uv run ruff format <files>` on changed files BEFORE every commit!**
+**IMPORTANT: Always run `uv run --extra dev ruff check <files> && uv run --extra dev ruff format <files>` on changed files BEFORE every commit!** Ruff lives in the `dev` extra, which a fresh worktree's `.venv` lacks.
 
 ```bash
 # Linting (required for CI)
-uv run ruff check .
+uv run --extra dev ruff check .
 
 # Auto-fix linting issues
-uv run ruff check . --fix
+uv run --extra dev ruff check . --fix
 
 # Formatting (required for CI)
-uv run ruff format .
+uv run --extra dev ruff format .
 
 # Before committing - always run both on changed files:
-uv run ruff check <files> && uv run ruff format <files>
+uv run --extra dev ruff check <files> && uv run --extra dev ruff format <files>
 ```
 
 ### Frontend Development
@@ -1054,6 +1054,46 @@ curl -s https://anyplot.ai/robots.txt | head -5
 This matters most for `app/nginx.conf`: nginx behaviour has no local
 verification loop in this repo, so production is the first place a change is
 observable at all.
+
+#### Change a trigger's included files
+
+The triggers are second-generation triggers on the `anyplot-github` repository
+connection. `gcloud builds triggers update github <name> --included-files=…`
+fails on them with `INVALID_ARGUMENT: Request contains an invalid argument`,
+with or without `--repository` and `--branch-pattern` (2026-10-29,
+`deploy-renderer`). Export the trigger, edit the file, and import it instead.
+A trigger edit is a Cloud Build config change, so name the trigger and the
+paths to the owner and get a yes before step 4 (`CLAUDE.md`, external-system
+writes).
+
+1. Export the trigger into a scratch directory, not the repository:
+
+   ```bash
+   gcloud builds triggers describe <name> --region=europe-west4 --project=anyplot --format=yaml > before.yaml
+   ```
+
+2. Copy `before.yaml` to `after.yaml` and add or remove paths under
+   `includedFiles`. Leave every other key as exported.
+3. Check that `diff before.yaml after.yaml` shows only the `includedFiles`
+   lines you meant.
+4. Import the edited config. It keeps the trigger's `id`, so it updates the
+   trigger in place:
+
+   ```bash
+   gcloud builds triggers import --source=after.yaml --region=europe-west4 --project=anyplot
+   ```
+
+5. Read the trigger back and compare:
+
+   ```bash
+   gcloud builds triggers describe <name> --region=europe-west4 --project=anyplot --format=yaml > verify.yaml
+   diff after.yaml verify.yaml && echo "trigger matches the edited config"
+   ```
+
+This route updated `deploy-renderer` at the first attempt on 2026-10-29
+(`Project.toml`, `Manifest.toml`) and on 2026-10-30
+(`agents/anyplot/render/convert.py`, `package.json`, `package-lock.json`,
+`automation/js-render/**`).
 
 ### Manual Deployment
 

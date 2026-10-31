@@ -377,8 +377,8 @@ This section is for the Gemini agent in the owner's agy session.
    the owner every time (2026-10-30).
 
    ```bash
-   PYTHON_DOTENV_DISABLED=1 uv run ruff check .
-   PYTHON_DOTENV_DISABLED=1 uv run ruff format --check .
+   PYTHON_DOTENV_DISABLED=1 uv run --extra dev ruff check .
+   PYTHON_DOTENV_DISABLED=1 uv run --extra dev ruff format --check .
    PYTHON_DOTENV_DISABLED=1 uv run --extra typecheck mypy api core --pretty     # Python changes
    PYTHON_DOTENV_DISABLED=1 uv run pytest tests/unit tests/integration -n auto  # or the narrower set the task names
    PYTHON_DOTENV_DISABLED=1 uv run python -m tools.changelog check --base origin/main  # after committing the fragment

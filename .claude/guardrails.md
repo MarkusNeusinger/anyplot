@@ -31,8 +31,8 @@ work that Google's quota can do goes there first.
 | Reads or polls with credentials (CI, deploys, `gh`/`gcloud` state); creates Todoist tasks | Haiku | Cheap; never changes state |
 | High-risk reviews (security, prod data, sandbox, privacy); genuinely hard reasoning | Fable | About 2.5 times Opus per token at API prices, so only where it pays |
 | Larger steps and long refactors, and the main driver once Claude tokens run low late in the week | Gemini, in the owner's interactive agy session, through a brief file in `~/projects/anyplot-briefs/`, one package of at most 20 to 25 files per fresh agy subagent, independent packages in parallel (`/gemini-task`) | The owner decides what runs without asking; Gemini pushes a `gemini/*` branch and opens a draft PR; Claude reviews it, marks it ready, and follows it through |
-| Check of every code PR Claude opens, before it opens; not for diffs only of docs, instruction files, changelog fragments, or `plots/`, under about 20 lines, or Dependabot (owner, 2026-10-29) | Gemini 3.8 Flash through Vertex AI in project `anyplot`, location `global`, on Flex PayGo (`/zweitmeinung`) | Copilot gets one round per PR, so its findings should already be fixed; half price on Flex, $0.07–0.28 per review |
-| Second opinion, only when the owner asks for one | Fable and Gemini 4 Argon side by side, Argon on the same Vertex route with thinking high | Stronger across files; $0.57–1.16 per Argon run. Both Gemini lanes are paid per token and covered by the $100 monthly Google Cloud credit that comes with Google AI Ultra; Gemini reads tracked repository files, prefetched data, and the public API through read-only tools, with no shell and no credentials |
+| Check of every code PR Claude opens, before it opens; not for diffs only of docs, instruction files, changelog fragments, or `plots/`, under about 20 lines, or Dependabot (owner, 2026-10-29) | Gemini 3.8 Flash through Vertex AI in project `anyplot`, location `global`, on Flex PayGo (`/zweitmeinung`) | Copilot gets one round per PR, so its findings should already be fixed; half price on Flex, median $0.27 per review ($0.07–1.14 over 40 runs to 2026-10-31) |
+| Second opinion, only when the owner asks for one | Fable and Gemini 4 Argon side by side, Argon on the same Vertex route with thinking high | Stronger across files; median $1.21 per Argon run ($0.35–1.64 over 16 runs to 2026-10-31). Both Gemini lanes are paid per token and covered by the $100 monthly Google Cloud credit that comes with Google AI Ultra; Gemini reads tracked repository files, prefetched data, and the public API through read-only tools, with no shell and no credentials |
 
 The pipeline's model choices are separate. Sonnet's lane is narrow on purpose:
 it never runs `gh` writes, `git push`, or `gcloud`, and a task whose result no
@@ -211,6 +211,19 @@ the brief's own words:
 Neither is new policy. Both are precedence a brief has to make explicit,
 because an agent cannot infer precedence from the order messages arrived in.
 
+**One builder per scope, and one message per round** (2026-10-31 retro). The
+review-fix rounds of a change stay with the builder that wrote it: it already
+holds the context, and a fresh agent would spend its first hour rebuilding
+it. New scope gets a new delegate on a fresh worktree instead of being fed to
+a long-lived one instruction by instruction. In the session of 2026-10-28 to
+2026-10-31, four builders that were steered that way (`ci-auth`,
+`js-page-export`, `pb1-exec`, `pb2-serve`) grew to 11 to 19 MB of transcript
+with two compactions each. Every message to an idle delegate also costs the
+main loop a turn when the hand-back arrives: 67 messages drew 28 hand-backs
+and at least 14 main-loop turns that only acknowledged an idle notice. So
+collect what a delegate needs to hear, review findings and corrections
+together, and send it as one message.
+
 ## External-system writes need explicit, named authorization
 
 The rule is the asking. This section is about what to hand over once the
@@ -255,6 +268,29 @@ instead of trusting a "done" in chat. A runbook that shipped this way belongs
 in the owning README, so the next round starts from a reviewed text rather
 than a fresh improvisation.
 
+**A denial binds the whole session, delegates included** (2026-10-31). The
+classifier refused a delegate's download of `actionlint`. The main loop then
+asked the same delegate, in a batch of instructions, to try it through a
+Docker image instead, "and if that is blocked too, say so and I run it". The
+classifier refused that message itself as an auto-mode bypass, at 15:02 UTC.
+The harness's own guidance speaks of denials "in your session", which reads
+as if a peer were a fresh start; it is not, because the peer runs under the
+same owner's permission decision. So a denial anywhere in the session is
+final for every agent in it. The next step goes to the owner: the exact
+command for a named yes, or a `!` line to run. Here the owner said yes and the
+pinned image ran at 15:09.
+
+**Console wizards: a private artifact the owner's own browser agent follows**
+(2026-10-31). Some setups exist only as clicks in a vendor console, such as
+the Claude Console workload identity federation for CI. The WSL session has
+no Chrome tools, so when the owner asked it to set this up through Claude in
+Chrome, it could not. What worked: write the steps as a private artifact,
+each field name copied from the vendor's documentation rather than recalled,
+with the values to enter and the result to paste back. The owner handed the
+link to Claude in Chrome in the owner's own browser, which clicked through
+the wizard, and the result came back about 10 minutes after the request (14:37 to
+14:48 UTC).
+
 ## After every merge, check that the site renders
 
 Owner rule, 2026-10-22, after an outage nothing caught.
@@ -291,6 +327,38 @@ container.
 break the site through the API, a Cloudflare rule, or a data change, and the
 run costs seconds. A `FAIL` stops further merges until the site renders,
 because each extra merge widens the set of suspects and the revert.
+
+## Long-running work reports progress proactively
+
+**What happened (2026-10-30).** The `plot-all-pill` builder wrote "The gates
+are still running (test and build); waiting for them to finish" at 12:09 UTC
+and ended its turn on that line, without a commit and without a report; it
+never woke again. The context compaction at 16:27 UTC summarised it as "still
+working on the Flash fixes", and the main loop trusted the summary, which is
+the only thing that survives a compaction. The main loop itself made no entry
+between 17:48 and 19:46 UTC. At 19:46 the owner asked "läuft wirklich noch
+was?" ("is anything really still running?"), and the answer at 19:50 was that
+nothing had run since midday. The changes in the worktree were nearly
+complete; the main loop finished them into #12478. On 2026-10-31 at 16:08 the
+owner was again the first to say that work had gone idle ("es ist einiges
+idle weiter").
+
+**The check.** About 30 minutes with no new commit and no message from a
+delegate is a suspected stall. So is any "still working" that a compaction
+summary hands over. Before repeating one, read the delegate's real state:
+
+```bash
+# ListAgents first: is it listed, busy or idle?
+git -C <worktree> log -1 --format='%ci %h %s'   # its last commit, and when
+git -C <worktree> status --porcelain | head     # uncommitted work it may have left
+```
+
+Idle, with no commit since the brief and changes left in the worktree,
+means stopped, whatever the summary says. Report it to the owner at once,
+with that evidence, and then either send the delegate one message that
+resumes it or take the work over. A delegate that ended its turn "waiting
+for" its own background job is the pattern to look for: nothing guarantees
+it is woken when the job finishes.
 
 ## Modify repo files only with the Edit/Write tools
 

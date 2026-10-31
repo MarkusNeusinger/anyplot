@@ -94,7 +94,7 @@ and uses a separate `test` database (auto-created/dropped) — skipped
 when unset. Lint gate before commit, both halves:
 
 ```bash
-uv run ruff check . && uv run ruff format --check .
+uv run --extra dev ruff check . && uv run --extra dev ruff format --check .
 uv run --extra typecheck mypy api core --pretty
 ```
 

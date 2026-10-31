@@ -430,7 +430,7 @@ You are the **environment-auditor** on the agentic-audit team. Analyze leverage 
 5. Use Grep to find logging, error handling, and type annotation patterns
 6. Compare `tests/` structure with `api/`, `core/`, `automation/` structure
 7. **Do NOT use Bash** for `find`, `ls`, `grep`, `cat` — use Glob/Grep/Read tools instead
-8. You MAY use Bash for: `uv run ruff check api/ core/ --select ANN 2>&1 | tail -20`
+8. You MAY use Bash for: `uv run --extra dev ruff check api/ core/ --select ANN 2>&1 | tail -20`
 
 **Report format:** Same as core-auditor — send findings to `agentic-lead` via `SendMessage` using the `LEVERAGE_POINT` / `POSITIVE` format.
 
@@ -558,6 +558,6 @@ You are the **workflow-auditor** on the agentic-audit team. Analyze leverage poi
 5. Use Grep for patterns like `prompt_claude_code`, `WorkflowState`, `@pytest.fixture`, `$ARGUMENTS`
 6. Use Glob to find all test files (`**/*test*.py`, `**/*.test.ts`) and template files
 7. **Do NOT use Bash** for `find`, `ls`, `grep`, `cat` — use Glob/Grep/Read tools instead
-8. You MAY use Bash for: `uv run pytest tests/ --co -q 2>&1 | tail -20` or `uv run ruff check . 2>&1 | tail -5`
+8. You MAY use Bash for: `uv run pytest tests/ --co -q 2>&1 | tail -20` or `uv run --extra dev ruff check . 2>&1 | tail -5`
 
 **Report format:** Same as core-auditor — send findings to `agentic-lead` via `SendMessage` using the `LEVERAGE_POINT` / `POSITIVE` format.

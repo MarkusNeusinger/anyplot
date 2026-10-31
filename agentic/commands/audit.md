@@ -31,10 +31,10 @@ You are the **audit-lead**. Your job is to coordinate a team of specialist audit
 
 2. **Run baseline measurements** (these are the ONLY Bash commands the Lead runs in this phase):
    ```bash
-   uv run ruff check . 2>&1 | tail -5
+   uv run --extra dev ruff check . 2>&1 | tail -5
    ```
    ```bash
-   uv run ruff format --check . 2>&1 | tail -5
+   uv run --extra dev ruff format --check . 2>&1 | tail -5
    ```
    In `since=` mode, additionally:
    ```bash
@@ -195,7 +195,7 @@ After all specialists report back and cross-validation has run:
    - **Importance** (1-5): see Severity Calibration table above
    - **Dimension** (1 of 6): see Dimension Taxonomy — every finding must carry exactly one
    - **Effort**: S (<30min, 1 file, mechanical), M (1-3h, 2-5 files, local context), L (half day+, 5-15 files, design decisions), XL (multi-day, 15+ files, needs own plan)
-   - **Auto-fix**: classify each finding as `ruff` (auto-fixable via `uv run ruff check --fix`), `eslint` (`yarn lint --fix`), `format` (`uv run ruff format`), `codemod` (mechanical rewrite that a small script could do), or `manual` (requires judgment)
+   - **Auto-fix**: classify each finding as `ruff` (auto-fixable via `uv run --extra dev ruff check --fix`), `eslint` (`yarn lint --fix`), `format` (`uv run --extra dev ruff format`), `codemod` (mechanical rewrite that a small script could do), or `manual` (requires judgment)
 5. **Compute Health Score (30-100)** — unchanged formula, trend-comparable across all prior reports:
    - Start at 100
    - Subtract: `min(70, 10 * critical_count + 3 * high_count + 1 * medium_count)`
