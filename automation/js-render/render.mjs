@@ -974,8 +974,9 @@ function usage(...lines) {
 // plotly figure 800 x 450 is drawn at scale 4, 1600 x 900 at 2, a bokeh figure
 // 4800 x 2700 at 2/3: the figure's layout and type sizes stay as the code wrote
 // them and only the resolution follows the canvas, the way `write_image(width,
-// height, scale)` and bokeh's `export_png` scale. A figure that names no size
-// (plotly) gets 1600 x 900, and one narrower than its box is centred on the
+// height, scale)` and bokeh's `export_png` scale. A plotly figure that names no
+// size gets 1600 x 900, one that names a single side keeps it and gets the
+// other at 16:9 (`figureSize`), and one narrower than its box is centred on the
 // page's background.
 // -----------------------------------------------------------------------------
 const FIGURE_PACKAGE = process.env.ANYPLOT_FIGURE_PACKAGE || null;
@@ -1058,14 +1059,20 @@ async function readFigure(file, library) {
 }
 
 // The figure's own size in CSS pixels, or null when only drawing it tells
-// (a bokeh layout without a size of its own).
+// (a bokeh root without both sides of its own). A plotly layout that names one
+// side keeps it and gets the other at the landscape aspect, 16:9 (width 1200
+// gets height 675, height 600 gets width 1066.67), so the side the code chose
+// is the one drawn.
 function figureSize(library, figure) {
   if (library === "plotly") {
     const layout = figure.layout ?? {};
-    if (typeof layout.width === "number" && typeof layout.height === "number") {
-      return checkedSize({ width: layout.width, height: layout.height });
-    }
-    return { width: ORIENTATIONS.landscape.cssWidth, height: ORIENTATIONS.landscape.cssHeight };
+    const { cssWidth, cssHeight } = ORIENTATIONS.landscape;
+    const width = typeof layout.width === "number" ? layout.width : null;
+    const height = typeof layout.height === "number" ? layout.height : null;
+    if (width !== null && height !== null) return checkedSize({ width, height });
+    if (width !== null) return checkedSize({ width, height: (width * cssHeight) / cssWidth });
+    if (height !== null) return checkedSize({ width: (height * cssWidth) / cssHeight, height });
+    return { width: cssWidth, height: cssHeight };
   }
   const root = figure.doc.roots.find((model) => isRecord(model) && model.id === figure.root_id);
   const attributes = isRecord(root.attributes) ? root.attributes : {};

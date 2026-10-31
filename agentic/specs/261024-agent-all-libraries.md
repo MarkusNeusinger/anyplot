@@ -2185,10 +2185,14 @@ unchanged, so the agents service sends no plotly or bokeh job before PB-2.
   (`ANYPLOT_DENY_EXEC`, `ANYPLOT_RLIMIT_AS_MB`, `ANYPLOT_RLIMIT_NPROC`) and with
   `ANYPLOT_FIGURE_PACKAGE`, the package's directory as the harness's own interpreter would
   import it (`importlib.util.find_spec`, which runs no package code). The child reports
-  through a pipe opened before the fork: its first line, the filter's state, is written
-  after the arming and before any plot code, so the plot cannot forge it; the error
-  record after it is advisory. The end line carries both steps' totals, the plot step's
-  `exec_deny`, and `steps` with each step's peak, CPU and wall time.
+  through a pipe opened before the fork. Its first line is the harness's own and comes
+  before any plot code, so the plot cannot forge it: `armed <state>` after the arming, or
+  `refused <state>` when a required filter is not in place and the plot never runs. Only
+  after `refused` is `EXEC_DENY_EXIT` (3) the harness's `ExecDenyUnavailable`; a plot that
+  ran and ended with the same code (`sys.exit(3)`) fails as a `plot` error like any other
+  code. The error record after the first line is advisory. The end line carries both
+  steps' totals, the plot step's `exec_deny`, and `steps` with each step's peak, CPU and
+  wall time.
 - **The final error line** of JS-2 for the plot step as well: `plot <Class> plot.py:<line>`
   for an exception (its traceback before it, as the interpreter prints it), `figure`
   (`NoFigure`, `FigureError`, `FigureTooLarge`), `crash PlotCrashed` for a signal and
@@ -2208,8 +2212,9 @@ unchanged, so the agents service sends no plotly or bokeh job before PB-2.
   and measured) picks the orientation, landscape at 4:3 and wider, and the device scale
   makes the box exactly 3200 x 1800 or 2400 x 2400: plotly 800 x 450 draws at scale 4,
   1600 x 900 at 2, bokeh 4800 x 2700 at 2/3. A figure narrower than its box is centred on
-  the page's background; a plotly figure without a size gets 1600 x 900; a side outside
-  320 to 6400 is `figure FigureError`. A screenshot of any other size fails as `harness
+  the page's background; a plotly figure without a size gets 1600 x 900, and one that
+  names a single side keeps it and gets the other at 16:9 (width 1200 draws at 1200 x
+  675); a side outside 320 to 6400, the derived one included, is `figure FigureError`. A screenshot of any other size fails as `harness
   CanvasError` instead of leaving a PNG.
 - **plotly's `CODE_BUILDERS` entry** is `_plotly_utils/basevalidators.py:
   build_validator`: `InfoArrayValidator.__init__` calls it for each item of an info-array
@@ -2277,23 +2282,29 @@ Also found:
   descriptor, the path is copied into an exact `str` while the guard is armed, and the
   frame-name comparisons take exact `str` only (`plain_name`); regression tests in
   `test_harness_guard.py` and `test_figure_mode.py` write a marker on the old harness.
-- The renderer's language check (`GET /status`, `503 runtime_unavailable`) stays per
-  language: a Python job of plotly or bokeh needs Node too, which every renderer image
-  has (the toolchain base); a renderer without it would answer exit 127 with a `harness
-  SpawnError` line.
+- **A two-step row needs Node.** `GET /status` still lists the toolchains per language,
+  but a render or page job is checked against its row (`executor.serves`): the language's
+  toolchain and the row's own binaries, so a plotly or bokeh job on a renderer without
+  Node is `503 runtime_unavailable` before any sandbox starts, not exit 127 with a
+  `harness SpawnError` line. Every renderer image has Node (the toolchain base).
 
-**Tests**: `tests/unit/agents/renderer/test_figure_mode.py` (52 cases without plotly or
+**Tests**: `tests/unit/agents/renderer/test_figure_mode.py` (91 cases without plotly or
 bokeh: the package's lookup and the screenshot command stood in): fork before arm (both
 steps children of one harness, the plot step one seccomp filter and the no-new-privileges
 bit more than the harness, the screenshot step none more and able to start a program),
 the limits and variables per step, a refused spawn, fork, exec, socket pair and PNG write,
 the kernel's refusal when the audit hook is blind to `os.exec`, nothing of the plot after
 it (`atexit`, a thread), the step-1 failures and their lines, a signal death, the cap at
-one byte over, a filter that is not in place, the screenshot step's own failure and a
-command that cannot start, the rows, the argv and the environment, and the executor's one
-timeout over either step (the launcher's process group killed with both children).
-`tests/unit/automation/test_js_render_figure.py` (35 cases, skipped without Node, the
-lock's packages, the browser and plotly): the canvas rule, a measured bokeh layout, markup
+one byte over, a filter that is not in place, a plot that exits with the filter's code
+itself, the screenshot step's own failure and a command that cannot start, the rows, the
+argv, the environment and Node's check, and the executor's one timeout over either step
+(the launcher's process group killed with both children). The fork, the arming and the
+kernel filter run only in those subprocess cases, which coverage does not see; in-process
+cases, with `os.fork`, `os._exit`, the guard and the plot stood in, cover the parent's
+verdict, the child's codes and report, the error record, the screenshot step's start and
+the steps' order. `tests/unit/automation/test_js_render_figure.py` (41 cases, skipped
+without Node, the lock's packages, the browser and plotly): the canvas rule, a plotly
+figure with one side, a measured bokeh layout, markup
 and handlers, `CustomJS`, WebGL, the figure checks, the usage errors, and the whole two
 steps through the Python harness in both themes for both libraries. `ci-image.yml`
 renders a plotly and a bokeh figure through the rows in the built image and checks that

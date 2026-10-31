@@ -178,8 +178,10 @@ class TestTheCanvas:
             ((1000, 700), (3200, 1800), "2.564"),
             ((700, 1000), (2400, 2400), "2.400"),
             ((None, None), (3200, 1800), "2.000"),
+            ((1200, None), (3200, 1800), "2.667"),
+            ((None, 600), (3200, 1800), "2.985"),
         ],
-        ids=["800x450", "1600x900", "600x600", "1200x1200", "3600x3600", "wide", "tall", "no size"],
+        ids=["800x450", "1600x900", "600x600", "1200x1200", "3600x3600", "wide", "tall", "no size", "width", "height"],
     )
     def test_a_plotly_figure_keeps_its_size_and_the_scale_makes_the_canvas(
         self, harness: Harness, tmp_path: Path, size: tuple, pixels: tuple[int, int], scale: str
@@ -192,6 +194,18 @@ class TestTheCanvas:
         assert run.png_size() == pixels
         assert f"at scale {scale}" in run.stdout
         assert not (run.work / "plot-light.html").exists()
+
+    @pytest.mark.parametrize(
+        ("size", "drawn"), [((1200, None), "1200x675"), ((None, 450), "800x450")], ids=["width", "height"]
+    )
+    def test_a_plotly_figure_with_one_side_keeps_it_and_gets_the_other_at_16_to_9(
+        self, harness: Harness, tmp_path: Path, size: tuple, drawn: str
+    ) -> None:
+        """The side the code named is drawn, not replaced by 1600 x 900; the other follows the landscape aspect."""
+        run = harness.draw(tmp_path, plotly_figure(*size))
+
+        assert run.returncode == 0, run.stderr
+        assert f"figure {drawn} at scale" in run.stdout
 
     def test_a_bokeh_figure_at_the_catalogues_4800_wide_draws_at_two_thirds(
         self, harness: Harness, tmp_path: Path
@@ -268,8 +282,19 @@ class TestTheFigureIsChecked:
             ({"data": [], "layout": []}, "FigureError", "is not a plotly figure"),
             (plotly_figure(100, 100), "FigureError", "outside 320 to 6400"),
             (plotly_figure(1e9, 450), "FigureError", "outside 320 to 6400"),
+            (plotly_figure(400), "FigureError", "outside 320 to 6400"),
+            (plotly_figure(None, 4000), "FigureError", "outside 320 to 6400"),
         ],
-        ids=["not json", "no data", "a list", "a list for a layout", "too small", "too large"],
+        ids=[
+            "not json",
+            "no data",
+            "a list",
+            "a list for a layout",
+            "too small",
+            "too large",
+            "a width whose height is too small",
+            "a height whose width is too large",
+        ],
     )
     def test_a_figure_the_page_must_not_take_fails_as_figure(
         self, harness: Harness, tmp_path: Path, figure: object, cls: str, text: str

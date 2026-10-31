@@ -761,6 +761,8 @@ class Executor(Protocol):
 
     def languages(self) -> dict[str, bool]: ...
 
+    def serves(self, language: str, library: str) -> bool: ...
+
     async def run_theme(self, job: RenderRequest, theme: Theme) -> ThemeRun: ...
 
     async def run_data(self, job: DataRunRequest) -> DataRun: ...
@@ -807,6 +809,15 @@ class SandboxExecutor:
             language: all(shutil.which(binary, path=SANDBOX_PATH) is not None for binary in needed[language])
             for language in LANGUAGES
         }
+
+    def serves(self, language: str, library: str) -> bool:
+        """Whether a job's row can run here: its language's toolchain (`languages`) and the row's own binaries, Node
+        for plotly's and bokeh's screenshot step (`RuntimeCommand.figure`) among them, which the Python language's
+        toolchain does not name."""
+        if not self.languages().get(language, False):
+            return False
+        row = command_for(language, library)
+        return all(shutil.which(binary, path=SANDBOX_PATH) is not None for binary in row.toolchain)
 
     async def run_theme(self, job: RenderRequest, theme: Theme) -> ThemeRun:
         """Render one theme; a launcher failure before the harness started is retried once."""

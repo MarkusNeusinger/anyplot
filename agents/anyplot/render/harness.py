@@ -271,8 +271,9 @@ FIGURE_PLOT_ONLY_ENV = ("ANYPLOT_DENY_EXEC", "ANYPLOT_RLIMIT_AS_MB", "ANYPLOT_RL
 """The variables of the plot step that the screenshot step does not get: the JavaScript row has no exec filter and
 neither `RLIMIT_AS` nor `RLIMIT_NPROC` (`agents/renderer/commands.py`)."""
 FIGURE_REPORT_BYTES = 64 * 1024
-"""What the parent reads of the plot step's report pipe (`plot_step`): its first line, the filter state, is written
-before any plot code runs; the last, the error record, is advisory like every line the plot shares."""
+"""What the parent reads of the plot step's report pipe (`plot_step`): its first line, the harness's own (`armed` or
+`refused` with the filter's state), is written before any plot code runs; the last, the error record, is advisory like
+every line the plot shares."""
 FIGURE_ERROR_CHARS = 200
 """The final error line's message at most (`render.mjs` `ERROR_MESSAGE_CHARS`)."""
 FIGURE_ERROR_KINDS = ("plot", "figure", "crash", "harness")
@@ -2606,9 +2607,10 @@ def plot_step(path, figure, run):
 
     The child is forked before anything is armed, so this process never is: it starts the screenshot step afterwards.
     The child reports through a pipe opened before the fork, its write end non-blocking, so a plot that fills the pipe
-    cannot hold the child's last write: the first line, the filter's state (`exec_deny <state>`), is written once the
-    guard is armed and before any plot code runs (`run_plot`'s `armed`), so the plot cannot forge it; the last, an error
-    record (`error {...}`), is advisory, like everything the plot shares with the harness.
+    cannot hold the child's last write. Its first line is the harness's own and is written before any plot code runs,
+    so the plot cannot forge it: `armed <state>` once the guard is armed (`run_plot`'s `armed`), or `refused <state>`
+    when a required filter was not in place and the plot never ran. The last, an error record (`error {...}`), is
+    advisory, like everything the plot shares with the harness. The verdict is `plot_step_verdict`'s.
     """
     import time
 
@@ -2628,22 +2630,33 @@ def plot_step(path, figure, run):
     os.close(write_end)
     _, status, usage = os.wait4(pid, 0)
     run["steps"]["plot"] = _step_usage(usage, time.monotonic() - started)
-    state, record = _read_figure_report(read_end)
-    run["exec_deny"] = state
+    report = _read_figure_report(read_end)
+    run["exec_deny"] = report.state
+    code, error = plot_step_verdict(status, report, path)
+    if error is not None:
+        figure_error_line(*error)
+    return code
+
+
+def plot_step_verdict(status, report, path):
+    """The plot step's exit code and, when it failed, its final error line's `(kind, class, where, message)`, from its
+    wait status and its report (`FigureReport`).
+
+    A death by a signal is `crash PlotCrashed`. `EXEC_DENY_EXIT` is the harness's own refusal only after a `refused`
+    line, which comes before any plot code: a plot that ran (`armed`) and ended with the same code chose it itself
+    (`sys.exit(3)`, `os._exit(3)`), which is a `plot` error like every other code but 0.
+    """
     if os.WIFSIGNALED(status):
         number = os.WTERMSIG(status)
-        figure_error_line("crash", "PlotCrashed", None, f"the plot step died of {_signal_name(number)}")
-        return 128 + number
+        return 128 + number, ("crash", "PlotCrashed", None, f"the plot step died of {_signal_name(number)}")
     code = os.waitstatus_to_exitcode(status)
-    if code == EXEC_DENY_EXIT and state != "on":
-        figure_error_line(
-            "harness", "ExecDenyUnavailable", None, f"the sandbox could not refuse process starts ({state})"
-        )
-        return code
-    if code != 0:
-        name, line, message = record if record is not None else ("Error", None, f"the plot step ended with {code}")
-        figure_error_line("plot", name, None if line is None else f"{os.path.basename(path)}:{line}", message)
-    return code
+    if report.refused:
+        message = f"the sandbox could not refuse process starts ({report.state})"
+        return EXEC_DENY_EXIT, ("harness", "ExecDenyUnavailable", None, message)
+    if code == 0:
+        return 0, None
+    name, line, message = report.record or ("Error", None, f"the plot step ended with {code}")
+    return code, ("plot", name, None if line is None else f"{os.path.basename(path)}:{line}", message)
 
 
 def plot_child(path, figure, report):
@@ -2658,10 +2671,10 @@ def plot_child(path, figure, report):
         seed_mplconfig()
         guard = PlotGuard((figure,))
         try:
-            run_plot(path, guard, armed=lambda state: _report_line(report, f"exec_deny {state}"))
+            run_plot(path, guard, armed=lambda state: _report_line(report, f"armed {state}"))
             code = 0
         except ExecDenyUnavailable as exc:
-            _report_line(report, f"exec_deny {guard.exec_deny}")
+            _report_line(report, f"refused {guard.exec_deny}")
             print(f"the sandbox could not refuse process starts ({exc}), which every run requires", file=sys.stderr)
             code = EXEC_DENY_EXIT
         except SystemExit as exc:
@@ -2733,10 +2746,18 @@ def _report_line(report, line):
         pass
 
 
+class FigureReport:
+    """What the plot step's report pipe said (`plot_step`): the filter's `state` (`off` when the plot never ran armed),
+    whether the arming was `refused`, and the advisory error `record`, `(class, line, message)` or None."""
+
+    def __init__(self, state="off", refused=False, record=None):
+        self.state = state
+        self.refused = refused
+        self.record = record
+
+
 def _read_figure_report(read_end):
-    """The plot step's filter state and error record from its report pipe, then closed: the state from the first line
-    (`off` without one: the plot never ran armed; `unavailable` for a value outside `install_exec_deny`'s), the record
-    from the last line that is one (None without)."""
+    """The plot step's report from its pipe (`parse_figure_report`), which is closed after."""
     data = b""
     try:
         while len(data) < FIGURE_REPORT_BYTES:
@@ -2748,13 +2769,21 @@ def _read_figure_report(read_end):
         pass
     finally:
         os.close(read_end)
+    return parse_figure_report(data)
+
+
+def parse_figure_report(data):
+    """A `FigureReport` from the pipe's bytes: the first line, the harness's own, says `armed <state>` or
+    `refused <state>` (a state outside `install_exec_deny`'s reads as `unavailable`), and the record is the last line
+    that is one."""
     lines = data.decode("utf-8", errors="replace").splitlines()
-    state = "off"
-    if lines and lines[0].startswith("exec_deny "):
-        state = lines[0].split(" ", 1)[1]
+    state, refused, first = "off", False, None
+    if lines and lines[0].startswith(("armed ", "refused ")):
+        first, state = lines[0].split(" ", 1)
         state = state if state in ("on", "unavailable", "unsupported") else "unavailable"
+        refused = first == "refused"
     record = None
-    for line in reversed(lines[1:] if state != "off" else lines):
+    for line in reversed(lines[1:] if first is not None else lines):
         if not line.startswith("error "):
             continue
         try:
@@ -2765,7 +2794,7 @@ def _read_figure_report(read_end):
             number = number if isinstance(number, int) and not isinstance(number, bool) and number > 0 else None
             record = (name, number, message)
             break
-    return state, record
+    return FigureReport(state, refused, record)
 
 
 def check_figure(figure):

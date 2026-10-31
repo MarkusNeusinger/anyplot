@@ -9,6 +9,7 @@ is a Python script that reports what it ran under. `tests/unit/automation/test_j
 figures through the JavaScript harness.
 """
 
+import contextlib
 import json
 import os
 import platform
@@ -17,8 +18,10 @@ import resource
 import subprocess
 import sys
 import time
+from collections.abc import Callable, Iterator
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -364,6 +367,48 @@ class TestThePlotStep:
         assert not (tmp_path / "work" / "plot-light.json").exists() and not (tmp_path / "work" / "shot.json").exists()
         assert end_line(done.stdout)["exec_deny"] == "unavailable"
 
+    @pytest.mark.parametrize(
+        ("plot", "env", "patch", "line", "state"),
+        [
+            pytest.param(
+                "import sys\nsys.exit(3)\n",
+                {"ANYPLOT_DENY_EXEC": "required"},
+                "",
+                "render: error: plot SystemExit plot.py:2: 3",
+                "on",
+                marks=KERNEL,
+                id="sys.exit(3) under the filter",
+            ),
+            pytest.param(
+                "import sys\nsys.exit(3)\n",
+                {},
+                "harness.install_exec_deny = lambda: 'unavailable'\n",
+                "render: error: plot SystemExit plot.py:2: 3",
+                "unavailable",
+                id="sys.exit(3) without a filter it did not require",
+            ),
+            pytest.param(
+                "import os\nos._exit(3)\n",
+                {},
+                "harness.install_exec_deny = lambda: 'unavailable'\n",
+                "render: error: plot Error -: the plot step ended with 3",
+                "unavailable",
+                id="os._exit(3), no record",
+            ),
+        ],
+    )
+    def test_a_plot_that_ends_with_the_filters_exit_code_is_a_plot_error(
+        self, tmp_path: Path, plot: str, env: dict[str, str], patch: str, line: str, state: str
+    ) -> None:
+        """`EXEC_DENY_EXIT` is the harness's refusal only when the report's first line says `refused`: a plot that ran
+        armed and chose the same code is the plot's failure, whatever the filter's state."""
+        done = run_figure(tmp_path, plot, env=env, patch=patch)
+
+        assert done.returncode == harness.EXEC_DENY_EXIT
+        assert last_line(done.stderr) == line
+        assert end_line(done.stdout)["exec_deny"] == state
+        assert not (tmp_path / "work" / "shot.json").exists()
+
 
 class TestTheScreenshotStep:
     def test_its_failure_is_the_runs_and_its_line_stays_last(self, tmp_path: Path) -> None:
@@ -434,24 +479,54 @@ class TestHelpers:
         assert harness.check_figure("at-cap.json") is None
 
     @pytest.mark.parametrize(
-        ("written", "state", "record"),
+        ("written", "state", "refused", "record"),
         [
-            (b"", "off", None),
-            (b"exec_deny on\n", "on", None),
-            (b"exec_deny forged\n", "unavailable", None),
-            (b'error ["SyntaxError", 3, "bad"]\n', "off", ("SyntaxError", 3, "bad")),
-            (b'exec_deny on\nerror ["ValueError", 0, "x"]\n', "on", ("ValueError", None, "x")),
-            (b'exec_deny on\nerror ["not a class", 2, "x"]\nerror [1, 2]\n', "on", None),
-            (b'exec_deny on\nerror ["A", 2, "x"]\nnoise\n', "on", ("A", 2, "x")),
+            (b"", "off", False, None),
+            (b"armed on\n", "on", False, None),
+            (b"armed unavailable\n", "unavailable", False, None),
+            (b"refused unavailable\n", "unavailable", True, None),
+            (b"armed forged\n", "unavailable", False, None),
+            (b"exec_deny on\n", "off", False, None),
+            (b"armed on\nrefused unavailable\n", "on", False, None),
+            (b'error ["SyntaxError", 3, "bad"]\n', "off", False, ("SyntaxError", 3, "bad")),
+            (b'armed on\nerror ["ValueError", 0, "x"]\n', "on", False, ("ValueError", None, "x")),
+            (b'armed on\nerror ["not a class", 2, "x"]\nerror [1, 2]\n', "on", False, None),
+            (b'armed on\nerror ["A", 2, "x"]\nnoise\n', "on", False, ("A", 2, "x")),
+            (b'armed on\nerror ["A", true, "x"]\nerror {"a": 1}\n', "on", False, ("A", None, "x")),
         ],
-        ids=["nothing", "on", "a forged state", "before arming", "line 0", "malformed", "noise after"],
+        ids=[
+            "nothing",
+            "on",
+            "unavailable and not required",
+            "refused",
+            "a forged state",
+            "an unknown first line",
+            "a refusal after the arming",
+            "before arming",
+            "line 0",
+            "malformed",
+            "noise after",
+            "a flag for a line",
+        ],
     )
-    def test_the_report_pipe(self, written: bytes, state: str, record: tuple | None) -> None:
+    def test_the_report_pipe(self, written: bytes, state: str, refused: bool, record: tuple | None) -> None:
+        """The first line is the harness's own: a later `refused` line is the plot's, and changes nothing."""
         read_end, write_end = os.pipe()
         os.write(write_end, written)
         os.close(write_end)
         os.set_blocking(read_end, False)
-        assert harness._read_figure_report(read_end) == (state, record)
+        report = harness._read_figure_report(read_end)
+        assert (report.state, report.refused, report.record) == (state, refused, record)
+
+    def test_an_empty_open_pipe_reads_as_nothing(self) -> None:
+        """A write end a stray process of the plot kept open: the reader takes what is there and does not wait."""
+        read_end, write_end = os.pipe()
+        os.set_blocking(read_end, False)
+        try:
+            report = harness._read_figure_report(read_end)
+        finally:
+            os.close(write_end)
+        assert (report.state, report.refused, report.record) == ("off", False, None)
 
     def test_the_final_line_is_one_line_within_its_cap(self, capsys: pytest.CaptureFixture[str]) -> None:
         harness.figure_error_line("plot", "ValueError", "plot.py:3", "a\nb\t c" + "x" * 500)
@@ -486,6 +561,352 @@ class TestHelpers:
         assert not harness.builds_code(frame(f"{site}/plotly/basedatatypes.py", "build_validator"))
 
 
+class Exited(Exception):
+    """`os._exit` in an in-process call of the plot step's child: the code, instead of the end of the test process."""
+
+    def __init__(self, code: int) -> None:
+        super().__init__(code)
+        self.code = code
+
+
+class StandInGuard:
+    """`PlotGuard`'s part the plot step's child uses: the filter's state and `paused`."""
+
+    def __init__(self, allowed: tuple[str, ...], exec_deny: str) -> None:
+        self.allowed = allowed
+        self.exec_deny = exec_deny
+
+    @contextlib.contextmanager
+    def paused(self) -> Iterator[None]:
+        yield
+
+
+def wait_status(code: int = 0, signal_number: int = 0) -> int:
+    """A wait status as `os.wait4` returns it: an exit code, or a death by a signal."""
+    return signal_number or code << 8
+
+
+def raise_in_plot(source: str) -> None:
+    """Run `source` as code of `plot.py`, so a traceback through it has the plot's frames."""
+    exec(compile(source, "plot.py", "exec"), {})
+
+
+class TestInProcess:
+    """The figure mode's logic in the test process, where the coverage of a run counts: the parent's judgement, the
+    child's exit codes and report, the records, the screenshot step's start and the steps' order, with `os.fork`,
+    `os._exit`, the guard and the plot stood in. The fork, the arming and the kernel filter themselves run only in the
+    subprocess cases above (an audit hook and a seccomp filter cannot be removed from the test process)."""
+
+    @pytest.mark.parametrize(
+        ("status", "report", "verdict"),
+        [
+            (wait_status(0), harness.FigureReport("on"), (0, None)),
+            (
+                wait_status(3),
+                harness.FigureReport("on", record=("SystemExit", 2, "3")),
+                (3, ("plot", "SystemExit", "plot.py:2", "3")),
+            ),
+            (
+                wait_status(3),
+                harness.FigureReport("unavailable"),
+                (3, ("plot", "Error", None, "the plot step ended with 3")),
+            ),
+            (
+                wait_status(3),
+                harness.FigureReport("unavailable", refused=True),
+                (
+                    3,
+                    (
+                        "harness",
+                        "ExecDenyUnavailable",
+                        None,
+                        "the sandbox could not refuse process starts (unavailable)",
+                    ),
+                ),
+            ),
+            (
+                wait_status(1),
+                harness.FigureReport(record=("SyntaxError", 1, "bad")),
+                (1, ("plot", "SyntaxError", "plot.py:1", "bad")),
+            ),
+            (wait_status(1), harness.FigureReport(), (1, ("plot", "Error", None, "the plot step ended with 1"))),
+            (
+                wait_status(signal_number=9),
+                harness.FigureReport("unavailable", refused=True),
+                (137, ("crash", "PlotCrashed", None, "the plot step died of SIGKILL")),
+            ),
+        ],
+        ids=[
+            "success",
+            "sys.exit(3) armed",
+            "exit 3 without a filter it did not require",
+            "refused",
+            "a syntax error before the arming",
+            "the harness's own failure",
+            "a signal",
+        ],
+    )
+    def test_the_verdict(self, status: int, report: harness.FigureReport, verdict: tuple) -> None:
+        assert harness.plot_step_verdict(status, report, "work/plot.py") == verdict
+
+    def test_the_parent_reads_the_report_after_the_wait(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        read_end, write_end = os.pipe()
+        os.write(write_end, b'armed on\nerror ["SystemExit", 2, "3"]\n')
+        waited: list[int] = []
+
+        def wait4(pid: int, options: int) -> tuple[int, int, SimpleNamespace]:
+            waited.append(pid)
+            return pid, wait_status(3), SimpleNamespace(ru_maxrss=204800, ru_utime=0.5, ru_stime=0.25)
+
+        monkeypatch.setattr(os, "pipe", lambda: (read_end, write_end))
+        monkeypatch.setattr(os, "fork", lambda: 4242)
+        monkeypatch.setattr(os, "wait4", wait4)
+        run: dict = {"exec_deny": "off", "steps": {}}
+
+        assert harness.plot_step("plot.py", "plot-light.json", run) == 3
+        assert waited == [4242] and run["exec_deny"] == "on"
+        assert run["steps"]["plot"]["max_rss_mb"] == 200.0 and run["steps"]["plot"]["cpu_s"] == 0.75
+        assert last_line(capsys.readouterr().err) == "render: error: plot SystemExit plot.py:2: 3"
+
+    @staticmethod
+    def child(
+        monkeypatch: pytest.MonkeyPatch, run_plot: Callable[..., None], *, exec_deny: str = "on"
+    ) -> tuple[int, harness.FigureReport]:
+        """`plot_child` with the plot `run_plot(path, guard, armed)`: its exit code and its report."""
+        monkeypatch.setattr(harness, "set_plot_limits", lambda: None)
+        monkeypatch.setattr(harness, "seed_mplconfig", lambda: None)
+        monkeypatch.setattr(harness, "PlotGuard", lambda allowed: StandInGuard(allowed, exec_deny))
+        monkeypatch.setattr(harness, "run_plot", run_plot)
+
+        def exit_(code: int) -> None:
+            raise Exited(code)
+
+        monkeypatch.setattr(os, "_exit", exit_)
+        read_end, write_end = os.pipe()
+        try:
+            with pytest.raises(Exited) as exited:
+                harness.plot_child("plot.py", "plot-light.json", write_end)
+        finally:
+            os.close(write_end)
+        os.set_blocking(read_end, False)
+        return exited.value.code, harness._read_figure_report(read_end)
+
+    @pytest.mark.parametrize(
+        ("raised", "code", "record"),
+        [
+            (None, 0, None),
+            ("raise SystemExit(3)", 3, ("SystemExit", 1, "3")),
+            ("raise SystemExit(259)", 3, ("SystemExit", 1, "259")),
+            ("raise SystemExit(256)", 0, None),
+            ("raise SystemExit(None)", 0, None),
+            ("raise SystemExit('no data')", 1, ("SystemExit", 1, "no data")),
+            ("x = 1\nraise ValueError('boom')", 1, ("ValueError", 2, "boom")),
+        ],
+        ids=["success", "sys.exit(3)", "a code past 255", "256", "None", "a message", "an exception"],
+    )
+    def test_the_childs_code_and_report_after_the_arming(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+        raised: str | None,
+        code: int,
+        record: tuple | None,
+    ) -> None:
+        def run_plot(path: str, guard: StandInGuard, armed: Callable[[str], None]) -> None:
+            assert guard.allowed == ("plot-light.json",)
+            armed(guard.exec_deny)
+            if raised is not None:
+                raise_in_plot(raised)
+
+        exit_code, report = self.child(monkeypatch, run_plot)
+
+        assert exit_code == code
+        assert (report.state, report.refused, report.record) == ("on", False, record)
+        stderr = capsys.readouterr().err
+        assert ("Traceback (most recent call last):" in stderr) == (record is not None and record[0] == "ValueError")
+        assert ("no data" in stderr) == (record is not None and record[2] == "no data")
+
+    def test_a_refused_arming_is_reported_before_any_plot_code(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        def run_plot(path: str, guard: StandInGuard, armed: Callable[[str], None]) -> None:
+            raise harness.ExecDenyUnavailable(guard.exec_deny)
+
+        code, report = self.child(monkeypatch, run_plot, exec_deny="unavailable")
+
+        assert code == harness.EXEC_DENY_EXIT
+        assert (report.state, report.refused, report.record) == ("unavailable", True, None)
+        assert "could not refuse process starts (unavailable)" in capsys.readouterr().err
+        assert harness.plot_step_verdict(wait_status(code), report, "plot.py")[1][:2] == (
+            "harness",
+            "ExecDenyUnavailable",
+        )
+
+    def test_the_harnesss_own_failure_in_the_child_is_1_without_a_report(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        def run_plot(path: str, guard: StandInGuard, armed: Callable[[str], None]) -> None:
+            pytest.fail("the plot ran")
+
+        def limits() -> None:
+            raise OSError("setrlimit")
+
+        monkeypatch.setattr(harness, "set_plot_limits", limits)
+        monkeypatch.setattr(harness, "seed_mplconfig", lambda: None)
+        monkeypatch.setattr(harness, "run_plot", run_plot)
+
+        def exit_(code: int) -> None:
+            raise Exited(code)
+
+        monkeypatch.setattr(os, "_exit", exit_)
+        read_end, write_end = os.pipe()
+        with pytest.raises(Exited) as exited:
+            harness.plot_child("plot.py", "plot-light.json", write_end)
+        os.close(write_end)
+        os.set_blocking(read_end, False)
+        report = harness._read_figure_report(read_end)
+
+        assert exited.value.code == 1 and (report.state, report.refused, report.record) == ("off", False, None)
+
+    def test_the_error_record(self) -> None:
+        guard = StandInGuard((), "on")
+        try:
+            raise_in_plot("def f():\n    raise KeyError('k')\n\nf()\n")
+        except KeyError as exc:
+            assert harness._error_record("plot.py", exc, guard) == ["KeyError", 2, "'k'"]
+        try:
+            compile("x = (\n", "plot.py", "exec")
+        except SyntaxError as exc:
+            name, line, _ = harness._error_record("plot.py", exc, guard)
+            assert (name, line) == ("SyntaxError", 1)
+        odd = type("not a class name", (Exception,), {})("x" * 1000)
+        assert harness._error_record("plot.py", odd, guard) == ["Error", None, "x" * harness.FIGURE_ERROR_CHARS]
+
+        class Unprintable(Exception):
+            def __str__(self) -> str:
+                raise RuntimeError("no text")
+
+        assert harness._error_record("plot.py", Unprintable(), guard) == ["Unprintable", None, ""]
+        assert harness._error_record("plot.py", SystemExit(4), guard, "4") == ["SystemExit", None, "4"]
+
+    def test_the_screenshot_step_starts_without_the_plots_variables(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+        for key in harness.FIGURE_PLOT_ONLY_ENV:
+            monkeypatch.setenv(key, "1")
+        monkeypatch.setenv("ANYPLOT_THEME", "dark")
+        script = (
+            "import json, os, sys\n"
+            "json.dump({'argv': sys.argv[1:], 'env': dict(os.environ)}, open('seen.json', 'w'))\n"
+            "sys.exit(5)\n"
+        )
+        run: dict = {"steps": {}}
+
+        code = harness.screenshot_step([sys.executable, "-I", "-c", script], "plot-dark.json", "/pkg/plotly", run)
+
+        assert code == 5
+        seen = json.loads((tmp_path / "seen.json").read_text(encoding="utf-8"))
+        assert seen["argv"] == ["--figure=plot-dark.json"]
+        assert not set(harness.FIGURE_PLOT_ONLY_ENV) & set(seen["env"])
+        assert seen["env"][harness.FIGURE_PACKAGE_ENV] == "/pkg/plotly" and seen["env"]["ANYPLOT_THEME"] == "dark"
+        assert set(run["steps"]["screenshot"]) == {"max_rss_mb", "cpu_s", "wall_s"}
+
+    def test_a_screenshot_step_killed_by_a_signal_is_128_plus_it(self, tmp_path: Path) -> None:
+        script = "import os, signal\nos.kill(os.getpid(), signal.SIGTERM)\n"
+        run: dict = {"steps": {}}
+        assert harness.screenshot_step([sys.executable, "-I", "-c", script], "plot-light.json", "/pkg", run) == 143
+
+    def test_a_screenshot_step_that_cannot_start_is_127(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        missing = str(tmp_path / "no-such-node")
+        assert harness.screenshot_step([missing], "plot-light.json", "/pkg", {"steps": {}}) == 127
+        assert last_line(capsys.readouterr().err) == (
+            f"render: error: harness SpawnError -: cannot run {missing} (FileNotFoundError)"
+        )
+
+    @pytest.fixture
+    def steps(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[str, list]:
+        """`run_figure` with the limits, the package's lookup and both steps stood in: what each step was given."""
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setenv("ANYPLOT_THEME", "light")
+        monkeypatch.setattr(harness, "set_run_limits", lambda: None)
+        monkeypatch.setattr(harness, "find_figure_package", lambda name: f"/pkg/{name}")
+        given: dict[str, list] = {"plot": [], "screenshot": []}
+
+        def plot_step(path: str, figure: str, run: dict) -> int:
+            given["plot"].append((path, figure, Path(figure).exists()))
+            if "TEST_FIGURE" in os.environ:
+                Path(figure).write_text(os.environ["TEST_FIGURE"], encoding="utf-8")
+            return int(os.environ.get("TEST_PLOT_EXIT", "0"))
+
+        def screenshot_step(command: list[str], figure: str, package_dir: str, run: dict) -> int:
+            given["screenshot"].append((command, figure, package_dir))
+            return 7
+
+        monkeypatch.setattr(harness, "plot_step", plot_step)
+        monkeypatch.setattr(harness, "screenshot_step", screenshot_step)
+        return given
+
+    def test_run_figure_takes_the_steps_in_order(
+        self, steps: dict[str, list], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        (tmp_path / "plot-light.json").write_text("stale", encoding="utf-8")
+        monkeypatch.setenv("TEST_FIGURE", "{}")
+
+        assert harness.run_figure(["bokeh", "plot.py", "--", "node", "render.mjs"], {"steps": {}}) == 7
+        assert steps["plot"] == [("plot.py", "plot-light.json", False)]  # the stale figure removed before
+        assert steps["screenshot"] == [(["node", "render.mjs"], "plot-light.json", "/pkg/bokeh")]
+
+    @pytest.mark.parametrize(
+        ("env", "code", "line"),
+        [
+            ({"TEST_PLOT_EXIT": "3"}, 3, None),
+            ({}, 1, "render: error: figure NoFigure -: the plot wrote no plot-light.json"),
+            ({"TEST_FIGURE": ""}, 1, "render: error: figure FigureError -: plot-light.json is empty"),
+            ({"ANYPLOT_THEME": "blue"}, 2, "render: error: harness UsageError -: ANYPLOT_THEME must be light or dark"),
+        ],
+        ids=["the plot step failed", "no figure", "an empty figure", "a bad theme"],
+    )
+    def test_run_figure_stops_at_the_first_failure(
+        self,
+        steps: dict[str, list],
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+        env: dict[str, str],
+        code: int,
+        line: str | None,
+    ) -> None:
+        for key, value in env.items():
+            monkeypatch.setenv(key, value)
+
+        assert harness.run_figure(["plotly", "plot.py", "--", "node"], {"steps": {}}) == code
+        assert steps["screenshot"] == []
+        if line is not None:
+            assert last_line(capsys.readouterr().err) == line
+
+    def test_the_end_line_carries_the_steps_even_when_a_step_raises(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        def run_figure(argv: list[str], run: dict) -> int:
+            run["exec_deny"] = "on"
+            run["steps"]["plot"] = {"max_rss_mb": 1.0, "cpu_s": 0.1, "wall_s": 0.2}
+            raise RuntimeError("the screenshot step broke")
+
+        monkeypatch.setattr(harness, "run_figure", run_figure)
+        with pytest.raises(RuntimeError):
+            harness.main_figure(["plotly", "plot.py", "--", "node"])
+        lines = capsys.readouterr().out.splitlines()
+
+        assert lines[0] == executor_module.HARNESS_START
+        end = end_line("\n".join(lines))
+        assert end["exec_deny"] == "on" and end["steps"] == {"plot": {"max_rss_mb": 1.0, "cpu_s": 0.1, "wall_s": 0.2}}
+
+    def test_signal_names(self) -> None:
+        assert harness._signal_name(9) == "SIGKILL" and harness._signal_name(250) == "signal 250"
+
+
 class TestTheRows:
     @pytest.mark.parametrize("library", FIGURE_LIBRARIES)
     def test_plotly_and_bokeh_run_in_two_steps(self, library: str) -> None:
@@ -495,6 +916,26 @@ class TestTheRows:
         assert row.env == JS_ENV
         # The plot step's: the filter and the Python limits; the screenshot step drops them.
         assert row.exec_deny and row.rlimit_as and row.rlimit_nproc and row.rlimit_as_mb is None
+
+    @pytest.mark.parametrize("node", [True, False], ids=["with Node", "without Node"])
+    def test_a_two_step_row_is_served_only_where_node_is(
+        self, config: ExecutorConfig, monkeypatch: pytest.MonkeyPatch, node: bool
+    ) -> None:
+        """The Python language's toolchain names no Node, so the row's own does: without it plotly and bokeh are
+        `runtime_unavailable` (`Renderer._render`), matplotlib still runs, and `GET /status` still lists Python."""
+
+        def which(binary: str, mode: int = os.F_OK | os.X_OK, path: str | None = None) -> str | None:
+            return None if binary == NODE_BINARY and not node else binary
+
+        monkeypatch.setattr(executor_module.shutil, "which", which)
+        executor = SandboxExecutor(config)
+
+        assert executor.languages()["python"] is True
+        assert executor.serves("python", "matplotlib") is True
+        assert all(executor.serves("python", library) is node for library in FIGURE_LIBRARIES)
+        # A language without its toolchain serves none of its rows.
+        monkeypatch.setattr(executor, "languages", lambda: {"python": False})
+        assert executor.serves("python", "matplotlib") is False
 
     def test_no_other_row_runs_in_two_steps(self) -> None:
         for library, language in commands.LIBRARY_LANGUAGES.items():
