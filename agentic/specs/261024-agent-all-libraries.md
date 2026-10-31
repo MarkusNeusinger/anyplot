@@ -1326,8 +1326,9 @@ preview in the chat, whose delivery is an open owner decision.
   the frame's origin is `null`, and that the snippet's attempts to set `top.location`, call
   `window.open` and `fetch`, and navigate its own frame to an http URL all fail; a unit-test
   image variant runs the same probe.
-- **JS-4b-2, the preview,** waits for the owner's choice of its delivery (the open decision
-  in "Second opinion on JS-4b's design").
+- **JS-4b-2, the preview,** reaches the chat through a relay page on the API (route A of
+  "Second opinion on JS-4b's design", the owner's decision of 2026-10-31); "What JS-4b-2
+  built" describes it.
 
 #### Order of the PRs
 
@@ -1984,6 +1985,118 @@ Everything in 3g but the preview (JS-4b-2).
 | Scroll or scale | both: stepped CSS scales to a quarter, a scroll bar below | a laptop shows the whole plot at 0.8 without scrolling; pure CSS cannot compute a free scale |
 | Not in the text | the download holds the session's registry entry; `500 page_failed` | like the theme toggle, one sandbox job per session at a time; a failed build has a code of its own |
 | The probe under `agents/renderer/toolchain/` or next to the harness | `agents/renderer/page_probe.mjs` | both of those are toolchain inputs, so every edit of the probe would rebuild the toolchain image |
+
+#### What JS-4b-2 built (2026-10-31): the interactive preview in the chat
+
+The owner chose route A on 2026-10-31 ("Second opinion on JS-4b's design"): a relay page on
+the API that the chat posts the page into. No token and no cookie reaches the relay, and the
+site's policy is unchanged (it already allows `frame-src https://api.anyplot.ai`).
+
+```
+the chat (anyplot.ai)
+  <iframe sandbox="allow-scripts" src="https://api.anyplot.ai/preview/relay">
+    the relay: an opaque origin (`sandbox allow-scripts` in its policy), its own script only
+      <iframe sandbox="allow-scripts" srcdoc=<the wrapper, set as a property>>
+        the wrapper of JS-4b-1: no script
+          <iframe sandbox="allow-scripts" srcdoc=<the harness's page>>
+            the plot code
+```
+
+- **The relay.** `GET /preview/relay`, served by the API (`api/routers/preview.py`) from
+  `api/preview_relay.py`, which imports only the standard library, so the renderer image's CI
+  step loads it by its path. Outside `/debug/*`, unauthenticated and the same for every
+  caller: 1,074 bytes, no markup of its own, one inline script. Its headers:
+  `Content-Security-Policy: sandbox allow-scripts; <the harness's policy>; frame-ancestors
+  <the site's origins> http://localhost:*`, `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy: no-referrer` and `Cache-Control: public, max-age=300`. The harness's
+  policy is copied once more and pinned to `render/page.py`'s `PAGE_POLICY` by a test, so it
+  keeps one owner; every frame inside the relay inherits it, so none of them reaches the
+  network.
+- **What the relay accepts.** The first message whose `event.source` is `window.parent` and
+  whose `event.origin` is one of the framing origins, holding a non-empty string of at most
+  32 Mi characters (the agents service answers a wrapper of at most 30 MiB). It writes the
+  string into a new `<iframe sandbox="allow-scripts">` through the `srcdoc` property and
+  ignores every later message; it sends nothing back.
+- **The chat.** A version whose artifacts include `plot.html` gets `.interactive()` on the
+  image (next to copy, download and open) and, while the preview is open, `.preview()` to go
+  back to the image. Nothing is fetched before the click. The click fetches the shown theme's
+  `plot.html` through the authenticated artifact route, the same request as the download, so
+  the session waits while the server builds it (`pageBusy`, from JS-4b-1). Then the card
+  mounts the relay and posts the page once, on the relay frame's first `load`, with the target
+  origin `*`, because an opaque origin cannot be named. A theme switch while the preview is
+  open fetches that theme's page and mounts a new relay; the PNG of a theme the preview showed
+  first renders when the image comes back. The pages stay in the card while the preview is
+  open (the download takes the shown one instead of building it again) and are dropped when
+  it closes. A failed build shows "could not show the interactive plot (<code>)".
+- **Sizing without changing the wrapper.** The chat posts the very wrapper the download
+  serves. The relay frame has the wrapper's size at scale 1, 1632x932 for a landscape plot and
+  1232x1232 for a square one (the canvas at half its pixels plus the 16-pixel margin),
+  which the wrapper's first media query just misses, so it shows the plot at scale 1. The
+  card scales the whole relay frame to its width with CSS `transform: scale()`, as the
+  wrapper scales its own frame, and pointer events reach the plot through both transforms.
+  `PAGE_FRAME_SIZES` in `app/src/lib/agent.ts` is pinned to `render/page.py` by a test.
+- **Telemetry.** Opening the preview reports `opened_preview` once per opening, when its
+  first page arrived: a new action in the closed set of the agents service, the BFF, the page
+  and the BFF mock (pinned equal by the existing test). It is a look, not a keep, so the API's
+  usage card and the BigQuery views do not count it, and no view file changes.
+- **The root prompt** lists `.interactive()` and `.preview()` among the result card's
+  controls for a Chart.js, D3, ECharts or Highcharts plot.
+- **The BFF mock** serves the API's own relay (`GET /preview/relay`, built by running
+  `python3 api/preview_relay.py`), so the browser check runs the real relay against the mock.
+- **The probe** gained a relay mode: `page_probe.mjs relay <relay.json> <plot.html>
+  [--hover]`, where `relay.json` is `python3 api/preview_relay.py <origins>`. It serves the
+  relay with its real headers on its own origin (`http://127.0.0.1:18732`, the API's part), a
+  parent at an allowed origin (`http://localhost:18733`, the chat's part) frames it at scale
+  0.75 and posts the wrapper, after two sibling frames (one at the parent's origin, one at
+  another) posted a page of their own. The `renderer-image` job runs it on the CI probe's
+  Chart.js wrapper with the production origins; the image test runs it for all four
+  libraries.
+- **The probe's result** (local Docker, `anyplot-renderer:js`): every check passed for
+  Chart.js, D3, ECharts and Highcharts. The plot drew in the frame (Chart.js 588,975 painted
+  pixels, D3 six shapes, ECharts 383,132 pixels, Highcharts 47 SVG shapes) and a hover changed
+  it. The relay, the wrapper and the plot's frame all have the origin `null`. The relay's own
+  frame says `sandbox="allow-scripts"` and has no `src`. `top.location`, storage, cookies and
+  navigating the wrapper (`parent.location`) or the relay (`parent.parent.location`) are
+  `SecurityError`; `window.open` returns `null`; `fetch` is a `TypeError`; the plot frame's
+  navigation of itself ends on `chrome-error://chromewebdata/`. The siblings' pages and a page
+  the plot posted into the relay were ignored, the relay kept its URL and the parent its
+  location, and no request reached the loopback listener, with no popup, download or dialog.
+  A parent at `http://127.0.0.1:18733` could not frame the relay (`frame-ancestors`); with that
+  header lifted for the test, the relay still ignored that origin's page and took the same page
+  from `http://localhost:18733` (the control).
+- **Negative controls** (a scratch copy of the relay, each one change): without the source
+  check, a sibling's page was shown (`siblings_ignored` failed); without the origin check,
+  another origin's page was shown (`another_origins_page_ignored`); with `frame-ancestors *`,
+  another origin framed it (`frame_ancestors_refuses_another_origin`); with `allow-same-origin`
+  on the relay's frame, `relay_frame_sandboxed_to_scripts` failed. Without the one-shot flag no
+  check failed: the source check already admits only the chat, which posts once, so the flag
+  is a second line.
+- **In the browser** (2026-10-31, the agent chat against the BFF mock with the API's relay):
+  `.interactive()` waits while the run streams; during the build the composer and the other
+  theme wait and the card says "building the interactive light plot…"; the relay loads from
+  the mock's origin, the plot's frame has the origin `null`, the dark theme shows the dark
+  page, and `.preview()` brings back the dark PNG. A hover changed the plot's readout through
+  the scaled relay at 1440 pixels (the frame 884 pixels wide, scale 0.54) and at 390 pixels
+  (295 pixels wide, scale 0.18, no horizontal scroll), in both site themes, with a console
+  free of errors and warnings. On a phone the plot is as small as its PNG in the card; the
+  download stays the way to see it full size.
+- **Tests.** The relay's route, headers, policy and script (`tests/unit/api/test_preview_relay.py`:
+  the local origins equal the BFF's, the site's policy already frames the API, the policy
+  equals `page.py`'s, origins that are not plain origins are dropped, the CLI's JSON); the
+  frame sizes (`test_page_export.py`); the card (`ResultCard.test.tsx`, six tests: no fetch
+  before the click and the image again on `.preview()`, one fetch per theme on a switch, the
+  download of the shown page without a second build, the wait while the session is busy, the
+  error, the PNG of a theme the preview showed once the image is back) and
+  `InteractivePreview.test.tsx` (one post with `*`, the sizes); the image test's relay probe
+  for the four libraries.
+
+| Brief | Built | Why |
+|---|---|---|
+| The site's origins and the BFF's local origins | `settings.cors_origins` filtered to plain origins, plus `http://localhost:*` | a configured value with a space or `;` could end the directive; the local expression is the BFF's regex, pinned by a test |
+| Post the download's wrapper, deviate only for a measured reason | the wrapper unchanged; the chat sizes the relay frame | at 1632x932 the wrapper shows scale 1, and a CSS transform scales the frame to any card width |
+| Not in the brief | `opened_preview`, not a keep | opening the preview is a look at the plot, not taking it home |
+| Not in the brief | `Cache-Control: public, max-age=300` | the page is the same for every caller and holds no data |
+| Not in the brief | the relay is served whatever `AGENT_ENABLED` says | it holds nothing, and only the chat frames it |
 
 ### 4. plotly and bokeh (through the JavaScript harness's Chromium)
 
@@ -2889,7 +3002,8 @@ Both reviewed the draft of 3g before JS-4b-1 was built; the findings below are a
 | One page per shown theme: the page carries the theme's tokens, so the download follows the theme on the card | both | `?theme=`, defaulting to the version's theme; the card asks for the theme it shows |
 | Split JS-4b into the download (JS-4b-1) and the in-chat preview (JS-4b-2), whose delivery needs a decision | both | JS-4b-1 is the download; JS-4b-2 waits for the owner's decision below |
 
-**Open: how the preview reaches the chat (JS-4b-2).** The reviewers disagree; neither is built.
+**How the preview reaches the chat (JS-4b-2).** The reviewers disagreed. **Decided (owner,
+2026-10-31): A**, built as "What JS-4b-2 built" describes.
 
 - **(A) Gemini: a relay page.** A static, unauthenticated page on api.anyplot.ai, served with
   `Content-Security-Policy: sandbox allow-scripts; <the page's policy>; frame-ancestors <the

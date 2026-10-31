@@ -585,8 +585,9 @@ jobs:
           # lock (the toolchain's Node stage installs them) and the root .dockerignore
           # (the build context); and the agents package's copy of the import allowlist
           # and the JavaScript error grammar, which a step compares with the image, and
-          # the export page's wrapper, which a step probes in the image's Chromium.
-          RENDERER_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(agents/renderer/|agents/__init__\.py$|agents/anyplot/render/harness\.py$|agents/anyplot/render/convert\.py$|agents/anyplot/render/page\.py$|agents/anyplot/code/profiles/javascript/(import-allowlist\.json|errors\.py)$|tests/image/|tests/unit/agents/runtime/convert_fixtures\.py$|pyproject\.toml$|uv\.lock$|README\.md$|Project\.toml$|Manifest\.toml$|package\.json$|package-lock\.json$|automation/js-render/|\.dockerignore$|\.github/workflows/ci-image\.yml$)' || true)
+          # the export page's wrapper and the API's preview relay, which steps probe in the
+          # image's Chromium.
+          RENDERER_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(agents/renderer/|agents/__init__\.py$|agents/anyplot/render/harness\.py$|agents/anyplot/render/convert\.py$|agents/anyplot/render/page\.py$|api/preview_relay\.py$|agents/anyplot/code/profiles/javascript/(import-allowlist\.json|errors\.py)$|tests/image/|tests/unit/agents/runtime/convert_fixtures\.py$|pyproject\.toml$|uv\.lock$|README\.md$|Project\.toml$|Manifest\.toml$|package\.json$|package-lock\.json$|automation/js-render/|\.dockerignore$|\.github/workflows/ci-image\.yml$)' || true)
 
           if [[ "$EVENT_NAME" == "workflow_dispatch" && "$FORCE_RUN" == "true" ]]; then
             echo "Manual trigger with force_run=true, will build the renderer image"
@@ -1321,6 +1322,30 @@ jobs:
             anyplot-renderer:ci /opt/node/bin/node /probe/page_probe.mjs check /page/plot.html --hover --attempts \
             > work-page/probe.json || { echo "::error::the page probe failed"; cat work-page/probe.json; exit 1; }
           python3 -c "import json; report = json.load(open('work-page/probe.json')); print('OK: the page probe passed', sorted(report['checks']))"
+
+      # The chat's interactive preview (JS-4b-2, route A): the API's relay page
+      # (api/preview_relay.py, standard library only, run by its path for its page and its real
+      # headers) on an origin of its own, a parent page at an allowed origin that frames it scaled
+      # as the chat does and posts the wrapper of the step above into it, and two siblings that
+      # post a page first. The probe asserts that the plot draws and answers a hover in a frame of
+      # origin null, that the snippet's ways out fail (the wrapper's and the relay's navigation
+      # among them), that the siblings' and the plot's own pages are ignored, that the relay keeps
+      # its URL, that another origin cannot frame it (frame-ancestors), and that with that check
+      # lifted the relay's own origin check still ignores that origin's page.
+      - name: Probe the chat's preview relay with the page
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          python3 api/preview_relay.py https://anyplot.ai https://www.anyplot.ai > work-page/relay.json
+          docker run --rm --network none --read-only --tmpfs /tmp \
+            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+            -v "$PWD/agents/renderer/page_probe.mjs:/probe/page_probe.mjs:ro" -v "$PWD/work-page:/page:ro" \
+            -e HOME=/tmp -e XDG_CACHE_HOME=/tmp -e XDG_CONFIG_HOME=/tmp \
+            -e PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers -e ANYPLOT_NODE_MODULES=/opt/anyplot/node_modules \
+            -e FONTCONFIG_FILE=/opt/anyplot/js-fonts.conf \
+            anyplot-renderer:ci /opt/node/bin/node /probe/page_probe.mjs relay /page/relay.json /page/plot.html --hover \
+            > work-page/relay-probe.json || { echo "::error::the relay probe failed"; cat work-page/relay-probe.json; exit 1; }
+          python3 -c "import json; report = json.load(open('work-page/relay-probe.json')); print('OK: the relay probe passed', sorted(report['checks']))"
 
       # The JavaScript code profile (JS-3) reads the MUI X import allowlist from a copy in the
       # agents package, because the agents image has no node_modules

@@ -363,12 +363,14 @@ OutcomeAction = Literal[
     "downloaded_png",
     "downloaded_code",
     "downloaded_page",
+    "opened_preview",
     "downloaded_data",
     "saved_session",
     "feedback",
 ]
-"""What the user did with a result; `downloaded_page` is a JavaScript plot's interactive `plot.html` (JS-4b). The BFF
-(`api/routers/agent.py`) and the page (`app/src/lib/agent.ts`) carry the same set."""
+"""What the user did with a result; `downloaded_page` is a JavaScript plot's interactive `plot.html` (JS-4b), and
+`opened_preview` that page shown in the card (JS-4b-2), a look and no keep. The BFF (`api/routers/agent.py`) and the
+page (`app/src/lib/agent.ts`) carry the same set."""
 OUTCOME_ACTIONS: tuple[str, ...] = get_args(OutcomeAction)
 Reaction = Literal["thumbs_up", "thumbs_down", "bug", "idea"]
 """The feedback reactions (`core/database/models.py` `FEEDBACK_REACTIONS`; pinned by a test)."""

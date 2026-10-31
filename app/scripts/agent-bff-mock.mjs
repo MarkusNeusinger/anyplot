@@ -129,7 +129,9 @@
  * download routes set; `409 run_active` while a turn runs. Without such a
  * library the mock answers exactly as before. `POST .../outcome` (the cards'
  * usage beacon after a copy or a download) checks the body like the BFF and
- * answers `204`.
+ * answers `204`. `GET /preview/relay`, the card's interactive preview (JS-4b-2),
+ * is the API's own relay page with its headers, which the mock reads from
+ * `python3 api/preview_relay.py` at start (`503` when python3 cannot run it).
  *
  *   AGENT_LIBRARIES=matplotlib,seaborn,chartjs node app/scripts/agent-bff-mock.mjs
  *   open http://localhost:3000/debug/agent?spec=scatter-basic&library=chartjs&language=javascript
@@ -146,8 +148,10 @@
  *   MOCK_PARSE_MS=4000 MOCK_QUEUE=0 MOCK_STEP_MS=3000 node app/scripts/agent-bff-mock.mjs
  */
 
+import { execFileSync } from 'node:child_process';
 import http from 'node:http';
 import { randomBytes, randomUUID } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import zlib from 'node:zlib';
 
 const PORT = Number(process.env.PORT || 8010);
@@ -157,6 +161,21 @@ const QUEUE_START = Number(process.env.MOCK_QUEUE ?? 2);
 const STOP_MS = Number(process.env.MOCK_STOP_MS ?? 2000);
 const PARSE_MS = Number(process.env.MOCK_PARSE_MS ?? 400);
 const BASE = `http://localhost:${PORT}`;
+
+/**
+ * The preview relay (`GET /preview/relay`, JS-4b-2), exactly as the API serves it: its page and headers come from
+ * `api/preview_relay.py` itself (`python3 api/preview_relay.py`), so the mock holds no copy of the relay's script.
+ * The relay admits every `http://localhost:*` parent, the dev server's included. Null when python3 cannot run it.
+ */
+function loadRelay() {
+  try {
+    const script = fileURLToPath(new URL('../../api/preview_relay.py', import.meta.url));
+    return JSON.parse(execFileSync('python3', [script], { encoding: 'utf-8' }));
+  } catch {
+    return null;
+  }
+}
+const RELAY = loadRelay();
 
 const role = (name, kinds, description, { required = true, variadic = false } = {}) => ({
   name,
@@ -1711,6 +1730,12 @@ async function route(req, res) {
 
   // Catalogue routes the layout and the plot page call.
   if (method === 'GET' && path === '/health') return json(res, 200, { status: 'ok' });
+  if (method === 'GET' && path === '/preview/relay') {
+    if (!RELAY) return fail(res, 503, 'relay_unavailable');
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', ...RELAY.headers });
+    res.end(RELAY.html);
+    return;
+  }
   if (method === 'GET' && path === '/specs')
     return json(
       res,
@@ -2077,6 +2102,7 @@ async function route(req, res) {
       'downloaded_png',
       'downloaded_code',
       'downloaded_page',
+      'opened_preview',
       'downloaded_data',
     ];
     const valid =

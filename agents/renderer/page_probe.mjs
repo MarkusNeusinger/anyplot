@@ -19,10 +19,25 @@
 //     navigating its own frame to an http URL; a local listener sees no
 //     request, and no popup, download or dialog appears.
 //
+// The relay mode (JS-4b-2, the chat's interactive preview) serves the API's
+// relay page (api/preview_relay.py) with its real headers on its own origin and
+// checks what the chat does with it: a parent page at an allowed origin
+// (http://localhost:<port>) frames the relay, scaled as the chat scales it, and
+// posts the wrapper into it; before that, a sibling frame at the same origin
+// and one at another origin post a page of their own, which the relay must
+// ignore. Then the plot draws in a frame of origin "null" and answers a hover,
+// the snippet's attempts fail as above, its attempts to navigate the wrapper or
+// the relay and to post a page into the relay fail or are ignored, and the relay
+// keeps its URL. A parent at another origin (http://127.0.0.1:<port>) cannot
+// frame the relay (`frame-ancestors`), and with that check lifted for the test
+// (`/relay-open`), the relay still ignores a page that origin posts.
+//
 // Usage:
 //   node page_probe.mjs snippet <chartjs|d3|echarts|highcharts>    print the probe's plot code
 //   node page_probe.mjs check <plot.html> [--hover] [--attempts]
+//   node page_probe.mjs relay <relay.json> <plot.html> [--hover]
 //
+// relay.json is `python3 api/preview_relay.py` (the relay's page and headers).
 // The snippets read window.ANYPLOT_DATA as {label, value} rows; the checker
 // prints one JSON report and exits 1 when a check failed. Playwright comes from
 // ANYPLOT_NODE_MODULES (the image's /opt/anyplot/node_modules) or the checkout's
@@ -32,17 +47,23 @@
 // tests/unit/agents/code/test_profile_javascript_page_image.py.
 // =============================================================================
 
+import { readFileSync } from "node:fs";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const PORT = 18731;
 const LISTENER = `http://127.0.0.1:${PORT}`;
+const RELAY_PORT = 18732; // the relay's own origin, http://127.0.0.1:18732 (api.anyplot.ai's part)
+const PARENT_PORT = 18733; // the chat's part: http://localhost:18733 is allowed, http://127.0.0.1:18733 is not
+const RELAY_SCALE = 0.75; // the chat scales the relay's frame to its card
+const WRAPPER_SIZE = { width: 1632, height: 932 }; // a landscape wrapper at scale 1: the canvas and 16 px around it
 const SETTLE_MS = 1500;
 const TIMEOUT_MS = 20000;
 const VIEWPORT = { width: 1440, height: 790 }; // a laptop's window: the wrapper scales the frame to 0.8
 const MIN_PAINTED = 1000;
 const MIN_SHAPES = 3;
+const MARKER_PAGE = '<p id="anyplot-marker">a page the relay must not show</p>';
 
 // The escape attempts, after the plot drew. Each records "refused <Error>" or
 // its value; the frame's self-navigation waits for the checker, since it ends
@@ -64,6 +85,9 @@ window.__anyplotProbe = {};
   record("window_open", function () { return window.open("${LISTENER}/popup"); });
   record("storage", function () { return localStorage.length; });
   record("cookie", function () { return document.cookie; });
+  record("parent_location", function () { parent.location = "${LISTENER}/parent"; });
+  record("grandparent_location", function () { parent.parent.location = "${LISTENER}/grandparent"; });
+  record("post_to_relay", function () { parent.parent.postMessage(${JSON.stringify(MARKER_PAGE)}, "*"); });
   fetch("${LISTENER}/fetch").then(
     function () { probe.fetch = "ok"; },
     function (e) { probe.fetch = "refused " + e.name; }
@@ -248,6 +272,217 @@ async function check(file, { hover, attempts }) {
   process.exit(report.failures.length ? 1 : 0);
 }
 
+// The relay mode's parent page: the relay frame scaled as the chat scales it, and, with `siblings`, two frames
+// that post a page of their own into the relay before the probe posts the real one (one at this origin, one at
+// another).
+function parentPage(relayPath, siblings) {
+  const { width, height } = WRAPPER_SIZE;
+  const others = siblings
+    ? `<iframe src="http://localhost:${PARENT_PORT}/sender" hidden></iframe>` +
+      `<iframe src="http://127.0.0.1:${PARENT_PORT}/sender" hidden></iframe>`
+    : "";
+  return `<!doctype html><html><head><meta charset="utf-8"><style>
+body { margin: 0; }
+#relay { display: block; border: 0; width: ${width}px; height: ${height}px; transform: scale(${RELAY_SCALE}); transform-origin: 0 0; }
+</style></head><body>
+<iframe id="relay" sandbox="allow-scripts" src="http://127.0.0.1:${RELAY_PORT}${relayPath}"></iframe>${others}
+</body></html>`;
+}
+
+// A sibling's page: it posts the marker page into the relay, its parent's first frame.
+const SENDER_PAGE = `<!doctype html><script>parent.frames[0].postMessage(${JSON.stringify(MARKER_PAGE)}, "*");</script>`;
+
+// Runs in a frame: whether it shows the marker page.
+function hasMarker() {
+  return document.getElementById("anyplot-marker") !== null;
+}
+
+async function relay(relayFile, pageFile, { hover }) {
+  const spec = JSON.parse(readFileSync(relayFile, "utf-8"));
+  const wrapper = readFileSync(pageFile, "utf-8");
+  const escapes = [];
+  const listener = http.createServer((request, response) => {
+    escapes.push(`listener ${request.url}`);
+    response.end("reached");
+  });
+  // The relay's origin: `/relay` with its real headers, `/relay-open` with `frame-ancestors` lifted for the
+  // origin check alone; any other request is an escape.
+  const relayHeaders = { "Content-Type": "text/html; charset=utf-8", ...spec.headers };
+  const openHeaders = {
+    ...relayHeaders,
+    "Content-Security-Policy": spec.headers["Content-Security-Policy"].replace(/frame-ancestors [^;]*/, "frame-ancestors *"),
+  };
+  const relayServer = http.createServer((request, response) => {
+    const headers = { "/relay": relayHeaders, "/relay-open": openHeaders }[request.url];
+    if (!headers) escapes.push(`relay ${request.url}`);
+    response.writeHead(headers ? 200 : 404, headers ?? {});
+    response.end(headers ? spec.html : "");
+  });
+  const parents = http.createServer((request, response) => {
+    const url = new URL(request.url, "http://parent");
+    const html =
+      url.pathname === "/parent"
+        ? parentPage(url.searchParams.get("relay") ?? "/relay", url.searchParams.has("siblings"))
+        : url.pathname === "/sender"
+          ? SENDER_PAGE
+          : null;
+    if (html === null) escapes.push(`parent ${request.url}`);
+    response.writeHead(html === null ? 404 : 200, { "Content-Type": "text/html; charset=utf-8" });
+    response.end(html ?? "");
+  });
+  await new Promise((resolve) => listener.listen(PORT, "127.0.0.1", resolve));
+  await new Promise((resolve) => relayServer.listen(RELAY_PORT, "127.0.0.1", resolve));
+  await new Promise((resolve) => parents.listen(PARENT_PORT, resolve)); // localhost and 127.0.0.1 alike
+  const { chromium } = await playwright();
+  const browser = await chromium.launch({ args: ["--no-sandbox", "--force-color-profile=srgb"] });
+  const report = { file: path.basename(pageFile), checks: {}, failures: [] };
+  const expect = (name, ok, value) => {
+    report.checks[name] = value;
+    if (!ok) report.failures.push(name);
+  };
+  const relayUrl = `http://127.0.0.1:${RELAY_PORT}/relay`;
+  const framesOf = (page) => page.frames().filter((frame) => frame !== page.mainFrame());
+  const post = (page) =>
+    page.evaluate((html) => document.getElementById("relay").contentWindow.postMessage(html, "*"), wrapper);
+  const plotFrame = async (page) => {
+    for (const frame of framesOf(page)) {
+      if (frame.url() === "about:srcdoc" && (await frame.evaluate(() => !!document.getElementById("container")).catch(() => false))) {
+        return frame;
+      }
+    }
+    return null;
+  };
+  const markerShown = async (page) => {
+    for (const frame of framesOf(page)) if (await frame.evaluate(hasMarker).catch(() => false)) return true;
+    return false;
+  };
+  try {
+    const context = await browser.newContext({ acceptDownloads: true, viewport: VIEWPORT });
+    const events = { popups: 0, downloads: 0, dialogs: 0 };
+    context.on("page", () => (events.popups += 1));
+
+    // 1. The chat's case: an allowed origin, the relay with its real headers, two siblings posting first.
+    const page = await context.newPage();
+    events.popups -= 1; // the page itself
+    page.on("download", () => (events.downloads += 1));
+    page.on("dialog", (dialog) => {
+      events.dialogs += 1;
+      dialog.dismiss().catch(() => {});
+    });
+    const parentUrl = `http://localhost:${PARENT_PORT}/parent?relay=/relay&siblings`;
+    await page.goto(parentUrl, { waitUntil: "load", timeout: TIMEOUT_MS });
+    await page.waitForTimeout(SETTLE_MS / 3);
+    const relayFrame = framesOf(page).find((frame) => frame.url() === relayUrl);
+    expect("relay_loaded", !!relayFrame, framesOf(page).map((frame) => frame.url()));
+    if (!relayFrame) throw new Error("no relay frame");
+    expect("relay_origin_null", (await relayFrame.evaluate(() => self.origin)) === "null", await relayFrame.evaluate(() => self.origin));
+    const beforePost = await relayFrame.evaluate(() => document.querySelectorAll("iframe").length);
+    expect("siblings_ignored", beforePost === 0 && !(await markerShown(page)), { relay_frames: beforePost });
+    await post(page);
+    let frame = null;
+    for (let waited = 0; !frame && waited < TIMEOUT_MS; waited += 250) {
+      await page.waitForTimeout(250);
+      frame = await plotFrame(page);
+    }
+    expect("page_shown", !!frame, framesOf(page).map((item) => item.url()));
+    if (!frame) throw new Error("the relay shows no page");
+    await frame.waitForFunction(() => window.__anyplotProbe && "fetch" in window.__anyplotProbe, null, { timeout: TIMEOUT_MS });
+    await page.waitForTimeout(SETTLE_MS);
+    const pageError = await frame.evaluate(() => window.__anyplotError);
+    expect("no_page_error", pageError === null, pageError);
+    const plot = await frame.evaluate(drawn);
+    expect("drew", plot.painted >= MIN_PAINTED || plot.shapes >= MIN_SHAPES, plot);
+    expect("opaque_origin", (await frame.evaluate(() => self.origin)) === "null", await frame.evaluate(() => self.origin));
+    // The relay's own frame for the page: sandboxed to scripts alone, whatever the parent's attribute adds or lacks.
+    const relayChild = await relayFrame.evaluate(() => {
+      const child = document.querySelector("iframe");
+      return child ? { sandbox: child.getAttribute("sandbox"), src: child.getAttribute("src"), srcdoc: child.hasAttribute("srcdoc") } : null;
+    });
+    expect("relay_frame_sandboxed_to_scripts", relayChild?.sandbox === "allow-scripts" && relayChild.src === null, relayChild);
+    const wrapperFrame = frame.parentFrame();
+    const wrapperOrigin = wrapperFrame ? await wrapperFrame.evaluate(() => self.origin) : null;
+    expect("wrapper_origin_null", wrapperOrigin === "null", wrapperOrigin);
+
+    if (hover) {
+      // The relay frame is scaled in the parent; the wrapper inside lays the canvas out 16 px from its corner.
+      const box = await page.evaluate(() => {
+        const rect = document.getElementById("relay").getBoundingClientRect();
+        return { x: rect.x, y: rect.y };
+      });
+      const before = await frame.evaluate(fingerprint);
+      let changedAt = null;
+      for (const share of [0.2, 0.35, 0.5, 0.65, 0.8]) {
+        await page.mouse.move(box.x + (16 + 1600 * share) * RELAY_SCALE, box.y + (16 + 900 * 0.8) * RELAY_SCALE);
+        await page.waitForTimeout(100);
+        if ((await frame.evaluate(fingerprint)) !== before) {
+          changedAt = share;
+          break;
+        }
+      }
+      expect("hover_changes_the_frame", changedAt !== null, { changed_at: changedAt });
+    }
+
+    const recorded = await frame.evaluate(() => window.__anyplotProbe || null);
+    const refused = (name) => typeof recorded?.[name] === "string" && recorded[name].startsWith("refused");
+    expect("top_location_refused", refused("top_location"), recorded?.top_location);
+    expect("window_open_null", recorded?.window_open === "null", recorded?.window_open);
+    expect("fetch_refused", refused("fetch"), recorded?.fetch);
+    expect("storage_refused", refused("storage"), recorded?.storage);
+    expect("cookie_refused", refused("cookie"), recorded?.cookie);
+    expect("wrapper_navigation_refused", refused("parent_location"), recorded?.parent_location);
+    expect("relay_navigation_refused", refused("grandparent_location"), recorded?.grandparent_location);
+    await frame.evaluate(() => window.__anyplotProbeNavigate && window.__anyplotProbeNavigate()).catch(() => {});
+    await page.waitForTimeout(SETTLE_MS);
+    const relayFrames = await relayFrame.evaluate(() => document.querySelectorAll("iframe").length);
+    expect("post_from_the_plot_ignored", relayFrames === 1 && !(await markerShown(page)), { relay_frames: relayFrames, posted: recorded?.post_to_relay });
+    expect("relay_kept_its_url", relayFrame.url() === relayUrl, relayFrame.url());
+    expect("parent_unchanged", page.url() === parentUrl, page.url());
+    // A refused navigation of the plot's own frame ends on Chromium's error page (`chrome-error://chromewebdata/`).
+    const urls = framesOf(page).map((item) => item.url());
+    expect("self_navigation_blocked", !urls.some((url) => url.startsWith(LISTENER)), urls);
+
+    // 2. Another origin cannot frame the relay: `frame-ancestors` keeps its script from running there.
+    const stranger = await context.newPage();
+    events.popups -= 1;
+    await stranger.goto(`http://127.0.0.1:${PARENT_PORT}/parent?relay=/relay`, { waitUntil: "load", timeout: TIMEOUT_MS });
+    await post(stranger).catch(() => {});
+    await stranger.waitForTimeout(SETTLE_MS);
+    const strangerUrls = framesOf(stranger).map((item) => item.url());
+    expect("frame_ancestors_refuses_another_origin", !strangerUrls.includes(relayUrl) && !(await plotFrame(stranger)), strangerUrls);
+
+    // 3. With `frame-ancestors` lifted, the relay's own check still ignores a page from another origin.
+    const lifted = await context.newPage();
+    events.popups -= 1;
+    await lifted.goto(`http://127.0.0.1:${PARENT_PORT}/parent?relay=/relay-open`, { waitUntil: "load", timeout: TIMEOUT_MS });
+    const openFrame = framesOf(lifted).find((item) => item.url() === `http://127.0.0.1:${RELAY_PORT}/relay-open`);
+    await post(lifted);
+    await lifted.waitForTimeout(SETTLE_MS);
+    const openFrames = openFrame ? await openFrame.evaluate(() => document.querySelectorAll("iframe").length) : null;
+    expect("another_origins_page_ignored", openFrames === 0, { relay_loaded: !!openFrame, relay_frames: openFrames });
+    // The control: the same lifted relay takes the page from an allowed origin, so its script ran in case 3.
+    const control = await context.newPage();
+    events.popups -= 1;
+    await control.goto(`http://localhost:${PARENT_PORT}/parent?relay=/relay-open`, { waitUntil: "load", timeout: TIMEOUT_MS });
+    await post(control);
+    let controlFrame = null;
+    for (let waited = 0; !controlFrame && waited < TIMEOUT_MS; waited += 250) {
+      await control.waitForTimeout(250);
+      controlFrame = await plotFrame(control);
+    }
+    expect("lifted_relay_takes_an_allowed_origins_page", !!controlFrame, framesOf(control).map((item) => item.url()));
+
+    expect("no_popup_download_or_dialog", !events.popups && !events.downloads && !events.dialogs, events);
+    expect("no_request_escaped", escapes.length === 0, escapes);
+  } catch (err) {
+    report.failures.push(`error: ${String(err && err.message ? err.message : err).slice(0, 300)}`);
+  } finally {
+    await browser.close();
+    for (const server of [listener, relayServer, parents]) server.close();
+  }
+  console.log(JSON.stringify(report, null, 1));
+  process.exit(report.failures.length ? 1 : 0);
+}
+
 const [mode, target, ...flags] = process.argv.slice(2);
 if (mode === "snippet") {
   const snippet = SNIPPETS[target];
@@ -255,6 +490,11 @@ if (mode === "snippet") {
   process.stdout.write(snippet + ATTEMPTS);
 } else if (mode === "check" && target) {
   await check(target, { hover: flags.includes("--hover"), attempts: flags.includes("--attempts") });
+} else if (mode === "relay" && target && flags[0]) {
+  await relay(target, flags[0], { hover: flags.includes("--hover") });
 } else {
-  fail("usage: node page_probe.mjs snippet <chartjs|d3|echarts|highcharts> | check <plot.html> [--hover] [--attempts]");
+  fail(
+    "usage: node page_probe.mjs snippet <chartjs|d3|echarts|highcharts> | check <plot.html> [--hover] [--attempts]" +
+      " | relay <relay.json> <plot.html> [--hover]"
+  );
 }

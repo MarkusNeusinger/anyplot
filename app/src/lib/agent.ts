@@ -9,7 +9,7 @@
  * `{"detail": "<code>", "ref": "<request id>"}` and become `AgentApiError`.
  */
 
-import { DEBUG_API_URL } from 'src/constants';
+import { API_URL, DEBUG_API_URL } from 'src/constants';
 import { fetchWithAuth } from 'src/lib/api';
 import type { SseEvent } from 'src/lib/sse';
 import { clearAccessReloadGuard } from 'src/utils/adminAuth';
@@ -34,9 +34,26 @@ export type Theme = 'light' | 'dark';
 export type CodeArtifact = 'plot.py' | 'plot.R' | 'plot.jl' | 'plot.js' | 'plot.tsx';
 /**
  * A JavaScript plot's self-contained interactive page: built by the server on
- * demand in the theme asked for, and only downloaded, never shown here.
+ * demand in the theme asked for, downloaded as it is, and shown in the card
+ * through the preview relay (`PREVIEW_RELAY_URL`).
  */
 export const PAGE_ARTIFACT = 'plot.html';
+/**
+ * The API's static relay page of the interactive preview (`api/preview_relay.py`,
+ * JS-4b-2): the card frames it sandboxed and posts the version's `plot.html`
+ * into it, which it shows in a sandboxed frame of its own. It sits outside
+ * `/debug/*`, takes no token and reads no cookie.
+ */
+export const PREVIEW_RELAY_URL = `${API_URL}/preview/relay`;
+/**
+ * The wrapper's own size at scale 1 (`agents/anyplot/render/page.py`: the canvas
+ * in CSS pixels and a 16 px margin around it), which the card frames the relay
+ * at and scales to its width; pinned to the wrapper by a test.
+ */
+export const PAGE_FRAME_SIZES = {
+  landscape: { width: 1632, height: 932 },
+  square: { width: 1232, height: 1232 },
+} as const;
 export type ArtifactName =
   'plot-light.png' | 'plot-dark.png' | CodeArtifact | typeof PAGE_ARTIFACT | 'data.csv';
 export const PNG_ARTIFACT: Record<Theme, ArtifactName> = {
@@ -418,6 +435,8 @@ export const OUTCOME_ACTIONS = [
   'downloaded_code',
   // A JavaScript plot's interactive `plot.html` (since JS-4b).
   'downloaded_page',
+  // The same page shown in the card (since JS-4b-2); a look, not a keep.
+  'opened_preview',
   'downloaded_data',
   'saved_session',
   'feedback',

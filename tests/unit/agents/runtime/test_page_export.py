@@ -17,7 +17,9 @@ from agents.anyplot.render.backends.fake import FakeBackend, fixture_page
 from agents.anyplot.render.contract import PageFailed, PageJob
 from agents.anyplot.render.page import (
     BACKGROUNDS,
+    DEVICE_SCALE_FACTOR,
     FRAME_SANDBOX,
+    MARGIN_PX,
     PAGE_POLICY,
     SCALES,
     WRAPPER_POLICY,
@@ -119,6 +121,21 @@ class TestWrapper:
         first = wrap_page(NASTY, theme="dark", canvas=(3200, 1800), title="scatter-basic · d3 · v2")
         assert first == wrap_page(NASTY, theme="dark", canvas=(3200, 1800), title="scatter-basic · d3 · v2")
         assert f"background: {BACKGROUNDS['dark']}" in first
+
+    def test_the_cards_preview_frame_is_the_wrappers_size_at_scale_one(self) -> None:
+        """JS-4b-2: the chat frames the relay at the wrapper's own size, the canvas and the margin around it
+        (`PAGE_FRAME_SIZES` in `app/src/lib/agent.ts`), which lies just past the first media query, so the wrapper
+        shows the plot at scale 1 and the card scales the whole frame."""
+        source = (REPO_ROOT / "app" / "src" / "lib" / "agent.ts").read_text(encoding="utf-8")
+        sizes = {
+            name: (int(width), int(height))
+            for name, width, height in re.findall(r"(landscape|square): \{ width: (\d+), height: (\d+) \}", source)
+        }
+        for name, canvas in (("landscape", (3200, 1800)), ("square", (2400, 2400))):
+            width, height = (side // DEVICE_SCALE_FACTOR + 2 * MARGIN_PX for side in canvas)
+            assert sizes[name] == (width, height), name
+            css = sizing_css(width - 2 * MARGIN_PX, height - 2 * MARGIN_PX)
+            assert f"(max-width: {width - 1}px), (max-height: {height - 1}px)" in css, name
 
 
 SQUARE_RUN_FORM = (

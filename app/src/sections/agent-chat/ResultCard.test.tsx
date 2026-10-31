@@ -289,6 +289,112 @@ describe('ResultCard', () => {
       renderCard();
       expect(screen.queryByText(".download('plot.html')")).not.toBeInTheDocument();
       expect(screen.getByText('# plot.py runs next to data.csv')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Show interactive' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe("a JavaScript plot's interactive preview", () => {
+    const jsVersion = (overrides: Partial<PlotVersion> = {}) => {
+      const version = makeVersion({ library: 'chartjs', ...overrides });
+      version.result = {
+        ...version.result,
+        artifacts: ['plot-light.png', 'plot.js', 'plot.html', 'data.csv'],
+      };
+      return version;
+    };
+    const page = (theme: string) => new Blob([`<p>${theme} page</p>`], { type: 'text/html' });
+    const fetchPages = () =>
+      vi.fn(async (_version: number, _name: string, theme?: string) => page(theme ?? 'none'));
+
+    it('shows the page through the relay only when asked, and the image again on .preview()', async () => {
+      const onFetchArtifact = fetchPages();
+      const { onOutcome } = renderCard({ version: jsVersion(), onFetchArtifact });
+      expect(onFetchArtifact).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+
+      const frame = await screen.findByTitle('Interactive plot, version 2, light theme');
+      expect(frame).toHaveAttribute('src', expect.stringMatching(/\/preview\/relay$/));
+      expect(frame).toHaveAttribute('sandbox', 'allow-scripts');
+      expect(onFetchArtifact).toHaveBeenCalledWith(2, 'plot.html', 'light');
+      expect(onOutcome.mock.calls).toEqual([['opened_preview', 2]]);
+      expect(screen.queryByRole('button', { name: 'Download PNG' })).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Show image' }));
+      expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
+      expect(screen.getByAltText('Adapted plot, version 2, light theme')).toBeInTheDocument();
+    });
+
+    it('shows the other theme page on a theme switch and fetches each page once', async () => {
+      const onFetchArtifact = fetchPages();
+      const { onRequestTheme, onOutcome } = renderCard({ version: jsVersion(), onFetchArtifact });
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+      await screen.findByTitle('Interactive plot, version 2, light theme');
+
+      await userEvent.click(screen.getByRole('button', { name: 'dark' }));
+      await screen.findByTitle('Interactive plot, version 2, dark theme');
+      await userEvent.click(screen.getByRole('button', { name: 'light' }));
+      await screen.findByTitle('Interactive plot, version 2, light theme');
+
+      expect(onFetchArtifact.mock.calls.map(call => call[2])).toEqual(['light', 'dark']);
+      // The preview needs no PNG of the dark theme, and one opening is one beacon.
+      expect(onRequestTheme).not.toHaveBeenCalled();
+      expect(onOutcome.mock.calls).toEqual([['opened_preview', 2]]);
+    });
+
+    it('downloads the page the open preview shows without a second build', async () => {
+      const onFetchArtifact = fetchPages();
+      const { onOutcome } = renderCard({ version: jsVersion(), onFetchArtifact });
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+      await screen.findByTitle('Interactive plot, version 2, light theme');
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Download plot.html, light theme' })
+      );
+
+      await waitFor(() => expect(clicked.map(entry => entry.download)).toEqual(['plot.html']));
+      expect(onFetchArtifact).toHaveBeenCalledTimes(1);
+      expect(onOutcome.mock.calls).toEqual([
+        ['opened_preview', 2],
+        ['downloaded_page', 2],
+      ]);
+    });
+
+    it('waits while the session is busy, since the server builds the page', async () => {
+      const onFetchArtifact = fetchPages();
+      renderCard({ version: jsVersion(), onFetchArtifact, busy: true });
+      const open = screen.getByRole('button', { name: 'Show interactive' });
+      expect(open).toBeDisabled();
+      fireEvent.click(open);
+      expect(onFetchArtifact).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
+    });
+
+    it('says so when the page could not be built', async () => {
+      const onFetchArtifact = vi.fn(async () =>
+        Promise.reject(Object.assign(new Error('nope'), { code: 'page_unavailable' }))
+      );
+      const { onOutcome } = renderCard({ version: jsVersion(), onFetchArtifact });
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'could not show the interactive plot (page_unavailable)'
+      );
+      expect(onOutcome).not.toHaveBeenCalled();
+    });
+
+    it('renders the PNG of a theme the preview showed once the image is back', async () => {
+      const onFetchArtifact = fetchPages();
+      const { onRequestTheme } = renderCard({ version: jsVersion(), onFetchArtifact });
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+      await screen.findByTitle('Interactive plot, version 2, light theme');
+      await userEvent.click(screen.getByRole('button', { name: 'dark' }));
+      await screen.findByTitle('Interactive plot, version 2, dark theme');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Show image' }));
+
+      expect(onRequestTheme).toHaveBeenCalledWith(2, 'dark');
+      expect(screen.getByText('rendering dark theme…')).toBeInTheDocument();
     });
   });
 

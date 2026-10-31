@@ -22,6 +22,11 @@
  *   interactive page, which the server builds in the theme on screen when it
  *   is asked for (so the button waits while the session is busy, like a theme
  *   that still has to render).
+ * - `.interactive()` shows that page in place of the image (`InteractivePreview`,
+ *   through the API's sandboxed relay), only when the user asks for it; a theme
+ *   switch shows the other theme's page, `.preview()` the image again. The pages
+ *   of an open preview are kept, so switching back or downloading the page
+ *   builds nothing twice; closing the preview drops them.
  * - A copy or a download that succeeded calls `onOutcome` with the action and
  *   the version, the content-free usage beacon; nothing else travels.
  * - Below the code, the quick-feedback control (`ResultFeedback`) stores the
@@ -37,6 +42,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DownloadIcon from '@mui/icons-material/Download';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Skeleton from '@mui/material/Skeleton';
@@ -54,9 +60,11 @@ import {
   hasPage,
   type OutcomeAction,
   PAGE_ARTIFACT,
+  PAGE_FRAME_SIZES,
   type Theme,
 } from 'src/lib/agent';
 import { copyImage, downloadBlob } from 'src/sections/agent-chat/files';
+import { InteractivePreview } from 'src/sections/agent-chat/InteractivePreview';
 import { IMAGE_FAILURE } from 'src/sections/agent-chat/messages';
 import { ResultFeedback } from 'src/sections/agent-chat/ResultFeedback';
 import { RoundGrid } from 'src/sections/agent-chat/RoundGrid';
@@ -138,6 +146,13 @@ export function ResultCard({
   const [fileError, setFileError] = useState<string | null>(null);
   const [buildingPage, setBuildingPage] = useState(false);
   const [aspect, setAspect] = useState(PLACEHOLDER_ASPECT);
+  // The interactive preview: shown in place of the image on request, with the pages fetched while it is open.
+  const [interactive, setInteractive] = useState(false);
+  const [pages, setPages] = useState<Partial<Record<Theme, string>>>({});
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  // Bumped when the preview closes, so a page that arrives afterwards is dropped; the beacon goes once per opening.
+  const previewRun = useRef(0);
+  const previewReported = useRef(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(null);
 
   // A newer version collapses this one; it stays one click away in the thread.
@@ -178,7 +193,17 @@ export function ResultCard({
     return !current || current.state === 'failed';
   };
 
+  /** Whether showing `theme` in the open preview needs its page built first. */
+  const needsPage = (theme: Theme) => pages[theme] === undefined;
+
   const handleTheme = (theme: Theme) => {
+    if (interactive) {
+      // The preview shows the other theme's page; the PNG renders when the image is back on screen.
+      if (needsPage(theme) && busy) return;
+      setShownTheme(theme);
+      void showPage(theme);
+      return;
+    }
     if (needsRender(theme)) {
       if (busy) return;
       onRequestTheme(number, theme);
@@ -242,11 +267,16 @@ export function ResultCard({
    * and the beacon reports it as `downloaded_page`.
    */
   const handleDownloadPage = async () => {
-    if (busy || buildingPage) return;
+    const shown = pages[shownTheme];
+    if (shown === undefined && (busy || buildingPage)) return;
     setFileError(null);
-    setBuildingPage(true);
+    setBuildingPage(shown === undefined);
     try {
-      const blob = await onFetchArtifact(number, PAGE_ARTIFACT, shownTheme);
+      // The open preview's page is the very file: no second build.
+      const blob =
+        shown !== undefined
+          ? new Blob([shown], { type: 'text/html' })
+          : await onFetchArtifact(number, PAGE_ARTIFACT, shownTheme);
       downloadBlob(blob, PAGE_ARTIFACT);
       onOutcome?.('downloaded_page', number);
     } catch {
@@ -255,6 +285,57 @@ export function ResultCard({
       setBuildingPage(false);
     }
   };
+
+  /** Fetch `theme`'s page for the open preview, unless it is there; the session waits while the server builds it. */
+  const showPage = async (theme: Theme) => {
+    if (!needsPage(theme) || busy || buildingPage) return;
+    const run = previewRun.current;
+    setPreviewError(null);
+    setBuildingPage(true);
+    try {
+      const text = await (await onFetchArtifact(number, PAGE_ARTIFACT, theme)).text();
+      if (run !== previewRun.current) return; // closed meanwhile
+      setPages(current => ({ ...current, [theme]: text }));
+      if (!previewReported.current) {
+        previewReported.current = true;
+        onOutcome?.('opened_preview', number);
+      }
+    } catch (err) {
+      if (run === previewRun.current) {
+        const code = (err as { code?: unknown } | null)?.code;
+        setPreviewError(typeof code === 'string' ? code : 'internal');
+      }
+    } finally {
+      setBuildingPage(false);
+    }
+  };
+
+  const handleOpenPreview = () => {
+    if (needsPage(shownTheme) && busy) return;
+    previewReported.current = false;
+    setInteractive(true);
+    void showPage(shownTheme);
+  };
+
+  const handleClosePreview = () => {
+    previewRun.current += 1;
+    setInteractive(false);
+    setPages({});
+    setPreviewError(null);
+    if (needsRender(shownTheme)) {
+      // A theme the preview showed without its PNG: render it now, or go back to the run's own while busy.
+      if (busy) setShownTheme(version.theme);
+      else onRequestTheme(number, shownTheme);
+    }
+  };
+
+  // The preview keeps the wrapper's own aspect; the image box takes the PNG's.
+  const square = (() => {
+    const [width, height] = aspect.split('/').map(Number);
+    return width > 0 && height > 0 && width / height < 1.3;
+  })();
+  const frameSize = square ? PAGE_FRAME_SIZES.square : PAGE_FRAME_SIZES.landscape;
+  const shownPage = interactive ? pages[shownTheme] : undefined;
 
   const overlayBtnSx = overlayButtonSx(isDark);
   // Named the way the progress grid names its rounds, and which round shipped when an earlier one won.
@@ -338,11 +419,56 @@ export function ResultCard({
               overflow: 'hidden',
               bgcolor: 'var(--bg-surface)',
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-              aspectRatio: aspect,
+              aspectRatio: interactive ? `${frameSize.width}/${frameSize.height}` : aspect,
             }}
             data-testid="result-image-box"
           >
-            {readyImage ? (
+            {interactive ? (
+              shownPage !== undefined ? (
+                <InteractivePreview
+                  key={shownTheme}
+                  page={shownPage}
+                  square={square}
+                  title={`Interactive plot, version ${number}, ${shownTheme} theme`}
+                />
+              ) : previewError ? (
+                <Box
+                  role="alert"
+                  sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    p: 2,
+                    textAlign: 'center',
+                    ...bodyTextSx,
+                    color: 'var(--ink-soft)',
+                  }}
+                >
+                  could not show the interactive plot ({previewError})
+                </Box>
+              ) : (
+                <>
+                  <Skeleton
+                    variant="rectangular"
+                    sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+                  />
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      ...labelSx,
+                    }}
+                  >
+                    {`building the interactive ${shownTheme} plot…`}
+                  </Box>
+                </>
+              )
+            ) : readyImage ? (
               <Box
                 component="img"
                 src={readyImage.url}
@@ -413,47 +539,77 @@ export function ResultCard({
               </Box>
             )}
 
-            <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
-              <Tooltip title=".copy_png()" disableFocusListener>
-                <span style={{ display: 'inline-flex' }}>
+            {interactive ? (
+              <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
+                <Tooltip title=".preview()" disableFocusListener>
                   <IconButton
-                    onClick={handleCopyImage}
-                    aria-label="Copy image"
-                    disabled={!readyImage}
+                    onClick={handleClosePreview}
+                    aria-label="Show image"
                     sx={overlayBtnSx}
                     size="medium"
                   >
                     <ImageOutlinedIcon fontSize="small" />
                   </IconButton>
-                </span>
-              </Tooltip>
-              <Tooltip title=".download()" disableFocusListener>
-                <span style={{ display: 'inline-flex' }}>
-                  <IconButton
-                    onClick={handleDownloadPng}
-                    aria-label="Download PNG"
-                    disabled={!readyImage}
-                    sx={overlayBtnSx}
-                    size="medium"
-                  >
-                    <DownloadIcon fontSize="small" />
-                  </IconButton>
-                </span>
-              </Tooltip>
-              <Tooltip title=".open()" disableFocusListener>
-                <span style={{ display: 'inline-flex' }}>
-                  <IconButton
-                    onClick={handleOpen}
-                    aria-label="Open full size"
-                    disabled={!readyImage}
-                    sx={overlayBtnSx}
-                    size="medium"
-                  >
-                    <OpenInNewIcon fontSize="small" />
-                  </IconButton>
-                </span>
-              </Tooltip>
-            </Box>
+                </Tooltip>
+              </Box>
+            ) : (
+              <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
+                {page && (
+                  <Tooltip title=".interactive()" disableFocusListener>
+                    <span style={{ display: 'inline-flex' }}>
+                      <IconButton
+                        onClick={handleOpenPreview}
+                        aria-label="Show interactive"
+                        disabled={busy || buildingPage}
+                        sx={overlayBtnSx}
+                        size="medium"
+                      >
+                        <PlayArrowIcon fontSize="small" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                )}
+                <Tooltip title=".copy_png()" disableFocusListener>
+                  <span style={{ display: 'inline-flex' }}>
+                    <IconButton
+                      onClick={handleCopyImage}
+                      aria-label="Copy image"
+                      disabled={!readyImage}
+                      sx={overlayBtnSx}
+                      size="medium"
+                    >
+                      <ImageOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title=".download()" disableFocusListener>
+                  <span style={{ display: 'inline-flex' }}>
+                    <IconButton
+                      onClick={handleDownloadPng}
+                      aria-label="Download PNG"
+                      disabled={!readyImage}
+                      sx={overlayBtnSx}
+                      size="medium"
+                    >
+                      <DownloadIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title=".open()" disableFocusListener>
+                  <span style={{ display: 'inline-flex' }}>
+                    <IconButton
+                      onClick={handleOpen}
+                      aria-label="Open full size"
+                      disabled={!readyImage}
+                      sx={overlayBtnSx}
+                      size="medium"
+                    >
+                      <OpenInNewIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </Box>
+            )}
           </Box>
 
           {/* Theme switch: the run rendered one theme; the other renders on demand. */}
@@ -474,7 +630,11 @@ export function ResultCard({
                   component="button"
                   type="button"
                   aria-pressed={active}
-                  disabled={!active && busy && needsRender(theme)}
+                  disabled={
+                    !active &&
+                    (busy || buildingPage) &&
+                    (interactive ? needsPage(theme) : needsRender(theme))
+                  }
                   onClick={() => handleTheme(theme)}
                   sx={{
                     ...actionButtonSx,
@@ -489,11 +649,13 @@ export function ResultCard({
                 </Box>
               );
             })}
-            {readyImage?.status === 'needs_attention' && shownTheme !== version.theme && (
-              <Box component="span" sx={{ ...labelSx, ml: 1 }}>
-                padded onto the canvas
-              </Box>
-            )}
+            {!interactive &&
+              readyImage?.status === 'needs_attention' &&
+              shownTheme !== version.theme && (
+                <Box component="span" sx={{ ...labelSx, ml: 1 }}>
+                  padded onto the canvas
+                </Box>
+              )}
           </Box>
 
           {/* How each round of the run ended, as the progress grid showed it while it ran. */}
