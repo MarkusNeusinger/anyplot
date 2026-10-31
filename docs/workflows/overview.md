@@ -431,6 +431,35 @@ gh workflow run bulk-generate.yml -f specification_id=all -f library=matplotlib
 
 **Concurrency limit**: Max 3 parallel implementations globally.
 
+### Generate one library for one spec
+
+To generate or regenerate a single (spec, library) pair, dispatch
+`impl-generate.yml` directly. It's the workflow `bulk-generate.yml` dispatches
+once per library:
+
+```bash
+gh workflow run impl-generate.yml -f specification_id=scatter-basic -f library=bokeh
+```
+
+`specification_id` and `library` are required. The optional inputs are the
+following:
+
+| Input | Default | Meaning |
+|-------|---------|---------|
+| `issue_number` | empty | The spec issue to report on; empty reads it from `plots/{spec-id}/specification.yaml` |
+| `model` | `auto` | The generation model, also used for repair: `auto` routes as in [Generation model](#generation-model); `haiku`, `sonnet`, or `opus` pins one. Reviews always run on Opus |
+| `change_request` | empty | A one-sentence hint the generator follows, such as the cross-library divergence note of the daily-regen similarity audit |
+| `regen_gate` | `true` | For a pair that already has an implementation on `main`: one review decides keep or replace, with no repair. `false` forces the fresh-generation path with the repair loop and the `regen:forced` label (see [Regen gate](#regen-gate-regenerations)) |
+| `source_ref` | empty | Adopt mode: take the file from this branch, tag, or commit SHA (see [Adopt implementations from a branch](#adopt-implementations-from-a-branch)) |
+| `source_model` | empty | Adopt mode only: the model that wrote the adopted file, recorded as `generated_by` |
+
+For example, to regenerate one pair on Opus with a hint:
+
+```bash
+gh workflow run impl-generate.yml -f specification_id=scatter-basic -f library=bokeh \
+  -f model=opus -f change_request="Use a different data scenario from the matplotlib version."
+```
+
 ### Adopt implementations from a branch
 
 Adopt mode takes each implementation file from a branch, tag, or commit SHA of

@@ -423,8 +423,21 @@ Before the first case the harness renders the catalogue file of the first case o
     --renderer remote --render-url https://RENDERER_URL --gcloud-token
   ```
 
-- To run the Gemini arm, add `--provider gemini`; it selects `gemini-3.8-flash` with the judge on `gemini-3.5-flash-lite`. `--model` alone implies its provider, and `--judge-model` and `--location` override the rest.
+- To run the Gemini arm, add `--provider gemini`; it selects `gemini-3.8-flash` with the judge on `gemini-3.5-flash-lite`. `--model` alone implies its provider, and `--judge-model` and `--location` (`eu` by default, `global` or `us`) override the rest. Give the arm its own `--out` so its gallery does not overwrite the other arm's:
+
+  ```bash
+  uv run --extra agents python -m agents.evals.matrix --provider gemini --cases smoke --budget-usd 4 \
+    --out agents/evals/reports/<date>-gemini --renderer remote --render-url https://RENDERER_URL --gcloud-token
+  ```
+
 - To run a subset, pass comma-separated globs over case ids, for example `--cases "*-seaborn-*"` or `--cases "pie-basic-*,box-basic-*"`. `--cases scatter-basic-matplotlib-german-message` runs the case whose German follow-up sets the session language: its first version is English, its second must carry German plot text, and each run's record holds the `done` event's `language`.
+- To check one library, the form every run of 2026-10-28 to 2026-10-31 took, select its cases by glob, cap the spend, write to a directory of its own, and skip the baseline diff, because the committed baseline holds none or few of that library's cases:
+
+  ```bash
+  uv run --extra agents python -m agents.evals.matrix --provider anthropic-vertex --location eu \
+    --cases '*-makie-*' --budget-usd 3 --no-baseline --out agents/evals/reports/<date>-makie \
+    --renderer remote --render-url https://RENDERER_URL --gcloud-token
+  ```
 
 | Flag | Meaning |
 |---|---|
@@ -436,7 +449,7 @@ Before the first case the harness renders the catalogue file of the first case o
 | `--static` | Run only the model-free static stage and write `<date>-static.json` instead of a matrix report (see [Run the stress cases](#run-the-stress-cases)); the renderer is `fake` unless `--renderer` or `AGENT_RENDERER` names another |
 | `--repeats N` | Runs per case, to see how stable a result is |
 | `--max-attempts N` | Adapter attempts per run, 1 to 3 (`AGENT_MAX_ATTEMPTS`, 2 by default), so 1 measures the first attempt alone and 3 a second repair round; the report's stamp records the value as `max_attempts` |
-| `--thinking-budget ROOT,ADAPTER` | Claude only: adaptive thinking for the root and the adapter, each value (0 to 4,096, 0 off) added to that agent's output cap (`AGENT_ROOT_THINKING_BUDGET`, `AGENT_ADAPTER_THINKING_BUDGET`); the stamp records it as `thinking_budget`, the summary names it, and the thinking tokens are priced as output |
+| `--thinking-budget ROOT,ADAPTER` | Claude only: adaptive thinking for the root and the adapter, each value (0 to 8,192, 0 off) added to that agent's output cap (`AGENT_ROOT_THINKING_BUDGET`, `AGENT_ADAPTER_THINKING_BUDGET`); the stamp records it as `thinking_budget`, the summary names it, and the thinking tokens are priced as output |
 | `--budget-usd X` | Stop before a case that could take the estimated list-price cost past X (the spend so far plus the costliest case so far), or once the cost has passed X (exit code 3) |
 | `--out DIR` | Output directory, `agents/evals/reports/` by default (git-ignored) |
 | `--baseline FILE`, `--no-baseline` | The report to compare with; by default `evals/baselines/claude-haiku-5-5.json` when it exists |

@@ -114,25 +114,27 @@ the reported coverage.
 
 ## Code quality
 
-Both linting and formatting must pass for CI.
+Both linting and formatting must pass for CI. Ruff is in the `dev` extra, so
+the commands name it: they then work in any environment, including a fresh
+worktree or one that a narrower `uv sync` left without it.
 
 ```bash
 # Check linting
-uv run ruff check .
+uv run --extra dev ruff check .
 
 # Auto-fix linting issues
-uv run ruff check . --fix
+uv run --extra dev ruff check . --fix
 
 # Check formatting
-uv run ruff format --check .
+uv run --extra dev ruff format --check .
 
 # Auto-format
-uv run ruff format .
+uv run --extra dev ruff format .
 ```
 
 **Always run before committing:**
 ```bash
-uv run ruff check . && uv run ruff format .
+uv run --extra dev ruff check . && uv run --extra dev ruff format .
 ```
 
 ---

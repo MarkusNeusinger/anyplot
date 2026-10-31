@@ -96,7 +96,7 @@ Execute these commands to validate the refactor is complete with zero regression
 
 - `uv run pytest tests/ -v` - Run test suite (must match baseline)
 - `uv run python -m py_compile api/**/*.py` - Check Python syntax
-- `uv run ruff check .` - Lint check
+- `uv run --extra dev ruff check .` - Lint check
 - <additional validation commands>
 
 ## Notes

@@ -308,8 +308,8 @@ regen** — that's a real defect on this dev box, not an unrelated change.
 ### 2e. Lint
 
 ```bash
-uv run ruff format plots/$SPEC_ID/implementations/python/$LIBRARY.py
-uv run ruff check --fix plots/$SPEC_ID/implementations/python/$LIBRARY.py
+uv run --extra dev ruff format plots/$SPEC_ID/implementations/python/$LIBRARY.py
+uv run --extra dev ruff check --fix plots/$SPEC_ID/implementations/python/$LIBRARY.py
 ```
 
 Fix any unfixable errors manually and re-run.
