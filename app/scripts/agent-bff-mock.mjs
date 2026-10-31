@@ -2076,6 +2076,7 @@ async function route(req, res) {
       'copied_image',
       'downloaded_png',
       'downloaded_code',
+      'downloaded_page',
       'downloaded_data',
     ];
     const valid =

@@ -1315,8 +1315,9 @@ preview in the chat, whose delivery is an open owner decision.
 - **The frontend.** A version whose artifacts include `plot.html` gets
   `.download('plot.html')` next to the code download, which downloads the page of the theme
   the card shows (a blob through the authenticated artifact fetch, with the theme). Its
-  telemetry outcome is `downloaded_code`: a new action would change the closed set and the
-  BigQuery views.
+  telemetry outcome was to be `downloaded_code`, because a new action changes the closed set
+  and the BigQuery views; the review of JS-4b-1's code reversed that: `downloaded_page`, with
+  the views' re-creation left to the owner (the section "Second opinion on JS-4b-1's code").
 - **The root prompt** lists `.download('plot.html')` for a Chart.js, D3, ECharts or
   Highcharts plot and says that `plot.js` runs by opening `plot.html` (topic 4).
 - **A probe in CI.** The `renderer-image` job builds a page with the image (a small Chart.js
@@ -1906,8 +1907,10 @@ Everything in 3g but the preview (JS-4b-2).
 - **Decisions taken in the build.**
   - The wrapper writes the page into a single-quoted `srcdoc` with only `&` and `'` as
     references: they are the only characters a single-quoted attribute value treats
-    specially, so the frame gets the page byte for byte (a test parses it back), and the
-    typed table's many `"` do not grow sixfold as they would in a double-quoted attribute.
+    specially, so the frame gets the page character for character (a test parses it back),
+    apart from the normalisation the HTML input stream applies to any load of a page (CR LF
+    and a lone CR become LF, NUL becomes U+FFFD), and the typed table's many `"` do not grow
+    sixfold as they would in a double-quoted attribute.
   - The frame scales by media queries in steps (1, 0.9, 0.8, ..., 0.25) to the largest that
     fits the window with a 16-pixel margin, and the wrapper scrolls below a quarter: a
     1440x900 laptop's window of about 1440x790 shows the landscape plot at 0.8 (1280x720)
@@ -1917,8 +1920,9 @@ Everything in 3g but the preview (JS-4b-2).
     harness by a test), and its title names the spec, the library and the version.
   - The download is registered in the session's run registry while it builds, like the
     theme toggle, so it and a turn or a toggle of the same session refuse each other with
-    `409 run_active`; the card's button waits while the session is busy, like a theme that
-    still has to render. Error codes: `503 page_unavailable` also for a renderer that cannot
+    `409 run_active`; the page holds the whole session back while the page builds
+    (`pageBusy` in `useAgentSession.ts`, after the review of the code), so the composer, the
+    theme toggles and the data edits wait as for a theme render. Error codes: `503 page_unavailable` also for a renderer that cannot
     be reached, `500 page_failed` for a build that left no page; the BFF passes both.
   - The local Docker backend mounts the checkout's `render.mjs` for renders too, not only
     for page builds, so a version's PNG and its page come from the same harness; a checkout
@@ -1926,7 +1930,8 @@ Everything in 3g but the preview (JS-4b-2).
   - The probe sits at `agents/renderer/page_probe.mjs`, outside the toolchain's inputs
     (`toolchain.py`, `INPUTS`): an edit of the probe reruns the `renderer-image` job but
     does not rebuild the toolchain image. It prints its snippets (`snippet chartjs`, `d3`,
-    `echarts`) for the harness and checks a wrapper (`check plot.html --hover --attempts`).
+    `echarts`, `highcharts`) for the harness and checks a wrapper (`check plot.html --hover
+    --attempts`).
     Its hover moves the window's own pointer over the scaled plot: Playwright's
     `hover({position})` maps a point into the frame without the frame's transform, and its
     events missed the plot (measured).
@@ -1944,10 +1949,11 @@ Everything in 3g but the preview (JS-4b-2).
 
   Without the container (Node on the host), a Chart.js page builds in 0.23 s.
 - **The probe** (`page_probe.mjs` in the image's Chromium, the window at 1440x790) passed for
-  Chart.js, D3 and ECharts pages built through the local backend and wrapped by
-  `page_download`: the chart drew in the frame (Chart.js 588,975 painted pixels, ECharts
-  383,132, D3 six shapes), a hover changed the frame (a Chart.js tooltip, D3's `mouseover`
-  text, ECharts' axis tooltip), the frame's origin is `null`, `top.location` and storage and
+  Chart.js, D3, ECharts and (after the review) Highcharts pages built through the local
+  backend and wrapped by `page_download`: the chart drew in the frame (Chart.js 588,975
+  painted pixels, ECharts 383,132, D3 six shapes, Highcharts SVG shapes), a hover changed the
+  frame (a Chart.js tooltip, D3's `mouseover` text, ECharts' axis tooltip, Highcharts'
+  tooltip), the frame's origin is `null`, `top.location` and storage and
   cookies are `SecurityError`, `window.open` returns `null`, `fetch` is a `TypeError` (the
   policy), the frame's navigation of itself to http ends on `chrome-error://chromewebdata/`,
   and a listener on the loopback saw no request, with no popup, download or dialog. The
@@ -1963,7 +1969,12 @@ Everything in 3g but the preview (JS-4b-2).
   headers (`test_artifact_names.py`), the service flow (a D3 session downloads its page in
   both themes; the error codes; `409 run_active` while a build runs), the BFF route, and the
   image test (`test_profile_javascript_page_image.py`, skipped without the image): the
-  probe for three libraries and the idioms for four.
+  probe and the idioms for all four libraries.
+- **In the browser** (2026-10-31, the agent chat against the local BFF mock, which serves
+  JavaScript versions with a stand-in page since then): the button waits while the run
+  streams, the light card downloads the light page and the dark card the dark one, and each
+  file opened from disk draws in its frame (origin `null`) and answers a hover, at 1440 and
+  390 pixels, in both site themes, with a clean console.
 
 | Text above (3g) | Built | Why |
 |---|---|---|
@@ -2889,6 +2900,21 @@ Both reviewed the draft of 3g before JS-4b-1 was built; the findings below are a
   `user_id|sid|version|theme|exp`, about five minutes), served only when the request says
   `Sec-Fetch-Dest: iframe`, because Fable measured that the URL opened directly as a tab lets
   the plot code navigate the tab, and kept outside `/debug/*`.
+
+## Second opinion on JS-4b-1's code (Gemini 4 Argon and Fable, 2026-10-31)
+
+Both reviewed the JS-4b-1 commit before its PR: sound with changes.
+
+| Finding | Decision |
+|---|---|
+| The page build holds the session's run entry on the server, but the card alone knew it was building, so a theme toggle, a message or a binding edit during the build got `409 run_active` | Adopted: `useAgentSession` tracks the build (`pageBusy`, part of `sessionBusy`), so the page holds the composer, the toggles and the edits back while `plot.html` builds, and starts no build while one of them runs |
+| The page download counted as `downloaded_code` | Adopted: its own outcome, `downloaded_page`, in the closed set of the agents service, the BFF and the page (pinned equal by a test), counted as a keep by the API's usage card. The BigQuery views that enumerate the actions (`agents/telemetry/views/02_event_views.sql` `keeps`, `06_score_outcomes.sql` `downloads`, the comment in `03_sessions.sql`) are not changed here: re-creating them is the owner's step, and until then a page download is an outcome that keeps nothing in those views |
+| The probe covered three of the four served libraries | Adopted: a Highcharts snippet, in the image test's `--hover --attempts` run; a comment says that `chrome-error://chromewebdata/` is what a blocked navigation looks like |
+| "Byte for byte" for the `srcdoc` | Adopted: character for character, apart from the input stream's normalisation (CR LF and a lone CR become LF, NUL becomes U+FFFD), as on any load of the page |
+| `/cancel` does not abort a page build | Not adopted: a build takes about 0.6 s, and the theme toggle, which renders far longer, does not stop on `/cancel` either |
+| A cap of its own on the BFF's stream of `plot.html` | Not adopted: the agents service refuses a wrapper over 30 MiB before it answers, and Cloud Run caps a response that is not streamed at 32 MiB |
+| Before the chat is public: the wrapper makes three or four transient copies of a page of up to 24 MiB (the decode, the two replaces, the encode), about 100 to 150 MiB at peak per build on the 2 GiB agents instance | Open: stream the wrapper, or do the replaces on bytes |
+| Before the chat is public: a page too large to answer is `500 page_failed` | Open: answer it `413` with its own code |
 
 ## Open questions for the owner
 

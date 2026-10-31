@@ -13,9 +13,13 @@
   opaque origin that cannot navigate the window, open popups, fetch, or read
   cookies and storage. Both download routes answer it as an attachment with
   `Content-Security-Policy: sandbox`. A renderer deployed before the route
-  answers `503 page_unavailable`. A JavaScript version now lists five
-  artifacts at most (two PNGs, the code, the page and the data), and the
-  assistant names the button and the page's place in running `plot.js`.
+  answers `503 page_unavailable`. While the page builds, the chat holds its
+  composer, theme switches and data edits back, as for a theme render. The
+  download is its own usage outcome, `downloaded_page`; the telemetry views
+  that list the outcomes still need re-creating. A JavaScript version now
+  lists five artifacts at most (two PNGs, the code, the page and the data),
+  and the assistant names the button and the page's place in running
+  `plot.js`.
 - **A probe of the page's boundary in the renderer image's CI.** It builds a
   Chart.js page with the image, wraps it with the agents' wrapper and opens it
   from `file://` in the image's Chromium: the chart drew and answers a hover,

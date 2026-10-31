@@ -234,7 +234,7 @@ describe('ResultCard', () => {
     };
     const pageBlob = new Blob(['<!doctype html>'], { type: 'text/html' });
 
-    it('downloads plot.html in the theme on screen and counts it as the code download', async () => {
+    it('downloads plot.html in the theme on screen and reports downloaded_page', async () => {
       const onFetchArtifact = vi.fn(async () => pageBlob);
       const { onOutcome } = renderCard({ version: jsVersion(), onFetchArtifact });
       expect(screen.getByText('# plot.js runs in plot.html')).toBeInTheDocument();
@@ -243,7 +243,7 @@ describe('ResultCard', () => {
       );
       await waitFor(() => expect(clicked.map(entry => entry.download)).toEqual(['plot.html']));
       expect(onFetchArtifact).toHaveBeenCalledWith(2, 'plot.html', 'light');
-      expect(onOutcome.mock.calls).toEqual([['downloaded_code', 2]]);
+      expect(onOutcome.mock.calls).toEqual([['downloaded_page', 2]]);
     });
 
     it('builds the page of the other theme once the card shows it', async () => {

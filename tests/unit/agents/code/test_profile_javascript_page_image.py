@@ -113,7 +113,7 @@ def download(version: CodeVersion, theme: str, out: Path) -> tuple[Path, float]:
     return out / "plot.html", took
 
 
-@pytest.mark.parametrize("library", ["chartjs", "d3", "echarts"])
+@pytest.mark.parametrize("library", ["chartjs", "d3", "echarts", "highcharts"])
 def test_the_probe_page_keeps_its_plot_and_refuses_every_way_out(tmp_path: Path, library: str) -> None:
     """The probe's snippet draws from the typed table, hovers into a tooltip through the scaled frame, and every one
     of its escape attempts fails: `top.location`, `window.open`, `fetch`, storage, cookies, its own frame's navigation

@@ -78,7 +78,8 @@
  * (`formulaKind`), and the assistant's `run_data_code` runs it in the chat;
  * the version it stores carries the Python that ran (`code`).
  *
- * One thing at a time: the agents service runs one turn, theme render or paste
+ * One thing at a time: the agents service runs one turn, theme render, page
+ * build (a JavaScript version's `plot.html`) or paste
  * per session (each window opens its own, and the user's other windows never
  * block it) and answers anything else with `409 run_active`, a parse, an undo or a
  * binding change rewrites the data a turn reads, and a confirmation must cover
@@ -162,6 +163,7 @@ import {
   MAX_FEEDBACK_CHARS,
   MAX_MESSAGE_CHARS,
   type OutcomeAction,
+  PAGE_ARTIFACT,
   parseAgentEvent,
   type PipelineStep,
   type PlotLanguage,
@@ -393,6 +395,11 @@ export interface AgentSessionState {
   libraryBusy: boolean;
   /** A theme toggle render is in flight. */
   themeBusy: boolean;
+  /**
+   * A JavaScript version's `plot.html` is being built: the server holds the
+   * session's run entry for it, as for a theme render.
+   */
+  pageBusy: boolean;
   /** The session language and how it was set; the header's chip shows it. */
   plotLanguage: PlotLanguage;
   /** The chip's language call is in flight. */
@@ -445,6 +452,7 @@ type Action =
   | { type: 'library_done'; library: string; eligibility: Eligibility }
   | { type: 'library_failed'; failure: Failure }
   | { type: 'theme_busy'; busy: boolean }
+  | { type: 'page_busy'; busy: boolean }
   | { type: 'language_start' }
   /** The language route's answer: the stored form, source `chosen`. */
   | { type: 'language_done'; plotLanguage: PlotLanguage }
@@ -503,6 +511,7 @@ export function initialAgentState(library: string): AgentSessionState {
     toLongError: null,
     libraryBusy: false,
     themeBusy: false,
+    pageBusy: false,
     // The server's default too, whatever the browser's locale: no answer needed to start.
     plotLanguage: { language: 'en', source: 'default' },
     languageBusy: false,
@@ -907,6 +916,8 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
       return { ...state, libraryBusy: false };
     case 'theme_busy':
       return { ...state, themeBusy: action.busy };
+    case 'page_busy':
+      return { ...state, pageBusy: action.busy };
     case 'language_start':
       return { ...state, languageBusy: true };
     case 'language_done':
@@ -1078,6 +1089,7 @@ export function useAgentSession({
   const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Set synchronously, before the state catches up, so a double click starts nothing twice.
   const themeRef = useRef(false);
+  const pageRef = useRef(false);
   const parseRef = useRef(false);
   const confirmRef = useRef(false);
   const undoRef = useRef(false);
@@ -1111,13 +1123,14 @@ export function useAgentSession({
   );
 
   /**
-   * Whether a turn, a theme render, a parse, a binding change, a confirmation,
-   * an undo, a library switch or a language choice is in flight.
+   * Whether a turn, a theme render, a page build, a parse, a binding change, a
+   * confirmation, an undo, a library switch or a language choice is in flight.
    */
   const busy = useCallback(
     () =>
       !!abortRef.current ||
       themeRef.current ||
+      pageRef.current ||
       parseRef.current ||
       confirmRef.current ||
       undoRef.current ||
@@ -1408,9 +1421,21 @@ export function useAgentSession({
     async (number: number, name: ArtifactName, theme?: Theme): Promise<Blob> => {
       const sid = stateRef.current.sessionId;
       if (!sid) throw new AgentApiError(0, 'no_session');
-      return agentApi.artifact(token, sid, name, number, theme);
+      if (name !== PAGE_ARTIFACT) return agentApi.artifact(token, sid, name, number);
+      // The server builds `plot.html` now and holds the session's run entry while it does, as
+      // for a theme render: the page holds back turns, toggles and data edits meanwhile, which
+      // the server would refuse with `409 run_active`, and starts no build while one of them runs.
+      if (busy()) throw new AgentApiError(409, 'run_active');
+      pageRef.current = true;
+      safeDispatch({ type: 'page_busy', busy: true });
+      try {
+        return await agentApi.artifact(token, sid, name, number, theme);
+      } finally {
+        pageRef.current = false;
+        safeDispatch({ type: 'page_busy', busy: false });
+      }
     },
-    [token]
+    [token, safeDispatch, busy]
   );
 
   /**
@@ -2050,6 +2075,7 @@ export function sessionBusy(state: AgentSessionState): boolean {
     state.undoBusy ||
     state.libraryBusy ||
     state.themeBusy ||
+    state.pageBusy ||
     state.languageBusy
   );
 }

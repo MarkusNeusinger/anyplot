@@ -20,8 +20,10 @@ agentic/specs/261024-agent-all-libraries.md):
   (`agents/renderer/page_probe.mjs`, the renderer image's CI step) checks it.
 * **The page in a single-quoted attribute**, with `&` and `'` written as character references
   (`frame_source`). Those two are the only characters a single-quoted attribute value treats
-  specially, so the frame gets the page byte for byte; a double-quoted one would turn every `"`
-  of the bundle and the typed table into six bytes.
+  specially, so the frame gets the page character for character, apart from the normalisation
+  the HTML input stream applies to any load of a page (CR LF and a lone CR become LF, NUL
+  becomes U+FFFD); a double-quoted one would turn every `"` of the bundle and the typed table
+  into six bytes.
 * **Sized by CSS alone** (`sizing_css`): the frame keeps the page's canvas (1600x900 CSS pixels,
   1200x1200 for a square plot), scaled down in steps by media queries until it fits the window
   with a margin (`SCALES`, down to a quarter), and scrolls below that, so no part is cut off on

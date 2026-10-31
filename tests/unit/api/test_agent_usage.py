@@ -253,7 +253,9 @@ class TestQuery:
     def test_a_save_is_no_keep_and_a_rejection_or_a_later_run_undoes_one(self) -> None:
         """Owner rule of 2026-10-16: users save a session to report a plot they did not like."""
         sql = usage_sql(DATASET)
-        keeps = "'copied_code', 'copied_image', 'downloaded_png', 'downloaded_code', 'downloaded_data'"
+        keeps = (
+            "'copied_code', 'copied_image', 'downloaded_png', 'downloaded_code', 'downloaded_page', 'downloaded_data'"
+        )
         assert f"IN ({keeps}), ts, NULL)) AS last_keep_at" in sql and "saved_session" not in sql
         assert "IN ('thumbs_down', 'bug')" in sql
         assert "outcomes.last_keep_at > per_session.last_run_at" in sql

@@ -238,8 +238,8 @@ export function ResultCard({
 
   /**
    * The interactive page in the theme on screen, built by the server now; the
-   * beacon counts it as the code download (`downloaded_code`), since the
-   * telemetry's closed action set has no action of its own for it.
+   * session hook holds the whole session back while it builds (`pageBusy`),
+   * and the beacon reports it as `downloaded_page`.
    */
   const handleDownloadPage = async () => {
     if (busy || buildingPage) return;
@@ -248,7 +248,7 @@ export function ResultCard({
     try {
       const blob = await onFetchArtifact(number, PAGE_ARTIFACT, shownTheme);
       downloadBlob(blob, PAGE_ARTIFACT);
-      onOutcome?.('downloaded_code', number);
+      onOutcome?.('downloaded_page', number);
     } catch {
       setFileError(`could not download ${PAGE_ARTIFACT}`);
     } finally {

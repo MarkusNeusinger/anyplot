@@ -589,10 +589,17 @@ class RenderThemeBody(_StrictBody):
 
 
 OutcomeAction = Literal[
-    "copied_code", "copied_image", "downloaded_png", "downloaded_code", "downloaded_data", "saved_session", "feedback"
+    "copied_code",
+    "copied_image",
+    "downloaded_png",
+    "downloaded_code",
+    "downloaded_page",
+    "downloaded_data",
+    "saved_session",
+    "feedback",
 ]
 """What the page reports a user did with a result (`agents/anyplot/telemetry.py` `OutcomeAction`; copied, because
-the API image does not ship the agents package)."""
+the API image does not ship the agents package; pinned equal by a test)."""
 
 
 def _check_reaction(value: str) -> str:

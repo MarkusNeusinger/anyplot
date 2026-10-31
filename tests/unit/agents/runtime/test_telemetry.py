@@ -293,6 +293,18 @@ def test_the_reactions_are_the_feedback_reactions() -> None:
     assert get_args(telemetry.Reaction) == FEEDBACK_REACTIONS
 
 
+def test_the_outcome_actions_are_the_bffs_and_the_pages() -> None:
+    """Three copies of one closed set: the agents service's, the BFF's (the API image has no agents package) and the
+    page's (`OUTCOME_ACTIONS` in `app/src/lib/agent.ts`); `downloaded_page` is the plot.html download (JS-4b)."""
+    from api.routers.agent import OutcomeAction
+
+    page = (Path(__file__).resolve().parents[4] / "app" / "src" / "lib" / "agent.ts").read_text(encoding="utf-8")
+    block = page[page.index("export const OUTCOME_ACTIONS = [") :]
+    listed = tuple(re.findall(r"^\s+'([a-z_]+)',$", block[: block.index("] as const;")], flags=re.MULTILINE))
+    assert get_args(OutcomeAction) == telemetry.OUTCOME_ACTIONS == listed
+    assert "downloaded_page" in telemetry.OUTCOME_ACTIONS
+
+
 def test_the_run_reasons_are_the_pipeline_reasons() -> None:
     from agents.anyplot.schemas import FailureReason, NotReadyReason
 

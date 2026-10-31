@@ -79,7 +79,9 @@ class TestWrapper:
         assert match is not None
         assert BACKGROUNDS == {"light": match.group(1), "dark": match.group(2)}
 
-    def test_the_frame_gets_the_page_byte_for_byte(self) -> None:
+    def test_the_frame_gets_the_page_character_for_character(self) -> None:
+        """Python's parser applies no input-stream normalisation (a browser turns CR LF into LF, NUL into U+FFFD, as
+        on any load of the page), so the page comes back exactly; NASTY holds neither."""
         document = wrap_page(NASTY, theme="dark", canvas=(3200, 1800), title="t")
         wrapper = parsed(document)
 

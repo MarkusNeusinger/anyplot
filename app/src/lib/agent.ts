@@ -416,6 +416,8 @@ export const OUTCOME_ACTIONS = [
   'copied_image',
   'downloaded_png',
   'downloaded_code',
+  // A JavaScript plot's interactive `plot.html` (since JS-4b).
+  'downloaded_page',
   'downloaded_data',
   'saved_session',
   'feedback',

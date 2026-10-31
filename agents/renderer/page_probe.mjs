@@ -20,7 +20,7 @@
 //     request, and no popup, download or dialog appears.
 //
 // Usage:
-//   node page_probe.mjs snippet <chartjs|d3|echarts>    print the probe's plot code
+//   node page_probe.mjs snippet <chartjs|d3|echarts|highcharts>    print the probe's plot code
 //   node page_probe.mjs check <plot.html> [--hover] [--attempts]
 //
 // The snippets read window.ANYPLOT_DATA as {label, value} rows; the checker
@@ -108,6 +108,17 @@ chart.setOption({
   xAxis: { type: "category", data: data.map((row) => String(row.label)) },
   yAxis: { type: "value" },
   series: [{ type: "bar", data: data.map((row) => row.value), itemStyle: { color: t.palette[0] } }],
+});
+`,
+  highcharts: `const t = window.ANYPLOT_TOKENS;
+const data = window.ANYPLOT_DATA;
+Highcharts.chart("container", {
+  chart: { type: "column", animation: false, backgroundColor: t.pageBg },
+  title: { text: "" },
+  credits: { enabled: false },
+  xAxis: { categories: data.map((row) => String(row.label)) },
+  plotOptions: { series: { animation: false } },
+  series: [{ name: "value", data: data.map((row) => row.value), color: t.palette[0] }],
 });
 `,
 };
@@ -218,6 +229,9 @@ async function check(file, { hover, attempts }) {
       await frame.evaluate(() => window.__anyplotProbeNavigate && window.__anyplotProbeNavigate()).catch(() => {});
       await page.waitForTimeout(SETTLE_MS);
       const after = page.frames().filter((item) => item !== page.mainFrame()).map((item) => item.url());
+      // A refused navigation leaves the frame on Chromium's error page, `chrome-error://chromewebdata/`: that is
+      // what blocked looks like (the listener's empty log below says no request left). An http(s) URL here would
+      // mean the frame loaded the target.
       expect("self_navigation_blocked", after.length === 1 && !/^https?:/.test(after[0]), after);
     }
 
@@ -242,5 +256,5 @@ if (mode === "snippet") {
 } else if (mode === "check" && target) {
   await check(target, { hover: flags.includes("--hover"), attempts: flags.includes("--attempts") });
 } else {
-  fail("usage: node page_probe.mjs snippet <chartjs|d3|echarts> | check <plot.html> [--hover] [--attempts]");
+  fail("usage: node page_probe.mjs snippet <chartjs|d3|echarts|highcharts> | check <plot.html> [--hover] [--attempts]");
 }
