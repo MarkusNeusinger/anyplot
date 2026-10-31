@@ -228,7 +228,7 @@ PR. The same test checks that every pin resolves.
 | `generate:{library}` | Trigger generation for library | User |
 | `impl:{library}:pending` | Generation in progress | Workflow |
 | `impl:{library}:done` | Implementation merged to main | Workflow |
-| `impl:{library}:failed` | Set by `impl-generate.yml` after three failed generation attempts for the pair within a 12-hour window, or by `impl-review.yml` when the PR still scores below 50 after four repair attempts. Infrastructure failures (provider incident, cloud auth, GitHub API) are retried on a separate cap of 5 and never set this label; a pair paused that way carries no label. An adopt-mode source failure never sets it either (see [Adopt implementations from a branch](#adopt-implementations-from-a-branch)). | Workflow |
+| `impl:{library}:failed` | Set by `impl-generate.yml` after three failed generation attempts for the pair within a 12-hour window, or by `impl-review.yml` when the PR still scores below 50 after four repair attempts. Infrastructure failures (provider incident, cloud auth, GitHub API) are retried on a separate cap of 5 and never set this label; a pair paused that way carries no label. A generation Claude stopped never sets it (see [When Claude stops a session](#when-claude-stops-a-session)), and an adopt-mode source failure doesn't either (see [Adopt implementations from a branch](#adopt-implementations-from-a-branch)). | Workflow |
 
 ### PR labels (on Pull Requests)
 
@@ -237,6 +237,8 @@ PR. The same test checks that every pin resolves.
 | `ai-approved` | Quality check passed (based on cascading thresholds) | Workflow |
 | `ai-rejected` | Quality check failed, triggers repair | Workflow |
 | `ai-attempt-1/2/3/4` | Retry counter | Workflow |
+| `ai-review-paused` | Claude stopped the PR's review (a spend or usage limit, or refused credentials): no score, no verdict. The watchdog skips the PR; pair mode or a manual rerun resumes it, and the next review removes the label (see [When Claude stops a session](#when-claude-stops-a-session)) | Workflow |
+| `ai-repair-paused` | Claude stopped the PR's repair, next to `ai-rejected`; the attempt isn't used up. The watchdog skips the PR; pair mode or a manual restart resumes it, and the next repair removes the label | Workflow |
 | `quality:XX` | Quality score (e.g., quality:92) | Workflow |
 | `quality-poor` | Score < 50, needs fundamental fixes | Workflow |
 | `regen` | Regeneration of an implementation that is live on main (marker for humans and the watchdog; `impl-review.yml` decides "regeneration" from `origin/main`) | Workflow |
@@ -304,6 +306,8 @@ A unit test (`tests/unit/prompts/test_prompts.py`) keeps the thresholds out of t
 Both paths write the marker comment before they dispatch the retry, and they retry the comment and the dispatch three times each. A marker that can't be read counts as a spent retry, so a GitHub outage can't buy a second one. When the retry is spent, or the marker comment or the dispatch itself fails, the PR gets `ai-review-failed`. The watchdog re-dispatches the review once for a fresh generation and only flags a regeneration. A PR left with only `quality:N` and no verdict is picked up by the watchdog's never-reviewed case. `impl-review.yml` adds these labels with `GITHUB_TOKEN`, which doesn't start workflow runs, so `impl-review-retry.yml` reacts only to a label that a person adds.
 
 `ai-review-failed` is removed by the review it asks for. Every review run removes the label when it starts ("Clear a stale ai-review-failed label", best effort). The watchdog leaves a PR with that label alone while a review of it is queued or running, and drops the label without a re-review when the PR already has a verdict label. This matters when GitHub accepts a dispatch but reports an error: the step then adds `ai-review-failed` although the re-review is already queued, and without these two guards the watchdog would start a second review of the same PR.
+
+A review that Claude stopped, at a spend or usage limit or on refused credentials, takes neither path: it gets `ai-review-paused`, spends no retry, and the watchdog skips it (see [When Claude stops a session](#when-claude-stops-a-session)).
 
 `impl-repair.yml` has the same one-retry rule for a repair run that crashes, recorded by a `<!-- repair-retry:{spec}:{library}:attempt-{n} -->` marker. It sums the marker count over all comment pages and treats a count it can't read as a spent retry. The watchdog's crashed-repair case takes over from there.
 
@@ -399,7 +403,7 @@ Located in `.github/workflows/`:
 | `bulk-generate.yml` | Batch implementation generation |
 | `review-retest.yml` | Dispatch-only measurement: re-runs the AI quality review on the frozen retest set (several fresh sessions per item, regen pairs in both orders) for one rules version, and reports score spread, verdict flips, weakness agreement, and gate order bias against a baseline arm. Read-only tokens; writes nothing outside its own artifacts. See [Review retest](review-retest.md) |
 | `daily-regen.yml` | Cron-driven regeneration of the oldest implementations (once a day at 02:17 UTC, off the top of the hour to dodge GitHub's scheduler overload). A spec's age counts from the newer of its last merged update and the last activity on its spec issue (every regen touches the issue), so a kept regeneration is not re-picked the next night. Any activity on the issue — a comment, a label, a report — postpones that spec's regen the same way. With the repository variable `REGEN_PAIRS_PER_DAY`, the scheduled run regenerates single (spec, library) pairs instead of whole specs; see [Daily regeneration modes](#daily-regeneration-modes) |
-| `watchdog-stuck-jobs.yml` | 6-hourly safety net: re-dispatches stuck reviews, repairs (including a repair that crashed after a rejection), merges and generations (straight to `impl-generate.yml`, marked only once the run exists), re-closes open `regen:kept` PRs, never rescues a regeneration into repair or re-dispatches its failed review (it flags it for manual attention instead; "regeneration" = the `regen` label or the implementation file on main, unless `regen:forced`), and rescues daily-regen when its cron is silently starved by GitHub (>26 h without a run) |
+| `watchdog-stuck-jobs.yml` | 6-hourly safety net: re-dispatches stuck reviews, repairs (including a repair that crashed after a rejection), merges and generations (straight to `impl-generate.yml`, marked only once the run exists), re-closes open `regen:kept` PRs, never rescues a regeneration into repair or re-dispatches its failed review (it flags it for manual attention instead; "regeneration" = the `regen` label or the implementation file on main, unless `regen:forced`), skips a PR whose review or repair Claude stopped (`ai-review-paused`, `ai-repair-paused`), and rescues daily-regen when its cron is silently starved by GitHub (>26 h without a run) |
 | `report-validate.yml` | Validates user-submitted issue reports |
 | `sync-postgres.yml` | Syncs `plots/` filesystem state to PostgreSQL on push to main, and runs `alembic upgrade head` against Cloud SQL first; a push that only adds a revision under `alembic/versions/` triggers it too, and so does one that changes a pin the library versions are read from (`uv.lock`, `package-lock.json`, `Manifest.toml`, `.python-version`, a setup action) |
 | `sync-labels.yml` | Auto-syncs spec/impl labels after manual PR merges |
@@ -524,22 +528,34 @@ night:
   `REGEN_ATTEMPT_WINDOW_DAYS`, else 30 days. After the window, the pair queues
   behind every pair touched before it.
 - An infrastructure failure, whose comment carries
-  `<!-- impl-fail-cause:infra -->`, and a stop at a Claude spend or usage
-  limit, whose comment carries `<!-- impl-paused-claude-limit:… -->`, are not
-  attempts: the pair stays at its place in the queue and comes back on a later
-  night.
+  `<!-- impl-fail-cause:infra -->`, and a generation Claude stopped, whose
+  comment carries `<!-- impl-paused-claude:… -->`, are not attempts: the pair
+  stays at its place in the queue and comes back on a later night.
 - A pair with an open implementation PR is skipped: its attempt is still
-  running or stuck.
+  running, stuck, or paused.
 - Every pair of a spec whose issue saw activity within `min_age_hours`
   (default 20) is skipped for that night, as in spec mode.
 - Only pairs with a metadata file are candidates, so pair mode never writes a
   first implementation. Gap backfill stays with `bulk-generate.yml`.
 
+Before the new pairs, pair mode resumes the reviews and repairs that Claude
+stopped: the open implementation PRs with `ai-review-paused` or
+`ai-repair-paused`, oldest first. Each resume counts against N, so a night with
+three paused PRs and `REGEN_PAIRS_PER_DAY=5` dispatches three resumes and two
+new pairs. The job "Re-dispatch paused reviews and repairs" starts
+`impl-review.yml` or `impl-repair.yml` with the arguments the watchdog's
+rescues use, at the pace of the pair dispatches. While the stop lasts, a resume
+is refused at its first request, which costs nothing, and pauses again.
+
+The picker fails closed. When the implementation PR listing fails, the run
+stops with an error, because that listing records the kept, closed, open, and
+paused PRs. The kept-regeneration and issue listings degrade with a warning.
 The picker reads the failed-generation comments only for the specs at the
-front of the queue, at most 100 issues per run. Spec mode keeps its own rule:
-a spec's age is the newer of its metadata and any activity on its issue, so a
-kept or failed regeneration moves the spec to the back of the queue, and so
-does an infrastructure failure or any comment.
+front of the queue, at most 100 issues per run, and a spec whose comments
+can't be read sits out the night. Spec mode keeps its own rule: a spec's age is
+the newer of its metadata and any activity on its issue, so a kept or failed
+regeneration moves the spec to the back of the queue, and so does an
+infrastructure failure or any comment.
 
 Pair mode skips the spec polish, because a spec rewritten for one library
 would leave its other implementations written against the old text. It
@@ -555,20 +571,24 @@ The picks go to the log and the run summary, so a dry run shows them:
 gh workflow run daily-regen.yml -f pairs=5 -f dry_run=true
 ```
 
-The dry run still runs the similarity audit, as in spec mode. To turn pair mode
-on for the schedule, run `gh variable set REGEN_PAIRS_PER_DAY --body 5`; to
-turn it off, run `gh variable delete REGEN_PAIRS_PER_DAY`.
+The dry run still runs the similarity audit, as in spec mode. With
+`CLAUDE_AUTH=oidc`, run [Test the spend limit](#test-the-spend-limit) first,
+before you set the variable. To turn pair mode on for the schedule, run
+`gh variable set REGEN_PAIRS_PER_DAY --body 5`; to turn it off, run
+`gh variable delete REGEN_PAIRS_PER_DAY`.
 
-When a pre-flight session (the spec polish or the similarity audit) stops at
-a [Claude spend or usage limit](#at-a-spend-or-usage-limit), the night's
-dispatch for that spec is skipped and the run fails. In pair mode, the
-similarity audit of each spec runs before that spec's pairs are dispatched,
-one spec after another, so it works as the night's probe: once a pair's
-generation, review, or repair has reached the limit, every later spec of the
-night stops at its audit and dispatches nothing. Pairs that were already
-dispatched fail at their first refused request, which costs nothing, and are
-parked without a retry or a counted attempt. Their spec keeps its pairs in
-the queue for a later night.
+When Claude stops a pre-flight session (the spec polish or the similarity
+audit), the night's dispatch for that spec is skipped and the run fails (see
+[When Claude stops a session](#when-claude-stops-a-session)). In pair mode,
+the similarity audit of each spec runs before that spec's pairs are
+dispatched, one spec after another, so it works as the night's probe: once a
+pair's generation, review, or repair has reached the limit, every later spec
+of the night stops at its audit and dispatches nothing. Pairs that were
+already dispatched fail at their first refused request, which costs nothing,
+and are parked without a retry or a counted attempt. Their spec keeps its
+pairs in the queue for a later night. The resumes don't wait for the audit:
+they start in a job of their own, and while the stop lasts each one pauses
+again at no cost.
 
 ---
 
@@ -701,7 +721,10 @@ interactive quota:
 - `CLAUDE_AUTH` has an unknown value.
 - `CLAUDE_AUTH` is `api` and the `ANTHROPIC_API_KEY` secret is missing.
 - `CLAUDE_AUTH` is `oidc` and one of the four `CLAUDE_WIF_*` variables is
-  missing or isn't an ID, or the job has no `id-token: write` permission.
+  missing or isn't an ID.
+- `CLAUDE_AUTH` is `oidc`, the run is one that federation refuses, and the
+  `CLAUDE_CODE_OAUTH_TOKEN` secret is missing (see
+  [Which runs federation accepts](#which-runs-federation-accepts)).
 
 In `spec-create.yml` and `report-validate.yml`, the step runs only for an
 issue that reaches Claude. In `impl-generate.yml`, it runs before the issue
@@ -728,19 +751,24 @@ the Claude steps of these runs work:
 | `spec-create.yml`, `report-validate.yml` | `issues` (a label) | `…:ref:refs/heads/main` |
 | `util-claude.yml` | `issue_comment`, also on a pull request | `…:ref:refs/heads/main` |
 
-Federation refuses these runs with `401 Authentication failed`, so they need
-`subscription` or `api`:
+Federation would refuse the other runs with `401 Authentication failed`, so
+under `oidc` they use the subscription on purpose:
 
 - `util-claude.yml` started by a `pull_request_review_comment` or a
   `pull_request_review`: the subject is `repo:MarkusNeusinger/anyplot:pull_request`.
 - Any workflow dispatched on another branch, such as a branch smoke with
   `--ref feature/x` and the retries it dispatches on that branch: the subject
-  is `…:ref:refs/heads/feature/x`. `impl-generate.yml` counts such a refusal as
-  a failed attempt, like any other authentication error.
+  is `…:ref:refs/heads/feature/x`.
 - `review-retest.yml`: its review job has no `id-token` permission on
   purpose, because without it the action can't mint the Claude GitHub App
-  token, so no session can write to the repository. Under `oidc`, "Resolve
-  Claude credentials" stops the job.
+  token, so no session can write to the repository. A retest arm on `oidc`
+  runs on the subscription.
+
+"Resolve Claude credentials" recognizes these runs by the event name, the
+ref, and the missing token request URL. It logs
+`oidc not available for <event>/<ref>; using subscription` as a notice and in
+the job summary, then runs the job on the `CLAUDE_CODE_OAUTH_TOKEN` secret. If
+the secret is missing, it stops the job instead.
 
 Every other job that runs Claude already has `id-token: write`, for the
 Claude GitHub App token and, in some of them, Google Cloud. The federation
@@ -820,12 +848,19 @@ put a generation on Sonnet at about $0.29 per implementation, a review on
 Opus at about $1.10, and a repair with its re-review at about $2.70 per
 implementation in all.
 
-### At a spend or usage limit
+### When Claude stops a session
 
-A Claude spend or usage limit stops the pipeline cleanly in every mode. Once
-the limit is reached, every request is refused until it resets or you raise
-it, and Claude Code's own retries can't get past it. The pipeline recognizes
-these texts:
+Two stops end the pipeline's work cleanly instead of counting as a failure of
+the implementation:
+
+- A Claude spend or usage limit, in every mode. Once the limit is reached,
+  every request is refused until it resets or you raise it, and Claude Code's
+  own retries can't get past it.
+- Refused credentials, with `api` and `oidc` only: an invalid or revoked API
+  key, or a federation exchange that the rule refuses. With the subscription,
+  an authentication error keeps the handling it had before the switch.
+
+For a limit, the pipeline recognizes these texts:
 
 - A spend limit you set on the workspace or the organization (`oidc`, `api`):
   HTTP 400 `invalid_request_error`, with a message that starts with
@@ -845,28 +880,49 @@ these texts:
 A transient rate limit, such as a per-minute token limit, is none of these:
 it keeps its retry and the infrastructure path it took before.
 
+For refused credentials, it recognizes the API's error types
+`authentication_error` and `permission_error`, HTTP status 401 or 403 on the
+failed request, Claude Code's error type `authentication_failed`, and the
+texts `Authentication failed` and `invalid x-api-key`. A limit wins over its
+status code: a 403 with a usage-limit message counts as a limit.
+
 "Claude session summary" reads these texts only from the error fields of a
 session that failed: the error result, Claude Code's error messages, and its
 API retries. It never reads the conversation, which may quote the same text,
 and never flags a session that ended well. When it finds one, it writes an
-`::error::` and the line **Claude spend/usage limit reached (auth=oidc)**, with
-the mode, to the job summary, and every path treats the stop as an
-infrastructure failure:
+`::error::` and the line **Claude spend/usage limit reached (auth=oidc)** or
+**Claude credentials refused (auth=oidc)**, with the mode, to the job summary,
+and every path treats the stop as an infrastructure failure:
 
 | Workflow | What happens |
 |----------|--------------|
-| `impl-generate.yml` | The retry is skipped, and "Stop at the Claude spend or usage limit" fails the job. "Handle generation failure" parks the pair before it counts anything: it removes `generate:{library}` and `impl:{library}:pending`, puts `impl:{library}:done` back for a live implementation, and comments with its own marker. Nothing is retried, no attempt counts toward the cap of three, and the pair is never marked `impl:{library}:failed`, a first implementation included. No PR exists; the next generation recreates the branch. |
-| `impl-review.yml` | "Validate review output" adds `ai-review-failed` and comments, without the auto re-review and without spending it. No score, no verdict: the PR stays open, nothing is merged or closed. The watchdog re-dispatches the review once at its next scan. |
-| `impl-repair.yml` | The retry is skipped. "Handle repair failure" restores `ai-rejected` and comments, without the auto-retry and without spending it. The watchdog's repair rescue, once per attempt, or a manual restart picks the PR up. |
-| `daily-regen.yml` | A spec polish or similarity audit at the limit skips that spec's dispatch, and the entry fails. |
+| `impl-generate.yml` | The retry is skipped, and "Stop when Claude stopped the session" fails the job. "Handle generation failure" parks the pair before it counts anything: it removes `generate:{library}` and `impl:{library}:pending`, puts `impl:{library}:done` back for a live implementation, and comments with the marker `<!-- impl-paused-claude:{spec-id}:{library} -->`. Nothing is retried, no attempt counts toward the cap of three, and the pair is never marked `impl:{library}:failed`, a first implementation included. No PR exists; the next generation recreates the branch. |
+| `impl-review.yml` | No score, no verdict, and no regen gate decision, even when the session wrote `quality_score.txt` before it stopped: "Extract quality score" is skipped. "Validate review output" adds `ai-review-paused` and the "AI Review Paused" comment, without the auto re-review and without spending it. The PR stays open, and nothing is merged or closed. |
+| `impl-repair.yml` | The retry is skipped. "Handle repair failure" restores `ai-rejected`, adds `ai-repair-paused`, and comments, without the auto-retry and without spending it. The attempt isn't used up. |
+| `daily-regen.yml` | A spec polish or similarity audit that Claude stopped skips that spec's dispatch, and the entry fails. |
 | `spec-create.yml`, `util-claude.yml` | The retry is skipped, and the job fails. |
 | `report-validate.yml`, `review-retest.yml` | The step fails as before: the issue gets the "Validation Failed" comment, and the cell is collected as failed. |
 
-In pair mode, a parked pair keeps its place in the queue: neither a parked
-generation nor a review stopped on an open PR is a real attempt. A pair whose
-review stopped keeps its open PR, which pair mode skips until the review
-finishes. A session that reaches the limit after it wrote its review files is
-scored on what it wrote, like any session that ends early.
+The watchdog skips every PR with `ai-review-paused` or `ai-repair-paused`, so
+it never spends its one-shot rescue on a stop. In pair mode, daily-regen
+resumes the paused PRs first, oldest first (see
+[Daily regeneration modes](#daily-regeneration-modes)), and the resumed review
+or repair removes its label when it starts. A parked pair keeps its place in
+the queue: neither a parked generation nor a paused review or repair is a real
+attempt.
+
+In spec mode, or to resume sooner, resume the paused PRs yourself once the
+limit resets or the credentials are fixed:
+
+1. Rerun every paused review:
+
+   ```bash
+   gh pr list --label ai-review-paused --json number --jq '.[].number' \
+     | xargs -I{} gh workflow run impl-review.yml -f pr_number={}
+   ```
+
+2. Restart every paused repair with the command in its "Repair Paused"
+   comment, which names the PR, the pair, and the attempt.
 
 Before this change, a subscription usage limit counted as the pair's own
 failure: it used up the three attempts and marked a first implementation
@@ -876,7 +932,9 @@ resets.
 
 ### Test the spend limit
 
-Test the stop after the merge, with `CLAUDE_AUTH=oidc`:
+Test the stop on the first day of `CLAUDE_AUTH=oidc`, before you set
+`REGEN_PAIRS_PER_DAY`, so that no nightly run spends the workspace while you
+test:
 
 1. In the Claude Console, set the `ci-regen` workspace's spend limit to the
    month's spend so far plus about 0.50 USD.
@@ -889,20 +947,24 @@ Test the stop after the merge, with `CLAUDE_AUTH=oidc`:
    The generation on Sonnet costs about 0.29 USD and passes; the review on
    Opus costs about 1.10 USD and reaches the limit while it runs.
 3. Check the `impl-review.yml` run: its summary shows **Claude spend/usage
-   limit reached (auth=oidc)**, the PR has `ai-review-failed` and the "AI
-   Review Paused (Claude spend/usage limit)" comment, no second review run
-   started, and no verdict or `quality:` label was added. If the summary line
-   is missing, the run's error text didn't match: read it in the log and
+   limit reached (auth=oidc)**, the PR has `ai-review-paused` and the "AI
+   Review Paused (Claude spend/usage limit reached)" comment, no second review
+   run started, and no verdict or `quality:` label was added. If the summary
+   line is missing, the run's error text didn't match: read it in the log and
    extend `LIMIT_PATTERN`.
 4. Check the spec issue: no `impl:{library}:failed` label, and no
    `impl-fail` comment for the pair.
-5. Restore the spend limit, then rerun the review, or wait for the watchdog:
+5. Check the next watchdog scan: its log reads
+   `PR #PR_NUMBER: paused (Claude stopped its review or repair) — skipped`,
+   and it dispatched nothing for the PR.
+6. Restore the spend limit, then rerun the review:
 
    ```bash
    gh workflow run impl-review.yml -f pr_number=PR_NUMBER
    ```
 
-6. Check that the review finishes and the regen gate decides as usual.
+7. Check that the review removes `ai-review-paused`, finishes, and the regen
+   gate decides as usual.
 
 To test the generation path as well, set the limit to the spend so far plus
 about 0.05 USD: the generation stops, the pair is parked as described above,
@@ -918,10 +980,33 @@ or `pull_request_target`, so a pull request from a fork never gets a
 credential. `util-claude.yml` runs only for comments by owners, members, and
 collaborators. `spec-create.yml` and `report-validate.yml` run on a label,
 which only maintainers can add, but they read issue text that anyone can
-write. Federation adds no stored secret: any step of a job with
-`id-token: write` can mint an OIDC token, but the federation rule accepts only
-`main`, so a token from a pull-request event or another branch is refused. A
-leaked federated token expires after 600 seconds, and an API key is billed
+write.
+
+Federation adds no stored secret, but the trust lives in the Claude Console,
+not in the repository:
+
+- Any step of a job with `id-token: write` can mint an OIDC token. The
+  federation rule accepts only `main`, so a token from a pull-request event or
+  another branch is refused, but a step on `main` can exchange its token for a
+  Claude API token whatever `CLAUDE_AUTH` says.
+- Switching `CLAUDE_AUTH` back to `subscription` or `api` doesn't close that
+  path. While you don't use `oidc`, disable the federation rule on the
+  [Workload identity](https://platform.claude.com/settings/workload-identity-federation)
+  page.
+- The rule's claims name the repository and the ref, not the workflow. GitHub
+  also signs the `job_workflow_ref` claim, the workflow file the job runs
+  from, so adding it to the rule could narrow federation to the workflows
+  that run Claude. This is unverified: check that the Console accepts the
+  claim before you rely on it.
+- The steps that run model-written code in a job with `id-token: write`
+  unset `ACTIONS_ID_TOKEN_REQUEST_URL` and `ACTIONS_ID_TOKEN_REQUEST_TOKEN`
+  first, so that code can't mint a token: "Adopt implementation from source
+  ref" and "Adaptability smoke run (record-only)" in `impl-generate.yml`, and
+  "Adaptability smoke run (record-only)" in `impl-repair.yml`. The
+  adaptability check in `impl-review.yml` reads the code without running it.
+  The switch doesn't change what a Claude session's own tools can reach.
+
+A leaked federated token expires after 600 seconds, and an API key is billed
 until you revoke it; the workspace's spend limit bounds either.
 
 ---

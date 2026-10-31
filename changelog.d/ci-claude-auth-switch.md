@@ -10,19 +10,23 @@
   "Resolve Claude credentials", stops the job on any other value or a missing
   credential instead of falling back to the subscription and the owner's
   interactive quota, and every Claude step reads its outputs, so each passes
-  exactly one credential and a new mode changes one step.
-  `docs/workflows/overview.md` has the Console setup, the switch commands and
-  the runs federation refuses.
-- **Every Claude session's cost in the job summary, and a clean stop at a
-  spend or usage limit.** A step after each Claude step writes
+  exactly one credential and a new mode changes one step. Under `oidc`, the
+  runs federation refuses (pull-request review events, other refs,
+  `review-retest.yml`) use the subscription and say so in the job summary.
+  `docs/workflows/overview.md` has the Console setup, the switch commands,
+  and how to close the federation path when `oidc` is off.
+- **Every Claude session's cost in the job summary, and a clean stop when
+  Claude refuses a session.** A step after each Claude step writes
   `total_cost_usd` (Claude Code's estimate at API list price), the model and
   the credential mode to the job summary and the log, and never fails the
   job. It also reads, from the error fields of a failed session, the API's
-  spend-limit, spend-cap and credit messages and the subscription's
-  usage-limit messages: the retry is skipped, `impl-generate.yml` parks the
-  pair, `impl-review.yml` and `impl-repair.yml` hand the PR on without
-  spending their automatic retry, and nothing counts as an attempt or marks
-  `impl:<lib>:failed`, a first implementation included. Before, a
+  spend-limit, spend-cap and credit messages, the subscription's usage-limit
+  messages, and, with `api` or `oidc`, refused credentials: the retry is
+  skipped, `impl-generate.yml` parks the pair, `impl-review.yml` and
+  `impl-repair.yml` pause the PR with the new labels `ai-review-paused` and
+  `ai-repair-paused` without spending their automatic retry or recording a
+  score, the watchdog skips paused PRs, and nothing counts as an attempt or
+  marks `impl:<lib>:failed`, a first implementation included. Before, a
   subscription usage limit used up a pair's three attempts. The weekly regen
   review's `collect_week.py --costs` reads the line, now counts the
   `daily-regen.yml` pre-flight too, and names the part that ran on API
@@ -37,8 +41,8 @@
   attempted (a closed PR, a kept regeneration, a failed generation) within
   the attempt window, 30 days unless `attempt_window_days` or
   `REGEN_ATTEMPT_WINDOW_DAYS` says otherwise, is not picked again, while an
-  infrastructure failure or a stop at a spend or usage limit leaves it in the
-  queue. Unset,
-  the schedule regenerates whole specs as before; a manual run opts in with
-  the new `pairs` input, and the watchdog's cron rescue forwards the
-  variable.
+  infrastructure failure or a generation Claude stopped leaves it in the
+  queue. Paused reviews and repairs are resumed first and count against N,
+  and the pick stops when it can't list the implementation PRs. Unset, the
+  schedule regenerates whole specs as before; a manual run opts in with the
+  new `pairs` input, and the watchdog's cron rescue forwards the variable.

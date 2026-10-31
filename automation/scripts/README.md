@@ -258,19 +258,23 @@ Closes a spec issue once every supported library is `impl:<lib>:done` or
 
 ### `regen_pick_pairs.py`
 The pick of `daily-regen.yml`'s pair mode (`REGEN_PAIRS_PER_DAY`, or the
-`pairs` input): the N oldest (spec, library) pairs across the catalogue, aged by
-the newer of their metadata `updated` and their last real attempt (a merged or
-closed implementation PR, `regen:kept` included, or a failed generation's
-`impl-fail` comment; infrastructure failures and spend or usage limit stops don't
-count). It skips pairs touched within `--attempt-window-days` (default 30),
-pairs with an open implementation PR, and every pair of a spec whose issue saw
-activity within `--min-age-hours`. PyYAML plus `gh`; a failed read degrades
-with a warning. The library list comes from the caller.
+`pairs` input). First the resumes: open implementation PRs whose review or
+repair Claude stopped (`ai-review-paused`, `ai-repair-paused`), oldest first,
+counted against N. Then the oldest (spec, library) pairs across the catalogue,
+aged by the newer of their metadata `updated` and their last real attempt (a
+merged or closed implementation PR, `regen:kept` included, or a failed
+generation's `impl-fail` comment; infrastructure failures and generations
+Claude stopped don't count). It skips pairs touched within
+`--attempt-window-days` (default 30), pairs with an open implementation PR,
+and every pair of a spec whose issue saw activity within `--min-age-hours`.
+PyYAML plus `gh`. It fails closed: a failed implementation PR listing exits 1,
+a spec whose comments can't be read sits out the night, and the kept and issue
+listings degrade with a warning. The library list comes from the caller.
 
 ```bash
 python3 automation/scripts/regen_pick_pairs.py --count 5 --min-age-hours 20 \
   --attempt-window-days 30 --repo OWNER/NAME --libraries "altair bokeh ..."
-# writes pairs_json, specs, specs_json and count to $GITHUB_OUTPUT
+# writes resume_json, resume_count, pairs_json, specs, specs_json and count to $GITHUB_OUTPUT
 ```
 
 ### `spec_pr_guard.py`

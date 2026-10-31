@@ -64,10 +64,13 @@ jobs:
         env:
           CLAUDE_AUTH: ${{ vars.CLAUDE_AUTH }}
           API_KEY_SET: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+          OAUTH_TOKEN_SET: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
           WIF_RULE_ID: ${{ vars.CLAUDE_WIF_RULE_ID }}
           WIF_ORG_ID: ${{ vars.CLAUDE_WIF_ORG_ID }}
           WIF_SERVICE_ACCOUNT_ID: ${{ vars.CLAUDE_WIF_SERVICE_ACCOUNT_ID }}
           WIF_WORKSPACE_ID: ${{ vars.CLAUDE_WIF_WORKSPACE_ID }}
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
         run: |
           fail() { echo "::error::$1; not falling back to the subscription"; exit 1; }
           mode="${CLAUDE_AUTH,,}"
@@ -75,16 +78,30 @@ jobs:
             ''|subscription) mode=subscription ;;
             api) [ "$API_KEY_SET" = "true" ] || fail "CLAUDE_AUTH is 'api' but the ANTHROPIC_API_KEY secret is missing" ;;
             oidc)
-              for name in WIF_RULE_ID WIF_ORG_ID WIF_SERVICE_ACCOUNT_ID WIF_WORKSPACE_ID; do
-                [[ "${!name}" =~ ^[A-Za-z0-9_-]+$ ]] || fail "CLAUDE_AUTH is 'oidc' but the variable CLAUDE_${name} is missing or not an ID"
-              done
-              [ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ] || fail "CLAUDE_AUTH is 'oidc' but this job has no 'id-token: write' permission"
-              {
-                echo "federation_rule_id=$WIF_RULE_ID"
-                echo "organization_id=$WIF_ORG_ID"
-                echo "service_account_id=$WIF_SERVICE_ACCOUNT_ID"
-                echo "workspace_id=$WIF_WORKSPACE_ID"
-              } >> "$GITHUB_OUTPUT" ;;
+              # The federation rule accepts only `…:ref:refs/heads/main`. A
+              # pull-request event (`…:pull_request`), another ref, and a job
+              # without id-token run on the subscription instead, by design
+              # and logged, never on an error.
+              if [[ "$EVENT" == pull_request* || "$REF" != "refs/heads/main" || -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]]; then
+                where="${EVENT}/${REF//[^A-Za-z0-9\/._-]/?}$([ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ] || echo ' (no id-token)')"
+                if [ "$OAUTH_TOKEN_SET" != "true" ]; then
+                  echo "::error::oidc not available for ${where}, and the CLAUDE_CODE_OAUTH_TOKEN secret is missing"
+                  exit 1
+                fi
+                echo "::notice::oidc not available for ${where}; using subscription"
+                echo "- oidc not available for ${where}; using subscription" >> "$GITHUB_STEP_SUMMARY"
+                mode=subscription
+              else
+                for name in WIF_RULE_ID WIF_ORG_ID WIF_SERVICE_ACCOUNT_ID WIF_WORKSPACE_ID; do
+                  [[ "${!name}" =~ ^[A-Za-z0-9_-]+$ ]] || fail "CLAUDE_AUTH is 'oidc' but the variable CLAUDE_${name} is missing or not an ID"
+                done
+                {
+                  echo "federation_rule_id=$WIF_RULE_ID"
+                  echo "organization_id=$WIF_ORG_ID"
+                  echo "service_account_id=$WIF_SERVICE_ACCOUNT_ID"
+                  echo "workspace_id=$WIF_WORKSPACE_ID"
+                } >> "$GITHUB_OUTPUT"
+              fi ;;
             *) fail "CLAUDE_AUTH must be unset, 'subscription', 'api' or 'oidc', got '${CLAUDE_AUTH//[^A-Za-z0-9 ._-]/?}'" ;;
           esac
           echo "mode=$mode" >> "$GITHUB_OUTPUT"
@@ -258,6 +275,23 @@ jobs:
           done
           echo "::warning::ai-review-failed could not be removed from PR #${PR_NUM} — the watchdog skips it while this review runs"
           exit 0
+
+      # This run resumes a review that Claude stopped (a spend or usage limit,
+      # or refused credentials): `ai-review-paused` goes, and the stop path in
+      # "Validate review output" puts it back if Claude stops this one too.
+      # Best effort.
+      - name: Clear the ai-review-paused label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUM: ${{ steps.pr.outputs.pr_number }}
+        run: |
+          if gh pr view "$PR_NUM" --json labels -q '.labels[].name' 2>/dev/null | grep -qxF "ai-review-paused"; then
+            if gh pr edit "$PR_NUM" --remove-label "ai-review-paused" 2>/dev/null; then
+              echo "::notice::Removed ai-review-paused from PR #${PR_NUM}: this run resumes the review"
+            else
+              echo "::warning::could not remove ai-review-paused from PR #${PR_NUM}"
+            fi
+          fi
 
       - name: Derive language + extension from library
         id: lang
@@ -973,9 +1007,10 @@ jobs:
           python3 "$RUNNER_TEMP/regen-tools/review_provenance.py" model --execution-file "${EXECUTION_FILE:-}"
 
       # The session's cost (Claude Code's own estimate at API list price),
-      # model and credential mode, for the weekly regen review, and whether it
-      # stopped at a Claude spend or usage limit (output limit_reached, which
-      # "Validate review output" reads). Never fatal.
+      # model and credential mode, for the weekly regen review, and whether
+      # Claude stopped it: a spend or usage limit, or refused credentials
+      # (outputs stopped, stop_reason). "Extract quality score" and
+      # "Validate review output" read it. Never fatal.
       - name: Claude session summary
         id: review_cost
         if: ${{ !cancelled() && (steps.review.outcome == 'success' || steps.review.outcome == 'failure') }}
@@ -986,18 +1021,25 @@ jobs:
           CLAUDE_STEP: impl-review
           # Only the error fields of a session that failed, because its own
           # text may quote the same messages: the error result, Claude Code's
-          # error messages and its API retries.
+          # error messages and its API retries, with their HTTP status.
           SESSION_ERRORS: >-
             ([.[] | select(.type == "result")] | last) as $result
             | if $result != null and $result.is_error != true then empty else
             (.[] | select((.type == "result" and .is_error == true) or (.type == "assistant" and .error != null) or (.type == "system" and .subtype == "api_retry"))
-            | (.result // ""), ((.errors // [])[] | tostring), (.error // "" | tostring), (if .type == "assistant" then ((.message.content // [])[] | .text? // "") else "" end))
+            | (.result // ""), ((.errors // [])[] | tostring), (.error // "" | tostring), (if .type == "assistant" then ((.message.content // [])[] | .text? // "") else "" end), (if (.api_error_status // .error_status) then "api_error_status=\(.api_error_status // .error_status)" else "" end))
             end
-          # The API's spend-limit, spend-cap and credit messages, Claude Code's
-          # billing_error and credit message, and its subscription usage-limit
-          # messages (the SDK's USAGE_LIMIT_ERROR_PREFIXES).
+          # A spend or usage limit, in every mode: the API's spend-limit,
+          # spend-cap and credit messages, Claude Code's billing_error and
+          # credit message, and its subscription usage-limit messages (the
+          # SDK's USAGE_LIMIT_ERROR_PREFIXES).
           LIMIT_PATTERN: >-
             reached your (specified )?(workspace )?API usage limits|enforced_spend_limit_reached|credit balance (is )?too low|billing_error|usage limit reached|You.{1,3}ve (hit|reached) your|You.{1,3}re out of (usage credits|extra usage)|Your org is out of usage|Your seat type doesn.{1,3}t include|Your usage allocation has been disabled|Your group.{1,3}s usage limit is set to \$0|requires usage credits
+          # Refused credentials, with api and oidc only (the subscription keeps
+          # its handling): HTTP 401 or 403, the API's authentication_error and
+          # permission_error, Claude Code's authentication_failed, a refused
+          # federation exchange ("Authentication failed"), a bad API key.
+          AUTH_PATTERN: >-
+            authentication_error|authentication_failed|permission_error|Authentication failed|invalid x-api-key|account_on_hold|api_error_status=40[13]
         run: |
           cost=$(jq -r '[.[] | select(.type == "result")] | last | .total_cost_usd // empty' "$EXECUTION_FILE" 2>/dev/null || true)
           model=$(jq -r '[.[] | select(.type == "system" and .subtype == "init")] | first | .model // empty' "$EXECUTION_FILE" 2>/dev/null || true)
@@ -1005,13 +1047,22 @@ jobs:
           echo "$line"
           echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
           errors=$(jq -r "$SESSION_ERRORS" "$EXECUTION_FILE" 2>/dev/null || true)
-          limit_reached=false
+          reason=""
           if grep -qiE "$LIMIT_PATTERN" <<< "$errors"; then
-            limit_reached=true
-            echo "::error::Claude spend/usage limit reached (auth=${CLAUDE_AUTH_MODE}) in ${CLAUDE_STEP}: no retry until the limit resets or is raised"
-            echo "- **Claude spend/usage limit reached (auth=${CLAUDE_AUTH_MODE})** in \`${CLAUDE_STEP}\`" >> "$GITHUB_STEP_SUMMARY"
+            reason=limit
+            what="Claude spend/usage limit reached"
+          elif [[ "$CLAUDE_AUTH_MODE" =~ ^(api|oidc)$ ]] && grep -qiE "$AUTH_PATTERN" <<< "$errors"; then
+            reason=auth
+            what="Claude credentials refused"
           fi
-          echo "limit_reached=${limit_reached}" >> "$GITHUB_OUTPUT"
+          if [ -n "$reason" ]; then
+            echo "::error::${what} (auth=${CLAUDE_AUTH_MODE}) in ${CLAUDE_STEP}: no retry until it is resolved"
+            echo "- **${what} (auth=${CLAUDE_AUTH_MODE})** in \`${CLAUDE_STEP}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "stopped=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "stopped=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "stop_reason=${reason}" >> "$GITHUB_OUTPUT"
 
       # Undo "Hide the previous review", whatever the review step did: the
       # metadata step below reads the metadata file from disk and rewrites
@@ -1040,9 +1091,14 @@ jobs:
             git checkout -- "$META_FILE" 2>/dev/null || true
           fi
 
+      # Not from a session Claude stopped (a limit or refused credentials),
+      # even when it wrote quality_score.txt before the stop: a cut-off
+      # review gives no score, no verdict and no gate decision. The step is
+      # skipped, `has_output` stays empty, and "Validate review output" takes
+      # the paused path.
       - name: Extract quality score
         id: score
-        if: steps.review.conclusion == 'success'
+        if: steps.review.conclusion == 'success' && steps.review_cost.outputs.stopped != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUM: ${{ steps.pr.outputs.pr_number }}
@@ -1116,37 +1172,48 @@ jobs:
           RUN_ID: ${{ github.run_id }}
           MODEL: ${{ steps.pr.outputs.model }}
           REVIEW_MODEL_ALIAS: ${{ steps.pr.outputs.review_model_alias }}
-          # The session stopped at a Claude spend or usage limit.
-          LIMIT_REACHED: ${{ steps.review_cost.outputs.limit_reached }}
+          # Claude stopped the session (a limit or refused credentials).
+          CLAUDE_STOPPED: ${{ steps.review_cost.outputs.stopped }}
+          STOP_REASON: ${{ steps.review_cost.outputs.stop_reason }}
           CLAUDE_MODE: ${{ steps.claude_auth.outputs.mode }}
         run: |
           echo "::error::AI Review did not produce valid output files (score=0)"
 
-          # A Claude spend or usage limit: a re-review now would be refused the
-          # same way, and it says nothing about the implementation. Hand the PR
-          # to the watchdog with `ai-review-failed`, as an exhausted retry
-          # does, but without the review-retry marker, so the one auto-retry
-          # stays for after the limit resets or is raised. No verdict, no
-          # score, nothing merged or closed.
-          if [ "${LIMIT_REACHED}" = "true" ]; then
-            echo "::error::Claude spend/usage limit reached (auth=${CLAUDE_MODE}) — no auto-retry for PR #${PR_NUM}"
+          # Claude stopped the session (a spend or usage limit, or refused
+          # credentials): a re-review now would be refused the same way, and
+          # it says nothing about the implementation. `ai-review-paused` (not
+          # `ai-review-failed`) keeps the watchdog's one-shot rescue off the
+          # PR; daily-regen's pair mode, or a manual rerun, resumes it. No
+          # review-retry marker, so the one auto-retry stays for after the stop
+          # is resolved. No verdict, no score, nothing merged or closed.
+          if [ "${CLAUDE_STOPPED}" = "true" ]; then
+            if [ "${STOP_REASON}" = "auth" ]; then
+              WHY="Claude credentials refused"
+              WHEN="once the credentials are fixed"
+            else
+              WHY="Claude spend/usage limit reached"
+              WHEN="once the limit resets or is raised"
+            fi
+            echo "::error::${WHY} (auth=${CLAUDE_MODE}) — review of PR #${PR_NUM} paused, no auto-retry"
+            gh label create "ai-review-paused" --color "fbca04" \
+              --description "Review paused: Claude stopped it (spend/usage limit or refused credentials)" 2>/dev/null || true
             for attempt in 1 2 3; do
-              gh pr edit "$PR_NUM" --add-label "ai-review-failed" 2>/dev/null && break
+              gh pr edit "$PR_NUM" --add-label "ai-review-paused" 2>/dev/null && break
               [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
-            done || echo "::error::could not add ai-review-failed to PR #${PR_NUM} — left to the watchdog's scan of stalled PRs"
-            gh pr comment "$PR_NUM" --body "<!-- review-paused-claude-limit:${SPEC_ID}:${LIBRARY} -->
-          ## :pause_button: AI Review Paused (Claude spend/usage limit)
+            done || echo "::error::could not add ai-review-paused to PR #${PR_NUM} — resume it with a manual rerun"
+            gh pr comment "$PR_NUM" --body "<!-- review-paused-claude:${SPEC_ID}:${LIBRARY} -->
+          ## :pause_button: AI Review Paused (${WHY})
 
-          Claude refused the review at a spend or usage limit (auth=\`${CLAUDE_MODE}\`). No score and no verdict were recorded, and the one automatic re-review is still unused.
+          Claude stopped the review: ${WHY} (auth=\`${CLAUDE_MODE}\`). No score and no verdict were recorded, and the one automatic re-review is still unused. The PR carries \`ai-review-paused\`, which the watchdog leaves alone; daily-regen's pair mode resumes it.
 
-          **Rerun once the limit resets or is raised:**
+          **Rerun ${WHEN}:**
           \`\`\`
           gh workflow run impl-review.yml -f pr_number=$PR_NUM
           \`\`\`
 
           ---
           :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*" \
-              || echo "::error::limit comment not posted on PR #${PR_NUM}"
+              || echo "::error::pause comment not posted on PR #${PR_NUM}"
             exit 1
           fi
 

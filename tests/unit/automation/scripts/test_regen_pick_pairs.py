@@ -1,13 +1,14 @@
 """Tests for automation.scripts.regen_pick_pairs — daily-regen's pair mode.
 
-The picker ages each (spec, library) pair by its newest touch, the metadata
-``updated`` or the last real attempt (a merged or closed implementation PR, a
-failed generation), keeps every pair touched within the attempt window out
-of the queue, and postpones a spec whose issue just saw activity. The
-no-loop rule is pinned here: a pair the gate kept, or whose generation
-failed, does not come back the next night, and an infrastructure failure or
-a stop at a spend or usage limit is no attempt. ``main`` runs once against a fake
-``gh`` the way the workflow calls it.
+The picker resumes the paused reviews and repairs first, then ages each
+(spec, library) pair by its newest touch, the metadata ``updated`` or the
+last real attempt (a merged or closed implementation PR, a failed
+generation), keeps every pair touched within the attempt window out of the
+queue, and postpones a spec whose issue just saw activity. The no-loop rule
+is pinned here: a pair the gate kept, or whose generation failed, does not
+come back the next night, an infrastructure failure or a generation Claude
+stopped is no attempt, and a pick that cannot see its records fails closed.
+``main`` runs against a fake ``gh`` the way the workflow calls it.
 """
 
 from __future__ import annotations
@@ -178,9 +179,17 @@ class TestFailedGenerations:
             fail_comment("a", "altair", 2, infra=True),  # infrastructure: no attempt
             fail_comment("a", "plotly", 1, infra=True),
             fail_comment("other", "altair", 1),  # another spec's marker
-            {"created_at": ts(1), "body": "<!-- impl-paused-claude-limit:a:plotly -->"},  # a spend or usage limit
+            {"created_at": ts(1), "body": "<!-- impl-paused-claude:a:plotly -->"},  # Claude stopped the session
         ]
         assert rp.failed_generations(comments, "a") == {"altair": at(5)}
+
+    def test_unreadable_failures_leave_the_spec_out(self, capsys):
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("a", "plotly", at(190))]
+        cands.append(rp.Candidate("b", "altair", at(100)))
+        picks, eligible = run_pick(cands, count=3, failures=lambda spec: None if spec == "a" else {})
+        # Fail closed: a's pairs may have failed last night.
+        assert picked(picks) == ["b/altair"] and eligible == 1
+        assert "::warning::Leaving a out of tonight" in capsys.readouterr().out
 
     def test_the_read_cap_stops_reading(self, capsys):
         cands = [rp.Candidate(spec, "altair", at(100 + i)) for i, spec in enumerate("abc")]
@@ -211,6 +220,34 @@ class TestFoldPulls:
         )
         assert recs.attempts == {("a", "altair"): (at(9), "merged PR"), ("a", "plotly"): (at(3), "kept PR")}
         assert recs.open_pairs == {("b", "plotly")}
+        assert recs.paused == []
+
+    def test_paused_prs_become_resumes(self):
+        recs = records()
+        review = {
+            "number": 21,
+            "headRefName": "implementation/a/plotly",
+            "state": "OPEN",
+            "updatedAt": ts(2),
+            "labels": [{"name": "ai-review-paused"}],
+        }
+        repair = {
+            "number": 22,
+            "headRefName": "implementation/b/altair",
+            "state": "OPEN",
+            "updatedAt": ts(3),
+            "labels": [{"name": n} for n in ("ai-rejected", "ai-attempt-1", "ai-attempt-2", "ai-repair-paused")],
+        }
+        # A paused PR that is closed meanwhile is an attempt, not a resume.
+        closed = {**review, "number": 23, "headRefName": "implementation/c/plotly", "state": "CLOSED"}
+        rp.fold_pulls([review, repair, closed, review], recs)  # the same PR twice: listed once
+        assert recs.open_pairs == {("a", "plotly"), ("b", "altair")}
+        assert recs.paused == [
+            rp.Resume(21, "review", "a", "plotly", 1, at(2)),
+            rp.Resume(22, "repair", "b", "altair", 2, at(3)),
+        ]
+        assert [r.pr for r in rp.resumes(recs, 5)] == [22, 21]  # oldest first
+        assert [r.pr for r in rp.resumes(recs, 1)] == [22]
 
     def test_issues(self):
         recs = records()
@@ -325,19 +362,76 @@ class TestMain:
         pairs = {(p["spec"], p["library"]) for p in json.loads(outputs["pairs_json"])}
         assert pairs == {("a-spec", "plotly"), ("b-spec", "altair"), ("b-spec", "matplotlib")}
 
-    def test_a_failed_listing_degrades_with_a_warning(self, tmp_path):
+    def _paused(self) -> dict[str, str]:
+        prs = [
+            {
+                "number": 21,
+                "headRefName": "implementation/a-spec/plotly",
+                "state": "OPEN",
+                "updatedAt": ts(2, self.now),
+                "labels": [{"name": "ai-review-paused"}],
+            },
+            {
+                "number": 22,
+                "headRefName": "implementation/b-spec/altair",
+                "state": "OPEN",
+                "updatedAt": ts(3, self.now),
+                "labels": [{"name": "ai-rejected"}, {"name": "ai-attempt-2"}, {"name": "ai-repair-paused"}],
+            },
+        ]
+        data = {"prs.json": json.dumps(prs), "kept.json": "[]", "issues.json": "[]"}
+        return data | {"comments-11.jsonl": "", "comments-12.jsonl": ""}
+
+    def test_paused_prs_are_resumed_before_new_pairs(self, tmp_path):
         self._plots(tmp_path)
-        result, outputs, _ = run_main(tmp_path, {"issues.json": "[]"}, 1)
+        result, outputs, summary = run_main(tmp_path, self._paused(), 3)
+        assert result.returncode == 0, result.stdout + result.stderr
+        # Both resumes count against the night's three; their pairs are open, so
+        # the one new pair is the oldest of the rest.
+        assert json.loads(outputs["resume_json"]) == [
+            {"pr": 22, "kind": "repair", "spec": "b-spec", "library": "altair", "attempt": 2},
+            {"pr": 21, "kind": "review", "spec": "a-spec", "library": "plotly", "attempt": 1},
+        ]
+        assert outputs["resume_count"] == "2"
+        assert json.loads(outputs["pairs_json"]) == [{"spec": "a-spec", "library": "altair"}]
+        assert outputs["count"] == "1"
+        assert "Pair mode: 2 resumed, 1 new pair(s) of 3" in summary and "| repair | #22 |" in summary
+
+    def test_resumes_can_take_the_whole_night(self, tmp_path):
+        self._plots(tmp_path)
+        _, outputs, _ = run_main(tmp_path, self._paused(), 1)
+        assert json.loads(outputs["resume_json"])[0]["pr"] == 22
+        assert outputs["resume_count"] == "1" and outputs["count"] == "0" and outputs["pairs_json"] == "[]"
+
+    def test_a_failed_implementation_pr_listing_stops_the_pick(self, tmp_path):
+        """The loop guard: without it a kept, closed or paused pair would be picked again."""
+        self._plots(tmp_path)
+        result, outputs, _ = run_main(tmp_path, {"kept.json": "[]", "issues.json": "[]"}, 1)
+        assert result.returncode == 1
+        assert "::error::Pair mode stops: the implementation PRs could not be listed" in result.stdout
+        assert outputs == {}
+
+    def test_the_other_listings_degrade_with_a_warning(self, tmp_path):
+        self._plots(tmp_path)
+        result, outputs, _ = run_main(tmp_path, {"prs.json": "[]", "comments-12.jsonl": ""}, 1)
         assert result.returncode == 0, result.stdout + result.stderr
         assert result.stdout.count("::warning::Could not list") == 2
+        # a-spec's comments cannot be read: it is left out, b-spec/altair is next.
         assert "::warning::Could not read the comments of issue #11" in result.stdout
-        assert json.loads(outputs["pairs_json"]) == [{"spec": "a-spec", "library": "altair"}]
+        assert json.loads(outputs["pairs_json"]) == [{"spec": "b-spec", "library": "altair"}]
 
     def test_nothing_eligible_writes_an_empty_pick(self, tmp_path):
         (tmp_path / "plots").mkdir()
         result, outputs, _ = run_main(tmp_path, {"prs.json": "[]", "kept.json": "[]", "issues.json": "[]"})
         assert result.returncode == 0, result.stdout + result.stderr
-        assert outputs == {"pairs_json": "[]", "specs": "", "specs_json": "[]", "count": "0"}
+        assert outputs == {
+            "resume_json": "[]",
+            "resume_count": "0",
+            "pairs_json": "[]",
+            "specs": "",
+            "specs_json": "[]",
+            "count": "0",
+        }
 
     @pytest.mark.parametrize(("count", "window"), [(0, "30"), (-1, "30"), (1, "-1")])
     def test_refuses_bad_numbers(self, tmp_path, count, window):

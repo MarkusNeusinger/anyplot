@@ -1,4 +1,4 @@
-"""Claude credential switch (vars.CLAUDE_AUTH), the session summary and the spend/usage limit.
+"""Claude credential switch (vars.CLAUDE_AUTH), the session summary, and the stops Claude makes.
 
 Every job that runs Claude starts with the same "Resolve Claude credentials"
 step. It maps CLAUDE_AUTH (unset or `subscription`, `api`, `oidc`) to a mode,
@@ -7,18 +7,21 @@ back to the subscription, and hands the mode and, for `oidc`, the four
 workload identity federation IDs to every Claude step as outputs. Each step
 then passes exactly one credential; the action's precedence with several set
 is undocumented (an API key or OAuth token silently shadows federation).
+Under `oidc`, the runs the federation rule refuses (a pull-request event,
+another ref, a job without id-token) use the subscription by design.
 
 After every Claude step, "Claude session summary" writes the cost line and
-reads whether the session stopped at a Claude spend or usage limit (the API's
-spend limit, spend cap or credit balance, the subscription's usage limit), in
-every mode; the retry is skipped then, and the failure paths of
-impl-generate, impl-review and impl-repair park the work as an infrastructure
-stop without a retry, a counted attempt or a failure verdict.
+reads whether Claude stopped the session: a spend or usage limit (the API's
+spend limit, spend cap or credit balance, the subscription's usage limit) in
+every mode, or refused credentials with api/oidc. The retry is skipped then;
+impl-generate parks the pair, impl-review and impl-repair pause the PR
+(`ai-review-paused`, `ai-repair-paused`, which the watchdog skips), and
+nothing counts as an attempt or a failure verdict. Pair mode resumes the
+paused PRs first.
 
 There is no pre-merge smoke for these workflows (claude-code-action refuses
 to run on a PR that changes them), so the wiring is pinned here and the
-scripts run for real. Also here: daily-regen's mode switch, its pair
-dispatch and the watchdog's rescue; the pick itself is tested in
+scripts run for real. The pick itself is tested in
 tests/unit/automation/scripts/test_regen_pick_pairs.py.
 """
 
@@ -38,7 +41,7 @@ WORKFLOWS_DIR = Path(__file__).parent.parent.parent.parent / ".github" / "workfl
 ACTION = "anthropics/claude-code-action@"
 RESOLVE = "Resolve Claude credentials"
 SUMMARY = "Claude session summary"
-STOP = "Stop at the Claude spend or usage limit"
+STOP = "Stop when Claude stopped the session"
 CREDENTIALS = {
     "anthropic_api_key": "${{ steps.claude_auth.outputs.mode == 'api' && secrets.ANTHROPIC_API_KEY || '' }}",
     "claude_code_oauth_token": (
@@ -98,6 +101,10 @@ def _step(filename: str, name: str) -> dict[str, Any]:
     return matches[0]
 
 
+def _names(filename: str, job: str) -> list[str]:
+    return [s.get("name", "") for s in _load(filename)["jobs"][job]["steps"]]
+
+
 JOBS = _claude_jobs()
 IDS = [f"{f}:{j}" for f, j, _ in JOBS]
 
@@ -146,16 +153,19 @@ def test_every_resolve_step_is_identical():
     assert reference["env"] == {
         "CLAUDE_AUTH": "${{ vars.CLAUDE_AUTH }}",
         "API_KEY_SET": "${{ secrets.ANTHROPIC_API_KEY != '' }}",
+        "OAUTH_TOKEN_SET": "${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}",
         "WIF_RULE_ID": "${{ vars.CLAUDE_WIF_RULE_ID }}",
         "WIF_ORG_ID": "${{ vars.CLAUDE_WIF_ORG_ID }}",
         "WIF_SERVICE_ACCOUNT_ID": "${{ vars.CLAUDE_WIF_SERVICE_ACCOUNT_ID }}",
         "WIF_WORKSPACE_ID": "${{ vars.CLAUDE_WIF_WORKSPACE_ID }}",
+        "EVENT": "${{ github.event_name }}",
+        "REF": "${{ github.ref }}",
     }
 
 
 @pytest.mark.parametrize(("filename", "name", "job"), JOBS, ids=IDS)
 def test_id_token_is_where_it_was(filename, name, job):
-    """No job gains id-token in this change; review-retest stays without it (oidc stops there)."""
+    """No job gains id-token in this change; review-retest stays without it (oidc routes it to the subscription)."""
     has_id_token = (job.get("permissions") or {}).get("id-token") == "write"
     assert has_id_token is (filename != "review-retest.yml"), (filename, name)
 
@@ -186,15 +196,15 @@ def test_summary_steps_share_one_script_and_unique_labels():
     labels = [s["env"]["CLAUDE_STEP"] for s in summaries]
     assert len(labels) == len(set(labels)) == sum(CLAUDE_WORKFLOWS.values())
     assert all(" " not in label for label in labels)
-    shared = {(s["run"], s["env"]["SESSION_ERRORS"], s["env"]["LIMIT_PATTERN"]) for s in summaries}
-    assert len(shared) == 1
+    keys = ("SESSION_ERRORS", "LIMIT_PATTERN", "AUTH_PATTERN")
+    assert len({(s["run"], *(s["env"][k] for k in keys)) for s in summaries}) == 1
     # The line must not look like Claude Code's own `"total_cost_usd": n`, or
     # collect_week.py's fallback regex would count a session twice.
     assert '"total_cost_usd":' not in summaries[0]["run"]
 
 
 @pytest.mark.parametrize(("filename", "name", "job"), JOBS, ids=IDS)
-def test_a_limit_skips_the_retry_and_stops_the_job(filename, name, job):
+def test_a_stop_skips_the_retry_and_fails_the_job(filename, name, job):
     steps = job["steps"]
     names = [s.get("name") for s in steps]
     claude = [s for s in steps if _is_claude(s)]
@@ -202,7 +212,7 @@ def test_a_limit_skips_the_retry_and_stops_the_job(filename, name, job):
         # Two independent pre-flight sessions, no retry: either one stops the dispatch.
         stop = steps[names.index(STOP)]
         assert stop["if"] == (
-            "${{ steps.polish_cost.outputs.limit_reached == 'true' || steps.similarity_cost.outputs.limit_reached == 'true' }}"
+            "${{ steps.polish_cost.outputs.stopped == 'true' || steps.similarity_cost.outputs.stopped == 'true' }}"
         )
         dispatches = [i for i, n in enumerate(names) if str(n).startswith("Dispatch ")]
         assert len(dispatches) == 2 and min(dispatches) > names.index(STOP) > steps.index(claude[-1])
@@ -212,10 +222,10 @@ def test_a_limit_skips_the_retry_and_stops_the_job(filename, name, job):
         return
     else:
         first, retry = claude
-        assert retry["if"].endswith(f" && steps.{first['id']}_cost.outputs.limit_reached != 'true'")
+        assert retry["if"].endswith(f" && steps.{first['id']}_cost.outputs.stopped != 'true'")
         stop = steps[names.index(STOP)]
         assert names.index(STOP) > steps.index(retry)
-        assert stop["if"] == f"steps.{first['id']}_cost.outputs.limit_reached == 'true'"
+        assert stop["if"] == f"steps.{first['id']}_cost.outputs.stopped == 'true'"
     assert "exit 1" in stop["run"] and "continue-on-error" not in stop
 
 
@@ -241,22 +251,53 @@ def test_no_claude_workflow_runs_on_pull_request_events():
         assert "pull_request" not in triggers, filename
 
 
+@pytest.mark.parametrize(
+    ("filename", "name"),
+    [
+        ("impl-generate.yml", "Adopt implementation from source ref"),
+        ("impl-generate.yml", "Adaptability smoke run (record-only)"),
+        ("impl-repair.yml", "Adaptability smoke run (record-only)"),
+    ],
+)
+def test_steps_running_model_written_code_get_no_oidc_request(filename, name):
+    """The jobs have id-token; the code they run must not be able to mint a token."""
+    first = next(line for line in _step(filename, name)["run"].splitlines() if not line.lstrip().startswith("#"))
+    assert first == "unset ACTIONS_ID_TOKEN_REQUEST_URL ACTIONS_ID_TOKEN_REQUEST_TOKEN"
+
+
 # --- the resolve step, run for real ------------------------------------------
 
 
-def _resolve(tmp_path: Path, auth: str | None, key_set: bool = False, id_token: bool = True, **wif: str):
+def _resolve(
+    tmp_path: Path,
+    auth: str | None,
+    key_set: bool = False,
+    id_token: bool = True,
+    oauth_set: bool = True,
+    event: str = "schedule",
+    ref: str = "refs/heads/main",
+    **wif: str,
+):
     script = _named(RESOLVE)[0]["run"]
-    out = tmp_path / "out"
+    out, summary = tmp_path / "out", tmp_path / "summary"
     out.write_text("", encoding="utf-8")
     env = {k: v for k, v in os.environ.items() if not k.startswith(("CLAUDE_", "WIF_", "ACTIONS_ID_TOKEN"))}
-    env |= {"API_KEY_SET": "true" if key_set else "false", "GITHUB_OUTPUT": str(out), **wif}
+    env |= {
+        "API_KEY_SET": "true" if key_set else "false",
+        "OAUTH_TOKEN_SET": "true" if oauth_set else "false",
+        "EVENT": event,
+        "REF": ref,
+        "GITHUB_OUTPUT": str(out),
+        "GITHUB_STEP_SUMMARY": str(summary),
+        **wif,
+    }
     if auth is not None:
         env["CLAUDE_AUTH"] = auth
     if id_token:
         env["ACTIONS_ID_TOKEN_REQUEST_URL"] = "https://token.actions.example/"
     result = subprocess.run(["bash", "-e", "-c", script], cwd=tmp_path, env=env, capture_output=True, text=True)
     outputs = dict(line.split("=", 1) for line in out.read_text().splitlines() if "=" in line)
-    return result, outputs
+    return result, outputs, summary.read_text() if summary.exists() else ""
 
 
 def _inputs(outputs: dict[str, str], key: str, token: str) -> dict[str, str]:
@@ -285,7 +326,7 @@ def _inputs(outputs: dict[str, str], key: str, token: str) -> dict[str, str]:
     ],
 )
 def test_resolve_passes_exactly_one_credential(tmp_path, auth, key_set, mode, given):
-    result, outputs = _resolve(tmp_path, auth, key_set, **WIF)
+    result, outputs, _ = _resolve(tmp_path, auth, key_set, **WIF)
     assert result.returncode == 0, result.stdout + result.stderr
     assert outputs["mode"] == mode and f"Claude credentials: {mode}" in result.stdout
     inputs = _inputs(outputs, "sk-ant-key" if key_set else "", "oauth-token")
@@ -300,20 +341,49 @@ def test_resolve_passes_exactly_one_credential(tmp_path, auth, key_set, mode, gi
 
 
 @pytest.mark.parametrize(
-    ("auth", "key_set", "wif", "id_token", "why"),
+    ("event", "ref", "id_token", "where"),
     [
-        ("api", False, WIF, True, "ANTHROPIC_API_KEY secret is missing"),
-        ("oidc", True, {**WIF, "WIF_RULE_ID": ""}, True, "CLAUDE_WIF_RULE_ID is missing"),
-        ("oidc", True, {k: v for k, v in WIF.items() if k != "WIF_WORKSPACE_ID"}, True, "CLAUDE_WIF_WORKSPACE_ID"),
-        ("oidc", True, {**WIF, "WIF_ORG_ID": "x\n::warning::y"}, True, "CLAUDE_WIF_ORG_ID is missing or not an ID"),
-        ("oidc", True, WIF, False, "no 'id-token: write' permission"),
-        ("apikey", True, WIF, True, "must be unset, 'subscription', 'api' or 'oidc'"),
-        (" api", True, WIF, True, "must be unset"),
-        ("api\n::warning::injected", True, WIF, True, "must be unset"),
+        # util-claude's review events present the `…:pull_request` subject.
+        ("pull_request_review", "refs/pull/7/merge", True, "pull_request_review/refs/pull/7/merge"),
+        ("pull_request_review_comment", "refs/pull/7/merge", True, "pull_request_review_comment/refs/pull/7/merge"),
+        # A branch smoke: `…:ref:refs/heads/feature/x`.
+        ("workflow_dispatch", "refs/heads/feature/x", True, "workflow_dispatch/refs/heads/feature/x"),
+        # review-retest: no id-token on purpose.
+        ("workflow_dispatch", "refs/heads/main", False, "workflow_dispatch/refs/heads/main (no id-token)"),
     ],
 )
-def test_resolve_stops_instead_of_falling_back(tmp_path, auth, key_set, wif, id_token, why):
-    result, outputs = _resolve(tmp_path, auth, key_set, id_token, **wif)
+def test_oidc_routes_the_runs_federation_refuses_to_the_subscription(tmp_path, event, ref, id_token, where):
+    result, outputs, summary = _resolve(tmp_path, "oidc", id_token=id_token, event=event, ref=ref, **WIF)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert outputs["mode"] == "subscription" and "federation_rule_id" not in outputs
+    assert f"::notice::oidc not available for {where}; using subscription" in result.stdout
+    assert f"- oidc not available for {where}; using subscription" in summary
+    assert {k for k, v in _inputs(outputs, "", "oauth-token").items() if v} == {"claude_code_oauth_token"}
+
+
+def test_oidc_routing_fails_fast_without_the_oauth_token(tmp_path):
+    result, outputs, _ = _resolve(
+        tmp_path, "oidc", oauth_set=False, event="pull_request_review", ref="refs/pull/7/merge"
+    )
+    assert result.returncode == 1 and "mode" not in outputs
+    assert result.stdout.startswith("::error::oidc not available for pull_request_review/refs/pull/7/merge")
+    assert "CLAUDE_CODE_OAUTH_TOKEN secret is missing" in result.stdout
+
+
+@pytest.mark.parametrize(
+    ("auth", "key_set", "wif", "why"),
+    [
+        ("api", False, WIF, "ANTHROPIC_API_KEY secret is missing"),
+        ("oidc", True, {**WIF, "WIF_RULE_ID": ""}, "CLAUDE_WIF_RULE_ID is missing"),
+        ("oidc", True, {k: v for k, v in WIF.items() if k != "WIF_WORKSPACE_ID"}, "CLAUDE_WIF_WORKSPACE_ID"),
+        ("oidc", True, {**WIF, "WIF_ORG_ID": "x\n::warning::y"}, "CLAUDE_WIF_ORG_ID is missing or not an ID"),
+        ("apikey", True, WIF, "must be unset, 'subscription', 'api' or 'oidc'"),
+        (" api", True, WIF, "must be unset"),
+        ("api\n::warning::injected", True, WIF, "must be unset"),
+    ],
+)
+def test_resolve_stops_instead_of_falling_back(tmp_path, auth, key_set, wif, why):
+    result, outputs, _ = _resolve(tmp_path, auth, key_set, **wif)
     assert result.returncode == 1
     assert result.stdout.startswith("::error::") and why in result.stdout
     assert "not falling back to the subscription" in result.stdout
@@ -335,8 +405,7 @@ def _summary(tmp_path: Path, execution: list[dict[str, Any]] | None, mode: str =
         "EXECUTION_FILE": str(exec_file) if execution is not None else "",
         "CLAUDE_AUTH_MODE": mode,
         "CLAUDE_STEP": "impl-review",
-        "SESSION_ERRORS": step["env"]["SESSION_ERRORS"],
-        "LIMIT_PATTERN": step["env"]["LIMIT_PATTERN"],
+        **{k: step["env"][k] for k in ("SESSION_ERRORS", "LIMIT_PATTERN", "AUTH_PATTERN")},
         "GITHUB_STEP_SUMMARY": str(summary),
         "GITHUB_OUTPUT": str(out),
     }
@@ -346,6 +415,7 @@ def _summary(tmp_path: Path, execution: list[dict[str, Any]] | None, mode: str =
 
 
 INIT = {"type": "system", "subtype": "init", "model": "claude-opus-5-5"}
+NOT_STOPPED = {"stopped": "false", "stop_reason": ""}
 
 
 def _failed(text: str, error: str | None = "invalid_request", status: int = 400) -> list[dict[str, Any]]:
@@ -405,7 +475,29 @@ LIMIT_FIXTURES = {
     "older CLI wording": _failed("Claude AI usage limit reached|1761955200", error=None),
 }
 
-NOT_A_LIMIT = {
+# Refused credentials (the API's error types, docs/en/api/errors; the federation's
+# fixed `401 Authentication failed`, docs/en/manage-claude/wif-providers/github-actions).
+AUTH_FIXTURES = {
+    "bad API key": _failed(
+        'API Error: 401 {"type":"error","error":{"type":"authentication_error","message":"invalid x-api-key"}}',
+        error="authentication_failed",
+        status=401,
+    ),
+    "federation refused": _failed(
+        'API Error: 401 {"type":"error","error":{"type":"authentication_error","message":"Authentication failed"}}',
+        error="authentication_failed",
+        status=401,
+    ),
+    "permission": _failed(
+        'API Error: 403 {"type":"error","error":{"type":"permission_error","message":"Your API key does not have '
+        'permission to use the specified resource."}}',
+        error="unknown",
+        status=403,
+    ),
+    "status only": _failed("Request failed", error=None, status=401),
+}
+
+NOT_A_STOP = {
     # A transient rate limit keeps its retry and the infrastructure path it had.
     "per-minute rate limit": _failed(
         'API Error: 429 {"error":{"type":"rate_limit_error","message":"Number of request tokens has exceeded your '
@@ -428,7 +520,7 @@ NOT_A_LIMIT = {
     ],
     "in a successful result": [
         INIT,
-        {"type": "result", "subtype": "success", "is_error": False, "result": "Docs say: credit balance is too low"},
+        {"type": "result", "subtype": "success", "is_error": False, "result": "Docs say: Authentication failed"},
     ],
     # A retried billing error the session got past: it ended well, so it never stopped.
     "recovered": [
@@ -444,7 +536,7 @@ def test_summary_reads_cost_and_model(tmp_path):
     result, summary, outputs = _summary(tmp_path, execution, mode="oidc")
     assert result.returncode == 0
     assert summary == "- `claude-cost step=impl-review auth=oidc model=claude-opus-5-5 total_cost_usd=0.2931`\n"
-    assert outputs == {"limit_reached": "false"}
+    assert outputs == NOT_STOPPED
 
 
 @pytest.mark.parametrize("execution", [None, [], [{"type": "assistant"}], [{"type": "result"}]])
@@ -452,7 +544,7 @@ def test_summary_never_fails_without_a_cost(tmp_path, execution):
     result, summary, outputs = _summary(tmp_path, execution)
     assert result.returncode == 0
     assert "auth=subscription model=n/a total_cost_usd=n/a" in summary
-    assert outputs == {"limit_reached": "false"}
+    assert outputs == NOT_STOPPED
 
 
 @pytest.mark.parametrize("case", sorted(LIMIT_FIXTURES))
@@ -460,32 +552,53 @@ def test_summary_never_fails_without_a_cost(tmp_path, execution):
 def test_summary_detects_a_spend_or_usage_limit(tmp_path, case, mode):
     result, summary, outputs = _summary(tmp_path, LIMIT_FIXTURES[case], mode)
     assert result.returncode == 0
-    assert outputs == {"limit_reached": "true"}, case
+    assert outputs == {"stopped": "true", "stop_reason": "limit"}, case
     assert f"::error::Claude spend/usage limit reached (auth={mode}) in impl-review" in result.stdout
     assert f"- **Claude spend/usage limit reached (auth={mode})** in `impl-review`" in summary
 
 
-@pytest.mark.parametrize("case", sorted(NOT_A_LIMIT))
-def test_summary_ignores_everything_else(tmp_path, case):
-    result, summary, outputs = _summary(tmp_path, NOT_A_LIMIT[case], "api")
-    assert outputs == {"limit_reached": "false"}, case
-    assert "spend/usage limit" not in summary
+@pytest.mark.parametrize("case", sorted(AUTH_FIXTURES))
+@pytest.mark.parametrize("mode", ["oidc", "api"])
+def test_summary_detects_refused_credentials_with_api_and_oidc(tmp_path, case, mode):
+    result, summary, outputs = _summary(tmp_path, AUTH_FIXTURES[case], mode)
+    assert outputs == {"stopped": "true", "stop_reason": "auth"}, case
+    assert f"::error::Claude credentials refused (auth={mode}) in impl-review" in result.stdout
+    assert f"- **Claude credentials refused (auth={mode})** in `impl-review`" in summary
 
 
-# --- the failure paths at a spend or usage limit ----------------------------------
+@pytest.mark.parametrize("case", sorted(AUTH_FIXTURES))
+def test_the_subscription_keeps_its_handling_of_refused_credentials(tmp_path, case):
+    assert _summary(tmp_path, AUTH_FIXTURES[case], "subscription")[2] == NOT_STOPPED
 
 
-# Logs every call as one JSON line; `pr view`/`issue view` answer nothing.
+def test_a_limit_wins_over_its_status_code(tmp_path):
+    """A 403 with a usage-limit message is a limit, not refused credentials."""
+    execution = _failed("You've hit your session limit · resets 12:30pm", error="rate_limit", status=403)
+    assert _summary(tmp_path, execution, "oidc")[2] == {"stopped": "true", "stop_reason": "limit"}
+
+
+@pytest.mark.parametrize("case", sorted(NOT_A_STOP))
+@pytest.mark.parametrize("mode", ["subscription", "api"])
+def test_summary_ignores_everything_else(tmp_path, case, mode):
+    result, summary, outputs = _summary(tmp_path, NOT_A_STOP[case], mode)
+    assert outputs == NOT_STOPPED, case
+    assert "limit reached" not in summary and "refused" not in summary
+
+
+# --- the failure paths after a stop -------------------------------------------
+
+
+# Logs every call as one JSON line; `pr view` answers with $GH_LABELS.
 FAKE_GH = """#!/usr/bin/env python3
 import json, os, sys
 with open(os.environ["GH_LOG"], "a", encoding="utf-8") as f:
     f.write(json.dumps(sys.argv[1:]) + "\\n")
+if sys.argv[1:3] == ["pr", "view"]:
+    print(os.environ.get("GH_LABELS", ""))
 """
 
 
-def _run_handler(tmp_path: Path, filename: str, name: str, **env: str) -> tuple[subprocess.CompletedProcess, list]:
-    step = _step(filename, name)
-    script = step["run"]
+def _run(tmp_path: Path, script: str, **env: str) -> tuple[subprocess.CompletedProcess, list]:
     for expr, value in {
         "${{ github.repository }}": "owner/repo",
         "${{ github.run_id }}": "1",
@@ -495,8 +608,9 @@ def _run_handler(tmp_path: Path, filename: str, name: str, **env: str) -> tuple[
     assert "${{" not in script
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir(exist_ok=True)
-    (bin_dir / "gh").write_text(FAKE_GH, encoding="utf-8")
-    (bin_dir / "gh").chmod(0o755)
+    for name, body in {"gh": FAKE_GH, "sleep": "#!/bin/sh\nexit 0\n"}.items():
+        (bin_dir / name).write_text(body, encoding="utf-8")
+        (bin_dir / name).chmod(0o755)
     log = tmp_path / "gh.log"
     base = {k: v for k, v in os.environ.items() if not k.startswith(("GIT_", "GH_"))}
     result = subprocess.run(
@@ -510,42 +624,52 @@ def _run_handler(tmp_path: Path, filename: str, name: str, **env: str) -> tuple[
     return result, calls
 
 
+def _run_step(tmp_path: Path, filename: str, name: str, **env: str):
+    return _run(tmp_path, _step(filename, name)["run"], **env)
+
+
 def _bodies(calls: list[list[str]]) -> list[str]:
     return [c[c.index("--body") + 1] for c in calls if "--body" in c]
 
 
-@pytest.mark.parametrize("mode", ["subscription", "oidc"])
+GENERATION_ENV = {
+    "SPEC_ID": "spec-a",
+    "LIBRARY": "plotly",
+    "ISSUE": "42",
+    "MODEL": "sonnet",
+    "CHANGE_REQUEST": "",
+    "CAMPAIGN_WINDOW_H": "12",
+    "INFRA_WINDOW_CAP": "5",
+    "CLAUDE_RETRY_OUTCOME": "skipped",
+    "CLAUDE_EXEC_FILE": "",
+    "CLAUDE_STOPPED": "true",
+    "LANGUAGE": "python",
+    "EXT": ".py",
+    "REGEN_GATE": "true",
+    "SOURCE_REF": "",
+    "SOURCE_MODEL": "",
+    "ADOPT_CAUSE": "",
+    "TRIGGER_REF": "main",
+    "RUN_URL": "https://github.com/owner/repo/actions/runs/1",
+}
+
+
+@pytest.mark.parametrize(
+    ("mode", "reason", "why"),
+    [
+        ("subscription", "limit", "Claude spend/usage limit reached"),
+        ("oidc", "limit", "Claude spend/usage limit reached"),
+        ("oidc", "auth", "Claude credentials refused"),
+    ],
+)
 @pytest.mark.parametrize(("regen_label", "live"), [("regen", True), ("", False)])
-def test_generation_at_a_limit_is_parked(tmp_path, regen_label, live, mode):
+def test_a_stopped_generation_is_parked(tmp_path, regen_label, live, mode, reason, why):
     """A first implementation too: no retry, no counted attempt, never `impl:<lib>:failed`."""
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
-    result, calls = _run_handler(
-        tmp_path,
-        "impl-generate.yml",
-        "Handle generation failure",
-        SPEC_ID="spec-a",
-        LIBRARY="plotly",
-        ISSUE="42",
-        MODEL="sonnet",
-        CHANGE_REQUEST="",
-        CAMPAIGN_WINDOW_H="12",
-        INFRA_WINDOW_CAP="5",
-        CLAUDE_RETRY_OUTCOME="skipped",
-        CLAUDE_EXEC_FILE="",
-        LIMIT_REACHED="true",
-        CLAUDE_MODE=mode,
-        REGEN_LABEL=regen_label,
-        LANGUAGE="python",
-        EXT=".py",
-        REGEN_GATE="true",
-        SOURCE_REF="",
-        SOURCE_MODEL="",
-        ADOPT_CAUSE="",
-        TRIGGER_REF="main",
-        RUN_URL="https://github.com/owner/repo/actions/runs/1",
-    )
+    env = GENERATION_ENV | {"CLAUDE_MODE": mode, "STOP_REASON": reason, "REGEN_LABEL": regen_label}
+    result, calls = _run_step(tmp_path, "impl-generate.yml", "Handle generation failure", **env)
     assert result.returncode == 0, result.stdout + result.stderr
-    assert f"::error::Claude spend/usage limit reached (auth={mode})" in result.stdout
+    assert f"::error::{why} (auth={mode})" in result.stdout
     assert not [c for c in calls if c[:2] == ["workflow", "run"]]  # no auto-retry
     edits = [c[3:5] for c in calls if c[:2] == ["issue", "edit"]]
     assert ["--remove-label", "impl:plotly:pending"] in edits and ["--remove-label", "generate:plotly"] in edits
@@ -554,12 +678,13 @@ def test_generation_at_a_limit_is_parked(tmp_path, regen_label, live, mode):
     assert not [c for c in calls if c[:2] == ["api", "--paginate"]]  # the attempt budget is not even read
     (body,) = _bodies(calls)
     # Its own marker: neither the 3-attempt cap nor daily-regen's attempt window counts it.
-    assert "<!-- impl-paused-claude-limit:spec-a:plotly -->" in body
+    assert "<!-- impl-paused-claude:spec-a:plotly -->" in body and why in body
     assert "<!-- impl-fail:" not in body and "impl-fail-cause:infra" not in body
 
 
-def test_repair_at_a_limit_keeps_its_retry(tmp_path):
-    result, calls = _run_handler(
+@pytest.mark.parametrize(("reason", "why"), [("limit", "spend/usage limit"), ("auth", "credentials refused")])
+def test_a_stopped_repair_is_paused_and_keeps_its_retry(tmp_path, reason, why):
+    result, calls = _run_step(
         tmp_path,
         "impl-repair.yml",
         "Handle repair failure",
@@ -570,21 +695,25 @@ def test_repair_at_a_limit_keeps_its_retry(tmp_path):
         MODEL="sonnet",
         REPOSITORY="owner/repo",
         RUN_ID="1",
-        LIMIT_REACHED="true",
-        CLAUDE_MODE="subscription",
+        CLAUDE_STOPPED="true",
+        STOP_REASON=reason,
+        CLAUDE_MODE="oidc",
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "::error::Claude spend/usage limit reached (auth=subscription)" in result.stdout
+    assert why in result.stdout
     assert ["pr", "edit", "7", "--add-label", "ai-rejected"] in calls
+    assert ["pr", "edit", "7", "--add-label", "ai-repair-paused"] in calls
+    assert any(c[:3] == ["label", "create", "ai-repair-paused"] for c in calls)
     assert not [c for c in calls if c[:2] == ["workflow", "run"]]
     assert not [c for c in calls if c[:1] == ["api"]]  # the retry budget is not even read
     (body,) = _bodies(calls)
-    assert "<!-- repair-paused-claude-limit:spec-a:plotly:attempt-2 -->" in body
+    assert "<!-- repair-paused-claude:spec-a:plotly:attempt-2 -->" in body
     assert "<!-- repair-retry:" not in body
 
 
-def test_review_at_a_limit_hands_off_without_spending_the_retry(tmp_path):
-    result, calls = _run_handler(
+@pytest.mark.parametrize(("reason", "why"), [("limit", "spend/usage limit"), ("auth", "credentials refused")])
+def test_a_stopped_review_is_paused_without_spending_the_retry(tmp_path, reason, why):
+    result, calls = _run_step(
         tmp_path,
         "impl-review.yml",
         "Validate review output",
@@ -595,16 +724,19 @@ def test_review_at_a_limit_hands_off_without_spending_the_retry(tmp_path):
         RUN_ID="1",
         MODEL="sonnet",
         REVIEW_MODEL_ALIAS="opus",
-        LIMIT_REACHED="true",
+        CLAUDE_STOPPED="true",
+        STOP_REASON=reason,
         CLAUDE_MODE="oidc",
     )
     assert result.returncode == 1  # no verdict: the run is red
-    assert "::error::Claude spend/usage limit reached (auth=oidc)" in result.stdout
-    assert ["pr", "edit", "7", "--add-label", "ai-review-failed"] in calls
+    assert why in result.stdout
+    assert ["pr", "edit", "7", "--add-label", "ai-review-paused"] in calls
+    assert not [c for c in calls if "ai-review-failed" in c]  # the watchdog's label stays off
+    assert any(c[:3] == ["label", "create", "ai-review-paused"] for c in calls)
     assert not [c for c in calls if c[:2] == ["api", "repos/owner/repo/dispatches"]]  # no re-review
     assert not [c for c in calls if c[:2] == ["api", "--paginate"]]
     (body,) = _bodies(calls)
-    assert "<!-- review-paused-claude-limit:spec-a:plotly -->" in body
+    assert "<!-- review-paused-claude:spec-a:plotly -->" in body
     assert "<!-- review-retry:" not in body
 
 
@@ -616,22 +748,121 @@ def test_review_at_a_limit_hands_off_without_spending_the_retry(tmp_path):
         ("impl-review.yml", "Validate review output"),
     ],
 )
-def test_failure_paths_read_the_limit(filename, name):
+def test_failure_paths_read_the_stop(filename, name):
     env = _step(filename, name)["env"]
     assert env["CLAUDE_MODE"] == "${{ steps.claude_auth.outputs.mode }}"
     if filename == "impl-review.yml":
-        assert env["LIMIT_REACHED"] == "${{ steps.review_cost.outputs.limit_reached }}"
+        assert env["CLAUDE_STOPPED"] == "${{ steps.review_cost.outputs.stopped }}"
+        assert env["STOP_REASON"] == "${{ steps.review_cost.outputs.stop_reason }}"
     else:
-        assert env["LIMIT_REACHED"] == (
-            "${{ steps.claude_cost.outputs.limit_reached == 'true' || steps.claude_retry_cost.outputs.limit_reached == 'true' }}"
+        assert env["CLAUDE_STOPPED"] == (
+            "${{ steps.claude_cost.outputs.stopped == 'true' || steps.claude_retry_cost.outputs.stopped == 'true' }}"
+        )
+        assert env["STOP_REASON"] == (
+            "${{ steps.claude_cost.outputs.stop_reason || steps.claude_retry_cost.outputs.stop_reason }}"
         )
 
 
-def test_generation_limit_park_comes_before_any_attempt_counting():
+def test_generation_park_comes_before_any_attempt_counting():
     """The park exits before the infra/agent split reads or writes a single impl-fail marker."""
     script = _step("impl-generate.yml", "Handle generation failure")["run"]
-    park = script.index('if [ "${LIMIT_REACHED}" = "true" ]; then')
+    park = script.index('if [ "${CLAUDE_STOPPED}" = "true" ]; then')
     assert park < script.index('INFRA_CAUSE=""') < script.index('MARKER="<!-- impl-fail:')
+
+
+def test_a_stopped_review_gives_no_score_verdict_or_gate_decision():
+    """Even when it wrote quality_score.txt before the stop: Extract skips, Validate takes the paused path."""
+    extract = _step("impl-review.yml", "Extract quality score")
+    assert extract["if"] == "steps.review.conclusion == 'success' && steps.review_cost.outputs.stopped != 'true'"
+    # With Extract skipped, has_output is '' — Validate runs, every scored step does not.
+    validate = _step("impl-review.yml", "Validate review output")
+    assert validate["if"] == "steps.review.conclusion == 'success' && steps.score.outputs.has_output != 'true'"
+    names = _names("impl-review.yml", "review")
+    assert names.index("Claude session summary") < names.index("Extract quality score")
+    assert names.index("Extract quality score") < names.index("Validate review output")
+
+
+@pytest.mark.parametrize(("labels", "removed"), [("ai-review-paused\nquality:80", True), ("quality:80", False)])
+def test_a_resumed_review_clears_its_pause(tmp_path, labels, removed):
+    names = _names("impl-review.yml", "review")
+    assert names.index("Clear the ai-review-paused label") < names.index("Run AI Quality Review")
+    result, calls = _run_step(
+        tmp_path, "impl-review.yml", "Clear the ai-review-paused label", PR_NUM="7", GH_LABELS=labels
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert (["pr", "edit", "7", "--remove-label", "ai-review-paused"] in calls) is removed
+
+
+def test_a_resumed_repair_clears_its_pause():
+    script = _step("impl-repair.yml", "Remove ai-rejected label")["run"]
+    assert '--remove-label "ai-repair-paused"' in script
+    names = _names("impl-repair.yml", "repair")
+    assert names.index("Remove ai-rejected label") < names.index("Run Claude Code to repair implementation")
+
+
+# --- the watchdog skips paused PRs ----------------------------------------------
+
+
+# `pr list` answers with $GH_PRS_JSON, `issue list` with nothing; every `api`
+# call fails, which the scan reads as "daily-regen state unknown".
+FAKE_GH_WATCHDOG = """#!/usr/bin/env python3
+import json, os, sys
+with open(os.environ["GH_LOG"], "a", encoding="utf-8") as f:
+    f.write(json.dumps(sys.argv[1:]) + "\\n")
+if sys.argv[1:3] == ["pr", "list"]:
+    print(os.environ["GH_PRS_JSON"])
+elif sys.argv[1:3] == ["issue", "list"]:
+    print("[]")
+elif sys.argv[1:2] == ["api"]:
+    sys.exit(1)
+"""
+
+
+@pytest.mark.parametrize(
+    "labels",
+    [
+        ["ai-review-paused", "ai-review-failed"],  # Case 1 would re-dispatch the review
+        ["ai-repair-paused", "ai-rejected", "ai-attempt-2", "quality:70"],  # Case 2b would re-dispatch the repair
+    ],
+)
+def test_the_watchdog_skips_paused_prs(tmp_path, labels):
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    (bin_dir / "gh").write_text(FAKE_GH_WATCHDOG, encoding="utf-8")
+    (bin_dir / "gh").chmod(0o755)
+    prs = [
+        {
+            "number": 7,
+            "labels": [{"name": n} for n in labels],
+            "headRefName": "implementation/spec-a/plotly",
+            "updatedAt": "2026-01-01T00:00:00Z",
+        }
+    ]
+    log = tmp_path / "gh.log"
+    script = _step("watchdog-stuck-jobs.yml", "Scan and dispatch")["run"]
+    base = {k: v for k, v in os.environ.items() if not k.startswith(("GIT_", "GH_"))}
+    result = subprocess.run(
+        ["bash", "-eo", "pipefail", "-c", script],
+        cwd=tmp_path,
+        env={
+            **base,
+            "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}",
+            "GH_LOG": str(log),
+            "GH_TOKEN": "unused",
+            "GH_REPO": "owner/repo",
+            "GH_PRS_JSON": json.dumps(prs),
+            "STALE_HOURS": "4",
+            "DRY_RUN": "false",
+            "REGEN_PAIRS": "",
+        },
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    calls = [json.loads(line) for line in log.read_text().splitlines()]
+    assert "PR #7: paused" in result.stdout
+    assert not [c for c in calls if c[:2] == ["workflow", "run"]]
+    assert not [c for c in calls if c[:2] == ["pr", "edit"]]
 
 
 # --- daily-regen modes ------------------------------------------------------
@@ -684,6 +915,8 @@ def test_daily_regen_mode_sources():
     assert '--attempt-window-days "$ATTEMPT_WINDOW_DAYS"' in pick["run"]
     outputs = workflow["jobs"]["pick"]["outputs"]
     assert outputs["specs_json"] == "${{ steps.pick.outputs.specs_json || steps.pick_pairs.outputs.specs_json }}"
+    assert outputs["resume_json"] == "${{ steps.pick_pairs.outputs.resume_json }}"
+    assert outputs["resume_count"] == "${{ steps.pick_pairs.outputs.resume_count }}"
 
 
 def test_spec_mode_steps_are_gated_off_in_pair_mode():
@@ -720,7 +953,7 @@ def _calls(log: Path) -> list[list[str]]:
     return calls
 
 
-def test_pair_dispatch_mirrors_bulk_generate(tmp_path):
+def _dispatch_bin(tmp_path: Path) -> Path:
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     for name, body in {
@@ -730,6 +963,11 @@ def test_pair_dispatch_mirrors_bulk_generate(tmp_path):
     }.items():
         (bin_dir / name).write_text(body, encoding="utf-8")
         (bin_dir / name).chmod(0o755)
+    return bin_dir
+
+
+def test_pair_dispatch_mirrors_bulk_generate(tmp_path):
+    bin_dir = _dispatch_bin(tmp_path)
     (tmp_path / "plots" / "a-spec").mkdir(parents=True)
     (tmp_path / "plots" / "a-spec" / "specification.yaml").write_text("issue: 42\n", encoding="utf-8")
     pairs = [
@@ -776,6 +1014,52 @@ def test_pair_dispatch_mirrors_bulk_generate(tmp_path):
     assert (
         step["env"]["PACE_SECONDS"] == "${{ (inputs.model == 'sonnet' || inputs.model == 'haiku') && '120' || '180' }}"
     )
+
+
+def test_paused_prs_are_resumed_first(tmp_path):
+    job = _load("daily-regen.yml")["jobs"]["resume-paused"]
+    assert job["needs"] == "pick"
+    assert job["if"] == (
+        "${{ needs.pick.outputs.mode == 'pairs' && needs.pick.outputs.resume_count != '0' "
+        "&& needs.pick.outputs.resume_count != '' && !inputs.dry_run }}"
+    )
+    assert job["permissions"] == {"contents": "read", "actions": "write"}
+    bin_dir = _dispatch_bin(tmp_path)
+    resume = [
+        {"pr": 7, "kind": "review", "spec": "a-spec", "library": "plotly", "attempt": 1},
+        {"pr": 8, "kind": "repair", "spec": "b-spec", "library": "altair", "attempt": 2},
+    ]
+    script = _daily_step("Re-dispatch paused reviews and repairs")["run"].replace(
+        "${{ github.repository }}", "owner/repo"
+    )
+    env = {
+        **os.environ,
+        "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}",
+        "GH_LOG": str(tmp_path / "gh.log"),
+        "RESUME_JSON": json.dumps(resume),
+        "PACE_SECONDS": "180",
+    }
+    result = subprocess.run(["bash", "-e", "-c", script], cwd=tmp_path, env=env, capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert _calls(tmp_path / "gh.log") == [
+        ["workflow", "run", "impl-review.yml", "-f", "pr_number=7", "--repo", "owner/repo"],
+        [
+            "workflow",
+            "run",
+            "impl-repair.yml",
+            "-f",
+            "pr_number=8",
+            "-f",
+            "specification_id=b-spec",
+            "-f",
+            "library=altair",
+            "-f",
+            "attempt=2",
+            "--repo",
+            "owner/repo",
+        ],
+    ]
+    assert (tmp_path / "gh.log.sleep").read_text().splitlines() == ["slept 180"]
 
 
 def test_watchdog_rescue_forwards_the_pair_count():

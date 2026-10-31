@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
-"""Pick the oldest implementations for daily-regen's pair mode.
+"""Pick the night's work for daily-regen's pair mode.
 
 Spec mode, the default, regenerates the N oldest specs with all their
-libraries. Pair mode picks the N oldest implementations, one (spec, library)
-pair each, across the catalogue:
+libraries. Pair mode spends the night's N on two kinds of work:
+
+1. Resumes first. Open implementation PRs whose review or repair Claude
+   stopped (a spend or usage limit, or refused credentials) carry
+   ``ai-review-paused`` or ``ai-repair-paused``; the oldest of them are
+   re-dispatched before anything new. A refused request costs nothing, so a
+   stop that is still active only pauses them again, and they resume on
+   their own once it lifts.
+2. Then the oldest implementations, one (spec, library) pair each, across the
+   catalogue:
 
 - A pair's age counts from its newest touch: its metadata ``updated``
   (``created`` when there is none), or its last real regeneration attempt,
@@ -17,11 +25,11 @@ pair each, across the catalogue:
   on the spec issue. A merge moves ``updated`` anyway; the other two leave it
   alone, and without them the same pair would come back the next night. An
   infrastructure failure (its comment carries ``impl-fail-cause:infra``) and
-  a stop at a Claude spend or usage limit (its own pause comment,
-  ``impl-paused-claude-limit``) are not attempts: the pair stays in the queue
-  and comes back on a later night.
+  a generation Claude stopped (its own pause comment, ``impl-paused-claude``)
+  are not attempts: the pair stays in the queue and comes back on a later
+  night.
 - A pair with an open implementation PR is skipped: its attempt is still
-  running or stuck, and the watchdog owns it.
+  running, stuck or paused, and the watchdog or the resume owns it.
 - Every pair of a spec whose issue saw activity within ``--min-age-hours`` is
   skipped, like the spec mode's postponement: a comment, a label or a report
   holds the spec back, and a night does not stack a spec whose last batch is
@@ -31,12 +39,13 @@ pair each, across the catalogue:
   pair mode never writes a first implementation; gap backfill stays with
   ``bulk-generate.yml``.
 
-The PR and issue listings are one ``gh`` call each, at most 1000 entries, most
-recent first (kept regenerations get a listing of their own, which reaches
-much further back). The failed-generation comments are read per spec issue,
-only for the specs at the front of the queue, at most ``--max-issue-reads``
-issues per run. A read that fails degrades to the other records with a
-warning, like the spec mode's issue listing.
+The implementation-PR listing is the loop guard: when it fails, the run stops
+with an error instead of picking without it. The kept-regeneration and issue
+listings are best effort (one ``gh`` call each, at most 1000 entries, most
+recent first; kept regenerations reach much further back than the PR
+listing). The failed-generation comments are read per spec issue, only for
+the specs at the front of the queue, at most ``--max-issue-reads`` issues per
+run; a spec whose comments cannot be read is left out of the night.
 
 Usage, from the repository root::
 
@@ -44,9 +53,9 @@ Usage, from the repository root::
         --attempt-window-days 30 --repo OWNER/NAME --libraries "altair bokeh ..."
 
 The library list comes from the caller (``core.constants.SUPPORTED_LIBRARIES``),
-so this file carries no copy that could drift. Writes ``pairs_json``,
-``specs``, ``specs_json`` and ``count`` to ``$GITHUB_OUTPUT`` and a table of
-the picks to ``$GITHUB_STEP_SUMMARY``.
+so this file carries no copy that could drift. Writes ``resume_json``,
+``resume_count``, ``pairs_json``, ``specs``, ``specs_json`` and ``count`` (new
+pairs) to ``$GITHUB_OUTPUT`` and a table of both to ``$GITHUB_STEP_SUMMARY``.
 """
 
 from __future__ import annotations
@@ -59,7 +68,7 @@ import re
 import subprocess
 import sys
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -70,12 +79,19 @@ import yaml
 ANCIENT = datetime.min.replace(tzinfo=timezone.utc)
 LIMIT = "1000"
 BRANCH_RE = re.compile(r"^implementation/(?P<spec>[a-z0-9][a-z0-9-]*)/(?P<lib>[a-z0-9]+)$")
+ATTEMPT_RE = re.compile(r"^ai-attempt-(?P<n>[0-9]+)$")
 # impl-generate.yml "Handle generation failure": every failure comment carries
 # the marker; an infrastructure failure's comment also carries the infra tag.
 FAIL_MARKER_RE = re.compile(r"<!-- impl-fail:(?P<spec>[a-z0-9][a-z0-9-]*):(?P<lib>[a-z0-9]+) -->")
 INFRA_TAG = "<!-- impl-fail-cause:infra -->"
+# impl-review.yml and impl-repair.yml set these when Claude stopped the session.
+PAUSED_LABELS = {"ai-repair-paused": "repair", "ai-review-paused": "review"}
 
 Pair = tuple[str, str]
+
+
+class ListingError(Exception):
+    """A listing the pick cannot do without failed."""
 
 
 @dataclass(frozen=True)
@@ -93,6 +109,16 @@ class Pick:
     basis: str
 
 
+@dataclass(frozen=True)
+class Resume:
+    pr: int
+    kind: str  # "review" or "repair"
+    spec: str
+    library: str
+    attempt: int
+    updated: datetime
+
+
 @dataclass
 class Records:
     """What GitHub says about past attempts, per pair and per spec issue."""
@@ -100,6 +126,7 @@ class Records:
     attempts: dict[Pair, tuple[datetime, str]]
     open_pairs: set[Pair]
     issue_activity: dict[int, datetime]
+    paused: list[Resume] = field(default_factory=list)
 
 
 def parse_ts(raw: str) -> datetime | None:
@@ -150,19 +177,25 @@ def _newer(records: dict[Pair, tuple[datetime, str]], pair: Pair, when: datetime
 
 
 def fold_pulls(pulls: Iterable[dict[str, Any]], records: Records) -> None:
-    """An open PR blocks its pair; a merged or closed one is the pair's attempt."""
+    """An open PR blocks its pair (and is a resume when paused); a merged or closed one is an attempt."""
     for pull in pulls:
         match = BRANCH_RE.match(str(pull.get("headRefName") or ""))
         if not match:
             continue
         pair = (match["spec"], match["lib"])
         state = pull.get("state")
+        labels = {str(label.get("name")) for label in pull.get("labels") or [] if isinstance(label, dict)}
         if state == "OPEN":
             records.open_pairs.add(pair)
+            kind = next((PAUSED_LABELS[name] for name in PAUSED_LABELS if name in labels), None)
+            number = pull.get("number")
+            if kind and isinstance(number, int) and all(r.pr != number for r in records.paused):
+                attempts = [int(m["n"]) for name in labels if (m := ATTEMPT_RE.match(name))]
+                updated = parse_ts(str(pull.get("updatedAt") or "")) or ANCIENT
+                records.paused.append(Resume(number, kind, pair[0], pair[1], max(attempts, default=1), updated))
             continue
         if state not in ("MERGED", "CLOSED"):
             continue
-        labels = {str(label.get("name")) for label in pull.get("labels") or [] if isinstance(label, dict)}
         basis = "merged PR" if state == "MERGED" else "kept PR" if "regen:kept" in labels else "closed PR"
         when = parse_ts(str(pull.get("closedAt") or pull.get("updatedAt") or ""))
         _newer(records.attempts, pair, when, basis)
@@ -197,6 +230,11 @@ def _touched(pair: Pair, metadata: datetime | None, records: Records) -> tuple[d
     return touched, basis
 
 
+def resumes(records: Records, count: int) -> list[Resume]:
+    """The oldest paused reviews and repairs, at most ``count``."""
+    return sorted(records.paused, key=lambda r: (r.updated, r.pr))[:count]
+
+
 def pick(
     candidates: Iterable[Candidate],
     records: Records,
@@ -205,15 +243,17 @@ def pick(
     min_age: timedelta,
     window: timedelta,
     count: int,
-    failures: Callable[[str], dict[str, datetime]] | None = None,
+    failures: Callable[[str], dict[str, datetime] | None] | None = None,
     max_reads: int = 100,
 ) -> tuple[list[Pick], int]:
     """The ``count`` oldest eligible pairs, oldest first, and how many were eligible.
 
-    ``failures(spec)`` returns the spec's failed generations per library. It is
-    asked lazily, once per spec, when one of the spec's pairs reaches the front
-    of the queue; a pair whose failure is newer than its age goes back into
-    the queue, or out of it while the failure is within the window.
+    ``failures(spec)`` returns the spec's failed generations per library, or
+    None when they cannot be read. It is asked lazily, once per spec, when one
+    of the spec's pairs reaches the front of the queue; a pair whose failure is
+    newer than its age goes back into the queue, or out of it while the
+    failure is within the window. A spec whose failures cannot be read is
+    left out of the night (fail closed: its pairs may have failed last night).
     """
     metadata: dict[Pair, datetime | None] = {}
     queue: list[tuple[datetime, str, str, str]] = []
@@ -233,6 +273,7 @@ def pick(
     eligible = len(queue)
 
     read: set[str] = set()
+    unreadable: set[str] = set()
     picks: list[Pick] = []
     while queue and len(picks) < count:
         key, spec, lib, basis = heapq.heappop(queue)
@@ -242,8 +283,15 @@ def pick(
                 failures = None
             else:
                 read.add(spec)
-                for flib, when in failures(spec).items():
+                found = failures(spec)
+                if found is None:
+                    unreadable.add(spec)
+                    print(f"::warning::Leaving {spec} out of tonight: its failed generations could not be read")
+                for flib, when in (found or {}).items():
                     _newer(records.attempts, (spec, flib), when, "failed generation")
+        if spec in unreadable:
+            eligible -= 1
+            continue
         touched, new_basis = _touched((spec, lib), metadata[(spec, lib)], records)
         if (touched or ANCIENT) != key:
             if touched is not None and now - touched < window:
@@ -260,18 +308,23 @@ def _gh_json(args: list[str], what: str) -> list[dict[str, Any]] | None:
         raw = subprocess.run(["gh", *args], check=True, capture_output=True, text=True).stdout
         data = json.loads(raw)
     except (subprocess.CalledProcessError, ValueError, OSError) as exc:
-        print(f"::warning::Could not list {what} ({' '.join(str(exc).split())[:200]}) — picking without them")
+        print(f"::warning::Could not list {what} ({' '.join(str(exc).split())[:200]})")
         return None
     return data if isinstance(data, list) else None
 
 
 def read_records(repo: str) -> Records:
     records = Records(attempts={}, open_pairs=set(), issue_activity={})
-    pr_list = ["pr", "list", "--repo", repo, "--limit", LIMIT, "--json", "headRefName,state,updatedAt,closedAt,labels"]
+    fields = "number,headRefName,state,updatedAt,closedAt,labels"
+    pr_list = ["pr", "list", "--repo", repo, "--limit", LIMIT, "--json", fields]
     pulls = _gh_json(
         [*pr_list, "--state", "all", "--search", "head:implementation/ sort:updated-desc"], "implementation PRs"
     )
-    fold_pulls(pulls or [], records)
+    if pulls is None:
+        # The loop guard: without it a kept, closed or paused pair would be
+        # picked again tonight.
+        raise ListingError("the implementation PRs could not be listed")
+    fold_pulls(pulls, records)
     # Kept regenerations again on their own: they are the attempts that leave
     # `updated` alone, and this listing reaches much further back.
     kept = _gh_json(
@@ -285,16 +338,16 @@ def read_records(repo: str) -> Records:
     )
     fold_issues(issues or [], records)
     print(
-        f"::notice::Attempt records for {len(records.attempts)} pair(s), {len(records.open_pairs)} open PR(s), "
-        f"activity for {len(records.issue_activity)} issue(s)"
+        f"::notice::Attempt records for {len(records.attempts)} pair(s), {len(records.open_pairs)} open PR(s) "
+        f"({len(records.paused)} paused), activity for {len(records.issue_activity)} issue(s)"
     )
     return records
 
 
-def issue_failures(repo: str, spec_issues: dict[str, int]) -> Callable[[str], dict[str, datetime]]:
+def issue_failures(repo: str, spec_issues: dict[str, int]) -> Callable[[str], dict[str, datetime] | None]:
     """``failures(spec)`` backed by the spec issue's comments (one paginated read per spec)."""
 
-    def failures(spec: str) -> dict[str, datetime]:
+    def failures(spec: str) -> dict[str, datetime] | None:
         issue = spec_issues.get(spec)
         if issue is None:
             return {}
@@ -309,19 +362,19 @@ def issue_failures(repo: str, spec_issues: dict[str, int]) -> Callable[[str], di
             comments = [json.loads(line) for line in raw.splitlines() if line.strip()]
         except (subprocess.CalledProcessError, ValueError, OSError) as exc:
             print(f"::warning::Could not read the comments of issue #{issue} ({' '.join(str(exc).split())[:200]})")
-            return {}
+            return None
         return failed_generations(comments, spec)
 
     return failures
 
 
-def summary_table(picks: list[Pick], eligible: int, count: int) -> str:
-    lines = [
-        f"### Pair mode: {len(picks)} of {count} requested ({eligible} eligible)",
-        "",
-        "| # | Spec | Library | Last touched | From |",
-        "|---|------|---------|--------------|------|",
-    ]
+def summary_table(resumed: list[Resume], picks: list[Pick], eligible: int, count: int) -> str:
+    lines = [f"### Pair mode: {len(resumed)} resumed, {len(picks)} new pair(s) of {count} ({eligible} eligible)", ""]
+    if resumed:
+        lines += ["| Resume | PR | Spec | Library |", "|--------|----|------|---------|"]
+        lines += [f"| {r.kind} | #{r.pr} | `{r.spec}` | `{r.library}` |" for r in resumed]
+        lines.append("")
+    lines += ["| # | Spec | Library | Last touched | From |", "|---|------|---------|--------------|------|"]
     for i, p in enumerate(picks, 1):
         touched = "never" if p.touched == ANCIENT else p.touched.strftime("%Y-%m-%dT%H:%M:%SZ")
         lines.append(f"| {i} | `{p.spec}` | `{p.library}` | {touched} | {p.basis} |")
@@ -345,7 +398,12 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     candidates, spec_issues = load_candidates(Path(args.plots), libraries)
-    records = read_records(args.repo)
+    try:
+        records = read_records(args.repo)
+    except ListingError as exc:
+        print(f"::error::Pair mode stops: {exc}, so the pick would lose its record of last nights' attempts")
+        return 1
+    resumed = resumes(records, args.count)
     picks, eligible = pick(
         candidates,
         records,
@@ -353,11 +411,12 @@ def main(argv: list[str] | None = None) -> int:
         datetime.now(timezone.utc),
         timedelta(hours=args.min_age_hours),
         timedelta(days=args.attempt_window_days),
-        args.count,
+        args.count - len(resumed),
         failures=issue_failures(args.repo, spec_issues),
         max_reads=args.max_issue_reads,
     )
 
+    print(f"::notice::Resumed: {[f'#{r.pr} {r.kind}' for r in resumed]}")
     print(
         f"::notice::Eligible pairs: {eligible} (attempt window {args.attempt_window_days} d)  "
         f"picked: {[f'{p.spec}/{p.library}' for p in picks]}"
@@ -367,7 +426,12 @@ def main(argv: list[str] | None = None) -> int:
 
     specs = list(dict.fromkeys(p.spec for p in picks))
     pairs = [{"spec": p.spec, "library": p.library} for p in picks]
+    resume_rows = [
+        {"pr": r.pr, "kind": r.kind, "spec": r.spec, "library": r.library, "attempt": r.attempt} for r in resumed
+    ]
     with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+        f.write(f"resume_json={json.dumps(resume_rows, separators=(',', ':'))}\n")
+        f.write(f"resume_count={len(resumed)}\n")
         f.write(f"pairs_json={json.dumps(pairs, separators=(',', ':'))}\n")
         f.write(f"specs={' '.join(specs)}\n")
         f.write(f"specs_json={json.dumps(specs)}\n")
@@ -375,7 +439,7 @@ def main(argv: list[str] | None = None) -> int:
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
         with open(summary, "a", encoding="utf-8") as f:
-            f.write(summary_table(picks, eligible, args.count))
+            f.write(summary_table(resumed, picks, eligible, args.count))
     return 0
 
 

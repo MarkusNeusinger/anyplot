@@ -68,10 +68,13 @@ jobs:
         env:
           CLAUDE_AUTH: ${{ vars.CLAUDE_AUTH }}
           API_KEY_SET: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+          OAUTH_TOKEN_SET: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
           WIF_RULE_ID: ${{ vars.CLAUDE_WIF_RULE_ID }}
           WIF_ORG_ID: ${{ vars.CLAUDE_WIF_ORG_ID }}
           WIF_SERVICE_ACCOUNT_ID: ${{ vars.CLAUDE_WIF_SERVICE_ACCOUNT_ID }}
           WIF_WORKSPACE_ID: ${{ vars.CLAUDE_WIF_WORKSPACE_ID }}
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
         run: |
           fail() { echo "::error::$1; not falling back to the subscription"; exit 1; }
           mode="${CLAUDE_AUTH,,}"
@@ -79,16 +82,30 @@ jobs:
             ''|subscription) mode=subscription ;;
             api) [ "$API_KEY_SET" = "true" ] || fail "CLAUDE_AUTH is 'api' but the ANTHROPIC_API_KEY secret is missing" ;;
             oidc)
-              for name in WIF_RULE_ID WIF_ORG_ID WIF_SERVICE_ACCOUNT_ID WIF_WORKSPACE_ID; do
-                [[ "${!name}" =~ ^[A-Za-z0-9_-]+$ ]] || fail "CLAUDE_AUTH is 'oidc' but the variable CLAUDE_${name} is missing or not an ID"
-              done
-              [ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ] || fail "CLAUDE_AUTH is 'oidc' but this job has no 'id-token: write' permission"
-              {
-                echo "federation_rule_id=$WIF_RULE_ID"
-                echo "organization_id=$WIF_ORG_ID"
-                echo "service_account_id=$WIF_SERVICE_ACCOUNT_ID"
-                echo "workspace_id=$WIF_WORKSPACE_ID"
-              } >> "$GITHUB_OUTPUT" ;;
+              # The federation rule accepts only `…:ref:refs/heads/main`. A
+              # pull-request event (`…:pull_request`), another ref, and a job
+              # without id-token run on the subscription instead, by design
+              # and logged, never on an error.
+              if [[ "$EVENT" == pull_request* || "$REF" != "refs/heads/main" || -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]]; then
+                where="${EVENT}/${REF//[^A-Za-z0-9\/._-]/?}$([ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ] || echo ' (no id-token)')"
+                if [ "$OAUTH_TOKEN_SET" != "true" ]; then
+                  echo "::error::oidc not available for ${where}, and the CLAUDE_CODE_OAUTH_TOKEN secret is missing"
+                  exit 1
+                fi
+                echo "::notice::oidc not available for ${where}; using subscription"
+                echo "- oidc not available for ${where}; using subscription" >> "$GITHUB_STEP_SUMMARY"
+                mode=subscription
+              else
+                for name in WIF_RULE_ID WIF_ORG_ID WIF_SERVICE_ACCOUNT_ID WIF_WORKSPACE_ID; do
+                  [[ "${!name}" =~ ^[A-Za-z0-9_-]+$ ]] || fail "CLAUDE_AUTH is 'oidc' but the variable CLAUDE_${name} is missing or not an ID"
+                done
+                {
+                  echo "federation_rule_id=$WIF_RULE_ID"
+                  echo "organization_id=$WIF_ORG_ID"
+                  echo "service_account_id=$WIF_SERVICE_ACCOUNT_ID"
+                  echo "workspace_id=$WIF_WORKSPACE_ID"
+                } >> "$GITHUB_OUTPUT"
+              fi ;;
             *) fail "CLAUDE_AUTH must be unset, 'subscription', 'api' or 'oidc', got '${CLAUDE_AUTH//[^A-Za-z0-9 ._-]/?}'" ;;
           esac
           echo "mode=$mode" >> "$GITHUB_OUTPUT"
@@ -259,11 +276,15 @@ jobs:
 
           echo "$FEEDBACK" > /tmp/ai_feedback.md
 
+      # `ai-repair-paused` goes too: this run resumes a repair that Claude
+      # stopped (a limit or refused credentials); the stop path puts it back
+      # if Claude stops this one as well.
       - name: Remove ai-rejected label
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh pr edit ${{ inputs.pr_number }} --remove-label "ai-rejected" 2>/dev/null || true
+          gh pr edit ${{ inputs.pr_number }} --remove-label "ai-repair-paused" 2>/dev/null || true
 
       - name: Run Claude Code to repair implementation
         id: claude
@@ -291,10 +312,10 @@ jobs:
             - BRANCH: ${{ env.branch }}
 
       # The session's cost (Claude Code's own estimate at API list price),
-      # model and credential mode, for the weekly regen review, and whether it
-      # stopped at a Claude spend or usage limit (output limit_reached). Read
-      # right after the step: the retry writes the same execution file. Never
-      # fatal.
+      # model and credential mode, for the weekly regen review, and whether
+      # Claude stopped it: a spend or usage limit, or refused credentials
+      # (outputs stopped, stop_reason). Read right after the step: the retry
+      # writes the same execution file. Never fatal.
       - name: Claude session summary
         id: claude_cost
         if: ${{ !cancelled() && (steps.claude.outcome == 'success' || steps.claude.outcome == 'failure') }}
@@ -305,18 +326,25 @@ jobs:
           CLAUDE_STEP: impl-repair
           # Only the error fields of a session that failed, because its own
           # text may quote the same messages: the error result, Claude Code's
-          # error messages and its API retries.
+          # error messages and its API retries, with their HTTP status.
           SESSION_ERRORS: >-
             ([.[] | select(.type == "result")] | last) as $result
             | if $result != null and $result.is_error != true then empty else
             (.[] | select((.type == "result" and .is_error == true) or (.type == "assistant" and .error != null) or (.type == "system" and .subtype == "api_retry"))
-            | (.result // ""), ((.errors // [])[] | tostring), (.error // "" | tostring), (if .type == "assistant" then ((.message.content // [])[] | .text? // "") else "" end))
+            | (.result // ""), ((.errors // [])[] | tostring), (.error // "" | tostring), (if .type == "assistant" then ((.message.content // [])[] | .text? // "") else "" end), (if (.api_error_status // .error_status) then "api_error_status=\(.api_error_status // .error_status)" else "" end))
             end
-          # The API's spend-limit, spend-cap and credit messages, Claude Code's
-          # billing_error and credit message, and its subscription usage-limit
-          # messages (the SDK's USAGE_LIMIT_ERROR_PREFIXES).
+          # A spend or usage limit, in every mode: the API's spend-limit,
+          # spend-cap and credit messages, Claude Code's billing_error and
+          # credit message, and its subscription usage-limit messages (the
+          # SDK's USAGE_LIMIT_ERROR_PREFIXES).
           LIMIT_PATTERN: >-
             reached your (specified )?(workspace )?API usage limits|enforced_spend_limit_reached|credit balance (is )?too low|billing_error|usage limit reached|You.{1,3}ve (hit|reached) your|You.{1,3}re out of (usage credits|extra usage)|Your org is out of usage|Your seat type doesn.{1,3}t include|Your usage allocation has been disabled|Your group.{1,3}s usage limit is set to \$0|requires usage credits
+          # Refused credentials, with api and oidc only (the subscription keeps
+          # its handling): HTTP 401 or 403, the API's authentication_error and
+          # permission_error, Claude Code's authentication_failed, a refused
+          # federation exchange ("Authentication failed"), a bad API key.
+          AUTH_PATTERN: >-
+            authentication_error|authentication_failed|permission_error|Authentication failed|invalid x-api-key|account_on_hold|api_error_status=40[13]
         run: |
           cost=$(jq -r '[.[] | select(.type == "result")] | last | .total_cost_usd // empty' "$EXECUTION_FILE" 2>/dev/null || true)
           model=$(jq -r '[.[] | select(.type == "system" and .subtype == "init")] | first | .model // empty' "$EXECUTION_FILE" 2>/dev/null || true)
@@ -324,17 +352,27 @@ jobs:
           echo "$line"
           echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
           errors=$(jq -r "$SESSION_ERRORS" "$EXECUTION_FILE" 2>/dev/null || true)
-          limit_reached=false
+          reason=""
           if grep -qiE "$LIMIT_PATTERN" <<< "$errors"; then
-            limit_reached=true
-            echo "::error::Claude spend/usage limit reached (auth=${CLAUDE_AUTH_MODE}) in ${CLAUDE_STEP}: no retry until the limit resets or is raised"
-            echo "- **Claude spend/usage limit reached (auth=${CLAUDE_AUTH_MODE})** in \`${CLAUDE_STEP}\`" >> "$GITHUB_STEP_SUMMARY"
+            reason=limit
+            what="Claude spend/usage limit reached"
+          elif [[ "$CLAUDE_AUTH_MODE" =~ ^(api|oidc)$ ]] && grep -qiE "$AUTH_PATTERN" <<< "$errors"; then
+            reason=auth
+            what="Claude credentials refused"
           fi
-          echo "limit_reached=${limit_reached}" >> "$GITHUB_OUTPUT"
+          if [ -n "$reason" ]; then
+            echo "::error::${what} (auth=${CLAUDE_AUTH_MODE}) in ${CLAUDE_STEP}: no retry until it is resolved"
+            echo "- **${what} (auth=${CLAUDE_AUTH_MODE})** in \`${CLAUDE_STEP}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "stopped=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "stopped=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "stop_reason=${reason}" >> "$GITHUB_OUTPUT"
 
-      # Not at a spend or usage limit: the retry would be refused the same way.
+      # Not after Claude stopped the session (a limit or refused credentials):
+      # the retry would be refused the same way.
       - name: Retry Claude (on failure)
-        if: steps.claude.outcome == 'failure' && steps.claude_cost.outputs.limit_reached != 'true'
+        if: steps.claude.outcome == 'failure' && steps.claude_cost.outputs.stopped != 'true'
         id: claude_retry
         timeout-minutes: 45
         uses: anthropics/claude-code-action@db77d4d3c98f3f6380e7cd45ffba2342a3dbde3c  # v1
@@ -368,18 +406,25 @@ jobs:
           CLAUDE_STEP: impl-repair/retry
           # Only the error fields of a session that failed, because its own
           # text may quote the same messages: the error result, Claude Code's
-          # error messages and its API retries.
+          # error messages and its API retries, with their HTTP status.
           SESSION_ERRORS: >-
             ([.[] | select(.type == "result")] | last) as $result
             | if $result != null and $result.is_error != true then empty else
             (.[] | select((.type == "result" and .is_error == true) or (.type == "assistant" and .error != null) or (.type == "system" and .subtype == "api_retry"))
-            | (.result // ""), ((.errors // [])[] | tostring), (.error // "" | tostring), (if .type == "assistant" then ((.message.content // [])[] | .text? // "") else "" end))
+            | (.result // ""), ((.errors // [])[] | tostring), (.error // "" | tostring), (if .type == "assistant" then ((.message.content // [])[] | .text? // "") else "" end), (if (.api_error_status // .error_status) then "api_error_status=\(.api_error_status // .error_status)" else "" end))
             end
-          # The API's spend-limit, spend-cap and credit messages, Claude Code's
-          # billing_error and credit message, and its subscription usage-limit
-          # messages (the SDK's USAGE_LIMIT_ERROR_PREFIXES).
+          # A spend or usage limit, in every mode: the API's spend-limit,
+          # spend-cap and credit messages, Claude Code's billing_error and
+          # credit message, and its subscription usage-limit messages (the
+          # SDK's USAGE_LIMIT_ERROR_PREFIXES).
           LIMIT_PATTERN: >-
             reached your (specified )?(workspace )?API usage limits|enforced_spend_limit_reached|credit balance (is )?too low|billing_error|usage limit reached|You.{1,3}ve (hit|reached) your|You.{1,3}re out of (usage credits|extra usage)|Your org is out of usage|Your seat type doesn.{1,3}t include|Your usage allocation has been disabled|Your group.{1,3}s usage limit is set to \$0|requires usage credits
+          # Refused credentials, with api and oidc only (the subscription keeps
+          # its handling): HTTP 401 or 403, the API's authentication_error and
+          # permission_error, Claude Code's authentication_failed, a refused
+          # federation exchange ("Authentication failed"), a bad API key.
+          AUTH_PATTERN: >-
+            authentication_error|authentication_failed|permission_error|Authentication failed|invalid x-api-key|account_on_hold|api_error_status=40[13]
         run: |
           cost=$(jq -r '[.[] | select(.type == "result")] | last | .total_cost_usd // empty' "$EXECUTION_FILE" 2>/dev/null || true)
           model=$(jq -r '[.[] | select(.type == "system" and .subtype == "init")] | first | .model // empty' "$EXECUTION_FILE" 2>/dev/null || true)
@@ -387,21 +432,31 @@ jobs:
           echo "$line"
           echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
           errors=$(jq -r "$SESSION_ERRORS" "$EXECUTION_FILE" 2>/dev/null || true)
-          limit_reached=false
+          reason=""
           if grep -qiE "$LIMIT_PATTERN" <<< "$errors"; then
-            limit_reached=true
-            echo "::error::Claude spend/usage limit reached (auth=${CLAUDE_AUTH_MODE}) in ${CLAUDE_STEP}: no retry until the limit resets or is raised"
-            echo "- **Claude spend/usage limit reached (auth=${CLAUDE_AUTH_MODE})** in \`${CLAUDE_STEP}\`" >> "$GITHUB_STEP_SUMMARY"
+            reason=limit
+            what="Claude spend/usage limit reached"
+          elif [[ "$CLAUDE_AUTH_MODE" =~ ^(api|oidc)$ ]] && grep -qiE "$AUTH_PATTERN" <<< "$errors"; then
+            reason=auth
+            what="Claude credentials refused"
           fi
-          echo "limit_reached=${limit_reached}" >> "$GITHUB_OUTPUT"
+          if [ -n "$reason" ]; then
+            echo "::error::${what} (auth=${CLAUDE_AUTH_MODE}) in ${CLAUDE_STEP}: no retry until it is resolved"
+            echo "- **${what} (auth=${CLAUDE_AUTH_MODE})** in \`${CLAUDE_STEP}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "stopped=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "stopped=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "stop_reason=${reason}" >> "$GITHUB_OUTPUT"
 
-      # The first session stopped at a spend or usage limit and its retry was
-      # skipped: fail here, so "Handle repair failure" restores the PR without
-      # an auto-retry instead of the steps below running on an unrepaired file.
-      - name: Stop at the Claude spend or usage limit
-        if: steps.claude_cost.outputs.limit_reached == 'true'
+      # Claude stopped the first session (a limit or refused credentials) and
+      # its retry was skipped: fail here, so "Handle repair failure" pauses the
+      # PR without an auto-retry instead of the steps below running on an
+      # unrepaired file.
+      - name: Stop when Claude stopped the session
+        if: steps.claude_cost.outputs.stopped == 'true'
         run: |
-          echo "::error::Claude spend/usage limit reached; the retry is skipped"
+          echo "::error::Claude stopped the session (${{ steps.claude_cost.outputs.stop_reason }}); the retry is skipped"
           exit 1
 
       - name: Process repaired image
@@ -449,6 +504,9 @@ jobs:
           SPEC_ID: ${{ inputs.specification_id }}
           LIBRARY: ${{ inputs.library }}
         run: |
+          # This step runs model-written code: it gets no way to mint an OIDC
+          # token (the job has id-token for Claude and Google Cloud).
+          unset ACTIONS_ID_TOKEN_REQUEST_URL ACTIONS_ID_TOKEN_REQUEST_TOKEN
           OUT="$RUNNER_TEMP/adapt"; TOOLS="$RUNNER_TEMP/adapt-tools"
           rm -rf "$OUT" "$TOOLS"; mkdir -p "$OUT" "$TOOLS"
           # The runner comes from this workflow's ref, never from the PR branch.
@@ -559,27 +617,40 @@ jobs:
           MODEL: ${{ steps.model.outputs.model || inputs.model || 'auto' }}
           REPOSITORY: ${{ github.repository }}
           RUN_ID: ${{ github.run_id }}
-          # Either session stopped at a Claude spend or usage limit.
-          LIMIT_REACHED: ${{ steps.claude_cost.outputs.limit_reached == 'true' || steps.claude_retry_cost.outputs.limit_reached == 'true' }}
+          # Claude stopped either session (a limit or refused credentials).
+          CLAUDE_STOPPED: ${{ steps.claude_cost.outputs.stopped == 'true' || steps.claude_retry_cost.outputs.stopped == 'true' }}
+          STOP_REASON: ${{ steps.claude_cost.outputs.stop_reason || steps.claude_retry_cost.outputs.stop_reason }}
           CLAUDE_MODE: ${{ steps.claude_auth.outputs.mode }}
         run: |
           # Restore ai-rejected label that was removed at start of repair so the
           # PR state stays consistent (otherwise it looks "stuck approved").
           gh pr edit "$PR_NUM" --add-label "ai-rejected" 2>/dev/null || true
 
-          # A Claude spend or usage limit: an auto-retry now would be refused
-          # the same way. The comment carries its own marker, not the
-          # repair-retry one, so the attempt keeps its one crash retry for after
-          # the limit resets or is raised; the watchdog's repair rescue (once
-          # per attempt) or a manual restart picks the PR up.
-          if [ "${LIMIT_REACHED}" = "true" ]; then
-            echo "::error::Claude spend/usage limit reached (auth=${CLAUDE_MODE}) — repair attempt ${ATTEMPT} stopped, no auto-retry"
-            gh pr comment "$PR_NUM" --body "<!-- repair-paused-claude-limit:${SPEC_ID}:${LIBRARY}:attempt-${ATTEMPT} -->
-          ## :pause_button: Repair Paused (Claude spend/usage limit, Attempt ${ATTEMPT}/4)
+          # Claude stopped the session (a spend or usage limit, or refused
+          # credentials): an auto-retry now would be refused the same way.
+          # `ai-repair-paused` keeps the watchdog's one-shot rescue off the PR;
+          # daily-regen's pair mode, or a manual restart, resumes it. The
+          # comment carries its own marker, not the repair-retry one, so the
+          # attempt keeps its one crash retry for after the stop is resolved.
+          if [ "${CLAUDE_STOPPED}" = "true" ]; then
+            if [ "${STOP_REASON}" = "auth" ]; then
+              WHY="Claude credentials refused"
+              WHEN="once the credentials are fixed"
+            else
+              WHY="Claude spend/usage limit reached"
+              WHEN="once the limit resets or is raised"
+            fi
+            echo "::error::${WHY} (auth=${CLAUDE_MODE}) — repair attempt ${ATTEMPT} paused, no auto-retry"
+            gh label create "ai-repair-paused" --color "fbca04" \
+              --description "Repair paused: Claude stopped it (spend/usage limit or refused credentials)" 2>/dev/null || true
+            gh pr edit "$PR_NUM" --add-label "ai-repair-paused" 2>/dev/null \
+              || echo "::warning::could not add ai-repair-paused to PR #${PR_NUM}"
+            gh pr comment "$PR_NUM" --body "<!-- repair-paused-claude:${SPEC_ID}:${LIBRARY}:attempt-${ATTEMPT} -->
+          ## :pause_button: Repair Paused (${WHY}, Attempt ${ATTEMPT}/4)
 
-          Claude refused the repair at a spend or usage limit (auth=\`${CLAUDE_MODE}\`). Nothing was retried, and the attempt is not used up.
+          Claude stopped the repair: ${WHY} (auth=\`${CLAUDE_MODE}\`). Nothing was retried, and the attempt is not used up. The PR carries \`ai-repair-paused\`, which the watchdog leaves alone; daily-regen's pair mode resumes it.
 
-          **Restart once the limit resets or is raised:**
+          **Restart ${WHEN}:**
           \`\`\`
           gh workflow run impl-repair.yml -f pr_number=${PR_NUM} -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f attempt=${ATTEMPT} -f model=${MODEL}
           \`\`\`
