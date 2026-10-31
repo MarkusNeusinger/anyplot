@@ -44,8 +44,10 @@ def test_catalogue_file_in_miniature() -> None:
     assert measure_canvas(report.code).pixels == LANDSCAPE
 
 
-@pytest.mark.parametrize("library", ["plotly", "ggplot2", ""])
+@pytest.mark.parametrize("library", ["ggplot2", "chartjs", ""])
 def test_unsupported_library_raises(library: str) -> None:
+    """Every Python library of the catalogue has a normaliser since PB-2a (plotly and bokeh); another language's
+    library has its own profile."""
     with pytest.raises(ValueError, match="no normaliser"):
         normalise(CATALOGUE, library=library)
 

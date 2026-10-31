@@ -16,7 +16,8 @@ what `POST /v1/sessions` does with a catalogue snapshot (`opening.assess`): stri
 (`render.runtimes.runtime_for`), which applies the SECURITY validator, the `THEME` and
 save-target checks and the map-spec rule. It counts the
 pairs by status (`clean`, `coupled`, `blocked`) per library, the blocked pairs by
-reason category (`security`, `no-theme`, `savefig-target`, `map-spec`, `syntax`), and
+reason category (`security`, `no-theme`, `savefig-target`, `map-spec`, `syntax`, and
+`webgl` for a plotly trace the renderer's browser cannot draw yet), and
 the SECURITY findings by rule id, and writes `<out>/<date>-eligibility.json` and its
 Markdown table (default `agents/evals/reports/`, git-ignored). A file whose
 normalisation raises counts as `error` with the exception class.
@@ -46,6 +47,8 @@ LIBRARIES: tuple[str, ...] = (
     "altair",
     "pygal",
     "letsplot",
+    "plotly",
+    "bokeh",
     "ggplot2",
     "makie",
     "chartjs",
@@ -54,9 +57,10 @@ LIBRARIES: tuple[str, ...] = (
     "highcharts",
     "muix",
 )
-"""The libraries with a runtime (`render.runtimes.RUNTIME_LIBRARIES`, pinned by a test), in sweep order: the six
-Python libraries, then ggplot2 (R, since 2026-10-29), Makie (Julia, since 2026-10-30), Chart.js, D3, ECharts and
-Highcharts (JavaScript, since 2026-10-30) and MUI X (JavaScript as TSX, since 2026-10-31)."""
+"""The libraries with a runtime (`render.runtimes.RUNTIME_LIBRARIES`, pinned by a test), in sweep order: the eight
+Python libraries (plotly and bokeh since 2026-10-31), then ggplot2 (R, since 2026-10-29), Makie (Julia, since
+2026-10-30), Chart.js, D3, ECharts and Highcharts (JavaScript, since 2026-10-30) and MUI X (JavaScript as TSX, since
+2026-10-31): all 15."""
 STATUSES: tuple[str, ...] = ("clean", "coupled", "blocked", "error")
 _SECURITY_RULE = re.compile(r"^security: ([a-z][a-z0-9-]*)(?: at line \d+)?:")
 

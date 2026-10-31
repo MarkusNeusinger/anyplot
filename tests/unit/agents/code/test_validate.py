@@ -94,8 +94,9 @@ class TestInterface:
         assert validate_security(plot("import seaborn as sns\n"), library="seaborn") == []
         assert validate_adaptation(ADAPTED, original_palette=ORIGINAL) == []
 
-    @pytest.mark.parametrize("library", ["plotly", "bokeh", "ggplot2", "d3"])
+    @pytest.mark.parametrize("library", ["ggplot2", "makie", "d3", "muix"])
     def test_library_without_profile_raises(self, library: str) -> None:
+        """Every Python library has a profile here since PB-2a (plotly, bokeh); the others have their language's."""
         with pytest.raises(ValueError, match="no validator profile"):
             validate_security(plot(), library=library)
 
@@ -1561,6 +1562,29 @@ REVIEWED_SUBMODULES: dict[str, frozenset[str]] = {
         "scale_colormap_mpl scale_convenience scale_identity_ scale_position series_meta stat subplots "
         "subplots_util theme_ theme_set tooltip util".split()
     ),
+    # PB-2a (2026-10-31, plotly 7.1.0, bokeh 3.10.1). plotly's trace modules hold the trace classes and their
+    # validators; express's `data` (bundled CSVs) is banned on its module, its `colors` re-exports plotly.colors,
+    # `trendline_functions` fits with statsmodels; figure_factory's `utils` computes. `plotly.graph_objects`,
+    # `plotly.colors` and `plotly.subplots` have no public submodule. bokeh's `callbacks`, `css`, `dom`, `map_plots`
+    # and `tiles` and plotting's `gmap` are banned on their modules, and `renderers` is banned on every receiver
+    # (altair's plugin registry, `UNSAFE_HELPERS`); the other model modules hold models whose JavaScript, markup and
+    # URL members are banned by name (`LIBRARY_BANS["bokeh"]`).
+    "plotly.graph_objs": frozenset(
+        "bar barpolar box candlestick carpet choropleth choroplethmap cone contour contourcarpet densitymap funnel "
+        "funnelarea graph_objs heatmap histogram histogram2d histogram2dcontour icicle image indicator isosurface "
+        "layout mesh3d ohlc parcats parcoords pie quiver sankey scatter scatter3d scattercarpet scattergeo scattergl "
+        "scattermap scatterpolar scatterpolargl scattersmith scatterternary splom streamtube sunburst surface table "
+        "treemap violin volume waterfall".split()
+    ),
+    "plotly.express": frozenset("colors imshow_utils trendline_functions".split()),
+    "plotly.figure_factory": frozenset({"utils"}),
+    "bokeh.plotting": frozenset("contour glyph_api graph".split()),
+    "bokeh.models": frozenset(
+        "annotations axes canvas comparisons coordinates expressions filters formatters glyph glyphs graphics "
+        "graphs grids labeling layouts mappers misc nodes plots ranges scales selections selectors sources "
+        "text textures tickers tools transforms ui util widgets".split()
+    ),
+    "bokeh.colors": frozenset("color groups named util".split()),
 }
 
 
@@ -1780,6 +1804,10 @@ def library_plot(library: str, body: str = "") -> str:
         return pygal_plot(body)
     if library == "letsplot":
         return letsplot_plot(body)
+    if library == "plotly":
+        return plotly_plot(body)
+    if library == "bokeh":
+        return bokeh_plot(body)
     return plot(("import seaborn as sns\n" if library == "seaborn" else "") + body)
 
 
@@ -2249,6 +2277,51 @@ def pygal_plot(body: str = "") -> str:
 def letsplot_plot(body: str = "") -> str:
     """A minimal valid lets-plot file in the catalogue's normalised shape, with `body` before the plot."""
     return LETSPLOT_HEADER + body + LETSPLOT_FOOTER
+
+
+PLOTLY_HEADER = """import os
+
+import pandas as pd
+import plotly.graph_objects as go
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+df = pd.DataFrame({"a": [1, 2, 3]})
+"""
+PLOTLY_FOOTER = """fig = go.Figure(go.Scatter(x=df["a"], y=df["a"]))
+fig.update_layout(paper_bgcolor=PAGE_BG, xaxis={"range": [0, 4]})
+fig.update_layout(width=800, height=450).write_json(f"plot-{THEME}.json")
+"""
+BOKEH_HEADER = """import json
+import os
+
+import pandas as pd
+from bokeh.embed import json_item
+from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.plotting import figure
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+df = pd.DataFrame({"a": [1, 2, 3]})
+"""
+BOKEH_FOOTER = """p = figure(width=4800, height=2700, toolbar_location=None)
+p.scatter(x="a", y="a", source=ColumnDataSource(df))
+p.add_tools(HoverTool(tooltips=[("a", "@a{0.0}")]))
+p.background_fill_color = PAGE_BG
+
+with open(f"plot-{THEME}.json", "w", encoding="utf-8") as figure_file:
+    json.dump(json_item(p), figure_file)
+"""
+
+
+def plotly_plot(body: str = "") -> str:
+    """A minimal valid plotly file in the normalised shape (the pinned figure save, PB-2a), with `body` before it."""
+    return PLOTLY_HEADER + body + PLOTLY_FOOTER
+
+
+def bokeh_plot(body: str = "") -> str:
+    """A minimal valid bokeh file in the normalised shape (the pinned figure save, PB-2a), with `body` before it."""
+    return BOKEH_HEADER + body + BOKEH_FOOTER
 
 
 PYGAL_ROUTES = [
@@ -2801,7 +2874,14 @@ def test_a_save_name_in_a_plotnine_expression_is_refused() -> None:
     ]
 
 
-LIBRARY_ROOTS = {"altair": "altair", "pygal": "pygal", "letsplot": "lets_plot"}
+LIBRARY_ROOTS = {
+    "altair": "altair",
+    "pygal": "pygal",
+    "letsplot": "lets_plot",
+    # plotly's and bokeh's package roots are no admitted import (PB-2a): a module of their surface stands in.
+    "plotly": "plotly.graph_objects",
+    "bokeh": "bokeh.models",
+}
 
 
 @pytest.mark.parametrize(

@@ -380,8 +380,12 @@ class TestOtherValidators:
         with pytest.raises(ValidationError, match="unknown libraries"):
             AgentSettings(libraries=["matplotlib", "excel"])
 
-    def test_library_without_a_runtime_is_refused(self) -> None:
-        """A catalogue library without a phase-1 runtime must not be reported as enabled."""
+    def test_library_without_a_runtime_is_refused(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """A catalogue library without a runtime must not be reported as enabled. The registry serves all 15 since
+        PB-2a (2026-10-31), so a registry without plotly stands in for one that lacks a library."""
+        from agents.anyplot import settings as settings_module
+
+        monkeypatch.setattr(settings_module, "RUNTIME_LIBRARIES", settings_module.RUNTIME_LIBRARIES - {"plotly"})
         with pytest.raises(ValidationError, match="no runtime"):
             AgentSettings(libraries=["matplotlib", "plotly"])
 

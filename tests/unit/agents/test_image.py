@@ -510,8 +510,12 @@ class TestCloudBuild:
             "_JUDGE_MODEL": defaults["judge_model"].default,
             # Every library with a runtime for the admin's live tests (owner, 2026-10-28), not the settings default:
             # the six Python libraries, ggplot2 on the R runtime (2026-10-29), Makie on the Julia runtime and Chart.js,
-            # D3, ECharts and Highcharts on the JavaScript runtime (2026-10-30), MUI X on it too (2026-10-31).
-            "_LIBRARIES": "matplotlib,seaborn,plotnine,altair,pygal,letsplot,ggplot2,makie,chartjs,d3,echarts,highcharts,muix",
+            # D3, ECharts and Highcharts on the JavaScript runtime (2026-10-30), MUI X on it too and plotly and bokeh on
+            # the Python runtime through the renderer's figure mode (2026-10-31): all 15.
+            "_LIBRARIES": (
+                "matplotlib,seaborn,plotnine,altair,pygal,letsplot,plotly,bokeh,ggplot2,makie,chartjs,d3,echarts,"
+                "highcharts,muix"
+            ),
             "_MIN_INSTANCES": "0",
             "_SMOKE_AUTH": "true",
         }

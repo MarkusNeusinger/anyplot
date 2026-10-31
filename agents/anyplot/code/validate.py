@@ -6,8 +6,9 @@ return an empty list for valid code and never raise on invalid code: a syntax er
 one only the compiler reports, such as a module-level `return`), an oversize file or a
 string that is not UTF-8 text is itself a `Finding`. Only `library` makes
 `validate_security` raise `ValueError`: an id outside the catalogue, or a catalogue
-library without a profile yet (`LIBRARY_IMPORTS`: matplotlib, seaborn, plotnine, altair,
-pygal and letsplot), because that is a caller bug, not a property of the code.
+library without a Python profile (`LIBRARY_IMPORTS`: matplotlib, seaborn, plotnine, altair,
+pygal, letsplot, plotly and bokeh; the other languages have their own), because that is a
+caller bug, not a property of the code.
 
 The validator is one guardrail layer, not the boundary: the sandbox (no egress, read-only
 root, no environment) and the loader substitution are the others. Its job is to make the
@@ -254,6 +255,33 @@ Decisions this module takes where the design leaves room:
   bound to a name (`tt = layer_tooltips(); tt.format(...)`) and a builder name bound
   twice stay findings. The `format=` keyword (`scale_y_continuous(format=...)`) is
   no attribute and passes everywhere.
+* **plotly and bokeh** (PB-2a, 2026-10-31). plotly gets `plotly.graph_objects` (and its
+  `graph_objs` alias), `plotly.express`, `plotly.subplots`, `plotly.colors` and
+  `plotly.figure_factory`, not the package root, so `plotly.io` (kaleido, `show`, file
+  readers), `plotly.offline` and `plotly.tools` stay out of reach (`_check_attribute_surface`
+  refuses `plotly.io` through `import plotly.colors`, too); `plotly.express.data`, the bundled
+  CSVs, is banned on its module. bokeh gets `bokeh.plotting`, `bokeh.models`,
+  `bokeh.layouts`, `bokeh.palettes`, `bokeh.transform`, `bokeh.colors`, `bokeh.util.hex`,
+  `bokeh.core.properties` and `json_item` of `bokeh.embed`; its submodules of JavaScript
+  models, stylesheets, DOM templates, tiles and Google Maps are banned on their modules
+  (`MODULE_ESCAPES`). `LIBRARY_BANS` holds plotly's other writers and browser starters, its
+  widget, map token, county choropleth and import by name, and bokeh's JavaScript models and
+  callbacks, markup models, URL-fetching models, and the writers `bokeh.plotting` re-exports.
+  bokeh's `tooltips` are `(label, value)` pairs, never a string, which bokeh renders as an
+  HTML template (`banned-keyword`). Both are drawn in a browser page that admits scripts by
+  its nonce alone and aborts every request (PB-1), so these rules guard the exported HTML,
+  which has no such policy, and keep the render's failures out of the adapter's way.
+* **The figure save** (plotly and bokeh, `code/figure.py`). Both save through one pinned
+  statement that writes `f"plot-{THEME}.json"`, `fig.update_layout(width=W, height=H)
+  .write_json(...)` or `with open(..., "w", encoding="utf-8") as figure_file:
+  json.dump(json_item(p), figure_file)`, which no rule above admits (`write_json` and `dump`
+  are banned names, `open` a banned builtin, `json` no admitted module). `_lift_figure_save`
+  takes every module-level statement of exactly that shape out of the tree the rules scan,
+  and bokeh's `import json` with it when nothing else reads the name; nothing in the
+  statement but the plot's name is free, and the plot's name is no imported name. Without
+  such a statement, or with two, it is a `savefig-target` finding, and so is a binding of
+  `json` other than `import json`, of `json_item` other than its import, or any binding of
+  `open`. The renderer's plot step may write that file and nothing else, under the guard.
 * **`type()`** is allowed with exactly one plain positional argument; anything else
   (three arguments, starred arguments, keywords) is the class-creating form.
 * **String method names.** pandas resolves `df.agg("to_csv")`, `df.apply("eval")` and
@@ -342,6 +370,7 @@ from core.constants import SUPPORTED_LIBRARIES
 from core.palette import IMPRINT
 
 from ..schemas import MAX_CODE_CHARS
+from .figure import JSON_ITEM, JSON_MODULE, FigureKind, figure_saves, is_json_import, is_json_item_import
 from .regions import (
     HTML_SUFFIX,
     PNG_SUFFIX,
@@ -505,8 +534,8 @@ _MATPLOTLIB_STACK: frozenset[str] = frozenset(
 # catalogue files also import directly (`cairocffi`, `PIL`, `xml.etree` and matplotlib stay
 # out, and so do the 23 catalogue files that subclass pygal's `Graph`: a class definition
 # is refused in every profile); lets-plot needs nothing else (no catalogue file imports
-# matplotlib with it; the 4 that draw on the PNG with PIL stay out). The other Python
-# libraries (plotly, bokeh) have no profile yet and raise `ValueError`.
+# matplotlib with it; the 4 that draw on the PNG with PIL stay out). plotly and bokeh (PB-2a) get the subpackages
+# their catalogue files import, never the package root (module docstring, "plotly and bokeh").
 LIBRARY_IMPORTS: dict[str, frozenset[str]] = {
     "matplotlib": _MATPLOTLIB_STACK,
     "seaborn": _MATPLOTLIB_STACK | {"seaborn"},
@@ -514,6 +543,29 @@ LIBRARY_IMPORTS: dict[str, frozenset[str]] = {
     "altair": frozenset({"altair", "PIL.Image"}),
     "pygal": frozenset({"pygal", "cairosvg"}),
     "letsplot": frozenset({"lets_plot"}),
+    "plotly": frozenset(
+        {
+            "plotly.graph_objects",
+            "plotly.graph_objs",
+            "plotly.express",
+            "plotly.subplots",
+            "plotly.colors",
+            "plotly.figure_factory",
+        }
+    ),
+    "bokeh": frozenset(
+        {
+            "bokeh.plotting",
+            "bokeh.models",
+            "bokeh.layouts",
+            "bokeh.palettes",
+            "bokeh.transform",
+            "bokeh.colors",
+            "bokeh.util.hex",
+            "bokeh.core.properties",
+            "bokeh.embed.json_item",
+        }
+    ),
 }
 # The DATA profile: no plotting stack, no sklearn (its `datasets` fetch over the network) and
 # no statsmodels (`statsmodels.api.datasets` and `webuse` read files and URLs). The standard
@@ -1063,6 +1115,18 @@ MODULE_ESCAPES: frozenset[str] = frozenset(
         "lets_plot.LetsPlot.set",
         "lets_plot.LetsPlot.setup_show_ext",
         "lets_plot.cfg",
+        # plotly (PB-2a, 2026-10-31): `plotly.express.data` reads the package's bundled CSVs (`px.data.iris()`), a name
+        # too common to ban (`fig.data`). bokeh: the submodules whose every model runs JavaScript (`callbacks`:
+        # `CustomJS`, `OpenURL`), loads a stylesheet or tiles from a URL (`css`, `tiles`), renders HTML templates into
+        # the page (`dom`) or calls the Google Maps API (`map_plots`, `plotting.gmap`); their models are banned by
+        # name in `LIBRARY_BANS["bokeh"]` too, wherever bokeh re-exports them.
+        "plotly.express.data",
+        "bokeh.models.callbacks",
+        "bokeh.models.css",
+        "bokeh.models.dom",
+        "bokeh.models.map_plots",
+        "bokeh.models.tiles",
+        "bokeh.plotting.gmap",
     }
 )
 """Escapes banned only on their own module, because the bare name is plausible data: `calendar.main`
@@ -1248,6 +1312,107 @@ LIBRARY_BANS: dict[str, frozenset[str]] = {
     # `LayerSpec.props()` hands out the spec's own dict, so code could rewrite a field the native bridge reads (an
     # image layer's `href`) after the check (the lets-plot spike of 2026-10-26); `props` is a plausible name elsewhere.
     "letsplot": frozenset({"props"}),
+    # plotly (PB-2a, 2026-10-31): the figure's other writers and its browser, which kaleido starts (`write_image`,
+    # `to_image`, `full_figure_for_development`), the HTML writers (`write_html`; `to_html`, `write_json` and `show`
+    # are banned everywhere), the widget and the bundle getter, the map token, figure_factory's county choropleth,
+    # which reads shapefiles, and `optional_imports.get_module`, an import by name. The figure is saved only by the
+    # pinned statement (`code/figure.py`), which the scan never sees.
+    "plotly": frozenset(
+        {
+            "write_image",
+            "write_html",
+            "to_image",
+            "full_figure_for_development",
+            "FigureWidget",
+            "get_plotlyjs",
+            "set_mapbox_access_token",
+            "create_county_choropleth",
+            "optional_imports",
+            "get_module",
+            "offline",
+        }
+    ),
+    # bokeh (PB-2a): no JavaScript (every `CustomJS...` model, `OpenURL`, `CustomAction`, the `js_*` callbacks and
+    # `HTMLTemplateFormatter`, whose templates compile to code), no markup the page or the exported HTML renders
+    # (`Div`, `Paragraph`, `PreText`, the HTML labels and title, dialogs and menus, `SVGIcon`'s raw SVG and
+    # `TablerIcon`'s web font), nothing fetched from a URL (the
+    # remote data sources, `ImageURL` and `image_url`, imported stylesheets, tile sources and `add_tile`, Google Maps),
+    # and none of the writers and browser starters `bokeh.plotting` re-exports (`output_file`, `show`, `curdoc`, ...;
+    # `save` is a save name no bokeh rule lists). The page refuses scripts without its nonce and every request, so in
+    # the sandbox these fail anyway (PB-1); the exported HTML has no such policy.
+    "bokeh": frozenset(
+        {
+            "CustomJS",
+            "CustomJSCompare",
+            "CustomJSExpr",
+            "CustomJSFilter",
+            "CustomJSHover",
+            "CustomJSTickFormatter",
+            "CustomJSTicker",
+            "CustomJSTransform",
+            "CustomAction",
+            "Callback",
+            "OpenURL",
+            "HTMLTemplateFormatter",
+            "js_on_event",
+            "js_on_change",
+            "js_on_click",
+            "js_link",
+            "js_event_callbacks",
+            "js_property_callbacks",
+            "Div",
+            "Paragraph",
+            "PreText",
+            "Markup",
+            "HTMLAnnotation",
+            "HTMLLabel",
+            "HTMLLabelSet",
+            "HTMLTitle",
+            "Dialog",
+            "OpenDialog",
+            "CloseDialog",
+            "Menu",
+            "ToolMenu",
+            "MenuItem",
+            "ActionItem",
+            "SVGIcon",
+            "TablerIcon",
+            "dom",
+            "AjaxDataSource",
+            "ServerSentDataSource",
+            "WebDataSource",
+            "ImageURL",
+            "image_url",
+            "ImageURLTexture",
+            "ImportedStyleSheet",
+            "GlobalImportedStyleSheet",
+            "TileSource",
+            "MercatorTileSource",
+            "TMSTileSource",
+            "WMTSTileSource",
+            "BBoxTileSource",
+            "QUADKEYTileSource",
+            "TileRenderer",
+            "add_tile",
+            "GMapPlot",
+            "GMap",
+            "GMapOptions",
+            "gmap",
+            "output_file",
+            "output_notebook",
+            "reset_output",
+            "curdoc",
+            "export_png",
+            "export_svg",
+            "export_svgs",
+            "file_html",
+            "components",
+            "autoload_static",
+            "server_document",
+            "server_session",
+            "push_notebook",
+        }
+    ),
 }
 """Names banned as attributes and `from` imports in one library's profile only, like `UNSAFE_HELPERS` there."""
 _STRING_DISPATCH_METHODS = frozenset({"agg", "aggregate", "apply", "transform", "applymap"})
@@ -1397,9 +1562,75 @@ def validate_security(code: str, *, library: str) -> list[Finding]:
     tree, findings = _parse(code)
     if tree is None:
         return findings
+    rule = save_rule(library)
+    figure_findings: list[Finding] = []
+    if rule.figure is not None:
+        tree, figure_findings = _lift_figure_save(tree, rule.figure)
     scan = _Scan(tree)
-    scan.security(library, COMMON_IMPORTS | SHARED_SCIENCE_IMPORTS | library_imports, save_rule(library))
+    scan.security(library, COMMON_IMPORTS | SHARED_SCIENCE_IMPORTS | library_imports, rule)
+    scan.findings.extend(figure_findings)
     return scan.result()
+
+
+FIGURE_SAVE_FORMS: dict[FigureKind, str] = {
+    "plotly": 'fig.update_layout(width=..., height=...).write_json(f"plot-{THEME}.json")',
+    "bokeh": 'with open(f"plot-{THEME}.json", "w", encoding="utf-8") as figure_file: json.dump(json_item(p), '
+    "figure_file)",
+}
+"""The pinned figure save of each figure library (`code/figure.py`), as the missing-save finding names it."""
+
+
+def _lift_figure_save(tree: ast.Module, kind: FigureKind) -> tuple[ast.Module, list[Finding]]:
+    """plotly's and bokeh's pinned figure save (module docstring, "The figure save"), lifted out of the tree the rules
+    scan, and the findings about it: none found, more than one, a plot that is a module, and for bokeh the names its
+    statement reads (`json`, `json_item`, `open`) bound anywhere else.
+
+    The statement is exactly the pinned shape (`figure.match_figure_save`) with one name free, so lifting it hides
+    nothing the rules would judge: its `open`, `json.dump` and `write_json` are refused everywhere else in the file.
+    bokeh's `import json` is lifted with it only when nothing else reads the name; otherwise the import rule refuses it.
+    """
+    saves = figure_saves(tree, kind)
+    findings: list[Finding] = []
+    if not saves:
+        findings.append(
+            Finding("savefig-target", f"no save of the figure found: end with {FIGURE_SAVE_FORMS[kind]}", None)
+        )
+        return tree, findings
+    for stmt, _ in saves[1:]:
+        findings.append(
+            Finding("savefig-target", "the figure is saved once, by the last module-level statement", stmt.lineno)
+        )
+    lifted = {id(stmt) for stmt, _ in saves}
+    full = _Scan(tree)
+    for stmt, found in saves:
+        # A name an import binds is a module or a function, never the plot (`json_item(np)`, `os.write_json(...)`).
+        if found.name in full.aliases or found.name in {"os", THEME_NAME}:
+            message = f"the figure save takes the plot, never the name '{found.name}'"
+            findings.append(Finding("module-value", message[:MAX_MESSAGE_CHARS], stmt.lineno))
+    if kind == "bokeh":
+        rest = [stmt for stmt in tree.body if id(stmt) not in lifted]
+        reads = {
+            node.id
+            for stmt in rest
+            for node in ast.walk(stmt)
+            if isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)
+        }
+        if JSON_MODULE not in reads:
+            lifted |= {id(stmt) for stmt in tree.body if is_json_import(stmt)}
+        for name, allowed in ((JSON_MODULE, is_json_import), (JSON_ITEM, is_json_item_import), ("open", None)):
+            for node in full._binding_nodes(name):
+                parent = full.parents.get(node)
+                if (
+                    allowed is not None
+                    and isinstance(node, ast.alias)
+                    and isinstance(parent, ast.stmt)
+                    and allowed(parent)
+                ):
+                    continue
+                message = f"'{name}' is read by the figure save and bound only by its import"
+                findings.append(Finding("savefig-target", message, full._line(node)))
+    body = [stmt for stmt in tree.body if id(stmt) not in lifted]
+    return ast.Module(body=body, type_ignores=tree.type_ignores), findings
 
 
 def validate_adaptation(code: str, *, original_palette: list[str]) -> list[Finding]:
@@ -1525,6 +1756,17 @@ def _is_none(node: ast.expr) -> bool:
 
 def _is_text(node: ast.expr) -> bool:
     return isinstance(node, ast.Constant) and isinstance(node.value, str)
+
+
+def _is_text_value(node: ast.expr) -> bool:
+    """A string: a literal, an f-string, a concatenation or `%` formatting with one, or a conditional of strings."""
+    if isinstance(node, ast.JoinedStr) or _is_text(node):
+        return True
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add | ast.Mod):
+        return _is_text_value(node.left) or _is_text_value(node.right)
+    if isinstance(node, ast.IfExp):
+        return _is_text_value(node.body) or _is_text_value(node.orelse)
+    return False
 
 
 def _is_inline_css(node: ast.expr) -> bool:
@@ -1778,6 +2020,8 @@ class _Scan:
             self._check_pygal_config()  # before the strings: it marks pygal's own stylesheets for the URL rule
         if library == "letsplot":
             self._check_letsplot_object()
+        if library == "bokeh":
+            self._check_bokeh_tooltips()
         self._check_strings()
         self._check_save(rule)
         self._check_save_names()
@@ -2316,7 +2560,8 @@ class _Scan:
                 self.add("banned-call", f"'{_snippet(func)}' is not allowed{hint}", call)
                 continue
             wrote_png |= self._check_save_call(call, rule, name)
-        if rule is not None and not wrote_png:
+        # plotly and bokeh write their figure by the pinned statement, which `_lift_figure_save` checks.
+        if rule is not None and rule.figure is None and not wrote_png:
             self.add("savefig-target", f'no {rule.verb} of f"plot-{{THEME}}.png" found', None)
 
     def _check_save_call(self, call: ast.Call, rule: SaveRule, name: str) -> bool:
@@ -2626,6 +2871,28 @@ class _Scan:
     def _is_unpacked(self, name: ast.Name) -> bool:
         parent = self.parents.get(name)
         return isinstance(parent, ast.keyword) and parent.arg is None
+
+    def _check_bokeh_tooltips(self) -> None:
+        """bokeh's `tooltips` as `(label, value)` pairs, never a string (module docstring, "bokeh"): a string is an
+        HTML template, which a hover renders into the page, and the exported HTML has no script policy. A `tooltips=`
+        keyword and a `.tooltips` store are checked, a module-level name through its one binding."""
+        message = "tooltips takes a list of (label, value) pairs; an HTML string template is not allowed"
+        values: list[tuple[ast.AST, ast.expr]] = [
+            (keyword, keyword.value) for keyword in self.of(ast.keyword) if keyword.arg == "tooltips"
+        ]
+        stores: list[tuple[ast.stmt, ast.expr, ast.expr]] = [
+            *((assign, target, assign.value) for assign in self.of(ast.Assign) for target in assign.targets),
+            *((assign, assign.target, assign.value) for assign in self.of(ast.AugAssign)),
+        ]
+        for statement, target, stored in stores:
+            if isinstance(target, ast.Attribute) and target.attr == "tooltips":
+                values.append((statement, stored))
+        for node, value in values:
+            if isinstance(value, ast.Name):
+                bound = self._module_value(value.id)
+                value = bound if bound is not None else value
+            if _is_text_value(value):
+                self.add("banned-keyword", message, node)
 
     def _check_letsplot_object(self) -> None:
         """`LetsPlot` only as `LetsPlot.setup_html()` without arguments (module docstring, "lets-plot")."""

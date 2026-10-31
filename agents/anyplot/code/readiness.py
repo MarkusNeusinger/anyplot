@@ -165,6 +165,82 @@ NORM_CALLS: dict[str, tuple[tuple[int, ...], frozenset[str]]] = {
 }
 """Each norm's range, center or boundary arguments, by position and keyword; never an encoding parameter such
 as `PowerNorm`'s `gamma` or `SymLogNorm`'s `linthresh` (review of #12206)."""
+WEBGL_TRACES = frozenset(
+    {
+        "Scattergl",
+        "Scatterpolargl",
+        "Splom",
+        "Scatter3d",
+        "Surface",
+        "Mesh3d",
+        "Cone",
+        "Streamtube",
+        "Volume",
+        "Isosurface",
+        "Parcoords",
+        "Scattermap",
+        "Choroplethmap",
+        "Densitymap",
+        "Scattermapbox",
+        "Choroplethmapbox",
+        "Densitymapbox",
+    }
+)
+"""plotly's trace types that draw with WebGL (plotly 7.1.0; the map traces through MapLibre), which the figure mode's
+browser lacks: plotly draws a notice in their place, and the render fails as `draw NoWebGL` (PB-1, 2026-10-31)."""
+WEBGL_EXPRESS = frozenset(
+    {
+        "scatter_3d",
+        "line_3d",
+        "scatter_matrix",
+        "parallel_coordinates",
+        "scatter_map",
+        "line_map",
+        "density_map",
+        "choropleth_map",
+        "scatter_mapbox",
+        "line_mapbox",
+        "density_mapbox",
+        "choropleth_mapbox",
+    }
+)
+"""The plotly express functions that make one of `WEBGL_TRACES`; `scatter` and `line` switch to `Scattergl` above
+1,000 points unless `render_mode="svg"`, which the normaliser adds (`normalise.PX_RENDER_MODE`)."""
+BOKEH_RANGE_CALLS = frozenset({"Range1d", "FixedTicker"})
+"""bokeh's literal axis ranges and ticks: `Range1d(0, 100)`, `FixedTicker(ticks=[0, 25, 50])`."""
+FIGURE_COUPLING: dict[
+    str, tuple[frozenset[str], dict[str, frozenset[str]], dict[str, tuple[tuple[int, ...], frozenset[str]]]]
+] = {
+    # plotly: an axis's `range`, `tickvals` and `dtick` as keywords or dict keys (`xaxis={"range": [0, 11]}`); shapes
+    # and annotations placed at data coordinates; `zmin`/`zmax` are COLOR_SCALE_KEYWORDS already.
+    "plotly": (
+        frozenset({"range", "tickvals", "dtick"}),
+        {
+            name: frozenset({"x", "y", "x0", "x1", "y0", "y1"})
+            for name in ("add_annotation", "add_hline", "add_vline", "add_hrect", "add_vrect", "add_shape")
+        },
+        {},
+    ),
+    # bokeh: `x_range=(0, 10.5)`, `ticker=[...]`, `Range1d`/`FixedTicker` (`BOKEH_RANGE_CALLS`) and range stores;
+    # `Span`, `Label`, `BoxAnnotation` and `Arrow` at data coordinates; a colour mapper's `low` and `high`.
+    "bokeh": (
+        frozenset({"x_range", "y_range", "ticker", "ticks"}),
+        {
+            "Span": frozenset({"location"}),
+            "Label": frozenset({"x", "y"}),
+            "BoxAnnotation": frozenset({"left", "right", "top", "bottom"}),
+            "Arrow": frozenset({"x_start", "y_start", "x_end", "y_end"}),
+        },
+        {
+            "LinearColorMapper": ((), frozenset({"low", "high"})),
+            "LogColorMapper": ((), frozenset({"low", "high"})),
+            "linear_cmap": ((2, 3), frozenset({"low", "high"})),
+            "log_cmap": ((2, 3), frozenset({"low", "high"})),
+        },
+    ),
+}
+"""Per figure library: the limit keywords and dict keys, the annotation calls with their coordinate keywords, and the
+colour mappers with their range positions and keywords (`_figure_coupling`)."""
 RANGE_CALLS = frozenset({"range", "arange", "linspace"})
 DATE_CALLS = frozenset({"Timestamp", "datetime", "datetime64", "date", "to_datetime"})
 GENERATOR_FACTORIES = frozenset({"default_rng", "RandomState", "Generator"})
@@ -261,10 +337,12 @@ def scan(normalised_code: str, *, spec_id: str, library: str, enabled_libraries:
         blocked.append(f"savefig-target: no {rule.verb} call")
     elif regions.savefig is None:
         blocked.append(f"savefig-target: the last {rule.verb} is not a module-level statement")
+    if library == "plotly":
+        blocked.extend(_webgl(tree))
     if blocked:
         return Readiness("blocked", [clip_reason(reason) for reason in blocked])
 
-    findings = _coupling(normalised_code, tree)
+    findings = _coupling(normalised_code, tree, library)
     reasons: list[str] = []
     hints: list[str] = []
     for category, prefix, advice in _CATEGORIES:
@@ -314,10 +392,48 @@ def _security(code: str, library: str) -> list[str]:
     return reasons
 
 
+# --- WebGL (plotly) ------------------------------------------------------------------------
+
+
+def _webgl(tree: ast.Module) -> list[str]:
+    """`webgl:` reasons for the plotly traces that draw with WebGL (`WEBGL_TRACES`): a `go.<Trace>(...)` or
+    `fig.add_<trace>(...)` call, a plotly express function that makes one (`WEBGL_EXPRESS`), `render_mode="webgl"`, or a
+    trace given as a dict whose `type` names one. The figure mode's browser has no WebGL, so plotly draws a notice
+    instead and the render fails as `draw NoWebGL` (PB-1); one reason per trace name, at its first line."""
+    lowered = {name.lower(): name for name in WEBGL_TRACES}
+    found: dict[str, int] = {}
+    for node in ast.walk(tree):
+        name = None
+        if isinstance(node, ast.Call):
+            callee = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", "")
+            if callee in WEBGL_TRACES or callee in WEBGL_EXPRESS:
+                name = callee
+            elif callee.startswith("add_") and callee.removeprefix("add_") in lowered:
+                name = lowered[callee.removeprefix("add_")]
+            for keyword in node.keywords:
+                value = keyword.value
+                text = value.value if isinstance(value, ast.Constant) and isinstance(value.value, str) else None
+                if keyword.arg == "render_mode" and text == "webgl":
+                    name = name or 'render_mode="webgl"'
+                elif keyword.arg == "type" and text in lowered:
+                    name = name or lowered[text]
+        elif isinstance(node, ast.Dict):
+            for key, value in zip(node.keys, node.values, strict=True):
+                if isinstance(key, ast.Constant) and key.value == "type" and isinstance(value, ast.Constant):
+                    if isinstance(value.value, str) and value.value in lowered:
+                        name = lowered[value.value]
+        if name is not None and name not in found:
+            found[name] = getattr(node, "lineno", 0)
+    return [
+        f"webgl: {name} at line {line} draws with WebGL, which the renderer's browser does not have"
+        for name, line in sorted(found.items(), key=lambda item: item[1])
+    ]
+
+
 # --- coupling heuristics -----------------------------------------------------------------
 
 
-def _coupling(code: str, tree: ast.Module) -> dict[str, list[tuple[int, str]]]:
+def _coupling(code: str, tree: ast.Module, library: str = "matplotlib") -> dict[str, list[tuple[int, str]]]:
     """Per category, `(line, snippet)` for each flagged line, in line order, one per line.
 
     A line's snippet names every flagged part of it, joined with `, ` (review of #12206: only the first literal
@@ -336,6 +452,9 @@ def _coupling(code: str, tree: ast.Module) -> dict[str, list[tuple[int, str]]]:
         parts[:] = [part for part in parts if not _inside(part, node)] + [node]
 
     for node in ast.walk(tree):
+        if library in FIGURE_COUPLING:
+            for category, part in _figure_coupling(node, library):
+                flag(category, part)
         if isinstance(node, ast.Call):
             callee = dotted_name(node.func)
             method = node.func.attr if isinstance(node.func, ast.Attribute) else callee
@@ -373,6 +492,46 @@ def _coupling(code: str, tree: ast.Module) -> dict[str, list[tuple[int, str]]]:
             snippet = f"{palette.name} ({len(palette.entries)} entries)"
             snippets["palette"].setdefault(palette.span.first_line, snippet)
     return {category: sorted(lines.items()) for category, lines in snippets.items() if lines}
+
+
+def _figure_coupling(node: ast.AST, library: str) -> list[tuple[str, ast.expr | ast.keyword]]:
+    """plotly's and bokeh's literals that fit only the catalogue's data (module docstring, the plotly and bokeh rows):
+    axis ranges, tick values and spacing, annotations at data positions and a colour mapper's range, with the 0 rule."""
+    found: list[tuple[str, ast.expr | ast.keyword]] = []
+    limits, annotations, scales = FIGURE_COUPLING[library]
+    if isinstance(node, ast.Call):
+        method = node.func.attr if isinstance(node.func, ast.Attribute) else getattr(node.func, "id", "")
+        for keyword in node.keywords:
+            if keyword.arg in limits and _has_literal([keyword.value]):
+                found.append(("limits", keyword))
+        if method in BOKEH_RANGE_CALLS and _has_literal([*node.args, *(kw.value for kw in node.keywords)]):
+            found.append(("limits", node))
+        positions = annotations.get(method)
+        if positions is not None:
+            coordinates = [kw.value for kw in node.keywords if kw.arg in positions]
+            if _has_literal(coordinates):
+                found.append(("annotations", node))
+        bounds = scales.get(method)
+        if bounds is not None:
+            values = [node.args[i] for i in bounds[0] if i < len(node.args)]
+            values += [kw.value for kw in node.keywords if kw.arg in bounds[1]]
+            if _has_literal(values):
+                found.append(("color-scale", node))
+    elif isinstance(node, ast.Dict):
+        for key, value in zip(node.keys, node.values, strict=True):
+            if isinstance(key, ast.Constant) and key.value in limits and _has_literal([value]):
+                found.append(("limits", value))
+    elif library == "bokeh" and isinstance(node, ast.Assign | ast.AugAssign):
+        targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+        for target in targets:
+            # `p.y_range.end = 105`, `p.x_range = Range1d(0, 10)` (the call above), `p.xaxis.ticker = [0, 5, 10]`
+            if not isinstance(target, ast.Attribute):
+                continue
+            owner = dotted_name(target.value) or ""
+            ranged = target.attr in ("start", "end", "bounds") and owner.endswith("_range")
+            if (ranged or target.attr == "ticker") and _has_literal([node.value]):
+                found.append(("limits", node.value))
+    return found
 
 
 def _inside(inner: ast.expr | ast.keyword, outer: ast.expr | ast.keyword) -> bool:

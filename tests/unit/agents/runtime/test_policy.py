@@ -152,6 +152,33 @@ class TestAdapterPromptPerLanguage:
         assert policy.adapter_instruction(library).startswith(
             policy.adapter_prompt("python") + "\n\n## Number formats by plot language\n\n"
         )
+        assert policy.library_passages(library) == ""
+
+    @pytest.mark.parametrize("library", ["plotly", "bokeh"])
+    def test_plotly_and_bokeh_read_their_own_section_after_the_python_prompt(self, library: str) -> None:
+        """PB-2a: their section replaces the matplotlib conventions for them, and no other library reads it."""
+        section = policy.library_passages(library)
+        text = policy.adapter_instruction(library)
+
+        assert section.startswith(f"## {library}: what replaces the matplotlib conventions above\n")
+        assert "<!--" not in section and "{{" not in section
+        assert text.startswith(policy.adapter_prompt("python") + "\n\n" + section + "\n\n## Number formats by plot")
+        assert source(f"prompts/library/{library}.md").strip() in text
+        for other in ("matplotlib", "pygal", "ggplot2", "chartjs"):
+            assert section not in policy.adapter_instruction(other)
+
+    @pytest.mark.parametrize("library", ["plotly", "bokeh"])
+    def test_the_figure_libraries_idioms_pass_the_python_validator(self, library: str) -> None:
+        """What plotly's and bokeh's sections tell the adapter to write is code both profiles admit; the image test
+        renders the same forms (`test_profile_python_figure_image.py`)."""
+        from agents.anyplot.code.validate import validate_adaptation, validate_security
+        from tests.unit.agents.code.conftest import FIGURE_PROMPT_IDIOM_SNIPPETS, FIGURE_PROMPT_IDIOMS
+
+        section, code = policy.library_passages(library), FIGURE_PROMPT_IDIOMS[library]
+        for snippet in FIGURE_PROMPT_IDIOM_SNIPPETS[library]:
+            assert snippet in section and snippet in code, snippet
+        assert validate_security(code, library=library) == []
+        assert validate_adaptation(code, original_palette=["#009E73", "#C475FD", "#4467A3"]) == []
 
     def test_ggplot2_reads_the_r_prompt_the_shared_rules_and_its_library_rules(self) -> None:
         text = policy.adapter_instruction("ggplot2")
@@ -502,15 +529,17 @@ class TestScopeRubricLibraries:
         assert policy.scope_rubric(["seaborn", "matplotlib"]) == policy.scope_rubric(["matplotlib", "seaborn"])
 
     def test_the_other_library_examples_name_no_library_the_registry_serves(self) -> None:
-        """MATLAB (outside the catalogue) and Plotly stand for another library in the rubric's examples; a step that
-        serves Plotly has to change its example (step 4 of the all-libraries plan). Chart.js stood there until JS-4a
-        served it."""
+        """MATLAB and Excel (outside the catalogue) stand for another library in the rubric's examples. Chart.js stood
+        there until JS-4a served it, Plotly until PB-2a served it: the registry serves every catalogue library since,
+        so a served deploy's rubric leaves only tools outside the catalogue."""
         from agents.anyplot.render.runtimes import RUNTIME_LIBRARIES
+        from core.constants import SUPPORTED_LIBRARIES
 
-        _, others = self.adapted_and_others(policy.scope_rubric(sorted(RUNTIME_LIBRARIES)))
         rubric = policy.scope_rubric(sorted(RUNTIME_LIBRARIES))
-        assert "Plotly" in others and "Chart.js" not in others and "MUI X" not in others
-        assert '("How would I do this plot in MATLAB? Give me the code.", "Gibt es das auch' in rubric
+        assert RUNTIME_LIBRARIES == SUPPORTED_LIBRARIES
+        assert "It adapts every library of the catalogue" in rubric
+        assert '("How would I do this plot in MATLAB? Give me the code.", "Gibt es das auch in Excel?")' in rubric
+        assert "Plotly?" not in rubric and "Chart.js?" not in rubric
 
     def test_a_catalogue_served_in_full_leaves_only_outside_tools(self) -> None:
         from core.constants import LIBRARIES_METADATA

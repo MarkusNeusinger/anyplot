@@ -1,5 +1,6 @@
 """The spike-X fixture generator: determinism, the committed files, the schema, and that every case can run."""
 
+import ast
 import csv
 import io
 import json
@@ -64,7 +65,7 @@ def test_check_mode_reports_a_stale_file(tmp_path, capsys: pytest.CaptureFixture
     assert "stale: pie-basic-seaborn-n12/data.csv" in capsys.readouterr().err
 
 
-def test_ten_specs_of_ten_families_times_thirteen_libraries_times_six_perturbations(files: dict[str, str]) -> None:
+def test_ten_specs_of_ten_families_times_fifteen_libraries_times_six_perturbations(files: dict[str, str]) -> None:
     from agents.anyplot.render.runtimes import RUNTIME_LIBRARIES
 
     assert len(SPECS) == 10 and {spec.family for spec in SPECS} == FAMILIES
@@ -75,6 +76,8 @@ def test_ten_specs_of_ten_families_times_thirteen_libraries_times_six_perturbati
         "altair",
         "pygal",
         "letsplot",
+        "plotly",
+        "bokeh",
         "ggplot2",
         "makie",
         "chartjs",
@@ -85,7 +88,7 @@ def test_ten_specs_of_ten_families_times_thirteen_libraries_times_six_perturbati
     )
     assert set(LIBRARIES) == RUNTIME_LIBRARIES  # every library the registry serves has its 60 cases
     ids = {name.split("/")[0] for name in files}
-    assert len(ids) == 780
+    assert len(ids) == 900
     assert ids == {
         case_id(spec.spec_id, library, perturbation)
         for spec in SPECS
@@ -127,7 +130,7 @@ def test_smoke_covers_every_spec_perturbation_and_library(files: dict[str, str])
     smoke = [case for case in smoke if SMOKE_TAG in case["tags"]]
     cycle = [case for case in smoke if case["library"] in SMOKE_CYCLE]
 
-    assert len(smoke) == len(SPECS) + len(LIBRARY_SMOKE) == 21
+    assert len(smoke) == len(SPECS) + len(LIBRARY_SMOKE) == 23
     assert set(SMOKE_CYCLE) | set(LIBRARY_SMOKE) == set(LIBRARIES) and not set(SMOKE_CYCLE) & set(LIBRARY_SMOKE)
     assert len(cycle) == len(SPECS)
     assert {case["spec_id"] for case in cycle} == {spec.spec_id for spec in SPECS}
@@ -155,6 +158,7 @@ def test_a_new_library_never_moves_the_smoke_cycle(files: dict[str, str]) -> Non
         "pie-basic-matplotlib-n12",
         "pie-basic-muix-renamed",
         "scatter-basic-altair-renamed",
+        "scatter-basic-bokeh-renamed",
         "scatter-basic-chartjs-renamed",
         "scatter-basic-d3-renamed",
         "scatter-basic-echarts-renamed",
@@ -163,6 +167,7 @@ def test_a_new_library_never_moves_the_smoke_cycle(files: dict[str, str]) -> Non
         "scatter-basic-letsplot-renamed",
         "scatter-basic-makie-renamed",
         "scatter-basic-matplotlib-renamed",
+        "scatter-basic-plotly-renamed",
         "scatter-basic-plotnine-renamed",
         "scatter-basic-pygal-renamed",
         "violin-basic-seaborn-x10",
@@ -213,6 +218,28 @@ def test_the_muix_files_split_by_the_version_they_were_written_for() -> None:
     assert {spec for spec, status in statuses.items() if status == "coupled"} == set(statuses) - clean
     assert deprecated == {"scatter-basic"}
     assert LIBRARY_SMOKE["muix"][0] in clean
+
+
+@pytest.mark.parametrize("library", ["plotly", "bokeh"])
+def test_the_plotly_and_bokeh_files_are_eligible_with_their_figure_save(library: str) -> None:
+    """PB-2a (2026-10-31): every one of the ten plotly and bokeh files is eligible, `coupled` but bokeh's `bar-grouped`,
+    and its normalised form ends on the pinned figure save the renderer's figure mode draws (`code/figure.py`);
+    bokeh's `histogram-basic` is eligible through the normaliser's `.format` rewrite of its hex colours."""
+    from agents.anyplot.code.figure import figure_saves
+    from agents.anyplot.code.normalise import normalise
+
+    settings = AgentSettings(libraries=list(LIBRARIES))
+    statuses = {}
+    for spec in SPECS:
+        snapshot = snapshot_from_repo(spec.spec_id, library)
+        eligibility, _ = assess(snapshot, library, settings)
+        statuses[spec.spec_id] = eligibility.status
+        tree = ast.parse(normalise(snapshot.code, library=library))
+        assert figure_saves(tree, library) and figure_saves(tree, library)[-1][0] is tree.body[-1], spec.spec_id
+    clean = {"bar-grouped"} if library == "bokeh" else set()
+    assert {spec for spec, status in statuses.items() if status == "clean"} == clean
+    assert {spec for spec, status in statuses.items() if status == "coupled"} == set(statuses) - clean
+    assert LIBRARY_SMOKE[library] == ("scatter-basic", "renamed")
 
 
 @pytest.mark.parametrize("spec", SPECS, ids=lambda spec: spec.spec_id)

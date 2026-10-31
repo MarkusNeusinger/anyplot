@@ -110,10 +110,11 @@ substitutions:
   # Every library with a runtime (owner decision of 2026-10-28): only the admin reaches the
   # chat yet, so this admin-only deploy serves each of them for live testing, the six Python
   # libraries, ggplot2 on the R runtime (since 2026-10-29), Makie on the Julia runtime,
-  # Chart.js, D3, ECharts and Highcharts on the JavaScript runtime (since 2026-10-30) and
-  # MUI X on it too (since 2026-10-31), and each one's 80 % eval matrix gates the public
-  # release instead. AGENT_LIBRARIES' default stays matplotlib,seaborn.
-  _LIBRARIES: matplotlib,seaborn,plotnine,altair,pygal,letsplot,ggplot2,makie,chartjs,d3,echarts,highcharts,muix
+  # Chart.js, D3, ECharts and Highcharts on the JavaScript runtime (since 2026-10-30), MUI X
+  # on it too and plotly and bokeh on the Python runtime through the renderer's figure mode
+  # (since 2026-10-31): all 15 catalogue libraries. Each one's 80 % eval matrix gates the
+  # public release instead. AGENT_LIBRARIES' default stays matplotlib,seaborn.
+  _LIBRARIES: matplotlib,seaborn,plotnine,altair,pygal,letsplot,plotly,bokeh,ggplot2,makie,chartjs,d3,echarts,highcharts,muix
   # "1" keeps an instance warm; "0" scales to zero between sessions (and so
   # forgets every in-memory session, which the client shows as "session expired").
   _MIN_INSTANCES: "0"

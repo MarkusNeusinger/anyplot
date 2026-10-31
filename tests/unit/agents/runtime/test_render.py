@@ -1164,8 +1164,8 @@ class TestBackends:
         runtime = local.runtime_for("seaborn")
         assert isinstance(runtime, PythonRuntime) and (runtime.library, runtime.cpu_seconds) == ("seaborn", 45)
         assert isinstance(local.runtime, PythonRuntime) and local.runtime.cpu_seconds == 45  # the data runs' runtime
-        with pytest.raises(ValueError, match="no runtime for 'plotly'"):
-            local.runtime_for("plotly")
+        with pytest.raises(ValueError, match="no runtime for 'excel'"):
+            local.runtime_for("excel")
 
     def test_job_validation(self) -> None:
         with pytest.raises(ValueError):

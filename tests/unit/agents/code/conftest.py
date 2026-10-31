@@ -5,8 +5,9 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
-CODE_LIBRARIES = ("matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot")
-"""The libraries with a Python code profile (`normalise.SUPPORTED_LIBRARIES`), in the corpus order."""
+CODE_LIBRARIES = ("matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot", "plotly", "bokeh")
+"""The libraries with a Python code profile (`normalise.SUPPORTED_LIBRARIES`), in the corpus order; plotly and bokeh
+since PB-2a (2026-10-31)."""
 CATALOGUE_FILES = [
     path
     for library in CODE_LIBRARIES
@@ -772,5 +773,154 @@ JS_PROMPT_IDIOMS: dict[str, str] = {
             </div>
           );
         }
+    """),
+}
+
+# What plotly's and bokeh's own sections of the adapter instruction (`agents/anyplot/prompts/adapter_plotly.md`,
+# `adapter_bokeh.md`, PB-2a) tell the adapter to write, as one working form per library: the column constants with a
+# quote and a backslash, the rows a mark needs dropped before a statistic, the timestamps in UTC, the plot language's
+# marks (plotly's `separators`, bokeh's fixed ticks with Python-written labels) and the pinned figure save. Each
+# snippet of `FIGURE_PROMPT_IDIOM_SNIPPETS` stands verbatim in its library's section and its form; the policy test
+# holds each form against both validator profiles, the image test renders it from a table with missing cells.
+FIGURE_PROMPT_IDIOM_SNIPPETS: dict[str, tuple[str, ...]] = {
+    "plotly": (
+        'fig.update_layout(width=800, height=450).write_json(f"plot-{THEME}.json")',
+        "paper_bgcolor=PAGE_BG, plot_bgcolor=PAGE_BG",
+        'font={"family": "Helvetica, Arial, sans-serif", "color": INK}',
+        "df.dropna(subset=[X, Y])",
+        'days = dated[DAY].dt.tz_convert("UTC").dt.tz_localize(None) if dated[DAY].dt.tz is not None else dated[DAY]',
+        'tickformat="%d.%m.%Y"',
+        "separators=DECIMAL + THOUSANDS",
+        'tickformat=",.0f"',
+        'f"{v:,.0f}".replace(",", "_").replace(".", DECIMAL).replace("_", THOUSANDS)',
+        'render_mode="svg"',
+    ),
+    "bokeh": (
+        'with open(f"plot-{THEME}.json", "w", encoding="utf-8") as figure_file:',
+        "json.dump(json_item(p), figure_file)",
+        "p = row(p, side)",
+        "df.dropna(subset=[X, Y])",
+        '[Y].astype("float64")',
+        'DatetimeTickFormatter(days="%d.%m.%Y", months="%m.%Y", years="%Y")',
+        "step = 10 ** math.floor(math.log10((high - low) / 5))",
+        "step *= next(factor for factor in (1, 2, 2.5, 5, 10) if factor * step >= (high - low) / 5)",
+        "ticks = [step * index for index in range(math.floor(low / step), math.ceil(high / step) + 1)]",
+        "p.yaxis.ticker = FixedTicker(ticks=ticks)",
+        'p.yaxis.major_label_overrides = {tick: f"{tick:,.0f}".replace(",", "_").replace(".", DECIMAL).replace("_", '
+        "THOUSANDS) for tick in ticks}",
+    ),
+}
+FIGURE_PROMPT_IDIOMS: dict[str, str] = {
+    "plotly": source("""
+        import os
+
+        import plotly.express as px
+        import plotly.graph_objects as go
+        from plotly.subplots import make_subplots
+
+        THEME = os.getenv("ANYPLOT_THEME", "light")
+        PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+        INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+        INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+        GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+        IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+
+        DAY = 'Tag "lokal"'  # role: x
+        X = DAY
+        Y = "Umsatz\\\\Netto"  # role: y
+        COUNT = "Anzahl"  # role: value
+        GROUP = "Region"  # role: group
+        DECIMAL, THOUSANDS = ",", "."
+
+        df = load_user_data()
+
+        dated = df.dropna(subset=[X, Y]).sort_values(DAY)
+        days = dated[DAY].dt.tz_convert("UTC").dt.tz_localize(None) if dated[DAY].dt.tz is not None else dated[DAY]
+        peak = dated[Y].idxmax()
+        v = dated.loc[peak, Y]
+        label = f"{v:,.0f}".replace(",", "_").replace(".", DECIMAL).replace("_", THOUSANDS)
+        totals = df.dropna(subset=[GROUP, COUNT]).groupby(GROUP, sort=False)[COUNT].sum().astype("float64")
+        spread = px.scatter(dated, x=X, y=Y, render_mode="svg")
+
+        fig = make_subplots(rows=1, cols=2, column_widths=[0.62, 0.38], horizontal_spacing=0.1)
+        fig.add_trace(go.Scatter(x=days, y=dated[Y], mode="lines+markers", line={"color": IMPRINT[0]}), row=1, col=1)
+        fig.add_trace(spread.data[0].update(marker={"color": IMPRINT[0], "size": 4}, x=days), row=1, col=1)
+        fig.add_annotation(x=days.loc[peak], y=v, text=label, font={"color": INK}, arrowcolor=INK_SOFT, row=1, col=1)
+        fig.add_trace(go.Bar(x=list(totals.index), y=totals.to_numpy(), marker_color=IMPRINT[: len(totals)]), row=1, col=2)
+        fig.update_xaxes(tickformat="%d.%m.%Y", row=1, col=1)
+        fig.update_xaxes(gridcolor=GRID, tickfont={"color": INK_SOFT})
+        fig.update_yaxes(tickformat=",.0f", gridcolor=GRID, tickfont={"color": INK_SOFT}, zeroline=False)
+        fig.update_layout(
+            title={"text": "Umsatz und Anzahl", "font": {"size": 16, "color": INK}, "x": 0.5},
+            separators=DECIMAL + THOUSANDS,
+            paper_bgcolor=PAGE_BG, plot_bgcolor=PAGE_BG,
+            font={"family": "Helvetica, Arial, sans-serif", "color": INK},
+            showlegend=False,
+        )
+
+        fig.update_layout(width=800, height=450).write_json(f"plot-{THEME}.json")
+    """),
+    "bokeh": source("""
+        import json
+        import math
+        import os
+
+        from bokeh.embed import json_item
+        from bokeh.layouts import row
+        from bokeh.models import ColumnDataSource, DatetimeTickFormatter, FixedTicker, Label
+        from bokeh.plotting import figure
+
+        THEME = os.getenv("ANYPLOT_THEME", "light")
+        PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+        INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+        INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+        IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
+
+        DAY = 'Tag "lokal"'  # role: x
+        X = DAY
+        Y = "Umsatz\\\\Netto"  # role: y
+        COUNT = "Anzahl"  # role: value
+        GROUP = "Region"  # role: group
+        DECIMAL, THOUSANDS = ",", "."
+
+        df = load_user_data()
+
+        dated = df.dropna(subset=[X, Y]).sort_values(DAY)
+        line = ColumnDataSource(data={"x": dated[DAY], "y": dated[Y].astype("float64")})
+        peak = dated[Y].idxmax()
+        v = dated.loc[peak, Y]
+        label = f"{v:,.0f}".replace(",", "_").replace(".", DECIMAL).replace("_", THOUSANDS)
+        totals = df.dropna(subset=[GROUP, COUNT]).groupby(GROUP, sort=False)[COUNT].sum().astype("float64")
+        groups = [str(group) for group in totals.index]
+
+        p = figure(width=2000, height=1800, x_axis_type="datetime", title="Umsatz", toolbar_location=None)
+        p.line(x="x", y="y", source=line, line_color=IMPRINT[0], line_width=4)
+        p.scatter(x="x", y="y", source=line, size=14, color=IMPRINT[0])
+        p.add_layout(Label(x=dated.loc[peak, DAY], y=v, text=label, text_color=INK, text_align="right", y_offset=12))
+        p.xaxis.formatter = DatetimeTickFormatter(days="%d.%m.%Y", months="%m.%Y", years="%Y")
+        low, high = float(dated[Y].min()), float(dated[Y].max())
+        step = 10 ** math.floor(math.log10((high - low) / 5))
+        step *= next(factor for factor in (1, 2, 2.5, 5, 10) if factor * step >= (high - low) / 5)
+        ticks = [step * index for index in range(math.floor(low / step), math.ceil(high / step) + 1)]
+        p.yaxis.ticker = FixedTicker(ticks=ticks)
+        p.yaxis.major_label_overrides = {tick: f"{tick:,.0f}".replace(",", "_").replace(".", DECIMAL).replace("_", THOUSANDS) for tick in ticks}
+
+        side = figure(width=1200, height=1800, x_range=groups, title="Anzahl", toolbar_location=None)
+        side.vbar(x=groups, top=totals.to_numpy(), width=0.7, color=IMPRINT[: len(groups)])
+        side.y_range.start = 0
+        for plot in (p, side):
+            plot.background_fill_color = PAGE_BG
+            plot.border_fill_color = PAGE_BG
+            plot.outline_line_color = None
+            plot.title.text_color = INK
+            for axis in (plot.xaxis, plot.yaxis):
+                axis.major_label_text_color = INK_SOFT
+                axis.axis_line_color = INK_SOFT
+            plot.grid.grid_line_color = INK
+            plot.grid.grid_line_alpha = 0.1
+        p = row(p, side)
+
+        with open(f"plot-{THEME}.json", "w", encoding="utf-8") as figure_file:
+            json.dump(json_item(p), figure_file)
     """),
 }

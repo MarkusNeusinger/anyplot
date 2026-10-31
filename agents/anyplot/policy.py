@@ -12,7 +12,9 @@ Every static instruction is assembled from files and never from paraphrased copi
   since 2026-10-30, `RUNTIME_PROMPTS`) fills the slots, also the one
   of `adapter_highlights.md` (`adapter_prompt`, `highlights_prompt`, since 2026-10-29: one
   place for each shared rule, and the Python prompts byte for byte what they were, which
-  tests pin); `scope_judge.md` gets one injected passage, the libraries the assistant
+  tests pin); plotly and bokeh add a section of their own after it (`adapter_plotly.md`,
+  `adapter_bokeh.md`, `LIBRARY_PROMPTS`, since 2026-10-31), which replaces the matplotlib
+  conventions for them; `scope_judge.md` gets one injected passage, the libraries the assistant
   adapts (`AGENT_LIBRARIES`) and the catalogue's others (`scope_rubric`);
 * the catalogue's prompt sources, read verbatim from the repository's `prompts/`
   directory: `default-style-guide.md`, `library/<library>.md`, and excerpts cut
@@ -105,6 +107,11 @@ RUNTIME_PROMPTS: dict[str, str] = {
 }
 """The runtime prompt of each language with a runtime (`render.runtimes.RUNTIME_CLASSES`), whose slots fill
 `adapter.md` and `adapter_highlights.md`."""
+LIBRARY_PROMPTS: dict[str, str] = {"plotly": "adapter_plotly.md", "bokeh": "adapter_bokeh.md"}
+"""The libraries whose code differs from the language's runtime prompt in more than its library rules: plotly and
+bokeh save their figure as JSON and draw in a browser (PB-2a, 2026-10-31). Their section follows the Python adapter
+prompt (`library_passages`), so the six other Python libraries read exactly what they read before."""
+_COMMENT = re.compile(r"\A\s*<!--.*?-->\s*", re.DOTALL)
 SCOPE_JUDGE = "scope_judge.md"
 LIBRARIES_SLOT = "libraries"
 """The one slot of `scope_judge.md`: which libraries the assistant adapts here and which it does not (`scope_rubric`)."""
@@ -372,9 +379,23 @@ def highlights_prompt(language: str) -> str:
 
 
 @lru_cache(maxsize=None)
+def library_passages(library: str) -> str:
+    """The library's own section of the adapter instruction (`LIBRARY_PROMPTS`), without the maintainers' comment that
+    opens its file; empty for a library without one."""
+    name = LIBRARY_PROMPTS.get(library)
+    if name is None:
+        return ""
+    text = _COMMENT.sub("", _read(PROMPTS_DIR / name), count=1).strip()
+    if not text or "<!--" in text:
+        raise PromptSourceError(f"{name} holds no section after its comment, or a second comment")
+    return text
+
+
+@lru_cache(maxsize=None)
 def adapter_instruction(library: str) -> str:
     """The adapter's static instruction for one library (≈8-10k tokens, a stable cache prefix): the adapter prompt in
-    the library's language (`adapter_prompt`), then the sources every language shares and the library's rules."""
+    the library's language (`adapter_prompt`), the library's own section where it has one (`library_passages`: plotly
+    and bokeh), then the sources every language shares and the library's rules."""
     from core.constants import LIBRARY_LANGUAGES
 
     from .settings import get_settings
@@ -386,6 +407,7 @@ def adapter_instruction(library: str) -> str:
     # The rubric holds the VQ-03 marker-size and alpha table (`vq03_table`), so it is not repeated.
     return _join(
         adapter_prompt(language),
+        library_passages(library),
         "## Number formats by plot language\n\n" + number_format_table(),
         highlights,
         "## Excerpt: which weaknesses to fix\n\n" + weaknesses,

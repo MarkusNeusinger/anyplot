@@ -1924,6 +1924,8 @@ jobs:
             agents/anyplot/prompts/adapter_r.md \
             agents/anyplot/prompts/adapter_julia.md \
             agents/anyplot/prompts/adapter_javascript.md \
+            agents/anyplot/prompts/adapter_plotly.md \
+            agents/anyplot/prompts/adapter_bokeh.md \
             agents/anyplot/prompts/reviewer.md \
             agents/anyplot/prompts/scope_judge.md \
             agents/anyplot/prompts/data_judge.md \
@@ -1937,6 +1939,8 @@ jobs:
             prompts/library/makie.md \
             prompts/library/chartjs.md \
             prompts/library/muix.md \
+            prompts/library/plotly.md \
+            prompts/library/bokeh.md \
             prompts/workflow-prompts/impl-repair-claude.md \
             prompts/workflow-prompts/ai-quality-review.md; do
             docker exec agents test -f "/app/$path" || { echo "::error::/app/$path is missing from the image"; exit 1; }
@@ -2042,6 +2046,38 @@ jobs:
             < plots/scatter-basic/implementations/javascript/chartjs.js
           docker exec -i agents .venv/bin/python -c "$script" muix bar-basic \
             < plots/bar-basic/implementations/javascript/muix.tsx
+
+      # plotly and bokeh in the built image (PB-2a, 2026-10-31): a catalogue file of each, piped
+      # in from the checkout, through the Python runtime's normaliser (the save block becomes the
+      # pinned figure save), validator and readiness scan, as POST /v1/sessions does with the
+      # library enabled, and the export swaps the figure save back for the library's normal
+      # save. Both are coupled in the corpus tests, so anything else, a SECURITY finding, a
+      # missing protected save or an export without the normal save fails the step.
+      - name: A plotly and a bokeh readiness scan run
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          script=$(cat <<'PY'
+          import sys
+          from agents.anyplot.render.runtimes import runtime_for
+
+          library, spec, normal = sys.argv[1], sys.argv[2], sys.argv[3]
+          runtime = runtime_for(library)
+          normalised = runtime.normalise(sys.stdin.read(), library)
+          result = runtime.readiness(normalised, spec_id=spec, enabled_libraries=[library])
+          assert result.status in ("clean", "coupled"), (result.status, result.reasons)
+          assert runtime.security(normalised) == [], runtime.security(normalised)
+          found = runtime.regions(normalised)
+          assert found.theme is not None and found.savefig is not None, "no THEME statement or no figure save"
+          exported = runtime.export(normalised, spec_id=spec, library_version=None)
+          assert normal in exported and 'plot-{THEME}.json' not in exported, exported[-400:]
+          print(f"OK: {spec} ({library}) is", result.status, result.reasons)
+          PY
+          )
+          docker exec -i agents .venv/bin/python -c "$script" plotly scatter-basic "write_image(" \
+            < plots/scatter-basic/implementations/python/plotly.py
+          docker exec -i agents .venv/bin/python -c "$script" bokeh scatter-basic "export_png(" \
+            < plots/scatter-basic/implementations/python/bokeh.py
 
       - name: Container logs on failure
         if: failure() && steps.check.outputs.should_build == 'true'

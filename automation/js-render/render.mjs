@@ -993,6 +993,39 @@ const FIGURE_ID = "anyplot-figure";
 // the headless shell has none: a render that shows it fails as `draw NoWebGL`
 // instead of passing with the notice for a plot.
 const PLOTLY_NO_WEBGL = "WebGL is not supported by your browser";
+// plotly's trace types that draw with WebGL (plotly.js 4.1.1, the map traces
+// through MapLibre). A 3D scene shows no notice: the headless shell hands out
+// a WebGL context, yet the scene draws nothing but its colour bar (scatter-3d
+// and a three-point Scatter3d, measured on 2026-10-31), which the host gates
+// pass. So a figure with one of these fails as `draw NoWebGL` before it is
+// drawn, until the renderer draws WebGL (PB-2a; the software renderer is
+// PB-2c's).
+const PLOTLY_WEBGL_TYPES = new Set([
+  "scattergl",
+  "scatterpolargl",
+  "splom",
+  "scatter3d",
+  "surface",
+  "mesh3d",
+  "cone",
+  "streamtube",
+  "volume",
+  "isosurface",
+  "parcoords",
+  "scattermap",
+  "choroplethmap",
+  "densitymap",
+  "scattermapbox",
+  "choroplethmapbox",
+  "densitymapbox",
+]);
+
+// The WebGL trace types a plotly figure holds.
+function plotlyWebglTypes(library, figure) {
+  if (library !== "plotly") return [];
+  const types = figure.data.map((trace) => (isRecord(trace) && typeof trace.type === "string" ? trace.type : ""));
+  return [...new Set(types.filter((type) => PLOTLY_WEBGL_TYPES.has(type)))];
+}
 
 // A figure page's policy: sandbox mode's, with the scripts admitted by a nonce
 // of the page instead of 'unsafe-inline'. Every script of a figure page is the
@@ -1260,6 +1293,8 @@ async function renderFigure(args) {
     bundles.push(await readFile(bundlePath, "utf-8"));
   }
   const { figure, text } = await readFigure(args.figure, library);
+  const webgl = plotlyWebglTypes(library, figure);
+  if (webgl.length > 0) throw failure(`render: ${webgl.join(", ")} draws with WebGL, which the renderer does not draw yet`, "draw", "NoWebGL");
   let size = figureSize(library, figure);
 
   const browser = await chromium.launch({ args: launchArgs() });

@@ -11,7 +11,8 @@ the library's language (`RUNTIME_CLASSES`), never by the class of an instance.
 in `AGENT_LIBRARIES`, and the readiness scan blocks it as `unsupported-library`.
 
 `PythonRuntime` serves matplotlib, seaborn, plotnine, altair, pygal and lets-plot
-(`letsplot`): each has a save rule (`code.regions.SAVE_RULES`) and a validator profile
+(`letsplot`), and plotly and bokeh since 2026-10-31 (PB-2a of step 4, through the renderer's
+two-step figure mode): each has a save rule (`code.regions.SAVE_RULES`) and a validator profile
 (`code.validate.LIBRARY_IMPORTS`), and the renderer image installs it. `RRuntime` serves
 ggplot2 since 2026-10-29 (PR 3b of the R pilot): the R code profile
 (`code/profiles/r/`) and the renderer's R row in exec mode. `JuliaRuntime` serves Makie
@@ -19,10 +20,10 @@ since 2026-10-30 (J2b of step 5): the Julia code profile (`code/profiles/julia/`
 renderer's Julia row in exec mode. `JavaScriptRuntime` serves Chart.js, D3, ECharts and
 Highcharts since 2026-10-30 (JS-4a of step 3) and MUI X since 2026-10-31 (JS-4c, as
 `plot.tsx`): the JavaScript code profile (`code/profiles/javascript/`) and the renderer's
-JavaScript row in exec mode. A later language adds a
-runtime module here, its class to `RUNTIME_CLASSES` and its libraries to
-`RUNTIME_LIBRARIES`; a later Python library (plotly, bokeh) adds its validator profile
-and save rule to the Python code modules and its id to `PYTHON_LIBRARIES`
+JavaScript row in exec mode. With those, the registry serves all 15 catalogue libraries.
+A later language adds a runtime module here, its class to `RUNTIME_CLASSES` and its
+libraries to `RUNTIME_LIBRARIES`; a later Python library adds its validator profile and
+save rule to the Python code modules and its id to `PYTHON_LIBRARIES`
 (`agentic/specs/261024-agent-all-libraries.md`).
 """
 
@@ -38,8 +39,11 @@ from .python import PythonRuntime
 from .r import RRuntime
 
 
-PYTHON_LIBRARIES: frozenset[str] = frozenset({"matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot"})
-"""The Python libraries with a complete runtime profile (`code.normalise.SUPPORTED_LIBRARIES`, pinned equal)."""
+PYTHON_LIBRARIES: frozenset[str] = frozenset(
+    {"matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot", "plotly", "bokeh"}
+)
+"""The Python libraries with a complete runtime profile (`code.normalise.SUPPORTED_LIBRARIES`, pinned equal). plotly
+and bokeh joined on 2026-10-31 (PB-2a): their rows render in the renderer's figure mode."""
 R_LIBRARIES: frozenset[str] = frozenset({"ggplot2"})
 """The R libraries with a complete runtime profile (`code.edits.R_LIBRARIES`, the edit applier's R dialect, pinned
 equal)."""

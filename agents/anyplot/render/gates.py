@@ -224,6 +224,55 @@ def error_summary(stderr_tail: str, *, code_file: str = CODE_FILE) -> str:
     return f"{names[-1]} at line {int(frames[-1])}" if frames else names[-1]
 
 
+NO_FINAL_LINE = "an error that printed no final error line"
+FIGURE_KIND_TEXTS: dict[tuple[str, str | None], str] = {
+    ("figure", "NoFigure"): "the plot wrote no figure: keep the final save statement, and let the code reach it",
+    ("figure", "FigureTooLarge"): "a figure over 16 MiB: draw fewer points, or aggregate them",
+    ("figure", None): "a figure the page cannot take (a size outside 320 to 6400 pixels a side, or no figure)",
+    ("crash", None): "the plot crashed (out of memory, most likely)",
+    ("page", None): "the page could not draw the figure (a part it cannot draw, such as a JavaScript callback)",
+    (
+        "draw",
+        "NoWebGL",
+    ): 'a WebGL trace, which the renderer cannot draw: use a 2D trace (go.Scatter, render_mode="svg")',
+    ("draw", None): "the figure drew nothing",
+    ("timeout", None): "the figure's page did not settle within 15 s",
+    ("harness", None): "a harness error (a toolchain fault, not the code)",
+}
+"""The fixed text of each kind of plotly's and bokeh's figure mode with a class where the kind has several (`None` for
+the rest of that kind): the plot step's `figure`, `crash` and `harness` lines (`harness.figure_error_line`) and the
+screenshot step's (`render.mjs` with `--figure`)."""
+_FIGURE_FINAL = re.compile(
+    r"^render: error: (?P<kind>[a-z]{1,16}) (?P<cls>[A-Za-z_$][\w$]{0,63}) (?:-|[^\s:]{1,64}:(?P<line>\d{1,7})): "
+)
+
+
+def figure_error_summary(stderr_tail: str, *, code_file: str = CODE_FILE) -> str:
+    """Where a plotly or bokeh render failed (the renderer's figure mode, `harness.py --figure`), never the message.
+
+    Both steps end a failure with the JavaScript harness's final error line, `render: error: <kind> <Class>
+    <where>: <message>`, the last on stderr. A `plot` line is the plot's own exception: its class and line come from
+    the traceback the plot step prints above it, as for every Python plot (`error_summary`), else from the line when
+    its class is a builtin exception (`sys.exit` prints no traceback). Every other kind is a fixed text
+    (`FIGURE_KIND_TEXTS`). Only the last line counts, since everything above it can quote what the plot printed."""
+    lines = [line.rstrip() for line in stderr_tail.splitlines() if line.strip()]
+    if not lines:
+        return "no error output"
+    match = _FIGURE_FINAL.match(lines[-1])
+    if match is None:
+        return NO_FINAL_LINE
+    kind, cls, line = match.group("kind"), match.group("cls"), match.group("line")
+    if kind == "plot":
+        summary = error_summary("\n".join(lines[:-1]), code_file=code_file)
+        if summary not in (NO_EXCEPTION_LINE, "no error output"):
+            return summary
+        named = _exception_class(cls)
+        if named is None:
+            return "an error"
+        return f"{named} at line {int(line)}" if line is not None else named
+    return FIGURE_KIND_TEXTS.get((kind, cls)) or FIGURE_KIND_TEXTS.get((kind, None)) or "an error"
+
+
 def _mib(value: int | None) -> str:
     return "more than allowed" if value is None else f"{value / (1024 * 1024):.1f} MiB"
 

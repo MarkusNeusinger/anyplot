@@ -1639,9 +1639,9 @@ def _prepare_and_run(args: argparse.Namespace, settings: "AgentSettings", argv: 
         raise SetupError(f"no case matches --cases {args.cases!r}")
     # The smoke set holds a plotnine and an altair case (since 2026-10-25), a pygal and a lets-plot case (since
     # 2026-10-26), a ggplot2 case (since 2026-10-29), a makie case and a chartjs, d3, echarts and highcharts case
-    # (since 2026-10-30) and a muix case (since 2026-10-31), which the default `AGENT_LIBRARIES` (matplotlib and
-    # seaborn) blocks as `library-disabled`; the readiness scan reads the settings, not the case. A smoke or full run
-    # needs all thirteen libraries enabled.
+    # (since 2026-10-30) and a muix, a plotly and a bokeh case (since 2026-10-31), which the default `AGENT_LIBRARIES`
+    # (matplotlib and seaborn) blocks as `library-disabled`; the readiness scan reads the settings, not the case. A
+    # smoke or full run needs all fifteen libraries enabled.
     disabled = sorted({case.library for case in cases} - set(settings.libraries))
     if disabled:
         _echo(

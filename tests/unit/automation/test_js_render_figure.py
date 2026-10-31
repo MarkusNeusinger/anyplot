@@ -271,6 +271,18 @@ class TestTheFigureIsData:
         assert_final_line(run, "draw", "NoWebGL")
         assert not (run.work / "plot-light.png").exists()
 
+    @pytest.mark.parametrize("trace", ["scatter3d", "surface", "parcoords", "scattermap"])
+    def test_a_webgl_trace_without_a_notice_fails_before_it_draws(
+        self, harness: Harness, tmp_path: Path, trace: str
+    ) -> None:
+        """PB-2a: a 3D scene shows no notice, it draws nothing but its colour bar, which the host gates pass; every
+        WebGL trace type fails before the page is drawn, until the renderer draws WebGL."""
+        figure = {"data": [{"type": trace}], "layout": {"width": 800, "height": 450}}
+        run = harness.draw(tmp_path, figure)
+
+        assert trace in assert_final_line(run, "draw", "NoWebGL")
+        assert not (run.work / "plot-light.png").exists()
+
 
 class TestTheFigureIsChecked:
     @pytest.mark.parametrize(
