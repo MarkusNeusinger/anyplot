@@ -12,3 +12,14 @@
   step end with the same final error line as a JavaScript render. The renderer
   image now carries plotly and bokeh without their kaleido and Selenium export
   stacks. The agent chat does not offer plotly or bokeh yet.
+
+### Fixed
+
+- **No user code runs while a render or data guard is paused.** The harness
+  pauses its guard briefly to read a traceback or resolve a path, and code the
+  snippet defined could run in that moment and write files the guard refuses:
+  an exception class's own `__traceback__` property while a data run printed
+  its traceback, and a path that subclasses `str` while a plot's file write was
+  checked. The harness now reads the traceback through Python's own
+  descriptor, copies a path to a plain string before the check, and compares
+  only plain strings while paused.

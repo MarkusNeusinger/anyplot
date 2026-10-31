@@ -2268,12 +2268,21 @@ Also found:
 - kaleido's `write_image` is refused at choreographer's socket pair (`socket.__new__`) and
   bokeh's `export_png` at its temporary HTML file (`open`), both under the guard on a
   developer machine where both stacks are installed; the image installs neither.
+- **Fixed on the way: user code while a guard is paused.** Every place the harness pauses
+  a guard was checked for code the snippet or plot defined. Two ran there and wrote files
+  the armed guard refuses: data mode's `print_snippet_error` read `exc.__traceback__`,
+  which the snippet's exception class can make a property, and plot mode's
+  `writes_elsewhere` ran `realpath` on a path that subclasses `str`, whose `split` and
+  `startswith` it called. The traceback is now read through `BaseException`'s own
+  descriptor, the path is copied into an exact `str` while the guard is armed, and the
+  frame-name comparisons take exact `str` only (`plain_name`); regression tests in
+  `test_harness_guard.py` and `test_figure_mode.py` write a marker on the old harness.
 - The renderer's language check (`GET /status`, `503 runtime_unavailable`) stays per
   language: a Python job of plotly or bokeh needs Node too, which every renderer image
   has (the toolchain base); a renderer without it would answer exit 127 with a `harness
   SpawnError` line.
 
-**Tests**: `tests/unit/agents/renderer/test_figure_mode.py` (51 cases without plotly or
+**Tests**: `tests/unit/agents/renderer/test_figure_mode.py` (52 cases without plotly or
 bokeh: the package's lookup and the screenshot command stood in): fork before arm (both
 steps children of one harness, the plot step one seccomp filter and the no-new-privileges
 bit more than the harness, the screenshot step none more and able to start a program),

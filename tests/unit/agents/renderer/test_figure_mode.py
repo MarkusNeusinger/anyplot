@@ -308,6 +308,27 @@ class TestThePlotStep:
         assert "Traceback (most recent call last):" in lines and 'File "plot.py", line 4, in <module>' in done.stderr
         assert lines[-1] == "render: error: plot KeyError plot.py:2: 'k'"
 
+    def test_the_error_record_runs_no_plot_code_paused(self, tmp_path: Path) -> None:
+        """The record's traceback walk pauses the guard; a `__traceback__` property of the plot's exception class is
+        not called there, and where the interpreter's traceback calls it, the armed guard refuses its write."""
+        plot = (
+            "class Escape(Exception):\n"
+            "    @property\n"
+            "    def __traceback__(self):\n"
+            "        try:\n"
+            "            open('escaped', 'w').write('x')\n"
+            "        except OSError:\n"
+            "            pass\n"
+            "        return None\n"
+            "\n"
+            "raise Escape('boom')\n"
+        )
+        done = run_figure(tmp_path, plot)
+
+        assert done.returncode == 1
+        assert last_line(done.stderr) == "render: error: plot Escape plot.py:10: boom"
+        assert not (tmp_path / "work" / "escaped").exists()
+
     def test_a_plot_step_killed_by_a_signal_is_a_crash(self, tmp_path: Path) -> None:
         """`RLIMIT_CPU` ends a busy plot: soft and hard limit alike, the kernel kills it with SIGKILL."""
         done = run_figure(tmp_path, "while True:\n    pass\n", env={"ANYPLOT_RLIMIT_CPU_S": "1"}, timeout=60)

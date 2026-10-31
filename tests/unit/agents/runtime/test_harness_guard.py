@@ -85,6 +85,28 @@ NO_CSSSELECT2 = pytest.mark.skipif(
 )
 
 
+TEXT_PATH = (
+    "class Text(str):\n"
+    "    pass\n"
+    "def _tries(name):\n"
+    "    method = getattr(str, name)\n"
+    "    def override(self, *args, **kwargs):\n"
+    "        try:\n"
+    f"            {WRITE_MARKER}\n"
+    "        except OSError:\n"
+    "            pass\n"
+    "        return method(self, *args, **kwargs)\n"
+    "    return override\n"
+    "for _name in ('split', 'rsplit', 'startswith', 'endswith', 'partition', 'rpartition', 'rstrip', 'lstrip', 'strip',\n"
+    "              '__getitem__', '__add__', '__eq__', '__hash__', '__contains__', '__len__', '__iter__', 'find', 'rfind',\n"
+    "              'join', 'replace', '__str__', '__format__', 'removesuffix', 'count', 'encode', '__fspath__'):\n"
+    "    if hasattr(str, _name):\n"
+    "        setattr(Text, _name, _tries(_name))\n"
+)
+"""A `str` subclass every method of which tries to write the marker: armed, the guard refuses the write; paused, it
+would pass. A path of this class may reach the guard's own path handling."""
+
+
 def forged_selector(payload: str) -> str:
     """A plot body that hands cssselect2's compiler Python objects in place of tokens: a `dimension` whose `int_value`
     is `payload` lands unquoted in the `eval` text `CompiledSelector.__init__` builds (`CODE_BUILDERS`), and the
@@ -144,6 +166,16 @@ PLOT_ROUTES = [
         f'with InterpreterPoolExecutor(1) as pool:\n    pool.submit(exec, "{WRITE_MARKER}").result()\n',
         id="InterpreterPoolExecutor",
         marks=pytest.mark.skipif(sys.version_info < (3, 14), reason="InterpreterPoolExecutor is new in 3.14"),
+    ),
+    # PB-1's review of the paused paths (2026-10-31): `writes_elsewhere` ran `realpath` on the event's path with the
+    # guard paused, and a `str` subclass's `split` and `startswith` wrote the marker there; every method of `Text` tries.
+    pytest.param(TEXT_PATH + "open(Text('/tmp/escape'), 'w')\n", id="a str subclass path to open"),
+    pytest.param(
+        TEXT_PATH + "import os\nos.open(Text('/tmp/escape'), os.O_WRONLY | os.O_CREAT)\n", id="... to os.open"
+    ),
+    pytest.param(
+        TEXT_PATH + "class P:\n    def __fspath__(self):\n        return Text('/tmp/escape')\nopen(P(), 'w')\n",
+        id="a path object that returns one",
     ),
     pytest.param(f"{WRITE_MARKER}\n", id="open for writing"),
     pytest.param(f"import os\nos.open('{MARKER}', os.O_CREAT | os.O_WRONLY)\n", id="os.open for writing"),
@@ -715,6 +747,37 @@ class TestDataGuardCode:
         code = "import pandas as pd\n" + DISARM + body + WRITE_AFTER + "df = pd.DataFrame({'a': [1]})\n"
         exit_code, out, stderr = run_data(tmp_path, code)
         assert exit_code in (DATA_EXIT["blocked"], DATA_EXIT["error"]), stderr
+        assert out == "" and not (tmp_path / MARKER).exists()
+
+    def test_the_traceback_is_read_without_the_snippets_code(self, tmp_path: Path) -> None:
+        """`print_snippet_error` reads the traceback with the guard paused: through `exc.__traceback__`, a property of
+        the snippet's exception class ran there and wrote the marker under the armed guard (F1 of PB-1, 2026-10-31).
+        `BaseException`'s own descriptor never calls it."""
+        code = (
+            "class Escape(Exception):\n"
+            "    @property\n"
+            "    def __traceback__(self):\n"
+            "        try:\n"
+            f"            {WRITE_MARKER}\n"
+            "        except RuntimeError:\n"
+            "            pass\n"
+            "        return None\n"
+            "\n"
+            "raise Escape('boom')\n"
+        )
+        exit_code, out, stderr = run_data(tmp_path, code)
+
+        assert exit_code == DATA_EXIT["error"], stderr
+        assert out == "" and not (tmp_path / MARKER).exists()
+        assert 'File "snippet.py", line 10, in <module>' in stderr
+        assert stderr.strip().splitlines()[-1] == "__main__.Escape: boom"
+
+    def test_the_message_runs_armed(self, tmp_path: Path) -> None:
+        """The exception's message is the snippet's code too (`__str__`): it runs with the guard armed."""
+        code = f"class Escape(Exception):\n    def __str__(self):\n        {WRITE_MARKER}\n        return 'x'\n\nraise Escape()\n"
+        exit_code, out, stderr = run_data(tmp_path, code)
+
+        assert exit_code == DATA_EXIT["blocked"], stderr
         assert out == "" and not (tmp_path / MARKER).exists()
 
     def test_unaudited_calls_are_replaced(self, tmp_path: Path) -> None:

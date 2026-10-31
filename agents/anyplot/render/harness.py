@@ -877,10 +877,11 @@ class DataGuard:
 
     def caller(self):
         """The frame that raised the event: the first frame above the guard's own (`sys._getframe` raises an audit
-        event of its own, which the data guard refuses, so the lookup runs paused)."""
+        event of its own, which the data guard refuses, so the lookup runs paused). The file names are compared as
+        exact `str` only (`plain_name`): a `str` subclass's `__eq__` would run code with the guard paused."""
         with self.paused():
             frame = sys._getframe(1)
-            while frame is not None and frame.f_code.co_filename == __file__:
+            while frame is not None and plain_name(frame.f_code.co_filename) == __file__:
                 frame = frame.f_back
         return frame
 
@@ -1023,6 +1024,11 @@ class PlotGuard(DataGuard):
         in another directory than the working one (`os.open("plot-light.png", flags, dir_fd=fd)`, or
         `open(..., opener=...)`, whose opener calls `os.open`): an `os.open` write passes only with an
         absolute path (#12177 review). `open` itself, which savefig and the probe use, takes no `dir_fd`.
+
+        The path becomes an exact `str` before the guard pauses for `realpath`: a path object's `__fspath__` (or a
+        `bytes` subclass's `decode`) runs while the guard is armed, and `realpath` never calls a method of a `str`
+        subclass the plot defined, whose `split` and `startswith` ran paused before and wrote files the armed guard
+        refuses (PB-1's review of the paused paths, 2026-10-31).
         """
         path, mode, flags = (*args, None, None, None)[:3]
         writes = (isinstance(mode, str) and any(letter in mode for letter in "wax+")) or (
@@ -1032,11 +1038,16 @@ class PlotGuard(DataGuard):
             return False
         if not isinstance(path, str | bytes | os.PathLike):
             return True  # a file descriptor, or anything else that names no path
-        if mode is None and not os.path.isabs(os.fsdecode(path)):
+        try:
+            # `str.join` copies a `str` subclass's characters into an exact `str` and calls none of its methods.
+            name = "".join((os.fsdecode(path),))
+        except Exception:
+            return True
+        if mode is None and not os.path.isabs(name):
             return True
         with self.paused():
             try:
-                return os.path.realpath(os.fsdecode(path)) not in self.outputs
+                return os.path.realpath(name) not in self.outputs
             except OSError, ValueError, TypeError:
                 return True
 
@@ -1093,18 +1104,29 @@ def preload_data_modules():
     return zones
 
 
+def plain_name(value):
+    """`value` when it is an exact `str`, else `"?"`: a name a paused guard may compare or format, since a `str`
+    subclass's methods (`__eq__`, `__format__`) are code the snippet or plot defined. `type()` runs none of them."""
+    return value if type(value) is str else "?"
+
+
 def print_snippet_error(guard, exc):
     """The traceback of a snippet error on stderr: its frames' files and lines and the exception line.
 
     Written by hand, with the guard paused only to read the traceback's frames: the
-    `traceback` module reads source lines from files, which the armed guard refuses.
+    `traceback` module reads source lines from files, which the armed guard refuses. Nothing
+    the snippet defined may run while it is paused: the traceback is read through
+    `BaseException`'s own descriptor, which a `__traceback__` of the snippet's exception class
+    cannot replace (it could, and a property there wrote files the armed guard refuses), and
+    only exact `str` names are formatted (`plain_name`). The exception's class name and message
+    may run snippet code, which the armed guard judges.
     """
     lines = ["Traceback (most recent call last):"]
     with guard.paused():
-        tb = exc.__traceback__
+        tb = BaseException.__traceback__.__get__(exc)
         while tb is not None:
             code = tb.tb_frame.f_code
-            lines.append(f'  File "{code.co_filename}", line {tb.tb_lineno}, in {code.co_name}')
+            lines.append(f'  File "{plain_name(code.co_filename)}", line {tb.tb_lineno}, in {plain_name(code.co_name)}')
             tb = tb.tb_next
     kind = type(exc)
     name = kind.__qualname__ if kind.__module__ == "builtins" else f"{kind.__module__}.{kind.__qualname__}"
@@ -2687,8 +2709,7 @@ def _error_record(path, exc, guard, message=None):
             with guard.paused():
                 tb = BaseException.__traceback__.__get__(exc)
                 while tb is not None:
-                    file_name = tb.tb_frame.f_code.co_filename
-                    if type(file_name) is str and file_name == path:
+                    if plain_name(tb.tb_frame.f_code.co_filename) == path:
                         line = tb.tb_lineno
                     tb = tb.tb_next
     except BaseException:
