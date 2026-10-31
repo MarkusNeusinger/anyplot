@@ -425,7 +425,15 @@ GUARDRAIL_SECTION_ANCHORS = {
         "gemini pushes only its `gemini/*` branch and opens only draft prs",
         "never extract, copy, or proxy the agy login",
     ],
-    "External-system writes need explicit, named authorization": ["explicit, named authorization"],
+    "External-system writes need explicit, named authorization": [
+        "explicit, named authorization",
+        "permission-classifier denial anywhere in the session",
+    ],
+    "Long-running work reports progress proactively": [
+        "never let the user be the one to ask",
+        "no new commit and no message for about 30 minutes is a suspected stall",
+        "after every context compaction, re-check each delegate's real state",
+    ],
     "After every merge, check that the site renders": [
         "after every merge, check that the site renders",
         "`scripts/site-smoke.mjs`",
