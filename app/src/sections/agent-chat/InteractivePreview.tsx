@@ -5,41 +5,49 @@
  * route (the download's page: the agents service's wrapper around the
  * harness's page). This component frames the API's static relay
  * (`PREVIEW_RELAY_URL`, `api/preview_relay.py`) sandboxed to scripts and posts
- * the page into it once, on the relay frame's first `load`; the relay shows it
- * in a sandboxed frame of its own, so the plot code runs three sandboxed frames
- * below the chat and never sees its origin, its token or its cookies.
+ * the page into it; the relay shows it in a sandboxed frame of its own, so the
+ * plot code runs three sandboxed frames below the chat and never sees its
+ * origin, its token or its cookies.
  *
+ * - A handshake, not a `load` event: the page goes out only on the relay's
+ *   ready signal (`PREVIEW_RELAY_READY`) from this frame's own window, once per
+ *   mount. A page that stands in at the relay's URL (an error or challenge page
+ *   of the edge, a route that shadows the path) sends no signal and gets
+ *   nothing; a signal from any other window (the plot, a sibling) is ignored.
  * - The target origin is `*`: the relay's origin is opaque (its policy and this
  *   frame's sandbox), so it cannot be named. The page goes only into the frame
- *   this component has just mounted, and only on its first load; a later load
- *   (the frame navigated, which the plot code cannot do) gets nothing.
- * - Nothing comes back: the relay never posts to its parent, and this
- *   component listens to no message.
- * - The relay frame keeps the wrapper's own size at scale 1 (`PAGE_FRAME_SIZES`)
- *   and is scaled down to the card's width with a transform, which pointer
- *   events pass through; the parent keys the component by theme, so a theme
- *   switch mounts a fresh relay for the other page.
+ *   this component mounted, whose window the signal came from.
+ * - Without a signal within `RELAY_READY_TIMEOUT_MS`, `onUnavailable` reports
+ *   `relay_unavailable`, so the card says so instead of showing a blank frame.
+ * - The relay frame has the wrapper's own size at scale 1, read from the page
+ *   (`pageFrameSize`), and is scaled down to the card's width with a transform,
+ *   which pointer events pass through; the parent keys the component by theme,
+ *   so a theme switch mounts a fresh relay for the other page.
  */
 
 import { useLayoutEffect, useRef, useState } from 'react';
 
 import Box from '@mui/material/Box';
 
-import { PAGE_FRAME_SIZES, PREVIEW_RELAY_URL } from 'src/lib/agent';
+import { pageFrameSize, PREVIEW_RELAY_READY, PREVIEW_RELAY_URL } from 'src/lib/agent';
+
+/** How long the card waits for the relay's signal: the relay is a 1 KB static page of the API. */
+export const RELAY_READY_TIMEOUT_MS = 10_000;
 
 export interface InteractivePreviewProps {
   /** The version's `plot.html`, the wrapper the download serves. */
   page: string;
-  /** A square plot (1200x1200 CSS pixels) rather than a landscape one (1600x900). */
-  square: boolean;
   title: string;
+  /** The relay did not answer in time: the card shows the code instead of the frame. */
+  onUnavailable: (code: 'relay_unavailable') => void;
 }
 
-export function InteractivePreview({ page, square, title }: InteractivePreviewProps) {
+export function InteractivePreview({ page, title, onUnavailable }: InteractivePreviewProps) {
   const box = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLIFrameElement>(null);
-  const posted = useRef(false);
-  const { width, height } = square ? PAGE_FRAME_SIZES.square : PAGE_FRAME_SIZES.landscape;
+  const unavailable = useRef(onUnavailable);
+  unavailable.current = onUnavailable;
+  const { width, height } = pageFrameSize(page);
   const [scale, setScale] = useState(0);
 
   useLayoutEffect(() => {
@@ -53,11 +61,26 @@ export function InteractivePreview({ page, square, title }: InteractivePreviewPr
     return () => observer.disconnect();
   }, [width]);
 
-  const handleLoad = () => {
-    if (posted.current) return;
-    posted.current = true;
-    frame.current?.contentWindow?.postMessage(page, '*');
-  };
+  // A layout effect, so the listener is in place before the relay frame, mounted in the same commit, can answer.
+  useLayoutEffect(() => {
+    let posted = false;
+    const timer = setTimeout(
+      () => unavailable.current('relay_unavailable'),
+      RELAY_READY_TIMEOUT_MS
+    );
+    const handleMessage = (event: MessageEvent) => {
+      const relay = frame.current?.contentWindow;
+      if (posted || !relay || event.source !== relay || event.data !== PREVIEW_RELAY_READY) return;
+      posted = true;
+      clearTimeout(timer);
+      relay.postMessage(page, '*');
+    };
+    window.addEventListener('message', handleMessage);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [page]);
 
   return (
     <Box
@@ -76,7 +99,6 @@ export function InteractivePreview({ page, square, title }: InteractivePreviewPr
         sandbox="allow-scripts"
         referrerPolicy="no-referrer"
         title={title}
-        onLoad={handleLoad}
         style={{
           display: 'block',
           border: 0,

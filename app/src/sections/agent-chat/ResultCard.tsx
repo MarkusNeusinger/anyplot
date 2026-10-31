@@ -26,7 +26,9 @@
  *   through the API's sandboxed relay), only when the user asks for it; a theme
  *   switch shows the other theme's page, `.preview()` the image again. The pages
  *   of an open preview are kept, so switching back or downloading the page
- *   builds nothing twice; closing the preview drops them.
+ *   builds nothing twice; closing the preview or collapsing the card (also
+ *   when a newer version arrives) drops them, and a build still under way is
+ *   ignored when it ends. The frame takes the wrapper's size from the page.
  * - A copy or a download that succeeded calls `onOutcome` with the action and
  *   the version, the content-free usage beacon; nothing else travels.
  * - Below the code, the quick-feedback control (`ResultFeedback`) stores the
@@ -60,7 +62,7 @@ import {
   hasPage,
   type OutcomeAction,
   PAGE_ARTIFACT,
-  PAGE_FRAME_SIZES,
+  pageFrameSize,
   type Theme,
 } from 'src/lib/agent';
 import { copyImage, downloadBlob } from 'src/sections/agent-chat/files';
@@ -154,13 +156,7 @@ export function ResultCard({
   const previewRun = useRef(0);
   const previewReported = useRef(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(null);
-
-  // A newer version collapses this one; it stays one click away in the thread.
   const [wasLatest, setWasLatest] = useState(latest);
-  if (wasLatest !== latest) {
-    setWasLatest(latest);
-    setExpanded(latest);
-  }
 
   useEffect(
     () => () => {
@@ -196,11 +192,40 @@ export function ResultCard({
   /** Whether showing `theme` in the open preview needs its page built first. */
   const needsPage = (theme: Theme) => pages[theme] === undefined;
 
+  /**
+   * Drop the preview: its pages (two wrappers of up to tens of MiB), its error,
+   * and a build still under way, whose page is ignored when it comes.
+   */
+  const dropPreview = () => {
+    previewRun.current += 1;
+    setInteractive(false);
+    setPages({});
+    setPreviewError(null);
+  };
+
+  /** Collapse the card; an open preview goes, and a theme it showed without a PNG gives way to the run's own. */
+  const collapse = () => {
+    if (interactive) {
+      dropPreview();
+      if (needsRender(shownTheme)) setShownTheme(version.theme);
+    }
+    setExpanded(false);
+  };
+
+  // A newer version collapses this one; it stays one click away in the thread.
+  if (wasLatest !== latest) {
+    setWasLatest(latest);
+    if (latest) setExpanded(true);
+    else collapse();
+  }
+
   const handleTheme = (theme: Theme) => {
     if (interactive) {
       // The preview shows the other theme's page; the PNG renders when the image is back on screen.
       if (needsPage(theme) && busy) return;
       setShownTheme(theme);
+      // A fresh relay for the theme, also after the last one did not answer.
+      setPreviewError(null);
       void showPage(theme);
       return;
     }
@@ -318,10 +343,7 @@ export function ResultCard({
   };
 
   const handleClosePreview = () => {
-    previewRun.current += 1;
-    setInteractive(false);
-    setPages({});
-    setPreviewError(null);
+    dropPreview();
     if (needsRender(shownTheme)) {
       // A theme the preview showed without its PNG: render it now, or go back to the run's own while busy.
       if (busy) setShownTheme(version.theme);
@@ -329,13 +351,10 @@ export function ResultCard({
     }
   };
 
-  // The preview keeps the wrapper's own aspect; the image box takes the PNG's.
-  const square = (() => {
-    const [width, height] = aspect.split('/').map(Number);
-    return width > 0 && height > 0 && width / height < 1.3;
-  })();
-  const frameSize = square ? PAGE_FRAME_SIZES.square : PAGE_FRAME_SIZES.landscape;
+  // The preview keeps the wrapper's own aspect, read from its page; the image box, and the preview while it
+  // builds, take the PNG's.
   const shownPage = interactive ? pages[shownTheme] : undefined;
+  const pageFrame = shownPage !== undefined ? pageFrameSize(shownPage) : null;
 
   const overlayBtnSx = overlayButtonSx(isDark);
   // Named the way the progress grid names its rounds, and which round shipped when an earlier one won.
@@ -345,7 +364,7 @@ export function ResultCard({
     <Box
       component="button"
       type="button"
-      onClick={() => setExpanded(open => !open)}
+      onClick={() => (expanded ? collapse() : setExpanded(true))}
       aria-expanded={expanded}
       aria-label={`Version ${number}, ${STATUS_LABEL[result.status] ?? result.status}`}
       sx={{
@@ -419,19 +438,12 @@ export function ResultCard({
               overflow: 'hidden',
               bgcolor: 'var(--bg-surface)',
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-              aspectRatio: interactive ? `${frameSize.width}/${frameSize.height}` : aspect,
+              aspectRatio: pageFrame ? `${pageFrame.width}/${pageFrame.height}` : aspect,
             }}
             data-testid="result-image-box"
           >
             {interactive ? (
-              shownPage !== undefined ? (
-                <InteractivePreview
-                  key={shownTheme}
-                  page={shownPage}
-                  square={square}
-                  title={`Interactive plot, version ${number}, ${shownTheme} theme`}
-                />
-              ) : previewError ? (
+              previewError ? (
                 <Box
                   role="alert"
                   sx={{
@@ -448,6 +460,13 @@ export function ResultCard({
                 >
                   could not show the interactive plot ({previewError})
                 </Box>
+              ) : shownPage !== undefined ? (
+                <InteractivePreview
+                  key={shownTheme}
+                  page={shownPage}
+                  title={`Interactive plot, version ${number}, ${shownTheme} theme`}
+                  onUnavailable={setPreviewError}
+                />
               ) : (
                 <>
                   <Skeleton

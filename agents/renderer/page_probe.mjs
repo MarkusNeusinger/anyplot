@@ -23,21 +23,29 @@
 // relay page (api/preview_relay.py) with its real headers on its own origin and
 // checks what the chat does with it: a parent page at an allowed origin
 // (http://localhost:<port>) frames the relay, scaled as the chat scales it, and
-// posts the wrapper into it; before that, a sibling frame at the same origin
-// and one at another origin post a page of their own, which the relay must
-// ignore. Then the plot draws in a frame of origin "null" and answers a hover,
-// the snippet's attempts fail as above, its attempts to navigate the wrapper or
-// the relay and to post a page into the relay fail or are ignored, and the relay
-// keeps its URL. A parent at another origin (http://127.0.0.1:<port>) cannot
-// frame the relay (`frame-ancestors`), and with that check lifted for the test
-// (`/relay-open`), the relay still ignores a page that origin posts.
+// runs the chat's side of the handshake (InteractivePreview.tsx): the wrapper
+// goes out only on the relay's ready signal from the relay frame's own window.
+// Before that, a sibling frame at the same origin and one at another origin
+// post a page of their own, which the relay must ignore. Then the plot draws in
+// a frame of origin "null" and answers a hover, a second page from the parent
+// is ignored, the snippet's attempts fail as above, its attempts to navigate
+// the wrapper or the relay, to post a page into the relay and to send the ready
+// signal to the top fail or are ignored, the relay keeps its URL, and the ready
+// signal is all the relay ever sent. A parent at another origin
+// (http://127.0.0.1:<port>) cannot frame the relay (`frame-ancestors`), and with
+// that check lifted for the test (`/relay-open`), the relay still ignores a page
+// that origin posts. A stand-in at the relay's URL (`/relay-missing`, a 404 page
+// that listens, as an error page of the edge could) gets nothing from the chat,
+// while a post on its load, the chat before the handshake, would have handed it
+// the page (the control).
 //
 // Usage:
 //   node page_probe.mjs snippet <chartjs|d3|echarts|highcharts>    print the probe's plot code
 //   node page_probe.mjs check <plot.html> [--hover] [--attempts]
 //   node page_probe.mjs relay <relay.json> <plot.html> [--hover]
 //
-// relay.json is `python3 api/preview_relay.py` (the relay's page and headers).
+// relay.json is `python3 api/preview_relay.py` (the relay's page, headers and
+// ready signal).
 // The snippets read window.ANYPLOT_DATA as {label, value} rows; the checker
 // prints one JSON report and exits 1 when a check failed. Playwright comes from
 // ANYPLOT_NODE_MODULES (the image's /opt/anyplot/node_modules) or the checkout's
@@ -64,6 +72,7 @@ const VIEWPORT = { width: 1440, height: 790 }; // a laptop's window: the wrapper
 const MIN_PAINTED = 1000;
 const MIN_SHAPES = 3;
 const MARKER_PAGE = '<p id="anyplot-marker">a page the relay must not show</p>';
+const RELAY_READY = "anyplot-relay-ready"; // the relay's only message (READY_MESSAGE in api/preview_relay.py)
 
 // The escape attempts, after the plot drew. Each records "refused <Error>" or
 // its value; the frame's self-navigation waits for the checker, since it ends
@@ -88,6 +97,7 @@ window.__anyplotProbe = {};
   record("parent_location", function () { parent.location = "${LISTENER}/parent"; });
   record("grandparent_location", function () { parent.parent.location = "${LISTENER}/grandparent"; });
   record("post_to_relay", function () { parent.parent.postMessage(${JSON.stringify(MARKER_PAGE)}, "*"); });
+  record("ready_to_top", function () { top.postMessage(${JSON.stringify(RELAY_READY)}, "*"); });
   fetch("${LISTENER}/fetch").then(
     function () { probe.fetch = "ok"; },
     function (e) { probe.fetch = "refused " + e.name; }
@@ -255,8 +265,12 @@ async function check(file, { hover, attempts }) {
       const after = page.frames().filter((item) => item !== page.mainFrame()).map((item) => item.url());
       // A refused navigation leaves the frame on Chromium's error page, `chrome-error://chromewebdata/`: that is
       // what blocked looks like (the listener's empty log below says no request left). An http(s) URL here would
-      // mean the frame loaded the target.
-      expect("self_navigation_blocked", after.length === 1 && !/^https?:/.test(after[0]), after);
+      // mean the frame loaded the target, and `about:srcdoc` that the attempt never ran.
+      expect(
+        "self_navigation_blocked",
+        after.length === 1 && after[0] !== "about:srcdoc" && !/^https?:/.test(after[0]),
+        after
+      );
     }
 
     expect("main_frame_unchanged", page.url() === url, page.url());
@@ -272,9 +286,39 @@ async function check(file, { hover, attempts }) {
   process.exit(report.failures.length ? 1 : 0);
 }
 
-// The relay mode's parent page: the relay frame scaled as the chat scales it, and, with `siblings`, two frames
-// that post a page of their own into the relay before the probe posts the real one (one at this origin, one at
-// another).
+// The chat's side of the handshake (app/src/sections/agent-chat/InteractivePreview.tsx), in the parent page: the
+// page goes into the relay frame only on the ready signal from that frame's own window, once. `anyplotShow` hands
+// it the page; `__anyplotChat` records what came in for the checks (every message from the relay frame, the ready
+// signals from it and from anywhere, the posts).
+const CHAT_SCRIPT = `
+(function () {
+  var READY = ${JSON.stringify(RELAY_READY)};
+  var relay = document.getElementById("relay");
+  var chat = (window.__anyplotChat = { fromRelay: [], ready: 0, readyAnywhere: 0, posts: 0 });
+  var page = null;
+  function send() {
+    if (page === null || chat.ready === 0 || chat.posts > 0) return;
+    chat.posts += 1;
+    relay.contentWindow.postMessage(page, "*");
+  }
+  window.addEventListener("message", function (event) {
+    if (event.data === READY) chat.readyAnywhere += 1;
+    if (event.source !== relay.contentWindow) return;
+    chat.fromRelay.push(typeof event.data === "string" ? event.data.slice(0, 64) : typeof event.data);
+    if (event.data !== READY) return;
+    chat.ready += 1;
+    send();
+  });
+  window.anyplotShow = function (html) {
+    page = html;
+    send();
+  };
+})();
+`;
+
+// The relay mode's parent page: the relay frame scaled as the chat scales it with the chat's handshake, and, with
+// `siblings`, two frames that post a page of their own into the relay before the probe hands over the real one (one
+// at this origin, one at another).
 function parentPage(relayPath, siblings) {
   const { width, height } = WRAPPER_SIZE;
   const others = siblings
@@ -286,11 +330,21 @@ body { margin: 0; }
 #relay { display: block; border: 0; width: ${width}px; height: ${height}px; transform: scale(${RELAY_SCALE}); transform-origin: 0 0; }
 </style></head><body>
 <iframe id="relay" sandbox="allow-scripts" src="http://127.0.0.1:${RELAY_PORT}${relayPath}"></iframe>${others}
+<script>${CHAT_SCRIPT}</script>
 </body></html>`;
 }
 
 // A sibling's page: it posts the marker page into the relay, its parent's first frame.
 const SENDER_PAGE = `<!doctype html><script>parent.frames[0].postMessage(${JSON.stringify(MARKER_PAGE)}, "*");</script>`;
+
+// What may answer at the relay's URL instead of the relay (an error or challenge page of the edge, a route that
+// shadows the path): a 404 page with a listener of its own, which records the length of every string it receives.
+const STAND_IN_PAGE = `<!doctype html><title>404 Not Found</title><h1>Not Found</h1><script>
+window.__received = [];
+window.addEventListener("message", function (event) {
+  window.__received.push(typeof event.data === "string" ? event.data.length : typeof event.data);
+});
+</script>`;
 
 // Runs in a frame: whether it shows the marker page.
 function hasMarker() {
@@ -306,13 +360,18 @@ async function relay(relayFile, pageFile, { hover }) {
     response.end("reached");
   });
   // The relay's origin: `/relay` with its real headers, `/relay-open` with `frame-ancestors` lifted for the
-  // origin check alone; any other request is an escape.
+  // origin check alone, `/relay-missing` the stand-in's 404; any other request is an escape.
   const relayHeaders = { "Content-Type": "text/html; charset=utf-8", ...spec.headers };
   const openHeaders = {
     ...relayHeaders,
     "Content-Security-Policy": spec.headers["Content-Security-Policy"].replace(/frame-ancestors [^;]*/, "frame-ancestors *"),
   };
   const relayServer = http.createServer((request, response) => {
+    if (request.url === "/relay-missing") {
+      response.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+      response.end(STAND_IN_PAGE);
+      return;
+    }
     const headers = { "/relay": relayHeaders, "/relay-open": openHeaders }[request.url];
     if (!headers) escapes.push(`relay ${request.url}`);
     response.writeHead(headers ? 200 : 404, headers ?? {});
@@ -342,8 +401,12 @@ async function relay(relayFile, pageFile, { hover }) {
   };
   const relayUrl = `http://127.0.0.1:${RELAY_PORT}/relay`;
   const framesOf = (page) => page.frames().filter((frame) => frame !== page.mainFrame());
-  const post = (page) =>
-    page.evaluate((html) => document.getElementById("relay").contentWindow.postMessage(html, "*"), wrapper);
+  // A post straight into the relay frame, without the handshake: what the chat did before it, on the frame's load.
+  const post = (page, html = wrapper) =>
+    page.evaluate((content) => document.getElementById("relay").contentWindow.postMessage(content, "*"), html);
+  // The chat's way: the page waits for the relay's ready signal.
+  const show = (page) => page.evaluate((html) => window.anyplotShow(html), wrapper);
+  const chatState = (page) => page.evaluate(() => ({ ...window.__anyplotChat }));
   const plotFrame = async (page) => {
     for (const frame of framesOf(page)) {
       if (frame.url() === "about:srcdoc" && (await frame.evaluate(() => !!document.getElementById("container")).catch(() => false))) {
@@ -360,6 +423,8 @@ async function relay(relayFile, pageFile, { hover }) {
     const context = await browser.newContext({ acceptDownloads: true, viewport: VIEWPORT });
     const events = { popups: 0, downloads: 0, dialogs: 0 };
     context.on("page", () => (events.popups += 1));
+
+    expect("ready_signal_is_the_chats", spec.ready === RELAY_READY, spec.ready);
 
     // 1. The chat's case: an allowed origin, the relay with its real headers, two siblings posting first.
     const page = await context.newPage();
@@ -378,7 +443,9 @@ async function relay(relayFile, pageFile, { hover }) {
     expect("relay_origin_null", (await relayFrame.evaluate(() => self.origin)) === "null", await relayFrame.evaluate(() => self.origin));
     const beforePost = await relayFrame.evaluate(() => document.querySelectorAll("iframe").length);
     expect("siblings_ignored", beforePost === 0 && !(await markerShown(page)), { relay_frames: beforePost });
-    await post(page);
+    const signalled = await chatState(page);
+    expect("relay_signalled_ready", signalled.ready === 1 && signalled.posts === 0, signalled);
+    await show(page);
     let frame = null;
     for (let waited = 0; !frame && waited < TIMEOUT_MS; waited += 250) {
       await page.waitForTimeout(250);
@@ -402,6 +469,11 @@ async function relay(relayFile, pageFile, { hover }) {
     const wrapperFrame = frame.parentFrame();
     const wrapperOrigin = wrapperFrame ? await wrapperFrame.evaluate(() => self.origin) : null;
     expect("wrapper_origin_null", wrapperOrigin === "null", wrapperOrigin);
+    // The relay takes one page: a second one, even from the allowed parent itself, is ignored.
+    await post(page, MARKER_PAGE);
+    await page.waitForTimeout(SETTLE_MS / 3);
+    const afterSecond = await relayFrame.evaluate(() => document.querySelectorAll("iframe").length);
+    expect("second_page_ignored", afterSecond === 1 && !(await markerShown(page)), { relay_frames: afterSecond });
 
     if (hover) {
       // The relay frame is scaled in the parent; the wrapper inside lays the canvas out 16 px from its corner.
@@ -437,9 +509,23 @@ async function relay(relayFile, pageFile, { hover }) {
     expect("post_from_the_plot_ignored", relayFrames === 1 && !(await markerShown(page)), { relay_frames: relayFrames, posted: recorded?.post_to_relay });
     expect("relay_kept_its_url", relayFrame.url() === relayUrl, relayFrame.url());
     expect("parent_unchanged", page.url() === parentUrl, page.url());
-    // A refused navigation of the plot's own frame ends on Chromium's error page (`chrome-error://chromewebdata/`).
+    // A refused navigation of the plot's own frame ends on Chromium's error page (`chrome-error://chromewebdata/`):
+    // the frame left `about:srcdoc` (the attempt ran) and reached no http(s) URL.
     const urls = framesOf(page).map((item) => item.url());
-    expect("self_navigation_blocked", !urls.some((url) => url.startsWith(LISTENER)), urls);
+    expect(
+      "self_navigation_blocked",
+      frame.url() !== "about:srcdoc" && !/^https?:/.test(frame.url()) && !urls.some((url) => url.startsWith(LISTENER)),
+      { plot_frame: frame.url(), frames: urls }
+    );
+    // The plot's ready signal reached the top (both signals counted there) but started no post: the chat answers
+    // the relay frame's window alone, and the relay never said anything but its one signal.
+    const chat = await chatState(page);
+    expect(
+      "ready_from_the_plot_ignored",
+      recorded?.ready_to_top === "ok" && chat.readyAnywhere === 2 && chat.ready === 1 && chat.posts === 1,
+      { ...chat, posted: recorded?.ready_to_top }
+    );
+    expect("relay_sent_only_the_signal", chat.fromRelay.length === 1 && chat.fromRelay[0] === RELAY_READY, chat.fromRelay);
 
     // 2. Another origin cannot frame the relay: `frame-ancestors` keeps its script from running there.
     const stranger = await context.newPage();
@@ -470,6 +556,25 @@ async function relay(relayFile, pageFile, { hover }) {
       controlFrame = await plotFrame(control);
     }
     expect("lifted_relay_takes_an_allowed_origins_page", !!controlFrame, framesOf(control).map((item) => item.url()));
+
+    // 4. A stand-in at the relay's URL that listens: it sends no ready signal, so the chat posts it nothing.
+    const standIn = await context.newPage();
+    events.popups -= 1;
+    await standIn.goto(`http://localhost:${PARENT_PORT}/parent?relay=/relay-missing`, { waitUntil: "load", timeout: TIMEOUT_MS });
+    await show(standIn);
+    await standIn.waitForTimeout(SETTLE_MS);
+    const standInFrame = framesOf(standIn).find((item) => item.url() === `http://127.0.0.1:${RELAY_PORT}/relay-missing`);
+    const received = standInFrame ? await standInFrame.evaluate(() => window.__received) : null;
+    const standInChat = await chatState(standIn);
+    expect("stand_in_receives_nothing", Array.isArray(received) && received.length === 0 && standInChat.posts === 0, {
+      received,
+      ...standInChat,
+    });
+    // The control: a post on the frame's load, the chat before the handshake, hands the stand-in the whole page.
+    await post(standIn);
+    await standIn.waitForTimeout(SETTLE_MS / 3);
+    const leaked = standInFrame ? await standInFrame.evaluate(() => window.__received) : null;
+    expect("stand_in_listens", Array.isArray(leaked) && leaked.length === 1 && leaked[0] === wrapper.length, leaked);
 
     expect("no_popup_download_or_dialog", !events.popups && !events.downloads && !events.dialogs, events);
     expect("no_request_escaped", escapes.length === 0, escapes);

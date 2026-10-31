@@ -22,6 +22,7 @@ from api.preview_relay import (
     LOCAL_ORIGINS,
     MAX_PAGE_CHARS,
     PAGE_POLICY,
+    READY_MESSAGE,
     RELAY_PATH,
     relay_headers,
     relay_html,
@@ -96,16 +97,26 @@ class TestPage:
         script = relay_html([])
         assert 'frame.setAttribute("sandbox", "allow-scripts");' in script
         assert "frame.srcdoc = page;" in script
-        # Never as built markup, and nothing goes back.
-        for forbidden in (
-            "innerHTML",
-            "outerHTML",
-            "document.write",
-            "insertAdjacentHTML",
-            "postMessage",
-            "allow-same",
-        ):
+        # Never as built markup.
+        for forbidden in ("innerHTML", "outerHTML", "document.write", "insertAdjacentHTML", "allow-same"):
             assert forbidden not in script, forbidden
+
+    def test_the_relays_only_message_is_the_ready_signal_to_its_parent_after_its_listener(self) -> None:
+        """A constant without content, sent once the listener is in place; the chat posts the page only on it."""
+        html = relay_html(["https://anyplot.ai"])
+        script = html[html.index("<script>") : html.index("</script>")]
+        signal = f'window.parent.postMessage("{READY_MESSAGE}", "*");'
+
+        assert script.count("postMessage") == 1
+        assert signal in script
+        assert script.index('window.addEventListener("message"') < script.index(signal)
+
+    def test_the_chat_and_the_probe_wait_for_the_same_signal(self) -> None:
+        agent_ts = (ROOT / "app" / "src" / "lib" / "agent.ts").read_text(encoding="utf-8")
+        probe = (ROOT / "agents" / "renderer" / "page_probe.mjs").read_text(encoding="utf-8")
+
+        assert f"export const PREVIEW_RELAY_READY = '{READY_MESSAGE}';" in agent_ts
+        assert f'const RELAY_READY = "{READY_MESSAGE}";' in probe
 
     def test_the_relay_loads_nothing(self) -> None:
         html = relay_html(["https://anyplot.ai"])
@@ -128,7 +139,7 @@ class TestPage:
 
         assert PAGE_POLICY == wrapper.PAGE_POLICY
 
-    def test_the_command_line_writes_the_page_and_the_headers(self) -> None:
+    def test_the_command_line_writes_the_page_the_headers_and_the_signal(self) -> None:
         """The probe's input (`python3 api/preview_relay.py <origin> ...`), from the standard library alone."""
         done = subprocess.run(
             [sys.executable, "-I", str(ROOT / "api" / "preview_relay.py"), "https://anyplot.ai"],
@@ -137,4 +148,8 @@ class TestPage:
             check=True,
         )
         written = json.loads(done.stdout)
-        assert written == {"html": relay_html(["https://anyplot.ai"]), "headers": relay_headers(["https://anyplot.ai"])}
+        assert written == {
+            "html": relay_html(["https://anyplot.ai"]),
+            "headers": relay_headers(["https://anyplot.ai"]),
+            "ready": READY_MESSAGE,
+        }

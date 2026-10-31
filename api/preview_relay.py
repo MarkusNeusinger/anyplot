@@ -18,20 +18,25 @@ origin that holds no data, takes no token and reads no cookie:
 * **Who may frame it.** `frame-ancestors` names the site's origins (`settings.cors_origins`) and
   any local dev server (`http://localhost:*`, the BFF's `LOCAL_ORIGIN_REGEX`), so no other site
   can embed it and post a page into it.
+* **What it says.** Once its listener is in place, it posts the constant `READY_MESSAGE` to
+  `window.parent` with the target origin `*`: a signal without content, so it tells any parent
+  nothing. That is all it ever sends. The chat posts the page only after this signal came from
+  the relay's own window, so a stand-in at the relay's URL (a 404 or 5xx page of the edge, a
+  challenge, a route that shadows the path) never receives the user's page, and the design does
+  not depend on how many `load` events the frame fires.
 * **What it accepts.** One message, the first that comes from `window.parent` (never the plot's
   frame, a sibling or a popup) at one of those origins, holding a string of at most
   `MAX_PAGE_CHARS` characters. It writes that string into a new `<iframe sandbox="allow-scripts">`
-  through the `srcdoc` property, never as built HTML, and ignores every later message. It sends
-  nothing back.
+  through the `srcdoc` property, never as built HTML, and ignores every later message.
 * **What it may do.** Its policy is the harness's (`PAGE_POLICY`: no request, no `eval`, no form,
   no `<base>`), so neither the relay nor any frame inside it, which inherit it, reaches the
   network; `sandbox allow-scripts` gives it an opaque origin, so it has no cookies or storage of
   the API's origin either.
 
 The chat posts with the target origin `*`, because an opaque origin cannot be named, and only
-once, on the first `load` of the relay frame it has just mounted (a later load is ignored).
-The probe (`agents/renderer/page_probe.mjs relay`, the renderer image's CI step) checks all of
-it in Chromium.
+once per mounted relay frame, on the ready signal from that frame's window. The probe
+(`agents/renderer/page_probe.mjs relay`, the renderer image's CI step) checks all of it in
+Chromium, a stand-in at the relay's URL included.
 
 Standard library only: the renderer image's CI step loads this module by its path to serve the
 probe's relay with the real headers; `api/routers/preview.py` serves it with the site's origins.
@@ -43,6 +48,9 @@ from collections.abc import Iterable
 
 
 RELAY_PATH = "/preview/relay"
+READY_MESSAGE = "anyplot-relay-ready"
+"""The relay's only message, to its parent once its listener is in place: no content, so the target origin `*` is
+harmless. The chat's `PREVIEW_RELAY_READY` (`app/src/lib/agent.ts`) and the probe's `RELAY_READY` are pinned to it."""
 PAGE_POLICY = (
     "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; "
     "form-action 'none'; base-uri 'none'"
@@ -84,7 +92,8 @@ def relay_headers(origins: Iterable[str]) -> dict[str, str]:
 
 
 def relay_html(origins: Iterable[str]) -> str:
-    """The relay page: no markup of its own, a script that takes one page from its parent (module docstring)."""
+    """The relay page: no markup of its own, a script that says it is ready and takes one page from its parent
+    (module docstring)."""
     allowed = json.dumps(relay_origins(origins)).replace("<", "\\u003c")
     return f"""<!doctype html>
 <html lang="en">
@@ -116,6 +125,7 @@ def relay_html(origins: Iterable[str]) -> str:
     frame.srcdoc = page;
     document.body.appendChild(frame);
   }});
+  window.parent.postMessage({json.dumps(READY_MESSAGE)}, "*");
 }})();
 </script>
 </body>
@@ -124,8 +134,10 @@ def relay_html(origins: Iterable[str]) -> str:
 
 
 if __name__ == "__main__":
-    # `python3 api/preview_relay.py [origin ...]`: the relay's page and headers as JSON, which the probe serves
-    # (`agents/renderer/page_probe.mjs relay`).
+    # `python3 api/preview_relay.py [origin ...]`: the relay's page, headers and ready signal as JSON, which the probe
+    # serves (`agents/renderer/page_probe.mjs relay`).
     import sys
 
-    print(json.dumps({"html": relay_html(sys.argv[1:]), "headers": relay_headers(sys.argv[1:])}))
+    print(
+        json.dumps({"html": relay_html(sys.argv[1:]), "headers": relay_headers(sys.argv[1:]), "ready": READY_MESSAGE})
+    )

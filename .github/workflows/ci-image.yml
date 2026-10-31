@@ -1326,12 +1326,15 @@ jobs:
       # The chat's interactive preview (JS-4b-2, route A): the API's relay page
       # (api/preview_relay.py, standard library only, run by its path for its page and its real
       # headers) on an origin of its own, a parent page at an allowed origin that frames it scaled
-      # as the chat does and posts the wrapper of the step above into it, and two siblings that
-      # post a page first. The probe asserts that the plot draws and answers a hover in a frame of
-      # origin null, that the snippet's ways out fail (the wrapper's and the relay's navigation
-      # among them), that the siblings' and the plot's own pages are ignored, that the relay keeps
-      # its URL, that another origin cannot frame it (frame-ancestors), and that with that check
-      # lifted the relay's own origin check still ignores that origin's page.
+      # as the chat does and posts the wrapper of the step above into it on the relay's ready
+      # signal, as the chat does, and two siblings that post a page first. The probe asserts that
+      # the plot draws and answers a hover in a frame of origin null, that the snippet's ways out
+      # fail (the wrapper's and the relay's navigation among them), that a second page and the
+      # siblings' and the plot's own pages are ignored, that the plot's own ready signal starts no
+      # post and the relay sends nothing but its signal, that the relay keeps its URL, that
+      # another origin cannot frame it (frame-ancestors), that with that check lifted the relay's
+      # own origin check still ignores that origin's page, and that a listening 404 page at the
+      # relay's URL receives nothing.
       - name: Probe the chat's preview relay with the page
         if: steps.check.outputs.should_build == 'true'
         run: |

@@ -132,6 +132,11 @@
  * answers `204`. `GET /preview/relay`, the card's interactive preview (JS-4b-2),
  * is the API's own relay page with its headers, which the mock reads from
  * `python3 api/preview_relay.py` at start (`503` when python3 cannot run it).
+ * The card frames the relay at `VITE_API_URL` (`PREVIEW_RELAY_URL`), while the
+ * chat's own requests go to `VITE_DEBUG_API_URL`: point both at the mock, as
+ * above, or the frame comes from another host's relay (the production API's
+ * with only `VITE_DEBUG_API_URL` set), and the browser runs that relay instead
+ * of the checkout's.
  *
  *   AGENT_LIBRARIES=matplotlib,seaborn,chartjs node app/scripts/agent-bff-mock.mjs
  *   open http://localhost:3000/debug/agent?spec=scatter-basic&library=chartjs&language=javascript

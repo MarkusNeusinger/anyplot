@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlotVersion } from 'src/hooks/useAgentSession';
+import { RELAY_READY_TIMEOUT_MS } from 'src/sections/agent-chat/InteractivePreview';
 import { ResultCard, type ResultCardProps } from 'src/sections/agent-chat/ResultCard';
-import { fireEvent, render, screen, userEvent, waitFor } from 'src/test-utils';
+import { act, fireEvent, render, screen, userEvent, waitFor } from 'src/test-utils';
 
 // The lazy-loaded highlighter, reduced to the code and the grammar it was asked for.
 vi.mock('src/components/CodeHighlighter', () => ({
@@ -395,6 +396,99 @@ describe('ResultCard', () => {
 
       expect(onRequestTheme).toHaveBeenCalledWith(2, 'dark');
       expect(screen.getByText('rendering dark theme…')).toBeInTheDocument();
+    });
+
+    it('frames a square plot square from its page, before its PNG has loaded', async () => {
+      const onFetchArtifact = vi.fn(
+        async () =>
+          new Blob(['<style>.frame { width: 1200px; height: 1200px; }</style>'], {
+            type: 'text/html',
+          })
+      );
+      renderCard({ version: jsVersion(), onFetchArtifact });
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+
+      const frame = await screen.findByTitle('Interactive plot, version 2, light theme');
+      expect(frame.style.width).toBe('1232px');
+      expect(getComputedStyle(screen.getByTestId('result-image-box')).aspectRatio).toBe(
+        '1232/1232'
+      );
+    });
+
+    it('says so when the relay does not answer, and mounts a fresh one on a theme click', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        renderCard({ version: jsVersion(), onFetchArtifact: fetchPages() });
+        fireEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+        await screen.findByTitle('Interactive plot, version 2, light theme');
+
+        act(() => {
+          vi.advanceTimersByTime(RELAY_READY_TIMEOUT_MS);
+        });
+
+        expect(screen.getByRole('alert')).toHaveTextContent(
+          'could not show the interactive plot (relay_unavailable)'
+        );
+        fireEvent.click(screen.getByRole('button', { name: 'light' }));
+        expect(screen.getByTitle('Interactive plot, version 2, light theme')).toBeInTheDocument();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('drops the preview and ignores a build still under way when the card collapses', async () => {
+      let finish: (blob: Blob) => void = () => undefined;
+      const onFetchArtifact = fetchPages();
+      onFetchArtifact.mockImplementationOnce(
+        () =>
+          new Promise<Blob>(resolve => {
+            finish = resolve;
+          })
+      );
+      const { onOutcome } = renderCard({ version: jsVersion(), onFetchArtifact });
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+      expect(screen.getByText('building the interactive light plot…')).toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: /^Version 2,/ }));
+      finish(page('light'));
+      await userEvent.click(screen.getByRole('button', { name: /^Version 2,/ }));
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Show interactive' })).toBeEnabled()
+      );
+
+      // The late page went nowhere: the image is back, and no opening was reported.
+      expect(screen.getByAltText('Adapted plot, version 2, light theme')).toBeInTheDocument();
+      expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
+      expect(onOutcome).not.toHaveBeenCalled();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+      await screen.findByTitle('Interactive plot, version 2, light theme');
+      expect(onFetchArtifact).toHaveBeenCalledTimes(2);
+      expect(onOutcome.mock.calls).toEqual([['opened_preview', 2]]);
+    });
+
+    it('closes the preview when a newer version arrives', async () => {
+      const onFetchArtifact = fetchPages();
+      const props: ResultCardProps = {
+        version: jsVersion(),
+        specId: 'scatter-basic',
+        language: 'javascript',
+        latest: true,
+        busy: false,
+        onRequestTheme: vi.fn(),
+        onFetchArtifact,
+        onTrack: vi.fn(),
+      };
+      const { rerender } = render(<ResultCard {...props} />);
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+      await screen.findByTitle('Interactive plot, version 2, light theme');
+
+      rerender(<ResultCard {...props} latest={false} />);
+      expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: /^Version 2,/ }));
+      expect(screen.getByAltText('Adapted plot, version 2, light theme')).toBeInTheDocument();
+      expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
     });
   });
 

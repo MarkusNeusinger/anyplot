@@ -30,7 +30,7 @@ from agents.anyplot.schemas import PlotResult
 from agents.anyplot.services import CodeVersion, Services
 from agents.anyplot.settings import AgentSettings
 from agents.renderer.commands import JS_FONTCONFIG_FILE, JS_NODE_MODULES, NODE_BINARY, PLAYWRIGHT_BROWSERS
-from api.preview_relay import relay_headers, relay_html
+from api.preview_relay import READY_MESSAGE, relay_headers, relay_html
 
 from .conftest import JS_PROMPT_IDIOMS, REPO_ROOT
 from .test_profile_javascript_image import IDIOM_DTYPES, IDIOM_NAMES, IDIOM_ROWS, csv_text
@@ -133,16 +133,19 @@ def test_the_probe_page_keeps_its_plot_and_refuses_every_way_out(tmp_path: Path,
 @pytest.mark.parametrize("library", ["chartjs", "d3", "echarts", "highcharts"])
 def test_the_chats_preview_relay_shows_the_page_and_nothing_else(tmp_path: Path, library: str) -> None:
     """JS-4b-2: the API's relay page with its real headers, framed by an allowed origin and scaled as the card scales
-    it, shows the downloaded wrapper: the plot draws and answers a hover in a frame of origin `null`, the snippet's ways
-    out fail (navigating the wrapper or the relay among them), the siblings' and the plot's own pages are ignored, and
-    another origin can neither frame the relay nor, with `frame-ancestors` lifted, have its page shown."""
+    it, says it is ready and shows the downloaded wrapper the parent then posts: the plot draws and answers a hover in
+    a frame of origin `null`, the snippet's ways out fail (navigating the wrapper or the relay among them), a second
+    page and the siblings' and the plot's own pages are ignored, the plot's ready signal starts no post, the relay
+    sends nothing but its signal, another origin can neither frame the relay nor, with `frame-ancestors` lifted, have
+    its page shown, and a listening 404 page at the relay's URL gets nothing."""
     snippet = in_image("snippet", library)
     assert snippet.returncode == 0, snippet.stderr
     version = version_of(library, snippet.stdout, PROBE_CSV, PROBE_DTYPES, [])
     wrapper, _ = download(version, "light", tmp_path)
     origins = ["https://anyplot.ai", "https://www.anyplot.ai"]
     (tmp_path / "relay.json").write_text(
-        json.dumps({"html": relay_html(origins), "headers": relay_headers(origins)}), encoding="utf-8"
+        json.dumps({"html": relay_html(origins), "headers": relay_headers(origins), "ready": READY_MESSAGE}),
+        encoding="utf-8",
     )
 
     done = in_image("relay", "/page/relay.json", "/page/plot.html", "--hover", mounts=((tmp_path, "/page"),))

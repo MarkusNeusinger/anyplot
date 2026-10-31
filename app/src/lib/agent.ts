@@ -42,18 +42,41 @@ export const PAGE_ARTIFACT = 'plot.html';
  * The API's static relay page of the interactive preview (`api/preview_relay.py`,
  * JS-4b-2): the card frames it sandboxed and posts the version's `plot.html`
  * into it, which it shows in a sandboxed frame of its own. It sits outside
- * `/debug/*`, takes no token and reads no cookie.
+ * `/debug/*`, takes no token and reads no cookie. It follows `API_URL`, while
+ * the chat's own requests follow `DEBUG_API_URL`.
  */
 export const PREVIEW_RELAY_URL = `${API_URL}/preview/relay`;
 /**
- * The wrapper's own size at scale 1 (`agents/anyplot/render/page.py`: the canvas
- * in CSS pixels and a 16 px margin around it), which the card frames the relay
- * at and scales to its width; pinned to the wrapper by a test.
+ * The relay's only message, a signal without content once it listens
+ * (`READY_MESSAGE` in `api/preview_relay.py`, pinned by a test): the card posts
+ * the page only on this signal from the relay frame's own window, so a page
+ * that stands in at the relay's URL (an error page of the edge) never gets it.
  */
-export const PAGE_FRAME_SIZES = {
-  landscape: { width: 1632, height: 932 },
-  square: { width: 1232, height: 1232 },
-} as const;
+export const PREVIEW_RELAY_READY = 'anyplot-relay-ready';
+/**
+ * The wrapper's frame at scale 1, the first rule of this form in its style
+ * (`sizing_css` in `agents/anyplot/render/page.py`, pinned by a test): the
+ * canvas in CSS pixels, 1600x900 or 1200x1200.
+ */
+export const PAGE_FRAME_PATTERN = /\.frame \{ width: (\d+)px; height: (\d+)px; \}/;
+/** The wrapper's margin around its frame (`MARGIN_PX` in `render/page.py`). */
+export const PAGE_MARGIN_PX = 16;
+/** The frame of a page without the rule: the landscape canvas, which the wrapper then scales to fit. */
+export const PAGE_FRAME_FALLBACK = { width: 1600, height: 900 };
+
+/**
+ * The wrapper's own size at scale 1, read from the page itself so the card's
+ * frame and the wrapper never disagree (a square plot whose PNG has not loaded
+ * is still framed square): the frame and the margin around it, just past the
+ * wrapper's first media query, so it shows the plot at scale 1 and the card
+ * scales the whole relay frame to its width.
+ */
+export function pageFrameSize(page: string): { width: number; height: number } {
+  const match = PAGE_FRAME_PATTERN.exec(page);
+  const width = match ? Number(match[1]) : PAGE_FRAME_FALLBACK.width;
+  const height = match ? Number(match[2]) : PAGE_FRAME_FALLBACK.height;
+  return { width: width + 2 * PAGE_MARGIN_PX, height: height + 2 * PAGE_MARGIN_PX };
+}
 export type ArtifactName =
   'plot-light.png' | 'plot-dark.png' | CodeArtifact | typeof PAGE_ARTIFACT | 'data.csv';
 export const PNG_ARTIFACT: Record<Theme, ArtifactName> = {
