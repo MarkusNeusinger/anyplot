@@ -14,7 +14,7 @@
   runs federation refuses (pull-request review events, other refs,
   `review-retest.yml`) use the subscription and say so in the job summary.
   `docs/workflows/overview.md` has the Console setup, the switch commands,
-  and how to close the federation path when `oidc` is off.
+  and how to close the federation path when `oidc` is off. (#12487)
 - **Every Claude session's cost in the job summary, and a clean stop when
   Claude refuses a session.** A step after each Claude step writes
   `total_cost_usd` (Claude Code's estimate at API list price), the model and
@@ -30,7 +30,7 @@
   subscription usage limit used up a pair's three attempts. The weekly regen
   review's `collect_week.py --costs` reads the line, now counts the
   `daily-regen.yml` pre-flight too, and names the part that ran on API
-  credits.
+  credits. (#12487)
 - **Daily regeneration by implementation instead of by spec: the repository
   variable `REGEN_PAIRS_PER_DAY`.** Set to N, the scheduled `daily-regen.yml`
   run picks the N oldest (spec, library) pairs across the catalogue
@@ -45,4 +45,4 @@
   queue. Paused reviews and repairs are resumed first and count against N,
   and the pick stops when it can't list the implementation PRs. Unset, the
   schedule regenerates whole specs as before; a manual run opts in with the
-  new `pairs` input, and the watchdog's cron rescue forwards the variable.
+  new `pairs` input, and the watchdog's cron rescue forwards the variable. (#12487)
