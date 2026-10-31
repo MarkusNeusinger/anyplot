@@ -88,7 +88,31 @@ PLOTLY_ROUTES = [
     pytest.param("LOGO = 'logo.png'\nimg = go.layout.Image(source=LOGO)\n", "url-literal", id="source through a name"),
     pytest.param("t = go.Choropleth(geojson='counties.json')\n", "url-literal", id="a relative geojson URL"),
     pytest.param("u = '//cdn.example.org/x.png'\n", "url-literal", id="a protocol-relative URL"),
+    # The review of PB-2a: anything but None where a URL goes, a built string and a flat update key included.
+    pytest.param(
+        "fig0 = go.Figure()\nfig0.add_layout_image(source=''.join(['lo', 'go.png']))\n", "url-literal", id="a join"
+    ),
+    pytest.param("fig0 = go.Figure()\nfig0.add_layout_image(source=str(THEME))\n", "url-literal", id="str()"),
+    pytest.param(
+        "m = [dict(buttons=[dict(method='relayout', args=[{'images[0].source': 'x.png'}])])]\n"
+        "fig0 = go.Figure()\nfig0.update_layout(updatemenus=m)\n",
+        "url-literal",
+        id="a flat key in an update's args",
+    ),
+    pytest.param("fig0 = go.Figure()\nfig0.layout.images[0].source = 'x.png'\n", "url-literal", id="a store"),
 ]
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        pytest.param("t = go.Choropleth(geojson={'type': 'FeatureCollection', 'features': []})\n", id="geojson dict"),
+        pytest.param("img = go.layout.Image(source=None)\n", id="no source"),
+        pytest.param("s = go.Sankey(link=dict(source=[0, 1], target=[1, 0], value=[1, 1]))\n", id="sankey data"),
+    ],
+)
+def test_url_contexts_take_none_or_data(body: str) -> None:
+    assert "url-literal" not in rules(plotly_plot(body), "plotly")
 
 
 def test_plotly_data_named_source_passes() -> None:
@@ -162,7 +186,78 @@ BOKEH_ROUTES = [
     ),
     pytest.param("q = figure()\nq._property_values\n", "banned-attribute", id="a private attribute"),
     pytest.param("q = figure(url='tiles/{Z}.png')\n", "url-literal", id="a relative URL"),
+    # The review of PB-2a: what reaches a property without a name the rules read, and CSS and MathJax's HTML.
+    pytest.param(
+        's = "<img src=x onerror=alert(1)>"\nh = HoverTool(**{"tool" + "tips": s})\n', "banned-keyword", id="a"
+    ),
+    pytest.param(
+        'opts = {}\nopts["tooltips"] = "%cimg src=x onerror=alert(1)>" % 60\nh = HoverTool(**opts)\n',
+        "banned-keyword",
+        id="b",
+    ),
+    pytest.param('h = HoverTool()\nh.update(**{"tool" + "tips": chr(60) + "b>x"})\n', "banned-keyword", id="c"),
+    pytest.param(
+        "from bokeh.models import Button, SetValue\nh = HoverTool()\n"
+        "b = Button(label='x', js_event_callbacks={'button_click': [SetValue(obj=h, attr='tooltips', value='x')]})\n",
+        "banned-keyword",
+        id="d js_event_callbacks",
+    ),
+    pytest.param("from bokeh.models import SetValue\n", "banned-attribute", id="d SetValue"),
+    pytest.param("from bokeh.models import ToggleVisibility\n", "banned-attribute", id="ToggleVisibility"),
+    pytest.param(
+        "from bokeh.models import Slider\ns = Slider(start=0, end=1, value=0, step=1, js_property_callbacks={})\n",
+        "banned-keyword",
+        id="js_property_callbacks",
+    ),
+    pytest.param("o = {'js_event_callbacks': {}}\n", "banned-keyword", id="a banned keyword as a dict key"),
+    pytest.param("q = figure()\nq.set_select(HoverTool, {'tooltips': 'x'})\n", "banned-attribute", id="set_select"),
+    pytest.param("q = figure()\nq.clone(**dict(width=1))\n", "banned-keyword", id="clone of a built dict"),
+    pytest.param("def f(**kw):\n    return figure(**kw)\n", "banned-keyword", id="a parameter unpacked"),
+    pytest.param("from bokeh.models import InlineStyleSheet\n", "banned-attribute", id="InlineStyleSheet"),
+    pytest.param("from bokeh.models import GlobalInlineStyleSheet\n", "banned-attribute", id="global stylesheet"),
+    pytest.param("from bokeh.models import Styles\n", "banned-attribute", id="Styles"),
+    pytest.param("q = figure(styles={'background': 'url(x)'})\n", "banned-keyword", id="styles"),
+    pytest.param("q = figure()\nq.stylesheets = [':host{}']\n", "banned-attribute", id="stylesheets"),
+    pytest.param("from bokeh.models import MathML\n", "banned-attribute", id="MathML"),
+    pytest.param(
+        "from bokeh.models import Label\nl = Label(x=1, y=1, text=r'$$\\href{javascript:alert(1)}{x}$$')\n",
+        "banned-keyword",
+        id="MathJax href",
+    ),
 ]
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        pytest.param(
+            'BASE = {"text_font_size": "28pt", "text_color": PAGE_BG}\nBOLD = {**BASE, "text_font_style": "bold"}\n'
+            "from bokeh.models import Label\nl = Label(x=1, y=1, text='a', **BOLD)\nm = Label(x=2, y=1, text='b', **BASE)\n",
+            id="module dicts read only by ** (the catalogue's line-reaction-coordinate, spc-xbar-r)",
+        ),
+        pytest.param("q = figure(**{'width': 800})\n", id="a dict literal"),
+    ],
+)
+def test_bokeh_unpacking_of_literal_options_passes(body: str) -> None:
+    assert validate_security(bokeh_plot(body), library="bokeh") == []
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        'BASE = {"text_color": PAGE_BG}\nBASE["text_font_size"] = "9pt"\nq = figure(**BASE)\n',
+        'BASE = {"text_color": PAGE_BG}\nBASE.update(width=1)\nq = figure(**BASE)\n',
+        "BASE = dict(width=1)\nq = figure(**BASE)\n",
+        "BASE = {'width': 1}\nfor BASE in [{}]:\n    pass\nq = figure(**BASE)\n",
+    ],
+)
+def test_bokeh_unpacking_of_a_changed_or_built_dict_is_refused(body: str) -> None:
+    assert "banned-keyword" in rules(bokeh_plot(body), "bokeh")
+
+
+def test_bokeh_the_figure_files_handle_is_named_by_the_save_alone() -> None:
+    code = bokeh_plot() + "n = figure_file.name\n"
+    assert "savefig-target" in rules(code, "bokeh")
 
 
 @pytest.mark.parametrize(("body", "rule"), BOKEH_ROUTES)

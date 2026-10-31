@@ -41,6 +41,10 @@ class TestTheErrorGrammar:
                 FIGURE_KIND_TEXTS[("figure", "NoFigure")],
             ),
             ("render: error: figure FigureTooLarge -: 17 MB", FIGURE_KIND_TEXTS[("figure", "FigureTooLarge")]),
+            (
+                "render: error: figure UnsafeMarkup -: the figure holds a Div model",
+                FIGURE_KIND_TEXTS[("figure", "UnsafeMarkup")],
+            ),
             ("render: error: figure FigureError -: the figure is 9000 x 450", FIGURE_KIND_TEXTS[("figure", None)]),
             ("render: error: crash PlotCrashed -: the plot step died of SIGKILL", FIGURE_KIND_TEXTS[("crash", None)]),
             ("render: error: draw NoWebGL -: scatter3d draws with WebGL", FIGURE_KIND_TEXTS[("draw", "NoWebGL")]),

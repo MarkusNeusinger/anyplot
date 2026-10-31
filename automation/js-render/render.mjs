@@ -1020,11 +1020,195 @@ const PLOTLY_WEBGL_TYPES = new Set([
   "densitymapbox",
 ]);
 
-// The WebGL trace types a plotly figure holds.
+// The WebGL trace types a plotly figure holds, compared without case.
 function plotlyWebglTypes(library, figure) {
-  if (library !== "plotly") return [];
-  const types = figure.data.map((trace) => (isRecord(trace) && typeof trace.type === "string" ? trace.type : ""));
+  if (library !== "plotly" || !Array.isArray(figure.data)) return [];
+  const types = figure.data.map((trace) => (isRecord(trace) && typeof trace.type === "string" ? trace.type.toLowerCase() : ""));
   return [...new Set(types.filter((type) => PLOTLY_WEBGL_TYPES.has(type)))];
+}
+
+// What a figure page would run, load or link, read from the figure the plot
+// wrote, before the page draws it (Fable review of PB-2a). The validator reads
+// the code (agents/anyplot/code/validate.py), but a `<` the code builds at run
+// time (`chr(60)`, `"%c" % 60`) shows in no literal; the figure holds every
+// value whatever built it. The page's policy stops a handler here, the user's
+// exported HTML has none, and the export is the same code on the same data,
+// so a figure refused here is never exported. A refusal fails the render as
+// `figure UnsafeMarkup`.
+//
+// bokeh: the models that run JavaScript, insert HTML or CSS, or load a URL;
+// JavaScript callbacks given as properties; CSS that loads a URL or escapes,
+// in a model's `styles` or a raw `stylesheets` entry; MathJax's
+// HTML commands in any string; and HoverTool's tooltips, which BokehJS parses
+// as HTML (a template and each pair's value), held to the validator's
+// template rule: text tags, quoted style or class attributes that load
+// nothing, never `{safe}`.
+const BOKEH_UNSAFE_MODELS = new Set([
+  "Callback", "CustomCode", "CustomAction", "CustomLabelingPolicy", "OpenURL", "SetValue", "ToggleVisibility",
+  "OpenDialog", "CloseDialog", "Dialog", "Div", "Paragraph", "PreText", "Markup", "HTMLAnnotation",
+  "HTMLTextAnnotation", "HTMLLabel", "HTMLLabelSet", "HTMLTitle", "HTMLTemplateFormatter", "StyleSheet",
+  "InlineStyleSheet", "ImportedStyleSheet", "GlobalInlineStyleSheet", "GlobalImportedStyleSheet", "Styles",
+  "SVGIcon", "TablerIcon", "ImageURL", "ImageURLTexture", "TileSource", "MercatorTileSource", "TMSTileSource",
+  "WMTSTileSource", "QUADKEYTileSource", "BBoxTileSource", "TileRenderer", "GMapPlot", "GMap", "GMapOptions",
+  "AjaxDataSource", "ServerSentDataSource", "WebDataSource", "MathML", "MathMLGlyph", "Menu", "MenuItem",
+  "ActionItem", "CheckableItem", "Tooltip", "Pane", "Panel", "Drawer", "Examiner",
+]);
+const BOKEH_TEMPLATE_TAGS = new Set([
+  "div", "span", "p", "br", "hr", "b", "strong", "i", "em", "u", "s", "small", "sub", "sup", "code", "pre",
+  "table", "thead", "tbody", "tr", "th", "td", "ul", "ol", "li", "h1", "h2", "h3", "h4", "h5", "h6",
+]);
+const BOKEH_TEMPLATE_ATTRIBUTES = new Set(["style", "class"]);
+const BOKEH_SAFE = /\{\s*safe\s*\}/;
+const MARKUP_OPEN = /<(?=[A-Za-z/!?]|$)/g;
+const TEMPLATE_TAG = /<(\/?)([A-Za-z][A-Za-z0-9]*)((?:\s+[A-Za-z][A-Za-z-]*\s*=\s*(?:"[^"<>]*"|'[^'<>]*'))*)\s*\/?>/y;
+const TEMPLATE_ATTRIBUTE = /([A-Za-z][A-Za-z-]*)\s*=\s*(?:"([^"<>]*)"|'([^'<>]*)')/g;
+const UNSAFE_TEMPLATE_VALUE = /url\s*\(|image-set\s*\(|expression\s*\(|javascript:|[&\\@$]/i;
+const MATHJAX_HTML = /\\(?:href|style|class|cssId|data)(?![A-Za-z])/;
+// plotly: a link (`<a href>`) anywhere plotly.js reads markup (titles,
+// annotations, hover and text templates, data) to anything but an http or
+// https URL, entities decoded; a style that loads or escapes; an image
+// `source` other than a data: image; a `geojson` URL.
+const PLOTLY_TAG = /<([A-Za-z]+)\b([^<>]*)>/g;
+const PLOTLY_ATTRIBUTE = /([A-Za-z:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/g;
+const CSS_LOAD = /url\s*\(|image-set\s*\(|expression\s*\(|@import|\\/i;
+const NAMED_ENTITIES = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", colon: ":", sol: "/", bsol: "\\", lpar: "(", rpar: ")", tab: "\t", newline: "\n", nbsp: " " };
+
+function decodeEntities(text) {
+  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);?/gi, (whole, body) => {
+    const lower = body.toLowerCase();
+    if (lower.startsWith("#x")) return String.fromCodePoint(Math.min(parseInt(lower.slice(2), 16), 0x10ffff));
+    if (lower.startsWith("#")) return String.fromCodePoint(Math.min(parseInt(lower.slice(1), 10), 0x10ffff));
+    return NAMED_ENTITIES[lower] ?? whole;
+  });
+}
+
+// Why a bokeh tooltip string is no allowed template, or null (validate.py's
+// `_template_problem`).
+function templateProblem(text) {
+  if (BOKEH_SAFE.test(text)) return "the {safe} format";
+  for (const opening of text.matchAll(MARKUP_OPEN)) {
+    TEMPLATE_TAG.lastIndex = opening.index;
+    const tag = TEMPLATE_TAG.exec(text);
+    if (tag === null || !BOKEH_TEMPLATE_TAGS.has(tag[2].toLowerCase())) return "markup other than text tags";
+    for (const attribute of tag[3].matchAll(TEMPLATE_ATTRIBUTE)) {
+      if (!BOKEH_TEMPLATE_ATTRIBUTES.has(attribute[1].toLowerCase())) return `a ${attribute[1].toLowerCase()} attribute`;
+      if (UNSAFE_TEMPLATE_VALUE.test(attribute[2] ?? attribute[3])) return "a style or class that loads, escapes or holds a field";
+    }
+  }
+  return null;
+}
+
+function isFilled(value) {
+  if (Array.isArray(value)) return value.length > 0;
+  if (isRecord(value) && value.type === "map") return Array.isArray(value.entries) && value.entries.length > 0;
+  return isRecord(value) ? Object.keys(value).length > 0 : value !== null && value !== undefined;
+}
+
+// A string in a CSS value (a model's `styles`, or a raw `stylesheets` entry)
+// that loads a URL or escapes. A colour passes: `background=` on a layout
+// writes `styles` (subplot-mosaic, ecg-twelve-lead).
+function cssLoads(value) {
+  const stack = [value];
+  while (stack.length > 0) {
+    const item = stack.pop();
+    if (typeof item === "string" && CSS_LOAD.test(item)) return true;
+    if (Array.isArray(item)) stack.push(...item);
+    else if (isRecord(item)) stack.push(...Object.values(item));
+  }
+  return false;
+}
+
+function bokehMarkupProblem(figure) {
+  const stack = [figure.doc];
+  while (stack.length > 0) {
+    const value = stack.pop();
+    if (typeof value === "string") {
+      if (MATHJAX_HTML.test(value)) return "a MathJax HTML command (\\href, \\style, \\class, \\cssId or \\data)";
+      continue;
+    }
+    if (Array.isArray(value)) {
+      for (const item of value) stack.push(item);
+      continue;
+    }
+    if (!isRecord(value)) continue;
+    if (value.type === "object" && typeof value.name === "string") {
+      const { name } = value;
+      if (BOKEH_UNSAFE_MODELS.has(name) || name.startsWith("CustomJS") || name.startsWith("bokeh.models.dom.")) {
+        return `a ${name} model`;
+      }
+      const attributes = isRecord(value.attributes) ? value.attributes : {};
+      for (const key of ["js_event_callbacks", "js_property_callbacks"]) {
+        if (isFilled(attributes[key])) return `${name}.${key}`;
+      }
+      for (const key of ["styles", "stylesheets"]) {
+        if (cssLoads(attributes[key])) return `CSS that loads a URL or escapes in ${name}.${key}`;
+      }
+      if (name === "HoverTool" && typeof attributes.tooltips === "string") {
+        const problem = templateProblem(attributes.tooltips);
+        if (problem !== null) return `a HoverTool template with ${problem}`;
+      } else if (name === "HoverTool" && Array.isArray(attributes.tooltips)) {
+        for (const pair of attributes.tooltips) {
+          const problem = Array.isArray(pair) && typeof pair[1] === "string" ? templateProblem(pair[1]) : null;
+          if (problem !== null) return `a HoverTool value with ${problem}`;
+        }
+      }
+    }
+    for (const item of Object.values(value)) stack.push(item);
+  }
+  return null;
+}
+
+function plotlyTextProblem(text) {
+  if (!text.includes("<")) return null;
+  for (const tag of text.matchAll(PLOTLY_TAG)) {
+    for (const attribute of tag[2].matchAll(PLOTLY_ATTRIBUTE)) {
+      const name = attribute[1].toLowerCase();
+      const value = decodeEntities(attribute[2] ?? attribute[3] ?? attribute[4] ?? "");
+      if ((name === "href" || name.endsWith(":href")) && !/^https?:\/\//i.test(value.replace(/[\x00-\x20]+/g, ""))) {
+        return "a link to something other than an http or https URL";
+      }
+      if (name === "style" && CSS_LOAD.test(value)) return "a style that loads a URL or escapes";
+    }
+  }
+  return null;
+}
+
+// An update path's last part, indexes dropped: "images[0].source" is ["images", "source"].
+function plotlyPath(key) {
+  return key.replace(/\[\d+\]/g, "").split(".").filter((part) => part !== "");
+}
+
+function plotlyMarkupProblem(figure) {
+  const stack = [[figure, ""]];
+  while (stack.length > 0) {
+    const [value, role] = stack.pop();
+    if (typeof value === "string") {
+      if (role === "image" && !/^data:image\//i.test(value.trim())) return "an image source other than a data: image";
+      if (role === "geojson") return "a geojson URL";
+      const problem = plotlyTextProblem(value);
+      if (problem !== null) return problem;
+      continue;
+    }
+    if (Array.isArray(value)) {
+      for (const item of value) stack.push([item, role]);
+      continue;
+    }
+    if (!isRecord(value)) continue;
+    for (const [key, item] of Object.entries(value)) {
+      const path = plotlyPath(key);
+      const last = path.at(-1) ?? "";
+      if (last === "images") stack.push([item, "images"]);
+      else if (last === "source" && (role === "images" || path.includes("images"))) stack.push([item, "image"]);
+      else if (last === "geojson") stack.push([item, "geojson"]);
+      else stack.push([item, ""]);
+    }
+  }
+  return null;
+}
+
+// What the figure would run, load or link, or null.
+function figureMarkupProblem(library, figure) {
+  return library === "bokeh" ? bokehMarkupProblem(figure) : plotlyMarkupProblem(figure);
 }
 
 // A figure page's policy: sandbox mode's, with the scripts admitted by a nonce
@@ -1293,6 +1477,8 @@ async function renderFigure(args) {
     bundles.push(await readFile(bundlePath, "utf-8"));
   }
   const { figure, text } = await readFigure(args.figure, library);
+  const unsafe = figureMarkupProblem(library, figure);
+  if (unsafe !== null) throw failure(`render: the figure holds ${unsafe}, which the page would run, load or link`, "figure", "UnsafeMarkup");
   const webgl = plotlyWebglTypes(library, figure);
   if (webgl.length > 0) throw failure(`render: ${webgl.join(", ")} draws with WebGL, which the renderer does not draw yet`, "draw", "NoWebGL");
   let size = figureSize(library, figure);

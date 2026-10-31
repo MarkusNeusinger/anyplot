@@ -6,8 +6,8 @@
   harness draws it in Chromium at the catalogue's canvas. The admin deploy names
   them, so all 15 catalogue libraries are served, and each one's 80 % eval
   matrix gates the public release. Across the catalogue 273 of 325 plotly and
-  254 of 325 bokeh files are eligible; in the renderer image 254 of the 273 and
-  247 of the 254 render on target in both themes as they stand, the rest only
+  252 of 325 bokeh files are eligible; in the renderer image 254 of the 273 and
+  245 of the 252 render on target in both themes as they stand, the rest only
   because their code divides by the length of the emptied catalogue title.
 - **The validator rules for plotly and bokeh.** Both refuse private names, a
   string where the library expects a URL whatever its scheme, and every model
@@ -16,6 +16,12 @@
   import by name. bokeh's tooltip templates pass as the catalogue writes them,
   text tags with a quoted `style` or `class`, never `{safe}`, because BokehJS
   parses a template and each tooltip value as HTML.
+- **The renderer checks a plotly or bokeh figure for markup before it draws
+  it.** A figure that holds what a browser would run, load or link (a bokeh
+  JavaScript, HTML or CSS model, a tooltip outside the template rule, a plotly
+  link to anything but an http URL, an image URL) fails as `figure
+  UnsafeMarkup`, whatever code built it, so the downloaded code never writes
+  it into the user's HTML.
 - **The figure save and the exported code.** The normaliser turns the
   catalogue's save block into one protected statement that writes the figure as
   JSON (plotly's size moved into the figure; bokeh's Selenium screenshot block
