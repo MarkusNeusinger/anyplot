@@ -81,6 +81,7 @@ def probe(wrapper: Path, *flags: str) -> dict[str, object]:
 
 def version_of(library: str, run_form: str, csv: str, dtypes: dict[str, str], dates: list[str]) -> CodeVersion:
     kinds = read_kinds(csv, dtypes, dates)  # type: ignore[arg-type]
+    code_artifact = runtime_for(library).code_artifact  # `plot.tsx` for MUI X
     return CodeVersion(
         number=1,
         working="",
@@ -88,9 +89,9 @@ def version_of(library: str, run_form: str, csv: str, dtypes: dict[str, str], da
         export="",
         data_csv=csv,
         render_id="r1",
-        result=PlotResult(status="ok", attempts=1, artifacts=["plot-light.png", "plot.js", "data.csv"]),
+        result=PlotResult(status="ok", attempts=1, artifacts=["plot-light.png", code_artifact, "data.csv"]),
         library=library,
-        code_artifact="plot.js",
+        code_artifact=code_artifact,
         data_json=typed_json(csv, kinds),
     )
 
@@ -114,11 +115,12 @@ def download(version: CodeVersion, theme: str, out: Path) -> tuple[Path, float]:
     return out / "plot.html", took
 
 
-@pytest.mark.parametrize("library", ["chartjs", "d3", "echarts", "highcharts"])
+@pytest.mark.parametrize("library", ["chartjs", "d3", "echarts", "highcharts", "muix"])
 def test_the_probe_page_keeps_its_plot_and_refuses_every_way_out(tmp_path: Path, library: str) -> None:
     """The probe's snippet draws from the typed table, hovers into a tooltip through the scaled frame, and every one
     of its escape attempts fails: `top.location`, `window.open`, `fetch`, storage, cookies, its own frame's navigation
-    to an http URL; the frame's origin is `null`, and a listener on the loopback sees no request."""
+    to an http URL; the frame's origin is `null`, and a listener on the loopback sees no request. MUI X's page is a
+    React bundle, whose legend draws a small svg per entry before the chart's (JS-4c: the probe hovers the largest)."""
     snippet = in_image("snippet", library)
     assert snippet.returncode == 0, snippet.stderr
     version = version_of(library, snippet.stdout, PROBE_CSV, PROBE_DTYPES, [])
@@ -130,7 +132,7 @@ def test_the_probe_page_keeps_its_plot_and_refuses_every_way_out(tmp_path: Path,
     assert isinstance(checks, dict) and checks["opaque_origin"] == "null"
 
 
-@pytest.mark.parametrize("library", ["chartjs", "d3", "echarts", "highcharts"])
+@pytest.mark.parametrize("library", ["chartjs", "d3", "echarts", "highcharts", "muix"])
 def test_the_chats_preview_relay_shows_the_page_and_nothing_else(tmp_path: Path, library: str) -> None:
     """JS-4b-2: the API's relay page with its real headers, framed by an allowed origin and scaled as the card scales
     it, says it is ready and shows the downloaded wrapper the parent then posts: the plot draws and answers a hover in
@@ -154,7 +156,7 @@ def test_the_chats_preview_relay_shows_the_page_and_nothing_else(tmp_path: Path,
     assert done.returncode == 0 and report["failures"] == [], (report, done.stderr[-2000:])
 
 
-@pytest.mark.parametrize("library", ["chartjs", "d3", "echarts", "highcharts"])
+@pytest.mark.parametrize("library", ["chartjs", "d3", "echarts", "highcharts", "muix"])
 def test_the_prompts_idioms_download_as_a_page_that_draws(tmp_path: Path, library: str) -> None:
     """Each library's idiom form (the adapter prompt's code, `conftest.JS_PROMPT_IDIOMS`) on the render test's table
     (missing cells, a column name with a quote and a backslash) downloads as a page that draws in its frame without a

@@ -546,6 +546,26 @@ JS_LIBRARY_IDIOM_SNIPPETS: dict[str, tuple[str, ...]] = {
         "[new Date(d[DAY]).getTime(), d[Y]]",
         "colors: t.palette",
     ),
+    "muix": (
+        "export default function",
+        "@mui/x-charts/LineChart",
+        "@mui/x-charts/hooks",
+        "@mui/material/Typography",
+        "skipAnimation",
+        "width={width}",
+        "useXScale()",
+        "useYScale()",
+        "useDrawingArea()",
+        "colors={t.palette}",
+        'colorMap: { type: "ordinal", values: groups, colors: groups.map((g, i) => t.palette[i]) }',
+        "valueFormatter: (v) => fmt(v, 1)",
+        'valueFormatter: (v) => (v == null ? "" : fmt(v, 1))',
+        '(v) => fmt(v / 1e6, 1) + " Mio."',
+        'scaleType: "utc"',
+        "data: dated.map((d) => new Date(d[DAY]))",
+        'valueFormatter: (v) => v.toISOString().slice(0, 10).split("-").reverse().join(".")',
+        "tickMinStep: 24 * 60 * 60 * 1000",
+    ),
 }
 _JS_IDIOM_HEAD = source(r"""
     //# anyplot-orientation: landscape
@@ -682,5 +702,75 @@ JS_PROMPT_IDIOMS: dict[str, str] = {
             data: dated.filter((d) => d[GROUP] === g).map((d) => [new Date(d[DAY]).getTime(), d[Y]]),
           })),
         });
+    """),
+    # MUI X's form is a TSX module: the imports below the directive, the shared head, then a component that draws the
+    # dated values on a UTC axis with a gap for each `null`, an overlay at data positions through the chart's scales,
+    # and the per-group totals as bars coloured by their category.
+    "muix": _JS_IDIOM_HEAD.replace(
+        "//# anyplot-orientation: landscape\n",
+        source("""
+            //# anyplot-orientation: landscape
+            import { LineChart } from "@mui/x-charts/LineChart";
+            import { BarChart } from "@mui/x-charts/BarChart";
+            import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
+            import Typography from "@mui/material/Typography";
+        """),
+        1,
+    )
+    + source(r"""
+        const totals = groups.map((g) => data.filter((d) => d[GROUP] === g && d[Y] != null).reduce((sum, d) => sum + d[Y], 0));
+
+        function Marks() {
+          const x = useXScale();
+          const y = useYScale();
+          const { left, width: plotWidth } = useDrawingArea();
+          const at = peak[DAY] == null ? null : x(new Date(peak[DAY]));
+          return (
+            <g>
+              <line x1={left} x2={left + plotWidth} y1={y(my)} y2={y(my)} stroke={INK_MUTED} strokeDasharray="6 4" />
+              {at == null ? null : <circle cx={at} cy={y(peak[Y])} r={8} fill="none" stroke={t.ink} />}
+            </g>
+          );
+        }
+
+        export default function Chart() {
+          return (
+            <div>
+              <Typography sx={{ color: t.ink, fontSize: 22, textAlign: "center" }}>{title}</Typography>
+              <LineChart
+                width={width}
+                height={(height - 40) / 2}
+                colors={t.palette}
+                skipAnimation
+                xAxis={[{
+                  scaleType: "utc",
+                  data: dated.map((d) => new Date(d[DAY])),
+                  valueFormatter: (v) => v.toISOString().slice(0, 10).split("-").reverse().join("."),
+                  tickMinStep: 24 * 60 * 60 * 1000,
+                  height: 40,
+                }]}
+                yAxis={[{ valueFormatter: (v) => fmt(v, 1), width: 120 }]}
+                series={[{ label: Y, data: dated.map((d) => d[Y]), showMark: true, valueFormatter: (v) => (v == null ? "" : fmt(v, 1)) }]}
+              >
+                <Marks />
+              </LineChart>
+              <BarChart
+                width={width}
+                height={(height - 40) / 2}
+                skipAnimation
+                hideLegend
+                xAxis={[{
+                  scaleType: "band",
+                  data: groups,
+                  label: GROUP,
+                  height: 60,
+                  colorMap: { type: "ordinal", values: groups, colors: groups.map((g, i) => t.palette[i]) },
+                }]}
+                yAxis={[{ valueFormatter: (v) => fmt(v / 1e6, 1) + " Mio.", width: 120 }]}
+                series={[{ label: Y, data: totals, valueFormatter: (v) => (v == null ? "" : fmt(v, 1)) }]}
+              />
+            </div>
+          );
+        }
     """),
 }

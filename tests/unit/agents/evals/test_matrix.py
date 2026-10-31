@@ -574,6 +574,35 @@ async def test_a_preflight_that_cannot_render_stops_before_the_first_case(
         )
 
 
+async def test_the_preflight_passes_over_a_muix_file_written_for_muix_7(
+    services: Services, backend: FakeBackend
+) -> None:
+    """JS-4c: `scatter-basic`'s MUI X file imports MUI X 7's `ChartContainer`, which fails the bundle step until the
+    adapter rewrites it, so the preflight renders the library's next case whose file bundles as it stands; the other
+    libraries keep their first case, and a selection of such files alone still renders the first."""
+    cases = select_cases(
+        load_cases(promoted_dir=Path("/nonexistent")), "scatter-basic-muix-*,violin-basic-muix-n12,scatter-basic-d3-n12"
+    )
+    assert [case.case_id for case in cases][:2] == ["scatter-basic-d3-n12", "scatter-basic-muix-date"]
+
+    await matrix.preflight(cases, services, echo=lambda _: None)
+
+    rendered = {job.library: job.source for job in backend.jobs}
+    assert set(rendered) == {"d3", "muix"}
+    assert "ChartContainer" not in rendered["muix"] and "violin" in rendered["muix"].lower()
+    assert '"@mui/x-charts/ChartContainer"' in snapshot_code("scatter-basic", "muix")
+
+    backend.jobs.clear()
+    await matrix.preflight(select_cases(cases, "scatter-basic-muix-*"), services, echo=lambda _: None)
+    assert [job.library for job in backend.jobs] == ["muix"] and "ChartContainer" in backend.jobs[0].source
+
+
+def snapshot_code(spec_id: str, library: str) -> str:
+    from agents.anyplot.dev_fixture import snapshot_from_repo
+
+    return snapshot_from_repo(spec_id, library).code
+
+
 async def test_a_renderer_outage_stops_the_run_and_saves_no_baseline(
     tmp_path: Path, services: Services, swap_models
 ) -> None:

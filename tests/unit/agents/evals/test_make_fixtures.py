@@ -64,7 +64,7 @@ def test_check_mode_reports_a_stale_file(tmp_path, capsys: pytest.CaptureFixture
     assert "stale: pie-basic-seaborn-n12/data.csv" in capsys.readouterr().err
 
 
-def test_ten_specs_of_ten_families_times_twelve_libraries_times_six_perturbations(files: dict[str, str]) -> None:
+def test_ten_specs_of_ten_families_times_thirteen_libraries_times_six_perturbations(files: dict[str, str]) -> None:
     from agents.anyplot.render.runtimes import RUNTIME_LIBRARIES
 
     assert len(SPECS) == 10 and {spec.family for spec in SPECS} == FAMILIES
@@ -81,10 +81,11 @@ def test_ten_specs_of_ten_families_times_twelve_libraries_times_six_perturbation
         "d3",
         "echarts",
         "highcharts",
+        "muix",
     )
     assert set(LIBRARIES) == RUNTIME_LIBRARIES  # every library the registry serves has its 60 cases
     ids = {name.split("/")[0] for name in files}
-    assert len(ids) == 720
+    assert len(ids) == 780
     assert ids == {
         case_id(spec.spec_id, library, perturbation)
         for spec in SPECS
@@ -126,7 +127,7 @@ def test_smoke_covers_every_spec_perturbation_and_library(files: dict[str, str])
     smoke = [case for case in smoke if SMOKE_TAG in case["tags"]]
     cycle = [case for case in smoke if case["library"] in SMOKE_CYCLE]
 
-    assert len(smoke) == len(SPECS) + len(LIBRARY_SMOKE) == 20
+    assert len(smoke) == len(SPECS) + len(LIBRARY_SMOKE) == 21
     assert set(SMOKE_CYCLE) | set(LIBRARY_SMOKE) == set(LIBRARIES) and not set(SMOKE_CYCLE) & set(LIBRARY_SMOKE)
     assert len(cycle) == len(SPECS)
     assert {case["spec_id"] for case in cycle} == {spec.spec_id for spec in SPECS}
@@ -152,6 +153,7 @@ def test_a_new_library_never_moves_the_smoke_cycle(files: dict[str, str]) -> Non
         "line-basic-seaborn-x10",
         "line-timeseries-seaborn-n5000",
         "pie-basic-matplotlib-n12",
+        "pie-basic-muix-renamed",
         "scatter-basic-altair-renamed",
         "scatter-basic-chartjs-renamed",
         "scatter-basic-d3-renamed",
@@ -191,6 +193,26 @@ def test_every_case_parses_binds_and_is_eligible(spec: make_fixtures.SpecFixture
             assert [warning for warning in parsed.warnings if RESPELLED not in warning] == [], directory
             check = check_bindings([Binding(**item) for item in case["bindings"]], roles, parsed.profile)
             assert check.complete and not check.errors, (directory, check.errors)
+
+
+def test_the_muix_files_split_by_the_version_they_were_written_for() -> None:
+    """JS-4c (2026-10-31): the five MUI X files regenerated for 9.16 are `clean`, the five written for 7.29 `coupled`,
+    and only `scatter-basic`'s imports MUI X 7's `ChartContainer` (`deprecated-api`), which the adapter rewrites: such
+    a file is served, never blocked for its version (the plan's question 13). The smoke case avoids it, since the eval
+    harness's preflight renders the catalogue file unchanged."""
+    settings = AgentSettings(libraries=list(LIBRARIES))
+    statuses = {}
+    deprecated = set()
+    for spec in SPECS:
+        eligibility, _ = assess(snapshot_from_repo(spec.spec_id, "muix"), "muix", settings)
+        statuses[spec.spec_id] = eligibility.status
+        if any(reason.startswith("deprecated-api") for reason in eligibility.reasons):
+            deprecated.add(spec.spec_id)
+    clean = {"box-basic", "heatmap-basic", "area-basic", "violin-basic", "pie-basic"}
+    assert {spec for spec, status in statuses.items() if status == "clean"} == clean
+    assert {spec for spec, status in statuses.items() if status == "coupled"} == set(statuses) - clean
+    assert deprecated == {"scatter-basic"}
+    assert LIBRARY_SMOKE["muix"][0] in clean
 
 
 @pytest.mark.parametrize("spec", SPECS, ids=lambda spec: spec.spec_id)

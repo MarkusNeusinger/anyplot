@@ -146,6 +146,7 @@ from agents.evals.report import (
 
 
 if TYPE_CHECKING:  # importing agents.anyplot builds the agents, so the runtime imports wait for `configure`
+    from agents.anyplot.render.contract import RuntimeAdapter
     from agents.anyplot.services import Services
     from agents.anyplot.settings import AgentSettings
     from agents.evals.cases import EvalCase
@@ -536,12 +537,26 @@ class RenderToken:
         return True
 
 
+def _bundles_as_it_stands(case: "EvalCase", runtime: "RuntimeAdapter") -> bool:
+    """Whether a case's normalised catalogue file imports nothing the image's MUI X lacks (`unavailable-import`, which
+    only the JavaScript runtime reports), so the preflight can render it unchanged."""
+    from agents.anyplot.render.runtimes.javascript import UNAVAILABLE_IMPORT_RULE
+
+    normalised = runtime.normalise(case.snapshot().code, case.library)
+    findings = runtime.adaptation(normalised, original_palette=[])
+    return not any(finding.rule == UNAVAILABLE_IMPORT_RULE for finding in findings)
+
+
 async def preflight(cases: list["EvalCase"], services: "Services", echo: Callable[[str], None]) -> None:
     """Render the catalogue file of each library's first case once, before any model call; SetupError if it fails.
 
     The job is the normalised original (it makes its own data) in the light theme,
     through `services.backend`, the same path as the pipeline's renders. It proves the
     backend renders at all: reachable, the caller accepted, the library in the image.
+    A catalogue file that imports what the image's MUI X lacks (`unavailable-import`, a file
+    written for MUI X 7) fails the bundle step until the adapter rewrites it, so it proves
+    nothing about the renderer: the library's first case whose file has no such import stands
+    in for it, and only when every selected file has one does the first fail as before.
     """
     from agents.anyplot.render.contract import RendererUnavailable, RenderJob
     from agents.anyplot.render.runtimes import runtime_for
@@ -551,8 +566,9 @@ async def preflight(cases: list["EvalCase"], services: "Services", echo: Callabl
     for case in cases:
         firsts.setdefault(case.library, case)
     timeout = float(get_settings().render_timeout_s)
-    for library, case in firsts.items():
+    for library, first in firsts.items():
         runtime = runtime_for(library, cpu_seconds=int(timeout))
+        case = next((each for each in cases if each.library == library and _bundles_as_it_stands(each, runtime)), first)
         job = RenderJob(
             job_id=secrets.token_hex(8),
             language=runtime.language,
@@ -1605,8 +1621,9 @@ def _prepare_and_run(args: argparse.Namespace, settings: "AgentSettings", argv: 
         raise SetupError(f"no case matches --cases {args.cases!r}")
     # The smoke set holds a plotnine and an altair case (since 2026-10-25), a pygal and a lets-plot case (since
     # 2026-10-26), a ggplot2 case (since 2026-10-29), a makie case and a chartjs, d3, echarts and highcharts case
-    # (since 2026-10-30), which the default `AGENT_LIBRARIES` (matplotlib and seaborn) blocks as `library-disabled`;
-    # the readiness scan reads the settings, not the case. A smoke or full run needs all twelve libraries enabled.
+    # (since 2026-10-30) and a muix case (since 2026-10-31), which the default `AGENT_LIBRARIES` (matplotlib and
+    # seaborn) blocks as `library-disabled`; the readiness scan reads the settings, not the case. A smoke or full run
+    # needs all thirteen libraries enabled.
     disabled = sorted({case.library for case in cases} - set(settings.libraries))
     if disabled:
         _echo(
