@@ -27,7 +27,8 @@
   trusted any code the import machinery ran, so a plot that drove it, with a
   loader of its own or a stock loader on a file it had written, ran a module
   body that read the guard's frames and switched it off. The guard now trusts
-  an import only when the interpreter's own loader runs it, refuses every code
+  an import only when the interpreter's own loader runs it, with its class as
+  it was before the plot started, refuses every code
   read and every native module load outside the installed packages, and
   refuses changing the flags of the output it shares with the screenshot step.
   The plot validator also refuses the package-data reader, the import spec

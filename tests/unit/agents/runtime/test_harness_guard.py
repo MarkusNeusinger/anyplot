@@ -244,6 +244,28 @@ PLOT_ROUTES = [
         + RUN_LOADER,
         id="a stock loader whose instance overrides get_code",
     ),
+    # Fable's review of the F6 fix: the method set on the stock class instead of the instance, on a stdlib file and with
+    # a clean instance dict. Patching the machinery deeper, its module globals (`_bootstrap._call_with_frames_removed`,
+    # `_frozen_importlib_external`'s helpers) or `builtins.compile`, is F8's kind and knowingly out of the in-process
+    # layer's reach: the validator, which refuses `sys`, every dunder name and the import machinery's helpers, is the
+    # barrier there (the harness's security model).
+    pytest.param(
+        STOCK_LOADER
+        + "path = os.path.join(os.path.dirname(os.__file__), 'colorsys.py')\n"
+        + "machinery.SourceFileLoader.get_code = lambda self, name: compile(PAYLOAD, path, 'exec')\n"
+        + "loader = machinery.SourceFileLoader('evil', path)\n"
+        + RUN_LOADER,
+        id="get_code set on the stock loader's class",
+    ),
+    pytest.param(
+        STOCK_LOADER
+        + "import sys\nsys.pycache_prefix = os.path.abspath('mpl')\n"  # no cached bytecode: the source is compiled
+        + "path = os.path.join(os.path.dirname(os.__file__), 'colorsys.py')\n"
+        + "machinery.SourceFileLoader.source_to_code = lambda self, data, path, **kw: compile(PAYLOAD, path, 'exec')\n"
+        + "loader = machinery.SourceFileLoader('evil', path)\n"
+        + RUN_LOADER,
+        id="source_to_code set on the stock loader's class",
+    ),
     pytest.param(
         STOCK_LOADER + "import sys\nsys.path_hooks.insert(0, exec)\nsys.path.insert(0, PAYLOAD)\n"
         "try:\n    importlib.import_module('anyplot_no_such_module')\nexcept ImportError:\n    pass\n",
@@ -979,6 +1001,59 @@ class TestImportMachinery:
         with zipfile.ZipFile(archive, "w") as handle:
             handle.writestr("evil.py", "x = 1\n")
         assert not machinery.trusted_loader(zipimport.zipimporter(str(archive)))
+
+    def test_a_stock_loader_whose_class_changed_is_not_trusted(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Fable's review of the F6 fix: a class attribute changes with no audit event, so the stock loaders' classes
+        are read before arming and a loader is trusted only while its class resolves every name as it did then. Each
+        patch is undone at once: the test process imports through these classes."""
+        import importlib.machinery
+        import typing
+        import zipimport
+
+        external = sys.modules["_frozen_importlib_external"]
+        machinery = harness.ImportMachinery()
+        stock = importlib.machinery.SourceFileLoader("colorsys", self.STDLIB_FILE)
+        typing.get_type_hints(importlib.machinery.SourceFileLoader)  # Python's own lazy entries keep the trust
+        assert machinery.trusted_loader(stock)
+
+        def stand_in(*args: object, **kwargs: object) -> None:
+            return None
+
+        changes = [
+            (importlib.machinery.SourceFileLoader, "get_code"),  # inherited: a new entry of the class itself
+            (external.SourceLoader, "source_to_code"),
+            (external.FileLoader, "get_data"),
+            (importlib.machinery.SourceFileLoader, "__getattr__"),  # a name none of the classes had
+        ]
+        for cls, name in changes:
+            with monkeypatch.context() as patch:
+                patch.setattr(cls, name, stand_in, raising=False)
+                assert not machinery.trusted_loader(stock), name
+            assert machinery.trusted_loader(stock), name
+        with monkeypatch.context() as patch:
+            patch.delattr(external.SourceLoader, "path_stats")
+            assert not machinery.trusted_loader(stock)
+        assert machinery.trusted_loader(stock)
+
+        class Shim(external._LoaderBasics):  # type: ignore[name-defined]
+            pass
+
+        sourceless = importlib.machinery.SourcelessFileLoader
+        bases = sourceless.__bases__
+        try:  # monkeypatch would undo `__bases__` with a `delattr`, which a class refuses
+            sourceless.__bases__ = (external.FileLoader, Shim)
+            assert not machinery.intact(sourceless)  # the same entries, another resolution order
+        finally:
+            sourceless.__bases__ = bases
+        assert machinery.intact(sourceless)
+        for cls, name in [
+            (importlib.machinery.ExtensionFileLoader, "create_module"),
+            (zipimport.zipimporter, "get_code"),
+        ]:
+            with monkeypatch.context() as patch:
+                patch.setattr(cls, name, stand_in)
+                assert not machinery.intact(cls), name
+            assert machinery.intact(cls), name
 
     def test_only_the_interpreters_own_import_frames_earn_trust(self) -> None:
         machinery = harness.ImportMachinery()

@@ -987,20 +987,50 @@ def under_prefixes(path, prefixes):
     return any(real == prefix or real.startswith(prefix + os.sep) for prefix in prefixes)
 
 
+TYPE_MRO = type.__dict__["__mro__"]
+TYPE_DICT = type.__dict__["__dict__"]
+TYPE_FLAGS = type.__dict__["__flags__"]
+IMMUTABLE_TYPE = 1 << 8
+"""`Py_TPFLAGS_IMMUTABLETYPE`: a class whose attributes no code can set or delete (`object`)."""
+LAZY_CLASS_ENTRIES = frozenset({"__annotate_func__", "__annotations_cache__"})
+"""What Python 3.14 adds to a class's own dict when its annotations are first read (`typing.get_type_hints`,
+`inspect`); no attribute lookup of an import reads them."""
+ABSENT = object()
+"""A class entry that is not there (`ImportMachinery.intact`)."""
+
+
+def class_entries(cls):
+    """`cls`'s method resolution order and, for each class in it whose attributes can change, its own entries but
+    `LAZY_CLASS_ENTRIES`. Read through `type`'s own descriptors, so neither a metaclass nor a property runs; a class
+    dict's keys are exact `str`, which `type` copies a `str` subclass into."""
+    mro = TYPE_MRO.__get__(cls)
+    mutable = (base for base in mro if not TYPE_FLAGS.__get__(base) & IMMUTABLE_TYPE)
+    return mro, tuple(
+        (base, {name: value for name, value in TYPE_DICT.__get__(base).items() if name not in LAZY_CLASS_ENTRIES})
+        for base in mutable
+    )
+
+
 class ImportMachinery:
     """What an import must look like for the plot guard to trust it (F6 of PB-1, Fable's review of 2026-10-31), read
     before the guard is armed.
 
     The import frames a walk up from an event meets first must be the interpreter's own: `_call_with_frames_removed`
-    called by the `exec_module` or `create_module` of a loader of exactly one of `LOADER_STATE`'s types (a subclass
+    called by the `exec_module` or `create_module` of a loader of exactly one of `loader_state`'s types (a subclass
     may change any method) whose instance holds nothing but its own state and whose file lies in the install
     (`install_prefixes`), or by `BuiltinImporter`, or `FrozenImporter.exec_module` itself. Every other import frame
     (a loader the plot built, a finder or path hook it installed that is a builtin such as `exec`) earns no trust.
     The frames and their code objects are the interpreter's; the loader is read with the guard armed, so a property or
-    a `str` subclass of the plot runs judged. The loaders' methods and the import modules' globals are mutable
-    Python attributes, and no event sees them change: this checks the shape of an import, not the integrity of the
-    machinery behind it. The reads of the code are what `IMPORT_CODE_READERS` and the `import` event of an extension
-    module bind to the install.
+    a `str` subclass of the plot runs judged.
+
+    A class's attributes change without an audit event, so the stock loaders' classes are also read once here, before
+    arming (`class_entries`), and an import of a loader whose class no longer resolves every attribute to the same
+    object earns no trust: a `get_code` or `source_to_code` the plot set on the class (Fable's review of the F6 fix,
+    2026-10-31), a base class it swapped. Deeper patches of the machinery (the module globals of
+    `_frozen_importlib_external`, `_bootstrap._call_with_frames_removed`, `builtins.compile`) are F8's kind and out of
+    this layer's reach; the validator, which refuses every name that reaches them, is the barrier there (the module
+    docstring's security model). The reads of the code are what `IMPORT_CODE_READERS` and the `import` event of an
+    extension module bind to the install.
     """
 
     def __init__(self):
@@ -1030,6 +1060,7 @@ class ImportMachinery:
             machinery.ExtensionFileLoader: file_state,
             zipimport.zipimporter: (frozenset({"archive", "prefix"}), "archive"),
         }
+        self.loader_classes = {loader: class_entries(loader) for loader in self.loader_state}
 
     def trusts(self, frame):
         """Whether `frame`, the first import frame (`IMPORT_FRAME_FILES`) of a walk up from an event, runs an import
@@ -1052,10 +1083,11 @@ class ImportMachinery:
             return False
 
     def trusted_loader(self, loader):
-        """Whether `loader` is exactly a stock loader whose instance holds only its own state, of exact `str` names,
-        and whose file (or archive) lies in the install."""
-        shape = self.loader_state.get(type(loader))
-        if shape is None:
+        """Whether `loader` is exactly a stock loader of an intact class (`intact`) whose instance holds only its own
+        state, of exact `str` names, and whose file (or archive) lies in the install."""
+        cls = type(loader)
+        shape = self.loader_state.get(cls)
+        if shape is None or not self.intact(cls):
             return False
         names, path_key = shape
         state = object.__getattribute__(loader, "__dict__")
@@ -1063,6 +1095,22 @@ class ImportMachinery:
             return False
         path = state.get(path_key)
         return type(path) is str and under_prefixes(path, self.prefixes)
+
+    def intact(self, cls):
+        """Whether the stock loader class `cls` resolves every attribute as it did before arming: the same classes in
+        its method resolution order, and each mutable one's own entries, the same names bound to the same objects
+        (`class_entries`). C-level reads alone: exact `str` keys, identity comparisons, no plot code."""
+        mro, classes = self.loader_classes[cls]
+        now = TYPE_MRO.__get__(cls)
+        if len(now) != len(mro) or not all(current is base for current, base in zip(now, mro, strict=True)):
+            return False
+        for base, entries in classes:
+            current = TYPE_DICT.__get__(base)
+            if sum(1 for name in current if name not in LAZY_CLASS_ENTRIES) != len(entries):
+                return False
+            if not all(current.get(name, ABSENT) is value for name, value in entries.items()):
+                return False
+        return True
 
 
 class PlotGuard(DataGuard):

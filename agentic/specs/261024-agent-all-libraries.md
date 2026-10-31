@@ -2294,7 +2294,8 @@ Also found:
     its first import frame is the interpreter's `_call_with_frames_removed` under the
     `exec_module` or `create_module` of exactly `SourceFileLoader`,
     `SourcelessFileLoader`, `ExtensionFileLoader` or `zipimporter` (instance state
-    `name` and `path`, or `archive` and `prefix`, nothing else, the file in the install),
+    `name` and `path`, or `archive` and `prefix`, nothing else, the file in the install,
+    the class as it was before arming),
     under `BuiltinImporter`, or is `FrozenImporter.exec_module` (`ImportMachinery`);
     and an extension module loads only from the install, refused at the `import` event
     that `_imp.create_dynamic` raises with its file before the library's native code runs.
@@ -2336,11 +2337,20 @@ Also found:
     shares can change the guard's decisions, which no audit event sees; and cffi's
     `dlopen`, which raises no audit event (above). The validator refuses what both need
     (`cffi`, `sys` and every dunder name), and no structural change to the harness is
-    planned for F8. The loaders' methods and the import modules' globals are mutable
-    attributes as well, and no audit event sees them change: the rules check the shape
-    of an import and the files it reads, not the integrity of the machinery behind
-    them; that stays with the validator, which refuses every name that reaches the
-    machinery.
+    planned for F8. A class attribute changes without an audit event as well, so the
+    stock loaders' classes are read before arming, and a loader whose class no longer
+    resolves every attribute to the same object earns no trust (`ImportMachinery.intact`:
+    the same method resolution order, each class's own entries unchanged but the two
+    Python 3.14 adds when annotations are first read): Fable's review of the fix measured
+    a `get_code` set on `SourceFileLoader` itself, with a clean instance on a stdlib file,
+    running the plot's module body with an import's trust, and a `source_to_code` set
+    there did the same. Both wrote the marker through the first fix and are refused now;
+    the 1,946 catalogue files render with the class check exactly as without it (1,771
+    render, 175 fail, the same refusals).
+    Deeper patches of the machinery (the module globals of `_frozen_importlib_external`,
+    `_bootstrap._call_with_frames_removed`, `builtins.compile`) are F8's kind and
+    knowingly out of the in-process layer's reach; the validator, which refuses every
+    name that reaches them, is the barrier there.
 - **A two-step row needs Node.** `GET /status` still lists the toolchains per language,
   but a render or page job is checked against its row (`executor.serves`): the language's
   toolchain and the row's own binaries, so a plotly or bokeh job on a renderer without
