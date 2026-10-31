@@ -9,7 +9,7 @@
   MUI X 7 is served `coupled` with its `deprecated-api` note, never blocked for
   its version (owner decision): the adapter rewrites `ChartContainer` to MUI X
   9.16's `ChartsContainer`. The interactive `plot.html` and the in-chat preview
-  work for MUI X's React bundle as for the other four.
+  work for MUI X's React bundle as for the other four. (#12483)
 - **MUI X idioms in the JavaScript adapter prompt.** `adapter_javascript.md`
   teaches what was measured with MUI X 9.16 in the renderer image: the module's
   imports and its one default export, MUI X 9's names for MUI X 7's, axis bands
@@ -20,12 +20,12 @@
   `1,250,000`), and a series formatter that guards `null`, which MUI X hands it
   when a reader hovers a gap; unguarded, the hover removes the whole chart. A
   test runs the idioms through both validator profiles, and an image test
-  renders them from a table with missing cells in both themes.
+  renders them from a table with missing cells in both themes. (#12483)
 - **MUI X eval fixtures.** The ten matrix specs for MUI X (60 cases, 780
   generated in all) and the smoke case `pie-basic-muix-renamed`; five of the
   ten files are `clean` (written for MUI X 9.16), five `coupled`, one of them
   with the `deprecated-api` note. Across the catalogue 311 of 323 MUI X files
-  are eligible.
+  are eligible. (#12483)
 
 ### Fixed
 
@@ -35,8 +35,8 @@
   so a selection starting with one (`scatter-basic-*`) stopped before any case.
   It now renders the library's first selected case whose file bundles as it
   stands, or, when none does (`scatter-basic-muix-*` alone), the library's smoke
-  case, so the case that tests the rewrite can run on its own.
+  case, so the case that tests the rewrite can run on its own. (#12483)
 - **The page probe hovers the plot, not a legend mark.** `page_probe.mjs`
   hovered the first canvas or svg in the plot's frame, which in a MUI X page is
   a legend entry's 10-pixel mark; it hovers the largest now. The renderer
-  image's CI builds and probes a MUI X page next to the Chart.js one.
+  image's CI builds and probes a MUI X page next to the Chart.js one. (#12483)
