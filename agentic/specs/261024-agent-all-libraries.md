@@ -2166,6 +2166,139 @@ Revised on 2026-10-30 after the second opinion on steps 3 and 4. Two PRs after J
   user's machine; the run form carries the sandbox's JSON save instead.
 - Fixtures, matrix, docs.
 
+#### What PB-1 built (2026-10-31): the two-step exec mode, not served yet
+
+The renderer's plotly and bokeh rows render in two steps; `AGENT_LIBRARIES`,
+`RUNTIME_LIBRARIES`, the runtime registry and the admin deploy's `_LIBRARIES` are
+unchanged, so the agents service sends no plotly or bokeh job before PB-2.
+
+- **Harness, figure mode** (`harness.py --figure <package> plot.py -- <screenshot
+  command>`). The start line, then `CPU` and `FSIZE` limits for both steps, then
+  `os.fork` before anything is armed. The child sets `RLIMIT_AS` and `RLIMIT_NPROC`, arms
+  `PlotGuard` with the kernel filter first (`ANYPLOT_DENY_EXEC=required` holds as in plot
+  mode), runs the plot, which may write nothing but `plot-<theme>.json`, and ends with
+  `os._exit`, so no `atexit` callback and no thread of the plot outlives it. The parent is
+  never armed: it checks the figure (a regular file opened without following a link, not
+  empty, at most `FIGURE_MAX_BYTES`, 16 MiB, the wire's cap for a typed table) and starts
+  the screenshot command, the JavaScript row's harness with `--figure=plot-<theme>.json`
+  appended, in the sandbox's environment without the plot step's variables
+  (`ANYPLOT_DENY_EXEC`, `ANYPLOT_RLIMIT_AS_MB`, `ANYPLOT_RLIMIT_NPROC`) and with
+  `ANYPLOT_FIGURE_PACKAGE`, the package's directory as the harness's own interpreter would
+  import it (`importlib.util.find_spec`, which runs no package code). The child reports
+  through a pipe opened before the fork: its first line, the filter's state, is written
+  after the arming and before any plot code, so the plot cannot forge it; the error
+  record after it is advisory. The end line carries both steps' totals, the plot step's
+  `exec_deny`, and `steps` with each step's peak, CPU and wall time.
+- **The final error line** of JS-2 for the plot step as well: `plot <Class> plot.py:<line>`
+  for an exception (its traceback before it, as the interpreter prints it), `figure`
+  (`NoFigure`, `FigureError`, `FigureTooLarge`), `crash PlotCrashed` for a signal and
+  `harness` (`UsageError`, `PackageMissing`, `ExecDenyUnavailable`, `SpawnError`); the
+  screenshot step's own line otherwise. The exit code is the failed step's.
+- **`render.mjs --library=<plotly|bokeh> --figure=<file>`**, sandbox mode only. The figure
+  is read without following a link, capped again, parsed and shape-checked in Node, and
+  carried as data: a `type="application/json"` element with `<`, U+2028 and U+2029
+  escaped, parsed in the page and handed to `Plotly.newPlot` (`staticPlot`,
+  `typesetMath: false`) or `Bokeh.embed.embed_item`. The bundles are the packages' own:
+  plotly's `package_data/plotly.min.js` (plotly.js 4.1.1 in plotly 7.1.0) and bokeh's
+  `bokeh.min.js` with its WebGL, widget and table bundles (bokeh 3.10.1; its MathJax bundle
+  is not loaded). The page is sandbox mode's, routes, console guard and heap cap included,
+  under a stricter policy: scripts by a nonce of the page instead of `'unsafe-inline'`.
+- **The canvas.** The figure's own size in CSS pixels (plotly's layout width and height,
+  bokeh's root width and height; a bokeh layout, which has none, is drawn once at scale 1
+  and measured) picks the orientation, landscape at 4:3 and wider, and the device scale
+  makes the box exactly 3200 x 1800 or 2400 x 2400: plotly 800 x 450 draws at scale 4,
+  1600 x 900 at 2, bokeh 4800 x 2700 at 2/3. A figure narrower than its box is centred on
+  the page's background; a plotly figure without a size gets 1600 x 900; a side outside
+  320 to 6400 is `figure FigureError`. A screenshot of any other size fails as `harness
+  CanvasError` instead of leaving a PNG.
+- **plotly's `CODE_BUILDERS` entry** is `_plotly_utils/basevalidators.py:
+  build_validator`: `InfoArrayValidator.__init__` calls it for each item of an info-array
+  property (`xaxis.range`, a `domain`), and it evaluates the item's validator class name,
+  `datatype.title().replace("_", "") + "Validator"`. plotly's schema names five types
+  (`angle`, `any`, `enumerated`, `number`, `subplotid`); a plot that calls the builder
+  itself gets title-cased text without underscores, which reaches only capitalised names
+  (the module's 23 validator classes, the builtins' classes and constants) and runs under
+  the guard. Every plotly plot that sets an axis range needs it.
+- **Renderer.** `RuntimeCommand.figure` names the package of a two-step row; plotly's and
+  bokeh's rows run `NODE_BINARY render.mjs --library=<library>` as the screenshot command
+  with `JS_ENV`, and keep the Python limits and the filter for the plot step.
+  `executor.build_argv` passes `--figure <library> plot.py -- <argv>`, `sandbox_env` a
+  Python row's settings plus `JS_ENV`. The image installs the `lib-plotly` and `lib-bokeh`
+  extras without their export stacks (kaleido, choreographer, logistro, Selenium,
+  webdriver-manager, trio and the WebSocket clients) and trims what neither step reads
+  (plotly's JupyterLab and widget bundles, bokeh's TypeScript compiler, ES module sources
+  and unminified bundles): plotly and bokeh take 68 MB, and the renderer image grows from
+  4,451 to 4,520 MB (+69 MB, against main on the same toolchain image).
+
+Measured in local Docker on the developer machine (32 CPUs, WSL 2, kernel 6.18), as the CI
+step runs it: `--network none --read-only`, `--cpus 2 --memory 4g`, an unprivileged user,
+the row's environment, `RLIMIT_AS` 1 GiB and `ANYPLOT_DENY_EXEC=required`; a hand-written
+figure per library and the catalogue's `scatter-basic`, `bar-basic`, `line-basic` and
+`heatmap-basic` with the save block swapped by hand for the JSON save (and Selenium's
+imports dropped), each in both themes:
+
+| Measurement | Result |
+|---|---|
+| Rendered | 20 of 20, every PNG 3200 x 1800 or 2400 x 2400 (the heatmaps), `exec_deny` `on` in every plot step |
+| Wall time, container start included | plotly 1.93 to 2.35 s, bokeh 1.60 to 1.85 s |
+| Plot step | 0.14 to 0.54 s wall, 0.14 to 0.53 s CPU, 53 to 156 MB peak (bokeh's heatmap the largest) |
+| Screenshot step | plotly 1.40 to 1.47 s wall, 0.74 to 0.77 s CPU, 186 to 193 MB for its largest process; bokeh 0.91 to 0.97 s, 0.68 to 0.73 s, 166 to 170 MB |
+| The whole container (`memory.peak`) | plotly 399 to 416 MiB, bokeh 518 to 561 MiB |
+| Under gVisor (`runsc-ptrace`, release-20261026.0), 12 of the renders | all 12 rendered, `exec_deny` `on`: wall 4.65 to 5.78 s, the plot step 0.40 to 1.15 s, the screenshot step 3.68 to 4.63 s; the same image's Chart.js render takes 3.68 s there and 1.06 s under runc |
+| Against the published catalogue PNGs (light) | bokeh `bar-basic` and `heatmap-basic` a mean difference of 0.01 of 255 (no pixel off by more than 40); plotly `bar-basic` 0.54 %, `line-basic` 0.11 %, `heatmap-basic` 1.09 % and `scatter-basic` 0.68 % of the pixels off by more than 40; bokeh `scatter-basic` 0.67 % and `line-basic` 2.03 %. The two largest are drift between the files and their published PNGs (the published bokeh `line-basic` has a band and an annotation the file does not draw; the published plotly `scatter-basic` has axis lines its `showline: False` turns off) |
+| Canvas against the catalogue's | plotly `line-basic` (1600 x 900 at scale 3) and bokeh `scatter-basic` and `line-basic` (4800 x 2700) publish 4800 x 2700 PNGs; this route draws the same layouts at 3200 x 1800 |
+| Fonts | the page resolves the files' Helvetica and Arial to Liberation Sans through the JavaScript row's fontconfig file; plotly's `Inter` first in a stack is not in the image and falls through to it |
+
+Also found:
+
+- **No WebGL in the headless shell.** plotly draws a notice in place of a WebGL trace
+  ("WebGL is not supported by your browser"), so the page now fails such a render as
+  `draw NoWebGL` instead of passing with the notice for a plot. In the catalogue that is
+  `Scattergl` (4 files), `Scatter3d` (5), `Surface` (2), `Mesh3d`, `Parcoords` and
+  `Densitymap` (1 each) and `Scattermap` (8, which also needs map tiles); plotly express
+  switches `scatter` to WebGL above 1,000 points. bokeh's `output_backend="webgl"` falls
+  back to its canvas (no catalogue file uses it). WebGL would need a software renderer
+  in Chromium (`--enable-unsafe-swiftshader`), an owner decision for PB-2.
+- **Markup in a figure.** bokeh's `Div` renders its HTML into the page: under sandbox
+  mode's `script-src 'unsafe-inline'` an `<img onerror>` in it ran (its fetch then stopped
+  at the policy). The figure page admits scripts by its nonce alone, so the handler does
+  not run; `CustomJS` and `CustomJSTickFormatter` cannot compile without
+  `'unsafe-eval'` (a render with the formatter fails as `page EvalError`). Markup in a
+  plotly title stays text.
+- kaleido's `write_image` is refused at choreographer's socket pair (`socket.__new__`) and
+  bokeh's `export_png` at its temporary HTML file (`open`), both under the guard on a
+  developer machine where both stacks are installed; the image installs neither.
+- The renderer's language check (`GET /status`, `503 runtime_unavailable`) stays per
+  language: a Python job of plotly or bokeh needs Node too, which every renderer image
+  has (the toolchain base); a renderer without it would answer exit 127 with a `harness
+  SpawnError` line.
+
+**Tests**: `tests/unit/agents/renderer/test_figure_mode.py` (51 cases without plotly or
+bokeh: the package's lookup and the screenshot command stood in): fork before arm (both
+steps children of one harness, the plot step one seccomp filter and the no-new-privileges
+bit more than the harness, the screenshot step none more and able to start a program),
+the limits and variables per step, a refused spawn, fork, exec, socket pair and PNG write,
+the kernel's refusal when the audit hook is blind to `os.exec`, nothing of the plot after
+it (`atexit`, a thread), the step-1 failures and their lines, a signal death, the cap at
+one byte over, a filter that is not in place, the screenshot step's own failure and a
+command that cannot start, the rows, the argv and the environment, and the executor's one
+timeout over either step (the launcher's process group killed with both children).
+`tests/unit/automation/test_js_render_figure.py` (35 cases, skipped without Node, the
+lock's packages, the browser and plotly): the canvas rule, a measured bokeh layout, markup
+and handlers, `CustomJS`, WebGL, the figure checks, the usage errors, and the whole two
+steps through the Python harness in both themes for both libraries. `ci-image.yml`
+renders a plotly and a bokeh figure through the rows in the built image and checks that
+the export stacks are absent.
+
+| Text above | Built | Why |
+|---|---|---|
+| `render.mjs --screenshot` | `render.mjs --library=<plotly\|bokeh> --figure=<file>`, refused without sandbox mode | the input is the figure; the page's rules must apply to it |
+| `_plotly_utils/basevalidators.py: __init__` | `_plotly_utils/basevalidators.py: build_validator` | the `eval` sits in the static method that `InfoArrayValidator.__init__` calls (plotly 7.1.0, the lock's version); the guard judges the frame that calls `eval` |
+| The page built inside `#container` at the canonical canvas | the figure's own CSS size, the device scale making the canvas | the catalogue's plotly files write 800 x 450 at scale 4 (146), 1600 x 900 at 3 (116), 600 x 600 at 4 (43) and 1200 x 1200 at 3 (9), and its bokeh files pass `width=4800` (113), `3200` (121) and `2400` (35): one CSS size would change every other file's type size against its plot |
+| The vendored `plotly.min.js` or BokehJS | the installed packages' own bundles, BokehJS's WebGL, widget and table bundles included, found by the harness | the page's version is the plot's; a model of another bundle would not draw |
+| Sandbox mode's page rules | the same with a nonce for scripts instead of `'unsafe-inline'` (tighter) | a bokeh `Div`'s handler ran under `'unsafe-inline'` (measured) |
+| The `lib-plotly` and `lib-bokeh` extras | without the export stacks, and trimmed | they start browsers, which the guard refuses; 27 MB of Selenium drivers; the image grows by 69 MB |
+
 ### 5. Julia: Makie
 
 Revised on 2026-10-29 after the second opinion on step 5 (Gemini 4 Argon and Fable; the

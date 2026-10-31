@@ -117,6 +117,21 @@ launcher reports every non-zero exit as its own SIGPIPE (-13) and so loses the c
 arms `PlotGuard` instead (step 5), which lets imports and reads through and refuses with
 `PermissionError`, so a plot that catches a refusal renders without what was refused.
 
+**Figure mode** (`harness.py --figure <package> plot.py -- <screenshot command...>`, the renderer's plotly and
+bokeh rows, PB-1 of step 4 in agentic/specs/261024-agent-all-libraries.md): two steps, because a plot-mode harness
+cannot start a browser once its guard is armed, and must not before. It prints the start line and sets the limits
+of both steps (CPU seconds, the largest file), then forks the plot step before anything is armed: the child sets
+the address-space and process limits, arms `PlotGuard` with the kernel filter first (`ANYPLOT_DENY_EXEC=required`
+holds here as in plot mode), runs the plot, which may write nothing but `plot-<theme>.json`, the figure as JSON
+(`fig.write_json` for plotly, `bokeh.embed.json_item` for bokeh), and ends with `os._exit`. The parent is never
+armed: once the child ended with exit code 0, it checks the figure (a regular file of at most `FIGURE_MAX_BYTES`)
+and starts the screenshot command, the JavaScript row's harness (`render.mjs --library=<package>`) with
+`--figure=plot-<theme>.json` appended, under the JavaScript row's limits and environment: the sandbox's without
+`FIGURE_PLOT_ONLY_ENV`, with `ANYPLOT_FIGURE_PACKAGE` naming the package's directory, whose own bundled JavaScript
+draws the figure, so the versions match. The plot step's failures end stderr with the final error line of the
+JavaScript harness (`figure_error_line`), the screenshot step's with the harness's own; the exit code is the failed
+step's, and the end line carries both steps' usage and the plot step's filter state (`main_figure`).
+
 The probe feeds the advisory gates G3 (clipped text), G5 (annotation outside its
 axes), G7 (overlapping text: tick labels among themselves, any other text with any), G8 (more point marks than data rows), G9 (more
 plotted points than any dataset within the parser's caps can hold) and G10
@@ -240,6 +255,29 @@ EXEC_DENY_PREFLIGHT_ENV = "ANYPLOT_EXEC_DENY_PREFLIGHT"
 before its `main`, so no user code is read."""
 EXEC_DENY_PREFLIGHT_TIMEOUT_S = 30
 """The preflight ends in its library's constructor; a program that outlives this ignored the preload."""
+FIGURE_FLAG = "--figure"
+"""Figure mode (module docstring): `harness.py --figure <package> plot.py -- <screenshot command...>`."""
+FIGURE_PACKAGES = ("plotly", "bokeh")
+"""The packages whose figure the screenshot step draws with the package's own JavaScript (`render.mjs`, `BUNDLES`)."""
+FIGURE_FILE = "plot-{theme}.json"
+"""The one file the plot step may write: the figure as JSON, which the screenshot step reads (`--figure=<file>`)."""
+FIGURE_MAX_BYTES = 16 * 1024 * 1024
+"""The largest figure the screenshot step takes (`render.mjs` `FIGURE_MAX_BYTES`, pinned equal by a test): the wire's
+cap for a JavaScript job's typed table (`wire.MAX_DATA_JSON_CHARS`), whose worst case at the parser's 20,000 rows and
+50 columns measures 9.04 million characters; `RLIMIT_FSIZE` bounds the file itself."""
+FIGURE_PACKAGE_ENV = "ANYPLOT_FIGURE_PACKAGE"
+"""The package's directory (`find_figure_package`), which the screenshot step reads the bundled JavaScript from."""
+FIGURE_PLOT_ONLY_ENV = ("ANYPLOT_DENY_EXEC", "ANYPLOT_RLIMIT_AS_MB", "ANYPLOT_RLIMIT_NPROC")
+"""The variables of the plot step that the screenshot step does not get: the JavaScript row has no exec filter and
+neither `RLIMIT_AS` nor `RLIMIT_NPROC` (`agents/renderer/commands.py`)."""
+FIGURE_REPORT_BYTES = 64 * 1024
+"""What the parent reads of the plot step's report pipe (`plot_step`): its first line, the filter state, is written
+before any plot code runs; the last, the error record, is advisory like every line the plot shares."""
+FIGURE_ERROR_CHARS = 200
+"""The final error line's message at most (`render.mjs` `ERROR_MESSAGE_CHARS`)."""
+FIGURE_ERROR_KINDS = ("plot", "figure", "crash", "harness")
+"""The final error line's kinds of the plot step: an exception in the plot, its figure file, a death by a signal, and
+the harness itself (usage, the filter, the package); the screenshot step prints its own (`render.mjs`)."""
 DATA_FLAG = "--data"
 DATA_OUT_FILE = "out.csv"
 DATA_STATUS_FILE = "status.json"
@@ -387,6 +425,7 @@ CODE_BUILDERS = frozenset(
         ("scipy/stats/_distn_infrastructure.py", "_attach_argparser_methods"),
         ("plotnine/mapping/_env.py", "eval"),
         ("cssselect2/compiler.py", "__init__"),
+        ("_plotly_utils/basevalidators.py", "build_validator"),
     }
 )
 """The `(file suffix, function)` pairs whose `exec` and `compile` both guards let through when they call them: each
@@ -410,7 +449,19 @@ payloads through every pygal channel, and read the generated source back with `a
 classes, id, attributes and `lang`, nothing else. Only Python objects handed to `compile_selector_list` in place of
 tokens (a forged `dimension` token whose `int_value` is a string) reach an unquoted slot; the validator admits neither
 `cssselect2` nor `tinycss2` nor `cairosvg.css`/`cairosvg.parser`, and a lambda the compiler built runs under the same
-guard as the plot (no write, process, socket or frame)."""
+guard as the plot (no write, process, socket or frame).
+
+plotly's `InfoArrayValidator.build_validator` (plotly 7.1.0, figure mode) evaluates the name of the validator class an
+info array's item needs: `eval(datatype.title().replace("_", "") + "Validator")`, the datatype read from the item's
+`valType`. `InfoArrayValidator.__init__` calls it for each item when plotly builds the validator of an info-array
+property, lazily, the first time a plot sets one (`xaxis.range`, a `domain`), so every plot that sets an axis range
+needs it. The items come from plotly's own schema (`plotly/validators/_validators.json`, read by `ValidatorCache`),
+whose info arrays name five types, `angle`, `any`, `enumerated`, `number` and `subplotid`, each a class of the module.
+A plot that calls `build_validator` itself controls the text, but the text is title-cased with every underscore
+removed and ends in `Validator` (a `#` can comment that out): no keyword but `True`, `False` and `None`, no lowercase
+name (no builtin function, no module), no dunder, so it can only read and call capitalised names, the module's 23
+globals of that kind (all validator classes) and the builtins' classes and constants, and whatever that runs stays under
+the same guard as the plot."""
 IMPORT_FRAME_FILES = ("<frozen importlib._bootstrap>", "<frozen importlib._bootstrap_external>")
 """The files of the frames that run an import. The plot guard lets an `exec` through when, walking up from its caller,
 it meets one of these frames before a frame of the plot: a module body the plot imports runs (and builds code: scipy's
@@ -1079,10 +1130,21 @@ def _limit(kind: int, value: int) -> None:
 
 
 def set_limits() -> None:
+    set_run_limits()
+    set_plot_limits()
+
+
+def set_run_limits() -> None:
+    """CPU seconds and the largest file, which every process of a run inherits: both steps of figure mode."""
     cpu = int(os.environ.get("ANYPLOT_RLIMIT_CPU_S", "60"))
     fsize = int(os.environ.get("ANYPLOT_RLIMIT_FSIZE_MB", "32")) * 1024 * 1024
     _limit(resource.RLIMIT_CPU, cpu)
     _limit(resource.RLIMIT_FSIZE, fsize)
+
+
+def set_plot_limits() -> None:
+    """The address space and the processes, each only when set: in figure mode the plot step's alone, because the
+    screenshot step runs under the JavaScript row's limits, which set neither."""
     address_space = os.environ.get("ANYPLOT_RLIMIT_AS_MB")
     if address_space:
         _limit(resource.RLIMIT_AS, int(address_space) * 1024 * 1024)
@@ -2163,7 +2225,7 @@ def frame_for_readers():
         return None
 
 
-def run_plot(path, guard):
+def run_plot(path, guard, armed=None):
     """Run the plot file as `__main__` under `guard`, the way `runpy.run_path` would.
 
     The file is read and compiled before the guard is armed, and the guard lets exactly
@@ -2174,7 +2236,8 @@ def run_plot(path, guard):
     cairocffi, with the same `ldconfig` lookups) when the plot names pygal or cairosvg. No
     bytecode is written: the guard refuses the writes.
     The plot's frames carry the path as given, as under `runpy`, so a traceback still names
-    `plot.py`.
+    `plot.py`. `armed`, when given, is called with the kernel filter's state once the guard is
+    armed and before the plot runs (figure mode's report, `plot_step`).
     """
     import builtins
     import ctypes  # noqa: F401  (see the docstring)
@@ -2197,6 +2260,8 @@ def run_plot(path, guard):
         "__cached__": None,
     }
     guard.arm(code)
+    if armed is not None:
+        armed(guard.exec_deny)
     exec(code, namespace)
 
 
@@ -2443,9 +2508,332 @@ def _child_usage():
     return {"max_rss_mb": round(usage.ru_maxrss / 1024, 1), "cpu_s": round(usage.ru_utime + usage.ru_stime, 3)}
 
 
+def main_figure(argv):
+    """Figure mode (module docstring): `<package> <plot file> -- <screenshot command...>`.
+
+    The start line goes out first and the end line last, as in exec mode; the end line's `max_rss_mb` and `cpu_s` are
+    both steps' (the largest process and the CPU time of all), `exec_deny` is the plot step's filter (`off` when the
+    plot never ran armed; the screenshot step has none by design), and `steps` holds each step's own figures. The exit
+    code is the failed step's: the plot's, 128 plus a signal, `EXEC_DENY_EXIT`, 1 for a missing or refused figure, or
+    the screenshot command's. Every failure of the plot step and of the harness ends stderr with the final error line
+    (`figure_error_line`); a failure of the screenshot step ends it with that step's own.
+    """
+    _report("start")
+    run = {"exec_deny": "off", "steps": {}}
+    code = 1
+    try:
+        code = run_figure(argv, run)
+    finally:
+        try:
+            _report("end", **_child_usage(), exec_deny=run["exec_deny"], steps=run["steps"])
+        except Exception:
+            pass  # a closed stdout must not hide the steps' own exit code
+    return code
+
+
+def run_figure(argv, run):
+    """`main_figure` after the start line: the arguments, the shared limits, the plot step, the figure's check and the
+    screenshot step, each failure with its final error line."""
+    if len(argv) < 4 or argv[2] != "--" or argv[0] not in FIGURE_PACKAGES:
+        packages = "|".join(FIGURE_PACKAGES)
+        print(f"usage: harness.py {FIGURE_FLAG} <{packages}> <plot file> -- <command> [args...]", file=sys.stderr)
+        figure_error_line("harness", "UsageError", None, "usage: the package, the plot file and the command")
+        return 2
+    package, path, command = argv[0], argv[1], argv[3:]
+    theme = os.environ.get(THEME_ENV, "light")
+    if theme not in ("light", "dark"):
+        figure_error_line("harness", "UsageError", None, f"{THEME_ENV} must be light or dark")
+        return 2
+    set_run_limits()
+    package_dir = find_figure_package(package)
+    if package_dir is None:
+        figure_error_line("harness", "PackageMissing", None, f"{package} is not installed where the harness runs")
+        return 2
+    figure = FIGURE_FILE.format(theme=theme)
+    try:
+        os.unlink(figure)  # only the plot step's own figure reaches the screenshot
+    except OSError:
+        pass  # missing, or no file at all, which `check_figure` refuses
+    code = plot_step(path, figure, run)
+    if code != 0:
+        return code
+    refusal = check_figure(figure)
+    if refusal is not None:
+        figure_error_line("figure", *refusal)
+        return 1
+    return screenshot_step(command, figure, package_dir, run)
+
+
+def find_figure_package(package):
+    """The directory of `package` as this interpreter would import it, found without importing it (a top-level name
+    runs no package code), or None when it is missing: the plot step imports the package from there, and the screenshot
+    step reads the package's bundled JavaScript from there, so the two versions are one."""
+    import importlib.util
+
+    try:
+        spec = importlib.util.find_spec(package)
+    except ImportError, ValueError:
+        return None
+    if spec is None or not spec.submodule_search_locations:
+        return None
+    return os.path.abspath(next(iter(spec.submodule_search_locations)))
+
+
+def plot_step(path, figure, run):
+    """Fork the plot step, wait for it and judge it: its exit code, 0 when it ran and ended well.
+
+    The child is forked before anything is armed, so this process never is: it starts the screenshot step afterwards.
+    The child reports through a pipe opened before the fork, its write end non-blocking, so a plot that fills the pipe
+    cannot hold the child's last write: the first line, the filter's state (`exec_deny <state>`), is written once the
+    guard is armed and before any plot code runs (`run_plot`'s `armed`), so the plot cannot forge it; the last, an error
+    record (`error {...}`), is advisory, like everything the plot shares with the harness.
+    """
+    import time
+
+    read_end, write_end = os.pipe()
+    os.set_blocking(write_end, False)
+    os.set_blocking(read_end, False)
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.flush()  # the child inherits the buffers; a buffered line must not print twice
+        except Exception:
+            pass
+    started = time.monotonic()
+    pid = os.fork()
+    if pid == 0:
+        os.close(read_end)
+        plot_child(path, figure, write_end)  # never returns
+    os.close(write_end)
+    _, status, usage = os.wait4(pid, 0)
+    run["steps"]["plot"] = _step_usage(usage, time.monotonic() - started)
+    state, record = _read_figure_report(read_end)
+    run["exec_deny"] = state
+    if os.WIFSIGNALED(status):
+        number = os.WTERMSIG(status)
+        figure_error_line("crash", "PlotCrashed", None, f"the plot step died of {_signal_name(number)}")
+        return 128 + number
+    code = os.waitstatus_to_exitcode(status)
+    if code == EXEC_DENY_EXIT and state != "on":
+        figure_error_line(
+            "harness", "ExecDenyUnavailable", None, f"the sandbox could not refuse process starts ({state})"
+        )
+        return code
+    if code != 0:
+        name, line, message = record if record is not None else ("Error", None, f"the plot step ended with {code}")
+        figure_error_line("plot", name, None if line is None else f"{os.path.basename(path)}:{line}", message)
+    return code
+
+
+def plot_child(path, figure, report):
+    """The plot step, in the forked child: the plot's limits, `PlotGuard` that lets it write `figure` alone, the plot
+    run as in plot mode, then `os._exit`, so no handler of the parent's stack, no `atexit` callback and no thread of the
+    plot outlives it. Its exit code is 0, the plot's own `sys.exit` code, `EXEC_DENY_EXIT` (the plot never ran), or 1
+    for an exception, whose traceback goes to stderr as the interpreter prints it and whose class, line and message go
+    to the report."""
+    code = 1
+    try:
+        set_plot_limits()
+        seed_mplconfig()
+        guard = PlotGuard((figure,))
+        try:
+            run_plot(path, guard, armed=lambda state: _report_line(report, f"exec_deny {state}"))
+            code = 0
+        except ExecDenyUnavailable as exc:
+            _report_line(report, f"exec_deny {guard.exec_deny}")
+            print(f"the sandbox could not refuse process starts ({exc}), which every run requires", file=sys.stderr)
+            code = EXEC_DENY_EXIT
+        except SystemExit as exc:
+            status = exc.code
+            if status is None or (isinstance(status, int) and status & 0xFF == 0):
+                code = 0
+            else:
+                code = status & 0xFF if isinstance(status, int) else 1
+                if not isinstance(status, int):
+                    print(status, file=sys.stderr)
+                _report_line(report, "error " + json.dumps(_error_record(path, exc, guard, str(status))))
+        except BaseException as exc:
+            try:
+                sys.__excepthook__(type(exc), exc, exc.__traceback__)
+            except BaseException:
+                pass
+            _report_line(report, "error " + json.dumps(_error_record(path, exc, guard)))
+    except BaseException:
+        pass  # the harness's own failure: exit code 1, no record
+    finally:
+        for stream in (sys.stdout, sys.stderr):
+            try:
+                stream.flush()
+            except BaseException:
+                pass
+        os._exit(code)
+
+
+def _error_record(path, exc, guard, message=None):
+    """`[class, line, message]` of an exception the plot raised: the class's name when it is an identifier, the line of
+    the innermost frame of the plot file (a syntax error's own line), and the message. The traceback is read with the
+    guard paused and through C attributes only (`BaseException.__traceback__`'s own descriptor, which a subclass's
+    `__traceback__` cannot replace), so no plot code runs while the guard is paused; the name and the message may run
+    plot code (a metaclass, `__str__`), which the armed guard then judges."""
+    try:
+        name = type(exc).__name__
+        name = name if isinstance(name, str) and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,63}", name) else "Error"
+    except BaseException:
+        name = "Error"
+    line = None
+    try:
+        if type(exc) in (SyntaxError, IndentationError, TabError) and exc.filename == path:
+            line = exc.lineno  # raised by `compile`, before the guard was armed
+        else:
+            with guard.paused():
+                tb = BaseException.__traceback__.__get__(exc)
+                while tb is not None:
+                    file_name = tb.tb_frame.f_code.co_filename
+                    if type(file_name) is str and file_name == path:
+                        line = tb.tb_lineno
+                    tb = tb.tb_next
+    except BaseException:
+        line = None
+    if message is None:
+        try:
+            message = str(exc)
+        except BaseException:
+            message = ""
+    if not isinstance(line, int) or isinstance(line, bool) or line < 1:
+        line = None
+    return [name, line, message[:FIGURE_ERROR_CHARS] if isinstance(message, str) else ""]
+
+
+def _report_line(report, line):
+    """One line to the plot step's report pipe, in one write (a pipe takes up to 4 KiB at once); a full pipe or a
+    closed descriptor loses the line, never the child."""
+    try:
+        os.write(report, (line[:4000] + "\n").encode("utf-8", errors="replace"))
+    except OSError:
+        pass
+
+
+def _read_figure_report(read_end):
+    """The plot step's filter state and error record from its report pipe, then closed: the state from the first line
+    (`off` without one: the plot never ran armed; `unavailable` for a value outside `install_exec_deny`'s), the record
+    from the last line that is one (None without)."""
+    data = b""
+    try:
+        while len(data) < FIGURE_REPORT_BYTES:
+            chunk = os.read(read_end, FIGURE_REPORT_BYTES - len(data))
+            if not chunk:
+                break
+            data += chunk
+    except BlockingIOError:
+        pass
+    finally:
+        os.close(read_end)
+    lines = data.decode("utf-8", errors="replace").splitlines()
+    state = "off"
+    if lines and lines[0].startswith("exec_deny "):
+        state = lines[0].split(" ", 1)[1]
+        state = state if state in ("on", "unavailable", "unsupported") else "unavailable"
+    record = None
+    for line in reversed(lines[1:] if state != "off" else lines):
+        if not line.startswith("error "):
+            continue
+        try:
+            name, number, message = json.loads(line.split(" ", 1)[1])
+        except ValueError, TypeError, RecursionError:
+            continue
+        if isinstance(name, str) and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,63}", name) and isinstance(message, str):
+            number = number if isinstance(number, int) and not isinstance(number, bool) and number > 0 else None
+            record = (name, number, message)
+            break
+    return state, record
+
+
+def check_figure(figure):
+    """Why the screenshot step must not take `figure`, as `(class, where, message)`, or None: it is missing, not a
+    regular file (opened without following a link), empty, or larger than `FIGURE_MAX_BYTES`."""
+    import stat
+
+    try:
+        descriptor = os.open(figure, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except FileNotFoundError:
+        return "NoFigure", None, f"the plot wrote no {figure}"
+    except OSError as exc:
+        return "FigureError", None, f"{figure} could not be opened as a regular file ({type(exc).__name__})"
+    try:
+        info = os.fstat(descriptor)
+    finally:
+        os.close(descriptor)
+    if not stat.S_ISREG(info.st_mode):
+        return "FigureError", None, f"{figure} is not a regular file"
+    if info.st_size == 0:
+        return "FigureError", None, f"{figure} is empty"
+    if info.st_size > FIGURE_MAX_BYTES:
+        return "FigureTooLarge", None, f"{figure} is {info.st_size} bytes, more than the {FIGURE_MAX_BYTES}-byte limit"
+    return None
+
+
+def screenshot_step(command, figure, package_dir, run):
+    """Start the screenshot command with `--figure=<figure>` appended, in the sandbox's environment without the plot
+    step's variables (`FIGURE_PLOT_ONLY_ENV`) and with the package's directory, and return its exit code (128 plus a
+    signal; 127 when it cannot start). It runs under the limits this process set and nothing else: no guard, no
+    filter, no address-space or process limit, as the JavaScript row runs."""
+    import subprocess
+    import time
+
+    env = {key: value for key, value in os.environ.items() if key not in FIGURE_PLOT_ONLY_ENV}
+    env[FIGURE_PACKAGE_ENV] = package_dir
+    argv = [*command, f"--figure={figure}"]
+    started = time.monotonic()
+    try:
+        # As exec mode starts its child: descriptors past stderr closed, SIGPIPE and SIGXFSZ back to their defaults.
+        child = subprocess.Popen(argv, env=env)
+    except OSError as exc:
+        print(f"{FIGURE_FLAG}: cannot run {argv[0]}: {type(exc).__name__}", file=sys.stderr)
+        figure_error_line("harness", "SpawnError", None, f"cannot run {argv[0]} ({type(exc).__name__})")
+        return 127
+    # `wait4` for the step's own usage; the exit code goes back to the Popen, which then has nothing left to reap.
+    _, status, usage = os.wait4(child.pid, 0)
+    child.returncode = code = os.waitstatus_to_exitcode(status)
+    run["steps"]["screenshot"] = _step_usage(usage, time.monotonic() - started)
+    return code if code >= 0 else 128 - code
+
+
+def figure_error_line(kind, name, where, message):
+    """The final error line of the JavaScript harness (`render.mjs`), for the plot step and the harness:
+    `render: error: <kind> <Class> <file>:<line>: <message>`, `-` without a line, the message on one line and at most
+    `FIGURE_ERROR_CHARS` characters."""
+    text = " ".join(str(message).split())
+    if len(text) > FIGURE_ERROR_CHARS:
+        text = text[: FIGURE_ERROR_CHARS - 1] + "…"
+    try:
+        print(f"render: error: {kind} {name} {where or '-'}: {text}", file=sys.stderr, flush=True)
+    except Exception:
+        pass
+
+
+def _step_usage(usage, wall):
+    """One step's figures for the end line: its largest process, its CPU time with its waited-for children's, its
+    wall time."""
+    return {
+        "max_rss_mb": round(usage.ru_maxrss / 1024, 1),
+        "cpu_s": round(usage.ru_utime + usage.ru_stime, 3),
+        "wall_s": round(wall, 3),
+    }
+
+
+def _signal_name(number):
+    import signal
+
+    try:
+        return signal.Signals(number).name
+    except ValueError:
+        return f"signal {number}"
+
+
 def main(argv):
     if len(argv) >= 2 and argv[1] == EXEC_FLAG:
         return main_exec(argv[2:])
+    if len(argv) >= 2 and argv[1] == FIGURE_FLAG:
+        return main_figure(argv[2:])
     if len(argv) == 3 and argv[1] == DATA_FLAG:
         return main_data(argv[2])
     if len(argv) == 3 and argv[1] == CONVERT_FLAG:

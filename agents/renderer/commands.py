@@ -14,6 +14,7 @@ sandbox with the probe harness in front:
 | Language | Code file | Command |
 |---|---|---|
 | `python` | `plot.py` | `python -I -X disable-remote-debug harness.py plot.py`: the harness runs the plot in process, with the plot guard and the savefig probe |
+| `python` (plotly, bokeh) | `plot.py` | `harness.py --figure <library> plot.py -- /opt/node/bin/node /opt/anyplot/js-render/render.mjs --library=<library>`: the plot in a forked, armed child writes `plot-<theme>.json`, then the JavaScript harness draws it |
 | `javascript` | `plot.js` (`plot.tsx` for MUI X) | `harness.py --exec -- /opt/node/bin/node /opt/anyplot/js-render/render.mjs --library=<library> plot.js` |
 | `r` | `plot.R` | `harness.py --exec -- /opt/R/4.6.1/lib/R/bin/exec/R --no-echo --no-restore --no-save --file=plot.R` |
 | `julia` | `plot.jl` | `harness.py --exec -- /opt/julia-1.13.2/bin/julia --project=/opt/julia-project --startup-file=no --history-file=no --compiled-modules=strict --heap-size-hint=1536M -L /opt/anyplot/toolchain/warmup.jl plot.jl` |
@@ -35,7 +36,10 @@ JavaScript row has it off: Node starts Chromium and Chromium starts its own proc
 while the plot code runs in the page, which has no process API. Node runs by its path as well
 (`NODE_BINARY`), with the harness's packages, the headless shell and the row's fonts named in
 its environment (`JS_ENV`, JS-1 of step 3), and the harness's sandbox mode switched on there
-(JS-2: the page rules, the closed imports, the bounded console, the final error line). A row also says which limits
+(JS-2: the page rules, the closed imports, the bounded console, the final error line). plotly's and bokeh's rows
+run in two steps (`FIGURE_FLAG`, `RuntimeCommand.figure`, PB-1): the plot under the plot guard, the exec filter and the
+Python limits in a child the harness forks before it arms anything, then the JavaScript row's harness, with its
+environment and limits, on the figure the plot wrote. A row also says which limits
 differ from the Python defaults: V8, Chromium and Julia's LLVM reserve address space far
 beyond their resident memory, so `RLIMIT_AS` is off for the JavaScript and Julia rows
 and for altair's Python row (vl-convert embeds V8); one Chromium render runs seven
@@ -72,6 +76,11 @@ LANGUAGES: tuple[Language, ...] = get_args(Language)
 
 EXEC_FLAG = "--exec"
 """The harness's exec-mode flag (`harness.EXEC_FLAG`): what follows `--` is the language's command."""
+FIGURE_FLAG = "--figure"
+"""The harness's two-step flag (`harness.FIGURE_FLAG`): `--figure <package> plot.py -- <screenshot command>`."""
+FIGURE_LIBRARIES: tuple[str, ...] = ("plotly", "bokeh")
+"""The Python libraries whose rows run in two steps (`harness.FIGURE_PACKAGES`, pinned equal by a test): the plot
+writes its figure as JSON under the plot guard, and the JavaScript row's harness draws it in Chromium."""
 
 LIBRARY_LANGUAGES: Mapping[str, Language] = MappingProxyType(
     {
@@ -260,14 +269,23 @@ class RuntimeCommand:
     (`executor.stderr_tail`); empty for a row whose tail is the plain last `MAX_STDERR_CHARS` characters. Julia's
     `ERROR:`: a deep Makie failure prints about 7,500 characters of stack, so the last 2,000 lose the line that
     names the exception (J2a, 2026-10-29)."""
+    figure: str = ""
+    """The package of a two-step row (`FIGURE_FLAG`, plotly and bokeh): the harness runs the plot itself in a forked,
+    armed child, and `argv` is then the screenshot step's command, which draws the figure the plot wrote with that
+    package's JavaScript; empty for every other row. `exec_deny`, `rlimit_as` and `rlimit_nproc` are the plot step's;
+    the screenshot step runs as the JavaScript row does (`harness.FIGURE_PLOT_ONLY_ENV`), and `env` is its
+    environment, which the sandbox carries after the Python settings."""
 
     def __post_init__(self) -> None:
         if self.rlimit_as_mb is not None and (not self.rlimit_as or self.rlimit_as_mb <= 0):
             raise ValueError("a row's own RLIMIT_AS needs rlimit_as on and a positive size")
+        if self.figure and (self.language != "python" or not self.argv):
+            raise ValueError("a two-step row runs a Python plot and a screenshot command")
 
     @property
     def in_process(self) -> bool:
-        """Whether the harness runs the code itself (Python) instead of a child command."""
+        """Whether the harness runs the code itself (Python) and nothing else; a two-step row runs it itself and then
+        the screenshot command (`figure`)."""
         return not self.argv
 
 
@@ -295,6 +313,25 @@ def _row(language: Language, library: str) -> RuntimeCommand:
                 env=MappingProxyType({"ARROW_DEFAULT_MEMORY_POOL": "system", "FONTCONFIG_FILE": FONTCONFIG_FILE}),
                 rlimit_as_mb=2048,
                 render_p95_s=15.0,
+            )
+        if library in FIGURE_LIBRARIES:
+            # plotly and bokeh draw in a browser, which plot code must not start (the plot guard refuses kaleido's
+            # and Selenium's starts) and which an armed process cannot start either: the harness forks the plot step
+            # before it arms anything, the plot writes `plot-<theme>.json` under the guard and the exec filter with
+            # the Python limits, and the harness, never armed, then runs the JavaScript row's harness on that file
+            # with the JavaScript row's environment (`env`, JS_ENV) and limits: no exec filter, no RLIMIT_AS, no
+            # RLIMIT_NPROC (PB-1 of step 4 in agentic/specs/261024-agent-all-libraries.md). The page draws the figure
+            # with the package's own bundled JavaScript, read from the installed Python package. The repair reserve
+            # stays 15 s: both steps of 20 renders took 1.6 to 2.4 s of wall time in the renderer image at 2 CPUs,
+            # container start included, and 4.7 to 5.8 s under gVisor's ptrace platform (2026-10-31).
+            return RuntimeCommand(
+                language,
+                code_file,
+                (NODE_BINARY, JS_HARNESS, f"--library={library}"),
+                env=JS_ENV,
+                toolchain=(NODE_BINARY,),
+                render_p95_s=15.0,
+                figure=library,
             )
         # altair renders in vl-convert's embedded V8, which reserves address space the way the JavaScript
         # row's Chromium does: under RLIMIT_AS up to 64 GiB it aborts at start ("Check failed: Start()",
