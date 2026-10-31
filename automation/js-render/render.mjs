@@ -1053,6 +1053,27 @@ const BOKEH_UNSAFE_MODELS = new Set([
   "AjaxDataSource", "ServerSentDataSource", "WebDataSource", "MathML", "MathMLGlyph", "Menu", "MenuItem",
   "ActionItem", "CheckableItem", "Tooltip", "Pane", "Panel", "Drawer", "Examiner",
 ]);
+// The models a bokeh figure may hold at all: every name the figure JSON of an
+// eligible catalogue file holds, nested models included (97 names, collected
+// from all 252 eligible files in both themes on 2026-10-31; Fable's second
+// review of PB-2a). Any other model fails as `figure UnsafeMarkup` after the
+// denylist above has named the ones known to run, insert or load something.
+// tests/unit/automation/bokeh_catalogue_models.json holds the names with the
+// files that use them, and a test keeps this set a superset of it.
+const BOKEH_CATALOGUE_MODELS = new Set([
+  "AdaptiveTicker", "AllIndices", "AllLabels", "AnnularWedge", "Arc", "AreaVisuals", "Arrow", "Band",
+  "BasicTickFormatter", "BasicTicker", "Bezier", "BoxAnnotation", "BoxInteractionHandles", "BoxZoomTool", "CDSView",
+  "CategoricalAxis", "CategoricalColorMapper", "CategoricalScale", "CategoricalTickFormatter", "CategoricalTicker",
+  "Circle", "ColorBar", "Column", "ColumnDataSource", "ContourColorBar", "ContourRenderer", "CrosshairTool",
+  "CumSum", "DataRange1d", "DatetimeAxis", "DatetimeTickFormatter", "DatetimeTicker", "DaysTicker", "DocumentConfig",
+  "Ellipse", "FactorRange", "Figure", "FixedTicker", "GlyphRenderer", "Grid", "GridPlot", "HBar", "HelpTool",
+  "HexTile", "HoverTool", "Image", "ImageRGBA", "Label", "LabelSet", "Legend", "LegendItem", "Line", "LinearAxis",
+  "LinearColorMapper", "LinearScale", "LogAxis", "LogScale", "LogTickFormatter", "LogTicker", "MonthsTicker",
+  "MultiLine", "MultiPolygons", "NoOverlap", "Node", "NormalHead", "Notifications", "NumeralTickFormatter",
+  "PanTool", "Patch", "Patches", "PrintfTickFormatter", "Quad", "Range1d", "Rect", "ResetTool", "Row", "SaveTool",
+  "Scatter", "Segment", "Selection", "Spacer", "Span", "Stack", "Step", "TapTool", "TeeHead", "Text", "Title",
+  "Toolbar", "UnionRenderers", "VArea", "VBar", "VeeHead", "Wedge", "WheelZoomTool", "Whisker", "YearsTicker",
+]);
 const BOKEH_TEMPLATE_TAGS = new Set([
   "div", "span", "p", "br", "hr", "b", "strong", "i", "em", "u", "s", "small", "sub", "sup", "code", "pre",
   "table", "thead", "tbody", "tr", "th", "td", "ul", "ol", "li", "h1", "h2", "h3", "h4", "h5", "h6",
@@ -1064,10 +1085,10 @@ const TEMPLATE_TAG = /<(\/?)([A-Za-z][A-Za-z0-9]*)((?:\s+[A-Za-z][A-Za-z-]*\s*=\
 const TEMPLATE_ATTRIBUTE = /([A-Za-z][A-Za-z-]*)\s*=\s*(?:"([^"<>]*)"|'([^'<>]*)')/g;
 const UNSAFE_TEMPLATE_VALUE = /url\s*\(|image-set\s*\(|expression\s*\(|javascript:|[&\\@$]/i;
 const MATHJAX_HTML = /\\(?:href|style|class|cssId|data)(?![A-Za-z])/;
-// plotly: a link (`<a href>`) anywhere plotly.js reads markup (titles,
-// annotations, hover and text templates, data) to anything but an http or
-// https URL, entities decoded; a style that loads or escapes; an image
-// `source` other than a data: image; a `geojson` URL.
+// plotly: a link (`<a>`, an `href`) anywhere plotly.js reads markup (titles,
+// annotations, hover and text templates, data); a style that loads or escapes,
+// entities decoded; an image `source` other than a data: image; a `geojson`
+// URL.
 const PLOTLY_TAG = /<([A-Za-z]+)\b([^<>]*)>/g;
 const PLOTLY_ATTRIBUTE = /([A-Za-z:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/g;
 const CSS_LOAD = /url\s*\(|image-set\s*\(|expression\s*\(|@import|\\/i;
@@ -1133,12 +1154,16 @@ function bokehMarkupProblem(figure) {
     if (!isRecord(value)) continue;
     if (value.type === "object" && typeof value.name === "string") {
       const { name } = value;
+      const article = /^[AEIOU]/.test(name) ? "an" : "a";
       if (BOKEH_UNSAFE_MODELS.has(name) || name.startsWith("CustomJS") || name.startsWith("bokeh.models.dom.")) {
-        return `a ${name} model`;
+        return `${article} ${name} model, which runs JavaScript, inserts HTML or CSS, or loads a URL`;
+      }
+      if (!BOKEH_CATALOGUE_MODELS.has(name)) {
+        return `${article} ${name} model, which no catalogue plot uses (draw with the catalogue's glyphs, annotations and tools instead)`;
       }
       const attributes = isRecord(value.attributes) ? value.attributes : {};
       for (const key of ["js_event_callbacks", "js_property_callbacks"]) {
-        if (isFilled(attributes[key])) return `${name}.${key}`;
+        if (isFilled(attributes[key])) return `JavaScript callbacks in ${name}.${key}`;
       }
       for (const key of ["styles", "stylesheets"]) {
         if (cssLoads(attributes[key])) return `CSS that loads a URL or escapes in ${name}.${key}`;
@@ -1161,12 +1186,13 @@ function bokehMarkupProblem(figure) {
 function plotlyTextProblem(text) {
   if (!text.includes("<")) return null;
   for (const tag of text.matchAll(PLOTLY_TAG)) {
+    // No link at all: no eligible catalogue file writes one, and the exported
+    // page would follow it wherever the code pointed it (Fable's second review).
+    if (tag[1].toLowerCase() === "a") return "a link (<a>), which the exported page would follow";
     for (const attribute of tag[2].matchAll(PLOTLY_ATTRIBUTE)) {
       const name = attribute[1].toLowerCase();
       const value = decodeEntities(attribute[2] ?? attribute[3] ?? attribute[4] ?? "");
-      if ((name === "href" || name.endsWith(":href")) && !/^https?:\/\//i.test(value.replace(/[\x00-\x20]+/g, ""))) {
-        return "a link to something other than an http or https URL";
-      }
+      if (name === "href" || name.endsWith(":href")) return "a link (an href attribute), which the exported page would follow";
       if (name === "style" && CSS_LOAD.test(value)) return "a style that loads a URL or escapes";
     }
   }
@@ -1478,7 +1504,7 @@ async function renderFigure(args) {
   }
   const { figure, text } = await readFigure(args.figure, library);
   const unsafe = figureMarkupProblem(library, figure);
-  if (unsafe !== null) throw failure(`render: the figure holds ${unsafe}, which the page would run, load or link`, "figure", "UnsafeMarkup");
+  if (unsafe !== null) throw failure(`render: the figure holds ${unsafe}`, "figure", "UnsafeMarkup");
   const webgl = plotlyWebglTypes(library, figure);
   if (webgl.length > 0) throw failure(`render: ${webgl.join(", ")} draws with WebGL, which the renderer does not draw yet`, "draw", "NoWebGL");
   let size = figureSize(library, figure);

@@ -296,10 +296,12 @@ Decisions this module takes where the design leaves room:
   MathJax's `\\href`, `\\style`, `\\class`, `\\cssId` or `\\data` is refused. These rules are the
   adapter's early answer, not the barrier: `chr(60)` builds a `<` no literal shows, so the
   renderer reads the figure the plot wrote before the page draws it and refuses what it
-  would run, load or link (`render.mjs`, `figure UnsafeMarkup`; the review of PB-2a), and
-  the export, the same code on the same data, never carries what the render refused. Both
-  are drawn in a browser page that admits scripts by its nonce alone and aborts every
-  request (PB-1); the exported HTML has no such policy.
+  would run, load or link, and any bokeh model no catalogue plot uses (`render.mjs`,
+  `figure UnsafeMarkup`; the reviews of PB-2a), and the export, the same code on the same
+  data, never carries what the render refused. A plotly string holds no link (`<a>`, an
+  `href`; `url-literal`), an https one included: the exported page would follow it, and no
+  eligible catalogue file writes one. Both are drawn in a browser page that admits scripts
+  by its nonce alone and aborts every request (PB-1); the exported HTML has no such policy.
 * **The figure save** (plotly and bokeh, `code/figure.py`). Both save through one pinned
   statement that writes `f"plot-{THEME}.json"`, `fig.update_layout(width=W, height=H)
   .write_json(...)` or `with open(..., "w", encoding="utf-8") as figure_file:
@@ -1464,6 +1466,13 @@ LIBRARY_BANS: dict[str, frozenset[str]] = {
             "Styles",
             "stylesheets",
             "styles",
+            # UI elements with content of their own, which no catalogue plot uses; the renderer refuses every model
+            # outside the catalogue's (`render.mjs`, BOKEH_CATALOGUE_MODELS), so the profile names these as well.
+            "Tooltip",
+            "Pane",
+            "Panel",
+            "Drawer",
+            "Examiner",
             # MathML, whose elements MathJax gives an `href`; TeX's `\href` and `\style` are refused in strings.
             "MathML",
             "MathMLGlyph",
@@ -1565,6 +1574,8 @@ MAX_TEMPLATE_DEPTH = 8
 _BOKEH_SAFE = re.compile(r"\{\s*safe\s*\}")
 """BokehJS's `{safe}` format, which inserts a field's value as HTML instead of escaping it."""
 _MATHJAX_HTML = re.compile(r"\\(?:href|style|class|cssId|data)(?![A-Za-z])")
+_LINK_IN_TEXT = re.compile(r"(?i)<a(?=[\s>/])|\bhref\s*=")
+"""A link in a plotly text (`<a ...>`, an `href`), which plotly.js draws as a link the exported page follows."""
 """MathJax's HTML commands, which bokeh's MathJax bundle loads (`HtmlConfiguration`): a TeX label could link
 anywhere (`\\href{javascript:...}`) or load CSS."""
 _PATH_INDEX = re.compile(r"\[\d+\]")
@@ -2253,6 +2264,8 @@ class _Scan:
             self._check_bokeh_unpacking()
         if library in URL_CONTEXTS:
             self._check_url_contexts()
+        if library == "plotly":
+            self._check_plotly_links()
         self._check_strings()
         self._check_save(rule)
         self._check_save_names()
@@ -3259,6 +3272,26 @@ class _Scan:
             problem = _template_problem(text)
             if problem is not None:
                 self.add("banned-keyword", problem, node)
+
+    def _check_plotly_links(self) -> None:
+        """No plotly string or f-string holds a link (`<a ...>`, an `href`): plotly.js draws one in any text it reads
+        as markup, and the exported page follows it wherever the code pointed it; no eligible catalogue file writes one
+        (Fable's second review of PB-2a). A courtesy like `_check_bokeh_markup`: the renderer refuses a link the code
+        builds at run time (`render.mjs`, `figure UnsafeMarkup`)."""
+        nodes: list[ast.Constant | ast.JoinedStr] = [*self.of(ast.Constant), *self.of(ast.JoinedStr)]
+        for node in nodes:
+            if isinstance(self.parents.get(node), ast.JoinedStr | ast.FormattedValue):
+                continue  # a piece of an f-string, which is read whole
+            if isinstance(node, ast.JoinedStr):
+                text = "".join(str(part.value) if isinstance(part, ast.Constant) else "x" for part in node.values)
+            elif isinstance(node.value, str):
+                text = node.value
+            else:
+                continue
+            if _LINK_IN_TEXT.search(text):
+                self.add(
+                    "url-literal", "a link in a text, which the exported page would follow: write plain text", node
+                )
 
     def _check_bokeh_unpacking(self) -> None:
         """A `**` argument in bokeh is a dict literal with string keys, or a name bound once at module level to one

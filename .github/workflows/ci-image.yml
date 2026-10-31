@@ -1362,6 +1362,65 @@ jobs:
           print('OK: plotly and bokeh are in the image, their export stacks are not')
           "
 
+      # The image's own harness refuses a figure that holds what a browser would run or follow, built at run
+      # time where no validator rule reads it (`chr(60)`): the markup check in render.mjs, which the toolchain
+      # image copies, is the barrier for the exported HTML (the review of PB-2a). Same row and flags as above.
+      - name: A plotly and a bokeh figure with markup fail as figure UnsafeMarkup
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mapfile -t ROW_FLAGS < work-figure/row.flags
+          mkdir -p work-unsafe/plotly work-unsafe/bokeh
+          cat > work-unsafe/plotly/plot.py <<'EOF'
+          import os
+
+          import plotly.graph_objects as go
+
+          THEME = os.getenv("ANYPLOT_THEME", "light")
+          link = chr(60) + 'a href="javascript:alert(1)">%{y}' + chr(60) + "/a>"
+          fig = go.Figure(go.Bar(x=["a", "b"], y=[1, 2], hovertemplate=link))
+          fig.update_layout(width=800, height=450)
+          fig.write_json(f"plot-{THEME}.json")
+          EOF
+          cat > work-unsafe/bokeh/plot.py <<'EOF'
+          import json
+          import os
+
+          from bokeh.embed import json_item
+          from bokeh.models import Div
+          from bokeh.plotting import figure
+
+          THEME = os.getenv("ANYPLOT_THEME", "light")
+          p = figure(width=4800, height=2700, toolbar_location=None)
+          p.line([1, 2], [3, 4])
+          p.tags = [Div(text=chr(60) + "img src=x onerror=alert(1)>")]
+          with open(f"plot-{THEME}.json", "w", encoding="utf-8") as handle:
+              json.dump(json_item(p), handle)
+          EOF
+          for library in plotly bokeh; do
+            mapfile -t ROW_ARGV < "work-figure/$library.argv"
+            printf 'x\n1\n' > "work-unsafe/$library/data.csv"
+            status=0
+            docker run --rm --network none --read-only --tmpfs /tmp \
+              --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+              -v "$PWD/work-unsafe/$library:/work" -w /work \
+              -e ANYPLOT_THEME=light -e MPLBACKEND=Agg -e MPLCONFIGDIR=/tmp/mpl -e ANYPLOT_MPL_SEED=/opt/mplconfig \
+              "${ROW_FLAGS[@]}" \
+              -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+              -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_RLIMIT_AS_MB=1024 \
+              -e ANYPLOT_DENY_EXEC=required \
+              anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py \
+              "${ROW_ARGV[@]}" \
+              > "work-unsafe/$library/harness.out" 2> "work-unsafe/$library/harness.err" || status=$?
+            last=$(grep -v '^[[:space:]]*$' "work-unsafe/$library/harness.err" | tail -n 1 || true)
+            if [[ "$status" -eq 0 || "$last" != "render: error: figure UnsafeMarkup "* || -e "work-unsafe/$library/plot-light.png" ]]; then
+              echo "::error::the $library figure with markup was not refused as figure UnsafeMarkup (exit $status)"
+              cat "work-unsafe/$library/harness.out" "work-unsafe/$library/harness.err"
+              exit 1
+            fi
+            echo "OK: $library refused: $last"
+          done
+
       # The downloadable plot.html of a JavaScript plot (JS-4b, step 3g of
       # agentic/specs/261024-agent-all-libraries.md): the row builds the page with
       # ANYPLOT_PAGE_ONLY=1 and starts no browser; the agents' wrapper (agents/anyplot/render/page.py,

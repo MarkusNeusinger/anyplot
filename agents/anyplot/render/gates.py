@@ -229,8 +229,9 @@ FIGURE_KIND_TEXTS: dict[tuple[str, str | None], str] = {
     ("figure", "NoFigure"): "the plot wrote no figure: keep the final save statement, and let the code reach it",
     ("figure", "FigureTooLarge"): "a figure over 16 MiB: draw fewer points, or aggregate them",
     ("figure", "UnsafeMarkup"): (
-        "the figure holds what a browser would run, load or link (a JavaScript, HTML or CSS model, a tooltip with"
-        " more than text tags, a link or image that is no http URL): write plain text and @column fields"
+        "the figure holds what a browser would run, load or link, or a bokeh model no catalogue plot uses (a"
+        " JavaScript, HTML or CSS model, a widget, a tooltip with more than text tags, a link, an image URL): draw"
+        " with the catalogue's glyphs, annotations and tools, and write plain text and @column fields"
     ),
     ("figure", None): "a figure the page cannot take (a size outside 320 to 6400 pixels a side, or no figure)",
     ("crash", None): "the plot crashed (out of memory, most likely)",

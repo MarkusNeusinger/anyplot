@@ -2663,17 +2663,32 @@ PB-1's figure mode: all 15 catalogue libraries are served. The interactive `plot
   CSS that loads a URL or escapes in `styles` or `stylesheets` (a layout's `background=`
   colour passes), MathJax's HTML commands in any string, and each
   `HoverTool`'s tooltips against the validator's template rule (`templateProblem`, the
-  same tags, attributes and `{safe}` as `_template_problem`). plotly: a link in any string
-  plotly.js reads as markup to anything but an `http` or `https` URL, entities decoded, a
-  `style` that loads a URL or escapes, an image `source` that is not a `data:` image (in
-  `images`, in a flat update key), and a `geojson` string. It lives in `render.mjs`, not in
-  the Python harness, because the page already parses the figure there and the final
-  error line is the figure mode's own; the gate's text for it is in
-  `FIGURE_KIND_TEXTS`. It guards the export because the export is the same code on the
-  same data: a figure refused here is never a version the user downloads. plotly.js 4.1.1
-  drops a `javascript:` link itself, entity-encoded too (measured in Chromium on
-  2026-10-31; a relative link it keeps), and the check refuses both before plotly.js
-  sees them.
+  same tags, attributes and `{safe}` as `_template_problem`). After Fable's second review
+  the denylist sits on an allowlist: a bokeh model outside `BOKEH_CATALOGUE_MODELS`, the 97
+  names the figure JSON of the 252 eligible catalogue files holds in both themes, nested
+  models included, is refused too ("a Slope model, which no catalogue plot uses"), and the
+  validator bans `Tooltip`, `Pane`, `Panel`, `Drawer` and `Examiner` by name, so both
+  layers agree (0 catalogue files affected). `tests/unit/automation/bokeh_catalogue_models.json`
+  holds the names with the files that use them; a test keeps the set equal to it, and an
+  opt-in test (`ANYPLOT_CATALOGUE_MODELS=1`, about 8 CPU minutes, 35 s on 32 CPUs)
+  recollects it from the catalogue after a bokeh regeneration. plotly: no link at all, an
+  `<a>` tag or an `href` in any string plotly.js reads as markup, an `https` one included
+  (no eligible catalogue file writes one; the exported page would follow it), a `style`
+  that loads a URL or escapes, entities decoded, an image `source` that is not a `data:`
+  image (in `images`, in a flat update key), and a `geojson` string; the validator refuses
+  a link in a plotly string as a `url-literal`. It lives in `render.mjs`, not in the Python
+  harness, because the page already parses the figure there and the final error line is
+  the figure mode's own; the gate's text for it is in `FIGURE_KIND_TEXTS`. It guards the
+  export because the export is the same code on the same data: a figure refused here is
+  never a version the user downloads. plotly.js 4.1.1 drops a `javascript:` link itself,
+  entity-encoded too (measured in Chromium on 2026-10-31; a relative link it keeps). The
+  toolchain image copies `render.mjs` (`toolchain.Dockerfile`), whose hash covers
+  `automation/js-render`, so a change rebuilds the toolchain in CI and on deploy; the
+  `deploy-renderer` trigger includes `automation/js-render/**` (read on 2026-10-31). The
+  image CI job builds from the PR's tree and asserts that a plotly link and a bokeh `Div`,
+  both built with `chr(60)`, fail as `figure UnsafeMarkup` through the image's own
+  harness, and the figure image test runs the same cases with and without the checkout's
+  `render.mjs` mounted, so a stale local image fails it.
 - **Prompt.** plotly and bokeh read a section of their own right after the Python adapter
   prompt (`prompts/adapter_plotly.md`, `adapter_bokeh.md`, `policy.LIBRARY_PROMPTS`), which
   replaces the matplotlib conventions for them; the Python prompt's pinned SHA-256 and every
@@ -2723,8 +2738,9 @@ tooltip templates the catalogue writes pass: chord-basic, heatmap-correlation an
 tree-decision, blocked by the first draft's string ban, are eligible and render on target
 in both themes.
 
-**The catalogue sweep** (2026-10-31, rerun with the markup check; `anyplot-renderer:figure`,
-built from this branch on `pb1-toolchain:dev`; every catalogue file normalised and
+**The catalogue sweep** (2026-10-31, rerun with the markup check and the model allowlist;
+`anyplot-renderer:figure`, rebuilt from this branch's toolchain and renderer Dockerfiles,
+its own `render.mjs` the checkout's byte for byte; every catalogue file normalised and
 rendered through the local Docker backend's figure mode in both themes, ten jobs at a time
 on 32 CPUs, the checkout's harnesses mounted):
 
@@ -2732,10 +2748,10 @@ on 32 CPUs, the checkout's harnesses mounted):
 |---|---|---|
 | Eligible files that render on target in both themes | 254 of 273 (93.0 %) | 245 of 252 (97.2 %) |
 | Failures among them | 19, all `ZeroDivisionError`: the code divides by the length of the emptied catalogue title | 7, the same |
-| Markup check (`figure UnsafeMarkup`) | no file | no eligible file; 20 blocked files (9 `CustomJS...` models, 8 tile renderers, 2 `Div`, 1 `js_event_callbacks`). A layout's `background=` colour, which bokeh writes into `styles`, passes (subplot-mosaic, ecg-twelve-lead; the first draft of the check refused any `styles`) |
-| Canvas | 452 PNGs 3200 x 1800, 96 2400 x 2400, no other size | 446 and 106 |
-| Wall time per theme, container start included, under the sweep's load | p50 3.8 s, p95 5.2 s, max 11.9 s | p50 3.4 s, p95 5.0 s, max 7.8 s |
-| Blocked files | 20 of 52 render; 15 fail `draw NoWebGL` (exactly the 15 with a `webgl` reason), 7 `page Error` (map specs: no topojson offline), 7 `RuntimeError` (the files the normaliser leaves on `write_image`, whose kaleido the image does not install), 3 others | 31 of 73 render; 20 `figure UnsafeMarkup`, 14 `NameError` (no `THEME`), 5 `ModuleNotFoundError` (Selenium), 1 timeout, 2 others |
+| Markup check (`figure UnsafeMarkup`) | no file | no eligible file; 22 blocked files: 8 map specs with a `MercatorAxis` (and tiles), 9 `CustomJS...` models, 2 `Div`, 1 `js_event_callbacks`, and 2 models outside the allowlist in files blocked for `.format` (donut-nested's `Annulus`, heatmap-rainflow's `LogColorMapper`). A layout's `background=` colour, which bokeh writes into `styles`, passes (subplot-mosaic, ecg-twelve-lead; the first draft of the check refused any `styles`) |
+| Canvas | 452 PNGs 3200 x 1800, 96 2400 x 2400, no other size | 446 and 102 |
+| Wall time per theme, container start included, under the sweep's load | p50 3.6 s, p95 5.1 s, max 11.4 s | p50 3.4 s, p95 5.2 s, max 16.8 s |
+| Blocked files | 20 of 52 render; 15 fail `draw NoWebGL` (exactly the 15 with a `webgl` reason), 7 `page Error` (map specs: no topojson offline), 7 `RuntimeError` (the files the normaliser leaves on `write_image`, whose kaleido the image does not install), 3 others | 29 of 73 render; 22 `figure UnsafeMarkup`, 14 `NameError` (no `THEME`), 5 `ModuleNotFoundError` (Selenium), 1 timeout, 2 others |
 
 **End to end without a model** (2026-10-31, the same image through the local Docker
 backend): 60 pasted rows, semicolon-separated with decimal commas, with a text group, two
@@ -2758,6 +2774,7 @@ ends on the normal save.
 | Not in the text | no private names in either profile; a string at a URL keyword refused whatever its scheme; `//host` refused by every profile's URL rule | owner decisions of 2026-10-31 on the survey's open questions; no served library's catalogue outcome changed (0 of 4,213 files) |
 | Not in the text | plotly's geo and map traces and bokeh's tiles refused in the run form | they load from the network, which the sandbox does not have; the exported `plot.py` keeps the catalogue's save, nothing else |
 | Not in the text | the renderer checks the figure JSON for markup before the page draws it (`figure UnsafeMarkup`); bokeh's `**` only of literal options | Fable's review measured tooltips built at run time running script on hover in the exported HTML; the static rules cannot see a `<` that `chr(60)` builds, the figure holds it |
+| Not in the text | bokeh models only from the catalogue's 97 (an allowlist under the denylist); no link at all in plotly text | Fable's second review: a denylist misses what nobody listed, and an https link still sends the user's click wherever the code pointed it; no eligible catalogue file loses anything |
 
 Found for later (not decided here):
 
@@ -2774,6 +2791,11 @@ Found for later (not decided here):
   `ANYPLOT_PAGE_ONLY` with `--figure`; the export's HTML save is the library's own and
   carries no script policy, which the markup check guards. PB-2b's interactive page
   should run the same check on the figure it embeds.
+- **bokeh models outside the catalogue's 97** (`Slope`, `HArea`, `PolyAnnotation`, a
+  widget) fail the render even where they are harmless; the adapter reads the gate's text
+  and draws with the catalogue's glyphs instead. The eval matrix will show how often that
+  costs a case; a model goes on the list when a catalogue regeneration or a measured need
+  brings it, with the snapshot.
 - **The markup check assumes the export is the render**: the same code on the same data
   writes the same figure. Code that draws differently from run to run (an unseeded
   generator, the clock) could pass the render and export something else; the validator's

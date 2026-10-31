@@ -100,7 +100,20 @@ PLOTLY_ROUTES = [
         id="a flat key in an update's args",
     ),
     pytest.param("fig0 = go.Figure()\nfig0.layout.images[0].source = 'x.png'\n", "url-literal", id="a store"),
+    # Fable's second review: no link in any plotly text, an https one included.
+    pytest.param(
+        "t = go.Scatter(x=[1], y=[1], hovertemplate='<a href=\"https://example.org\">%{y}</a>')\n",
+        "url-literal",
+        id="an https link in a hovertemplate",
+    ),
+    pytest.param("u = f\"<a href='{THEME}.html'>x</a>\"\n", "url-literal", id="a link in an f-string"),
+    pytest.param("u = '<span xlink:href=\"x\">x</span>'\n", "url-literal", id="an href elsewhere"),
 ]
+
+
+def test_plotly_markup_without_a_link_passes() -> None:
+    body = "t = go.Scatter(x=[1], y=[1], hovertemplate='<b>%{y}</b><br><i>a</i><extra></extra>')\n"
+    assert validate_security(plotly_plot(body), library="plotly") == []
 
 
 @pytest.mark.parametrize(
@@ -224,6 +237,12 @@ BOKEH_ROUTES = [
         "banned-keyword",
         id="MathJax href",
     ),
+    # Fable's second review: the UI elements the renderer refuses are refused by name here too.
+    pytest.param("from bokeh.models import Tooltip\n", "banned-attribute", id="Tooltip"),
+    pytest.param("from bokeh.models import Pane\n", "banned-attribute", id="Pane"),
+    pytest.param("from bokeh.models import Panel\n", "banned-attribute", id="Panel"),
+    pytest.param("from bokeh.models import Drawer\n", "banned-attribute", id="Drawer"),
+    pytest.param("from bokeh.models import Examiner\n", "banned-attribute", id="Examiner"),
 ]
 
 

@@ -18,10 +18,11 @@
   parses a template and each tooltip value as HTML.
 - **The renderer checks a plotly or bokeh figure for markup before it draws
   it.** A figure that holds what a browser would run, load or link (a bokeh
-  JavaScript, HTML or CSS model, a tooltip outside the template rule, a plotly
-  link to anything but an http URL, an image URL) fails as `figure
-  UnsafeMarkup`, whatever code built it, so the downloaded code never writes
-  it into the user's HTML.
+  JavaScript, HTML or CSS model or any model no catalogue plot uses, a tooltip
+  outside the template rule, a link in plotly text, an image URL) fails as
+  `figure UnsafeMarkup`, whatever code built it, so the downloaded code never
+  writes it into the user's HTML. The renderer image's CI asserts the refusal
+  through the image's own harness.
 - **The figure save and the exported code.** The normaliser turns the
   catalogue's save block into one protected statement that writes the figure as
   JSON (plotly's size moved into the figure; bokeh's Selenium screenshot block

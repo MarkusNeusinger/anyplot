@@ -4,12 +4,14 @@ Skipped unless Docker is available and the image is present (`ANYPLOT_FIGURE_IMA
 `anyplot-renderer:figure`, a local tag of a renderer image with PB-1's figure mode). Each render goes through the local
 Docker backend exactly as a development session's does: the library's runtime command (the harness in figure mode, then
 the JavaScript row's harness) and environment, the checkout's `harness.py` and `render.mjs` mounted over the image's, no
-network, a read-only root, the run form from the Python loader and `data.csv` next to it.
+network, a read-only root, the run form from the Python loader and `data.csv` next to it. The markup cases also run the
+image's own `render.mjs`, so they need an image built from this tree.
 """
 
 import asyncio
 import functools
 import os
+import secrets
 import shutil
 import struct
 import subprocess
@@ -17,6 +19,7 @@ import subprocess
 import pytest
 
 from agents.anyplot.code.loader import to_run_form
+from agents.anyplot.render.backends import local as local_backend
 from agents.anyplot.render.backends.local import LocalDockerBackend
 from agents.anyplot.render.contract import RenderJob
 from agents.anyplot.render.runtimes import PythonRuntime, runtime_for
@@ -69,7 +72,7 @@ def render(library: str, source: str) -> dict[str, tuple[int | None, bytes | Non
         image=IMAGE, runtime=PythonRuntime(), environment="development", runtime_for=runtime_for
     )
     job = RenderJob(
-        job_id=f"pb2-{library}",
+        job_id=f"pb2-{library}-{secrets.token_hex(4)}",  # unique: parallel tests start containers named by it
         language="python",
         library=library,
         source=source,
@@ -104,3 +107,63 @@ def test_a_webgl_trace_fails_as_no_webgl() -> None:
     for theme, (code, png, tail) in render("plotly", source).items():
         assert code != 0 and png is None, theme
         assert runtime_for("plotly").error_summary(tail).startswith("a WebGL trace"), tail[-500:]
+
+
+UNSAFE_FIGURES = {
+    "bokeh-tooltip-in-tags": (
+        "bokeh",
+        "import json\nimport os\n\nfrom bokeh.embed import json_item\nfrom bokeh.models import Tooltip\n"
+        "from bokeh.plotting import figure\n\n"
+        'THEME = os.getenv("ANYPLOT_THEME", "light")\n'
+        "p = figure(width=4800, height=2700, toolbar_location=None)\np.line([1, 2], [3, 4])\n"
+        'p.tags = [Tooltip(content="x")]\n'
+        'with open(f"plot-{THEME}.json", "w", encoding="utf-8") as figure_file:\n'
+        "    json.dump(json_item(p), figure_file)\n",
+    ),
+    "bokeh-div-built-at-run-time": (
+        "bokeh",
+        "import json\nimport os\n\nfrom bokeh.embed import json_item\nfrom bokeh.models import Div\n"
+        "from bokeh.plotting import figure\n\n"
+        'THEME = os.getenv("ANYPLOT_THEME", "light")\n'
+        "p = figure(width=4800, height=2700, toolbar_location=None)\np.line([1, 2], [3, 4])\n"
+        'p.tags = [Div(text=chr(60) + "img src=x onerror=alert(1)>")]\n'
+        'with open(f"plot-{THEME}.json", "w", encoding="utf-8") as figure_file:\n'
+        "    json.dump(json_item(p), figure_file)\n",
+    ),
+    "plotly-link-in-a-hovertemplate": (
+        "plotly",
+        "import os\n\nimport plotly.graph_objects as go\n\n"
+        'THEME = os.getenv("ANYPLOT_THEME", "light")\n'
+        "link = chr(60) + 'a href=\"javascript:alert(1)\">%{y}' + chr(60) + '/a>'\n"
+        'fig = go.Figure(go.Bar(x=["a", "b"], y=[1, 2], hovertemplate=link))\n'
+        'fig.update_layout(width=800, height=450).write_json(f"plot-{THEME}.json")\n',
+    ),
+    "plotly-link-in-a-colour-bar-title": (
+        "plotly",
+        "import os\n\nimport plotly.graph_objects as go\n\n"
+        'THEME = os.getenv("ANYPLOT_THEME", "light")\n'
+        "title = chr(60) + 'a href=\"javascript:alert(1)\">t' + chr(60) + '/a>'\n"
+        "fig = go.Figure(go.Scatter(x=[1, 2], y=[1, 2], mode='markers',\n"
+        "    marker={'color': [1, 2], 'colorbar': {'title': {'text': title}}}))\n"
+        'fig.update_layout(width=800, height=450).write_json(f"plot-{THEME}.json")\n',
+    ),
+}
+
+
+@pytest.mark.parametrize("harness", ["checkout", "image"])
+@pytest.mark.parametrize("case", sorted(UNSAFE_FIGURES))
+def test_markup_built_at_run_time_fails_as_unsafe_markup(
+    case: str, harness: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Fable's reviews of PB-2a: what a browser would run or follow, built where no validator rule reads it
+    (`chr(60)`, a model in a plot's `tags`), fails as `figure UnsafeMarkup` before a page opens. `image` runs the
+    image's own `render.mjs` (the checkout's is not mounted), so a stale image fails here."""
+    if harness == "image":
+        monkeypatch.setattr(local_backend, "JS_HARNESS_SOURCE", local_backend.JS_HARNESS_SOURCE.with_name("absent.mjs"))
+    library, source = UNSAFE_FIGURES[case]
+
+    for theme, (code, png, tail) in render(library, source).items():
+        last = [line for line in tail.splitlines() if line.strip()][-1:]
+        assert code != 0 and png is None, (theme, tail[-500:])
+        assert last and last[0].startswith("render: error: figure UnsafeMarkup "), (theme, tail[-500:])
+        assert runtime_for(library).error_summary(tail).startswith("the figure holds what a browser"), tail[-500:]
