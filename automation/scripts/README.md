@@ -256,6 +256,21 @@ Closes a spec issue once every supported library is `impl:<lib>:done` or
 `:failed`. Shared by `impl-merge.yml` and the kept-regen branch of
 `impl-review.yml`.
 
+### `regen_pick_pairs.py`
+The pick of `daily-regen.yml`'s pair mode (`REGEN_PAIRS_PER_DAY`, or the
+`pairs` input): the N oldest (spec, library) pairs across the catalogue, aged by
+the newer of their metadata `updated` and their last attempt (implementation PR,
+`regen:kept` PR, `impl-generate.yml` run). It skips pairs younger than
+`--min-age-hours`, pairs with an open implementation PR, and every pair of a
+spec whose issue saw activity in that window. PyYAML plus `gh`; a failed listing
+degrades with a warning. The library list comes from the caller.
+
+```bash
+python3 automation/scripts/regen_pick_pairs.py --count 5 --min-age-hours 20 \
+  --repo OWNER/NAME --libraries "altair bokeh ..."
+# writes pairs_json, specs, specs_json and count to $GITHUB_OUTPUT
+```
+
 ### `spec_pr_guard.py`
 Fail-closed file allowlist for the spec PR that the merge job in `spec-create.yml`
 merges: the diff of the PR head against its merge base with `main` may only add or

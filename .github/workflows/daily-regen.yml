@@ -1,8 +1,18 @@
 name: "Scheduled: Regen oldest specs"
-run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.event.inputs.count || '1' }} / ${{ github.event.inputs.model || 'auto' }})"
+run-name: "Scheduled regen (${{ github.event.inputs.specification_id || (github.event.inputs.pairs && format('{0} pairs', github.event.inputs.pairs)) || github.event.inputs.count || '1' }} / ${{ github.event.inputs.model || 'auto' }})"
 
 # Picks the N oldest specs (by most-recent implementation `updated` timestamp)
 # and re-dispatches `bulk-generate.yml` for each. Default N=1 per cron tick.
+#
+# Pair mode (off unless configured): with the repository variable
+# REGEN_PAIRS_PER_DAY set to N >= 1, the scheduled run instead picks the N
+# oldest implementations — single (spec, library) pairs across the catalogue,
+# aged by their own metadata and regeneration attempts —
+# (automation/scripts/regen_pick_pairs.py) and dispatches each pair straight
+# to impl-generate.yml, skipping the spec polish. A manual run opts in with the
+# `pairs` input; the variable never changes a manual run, except the
+# watchdog's cron rescue, which forwards it as `pairs` because it replaces the
+# missed scheduled run. Unset, the schedule runs spec mode exactly as before.
 #
 # Schedule: once per day at 02:17 UTC (04:17 Berlin under CEST, 03:17 under
 # CET — Actions cron is always UTC). Until 2026-09 it ticked every 2 hours
@@ -29,8 +39,9 @@ run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.e
 #
 # Triggers:
 #   - schedule: once daily at 02:17 UTC → auto (Sonnet regenerations, Opus reviews)
-#   - workflow_dispatch: manual, with inputs for spec id, model, count, dry-run
-#     (also used by the watchdog's cron-liveness rescue, with all defaults)
+#   - workflow_dispatch: manual, with inputs for spec id, model, count, dry-run,
+#     pairs (also used by the watchdog's cron-liveness rescue, with all
+#     defaults — plus `pairs` when REGEN_PAIRS_PER_DAY is set)
 
 on:
   schedule:
@@ -63,6 +74,10 @@ on:
         description: "Just print picks, do not trigger bulk-generate"
         type: boolean
         default: false
+      pairs:
+        description: "Pair mode: regen this many of the oldest implementations (spec × library) instead of whole specs, without spec polish (empty = spec mode; ignored when specification_id is set)"
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -77,11 +92,15 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      issues: read   # spec issue updatedAt = last regen attempt per spec
+      issues: read          # spec issue updatedAt = last regen attempt per spec
+      pull-requests: read   # pair mode: implementation PRs = last attempt per pair
+      actions: read         # pair mode: impl-generate runs = last attempt per pair
     outputs:
-      specs: ${{ steps.pick.outputs.specs }}
-      specs_json: ${{ steps.pick.outputs.specs_json }}
-      count: ${{ steps.pick.outputs.count }}
+      mode: ${{ steps.mode.outputs.mode }}
+      specs: ${{ steps.pick.outputs.specs || steps.pick_pairs.outputs.specs }}
+      specs_json: ${{ steps.pick.outputs.specs_json || steps.pick_pairs.outputs.specs_json }}
+      count: ${{ steps.pick.outputs.count || steps.pick_pairs.outputs.count }}
+      pairs_json: ${{ steps.pick_pairs.outputs.pairs_json }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
@@ -93,8 +112,32 @@ jobs:
       - name: Install PyYAML
         run: pip install pyyaml
 
+      # Spec mode unless a pair count is given: the `pairs` input on a manual
+      # run (the watchdog's cron rescue forwards REGEN_PAIRS_PER_DAY there),
+      # the REGEN_PAIRS_PER_DAY variable on the schedule. A spec override
+      # always wins. Anything but a positive integer stops the run instead of
+      # falling back to a whole spec.
+      - name: Resolve regen mode
+        id: mode
+        env:
+          PAIRS: ${{ github.event_name == 'schedule' && vars.REGEN_PAIRS_PER_DAY || inputs.pairs }}
+          SPEC_OVERRIDE: ${{ inputs.specification_id }}
+        run: |
+          if [ -n "$SPEC_OVERRIDE" ] || [ -z "$PAIRS" ]; then
+            echo "mode=spec" >> "$GITHUB_OUTPUT"
+            echo "Regen mode: spec"
+          elif [[ "$PAIRS" =~ ^[1-9][0-9]*$ ]]; then
+            echo "mode=pairs" >> "$GITHUB_OUTPUT"
+            echo "pairs=$PAIRS" >> "$GITHUB_OUTPUT"
+            echo "::notice::Regen mode: pairs (${PAIRS} per run)"
+          else
+            echo "::error::The pair count (REGEN_PAIRS_PER_DAY or the pairs input) must be a positive integer, got '${PAIRS//[^A-Za-z0-9 ._-]/?}'"
+            exit 1
+          fi
+
       - name: Pick oldest spec(s) (or use override)
         id: pick
+        if: steps.mode.outputs.mode == 'spec'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
@@ -235,6 +278,22 @@ jobs:
               f.write(f"count={len(picks)}\n")
           PY
 
+      # Pair mode: the N oldest (spec, library) pairs, with the spec mode's
+      # age rule applied per pair (see the script's docstring). The picks go
+      # to the log and the run summary, also on a dry run.
+      - name: Pick oldest pairs (pair mode)
+        id: pick_pairs
+        if: steps.mode.outputs.mode == 'pairs'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          COUNT: ${{ steps.mode.outputs.pairs }}
+          MIN_AGE_HOURS: ${{ inputs.min_age_hours || '20' }}
+        run: |
+          LIBRARIES=$(python3 -c "from core.constants import SUPPORTED_LIBRARIES; print(' '.join(sorted(SUPPORTED_LIBRARIES)))")
+          python3 automation/scripts/regen_pick_pairs.py --count "$COUNT" --min-age-hours "$MIN_AGE_HOURS" \
+            --repo "$GH_REPO" --libraries "$LIBRARIES"
+
   # ============================================================================
   # Pre-flight: per spec, run autonomous spec polish + cross-library similarity
   # audit, then dispatch bulk-generate with the resulting change_requests.
@@ -248,6 +307,15 @@ jobs:
   # model ("auto" unless a manual run pins one) is passed through to
   # bulk-generate (and from there to impl-generate and repair) unchanged;
   # reviews always run on Opus.
+  #
+  # Pair mode: one matrix entry per spec among the picked pairs. The spec
+  # polish is skipped (a spec rewritten for one library would leave its other
+  # implementations written against the old text), the similarity audit runs
+  # as in spec mode, and each picked pair of the spec is dispatched straight
+  # to impl-generate.yml with bulk-generate's arguments and pacing — not via
+  # bulk-generate.yml, whose single concurrency group keeps at most one
+  # pending run and cancels the older one (see the watchdog's
+  # dispatch_generate).
   # ============================================================================
   preflight-dispatch:
     needs: pick
@@ -268,6 +336,31 @@ jobs:
     # Side-effect steps (polish, dispatch) are individually gated on
     # `!inputs.dry_run` below.
     steps:
+      # Claude credentials: the repository variable CLAUDE_AUTH picks one per
+      # run and each Claude step passes exactly that one, the other input
+      # empty. Unset or `subscription`: CLAUDE_CODE_OAUTH_TOKEN, as before;
+      # `api`: ANTHROPIC_API_KEY. Any other value, or `api` without the key,
+      # stops the job here, never a silent fallback to the subscription.
+      # Identical in every job that runs Claude (tests/unit/workflows/
+      # test_claude_auth.py); docs/workflows/overview.md#claude-credentials.
+      - name: Check Claude credentials
+        env:
+          CLAUDE_AUTH: ${{ vars.CLAUDE_AUTH }}
+          API_KEY_SET: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+        run: |
+          case "${CLAUDE_AUTH,,}" in
+            ''|subscription) echo "Claude credentials: subscription (CLAUDE_CODE_OAUTH_TOKEN)" ;;
+            api)
+              if [ "$API_KEY_SET" != "true" ]; then
+                echo "::error::CLAUDE_AUTH is 'api' but the ANTHROPIC_API_KEY secret is missing; not falling back to the subscription"
+                exit 1
+              fi
+              echo "Claude credentials: api (ANTHROPIC_API_KEY)" ;;
+            *)
+              echo "::error::CLAUDE_AUTH must be unset, 'subscription' or 'api', got '${CLAUDE_AUTH//[^A-Za-z0-9 ._-]/?}'"
+              exit 1 ;;
+          esac
+
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -294,14 +387,16 @@ jobs:
           fi
 
       - name: Spec polish (autonomous, opens PR with auto-merge)
-        if: ${{ steps.gate.outputs.skip_polish == '0' && !inputs.dry_run }}
+        id: polish
+        if: ${{ steps.gate.outputs.skip_polish == '0' && !inputs.dry_run && needs.pick.outputs.mode != 'pairs' }}
         # Optional quality pass: a transient action failure here must not
         # block the main regeneration pipeline. Skip cleanly and continue.
         continue-on-error: true
         timeout-minutes: 15
         uses: anthropics/claude-code-action@db77d4d3c98f3f6380e7cd45ffba2342a3dbde3c  # v1
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ vars.CLAUDE_AUTH == 'api' && secrets.ANTHROPIC_API_KEY || '' }}
+          claude_code_oauth_token: ${{ vars.CLAUDE_AUTH != 'api' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
           claude_args: '--model sonnet --settings ${{ github.workspace }}/.claude/settings.json'
           allowed_bots: '*'
           prompt: |
@@ -310,14 +405,32 @@ jobs:
             Variables for this run:
             - SPEC_ID: ${{ matrix.spec_id }}
 
+      # The session's cost (Claude Code's own estimate at API list price) and
+      # the credential it ran on, for the weekly regen review. Never fatal.
+      - name: Claude cost to the job summary (spec polish)
+        if: ${{ !cancelled() && (steps.polish.outcome == 'success' || steps.polish.outcome == 'failure') }}
+        continue-on-error: true
+        env:
+          EXECUTION_FILE: ${{ steps.polish.outputs.execution_file }}
+          CLAUDE_AUTH_MODE: ${{ vars.CLAUDE_AUTH == 'api' && 'api' || 'subscription' }}
+          CLAUDE_STEP: daily-regen/polish
+        run: |
+          cost=$(jq -r '[.[] | select(.type == "result")] | last | .total_cost_usd // empty' "$EXECUTION_FILE" 2>/dev/null || true)
+          model=$(jq -r '[.[] | select(.type == "system" and .subtype == "init")] | first | .model // empty' "$EXECUTION_FILE" 2>/dev/null || true)
+          line="claude-cost step=${CLAUDE_STEP} auth=${CLAUDE_AUTH_MODE} model=${model:-n/a} total_cost_usd=${cost:-n/a}"
+          echo "$line"
+          echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Cross-library similarity audit
+        id: similarity
         # Read-only audit; if it fails, fall back to empty change_requests
         # rather than aborting the dispatch.
         continue-on-error: true
         timeout-minutes: 15
         uses: anthropics/claude-code-action@db77d4d3c98f3f6380e7cd45ffba2342a3dbde3c  # v1
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ vars.CLAUDE_AUTH == 'api' && secrets.ANTHROPIC_API_KEY || '' }}
+          claude_code_oauth_token: ${{ vars.CLAUDE_AUTH != 'api' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
           claude_args: '--model sonnet --settings ${{ github.workspace }}/.claude/settings.json'
           allowed_bots: '*'
           prompt: |
@@ -325,6 +438,20 @@ jobs:
 
             Variables for this run:
             - SPEC_ID: ${{ matrix.spec_id }}
+
+      - name: Claude cost to the job summary (similarity audit)
+        if: ${{ !cancelled() && (steps.similarity.outcome == 'success' || steps.similarity.outcome == 'failure') }}
+        continue-on-error: true
+        env:
+          EXECUTION_FILE: ${{ steps.similarity.outputs.execution_file }}
+          CLAUDE_AUTH_MODE: ${{ vars.CLAUDE_AUTH == 'api' && 'api' || 'subscription' }}
+          CLAUDE_STEP: daily-regen/similarity
+        run: |
+          cost=$(jq -r '[.[] | select(.type == "result")] | last | .total_cost_usd // empty' "$EXECUTION_FILE" 2>/dev/null || true)
+          model=$(jq -r '[.[] | select(.type == "system" and .subtype == "init")] | first | .model // empty' "$EXECUTION_FILE" 2>/dev/null || true)
+          line="claude-cost step=${CLAUDE_STEP} auth=${CLAUDE_AUTH_MODE} model=${model:-n/a} total_cost_usd=${cost:-n/a}"
+          echo "$line"
+          echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Collect change_requests
         id: collect
@@ -348,7 +475,7 @@ jobs:
           echo "::notice::change_requests for ${{ matrix.spec_id }}: ${flagged} lib(s) flagged — ${CR_COMPACT}"
 
       - name: Dispatch bulk-generate with change_requests
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !inputs.dry_run && needs.pick.outputs.mode != 'pairs' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ matrix.spec_id }}
@@ -366,3 +493,57 @@ jobs:
           # the next matrix entry's dispatch (matrix is serialized via
           # max-parallel: 1, so this is between specs).
           sleep 5
+
+      # Pair mode: bulk-generate's per-pair dispatch for each picked library of
+      # this spec — the issue from specification.yaml, the library's
+      # divergence hint, the regen gate on, three dispatch attempts — with
+      # bulk-generate's default pace (180 s, 120 s for a pinned sonnet or
+      # haiku) before every dispatch but the run's first. impl-generate sets
+      # `impl:<lib>:pending` itself, so this job needs no issue permission.
+      - name: Dispatch impl-generate for each picked pair (pair mode)
+        if: ${{ !inputs.dry_run && needs.pick.outputs.mode == 'pairs' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SPEC_ID: ${{ matrix.spec_id }}
+          MODEL: ${{ inputs.model || 'auto' }}
+          CHANGE_REQUESTS: ${{ steps.collect.outputs.change_requests }}
+          PAIRS_JSON: ${{ needs.pick.outputs.pairs_json }}
+          PACE_SECONDS: ${{ (inputs.model == 'sonnet' || inputs.model == 'haiku') && '120' || '180' }}
+        run: |
+          set -u
+          ISSUE=""
+          if [ -f "plots/${SPEC_ID}/specification.yaml" ]; then
+            ISSUE=$(yq '.issue' "plots/${SPEC_ID}/specification.yaml" 2>/dev/null || echo "")
+            [ "$ISSUE" = "null" ] && ISSUE=""
+          fi
+          FIRST=$(echo "$PAIRS_JSON" | jq -r '.[0] | "\(.spec)/\(.library)"')
+          failed=0
+          for LIBRARY in $(echo "$PAIRS_JSON" | jq -r --arg spec "$SPEC_ID" '.[] | select(.spec == $spec) | .library'); do
+            if [ "${SPEC_ID}/${LIBRARY}" != "$FIRST" ]; then
+              echo "Sleeping ${PACE_SECONDS}s before the next dispatch…"
+              sleep "$PACE_SECONDS"
+            fi
+            HINT=$(echo "$CHANGE_REQUESTS" | jq -r --arg lib "$LIBRARY" '.[$lib] // ""')
+            args=(-f specification_id="${SPEC_ID}" -f library="${LIBRARY}" -f model="${MODEL}"
+                  -f change_request="${HINT}" -f regen_gate=true -f source_ref= -f source_model=)
+            if [ -n "$ISSUE" ]; then
+              args+=(-f issue_number="${ISSUE}")
+            fi
+            echo "::notice::$(date -u +%H:%M:%SZ)  dispatching impl-generate for ${SPEC_ID}/${LIBRARY} (issue: ${ISSUE:-none}, model=${MODEL}, change_request: ${HINT:-none})"
+            dispatched=0
+            for attempt in 1 2 3; do
+              if gh workflow run impl-generate.yml --repo "${{ github.repository }}" "${args[@]}"; then
+                dispatched=1
+                break
+              fi
+              echo "::warning::Dispatch attempt $attempt failed for ${SPEC_ID}/${LIBRARY}, retrying in 10s"
+              sleep 10
+            done
+            if [ "$dispatched" = "0" ]; then
+              echo "::error::Failed to dispatch ${SPEC_ID}/${LIBRARY} after 3 attempts — continuing"
+              failed=$((failed + 1))
+            fi
+          done
+          if [ "$failed" -gt 0 ]; then
+            exit 1
+          fi

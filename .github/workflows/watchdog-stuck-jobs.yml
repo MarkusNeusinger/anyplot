@@ -69,6 +69,10 @@ jobs:
           GH_REPO: ${{ github.repository }}
           STALE_HOURS: ${{ inputs.stale_hours || '4' }}
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          # daily-regen's pair mode: the cron rescue replaces a missed
+          # scheduled run, so it forwards the pair count the schedule would
+          # have used. Empty = spec mode, the dispatch as before.
+          REGEN_PAIRS: ${{ vars.REGEN_PAIRS_PER_DAY }}
         run: |
           set -euo pipefail
           STALE_SEC=$(( STALE_HOURS * 3600 ))
@@ -568,7 +572,7 @@ jobs:
               gap_hm=$(printf '%dh%02dm' $(( gap / 3600 )) $(( (gap % 3600) / 60 )))
               if (( gap > LIVENESS_HOURS * 3600 )); then
                 echo "::warning::daily-regen: no new run on main for ${gap_hm} (> ${LIVENESS_HOURS}h) — schedule starved, re-dispatching"
-                dispatch "daily-regen: cron starved (${gap_hm} silent)" daily-regen.yml || true
+                dispatch "daily-regen: cron starved (${gap_hm} silent)" daily-regen.yml ${REGEN_PAIRS:+-f "pairs=$REGEN_PAIRS"} || true
               else
                 echo "daily-regen liveness: ${ref_label} ${gap_hm} ago — healthy"
               fi

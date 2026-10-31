@@ -98,6 +98,33 @@ jobs:
       pr_number: ${{ steps.pr.outputs.pr_number }}
 
     steps:
+      # Claude credentials: the repository variable CLAUDE_AUTH picks one per
+      # run and each Claude step passes exactly that one, the other input
+      # empty. Unset or `subscription`: CLAUDE_CODE_OAUTH_TOKEN, as before;
+      # `api`: ANTHROPIC_API_KEY. Any other value, or `api` without the key,
+      # stops the job here, never a silent fallback to the subscription.
+      # Identical in every job that runs Claude (tests/unit/workflows/
+      # test_claude_auth.py); docs/workflows/overview.md#claude-credentials.
+      # First step: a stop here precedes "Set final issue number", so "Handle
+      # generation failure" never counts it against the pair's attempts.
+      - name: Check Claude credentials
+        env:
+          CLAUDE_AUTH: ${{ vars.CLAUDE_AUTH }}
+          API_KEY_SET: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+        run: |
+          case "${CLAUDE_AUTH,,}" in
+            ''|subscription) echo "Claude credentials: subscription (CLAUDE_CODE_OAUTH_TOKEN)" ;;
+            api)
+              if [ "$API_KEY_SET" != "true" ]; then
+                echo "::error::CLAUDE_AUTH is 'api' but the ANTHROPIC_API_KEY secret is missing; not falling back to the subscription"
+                exit 1
+              fi
+              echo "Claude credentials: api (ANTHROPIC_API_KEY)" ;;
+            *)
+              echo "::error::CLAUDE_AUTH must be unset, 'subscription' or 'api', got '${CLAUDE_AUTH//[^A-Za-z0-9 ._-]/?}'"
+              exit 1 ;;
+          esac
+
       # ========================================================================
       # Setup: Extract inputs and validate
       # ========================================================================
@@ -651,7 +678,8 @@ jobs:
         timeout-minutes: 60
         uses: anthropics/claude-code-action@db77d4d3c98f3f6380e7cd45ffba2342a3dbde3c  # v1
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ vars.CLAUDE_AUTH == 'api' && secrets.ANTHROPIC_API_KEY || '' }}
+          claude_code_oauth_token: ${{ vars.CLAUDE_AUTH != 'api' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
           claude_args: "--model ${{ steps.inputs.outputs.model }} --settings ${{ github.workspace }}/.claude/settings.json"
           # bulk-generate dispatches us from the github-actions bot; explicitly allow it.
           allowed_bots: '*'
@@ -664,6 +692,23 @@ jobs:
             - EXT: ${{ steps.inputs.outputs.ext }}
             - SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
             - IS_REGENERATION: ${{ steps.existing.outputs.is_regeneration }}
+
+      # The session's cost (Claude Code's own estimate at API list price) and
+      # the credential it ran on, for the weekly regen review. Read right after
+      # the step: the retry writes the same execution file. Never fatal.
+      - name: Claude cost to the job summary
+        if: ${{ !cancelled() && (steps.claude.outcome == 'success' || steps.claude.outcome == 'failure') }}
+        continue-on-error: true
+        env:
+          EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
+          CLAUDE_AUTH_MODE: ${{ vars.CLAUDE_AUTH == 'api' && 'api' || 'subscription' }}
+          CLAUDE_STEP: impl-generate
+        run: |
+          cost=$(jq -r '[.[] | select(.type == "result")] | last | .total_cost_usd // empty' "$EXECUTION_FILE" 2>/dev/null || true)
+          model=$(jq -r '[.[] | select(.type == "system" and .subtype == "init")] | first | .model // empty' "$EXECUTION_FILE" 2>/dev/null || true)
+          line="claude-cost step=${CLAUDE_STEP} auth=${CLAUDE_AUTH_MODE} model=${model:-n/a} total_cost_usd=${cost:-n/a}"
+          echo "$line"
+          echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Retry Claude (on failure)
         if: steps.claude.outcome == 'failure' && steps.inputs.outputs.source_ref == ''
@@ -671,7 +716,8 @@ jobs:
         timeout-minutes: 60
         uses: anthropics/claude-code-action@db77d4d3c98f3f6380e7cd45ffba2342a3dbde3c  # v1
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ vars.CLAUDE_AUTH == 'api' && secrets.ANTHROPIC_API_KEY || '' }}
+          claude_code_oauth_token: ${{ vars.CLAUDE_AUTH != 'api' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
           claude_args: "--model ${{ steps.inputs.outputs.model }} --settings ${{ github.workspace }}/.claude/settings.json"
           # bulk-generate dispatches us from the github-actions bot; explicitly allow it.
           allowed_bots: '*'
@@ -684,6 +730,20 @@ jobs:
             - EXT: ${{ steps.inputs.outputs.ext }}
             - SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
             - IS_REGENERATION: ${{ steps.existing.outputs.is_regeneration }}
+
+      - name: Claude cost to the job summary (retry)
+        if: ${{ !cancelled() && (steps.claude_retry.outcome == 'success' || steps.claude_retry.outcome == 'failure') }}
+        continue-on-error: true
+        env:
+          EXECUTION_FILE: ${{ steps.claude_retry.outputs.execution_file }}
+          CLAUDE_AUTH_MODE: ${{ vars.CLAUDE_AUTH == 'api' && 'api' || 'subscription' }}
+          CLAUDE_STEP: impl-generate/retry
+        run: |
+          cost=$(jq -r '[.[] | select(.type == "result")] | last | .total_cost_usd // empty' "$EXECUTION_FILE" 2>/dev/null || true)
+          model=$(jq -r '[.[] | select(.type == "system" and .subtype == "init")] | first | .model // empty' "$EXECUTION_FILE" 2>/dev/null || true)
+          line="claude-cost step=${CLAUDE_STEP} auth=${CLAUDE_AUTH_MODE} model=${model:-n/a} total_cost_usd=${cost:-n/a}"
+          echo "$line"
+          echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
 
       # ========================================================================
       # Create metadata file (before PR)

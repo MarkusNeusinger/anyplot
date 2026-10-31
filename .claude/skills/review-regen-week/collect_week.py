@@ -52,6 +52,13 @@ BRANCH_RE = re.compile(r"^implementation/(?P<spec>[a-z0-9][a-z0-9-]*)/(?P<lib>[a
 WRITEBACK_BRANCH_RE = re.compile(r"^review-writeback/(?P<spec>[^/]+)/(?P<lib>[^/]+)/(?P<kept>\d+)$")
 RUN_URL_RE = re.compile(r"/actions/runs/(\d+)")
 COST_RE = re.compile(r'"total_cost_usd":\s*([0-9.]+)')
+# The line every Claude step's "Claude cost to the job summary" step prints,
+# with the credential it ran on (vars.CLAUDE_AUTH). A job from before that
+# step carries only Claude Code's own `"total_cost_usd": n` and ran on the
+# subscription.
+COST_LINE_RE = re.compile(
+    r"claude-cost step=\S+ auth=(?P<auth>api|subscription) model=\S+ total_cost_usd=(?P<usd>[0-9.]+)"
+)
 GCS_PUBLIC = "https://storage.googleapis.com/anyplot-images/plots"
 VERDICT_LABELS = ("regen:improved", "regen:kept", "ai-approved", "ai-rejected")
 PIPELINE_WORKFLOWS = (
@@ -62,7 +69,7 @@ PIPELINE_WORKFLOWS = (
     "impl-repair.yml",
     "impl-merge.yml",
 )
-CLAUDE_WORKFLOWS = ("impl-generate.yml", "impl-review.yml", "impl-repair.yml")
+CLAUDE_WORKFLOWS = ("daily-regen.yml", "impl-generate.yml", "impl-review.yml", "impl-repair.yml")
 
 # A keep whose re-score sits this far below the stored score is a render look.
 # Under the same judge (both reviews from one model family) a few points is
@@ -309,7 +316,9 @@ def previously_reported(rows: Sequence[dict[str, Any]]) -> set[int]:
     return {int(r["pr"]) for r in rows if r.get("state") != "OPEN"}
 
 
-def summarize(rows: Sequence[dict[str, Any]], runs: dict[str, Counter], cost: float | None) -> dict[str, Any]:
+def summarize(
+    rows: Sequence[dict[str, Any]], runs: dict[str, Counter], cost: float | None, api_cost: float | None = None
+) -> dict[str, Any]:
     decided = [r for r in rows if r["verdict"]]
     merges = [r for r in decided if r["verdict"] == "merge"]
     keeps = [r for r in decided if r["verdict"] == "keep"]
@@ -337,6 +346,7 @@ def summarize(rows: Sequence[dict[str, Any]], runs: dict[str, Counter], cost: fl
         "identical_vectors": identical_vectors(rows),
         "runs": {wf: dict(counter) for wf, counter in runs.items()},
         "cost_usd": round(cost, 2) if cost is not None else None,
+        "cost_usd_api": round(api_cost, 2) if api_cost is not None else None,
     }
 
 
@@ -364,8 +374,16 @@ METRIC_ROWS: tuple[tuple[str, str, Callable[[dict[str, Any]], Any]], ...] = (
     ("Missing pair artifact", "0", lambda s: s["flags"].get("no_pair_artifact", 0)),
     ("daily-regen runs (success/all)", "7/7", lambda s: _success(s["runs"].get("daily-regen.yml", {}))),
     ("Failed pipeline runs", "few", lambda s: sum(c.get("failure", 0) for c in s["runs"].values())),
-    ("Session cost (USD)", "", lambda s: "not collected" if s["cost_usd"] is None else f"${s['cost_usd']:.0f}"),
+    ("Session cost (USD)", "", lambda s: _cost(s)),
 )
+
+
+def _cost(summary: dict[str, Any]) -> str:
+    """The week's session cost, and the part that ran on API credits when there is one."""
+    if summary["cost_usd"] is None:
+        return "not collected"
+    api = summary.get("cost_usd_api")
+    return f"${summary['cost_usd']:.0f}" + (f" (API ${api:.0f})" if api else "")
 
 
 def _cell(value: Any) -> str:
@@ -544,9 +562,20 @@ def pipeline_runs(since: str) -> dict[str, list[dict[str, Any]]]:
     return runs
 
 
-def session_cost(runs: dict[str, list[dict[str, Any]]]) -> float:
-    """Sum of ``total_cost_usd`` over every job log of the Claude-running workflows."""
-    total = 0.0
+def log_cost(log: str) -> dict[str, float]:
+    """One job log's session cost by credential: the cost lines, else Claude Code's own lines."""
+    lines = COST_LINE_RE.findall(log)
+    if not lines:
+        return {"subscription": sum(float(m) for m in COST_RE.findall(log))}
+    by_auth: dict[str, float] = {}
+    for auth, usd in lines:
+        by_auth[auth] = by_auth.get(auth, 0.0) + float(usd)
+    return by_auth
+
+
+def session_cost(runs: dict[str, list[dict[str, Any]]]) -> dict[str, float]:
+    """``total_cost_usd`` over every job log of the Claude-running workflows, by credential."""
+    total: dict[str, float] = {}
     for workflow in CLAUDE_WORKFLOWS:
         for run in runs.get(workflow, []):
             jobs = _gh_json(["api", f"repos/{{owner}}/{{repo}}/actions/runs/{run['databaseId']}/jobs"]) or {}
@@ -555,7 +584,8 @@ def session_cost(runs: dict[str, list[dict[str, Any]]]) -> float:
                     log = _gh(["api", f"repos/{{owner}}/{{repo}}/actions/jobs/{job['id']}/logs"])
                 except subprocess.CalledProcessError:
                     continue  # an expired or missing log costs nothing to skip
-                total += sum(float(m) for m in COST_RE.findall(log))
+                for auth, usd in log_cost(log).items():
+                    total[auth] = total.get(auth, 0.0) + usd
     return total
 
 
@@ -602,7 +632,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         ]
         for wf, listed in runs.items()
     }
-    summary = summarize(rows, run_counts, session_cost(runs) if args.costs else None)
+    costs = session_cost(runs) if args.costs else None
+    summary = summarize(
+        rows,
+        run_counts,
+        sum(costs.values()) if costs is not None else None,
+        costs.get("api", 0.0) if costs is not None else None,
+    )
     sample, not_opened = render_sample(rows, seed=args.since)
     previous = previous_payload.get("summary")
     payload = {

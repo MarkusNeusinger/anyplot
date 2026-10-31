@@ -278,3 +278,28 @@ def test_previous_summary_with_missing_keys_still_renders(cw, tmp_path):
     text = cw.render_markdown(summary, rows, [], previous={"regen_prs": 3})
     assert "| Regen PRs (specs) |" in text
     json.dumps(summary)  # the summary is what --out stores
+
+
+class TestSessionCost:
+    """A job log's cost: the workflows' `claude-cost` lines, else Claude Code's own lines."""
+
+    # What a job log holds since the cost step: Claude Code's own result line,
+    # the step's script as the runner echoes it, and the line it printed.
+    LOG = """\
+2026-10-31T02:30:00.0Z   "total_cost_usd": 0.2931,
+2026-10-31T02:30:01.0Z line="claude-cost step=${CLAUDE_STEP} auth=${CLAUDE_AUTH_MODE} model=${model:-n/a} total_cost_usd=${cost:-n/a}"
+2026-10-31T02:30:01.1Z claude-cost step=impl-generate auth=api model=claude-sonnet-5-5 total_cost_usd=0.2931
+2026-10-31T02:40:00.0Z claude-cost step=impl-generate/retry auth=api model=n/a total_cost_usd=n/a
+"""
+
+    def test_cost_lines_win_and_carry_the_credential(self, cw):
+        assert cw.log_cost(self.LOG) == {"api": 0.2931}
+
+    def test_an_older_log_counts_as_subscription(self, cw):
+        assert cw.log_cost('  "total_cost_usd": 1.1,\n  "total_cost_usd": 0.4\n') == {"subscription": 1.5}
+
+    def test_the_digest_names_the_api_part(self, cw):
+        assert "| Session cost (USD) | – | $42 (API $30) |" in cw.render_markdown(
+            cw.summarize([], {}, 42.0, 30.0), [], [], None
+        )
+        assert "| Session cost (USD) | – | $42 |" in cw.render_markdown(cw.summarize([], {}, 42.0, 0.0), [], [], None)

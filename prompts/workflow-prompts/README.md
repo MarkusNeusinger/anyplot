@@ -20,7 +20,9 @@ Example (from `.github/workflows/impl-review.yml`):
 ```yaml
 - uses: anthropics/claude-code-action@<sha>  # v1
   with:
-    claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+    # Exactly one credential, chosen by vars.CLAUDE_AUTH (docs/workflows/overview.md#claude-credentials)
+    anthropic_api_key: ${{ vars.CLAUDE_AUTH == 'api' && secrets.ANTHROPIC_API_KEY || '' }}
+    claude_code_oauth_token: ${{ vars.CLAUDE_AUTH != 'api' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
     claude_args: "--model sonnet"
     prompt: |
       Read `prompts/workflow-prompts/ai-quality-review.md` and follow those instructions.

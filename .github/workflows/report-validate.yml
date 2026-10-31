@@ -41,6 +41,32 @@ jobs:
           fi
           echo "should_run=true" >> $GITHUB_OUTPUT
 
+      # Claude credentials: the repository variable CLAUDE_AUTH picks one per
+      # run and each Claude step passes exactly that one, the other input
+      # empty. Unset or `subscription`: CLAUDE_CODE_OAUTH_TOKEN, as before;
+      # `api`: ANTHROPIC_API_KEY. Any other value, or `api` without the key,
+      # stops the job here, never a silent fallback to the subscription.
+      # Identical in every job that runs Claude (tests/unit/workflows/
+      # test_claude_auth.py); docs/workflows/overview.md#claude-credentials.
+      - name: Check Claude credentials
+        if: steps.check.outputs.should_run == 'true'
+        env:
+          CLAUDE_AUTH: ${{ vars.CLAUDE_AUTH }}
+          API_KEY_SET: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+        run: |
+          case "${CLAUDE_AUTH,,}" in
+            ''|subscription) echo "Claude credentials: subscription (CLAUDE_CODE_OAUTH_TOKEN)" ;;
+            api)
+              if [ "$API_KEY_SET" != "true" ]; then
+                echo "::error::CLAUDE_AUTH is 'api' but the ANTHROPIC_API_KEY secret is missing; not falling back to the subscription"
+                exit 1
+              fi
+              echo "Claude credentials: api (ANTHROPIC_API_KEY)" ;;
+            *)
+              echo "::error::CLAUDE_AUTH must be unset, 'subscription' or 'api', got '${CLAUDE_AUTH//[^A-Za-z0-9 ._-]/?}'"
+              exit 1 ;;
+          esac
+
       - name: Checkout repository
         if: steps.check.outputs.should_run == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -65,7 +91,8 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_USER: ${{ github.event.issue.user.login }}
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ vars.CLAUDE_AUTH == 'api' && secrets.ANTHROPIC_API_KEY || '' }}
+          claude_code_oauth_token: ${{ vars.CLAUDE_AUTH != 'api' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
           claude_args: "--model opus --settings ${{ github.workspace }}/.claude/settings.json"
           prompt: |
             ## Task: Validate Issue Report
@@ -156,6 +183,22 @@ jobs:
             - Do NOT add the `approved` label
             - Do NOT trigger any fixes
             - Keep the analysis comment concise but informative
+
+      # The session's cost (Claude Code's own estimate at API list price) and
+      # the credential it ran on. Never fatal.
+      - name: Claude cost to the job summary
+        if: ${{ !cancelled() && (steps.validate.outcome == 'success' || steps.validate.outcome == 'failure') }}
+        continue-on-error: true
+        env:
+          EXECUTION_FILE: ${{ steps.validate.outputs.execution_file }}
+          CLAUDE_AUTH_MODE: ${{ vars.CLAUDE_AUTH == 'api' && 'api' || 'subscription' }}
+          CLAUDE_STEP: report-validate
+        run: |
+          cost=$(jq -r '[.[] | select(.type == "result")] | last | .total_cost_usd // empty' "$EXECUTION_FILE" 2>/dev/null || true)
+          model=$(jq -r '[.[] | select(.type == "system" and .subtype == "init")] | first | .model // empty' "$EXECUTION_FILE" 2>/dev/null || true)
+          line="claude-cost step=${CLAUDE_STEP} auth=${CLAUDE_AUTH_MODE} model=${model:-n/a} total_cost_usd=${cost:-n/a}"
+          echo "$line"
+          echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Add reaction on success
         if: steps.check.outputs.should_run == 'true' && steps.validate.outcome == 'success'
