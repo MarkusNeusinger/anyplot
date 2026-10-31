@@ -39,7 +39,7 @@ interface ChatThreadProps {
   specId: string;
   language: string;
   onRequestTheme: (version: number, theme: Theme) => void;
-  onFetchArtifact: (version: number, name: ArtifactName) => Promise<Blob>;
+  onFetchArtifact: (version: number, name: ArtifactName, theme?: Theme) => Promise<Blob>;
   onTrack: (event: string, props?: Record<string, string | undefined>) => void;
   /** The result cards' usage beacon (`ResultCard`'s `onOutcome`). */
   onOutcome?: (action: CardOutcome, version: number) => void;

@@ -51,8 +51,16 @@ The dataset leaves room for the `_logs` suffix of the linked log dataset (1,024 
 LOGS_SUFFIX = "_logs"
 """The linked log dataset is the views dataset's name plus this suffix (`docs/reference/agent-telemetry.md`)."""
 
-KEEP_ACTIONS = ("copied_code", "copied_image", "downloaded_png", "downloaded_code", "downloaded_data")
-"""The outcomes that keep a result; never `saved_session`, which users also send to report a plot they did not like."""
+KEEP_ACTIONS = (
+    "copied_code",
+    "copied_image",
+    "downloaded_png",
+    "downloaded_code",
+    "downloaded_page",
+    "downloaded_data",
+)
+"""The outcomes that keep a result; never `saved_session`, which users also send to report a plot they did not like.
+`downloaded_page` (a JavaScript plot's `plot.html`, since JS-4b) keeps one like the code download."""
 REJECT_REACTIONS = ("thumbs_down", "bug")
 """Feedback reactions that make a session not kept, whatever else the user did."""
 REJECT_LOOKBACK_DAYS = 2

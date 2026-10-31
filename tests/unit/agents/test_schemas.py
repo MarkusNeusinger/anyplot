@@ -556,7 +556,7 @@ class TestPlotResult:
 
     def test_artifacts_come_from_the_allowlist_once(self) -> None:
         with pytest.raises(ValidationError):
-            PlotResult(status="ok", attempts=1, artifacts=["plot.html"])
+            PlotResult(status="ok", attempts=1, artifacts=["page.html"])
         with pytest.raises(ValidationError, match="unique"):
             PlotResult(status="ok", attempts=1, artifacts=["plot.py", "plot.py"])
 

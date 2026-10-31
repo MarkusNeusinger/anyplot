@@ -584,8 +584,9 @@ jobs:
           # Julia stage precompiles it), the catalogue's JavaScript harness and its
           # lock (the toolchain's Node stage installs them) and the root .dockerignore
           # (the build context); and the agents package's copy of the import allowlist
-          # and the JavaScript error grammar, which a step compares with the image.
-          RENDERER_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(agents/renderer/|agents/__init__\.py$|agents/anyplot/render/harness\.py$|agents/anyplot/render/convert\.py$|agents/anyplot/code/profiles/javascript/(import-allowlist\.json|errors\.py)$|tests/image/|tests/unit/agents/runtime/convert_fixtures\.py$|pyproject\.toml$|uv\.lock$|README\.md$|Project\.toml$|Manifest\.toml$|package\.json$|package-lock\.json$|automation/js-render/|\.dockerignore$|\.github/workflows/ci-image\.yml$)' || true)
+          # and the JavaScript error grammar, which a step compares with the image, and
+          # the export page's wrapper, which a step probes in the image's Chromium.
+          RENDERER_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(agents/renderer/|agents/__init__\.py$|agents/anyplot/render/harness\.py$|agents/anyplot/render/convert\.py$|agents/anyplot/render/page\.py$|agents/anyplot/code/profiles/javascript/(import-allowlist\.json|errors\.py)$|tests/image/|tests/unit/agents/runtime/convert_fixtures\.py$|pyproject\.toml$|uv\.lock$|README\.md$|Project\.toml$|Manifest\.toml$|package\.json$|package-lock\.json$|automation/js-render/|\.dockerignore$|\.github/workflows/ci-image\.yml$)' || true)
 
           if [[ "$EVENT_NAME" == "workflow_dispatch" && "$FORCE_RUN" == "true" ]]; then
             echo "Manual trigger with force_run=true, will build the renderer image"
@@ -1265,6 +1266,61 @@ jobs:
           assert shutil.which('node', path=SANDBOX_PATH) is None, shutil.which('node', path=SANDBOX_PATH)
           print(f'OK: {NODE_BINARY} is in the image, and no node is on {SANDBOX_PATH}')
           "
+
+      # The downloadable plot.html of a JavaScript plot (JS-4b, step 3g of
+      # agentic/specs/261024-agent-all-libraries.md): the row builds the page with
+      # ANYPLOT_PAGE_ONLY=1 and starts no browser; the agents' wrapper (agents/anyplot/render/page.py,
+      # loaded by its path: it imports only the standard library) puts it into a sandboxed srcdoc
+      # frame; the probe (agents/renderer/page_probe.mjs) opens the wrapper from file:// in the image's
+      # Chromium, offline: the chart drew and answers a hover through the scaled frame, the frame's
+      # origin is null, and the snippet's attempts to set top.location, call window.open and fetch,
+      # read storage and cookies, and navigate its own frame to an http URL all fail, with no request
+      # reaching a listener on the loopback.
+      - name: Build, wrap and probe a JavaScript plot's page
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p work-page
+          mapfile -t ROW_FLAGS < work-js/row.flags
+          mapfile -t ROW_ARGV < work-js/chartjs.argv
+          probe=(-v "$PWD/agents/renderer/page_probe.mjs:/probe/page_probe.mjs:ro")
+          docker run --rm --network none "${probe[@]}" anyplot-renderer:ci \
+            /opt/node/bin/node /probe/page_probe.mjs snippet chartjs > work-page/plot.js
+          printf '%s\n' '{"columns":["label","value"],"data":[["a</script>",3],["b",5],["c",2],["d",7],["e",4]]}' \
+            > work-page/data.json
+          start=$(date +%s.%N)
+          docker run --rm --network none --read-only --tmpfs /tmp \
+            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+            -v "$PWD/work-page:/work" -w /work \
+            -e ANYPLOT_THEME=light "${ROW_FLAGS[@]}" -e ANYPLOT_DATA_JSON=/work/data.json -e ANYPLOT_PAGE_ONLY=1 \
+            -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+            -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 \
+            anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py \
+            --exec -- "${ROW_ARGV[@]}" > work-page/harness.out 2> work-page/harness.err \
+            || { echo "::error::the page build failed"; cat work-page/harness.out work-page/harness.err; exit 1; }
+          echo "page build: $(python3 -c "import sys; print(round(float(sys.argv[2]) - float(sys.argv[1]), 1))" "$start" "$(date +%s.%N)") s"
+          test -s work-page/plot-light.html && test ! -e work-page/plot-light.png \
+            || { echo "::error::the page build wrote no page, or a PNG"; ls -la work-page; exit 1; }
+          python3 - <<'EOF'
+          import importlib.util
+
+          spec = importlib.util.spec_from_file_location("page", "agents/anyplot/render/page.py")
+          page = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(page)
+          html = open("work-page/plot-light.html", encoding="utf-8").read()
+          wrapped = page.wrap_page(html, theme="light", canvas=(3200, 1800), title="page probe")
+          open("work-page/plot.html", "w", encoding="utf-8").write(wrapped)
+          print(f"OK: a page of {len(html.encode()):,} bytes, wrapped {len(wrapped.encode()):,}")
+          EOF
+          docker run --rm --network none --read-only --tmpfs /tmp \
+            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+            "${probe[@]}" -v "$PWD/work-page:/page:ro" \
+            -e HOME=/tmp -e XDG_CACHE_HOME=/tmp -e XDG_CONFIG_HOME=/tmp \
+            -e PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers -e ANYPLOT_NODE_MODULES=/opt/anyplot/node_modules \
+            -e FONTCONFIG_FILE=/opt/anyplot/js-fonts.conf \
+            anyplot-renderer:ci /opt/node/bin/node /probe/page_probe.mjs check /page/plot.html --hover --attempts \
+            > work-page/probe.json || { echo "::error::the page probe failed"; cat work-page/probe.json; exit 1; }
+          python3 -c "import json; report = json.load(open('work-page/probe.json')); print('OK: the page probe passed', sorted(report['checks']))"
 
       # The JavaScript code profile (JS-3) reads the MUI X import allowlist from a copy in the
       # agents package, because the agents image has no node_modules

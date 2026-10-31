@@ -18,7 +18,16 @@ import pytest
 
 from agents.anyplot.render.backends import remote as remote_module
 from agents.anyplot.render.backends.remote import IdTokenSource, RemoteBackend, token_expiry
-from agents.anyplot.render.contract import ConvertJob, DataJob, DataRunUnsupported, RendererUnavailable, RenderJob
+from agents.anyplot.render.contract import (
+    ConvertJob,
+    DataJob,
+    DataRunUnsupported,
+    PageFailed,
+    PageJob,
+    PageUnsupported,
+    RendererUnavailable,
+    RenderJob,
+)
 from agents.anyplot.render.gates import evaluate
 from agents.anyplot.render.serial import RenderBusy, SerialRenderer
 from agents.renderer.executor import ExecutorConfig, SandboxExecutor
@@ -782,3 +791,135 @@ class TestConvert:
         with pytest.raises(RendererUnavailable, match="HTTP 503, sandbox_unavailable"):
             await backend.convert(ConvertJob(job_id="conv123", data=b"PK\x05\x06"))
         await backend.aclose()
+
+
+def page_job(**overrides: Any) -> PageJob:
+    values: dict[str, Any] = {
+        "job_id": "page123",
+        "library": "chartjs",
+        "source": "const data = window.ANYPLOT_DATA;\n",
+        "data_json": '{"columns":["x"],"data":[[1]]}',
+        "theme": "dark",
+        "timeout_s": 30.0,
+    }
+    return PageJob(**{**values, **overrides})
+
+
+class TestPage:
+    """`page` (JS-4b): the renderer's `POST /page` answer is the page; its refusals keep their meaning."""
+
+    async def test_a_page_comes_back_as_its_text(self, backend: RemoteBackend, fake: FakeExecutor) -> None:
+        fake.toolchains["javascript"] = True
+
+        page = await SerialRenderer(backend, concurrency=1).page(page_job())
+
+        assert page == "<!doctype html><p>chartjs dark ü</p>"
+        assert fake.calls == [("page123", "page-dark")]
+
+    async def test_the_body_is_the_page_request(self) -> None:
+        seen: list[dict[str, Any]] = []
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            seen.append(json.loads(request.content))
+            return httpx.Response(200, content=b"<p>x</p>", headers={"Content-Type": "text/html; charset=utf-8"})
+
+        backend = mocked(handler)
+        await backend.page(page_job())
+        await backend.aclose()
+
+        assert seen == [
+            {
+                "job_id": "page123",
+                "language": "javascript",
+                "library": "chartjs",
+                "source": "const data = window.ANYPLOT_DATA;\n",
+                "data_json": '{"columns":["x"],"data":[[1]]}',
+                "theme": "dark",
+                "timeout_s": 30.0,
+            }
+        ]
+
+    async def test_an_old_renderer_without_the_route_is_unsupported(self) -> None:
+        """The agents service deploys before the renderer: until the renderer follows, `/page` is a 404."""
+        backend = mocked(lambda request: httpx.Response(404, json={"detail": "Not Found"}))
+
+        with pytest.raises(PageUnsupported):
+            await backend.page(page_job())
+        await backend.aclose()
+
+    async def test_a_build_that_left_no_page_is_a_page_failure(self) -> None:
+        tail = "render: error: import ImportRefused plot.tsx:1: refused\n"
+        body = {"detail": "page_failed", "job_id": "page123", "exit_code": 1, "stderr_tail": tail, "wall_s": 0.4}
+        backend = mocked(lambda request: httpx.Response(422, json=body))
+
+        with pytest.raises(PageFailed) as failed:
+            await backend.page(page_job())
+        await backend.aclose()
+
+        assert (failed.value.exit_code, failed.value.stderr_tail, failed.value.wall_s) == (1, tail, 0.4)
+
+    async def test_a_launcher_failure_is_the_renderers(self) -> None:
+        body = {"detail": "page_failed", "job_id": "page123", "exit_code": None, "reason": "launcher", "attempts": 2}
+        backend = mocked(lambda request: httpx.Response(422, json=body))
+
+        with pytest.raises(RendererUnavailable, match="launcher") as failed:
+            await backend.page(page_job())
+        await backend.aclose()
+
+        assert not isinstance(failed.value, PageUnsupported)
+
+    @pytest.mark.parametrize("detail", ["busy", "low_memory"])
+    async def test_a_busy_renderer_is_render_busy(self, detail: str) -> None:
+        backend = mocked(lambda request: httpx.Response(503, json={"detail": detail}))
+
+        with pytest.raises(RenderBusy):
+            await backend.page(page_job())
+        await backend.aclose()
+
+    @pytest.mark.parametrize(
+        ("response", "message"),
+        [
+            (httpx.Response(503, json={"detail": "runtime_unavailable"}), "HTTP 503, runtime_unavailable"),
+            (httpx.Response(200, json={"html": "<p>"}), "not text/html"),
+            (httpx.Response(200, content=b"\xff", headers={"Content-Type": "text/html"}), "not UTF-8"),
+            (httpx.Response(422, json={"detail": "page_failed", "unexpected": 1}), "does not match the contract"),
+        ],
+    )
+    async def test_other_answers_are_unavailable(self, response: httpx.Response, message: str) -> None:
+        backend = mocked(lambda request: response)
+
+        with pytest.raises(RendererUnavailable, match=message):
+            await backend.page(page_job())
+        await backend.aclose()
+
+    async def test_a_page_over_the_cap_is_refused(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(remote_module, "MAX_PAGE_BYTES", 4)
+        backend = mocked(
+            lambda request: httpx.Response(200, content=b"<p>x</p>", headers={"Content-Type": "text/html"})
+        )
+
+        with pytest.raises(RendererUnavailable, match="over the 4-byte cap"):
+            await backend.page(page_job())
+        await backend.aclose()
+
+    async def test_a_cancelled_build_asks_the_renderer_to_stop(self) -> None:
+        cancels: list[str] = []
+        started = asyncio.Event()
+
+        async def handler(request: httpx.Request) -> httpx.Response:
+            if request.url.path.endswith("/cancel"):
+                cancels.append(request.url.path)
+                return httpx.Response(200, json={"cancelled": 1})
+            started.set()
+            await asyncio.sleep(30)
+            return httpx.Response(200)
+
+        backend = mocked(handler)
+        task = asyncio.create_task(backend.page(page_job()))
+        await started.wait()
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        await backend.aclose()
+
+        assert cancels == ["/render/page123/cancel"]

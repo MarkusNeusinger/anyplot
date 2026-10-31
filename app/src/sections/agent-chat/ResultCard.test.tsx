@@ -219,6 +219,79 @@ describe('ResultCard', () => {
     ]);
   });
 
+  describe("a JavaScript plot's page", () => {
+    const jsVersion = (overrides: Partial<PlotVersion> = {}) => {
+      const version = makeVersion({
+        library: 'chartjs',
+        code: { state: 'ready', text: 'const data = window.ANYPLOT_DATA;\n' },
+        ...overrides,
+      });
+      version.result = {
+        ...version.result,
+        artifacts: ['plot-light.png', 'plot.js', 'plot.html', 'data.csv'],
+      };
+      return version;
+    };
+    const pageBlob = new Blob(['<!doctype html>'], { type: 'text/html' });
+
+    it('downloads plot.html in the theme on screen and reports downloaded_page', async () => {
+      const onFetchArtifact = vi.fn(async () => pageBlob);
+      const { onOutcome } = renderCard({ version: jsVersion(), onFetchArtifact });
+      expect(screen.getByText('# plot.js runs in plot.html')).toBeInTheDocument();
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Download plot.html, light theme' })
+      );
+      await waitFor(() => expect(clicked.map(entry => entry.download)).toEqual(['plot.html']));
+      expect(onFetchArtifact).toHaveBeenCalledWith(2, 'plot.html', 'light');
+      expect(onOutcome.mock.calls).toEqual([['downloaded_page', 2]]);
+    });
+
+    it('builds the page of the other theme once the card shows it', async () => {
+      const onFetchArtifact = vi.fn(async () => pageBlob);
+      renderCard({
+        onFetchArtifact,
+        version: jsVersion({
+          images: {
+            light: { state: 'ready', url: 'blob:light', blob: pngBlob, status: 'ok' },
+            dark: { state: 'ready', url: 'blob:dark', blob: pngBlob, status: 'ok' },
+          },
+        }),
+      });
+      await userEvent.click(screen.getByRole('button', { name: 'dark' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Download plot.html, dark theme' }));
+      await waitFor(() => expect(onFetchArtifact).toHaveBeenCalledWith(2, 'plot.html', 'dark'));
+    });
+
+    it('waits while the session is busy, since the server builds the page', async () => {
+      const onFetchArtifact = vi.fn(async () => pageBlob);
+      renderCard({ version: jsVersion(), onFetchArtifact, busy: true });
+      const button = screen.getByRole('button', { name: 'Download plot.html, light theme' });
+      expect(button).toBeDisabled();
+      await userEvent.click(button);
+      expect(onFetchArtifact).not.toHaveBeenCalled();
+      // The code itself stays one click away.
+      expect(screen.getByRole('button', { name: 'Download plot.js' })).toBeEnabled();
+    });
+
+    it('says so when the page could not be built', async () => {
+      const { onOutcome } = renderCard({
+        version: jsVersion(),
+        onFetchArtifact: vi.fn(async () => Promise.reject(new Error('page_unavailable'))),
+      });
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Download plot.html, light theme' })
+      );
+      expect(await screen.findByRole('alert')).toHaveTextContent('could not download plot.html');
+      expect(onOutcome).not.toHaveBeenCalled();
+    });
+
+    it('is not offered for a plot of another language', () => {
+      renderCard();
+      expect(screen.queryByText(".download('plot.html')")).not.toBeInTheDocument();
+      expect(screen.getByText('# plot.py runs next to data.csv')).toBeInTheDocument();
+    });
+  });
+
   it('reports no download when the file could not be fetched', async () => {
     const { onOutcome } = renderCard({
       onFetchArtifact: vi.fn(async () => Promise.reject(new Error('gone'))),

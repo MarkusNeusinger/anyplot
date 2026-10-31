@@ -88,7 +88,7 @@ class Harness:
         files: dict[str, str] | None = None,
     ) -> Run:
         work = tmp_path / "work"
-        work.mkdir(exist_ok=True)
+        work.mkdir(parents=True, exist_ok=True)
         code_file = "plot.tsx" if library == "muix" else "plot.js"
         (work / code_file).write_text(source, encoding="utf-8")
         for name, text in (files or {}).items():
@@ -561,6 +561,75 @@ def test_a_broken_data_file_fails_before_the_browser(harness: Harness, tmp_path:
     _assert_final_line(run, "data", "DataError", "-")
     run = harness.render(tmp_path, CANVAS, env={"ANYPLOT_DATA_JSON": "missing.json"})
     _assert_final_line(run, "data", "DataError", "-")
+
+
+# --- Page-only mode (JS-4b: the downloadable plot.html) -----------------------------------------
+
+PAGE_ONLY = {"ANYPLOT_PAGE_ONLY": "1"}
+NO_BROWSER = {"PLAYWRIGHT_BROWSERS_PATH": "/nonexistent/anyplot-no-browsers"}
+"""A browser path with no browser in it: a run that tried to start Chromium would fail."""
+
+
+def test_page_only_writes_the_page_a_render_builds_and_starts_no_browser(harness: Harness, tmp_path: Path) -> None:
+    """The page is byte for byte the one the render screenshots, policy and table included, whatever
+    `ANYPLOT_NO_HTML` says; no browser starts, so the code does not run (it would throw)."""
+    data = '{"columns":["label"],"data":[["</script>"],[null]]}'
+    source = (
+        "const data = window.ANYPLOT_DATA;\n"
+        + CANVAS
+        + "new Chart(canvas, { type: 'bar', data: { labels: data.map((r) => r.label), datasets: [] } });\n"
+    )
+    rendered = harness.render(
+        tmp_path / "render",
+        source,
+        env={"ANYPLOT_DATA_JSON": "data.json", "ANYPLOT_NO_HTML": "0"},
+        files={"data.json": data},
+    )
+    page = harness.render(
+        tmp_path / "page",
+        source + 'throw new Error("the page ran");\n',
+        env={**PAGE_ONLY, **NO_BROWSER, "ANYPLOT_DATA_JSON": "data.json"},
+        files={"data.json": data},
+    )
+
+    assert rendered.returncode == 0 and page.returncode == 0, (rendered.stderr, page.stderr)
+    built = (page.work / "plot-light.html").read_text(encoding="utf-8")
+    expected = (rendered.work / "plot-light.html").read_text(encoding="utf-8")
+    assert built == expected.replace(source, source + 'throw new Error("the page ran");\n')
+    assert 'http-equiv="Content-Security-Policy"' in built and "\\u003c/script>" in built
+    assert not (page.work / "plot-light.png").exists()
+    assert page.stdout.strip() == f"render: chartjs light landscape page → {page.work / 'plot-light.html'}"
+
+
+def test_page_only_bundles_muix_through_the_closed_import_plugin(harness: Harness, tmp_path: Path) -> None:
+    allowed = _muix('import { useState } from "react";', "const [n] = useState(1); void n;")
+    built = harness.render(tmp_path / "ok", allowed, library="muix", env={**PAGE_ONLY, **NO_BROWSER})
+    refused = harness.render(
+        tmp_path / "refused",
+        'import text from "/etc/os-release";\nexport default () => text;\n',
+        library="muix",
+        env=PAGE_ONLY,
+    )
+
+    assert built.returncode == 0, built.stderr
+    assert "createRoot" in (built.work / "plot-light.html").read_text(encoding="utf-8")
+    _assert_final_line(refused, "import", "ImportRefused", "plot.tsx:1")
+    assert not (refused.work / "plot-light.html").exists()
+
+
+def test_page_only_fails_on_a_broken_data_file_with_the_final_line(harness: Harness, tmp_path: Path) -> None:
+    run = harness.render(
+        tmp_path, CANVAS, env={**PAGE_ONLY, "ANYPLOT_DATA_JSON": "data.json"}, files={"data.json": "[1]"}
+    )
+    _assert_final_line(run, "data", "DataError", "-")
+    assert not (run.work / "plot-light.html").exists()
+
+
+def test_page_only_needs_the_sandbox_mode(harness: Harness, tmp_path: Path) -> None:
+    """The page leaves the sandbox as a download, so it is only ever the sandbox's page, with its policy."""
+    run = harness.render(tmp_path, CANVAS, sandbox=False, env=PAGE_ONLY)
+    assert run.returncode == 2 and "ANYPLOT_PAGE_ONLY=1 needs ANYPLOT_SANDBOX=1" in run.stderr
+    assert not (run.work / "plot-light.html").exists() and not (run.work / "plot-light.png").exists()
 
 
 # --- The final error line ----------------------------------------------------------------------

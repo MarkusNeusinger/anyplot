@@ -8,6 +8,7 @@ import {
   codeArtifact,
   convertAnswer,
   countBucket,
+  hasPage,
   longSuggestion,
   parseAgentEvent,
   renderedThemes,
@@ -107,6 +108,19 @@ describe('parseAgentEvent', () => {
         version: null,
         rounds: [],
       },
+    });
+  });
+
+  it("keeps a JavaScript plot's page among its artifacts", () => {
+    const event = parseAgentEvent(
+      raw('plot', {
+        status: 'ok',
+        attempts: 1,
+        artifacts: ['plot-light.png', 'plot.js', 'plot.html', 'data.csv', 'page.html'],
+      })
+    );
+    expect(event).toMatchObject({
+      result: { artifacts: ['plot-light.png', 'plot.js', 'plot.html', 'data.csv'] },
     });
   });
 
@@ -668,6 +682,17 @@ describe('agentApi cases', () => {
     expect((init.headers as Record<string, string>)['X-Anyplot-Client']).toBe('agent-chat/1');
   });
 
+  it("asks for a version's page in a theme, and for every other file without one", async () => {
+    const fetchMock = vi.fn(async () => new Response('<!doctype html>', { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const page = await agentApi.artifact('tok', 'S1', 'plot.html', 3, 'dark');
+    expect(await page.text()).toBe('<!doctype html>');
+    await agentApi.artifact('tok', 'S1', 'data.csv', 3);
+    const urls = fetchMock.mock.calls.map(call => (call as unknown as [string])[0]);
+    expect(urls[0]).toMatch(/\/debug\/agent\/sessions\/S1\/artifacts\/plot\.html\?v=3&theme=dark$/);
+    expect(urls[1]).toMatch(/\/debug\/agent\/sessions\/S1\/artifacts\/data\.csv\?v=3$/);
+  });
+
   it('fetches a case file as a blob through the proxy', async () => {
     const fetchMock = vi.fn(
       async () => new Response('png', { status: 200, headers: { 'Content-Type': 'image/png' } })
@@ -861,6 +886,12 @@ describe('helpers', () => {
     expect(codeArtifact(['plot-light.png', 'plot.R', 'data.csv'])).toBe('plot.R');
     expect(codeArtifact(['plot-light.png', 'plot.tsx', 'data.csv'])).toBe('plot.tsx');
     expect(codeArtifact(['plot-light.png', 'data.csv'])).toBe('plot.py');
+    expect(codeArtifact(['plot-light.png', 'plot.js', 'plot.html', 'data.csv'])).toBe('plot.js');
+  });
+
+  it('offers the page only for a version that lists it', () => {
+    expect(hasPage(['plot-light.png', 'plot.js', 'plot.html', 'data.csv'])).toBe(true);
+    expect(hasPage(['plot-light.png', 'plot.py', 'data.csv'])).toBe(false);
   });
 
   it('sends a locale the BFF accepts', () => {

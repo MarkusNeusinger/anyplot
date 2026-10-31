@@ -48,6 +48,12 @@
 //                              typed_json.py), injected as window.ANYPLOT_DATA
 //   ANYPLOT_IMPORT_ALLOWLIST   the allowlist file (default: import-allowlist.json
 //                              next to this harness, where the image puts it)
+//   ANYPLOT_PAGE_ONLY=1        with ANYPLOT_SANDBOX=1 only: build the page as a
+//                              render would (the policy, the data, MUI X through
+//                              the closed import plugin), write plot-<theme>.html
+//                              whatever ANYPLOT_NO_HTML says, and exit without
+//                              starting Chromium: the agents' downloadable
+//                              plot.html (JS-4b)
 //
 // The final error line (sandbox mode): on any failure the LAST line on stderr is
 //   render: error: <kind> <Class> <file>:<line>: <message>
@@ -90,6 +96,7 @@ const BUILD_ROOT = process.env.ANYPLOT_NODE_MODULES ? path.dirname(path.resolve(
 // -----------------------------------------------------------------------------
 const SANDBOX = process.env.ANYPLOT_SANDBOX === "1";
 const NO_HTML = process.env.ANYPLOT_NO_HTML === "1";
+const PAGE_ONLY = process.env.ANYPLOT_PAGE_ONLY === "1";
 const DATA_JSON = process.env.ANYPLOT_DATA_JSON || null;
 const IMPORT_ALLOWLIST = process.env.ANYPLOT_IMPORT_ALLOWLIST || path.join(__dirname, "import-allowlist.json");
 // Nothing but the inlined page: no request, no socket, no frame, no worker from a
@@ -825,6 +832,10 @@ async function main() {
   if (!args.file) {
     usage("usage: node automation/js-render/render.mjs <impl.js> [--library=<id>] [--square]");
   }
+  if (PAGE_ONLY && !SANDBOX) {
+    // The page leaves the sandbox as a download, so it is only ever the sandbox's page, policy included.
+    usage("render: ANYPLOT_PAGE_ONLY=1 needs ANYPLOT_SANDBOX=1");
+  }
 
   const theme = process.env.ANYPLOT_THEME === "dark" ? "dark" : "light";
   const tokens = themeTokens(theme);
@@ -877,6 +888,13 @@ async function main() {
   // Write the self-contained interactive page first — it is a deliverable in its
   // own right and useful for debugging even if the screenshot step later fails.
   const htmlOut = path.resolve(process.cwd(), `plot-${theme}.html`);
+  // ANYPLOT_PAGE_ONLY: the page is the whole output. No browser starts, so the
+  // snippet never runs here; it runs in the browser of whoever opens the page.
+  if (PAGE_ONLY) {
+    await writeFile(htmlOut, html, "utf-8");
+    console.log(`render: ${library} ${theme} ${orientation} page → ${htmlOut}`);
+    return;
+  }
   if (!NO_HTML) await writeFile(htmlOut, html, "utf-8");
 
   // Sandbox mode: no popup (window.open returns null, so no page outside the

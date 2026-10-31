@@ -14,7 +14,8 @@ like `agents/evals/`.
 | `POST /render` | `RenderRequest` (`wire.py`): `{job_id, language, library, source, data_csv, themes, timeout_s}`, and for a JavaScript job an optional `data_json` (the table as typed JSON, written as `data.json`) | `RenderResponse`: per theme the exit code, a timeout flag, the stderr tail, the probe, the PNG as base64, the attempts, a reason with the measured value and the limit; the slot wait and total time; `MemAvailable` | `401 unauthenticated`, `403 forbidden`, `409 job_conflict` (another payload for a `job_id` and themes in flight or just finished), `422 invalid_job`, `499 cancelled` or `499 client_gone` (nobody reads it), `500 internal`, `503 busy` (no slot within `RENDERER_SLOT_WAIT_S`), `503 low_memory`, `503 stuck`, `503 sandbox_unavailable`, `503 volume_missing`, `503 runtime_unavailable` (the language's toolchain is not in this image; `GET /status` lists them under `languages`), `503 io` |
 | `POST /run-data` | `DataRunRequest`: `{job_id, source, timeout_s}` (`timeout_s` at most 30) | `DataRunResponse`: the exit code (`harness.DATA_EXIT`), a timeout flag, a reason with the measured value and the limit, `csv_text` (the `out.csv` the harness wrote, only after exit code 0), the stderr tail, the attempts, the timings, the version, `MemAvailable` | the errors of `POST /render` |
 | `POST /convert` | `ConvertRequest`: `{job_id, data_base64, sheet?, timeout_s}` (the file at most 5 MiB, `timeout_s` at most 15) | `ConvertResponse`: the exit code (`harness.CONVERT_EXIT`), a timeout flag, a run reason, `refusal` (`wire.CONVERT_REASONS`) with the measured value and the cap, `text` (CSV, or JSON records for a table with list columns, at most 1 MiB) and `meta` (`{kind, format, rows, columns, sheet, sheets, sheet_count, warnings}`) after exit code 0, the attempts, the timings, the version, `MemAvailable` | the errors of `POST /render` |
-| `POST /render/{job_id}/cancel` | | `{"cancelled": n}`: the renders, data runs and conversions of that job it stopped | `401`, `403`, `422 invalid_job` |
+| `POST /page` | `PageRequest`: `{job_id, language: "javascript", library, source, data_json, theme, timeout_s}` (a JavaScript version's run form and typed table) | the self-contained page the harness builds for that theme (`ANYPLOT_PAGE_ONLY=1`: no browser starts), as `text/html; charset=utf-8`, at most `wire.MAX_PAGE_BYTES` | the errors of `POST /render`, `422 invalid_job` for another language, and `422 page_failed` with a `PageFailure` body (the exit code, a reason with the measured value and the limit, the stderr tail with the harness's final error line) for a build that left no page |
+| `POST /render/{job_id}/cancel` | | `{"cancelled": n}`: the renders, data runs, conversions and page builds of that job it stopped | `401`, `403`, `422 invalid_job` |
 | `GET /status` | | `RendererStatus`: name, version, revision, in flight, waiting, stuck launchers, `MemAvailable`, whether the launcher exists, whether the run volume is in place, `languages` (which toolchains of `commands.py` the image carries) | `401`, `403` |
 
 All routes sit behind the caller check (`auth.py`) and Cloud Run IAM. There is no
@@ -41,6 +42,15 @@ route answers it `404`, which the agents side reads as `unavailable`.
 `agents/anyplot/render/convert.py`) under the same guard, slot, memory floor, watchdog, kill
 path and idempotency rules (key: the `job_id` and `convert`). Nothing of the file, its text or
 its sheet names is logged; the log line carries the kind, the exit code and the refusal.
+
+**Page builds.** `POST /page` (JS-4b, the downloadable `plot.html` of a JavaScript plot)
+runs the JavaScript row with `ANYPLOT_PAGE_ONLY=1` under the same sandbox, slot, memory
+floor, watchdog, kill path and idempotency rules (key: the `job_id`, `page` and the theme).
+The harness builds the page as a render would and starts no browser, so the plot code does
+not run here; a build holds the render slot all the same (0.6 s for each of the four
+libraries in local Docker, the container's start included; accepted for now). A finished
+page is not kept for replays: it can be 24 MiB, and a second build runs no code. A renderer
+deployed before the route answers it `404`, which the agents side reads as `PageUnsupported`.
 
 **`job_id` and the themes are the idempotency key.** The `remote` backend and the
 deploy smoke replay a `POST /render` after an ambiguous failure (a connection error,
@@ -96,7 +106,7 @@ from typing import Annotated, Any
 from fastapi import Depends, FastAPI, Request
 from fastapi import Path as PathParam
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from .auth import CallerRefused, check_caller
 from .executor import Executor, ExecutorConfig, SandboxExecutor, Unavailable, mem_available_mb, runs_volume_ok
@@ -107,6 +117,9 @@ from .wire import (
     ConvertResponse,
     DataRunRequest,
     DataRunResponse,
+    PageFailure,
+    PageRequest,
+    PageResponse,
     RendererStatus,
     RenderRequest,
     RenderResponse,
@@ -134,13 +147,15 @@ class JobConflict(Exception):
     """A `POST /render` whose key is in flight or just finished with another payload; answered `409 job_conflict`."""
 
 
-type Job = RenderRequest | DataRunRequest | ConvertRequest
-type Answer = RenderResponse | DataRunResponse | ConvertResponse
+type Job = RenderRequest | DataRunRequest | ConvertRequest | PageRequest
+type Answer = RenderResponse | DataRunResponse | ConvertResponse | PageResponse
 type JobKey = tuple[str, tuple[str, ...]]
-"""The idempotency key of a request: its `job_id` and its themes, in order, `("data",)` for a data run and
-`("convert",)` for a conversion."""
+"""The idempotency key of a request: its `job_id` and its themes, in order, `("data",)` for a data run,
+`("convert",)` for a conversion and `("page", <theme>)` for a page build."""
 DATA_KEY = ("data",)
 CONVERT_KEY = ("convert",)
+PAGE_KEY = "page"
+_HTML = "text/html; charset=utf-8"
 
 
 def job_key(job: Job) -> JobKey:
@@ -148,6 +163,8 @@ def job_key(job: Job) -> JobKey:
         return (job.job_id, DATA_KEY)
     if isinstance(job, ConvertRequest):
         return (job.job_id, CONVERT_KEY)
+    if isinstance(job, PageRequest):
+        return (job.job_id, (PAGE_KEY, job.theme))
     return (job.job_id, tuple(job.themes))
 
 
@@ -259,6 +276,8 @@ class Renderer:
             work = self.run_data(job)
         elif isinstance(job, ConvertRequest):
             work = self.convert(job)
+        elif isinstance(job, PageRequest):
+            work = self.page(job)
         else:
             work = self.render(job)
         task: asyncio.Task[Answer] = asyncio.create_task(work)
@@ -280,6 +299,8 @@ class Renderer:
             del self._running[key]
         if task.cancelled() or task.exception() is not None:
             return  # only an answer is worth replaying; a refusal or an error runs again
+        if isinstance(task.result(), PageResponse):
+            return  # up to 24 MiB each, and a second build runs no code: a replay builds it again
         self._done[key] = (print_, task.result())
         while len(self._done) > DONE_CACHE:
             self._done.popitem(last=False)
@@ -431,6 +452,53 @@ class Renderer:
         )
         return response
 
+    async def page(self, job: PageRequest) -> PageResponse:
+        started = time.monotonic()
+        try:
+            return await self._page(job, started)
+        finally:
+            self._exit_if_stuck()
+
+    async def _page(self, job: PageRequest, started: float) -> PageResponse:
+        """One page build in its own sandbox, inside the same single slot as the renders."""
+        if self.volume is False:
+            raise Unavailable("volume_missing")
+        if not self.executor.languages().get(job.language, False):
+            raise Unavailable("runtime_unavailable")
+        async with self.slot.hold(self.settings.slot_wait_s):
+            waited = time.monotonic() - started
+            floor = self.settings.min_mem_available_mb
+            available = mem_available_mb()
+            if floor and available is not None and available < floor:
+                raise Unavailable("low_memory")
+            run = await self.executor.run_page(job)
+        response = PageResponse(
+            **run.model_dump(),
+            job_id=job.job_id,
+            timings=RenderTimings(slot_wait_s=round(waited, 3), total_s=round(time.monotonic() - started, 3)),
+            version=self.version,
+            mem_available_mb=mem_available_mb(),
+        )
+        logger.info(
+            json.dumps(
+                {
+                    "event": "page",
+                    "job_id": job.job_id,
+                    "library": job.library,
+                    "theme": job.theme,
+                    "exit_code": response.exit_code,
+                    "reason": response.reason,
+                    "measured": response.measured,
+                    "limit": response.limit,
+                    "attempts": response.attempts,
+                    "page_chars": None if response.html is None else len(response.html),
+                    "slot_wait_s": response.timings.slot_wait_s,
+                    "total_s": response.timings.total_s,
+                }
+            )
+        )
+        return response
+
     def _exit_if_stuck(self) -> None:
         """On Cloud Run, a stuck launcher ends this instance: no render could run on it again."""
         if self.terminating or not self.settings.cloud_run_service or not self.executor.stuck:
@@ -528,25 +596,44 @@ async def _leave(renderer: Renderer, job: Job, task: "asyncio.Future[Answer]") -
 
 
 @app.post("/render", dependencies=caller_checked)
-async def render(job: RenderRequest, renderer: RendererDep, request: Request) -> JSONResponse:
+async def render(job: RenderRequest, renderer: RendererDep, request: Request) -> Response:
     """Run every theme of `job` in its own sandbox, one after the other, inside the render slot."""
     return await _serve(job, renderer, request)
 
 
 @app.post("/run-data", dependencies=caller_checked)
-async def run_data(job: DataRunRequest, renderer: RendererDep, request: Request) -> JSONResponse:
+async def run_data(job: DataRunRequest, renderer: RendererDep, request: Request) -> Response:
     """Run one data snippet in its own sandbox with the harness in data mode, inside the same render slot."""
     return await _serve(job, renderer, request)
 
 
 @app.post("/convert", dependencies=caller_checked)
-async def convert(job: ConvertRequest, renderer: RendererDep, request: Request) -> JSONResponse:
+async def convert(job: ConvertRequest, renderer: RendererDep, request: Request) -> Response:
     """Convert one data file (Excel, OpenDocument, Parquet, Feather, Arrow, NumPy) to CSV text in its own sandbox,
     with the harness in convert mode, inside the same render slot."""
     return await _serve(job, renderer, request)
 
 
-async def _serve(job: Job, renderer: Renderer, request: Request) -> JSONResponse:
+@app.post("/page", dependencies=caller_checked)
+async def page(job: PageRequest, renderer: RendererDep, request: Request) -> Response:
+    """Build a JavaScript version's self-contained page in one theme in its own sandbox, with the harness in page-only
+    mode, inside the same render slot; answered as the page itself, or `422 page_failed`."""
+    return await _serve(job, renderer, request)
+
+
+def _page_answer(answer: PageResponse) -> Response:
+    """A built page as `text/html`; a build without one as `422 page_failed` (`PageFailure`)."""
+    if answer.html is not None:
+        return Response(
+            content=answer.html.encode("utf-8"),
+            media_type=_HTML,
+            headers={**_NO_STORE, "X-Content-Type-Options": "nosniff"},
+        )
+    failure = PageFailure.model_validate(answer.model_dump(exclude={"html", "timings", "version", "mem_available_mb"}))
+    return JSONResponse(status_code=422, content=failure.model_dump(mode="json"), headers=_NO_STORE)
+
+
+async def _serve(job: Job, renderer: Renderer, request: Request) -> Response:
     """Join or start the job, race it against the client's disconnect, and answer it (see the module docstring)."""
     task = renderer.join(job)
     gone = asyncio.create_task(_client_gone(request))
@@ -572,7 +659,10 @@ async def _serve(job: Job, renderer: Renderer, request: Request) -> JSONResponse
     try:
         if error is not None:
             raise error
-        content = task.result().model_dump(mode="json")
+        answer = task.result()
+        if isinstance(answer, PageResponse):
+            return _page_answer(answer)
+        content = answer.model_dump(mode="json")
         if "damage" in content and content["damage"] is None:
             # Left out while empty: an agents service from before the field forbids unknown keys (deploy order).
             del content["damage"]

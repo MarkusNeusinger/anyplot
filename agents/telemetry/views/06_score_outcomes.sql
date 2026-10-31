@@ -8,7 +8,7 @@
 -- version and is left out.
 --
 -- `taken` is true when the user copied or downloaded this version (`copied_code`, `copied_image`, `downloaded_png`,
--- `downloaded_code`, `downloaded_data`); `rejected` when a feedback on this version reacted `thumbs_down` or `bug`;
+-- `downloaded_code`, `downloaded_page` (a JavaScript plot's `plot.html`), `downloaded_data`); `rejected` when a feedback on this version reacted `thumbs_down` or `bug`;
 -- `kept` is taken and not rejected. Unlike the session's `kept` (03_sessions.sql), it judges one version: a copy of
 -- version 1 counts for version 1 even when the session went on to version 2. A saved session and a feedback on the
 -- chat carry version 0 and belong to no version. `reaction` is the latest reaction on this version. The seconds run
@@ -36,7 +36,7 @@ acted AS (
     source,
     version,
     COUNTIF(action IN ('copied_code', 'copied_image')) AS copies,
-    COUNTIF(action IN ('downloaded_png', 'downloaded_code', 'downloaded_data')) AS downloads,
+    COUNTIF(action IN ('downloaded_png', 'downloaded_code', 'downloaded_page', 'downloaded_data')) AS downloads,
     COUNTIF(action = 'feedback') AS feedback,
     COUNTIF(action = 'feedback' AND reaction IN ('thumbs_down', 'bug')) AS rejections,
     ARRAY_AGG(reaction IGNORE NULLS ORDER BY ts DESC LIMIT 1)[SAFE_OFFSET(0)] AS reaction,

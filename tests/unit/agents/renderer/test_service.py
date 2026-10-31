@@ -16,10 +16,18 @@ from agents.renderer.auth import decode_claims
 from agents.renderer.executor import ExecutorConfig, SandboxExecutor, Unavailable
 from agents.renderer.main import Renderer, app, get_renderer
 from agents.renderer.settings import RendererSettings, get_settings
-from agents.renderer.wire import ConvertResponse, DataRunResponse, RendererStatus, RenderResponse
+from agents.renderer.wire import (
+    MAX_PAGE_BYTES,
+    ConvertResponse,
+    DataRunResponse,
+    PageFailure,
+    PageRun,
+    RendererStatus,
+    RenderResponse,
+)
 
 from .conftest import FakeLauncher
-from .helpers import AGENTS_SA, SLEEPER, URL, FakeExecutor, convert_job, data_job, id_token, job
+from .helpers import AGENTS_SA, SLEEPER, URL, FakeExecutor, convert_job, data_job, id_token, job, page_job
 
 
 GOOD = id_token(aud=URL, email=AGENTS_SA)
@@ -523,6 +531,134 @@ class TestRunData:
         answer = DataRunResponse.model_validate_json(response.content)
         assert answer.exit_code == 0 and answer.csv_text == "x,y\n1,3\n2,4\n"
         assert renderer.slot.in_flight == 0
+
+
+def page_body(**overrides: Any) -> dict[str, Any]:
+    return {**page_job().model_dump(mode="json"), **overrides}
+
+
+class TestPage:
+    """`POST /page` (JS-4b): a JavaScript version's page, built in the slot, answered as the page itself."""
+
+    @pytest.fixture(autouse=True)
+    def _javascript(self, fake: FakeExecutor) -> None:
+        fake.toolchains["javascript"] = True
+
+    async def test_a_built_page_is_the_answer(self, client: httpx.AsyncClient, fake: FakeExecutor) -> None:
+        response = await client.post("/page", json=page_body(theme="dark"), headers=auth())
+
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "text/html; charset=utf-8"
+        assert (
+            response.headers["cache-control"] == "no-store" and response.headers["x-content-type-options"] == "nosniff"
+        )
+        assert response.text == "<!doctype html><p>chartjs dark ü</p>"
+        assert fake.calls == [("page123", "page-dark")]
+
+    async def test_an_invalid_job_is_refused_without_echoing_it(self, client: httpx.AsyncClient) -> None:
+        for bad in (
+            page_body(language="python", library="matplotlib", source="SECRET-SNIPPET"),
+            page_body(library="ggplot2", source="SECRET-SNIPPET"),
+            page_body(data_json=None, source="SECRET-SNIPPET"),
+            page_body(themes=["light"], source="SECRET-SNIPPET"),
+            page_body(theme="sepia", source="SECRET-SNIPPET"),
+            page_body(timeout_s=600, source="SECRET-SNIPPET"),
+        ):
+            response = await client.post("/page", json=bad, headers=auth())
+            assert response.status_code == 422 and response.json() == {"detail": "invalid_job"}, bad
+            assert "SECRET" not in response.text
+        no_data = page_body()
+        del no_data["data_json"]
+        assert (await client.post("/page", json=no_data, headers=auth())).status_code == 422
+
+    async def test_the_caller_check_applies(self, client: httpx.AsyncClient) -> None:
+        assert (await client.post("/page", json=page_body())).status_code == 401
+
+    async def test_a_build_that_left_no_page_is_a_page_failure(
+        self, client: httpx.AsyncClient, fake: FakeExecutor
+    ) -> None:
+        tail = "render: error: data DataError -: the data file data.json is unreadable\n"
+        fake.page = PageRun(exit_code=1, stderr_tail=tail, wall_s=0.3)
+
+        response = await client.post("/page", json=page_body(), headers=auth())
+
+        assert response.status_code == 422
+        failure = PageFailure.model_validate_json(response.content)
+        assert (failure.detail, failure.job_id, failure.exit_code, failure.stderr_tail) == (
+            "page_failed",
+            "page123",
+            1,
+            tail,
+        )
+
+    async def test_a_page_over_the_cap_names_its_size(self, client: httpx.AsyncClient, fake: FakeExecutor) -> None:
+        fake.page = PageRun(exit_code=0, reason="output_rejected", measured=30_000_000, limit=MAX_PAGE_BYTES)
+
+        response = await client.post("/page", json=page_body(), headers=auth())
+
+        assert response.status_code == 422
+        assert response.json() | {"wall_s": 0} == {
+            "detail": "page_failed",
+            "job_id": "page123",
+            "exit_code": 0,
+            "timed_out": False,
+            "reason": "output_rejected",
+            "measured": 30_000_000,
+            "limit": MAX_PAGE_BYTES,
+            "stderr_tail": "",
+            "wall_s": 0,
+            "attempts": 1,
+        }
+
+    async def test_a_page_build_and_a_render_share_the_one_slot(
+        self, client: httpx.AsyncClient, fake: FakeExecutor
+    ) -> None:
+        responses = await asyncio.gather(
+            client.post("/page", json=page_body(), headers=auth()),
+            client.post("/render", json=body(), headers=auth()),
+            client.post("/page", json=page_body(theme="dark"), headers=auth()),
+        )
+
+        assert [response.status_code for response in responses] == [200, 200, 200]
+        assert fake.max_active == 1 and len(fake.calls) == 4
+
+    async def test_a_finished_page_is_not_kept_for_a_replay(
+        self, client: httpx.AsyncClient, fake: FakeExecutor
+    ) -> None:
+        """A page can be 24 MiB, and a second build runs no code: a replay builds it again."""
+        first = await client.post("/page", json=page_body(), headers=auth())
+        second = await client.post("/page", json=page_body(), headers=auth())
+
+        assert first.content == second.content and fake.calls == [("page123", "page-light")] * 2
+
+    async def test_a_replay_while_the_build_runs_joins_it(self, client: httpx.AsyncClient, fake: FakeExecutor) -> None:
+        fake.gate = asyncio.Event()
+        first = asyncio.create_task(client.post("/page", json=page_body(), headers=auth()))
+        await asyncio.sleep(0.05)
+        replay = asyncio.create_task(client.post("/page", json=page_body(), headers=auth()))
+        other = await client.post("/page", json=page_body(source="const data = 2;\n"), headers=auth())
+        fake.gate.set()
+
+        assert other.status_code == 409 and other.json() == {"detail": "job_conflict"}
+        assert (await first).status_code == (await replay).status_code == 200
+        assert fake.calls == [("page123", "page-light")]
+
+    async def test_a_language_without_its_toolchain_is_refused(
+        self, client: httpx.AsyncClient, fake: FakeExecutor
+    ) -> None:
+        fake.toolchains["javascript"] = False
+
+        response = await client.post("/page", json=page_body(), headers=auth())
+
+        assert response.status_code == 503 and response.json() == {"detail": "runtime_unavailable"}
+        assert fake.calls == []
+
+    async def test_an_executor_refusal_is_a_503(self, client: httpx.AsyncClient, fake: FakeExecutor) -> None:
+        fake.error = Unavailable("busy")
+
+        response = await client.post("/page", json=page_body(), headers=auth())
+
+        assert response.status_code == 503 and response.json() == {"detail": "busy"}
 
 
 class TestStatus:

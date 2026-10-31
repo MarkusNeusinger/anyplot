@@ -358,8 +358,17 @@ PromptHash = Annotated[str, Field(pattern=r"^[0-9a-f]{16}$")]
 """The first 16 hex characters of the SHA-256 of a static instruction (`policy.prompt_hash`)."""
 
 OutcomeAction = Literal[
-    "copied_code", "copied_image", "downloaded_png", "downloaded_code", "downloaded_data", "saved_session", "feedback"
+    "copied_code",
+    "copied_image",
+    "downloaded_png",
+    "downloaded_code",
+    "downloaded_page",
+    "downloaded_data",
+    "saved_session",
+    "feedback",
 ]
+"""What the user did with a result; `downloaded_page` is a JavaScript plot's interactive `plot.html` (JS-4b). The BFF
+(`api/routers/agent.py`) and the page (`app/src/lib/agent.ts`) carry the same set."""
 OUTCOME_ACTIONS: tuple[str, ...] = get_args(OutcomeAction)
 Reaction = Literal["thumbs_up", "thumbs_down", "bug", "idea"]
 """The feedback reactions (`core/database/models.py` `FEEDBACK_REACTIONS`; pinned by a test)."""

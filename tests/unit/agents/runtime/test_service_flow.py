@@ -11,6 +11,7 @@ one test never wait for the rate window; `test_run_queue_flow.py` drives the que
 at its production defaults with a fake clock.
 """
 
+import asyncio
 import base64
 import json
 import logging
@@ -45,10 +46,12 @@ from agents.anyplot.models import (
 from agents.anyplot.opening import NOTES_INSTRUCTION_WARNING, NOTES_REFUSED_WARNING, NOTES_UNCHECKED_WARNING, assess
 from agents.anyplot.pipeline import SoftDeadline
 from agents.anyplot.policy import refusal, scope_rubric
-from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
-from agents.anyplot.render.contract import RenderJob, Theme
+from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome, fixture_page
+from agents.anyplot.render.contract import PageFailed, PageJob, PageUnsupported, RendererUnavailable, RenderJob, Theme
+from agents.anyplot.render.page import WRAPPER_POLICY, frame_source
 from agents.anyplot.render.png import size_of
 from agents.anyplot.render.runtimes.python import PythonRuntime
+from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import StoredRender
 from agents.anyplot.render.watermark import add_footer
 from agents.anyplot.run_queue import RunQueue
@@ -57,7 +60,16 @@ from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE, PENDING_REQUEST, read_session
 from agents.anyplot.settings import get_settings
 from agents.anyplot.sub_agents.adapter import ADAPTERS
-from agents.main import ACTION_LANGUAGE_LINE, MAX_CAUSE_CHARS, MAX_MESSAGE_CHARS, Runtime, app, clip_cause, get_runtime
+from agents.main import (
+    ACTION_LANGUAGE_LINE,
+    MAX_CAUSE_CHARS,
+    MAX_MESSAGE_CHARS,
+    PAGE_HEADERS,
+    Runtime,
+    app,
+    clip_cause,
+    get_runtime,
+)
 
 from .conftest import CASES
 from .fakes import (
@@ -1579,11 +1591,8 @@ D3_PLAN: dict[str, Any] = {
 """A D3 adaptation of scatter-basic in its smallest form: the sample replaced by the placeholder (JS-4a)."""
 
 
-async def test_a_javascript_plot_renders_and_toggles_from_its_typed_table(
-    client: httpx.AsyncClient, swap_models, backend: FakeBackend, services: Services, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """JS-4a: the pipeline types the table once per run; the render job, the shipped version and the theme toggle's
-    job carry the same `data_json`, whose columns are the dataset's, and the run form reads it."""
+async def open_d3_session(client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch) -> str:
+    """A D3 session with the scatter data confirmed, its adapter answering `D3_PLAN`."""
     from agents.anyplot.models import make_content_config
     from agents.anyplot.settings import AgentSettings
     from agents.anyplot.sub_agents.adapter import make_adapter
@@ -1614,18 +1623,126 @@ async def test_a_javascript_plot_renders_and_toggles_from_its_typed_table(
     loaded = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": data})
     assert loaded.status_code == 200, loaded.text
     await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
+    return sid
+
+
+async def test_a_javascript_plot_renders_and_toggles_from_its_typed_table(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, services: Services, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """JS-4a: the pipeline types the table once per run; the render job, the shipped version and the theme toggle's
+    job carry the same `data_json`, whose columns are the dataset's, and the run form reads it."""
+    sid = await open_d3_session(client, swap_models, monkeypatch)
 
     plot = next(payload for name, payload in await create_plot(client, sid) if name == "plot")
     toggled = await render_theme(client, sid, "dark")
 
-    assert plot["status"] == "ok" and "plot.js" in plot["artifacts"], plot
-    assert toggled.status_code == 200 and toggled.json()["artifacts"][-2:] == ["plot.js", "data.csv"]
+    assert plot["status"] == "ok" and plot["artifacts"] == ["plot-light.png", "plot.js", "plot.html", "data.csv"]
+    assert toggled.status_code == 200
+    assert toggled.json()["artifacts"] == ["plot-light.png", "plot-dark.png", "plot.js", "plot.html", "data.csv"]
     first, toggle = backend.jobs[0], backend.jobs[-1]
     assert (first.language, first.library, toggle.themes) == ("javascript", "d3", ("dark",))
     assert first.data_json is not None and toggle.data_json == first.data_json
     assert json.loads(first.data_json)["columns"] == first.data_csv.splitlines()[0].split(",")
     assert "const data = window.ANYPLOT_DATA;" in first.source and "loadUserData" not in first.source
     assert services.versions.latest_rendered(sid, library="d3").data_json == first.data_json
+
+    # JS-4b: the page is built on demand from the same run form and table, in the theme asked for (the version's
+    # by default), wrapped, and answered as an attachment; nothing of it is stored.
+    own = await client.get(f"/v1/sessions/{sid}/artifacts/plot.html", headers=HEADERS)
+    dark = await client.get(f"/v1/sessions/{sid}/artifacts/plot.html?v=1&theme=dark", headers=HEADERS)
+    assert own.status_code == 200 and dark.status_code == 200, (own.text, dark.text)
+    assert [job.theme for job in backend.page_jobs] == ["light", "dark"]
+    for job in backend.page_jobs:
+        assert (job.language, job.library, job.source, job.data_json) == (
+            "javascript",
+            "d3",
+            first.source,
+            first.data_json,
+        )
+    assert dark.headers["content-type"] == "text/html; charset=utf-8"
+    for key, value in PAGE_HEADERS.items():
+        assert dark.headers[key] == value, key
+    assert f"srcdoc='{frame_source(fixture_page(backend.page_jobs[1]))}'" in dark.text
+    assert 'data-theme="dark"' in dark.text and 'data-theme="light"' in own.text
+    assert f'content="{WRAPPER_POLICY}"' in dark.text
+
+
+def _raises(error: Exception):
+    def script(job: PageJob) -> str:
+        raise error
+
+    return script
+
+
+@pytest.mark.parametrize(
+    ("error", "status", "code"),
+    [
+        (PageUnsupported("no /page route"), 503, "page_unavailable"),
+        (RendererUnavailable("unreachable"), 503, "page_unavailable"),
+        (RenderBusy("no slot"), 503, "capacity"),
+        (PageFailed(exit_code=1, stderr_tail="render: error: data DataError -: broken\n"), 500, "page_failed"),
+    ],
+)
+async def test_a_page_that_cannot_be_built_answers_a_fixed_code(
+    client: httpx.AsyncClient,
+    swap_models,
+    backend: FakeBackend,
+    monkeypatch: pytest.MonkeyPatch,
+    error: Exception,
+    status: int,
+    code: str,
+) -> None:
+    """JS-4b: a renderer deployed before `POST /page` (the agents service deploys first) is `503 page_unavailable`, a
+    busy one `503 capacity` like the theme toggle, a build that left no page `500 page_failed`; the session is free
+    again afterwards."""
+    sid = await open_d3_session(client, swap_models, monkeypatch)
+    await create_plot(client, sid)
+    backend.page_script = _raises(error)
+
+    response = await client.get(f"/v1/sessions/{sid}/artifacts/plot.html", headers=HEADERS)
+
+    assert (response.status_code, response.json()) == (status, {"detail": code})
+    assert "content-disposition" not in response.headers
+    backend.page_script = None
+    assert (await client.get(f"/v1/sessions/{sid}/artifacts/plot.html", headers=HEADERS)).status_code == 200
+
+
+async def test_a_page_is_offered_for_a_javascript_version_only(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+    await create_plot(client, sid)
+
+    response = await client.get(f"/v1/sessions/{sid}/artifacts/plot.html?theme=dark", headers=HEADERS)
+
+    assert (response.status_code, response.json()) == (404, {"detail": "not_found"})
+    assert backend.page_jobs == []
+
+
+async def test_a_page_build_holds_the_session_like_the_theme_toggle(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """While a page builds, the session's turn, toggle or second build is `409 run_active`, as for the toggle."""
+    sid = await open_d3_session(client, swap_models, monkeypatch)
+    await create_plot(client, sid)
+    started, release = asyncio.Event(), asyncio.Event()
+
+    async def slow(job: PageJob) -> str:
+        started.set()
+        await release.wait()
+        return fixture_page(job)
+
+    monkeypatch.setattr(backend, "page", slow)
+    first = asyncio.create_task(client.get(f"/v1/sessions/{sid}/artifacts/plot.html", headers=HEADERS))
+    await started.wait()
+    second = await client.get(f"/v1/sessions/{sid}/artifacts/plot.html", headers=HEADERS)
+    toggle = await render_theme(client, sid, "dark")
+    release.set()
+
+    assert (second.status_code, second.json()) == (409, {"detail": "run_active"})
+    assert toggle.status_code == 409
+    assert (await first).status_code == 200
 
 
 async def test_theme_toggle_pads_an_off_canvas_theme(

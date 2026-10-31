@@ -1732,8 +1732,8 @@ describe('useAgentSession: turns', () => {
 });
 
 describe('useAgentSession: versions and library', () => {
-  async function withVersion(render?: Handler) {
-    const routes = baseRoutes();
+  async function withVersion(render?: Handler, extra: Record<string, Handler> = {}) {
+    const routes = { ...baseRoutes(), ...extra };
     routes['POST /sessions/S1/messages'] = () =>
       sse([
         ['plot', PLOT_OK],
@@ -1789,6 +1789,52 @@ describe('useAgentSession: versions and library', () => {
     );
     await act(() => toggle);
     expect(result.current.state.themeBusy).toBe(false);
+  });
+
+  it('holds the session back while plot.html builds, as the server does', async () => {
+    const gate = deferred<Response>();
+    const { result } = await withVersion(undefined, {
+      'GET /sessions/S1/artifacts/plot.html': () => gate.promise,
+    });
+    let building: Promise<Blob> = Promise.resolve(new Blob());
+    act(() => {
+      building = result.current.fetchArtifact(1, 'plot.html', 'dark');
+    });
+    await waitFor(() => expect(result.current.state.pageBusy).toBe(true));
+    expect(sessionBusy(result.current.state)).toBe(true);
+    const turns = calls.filter(call => call.path.endsWith('/messages')).length;
+    await act(() => result.current.createPlot());
+    await act(() => result.current.requestTheme(1, 'dark'));
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    // A second build waits too: the server would answer it `409 run_active`.
+    await expect(result.current.fetchArtifact(1, 'plot.html', 'light')).rejects.toMatchObject({
+      code: 'run_active',
+    });
+    expect(calls.filter(call => call.path.endsWith('/messages'))).toHaveLength(turns);
+    expect(
+      calls.some(call => call.path.endsWith('/render') || call.path.endsWith('/dataset'))
+    ).toBe(false);
+    expect(calls.filter(call => call.path.endsWith('/plot.html'))).toHaveLength(1);
+    expect(calls.find(call => call.path.endsWith('/plot.html'))?.search).toBe('?v=1&theme=dark');
+
+    gate.resolve(new Response('<!doctype html>', { status: 200 }));
+    await act(async () => {
+      await building;
+    });
+    expect(result.current.state.pageBusy).toBe(false);
+    expect(sessionBusy(result.current.state)).toBe(false);
+  });
+
+  it('frees the session when the page build fails', async () => {
+    const { result } = await withVersion(undefined, {
+      'GET /sessions/S1/artifacts/plot.html': () => json(503, { detail: 'page_unavailable' }),
+    });
+    await act(async () => {
+      await expect(result.current.fetchArtifact(1, 'plot.html', 'light')).rejects.toMatchObject({
+        code: 'page_unavailable',
+      });
+    });
+    expect(result.current.state.pageBusy).toBe(false);
   });
 
   it('switches the library and keeps the dataset', async () => {

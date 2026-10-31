@@ -1259,6 +1259,76 @@ difference.
   with its sandboxed preview and its download (question 12, "Found for JS-4" under JS-3).
   MUI X follows them with its fixtures.
 
+#### 3g. The export page (JS-4b)
+
+Reviewed by Gemini 4 Argon and Fable on 2026-10-31 (the section "Second opinion on JS-4b's
+design" at the end). JS-4b is two PRs: JS-4b-1, the downloadable page, and JS-4b-2, its
+preview in the chat, whose delivery is an open owner decision.
+
+- **Page only, no browser.** In sandbox mode the harness's switch `ANYPLOT_PAGE_ONLY=1`
+  builds the page exactly as a render would (`buildHtml` with the sandbox policy and the
+  typed table of `ANYPLOT_DATA_JSON`; MUI X still bundles through the closed import plugin),
+  writes `plot-<theme>.html` whatever `ANYPLOT_NO_HTML` says, and exits 0 without starting
+  Chromium, so the plot code never runs on the renderer. A broken data file still fails as
+  `data DataError` with the final error line. Without the switch nothing changes.
+- **The renderer's `POST /page`.** The caller check, the sandbox and the JavaScript row of
+  `/render`, with `ANYPLOT_PAGE_ONLY=1` added to the row's environment. The request
+  (`wire.PageRequest`, `extra="forbid"`) is `{job_id, language: "javascript", library,
+  source, data_json, theme, timeout_s}`; another language is `422 invalid_job`. The answer
+  is the page as `text/html; charset=utf-8` under a byte cap, with `/render`'s failure
+  mapping (busy, low memory, ...) and a JSON body for a build that left no page. A build
+  may hold the render slot (accepted for now).
+- **The agents' backends.** `RenderBackend.page(...)` returns the page's text. The remote
+  backend posts to `/page`, and a `404` raises a typed `PageUnsupported`, as `/run-data`
+  does with `DataRunUnsupported`: the agents service deploys before the renderer, and an old
+  renderer's request models forbid unknown fields. The local Docker backend runs the same
+  harness run and mounts the checkout's `automation/js-render/render.mjs` over the image's,
+  as it mounts the checkout's `harness.py`. The fake backend returns a deterministic stub;
+  `SerialRenderer` passes the build through in the `toggle` lane.
+- **The download is a wrapper** that the agents service builds in pure, deterministic Python:
+  an outer document with no script of its own, a meta policy that is exactly the harness's
+  `CONTENT_SECURITY_POLICY` plus `frame-src 'none'`, and `<iframe sandbox="allow-scripts"
+  srcdoc="...">` with the page escaped for the attribute. A `srcdoc` child inherits the
+  wrapper's policy (Fable measured it in Chromium): the draft's stricter wrapper policy,
+  `default-src 'none'` without `script-src 'unsafe-inline'`, blanks the plot. Never
+  `allow-same-origin`, `allow-top-navigation`, `allow-popups`, `allow-modals`,
+  `allow-forms` or `allow-downloads`. The 1600x900 (or 1200x1200) page is not clipped on a
+  laptop screen: the wrapper scrolls or scales it by CSS alone. A unit test pins the
+  wrapper's policy to the harness's constant, read from `render.mjs`, plus `frame-src
+  'none'`, so the policy has one owner. Measured by Fable: `frame-src 'none'` does not block
+  the `srcdoc` itself, it blocks the child's navigation of itself to http(s); inside the
+  child, `top.location`, `window.open`, cookies, storage, `fetch` and workers are refused or
+  blocked.
+- **The artifact.** `plot.html` joins `ArtifactName` and a JavaScript version's artifacts,
+  and `PlotResult.artifacts` holds five (two PNGs, the code, the page, the data; Gemini: a
+  JavaScript version with both themes would fail validation at four).
+  `GET /v1/sessions/{sid}/artifacts/plot.html?v=&theme=` builds the page on demand, never
+  stored (up to about 17 MB a page), from the version's run form, library, `data_json` and
+  the theme asked for (default: the version's; the frontend asks for the card's shown
+  theme), wraps it and answers `text/html; charset=utf-8` with `Content-Disposition:
+  attachment; filename="plot.html"`, `Content-Security-Policy: sandbox`,
+  `X-Content-Type-Options: nosniff`, `Cache-Control: private, no-store` and
+  `Referrer-Policy: no-referrer`; `404` for a version that is not JavaScript,
+  `PageUnsupported` as `503 page_unavailable`, busy as `503` like the theme toggle. The BFF
+  adds `plot.html` to its allowlist, forwards `theme` and sets the same headers itself (it
+  never forwards upstream media types); `plot.html` stays out of the feedback case's files.
+- **The frontend.** A version whose artifacts include `plot.html` gets
+  `.download('plot.html')` next to the code download, which downloads the page of the theme
+  the card shows (a blob through the authenticated artifact fetch, with the theme). Its
+  telemetry outcome was to be `downloaded_code`, because a new action changes the closed set
+  and the BigQuery views; the review of JS-4b-1's code reversed that: `downloaded_page`, with
+  the views' re-creation left to the owner (the section "Second opinion on JS-4b-1's code").
+- **The root prompt** lists `.download('plot.html')` for a Chart.js, D3, ECharts or
+  Highcharts plot and says that `plot.js` runs by opening `plot.html` (topic 4).
+- **A probe in CI.** The `renderer-image` job builds a page with the image (a small Chart.js
+  snippet that reads `window.ANYPLOT_DATA`), wraps it with the agents' wrapper, opens it from
+  `file://` in the image's Chromium and asserts that the chart drew in the inner frame, that
+  the frame's origin is `null`, and that the snippet's attempts to set `top.location`, call
+  `window.open` and `fetch`, and navigate its own frame to an http URL all fail; a unit-test
+  image variant runs the same probe.
+- **JS-4b-2, the preview,** waits for the owner's choice of its delivery (the open decision
+  in "Second opinion on JS-4b's design").
+
 #### Order of the PRs
 
 JS-1 → JS-2 → JS-3 → JS-4; PB-1 and PB-2 (step 4) follow JS-2, whose harness they reuse.
@@ -1804,6 +1874,116 @@ fixtures.
 | The deploy smoke's Chart.js render as a gate | a gate, and the page reads the job's typed table | the deploy proves the data path every agent job takes |
 | `+null === 0` warned in the prompt | `+null`, `Number(null)`, `null * 2`, `String(null)` and `Math.max` named, with the filter before any conversion | JS-3's lollipop finding |
 | Not in the text | time axes in UTC; Chart.js on a category or linear axis | measured: the exported page runs in the user's zone, and the page has no date adapter |
+
+#### What JS-4b-1 built (2026-10-31): the downloadable `plot.html`
+
+Everything in 3g but the preview (JS-4b-2).
+
+- **Harness.** `ANYPLOT_PAGE_ONLY=1` works only with `ANYPLOT_SANDBOX=1` (without it the
+  harness stops with a usage error, exit 2), because the page leaves the sandbox as a
+  download and so must carry the policy. The page-only run writes the very page a render
+  writes (a host test compares them byte for byte, the snippet's own text aside) and starts
+  no browser: a run with a browser path that holds no browser passes, and a snippet that
+  throws builds its page all the same.
+- **Renderer.** `POST /page` with `wire.PageRequest` (`data_json` required: a JavaScript run
+  form reads `window.ANYPLOT_DATA`), `executor.run_page` (the code file and `data.json`, no
+  `data.csv`; the JavaScript row's argv; `ANYPLOT_PAGE_ONLY=1` in its environment) and a
+  `422 {"detail": "page_failed", ...}` body (`wire.PageFailure`: the exit code, the reason
+  with the measured value and the limit, the stderr tail) for a build without a page. The
+  page is read after exit code 0 under `MAX_PAGE_BYTES`, 24 MiB (the bundle, ECharts' 1.1 MB
+  the largest, plus at most 16 MiB of typed table with every `<` escaped to six bytes, and
+  8 MiB under Cloud Run's 32 MiB cap on a response that is not streamed), as strict UTF-8.
+  The idempotency key is the `job_id`, `page` and the theme; a replay joins a build in
+  flight, but a finished page is not kept in the replay cache (16 answers of up to 24 MiB
+  would hold 384 MiB of a 4 GiB instance, and a second build runs no code).
+- **Agents.** `PageJob`, `PageUnsupported`, `PageFailed` and `RenderBackend.page` in
+  `render/contract.py`; the remote backend's `page` (a `404` is `PageUnsupported`, `422
+  page_failed` is `PageFailed`, `503 busy` and `low_memory` are `RenderBusy`, a launcher
+  failure is the renderer's); the local backend's `page`; the fake's `fixture_page`;
+  `SerialRenderer.page` in the `toggle` lane. `render/page.py` wraps the page and imports
+  only the standard library, so the CI step loads it by its path. `page_export.page_download`
+  builds and wraps on demand, waits for a slot as long as the theme toggle does, and logs a
+  failed build by its error summary (kind, class, line), never its message.
+- **Decisions taken in the build.**
+  - The wrapper writes the page into a single-quoted `srcdoc` with only `&` and `'` as
+    references: they are the only characters a single-quoted attribute value treats
+    specially, so the frame gets the page character for character (a test parses it back),
+    apart from the normalisation the HTML input stream applies to any load of a page (CR LF
+    and a lone CR become LF, NUL becomes U+FFFD), and the typed table's many `"` do not grow
+    sixfold as they would in a double-quoted attribute.
+  - The frame scales by media queries in steps (1, 0.9, 0.8, ..., 0.25) to the largest that
+    fits the window with a 16-pixel margin, and the wrapper scrolls below a quarter: a
+    1440x900 laptop's window of about 1440x790 shows the landscape plot at 0.8 (1280x720)
+    without a scroll bar. Pure CSS: `transform: scale()` on the frame inside a box of the
+    scaled size; pointer events reach the plot through the transform (the probe hovers it).
+  - The wrapper's margin is the page's background per theme (`pageBg`, pinned to the
+    harness by a test), and its title names the spec, the library and the version.
+  - The download is registered in the session's run registry while it builds, like the
+    theme toggle, so it and a turn or a toggle of the same session refuse each other with
+    `409 run_active`; the page holds the whole session back while the page builds
+    (`pageBusy` in `useAgentSession.ts`, after the review of the code), so the composer, the
+    theme toggles and the data edits wait as for a theme render. Error codes: `503 page_unavailable` also for a renderer that cannot
+    be reached, `500 page_failed` for a build that left no page; the BFF passes both.
+  - The local Docker backend mounts the checkout's `render.mjs` for renders too, not only
+    for page builds, so a version's PNG and its page come from the same harness; a checkout
+    without the file (an agents image) keeps the image's.
+  - The probe sits at `agents/renderer/page_probe.mjs`, outside the toolchain's inputs
+    (`toolchain.py`, `INPUTS`): an edit of the probe reruns the `renderer-image` job but
+    does not rebuild the toolchain image. It prints its snippets (`snippet chartjs`, `d3`,
+    `echarts`, `highcharts`) for the harness and checks a wrapper (`check plot.html --hover
+    --attempts`).
+    Its hover moves the window's own pointer over the scaled plot: Playwright's
+    `hover({position})` maps a point into the frame without the frame's transform, and its
+    events missed the plot (measured).
+  - The result card's code label reads `# plot.js runs in plot.html` for a JavaScript
+    version (it said `runs next to data.csv`, which only the other languages do).
+- **Measured** (local Docker, the JS-2 renderer image with the checkout's harness mounted, the
+  local backend's `page`, five runs each):
+
+  | Library | Build, container start included | Page, 40 rows | Wrapped | Page, 20,000 rows (a 574 KB CSV, 730 KB of typed JSON) |
+  |---|---|---|---|---|
+  | Chart.js | p50 0.61 s | 214 KB | 223 KB | 943 KB, built in 0.63 s |
+  | D3 | p50 0.60 s | 288 KB | 297 KB | 1.02 MB, 0.61 s |
+  | ECharts | p50 0.60 s | 1.13 MB | 1.18 MB | 1.86 MB, 0.65 s |
+  | Highcharts | p50 0.61 s | 288 KB | 308 KB | 1.02 MB, 0.62 s |
+
+  Without the container (Node on the host), a Chart.js page builds in 0.23 s.
+- **The probe** (`page_probe.mjs` in the image's Chromium, the window at 1440x790) passed for
+  Chart.js, D3, ECharts and (after the review) Highcharts pages built through the local
+  backend and wrapped by `page_download`: the chart drew in the frame (Chart.js 588,975
+  painted pixels, ECharts 383,132, D3 six shapes, Highcharts SVG shapes), a hover changed the
+  frame (a Chart.js tooltip, D3's `mouseover` text, ECharts' axis tooltip, Highcharts'
+  tooltip), the frame's origin is `null`, `top.location` and storage and
+  cookies are `SecurityError`, `window.open` returns `null`, `fetch` is a `TypeError` (the
+  policy), the frame's navigation of itself to http ends on `chrome-error://chromewebdata/`,
+  and a listener on the loopback saw no request, with no popup, download or dialog. The
+  prompt idioms of all four libraries download as pages that draw, in both themes. Two
+  controls: with `allow-same-origin allow-top-navigation allow-popups` the snippet
+  navigated the window away and the probe failed; without `frame-src 'none'` the
+  navigation was blocked all the same, because the wrapper's `default-src 'none'` is the
+  fallback of `frame-src`, so the explicit directive is a second line, not the only one.
+- **Tests.** The harness's page-only mode (`test_js_render_sandbox.py`), the wire, the
+  executor through the fake launcher and the real harness in exec mode, the service route
+  (`test_service.py`, `TestPage`), the remote backend (`TestPage`), the wrapper and
+  `page_download` (`test_page_export.py`), the artifact names and both copies of the page's
+  headers (`test_artifact_names.py`), the service flow (a D3 session downloads its page in
+  both themes; the error codes; `409 run_active` while a build runs), the BFF route, and the
+  image test (`test_profile_javascript_page_image.py`, skipped without the image): the
+  probe and the idioms for all four libraries.
+- **In the browser** (2026-10-31, the agent chat against the local BFF mock, which serves
+  JavaScript versions with a stand-in page since then): the button waits while the run
+  streams, the light card downloads the light page and the dark card the dark one, and each
+  file opened from disk draws in its frame (origin `null`) and answers a hover, at 1440 and
+  390 pixels, in both site themes, with a clean console.
+
+| Text above (3g) | Built | Why |
+|---|---|---|
+| `ANYPLOT_PAGE_ONLY=1` in sandbox mode | refused without `ANYPLOT_SANDBOX=1` | the download must carry the sandbox's policy |
+| `/page`'s failures with `/render`'s mapping and the final error line in a JSON body | `422 page_failed` with `wire.PageFailure` | a built page is the body itself, so a failure needs another status; `422` is never retried by the front end and carries the renderer's own `detail` |
+| The page escaped for the attribute | a single-quoted `srcdoc` with `&` and `'` as references | the exact escape for that attribute state, without growing every `"` of the table sixfold |
+| Scroll or scale | both: stepped CSS scales to a quarter, a scroll bar below | a laptop shows the whole plot at 0.8 without scrolling; pure CSS cannot compute a free scale |
+| Not in the text | the download holds the session's registry entry; `500 page_failed` | like the theme toggle, one sandbox job per session at a time; a failed build has a code of its own |
+| The probe under `agents/renderer/toolchain/` or next to the harness | `agents/renderer/page_probe.mjs` | both of those are toolchain inputs, so every edit of the probe would rebuild the toolchain image |
 
 ### 4. plotly and bokeh (through the JavaScript harness's Chromium)
 
@@ -2694,6 +2874,47 @@ every render path. Each finding was checked against the code before it was adopt
 
 Cost: Gemini 4 Argon $1.45 (5 turns, 881,600 input tokens, 647,916 cached); Fable about
 157,000 tokens.
+
+## Second opinion on JS-4b's design (Gemini 4 Argon and Fable, 2026-10-31)
+
+Both reviewed the draft of 3g before JS-4b-1 was built; the findings below are adopted in 3g.
+"Measured" marks a claim Fable reproduced in Chromium.
+
+| Finding | From | Change |
+|---|---|---|
+| A `srcdoc` frame inherits the wrapper's content security policy, so the draft's stricter wrapper policy (`default-src 'none'` without `script-src 'unsafe-inline'`) blanks the plot; `frame-src 'none'` does not block the `srcdoc` itself, but blocks the frame's navigation of itself to http(s) | both (Fable measured) | The wrapper's policy is exactly the harness's plus `frame-src 'none'`, pinned to the harness's constant by a test |
+| Build the page on demand instead of storing it next to the PNGs: a page is the bundle plus the typed table, up to about 17 MB | both | `GET .../artifacts/plot.html` builds it per request through the renderer's `POST /page` |
+| `PlotResult.artifacts` caps at four, and a JavaScript version with both themes and the page has five | Gemini | The cap is five (`schemas.MAX_ARTIFACTS`) |
+| The agents service deploys before the renderer, and an older renderer has no `/page` | Gemini | A `404` raises `PageUnsupported`, answered `503 page_unavailable` |
+| One page per shown theme: the page carries the theme's tokens, so the download follows the theme on the card | both | `?theme=`, defaulting to the version's theme; the card asks for the theme it shows |
+| Split JS-4b into the download (JS-4b-1) and the in-chat preview (JS-4b-2), whose delivery needs a decision | both | JS-4b-1 is the download; JS-4b-2 waits for the owner's decision below |
+
+**Open: how the preview reaches the chat (JS-4b-2).** The reviewers disagree; neither is built.
+
+- **(A) Gemini: a relay page.** A static, unauthenticated page on api.anyplot.ai, served with
+  `Content-Security-Policy: sandbox allow-scripts; <the page's policy>; frame-ancestors <the
+  site's origins>`, receives the page by `postMessage` from the chat (it checks the sender's
+  origin) and writes it into a sandboxed `srcdoc` child. No token travels, and Cloudflare
+  Access does not stand in the way.
+- **(B) Fable: a capability URL.** A short-lived HMAC URL (its own key; the payload
+  `user_id|sid|version|theme|exp`, about five minutes), served only when the request says
+  `Sec-Fetch-Dest: iframe`, because Fable measured that the URL opened directly as a tab lets
+  the plot code navigate the tab, and kept outside `/debug/*`.
+
+## Second opinion on JS-4b-1's code (Gemini 4 Argon and Fable, 2026-10-31)
+
+Both reviewed the JS-4b-1 commit before its PR: sound with changes.
+
+| Finding | Decision |
+|---|---|
+| The page build holds the session's run entry on the server, but the card alone knew it was building, so a theme toggle, a message or a binding edit during the build got `409 run_active` | Adopted: `useAgentSession` tracks the build (`pageBusy`, part of `sessionBusy`), so the page holds the composer, the toggles and the edits back while `plot.html` builds, and starts no build while one of them runs |
+| The page download counted as `downloaded_code` | Adopted: its own outcome, `downloaded_page`, in the closed set of the agents service, the BFF and the page (pinned equal by a test), counted as a keep by the API's usage card. The view files that enumerate the actions name it too (`agents/telemetry/views/02_event_views.sql` `keeps`, `06_score_outcomes.sql` `downloads`, the comment in `03_sessions.sql`); re-creating the views in BigQuery after the merge is the owner's step, and until then a page download is an outcome that keeps nothing there |
+| The probe covered three of the four served libraries | Adopted: a Highcharts snippet, in the image test's `--hover --attempts` run; a comment says that `chrome-error://chromewebdata/` is what a blocked navigation looks like |
+| "Byte for byte" for the `srcdoc` | Adopted: character for character, apart from the input stream's normalisation (CR LF and a lone CR become LF, NUL becomes U+FFFD), as on any load of the page |
+| `/cancel` does not abort a page build | Not adopted: a build takes about 0.6 s, and the theme toggle, which renders far longer, does not stop on `/cancel` either |
+| A cap of its own on the BFF's stream of `plot.html` | Not adopted: the agents service refuses a wrapper over 30 MiB before it answers, and Cloud Run caps a response that is not streamed at 32 MiB |
+| Before the chat is public: the wrapper makes three or four transient copies of a page of up to 24 MiB (the decode, the two replaces, the encode), about 100 to 150 MiB at peak per build on the 2 GiB agents instance | Open: stream the wrapper, or do the replaces on bytes |
+| Before the chat is public: a page too large to answer is `500 page_failed` | Open: answer it `413` with its own code |
 
 ## Open questions for the owner
 

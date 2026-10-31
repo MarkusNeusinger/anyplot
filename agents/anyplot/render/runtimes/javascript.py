@@ -88,6 +88,10 @@ from .python import IMAGE_HARNESS, IMAGE_PYTHON, RENDER_RLIMIT_FSIZE_MB, PythonR
 
 
 LANGUAGE = "javascript"
+JS_HARNESS_SOURCE = Path(__file__).resolve().parents[4] / "automation" / "js-render" / "render.mjs"
+"""The checkout's browser harness, which the local Docker backend mounts read-only over the image's (`JS_HARNESS`) for
+every JavaScript container, renders and page builds alike, as it mounts the checkout's `harness.py`: a local run uses the
+harness under development."""
 UNAVAILABLE_IMPORT_RULE = "unavailable-import"
 ADAPTATION_TARGETS: Mapping[str, str] = MappingProxyType(
     {
