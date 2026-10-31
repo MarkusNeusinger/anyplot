@@ -6,9 +6,16 @@
   harness draws it in Chromium at the catalogue's canvas. The admin deploy names
   them, so all 15 catalogue libraries are served, and each one's 80 % eval
   matrix gates the public release. Across the catalogue 273 of 325 plotly and
-  253 of 325 bokeh files are eligible; in the renderer image 254 of the 273 and
-  246 of the 253 render on target in both themes as they stand, the rest only
+  254 of 325 bokeh files are eligible; in the renderer image 254 of the 273 and
+  247 of the 254 render on target in both themes as they stand, the rest only
   because their code divides by the length of the emptied catalogue title.
+- **The validator rules for plotly and bokeh.** Both refuse private names, a
+  string where the library expects a URL whatever its scheme, and every model
+  that loads from the network or a file: plotly's geo and map traces and its
+  `plotly_relayout` family, bokeh's JavaScript, markup and tile models and its
+  import by name. bokeh's tooltip templates pass as the catalogue writes them,
+  text tags with a quoted `style` or `class`, never `{safe}`, because BokehJS
+  parses a template and each tooltip value as HTML.
 - **The figure save and the exported code.** The normaliser turns the
   catalogue's save block into one protected statement that writes the figure as
   JSON (plotly's size moved into the figure; bokeh's Selenium screenshot block
@@ -36,6 +43,10 @@
 - **The scope judge's example of another library is Excel.** "Gibt es das
   auch in Plotly?" stood for a library the assistant does not adapt; plotly is
   served now, and so is every catalogue library.
+- **Every profile's URL rule refuses a protocol-relative URL.** The Python, R
+  and Julia validators refuse `//host/...`, `ws://`, `wss://`, `blob:` and
+  `javascript:` in a string, as the JavaScript one has since JS-3; no catalogue
+  file of a served library changes its outcome.
 
 ### Fixed
 

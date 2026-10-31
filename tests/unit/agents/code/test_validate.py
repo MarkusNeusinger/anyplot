@@ -853,6 +853,10 @@ class TestStrings:
             "'see HTTPS://x.y'",
             "f'https://{THEME}/x'",
             "b'http://x'",
+            "'//cdn.example.org/x.png'",
+            "'wss://example.org/feed'",
+            "'blob:abc'",
+            "'javascript:alert(1)'",
         ],
     )
     def test_url_literal(self, literal: str) -> None:
@@ -2388,7 +2392,9 @@ PYGAL_NEAR_ROUTES = [
     pytest.param("import cairosvg\nv = cairosvg.VERSION\n", id="cairosvg's version string"),
 ]
 PYGAL_CONFIG_ROUTES = [
-    pytest.param('c2 = pygal.Bar(js=["//cdn.example/x.js"])\n', {"banned-keyword"}, id="a script fetched"),
+    pytest.param(
+        'c2 = pygal.Bar(js=["//cdn.example/x.js"])\n', {"banned-keyword", "url-literal"}, id="a script fetched"
+    ),
     pytest.param('c2 = pygal.Bar(js=["file:///etc/passwd"])\n', {"banned-keyword", "url-literal"}, id="a script read"),
     pytest.param('c2 = pygal.Bar(css=["file:///etc/passwd"])\n', {"banned-keyword", "url-literal"}, id="a file read"),
     pytest.param('c2 = pygal.Bar(css=["fi" + "le:///etc/passwd"])\n', {"banned-keyword"}, id="a built entry"),

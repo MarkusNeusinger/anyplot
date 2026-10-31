@@ -45,7 +45,58 @@ PLOTLY_ROUTES = [
         "banned-attribute",
         id="county choropleth reads shapefiles",
     ),
+    pytest.param(
+        "import plotly.express as px\nm = px.optional_imports.get_module('os')\n",
+        "banned-attribute",
+        id="px get_module",
+    ),
+    pytest.param(
+        "import plotly.figure_factory as ff\nm = ff.optional_imports.get_module('os')\n",
+        "banned-attribute",
+        id="ff get_module",
+    ),
+    pytest.param("from plotly.express import optional_imports\n", "banned-attribute", id="optional_imports by from"),
+    pytest.param("from plotly.optional_imports import get_module\n", "banned-import", id="the module"),
+    pytest.param("import plotly.express as px\nc = px._core\n", "banned-attribute", id="a private module"),
+    pytest.param("fig0 = go.Figure()\nfig0._layout['width'] = '1'\n", "banned-attribute", id="the layout dict"),
+    pytest.param("fig0 = go.Figure(layout={'width': 900}, _validate=False)\n", "banned-keyword", id="_validate"),
+    pytest.param(
+        "fig0 = go.Figure()\nfig0.write_html('x.html', post_script='alert(1)', include_plotlyjs='x.js')\n",
+        "banned-attribute",
+        id="write_html with script keywords",
+    ),
+    pytest.param('fig0 = go.Figure()\nfig0.plotly_relayout({"width": "1"})\n', "banned-attribute", id="relayout"),
+    pytest.param("fig0 = go.Figure()\nfig0.plotly_update(layout={})\n", "banned-attribute", id="update"),
+    pytest.param("fig0 = go.Figure()\nfig0.plotly_restyle({})\n", "banned-attribute", id="restyle"),
+    pytest.param("fig0 = go.Figure()\nfig0._validate = False\n", "banned-attribute", id="a private attribute"),
+    pytest.param("t = go.Scatter(x=[1], _validate=False)\n", "banned-keyword", id="a private keyword"),
+    pytest.param("t = go.Scatter(**{'_validate': False})\n", "banned-keyword", id="a private key"),
+    pytest.param(
+        "import plotly.express as px\nf = px.scatter(df, trendline='rolling', trendline_options={'function': 'mean'})\n",
+        "banned-keyword",
+        id="trendline_options dispatches by name",
+    ),
+    pytest.param("t = go.Scattergeo(lat=[1], lon=[1])\n", "banned-attribute", id="a geo trace fetches its map"),
+    pytest.param(
+        "import plotly.express as px\nf = px.scatter_map(df, lat='a', lon='a')\n", "banned-attribute", id="tiles"
+    ),
+    pytest.param("fig0 = go.Figure()\nfig0.update_geos(visible=False)\n", "banned-attribute", id="update_geos"),
+    pytest.param("fig0 = go.Figure()\nfig0.add_layout_image(source='logo.png')\n", "url-literal", id="image source"),
+    pytest.param(
+        "fig0 = go.Figure()\nfig0.update_layout(images=[dict(source='logo.png')])\n", "url-literal", id="images list"
+    ),
+    pytest.param("LOGO = 'logo.png'\nimg = go.layout.Image(source=LOGO)\n", "url-literal", id="source through a name"),
+    pytest.param("t = go.Choropleth(geojson='counties.json')\n", "url-literal", id="a relative geojson URL"),
+    pytest.param("u = '//cdn.example.org/x.png'\n", "url-literal", id="a protocol-relative URL"),
 ]
+
+
+def test_plotly_data_named_source_passes() -> None:
+    body = (
+        "edges = pd.DataFrame([{'source': 'A', 'target': 'B'}])\n"
+        "s = go.Sankey(link=dict(source=[0, 1], target=[1, 0], value=[1, 1]))\n"
+    )
+    assert validate_security(plotly_plot(body), library="plotly") == []
 
 
 @pytest.mark.parametrize(("body", "rule"), PLOTLY_ROUTES)
@@ -83,13 +134,34 @@ BOKEH_ROUTES = [
     pytest.param("import bokeh.sampledata\n", "banned-import", id="sampledata"),
     pytest.param("import bokeh.util.compiler\n", "banned-import", id="compiler (Node)"),
     pytest.param("import bokeh.themes\n", "banned-import", id="themes read files"),
-    pytest.param('h = HoverTool(tooltips="<b>@a</b>")\n', "banned-keyword", id="an HTML tooltip template"),
+    pytest.param("from bokeh.models import Model\nm = Model.lookup('x')\n", "banned-attribute", id="lookup by name"),
+    pytest.param("from bokeh.core.properties import Instance\n", "banned-import", id="Instance by string"),
     pytest.param(
-        'TIPS = "<img src=x onerror=alert(1)>"\nh = HoverTool(tooltips=TIPS)\n',
-        "banned-keyword",
-        id="an HTML tooltip template through a name",
+        "from bokeh.models import GlyphRenderer\nt = GlyphRenderer.glyph.property\n", "banned-attribute", id="property"
     ),
-    pytest.param('h = HoverTool()\nh.tooltips = f"<i>{THEME}</i>"\n', "banned-keyword", id="a tooltips store"),
+    pytest.param("q = figure()\nd = q.descriptors()\n", "banned-attribute", id="descriptors"),
+    pytest.param("q = figure()\nd = q.properties_with_refs()\n", "banned-attribute", id="properties_with_refs"),
+    pytest.param("q = figure()\nd = q.dataspecs()\n", "banned-attribute", id="dataspecs"),
+    pytest.param("q = figure()\nd = q.parameters()\n", "banned-attribute", id="parameters"),
+    pytest.param(
+        "q = figure()\nd = q.query_properties_with_values(lambda d: True)\n", "banned-attribute", id="query descriptors"
+    ),
+    pytest.param("q = figure()\nc = q.model_class_reverse_map['Div']\n", "banned-attribute", id="a class by name"),
+    pytest.param("h = HoverTool()\nh.set_from_json('tooltips', 'x')\n", "banned-attribute", id="set_from_json"),
+    pytest.param("q = figure()\nq.apply_theme({'width': 'x'})\n", "banned-attribute", id="apply_theme"),
+    pytest.param("from bokeh.plotting import Document\n", "banned-attribute", id="Document re-export"),
+    pytest.param("import bokeh.themes\n", "banned-import", id="Theme"),
+    pytest.param("from bokeh.models import ImageURLTexture\n", "banned-attribute", id="ImageURLTexture"),
+    pytest.param("from bokeh.models import Switch\ns = Switch(on_icon='x.svg')\n", "banned-keyword", id="on_icon"),
+    pytest.param("from bokeh.models import Document\n", "banned-attribute", id="a document of its own"),
+    pytest.param(
+        "from bokeh.models import Toggle\nt = Toggle(icon='x.svg')\n", "banned-keyword", id="icon reads a file"
+    ),
+    pytest.param(
+        "from bokeh.models import Toggle\nt = Toggle()\nt.on_icon = 'x.svg'\n", "banned-attribute", id="store"
+    ),
+    pytest.param("q = figure()\nq._property_values\n", "banned-attribute", id="a private attribute"),
+    pytest.param("q = figure(url='tiles/{Z}.png')\n", "url-literal", id="a relative URL"),
 ]
 
 
@@ -98,9 +170,88 @@ def test_bokeh_routes_are_refused(body: str, rule: str) -> None:
     assert rule in rules(bokeh_plot(body), "bokeh")
 
 
-def test_bokeh_tooltip_pairs_pass() -> None:
-    body = 'TIPS = [("x", "@a{0.0}")]\nh = HoverTool(tooltips=TIPS)\nh2 = HoverTool(tooltips=[("y", "@a")])\n'
-    assert validate_security(bokeh_plot(body), library="bokeh") == []
+class TestBokehTooltips:
+    """BokehJS parses a template string and each pair's value as HTML; the profile reads every text either can take
+    (owner decision of 2026-10-31: templates as the catalogue writes them, no `{safe}`)."""
+
+    @pytest.mark.parametrize(
+        "body",
+        [
+            pytest.param('TIPS = [("x", "@a{0.0}")]\nh = HoverTool(tooltips=TIPS)\n', id="pairs through a name"),
+            pytest.param('h = HoverTool(tooltips=[("y", "@a"), ("n", "$index")])\n', id="pairs"),
+            pytest.param('h = HoverTool(tooltips="<b>@a</b> &times; <i>@a{0.00}</i><br/>")\n', id="a template"),
+            pytest.param(
+                'INK = "#1A1A17" if THEME == "light" else "#F0EFE8"\nBG = INK\n'
+                'h = HoverTool(tooltips=f"""<div style="color:{BG};padding:8px">'
+                '<span class=\'k\'>@a</span></div>""")\n',
+                id="an f-string over theme constants, as chord-basic writes it",
+            ),
+            pytest.param('UCL = 3.5\nh = HoverTool(tooltips=[("UCL", f"{UCL:.3f}")])\n', id="a formatted number"),
+            pytest.param('h = HoverTool(tooltips=[(f"d < {2:.1f}", "@a")])\n', id="a label is text"),
+            pytest.param('h = HoverTool(tooltips=[("cmp", "@a < 5 <= @a")])\n', id="a comparison is text"),
+            pytest.param("h = HoverTool(tooltips=None)\n", id="no tooltips"),
+        ],
+    )
+    def test_allowed(self, body: str) -> None:
+        assert validate_security(bokeh_plot(body), library="bokeh") == []
+
+    @pytest.mark.parametrize(
+        ("body", "rule"),
+        [
+            pytest.param('h = HoverTool(tooltips=[("x", "@a{safe}")])\n', "banned-keyword", id="{safe}"),
+            pytest.param('h = HoverTool(tooltips="<div>@a{ safe }</div>")\n', "banned-keyword", id="{ safe }"),
+            pytest.param('F = "safe"\nh = HoverTool(tooltips=f"@a{{{F}}}")\n', "banned-keyword", id="{safe} by name"),
+            pytest.param('h = HoverTool(tooltips="<img src=x onerror=alert(1)>")\n', "banned-keyword", id="img"),
+            pytest.param('h = HoverTool(tooltips=[("x", "<img src=x>")])\n', "banned-keyword", id="img in a pair"),
+            pytest.param('h = HoverTool(tooltips="<a href=\\"#\\">@a</a>")\n', "banned-keyword", id="a link"),
+            pytest.param('h = HoverTool(tooltips="<b onclick=\\"x\\">@a</b>")\n', "banned-keyword", id="a handler"),
+            pytest.param('h = HoverTool(tooltips="<b style=x>@a</b>")\n', "banned-keyword", id="unquoted"),
+            pytest.param(
+                'h = HoverTool(tooltips="<div style=\\"background:url(x.png)\\">@a</div>")\n',
+                "banned-keyword",
+                id="a CSS URL",
+            ),
+            pytest.param(
+                'h = HoverTool(tooltips="<div style=\\"color:@a\\">x</div>")\n', "banned-keyword", id="a field in style"
+            ),
+            pytest.param(
+                'h = HoverTool(tooltips="<div style=\\"u&#114;l(x)\\">x</div>")\n', "banned-keyword", id="an entity"
+            ),
+            pytest.param('h = HoverTool(tooltips="<b>@a</b" + ">")\n', "banned-keyword", id="a concatenation"),
+            pytest.param('h = HoverTool(tooltips=f"<b>{THEME}</b>")\n', "banned-keyword", id="an unreadable value"),
+            pytest.param(
+                'for name in ["a"]:\n    h = HoverTool(tooltips=[("Server", name)])\n',
+                "banned-keyword",
+                id="a loop variable's text, as the catalogue's horizon-basic writes it",
+            ),
+            pytest.param('h = HoverTool(tooltips=[("x", f"{THEME:.3}")])\n', "banned-keyword", id="a text spec"),
+            pytest.param('h = HoverTool(tooltips=[("x", f"{THEME!r}")])\n', "banned-keyword", id="a conversion"),
+            pytest.param('h = HoverTool(tooltips=["@a"])\n', "banned-keyword", id="no pair"),
+            pytest.param(
+                'TIPS = [("x", "@a")]\nTIPS.append(("y", "<img src=x>"))\nh = HoverTool(tooltips=TIPS)\n',
+                "banned-keyword",
+                id="a list changed after its binding",
+            ),
+            pytest.param(
+                'h = HoverTool(tooltips=[("x", "@a")])\nh.tooltips.append(("y", "@a"))\n',
+                "banned-attribute",
+                id="a tooltips list changed in place",
+            ),
+            pytest.param('h = HoverTool()\nh.tooltips = "<img src=x>"\n', "banned-keyword", id="a store"),
+            pytest.param('h = HoverTool(**{"tooltips": "<img src=x>"})\n', "banned-keyword", id="an unpacked key"),
+            pytest.param(
+                'OPTS = {"tooltips": [("x", "<b>@a</b>")]}\nTIP = "<img src=x>"\n', "banned-keyword", id="a piece"
+            ),
+            pytest.param('OPEN = "<"\n', "banned-keyword", id="a lone opening bracket"),
+        ],
+    )
+    def test_refused(self, body: str, rule: str) -> None:
+        assert rule in rules(bokeh_plot(body), "bokeh")
+
+    def test_a_refused_template_is_one_finding(self) -> None:
+        found = validate_security(bokeh_plot('h = HoverTool(tooltips="<img src=x>")\n'), library="bokeh")
+        assert [finding.rule for finding in found] == ["banned-keyword"]
+        assert "<img" not in found[0].message
 
 
 class TestTheFigureSave:

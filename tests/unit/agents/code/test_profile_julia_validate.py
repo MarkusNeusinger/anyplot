@@ -170,6 +170,7 @@ def test_the_working_form_in_miniature_passes_both_profiles() -> None:
         "Random = 1",
         # literals
         'url = "https://example.org/data.csv"',
+        'url = "//cdn.example.org/data.csv"',
         'big = "' + "x" * 201 + '"',
     ],
 )

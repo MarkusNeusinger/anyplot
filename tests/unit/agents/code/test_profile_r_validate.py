@@ -91,6 +91,7 @@ def test_a_minimal_program_passes() -> None:
         ('source("x.R")', "banned-name"),
         ("options(warn = 2)", "banned-name"),
         ('x <- "https://example.com"', "url-literal"),
+        ('x <- "//cdn.example.com/x.png"', "url-literal"),
         ('x <- "' + "a" * 201 + '"', "string-length"),
         # packages
         ("library(readr)", "banned-import"),

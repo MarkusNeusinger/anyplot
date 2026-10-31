@@ -243,16 +243,22 @@ class TestTheFigureIsData:
         assert "refused" not in run.stderr and "console error" not in run.stderr
 
     def test_an_event_handler_in_bokehs_markup_never_runs(self, harness: Harness, tmp_path: Path) -> None:
-        """Sandbox mode's policy allows inline handlers; a figure page's admits scripts by its nonce alone."""
+        """Sandbox mode's policy allows inline handlers; a figure page's admits scripts by its nonce alone. The handler
+        would log a marker it builds at run time, so the source text the violation may quote never holds it; the
+        assertions read what ran and which directive refused it, not Chromium's wording, which changes between
+        versions ("Refused to execute inline event handler ..." locally, "Executing inline event handler violates
+        ..." in CI)."""
         bokeh = bokeh_or_skip()
         plot = bokeh.plotting.figure(width=800, height=450, toolbar_location=None)
         plot.line([1, 2], [3, 4])
-        div = bokeh.models.Div(text="<img src=x onerror=\"fetch('http://127.0.0.1:9/div')\"><b>bold</b>")
+        handler = "console.error('handler' + '-ran'); fetch('http://127.0.0.1:9/div')"
+        div = bokeh.models.Div(text=f'<img src=x onerror="{handler}"><b>bold</b>')
         run = harness.draw(tmp_path, bokeh.embed.json_item(bokeh.layouts.column(div, plot)), library="bokeh")
 
         assert run.returncode == 0, run.stderr
-        assert "Executing inline event handler violates the following Content Security Policy" in run.stderr
+        assert "handler-ran" not in run.stderr
         assert "refused" not in run.stderr and "Failed to fetch" not in run.stderr
+        assert "script-src" in run.stderr  # the console error names the directive that refused the handler
 
     def test_custom_js_cannot_compile(self, harness: Harness, tmp_path: Path) -> None:
         bokeh = bokeh_or_skip()

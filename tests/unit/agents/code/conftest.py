@@ -808,6 +808,7 @@ FIGURE_PROMPT_IDIOM_SNIPPETS: dict[str, tuple[str, ...]] = {
         "p.yaxis.ticker = FixedTicker(ticks=ticks)",
         'p.yaxis.major_label_overrides = {tick: f"{tick:,.0f}".replace(",", "_").replace(".", DECIMAL).replace("_", '
         "THOUSANDS) for tick in ticks}",
+        "tooltips=f'<div style=\"color:{INK}\">@label</div>'",
     ),
 }
 FIGURE_PROMPT_IDIOMS: dict[str, str] = {
@@ -867,7 +868,7 @@ FIGURE_PROMPT_IDIOMS: dict[str, str] = {
 
         from bokeh.embed import json_item
         from bokeh.layouts import row
-        from bokeh.models import ColumnDataSource, DatetimeTickFormatter, FixedTicker, Label
+        from bokeh.models import ColumnDataSource, DatetimeTickFormatter, FixedTicker, HoverTool, Label
         from bokeh.plotting import figure
 
         THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -886,7 +887,8 @@ FIGURE_PROMPT_IDIOMS: dict[str, str] = {
         df = load_user_data()
 
         dated = df.dropna(subset=[X, Y]).sort_values(DAY)
-        line = ColumnDataSource(data={"x": dated[DAY], "y": dated[Y].astype("float64")})
+        labels = [f"{value:,.0f}".replace(",", "_").replace(".", DECIMAL).replace("_", THOUSANDS) for value in dated[Y]]
+        line = ColumnDataSource(data={"x": dated[DAY], "y": dated[Y].astype("float64"), "label": labels})
         peak = dated[Y].idxmax()
         v = dated.loc[peak, Y]
         label = f"{v:,.0f}".replace(",", "_").replace(".", DECIMAL).replace("_", THOUSANDS)
@@ -896,6 +898,7 @@ FIGURE_PROMPT_IDIOMS: dict[str, str] = {
         p = figure(width=2000, height=1800, x_axis_type="datetime", title="Umsatz", toolbar_location=None)
         p.line(x="x", y="y", source=line, line_color=IMPRINT[0], line_width=4)
         p.scatter(x="x", y="y", source=line, size=14, color=IMPRINT[0])
+        p.add_tools(HoverTool(tooltips=f'<div style="color:{INK}">@label</div>'))
         p.add_layout(Label(x=dated.loc[peak, DAY], y=v, text=label, text_color=INK, text_align="right", y_offset=12))
         p.xaxis.formatter = DatetimeTickFormatter(days="%d.%m.%Y", months="%m.%Y", years="%Y")
         low, high = float(dated[Y].min()), float(dated[Y].max())
