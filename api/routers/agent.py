@@ -594,6 +594,7 @@ OutcomeAction = Literal[
     "downloaded_png",
     "downloaded_code",
     "downloaded_page",
+    "opened_preview",
     "downloaded_data",
     "saved_session",
     "feedback",

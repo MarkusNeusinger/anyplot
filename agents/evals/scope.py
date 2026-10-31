@@ -18,9 +18,10 @@ The calls are paced: `--calls-per-minute` (25 by default, 0 turns it off) spaces
 starts of the judge calls at least 60/N seconds apart across every concurrent case,
 so a full run takes about 7 minutes. In the project `anyplot` the Vertex AI quota
 for Claude Haiku in `eu` (`eu_multi_region_online_prediction_requests_per_base_model`)
-is 30 requests per minute, and failed calls count against it too: unpaced runs on
-2026-10-10 answered about 60 cases and then got HTTP 429 for every remaining call. The
-judge's own retry is not paced, so 25 leaves room for a few retries a minute. A case
+was 30 requests per minute until the owner raised it to 150 on 2026-10-31, and failed
+calls count against it too: unpaced runs on 2026-10-10 answered about 60 cases and then
+got HTTP 429 for every remaining call. The judge's own retry is not paced, and the
+agents service shares the quota, so 25 leaves room for both. A case
 the judge could not answer keeps the cause, the `JudgeUnavailable` message, which
 names the failure's exception type (for example `RateLimitError`) and never the case
 text.

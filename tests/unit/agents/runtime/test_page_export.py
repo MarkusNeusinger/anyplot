@@ -17,7 +17,9 @@ from agents.anyplot.render.backends.fake import FakeBackend, fixture_page
 from agents.anyplot.render.contract import PageFailed, PageJob
 from agents.anyplot.render.page import (
     BACKGROUNDS,
+    DEVICE_SCALE_FACTOR,
     FRAME_SANDBOX,
+    MARGIN_PX,
     PAGE_POLICY,
     SCALES,
     WRAPPER_POLICY,
@@ -69,7 +71,7 @@ def parsed(document: str) -> Wrapper:
 
 
 class TestWrapper:
-    def test_the_policy_is_the_harnesss_plus_frame_src_none(self) -> None:
+    def test_the_policy_is_the_harness_policy_plus_frame_src_none(self) -> None:
         """One owner: the harness. The wrapper's policy is exactly its policy and `frame-src 'none'`, because a `srcdoc`
         frame inherits the wrapper's policy (Fable measured a stricter one blanking the plot)."""
         assert harness_policy() == PAGE_POLICY
@@ -119,6 +121,32 @@ class TestWrapper:
         first = wrap_page(NASTY, theme="dark", canvas=(3200, 1800), title="scatter-basic · d3 · v2")
         assert first == wrap_page(NASTY, theme="dark", canvas=(3200, 1800), title="scatter-basic · d3 · v2")
         assert f"background: {BACKGROUNDS['dark']}" in first
+
+    def test_the_cards_preview_frame_is_read_from_the_wrapper_at_scale_one(self) -> None:
+        """JS-4b-2: the chat reads the frame's size at scale 1 from the page it shows (`pageFrameSize` in
+        `app/src/lib/agent.ts`, the first match of `PAGE_FRAME_PATTERN`) and frames the relay at that size plus
+        `PAGE_MARGIN_PX` around it, which lies just past the first media query, so the wrapper shows the plot at
+        scale 1 and the card scales the whole frame. The first match is the wrapper's own rule, whatever the page
+        inside it holds; the fallback, for a page without the rule, is the landscape frame."""
+        source = (REPO_ROOT / "app" / "src" / "lib" / "agent.ts").read_text(encoding="utf-8")
+        literal = re.search(r"export const PAGE_FRAME_PATTERN = /(.+)/;\n", source)
+        margin = re.search(r"export const PAGE_MARGIN_PX = (\d+);", source)
+        fallback = re.search(r"export const PAGE_FRAME_FALLBACK = \{ width: (\d+), height: (\d+) \};", source)
+        assert literal is not None and margin is not None and fallback is not None
+        pattern = re.compile(literal.group(1))
+        assert int(margin.group(1)) == MARGIN_PX
+        assert (int(fallback.group(1)), int(fallback.group(2))) == (1600, 900)
+
+        decoy = "<p>.frame { width: 10px; height: 10px; }</p>"
+        for canvas in ((3200, 1800), (2400, 2400)):
+            wrapper = wrap_page(decoy, theme="light", canvas=canvas, title="t")
+            found = pattern.search(wrapper)
+            assert found is not None
+            width, height = (int(found.group(1)), int(found.group(2)))
+            assert (width, height) == tuple(side // DEVICE_SCALE_FACTOR for side in canvas)
+            css = sizing_css(width, height)
+            framed = (width + 2 * MARGIN_PX, height + 2 * MARGIN_PX)
+            assert f"(max-width: {framed[0] - 1}px), (max-height: {framed[1] - 1}px)" in css, canvas
 
 
 SQUARE_RUN_FORM = (

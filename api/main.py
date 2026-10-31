@@ -45,6 +45,7 @@ from api.routers import (  # noqa: E402
     libraries_router,
     og_images_router,
     plots_router,
+    preview_router,
     proxy_router,
     seo_router,
     specs_router,
@@ -377,6 +378,7 @@ app.include_router(download_router)
 app.include_router(seo_router)
 app.include_router(og_images_router)
 app.include_router(proxy_router)
+app.include_router(preview_router)
 app.include_router(debug_router)
 app.include_router(agent_router)
 app.include_router(feedback_router)
