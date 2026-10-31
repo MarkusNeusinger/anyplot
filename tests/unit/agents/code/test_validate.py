@@ -3109,14 +3109,23 @@ def test_catalogue_file_never_raises(path: Path) -> None:
         assert finding.line is None or finding.line >= 1
 
 
+CATALOGUE_CPU_PER_FILE_S = 20.0 / 1946
+"""The SECURITY profile's CPU budget per catalogue file: main's corpus bound of 20 s over its 1,946 files of six
+libraries (2026-10-31), held per file since plotly and bokeh joined the corpus (PB-2a), because the agent validates one
+file per request and a corpus total failed for every new library. CI runs about 4 times slower than a local machine:
+the six libraries took 4.45 s locally and about 18.4 s in CI on main."""
+
+
 @pytest.mark.skipif(not CATALOGUE_FILES, reason="plots/ is absent")
 def test_catalogue_summary() -> None:
     """Per-rule finding counts over the corpus, one block per library with a profile; visible with `pytest -s`.
-    The bound is CPU time, as in `test_catalogue_file_never_raises`."""
+    The bound is CPU time per file (`CATALOGUE_CPU_PER_FILE_S`), as in `test_catalogue_file_never_raises`."""
     started = time.process_time()
     lines = []
+    total = 0
     for library in CODE_LIBRARIES:
         files = [path for path in CATALOGUE_FILES if path.stem == library]
+        total += len(files)
         findings_per_rule: Counter[str] = Counter()
         files_per_rule: Counter[str] = Counter()
         clean = 0
@@ -3129,5 +3138,9 @@ def test_catalogue_summary() -> None:
         for rule, count in findings_per_rule.most_common():
             lines.append(f"  {rule:<18} {count:>5} findings in {files_per_rule[rule]:>4} files")
     elapsed = time.process_time() - started
-    print("\n" + "\n".join(lines) + f"\n({elapsed:.2f}s CPU)")
-    assert elapsed < 20.0
+    per_file = elapsed / total
+    print("\n" + "\n".join(lines) + f"\n({elapsed:.2f}s CPU, {1000 * per_file:.2f} ms per file)")
+    assert per_file < CATALOGUE_CPU_PER_FILE_S, (
+        f"{1000 * per_file:.2f} ms CPU per file over {total} files ({elapsed:.1f} s); "
+        f"the budget is {1000 * CATALOGUE_CPU_PER_FILE_S:.2f} ms"
+    )
