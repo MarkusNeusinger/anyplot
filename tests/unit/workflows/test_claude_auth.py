@@ -1,4 +1,4 @@
-"""Claude credential switch (vars.CLAUDE_AUTH), the session summary and the spend limit.
+"""Claude credential switch (vars.CLAUDE_AUTH), the session summary and the spend/usage limit.
 
 Every job that runs Claude starts with the same "Resolve Claude credentials"
 step. It maps CLAUDE_AUTH (unset or `subscription`, `api`, `oidc`) to a mode,
@@ -9,10 +9,11 @@ then passes exactly one credential; the action's precedence with several set
 is undocumented (an API key or OAuth token silently shadows federation).
 
 After every Claude step, "Claude session summary" writes the cost line and
-reads whether the session stopped at the Claude spend limit (api/oidc only);
-the retry is skipped then, and the failure paths of impl-generate,
-impl-review and impl-repair park the work as an infrastructure stop without
-a retry or a counted attempt.
+reads whether the session stopped at a Claude spend or usage limit (the API's
+spend limit, spend cap or credit balance, the subscription's usage limit), in
+every mode; the retry is skipped then, and the failure paths of
+impl-generate, impl-review and impl-repair park the work as an infrastructure
+stop without a retry, a counted attempt or a failure verdict.
 
 There is no pre-merge smoke for these workflows (claude-code-action refuses
 to run on a PR that changes them), so the wiring is pinned here and the
@@ -37,7 +38,7 @@ WORKFLOWS_DIR = Path(__file__).parent.parent.parent.parent / ".github" / "workfl
 ACTION = "anthropics/claude-code-action@"
 RESOLVE = "Resolve Claude credentials"
 SUMMARY = "Claude session summary"
-STOP = "Stop at the Claude spend limit"
+STOP = "Stop at the Claude spend or usage limit"
 CREDENTIALS = {
     "anthropic_api_key": "${{ steps.claude_auth.outputs.mode == 'api' && secrets.ANTHROPIC_API_KEY || '' }}",
     "claude_code_oauth_token": (
@@ -185,7 +186,7 @@ def test_summary_steps_share_one_script_and_unique_labels():
     labels = [s["env"]["CLAUDE_STEP"] for s in summaries]
     assert len(labels) == len(set(labels)) == sum(CLAUDE_WORKFLOWS.values())
     assert all(" " not in label for label in labels)
-    shared = {(s["run"], s["env"]["SESSION_ERRORS"], s["env"]["SPEND_LIMIT_PATTERN"]) for s in summaries}
+    shared = {(s["run"], s["env"]["SESSION_ERRORS"], s["env"]["LIMIT_PATTERN"]) for s in summaries}
     assert len(shared) == 1
     # The line must not look like Claude Code's own `"total_cost_usd": n`, or
     # collect_week.py's fallback regex would count a session twice.
@@ -193,7 +194,7 @@ def test_summary_steps_share_one_script_and_unique_labels():
 
 
 @pytest.mark.parametrize(("filename", "name", "job"), JOBS, ids=IDS)
-def test_a_spend_limit_skips_the_retry_and_stops_the_job(filename, name, job):
+def test_a_limit_skips_the_retry_and_stops_the_job(filename, name, job):
     steps = job["steps"]
     names = [s.get("name") for s in steps]
     claude = [s for s in steps if _is_claude(s)]
@@ -201,7 +202,7 @@ def test_a_spend_limit_skips_the_retry_and_stops_the_job(filename, name, job):
         # Two independent pre-flight sessions, no retry: either one stops the dispatch.
         stop = steps[names.index(STOP)]
         assert stop["if"] == (
-            "${{ steps.polish_cost.outputs.spend_limit == 'true' || steps.similarity_cost.outputs.spend_limit == 'true' }}"
+            "${{ steps.polish_cost.outputs.limit_reached == 'true' || steps.similarity_cost.outputs.limit_reached == 'true' }}"
         )
         dispatches = [i for i, n in enumerate(names) if str(n).startswith("Dispatch ")]
         assert len(dispatches) == 2 and min(dispatches) > names.index(STOP) > steps.index(claude[-1])
@@ -211,10 +212,10 @@ def test_a_spend_limit_skips_the_retry_and_stops_the_job(filename, name, job):
         return
     else:
         first, retry = claude
-        assert retry["if"].endswith(f" && steps.{first['id']}_cost.outputs.spend_limit != 'true'")
+        assert retry["if"].endswith(f" && steps.{first['id']}_cost.outputs.limit_reached != 'true'")
         stop = steps[names.index(STOP)]
         assert names.index(STOP) > steps.index(retry)
-        assert stop["if"] == f"steps.{first['id']}_cost.outputs.spend_limit == 'true'"
+        assert stop["if"] == f"steps.{first['id']}_cost.outputs.limit_reached == 'true'"
     assert "exit 1" in stop["run"] and "continue-on-error" not in stop
 
 
@@ -335,7 +336,7 @@ def _summary(tmp_path: Path, execution: list[dict[str, Any]] | None, mode: str =
         "CLAUDE_AUTH_MODE": mode,
         "CLAUDE_STEP": "impl-review",
         "SESSION_ERRORS": step["env"]["SESSION_ERRORS"],
-        "SPEND_LIMIT_PATTERN": step["env"]["SPEND_LIMIT_PATTERN"],
+        "LIMIT_PATTERN": step["env"]["LIMIT_PATTERN"],
         "GITHUB_STEP_SUMMARY": str(summary),
         "GITHUB_OUTPUT": str(out),
     }
@@ -356,17 +357,86 @@ def _failed(text: str, error: str | None = "invalid_request", status: int = 400)
     return [INIT, assistant, result | {"result": text, "total_cost_usd": 0.41}]
 
 
-# The API's own messages (platform.claude.com/docs/en/api/rate-limits, /api/errors).
-WORKSPACE_LIMIT = (
-    'API Error: 400 {"type":"error","error":{"type":"invalid_request_error","message":"You have reached your '
-    'specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC."}}'
-)
-TIER_CAP = (
-    'API Error: 429 {"type":"error","error":{"type":"rate_limit_error","message":"You have reached your API usage '
-    'limits: your organization has crossed its monthly API usage threshold.","details":{"error_code":'
-    '"enforced_spend_limit_reached"}}}'
-)
-CREDIT = "Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing."
+# Fixtures with the texts as the API and Claude Code produce them, by source.
+LIMIT_FIXTURES = {
+    # A workspace spend limit you set: HTTP 400 invalid_request_error
+    # (platform.claude.com/docs/en/api/rate-limits; anthropics/claude-code#40664).
+    "workspace spend limit": _failed(
+        'API Error: 400 {"type":"error","error":{"type":"invalid_request_error","message":"You have reached your '
+        'specified workspace API usage limits. You will regain access on 2026-12-01 at 00:00 UTC."}}'
+    ),
+    # An organization spend limit you set (anthropics/claude-code#52077, the raw API error).
+    "org spend limit": _failed(
+        'Error: 400 {"type":"error","error":{"type":"invalid_request_error","message":"You have reached your '
+        'specified API usage limits. You will regain access on 2026-05-01 at 00:00 UTC."}}'
+    ),
+    # The usage tier's monthly cap: HTTP 429 rate_limit_error with an error_code (the same docs page).
+    "tier spend cap": _failed(
+        'API Error: 429 {"type":"error","error":{"type":"rate_limit_error","message":"You have reached your API usage '
+        'limits: your organization has crossed its monthly API usage threshold.","details":{"error_code":'
+        '"enforced_spend_limit_reached"}}}',
+        error="rate_limit",
+        status=429,
+    ),
+    # Credits: the API's message, and Claude Code's non-interactive and interactive renderings
+    # (anthropics/claude-code#99371, #103854).
+    "credit, API": _failed(
+        "Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or "
+        "purchase credits.",
+        error="billing_error",
+    ),
+    "credit, Claude Code result": _failed("Credit balance is too low", error=None),
+    "credit, Claude Code interactive": _failed(
+        "Credit balance too low · Add funds: https://platform.claude.com/settings/billing", error=None
+    ),
+    # The SDK's own billing error type on an API retry (SDKAssistantMessageError).
+    "billing_error retry": [
+        INIT,
+        {"type": "system", "subtype": "api_retry", "error": "billing_error", "error_status": 402},
+    ],
+    # Subscription: Claude Code's usage-limit messages, which start with one of the SDK's
+    # USAGE_LIMIT_ERROR_PREFIXES ("the error-path outputs of getLimitReachedText"); the
+    # session-limit text as reported in anthropics/claude-code#101965.
+    "session limit": _failed("You've hit your session limit · resets 12:30pm", error="rate_limit", status=429),
+    "session limit, curly apostrophe": _failed("You’ve hit your session limit · resets 4am (Europe/Berlin)", None),
+    "weekly limit": _failed("You've reached your weekly limit · resets Nov 3, 9am", error="rate_limit", status=429),
+    "out of extra usage": _failed("You're out of extra usage · resets 12:30pm", error="rate_limit", status=429),
+    "org out of usage": _failed("Your org is out of usage · contact your admin", error="rate_limit", status=429),
+    "older CLI wording": _failed("Claude AI usage limit reached|1761955200", error=None),
+}
+
+NOT_A_LIMIT = {
+    # A transient rate limit keeps its retry and the infrastructure path it had.
+    "per-minute rate limit": _failed(
+        'API Error: 429 {"error":{"type":"rate_limit_error","message":"Number of request tokens has exceeded your '
+        'per-minute rate limit"}}',
+        error="rate_limit",
+        status=429,
+    ),
+    "rate limit, CLI wording": _failed("API Error: Rate limit reached", error="rate_limit", status=429),
+    "server error": _failed("API Error: 500 Internal server error", error="server_error", status=500),
+    # A usage warning, not a stop (the SDK's USAGE_WARNING_PREFIXES).
+    "usage warning": _failed("You've used 95% of your weekly limit", error="unknown", status=500),
+    # The session's own text may quote the messages (a doc it read, a review comment): not an error field.
+    "quoted by the model": [
+        INIT,
+        {"type": "assistant", "message": {"content": [{"type": "text", "text": "Docs: credit balance is too low"}]}},
+    ],
+    "quoted by a tool": [
+        INIT,
+        {"type": "user", "message": {"content": [{"type": "tool_result", "content": "You've hit your session limit"}]}},
+    ],
+    "in a successful result": [
+        INIT,
+        {"type": "result", "subtype": "success", "is_error": False, "result": "Docs say: credit balance is too low"},
+    ],
+    # A retried billing error the session got past: it ended well, so it never stopped.
+    "recovered": [
+        INIT,
+        {"type": "system", "subtype": "api_retry", "error": "billing_error", "error_status": 402},
+        {"type": "result", "subtype": "success", "is_error": False, "result": "done"},
+    ],
+}
 
 
 def test_summary_reads_cost_and_model(tmp_path):
@@ -374,7 +444,7 @@ def test_summary_reads_cost_and_model(tmp_path):
     result, summary, outputs = _summary(tmp_path, execution, mode="oidc")
     assert result.returncode == 0
     assert summary == "- `claude-cost step=impl-review auth=oidc model=claude-opus-5-5 total_cost_usd=0.2931`\n"
-    assert outputs == {"spend_limit": "false"}
+    assert outputs == {"limit_reached": "false"}
 
 
 @pytest.mark.parametrize("execution", [None, [], [{"type": "assistant"}], [{"type": "result"}]])
@@ -382,54 +452,27 @@ def test_summary_never_fails_without_a_cost(tmp_path, execution):
     result, summary, outputs = _summary(tmp_path, execution)
     assert result.returncode == 0
     assert "auth=subscription model=n/a total_cost_usd=n/a" in summary
-    assert outputs == {"spend_limit": "false"}
+    assert outputs == {"limit_reached": "false"}
 
 
-@pytest.mark.parametrize(
-    "execution",
-    [
-        _failed(WORKSPACE_LIMIT),
-        _failed(TIER_CAP, error="rate_limit", status=429),
-        _failed(CREDIT, error="billing_error"),
-        _failed("Credit balance is too low", error=None),
-        [INIT, {"type": "system", "subtype": "api_retry", "error": "billing_error", "error_status": 402}],
-    ],
-)
-@pytest.mark.parametrize("mode", ["api", "oidc"])
-def test_summary_detects_the_spend_limit(tmp_path, execution, mode):
-    result, summary, outputs = _summary(tmp_path, execution, mode)
+@pytest.mark.parametrize("case", sorted(LIMIT_FIXTURES))
+@pytest.mark.parametrize("mode", ["subscription", "oidc", "api"])
+def test_summary_detects_a_spend_or_usage_limit(tmp_path, case, mode):
+    result, summary, outputs = _summary(tmp_path, LIMIT_FIXTURES[case], mode)
     assert result.returncode == 0
-    assert outputs == {"spend_limit": "true"}
-    assert f"::error::Claude spend limit reached (mode {mode}) in impl-review" in result.stdout
-    assert f"- **Claude spend limit reached (mode {mode})** in `impl-review`" in summary
+    assert outputs == {"limit_reached": "true"}, case
+    assert f"::error::Claude spend/usage limit reached (auth={mode}) in impl-review" in result.stdout
+    assert f"- **Claude spend/usage limit reached (auth={mode})** in `impl-review`" in summary
 
 
-def test_the_subscription_never_reads_a_spend_limit(tmp_path):
-    """Subscription runs keep today's behaviour exactly: no new branch can fire."""
-    assert _summary(tmp_path, _failed(WORKSPACE_LIMIT), "subscription")[2] == {"spend_limit": "false"}
+@pytest.mark.parametrize("case", sorted(NOT_A_LIMIT))
+def test_summary_ignores_everything_else(tmp_path, case):
+    result, summary, outputs = _summary(tmp_path, NOT_A_LIMIT[case], "api")
+    assert outputs == {"limit_reached": "false"}, case
+    assert "spend/usage limit" not in summary
 
 
-@pytest.mark.parametrize(
-    "execution",
-    [
-        # A transient rate limit is retried as before.
-        _failed(
-            'API Error: 429 {"error":{"type":"rate_limit_error","message":"Number of request tokens has exceeded your per-minute rate limit"}}',
-            error="rate_limit",
-            status=429,
-        ),
-        _failed("API Error: 500 Internal server error", error="server_error", status=500),
-        # The session's own text may quote the messages (a doc it read, a review comment): not an error field.
-        [INIT, {"type": "assistant", "message": {"content": [{"type": "text", "text": WORKSPACE_LIMIT}]}}],
-        [INIT, {"type": "user", "message": {"content": [{"type": "tool_result", "content": CREDIT}]}}],
-        [INIT, {"type": "result", "subtype": "success", "is_error": False, "result": f"Docs say: {CREDIT}"}],
-    ],
-)
-def test_summary_ignores_everything_else(tmp_path, execution):
-    assert _summary(tmp_path, execution, "api")[2] == {"spend_limit": "false"}
-
-
-# --- the failure paths at the spend limit ---------------------------------------
+# --- the failure paths at a spend or usage limit ----------------------------------
 
 
 # Logs every call as one JSON line; `pr view`/`issue view` answer nothing.
@@ -471,8 +514,10 @@ def _bodies(calls: list[list[str]]) -> list[str]:
     return [c[c.index("--body") + 1] for c in calls if "--body" in c]
 
 
+@pytest.mark.parametrize("mode", ["subscription", "oidc"])
 @pytest.mark.parametrize(("regen_label", "live"), [("regen", True), ("", False)])
-def test_generation_at_the_spend_limit_is_parked(tmp_path, regen_label, live):
+def test_generation_at_a_limit_is_parked(tmp_path, regen_label, live, mode):
+    """A first implementation too: no retry, no counted attempt, never `impl:<lib>:failed`."""
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
     result, calls = _run_handler(
         tmp_path,
@@ -487,8 +532,8 @@ def test_generation_at_the_spend_limit_is_parked(tmp_path, regen_label, live):
         INFRA_WINDOW_CAP="5",
         CLAUDE_RETRY_OUTCOME="skipped",
         CLAUDE_EXEC_FILE="",
-        SPEND_LIMIT="true",
-        CLAUDE_MODE="oidc",
+        LIMIT_REACHED="true",
+        CLAUDE_MODE=mode,
         REGEN_LABEL=regen_label,
         LANGUAGE="python",
         EXT=".py",
@@ -500,19 +545,20 @@ def test_generation_at_the_spend_limit_is_parked(tmp_path, regen_label, live):
         RUN_URL="https://github.com/owner/repo/actions/runs/1",
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "::error::Claude spend limit reached (mode oidc)" in result.stdout
+    assert f"::error::Claude spend/usage limit reached (auth={mode})" in result.stdout
     assert not [c for c in calls if c[:2] == ["workflow", "run"]]  # no auto-retry
     edits = [c[3:5] for c in calls if c[:2] == ["issue", "edit"]]
     assert ["--remove-label", "impl:plotly:pending"] in edits and ["--remove-label", "generate:plotly"] in edits
     assert (["--add-label", "impl:plotly:done"] in edits) is live
     assert not any("impl:plotly:failed" in c for c in edits)  # never a capability verdict
+    assert not [c for c in calls if c[:2] == ["api", "--paginate"]]  # the attempt budget is not even read
     (body,) = _bodies(calls)
     # Its own marker: neither the 3-attempt cap nor daily-regen's attempt window counts it.
-    assert "<!-- impl-paused-spend-limit:spec-a:plotly -->" in body
-    assert "<!-- impl-fail:" not in body
+    assert "<!-- impl-paused-claude-limit:spec-a:plotly -->" in body
+    assert "<!-- impl-fail:" not in body and "impl-fail-cause:infra" not in body
 
 
-def test_repair_at_the_spend_limit_keeps_its_retry(tmp_path):
+def test_repair_at_a_limit_keeps_its_retry(tmp_path):
     result, calls = _run_handler(
         tmp_path,
         "impl-repair.yml",
@@ -524,19 +570,20 @@ def test_repair_at_the_spend_limit_keeps_its_retry(tmp_path):
         MODEL="sonnet",
         REPOSITORY="owner/repo",
         RUN_ID="1",
-        SPEND_LIMIT="true",
-        CLAUDE_MODE="api",
+        LIMIT_REACHED="true",
+        CLAUDE_MODE="subscription",
     )
     assert result.returncode == 0, result.stdout + result.stderr
+    assert "::error::Claude spend/usage limit reached (auth=subscription)" in result.stdout
     assert ["pr", "edit", "7", "--add-label", "ai-rejected"] in calls
     assert not [c for c in calls if c[:2] == ["workflow", "run"]]
     assert not [c for c in calls if c[:1] == ["api"]]  # the retry budget is not even read
     (body,) = _bodies(calls)
-    assert "<!-- repair-paused-spend-limit:spec-a:plotly:attempt-2 -->" in body
+    assert "<!-- repair-paused-claude-limit:spec-a:plotly:attempt-2 -->" in body
     assert "<!-- repair-retry:" not in body
 
 
-def test_review_at_the_spend_limit_hands_off_without_spending_the_retry(tmp_path):
+def test_review_at_a_limit_hands_off_without_spending_the_retry(tmp_path):
     result, calls = _run_handler(
         tmp_path,
         "impl-review.yml",
@@ -548,15 +595,16 @@ def test_review_at_the_spend_limit_hands_off_without_spending_the_retry(tmp_path
         RUN_ID="1",
         MODEL="sonnet",
         REVIEW_MODEL_ALIAS="opus",
-        SPEND_LIMIT="true",
+        LIMIT_REACHED="true",
         CLAUDE_MODE="oidc",
     )
     assert result.returncode == 1  # no verdict: the run is red
+    assert "::error::Claude spend/usage limit reached (auth=oidc)" in result.stdout
     assert ["pr", "edit", "7", "--add-label", "ai-review-failed"] in calls
     assert not [c for c in calls if c[:2] == ["api", "repos/owner/repo/dispatches"]]  # no re-review
     assert not [c for c in calls if c[:2] == ["api", "--paginate"]]
     (body,) = _bodies(calls)
-    assert "<!-- review-paused-spend-limit:spec-a:plotly -->" in body
+    assert "<!-- review-paused-claude-limit:spec-a:plotly -->" in body
     assert "<!-- review-retry:" not in body
 
 
@@ -568,15 +616,22 @@ def test_review_at_the_spend_limit_hands_off_without_spending_the_retry(tmp_path
         ("impl-review.yml", "Validate review output"),
     ],
 )
-def test_failure_paths_read_the_spend_limit(filename, name):
+def test_failure_paths_read_the_limit(filename, name):
     env = _step(filename, name)["env"]
     assert env["CLAUDE_MODE"] == "${{ steps.claude_auth.outputs.mode }}"
     if filename == "impl-review.yml":
-        assert env["SPEND_LIMIT"] == "${{ steps.review_cost.outputs.spend_limit }}"
+        assert env["LIMIT_REACHED"] == "${{ steps.review_cost.outputs.limit_reached }}"
     else:
-        assert env["SPEND_LIMIT"] == (
-            "${{ steps.claude_cost.outputs.spend_limit == 'true' || steps.claude_retry_cost.outputs.spend_limit == 'true' }}"
+        assert env["LIMIT_REACHED"] == (
+            "${{ steps.claude_cost.outputs.limit_reached == 'true' || steps.claude_retry_cost.outputs.limit_reached == 'true' }}"
         )
+
+
+def test_generation_limit_park_comes_before_any_attempt_counting():
+    """The park exits before the infra/agent split reads or writes a single impl-fail marker."""
+    script = _step("impl-generate.yml", "Handle generation failure")["run"]
+    park = script.index('if [ "${LIMIT_REACHED}" = "true" ]; then')
+    assert park < script.index('INFRA_CAUSE=""') < script.index('MARKER="<!-- impl-fail:')
 
 
 # --- daily-regen modes ------------------------------------------------------

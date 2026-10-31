@@ -17,8 +17,9 @@ pair each, across the catalogue:
   on the spec issue. A merge moves ``updated`` anyway; the other two leave it
   alone, and without them the same pair would come back the next night. An
   infrastructure failure (its comment carries ``impl-fail-cause:infra``) and
-  a stop at the Claude spend limit (its own pause comment) are not attempts:
-  the pair stays in the queue and comes back on a later night.
+  a stop at a Claude spend or usage limit (its own pause comment,
+  ``impl-paused-claude-limit``) are not attempts: the pair stays in the queue
+  and comes back on a later night.
 - A pair with an open implementation PR is skipped: its attempt is still
   running or stuck, and the watchdog owns it.
 - Every pair of a spec whose issue saw activity within ``--min-age-hours`` is

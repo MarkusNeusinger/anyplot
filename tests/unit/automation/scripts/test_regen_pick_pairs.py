@@ -6,7 +6,7 @@ failed generation), keeps every pair touched within the attempt window out
 of the queue, and postpones a spec whose issue just saw activity. The
 no-loop rule is pinned here: a pair the gate kept, or whose generation
 failed, does not come back the next night, and an infrastructure failure or
-a stop at the spend limit is no attempt. ``main`` runs once against a fake
+a stop at a spend or usage limit is no attempt. ``main`` runs once against a fake
 ``gh`` the way the workflow calls it.
 """
 
@@ -178,7 +178,7 @@ class TestFailedGenerations:
             fail_comment("a", "altair", 2, infra=True),  # infrastructure: no attempt
             fail_comment("a", "plotly", 1, infra=True),
             fail_comment("other", "altair", 1),  # another spec's marker
-            {"created_at": ts(1), "body": "<!-- impl-paused-spend-limit:a:plotly -->"},
+            {"created_at": ts(1), "body": "<!-- impl-paused-claude-limit:a:plotly -->"},  # a spend or usage limit
         ]
         assert rp.failed_generations(comments, "a") == {"altair": at(5)}
 

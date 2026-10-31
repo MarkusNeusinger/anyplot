@@ -715,12 +715,10 @@ jobs:
             - IS_REGENERATION: ${{ steps.existing.outputs.is_regeneration }}
 
       # The session's cost (Claude Code's own estimate at API list price),
-      # model and credential, for the weekly regen review, and whether it
-      # stopped at the Claude spend limit (api/oidc only: the API's messages
-      # for a spend limit you set, the tier's spend cap and an empty credit
-      # balance, read only from the session's error fields, because its own
-      # text may quote them). Read right after the step: the retry writes the
-      # same execution file. Never fatal.
+      # model and credential mode, for the weekly regen review, and whether it
+      # stopped at a Claude spend or usage limit (output limit_reached). Read
+      # right after the step: the retry writes the same execution file. Never
+      # fatal.
       - name: Claude session summary
         id: claude_cost
         if: ${{ !cancelled() && (steps.claude.outcome == 'success' || steps.claude.outcome == 'failure') }}
@@ -729,10 +727,20 @@ jobs:
           EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
           CLAUDE_AUTH_MODE: ${{ steps.claude_auth.outputs.mode }}
           CLAUDE_STEP: impl-generate
+          # Only the error fields of a session that failed, because its own
+          # text may quote the same messages: the error result, Claude Code's
+          # error messages and its API retries.
           SESSION_ERRORS: >-
-            .[] | select((.type == "result" and .is_error == true) or (.type == "assistant" and .error != null) or (.type == "system" and .subtype == "api_retry"))
-            | (.result // ""), ((.errors // [])[] | tostring), (.error // "" | tostring), (if .type == "assistant" then ((.message.content // [])[] | .text? // "") else "" end)
-          SPEND_LIMIT_PATTERN: 'reached your (specified )?(workspace )?API usage limits|enforced_spend_limit_reached|credit balance is too low|billing_error'
+            ([.[] | select(.type == "result")] | last) as $result
+            | if $result != null and $result.is_error != true then empty else
+            (.[] | select((.type == "result" and .is_error == true) or (.type == "assistant" and .error != null) or (.type == "system" and .subtype == "api_retry"))
+            | (.result // ""), ((.errors // [])[] | tostring), (.error // "" | tostring), (if .type == "assistant" then ((.message.content // [])[] | .text? // "") else "" end))
+            end
+          # The API's spend-limit, spend-cap and credit messages, Claude Code's
+          # billing_error and credit message, and its subscription usage-limit
+          # messages (the SDK's USAGE_LIMIT_ERROR_PREFIXES).
+          LIMIT_PATTERN: >-
+            reached your (specified )?(workspace )?API usage limits|enforced_spend_limit_reached|credit balance (is )?too low|billing_error|usage limit reached|You.{1,3}ve (hit|reached) your|You.{1,3}re out of (usage credits|extra usage)|Your org is out of usage|Your seat type doesn.{1,3}t include|Your usage allocation has been disabled|Your group.{1,3}s usage limit is set to \$0|requires usage credits
         run: |
           cost=$(jq -r '[.[] | select(.type == "result")] | last | .total_cost_usd // empty' "$EXECUTION_FILE" 2>/dev/null || true)
           model=$(jq -r '[.[] | select(.type == "system" and .subtype == "init")] | first | .model // empty' "$EXECUTION_FILE" 2>/dev/null || true)
@@ -740,17 +748,17 @@ jobs:
           echo "$line"
           echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
           errors=$(jq -r "$SESSION_ERRORS" "$EXECUTION_FILE" 2>/dev/null || true)
-          spend_limit=false
-          if [[ "$CLAUDE_AUTH_MODE" =~ ^(api|oidc)$ ]] && grep -qiE "$SPEND_LIMIT_PATTERN" <<< "$errors"; then
-            spend_limit=true
-            echo "::error::Claude spend limit reached (mode ${CLAUDE_AUTH_MODE}) in ${CLAUDE_STEP}: no retry until the limit is raised"
-            echo "- **Claude spend limit reached (mode ${CLAUDE_AUTH_MODE})** in \`${CLAUDE_STEP}\`" >> "$GITHUB_STEP_SUMMARY"
+          limit_reached=false
+          if grep -qiE "$LIMIT_PATTERN" <<< "$errors"; then
+            limit_reached=true
+            echo "::error::Claude spend/usage limit reached (auth=${CLAUDE_AUTH_MODE}) in ${CLAUDE_STEP}: no retry until the limit resets or is raised"
+            echo "- **Claude spend/usage limit reached (auth=${CLAUDE_AUTH_MODE})** in \`${CLAUDE_STEP}\`" >> "$GITHUB_STEP_SUMMARY"
           fi
-          echo "spend_limit=${spend_limit}" >> "$GITHUB_OUTPUT"
+          echo "limit_reached=${limit_reached}" >> "$GITHUB_OUTPUT"
 
-      # Not on a spend limit: the retry would be refused the same way.
+      # Not at a spend or usage limit: the retry would be refused the same way.
       - name: Retry Claude (on failure)
-        if: steps.claude.outcome == 'failure' && steps.inputs.outputs.source_ref == '' && steps.claude_cost.outputs.spend_limit != 'true'
+        if: steps.claude.outcome == 'failure' && steps.inputs.outputs.source_ref == '' && steps.claude_cost.outputs.limit_reached != 'true'
         id: claude_retry
         timeout-minutes: 60
         uses: anthropics/claude-code-action@db77d4d3c98f3f6380e7cd45ffba2342a3dbde3c  # v1
@@ -782,10 +790,20 @@ jobs:
           EXECUTION_FILE: ${{ steps.claude_retry.outputs.execution_file }}
           CLAUDE_AUTH_MODE: ${{ steps.claude_auth.outputs.mode }}
           CLAUDE_STEP: impl-generate/retry
+          # Only the error fields of a session that failed, because its own
+          # text may quote the same messages: the error result, Claude Code's
+          # error messages and its API retries.
           SESSION_ERRORS: >-
-            .[] | select((.type == "result" and .is_error == true) or (.type == "assistant" and .error != null) or (.type == "system" and .subtype == "api_retry"))
-            | (.result // ""), ((.errors // [])[] | tostring), (.error // "" | tostring), (if .type == "assistant" then ((.message.content // [])[] | .text? // "") else "" end)
-          SPEND_LIMIT_PATTERN: 'reached your (specified )?(workspace )?API usage limits|enforced_spend_limit_reached|credit balance is too low|billing_error'
+            ([.[] | select(.type == "result")] | last) as $result
+            | if $result != null and $result.is_error != true then empty else
+            (.[] | select((.type == "result" and .is_error == true) or (.type == "assistant" and .error != null) or (.type == "system" and .subtype == "api_retry"))
+            | (.result // ""), ((.errors // [])[] | tostring), (.error // "" | tostring), (if .type == "assistant" then ((.message.content // [])[] | .text? // "") else "" end))
+            end
+          # The API's spend-limit, spend-cap and credit messages, Claude Code's
+          # billing_error and credit message, and its subscription usage-limit
+          # messages (the SDK's USAGE_LIMIT_ERROR_PREFIXES).
+          LIMIT_PATTERN: >-
+            reached your (specified )?(workspace )?API usage limits|enforced_spend_limit_reached|credit balance (is )?too low|billing_error|usage limit reached|You.{1,3}ve (hit|reached) your|You.{1,3}re out of (usage credits|extra usage)|Your org is out of usage|Your seat type doesn.{1,3}t include|Your usage allocation has been disabled|Your group.{1,3}s usage limit is set to \$0|requires usage credits
         run: |
           cost=$(jq -r '[.[] | select(.type == "result")] | last | .total_cost_usd // empty' "$EXECUTION_FILE" 2>/dev/null || true)
           model=$(jq -r '[.[] | select(.type == "system" and .subtype == "init")] | first | .model // empty' "$EXECUTION_FILE" 2>/dev/null || true)
@@ -793,21 +811,21 @@ jobs:
           echo "$line"
           echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
           errors=$(jq -r "$SESSION_ERRORS" "$EXECUTION_FILE" 2>/dev/null || true)
-          spend_limit=false
-          if [[ "$CLAUDE_AUTH_MODE" =~ ^(api|oidc)$ ]] && grep -qiE "$SPEND_LIMIT_PATTERN" <<< "$errors"; then
-            spend_limit=true
-            echo "::error::Claude spend limit reached (mode ${CLAUDE_AUTH_MODE}) in ${CLAUDE_STEP}: no retry until the limit is raised"
-            echo "- **Claude spend limit reached (mode ${CLAUDE_AUTH_MODE})** in \`${CLAUDE_STEP}\`" >> "$GITHUB_STEP_SUMMARY"
+          limit_reached=false
+          if grep -qiE "$LIMIT_PATTERN" <<< "$errors"; then
+            limit_reached=true
+            echo "::error::Claude spend/usage limit reached (auth=${CLAUDE_AUTH_MODE}) in ${CLAUDE_STEP}: no retry until the limit resets or is raised"
+            echo "- **Claude spend/usage limit reached (auth=${CLAUDE_AUTH_MODE})** in \`${CLAUDE_STEP}\`" >> "$GITHUB_STEP_SUMMARY"
           fi
-          echo "spend_limit=${spend_limit}" >> "$GITHUB_OUTPUT"
+          echo "limit_reached=${limit_reached}" >> "$GITHUB_OUTPUT"
 
-      # The first session stopped at the spend limit and its retry was skipped:
-      # fail here, so "Handle generation failure" parks the pair instead of
-      # the steps below running without an implementation.
-      - name: Stop at the Claude spend limit
-        if: steps.claude_cost.outputs.spend_limit == 'true'
+      # The first session stopped at a spend or usage limit and its retry was
+      # skipped: fail here, so "Handle generation failure" parks the pair
+      # instead of the steps below running without an implementation.
+      - name: Stop at the Claude spend or usage limit
+        if: steps.claude_cost.outputs.limit_reached == 'true'
         run: |
-          echo "::error::Claude spend limit reached; the retry is skipped"
+          echo "::error::Claude spend/usage limit reached; the retry is skipped"
           exit 1
 
       # ========================================================================
@@ -1610,10 +1628,10 @@ jobs:
           # job by itself).
           CLAUDE_RETRY_OUTCOME: ${{ steps.claude_retry.outcome }}
           CLAUDE_EXEC_FILE: ${{ steps.claude_retry.outputs.execution_file }}
-          # Either session stopped at the Claude spend limit (api/oidc only;
-          # "Claude session summary" reads it): parked below, never retried,
-          # never counted.
-          SPEND_LIMIT: ${{ steps.claude_cost.outputs.spend_limit == 'true' || steps.claude_retry_cost.outputs.spend_limit == 'true' }}
+          # Either session stopped at a Claude spend or usage limit ("Claude
+          # session summary" reads it): parked below, never retried, never
+          # counted.
+          LIMIT_REACHED: ${{ steps.claude_cost.outputs.limit_reached == 'true' || steps.claude_retry_cost.outputs.limit_reached == 'true' }}
           CLAUDE_MODE: ${{ steps.claude_auth.outputs.mode }}
           GCP_AUTH_OUTCOME: ${{ steps.gcp_auth.outcome }}
           GCLOUD_OUTCOME: ${{ steps.gcloud.outcome }}
@@ -1726,26 +1744,28 @@ jobs:
             exit 0
           fi
 
-          # The Claude spend limit (api/oidc): an infrastructure stop that a
-          # retry cannot get past until the limit is raised, so the pair is
-          # parked at once — no auto-retry, no attempt counted (the comment
-          # carries its own marker, never the impl-fail one, so neither the
-          # 3-attempt cap nor daily-regen's attempt window sees it), never
-          # `impl:<lib>:failed`. The pair stays in daily-regen's queue.
-          if [ "${SPEND_LIMIT}" = "true" ]; then
-            echo "::error::Claude spend limit reached (mode ${CLAUDE_MODE}) — ${LIBRARY}/${SPEC_ID} parked: no auto-retry, no attempt counted, not marked failed"
+          # A Claude spend or usage limit (the API's spend limit or credit
+          # balance, the subscription's usage limit): an infrastructure stop
+          # that a retry cannot get past until the limit resets or is raised,
+          # so the pair is parked at once — for a first implementation too.
+          # No auto-retry, no attempt counted (the comment carries its own
+          # marker, never the impl-fail one, so neither the 3-attempt cap nor
+          # daily-regen's attempt window sees it), never `impl:<lib>:failed`.
+          # The pair stays in daily-regen's queue.
+          if [ "${LIMIT_REACHED}" = "true" ]; then
+            echo "::error::Claude spend/usage limit reached (auth=${CLAUDE_MODE}) — ${LIBRARY}/${SPEC_ID} parked: no auto-retry, no attempt counted, not marked failed"
             for stale in "generate:${LIBRARY}" "impl:${LIBRARY}:pending"; do
               gh issue edit "$ISSUE" --remove-label "$stale" 2>/dev/null || true
             done
             if [ "$IS_LIVE" = "true" ]; then
               gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:done" 2>/dev/null || true
             fi
-            gh issue comment "$ISSUE" --body "<!-- impl-paused-spend-limit:${SPEC_ID}:${LIBRARY} -->
-          ## :pause_button: ${LIBRARY} Paused (Claude spend limit)
+            gh issue comment "$ISSUE" --body "<!-- impl-paused-claude-limit:${SPEC_ID}:${LIBRARY} -->
+          ## :pause_button: ${LIBRARY} Paused (Claude spend/usage limit)
 
-          The Claude API refused the **${LIBRARY}** generation for \`${SPEC_ID}\` at the spend limit (credentials: \`${CLAUDE_MODE}\`). This is **not** a capability verdict: nothing was retried, no attempt was counted, and the pair is not marked failed.
+          Claude refused the **${LIBRARY}** generation for \`${SPEC_ID}\` at a spend or usage limit (auth=\`${CLAUDE_MODE}\`). This is **not** a capability verdict: nothing was retried, no attempt was counted, and the pair is not marked failed.
 
-          Once the limit is raised, run:
+          Once the limit resets or is raised, run:
           \`\`\`
           gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f issue_number=${ISSUE} -f model=${MODEL}
           \`\`\`

@@ -973,11 +973,9 @@ jobs:
           python3 "$RUNNER_TEMP/regen-tools/review_provenance.py" model --execution-file "${EXECUTION_FILE:-}"
 
       # The session's cost (Claude Code's own estimate at API list price),
-      # model and credential, for the weekly regen review, and whether it
-      # stopped at the Claude spend limit (api/oidc only: the API's messages
-      # for a spend limit you set, the tier's spend cap and an empty credit
-      # balance, read only from the session's error fields, because its own
-      # text may quote them). "Validate review output" reads it. Never fatal.
+      # model and credential mode, for the weekly regen review, and whether it
+      # stopped at a Claude spend or usage limit (output limit_reached, which
+      # "Validate review output" reads). Never fatal.
       - name: Claude session summary
         id: review_cost
         if: ${{ !cancelled() && (steps.review.outcome == 'success' || steps.review.outcome == 'failure') }}
@@ -986,10 +984,20 @@ jobs:
           EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
           CLAUDE_AUTH_MODE: ${{ steps.claude_auth.outputs.mode }}
           CLAUDE_STEP: impl-review
+          # Only the error fields of a session that failed, because its own
+          # text may quote the same messages: the error result, Claude Code's
+          # error messages and its API retries.
           SESSION_ERRORS: >-
-            .[] | select((.type == "result" and .is_error == true) or (.type == "assistant" and .error != null) or (.type == "system" and .subtype == "api_retry"))
-            | (.result // ""), ((.errors // [])[] | tostring), (.error // "" | tostring), (if .type == "assistant" then ((.message.content // [])[] | .text? // "") else "" end)
-          SPEND_LIMIT_PATTERN: 'reached your (specified )?(workspace )?API usage limits|enforced_spend_limit_reached|credit balance is too low|billing_error'
+            ([.[] | select(.type == "result")] | last) as $result
+            | if $result != null and $result.is_error != true then empty else
+            (.[] | select((.type == "result" and .is_error == true) or (.type == "assistant" and .error != null) or (.type == "system" and .subtype == "api_retry"))
+            | (.result // ""), ((.errors // [])[] | tostring), (.error // "" | tostring), (if .type == "assistant" then ((.message.content // [])[] | .text? // "") else "" end))
+            end
+          # The API's spend-limit, spend-cap and credit messages, Claude Code's
+          # billing_error and credit message, and its subscription usage-limit
+          # messages (the SDK's USAGE_LIMIT_ERROR_PREFIXES).
+          LIMIT_PATTERN: >-
+            reached your (specified )?(workspace )?API usage limits|enforced_spend_limit_reached|credit balance (is )?too low|billing_error|usage limit reached|You.{1,3}ve (hit|reached) your|You.{1,3}re out of (usage credits|extra usage)|Your org is out of usage|Your seat type doesn.{1,3}t include|Your usage allocation has been disabled|Your group.{1,3}s usage limit is set to \$0|requires usage credits
         run: |
           cost=$(jq -r '[.[] | select(.type == "result")] | last | .total_cost_usd // empty' "$EXECUTION_FILE" 2>/dev/null || true)
           model=$(jq -r '[.[] | select(.type == "system" and .subtype == "init")] | first | .model // empty' "$EXECUTION_FILE" 2>/dev/null || true)
@@ -997,13 +1005,13 @@ jobs:
           echo "$line"
           echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
           errors=$(jq -r "$SESSION_ERRORS" "$EXECUTION_FILE" 2>/dev/null || true)
-          spend_limit=false
-          if [[ "$CLAUDE_AUTH_MODE" =~ ^(api|oidc)$ ]] && grep -qiE "$SPEND_LIMIT_PATTERN" <<< "$errors"; then
-            spend_limit=true
-            echo "::error::Claude spend limit reached (mode ${CLAUDE_AUTH_MODE}) in ${CLAUDE_STEP}: no retry until the limit is raised"
-            echo "- **Claude spend limit reached (mode ${CLAUDE_AUTH_MODE})** in \`${CLAUDE_STEP}\`" >> "$GITHUB_STEP_SUMMARY"
+          limit_reached=false
+          if grep -qiE "$LIMIT_PATTERN" <<< "$errors"; then
+            limit_reached=true
+            echo "::error::Claude spend/usage limit reached (auth=${CLAUDE_AUTH_MODE}) in ${CLAUDE_STEP}: no retry until the limit resets or is raised"
+            echo "- **Claude spend/usage limit reached (auth=${CLAUDE_AUTH_MODE})** in \`${CLAUDE_STEP}\`" >> "$GITHUB_STEP_SUMMARY"
           fi
-          echo "spend_limit=${spend_limit}" >> "$GITHUB_OUTPUT"
+          echo "limit_reached=${limit_reached}" >> "$GITHUB_OUTPUT"
 
       # Undo "Hide the previous review", whatever the review step did: the
       # metadata step below reads the metadata file from disk and rewrites
@@ -1108,37 +1116,37 @@ jobs:
           RUN_ID: ${{ github.run_id }}
           MODEL: ${{ steps.pr.outputs.model }}
           REVIEW_MODEL_ALIAS: ${{ steps.pr.outputs.review_model_alias }}
-          # The session stopped at the Claude spend limit (api/oidc only).
-          SPEND_LIMIT: ${{ steps.review_cost.outputs.spend_limit }}
+          # The session stopped at a Claude spend or usage limit.
+          LIMIT_REACHED: ${{ steps.review_cost.outputs.limit_reached }}
           CLAUDE_MODE: ${{ steps.claude_auth.outputs.mode }}
         run: |
           echo "::error::AI Review did not produce valid output files (score=0)"
 
-          # The Claude spend limit (api/oidc): a re-review now would be refused
-          # the same way, and it says nothing about the implementation. Hand
-          # the PR to the watchdog with `ai-review-failed`, as an exhausted
-          # retry does, but without the review-retry marker, so the one
-          # auto-retry stays for after the limit is raised. No verdict, no
+          # A Claude spend or usage limit: a re-review now would be refused the
+          # same way, and it says nothing about the implementation. Hand the PR
+          # to the watchdog with `ai-review-failed`, as an exhausted retry
+          # does, but without the review-retry marker, so the one auto-retry
+          # stays for after the limit resets or is raised. No verdict, no
           # score, nothing merged or closed.
-          if [ "${SPEND_LIMIT}" = "true" ]; then
-            echo "::error::Claude spend limit reached (mode ${CLAUDE_MODE}) — no auto-retry for PR #${PR_NUM}"
+          if [ "${LIMIT_REACHED}" = "true" ]; then
+            echo "::error::Claude spend/usage limit reached (auth=${CLAUDE_MODE}) — no auto-retry for PR #${PR_NUM}"
             for attempt in 1 2 3; do
               gh pr edit "$PR_NUM" --add-label "ai-review-failed" 2>/dev/null && break
               [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
             done || echo "::error::could not add ai-review-failed to PR #${PR_NUM} — left to the watchdog's scan of stalled PRs"
-            gh pr comment "$PR_NUM" --body "<!-- review-paused-spend-limit:${SPEC_ID}:${LIBRARY} -->
-          ## :pause_button: AI Review Paused (Claude spend limit)
+            gh pr comment "$PR_NUM" --body "<!-- review-paused-claude-limit:${SPEC_ID}:${LIBRARY} -->
+          ## :pause_button: AI Review Paused (Claude spend/usage limit)
 
-          The Claude API refused the review at the spend limit (credentials: \`${CLAUDE_MODE}\`). No score and no verdict were recorded, and the one automatic re-review is still unused.
+          Claude refused the review at a spend or usage limit (auth=\`${CLAUDE_MODE}\`). No score and no verdict were recorded, and the one automatic re-review is still unused.
 
-          **Rerun once the limit is raised:**
+          **Rerun once the limit resets or is raised:**
           \`\`\`
           gh workflow run impl-review.yml -f pr_number=$PR_NUM
           \`\`\`
 
           ---
           :robot: *[impl-review](https://github.com/$REPOSITORY/actions/runs/$RUN_ID)*" \
-              || echo "::error::spend-limit comment not posted on PR #${PR_NUM}"
+              || echo "::error::limit comment not posted on PR #${PR_NUM}"
             exit 1
           fi
 

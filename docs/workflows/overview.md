@@ -524,9 +524,10 @@ night:
   `REGEN_ATTEMPT_WINDOW_DAYS`, else 30 days. After the window, the pair queues
   behind every pair touched before it.
 - An infrastructure failure, whose comment carries
-  `<!-- impl-fail-cause:infra -->`, and a stop at the Claude spend limit are
-  not attempts: the pair stays at its place in the queue and comes back on a
-  later night.
+  `<!-- impl-fail-cause:infra -->`, and a stop at a Claude spend or usage
+  limit, whose comment carries `<!-- impl-paused-claude-limit:… -->`, are not
+  attempts: the pair stays at its place in the queue and comes back on a later
+  night.
 - A pair with an open implementation PR is skipped: its attempt is still
   running or stuck.
 - Every pair of a spec whose issue saw activity within `min_age_hours`
@@ -559,12 +560,15 @@ on for the schedule, run `gh variable set REGEN_PAIRS_PER_DAY --body 5`; to
 turn it off, run `gh variable delete REGEN_PAIRS_PER_DAY`.
 
 When a pre-flight session (the spec polish or the similarity audit) stops at
-the [Claude spend limit](#at-the-spend-limit), the night's dispatch for that
-spec is skipped and the run fails. `daily-regen.yml` dispatches every pair
-within a few minutes, before the first generation is reviewed, so it can't
-see a limit that a later review of the same night reaches. The pairs
-dispatched after the limit was reached fail at their first refused request,
-which costs nothing, and are parked without a retry or a counted attempt.
+a [Claude spend or usage limit](#at-a-spend-or-usage-limit), the night's
+dispatch for that spec is skipped and the run fails. In pair mode, the
+similarity audit of each spec runs before that spec's pairs are dispatched,
+one spec after another, so it works as the night's probe: once a pair's
+generation, review, or repair has reached the limit, every later spec of the
+night stops at its audit and dispatches nothing. Pairs that were already
+dispatched fail at their first refused request, which costs nothing, and are
+parked without a retry or a counted attempt. Their spec keeps its pairs in
+the queue for a later night.
 
 ---
 
@@ -816,30 +820,42 @@ put a generation on Sonnet at about $0.29 per implementation, a review on
 Opus at about $1.10, and a repair with its re-review at about $2.70 per
 implementation in all.
 
-### At the spend limit
+### At a spend or usage limit
 
-With `oidc` or `api`, the workspace's spend limit stops the pipeline cleanly.
-The API refuses every request once the limit is reached, and Claude Code's own
-retries can't get past it:
+A Claude spend or usage limit stops the pipeline cleanly in every mode. Once
+the limit is reached, every request is refused until it resets or you raise
+it, and Claude Code's own retries can't get past it. The pipeline recognizes
+these texts:
 
-- A spend limit you set on the workspace or the organization answers HTTP 400
-  `invalid_request_error` with a message that starts with
-  `You have reached your specified workspace API usage limits` (or
-  `… specified API usage limits` for the organization).
-- The usage tier's monthly spend cap answers HTTP 429 `rate_limit_error` with
+- A spend limit you set on the workspace or the organization (`oidc`, `api`):
+  HTTP 400 `invalid_request_error`, with a message that starts with
+  `You have reached your specified workspace API usage limits` or
+  `You have reached your specified API usage limits`.
+- The usage tier's monthly spend cap: HTTP 429 `rate_limit_error` with the
   `error_code` `enforced_spend_limit_reached` and no `retry-after` header.
-- An empty credit balance answers `Your credit balance is too low`.
+- An empty credit balance: the API's `Your credit balance is too low`, Claude
+  Code's `Credit balance is too low` or `Credit balance too low · Add funds`,
+  and its error type `billing_error`.
+- The subscription's usage limit (`subscription`): Claude Code's messages that
+  start with one of the prefixes its SDK exports as
+  `USAGE_LIMIT_ERROR_PREFIXES`, such as
+  `You've hit your session limit · resets 12:30pm`, and the older
+  `Claude AI usage limit reached`.
 
-"Claude session summary" reads these messages, and Claude Code's
-`billing_error`, from the session's error fields only: the error result, Claude
-Code's error messages, and its API retries. It never reads the conversation,
-which may quote the same text. When it finds one, it writes an `::error::`
-and the line **Claude spend limit reached (mode oidc)** (or `api`) to the job
-summary, and every path treats the stop as an infrastructure failure:
+A transient rate limit, such as a per-minute token limit, is none of these:
+it keeps its retry and the infrastructure path it took before.
+
+"Claude session summary" reads these texts only from the error fields of a
+session that failed: the error result, Claude Code's error messages, and its
+API retries. It never reads the conversation, which may quote the same text,
+and never flags a session that ended well. When it finds one, it writes an
+`::error::` and the line **Claude spend/usage limit reached (auth=oidc)**, with
+the mode, to the job summary, and every path treats the stop as an
+infrastructure failure:
 
 | Workflow | What happens |
 |----------|--------------|
-| `impl-generate.yml` | The retry is skipped, and "Stop at the Claude spend limit" fails the job. "Handle generation failure" parks the pair: it removes `generate:{library}` and `impl:{library}:pending`, puts `impl:{library}:done` back for a live implementation, and comments with its own marker. Nothing is retried, no attempt counts toward the cap of three, and the pair is never marked `impl:{library}:failed`. No PR exists; the next generation recreates the branch. |
+| `impl-generate.yml` | The retry is skipped, and "Stop at the Claude spend or usage limit" fails the job. "Handle generation failure" parks the pair before it counts anything: it removes `generate:{library}` and `impl:{library}:pending`, puts `impl:{library}:done` back for a live implementation, and comments with its own marker. Nothing is retried, no attempt counts toward the cap of three, and the pair is never marked `impl:{library}:failed`, a first implementation included. No PR exists; the next generation recreates the branch. |
 | `impl-review.yml` | "Validate review output" adds `ai-review-failed` and comments, without the auto re-review and without spending it. No score, no verdict: the PR stays open, nothing is merged or closed. The watchdog re-dispatches the review once at its next scan. |
 | `impl-repair.yml` | The retry is skipped. "Handle repair failure" restores `ai-rejected` and comments, without the auto-retry and without spending it. The watchdog's repair rescue, once per attempt, or a manual restart picks the PR up. |
 | `daily-regen.yml` | A spec polish or similarity audit at the limit skips that spec's dispatch, and the entry fails. |
@@ -852,8 +868,11 @@ review stopped keeps its open PR, which pair mode skips until the review
 finishes. A session that reaches the limit after it wrote its review files is
 scored on what it wrote, like any session that ends early.
 
-With the subscription nothing changes: the summary never reads a spend limit
-there, and the subscription's own usage limit takes the paths it took before.
+Before this change, a subscription usage limit counted as the pair's own
+failure: it used up the three attempts and marked a first implementation
+`impl:{library}:failed`. A bulk run that reaches the subscription limit now
+parks the rest of its pairs instead, and you re-dispatch them once the limit
+resets.
 
 ### Test the spend limit
 
@@ -869,10 +888,12 @@ Test the stop after the merge, with `CLAUDE_AUTH=oidc`:
 
    The generation on Sonnet costs about 0.29 USD and passes; the review on
    Opus costs about 1.10 USD and reaches the limit while it runs.
-3. Check the `impl-review.yml` run: its summary shows **Claude spend limit
-   reached (mode oidc)**, the PR has `ai-review-failed` and the "AI Review
-   Paused (Claude spend limit)" comment, no second review run started, and no
-   verdict or `quality:` label was added.
+3. Check the `impl-review.yml` run: its summary shows **Claude spend/usage
+   limit reached (auth=oidc)**, the PR has `ai-review-failed` and the "AI
+   Review Paused (Claude spend/usage limit)" comment, no second review run
+   started, and no verdict or `quality:` label was added. If the summary line
+   is missing, the run's error text didn't match: read it in the log and
+   extend `LIMIT_PATTERN`.
 4. Check the spec issue: no `impl:{library}:failed` label, and no
    `impl-fail` comment for the pair.
 5. Restore the spend limit, then rerun the review, or wait for the watchdog:

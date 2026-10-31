@@ -13,17 +13,20 @@
   exactly one credential and a new mode changes one step.
   `docs/workflows/overview.md` has the Console setup, the switch commands and
   the runs federation refuses.
-- **Every Claude session's cost in the job summary, and a clean stop at the
-  spend limit.** A step after each Claude step writes `total_cost_usd`
-  (Claude Code's estimate at API list price), the model and the credential
-  mode to the job summary and the log, and never fails the job. With `oidc`
-  or `api` it also reads the API's spend-limit and credit messages from the
-  session's error fields: the retry is skipped, `impl-generate.yml` parks the
+- **Every Claude session's cost in the job summary, and a clean stop at a
+  spend or usage limit.** A step after each Claude step writes
+  `total_cost_usd` (Claude Code's estimate at API list price), the model and
+  the credential mode to the job summary and the log, and never fails the
+  job. It also reads, from the error fields of a failed session, the API's
+  spend-limit, spend-cap and credit messages and the subscription's
+  usage-limit messages: the retry is skipped, `impl-generate.yml` parks the
   pair, `impl-review.yml` and `impl-repair.yml` hand the PR on without
-  spending their automatic retry, and nothing counts as an attempt or a
-  failure verdict. The weekly regen review's `collect_week.py --costs` reads
-  the line, now counts the `daily-regen.yml` pre-flight too, and names the
-  part that ran on API credits.
+  spending their automatic retry, and nothing counts as an attempt or marks
+  `impl:<lib>:failed`, a first implementation included. Before, a
+  subscription usage limit used up a pair's three attempts. The weekly regen
+  review's `collect_week.py --costs` reads the line, now counts the
+  `daily-regen.yml` pre-flight too, and names the part that ran on API
+  credits.
 - **Daily regeneration by implementation instead of by spec: the repository
   variable `REGEN_PAIRS_PER_DAY`.** Set to N, the scheduled `daily-regen.yml`
   run picks the N oldest (spec, library) pairs across the catalogue
@@ -34,7 +37,8 @@
   attempted (a closed PR, a kept regeneration, a failed generation) within
   the attempt window, 30 days unless `attempt_window_days` or
   `REGEN_ATTEMPT_WINDOW_DAYS` says otherwise, is not picked again, while an
-  infrastructure failure or a spend-limit stop leaves it in the queue. Unset,
+  infrastructure failure or a stop at a spend or usage limit leaves it in the
+  queue. Unset,
   the schedule regenerates whole specs as before; a manual run opts in with
   the new `pairs` input, and the watchdog's cron rescue forwards the
   variable.

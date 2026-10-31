@@ -261,7 +261,7 @@ The pick of `daily-regen.yml`'s pair mode (`REGEN_PAIRS_PER_DAY`, or the
 `pairs` input): the N oldest (spec, library) pairs across the catalogue, aged by
 the newer of their metadata `updated` and their last real attempt (a merged or
 closed implementation PR, `regen:kept` included, or a failed generation's
-`impl-fail` comment; infrastructure failures and spend-limit stops don't
+`impl-fail` comment; infrastructure failures and spend or usage limit stops don't
 count). It skips pairs touched within `--attempt-window-days` (default 30),
 pairs with an open implementation PR, and every pair of a spec whose issue saw
 activity within `--min-age-hours`. PyYAML plus `gh`; a failed read degrades
