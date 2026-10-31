@@ -2167,6 +2167,19 @@ in-chat preview needed none either; the page probe needed one fix (below).
     every date twice; `tickMinStep: 24 * 60 * 60 * 1000` leaves one per day.
   - MUI X's default number format writes `1,240,000` on the axis and `1,300,000` in the
     tooltip; an axis's `valueFormatter` writes both.
+  - Which formatter can see `null` (after the pre-PR check, every formatter instrumented to
+    record what it got, the pointer swept over a grid of each chart and the keyboard stepped
+    through it): the value axis's `valueFormatter` is called only for its ticks, with numbers,
+    in a line chart with gaps (20 calls), a horizontal bar chart (`layout="horizontal"`, the
+    value axis on x, 31 calls) with gaps, a vertical one, and stacked areas with gaps; MUI X
+    makes only the category or date axis a tooltip axis (`axisTooltipGetter`: x for lines,
+    the band axis for bars), so the value axis's formatter never runs in a tooltip. The
+    tooltip calls the series' own formatter with the gap's `null` (26 times in the line chart,
+    16 in the horizontal bars) and the category or date axis's formatter with that axis's own
+    value, which is `null` only where the axis's `data` holds one (a `null` category: once at
+    its tick, which the static render already meets, and 12 times in the tooltip). So the
+    prompt keeps the value axis's formatter unguarded and guards the series' formatter, and
+    its rule against `null` categories covers the axis's.
   - A series' own `valueFormatter` is called with the `null` of a gap when the pointer is
     over it: `fmt(null)` threw `TypeError: Cannot read properties of null (reading
     'toFixed')`, and React removed the whole chart (the container empty, no svg left). The
@@ -2238,7 +2251,7 @@ in-chat preview needed none either; the page probe needed one fix (below).
 |---|---|---|
 | MUI X after its regeneration or per question 13 | served now, the 7.29 files `coupled` with `deprecated-api` and the rewrite taught in the prompt | owner decision A of 2026-10-30 |
 | One smoke case per library on `scatter-basic` | `pie-basic-muix-renamed` | scatter-basic's MUI X file is written for 7.29 and fails the bundle, and the eval harness's preflight renders the catalogue file of a library's first case unchanged |
-| Not in the text | the preflight takes the library's first case whose file has no `unavailable-import` finding, else the first | a selection starting with scatter-basic (`scatter-basic-*`) stopped before any case; no file of another library has the finding, so their preflight is unchanged |
+| Not in the text | the preflight takes the library's first selected case whose file has no `unavailable-import` finding, else the library's smoke case from the committed fixtures, else the first | the preflight checks the renderer and evaluates no case; a selection starting with scatter-basic stopped before any case, and one of MUI X 7 files alone (`scatter-basic-muix-*`, the matrix run spec by spec for the Vertex quota) could never evaluate the case that tests the `ChartContainer` rewrite (the first version fell back to that file; the pre-PR check found it); no file of another library has the finding, so their preflight is unchanged |
 | Not in the text | the page probe hovers the largest canvas or svg | MUI X's legend draws an svg per entry before the chart's own |
 | Not in the text | the CI page probe builds MUI X's page too | it is the only React bundle among the five, and the only page an import plugin builds |
 | The frontend's library selector | unchanged | it reads the served list from the agents service's status; `plot.tsx` and its `plot.html` existed since JS-4b |

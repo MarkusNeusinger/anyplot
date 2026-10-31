@@ -552,23 +552,41 @@ async def preflight(cases: list["EvalCase"], services: "Services", echo: Callabl
 
     The job is the normalised original (it makes its own data) in the light theme,
     through `services.backend`, the same path as the pipeline's renders. It proves the
-    backend renders at all: reachable, the caller accepted, the library in the image.
-    A catalogue file that imports what the image's MUI X lacks (`unavailable-import`, a file
-    written for MUI X 7) fails the bundle step until the adapter rewrites it, so it proves
-    nothing about the renderer: the library's first case whose file has no such import stands
-    in for it, and only when every selected file has one does the first fail as before.
+    backend renders at all: reachable, the caller accepted, the library in the image; it
+    evaluates no case. A catalogue file that imports what the image's MUI X lacks
+    (`unavailable-import`, a file written for MUI X 7) fails the bundle step until the adapter
+    rewrites it, so it proves nothing about the renderer: the library's first selected case
+    whose file has no such import stands in for it, and when no selected case has one (a run of
+    `scatter-basic-muix-*` alone, the case that tests the rewrite), the library's smoke case
+    from the committed fixtures does (`make_fixtures.LIBRARY_SMOKE`, the `smoke` tag). Only a
+    library without such a smoke case renders its first file and fails as before.
     """
     from agents.anyplot.render.contract import RendererUnavailable, RenderJob
     from agents.anyplot.render.runtimes import runtime_for
     from agents.anyplot.settings import get_settings
+    from agents.evals.cases import load_cases, select_cases
 
     firsts: dict[str, EvalCase] = {}
     for case in cases:
         firsts.setdefault(case.library, case)
     timeout = float(get_settings().render_timeout_s)
+    smoke: list[EvalCase] | None = None
     for library, first in firsts.items():
         runtime = runtime_for(library, cpu_seconds=int(timeout))
-        case = next((each for each in cases if each.library == library and _bundles_as_it_stands(each, runtime)), first)
+        stand_in = next(
+            (each for each in cases if each.library == library and _bundles_as_it_stands(each, runtime)), None
+        )
+        if stand_in is None:
+            smoke = smoke if smoke is not None else select_cases(load_cases(), "smoke")
+            stand_in = next(
+                (each for each in smoke if each.library == library and _bundles_as_it_stands(each, runtime)), None
+            )
+            if stand_in is not None:
+                echo(
+                    f"preflight: every selected {library} case's catalogue file imports what the image lacks; "
+                    f"the smoke case {stand_in.case_id} proves the renderer instead"
+                )
+        case = stand_in or first
         job = RenderJob(
             job_id=secrets.token_hex(8),
             language=runtime.language,

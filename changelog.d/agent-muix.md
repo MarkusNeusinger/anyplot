@@ -33,7 +33,9 @@
   rendered the catalogue file of each library's first case unchanged, and a MUI X
   file written for MUI X 7 fails the bundle step until the adapter rewrites it,
   so a selection starting with one (`scatter-basic-*`) stopped before any case.
-  It now renders the library's first case whose file bundles as it stands.
+  It now renders the library's first selected case whose file bundles as it
+  stands, or, when none does (`scatter-basic-muix-*` alone), the library's smoke
+  case, so the case that tests the rewrite can run on its own.
 - **The page probe hovers the plot, not a legend mark.** `page_probe.mjs`
   hovered the first canvas or svg in the plot's frame, which in a MUI X page is
   a legend entry's 10-pixel mark; it hovers the largest now. The renderer

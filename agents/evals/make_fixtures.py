@@ -97,8 +97,9 @@ chartjs, d3, echarts and highcharts (since JS-4a). `scatter-basic` is the spec w
 of each of these libraries were rendered when the library's step landed, and it is
 eligible for all ten. MUI X's smoke case (since JS-4c) is `pie-basic-muix-renamed`
 instead: its `scatter-basic` file is written for MUI X 7 and does not bundle as it stands,
-so the eval harness's preflight, which renders the catalogue file of a library's first
-case, could not prove the renderer with it; `pie-basic`'s file is written for MUI X 9.16
+so the eval harness's preflight, which renders a catalogue file to check the renderer,
+could not prove it with that file, and takes the smoke case's file when no selected MUI X
+file bundles (`matrix.preflight`); `pie-basic`'s file is written for MUI X 9.16
 and `clean`, and its renamed headers (`Ausgabenposten`, `Betrag CHF`) carry an umlaut and
 a space. `renamed` puts headers with spaces and a dot
 (`Werbebudget in Tsd. CHF`) into the library's own column syntax: plotnine's `aes`
