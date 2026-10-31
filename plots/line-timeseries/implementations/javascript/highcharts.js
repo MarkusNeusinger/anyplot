@@ -68,7 +68,13 @@ const data = temperatures.map((point) => {
       dataLabels: {
         enabled: true,
         format: "Low: {y}°C",
-        y: -16,
+        verticalAlign: "top",
+        align: "left",
+        x: -8,
+        y: 12,
+        allowOverlap: true,
+        crop: false,
+        overflow: "allow",
         style: { color: t.ink, fontSize: "13px", fontWeight: "600", textOutline: "none" },
       },
     };
@@ -78,6 +84,7 @@ const data = temperatures.map((point) => {
 
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
+  palette: { colorScheme: t.theme },
   chart: {
     type: "area",
     backgroundColor: "transparent",
@@ -100,6 +107,8 @@ Highcharts.chart("container", {
     title: { text: "Date", style: { color: t.inkSoft, fontSize: "16px" } },
   },
   yAxis: {
+    // Headroom below the trough so its label fits under the marker.
+    softMin: trough[1] - 3,
     title: {
       text: "Avg. Temperature (°C)",
       style: { color: t.inkSoft, fontSize: "16px" },
