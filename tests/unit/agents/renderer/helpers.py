@@ -147,11 +147,16 @@ class FakeExecutor:
         self.stuck = 0
         self.available = True
         self.toolchains: dict[str, bool] = {"python": True, "javascript": False, "r": False, "julia": False}
+        self.missing_rows: set[tuple[str, str]] = set()
+        """`(language, library)` rows whose own binaries are missing although their language's are there."""
         self.page: PageRun | None = None
         """A page build's answer; None builds a small page that names the library and the theme."""
 
     def languages(self) -> dict[str, bool]:
         return dict(self.toolchains)
+
+    def serves(self, language: str, library: str) -> bool:
+        return self.toolchains.get(language, False) and (language, library) not in self.missing_rows
 
     async def run_theme(self, job: RenderRequest, theme: Theme) -> ThemeRun:
         self.active += 1

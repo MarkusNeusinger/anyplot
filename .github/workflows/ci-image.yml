@@ -1268,6 +1268,100 @@ jobs:
           print(f'OK: {NODE_BINARY} is in the image, and no node is on {SANDBOX_PATH}')
           "
 
+      # plotly and bokeh (PB-1 of step 4 in agentic/specs/261024-agent-all-libraries.md) render in
+      # two steps: the harness forks the plot before it arms anything, the plot writes its figure as
+      # JSON under the plot guard and the exec filter with the Python limits, and the harness, never
+      # armed, then runs the JavaScript row's harness on it, which draws it with the package's own
+      # bundled JavaScript. The sandbox's environment is a Python row's plus the JavaScript row's, as
+      # `executor.sandbox_env` builds it; each plot sets its size the way the catalogue's save does,
+      # and the canvas follows (plotly 800x450 at scale 4, bokeh 4800x2700 at 2/3). The image carries
+      # plotly and bokeh, and none of their export stacks.
+      - name: Render plotly and bokeh plots through the harness in figure mode
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p work-figure/plotly work-figure/bokeh
+          python3 - > work-figure/row.flags <<'EOF'
+          from agents.renderer.commands import FIGURE_FLAG, NODE_BINARY, command_for
+
+          for library in ("plotly", "bokeh"):
+              row = command_for("python", library)
+              assert row.figure == library and row.exec_deny and row.argv[0] == NODE_BINARY, row
+              with open(f"work-figure/{library}.argv", "w") as handle:
+                  handle.write("\n".join([FIGURE_FLAG, library, row.code_file, "--", *row.argv]) + "\n")
+          assert command_for("python", "plotly").env == command_for("python", "bokeh").env
+          for key, value in row.env.items():
+              print(f"-e\n{key}={value}")
+          EOF
+          mapfile -t ROW_FLAGS < work-figure/row.flags
+          cat > work-figure/plotly/plot.py <<'EOF'
+          import os
+
+          import plotly.graph_objects as go
+
+          THEME = os.getenv("ANYPLOT_THEME", "light")
+          fig = go.Figure(go.Bar(x=["a", "b", "c"], y=[1, 3, 2], marker={"color": "#009E73"}))
+          # An axis range builds plotly's info-array validator, an `eval` the guard admits (CODE_BUILDERS).
+          fig.update_layout(title={"text": "Größe – plotly"}, yaxis={"range": [0, 4]}, width=800, height=450)
+          fig.write_json(f"plot-{THEME}.json")
+          EOF
+          cat > work-figure/bokeh/plot.py <<'EOF'
+          import json
+          import os
+
+          from bokeh.embed import json_item
+          from bokeh.plotting import figure
+
+          THEME = os.getenv("ANYPLOT_THEME", "light")
+          p = figure(x_range=["a", "b", "c"], width=4800, height=2700, title="Größe – bokeh", toolbar_location=None)
+          p.vbar(x=["a", "b", "c"], top=[1, 3, 2], width=0.8, color="#009E73")
+          with open(f"plot-{THEME}.json", "w", encoding="utf-8") as handle:
+              json.dump(json_item(p), handle)
+          EOF
+          for library in plotly bokeh; do
+            mapfile -t ROW_ARGV < "work-figure/$library.argv"
+            echo "the $library row: ${ROW_ARGV[*]}"
+            printf 'x\n1\n' > "work-figure/$library/data.csv"
+            start=$(date +%s.%N)
+            docker run --rm --network none --read-only --tmpfs /tmp \
+              --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+              -v "$PWD/work-figure/$library:/work" -w /work \
+              -e ANYPLOT_THEME=light -e MPLBACKEND=Agg -e MPLCONFIGDIR=/tmp/mpl -e ANYPLOT_MPL_SEED=/opt/mplconfig \
+              "${ROW_FLAGS[@]}" \
+              -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+              -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_RLIMIT_AS_MB=1024 \
+              -e ANYPLOT_DENY_EXEC=required \
+              anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py \
+              "${ROW_ARGV[@]}" \
+              > "work-figure/$library/harness.out" 2> "work-figure/$library/harness.err" \
+              || { echo "::error::the $library render failed"; cat "work-figure/$library/harness.out" "work-figure/$library/harness.err"; exit 1; }
+            echo "wall time: $(python3 -c "import sys; print(round(float(sys.argv[2]) - float(sys.argv[1]), 1))" "$start" "$(date +%s.%N)") s"
+            grep -qxF 'HARNESS {"event": "start"}' "work-figure/$library/harness.out" \
+              || { echo "::error::no HARNESS start line"; cat "work-figure/$library/harness.out"; exit 1; }
+            python3 - "work-figure/$library" "$library" <<'EOF'
+          import json, os, struct, sys
+
+          work, library = sys.argv[1:]
+          png = open(f"{work}/plot-light.png", "rb").read()
+          assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
+          width, height = struct.unpack(">II", png[16:24])
+          assert (width, height) == (3200, 1800), (width, height)
+          end = json.loads(open(f"{work}/harness.out").read().splitlines()[-1].split(" ", 1)[1])
+          assert end["exec_deny"] == "on", f"the plot step ran without the exec filter: {end}"
+          assert set(end["steps"]) == {"plot", "screenshot"}, end
+          assert not os.path.exists(f"{work}/plot-light.html"), "the screenshot step wrote a page"
+          print(f"OK: {library} plot-light.png {width}x{height}, {len(png)} bytes; steps {end['steps']}")
+          EOF
+          done
+          docker run --rm --network none anyplot-renderer:ci /app/.venv/bin/python -c "
+          import importlib.util
+          for name in ('plotly', 'bokeh'):
+              assert importlib.util.find_spec(name), name
+          for name in ('kaleido', 'choreographer', 'selenium', 'webdriver_manager'):
+              assert importlib.util.find_spec(name) is None, f'{name} is in the image'
+          print('OK: plotly and bokeh are in the image, their export stacks are not')
+          "
+
       # The downloadable plot.html of a JavaScript plot (JS-4b, step 3g of
       # agentic/specs/261024-agent-all-libraries.md): the row builds the page with
       # ANYPLOT_PAGE_ONLY=1 and starts no browser; the agents' wrapper (agents/anyplot/render/page.py,

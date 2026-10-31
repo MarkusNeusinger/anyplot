@@ -65,8 +65,24 @@ COPY pyproject.toml uv.lock README.md ./
 # directory, which uvicorn puts on `sys.path`.
 # The `convert` extra (python-calamine, pyarrow) is the file conversion's readers
 # (`harness.py --convert`, agents/anyplot/render/convert.py).
+# plotly and bokeh (PB-1 of step 4) run in the harness's figure mode: the plot
+# writes its figure as JSON, and the JavaScript row's harness draws it with the
+# package's own bundled JavaScript (plotly's package_data/plotly.min.js, bokeh's
+# server/static/js/*.min.js), so the page's version is the plot's. Their image
+# export stacks stay out: kaleido with choreographer and logistro, Selenium with
+# webdriver-manager, trio and the WebSocket clients. Each starts a browser, which
+# the plot guard refuses anyway, and Selenium alone carries 27 MB of drivers; a
+# plot that saves through them fails with the package's own "not installed"
+# message instead. What the two extras add is plotly, bokeh, tornado and
+# xyzservices.
 RUN uv venv && uv sync --frozen --no-install-project --extra lib-matplotlib --extra lib-seaborn \
-    --extra lib-plotnine --extra lib-altair --extra lib-pygal --extra lib-letsplot --extra convert
+    --extra lib-plotnine --extra lib-altair --extra lib-pygal --extra lib-letsplot --extra convert \
+    --extra lib-plotly --extra lib-bokeh \
+    --no-install-package kaleido --no-install-package choreographer --no-install-package logistro \
+    --no-install-package simplejson --no-install-package selenium --no-install-package webdriver-manager \
+    --no-install-package trio --no-install-package trio-websocket --no-install-package outcome \
+    --no-install-package sortedcontainers --no-install-package wsproto --no-install-package websocket-client \
+    --no-install-package pysocks
 
 # pyarrow ships far more than the converter reads (owner decision of 2026-10-15: slim it).
 # The conversion needs the core, compute, IPC, Feather and Parquet; it never touches
@@ -90,6 +106,24 @@ RUN p=.venv/lib/python3.14/site-packages/pyarrow \
         "$p"/libarrow_python.so "$p"/libarrow_python.so.*.*.* \
     && du -sh "$p" \
     && .venv/bin/python -c "import pyarrow.parquet, pyarrow.feather, pyarrow.ipc, pyarrow.compute"
+
+# plotly and bokeh ship JavaScript that neither step of figure mode reads (PB-1): plotly's
+# JupyterLab extension and Jupyter widget bundle, bokeh's TypeScript compiler for custom
+# models (it runs Node, which plot code cannot start), its ES module sources and the
+# unminified twins of its bundles. The page loads the minified bundles alone
+# (`automation/js-render/render.mjs`, FIGURES), which stay with MathJax's, and so does every
+# Python module. The two packages' 94 MB installed (bytecode included) become 68 MB, and the
+# image grows by 69 MB in all (2026-10-31); the imports below and the CI job's plotly and
+# bokeh renders fail on a file that is needed.
+RUN p=.venv/lib/python3.14/site-packages \
+    && du -shc "$p/plotly" "$p/bokeh" \
+    && rm -rf "$p/plotly/labextension" "$p/plotly/package_data/widgetbundle.js" \
+        "$p/bokeh/server/static/js/compiler.js" "$p/bokeh/server/static/js/lib" \
+    && for f in bokeh bokeh-api bokeh-gl bokeh-mathjax bokeh-tables bokeh-widgets; do \
+         test -s "$p/bokeh/server/static/js/$f.min.js" && rm "$p/bokeh/server/static/js/$f.js"; \
+       done \
+    && du -shc "$p/plotly" "$p/bokeh" \
+    && .venv/bin/python -c "import plotly.graph_objects, plotly.express, plotly.io, bokeh.plotting, bokeh.embed, bokeh.models, bokeh.layouts"
 
 # The image does not install the project, so its version is written to a file
 # that `GET /status` reports.

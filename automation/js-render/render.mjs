@@ -69,8 +69,9 @@
 // agentic/specs/261024-agent-all-libraries.md).
 // =============================================================================
 
-import { readFile, writeFile } from "node:fs/promises";
-import { existsSync, realpathSync } from "node:fs";
+import { open, readFile, writeFile } from "node:fs/promises";
+import { constants, existsSync, realpathSync } from "node:fs";
+import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -271,6 +272,26 @@ const BUNDLES = {
   // `.tsx`, bundled via esbuild (see bundleReactSnippet). Only the MIT community
   // surface is vendored; @mui/x-charts-pro / Premium are NOT installed.
   muix: { framework: "react" },
+};
+
+// -----------------------------------------------------------------------------
+// Figure libraries (figure mode, sandbox only; see renderFigure): the Python
+// plot writes its figure as JSON and the page draws it with the Python
+// package's own bundled JavaScript, read from the package's directory
+// (ANYPLOT_FIGURE_PACKAGE), so the two versions are one; `files` are relative
+// to it. bokeh's WebGL, widget and table models live in bundles of their own;
+// its MathJax bundle is left out (MathJax off). No snippet runs for these.
+// -----------------------------------------------------------------------------
+const FIGURES = {
+  plotly: { files: ["package_data/plotly.min.js"] },
+  bokeh: {
+    files: [
+      "server/static/js/bokeh.min.js",
+      "server/static/js/bokeh-gl.min.js",
+      "server/static/js/bokeh-widgets.min.js",
+      "server/static/js/bokeh-tables.min.js",
+    ],
+  },
 };
 
 // -----------------------------------------------------------------------------
@@ -532,11 +553,12 @@ function buildFailure(err, snippetPath) {
 }
 
 function parseArgs(argv) {
-  const args = { square: false, library: null, file: null };
+  const args = { square: false, library: null, file: null, figure: null };
   for (const arg of argv) {
     if (arg === "--square") args.square = true;
     else if (arg === "--landscape") args.square = false;
     else if (arg.startsWith("--library=")) args.library = arg.slice("--library=".length);
+    else if (arg.startsWith("--figure=")) args.figure = arg.slice("--figure=".length);
     else if (arg.startsWith("--orientation=")) args.square = arg.slice("--orientation=".length) === "square";
     else if (!arg.startsWith("--")) args.file = arg;
   }
@@ -821,14 +843,469 @@ const CONTEXT = {
   refused: { requests: 0, sockets: 0 },
 };
 
+// Sandbox mode: no popup (window.open returns null, so no page outside the
+// context's routes), no WebRTC connection and the page's V8 heap capped
+// (PAGE_HEAP_MB). Neither the routes nor the content security policy see
+// WebRTC: a page's RTCPeerConnection reached a local STUN server over UDP and a
+// TURN server over TCP (measured in JS-2). With the forced policy WebRTC uses
+// no UDP and TCP only through the proxy, which is a closed port, also for the
+// loopback, which a proxy otherwise bypasses.
+function launchArgs() {
+  const args = ["--no-sandbox", "--force-color-profile=srgb"];
+  if (SANDBOX) {
+    args.push(
+      "--block-new-web-contents",
+      "--force-webrtc-ip-handling-policy=disable_non_proxied_udp",
+      `--proxy-server=${DEAD_PROXY}`,
+      "--proxy-bypass-list=<-loopback>",
+      `--js-flags=--max-old-space-size=${PAGE_HEAP_MB}`,
+    );
+  }
+  return args;
+}
+
+// Sandbox mode: `new Date("2026-03-01T00:00")` is midnight UTC whatever the
+// host's zone; no service worker, whose requests no route sees.
+const SANDBOX_PAGE_OPTIONS = { timezoneId: "UTC", serviceWorkers: "block", acceptDownloads: false };
+
+// Sandbox mode's rules of a new page's context.
+async function applyPageRules(page) {
+  // Every request of the context is aborted (fetch, XHR, sendBeacon, images,
+  // styles, frames), and every WebSocket closed, which the route does not see.
+  // setContent loads no URL, so the inlined page itself needs no request.
+  await page.context().route("**/*", (route) => {
+    CONTEXT.refused.requests += 1;
+    return route.abort("blockedbyclient");
+  });
+  await page.context().routeWebSocket("**", (ws) => {
+    CONTEXT.refused.sockets += 1;
+    ws.close();
+  });
+  // The context script guards the main frame's console; this, every frame's
+  // after it (setContent writes into the page's first document, which no init
+  // script reaches).
+  await page.context().addInitScript({ content: CONSOLE_GUARD });
+  page.on("crash", () => {
+    CONTEXT.crashed = true;
+  });
+}
+
+// Sandbox mode: `promise`, or a `timeout` failure once `deadline` has passed.
+function boundedBy(deadline) {
+  return (promise) => {
+    let timer;
+    const late = new Promise((_, reject) => {
+      timer = setTimeout(
+        () => reject(failure(`the page did not settle within ${SETTLE_TIMEOUT_MS / 1000} s`, "timeout", "TimeoutError")),
+        Math.max(0, deadline - Date.now()),
+      );
+    });
+    return Promise.race([promise, late]).finally(() => clearTimeout(timer));
+  };
+}
+
+// Sandbox mode reads the page's own records cut in the page, as scalars, since
+// the snippet can write them: the error record (returned), where the first
+// error happened, and how many console errors the guard kept in the page.
+async function readPageRecords(page, bounded) {
+  const inPageError = await bounded(
+    page.evaluate((limit) => {
+      try {
+        const value = window.__anyplotError;
+        return value == null ? null : String(value).slice(0, limit);
+      } catch (e) {
+        return "an error record that cannot be read";
+      }
+    }, PAGE_ERROR_CHARS),
+  );
+  CONTEXT.errorAt = await bounded(
+    page.evaluate(() => {
+      try {
+        const at = window.__anyplotErrorAt;
+        return at ? { file: String(at.file).slice(0, 200), line: Number(at.line) | 0 } : null;
+      } catch (e) {
+        return null;
+      }
+    }),
+  );
+  // The console.error calls the guard kept in the page count too.
+  const seen = await bounded(
+    page.evaluate(() => {
+      try {
+        return Number(window.__anyplotConsoleSeen()) || 0;
+      } catch (e) {
+        return 0;
+      }
+    }),
+  );
+  CONTEXT.console.total += Math.max(0, seen - CONSOLE_KEEP);
+  return inPageError;
+}
+
 function usage(...lines) {
   for (const line of lines) console.error(line);
   if (SANDBOX) console.error(`render: error: harness UsageError -: ${oneLine(lines[0].replace(/^render: /, ""), ERROR_MESSAGE_CHARS)}`);
   process.exit(2);
 }
 
+// -----------------------------------------------------------------------------
+// Figure mode: plotly and bokeh (PB-1 of step 4 in
+// agentic/specs/261024-agent-all-libraries.md).
+//
+// The renderer's Python harness runs the plot first, armed, in a child of its
+// own, and the plot writes its figure as JSON (`fig.write_json`,
+// `bokeh.embed.json_item`); the harness, never armed, then runs this file with
+// `--library=<plotly|bokeh> --figure=plot-<theme>.json` and the package's
+// directory in ANYPLOT_FIGURE_PACKAGE (agents/anyplot/render/harness.py,
+// figure mode). The figure is the model-written plot's output, so it is data
+// here: parsed in Node, carried by a `type="application/json"` element with `<`,
+// U+2028 and U+2029 escaped, parsed again in the page and handed to
+// `Plotly.newPlot` or `Bokeh.embed.embed_item`, never written into the page as
+// markup or script. The page is sandbox mode's, its rules and console guard
+// included, under a stricter policy (`figurePolicy`): scripts by the page's
+// nonce alone and no `'unsafe-eval'`, so nothing the figure carries runs as
+// code; figure mode refuses to run without ANYPLOT_SANDBOX=1.
+//
+// The canvas: the figure's own size in CSS pixels (plotly's layout width and
+// height, bokeh's root width and height; a bokeh layout without one is drawn
+// once at scale 1 and measured) picks the orientation, landscape at an aspect
+// of 4:3 and wider, square below, and the box of that orientation around it;
+// the device scale makes the box exactly 3200 x 1800 or 2400 x 2400 pixels. A
+// plotly figure 800 x 450 is drawn at scale 4, 1600 x 900 at 2, a bokeh figure
+// 4800 x 2700 at 2/3: the figure's layout and type sizes stay as the code wrote
+// them and only the resolution follows the canvas, the way `write_image(width,
+// height, scale)` and bokeh's `export_png` scale. A plotly figure that names no
+// size gets 1600 x 900, one that names a single side keeps it and gets the
+// other at 16:9 (`figureSize`), and one narrower than its box is centred on the
+// page's background.
+// -----------------------------------------------------------------------------
+const FIGURE_PACKAGE = process.env.ANYPLOT_FIGURE_PACKAGE || null;
+// harness.FIGURE_MAX_BYTES, pinned equal by a test: the harness refuses a larger
+// figure before this file runs; this is the check behind it.
+const FIGURE_MAX_BYTES = 16 * 1024 * 1024;
+// The sides a figure may name, in CSS pixels: the device scale stays between 10
+// (320 wide) and 1/2 (6400 wide).
+const FIGURE_MIN_SIDE = 320;
+const FIGURE_MAX_SIDE = 6400;
+const FIGURE_JSON_ID = "anyplot-figure-json";
+const FIGURE_ID = "anyplot-figure";
+// plotly.js's notice in place of a WebGL trace when the page has no WebGL, as
+// the headless shell has none: a render that shows it fails as `draw NoWebGL`
+// instead of passing with the notice for a plot.
+const PLOTLY_NO_WEBGL = "WebGL is not supported by your browser";
+
+// A figure page's policy: sandbox mode's, with the scripts admitted by a nonce
+// of the page instead of 'unsafe-inline'. Every script of a figure page is the
+// harness's own, so markup the figure carries (a bokeh Div's `<img onerror>`,
+// measured running under 'unsafe-inline') runs no handler and no
+// `javascript:` URL; no 'unsafe-eval' either, so CustomJS models do not compile.
+function figurePolicy(nonce) {
+  const policy = CONTENT_SECURITY_POLICY.replace("script-src 'unsafe-inline'", `script-src 'nonce-${nonce}'`);
+  if (policy === CONTENT_SECURITY_POLICY) throw failure("render: the figure policy lost its script source", "harness", "PolicyError");
+  return policy;
+}
+// The pixels of each canvas (ORIENTATIONS at DEVICE_SCALE_FACTOR).
+const CANVAS_PIXELS = Object.fromEntries(
+  Object.entries(ORIENTATIONS).map(([name, css]) => [name, [css.cssWidth * DEVICE_SCALE_FACTOR, css.cssHeight * DEVICE_SCALE_FACTOR]]),
+);
+
+function isRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+// The figure file as the page carries it, and parsed: opened without following
+// a link, at most FIGURE_MAX_BYTES, JSON of the library's shape.
+async function readFigure(file, library) {
+  let handle;
+  try {
+    handle = await open(path.resolve(process.cwd(), file), constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+  } catch (err) {
+    throw failure(`the figure ${file} could not be opened as a regular file (${err.code || err.name})`, "figure", "FigureError");
+  }
+  let text;
+  try {
+    const info = await handle.stat();
+    if (!info.isFile()) throw failure(`the figure ${file} is not a regular file`, "figure", "FigureError");
+    if (info.size > FIGURE_MAX_BYTES) {
+      throw failure(`the figure ${file} is ${info.size} bytes, more than the ${FIGURE_MAX_BYTES}-byte limit`, "figure", "FigureTooLarge");
+    }
+    text = await handle.readFile("utf-8");
+  } finally {
+    await handle.close();
+  }
+  if (Buffer.byteLength(text, "utf-8") > FIGURE_MAX_BYTES) {
+    throw failure(`the figure ${file} grew past the ${FIGURE_MAX_BYTES}-byte limit while it was read`, "figure", "FigureTooLarge");
+  }
+  let figure;
+  try {
+    figure = JSON.parse(text);
+  } catch (err) {
+    throw failure(`the figure ${file} is not JSON: ${err.message}`, "figure", "FigureError");
+  }
+  const shaped =
+    library === "plotly"
+      ? isRecord(figure) && Array.isArray(figure.data) && (figure.layout === undefined || isRecord(figure.layout))
+      : isRecord(figure) &&
+        typeof figure.root_id === "string" &&
+        isRecord(figure.doc) &&
+        Array.isArray(figure.doc.roots) &&
+        figure.doc.roots.some((root) => isRecord(root) && root.id === figure.root_id);
+  if (!shaped) {
+    const expected = library === "plotly" ? '{"data": [...], "layout": {...}}' : "bokeh.embed.json_item's {root_id, doc}";
+    throw failure(`the figure ${file} is not a ${library} figure (${expected})`, "figure", "FigureError");
+  }
+  // Inside valid JSON `<`, U+2028 and U+2029 occur only in strings, where the escape is the same character.
+  return { figure, text: text.replace(SCRIPT_BREAKING, (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`) };
+}
+
+// The figure's own size in CSS pixels, or null when only drawing it tells
+// (a bokeh root without both sides of its own). A plotly layout that names one
+// side keeps it and gets the other at the landscape aspect, 16:9 (width 1200
+// gets height 675, height 600 gets width 1066.67), so the side the code chose
+// is the one drawn.
+function figureSize(library, figure) {
+  if (library === "plotly") {
+    const layout = figure.layout ?? {};
+    const { cssWidth, cssHeight } = ORIENTATIONS.landscape;
+    const width = typeof layout.width === "number" ? layout.width : null;
+    const height = typeof layout.height === "number" ? layout.height : null;
+    if (width !== null && height !== null) return checkedSize({ width, height });
+    if (width !== null) return checkedSize({ width, height: (width * cssHeight) / cssWidth });
+    if (height !== null) return checkedSize({ width: (height * cssWidth) / cssHeight, height });
+    return { width: cssWidth, height: cssHeight };
+  }
+  const root = figure.doc.roots.find((model) => isRecord(model) && model.id === figure.root_id);
+  const attributes = isRecord(root.attributes) ? root.attributes : {};
+  if (typeof attributes.sizing_mode === "string" && attributes.sizing_mode !== "fixed") {
+    // A responsive root fills its container: the landscape box.
+    return { width: ORIENTATIONS.landscape.cssWidth, height: ORIENTATIONS.landscape.cssHeight };
+  }
+  if (typeof attributes.width === "number" && typeof attributes.height === "number") {
+    return checkedSize({ width: attributes.width, height: attributes.height });
+  }
+  return null;
+}
+
+function checkedSize(size) {
+  const fits = (side) => Number.isFinite(side) && side >= FIGURE_MIN_SIDE && side <= FIGURE_MAX_SIDE;
+  if (!fits(size.width) || !fits(size.height)) {
+    const shown = `${Number(size.width).toFixed(0)} x ${Number(size.height).toFixed(0)}`;
+    throw failure(`the figure is ${shown}, outside ${FIGURE_MIN_SIDE} to ${FIGURE_MAX_SIDE} CSS pixels a side`, "figure", "FigureError");
+  }
+  return size;
+}
+
+// The canvas around a figure: the orientation, its box in CSS pixels (the
+// figure's own size at the box's aspect, a landscape width a multiple of 16, so
+// both sides are whole pixels) and the device scale that makes the box the
+// canvas's pixels.
+function figureCanvas(size) {
+  if (3 * size.width < 4 * size.height) {
+    const side = Math.ceil(Math.max(size.width, size.height));
+    return { orientation: "square", cssWidth: side, cssHeight: side, scale: CANVAS_PIXELS.square[0] / side };
+  }
+  const width = 16 * Math.ceil(Math.max(size.width, (size.height * 16) / 9) / 16);
+  return { orientation: "landscape", cssWidth: width, cssHeight: (width * 9) / 16, scale: CANVAS_PIXELS.landscape[0] / width };
+}
+
+// The page's own drawing script: parse the figure from its JSON element, draw
+// it with the library, and set the ready signal once it is drawn and the fonts
+// are in, or the error record when the library refuses it.
+function figureScript(library, size) {
+  const draw =
+    library === "plotly"
+      ? `var layout = figure.layout || {};
+    layout.width = ${size.width};
+    layout.height = ${size.height};
+    layout.autosize = false;
+    var config = { staticPlot: true, displayModeBar: false, typesetMath: false, responsive: false, showTips: false };
+    drawn = Plotly.newPlot(target, figure.data, layout, config);`
+      : `drawn = Bokeh.embed.embed_item(figure, ${JSON.stringify(FIGURE_ID)});`;
+  return `
+(function () {
+  var target = document.getElementById(${JSON.stringify(FIGURE_ID)});
+  var failed = function (err) { window.__anyplotError = String(err && err.stack ? err.stack : err); };
+  var drawn;
+  try {
+    var figure = JSON.parse(document.getElementById(${JSON.stringify(FIGURE_JSON_ID)}).textContent);
+    ${draw}
+  } catch (err) {
+    failed(err);
+    return;
+  }
+  Promise.resolve(drawn)
+    .then(function () { return document.fonts ? document.fonts.ready : null; })
+    .then(function () {
+      requestAnimationFrame(function () { requestAnimationFrame(function () { window.__anyplotReady = true; }); });
+    }, failed);
+})();
+//# sourceURL=anyplot-figure.js`;
+}
+
+// The figure's page: sandbox mode's policy, console guard and error records,
+// the library's bundles, the figure as data and the drawing script. `canvas`
+// null builds the measuring page, whose container takes the figure's own size.
+function buildFigureHtml({ tokens, library, bundles, figureText, size, canvas }) {
+  const container = canvas
+    ? `width: ${canvas.cssWidth}px; height: ${canvas.cssHeight}px; display: flex; align-items: center; justify-content: center;`
+    : "display: inline-block;";
+  const nonce = randomBytes(18).toString("base64");
+  const scripts = bundles
+    .map(
+      (source, index) =>
+        `<script nonce="${nonce}">\n${source.replace(/<\/script/gi, "<\\/script")}\n//# sourceURL=anyplot-${library}-${index + 1}.js\n</script>`,
+    )
+    .join("\n");
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="${figurePolicy(nonce)}" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>anyplot</title>
+<style>
+  html, body { margin: 0; padding: 0; background: ${tokens.pageBg}; overflow: hidden; }
+  #container { ${container} background: ${tokens.pageBg}; position: relative; overflow: hidden; }
+</style>
+</head>
+<body>
+<div id="container"><div id="${FIGURE_ID}"></div></div>
+<script type="application/json" id="${FIGURE_JSON_ID}">${figureText}</script>
+<script nonce="${nonce}">
+  window.ANYPLOT_THEME = ${JSON.stringify(tokens.theme)};
+  window.__anyplotError = null;
+  window.addEventListener("error", (e) => { window.__anyplotError = String(e.error || e.message); });
+  window.addEventListener("unhandledrejection", (e) => { window.__anyplotError = String(e.reason); });
+  ${CONSOLE_GUARD}
+  window.__anyplotErrorAt = null;
+  window.addEventListener("error", (e) => {
+    if (window.__anyplotErrorAt === null) window.__anyplotErrorAt = { file: String(e.filename || ""), line: e.lineno | 0 };
+  });
+</script>
+${scripts}
+<script nonce="${nonce}">${figureScript(library, size ?? { width: 0, height: 0 })}
+</script>
+</body>
+</html>`;
+}
+
+// One page of a figure: sandbox mode's options and rules, the canvas's
+// viewport and scale, drawn until the ready signal or the error record, both
+// bounded by one deadline; a page error fails it as in a snippet's render.
+async function drawFigurePage(browser, html, { width, height, scale, theme }) {
+  const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: scale, ...SANDBOX_PAGE_OPTIONS });
+  await applyPageRules(page);
+  await page.emulateMedia({ reducedMotion: "reduce", colorScheme: theme });
+  page.on("console", (msg) => {
+    if (msg.type() !== "error") return;
+    CONTEXT.console.total += 1;
+    if (CONTEXT.console.kept.length < CONSOLE_KEEP) CONTEXT.console.kept.push(oneLine(msg.text(), CONSOLE_MESSAGE_CHARS));
+  });
+  page.on("pageerror", (err) => {
+    if (CONTEXT.pageError === null) CONTEXT.pageError = cappedPageError(err);
+  });
+  const bounded = boundedBy(Date.now() + SETTLE_TIMEOUT_MS);
+  await bounded(page.setContent(html, { waitUntil: "load" }));
+  await bounded(page.waitForFunction(() => window.__anyplotReady === true || window.__anyplotError != null, null, { timeout: 0 }));
+  const inPageError = await readPageRecords(page, bounded);
+  if (CONTEXT.pageError || inPageError) {
+    CONTEXT.inPageError = inPageError;
+    throw failure(`render: the figure failed to draw:\n${String(CONTEXT.pageError?.stack || inPageError)}`, "page", "Error");
+  }
+  const drew = await bounded(
+    page.evaluate((id) => {
+      const marks = (root) => {
+        if (root.querySelector("canvas, svg, img")) return true;
+        for (const element of root.querySelectorAll("*")) if (element.shadowRoot && marks(element.shadowRoot)) return true;
+        return false;
+      };
+      const target = document.getElementById(id);
+      return !!target && marks(target);
+    }, FIGURE_ID),
+  );
+  if (!drew) throw failure("render: the figure drew nothing into #container (no <canvas>/<svg> mounted).", "draw", "NoOutput");
+  const noWebGl = await bounded(
+    page.evaluate(
+      ([id, notice]) => Array.from(document.getElementById(id).querySelectorAll("p")).some((p) => p.textContent.startsWith(notice)),
+      [FIGURE_ID, PLOTLY_NO_WEBGL],
+    ),
+  );
+  if (noWebGl) throw failure("render: a WebGL trace cannot draw: the page has no WebGL", "draw", "NoWebGL");
+  return { page, bounded };
+}
+
+async function renderFigure(args) {
+  const library = args.library;
+  if (!Object.hasOwn(FIGURES, library ?? "")) {
+    usage(`render: --figure is for ${Object.keys(FIGURES).join(" and ")}, not "${library}"`);
+  }
+  const info = FIGURES[library];
+  if (args.figure === null || args.file !== null) {
+    usage(`render: ${library} draws a figure: pass --figure=<file> and no code file`);
+  }
+  if (!SANDBOX) usage("render: --figure needs ANYPLOT_SANDBOX=1");
+  if (PAGE_ONLY) usage("render: ANYPLOT_PAGE_ONLY=1 builds no page for a figure");
+  if (!FIGURE_PACKAGE) usage("render: --figure needs ANYPLOT_FIGURE_PACKAGE, the package's directory");
+
+  const theme = process.env.ANYPLOT_THEME === "dark" ? "dark" : "light";
+  const tokens = themeTokens(theme);
+  CONTEXT.snippetName = path.basename(args.figure);
+  CONTEXT.snippetPath = path.resolve(process.cwd(), args.figure);
+  CONTEXT.bundleName = `anyplot-${library}.js`;
+
+  const bundles = [];
+  for (const file of info.files) {
+    const bundlePath = path.join(FIGURE_PACKAGE, file);
+    if (!existsSync(bundlePath)) usage(`render: bundle missing: ${bundlePath}`);
+    bundles.push(await readFile(bundlePath, "utf-8"));
+  }
+  const { figure, text } = await readFigure(args.figure, library);
+  let size = figureSize(library, figure);
+
+  const browser = await chromium.launch({ args: launchArgs() });
+  try {
+    if (size === null) {
+      // A bokeh layout: drawn once at scale 1 on a page as large as a figure
+      // may be, where the container takes its size.
+      const html = buildFigureHtml({ tokens, library, bundles, figureText: text, size: null, canvas: null });
+      const measuring = { width: FIGURE_MAX_SIDE, height: FIGURE_MAX_SIDE, scale: 1, theme };
+      const { page, bounded } = await drawFigurePage(browser, html, measuring);
+      const box = await bounded(
+        page.evaluate((id) => {
+          const rect = document.getElementById(id).getBoundingClientRect();
+          return { width: Math.ceil(rect.width), height: Math.ceil(rect.height) };
+        }, FIGURE_ID),
+      );
+      await page.close();
+      size = checkedSize(box);
+    }
+    const canvas = figureCanvas(size);
+    const html = buildFigureHtml({ tokens, library, bundles, figureText: text, size, canvas });
+    const shape = { width: canvas.cssWidth, height: canvas.cssHeight, scale: canvas.scale, theme };
+    const { page, bounded } = await drawFigurePage(browser, html, shape);
+    const png = await bounded(page.locator("#container").screenshot());
+    const [width, height] = [png.readUInt32BE(16), png.readUInt32BE(20)];
+    const [expectedWidth, expectedHeight] = CANVAS_PIXELS[canvas.orientation];
+    if (width !== expectedWidth || height !== expectedHeight) {
+      throw failure(`the screenshot is ${width}x${height}, not the ${canvas.orientation} canvas's ${expectedWidth}x${expectedHeight}`, "harness", "CanvasError");
+    }
+    const pngOut = path.resolve(process.cwd(), `plot-${theme}.png`);
+    await writeFile(pngOut, png);
+    printSummary(CONTEXT);
+    console.log(
+      `render: ${library} ${theme} ${canvas.orientation} figure ${size.width}x${size.height} at scale ${canvas.scale.toFixed(3)} → ${pngOut} (${width}×${height})`,
+    );
+  } finally {
+    await browser.close();
+  }
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  if (args.figure !== null || Object.hasOwn(FIGURES, args.library ?? "")) {
+    await renderFigure(args);
+    return;
+  }
   if (!args.file) {
     usage("usage: node automation/js-render/render.mjs <impl.js> [--library=<id>] [--square]");
   }
@@ -848,6 +1325,9 @@ async function main() {
 
   // Library id: explicit flag wins, else the file stem (chartjs.js → chartjs).
   const library = args.library || path.basename(filePath).replace(/\.(js|mjs|cjs|ts|tsx)$/i, "");
+  if (Object.hasOwn(FIGURES, library)) {
+    usage(`render: ${library} draws a figure, not a code file: pass --library=${library} --figure=<file>`);
+  }
   const bundleInfo = BUNDLES[library];
   if (!bundleInfo) {
     usage(
@@ -897,52 +1377,14 @@ async function main() {
   }
   if (!NO_HTML) await writeFile(htmlOut, html, "utf-8");
 
-  // Sandbox mode: no popup (window.open returns null, so no page outside the
-  // context's routes), no WebRTC connection and the page's V8 heap capped
-  // (PAGE_HEAP_MB). Neither the routes nor the content security policy see
-  // WebRTC: a page's RTCPeerConnection reached a local STUN server over UDP and a
-  // TURN server over TCP (measured in JS-2). With the forced policy WebRTC uses
-  // no UDP and TCP only through the proxy, which is a closed port, also for the
-  // loopback, which a proxy otherwise bypasses.
-  const launchArgs = ["--no-sandbox", "--force-color-profile=srgb"];
-  if (SANDBOX) {
-    launchArgs.push(
-      "--block-new-web-contents",
-      "--force-webrtc-ip-handling-policy=disable_non_proxied_udp",
-      `--proxy-server=${DEAD_PROXY}`,
-      "--proxy-bypass-list=<-loopback>",
-      `--js-flags=--max-old-space-size=${PAGE_HEAP_MB}`,
-    );
-  }
-  const browser = await chromium.launch({ args: launchArgs });
+  const browser = await chromium.launch({ args: launchArgs() });
   try {
     const page = await browser.newPage({
       viewport: { width: css.cssWidth, height: css.cssHeight },
       deviceScaleFactor: DEVICE_SCALE_FACTOR,
-      // Sandbox mode: `new Date("2026-03-01T00:00")` is midnight UTC whatever the
-      // host's zone; no service worker, whose requests no route sees.
-      ...(SANDBOX ? { timezoneId: "UTC", serviceWorkers: "block", acceptDownloads: false } : {}),
+      ...(SANDBOX ? SANDBOX_PAGE_OPTIONS : {}),
     });
-    if (SANDBOX) {
-      // Every request of the context is aborted (fetch, XHR, sendBeacon, images,
-      // styles, frames), and every WebSocket closed, which the route does not see.
-      // setContent loads no URL, so the inlined page itself needs no request.
-      await page.context().route("**/*", (route) => {
-        CONTEXT.refused.requests += 1;
-        return route.abort("blockedbyclient");
-      });
-      await page.context().routeWebSocket("**", (ws) => {
-        CONTEXT.refused.sockets += 1;
-        ws.close();
-      });
-      // The context script guards the main frame's console; this, every frame's
-      // after it (setContent writes into the page's first document, which no init
-      // script reaches).
-      await page.context().addInitScript({ content: CONSOLE_GUARD });
-      page.on("crash", () => {
-        CONTEXT.crashed = true;
-      });
-    }
+    if (SANDBOX) await applyPageRules(page);
 
     // Static screenshot of an animated chart must catch the *final* frame, never
     // a mid-tween one. The library prompts already mandate disabling animation
@@ -976,18 +1418,7 @@ async function main() {
     // Sandbox mode bounds every answer the page gives by one deadline
     // (SETTLE_TIMEOUT_MS), loading the page included: a snippet whose inline
     // script never returns, or a page that never settles, fails as `timeout`.
-    const deadline = Date.now() + SETTLE_TIMEOUT_MS;
-    const bounded = (promise) => {
-      if (!SANDBOX) return promise;
-      let timer;
-      const late = new Promise((_, reject) => {
-        timer = setTimeout(
-          () => reject(failure(`the page did not settle within ${SETTLE_TIMEOUT_MS / 1000} s`, "timeout", "TimeoutError")),
-          Math.max(0, deadline - Date.now()),
-        );
-      });
-      return Promise.race([promise, late]).finally(() => clearTimeout(timer));
-    };
+    const bounded = SANDBOX ? boundedBy(Date.now() + SETTLE_TIMEOUT_MS) : (promise) => promise;
 
     await bounded(page.setContent(html, { waitUntil: "load" }));
 
@@ -1027,41 +1458,7 @@ async function main() {
     // main().catch turns the throw into a non-zero exit.
     // Sandbox mode reads the page's own records cut in the page, as scalars, since
     // the snippet can write them.
-    const inPageError = SANDBOX
-      ? await bounded(
-          page.evaluate((limit) => {
-            try {
-              const value = window.__anyplotError;
-              return value == null ? null : String(value).slice(0, limit);
-            } catch (e) {
-              return "an error record that cannot be read";
-            }
-          }, PAGE_ERROR_CHARS),
-        )
-      : await page.evaluate(() => window.__anyplotError);
-    if (SANDBOX) {
-      CONTEXT.errorAt = await bounded(
-        page.evaluate(() => {
-          try {
-            const at = window.__anyplotErrorAt;
-            return at ? { file: String(at.file).slice(0, 200), line: Number(at.line) | 0 } : null;
-          } catch (e) {
-            return null;
-          }
-        }),
-      );
-      // The console.error calls the guard kept in the page count too.
-      const seen = await bounded(
-        page.evaluate(() => {
-          try {
-            return Number(window.__anyplotConsoleSeen()) || 0;
-          } catch (e) {
-            return 0;
-          }
-        }),
-      );
-      CONTEXT.console.total += Math.max(0, seen - CONSOLE_KEEP);
-    }
+    const inPageError = SANDBOX ? await readPageRecords(page, bounded) : await page.evaluate(() => window.__anyplotError);
     if (pageError || inPageError) {
       CONTEXT.inPageError = inPageError;
       throw failure(`render: the snippet threw while drawing:\n${String(pageError?.stack || pageError || inPageError)}`, "page", "Error");

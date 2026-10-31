@@ -11,7 +11,7 @@ like `agents/evals/`.
 
 | Route | Body | Result | Errors |
 |---|---|---|---|
-| `POST /render` | `RenderRequest` (`wire.py`): `{job_id, language, library, source, data_csv, themes, timeout_s}`, and for a JavaScript job an optional `data_json` (the table as typed JSON, written as `data.json`) | `RenderResponse`: per theme the exit code, a timeout flag, the stderr tail, the probe, the PNG as base64, the attempts, a reason with the measured value and the limit; the slot wait and total time; `MemAvailable` | `401 unauthenticated`, `403 forbidden`, `409 job_conflict` (another payload for a `job_id` and themes in flight or just finished), `422 invalid_job`, `499 cancelled` or `499 client_gone` (nobody reads it), `500 internal`, `503 busy` (no slot within `RENDERER_SLOT_WAIT_S`), `503 low_memory`, `503 stuck`, `503 sandbox_unavailable`, `503 volume_missing`, `503 runtime_unavailable` (the language's toolchain is not in this image; `GET /status` lists them under `languages`), `503 io` |
+| `POST /render` | `RenderRequest` (`wire.py`): `{job_id, language, library, source, data_csv, themes, timeout_s}`, and for a JavaScript job an optional `data_json` (the table as typed JSON, written as `data.json`) | `RenderResponse`: per theme the exit code, a timeout flag, the stderr tail, the probe, the PNG as base64, the attempts, a reason with the measured value and the limit; the slot wait and total time; `MemAvailable` | `401 unauthenticated`, `403 forbidden`, `409 job_conflict` (another payload for a `job_id` and themes in flight or just finished), `422 invalid_job`, `499 cancelled` or `499 client_gone` (nobody reads it), `500 internal`, `503 busy` (no slot within `RENDERER_SLOT_WAIT_S`), `503 low_memory`, `503 stuck`, `503 sandbox_unavailable`, `503 volume_missing`, `503 runtime_unavailable` (the toolchain of the job's row is not in this image: its language's, which `GET /status` lists under `languages`, or the row's own, Node for plotly's and bokeh's screenshot step; `executor.serves`), `503 io` |
 | `POST /run-data` | `DataRunRequest`: `{job_id, source, timeout_s}` (`timeout_s` at most 30) | `DataRunResponse`: the exit code (`harness.DATA_EXIT`), a timeout flag, a reason with the measured value and the limit, `csv_text` (the `out.csv` the harness wrote, only after exit code 0), the stderr tail, the attempts, the timings, the version, `MemAvailable` | the errors of `POST /render` |
 | `POST /convert` | `ConvertRequest`: `{job_id, data_base64, sheet?, timeout_s}` (the file at most 5 MiB, `timeout_s` at most 15) | `ConvertResponse`: the exit code (`harness.CONVERT_EXIT`), a timeout flag, a run reason, `refusal` (`wire.CONVERT_REASONS`) with the measured value and the cap, `text` (CSV, or JSON records for a table with list columns, at most 1 MiB) and `meta` (`{kind, format, rows, columns, sheet, sheets, sheet_count, warnings}`) after exit code 0, the attempts, the timings, the version, `MemAvailable` | the errors of `POST /render` |
 | `POST /page` | `PageRequest`: `{job_id, language: "javascript", library, source, data_json, theme, timeout_s}` (a JavaScript version's run form and typed table) | the self-contained page the harness builds for that theme (`ANYPLOT_PAGE_ONLY=1`: no browser starts), as `text/html; charset=utf-8`, at most `wire.MAX_PAGE_BYTES` | the errors of `POST /render`, `422 invalid_job` for another language, and `422 page_failed` with a `PageFailure` body (the exit code, a reason with the measured value and the limit, the stderr tail with the harness's final error line) for a build that left no page |
@@ -324,7 +324,7 @@ class Renderer:
     async def _render(self, job: RenderRequest, started: float) -> RenderResponse:
         if self.volume is False:
             raise Unavailable("volume_missing")
-        if not self.executor.languages().get(job.language, False):
+        if not self.executor.serves(job.language, job.library):
             raise Unavailable("runtime_unavailable")
         async with self.slot.hold(self.settings.slot_wait_s):
             waited = time.monotonic() - started
@@ -463,7 +463,7 @@ class Renderer:
         """One page build in its own sandbox, inside the same single slot as the renders."""
         if self.volume is False:
             raise Unavailable("volume_missing")
-        if not self.executor.languages().get(job.language, False):
+        if not self.executor.serves(job.language, job.library):
             raise Unavailable("runtime_unavailable")
         async with self.slot.hold(self.settings.slot_wait_s):
             waited = time.monotonic() - started

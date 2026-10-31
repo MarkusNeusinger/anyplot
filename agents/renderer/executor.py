@@ -102,7 +102,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from .commands import EXEC_DENY_ENV, EXEC_FLAG, LANGUAGES, RuntimeCommand, command_for, toolchains
+from .commands import EXEC_DENY_ENV, EXEC_FLAG, FIGURE_FLAG, LANGUAGES, RuntimeCommand, command_for, toolchains
 from .settings import RendererSettings
 from .wire import (
     CONVERT_INPUT_FILE,
@@ -491,9 +491,13 @@ def sandbox_env(
     `data_json` says the run directory holds the job's `data.json` (`RenderRequest.data_json`): a JavaScript row
     then names it in `ANYPLOT_DATA_JSON`, which the harness injects as `window.ANYPLOT_DATA`; no other row reads it.
     `page` (a page build, `POST /page`) adds `ANYPLOT_PAGE_ONLY=1` to the JavaScript row's environment.
+
+    A two-step row (`RuntimeCommand.figure`, plotly and bokeh) gets a Python row's settings and then its own
+    environment, the JavaScript row's, which the screenshot step reads; its limits and the filter variable are the
+    plot step's, and the harness keeps them from the screenshot step (`harness.FIGURE_PLOT_ONLY_ENV`).
     """
     plot: dict[str, str] = {}
-    if theme is not None and command is not None and not command.in_process:
+    if theme is not None and command is not None and not command.in_process and not command.figure:
         plot = {"ANYPLOT_THEME": theme, **command.env}
         if data_json and command.language == "javascript":
             plot[DATA_JSON_ENV] = f"{WORKDIR}/{DATA_JSON_FILE}"
@@ -549,8 +553,9 @@ def build_argv(
     """The `sandbox do` command of one theme, of a data run (`theme` None, the harness in data mode) or of a
     conversion (`convert`, the harness in convert mode); asserted to carry neither `--write` nor `--allow-egress`.
 
-    A theme's `command` is its row of the command table: a Python row runs the harness in plot mode on `plot.py`;
-    any other row runs the harness in exec mode (`EXEC_FLAG`) with the row's own argv and code file. The argv
+    A theme's `command` is its row of the command table: a Python row runs the harness in plot mode on `plot.py`, a
+    two-step row (plotly, bokeh) in figure mode (`FIGURE_FLAG`) on `plot.py` with the row's argv as the screenshot
+    command; any other row runs the harness in exec mode (`EXEC_FLAG`) with the row's own argv and code file. The argv
     comes from the table alone; the request only selected the row. `data_json` and `page`: see `sandbox_env`."""
     argv = [
         config.sandbox_binary,
@@ -572,6 +577,8 @@ def build_argv(
         argv += [CONVERT_FLAG, CONVERT_INPUT_FILE]
     elif theme is None:
         argv += [DATA_FLAG, SNIPPET_FILE]
+    elif command is not None and command.figure:
+        argv += [FIGURE_FLAG, command.figure, command.code_file, "--", *command.argv]
     elif command is not None and not command.in_process:
         argv += [EXEC_FLAG, "--", *command.argv, f"{command.code_flag}{command.code_file}"]
     else:
@@ -754,6 +761,8 @@ class Executor(Protocol):
 
     def languages(self) -> dict[str, bool]: ...
 
+    def serves(self, language: str, library: str) -> bool: ...
+
     async def run_theme(self, job: RenderRequest, theme: Theme) -> ThemeRun: ...
 
     async def run_data(self, job: DataRunRequest) -> DataRun: ...
@@ -800,6 +809,15 @@ class SandboxExecutor:
             language: all(shutil.which(binary, path=SANDBOX_PATH) is not None for binary in needed[language])
             for language in LANGUAGES
         }
+
+    def serves(self, language: str, library: str) -> bool:
+        """Whether a job's row can run here: its language's toolchain (`languages`) and the row's own binaries, Node
+        for plotly's and bokeh's screenshot step (`RuntimeCommand.figure`) among them, which the Python language's
+        toolchain does not name."""
+        if not self.languages().get(language, False):
+            return False
+        row = command_for(language, library)
+        return all(shutil.which(binary, path=SANDBOX_PATH) is not None for binary in row.toolchain)
 
     async def run_theme(self, job: RenderRequest, theme: Theme) -> ThemeRun:
         """Render one theme; a launcher failure before the harness started is retried once."""

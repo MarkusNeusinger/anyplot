@@ -687,6 +687,19 @@ class TestStatus:
         response = await client.post("/render", json=body(language="r", library="ggplot2"), headers=auth())
         assert response.status_code == 200 and fake.calls == [("job123", "light"), ("job123", "dark")]
 
+    async def test_a_row_without_its_own_binaries_is_refused_though_its_language_has_them(
+        self, client: httpx.AsyncClient, fake: FakeExecutor
+    ) -> None:
+        """plotly's row is Python's language but needs Node for its screenshot step (`RuntimeCommand.figure`)."""
+        fake.missing_rows.add(("python", "plotly"))
+
+        response = await client.post("/render", json=body(language="python", library="plotly"), headers=auth())
+
+        assert response.status_code == 503 and response.json() == {"detail": "runtime_unavailable"}
+        assert fake.calls == []
+        response = await client.post("/render", json=body(), headers=auth())
+        assert response.status_code == 200
+
     def test_the_default_renderer_uses_the_sandbox_executor(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("RENDERER_ALLOWED_CALLERS", f"{AGENTS_SA}, owner@example.com")
         monkeypatch.setenv("RENDERER_AUDIENCES", URL)
