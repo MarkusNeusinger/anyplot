@@ -11,7 +11,7 @@
   2400x2400, so the catalogue's layouts look as published. Failures in either
   step end with the same final error line as a JavaScript render. The renderer
   image now carries plotly and bokeh without their kaleido and Selenium export
-  stacks. The agent chat does not offer plotly or bokeh yet.
+  stacks. The agent chat does not offer plotly or bokeh yet. (#12484)
 
 ### Fixed
 
@@ -22,4 +22,4 @@
   its traceback, and a path that subclasses `str` while a plot's file write was
   checked. The harness now reads the traceback through Python's own
   descriptor, copies a path to a plain string before the check, and compares
-  only plain strings while paused.
+  only plain strings while paused. (#12484)
