@@ -1276,52 +1276,58 @@ jobs:
       # Chromium, offline: the chart drew and answers a hover through the scaled frame, the frame's
       # origin is null, and the snippet's attempts to set top.location, call window.open and fetch,
       # read storage and cookies, and navigate its own frame to an http URL all fail, with no request
-      # reaching a listener on the loopback.
+      # reaching a listener on the loopback. Chart.js's page sits in work-page/, which the relay
+      # step below reuses; MUI X's (JS-4c), a React bundle the harness builds through its closed
+      # import plugin, in work-page/muix/.
       - name: Build, wrap and probe a JavaScript plot's page
         if: steps.check.outputs.should_build == 'true'
         run: |
           set -euo pipefail
-          mkdir -p work-page
+          mkdir -p work-page/muix
           mapfile -t ROW_FLAGS < work-js/row.flags
-          mapfile -t ROW_ARGV < work-js/chartjs.argv
           probe=(-v "$PWD/agents/renderer/page_probe.mjs:/probe/page_probe.mjs:ro")
-          docker run --rm --network none "${probe[@]}" anyplot-renderer:ci \
-            /opt/node/bin/node /probe/page_probe.mjs snippet chartjs > work-page/plot.js
-          printf '%s\n' '{"columns":["label","value"],"data":[["a</script>",3],["b",5],["c",2],["d",7],["e",4]]}' \
-            > work-page/data.json
-          start=$(date +%s.%N)
-          docker run --rm --network none --read-only --tmpfs /tmp \
-            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
-            -v "$PWD/work-page:/work" -w /work \
-            -e ANYPLOT_THEME=light "${ROW_FLAGS[@]}" -e ANYPLOT_DATA_JSON=/work/data.json -e ANYPLOT_PAGE_ONLY=1 \
-            -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
-            -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 \
-            anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py \
-            --exec -- "${ROW_ARGV[@]}" > work-page/harness.out 2> work-page/harness.err \
-            || { echo "::error::the page build failed"; cat work-page/harness.out work-page/harness.err; exit 1; }
-          echo "page build: $(python3 -c "import sys; print(round(float(sys.argv[2]) - float(sys.argv[1]), 1))" "$start" "$(date +%s.%N)") s"
-          test -s work-page/plot-light.html && test ! -e work-page/plot-light.png \
-            || { echo "::error::the page build wrote no page, or a PNG"; ls -la work-page; exit 1; }
-          python3 - <<'EOF'
+          for case in "chartjs work-page" "muix work-page/muix"; do
+            read -r library dir <<< "$case"
+            mapfile -t ROW_ARGV < "work-js/$library.argv"
+            docker run --rm --network none "${probe[@]}" anyplot-renderer:ci \
+              /opt/node/bin/node /probe/page_probe.mjs snippet "$library" > "$dir/${ROW_ARGV[-1]}"
+            printf '%s\n' '{"columns":["label","value"],"data":[["a</script>",3],["b",5],["c",2],["d",7],["e",4]]}' \
+              > "$dir/data.json"
+            start=$(date +%s.%N)
+            docker run --rm --network none --read-only --tmpfs /tmp \
+              --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+              -v "$PWD/$dir:/work" -w /work \
+              -e ANYPLOT_THEME=light "${ROW_FLAGS[@]}" -e ANYPLOT_DATA_JSON=/work/data.json -e ANYPLOT_PAGE_ONLY=1 \
+              -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+              -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 \
+              anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py \
+              --exec -- "${ROW_ARGV[@]}" > "$dir/harness.out" 2> "$dir/harness.err" \
+              || { echo "::error::the $library page build failed"; cat "$dir/harness.out" "$dir/harness.err"; exit 1; }
+            echo "$library page build: $(python3 -c "import sys; print(round(float(sys.argv[2]) - float(sys.argv[1]), 1))" "$start" "$(date +%s.%N)") s"
+            test -s "$dir/plot-light.html" && test ! -e "$dir/plot-light.png" \
+              || { echo "::error::the $library page build wrote no page, or a PNG"; ls -la "$dir"; exit 1; }
+            python3 - "$dir" <<'EOF'
           import importlib.util
+          import sys
 
           spec = importlib.util.spec_from_file_location("page", "agents/anyplot/render/page.py")
           page = importlib.util.module_from_spec(spec)
           spec.loader.exec_module(page)
-          html = open("work-page/plot-light.html", encoding="utf-8").read()
+          html = open(f"{sys.argv[1]}/plot-light.html", encoding="utf-8").read()
           wrapped = page.wrap_page(html, theme="light", canvas=(3200, 1800), title="page probe")
-          open("work-page/plot.html", "w", encoding="utf-8").write(wrapped)
+          open(f"{sys.argv[1]}/plot.html", "w", encoding="utf-8").write(wrapped)
           print(f"OK: a page of {len(html.encode()):,} bytes, wrapped {len(wrapped.encode()):,}")
           EOF
-          docker run --rm --network none --read-only --tmpfs /tmp \
-            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
-            "${probe[@]}" -v "$PWD/work-page:/page:ro" \
-            -e HOME=/tmp -e XDG_CACHE_HOME=/tmp -e XDG_CONFIG_HOME=/tmp \
-            -e PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers -e ANYPLOT_NODE_MODULES=/opt/anyplot/node_modules \
-            -e FONTCONFIG_FILE=/opt/anyplot/js-fonts.conf \
-            anyplot-renderer:ci /opt/node/bin/node /probe/page_probe.mjs check /page/plot.html --hover --attempts \
-            > work-page/probe.json || { echo "::error::the page probe failed"; cat work-page/probe.json; exit 1; }
-          python3 -c "import json; report = json.load(open('work-page/probe.json')); print('OK: the page probe passed', sorted(report['checks']))"
+            docker run --rm --network none --read-only --tmpfs /tmp \
+              --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+              "${probe[@]}" -v "$PWD/$dir:/page:ro" \
+              -e HOME=/tmp -e XDG_CACHE_HOME=/tmp -e XDG_CONFIG_HOME=/tmp \
+              -e PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers -e ANYPLOT_NODE_MODULES=/opt/anyplot/node_modules \
+              -e FONTCONFIG_FILE=/opt/anyplot/js-fonts.conf \
+              anyplot-renderer:ci /opt/node/bin/node /probe/page_probe.mjs check /page/plot.html --hover --attempts \
+              > "$dir/probe.json" || { echo "::error::the $library page probe failed"; cat "$dir/probe.json"; exit 1; }
+            python3 -c "import json, sys; report = json.load(open(sys.argv[1])); print('OK: the', sys.argv[2], 'page probe passed', sorted(report['checks']))" "$dir/probe.json" "$library"
+          done
 
       # The chat's interactive preview (JS-4b-2, route A): the API's relay page
       # (api/preview_relay.py, standard library only, run by its path for its page and its real
@@ -1836,6 +1842,7 @@ jobs:
             prompts/library/ggplot2.md \
             prompts/library/makie.md \
             prompts/library/chartjs.md \
+            prompts/library/muix.md \
             prompts/workflow-prompts/impl-repair-claude.md \
             prompts/workflow-prompts/ai-quality-review.md; do
             docker exec agents test -f "/app/$path" || { echo "::error::/app/$path is missing from the image"; exit 1; }
@@ -1911,13 +1918,13 @@ jobs:
           docker exec -i agents .venv/bin/python -c "$script" < plots/scatter-basic/implementations/julia/makie.jl
 
       # The JavaScript runtime in the built image (JS-3 of step 3 for the profile, JS-4a on
-      # 2026-10-30 for the runtime): the pruned javascript and tsx grammars read a catalogue
-      # Chart.js file and a MUI X file written for 9.16, piped in from the checkout, through the
-      # JavaScript runtime's normaliser, validator and readiness scan, as POST /v1/sessions does
-      # with the library enabled (MUI X has the runtime class but is not served yet); both are
-      # coupled in the corpus tests, so anything but clean or coupled, a SECURITY finding, or a
-      # missing token line or directive fails the step. The MUI X scan also reads the package's
-      # copy of the import allowlist, which the image must carry.
+      # 2026-10-30 for the runtime, JS-4c on 2026-10-31 for MUI X): the pruned javascript and tsx
+      # grammars read a catalogue Chart.js file and a MUI X file written for 9.16, piped in from
+      # the checkout, through the JavaScript runtime's normaliser, validator and readiness scan,
+      # as POST /v1/sessions does with the library enabled; both are clean or coupled in the
+      # corpus tests, so anything else, a SECURITY finding, or a missing token line or directive
+      # fails the step. The MUI X scan also reads the package's copy of the import allowlist,
+      # which the image must carry.
       - name: A JavaScript readiness scan runs
         if: steps.check.outputs.should_build == 'true'
         run: |

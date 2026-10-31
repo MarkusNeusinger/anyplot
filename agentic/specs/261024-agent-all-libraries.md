@@ -2134,6 +2134,143 @@ the chat (anyplot.ai)
 | Not in the brief | `Cache-Control: public, max-age=300` | the page is the same for every caller and holds no data |
 | Not in the brief | the relay is served whatever `AGENT_ENABLED` says | it holds nothing, and only the chat frames it |
 
+#### What JS-4c built (2026-10-31): MUI X served for the admin
+
+3f's last library, per question 13 (decision A): MUI X joins `JAVASCRIPT_LIBRARIES` and the
+admin deploy's `_LIBRARIES`, so 13 of the 15 catalogue libraries are served. The runtime
+class needed no change: it took MUI X as `plot.tsx` since JS-4a. The download and the
+in-chat preview needed none either; the page probe needed one fix (below).
+
+- **Readiness.** Of the 323 catalogue MUI X files 311 are eligible: 93 `clean`, 218
+  `coupled`, 12 blocked (the 11 map specs and qrcode-basic). By the version a file was
+  written for: 196 for MUI X 7.29 (139 `coupled` without a version note, 51 `coupled` with
+  `deprecated-api`, 6 blocked) and 127 for 9.16 (93 `clean`, 28 `coupled`, 6 blocked). The
+  one file that imports `ChartContainer` by name from the package root is qrcode-basic,
+  blocked anyway (`url-literal`); four more files name `ChartContainer` in a comment only.
+- **Fixtures.** 60 cases (`*-muix-*`, 780 generated in all) on the ten matrix specs. The
+  five files regenerated for 9.16 (box, heatmap, area, violin, pie) are `clean`; the five
+  written for 7.29 (scatter, line, bar-grouped, histogram, line-timeseries) are `coupled`
+  with the `data-block` hint, and scatter-basic's also with `deprecated-api`. The smoke case
+  is `pie-basic-muix-renamed`, not `scatter-basic` (table below). A test pins the split
+  (`test_the_muix_files_split_by_the_version_they_were_written_for`).
+- **Measured in the renderer image** (`anyplot-renderer:muix`, built from this branch on
+  the local `js2-toolchain:dev`, the checkout's `render.mjs` mounted as the local backend
+  does; MUI X 9.16.0, `@mui/material` 9.5.0, React 19.3.1), each a page built with the
+  JavaScript row and opened in the image's Chromium with a time zone of its own:
+  - A `scaleType: "time"` axis is d3's `scaleTime`: in `America/New_York` its ticks sit at
+    New York's midnights, five hours off the data's UTC dates, and its tooltip wrote the
+    point of 2 January as `Thu Jan 01 2026 19:00:00 GMT-0500 (Eastern Standard Time)`. A
+    `"utc"` axis (`scaleUtc`) with
+    `valueFormatter: (v) => v.toISOString().slice(0, 10).split("-").reverse().join(".")`
+    wrote `02.01.2026` in its ticks and its tooltip in both zones. The default tick count
+    (one per 50 pixels) put two ticks on each day of a week of dates, so the formatter wrote
+    every date twice; `tickMinStep: 24 * 60 * 60 * 1000` leaves one per day.
+  - MUI X's default number format writes `1,240,000` on the axis and `1,300,000` in the
+    tooltip; an axis's `valueFormatter` writes both.
+  - Which formatter can see `null` (after the pre-PR check, every formatter instrumented to
+    record what it got, the pointer swept over a grid of each chart and the keyboard stepped
+    through it): the value axis's `valueFormatter` is called only for its ticks, with numbers,
+    in a line chart with gaps (20 calls), a horizontal bar chart (`layout="horizontal"`, the
+    value axis on x, 31 calls) with gaps, a vertical one, and stacked areas with gaps; MUI X
+    makes only the category or date axis a tooltip axis (`axisTooltipGetter`: x for lines,
+    the band axis for bars), so the value axis's formatter never runs in a tooltip. The
+    tooltip calls the series' own formatter with the gap's `null` (26 times in the line chart,
+    16 in the horizontal bars) and the category or date axis's formatter with that axis's own
+    value, which is `null` only where the axis's `data` holds one (a `null` category: once at
+    its tick, which the static render already meets, and 12 times in the tooltip). So the
+    prompt keeps the value axis's formatter unguarded and guards the series' formatter, and
+    its rule against `null` categories covers the axis's.
+  - A series' own `valueFormatter` is called with the `null` of a gap when the pointer is
+    over it: `fmt(null)` threw `TypeError: Cannot read properties of null (reading
+    'toFixed')`, and React removed the whole chart (the container empty, no svg left). The
+    static render never hovers, so no gate sees it; the guarded form
+    `(v) => (v == null ? "" : fmt(v, 1))` swept over all 60 points of the idiom page in New
+    York shows 60 tooltips, the two gaps empty, and no error.
+  - A `null` in a band axis's `data` is drawn as the category `null`; a scatter point with a
+    `null` coordinate is left out without a word; a pie slice whose value is `null` takes
+    its palette position and draws nothing, so the next slice gets the third colour.
+  - Errors: a `TypeError` in the component names its line through the bundle's source map
+    (`page TypeError plot.tsx:9`), and the 7.29 import fails at the bundle
+    (`import ImportRefused plot.tsx:7: import "@mui/x-charts/ChartContainer" refused: it is
+    not on the image's import allowlist`).
+  - The scatter-basic file with only the import renamed to `ChartsContainer` renders, but
+    its x tick labels vanish (the axis band's default height, at 14-pixel ticks) and its
+    trend line and frame, drawn at pixel positions computed from `margin`, miss the plot
+    area: MUI X 9 places `margin` outside the axes' bands.
+- **Prompt.** `adapter_javascript.md` adds MUI X's passages to the slots the four
+  libraries read, whose rules keep their meaning for those four (the safe-code slot's
+  "never `import`, `export` or `require`" now reads "never `require`, and `import` and
+  `export` only in MUI X's module"): the TSX module with its imports and one default export
+  (`data_statement`, `safe_code`), MUI X 9.16's names for MUI X 7's and the rewrite a `deprecated-api` hint
+  asks for, `colors={t.palette}` and an ordinal `colorMap` on a band axis, `skipAnimation`,
+  axis bands sized with `height` and `width`, overlays through `useXScale()`, `useYScale()`
+  and `useDrawingArea()` from `@mui/x-charts/hooks`, the value axis's `valueFormatter` with
+  `fmt`, the guarded series formatter, the `"utc"` axis above, and MUI X's own ways of
+  showing `null`. The idiom form (`conftest.JS_PROMPT_IDIOMS["muix"]`: a line chart of the
+  dated values with gaps, an overlay through the scales, per-group totals as bars) passes
+  both validator profiles and renders 3200x1800 in both themes from the table with missing
+  cells and the column name with a quote and a backslash, in 1.2 to 1.3 s a theme.
+- **The 7.29 path.** scatter-basic's catalogue file, hand-adapted as the prompt teaches to
+  the `scatter-basic-muix-renamed` case (150 rows, `Werbebudget in Tsd. CHF`): the import
+  and its uses renamed to `ChartsContainer`, the data block replaced by the placeholder and
+  two column constants, the literal axis limits dropped, the trend line, the frame and the
+  `r` note drawn in a component through the chart's scales, the axis bands sized, `fmt` on
+  both axes and in the guarded series formatter. As a `full_code` plan it applies to the
+  normalised file without drift, `_check` lets it render with no finding, and through the
+  local Docker backend it passes R1 to R3 in both themes, 3200x1800 (3200x1864 with the
+  footer strip), 1.7 s for the two-theme job; the trend line stays inside the plot area and
+  every tick label shows.
+- **Export and preview.** The probe's MUI X snippet (a `BarChart` of the typed table, its
+  escape attempts appended to the module) builds through the local backend's page in 0.85
+  to 1.0 s with the container's start: a page of 694 KB, wrapped 722 KB. `check --hover
+  --attempts` and the relay mode passed every check in both themes: the chart drew (50 SVG
+  shapes), a hover changed the frame, the origin is `null`, `top.location`, storage,
+  cookies and the wrapper's and relay's navigation are `SecurityError`, `window.open` is
+  `null`, `fetch` a `TypeError`, the self-navigation ends on `chrome-error://chromewebdata/`,
+  and the relay showed the page only on its signal. No MUI X fix to the harness, the CSP or
+  the frames was needed. The probe needed one: its hover took the first canvas or svg in
+  the frame, which in a MUI X page is a legend entry's 10x10 mark; the unchanged probe
+  failed `hover_changes_the_frame` there (measured), and it hovers the largest now, which
+  the four other libraries pass as before (the image tests, 28 in 30 s).
+- **End to end without a model** (2026-10-31, the branch image through the local Docker
+  backend): a pasted table of 60 rows, semicolon-separated with decimal commas, with a text
+  group, two number columns with a gap each, a timestamp column with `+01:00`,
+  microseconds and two gaps, and an integer column past 2^53, through the parser (text,
+  datetime, number, integer, integer), MUI X's prompt-idiom form, `_check`, the loader, the
+  typed table (3,999 bytes) and the host gates: R1 to R3 pass in both themes, 3200x1864 with
+  the footer strip, 1.4 s for the two-theme job; the notes count 60 integers, 58 cut and 58
+  converted timestamps. Its `plot.html` downloads at 749 KB in a p50 of 0.85 s (five builds
+  a theme) and passes the probe with a hover in both themes (152 SVG shapes).
+- **CI.** The renderer image's page step builds, wraps and probes a MUI X page after the
+  Chart.js one (`work-page/muix/`); the relay step keeps Chart.js's. The step ran locally
+  against the branch image with the checkout's harness mounted, since the local toolchain
+  carries JS-2's: Chart.js 0.6 s and 220 KB wrapped, MUI X 0.8 s and 722 KB, both probes
+  and the relay passed. The agents image's file check lists `prompts/library/muix.md`.
+
+| Text above (3f) | Built | Why |
+|---|---|---|
+| MUI X after its regeneration or per question 13 | served now, the 7.29 files `coupled` with `deprecated-api` and the rewrite taught in the prompt | owner decision A of 2026-10-30 |
+| One smoke case per library on `scatter-basic` | `pie-basic-muix-renamed` | scatter-basic's MUI X file is written for 7.29 and fails the bundle, and the eval harness's preflight renders the catalogue file of a library's first case unchanged |
+| Not in the text | the preflight takes the library's first selected case whose file has no `unavailable-import` finding, else the library's smoke case from the committed fixtures, else the first | the preflight checks the renderer and evaluates no case; a selection starting with scatter-basic stopped before any case, and one of MUI X 7 files alone (`scatter-basic-muix-*`, the matrix run spec by spec for the Vertex quota) could never evaluate the case that tests the `ChartContainer` rewrite (the first version fell back to that file; the pre-PR check found it); no file of another library has the finding, so their preflight is unchanged |
+| Not in the text | the page probe hovers the largest canvas or svg | MUI X's legend draws an svg per entry before the chart's own |
+| Not in the text | the CI page probe builds MUI X's page too | it is the only React bundle among the five, and the only page an import plugin builds |
+| The frontend's library selector | unchanged | it reads the served list from the agents service's status; `plot.tsx` and its `plot.html` existed since JS-4b |
+| The BFF mock's JavaScript libraries | unchanged (the four) | its page is a stand-in without a library bundle; a MUI X session there would need `plot.tsx` in four places for no new check |
+
+Found for later (not decided here):
+
+- **The catalogue's own MUI X habits work against the exported page.** 17 catalogue MUI X
+  files use `scaleType: "time"` and none `"utc"`, and about 45 of the 159 lines with a
+  `valueFormatter` guard against a missing value. Catalogue data has no gaps and the
+  harness runs in UTC, so the catalogue renders are right; a user's adapted plot inherits
+  the habits unless the adapter applies the prompt's rules, and no gate sees either (the
+  render never hovers, and runs in UTC). A validator hint for an unguarded series formatter
+  or a `"time"` axis, or a hover sweep of the page in the eval matrix, would catch them.
+- **The 139 files written for 7.29 without a version note** render, but MUI X 7's CSS class
+  names and legend props in them match nothing in 9.16 (`prompts/library/muix.md`, "MUI X
+  v9 API"), so their styling may silently go; the adapter reads that section with the
+  library rules, and the eval matrix's MUI X run will show how often it matters.
+
 ### 4. plotly and bokeh (through the JavaScript harness's Chromium)
 
 Revised on 2026-10-30 after the second opinion on steps 3 and 4. Two PRs after JS-2: PB-1

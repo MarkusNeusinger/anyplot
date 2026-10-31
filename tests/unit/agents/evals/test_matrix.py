@@ -574,6 +574,64 @@ async def test_a_preflight_that_cannot_render_stops_before_the_first_case(
         )
 
 
+async def test_the_preflight_passes_over_a_muix_file_written_for_muix_7(
+    services: Services, backend: FakeBackend
+) -> None:
+    """JS-4c: `scatter-basic`'s MUI X file imports MUI X 7's `ChartContainer`, which fails the bundle step until the
+    adapter rewrites it, so the preflight renders the library's next selected case whose file bundles as it stands,
+    and the other libraries keep their first case. The preflight checks the renderer, it evaluates no case."""
+    cases = select_cases(
+        load_cases(promoted_dir=Path("/nonexistent")), "scatter-basic-muix-*,violin-basic-muix-n12,scatter-basic-d3-n12"
+    )
+    assert [case.case_id for case in cases][:2] == ["scatter-basic-d3-n12", "scatter-basic-muix-date"]
+
+    await matrix.preflight(cases, services, echo=lambda _: None)
+
+    rendered = {job.library: job.source for job in backend.jobs}
+    assert set(rendered) == {"d3", "muix"}
+    assert rendered["muix"] == normalised_code("violin-basic", "muix")
+    assert '"@mui/x-charts/ChartContainer"' in snapshot_code("scatter-basic", "muix")
+
+
+async def test_a_selection_of_muix_7_files_alone_passes_the_preflight_through_the_smoke_case(
+    services: Services, backend: FakeBackend, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A run of `scatter-basic-muix-*` alone (the matrix run spec by spec, which the Vertex quota asks for) selects no
+    file that bundles as it stands, so MUI X's smoke case (`pie-basic-muix-renamed`, `make_fixtures.LIBRARY_SMOKE`)
+    proves the renderer, and the case that tests the `ChartContainer` rewrite runs. Without a smoke case to stand in,
+    the first file renders and fails as before."""
+    from agents.evals import cases as cases_module
+    from agents.evals.make_fixtures import LIBRARY_SMOKE
+
+    selected = select_cases(load_cases(promoted_dir=Path("/nonexistent")), "scatter-basic-muix-*")
+    assert len(selected) == 6 and LIBRARY_SMOKE["muix"] == ("pie-basic", "renamed")
+    lines: list[str] = []
+
+    await matrix.preflight(selected, services, echo=lines.append)
+
+    assert [job.library for job in backend.jobs] == ["muix"]
+    assert backend.jobs[0].source == normalised_code("pie-basic", "muix")
+    assert any("smoke case pie-basic-muix-renamed proves the renderer" in line for line in lines), lines
+    assert lines[-1].startswith("preflight: pie-basic (muix) rendered in")
+
+    backend.jobs.clear()
+    monkeypatch.setattr(cases_module, "load_cases", lambda: [])
+    await matrix.preflight(selected, services, echo=lambda _: None)
+    assert [job.library for job in backend.jobs] == ["muix"] and "ChartContainer" in backend.jobs[0].source
+
+
+def normalised_code(spec_id: str, library: str) -> str:
+    from agents.anyplot.render.runtimes import runtime_for
+
+    return runtime_for(library).normalise(snapshot_code(spec_id, library), library)
+
+
+def snapshot_code(spec_id: str, library: str) -> str:
+    from agents.anyplot.dev_fixture import snapshot_from_repo
+
+    return snapshot_from_repo(spec_id, library).code
+
+
 async def test_a_renderer_outage_stops_the_run_and_saves_no_baseline(
     tmp_path: Path, services: Services, swap_models
 ) -> None:

@@ -40,7 +40,7 @@
 // the page (the control).
 //
 // Usage:
-//   node page_probe.mjs snippet <chartjs|d3|echarts|highcharts>    print the probe's plot code
+//   node page_probe.mjs snippet <chartjs|d3|echarts|highcharts|muix>    print the probe's plot code
 //   node page_probe.mjs check <plot.html> [--hover] [--attempts]
 //   node page_probe.mjs relay <relay.json> <plot.html> [--hover]
 //
@@ -155,6 +155,27 @@ Highcharts.chart("container", {
   series: [{ name: "value", data: data.map((row) => row.value), color: t.palette[0] }],
 });
 `,
+  // MUI X's code is a TSX module the harness bundles with React (JS-4c); the attempts below run when the
+  // bundle evaluates the module, before React draws, and its axis tooltip answers the hover.
+  muix: `import { BarChart } from "@mui/x-charts/BarChart";
+
+const t = window.ANYPLOT_TOKENS;
+const data = window.ANYPLOT_DATA;
+const { width, height } = window.ANYPLOT_SIZE;
+
+export default function Chart() {
+  return (
+    <BarChart
+      width={width}
+      height={height}
+      colors={t.palette}
+      skipAnimation
+      xAxis={[{ scaleType: "band", data: data.map((row) => String(row.label)) }]}
+      series={[{ label: "value", data: data.map((row) => row.value) }]}
+    />
+  );
+}
+`,
 };
 
 function fail(message) {
@@ -234,8 +255,14 @@ async function check(file, { hover, attempts }) {
       // The mouse moves in the window's own coordinates over the plot as the wrapper shows it (scaled):
       // Playwright's `hover({position})` maps a point into the frame without the frame's transform
       // (measured: its events missed the scaled frame), while a real pointer's reach the plot.
+      // The largest canvas or svg is the plot: MUI X's legend draws a small svg per entry before the chart's own.
       const before = await frame.evaluate(fingerprint);
-      const box = await frame.locator("#container canvas, #container svg").first().boundingBox();
+      const plots = frame.locator("#container canvas, #container svg");
+      let box = null;
+      for (let index = 0; index < (await plots.count()); index += 1) {
+        const candidate = await plots.nth(index).boundingBox();
+        if (candidate && (!box || candidate.width * candidate.height > box.width * box.height)) box = candidate;
+      }
       if (!box) throw new Error("the plot has no box");
       let changedAt = null;
       for (const share of [0.2, 0.35, 0.5, 0.65, 0.8]) {
@@ -610,7 +637,7 @@ if (mode === "snippet") {
   await relay(target, flags[0], { hover: flags.includes("--hover") });
 } else {
   fail(
-    "usage: node page_probe.mjs snippet <chartjs|d3|echarts|highcharts> | check <plot.html> [--hover] [--attempts]" +
+    "usage: node page_probe.mjs snippet <chartjs|d3|echarts|highcharts|muix> | check <plot.html> [--hover] [--attempts]" +
       " | relay <relay.json> <plot.html> [--hover]"
   );
 }

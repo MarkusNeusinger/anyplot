@@ -214,11 +214,11 @@ class TestAdapterPromptPerLanguage:
         assert validate_security(JULIA_PROMPT_IDIOMS) == []
         assert validate_adaptation(JULIA_PROMPT_IDIOMS, original_palette=["#009E73", "#C475FD", "#4467A3"]) == []
 
-    @pytest.mark.parametrize("library", ["chartjs", "d3", "echarts", "highcharts"])
+    @pytest.mark.parametrize("library", ["chartjs", "d3", "echarts", "highcharts", "muix"])
     def test_the_javascript_prompts_idioms_pass_the_javascript_validator(self, library: str) -> None:
         """What the JavaScript prompts tell the adapter to write (the adapter prompt and the highlights section) is
-        code the JavaScript validator admits for each library, the ADAPTATION profile too; the image test renders the
-        same forms."""
+        code the JavaScript validator admits for each library, the ADAPTATION profile too, MUI X's TSX module with the
+        TSX grammar and the import allowlist (JS-4c); the image test renders the same forms."""
         from agents.anyplot.code.profiles.javascript.validate import validate_adaptation, validate_security
         from tests.unit.agents.code.conftest import (
             JS_LIBRARY_IDIOM_SNIPPETS,
@@ -509,7 +509,7 @@ class TestScopeRubricLibraries:
 
         _, others = self.adapted_and_others(policy.scope_rubric(sorted(RUNTIME_LIBRARIES)))
         rubric = policy.scope_rubric(sorted(RUNTIME_LIBRARIES))
-        assert "Plotly" in others and "Chart.js" not in others
+        assert "Plotly" in others and "Chart.js" not in others and "MUI X" not in others
         assert '("How would I do this plot in MATLAB? Give me the code.", "Gibt es das auch' in rubric
 
     def test_a_catalogue_served_in_full_leaves_only_outside_tools(self) -> None:

@@ -50,10 +50,8 @@ class TestRegistry:
         assert PYTHON_LIBRARIES == {"matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot"}
         assert R_LIBRARIES == edits.R_LIBRARIES == {"ggplot2"}
         assert JULIA_LIBRARIES == edits.JULIA_LIBRARIES == {"makie"}
-        # MUI X has the profile and the runtime class, and the registry serves it once its fixtures exist.
-        assert (
-            JAVASCRIPT_LIBRARIES == edits.JAVASCRIPT_LIBRARIES - {"muix"} == {"chartjs", "d3", "echarts", "highcharts"}
-        )
+        # MUI X joined the four with its fixtures (JS-4c, 2026-10-31).
+        assert JAVASCRIPT_LIBRARIES == edits.JAVASCRIPT_LIBRARIES == {"chartjs", "d3", "echarts", "highcharts", "muix"}
         assert (
             RUNTIME_LIBRARIES
             == PYTHON_LIBRARIES | R_LIBRARIES | JULIA_LIBRARIES | JAVASCRIPT_LIBRARIES
@@ -110,7 +108,8 @@ class TestRegistry:
         runtime = runtime_for(library, cpu_seconds=45)
         assert isinstance(runtime, JavaScriptRuntime)
         assert runtime.library == library and runtime.language == "javascript" == language_of(library)
-        assert runtime.file_name == "plot.js" and runtime.code_artifact == "plot.js" in CODE_ARTIFACTS
+        code_file = "plot.tsx" if library == "muix" else "plot.js"
+        assert runtime.file_name == code_file and runtime.code_artifact == code_file in CODE_ARTIFACTS
         assert runtime.placeholder == js_regions.PLACEHOLDER == "const data = loadUserData();"
         assert runtime.cpu_seconds == 45 and runtime.render_p95_s == 15.0
         assert runtime.blocking_rules == BLOCKING_RULES | {"unavailable-import"}
@@ -120,31 +119,32 @@ class TestRegistry:
         with pytest.raises(ValueError, match="r library"):
             JavaScriptRuntime(library="ggplot2")
 
-    def test_the_javascript_runtime_class_takes_muix_as_tsx(self) -> None:
-        """MUI X is not served yet, but the class writes and exports it as TSX (`commands.CODE_FILE_OVERRIDES`)."""
-        runtime = JavaScriptRuntime(library="muix")
+    def test_the_javascript_runtime_takes_muix_as_tsx(self) -> None:
+        """MUI X's code is written and exported as TSX (`commands.CODE_FILE_OVERRIDES`), served since JS-4c."""
+        runtime = runtime_for("muix")
         assert runtime.file_name == "plot.tsx" and runtime.code_artifact == "plot.tsx" in CODE_ARTIFACTS
         assert runtime.command("light")[-1] == "plot.tsx"
         assert runtime.security(MUIX_WORKING) == []
 
     def test_a_library_without_a_runtime_is_refused_but_known(self) -> None:
         assert language_of("plotly") == "python" and not has_runtime("plotly")
-        assert language_of("muix") == "javascript" and not has_runtime("muix")
-        with pytest.raises(ValueError, match="no runtime for 'muix'"):
-            runtime_for("muix")
+        assert language_of("bokeh") == "python" and not has_runtime("bokeh")
+        with pytest.raises(ValueError, match="no runtime for 'plotly'"):
+            runtime_for("plotly")
         with pytest.raises(ValueError, match="unknown library"):
             language_of("excel")
 
     def test_the_settings_accept_the_served_libraries_and_refuse_one_the_registry_does_not_serve(self) -> None:
-        assert AgentSettings(libraries=["matplotlib", "ggplot2", "makie", "d3", "highcharts"]).libraries == [
+        assert AgentSettings(libraries=["matplotlib", "ggplot2", "makie", "d3", "highcharts", "muix"]).libraries == [
             "matplotlib",
             "ggplot2",
             "makie",
             "d3",
             "highcharts",
+            "muix",
         ]
         with pytest.raises(ValueError, match="no runtime"):
-            AgentSettings(libraries=["matplotlib", "muix"])
+            AgentSettings(libraries=["matplotlib", "plotly"])
 
 
 class TestPythonRuntimeBindings:

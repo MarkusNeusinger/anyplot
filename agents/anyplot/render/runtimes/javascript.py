@@ -1,5 +1,5 @@
-"""The JavaScript runtime: Chart.js, D3, ECharts and Highcharts (`runtimes.JAVASCRIPT_LIBRARIES`), run as `plot.js` by
-the catalogue's browser harness in the harness's exec mode.
+"""The JavaScript runtime: Chart.js, D3, ECharts, Highcharts and MUI X (`runtimes.JAVASCRIPT_LIBRARIES`), run as
+`plot.js` (`plot.tsx` for MUI X) by the catalogue's browser harness in the harness's exec mode.
 
 The JavaScript counterpart of `runtimes/julia.py`, built on 2026-10-30 as JS-4a of step 3
 (`agentic/specs/261024-agent-all-libraries.md`). It binds the JavaScript code profile of
@@ -8,8 +8,10 @@ readiness, loader, error grammar) and the language-neutral modules that take the
 (the edit applier's JavaScript dialect in `code/edits.py`, the export's run line) to the
 runtime interface, so the pipeline, the theme toggle, the local Docker backend and the
 eval harness serve these libraries as they serve the Python libraries, ggplot2 and Makie.
-The class takes MUI X too (`plot.tsx`, the TSX grammar); the registry serves it once its
-fixtures exist (the plan's order: MUI X last).
+MUI X joined on 2026-10-31 (JS-4c): `plot.tsx`, the TSX grammar, a module that the
+harness bundles with esbuild through its closed import plugin and mounts as a React
+component; a file written for MUI X 7 is `coupled` with the `deprecated-api` note, and
+the adapter rewrites its imports (the plan's question 13).
 
 **The command** is the renderer's JavaScript row (`agents/renderer/commands.py`): the
 probe-less harness in exec mode in front of Node by its path,

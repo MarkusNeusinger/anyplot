@@ -99,11 +99,12 @@ IDIOM_ROWS = [
 
 
 @pytest.mark.parametrize("theme", ["light", "dark"])
-@pytest.mark.parametrize("library", ["chartjs", "d3", "echarts", "highcharts"])
+@pytest.mark.parametrize("library", ["chartjs", "d3", "echarts", "highcharts", "muix"])
 def test_the_prompts_idioms_render_from_the_typed_table(tmp_path: Path, library: str, theme: str) -> None:
     """Each library's idiom form (`conftest.JS_PROMPT_IDIOMS`, the prompt's code verbatim) renders 3200x1800 from a
     table with missing dates, numbers and a column name with a quote and a backslash: `null` dropped before every
-    statistic, `fmt` on the value axes, the time axes in UTC (measured on 2026-10-30)."""
+    statistic, `fmt` on the value axes, the time axes in UTC (measured on 2026-10-30; MUI X's TSX module, bundled
+    through the closed import plugin, on 2026-10-31)."""
     write_job(
         tmp_path, library, JS_PROMPT_IDIOMS[library], csv_text(IDIOM_NAMES, IDIOM_ROWS), IDIOM_DTYPES, [IDIOM_NAMES[0]]
     )
@@ -160,6 +161,53 @@ def test_the_page_reads_every_kind_as_the_prompt_describes(tmp_path: Path) -> No
     assert result.returncode == 0, result.stderr[-2000:]
     kinds = read_kinds(csv_text(names, rows), dtypes, ["d", "ts"])  # type: ignore[arg-type]
     assert kinds.inexact == {"big": 1} and kinds.submillisecond == {"ts": 1} and kinds.offset == {"ts": 1}
+
+
+def test_a_muix_7_import_fails_the_bundle_at_its_line_until_rewritten(tmp_path: Path) -> None:
+    """The prompt's claim (JS-4c, the plan's question 13): MUI X 9.16 lacks MUI X 7's `ChartContainer`, so a file
+    written for MUI X 7 fails the bundle step, and the error summary names the import's line; with the import and its
+    uses rewritten to `ChartsContainer` it renders 3200x1800 from the typed table."""
+    working = source("""
+        //# anyplot-orientation: landscape
+        import { ChartContainer } from "@mui/x-charts/ChartContainer";
+        import { BarPlot } from "@mui/x-charts/BarChart";
+        import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
+
+        const t = window.ANYPLOT_TOKENS;
+        const { width, height } = window.ANYPLOT_SIZE;
+
+        const data = loadUserData();
+
+        export default function Chart() {
+          return (
+            <ChartContainer
+              width={width}
+              height={height}
+              skipAnimation
+              series={[{ type: "bar", data: data.map((d) => d.value), color: t.palette[0] }]}
+              xAxis={[{ scaleType: "band", data: data.map((d) => d.label), height: 40 }]}
+            >
+              <BarPlot />
+              <ChartsXAxis />
+            </ChartContainer>
+          );
+        }
+    """)
+    csv = csv_text(["label", "value"], [("a", "1"), ("b", "3"), ("c", "2")])
+    write_job(tmp_path, "muix", working, csv, {"label": "text", "value": "integer"}, [])
+
+    result = render(tmp_path, "muix")
+
+    assert result.returncode != 0
+    summary = runtime_for("muix").error_summary(result.stderr, run_form=to_run_form(working, library="muix"))
+    assert "at line 2" in summary, (summary, result.stderr[-1000:])
+
+    rewritten = working.replace("ChartContainer", "ChartsContainer")
+    assert 'import { ChartsContainer } from "@mui/x-charts/ChartsContainer";' in rewritten
+    write_job(tmp_path, "muix", rewritten, csv, {"label": "text", "value": "integer"}, [])
+    result = render(tmp_path, "muix")
+    assert result.returncode == 0, result.stderr[-2000:]
+    assert png_size(tmp_path / "plot-light.png") == (3200, 1800)
 
 
 def test_chartjs_has_no_time_axis_in_the_page(tmp_path: Path) -> None:

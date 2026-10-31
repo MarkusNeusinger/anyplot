@@ -17,9 +17,9 @@ ggplot2 since 2026-10-29 (PR 3b of the R pilot): the R code profile
 (`code/profiles/r/`) and the renderer's R row in exec mode. `JuliaRuntime` serves Makie
 since 2026-10-30 (J2b of step 5): the Julia code profile (`code/profiles/julia/`) and the
 renderer's Julia row in exec mode. `JavaScriptRuntime` serves Chart.js, D3, ECharts and
-Highcharts since 2026-10-30 (JS-4a of step 3): the JavaScript code profile
-(`code/profiles/javascript/`) and the renderer's JavaScript row in exec mode; it takes
-MUI X too, which the registry serves once its fixtures exist. A later language adds a
+Highcharts since 2026-10-30 (JS-4a of step 3) and MUI X since 2026-10-31 (JS-4c, as
+`plot.tsx`): the JavaScript code profile (`code/profiles/javascript/`) and the renderer's
+JavaScript row in exec mode. A later language adds a
 runtime module here, its class to `RUNTIME_CLASSES` and its libraries to
 `RUNTIME_LIBRARIES`; a later Python library (plotly, bokeh) adds its validator profile
 and save rule to the Python code modules and its id to `PYTHON_LIBRARIES`
@@ -46,10 +46,12 @@ equal)."""
 JULIA_LIBRARIES: frozenset[str] = frozenset({"makie"})
 """The Julia libraries with a complete runtime profile (`code.edits.JULIA_LIBRARIES`, the edit applier's Julia dialect,
 pinned equal)."""
-JAVASCRIPT_LIBRARIES: frozenset[str] = frozenset({"chartjs", "d3", "echarts", "highcharts"})
+JAVASCRIPT_LIBRARIES: frozenset[str] = frozenset({"chartjs", "d3", "echarts", "highcharts", "muix"})
 """The JavaScript libraries the registry serves: `code.edits.JAVASCRIPT_LIBRARIES` (the edit applier's JavaScript
-dialect) without MUI X, which follows once its fixtures exist (the plan's order). Highcharts is served under its
-non-commercial licence (owner decision of 2026-10-30, the plan's question 6)."""
+dialect, pinned equal). MUI X joined on 2026-10-31 with its fixtures (JS-4c, the plan's order: MUI X last); its files
+written for MUI X 7 are served `coupled` with the `deprecated-api` note, never blocked for their version (owner
+decision of 2026-10-30, the plan's question 13). Highcharts is served under its non-commercial licence (owner decision
+of 2026-10-30, the plan's question 6)."""
 
 RUNTIME_LIBRARIES: frozenset[str] = PYTHON_LIBRARIES | R_LIBRARIES | JULIA_LIBRARIES | JAVASCRIPT_LIBRARIES
 """Every library the registry serves; a library of `core.constants.SUPPORTED_LIBRARIES` outside it has no runtime yet."""
