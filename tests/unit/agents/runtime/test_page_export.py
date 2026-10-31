@@ -37,7 +37,8 @@ NASTY = "<p>it's &amp; \"quoted\" </iframe><script>top.location='x'</script>  
 
 def harness_policy() -> str:
     """`CONTENT_SECURITY_POLICY` as `render.mjs` writes it: string literals joined with `+`."""
-    match = re.search(r"const CONTENT_SECURITY_POLICY =\s*((?:\"[^\"]*\"\s*\+?\s*)+);", HARNESS)
+    # A literal, then `+ literal` as often as it comes: one way to match, so no backtracking blow-up (CodeQL py/redos).
+    match = re.search(r"const CONTENT_SECURITY_POLICY =\s*(\"[^\"]*\"(?:\s*\+\s*\"[^\"]*\")*)\s*;", HARNESS)
     assert match is not None, "render.mjs no longer defines CONTENT_SECURITY_POLICY as string literals"
     return "".join(re.findall(r"\"([^\"]*)\"", match.group(1)))
 
