@@ -259,9 +259,10 @@ gh api repos/{owner}/{repo}/issues/<num>/comments  # conversation (codecov, bots
 ```
 
 **b2. Codecov** (the comment arrives in the conversation after the
-coverage upload; the repo uses flags/components). A red
-`codecov/patch/*` check means §1's test rule was missed: add the test to
-the same branch, judged the way §1 says.
+coverage upload; the repo uses flags/components). Triage a red
+`codecov/patch/*` check the way §1 says: uncovered NEW pure logic means
+§1's test rule was missed, so add the test to the same branch; lines only a
+live DB/HTTP flow exercises stay uncovered, and the PR says so.
 
 **c. List unresolved threads** (the id is needed for resolving):
 
