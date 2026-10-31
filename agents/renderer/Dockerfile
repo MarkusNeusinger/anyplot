@@ -111,18 +111,18 @@ RUN p=.venv/lib/python3.14/site-packages/pyarrow \
 # JupyterLab extension and Jupyter widget bundle, bokeh's TypeScript compiler for custom
 # models (it runs Node, which plot code cannot start), its ES module sources and the
 # unminified twins of its bundles. The page loads the minified bundles alone
-# (`automation/js-render/render.mjs`, BUNDLES), which stay with MathJax's, and so does every
+# (`automation/js-render/render.mjs`, FIGURES), which stay with MathJax's, and so does every
 # Python module. The two packages' 94 MB installed (bytecode included) become 68 MB, and the
 # image grows by 69 MB in all (2026-10-31); the imports below and the CI job's plotly and
 # bokeh renders fail on a file that is needed.
 RUN p=.venv/lib/python3.14/site-packages \
-    && du -shc "$p/plotly" "$p/bokeh" | tail -n 1 \
+    && du -shc "$p/plotly" "$p/bokeh" \
     && rm -rf "$p/plotly/labextension" "$p/plotly/package_data/widgetbundle.js" \
         "$p/bokeh/server/static/js/compiler.js" "$p/bokeh/server/static/js/lib" \
     && for f in bokeh bokeh-api bokeh-gl bokeh-mathjax bokeh-tables bokeh-widgets; do \
          test -s "$p/bokeh/server/static/js/$f.min.js" && rm "$p/bokeh/server/static/js/$f.js"; \
        done \
-    && du -shc "$p/plotly" "$p/bokeh" | tail -n 1 \
+    && du -shc "$p/plotly" "$p/bokeh" \
     && .venv/bin/python -c "import plotly.graph_objects, plotly.express, plotly.io, bokeh.plotting, bokeh.embed, bokeh.models, bokeh.layouts"
 
 # The image does not install the project, so its version is written to a file
