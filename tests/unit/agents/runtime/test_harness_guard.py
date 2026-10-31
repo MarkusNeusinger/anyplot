@@ -105,6 +105,31 @@ TEXT_PATH = (
 )
 """A `str` subclass every method of which tries to write the marker: armed, the guard refuses the write; paused, it
 would pass. A path of this class may reach the guard's own path handling."""
+DISARMING_PAYLOAD = (
+    "import sys\n"
+    "frame = sys._getframe(0)\n"
+    "while frame is not None:\n"
+    "    for value in list(frame.f_locals.values()):\n"
+    "        if hasattr(value, 'armed') and hasattr(value, 'outputs'):\n"
+    "            value.armed = False\n"
+    "    frame = frame.f_back\n"
+    f"{WRITE_MARKER}\n"
+)
+"""Module source a plot hands the import machinery (F6): with an import's trust it reads the frames up to the guard,
+disarms it and writes the marker."""
+STOCK_LOADER = (
+    "import importlib, importlib.abc, os\n"
+    "import importlib.machinery as machinery\n"
+    "import importlib.util as util\n"
+    f"PAYLOAD = {DISARMING_PAYLOAD!r}\n"
+    "def write_source(name):\n"
+    "    path = os.path.abspath(name)\n"
+    "    open(path, 'w').write(PAYLOAD)\n"
+    "    return path\n"
+)
+"""The F6 routes' preamble: the machinery's modules and `write_source`, which puts the payload into an output file the
+guard lets the plot write and returns its absolute path."""
+RUN_LOADER = "loader.exec_module(util.module_from_spec(util.spec_from_loader('evil', loader)))\n"
 
 
 def forged_selector(payload: str) -> str:
@@ -177,6 +202,68 @@ PLOT_ROUTES = [
         TEXT_PATH + "class P:\n    def __fspath__(self):\n        return Text('/tmp/escape')\nopen(P(), 'w')\n",
         id="a path object that returns one",
     ),
+    # F6 of PB-1's review (Fable, 2026-10-31): the import machinery driven by the plot. A module body the plot supplies
+    # would run with an import's trust, read the frames up to the guard, disarm it and write the marker.
+    pytest.param(
+        STOCK_LOADER + "loader = machinery.SourceFileLoader('evil', write_source('plot-light.html'))\n" + RUN_LOADER,
+        id="a stock source loader on a file the plot wrote",
+    ),
+    pytest.param(
+        STOCK_LOADER + "loader = type(np.__loader__)('evil', write_source('plot-light.html'))\n" + RUN_LOADER,
+        id="the loader class of an admitted module",
+    ),
+    pytest.param(
+        STOCK_LOADER
+        + "import marshal\npath = os.path.abspath('plot-light.png')\n"
+        + "code = marshal.dumps(compile(PAYLOAD, 'evil', 'exec'))\n"
+        + "open(path, 'wb').write(util.MAGIC_NUMBER + bytes(12) + code)\n"
+        + "loader = machinery.SourcelessFileLoader('evil', path)\n"
+        + RUN_LOADER,
+        id="a stock bytecode loader on a file the plot wrote",
+    ),
+    pytest.param(
+        STOCK_LOADER
+        + "import zipfile, zipimport\npath = os.path.abspath('plot-light.png')\n"
+        + "with zipfile.ZipFile(path, 'w') as archive:\n    archive.writestr('evil.py', PAYLOAD)\n"
+        + "spec = zipimport.zipimporter(path).find_spec('evil')\nspec.loader.exec_module(util.module_from_spec(spec))\n",
+        id="zipimport on an archive the plot wrote",
+    ),
+    pytest.param(
+        STOCK_LOADER
+        + "class Loader(importlib.abc.SourceLoader):\n"
+        + "    def get_filename(self, name):\n        return os.__file__\n"
+        + "    def get_data(self, path):\n        return PAYLOAD.encode()\n"
+        + "loader = Loader()\n"
+        + RUN_LOADER,
+        id="a loader of the plot's own (Fable's proof of concept)",
+    ),
+    pytest.param(
+        STOCK_LOADER
+        + "loader = machinery.SourceFileLoader('evil', os.path.join(os.path.dirname(os.__file__), 'colorsys.py'))\n"
+        + "loader.get_code = lambda name: compile(PAYLOAD, loader.path, 'exec')\n"
+        + RUN_LOADER,
+        id="a stock loader whose instance overrides get_code",
+    ),
+    pytest.param(
+        STOCK_LOADER + "import sys\nsys.path_hooks.insert(0, exec)\nsys.path.insert(0, PAYLOAD)\n"
+        "try:\n    importlib.import_module('anyplot_no_such_module')\nexcept ImportError:\n    pass\n",
+        id="exec as a path hook",
+    ),
+    pytest.param(
+        STOCK_LOADER
+        + "import numpy.random.mtrand as native\n"
+        + "open('plot-light.png', 'wb').write(open(native.__file__, 'rb').read())\n"
+        + "loader = machinery.ExtensionFileLoader('mtrand', os.path.abspath('plot-light.png'))\n"
+        + "util.module_from_spec(util.spec_from_file_location('mtrand', loader.path, loader=loader))\n",
+        id="an extension module the plot wrote",
+    ),
+    pytest.param(
+        "import pkgutil\nraw = pkgutil.get_data('matplotlib', '../../../../../../../../etc/hostname')\n",
+        id="pkgutil.get_data past its package",
+    ),
+    # Flash's review of PB-1: stdout and stderr are one open file description across figure mode's fork.
+    pytest.param("import fcntl, os\nfcntl.fcntl(1, fcntl.F_SETFL, os.O_NONBLOCK)\n", id="fcntl on stdout"),
+    pytest.param("import os\nos.set_blocking(1, False)\n", id="os.set_blocking on stdout"),
     pytest.param(f"{WRITE_MARKER}\n", id="open for writing"),
     pytest.param(f"import os\nos.open('{MARKER}', os.O_CREAT | os.O_WRONLY)\n", id="os.open for writing"),
     pytest.param("plt.figure().savefig('plot-dark.png')\n", id="a save to another name"),
@@ -281,6 +368,15 @@ class TestPlotGuard:
         assert not (tmp_path / MARKER).exists()
         assert not (tmp_path / "plot-dark.png").exists() and not (tmp_path / "mpl" / "plot-light.png").exists()
         assert (tmp_path / "plot.py").exists()
+
+    def test_imports_from_the_install_still_run_under_the_guard(self, tmp_path: Path) -> None:
+        """F6's rules keep every import of the interpreter's own loaders: a site package with extension modules and an
+        import-time `ctypes.cast` (scipy.stats), a stdlib module with an extension of `lib-dynload` (lzma), a stdlib
+        package (zoneinfo) and a frozen module (`__hello__`), each imported first with the guard armed."""
+        exit_code, stderr = render(tmp_path, "import scipy.stats\nimport lzma\nimport zoneinfo\nimport __hello__\n")
+
+        assert exit_code == 0, stderr[-2000:]
+        assert (tmp_path / "plot-light.png").stat().st_size > 0
 
     @pytest.mark.parametrize("body", CALLBACK_ROUTES)
     def test_frame_callbacks_are_refused(self, tmp_path: Path, body: str) -> None:
@@ -831,6 +927,77 @@ class TestDataGuardCode:
         exit_code, out, stderr = run_data(tmp_path, "import pandas as pd\n" + code + "df = pd.DataFrame({'a': [1]})\n")
         assert exit_code == DATA_EXIT["blocked"], stderr
         assert out == ""
+
+
+class TestImportMachinery:
+    """What an import must look like for the plot guard to trust it (`harness.ImportMachinery`, F6 of PB-1's review);
+    the routes above run the same rules armed."""
+
+    STDLIB_FILE = str(Path(json.__file__).parent.parent / "colorsys.py")
+
+    def test_the_install_holds_the_stdlib_and_the_site_packages_and_not_the_run(self, tmp_path: Path) -> None:
+        prefixes = harness.install_prefixes()
+        assert harness.under_prefixes(self.STDLIB_FILE, prefixes)
+        assert harness.under_prefixes(pytest.__file__, prefixes)
+        assert not harness.under_prefixes(str(tmp_path / "plot-light.html"), prefixes)
+        assert not harness.under_prefixes("/tmp/evil.py", prefixes)
+        (tmp_path / "link.py").symlink_to(self.STDLIB_FILE)
+        assert harness.under_prefixes(str(tmp_path / "link.py"), prefixes)  # its real path is the stdlib's
+        (tmp_path / "out.py").write_text("x = 1\n", encoding="utf-8")
+        climbing = str(Path(self.STDLIB_FILE).parent) + "/.." * 20 + str(tmp_path / "out.py")
+        assert not harness.under_prefixes(climbing, prefixes)  # starts with a prefix, resolves outside
+
+    def test_only_an_exact_stock_loader_of_the_install_is_trusted(self, tmp_path: Path) -> None:
+        import importlib.abc
+        import importlib.machinery
+        import zipimport
+
+        machinery = harness.ImportMachinery()
+        stock = importlib.machinery.SourceFileLoader("colorsys", self.STDLIB_FILE)
+        assert machinery.trusted_loader(stock)
+
+        class Subclass(importlib.machinery.SourceFileLoader):
+            pass
+
+        class Own(importlib.abc.SourceLoader):
+            def get_filename(self, name: str) -> str:
+                return "colorsys.py"
+
+            def get_data(self, path: str) -> bytes:
+                return b""
+
+        overridden = importlib.machinery.SourceFileLoader("colorsys", self.STDLIB_FILE)
+        overridden.get_code = lambda name: None  # type: ignore[method-assign]
+        assert not machinery.trusted_loader(Subclass("colorsys", self.STDLIB_FILE))
+        assert not machinery.trusted_loader(Own())
+        assert not machinery.trusted_loader(overridden)
+        assert not machinery.trusted_loader(importlib.machinery.SourceFileLoader("x", str(tmp_path / "x.py")))
+        assert not machinery.trusted_loader(object())
+        archive = tmp_path / "evil.zip"
+        import zipfile
+
+        with zipfile.ZipFile(archive, "w") as handle:
+            handle.writestr("evil.py", "x = 1\n")
+        assert not machinery.trusted_loader(zipimport.zipimporter(str(archive)))
+
+    def test_only_the_interpreters_own_import_frames_earn_trust(self) -> None:
+        machinery = harness.ImportMachinery()
+
+        def frame(code: object, back: object = None, local_self: object = None) -> object:
+            return type("Frame", (), {"f_code": code, "f_back": back, "f_locals": {"self": local_self}})
+
+        import importlib.machinery
+
+        stock = importlib.machinery.SourceFileLoader("colorsys", self.STDLIB_FILE)
+        exec_module = frame(next(iter(machinery.loader_entries)), local_self=stock)
+        assert machinery.trusts(frame(machinery.trampoline, back=exec_module))
+        assert machinery.trusts(frame(machinery.frozen_exec))
+        assert machinery.trusts(frame(machinery.trampoline, back=frame(next(iter(machinery.static_entries)))))
+        assert not machinery.trusts(frame(machinery.trampoline, back=frame((lambda: 0).__code__)))
+        assert not machinery.trusts(frame(machinery.trampoline))
+        assert not machinery.trusts(frame((lambda: 0).__code__))  # `_path_hooks`, `_find_spec` and the like
+        untrusted = frame(next(iter(machinery.loader_entries)), local_self=object())
+        assert not machinery.trusts(frame(machinery.trampoline, back=untrusted))
 
 
 def test_ctypes_helper_addresses_are_empty_without_ctypes(monkeypatch: pytest.MonkeyPatch) -> None:

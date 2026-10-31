@@ -174,6 +174,16 @@ class TestTwoSteps:
         assert end["max_rss_mb"] >= end["steps"]["plot"]["max_rss_mb"]
         assert end["cpu_s"] >= end["steps"]["plot"]["cpu_s"] + end["steps"]["screenshot"]["cpu_s"] - 0.01
 
+    def test_imports_from_the_install_run_in_the_plot_step(self, tmp_path: Path) -> None:
+        """The plot step's guard trusts the interpreter's own loaders (F6 of PB-1's review): a site package with
+        extension modules, a stdlib module with a `lib-dynload` extension, a stdlib package and a frozen module, each
+        imported first with the guard armed."""
+        plot = "import scipy.stats\nimport lzma\nimport zoneinfo\nimport __hello__\n" + OBSERVING_PLOT
+        done = run_figure(tmp_path, plot, env={"ANYPLOT_DENY_EXEC": "required"})
+
+        assert done.returncode == 0, done.stderr
+        assert (tmp_path / "work" / "shot.json").exists()
+
     def test_the_plots_process_limit_is_its_own(self, tmp_path: Path) -> None:
         """`RLIMIT_NPROC` binds the plot step; the screenshot step keeps the harness's own, as the JavaScript row."""
         soft, hard = resource.getrlimit(resource.RLIMIT_NPROC)

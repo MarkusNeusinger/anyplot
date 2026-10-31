@@ -761,6 +761,7 @@ ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
         "_interpchannels",
         "CodeType",
         "FunctionType",
+        "LambdaType",  # `types.FunctionType` under its other name (the walk of 2026-10-31)
         "attrgetter",
         "methodcaller",
         "global_enum",
@@ -833,6 +834,12 @@ ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
         "geopandas",
         "png",
         "palettable",
+        # matplotlib re-exports dateutil (`matplotlib.dates.dateutil`, `matplotlib.category.dateutil`), whose
+        # `zoneinfo.get_data` is `pkgutil.get_data`: import by name and a read of any file relative to the package
+        # (`'../..'`), and whose vendored `tz.six` hands out importlib's `spec_from_loader` (the reachability walk of
+        # 2026-10-31, F7 of PB-1's review).
+        "dateutil",
+        "six",
     }
 )
 UNSAFE_SUBMODULES: frozenset[str] = frozenset(
@@ -1001,6 +1008,20 @@ UNSAFE_HELPERS: frozenset[str] = frozenset(
         "get_boundaries",
         "get_limits",
         "extend_path",
+        # Import machinery and package data by name wherever a package re-exports it (the reachability walk of
+        # 2026-10-31, F7 of PB-1's review): `pkgutil.get_data` reads any file relative to a package it imports by name,
+        # and importlib's spec builders take a loader. matplotlib's `Line2D.get_data()` goes with them; no catalogue
+        # file calls it, and `get_xdata()` and `get_ydata()` stay.
+        "get_data",
+        "spec_from_loader",
+        "spec_from_file_location",
+        "module_from_spec",
+        # The `types` module is re-exported by typing, dataclasses, matplotlib.cbook and pandas (the same walk):
+        # `new_class` builds a class from a callable body, which a class statement and three-argument `type()` are
+        # refused for, and `ModuleType` a module object a loader could run code into.
+        "new_class",
+        "prepare_class",
+        "ModuleType",
     }
 )
 """Public functions and classes of the allowed modules that exec, start a process, import by name, fetch or write

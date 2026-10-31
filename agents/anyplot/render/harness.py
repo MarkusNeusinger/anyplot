@@ -50,7 +50,9 @@ copies it to `/opt/anyplot/harness.py`. In order it:
 5. compiles the plot file and runs it as `__main__` (`run_plot`, which `runpy.run_path`
    did before) under `PlotGuard`, an audit hook armed just before: from there on the
    interpreter refuses every `exec` but the plot's own run, the module bodies of an import
-   and `CODE_BUILDERS` (`namedtuple`, dataclasses, scipy's distributions, plotnine's
+   by the interpreter's own loaders (`ImportMachinery`; an import reads code only from the
+   install, and an extension module loads only from there: `IMPORT_CODE_READERS`, since
+   2026-10-31) and `CODE_BUILDERS` (`namedtuple`, dataclasses, scipy's distributions, plotnine's
    expression strings, and cssselect2's selector compiler, which pygal's PNG export runs for
    every CSS rule of the chart), a code object or
    function built by hand or a `__code__` assignment, every `open` that writes anything but
@@ -466,7 +468,14 @@ the same guard as the plot."""
 IMPORT_FRAME_FILES = ("<frozen importlib._bootstrap>", "<frozen importlib._bootstrap_external>")
 """The files of the frames that run an import. The plot guard lets an `exec` through when, walking up from its caller,
 it meets one of these frames before a frame of the plot: a module body the plot imports runs (and builds code: scipy's
-distributions, numpy's `f2py` rule tables, `typing.NamedTuple`) with no plot code between it and the import."""
+distributions, numpy's `f2py` rule tables, `typing.NamedTuple`) with no plot code between it and the import. Since
+2026-10-31 only an import of the interpreter's own loaders counts (`ImportMachinery.trusts`): a plot drove
+`importlib`'s machinery with a loader of its own, or with a stock loader on a file it wrote, and the module body it
+supplied read the frames up to the guard and disarmed it (F6 of PB-1, Fable's review)."""
+IMPORT_CODE_READERS = ("<frozen importlib._bootstrap_external>", "<frozen zipimport>")
+"""The files whose `open` events read code for an import: a file loader's `get_data` (source and bytecode) and
+zipimport's archive reader. The plot guard refuses such a read outside the interpreter's install (`install_prefixes`),
+whoever drives the loader, so no import reads code from the run directory or `/tmp`."""
 CODE_OBJECT_EVENTS = ("code.__new__", "function.__new__")
 """Building a code object or a function from one: the plot guard treats them, and a `__code__` assignment, like
 `exec`. `types.coroutine` assigns `__code__` when `asyncio` is imported, which a library may do lazily."""
@@ -526,6 +535,7 @@ PLOT_BLOCKED_PREFIXES = (
     "sys.monitoring.",
     "sys.remote_exec",
     "cpython.remote_debugger_script",
+    "fcntl.",
 )
 """Audit events `PlotGuard` refuses once it is armed (`ctypes.*` but `NATIVE_CALLERS`), next to `exec` and
 `CODE_OBJECT_EVENTS` and every `open` that writes anywhere but the plot's PNG and its probe. Unlike data mode it lets
@@ -540,7 +550,11 @@ code positions to (Fable review of #12181): `sys.settrace` and `sys.setprofile` 
 `setprofile` and their `_all_threads` forms raise, per thread) and `sys.monitoring.register_callback`, the one PEP 669
 call that raises an event (`use_tool_id` and `set_events` do nothing without a callback). A trace function gets the
 real frame and walks `f_back`, which no event sees, to `run_plot`'s locals. The signal handler, which gets a frame
-too, has no event and is replaced instead (`UNAUDITED_CALLS`).
+too, has no event and is replaced instead (`UNAUDITED_CALLS`). `fcntl.*` (since 2026-10-31, the review of PB-1) and
+`os.set_blocking`, which raises no event and is replaced in plot mode (`PLOT_UNAUDITED_CALLS`), would change the flags of
+a descriptor the plot shares with its parent: stdout and stderr are one open file description across figure mode's
+fork, and a plot that made them non-blocking would break the parent's writes. No admitted library calls either while
+it draws (the catalogue sweep of 2026-10-31).
 
 The guard's state (`armed`, `paused_depth`) stays a plain attribute, settable by anyone holding the guard: CPython
 gives in-process code no state that a reference cannot reach (a closure cell is writable through `cell_contents`, a
@@ -686,11 +700,17 @@ def refused_call(*args, **kwargs):
     raise PermissionError("blocked by the sandbox: a call the audit hook cannot see")
 
 
-def disable_unaudited_calls():
-    """Replace `UNAUDITED_CALLS` in the modules that are loaded or load without side effects."""
+PLOT_UNAUDITED_CALLS = (("os", "set_blocking"), ("posix", "set_blocking"))
+"""What plot mode replaces next to `UNAUDITED_CALLS`: `os.set_blocking` changes a shared descriptor's flags with no
+event, as `fcntl.fcntl` does with one (`PLOT_BLOCKED_PREFIXES`)."""
+
+
+def disable_unaudited_calls(calls=None):
+    """Replace `calls` (`UNAUDITED_CALLS` when None, read at call time) in the modules that are loaded or load without
+    side effects."""
     import importlib
 
-    for module_name, name in UNAUDITED_CALLS:
+    for module_name, name in UNAUDITED_CALLS if calls is None else calls:
         module = sys.modules.get(module_name)
         if module is None and module_name.startswith(("posix", "_posix", "signal", "_signal", "_interpreters")):
             try:
@@ -926,6 +946,112 @@ class DataGuard:
 WRITE_FLAGS = os.O_WRONLY | os.O_RDWR | os.O_APPEND | os.O_CREAT | os.O_TRUNC
 
 
+def install_prefixes():
+    """The real paths of the interpreter's own install, read from `sysconfig` before a guard is armed: the standard
+    library (`lib-dynload` in it) and its zipped form on `sys.path`, and the site packages. A read-only image holds them;
+    the run directory and `/tmp`, which the plot can write, are not among them."""
+    import sysconfig
+
+    paths = sysconfig.get_paths()
+    found = {paths[key] for key in ("stdlib", "platstdlib", "purelib", "platlib") if paths.get(key)}
+    found.add(os.path.join(sys.base_prefix, "lib", f"python{sys.version_info.major}{sys.version_info.minor}.zip"))
+    return tuple(sorted({os.path.realpath(path) for path in found}))
+
+
+def exact_path(path):
+    """`path` (a `str`, `bytes` or path object) as an exact `str`, or None: a path object's `__fspath__` runs here, so
+    the caller must not have paused its guard, and `str.join` copies a `str` subclass without calling its methods."""
+    try:
+        return "".join((os.fsdecode(path),))
+    except Exception:
+        return None
+
+
+def under_prefixes(path, prefixes):
+    """Whether `path`, an exact `str`, is one of `prefixes` or lies below one, after `realpath` (a link out of them
+    does not count)."""
+    real = os.path.realpath(path)
+    return any(real == prefix or real.startswith(prefix + os.sep) for prefix in prefixes)
+
+
+class ImportMachinery:
+    """What an import must look like for the plot guard to trust it (F6 of PB-1, Fable's review of 2026-10-31), read
+    before the guard is armed.
+
+    The import frames a walk up from an event meets first must be the interpreter's own: `_call_with_frames_removed`
+    called by the `exec_module` or `create_module` of a loader of exactly one of `LOADER_STATE`'s types (a subclass
+    may change any method) whose instance holds nothing but its own state and whose file lies in the install
+    (`install_prefixes`), or by `BuiltinImporter`, or `FrozenImporter.exec_module` itself. Every other import frame
+    (a loader the plot built, a finder or path hook it installed that is a builtin such as `exec`) earns no trust.
+    The frames and their code objects are the interpreter's; the loader is read with the guard armed, so a property or
+    a `str` subclass of the plot runs judged. The loaders' methods and the import modules' globals are mutable
+    Python attributes, and no event sees them change: this checks the shape of an import, not the integrity of the
+    machinery behind it. The reads of the code are what `IMPORT_CODE_READERS` and the `import` event of an extension
+    module bind to the install.
+    """
+
+    def __init__(self):
+        import importlib.machinery as machinery
+        import zipimport
+
+        bootstrap = sys.modules["_frozen_importlib"]
+        external = sys.modules["_frozen_importlib_external"]
+        self.prefixes = install_prefixes()
+        self.trampoline = bootstrap._call_with_frames_removed.__code__
+        self.frozen_exec = bootstrap.FrozenImporter.exec_module.__code__
+        # The entries whose loader is `self`, and the static ones of the builtin importer.
+        self.loader_entries = frozenset(
+            {
+                external._LoaderBasics.exec_module.__code__,
+                machinery.ExtensionFileLoader.create_module.__code__,
+                machinery.ExtensionFileLoader.exec_module.__code__,
+            }
+        )
+        self.static_entries = frozenset(
+            {bootstrap.BuiltinImporter.create_module.__code__, bootstrap.BuiltinImporter.exec_module.__code__}
+        )
+        file_state = (frozenset({"name", "path"}), "path")
+        self.loader_state = {
+            machinery.SourceFileLoader: file_state,
+            machinery.SourcelessFileLoader: file_state,
+            machinery.ExtensionFileLoader: file_state,
+            zipimport.zipimporter: (frozenset({"archive", "prefix"}), "archive"),
+        }
+
+    def trusts(self, frame):
+        """Whether `frame`, the first import frame (`IMPORT_FRAME_FILES`) of a walk up from an event, runs an import
+        of the interpreter's own loaders (the class docstring)."""
+        code = frame.f_code
+        if code is self.frozen_exec:
+            return True
+        if code is not self.trampoline:
+            return False
+        entry = frame.f_back
+        if entry is None:
+            return False
+        if entry.f_code in self.static_entries:
+            return True
+        if entry.f_code not in self.loader_entries:
+            return False
+        try:
+            return self.trusted_loader(entry.f_locals["self"])
+        except Exception:
+            return False
+
+    def trusted_loader(self, loader):
+        """Whether `loader` is exactly a stock loader whose instance holds only its own state, of exact `str` names,
+        and whose file (or archive) lies in the install."""
+        shape = self.loader_state.get(type(loader))
+        if shape is None:
+            return False
+        names, path_key = shape
+        state = object.__getattribute__(loader, "__dict__")
+        if type(state) is not dict or not all(type(name) is str and name in names for name in state):
+            return False
+        path = state.get(path_key)
+        return type(path) is str and under_prefixes(path, self.prefixes)
+
+
 class PlotGuard(DataGuard):
     """The audit hook of plot mode: once armed, refuses `PLOT_BLOCKED_PREFIXES` (processes, sockets, native code,
     filesystem changes), every `open` that writes anywhere but `outputs`, a `__code__` assignment, every `exec`
@@ -941,14 +1067,18 @@ class PlotGuard(DataGuard):
         self.outputs = frozenset(os.path.realpath(path) for path in outputs)
         self.plot_file = None
         self.import_ctypes_helpers = ctypes_helper_addresses()
+        self.machinery = ImportMachinery()
 
     def arm(self, entry=None):
         self.plot_file = entry.co_filename if entry is not None else None
+        disable_unaudited_calls(PLOT_UNAUDITED_CALLS)
         super().arm(entry)
 
     def refuses(self, event, args):
         if event == "open":
-            return self.writes_elsewhere(args)
+            return self.writes_elsewhere(args) or self.reads_foreign_code(args)
+        if event == "import":
+            return self.loads_foreign_file(args)
         if event == "compile":
             return False
         if event == "exec" or event in CODE_OBJECT_EVENTS or sets_code(event, args):
@@ -999,15 +1129,36 @@ class PlotGuard(DataGuard):
 
     def nearest_origin(self, frame):
         """Walking up from `frame`: `"plot"` when a frame of the plot file comes first, `"import"` when an import
-        frame (`IMPORT_FRAME_FILES`) does, None when neither is on the stack."""
+        frame (`IMPORT_FRAME_FILES`) of the interpreter's own loaders does (`ImportMachinery.trusts`), `"untrusted"`
+        when another import frame does, None when none is on the stack."""
         while frame is not None:
             file_name = frame.f_code.co_filename
             if file_name == self.plot_file:
                 return "plot"
             if file_name in IMPORT_FRAME_FILES:
-                return "import"
+                return "import" if self.machinery.trusts(frame) else "untrusted"
             frame = frame.f_back
         return None
+
+    def reads_foreign_code(self, args):
+        """Whether an `open` event is a read of the import machinery's code readers (`IMPORT_CODE_READERS`: a file
+        loader's `get_data`, zipimport's archive) outside the install (`install_prefixes`). Checked whoever drives the
+        loader and before its bytes exist, so a stock loader on a file the plot wrote reads nothing (F6 of PB-1)."""
+        caller = self.caller()
+        if caller is None or plain_name(caller.f_code.co_filename) not in IMPORT_CODE_READERS:
+            return False
+        path = exact_path(args[0]) if args else None
+        return path is None or not under_prefixes(path, self.machinery.prefixes)
+
+    def loads_foreign_file(self, args):
+        """Whether an `import` event names a file outside the install: `_imp.create_dynamic` raises it with the path of
+        the extension module it is about to load, and no `open` event comes before the library's native code runs (an
+        `ExtensionFileLoader` on a file the plot wrote, measured on 2026-10-31). An `import` statement's event names no
+        file."""
+        if len(args) < 2 or args[1] is None:
+            return False
+        path = exact_path(args[1])
+        return path is None or not under_prefixes(path, self.machinery.prefixes)
 
     def native_caller(self):
         """Whether the first frame outside the `ctypes` package that raised a `ctypes.*` event is one of

@@ -2282,6 +2282,53 @@ Also found:
   descriptor, the path is copied into an exact `str` while the guard is armed, and the
   frame-name comparisons take exact `str` only (`plain_name`); regression tests in
   `test_harness_guard.py` and `test_figure_mode.py` write a marker on the old harness.
+- **Guard hardening found on the way** (Fable's review of PB-1 rated F6 high, Flash's
+  review added the descriptor flags; built 2026-10-31):
+  - F6, import trust. The plot guard trusted any code the import machinery ran, and the
+    frames it read. A plot drove that machinery itself and supplied the module body,
+    which walked the frames to the guard and disarmed it. Three rules now hold:
+    an import reads code only from the install (`install_prefixes`: the stdlib with
+    `lib-dynload` and its zip, the site packages, from `sysconfig` before arming), refused
+    at the read of a file loader's `get_data` or zipimport's archive
+    (`IMPORT_CODE_READERS`), whoever drives the loader; an import earns trust only when
+    its first import frame is the interpreter's `_call_with_frames_removed` under the
+    `exec_module` or `create_module` of exactly `SourceFileLoader`,
+    `SourcelessFileLoader`, `ExtensionFileLoader` or `zipimporter` (instance state
+    `name` and `path`, or `archive` and `prefix`, nothing else, the file in the install),
+    under `BuiltinImporter`, or is `FrozenImporter.exec_module` (`ImportMachinery`);
+    and an extension module loads only from the install, refused at the `import` event
+    that `_imp.create_dynamic` raises with its file before the library's native code runs.
+  - Native loads: an `ExtensionFileLoader` on a plot-written file raises that `import`
+    event (measured under runc and gVisor); `ctypes.CDLL` raises `ctypes.dlopen`, refused
+    already; cffi's `FFI().dlopen(path)` raises no audit event at all, so no guard rule
+    can see it (an open question for the owner: a `noexec` run directory, as Docker's
+    `tmpfs` already is; the validator refuses `cffi`).
+  - Descriptor flags: `fcntl.*` and `os.set_blocking` (no event, replaced) are refused in
+    plot mode, figure mode's plot step included, because stdout and stderr are one open
+    file description across the fork.
+  - The validator (F7 and the walk): a walk over every public attribute of the admitted
+    modules (1,331 modules in the image) found import machinery the validator admitted:
+    matplotlib's bundled `dateutil.zoneinfo.get_data` (`pkgutil.get_data`, a read of any
+    file relative to a package it imports by name) and `dateutil.tz.six.spec_from_loader`,
+    and the `types` module's `new_class` (a class from a callable body, where class
+    statements are refused), `ModuleType` and `LambdaType`. `dateutil` and `six` are
+    banned as module re-exports, `get_data`, the spec builders, `new_class`,
+    `prepare_class` and `ModuleType` as helpers, `LambdaType` with `FunctionType`; the
+    walk is now a test, and of the image's 222 machinery paths none is admitted.
+  - Measured: every catalogue file of the six served Python libraries (1,946) rendered
+    in the renderer image with the previous harness and with this one, 12 at a time:
+    1,771 render under both, 175 fail under both (the guard's earlier refusals, out of
+    memory), no file changes outcome, and no run called `fcntl` or `os.set_blocking`. The
+    ten plotly and bokeh inputs above render as before under runc, two of them under
+    gVisor. The F6 routes (stock source, bytecode and zip loaders on a plot-written file,
+    the loader class of an admitted module, Fable's loader of its own, an instance that
+    overrides `get_code`, `exec` as a path hook, an extension module written by the plot)
+    each wrote a marker through the previous harness and are refused now, in plot and
+    figure mode; they are tests in `test_harness_guard.py`.
+  - Not covered by design: the loaders' methods and the import modules' globals are
+    mutable attributes, and no audit event sees them change. The rules check the shape of
+    an import and the files it reads, not the integrity of the machinery behind them; that
+    stays with the validator, which refuses every name that reaches the machinery.
 - **A two-step row needs Node.** `GET /status` still lists the toolchains per language,
   but a render or page job is checked against its row (`executor.serves`): the language's
   toolchain and the row's own binaries, so a plotly or bokeh job on a renderer without

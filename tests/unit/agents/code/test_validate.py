@@ -13,6 +13,7 @@ from typing import get_args
 
 import pytest
 
+from agents.anyplot.code import validate
 from agents.anyplot.code.validate import (
     BANNED_ATTRIBUTES,
     BANNED_IO,
@@ -1573,6 +1574,146 @@ def test_every_submodule_is_reviewed(root: str) -> None:
     unreviewed = sorted(found - REVIEWED_SUBMODULES[root] - banned)
     assert not unreviewed, f"review these {root} submodules and add them to REVIEWED_SUBMODULES or ban them"
     assert not REVIEWED_SUBMODULES[root] & banned
+
+
+# --- import machinery reachable from the admitted modules (F6 and F7 of PB-1's review, 2026-10-31) -----------------
+
+IMPORT_MACHINERY_MODULES = frozenset(
+    {
+        "importlib",
+        "importlib.util",
+        "importlib.machinery",
+        "importlib.abc",
+        "importlib.resources",
+        "importlib.metadata",
+        "_frozen_importlib",
+        "_frozen_importlib_external",
+        "zipimport",
+        "pkgutil",
+        "runpy",
+        "sys",
+        "marshal",
+    }
+)
+"""Modules whose mere reach is a route. The `types` module is not one: typing, dataclasses, matplotlib.cbook and pandas
+re-export it, and its dangerous members (`new_class`, `ModuleType`, `FunctionType`, `CodeType`) are banned by name."""
+IMPORT_MACHINERY_FUNCTIONS = frozenset(
+    {"importlib", "importlib.util", "_frozen_importlib", "_frozen_importlib_external", "zipimport", "pkgutil", "runpy"}
+)
+
+
+def _import_machinery(value: object) -> bool:
+    """A module of the import machinery, a loader class or `ModuleType`, a function of the machinery's modules, or one
+    of the `types` members that build classes and functions."""
+    import importlib.abc
+    import types
+
+    if isinstance(value, types.ModuleType):
+        return value.__name__ in IMPORT_MACHINERY_MODULES
+    if isinstance(value, type):
+        try:
+            return issubclass(value, importlib.abc.Loader) or value in (
+                types.ModuleType,
+                types.FunctionType,
+                types.CodeType,
+            )
+        except TypeError:
+            return False
+    if value is types.new_class or value is types.prepare_class:
+        return True
+    return callable(value) and getattr(value, "__module__", None) in IMPORT_MACHINERY_FUNCTIONS
+
+
+def _reachable_import_machinery(depth: int = 4) -> list[tuple[str, str]]:
+    """`(root, path)` of every import-machinery value a public attribute chain reaches from the admitted modules: the
+    modules below a root up to `depth` attributes, and one level of attributes of the classes found there."""
+    import importlib
+    import types
+    import warnings
+
+    roots = sorted(
+        frozenset(validate.COMMON_IMPORTS)
+        | validate.SHARED_SCIENCE_IMPORTS
+        | frozenset().union(*validate.LIBRARY_IMPORTS.values())
+    )
+    found: list[tuple[str, str]] = []
+    seen: set[int] = set()
+    queue: list[tuple[types.ModuleType, str, str, int]] = []
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        for root in roots:
+            try:
+                queue.append((importlib.import_module(root), root, root, 0))
+            except Exception:
+                continue  # a library this test environment does not install
+        while queue:
+            module, root, path, level = queue.pop(0)
+            if id(module) in seen:
+                continue
+            seen.add(id(module))
+            for name in [name for name in dir(module) if not name.startswith("_")]:
+                try:
+                    value = getattr(module, name)
+                except Exception:
+                    continue
+                here = f"{path}.{name}"
+                if _import_machinery(value):
+                    found.append((root, here))
+                if isinstance(value, types.ModuleType) and level < depth:
+                    queue.append((value, root, here, level + 1))
+                elif isinstance(value, type) and level < depth:
+                    for attribute in [a for a in dir(value) if not a.startswith("_")][:400]:
+                        try:
+                            if _import_machinery(getattr(value, attribute)):
+                                found.append((root, f"{here}.{attribute}"))
+                        except Exception:
+                            continue
+    return found
+
+
+def test_no_admitted_module_hands_out_import_machinery(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Every public attribute path from an admitted module to the import machinery (loaders, spec builders, `pkgutil`,
+    `types`, `sys`) is refused, so plot code cannot drive an import of its own (F6) or read package files by name
+    (F7: matplotlib's `dateutil.zoneinfo.get_data` and `dateutil.tz.six.spec_from_loader`, found by this walk). A
+    library upgrade that adds such a path fails here until it is banned."""
+    monkeypatch.setenv("MPLBACKEND", "Agg")
+    profiles = validate.LIBRARY_IMPORTS
+    admitted = []
+    paths = _reachable_import_machinery()
+    assert paths, "the walk reached nothing: the admitted modules did not import"
+    for root, path in paths:
+        library = next((name for name, modules in profiles.items() if root in modules), "matplotlib")
+        findings = [
+            f for f in validate_security(f"import {root}\nx = {path}\n", library=library) if f.rule != "savefig-target"
+        ]
+        if not findings:
+            admitted.append(path)
+    assert not admitted, f"the validator admits import machinery: {admitted[:10]}"
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        "import matplotlib\nraw = matplotlib.category.dateutil.zoneinfo.get_data('matplotlib', '../../etc/os-release')\n",
+        "import matplotlib\nreader = matplotlib.dates.dateutil\n",
+        "import matplotlib\nspec = matplotlib.category.dateutil.tz.six.spec_from_loader('x', None)\n",
+        "import numpy as np\nraw = np.get_data('numpy', 'x')\n",
+        "import numpy as np\nm = np.module_from_spec(None)\n",
+        "import typing\nText = typing.types.new_class('Text', (str,), {}, lambda ns: ns.update(split=lambda s: []))\n",
+        "import dataclasses\nm = dataclasses.types.ModuleType('x')\n",
+    ],
+    ids=[
+        "dateutil's get_data",
+        "the dateutil re-export",
+        "six's spec_from_loader",
+        "get_data",
+        "module_from_spec",
+        "a class built by types.new_class",
+        "types.ModuleType",
+    ],
+)
+def test_the_package_data_and_spec_routes_are_refused(code: str) -> None:
+    assert [f for f in validate_security(code, library="matplotlib") if f.rule != "savefig-target"]
 
 
 # --- plotnine and altair (step 1b of agentic/specs/261024-agent-all-libraries.md) ------------------------------
