@@ -29,3 +29,8 @@
   JavaScript render or page build mounts `automation/js-render/render.mjs`
   over the image's, as the backend mounts the checkout's `harness.py`, so a
   local run uses the harness under development.
+- **The agent chat's local mock serves JavaScript versions.** With a
+  JavaScript library in `AGENT_LIBRARIES`, `app/scripts/agent-bff-mock.mjs`
+  answers `plot.js` and a wrapped `plot.html` per theme, so the download can be
+  driven in a browser without the services; it also accepts the cards' usage
+  beacon. Its other answers are unchanged.
