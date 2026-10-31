@@ -151,8 +151,10 @@ export function ResultCard({
   // The interactive preview: shown in place of the image on request, with the pages fetched while it is open.
   const [interactive, setInteractive] = useState(false);
   const [pages, setPages] = useState<Partial<Record<Theme, string>>>({});
-  const [previewError, setPreviewError] = useState<string | null>(null);
-  // Bumped when the preview closes, so a page that arrives afterwards is dropped; the beacon goes once per opening.
+  // Per theme, so a failed build of one theme never covers the page of the other that is on screen meanwhile.
+  const [previewErrors, setPreviewErrors] = useState<Partial<Record<Theme, string>>>({});
+  // Bumped when the preview closes or the card unmounts, so a page that arrives afterwards is dropped; the beacon goes
+  // once per opening.
   const previewRun = useRef(0);
   const previewReported = useRef(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(null);
@@ -161,6 +163,8 @@ export function ResultCard({
   useEffect(
     () => () => {
       if (toastTimer.current) clearTimeout(toastTimer.current);
+      // A build still under way when the card goes keeps neither its page nor reports the opening.
+      previewRun.current += 1;
     },
     []
   );
@@ -192,6 +196,10 @@ export function ResultCard({
   /** Whether showing `theme` in the open preview needs its page built first. */
   const needsPage = (theme: Theme) => pages[theme] === undefined;
 
+  /** Set or clear (`undefined`) the preview's error for `theme`. */
+  const setPreviewError = (theme: Theme, code: string | undefined) =>
+    setPreviewErrors(current => ({ ...current, [theme]: code }));
+
   /**
    * Drop the preview: its pages (two wrappers of up to tens of MiB), its error,
    * and a build still under way, whose page is ignored when it comes.
@@ -200,7 +208,7 @@ export function ResultCard({
     previewRun.current += 1;
     setInteractive(false);
     setPages({});
-    setPreviewError(null);
+    setPreviewErrors({});
   };
 
   /** Collapse the card; an open preview goes, and a theme it showed without a PNG gives way to the run's own. */
@@ -225,7 +233,7 @@ export function ResultCard({
       if (needsPage(theme) && busy) return;
       setShownTheme(theme);
       // A fresh relay for the theme, also after the last one did not answer.
-      setPreviewError(null);
+      setPreviewError(theme, undefined);
       void showPage(theme);
       return;
     }
@@ -315,7 +323,7 @@ export function ResultCard({
   const showPage = async (theme: Theme) => {
     if (!needsPage(theme) || busy || buildingPage) return;
     const run = previewRun.current;
-    setPreviewError(null);
+    setPreviewError(theme, undefined);
     setBuildingPage(true);
     try {
       const text = await (await onFetchArtifact(number, PAGE_ARTIFACT, theme)).text();
@@ -328,7 +336,7 @@ export function ResultCard({
     } catch (err) {
       if (run === previewRun.current) {
         const code = (err as { code?: unknown } | null)?.code;
-        setPreviewError(typeof code === 'string' ? code : 'internal');
+        setPreviewError(theme, typeof code === 'string' ? code : 'internal');
       }
     } finally {
       setBuildingPage(false);
@@ -354,6 +362,7 @@ export function ResultCard({
   // The preview keeps the wrapper's own aspect, read from its page; the image box, and the preview while it
   // builds, take the PNG's.
   const shownPage = interactive ? pages[shownTheme] : undefined;
+  const previewError = interactive ? previewErrors[shownTheme] : undefined;
   const pageFrame = shownPage !== undefined ? pageFrameSize(shownPage) : null;
 
   const overlayBtnSx = overlayButtonSx(isDark);
@@ -465,7 +474,7 @@ export function ResultCard({
                   key={shownTheme}
                   page={shownPage}
                   title={`Interactive plot, version ${number}, ${shownTheme} theme`}
-                  onUnavailable={setPreviewError}
+                  onUnavailable={code => setPreviewError(shownTheme, code)}
                 />
               ) : (
                 <>

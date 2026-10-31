@@ -377,11 +377,22 @@ async function relay(relayFile, pageFile, { hover }) {
     response.writeHead(headers ? 200 : 404, headers ?? {});
     response.end(headers ? spec.html : "");
   });
+  // The relay paths a parent may frame, picked by the query and never copied from it into the page.
+  const relayPathOf = (name) => {
+    switch (name) {
+      case "/relay-open":
+        return "/relay-open";
+      case "/relay-missing":
+        return "/relay-missing";
+      default:
+        return "/relay";
+    }
+  };
   const parents = http.createServer((request, response) => {
     const url = new URL(request.url, "http://parent");
     const html =
       url.pathname === "/parent"
-        ? parentPage(url.searchParams.get("relay") ?? "/relay", url.searchParams.has("siblings"))
+        ? parentPage(relayPathOf(url.searchParams.get("relay")), url.searchParams.has("siblings"))
         : url.pathname === "/sender"
           ? SENDER_PAGE
           : null;

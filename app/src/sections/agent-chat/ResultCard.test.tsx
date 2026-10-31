@@ -490,6 +490,60 @@ describe('ResultCard', () => {
       expect(screen.getByAltText('Adapted plot, version 2, light theme')).toBeInTheDocument();
       expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
     });
+
+    it("keeps a theme's page on screen when the other theme's build fails meanwhile", async () => {
+      let fail: (reason: unknown) => void = () => undefined;
+      const onFetchArtifact = fetchPages();
+      const { onOutcome } = renderCard({ version: jsVersion(), onFetchArtifact });
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+      await screen.findByTitle('Interactive plot, version 2, light theme');
+      onFetchArtifact.mockImplementationOnce(
+        () =>
+          new Promise<Blob>((_resolve, reject) => {
+            fail = reject;
+          })
+      );
+
+      await userEvent.click(screen.getByRole('button', { name: 'dark' }));
+      expect(screen.getByText('building the interactive dark plot…')).toBeInTheDocument();
+      // The light page is there already, so its theme stays clickable while the dark one builds.
+      await userEvent.click(screen.getByRole('button', { name: 'light' }));
+      await screen.findByTitle('Interactive plot, version 2, light theme');
+      await act(async () => fail(Object.assign(new Error('nope'), { code: 'page_unavailable' })));
+
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(screen.getByTitle('Interactive plot, version 2, light theme')).toBeInTheDocument();
+      expect(onOutcome.mock.calls).toEqual([['opened_preview', 2]]);
+    });
+
+    it('reports no opening when the card unmounts while the page builds', async () => {
+      let finish: (blob: Blob) => void = () => undefined;
+      const onOutcome = vi.fn();
+      const { unmount } = render(
+        <ResultCard
+          version={jsVersion()}
+          specId="scatter-basic"
+          language="javascript"
+          latest
+          busy={false}
+          onRequestTheme={vi.fn()}
+          onFetchArtifact={vi.fn(
+            () =>
+              new Promise<Blob>(resolve => {
+                finish = resolve;
+              })
+          )}
+          onTrack={vi.fn()}
+          onOutcome={onOutcome}
+        />
+      );
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+
+      unmount();
+      await act(async () => finish(page('light')));
+
+      expect(onOutcome).not.toHaveBeenCalled();
+    });
   });
 
   it('reports no download when the file could not be fetched', async () => {

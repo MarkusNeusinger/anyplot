@@ -71,7 +71,7 @@ def parsed(document: str) -> Wrapper:
 
 
 class TestWrapper:
-    def test_the_policy_is_the_harnesss_plus_frame_src_none(self) -> None:
+    def test_the_policy_is_the_harness_policy_plus_frame_src_none(self) -> None:
         """One owner: the harness. The wrapper's policy is exactly its policy and `frame-src 'none'`, because a `srcdoc`
         frame inherits the wrapper's policy (Fable measured a stricter one blanking the plot)."""
         assert harness_policy() == PAGE_POLICY

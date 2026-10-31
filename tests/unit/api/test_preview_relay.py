@@ -129,7 +129,7 @@ class TestPage:
         assert relay_policy(origins).endswith(f"frame-ancestors https://anyplot.ai {LOCAL_ORIGINS}")
         assert "</script>" not in json.dumps(relay_origins(["https://a.example"]))
 
-    def test_the_policy_is_the_harnesss(self) -> None:
+    def test_the_policy_is_the_harness_policy(self) -> None:
         """One owner: the harness's `CONTENT_SECURITY_POLICY`, which the agents' wrapper pins against `render.mjs`; the
         wrapper is loaded by its path (standard library only), since the agents package's `__init__` imports ADK."""
         spec = importlib.util.spec_from_file_location("wrapper", ROOT / "agents" / "anyplot" / "render" / "page.py")
