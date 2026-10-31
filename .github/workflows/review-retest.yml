@@ -123,7 +123,7 @@ jobs:
       # review_retest, review_provenance and regen_gate use PEP 758 `except A, B:`,
       # which parses on Python 3.14 only; the runner image's python3 is not pinned.
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version-file: '.python-version'
 
@@ -231,7 +231,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version-file: '.python-version'
 
@@ -302,7 +302,7 @@ jobs:
         if: steps.cell.outcome == 'success'
         continue-on-error: true
         timeout-minutes: 25
-        uses: anthropics/claude-code-action@db77d4d3c98f3f6380e7cd45ffba2342a3dbde3c  # v1
+        uses: anthropics/claude-code-action@8041f1d17e0e7d2f2cfe35002962e9f26237c0bb  # v1
         env:
           LIBRARY: ${{ matrix.cell.library }}
           SPEC_ID: ${{ matrix.cell.spec_id }}
@@ -382,7 +382,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version-file: '.python-version'
 
