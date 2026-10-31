@@ -52,13 +52,15 @@ BRANCH_RE = re.compile(r"^implementation/(?P<spec>[a-z0-9][a-z0-9-]*)/(?P<lib>[a
 WRITEBACK_BRANCH_RE = re.compile(r"^review-writeback/(?P<spec>[^/]+)/(?P<lib>[^/]+)/(?P<kept>\d+)$")
 RUN_URL_RE = re.compile(r"/actions/runs/(\d+)")
 COST_RE = re.compile(r'"total_cost_usd":\s*([0-9.]+)')
-# The line every Claude step's "Claude cost to the job summary" step prints,
-# with the credential it ran on (vars.CLAUDE_AUTH). A job from before that
-# step carries only Claude Code's own `"total_cost_usd": n` and ran on the
+# The line every Claude step's "Claude session summary" step prints, with the
+# credential mode it ran on (vars.CLAUDE_AUTH). A job from before that step
+# carries only Claude Code's own `"total_cost_usd": n` and ran on the
 # subscription.
 COST_LINE_RE = re.compile(
-    r"claude-cost step=\S+ auth=(?P<auth>api|subscription) model=\S+ total_cost_usd=(?P<usd>[0-9.]+)"
+    r"claude-cost step=\S+ auth=(?P<auth>api|oidc|subscription) model=\S+ total_cost_usd=(?P<usd>[0-9.]+)"
 )
+# The modes billed to Claude API credits; the subscription is not billed per session.
+API_MODES = ("api", "oidc")
 GCS_PUBLIC = "https://storage.googleapis.com/anyplot-images/plots"
 VERDICT_LABELS = ("regen:improved", "regen:kept", "ai-approved", "ai-rejected")
 PIPELINE_WORKFLOWS = (
@@ -637,7 +639,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         rows,
         run_counts,
         sum(costs.values()) if costs is not None else None,
-        costs.get("api", 0.0) if costs is not None else None,
+        sum(costs.get(mode, 0.0) for mode in API_MODES) if costs is not None else None,
     )
     sample, not_opened = render_sample(rows, seed=args.since)
     previous = previous_payload.get("summary")

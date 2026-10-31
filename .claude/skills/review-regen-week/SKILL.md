@@ -68,8 +68,8 @@ uv run python -m automation.scripts.review_retest first-reviews \
   prints the failed ones under the metric table, and with `--costs`
   sums `total_cost_usd` from every daily-regen pre-flight, generate,
   review and repair job log, and names the part that ran on API credits
-  (`CLAUDE_AUTH=api`, read from each step's `claude-cost` line; about
-  one minute per 50 runs; leave it off for a quick look). Its
+  (`CLAUDE_AUTH=oidc` or `api`, read from each step's `claude-cost` line;
+  about one minute per 50 runs; leave it off for a quick look). Its
   stdout is the metric table and the PR table the report starts from;
   `◆` marks the render sample.
 - `gate-report` adds the aggregate view and its soft alarms, among

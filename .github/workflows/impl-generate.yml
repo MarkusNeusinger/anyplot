@@ -98,32 +98,49 @@ jobs:
       pr_number: ${{ steps.pr.outputs.pr_number }}
 
     steps:
-      # Claude credentials: the repository variable CLAUDE_AUTH picks one per
-      # run and each Claude step passes exactly that one, the other input
-      # empty. Unset or `subscription`: CLAUDE_CODE_OAUTH_TOKEN, as before;
-      # `api`: ANTHROPIC_API_KEY. Any other value, or `api` without the key,
-      # stops the job here, never a silent fallback to the subscription.
-      # Identical in every job that runs Claude (tests/unit/workflows/
-      # test_claude_auth.py); docs/workflows/overview.md#claude-credentials.
+      # Claude credentials: the repository variable CLAUDE_AUTH picks one mode
+      # per run, and every Claude step below reads this step's outputs, so a
+      # new mode changes only this step. Unset or `subscription`:
+      # CLAUDE_CODE_OAUTH_TOKEN, as before; `api`: ANTHROPIC_API_KEY; `oidc`:
+      # workload identity federation with the four CLAUDE_WIF_* variables,
+      # which needs `id-token: write` on the job. Each Claude step gets
+      # exactly one credential. An unknown value, or a mode whose credential
+      # is missing, stops the job here, never a silent fallback to the
+      # subscription. Identical in every job that runs Claude
+      # (tests/unit/workflows/test_claude_auth.py);
+      # docs/workflows/overview.md#claude-credentials.
       # First step: a stop here precedes "Set final issue number", so "Handle
       # generation failure" never counts it against the pair's attempts.
-      - name: Check Claude credentials
+      - name: Resolve Claude credentials
+        id: claude_auth
         env:
           CLAUDE_AUTH: ${{ vars.CLAUDE_AUTH }}
           API_KEY_SET: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+          WIF_RULE_ID: ${{ vars.CLAUDE_WIF_RULE_ID }}
+          WIF_ORG_ID: ${{ vars.CLAUDE_WIF_ORG_ID }}
+          WIF_SERVICE_ACCOUNT_ID: ${{ vars.CLAUDE_WIF_SERVICE_ACCOUNT_ID }}
+          WIF_WORKSPACE_ID: ${{ vars.CLAUDE_WIF_WORKSPACE_ID }}
         run: |
-          case "${CLAUDE_AUTH,,}" in
-            ''|subscription) echo "Claude credentials: subscription (CLAUDE_CODE_OAUTH_TOKEN)" ;;
-            api)
-              if [ "$API_KEY_SET" != "true" ]; then
-                echo "::error::CLAUDE_AUTH is 'api' but the ANTHROPIC_API_KEY secret is missing; not falling back to the subscription"
-                exit 1
-              fi
-              echo "Claude credentials: api (ANTHROPIC_API_KEY)" ;;
-            *)
-              echo "::error::CLAUDE_AUTH must be unset, 'subscription' or 'api', got '${CLAUDE_AUTH//[^A-Za-z0-9 ._-]/?}'"
-              exit 1 ;;
+          fail() { echo "::error::$1; not falling back to the subscription"; exit 1; }
+          mode="${CLAUDE_AUTH,,}"
+          case "$mode" in
+            ''|subscription) mode=subscription ;;
+            api) [ "$API_KEY_SET" = "true" ] || fail "CLAUDE_AUTH is 'api' but the ANTHROPIC_API_KEY secret is missing" ;;
+            oidc)
+              for name in WIF_RULE_ID WIF_ORG_ID WIF_SERVICE_ACCOUNT_ID WIF_WORKSPACE_ID; do
+                [[ "${!name}" =~ ^[A-Za-z0-9_-]+$ ]] || fail "CLAUDE_AUTH is 'oidc' but the variable CLAUDE_${name} is missing or not an ID"
+              done
+              [ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ] || fail "CLAUDE_AUTH is 'oidc' but this job has no 'id-token: write' permission"
+              {
+                echo "federation_rule_id=$WIF_RULE_ID"
+                echo "organization_id=$WIF_ORG_ID"
+                echo "service_account_id=$WIF_SERVICE_ACCOUNT_ID"
+                echo "workspace_id=$WIF_WORKSPACE_ID"
+              } >> "$GITHUB_OUTPUT" ;;
+            *) fail "CLAUDE_AUTH must be unset, 'subscription', 'api' or 'oidc', got '${CLAUDE_AUTH//[^A-Za-z0-9 ._-]/?}'" ;;
           esac
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "Claude credentials: $mode"
 
       # ========================================================================
       # Setup: Extract inputs and validate
@@ -678,8 +695,12 @@ jobs:
         timeout-minutes: 60
         uses: anthropics/claude-code-action@db77d4d3c98f3f6380e7cd45ffba2342a3dbde3c  # v1
         with:
-          anthropic_api_key: ${{ vars.CLAUDE_AUTH == 'api' && secrets.ANTHROPIC_API_KEY || '' }}
-          claude_code_oauth_token: ${{ vars.CLAUDE_AUTH != 'api' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
+          anthropic_api_key: ${{ steps.claude_auth.outputs.mode == 'api' && secrets.ANTHROPIC_API_KEY || '' }}
+          claude_code_oauth_token: ${{ steps.claude_auth.outputs.mode == 'subscription' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
+          anthropic_federation_rule_id: ${{ steps.claude_auth.outputs.federation_rule_id }}
+          anthropic_organization_id: ${{ steps.claude_auth.outputs.organization_id }}
+          anthropic_service_account_id: ${{ steps.claude_auth.outputs.service_account_id }}
+          anthropic_workspace_id: ${{ steps.claude_auth.outputs.workspace_id }}
           claude_args: "--model ${{ steps.inputs.outputs.model }} --settings ${{ github.workspace }}/.claude/settings.json"
           # bulk-generate dispatches us from the github-actions bot; explicitly allow it.
           allowed_bots: '*'
@@ -693,31 +714,53 @@ jobs:
             - SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
             - IS_REGENERATION: ${{ steps.existing.outputs.is_regeneration }}
 
-      # The session's cost (Claude Code's own estimate at API list price) and
-      # the credential it ran on, for the weekly regen review. Read right after
-      # the step: the retry writes the same execution file. Never fatal.
-      - name: Claude cost to the job summary
+      # The session's cost (Claude Code's own estimate at API list price),
+      # model and credential, for the weekly regen review, and whether it
+      # stopped at the Claude spend limit (api/oidc only: the API's messages
+      # for a spend limit you set, the tier's spend cap and an empty credit
+      # balance, read only from the session's error fields, because its own
+      # text may quote them). Read right after the step: the retry writes the
+      # same execution file. Never fatal.
+      - name: Claude session summary
+        id: claude_cost
         if: ${{ !cancelled() && (steps.claude.outcome == 'success' || steps.claude.outcome == 'failure') }}
         continue-on-error: true
         env:
           EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
-          CLAUDE_AUTH_MODE: ${{ vars.CLAUDE_AUTH == 'api' && 'api' || 'subscription' }}
+          CLAUDE_AUTH_MODE: ${{ steps.claude_auth.outputs.mode }}
           CLAUDE_STEP: impl-generate
+          SESSION_ERRORS: >-
+            .[] | select((.type == "result" and .is_error == true) or (.type == "assistant" and .error != null) or (.type == "system" and .subtype == "api_retry"))
+            | (.result // ""), ((.errors // [])[] | tostring), (.error // "" | tostring), (if .type == "assistant" then ((.message.content // [])[] | .text? // "") else "" end)
+          SPEND_LIMIT_PATTERN: 'reached your (specified )?(workspace )?API usage limits|enforced_spend_limit_reached|credit balance is too low|billing_error'
         run: |
           cost=$(jq -r '[.[] | select(.type == "result")] | last | .total_cost_usd // empty' "$EXECUTION_FILE" 2>/dev/null || true)
           model=$(jq -r '[.[] | select(.type == "system" and .subtype == "init")] | first | .model // empty' "$EXECUTION_FILE" 2>/dev/null || true)
           line="claude-cost step=${CLAUDE_STEP} auth=${CLAUDE_AUTH_MODE} model=${model:-n/a} total_cost_usd=${cost:-n/a}"
           echo "$line"
           echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
+          errors=$(jq -r "$SESSION_ERRORS" "$EXECUTION_FILE" 2>/dev/null || true)
+          spend_limit=false
+          if [[ "$CLAUDE_AUTH_MODE" =~ ^(api|oidc)$ ]] && grep -qiE "$SPEND_LIMIT_PATTERN" <<< "$errors"; then
+            spend_limit=true
+            echo "::error::Claude spend limit reached (mode ${CLAUDE_AUTH_MODE}) in ${CLAUDE_STEP}: no retry until the limit is raised"
+            echo "- **Claude spend limit reached (mode ${CLAUDE_AUTH_MODE})** in \`${CLAUDE_STEP}\`" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "spend_limit=${spend_limit}" >> "$GITHUB_OUTPUT"
 
+      # Not on a spend limit: the retry would be refused the same way.
       - name: Retry Claude (on failure)
-        if: steps.claude.outcome == 'failure' && steps.inputs.outputs.source_ref == ''
+        if: steps.claude.outcome == 'failure' && steps.inputs.outputs.source_ref == '' && steps.claude_cost.outputs.spend_limit != 'true'
         id: claude_retry
         timeout-minutes: 60
         uses: anthropics/claude-code-action@db77d4d3c98f3f6380e7cd45ffba2342a3dbde3c  # v1
         with:
-          anthropic_api_key: ${{ vars.CLAUDE_AUTH == 'api' && secrets.ANTHROPIC_API_KEY || '' }}
-          claude_code_oauth_token: ${{ vars.CLAUDE_AUTH != 'api' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
+          anthropic_api_key: ${{ steps.claude_auth.outputs.mode == 'api' && secrets.ANTHROPIC_API_KEY || '' }}
+          claude_code_oauth_token: ${{ steps.claude_auth.outputs.mode == 'subscription' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
+          anthropic_federation_rule_id: ${{ steps.claude_auth.outputs.federation_rule_id }}
+          anthropic_organization_id: ${{ steps.claude_auth.outputs.organization_id }}
+          anthropic_service_account_id: ${{ steps.claude_auth.outputs.service_account_id }}
+          anthropic_workspace_id: ${{ steps.claude_auth.outputs.workspace_id }}
           claude_args: "--model ${{ steps.inputs.outputs.model }} --settings ${{ github.workspace }}/.claude/settings.json"
           # bulk-generate dispatches us from the github-actions bot; explicitly allow it.
           allowed_bots: '*'
@@ -731,19 +774,41 @@ jobs:
             - SPEC_ID: ${{ steps.inputs.outputs.specification_id }}
             - IS_REGENERATION: ${{ steps.existing.outputs.is_regeneration }}
 
-      - name: Claude cost to the job summary (retry)
+      - name: Claude session summary (retry)
+        id: claude_retry_cost
         if: ${{ !cancelled() && (steps.claude_retry.outcome == 'success' || steps.claude_retry.outcome == 'failure') }}
         continue-on-error: true
         env:
           EXECUTION_FILE: ${{ steps.claude_retry.outputs.execution_file }}
-          CLAUDE_AUTH_MODE: ${{ vars.CLAUDE_AUTH == 'api' && 'api' || 'subscription' }}
+          CLAUDE_AUTH_MODE: ${{ steps.claude_auth.outputs.mode }}
           CLAUDE_STEP: impl-generate/retry
+          SESSION_ERRORS: >-
+            .[] | select((.type == "result" and .is_error == true) or (.type == "assistant" and .error != null) or (.type == "system" and .subtype == "api_retry"))
+            | (.result // ""), ((.errors // [])[] | tostring), (.error // "" | tostring), (if .type == "assistant" then ((.message.content // [])[] | .text? // "") else "" end)
+          SPEND_LIMIT_PATTERN: 'reached your (specified )?(workspace )?API usage limits|enforced_spend_limit_reached|credit balance is too low|billing_error'
         run: |
           cost=$(jq -r '[.[] | select(.type == "result")] | last | .total_cost_usd // empty' "$EXECUTION_FILE" 2>/dev/null || true)
           model=$(jq -r '[.[] | select(.type == "system" and .subtype == "init")] | first | .model // empty' "$EXECUTION_FILE" 2>/dev/null || true)
           line="claude-cost step=${CLAUDE_STEP} auth=${CLAUDE_AUTH_MODE} model=${model:-n/a} total_cost_usd=${cost:-n/a}"
           echo "$line"
           echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
+          errors=$(jq -r "$SESSION_ERRORS" "$EXECUTION_FILE" 2>/dev/null || true)
+          spend_limit=false
+          if [[ "$CLAUDE_AUTH_MODE" =~ ^(api|oidc)$ ]] && grep -qiE "$SPEND_LIMIT_PATTERN" <<< "$errors"; then
+            spend_limit=true
+            echo "::error::Claude spend limit reached (mode ${CLAUDE_AUTH_MODE}) in ${CLAUDE_STEP}: no retry until the limit is raised"
+            echo "- **Claude spend limit reached (mode ${CLAUDE_AUTH_MODE})** in \`${CLAUDE_STEP}\`" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "spend_limit=${spend_limit}" >> "$GITHUB_OUTPUT"
+
+      # The first session stopped at the spend limit and its retry was skipped:
+      # fail here, so "Handle generation failure" parks the pair instead of
+      # the steps below running without an implementation.
+      - name: Stop at the Claude spend limit
+        if: steps.claude_cost.outputs.spend_limit == 'true'
+        run: |
+          echo "::error::Claude spend limit reached; the retry is skipped"
+          exit 1
 
       # ========================================================================
       # Create metadata file (before PR)
@@ -1545,6 +1610,11 @@ jobs:
           # job by itself).
           CLAUDE_RETRY_OUTCOME: ${{ steps.claude_retry.outcome }}
           CLAUDE_EXEC_FILE: ${{ steps.claude_retry.outputs.execution_file }}
+          # Either session stopped at the Claude spend limit (api/oidc only;
+          # "Claude session summary" reads it): parked below, never retried,
+          # never counted.
+          SPEND_LIMIT: ${{ steps.claude_cost.outputs.spend_limit == 'true' || steps.claude_retry_cost.outputs.spend_limit == 'true' }}
+          CLAUDE_MODE: ${{ steps.claude_auth.outputs.mode }}
           GCP_AUTH_OUTCOME: ${{ steps.gcp_auth.outcome }}
           GCLOUD_OUTCOME: ${{ steps.gcloud.outcome }}
           GCS_OUTCOME: ${{ steps.gcs.outcome }}
@@ -1646,6 +1716,38 @@ jobs:
           Not retried and not counted toward the 3-attempt cap, because a retry would read the same file. Fix the file on \`${SOURCE_REF}\`, then run:
           \`\`\`
           gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f issue_number=${ISSUE} -f source_ref=${SOURCE_REF}${SOURCE_MODEL:+ -f source_model=${SOURCE_MODEL}}
+          \`\`\`
+
+          ---
+          :robot: *[impl-generate](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})*"
+            if [ "$IS_LIVE" = "true" ]; then
+              close_issue_if_complete
+            fi
+            exit 0
+          fi
+
+          # The Claude spend limit (api/oidc): an infrastructure stop that a
+          # retry cannot get past until the limit is raised, so the pair is
+          # parked at once — no auto-retry, no attempt counted (the comment
+          # carries its own marker, never the impl-fail one, so neither the
+          # 3-attempt cap nor daily-regen's attempt window sees it), never
+          # `impl:<lib>:failed`. The pair stays in daily-regen's queue.
+          if [ "${SPEND_LIMIT}" = "true" ]; then
+            echo "::error::Claude spend limit reached (mode ${CLAUDE_MODE}) — ${LIBRARY}/${SPEC_ID} parked: no auto-retry, no attempt counted, not marked failed"
+            for stale in "generate:${LIBRARY}" "impl:${LIBRARY}:pending"; do
+              gh issue edit "$ISSUE" --remove-label "$stale" 2>/dev/null || true
+            done
+            if [ "$IS_LIVE" = "true" ]; then
+              gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:done" 2>/dev/null || true
+            fi
+            gh issue comment "$ISSUE" --body "<!-- impl-paused-spend-limit:${SPEC_ID}:${LIBRARY} -->
+          ## :pause_button: ${LIBRARY} Paused (Claude spend limit)
+
+          The Claude API refused the **${LIBRARY}** generation for \`${SPEC_ID}\` at the spend limit (credentials: \`${CLAUDE_MODE}\`). This is **not** a capability verdict: nothing was retried, no attempt was counted, and the pair is not marked failed.
+
+          Once the limit is raised, run:
+          \`\`\`
+          gh workflow run impl-generate.yml -f specification_id=${SPEC_ID} -f library=${LIBRARY} -f issue_number=${ISSUE} -f model=${MODEL}
           \`\`\`
 
           ---

@@ -391,6 +391,7 @@ class TestWiring:
         assert (
             _step("impl-generate.yml", RETRY_STEP)["if"]
             == "steps.claude.outcome == 'failure' && steps.inputs.outputs.source_ref == ''"
+            " && steps.claude_cost.outputs.spend_limit != 'true'"
         )
         assert _step("impl-generate.yml", OVERLAY_STEP)["if"].endswith("&& steps.inputs.outputs.source_ref == ''")
 

@@ -509,19 +509,36 @@ their meaning, and switches to pair mode only with the `pairs` input. The
 watchdog's cron rescue replaces a missed scheduled run, so it forwards the
 variable as `pairs`. A `specification_id` always wins over a pair count.
 
-Pair mode picks pairs the way spec mode picks specs, per pair:
+Pair mode picks the oldest pairs and never picks the same pair night after
+night:
 
-- A pair's age is the newer of its metadata `updated` timestamp (`created`
-  when there's none) and its last regeneration attempt: its newest
-  `implementation/{spec-id}/{library}` PR in any state, its newest
-  `regen:kept` PR, and its newest `impl-generate.yml` run. A kept regeneration
-  leaves `updated` alone, so without the attempt record the same pair would
-  come back the next night.
-- A pair younger than `min_age_hours` (default 20) is skipped. So is every
-  pair of a spec whose issue saw activity within that window.
-- A pair with an open implementation PR is skipped.
+- A pair's age is its newest touch: its metadata `updated` timestamp
+  (`created` when there's none), or its last real attempt, whichever is newer.
+  A real attempt is an `implementation/{spec-id}/{library}` PR that was merged
+  or closed, a `regen:kept` PR included, or a failed generation, which leaves
+  an `<!-- impl-fail:{spec-id}:{library} -->` comment on the spec issue. A
+  kept regeneration and a failed generation leave `updated` alone, so without
+  the attempt record the same pair would come back the next night.
+- A pair touched within the attempt window is skipped. The window is the
+  `attempt_window_days` input, else the repository variable
+  `REGEN_ATTEMPT_WINDOW_DAYS`, else 30 days. After the window, the pair queues
+  behind every pair touched before it.
+- An infrastructure failure, whose comment carries
+  `<!-- impl-fail-cause:infra -->`, and a stop at the Claude spend limit are
+  not attempts: the pair stays at its place in the queue and comes back on a
+  later night.
+- A pair with an open implementation PR is skipped: its attempt is still
+  running or stuck.
+- Every pair of a spec whose issue saw activity within `min_age_hours`
+  (default 20) is skipped for that night, as in spec mode.
 - Only pairs with a metadata file are candidates, so pair mode never writes a
   first implementation. Gap backfill stays with `bulk-generate.yml`.
+
+The picker reads the failed-generation comments only for the specs at the
+front of the queue, at most 100 issues per run. Spec mode keeps its own rule:
+a spec's age is the newer of its metadata and any activity on its issue, so a
+kept or failed regeneration moves the spec to the back of the queue, and so
+does an infrastructure failure or any comment.
 
 Pair mode skips the spec polish, because a spec rewritten for one library
 would leave its other implementations written against the old text. It
@@ -540,6 +557,14 @@ gh workflow run daily-regen.yml -f pairs=5 -f dry_run=true
 The dry run still runs the similarity audit, as in spec mode. To turn pair mode
 on for the schedule, run `gh variable set REGEN_PAIRS_PER_DAY --body 5`; to
 turn it off, run `gh variable delete REGEN_PAIRS_PER_DAY`.
+
+When a pre-flight session (the spec polish or the similarity audit) stops at
+the [Claude spend limit](#at-the-spend-limit), the night's dispatch for that
+spec is skipped and the run fails. `daily-regen.yml` dispatches every pair
+within a few minutes, before the first generation is reviewed, so it can't
+see a limit that a later review of the same night reaches. The pairs
+dispatched after the limit was reached fail at their first refused request,
+which costs nothing, and are parked without a retry or a counted attempt.
 
 ---
 
@@ -644,41 +669,139 @@ gate record and notice line show `model=n/a`.
 
 ## Claude credentials
 
-Every Claude step of the pipeline runs on one of two credentials. The
+Every Claude step of the pipeline runs on one of three credentials. The
 repository variable `CLAUDE_AUTH` chooses it for every run:
 
 | `CLAUDE_AUTH` | Credential | Billed to |
 |---------------|------------|-----------|
 | Unset, empty, or `subscription` | The `CLAUDE_CODE_OAUTH_TOKEN` secret | The owner's Claude subscription, as before the switch |
-| `api` | The `ANTHROPIC_API_KEY` secret | The Claude API credits of the key's Console workspace |
+| `oidc` | Workload identity federation: the job's GitHub OIDC token, exchanged for a short-lived Claude API token. The repository variables `CLAUDE_WIF_RULE_ID`, `CLAUDE_WIF_ORG_ID`, `CLAUDE_WIF_SERVICE_ACCOUNT_ID`, and `CLAUDE_WIF_WORKSPACE_ID` name the federation. | The API credits of the federation's workspace |
+| `api` | The `ANTHROPIC_API_KEY` secret, the fallback when federation isn't available | The API credits of the key's workspace |
 | Anything else | None: the job stops | Nothing |
 
 The value ignores case. The switch covers all 13 Claude steps in the 8
 workflows that run Claude: `daily-regen.yml`, `impl-generate.yml`,
 `impl-repair.yml`, `impl-review.yml`, `report-validate.yml`,
-`review-retest.yml`, `spec-create.yml`, and `util-claude.yml`. Each step
-passes exactly one credential and leaves the other input empty, because the
-action doesn't document which one wins when both are set. The models don't
+`review-retest.yml`, `spec-create.yml`, and `util-claude.yml`. The models don't
 change: the aliases `sonnet` and `opus` resolve to the same models on the API.
 
-Every job that runs Claude starts with the step "Check Claude credentials".
-It stops the job with an error when `CLAUDE_AUTH` has an unknown value, or
-when it's `api` and the `ANTHROPIC_API_KEY` secret is missing. It never falls
-back to the subscription, so a broken switch can't spend the owner's
-interactive quota. In `spec-create.yml` and `report-validate.yml`, the check
-runs only for an issue that reaches Claude. In `impl-generate.yml`, it runs
-before the issue number is known, so a stop never counts against the pair's
-three attempts.
+Every job that runs Claude starts with the step "Resolve Claude credentials".
+It turns `CLAUDE_AUTH` into a mode, and every Claude step reads the step's
+outputs, so a new mode changes only that step. Each Claude step gets exactly
+one credential and leaves the others empty, because an API key or an OAuth
+token silently shadows federation, and the action doesn't document which of
+the two wins. The step stops the job with an error in these cases, and never
+falls back to the subscription, so a broken switch can't spend the owner's
+interactive quota:
+
+- `CLAUDE_AUTH` has an unknown value.
+- `CLAUDE_AUTH` is `api` and the `ANTHROPIC_API_KEY` secret is missing.
+- `CLAUDE_AUTH` is `oidc` and one of the four `CLAUDE_WIF_*` variables is
+  missing or isn't an ID, or the job has no `id-token: write` permission.
+
+In `spec-create.yml` and `report-validate.yml`, the step runs only for an
+issue that reaches Claude. In `impl-generate.yml`, it runs before the issue
+number is known, so a stop never counts against the pair's three attempts.
 
 With an API key, the action also classifies Claude's unconfirmed inline PR
 comments with Haiku on that key and drops the ones it reads as test probes.
-Without a key, it posts all of them. Only `util-claude.yml` on a pull request
-writes inline comments.
+With the subscription or federation, it posts all of them. Only
+`util-claude.yml` on a pull request writes inline comments.
+
+### Which runs federation accepts
+
+GitHub mints the OIDC token per job, and its `sub` claim names the trigger.
+The federation rule accepts only the subject
+`repo:MarkusNeusinger/anyplot:ref:refs/heads/main`, so with `CLAUDE_AUTH=oidc`
+the Claude steps of these runs work:
+
+| Workflow | Triggers | Subject |
+|----------|----------|---------|
+| `daily-regen.yml` | `schedule`, `workflow_dispatch` on `main` | `…:ref:refs/heads/main` |
+| `impl-generate.yml` | `issues` (a `generate:` label), `workflow_dispatch` on `main` from bulk-generate, daily-regen, the watchdog, and its own retries | `…:ref:refs/heads/main` |
+| `impl-review.yml` | `repository_dispatch`, `workflow_dispatch` on `main` | `…:ref:refs/heads/main` |
+| `impl-repair.yml` | `workflow_dispatch` on `main` | `…:ref:refs/heads/main` |
+| `spec-create.yml`, `report-validate.yml` | `issues` (a label) | `…:ref:refs/heads/main` |
+| `util-claude.yml` | `issue_comment`, also on a pull request | `…:ref:refs/heads/main` |
+
+Federation refuses these runs with `401 Authentication failed`, so they need
+`subscription` or `api`:
+
+- `util-claude.yml` started by a `pull_request_review_comment` or a
+  `pull_request_review`: the subject is `repo:MarkusNeusinger/anyplot:pull_request`.
+- Any workflow dispatched on another branch, such as a branch smoke with
+  `--ref feature/x` and the retries it dispatches on that branch: the subject
+  is `…:ref:refs/heads/feature/x`. `impl-generate.yml` counts such a refusal as
+  a failed attempt, like any other authentication error.
+- `review-retest.yml`: its review job has no `id-token` permission on
+  purpose, because without it the action can't mint the Claude GitHub App
+  token, so no session can write to the repository. Under `oidc`, "Resolve
+  Claude credentials" stops the job.
+
+Every other job that runs Claude already has `id-token: write`, for the
+Claude GitHub App token and, in some of them, Google Cloud. The federation
+didn't add the permission to any job.
+
+### Set up workload identity federation
+
+1. In the Claude Console, open
+   [Workload identity](https://platform.claude.com/settings/workload-identity-federation),
+   click **Connect workload**, and select **GitHub Actions**. The wizard
+   registers GitHub's issuer, creates a service account, and creates the
+   federation rule.
+2. Give the rule these values:
+   - Subject prefix: `repo:MarkusNeusinger/anyplot:ref:refs/heads/main`.
+   - Audience: `https://api.anthropic.com`, the action's default.
+   - Claims: `repository_owner=MarkusNeusinger`, `repository=MarkusNeusinger/anyplot`,
+     and `ref=refs/heads/main`.
+   - Workspace: `ci-regen` only, with the scope `workspace:developer` and a
+     token lifetime of 600 seconds. The action fetches a fresh GitHub token
+     every 4 minutes and Claude Code exchanges it again, so a session longer
+     than the lifetime keeps running.
+3. Remove the `event_name=push` claim that the wizard fills in. With it, the
+   rule refuses every scheduled, dispatched, and issue-triggered run, which is
+   every run of the pipeline.
+4. Set a spend limit on the `ci-regen` workspace.
+5. Store the four IDs as repository variables. They're identifiers, not
+   secrets. The organization ID is on the
+   [Organization](https://platform.claude.com/settings/organization) page; the
+   rule ID (`fdrl_…`), the service account ID (`svac_…`), and the workspace ID
+   (`wrkspc_…`) belong to the resources the wizard created:
+
+   ```bash
+   gh variable set CLAUDE_WIF_RULE_ID --body fdrl_...
+   gh variable set CLAUDE_WIF_ORG_ID --body 00000000-0000-0000-0000-000000000000
+   gh variable set CLAUDE_WIF_SERVICE_ACCOUNT_ID --body svac_...
+   gh variable set CLAUDE_WIF_WORKSPACE_ID --body wrkspc_...
+   ```
+
+6. Switch the pipeline to federation, as described in
+   [Switch modes](#switch-modes).
+
+A refused exchange always answers `401 Authentication failed`. The reason, such
+as `match_subject_prefix`, is in the authentication history on the Workload
+identity page.
+
+### Switch modes
+
+Switch with one command. Each takes effect with the next job that starts.
+
+- Federation: `gh variable set CLAUDE_AUTH --body oidc`
+- API key: run `gh secret set ANTHROPIC_API_KEY` once, which prompts for the
+  value so the key stays out of your shell history, then
+  `gh variable set CLAUDE_AUTH --body api`
+- Subscription: `gh variable set CLAUDE_AUTH --body subscription`, or
+  `gh variable delete CLAUDE_AUTH`
+
+To check a switch, open the next Claude run: the step "Resolve Claude
+credentials" logs `Claude credentials: <mode>`, and the cost line in the job
+summary reads `auth=<mode>`. For an API key, create it in a workspace of its
+own with a spend limit.
 
 ### Session cost
 
-After every Claude step, the step "Claude cost to the job summary" writes one
-line to the job summary and the log:
+After every Claude step, the step "Claude session summary" writes one line to
+the job summary and the log:
 
 ```text
 claude-cost step=impl-generate auth=api model=claude-sonnet-5-5 total_cost_usd=0.2931
@@ -693,70 +816,92 @@ put a generation on Sonnet at about $0.29 per implementation, a review on
 Opus at about $1.10, and a repair with its re-review at about $2.70 per
 implementation in all.
 
-### Switch to API credits
-
-1. In the Claude Console, create a workspace for the pipeline, for example
-   `anyplot-ci`, and set a monthly spend limit on it.
-2. Create an API key in that workspace.
-3. Store the key as a repository secret. The command prompts for the value,
-   so the key stays out of your shell history:
-
-   ```bash
-   gh secret set ANTHROPIC_API_KEY
-   ```
-
-4. Switch the pipeline to the key:
-
-   ```bash
-   gh variable set CLAUDE_AUTH --body api
-   ```
-
-5. Check the next Claude run: the step "Check Claude credentials" logs
-   `Claude credentials: api (ANTHROPIC_API_KEY)`, and the cost line in the job
-   summary reads `auth=api`.
-
-To switch back to the subscription, run
-`gh variable set CLAUDE_AUTH --body subscription`, or delete the variable. The
-key can stay in place.
-
 ### At the spend limit
 
-When the workspace reaches its spend limit, the API refuses every request
-until the limit resets or you raise it. Each Claude step then fails, and its
-retry fails too. What happens next depends on the error text in the step's
-execution log:
+With `oidc` or `api`, the workspace's spend limit stops the pipeline cleanly.
+The API refuses every request once the limit is reached, and Claude Code's own
+retries can't get past it:
 
-- **The text names a provider-side error**, such as a `429` with
-  `rate_limit_error`, `too many requests`, `overloaded`, or a 5xx status.
-  `impl-generate.yml` counts the failure as an infrastructure failure: it
-  doesn't spend the pair's three attempts, and it retries the pair until the
-  fifth infrastructure failure in 12 hours, which parks the pair without
-  `impl:{library}:failed` and with a comment that holds the command to
-  re-dispatch it.
-- **The text names anything else**, such as a low credit balance.
-  `impl-generate.yml` counts the failure as the pair's own. A regeneration is
-  never marked `impl:{library}:failed`, because its implementation is live on
-  main. A first implementation is marked failed after its third attempt.
+- A spend limit you set on the workspace or the organization answers HTTP 400
+  `invalid_request_error` with a message that starts with
+  `You have reached your specified workspace API usage limits` (or
+  `… specified API usage limits` for the organization).
+- The usage tier's monthly spend cap answers HTTP 429 `rate_limit_error` with
+  `error_code` `enforced_spend_limit_reached` and no `retry-after` header.
+- An empty credit balance answers `Your credit balance is too low`.
 
-A failed review gets one automatic re-review and then `ai-review-failed`, a
-failed repair gets one automatic retry, and the watchdog rescues each once.
-The spec polish
-and the similarity audit in `daily-regen.yml` fail without stopping the
-dispatch. To recover, raise the limit or switch back to the subscription, then
-re-dispatch the parked pairs.
+"Claude session summary" reads these messages, and Claude Code's
+`billing_error`, from the session's error fields only: the error result, Claude
+Code's error messages, and its API retries. It never reads the conversation,
+which may quote the same text. When it finds one, it writes an `::error::`
+and the line **Claude spend limit reached (mode oidc)** (or `api`) to the job
+summary, and every path treats the stop as an infrastructure failure:
+
+| Workflow | What happens |
+|----------|--------------|
+| `impl-generate.yml` | The retry is skipped, and "Stop at the Claude spend limit" fails the job. "Handle generation failure" parks the pair: it removes `generate:{library}` and `impl:{library}:pending`, puts `impl:{library}:done` back for a live implementation, and comments with its own marker. Nothing is retried, no attempt counts toward the cap of three, and the pair is never marked `impl:{library}:failed`. No PR exists; the next generation recreates the branch. |
+| `impl-review.yml` | "Validate review output" adds `ai-review-failed` and comments, without the auto re-review and without spending it. No score, no verdict: the PR stays open, nothing is merged or closed. The watchdog re-dispatches the review once at its next scan. |
+| `impl-repair.yml` | The retry is skipped. "Handle repair failure" restores `ai-rejected` and comments, without the auto-retry and without spending it. The watchdog's repair rescue, once per attempt, or a manual restart picks the PR up. |
+| `daily-regen.yml` | A spec polish or similarity audit at the limit skips that spec's dispatch, and the entry fails. |
+| `spec-create.yml`, `util-claude.yml` | The retry is skipped, and the job fails. |
+| `report-validate.yml`, `review-retest.yml` | The step fails as before: the issue gets the "Validation Failed" comment, and the cell is collected as failed. |
+
+In pair mode, a parked pair keeps its place in the queue: neither a parked
+generation nor a review stopped on an open PR is a real attempt. A pair whose
+review stopped keeps its open PR, which pair mode skips until the review
+finishes. A session that reaches the limit after it wrote its review files is
+scored on what it wrote, like any session that ends early.
+
+With the subscription nothing changes: the summary never reads a spend limit
+there, and the subscription's own usage limit takes the paths it took before.
+
+### Test the spend limit
+
+Test the stop after the merge, with `CLAUDE_AUTH=oidc`:
+
+1. In the Claude Console, set the `ci-regen` workspace's spend limit to the
+   month's spend so far plus about 0.50 USD.
+2. Dispatch one regeneration of a pair whose implementation is live on main:
+
+   ```bash
+   gh workflow run impl-generate.yml -f specification_id=SPEC_ID -f library=LIBRARY
+   ```
+
+   The generation on Sonnet costs about 0.29 USD and passes; the review on
+   Opus costs about 1.10 USD and reaches the limit while it runs.
+3. Check the `impl-review.yml` run: its summary shows **Claude spend limit
+   reached (mode oidc)**, the PR has `ai-review-failed` and the "AI Review
+   Paused (Claude spend limit)" comment, no second review run started, and no
+   verdict or `quality:` label was added.
+4. Check the spec issue: no `impl:{library}:failed` label, and no
+   `impl-fail` comment for the pair.
+5. Restore the spend limit, then rerun the review, or wait for the watchdog:
+
+   ```bash
+   gh workflow run impl-review.yml -f pr_number=PR_NUMBER
+   ```
+
+6. Check that the review finishes and the regen gate decides as usual.
+
+To test the generation path as well, set the limit to the spend so far plus
+about 0.05 USD: the generation stops, the pair is parked as described above,
+and its retry is skipped.
 
 ### Exposure
 
-The key reaches the same steps that the OAuth token reaches, and nothing
-else: `tests/unit/workflows/test_claude_auth.py` checks that the secret
-appears only in the action input and in the check step's `!= ''` test. None of
-the eight workflows runs on `pull_request` or `pull_request_target`, so a pull
-request from a fork never gets either credential. `util-claude.yml` runs only
-for comments by owners, members, and collaborators. `spec-create.yml` and
-`report-validate.yml` run on a label, which only maintainers can add, but
-they read issue text that anyone can write. A key is billed per token, so keep
-it in its own workspace: the workspace's spend limit bounds what a leaked key
-can cost.
+Each credential reaches only the Claude steps, and nothing else:
+`tests/unit/workflows/test_claude_auth.py` checks that the API key appears only
+in the action input and in the resolve step's `!= ''` test, and that no job
+gained `id-token: write`. None of the eight workflows runs on `pull_request`
+or `pull_request_target`, so a pull request from a fork never gets a
+credential. `util-claude.yml` runs only for comments by owners, members, and
+collaborators. `spec-create.yml` and `report-validate.yml` run on a label,
+which only maintainers can add, but they read issue text that anyone can
+write. Federation adds no stored secret: any step of a job with
+`id-token: write` can mint an OIDC token, but the federation rule accepts only
+`main`, so a token from a pull-request event or another branch is refused. A
+leaked federated token expires after 600 seconds, and an API key is billed
+until you revoke it; the workspace's spend limit bounds either.
 
 ---
 

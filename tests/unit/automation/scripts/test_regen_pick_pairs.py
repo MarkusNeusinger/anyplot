@@ -1,9 +1,13 @@
 """Tests for automation.scripts.regen_pick_pairs — daily-regen's pair mode.
 
-The picker mirrors the spec mode's age rule per (spec, library) pair: the
-newer of the metadata ``updated`` and the pair's last attempt, a minimum age,
-the spec issue's activity as a postponement. Every exclusion is pinned here,
-and ``main`` runs once against a fake ``gh`` the way the workflow calls it.
+The picker ages each (spec, library) pair by its newest touch, the metadata
+``updated`` or the last real attempt (a merged or closed implementation PR, a
+failed generation), keeps every pair touched within the attempt window out
+of the queue, and postpones a spec whose issue just saw activity. The
+no-loop rule is pinned here: a pair the gate kept, or whose generation
+failed, does not come back the next night, and an infrastructure failure or
+a stop at the spend limit is no attempt. ``main`` runs once against a fake
+``gh`` the way the workflow calls it.
 """
 
 from __future__ import annotations
@@ -23,12 +27,13 @@ from automation.scripts import regen_pick_pairs as rp
 
 NOW = datetime(2026, 10, 31, 2, 17, tzinfo=timezone.utc)
 MIN_AGE = timedelta(hours=20)
+WINDOW = timedelta(days=30)
 LIBS = ["altair", "matplotlib", "plotly"]
 SCRIPT = Path(rp.__file__)
 
 
-def ts(days: float) -> str:
-    return (NOW - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+def ts(days: float, now: datetime = NOW) -> str:
+    return (now - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def at(days: float) -> datetime:
@@ -54,8 +59,17 @@ def records(**kw) -> rp.Records:
     )
 
 
+def run_pick(cands, recs=None, issues=None, count=5, window=WINDOW, failures=None, max_reads=100):
+    return rp.pick(cands, recs or records(), issues or {}, NOW, MIN_AGE, window, count, failures, max_reads)
+
+
 def picked(picks: list[rp.Pick]) -> list[str]:
     return [f"{p.spec}/{p.library}" for p in picks]
+
+
+def fail_comment(spec: str, lib: str, days: float, infra: bool = False) -> dict[str, str]:
+    body = f"<!-- impl-fail:{spec}:{lib} -->\n" + (f"{rp.INFRA_TAG}\n" if infra else "") + "## Failed"
+    return {"created_at": ts(days), "body": body}
 
 
 class TestLoadCandidates:
@@ -81,100 +95,122 @@ class TestLoadCandidates:
 class TestPick:
     def test_oldest_first_across_specs(self):
         cands = [
-            rp.Candidate("a", "altair", at(5)),
-            rp.Candidate("b", "plotly", at(50)),
-            rp.Candidate("a", "plotly", at(20)),
+            rp.Candidate("a", "altair", at(40)),
+            rp.Candidate("b", "plotly", at(90)),
+            rp.Candidate("a", "plotly", at(60)),
         ]
-        picks, eligible = rp.pick(cands, records(), {}, NOW, MIN_AGE, 2)
+        picks, eligible = run_pick(cands, count=2)
         assert picked(picks) == ["b/plotly", "a/plotly"]
         assert eligible == 3
 
-    def test_a_kept_regeneration_ages_from_its_attempt(self):
-        # The gate kept a/altair two days ago: `updated` is still 90 days old,
-        # but the pair is now younger than b/plotly.
-        cands = [rp.Candidate("a", "altair", at(90)), rp.Candidate("b", "plotly", at(30))]
-        recs = records(attempts={("a", "altair"): (at(2), "kept PR")})
-        picks, _ = rp.pick(cands, recs, {}, NOW, MIN_AGE, 2)
+    def test_a_kept_pair_waits_out_the_window(self):
+        # The gate kept a/altair 10 days ago: `updated` is still 200 days old.
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(60))]
+        recs = records(attempts={("a", "altair"): (at(10), "kept PR")})
+        assert picked(run_pick(cands, recs)[0]) == ["b/plotly"]
+
+    def test_after_the_window_an_attempt_queues_behind_older_pairs(self):
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "plotly", at(60))]
+        recs = records(attempts={("a", "altair"): (at(45), "kept PR")})
+        picks, _ = run_pick(cands, recs)
         assert picked(picks) == ["b/plotly", "a/altair"]
-        assert picks[1].basis == "kept PR" and picks[1].touched == at(2)
+        assert picks[1].basis == "kept PR" and picks[1].touched == at(45)
 
-    def test_an_attempt_older_than_the_metadata_changes_nothing(self):
-        cands = [rp.Candidate("a", "altair", at(5))]
-        picks, _ = rp.pick(cands, records(attempts={("a", "altair"): (at(9), "run")}), {}, NOW, MIN_AGE, 1)
-        assert picks[0].basis == "metadata" and picks[0].touched == at(5)
+    def test_a_recent_merge_is_inside_the_window_too(self):
+        cands = [rp.Candidate("a", "altair", at(12)), rp.Candidate("a", "plotly", at(31))]
+        assert picked(run_pick(cands)[0]) == ["a/plotly"]
 
-    def test_too_fresh_pairs_are_skipped(self):
-        cands = [rp.Candidate("a", "altair", at(0.5)), rp.Candidate("a", "plotly", at(30))]
-        recs = records(attempts={("a", "plotly"): (at(0.2), "run")})  # a generation started 5 h ago
-        assert rp.pick(cands, recs, {}, NOW, MIN_AGE, 5) == ([], 0)
+    def test_window_zero_orders_only(self):
+        cands = [rp.Candidate("a", "altair", at(2)), rp.Candidate("a", "plotly", at(1))]
+        assert picked(run_pick(cands, window=timedelta(0))[0]) == ["a/altair", "a/plotly"]
 
     def test_open_pr_skips_only_its_pair(self):
-        cands = [rp.Candidate("a", "altair", at(30)), rp.Candidate("a", "plotly", at(40))]
-        picks, _ = rp.pick(cands, records(open_pairs={("a", "plotly")}), {}, NOW, MIN_AGE, 5)
-        assert picked(picks) == ["a/altair"]
+        cands = [rp.Candidate("a", "altair", at(60)), rp.Candidate("a", "plotly", at(70))]
+        assert picked(run_pick(cands, records(open_pairs={("a", "plotly")}))[0]) == ["a/altair"]
 
     def test_recent_issue_activity_postpones_every_pair_of_the_spec(self):
-        cands = [rp.Candidate("a", "altair", at(30)), rp.Candidate("b", "altair", at(10))]
+        cands = [rp.Candidate("a", "altair", at(60)), rp.Candidate("b", "altair", at(40))]
         recs = records(issues={1: at(0.3), 2: at(3)})
-        picks, _ = rp.pick(cands, recs, {"a": 1, "b": 2}, NOW, MIN_AGE, 5)
-        assert picked(picks) == ["b/altair"]  # b's issue is three days old: no postponement
+        assert picked(run_pick(cands, recs, {"a": 1, "b": 2})[0]) == ["b/altair"]
 
     def test_issue_activity_is_a_gate_not_an_age(self):
-        # Old activity on a's issue does not re-date a's pairs.
-        cands = [rp.Candidate("a", "altair", at(30)), rp.Candidate("b", "altair", at(20))]
-        picks, _ = rp.pick(cands, records(issues={1: at(2)}), {"a": 1}, NOW, MIN_AGE, 1)
-        assert picked(picks) == ["a/altair"] and picks[0].touched == at(30)
+        cands = [rp.Candidate("a", "altair", at(60)), rp.Candidate("b", "altair", at(50))]
+        picks, _ = run_pick(cands, records(issues={1: at(2)}), {"a": 1}, count=1)
+        assert picked(picks) == ["a/altair"] and picks[0].touched == at(60)
 
     def test_no_timestamp_at_all_is_ancient(self):
         cands = [rp.Candidate("a", "altair", at(300)), rp.Candidate("b", "altair", None)]
-        picks, _ = rp.pick(cands, records(), {}, NOW, MIN_AGE, 2)
+        picks, _ = run_pick(cands, count=2)
         assert picked(picks) == ["b/altair", "a/altair"]
         assert picks[0].touched == rp.ANCIENT and picks[0].basis == "none"
 
-    def test_no_metadata_timestamp_ages_from_the_attempt(self):
-        cands = [rp.Candidate("b", "altair", None)]
-        assert rp.pick(cands, records(attempts={("b", "altair"): (at(0.1), "run")}), {}, NOW, MIN_AGE, 1)[0] == []
-
     def test_ties_break_by_spec_then_library(self):
-        cands = [
-            rp.Candidate("b", "altair", at(9)),
-            rp.Candidate("a", "plotly", at(9)),
-            rp.Candidate("a", "altair", at(9)),
+        cands = [rp.Candidate("b", "altair", at(90)), rp.Candidate("a", "plotly", at(90))]
+        cands.append(rp.Candidate("a", "altair", at(90)))
+        assert picked(run_pick(cands, count=3)[0]) == ["a/altair", "a/plotly", "b/altair"]
+
+
+class TestFailedGenerations:
+    def test_a_failed_generation_is_an_attempt(self):
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("a", "plotly", at(150))]
+        cands.append(rp.Candidate("b", "altair", at(100)))
+        asked: list[str] = []
+
+        def failures(spec):
+            asked.append(spec)
+            return {"altair": at(3)} if spec == "a" else {}
+
+        picks, eligible = run_pick(cands, count=2, failures=failures)
+        # a/altair failed three days ago: out for the window; its sibling is not.
+        assert picked(picks) == ["a/plotly", "b/altair"]
+        assert eligible == 2
+        assert asked == ["a", "b"]  # once per spec, only for the front of the queue
+
+    def test_an_old_failure_re_ages_the_pair(self):
+        cands = [rp.Candidate("a", "altair", at(200)), rp.Candidate("b", "altair", at(100))]
+        picks, _ = run_pick(cands, count=2, failures=lambda spec: {"altair": at(40)} if spec == "a" else {})
+        assert picked(picks) == ["b/altair", "a/altair"]
+        assert picks[1].basis == "failed generation"
+
+    def test_comments_count_only_real_failures(self):
+        comments = [
+            fail_comment("a", "altair", 5),
+            fail_comment("a", "altair", 2, infra=True),  # infrastructure: no attempt
+            fail_comment("a", "plotly", 1, infra=True),
+            fail_comment("other", "altair", 1),  # another spec's marker
+            {"created_at": ts(1), "body": "<!-- impl-paused-spend-limit:a:plotly -->"},
         ]
-        assert picked(rp.pick(cands, records(), {}, NOW, MIN_AGE, 3)[0]) == ["a/altair", "a/plotly", "b/altair"]
+        assert rp.failed_generations(comments, "a") == {"altair": at(5)}
+
+    def test_the_read_cap_stops_reading(self, capsys):
+        cands = [rp.Candidate(spec, "altair", at(100 + i)) for i, spec in enumerate("abc")]
+        asked: list[str] = []
+        picks, _ = run_pick(cands, count=3, failures=lambda spec: asked.append(spec) or {}, max_reads=1)
+        assert len(picks) == 3 and asked == ["c"]
+        assert "::warning::Read the failed generations of 1 specs" in capsys.readouterr().out
 
 
-class TestFold:
-    def test_pulls_keep_the_newest_attempt_and_mark_open_ones(self):
+class TestFoldPulls:
+    def test_open_blocks_closed_and_merged_count(self):
         recs = records()
         rp.fold_pulls(
             [
-                {"headRefName": "implementation/a/altair", "state": "MERGED", "updatedAt": ts(9)},
-                {"headRefName": "implementation/a/altair", "state": "CLOSED", "updatedAt": ts(3)},
+                {"headRefName": "implementation/a/altair", "state": "MERGED", "closedAt": ts(9), "updatedAt": ts(1)},
+                {"headRefName": "implementation/a/altair", "state": "CLOSED", "closedAt": ts(40), "labels": []},
+                {
+                    "headRefName": "implementation/a/plotly",
+                    "state": "CLOSED",
+                    "closedAt": ts(3),
+                    "labels": [{"name": "regen"}, {"name": "regen:kept"}],
+                },
                 {"headRefName": "implementation/b/plotly", "state": "OPEN", "updatedAt": ts(1)},
-                {"headRefName": "review-writeback/a/altair/12", "state": "MERGED", "updatedAt": ts(0)},
-                {"headRefName": "implementation/a/altair/extra", "state": "OPEN", "updatedAt": ts(0)},
+                {"headRefName": "review-writeback/a/altair/12", "state": "MERGED", "closedAt": ts(0)},
+                {"headRefName": "implementation/a/altair/extra", "state": "CLOSED", "closedAt": ts(0)},
             ],
-            "implementation PR",
             recs,
         )
-        assert recs.attempts == {
-            ("a", "altair"): (at(3), "implementation PR"),
-            ("b", "plotly"): (at(1), "implementation PR"),
-        }
+        assert recs.attempts == {("a", "altair"): (at(9), "merged PR"), ("a", "plotly"): (at(3), "kept PR")}
         assert recs.open_pairs == {("b", "plotly")}
-
-    def test_runs_parse_the_impl_generate_run_name(self):
-        recs = records()
-        rp.fold_runs(
-            [
-                {"displayTitle": "Generate: plotly for line-basic", "createdAt": ts(4)},
-                {"displayTitle": "Generate: generate:plotly for issue", "createdAt": ts(1)},
-                {"displayTitle": "Review: PR #12", "createdAt": ts(1)},
-            ],
-            recs,
-        )
-        assert recs.attempts == {("line-basic", "plotly"): (at(4), "run")}
 
     def test_issues(self):
         recs = records()
@@ -182,30 +218,31 @@ class TestFold:
         assert recs.issue_activity == {3: at(2)}
 
 
-# Answers each listing the picker makes from a JSON file named after it; a
-# listing whose file is missing fails like an API error. Logs every call.
+# Answers each listing the picker makes from a JSON file named after it, and an
+# issue's comments (`api … --jq …`) from comments-<issue>.jsonl; a listing
+# whose file is missing fails like an API error. Logs every call.
 FAKE_GH = """#!/bin/sh
 echo "$*" >> "$GH_LOG"
 case "$*" in
-  *"head:implementation/"*) f=prs ;;
-  *"regen:kept"*) f=kept ;;
-  "run list"*) f=runs ;;
-  "issue list"*) f=issues ;;
+  *"head:implementation/"*) f=prs.json ;;
+  *"regen:kept"*) f=kept.json ;;
+  "issue list"*) f=issues.json ;;
+  "api --paginate repos/o/r/issues/"*) n=${3#repos/o/r/issues/}; f=comments-${n%%/*}.jsonl ;;
   *) exit 1 ;;
 esac
-[ -f "$GH_DATA/$f.json" ] || { echo "HTTP 502" >&2; exit 1; }
-cat "$GH_DATA/$f.json"
+[ -f "$GH_DATA/$f" ] || { echo "HTTP 502" >&2; exit 1; }
+cat "$GH_DATA/$f"
 """
 
 
-def run_main(tmp_path: Path, data: dict[str, list], count: int = 3) -> tuple[subprocess.CompletedProcess, dict, str]:
+def run_main(tmp_path: Path, data: dict[str, str], count: int = 3, *extra: str):
     bin_dir, data_dir = tmp_path / "bin", tmp_path / "data"
     bin_dir.mkdir()
     data_dir.mkdir()
     (bin_dir / "gh").write_text(FAKE_GH, encoding="utf-8")
     (bin_dir / "gh").chmod(0o755)
-    for name, rows in data.items():
-        (data_dir / f"{name}.json").write_text(json.dumps(rows), encoding="utf-8")
+    for name, text in data.items():
+        (data_dir / name).write_text(text, encoding="utf-8")
     out, summary = tmp_path / "out", tmp_path / "summary"
     env = {
         **os.environ,
@@ -215,7 +252,7 @@ def run_main(tmp_path: Path, data: dict[str, list], count: int = 3) -> tuple[sub
         "GITHUB_OUTPUT": str(out),
         "GITHUB_STEP_SUMMARY": str(summary),
     }
-    args = ["--count", str(count), "--min-age-hours", "20", "--repo", "o/r", "--libraries", " ".join(LIBS)]
+    args = ["--count", str(count), "--min-age-hours", "20", "--repo", "o/r", "--libraries", " ".join(LIBS), *extra]
     result = subprocess.run(
         [sys.executable, str(SCRIPT), *args, "--plots", str(tmp_path / "plots")],
         env=env,
@@ -228,30 +265,45 @@ def run_main(tmp_path: Path, data: dict[str, list], count: int = 3) -> tuple[sub
 
 class TestMain:
     def _plots(self, tmp_path: Path) -> None:
+        self.now = datetime.now(timezone.utc)
         plots = tmp_path / "plots"
-        now = datetime.now(timezone.utc)
-
-        def old(days: float) -> str:
-            return (now - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-        write_spec(plots, "a-spec", {"altair": {"updated": old(90)}, "plotly": {"updated": old(60)}}, issue=11)
-        write_spec(plots, "b-spec", {"altair": {"updated": old(80)}, "matplotlib": {"updated": old(70)}}, issue=12)
-        self.recent = old(0.1)
-        self.week = old(7)
+        write_spec(
+            plots, "a-spec", {"altair": {"updated": ts(190, self.now)}, "plotly": {"updated": ts(160, self.now)}}, 11
+        )
+        write_spec(
+            plots,
+            "b-spec",
+            {"altair": {"updated": ts(180, self.now)}, "matplotlib": {"updated": ts(170, self.now)}},
+            12,
+        )
 
     def test_writes_pairs_specs_and_summary(self, tmp_path):
         self._plots(tmp_path)
+        prs = [{"headRefName": "implementation/b-spec/matplotlib", "state": "OPEN", "updatedAt": ts(0.1, self.now)}]
+        kept = [
+            {
+                "headRefName": "implementation/a-spec/altair",
+                "state": "CLOSED",
+                "closedAt": ts(40, self.now),
+                "labels": [{"name": "regen:kept"}],
+            }
+        ]
+        comments = [
+            {"created_at": ts(5, self.now), "body": "<!-- impl-fail:b-spec:altair -->\n<!-- impl-fail-cause:infra -->"}
+        ]
         result, outputs, summary = run_main(
             tmp_path,
             {
-                "prs": [{"headRefName": "implementation/b-spec/matplotlib", "state": "OPEN", "updatedAt": self.recent}],
-                "kept": [{"headRefName": "implementation/a-spec/altair", "state": "CLOSED", "updatedAt": self.week}],
-                "runs": [],
-                "issues": [{"number": 11, "updatedAt": self.week}],
+                "prs.json": json.dumps(prs),
+                "kept.json": json.dumps(kept),
+                "issues.json": json.dumps([{"number": 11, "updatedAt": ts(7, self.now)}]),
+                "comments-11.jsonl": "",
+                "comments-12.jsonl": "\n".join(json.dumps(c) for c in comments),
             },
         )
         assert result.returncode == 0, result.stdout + result.stderr
-        # a-spec/altair is aged by its keep (7 d), b-spec/matplotlib has an open PR.
+        # b-spec/matplotlib has an open PR; a-spec/altair was kept 40 days ago,
+        # so it queues last; b-spec/altair's infrastructure failure is no attempt.
         assert json.loads(outputs["pairs_json"]) == [
             {"spec": "b-spec", "library": "altair"},
             {"spec": "a-spec", "library": "plotly"},
@@ -260,22 +312,35 @@ class TestMain:
         assert json.loads(outputs["specs_json"]) == ["b-spec", "a-spec"]
         assert outputs["specs"] == "b-spec a-spec" and outputs["count"] == "3"
         assert "| 3 | `a-spec` | `altair` |" in summary and "kept PR" in summary
+        log = (tmp_path / "gh.log").read_text()
+        assert "repos/o/r/issues/12/comments?per_page=100" in log and "run list" not in log
+
+    def test_the_window_comes_from_the_argument(self, tmp_path):
+        self._plots(tmp_path)
+        kept = [{"headRefName": "implementation/a-spec/altair", "state": "CLOSED", "closedAt": ts(40, self.now)}]
+        data = {"prs.json": "[]", "kept.json": json.dumps(kept), "issues.json": "[]"}
+        data |= {"comments-11.jsonl": "", "comments-12.jsonl": ""}
+        _, outputs, _ = run_main(tmp_path, data, 5, "--attempt-window-days", "60")
+        # Kept 40 days ago is inside a 60-day window.
+        pairs = {(p["spec"], p["library"]) for p in json.loads(outputs["pairs_json"])}
+        assert pairs == {("a-spec", "plotly"), ("b-spec", "altair"), ("b-spec", "matplotlib")}
 
     def test_a_failed_listing_degrades_with_a_warning(self, tmp_path):
         self._plots(tmp_path)
-        result, outputs, _ = run_main(tmp_path, {"issues": []}, count=1)
+        result, outputs, _ = run_main(tmp_path, {"issues.json": "[]"}, 1)
         assert result.returncode == 0, result.stdout + result.stderr
-        assert result.stdout.count("::warning::Could not list") == 3
+        assert result.stdout.count("::warning::Could not list") == 2
+        assert "::warning::Could not read the comments of issue #11" in result.stdout
         assert json.loads(outputs["pairs_json"]) == [{"spec": "a-spec", "library": "altair"}]
 
     def test_nothing_eligible_writes_an_empty_pick(self, tmp_path):
         (tmp_path / "plots").mkdir()
-        result, outputs, _ = run_main(tmp_path, {"prs": [], "kept": [], "runs": [], "issues": []})
+        result, outputs, _ = run_main(tmp_path, {"prs.json": "[]", "kept.json": "[]", "issues.json": "[]"})
         assert result.returncode == 0, result.stdout + result.stderr
         assert outputs == {"pairs_json": "[]", "specs": "", "specs_json": "[]", "count": "0"}
 
-    @pytest.mark.parametrize("count", [0, -1])
-    def test_refuses_a_count_below_one(self, tmp_path, count):
+    @pytest.mark.parametrize(("count", "window"), [(0, "30"), (-1, "30"), (1, "-1")])
+    def test_refuses_bad_numbers(self, tmp_path, count, window):
         (tmp_path / "plots").mkdir()
-        result, _, _ = run_main(tmp_path, {}, count=count)
+        result, _, _ = run_main(tmp_path, {}, count, "--attempt-window-days", window)
         assert result.returncode == 1 and "::error::" in result.stdout

@@ -295,6 +295,11 @@ class TestSessionCost:
     def test_cost_lines_win_and_carry_the_credential(self, cw):
         assert cw.log_cost(self.LOG) == {"api": 0.2931}
 
+    def test_federation_is_api_credits_too(self, cw):
+        log = "claude-cost step=impl-review auth=oidc model=claude-opus-5-5 total_cost_usd=1.1\n"
+        assert cw.log_cost(log) == {"oidc": 1.1}
+        assert set(cw.API_MODES) == {"api", "oidc"}
+
     def test_an_older_log_counts_as_subscription(self, cw):
         assert cw.log_cost('  "total_cost_usd": 1.1,\n  "total_cost_usd": 0.4\n') == {"subscription": 1.5}
 
