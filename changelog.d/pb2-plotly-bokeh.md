@@ -9,20 +9,22 @@
   252 of 325 bokeh files are eligible; in the renderer image 254 of the 273 and
   245 of the 252 render on target in both themes as they stand, the rest only
   because their code divides by the length of the emptied catalogue title.
-- **The validator rules for plotly and bokeh.** Both refuse private names, a
-  string where the library expects a URL whatever its scheme, and every model
-  that loads from the network or a file: plotly's geo and map traces and its
-  `plotly_relayout` family, bokeh's JavaScript, markup and tile models and its
-  import by name. bokeh's tooltip templates pass as the catalogue writes them,
-  text tags with a quoted `style` or `class`, never `{safe}`, because BokehJS
-  parses a template and each tooltip value as HTML.
+  (#12490)
+- **The validator rules for plotly and bokeh.** Both refuse private names,
+  anything but `None` where the library expects a URL, and every model that
+  loads from the network or a file: plotly's geo and map traces and its
+  `plotly_relayout` family, bokeh's JavaScript, markup, CSS and tile models and
+  its import by name. bokeh's tooltip templates pass as the catalogue writes
+  them, text tags with a quoted `style` or `class`, never `{safe}`, because
+  BokehJS parses a template and each tooltip value as HTML; plotly text holds
+  no link. (#12490)
 - **The renderer checks a plotly or bokeh figure for markup before it draws
   it.** A figure that holds what a browser would run, load or link (a bokeh
   JavaScript, HTML or CSS model or any model no catalogue plot uses, a tooltip
   outside the template rule, a link in plotly text, an image URL) fails as
   `figure UnsafeMarkup`, whatever code built it, so the downloaded code never
   writes it into the user's HTML. The renderer image's CI asserts the refusal
-  through the image's own harness.
+  through the image's own harness. (#12490)
 - **The figure save and the exported code.** The normaliser turns the
   catalogue's save block into one protected statement that writes the figure as
   JSON (plotly's size moved into the figure; bokeh's Selenium screenshot block
@@ -30,7 +32,7 @@
   save, so it runs unchanged on the user's machine with `data.csv`: plotly's
   `write_image` and `write_html`, bokeh's `export_png`, `output_file` and
   `save`. This is the one place where the export is not the run form byte for
-  byte (owner decision).
+  byte (owner decision). (#12490)
 - **plotly and bokeh adapter sections.** Measured in the renderer image: the
   protected save, the theme tokens on the figure, timestamps converted to UTC
   (plotly draws an offset timestamp's clock time as given), plotly's
@@ -38,22 +40,23 @@
   ticks on fixed values with labels written in Python (BokehJS writes English
   marks whatever its `language`), `render_mode="svg"` and no WebGL. An image
   test renders each idiom from a table with missing cells in both themes.
+  (#12490)
 - **plotly and bokeh eval fixtures.** The ten matrix specs for each (120 cases,
   900 generated in all) and the smoke cases `scatter-basic-plotly-renamed` and
-  `scatter-basic-bokeh-renamed`; all twenty files are eligible.
+  `scatter-basic-bokeh-renamed`; all twenty files are eligible. (#12490)
 - **A plotly figure render gates the renderer's deploy.** The candidate smoke
   renders a plotly figure with an axis range through both steps of the figure
-  mode under gVisor and refuses the promotion when it fails twice.
+  mode under gVisor and refuses the promotion when it fails twice. (#12490)
 
 ### Changed
 
 - **The scope judge's example of another library is Excel.** "Gibt es das
   auch in Plotly?" stood for a library the assistant does not adapt; plotly is
-  served now, and so is every catalogue library.
+  served now, and so is every catalogue library. (#12490)
 - **Every profile's URL rule refuses a protocol-relative URL.** The Python, R
   and Julia validators refuse `//host/...`, `ws://`, `wss://`, `blob:` and
   `javascript:` in a string, as the JavaScript one has since JS-3; no catalogue
-  file of a served library changes its outcome.
+  file of a served library changes its outcome. (#12490)
 
 ### Fixed
 
@@ -62,3 +65,4 @@
   plotly's WebGL notice, and the host gates passed it. A figure with a WebGL
   trace now fails as `draw NoWebGL` before it is drawn, and the readiness scan
   blocks such catalogue files (15 plotly files) until the renderer draws WebGL.
+  (#12490)
