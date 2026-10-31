@@ -2,12 +2,12 @@ library: highcharts
 language: javascript
 specification_id: line-timeseries
 created: '2026-09-05T08:26:53Z'
-updated: '2026-09-05T08:41:37Z'
+updated: '2026-10-31T07:19:36Z'
 generated_by: claude-sonnet
-workflow_run: 33955092301
+workflow_run: 41179788984
 issue: 2006
-language_version: 22.23.2
-library_version: 12.6.0
+language_version: 22.23.4
+library_version: 13.1.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/highcharts/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-timeseries/javascript/highcharts/plot-light.html
@@ -15,108 +15,110 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-time
 quality_score: 87
 review:
   strengths:
-  - Peak/trough callout points with dataLabels and a dashed plotLines average reference
-    line turn a plain time series into a small data story.
-  - Gradient area fill built correctly via Highcharts.color(...).setOpacity(...),
-    using the same brand-green token so light/dark data colors stay identical.
-  - Clean, idiomatic datetime axis with automatic month-level tick formatting - no
-    manual tick-locator hacks needed.
-  - Fully deterministic in-browser data generation via a fixed-seed LCG, as required
-    for this runtime.
+  - True datetime x axis with automatic monthly 'Jan 2024' tick formatting that fits
+    the one-year span, no manual tick hacks
+  - Peak label placed above the maximum and Low label below the minimum (softMin headroom),
+    so the noisy line never runs through either label
+  - Gradient fill built with Highcharts.color().setOpacity() from the same brand-green
+    token, identical in both themes
+  - Theme tokens threaded through every text element and palette.colorScheme pinned
+    to the theme; deterministic fixed-seed LCG data
   weaknesses:
-  - Chart type is area (line + gradient fill) rather than a plain line series - matches
-    the spirit of the spec but is a stylistic deviation from 'time series line plot';
-    consider whether a thinner/lighter fill (or no fill) reads closer to the spec's
-    literal ask.
-  - '''Low: 0.1°C'' callout label sits close to its marker near the bottom-left of
-    the plot area - a touch more vertical offset would give it clearer breathing room.'
-  - Visual refinement beyond the gradient/plot-line is fairly close to library defaults;
-    a bit more custom polish (e.g., refined tick density, subtler grid) would lift
-    Design Excellence.
+  - 'SC-01 (both): the series is a Highcharts area (line plus gradient fill to the
+    baseline) rather than the line plot the spec names → a plain line series. Likely
+    cause: chart.type "area" and plotOptions.area.fillColor.'
+  - 'Suggestion: the ''Annual avg'' plot-line label at 13px is slightly smaller than
+    the tick labels; matching 14px would balance it.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Title "line-timeseries · javascript · highcharts · anyplot.ai" in dark bold text, clearly legible. Axis titles "Date" and "Avg. Temperature (°C)" in dark gray, legible. Tick labels (Jan 2024, Feb 2024, ...) legible. Dashed "Annual avg: 12°C" reference line label and "Peak: 23.8°C" / "Low: 0.1°C" callout labels all legible in dark text.
-      Data: Single series in #009E73 teal-green line with a matching gradient area fill beneath it (opacity fading to 0 toward the baseline). Callout markers at peak and trough use the same green fill with a dark outline.
+      Background: Warm off-white #FAF8F1, not pure white.
+      Chrome: Title "line-timeseries · javascript · highcharts · anyplot.ai" bold dark at top centre; axis titles "Date" and "Avg. Temperature (°C)" and ticks (Jan 2024 … Jan 2025 monthly; -4 to 26 in steps of 2) in dark inkSoft gray, all readable. Subtle gray grid on both axes. Dashed dark "Annual avg: 12°C" line with right-aligned label.
+      Data: One #009E73 line of 366 daily temperatures tracing a seasonal arc (0.1 °C in early January to 23.8 °C in early July), with a green gradient fill fading to transparent. Two green markers with dark outlines: "Peak: 23.8°C" label above the maximum, "Low: 0.1°C" label below the minimum; the line crosses neither label.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Title, axis titles, tick labels, "Annual avg" plot-line label, and "Peak"/"Low" callout labels all render in light gray/white and are clearly legible against the dark background. No dark-on-dark issues observed.
-      Data: Line and gradient area fill use the identical #009E73 green as the light render - confirmed unchanged data color between themes.
+      Background: Warm near-black #1A1A17, not pure black.
+      Chrome: Title, axis titles, ticks, avg label and callout labels in light ink/inkSoft, all readable; no dark-on-dark text. Grid subtle but visible; the dashed avg line is light gray.
+      Data: Identical #009E73 line and gradient fill as the light render; callout markers green with a light outline. Only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All chrome and callout labels explicitly sized and readable in both
-          themes
+        comment: Title 22px, axis titles 16px, ticks 14px, callouts 13px; all readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Low callout sits close to its marker but does not collide
+        comment: Peak label above its maximum, Low label below its minimum; the line
+          runs through neither, and the avg label sits clear of the series
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Line + gradient area appropriate for 366 daily points, markers reserved
-          for callouts
+        comment: 2.5px line suits 366 daily points; markers only on the two callouts
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green series with adequate contrast, no red/green-only
+        comment: Single green series, high contrast on both surfaces, no red-green
           signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, no overflow or clipping
+        comment: Canvas gate passed; nothing clipped or overflowing; balanced axis
+          titles
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units
+        comment: '''Date'' and ''Avg. Temperature (°C)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, both renders theme-correct'
+        comment: 'Series #009E73 in both renders; backgrounds #FAF8F1 / #1A1A17; chrome
+          theme-correct'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Gradient fill, average line, and callouts show design intent
+        passed: false
+        comment: 'Clear typographic hierarchy: bold 600 callouts above lighter inkSoft
+          chrome, gradient fill fading to transparent'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Clean chrome and subtle grid, but mostly close to library defaults
+        passed: false
+        comment: Callout labels placed deliberately clear of the line (peak above,
+          low below with softMin headroom); avg label right-aligned above its dashed
+          line
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Peak/trough and average line give the viewer a clear narrative
+        passed: false
+        comment: Peak, low and annual-average callouts give the seasonal curve focal
+          points beyond the Notes
     spec_compliance:
       score: 14
       max: 15
@@ -125,48 +127,51 @@ review:
         name: Plot Type
         score: 4
         max: 5
-        passed: true
-        comment: Rendered as area (line + fill) rather than a plain line series
+        passed: false
+        comment: Rendered as an area series (line plus gradient fill) instead of the
+          line plot the spec names (defect line)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Datetime axis, intelligent tick formatting, grid lines on both axes
+        comment: True datetime axis, monthly 'Jan 2024' ticks fit the one-year span,
+          grid on both axes, y axis not forced to zero
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = date, Y = temperature, full year shown
+        comment: Date on x, temperature on y, every daily point at its own timestamp
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly, legend correctly disabled
+        comment: Mandated title format; legend disabled for the single series (N/A)
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Seasonal cycle, noise, peak/trough, and average all demonstrated
+        comment: Seasonal cycle, daily noise and extremes over a full year
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible daily-average-temperature data, neutral topic
+        comment: Daily average temperature, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-26C range sensible for domain
+        comment: 'Checked: 0.1-23.8 °C range and 12 °C annual mean read off the axis
+          match the seasonal formula 12 + 10·sin'
     code_quality:
       score: 10
       max: 10
@@ -176,7 +181,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary classes/functions
+        comment: Flat script; the tiny LCG helper is the documented in-browser seeding
+          pattern
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -194,38 +200,46 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate API usage
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No file I/O, animation disabled in both places
+        comment: 'Renders into #container, animation disabled in chart and series,
+          credits off'
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Idiomatic datetime axis, plotLines, per-point dataLabels/marker overrides
+        passed: false
+        comment: Idiomatic datetime axis, per-point marker/dataLabels overrides, plotLines
+          with label, softMin, palette.colorScheme pinned
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Highcharts.color gradient construction and plotLines labeling, contained
-          feature set
+        passed: false
+        comment: Highcharts.color().setOpacity() gradient stops and plotLines labelling
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-24d0f11364
+  rendered_at: '2026-10-31T07:16:08Z'
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   dataprep:
   - time-series
   styling:
   - gradient-fill
+  - alpha-blending
