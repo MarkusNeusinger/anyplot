@@ -123,7 +123,8 @@ SELECT
   LAX_INT64(payload.version) AS version,
   JSON_VALUE(payload.reaction) AS reaction,
   JSON_VALUE(payload.action) IN (
-    'copied_code', 'copied_image', 'downloaded_png', 'downloaded_code', 'downloaded_data', 'saved_session'
+    'copied_code', 'copied_image', 'downloaded_png', 'downloaded_code', 'downloaded_page', 'downloaded_data',
+    'saved_session'
   ) AS keeps
 FROM `anyplot.agent_telemetry.events`
 WHERE event = 'outcome';
