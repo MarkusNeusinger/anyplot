@@ -433,6 +433,15 @@ Plugin order on `App`, where the first non-None result wins and a plugin never r
 | Session poisoning or BFF bypass | Our own FastAPI, never `get_fast_api_app`; clients never write state or events; the BFF allowlists bodies; the agents app checks the IAM-forwarded ID-token claims; `ToolCallIntegrityPlugin` once sessions persist |
 | Phase 2 | Model Armor through direct sanitize calls on `modelarmor.eu.rep.googleapis.com` (once per user message and once per final text, failing closed, with `logSanitizeOperations=false`); `ModelArmorPlugin` only if a spike shows acceptable call counts, because it re-screens on every model call |
 
+**Layers against code escape.** The harness's audit hooks (`DataGuard`, `PlotGuard` in `agents/anyplot/render/harness.py`) are defense in depth, not the boundary: a hook shares the interpreter with the code it judges, so code that changes the interpreter's shared state in place (the harness's own objects, the import machinery, the builtins) can change what the hook decides, and no audit event sees that change. Native libraries that cffi opens raise no audit event either. The boundaries are, in order:
+
+1. The validator, which refuses the names those routes need (`sys`, `cffi`, every dunder name) before any code runs.
+2. The kernel's exec filter: a seccomp filter installed on every thread (`SECCOMP_FILTER_FLAG_TSYNC`) and inherited by every child, which refuses every `execve` and `execveat` and which no code in the process can lift.
+3. The resource limits, soft and hard alike.
+4. On Cloud Run, the gVisor sandbox that `sandbox do` starts for each job (spikes S and S2): no egress (the metadata server, DNS and TCP all fail), none of the service's environment or tokens, a read-only root filesystem (the renderer passes no `--write`), no view of the sibling sandboxes, and a lifetime of one job.
+
+The known limits of the in-process layer are listed in the PB-1 section of `agentic/specs/261024-agent-all-libraries.md`.
+
 ## Feedback capture
 
 Every agent result can be reported with one click and a short text, and the report carries the full case, so prompts, validator rules, gates and the model pin can be tuned from real sessions. It mirrors the site feedback (`api/routers/feedback.py`, `FeedbackWidget`, triage under `/debug/feedback/*`) but stores a case bundle instead of a message.

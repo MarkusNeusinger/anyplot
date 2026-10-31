@@ -2325,17 +2325,29 @@ Also found:
     overrides `get_code`, `exec` as a path hook, an extension module written by the plot)
     each wrote a marker through the previous harness and are refused now, in plot and
     figure mode; they are tests in `test_harness_guard.py`.
-  - Not covered by design: the loaders' methods and the import modules' globals are
-    mutable attributes, and no audit event sees them change. The rules check the shape of
-    an import and the files it reads, not the integrity of the machinery behind them; that
-    stays with the validator, which refuses every name that reaches the machinery.
+  - Known limits of the in-process layer. The guard shares the interpreter with the
+    plot, so it is defense in depth behind the validator, the kernel's exec filter
+    (seccomp, on every thread and inherited by every child), the resource limits and the
+    per-job gVisor sandbox (spikes S and S2: no egress, as the metadata server, DNS and
+    TCP all fail; none of the service's environment or tokens; a read-only root
+    filesystem without `--write`; no view of the sibling sandboxes; one job's lifetime).
+    The harness's module docstring states the same. Two limits are known and stay: F8,
+    plot code that reaches the harness's own objects through state the interpreter
+    shares can change the guard's decisions, which no audit event sees; and cffi's
+    `dlopen`, which raises no audit event (above). The validator refuses what both need
+    (`cffi`, `sys` and every dunder name), and no structural change to the harness is
+    planned for F8. The loaders' methods and the import modules' globals are mutable
+    attributes as well, and no audit event sees them change: the rules check the shape
+    of an import and the files it reads, not the integrity of the machinery behind
+    them; that stays with the validator, which refuses every name that reaches the
+    machinery.
 - **A two-step row needs Node.** `GET /status` still lists the toolchains per language,
   but a render or page job is checked against its row (`executor.serves`): the language's
   toolchain and the row's own binaries, so a plotly or bokeh job on a renderer without
   Node is `503 runtime_unavailable` before any sandbox starts, not exit 127 with a
   `harness SpawnError` line. Every renderer image has Node (the toolchain base).
 
-**Tests**: `tests/unit/agents/renderer/test_figure_mode.py` (91 cases without plotly or
+**Tests**: `tests/unit/agents/renderer/test_figure_mode.py` (92 cases without plotly or
 bokeh: the package's lookup and the screenshot command stood in): fork before arm (both
 steps children of one harness, the plot step one seccomp filter and the no-new-privileges
 bit more than the harness, the screenshot step none more and able to start a program),

@@ -134,6 +134,19 @@ draws the figure, so the versions match. The plot step's failures end stderr wit
 JavaScript harness (`figure_error_line`), the screenshot step's with the harness's own; the exit code is the failed
 step's, and the end line carries both steps' usage and the plot step's filter state (`main_figure`).
 
+**Security model.** `DataGuard` and `PlotGuard` are defense in depth, not the boundary: an audit hook shares the
+interpreter with the code it judges, so code that changes the interpreter's shared state in place (the harness's own
+objects, the import machinery's functions and module globals, the builtins) can change what the hook decides, and
+no audit event sees such a change. The tests name every route the guards close; the known limits of this layer are
+in the plan's PB-1 section (agentic/specs/261024-agent-all-libraries.md, step 4). The boundaries, in order: the
+validator (`agents/anyplot/code/validate.py`), which refuses the names those routes need (`sys`, `cffi`, every dunder
+name) before any code runs; the kernel's exec filter (`install_exec_deny`: seccomp, installed with
+`SECCOMP_FILTER_FLAG_TSYNC` on every thread and inherited by every child), which no code in the process can lift;
+the resource limits, soft and hard alike; and on Cloud Run the gVisor sandbox that `sandbox do` starts for each job
+(spikes S and S2): no egress (the metadata server, DNS and TCP all fail), none of the service's environment or
+tokens, a read-only root filesystem (the renderer passes no `--write`), no view of the sibling sandboxes, and a
+lifetime of one job.
+
 The probe feeds the advisory gates G3 (clipped text), G5 (annotation outside its
 axes), G7 (overlapping text: tick labels among themselves, any other text with any), G8 (more point marks than data rows), G9 (more
 plotted points than any dataset within the parser's caps can hold) and G10
