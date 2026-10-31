@@ -1201,7 +1201,19 @@ jobs:
               gh pr edit "$PR_NUM" --add-label "ai-review-paused" 2>/dev/null && break
               [ "$attempt" -lt 3 ] && sleep $((attempt * 10))
             done || echo "::error::could not add ai-review-paused to PR #${PR_NUM} — resume it with a manual rerun"
-            gh pr comment "$PR_NUM" --body "<!-- review-paused-claude:${SPEC_ID}:${LIBRARY} -->
+            # A resume while the stop lasts pauses again: one comment per
+            # pause, so the label alone stands when the PR's latest bot
+            # comment is already this pause (its first line is the marker).
+            # A read that fails posts it.
+            PAUSE_MARKER="<!-- review-paused-claude:${SPEC_ID}:${LIBRARY} -->"
+            LAST_BOT=$(gh api --paginate "repos/${REPOSITORY}/issues/${PR_NUM}/comments?per_page=100" \
+              --jq '.[] | select(.user.type == "Bot") | (.body // "") | split("\n") | .[0] // "" | rtrimstr("\r")' 2>/dev/null \
+              | tail -n 1) || LAST_BOT=""
+            if [ "$LAST_BOT" = "$PAUSE_MARKER" ]; then
+              echo "::notice::PR #${PR_NUM} already shows this pause; no new comment"
+              exit 1
+            fi
+            gh pr comment "$PR_NUM" --body "${PAUSE_MARKER}
           ## :pause_button: AI Review Paused (${WHY})
 
           Claude stopped the review: ${WHY} (auth=\`${CLAUDE_MODE}\`). No score and no verdict were recorded, and the one automatic re-review is still unused. The PR carries \`ai-review-paused\`, which the watchdog leaves alone; daily-regen's pair mode resumes it.

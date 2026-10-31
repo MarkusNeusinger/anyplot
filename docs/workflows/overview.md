@@ -907,7 +907,9 @@ The watchdog skips every PR with `ai-review-paused` or `ai-repair-paused`, so
 it never spends its one-shot rescue on a stop. In pair mode, daily-regen
 resumes the paused PRs first, oldest first (see
 [Daily regeneration modes](#daily-regeneration-modes)), and the resumed review
-or repair removes its label when it starts. A parked pair keeps its place in
+or repair removes its label when it starts. A resume that pauses again while
+the stop lasts puts the label back but posts no second comment when the PR's
+latest bot comment is already the same pause. A parked pair keeps its place in
 the queue: neither a parked generation nor a paused review or repair is a real
 attempt.
 

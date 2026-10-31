@@ -29,6 +29,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -588,14 +590,22 @@ def test_summary_ignores_everything_else(tmp_path, case, mode):
 # --- the failure paths after a stop -------------------------------------------
 
 
-# Logs every call as one JSON line; `pr view` answers with $GH_LABELS.
+# Logs every call as one JSON line; `pr view` answers with $GH_LABELS, and a
+# read of an issue's comments with $GH_COMMENTS (what its --jq would print),
+# failing when that is FAIL.
 FAKE_GH = """#!/usr/bin/env python3
 import json, os, sys
 with open(os.environ["GH_LOG"], "a", encoding="utf-8") as f:
     f.write(json.dumps(sys.argv[1:]) + "\\n")
 if sys.argv[1:3] == ["pr", "view"]:
     print(os.environ.get("GH_LABELS", ""))
+elif sys.argv[1] == "api" and "/comments" in " ".join(sys.argv):
+    if os.environ.get("GH_COMMENTS") == "FAIL":
+        sys.exit(1)
+    print(os.environ.get("GH_COMMENTS", ""))
 """
+# The pause paths' only read: the PR's bot comments, newest last.
+LAST_BOT_READ = "repos/owner/repo/issues/7/comments?per_page=100"
 
 
 def _run(tmp_path: Path, script: str, **env: str) -> tuple[subprocess.CompletedProcess, list]:
@@ -705,7 +715,8 @@ def test_a_stopped_repair_is_paused_and_keeps_its_retry(tmp_path, reason, why):
     assert ["pr", "edit", "7", "--add-label", "ai-repair-paused"] in calls
     assert any(c[:3] == ["label", "create", "ai-repair-paused"] for c in calls)
     assert not [c for c in calls if c[:2] == ["workflow", "run"]]
-    assert not [c for c in calls if c[:1] == ["api"]]  # the retry budget is not even read
+    # The retry budget is not even read: the one read is the latest bot comment.
+    assert [c[2] for c in calls if c[:1] == ["api"]] == [LAST_BOT_READ]
     (body,) = _bodies(calls)
     assert "<!-- repair-paused-claude:spec-a:plotly:attempt-2 -->" in body
     assert "<!-- repair-retry:" not in body
@@ -733,11 +744,91 @@ def test_a_stopped_review_is_paused_without_spending_the_retry(tmp_path, reason,
     assert ["pr", "edit", "7", "--add-label", "ai-review-paused"] in calls
     assert not [c for c in calls if "ai-review-failed" in c]  # the watchdog's label stays off
     assert any(c[:3] == ["label", "create", "ai-review-paused"] for c in calls)
-    assert not [c for c in calls if c[:2] == ["api", "repos/owner/repo/dispatches"]]  # no re-review
-    assert not [c for c in calls if c[:2] == ["api", "--paginate"]]
+    # No re-review, and the retry budget is not even read: the one read is the latest bot comment.
+    assert [c[2] for c in calls if c[:1] == ["api"]] == [LAST_BOT_READ]
     (body,) = _bodies(calls)
     assert "<!-- review-paused-claude:spec-a:plotly -->" in body
     assert "<!-- review-retry:" not in body
+
+
+PAUSE_PATHS = {
+    "review": (
+        "impl-review.yml",
+        "Validate review output",
+        {"MODEL": "sonnet", "REVIEW_MODEL_ALIAS": "opus"},
+        "ai-review-paused",
+        "<!-- review-paused-claude:spec-a:plotly -->",
+        1,
+    ),
+    "repair": (
+        "impl-repair.yml",
+        "Handle repair failure",
+        {"MODEL": "sonnet", "ATTEMPT": "2"},
+        "ai-repair-paused",
+        "<!-- repair-paused-claude:spec-a:plotly:attempt-2 -->",
+        0,
+    ),
+}
+
+
+@pytest.mark.parametrize("kind", sorted(PAUSE_PATHS))
+@pytest.mark.parametrize(
+    ("latest", "posts"),
+    [
+        # A resume that paused again: the label alone, no second comment.
+        ("same pause", False),
+        # The PR moved on since (another bot comment), or nothing to compare.
+        ("other comment after the pause", True),
+        ("no comments", True),
+        ("read fails", True),
+    ],
+)
+def test_a_repeated_pause_posts_no_second_comment(tmp_path, kind, latest, posts):
+    filename, name, extra, label, marker, rc = PAUSE_PATHS[kind]
+    # The first line of each bot comment, oldest first; a pause starts with its marker.
+    comments = {
+        "same pause": f"## AI Review - Attempt 1/3\n{marker}",
+        "other comment after the pause": f"{marker}\n## AI Review - Attempt 1/3",
+        "no comments": "",
+        "read fails": "FAIL",
+    }[latest]
+    env = {"PR_NUM": "7", "SPEC_ID": "spec-a", "LIBRARY": "plotly", "REPOSITORY": "owner/repo", "RUN_ID": "1"}
+    env |= extra | {"CLAUDE_STOPPED": "true", "STOP_REASON": "limit", "CLAUDE_MODE": "oidc", "GH_COMMENTS": comments}
+    result, calls = _run_step(tmp_path, filename, name, **env)
+    assert result.returncode == rc, result.stdout + result.stderr
+    assert ["pr", "edit", "7", "--add-label", label] in calls  # the label is kept either way
+    assert (len(_bodies(calls)) == 1) is posts
+    assert ("already shows this pause" in result.stdout) is not posts
+    (read,) = [c for c in calls if c[:1] == ["api"]]
+    assert read[read.index("--jq") + 1].startswith('.[] | select(.user.type == "Bot") | (.body // "")')
+
+
+@pytest.mark.skipif(shutil.which("jq") is None, reason="needs jq")
+@pytest.mark.parametrize("kind", sorted(PAUSE_PATHS))
+def test_the_latest_bot_comment_read_yields_first_lines(kind):
+    """The real filter on REST-shaped comments: bots only, first line, CRLF and empty bodies safe."""
+    filename, name, *_ = PAUSE_PATHS[kind]
+    match = re.search(r"--jq '([^']+)'", _step(filename, name)["run"])
+    assert match
+    comments = [
+        {"user": {"type": "Bot"}, "body": "## AI Review - Attempt 1/3\nscore"},
+        {"user": {"type": "User"}, "body": "<!-- review-paused-claude:spec-a:plotly -->"},
+        {"user": {"type": "Bot"}, "body": None},
+        {"user": {"type": "Bot"}, "body": "<!-- review-paused-claude:spec-a:plotly -->\r\n## Paused & <ok>"},
+    ]
+    out = subprocess.run(
+        ["jq", "-r", match[1]], input=json.dumps(comments), capture_output=True, text=True, check=True
+    ).stdout
+    assert out.splitlines() == ["## AI Review - Attempt 1/3", "", "<!-- review-paused-claude:spec-a:plotly -->"]
+
+
+def test_a_new_repair_attempt_gets_its_own_pause_comment(tmp_path):
+    earlier = "<!-- repair-paused-claude:spec-a:plotly:attempt-1 -->"
+    env = {"PR_NUM": "7", "SPEC_ID": "spec-a", "LIBRARY": "plotly", "REPOSITORY": "owner/repo", "RUN_ID": "1"}
+    env |= {"MODEL": "sonnet", "ATTEMPT": "2", "CLAUDE_STOPPED": "true", "STOP_REASON": "limit", "CLAUDE_MODE": "oidc"}
+    _, calls = _run_step(tmp_path, "impl-repair.yml", "Handle repair failure", GH_COMMENTS=earlier, **env)
+    (body,) = _bodies(calls)
+    assert "<!-- repair-paused-claude:spec-a:plotly:attempt-2 -->" in body
 
 
 @pytest.mark.parametrize(
