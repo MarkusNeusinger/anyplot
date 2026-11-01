@@ -4,9 +4,11 @@
 It reads spec, library, dataset and bindings from server-set session state, never from
 its input: `PipelineArgs` carries only `change_request`, `base` and `theme` (the one
 theme to render; omitted, the theme `run_theme` picks, the site's unless the user
-asked for one). The session language is read once per run, so the adapter, which
-writes the plot's own text in it, and the reviewer, which judges that text against it,
-share one value; each prompt gets it fenced as `<plot_language>`. It runs at most
+asked for one). The plot language (`session_state.plot_language`: the user's request for
+the plot's text, else the language of the session's latest plot, else the session
+language) is read once per run, so the adapter, which writes the plot's own text in it,
+and the reviewer, which judges that text against it, share one value; each prompt gets it
+fenced as `<plot_language>`. It runs at most
 `AGENT_MAX_ATTEMPTS` attempts, two by default (the first and one repair round; the
 eval harness may set one or three):
 
@@ -24,7 +26,7 @@ eval harness may set one or three):
    of the runtime's `blocking_rules` rejects the code: a placeholder rule in every
    language, and in R and Julia a dataset package too; the other findings become defect lines
    with the runtime's targets but the code still renders); a change whose base version was written in another
-   language than the session language (`language_changed`) rewrites every title,
+   language than the plot language (`language_changed`, after the user asked for another one) rewrites every title,
    label and annotation, so its budget grows by `REWRITE_LITERAL_FACTOR` times the
    literal text the plan replaces, up to `MAX_NEW_LITERAL_CHARS`;
 3. **render**: `normalise`, the loader substitution (the runtime's `loader_block`, typed
@@ -195,6 +197,7 @@ from .session_state import (
     PENDING_EXPECTED_TEXTS,
     PENDING_REQUEST,
     SessionView,
+    plot_language,
     read_session,
 )
 from .settings import AgentSettings, get_settings
@@ -429,7 +432,8 @@ class Run:
     theme_asked: bool = False
     """The user asked for `theme` (`run_theme`); the shipped version keeps it as `CodeVersion.theme_asked`."""
     language: str = DEFAULT_LANGUAGE
-    """The session language, read once per run: the adapter writes the plot text in it, the reviewer judges it."""
+    """The plot language (`session_state.plot_language`), read once per run: the adapter writes the plot text in it,
+    the reviewer judges it."""
     attempts: int = 0
     best: Candidate | None = None
     padded: Candidate | None = None
@@ -1427,6 +1431,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     settings = get_settings()
     ledger = ledger_for(ctx.invocation_id)
     view, dataset, not_ready = load_inputs(ctx, services)
+    language = plot_language(view, services.versions.latest_language(ctx.session.id)) if view is not None else None
     if not_ready is not None or view is None or dataset is None:
         kept = keep_pending_request(ctx.state, node_input, not_ready)
         # An attempted plot the data was not ready for is a run of its own in the telemetry: the funnel sees it.
@@ -1439,7 +1444,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
             base=node_input.base,
             status="not_ready",
             reason=not_ready or "no_dataset",
-            plot_language=telemetry.plot_language(view.language) if view is not None else None,
+            plot_language=telemetry.plot_language(language),
             readiness=telemetry.readiness(view.readiness) if view is not None else None,
         )
         yield _result_event(PlotResult.not_ready(not_ready or "no_dataset", request_kept=kept))
@@ -1465,7 +1470,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         dataset=dataset,
         theme=theme,
         theme_asked=theme_asked,
-        language=view.language,
+        language=language or view.language,
         change_request=node_input.change_request,
         expected_texts=list(node_input.expected_texts),
         base=node_input.base,
@@ -1664,7 +1669,8 @@ async def _attempts(
     working = previous.working if previous is not None else view.normalised
     # What the user asked of the base version's lineage stands: every adapter call and the reviewer see it.
     run.user_requests = standing_requests(previous.requests) if previous is not None else []
-    # The base version's text is in another language than the session's: the adapter rewrites it.
+    # The base version's text is in another language than the plot language (the user asked for another one since,
+    # maybe in another library): the adapter rewrites it.
     language_changed = previous is not None and not same_language(previous.language, run.language)
     # A change on a previous version adds a little text; adapting the catalogue code renames much. A change
     # that rewrites the text in another language keeps the change's budget plus the text it replaces (`_check`).
