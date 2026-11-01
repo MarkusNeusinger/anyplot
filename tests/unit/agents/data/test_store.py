@@ -1,7 +1,7 @@
 """Tests for agents/anyplot/data/store.py: ownership, idle sweep, byte accounting and the cap."""
 
 import re
-from dataclasses import replace
+from dataclasses import asdict, replace
 
 import pytest
 
@@ -92,6 +92,58 @@ class TestOwnership:
         assert store.get(first, "s1") is None
         assert store.get(other, "s2") is not None
         assert store.delete_session("s1") == []
+
+
+class TestCopy:
+    """The admin fan-out's copy into another session (`DatasetStore.copy`): every field as it is, own ids and times."""
+
+    def test_a_copy_is_the_same_dataset_under_its_own_id_and_session(self, store: DatasetStore, clock: Clock) -> None:
+        noted = parse_dataset("Grüße aus Wien\nx,y,n\n0.12345678901234568,NaN,\n2.5,1.25,7\n3,4,8\n")
+        source_id = store.put("s1", noted, code="df = make()", source="computed from a formula", file_name="a.csv")
+        clock.now += 30
+
+        copy_id = store.copy(source_id, "s1", "s2")
+
+        assert copy_id is not None and copy_id != source_id
+        original, copied = store.get(source_id, "s1"), store.get(copy_id, "s2")
+        assert original is not None and copied is not None
+        assert asdict(copied) == {
+            **asdict(original),
+            "dataset_id": copy_id,
+            "session_id": "s2",
+            "created_at": 1030.0,
+            "last_used_at": 1030.0,
+        }
+        assert copied.csv is original.csv  # the very string: nothing was written or read again
+        assert store.get(copy_id, "s1") is None  # the copy is the other session's only
+
+    def test_the_copy_is_independent_of_the_original(self, store: DatasetStore, parsed: ParsedDataset) -> None:
+        source_id = store.put("s1", parsed)
+        copy_id = store.copy(source_id, "s1", "s2")
+        original = store.get(source_id, "s1")
+        assert copy_id is not None and original is not None
+        original.preview[0][0] = "changed"
+        original.parse_dates.append("value")
+        original.profile.columns[0].missing = 99
+
+        copied = store.get(copy_id, "s2")
+        assert copied is not None
+        assert copied.preview[0][0] == "2024-01-01"
+        assert copied.parse_dates == ["when"]
+        assert copied.profile.columns[0].missing == 0
+
+    def test_only_the_owner_copies_and_the_cap_holds(self, parsed: ParsedDataset) -> None:
+        size = dataset_size(parsed)
+        store = DatasetStore(max_bytes=2 * size)
+        source_id = store.put("s1", parsed)
+
+        assert store.copy(source_id, "s2", "s3") is None  # another session's dataset, as for `get`
+        assert store.copy("unknown", "s1", "s3") is None
+        assert store.copy(source_id, "s1", "s2") is not None
+        assert store.used_bytes == 2 * size
+        with pytest.raises(StoreFull):
+            store.copy(source_id, "s1", "s3")
+        assert len(store) == 2 and store.used_bytes == 2 * size
 
 
 class TestSweep:

@@ -151,6 +151,12 @@
  * 900 ms more). Slowed down, the page's working states stay visible:
  *
  *   MOCK_PARSE_MS=4000 MOCK_QUEUE=0 MOCK_STEP_MS=3000 node app/scripts/agent-bff-mock.mjs
+ *
+ * The admin fan-out (`.plot_all()`): `POST .../dataset/copy` with `{from_session}` copies the source session's
+ * confirmed data, bindings and session language into a session opened with `source: fanout`, with the service's
+ * refusals (`404 session_expired`, `409 has_dataset`, `422 no_dataset`, `422 unconfirmed`, `422 invalid`).
+ * MOCK_NO_COPY=1 answers it `404 not_found`, as an agents service deployed before the route does, so the page's
+ * fallback (the paste posted again, or `copy_unavailable`) can be driven.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -165,6 +171,7 @@ const QUEUE_MS = Number(process.env.MOCK_QUEUE_MS || 2500);
 const QUEUE_START = Number(process.env.MOCK_QUEUE ?? 2);
 const STOP_MS = Number(process.env.MOCK_STOP_MS ?? 2000);
 const PARSE_MS = Number(process.env.MOCK_PARSE_MS ?? 400);
+const NO_COPY = process.env.MOCK_NO_COPY === '1';
 const BASE = `http://localhost:${PORT}`;
 
 /**
@@ -1866,6 +1873,8 @@ async function route(req, res) {
       // The session language: English by default, whatever the browser's locale.
       language: 'en',
       languageSource: 'default',
+      // Opened by the admin's `.plot_all()` (`source: fanout`): the only kind of session a copy may go into.
+      fanout: body.source === 'fanout',
       active: false,
       cancelled: false,
     });
@@ -1983,6 +1992,45 @@ async function route(req, res) {
       res,
       200,
       { ...datasetPayload(session), roles: SPECS[session.specId].roles, changes },
+      ref
+    );
+  }
+  if (method === 'POST' && rest === '/dataset/copy') {
+    // The admin fan-out's copy (`agents/main.py` `copy_dataset`): the source session's confirmed version, as it is.
+    if (NO_COPY) return fail(res, 404, 'not_found', ref);
+    const keys = body && typeof body === 'object' ? Object.keys(body) : [];
+    const from = body?.from_session;
+    if (keys.length !== 1 || typeof from !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(from))
+      return fail(res, 422, 'invalid', ref);
+    if (from === sid) return fail(res, 422, 'invalid', ref);
+    const origin = sessions.get(from);
+    if (!origin) return fail(res, 404, 'session_expired', ref);
+    if (session.active || origin.active) return fail(res, 409, 'run_active', ref);
+    if (!session.fanout || origin.specId !== session.specId) return fail(res, 422, 'invalid', ref);
+    if (session.dataset) return fail(res, 409, 'has_dataset', ref);
+    if (!origin.dataset) return fail(res, 422, 'no_dataset', ref);
+    if (!origin.confirmed) return fail(res, 422, 'unconfirmed', ref);
+    session.dataset = structuredClone(origin.dataset);
+    session.bindings = origin.bindings.map(binding => ({ ...binding }));
+    const checked = checkBindings(session, session.bindings);
+    session.complete = checked.complete;
+    session.confirmed = true; // the source's confirmation comes along
+    session.history = [];
+    session.version = 1;
+    session.language = origin.language;
+    session.languageSource = origin.languageSource;
+    return json(
+      res,
+      200,
+      {
+        ...datasetPayload(session),
+        roles: SPECS[session.specId].roles,
+        language: { language: session.language, source: session.languageSource },
+        confirmed: true,
+        complete: checked.complete,
+        missing_roles: checked.missing_roles,
+        copied_from: origin.version,
+      },
       ref
     );
   }

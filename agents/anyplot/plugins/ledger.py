@@ -230,18 +230,27 @@ class _Day:
     user_pastes: dict[str, int] = field(default_factory=dict)
     user_conversions: dict[str, int] = field(default_factory=dict)
     user_outcomes: dict[str, int] = field(default_factory=dict)
+    user_copies: dict[str, int] = field(default_factory=dict)
 
 
 MESSAGE_WINDOW_S = 60.0
 """The sliding window of `AGENT_USER_MESSAGES_PER_MINUTE` and `AGENT_USER_PASTES_PER_MINUTE`."""
 MessageLimit = Literal["rate_limited", "daily_limit"]
 """Why `message_limit` or `paste_limit` refuses: the minute's count, or the day's."""
-WindowKind = Literal["message", "paste", "convert", "outcome"]
+WindowKind = Literal["message", "paste", "convert", "outcome", "copy"]
 OUTCOMES_PER_MINUTE = 30
 OUTCOMES_PER_DAY = 2000
 """The page's outcome beacons per user (`POST /v1/sessions/{sid}/outcome`): a copy or a download is one click, so
 30 in a minute is far beyond use; more get `429 rate_limited`, which the page ignores. Constants, not settings: the
 beacon spends no model call and no sandbox time, the cap only bounds the telemetry lines one user can write."""
+COPIES_PER_MINUTE = 30
+COPIES_PER_DAY = 150
+"""The admin fan-out's data copies per user (`POST /v1/sessions/{sid}/dataset/copy`): one per library of a
+`.plot_all()`, at most 15, so 30 in a minute is two fan-outs and 150 a day about ten (1.5 times the day's 100 pastes,
+review of 2026-11-01: 600 let one user put about 3 GiB a day into the 256 MiB store). A copy parses nothing and calls
+no model, so it is no paste, but each one takes the dataset's size in the store again: the cap bounds what one user
+can put there. A per-user byte budget in the store is the follow-up before the chat goes public. Constants, not
+settings, like the outcome beacons'."""
 
 
 class UsageBook:
@@ -387,6 +396,18 @@ class UsageBook:
         day = self._current()
         day.user_outcomes[user_id] = day.user_outcomes.get(user_id, 0) + 1
         self._stamp("outcome", user_id)
+
+    def copy_limit(self, user_id: str) -> MessageLimit | None:
+        """Why the user may not copy another dataset into a fan-out session now, or None (`COPIES_PER_MINUTE`,
+        `_PER_DAY`)."""
+        count = self._current().user_copies.get(user_id, 0)
+        return self._limit("copy", user_id, count, COPIES_PER_MINUTE, COPIES_PER_DAY)
+
+    def add_copy(self, user_id: str) -> None:
+        """Count one dataset copy against the user's minute and day."""
+        day = self._current()
+        day.user_copies[user_id] = day.user_copies.get(user_id, 0) + 1
+        self._stamp("copy", user_id)
 
     def _limit(
         self, kind: WindowKind, user_id: str, today_count: int, per_minute: int, per_day: int

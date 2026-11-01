@@ -1,5 +1,7 @@
 /**
- * "Use with my data": the admin-only agent chat at `/debug/agent?spec=&library=&language=`.
+ * "Use with my data": the admin-only agent chat at `/debug/agent?spec=&library=&language=`,
+ * plus `&all=1` while the header's `all` pill is pressed. The query follows the
+ * session: a library switch writes `library` and its `language`.
  *
  * One column, chat first, two steps, data first. The data card is the first
  * turn of the thread: paste data (or ask in the chat for a curve, whose table
@@ -39,16 +41,18 @@
  * pipeline steps), and the data card says why its controls wait.
  *
  * The header's `all` pill, after the library pills, is the admin's test run.
- * While it is pressed, the composer's create action is `.plot_all()`: the table
- * as it was pasted or opened, with the confirmed bindings, plotted in every
- * library of the header at once (`FanOut`), a session per library, at most
- * `AGENT_USER_MAX_RUNS` plots running, each through the normal run queue. This
- * session stays the data session; in step 2 the message box waits (typed text
- * would not go along) and a line above it says so, while in step 1 the chat
- * about the data goes on as without `all`. Any library pill turns `all` off
- * again; while the panel is open, neither the pills nor `all` change. Data the
- * assistant changed or computed has no upload to replay, so `.plot_all()`
- * waits for a pasted or opened table and says so.
+ * While it is pressed, the composer's create action is `.plot_all()`: the
+ * confirmed data, with the confirmed bindings, plotted in every library of the
+ * header at once (`FanOut`), a session per library into which the server copies
+ * this session's confirmed version, whatever its origin (pasted, opened,
+ * computed or changed by the assistant), at most `AGENT_USER_MAX_RUNS` plots
+ * running, each through the normal run queue. This session stays the data
+ * session; in step 2 the message box waits (typed text would not go along) and
+ * a line above it says so, while in step 1 the chat about the data goes on as
+ * without `all`. Any library pill turns `all` off again; while the panel is
+ * open, neither the pills, `all` nor the data card change, so every library
+ * copies the same confirmed data. The pill is in the URL as `&all=1`,
+ * so a reload presses it again once the libraries are known.
  *
  * Gates, outermost first:
  * 1. `CONFIG.features.agentChat` (build-time `VITE_ENABLE_AGENT_CHAT`): off, the
@@ -115,10 +119,6 @@ const COLUMN_MAX_WIDTH = 960;
 /** What `.start_over()` does, unlike `.send()` beside it (the owner could not tell the two apart). */
 const START_OVER_HELP = 'new from the catalogue plot, without your changes';
 const START_OVER_HELP_ID = 'agent-start-over-help';
-/** Why `.plot_all()` waits: the fan-out replays the upload, which only a paste or a file leaves. */
-const PLOT_ALL_HINT =
-  '.plot_all() takes a table as it was pasted or opened, not one the assistant changed or computed';
-const PLOT_ALL_HINT_ID = 'agent-plot-all-hint';
 
 /** A pill of the header's library group: a library, or `all` after them. */
 const pillSx = (pressed: boolean) => ({
@@ -183,6 +183,35 @@ export function AgentChatPage() {
   // highlighter and a back link to a page that does not exist.
   const language = LIB_TO_LANG[library] ?? 'python';
   const valid = SPEC_PATTERN.test(spec) && (LIBRARIES as readonly string[]).includes(library);
+  const allInUrl = params.get('all') === '1';
+
+  // Every edit of the query starts from the latest one, also an edit made after an await (a
+  // library switch), so one edit never brings back what another removed (`all`).
+  const paramsRef = useRef(params);
+  paramsRef.current = params;
+  const editParams = useCallback(
+    (edit: (next: URLSearchParams) => void) => {
+      const next = new URLSearchParams(paramsRef.current);
+      edit(next);
+      if (next.toString() === paramsRef.current.toString()) return;
+      paramsRef.current = next;
+      setParams(next, { replace: true });
+    },
+    [setParams]
+  );
+  const onLibraryChange = useCallback(
+    (next: string) =>
+      editParams(query => {
+        query.set('library', next);
+        query.set('language', LIB_TO_LANG[next] ?? 'python');
+      }),
+    [editParams]
+  );
+  const onAllChange = useCallback(
+    (pressed: boolean) =>
+      editParams(query => (pressed ? query.set('all', '1') : query.delete('all'))),
+    [editParams]
+  );
 
   // `source` only says where the visitor came from; it is read once for
   // `agent_open` and dropped, so a reload counts as a direct open.
@@ -230,11 +259,9 @@ export function AgentChatPage() {
       library={library}
       language={language}
       token={token}
-      onLibraryChange={next => {
-        const nextParams = new URLSearchParams(params);
-        nextParams.set('library', next);
-        setParams(nextParams, { replace: true });
-      }}
+      allInUrl={allInUrl}
+      onLibraryChange={onLibraryChange}
+      onAllChange={onAllChange}
     />
   );
 }
@@ -244,10 +271,22 @@ interface AgentChatProps {
   library: string;
   language: string;
   token: string;
+  /** `&all=1` at the mount: the `all` pill starts pressed, once the libraries are known. */
+  allInUrl: boolean;
   onLibraryChange: (library: string) => void;
+  /** The `all` pill as it is now, for the URL. */
+  onAllChange: (pressed: boolean) => void;
 }
 
-function AgentChat({ specId, library, language, token, onLibraryChange }: AgentChatProps) {
+function AgentChat({
+  specId,
+  library,
+  language,
+  token,
+  allInUrl,
+  onLibraryChange,
+  onAllChange,
+}: AgentChatProps) {
   const { trackEvent } = useAnalytics();
   const { isDark } = useTheme();
   const locale = useMemo(() => browserLocale(), []);
@@ -256,17 +295,19 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   const [draft, setDraft] = useState('');
   const [title, setTitle] = useState<string | null>(null);
   const [libraries, setLibraries] = useState<string[]>([...DEFAULT_AGENT_LIBRARIES]);
-  // `.plot_all()`: the server's run limit, and what the open fan-out replays in every library.
+  // `.plot_all()`: the server's run limit, and the session whose confirmed data the open fan-out copies.
   const [maxRuns, setMaxRuns] = useState(DEFAULT_USER_MAX_RUNS);
   // Both answers below are in (or failed): before that, the libraries and the limit are fallbacks.
   const [listsSettled, setListsSettled] = useState(false);
   const [fanOut, setFanOut] = useState<{
-    upload: DatasetUpload;
+    sourceSession: string;
+    upload?: DatasetUpload;
     bindings: BindingMap;
     libraries: string[];
   } | null>(null);
-  // The header's `all` pill: page state only, never in the URL.
-  const [allPressed, setAllPressed] = useState(false);
+  // The header's `all` pill, in the URL as `&all=1` (`onAllChange`). Pressed from the URL, it
+  // takes effect only once `offerAll` holds (`plotAll`), when the libraries are the server's.
+  const [allPressed, setAllPressed] = useState(allInUrl);
   const allRef = useRef<HTMLButtonElement>(null);
   const fanOutRef = useRef<HTMLElement>(null);
   // Set by a key press on `.plot_all()`: the panel it opens takes the focus, once.
@@ -364,9 +405,6 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   // text in the box goes with it; the pipeline counts versions per library too.
   const hasPlot = Object.values(state.versions).some(version => version.library === state.library);
   const firstPlot = step2 && !hasPlot;
-  // `.plot_all()`: the stored upload, as it was posted, plotted in every library at once. Data
-  // the assistant changed or computed has no upload, so the fan-out never plots other data.
-  const upload = state.dataset?.upload;
   // The `all` pill only once the libraries and the limit are the server's: a snapshot of the
   // fallbacks would leave libraries out or start more runs than the server takes (`run_limit`).
   const offerAll = listsSettled && libraries.length > 1 && !reopen;
@@ -374,6 +412,12 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   // The chat waits only where `.plot_all()` is the action, in step 2: the fan-out takes no
   // text. Before it, with or without data, the box talks about the data as without `all`.
   const chatLocked = plotAll && step2;
+
+  // `&all=1` follows the pill, so a reload presses it again. Only from the lists' answers on:
+  // before them `all` is not offered yet, and a pill pressed from the URL waits for them.
+  useEffect(() => {
+    if (listsSettled) onAllChange(plotAll);
+  }, [listsSettled, plotAll, onAllChange]);
   // The notice before the confirmation is done once the data is confirmed or a turn starts.
   // Adjusted while rendering, React's pattern for state that follows other state.
   if (gateShown && (step2 || running)) setGateShown(false);
@@ -487,8 +531,10 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   };
 
   /**
-   * `.plot_all()`, the composer's action while `all` is pressed: the stored
-   * upload with the confirmed bindings, in every library of the header at once.
+   * `.plot_all()`, the composer's action while `all` is pressed: the confirmed
+   * data with its bindings, in every library of the header at once; the server
+   * copies this session's confirmed version into each library's session. The
+   * upload and the bindings go along only for a server without the copy.
    * Before the confirmation it calls nothing and shows the notice, as the quiet
    * `.create_plot()` does.
    */
@@ -497,9 +543,15 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
       setGateShown(true);
       return;
     }
-    if (!upload) return;
+    if (!state.sessionId) return;
+    const upload = state.dataset?.upload;
     fanOutFocus.current = event.detail === 0;
-    setFanOut({ upload, bindings: state.bindings, libraries: [...libraries] });
+    setFanOut({
+      sourceSession: state.sessionId,
+      ...(upload ? { upload } : {}),
+      bindings: state.bindings,
+      libraries: [...libraries],
+    });
   };
 
   /**
@@ -541,13 +593,12 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
       type="button"
       ref={createRef}
       onClick={handlePlotAll}
-      disabled={!upload || !!fanOut || (step2 ? !canCreate : state.phase !== 'ready' || busy)}
+      disabled={!!fanOut || (step2 ? !canCreate : state.phase !== 'ready' || busy)}
       aria-label="Plot in all libraries"
       aria-describedby={
         [
           step2 ? DATA_SUMMARY_ID : gate ? 'agent-create-gate' : null,
           chatLocked ? 'agent-create-line' : null,
-          upload ? null : PLOT_ALL_HINT_ID,
         ]
           .filter(Boolean)
           .join(' ') || undefined
@@ -611,7 +662,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 <Box
                   key={lib}
                   component="a"
-                  href={paths.agentChat(specId, lib, language)}
+                  href={paths.agentChat(specId, lib, LIB_TO_LANG[lib] ?? 'python')}
                   sx={{ ...pillSx(false), textDecoration: 'none' }}
                 >
                   {lib}
@@ -737,6 +788,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             toggleRef={toggleRef}
             confirmRef={confirmRef}
             decisionRef={decisionRef}
+            // Not while the fan-out's panel is open: its sessions copy this session's confirmed data.
+            locked={!!fanOut}
           />
 
           {state.items.length === 0 && !state.run && (
@@ -932,15 +985,6 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 </>
               )}
             </Box>
-            {plotAll && state.dataset && !upload && (
-              <Box
-                id={PLOT_ALL_HINT_ID}
-                data-testid="plot-all-hint"
-                sx={{ ...labelSx, color: 'var(--ink-soft)', mt: -1 }}
-              >
-                # {PLOT_ALL_HINT}
-              </Box>
-            )}
             {/* No role on the visible notice: the status box below speaks it, once. */}
             {gate && (
               <Box
@@ -1004,6 +1048,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             libraries={fanOut.libraries}
             locale={locale}
             token={token}
+            sourceSession={fanOut.sourceSession}
             upload={fanOut.upload}
             bindings={fanOut.bindings}
             maxRuns={maxRuns}

@@ -735,7 +735,85 @@ describe('useAgentSession: confirming the data (step 1)', () => {
   });
 });
 
-describe('useAgentSession: replaying an upload (the admin fan-out)', () => {
+describe('useAgentSession: copying the confirmed data (the admin fan-out)', () => {
+  /** The page session's version 3, computed by the assistant, as the server copied it. */
+  const COPIED = {
+    ...PREPARED,
+    roles: [role('x'), role('y')],
+    version: 1,
+    language: { language: 'de', source: 'chosen' },
+    confirmed: true,
+    complete: true,
+    missing_roles: [],
+    copied_from: 3,
+  };
+
+  it('takes the copy bound and confirmed, without a paste, a binding call or a summary turn', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset/copy'] = () => json(200, COPIED);
+    const { result } = await openSession(routes);
+    let failure: unknown = 'pending';
+    await act(async () => {
+      failure = await result.current.copyData('PAGE');
+    });
+
+    expect(failure).toBeNull();
+    expect(calls.map(call => `${call.method} ${call.path}`)).toEqual([
+      'POST /sessions',
+      'POST /sessions/S1/dataset/copy',
+    ]);
+    expect(calls[1].body).toEqual({ from_session: 'PAGE' });
+    const { state } = result.current;
+    expect(state.dataConfirmed).toBe(true);
+    expect(state.bindings).toEqual({ x: 'Minutes', y: 'Exam Score' });
+    expect(state.bindingsComplete).toBe(true);
+    expect(state.dataset?.parsed.version).toBe(1);
+    expect(state.dataset?.parsed.preview).toEqual(PREPARED.preview);
+    // Computed data has no upload: the copy needs none.
+    expect(state.dataset?.upload).toBeUndefined();
+    expect(state.plotLanguage).toEqual({ language: 'de', source: 'chosen' });
+    expect(state.items).toEqual([]);
+    expect(state.parsing).toBe(false);
+  });
+
+  it('says why a copy stopped: a server without the route, a refusal, incomplete bindings', async () => {
+    const missing = baseRoutes();
+    missing['POST /sessions/S1/dataset/copy'] = () =>
+      json(404, { detail: 'not_found', ref: 'r-404' });
+    const first = await openSession(missing);
+    let failure: unknown;
+    await act(async () => {
+      failure = await first.result.current.copyData('PAGE');
+    });
+    expect(failure).toEqual({ code: 'not_found', ref: 'r-404' });
+    expect(first.result.current.state.dataset).toBeNull();
+    expect(first.result.current.state.parsing).toBe(false);
+    first.unmount();
+
+    const refused = baseRoutes();
+    refused['POST /sessions/S1/dataset/copy'] = () =>
+      json(422, { detail: 'unconfirmed', ref: 'r-u' });
+    const second = await openSession(refused);
+    await act(async () => {
+      failure = await second.result.current.copyData('PAGE');
+    });
+    expect(failure).toEqual({ code: 'unconfirmed', ref: 'r-u' });
+    expect(second.result.current.state.dataConfirmed).toBe(false);
+    second.unmount();
+
+    const incomplete = baseRoutes();
+    incomplete['POST /sessions/S1/dataset/copy'] = () =>
+      json(200, { ...COPIED, complete: false, missing_roles: ['y'] });
+    const third = await openSession(incomplete);
+    await act(async () => {
+      failure = await third.result.current.copyData('PAGE');
+    });
+    expect(failure).toEqual({ code: 'bindings_incomplete', ref: null });
+    expect(third.result.current.state.missingRoles).toEqual(['y']);
+  });
+});
+
+describe('useAgentSession: replaying an upload (a server without the copy)', () => {
   const TEXT = 'Student,Study Hours,Exam Score\nS01,1.5,52\n';
   const BOUND = { x: 'Study Hours', y: 'Exam Score' };
 

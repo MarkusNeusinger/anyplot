@@ -59,6 +59,10 @@ A new paste empties it."""
 DATASET_VERSION = PREFIX + "dataset_version"
 """The number of the current dataset version: 1 for a paste, one more for every
 `prepare_data`, one less for every undo. Above 1 there is a version to undo."""
+DATASET_COPIED_FROM = PREFIX + "dataset_copied_from"
+"""The number of the data version this session's data was copied from (`POST .../dataset/copy`, the admin fan-out's
+copy of the page session's confirmed version), absent for data of the session's own. The copy is the session's
+version 1, with no history; this records where it came from, for the feedback bundle. A paste replaces it."""
 BINDINGS = PREFIX + "bindings"
 CONFIRMED = PREFIX + "confirmed"
 """The fingerprint of what the user confirmed (`.confirm()` in the data panel): the dataset

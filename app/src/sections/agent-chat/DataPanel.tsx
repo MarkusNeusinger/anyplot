@@ -29,7 +29,10 @@
  * binding change, a confirmation, an undo), a line under the bindings label
  * that says the dropdowns and `.confirm()` wait, because the server runs one
  * thing per session and would refuse a second. The controls keep their
- * disabled look; a hidden live region announces the parse and the step.
+ * disabled look; a hidden live region announces the parse and the step. While
+ * the admin fan-out's panel is open (`locked`), every action waits in the same
+ * way, since its sessions copy this data, and a line at the top of the card,
+ * which the card names as its description, says to close the panel first.
  *
  * Every role of the spec gets a column choice (`bindingRows` in `bindings.ts`):
  * a single role one dropdown, a variadic family one per member plus one for
@@ -148,6 +151,7 @@ import {
   describeFileRefusal,
   FILE_BUSY_TEXT,
   FILE_CONVERTING_TEXT,
+  FILE_LOCKED_TEXT,
 } from 'src/sections/agent-chat/messages';
 import { previewSegments } from 'src/sections/agent-chat/previewCell';
 import { inStep2 } from 'src/sections/agent-chat/steps';
@@ -761,7 +765,18 @@ interface DataPanelProps {
    * asks for another sheet of the same file. Without it, such files are refused.
    */
   onConvert?: (dataBase64: string, sheet?: string) => Promise<ConvertAnswer>;
+  /**
+   * The admin fan-out's panel is open: its sessions copy this session's confirmed data, so
+   * nothing here may change it until the panel closes. Every action waits, as while a step
+   * runs, and a line at the top of the card says why.
+   */
+  locked?: boolean;
 }
+
+/** The card's line while the fan-out's panel is open, which the card names as its description. */
+export const DATA_LOCK_TEXT =
+  '# the data waits while all libraries plot it · .close() the panel to change it';
+const DATA_LOCK_ID = 'agent-data-lock';
 
 export function DataPanel({
   state,
@@ -778,6 +793,7 @@ export function DataPanel({
   decisionRef,
   onTrack,
   onConvert,
+  locked = false,
 }: DataPanelProps) {
   const [text, setText] = useState('');
   // A binary file on its way to the server and back, as the line the box shows meanwhile
@@ -822,7 +838,9 @@ export function DataPanel({
   const ready = state.phase === 'ready' && !!state.sessionId;
   // A turn, a theme render, a parse, a binding change or a confirmation in
   // flight: the server would refuse or race a second one.
-  const busy = sessionBusy(state);
+  const working = sessionBusy(state);
+  // Every action also waits while the fan-out's panel copies this data (`locked`).
+  const busy = working || locked;
   // Whether a dropped file would be taken now: not while a step runs or another file is being read.
   const dropReady = ready && !busy && !converting;
   const transcription = state.transcription;
@@ -1036,7 +1054,10 @@ export function DataPanel({
     const seq = readSeq.current;
     setPendingFile(null);
     if (!ready || busy) {
-      setFileNotice({ tone: 'error', text: FILE_BUSY_TEXT });
+      setFileNotice({
+        tone: 'error',
+        text: locked && !working ? FILE_LOCKED_TEXT : FILE_BUSY_TEXT,
+      });
       trackFile('unknown', null, 'busy');
       return;
     }
@@ -1301,7 +1322,9 @@ export function DataPanel({
                 ? 'drop the file to read it into the box'
                 : converting
                   ? 'a file is still being read: drop the next one when it is done'
-                  : 'a step is still running: drop the file when it is done'}
+                  : locked && !working
+                    ? 'all libraries are plotting this data: close the panel first'
+                    : 'a step is still running: drop the file when it is done'}
             </Box>
           </Box>
         )}
@@ -1628,7 +1651,7 @@ export function DataPanel({
             <Box sx={{ ...labelSx, mb: 0.75 }}># bindings — which column plays which role</Box>
             {/* Why the dropdowns and `.confirm()` do not answer: the server runs one thing
                 per session. Not a live region: the thread and the step status announce the work. */}
-            {busy && (
+            {working && (
               <Box
                 data-testid="bindings-lock"
                 sx={{ ...labelSx, color: 'var(--ink-soft)', mt: -0.25, mb: 1 }}
@@ -1876,11 +1899,22 @@ export function DataPanel({
         <Box
           component="section"
           aria-label="Your data"
+          aria-describedby={locked ? DATA_LOCK_ID : undefined}
           id="agent-data-card"
           data-testid="data-card"
           ref={cardRef}
           sx={cardSx}
         >
+          {/* Why every control below waits: the fan-out's sessions copy this data. */}
+          {locked && (
+            <Box
+              id={DATA_LOCK_ID}
+              data-testid="data-lock"
+              sx={{ ...labelSx, color: 'var(--ink)', mb: 1.5 }}
+            >
+              {DATA_LOCK_TEXT}
+            </Box>
+          )}
           {/* With the header above it, one line says what a change here does; the line
               stays when the confirmation drops, so the controls below it do not jump. */}
           {pinned && (

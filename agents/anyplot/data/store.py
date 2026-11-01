@@ -19,7 +19,7 @@ not wall-clock dates.
 import secrets
 import time
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from ..schemas import ColumnDtype, DatasetProfile
 from .parse import ParsedDataset
@@ -117,11 +117,8 @@ class DatasetStore:
         size = dataset_size(parsed) + sum(
             len(text.encode("utf-8", errors="surrogatepass")) for text in (code, source, file_name) if text
         )
-        if self._used_bytes + size > self.max_bytes:
-            raise StoreFull(f"the dataset store is full ({self._used_bytes} of {self.max_bytes} bytes used)")
-        dataset_id = secrets.token_urlsafe(16)
-        while dataset_id in self._datasets:  # 128 random bits; the loop only guards the impossible
-            dataset_id = secrets.token_urlsafe(16)
+        self._room_for(size)
+        dataset_id = self._new_id()
         now = self._clock()
         self._datasets[dataset_id] = StoredDataset(
             dataset_id=dataset_id,
@@ -142,6 +139,36 @@ class DatasetStore:
         )
         self._used_bytes += size
         return dataset_id
+
+    def copy(self, dataset_id: str, session_id: str, to_session_id: str) -> str | None:
+        """Store a copy of one dataset of `session_id` for `to_session_id` and return the copy's new id; None when
+        the dataset does not exist or belongs to another session, `StoreFull` past the cap (nothing stored then).
+
+        The admin fan-out's copy (`POST /v1/sessions/{sid}/dataset/copy`): every field as it is, nothing parsed
+        again, the canonical CSV the very same string, so the copy holds the same values, dtypes, column order,
+        notes, file name, source and code. Only the ids and the times are the copy's own.
+        """
+        stored = self.get(dataset_id, session_id)
+        if stored is None:
+            return None
+        self._room_for(stored.size_bytes)
+        copy_id = self._new_id()
+        now = self._clock()
+        self._datasets[copy_id] = replace(
+            stored,
+            dataset_id=copy_id,
+            session_id=to_session_id,
+            profile=stored.profile.model_copy(deep=True),
+            column_dtypes=dict(stored.column_dtypes),
+            parse_dates=list(stored.parse_dates),
+            text_columns=list(stored.text_columns),
+            preview=[list(row) for row in stored.preview],
+            context_lines=list(stored.context_lines),
+            created_at=now,
+            last_used_at=now,
+        )
+        self._used_bytes += stored.size_bytes
+        return copy_id
 
     def get(self, dataset_id: str, session_id: str) -> StoredDataset | None:
         """The dataset if it exists and belongs to `session_id`, else None; a hit counts as use."""
@@ -185,6 +212,16 @@ class DatasetStore:
         for dataset_id in removed:
             self._remove(dataset_id)
         return removed
+
+    def _room_for(self, size: int) -> None:
+        if self._used_bytes + size > self.max_bytes:
+            raise StoreFull(f"the dataset store is full ({self._used_bytes} of {self.max_bytes} bytes used)")
+
+    def _new_id(self) -> str:
+        dataset_id = secrets.token_urlsafe(16)
+        while dataset_id in self._datasets:  # 128 random bits; the loop only guards the impossible
+            dataset_id = secrets.token_urlsafe(16)
+        return dataset_id
 
     def _remove(self, dataset_id: str) -> None:
         stored = self._datasets.pop(dataset_id)

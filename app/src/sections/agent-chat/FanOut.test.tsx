@@ -72,14 +72,21 @@ const PLOT_OK = {
   version: 1,
 };
 
+/** The copy's answer: the page session's version 3, bound and confirmed on the server. */
+const COPIED = { ...DATASET, confirmed: true, complete: true, missing_roles: [], copied_from: 3 };
+
 const UPLOAD = { text: 'Study Hours,Exam Score\n1.5,52\n', confirmed: false, source: 'scores.csv' };
 const BINDINGS = { x: 'Study Hours', y: 'Exam Score' };
+const PAGE_SESSION = 'S-page';
 
 let calls: Call[];
 let turns: Map<string, ReturnType<typeof liveTurn>>;
 
-/** The BFF: a session per library (`S-<library>`), `ineligible` libraries refused at the open. */
-function mockBff(ineligible: string[] = []) {
+/**
+ * The BFF: a session per library (`S-<library>`), `ineligible` libraries refused at the open.
+ * `copy` answers the copy route: the server's copy, a server without it (`404 not_found`), or a refusal.
+ */
+function mockBff(ineligible: string[] = [], copy: () => Response = () => json(200, COPIED)) {
   calls = [];
   turns = new Map();
   vi.stubGlobal(
@@ -99,6 +106,7 @@ function mockBff(ineligible: string[] = []) {
       }
       const sid = path.split('/')[2];
       if (method === 'DELETE') return new Response(null, { status: 204 });
+      if (path.endsWith('/dataset/copy')) return copy();
       if (path.endsWith('/dataset')) return json(200, DATASET);
       if (path.endsWith('/bindings')) {
         return json(200, { bindings: body, complete: true, missing_roles: [] });
@@ -120,15 +128,24 @@ function mockBff(ineligible: string[] = []) {
 
 const plotTurns = () => calls.filter(call => call.path.endsWith('/messages'));
 const card = (library: string) => screen.getByRole('article', { name: library });
+const status = (library: string) => within(card(library)).getByTestId('fanout-status');
 
-function renderFanOut(libraries: string[], maxRuns: number, onClose = vi.fn()) {
+function renderFanOut(
+  libraries: string[],
+  maxRuns: number,
+  {
+    onClose = vi.fn(),
+    upload = UPLOAD,
+  }: { onClose?: () => void; upload?: typeof UPLOAD | null } = {}
+) {
   return render(
     <FanOut
       specId="scatter-basic"
       libraries={libraries}
       locale="en"
       token=""
-      upload={UPLOAD}
+      sourceSession={PAGE_SESSION}
+      {...(upload ? { upload } : {})}
       bindings={BINDINGS}
       maxRuns={maxRuns}
       onClose={onClose}
@@ -146,7 +163,7 @@ afterEach(() => {
 });
 
 describe('FanOut', () => {
-  it('replays the upload in a session per library and runs at most maxRuns plots at once', async () => {
+  it('copies the confirmed data into a session per library and runs at most maxRuns plots at once', async () => {
     mockBff();
     renderFanOut(['matplotlib', 'seaborn', 'altair'], 2);
 
@@ -161,17 +178,15 @@ describe('FanOut', () => {
         source: 'fanout',
       }))
     );
-    // Every library stored the same upload with the same bindings, and no summary turn ran.
+    // The server copied the page session's confirmed data into every library: no paste, no
+    // binding call, no confirmation of its own and no summary turn.
     for (const library of ['matplotlib', 'seaborn', 'altair']) {
-      const upload = calls.find(call => call.path === `/sessions/S-${library}/dataset`);
-      // The client sends `confirmed` only when it is true.
-      expect(upload?.body).toEqual({ text: UPLOAD.text, source: UPLOAD.source });
-      const put = calls.find(call => call.path === `/sessions/S-${library}/bindings`);
-      expect(put?.body).toEqual([
-        { role: 'x', column: 'Study Hours' },
-        { role: 'y', column: 'Exam Score' },
-      ]);
+      const copy = calls.find(call => call.path === `/sessions/S-${library}/dataset/copy`);
+      expect(copy?.body).toEqual({ from_session: PAGE_SESSION });
     }
+    expect(
+      calls.filter(call => /\/dataset$|\/bindings$|\/dataset\/confirm$/.test(call.path))
+    ).toEqual([]);
     expect(plotTurns().map(call => call.body)).toEqual([
       { action: 'create_plot' },
       { action: 'create_plot' },
@@ -193,10 +208,89 @@ describe('FanOut', () => {
     expect(within(card('altair')).getByTestId('fanout-status')).toHaveTextContent('adapting…');
   });
 
+  it('posts the paste again on a server without the copy, with the bindings of the click', async () => {
+    mockBff([], () => json(404, { detail: 'not_found', ref: 'r-404' }));
+    renderFanOut(['matplotlib', 'seaborn'], 2);
+
+    await waitFor(() => expect(plotTurns()).toHaveLength(2));
+    for (const library of ['matplotlib', 'seaborn']) {
+      const paths = calls
+        .filter(call => call.path.startsWith(`/sessions/S-${library}/`))
+        .map(call => call.path.replace(`/sessions/S-${library}`, ''));
+      expect(paths).toEqual([
+        '/dataset/copy',
+        '/dataset',
+        '/bindings',
+        '/dataset/confirm',
+        '/messages',
+      ]);
+      // The client sends `confirmed` only when it is true.
+      expect(calls.find(call => call.path === `/sessions/S-${library}/dataset`)?.body).toEqual({
+        text: UPLOAD.text,
+        source: UPLOAD.source,
+      });
+      expect(calls.find(call => call.path === `/sessions/S-${library}/bindings`)?.body).toEqual([
+        { role: 'x', column: 'Study Hours' },
+        { role: 'y', column: 'Exam Score' },
+      ]);
+    }
+    expect(status('matplotlib')).toHaveTextContent('adapting…');
+  });
+
+  it('reads the 404 of a BFF without the route, in the API-wide error shape, as no copy', async () => {
+    // An older API answers an unknown route through `api/exceptions.py`'s handler: no `detail`,
+    // no request id; the page reads the status as `not_found` and posts the paste again.
+    mockBff([], () =>
+      json(404, {
+        status: 404,
+        message: 'Not Found',
+        path: '/debug/agent/sessions/S-matplotlib/dataset/copy',
+      })
+    );
+    renderFanOut(['matplotlib'], 1);
+
+    await waitFor(() => expect(plotTurns()).toHaveLength(1));
+    expect(calls.map(call => call.path)).toEqual([
+      '/sessions',
+      '/sessions/S-matplotlib/dataset/copy',
+      '/sessions/S-matplotlib/dataset',
+      '/sessions/S-matplotlib/bindings',
+      '/sessions/S-matplotlib/dataset/confirm',
+      '/sessions/S-matplotlib/messages',
+    ]);
+  });
+
+  it('stops each library with one line when a server without the copy has no paste to post', async () => {
+    mockBff([], () => json(404, { detail: 'not_found', ref: 'r-404' }));
+    renderFanOut(['matplotlib', 'seaborn'], 2, { upload: null });
+
+    await waitFor(() => expect(status('seaborn')).toHaveTextContent('data · copy_unavailable'));
+    expect(status('matplotlib')).toHaveTextContent('data · copy_unavailable');
+    expect(
+      within(card('matplotlib')).getByText(/this server cannot copy changed or computed data yet/)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/2 of 2 done/)).toBeInTheDocument();
+    expect(calls.filter(call => call.path.endsWith('/dataset'))).toEqual([]);
+    expect(plotTurns()).toEqual([]);
+  });
+
+  it('frees the place of a library whose copy the server refuses', async () => {
+    mockBff([], () => json(422, { detail: 'unconfirmed', ref: 'r-u' }));
+    renderFanOut(['matplotlib'], 1);
+
+    await waitFor(() => expect(status('matplotlib')).toHaveTextContent('data · unconfirmed'));
+    expect(
+      within(card('matplotlib')).getByText(/the data is not confirmed any more/)
+    ).toBeInTheDocument();
+    // A refusal is no missing route: nothing is posted again.
+    expect(calls.filter(call => call.path.endsWith('/dataset'))).toEqual([]);
+    expect(plotTurns()).toEqual([]);
+  });
+
   it('frees the place of a library that cannot open, and deletes the sessions when it goes', async () => {
     mockBff(['plotnine']);
     const onClose = vi.fn();
-    const view = renderFanOut(['plotnine', 'seaborn'], 1, onClose);
+    const view = renderFanOut(['plotnine', 'seaborn'], 1, { onClose });
 
     await waitFor(() => expect(plotTurns()).toHaveLength(1));
     expect(plotTurns()[0].path).toBe('/sessions/S-seaborn/messages');
