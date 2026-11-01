@@ -88,7 +88,7 @@
  * categories") answers `422 data_request`: `parseData` sends it to the chat as
  * the user's turn at once, with no offer to click, and the assistant generates
  * example data with code it writes (`run_data_code`), which the turn's `done`
- * carries like a formula's table (`dataRequests` counts these hand-offs).
+ * carries like a formula's table (`dataRequest` names the last hand-off).
  *
  * One thing at a time: the agents service runs one turn, theme render, page
  * build (a JavaScript version's `plot.html`) or paste
@@ -378,11 +378,12 @@ export interface AgentSessionState {
   /** What `formula` was refused as: a formula, or code that generates data. */
   formulaKind: FormulaKind;
   /**
-   * How many pastes the dataset route answered `422 data_request` and the hook
-   * sent to the chat as the user's turn: the data panel empties its box on each,
+   * The last paste the dataset route answered `422 data_request` and the hook
+   * sent to the chat as the user's turn, with `seq` counting these hand-offs:
+   * the data panel empties its box on each while it still holds that text,
    * because the text is now the user's message there.
    */
-  dataRequests: number;
+  dataRequest: { text: string; seq: number } | null;
   /** A table read from free text that awaits `.use()` or `.discard()`. */
   transcription: TranscriptionState | null;
   /** The spec's roles, in spec order; the data panel shows a column choice for each. */
@@ -452,8 +453,8 @@ type Action =
   | { type: 'parse_failed'; failure: Failure; formula?: string; formulaKind?: FormulaKind }
   /** The refused formula went to the chat as a turn. */
   | { type: 'formula_sent' }
-  /** The paste asked for data (`422 data_request`): no error, it goes to the chat as the user's turn. */
-  | { type: 'data_requested' }
+  /** The paste asked for data (`422 data_request`): no error, `text` goes to the chat as the user's turn. */
+  | { type: 'data_requested'; text: string }
   | { type: 'transcribed'; transcription: TranscriptionState }
   | { type: 'transcription_clear' }
   | { type: 'bindings_start'; bindings: BindingMap }
@@ -520,7 +521,7 @@ export function initialAgentState(library: string): AgentSessionState {
     datasetError: null,
     formula: null,
     formulaKind: 'formula',
-    dataRequests: 0,
+    dataRequest: null,
     transcription: null,
     roles: [],
     bindings: {},
@@ -854,7 +855,7 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         datasetError: null,
         formula: null,
         transcription: null,
-        dataRequests: state.dataRequests + 1,
+        dataRequest: { text: action.text, seq: (state.dataRequest?.seq ?? 0) + 1 },
       };
     case 'transcribed':
       // Nothing is stored yet: the dataset, its bindings and their confirmation stay until
@@ -1886,7 +1887,7 @@ export function useAgentSession({
         if (failure.code === 'data_request' && text.trim().length <= MAX_MESSAGE_CHARS) {
           // A request for data holds no table: the chat answers it, with no offer to click first.
           request = text.trim();
-          safeDispatch({ type: 'data_requested' });
+          safeDispatch({ type: 'data_requested', text: request });
           trackEvent('agent_data_parsed', { status: 'data_request', size_bucket: bucket });
         } else {
           // A formula or code is refused so that the chat computes or runs it (`sendFormula`).

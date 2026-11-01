@@ -826,14 +826,17 @@ export function DataPanel({
   // The box's text as of the last render, for a file read that ends after an edit.
   const textRef = useRef(text);
   textRef.current = text;
-  // A request for data moved to the chat as the user's message (`dataRequests` counts them), as `.send()` moves a
-  // formula: the box is free for a table. Adjusted during render, as React adjusts state when a prop changes.
-  const [requestsSeen, setRequestsSeen] = useState(state.dataRequests);
-  if (state.dataRequests !== requestsSeen) {
-    setRequestsSeen(state.dataRequests);
-    setText('');
-    setSource(null);
-    setConverted(null);
+  // A request for data moved to the chat as the user's message (`dataRequest`), as `.send()` moves a formula: the
+  // box is free for a table. Only while it still holds that text: an edit made while the parse ran stays. Adjusted
+  // during render, as React adjusts state when a prop changes.
+  const [requestSeen, setRequestSeen] = useState(state.dataRequest?.seq ?? 0);
+  if (state.dataRequest && state.dataRequest.seq !== requestSeen) {
+    setRequestSeen(state.dataRequest.seq);
+    if (text.trim() === state.dataRequest.text) {
+      setText('');
+      setSource(null);
+      setConverted(null);
+    }
   }
   // Step 2 only: whether the full card shows below the pinned header.
   const [expanded, setExpanded] = useState(false);

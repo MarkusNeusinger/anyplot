@@ -1366,7 +1366,7 @@ describe('useAgentSession: formulas', () => {
     expect(result.current.state).toMatchObject({
       datasetError: null,
       formula: null,
-      dataRequests: 1,
+      dataRequest: { text: 'Beispieldaten', seq: 1 },
       parsing: false,
     });
     expect(result.current.state.dataset?.parsed.version).toBe(1);
