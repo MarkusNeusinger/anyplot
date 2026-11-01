@@ -1,3 +1,9 @@
+### Added
+
+- **`--theme dark` for the eval matrix.** Every turn of the run sends the
+  site theme, as the chat page does, so dark first renders can be measured
+  before the public release. Every committed baseline is light. (#12505)
+
 ### Changed
 
 - **The agent chat's plot follows the site theme.** On the dark site the
