@@ -284,7 +284,8 @@ class TestSetLanguageTool:
         assert context.state[PLOT_LANGUAGE] == "de"  # `both` by default: the replies and the plot
 
     async def test_the_plot_alone_leaves_the_replies(self, services: Services) -> None:
-        """A1 of the live test of 2026-11-01: "Make the title German" turned the replies German too."""
+        """A1 of the live test of 2026-11-01: "Make the title German" turned the replies German too; `plot` now
+        changes only the plot's language, and the replies stay English."""
         context = tool_context(opened(**language_delta("en", "detected")), "inv-lang-9")
         services.versions.add("s1", rendered(1, "matplotlib", "en"))
 

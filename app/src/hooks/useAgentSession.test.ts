@@ -2101,7 +2101,7 @@ describe('agentReducer', () => {
       source: 'default' | 'pasted' | 'detected' | 'chosen'
     ) => agentReducer(state, { type: 'language_sync', plotLanguage: { language, source } });
     const pastedNotice =
-      'language: de · detected from your pasted data · the lang chip in the header changes it';
+      'reply language: de · detected from your pasted data · a plot you have keeps its language · the lang chip in the header changes both';
 
     const pasted = sync(ready, 'de', 'pasted');
     expect(pasted.plotLanguage).toEqual({ language: 'de', source: 'pasted' });
@@ -2111,7 +2111,7 @@ describe('agentReducer', () => {
     expect(sync(pasted, 'en', 'default')).toBe(pasted);
     // A later paste in another language moves it, with a notice.
     expect(lastItem(sync(pasted, 'fr', 'pasted').items)).toMatchObject({
-      text: 'language: fr · detected from your pasted data · the lang chip in the header changes it',
+      text: 'reply language: fr · detected from your pasted data · a plot you have keeps its language · the lang chip in the header changes both',
     });
     // The first typed message replaces it, with the message's notice.
     const detected = sync(pasted, 'en', 'detected');

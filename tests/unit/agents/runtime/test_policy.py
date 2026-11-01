@@ -638,7 +638,7 @@ class TestSessionLanguage:
 
         assert "- `set_language(language, applies_to)`: sets the language of your replies" in root
         assert 'call `set_language` with that language and `applies_to` `"plot"`, alone, before any other tool' in root
-        # Live test of 2026-11-01: "Make the title German" turned the replies German too.
+        # Live test of 2026-11-01: "Make the title German" turned the replies German too; `plot` keeps them.
         assert "your replies stay in the session language" in root
         assert 'When the user asks for your replies in another language ("answer in French")' in root
         assert 'call it with `applies_to` `"replies"`' in root and 'call it with `applies_to` `"both"`' in root

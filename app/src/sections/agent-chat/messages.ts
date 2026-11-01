@@ -93,7 +93,7 @@ export const LANGUAGE_DETECTED_TEXT = (language: string) =>
  * language of its notes or column names (`pasted`), before any typed message.
  */
 export const LANGUAGE_PASTED_TEXT = (language: string) =>
-  `language: ${language} · detected from your pasted data · the lang chip in the header changes it`;
+  `reply language: ${language} · detected from your pasted data · a plot you have keeps its language · the lang chip in the header changes both`;
 
 /** Failures only the language chip meets; any other code reads as the page's turn errors do. */
 export const LANGUAGE_FAILURE: Record<string, string> = {
