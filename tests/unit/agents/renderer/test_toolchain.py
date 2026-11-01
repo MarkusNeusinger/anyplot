@@ -230,13 +230,15 @@ class TestJulia:
 
     def test_the_build_smoke_runs_the_rows_launcher_flags_and_environment(self) -> None:
         """The build's smoke loads every package the way a render will, so a depot that would not load under
-        `--compiled-modules=strict` with the row's environment fails the build, not the first render."""
+        `--compiled-modules=strict` with the row's environment fails the build, not the first render. The row's text
+        probe is the renderer image's, not the toolchain's (`commands.JULIA_TEXT_PROBE`): the smoke runs the flags."""
         final = _stages(TOOLCHAIN_DOCKERFILE.read_text(encoding="utf-8"))["final"]
         smoke = final[final.rindex('RUN j="/opt/julia-${JULIA_VERSION}"') :]
         assert "run() {" in smoke
         row = commands.command_for("julia", "makie")
         assert 'j="/opt/julia-${JULIA_VERSION}"' in smoke and '"$j/bin/julia"' in smoke
-        for flag in row.argv[1:]:
+        assert row.argv[1:] == (*commands.JULIA_FLAGS, "-L", commands.JULIA_TEXT_PROBE)
+        for flag in commands.JULIA_FLAGS:
             assert flag in smoke, flag
         for key, value in row.env.items():
             expected = '"JULIA_CPU_TARGET=${JULIA_CPU_TARGET}"' if key == "JULIA_CPU_TARGET" else f"{key}={value}"

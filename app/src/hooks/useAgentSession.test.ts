@@ -1,3 +1,5 @@
+import { createElement, type ReactNode } from 'react';
+
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -10,10 +12,12 @@ import {
   initialAgentState,
   missingRolesOf,
   sessionBusy,
+  sessionHoldsWork,
   type TranscriptionState,
   useAgentSession,
   type UseAgentSessionOptions,
 } from 'src/hooks/useAgentSession';
+import { type EffectiveTheme, ThemeContext } from 'src/hooks/useLayoutContext';
 import type { DatasetChanged, DatasetParsed, RoleSpec } from 'src/lib/agent';
 import { pendingReply } from 'src/sections/agent-chat/steps';
 
@@ -21,6 +25,15 @@ const lastItem = (items: ChatItem[]) => items[items.length - 1];
 /** The notice after the first typed message set the reply language; a plot keeps its own (owner, 2026-11-01). */
 const LANGUAGE_DETECTED_TEXT = (language: string) =>
   `reply language: ${language} · detected from your message · a plot you have keeps its language · the lang chip in the header changes both`;
+
+/** The layout's theme context with `effective` as the theme the site shows. */
+const siteTheme = (effective: EffectiveTheme) => ({
+  mode: effective,
+  effective,
+  isDark: effective === 'dark',
+  setMode: () => {},
+  cycle: () => {},
+});
 
 const trackEvent = vi.fn();
 vi.mock('src/hooks/useAnalytics', () => ({
@@ -1533,6 +1546,8 @@ describe('useAgentSession: turns', () => {
 
     const turn = calls.find(call => call.path.endsWith('/messages'));
     expect(turn?.body).toEqual({ action: 'create_plot' });
+    // Outside a layout the site theme is the context's default: light.
+    expect(turn?.search).toBe('?theme=light');
     expect(result.current.state.run).toBeNull();
     expect(result.current.state.items.map(item => item.kind)).toEqual([
       'action',
@@ -1552,6 +1567,41 @@ describe('useAgentSession: turns', () => {
       repaired: 'no',
       spec: 'scatter-basic',
     });
+  });
+
+  it('sends the site theme each turn starts with, so a plot follows the page', async () => {
+    // User test E2 of 2026-11-01: on the dark site the first plot came back light.
+    const routes = baseRoutes();
+    let number = 0;
+    routes['POST /sessions/S1/messages'] = () => {
+      number += 1;
+      return sse([
+        ['plot', { ...PLOT_OK, version: number, artifacts: ['plot-dark.png', 'plot.py'] }],
+        ['done', {}],
+      ]);
+    };
+    mockFetch(routes);
+    let site: EffectiveTheme = 'dark';
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(ThemeContext.Provider, { value: siteTheme(site) }, children);
+    const { result, rerender } = renderHook(() => useAgentSession(options), { wrapper });
+    await waitFor(() => expect(result.current.state.phase).toBe('ready'));
+
+    await act(() => result.current.createPlot());
+    const turnSearches = () =>
+      calls.filter(call => call.path.endsWith('/messages')).map(call => call.search);
+    expect(turnSearches()).toEqual(['?theme=dark']);
+    // The run rendered the dark theme only: the card shows it, and nothing renders twice.
+    await waitFor(() => expect(result.current.state.versions[1].images.dark?.state).toBe('ready'));
+    expect(result.current.state.versions[1].theme).toBe('dark');
+    expect(calls.some(call => call.path.endsWith('/render'))).toBe(false);
+
+    // The user switched the site to light: the next turn sends the switch, the shown version stays.
+    site = 'light';
+    rerender();
+    await act(() => result.current.sendMessage('bigger markers'));
+    expect(turnSearches()).toEqual(['?theme=dark', '?theme=light']);
+    expect(result.current.state.versions[1].theme).toBe('dark');
   });
 
   it("addresses the artifacts by the server's version number, not a count", async () => {
@@ -2494,6 +2544,85 @@ describe('agentReducer', () => {
       { name: 'y', kinds: [], required: false, variadic: false, description: '' },
     ]);
     expect(state.bindingsComplete).toBe(true);
+  });
+});
+
+describe('sessionHoldsWork', () => {
+  const ready: AgentSessionState = {
+    ...initialAgentState('matplotlib'),
+    phase: 'ready',
+    sessionId: 'S1',
+  };
+
+  it('holds nothing for an empty session, open or not', () => {
+    expect(sessionHoldsWork(initialAgentState('matplotlib'))).toBe(false);
+    expect(sessionHoldsWork(ready)).toBe(false);
+    // A thread without data or a plot (a question, a refused paste) is nothing to lose either.
+    const asked = agentReducer(ready, { type: 'item', item: { kind: 'user', text: 'hi' } });
+    expect(sessionHoldsWork(asked)).toBe(false);
+  });
+
+  it('holds stored data, confirmed or not, a table read from text, a plot and work in flight', () => {
+    const parsed = agentReducer(ready, {
+      type: 'parse_done',
+      parsed: DATASET as DatasetParsed,
+      bytes: 30,
+    });
+    expect(sessionHoldsWork(parsed)).toBe(true);
+    expect(sessionHoldsWork(agentReducer(parsed, { type: 'confirm_done' }))).toBe(true);
+
+    const transcription: TranscriptionState = {
+      text: TRANSCRIBED.text,
+      preview: TRANSCRIBED.preview,
+      profile: { ...TRANSCRIBED.profile, columns: [] },
+      warnings: [],
+      note: '',
+      bytes: 26,
+    };
+    expect(sessionHoldsWork(agentReducer(ready, { type: 'transcribed', transcription }))).toBe(
+      true
+    );
+
+    const plotted: AgentSessionState = {
+      ...ready,
+      versions: {
+        1: {
+          number: 1,
+          library: 'matplotlib',
+          result: {
+            status: 'ok',
+            attempts: 1,
+            artifacts: [],
+            changes: [],
+            residual_defects: [],
+            version: 1,
+          },
+          theme: 'light',
+          images: {},
+          code: { state: 'loading' },
+        },
+      },
+    };
+    expect(sessionHoldsWork(plotted)).toBe(true);
+
+    // A paste or a formula turn still in flight, before anything is stored.
+    expect(sessionHoldsWork(agentReducer(ready, { type: 'parse_start' }))).toBe(true);
+    expect(sessionHoldsWork(agentReducer(ready, { type: 'run_start', kind: 'message' }))).toBe(
+      true
+    );
+  });
+
+  it('holds nothing once the page no longer shows the session', () => {
+    const parsed = agentReducer(ready, {
+      type: 'parse_done',
+      parsed: DATASET as DatasetParsed,
+      bytes: 30,
+    });
+    const failure = { code: 'session_expired', ref: null };
+    expect(
+      sessionHoldsWork(agentReducer(parsed, { type: 'open_failed', phase: 'error', failure }))
+    ).toBe(false);
+    expect(sessionHoldsWork(agentReducer(parsed, { type: 'unauthorized' }))).toBe(false);
   });
 });
 

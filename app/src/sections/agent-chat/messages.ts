@@ -95,6 +95,13 @@ export const LANGUAGE_DETECTED_TEXT = (language: string) =>
 export const LANGUAGE_PASTED_TEXT = (language: string) =>
   `reply language: ${language} · detected from your pasted data · a plot you have keeps its language · the lang chip in the header changes both`;
 
+/**
+ * The browser's confirm before a link inside the site leaves the chat with data
+ * or plots in it; a reload or a closed tab gets the browser's own wording.
+ */
+export const LEAVE_TEXT =
+  'leave the chat? the session ends here, and its data and plots cannot be restored';
+
 /** Failures only the language chip meets; any other code reads as the page's turn errors do. */
 export const LANGUAGE_FAILURE: Record<string, string> = {
   invalid: 'the server refused this language name',

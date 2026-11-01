@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { type EffectiveTheme, ThemeContext } from 'src/hooks/useLayoutContext';
 import { FanOut } from 'src/sections/agent-chat/FanOut';
 
 vi.mock('src/hooks/useAnalytics', () => ({
@@ -10,6 +11,7 @@ vi.mock('src/hooks/useAnalytics', () => ({
 interface Call {
   method: string;
   path: string;
+  search: string;
   body: unknown;
 }
 
@@ -92,10 +94,11 @@ function mockBff(ineligible: string[] = [], copy: () => Response = () => json(20
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: string, init: RequestInit = {}) => {
-      const path = new URL(input).pathname.replace(/^.*\/debug\/agent/, '');
+      const url = new URL(input);
+      const path = url.pathname.replace(/^.*\/debug\/agent/, '');
       const method = init.method ?? 'GET';
       const body = typeof init.body === 'string' ? JSON.parse(init.body) : undefined;
-      calls.push({ method, path, body });
+      calls.push({ method, path, search: url.search, body });
       if (method === 'POST' && path === '/sessions') {
         const { library } = body as { library: string };
         if (ineligible.includes(library)) return json(422, { detail: 'not_eligible', ref: 'r' });
@@ -136,20 +139,30 @@ function renderFanOut(
   {
     onClose = vi.fn(),
     upload = UPLOAD,
-  }: { onClose?: () => void; upload?: typeof UPLOAD | null } = {}
+    site = 'light',
+  }: { onClose?: () => void; upload?: typeof UPLOAD | null; site?: EffectiveTheme } = {}
 ) {
+  const theme = {
+    mode: site,
+    effective: site,
+    isDark: site === 'dark',
+    setMode: () => {},
+    cycle: () => {},
+  };
   return render(
-    <FanOut
-      specId="scatter-basic"
-      libraries={libraries}
-      locale="en"
-      token=""
-      sourceSession={PAGE_SESSION}
-      {...(upload ? { upload } : {})}
-      bindings={BINDINGS}
-      maxRuns={maxRuns}
-      onClose={onClose}
-    />
+    <ThemeContext.Provider value={theme}>
+      <FanOut
+        specId="scatter-basic"
+        libraries={libraries}
+        locale="en"
+        token=""
+        sourceSession={PAGE_SESSION}
+        {...(upload ? { upload } : {})}
+        bindings={BINDINGS}
+        maxRuns={maxRuns}
+        onClose={onClose}
+      />
+    </ThemeContext.Provider>
   );
 }
 
@@ -206,6 +219,14 @@ describe('FanOut', () => {
       await within(card('matplotlib')).findByRole('img', { name: /matplotlib plot, version 1/ })
     ).toHaveAttribute('src', 'blob:mock');
     expect(within(card('altair')).getByTestId('fanout-status')).toHaveTextContent('adapting…');
+  });
+
+  it("plots every library in the page's site theme", async () => {
+    mockBff();
+    renderFanOut(['matplotlib', 'seaborn'], 2, { site: 'dark' });
+
+    await waitFor(() => expect(plotTurns()).toHaveLength(2));
+    expect(plotTurns().map(call => call.search)).toEqual(['?theme=dark', '?theme=dark']);
   });
 
   it('posts the paste again on a server without the copy, with the bindings of the click', async () => {

@@ -1,10 +1,11 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider } from '@mui/material/styles';
 
 import { AgentChatPage } from 'src/pages/AgentChatPage';
+import { LEAVE_TEXT } from 'src/sections/agent-chat/messages';
 import { theme } from 'src/theme';
 import { ADMIN_HINT_KEY } from 'src/utils/adminAuth';
 
@@ -302,22 +303,26 @@ function LocationProbe() {
   return <output data-testid="location">{`${current.pathname}${current.search}`}</output>;
 }
 
+/** A data router, as in the app: the page's leave warning uses the router's blocker. */
 function renderAt(url: string) {
+  const router = createMemoryRouter(
+    [
+      {
+        path: '/debug/agent',
+        element: (
+          <>
+            <AgentChatPage />
+            <LocationProbe />
+          </>
+        ),
+      },
+      { path: '*', element: <LocationProbe /> },
+    ],
+    { initialEntries: [url] }
+  );
   return render(
     <ThemeProvider theme={theme}>
-      <MemoryRouter initialEntries={[url]}>
-        <Routes>
-          <Route
-            path="/debug/agent"
-            element={
-              <>
-                <AgentChatPage />
-                <LocationProbe />
-              </>
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+      <RouterProvider router={router} />
     </ThemeProvider>
   );
 }
@@ -325,10 +330,12 @@ function renderAt(url: string) {
 const PAGE = '/debug/agent?spec=scatter-basic&library=matplotlib&language=python';
 const agentCalls = () =>
   fetchMock.mock.calls.filter(([input]) => String(input).includes('/debug/agent'));
+/** The path of a call, without the query (a turn carries the site theme there). */
+const pathOf = (input: unknown) => new URL(String(input)).pathname;
 /** The bodies of the chat turns the page posted, in order. */
 const turnBodies = () =>
   agentCalls()
-    .filter(([input]) => String(input).endsWith('/messages'))
+    .filter(([input]) => pathOf(input).endsWith('/messages'))
     .map(([, init]) => JSON.parse(String((init as RequestInit).body)) as Record<string, string>);
 const lastTurn = () => turnBodies().slice(-1)[0];
 
@@ -999,6 +1006,64 @@ describe('AgentChatPage gating', () => {
   });
 });
 
+describe('AgentChatPage leave warning', () => {
+  /** A reload or a closed tab, as the browser starts it: whether the page asked to stay. */
+  function unload(): boolean {
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    return event.defaultPrevented;
+  }
+  const deletes = () =>
+    agentCalls().filter(([, init]) => (init as RequestInit | undefined)?.method === 'DELETE');
+  const backLink = () => screen.getByRole('link', { name: /Basic Scatter Plot/ });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('asks nothing while the session is empty: the back link just leaves', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await screen.findByLabelText(/# your data/);
+    expect(unload()).toBe(false);
+
+    fireEvent.click(await screen.findByRole('link', { name: /Basic Scatter Plot/ }));
+    await waitFor(() => expect(screen.queryByLabelText(/# your data/)).not.toBeInTheDocument());
+    expect(screen.getByTestId('location')).toHaveTextContent('/scatter-basic');
+    expect(confirm).not.toHaveBeenCalled();
+  });
+
+  it('asks before a reload or a link drops the data, and lets its own query edits pass', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    expect(unload()).toBe(true);
+
+    // The `all` pill writes the query on the same path: nothing to ask.
+    const all = await screen.findByRole('button', { name: 'All libraries' });
+    await waitFor(() => expect(all).toBeEnabled());
+    fireEvent.click(all);
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('all=1'));
+    expect(confirm).not.toHaveBeenCalled();
+
+    // The back link to the plot, declined: the chat and its session stay.
+    fireEvent.click(backLink());
+    await waitFor(() => expect(confirm).toHaveBeenCalledWith(LEAVE_TEXT));
+    expect(screen.getByTestId('data-pinned')).toBeInTheDocument();
+    expect(deletes()).toHaveLength(0);
+
+    // Agreed: the page goes, and the session with it.
+    confirm.mockReturnValue(true);
+    fireEvent.click(backLink());
+    await waitFor(() => expect(screen.queryByTestId('data-pinned')).not.toBeInTheDocument());
+    expect(screen.getByTestId('location')).toHaveTextContent('/scatter-basic');
+    await waitFor(() => expect(deletes()).toHaveLength(1));
+    expect(unload()).toBe(false);
+  });
+});
+
 describe('AgentChatPage working states', () => {
   it('says that the data is being parsed, under .parse() and to a screen reader', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
@@ -1477,7 +1542,7 @@ describe('AgentChatPage .plot_all()', () => {
   const fanOutCalls = (rest: string) =>
     agentCalls()
       .filter(([input]) => /\/sessions\/F-[a-z0-9]+/.test(String(input)))
-      .filter(([input]) => String(input).endsWith(rest))
+      .filter(([input]) => pathOf(input).endsWith(rest))
       .map(([input, init]) => ({
         session: String(input).match(/F-[a-z0-9]+/)?.[0],
         body: (init as RequestInit).body ? JSON.parse(String((init as RequestInit).body)) : null,

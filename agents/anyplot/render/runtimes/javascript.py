@@ -41,9 +41,12 @@ with a UTC offset other than zero, which the typing converts to UTC, as R's and 
 loaders do (owner decisions of 2026-10-29 and 2026-10-30: "what changed", the status left
 as the render earns it).
 
-**Outputs.** The harness writes `plot-<theme>.png` and no probe, and in sandbox mode no
-interactive page (`ANYPLOT_NO_HTML`): the host gates R1 to R3 judge the render, and the
-reviewer finds the requested texts in the image (`review_texts`), as for R and Julia. A
+**Outputs.** The harness writes `plot-<theme>.png`, in sandbox mode no interactive page
+(`ANYPLOT_NO_HTML`), and a probe of the texts the page draws, by role (`render.mjs`,
+`writeTextProbe`, since 2026-11-01), which the closing reply quotes: the host gates R1 to R3
+judge the render, and the reviewer finds the requested texts in the image (`review_texts`),
+as for R and Julia, since a canvas library's texts come from its chart model, which a
+plugin's own drawing is not in. A
 failed render ends with the harness's final error line (`render: error: <kind> <Class>
 <file>:<line>: ...`), which `error_summary` reads: the class and the snippet's line, a
 line on the loader named as the data loader, a line past the code's end (the harness's
@@ -84,7 +87,7 @@ from ...data.typed_json import typed_json
 from ...schemas import AdaptPlan, CodeArtifact
 from ..contract import BLOCKING_RULES, Theme
 from ..harness import INTERPRETER_FLAGS
-from ..png import MAX_PNG_BYTES, read_output
+from ..png import MAX_PNG_BYTES, read_output, read_probe
 from .notes import counted_note, offset_note
 from .python import IMAGE_HARNESS, IMAGE_PYTHON, RENDER_RLIMIT_FSIZE_MB, PythonRuntime
 
@@ -118,9 +121,11 @@ class JavaScriptRuntime:
     """The working form's data placeholder, `const data = loadUserData();`, which the loader replaces."""
     blocking_rules: frozenset[str] = BLOCKING_RULES | {UNAVAILABLE_IMPORT_RULE}
     adaptation_targets: Mapping[str, str] = ADAPTATION_TARGETS
+    text_probe = True
+    """The browser harness's text probe (module docstring, "Outputs")."""
     review_texts = True
-    """The harness writes no probe, so the reviewer finds the requested texts in the image (module docstring,
-    "Outputs")."""
+    """The probe's texts are for the closing reply, so the reviewer finds the requested texts in the image (module
+    docstring, "Outputs")."""
 
     def __init__(
         self,
@@ -243,8 +248,8 @@ class JavaScriptRuntime:
         return [f"{finding.rule}: {finding.message}" for finding in validate_security(code, library=self.library)]
 
     def collect(self, run_dir: Path, theme: Theme) -> tuple[bytes | None, dict[str, Any] | None]:
-        """The PNG, read without following links; the harness writes no probe."""
-        return read_output(run_dir / f"plot-{theme}.png", MAX_PNG_BYTES), None
+        """The PNG and the text probe, read without following links."""
+        return read_output(run_dir / f"plot-{theme}.png", MAX_PNG_BYTES), read_probe(run_dir / f"probe-{theme}.json")
 
     # The code conventions of the language, for the pipeline (`agents/anyplot/code/profiles/javascript/`).
 

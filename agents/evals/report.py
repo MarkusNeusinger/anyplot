@@ -25,6 +25,14 @@ no ADAPTATION validator finding on the shipped code. The advisory probe gates (G
 G5, G7, G8, G9, G10, G11, G12) and the reviewer's verdict do not decide a pass; the owner's blind
 judgement in the gallery does that for the sample, which holds passed renders only.
 Every rate counts all runs: a run that crashed in the harness did not pass.
+**Drawn texts.** `untexted` counts the shipped runs whose probe reported no drawn texts
+(`texts` is None: the `pipeline_result` line's roles of `PlotShows.texts`) although their
+library's render reports them (`texts_expected`, every library since 2026-11-01), per library in
+`untexted_by_library`: the closing reply of such a run had no text of the plot to quote
+(user test of 2026-11-01). `unbacked_quotes` counts the passages the root's replies to a
+shipped plot quote that no drawn text and no requested text holds (`matrix.unbacked_quotes`),
+and `probe_errors` the failed probes by class. The matrix prints a note when any of the
+first two is above zero; none decides a pass.
 **Accept-match** compares the harness outcome (`accepted` when the status is `ok`, the
 reviewer's pass) with a case's `expected` value; cases that expect `unknown` are left
 out.
@@ -147,6 +155,15 @@ def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
     for run in runs:
         tokens.update(run.get("tokens") or {})
     reviewer = Counter(str((run.get("reviewer") or {}).get("verdict")) for run in counted)
+    # A shipped render whose probe reported no drawn texts although its library's render reports them: the closing
+    # reply had none to quote. A library without a probe (`texts_expected` False) and a run of a report older than the
+    # fields are not counted.
+    untexted = [
+        run
+        for run in runs
+        if run.get("status") in SHIPPED and run.get("texts_expected") is True and run.get("texts") is None
+    ]
+    quoting = [run for run in runs if int(run.get("unbacked_quotes") or 0) > 0]
     return {
         "runs": len(runs),
         "counted": len(counted),
@@ -190,6 +207,11 @@ def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
         "stages_not_passed": _values([run for run in runs if not run.get("passed")], "stage"),
         "shipped_from_attempt": _values(runs, "shipped_attempt"),
         "reviewer": dict(sorted(reviewer.items())),
+        "untexted": len(untexted),
+        "untexted_by_library": dict(sorted(Counter(str(run.get("library")) for run in untexted).items())),
+        "unbacked_quotes": sum(int(run.get("unbacked_quotes") or 0) for run in runs),
+        "unbacked_quote_runs": sorted(str(run.get("case_id")) for run in quoting),
+        "probe_errors": _counter(runs, "probe_errors"),
         "model_versions": sorted({version for run in runs for version in run.get("model_versions") or []}),
         "by_perturbation": _group(runs, lambda run: str(run.get("perturbation") or "custom")),
         "by_library": _group(runs, lambda run: str(run.get("library"))),
@@ -442,6 +464,21 @@ def summary_markdown(report: dict[str, Any], diff: Diff | None = None) -> str:
             ],
             ["ok rate", _pct(summary.get("ok_rate"))],
             ["Accept-match rate", f"{_pct(summary.get('accept_match_rate'))} of {summary.get('accept_judged')}"],
+            [
+                "Shipped without drawn texts",
+                f"{summary.get('untexted', 0)}"
+                + "".join(
+                    f", {library} {count}" for library, count in (summary.get("untexted_by_library") or {}).items()
+                ),
+            ],
+            [
+                "Quotes in replies that no drawn text holds",
+                f"{summary.get('unbacked_quotes', 0)} in {len(summary.get('unbacked_quote_runs') or [])} runs",
+            ],
+            [
+                "Probe errors",
+                ", ".join(f"{name} {n}" for name, n in (summary.get("probe_errors") or {}).items()) or "0",
+            ],
             ["Statuses", ", ".join(f"{name} {count}" for name, count in (summary.get("statuses") or {}).items())],
             ["Cost at list price", _usd(summary.get("cost_total_usd"))],
             ["Cost per successful plot", _usd(summary.get("cost_per_success_usd"))],

@@ -12,6 +12,7 @@ from agents.anyplot.code.profiles.r import regions as r_regions
 from agents.anyplot.code.regions import PLACEHOLDER
 from agents.anyplot.data.kinds import ColumnKinds, read_kinds
 from agents.anyplot.render.contract import BLOCKING_RULES, RenderJob
+from agents.anyplot.render.png import read_probe
 from agents.anyplot.render.runtimes import (
     JAVASCRIPT_LIBRARIES,
     JULIA_LIBRARIES,
@@ -108,7 +109,8 @@ class TestRegistry:
         assert runtime.cpu_seconds == 45 and runtime.render_p95_s == 15.0
         assert runtime.blocking_rules == BLOCKING_RULES | {"dataset-package"}
         assert set(runtime.adaptation_targets) == set(PYTHON_TARGETS)
-        assert runtime.review_texts is True  # no probe: the review finds the requested texts in the image
+        # The probe's texts ground the reply; the review finds the requested texts in the image.
+        assert runtime.review_texts is True and runtime.text_probe is True
         assert has_runtime("ggplot2")
         with pytest.raises(ValueError, match="python library"):
             RRuntime(library="matplotlib")
@@ -123,7 +125,8 @@ class TestRegistry:
         assert runtime.cpu_seconds == 45 and runtime.render_p95_s == 25.0
         assert runtime.blocking_rules == BLOCKING_RULES | {"dataset-package"}
         assert set(runtime.adaptation_targets) == set(PYTHON_TARGETS)
-        assert runtime.review_texts is True  # no probe: the review finds the requested texts in the image
+        # The probe's texts ground the reply; the review finds the requested texts in the image.
+        assert runtime.review_texts is True and runtime.text_probe is True
         assert has_runtime("makie")
         with pytest.raises(ValueError, match="r library"):
             JuliaRuntime(library="ggplot2")
@@ -140,7 +143,8 @@ class TestRegistry:
         assert runtime.cpu_seconds == 45 and runtime.render_p95_s == 15.0
         assert runtime.blocking_rules == BLOCKING_RULES | {"unavailable-import"}
         assert set(runtime.adaptation_targets) == set(PYTHON_TARGETS)
-        assert runtime.review_texts is True  # no probe: the review finds the requested texts in the image
+        # The probe's texts ground the reply; the review finds the requested texts in the image.
+        assert runtime.review_texts is True and runtime.text_probe is True
         assert has_runtime(library)
         with pytest.raises(ValueError, match="r library"):
             JavaScriptRuntime(library="ggplot2")
@@ -352,11 +356,16 @@ class TestRRuntimeBindings:
         assert runtime.data_command() == python.data_command() and runtime.data_env(20) == python.data_env(20)
         assert runtime.convert_command() == python.convert_command() and runtime.convert_env() == python.convert_env()
 
-    def test_collect_reads_the_png_and_no_probe(self, tmp_path: Path) -> None:
+    def test_collect_reads_the_png_and_the_text_probe(self, tmp_path: Path) -> None:
+        """The probe the harness made of the drawn texts `text_probe.R` left (`harness.collect_text_probe`)."""
         (tmp_path / "plot-dark.png").write_bytes(b"\x89PNG data")
-        (tmp_path / "probe-dark.json").write_text('{"texts": []}')
-        assert runtime_for("ggplot2").collect(tmp_path, "dark") == (b"\x89PNG data", None)
+        (tmp_path / "probe-dark.json").write_text('{"labels": [{"kind": "title", "text": "Umsatz"}]}')
+        assert runtime_for("ggplot2").collect(tmp_path, "dark") == (
+            b"\x89PNG data",
+            {"labels": [{"kind": "title", "text": "Umsatz"}]},
+        )
         assert runtime_for("ggplot2").collect(tmp_path, "light") == (None, None)
+        assert runtime_for("ggplot2").text_probe is True and runtime_for("ggplot2").review_texts is True
 
 
 class TestJuliaRuntimeBindings:
@@ -512,12 +521,12 @@ class TestJuliaRuntimeBindings:
 
     def test_the_command_is_the_renderers_julia_row_in_exec_mode(self) -> None:
         """The argv `executor.build_argv` runs after `sandbox do --`: the harness, `--exec --`, Julia's launcher."""
-        from agents.renderer.commands import JULIA_BINARY, JULIA_FLAGS, command_for
+        from agents.renderer.commands import JULIA_BINARY, JULIA_FLAGS, JULIA_TEXT_PROBE, command_for
         from agents.renderer.executor import ExecutorConfig, build_argv
         from agents.renderer.settings import RendererSettings
 
         local = runtime_for("makie").command("light")
-        expected = ["--exec", "--", JULIA_BINARY, *JULIA_FLAGS, "plot.jl"]
+        expected = ["--exec", "--", JULIA_BINARY, *JULIA_FLAGS, "-L", JULIA_TEXT_PROBE, "plot.jl"]
         assert local[-len(expected) :] == expected
         config = ExecutorConfig.from_settings(RendererSettings())
         deployed = build_argv(config, "r-x", Path("/runs/x"), "light", 60, command=command_for("julia", "makie"))
@@ -528,11 +537,13 @@ class TestJuliaRuntimeBindings:
         assert runtime.data_command() == python.data_command() and runtime.data_env(20) == python.data_env(20)
         assert runtime.convert_command() == python.convert_command() and runtime.convert_env() == python.convert_env()
 
-    def test_collect_reads_the_png_and_no_probe(self, tmp_path: Path) -> None:
+    def test_collect_reads_the_png_and_the_text_probe(self, tmp_path: Path) -> None:
+        """The probe the harness made of the drawn texts `text_probe.jl` left (`harness.collect_text_probe`)."""
         (tmp_path / "plot-dark.png").write_bytes(b"\x89PNG data")
-        (tmp_path / "probe-dark.json").write_text('{"texts": []}')
-        assert runtime_for("makie").collect(tmp_path, "dark") == (b"\x89PNG data", None)
+        (tmp_path / "probe-dark.json").write_text('{"error": "MethodError"}')
+        assert runtime_for("makie").collect(tmp_path, "dark") == (b"\x89PNG data", {"error": "MethodError"})
         assert runtime_for("makie").collect(tmp_path, "light") == (None, None)
+        assert runtime_for("makie").text_probe is True and runtime_for("makie").review_texts is True
 
 
 class TestJavaScriptRuntimeBindings:
@@ -709,11 +720,25 @@ class TestJavaScriptRuntimeBindings:
         assert runtime.data_command() == python.data_command() and runtime.data_env(20) == python.data_env(20)
         assert runtime.convert_command() == python.convert_command() and runtime.convert_env() == python.convert_env()
 
-    def test_collect_reads_the_png_and_no_probe(self, tmp_path: Path) -> None:
+    def test_collect_reads_the_png_and_the_text_probe(self, tmp_path: Path) -> None:
+        """The browser harness writes the drawn texts (`render.mjs`, `writeTextProbe`); a probe that is no JSON
+        object is simply absent, as Python's is."""
         (tmp_path / "plot-dark.png").write_bytes(b"\x89PNG data")
-        (tmp_path / "probe-dark.json").write_text('{"texts": []}')
-        assert runtime_for("d3").collect(tmp_path, "dark") == (b"\x89PNG data", None)
+        (tmp_path / "probe-dark.json").write_text('{"labels": [{"kind": "title", "text": "Umsatz"}]}')
+        (tmp_path / "probe-light.json").write_text("[1, 2]")
+        assert runtime_for("d3").collect(tmp_path, "dark") == (
+            b"\x89PNG data",
+            {"labels": [{"kind": "title", "text": "Umsatz"}]},
+        )
         assert runtime_for("d3").collect(tmp_path, "light") == (None, None)
+
+    def test_a_broken_or_linked_probe_is_simply_absent(self, tmp_path: Path) -> None:
+        (tmp_path / "probe-light.json").write_text("{not json")
+        (tmp_path / "elsewhere.json").write_text('{"labels": []}')
+        (tmp_path / "probe-dark.json").symlink_to(tmp_path / "elsewhere.json")
+        assert read_probe(tmp_path / "probe-light.json") is None
+        assert read_probe(tmp_path / "probe-dark.json") is None  # never followed: the code under test made it
+        assert read_probe(tmp_path / "elsewhere.json") == {"labels": []}
 
 
 class TestRowEnvironment:

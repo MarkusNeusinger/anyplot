@@ -42,7 +42,9 @@
 //                              closed, no popup (--block-new-web-contents), a
 //                              content security policy, the zone UTC, a V8 heap
 //                              cap; MUI X imports closed to the image's allowlist;
-//                              a bounded console; one final error line (below)
+//                              a bounded console; one final error line (below);
+//                              and probe-<theme>.json, the texts the plot draws by
+//                              role (`writeTextProbe`), for the agents' reply
 //   ANYPLOT_NO_HTML=1          no plot-<theme>.html
 //   ANYPLOT_DATA_JSON=<path>   the table as typed JSON (agents/anyplot/data/
 //                              typed_json.py), injected as window.ANYPLOT_DATA
@@ -942,6 +944,347 @@ async function readPageRecords(page, bounded) {
   return inPageError;
 }
 
+// -----------------------------------------------------------------------------
+// The text probe (sandbox mode): after the screenshot, the texts the plot draws,
+// by role, go to probe-<theme>.json as `labels` ({kind, text} in the kinds of
+// the matplotlib probe, agents/anyplot/render/harness.py `drawn_labels`) and
+// `labels_truncated`, under that probe's caps. The agents' closing reply quotes
+// them (agents/anyplot/grounding.py); the requested-text check stays with the
+// reviewer for these libraries. The probe is best-effort: one that fails or
+// runs past TEXT_PROBE_TIMEOUT_MS leaves the labels out, writes `{"error":
+// <class>}` (which the agents log as `probe_error`) and a stdout line, and never
+// fails or changes the render.
+//
+// SVG and HTML texts come from the page (`pageTexts`): every drawn <text> and
+// every HTML text node in #container but those an ECharts instance or bokeh
+// draws (their own sources below report them), named by the library's classes
+// (Highcharts, plotly, MUI X; D3's axis ticks by their axis's text-anchor). A
+// text no class names is the title when it is the largest in the top fifth of
+// the plot, in a library that names none; else another text. Chart.js and bokeh
+// draw on a canvas, so their texts come from the chart's own model: Chart.js's
+// titles, scale titles, the ticks it kept and the legend; bokeh's titles,
+// labels, axis labels, the tick labels its axes compute and the legends. A text
+// a plugin draws itself is not in the model, so those probes report themselves
+// incomplete. ECharts' scene graph (zrender's display list) holds every text it
+// draws, each named by the component or series that owns it.
+// -----------------------------------------------------------------------------
+const TEXT_PROBE_TIMEOUT_MS = 2000; // the catalogue's bar-grouped pages answer in tens of milliseconds
+const LABEL_LIMIT = 400; // harness.LABEL_LIMIT
+const LABEL_CHARS = 200; // harness.LABEL_CHARS
+const LABEL_TOTAL_CHARS = 20000; // harness.LABEL_TOTAL_CHARS
+const TICK_LABELS_PER_AXIS = 100; // harness.TICK_LABELS_PER_AXIS, per kind here
+const PAGE_TEXTS_LIMIT = 2000; // texts the page hands back at most
+
+// Runs in the page: `{entries: [[kind, text], ...], complete}`. The snippet
+// shares the page and can change what this reads, so Node checks every value.
+function pageTexts([library, limit]) {
+  const entries = [];
+  let complete = true;
+  const add = (kind, value) => {
+    if (value === null || value === undefined) return;
+    if (entries.length >= limit) {
+      complete = false;
+      return;
+    }
+    const text = String(value).replace(/\s+/g, " ").trim();
+    if (text) entries.push([kind, text]);
+  };
+  const addAll = (kind, value) => [].concat(value).forEach((item) => add(kind, item));
+  const container = document.getElementById("container");
+  if (!container) return { entries, complete: false };
+  const frame = container.getBoundingClientRect();
+  const has = (element, selector) => element.closest(selector) !== null;
+  const axisOf = (element, x, y) => (has(element, x) ? "x" : has(element, y) ? "y" : null);
+  const ROLES = {
+    highcharts(element) {
+      if (has(element, ".highcharts-tooltip, .highcharts-tooltip-container")) return null;
+      if (has(element, ".highcharts-title")) return "title";
+      if (has(element, ".highcharts-subtitle")) return "subtitle";
+      if (has(element, ".highcharts-legend")) return "legend text";
+      if (has(element, ".highcharts-data-label, .highcharts-data-labels")) return "annotation";
+      // The classes name the axis collection; an inverted chart (a bar chart) draws xAxis vertically, and the kinds
+      // name the drawn axis, as matplotlib's do.
+      const drawn = (axis) => {
+        const charts = (window.Highcharts && window.Highcharts.charts) || [];
+        const chart = charts.find((item) => item && item.container && item.container.contains(element));
+        return axis && chart && chart.inverted ? { x: "y", y: "x" }[axis] : axis;
+      };
+      if (has(element, ".highcharts-axis-title")) {
+        const axis = drawn(axisOf(element, ".highcharts-xaxis", ".highcharts-yaxis"));
+        return axis ? `${axis} axis label` : "other axis label";
+      }
+      if (has(element, ".highcharts-axis-labels")) {
+        const axis = drawn(axisOf(element, ".highcharts-xaxis-labels", ".highcharts-yaxis-labels"));
+        return axis ? `${axis} tick label` : "text";
+      }
+      return undefined;
+    },
+    plotly(element) {
+      if (has(element, ".hoverlayer, .modebar-container")) return null;
+      if (has(element, ".gtitle-subtitle")) return "subtitle";
+      if (has(element, ".gtitle")) return "title";
+      if (has(element, ".legend")) return "legend text";
+      if (has(element, ".annotation")) return "annotation";
+      if (has(element, ".colorbar")) return has(element, ".cbtitle") ? "colorbar label" : "colorbar tick label";
+      for (let node = element; node && node !== container; node = node.parentElement) {
+        const name = Array.from(node.classList || []).find((item) => /^[xy]\d*(title|tick)$/.test(item));
+        if (name) return `${name[0]} ${name.endsWith("title") ? "axis label" : "tick label"}`;
+      }
+      if (has(element, ".textpoint, .slicetext, .bartext")) return "annotation";
+      return undefined;
+    },
+    muix(element) {
+      if (has(element, '[class*="MuiChartsTooltip"], [class*="MuiPopper"]')) return null;
+      const axis = axisOf(element, '[class*="MuiChartsAxis-directionX"]', '[class*="MuiChartsAxis-directionY"]');
+      if (has(element, '[class*="MuiChartsAxis-tickLabel"]')) return axis ? `${axis} tick label` : "text";
+      if (has(element, '[class*="MuiChartsAxis-label"]')) return axis ? `${axis} axis label` : "other axis label";
+      if (has(element, '[class*="MuiChartsLegend"]')) return "legend text";
+      if (has(element, '[class*="MuiBarLabel"], [class*="MuiPieArcLabel"]')) return "annotation";
+      return undefined;
+    },
+    d3(element) {
+      // d3-axis sets text-anchor on the axis's group: middle on a bottom or top axis, end or start on a side one.
+      const tick = element.closest(".tick");
+      if (tick && tick.parentElement) {
+        const anchor = tick.parentElement.getAttribute("text-anchor");
+        return anchor === "middle" ? "x tick label" : anchor === "end" || anchor === "start" ? "y tick label" : "text";
+      }
+      return undefined; // a rotated text may be the y axis label: decided after the walk (`edgeLabel`)
+    },
+  };
+  // D3 names no axis label: a text turned by 90 degrees is one only when it is the single such text in the outer
+  // tenth of the plot's width, beside the axis; rotated value labels and annotations stay other texts.
+  const rotated = (element) => /rotate\(\s*-?(90|270)\b/.test(element.getAttribute("transform") || "");
+  const roleOf = ROLES[library] || (() => undefined);
+  const drawn = (element) => {
+    if (element.checkVisibility && !element.checkVisibility({ opacityProperty: true, visibilityProperty: true })) return false;
+    const rect = element.getBoundingClientRect();
+    const inside = rect.right > frame.left && rect.left < frame.right && rect.bottom > frame.top && rect.top < frame.bottom;
+    return rect.width > 0 && rect.height > 0 && inside;
+  };
+  // A text's own characters: Highcharts draws an outlined label twice, once as a `highcharts-text-outline` tspan;
+  // a <title> inside a text is its tooltip.
+  const ownText = (element) => {
+    let text = "";
+    for (const child of element.childNodes) {
+      if (child.nodeType === Node.TEXT_NODE) text += child.data;
+      else if (child.nodeType === Node.ELEMENT_NODE && child.localName !== "title" && !child.classList.contains("highcharts-text-outline")) {
+        text += ownText(child);
+      }
+    }
+    return text;
+  };
+  const loose = [];
+  let largest = 0; // the font size of the largest named text
+  // The DOM an ECharts instance draws into, whose texts its display list reports (an SVG renderer's too); bokeh's
+  // page is its figure alone, whose texts its models report. Walking them as well would count each text twice.
+  const echartsRoots =
+    library === "echarts" && window.echarts
+      ? [container, ...container.querySelectorAll("*")].filter((element) => window.echarts.getInstanceByDom(element))
+      : [];
+  const visit = (element, text) => {
+    if (entries.length + loose.length >= limit) {
+      complete = false; // a page of more texts than the probe keeps: the rest are not measured
+      return;
+    }
+    if (library === "bokeh" || echartsRoots.some((root) => root.contains(element))) return;
+    const kind = roleOf(element);
+    if (kind === null || !drawn(element)) return;
+    const size = parseFloat(getComputedStyle(element).fontSize) || 0;
+    if (kind !== undefined) {
+      largest = Math.max(largest, size);
+      add(kind, text);
+      return;
+    }
+    const rect = element.getBoundingClientRect();
+    const middle = rect.left + rect.width / 2 - frame.left;
+    const edge = middle < frame.width / 10 || middle > (frame.width * 9) / 10;
+    loose.push({ text, size, top: rect.top - frame.top, beside: library === "d3" && rotated(element) && edge });
+  };
+  for (const element of container.querySelectorAll("text")) visit(element, ownText(element));
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const parent = node.parentElement;
+    if (parent && node.data.trim() && !parent.closest("svg, script, style")) visit(parent, node.data);
+  }
+
+  if (library === "chartjs" && window.Chart) {
+    complete = false; // a plugin's own drawing is in no model
+    for (const chart of Object.values(window.Chart.instances || {})) {
+      const plugins = chart.options.plugins || {};
+      if (plugins.title && plugins.title.display) addAll("title", plugins.title.text);
+      if (plugins.subtitle && plugins.subtitle.display) addAll("subtitle", plugins.subtitle.text);
+      for (const scale of Object.values(chart.scales || {})) {
+        const options = scale.options || {};
+        if (options.display === false) continue;
+        const axis = scale.axis === "x" || scale.axis === "y" ? scale.axis : null;
+        if (options.title && options.title.display) addAll(axis ? `${axis} axis label` : "other axis label", options.title.text);
+        if (!options.ticks || options.ticks.display !== false) {
+          for (const tick of scale.ticks || []) addAll(axis ? `${axis} tick label` : "text", tick.label);
+        }
+        if (Array.isArray(scale._pointLabels) && !(options.pointLabels && options.pointLabels.display === false)) {
+          for (const label of scale._pointLabels) addAll("text", label);
+        }
+      }
+      const legend = chart.legend;
+      if (legend && legend.options && legend.options.display) {
+        if (legend.options.title && legend.options.title.display) addAll("legend text", legend.options.title.text);
+        for (const item of legend.legendItems || []) addAll("legend text", item.text);
+      }
+    }
+  } else if (library === "echarts" && window.echarts) {
+    const lines = (value) => String(value === null || value === undefined ? "" : value).split("\n");
+    // The component or series whose view group holds a text names its role (null: a series, a value label).
+    // An axis view marks its texts (`anid`, ECharts 6.1): `name` for the axis name, `label_<n>` for a tick label, so a
+    // category that reads like the axis name stays a tick; an element without the mark is read by its text.
+    const kindOf = (model, text, anid) => {
+      if (model === null) return "annotation";
+      if (!model) return "text";
+      const type = model.mainType;
+      if (type === "title") return lines(model.get("subtext")).includes(text) ? "subtitle" : "title";
+      if (type === "legend") return "legend text";
+      if (type === "markLine" || type === "markPoint" || type === "markArea") return "annotation";
+      if (!/Axis$/.test(type)) return "text";
+      const marked = anid === "name" ? true : typeof anid === "string" && anid.startsWith("label") ? false : null;
+      const named = marked ?? lines(model.get("name")).includes(text);
+      const axis = { xAxis: "x", yAxis: "y" }[type];
+      if (axis) return `${axis} ${named ? "axis label" : "tick label"}`;
+      return named ? "other axis label" : "text";
+    };
+    for (const element of [container, ...container.querySelectorAll("*")]) {
+      const chart = window.echarts.getInstanceByDom(element);
+      if (!chart) continue;
+      const owners = new Map();
+      for (const view of chart._componentsViews || []) if (view && view.group && view.__model) owners.set(view.group, view.__model);
+      for (const view of chart._chartsViews || []) if (view && view.group) owners.set(view.group, null);
+      for (const shape of chart.getZr().storage.getDisplayList(true)) {
+        const text = shape.style && shape.style.text;
+        if (text === null || text === undefined || shape.invisible) continue;
+        let node = shape;
+        for (let depth = 0; node && !owners.has(node) && depth < 100; depth += 1) node = node.parent || node.__hostTarget;
+        if (node && !owners.has(node)) node = null; // a chain too deep (or a cycle) names no view
+        const anid = shape.anid ?? (shape.parent ? shape.parent.anid : undefined);
+        add(kindOf(node ? owners.get(node) : undefined, String(text), anid), text);
+      }
+    }
+  } else if (library === "bokeh" && window.Bokeh) {
+    complete = false; // a widget's HTML sits in shadow roots, out of the walk above
+    const index = window.Bokeh.index;
+    const stack = index instanceof Map ? [...index.values()] : Object.values(index || {});
+    const seen = new Set();
+    while (stack.length && seen.size < 10000) {
+      const view = stack.pop();
+      if (!view || seen.has(view)) continue;
+      seen.add(view);
+      try {
+        for (const child of view.children()) stack.push(child);
+      } catch (e) {
+        complete = false;
+      }
+      const model = view.model;
+      if (!model || model.visible === false) continue;
+      const type = String(model.type);
+      if (type === "Title") add("title", model.text);
+      else if (type === "Label") add("annotation", model.text);
+      else if (type === "LabelSet" && view.text && typeof view.text.get === "function") {
+        for (let i = 0; i < Math.min(view.text.length, limit); i += 1) add("annotation", view.text.get(i));
+      } else if (type === "Legend") {
+        if (model.title) add("legend text", model.title);
+        for (const item of model.items || []) {
+          if (item.visible === false) continue;
+          addAll("legend text", item.get_labels_list_from_label_prop ? item.get_labels_list_from_label_prop() : []);
+        }
+      } else if (/Axis$/.test(type)) {
+        const axis = view.dimension === 0 ? "x" : view.dimension === 1 ? "y" : null;
+        const label = model.axis_label;
+        if (label !== null && label !== undefined) add(axis ? `${axis} axis label` : "other axis label", label.text ?? label);
+        // A categorical axis draws one row of labels per level of its factors (a quarter over its products).
+        const levels = typeof view._get_factor_info === "function" ? view._get_factor_info().map((level) => level[0]) : null;
+        const ticks = view.tick_coords && view.tick_coords.major ? view.tick_coords.major[view.dimension] : [];
+        for (const labels of levels || (ticks && ticks.length ? [view.compute_labels(ticks)] : [])) {
+          for (const item of (labels && labels.items) || []) add(axis ? `${axis} tick label` : "text", item.text);
+        }
+      }
+    }
+  }
+
+  // The title of a plot whose library names none: the one text larger than every other, in the top fifth. Legend
+  // entries at the top share their size, so none of them is taken for it.
+  const beside = loose.filter((item) => item.beside);
+  const edgeLabel = beside.length === 1 ? beside[0] : null;
+  let title = null;
+  if (!entries.some(([kind]) => kind === "title")) {
+    const top = Math.max(largest, ...loose.map((item) => item.size));
+    const biggest = loose.filter((item) => item.size === top);
+    if (biggest.length === 1 && top > largest && biggest[0].top < frame.height / 5) title = biggest[0];
+  }
+  for (const item of loose) add(item === edgeLabel ? "y axis label" : item === title ? "title" : "text", item.text);
+  return { entries, complete };
+}
+
+// `labels` and `labels_truncated` from the page's answer: every entry checked, titles, axis labels, legend texts and
+// annotations first, then at most TICK_LABELS_PER_AXIS tick labels of each kind, then other texts; under LABEL_LIMIT,
+// LABEL_CHARS and LABEL_TOTAL_CHARS, as harness.text_labels.
+function textLabels(found) {
+  const valid = (entry) =>
+    Array.isArray(entry) && entry.length === 2 && typeof entry[0] === "string" && entry[0].length <= 40 && typeof entry[1] === "string";
+  const entries = found && Array.isArray(found.entries) ? found.entries.slice(0, PAGE_TEXTS_LIMIT).filter(valid) : [];
+  let truncated = !(found && found.complete === true) || entries.length >= PAGE_TEXTS_LIMIT;
+  const ranked = [];
+  const perKind = new Map();
+  for (const [kind, raw] of entries) {
+    const text = raw.replace(/\s+/g, " ").trim();
+    if (!text) continue;
+    if (kind.endsWith("tick label")) {
+      perKind.set(kind, (perKind.get(kind) || 0) + 1);
+      if (perKind.get(kind) > TICK_LABELS_PER_AXIS) {
+        truncated = true;
+        continue;
+      }
+    }
+    ranked.push({ rank: kind.endsWith("tick label") ? 1 : kind === "text" ? 2 : 0, kind, text });
+  }
+  ranked.sort((a, b) => a.rank - b.rank); // stable: draw order within a rank
+  const labels = [];
+  let budget = LABEL_TOTAL_CHARS;
+  for (const { kind, text } of ranked.slice(0, LABEL_LIMIT)) {
+    const size = Math.min(text.length, LABEL_CHARS);
+    if (size > budget) {
+      truncated = true;
+      break;
+    }
+    budget -= size;
+    truncated = truncated || text.length > LABEL_CHARS;
+    labels.push({ kind, text: text.slice(0, LABEL_CHARS) });
+  }
+  return { labels, labels_truncated: truncated || ranked.length > LABEL_LIMIT };
+}
+
+// Writes probe-<theme>.json from the page as it was screenshotted. A failure or a page that does not answer within
+// TEXT_PROBE_TIMEOUT_MS writes `{"error": <class>}` and a stdout line instead: the render stands either way.
+async function writeTextProbe(page, library, theme) {
+  const out = path.resolve(process.cwd(), `probe-${theme}.json`);
+  let report;
+  try {
+    const bounded = boundedBy(Date.now() + TEXT_PROBE_TIMEOUT_MS);
+    report = textLabels(await bounded(page.evaluate(pageTexts, [library, PAGE_TEXTS_LIMIT])));
+  } catch (err) {
+    const cls = errorClass(FAILURES.get(err)?.cls ?? err?.name, "Error");
+    console.log(`render: the text probe left the labels out (${cls})`);
+    report = { error: cls };
+  }
+  let handle = null;
+  try {
+    // Never through a link a step before this one could have left at the probe's name.
+    handle = await open(out, constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | constants.O_NOFOLLOW, 0o644);
+    await handle.writeFile(JSON.stringify(report), "utf-8");
+  } catch {
+    // The texts ground the agents' reply; a probe that cannot be written leaves none, and the render stands.
+  } finally {
+    await handle?.close().catch(() => {});
+  }
+}
+
 function usage(...lines) {
   for (const line of lines) console.error(line);
   if (SANDBOX) console.error(`render: error: harness UsageError -: ${oneLine(lines[0].replace(/^render: /, ""), ERROR_MESSAGE_CHARS)}`);
@@ -1538,6 +1881,7 @@ async function renderFigure(args) {
     }
     const pngOut = path.resolve(process.cwd(), `plot-${theme}.png`);
     await writeFile(pngOut, png);
+    await writeTextProbe(page, library, theme);
     printSummary(CONTEXT);
     console.log(
       `render: ${library} ${theme} ${canvas.orientation} figure ${size.width}x${size.height} at scale ${canvas.scale.toFixed(3)} → ${pngOut} (${width}×${height})`,
@@ -1729,6 +2073,7 @@ async function main() {
 
     const pngOut = path.resolve(process.cwd(), `plot-${theme}.png`);
     await bounded(container.screenshot({ path: pngOut }));
+    if (SANDBOX) await writeTextProbe(page, library, theme);
 
     if (consoleErrors.length) {
       console.warn(`render: ${consoleErrors.length} console error(s) during render:`);

@@ -1024,6 +1024,27 @@ class TestMessagesStream:
         client.post("/debug/agent/sessions/s1/messages", json={"text": "make it blue"}, headers=CLIENT_HEADERS)
         assert upstream.last_json == {"text": "make it blue"}
 
+    def test_the_site_theme_is_forwarded_as_a_query_parameter(self, client, upstream) -> None:
+        """The page's site theme rides in the query, never the strict body, so either side deploys first."""
+        upstream.handler = lambda request: httpx.Response(200, content=b"event: done\ndata: {}\n\n")
+        client.post(
+            "/debug/agent/sessions/s1/messages?theme=dark", json={"action": "create_plot"}, headers=CLIENT_HEADERS
+        )
+        assert str(upstream.requests[-1].url) == f"{SERVICE_URL}/v1/sessions/s1/messages?theme=dark"
+        assert upstream.last_json == {"action": "create_plot"}
+
+    def test_a_turn_without_a_site_theme_sends_none(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(200, content=b"event: done\ndata: {}\n\n")
+        client.post("/debug/agent/sessions/s1/messages", json={"action": "create_plot"}, headers=CLIENT_HEADERS)
+        assert str(upstream.requests[-1].url) == f"{SERVICE_URL}/v1/sessions/s1/messages"
+
+    def test_an_unknown_site_theme_is_422_before_any_upstream_call(self, client, upstream) -> None:
+        response = client.post(
+            "/debug/agent/sessions/s1/messages?theme=sepia", json={"action": "create_plot"}, headers=CLIENT_HEADERS
+        )
+        assert response.status_code == 422
+        assert upstream.requests == []
+
     def test_connection_failure_emits_error_then_done(self, client, upstream) -> None:
         def refuse(request):
             raise httpx.ConnectError("connection refused")

@@ -196,6 +196,8 @@ COPY agents/renderer/ ./agents/renderer/
 COPY --from=builder /app/VERSION ./agents/renderer/VERSION
 COPY agents/anyplot/render/harness.py /opt/anyplot/harness.py
 COPY agents/anyplot/render/convert.py /opt/anyplot/convert.py
+# The R and Julia rows' text probes (R_TEXT_PROBE and JULIA_TEXT_PROBE in agents/renderer/commands.py).
+COPY agents/anyplot/render/text_probe.R agents/anyplot/render/text_probe.jl /opt/anyplot/
 
 # lets-plot's native ImageMagick starts its delegate programs (Ghostscript, curl,
 # ffmpeg, ...) by name from PATH, where the plot guard's audit hook cannot see a
@@ -251,6 +253,7 @@ COPY agents/renderer/fonts.conf /opt/anyplot/fonts.conf
 RUN mkdir -p /opt/mplconfig \
     && MPLCONFIGDIR=/opt/mplconfig .venv/bin/python -I -c "import sys; sys.path.insert(0, '/opt/anyplot'); import harness; harness.check_fonts()" \
     && chmod -R a+rX /opt/mplconfig /opt/anyplot/harness.py /opt/anyplot/convert.py /opt/anyplot/fonts.conf \
+       /opt/anyplot/text_probe.R /opt/anyplot/text_probe.jl \
        /usr/share/fonts/noto /usr/share/doc/fonts-noto
 
 RUN .venv/bin/python -m compileall -q agents

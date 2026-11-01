@@ -16,6 +16,13 @@
  * events instead (the server numbers them in the same order), which drifts
  * only when a stored version's event never arrives.
  *
+ * Theme: every turn sends the theme the site shows when it starts
+ * (`useTheme().effective`, so `system` resolves first), and a plot of that turn
+ * renders in it unless the user asked for a theme in the chat (owner decision
+ * of 2026-11-01); the light and dark switch renders the other one. A switch of
+ * the site theme mid-session changes no shown version, only the next one. The
+ * fan-out's sessions are this hook too, so they send the same theme.
+ *
  * Bindings: the dataset answer lists the spec's roles. A single role binds
  * under its own name, a variadic family `y` under its members `y1`, `y2`, ...;
  * the hook keeps the members contiguous (`compactFamilies`), so clearing `y2`
@@ -90,7 +97,9 @@
  *
  * Session lifetime: the session, with the pasted data and its renders, is
  * deleted when the page unmounts and on `pagehide` (a reload or a closed tab,
- * sent with `keepalive`); the server's idle sweep is the backstop.
+ * sent with `keepalive`); the server's idle sweep is the backstop. Nothing
+ * restores it, so while it holds data, a plot or work in flight
+ * (`sessionHoldsWork`) the page asks before it lets the user leave.
  *
  * Saving: `saveSession` (`.save()`) downloads the session's feedback case,
  * the conversation, code, images and config the agents service assembles,
@@ -141,6 +150,7 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react';
 
 import { useAnalytics } from 'src/hooks/useAnalytics';
+import { useTheme } from 'src/hooks/useLayoutContext';
 import {
   agentApi,
   AgentApiError,
@@ -1102,11 +1112,14 @@ export function useAgentSession({
 }: UseAgentSessionOptions) {
   const [state, dispatch] = useReducer(agentReducer, library, initialAgentState);
   const { trackEvent } = useAnalytics();
+  const { effective: siteTheme } = useTheme();
 
   // Values async callbacks read after an await; refs, so a stale closure never
   // acts on a previous session.
   const stateRef = useRef(state);
   stateRef.current = state;
+  const siteThemeRef = useRef<Theme>(siteTheme);
+  siteThemeRef.current = siteTheme;
   const abortRef = useRef<AbortController | null>(null);
   const stoppedRef = useRef(false);
   const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1733,7 +1746,13 @@ export function useAgentSession({
       );
       let finished = false;
       try {
-        const response = await agentApi.postMessage(token, sid, body, controller.signal);
+        const response = await agentApi.postMessage(
+          token,
+          sid,
+          body,
+          controller.signal,
+          siteThemeRef.current
+        );
         if (!response.body) throw new AgentApiError(502, 'upstream');
         for await (const raw of readSseEvents(response.body, controller.signal)) {
           const event = parseAgentEvent(raw);
@@ -2135,5 +2154,23 @@ export function sessionBusy(state: AgentSessionState): boolean {
     state.themeBusy ||
     state.pageBusy ||
     state.languageBusy
+  );
+}
+
+/**
+ * Whether leaving the page would lose something: stored data, a table read
+ * from text that waits for its decision, a plot, or work in flight. The
+ * session lives only in this page's memory and the server's (see the module
+ * notes), so the page asks before a reload, a closed tab or a navigation ends
+ * it. Only while the page shows the session (`ready`): an expired or refused
+ * one shows nothing that leaving would take away.
+ */
+export function sessionHoldsWork(state: AgentSessionState): boolean {
+  return (
+    state.phase === 'ready' &&
+    (!!state.dataset ||
+      !!state.transcription ||
+      Object.keys(state.versions).length > 0 ||
+      sessionBusy(state))
   );
 }
