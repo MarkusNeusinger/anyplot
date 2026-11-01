@@ -19,7 +19,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
 | `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
-| `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (version 1) plus `confirmed: true`, `complete`, `missing_roles` and `copied_from` (the source's version number): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`), `503 capacity` |
+| `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (version 1) plus `confirmed: true`, `complete`, `missing_roles` and `copied_from` (the source's version number): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`; never for an admin), `503 capacity` |
 | `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, `summarize_data`); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
@@ -1769,7 +1769,7 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
 
 @app.post("/v1/sessions/{sid}/dataset/copy", dependencies=v1_dependencies)
 async def copy_dataset(
-    sid: SessionId, body: CopyDatasetBody, user: User, runtime: RuntimeDep, rid: RequestId
+    sid: SessionId, body: CopyDatasetBody, user: User, tier: CallerTier, runtime: RuntimeDep, rid: RequestId
 ) -> JSONResponse:
     """The admin fan-out's copy: the confirmed current data version of `from_session` becomes this session's data.
 
@@ -1785,7 +1785,8 @@ async def copy_dataset(
 
     The copy is the stored version as it is (`DatasetStore.copy`): the same canonical CSV, dtypes, column order,
     notes, file name, source and code, nothing parsed or judged again, so it costs no model call and counts as no
-    paste; its own counter (`COPIES_PER_MINUTE`, `_PER_DAY`) bounds what one user puts in the store. The bindings,
+    paste; its own counter (`COPIES_PER_MINUTE`, `_PER_DAY`) bounds what one user puts in the store, except for an
+    admin, whose fan-outs in several windows copy more at once and whom only the store's byte cap bounds. The bindings,
     their confirmation and the session language come along. The copy is the target's version 1 with no undo
     history, and `DATASET_COPIED_FROM` records the source's version number. The answer is the paste route's
     dataset shape plus `confirmed`, `complete`, `missing_roles` and `copied_from`. The `dataset_copy` attribution
@@ -1816,8 +1817,10 @@ async def copy_dataset(
     check = check_bindings(origin.bindings, roles, stored.profile)
     if check.errors:
         raise AgentsError(422, "invalid")
-    ledger = _stamp(RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action"), view, session)
-    limit = services.usage.copy_limit(user)
+    ledger = _stamp(
+        RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action", tier=tier), view, session
+    )
+    limit = services.usage.copy_limit(user, tier)  # never a limit for an admin; the store's byte cap still binds
     if limit is not None:
         attribution("dataset_copy", ledger, outcome=limit)
         raise AgentsError(429, limit)

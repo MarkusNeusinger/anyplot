@@ -379,6 +379,26 @@ async def test_copies_are_counted_per_user(
     assert refused.dataset_id is None
 
 
+@pytest.mark.parametrize("cap", ["COPIES_PER_MINUTE", "COPIES_PER_DAY"])
+async def test_an_admin_is_exempt_from_the_copy_caps(
+    client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch, cap: str
+) -> None:
+    """Owner decision of 2026-11-01: three windows of `.plot_all()` copy 45 datasets within a minute; only the
+    store's byte cap bounds an admin's copies."""
+    monkeypatch.setattr(ledger, cap, 1)
+    source = await open_session(client)
+    await paste(client, source)
+    targets = [await open_session(client, library=library, fanout=True) for library in ("seaborn", "matplotlib")]
+    admin = {**headers(), "X-Anyplot-Tier": "admin"}
+
+    answers = [
+        await client.post(f"/v1/sessions/{target}/dataset/copy", headers=admin, json={"from_session": source})
+        for target in targets
+    ]
+
+    assert [answer.status_code for answer in answers] == [200, 200]
+
+
 async def test_a_full_store_refuses_the_copy_and_keeps_nothing(
     client: httpx.AsyncClient, runtime: Runtime, services: Services
 ) -> None:

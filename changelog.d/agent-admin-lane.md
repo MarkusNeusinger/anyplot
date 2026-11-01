@@ -26,5 +26,7 @@
 - **The fan-out panel waits out `run_limit` instead of failing.** With
   `.plot_all()` open in several windows the admin's cap counts them all: a
   library the cap refused goes back to waiting, and the panel tries again
-  when one of its runs ends or after 15 s, giving up only after 30 minutes
-  (#12507).
+  when one of its runs ends or after 15 s, giving up only after 30 minutes.
+  The fan-out's data copies no longer count against an admin's copy limits
+  (30 a minute, 150 a day), so three windows can copy their 45 datasets at
+  once (#12507).

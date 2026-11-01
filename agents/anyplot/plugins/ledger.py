@@ -26,8 +26,10 @@ token budget, the pipeline runs, the data runs, the chat turns) and from the cha
 minute (owner decision of 2026-11-01: a fan-out over every library starts a turn and a run
 per library); the global day budget and the `attack` strikes bind every tier, the one as
 the service's runaway guard, the other as a safety rule rather than a usage cap. Pastes,
-file conversions, fan-out copies and outcome beacons keep their limits for every tier:
-they bound memory and sandbox time, not model spend.
+file conversions and outcome beacons keep their limits for every tier: they bound memory
+and sandbox time, not model spend. The fan-out's copies bind no admin (`copy_limit`): three
+windows of `.plot_all()` copy 45 datasets within a minute, and the store's byte cap still
+refuses a copy it has no room for.
 
 The request, user-day and global-day budgets count cost-weighted tokens: each kind
 weighted by its price relative to an uncached input token (`BUDGET_WEIGHTS`), so a
@@ -279,7 +281,7 @@ COPIES_PER_DAY = 150
 review of 2026-11-01: 600 let one user put about 3 GiB a day into the 256 MiB store). A copy parses nothing and calls
 no model, so it is no paste, but each one takes the dataset's size in the store again: the cap bounds what one user
 can put there. A per-user byte budget in the store is the follow-up before the chat goes public. Constants, not
-settings, like the outcome beacons'."""
+settings, like the outcome beacons'. An admin is exempt from both (owner decision of 2026-11-01, `copy_limit`)."""
 
 
 class UsageBook:
@@ -434,9 +436,13 @@ class UsageBook:
         day.user_outcomes[user_id] = day.user_outcomes.get(user_id, 0) + 1
         self._stamp("outcome", user_id)
 
-    def copy_limit(self, user_id: str) -> MessageLimit | None:
+    def copy_limit(self, user_id: str, tier: Tier = "public") -> MessageLimit | None:
         """Why the user may not copy another dataset into a fan-out session now, or None (`COPIES_PER_MINUTE`,
-        `_PER_DAY`)."""
+        `_PER_DAY`). Never a limit for an admin (owner decision of 2026-11-01), whose copies are still counted: three
+        windows of `.plot_all()` copy 45 datasets within a minute, and the store's own byte cap still refuses a copy
+        it has no room for (`503 capacity`)."""
+        if tier == "admin":
+            return None
         count = self._current().user_copies.get(user_id, 0)
         return self._limit("copy", user_id, count, COPIES_PER_MINUTE, COPIES_PER_DAY)
 
