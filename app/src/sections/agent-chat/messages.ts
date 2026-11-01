@@ -86,7 +86,7 @@ export const CONFIRM_LOST_TEXT: Record<ConfirmLoss, string> = {
  * session language (`detected`); a choice from the chip or the chat says nothing.
  */
 export const LANGUAGE_DETECTED_TEXT = (language: string) =>
-  `language: ${language} · detected from your message · the lang chip in the header changes it`;
+  `reply language: ${language} · detected from your message · a plot you have keeps its language · the lang chip in the header changes both`;
 
 /**
  * The thread's one quiet line when a paste set the session language from the

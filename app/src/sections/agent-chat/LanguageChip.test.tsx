@@ -16,7 +16,7 @@ function deferred() {
 
 const EN: PlotLanguage = { language: 'en', source: 'default' };
 const chip = () => screen.getByTestId('language-chip');
-const dialog = () => screen.getByRole('dialog', { name: 'Plot language' });
+const dialog = () => screen.getByRole('dialog', { name: 'Language of the replies and the plot' });
 
 describe('LanguageChip', () => {
   it('shows the value and how it was set, and is disabled while the page says so', () => {
@@ -24,7 +24,7 @@ describe('LanguageChip', () => {
     const { rerender } = render(<LanguageChip value={EN} disabled onSet={onSet} />);
     expect(chip()).toHaveTextContent(/^lang: en$/);
     expect(chip()).toBeDisabled();
-    expect(chip()).toHaveAccessibleName('Plot language: en, default. Change');
+    expect(chip()).toHaveAccessibleName('Reply language: en, default. Change');
 
     rerender(
       <LanguageChip value={{ language: 'de', source: 'detected' }} disabled={false} onSet={onSet} />
@@ -37,7 +37,7 @@ describe('LanguageChip', () => {
       <LanguageChip value={{ language: 'de', source: 'pasted' }} disabled={false} onSet={onSet} />
     );
     expect(chip()).toHaveTextContent(/^lang: de · from data$/);
-    expect(chip()).toHaveAccessibleName('Plot language: de, from data. Change');
+    expect(chip()).toHaveAccessibleName('Reply language: de, from data. Change');
 
     rerender(
       <LanguageChip
@@ -47,7 +47,11 @@ describe('LanguageChip', () => {
       />
     );
     expect(chip()).toHaveTextContent(/^lang: Klingon · chosen$/);
-    expect(chip()).toHaveAttribute('title', "language of the plot's text and the replies: Klingon");
+    // The chip names the replies' language; a choice here sets the plot's text too (owner, 2026-11-01).
+    expect(chip()).toHaveAttribute(
+      'title',
+      "language of the replies: Klingon · a choice here also sets the next plot's text"
+    );
   });
 
   it('announces each change of the value once, and nothing on mount', () => {
@@ -57,7 +61,7 @@ describe('LanguageChip', () => {
     rerender(
       <LanguageChip value={{ language: 'de', source: 'detected' }} disabled={false} onSet={onSet} />
     );
-    expect(screen.getByRole('status')).toHaveTextContent('plot language: de');
+    expect(screen.getByRole('status')).toHaveTextContent('reply language: de');
   });
 
   it('opens the list with the current language pressed; Escape closes it and the focus returns', async () => {

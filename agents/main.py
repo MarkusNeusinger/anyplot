@@ -232,6 +232,7 @@ from agents.anyplot.session_state import (
     DATASET_VERSION,
     PENDING_BINDINGS,
     PENDING_CLEARED,
+    PLOT_LANGUAGE,
     TELEMETRY_SOURCE,
     CatalogueSnapshot,
     SessionView,
@@ -239,6 +240,7 @@ from agents.anyplot.session_state import (
     confirm_delta,
     confirmation_fingerprint,
     language_delta,
+    plot_language,
     read_session,
 )
 from agents.anyplot.settings import AgentSettings, get_settings
@@ -1586,9 +1588,9 @@ async def put_bindings(
 
 @app.put("/v1/sessions/{sid}/language", dependencies=v1_dependencies)
 async def put_language(sid: SessionId, body: LanguageBody, user: User, runtime: RuntimeDep) -> JSONResponse:
-    """The user's choice (the chat header's chip): the session language with the source `chosen`.
+    """The user's choice (the chat header's chip): the session language with the source `chosen`, and the plot's.
 
-    Detection never writes over a choice, and the root's `set_language` tool makes the
+    Detection never writes over a choice, and the root's `set_language` tool with `applies_to` `both` makes the
     same change. The next reply and the next plot version use it; earlier versions keep
     their text. The pattern runs before `normalise` (a leading space is a `422`), and the
     answer carries the stored form, which the page shows: `English` comes back as `en`,
@@ -1603,7 +1605,7 @@ async def put_language(sid: SessionId, body: LanguageBody, user: User, runtime: 
     value = normalise(body.language)
     if not is_valid(value):
         raise AgentsError(422, "invalid")
-    await runtime.write_state(session, language_delta(value, "chosen"))
+    await runtime.write_state(session, {**language_delta(value, "chosen"), PLOT_LANGUAGE: value})
     answer: dict[str, Any] = {"language": value, "source": "chosen"}
     view = read_session(session.state)
     stored = get_services().datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
@@ -1739,8 +1741,8 @@ async def copy_dataset(
     The copy is the stored version as it is (`DatasetStore.copy`): the same canonical CSV, dtypes, column order,
     notes, file name, source and code, nothing parsed or judged again, so it costs no model call and counts as no
     paste; its own counter (`COPIES_PER_MINUTE`, `_PER_DAY`) bounds what one user puts in the store. The bindings,
-    their confirmation and the session language come along. The copy is the target's version 1 with no undo
-    history, and `DATASET_COPIED_FROM` records the source's version number. The answer is the paste route's
+    their confirmation, the session language and the plot language come along. The copy is the target's version 1
+    with no undo history, and `DATASET_COPIED_FROM` records the source's version number. The answer is the paste route's
     dataset shape plus `confirmed`, `complete`, `missing_roles` and `copied_from`. The `dataset_copy` attribution
     line carries the counts, the version number and the source session's salted hash, never data; a copy writes
     no `data_input` telemetry line, because no input reached the dataset route.
@@ -1796,6 +1798,8 @@ async def copy_dataset(
             DATASET_COPIED_FROM: origin.dataset_version,
             CONFIRMED: confirmation_fingerprint(copied.dataset_id, bindings),
             **language_delta(origin.language, origin.language_source),
+            # The page's plot language, which can differ from its reply language once it has a plot.
+            PLOT_LANGUAGE: plot_language(origin, services.versions.latest_language(body.from_session)),
             **PENDING_CLEARED,
         },
     )

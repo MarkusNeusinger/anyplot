@@ -3,9 +3,12 @@
  * `lang: en` until something sets it, `lang: de · from data` after a paste
  * whose notes or column names are German, `lang: de · detected` after the
  * session's first typed message, `lang: de · chosen` after a choice here or a
- * request in the chat ("labels in English"). The session language is the
- * language of the assistant's replies and of every text in the plot; code,
- * comments and column names stay as they are.
+ * request in the chat ("answer in English"). The session language is the
+ * language of the assistant's replies and of the first plot's text; code,
+ * comments and column names stay as they are. Since 2026-11-01 a plot keeps
+ * its text's language after a message in another language, so the chip names
+ * the replies' language, and a choice here sets the replies and the next
+ * plot version alike (the server stores both).
  *
  * A click opens a popover with the ten common languages and a free-text field
  * for any other, in Latin letters (`LANGUAGE_PATTERN`, the server's pattern;
@@ -90,7 +93,7 @@ export function LanguageChip({ value, disabled, onSet }: LanguageChipProps) {
   const [announcement, setAnnouncement] = useState('');
   if (shown.language !== value.language || shown.source !== value.source) {
     setShown(value);
-    setAnnouncement(`plot language: ${value.language}`);
+    setAnnouncement(`reply language: ${value.language}`);
   }
   const mounted = useRef(true);
   useEffect(() => {
@@ -164,8 +167,8 @@ export function LanguageChip({ value, disabled, onSet }: LanguageChipProps) {
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? popoverId : undefined}
-        aria-label={`Plot language: ${value.language}, ${SOURCE_LABEL[value.source]}. Change`}
-        title={`language of the plot's text and the replies: ${value.language}`}
+        aria-label={`Reply language: ${value.language}, ${SOURCE_LABEL[value.source]}. Change`}
+        title={`language of the replies: ${value.language} · a choice here also sets the next plot's text`}
         sx={{
           ...actionButtonSx,
           display: 'inline-flex',
@@ -228,7 +231,7 @@ export function LanguageChip({ value, disabled, onSet }: LanguageChipProps) {
         slotProps={{
           paper: {
             role: 'dialog',
-            'aria-label': 'Plot language',
+            'aria-label': 'Language of the replies and the plot',
             sx: { width: { xs: 'calc(100vw - 32px)', sm: 380 }, p: 1.5, mt: 0.5 },
           },
         }}

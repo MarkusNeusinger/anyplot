@@ -25,8 +25,8 @@ from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.plugins import ledger
 from agents.anyplot.plugins.ledger import ATTRIBUTION_LOGGER
 from agents.anyplot.run_queue import RunQueue
-from agents.anyplot.schemas import Binding
-from agents.anyplot.services import Services
+from agents.anyplot.schemas import Binding, PlotResult
+from agents.anyplot.services import CodeVersion, Services
 from agents.anyplot.session_state import (
     BINDINGS,
     CONFIRMED,
@@ -34,8 +34,11 @@ from agents.anyplot.session_state import (
     DATASET_VERSION,
     LANGUAGE,
     LANGUAGE_SOURCE,
+    PLOT_LANGUAGE,
     SessionView,
     confirmation_fingerprint,
+    language_delta,
+    plot_language,
     read_session,
 )
 from agents.main import APP_NAME, Runtime, app, get_runtime
@@ -126,6 +129,21 @@ def stored_of(services: Services, view: SessionView, sid: str) -> StoredDataset:
     stored = services.datasets.get(view.dataset_id, sid)
     assert stored is not None
     return stored
+
+
+def rendered_version(*, language: str) -> CodeVersion:
+    """A shipped version whose plot text is in `language`."""
+    result = PlotResult(status="ok", attempts=1, artifacts=["plot.py"])
+    return CodeVersion(
+        number=1,
+        working="w",
+        run_form="r",
+        export="e",
+        data_csv="a\n1\n",
+        render_id="r1",
+        result=result,
+        language=language,
+    )
 
 
 def frame(stored: StoredDataset) -> pd.DataFrame:
@@ -236,7 +254,28 @@ async def test_the_bindings_and_the_session_language_come_along(client: httpx.As
     assert response.json()["language"] == {"language": "de", "source": "chosen"}
     copied_view, state = await view_of(runtime, target)
     assert [binding.model_dump() for binding in copied_view.bindings] == swapped and copied_view.data_confirmed
-    assert (state[LANGUAGE], state[LANGUAGE_SOURCE]) == ("de", "chosen")
+    assert (state[LANGUAGE], state[LANGUAGE_SOURCE], state[PLOT_LANGUAGE]) == ("de", "chosen", "de")
+
+
+async def test_the_page_plots_language_comes_along_when_the_replies_moved_on(
+    client: httpx.AsyncClient, runtime: Runtime, services: Services
+) -> None:
+    """The page's plot is German while its replies became English (owner decision of 2026-11-01): the fan-out plots
+    in German, the language the page's plot shows."""
+    source = await open_session(client)
+    await paste(client, source)
+    session = await runtime.session(USER, source)
+    await runtime.write_state(session, language_delta("en", "detected"))
+    services.versions.add(source, rendered_version(language="de"))
+    target = await open_session(client, library="seaborn", fanout=True)
+
+    response = await copy(client, target, source)
+
+    assert response.status_code == 200, response.text
+    assert response.json()["language"] == {"language": "en", "source": "detected"}
+    copied_view, state = await view_of(runtime, target)
+    assert (state[LANGUAGE], state[PLOT_LANGUAGE]) == ("en", "de")
+    assert plot_language(copied_view, services.versions.latest_language(target)) == "de"
 
 
 async def test_the_copy_plots_without_a_confirmation_of_its_own(client: httpx.AsyncClient, swap_models) -> None:

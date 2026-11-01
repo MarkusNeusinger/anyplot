@@ -23,7 +23,13 @@ import pytest
 from google.genai import types
 
 from agents.anyplot import pipeline, telemetry
-from agents.anyplot.agent import LANGUAGE_SOURCE_LINES, NOTES_LINE, REPLY_LANGUAGE_LINE, session_context
+from agents.anyplot.agent import (
+    LANGUAGE_SOURCE_LINES,
+    NOTES_LINE,
+    PLOT_LANGUAGE_HEADING,
+    REPLY_LANGUAGE_LINE,
+    session_context,
+)
 from agents.anyplot.code.edits import apply_plan
 from agents.anyplot.data.generate import looks_like_formula
 from agents.anyplot.data.parse import HEADERLESS_LIST_WARNING, MAX_INPUT_BYTES
@@ -57,7 +63,7 @@ from agents.anyplot.render.watermark import add_footer
 from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.schemas import AdaptPlan, Verdict
 from agents.anyplot.services import Services, get_services
-from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE, PENDING_REQUEST, read_session
+from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE, PENDING_REQUEST, PLOT_LANGUAGE, read_session
 from agents.anyplot.settings import get_settings
 from agents.anyplot.sub_agents.adapter import ADAPTERS
 from agents.main import (
@@ -3188,7 +3194,7 @@ def request_text(request: Any) -> str:
 
 def language_block(language: str, source: str) -> tuple[str, str]:
     """The session block's language line and its fenced value."""
-    return LANGUAGE_SOURCE_LINES[source], f"<plot_language>\n{language}\n</plot_language>"
+    return LANGUAGE_SOURCE_LINES[source], f"<reply_language>\n{language}\n</reply_language>"
 
 
 async def say(client: httpx.AsyncClient, sid: str, text: str) -> list[tuple[str, dict[str, Any]]]:
@@ -3237,8 +3243,10 @@ async def test_a_language_chosen_in_the_chip_reaches_the_root_and_the_adapter(
     root = request_text(requests_of(fake, "root")[0])
     line, value = language_block("ja", "chosen")
     assert line in root and value in root
-    assert "write your replies and the plot text in it" in root
+    assert "write your replies in it" in root
+    assert "<plot_language>" not in root.split("Session (set by the server):")[-1]  # the plot follows: one fence
     assert "Plot language:\n<plot_language>\nja\n</plot_language>" in adapter_inputs(fake)[0]
+    assert (await _session_state(client, sid))[PLOT_LANGUAGE] == "ja"  # the chip sets the plot's language too
 
 
 async def test_the_first_typed_message_detects_the_language_once(
@@ -3308,10 +3316,11 @@ async def test_an_action_and_a_refused_message_never_detect(client: httpx.AsyncC
 GERMAN_CHANGE = "Mach die Punkte etwas größer."
 
 
-async def test_the_adapter_and_the_reviewer_get_the_plot_language(
+async def test_a_message_in_another_language_keeps_the_plots_language(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:
-    """v1 in English from the action; the German change sets `de`, so v2 is written in German and says so."""
+    """v1 in English from the action; the German change records `de` for the replies, and v2 keeps English: a
+    follow-up message never rewrites the plot's text (owner decision of 2026-11-01)."""
     script = {
         "root": [
             {"call": "plot_pipeline", "args": {}},
@@ -3333,23 +3342,59 @@ async def test_the_adapter_and_the_reviewer_get_the_plot_language(
     assert (plot["status"], plot["version"]) == ("ok", 2)
     assert done_language(events) == {"language": "de", "source": "detected"}
     first, second = adapter_inputs(fake)
-    assert "Plot language:\n<plot_language>\nen\n</plot_language>" in first and "language_changed" not in first
-    assert "Plot language:\n<plot_language>\nde\n</plot_language>" in second
-    assert '"language_changed": true' in second  # the rewrite instruction, inside the tool notes
+    for adapted in (first, second):
+        assert "Plot language:\n<plot_language>\nen\n</plot_language>" in adapted
+        assert "language_changed" not in adapted
     reviews = [request_text(request) for request in requests_of(fake, "reviewer")]
-    assert "Plot language:\n<plot_language>\nen\n</plot_language>" in reviews[0]
-    assert "Plot language:\n<plot_language>\nde\n</plot_language>" in reviews[1]
+    assert all("Plot language:\n<plot_language>\nen\n</plot_language>" in review for review in reviews)
+    # The root replies in German and reads that the plot is English.
+    block = request_text(requests_of(fake, "root")[-1]).split("Session (set by the server):")[-1]
+    assert "<reply_language>\nde\n</reply_language>" in block
+    assert f"{PLOT_LANGUAGE_HEADING}\n<plot_language>\nen\n</plot_language>" in block
     bundle = (await client.get(f"/v1/sessions/{sid}/bundle", headers=HEADERS)).json()
-    assert [version["language"] for version in bundle["versions"]] == ["en", "de"]  # v1 keeps its text
+    assert [version["language"] for version in bundle["versions"]] == ["en", "en"]
     assert bundle["session"]["locale"] == "en" and bundle["session"]["plot_language"] == "de"
 
 
-@pytest.mark.parametrize(("lang", "message"), [("en", "change the title"), ("de", "Ändere den Titel")])
-async def test_a_change_that_switches_the_language_may_grow_the_text_it_replaces(
-    client: httpx.AsyncClient, swap_models, judge, caplog: pytest.LogCaptureFixture, lang: str, message: str
+async def test_an_english_message_keeps_a_german_paste_plot_german(
+    client: httpx.AsyncClient, swap_models, judge
 ) -> None:
-    """A rewrite in another language gets a change's 300 characters plus 1.5 times the text it replaces; the same
-    change in the same language gets the 300 alone."""
+    """Live test of 2026-11-01 (B1): a German paste set `de`, the first plot was German, and "Use a log scale on y"
+    then recorded `en` and turned the plot's title and numbers English while its axes stayed German."""
+    script = {
+        "root": [
+            {"call": "plot_pipeline", "args": {}},
+            {"text": "Hier ist dein Plot."},
+            {"call": "plot_pipeline", "args": {"change_request": "Use a log scale on y.", "base": "previous"}},
+            {"text": "Done: the y axis is logarithmic."},
+        ],
+        "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
+        "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+    }
+    fake = swap_models("gemini", script)
+    sid = await open_session(client, with_data=False)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]  # the dataset judge reads the headers as German
+    data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
+    assert (await paste(client, sid, data))["language"] == {"language": "de", "source": "pasted"}
+    assert (await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)).status_code == 200
+    await create_plot(client, sid)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="en")]
+
+    events = await say(client, sid, "Use a log scale on y")
+
+    assert done_language(events) == {"language": "en", "source": "detected"}  # the replies follow the message
+    first, second = adapter_inputs(fake)
+    assert "Plot language:\n<plot_language>\nde\n</plot_language>" in first
+    assert "Plot language:\n<plot_language>\nde\n</plot_language>" in second and "language_changed" not in second
+    assert [version.language for version in get_services().versions.all(sid)] == ["de", "de"]
+
+
+@pytest.mark.parametrize("lang", ["en", "de"])
+async def test_a_change_that_switches_the_language_may_grow_the_text_it_replaces(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture, lang: str
+) -> None:
+    """A rewrite in another language (the chip chose German) gets a change's 300 characters plus 1.5 times the text
+    it replaces; the same change in the same language gets the 300 alone."""
     caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
     # 329 new characters (a title of 29 and two notes of 150) for the 25 of the English title they replace:
     # over 300, under 300 + ceil(1.5 * 25) = 338.
@@ -3372,9 +3417,9 @@ async def test_a_change_that_switches_the_language_may_grow_the_text_it_replaces
     swap_models("gemini", script)
     sid = await open_session(client)
     await create_plot(client, sid)
-    judge.script = [JudgeVerdict(verdict="in_scope", lang=lang)]
+    assert (await put_language(client, sid, {"language": lang})).status_code == 200
 
-    events = await say(client, sid, message)
+    events = await say(client, sid, "change the title")
 
     plot = next(data for name, data in events if name == "plot")
     change_check = attribution_lines(caplog, "pipeline_check")[1]
@@ -3525,21 +3570,25 @@ async def test_set_language_on_a_session_already_in_that_language_is_no_change(
     assert responses == [{"status": "ok", "source": "chosen", "changed": False, "plot_outdated": False}]
 
 
+REWRITE_REQUEST = (
+    "Write the title, axis titles, legend entries and annotations in the plot language; change nothing else."
+)
+"""The root's change request after a `set_language` that left the shown plot outdated (`root.md`, "Language")."""
+
+
 async def test_a_plot_drawn_before_detection_is_rewritten_when_the_user_asks(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:
-    """v1 comes from the action, in English; a German question then records `de`. "Beschriftung auf Deutsch" is no
-    change of the session language, but the shown plot is outdated, so the root remakes it in German."""
-    rewrite = (
-        "Write the title, axis titles, legend entries and annotations in the session language; change nothing else."
-    )
+    """v1 comes from the action, in English; a German question then records `de` for the replies and leaves the plot
+    English. "Beschriftung auf Deutsch" changes no reply language, but the shown plot is outdated, so the root remakes
+    it in German."""
     script = {
         "root": [
             {"call": "plot_pipeline", "args": {}},
             {"text": ROOT_REPLY},
             {"text": "Die x-Achse zeigt die Lernstunden."},
-            {"call": "set_language", "args": {"language": "de"}},
-            {"call": "plot_pipeline", "args": {"change_request": rewrite, "base": "previous"}},
+            {"call": "set_language", "args": {"language": "de", "applies_to": "plot"}},
+            {"call": "plot_pipeline", "args": {"change_request": REWRITE_REQUEST, "base": "previous"}},
             {"text": "Die Beschriftung ist jetzt auf Deutsch."},
         ],
         "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
@@ -3569,17 +3618,15 @@ async def test_a_plot_drawn_before_detection_is_rewritten_when_the_user_asks(
 async def test_a_chat_request_on_a_plot_remakes_it_in_the_new_language(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:
-    """D-8: `set_language` alone, then the rewrite on the previous version, in one turn; v1 keeps its text."""
-    rewrite = (
-        "Write the title, axis titles, legend entries and annotations in the session language; change nothing else."
-    )
+    """D-8: `set_language` alone, then the rewrite on the previous version, in one turn; v1 keeps its text. Live test
+    of 2026-11-01 (A1): an English request for German plot text leaves the replies English."""
     script = {
         "root": [
             {"call": "plot_pipeline", "args": {}},
             {"text": ROOT_REPLY},
-            {"call": "set_language", "args": {"language": "Deutsch"}},
-            {"call": "plot_pipeline", "args": {"change_request": rewrite, "base": "previous"}},
-            {"text": "Die Beschriftung ist jetzt auf Deutsch."},
+            {"call": "set_language", "args": {"language": "Deutsch", "applies_to": "plot"}},
+            {"call": "plot_pipeline", "args": {"change_request": REWRITE_REQUEST, "base": "previous"}},
+            {"text": "The labels are German now."},
         ],
         "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
         "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
@@ -3588,11 +3635,13 @@ async def test_a_chat_request_on_a_plot_remakes_it_in_the_new_language(
     sid = await open_session(client)
     await create_plot(client, sid)
 
-    events = await say(client, sid, "Labels in German, please.")  # the unscripted judge: in_scope, en
+    events = await say(client, sid, "Make the title German")  # the unscripted judge: in_scope, en
 
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["version"]) == ("ok", 2)
-    assert done_language(events) == {"language": "de", "source": "chosen"}
+    assert done_language(events) == {"language": "en", "source": "detected"}  # the replies stay English
+    state = await _session_state(client, sid)
+    assert (state[LANGUAGE], state[PLOT_LANGUAGE]) == ("en", "de")
     second = adapter_inputs(fake)[1]
     assert "Plot language:\n<plot_language>\nde\n</plot_language>" in second and '"language_changed": true' in second
     versions = get_services().versions.all(sid)

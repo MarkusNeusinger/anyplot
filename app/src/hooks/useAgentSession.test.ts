@@ -18,6 +18,9 @@ import type { DatasetChanged, DatasetParsed, RoleSpec } from 'src/lib/agent';
 import { pendingReply } from 'src/sections/agent-chat/steps';
 
 const lastItem = (items: ChatItem[]) => items[items.length - 1];
+/** The notice after the first typed message set the reply language; a plot keeps its own (owner, 2026-11-01). */
+const LANGUAGE_DETECTED_TEXT = (language: string) =>
+  `reply language: ${language} · detected from your message · a plot you have keeps its language · the lang chip in the header changes both`;
 
 const trackEvent = vi.fn();
 vi.mock('src/hooks/useAnalytics', () => ({
@@ -1932,7 +1935,7 @@ describe('useAgentSession: versions and library', () => {
 
 describe('useAgentSession: session language', () => {
   const languageNotices = (items: ChatItem[]) =>
-    items.filter(item => item.kind === 'notice' && item.text.startsWith('language:'));
+    items.filter(item => item.kind === 'notice' && /^(reply )?language:/.test(item.text));
 
   it('starts in English whatever the locale, with no call', async () => {
     mockFetch(baseRoutes());
@@ -2022,7 +2025,7 @@ describe('useAgentSession: session language', () => {
     // The notice comes under the reply of the turn that set it.
     expect(lastItem(result.current.state.items)).toMatchObject({
       kind: 'notice',
-      text: 'language: de · detected from your message · the lang chip in the header changes it',
+      text: LANGUAGE_DETECTED_TEXT('de'),
     });
     expect(lastItem(result.current.state.items)).not.toHaveProperty('tone');
 
@@ -2066,7 +2069,7 @@ describe('agentReducer', () => {
       {
         id: 1,
         kind: 'notice',
-        text: 'language: de · detected from your message · the lang chip in the header changes it',
+        text: LANGUAGE_DETECTED_TEXT('de'),
       },
     ]);
     // default → default and detected → detected: nothing new in the thread.
@@ -2114,7 +2117,7 @@ describe('agentReducer', () => {
     const detected = sync(pasted, 'en', 'detected');
     expect(detected.plotLanguage).toEqual({ language: 'en', source: 'detected' });
     expect(lastItem(detected.items)).toMatchObject({
-      text: 'language: en · detected from your message · the lang chip in the header changes it',
+      text: LANGUAGE_DETECTED_TEXT('en'),
     });
     // Never over a typed or a chosen language.
     expect(sync(detected, 'de', 'pasted')).toBe(detected);
