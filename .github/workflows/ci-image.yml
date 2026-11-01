@@ -1067,6 +1067,12 @@ jobs:
           width, height = struct.unpack(">II", png[16:24])
           assert (width, height) == (3200, 1800), (width, height)
           print(f"OK: R plot-light.png {width}x{height}, {len(png)} bytes")
+          # The row's text probe (R_TEXT_PROBE) left the drawn texts, which the harness made the probe.
+          import json
+          labels = {(label["kind"], label["text"]) for label in json.load(open("work-r/probe-light.json"))["labels"]}
+          assert ("title", "Größe – Überblick") in labels, labels
+          assert ("x tick label", "b") in labels and ("x axis label", "x") in labels, labels
+          print(f"OK: R probe with {len(labels)} drawn texts")
           EOF
           tail -n 1 work-r/harness.out
 
@@ -1084,12 +1090,12 @@ jobs:
           set -euo pipefail
           mkdir -p work-jl
           python3 - > work-jl/row.flags <<'EOF'
-          from agents.renderer.commands import JULIA_WARMUP, command_for
+          from agents.renderer.commands import JULIA_TEXT_PROBE, JULIA_WARMUP, command_for
 
           row = command_for("julia", "makie")
           assert row.exec_deny and not row.rlimit_as, "the Julia row runs under the exec filter, without RLIMIT_AS"
           assert "--compiled-modules=strict" in row.argv, row.argv
-          assert row.argv[-2:] == ("-L", JULIA_WARMUP), row.argv
+          assert row.argv[-4:] == ("-L", JULIA_WARMUP, "-L", JULIA_TEXT_PROBE), row.argv
           for key, value in row.env.items():
               print(f"-e\n{key}={value}")
           EOF
@@ -1126,6 +1132,11 @@ jobs:
           width, height = struct.unpack(">II", png[16:24])
           assert (width, height) == (3200, 1800), (width, height)
           print(f"OK: Makie plot-light.png {width}x{height}, {len(png)} bytes")
+          # The row's text probe (JULIA_TEXT_PROBE) left the figure's drawn texts, which the harness made the probe.
+          import json
+          kinds = {label["kind"] for label in json.load(open("work-jl/probe-light.json"))["labels"]}
+          assert {"x tick label", "y tick label"} <= kinds, kinds
+          print(f"OK: Makie probe with the kinds {sorted(kinds)}")
           EOF
           tail -n 1 work-jl/harness.out
 

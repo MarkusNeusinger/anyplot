@@ -27,7 +27,7 @@ judgement in the gallery does that for the sample, which holds passed renders on
 Every rate counts all runs: a run that crashed in the harness did not pass.
 **Drawn texts.** `untexted` counts the shipped runs whose probe reported no drawn texts
 (`texts` is None: the `pipeline_result` line's roles of `PlotShows.texts`) although their
-library's render reports them (`texts_expected`; not yet ggplot2 and Makie), per library in
+library's render reports them (`texts_expected`, every library since 2026-11-01), per library in
 `untexted_by_library`: the closing reply of such a run had no text of the plot to quote
 (user test of 2026-11-01). `unbacked_quotes` counts the passages the root's replies to a
 shipped plot quote that no drawn text and no requested text holds (`matrix.unbacked_quotes`),
@@ -156,8 +156,8 @@ def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
         tokens.update(run.get("tokens") or {})
     reviewer = Counter(str((run.get("reviewer") or {}).get("verdict")) for run in counted)
     # A shipped render whose probe reported no drawn texts although its library's render reports them: the closing
-    # reply had none to quote. ggplot2 and Makie report none yet (`texts_expected` False); a run of a report older than
-    # the fields is not counted.
+    # reply had none to quote. A library without a probe (`texts_expected` False) and a run of a report older than the
+    # fields are not counted.
     untexted = [
         run
         for run in runs

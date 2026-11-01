@@ -17,7 +17,7 @@ sandbox with the probe harness in front:
 | `python` (plotly, bokeh) | `plot.py` | `harness.py --figure <library> plot.py -- /opt/node/bin/node /opt/anyplot/js-render/render.mjs --library=<library>`: the plot in a forked, armed child writes `plot-<theme>.json`, then the JavaScript harness draws it |
 | `javascript` | `plot.js` (`plot.tsx` for MUI X) | `harness.py --exec -- /opt/node/bin/node /opt/anyplot/js-render/render.mjs --library=<library> plot.js` |
 | `r` | `plot.R` | `harness.py --exec -- /opt/R/4.6.1/lib/R/bin/exec/R --no-echo --no-restore --no-save --file=plot.R` |
-| `julia` | `plot.jl` | `harness.py --exec -- /opt/julia-1.13.2/bin/julia --project=/opt/julia-project --startup-file=no --history-file=no --compiled-modules=strict --heap-size-hint=1536M -L /opt/anyplot/toolchain/warmup.jl plot.jl` |
+| `julia` | `plot.jl` | `harness.py --exec -- /opt/julia-1.13.2/bin/julia --project=/opt/julia-project --startup-file=no --history-file=no --compiled-modules=strict --heap-size-hint=1536M -L /opt/anyplot/toolchain/warmup.jl -L /opt/anyplot/text_probe.jl plot.jl` |
 
 In exec mode (`EXEC_FLAG`) the harness prints its start line, sets the resource limits
 and runs the language's own command as a child, so the launcher retry, the host
@@ -28,7 +28,9 @@ start after the first is killed (step 2b of agentic/specs/261024-agent-all-libra
 Julia runs its launcher by path too (`JULIA_BINARY`), with the precompiled depot loaded
 under `--compiled-modules=strict` (`JULIA_FLAGS`, step 5), so a package image that does
 not load fails the render at once instead of compiling under its timeout, and loads the
-image's precompile workload with `-L` before the plot (`JULIA_WARMUP`, J1.1).
+image's precompile workload with `-L` before the plot (`JULIA_WARMUP`, J1.1). Both rows load
+a text probe of the agents' harness (`R_TEXT_PROBE` as R's user profile, `JULIA_TEXT_PROBE`
+with a second `-L`), which leaves the plot's drawn texts for the harness's probe.
 A row with `exec_deny` gets `ANYPLOT_DENY_EXEC=required` while `RENDERER_EXEC_DENY` is
 `required` (`executor.sandbox_env`): a Python row's harness installs the filter itself,
 an exec-mode row's harness preloads it into the child (`harness.EXEC_DENY_PRELOAD`). The
@@ -183,7 +185,15 @@ package from its source in process, with exit 0 and no message, for minutes in C
 would start a compile worker, which the exec filter kills (step 5 of agentic/specs/261024-agent-all-libraries.md,
 second opinion of 2026-10-29). `--heap-size-hint` makes the collector work before the 4 GiB instance runs short, since
 the row has no `RLIMIT_AS`. `-L` loads the precompile workload (`JULIA_WARMUP`) before the code file the harness
-appends."""
+appends. The toolchain image's build smoke runs these flags too (`toolchain.Dockerfile`)."""
+JULIA_TEXT_PROBE = "/opt/anyplot/text_probe.jl"
+"""The agents' text probe for Makie (`agents/anyplot/render/text_probe.jl`), which the renderer image copies (the
+toolchain image, whose smoke runs `JULIA_FLAGS`, does not carry it): the row loads it with a second `-L` after the
+workload, and it registers an `atexit` hook that leaves the figure's drawn texts as `texts-<theme>.json` for the harness
+(`harness.collect_text_probe`). After the workload, because its hook must run before the ones the workload's packages
+registered (hooks run last in, first out), while the figure is still current. Measured on 2026-11-01: about 0.55 s
+more for the catalogue's `bar-grouped` (4.80 to 5.34 s, median of seven interleaved pairs), the hook itself 0.2 to
+0.3 s, its code compiled at exit."""
 JULIA_ENV: Mapping[str, str] = MappingProxyType(
     {
         # The sandbox sets no locale; the catalogue's runner renders under C.UTF-8, as for R.
@@ -209,6 +219,11 @@ R_HOME = "/opt/R/4.6.1/lib/R"
 """R's home in the toolchain image (Posit's build for Debian 13, agents/renderer/toolchain.Dockerfile)."""
 R_BINARY = f"{R_HOME}/bin/exec/R"
 """R's own binary, which the row runs directly: `Rscript` and `bin/R` would each need another program start."""
+R_TEXT_PROBE = "/opt/anyplot/text_probe.R"
+"""The agents' text probe for ggplot2 (`agents/anyplot/render/text_probe.R`, the renderer image's copy), R's user
+profile: it traces `ggsave` once ggplot2 loads, and each save leaves the plot's drawn texts as `texts-<theme>.json`
+for the harness (`harness.collect_text_probe`). Measured on 2026-11-01: about 0.3 s more for the catalogue's
+`bar-grouped` (1.28 to 1.58 s, median of seven interleaved pairs), the plot's grob built a second time."""
 R_ENV: Mapping[str, str] = MappingProxyType(
     {
         "R_HOME": R_HOME,
@@ -222,9 +237,10 @@ R_ENV: Mapping[str, str] = MappingProxyType(
         "LANG": "C.UTF-8",
         "XDG_CACHE_HOME": "/tmp",
         "R_LIBS_USER": "/tmp/R",
+        "R_PROFILE_USER": R_TEXT_PROBE,
     }
 )
-"""What R's `bin/R` script would set before it starts the binary, plus the locale and the caches."""
+"""What R's `bin/R` script would set before it starts the binary, plus the locale, the caches and the text probe."""
 FONTCONFIG_FILE = "/opt/anyplot/fonts.conf"
 """The image's minimal fontconfig file (`agents/renderer/fonts.conf`: one font directory, no cache directory) for
 the fontconfig that lets-plot's native bridge links, which finds no configuration of its own in the image."""
@@ -395,7 +411,7 @@ def _row(language: Language, library: str) -> RuntimeCommand:
     return RuntimeCommand(
         language,
         code_file,
-        (JULIA_BINARY, *JULIA_FLAGS),
+        (JULIA_BINARY, *JULIA_FLAGS, "-L", JULIA_TEXT_PROBE),
         env=JULIA_ENV,
         toolchain=(JULIA_BINARY,),
         rlimit_as=False,

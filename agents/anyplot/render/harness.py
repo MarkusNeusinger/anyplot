@@ -49,7 +49,9 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    radial labels (`agents/anyplot/render/polar.py`); a plot that draws without matplotlib gets a
    probe of its drawn texts alone (`install_text_probes`): pygal's SVG as cairosvg receives it,
    altair's scenegraph from vl-convert and lets-plot's SVG from its bridge, each read by the roles
-   the library's own classes name, and nothing else of the probe above;
+   the library's own classes name, and nothing else of the probe above; in exec mode, R's and
+   Julia's text probes (`text_probe.R`, `text_probe.jl`, which the renderer's rows load) leave
+   their drawn texts for the harness to turn into the same probe (`collect_text_probe`);
 5. compiles the plot file and runs it as `__main__` (`run_plot`, which `runpy.run_path`
    did before) under `PlotGuard`, an audit hook armed just before: from there on the
    interpreter refuses every `exec` but the plot's own run, the module bodies of an import
@@ -174,6 +176,7 @@ import os
 import re
 import resource
 import shutil
+import stat
 import sys
 import traceback
 
@@ -2447,6 +2450,63 @@ def wrap_text_probe(owner, name, theme, read):
     setattr(owner, name, wrapped)
 
 
+TEXT_ENTRIES_FILE = "texts-{theme}.json"
+"""What the R and Julia text probes (`text_probe.R`, `text_probe.jl`) leave in exec mode: `{"entries": [[kind, text],
+...]}` or `{"error": <class>}`, which `collect_text_probe` turns into the probe."""
+TEXT_ENTRIES_MAX_BYTES = 4 * 1024 * 1024
+TEXT_KIND_CHARS = 40
+"""The longest probe kind (`colorbar tick label` has 19 characters); a longer one is a tampered file."""
+
+
+def collect_text_probe(theme):
+    """Exec mode, after the child ended with exit code 0: `texts-<theme>.json` as `probe-<theme>.json`.
+
+    The file is read without following a link or blocking on a pipe, as a regular file only and
+    under `TEXT_ENTRIES_MAX_BYTES`, every entry is checked (two strings, a kind of at most
+    `TEXT_KIND_CHARS`) and the labels get the probe's caps (`text_labels`), so one cap and one
+    ordering hold for every language. A file the probe left with an error, or one that cannot be
+    read, becomes `{"error": <class>}`; no file, no probe.
+    """
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+    try:
+        descriptor = os.open(TEXT_ENTRIES_FILE.format(theme=theme), flags)
+    except FileNotFoundError:
+        return
+    except OSError as exc:
+        write_text_probe(theme, {"error": type(exc).__name__})
+        return
+    try:
+        with os.fdopen(descriptor, "rb") as handle:
+            if not stat.S_ISREG(os.fstat(handle.fileno()).st_mode):
+                raise ValueError("the drawn texts are no regular file")
+            raw = handle.read(TEXT_ENTRIES_MAX_BYTES + 1)
+        if len(raw) > TEXT_ENTRIES_MAX_BYTES:
+            raise ValueError("the drawn texts are larger than the probe reads")
+        loaded = json.loads(raw)
+        if not isinstance(loaded, dict):
+            raise ValueError("the drawn texts are no JSON object")
+        if isinstance(loaded.get("error"), str):
+            report = {"error": loaded["error"][:TEXT_KIND_CHARS]}
+        else:
+            entries = loaded.get("entries")
+            if not isinstance(entries, list):
+                raise ValueError("the drawn texts carry no entries")
+            pairs = [
+                (entry[0], entry[1])
+                for entry in entries
+                if isinstance(entry, list)
+                and len(entry) == 2
+                and isinstance(entry[0], str)
+                and isinstance(entry[1], str)
+                and len(entry[0]) <= TEXT_KIND_CHARS
+            ]
+            labels, truncated = text_labels(pairs)
+            report = {"labels": labels, "labels_truncated": truncated or len(pairs) < len(entries)}
+    except Exception as exc:  # the probe never breaks a render
+        report = {"error": type(exc).__name__}
+    write_text_probe(theme, report)
+
+
 def install_text_probes(path, theme):
     """Wrap the PNG export of each library the plot file names that draws without matplotlib (module docstring, 4).
 
@@ -2924,6 +2984,10 @@ def main_exec(command):
        child returned (second opinion of 2026-10-28).
 
     Without the variable the child runs unfiltered, and `exec_deny` is `off`.
+
+    After a run that counts (exit code 0, the filter on where it is required), the drawn texts an R
+    or Julia text probe left become `probe-<theme>.json` (`collect_text_probe`); a failure there
+    never changes the exit code.
     """
     if command and command[0] == "--":
         command = command[1:]
@@ -2947,6 +3011,13 @@ def main_exec(command):
                 return EXEC_DENY_EXIT
         code, state = _run_child(command, preload=required)
         started = True
+        theme = os.environ.get(THEME_ENV, "light")
+        if code == 0 and (state == "on" or not required) and theme in ("light", "dark"):
+            # R's and Julia's text probes leave the drawn texts as `texts-<theme>.json` (best-effort, never the exit).
+            try:
+                collect_text_probe(theme)
+            except Exception:
+                pass
     except OSError as exc:
         print(f"{EXEC_FLAG}: cannot run {command[0]}: {type(exc).__name__}", file=sys.stderr)
         code = 127

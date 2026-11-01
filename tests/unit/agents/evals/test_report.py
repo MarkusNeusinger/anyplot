@@ -219,13 +219,13 @@ def test_flips_with_repeats_compare_the_share_of_passed_runs() -> None:
 
 
 def test_shipped_runs_without_drawn_texts_are_counted_where_the_library_reports_them() -> None:
-    """User test of 2026-11-01: a shipped render without drawn texts left the reply nothing to quote. ggplot2 and
-    Makie report none yet, so they are not counted until their probe exists."""
+    """User test of 2026-11-01: a shipped render without drawn texts left the reply nothing to quote. A library whose
+    render reports no texts (`texts_expected` False) is not counted."""
     runs = [
         run("a-matplotlib-x", texts=["title", "x tick labels"], texts_expected=True),
         run("b-chartjs-x", library="chartjs", texts=None, texts_expected=True, probe_errors={"TimeoutError": 1}),
         run("c-pygal-x", library="pygal", status="needs_attention", texts=None, texts_expected=True),
-        run("d-ggplot2-x", library="ggplot2", texts=None, texts_expected=False),
+        run("d-unprobed-x", library="unprobed", texts=None, texts_expected=False),
         run("e-chartjs-x", library="chartjs", status="failed", passed=False, texts=None, texts_expected=True),
         run("f-pygal-x", library="pygal"),  # a report older than the fields
         run("g-bokeh-x", library="bokeh", texts=["title"], texts_expected=True, unbacked_quotes=2),

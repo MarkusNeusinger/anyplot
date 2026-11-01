@@ -629,8 +629,8 @@ def missing(line: str = MISS_LINE) -> dict[str, Any]:
 
 @pytest.fixture
 def reviewer_checks_texts(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The fixture session's matplotlib runtime as R's (`RRuntime.review_texts`): no drawn texts (the fake's probe
-    has no `labels`, as R writes no probe), so the review finds the requested texts in the image."""
+    """The fixture session's matplotlib runtime as R's (`RRuntime.review_texts`): the review finds the requested texts
+    in the image, whatever the probe reports (the fake's probe has no `labels` unless a test gives it some)."""
     monkeypatch.setattr(PythonRuntime, "review_texts", True)
 
 

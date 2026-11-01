@@ -117,7 +117,10 @@ class TestTable:
             "--heap-size-hint=1536M",
             "-L",
             commands.JULIA_WARMUP,
+            "-L",
+            commands.JULIA_TEXT_PROBE,
         )
+        assert julia.argv[1:-2] == commands.JULIA_FLAGS  # the flags the toolchain's build smoke runs
         assert not any(
             flag.startswith("--compiled-modules=") and flag != "--compiled-modules=strict" for flag in julia.argv
         )
@@ -206,13 +209,27 @@ class TestTable:
         assert f"> {commands.JS_IMPORT_ALLOWLIST}" in dockerfile
         assert f"COPY --from=node {commands.JS_IMPORT_ALLOWLIST} {commands.JS_IMPORT_ALLOWLIST}" in dockerfile
 
-    def test_julia_loads_the_precompile_workload_right_before_the_plot(self) -> None:
+    def test_julia_loads_the_precompile_workload_then_the_text_probe_before_the_plot(self) -> None:
         """J1.1: the workload's native code is used only while its package is loaded, so `-L` loads it before the
-        plot, which stays the program (`julia ... -L warmup.jl plot.jl`), from the toolchain's own directory."""
+        plot, which stays the program (`julia ... -L warmup.jl -L text_probe.jl plot.jl`), from the toolchain's own
+        directory. The text probe comes after the workload: its `atexit` hook must run before the ones the workload's
+        packages registered, while the figure is still current (2026-11-01)."""
         julia = command_for("julia", "makie")
-        assert julia.argv[-2:] == ("-L", commands.JULIA_WARMUP) and julia.argv.count("-L") == 1
+        assert julia.argv[-4:] == ("-L", commands.JULIA_WARMUP, "-L", commands.JULIA_TEXT_PROBE)
+        assert julia.argv.count("-L") == 2
         assert commands.JULIA_WARMUP == "/opt/anyplot/toolchain/warmup.jl"
         assert julia.code_flag == "" and julia.code_file == "plot.jl"
+
+    def test_the_r_and_julia_text_probes_are_in_the_image_where_the_rows_name_them(self) -> None:
+        """R reads its text probe as the user profile, Julia loads it with `-L`; the renderer's Dockerfile copies both
+        from the agents' render package to the paths the rows name, and the local backend mounts the same files."""
+        assert command_for("r", "ggplot2").env["R_PROFILE_USER"] == commands.R_TEXT_PROBE
+        render = Path(commands.__file__).parents[1] / "anyplot" / "render"
+        dockerfile = (Path(commands.__file__).parent / "Dockerfile").read_text(encoding="utf-8")
+        for path in (commands.R_TEXT_PROBE, commands.JULIA_TEXT_PROBE):
+            name = Path(path).name
+            assert (render / name).is_file() and path == f"/opt/anyplot/{name}"
+            assert f"agents/anyplot/render/{name}" in dockerfile and path in dockerfile
 
     def test_a_pair_outside_the_table_is_refused(self) -> None:
         with pytest.raises(ValueError, match="no runtime command"):

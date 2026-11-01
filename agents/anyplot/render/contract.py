@@ -320,8 +320,8 @@ class RuntimeAdapter(Protocol):
 
     text_probe: bool
     """Whether the library's render reports its drawn texts (`labels` in its probe), which the closing reply quotes:
-    every Python and JavaScript library since 2026-11-01, not yet ggplot2 and Makie. The eval report counts a shipped
-    render without them only where this is True (`agents/evals/report.py`, `untexted`)."""
+    every library since 2026-11-01 (ggplot2 and Makie through their rows' text probes). The eval report counts a
+    shipped render without them only where this is True (`agents/evals/report.py`, `untexted`)."""
 
     @property
     def review_texts(self) -> bool:

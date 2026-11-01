@@ -13,7 +13,8 @@ probe-less harness in exec mode in front of Julia's launcher by its path,
 
     python -I -X disable-remote-debug harness.py --exec -- /opt/julia-1.13.2/bin/julia
         --project=/opt/julia-project --startup-file=no --history-file=no
-        --compiled-modules=strict --heap-size-hint=1536M -L /opt/anyplot/toolchain/warmup.jl plot.jl
+        --compiled-modules=strict --heap-size-hint=1536M -L /opt/anyplot/toolchain/warmup.jl
+        -L /opt/anyplot/text_probe.jl plot.jl
 
 with the precompiled depot loaded under `--compiled-modules=strict` and the precompile
 workload loaded before the plot (J1, J1.1). The environment is the renderer's
@@ -25,9 +26,11 @@ turns it off: LLVM reserves address space far beyond its resident set) and
 launcher. As for Python and R, the local backend leaves `RLIMIT_NPROC` to the container's
 `--pids-limit`.
 
-**Outputs.** Julia writes `plot-<theme>.png` and no probe: the host gates R1 to R3 judge
-the render, and the reviewer finds the requested texts in the image (`review_texts`, owner
-decision of 2026-10-29), as for R. A failed render's stderr tail keeps Julia's first
+**Outputs.** Julia writes `plot-<theme>.png`, and since 2026-11-01 a probe of its drawn texts
+alone: the row loads `text_probe.jl` with `-L`, whose `atexit` hook leaves the current figure's
+texts by block for the harness (`harness.collect_text_probe`), which the closing reply quotes.
+The host gates R1 to R3 judge the render, and the reviewer finds the requested texts in the
+image (`review_texts`, owner decision of 2026-10-29), as for R. A failed render's stderr tail keeps Julia's first
 `ERROR:` line in front of the last characters (the row's `stderr_head`), and the error
 summary names the working form's lines: the loader replaced the one placeholder line with
 15 lines and more, which `error_summary` takes off again with the run form's loader span
@@ -78,7 +81,7 @@ from ...data.kinds import ColumnKinds
 from ...schemas import AdaptPlan, CodeArtifact
 from ..contract import BLOCKING_RULES, Theme
 from ..harness import INTERPRETER_FLAGS
-from ..png import MAX_PNG_BYTES, read_output
+from ..png import MAX_PNG_BYTES, read_output, read_probe
 from .notes import counted_note, offset_note
 from .python import DATA_RLIMIT_AS_MB, IMAGE_HARNESS, IMAGE_PYTHON, RENDER_RLIMIT_FSIZE_MB, PythonRuntime
 
@@ -114,10 +117,11 @@ class JuliaRuntime:
     """The working form's data placeholder, `df = load_user_data()`, which the loader replaces."""
     blocking_rules: frozenset[str] = BLOCKING_RULES | {DATASET_PACKAGE_RULE}
     adaptation_targets: Mapping[str, str] = ADAPTATION_TARGETS
-    text_probe = False
-    """Julia writes no probe yet (module docstring, "Outputs")."""
+    text_probe = True
+    """The text probe the Julia row loads with `-L` (module docstring, "Outputs")."""
     review_texts = True
-    """Julia writes no probe, so the reviewer finds the requested texts in the image (module docstring, "Outputs")."""
+    """The probe's texts are for the closing reply, so the reviewer finds the requested texts in the image (module
+    docstring, "Outputs")."""
 
     def __init__(
         self,
@@ -217,8 +221,8 @@ class JuliaRuntime:
         return [f"{finding.rule}: {finding.message}" for finding in validate_security(code)]
 
     def collect(self, run_dir: Path, theme: Theme) -> tuple[bytes | None, dict[str, Any] | None]:
-        """The PNG, read without following links; Julia writes no probe."""
-        return read_output(run_dir / f"plot-{theme}.png", MAX_PNG_BYTES), None
+        """The PNG and the text probe the harness made of the drawn texts, read without following links."""
+        return read_output(run_dir / f"plot-{theme}.png", MAX_PNG_BYTES), read_probe(run_dir / f"probe-{theme}.json")
 
     # The code conventions of the language, for the pipeline (`agents/anyplot/code/profiles/julia/`).
 

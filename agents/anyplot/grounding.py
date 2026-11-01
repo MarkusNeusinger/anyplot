@@ -12,7 +12,8 @@ Two measurements, both code:
   reads fenced next to the result. Every library's render reports them since 2026-11-01:
   matplotlib, seaborn and plotnine through `harness.drawn_labels`, pygal, altair and
   lets-plot through `harness.install_text_probes`, the JavaScript libraries, plotly and bokeh
-  through the browser harness (`render.mjs`, `writeTextProbe`); ggplot2 and Makie do not yet.
+  through the browser harness (`render.mjs`, `writeTextProbe`), ggplot2 and Makie through the
+  text probes their rows load (`text_probe.R`, `text_probe.jl`, `harness.collect_text_probe`).
   The probe is written by the code under test, so every value is checked for type and
   clipped; a probe without `labels` (a failed text report) yields None, which the root never
   sees (`plugins/tool_safety.fence_pipeline_notes` drops it), and a run with requested texts
@@ -216,10 +217,17 @@ PROBE_ERRORS = frozenset(
         "OSError",
         "RuntimeError",
         "UnicodeDecodeError",
+        "JSONDecodeError",
+        "MethodError",
+        "FieldError",
+        "BoundsError",
+        "UndefVarError",
+        "ArgumentError",
     }
 )
-"""The exception classes a failed probe names (`{"error": <class>}`: matplotlib's probe, a text probe) that the
-attribution log keeps by name; any other value reads `other`, since the code under test can write the probe."""
+"""The exception classes a failed probe names (`{"error": <class>}`: matplotlib's probe, a text probe, Julia's types
+among them; R's probe names `Error`) that the attribution log keeps by name; any other value reads `other`, since the
+code under test can write the probe."""
 
 
 def probe_error(probe: Any) -> str | None:

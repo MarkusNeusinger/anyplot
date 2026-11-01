@@ -11,6 +11,7 @@ from agents.renderer import executor as executor_module
 from agents.renderer.commands import (
     EXEC_FLAG,
     JULIA_BINARY,
+    JULIA_TEXT_PROBE,
     JULIA_WARMUP,
     LANGUAGES,
     NODE_BINARY,
@@ -75,7 +76,8 @@ class TestRows:
         argv = build_argv(config, "r-a-light", tmp_path, "light", 60, command=row)
         assert argv[argv.index(config.harness) :] == [config.harness, EXEC_FLAG, "--", *row.argv, "plot.jl"]
         assert row.argv[0] == JULIA_BINARY and "--compiled-modules=strict" in argv
-        assert argv[-3:] == ["-L", JULIA_WARMUP, "plot.jl"]  # the precompile workload loads before the plot
+        # The precompile workload, then the text probe, load before the plot.
+        assert argv[-5:] == ["-L", JULIA_WARMUP, "-L", JULIA_TEXT_PROBE, "plot.jl"]
         values = envs(argv)
         assert values["JULIA_DEPOT_PATH"] == "/tmp/depot:/opt/julia-depot" and values["LANG"] == "C.UTF-8"
         assert values["ANYPLOT_DENY_EXEC"] == "required" and "LD_PRELOAD" not in values

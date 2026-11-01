@@ -23,12 +23,14 @@ key for key, as `PythonRuntime.env` is for a Python row: the theme, R's own vari
 prove it with a preflight before the code runs. As for Python, the local backend leaves
 `RLIMIT_NPROC` to the container's `--pids-limit`.
 
-**Outputs.** R writes `plot-<theme>.png` and no probe: the host gates R1 to R3 judge the
-render, and the advisory gates (G3 to G12) have nothing to read, as for altair, pygal
-and lets-plot. Nor are there drawn texts to check the user's requested texts against, so
-the reviewer finds them in the image instead (`review_texts`, owner decision of
-2026-10-29): a run that asks for a text is `needs_attention` only when the review cannot
-find it, or when no readable review answered for it.
+**Outputs.** R writes `plot-<theme>.png`, and since 2026-11-01 a probe of its drawn texts
+alone: the row loads `text_probe.R` as R's user profile, which traces `ggsave` and leaves the
+saved plot's texts by grob-layout role for the harness (`harness.collect_text_probe`), which
+the closing reply quotes. The host gates R1 to R3 judge the render, and the advisory gates
+(G3 to G12) have nothing to read, as for altair, pygal and lets-plot. The requested texts stay
+the reviewer's to find in the image (`review_texts`, owner decision of 2026-10-29): a run that
+asks for a text is `needs_attention` only when the review cannot find it, or when no readable
+review answered for it.
 
 **Data runs and conversions** stay Python's: `run_data_code` runs the Python the root
 translated, whatever the plot's language, and a conversion reads a dropped file with the
@@ -80,7 +82,7 @@ from ...data.kinds import ColumnKinds
 from ...schemas import AdaptPlan, CodeArtifact
 from ..contract import BLOCKING_RULES, Theme
 from ..harness import INTERPRETER_FLAGS
-from ..png import MAX_PNG_BYTES, read_output
+from ..png import MAX_PNG_BYTES, read_output, read_probe
 from .notes import counted_note, offset_note
 from .python import DATA_RLIMIT_AS_MB, IMAGE_HARNESS, IMAGE_PYTHON, RENDER_RLIMIT_FSIZE_MB, PythonRuntime
 
@@ -113,10 +115,11 @@ class RRuntime:
     """The working form's data placeholder, `df <- load_user_data()`, which the loader replaces."""
     blocking_rules: frozenset[str] = BLOCKING_RULES | {DATASET_PACKAGE_RULE}
     adaptation_targets: Mapping[str, str] = ADAPTATION_TARGETS
-    text_probe = False
-    """R writes no probe yet (module docstring, "Outputs")."""
+    text_probe = True
+    """The text probe the R row loads as R's user profile (module docstring, "Outputs")."""
     review_texts = True
-    """R writes no probe, so the reviewer finds the requested texts in the image (module docstring, "Outputs")."""
+    """The probe's texts are for the closing reply, so the reviewer finds the requested texts in the image (module
+    docstring, "Outputs")."""
 
     def __init__(
         self,
@@ -219,8 +222,8 @@ class RRuntime:
         return [f"{finding.rule}: {finding.message}" for finding in validate_security(code)]
 
     def collect(self, run_dir: Path, theme: Theme) -> tuple[bytes | None, dict[str, Any] | None]:
-        """The PNG, read without following links; R writes no probe."""
-        return read_output(run_dir / f"plot-{theme}.png", MAX_PNG_BYTES), None
+        """The PNG and the text probe the harness made of the drawn texts, read without following links."""
+        return read_output(run_dir / f"plot-{theme}.png", MAX_PNG_BYTES), read_probe(run_dir / f"probe-{theme}.json")
 
     # The code conventions of the language, for the pipeline (`agents/anyplot/code/profiles/r/`).
 
