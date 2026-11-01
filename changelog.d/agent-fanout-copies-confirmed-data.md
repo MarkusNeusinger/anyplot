@@ -11,7 +11,7 @@
   confirmed; a copy parses and judges nothing again, counts as no paste, and
   has a per-user limit of its own. While the panel is open the data card
   waits, so every library copies the same confirmed data. The page falls back
-  to posting the paste again while the server has no copy route.
+  to posting the paste again while the server has no copy route. (#12501)
 
 ### Fixed
 
@@ -19,4 +19,4 @@
   library's `language` next to `library`, so the query no longer reads
   `library=matplotlib&language=javascript`, and the header's `all` pill is in
   the URL as `&all=1`, which a reload presses again once the libraries are
-  known.
+  known. (#12501)
