@@ -9,6 +9,8 @@
  *   12"); a rate without a base reads `—`.
  * - Three short ranked lists: the specs, the data formats and the refusal
  *   codes seen most often.
+ * - Below, apart from the window toggle (`AgentDailyUsage.tsx`): today so far,
+ *   live from the agents service, and a table of the last 14 UTC days.
  * - BigQuery not set up yet (`not_configured`), a failed query (`unavailable`)
  *   and a window without sessions are one muted line each. A failed request or
  *   an answer the page cannot read is the `unavailable` line too: the section
@@ -24,6 +26,7 @@ import Typography from '@mui/material/Typography';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { DEBUG_API_URL } from 'src/constants';
 import { fetchWithAuth } from 'src/lib/api';
+import { AgentDailyTable, AgentTodayLine } from 'src/sections/debug/AgentDailyUsage';
 import { timeAgo } from 'src/sections/debug/format';
 import { debugControlSx, listMutedSx, listTextSx } from 'src/sections/debug/styles';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
@@ -242,6 +245,10 @@ export function AgentUsageSection({ token, reloadCounter }: AgentUsageSectionPro
           </Box>
         </>
       )}
+
+      {/* Independent of the window toggle: today live, and one row per day. */}
+      <AgentTodayLine token={token} reloadCounter={reloadCounter} />
+      <AgentDailyTable token={token} reloadCounter={reloadCounter} />
     </Box>
   );
 }

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 
 import { AgentChatPage } from 'src/pages/AgentChatPage';
-import { LEAVE_TEXT } from 'src/sections/agent-chat/messages';
+import { LEAVE_TEXT, servicePausedText } from 'src/sections/agent-chat/messages';
 import { theme } from 'src/theme';
 import { ADMIN_HINT_KEY } from 'src/utils/adminAuth';
 
@@ -1763,5 +1763,53 @@ describe('AgentChatPage URL', () => {
     await waitFor(() => expect(query().has('all')).toBe(false));
     expect(screen.queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
     expect(query().get('library')).toBe('matplotlib');
+  });
+});
+
+describe('AgentChatPage service pause', () => {
+  /** The status answer as `stubFetch` gives it, plus `extra`. */
+  function statusWith(extra: Record<string, unknown>) {
+    const base = fetchMock.getMockImplementation() as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    fetchMock.mockImplementation((input: string, init?: RequestInit) =>
+      input.endsWith('/debug/agent/status')
+        ? Promise.resolve(
+            json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true, ...extra })
+          )
+        : base(input, init)
+    );
+  }
+
+  it('says before the user types that the whole chat paused, until when in their time', async () => {
+    const resetsAt = new Date(Date.now() + 3_600_000).toISOString();
+    statusWith({ paused: true, resets_at: resetsAt });
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+
+    const note = await screen.findByTestId('service-paused');
+    expect(note).toHaveAttribute('role', 'note');
+    expect(note).toHaveTextContent(`# ${servicePausedText(resetsAt)}`);
+    expect(note).toHaveTextContent(/your own limit is not affected$/);
+    // The composer stays: the note may go stale at midnight, the server decides each turn.
+    expect(screen.getByLabelText('Message')).toBeInTheDocument();
+  });
+
+  it('shows no note while the service runs, nor for a reset already past', async () => {
+    statusWith({ paused: false, resets_at: new Date(Date.now() + 3_600_000).toISOString() });
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    const { unmount } = renderAt(PAGE);
+    await screen.findByLabelText('Message');
+    await waitFor(() =>
+      expect(agentCalls().some(([input]) => pathOf(input).endsWith('/status'))).toBe(true)
+    );
+    expect(screen.queryByTestId('service-paused')).not.toBeInTheDocument();
+    unmount();
+
+    statusWith({ paused: true, resets_at: new Date(Date.now() - 1_000).toISOString() });
+    renderAt(PAGE);
+    await screen.findByLabelText('Message');
+    expect(screen.queryByTestId('service-paused')).not.toBeInTheDocument();
   });
 });

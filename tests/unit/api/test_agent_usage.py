@@ -1,11 +1,13 @@
 """
-Tests for GET /debug/agent-usage and api/agent_usage.py — the agent usage highlights read from BigQuery.
+Tests for GET /debug/agent-usage, GET /debug/agent-usage/daily and api/agent_usage.py — the agent usage
+highlights and the per-day table read from BigQuery.
 
 No test reaches BigQuery: `get_usage_query` is overridden with a fake that records the SQL and answers rows.
 """
 
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
@@ -16,8 +18,12 @@ from api import agent_usage
 from api.agent_usage import (
     CACHE_TTL_S,
     DATASET_PATTERN,
+    LIMIT_CODES,
     clear_usage_cache,
+    daily_sql,
+    daily_start,
     decode_rows,
+    read_daily,
     read_usage,
     usage_query,
     usage_sql,
@@ -286,3 +292,131 @@ class TestQuery:
     def test_an_empty_answer_is_zero(self) -> None:
         usage = read_usage(FakeQuery(rows=[]), DATASET, 7)
         assert usage.status == "ok" and usage.sessions == 0 and usage.kept_rate is None
+
+
+NOW = datetime(2026, 11, 2, 14, 5, 30, tzinfo=UTC)
+DAY_ROWS: list[dict[str, Any]] = [
+    {
+        "day": "2026-11-02",
+        "sessions": 4,
+        "plots_shipped": 3,
+        "hits_service_paused": 2,
+        "hits_capacity": 1,
+        "queue_wait_p95_ms": 12_400,
+        "queue_waits": 3,
+        "cost_usd": 0.022837133,
+        "fanout_cost_usd": 0.1210845185,
+        "unpriced_calls": 0,
+    },
+    # A day with lines but no shipped plot and a run before the queue-wait field: no percentile.
+    {"day": "2026-10-28", "sessions": 11, "cost_usd": 0.17469341, "queue_wait_p95_ms": None, "queue_waits": 0},
+    {"day": None, "sessions": 99},  # never a row without its day
+]
+
+
+class TestDaily:
+    def test_answers_every_day_of_the_window_newest_first(self, client, fake) -> None:
+        fake._rows = DAY_ROWS
+        body = client.get("/debug/agent-usage/daily").json()
+
+        assert body["status"] == "ok" and body["days"] == 14 and len(body["rows"]) == 14
+        dates = [row["date"] for row in body["rows"]]
+        assert dates == sorted(dates, reverse=True) and dates[0] == datetime.now(UTC).date().isoformat()
+        sql, since = fake.calls[0]
+        assert f"`{DATASET}_logs._AllLogs`" in sql and f"`{DATASET}.model_prices`" in sql
+        assert since == datetime.combine(datetime.now(UTC).date() - timedelta(days=13), datetime.min.time(), UTC)
+
+    def test_reads_a_day_and_fills_the_days_without_lines(self) -> None:
+        daily = read_daily(FakeQuery(rows=DAY_ROWS), DATASET, now=NOW)
+        today, quiet, busy = daily.rows[0], daily.rows[1], daily.rows[5]
+
+        assert (today.date, today.sessions, today.plots_shipped) == ("2026-11-02", 4, 3)
+        assert (today.cost_usd, today.fanout_cost_usd, today.unpriced_calls) == (0.0228, 0.1211, 0)
+        assert today.limit_hits == {
+            "service_paused": 2,
+            "budget": 0,
+            "daily_limit": 0,
+            "rate_limited": 0,
+            "run_limit": 0,
+            "capacity": 1,
+        }
+        assert (today.queue_wait_p95_ms, today.queue_waits) == (12_400, 3)
+        # A day without a line is zeros, and its percentile is unknown, not 0.
+        assert quiet.date == "2026-11-01" and quiet.sessions == 0 and quiet.cost_usd == 0.0
+        assert quiet.queue_wait_p95_ms is None and set(quiet.limit_hits.values()) == {0}
+        assert (busy.date, busy.sessions, busy.cost_usd, busy.queue_wait_p95_ms) == ("2026-10-28", 11, 0.1747, None)
+        assert daily.rows[-1].date == "2026-10-20" and 99 not in [row.sessions for row in daily.rows]
+
+    def test_the_window_starts_at_midnight_and_stays_for_the_day(self) -> None:
+        morning = daily_start(datetime(2026, 11, 2, 0, 0, 1, tzinfo=UTC))
+        night = daily_start(datetime(2026, 11, 2, 23, 59, 59, tzinfo=UTC))
+        assert morning == night == datetime(2026, 10, 20, tzinfo=UTC)
+        assert daily_start(datetime(2026, 11, 3, tzinfo=UTC)) == datetime(2026, 10, 21, tzinfo=UTC)
+
+    def test_an_answer_is_kept_and_a_new_day_queries_anew(self) -> None:
+        fake, now = FakeQuery(rows=DAY_ROWS), [100.0]
+        read_daily(fake, DATASET, now=NOW, clock=lambda: now[0])
+        now[0] += CACHE_TTL_S - 1
+        read_daily(fake, DATASET, now=NOW, clock=lambda: now[0])
+        assert len(fake.calls) == 1
+        read_daily(fake, DATASET, now=NOW + timedelta(days=1), clock=lambda: now[0])
+        assert len(fake.calls) == 2  # the window moved: another key
+
+    def test_the_statuses_carry_no_rows(self) -> None:
+        assert read_daily(FakeQuery(), None).status == "not_configured"
+        assert read_daily(None, DATASET).status == "unavailable"
+        failing = FakeQuery(error=RuntimeError("403 Access Denied"))
+        failed = read_daily(failing, DATASET, now=NOW)
+        assert failed.status == "unavailable" and failed.rows == []
+        # A failure is never kept.
+        assert read_daily(FakeQuery(rows=[]), DATASET, now=NOW).status == "ok"
+
+    def test_needs_the_admin_gate(self) -> None:
+        fastapi_app.dependency_overrides[get_usage_query] = lambda: FakeQuery()
+        try:
+            with patch.object(settings, "admin_token", "supersecret"):
+                response = TestClient(app).get("/debug/agent-usage/daily")
+        finally:
+            fastapi_app.dependency_overrides.clear()
+        assert response.status_code == 401
+
+
+class TestDailyQuery:
+    def test_prunes_to_the_window_before_it_deduplicates(self) -> None:
+        sql = daily_sql(DATASET)
+        assert sql.index("timestamp >= TIMESTAMP_SUB(@since, INTERVAL 2 DAY)") < sql.index("QUALIFY ROW_NUMBER()")
+        assert "CURRENT_TIMESTAMP" not in sql and "CURRENT_DATE" not in sql
+        # The lookback only dates the chats: every count of the window reads from its start.
+        assert sql.count("WHERE ts >= @since") == 3 and "WHERE first_ts >= @since" in sql
+
+    def test_counts_live_lines_and_the_fanout_cost_apart(self) -> None:
+        sql = daily_sql(DATASET)
+        assert "JSON_VALUE(json_payload.source) IN ('live', 'fanout')" in sql and "harness" not in sql
+        lines = sql[sql.index("lines AS") : sql.index("steps AS")]
+        assert "source = 'live'" in lines
+        assert "SUM(IF(source = 'live', usd, 0)) AS cost_usd" in sql
+        assert "SUM(IF(source = 'fanout', usd, 0)) AS fanout_cost_usd" in sql
+
+    def test_prices_as_the_cost_view_does(self) -> None:
+        """The same steps, the same model id clean-up and the same cache factors as `05_prices_cost.sql`."""
+        view = (Path(__file__).parents[3] / "agents/telemetry/views/05_prices_cost.sql").read_text(encoding="utf-8")
+        sql = daily_sql(DATASET)
+        for fragment in (
+            r"r'(@.*|-[0-9]{8})$'",
+            "UNNEST(JSON_QUERY_ARRAY(",
+            "* prices.input_usd_per_m * 0.1",
+            "* prices.input_usd_per_m * 1.25",
+            "* prices.output_usd_per_m",
+            ") / 1e6",
+        ):
+            assert fragment in view and fragment in sql, fragment
+        steps = sql[sql.index("steps AS") : sql.index("costs AS")]
+        assert "event = 'chat_turn'" in steps and "event = 'data_input'" in steps and "pipeline_run" not in steps
+
+    def test_counts_every_limit_code_where_a_line_records_it(self) -> None:
+        sql = daily_sql(DATASET)
+        for code in LIMIT_CODES:
+            assert f"COUNTIF(code = '{code}') AS hits_{code}" in sql
+        assert "IFNULL(JSON_VALUE(payload.refusal), JSON_VALUE(payload.error))" in sql
+        assert "WHEN 'data_input' THEN JSON_VALUE(payload.outcome)" in sql
+        assert "APPROX_QUANTILES(queue_wait_ms, 100 IGNORE NULLS)[SAFE_OFFSET(95)]" in sql

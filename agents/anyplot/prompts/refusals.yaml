@@ -47,6 +47,22 @@ budget:
   vi: "Hiện đã đạt giới hạn sử dụng. Bạn vui lòng thử lại sau."
   ru: "Лимит использования пока исчерпан. Пожалуйста, попробуй ещё раз позже."
 
+# The service's day budget (`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`) is spent, not the user's own:
+# every user gets this until the usage book's new day at 00:00 UTC. The page adds the time
+# in the user's own time zone next to it (the server does not know the zone).
+service_paused:
+  en: "The chat has reached today's overall limit and is paused until 00:00 UTC. Your own limit is not affected."
+  de: "Der Chat hat das heutige Gesamtlimit erreicht und ist bis 00:00 UTC pausiert. Dein eigenes Limit ist davon nicht betroffen."
+  fr: "Le chat a atteint la limite globale du jour et est en pause jusqu'à 00:00 UTC. Ta propre limite n'est pas concernée."
+  es: "El chat ha alcanzado el límite global de hoy y está en pausa hasta las 00:00 UTC. Tu propio límite no se ve afectado."
+  it: "La chat ha raggiunto il limite complessivo di oggi ed è in pausa fino alle 00:00 UTC. Il tuo limite personale non è interessato."
+  pt: "O chat atingiu o limite geral de hoje e está pausado até 00:00 UTC. O seu próprio limite não é afetado."
+  nl: "De chat heeft de totale limiet van vandaag bereikt en is gepauzeerd tot 00:00 UTC. Je eigen limiet blijft onaangetast."
+  pl: "Czat osiągnął dzisiejszy limit ogólny i jest wstrzymany do 00:00 UTC. Twój własny limit pozostaje bez zmian."
+  zh: "聊天已达到今天的总上限，暂停至 UTC 00:00。你自己的额度不受影响。"
+  vi: "Cuộc trò chuyện đã đạt giới hạn chung của hôm nay và tạm dừng đến 00:00 UTC. Giới hạn của riêng bạn không bị ảnh hưởng."
+  ru: "Чат достиг общего лимита на сегодня и приостановлен до 00:00 UTC. Твой личный лимит не затронут."
+
 rate_limited:
   en: "That is too many messages in a short time. Please wait a minute and try again."
   de: "Das sind zu viele Nachrichten in kurzer Zeit. Bitte warte eine Minute und versuche es dann noch einmal."

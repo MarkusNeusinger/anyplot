@@ -247,6 +247,7 @@ _UPSTREAM_CODES = frozenset(
         "unconfirmed",
         "rate_limited",
         "daily_limit",
+        "service_paused",
         "locked_out",
         "session_closed",
         "convert_unavailable",
@@ -1113,10 +1114,43 @@ async def agent_status(ctx: Ctx, client: Client) -> dict[str, Any]:
     """The agents service's status plus `enabled`.
 
     Upstream fields: `libraries`, `model`, `location`, `version`, `provider`, the
-    run queue's `waiting` entries and `in_flight` runs, and `user_max_runs`.
+    run queue's `waiting` entries and `in_flight` runs, `user_max_runs`, and `paused`
+    with `resets_at` (the service's day budget is spent until then).
     """
     upstream = await _call_upstream(client, ctx, "GET", "/status")
     return {**(upstream if isinstance(upstream, dict) else {}), "enabled": True}
+
+
+BUDGET_FIELDS = frozenset(
+    {
+        "date",
+        "since",
+        "started_at",
+        "resets_at",
+        "paused",
+        "model",
+        "tokens",
+        "budget_tokens",
+        "usd",
+        "budget_usd",
+        "users",
+        "users_at_limit",
+        "limits",
+    }
+)
+"""The fields of the agents service's `GET /v1/budget` that reach the page: counts, times and the model id, never a
+user id, so a field the service adds later stays upstream until it is named here."""
+
+
+@router.get("/budget", dependencies=[Depends(require_admin)])
+async def agent_budget(ctx: Ctx, client: Client) -> dict[str, Any]:
+    """The `/debug` page's live line for today: the agents service's global spend against its day budget, and how
+    many users are at their own limits, for the instance's lifetime. Admin-gated on the route itself as well as by
+    the router, so it stays an admin view once the chat routes open to everyone."""
+    upstream = await _call_upstream(client, ctx, "GET", "/budget")
+    return {
+        key: value for key, value in (upstream if isinstance(upstream, dict) else {}).items() if key in BUDGET_FIELDS
+    }
 
 
 @router.get("/eligibility")

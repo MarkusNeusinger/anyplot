@@ -43,7 +43,8 @@ from api.routers.agent import (
     get_case_bucket,
     load_catalogue_snapshot,
 )
-from api.routers.debug import AdminIdentity, require_admin_identity
+from api.routers.agent import router as agent_router
+from api.routers.debug import AdminIdentity, require_admin, require_admin_identity
 from core.agent_cases import case_object, row_from_manifest
 from core.config import settings
 from core.database import AGENT_CASE_EXPECTED, FEEDBACK_REACTIONS, FEEDBACK_STATUSES, AgentFeedback, get_db
@@ -321,6 +322,7 @@ def _sse_events(body: str) -> list[tuple[str, dict]]:
 # Every route with a request that passes validation, for the "all dark" sweep.
 ALL_ROUTES = [
     ("GET", "/debug/agent/status", None),
+    ("GET", "/debug/agent/budget", None),
     ("GET", "/debug/agent/eligibility?spec=scatter-basic&library=matplotlib", None),
     ("POST", "/debug/agent/sessions", {"spec_id": "scatter-basic", "library": "matplotlib", "locale": "en"}),
     ("POST", "/debug/agent/sessions/s1/library", {"spec_id": "scatter-basic", "library": "seaborn"}),
@@ -2079,6 +2081,48 @@ class TestFeedback:
         rows.create_case.assert_not_awaited()
 
 
+class TestBudget:
+    """`GET /debug/agent/budget`: the `/debug` page's live line, counts and times only."""
+
+    ANSWER = {
+        "date": "2026-11-02",
+        "since": "2026-11-02T14:05:12Z",
+        "started_at": "2026-11-02T14:05:12Z",
+        "resets_at": "2026-11-03T00:00:00Z",
+        "paused": False,
+        "model": "claude-haiku-5-5",
+        "tokens": 12_000_000,
+        "budget_tokens": 100_000_000,
+        "usd": 1.32,
+        "budget_usd": 11.0,
+        "users": 3,
+        "users_at_limit": 1,
+        "limits": {"tokens": 1, "runs": 0},
+    }
+
+    def test_forwards_the_named_fields_only(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(200, json={**self.ANSWER, "user_ids": ["adm_0123"]})
+        response = client.get("/debug/agent/budget")
+
+        assert response.status_code == 200 and response.json() == self.ANSWER
+        assert str(upstream.requests[0].url) == f"{SERVICE_URL}/v1/budget"
+        assert response.headers["Cache-Control"] == "private, no-store"
+
+    def test_the_route_carries_its_own_admin_gate(self, agent_on, upstream) -> None:
+        """Gated on the route as well as by the router, so it stays an admin view if the chat routes open."""
+        route = next(route for route in agent_router.routes if getattr(route, "path", "") == "/debug/agent/budget")
+        assert any(dependency.call is require_admin for dependency in route.dependant.dependencies)
+        with patch.object(settings, "admin_token", "supersecret"):
+            response = TestClient(app).get("/debug/agent/budget", headers={"X-Admin-Token": "wrong"})
+        assert response.status_code == 401 and upstream.requests == []
+
+    def test_an_upstream_failure_keeps_the_agent_error_shape(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(500, json={"detail": "boom"})
+        response = client.get("/debug/agent/budget")
+        assert response.status_code == 500
+        assert response.json() == {"detail": "upstream", "ref": response.headers["X-Request-Id"]}
+
+
 class TestUpstreamMapping:
     @pytest.mark.parametrize(
         ("status", "body", "expected_status", "expected_code"),
@@ -2096,6 +2140,8 @@ class TestUpstreamMapping:
             # The paste route's limits and guards since 2026-10-14; a 403 with a documented code is no IAM error.
             (429, {"detail": "daily_limit"}, 429, "daily_limit"),
             (429, {"detail": "locked_out"}, 429, "locked_out"),
+            # The service's day budget, not the user's own (2026-11-02): never the generic `rate_limited` of a 429.
+            (429, {"detail": "service_paused"}, 429, "service_paused"),
             (403, {"detail": "session_closed"}, 403, "session_closed"),
             (422, {"detail": "Traceback: KeyError in /app/agents/x.py"}, 422, "invalid"),
             (409, {"detail": ["run_active"]}, 409, "conflict"),

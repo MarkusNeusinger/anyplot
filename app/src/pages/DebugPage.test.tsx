@@ -448,9 +448,15 @@ describe('DebugPage agent usage', () => {
     generated_at: '2026-10-16T12:00:00Z',
   };
 
-  /** The page's own calls answered as in the tests above; the usage call by `usage`. */
-  function stubFetch(usage: (days: string) => Promise<unknown>) {
+  /** The page's own calls answered as in the tests above; the usage call by `usage`, the day views by theirs. */
+  function stubFetch(
+    usage: (days: string) => Promise<unknown>,
+    days: () => Promise<unknown> = () => ok({ status: 'not_configured', rows: [] }),
+    today: () => Promise<unknown> = () => Promise.resolve({ ok: false, json: () => ({}) })
+  ) {
     const fetchMock = vi.fn((url: string) => {
+      if (url.includes('/debug/agent-usage/daily')) return days();
+      if (url.includes('/debug/agent/budget')) return today();
       if (url.includes('/debug/agent-usage')) {
         return usage(new URL(url).searchParams.get('days') ?? '');
       }
@@ -497,7 +503,7 @@ describe('DebugPage agent usage', () => {
       'none in this window'
     );
     const urls = fetchMock.mock.calls.map(call => call[0]);
-    expect(urls.filter(url => url.includes('/debug/agent-usage'))).toEqual([
+    expect(urls.filter(url => url.includes('/debug/agent-usage?'))).toEqual([
       expect.stringMatching(/\/debug\/agent-usage\?days=7$/),
     ]);
   });
@@ -561,11 +567,155 @@ describe('DebugPage agent usage', () => {
     );
     const usageUrls = fetchMock.mock.calls
       .map(call => call[0])
-      .filter(url => url.includes('/debug/agent-usage'));
+      .filter(url => url.includes('/debug/agent-usage?'));
     expect(usageUrls).toEqual([
       expect.stringMatching(/\?days=7$/),
       expect.stringMatching(/\?days=30$/),
     ]);
+    // The day views do not follow the toggle: one call each.
+    const calls = fetchMock.mock.calls.map(call => call[0]);
+    expect(calls.filter(url => url.includes('/debug/agent-usage/daily'))).toHaveLength(1);
+    expect(calls.filter(url => url.includes('/debug/agent/budget'))).toHaveLength(1);
+  });
+
+  const DAY = {
+    date: '2026-11-02',
+    sessions: 4,
+    plots_shipped: 3,
+    cost_usd: 0.0228,
+    fanout_cost_usd: 0.1211,
+    unpriced_calls: 0,
+    limit_hits: {
+      service_paused: 2,
+      budget: 0,
+      daily_limit: 0,
+      rate_limited: 0,
+      run_limit: 0,
+      capacity: 1,
+    },
+    queue_wait_p95_ms: 12_400,
+    queue_waits: 3,
+  };
+  const QUIET = {
+    ...DAY,
+    date: '2026-11-01',
+    sessions: 0,
+    plots_shipped: 0,
+    cost_usd: 0,
+    fanout_cost_usd: 0,
+    unpriced_calls: 2,
+    limit_hits: { ...DAY.limit_hits, service_paused: 0, capacity: 0 },
+    queue_wait_p95_ms: null,
+    queue_waits: 0,
+  };
+  const BUDGET = {
+    date: '2026-11-02',
+    since: '2026-11-02T14:05:12Z',
+    started_at: '2026-11-02T14:05:12Z',
+    resets_at: '2026-11-03T00:00:00Z',
+    paused: false,
+    model: 'claude-haiku-5-5',
+    tokens: 12_000_000,
+    budget_tokens: 100_000_000,
+    usd: 1.32,
+    budget_usd: 11,
+    users: 3,
+    users_at_limit: 1,
+    limits: { tokens: 1, runs: 0, data_runs: 0, messages: 0, pastes: 0, conversions: 0 },
+  };
+
+  it('shows one row per day, newest first, with a dash for a queue wait the day has not', async () => {
+    stubFetch(
+      () => ok(USAGE),
+      () => ok({ status: 'ok', days: 14, rows: [DAY, QUIET], generated_at: USAGE.generated_at })
+    );
+    render(<DebugPage />);
+
+    const days = await screen.findByRole('group', { name: 'Per day' });
+    const table = await within(days).findByRole('table');
+    const [head, today, quiet] = within(table).getAllByRole('row');
+    expect(head).toHaveTextContent(
+      'day (UTC)new chatsplotscostfan-outlimit hitsp95 queue wait'
+    );
+    expect(today).toHaveTextContent(
+      '2026-11-02 · so far43$0.02$0.12service_paused 2 · capacity 112.4 s'
+    );
+    // A day before the queue wait field reads `—`; unpriced calls mark the cost as a floor.
+    expect(quiet).toHaveTextContent('2026-11-0100$0.00+$0.000—');
+    expect(within(quiet).getByTitle('2 model calls without a price')).toHaveTextContent('$0.00+');
+  });
+
+  it('says so when the per-day numbers are not configured or the query failed', async () => {
+    let answer = () => ok({ status: 'not_configured', rows: [] });
+    stubFetch(
+      () => ok(USAGE),
+      () => answer()
+    );
+    const { unmount } = render(<DebugPage />);
+    expect(await screen.findByTestId('agent-daily-empty')).toHaveTextContent(
+      'BigQuery telemetry is not configured yet'
+    );
+    unmount();
+
+    answer = () => Promise.reject(new TypeError('Failed to fetch'));
+    render(<DebugPage />);
+    expect(await screen.findByTestId('agent-daily-empty')).toHaveTextContent(
+      'per-day numbers unavailable right now'
+    );
+  });
+
+  it("shows today's spend live, with the counts' lifetime", async () => {
+    stubFetch(
+      () => ok(USAGE),
+      undefined,
+      () => ok(BUDGET)
+    );
+    render(<DebugPage />);
+
+    const line = await screen.findByTestId('agent-today');
+    expect(line).toHaveTextContent(
+      'today: $1.32 of $11.00 (12.0 M of 100.0 M weighted tokens, 12%) · 3 users, 1 at their own limit (tokens 1)'
+    );
+    const group = screen.getByRole('group', { name: 'Today, live' });
+    expect(group).toHaveTextContent('counted since 14:05 UTC, when this instance started');
+    expect(group).toHaveTextContent('a redeploy or a scale to zero starts the counts again');
+    expect(screen.queryByTestId('agent-today-paused')).not.toBeInTheDocument();
+  });
+
+  it('marks a paused day, and an instance older than today', async () => {
+    stubFetch(
+      () => ok(USAGE),
+      undefined,
+      () =>
+        ok({
+          ...BUDGET,
+          paused: true,
+          since: '2026-11-02T00:00:00Z',
+          started_at: '2026-10-31T09:12:00Z',
+          usd: null,
+          budget_usd: null,
+        })
+    );
+    render(<DebugPage />);
+
+    expect(await screen.findByTestId('agent-today-paused')).toHaveTextContent(
+      'paused · the day budget is spent: every turn gets service_paused until'
+    );
+    // No price for the model: the tokens alone.
+    expect(screen.getByTestId('agent-today')).toHaveTextContent(
+      'today: 12.0 M of 100.0 M weighted tokens · 3 users'
+    );
+    expect(screen.getByRole('group', { name: 'Today, live' })).toHaveTextContent(
+      'counted since 00:00 UTC; this instance has run since 2026-10-31 09:12:00 UTC'
+    );
+  });
+
+  it('says so when the agents service does not answer', async () => {
+    stubFetch(() => ok(USAGE));
+    render(<DebugPage />);
+    expect(await screen.findByTestId('agent-today-empty')).toHaveTextContent(
+      'live numbers unavailable: the agents service did not answer'
+    );
   });
 });
 

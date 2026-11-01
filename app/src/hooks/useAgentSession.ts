@@ -196,6 +196,7 @@ import {
   CONFIRM_LOST_TEXT,
   LANGUAGE_DETECTED_TEXT,
   LANGUAGE_PASTED_TEXT,
+  nextUtcMidnight,
 } from 'src/sections/agent-chat/messages';
 import { reloadOnceForAccess } from 'src/utils/adminAuth';
 
@@ -272,7 +273,8 @@ export type ChatItem =
   | { id: number; kind: 'user'; text: string }
   | { id: number; kind: 'action'; action: TurnAction; library: string }
   | { id: number; kind: 'assistant'; text: string }
-  | { id: number; kind: 'refusal'; code: string; text: string }
+  /** `until`: when a `service_paused` refusal ends (the next 00:00 UTC as it arrived). */
+  | { id: number; kind: 'refusal'; code: string; text: string; until?: string }
   | { id: number; kind: 'error'; code: string; ref: string | null }
   | { id: number; kind: 'plot'; version: number }
   | { id: number; kind: 'plot_failed'; result: PlotResult }
@@ -1078,6 +1080,8 @@ const GUARDRAIL_REASONS = new Set([
   // a user paused for the day after repeated attack verdicts.
   'other_library',
   'locked_out',
+  // The whole service paused for the day: its day budget is spent, not the user's own.
+  'service_paused',
 ]);
 
 /** The paste route's guard refusals (HTTP errors, not stream refusals) that count as guardrail blocks. */
@@ -1085,6 +1089,7 @@ const PASTE_GUARDRAIL_REASONS = new Set([
   'data_refused',
   'rate_limited',
   'daily_limit',
+  'service_paused',
   'locked_out',
   'session_closed',
 ]);
@@ -1680,7 +1685,12 @@ export function useAgentSession({
           onPlot(event.result);
           break;
         case 'refusal':
-          addItem({ kind: 'refusal', code: event.code, text: event.text });
+          addItem({
+            kind: 'refusal',
+            code: event.code,
+            text: event.text,
+            ...(event.code === 'service_paused' ? { until: nextUtcMidnight() } : {}),
+          });
           trackEvent('agent_guardrail_block', {
             reason: GUARDRAIL_REASONS.has(event.code) ? event.code : 'other',
           });

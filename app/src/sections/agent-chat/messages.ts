@@ -47,6 +47,33 @@ export const PLOT_FAILED_TEXT: Record<string, string> = {
   data_unconfirmed: 'confirm your data first: check the preview and the bindings, then .confirm()',
 };
 
+/**
+ * An instant on the browser's own clock (`01:00`), or null for one that does not
+ * parse: the agents service counts its days in UTC, the user reads their own time.
+ */
+export function localClock(iso: string): string | null {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+}
+
+/** The next 00:00 UTC, when the agents service's day budget starts again from zero. */
+export function nextUtcMidnight(now: number = Date.now()): string {
+  const date = new Date(now);
+  return new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + 1)
+  ).toISOString();
+}
+
+/**
+ * The whole chat paused for the day (`service_paused`): the service's day budget is
+ * spent, not the user's own. `until` is the reset in the user's time; the server's
+ * own refusal says 00:00 UTC, since it does not know the user's time zone.
+ */
+export function servicePausedText(until: string = nextUtcMidnight()): string {
+  return `the chat has reached today's overall limit and is paused until ${localClock(until) ?? '00:00 UTC'} · your own limit is not affected`;
+}
+
 /** Failures of the dataset, bindings, confirmation and undo calls. */
 export const DATA_FAILURE: Record<string, string> = {
   too_long: 'more than 1 MB; paste fewer rows',
@@ -70,6 +97,14 @@ export const DATA_FAILURE: Record<string, string> = {
     'no answer: your sign-in may have expired (reload the page), or the connection dropped',
   network: 'the server did not answer; check your connection',
 };
+
+/**
+ * A data call's failure text: `DATA_FAILURE`, except the service's pause
+ * (`429 service_paused`), which names its end in the user's own time.
+ */
+function dataFailureText(code: string): string | undefined {
+  return code === 'service_paused' ? servicePausedText() : DATA_FAILURE[code];
+}
 
 /**
  * What dropped a confirmation the user had given: the thread's warning notice
@@ -222,7 +257,7 @@ export function describeConvertFailure(
   kind: string | null = null,
   damage: string | null = null
 ): string {
-  let text = CONVERT_FAILURE[code] ?? DATA_FAILURE[code] ?? `could not be read (${code})`;
+  let text = CONVERT_FAILURE[code] ?? dataFailureText(code) ?? `could not be read (${code})`;
   // A damaged file names the format its first bytes claimed, and the part the server found broken.
   if (code === 'file_corrupt' && damage && DAMAGE_TEXT[damage]) {
     const as = kind && KIND_NAME[kind] ? ` as ${KIND_NAME[kind]}` : '';
@@ -316,6 +351,6 @@ export function describeDataFailure(
   ref: string | null,
   cause: string | null = null
 ): string {
-  const text = cause || (DATA_FAILURE[code] ?? `request failed (${code})`);
+  const text = cause || (dataFailureText(code) ?? `request failed (${code})`);
   return ref ? `${text} · ref ${ref}` : text;
 }

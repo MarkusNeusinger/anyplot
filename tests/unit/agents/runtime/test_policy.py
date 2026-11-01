@@ -773,6 +773,7 @@ REASONS = [
     "out_of_scope",
     "needs_data",
     "budget",
+    "service_paused",
     "rate_limited",
     "daily_limit",
     "session_closed",
@@ -830,6 +831,18 @@ class TestRefusals:
 
         assert "cannot fetch data from the internet" in english and "paste it into the data panel" in english
         assert "keine Daten aus dem Internet" in german and "Datenbereich" in german
+
+    def test_the_pause_names_its_end_in_utc_and_spares_the_users_own_limit(self) -> None:
+        """The service's day budget, not the user's own (owner request of 2026-11-02): every language names the reset
+        in UTC, the one time the server knows, and says the user's own limit is untouched."""
+        texts = policy.refusals()["service_paused"]
+
+        assert all("00:00" in text and "UTC" in text for text in texts.values())
+        assert texts["en"] == (
+            "The chat has reached today's overall limit and is paused until 00:00 UTC. Your own limit is not affected."
+        )
+        assert "Dein eigenes Limit" in texts["de"]
+        assert texts["en"] != policy.refusal("budget", "en")
 
     def test_a_missing_root_refusal_breaks_the_build(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         (tmp_path / "refusals.yaml").write_text('out_of_scope:\n  en: "x"\n', encoding="utf-8")

@@ -167,6 +167,7 @@ DataOutcome = Literal[
     "capacity",
     "rate_limited",
     "daily_limit",
+    "service_paused",
     "locked_out",
     "file_refused",
     "file_failed",
@@ -252,10 +253,12 @@ RefusalCode = Literal[
     "locked_out",
     "session_closed",
     "budget",
+    "service_paused",
     "rate_limited",
     "daily_limit",
     "other",
 ]
+"""`service_paused` (since 2026-11-02): the service's day budget is spent, not the user's own (`ledger.day_refusal`)."""
 ErrorCode = Literal["guard_unavailable", "capacity", "run_limit", "deadline", "internal", "cancelled", "other"]
 """`cancelled`: the client closed the stream before the turn ended (the page's cancel, a reload, a lost connection);
 `run_limit`: the turn's sandbox run would have been one more than `AGENT_USER_MAX_RUNS` across the user's sessions."""
@@ -1013,6 +1016,7 @@ REFUSAL_OUTCOMES: dict[str, DataOutcome] = {
     "capacity": "capacity",
     "rate_limited": "rate_limited",
     "daily_limit": "daily_limit",
+    "service_paused": "service_paused",
     "locked_out": "locked_out",
     "convert_unavailable": "convert_unavailable",
 }

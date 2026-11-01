@@ -20,6 +20,12 @@ for the rest of the day, so a turn gets the budget refusal and a dataset
 which the `/messages` route checks before the scope judge (`message_limit`). Only a new
 UTC day, a redeploy or a scale-to-zero resets them.
 
+The global day budget binds the whole service: once it is spent (`UsageBook.paused`),
+every user gets the `service_paused` refusal (`day_refusal`) until 00:00 UTC, told apart
+from a user's own spent budget (`budget`, a paste's `daily_limit`). `UsageBook.snapshot`
+answers the admin's live view of the day (`GET /v1/budget`): the global spend and how many
+users are at their own limits, counts only, for the instance's lifetime.
+
 The request, user-day and global-day budgets count cost-weighted tokens: each kind
 weighted by its price relative to an uncached input token (`BUDGET_WEIGHTS`), so a
 cache read counts a tenth and an output token five times. `RequestLedger.tokens` and
@@ -41,7 +47,7 @@ from collections import OrderedDict, deque
 from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 
 from ..schemas import Theme
@@ -222,6 +228,23 @@ def today() -> str:
     return datetime.now(UTC).date().isoformat()
 
 
+def utc_stamp(moment: datetime) -> str:
+    """An instant as the API writes one: ISO 8601 in UTC to the second, with a `Z`."""
+    return moment.astimezone(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def next_reset(now: datetime | None = None) -> datetime:
+    """The next 00:00 UTC: when the usage book starts a new day and every daily counter, the global one included,
+    starts again from zero."""
+    current = (now or datetime.now(UTC)).astimezone(UTC)
+    return datetime.combine(current.date() + timedelta(days=1), datetime.min.time(), UTC)
+
+
+SERVICE_PAUSED = "service_paused"
+"""The refusal and the paste route's `429` once the global day budget is spent: the whole service pauses until
+00:00 UTC, whatever the user's own counts (owner request of 2026-11-02: tell it apart from the user's own limit)."""
+
+
 @dataclass
 class _Day:
     date: str
@@ -257,6 +280,30 @@ can put there. A per-user byte budget in the store is the follow-up before the c
 settings, like the outcome beacons'."""
 
 
+LimitKind = Literal["tokens", "runs", "data_runs", "messages", "pastes", "conversions", "locked_out"]
+"""The day caps of one user that `UsageBook.snapshot` counts users at: the token budget, the pipeline runs, the
+`run_data_code` runs, the chat turns, the pastes, the file conversions, and the `attack` strikes."""
+LIMIT_KINDS: tuple[LimitKind, ...] = ("tokens", "runs", "data_runs", "messages", "pastes", "conversions", "locked_out")
+
+
+@dataclass(frozen=True)
+class DaySnapshot:
+    """The usage book's day as the admin's live view reads it (`GET /v1/budget`): counts only, never a user id."""
+
+    date: str
+    since: datetime
+    """When this day's counts began: the book's start when the instance started today, else 00:00 UTC."""
+    started_at: datetime
+    """When this instance's usage book started: a redeploy or a scale-to-zero starts a new one at zero."""
+    global_tokens: int
+    users: int
+    """Users with a chat turn, a paste, a conversion, a run, booked tokens or a strike today."""
+    at_limit: int
+    """Users at one or more of their own day caps (`limits`), each counted once."""
+    limits: dict[LimitKind, int]
+    """Users at each day cap; a user at two caps counts under both."""
+
+
 class UsageBook:
     """Per-user and global daily counters for this instance's lifetime, and each user's messages and pastes of the
     last minute."""
@@ -265,6 +312,8 @@ class UsageBook:
         self._day = _Day(today())
         self._clock = clock
         self._recent: dict[tuple[WindowKind, str], deque[float]] = {}
+        self.started_at = datetime.now(UTC)
+        """When the book began counting: in production the instance's first request (`services.get_services`)."""
 
     def _current(self) -> _Day:
         date = today()
@@ -317,6 +366,45 @@ class UsageBook:
         """Whether the user's `attack` strikes reached `AGENT_ATTACK_STRIKES` today: the `locked_out` refusal, which
         `daily_ok` folds into its answer, told apart from a spent token budget."""
         return self.user_strikes(user_id) >= settings.attack_strikes
+
+    def paused(self, settings: AgentSettings, *, reserve: int = 0) -> bool:
+        """Whether the service's day budget (`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`) is spent, `reserve` tokens beyond the
+        spend: the `service_paused` refusal for everyone until 00:00 UTC, which `daily_ok` folds into its answer."""
+        return self.global_tokens() + reserve >= settings.global_daily_token_budget
+
+    def snapshot(self, settings: AgentSettings) -> DaySnapshot:
+        """Today's global spend and how many users are at their own day caps, as counts (`DaySnapshot`)."""
+        day = self._current()
+        reached: dict[LimitKind, set[str]] = {
+            "tokens": _at_least(day.user_tokens, settings.daily_token_budget),
+            "runs": _at_least(day.user_runs, settings.daily_pipeline_runs),
+            "data_runs": _at_least(day.user_data_runs, settings.daily_data_runs),
+            "messages": _at_least(day.user_messages, settings.user_messages_per_day),
+            "pastes": _at_least(day.user_pastes, settings.user_pastes_per_day),
+            "conversions": _at_least(day.user_conversions, settings.user_conversions_per_day),
+            "locked_out": {
+                user for user, strikes in day.user_strikes.items() if len(strikes) >= settings.attack_strikes
+            },
+        }
+        users = set().union(
+            day.user_tokens,
+            day.user_runs,
+            day.user_data_runs,
+            day.user_messages,
+            day.user_pastes,
+            day.user_conversions,
+            day.user_strikes,
+        )
+        midnight = datetime.fromisoformat(day.date).replace(tzinfo=UTC)
+        return DaySnapshot(
+            date=day.date,
+            since=max(self.started_at, midnight),
+            started_at=self.started_at,
+            global_tokens=day.global_tokens,
+            users=len(users),
+            at_limit=len(set().union(*reached.values())),
+            limits={kind: len(reached[kind]) for kind in LIMIT_KINDS},
+        )
 
     def runs_ok(self, user_id: str, settings: AgentSettings) -> bool:
         return self.user_runs(user_id) < settings.daily_pipeline_runs
@@ -444,6 +532,21 @@ class UsageBook:
         return recent
 
 
+def _at_least(counts: dict[str, int], cap: int) -> set[str]:
+    return {user for user, count in counts.items() if count >= cap}
+
+
+def day_refusal(usage: UsageBook, user_id: str, settings: AgentSettings, *, reserve: int = 0) -> str:
+    """Which refusal a failed `daily_ok` is: `locked_out` past the day's strikes, `budget` when the user's own day
+    budget is spent, `service_paused` when only the service's is (its text says the user's own limit is untouched)."""
+    if usage.locked_out(user_id, settings):
+        return "locked_out"
+    own_left = usage.user_tokens(user_id) + reserve < settings.daily_token_budget
+    if own_left and usage.paused(settings, reserve=reserve):
+        return SERVICE_PAUSED
+    return "budget"
+
+
 def request_ok(ledger: RequestLedger, settings: AgentSettings, *, next_calls: int = 1, reserve: int = 0) -> bool:
     """Whether the request may make `next_calls` more LLM calls and still has `reserve` cost-weighted tokens left."""
     return (
@@ -531,6 +634,22 @@ attempts books a median of 77,747 (95th percentile 87,180, at most 103,800), and
 115,046 at most with a second review; with three attempts (`AGENT_MAX_ATTEMPTS=3`, the
 three-attempt rerun) at most 106,042, and about 117,300 with a second review. The
 160,000 of `AGENT_REQUEST_TOKEN_BUDGET` stays about 36 % above the costliest of these."""
+
+
+UNIT_PRICES: dict[str, float] = {"claude-haiku-5-5": 0.10, "gemini-3.8-flash": 1.50}
+"""The uncached input list price, USD per million tokens at the `global` endpoint, of each main model the budgets
+are counted in: one weighted token (`BUDGET_WEIGHTS`, `JUDGE_WEIGHTS`) costs this much. The prices of
+`agents/evals/pricing.py`, which the image does not ship (a test keeps both equal)."""
+LOCATION_SURCHARGES: dict[str, float] = {"global": 0.0, "eu": 0.10, "us": 0.10}
+"""`pricing.LOCATION_SURCHARGE`: the multi-regions add 10 % to the global list price (a test keeps both equal)."""
+
+
+def weighted_usd(tokens: int, model: str, location: str) -> float | None:
+    """Weighted tokens of `model` at `location` in USD at list price; None for a model without a price here."""
+    price = UNIT_PRICES.get(model)
+    if price is None:
+        return None
+    return tokens * price * (1.0 + LOCATION_SURCHARGES.get(location, 0.0)) / 1e6
 
 
 def weighted_tokens(*, uncached: int = 0, cached: int = 0, cache_write: int = 0, output: int = 0) -> int:

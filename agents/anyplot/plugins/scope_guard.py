@@ -5,8 +5,9 @@
 * a structured action (`RequestLedger.kind == "action"`, set by the `/v1` route for
   "Create plot") is not judged;
 * a message with a non-text part is withheld with the `unsupported_content` refusal;
-* the per-user and global daily budget is checked before the judge runs, and the
-  judge's tokens are booked to the ledger and the usage book;
+* the per-user and global daily budget is checked before the judge runs (the
+  `service_paused` refusal when only the global one is spent, `ledger.day_refusal`),
+  and the judge's tokens are booked to the ledger and the usage book;
 * the judge sees all text parts inside `<user_message>`, the root's last real reply
   (at most 500 characters; never a fixed refusal or the outage line, `is_service_text`)
   inside `<last_assistant_turn>`, and the user's last three
@@ -97,7 +98,7 @@ from ..policy import fence, fixed_replies, refusal, refusals, scope_rubric
 from ..services import KeptRefusal, get_services
 from ..session_state import LANGUAGE_SOURCE, SPEC_ID, language_delta
 from ..settings import get_settings
-from .ledger import RequestLedger, attribution, judge_budget_tokens, ledger_for
+from .ledger import RequestLedger, attribution, day_refusal, judge_budget_tokens, ledger_for
 
 
 logger = logging.getLogger(__name__)
@@ -289,7 +290,7 @@ class ScopeGuardPlugin(BasePlugin):
         settings = get_settings()
         user = ledger.user_id or invocation_context.session.user_id
         if not services.usage.daily_ok(user, settings):
-            reason = LOCKED_OUT if services.usage.locked_out(user, settings) else "budget"
+            reason = day_refusal(services.usage, user, settings)  # `locked_out`, `service_paused` or `budget`
             ledger.refuse(reason, refusal(reason, ledger.lang))
             attribution("scope_guard", ledger, verdict=reason)
             return _withheld()

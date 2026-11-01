@@ -111,6 +111,10 @@ export interface AgentStatus {
   in_flight?: number;
   /** `AGENT_USER_MAX_RUNS`: one user's sandbox runs queued or running at once; absent from an older server. */
   user_max_runs?: number;
+  /** The service's day budget is spent: every turn gets `service_paused` until `resets_at`. */
+  paused?: boolean;
+  /** The next 00:00 UTC, when the day budget starts again (ISO 8601). */
+  resets_at?: string;
   enabled: boolean;
 }
 
