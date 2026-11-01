@@ -89,9 +89,9 @@ class TestAdapterInstruction:
 class TestAdapterPromptPerLanguage:
     """`adapter.md` holds the shared rules, each language's runtime prompt fills its slots (2026-10-29)."""
 
-    PYTHON_SHA256 = "c3c8ec053d9de7bd48ca64b5df1ac8a9c5dd2f1a8ace214bdbd3564a5fd1fb8e"
+    PYTHON_SHA256 = "0a9e053f1ee1695358e4998b6d9dd62c270c6e9f5db6e3be94fee907f4caa6e9"
     """SHA-256 of `adapter.md` as `own_prompt` read it before the split (51ceaac6c, stripped, 18,703 characters),
-    since 2026-11-01 with the `changes` notes in the plot language and in plain words (19,301 characters)."""
+    since 2026-11-01 with the `changes` notes in plain words and in the reply language (19,615 characters)."""
 
     def test_the_python_adapter_prompt_matches_its_pinned_hash(self) -> None:
         """Golden: the Python libraries' adapters read exactly the pinned prompt. It was the one they read before R
@@ -102,7 +102,7 @@ class TestAdapterPromptPerLanguage:
         assert hashlib.sha256(prompt.encode("utf-8")).hexdigest() == self.PYTHON_SHA256, (
             "the Python adapter prompt changed; if that is intended, pin its new SHA-256 here"
         )
-        assert len(prompt) == 19_301 and "{{" not in prompt
+        assert len(prompt) == 19_615 and "{{" not in prompt
 
     HIGHLIGHTS_SHA256 = "b810744bed4b986e2a76d4480f72ee986c69b12d12f964f0d988d815141d3567"
     """SHA-256 of `adapter_highlights.md` as `own_prompt` read it before its slot (51ceaac6c, 1,058 characters)."""
@@ -723,8 +723,11 @@ class TestSessionLanguage:
         # ...but an identifier is written as text for a reader (owner, 2026-10-16), by the shared rule.
         assert '`Reaktionszeit_ms` becomes "Reaktionszeit (ms)"' in adapter
         assert "### Axis and Legend Titles" in adapter  # the style guide's rule, read verbatim
-        # The user reads the notes under the plot (owner, 2026-11-01): the plot language, plain words, no code names.
-        assert "`changes`: up to five short notes in the plot language" in adapter
+        # The user reads the notes under the plot (owner, 2026-11-01): the language they chat in, plain words, no
+        # code names; the plot text stays in the plot language.
+        assert "`changes`: up to five short notes in the reply language when the request names one, else" in adapter
+        assert "- Reply language (optional), inside `<reply_language>`" in adapter
+        assert "write the `changes` notes in it, and the plot text still in the plot language" in adapter
         assert "never a function, a variable, a file or a library call (`load_user_data()`" in adapter
         assert "a fix after `feedback` lists the fix, never again what the code already did" in adapter
 

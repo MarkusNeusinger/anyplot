@@ -7,7 +7,8 @@
   with no offer, and act on the user's answer in the same turn: "the scores are out of 100" now sets the axis to 0
   to 100. On seven chat scenarios from the user test of 2026-11-01, questions per reply fell from 0.75 to 0 and the
   words per reply from 58.7 to 50.4 on average (plot replies from 50 to 37). The version's "what changed" notes are
-  written in the plot language and in plain words, without the code's own names such as `load_user_data()`.
+  written in the language the user chats in, also when the plot keeps another one, and in plain words, without
+  the code's own names such as `load_user_data()`.
   (#12506)
 
 ### Added
