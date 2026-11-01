@@ -200,7 +200,9 @@ SELF_REVIEW_LINE = (
     "to the reviewer, check it against each technical criterion of the rubric in your instructions (VQ, SC, DQ) "
     "and against the spec: fix what falls short. When the notes also name the previous round's findings, check "
     "that your changes fixed them in the image. What the change request and the earlier requests set stays as "
-    "the user asked, whatever the rubric says. If nothing needs fixing, answer with an empty edit list."
+    "the user asked, whatever the rubric says. If nothing needs fixing, answer with an empty edit list. Your "
+    "`changes` list only what this answer fixes, never again what the code already did: the user already has "
+    "the notes of the first answer."
 )
 """The feedback of the self-review attempt (`AGENT_SELF_REVIEW`); the render itself is attached by the adapter's callback."""
 MEASURED_LINE = (

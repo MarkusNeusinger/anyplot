@@ -80,9 +80,9 @@ class TestFixtures:
         ops = {operation["op"] for item in cases for operation in item.expected_operations}
 
         # 30 single-step cases (two of them `derive`, two `make_date`, one month-only date format, one sort of month
-        # names, one daily mean per sensor), 10 `hard` ones (chains, ambiguity, unsupported asks) and 11 data-code
-        # cases.
-        assert len(cases) == 51
+        # names, one daily mean per sensor), 10 `hard` ones (chains, ambiguity, unsupported asks), 11 data-code
+        # cases and 4 step-1 summaries.
+        assert len(cases) == 55
         assert {item.locale for item in cases if "derive" in item.tags} == {"de", "en"}
         assert sum(1 for item in cases if "hard" in item.tags) == 10
         assert locales["de"] >= 5 and locales["en"] >= 5
@@ -112,6 +112,30 @@ class TestFixtures:
         refused = [item for item in cases if item.refuse]
         assert {item.id for item in refused} == {"en-code-reads-a-file", "en-code-general-script"}
         assert all(not item.expected_operations for item in refused)
+
+    def test_the_summary_cases(self) -> None:
+        """The step-1 summary, where 10 of 11 replies of the user test of 2026-11-01 closed with a question."""
+        cases = [item for item in load_cases(DEFAULT_CASES) if item.action is not None]
+
+        assert len(cases) == 4 and {item.locale for item in cases} == {"de", "en"}
+        assert all(item.message is None and item.dataset_text and not item.expected_operations for item in cases)
+        assert all("summary" in item.tags for item in cases)
+        # Dates whose day and month order reads both ways: the one summary that may close with its question.
+        assert [item.id for item in cases if prep.BLOCKED_TAGS & set(item.tags)] == ["en-summary-ambiguous-dates"]
+
+    @pytest.mark.parametrize(
+        "fields",
+        [
+            {"message": "rename it", "action": "summarize_data"},
+            {},
+            {"action": "summarize_data", "dataset_text": None},
+            {"action": "create_plot"},
+        ],
+    )
+    def test_a_case_has_a_message_or_a_summary_action(self, fields: dict[str, Any]) -> None:
+        data: dict[str, Any] = {"id": "x-001", "dataset_text": HOURS, "expected_operations": [], "locale": "en"}
+        with pytest.raises(ValidationError):
+            PrepCase.model_validate({**data, **fields})
 
     def test_every_fixture_is_consistent_with_the_operations(self) -> None:
         """The expected operations apply to the fixture's own dataset, and the dataset passes the pre-filter.
@@ -357,6 +381,90 @@ class TestScore:
         assert code == EXIT_FAILED and "below 0.8" in reasons[0]
         assert "miss" in prep.table(self.CASES, results)
 
+    def test_the_reply_gate_counts_the_replies_apart_from_the_operations(self) -> None:
+        expected = [canonical_operations(item.expected_operations, ".") for item in self.CASES]
+        sort = [{"op": "sort", "column": "Exam Score"}]
+        results = [
+            CaseResult(
+                "a-001",
+                [RENAME],
+                expected[0],
+                expected[0],
+                True,
+                reply_words=12,
+                reply_questions=1,
+                closing_question=True,
+                reply_miss="closing_question",
+            ),
+            CaseResult("a-002", [], expected[1], [], True, refusal="out_of_scope"),  # a refusal has no reply
+            CaseResult("a-003", sort, expected[2], expected[2], True, reply_words=20),
+        ]
+
+        scored = prep.score(self.CASES, results)
+
+        summary = scored["summary"]
+        assert summary["exact"] == 1.0 and summary["replies"] == 2 and summary["closing_questions"] == 1
+        assert summary["questions_per_reply"] == 0.5 and summary["reply_words_max"] == 20
+        assert summary["reply_misses"] == 1 and summary["reply_miss_rate"] == 0.5
+        assert summary["reply_miss_kinds"] == {"closing_question": 1}
+        assert scored["misses"] == [] and scored["reply_misses"] == [
+            {"id": "a-001", "reply_miss": "closing_question", "words": 12}
+        ]
+        code, reasons = verdict_of(summary, Gates())
+        assert code == EXIT_FAILED and reasons == [
+            "1 of 2 replies close with a question the turn was not blocked for or run over "
+            f"{prep.MAX_REPLY_WORDS} words (more than 10%)"
+        ]
+        assert verdict_of(summary, Gates(max_reply_misses=0.5)) == (EXIT_OK, [])
+        assert "match, reply: closing question" in prep.table(self.CASES, results)
+        assert "1 close with a question, 1 reply misses" in prep.summary_text(scored, reasons)
+
+
+class TestReplyShape:
+    LONG = " ".join(["word"] * prep.MAX_REPLY_WORDS) + " more."
+
+    @pytest.mark.parametrize(
+        ("texts", "blocked", "shape", "miss"),
+        [
+            (["Renamed Study Hours to Hours."], False, (5, 0, False), None),
+            # The user test of 2026-11-01: a summary that closes with a question nothing waits for.
+            (
+                ["Die Daten haben 4 Zeilen.", "Ist Anzahl eine Stückzahl pro Tier?"],
+                False,
+                (11, 1, True),
+                "closing_question",
+            ),
+            (["Do you mean the total per month or per year?"], True, (10, 1, True), None),
+            (["Sorted by score (highest first?) as asked."], False, (7, 1, False), None),
+            (["Willst du noch etwas ändern?**"], False, (5, 1, True), "closing_question"),
+            ([LONG], False, (prep.MAX_REPLY_WORDS + 1, 0, False), "long"),
+            ([LONG + " Which one?"], True, (prep.MAX_REPLY_WORDS + 3, 1, True), "long"),
+        ],
+    )
+    def test_words_questions_and_the_reply_miss(
+        self, texts: list[str], blocked: bool, shape: tuple[int, int, bool], miss: str | None
+    ) -> None:
+        result = CaseResult("s-001", [], [])
+
+        prep.measure_reply(result, texts, blocked=blocked)
+
+        assert (result.reply_words, result.reply_questions, result.closing_question) == shape
+        assert result.reply_miss == miss
+
+    def test_a_failed_data_call_blocks_the_turn(self) -> None:
+        result = CaseResult("s-001", [], [], failed_calls=1)
+
+        prep.measure_reply(result, ["The column holds text. Which one should I read as numbers?"], blocked=False)
+
+        assert result.closing_question and result.reply_miss is None
+
+    def test_a_turn_without_a_reply_is_not_measured(self) -> None:
+        result = CaseResult("s-001", [], [], refusal="out_of_scope")
+
+        prep.measure_reply(result, [], blocked=False)
+
+        assert result.reply_words is None and result.reply_miss is None
+
 
 def script_for(*answers: list[dict[str, Any]]) -> dict[str, list[Any]]:
     return {"root": [item for turn in answers for item in turn], "adapter": [], "reviewer": []}
@@ -449,6 +557,34 @@ class TestRun:
             assert static["text"].startswith("# anyplot assistant") and "cache_control" not in session
             assert session["text"].startswith("Session (set by the server):")
             assert "<<<" not in json.dumps(call["messages"], ensure_ascii=False)
+
+    def test_a_summary_action_is_sent_and_its_reply_measured(self, services: Services, swap_models) -> None:
+        """The page's summary action, never a message: a closing question is a reply miss unless the case asks back."""
+        cases = [
+            PrepCase(id="y-001", dataset_text=HOURS, action="summarize_data", expected_operations=[], locale="en"),
+            PrepCase(
+                id="y-002",
+                dataset_text=HOURS,
+                action="summarize_data",
+                expected_operations=[],
+                locale="en",
+                tags=["ask_back"],
+            ),
+        ]
+        reply = "4 rows; x is Study Hours, y is Exam Score. Are the scores out of 100?"
+        root_turns: list[list[dict[str, Any]]] = [
+            [{"call": "get_dataset_profile", "args": {}}, {"text": reply}],
+            [{"call": "get_dataset_profile", "args": {}}, {"text": reply}],
+        ]
+        fake: FakeAnthropic = swap_models("anthropic-vertex", script_for(*root_turns))
+
+        results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        assert [result.match for result in results] == [True, True]
+        assert [result.reply_miss for result in results] == ["closing_question", None]
+        assert results[0].reply_words == 16 and results[0].reply_questions == 1
+        # The action reached the root as the page's summary turn, never as typed text.
+        assert "[action] Summarize the dataset for the user." in json.dumps(fake.calls[0]["messages"])
 
     def test_generate_data_calls_are_read_and_scored_like_operations(self, services: Services, swap_models) -> None:
         """A formula case may come without a dataset; a formula the server cannot compute is a miss (`failed_calls`)."""

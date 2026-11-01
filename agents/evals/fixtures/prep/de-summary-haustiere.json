@@ -1,0 +1,11 @@
+{
+  "dataset_text": "Tier,Anzahl\nHund,7\nKatze,3\nVogel,4\nFisch,2\n",
+  "action": "summarize_data",
+  "expected_operations": [],
+  "locale": "de",
+  "spec_id": "pie-basic",
+  "tags": [
+    "summary",
+    "no_tool"
+  ]
+}

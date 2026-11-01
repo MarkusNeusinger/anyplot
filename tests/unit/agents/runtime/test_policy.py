@@ -89,8 +89,9 @@ class TestAdapterInstruction:
 class TestAdapterPromptPerLanguage:
     """`adapter.md` holds the shared rules, each language's runtime prompt fills its slots (2026-10-29)."""
 
-    PYTHON_SHA256 = "1c27b0afb55a1a82993d05d2c928fd8a2986c08488be60273a4e6010a81eeeef"
-    """SHA-256 of `adapter.md` as `own_prompt` read it before the split (51ceaac6c, stripped, 18,703 characters)."""
+    PYTHON_SHA256 = "c3c8ec053d9de7bd48ca64b5df1ac8a9c5dd2f1a8ace214bdbd3564a5fd1fb8e"
+    """SHA-256 of `adapter.md` as `own_prompt` read it before the split (51ceaac6c, stripped, 18,703 characters),
+    since 2026-11-01 with the `changes` notes in the plot language and in plain words (19,301 characters)."""
 
     def test_the_python_adapter_prompt_is_byte_identical_to_the_one_before_the_split(self) -> None:
         """Golden: the Python libraries' adapters read exactly what they read before R joined. A deliberate change of
@@ -100,7 +101,7 @@ class TestAdapterPromptPerLanguage:
         assert hashlib.sha256(prompt.encode("utf-8")).hexdigest() == self.PYTHON_SHA256, (
             "the Python adapter prompt changed; if that is intended, pin its new SHA-256 here"
         )
-        assert len(prompt) == 18_703 and "{{" not in prompt
+        assert len(prompt) == 19_301 and "{{" not in prompt
 
     HIGHLIGHTS_SHA256 = "b810744bed4b986e2a76d4480f72ee986c69b12d12f964f0d988d815141d3567"
     """SHA-256 of `adapter_highlights.md` as `own_prompt` read it before its slot (51ceaac6c, 1,058 characters)."""
@@ -587,6 +588,46 @@ class TestScopeRubricLibraries:
         assert "is `in_scope`, never `needs_data`" in scope and "parametric circle" in scope
 
 
+class TestReplies:
+    """Owner decision of 2026-11-01: short replies, a question only when it matters, the user's answer acted on."""
+
+    def test_a_question_only_when_the_turn_needs_it_and_no_closing_offer(self) -> None:
+        root = policy.root_instruction()
+
+        assert "## Replies" in root and "Lead with the result, in the session language" in root
+        assert "Ask a question only when you cannot go on without the answer" in root
+        assert "Never close a reply with an offer or an invitation" in root
+        # An "offer" the instruction asks for elsewhere keeps its information as a statement.
+        assert "say in one short sentence what is possible, as a statement" in root
+        # The summary's question is no longer a duty (the user test: 10 of 11 summaries closed with one).
+        assert "and one question when something is ambiguous" not in root
+        assert "Ask a question only about what the profile leaves open" in root
+        assert "name them briefly, in plain words, without an offer to fix them" in root
+
+    def test_brevity_keeps_every_notice_the_data_rules_require(self) -> None:
+        root = policy.root_instruction()
+        notices = root.split("Brevity never drops these notices", 1)[1].split("\n\n", 2)[1]
+
+        for prefix in ("R reads", "JavaScript reads", "Julia keeps time", "JavaScript keeps time", "R converts"):
+            assert f'"{prefix}"' in notices
+        assert "with the counts from its `changes`" in notices
+        assert "`requested_not_found`" in notices
+        assert "what a tool error or a limit says cannot be done" in notices
+
+    def test_an_answer_is_acted_on_in_the_same_turn(self) -> None:
+        """The user test's A3: "out of 100" was answered, and the axis stayed at 0 to 90."""
+        root = policy.root_instruction()
+
+        assert "act on it in that turn as on a request" in root
+        assert '"y axis from 0 to 100"' in root and "never ask the same thing again" in root
+
+    def test_the_self_review_lists_only_its_own_fixes(self) -> None:
+        """The user test: the proofread restated the first answer's notes, so "what changed" repeated itself."""
+        from agents.anyplot.pipeline import SELF_REVIEW_LINE
+
+        assert "`changes` list only what this answer fixes, never again what the code already did" in SELF_REVIEW_LINE
+
+
 class TestSessionLanguage:
     """Owner decision of 2026-10-12: one session language for the replies and every text in the plot."""
 
@@ -648,7 +689,10 @@ class TestSessionLanguage:
         # ...but an identifier is written as text for a reader (owner, 2026-10-16), by the shared rule.
         assert '`Reaktionszeit_ms` becomes "Reaktionszeit (ms)"' in adapter
         assert "### Axis and Legend Titles" in adapter  # the style guide's rule, read verbatim
-        assert "`changes`: up to five short English notes" in adapter  # internal notes stay English
+        # The user reads the notes under the plot (owner, 2026-11-01): the plot language, plain words, no code names.
+        assert "`changes`: up to five short notes in the plot language" in adapter
+        assert "never a function, a variable, a file or a library call (`load_user_data()`" in adapter
+        assert "a fix after `feedback` lists the fix, never again what the code already did" in adapter
 
     def test_the_reviewer_judges_the_plot_text_fail_open(self) -> None:
         reviewer = policy.reviewer_instruction()

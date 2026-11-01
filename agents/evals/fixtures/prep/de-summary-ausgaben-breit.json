@@ -1,0 +1,12 @@
+{
+  "dataset_text": "Kategorie;Jan;Feb;März;Apr\nMiete;980,00;980,00;980,00;995,00\nLebensmittel;310,40;295,10;322,85;301,60\nStrom;92,00;88,50;79,30;64,20\nFreizeit;75,00;110,25;58,90;131,40\n",
+  "action": "summarize_data",
+  "expected_operations": [],
+  "locale": "de",
+  "spec_id": "bar-grouped",
+  "tags": [
+    "summary",
+    "to_long",
+    "decimal_comma"
+  ]
+}
