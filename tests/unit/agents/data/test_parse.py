@@ -1231,7 +1231,9 @@ class TestMonthsAndQuarters:
 
     def test_month_names_with_years_read_as_set_type_reads_them(self) -> None:
         text = "Monat,v\nOkt. 2026,1\nNov. 2026,2\nDez. 2026,3\n"
-        operations = TypeAdapter(list[Operation]).validate_python([{"op": "set_type", "column": "Monat", "type": "datetime"}])
+        operations = TypeAdapter(list[Operation]).validate_python(
+            [{"op": "set_type", "column": "Monat", "type": "datetime"}]
+        )
 
         converted = apply_operations(parse_dataset(text, text_columns=["Monat"]), operations)
 

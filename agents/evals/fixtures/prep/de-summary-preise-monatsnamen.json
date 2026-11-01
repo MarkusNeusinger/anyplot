@@ -1,0 +1,14 @@
+{
+  "dataset_text": "Preisverlauf Grafikkarte\nTypischer Tiefstpreis pro Monat, neueste zuerst. Δ ist die Änderung zum Vormonat in €.\n\nMonat\tNeu\tΔ\tGebraucht\tΔ\nOkt. 2026\t\t\t2925 €\t+275\nSept. 2026\t\t\t2650 €\t+250\nAug. 2026\t\t\t2400 €\t+201\nJuli 2026\t\t\t2199 €\t−100\nJuni 2026\t\t\t2299 €\t−120\nMai 2026\t\t\t2419 €\t+1270\nApr. 2026\t\t\t1149 €\t−1051\nMärz 2026\t\t\t2200 €\t0\nFeb. 2026\t\t\t2200 €\t+1\nJan. 2026\t\t\t2199 €\t0\nDez. 2025\t\t\t2199 €\t+19\n",
+  "action": "summarize_data",
+  "expected_operations": [{"op": "sort", "column": "Monat"}],
+  "locale": "de",
+  "spec_id": "line-timeseries-rolling",
+  "library": "seaborn",
+  "tags": [
+    "summary",
+    "month_names",
+    "minus_sign",
+    "date_order"
+  ]
+}

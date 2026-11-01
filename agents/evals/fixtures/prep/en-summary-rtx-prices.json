@@ -1,0 +1,13 @@
+{
+  "dataset_text": "RTX 4090 Price History Table\nTypical (median) lowest daily price in each month, newest first. Δ is the change from the previous month in $.\n\nMonth\tNew\tΔ\tUsed\tΔ\nNov 2026\t\t\t$3000\t+75\nOct 2026\t\t\t$2925\t+275\nSep 2026\t\t\t$2650\t+250\nAug 2026\t\t\t$2400\t+201\nJul 2026\t\t\t$2199\t−100\nJun 2026\t\t\t$2299\t−120\nMay 2026\t\t\t$2419\t+1270\nApr 2026\t\t\t$1149\t−1051\nMar 2026\t\t\t$2200\t0\nFeb 2026\t\t\t$2200\t+1\nJan 2026\t\t\t$2199\t0\nDec 2025\t\t\t$2199\t+19\n",
+  "action": "summarize_data",
+  "expected_operations": [{"op": "sort", "column": "Month"}],
+  "locale": "en",
+  "spec_id": "line-timeseries-rolling",
+  "tags": [
+    "summary",
+    "month_names",
+    "minus_sign",
+    "date_order"
+  ]
+}

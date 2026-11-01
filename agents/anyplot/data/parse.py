@@ -3261,9 +3261,9 @@ def _as_periods(column: _Column, present: list[str]) -> bool:
     return True
 
 
-def _month_years(cells: list[str]) -> dict[str, tuple[int, int]] | None:
+def _month_years(cells: list[str]) -> dict[str, tuple[int, ...]] | None:
     """Each distinct cell's year and month when every cell names a month and a year (`months.month_year`), else None."""
-    fields: dict[str, tuple[int, int]] = {}
+    fields: dict[str, tuple[int, ...]] = {}
     for cell in cells:
         if cell in fields:
             continue

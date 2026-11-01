@@ -937,7 +937,9 @@ def dry_run(
     order: Literal["ascending", "descending"] | None = None
     values = conversion.values.dropna()
     if target == "datetime" and values.nunique() > 1:
-        order = "ascending" if values.is_monotonic_increasing else "descending" if values.is_monotonic_decreasing else None
+        order = (
+            "ascending" if values.is_monotonic_increasing else "descending" if values.is_monotonic_decreasing else None
+        )
     return DryRun(column, target, present, present - conversion.failed, conversion.reading, conversion.guess, order)
 
 
@@ -1936,7 +1938,10 @@ def _without_filled_in(result: pd.Series, texts: pd.Series) -> pd.Series:
     a time alone, and a year 1 not written as `0001` fail and are counted like any other.
     """
     made_up = pd.Series(
-        [isinstance(text, str) and (not _DIGIT.search(text) or bool(_TIME_ONLY.fullmatch(text.strip()))) for text in texts],
+        [
+            isinstance(text, str) and (not _DIGIT.search(text) or bool(_TIME_ONLY.fullmatch(text.strip())))
+            for text in texts
+        ],
         index=result.index,
     )
     year_one = (result.dt.year == 1).fillna(False).astype(bool)

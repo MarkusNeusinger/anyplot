@@ -81,8 +81,8 @@ class TestFixtures:
 
         # 30 single-step cases (two of them `derive`, two `make_date`, one month-only date format, one sort of month
         # names, one daily mean per sensor), 10 `hard` ones (chains, ambiguity, unsupported asks), 11 data-code
-        # cases and 4 step-1 summaries.
-        assert len(cases) == 55
+        # cases and 8 step-1 summaries.
+        assert len(cases) == 59
         assert {item.locale for item in cases if "derive" in item.tags} == {"de", "en"}
         assert sum(1 for item in cases if "hard" in item.tags) == 10
         assert locales["de"] >= 5 and locales["en"] >= 5
@@ -117,11 +117,20 @@ class TestFixtures:
         """The step-1 summary, where 10 of 11 replies of the user test of 2026-11-01 closed with a question."""
         cases = [item for item in load_cases(DEFAULT_CASES) if item.action is not None]
 
-        assert len(cases) == 4 and {item.locale for item in cases} == {"de", "en"}
-        assert all(item.message is None and item.dataset_text and not item.expected_operations for item in cases)
+        assert len(cases) == 8 and {item.locale for item in cases} == {"de", "en"}
+        assert all(item.message is None and item.dataset_text for item in cases)
         assert all("summary" in item.tags for item in cases)
-        # Dates whose day and month order reads both ways: the one summary that may close with its question.
-        assert [item.id for item in cases if prep.BLOCKED_TAGS & set(item.tags)] == ["en-summary-ambiguous-dates"]
+        # A summary changes the data only for what the server found in code (live test of 2026-11-01): a newest-first
+        # date column gets its sort, a text column that converts for certain fills an open role.
+        changing = {item.id for item in cases if item.expected_operations}
+        assert changing == {"en-summary-rtx-prices", "de-summary-preise-monatsnamen", "en-summary-convert-day-dates"}
+        assert all("date_order" in item.tags for item in cases if item.id in changing)
+        # Dates whose day and month order reads both ways, and a conversion that would guess the century: the
+        # summaries that may close with their question.
+        assert [item.id for item in cases if prep.BLOCKED_TAGS & set(item.tags)] == [
+            "de-summary-datum-zweistellig",
+            "en-summary-ambiguous-dates",
+        ]
 
     @pytest.mark.parametrize(
         "fields",

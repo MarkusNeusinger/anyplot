@@ -87,7 +87,9 @@ class TestCandidates:
 
         assert (candidate.role, candidate.dry.type, candidate.name) == ("value", "number", "price (number)")
         assert candidate.dry.certain
-        assert candidate.operations() == [{"op": "set_type", "column": "price", "type": "number", "name": "price (number)"}]
+        assert candidate.operations() == [
+            {"op": "set_type", "column": "price", "type": "number", "name": "price (number)"}
+        ]
 
     def test_a_column_of_dates_is_never_a_number_candidate(self) -> None:
         """`Nov 26, 2026` would be 26.2026 behind a unit `Nov`: a date column serves a date role or none."""
@@ -138,7 +140,7 @@ class TestCandidates:
         assert len(found(f"{header}\n{rows}\n{rows}\n", roles=roles)) == MAX_CANDIDATES
 
     def test_the_line_is_valid_json_after_operations(self) -> None:
-        [candidate] = found('Datum;Preis\n26 Nov 2026;1\n25 Nov 2026;2\n')
+        [candidate] = found("Datum;Preis\n26 Nov 2026;1\n25 Nov 2026;2\n")
 
         assert json.loads(candidate.line().split("; operations: ", 1)[1]) == candidate.operations()
 

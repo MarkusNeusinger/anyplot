@@ -597,16 +597,16 @@ class TestSetTypeDatetime:
         assert failure(SALES, {"op": "set_type", "column": "Umsatz", "type": "datetime"})[0] == "type_mismatch"
 
     @pytest.mark.parametrize(
-        ("cells", "dates"),
+        ("months", "dates"),
         [
             (["Okt. 2026", "Nov. 2026", "Dez. 2026"], ["2026-10-01", "2026-11-01", "2026-12-01"]),
             (["2026 März", "2026 Mai"], ["2026-03-01", "2026-05-01"]),
             (["listopad 2026", "grudzień 2026"], ["2026-11-01", "2026-12-01"]),
         ],
     )
-    def test_month_names_with_a_year_in_any_of_the_eleven_languages(self, cells: list[str], dates: list[str]) -> None:
+    def test_month_names_with_a_year_in_any_of_the_eleven_languages(self, months: list[str], dates: list[str]) -> None:
         """pandas reads English names only; the conversion reads what the parser reads (live test of 2026-11-01)."""
-        text = "t;v\n" + "".join(f"{cell};{index}\n" for index, cell in enumerate(cells))
+        text = "t;v\n" + "".join(f"{month};{index}\n" for index, month in enumerate(months))
         prepared = apply_operations(
             parse_dataset(text, text_columns=["t"]),
             OPERATIONS.validate_python([{"op": "set_type", "column": "t", "type": "datetime"}]),
@@ -614,7 +614,7 @@ class TestSetTypeDatetime:
 
         assert cells(prepared, 0) == dates
         assert prepared.changes == [
-            f"t: {len(cells)} cells read as months (a month name and a year, each as the first day of the month)"
+            f"t: {len(months)} cells read as months (a month name and a year, each as the first day of the month)"
         ]
 
     def test_month_names_leave_no_day_and_month_order_open(self) -> None:
@@ -660,7 +660,9 @@ class TestSetTypeIntoNewColumn:
     TEXT = "Datum;Preis\n26 Nov 2026;$5\n25 Nov 2026;7\n24 Nov 2026;$12\n"
 
     def test_dates_go_into_a_new_column_and_the_source_stays(self) -> None:
-        prepared = prepare(self.TEXT, {"op": "set_type", "column": "Datum", "type": "datetime", "name": "Datum (Datum)"})
+        prepared = prepare(
+            self.TEXT, {"op": "set_type", "column": "Datum", "type": "datetime", "name": "Datum (Datum)"}
+        )
 
         assert rows(prepared)[0] == "Datum,Preis,Datum (Datum)"
         assert cells(prepared, 0) == ["26 Nov 2026", "25 Nov 2026", "24 Nov 2026"]
@@ -703,7 +705,10 @@ class TestSetTypeIntoNewColumn:
     @pytest.mark.parametrize(
         ("operation", "message"),
         [
-            ({"type": "text", "column": "Datum", "name": "x"}, "set_type to text changes the column itself: leave name out"),
+            (
+                {"type": "text", "column": "Datum", "name": "x"},
+                "set_type to text changes the column itself: leave name out",
+            ),
             ({"type": "datetime", "column": "Datum", "name": "Preis"}, "a column named 'Preis' already exists"),
             ({"type": "number", "column": "n", "name": "x"}, "column 'n' already holds numbers: bind it as it is"),
             ({"type": "datetime", "column": "d", "name": "x"}, "column 'd' already holds dates: bind it as it is"),
