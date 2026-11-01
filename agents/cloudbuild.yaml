@@ -166,14 +166,15 @@ steps:
   # worst case is about 1.1 GiB: the dataset and render stores' 256 MiB caps, the
   # process, a 1 MB paste's parse and the PNG gates, and an out-of-memory kill would
   # lose every session in memory, hence 2 GiB); ONE instance, because sessions, datasets,
-  # renders and the run queue live in memory; concurrency 30 and a 1200 s timeout
+  # renders and the run queue live in memory; concurrency 80 and a 1200 s timeout
   # because of the run queue, not the CPU: every queued run holds an open stream,
-  # so the instance must take the public lane's 10 waiting streams and its run in
-  # flight, the admin lane's 5 runs and 5 waiting streams (since 2026-11-01; 20
-  # before, without that lane), 21 in all, and the other routes, and one turn can
-  # last the queue's 600 s maximum wait plus
+  # so the instance must take the queue's 60 waiting streams and its 5 runs in
+  # flight (since 2026-11-01: 6 starts a minute times the 600 s wait; 10 and 1
+  # before, at concurrency 20) and about 15 more for the other routes, and one turn
+  # can last the queue's 600 s maximum wait plus
   # the 540 s request deadline (anyplot-api's own --timeout is 1200 for the same
-  # turn). No secrets, no Cloud SQL in phase 1.
+  # turn). An idle stream waiting in the queue costs a heartbeat every 15 s, no CPU
+  # to speak of. No secrets, no Cloud SQL in phase 1.
   #
   # `--update-env-vars`, never `--set-env-vars`, for the reason api/cloudbuild.yaml
   # gives: an out-of-band variable must survive a deploy.
@@ -221,7 +222,7 @@ steps:
           --memory=2Gi \
           --min-instances=${_MIN_INSTANCES} \
           --max-instances=1 \
-          --concurrency=30 \
+          --concurrency=80 \
           --timeout=1200 \
           "--update-env-vars=^|^ENVIRONMENT=production|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GOOGLE_GENAI_USE_ENTERPRISE=TRUE|GOOGLE_CLOUD_LOCATION=eu|AGENT_LOCATION=eu|AGENT_PROVIDER=${_PROVIDER}|AGENT_MODEL=${_MODEL}|AGENT_JUDGE_MODEL=${_JUDGE_MODEL}|AGENT_LIBRARIES=${_LIBRARIES}|AGENT_RENDERER=remote|AGENT_RENDER_URL=${_RENDER_URL}|AGENT_ALLOWED_CALLERS=${_API_CALLER},${_SERVICE_ACCOUNT}|AGENT_SERVICE_URLS=$$AUDIENCES|ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS=false" \
           "$${TRAFFIC[@]}" \

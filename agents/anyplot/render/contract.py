@@ -158,7 +158,7 @@ class RenderResult:
     outputs: dict[Theme, ThemeOutput] = field(default_factory=dict)
     slot_wait_s: float = 0.0
     """Seconds the job waited for the instance's render slot (`render/serial.py`), every theme together: what the
-    runs of both run-queue lanes in flight cost each other's renders."""
+    runs in flight cost each other's renders."""
 
 
 class DataRunUnsupported(RendererUnavailable):

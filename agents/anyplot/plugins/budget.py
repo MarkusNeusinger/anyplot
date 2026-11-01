@@ -163,11 +163,17 @@ class BudgetPlugin(BasePlugin):
             if ToolSafetyPlugin.check(tool.name, tool_args, tool_context.agent_name) is not None:
                 return None  # ToolSafety refuses an invalid call; it is not a run either
             usage = get_services().usage
+            settings = get_settings()
             user = ledger.user_id or tool_context.session.user_id
-            if not usage.runs_ok(user, get_settings(), ledger.tier):
+            if not usage.runs_ok(user, settings, ledger.tier):
                 attribution("budget_pipeline", ledger, verdict="refused")
                 return {"status": "error", "code": "budget"}
+            # What the run's telemetry buckets (`telemetry.runs_today_bucket`, `tokens_today_bucket`): how far into
+            # the day's limits the user was when this run was booked, measured against the public budget for every
+            # tier so the numbers stay comparable. The user id never leaves the usage book.
+            ledger.user_tokens_share = usage.user_tokens(user) / settings.daily_token_budget
             usage.add_pipeline_run(user)
+            ledger.user_runs_today = usage.user_runs(user)
             return None
         except Exception as exc:
             logger.warning("pipeline budget failed: %s", type(exc).__name__)

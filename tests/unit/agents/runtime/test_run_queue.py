@@ -10,7 +10,6 @@ import pytest
 
 from agents.anyplot.run_queue import (
     HEARTBEAT_S,
-    LaneLimits,
     QueueFull,
     QueuePosition,
     QueueTimeout,
@@ -126,10 +125,12 @@ class TestRate:
 
 
 class TestCapacity:
-    def test_the_defaults_hold_ten_waiting_entries(self) -> None:
+    def test_the_defaults_hold_sixty_waiting_entries(self) -> None:
+        """Owner decision of 2026-11-01: five in flight, one start every 10 s, so 6 a minute times 600 s / 60."""
         queue = RunQueue.from_settings(AgentSettings())
 
-        assert (queue.concurrency, queue.per_minute, queue.max_wait_s, queue.capacity) == (1, 1, 600, 10)
+        assert (queue.concurrency, queue.per_minute, queue.max_wait_s, queue.capacity) == (5, 6, 600, 60)
+        assert queue.start_gap_s == 10
 
     def test_a_full_queue_refuses_a_new_entry(self, clock: Clock) -> None:
         queue = make(clock, per_minute=1, max_wait_s=120)  # two entries wait at most two minutes
@@ -164,8 +165,10 @@ class TestCapacity:
 class TestPerUser:
     """`AGENT_USER_MAX_RUNS`: a user's entries, waiting and running, across their sessions (2026-10-21)."""
 
-    def test_the_default_cap_is_three(self) -> None:
-        assert RunQueue.from_settings(AgentSettings()).per_user == 3
+    def test_the_default_caps_are_two_and_five_for_an_admin(self) -> None:
+        queue = RunQueue.from_settings(AgentSettings())
+
+        assert (queue.user_cap("normal"), queue.user_cap("premium"), queue.user_cap("admin")) == (2, 2, 5)
 
     def test_the_fourth_entry_of_a_user_is_refused_and_another_user_still_queues(self, clock: Clock) -> None:
         queue = RunQueue(concurrency=1, per_minute=1_000, max_wait_s=600, clock=clock, per_user=3)
@@ -211,135 +214,143 @@ class TestPerUser:
         assert queue.per_user is None and queue.user_entries("u") == 5
 
 
-def with_admin(clock: Clock, *, per_minute: int | None = None, max_wait_s: float = 600) -> RunQueue:
-    """The production shape: the public lane at its defaults, the admin lane at its own (five, no window, five)."""
-    return RunQueue(
-        concurrency=1,
-        per_minute=1,
-        max_wait_s=max_wait_s,
-        clock=clock,
-        per_user=3,
-        admin=LaneLimits(concurrency=5, per_minute=per_minute, per_user=5),
-    )
+def production(clock: Clock) -> RunQueue:
+    """The queue at the production defaults (owner decision of 2026-11-01): 5 in flight, one start every 10 s,
+    60 waiting entries, 2 runs per public user and 5 per admin."""
+    return RunQueue.from_settings(AgentSettings(), clock=clock)
+
+
+class TestStartGap:
+    """`AGENT_RUNS_PER_MINUTE` 6 spaces the starts 10 s apart: a fan-out's runs never start, or render, together."""
+
+    def test_starts_are_spaced_by_the_gap_even_with_free_slots(self, clock: Clock) -> None:
+        queue = production(clock)
+        first, second, third = (queue.submit(user, f"s-{user}") for user in ("a", "b", "c"))
+
+        assert (first.running, second.waiting, third.waiting) == (True, True, True)
+        assert queue.next_change_at(clock()) == clock() + 10
+        clock.advance(10)
+        queue.pump()
+        assert second.running and third.waiting
+        clock.advance(9.9)
+        queue.pump()
+        assert third.waiting
+        clock.advance(0.1)
+        queue.pump()
+        assert third.running and queue.in_flight == 3
+
+    def test_without_a_gap_the_window_alone_decides(self, clock: Clock) -> None:
+        queue = make(clock, concurrency=3)
+
+        tickets = [queue.submit(user, f"s-{user}") for user in ("a", "b", "c")]
+
+        assert queue.start_gap_s == 0 and all(ticket.running for ticket in tickets)
+
+    def test_the_gap_is_refused_below_zero(self, clock: Clock) -> None:
+        with pytest.raises(ValueError):
+            RunQueue(concurrency=1, per_minute=1, max_wait_s=600, clock=clock, start_gap_s=-1)
 
 
 class TestLanes:
-    """The admin lane (owner decision of 2026-11-01): limits of its own, beside the public lane's."""
+    """The admin lane (owner decision of 2026-11-01): the same concurrency, rate and order as everyone, a cap of 5."""
 
-    def test_the_defaults_give_the_admin_lane_five_runs_no_window_and_five_per_admin(self) -> None:
-        queue = RunQueue.from_settings(AgentSettings())
-
-        assert queue.limits("admin") == LaneLimits(concurrency=5, per_minute=None, per_user=5)
-        assert queue.limits("normal") == queue.limits("premium") == LaneLimits(concurrency=1, per_minute=1, per_user=3)
-        # One waiting admin entry per slot: 11 public and 10 admin streams fit Cloud Run's 30 with room for the routes.
-        assert (queue.lane_capacity("admin"), queue.capacity) == (5, 10)
-
-    def test_a_fanout_starts_five_runs_at_once_without_a_rate_window(self, clock: Clock) -> None:
-        queue = with_admin(clock)
-
-        runs = [queue.submit("admin", f"s-{library}", lane="admin") for library in range(5)]
-
-        assert all(ticket.running for ticket in runs) and queue.in_flight == 5
-        assert queue.next_change_at(clock()) == float("inf")  # nothing waits for a window
-
-    def test_the_lanes_never_wait_for_each_other(self, clock: Clock) -> None:
-        queue = with_admin(clock)
+    def test_the_admin_lane_shares_the_concurrency_and_the_rate(self, clock: Clock) -> None:
+        queue = production(clock)
         public = queue.submit("u", "s-u")
-        behind = queue.submit("v", "s-v")  # the public slot is taken: it waits
         admin = [queue.submit("admin", f"s-{index}", lane="admin") for index in range(5)]
 
-        assert public.running and behind.waiting
-        assert all(ticket.running for ticket in admin)  # the public run in flight takes none of the admin slots
-        queue.release(public)
-        clock.advance(60)
+        for _ in range(4):
+            clock.advance(10)
+            queue.pump()
+
+        assert public.running and [ticket.state for ticket in admin] == ["running"] * 4 + ["waiting"]
+        clock.advance(10)
         queue.pump()
-        assert behind.running  # five admin runs in flight take none of the public slot either
-        assert queue.in_flight == 6
+        assert admin[-1].waiting  # five in flight: the gap passed, but no slot is free
+        queue.release(public)
+        assert admin[-1].running and queue.in_flight == 5
 
-    def test_positions_and_capacity_count_the_lane_only(self, clock: Clock) -> None:
-        queue = with_admin(clock, max_wait_s=120)  # public capacity 2, admin capacity 5 (one per slot)
-        queue.submit("u", "s-u")
-        queue.submit("v", "s-v")
-        queue.submit("w", "s-w")
-        with pytest.raises(QueueFull):
-            queue.submit("x", "s-x")  # the public lane is full
-
-        admins = [queue.submit(f"a{index}", f"s-a{index}", lane="admin") for index in range(6)]
-
-        assert [ticket.state for ticket in admins] == ["running"] * 5 + ["waiting"]
-        assert queue.position(admins[-1]) == QueuePosition(position=1, waiting=1)
-        assert queue.waiting_count == 3  # both lanes
-
-    def test_a_lane_without_a_window_holds_one_waiting_entry_per_slot(self, clock: Clock) -> None:
-        """Two admins at their cap: five run, five wait, and one more is `capacity`, never past Cloud Run's streams."""
-        queue = with_admin(clock)
-        for index in range(10):
-            queue.submit(f"admin-{index % 2}", f"s-{index}", lane="admin")
-
-        with pytest.raises(QueueFull):
-            queue.submit("admin-2", "s-10", lane="admin")
-        assert (queue.in_flight, queue.waiting_count) == (5, 5)
-
-    def test_the_per_user_cap_is_the_lanes(self, clock: Clock) -> None:
-        queue = with_admin(clock)
-        mine = [queue.submit("admin", f"s-{index}", lane="admin") for index in range(5)]
+    def test_each_lane_has_its_own_per_user_cap(self, clock: Clock) -> None:
+        queue = production(clock)
+        public = [queue.submit("u", f"s-u{index}") for index in range(2)]
+        admin = [queue.submit("admin", f"s-a{index}", lane="admin") for index in range(5)]
 
         with pytest.raises(QueueUserLimit):
-            queue.submit("admin", "s-6", lane="admin")
-        assert all(ticket.running for ticket in mine)
-        assert queue.user_entries("admin", "admin") == 5 and queue.user_entries("admin") == 0
-        queue.release(mine[0])
-        assert queue.submit("admin", "s-6", lane="admin").running  # a finished run frees its place at once
+            queue.submit("u", "s-u2")
+        with pytest.raises(QueueUserLimit):
+            queue.submit("admin", "s-a5", lane="admin")
+        assert len(public) == 2 and len(admin) == 5 and queue.user_entries("admin") == 5
 
-    def test_an_admin_rate_window_applies_when_set(self, clock: Clock) -> None:
-        queue = with_admin(clock, per_minute=2)
-        first, second, third = (queue.submit("admin", f"s-{index}", lane="admin") for index in range(3))
-
-        assert (first.running, second.running, third.waiting) == (True, True, True)
-        assert queue.lane_capacity("admin") == 20
-        assert queue.next_change_at(clock()) == clock() + 60
-        clock.advance(60)
-        queue.pump()
-        assert third.running
-
-    async def test_an_admin_entry_waits_and_runs_like_any_other(self, clock: Clock) -> None:
-        queue = with_admin(clock)
-        running = [queue.submit(f"a{index}", f"s-{index}", lane="admin") for index in range(5)]
-        sixth = queue.submit("b", "s-b", lane="admin")
-        seen: list[QueuePosition] = []
-        waiter = asyncio.create_task(collect(queue, sixth, seen))
-        await settle()
-
-        queue.release(running[2])
-
-        await asyncio.wait_for(waiter, 1)
-        assert seen == [QueuePosition(1, 1)] and sixth.running
-
-    def test_an_admin_entry_expires_at_the_maximum_wait(self, clock: Clock) -> None:
-        queue = with_admin(clock)
-        for index in range(5):
-            queue.submit(f"a{index}", f"s-{index}", lane="admin")
-        sixth = queue.submit("b", "s-b", lane="admin")
-
-        assert queue.next_change_at(clock()) == clock() + 600
-        clock.advance(600)
-        queue.pump()
-        assert sixth.state == "expired"
-
-    def test_a_queue_without_an_admin_lane_refuses_an_admin_entry(self, clock: Clock) -> None:
+    def test_premium_goes_first_and_admin_keeps_its_arrival_order(self, clock: Clock) -> None:
         queue = make(clock)
+        queue.submit("x", "s-x")
+        normal = queue.submit("n", "s-n")
+        admin = queue.submit("admin", "s-a", lane="admin")
+        premium = queue.submit("p", "s-p", lane="premium")
 
-        with pytest.raises(ValueError, match="no admin lane"):
-            queue.submit("admin", "s-a", lane="admin")
-        assert queue.waiting_count == 0 and queue.in_flight == 0
+        positions = [queue.position(ticket) for ticket in (premium, normal, admin)]
+        assert [position.position for position in positions if position] == [1, 2, 3]
 
-    def test_invalid_lane_limits_are_refused(self) -> None:
-        with pytest.raises(ValueError):
-            LaneLimits(concurrency=0)
-        with pytest.raises(ValueError):
-            LaneLimits(concurrency=5, per_minute=0)
-        with pytest.raises(ValueError):
-            LaneLimits(concurrency=5, per_user=0)
+    def test_the_admin_entry_records_where_it_stood_and_how_long_it_waited(self, clock: Clock) -> None:
+        """The usage telemetry's `queue_position` and `queue_wait_ms` (`pipeline_run`): numbers, never a user."""
+        queue = production(clock)
+        first = queue.submit("u", "s-u")
+        second = queue.submit("admin", "s-a", lane="admin")
+
+        assert (first.submitted_position, first.waited_s) == (0, 0.0)
+        assert (second.submitted_position, second.waited_s) == (1, None)
+        clock.advance(10)
+        queue.pump()
+        assert second.waited_s == 10
+
+
+class TestFanOut:
+    """The owner's check of 2026-11-01: a 15-library fan-out never loses a library to `capacity` or `run_limit`."""
+
+    @staticmethod
+    def fan_out(queue: RunQueue, clock: Clock, *, libraries: int = 15, others: int = 0) -> tuple[int, int, float]:
+        """The page's pool (`FanOut.tsx`): one admin keeps `user_max_runs` libraries submitted, a new one each time a
+        run ends; each run takes 60 to 240 s once it starts. `others` public users submit two runs each at the
+        start. Returns the libraries started, the refusals, and the minutes until the last run ended."""
+        durations = [60 + (index * 37) % 181 for index in range(libraries)]  # 60 to 240 s, spread
+        cap = queue.user_cap("admin") or libraries
+        for user in range(others):
+            for run in range(2):
+                queue.submit(f"public-{user}", f"s-p{user}-{run}")
+        pending, live, started, refused, start = list(range(libraries)), {}, 0, 0, clock()
+        while pending or live:
+            while pending and len(live) < cap:
+                library = pending.pop(0)
+                try:
+                    live[library] = queue.submit("admin", f"s-{library}", lane="admin")
+                except QueueFull, QueueUserLimit:
+                    refused += 1
+            clock.advance(1)
+            queue.pump()
+            for library, ticket in list(live.items()):
+                if ticket.state == "expired":
+                    refused += 1
+                    del live[library]
+                elif ticket.running and clock() - (ticket.started_at or 0) >= durations[library]:
+                    started += 1
+                    queue.release(ticket)
+                    del live[library]
+            for entry in list(queue._running):  # the public runs end after 120 s
+                if entry.user.startswith("public") and clock() - (entry.started_at or 0) >= 120:
+                    queue.release(entry)
+        return started, refused, (clock() - start) / 60
+
+    def test_fifteen_libraries_of_one_admin_all_start_and_none_is_refused(self, clock: Clock) -> None:
+        started, refused, minutes = self.fan_out(production(clock), clock)
+
+        assert (started, refused) == (15, 0)
+        assert minutes < 10  # five at a time, one start every 10 s: about three rounds of runs
+
+    def test_the_fanout_still_loses_nothing_beside_public_users(self, clock: Clock) -> None:
+        """Three public users hold six runs when the fan-out starts: the admin's entries wait, none is refused."""
+        started, refused, _ = self.fan_out(production(clock), clock, others=3)
+
+        assert (started, refused) == (15, 0)
 
 
 class TestMaxWait:

@@ -33,13 +33,10 @@ class TestDefaults:
         assert settings.judge_timeout_s == 4.0
         assert settings.render_concurrency == 1  # serial renders: one sandbox per 4 GiB instance
         assert settings.watermark is True  # served PNGs carry the footer strip
-        assert settings.run_concurrency == 1
-        assert settings.runs_per_minute == 1
-        assert settings.queue_max_wait_s == 600
-        assert settings.user_max_runs == 3  # sandbox runs per user across sessions (owner decision of 2026-10-21)
-        # The admin lane (owner decision of 2026-11-01): five runs at once, no rate window, five per admin.
-        assert (settings.admin_run_concurrency, settings.admin_runs_per_minute) == (5, None)
-        assert settings.admin_user_max_runs == 5
+        # Owner decision of 2026-11-01: five in flight for the whole instance, one start every 10 s for every lane,
+        # two runs per public user and five per admin across sessions.
+        assert (settings.run_concurrency, settings.runs_per_minute, settings.queue_max_wait_s) == (5, 6, 600)
+        assert (settings.user_max_runs, settings.admin_user_max_runs) == (2, 5)
         assert settings.service_urls == []
         assert settings.dev_fixture is None
         assert settings.libraries == ["matplotlib", "seaborn"]
@@ -49,9 +46,10 @@ class TestDefaults:
         assert settings.max_attempts == 2  # the first attempt and at most one repair round
         assert settings.max_llm_calls == 16  # two rounds of adapt, self-review and retry, two reviews, the root
         assert settings.request_token_budget == 800_000  # never cuts a live-flow round short (CLI max ~458k)
-        assert settings.daily_token_budget == 8_000_000  # about 30 median live-flow runs
-        assert settings.daily_pipeline_runs == 40
-        assert settings.global_daily_token_budget == 80_000_000  # the runaway guard of every tier (2026-11-01)
+        # Owner decision of 2026-11-01: a public user's day is about $1 and 50 runs, the service's about $10.
+        assert settings.daily_token_budget == 10_000_000
+        assert settings.daily_pipeline_runs == 50
+        assert settings.global_daily_token_budget == 100_000_000  # the runaway guard of every tier
         assert settings.render_timeout_s == 60
         assert settings.request_deadline_s == 540  # a round with self-review takes about 60 s; never cut short
         assert settings.soft_deadline_s == 480
@@ -129,25 +127,11 @@ class TestEnvironmentOverrides:
 
         assert (settings.run_concurrency, settings.runs_per_minute, settings.queue_max_wait_s) == (2, 3, 300)
 
-    def test_admin_lane_settings_come_from_the_environment(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("AGENT_ADMIN_RUN_CONCURRENCY", "4")
-        monkeypatch.setenv("AGENT_ADMIN_RUNS_PER_MINUTE", "6")
-        monkeypatch.setenv("AGENT_ADMIN_USER_MAX_RUNS", "2")
+    def test_the_admin_cap_comes_from_the_environment_and_is_positive(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("AGENT_ADMIN_USER_MAX_RUNS", "3")
+        assert AgentSettings().admin_user_max_runs == 3
 
-        settings = AgentSettings()
-
-        assert settings.admin_run_concurrency == 4
-        assert (settings.admin_runs_per_minute, settings.admin_user_max_runs) == (6, 2)
-
-    def test_a_blank_admin_rate_sets_no_window(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("AGENT_ADMIN_RUNS_PER_MINUTE", " ")
-
-        assert AgentSettings().admin_runs_per_minute is None
-
-    @pytest.mark.parametrize("name", ["AGENT_ADMIN_RUN_CONCURRENCY", "AGENT_ADMIN_RUNS_PER_MINUTE"])
-    def test_the_admin_lane_limits_are_positive(self, monkeypatch: pytest.MonkeyPatch, name: str) -> None:
-        monkeypatch.setenv(name, "0")
-
+        monkeypatch.setenv("AGENT_ADMIN_USER_MAX_RUNS", "0")
         with pytest.raises(ValidationError):
             AgentSettings()
 

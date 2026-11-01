@@ -174,6 +174,16 @@ class RequestLedger:
     """The operation names of every `prepare_data` call that changed the data (closed: `telemetry.PREP_OPS`)."""
     reply_question: bool = False
     """The root's last reply sent to the page ends with a question mark (`stream.Translator`); the text is never kept."""
+    queue_position: int | None = None
+    queue_wait_s: float | None = None
+    """Where the turn's run-queue entry stood at submit (0: it started at once) and how long it waited, set by the
+    route once the entry starts (`TurnSlot.take`); None for a turn that never ran sandbox work. The usage telemetry's
+    `queue_position` and `queue_wait_ms` (`pipeline_run`)."""
+    user_runs_today: int | None = None
+    user_tokens_share: float | None = None
+    """This run's ordinal among the user's pipeline runs of the UTC day, and the share of the public per-user daily
+    token budget (`AGENT_DAILY_TOKEN_BUDGET`) the user had spent when it was booked, admins measured against it too,
+    set by the Budget plugin (`before_tool_callback`). Only their buckets reach the telemetry, never the user."""
     site_theme: Theme | None = None
     """The theme the page showed the site in when the user sent the turn (`/messages?theme=`), which a plot run takes
     when neither the user nor the version it changes asked for one (`pipeline.run_theme`); None without a page."""

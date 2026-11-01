@@ -61,7 +61,7 @@ needs `ADAPTER_P95_S` plus the runtime's `render_p95_s` left, so the first attem
 the soft deadline) and for every render timeout;
 the request deadline is `abort_signal` on the run. A render waits in the `run` lane of the render slot
 (`render/serial.py`), ahead of every waiting theme toggle, so it waits only for the renders
-of the other runs in flight (up to five admin runs and one public run since 2026-11-01);
+of the other runs in flight (up to five since 2026-11-01, their starts at least 10 s apart);
 its clamped timeout starts when it runs. The gates run in a worker thread, off the
 event loop the other runs in flight share. The exported
 code (`plot.py`, `plot.R`, `plot.jl`) names the rendered theme in its run line.
@@ -1447,6 +1447,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
             reason=not_ready or "no_dataset",
             plot_language=telemetry.plot_language(view.language) if view is not None else None,
             readiness=telemetry.readiness(view.readiness) if view is not None else None,
+            lane=ledger.tier,
         )
         yield _result_event(PlotResult.not_ready(not_ready or "no_dataset", request_kept=kept))
         return
@@ -1621,6 +1622,13 @@ def _telemetry_run(
         review_ms=telemetry.ms(run.stage_s.get("review", 0.0)),
         total_ms=telemetry.ms(seconds),
         steps=telemetry.step_tokens(ledger.steps, steps=("adapter", "reviewer")),
+        # Whether anyone waits long or comes close to a limit (owner, 2026-11-01): buckets and bounded numbers of
+        # the queue and the usage book, never the user they were counted for.
+        lane=ledger.tier,
+        queue_wait_ms=telemetry.ms(ledger.queue_wait_s) if ledger.queue_wait_s is not None else None,
+        queue_position=ledger.queue_position,
+        user_runs_today=telemetry.runs_today_bucket(ledger.user_runs_today),
+        user_tokens_today=telemetry.tokens_today_bucket(ledger.user_tokens_share),
     )
 
 

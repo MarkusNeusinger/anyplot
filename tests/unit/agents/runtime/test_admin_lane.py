@@ -2,9 +2,11 @@
 
 The BFF asserts the tier with `X-Anyplot-Tier: admin`; the agents service trusts it only behind
 its caller check, reads anything else as `public`, and then gives the admin's runs the run
-queue's admin lane and exempts them from the per-user day caps and the chat turns' minute.
-The global day budget binds every tier. A model quota that outlasts the SDK's retries ends a
-run as `busy`, and the gates run off the event loop the runs in flight share.
+queue's admin lane (the shared five slots, a cap of five runs instead of two) and exempts
+them from the per-user day caps and the chat turns' minute. The global day budget binds
+every tier. A model quota that outlasts the SDK's retries ends a run as `busy`, and the gates
+run off the event loop the runs in flight share. The run's usage telemetry says how long it
+waited and how close its user came to a limit, never who the user is.
 """
 
 import asyncio
@@ -19,11 +21,12 @@ import httpx
 import pytest
 from google.adk.workflow._errors import DynamicNodeFailError
 from google.genai import errors as genai_errors
+from pydantic import ValidationError
 
-from agents.anyplot import pipeline, theme_render
+from agents.anyplot import pipeline, telemetry, theme_render
 from agents.anyplot.models import CLAUDE_MAX_RETRIES, AnthropicJudge, VertexClaude, error_chain, make_model, model_busy
 from agents.anyplot.plugins.ledger import ATTRIBUTION_LOGGER, RequestLedger, UsageBook, budget_allows
-from agents.anyplot.run_queue import LaneLimits, RunQueue
+from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.services import Services
 from agents.anyplot.settings import AgentSettings, get_settings
 from agents.main import Runtime, app, caller_tier, get_runtime
@@ -60,14 +63,10 @@ def clock() -> Clock:
 
 @pytest.fixture
 def runtime(clock: Clock) -> Iterator[Runtime]:
-    """The production shape: the public lane at its defaults, the admin lane at its own."""
+    """The production limits but the start gap, which the fake clock would hold forever: five in flight, sixty
+    waiting, two runs per public user and five per admin."""
     queue = RunQueue(
-        concurrency=1,
-        per_minute=1,
-        max_wait_s=600,
-        clock=clock,
-        per_user=3,
-        admin=LaneLimits(concurrency=5, per_minute=None, per_user=5),
+        concurrency=5, per_minute=6, max_wait_s=600, clock=clock, per_user=2, admin_per_user=5, start_gap_s=0
     )
     fresh = Runtime(queue=queue)
     app.dependency_overrides[get_runtime] = lambda: fresh
@@ -97,9 +96,9 @@ class TestTier:
         admin = (await client.get("/v1/status", headers=ADMIN_HEADERS)).json()
         other = (await client.get("/v1/status", headers={**HEADERS, "X-Anyplot-Tier": "root"})).json()
 
-        assert (public["tier"], public["user_max_runs"]) == ("public", 3)
+        assert (public["tier"], public["user_max_runs"]) == ("public", 2)
         assert (admin["tier"], admin["user_max_runs"]) == ("admin", 5)
-        assert (other["tier"], other["user_max_runs"]) == ("public", 3)  # never a 422: an old BFF sends nothing
+        assert (other["tier"], other["user_max_runs"]) == ("public", 2)  # never a 422: an old BFF sends nothing
 
     async def test_status_follows_the_settings(self, services: Services, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("AGENT_ADMIN_USER_MAX_RUNS", "4")
@@ -215,7 +214,7 @@ class TestExemptions:
 
 
 class TestAdminLaneFlow:
-    async def test_an_admin_run_starts_beside_a_public_run_in_flight(
+    async def test_an_admin_run_starts_beside_a_public_run_and_both_lines_stay_anonymous(
         self,
         client: httpx.AsyncClient,
         runtime: Runtime,
@@ -225,6 +224,7 @@ class TestAdminLaneFlow:
     ) -> None:
         backend.gate.clear()  # the public run's render holds it in flight
         caplog.set_level(logging.INFO, logger=ATTRIBUTION_LOGGER)
+        caplog.set_level(logging.INFO, logger=telemetry.TELEMETRY_LOGGER)
         swap_models("gemini", interleaved_runs())
         public = await open_session(client, user=OTHER)
         admin = await open_session(client)
@@ -235,7 +235,7 @@ class TestAdminLaneFlow:
         admin_run = asyncio.create_task(create_plot(client, admin, ADMIN_HEADERS))
         await until(lambda: queue.in_flight == 2, "the admin run to start beside the public one")
 
-        assert queue.waiting_count == 0  # the public lane's one slot and minute never held it
+        assert queue.waiting_count == 0  # the five slots are shared: the public run in flight never held it
         backend.gate.set()
         admin_events = await asyncio.wait_for(admin_run, 10)
         public_events = await asyncio.wait_for(public_run, 10)
@@ -247,6 +247,79 @@ class TestAdminLaneFlow:
         assert lanes == {OTHER: "normal", HEADERS["X-Anyplot-User"]: "admin"}
         renders = attribution_lines(caplog, "pipeline_render")
         assert len(renders) == 2 and all(line["slot_wait_s"] >= 0 for line in renders)
+        # The run's usage telemetry (owner, 2026-11-01): its lane, its wait and how close its user came to a limit,
+        # as numbers and buckets; neither user id, nor the user-id key's prefix, appears anywhere in a line.
+        raw = [record.getMessage() for record in caplog.records if record.name == telemetry.TELEMETRY_LOGGER]
+        runs = sorted((json.loads(line) for line in raw if '"pipeline_run"' in line), key=lambda line: line["lane"])
+        assert [(run["lane"], run["queue_position"], run["queue_wait_ms"]) for run in runs] == [
+            ("admin", 0, 0),
+            ("public", 0, 0),
+        ]
+        assert all((run["user_runs_today"], run["user_tokens_today"]) == ("1", "lt25") for run in runs)
+        assert not any(OTHER in line or HEADERS["X-Anyplot-User"] in line or "adm_" in line for line in raw)
+
+
+class TestLimitTelemetry:
+    """Whether anyone waits long or comes close to a limit, without saying who (owner, 2026-11-01)."""
+
+    NEW_FIELDS = ("lane", "queue_wait_ms", "queue_position", "user_runs_today", "user_tokens_today")
+
+    def test_the_runs_of_the_day_fall_into_the_owners_buckets(self) -> None:
+        ordinals = {1: "1", 2: "2_5", 5: "2_5", 6: "6_10", 10: "6_10", 11: "11_20", 20: "11_20", 21: "21_30"}
+        ordinals |= {30: "21_30", 31: "31_40", 40: "31_40", 41: "41_plus", 500: "41_plus"}
+
+        assert {ordinal: telemetry.runs_today_bucket(ordinal) for ordinal in ordinals} == ordinals
+        assert telemetry.runs_today_bucket(None) is None and telemetry.runs_today_bucket(0) is None
+
+    def test_the_spent_budget_falls_into_the_owners_buckets(self) -> None:
+        shares = {0.0: "lt25", 0.249: "lt25", 0.25: "25_50", 0.5: "50_75", 0.75: "75_90", 0.9: "90_100", 1.0: "90_100"}
+        shares |= {1.01: "over", 3.0: "over"}
+
+        assert {share: telemetry.tokens_today_bucket(share) for share in shares} == shares
+        assert telemetry.tokens_today_bucket(None) is None
+
+    def test_the_new_fields_validate(self) -> None:
+        run = telemetry.PipelineRun(
+            run_index=1,
+            base="catalogue",
+            status="ok",
+            lane="admin",
+            queue_wait_ms=31_400,
+            queue_position=4,
+            user_runs_today="2_5",
+            user_tokens_today="over",
+        )
+
+        assert run.model_dump(include=set(self.NEW_FIELDS)) == {
+            "lane": "admin",
+            "queue_wait_ms": 31_400,
+            "queue_position": 4,
+            "user_runs_today": "2_5",
+            "user_tokens_today": "over",
+        }
+
+    @pytest.mark.parametrize("field", NEW_FIELDS)
+    def test_no_new_field_can_carry_an_id(self, field: str) -> None:
+        """A closed set or a bounded integer: a user id, its hash or a key never validates."""
+        for value in ("adm_0123456789abcdef", "0123456789abcdef", -1, 10**12):
+            with pytest.raises(ValidationError):
+                telemetry.PipelineRun(run_index=1, base="catalogue", status="ok", **{field: value})
+
+    async def test_an_admins_run_limit_lands_in_the_chat_turn(
+        self, client: httpx.AsyncClient, runtime: Runtime, swap_models, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """The limit refusals were recorded before; the admin lane's land in the same `chat_turn.error`."""
+        caplog.set_level(logging.INFO, logger=telemetry.TELEMETRY_LOGGER)
+        swap_models("gemini", {"root": [{"call": "plot_pipeline", "args": {}}, {"text": ROOT_REPLY}]})
+        sid = await open_session(client)
+        for index in range(5):  # the admin's five places, held by their other windows
+            runtime.run_queue().submit(HEADERS["X-Anyplot-User"], f"s-other-{index}", lane="admin")
+
+        events = await create_plot(client, sid, ADMIN_HEADERS)
+
+        assert ("error", "run_limit") in [(name, data.get("code")) for name, data in events]
+        turns = [json.loads(r.getMessage()) for r in caplog.records if r.name == telemetry.TELEMETRY_LOGGER]
+        assert [turn["error"] for turn in turns if turn["event"] == "chat_turn"] == ["run_limit"]
 
 
 class TestBusy:

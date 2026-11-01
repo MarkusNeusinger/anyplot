@@ -12,8 +12,8 @@ it), so no backend has to remember a semaphore of its own:
   lane) before a waiting theme toggle (`toggle` lane), first come first served
   within a lane. A run therefore never waits for a line of toggles that arrived
   before it, only for the renders of the other runs in flight: since 2026-11-01 up
-  to five admin runs and one public run at once (`run_queue.py`), whichever run-queue
-  lane they came from. `RenderResult.slot_wait_s` reports the wait.
+  to five at once (`run_queue.py`), whichever run-queue lane they came from, their
+  starts at least 10 s apart. `RenderResult.slot_wait_s` reports the wait.
 * **Bounded waits.** A caller may pass `wait_s`: when no slot came free in time,
   `render` raises `RenderBusy` and nothing ran. The theme toggle uses it, so a
   synchronous route never hangs behind a busy instance.

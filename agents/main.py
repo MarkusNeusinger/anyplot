@@ -37,9 +37,10 @@ already verified it and replaced the signature) and requires its `aud` in
 checks only that one and passes `Authorization` through unverified.
 
 `X-Anyplot-Tier: admin` puts the request in the admin tier (owner decision of 2026-11-01):
-its sandbox runs go into the run queue's admin lane, with limits of its own
-(`AGENT_ADMIN_*`), and it is exempt from the per-user day caps and the chat turns' minute
-(`plugins/ledger.py`); the global day budget binds it like everyone. The BFF sets the
+its sandbox runs go into the run queue's admin lane, which shares the instance's
+concurrency and start rate with everyone's and allows five runs per admin
+(`AGENT_ADMIN_USER_MAX_RUNS`), and it is exempt from the per-user day caps and the chat
+turns' minute (`plugins/ledger.py`); the global day budget binds it like everyone. The BFF sets the
 header from the identity its admin gate verified, and only an allowed caller gets past the
 caller check, so nobody else can claim the tier. A missing or other value is the public
 tier, never an error: a BFF deployed before the header keeps today's limits for everyone.
@@ -480,7 +481,8 @@ StreamNote = tuple[Literal["queued"], QueuePosition] | tuple[Literal["event"], E
 """What the stream's outbox carries: a queue position of a waiting sandbox run, an ADK event, or the run's end."""
 
 TIER_LANES: dict[Tier, Lane] = {"admin": "admin", "public": "normal"}
-"""The run queue's lane of each tier (`run_queue.py`): an admin's runs have limits of their own."""
+"""The run queue's lane of each tier (`run_queue.py`): an admin's runs share the concurrency and the rate with
+everyone's and have a per-user cap of their own."""
 
 
 @dataclass
@@ -493,7 +495,8 @@ class TurnSlot:
     position into the stream's outbox as it changes (the stream sends it as
     `status{step:"queued"}`), and resumes the deadline with the time it had left when the entry starts.
     A later call in the same turn answers at once: one start per turn. The entry goes into
-    the lane of the turn's tier (`TIER_LANES`). A full lane or
+    the lane of the turn's tier (`TIER_LANES`), and its position at submit and its wait go into
+    the ledger for the run's usage telemetry (`RequestLedger.queue_position`, `queue_wait_s`). A full queue or
     an expired wait fails the turn with `capacity` and aborts the run, so the stream ends
     with `error{code:"capacity"}` and the root spends no further call; a user who already
     holds their lane's cap of entries (`AGENT_USER_MAX_RUNS`, `AGENT_ADMIN_USER_MAX_RUNS`) in
@@ -545,6 +548,8 @@ class TurnSlot:
             outcome = "withdrawn"
         waited_s = round(self.runtime.now() - ticket.enqueued_at, 1)
         attribution("queue", self.ledger, verdict=outcome, waited_s=waited_s, lane=lane)
+        if ticket.waited_s is not None:  # it started: what the run's telemetry line reports, never who waited
+            self.ledger.queue_position, self.ledger.queue_wait_s = ticket.submitted_position, ticket.waited_s
         if outcome == "expired":
             self._fail("capacity")
         if outcome != "started":
@@ -887,7 +892,7 @@ async def status(runtime: RuntimeDep, tier: CallerTier) -> dict[str, Any]:
         "version": _version(),
         "waiting": queue.waiting_count,
         "in_flight": queue.in_flight,
-        "user_max_runs": queue.limits(TIER_LANES[tier]).per_user,
+        "user_max_runs": queue.user_cap(TIER_LANES[tier]),
         "tier": tier,
     }
 

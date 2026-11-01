@@ -129,7 +129,7 @@ async def test_the_second_user_waits_in_the_queue_then_runs(
     assert root_calls(fake) == 2
     status = (await client.get("/v1/status", headers=HEADERS)).json()
     assert (status["waiting"], status["in_flight"]) == (1, 1)
-    assert status["user_max_runs"] == get_settings().user_max_runs
+    assert status["user_max_runs"] == queue.per_user  # the caller's own cap, as this queue holds it
     backend.gate.set()
     first_events = await asyncio.wait_for(first_run, 10)
     assert next(data for name, data in first_events if name == "plot")["status"] == "ok"
