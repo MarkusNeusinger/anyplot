@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 pyramid-basic: Basic Pyramid Chart
-Library: altair 6.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-04-29
+Library: altair 6.3.0 | Python 3.14.9
+Quality: 83/100 | Updated: 2026-11-01
 """
 
 import importlib
