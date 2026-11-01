@@ -1,0 +1,17 @@
+{
+  "spec_id": "line-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {"role": "x", "column": "Week"},
+    {"role": "y", "column": "Active Users"}
+  ],
+  "expected": "unknown",
+  "tags": ["numeric", "combined-request", "language", "small"],
+  "source": "hand-written synthetic data, generalised from the user test of 2026-11-01 (a language change and a log scale in one message, the log scale dropped)",
+  "checks": {
+    "language": "de",
+    "texts_changed": ["title"],
+    "code_added": ["yscale\\s*(?:\\(\\s*|=\\s*)[\"'](?:sym)?log[\"']|semilogy\\(|loglog\\("]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "spec_id": "scatter-basic",
+  "library": "matplotlib",
+  "locale": "en",
+  "bindings": [
+    {"role": "x", "column": "Ad Spend (kCHF)"},
+    {"role": "y", "column": "Revenue (kCHF)"}
+  ],
+  "expected": "unknown",
+  "tags": ["numeric", "combined-request", "theme", "small"],
+  "source": "hand-written synthetic data: a theme change and a grid in one message",
+  "checks": {
+    "theme": "dark",
+    "code_added": ["xaxis\\.grid\\(\\s*(?:True|visible\\s*=\\s*True)|\\.grid\\([^)]*\\baxis\\s*=\\s*[\"'](?:x|both)[\"']|\\bax\\.grid\\((?![^)]*\\baxis\\s*=)"],
+    "code_kept": ["subplots\\(.*facecolor=PAGE_BG\\b", "set_xlabel\\(.*color=INK\\b"]
+  }
+}

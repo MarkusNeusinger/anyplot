@@ -21,7 +21,9 @@ schema-2 run (`SUPPORTED_SCHEMAS`).
 
 **Pass.** A run passes when it shipped a render (`ok` or `needs_attention`) that
 passed every deterministic gate: the host gates R1 to R3 without a padded canvas, and
-no ADAPTATION validator finding on the shipped code. The advisory probe gates (G3,
+no ADAPTATION validator finding on the shipped code; a case with follow-up `checks`
+(`cases.FollowUpChecks`) also needs every check of its follow-up to hold, and
+`check_failures` names each one that did not (`<case> r<repeat>: <check>`). The advisory probe gates (G3,
 G5, G7, G8, G9, G10, G11, G12) and the reviewer's verdict do not decide a pass; the owner's blind
 judgement in the gallery does that for the sample, which holds passed renders only.
 Every rate counts all runs: a run that crashed in the harness did not pass.
@@ -164,6 +166,12 @@ def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
         if run.get("status") in SHIPPED and run.get("texts_expected") is True and run.get("texts") is None
     ]
     quoting = [run for run in runs if int(run.get("unbacked_quotes") or 0) > 0]
+    check_failures = sorted(
+        f"{run.get('case_id')} r{run.get('repeat')}: {name}"
+        for run in runs
+        for name, held in (run.get("checks") or {}).items()
+        if not held
+    )
     return {
         "runs": len(runs),
         "counted": len(counted),
@@ -211,6 +219,8 @@ def summarize(runs: list[dict[str, Any]]) -> dict[str, Any]:
         "untexted_by_library": dict(sorted(Counter(str(run.get("library")) for run in untexted).items())),
         "unbacked_quotes": sum(int(run.get("unbacked_quotes") or 0) for run in runs),
         "unbacked_quote_runs": sorted(str(run.get("case_id")) for run in quoting),
+        "checked": sum(1 for run in runs if run.get("checks")),
+        "check_failures": check_failures,
         "probe_errors": _counter(runs, "probe_errors"),
         "model_versions": sorted({version for run in runs for version in run.get("model_versions") or []}),
         "by_perturbation": _group(runs, lambda run: str(run.get("perturbation") or "custom")),
@@ -474,6 +484,11 @@ def summary_markdown(report: dict[str, Any], diff: Diff | None = None) -> str:
             [
                 "Quotes in replies that no drawn text holds",
                 f"{summary.get('unbacked_quotes', 0)} in {len(summary.get('unbacked_quote_runs') or [])} runs",
+            ],
+            [
+                "Follow-up checks that failed",
+                f"{len(summary.get('check_failures') or [])} in {summary.get('checked', 0)} checked runs"
+                + "".join(f"; {failure}" for failure in summary.get("check_failures") or []),
             ],
             [
                 "Probe errors",

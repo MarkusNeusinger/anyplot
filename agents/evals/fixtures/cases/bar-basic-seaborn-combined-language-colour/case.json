@@ -1,0 +1,17 @@
+{
+  "spec_id": "bar-basic",
+  "library": "seaborn",
+  "locale": "en",
+  "bindings": [
+    {"role": "category", "column": "Region"},
+    {"role": "value", "column": "Orders"}
+  ],
+  "expected": "unknown",
+  "tags": ["categorical", "combined-request", "language", "small"],
+  "source": "hand-written synthetic data: a language change and a colour in one message (English region names, so the paste leaves the session English)",
+  "checks": {
+    "language": "de",
+    "texts_changed": ["title"],
+    "code_added": ["(?i)#4467A3|[\"'](?:tab:)?blue[\"']|#0072B2"]
+  }
+}

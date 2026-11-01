@@ -15,6 +15,7 @@ import asyncio
 import base64
 import json
 import logging
+import re
 from collections.abc import AsyncIterator, Iterator
 from typing import Any
 
@@ -50,7 +51,7 @@ from agents.anyplot.models import (
     Transcription,
 )
 from agents.anyplot.opening import NOTES_INSTRUCTION_WARNING, NOTES_REFUSED_WARNING, NOTES_UNCHECKED_WARNING, assess
-from agents.anyplot.pipeline import SoftDeadline
+from agents.anyplot.pipeline import LANGUAGE_REWRITE_REQUEST, SoftDeadline
 from agents.anyplot.policy import refusal, scope_rubric
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome, fixture_page
 from agents.anyplot.render.contract import PageFailed, PageJob, PageUnsupported, RendererUnavailable, RenderJob, Theme
@@ -3714,10 +3715,10 @@ async def test_set_language_on_a_session_already_in_that_language_is_no_change(
     assert responses == [{"status": "ok", "source": "chosen", "changed": False, "plot_outdated": False}]
 
 
-REWRITE_REQUEST = (
-    "Write the title, axis titles, legend entries and annotations in the plot language; change nothing else."
-)
-"""The root's change request after a `set_language` that left the shown plot outdated (`root.md`, "Language")."""
+def change_request_of(adapter_input: str) -> str | None:
+    """The `Change request:` block of an adapter input, or None without one."""
+    found = re.search(r"Change request:\n<user_message>\n(.*?)\n</user_message>", adapter_input, re.DOTALL)
+    return found.group(1) if found else None
 
 
 async def test_a_plot_drawn_before_detection_is_rewritten_when_the_user_asks(
@@ -3732,7 +3733,7 @@ async def test_a_plot_drawn_before_detection_is_rewritten_when_the_user_asks(
             {"text": ROOT_REPLY},
             {"text": "Die x-Achse zeigt die Lernstunden."},
             {"call": "set_language", "args": {"language": "de", "applies_to": "plot"}},
-            {"call": "plot_pipeline", "args": {"change_request": REWRITE_REQUEST, "base": "previous"}},
+            {"call": "plot_pipeline", "args": {"base": "previous"}},
             {"text": "Die Beschriftung ist jetzt auf Deutsch."},
         ],
         "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
@@ -3762,14 +3763,15 @@ async def test_a_plot_drawn_before_detection_is_rewritten_when_the_user_asks(
 async def test_a_chat_request_on_a_plot_remakes_it_in_the_new_language(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:
-    """D-8: `set_language` alone, then the rewrite on the previous version, in one turn; v1 keeps its text. Live test
-    of 2026-11-01 (A1): an English request for German plot text leaves the replies English."""
+    """D-8: `set_language`, then the rewrite on the previous version, in one turn; v1 keeps its text. Live test
+    of 2026-11-01 (A1): an English request for German plot text leaves the replies English. The root asks for nothing
+    else, so the server writes the rewrite request itself."""
     script = {
         "root": [
             {"call": "plot_pipeline", "args": {}},
             {"text": ROOT_REPLY},
             {"call": "set_language", "args": {"language": "Deutsch", "applies_to": "plot"}},
-            {"call": "plot_pipeline", "args": {"change_request": REWRITE_REQUEST, "base": "previous"}},
+            {"call": "plot_pipeline", "args": {"base": "previous"}},
             {"text": "The labels are German now."},
         ],
         "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
@@ -3788,8 +3790,55 @@ async def test_a_chat_request_on_a_plot_remakes_it_in_the_new_language(
     assert (state[LANGUAGE], state[PLOT_LANGUAGE]) == ("en", "de")
     second = adapter_inputs(fake)[1]
     assert "Plot language:\n<plot_language>\nde\n</plot_language>" in second and '"language_changed": true' in second
+    assert change_request_of(second) == LANGUAGE_REWRITE_REQUEST
     versions = get_services().versions.all(sid)
     assert [version.language for version in versions] == ["en", "de"]
+    assert versions[1].requests == [LANGUAGE_REWRITE_REQUEST]
+
+
+@pytest.mark.parametrize(
+    ("message", "language", "args"),
+    [
+        (
+            "Make the title German and use a log scale on the y axis.",
+            "de",
+            {"change_request": "Use a log scale on the y axis", "base": "previous"},
+        ),
+        ("Labels in German and the points blue.", "de", {"change_request": "Points in blue", "base": "previous"}),
+    ],
+    ids=["log scale", "colour"],
+)
+async def test_a_language_change_and_another_change_reach_the_adapter_in_one_run(
+    client: httpx.AsyncClient, swap_models, message: str, language: str, args: dict[str, str]
+) -> None:
+    """User test of 2026-11-01: "make the title German and use a log scale" got the German title only, because the
+    root sent the fixed rewrite request, which ended "change nothing else". The root now sends the user's other
+    change; the adapter gets it with `language_changed`, and the version keeps it among its requests."""
+    script = {
+        "root": [
+            {"call": "plot_pipeline", "args": {}},
+            {"text": ROOT_REPLY},
+            {"call": "set_language", "args": {"language": language, "applies_to": "plot"}},
+            {"call": "plot_pipeline", "args": args},
+            {"text": "The title is German now, and the change is in."},
+        ],
+        "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
+        "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+    }
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+    await create_plot(client, sid)
+
+    events = await say(client, sid, message)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["version"]) == ("ok", 2)
+    second = adapter_inputs(fake)[1]
+    assert '"language_changed": true' in second
+    assert change_request_of(second) == args["change_request"]
+    versions = get_services().versions.all(sid)
+    assert [version.language for version in versions] == ["en", language]
+    assert versions[1].requests == [args["change_request"]]
 
 
 async def test_a_library_switch_keeps_the_language(client: httpx.AsyncClient, swap_models) -> None:

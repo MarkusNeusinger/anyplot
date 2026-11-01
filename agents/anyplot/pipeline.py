@@ -28,7 +28,8 @@ eval harness may set one or three):
    with the runtime's targets but the code still renders); a change whose base version was written in another
    language than the plot language (`language_changed`, after the user asked for another one) rewrites every title,
    label and annotation, so its budget grows by `REWRITE_LITERAL_FACTOR` times the
-   literal text the plan replaces, up to `MAX_NEW_LITERAL_CHARS`;
+   literal text the plan replaces, up to `MAX_NEW_LITERAL_CHARS`; that rewrite is the server's, next to the user's
+   other changes, and a run without a change request of its own gets `LANGUAGE_REWRITE_REQUEST` (`rewrite_request`);
 3. **render**: `normalise`, the loader substitution (the runtime's `loader_block`, typed
    from the parser's dtypes and the column kinds), then the one
    theme of the run (`run_theme`: the one the user asked for, else the site's) through the
@@ -216,6 +217,10 @@ SELF_REVIEW_LINE = (
     "the user asked, whatever the rubric says. If nothing needs fixing, answer with an empty edit list."
 )
 """The feedback of the self-review attempt (`AGENT_SELF_REVIEW`); the render itself is attached by the adapter's callback."""
+LANGUAGE_REWRITE_REQUEST = (
+    "Write the title, axis titles, legend entries and annotations in the plot language; change nothing else."
+)
+"""The change request of a run on a version written in another language when the root sent none (`rewrite_request`)."""
 MEASURED_LINE = (
     "Measured: the server's checks found the lines below in this render's code or image; fix each of them, "
     "or the plot goes to a repair round."
@@ -748,6 +753,23 @@ def take_pending_request(state: Any, args: PipelineArgs) -> PipelineArgs:
         return PipelineArgs.model_validate(joined)
     except ValidationError:
         return args
+
+
+def rewrite_request(args: PipelineArgs, language_changed: bool) -> PipelineArgs:
+    """The run's arguments with the server's `LANGUAGE_REWRITE_REQUEST` when its base is in another language and the
+    root sent no change of its own; otherwise as they are.
+
+    User test of 2026-11-01: "make the title German and use a log scale on y" got the German
+    title only. `root.md` had the root call `plot_pipeline` after `set_language` with this
+    fixed request, which ends "change nothing else", so the log scale never reached the
+    adapter. The rewrite is the server's now: the adapter rewrites the text whenever the
+    base version is in another language (`language_changed`, whatever else the change request
+    asks for), the root's change request carries only the user's other changes, and a run
+    without any gets this request, so a language-only change still reads as one.
+    """
+    if not language_changed or args.change_request.strip():
+        return args
+    return args.model_copy(update={"change_request": LANGUAGE_REWRITE_REQUEST})
 
 
 PENDING_KEYS = (PENDING_REQUEST, PENDING_EXPECTED_TEXTS, PENDING_BINDINGS)
@@ -1672,6 +1694,8 @@ async def _attempts(
     # The base version's text is in another language than the plot language (the user asked for another one since,
     # maybe in another library): the adapter rewrites it.
     language_changed = previous is not None and not same_language(previous.language, run.language)
+    args = rewrite_request(args, language_changed)
+    run.change_request = args.change_request
     # A change on a previous version adds a little text; adapting the catalogue code renames much. A change
     # that rewrites the text in another language keeps the change's budget plus the text it replaces (`_check`).
     budget = MAX_CHANGE_LITERAL_CHARS if previous is not None else MAX_NEW_LITERAL_CHARS

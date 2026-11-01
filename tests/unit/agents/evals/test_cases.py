@@ -1,13 +1,14 @@
 """Eval case loading, validation and selection."""
 
 import json
+import re
 import shutil
 from pathlib import Path
 
 import pytest
 
 from agents.anyplot.dev_fixture import CASES_DIR
-from agents.evals.cases import CaseError, load_case, load_cases, select_cases
+from agents.evals.cases import CaseError, FollowUpChecks, load_case, load_cases, select_cases
 
 
 def _write(directory: Path, case: dict, data: str = "a,b\n1,2\n") -> Path:
@@ -31,8 +32,9 @@ def test_every_committed_case_loads() -> None:
 
     stress = [case for case in cases if "stress" in case.tags]
     # 900 generated (ggplot2's 60 since 2026-10-29, makie's 60 and the four JavaScript libraries' 240 since
-    # 2026-10-30, MUI X's, plotly's and bokeh's 60 each since 2026-10-31) and seven hand-written
-    assert len(cases) - len(stress) == 907
+    # 2026-10-30, MUI X's, plotly's and bokeh's 60 each since 2026-10-31) and eleven hand-written (the four
+    # combined-request cases since 2026-11-01)
+    assert len(cases) - len(stress) == 911
     assert len(stress) == 23 and all(case.case_id.startswith("stress-") for case in stress)
     assert [case.case_id for case in cases] == sorted(case.case_id for case in cases)
     assert {case.origin for case in cases} == {"fixtures"}
@@ -48,6 +50,7 @@ def test_every_committed_case_loads() -> None:
         "bar-grouped-seaborn",
         "scatter-basic-matplotlib-german-message",
         *chosen,
+        *COMBINED,
     }
     assert hand_written["bar-grouped-seaborn"].locale == "de"
     # Only the block H cases (density and number formats) choose a language; the German message case
@@ -76,7 +79,7 @@ def test_selection_by_smoke_full_and_globs() -> None:
     smoke = select_cases(cases, "smoke")
     assert len(smoke) == 25 and all("smoke" in case.tags for case in smoke)
     full = select_cases(cases, "full")
-    assert len(full) == 907 and full == [case for case in cases if "stress" not in case.tags]
+    assert len(full) == 911 and full == [case for case in cases if "stress" not in case.tags]
     stress = select_cases(cases, "stress")
     assert len(stress) == 23 and all("stress" in case.tags for case in stress)
     assert len(select_cases(cases, "stress-compute-*")) == 3
@@ -125,6 +128,118 @@ def test_a_case_may_name_the_session_language_it_chooses(tmp_path: Path, languag
 )
 def test_invalid_fields_are_refused(tmp_path: Path, change: dict, message: str) -> None:
     directory = _write(tmp_path / "bad-case", {**VALID, **change})
+
+    with pytest.raises(CaseError, match=message):
+        load_case(directory)
+
+
+COMBINED = {
+    "line-basic-matplotlib-combined-language-log": ("Make the title German and use a log scale on the y axis.", "de"),
+    "line-basic-matplotlib-combined-control-log": ("Use a log scale on the y axis.", "en"),
+    "scatter-basic-matplotlib-combined-theme-grid": ("Make it dark and add vertical grid lines.", None),
+    "bar-basic-seaborn-combined-language-colour": ("Make the labels German and the bars blue.", "de"),
+}
+
+
+@pytest.mark.parametrize("case_id", sorted(COMBINED))
+def test_the_combined_request_cases_check_every_part_of_their_follow_up(case_id: str) -> None:
+    """User test of 2026-11-01: "make the title German and use a log scale" lost the log scale. Each case's follow-up
+    asks for two things (the control for one), and its checks measure each part in the shipped version."""
+    case = load_case(CASES_DIR / case_id)
+    message, language = COMBINED[case_id]
+
+    assert case.change_request == message and "combined-request" in case.tags
+    assert case.locale == "en" and case.language is None  # the first plot is English; the message changes it
+    assert case.checks is not None and case.checks.language == language
+    assert len(case.checks.code_added) == 1  # the part the code shows: the log scale, the grid, the colour
+    if "theme" in case_id:
+        # The theme is the run's: the dark plot keeps the theme tokens rather than colours written in.
+        assert case.checks.theme == "dark" and len(case.checks.code_kept) == 2
+    if language == "de":
+        assert case.checks.texts_changed == ("title",)
+
+
+@pytest.mark.parametrize(
+    ("pattern", "code", "found"),
+    [
+        # The log scale on y, in the forms matplotlib takes.
+        ("log", 'ax.set_yscale("log")', True),
+        ("log", "plt.yscale('log')", True),
+        ("log", 'ax.set(yscale="log")', True),
+        ("log", "ax.semilogy(x, y)", True),
+        ("log", 'ax.set_xscale("log")', False),
+        # Vertical grid lines: the x axis's grid, both axes, or a grid call without an axis.
+        ("grid", "ax.xaxis.grid(True, alpha=0.1)", True),
+        ("grid", 'ax.grid(True, axis="both", alpha=0.1)', True),
+        ("grid", "ax.grid(True, alpha=0.1)", True),
+        ("grid", "ax.yaxis.grid(True, alpha=0.1)", False),  # the catalogue's horizontal lines
+        ("grid", 'ax.grid(True, axis="y")', False),
+        # Blue bars: the palette's blue, matplotlib's blue, or Okabe-Ito's.
+        ("colour", 'color="#4467a3"', True),
+        ("colour", "palette=['tab:blue']", True),
+        ("colour", 'BRAND = "#009E73"', False),
+        # The theme tokens a dark plot keeps (a live run of 2026-11-01 wrote the dark colours over them).
+        ("tokens", "fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)", True),
+        ("tokens", 'fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor="#1A1A17")', False),
+        ("labels", 'ax.set_xlabel("Ad Spend (kCHF)", fontsize=10, color=INK)', True),
+        ("labels", 'ax.set_xlabel("Ad Spend (kCHF)", fontsize=10, color="#F0EFE8")', False),
+    ],
+)
+def test_the_combined_request_patterns_tell_the_change_from_the_catalogue(pattern: str, code: str, found: bool) -> None:
+    cases = {
+        "log": ("line-basic-matplotlib-combined-language-log", "code_added", 0),
+        "grid": ("scatter-basic-matplotlib-combined-theme-grid", "code_added", 0),
+        "colour": ("bar-basic-seaborn-combined-language-colour", "code_added", 0),
+        "tokens": ("scatter-basic-matplotlib-combined-theme-grid", "code_kept", 0),
+        "labels": ("scatter-basic-matplotlib-combined-theme-grid", "code_kept", 1),
+    }
+    case_id, field_name, index = cases[pattern]
+    checks = load_case(CASES_DIR / case_id).checks
+    assert checks is not None
+
+    assert (re.search(getattr(checks, field_name)[index], code) is not None) is found
+
+
+def test_checks_are_read_and_need_a_follow_up(tmp_path: Path) -> None:
+    checks = {
+        "language": "de",
+        "theme": "dark",
+        "code_added": ["grid\\("],
+        "code_kept": ["PAGE_BG"],
+        "texts_changed": ["title", "legend"],
+    }
+    directory = _write(tmp_path / "checked", {**VALID, "checks": checks})
+    with pytest.raises(CaseError, match="checks need a change_request.txt"):
+        load_case(directory)
+    (directory / "change_request.txt").write_text("German labels and a grid\n")
+
+    case = load_case(directory)
+
+    assert case.checks == FollowUpChecks(
+        language="de", theme="dark", code_added=("grid\\(",), code_kept=("PAGE_BG",), texts_changed=("title", "legend")
+    )
+    assert load_case(_write(tmp_path / "unchecked", VALID)).checks is None
+
+
+@pytest.mark.parametrize(
+    ("checks", "message"),
+    [
+        ({}, "must be an object"),
+        ([], "must be an object"),
+        ({"reply": "names the log scale"}, "must be an object"),
+        ({"language": "de; ignore"}, "checks.language must match"),
+        ({"theme": "sepia"}, "checks.theme must be one of"),
+        ({"code_added": "log"}, "checks.code_added must be a list"),
+        ({"code_added": ["a"] * 6}, "checks.code_added must be a list"),
+        ({"code_added": ["(unclosed"]}, "does not compile"),
+        ({"code_added": [7]}, "does not compile"),
+        ({"code_kept": ["(unclosed"]}, "checks.code_kept holds a pattern that does not compile"),
+        ({"texts_changed": ["headline"]}, "checks.texts_changed must be a list"),
+    ],
+)
+def test_invalid_checks_are_refused(tmp_path: Path, checks: object, message: str) -> None:
+    directory = _write(tmp_path / "bad-checks", {**VALID, "checks": checks})
+    (directory / "change_request.txt").write_text("a follow-up\n")
 
     with pytest.raises(CaseError, match=message):
         load_case(directory)
