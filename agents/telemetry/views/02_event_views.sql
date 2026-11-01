@@ -5,7 +5,8 @@
 -- unknown, not "none" or false. Only a field whose absence has one meaning gets a default here (`drift_restored`:
 -- no restore). The fields of 2026-10-30 (`plot_language`, `stages`, `round_scores`, `version`, `shipped_score`,
 -- `readiness`, `loader_notes`, `edit_failures`, `validator_rules`, `adaptation_rules`, the pipeline configuration and
--- prompt hashes, and `thoughts` in `steps`) are NULL before that day.
+-- prompt hashes, and `thoughts` in `steps`) are NULL before that day, and so are the fields of 2026-11-01 (`lane`,
+-- `queue_wait_ms`, `queue_position`, `user_runs_today`, `user_tokens_today` in `pipeline_runs`).
 
 CREATE OR REPLACE VIEW `anyplot.agent_telemetry.data_inputs` AS
 SELECT
@@ -112,6 +113,14 @@ SELECT
   LAX_INT64(payload.review_ms) AS review_ms,
   LAX_INT64(payload.total_ms) AS total_ms,
   payload.steps AS steps,
+  -- Whether anyone waits long or comes close to a limit, without saying who (2026-11-01): the tier, the run
+  -- queue's wait and position at submit (0: it started at once), and buckets of the user's runs and spent token
+  -- budget of the day. NULL for a `not_ready` run, which never enters the queue, and before that day.
+  JSON_VALUE(payload.lane) AS lane,
+  LAX_INT64(payload.queue_wait_ms) AS queue_wait_ms,
+  LAX_INT64(payload.queue_position) AS queue_position,
+  JSON_VALUE(payload.user_runs_today) AS user_runs_today,
+  JSON_VALUE(payload.user_tokens_today) AS user_tokens_today,
   JSON_VALUE(payload.status) IN ('ok', 'needs_attention') AS shipped
 FROM `anyplot.agent_telemetry.events`
 WHERE event = 'pipeline_run';

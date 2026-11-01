@@ -20,6 +20,15 @@ for the rest of the day, so a turn gets the budget refusal and a dataset
 which the `/messages` route checks before the scope judge (`message_limit`). Only a new
 UTC day, a redeploy or a scale-to-zero resets them.
 
+Every check takes the caller's `Tier`, which the `/v1` route reads from the header the BFF
+sets (`agents/main.py` `caller_tier`). An `admin` is exempt from the per-user day caps (the
+token budget, the pipeline runs, the data runs, the chat turns) and from the chat turns'
+minute (owner decision of 2026-11-01: a fan-out over every library starts a turn and a run
+per library); the global day budget and the `attack` strikes bind every tier, the one as
+the service's runaway guard, the other as a safety rule rather than a usage cap. Pastes,
+file conversions, fan-out copies and outcome beacons keep their limits for every tier:
+they bound memory and sandbox time, not model spend.
+
 The request, user-day and global-day budgets count cost-weighted tokens: each kind
 weighted by its price relative to an uncached input token (`BUDGET_WEIGHTS`), so a
 cache read counts a tenth and an output token five times. `RequestLedger.tokens` and
@@ -54,6 +63,9 @@ ATTRIBUTION_LOGGER = "anyplot.agents.attribution"
 logger = logging.getLogger(ATTRIBUTION_LOGGER)
 
 RequestKind = Literal["action", "text"]
+Tier = Literal["admin", "public"]
+"""Who the caller is to the limits: `admin` (the BFF asserts it for an admin identity) or `public` (everyone else,
+and every request without the assertion)."""
 MAX_ADHOC_LEDGERS = 64
 
 
@@ -104,6 +116,9 @@ class RequestLedger:
     user_id: str = ""
     session_id: str = ""
     kind: RequestKind = "text"
+    tier: Tier = "public"
+    """The caller's tier, set by the `/messages` route from the BFF's assertion: the run queue's lane and the day
+    caps' exemptions follow it. `public` without a route (`adk web`)."""
     invocation_id: str | None = None
     llm_calls: int = 0
     tokens: int = 0
@@ -159,6 +174,16 @@ class RequestLedger:
     """The operation names of every `prepare_data` call that changed the data (closed: `telemetry.PREP_OPS`)."""
     reply_question: bool = False
     """The root's last reply sent to the page ends with a question mark (`stream.Translator`); the text is never kept."""
+    queue_position: int | None = None
+    queue_wait_s: float | None = None
+    """Where the turn's run-queue entry stood at submit (0: it started at once) and how long it waited, set by the
+    route once the entry starts (`TurnSlot.take`); None for a turn that never ran sandbox work. The usage telemetry's
+    `queue_position` and `queue_wait_ms` (`pipeline_run`)."""
+    user_runs_today: int | None = None
+    user_tokens_share: float | None = None
+    """This run's ordinal among the user's pipeline runs of the UTC day, and the share of the public per-user daily
+    token budget (`AGENT_DAILY_TOKEN_BUDGET`) the user had spent when it was booked, admins measured against it too,
+    set by the Budget plugin (`before_tool_callback`). Only their buckets reach the telemetry, never the user."""
     site_theme: Theme | None = None
     """The theme the page showed the site in when the user sent the turn (`/messages?theme=`), which a plot run takes
     when neither the user nor the version it changes asked for one (`pipeline.run_theme`); None without a page."""
@@ -305,10 +330,13 @@ class UsageBook:
     def user_strikes(self, user_id: str) -> int:
         return len(self._current().user_strikes.get(user_id, ()))
 
-    def daily_ok(self, user_id: str, settings: AgentSettings, *, reserve: int = 0) -> bool:
-        """Whether the user and the service still have daily token budget, `reserve` tokens beyond the spend, and strikes left."""
+    def daily_ok(self, user_id: str, settings: AgentSettings, *, reserve: int = 0, tier: Tier = "public") -> bool:
+        """Whether the user and the service still have daily token budget, `reserve` tokens beyond the spend, and strikes left.
+
+        An `admin` has no daily token budget of their own: only the service's and the strikes bind them.
+        """
         return (
-            self.user_tokens(user_id) + reserve < settings.daily_token_budget
+            (tier == "admin" or self.user_tokens(user_id) + reserve < settings.daily_token_budget)
             and self.global_tokens() + reserve < settings.global_daily_token_budget
             and self.user_strikes(user_id) < settings.attack_strikes
         )
@@ -318,8 +346,9 @@ class UsageBook:
         `daily_ok` folds into its answer, told apart from a spent token budget."""
         return self.user_strikes(user_id) >= settings.attack_strikes
 
-    def runs_ok(self, user_id: str, settings: AgentSettings) -> bool:
-        return self.user_runs(user_id) < settings.daily_pipeline_runs
+    def runs_ok(self, user_id: str, settings: AgentSettings, tier: Tier = "public") -> bool:
+        """Whether the user may start another pipeline run today (`AGENT_DAILY_PIPELINE_RUNS`); always for an admin."""
+        return tier == "admin" or self.user_runs(user_id) < settings.daily_pipeline_runs
 
     def add_data_run(self, user_id: str) -> None:
         """Count one `run_data_code` run against the user's day, before it runs."""
@@ -329,16 +358,20 @@ class UsageBook:
     def user_data_runs(self, user_id: str) -> int:
         return self._current().user_data_runs.get(user_id, 0)
 
-    def data_runs_ok(self, user_id: str, settings: AgentSettings) -> bool:
-        return self.user_data_runs(user_id) < settings.daily_data_runs
+    def data_runs_ok(self, user_id: str, settings: AgentSettings, tier: Tier = "public") -> bool:
+        """Whether the user may run another data snippet today (`AGENT_DAILY_DATA_RUNS`); always for an admin."""
+        return tier == "admin" or self.user_data_runs(user_id) < settings.daily_data_runs
 
     def user_messages(self, user_id: str) -> int:
         """The user's chat turns today (typed messages and actions alike) that passed `message_limit`."""
         return self._current().user_messages.get(user_id, 0)
 
-    def message_limit(self, user_id: str, settings: AgentSettings) -> MessageLimit | None:
+    def message_limit(self, user_id: str, settings: AgentSettings, tier: Tier = "public") -> MessageLimit | None:
         """Why the user may not send another chat turn now, or None; checked before the scope judge, so a flood costs
-        no model call. A refused turn is not counted: the window frees itself one minute after the last counted one."""
+        no model call. A refused turn is not counted: the window frees itself one minute after the last counted one.
+        Never a limit for an admin, whose turns are still counted."""
+        if tier == "admin":
+            return None
         return self._limit(
             "message",
             user_id,
@@ -460,10 +493,10 @@ def budget_allows(
     `reserve` is what the caller still needs after the check, in cost-weighted tokens:
     the pipeline keeps room for a review and the root's closing reply
     (`pipeline.REVIEW_RESERVE_TOKENS`), so a review never leaves the reply to a shipped
-    plot to the `budget` refusal.
+    plot to the `budget` refusal. The user-day budget follows the ledger's tier (`UsageBook.daily_ok`).
     """
     return request_ok(ledger, settings, next_calls=next_calls, reserve=reserve) and usage.daily_ok(
-        ledger.user_id or "anonymous", settings, reserve=reserve
+        ledger.user_id or "anonymous", settings, reserve=reserve, tier=ledger.tier
     )
 
 

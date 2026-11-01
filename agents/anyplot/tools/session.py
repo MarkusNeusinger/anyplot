@@ -588,7 +588,7 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
     # Checked before the queue wait and counted after it, so a run that never starts is never counted; the user's
     # runs waiting in their other sessions at the same time (at most `AGENT_USER_MAX_RUNS` - 1) can each pass this
     # check and overshoot the day's count by as many, a small overshoot accepted with the parallel windows (2026-10-21).
-    if not services.usage.data_runs_ok(user, settings):
+    if not services.usage.data_runs_ok(user, settings, ledger.tier):
         attribution("data_code", ledger, outcome="daily_limit", language=language)
         return _error("daily_limit")
     if ledger.run_slot is not None and not await ledger.run_slot():  # the run queue's slot and the turn's start

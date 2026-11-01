@@ -163,6 +163,12 @@ request whose `max_tokens` could take longer than ten minutes at its assumed rat
 (about 21,333 tokens) unless the client sets a timeout of its own. The adapter's
 49,152 take about 143 s at the measured rate; 300 s leaves twice that, and the
 pipeline's deadlines bound a run long before the SDK's retries could add up."""
+CLAUDE_MAX_RETRIES = 4
+"""The SDK retries of the root's, the adapter's and the reviewer's Claude calls (`VertexClaude`), twice the SDK's
+default of 2 since 2026-11-01: the admin lane runs five pipelines at once, and a 429 on a shared Vertex AI quota
+passes within seconds (the SDK backs off 0.5, 1, 2 and 4 s with jitter, or as long as the answer's `retry-after`
+asks). A call still refused after them ends the turn as busy (`model_busy`). The judge keeps 0: its own budget of
+`AGENT_JUDGE_TIMEOUT_S` is the only clock it may spend (`_within_budget`)."""
 GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS = 12_288
 """The Gemini adapter's cap when a full file is allowed, thinking included.
 
@@ -337,6 +343,7 @@ class VertexClaude(Claude):
             project_id=self.vertex_project,
             region=self.vertex_region,
             timeout=Timeout(CLAUDE_REQUEST_TIMEOUT_S, connect=10.0),
+            max_retries=CLAUDE_MAX_RETRIES,
         )
 
     def _build_anthropic_kwargs(
@@ -440,7 +447,11 @@ def cli_client(settings: AgentSettings | None = None, *, fallback: bool = True) 
     key = (settings.project if fallback else "", settings.location, settings.cli_concurrency, settings.cli_call_log)
     client = _CLI_CLIENTS.get(key)
     if client is None:
-        vertex = make_anthropic_client(settings.project, settings.location, max_retries=2) if fallback else None
+        vertex = (
+            make_anthropic_client(settings.project, settings.location, max_retries=CLAUDE_MAX_RETRIES)
+            if fallback
+            else None
+        )
         log = Path(settings.cli_call_log) if settings.cli_call_log else None
         client = ClaudeCliClient(fallback=vertex, concurrency=settings.cli_concurrency, call_log=log)
         _CLI_CLIENTS[key] = client
@@ -902,6 +913,41 @@ def make_anthropic_client(project: str, location: str, *, max_retries: int = 0) 
     from anthropic import AsyncAnthropicVertex
 
     return AsyncAnthropicVertex(project_id=project, region=location, max_retries=max_retries)
+
+
+BUSY_STATUSES = frozenset({429, 529})
+"""The HTTP statuses of a model call that mean the service is busy, not broken: a quota (429) and Anthropic's
+overload (529, the SDK's `OverloadedError`). Both pass within seconds to minutes."""
+
+
+def error_chain(exc: BaseException) -> list[BaseException]:
+    """`exc` and the errors behind it, outermost first: through ADK's `DynamicNodeFailError` (its `error`) and explicit
+    causes (`raise ... from`). Never an implicit `__context__`: an unrelated failure raised while handling a quota
+    error is that failure, not the quota."""
+    chain: list[BaseException] = []
+    current: BaseException | None = exc
+    while current is not None and all(current is not seen for seen in chain):
+        chain.append(current)
+        wrapped = getattr(current, "error", None)
+        current = wrapped if isinstance(wrapped, BaseException) else current.__cause__
+    return chain
+
+
+def model_busy(exc: BaseException) -> bool:
+    """Whether a model call failed because the model service is busy, after its retries: a quota (Anthropic's
+    `RateLimitError`, Gemini's `RESOURCE_EXHAUSTED`) or an overload (`OverloadedError`), anywhere in `error_chain`.
+
+    Read from the type names and the status codes only, never from a message. The `/messages` stream ends such a turn
+    with `capacity` and the pipeline its run with `busy`: both read as "busy, try again shortly", not as a fault.
+    """
+    for link in error_chain(exc):
+        name = type(link).__name__
+        if "RateLimit" in name or "ResourceExhausted" in name or "Overloaded" in name:
+            return True
+        statuses = (getattr(link, "code", None), getattr(link, "status_code", None))
+        if any(isinstance(status, int) and status in BUSY_STATUSES for status in statuses):
+            return True
+    return False
 
 
 def parse_judge_answer(text: str) -> JudgeVerdict:

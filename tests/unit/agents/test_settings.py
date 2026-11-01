@@ -33,10 +33,10 @@ class TestDefaults:
         assert settings.judge_timeout_s == 4.0
         assert settings.render_concurrency == 1  # serial renders: one sandbox per 4 GiB instance
         assert settings.watermark is True  # served PNGs carry the footer strip
-        assert settings.run_concurrency == 1
-        assert settings.runs_per_minute == 1
-        assert settings.queue_max_wait_s == 600
-        assert settings.user_max_runs == 3  # sandbox runs per user across sessions (owner decision of 2026-10-21)
+        # Owner decision of 2026-11-01: five in flight for the whole instance, one start every 10 s for every lane,
+        # two runs per public user and five per admin across sessions.
+        assert (settings.run_concurrency, settings.runs_per_minute, settings.queue_max_wait_s) == (5, 6, 600)
+        assert (settings.user_max_runs, settings.admin_user_max_runs) == (2, 5)
         assert settings.service_urls == []
         assert settings.dev_fixture is None
         assert settings.libraries == ["matplotlib", "seaborn"]
@@ -46,9 +46,10 @@ class TestDefaults:
         assert settings.max_attempts == 2  # the first attempt and at most one repair round
         assert settings.max_llm_calls == 16  # two rounds of adapt, self-review and retry, two reviews, the root
         assert settings.request_token_budget == 800_000  # never cuts a live-flow round short (CLI max ~458k)
-        assert settings.daily_token_budget == 8_000_000  # about 30 median live-flow runs
-        assert settings.daily_pipeline_runs == 40
-        assert settings.global_daily_token_budget == 24_000_000  # three users at their daily budget
+        # Owner decision of 2026-11-01: a public user's day is about $1 and 50 runs, the service's about $10.
+        assert settings.daily_token_budget == 10_000_000
+        assert settings.daily_pipeline_runs == 50
+        assert settings.global_daily_token_budget == 100_000_000  # the runaway guard of every tier
         assert settings.render_timeout_s == 60
         assert settings.request_deadline_s == 540  # a round with self-review takes about 60 s; never cut short
         assert settings.soft_deadline_s == 480
@@ -125,6 +126,14 @@ class TestEnvironmentOverrides:
         settings = AgentSettings()
 
         assert (settings.run_concurrency, settings.runs_per_minute, settings.queue_max_wait_s) == (2, 3, 300)
+
+    def test_the_admin_cap_comes_from_the_environment_and_is_positive(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("AGENT_ADMIN_USER_MAX_RUNS", "3")
+        assert AgentSettings().admin_user_max_runs == 3
+
+        monkeypatch.setenv("AGENT_ADMIN_USER_MAX_RUNS", "0")
+        with pytest.raises(ValidationError):
+            AgentSettings()
 
     @pytest.mark.parametrize(("value", "expected"), [("false", False), ("0", False), ("true", True), ("1", True)])
     def test_the_footer_strip_switch_comes_from_the_environment(

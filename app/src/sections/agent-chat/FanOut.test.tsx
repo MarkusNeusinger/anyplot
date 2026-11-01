@@ -84,13 +84,26 @@ const PAGE_SESSION = 'S-page';
 let calls: Call[];
 let turns: Map<string, ReturnType<typeof liveTurn>>;
 
+/** A turn the user's cap refused: the server's `run_limit`, then `done`. */
+const runLimitTurn = () =>
+  new Response(
+    wire('error', { code: 'run_limit', ref: 'r-lim' }) + wire('done', { llm_calls: 1 }),
+    { status: 200, headers: { 'Content-Type': 'text/event-stream' } }
+  );
+
 /**
  * The BFF: a session per library (`S-<library>`), `ineligible` libraries refused at the open.
  * `copy` answers the copy route: the server's copy, a server without it (`404 not_found`), or a refusal.
+ * The first plot turn of each library in `limitedOnce` gets `run_limit`, as when other windows hold the places.
  */
-function mockBff(ineligible: string[] = [], copy: () => Response = () => json(200, COPIED)) {
+function mockBff(
+  ineligible: string[] = [],
+  copy: () => Response = () => json(200, COPIED),
+  limitedOnce: string[] = []
+) {
   calls = [];
   turns = new Map();
+  const limited = new Set<string>();
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: string, init: RequestInit = {}) => {
@@ -117,6 +130,10 @@ function mockBff(ineligible: string[] = [], copy: () => Response = () => json(20
       if (path.endsWith('/dataset/confirm'))
         return json(200, { confirmed: true, rows: 1, columns: 2 });
       if (path.endsWith('/messages')) {
+        if (limitedOnce.includes(sid.replace(/^S-/, '')) && !limited.has(sid)) {
+          limited.add(sid);
+          return runLimitTurn();
+        }
         const turn = liveTurn();
         turns.set(sid, turn);
         return turn.response;
@@ -219,6 +236,29 @@ describe('FanOut', () => {
       await within(card('matplotlib')).findByRole('img', { name: /matplotlib plot, version 1/ })
     ).toHaveAttribute('src', 'blob:mock');
     expect(within(card('altair')).getByTestId('fanout-status')).toHaveTextContent('adapting…');
+  });
+
+  it('sends a library the cap refused back to waiting and tries it again at the next freed place', async () => {
+    mockBff([], () => json(200, COPIED), ['seaborn']);
+    renderFanOut(['matplotlib', 'seaborn', 'altair'], 2);
+
+    // seaborn's turn hit the cap (the admin's other windows hold the places): no failure, it waits,
+    // and the panel starts nothing more while only matplotlib holds a place the server gave it.
+    await waitFor(() => expect(status('seaborn')).toHaveTextContent('waiting · run_limit ×1'));
+    expect(plotTurns().map(call => call.path)).toEqual([
+      '/sessions/S-matplotlib/messages',
+      '/sessions/S-seaborn/messages',
+    ]);
+    expect(status('altair')).toHaveTextContent('waiting for a free place…');
+    expect(screen.getByText(/0 of 3 done/)).toBeInTheDocument();
+
+    // matplotlib's plot frees a place: seaborn, first in the page's order, tries again and runs.
+    turns.get('S-matplotlib')!.finish();
+    await waitFor(() => expect(plotTurns()).toHaveLength(3));
+    expect(plotTurns()[2].path).toBe('/sessions/S-seaborn/messages');
+    await waitFor(() => expect(status('seaborn')).toHaveTextContent('adapting…'));
+    turns.get('S-seaborn')!.finish();
+    await waitFor(() => expect(status('seaborn')).toHaveTextContent('v1 · ok'));
   });
 
   it("plots every library in the page's site theme", async () => {

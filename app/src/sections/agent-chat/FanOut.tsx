@@ -8,10 +8,15 @@
  * version into it with its bindings and their confirmation (`copyData`, without
  * the summary turn of a paste), whatever the data's origin: pasted, opened,
  * computed or changed by the assistant. It then starts `create_plot` in at most
- * `maxRuns` sessions at a time (`grantSlots`): the server's
- * `AGENT_USER_MAX_RUNS`, which refuses one run more with `run_limit`. Each run
- * goes through the agents service's run queue like any other, and each session
- * is deleted when the panel closes or the page goes, like the page's own.
+ * `maxRuns` sessions at a time (`grantSlots`): the caller's own cap, which
+ * `/status` reports as `user_max_runs` (`AGENT_ADMIN_USER_MAX_RUNS`, 5, for the
+ * admin since 2026-11-01) and which refuses one run more with `run_limit`. That
+ * cap counts the admin's runs in every window, so a `run_limit` sends the library
+ * back to waiting and holds the panel back until one of its runs ends or 15 s
+ * pass (`nextFanOut`); three panels started at once thus share the five places
+ * and finish every library. Each run goes through the agents service's run queue,
+ * and each session is deleted when the panel closes or the page goes, like the
+ * page's own.
  *
  * A server without the copy (the page deployed before the API or the agents
  * service) answers `404 not_found`: a library then posts the page's upload again
@@ -30,8 +35,13 @@ import {
   useAgentSession,
 } from 'src/hooks/useAgentSession';
 import {
+  awaitsRetry,
+  type FanOutEvent,
   type FanOutSlot,
-  grantSlots,
+  initialFanOut,
+  nextFanOut,
+  RUN_LIMIT_RETRY_MS,
+  type RunLimitInfo,
   runStatus,
   type Tone,
 } from 'src/sections/agent-chat/fanoutRules';
@@ -61,8 +71,10 @@ interface FanOutRunProps {
   upload?: DatasetUpload;
   bindings: BindingMap;
   slot: FanOutSlot;
+  limit: RunLimitInfo | null;
   onReady: (library: string) => void;
   onDone: (library: string) => void;
+  onLimited: (library: string) => void;
 }
 
 function FanOutRun({
@@ -74,10 +86,12 @@ function FanOutRun({
   upload,
   bindings,
   slot,
+  limit,
   onReady,
   onDone,
+  onLimited,
 }: FanOutRunProps) {
-  const { state, copyData, replayData, createPlot, stop } = useAgentSession({
+  const { state, copyData, replayData, plotTurn, stop } = useAgentSession({
     specId,
     library,
     locale,
@@ -86,7 +100,7 @@ function FanOutRun({
   });
   const [dataFailure, setDataFailure] = useState<Failure | null>(null);
   const stored = useRef(false);
-  const started = useRef(false);
+  const inFlight = useRef(false);
 
   // The session opened: the server copies the page session's confirmed data into it. A session
   // that could not open (not eligible, an error) gives its place up at once.
@@ -125,14 +139,25 @@ function FanOutRun({
     onDone,
   ]);
 
-  // Given a place: one `create_plot`, whose end frees the place, whatever it brought.
+  // Given a place: one `create_plot`, whose end frees the place. A `run_limit` (the admin's runs in other
+  // windows hold every place) sends the library back to waiting for another place; anything else ends it.
   useEffect(() => {
-    if (slot !== 'running' || started.current) return;
-    started.current = true;
-    void createPlot().finally(() => onDone(library));
-  }, [slot, createPlot, library, onDone]);
+    if (slot !== 'running' || inFlight.current) return;
+    inFlight.current = true;
+    void plotTurn()
+      .then(code => {
+        inFlight.current = false;
+        if (code === 'run_limit') onLimited(library);
+        else onDone(library);
+      })
+      .catch(() => {
+        // The turn handles its own errors; this only keeps an unexpected rejection from holding the place.
+        inFlight.current = false;
+        onDone(library);
+      });
+  }, [slot, plotTurn, library, onDone, onLimited]);
 
-  const status = runStatus(state, slot, dataFailure);
+  const status = runStatus(state, slot, dataFailure, limit);
   const versions = Object.values(state.versions).filter(version => version.library === library);
   const latest = versions[versions.length - 1];
   const image = latest?.images[latest.theme];
@@ -217,7 +242,7 @@ export interface FanOutProps {
    */
   upload?: DatasetUpload;
   bindings: BindingMap;
-  /** How many plots run at once (`AGENT_USER_MAX_RUNS`). */
+  /** How many plots run at once: the caller's own cap (`user_max_runs` of `/status`). */
   maxRuns: number;
   onClose: () => void;
   /** The panel, which takes the focus when a key press on `.plot_all()` opened it. */
@@ -236,20 +261,25 @@ export function FanOut({
   maxRuns,
   onClose,
 }: FanOutProps) {
-  const [slots, setSlots] = useState<Record<string, FanOutSlot>>(() =>
-    Object.fromEntries(libraries.map(library => [library, 'data' as FanOutSlot]))
-  );
-  const move = useCallback(
-    (library: string, slot: 'waiting' | 'done') =>
-      setSlots(current =>
-        current[library] === 'done'
-          ? current
-          : grantSlots({ ...current, [library]: slot }, libraries, maxRuns)
-      ),
+  const [fanOut, setFanOut] = useState(() => initialFanOut(libraries));
+  const send = useCallback(
+    (event: FanOutEvent) => setFanOut(current => nextFanOut(current, event, libraries, maxRuns)),
     [libraries, maxRuns]
   );
-  const onReady = useCallback((library: string) => move(library, 'waiting'), [move]);
-  const onDone = useCallback((library: string) => move(library, 'done'), [move]);
+  const onReady = useCallback((library: string) => send({ type: 'ready', library }), [send]);
+  const onDone = useCallback((library: string) => send({ type: 'ended', library }), [send]);
+  const onLimited = useCallback(
+    (library: string) => send({ type: 'run_limit', library, now: Date.now() }),
+    [send]
+  );
+  // Held back by `run_limit`: try one library more every 15 s, until the server takes it again.
+  const retrying = awaitsRetry(fanOut);
+  useEffect(() => {
+    if (!retrying) return;
+    const timer = setInterval(() => send({ type: 'retry' }), RUN_LIMIT_RETRY_MS);
+    return () => clearInterval(timer);
+  }, [retrying, send]);
+  const { slots } = fanOut;
   const done = libraries.filter(library => slots[library] === 'done').length;
 
   return (
@@ -308,8 +338,17 @@ export function FanOut({
             upload={upload}
             bindings={bindings}
             slot={slots[library]}
+            limit={
+              fanOut.limited[library]
+                ? {
+                    count: fanOut.limited[library].count,
+                    gaveUp: fanOut.gaveUp.includes(library),
+                  }
+                : null
+            }
             onReady={onReady}
             onDone={onDone}
+            onLimited={onLimited}
           />
         ))}
       </Box>

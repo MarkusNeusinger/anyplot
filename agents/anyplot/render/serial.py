@@ -10,8 +10,10 @@ it), so no backend has to remember a semaphore of its own:
   two sandboxes at once.
 * **Runs first.** A slot that comes free goes to a waiting pipeline render (`run`
   lane) before a waiting theme toggle (`toggle` lane), first come first served
-  within a lane. A run therefore waits for at most the render in progress, never
-  for a line of toggles that arrived before it.
+  within a lane. A run therefore never waits for a line of toggles that arrived
+  before it, only for the renders of the other runs in flight: since 2026-11-01 up
+  to five at once (`run_queue.py`), whichever run-queue lane they came from, their
+  starts at least 10 s apart. `RenderResult.slot_wait_s` reports the wait.
 * **Bounded waits.** A caller may pass `wait_s`: when no slot came free in time,
   `render` raises `RenderBusy` and nothing ran. The theme toggle uses it, so a
   synchronous route never hangs behind a busy instance.
@@ -25,6 +27,7 @@ JavaScript plot). No ADK import.
 """
 
 import asyncio
+import time
 from collections import deque
 from dataclasses import replace
 from typing import Literal
@@ -99,10 +102,12 @@ class SerialRenderer:
         result = RenderResult(job_id=job.job_id)
         for theme in job.themes:
             part = job if len(job.themes) == 1 else replace(job, themes=(theme,))
+            asked = time.monotonic()
             try:
                 await self.slots.acquire(lane, wait_s)
             except TimeoutError:
                 raise RenderBusy(f"no render slot came free within {wait_s} s") from None
+            result.slot_wait_s += time.monotonic() - asked
             try:
                 rendered = await self.backend.render(part)
             finally:

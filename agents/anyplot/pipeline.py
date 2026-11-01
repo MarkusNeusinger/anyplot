@@ -62,8 +62,10 @@ the soft deadline (`AGENT_SOFT_DEADLINE_S`) before every attempt after the first
 needs `ADAPTER_P95_S` plus the runtime's `render_p95_s` left, so the first attempt has the rest of
 the soft deadline) and for every render timeout;
 the request deadline is `abort_signal` on the run. A render waits in the `run` lane of the render slot
-(`render/serial.py`), ahead of every waiting theme toggle, so it waits for at most
-the render in progress; its clamped timeout starts when it runs. The exported
+(`render/serial.py`), ahead of every waiting theme toggle, so it waits only for the renders
+of the other runs in flight (up to five since 2026-11-01, their starts at least 10 s apart);
+its clamped timeout starts when it runs. The gates run in a worker thread, off the
+event loop the other runs in flight share. The exported
 code (`plot.py`, `plot.R`, `plot.jl`) names the rendered theme in its run line.
 
 Every path that is not cancelled yields exactly one `Event(output=PlotResult)` as a
@@ -101,18 +103,21 @@ Every step also writes one content-free attribution line (`plugins/ledger.attrib
 `pipeline_check` (edit-apply failure count and kinds, outcome `drift_restored` with
 the restored drift kinds, how many edits a tolerant matching tier applied, blocking
 validator rule ids, the labels of banned imports (`validate.module_label`: a word of a closed vocabulary, or `?`), ADAPTATION rule
-ids), `pipeline_render` (render and wall time, the gate ids that
+ids), `pipeline_render` (render, render-slot wait and wall time, the gate ids that
 failed or reported, and the class a failed probe names, `grounding.probe_error`),
 `pipeline_review` (the verdict, its defect ids and the call's
 finish reason) and `pipeline_result` (status, reason, attempts, the `Stage` that ended
 each attempt and the run, the shipped and the last reviewed attempt, the number of
 reviewer calls, whether the shipped
 render was padded or carries ADAPTATION or probe findings, the roles of its drawn texts
-and whether its library reports them, and the exception class behind reason `error`). The eval harness (`agents/evals/matrix.py`) reads them per
+and whether its library reports them, and the exception class behind reason `error`
+or `busy`, the latter a model quota or overload still refused after the SDK's retries,
+`models.model_busy`; the innermost class, never ADK's wrapper). The eval harness (`agents/evals/matrix.py`) reads them per
 case; they never carry code, data, column names or model text. `PlotResult.reason`
 keeps its public vocabulary; the stage is only in the attribution line.
 """
 
+import asyncio
 import csv
 import functools
 import io
@@ -152,6 +157,7 @@ from .grounding import (
     reviewed_misses,
 )
 from .language import DEFAULT_LANGUAGE, same_language
+from .models import error_chain, model_busy
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, adapter_instruction, fence, prompt_hash
 from .render.contract import RendererUnavailable, RenderJob, RuntimeAdapter, Theme
@@ -445,7 +451,7 @@ class Run:
     rendered: bool = False
     unreviewed_why: str | None = None
     error_type: str | None = None
-    """The exception class that ended the run with reason `error` (content-free, for the attribution log)."""
+    """The exception class that ended the run with reason `error` or `busy` (content-free, for the attribution log)."""
     stage: Stage | None = None
     """What stopped the run: the last attempt's stage, or a limit before the next attempt."""
     stages: list[Stage] = field(default_factory=list)
@@ -1163,7 +1169,7 @@ def finish(run: Run) -> PlotResult:
     shipped = shipped_candidate(run)
     if shipped is None:
         reason: FailureReason
-        if run.reason in ("budget", "deadline", "error"):
+        if run.reason in ("budget", "deadline", "busy", "error"):
             reason = run.reason
         else:
             reason = "render" if run.rendered else "validation"
@@ -1452,6 +1458,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
             reason=not_ready or "no_dataset",
             plot_language=telemetry.plot_language(language),
             readiness=telemetry.readiness(view.readiness) if view is not None else None,
+            lane=ledger.tier,
         )
         yield _result_event(PlotResult.not_ready(not_ready or "no_dataset", request_kept=kept))
         return
@@ -1488,9 +1495,13 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
             yield event
     except Exception as exc:  # every failure ends in a PlotResult; the type is logged, never the message
         logger.warning("pipeline failed: %s", type(exc).__name__)
-        run.reason = "error"
-        run.error_type = type(exc).__name__
-        run.unreviewed_why = run.unreviewed_why or "an internal error stopped the run"
+        busy = model_busy(exc)  # a quota or overload after the SDK's retries: try again shortly, not a fault
+        run.reason = "busy" if busy else "error"
+        # The innermost class, not ADK's `DynamicNodeFailError` around a sub-agent's failure (Flash review, 2026-11-01).
+        run.error_type = type(error_chain(exc)[-1]).__name__
+        run.unreviewed_why = run.unreviewed_why or (
+            "the model service was busy" if busy else "an internal error stopped the run"
+        )
         if len(run.stages) < run.attempts:
             _end_attempt(run, "error")
         run.stage = "error"
@@ -1528,7 +1539,8 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
     harness counts a shipped run without texts where they are expected (`agents/evals/report.py`,
     `untexted`). `error` is the exception class behind
     reason `error` (for example `RendererUnavailable`, which the harness treats as an
-    outage rather than a model failure), never its message. `stage` names what stopped
+    outage rather than a model failure) or `busy` (a `RateLimitError` or an `OverloadedError`),
+    the innermost class of `models.error_chain`, never its message. `stage` names what stopped
     the run and `stages` what ended each attempt (`Stage`); `shipped_attempt` and
     `reviewed_attempt` name the attempt whose render shipped and the one the reviewer
     was last called on, and `reviews` counts the reviewer calls.
@@ -1554,7 +1566,7 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
         texts=sorted(shipped.texts) if shipped and shipped.texts is not None else None,
         texts_expected=runtime_for(run.view.library).text_probe,
         residual=len(result.residual_defects),
-        error=run.error_type if result.reason == "error" else None,
+        error=run.error_type if result.reason in ("error", "busy") else None,
     )
 
 
@@ -1621,6 +1633,13 @@ def _telemetry_run(
         review_ms=telemetry.ms(run.stage_s.get("review", 0.0)),
         total_ms=telemetry.ms(seconds),
         steps=telemetry.step_tokens(ledger.steps, steps=("adapter", "reviewer")),
+        # Whether anyone waits long or comes close to a limit (owner, 2026-11-01): buckets and bounded numbers of
+        # the queue and the usage book, never the user they were counted for.
+        lane=ledger.tier,
+        queue_wait_ms=telemetry.ms(ledger.queue_wait_s) if ledger.queue_wait_s is not None else None,
+        queue_position=ledger.queue_position,
+        user_runs_today=telemetry.runs_today_bucket(ledger.user_runs_today),
+        user_tokens_today=telemetry.tokens_today_bucket(ledger.user_tokens_share),
     )
 
 
@@ -1877,7 +1896,10 @@ async def _attempts(
         rendered = await services.backend.render(job)
         render_s = time.monotonic() - started
         run.timed("render", render_s)
-        report = evaluate(
+        # The gates decode and scan the PNGs, CPU work of up to a second: in a worker thread, so the other runs in
+        # flight (five in the admin lane) keep streaming meanwhile, as the watermark does (`main._served_png`).
+        report = await asyncio.to_thread(
+            evaluate,
             rendered,
             themes=job.themes,
             library=view.library,
@@ -1899,6 +1921,7 @@ async def _attempts(
             attempt=attempt,
             theme=run.theme,
             render_s=round(render_s, 3),
+            slot_wait_s=round(rendered.slot_wait_s, 3),
             wall_s={theme: round(output.wall_s, 3) for theme, output in rendered.outputs.items()},
             passed=report.passed_host_gates,
             canvas_ok=report.canvas_ok,

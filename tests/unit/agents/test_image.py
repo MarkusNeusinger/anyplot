@@ -550,7 +550,8 @@ class TestCloudBuild:
             "--memory=2Gi",
             "--min-instances=${_MIN_INSTANCES}",
             "--max-instances=1",
-            "--concurrency=20",
+            # The queue's 60 waiting streams and 5 runs, plus the other routes (2026-11-01)
+            "--concurrency=80",
             "--timeout=1200",
             "TRAFFIC=(--no-traffic)",
             "--tag=candidate",
