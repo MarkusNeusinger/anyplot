@@ -251,7 +251,7 @@ def fence_pipeline_notes(result: dict[str, Any]) -> dict[str, Any]:
     return fenced
 
 
-SHOWS_KEPT_GROUPS = ("title", "x axis label", "y axis label", "z axis label", "legend")
+SHOWS_KEPT_GROUPS = ("title", "subtitle", "x axis label", "y axis label", "z axis label", "legend")
 """The `shows` texts a result over its cap keeps: what a reply quotes most; tick labels and the rest go first."""
 
 

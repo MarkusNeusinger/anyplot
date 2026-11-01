@@ -2416,9 +2416,15 @@ def vega_texts(scenegraph):
 
 
 def write_text_probe(theme, report):
-    """`probe-<theme>.json` from `report`, a text probe or `{"error": <class>}`; a failed write leaves no probe."""
+    """`probe-<theme>.json` from `report`, a text probe or `{"error": <class>}`; a failed write leaves no probe.
+
+    Opened without following a link, as `collect_text_probe` reads: in exec mode the child that ran before could have
+    left one at the probe's name. The path is absolute, which the plot guard asks of an `os.open` write.
+    """
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NOFOLLOW", 0)
     try:
-        with open(f"probe-{theme}.json", "w", encoding="utf-8") as handle:
+        descriptor = os.open(os.path.abspath(f"probe-{theme}.json"), flags, 0o644)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
             handle.write(json.dumps(report))
     except OSError:
         pass

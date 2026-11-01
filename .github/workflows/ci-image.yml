@@ -586,7 +586,7 @@ jobs:
           echo "$CHANGED_FILES"
 
           # What the image is built from: its Dockerfile, the service package,
-          # the harness it copies, the dependency lock, README.md (copied next
+          # the harness and the R and Julia text probes it copies, the dependency lock, README.md (copied next
           # to pyproject.toml), the catalogue's Julia project (the toolchain's
           # Julia stage precompiles it), the catalogue's JavaScript harness and its
           # lock (the toolchain's Node stage installs them) and the root .dockerignore
@@ -594,7 +594,7 @@ jobs:
           # and the JavaScript error grammar, which a step compares with the image, and
           # the export page's wrapper and the API's preview relay, which steps probe in the
           # image's Chromium.
-          RENDERER_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(agents/renderer/|agents/__init__\.py$|agents/anyplot/render/harness\.py$|agents/anyplot/render/convert\.py$|agents/anyplot/render/page\.py$|api/preview_relay\.py$|agents/anyplot/code/profiles/javascript/(import-allowlist\.json|errors\.py)$|tests/image/|tests/unit/agents/runtime/convert_fixtures\.py$|pyproject\.toml$|uv\.lock$|README\.md$|Project\.toml$|Manifest\.toml$|package\.json$|package-lock\.json$|automation/js-render/|\.dockerignore$|\.github/workflows/ci-image\.yml$)' || true)
+          RENDERER_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(agents/renderer/|agents/__init__\.py$|agents/anyplot/render/harness\.py$|agents/anyplot/render/convert\.py$|agents/anyplot/render/text_probe\.(R|jl)$|agents/anyplot/render/page\.py$|api/preview_relay\.py$|agents/anyplot/code/profiles/javascript/(import-allowlist\.json|errors\.py)$|tests/image/|tests/unit/agents/runtime/convert_fixtures\.py$|pyproject\.toml$|uv\.lock$|README\.md$|Project\.toml$|Manifest\.toml$|package\.json$|package-lock\.json$|automation/js-render/|\.dockerignore$|\.github/workflows/ci-image\.yml$)' || true)
 
           if [[ "$EVENT_NAME" == "workflow_dispatch" && "$FORCE_RUN" == "true" ]]; then
             echo "Manual trigger with force_run=true, will build the renderer image"

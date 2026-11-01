@@ -2,19 +2,26 @@
 #
 # The renderer's R row names this file as R's user profile (`R_PROFILE_USER`,
 # agents/renderer/commands.py), so R reads it before `plot.R`. It only registers a hook:
-# when ggplot2 loads, `ggsave` is traced, and each save first writes `texts-<theme>.json`,
-# `{"entries": [[kind, text], ...]}`, the texts of the plot it saves, which the harness's exec
-# mode turns into `probe-<theme>.json` under the probe's caps (`harness.collect_text_probe`).
-# The texts come from the plot's grob tree (`ggplotGrob`, `patchworkGrob` for a patchwork),
-# each named by the layout cell it sits in: the title, subtitle and caption, the axis titles
-# (`xlab-*`, `ylab-*`), the axes' tick labels (`axis-b`, `axis-l`, ...), the legends
-# (`guide-box-*`), a panel's texts (`geom_text`, `annotate`) as annotations, and a facet strip
-# as another text.
+# when ggplot2 loads, `ggsave` is wrapped, and each save that returned writes
+# `texts-<theme>.json`, `{"entries": [[kind, text], ...]}`, the texts of the plot it saved,
+# which the harness's exec mode turns into `probe-<theme>.json` under the probe's caps
+# (`harness.collect_text_probe`). The texts come from the plot's grob tree (`ggplotGrob`,
+# `patchworkGrob` for a patchwork), each named by the layout cell it sits in: the title,
+# subtitle and caption, the axis titles (`xlab-*`, `ylab-*`), the axes' tick labels
+# (`axis-b`, `axis-l`, ...), the legends (`guide-box-*`), a panel's texts (`geom_text`,
+# `annotate`) as annotations, and a facet strip as another text.
 #
-# Best-effort: any failure writes `{"error": "Error"}` instead and prints nothing, so the
-# plot's output and its exit code stay its own. The grob is built on a null PDF device, so no
-# file is written and the plot's current device stays current. The plot code runs after this
-# file and can change what it does; the harness and the agents read the result as untrusted data.
+# The probe runs after `ggsave` returned, the PNG drawn and closed: building the grob a second
+# time draws random numbers (a jitter, a bootstrap) and may warn, and after the save neither
+# can reach the saved PNG. A save that failed leaves no file. (Capturing the table `ggsave` built,
+# at `ggplot_gtable`'s exit, would save the second build, about 0.3 s, but a patchwork
+# assembles its table elsewhere, from one such table per plot.)
+#
+# Best-effort: any failure writes `{"error": "Error"}` instead and prints nothing (warnings and
+# messages of the build are muffled, also under `options(warn = 2)`), so the plot's output and
+# its exit code stay its own. The grob is built on a null PDF device, so no file is written,
+# and the device that was current is current again. The plot code runs after this file and can
+# change what it does; the harness and the agents read the result as untrusted data.
 local({
   theme <- Sys.getenv("ANYPLOT_THEME", "light")
   limit <- 2000L
@@ -46,7 +53,7 @@ local({
         } else {
           as.character(labels)
         }
-        for (text in texts) found[[length(found) + 1L]] <<- c(kind_of(names), text)
+        for (text in texts[!is.na(texts)]) found[[length(found) + 1L]] <<- c(kind_of(names), text)
         return(invisible())
       }
       if (inherits(x, "gtable")) {
@@ -74,9 +81,11 @@ local({
   probe <- function(plot) {
     previous <- grDevices::dev.cur()
     grDevices::pdf(NULL)
-    found <- tryCatch(texts_of(plot), error = function(e) NULL)
-    grDevices::dev.off()
-    if (previous > 1L) grDevices::dev.set(previous)
+    on.exit({
+      grDevices::dev.off()
+      if (previous > 1L) grDevices::dev.set(previous)
+    })
+    found <- tryCatch(suppressWarnings(suppressMessages(texts_of(plot))), error = function(e) NULL)
     report <- if (is.null(found)) {
       "{\"error\":\"Error\"}"
     } else {
@@ -86,13 +95,27 @@ local({
     tryCatch(write_report(report), error = function(e) NULL)
     invisible()
   }
-  # The tracer calls the function object itself, never a name the plot's code could shadow.
-  safe_probe <- function(plot) tryCatch(probe(plot), error = function(e) NULL)
+  safe_probe <- function(plot) {
+    tryCatch(probe(plot), error = function(e) NULL)
+    invisible()
+  }
+  # `ggsave` in the namespace becomes a wrapper that saves first and probes after a save that returned. Not a `trace`
+  # at its exit: `ggsave`'s own `on.exit()` (no `add = TRUE`) replaces the exit a trace registers. The wrapper takes
+  # the plot once, as `ggsave` would (its default `get_last_plot()` resolves in the namespace), passes every other
+  # argument on, and calls the function objects themselves, never a name the plot's code could shadow.
   setHook(packageEvent("ggplot2", "onLoad"), function(...) {
     tryCatch(
-      suppressMessages(
-        trace("ggsave", where = asNamespace("ggplot2"), print = FALSE, tracer = bquote(.(safe_probe)(plot)))
-      ),
+      {
+        original <- get("ggsave", envir = asNamespace("ggplot2"))
+        wrapper <- function(filename, plot = get_last_plot(), ...) NULL
+        body(wrapper) <- bquote({
+          value <- .(original)(filename, plot, ...)
+          .(safe_probe)(plot)
+          invisible(value)
+        })
+        environment(wrapper) <- asNamespace("ggplot2")
+        utils::assignInNamespace("ggsave", wrapper, ns = "ggplot2")
+      },
       error = function(e) NULL
     )
   })

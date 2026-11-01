@@ -54,6 +54,7 @@ MAX_DRAWN_CHARS = 200
 """One drawn text as the check reads it (`harness.LABEL_CHARS`): longer than any requested text."""
 GROUP_LIMITS: dict[ShownGroup, int] = {
     "title": 3,
+    "subtitle": 2,
     "x axis label": 2,
     "y axis label": 2,
     "z axis label": 2,
@@ -66,7 +67,7 @@ GROUP_LIMITS: dict[ShownGroup, int] = {
     "other texts": 6,
 }
 """Distinct texts `PlotShows.texts` keeps per role: enough to quote a title or read a tick format, and
-at most 62 texts of `MAX_SHOWN_TEXT_CHARS` (about 5 KB) next to the result's other fields."""
+at most 64 texts of `MAX_SHOWN_TEXT_CHARS` (about 5 KB) next to the result's other fields."""
 UNVERIFIED_LINE = (
     "SC-04 ({theme}): the requested texts could not be checked against the render "
     "→ compare them with the image. Likely cause: no drawn texts to check them against and no readable review."
@@ -124,6 +125,7 @@ _DATE = re.compile(r"\b\d{1,4}[./-]\d{1,2}[./-]\d{1,4}\b")
 KIND_GROUPS: dict[str, ShownGroup] = {
     "title": "title",
     "suptitle": "title",
+    "subtitle": "subtitle",
     "x axis label": "x axis label",
     "y axis label": "y axis label",
     "z axis label": "z axis label",
@@ -133,7 +135,9 @@ KIND_GROUPS: dict[str, ShownGroup] = {
     "z tick label": "z tick labels",
     "annotation": "annotations",
 }
-"""The `PlotShows.texts` role of each probe `kind` (`harness._text_kinds` and `drawn_labels`'s tick labels)."""
+"""The `PlotShows.texts` role of each probe `kind` (`harness._text_kinds` and `drawn_labels`'s tick labels); `subtitle`
+is the text probes' (`harness.text_labels`, `render.mjs`, `text_probe.R`, `text_probe.jl`), a role of its own so a
+subtitle is never trimmed with the other texts."""
 TICK_GROUPS: tuple[ShownGroup, ...] = ("y tick labels", "x tick labels", "z tick labels")
 
 

@@ -221,9 +221,9 @@ R_BINARY = f"{R_HOME}/bin/exec/R"
 """R's own binary, which the row runs directly: `Rscript` and `bin/R` would each need another program start."""
 R_TEXT_PROBE = "/opt/anyplot/text_probe.R"
 """The agents' text probe for ggplot2 (`agents/anyplot/render/text_probe.R`, the renderer image's copy), R's user
-profile: it traces `ggsave` once ggplot2 loads, and each save leaves the plot's drawn texts as `texts-<theme>.json`
-for the harness (`harness.collect_text_probe`). Measured on 2026-11-01: about 0.3 s more for the catalogue's
-`bar-grouped` (1.28 to 1.58 s, median of seven interleaved pairs), the plot's grob built a second time."""
+profile: it wraps `ggsave` once ggplot2 loads, and each save that returned leaves the plot's drawn texts as
+`texts-<theme>.json` for the harness (`harness.collect_text_probe`). Measured on 2026-11-01: about 0.3 s more for the
+catalogue's `bar-grouped` (1.28 to 1.58 s, median of seven interleaved pairs), the plot's grob built a second time."""
 R_ENV: Mapping[str, str] = MappingProxyType(
     {
         "R_HOME": R_HOME,

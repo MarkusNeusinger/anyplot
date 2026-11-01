@@ -1002,12 +1002,19 @@ function pageTexts([library, limit]) {
       if (has(element, ".highcharts-subtitle")) return "subtitle";
       if (has(element, ".highcharts-legend")) return "legend text";
       if (has(element, ".highcharts-data-label, .highcharts-data-labels")) return "annotation";
+      // The classes name the axis collection; an inverted chart (a bar chart) draws xAxis vertically, and the kinds
+      // name the drawn axis, as matplotlib's do.
+      const drawn = (axis) => {
+        const charts = (window.Highcharts && window.Highcharts.charts) || [];
+        const chart = charts.find((item) => item && item.container && item.container.contains(element));
+        return axis && chart && chart.inverted ? { x: "y", y: "x" }[axis] : axis;
+      };
       if (has(element, ".highcharts-axis-title")) {
-        const axis = axisOf(element, ".highcharts-xaxis", ".highcharts-yaxis");
+        const axis = drawn(axisOf(element, ".highcharts-xaxis", ".highcharts-yaxis"));
         return axis ? `${axis} axis label` : "other axis label";
       }
       if (has(element, ".highcharts-axis-labels")) {
-        const axis = axisOf(element, ".highcharts-xaxis-labels", ".highcharts-yaxis-labels");
+        const axis = drawn(axisOf(element, ".highcharts-xaxis-labels", ".highcharts-yaxis-labels"));
         return axis ? `${axis} tick label` : "text";
       }
       return undefined;
@@ -1042,9 +1049,12 @@ function pageTexts([library, limit]) {
         const anchor = tick.parentElement.getAttribute("text-anchor");
         return anchor === "middle" ? "x tick label" : anchor === "end" || anchor === "start" ? "y tick label" : "text";
       }
-      return /rotate\(\s*-?(90|270)\b/.test(element.getAttribute("transform") || "") ? "y axis label" : undefined;
+      return undefined; // a rotated text may be the y axis label: decided after the walk (`edgeLabel`)
     },
   };
+  // D3 names no axis label: a text turned by 90 degrees is one only when it is the single such text in the outer
+  // tenth of the plot's width, beside the axis; rotated value labels and annotations stay other texts.
+  const rotated = (element) => /rotate\(\s*-?(90|270)\b/.test(element.getAttribute("transform") || "");
   const roleOf = ROLES[library] || (() => undefined);
   const drawn = (element) => {
     if (element.checkVisibility && !element.checkVisibility({ opacityProperty: true, visibilityProperty: true })) return false;
@@ -1086,7 +1096,10 @@ function pageTexts([library, limit]) {
       add(kind, text);
       return;
     }
-    loose.push({ text, size, top: element.getBoundingClientRect().top - frame.top });
+    const rect = element.getBoundingClientRect();
+    const middle = rect.left + rect.width / 2 - frame.left;
+    const edge = middle < frame.width / 10 || middle > (frame.width * 9) / 10;
+    loose.push({ text, size, top: rect.top - frame.top, beside: library === "d3" && rotated(element) && edge });
   };
   for (const element of container.querySelectorAll("text")) visit(element, ownText(element));
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
@@ -1122,7 +1135,9 @@ function pageTexts([library, limit]) {
   } else if (library === "echarts" && window.echarts) {
     const lines = (value) => String(value === null || value === undefined ? "" : value).split("\n");
     // The component or series whose view group holds a text names its role (null: a series, a value label).
-    const kindOf = (model, text) => {
+    // An axis view marks its texts (`anid`, ECharts 6.1): `name` for the axis name, `label_<n>` for a tick label, so a
+    // category that reads like the axis name stays a tick; an element without the mark is read by its text.
+    const kindOf = (model, text, anid) => {
       if (model === null) return "annotation";
       if (!model) return "text";
       const type = model.mainType;
@@ -1130,7 +1145,8 @@ function pageTexts([library, limit]) {
       if (type === "legend") return "legend text";
       if (type === "markLine" || type === "markPoint" || type === "markArea") return "annotation";
       if (!/Axis$/.test(type)) return "text";
-      const named = lines(model.get("name")).includes(text);
+      const marked = anid === "name" ? true : typeof anid === "string" && anid.startsWith("label") ? false : null;
+      const named = marked ?? lines(model.get("name")).includes(text);
       const axis = { xAxis: "x", yAxis: "y" }[type];
       if (axis) return `${axis} ${named ? "axis label" : "tick label"}`;
       return named ? "other axis label" : "text";
@@ -1147,7 +1163,8 @@ function pageTexts([library, limit]) {
         let node = shape;
         for (let depth = 0; node && !owners.has(node) && depth < 100; depth += 1) node = node.parent || node.__hostTarget;
         if (node && !owners.has(node)) node = null; // a chain too deep (or a cycle) names no view
-        add(kindOf(node ? owners.get(node) : undefined, String(text)), text);
+        const anid = shape.anid ?? (shape.parent ? shape.parent.anid : undefined);
+        add(kindOf(node ? owners.get(node) : undefined, String(text), anid), text);
       }
     }
   } else if (library === "bokeh" && window.Bokeh) {
@@ -1193,13 +1210,15 @@ function pageTexts([library, limit]) {
 
   // The title of a plot whose library names none: the one text larger than every other, in the top fifth. Legend
   // entries at the top share their size, so none of them is taken for it.
+  const beside = loose.filter((item) => item.beside);
+  const edgeLabel = beside.length === 1 ? beside[0] : null;
   let title = null;
   if (!entries.some(([kind]) => kind === "title")) {
     const top = Math.max(largest, ...loose.map((item) => item.size));
     const biggest = loose.filter((item) => item.size === top);
     if (biggest.length === 1 && top > largest && biggest[0].top < frame.height / 5) title = biggest[0];
   }
-  for (const item of loose) add(item === title ? "title" : "text", item.text);
+  for (const item of loose) add(item === edgeLabel ? "y axis label" : item === title ? "title" : "text", item.text);
   return { entries, complete };
 }
 
@@ -1254,10 +1273,15 @@ async function writeTextProbe(page, library, theme) {
     console.log(`render: the text probe left the labels out (${cls})`);
     report = { error: cls };
   }
+  let handle = null;
   try {
-    await writeFile(out, JSON.stringify(report), "utf-8");
+    // Never through a link a step before this one could have left at the probe's name.
+    handle = await open(out, constants.O_WRONLY | constants.O_CREAT | constants.O_TRUNC | constants.O_NOFOLLOW, 0o644);
+    await handle.writeFile(JSON.stringify(report), "utf-8");
   } catch {
     // The texts ground the agents' reply; a probe that cannot be written leaves none, and the render stands.
+  } finally {
+    await handle?.close().catch(() => {});
   }
 }
 

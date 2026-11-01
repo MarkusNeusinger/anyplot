@@ -18,7 +18,7 @@ from typing import Any
 import pytest
 
 from agents.anyplot.render.backends.local import LocalDockerBackend
-from agents.anyplot.render.contract import RenderJob
+from agents.anyplot.render.contract import RenderJob, ThemeOutput
 from agents.anyplot.render.runtimes import PythonRuntime, runtime_for
 
 
@@ -55,7 +55,7 @@ save("plot-$(THEME).png", fig; px_per_unit = 2)
 """
 
 
-def render(library: str, source: str) -> tuple[int | None, Any]:
+def run(library: str, source: str, data: str = DATA) -> ThemeOutput:
     backend = LocalDockerBackend(
         image=IMAGE, runtime=PythonRuntime(), environment="development", runtime_for=runtime_for
     )
@@ -65,11 +65,15 @@ def render(library: str, source: str) -> tuple[int | None, Any]:
         language=runtime.language,
         library=library,
         source=source,
-        data_csv=DATA,
+        data_csv=data,
         themes=("light",),
         timeout_s=180,
     )
-    output = asyncio.run(backend.render(job)).outputs["light"]
+    return asyncio.run(backend.render(job)).outputs["light"]
+
+
+def render(library: str, source: str) -> tuple[int | None, Any]:
+    output = run(library, source)
     return output.exit_code, output.probe
 
 
@@ -129,6 +133,58 @@ def test_a_ggplot2_patchwork_names_each_plot_s_title_and_its_own() -> None:
     assert code == 0
     labels = kinds_and_texts(probe)
     assert {("title", "Gesamt"), ("title", "Umsatz – Übersicht"), ("legend text", "Gebiet")} <= labels
+
+
+JITTER = """library(ggplot2)
+THEME <- Sys.getenv("ANYPLOT_THEME", "light")
+df <- readr::read_csv("data.csv", show_col_types = FALSE)
+set.seed(1)
+plot <- ggplot(df, aes(Region, Umsatz)) + geom_jitter(width = 0.4, height = 0.4, size = 8) + labs(title = "Streuung")
+UNTRACE
+ggsave(sprintf("plot-%s.png", THEME), plot, device = ragg::agg_png, width = 16, height = 9, dpi = 200)
+"""
+
+
+def test_the_ggplot2_probe_runs_after_the_save_and_never_changes_the_png() -> None:
+    """Second opinion of 2026-11-01: the probe builds the plot a second time, which draws random numbers (a jitter, a
+    bootstrap). At `ggsave`'s exit that build comes after the drawing, so the PNG is the one a render without the
+    probe saves, byte for byte."""
+    with_probe = run("ggplot2", JITTER.replace("UNTRACE\n", ""))
+    # The save without the probe: the `ggsave` the wrapper calls, the function object its body holds.
+    original = "ggsave <- body(ggplot2::ggsave)[[2]][[3]][[1]]"
+    without = run("ggplot2", JITTER.replace("UNTRACE", original))
+
+    assert with_probe.exit_code == 0 and without.exit_code == 0
+    assert ("title", "Streuung") in kinds_and_texts(with_probe.probe) and without.probe is None
+    assert with_probe.png is not None and with_probe.png == without.png
+
+
+def test_the_ggplot2_probe_muffles_the_warnings_of_its_own_build() -> None:
+    """A plot that warns while it is built (a row without a value) warns once, from the save, never from the probe."""
+    output = run("ggplot2", GGPLOT, data=DATA + "Ost,\n")
+
+    # One warning per layer, from the save; the probe's build would repeat both.
+    assert output.exit_code == 0 and output.stderr_tail.count("(`geom_col()`)") == 1, output.stderr_tail
+    assert ("x tick label", "Süd") in kinds_and_texts(output.probe)
+
+
+def test_a_makie_rich_text_and_an_axis3_are_read_as_drawn() -> None:
+    source = """using CairoMakie
+const THEME = get(ENV, "ANYPLOT_THEME", "light")
+fig = Figure(size = (1600, 900))
+ax = Axis(fig[1, 1]; title = rich("CO", subscript("2"), " je Kopf"), xlabel = "Jahr", ylabel = "t")
+lines!(ax, 1:3, [1, 2, 3])
+ax3 = Axis3(fig[1, 2]; title = "Fläche", xlabel = "Ost", ylabel = "Nord", zlabel = "Höhe")
+surface!(ax3, rand(5, 5))
+hidden = Axis3(fig[2, 1:2]; title = "versteckt", titlevisible = false, zlabelvisible = false, zlabel = "weg")
+save("plot-$(THEME).png", fig; px_per_unit = 2)
+"""
+    code, probe = render("makie", source)
+
+    assert code == 0
+    labels = kinds_and_texts(probe)
+    assert {("title", "CO2 je Kopf"), ("title", "Fläche"), ("z axis label", "Höhe"), ("x axis label", "Ost")} <= labels
+    assert not {text for _, text in labels} & {"versteckt", "weg"}
 
 
 def test_a_ggplot2_probe_that_fails_leaves_an_error_and_the_render_stands() -> None:

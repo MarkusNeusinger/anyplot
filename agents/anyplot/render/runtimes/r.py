@@ -24,7 +24,7 @@ prove it with a preflight before the code runs. As for Python, the local backend
 `RLIMIT_NPROC` to the container's `--pids-limit`.
 
 **Outputs.** R writes `plot-<theme>.png`, and since 2026-11-01 a probe of its drawn texts
-alone: the row loads `text_probe.R` as R's user profile, which traces `ggsave` and leaves the
+alone: the row loads `text_probe.R` as R's user profile, which wraps `ggsave` and leaves the
 saved plot's texts by grob-layout role for the harness (`harness.collect_text_probe`), which
 the closing reply quotes. The host gates R1 to R3 judge the render, and the advisory gates
 (G3 to G12) have nothing to read, as for altair, pygal and lets-plot. The requested texts stay

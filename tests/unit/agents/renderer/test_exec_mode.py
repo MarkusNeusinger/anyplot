@@ -185,6 +185,17 @@ class TestExecModeTextProbe:
 
         assert not Path("probe-dark.json").exists()
 
+    def test_the_probe_is_never_written_through_a_link(self, tmp_path: Path) -> None:
+        """The child ran first and could leave a link at the probe's name: the write does not follow it."""
+        target = tmp_path / "elsewhere.txt"
+        target.write_text("untouched", encoding="utf-8")
+        Path("probe-dark.json").symlink_to(target)
+        Path("texts-dark.json").write_text('{"entries": [["title", "Umsatz"]]}', encoding="utf-8")
+
+        harness.collect_text_probe("dark")
+
+        assert target.read_text(encoding="utf-8") == "untouched" and Path("probe-dark.json").is_symlink()
+
 
 def end_line(stdout: str) -> dict[str, object]:
     line = next(line for line in stdout.splitlines() if line.startswith(HARNESS_END))

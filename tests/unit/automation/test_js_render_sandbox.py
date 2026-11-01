@@ -225,6 +225,26 @@ def test_two_top_texts_of_one_size_are_no_title(harness: Harness, tmp_path: Path
     assert not any(kind == "title" for kind, _ in labels) and ("text", "Nord") in labels
 
 
+def test_a_rotated_d3_value_label_is_no_axis_label(harness: Harness, tmp_path: Path) -> None:
+    """Second opinion of 2026-11-01: only the one rotated text beside the plot is the y axis label; rotated value labels
+    over the bars stay other texts, and two rotated texts at the edges name none."""
+    rotated = "svg.append('text').attr('transform', 'translate({x},{y}) rotate(-90)').text('{text}');\n"
+    head = "const svg = d3.select('#container').append('svg').attr('width', 1600).attr('height', 900);\n"
+    values = "".join(rotated.format(x=x, y=400, text=text) for x, text in [(500, "12,5"), (900, "7,0")])
+    one = harness.render(tmp_path / "one", head + rotated.format(x=30, y=450, text="Anzahl") + values, library="d3")
+    two = harness.render(
+        tmp_path / "two",
+        head + rotated.format(x=30, y=450, text="Links") + rotated.format(x=1570, y=450, text="Rechts") + values,
+        library="d3",
+    )
+
+    assert one.returncode == 0 and two.returncode == 0, one.stderr + two.stderr
+    labels, _ = probe_labels(one)
+    assert ("y axis label", "Anzahl") in labels and {("text", "12,5"), ("text", "7,0")} <= set(labels)
+    labels, _ = probe_labels(two)
+    assert not any(kind == "y axis label" for kind, _ in labels)
+
+
 def test_a_highcharts_probe_reads_its_classes_and_an_outlined_label_once(harness: Harness, tmp_path: Path) -> None:
     source = (
         "Highcharts.chart('container', { chart: { type: 'column', animation: false }, credits: { enabled: false },"
@@ -240,6 +260,49 @@ def test_a_highcharts_probe_reads_its_classes_and_an_outlined_label_once(harness
     assert {("title", "Umsatz"), ("x axis label", "Filiale"), ("y axis label", "CHF")} <= set(labels)
     assert {("legend text", "Nord"), ("x tick label", "Zug"), ("annotation", "5")} <= set(labels)
     assert labels.count(("annotation", "5")) == 1 and truncated is False
+
+
+def test_an_inverted_highcharts_chart_names_the_axes_it_draws(harness: Harness, tmp_path: Path) -> None:
+    """A bar chart draws xAxis (its categories) vertically: the kinds name the drawn axis, as matplotlib's do."""
+    source = (
+        "Highcharts.chart('container', { chart: { type: 'bar', animation: false }, credits: { enabled: false },"
+        " xAxis: { categories: ['Bern', 'Zug'], title: { text: 'Filiale' } }, yAxis: { title: { text: 'CHF' } },"
+        " plotOptions: { series: { animation: false } }, series: [{ name: 'Nord', data: [3, 5] }] });\n"
+    )
+    run = harness.render(tmp_path, source, library="highcharts")
+
+    assert run.returncode == 0, run.stderr
+    labels, _ = probe_labels(run)
+    assert {("y axis label", "Filiale"), ("y tick label", "Zug"), ("x axis label", "CHF")} <= set(labels)
+    assert any(kind == "x tick label" for kind, _ in labels) and ("x tick label", "Zug") not in labels
+
+
+def test_an_echarts_category_that_reads_like_the_axis_name_stays_a_tick(harness: Harness, tmp_path: Path) -> None:
+    """The axis view marks its texts (`anid`), so a category spelled as the axis name is still a tick label."""
+    source = (
+        "const chart = echarts.init(document.getElementById('container'));\n"
+        "chart.setOption({ animation: false, xAxis: { type: 'category', name: 'Filiale', data: ['Bern', 'Filiale'] },"
+        " yAxis: { type: 'value' }, series: [{ type: 'bar', data: [3, 5] }] });\n"
+    )
+    run = harness.render(tmp_path, source, library="echarts")
+
+    assert run.returncode == 0, run.stderr
+    labels, _ = probe_labels(run)
+    assert labels.count(("x axis label", "Filiale")) == 1 and ("x tick label", "Filiale") in labels
+
+
+def test_the_probe_is_never_written_through_a_link(harness: Harness, tmp_path: Path) -> None:
+    """A link left at the probe's name is not followed: its target stays as it was, and the render stands."""
+    work = tmp_path / "work"
+    work.mkdir(parents=True)
+    target = tmp_path / "elsewhere.txt"
+    target.write_text("untouched", encoding="utf-8")
+    (work / "probe-light.json").symlink_to(target)
+
+    run = harness.render(tmp_path, CHART)
+
+    assert run.returncode == 0, run.stderr
+    assert target.read_text(encoding="utf-8") == "untouched" and (work / "probe-light.json").is_symlink()
 
 
 @pytest.mark.parametrize("renderer", ["canvas", "svg"])

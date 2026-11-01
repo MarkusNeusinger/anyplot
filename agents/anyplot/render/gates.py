@@ -63,6 +63,7 @@ TEXT_KINDS = frozenset(
         "figure axis label",
         "title",
         "suptitle",
+        "subtitle",
         "annotation",
         "legend text",
         "text",

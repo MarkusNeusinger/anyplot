@@ -22,11 +22,15 @@ const THEME = get(ENV, "ANYPLOT_THEME", "light")
 const LIMIT = 2000
 const MAKIE = Base.PkgId(Base.UUID("ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"), "Makie")
 
-"""The strings of a text attribute's value: a string, a vector of them, or anything else as `string`."""
+"""The strings of a text attribute's value: a string, a vector of them, Makie's rich text as the text it draws (its
+children's strings joined: `rich("CO", subscript("2"))` draws `CO2`), or anything else as `string`."""
 function strings(value)::Vector{String}
     value isa AbstractString && return [String(value)]
     value isa AbstractVector && return reduce(vcat, (strings(item) for item in value); init = String[])
     value === nothing && return String[]
+    if hasproperty(value, :children)  # Makie.RichText
+        return [join(reduce(vcat, (strings(child) for child in value.children); init = String[]))]
+    end
     return [string(value)]
 end
 
@@ -76,7 +80,7 @@ function entries(M, figure)
         # One block that cannot be read (a version's other field names) leaves the others' texts.
         try
             if block isa M.Axis
-                if shown(block.titlevisible) && !isempty(strip(string(block.title[])))
+                if shown(block.titlevisible) && any(text -> !isempty(strip(text)), strings(block.title[]))
                     titled = true
                     add("title", block.title[])
                 end
@@ -101,10 +105,18 @@ function entries(M, figure)
                 shown(block.labelvisible) && add("colorbar label", block.label[])
                 shown(block.ticklabelsvisible) && add("colorbar tick label", block.axis.ticklabels[])
             elseif block isa M.Label
-                shown(block.visible) && push!(labels, (Float64(block.fontsize[]), string(block.text[])))
-            elseif hasproperty(block, :title)  # Axis3, PolarAxis
-                titled = titled || !isempty(strip(string(block.title[])))
-                add("title", block.title[])
+                shown(block.visible) && push!(labels, (Float64(block.fontsize[]), join(strings(block.text[]), " ")))
+            elseif hasproperty(block, :title)  # Axis3, PolarAxis: their title and axis labels where they draw them
+                if !hasproperty(block, :titlevisible) || shown(block.titlevisible)
+                    titled = titled || any(text -> !isempty(strip(text)), strings(block.title[]))
+                    add("title", block.title[])
+                end
+                for (name, kind) in ((:xlabel, "x axis label"), (:ylabel, "y axis label"), (:zlabel, "z axis label"))
+                    visible = Symbol(name, :visible)
+                    if hasproperty(block, name) && (!hasproperty(block, visible) || shown(getproperty(block, visible)))
+                        add(kind, getproperty(block, name)[])
+                    end
+                end
             end
         catch
         end
