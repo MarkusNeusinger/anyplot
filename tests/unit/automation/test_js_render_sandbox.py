@@ -292,6 +292,21 @@ def test_a_page_that_tampers_with_the_model_renders_without_a_probe(harness: Har
     assert run.png_size() == (3200, 1800) and not (run.work / "probe-light.json").exists()
 
 
+def test_a_probe_that_never_returns_is_given_up_and_the_render_stands(harness: Harness, tmp_path: Path) -> None:
+    """A model whose read never ends blocks the page: the probe's own bound gives up, and the browser still closes."""
+    source = (
+        CANVAS + "new Chart(canvas, { type: 'bar', options: { animation: false },"
+        " data: { labels: ['a'], datasets: [{ data: [1] }] } });\n"
+        "Object.defineProperty(Chart, 'instances', { get() { for (;;) {} } });\n"
+    )
+    started = time.monotonic()
+    run = harness.render(tmp_path, source)
+
+    assert run.returncode == 0, run.stderr
+    assert run.png_size() == (3200, 1800) and not (run.work / "probe-light.json").exists()
+    assert "render: error:" not in run.stderr and time.monotonic() - started < 60
+
+
 def test_without_the_variables_there_is_no_probe(harness: Harness, tmp_path: Path) -> None:
     run = harness.render(tmp_path, "const t = window.ANYPLOT_TOKENS;\n" + CANVAS, sandbox=False)
 

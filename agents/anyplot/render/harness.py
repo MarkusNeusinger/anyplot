@@ -2434,7 +2434,10 @@ def wrap_text_probe(owner, name, theme, read):
             entries = None
         result = original(*args, **kwargs)
         if entries is not None:
-            write_text_probe(theme, entries)
+            try:
+                write_text_probe(theme, entries)
+            except Exception:  # nor does writing it
+                pass
         return result
 
     setattr(owner, name, wrapped)

@@ -1131,7 +1131,8 @@ function pageTexts([library, limit]) {
         const text = shape.style && shape.style.text;
         if (text === null || text === undefined || shape.invisible) continue;
         let node = shape;
-        while (node && !owners.has(node)) node = node.parent || node.__hostTarget;
+        for (let depth = 0; node && !owners.has(node) && depth < 100; depth += 1) node = node.parent || node.__hostTarget;
+        if (node && !owners.has(node)) node = null; // a chain too deep (or a cycle) names no view
         add(kindOf(node ? owners.get(node) : undefined, String(text)), text);
       }
     }
