@@ -41,13 +41,21 @@ Row = Annotated[list[Cell], Field(min_length=1, max_length=MAX_TRANSCRIBE_COLUMN
 
 
 class TranscribedTable(BaseModel):
-    """The model's reading of the text: column names, rows of cells as text, and a short note."""
+    """The model's reading of the text: column names, rows of cells as text, a short note, and whether the text asks
+    for data instead of holding it.
+
+    `asks_for_data` is the transcriber's half of the data-request guard (`classify.looks_like_data_request` is the
+    rule-based half, before any model): text such as "monthly sales for 4 regions" or a request in a language the
+    rules do not read. The route answers it `422 data_request`, which the page sends to the chat, for text the chat
+    takes that holds no table by this answer or no values of its own (`classify.request_for_chat`).
+    """
 
     model_config = ConfigDict(extra="forbid")
 
     columns: list[Header] = Field(min_length=1, max_length=MAX_TRANSCRIBE_COLUMNS)
     rows: list[Row] = Field(min_length=1, max_length=MAX_TRANSCRIBE_ROWS)
     note: str = Field(default="", max_length=MAX_TRANSCRIBE_NOTE_CHARS)
+    asks_for_data: bool = False
 
 
 MAX_TRANSCRIBE_LINES = MAX_TRANSCRIBE_ROWS

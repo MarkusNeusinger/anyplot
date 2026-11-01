@@ -62,12 +62,18 @@ def code_source(code: str, language: str) -> str:
     what it does, not its names), so they reach the adapter and the reviewer only fenced as
     `<user_notes>` data, at most `MAX_SOURCE_NAMES` per kind and `MAX_SOURCE_CHARS` in all.
     A function the root named after the system (`def lorenz(...)`) carries the subject
-    into the title.
+    into the title. Example data (`language` `example`) is named as such: the root made it
+    up for a user who asked for example data, so it is no measurement.
     """
+    head = (
+        "generated example data, made up by Python code"
+        if language == "example"
+        else f"computed by Python code (translated from {language})"
+    )
     try:
         tree = ast.parse(code)
     except SyntaxError, ValueError:
-        return f"computed by Python code (translated from {language})"
+        return head
     defined: list[str] = []
     calls: list[str] = []
     assigned: list[str] = []
@@ -80,7 +86,7 @@ def code_source(code: str, language: str) -> str:
                 calls.append(name)
         elif isinstance(item, ast.Assign):
             assigned += [target.id for target in item.targets if isinstance(target, ast.Name)]
-    parts = [f"computed by Python code (translated from {language})"]
+    parts = [head]
     for label, names in (("functions defined", defined), ("calls", calls), ("names", assigned)):
         unique = list(dict.fromkeys(names))[:MAX_SOURCE_NAMES]
         if unique:

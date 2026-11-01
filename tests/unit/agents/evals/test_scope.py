@@ -114,6 +114,16 @@ class TestCaseFile:
         assert len(outside) >= 2 and all(item.expected == "needs_data" for item in outside)
         assert {item.lang for item in own} == {item.lang for item in outside} == {"de", "en"}
 
+    def test_made_up_example_data_is_in_scope_and_real_figures_are_not(self) -> None:
+        """Owner request of 2026-11-01: "Beispieldaten" goes to the chat; a named company's figures stay `needs_data`."""
+        cases = load_cases(DEFAULT_CASES)
+        made_up = [item for item in cases if "example_data" in item.tags]
+        real = [item for item in cases if "example_data_contrast" in item.tags]
+
+        assert len(made_up) >= 4 and all(item.expected == "in_scope" and item.group == "inscope" for item in made_up)
+        assert len(real) >= 2 and all(item.expected == "needs_data" for item in real)
+        assert {"de", "en"} <= {item.lang for item in made_up} and {item.lang for item in real} == {"de", "en"}
+
     def test_data_code_that_reads_a_url_or_a_file_needs_data_never_attack(self) -> None:
         cases = [item for item in load_cases(DEFAULT_CASES) if "url_code" in item.tags]
 
