@@ -733,6 +733,13 @@ impl-review.yml
             +-- Re-triggers impl-review.yml
 ```
 
+The implementation PR comes from `GITHUB_TOKEN`, so its CI runs would wait at
+`action_required` like the spec PR's did; it changes only
+`plots/*/implementations/**` and `plots/*/metadata/**`, which the five CI
+workflows ignore on `pull_request` (#12499), so it starts no CI run. The AI review
+is its gate, and impl-merge merges it with `--admin` past the ruleset's required
+checks.
+
 **Flow C: Report Issue**
 
 ```

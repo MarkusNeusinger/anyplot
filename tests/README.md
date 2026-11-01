@@ -141,7 +141,7 @@ async def async_client():
 
 ## CI/CD
 
-GitHub Actions runs tests on every PR:
+GitHub Actions runs tests on every PR except the plot pipeline's own, which change only `plots/*/implementations/**` and `plots/*/metadata/**` and start no CI run (`paths-ignore`, #12499):
 
 - **ci-tests.yml**: Runs the unit, integration (SQLite), and E2E tests (PostgreSQL through the Cloud SQL proxy) on four pytest-xdist workers (`-n 4 --dist worksteal`)
 - **Coverage**: Reports code coverage to ensure >90% coverage
