@@ -814,13 +814,20 @@ def _number_conversion(series: pd.Series, requested: str) -> Conversion:
         reading += f", unit '{_clip(unit, MAX_CELL_CHARS)}' removed"
     notices = [note for note in (minus_note(minus) if minus else "", rounded_note(rounded) if rounded else "") if note]
     guess = _number_guess(series, used)
+    if rounded and guess is None:
+        # Digits past what a number holds (an account number of 20 digits) would be lost: the parser kept it text.
+        guess = "that values with more digits than a number holds may be rounded"
     return Conversion(converted, failed, reading, "; ".join(notices), guess=guess, unit=unit)
 
 
 def _number_guess(series: pd.Series, used: str) -> str | None:
-    """What a read as numbers guessed: thousands separators of spaces or apostrophes (`123 456` may be an id), or
-    the decimal mark, when the other mark reads every cell too, to other values (`1,234` is 1.234 or 1234)."""
+    """What a read as numbers guessed: that leading zeros are no part of the value (`007`, a code the parser kept
+    text), thousands separators of spaces or apostrophes (`123 456` may be an id), or the decimal mark, when the
+    other mark reads every cell too, to other values (`1,234` is 1.234 or 1234). Flash pre-check of 2026-11-01:
+    without the first, a postal code column read as certain numbers for an open role."""
     texts = [ascii_minus([text])[0][0] for text in _texts(series) if isinstance(text, str)]
+    if any(_LEADING_ZERO.search(text.strip()) for text in texts):
+        return "that leading zeros are no part of the value"
     if any(_GROUP_INSIDE.search(text.strip()) for text in texts):
         return "that spaces or apostrophes separate thousands"
     other = "," if used == "." else "."
@@ -833,6 +840,8 @@ def _number_guess(series: pd.Series, used: str) -> str | None:
 
 _GROUP_INSIDE = re.compile(r"[0-9][\s'’]+[0-9]")
 """A space or an apostrophe between digits: `set_type` reads it as a thousands separator, the parser only by rule."""
+_LEADING_ZERO = re.compile(r"(?<![0-9.,'’\s])0[0-9]")
+"""A zero that leads a run of digits (`007`, `$012`), never one after a decimal mark or a group (`1.05`, `1 005`)."""
 
 
 def _date_conversion(series: pd.Series, date_format: str | None) -> Conversion:

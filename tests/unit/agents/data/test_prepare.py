@@ -794,6 +794,19 @@ class TestDryRun:
 
         assert dry is not None and dry.guess == "that spaces or apostrophes separate thousands"
 
+    def test_leading_zeros_are_a_guess(self) -> None:
+        """A postal code column the parser kept text must never convert to numbers without a question."""
+        dry = self.run("zip;v\n007;1\n$012;2\n105;3\n", "zip", "number")
+
+        assert dry is not None and dry.guess == "that leading zeros are no part of the value"
+        assert self.run("p;v\n1.05;1\n0.5;2\n", "p", "number").guess is None  # type: ignore[union-attr]
+
+    def test_rounded_digits_are_a_guess(self) -> None:
+        dry = self.run("account;v\n12345678901234567890;1\n5;2\n", "account", "number")
+
+        assert dry is not None and not dry.certain
+        assert dry.guess == "that values with more digits than a number holds may be rounded"
+
     def test_a_date_with_a_month_name_is_no_number(self) -> None:
         """`Nov 26, 2026` read as a number behind a unit `Nov` would be 26.2026."""
         assert self.run("d;v\nNov 26, 2026;1\nNov 25, 2026;2\n", "d", "number") is None
