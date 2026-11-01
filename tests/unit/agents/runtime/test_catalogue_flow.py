@@ -727,10 +727,11 @@ async def test_without_drawn_texts_an_unread_review_keeps_the_note(client: httpx
 
 @pytest.mark.usefixtures("reviewer_checks_texts")
 async def test_a_text_probe_grounds_the_reply_and_the_review_checks_the_requested_texts(
-    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, caplog: pytest.LogCaptureFixture
 ) -> None:
     """User test of 2026-11-01 (Chart.js, bokeh, pygal): the probe of a library without matplotlib reports its drawn
     texts, which reach the root, while the requested texts stay the review's to find, never the probe's to miss."""
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
     script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN])
     ask_for(script, TEMPERATURE)
     script["reviewer"] = [{"json": score()}]
@@ -749,6 +750,31 @@ async def test_a_text_probe_grounds_the_reply_and_the_review_checks_the_requeste
     assert shipped is not None and shipped.result.shows is not None
     assert shipped.result.shows.texts == {"title": ["Prüfungen"], "y axis label": ["Punkte"]}
     assert "Prüfungen" in root_inputs(fake)[-1]
+    (result,) = attribution_lines(caplog, "pipeline_result")
+    assert (result["texts"], result["texts_expected"]) == (["title", "y axis label"], True)  # roles, never texts
+
+
+async def test_a_failed_text_probe_drops_the_texts_and_is_logged(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A probe that failed (`{"error": <class>}`) is best-effort: the plot ships, the root gets no `texts` and no
+    null, and the render's attribution line names the class; a value outside the closed vocabulary reads `other`."""
+    caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN])
+    script["reviewer"] = [{"json": score()}]
+    probes = iter([{"error": "TimeoutError"}, {"error": "Kanton Zürich"}])
+    backend.script = lambda job, theme: FakeOutcome(probe=next(probes, None))
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert plot["status"] == "ok"
+    errors = [line["probe_error"] for line in attribution_lines(caplog, "pipeline_render")]
+    assert errors[0] == "TimeoutError" and set(errors) <= {"TimeoutError", "other"}
+    closing = root_inputs(fake)[-1]
+    assert '\\"texts\\"' not in closing and "Kanton" not in closing
 
 
 CHECKLIST_MISS: dict[str, Any] = {

@@ -11,6 +11,7 @@ The fixtures generalise the live tests of 2026-10-14/15:
 
 import json
 import re
+import sys
 from types import SimpleNamespace
 from typing import Any, cast
 
@@ -736,6 +737,59 @@ class TestTextProbes:
         ]
         assert harness.vega_texts({"scenegraph": "tampered"}) == []
 
+    def test_install_wraps_the_png_export_of_each_library_the_plot_names(
+        self, tmp_path: Any, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Stand-ins for cairosvg, vl-convert and lets-plot's bridge: each PNG export writes the probe of what it draws,
+        laid out with the export's own options; a library the plot does not name stays unwrapped."""
+        monkeypatch.chdir(tmp_path)
+        layouts: list[dict[str, Any]] = []
+        scenegraph = {"scenegraph": {"marktype": "text", "role": "title-text", "items": [{"text": "Umsatz"}]}}
+
+        def lay_out(spec: Any, **options: Any) -> dict[str, Any]:
+            layouts.append(options)
+            return scenegraph
+
+        def to_png(*args: Any, **kwargs: Any) -> bytes:
+            return b"png"
+
+        cairosvg = SimpleNamespace(svg2png=to_png)
+        vl_convert = SimpleNamespace(
+            vegalite_to_png=to_png, vegalite_to_scenegraph=lay_out, vega_to_png=to_png, vega_to_scenegraph=lay_out
+        )
+        svg = '<svg xmlns="http://www.w3.org/2000/svg"><text class="axis-title-y">CHF</text></svg>'
+        bridge = SimpleNamespace(_generate_png=to_png, _generate_svg=lambda spec, width, height, unit: svg)
+        for name, module in {
+            "cairosvg": cairosvg,
+            "vl_convert": vl_convert,
+            "lets_plot": SimpleNamespace(_kbridge=bridge),
+            "lets_plot._kbridge": bridge,
+        }.items():
+            monkeypatch.setitem(sys.modules, name, module)
+        plot = tmp_path / "plot.py"
+        plot.write_text("import pygal\nimport altair\nfrom lets_plot import *\n", encoding="utf-8")
+
+        harness.install_text_probes(str(plot), "light")
+
+        def read() -> dict[str, list[str]] | None:
+            return shown(json.loads((tmp_path / "probe-light.json").read_text(encoding="utf-8")))
+
+        assert cairosvg.svg2png(bytestring=PYGAL_SVG, write_to="plot-light.png") == b"png"
+        assert (read() or {})["title"] == ["Bevölkerung"]
+        assert vl_convert.vegalite_to_png({"mark": "bar"}, vl_version="v6", scale=2, format_locale="de-DE") == b"png"
+        assert read() == {"title": ["Umsatz"]} and layouts[-1] == {"vl_version": "v6", "format_locale": "de-DE"}
+        assert vl_convert.vega_to_png({"marks": []}, scale=2, theme="dark") == b"png" and layouts[-1] == {}
+        assert bridge._generate_png({"kind": "plot"}, 800, 450, "px", 144, 2.0) == b"png"
+        assert read() == {"y axis label": ["CHF"]}
+
+        plain = tmp_path / "plain.py"
+        plain.write_text("import matplotlib\n", encoding="utf-8")
+        untouched = SimpleNamespace(svg2png=to_png)
+        monkeypatch.setitem(sys.modules, "cairosvg", untouched)
+        harness.install_text_probes(str(plain), "light")
+        assert untouched.svg2png is to_png
+        harness.install_text_probes(str(tmp_path / "missing.py"), "light")  # an unreadable file wraps nothing
+
     def test_the_labels_keep_the_matplotlib_probes_caps(self) -> None:
         ticks = [("x tick label", f"Kanton {index}") for index in range(harness.TICK_LABELS_PER_AXIS + 5)]
         labels, truncated = harness.text_labels([*ticks, ("title", "x" * (harness.LABEL_CHARS + 1)), ("text", " ")])
@@ -761,16 +815,22 @@ class TestTextProbes:
         harness.wrap_text_probe(owner, "export", "dark", lambda svg: harness.svg_texts(svg, harness.pygal_kind))
         harness.wrap_text_probe(failing_owner, "export", "dark", lambda svg: [("title", "t")])
 
+        probe = tmp_path / "probe-dark.json"
         assert owner.export(PYGAL_SVG) == b"png" and calls == [PYGAL_SVG]
-        texts = shown(json.loads((tmp_path / "probe-dark.json").read_text(encoding="utf-8")))
+        texts = shown(json.loads(probe.read_text(encoding="utf-8")))
         assert texts is not None and texts["title"] == ["Bevölkerung"]
 
-        (tmp_path / "probe-dark.json").unlink()
-        assert owner.export("<not svg") == b"png"  # the read failed: the PNG still comes, without a probe
-        assert not (tmp_path / "probe-dark.json").exists()
+        # The read failed: the PNG still comes, and the probe drops the labels and names the error for the log.
+        assert owner.export("<not svg") == b"png" and calls[-1] == "<not svg"
+        assert json.loads(probe.read_text(encoding="utf-8")) == {"error": "ParseError"}
+        assert drawn_texts(json.loads(probe.read_text(encoding="utf-8"))) is None
+        assert owner.export("<svg/>" + " " * harness.TEXT_PROBE_MAX_SVG_CHARS) == b"png"  # too large to read
+        assert json.loads(probe.read_text(encoding="utf-8")) == {"error": "ValueError"}
+
+        probe.unlink()
         with pytest.raises(ValueError, match="no PNG"):
             failing_owner.export(PYGAL_SVG)
-        assert not (tmp_path / "probe-dark.json").exists()  # a failed save leaves no probe either
+        assert not probe.exists()  # a failed save leaves no probe
 
 
 class TestDatasetContext:

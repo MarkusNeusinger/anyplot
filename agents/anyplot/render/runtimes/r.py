@@ -113,6 +113,8 @@ class RRuntime:
     """The working form's data placeholder, `df <- load_user_data()`, which the loader replaces."""
     blocking_rules: frozenset[str] = BLOCKING_RULES | {DATASET_PACKAGE_RULE}
     adaptation_targets: Mapping[str, str] = ADAPTATION_TARGETS
+    text_probe = False
+    """R writes no probe yet (module docstring, "Outputs")."""
     review_texts = True
     """R writes no probe, so the reviewer finds the requested texts in the image (module docstring, "Outputs")."""
 

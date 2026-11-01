@@ -318,6 +318,11 @@ class RuntimeAdapter(Protocol):
     """The target of each soft ADAPTATION finding's defect line, in the language's own code; a rule without one gets
     the pipeline's default."""
 
+    text_probe: bool
+    """Whether the library's render reports its drawn texts (`labels` in its probe), which the closing reply quotes:
+    every Python and JavaScript library since 2026-11-01, not yet ggplot2 and Makie. The eval report counts a shipped
+    render without them only where this is True (`agents/evals/report.py`, `untexted`)."""
+
     @property
     def review_texts(self) -> bool:
         """Whether the reviewer, not the probe, checks the user's requested texts (owner decision of 2026-10-29):

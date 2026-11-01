@@ -2269,6 +2269,9 @@ LETSPLOT_TEXT_KINDS = {
     "legend-item": "legend text",
 }
 """The probe kind of a lets-plot SVG text by its class; a text without a class is a `geom_text` label (`annotation`)."""
+TEXT_PROBE_MAX_SVG_CHARS = 8_000_000
+"""The largest SVG a text probe parses: the bound on its time (a pygal chart of 20,000 points writes about 4 MB, read in
+a fraction of a second). A larger one leaves the probe out, as any failure does."""
 
 
 def text_labels(entries):
@@ -2321,10 +2324,13 @@ def svg_texts(svg, kind_of):
     """`(kind, text)` of every `<text>` of an SVG document that draws, in document order.
 
     `kind_of(classes, element)` names a text's kind from the class sets of its ancestors and
-    itself (the text's own last), or None to leave it out.
+    itself (the text's own last), or None to leave it out. A document over
+    `TEXT_PROBE_MAX_SVG_CHARS` is refused (`ValueError`).
     """
     from xml.etree import ElementTree
 
+    if svg is None or len(svg) > TEXT_PROBE_MAX_SVG_CHARS:
+        raise ValueError("no SVG, or one too large for the text probe")
     entries = []
     stack = [(ElementTree.fromstring(svg), ())]
     while stack:
@@ -2406,12 +2412,11 @@ def vega_texts(scenegraph):
     return entries
 
 
-def write_text_probe(theme, entries):
-    """`probe-<theme>.json` with the drawn texts alone (`text_labels`); a failed write leaves no probe."""
-    labels, truncated = text_labels(entries)
+def write_text_probe(theme, report):
+    """`probe-<theme>.json` from `report`, a text probe or `{"error": <class>}`; a failed write leaves no probe."""
     try:
         with open(f"probe-{theme}.json", "w", encoding="utf-8") as handle:
-            handle.write(json.dumps({"labels": labels, "labels_truncated": truncated}))
+            handle.write(json.dumps(report))
     except OSError:
         pass
 
@@ -2419,9 +2424,11 @@ def write_text_probe(theme, entries):
 def wrap_text_probe(owner, name, theme, read):
     """Wrap `owner.name`, the call that makes the PNG, so that it also writes the text probe of what it draws.
 
-    `read` takes the call's arguments and returns the `(kind, text)` pairs; it runs first and
-    never breaks the render (a failure leaves no probe), and the probe is written only after
-    the call returned, so a failed save leaves none either.
+    `read` takes the call's arguments and returns the `(kind, text)` pairs. The probe is
+    best-effort: it runs before the call, never breaks or changes the render, and is written
+    only after the call returned, so a failed save leaves none. A read or a report that fails
+    leaves the labels out and writes `{"error": <class>}`, as matplotlib's probe does, which
+    the pipeline logs (`pipeline_render`, `probe_error`).
     """
     original = getattr(owner, name, None)
     if original is None:
@@ -2429,15 +2436,12 @@ def wrap_text_probe(owner, name, theme, read):
 
     def wrapped(*args, **kwargs):
         try:
-            entries = read(*args, **kwargs)
-        except Exception:  # the probe never breaks a render
-            entries = None
+            labels, truncated = text_labels(read(*args, **kwargs))
+            report = {"labels": labels, "labels_truncated": truncated}
+        except Exception as exc:  # the probe never breaks a render
+            report = {"error": type(exc).__name__}
         result = original(*args, **kwargs)
-        if entries is not None:
-            try:
-                write_text_probe(theme, entries)
-            except Exception:  # nor does writing it
-                pass
+        write_text_probe(theme, report)
         return result
 
     setattr(owner, name, wrapped)

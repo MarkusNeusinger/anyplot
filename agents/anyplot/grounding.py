@@ -199,6 +199,37 @@ def drawn_texts(probe: Any) -> DrawnTexts | None:
     return DrawnTexts(labels, complete)
 
 
+PROBE_ERRORS = frozenset(
+    {
+        "Error",
+        "TimeoutError",
+        "TypeError",
+        "ValueError",
+        "RangeError",
+        "ReferenceError",
+        "ParseError",
+        "KeyError",
+        "IndexError",
+        "AttributeError",
+        "RecursionError",
+        "MemoryError",
+        "OSError",
+        "RuntimeError",
+        "UnicodeDecodeError",
+    }
+)
+"""The exception classes a failed probe names (`{"error": <class>}`: matplotlib's probe, a text probe) that the
+attribution log keeps by name; any other value reads `other`, since the code under test can write the probe."""
+
+
+def probe_error(probe: Any) -> str | None:
+    """The class a probe names for a report that failed, for the `pipeline_render` line: None when it names none."""
+    error = probe.get("error") if isinstance(probe, dict) else None
+    if error is None:
+        return None
+    return error if isinstance(error, str) and error in PROBE_ERRORS else "other"
+
+
 def plot_texts(drawn: DrawnTexts | None) -> dict[ShownGroup, list[str]] | None:
     """`PlotShows.texts`: the drawn texts within `GROUP_LIMITS` and `MAX_SHOWN_TEXT_CHARS`, for the root's reply."""
     if drawn is None:

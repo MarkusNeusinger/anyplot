@@ -12,6 +12,7 @@ from agents.anyplot.code.profiles.r import regions as r_regions
 from agents.anyplot.code.regions import PLACEHOLDER
 from agents.anyplot.data.kinds import ColumnKinds, read_kinds
 from agents.anyplot.render.contract import BLOCKING_RULES, RenderJob
+from agents.anyplot.render.png import read_probe
 from agents.anyplot.render.runtimes import (
     JAVASCRIPT_LIBRARIES,
     JULIA_LIBRARIES,
@@ -720,6 +721,14 @@ class TestJavaScriptRuntimeBindings:
             {"labels": [{"kind": "title", "text": "Umsatz"}]},
         )
         assert runtime_for("d3").collect(tmp_path, "light") == (None, None)
+
+    def test_a_broken_or_linked_probe_is_simply_absent(self, tmp_path: Path) -> None:
+        (tmp_path / "probe-light.json").write_text("{not json")
+        (tmp_path / "elsewhere.json").write_text('{"labels": []}')
+        (tmp_path / "probe-dark.json").symlink_to(tmp_path / "elsewhere.json")
+        assert read_probe(tmp_path / "probe-light.json") is None
+        assert read_probe(tmp_path / "probe-dark.json") is None  # never followed: the code under test made it
+        assert read_probe(tmp_path / "elsewhere.json") == {"labels": []}
 
 
 class TestRowEnvironment:

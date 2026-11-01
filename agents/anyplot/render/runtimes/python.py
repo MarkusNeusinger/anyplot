@@ -113,6 +113,8 @@ class PythonRuntime:
     """The working form's data placeholder, which the loader replaces."""
     blocking_rules: frozenset[str] = BLOCKING_RULES
     adaptation_targets: Mapping[str, str] = ADAPTATION_TARGETS
+    text_probe = True
+    """matplotlib's probe, or the text probe of a library without matplotlib (`harness.install_text_probes`)."""
 
     @property
     def review_texts(self) -> bool:

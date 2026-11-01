@@ -121,6 +121,8 @@ class JavaScriptRuntime:
     """The working form's data placeholder, `const data = loadUserData();`, which the loader replaces."""
     blocking_rules: frozenset[str] = BLOCKING_RULES | {UNAVAILABLE_IMPORT_RULE}
     adaptation_targets: Mapping[str, str] = ADAPTATION_TARGETS
+    text_probe = True
+    """The browser harness's text probe (module docstring, "Outputs")."""
     review_texts = True
     """The probe's texts are for the closing reply, so the reviewer finds the requested texts in the image (module
     docstring, "Outputs")."""

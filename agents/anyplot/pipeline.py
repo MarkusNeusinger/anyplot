@@ -100,12 +100,13 @@ Every step also writes one content-free attribution line (`plugins/ledger.attrib
 the restored drift kinds, how many edits a tolerant matching tier applied, blocking
 validator rule ids, the labels of banned imports (`validate.module_label`: a word of a closed vocabulary, or `?`), ADAPTATION rule
 ids), `pipeline_render` (render and wall time, the gate ids that
-failed or reported), `pipeline_review` (the verdict, its defect ids and the call's
+failed or reported, and the class a failed probe names, `grounding.probe_error`),
+`pipeline_review` (the verdict, its defect ids and the call's
 finish reason) and `pipeline_result` (status, reason, attempts, the `Stage` that ended
 each attempt and the run, the shipped and the last reviewed attempt, the number of
 reviewer calls, whether the shipped
-render was padded or carries ADAPTATION or probe findings, and the exception class
-behind reason `error`). The eval harness (`agents/evals/matrix.py`) reads them per
+render was padded or carries ADAPTATION or probe findings, the roles of its drawn texts
+and whether its library reports them, and the exception class behind reason `error`). The eval harness (`agents/evals/matrix.py`) reads them per
 case; they never carry code, data, column names or model text. `PlotResult.reason`
 keeps its public vocabulary; the stage is only in the attribution line.
 """
@@ -139,7 +140,15 @@ from .data.bindings import check_bindings
 from .data.kinds import ColumnKinds, read_kinds
 from .data.store import StoredDataset
 from .dataset_context import dataset_context, file_name_for_models
-from .grounding import EXPECT_LINE_ID, UNVERIFIED_LINE, drawn_texts, expected_misses, plot_texts, reviewed_misses
+from .grounding import (
+    EXPECT_LINE_ID,
+    UNVERIFIED_LINE,
+    drawn_texts,
+    expected_misses,
+    plot_texts,
+    probe_error,
+    reviewed_misses,
+)
 from .language import DEFAULT_LANGUAGE, same_language
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, adapter_instruction, fence, prompt_hash
@@ -1488,8 +1497,10 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
     `padded`, `adaptation` (ADAPTATION rule ids) and `advisory` (probe gate ids) describe
     the shipped render; a failed run has none. `texts` names the roles of the drawn texts
     `PlotShows.texts` reports for the shipped render (`title`, `x tick labels`, ...; role
-    names only, never a text), or is None when its probe reported none: the eval harness
-    counts such runs (`agents/evals/report.py`, `untexted`). `error` is the exception class behind
+    names only, never a text), or is None when its probe reported none, and `texts_expected`
+    says whether the library's render reports them (`RuntimeAdapter.text_probe`): the eval
+    harness counts a shipped run without texts where they are expected (`agents/evals/report.py`,
+    `untexted`). `error` is the exception class behind
     reason `error` (for example `RendererUnavailable`, which the harness treats as an
     outage rather than a model failure), never its message. `stage` names what stopped
     the run and `stages` what ended each attempt (`Stage`); `shipped_attempt` and
@@ -1515,6 +1526,7 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
         adaptation=list(shipped.adaptation_rules) if shipped else [],
         advisory=list(shipped.advisory_gates) if shipped else [],
         texts=sorted(shipped.texts) if shipped and shipped.texts is not None else None,
+        texts_expected=runtime_for(run.view.library).text_probe,
         residual=len(result.residual_defects),
         error=run.error_type if result.reason == "error" else None,
     )
@@ -1862,6 +1874,8 @@ async def _attempts(
             passed=report.passed_host_gates,
             canvas_ok=report.canvas_ok,
             gates=report.failed_gates,
+            # A probe that failed names its class (a text probe drops its labels then): the log of a best-effort step.
+            probe_error=probe_error(probed.probe) if (probed := rendered.outputs.get(run.theme)) is not None else None,
         )
         run.rendered = True
         if not report.passed_host_gates:

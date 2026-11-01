@@ -950,11 +950,14 @@ async function readPageRecords(page, bounded) {
 // the matplotlib probe, agents/anyplot/render/harness.py `drawn_labels`) and
 // `labels_truncated`, under that probe's caps. The agents' closing reply quotes
 // them (agents/anyplot/grounding.py); the requested-text check stays with the
-// reviewer for these libraries. A probe that fails or runs past
-// TEXT_PROBE_TIMEOUT_MS is left out: it never fails a render.
+// reviewer for these libraries. The probe is best-effort: one that fails or
+// runs past TEXT_PROBE_TIMEOUT_MS leaves the labels out, writes `{"error":
+// <class>}` (which the agents log as `probe_error`) and a stdout line, and never
+// fails or changes the render.
 //
 // SVG and HTML texts come from the page (`pageTexts`): every drawn <text> and
-// every HTML text node in #container, named by the library's classes
+// every HTML text node in #container but those an ECharts instance or bokeh
+// draws (their own sources below report them), named by the library's classes
 // (Highcharts, plotly, MUI X; D3's axis ticks by their axis's text-anchor). A
 // text no class names is the title when it is the largest in the top fifth of
 // the plot, in a library that names none; else another text. Chart.js and bokeh
@@ -965,7 +968,7 @@ async function readPageRecords(page, bounded) {
 // incomplete. ECharts' scene graph (zrender's display list) holds every text it
 // draws, each named by the component or series that owns it.
 // -----------------------------------------------------------------------------
-const TEXT_PROBE_TIMEOUT_MS = 3000;
+const TEXT_PROBE_TIMEOUT_MS = 2000; // the catalogue's bar-grouped pages answer in tens of milliseconds
 const LABEL_LIMIT = 400; // harness.LABEL_LIMIT
 const LABEL_CHARS = 200; // harness.LABEL_CHARS
 const LABEL_TOTAL_CHARS = 20000; // harness.LABEL_TOTAL_CHARS
@@ -1063,7 +1066,18 @@ function pageTexts([library, limit]) {
   };
   const loose = [];
   let largest = 0; // the font size of the largest named text
+  // The DOM an ECharts instance draws into, whose texts its display list reports (an SVG renderer's too); bokeh's
+  // page is its figure alone, whose texts its models report. Walking them as well would count each text twice.
+  const echartsRoots =
+    library === "echarts" && window.echarts
+      ? [container, ...container.querySelectorAll("*")].filter((element) => window.echarts.getInstanceByDom(element))
+      : [];
   const visit = (element, text) => {
+    if (entries.length + loose.length >= limit) {
+      complete = false; // a page of more texts than the probe keeps: the rest are not measured
+      return;
+    }
+    if (library === "bokeh" || echartsRoots.some((root) => root.contains(element))) return;
     const kind = roleOf(element);
     if (kind === null || !drawn(element)) return;
     const size = parseFloat(getComputedStyle(element).fontSize) || 0;
@@ -1227,14 +1241,23 @@ function textLabels(found) {
   return { labels, labels_truncated: truncated || ranked.length > LABEL_LIMIT };
 }
 
-// Writes probe-<theme>.json from the page as it was screenshotted; any failure leaves no probe.
+// Writes probe-<theme>.json from the page as it was screenshotted. A failure or a page that does not answer within
+// TEXT_PROBE_TIMEOUT_MS writes `{"error": <class>}` and a stdout line instead: the render stands either way.
 async function writeTextProbe(page, library, theme) {
+  const out = path.resolve(process.cwd(), `probe-${theme}.json`);
+  let report;
   try {
     const bounded = boundedBy(Date.now() + TEXT_PROBE_TIMEOUT_MS);
-    const found = await bounded(page.evaluate(pageTexts, [library, PAGE_TEXTS_LIMIT]));
-    await writeFile(path.resolve(process.cwd(), `probe-${theme}.json`), JSON.stringify(textLabels(found)), "utf-8");
+    report = textLabels(await bounded(page.evaluate(pageTexts, [library, PAGE_TEXTS_LIMIT])));
+  } catch (err) {
+    const cls = errorClass(FAILURES.get(err)?.cls ?? err?.name, "Error");
+    console.log(`render: the text probe left the labels out (${cls})`);
+    report = { error: cls };
+  }
+  try {
+    await writeFile(out, JSON.stringify(report), "utf-8");
   } catch {
-    // The texts ground the agents' reply; a page that will not tell them still renders.
+    // The texts ground the agents' reply; a probe that cannot be written leaves none, and the render stands.
   }
 }
 

@@ -242,9 +242,13 @@ def test_a_highcharts_probe_reads_its_classes_and_an_outlined_label_once(harness
     assert labels.count(("annotation", "5")) == 1 and truncated is False
 
 
-def test_an_echarts_probe_names_each_text_by_the_view_that_draws_it(harness: Harness, tmp_path: Path) -> None:
+@pytest.mark.parametrize("renderer", ["canvas", "svg"])
+def test_an_echarts_probe_names_each_text_by_the_view_that_draws_it(
+    harness: Harness, tmp_path: Path, renderer: str
+) -> None:
+    """The SVG renderer draws `<text>` elements too: the display list reports each once (Copilot review of #12503)."""
     source = (
-        "const chart = echarts.init(document.getElementById('container'));\n"
+        f"const chart = echarts.init(document.getElementById('container'), null, {{ renderer: '{renderer}' }});\n"
         "chart.setOption({ animation: false, title: { text: 'Umsatz', subtext: 'in CHF' }, legend: {},"
         " xAxis: { type: 'category', name: 'Filiale', data: ['Bern', 'Zug'] }, yAxis: { type: 'value' },"
         " series: [{ type: 'bar', name: 'Nord', data: [3, 5], label: { show: true },"
@@ -258,6 +262,7 @@ def test_an_echarts_probe_names_each_text_by_the_view_that_draws_it(harness: Har
         labels
     )
     assert {("x tick label", "Zug"), ("annotation", "5")} <= set(labels) and any(k == "y tick label" for k, _ in labels)
+    assert labels.count(("title", "Umsatz")) == 1 and not any(kind == "text" for kind, _ in labels)
     assert truncated is False  # zrender's display list holds every text it draws
 
 
@@ -279,32 +284,38 @@ def test_a_muix_probe_reads_the_axes_and_an_html_heading_as_the_title(harness: H
     )
 
 
-def test_a_page_that_tampers_with_the_model_renders_without_a_probe(harness: Harness, tmp_path: Path) -> None:
-    """The snippet shares the page: a model that throws when read leaves no probe, never a failed render."""
-    source = (
-        CANVAS + "new Chart(canvas, { type: 'bar', options: { animation: false },"
-        " data: { labels: ['a'], datasets: [{ data: [1] }] } });\n"
-        "Object.defineProperty(Chart, 'instances', { get() { throw new Error('no'); } });\n"
-    )
+CHART = (
+    CANVAS + "new Chart(canvas, { type: 'bar', options: { animation: false },"
+    " data: { labels: ['a'], datasets: [{ data: [1] }] } });\n"
+)
+
+
+def test_a_page_that_tampers_with_the_model_drops_the_labels_and_renders(harness: Harness, tmp_path: Path) -> None:
+    """The snippet shares the page: a model that throws when read leaves the labels out, names the error for the
+    agents' log, and never fails the render."""
+    source = CHART + "Object.defineProperty(Chart, 'instances', { get() { throw new Error('no'); } });\n"
     run = harness.render(tmp_path, source)
 
     assert run.returncode == 0, run.stderr
-    assert run.png_size() == (3200, 1800) and not (run.work / "probe-light.json").exists()
+    assert run.png_size() == (3200, 1800)
+    assert json.loads((run.work / "probe-light.json").read_text(encoding="utf-8")) == {"error": "Error"}
+    assert "render: the text probe left the labels out (Error)" in run.stdout
 
 
-def test_a_probe_that_never_returns_is_given_up_and_the_render_stands(harness: Harness, tmp_path: Path) -> None:
-    """A model whose read never ends blocks the page: the probe's own bound gives up, and the browser still closes."""
-    source = (
-        CANVAS + "new Chart(canvas, { type: 'bar', options: { animation: false },"
-        " data: { labels: ['a'], datasets: [{ data: [1] }] } });\n"
-        "Object.defineProperty(Chart, 'instances', { get() { for (;;) {} } });\n"
-    )
+def test_a_probe_that_never_returns_is_given_up_within_its_bound(harness: Harness, tmp_path: Path) -> None:
+    """A model whose read never ends blocks the page: the probe's own bound (2 s) gives up, the browser still closes,
+    and the render takes about that much longer than a clean one, never the job's timeout."""
     started = time.monotonic()
-    run = harness.render(tmp_path, source)
+    clean = harness.render(tmp_path / "clean", CHART)
+    clean_s = time.monotonic() - started
+    started = time.monotonic()
+    run = harness.render(tmp_path, CHART + "Object.defineProperty(Chart, 'instances', { get() { for (;;) {} } });\n")
+    hung_s = time.monotonic() - started
 
-    assert run.returncode == 0, run.stderr
-    assert run.png_size() == (3200, 1800) and not (run.work / "probe-light.json").exists()
-    assert "render: error:" not in run.stderr and time.monotonic() - started < 60
+    assert clean.returncode == 0 and run.returncode == 0, run.stderr
+    assert run.png_size() == (3200, 1800) and "render: error:" not in run.stderr
+    assert json.loads((run.work / "probe-light.json").read_text(encoding="utf-8")) == {"error": "TimeoutError"}
+    assert hung_s - clean_s < 6, (clean_s, hung_s)
 
 
 def test_without_the_variables_there_is_no_probe(harness: Harness, tmp_path: Path) -> None:
