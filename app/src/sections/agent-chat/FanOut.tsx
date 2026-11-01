@@ -144,11 +144,17 @@ function FanOutRun({
   useEffect(() => {
     if (slot !== 'running' || inFlight.current) return;
     inFlight.current = true;
-    void plotTurn().then(code => {
-      inFlight.current = false;
-      if (code === 'run_limit') onLimited(library);
-      else onDone(library);
-    });
+    void plotTurn()
+      .then(code => {
+        inFlight.current = false;
+        if (code === 'run_limit') onLimited(library);
+        else onDone(library);
+      })
+      .catch(() => {
+        // The turn handles its own errors; this only keeps an unexpected rejection from holding the place.
+        inFlight.current = false;
+        onDone(library);
+      });
   }, [slot, plotTurn, library, onDone, onLimited]);
 
   const status = runStatus(state, slot, dataFailure, limit);
