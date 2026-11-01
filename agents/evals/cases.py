@@ -186,13 +186,17 @@ def _checks(value: Any, directory: Path) -> FollowUpChecks | None:
     roles = value.get("texts_changed", [])
     if not isinstance(roles, list) or not all(role in get_args(ShownGroup) for role in roles):
         raise CaseError(f"{where}.texts_changed must be a list of drawn-text roles (`PlotShows.texts`)")
-    return FollowUpChecks(
+    checks = FollowUpChecks(
         language=language,
         theme=theme,
         code_added=_patterns(value, "code_added", where),
         code_kept=_patterns(value, "code_kept", where),
         texts_changed=tuple(roles),
     )
+    if checks == FollowUpChecks():
+        # Only `shipped` and `requested_found` would be left, which a follow-up that changed nothing passes.
+        raise CaseError(f"{where} must check something: a language, a theme, a code pattern or a drawn-text role")
+    return checks
 
 
 def _patterns(value: dict[str, Any], key: str, where: str) -> tuple[str, ...]:

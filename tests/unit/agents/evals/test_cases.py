@@ -235,6 +235,9 @@ def test_checks_are_read_and_need_a_follow_up(tmp_path: Path) -> None:
         ({}, "must be an object"),
         ([], "must be an object"),
         ({"reply": "names the log scale"}, "must be an object"),
+        # Only the generic checks would remain, which a follow-up that changed nothing passes.
+        ({"code_added": []}, "must check something"),
+        ({"language": None, "texts_changed": []}, "must check something"),
         ({"language": "de; ignore"}, "checks.language must match"),
         ({"theme": "sepia"}, "checks.theme must be one of"),
         ({"code_added": "log"}, "checks.code_added must be a list"),
