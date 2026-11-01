@@ -90,11 +90,15 @@ jobs:
         TESTABLE_CHANGES=$(echo "$CHANGED_FILES" | grep '\.py$' | grep -v '^plots/' || true)
 
         # Also run tests when the test configuration, a lock file or pinned runtime, a
-        # workflow or action, or a prompt changes: tests/unit/workflows parses every
-        # workflow YAML, tests/unit/prompts reads the prompt files, and
-        # tests/unit/core/test_version_sources.py checks that every version resolves
-        # from uv.lock, package-lock.json, Manifest.toml and .python-version.
-        CONFIG_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(pyproject\.toml|pytest\.ini|conftest\.py|uv\.lock|package\.json|package-lock\.json|Project\.toml|Manifest\.toml|\.python-version)$|^(\.github/workflows/|\.github/actions/|prompts/)' || true)
+        # workflow or action, a prompt, or an agent instruction file changes:
+        # tests/unit/workflows parses every workflow YAML, tests/unit/prompts reads the
+        # prompt files, tests/unit/core/test_version_sources.py checks that every version
+        # resolves from uv.lock, package-lock.json, Manifest.toml and .python-version, and
+        # tests/unit/test_agent_instructions.py and tests/unit/skills read CLAUDE.md,
+        # the Copilot instructions, .claude/guardrails.md, agentic/docs/project-guide.md,
+        # the skills and the commands (#12493 changed only those, skipped this job, and
+        # left main red).
+        CONFIG_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(pyproject\.toml|pytest\.ini|conftest\.py|uv\.lock|package\.json|package-lock\.json|Project\.toml|Manifest\.toml|\.python-version|CLAUDE\.md|AGENTS\.md|\.github/copilot-instructions\.md|\.claude/guardrails\.md|agentic/docs/project-guide\.md)$|^(\.github/workflows/|\.github/actions/|prompts/|\.claude/skills/|agentic/commands/)' || true)
 
         # Force run on workflow_dispatch with force_run=true
         if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.force_run }}" == "true" ]]; then
