@@ -109,8 +109,8 @@ each attempt and the run, the shipped and the last reviewed attempt, the number 
 reviewer calls, whether the shipped
 render was padded or carries ADAPTATION or probe findings, the roles of its drawn texts
 and whether its library reports them, and the exception class behind reason `error`
-or `busy`, the latter a model quota still refused after the SDK's
-retries, `models.rate_limited`). The eval harness (`agents/evals/matrix.py`) reads them per
+or `busy`, the latter a model quota or overload still refused after the SDK's retries,
+`models.model_busy`; the innermost class, never ADK's wrapper). The eval harness (`agents/evals/matrix.py`) reads them per
 case; they never carry code, data, column names or model text. `PlotResult.reason`
 keeps its public vocabulary; the stage is only in the attribution line.
 """
@@ -155,7 +155,7 @@ from .grounding import (
     reviewed_misses,
 )
 from .language import DEFAULT_LANGUAGE, same_language
-from .models import rate_limited
+from .models import error_chain, model_busy
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, adapter_instruction, fence, prompt_hash
 from .render.contract import RendererUnavailable, RenderJob, RuntimeAdapter, Theme
@@ -1483,9 +1483,10 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
             yield event
     except Exception as exc:  # every failure ends in a PlotResult; the type is logged, never the message
         logger.warning("pipeline failed: %s", type(exc).__name__)
-        busy = rate_limited(exc)  # a model quota after the SDK's retries: busy, try again shortly, not a fault
+        busy = model_busy(exc)  # a quota or overload after the SDK's retries: try again shortly, not a fault
         run.reason = "busy" if busy else "error"
-        run.error_type = type(exc).__name__
+        # The innermost class, not ADK's `DynamicNodeFailError` around a sub-agent's failure (Flash review, 2026-11-01).
+        run.error_type = type(error_chain(exc)[-1]).__name__
         run.unreviewed_why = run.unreviewed_why or (
             "the model service was busy" if busy else "an internal error stopped the run"
         )
@@ -1526,8 +1527,8 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
     harness counts a shipped run without texts where they are expected (`agents/evals/report.py`,
     `untexted`). `error` is the exception class behind
     reason `error` (for example `RendererUnavailable`, which the harness treats as an
-    outage rather than a model failure) or `busy` (a `RateLimitError` or a wrapper of
-    one), never its message. `stage` names what stopped
+    outage rather than a model failure) or `busy` (a `RateLimitError` or an `OverloadedError`),
+    the innermost class of `models.error_chain`, never its message. `stage` names what stopped
     the run and `stages` what ended each attempt (`Stage`); `shipped_attempt` and
     `reviewed_attempt` name the attempt whose render shipped and the one the reviewer
     was last called on, and `reviews` counts the reviewer calls.

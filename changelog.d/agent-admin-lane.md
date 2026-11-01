@@ -16,7 +16,7 @@
 - **The global daily token budget rose to 80,000,000.** It stays the runaway
   guard for every tier, admins included (24,000,000 before), and the Claude
   calls of root, adapter and reviewer retry a refused call four times instead
-  of the SDK's two; a 429 that outlasts them ends the run as `busy`, which
+  of the SDK's two; a 429 or 529 that outlasts them ends the run as `busy`, which
   the page words as "the model service is busy; try again in a minute".
   The render gates run in a worker thread, so one run's PNG checks never
   stall the other runs in flight.

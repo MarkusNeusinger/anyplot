@@ -42,7 +42,7 @@ export const PLOT_FAILED_TEXT: Record<string, string> = {
   render: 'the plot did not render',
   deadline: 'the run ran out of time before a render passed',
   budget: 'the usage limit is reached',
-  // The model service refused a call for its quota, also after the retries.
+  // The model service refused a call for its quota or an overload, also after the retries.
   busy: 'the model service is busy; try again in a minute',
   error: 'something went wrong while adapting',
   no_dataset: 'paste and parse your data first',

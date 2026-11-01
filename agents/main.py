@@ -185,7 +185,7 @@ from agents.anyplot.language import (
     pasted_language,
     refusal_lang,
 )
-from agents.anyplot.models import JudgeFailure, JudgeUnavailable, rate_limited
+from agents.anyplot.models import JudgeFailure, JudgeUnavailable, model_busy
 from agents.anyplot.opening import (
     INSTRUCTION_LIKE,
     MAX_SOURCE_RAW_CHARS,
@@ -2032,7 +2032,7 @@ async def _produce(
 
 
 def _error_code(exc: BaseException) -> str:
-    if rate_limited(exc):  # a model quota after the SDK's retries: busy, like a full queue
+    if model_busy(exc):  # a model quota or overload after the SDK's retries: busy, like a full queue
         return "capacity"
     if type(exc).__name__ == "LlmCallsLimitExceededError":
         return "capacity"

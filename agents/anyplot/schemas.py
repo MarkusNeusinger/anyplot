@@ -141,8 +141,9 @@ Theme = Literal["light", "dark"]
 
 PlotStatus = Literal["ok", "needs_attention", "failed", "not_ready"]
 FailureReason = Literal["validation", "render", "deadline", "budget", "busy", "error"]
-"""`busy`: a model call was still refused for its quota (429) after its retries (`models.rate_limited`), so the
-run stopped; the user can try again shortly. `error`: any other failure the run could not recover from."""
+"""`busy`: a model call was still refused for its quota (429) or an overload (529) after its retries
+(`models.model_busy`), so the run stopped; the user can try again shortly. `error`: any other failure the run could
+not recover from."""
 NotReadyReason = Literal["no_dataset", "incomplete_bindings", "data_unconfirmed"]
 """`data_unconfirmed`: the dataset and its bindings are there, but the user has not confirmed
 them in the data panel yet (step 1 of two, owner rule of 2026-10-11)."""
