@@ -458,6 +458,16 @@ class TestReplyShape:
 
         assert result.closing_question and result.reply_miss is None
 
+    def test_a_required_role_left_open_blocks_the_turn(self) -> None:
+        """The prep run of 2026-11-01: after a total row was dropped, a scatter plot had one number column left."""
+        result = CaseResult("s-001", [], [], roles_open=True)
+
+        prep.measure_reply(
+            result, ["Dropped the Total row; 3 rows remain. Which column should go on y?"], blocked=False
+        )
+
+        assert result.closing_question and result.reply_miss is None
+
     def test_a_turn_without_a_reply_is_not_measured(self) -> None:
         result = CaseResult("s-001", [], [], refusal="out_of_scope")
 
@@ -570,18 +580,28 @@ class TestRun:
                 locale="en",
                 tags=["ask_back"],
             ),
+            # One number column for a scatter plot: y stays open, so the turn is blocked.
+            PrepCase(
+                id="y-003",
+                dataset_text="Product,Revenue\nShoes,10\nHats,5\nBags,8\n",
+                action="summarize_data",
+                expected_operations=[],
+                locale="en",
+            ),
         ]
         reply = "4 rows; x is Study Hours, y is Exam Score. Are the scores out of 100?"
         root_turns: list[list[dict[str, Any]]] = [
             [{"call": "get_dataset_profile", "args": {}}, {"text": reply}],
             [{"call": "get_dataset_profile", "args": {}}, {"text": reply}],
+            [{"call": "get_dataset_profile", "args": {}}, {"text": "3 rows; y has no number column. Can you add one?"}],
         ]
         fake: FakeAnthropic = swap_models("anthropic-vertex", script_for(*root_turns))
 
         results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
 
-        assert [result.match for result in results] == [True, True]
-        assert [result.reply_miss for result in results] == ["closing_question", None]
+        assert [result.match for result in results] == [True, True, True]
+        assert [result.roles_open for result in results] == [False, False, True]
+        assert [result.reply_miss for result in results] == ["closing_question", None, None]
         assert results[0].reply_words == 16 and results[0].reply_questions == 1
         # The action reached the root as the page's summary turn, never as typed text.
         assert "[action] Summarize the dataset for the user." in json.dumps(fake.calls[0]["messages"])

@@ -57,7 +57,8 @@ does after a paste): it expects no data call, and only its reply is scored. Ever
 measured for its shape (owner decision of 2026-11-01: short, to the point, a question only when it
 matters): its words (`MAX_REPLY_WORDS`), its questions, and whether it closes with one. A closing
 question is a reply miss unless the turn is blocked: the case is tagged `ask_back` (a request that can
-mean two different changes), or a data call of the turn failed. A reply over `MAX_REPLY_WORDS` words is a
+mean two different changes), a data call of the turn failed, or the turn left a required role of the spec
+without a column (`roles_open`). A reply over `MAX_REPLY_WORDS` words is a
 reply miss too. The reply gate is `--max-reply-misses` (10 percent) of the answered cases with a reply;
 the reply text itself never enters the report.
 
@@ -467,7 +468,10 @@ class CaseResult:
     closing_question: bool = False
     """The last reply text ends with a question mark (`telemetry.ends_with_question`)."""
     reply_miss: str | None = None
-    """`closing_question` (one the turn was not blocked for, see `BLOCKED_TAGS`) or `long` (over `MAX_REPLY_WORDS`)."""
+    """`closing_question` (one the turn was not blocked for, see `measure_reply`) or `long` (over `MAX_REPLY_WORDS`)."""
+    roles_open: bool = False
+    """The turn left a required role of the spec without a column, so the plot cannot be drawn until the user binds
+    one or brings other data: the reply may close with a question about it."""
     llm_calls: int = 0
     cost_usd: float = 0.0
     latency_s: float = 0.0
@@ -582,7 +586,15 @@ class CaseRunner:
         from run to run, so it counts as the size of the table it stored. Returns the root's reply
         texts of the turn, in order, for `measure_reply`; they never enter the result.
         """
+        from agents.anyplot.data.bindings import check_bindings
+        from agents.anyplot.services import get_services
+        from agents.anyplot.session_state import read_session
+
         session = await self.runtime.session(user, sid)
+        view = read_session(session.state)
+        stored = get_services().datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
+        if view is not None and stored is not None:
+            result.roles_open = not check_bindings(view.bindings, view.snapshot.roles(), stored.profile).complete
         operations: list[dict[str, Any]] = []
         texts: list[str] = []
         for event in session.events:
@@ -628,8 +640,9 @@ def measure_reply(result: CaseResult, texts: Sequence[str], *, blocked: bool) ->
     """The reply's shape: its words and questions, whether it closes with a question, and its reply miss.
 
     `blocked` says the turn cannot go on without the user's answer (`BLOCKED_TAGS`); a data call that failed
-    blocks it too, since the root then has to ask how to go on. A turn without a reply text (a refusal) is
-    measured as none.
+    blocks it too, since the root then has to ask how to go on, and so does a required role the turn left
+    without a column (`roles_open`), the case `root.md` names for a question. A turn without a reply text (a
+    refusal) is measured as none.
     """
     from agents.anyplot.telemetry import ends_with_question
 
@@ -639,7 +652,7 @@ def measure_reply(result: CaseResult, texts: Sequence[str], *, blocked: bool) ->
     result.reply_words = len(reply.split())
     result.reply_questions = len(QUESTION.findall(reply))
     result.closing_question = ends_with_question(texts[-1])
-    if result.closing_question and not (blocked or result.failed_calls):
+    if result.closing_question and not (blocked or result.failed_calls or result.roles_open):
         result.reply_miss = "closing_question"
     elif result.reply_words > MAX_REPLY_WORDS:
         result.reply_miss = "long"

@@ -596,9 +596,10 @@ class TestReplies:
 
         assert "## Replies" in root and "Lead with the result, in the session language" in root
         assert "Ask a question only when you cannot go on without the answer" in root
-        assert "Never close a reply with an offer or an invitation" in root
-        # An "offer" the instruction asks for elsewhere keeps its information as a statement.
+        assert "Never close a reply with an invitation, whether as a question or as a statement" in root
+        # An "offer" the instruction asks for elsewhere keeps its information as a statement, which may close it.
         assert "say in one short sentence what is possible, as a statement" in root
+        assert "never as a question; such a statement may close the reply" in root
         # The summary's question is no longer a duty (the user test: 10 of 11 summaries closed with one).
         assert "and one question when something is ambiguous" not in root
         assert "Ask a question only about what the profile leaves open" in root
@@ -608,7 +609,16 @@ class TestReplies:
         root = policy.root_instruction()
         notices = root.split("Brevity never drops these notices", 1)[1].split("\n\n", 2)[1]
 
-        for prefix in ("R reads", "JavaScript reads", "Julia keeps time", "JavaScript keeps time", "R converts"):
+        # Every server line the "After `plot_pipeline` returns" rules name, in every language that writes one.
+        for prefix in (
+            "R reads",
+            "JavaScript reads",
+            "Julia keeps time",
+            "JavaScript keeps time",
+            "R converts",
+            "Julia converts",
+            "JavaScript converts",
+        ):
             assert f'"{prefix}"' in notices
         assert "with the counts from its `changes`" in notices
         assert "`requested_not_found`" in notices
