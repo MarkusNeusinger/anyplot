@@ -284,6 +284,10 @@ export function describeConvertWarnings(
 export const FILE_BUSY_TEXT =
   'a step is still running; drop or open the file again when it is done';
 
+/** A file dropped while the admin fan-out's panel copies the data: the data waits until it closes. */
+export const FILE_LOCKED_TEXT =
+  'all libraries are plotting this data; close the panel, then drop or open the file again';
+
 /** A file dropped or chosen while the server still reads the one before. */
 export const FILE_CONVERTING_TEXT =
   'a file is still being read on the server; drop or open the next one when it is done';

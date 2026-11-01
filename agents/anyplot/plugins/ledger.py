@@ -244,11 +244,13 @@ OUTCOMES_PER_DAY = 2000
 30 in a minute is far beyond use; more get `429 rate_limited`, which the page ignores. Constants, not settings: the
 beacon spends no model call and no sandbox time, the cap only bounds the telemetry lines one user can write."""
 COPIES_PER_MINUTE = 30
-COPIES_PER_DAY = 600
+COPIES_PER_DAY = 150
 """The admin fan-out's data copies per user (`POST /v1/sessions/{sid}/dataset/copy`): one per library of a
-`.plot_all()`, at most 15, so 30 in a minute is two fan-outs. A copy parses nothing and calls no model, so it is no
-paste, but each one takes the dataset's size in the store again: the cap bounds what one user can put there.
-Constants, not settings, like the outcome beacons'."""
+`.plot_all()`, at most 15, so 30 in a minute is two fan-outs and 150 a day about ten (1.5 times the day's 100 pastes,
+review of 2026-11-01: 600 let one user put about 3 GiB a day into the 256 MiB store). A copy parses nothing and calls
+no model, so it is no paste, but each one takes the dataset's size in the store again: the cap bounds what one user
+can put there. A per-user byte budget in the store is the follow-up before the chat goes public. Constants, not
+settings, like the outcome beacons'."""
 
 
 class UsageBook:

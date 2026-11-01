@@ -9,8 +9,9 @@
   out too, and every library plots exactly what was confirmed. Both sessions
   must be the caller's, the target a fan-out session without data, the source
   confirmed; a copy parses and judges nothing again, counts as no paste, and
-  has a per-user limit of its own. The page falls back to posting the paste
-  again while the server has no copy route.
+  has a per-user limit of its own. While the panel is open the data card
+  waits, so every library copies the same confirmed data. The page falls back
+  to posting the paste again while the server has no copy route.
 
 ### Fixed
 

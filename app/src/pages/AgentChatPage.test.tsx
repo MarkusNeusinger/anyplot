@@ -1527,6 +1527,38 @@ describe('AgentChatPage .plot_all()', () => {
     );
   });
 
+  it('locks the data card while the panel copies the data, and frees it on .close()', async () => {
+    fanOutSessions(() =>
+      json(200, { ...DATASET, confirmed: true, complete: true, missing_roles: [], copied_from: 1 })
+    );
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    fireEvent.click(await screen.findByRole('button', { name: 'All libraries' }));
+    fireEvent.click(plotAllButton(), { detail: 1 });
+    const panel = await screen.findByRole('region', { name: 'All libraries' });
+
+    // Opening the card is only a look: it opens, but nothing in it changes the data.
+    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    const card = screen.getByRole('region', { name: 'Your data' });
+    const line = '# the data waits while all libraries plot it · .close() the panel to change it';
+    expect(within(card).getByTestId('data-lock')).toHaveTextContent(line);
+    expect(card).toHaveAccessibleDescription(line);
+    expect(within(card).getByRole('button', { name: 'Open a data file' })).toBeDisabled();
+    expect(within(card).getByLabelText(/^x/)).toBeDisabled();
+    fireEvent.change(within(card).getByLabelText(/# your data/), {
+      target: { value: 'hours,score\n9,99\n8,88\n' },
+    });
+    expect(within(card).getByRole('button', { name: '.parse()' })).toBeDisabled();
+
+    fireEvent.click(within(panel).getByRole('button', { name: 'Close all libraries' }));
+    expect(screen.queryByTestId('data-lock')).not.toBeInTheDocument();
+    const reopened = screen.getByRole('region', { name: 'Your data' });
+    expect(reopened).not.toHaveAccessibleDescription();
+    expect(within(reopened).getByRole('button', { name: '.parse()' })).toBeEnabled();
+    expect(within(reopened).getByLabelText(/^x/)).toBeEnabled();
+  });
+
   it('posts the paste again in every library while the server has no copy', async () => {
     fanOutSessions(() => json(404, { detail: 'not_found', ref: 'r-404' }));
     localStorage.setItem(ADMIN_HINT_KEY, '1');

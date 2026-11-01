@@ -280,6 +280,65 @@ describe('DataPanel bindings', () => {
     expect(screen.getByRole('button', { name: '.parse()' })).toBeDisabled();
   });
 
+  it('holds every action back while the fan-out panel copies the data, and says why', async () => {
+    const onParse = vi.fn();
+    const onUndo = vi.fn();
+    const panel = (state: AgentSessionState, locked: boolean) => (
+      <DataPanel
+        state={state}
+        onParse={onParse}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
+        onBind={vi.fn()}
+        onConfirmData={vi.fn()}
+        onUndo={onUndo}
+        locked={locked}
+      />
+    );
+    const changed = stateWith(
+      { x: 'month', y1: 'shoes' },
+      { dataChange: { kind: 'changed', changes: ['dropped 1 row'], version: 2 } }
+    );
+    const versioned = {
+      ...changed,
+      dataset: { ...changed.dataset, parsed: { ...changed.dataset.parsed, version: 2 } },
+    };
+    const { rerender } = render(panel(versioned, true));
+    const card = screen.getByRole('region', { name: 'Your data' });
+    const line = '# the data waits while all libraries plot it · .close() the panel to change it';
+    expect(screen.getByTestId('data-lock')).toHaveTextContent(line);
+    expect(card).toHaveAccessibleDescription(line);
+    // Nothing that changes the data or its confirmation starts; the session itself is idle.
+    expect(screen.queryByTestId('bindings-lock')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '.undo()' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Open a data file' })).toBeDisabled();
+    expect(screen.getByLabelText(/^x/)).toBeDisabled();
+    await userEvent.type(screen.getByLabelText(/# your data/), 'a,b\n1,2\n');
+    expect(screen.getByRole('button', { name: '.parse()' })).toBeDisabled();
+    fireEvent.drop(screen.getByTestId('data-drop-zone'), {
+      dataTransfer: {
+        files: [new File(['a,b\n1,2\n'], 'b.csv', { type: 'text/csv' })],
+        types: ['Files'],
+      },
+    });
+    expect(await screen.findByTestId('file-error')).toHaveTextContent(
+      'all libraries are plotting this data; close the panel, then drop or open the file again'
+    );
+
+    // The panel closed: the card is the user's again.
+    rerender(panel(versioned, false));
+    expect(screen.queryByTestId('data-lock')).not.toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Your data' })).not.toHaveAccessibleDescription();
+    expect(screen.getByRole('button', { name: '.parse()' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '.confirm()' })).toBeEnabled();
+    expect(screen.getByLabelText(/^x/)).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: '.undo()' }));
+    expect(onUndo).toHaveBeenCalledTimes(1);
+    expect(onParse).not.toHaveBeenCalled();
+  });
+
   it('holds back the confirmation while a table read from text awaits its decision', () => {
     // The stored dataset and its bindings stay, but the user decides on the data first.
     render(

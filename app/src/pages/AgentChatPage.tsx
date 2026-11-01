@@ -50,7 +50,8 @@
  * session; in step 2 the message box waits (typed text would not go along) and
  * a line above it says so, while in step 1 the chat about the data goes on as
  * without `all`. Any library pill turns `all` off again; while the panel is
- * open, neither the pills nor `all` change. The pill is in the URL as `&all=1`,
+ * open, neither the pills, `all` nor the data card change, so every library
+ * copies the same confirmed data. The pill is in the URL as `&all=1`,
  * so a reload presses it again once the libraries are known.
  *
  * Gates, outermost first:
@@ -787,6 +788,8 @@ function AgentChat({
             toggleRef={toggleRef}
             confirmRef={confirmRef}
             decisionRef={decisionRef}
+            // Not while the fan-out's panel is open: its sessions copy this session's confirmed data.
+            locked={!!fanOut}
           />
 
           {state.items.length === 0 && !state.run && (

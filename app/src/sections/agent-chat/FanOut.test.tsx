@@ -237,6 +237,29 @@ describe('FanOut', () => {
     expect(status('matplotlib')).toHaveTextContent('adapting…');
   });
 
+  it('reads the 404 of a BFF without the route, in the API-wide error shape, as no copy', async () => {
+    // An older API answers an unknown route through `api/exceptions.py`'s handler: no `detail`,
+    // no request id; the page reads the status as `not_found` and posts the paste again.
+    mockBff([], () =>
+      json(404, {
+        status: 404,
+        message: 'Not Found',
+        path: '/debug/agent/sessions/S-matplotlib/dataset/copy',
+      })
+    );
+    renderFanOut(['matplotlib'], 1);
+
+    await waitFor(() => expect(plotTurns()).toHaveLength(1));
+    expect(calls.map(call => call.path)).toEqual([
+      '/sessions',
+      '/sessions/S-matplotlib/dataset/copy',
+      '/sessions/S-matplotlib/dataset',
+      '/sessions/S-matplotlib/bindings',
+      '/sessions/S-matplotlib/dataset/confirm',
+      '/sessions/S-matplotlib/messages',
+    ]);
+  });
+
   it('stops each library with one line when a server without the copy has no paste to post', async () => {
     mockBff([], () => json(404, { detail: 'not_found', ref: 'r-404' }));
     renderFanOut(['matplotlib', 'seaborn'], 2, { upload: null });
