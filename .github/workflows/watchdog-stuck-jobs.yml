@@ -20,6 +20,10 @@ run-name: "Watchdog: scan ${{ github.event_name == 'workflow_dispatch' && '(manu
 #   4. daily-regen's cron silently starved by GitHub's scheduler (no run
 #      for >26 h outside the quiet window) — re-dispatched manually.
 #
+# PRs labelled `ai-review-paused` or `ai-repair-paused` (Claude stopped the
+# review or repair at a spend or usage limit, or refused its credentials) are
+# skipped: daily-regen's pair mode resumes them.
+#
 # Retries are bounded per-cause via marker labels:
 #   - `ai-review-rescued`            (review failures)
 #   - `watchdog:repair-rescued-<N>`  (repair failures, one per attempt#)
@@ -69,6 +73,10 @@ jobs:
           GH_REPO: ${{ github.repository }}
           STALE_HOURS: ${{ inputs.stale_hours || '4' }}
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          # daily-regen's pair mode: the cron rescue replaces a missed
+          # scheduled run, so it forwards the pair count the schedule would
+          # have used. Empty = spec mode, the dispatch as before.
+          REGEN_PAIRS: ${{ vars.REGEN_PAIRS_PER_DAY }}
         run: |
           set -euo pipefail
           STALE_SEC=$(( STALE_HOURS * 3600 ))
@@ -195,6 +203,16 @@ jobs:
 
             spec_id=$(echo "$branch" | cut -d'/' -f2)
             library=$(echo "$branch" | cut -d'/' -f3)
+
+            # Paused: Claude stopped the PR's review or repair (a spend or
+            # usage limit, or refused credentials). A rescue now would be
+            # refused the same way and spend the PR's one-shot rescue on a
+            # stop that is still active. daily-regen's pair mode, or a manual
+            # rerun, resumes the PR, and the resumed run removes the label.
+            if echo " $labels " | grep -qE " (ai-review-paused|ai-repair-paused) "; then
+              echo "::notice::PR #$num: paused (Claude stopped its review or repair) — skipped"
+              continue
+            fi
 
             # Case 0: regeneration the regen gate KEPT (live implementation
             #   stays) whose PR is still open — impl-review's close was lost.
@@ -568,7 +586,7 @@ jobs:
               gap_hm=$(printf '%dh%02dm' $(( gap / 3600 )) $(( (gap % 3600) / 60 )))
               if (( gap > LIVENESS_HOURS * 3600 )); then
                 echo "::warning::daily-regen: no new run on main for ${gap_hm} (> ${LIVENESS_HOURS}h) — schedule starved, re-dispatching"
-                dispatch "daily-regen: cron starved (${gap_hm} silent)" daily-regen.yml || true
+                dispatch "daily-regen: cron starved (${gap_hm} silent)" daily-regen.yml ${REGEN_PAIRS:+-f "pairs=$REGEN_PAIRS"} || true
               else
                 echo "daily-regen liveness: ${ref_label} ${gap_hm} ago — healthy"
               fi

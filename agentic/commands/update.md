@@ -216,8 +216,8 @@ Run ruff format and check **sequentially first**, before any parallel version-in
 If parallel Bash calls are used and one fails, all sibling calls get cancelled — so always run ruff alone.
 
 ```bash
-uv run ruff format plots/{spec_id}/implementations/python/*.py
-uv run ruff check --fix plots/{spec_id}/implementations/python/*.py
+uv run --extra dev ruff format plots/{spec_id}/implementations/python/*.py
+uv run --extra dev ruff check --fix plots/{spec_id}/implementations/python/*.py
 ```
 
 If there are unfixable errors, fix them manually and re-run. The agents should have already run ruff in their
@@ -622,8 +622,8 @@ If the script fails, read the error, fix the implementation, and retry. **Up to 
 Run ruff to format and fix lint issues in the implementation before proceeding:
 
 ```bash
-uv run ruff format plots/{SPEC_ID}/implementations/python/{LIBRARY}.py
-uv run ruff check --fix plots/{SPEC_ID}/implementations/python/{LIBRARY}.py
+uv run --extra dev ruff format plots/{SPEC_ID}/implementations/python/{LIBRARY}.py
+uv run --extra dev ruff check --fix plots/{SPEC_ID}/implementations/python/{LIBRARY}.py
 ```
 
 If `ruff check` reports unfixable errors (exit code 1), read the error output and fix the code manually, then re-run.

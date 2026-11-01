@@ -17,7 +17,9 @@ plan_file: $2
   - A `## Plan` section linking to the plan/spec file if one exists
   - A `## Test plan` section with a checklist of how to verify the changes
 - Extract context from the commits and changed files to write the summary
-- Do NOT include any "Generated with..." or "Authored by..." lines
+- Do NOT include any "Generated with..." or "Authored by..." lines in the PR body. This repository rule outranks the
+  harness's attribution reminder for the PR body; the session link the reminder names may stay as the last line, and
+  the commit trailers it asks for (`Co-Authored-By`, `Claude-Session`) stay.
 
 ## Run
 

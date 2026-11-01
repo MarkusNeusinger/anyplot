@@ -2,45 +2,55 @@ library: bokeh
 language: python
 specification_id: scatter-basic
 created: '2025-12-10T20:55:10Z'
-updated: '2026-04-23T22:00:58Z'
-generated_by: claude-opus
-workflow_run: 24860109612
+updated: '2026-10-31T19:51:11Z'
+generated_by: claude-sonnet
+workflow_run: 41235530361
 issue: 611
-python_version: 3.14.4
-library_version: 3.9.0
+language_version: 3.14.9
+library_version: 3.10.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/bokeh/plot-dark.html
-quality_score: 90
+quality_score: 83
 review:
   strengths:
-  - 'Clean, idiomatic Bokeh implementation: ColumnDataSource, HoverTool, and dual
-    PNG+HTML export all used correctly'
-  - Excellent theme-adaptive styling — both light and dark renders are visually polished
-    with correct backgrounds and adaptive chrome
-  - Realistic, neutral education dataset (study hours vs exam scores) with clear positive
-    correlation demonstrates scatter plot purpose effectively
+  - 'Correct basic variant: one point per observation at its exact (x, y) value, all
+    in brand green #009E73, with no trend line, band or annotation layer'
+  - Moderate transparency (alpha=0.7) with a thin page-colored ring per marker keeps
+    overlapping points distinguishable while dense areas read darker
+  - 'Fully theme-adaptive chrome: #FAF8F1 / #1A1A17 backgrounds, INK title and axis
+    titles, INK_SOFT ticks and axis lines, subtle grid at alpha 0.10, identical data
+    color across both renders'
+  - Canvas contract met exactly (3200x1800 with toolbar_location=None, min_border_*
+    reservations and the CDP viewport override); text sized per the library prompt
+    and readable in both themes
+  - Data-derived Range1d padding and ColumnDataSource(df) with column constants keep
+    the plot adaptable to other data
+  - HoverTool with formatted, braced column-name tooltips adds value inspection in
+    the HTML output without affecting the PNG
   weaknesses:
-  - Marker size (size=34) is slightly small for 180 points on a 4800x2700px canvas;
-    size=50-55 would improve visual presence
-  - Grid line width=2 on both axes adds minor visual weight; reducing to width=1 or
-    removing x-grid would refine the look
+  - 'SC-04 (both): the title reads ''scatter-basic · bokeh · anyplot.ai'' and omits
+    the language segment → ''scatter-basic · python · bokeh · anyplot.ai''. Likely
+    cause: the title string in figure(title=...) and output_file(title=...).'
+  - 'Suggestion: the generated cloud has r ≈ 0.94 (slope 7.2 against noise sd 6.5);
+    a noise sd near 15 would match the spec''s example of a moderate correlation (r
+    ~ 0.7) and show more spread.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "scatter-basic · bokeh · anyplot.ai" in bold dark ink, centered; axis labels "Study Hours per Day" and "Exam Score (%)" in dark ink; tick labels in slightly lighter dark gray — all clearly readable
-      Data: ~180 scatter points in brand green (#009E73) with off-white marker edges; regression trend line (dashed) and semi-transparent confidence band visible; alpha ~0.7
+      Background: warm off-white #FAF8F1 (sampled 250,248,241), not pure white
+      Chrome: bold centered title "scatter-basic · bokeh · anyplot.ai" in near-black ink; axis titles "Study Hours per Day" (x) and "Exam Score (%)" (y) in dark ink; tick labels 2–10 and 20–100 in soft dark gray; L-shaped axis lines only, no plot outline; very subtle grid. All text clearly readable.
+      Data: about 180 circular markers in #009E73 at alpha 0.7 with thin page-colored rings, a clear rising cloud from (~1 h, ~20–45 %) to (~9.5 h, ~99 %), moderate spread and a few mild outliers (e.g. ~4.4 h / 76 %, ~7.5 h / 63 %); no trend line, band or labels. Canvas 3200x1800.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title, axis labels, and tick labels all flip to light-colored text (near-white/light gray) — no dark-on-dark failures; grid lines remain subtle
-      Data: Scatter markers are identical #009E73 green — data colors match light render exactly; confidence band more saturated/darker on dark surface but still visible
+      Background: warm near-black #1A1A17, not pure black
+      Chrome: title and axis titles flip to near-white, tick labels to light gray, axis lines light gray, grid subtle but visible; no dark-on-dark text anywhere.
+      Data: identical #009E73 markers at the same positions and alpha as the light render, rings now in the dark page color; green reads well on the dark surface.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -48,73 +58,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 42pt, axis labels 32pt, tick labels 24pt explicitly set; readable
-          in both themes
+        comment: Title 50pt, axis titles 42pt, ticks 34pt set explicitly; balanced
+          and readable in both themes and at thumbnail size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions
+        comment: No text collisions; point overlap is light and handled by alpha +
+          page-colored rings
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers visible with alpha=0.7; size=34 slightly small for 180 points
-          on 4800px canvas
+        comment: '180 points at size 24, alpha 0.7: prominent but not blobbed'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green, CVD-safe Okabe-Ito
+        comment: Single hue with strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Data fills ~70% of canvas, balanced margins
+        comment: Exactly 3200x1800 (canvas gate passed); plot area fills most of the
+          canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Study Hours per Day and Exam Score (%) with units
+        comment: Study Hours per Day / Exam Score (%) — descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, theme-adaptive
-          chrome correct'
+        comment: 'Imprint position 1 #009E73; correct backgrounds and theme-correct
+          chrome in both renders'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Professional: warm backgrounds, white marker edges, regression feature
-          adds sophistication; above default but not publication-ready'
+        comment: The style-guide baseline (Imprint, theme tokens, explicit sizes),
+          nothing decided beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: outline_line_color=None, grid alpha=0.10, minor ticks removed; further
-          reduction would improve
+        comment: 'Baseline: L-frame, subtle grid; nothing beyond'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Regression trend line + confidence band guides viewer to positive
-          correlation story
+        comment: Data displayed, no hierarchy chosen beyond the spec
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -122,25 +131,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot
+        comment: Basic scatter with x and y only, no extra encodings or layers (C5)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Transparency, axis labels, grid lines, balanced point size all present
+        comment: alpha ~0.7, axis labels, title, grid, balanced point size; C1, C3,
+          C4, C5 all shown
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Study hours on x, exam scores on y, all data visible
+        comment: Hours on x, score on y, marks at their values, ranges padded from
+          the data
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title 'scatter-basic · bokeh · anyplot.ai' correct; no legend appropriate
+        passed: false
+        comment: Title lacks the language segment 'python' (defect line); legend N/A
           for single series
     data_quality:
       score: 15
@@ -151,19 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows scatter density variation, outliers, clear positive trend
+        comment: Clear direction, visible spread and a few mild outliers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Education scenario (study hours vs exam scores): neutral, real-world'
+        comment: Study hours vs exam score — neutral education scenario from the spec's
+          applications
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Study hours 0.8-9.6 hrs/day, exam scores 18-99% — both realistic
+        comment: 'Checked: hours 0.8–9.6 per day, scores 19–99 %, clipped within 18–99
+          in code; no Check values in the spec'
     code_quality:
       score: 10
       max: 10
@@ -173,52 +186,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save; no functions or classes'
+        comment: Linear imports → constants → Data → Plot → Save, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; HoverTool is real Bokeh functionality
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh API
+        comment: plot-{THEME}.html via save + plot-{THEME}.png via Selenium, as the
+          library prompt requires
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: ColumnDataSource, figure(), scatter(), HoverTool via add_tools(),
-          export_png+output_file+save — all canonical Bokeh patterns
+        comment: Correct figure/scatter/ColumnDataSource usage as the library prompt
+          shows; nothing beyond it
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HoverTool with custom tooltips is Bokeh-distinctive; dual PNG+HTML
-          export leverages interactive-library nature
+        comment: HoverTool bound to the scatter renderer with Bokeh field formatters
+          ({0.1}) on braced column names — a Bokeh-specific interactive feature beyond
+          the mandated pattern
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
+  rendered_at: '2026-10-31T19:46:49Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - hover-tooltips
   - html-export

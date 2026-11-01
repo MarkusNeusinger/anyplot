@@ -35,7 +35,7 @@ that's an explicit acceptance criterion.
 Lint + type gates, the same three CI runs (`Run Linting` job):
 
 ```bash
-uv run ruff check . && uv run ruff format --check .
+uv run --extra dev ruff check . && uv run --extra dev ruff format --check .
 uv run --extra typecheck mypy api core --pretty
 ```
 
@@ -95,6 +95,12 @@ To check against **real** data, don't reach for the DB from a script
   gates use: `uv sync --extra test --extra dev --extra typecheck --extra agents`
   (CI's "Run Tests" syncs `--extra test --extra agents`); mypy always
   needs `--extra typecheck`.
+- **The system `python3` is 3.12; the project and CI run 3.14**
+  (`requires-python = ">=3.14"`). A repo script with 3.14 syntax, such
+  as a PEP 758 `except A, B:` without parentheses, stops with
+  `SyntaxError: multiple exception types must be parenthesized` under
+  `python3` (2026-10-31, `python3 automation/scripts/regen_pick_pairs.py`).
+  Run repo scripts with `uv run python`, which uses the project's 3.14.
 
 ## Troubleshooting
 

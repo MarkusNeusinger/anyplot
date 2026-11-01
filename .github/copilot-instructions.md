@@ -12,7 +12,7 @@ A companion guide `CLAUDE.md` at the repo root carries the shared rules for Clau
 - **Never echo secret values into transcripts or logs** - Verify secrets by exit code or metadata, never by printing them.
 - **Fix small build/test blockers directly, even when out of scope** - If a typecheck error, failing test, lint failure, or other small pipeline blocker shows up while you work on something unrelated, fix it in the same PR or a tiny follow-up — never leave it parked as "pre-existing" or "out of scope". A latent error that doesn't surface locally silently breaks the next Cloud Build, which deploys nothing while every PR check looks green. The bar: if the fix is under ~20 lines and obviously correct, make it; if it would expand scope meaningfully, ask first rather than deferring silently.
 - **Structural fix over symptomatic fix** - When a cheap symptomatic fix and a correct structural fix compete, take the structural one: fix the cause, never mute the alarm. Never modify working code to make a broken test pass — fix the test or flag it.
-- **Never manually merge a pipeline PR, and never bypass the pipeline** - Specifications and implementations go through the GitHub Actions workflows: `spec-create.yml` writes `plots/{spec-id}/specification.md` and `.yaml`, `impl-merge.yml` merges implementation PRs and creates their `metadata/*.yaml`, promotes the preview images to GCS and sets the `impl:{library}:done` label. Merging one by hand skips all of that and leaves `quality_score: null`, no review data, missing GCS images and the issue open. So: never write those files by hand, never run `gh pr merge` on a spec or implementation PR, and add the `approved` label to the **issue**, never to the PR. The full DON'T/DO table is in `CLAUDE.md`. Ordinary (non-pipeline) PRs are merged by the repository owner, not by an agent.
+- **Never manually merge a pipeline PR, and never bypass the pipeline** - Specifications and implementations go through the GitHub Actions workflows: `spec-create.yml` writes `plots/{spec-id}/specification.md` and `.yaml`, `impl-merge.yml` merges implementation PRs and creates their `metadata/*.yaml`, promotes the preview images to GCS and sets the `impl:{library}:done` label. Merging one by hand skips all of that and leaves `quality_score: null`, no review data, missing GCS images and the issue open. So: never write those files by hand, never run `gh pr merge` on a spec or implementation PR, and add the `approved` label to the **issue**, never to the PR. The full DON'T/DO table is in `CLAUDE.md`. Ordinary (non-pipeline) PRs are merged only on the owner's explicit, named authorization in the session.
 
 ## Changelog + releases
 
@@ -74,14 +74,14 @@ uv run pytest tests/integration
 # Run only E2E tests (requires DATABASE_URL)
 uv run pytest tests/e2e
 
-# Linting (required for CI)
-uv run ruff check .
+# Linting (required for CI); ruff is in the dev extra
+uv run --extra dev ruff check .
 
 # Auto-fix linting issues
-uv run ruff check . --fix
+uv run --extra dev ruff check . --fix
 
 # Formatting (required for CI)
-uv run ruff format .
+uv run --extra dev ruff format .
 ```
 
 ### Frontend Development
@@ -272,8 +272,8 @@ Automatic deployment on push to `main`:
 
 Before completing any task:
 1. All tests pass: `uv run pytest tests/unit tests/integration`
-2. Code passes linting: `uv run ruff check .`
-3. Code is properly formatted: `uv run ruff format --check .`
+2. Code passes linting: `uv run --extra dev ruff check .`
+3. Code is properly formatted: `uv run --extra dev ruff format --check .`
 4. Type hints are included for all new functions
 5. Docstrings follow Google style for public functions
 6. Add integration tests for database-related changes (repositories, models)
@@ -330,5 +330,5 @@ uv run alembic upgrade head
 
 - **Import errors**: Run `uv sync --all-extras` to install dependencies
 - **Test failures**: Fix a small failure you run into even when your task did not cause it (see "Fix small build/test blockers directly" under Important Rules); ask before a fix that would expand the PR's scope meaningfully
-- **Linting failures**: Run `uv run ruff check . --fix` to auto-fix common issues
+- **Linting failures**: Run `uv run --extra dev ruff check . --fix` to auto-fix common issues
 - **Type checking**: Add type hints using standard Python typing (e.g., `list[str]`, `dict[str, int]`)

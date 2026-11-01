@@ -45,13 +45,13 @@ to read it for this command — the test commands below are self-contained.
 
 1. **Code Formatting Check**
    - Preparation Command: None
-   - Command: `uv run ruff format --check .`
+   - Command: `uv run --extra dev ruff format --check .`
    - test_name: "code_formatting"
    - test_purpose: "Validates that Python code follows consistent formatting standards"
 
 2. **Backend Code Quality Check**
    - Preparation Command: None
-   - Command: `uv run ruff check .`
+   - Command: `uv run --extra dev ruff check .`
    - test_name: "backend_linting"
    - test_purpose: "Validates Python code quality, identifies unused imports, style violations, and potential bugs"
 
@@ -105,14 +105,14 @@ to read it for this command — the test commands below are self-contained.
   {
     "test_name": "backend_linting",
     "passed": false,
-    "execution_command": "uv run ruff check .",
+    "execution_command": "uv run --extra dev ruff check .",
     "test_purpose": "Validates Python code quality, identifies unused imports, style violations, and potential bugs",
     "error": "api/main.py:15:1: F401 `os` imported but unused"
   },
   {
     "test_name": "code_formatting",
     "passed": true,
-    "execution_command": "uv run ruff format --check .",
+    "execution_command": "uv run --extra dev ruff format --check .",
     "test_purpose": "Validates that Python code follows consistent formatting standards"
   }
 ]

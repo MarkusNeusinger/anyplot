@@ -2,52 +2,53 @@ library: altair
 language: python
 specification_id: pyramid-basic
 created: '2025-12-23T18:31:35Z'
-updated: '2026-04-29T15:14:07Z'
+updated: '2026-11-01T02:38:03Z'
 generated_by: claude-sonnet
-workflow_run: 25116187906
+workflow_run: 41265611024
 issue: 1000
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.14.9
+library_version: 6.3.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/altair/plot-dark.html
-quality_score: 90
+quality_score: 83
 review:
   strengths:
-  - Correct population pyramid with left/right bars from center axis
-  - 'First series (Male) correctly uses Okabe-Ito #009E73, Female uses #D55E00 — perfect
-    palette order'
-  - All font sizes explicitly set (title 28px, axis labels 22px, ticks 18px, legend
-    18-20px)
-  - 'Theme-adaptive chrome: both light (#FAF8F1) and dark (#1A1A17) backgrounds correct,
-    text and grid tokens properly applied'
-  - Interactive legend selection (click to isolate gender) using Altair-distinctive
-    selection_point + condition pattern
-  - labelExpr=abs(datum.value) elegantly shows absolute values on the symmetric axis
-  - Clean code with method chaining and proper Altair encoding types
-  - Both HTML and PNG outputs saved correctly
+  - 'Correct pyramid: male bars to the left, female to the right from one central
+    zero line, ages ascending bottom to top'
+  - Symmetric scale derived from the data (±12) with labelExpr='abs(datum.value)'
+    so both sides show magnitudes, not negative numbers
+  - 'Imprint positions 1-2 (#009E73 / #C475FD) identical in both themes, chrome fully
+    theme-adaptive'
+  - Legend-bound selection_point with conditional opacity lets the HTML viewer isolate
+    one side; tooltips show the unsigned value
+  - 'Adaptable code: column constants, escaped field names, melt-based reshape, canvas
+    padded (never cropped) to exactly 3200x1800'
   weaknesses:
-  - 'DE-01 LOW: Well-configured default appearance — lacks aesthetic sophistication
-    beyond standard bar styling. Add stronger visual hierarchy: gradient fills, size
-    variation by age group, or a meaningful annotation to signal the female demographic
-    advantage in older cohorts'
-  - 'VQ-05 MINOR: Legend placed at bottom-left corner feels slightly disconnected
-    from the main chart — consider placing it inline with the bars or inside the chart
-    frame'
+  - 'SC-04 (both): the title reads ''pyramid-basic · altair · anyplot.ai'' and lacks
+    the language segment → ''pyramid-basic · python · altair · anyplot.ai''. Likely
+    cause: alt.Title(text=...) string omits ''python''.'
+  - 'VQ-05 (both): the legend sits in the bottom-left corner below an empty band of
+    about 100 px, off-centre from the centred x-axis title and the pyramid''s central
+    axis → place it close to and centred on the plot (e.g. legend direction horizontal
+    with a centred bottom placement, or orient=''top-right'' inside the free upper-right
+    corner). Likely cause: alt.Legend(orient=''bottom'') aligns to the left edge of
+    the view.'
+  - 'Suggestion: a slightly tighter bar band (fewer px between bars) would make the
+    silhouette read more as one shape.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, clearly not pure white.
-      Chrome: Title "pyramid-basic · altair · anyplot.ai" in dark ink at top, centered. Y-axis label "Age Group" and X-axis label "Population (millions)" in dark text, all clearly readable. Tick labels (age groups 0-9 through 80+, and values 8/6/4/2/0/2/4/6/8) in muted dark ink, readable at full resolution.
-      Data: Male bars (green #009E73) extend left from center; Female bars (orange #D55E00) extend right. Classic pyramid shape visible — widest at 40-49, narrowing at both extremes. Females clearly outnumber males in 60-79 and 80+ groups. Subtle rounded corner radius on bar ends. Vertical grid lines very subtle (opacity 0.10).
-      Legend: Small box at bottom-left with "Gender" title and Male/Female color swatches — slightly disconnected from chart area.
-      Legibility verdict: PASS — all text clearly readable against the light background.
+      Background: warm off-white #FAF8F1, not pure white; canvas 3200x1800.
+      Chrome: title 'pyramid-basic · altair · anyplot.ai' centred in bold dark ink; y-axis title 'Age group' and x-axis title 'Population (millions)' in dark ink; tick labels (0-9 … 80+, and 12 10 8 6 4 2 0 2 4 6 8 10 12) in INK_SOFT; faint vertical grid; left/bottom axis domain lines. Legend box 'Gender' with Male/Female swatches in the bottom-left corner on #FFFDF6 with an INK_SOFT frame. All text readable.
+      Data: male bars #009E73 extend left, female bars #C475FD extend right from zero; widest at 40-49, clear female surplus at 60+; ages ascend bottom to top, labels level with each pair of bars.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct warm near-black, not pure black.
-      Chrome: Title in light (#F0EFE8) text, readable. Axis labels and tick labels in muted light ink (#B8B7B0), visible against dark background. Grid lines very subtle on dark surface. Legend box filled with elevated dark (#242420) with light text.
-      Data: Identical data colors — Male #009E73, Female #D55E00 — same as light render, only chrome flips. Same pyramid shape clearly visible.
-      Legibility verdict: PASS — no dark-on-dark failures detected. All axis labels, tick marks, title, and legend text are light-colored and readable against the near-black background.
+      Background: warm near-black #1A1A17, not pure black.
+      Chrome: title and axis titles in light ink #F0EFE8, ticks in #B8B7B0, legend on elevated #242420 with light text; grid faint but visible; no dark-on-dark text.
+      Data: same #009E73 / #C475FD bars as the light render; only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -58,51 +59,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, ticks
-          18px, legend 18-20px'
+        comment: All sizes set explicitly (title 16, axis titles 12, ticks/legend
+          10 at scale 4); title ~37% of width, balanced axis text, readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap — age group labels well-spaced, tick labels clear, legend
-          outside data area
+        comment: No text collisions; legend padded inside its frame and clear of the
+          plot
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible, appropriate width for 9 age groups, pyramid
-          shape unmistakable
+        comment: Nine thick bars with small gaps, legend swatches match the bars in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1+2 (green/orange) — CVD-safe, high contrast
-          between series and background
+        comment: Green vs lilac differ clearly in hue and luminance, side position
+          is a second cue
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 'Good canvas utilization, minor issue: legend at bottom-left corner
-          feels slightly isolated from chart'
+        comment: 3200x1800, plot fills the canvas well, but the legend sits off-centre
+          in the bottom-left corner under an empty band (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis 'Population (millions)' with units, Y-axis 'Age Group' descriptive
+        comment: '''Population (millions)'' with units, ''Age group'' descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Male=#009E73 (position 1), Female=#D55E00 (position 2); backgrounds
-          #FAF8F1/#1A1A17; chrome fully theme-adaptive'
+        comment: 'Male #009E73, Female #C475FD (Imprint 1-2), identical in both renders;
+          backgrounds #FAF8F1 / #1A1A17, chrome flips correctly'
     design_excellence:
-      score: 12
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -110,25 +112,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured default — correct palette, slight corner radius on
-          bars, but no distinctive design element beyond library defaults
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Subtle grid (opacity 0.10), no spines (stroke=None on view), elevated
-          legend box with stroke — good but not perfect
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Dual contrasting colors (green/orange) guide the eye to compare genders;
-          female demographic advantage in older groups is visually obvious from color
-          contrast
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -136,29 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Classic population pyramid: left bars for male, right bars for female,
-          shared central Y-axis'
+        comment: Classic mirrored pyramid, two series only, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: category labels on central axis, left/right
-          bars, distinct colors, legend, symmetric axis scale'
+        comment: C1 opposing bars from one centre, C2 symmetric +/-12 scale with abs()
+          tick labels, C3 one colour per side + legend, C4 ages ascending bottom to
+          top level with bars, C5 no extras
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y=age groups, X=population (negative for male, positive for female),
-          absolute values shown via labelExpr
+        comment: Signed values at their data positions, domain covers all values symmetrically
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title 'pyramid-basic · altair · anyplot.ai' correct; Legend 'Gender'
-          with Male/Female labels
+        passed: false
+        comment: Title lacks the language segment 'python' (defect line); legend 'Gender'
+          Male/Female correct
     data_quality:
       score: 15
       max: 15
@@ -168,22 +165,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 9 age groups (0-9 through 80+), clear pyramid shape, pronounced asymmetry
-          in older cohorts — shows all aspects of the chart type
+        comment: Nine groups, bulge at 40-49, visible asymmetry in older cohorts
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard demographic scenario — population pyramid with age/sex distribution,
-          a neutral scientific use case
+        comment: Neutral age/sex population pyramid
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 1.2–8.7M plausible for mid-sized country; female longevity
-          advantage in older groups matches real-world demographic patterns
+        comment: 1.2-8.7 M per cohort plausible for a mid-sized country; female surplus
+          in older ages realistic. No Check values in spec
     code_quality:
       score: 10
       max: 10
@@ -193,59 +188,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: path fixup -> data -> chart -> save, no functions
-          or classes'
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: importlib, os, sys, altair, pandas — all used
+        comment: altair, numpy, pandas, PIL all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Altair method chaining, no fake UI elements
+        comment: melt + np.where, no hand-rolled algorithm, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html, current Altair API
+        comment: plot-{THEME}.png padded to 3200x1800 + plot-{THEME}.html, Altair
+          6 API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Textbook Altair: mark_bar + encode with typed fields, alt.Scale/Axis/Legend/Title,
-          configure_* pattern'
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: selection_point(bind='legend') + alt.condition() for interactive
-          highlighting — distinctly Altair's declarative interaction grammar; labelExpr='abs(datum.value)'
-          for axis label transformation
+        comment: Tidy long frame, typed escaped encodings, Scale/Axis/Legend objects
+          and configure_* chain
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: selection_point(bind='legend') + alt.condition opacity, and Vega
+          expression labelExpr='abs(datum.value)' for magnitude ticks
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-1bf36bc7d5
+  rendered_at: '2026-11-01T02:34:39Z'
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - hover-tooltips
   - html-export
-  - manual-ticks
-  patterns: []
+  patterns:
+  - wide-to-long
   dataprep: []
   styling:
   - alpha-blending
