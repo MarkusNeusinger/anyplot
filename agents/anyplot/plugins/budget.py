@@ -164,7 +164,7 @@ class BudgetPlugin(BasePlugin):
                 return None  # ToolSafety refuses an invalid call; it is not a run either
             usage = get_services().usage
             user = ledger.user_id or tool_context.session.user_id
-            if not usage.runs_ok(user, get_settings()):
+            if not usage.runs_ok(user, get_settings(), ledger.tier):
                 attribution("budget_pipeline", ledger, verdict="refused")
                 return {"status": "error", "code": "budget"}
             usage.add_pipeline_run(user)

@@ -83,12 +83,15 @@ Three rules hold for everything here:
 | `AGENT_RENDER_IMAGE` | `anyplot-renderer:dev` | Image the `local` renderer runs, built from `renderer/Dockerfile` |
 | `AGENT_RENDER_CONCURRENCY` | `1` | Theme renders at the same time, for every backend (`render/serial.py`); serial, because one 4 GiB instance holds one sandbox safely (spikes S and S2) |
 | `AGENT_WATERMARK` | `true` | Whether the served PNGs (the artifact route and the feedback bundle) carry the footer strip; `false` serves the raw renders. The gates, the reviewer and `plot.py` always see the raw render |
-| `AGENT_RUN_CONCURRENCY` | `1` | Sandbox runs in flight (a turn's `plot_pipeline` or `run_data_code` call, holding its entry until the turn ends); the run queue holds the rest. A chat turn without one never enters the queue |
-| `AGENT_RUNS_PER_MINUTE` | `1` | Sandbox runs that may start within any 60 seconds (a sliding window), one per turn |
-| `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, after which the turn ends with `error{code:"capacity"}`; the queue holds rate x wait / 60 entries (10), and a sandbox run beyond that ends its turn the same way. Through the BFF the whole turn, this wait included, ends by `AGENT_TURN_MAX_S` (1,190 s, see `docs/reference/api.md`), which the root's first call, the full wait and the 540 s run fit into |
-| `AGENT_USER_MAX_RUNS` | `3` | Sandbox runs one user may have queued or running at the same time, across all their sessions (browser windows); the turn whose run would be one more ends with `error{code:"run_limit"}`, before the queue's length is checked. Everything else runs per session at once: a session answers `409 run_active` only to a second thing of its own |
-| `AGENT_USER_MESSAGES_PER_MINUTE` | `10` | Chat turns (typed messages and actions) per user within any 60 seconds; one more gets the fixed `rate_limited` refusal before the scope judge, so it costs no model call |
-| `AGENT_USER_MESSAGES_PER_DAY` | `200` | Chat turns per user and UTC day; one more gets the fixed `daily_limit` refusal before the scope judge |
+| `AGENT_RUN_CONCURRENCY` | `1` | Sandbox runs in flight in the public lane (a turn's `plot_pipeline` or `run_data_code` call, holding its entry until the turn ends); the run queue holds the rest. A chat turn without one never enters the queue |
+| `AGENT_RUNS_PER_MINUTE` | `1` | Sandbox runs that may start within any 60 seconds in the public lane (a sliding window), one per turn |
+| `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, after which the turn ends with `error{code:"capacity"}`; each lane holds rate x wait / 60 entries (10 in the public lane; a lane without a rate counts its concurrency, 50 in the admin lane), and a sandbox run beyond that ends its turn the same way. Through the BFF the whole turn, this wait included, ends by `AGENT_TURN_MAX_S` (1,190 s, see `docs/reference/api.md`), which the root's first call, the full wait and the 540 s run fit into |
+| `AGENT_USER_MAX_RUNS` | `3` | Sandbox runs one public user may have queued or running at the same time, across all their sessions (browser windows); the turn whose run would be one more ends with `error{code:"run_limit"}`, before the queue's length is checked. Everything else runs per session at once: a session answers `409 run_active` only to a second thing of its own |
+| `AGENT_ADMIN_RUN_CONCURRENCY` | `5` | Sandbox runs in flight in the admin lane, beside the public lane's: a request with `X-Anyplot-Tier: admin` from an allowed caller (the BFF for its admins) |
+| `AGENT_ADMIN_RUNS_PER_MINUTE` | unset | Sandbox runs that may start within any 60 seconds in the admin lane; unset sets no rate window |
+| `AGENT_ADMIN_USER_MAX_RUNS` | `5` | Sandbox runs one admin may have queued or running at the same time; `GET /v1/status` reports it to an admin as `user_max_runs`, and `.plot_all()` starts that many plots at once |
+| `AGENT_USER_MESSAGES_PER_MINUTE` | `10` | Chat turns (typed messages and actions) per user within any 60 seconds; one more gets the fixed `rate_limited` refusal before the scope judge, so it costs no model call. An admin is exempt |
+| `AGENT_USER_MESSAGES_PER_DAY` | `200` | Chat turns per user and UTC day; one more gets the fixed `daily_limit` refusal before the scope judge. An admin is exempt |
 | `AGENT_SESSION_REFUSALS` | `3` | Scope-judge refusals of type `out_of_scope` or `attack` (never `needs_data`; `other_library` only with `AGENT_OTHER_LIBRARY_COUNTS`) after which a session is closed: that refusal and every later turn answer `session_closed`, a paste `403 session_closed`, and the user reloads the page for a new session |
 | `AGENT_OTHER_LIBRARY_COUNTS` | `false` | Whether the `other_library` answer (this plot in another library or language) counts toward `AGENT_SESSION_REFUSALS` |
 | `AGENT_SESSION_CLOSE_WARNING` | `true` | The counted refusal one before the closing one ends with the fixed `close_warning` sentence |
@@ -114,13 +117,13 @@ Three rules hold for everything here:
 | `AGENT_ROOT_EFFORT`, `AGENT_ADAPTER_EFFORT`, `AGENT_REVIEWER_EFFORT` | `medium`, `high`, `high` | Claude's effort per agent kind (`low`, `medium`, `high`), set by the 2026-10-13 measurements (see [The plot pipeline since 2026-10-13](#the-plot-pipeline-since-2026-10-13)); on the claude-cli transport also how much the CLI thinks |
 | `AGENT_MAX_LLM_CALLS` | `16` | LLM calls per request |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `800000` | Cost-weighted tokens per request (see [Token budgets and output caps](#token-budgets-and-output-caps)) |
-| `AGENT_DAILY_TOKEN_BUDGET` | `8000000` | Cost-weighted tokens per user and day |
-| `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
-| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `24000000` | Cost-weighted tokens per day for the whole service |
+| `AGENT_DAILY_TOKEN_BUDGET` | `8000000` | Cost-weighted tokens per user and day; an admin is exempt |
+| `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day; an admin is exempt |
+| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `80000000` | Cost-weighted tokens per day for the whole service, admins included (24,000,000 before 2026-11-01) |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per theme render |
 | `AGENT_DATA_CODE` | `true` | Whether the root's `run_data_code` runs; `false` makes it answer `unavailable`. The tool also answers `unavailable` while the renderer has no `POST /run-data` (`404`) |
 | `AGENT_DATA_RUN_TIMEOUT_S` | `20` | Seconds one data snippet may run, at most 30 |
-| `AGENT_DAILY_DATA_RUNS` | `30` | `run_data_code` runs per user and day, counted before each run; a data run also takes the run queue's slot and its turn's start in the rate window, like a plot |
+| `AGENT_DAILY_DATA_RUNS` | `30` | `run_data_code` runs per user and day, counted before each run; a data run also takes the run queue's slot and its turn's start in the rate window, like a plot. An admin is exempt from the count |
 | `AGENT_REQUEST_DEADLINE_S` | `540` | Hard request deadline (180 before 2026-10-13: with a self-review per round, the soft deadline of 140 s stopped the repair round in 11 of 20 runs; the owner's rule is that no plot ships unfinished for lack of time) |
 | `AGENT_SOFT_DEADLINE_S` | `480` | Soft deadline inside the pipeline |
 | `AGENT_JUDGE_TIMEOUT_S` | `4` | Budget of one judge verdict, its one retry and the half-second wait before it included |
@@ -221,9 +224,9 @@ Claude runs with adaptive thinking on the root (`AGENT_ROOT_THINKING_BUDGET`, 1,
 uv run uvicorn agents.main:app --port 8001
 ```
 
-The service needs the header `X-Anyplot-User` on every `/v1` route; outside `ENVIRONMENT=development` it also requires the IAM-forwarded ID token (`AGENT_SERVICE_URLS`, `AGENT_ALLOWED_CALLERS`). To drive it from the plot page, run the API in front of it as described under [Drive the chat page](#drive-the-chat-page).
+The service needs the header `X-Anyplot-User` on every `/v1` route; outside `ENVIRONMENT=development` it also requires the IAM-forwarded ID token (`AGENT_SERVICE_URLS`, `AGENT_ALLOWED_CALLERS`). `X-Anyplot-Tier: admin` serves a request as an admin: the run queue's admin lane (five runs at once, no rate window) and no per-user day caps or message minute; without it a request is public. The BFF sends it for every admin. To drive it from the plot page, run the API in front of it as described under [Drive the chat page](#drive-the-chat-page).
 
-At the defaults only one sandbox run may start a minute, so a second "Create plot" within a minute waits in the run queue: the turn starts at once, and when its pipeline is about to run, the stream shows `status` events with `step: "queued"` until the minute is over. A turn that runs no sandbox (a question, a refusal, the summary after a paste, a data request in step 1) never waits. To iterate faster on your own machine, export `AGENT_RUNS_PER_MINUTE=60`; more than 10 chat turns a minute get the `rate_limited` refusal (`AGENT_USER_MESSAGES_PER_MINUTE`). The theme toggle (`POST /v1/sessions/{sid}/versions/{version}/render {"theme": "dark"}`) never waits in the queue.
+At the defaults only one public sandbox run may start a minute, so a second "Create plot" within a minute waits in the run queue: the turn starts at once, and when its pipeline is about to run, the stream shows `status` events with `step: "queued"` until the minute is over. A turn that runs no sandbox (a question, a refusal, the summary after a paste, a data request in step 1) never waits. To iterate faster on your own machine, send `X-Anyplot-Tier: admin` or export `AGENT_RUNS_PER_MINUTE=60`; more than 10 chat turns a minute get the `rate_limited` refusal (`AGENT_USER_MESSAGES_PER_MINUTE`) in the public tier. The theme toggle (`POST /v1/sessions/{sid}/versions/{version}/render {"theme": "dark"}`) never waits in the queue.
 
 ### Drive the chat page
 
@@ -383,7 +386,7 @@ The container has no Application Default Credentials, so a "Create plot" fails a
 
 `cloudbuild.yaml` builds the image, deploys a `candidate` revision without traffic, smokes it, and promotes exactly that revision:
 
-- The flags follow the design: one instance (sessions live in memory), 1 vCPU and 2 GiB (2 vCPU and 4 GiB before 2026-10-29), `--concurrency=20` and `--timeout=1200` (900 before 2026-10-13) for the run queue's open streams, `--no-allow-unauthenticated`, the service account `anyplot-agents@`, no `--sandbox-launcher`, and `--update-env-vars` only.
+- The flags follow the design: one instance (sessions live in memory), 1 vCPU and 2 GiB (2 vCPU and 4 GiB before 2026-10-29), `--concurrency=30` (20 before the admin lane of 2026-11-01) and `--timeout=1200` (900 before 2026-10-13) for the run queue's open streams, `--no-allow-unauthenticated`, the service account `anyplot-agents@`, no `--sandbox-launcher`, and `--update-env-vars` only.
 - `_PROVIDER`, `_MODEL`, `_JUDGE_MODEL` and `_LIBRARIES` default to the settings defaults, so a deploy switches the model arm without a code change. The budgets and limits are not set, so the deployed code's settings defaults apply.
 - `_RENDER_URL` is the `status.url` of the real `anyplot-renderer`, and the deploy refuses to run without it, because `--update-env-vars` would otherwise replace a working renderer URL with nothing. `AGENT_ALLOWED_CALLERS` is `_API_CALLER`, anyplot-api's runtime identity (the Compute Engine default service account unless a build sets another one), plus `anyplot-agents@` itself for the smoke. The deploy adds the service's own URL to `AGENT_SERVICE_URLS`.
 - The smoke expects Cloud Run IAM to refuse an anonymous `GET /v1/status` with `403`. With `_SMOKE_AUTH=true`, the default, it also calls `/v1/status` with an ID token minted for `anyplot-agents@` and checks that the answer names the configured provider, model, location and libraries.

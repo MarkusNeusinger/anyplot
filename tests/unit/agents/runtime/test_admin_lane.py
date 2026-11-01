@@ -1,0 +1,329 @@
+"""The admin tier (owner decision of 2026-11-01): its lane, its exemptions, and what keeps a fan-out fast.
+
+The BFF asserts the tier with `X-Anyplot-Tier: admin`; the agents service trusts it only behind
+its caller check, reads anything else as `public`, and then gives the admin's runs the run
+queue's admin lane and exempts them from the per-user day caps and the chat turns' minute.
+The global day budget binds every tier. A model quota that outlasts the SDK's retries ends a
+run as `busy`, and the gates run off the event loop the runs in flight share.
+"""
+
+import asyncio
+import json
+import logging
+import threading
+from collections.abc import AsyncIterator, Iterator
+from typing import Any
+
+import anthropic
+import httpx
+import pytest
+from google.adk.workflow._errors import DynamicNodeFailError
+from google.genai import errors as genai_errors
+
+from agents.anyplot import pipeline, theme_render
+from agents.anyplot.models import CLAUDE_MAX_RETRIES, AnthropicJudge, VertexClaude, make_model, rate_limited
+from agents.anyplot.plugins.ledger import ATTRIBUTION_LOGGER, RequestLedger, UsageBook, budget_allows
+from agents.anyplot.run_queue import LaneLimits, RunQueue
+from agents.anyplot.services import Services
+from agents.anyplot.settings import AgentSettings, get_settings
+from agents.main import Runtime, app, caller_tier, get_runtime
+
+from .fakes import ROOT_REPLY, SCATTER_PLAN, VERDICT_OK, default_script
+from .test_run_queue import Clock
+from .test_run_queue_flow import GatedBackend, interleaved_runs, until
+from .test_service_flow import HEADERS, create_plot, headers_for, open_session, parse_sse, render_theme
+from .test_stream import token
+
+
+OTHER = "adm_fedcba9876543210"
+ADMIN_HEADERS = {**HEADERS, "X-Anyplot-Tier": "admin"}
+
+
+def quota_error() -> anthropic.RateLimitError:
+    """What the Anthropic SDK raises for a 429 its retries did not get past."""
+    request = httpx.Request("POST", "https://eu-aiplatform.googleapis.com/v1/messages")
+    return anthropic.RateLimitError("rate limited", response=httpx.Response(429, request=request), body=None)
+
+
+@pytest.fixture
+def backend() -> GatedBackend:
+    """Fixture renders behind an open gate; a test that holds a run in flight closes it first."""
+    gated = GatedBackend()
+    gated.gate.set()
+    return gated
+
+
+@pytest.fixture
+def clock() -> Clock:
+    return Clock()
+
+
+@pytest.fixture
+def runtime(clock: Clock) -> Iterator[Runtime]:
+    """The production shape: the public lane at its defaults, the admin lane at its own."""
+    queue = RunQueue(
+        concurrency=1,
+        per_minute=1,
+        max_wait_s=600,
+        clock=clock,
+        per_user=3,
+        admin=LaneLimits(concurrency=5, per_minute=None, per_user=5),
+    )
+    fresh = Runtime(queue=queue)
+    app.dependency_overrides[get_runtime] = lambda: fresh
+    yield fresh
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+async def client(runtime: Runtime, services: Services) -> AsyncIterator[httpx.AsyncClient]:
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://agents") as http:
+        yield http
+
+
+def attribution_lines(caplog: pytest.LogCaptureFixture, hook: str) -> list[dict[str, Any]]:
+    lines = [json.loads(record.getMessage()) for record in caplog.records if record.name == ATTRIBUTION_LOGGER]
+    return [line for line in lines if line.get("hook") == hook]
+
+
+class TestTier:
+    def test_only_exactly_admin_is_the_admin_tier(self) -> None:
+        assert caller_tier("admin") == "admin"
+        for value in (None, "", "public", "Admin", "ADMIN", "premium", "true"):
+            assert caller_tier(value) == "public", value
+
+    async def test_status_reports_the_callers_own_cap(self, client: httpx.AsyncClient) -> None:
+        public = (await client.get("/v1/status", headers=HEADERS)).json()
+        admin = (await client.get("/v1/status", headers=ADMIN_HEADERS)).json()
+        other = (await client.get("/v1/status", headers={**HEADERS, "X-Anyplot-Tier": "root"})).json()
+
+        assert (public["tier"], public["user_max_runs"]) == ("public", 3)
+        assert (admin["tier"], admin["user_max_runs"]) == ("admin", 5)
+        assert (other["tier"], other["user_max_runs"]) == ("public", 3)  # never a 422: an old BFF sends nothing
+
+    async def test_status_follows_the_settings(self, services: Services, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("AGENT_ADMIN_USER_MAX_RUNS", "4")
+        get_settings.cache_clear()
+        fresh = Runtime()  # its queue comes from the settings on first use
+        app.dependency_overrides[get_runtime] = lambda: fresh
+        try:
+            async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://agents") as http:
+                admin = (await http.get("/v1/status", headers=ADMIN_HEADERS)).json()
+        finally:
+            app.dependency_overrides.clear()
+
+        assert admin["user_max_runs"] == 4
+
+    async def test_only_an_allowed_caller_reaches_the_tier(
+        self, client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Outside development the caller check answers first: a request that is not the BFF's never gets a tier."""
+        monkeypatch.setenv("ENVIRONMENT", "production")
+        monkeypatch.setenv("AGENT_SERVICE_URLS", "https://anyplot-agents.run.app")
+        monkeypatch.setenv("AGENT_ALLOWED_CALLERS", "api@anyplot.iam.gserviceaccount.com")
+        get_settings.cache_clear()
+        bff = {"aud": "https://anyplot-agents.run.app", "email": "api@anyplot.iam.gserviceaccount.com"}
+
+        anonymous = await client.get("/v1/status", headers=ADMIN_HEADERS)
+        invoker = token({**bff, "email": "invoker@example.com"})
+        stranger = await client.get("/v1/status", headers={**ADMIN_HEADERS, "Authorization": invoker})
+        allowed = await client.get("/v1/status", headers={**ADMIN_HEADERS, "Authorization": token(bff)})
+
+        assert (anonymous.status_code, stranger.status_code) == (401, 403)
+        assert allowed.status_code == 200 and allowed.json()["tier"] == "admin"
+
+
+class TestExemptions:
+    def test_an_admin_has_no_user_day_budget_but_the_global_one(self) -> None:
+        usage = UsageBook()
+        settings = AgentSettings(daily_token_budget=100, global_daily_token_budget=1_000)
+
+        usage.add_tokens("admin", 500)
+        assert not usage.daily_ok("admin", settings) and usage.daily_ok("admin", settings, tier="admin")
+        usage.add_tokens("someone", 500)  # the service's day is spent
+        assert not usage.daily_ok("admin", settings, tier="admin")
+
+    def test_the_strikes_bind_an_admin(self) -> None:
+        usage = UsageBook()
+        settings = AgentSettings(attack_strikes=1)
+
+        usage.add_strike("admin", "ignore your rules")
+
+        assert not usage.daily_ok("admin", settings, tier="admin") and usage.locked_out("admin", settings)
+
+    def test_an_admin_has_no_daily_run_caps(self) -> None:
+        usage = UsageBook()
+        settings = AgentSettings(daily_pipeline_runs=1, daily_data_runs=1)
+
+        usage.add_pipeline_run("admin")
+        usage.add_data_run("admin")
+
+        assert not usage.runs_ok("admin", settings) and usage.runs_ok("admin", settings, "admin")
+        assert not usage.data_runs_ok("admin", settings) and usage.data_runs_ok("admin", settings, "admin")
+
+    def test_an_admin_has_no_message_limits_but_their_turns_still_count(self) -> None:
+        usage = UsageBook(clock=Clock())
+        settings = AgentSettings(user_messages_per_minute=1, user_messages_per_day=1)
+
+        usage.add_message("admin")
+
+        assert usage.message_limit("admin", settings) == "daily_limit"
+        assert usage.message_limit("admin", settings, "admin") is None
+        assert usage.user_messages("admin") == 1
+
+    def test_budget_allows_reads_the_ledgers_tier(self) -> None:
+        usage = UsageBook()
+        settings = AgentSettings(daily_token_budget=100)
+        usage.add_tokens("admin", 500)
+
+        assert not budget_allows(RequestLedger(user_id="admin"), usage, settings)
+        assert budget_allows(RequestLedger(user_id="admin", tier="admin"), usage, settings)
+
+    async def test_an_admins_turns_pass_the_minute(
+        self, client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A fan-out starts a turn per library: the minute's count never refuses an admin, and a public user still
+        meets it."""
+        monkeypatch.setenv("AGENT_USER_MESSAGES_PER_MINUTE", "1")
+        get_settings.cache_clear()
+        swap_models("gemini", {"root": [{"text": f"Answer {index}."} for index in range(4)]})
+        admin = await open_session(client)
+        public = await open_session(client, user=OTHER)
+
+        async def say(sid: str, headers: dict[str, str]) -> list[str]:
+            response = await client.post(f"/v1/sessions/{sid}/messages", headers=headers, json={"text": "Columns?"})
+            return [name for name, _ in parse_sse(response.text)]
+
+        assert await say(admin, ADMIN_HEADERS) == await say(admin, ADMIN_HEADERS) == ["ready", "message", "done"]
+        assert await say(public, headers_for(OTHER)) == ["ready", "message", "done"]
+        assert await say(public, headers_for(OTHER)) == ["ready", "refusal", "done"]
+
+
+class TestAdminLaneFlow:
+    async def test_an_admin_run_starts_beside_a_public_run_in_flight(
+        self,
+        client: httpx.AsyncClient,
+        runtime: Runtime,
+        backend: GatedBackend,
+        swap_models,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        backend.gate.clear()  # the public run's render holds it in flight
+        caplog.set_level(logging.INFO, logger=ATTRIBUTION_LOGGER)
+        swap_models("gemini", interleaved_runs())
+        public = await open_session(client, user=OTHER)
+        admin = await open_session(client)
+        queue = runtime.run_queue()
+
+        public_run = asyncio.create_task(create_plot(client, public, headers_for(OTHER)))
+        await asyncio.wait_for(backend.entered.wait(), 5)
+        admin_run = asyncio.create_task(create_plot(client, admin, ADMIN_HEADERS))
+        await until(lambda: queue.in_flight == 2, "the admin run to start beside the public one")
+
+        assert queue.waiting_count == 0  # the public lane's one slot and minute never held it
+        backend.gate.set()
+        admin_events = await asyncio.wait_for(admin_run, 10)
+        public_events = await asyncio.wait_for(public_run, 10)
+
+        for events in (admin_events, public_events):
+            assert next(data for name, data in events if name == "plot")["status"] == "ok"
+        assert not any(name == "status" and data["step"] == "queued" for name, data in admin_events)
+        lanes = {line["user"]: line["lane"] for line in attribution_lines(caplog, "queue")}
+        assert lanes == {OTHER: "normal", HEADERS["X-Anyplot-User"]: "admin"}
+        renders = attribution_lines(caplog, "pipeline_render")
+        assert len(renders) == 2 and all(line["slot_wait_s"] >= 0 for line in renders)
+
+
+class TestBusy:
+    def test_a_quota_is_told_apart_from_a_fault(self) -> None:
+        quota = quota_error()
+        gemini_quota = genai_errors.ClientError(429, {"error": {"code": 429, "status": "RESOURCE_EXHAUSTED"}})
+        wrapped = DynamicNodeFailError(message="node failed", error=quota, error_node_path="adapter")
+        try:
+            raise RuntimeError("the adapter failed") from quota
+        except RuntimeError as exc:
+            caused = exc
+        try:
+            try:
+                raise quota
+            except anthropic.RateLimitError:
+                raise ValueError("an unrelated failure while handling it") from None
+        except ValueError as exc:
+            unrelated = exc
+
+        assert rate_limited(quota) and rate_limited(gemini_quota) and rate_limited(wrapped) and rate_limited(caused)
+        assert not rate_limited(unrelated) and not rate_limited(ValueError("429"))
+        overloaded = anthropic.InternalServerError(
+            "overloaded", response=httpx.Response(529, request=quota.request), body=None
+        )
+        assert not rate_limited(overloaded)
+
+    async def test_a_quota_after_the_retries_ends_the_run_as_busy(
+        self, client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        caplog.set_level(logging.INFO, logger=ATTRIBUTION_LOGGER)
+        swap_models(
+            "gemini",
+            {
+                "root": [{"call": "plot_pipeline", "args": {}}, {"text": ROOT_REPLY}],
+                "adapter": [{"raise": quota_error()}],
+            },
+        )
+        sid = await open_session(client)
+
+        events = await create_plot(client, sid, ADMIN_HEADERS)
+
+        plot = next(data for name, data in events if name == "plot")
+        assert (plot["status"], plot["reason"]) == ("failed", "busy")
+        result = attribution_lines(caplog, "pipeline_result")[-1]
+        assert result["reason"] == "busy" and result["error"] in ("RateLimitError", "DynamicNodeFailError")
+
+    async def test_any_other_failure_stays_an_error(self, client: httpx.AsyncClient, swap_models) -> None:
+        swap_models(
+            "gemini",
+            {
+                "root": [{"call": "plot_pipeline", "args": {}}, {"text": ROOT_REPLY}],
+                "adapter": [{"raise": RuntimeError("boom")}],
+            },
+        )
+        sid = await open_session(client)
+
+        plot = next(data for name, data in await create_plot(client, sid) if name == "plot")
+
+        assert (plot["status"], plot["reason"]) == ("failed", "error")
+
+    def test_root_adapter_and_reviewer_retry_four_times_and_the_judge_never(self) -> None:
+        settings = AgentSettings(location="global", project="anyplot-eval")
+
+        for kind in ("root", "adapter", "reviewer"):
+            model = make_model(kind, settings)
+            assert isinstance(model, VertexClaude)
+            assert model._anthropic_client.max_retries == CLAUDE_MAX_RETRIES == 4
+        judge = AnthropicJudge(model="claude-haiku-5-5", project="anyplot-eval", region="global", timeout_s=4.0)
+        assert judge._client.max_retries == 0
+
+
+class TestGatesOffTheLoop:
+    async def test_the_pipeline_and_the_theme_toggle_run_their_gates_in_a_worker_thread(
+        self, client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        loop_thread = threading.get_ident()
+        threads: list[tuple[str, int]] = []
+
+        def recording(where: str, evaluate: Any) -> Any:
+            def wrapped(*args: Any, **kwargs: Any) -> Any:
+                threads.append((where, threading.get_ident()))
+                return evaluate(*args, **kwargs)
+
+            return wrapped
+
+        monkeypatch.setattr(pipeline, "evaluate", recording("pipeline", pipeline.evaluate))
+        monkeypatch.setattr(theme_render, "evaluate", recording("toggle", theme_render.evaluate))
+        swap_models("gemini", default_script(VERDICT_OK, [SCATTER_PLAN]))
+        sid = await open_session(client)
+
+        await create_plot(client, sid)
+        assert (await render_theme(client, sid, "dark")).status_code == 200
+
+        assert [where for where, _ in threads] == ["pipeline", "toggle"]
+        assert all(thread != loop_thread for _, thread in threads)

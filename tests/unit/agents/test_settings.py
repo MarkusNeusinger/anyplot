@@ -37,6 +37,9 @@ class TestDefaults:
         assert settings.runs_per_minute == 1
         assert settings.queue_max_wait_s == 600
         assert settings.user_max_runs == 3  # sandbox runs per user across sessions (owner decision of 2026-10-21)
+        # The admin lane (owner decision of 2026-11-01): five runs at once, no rate window, five per admin.
+        assert (settings.admin_run_concurrency, settings.admin_runs_per_minute) == (5, None)
+        assert settings.admin_user_max_runs == 5
         assert settings.service_urls == []
         assert settings.dev_fixture is None
         assert settings.libraries == ["matplotlib", "seaborn"]
@@ -48,7 +51,7 @@ class TestDefaults:
         assert settings.request_token_budget == 800_000  # never cuts a live-flow round short (CLI max ~458k)
         assert settings.daily_token_budget == 8_000_000  # about 30 median live-flow runs
         assert settings.daily_pipeline_runs == 40
-        assert settings.global_daily_token_budget == 24_000_000  # three users at their daily budget
+        assert settings.global_daily_token_budget == 80_000_000  # the runaway guard of every tier (2026-11-01)
         assert settings.render_timeout_s == 60
         assert settings.request_deadline_s == 540  # a round with self-review takes about 60 s; never cut short
         assert settings.soft_deadline_s == 480
@@ -125,6 +128,28 @@ class TestEnvironmentOverrides:
         settings = AgentSettings()
 
         assert (settings.run_concurrency, settings.runs_per_minute, settings.queue_max_wait_s) == (2, 3, 300)
+
+    def test_admin_lane_settings_come_from_the_environment(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("AGENT_ADMIN_RUN_CONCURRENCY", "4")
+        monkeypatch.setenv("AGENT_ADMIN_RUNS_PER_MINUTE", "6")
+        monkeypatch.setenv("AGENT_ADMIN_USER_MAX_RUNS", "2")
+
+        settings = AgentSettings()
+
+        assert settings.admin_run_concurrency == 4
+        assert (settings.admin_runs_per_minute, settings.admin_user_max_runs) == (6, 2)
+
+    def test_a_blank_admin_rate_sets_no_window(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("AGENT_ADMIN_RUNS_PER_MINUTE", " ")
+
+        assert AgentSettings().admin_runs_per_minute is None
+
+    @pytest.mark.parametrize("name", ["AGENT_ADMIN_RUN_CONCURRENCY", "AGENT_ADMIN_RUNS_PER_MINUTE"])
+    def test_the_admin_lane_limits_are_positive(self, monkeypatch: pytest.MonkeyPatch, name: str) -> None:
+        monkeypatch.setenv(name, "0")
+
+        with pytest.raises(ValidationError):
+            AgentSettings()
 
     @pytest.mark.parametrize(("value", "expected"), [("false", False), ("0", False), ("true", True), ("1", True)])
     def test_the_footer_strip_switch_comes_from_the_environment(

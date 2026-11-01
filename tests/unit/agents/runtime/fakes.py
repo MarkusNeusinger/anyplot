@@ -86,6 +86,8 @@ class ScriptedLlm(BaseLlm):
         self.requests.append(llm_request)
         queue = self.script.get(kind_of(llm_request), [])
         item = queue.pop(0) if queue else {"text": "fallback"}
+        if "raise" in item:  # the call fails, as a quota (429) or an outage would
+            raise item["raise"]
         yield gemini_response(item)
 
 

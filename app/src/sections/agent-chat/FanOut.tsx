@@ -8,10 +8,12 @@
  * version into it with its bindings and their confirmation (`copyData`, without
  * the summary turn of a paste), whatever the data's origin: pasted, opened,
  * computed or changed by the assistant. It then starts `create_plot` in at most
- * `maxRuns` sessions at a time (`grantSlots`): the server's
- * `AGENT_USER_MAX_RUNS`, which refuses one run more with `run_limit`. Each run
- * goes through the agents service's run queue like any other, and each session
- * is deleted when the panel closes or the page goes, like the page's own.
+ * `maxRuns` sessions at a time (`grantSlots`): the caller's own cap, which
+ * `/status` reports as `user_max_runs` (`AGENT_ADMIN_USER_MAX_RUNS`, 5, for the
+ * admin since 2026-11-01) and which refuses one run more with `run_limit`. Each
+ * run goes through the agents service's run queue, in the admin lane with its own
+ * five slots, and each session is deleted when the panel closes or the page goes,
+ * like the page's own.
  *
  * A server without the copy (the page deployed before the API or the agents
  * service) answers `404 not_found`: a library then posts the page's upload again
@@ -217,7 +219,7 @@ export interface FanOutProps {
    */
   upload?: DatasetUpload;
   bindings: BindingMap;
-  /** How many plots run at once (`AGENT_USER_MAX_RUNS`). */
+  /** How many plots run at once: the caller's own cap (`user_max_runs` of `/status`). */
   maxRuns: number;
   onClose: () => void;
   /** The panel, which takes the focus when a key press on `.plot_all()` opened it. */

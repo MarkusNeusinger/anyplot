@@ -109,8 +109,13 @@ export interface AgentStatus {
   provider?: string;
   waiting?: number;
   in_flight?: number;
-  /** `AGENT_USER_MAX_RUNS`: one user's sandbox runs queued or running at once; absent from an older server. */
+  /**
+   * The caller's own cap of sandbox runs queued or running at once: `AGENT_USER_MAX_RUNS`, or
+   * `AGENT_ADMIN_USER_MAX_RUNS` for an admin; absent from an older server.
+   */
   user_max_runs?: number;
+  /** The tier the agents service served the request as (`X-Anyplot-Tier`); absent from an older server. */
+  tier?: 'admin' | 'public';
   enabled: boolean;
 }
 
@@ -1201,7 +1206,7 @@ export type PipelineStep = (typeof PIPELINE_STEPS)[number];
 
 export const STREAM_ERROR_CODES = [
   'capacity',
-  // The user already has `AGENT_USER_MAX_RUNS` (3) sandbox runs queued or running in other windows.
+  // The user already has their cap of sandbox runs (`user_max_runs`) queued or running in other windows.
   'run_limit',
   'deadline',
   'guard_unavailable',

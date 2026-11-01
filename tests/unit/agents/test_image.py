@@ -550,7 +550,8 @@ class TestCloudBuild:
             "--memory=2Gi",
             "--min-instances=${_MIN_INSTANCES}",
             "--max-instances=1",
-            "--concurrency=20",
+            # The public lane's 10 waiting streams and its run, the admin lane's 5 runs and the other routes (2026-11-01)
+            "--concurrency=30",
             "--timeout=1200",
             "TRAFFIC=(--no-traffic)",
             "--tag=candidate",

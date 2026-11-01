@@ -129,6 +129,15 @@ describe('runStatus', () => {
       runStatus(ready({ items: [{ id: 1, kind: 'plot_failed', result: failed }] }), 'done', null)
         .text
     ).toBe('failed · render_error');
+    // A model quota that outlasted the retries reads as busy, with the chat's sentence.
+    const busy = result({ status: 'failed', reason: 'busy' });
+    expect(
+      runStatus(ready({ items: [{ id: 1, kind: 'plot_failed', result: busy }] }), 'done', null)
+    ).toEqual({
+      text: 'failed · busy',
+      tone: 'error',
+      detail: 'the model service is busy; try again in a minute',
+    });
     expect(
       runStatus(
         ready({ items: [{ id: 1, kind: 'error', code: 'run_limit', ref: null }] }),

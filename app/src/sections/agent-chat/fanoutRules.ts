@@ -4,9 +4,12 @@
  */
 
 import type { AgentSessionState, Failure } from 'src/hooks/useAgentSession';
-import { ERROR_TEXT } from 'src/sections/agent-chat/messages';
+import { ERROR_TEXT, PLOT_FAILED_TEXT } from 'src/sections/agent-chat/messages';
 
-/** `AGENT_USER_MAX_RUNS`'s default, for a server whose `/status` does not name it. */
+/**
+ * The public cap (`AGENT_USER_MAX_RUNS`), for a server whose `/status` does not name the caller's own: an
+ * older server has no admin lane, so the public cap is what it holds an admin to.
+ */
 export const DEFAULT_USER_MAX_RUNS = 3;
 
 /** Where a library is: storing its data, waiting for a free place, running its plot, or finished. */
@@ -85,7 +88,11 @@ export function runStatus(
   }
   for (const item of [...state.items].reverse()) {
     if (item.kind === 'plot_failed') {
-      return { text: `failed · ${item.result.reason ?? item.result.status}`, tone: 'error' };
+      return {
+        text: `failed · ${item.result.reason ?? item.result.status}`,
+        tone: 'error',
+        detail: PLOT_FAILED_TEXT[item.result.reason ?? ''],
+      };
     }
     if (item.kind === 'error') {
       return { text: `error · ${item.code}`, tone: 'error', detail: ERROR_TEXT[item.code] };

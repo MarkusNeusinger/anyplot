@@ -684,7 +684,9 @@ async def test_a_cancelled_turn_records_the_language_the_turn_set(
     judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
     sid = await open_session(client)
 
-    response = await post_message(sid, MessageBody(text="Mach die Punkte größer"), USER, runtime, "req-cancelled")
+    response = await post_message(
+        sid, MessageBody(text="Mach die Punkte größer"), USER, "public", runtime, "req-cancelled"
+    )
     stream = cast(AsyncIterator[str], response.body_iterator)
     chunks = []
     async for chunk in stream:

@@ -263,7 +263,7 @@ LanguageSource = Literal["default", "pasted", "detected", "chosen"]
 Step = Literal["root", "adapter", "reviewer", "judge", "other"]
 
 PlotStatus = Literal["ok", "needs_attention", "failed", "not_ready"]
-FailureReason = Literal["validation", "render", "deadline", "budget", "error"]
+FailureReason = Literal["validation", "render", "deadline", "budget", "busy", "error"]
 NotReadyReason = Literal["no_dataset", "incomplete_bindings", "data_unconfirmed"]
 """`schemas.NotReadyReason`: why a `not_ready` run did not start (pinned equal by a test)."""
 ScoreBucket = Literal["lt50", "50_69", "70_79", "80_89", "90_plus"]

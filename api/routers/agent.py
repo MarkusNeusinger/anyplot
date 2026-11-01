@@ -2,7 +2,9 @@
 
 The browser never talks to the agents service. This router sits behind the
 same gate as every other `/debug` route and in front of the private
-anyplot-agents Cloud Run service: it derives the opaque user id, accepts only
+anyplot-agents Cloud Run service: it derives the opaque user id, asserts the
+caller's tier (`X-Anyplot-Tier: admin`, which gives the admin the agents service's
+admin lane), accepts only
 allowlisted request fields, presents a Cloud Run ID token upstream, and
 re-frames the chat stream so only the documented `anyplot/1` events reach the
 browser. Design: `docs/concepts/agent-network.md` ("Serving and
@@ -445,13 +447,24 @@ def derive_user_id(key: bytes, identity: AdminIdentity) -> str:
     return "adm_" + digest[:16]
 
 
+AgentTier = Literal["admin", "public"]
+"""The caller's tier the agents service keys its run-queue lane and its day caps on (`X-Anyplot-Tier`)."""
+
+
 @dataclass(frozen=True)
 class AgentContext:
-    """Per-request upstream context: where to call, as whom, under which id."""
+    """Per-request upstream context: where to call, as whom, under which id, in which tier.
+
+    `tier` is asserted here and only here, from the identity the admin gate verified: never
+    from a request field (the client's `source: fanout` only labels telemetry). Every route of
+    this router passes the admin gate, so every caller is `admin`; a public path, once there is
+    one, builds its context with `public`.
+    """
 
     base_url: str
     user_id: str
     request_id: str
+    tier: AgentTier = "public"
 
 
 def agent_context(
@@ -459,12 +472,15 @@ def agent_context(
     identity: AdminIdentity = Depends(require_admin_identity),
     config: AgentConfig = Depends(require_agent_enabled),
 ) -> AgentContext:
-    """Mint the request id (returned as `X-Request-Id`) and derive the user id."""
+    """Mint the request id (returned as `X-Request-Id`), derive the user id, and assert the admin tier."""
     request_id = str(uuid.uuid4())
     response.headers["X-Request-Id"] = request_id
     response.headers["Cache-Control"] = _NO_STORE
     return AgentContext(
-        base_url=config.service_url, user_id=derive_user_id(config.user_id_key, identity), request_id=request_id
+        base_url=config.service_url,
+        user_id=derive_user_id(config.user_id_key, identity),
+        request_id=request_id,
+        tier="admin",
     )
 
 
@@ -718,7 +734,7 @@ def _fetch_id_token(audience: str) -> str:
 
 
 async def _upstream_headers(ctx: AgentContext) -> dict[str, str]:
-    headers = {"X-Anyplot-User": ctx.user_id, "X-Request-Id": ctx.request_id}
+    headers = {"X-Anyplot-User": ctx.user_id, "X-Anyplot-Tier": ctx.tier, "X-Request-Id": ctx.request_id}
     if not _is_local(ctx.base_url):
         token = await run_in_threadpool(_fetch_id_token, ctx.base_url)
         headers["Authorization"] = f"Bearer {token}"
@@ -1113,7 +1129,8 @@ async def agent_status(ctx: Ctx, client: Client) -> dict[str, Any]:
     """The agents service's status plus `enabled`.
 
     Upstream fields: `libraries`, `model`, `location`, `version`, `provider`, the
-    run queue's `waiting` entries and `in_flight` runs, and `user_max_runs`.
+    run queue's `waiting` entries and `in_flight` runs, `user_max_runs` (the caller's own
+    cap in their tier's lane) and `tier`.
     """
     upstream = await _call_upstream(client, ctx, "GET", "/status")
     return {**(upstream if isinstance(upstream, dict) else {}), "enabled": True}
