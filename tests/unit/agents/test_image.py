@@ -517,7 +517,8 @@ class TestCloudBuild:
                 "matplotlib,seaborn,plotnine,altair,pygal,letsplot,plotly,bokeh,ggplot2,makie,chartjs,d3,echarts,"
                 "highcharts,muix"
             ),
-            "_MIN_INSTANCES": "0",
+            # One warm instance since 2026-11-02 (owner): the unused Compute Flexible commitment absorbs it.
+            "_MIN_INSTANCES": "1",
             "_SMOKE_AUTH": "true",
         }
         deployed = _config(CLOUDBUILD)["substitutions"]["_LIBRARIES"].split(",")
