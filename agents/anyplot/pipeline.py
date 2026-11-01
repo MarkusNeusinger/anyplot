@@ -214,7 +214,9 @@ SELF_REVIEW_LINE = (
     "to the reviewer, check it against each technical criterion of the rubric in your instructions (VQ, SC, DQ) "
     "and against the spec: fix what falls short. When the notes also name the previous round's findings, check "
     "that your changes fixed them in the image. What the change request and the earlier requests set stays as "
-    "the user asked, whatever the rubric says. If nothing needs fixing, answer with an empty edit list."
+    "the user asked, whatever the rubric says. If nothing needs fixing, answer with an empty edit list. Your "
+    "`changes` list only what this answer fixes, never again what the code already did: the user already has "
+    "the notes of the first answer."
 )
 """The feedback of the self-review attempt (`AGENT_SELF_REVIEW`); the render itself is attached by the adapter's callback."""
 LANGUAGE_REWRITE_REQUEST = (
@@ -803,7 +805,8 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
 
     Outside a fence stand only fixed headings, the validated library id and
     `allow_full`; the plot language, a user-chosen value bounded by a pattern, stands
-    inside its own `<plot_language>` fence. The notes on the attempt go into one
+    inside its own `<plot_language>` fence, and the reply language, when it differs, inside
+    `<reply_language>` (the `changes` notes are written in it). The notes on the attempt go into one
     `<tool_notes>` block as JSON, the way the `plot_pipeline` result reaches the root:
     the readiness hints quote catalogue lines, the feedback quotes model-written code
     (failed edits, validator findings) or is model-written (reviewer lines), and the
@@ -828,6 +831,8 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
         "Plot language:",
         fence("plot_language", request.plot_language),
     ]
+    if request.reply_language is not None:
+        lines += [REPLY_LANGUAGE_HEADING, fence("reply_language", request.reply_language)]
     lines += _context_lines(request.dataset_context, request.file_name)
     lines += _requests_lines(request.user_requests, request.change_request)
     if request.expected_texts:
@@ -874,6 +879,7 @@ def render_review_request(request: ReviewRequest) -> str:
     return "\n".join(lines)
 
 
+REPLY_LANGUAGE_HEADING = "Reply language (the user chats in it; write the `changes` notes in it):"
 EARLIER_REQUESTS_HEADING = "Earlier requests (the user's standing decisions, oldest first):"
 EXPECTED_HEADING = "Texts and number formats the user asked to see in the plot, verbatim (one per line):"
 REVIEW_EXPECTED_HEADING = (
@@ -1770,6 +1776,8 @@ async def _attempts(
             allow_full=attempt >= 2,
             plot_language=run.language,
             language_changed=language_changed,
+            # The notes explain the plot to the user, so they follow the language the user chats in.
+            reply_language=None if same_language(view.language, run.language) else view.language,
             expected_texts=run.expected_texts,
             dataset_context=context,
             file_name=file_name,
