@@ -8,4 +8,4 @@
   dialog for a reload or a closed tab, and a `confirm` from the router's
   blocker for a link inside the site or the back button. An empty session and
   the page's own query edits (a library pill, `all`) ask nothing. Sessions
-  still live in memory only.
+  still live in memory only. (#12502)
