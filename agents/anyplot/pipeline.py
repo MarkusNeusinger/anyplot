@@ -3,10 +3,10 @@
 `run_pipeline` is the single node of the `plot_pipeline` workflow (`tools/session.py`).
 It reads spec, library, dataset and bindings from server-set session state, never from
 its input: `PipelineArgs` carries only `change_request`, `base` and `theme` (the one
-theme to render; omitted, a change keeps the previous version's theme and a new plot
-is light). The session language is read once per run, so the adapter, which writes the
-plot's own text in it, and the reviewer, which judges that text against it, share one
-value; each prompt gets it fenced as `<plot_language>`. It runs at most
+theme to render; omitted, the theme `run_theme` picks, the site's unless the user
+asked for one). The session language is read once per run, so the adapter, which
+writes the plot's own text in it, and the reviewer, which judges that text against it,
+share one value; each prompt gets it fenced as `<plot_language>`. It runs at most
 `AGENT_MAX_ATTEMPTS` attempts, two by default (the first and one repair round; the
 eval harness may set one or three):
 
@@ -29,7 +29,7 @@ eval harness may set one or three):
    literal text the plan replaces, up to `MAX_NEW_LITERAL_CHARS`;
 3. **render**: `normalise`, the loader substitution (the runtime's `loader_block`, typed
    from the parser's dtypes and the column kinds), then the one
-   theme the call asks for (`PipelineArgs.theme`, light by default) through the
+   theme of the run (`run_theme`: the one the user asked for, else the site's) through the
    render backend, and the host gates (`render/gates.py`) on exactly that theme; a failed
    render's summary is the runtime's error grammar over the code that ran
    (`RuntimeAdapter.error_summary` with the run form, so Julia's names the working form's
@@ -39,10 +39,11 @@ eval harness may set one or three):
    allowed attempt), and once more on the repaired render after a rejection
    (`MAX_REVIEWS` reviewer calls in all, every round with `AGENT_SHIP_BEST`); the
    reviewer agent sees the rendered theme's PNG, so each of its image defects is
-   filed under that theme, whatever theme the reviewer named. A render without drawn
-   texts on a runtime whose reviewer checks them (`RuntimeAdapter.review_texts`: R, Julia,
-   altair, pygal and lets-plot) hands the review the requested texts, and each one it
-   cannot find in the image is a miss like the probe's (`grounding.reviewed_misses`), in the same call;
+   filed under that theme, whatever theme the reviewer named. A render on a runtime
+   whose reviewer checks the requested texts (`RuntimeAdapter.review_texts`: every library
+   but matplotlib, seaborn and plotnine, whose probes read their texts for the reply only)
+   hands the review the requested texts, and each one it cannot find in the image is a miss
+   like the probe's (`grounding.reviewed_misses`), in the same call;
 5. **repair**: when an attempt left feedback (an answer that missed the schema or was
    cut off at the output limit, each with its own line, failed edits, validator
    findings, a failed render, a missed canvas, reviewer defects, and measured
@@ -99,12 +100,13 @@ Every step also writes one content-free attribution line (`plugins/ledger.attrib
 the restored drift kinds, how many edits a tolerant matching tier applied, blocking
 validator rule ids, the labels of banned imports (`validate.module_label`: a word of a closed vocabulary, or `?`), ADAPTATION rule
 ids), `pipeline_render` (render and wall time, the gate ids that
-failed or reported), `pipeline_review` (the verdict, its defect ids and the call's
+failed or reported, and the class a failed probe names, `grounding.probe_error`),
+`pipeline_review` (the verdict, its defect ids and the call's
 finish reason) and `pipeline_result` (status, reason, attempts, the `Stage` that ended
 each attempt and the run, the shipped and the last reviewed attempt, the number of
 reviewer calls, whether the shipped
-render was padded or carries ADAPTATION or probe findings, and the exception class
-behind reason `error`). The eval harness (`agents/evals/matrix.py`) reads them per
+render was padded or carries ADAPTATION or probe findings, the roles of its drawn texts
+and whether its library reports them, and the exception class behind reason `error`). The eval harness (`agents/evals/matrix.py`) reads them per
 case; they never carry code, data, column names or model text. `PlotResult.reason`
 keeps its public vocabulary; the stage is only in the attribution line.
 """
@@ -138,7 +140,15 @@ from .data.bindings import check_bindings
 from .data.kinds import ColumnKinds, read_kinds
 from .data.store import StoredDataset
 from .dataset_context import dataset_context, file_name_for_models
-from .grounding import EXPECT_LINE_ID, UNVERIFIED_LINE, drawn_texts, expected_misses, plot_texts, reviewed_misses
+from .grounding import (
+    EXPECT_LINE_ID,
+    UNVERIFIED_LINE,
+    drawn_texts,
+    expected_misses,
+    plot_texts,
+    probe_error,
+    reviewed_misses,
+)
 from .language import DEFAULT_LANGUAGE, same_language
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, adapter_instruction, fence, prompt_hash
@@ -396,18 +406,19 @@ class Candidate:
     """What this render's code changed, for `PlotResult.changes`: the notes of every adapter call of the run
     up to this render that changed the code (`Run.changes`), so a best-scored earlier render reports its own."""
     texts: dict[ShownGroup, list[str]] | None = None
-    """This render's drawn texts by role (`grounding.plot_texts`), for `PlotShows`; None without probe labels."""
+    """This render's drawn texts by role (`grounding.plot_texts`), for `PlotShows`; None without probe labels, which
+    the root never sees (`tool_safety.fence_pipeline_notes`)."""
     expect_lines: list[str] = field(default_factory=list)
     """The requested texts and number formats this render does not show (`grounding.expected_misses`), as lines."""
     expect_misses: list[str] = field(default_factory=list)
     """The same misses as the requested texts themselves, for `PlotShows.requested_not_found`."""
     expect_note: str | None = None
-    """`grounding.UNVERIFIED_LINE` when the run had requested texts but the probe reported no drawn texts, and no
-    readable review of this render answered for them (`expect_review`)."""
+    """`grounding.UNVERIFIED_LINE` when the run had requested texts but no drawn texts checked them, and no readable
+    review of this render answered for them (`expect_review`)."""
     expect_review: bool = False
-    """The requested texts go to this render's review, since it reports no drawn texts and its runtime's reviewer
-    checks them (`RuntimeAdapter.review_texts`): a readable review replaces `expect_note` with the misses it
-    reports (`grounding.reviewed_misses`), as `expect_lines` and `expect_misses`."""
+    """The requested texts go to this render's review, since its runtime's reviewer checks them
+    (`RuntimeAdapter.review_texts`): a readable review replaces `expect_note` with the misses it reports
+    (`grounding.reviewed_misses`), as `expect_lines` and `expect_misses`."""
 
 
 @dataclass
@@ -417,6 +428,8 @@ class Run:
     view: SessionView
     dataset: StoredDataset
     theme: Theme = "light"
+    theme_asked: bool = False
+    """The user asked for `theme` (`run_theme`); the shipped version keeps it as `CodeVersion.theme_asked`."""
     language: str = DEFAULT_LANGUAGE
     """The session language, read once per run: the adapter writes the plot text in it, the reviewer judges it."""
     attempts: int = 0
@@ -1251,6 +1264,7 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
             title=shipped.plan.title,
             library=run.view.library,
             theme=run.theme,
+            theme_asked=run.theme_asked,
             language=run.language,
             requests=standing_requests([*run.user_requests, run.change_request]),
             themes={run.theme: ThemeRender("needs_attention", PADDED_REASON) if shipped.padded else ThemeRender("ok")},
@@ -1389,17 +1403,23 @@ def _reraise_unless_schema(exc: Exception) -> None:
     logger.warning("sub-agent answer failed its schema: %s", type(exc).__name__)
 
 
-def _default_theme(services: Services, session_id: str, library: str, base: str) -> Theme:
-    """An omitted theme keeps the previous version's theme on a change; a new plot is light.
+def run_theme(asked: Theme | None, site: Theme | None, previous: CodeVersion | None) -> tuple[Theme, bool]:
+    """The one theme a run renders, and whether the user asked for it (`CodeVersion.theme_asked`).
 
-    The root may leave `theme` out of a refinement call, so a dark plot must not
-    silently come back light.
+    In order: the theme the root passed (`PipelineArgs.theme`), which the user asked for in the chat; on a
+    change, the theme of the version it changes (`previous`) when the user asked for that one, because the root
+    leaves `theme` out of a refinement and a dark plot asked for must not silently come back light; the site
+    theme the page sent with the turn (`RequestLedger.site_theme`; owner decision of 2026-11-01: a user on the
+    dark site gets a dark plot, the other theme one click away on the toggle), so a change after a switch of the
+    site theme follows the switch; without a page (`adk web`, the evals) the version it changes, else light.
     """
-    if base == "previous":
-        previous = services.versions.latest_rendered(session_id, library=library)
-        if previous is not None:
-            return previous.theme
-    return "light"
+    if asked is not None:
+        return asked, True
+    if previous is not None and previous.theme_asked:
+        return previous.theme, True
+    if site is not None:
+        return site, False
+    return (previous.theme if previous is not None else "light"), False
 
 
 @node(name="run_pipeline", rerun_on_resume=True)
@@ -1436,11 +1456,17 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         return
     # Taken only once the run has its slot: a run that never starts leaves the user's note for the next one.
     node_input = take_pending_request(ctx.state, node_input)
-    theme = node_input.theme or _default_theme(services, ctx.session.id, view.library, node_input.base)
+    previous = (
+        services.versions.latest_rendered(ctx.session.id, library=view.library)
+        if node_input.base == "previous"
+        else None
+    )
+    theme, theme_asked = run_theme(node_input.theme, ledger.site_theme, previous)
     run = Run(
         view=view,
         dataset=dataset,
         theme=theme,
+        theme_asked=theme_asked,
         language=view.language,
         change_request=node_input.change_request,
         expected_texts=list(node_input.expected_texts),
@@ -1486,7 +1512,12 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
     """The content-free outcome line of one pipeline run: what the eval harness's pass and gate counts read.
 
     `padded`, `adaptation` (ADAPTATION rule ids) and `advisory` (probe gate ids) describe
-    the shipped render; a failed run has none. `error` is the exception class behind
+    the shipped render; a failed run has none. `texts` names the roles of the drawn texts
+    `PlotShows.texts` reports for the shipped render (`title`, `x tick labels`, ...; role
+    names only, never a text), or is None when its probe reported none, and `texts_expected`
+    says whether the library's render reports them (`RuntimeAdapter.text_probe`): the eval
+    harness counts a shipped run without texts where they are expected (`agents/evals/report.py`,
+    `untexted`). `error` is the exception class behind
     reason `error` (for example `RendererUnavailable`, which the harness treats as an
     outage rather than a model failure), never its message. `stage` names what stopped
     the run and `stages` what ended each attempt (`Stage`); `shipped_attempt` and
@@ -1511,6 +1542,8 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
         padded=bool(shipped and shipped.padded),
         adaptation=list(shipped.adaptation_rules) if shipped else [],
         advisory=list(shipped.advisory_gates) if shipped else [],
+        texts=sorted(shipped.texts) if shipped and shipped.texts is not None else None,
+        texts_expected=runtime_for(run.view.library).text_probe,
         residual=len(result.residual_defects),
         error=run.error_type if result.reason == "error" else None,
     )
@@ -1858,6 +1891,8 @@ async def _attempts(
             passed=report.passed_host_gates,
             canvas_ok=report.canvas_ok,
             gates=report.failed_gates,
+            # A probe that failed names its class (a text probe drops its labels then): the log of a best-effort step.
+            probe_error=probe_error(probed.probe) if (probed := rendered.outputs.get(run.theme)) is not None else None,
         )
         run.rendered = True
         if not report.passed_host_gates:
@@ -1865,15 +1900,18 @@ async def _attempts(
             _end_attempt(run, "render", feedback)
             continue
         output = rendered.outputs.get(run.theme)
-        # The check reads every drawn text; `shows` gets the clipped summary of them.
+        # `shows` gets the clipped summary of every drawn text the probe reports.
         drawn = drawn_texts(output.probe if output is not None else None)
         texts = plot_texts(drawn)
         checking = settings.expect_check != "off" and bool(run.expected_texts)
-        misses = expected_misses(run.expected_texts, drawn) if checking else []
+        # The requested texts are checked against matplotlib's drawn texts; where the runtime's reviewer checks them
+        # (`review_texts`: every library without matplotlib), its probe's texts ground the reply alone.
+        measured_texts = None if runtime.review_texts else drawn
+        misses = expected_misses(run.expected_texts, measured_texts) if checking else []
         expect_lines = [miss.line(run.theme) for miss in misses]
-        # No drawn texts to check against (a renderer without `labels`): a note, never a pass. Where the runtime says
-        # so (R), the review finds the texts in the image instead, and only its answer lifts the note.
-        unverified = checking and drawn is None
+        # No drawn texts to check against: a note, never a pass. Where the runtime says so, the review finds the texts
+        # in the image instead, and only its answer lifts the note.
+        unverified = checking and measured_texts is None
         expect_note = UNVERIFIED_LINE.format(theme=run.theme) if unverified else None
         candidate = Candidate(
             working=working,

@@ -108,6 +108,95 @@ class TestExecModeInProcess:
         assert code == 2 and captured.out.splitlines() == [HARNESS_START] and "usage" in captured.err
 
 
+WRITES_TEXTS = (
+    "import json, sys; open('texts-dark.json', 'w').write(json.dumps({'entries': "
+    "[['x tick label', 'Bern'], ['title', 'Umsatz'], ['x tick label', 'Zug'], [1, 'tampered']]})); "
+    "sys.exit(int(sys.argv[1]))"
+)
+"""A child that leaves drawn texts as R's and Julia's text probes do (`text_probe.R`, `text_probe.jl`)."""
+
+
+class TestExecModeTextProbe:
+    """After a run that counts, the harness turns the drawn texts an R or Julia probe left into the probe, under the
+    probe's caps; anything else is best-effort and never changes the exit code (2026-11-01)."""
+
+    @pytest.fixture(autouse=True)
+    def in_a_run_directory(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(harness, "set_limits", lambda: None)
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setenv(harness.THEME_ENV, "dark")
+
+    def probe(self) -> dict[str, object]:
+        return json.loads(Path("probe-dark.json").read_text(encoding="utf-8"))
+
+    def test_the_drawn_texts_become_the_probe_after_exit_code_0(self) -> None:
+        code = harness.main(["harness.py", EXEC_FLAG, "--", sys.executable, "-c", WRITES_TEXTS, "0"])
+
+        assert code == 0
+        assert self.probe() == {
+            "labels": [
+                {"kind": "title", "text": "Umsatz"},
+                {"kind": "x tick label", "text": "Bern"},
+                {"kind": "x tick label", "text": "Zug"},
+            ],
+            "labels_truncated": True,  # an entry that is no pair of strings was left out
+        }
+
+    def test_a_failed_run_leaves_no_probe(self) -> None:
+        code = harness.main(["harness.py", EXEC_FLAG, "--", sys.executable, "-c", WRITES_TEXTS, "1"])
+
+        assert code == 1 and not Path("probe-dark.json").exists()
+
+    @pytest.mark.parametrize(
+        ("content", "error"),
+        [
+            ('{"error": "Error"}', "Error"),
+            ("{not json", "JSONDecodeError"),
+            ("[1, 2]", "ValueError"),
+            ('{"entries": "Bern"}', "ValueError"),
+        ],
+        ids=["the probe's own error", "broken", "no object", "no entries"],
+    )
+    def test_a_probe_that_failed_or_a_broken_file_is_an_error_probe(self, content: str, error: str) -> None:
+        Path("texts-dark.json").write_text(content, encoding="utf-8")
+
+        harness.collect_text_probe("dark")
+
+        assert self.probe() == {"error": error}
+
+    def test_a_link_a_pipe_or_an_oversized_file_is_never_read_as_texts(self, tmp_path: Path) -> None:
+        (tmp_path / "elsewhere.json").write_text('{"entries": [["title", "Umsatz"]]}', encoding="utf-8")
+        Path("texts-dark.json").symlink_to(tmp_path / "elsewhere.json")
+        harness.collect_text_probe("dark")
+        assert self.probe() == {"error": "OSError"}  # O_NOFOLLOW refuses the link (ELOOP)
+
+        Path("texts-dark.json").unlink()
+        os.mkfifo("texts-dark.json")
+        harness.collect_text_probe("dark")  # opened without blocking, refused as no regular file
+        assert self.probe() == {"error": "ValueError"}
+
+        Path("texts-dark.json").unlink()
+        Path("texts-dark.json").write_bytes(b" " * (harness.TEXT_ENTRIES_MAX_BYTES + 1))
+        harness.collect_text_probe("dark")
+        assert self.probe() == {"error": "ValueError"}
+
+    def test_no_file_no_probe(self) -> None:
+        harness.collect_text_probe("dark")
+
+        assert not Path("probe-dark.json").exists()
+
+    def test_the_probe_is_never_written_through_a_link(self, tmp_path: Path) -> None:
+        """The child ran first and could leave a link at the probe's name: the write does not follow it."""
+        target = tmp_path / "elsewhere.txt"
+        target.write_text("untouched", encoding="utf-8")
+        Path("probe-dark.json").symlink_to(target)
+        Path("texts-dark.json").write_text('{"entries": [["title", "Umsatz"]]}', encoding="utf-8")
+
+        harness.collect_text_probe("dark")
+
+        assert target.read_text(encoding="utf-8") == "untouched" and Path("probe-dark.json").is_symlink()
+
+
 def end_line(stdout: str) -> dict[str, object]:
     line = next(line for line in stdout.splitlines() if line.startswith(HARNESS_END))
     return json.loads(line.split(" ", 1)[1])

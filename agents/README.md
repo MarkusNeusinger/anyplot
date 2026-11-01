@@ -451,6 +451,7 @@ Before the first case the harness renders the catalogue file of the first case o
 | `--max-attempts N` | Adapter attempts per run, 1 to 3 (`AGENT_MAX_ATTEMPTS`, 2 by default), so 1 measures the first attempt alone and 3 a second repair round; the report's stamp records the value as `max_attempts` |
 | `--thinking-budget ROOT,ADAPTER` | Claude only: adaptive thinking for the root and the adapter, each value (0 to 8,192, 0 off) added to that agent's output cap (`AGENT_ROOT_THINKING_BUDGET`, `AGENT_ADAPTER_THINKING_BUDGET`); the stamp records it as `thinking_budget`, the summary names it, and the thinking tokens are priced as output |
 | `--budget-usd X` | Stop before a case that could take the estimated list-price cost past X (the spend so far plus the costliest case so far), or once the cost has passed X (exit code 3) |
+| `--theme light\|dark` | The site theme every turn sends (`?theme=`), as the chat page does, so `dark` measures dark first renders; without it, no theme is sent and the plots render light, as in every committed baseline. The stamp records it as `theme`; compare a dark run with `--no-baseline` or a dark baseline. The preflight stays light |
 | `--out DIR` | Output directory, `agents/evals/reports/` by default (git-ignored) |
 | `--baseline FILE`, `--no-baseline` | The report to compare with; by default `evals/baselines/claude-haiku-5-5.json` when it exists |
 | `--tolerance F` | The pass-rate drop that counts as a regression, 0.05 (5 percentage points) by default |

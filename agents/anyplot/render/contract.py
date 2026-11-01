@@ -318,11 +318,19 @@ class RuntimeAdapter(Protocol):
     """The target of each soft ADAPTATION finding's defect line, in the language's own code; a rule without one gets
     the pipeline's default."""
 
+    text_probe: bool
+    """Whether the library's render reports its drawn texts (`labels` in its probe), which the closing reply quotes:
+    every library since 2026-11-01 (ggplot2 and Makie through their rows' text probes). The eval report counts a
+    shipped render without them only where this is True (`agents/evals/report.py`, `untexted`)."""
+
     @property
     def review_texts(self) -> bool:
-        """Whether the reviewer checks the user's requested texts in the image when a render reports no drawn texts
-        (owner decision of 2026-10-29, for a library without the text probe): False leaves such a render with the
-        `grounding.UNVERIFIED_LINE` note, True hands the texts to its review (`grounding.reviewed_misses`)."""
+        """Whether the reviewer, not the probe, checks the user's requested texts (owner decision of 2026-10-29):
+        True hands the texts to the render's review (`grounding.reviewed_misses`), whatever the probe reports, since
+        this library's probe reads its texts for the closing reply only (the libraries without matplotlib's probe,
+        whose text probes came on 2026-11-01); False checks them against the probe's drawn texts
+        (`grounding.expected_misses`) and leaves a render whose probe reports none with the
+        `grounding.UNVERIFIED_LINE` note."""
         ...
 
     def command(self, theme: Theme) -> list[str]:

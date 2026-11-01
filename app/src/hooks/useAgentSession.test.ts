@@ -1,3 +1,5 @@
+import { createElement, type ReactNode } from 'react';
+
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -15,10 +17,20 @@ import {
   useAgentSession,
   type UseAgentSessionOptions,
 } from 'src/hooks/useAgentSession';
+import { type EffectiveTheme, ThemeContext } from 'src/hooks/useLayoutContext';
 import type { DatasetChanged, DatasetParsed, RoleSpec } from 'src/lib/agent';
 import { pendingReply } from 'src/sections/agent-chat/steps';
 
 const lastItem = (items: ChatItem[]) => items[items.length - 1];
+
+/** The layout's theme context with `effective` as the theme the site shows. */
+const siteTheme = (effective: EffectiveTheme) => ({
+  mode: effective,
+  effective,
+  isDark: effective === 'dark',
+  setMode: () => {},
+  cycle: () => {},
+});
 
 const trackEvent = vi.fn();
 vi.mock('src/hooks/useAnalytics', () => ({
@@ -1531,6 +1543,8 @@ describe('useAgentSession: turns', () => {
 
     const turn = calls.find(call => call.path.endsWith('/messages'));
     expect(turn?.body).toEqual({ action: 'create_plot' });
+    // Outside a layout the site theme is the context's default: light.
+    expect(turn?.search).toBe('?theme=light');
     expect(result.current.state.run).toBeNull();
     expect(result.current.state.items.map(item => item.kind)).toEqual([
       'action',
@@ -1550,6 +1564,41 @@ describe('useAgentSession: turns', () => {
       repaired: 'no',
       spec: 'scatter-basic',
     });
+  });
+
+  it('sends the site theme each turn starts with, so a plot follows the page', async () => {
+    // User test E2 of 2026-11-01: on the dark site the first plot came back light.
+    const routes = baseRoutes();
+    let number = 0;
+    routes['POST /sessions/S1/messages'] = () => {
+      number += 1;
+      return sse([
+        ['plot', { ...PLOT_OK, version: number, artifacts: ['plot-dark.png', 'plot.py'] }],
+        ['done', {}],
+      ]);
+    };
+    mockFetch(routes);
+    let site: EffectiveTheme = 'dark';
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(ThemeContext.Provider, { value: siteTheme(site) }, children);
+    const { result, rerender } = renderHook(() => useAgentSession(options), { wrapper });
+    await waitFor(() => expect(result.current.state.phase).toBe('ready'));
+
+    await act(() => result.current.createPlot());
+    const turnSearches = () =>
+      calls.filter(call => call.path.endsWith('/messages')).map(call => call.search);
+    expect(turnSearches()).toEqual(['?theme=dark']);
+    // The run rendered the dark theme only: the card shows it, and nothing renders twice.
+    await waitFor(() => expect(result.current.state.versions[1].images.dark?.state).toBe('ready'));
+    expect(result.current.state.versions[1].theme).toBe('dark');
+    expect(calls.some(call => call.path.endsWith('/render'))).toBe(false);
+
+    // The user switched the site to light: the next turn sends the switch, the shown version stays.
+    site = 'light';
+    rerender();
+    await act(() => result.current.sendMessage('bigger markers'));
+    expect(turnSearches()).toEqual(['?theme=dark', '?theme=light']);
+    expect(result.current.state.versions[1].theme).toBe('dark');
   });
 
   it("addresses the artifacts by the server's version number, not a count", async () => {

@@ -14,10 +14,12 @@ aspect ratio, because cropping would cut data or labels.
 """
 
 import io
+import json
 import os
 import stat
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from PIL import Image
 
@@ -86,6 +88,19 @@ def read_output(path: Path, max_bytes: int) -> bytes | None:
             f"{path.name} grew past the {max_bytes}-byte limit while it was read", size=len(data), limit=max_bytes
         )
     return data
+
+
+def read_probe(path: Path) -> dict[str, Any] | None:
+    """`probe-<theme>.json` as a JSON object, or None: missing, refused by `read_output`, or not an object.
+
+    The probe is advisory, so a broken one is simply absent, as the renderer's `wire.clean_probe` treats it.
+    """
+    try:
+        raw = read_output(path, MAX_PROBE_BYTES)
+        loaded = json.loads(raw) if raw else None
+    except ValueError, OSError:
+        return None
+    return loaded if isinstance(loaded, dict) else None
 
 
 def harden(data: bytes) -> HardenedPng:

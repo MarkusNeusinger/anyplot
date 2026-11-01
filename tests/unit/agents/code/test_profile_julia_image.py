@@ -18,7 +18,8 @@ import pytest
 from agents.anyplot.code.profiles.julia.loader import loader_statement, to_run_form
 from agents.anyplot.code.profiles.julia.validate import validate_adaptation, validate_security
 from agents.anyplot.data.kinds import read_kinds
-from agents.renderer.commands import command_for
+from agents.anyplot.render.runtimes.python import HARNESS_SOURCE
+from agents.renderer.commands import JULIA_TEXT_PROBE, command_for
 
 from .conftest import JULIA_PROMPT_IDIOMS, JULIA_WORKING, source
 
@@ -42,10 +43,12 @@ def julia(work: Path, script: str, *, theme: str = "light") -> subprocess.Comple
     """Run `script` (a file in `work`) with the renderer's Julia row, offline, as the current user."""
     row = command_for("julia", "makie")
     environment = [flag for key, value in row.env.items() for flag in ("-e", f"{key}={value}")]
+    # The row's text probe from this checkout, as the local backend mounts it: an image may predate it.
+    probe = ["-v", f"{HARNESS_SOURCE.with_name('text_probe.jl')}:{JULIA_TEXT_PROBE}:ro"]
     return subprocess.run(
         [
             "docker", "run", "--rm", "--network", "none", "--read-only", "--tmpfs", "/tmp",
-            "--user", f"{os.getuid()}:{os.getgid()}", "-v", f"{work}:/work", "-w", "/work",
+            "--user", f"{os.getuid()}:{os.getgid()}", "-v", f"{work}:/work", "-w", "/work", *probe,
             "-e", f"ANYPLOT_THEME={theme}", "-e", "HOME=/tmp", *environment,
             IMAGE, *row.argv, script,
         ],

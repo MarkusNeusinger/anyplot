@@ -42,7 +42,12 @@ Answers that failed their schema are counted by agent kind and outcome
 (`answer_outcomes`: `repaired` or `refused`) and by broken rule (`answer_rules`, list
 indices written `*`), from the guard's `answer_schema` lines. `language` is the last
 `done` event's session language, `{language, source}`, so a report shows which
-language each run ended in; it is recorded, never scored.
+language each run ended in; it is recorded, never scored. `texts` are the roles of the
+drawn texts the shipped result showed the root (`PlotShows.texts`, None without them),
+`texts_expected` whether the library's render reports them, `probe_errors` the classes of
+probes that failed by count, and `unbacked_quotes` how many passages the root's replies to a
+shipped plot quote that no drawn text and no requested text holds (`unbacked_quotes`; the
+replies and texts are compared in process and never stored).
 
 Outputs, under `--out` (default `agents/evals/reports/`, git-ignored):
 
@@ -115,6 +120,7 @@ import json
 import logging
 import os
 import platform
+import re
 import secrets
 import subprocess
 import sys
@@ -253,6 +259,11 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         type=float,
         help="stop before a case that could take the estimated list-price cost past this (spent + costliest case)",
     )
+    parser.add_argument(
+        "--theme",
+        choices=("light", "dark"),
+        help="the site theme every turn sends (`?theme=`), the theme the plots render in (default: none, light)",
+    )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="output directory (default agents/evals/reports)")
     parser.add_argument("--baseline", type=Path, help="baseline report (default: baselines/<pinned model>.json)")
     parser.add_argument("--no-baseline", action="store_true", help="do not compare with any baseline")
@@ -359,6 +370,8 @@ class MatrixConfig:
     preflight: bool = True
     render_token: "RenderToken | None" = None
     keep_attempts: bool = False
+    theme: str | None = None
+    """`--theme`: the site theme every turn sends, as the page does; None sends none, and the plots render light."""
     argv: list[str] = field(default_factory=list)
 
 
@@ -708,6 +721,10 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "padded": False,
         "adaptation": [],
         "advisory": [],
+        "texts": None,
+        "texts_expected": None,
+        "probe_errors": {},
+        "unbacked_quotes": 0,
         "residual_defects": [],
         "gate_failures": {},
         "validator_rejections": {},
@@ -850,6 +867,7 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
     modules: Counter[str] = Counter(record["banned_imports"])
     answers: Counter[str] = Counter(record["answer_outcomes"])
     rules: Counter[str] = Counter(record["answer_rules"])
+    probe_errors: Counter[str] = Counter(record["probe_errors"])
     finishes = {kind: Counter[str](reasons) for kind, reasons in record["finish_reasons"].items()}
     versions = set(record["model_versions"])
     tokens = record["tokens"]
@@ -895,6 +913,8 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
             _book_attempt(record, hook, line)
         elif hook == "pipeline_render":
             gates.update(str(gate) for gate in line.get("gates") or [])
+            if line.get("probe_error"):
+                probe_errors[str(line["probe_error"])] += 1
             record["render_s"].append(_number(line.get("render_s")))
             wall = line.get("wall_s")
             if isinstance(wall, dict):
@@ -911,6 +931,9 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
             record["padded"] = bool(line.get("padded"))
             record["adaptation"] = [str(rule) for rule in line.get("adaptation") or []]
             record["advisory"] = [str(gate) for gate in line.get("advisory") or []]
+            texts = line.get("texts")
+            record["texts"] = [str(role) for role in texts] if isinstance(texts, list) else None
+            record["texts_expected"] = line.get("texts_expected") is True
             if line.get("error"):
                 record["pipeline_error"] = str(line["error"])
             _book_stages(record, line)
@@ -925,6 +948,7 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
     record["banned_imports"] = dict(sorted(modules.items()))
     record["answer_outcomes"] = dict(sorted(answers.items()))
     record["answer_rules"] = dict(sorted(rules.items()))
+    record["probe_errors"] = dict(sorted(probe_errors.items()))
     record["finish_reasons"] = {kind: dict(sorted(reasons.items())) for kind, reasons in sorted(finishes.items())}
     record["model_versions"] = sorted(versions)
 
@@ -991,6 +1015,56 @@ def book_turn(record: dict[str, Any], turn: Turn) -> dict[str, Any] | None:
     return plot
 
 
+QUOTED_PASSAGE = re.compile(r'[„“"«»]\s*([^„“”"«»\n]{2,200}?)\s*[“”"«»]')
+"""A passage the root quotes: in straight or typographic double quotes or guillemets (German „…“, English “…”, French
+«…»); backticks name the page's controls and are no quote of the plot."""
+
+
+def _norm_quote(text: str) -> str:
+    return " ".join(text.casefold().split()).strip(".,;:!?…")
+
+
+def _stands_in(wanted: str, text: str) -> bool:
+    """`wanted` stands whole in `text`: `jahrgang` is not in `jahrgangsstufe`, `fach` is in `nach fach und`."""
+    before = r"(?<!\w)" if re.match(r"\w", wanted) else ""
+    after = r"(?!\w)" if re.search(r"\w$", wanted) else ""
+    return re.search(before + re.escape(wanted) + after, text) is not None
+
+
+def unbacked_quotes(replies: list[str], shows: dict[str, Any] | None) -> int:
+    """How many passages the root's replies to a shipped plot quote that no drawn text and no requested text holds.
+
+    The root may quote a title, a label or a format only from `shows.texts` (root.md), and a requested text from
+    `requested_not_found`; a passage that stands in neither was invented or came from elsewhere (a column name, the
+    adapter's notes). A quote of whole words of a drawn text counts as backed. Content stays in process: the count
+    is all the record keeps.
+    """
+    shows = shows or {}
+    texts = shows.get("texts")
+    groups = texts.values() if isinstance(texts, dict) else []
+    drawn = [_norm_quote(str(text)) for group in groups for text in group or []]
+    drawn += [_norm_quote(str(text)) for text in shows.get("requested_not_found") or []]
+    count = 0
+    for reply in replies:
+        for passage in QUOTED_PASSAGE.findall(reply):
+            wanted = _norm_quote(passage)
+            if wanted and not any(_stands_in(wanted, text) for text in drawn):
+                count += 1
+    return count
+
+
+def shipped_shows(sid: str, number: Any) -> dict[str, Any] | None:
+    """`PlotShows` of the shipped version `number` (the `plot` event's), from the in-process services the app runs
+    on; None for a version it does not hold."""
+    from agents.anyplot.services import get_services
+
+    if not isinstance(number, int) or isinstance(number, bool) or number < 1:
+        return None
+    version = get_services().versions.get(sid, number)
+    shows = version.result.shows if version is not None else None
+    return shows.model_dump(mode="json") if shows is not None else None
+
+
 def finish_record(record: dict[str, Any]) -> None:
     """Derive pass, the harness outcome and the accept match from the booked fields (see `report.py`)."""
     if record["status"] == "harness_error":
@@ -1011,6 +1085,7 @@ class CaseRunner:
     settings: "AgentSettings"
     renders_dir: Path
     recorder: AttemptRecorder | None = None
+    theme: str | None = None
 
     async def run(self, case: "EvalCase", repeat: int) -> dict[str, Any]:
         """One case and repeat, from opening the session to deleting it; never raises for a broken case."""
@@ -1155,7 +1230,8 @@ class CaseRunner:
     ) -> dict[str, Any] | None:
         self.timed.chunks.clear()
         started = time.monotonic()
-        response = await self.client.post(f"/v1/sessions/{sid}/messages", headers=headers, json=body)
+        params = {"theme": self.theme} if self.theme else None
+        response = await self.client.post(f"/v1/sessions/{sid}/messages", headers=headers, json=body, params=params)
         turn = Turn(
             response.status_code,
             None if response.status_code == 200 else _detail(response),
@@ -1163,6 +1239,9 @@ class CaseRunner:
         )
         plot = book_turn(record, turn)
         book_attribution(record, self.collector.take(headers["X-Request-Id"]), self.settings)
+        if plot is not None and record["status"] in SHIPPED:
+            replies = [str(data.get("text") or "") for _, name, data in turn.events if name == "message"]
+            record["unbacked_quotes"] += unbacked_quotes(replies, shipped_shows(sid, plot.get("version")))
         return plot
 
     async def _save_png(
@@ -1278,6 +1357,7 @@ def build_stamp(
         "tolerance": config.tolerance,
         "gallery_seed": config.seed,
         "baseline": str(config.baseline_path) if config.baseline_path else None,
+        "theme": config.theme,
         "argv": list(config.argv),
     }
 
@@ -1395,7 +1475,7 @@ async def _run_matrix(
     try:
         transport = httpx.ASGITransport(app=timed)
         async with httpx.AsyncClient(transport=transport, base_url="http://agents", timeout=None) as client:
-            runner = CaseRunner(client, timed, collector, settings, config.out / "renders", recorder)
+            runner = CaseRunner(client, timed, collector, settings, config.out / "renders", recorder, config.theme)
             for index, (case, repeat) in enumerate(plan, start=1):
                 if config.budget_usd is not None and runs and total + costliest > config.budget_usd:
                     stopped = "budget"
@@ -1467,6 +1547,17 @@ async def _run_matrix(
         result.notes.append(
             f"{harness_errors} runs crashed in the harness (the `error` field of each run names the class); "
             "they count as failures"
+        )
+    if summary.get("untexted"):
+        libraries = ", ".join(f"{library} {count}" for library, count in summary["untexted_by_library"].items())
+        result.notes.append(
+            f"{summary['untexted']} shipped runs reported no drawn texts, so the closing reply had none to quote "
+            f"({libraries}); every library's probe should report them"
+        )
+    if summary.get("unbacked_quotes"):
+        result.notes.append(
+            f"{summary['unbacked_quotes']} quoted passages in replies to a shipped plot stand in no drawn text "
+            f"({', '.join(summary['unbacked_quote_runs'])}): check that the reply quoted only what the plot shows"
         )
     if stopped == "outage":
         result.exit_code = EXIT_OUTAGE
@@ -1667,6 +1758,7 @@ def _prepare_and_run(args: argparse.Namespace, settings: "AgentSettings", argv: 
         save_baseline=args.save_baseline,
         preflight=not args.no_preflight,
         keep_attempts=args.keep_attempts,
+        theme=args.theme,
         render_token=RenderToken(os.environ) if args.gcloud_token else None,
         argv=list(sys.argv[1:] if argv is None else argv),
     )
