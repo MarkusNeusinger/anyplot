@@ -601,7 +601,6 @@ export function SpecPage() {
                 notes={specData.notes}
                 tags={specData.tags}
                 created={specData.created}
-                updated={specData.updated}
                 imageDescription={undefined}
                 strengths={undefined}
                 weaknesses={undefined}
@@ -650,7 +649,7 @@ export function SpecPage() {
                 notes={specData.notes}
                 tags={specData.tags}
                 created={specData.created}
-                updated={specData.updated}
+                updated={currentImpl?.updated}
                 imageDescription={currentImpl?.review_image_description}
                 strengths={currentImpl?.review_strengths}
                 weaknesses={currentImpl?.review_weaknesses}
