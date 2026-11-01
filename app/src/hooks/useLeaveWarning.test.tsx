@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createMemoryRouter, Link, RouterProvider, useLocation } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { useLeaveWarning } from 'src/hooks/useLeaveWarning';
+import { reloadWithoutWarning, useLeaveWarning } from 'src/hooks/useLeaveWarning';
 
 const MESSAGE = 'leave?';
 
@@ -57,6 +57,17 @@ describe('useLeaveWarning', () => {
 
     renderPage(false);
     expect(leavePage()).toBe(false);
+  });
+
+  it('lets a reload the user asked for pass, and asks again for the next one', () => {
+    renderPage(true);
+    let cancelled: boolean | null = null;
+    // The browser runs the reload's `beforeunload` while the reload starts.
+    reloadWithoutWarning(() => {
+      cancelled = leavePage();
+    });
+    expect(cancelled).toBe(false);
+    expect(leavePage()).toBe(true);
   });
 
   it('asks before a link leaves the path, and stays when the user declines', async () => {

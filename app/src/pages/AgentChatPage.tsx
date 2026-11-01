@@ -58,7 +58,9 @@
  * data, a plot or work in flight, a reload, a closed tab or a link off the page
  * asks first (`useLeaveWarning`: the browser's `beforeunload` dialog, and for a
  * link inside the site or the back button the router's blocker with a
- * `confirm`). The page's own query edits pass.
+ * `confirm`). The page's own query edits pass, and so do the reload links
+ * after an expired session or no answer (`ReloadHint`), which the user clicked
+ * on purpose.
  *
  * Gates, outermost first:
  * 1. `CONFIG.features.agentChat` (build-time `VITE_ENABLE_AGENT_CHAT`): off, the
