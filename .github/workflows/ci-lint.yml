@@ -17,6 +17,13 @@ on:
       - 'implementation/**'
       # Jules sub-PRs into a feature branch (/jules-task) get linted before Claude merges them.
       - 'feature/**'
+    # A PR whose every file is in these paths starts no run. The plot pipeline opens such
+    # PRs with GITHUB_TOKEN; GitHub holds the runs of a bot-triggered PR for approval
+    # that never comes, and they end as `failure` at the merge (#12495, run 41265466065).
+    # A PR that also changes any other file keeps every run.
+    paths-ignore:
+      - 'plots/*/implementations/**'
+      - 'plots/*/metadata/**'
   merge_group:
 
 concurrency:
