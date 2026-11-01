@@ -179,7 +179,7 @@ class TestExemptions:
         assert not budget_allows(RequestLedger(user_id="admin"), usage, settings)
         assert budget_allows(RequestLedger(user_id="admin", tier="admin"), usage, settings)
 
-    async def test_an_admins_turns_pass_the_minute(
+    async def test_admin_turns_pass_the_minute(
         self, client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A fan-out starts a turn per library: the minute's count never refuses an admin, and a public user still

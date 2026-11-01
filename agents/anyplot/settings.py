@@ -38,7 +38,7 @@ another provider, model or location.
 | `AGENT_WATERMARK` | `true` | Append the footer strip ("made with any.plot()", "anyplot.ai/<spec-id>") to the PNGs the artifact route and the feedback bundle serve; `false` serves the raw renders. Gates, reviewer and `plot.py` always see the raw render |
 | `AGENT_RUN_CONCURRENCY` | `1` | Sandbox runs (a `plot_pipeline` or `run_data_code` call, held until its turn ends) in flight per instance in the public lane (every caller the BFF does not assert as an admin); the run queue holds the rest. A chat turn without one never enters the queue |
 | `AGENT_RUNS_PER_MINUTE` | `1` | Sandbox runs that may start within any 60 seconds in the public lane (a sliding window); one start per turn |
-| `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, in every lane; it also sizes each lane (its runs per minute x this / 60 entries; a lane without a rate counts its concurrency) |
+| `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, in every lane; it also sizes each lane (its runs per minute x this / 60 entries; a lane without a rate holds one waiting entry per slot) |
 | `AGENT_USER_MAX_RUNS` | `3` | Sandbox runs one public user may have queued or running at the same time, across all their sessions (browser windows); one more ends its turn with `error{code:"run_limit"}`. Everything else in a session (chat turns, pastes, data steps, the theme toggle, file conversions) runs at once, whatever the user's other sessions do |
 | `AGENT_ADMIN_RUN_CONCURRENCY` | `5` | Sandbox runs in flight in the admin lane (`X-Anyplot-Tier: admin` from an allowed caller), on top of the public lane's: the admin's fan-out over every library runs five plots at once without taking the public lane's slot. Both lanes share the instance and its one render slot (`AGENT_RENDER_CONCURRENCY`) |
 | `AGENT_ADMIN_RUNS_PER_MINUTE` | unset | Sandbox runs that may start within any 60 seconds in the admin lane; unset sets no rate window |
@@ -489,7 +489,7 @@ class AgentSettings(BaseSettings):
     flow's numbers: about 54 median runs with a warm cache, where the 40 runs of `daily_pipeline_runs`
     bind first, and about 26 for a user whose every request starts cold (77,700 each), where
     this budget binds. An admin is exempt (owner decision of 2026-11-01): one fan-out over the 15
-    libraries books about 4 to 7 million, so the global budget is an admin's only daily cap."""
+    libraries books about 4 to 7 million, so the global budget is an admin's only daily cap on model spend."""
 
     daily_pipeline_runs: PositiveInt = 40
     """Pipeline runs per user and day (`AGENT_DAILY_PIPELINE_RUNS`); an admin is exempt."""

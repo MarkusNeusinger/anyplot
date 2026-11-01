@@ -169,8 +169,9 @@ steps:
   # renders and the run queue live in memory; concurrency 30 and a 1200 s timeout
   # because of the run queue, not the CPU: every queued run holds an open stream,
   # so the instance must take the public lane's 10 waiting streams and its run in
-  # flight, the admin lane's 5 runs (since 2026-11-01; 20 before, without that lane)
-  # and the other routes, and one turn can last the queue's 600 s maximum wait plus
+  # flight, the admin lane's 5 runs and 5 waiting streams (since 2026-11-01; 20
+  # before, without that lane), 21 in all, and the other routes, and one turn can
+  # last the queue's 600 s maximum wait plus
   # the 540 s request deadline (anyplot-api's own --timeout is 1200 for the same
   # turn). No secrets, no Cloud SQL in phase 1.
   #

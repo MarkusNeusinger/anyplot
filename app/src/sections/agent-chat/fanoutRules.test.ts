@@ -72,6 +72,8 @@ describe('runStatus', () => {
     );
     expect(failed.text).toBe('error · capacity');
     expect(failed.detail).toMatch(/queue/);
+    // A root call the model service refused after its retries ends as `capacity` too: the text says so.
+    expect(failed.detail).toMatch(/model service is overloaded/);
     expect(runStatus(ready(), 'data', { code: 'rate_limited', ref: null }).text).toBe(
       'data · rate_limited'
     );

@@ -8,7 +8,10 @@ import type { ConfirmLoss } from 'src/hooks/useAgentSession';
 
 /** Errors of a turn (stream `error` events and failed requests). */
 export const ERROR_TEXT: Record<string, string> = {
-  capacity: 'the run queue is full or the wait ran out; try again in a few minutes',
+  // The agents service's `capacity`: a full run queue, a wait that ran out, or a model call the model service still
+  // refused for its quota or an overload after the retries (`model_busy`, the root's call before any plot run).
+  capacity:
+    'the server is busy: the run queue is full, the wait ran out, or the model service is overloaded; try again in a few minutes',
   // The user's own cap (`user_max_runs` of `/status`: 3, or 5 for an admin): plots and data runs queued or
   // running across the user's windows.
   run_limit:

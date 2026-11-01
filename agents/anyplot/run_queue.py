@@ -39,10 +39,12 @@ each), and the reverse.
 waiting entries, where `rate` is its runs per minute (10 for the `normal` lane at the
 defaults): a new entry that would stand at a position past it would wait longer than
 the maximum, so `submit` refuses it with `QueueFull`, which the route answers as
-`503 capacity`. A lane without a rate window counts its concurrency as its rate,
-because under the formula's assumption below it starts at most that many runs a minute
-(50 for the `admin` lane at the defaults, which its per-user cap keeps far lower: five
-entries per admin). An entry that can start at once never waits and is accepted even
+`503 capacity`. A lane without a rate window holds one waiting entry per slot, as many
+as its concurrency (5 for the `admin` lane at the defaults): every waiting entry holds
+an open stream, and the instance's Cloud Run concurrency (`agents/cloudbuild.yaml`) must
+take both lanes' streams at their fullest before the queue answers `capacity` (review of
+#12507: the rate formula with the concurrency as the rate allowed 50 admin entries, past
+Cloud Run's 30). An entry that can start at once never waits and is accepted even
 when `capacity` is 0. An entry that waited `AGENT_QUEUE_MAX_WAIT_S` leaves with
 `QueueTimeout`, which the stream ends as `error{code:"capacity"}`; an entry whose turn
 comes at that very moment starts instead.
@@ -255,14 +257,15 @@ class RunQueue:
         return self.lane_capacity("normal")
 
     def lane_capacity(self, lane: Lane) -> int:
-        """Waiting entries the maximum wait allows under `lane`'s limits: the rate times the maximum wait, per window.
+        """Waiting entries `lane`'s limits allow: the rate times the maximum wait, per window.
 
-        A lane without a rate window counts its concurrency as its rate: under the formula's assumption that a run
-        ends within the window, it starts at most that many runs per window.
+        A lane without a rate window holds one waiting entry per slot (its concurrency), so the open streams of the
+        instance stay bounded by the limits, never by the maximum wait alone.
         """
         limits = self.limits(lane)
-        rate = limits.per_minute if limits.per_minute is not None else limits.concurrency
-        return math.floor(rate * self.max_wait_s / self.window_s)
+        if limits.per_minute is None:
+            return limits.concurrency
+        return math.floor(limits.per_minute * self.max_wait_s / self.window_s)
 
     @property
     def waiting_count(self) -> int:

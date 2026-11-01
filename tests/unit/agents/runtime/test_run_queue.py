@@ -231,7 +231,8 @@ class TestLanes:
 
         assert queue.limits("admin") == LaneLimits(concurrency=5, per_minute=None, per_user=5)
         assert queue.limits("normal") == queue.limits("premium") == LaneLimits(concurrency=1, per_minute=1, per_user=3)
-        assert (queue.lane_capacity("admin"), queue.capacity) == (50, 10)
+        # One waiting admin entry per slot: 11 public and 10 admin streams fit Cloud Run's 30 with room for the routes.
+        assert (queue.lane_capacity("admin"), queue.capacity) == (5, 10)
 
     def test_a_fanout_starts_five_runs_at_once_without_a_rate_window(self, clock: Clock) -> None:
         queue = with_admin(clock)
@@ -256,7 +257,7 @@ class TestLanes:
         assert queue.in_flight == 6
 
     def test_positions_and_capacity_count_the_lane_only(self, clock: Clock) -> None:
-        queue = with_admin(clock, max_wait_s=120)  # public capacity 2, admin capacity 10
+        queue = with_admin(clock, max_wait_s=120)  # public capacity 2, admin capacity 5 (one per slot)
         queue.submit("u", "s-u")
         queue.submit("v", "s-v")
         queue.submit("w", "s-w")
@@ -268,6 +269,16 @@ class TestLanes:
         assert [ticket.state for ticket in admins] == ["running"] * 5 + ["waiting"]
         assert queue.position(admins[-1]) == QueuePosition(position=1, waiting=1)
         assert queue.waiting_count == 3  # both lanes
+
+    def test_a_lane_without_a_window_holds_one_waiting_entry_per_slot(self, clock: Clock) -> None:
+        """Two admins at their cap: five run, five wait, and one more is `capacity`, never past Cloud Run's streams."""
+        queue = with_admin(clock)
+        for index in range(10):
+            queue.submit(f"admin-{index % 2}", f"s-{index}", lane="admin")
+
+        with pytest.raises(QueueFull):
+            queue.submit("admin-2", "s-10", lane="admin")
+        assert (queue.in_flight, queue.waiting_count) == (5, 5)
 
     def test_the_per_user_cap_is_the_lanes(self, clock: Clock) -> None:
         queue = with_admin(clock)
