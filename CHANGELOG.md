@@ -34,6 +34,1479 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+## [3.6.0] — 2026-11-01 — All fifteen
+
+### Added
+
+- **The prep eval measures the root's replies.** Every reply's words, questions and closing question are counted;
+  a closing question the turn was not blocked for, or a reply over 100 words, is a reply miss, gated at 10 %
+  (`--max-reply-misses`). A case can send the page's summary action, and four step-1 summary cases join the set.
+  (#12506)
+- **`--theme dark` for the eval matrix.** Every turn of the run sends the
+  site theme, as the chat page does, so dark first renders can be measured
+  before the public release. Every committed baseline is light. (#12505)
+- **plotly and bokeh in "Use with my data", for the admin's live tests.** The
+  Python runtime serves both through the renderer's two-step figure mode: the
+  plot writes its figure as JSON under the plot guard, and the JavaScript
+  harness draws it in Chromium at the catalogue's canvas. The admin deploy names
+  them, so all 15 catalogue libraries are served, and each one's 80 % eval
+  matrix gates the public release. Across the catalogue 273 of 325 plotly and
+  252 of 325 bokeh files are eligible; in the renderer image 254 of the 273 and
+  245 of the 252 render on target in both themes as they stand, the rest only
+  because their code divides by the length of the emptied catalogue title.
+  (#12490)
+- **The validator rules for plotly and bokeh.** Both refuse private names,
+  anything but `None` where the library expects a URL, and every model that
+  loads from the network or a file: plotly's geo and map traces and its
+  `plotly_relayout` family, bokeh's JavaScript, markup, CSS and tile models and
+  its import by name. bokeh's tooltip templates pass as the catalogue writes
+  them, text tags with a quoted `style` or `class`, never `{safe}`, because
+  BokehJS parses a template and each tooltip value as HTML; plotly text holds
+  no link. (#12490)
+- **The renderer checks a plotly or bokeh figure for markup before it draws
+  it.** A figure that holds what a browser would run, load or link (a bokeh
+  JavaScript, HTML or CSS model or any model no catalogue plot uses, a tooltip
+  outside the template rule, a link in plotly text, an image URL) fails as
+  `figure UnsafeMarkup`, whatever code built it, so the downloaded code never
+  writes it into the user's HTML. The renderer image's CI asserts the refusal
+  through the image's own harness. (#12490)
+- **The figure save and the exported code.** The normaliser turns the
+  catalogue's save block into one protected statement that writes the figure as
+  JSON (plotly's size moved into the figure; bokeh's Selenium screenshot block
+  removed). The downloaded `plot.py` swaps it back for the library's normal
+  save, so it runs unchanged on the user's machine with `data.csv`: plotly's
+  `write_image` and `write_html`, bokeh's `export_png`, `output_file` and
+  `save`. This is the one place where the export is not the run form byte for
+  byte (owner decision). (#12490)
+- **plotly and bokeh adapter sections.** Measured in the renderer image: the
+  protected save, the theme tokens on the figure, timestamps converted to UTC
+  (plotly draws an offset timestamp's clock time as given), plotly's
+  `separators` for the plot language's decimal and thousands marks, bokeh's
+  ticks on fixed values with labels written in Python (BokehJS writes English
+  marks whatever its `language`), `render_mode="svg"` and no WebGL. An image
+  test renders each idiom from a table with missing cells in both themes.
+  (#12490)
+- **plotly and bokeh eval fixtures.** The ten matrix specs for each (120 cases,
+  900 generated in all) and the smoke cases `scatter-basic-plotly-renamed` and
+  `scatter-basic-bokeh-renamed`; all twenty files are eligible. (#12490)
+- **A plotly figure render gates the renderer's deploy.** The candidate smoke
+  renders a plotly figure with an axis range through both steps of the figure
+  mode under gVisor and refuses the promotion when it fails twice. (#12490)
+- **The pipeline's Claude steps can run on API credits, by workload identity
+  federation or an API key: the repository variable `CLAUDE_AUTH`.** Unset or
+  `subscription`, all 13 Claude steps in the 8 workflows that run Claude use
+  the `CLAUDE_CODE_OAUTH_TOKEN` secret as before. `oidc` exchanges the job's
+  GitHub OIDC token for a short-lived token of the `ci-regen` workspace (the
+  four `CLAUDE_WIF_*` variables; the Console rule accepts only runs on
+  `main`), and `api` uses the `ANTHROPIC_API_KEY` secret. A new first step,
+  "Resolve Claude credentials", stops the job on any other value or a missing
+  credential instead of falling back to the subscription and the owner's
+  interactive quota, and every Claude step reads its outputs, so each passes
+  exactly one credential and a new mode changes one step. Under `oidc`, the
+  runs federation refuses (pull-request review events, other refs,
+  `review-retest.yml`) use the subscription and say so in the job summary.
+  `docs/workflows/overview.md` has the Console setup, the switch commands,
+  and how to close the federation path when `oidc` is off. (#12487)
+- **Every Claude session's cost in the job summary, and a clean stop when
+  Claude refuses a session.** A step after each Claude step writes
+  `total_cost_usd` (Claude Code's estimate at API list price), the model and
+  the credential mode to the job summary and the log, and never fails the
+  job. It also reads, from the error fields of a failed session, the API's
+  spend-limit, spend-cap and credit messages, the subscription's usage-limit
+  messages, and, with `api` or `oidc`, refused credentials: the retry is
+  skipped, `impl-generate.yml` parks the pair, `impl-review.yml` and
+  `impl-repair.yml` pause the PR with the new labels `ai-review-paused` and
+  `ai-repair-paused` without spending their automatic retry or recording a
+  score, the watchdog skips paused PRs, and nothing counts as an attempt or
+  marks `impl:<lib>:failed`, a first implementation included. Before, a
+  subscription usage limit used up a pair's three attempts. The weekly regen
+  review's `collect_week.py --costs` reads the line, now counts the
+  `daily-regen.yml` pre-flight too, and names the part that ran on API
+  credits. (#12487)
+- **Daily regeneration by implementation instead of by spec: the repository
+  variable `REGEN_PAIRS_PER_DAY`.** Set to N, the scheduled `daily-regen.yml`
+  run picks the N oldest (spec, library) pairs across the catalogue
+  (`automation/scripts/regen_pick_pairs.py`), skips the spec polish, and
+  dispatches each pair straight to `impl-generate.yml` with
+  `bulk-generate.yml`'s arguments and pace, since that workflow's single
+  concurrency group would cancel queued runs. A pair merged or really
+  attempted (a closed PR, a kept regeneration, a failed generation) within
+  the attempt window, 30 days unless `attempt_window_days` or
+  `REGEN_ATTEMPT_WINDOW_DAYS` says otherwise, is not picked again, while an
+  infrastructure failure or a generation Claude stopped leaves it in the
+  queue. Paused reviews and repairs are resumed first and count against N,
+  and the pick stops when it can't list the implementation PRs. Unset, the
+  schedule regenerates whole specs as before; a manual run opts in with the
+  new `pairs` input, and the watchdog's cron rescue forwards the variable. (#12487)
+- **The renderer draws plotly and bokeh figures in two steps, not served yet.**
+  The render harness forks the plot before it arms anything: the plot runs
+  under the plot guard and the exec filter with the Python limits and may write
+  only its figure as JSON, and the harness, never armed, then hands the figure
+  to the JavaScript row's browser harness, which draws it as data with the
+  installed package's own plotly.js or BokehJS in the sandboxed page, with a
+  stricter policy that runs no script the figure carries. The figure keeps the
+  size its code gave it, and the scale makes the image exactly 3200x1800 or
+  2400x2400, so the catalogue's layouts look as published. Failures in either
+  step end with the same final error line as a JavaScript render. The renderer
+  image now carries plotly and bokeh without their kaleido and Selenium export
+  stacks. The agent chat does not offer plotly or bokeh yet. (#12484)
+- **MUI X in "Use with my data", for the admin's live tests.** The JavaScript
+  runtime serves MUI X (`muix`) next to Chart.js, D3, ECharts and Highcharts:
+  `plot.tsx`, a React module the renderer's harness bundles through its closed
+  import plugin and mounts as a component, with the user's table as typed JSON.
+  The admin deploy names it, so 13 of the 15 catalogue libraries are served, and
+  its 80 % eval matrix gates the public release. A catalogue file written for
+  MUI X 7 is served `coupled` with its `deprecated-api` note, never blocked for
+  its version (owner decision): the adapter rewrites `ChartContainer` to MUI X
+  9.16's `ChartsContainer`. The interactive `plot.html` and the in-chat preview
+  work for MUI X's React bundle as for the other four. (#12483)
+- **MUI X idioms in the JavaScript adapter prompt.** `adapter_javascript.md`
+  teaches what was measured with MUI X 9.16 in the renderer image: the module's
+  imports and its one default export, MUI X 9's names for MUI X 7's, axis bands
+  sized for the user's labels (MUI X cuts tick labels that do not fit), overlays
+  drawn through the chart's own scales instead of pixel positions from `margin`,
+  a `"utc"` time axis with a formatter (a `"time"` axis follows the browser's
+  zone in the exported page), `fmt` on every value axis (MUI X writes
+  `1,250,000`), and a series formatter that guards `null`, which MUI X hands it
+  when a reader hovers a gap; unguarded, the hover removes the whole chart. A
+  test runs the idioms through both validator profiles, and an image test
+  renders them from a table with missing cells in both themes. (#12483)
+- **MUI X eval fixtures.** The ten matrix specs for MUI X (60 cases, 780
+  generated in all) and the smoke case `pie-basic-muix-renamed`; five of the
+  ten files are `clean` (written for MUI X 9.16), five `coupled`, one of them
+  with the `deprecated-api` note. Across the catalogue 311 of 323 MUI X files
+  are eligible. (#12483)
+- **A Chart.js, D3, ECharts or Highcharts plot plays in the result card.**
+  `.interactive()` on the image shows the plot's `plot.html` in the card, in
+  the theme on screen, with its tooltips and hover; `.preview()` brings the
+  image back, and a theme switch shows that theme's page. Nothing loads before
+  the click: the chat then fetches the very page the download serves, through
+  the same authenticated route, and holds the session while the server builds
+  it. The page reaches the card through a relay on the API, so no token or
+  cookie ever meets the plot code, and the site's content security policy is
+  unchanged. The frame takes the plot's orientation from the page itself, and
+  collapsing the card drops the preview's pages. Opening the preview is its
+  own usage outcome, `opened_preview`, a look that counts as no keep. (#12482)
+- **The relay page of the chat's interactive preview, `GET /preview/relay`.**
+  A static, unauthenticated page of 1 KB on the API, outside `/debug/*`,
+  served with `Content-Security-Policy: sandbox allow-scripts`, the browser
+  harness's policy and `frame-ancestors` for the site's origins and local dev
+  servers, so it runs in an opaque origin without network that no other site
+  can frame. Its only message is a constant ready signal without content to
+  its parent; the chat posts the page only on that signal from the relay's own
+  frame, so a page that stands in at the relay's URL, such as an error page of
+  the edge, never receives it, and the card says `relay_unavailable` when no
+  signal comes. The relay takes one page, the first that its parent posts from
+  an allowed origin, writes it into an `<iframe sandbox="allow-scripts">`
+  through the `srcdoc` property and ignores everything else. The BFF mock
+  serves the same relay. (#12482)
+- **A probe of the relay in the renderer image's CI.** The page probe's new
+  relay mode serves the relay with its real headers on an origin of its own,
+  frames it scaled from an allowed origin that waits for the signal, and posts
+  the CI page's wrapper: the chart draws and answers a hover in a frame of
+  origin `null`, the plot code cannot navigate the wrapper or the relay, post
+  a page into it or fake the signal, a second page and pages from sibling
+  frames and from another origin are ignored, another origin cannot frame the
+  relay, and a listening 404 page at the relay's URL receives nothing. The
+  image test runs it for all four libraries. (#12482)
+- **A Chart.js, D3, ECharts or Highcharts plot downloads as an interactive
+  `plot.html`.** The result card's `.download('plot.html')` saves the
+  self-contained page in the theme on screen: the chart library, the theme,
+  the user's table and the plot code, which opens in any browser without a
+  server. The agents service builds it on demand, never stored, through the
+  renderer's new `POST /page`, where the browser harness writes the page a
+  render would screenshot and starts no browser (`ANYPLOT_PAGE_ONLY=1`). The
+  download is a wrapper with no script of its own: the harness's content
+  security policy plus `frame-src 'none'`, and the page in an
+  `<iframe sandbox="allow-scripts" srcdoc=...>`, so the plot code runs in an
+  opaque origin that cannot navigate the window, open popups, fetch, or read
+  cookies and storage. Both download routes answer it as an attachment with
+  `Content-Security-Policy: sandbox`. A renderer deployed before the route
+  answers `503 page_unavailable`. While the page builds, the chat holds its
+  composer, theme switches and data edits back, as for a theme render. The
+  download is its own usage outcome, `downloaded_page`, which the telemetry
+  views count as a download and a keep once they are re-created. A
+  JavaScript version now lists five artifacts at most (two PNGs, the code,
+  the page and the data), and the assistant names the button and the page's
+  place in running `plot.js`. (#12480)
+- **A probe of the page's boundary in the renderer image's CI.** It builds a
+  Chart.js page with the image, wraps it with the agents' wrapper and opens it
+  from `file://` in the image's Chromium: the chart drew and answers a hover,
+  the frame's origin is `null`, and the plot code's attempts to set
+  `top.location`, call `window.open` and `fetch`, read storage and cookies,
+  and navigate its own frame to an http URL all fail. (#12480)
+- **Chart.js, D3, ECharts and Highcharts in "Use with my data", for the
+  admin's live tests.** `JavaScriptRuntime`
+  (`agents/anyplot/render/runtimes/javascript.py`) serves the four libraries on
+  the JavaScript code profile: `plot.js` renders through the renderer's
+  JavaScript row, the catalogue's browser harness in its sandbox mode, and the
+  page reads the user's table as typed JSON that Python writes from the
+  canonical CSV (`RenderJob.data_json`), so the theme toggle renders the other
+  theme from the same table. The admin deploy names the four libraries next to
+  the eight served before, and each library's 80 % eval matrix gates the public
+  release. Highcharts is served under its non-commercial licence (owner
+  decision). When the typing changes a value, the first entries of the
+  version's "what changed" list count the integers past 2^53, the timestamps
+  cut to the millisecond and the timestamps converted to UTC, per column, and
+  the plot's status stays its own. The PNG and `plot.js` download now; the
+  interactive `plot.html` the code file's header names comes in the next step.
+  (#12479)
+- **A JavaScript adapter prompt.** `adapter_javascript.md` fills the shared
+  adapter prompt's slots for JavaScript: the placeholder
+  `const data = loadUserData();` and how the table is typed, column constants
+  read as `d[COL]`, the protected token lines and orientation directive, `null`
+  dropped before any conversion or statistic, a number formatter for every
+  library's value axis that writes the plot language's marks, time axes kept in
+  UTC so an exported page shows the same dates in every time zone, and Chart.js
+  dates on a category or linear axis, since the page has no date adapter. A
+  test runs its idioms through both validator profiles for each library, and an
+  image test renders them from a table with missing cells. (#12479)
+- **JavaScript eval fixtures.** The ten matrix specs for Chart.js, D3, ECharts
+  and Highcharts (240 cases, 720 generated in all) with one smoke case each;
+  the eligibility sweep covers the four libraries (none `clean`; 306 of 321
+  Chart.js, 311 of 325 D3, 311 of 325 ECharts and 310 of 323 Highcharts files
+  eligible). (#12479)
+- **Agent telemetry: why a run needed its attempts, and with which configuration.** Each `pipeline_run` line
+  now lists the stage that ended every attempt (`stages`, so adapter answers cut off at the output limit can
+  be counted), the score bucket of every round, the readiness of the catalogue file, the kinds of cells the
+  runtime's loader changed (`inexact`, `submillisecond`, `offset`, asked from the runtime), the edit-failure
+  kinds and validator rule ids of its checks, the reviewer mode, ship-best and self-review settings, and the
+  hashes of the adapter and reviewer prompts. Every token entry gains `thoughts`, the thinking part of
+  `output`, which stays inclusive so the cost view and the older rows keep their meaning. All values come from
+  closed sets pinned to their sources by tests; an unknown id is `other`, never a dropped line. The views get a
+  typed column per field, an `attempts` view and `edit` and `validator` failure kinds. (#12477)
+- **Agent telemetry: the review score joins what users do with the plot.** `pipeline_run` names the version
+  it shipped (`version`, the number the page sends back with every outcome) and the shipped render's own score
+  bucket (`shipped_score`). The new `score_outcomes` view lists every shipped version with its score, rounds and
+  attempt stages beside the copies, downloads and reaction on exactly that version, the plots the session shipped
+  before it, and the seconds from the first plot to the take-away, so the keep rate can be read per score bucket
+  and library, once each session has ended. One limit, `MAX_AGENT_VERSION` (999), now bounds every version
+  number the routes and the telemetry take. (#12477)
+- **Feedback cases: the catalogue reviewer's prompt has its own hash.** The bundle's `prompt_hashes` gain
+  `reviewer_catalogue`: `reviewer` hashed the checklist instruction only, so a change of the catalogue rubric the
+  live reviewer runs changed no hash. Every case's combined `prompt_hash` shifts once with this release without any
+  prompt changing; the cases before it are all admin test cases. The same deploy shifts three telemetry numbers a
+  report sees: `language_source` reads the turn's own detection, `failures` gains the kinds `edit` and `validator`,
+  and the fan-out's sessions leave `live` (`docs/reference/agent-telemetry.md`, "Shifts a report notices on
+  2026-10-30"). (#12477)
+- **Agent telemetry: the plot language, as a code.** `chat_turn` and `pipeline_run` record the session
+  language as one of twelve codes or `other`, never the free-text value; the legal page names it. (#12477)
+- **Agent telemetry: the admin's fan-out sessions are filed apart.** The sessions "plot in all libraries"
+  opens carry `source = "fanout"` on every line, so the live numbers and the `/debug` card no longer count the
+  owner's test sessions, none of which ever kept a plot. (#12477)
+- **The JavaScript code profile for "Use with my data", not served yet.**
+  `agents/anyplot/code/profiles/javascript/` reads Chart.js, D3, ECharts and
+  Highcharts code with the pinned tree-sitter grammar for JavaScript and MUI X
+  code with the one for TSX (the agents image now keeps both): the protected
+  token lines that read the harness's `window.ANYPLOT_*` globals and the
+  orientation directive, a normaliser that strips the header, writes one
+  directive on the first line and blanks the catalogue title, a SECURITY and
+  ADAPTATION validator that resolves scopes and admits a closed world of
+  global names (the network, storage, frames, workers, `eval`, `Function`,
+  `import()`, `require`, `.constructor`, string timers, elements that load,
+  aliasing and computed access on `window`, `this` where it may be the window,
+  keys built to spell `constructor`, protocol-relative URLs and writes that
+  navigate or load a URL the code did not draw are refused, with the named
+  bypasses as tests), MUI X imports checked against a copy of the renderer
+  image's import allowlist that a test and CI compare with the image's, the
+  readiness scan (93 clean, 1,456 coupled, 68 blocked; MUI X files written
+  for 7.29 are coupled with a note naming the imports MUI X 9 lacks), the
+  one-line loader `const data = window.ANYPLOT_DATA;`, and an error grammar
+  that reads the harness's final error line without its message. The edit
+  applier gains a JavaScript dialect (`//` and `/* */` comments, a `#` in a
+  string stays text) and the export a `//` header that names the exported
+  `plot.html`, with the other languages' output unchanged; the runtime, the
+  prompts and the fixtures follow in JS-4. (#12473)
+- **Render and unit tests for the palette, debug, and map sections.** Vitest
+  suites under `app/src/sections/palette/`, `app/src/sections/debug/`, and
+  `app/src/sections/map/` cover the components split out of `PalettePage`,
+  `DebugPage`, and `MapPage`: the hue–chroma wheel, comparison palettes,
+  snippet tabs, the WCAG swatch stroke per theme, the spec matrix headers and
+  filters, feedback triage, and the map legend, hover panel, search pill,
+  force weights, and canvas shell. The state that lives in the pages is tested
+  on the real pages: `PalettePage.test.tsx` covers the swatch copy reset and
+  the CVD sort order, and `DebugPage.test.tsx` the spec sort orders, the
+  incomplete and low-score filters, and the feedback status PATCH with its
+  revert. Every behaviour the review named was checked by breaking it on
+  purpose and watching a test fail. (#12470)
+- **A sandbox mode for the JavaScript render harness, not served yet.**
+  `automation/js-render/render.mjs` gains switches that only the renderer's
+  JavaScript row sets, so the catalogue pipeline renders exactly as before:
+  `ANYPLOT_SANDBOX=1` aborts every request of the page, closes every WebSocket,
+  blocks popups and WebRTC, adds a content security policy, renders in UTC and
+  caps the page's memory; MUI X imports are closed to the image's allowlist, so
+  a snippet can no longer bundle a file of the image; the console keeps the first
+  five errors; and a failure ends stderr with one line naming the error's kind,
+  class and line in the snippet. `ANYPLOT_NO_HTML=1` skips the interactive page,
+  and `ANYPLOT_DATA_JSON` injects the table as `window.ANYPLOT_DATA`, typed by the
+  service from the canonical CSV (`agents/anyplot/data/typed_json.py`) and carried
+  by a new optional `data_json` field of the render request. Every catalogue
+  JavaScript file that rendered before renders the same way in sandbox mode. The
+  agent chat does not offer JavaScript yet. (#12466)
+- **Node and Chromium in the renderer's toolchain image, not served yet.** The
+  toolchain image (`agents/renderer/toolchain.Dockerfile`) gains a Node stage of
+  its own: the official Node 22 build, the pipeline's major, checked against
+  nodejs.org's SHA-256; the repository's `package-lock.json` installed with
+  `npm ci --ignore-scripts`; and Playwright's Chromium headless shell alone, with
+  the libraries it links and libgbm unpacked without Mesa and LLVM. The
+  renderer's JavaScript row runs Node by its path (`/opt/node/bin/node`, never on
+  the sandbox's PATH) on the catalogue's own harness, with Liberation fonts for
+  that row alone, so the catalogue's Helvetica and Arial font stack resolves as
+  on the pipeline's runner while Python's renders keep their fonts. The build
+  derives MUI X's import allowlist from the installed packages' exports maps, for
+  the harness's sandbox mode and the code profile that come next. 1,565 of the
+  1,617 Chart.js, D3, ECharts, Highcharts and MUI X catalogue files render in the
+  image unchanged (wall p95 2.4 s at 2 CPUs); the 52 that fail are MUI X files
+  written for 7.29. The image build, CI and the deploy's candidate smoke each
+  render through the row; the agent chat does not offer JavaScript yet. The
+  images grow by 565 MB. (#12465)
+- **Makie in "Use with my data", for the admin's live tests.** `JuliaRuntime`
+  (`agents/anyplot/render/runtimes/julia.py`) serves Makie on the Julia code
+  profile: `plot.jl` renders through the renderer's Julia row in exec mode
+  under the preloaded exec filter, with the precompiled depot and the
+  precompile workload, and the export downloads as `plot.jl` with `julia
+  --project=. plot.jl` in its header. The admin deploy names Makie next to the
+  six Python libraries and ggplot2, and its 80 % eval matrix gates the public
+  release. ADAPTATION refuses a working form that keeps a dataset package
+  (RDatasets, PalmerPenguins). When the loader cuts a timestamp's digits below
+  the millisecond, which Julia's `DateTime` cannot hold, the first entry of
+  the version's "what changed" list names the columns and counts the cells,
+  and the plot's status stays its own. A scripted identity adaptation of the
+  smoke fixture renders 3200x1800 in both themes through the local Docker
+  backend in about 5.7 s with `exec_deny: on`. (#12464)
+- **A Julia adapter prompt.** `adapter_julia.md` fills the shared adapter
+  prompt's slots for Julia: the placeholder `df = load_user_data()` and how the
+  loader types each column, column constants read as `df[!, COL]`, the
+  protected statements, the packages the adapter may load, a number formatter
+  that writes the plot language's decimal and thousands marks, and what Makie
+  0.24 refuses that the catalogue never meets (a date column with a missing
+  cell, spans and bands on a time axis, text as `barplot!`'s x). A test runs
+  its idioms through both Julia validator profiles, and an image test renders
+  them. Python's prompt is unchanged, and its SHA-256 pin holds. (#12464)
+- **Makie eval fixtures.** The ten matrix specs for Makie (60 cases, 480
+  generated in all) with the smoke case `scatter-basic-makie-renamed`; the
+  eligibility sweep covers Makie (325 files: 0 clean, 308 coupled, 17
+  blocked). (#12464)
+- **The Julia (Makie) code profile for "Use with my data", not served yet.**
+  `agents/anyplot/code/profiles/julia/` reads Makie code with the pinned
+  tree-sitter grammar for Julia (the agents image now keeps the R and Julia
+  grammars): the protected regions, a normaliser that strips the header,
+  blanks the catalogue title, saves into the working directory, renames
+  the deprecated `resolution` keyword to `size` and sets only the save's
+  `px_per_unit` for CairoMakie's rounding, the SECURITY and ADAPTATION
+  validator that refuses by shape (process starts, file I/O, `ENV`,
+  evaluation, reflection, native code, computed callees, string
+  interpolation walked as code, a `using` allowlist) with the named
+  bypasses as tests, the readiness scan (0 clean, 308 coupled, 17
+  blocked), a `CSV.read` loader typed from the data's kinds that reads
+  every integer exactly and turns timestamps into UTC through TimeZones.jl
+  (the kinds count the cells below the millisecond that Julia truncates),
+  and an error grammar that never quotes Julia's message. The edit applier
+  gains a Julia dialect and the export the run line `julia --project=.
+  plot.jl`, with Python's and R's output unchanged; the runtime, the
+  prompts and the fixtures follow in the next step. (#12459)
+- **The renderer's Julia row loads a precompile workload before every plot.** The
+  toolchain image develops a small package, `AnyplotWarmup`, into its own copy of
+  the Julia project and precompiles a `PrecompileTools` workload of the calls the
+  catalogue's Makie files make most and of the agent's data loader (a typed
+  `CSV.read`, datetimes through TimeZones, plots from DataFrame columns); the row
+  loads it with `-L /opt/anyplot/toolchain/warmup.jl`, so `plot.jl` stays the
+  program and its error frames and exit codes do not change. CSV, DataFrames and
+  TimeZones invalidate much of Makie's precompiled code, so an adapted Makie render
+  took 16 to 18 s locally at 2 CPUs; with the workload it takes 5 s, and catalogue
+  files gain 6 to 63 %. The repository's `Project.toml` and `Manifest.toml` do not
+  change; the images grow by about 100 MB. (#12460)
+- **Julia in the renderer's toolchain image, not served yet.** The toolchain
+  image (`agents/renderer/toolchain.Dockerfile`) gains a Julia stage of its
+  own: the official Julia 1.13.2 build, checked against julialang's SHA-256,
+  and the catalogue's `Project.toml` and `Manifest.toml` precompiled into a
+  depot, so the renderer runs the pipeline's Makie 0.24.16. The renderer's
+  Julia row starts the launcher by its path under the preloaded exec filter
+  with `--compiled-modules=strict`: a package image that does not load fails
+  a render in about a second instead of compiling for minutes under its
+  timeout, which the image build, CI and the deploy's candidate smoke each
+  check with a Makie render. The agent chat does not offer Makie yet.
+  TimeZones.jl becomes a direct dependency of the Julia project, for the
+  loader that turns datetimes with offsets into UTC. (#12455)
+- **ggplot2 in "Use with my data", for the admin's live tests.** `RRuntime`
+  (`agents/anyplot/render/runtimes/r.py`) serves ggplot2 on the R code profile:
+  `plot.R` renders through the renderer's R row in exec mode under the
+  preloaded exec filter, the export downloads as `plot.R` with `Rscript
+  plot.R` in its header, and the registry picks a runtime by the library's
+  language. The admin deploy names ggplot2 next to the six Python libraries,
+  and its 80 % eval matrix gates the public release. ADAPTATION refuses a
+  working form that keeps a dataset package (gapminder, palmerpenguins), and
+  when R reads integers beyond 2^53 as the nearest double, the first entry of
+  the version's "what changed" list names the columns and counts the cells,
+  so no value changes unannounced and the plot's status stays its own.
+  A scripted identity adaptation of a fixture renders 3200x1800 in both themes
+  through the local Docker backend with `exec_deny: on`. (#12448)
+- **An adapter prompt per language.** `adapter.md` keeps the rules every
+  language shares and names a slot wherever the code differs;
+  `adapter_python.md` and `adapter_r.md` fill them. The R prompt teaches the
+  placeholder `df <- load_user_data()`, column constants read through
+  `.data[[...]]`, the protected statements, the packages the adapter may
+  attach and what the validator refuses. The Python prompt is byte for byte
+  the one before, which a test pins by its SHA-256. (#12448)
+- **ggplot2 eval fixtures.** The ten matrix specs for ggplot2 (60 cases, 420
+  generated in all) with the smoke case `scatter-basic-ggplot2-renamed`; the
+  eligibility sweep and the development fixture seed find each library's
+  files under its language (325 ggplot2 files: 4 clean, 306 coupled, 15
+  blocked). (#12448)
+- **The R (ggplot2) code profile for "Use with my data", not served yet.**
+  `agents/anyplot/code/profiles/r/` reads ggplot2 code with tree-sitter
+  (`tree-sitter` 0.26.0 and `tree-sitter-language-pack` 0.13.0, whose
+  bundled grammars need no download; the agents image keeps only the R
+  grammar, 0.6 MB of 184 MB): the protected regions, a normaliser that
+  strips the header, blanks the catalogue title and sets only the save's
+  dpi for ragg's truncation (all 325 catalogue files land on 3200x1800 or
+  2400x2400), the SECURITY and ADAPTATION validator with the named
+  bypasses as tests, the readiness scan (4 clean, 306 coupled, 15 blocked;
+  a missing marker never blocks), a readr loader typed from the data's
+  kinds, which also count the integer cells past 2^53 a double would
+  change, and an error grammar that never quotes R's message. A denied
+  name is refused where it can run (a callee, a function argument, a
+  value outside a data mask), so a user's column called `source` or
+  `file` passes. The edit applier and the export header now take the
+  language as a parameter, with Python's output unchanged; the runtime
+  and the registry entry follow in the next step. (#12443)
+- **Google Jules takes short implementation tasks.** The new `jules-task`
+  skill hands credential-free tasks that fit a roughly 30-minute cloud run to
+  Jules through Google's official MCP server (`.mcp.json`, key read from
+  `.env`). It covers single tasks against `main`, parallel sub-tasks of a
+  `feature/*` branch, and best-of-N comparisons when the approach is open, and
+  bundles a session watcher that flags empty PRs. The Ultra plan allows 300
+  tasks a day, each counted once, so this work no longer costs Claude tokens.
+  (#12429)
+- **The renderer runs R plots in exec mode under the exec filter.** The R row of
+  the command table starts R's own binary with `--file=plot.R` and the environment
+  R's start script would set (UTF-8 locale included), and the harness preloads the
+  exec filter into it: every program the plot starts is killed. A preflight starts
+  R alone first and lets the plot run only when the filter took there, and a run
+  whose filter did not report `on` is refused with exit code 3 as well
+  (`RENDERER_EXEC_DENY=optional` stays the switch). Each row now says whether it needs the filter; only the
+  JavaScript row, whose Node and Chromium start their own processes, has it off. The
+  agents service does not send R jobs yet. (#12428)
+- **The renderer builds on a toolchain image with R 4.6.1 and an exec filter for
+  exec-mode runtimes.** `anyplot-toolchain` (`agents/renderer/toolchain.Dockerfile`)
+  is `python:3.14-slim`, pinned by digest, with Posit's R 4.6.1 for Debian 13, the
+  pipeline's ggplot2 package set plus readr as Package Manager binaries, and a
+  preload library whose constructor kills every later program start before user
+  code runs. The deploy builds and pushes it to Artifact Registry only when the hash
+  of its inputs is new, and the CI job pulls it or builds it. The Python renders of
+  all six libraries stay byte-identical; R is not served yet (step 2 of the
+  all-libraries plan, revised after a second opinion). (#12423)
+- **`.plot_all()` in the admin agent chat: one table, a plot in every library at
+  once.** In step 2 the page replays the confirmed upload and bindings in a
+  session per enabled library, without the summary turn, and runs their plots
+  through the normal run queue, at most `AGENT_USER_MAX_RUNS` at a time, which
+  `GET /status` now reports as `user_max_runs`. The results show as a grid of
+  cards with each library's status, image and `.stop()`. (#12417)
+- **"Use with my data" can adapt and render pygal and lets-plot.** The agent
+  network's Python runtime (`agents/anyplot/render/runtimes/`) now serves the
+  catalogue's pygal and lets-plot files next to matplotlib, seaborn, plotnine and
+  altair. pygal saves through `render_to_png` and `cairosvg.svg2png` for the PNG and
+  `render_to_file` for the HTML, whose target and file type the validator pins
+  because libcairo writes the PNG past the plot guard; lets-plot saves through
+  `ggsave` with `path="."`. The validator gains both import surfaces, keeps
+  cairosvg's CSS stack unreachable, rules pygal's `css=`, `js=` and `defs=` config,
+  and admits lets-plot's tooltip and label builders' `.format` with literal
+  arguments. The normaliser rewrites pygal's HTML writes to `render_to_file`,
+  expands lets-plot's star import from a static copy of `lets_plot.__all__`, removes
+  its `lets-plot-images` epilogue, and sets both libraries' canvas, because R2's
+  pixel cap refuses the catalogue's 4800x2700 PNGs outright; its four new guard
+  rules and a new target form also lift plotnine from 264 to 267 and altair from 269
+  to 273 eligible files. The plot guard imports cairosvg before it is armed and lets
+  cssselect2 compile pygal's CSS selectors; the renderer image installs both
+  libraries and libcairo, and lets-plot's row runs with its own 2048 MiB address
+  space and Arrow's system allocator, which its native rasteriser needs. 209 of 325
+  pygal and 284 of 325 lets-plot files are eligible. The eval fixtures cover both
+  libraries: 120 more generated cases (360 in all) and one smoke case each (16 in the
+  smoke set). `AGENT_LIBRARIES` keeps its default `matplotlib,seaborn` until each
+  library's eval matrix reaches 80 %. (#12405)
+- **The agent network's runtime seam for every catalogue language.** The renderer
+  holds one fixed render command per language in `agents/renderer/commands.py`,
+  keyed by the job's `(language, library)` and never taken from the request; the
+  probe harness gains an exec mode (`harness.py --exec -- <command>`) that runs a
+  non-Python command under the same limits, start and end lines, launcher retry and
+  kill path; `GET /status` reports the toolchains the image carries and a job in a
+  language without one answers `503 runtime_unavailable`. On the agents side a
+  registry (`agents/anyplot/render/runtimes/runtime_for`) hands the pipeline, the
+  theme toggle, the local backend and the eval harness one `RuntimeAdapter` per
+  library, which now also carries the language's code conventions, error grammar,
+  export and the render time a repair reserves; the exported code's artifact name
+  follows the language (`plot.py`, `plot.R`, `plot.jl`, `plot.js`, `plot.tsx`)
+  through the wire, the BFF, the feedback case and the result card. matplotlib and
+  seaborn behave as before; the table's other rows wait for their toolchains.
+  (#12404)
+- **Phase-2 plan for "Use with my data" in all 15 libraries.**
+  `agentic/specs/261024-agent-all-libraries.md` takes the agent network from
+  matplotlib and seaborn to the other 13 catalogue libraries: a runtime registry
+  in place of the hard-wired Python runtime, one fixed render command per language
+  in the renderer, a harness exec mode for Node, Rscript and julia, the toolchains
+  in the renderer image, a deterministic code profile per language, and seven PRs in
+  order (the seam, plotnine and altair, pygal and lets-plot, R, JavaScript, plotly
+  and bokeh, Julia). It records the spike measurements (the JS harness, the Python
+  extras under the probe harness, plotly and bokeh, R and Julia in local Docker), the
+  Fable second opinion and the owner questions with their defaults. (#12404)
+- **"Use with my data" can adapt and render plotnine and altair.** The agent
+  network's Python runtime now serves the catalogue's plotnine and altair files
+  next to matplotlib and seaborn: a save rule per library
+  (`agents/anyplot/code/regions.py`, `SAVE_RULES`) replaces the savefig rule in the
+  regions, the normaliser, the readiness scan, the edits and the validator, so
+  plotnine's `save` and `ggsave` and altair's `save` are the protected final save;
+  the validator gains both import surfaces, parses plotnine's `aes` and facet strings
+  as code, refuses `formula=` (patsy runs Python while it parses one), and admits
+  altair's PIL padding block on the PNG only; the plot guard lets altair write its
+  `plot-<theme>.html` inside the sandbox, where nothing collects it, and hands
+  plotnine's `Environment.capture` the plot's frame. The renderer image installs both
+  libraries, and the eval fixtures gain 120 cases for them. 264 of 321 plotnine and
+  269 of 325 altair files are eligible; `AGENT_LIBRARIES` keeps its default
+  `matplotlib,seaborn` until each library's eval matrix reaches 80 %. (#12404)
+- **Adopt mode records who wrote the code: `source_model` on
+  `impl-generate.yml` and `bulk-generate.yml`.** The optional input names the
+  model that wrote an adopted implementation, such as `gemini-4-argon`, and
+  becomes the metadata's `generated_by`; without it `generated_by` stays
+  `adopted:<ref>`. Every adopted file's metadata also gets a new key,
+  `adopted_from: <ref> (<sha>)`, so the source commit survives after the
+  `gemini/*` branch is gone. The PR body's `**Generation:**` line, the adopt
+  commit and the run notices name the model, and every retry forwards it like
+  `source_ref`. The value is checked as a model name and ignored with a
+  warning without `source_ref`. Both workflows now reject a malformed
+  `source_ref` or `source_model` without echoing it, since a newline in a
+  dispatch value would start a workflow command, and `bulk-generate.yml` does
+  so before its first dispatch. (#12297)
+- **Adopt mode for the implementation pipeline: `source_ref` on
+  `impl-generate.yml` and `bulk-generate.yml`.** With it set, impl-generate
+  takes the implementation file from that branch, tag or commit SHA instead of
+  running Claude, renders it in both themes with the generator's commands,
+  checks the canvas with `core.canvas`, and runs every later step unchanged:
+  metadata, PR, staging upload, review, repair and merge. It exists so code
+  written outside the pipeline, such as a `gemini/*` branch that migrates the
+  323 MUI X implementations to MUI X 9, reaches main only through the Opus
+  review, with metadata, quality score, GCS promotion and labels still owned by
+  the pipeline. An adopted run is always a forced regeneration (`regen:forced`),
+  the routed model only runs repair, the PR body and the metadata
+  (`generated_by: adopted:<ref>`) name the source, and a missing file or a
+  failed render is reported once without a retry, because a retry would read
+  the same file. Python and JavaScript only for now. (#12274)
+- **The adaptable-code convention in all 15 library prompts.** A new
+  implementation keeps one replaceable `# Data` block that ends in a tidy
+  DataFrame `df` (or a `tibble`, a Julia `DataFrame`, or JavaScript records),
+  names each spec role once as a column constant with a `# role:` comment, lists
+  all eight Imprint hues and uses the first `n`, and derives labels, callout
+  targets, and limits from the data below the block. People who copy the code
+  and the "Use with my data" agent replace the block and the constants, and
+  nothing below them. Regenerations of R, Julia, and JavaScript pairs keep
+  their regeneration rules, because only Python has a checker so far. (#12261)
+- **A Python self-check before every generation commits (Step 3c).**
+  `python -m core.smoke_run selfcheck` runs the static adaptability check and
+  the perturbation smoke run on the new file, up to three attempts. It never
+  blocks the commit, and the commit body records the result, so a first
+  generation that still fails merges and converts on its next regeneration.
+  (#12261)
+- **A record-only smoke run and a predecessor render in `impl-generate.yml`.**
+  The step "Adaptability smoke run (record-only)" runs the smoke run on the
+  generated file and, on a regeneration, on the predecessor too. It renders both
+  sources in the same runner and stages the results and the raw renders under a
+  private `adapt/` prefix in GCS staging, which `impl-merge.yml` never promotes.
+  `impl-repair.yml` reruns the smoke run after every repair. Identity is measured
+  on the raw renders, before the PNGs are quantized. (#12261)
+- **A record-only adaptability step in `impl-review.yml`.** The step
+  "Adaptability check (record-only)" runs the checker mirror on both sources
+  and reads the staged smoke results. It writes one record per source and an
+  `adapt_check` notice per side, and it never fails the run. The reviewer never
+  sees it, and the review prompt and the rubric are unchanged. (#12261)
+- **The adapt route and the adapt regression in the regen gate.** A
+  regeneration that converts a Python implementation to the convention now
+  merges on render identity, without a visible improvement, when all of these
+  hold: the predecessor fails the check and the new source passes it, the two
+  renders differ in at most 0.5 % of their pixels in both themes at equal size,
+  the new source stays within max(1.25 × prev, prev + 15) lines, and the review
+  keeps every technical item at or above its re-score. The reason code is
+  `adapt_identity`, and the gate record gains an `adapt` block. A conversion
+  that breaks the check (the predecessor passes, the new source fails) is kept
+  as `adapt_regression`, on every spec, so converted code stays converted.
+  `regen_gate.py adapt-route` evaluates the route before the review. The
+  repository variable `ADAPT_REVIEW_FREE` lets identical conversions merge
+  without a review. It is off until the owner turns it on. The label
+  `regen:adapt` counts the merges on which the route held through the review,
+  and `regen:adapt-overruled` counts the PRs whose route held before the review
+  and that the review turned off. (#12261)
+- **Adaptability checker for Python implementations.** `core/adaptability.py`
+  checks a source against the adaptable-code convention
+  (`docs/concepts/adaptable-code.md`): one `# Data` block that ends in `df`,
+  one column constant per spec role, no sample literals below the block, and
+  the full Imprint palette when a role colors the marks. It writes at most one
+  CQ-01 `(code)` line per rule class, and classes under 90 % precision on a
+  judged sample of 30 are advisory. `python -m core.adaptability report plots/`
+  prints the catalogue baseline, and `automation/scripts/adaptability_check.py`
+  is its generated single-file mirror for the workflow runner. The pipeline
+  does not run it yet, so this changes no score and no workflow. (#12244)
+- **Perturbation tables and render identity for the smoke run.**
+  `core/perturbation.py` builds the tables the smoke run swaps into the block
+  (renamed columns and categories, one more and one fewer group, a single group,
+  a tenth and ten times the rows, scaled values) and the source to run on each.
+  `core/render_identity.py` measures the share of differing pixels between two
+  renders against a bound. (#12244)
+- **Dependabot watches the JavaScript render harness.** The root `package.json`
+  (Chart.js, D3, ECharts, Highcharts, MUI X) gets weekly grouped minor and
+  patch PRs; a major arrives as its own PR, because it changes the API the
+  library prompt describes. Playwright and esbuild get a group of their own,
+  so a Chromium change never rides along with a chart-library bump. (#12240)
+- **A browser check that the site renders, before and after every merge.**
+  `scripts/site-smoke.mjs` loads the home page, `/plots` and a spec page in
+  headless Chromium and fails on a JavaScript error or an empty page. The
+  app-image CI job runs it against the built container, so a dependency bump
+  that breaks the boot fails its PR, and a new rule in `CLAUDE.md` (with the
+  recipe in the `open-pr` skill and the Dependabot batch command) runs it
+  against production after every merge. On 2026-10-22 a vite bump passed
+  every check and left every page blank for about 45 minutes. (#12236)
+- **Gemini takes coding tasks through `gemini`-labelled issues.** Claude
+  writes the task as an issue. The owner works it with Gemini 4 Argon in his
+  interactive agy session, in a separate clone with pushing disabled. Claude
+  then reviews the branch and ships it as a PR (`/gemini-task`). Gemini's quota
+  does the implementation, while credentials and every outside write stay with
+  Claude. (#12223)
+
+### Changed
+
+- **The agent chat answers short and asks only when it matters.** The root's new "Replies" rules lead with the
+  result in two or three sentences, keep every notice the data rules require (the loader's "reads", "keeps time"
+  and "converts" lines, data changes with their counts, `requested_not_found`, refusals and limits), ask a
+  question only when the turn cannot go on without it or the answer changes the data or the plot materially, close
+  with no offer, and act on the user's answer in the same turn: "the scores are out of 100" now sets the axis to 0
+  to 100. On seven chat scenarios from the user test of 2026-11-01, questions per reply fell from 0.75 to 0 and the
+  words per reply from 58.7 to 50.4 on average (plot replies from 50 to 37). The version's "what changed" notes are
+  written in the language the user chats in, also when the plot keeps another one, and in plain words, without
+  the code's own names such as `load_user_data()`.
+  (#12506)
+- **The agent chat's plot follows the site theme.** On the dark site the
+  first render of each plot version is now dark, and on the light site it is
+  light. The other theme is still one click away on the light and dark switch,
+  and each version still takes one render. The page sends the theme the site
+  shows with every turn (`POST .../messages?theme=`). The query parameter lets
+  the page, the API and the agents service deploy in any order. A change made
+  after a site-theme switch follows the switch. A theme the user asked for in
+  the chat holds for later changes of that plot. The admin fan-out
+  (`.plot_all()`) plots every library in the same theme. This fixes user test
+  E2 of 2026-11-01, where the dark site showed a bright plot card. (#12505)
+- **`.plot_all()` plots the confirmed data, whatever its origin.** The admin
+  fan-out of the agent chat (`/debug/agent`) has the agents service copy the
+  page session's confirmed current data version into each library's session
+  (`POST /v1/sessions/{sid}/dataset/copy`), byte for byte with its bindings,
+  their confirmation and the session language, instead of posting the paste
+  again. A table the assistant changed or computed (`sin x cos x`) now fans
+  out too, and every library plots exactly what was confirmed. Both sessions
+  must be the caller's, the target a fan-out session without data, the source
+  confirmed; a copy parses and judges nothing again, counts as no paste, and
+  has a per-user limit of its own. While the panel is open the data card
+  waits, so every library copies the same confirmed data. The page falls back
+  to posting the paste again while the server has no copy route. (#12501)
+- **Pipeline-only implementation PRs start no CI runs.** The five CI workflows
+  skip a PR that changes only `plots/*/implementations/**` and
+  `plots/*/metadata/**`: GitHub holds the runs of a PR that the pipeline opens
+  with `GITHUB_TOKEN` for an approval that never comes, and they ended as a red
+  `failure` at the merge without having checked anything. (#12499)
+- **The scope judge's example of another library is Excel.** "Gibt es das
+  auch in Plotly?" stood for a library the assistant does not adapt; plotly is
+  served now, and so is every catalogue library. (#12490)
+- **Every profile's URL rule refuses a protocol-relative URL.** The Python, R
+  and Julia validators refuse `//host/...`, `ws://`, `wss://`, `blob:` and
+  `javascript:` in a string, as the JavaScript one has since JS-3; no catalogue
+  file of a served library changes its outcome. (#12490)
+- **The PR watchers end on their own.** `watch-deploys.sh` exits 0 with
+  `no deploy for <sha>` once 6 polls (about 3 minutes) have found no build
+  for a merge whose paths trigger nothing, instead of waiting 30 minutes, and
+  exits 2 at once when `gcloud builds list` fails, so a lapsed login never
+  reads as "no deploy". `watch-checks.sh` waits 90 polls, about 45 minutes,
+  because a PR that builds the renderer image takes 30 to 40, and its
+  `TIMEOUT` line names the checks still pending (#12493).
+- **The agent rules and skills carry what the 2026-10-31 session retro
+  measured.** `CLAUDE.md` adds a delegate stall check (about 30 minutes with
+  no commit and no message, and a re-check of every delegate after a context
+  compaction), makes a permission-classifier denial final for every agent of
+  the session, and puts the first Copilot review at about 5 minutes. The
+  `open-pr` skill gains a hadolint gate for the Dockerfiles, tests for new
+  code before the PR opens, the 16 real check names, the GraphQL request for
+  a further Copilot round, a `git pull --ff-only` of the shared checkout after
+  a merge, and a report of worktrees whose branch is gone. `zweitmeinung`
+  attaches a diff over about 60 KB instead of inlining it, documents how
+  `--attach` resolves paths, and states the measured Gemini costs. Gate
+  commands name ruff's `dev` extra (`uv run --extra dev ruff …`), which a
+  fresh worktree lacks (#12493).
+- **Recipes that lived only in chat are documented.** The single-library
+  `impl-generate.yml` dispatch with its optional inputs
+  (`docs/workflows/overview.md`), the eval-matrix forms real runs use
+  (`agents/README.md`), and the export, edit and import route for a
+  second-generation Cloud Build trigger, whose `update github
+  --included-files` fails with `INVALID_ARGUMENT`
+  (`agentic/docs/project-guide.md`) (#12493).
+- **The eval pacing text follows the raised Haiku quota.** The owner raised
+  the project's Claude Haiku `eu` overrides on 2026-10-31 to 150 requests,
+  1,000,000 input tokens and 200,000 output tokens a minute (from 30
+  requests); the agents README, the design doc and the scope and prep evals'
+  docstrings say so, and why `--calls-per-minute` keeps its default of 25.
+  (#12482)
+- **The local Docker backend runs the checkout's browser harness.** A
+  JavaScript render or page build mounts `automation/js-render/render.mjs`
+  over the image's, as the backend mounts the checkout's `harness.py`, so a
+  local run uses the harness under development. (#12480)
+- **The agent chat's local mock serves JavaScript versions.** With a
+  JavaScript library in `AGENT_LIBRARIES`, `app/scripts/agent-bff-mock.mjs`
+  answers `plot.js` and a wrapped `plot.html` per theme, so the download can be
+  driven in a browser without the services; it also accepts the cards' usage
+  beacon. Its other answers are unchanged. (#12480)
+- **The renderer deploy's Chart.js smoke is a gate.** A failed Chart.js render
+  of the candidate revision now refuses the promotion, as the Makie render
+  does, and the smoke's page reads its table from the job's typed JSON, the
+  path every agent job takes. (#12479)
+- **The scope judge's example of another library is MATLAB.** It was "this
+  plot in JavaScript with Chart.js", which the chat now adapts. (#12479)
+- **The assistant names the time-zone notes of every language.** A "what
+  changed" line that says R, Julia or JavaScript converted timestamps with an
+  offset to UTC is now named in the reply, like the other loader notes.
+  (#12479)
+- **A loader note never passes the 200-character limit.** With very long
+  column names and many changed cells, the first column's name in a note is
+  now cut with an ellipsis instead of failing the result. (#12479)
+- **`.plot_all()` in the admin agent chat is chosen in the library selector.** An
+  `all` pill after the header's library pills turns the composer's create action
+  into `.plot_all()`, which replays the confirmed table in every library at
+  once; the separate row under the composer is gone. While `all` is pressed the
+  page's own session stays the data session; in step 2 the message box waits,
+  since the fan-out takes no typed text, while the chat about the data in step 1
+  goes on. Any library pill turns `all` off again. Data the assistant changed or
+  computed keeps `.plot_all()` disabled, with a line that says why. (#12478)
+- **The agent's adapter may think and answer up to about 50,000 tokens.** In the
+  Makie eval matrix, 9 of 139 adapter calls stopped at the old cap of 16,384
+  tokens with nothing written: each had spent the whole cap thinking, while the
+  finished calls thought up to 14,315 tokens. Each such call cost a repair round.
+  The Claude adapter's output cap is now 40,960 tokens for edits and for full
+  files, with its 8,192 tokens of thinking room on top (49,152). The Vertex
+  client sets its own 300-second timeout, because the Anthropic SDK refuses a
+  non-streaming request that large otherwise. An answer that needs fewer tokens
+  costs and takes what it did before; the root and the reviewer keep their caps.
+  (#12475)
+- **Gemini reviews its own finished work before it hands over.** In the
+  `gemini-task` skill, Gemini starts one fresh subagent as a reviewer once a
+  task, single or in packages, or a review round is done. The reviewer sees
+  only the brief's Constraints and Acceptance and the diff, reads the whole
+  diff for defects, and runs the mutation table plus
+  breaks of its own. Gemini fixes the findings that hold up and lists every
+  finding in a new `## Self-review` section of the PR body, as fixed or
+  declined. Claude's independent Opus review stays, because a reviewer of
+  the same model shares the author's blind spots. The owner's reason: code
+  quality comes before saving tokens. (#12476)
+- **Gemini test tasks prove what their tests catch.** In the `gemini-task`
+  skill, a test brief names the files where the behavior lives and carries a
+  mutation table in Acceptance: one deliberate break per behavior that must
+  turn a test red, and one harmless refactor that must stay green. The review
+  subagent runs the table and adds breaks of its own. Larger findings go back
+  as a review round, one PR comment with a section per package; Gemini works
+  the independent ones in parallel on `gemini/<slug>-r<n>-<k>` branches from
+  the task branch and merges them back. In the first parallel run, the section tests passed every
+  gate while two of three packages tested copies of the page logic instead of
+  the pages. Cleanup now asks before deleting package branches, as
+  `CLAUDE.md` requires. (#12474)
+- **The agent chat announces timestamps it shows in UTC.** The parser keeps a
+  column's one time-zone offset (a column with several is written in UTC with a
+  note of its own), and R's and Julia's loaders read a timestamp with an offset
+  in UTC, so a plot showed `08:00+01:00` as 07:00 without saying so. The instant
+  stays exact, but the clock time moves. Such cells now appear in "what changed",
+  counted per column, in the same words for R and Julia ("R converts 4
+  timestamps with a time-zone offset to UTC, so the plot shows their UTC clock
+  time: 3 in 'Ankunft', 1 in 'Abfahrt'"). `Z`, `+00:00` and a timestamp without
+  an offset keep their clock time and are not counted. The status stays as the
+  render earns it, as with the other loader notes. The JavaScript runtime will
+  use the same count and wording. (#12468)
+- **The JavaScript harness reads its packages from `ANYPLOT_NODE_MODULES`.**
+  `automation/js-render/render.mjs` keeps finding `node_modules` two levels above
+  itself in a checkout, so the pipeline renders as before; the renderer image,
+  where the harness sits elsewhere, names the directory. `package.json`,
+  `package-lock.json` and `automation/js-render/` join the toolchain's hash, the
+  build context and the CI image job's change filter. (#12465)
+- **Gemini works independent packages in parallel, in one PR.** When a brief
+  task has two or more packages marked `independent`, the `gemini-task` skill
+  has Gemini in the owner's agy session start one agy subagent per package, at
+  most eight at a time, each in its own Git worktree on its own
+  `gemini/<slug>-<k>` branch. Gemini then merges the package branches into
+  `gemini/<slug>`, runs the gates on the result, and opens one draft PR with
+  one changelog fragment for the whole task; coupled packages still run one
+  after another. One start line, `/gemini-task <slug>`, covers every package.
+  `/teamwork` is ruled out for this repository because it builds outside it,
+  without branches or PRs. The agy permission rules gain the `git -C <clone>`
+  forms and the coordinator's `git merge --no-ff`, and the repository no
+  longer calls a 2026-10-16 forum reply a Google staff reply. (#12462)
+- **PalettePage split into sections.** `PalettePage.tsx` shrinks from 1,783 to
+  144 lines: its colour helpers, sub-components (`ChromaWheel`, `CodeBlock`,
+  `DeltaEMatrix`), and eight numbered sections move into
+  `app/src/sections/palette/`. The page keeps only state, effects, memos, and
+  layout, and renders the same markup as before. (#12463)
+- **agy works without a prompt for every command.** The `gemini-task` skill
+  ships `agy-permissions.json`, the permission rules for the owner's agy
+  settings, with a one-line merge for a new machine: the toolchains, file
+  tools, local Git, pushes to `gemini/*` branches, GitHub reads, and Gemini's
+  own draft PR run without asking; cloud CLIs, network downloads, history
+  rewrites, other GitHub writes, `chmod`, and writes to the brief folder are
+  denied. (#12461)
+- **DebugPage and MapPage split into sections.** `DebugPage.tsx` shrinks from
+  1,853 to 541 lines: its KPI grid, charts, tables, and feedback blocks move
+  into `app/src/sections/debug/`. `MapPage.tsx` shrinks from 1,291 to 265
+  lines: its selection, search, and resize logic moves into hooks with tests,
+  and the canvas, legend, hover panel, search pill, and weights panel into
+  `app/src/sections/map/`. Both pages render the same markup as before.
+  PalettePage stays as it is for now. (#12457)
+- **Gemini tasks as brief files instead of issues.** Claude now hands work to
+  Gemini in the owner's agy session as a read-only brief in
+  `~/projects/anyplot-briefs/`, outside both checkouts; a `gemini`-labelled
+  issue is written only when the owner asks for one. The owner starts a task
+  with `agy-work` (a shell function the `gemini-task` skill documents) and
+  `/gemini-task <slug>`. Large work is cut into packages of at most 20 to 25
+  files, each in a fresh session with mechanical convention checks in its
+  Acceptance. Claude reviews against the brief, never against Gemini's PR
+  text. (#12458)
+- **The agents service runs on 1 vCPU and 2 GiB.** `anyplot-agents` was sized
+  at 2 vCPU and 4 GiB when it still hosted the sandboxes; over the 14 days to
+  2026-10-29 its hourly p99 peaked at 0.46 of a core and 370 MiB, since it
+  mostly waits on the model and the renderer. 2 GiB keeps headroom for the
+  worst case of about 1.1 GiB (the dataset and render stores' 256 MiB caps, a
+  1 MB paste's parse and the PNG gates), because an out-of-memory kill would
+  lose every session in memory. The renderer stays at 2 vCPU and 4 GiB. (#12456)
+- **The renderer deploy runs on 8 vCPUs with a registry layer cache.**
+  `agents/renderer/cloudbuild.yaml` runs on `E2_HIGHCPU_8` with an hour's
+  timeout and builds a missing toolchain with BuildKit's registry cache, so a
+  change to one toolchain no longer rebuilds the others; `Project.toml` and
+  `Manifest.toml` join the toolchain's hash, the build context and the CI
+  image job's change filter. (#12455)
+- **Stop a Jules session before closing its PR.** The `jules-task` skill now
+  tells the session to stop before Claude closes a losing or duplicate PR:
+  closing a PR wakes its session, and on 2026-10-29 one pushed a new commit
+  and recreated its deleted branch. (#12438)
+- **SEO router reuses the shared display-name maps.** `api/routers/seo.py`
+  imports `LANGUAGE_NAMES` and `LIBRARY_NAMES` from `core.constants` instead
+  of deriving its own copies, so exactly one derived name map exists.
+  (#12419)
+- **Per-route page metadata uses React 19 native hoisting.** Pages render
+  bare `<title>`, `<meta>` and `<link rel="canonical">` elements instead of
+  wrapping them in `react-helmet-async`, which is archived upstream; the
+  dependency and its `HelmetProvider` are gone. The `/plots` title is now
+  declarative too and keeps the route name next to the active filters
+  (`lib:matplotlib | plots | anyplot.ai`); `useUrlSync` no longer writes
+  `document.title`. (#12424)
+- **Delegation lanes after the first Jules test.** The delegation rule in
+  `CLAUDE.md` and `.claude/guardrails.md` now gives Sonnet a narrow lane for
+  bounded work a command verifies, sends ~30-minute implementation to Jules
+  and larger steps to `/gemini-task`, and runs Fable plus Gemini 4 Argon only
+  when the owner asks for a second opinion. Claude merges Jules's sub-PRs into
+  a `feature/*` branch it leads; every merge into `main` stays with the owner.
+  The guardrails record the Gemini 3 Pro against Flash comparison that made
+  Flash the Jules model. (#12429)
+- **Gemini Flash checks every code PR before it opens.** `/open-pr` now runs
+  `/zweitmeinung` with Gemini 3.8 Flash on the branch diff before a code PR
+  opens, so Copilot's single round ideally finds nothing. Diffs made only of
+  docs, instruction files, changelog fragments, or `plots/`, and diffs under
+  about 20 lines, skip it. (#12429)
+- **Lint and tests run on pull requests into `feature/**`.** `ci-lint` and
+  `ci-tests` now also run for PRs into a feature branch, so every Jules
+  sub-PR is checked before Claude merges it. Image builds, migrations,
+  CodeQL, and the changelog check stay on PRs into `main`. (#12429)
+- **A 1-D NumPy array converts to one column.** "Use with my data" used to refuse a
+  plain 1-D `.npy` array as `file_array_shape`; it now becomes one column, `value`,
+  which is what a histogram, a box plot or a line over the index needs. An `.npz` of
+  two or more plain 1-D arrays of one length, which is what
+  `np.savez(path, t=t, y=y)` writes, becomes one table with a column per array named
+  after it; scalars saved next to them are left out and named. Any other `.npz` is
+  still read one array at a time: a 2-D or structured array before a 1-D one. Still
+  refused are 0-D arrays, arrays of three or more dimensions and structured arrays of
+  more than one. (#12413)
+- **The agents deploy serves all six Python libraries.** `_LIBRARIES` in
+  `agents/cloudbuild.yaml` now names plotnine, altair, pygal and lets-plot next to
+  matplotlib and seaborn, so the admin can test each one in the live chat; only the
+  admin reaches the chat yet. Each library's 80 % eval matrix now gates the public
+  release. `AGENT_LIBRARIES` keeps its default `matplotlib,seaborn`. (#12410)
+- **R2 refuses a render as blank only when 99.7 % of it is one colour, not 98 %.**
+  The agent network's blocking PNG check (`agents/anyplot/render/png.py`) refused
+  sparse but complete charts: 33 of the 195 eligible pygal renders and lets-plot's
+  point-basic (98.38 %) are 98 % one colour or more, the sparsest pygal one 99.44 %.
+  A bare canvas (99.93 %) or a title alone (99.78 %) still fails. The cutoff holds
+  for every library, and it refuses nothing the old one accepted. (#12405)
+- **`impl-review.yml` runs on the pinned Python.** A setup step reads
+  `.python-version` before the first regen tool runs, because the regen gate,
+  the provenance script, and the checker mirror use PEP 758 `except A, B:`
+  since the move to Python 3.14, and the runner image's own Python is not
+  pinned. `impl-merge.yml` now promotes only the `plot-*` files from staging,
+  so the private `adapt/` artifacts never reach production. (#12261)
+- **Python 3.14 everywhere.** The project floor (`requires-python`), the pinned
+  interpreter (`.python-version`, 3.14.9), mypy's target, every workflow's
+  `setup-python`, the three service images (`python:3.14-slim` for the API,
+  the agents service and the renderer) and the Python runtime the languages
+  table reports move from 3.13 to 3.14. 3.13 receives security fixes only since
+  October 2026, while 3.14 gets bug fixes until October 2027; 3.15 waits for a
+  lets-plot wheel. `google-crc32c` moves from 1.7.1 to 1.9.0 in the lock, because
+  1.7.1 publishes no cp314 wheel and the images carry no compiler to build it.
+  The steps that ran repository Python on the runner's own `python3` (the spec
+  check in CI, impl-merge's write-back, review-retest) now set up the pinned
+  interpreter, because the code uses 3.14-only syntax. Rebuild a local
+  `anyplot-renderer:dev` image after this change: the local renderer mounts the
+  checkout's harness, which no longer parses on 3.13. (#12247)
+- **MUI X implementations are generated against @mui/x-charts 9.16, React 19
+  and @mui/material 9.5.** The pinned render stack in the root `package.json`
+  moves up from @mui/x-charts 7.29.1, React 18.3.1 and @mui/material 5.18.0,
+  matching the React and Material versions the frontend already runs.
+  `prompts/library/muix.md` gains a "MUI X v9 API" section on the changes that
+  break or silently restyle generated code: `ChartsContainer` instead of
+  `ChartContainer`, `hideLegend` and the new legend position values, the HTML
+  legend's extra height, `position: "none"` instead of `leftAxis={null}`, the
+  per-chart CSS classes and `[data-series]`, and the line-mark defaults. The
+  Sizing section adds that each axis needs an explicit `height` or `width` once
+  its fonts grow, because v9 truncates tick labels that don't fit its band.
+  The render harness itself needed no change. Existing MUI X implementations
+  were written for v7: 164 of 323 no longer bundle under v9, and most of the
+  rest render differently, so they need regeneration before they can be
+  re-rendered. (#12243)
+- **The spec role parser moved to `core/spec_roles.py`.** The agent and the
+  checker now read a spec's `## Data` roles through one parser, which also files
+  each spec as a table, matrix, network, generated or map spec and names its
+  color-driving role. (#12244)
+- **R implementations now render on R 4.6.1 with ggplot2 4.0.3.** The shared R
+  setup action installs R 4.6.1 and pins the Posit Package Manager snapshot to
+  2026-10-20 (was R 4.4.1 and 2025-01-15, ggplot2 3.5.1). The ggplot2 generator
+  prompt gains a "ggplot2 4.0 notes" section for the changes that render
+  differently without an error: label borders, binning edges, `theme_void()`
+  borders, rotated top-axis text and legend order. All 325 ggplot2
+  implementations still render in both themes; existing catalogue images stay
+  as they are until an implementation is regenerated. (#12242)
+- **The Julia render stack moves to Julia 1.13 and Makie 0.24.** The
+  Manifest pins Makie 0.24.16 and CairoMakie 0.15.16, up from the 0.21.9 that
+  the QRCoders dependency had forced in June: every QRCoders release caps
+  ImageCore at 0.9, while Makie 0.21.10 and later need ImageCore 0.10.
+  QRCoders leaves the environment, so qrcode-basic's Makie implementation
+  needs a regeneration, and nyquist-basic, which crashed on 0.21.9, renders
+  again. The setup action installs Julia 1.13, and the Makie generator prompt
+  switches to `Figure(size = …)` and adds notes on the 0.24 APIs that changed
+  (arrows, text alignment, layout gaps, and `heatmap!` on a `PolarAxis`,
+  which renders a blank figure) (#12245).
+- **Highcharts renders with 13.1.1 instead of 12.6.0.** The JavaScript render
+  harness pins the latest 13.x release, which also carries the fixes for the
+  2026-09 core security advisories (prototype pollution through `series.keys`,
+  `javascript:` URLs in `credits.href` and exported markup). The generator
+  prompt now pins `palette: { colorScheme: t.theme }`, because Highcharts 13
+  takes every default color from CSS variables that otherwise follow the
+  viewer's OS dark-mode setting in the interactive HTML. It also covers the
+  13.x changes a before/after render of all 323 Highcharts implementations
+  surfaced: the `dataLabels.distance` gap, legend symbols that take
+  `series.opacity`, near-black default outlines in the dark theme, and the
+  cropping of unsorted line data. Existing implementations stay as they are,
+  and regeneration refreshes them. (#12246)
+- **The frontend tests run on Vitest 5.** `vitest` and `@vitest/coverage-v8`
+  in `app/` move from 4.1.11 to 5.0.5, which also resolves `@vitest/mocker`
+  5.0.5, outside the range of the two open `@vitest/mocker` advisories. The
+  suite needed no config or test changes: it still covers the same 117 files
+  with the same 1,168 tests, and the production bundle is unchanged, since
+  Vitest is a test-time dependency only. (#12249)
+- **Adaptable-code rollout revised after a second opinion.** The design in
+  `docs/concepts/adaptable-code.md` now merges a conversion on render identity
+  (both sources rendered in the same runner, under 0.5 % of pixels differing
+  per theme) instead of a one-point score tolerance, converts the catalogue
+  through a capped targeted pass over matplotlib and seaborn instead of one
+  spec a night across 15 libraries, drops the first-generation repair trigger
+  that collided with the early `ai-approved` label, keeps the Opus review for
+  the first 50 identical conversions, perturbs missing values only in the
+  dtypes the agent's loader produces, and drops the `fill_value=0` pivot that
+  invented zero bars. The
+  reasons are recorded next to the owner's decisions of 2026-10-23, so the
+  document stays the single source for PR 2. (#12239)
+- **Copilot reviews a PR once; another round only while the previous one
+  had high or critical findings.** `CLAUDE.md`, the `open-pr` skill and
+  `/pull_request` replace "stop once a round yields nothing new", which let
+  a round with any findings draw the next one, with the owner's rule of
+  2026-10-23: a round with only low and medium findings gets its fixes
+  pushed and its threads resolved, and that is the end, because every round
+  re-reads the whole diff and costs premium requests. (#12250)
+- **Library and runtime versions are read from the pins, never written by
+  hand.** `core/library_versions.py` reads `uv.lock`, the root
+  `package-lock.json`, `Manifest.toml`, `.python-version`, the setup actions
+  and the R snapshot, and the database sync fills the Libraries page from it;
+  `core/constants.py` carries no version any more. Ten of its fifteen numbers
+  had drifted (matplotlib 3.9.0 against 3.11.2 locked, ECharts 5.5.1 against
+  6.1.0), and a Dependabot bump now needs no edit. The library prompts' example
+  headers carry no version; every prompt of a locked library (Python,
+  JavaScript, Makie) states the API level it writes for, and a test holds it
+  to the lock's major. CI now also fails when `uv.lock` is out of date with
+  `pyproject.toml`. (#12240)
+- **Merged branches are cleaned up locally too.** GitHub deletes a PR's
+  remote branch on merge, but never the local copy, and 212 merged local
+  branches had piled up by 2026-10-22. After a merge, Claude now removes the
+  PR's worktree and local branch without asking (`CLAUDE.md`, the `open-pr`
+  and `gemini-task` skills); unmerged branches still need the owner's OK.
+  (#12238)
+- **Gemini tasks after the first pilot.** The `gemini-task` skill now reads
+  issues with `gh issue view --json` and updates PR bodies through `gh api`,
+  because both bare commands fail on this repository; asks issue authors for
+  cases where the existing rules must still win and for the files the gates
+  couple; names the environment sync with the `agents` extra; and has Gemini
+  hand over in the repository's PR format. The changelog check names a
+  fragment that is on disk but not yet committed. (#12229)
+- **Gemini second opinions run through Vertex AI, and Claude no longer runs
+  agy.** Google's Antigravity FAQ and a staff reply of 2026-10-16 forbid
+  running the Antigravity CLI from third-party coding agents under a consumer
+  login, even read-only. The new `zweitmeinung` project skill calls Gemini
+  through Vertex AI in project `anyplot` with read-only tools: Gemini 3.8 Flash
+  on half-price Flex PayGo for first reviews of normal PRs, and Gemini 4 Argon
+  for plans and second opinions. Its script inlines the diff and the changed
+  files and reads several files per call, because every tool turn re-sends the
+  whole conversation; unit tests pin its read-only confinement and tool loop.
+  `CLAUDE.md` and `.claude/guardrails.md` describe the split and its measured
+  costs. (#12226)
+- **Gemini hands its work over as a draft PR.** In the `gemini-task` skill,
+  Gemini pushes its `gemini/*` branch and opens a draft PR labelled `gemini`,
+  so CI runs at once while Copilot waits; Claude reviews the draft and marks it
+  ready. The owner may let Gemini run tests and builds unattended in his own
+  agy session, and only he starts agy. (#12226)
+- **Delegation runs in lanes.** The delegation rule in `CLAUDE.md` and
+  `.claude/guardrails.md` now sends work by what it needs. Opus handles
+  anything that changes state. Haiku only reads, polls, and creates Todoist
+  tasks. Fable takes high-risk reviews. Gemini takes credential-free reading,
+  first reviews, and implementation. Sonnet no longer has a lane in interactive
+  sessions. The guardrails also record why headless Gemini implementation was
+  dropped: agy's login is a project-owner token, Google front ends route by
+  `Host` header, and proxying the token breaks the Antigravity terms. (#12223)
+- **The data box says what it waits for.** While a dropped Parquet, Excel,
+  OpenDocument, Feather or NumPy file is read on the server, and while
+  `.parse()` runs, the box shows `# reading "x.parquet" on the server … · 4 s`
+  or `# parsing your data … · 3 s` over itself: a pulsing `…`, a seconds counter
+  and a thin bar along its foot. Before, only the buttons greyed out and a quiet
+  line under them changed, so the page looked stuck for the several seconds a
+  sandbox read takes. (#12221)
+- **The agent chat's windows work in parallel; only their sandbox runs queue.**
+  A paste, a chat turn, a data step (bindings, `.confirm()`, `.undo()`,
+  `.to_long()`, the language, a library switch), the theme toggle and a file
+  conversion in one browser window no longer answer `409 run_active` because
+  another window of the same user renders a plot: every exclusion in the
+  agents service is now per session (`Runtime.active`, `Runtime.pasting`,
+  `Runtime.converting`), and within one session it stays one thing at a time.
+  Plot runs and data snippets still share the run queue, at most three per user
+  queued or running across windows (`AGENT_USER_MAX_RUNS`); a fourth ends its
+  turn with the new stream error `run_limit`, which the page words as "you
+  already have 3 plots or data runs in progress in other windows", instead of
+  `capacity`. The per-user rate limits and daily budgets are unchanged (owner
+  decision of 2026-10-21). (#12220)
+- **Dependencies:** 14 Dependabot PRs. Security updates close 60 advisories, four rated
+  critical and 32 high: `pillow` 12.3.0 → 13.0.0, a major version, with 39 of them and all
+  four critical ones (#12230), `aiohttp` 3.14.3 → 3.14.4 (#12219), `virtualenv` 21.7.13 →
+  21.14.9 (#12231), and in `app/` `vite` 8.0.16 → 8.1.6 (#12225), which left the site blank
+  until #12235 moved it on to 8.3.5. The grouped python-minor bumps (#12213, #12233) carry
+  `anthropic` 1.8.0 → 1.15.0, `mcp` 2.2.0 → 2.3.0, `fastmcp` 4.0.10 → 4.1.1, `pydantic`
+  2.13.5 → 2.14.1, `asyncpg` 0.31.0 → 0.32.0, `ruff` 0.16.9 → 0.17.1, `mypy` 2.3.1 → 2.4.0,
+  `bokeh` 3.10.0 → 3.10.1, `kaleido` 1.4.0 → 1.5.0 and `python-calamine` 0.8.3 → 0.9.0;
+  `certifi` moves to 2026.10.19 (#12234). npm in `app/`: `@mui/material` 9.5.0 (#12161),
+  React 19.3.1 (#12215), the react group (#12160) and two npm-minor groups (#12211,
+  #12232). GitHub Actions: `claude-code-action` 1.0.240 → 1.0.254 and the setup-uv,
+  setup-node, CodeQL and artifact actions (#12164, #12218).
+
+### Removed
+
+- **Google Jules lane.** Google announced on 2026-10-29 that Jules takes no
+  new sessions after 2026-11-11 and shuts down on 2026-12-31, so the lane
+  leaves `CLAUDE.md`, `.github/copilot-instructions.md`, and the guardrails,
+  together with the `jules-task` skill and the Jules MCP server in `.mcp.json`.
+  In its three test rounds Jules paid off only for work a command can verify:
+  three of nine page-split variants kept their page unchanged. The checks that
+  proved it (a jsdom snapshot with the existing test's mocks, a browser
+  comparison against the production API) move into the `gemini-task` skill,
+  where behaviour-preserving refactors go. The CI conditions that keep Jules
+  and Dependabot PRs away from secrets stay until Jules stops taking sessions.
+  (#12453)
+- **The auto-update workflow for PR branches.** `auto-update-pr-branches.yml`
+  merged `main` into every open PR with auto-merge after each push to `main`.
+  The `main` ruleset's checks are not strict, so no PR needed it, and its
+  merge commits, authored by `github-actions[bot]`, held each PR's CI at
+  `action_required` until someone approved the runs by hand (eight times on
+  one PR on 2026-10-22). Auto-merge now fires on the PR's own green head.
+  (#12237)
+
+### Fixed
+
+- **A follow-up message no longer changes the plot's language.** In the live
+  test of 2026-11-01 a German paste gave a German plot, and the English
+  follow-up "Use a log scale on y" translated its title and number format while
+  the axes and months from the data stayed German; "Make the title German"
+  turned the assistant's replies German as well, where now only the plot's
+  language changes and the replies stay English. The plot's text has its own
+  language (`session_state.plot_language`): the language the user asked for the
+  plot, else the language of the session's latest plot, else the session
+  language. So the first plot follows the paste, the first typed message or the
+  chip as before, and later versions keep it. The root's `set_language` takes
+  `applies_to` (`plot`, `replies` or `both`, the default for a request that
+  names no target), the chip sets both and now says it names the replies'
+  language, and the admin fan-out copies the page's plot language. (#12504)
+- **The agent's reply names the texts the plot draws, in all 15 libraries.**
+  In the user test of 2026-11-01, replies for Chart.js, bokeh and pygal plots
+  said the plot's title and labels could not be read back, and a Makie reply
+  offered a title the plot already had. Only matplotlib, seaborn and plotnine
+  reported their drawn texts. Now pygal, altair and lets-plot report them
+  through the render harness; Chart.js, D3, ECharts, Highcharts, MUI X, plotly
+  and bokeh through the browser harness; and ggplot2 and Makie through a text
+  probe their renderer rows load, each by the library's own roles (title, axis
+  labels, ticks, legend, annotations). The probes are best-effort: a failure
+  drops the labels and is logged, never fails the render, and adds at most
+  0.55 s (Makie). The requested-text check stays with the reviewer for these
+  libraries, and G12 stays matplotlib's. (#12503)
+- **A render without drawn texts no longer hands the root a `null`.** The
+  root gets `shows` without `texts`, its prompt no longer mentions unread
+  texts, and it never claims a text is absent from what `texts` leaves out.
+  The eval report counts shipped runs without drawn texts per library
+  (`untexted`), quotes in replies that no drawn text holds
+  (`unbacked_quotes`), and failed probes. (#12503)
+- **The agent chat asks before leaving drops the session.** A reload, a
+  closed tab or a link off `/debug/agent` used to end the session unasked,
+  with its data and plots, also after a 20-minute `.plot_all()` across 15
+  libraries. While the session holds data, a table read from text, a plot or
+  work in flight, the page now asks first: the browser's own `beforeunload`
+  dialog for a reload or a closed tab, and a `confirm` from the router's
+  blocker for a link inside the site or the back button. An empty session,
+  the page's own query edits (a library pill, `all`) and the reload links
+  after an expired session or no answer ask nothing. Sessions still live in
+  memory only. (#12502)
+- **The agent chat's URL follows the session.** A library switch writes the
+  library's `language` next to `library`, so the query no longer reads
+  `library=matplotlib&language=javascript`, and the header's `all` pill is in
+  the URL as `&all=1`, which a reload presses again once the libraries are
+  known. (#12501)
+- **Regenerations re-apply the plot title format.** The regeneration prompt now lists the title format (`{spec-id} · {language} · {library} · anyplot.ai`) under "Base style wins" and in its final check, so a regenerated implementation re-derives the title from the current rule instead of carrying over a predecessor's title that lacks the `{language}` segment; an optional descriptive prefix the previous title had stays. (#12500)
+- **The implementation tab shows the date of the last update.** The date under the strengths and weaknesses was the first generation date, so a regenerated implementation showed its original date next to a score and review from the latest run. It now shows the implementation's own last update date, falling back to the generation date and then the spec's creation date. (#12498)
+- **The renderer deploys again, with plotly and bokeh.** Cloud Build refused the renderer's
+  deploy for PB-2a before its first step ran, because the inline smoke step had grown to
+  11,347 characters and Cloud Build accepts at most 10,000 per step argument; the agents
+  service deployed and the renderer kept its previous revision. The render probes now live
+  in `agents/renderer/deploy_smoke.sh`, which the smoke step calls with the token in the
+  environment, a new unit test keeps every Cloud Build config's arguments under the limit,
+  and `ci-tests.yml` runs the unit tests when a Cloud Build config or the smoke script
+  changes. (#12497)
+- **A plotly 3D plot no longer passes as a blank render.** The renderer's
+  headless browser draws a 3D scene as nothing but its colour bar, without
+  plotly's WebGL notice, and the host gates passed it. A figure with a WebGL
+  trace now fails as `draw NoWebGL` before it is drawn, and the readiness scan
+  blocks such catalogue files (15 plotly files) until the renderer draws WebGL.
+  (#12490)
+- **The unit tests run when an agent instruction file changes, and main is green
+  again.** #12493 added the section "Long-running work reports progress
+  proactively" to `.claude/guardrails.md` but changed no Python, so "Run Tests"
+  skipped it and `test_every_companion_section_is_registered` failed on main.
+  The section and the classifier-denial rule are now registered with their
+  CLAUDE.md anchors, and `ci-tests.yml` also runs the tests for changes to
+  `CLAUDE.md`, `AGENTS.md`, `.github/copilot-instructions.md`,
+  `.claude/guardrails.md`, `agentic/docs/project-guide.md`, `.claude/skills/`
+  and `agentic/commands/`, which
+  `tests/unit/test_agent_instructions.py` and `tests/unit/skills` read. (#12494)
+- **No user code runs while a render or data guard is paused.** The harness
+  pauses its guard briefly to read a traceback or resolve a path, and code the
+  snippet defined could run in that moment and write files the guard refuses:
+  an exception class's own `__traceback__` property while a data run printed
+  its traceback, and a path that subclasses `str` while a plot's file write was
+  checked. The harness now reads the traceback through Python's own
+  descriptor, copies a path to a plain string before the check, and compares
+  only plain strings while paused. (#12484)
+- **A plot can no longer run code of its own as an import.** The render guard
+  trusted any code the import machinery ran, so a plot that drove it, with a
+  loader of its own or a stock loader on a file it had written, ran a module
+  body that read the guard's frames and switched it off. The guard now trusts
+  an import only when the interpreter's own loader runs it, with its class as
+  it was before the plot started, refuses every code
+  read and every native module load outside the installed packages, and
+  refuses changing the flags of the output it shares with the screenshot step.
+  The plot validator also refuses the package-data reader, the import spec
+  builders and the dynamic class builder that matplotlib's bundled dateutil and
+  the standard library's `types` module hand out, found by a new walk over
+  everything the validator admits. (#12484)
+- **The eval matrix's preflight with a MUI X 7 file first.** The preflight
+  rendered the catalogue file of each library's first case unchanged, and a MUI X
+  file written for MUI X 7 fails the bundle step until the adapter rewrites it,
+  so a selection starting with one (`scatter-basic-*`) stopped before any case.
+  It now renders the library's first selected case whose file bundles as it
+  stands, or, when none does (`scatter-basic-muix-*` alone), the library's smoke
+  case, so the case that tests the rewrite can run on its own. (#12483)
+- **The page probe hovers the plot, not a legend mark.** `page_probe.mjs`
+  hovered the first canvas or svg in the plot's frame, which in a MUI X page is
+  a legend entry's 10-pixel mark; it hovers the largest now. The renderer
+  image's CI builds and probes a MUI X page next to the Chart.js one. (#12483)
+- **The agent network's concept doc described Makie as not served.** The merge
+  of the JavaScript toolchain step dropped the doc lines that served Makie;
+  they are back, with the JavaScript runtime's. (#12479)
+- **Agent telemetry: a turn records the language it set.** `language_source` was read before the turn ran, so
+  the turn whose message the language was detected from, or that called `set_language`, recorded the value from
+  before; the line now reads the session after the run. (#12477)
+- **Gemini's parallel package agents can write in their worktrees.** agy
+  creates each subagent's Git worktree under
+  `~/.gemini/antigravity-cli/worktrees/`, and the agy permission rules denied
+  Gemini's file tools the whole `~/.gemini` folder, so the first parallel run
+  fell back to one package after another. `agy-permissions.json` now denies
+  reads and writes for each entry of `~/.gemini` and
+  `~/.gemini/antigravity-cli` by name, which keeps the agy login and settings
+  closed and leaves only `worktrees/` open, with `regex:` rules for `cd` and
+  `git -C` into it that refuse `..`. Pushes to `gemini/<slug>` no longer
+  prompt: agy matches each word of a rule whole, so the old
+  `git push origin gemini/` allow never matched a real branch, and a `regex:`
+  rule replaces it. Force pushes and pushes to `main` are denied in every
+  `git -C` form, and the push deny rules also match when agy compares a whole
+  command against them. (#12467)
+- **A failed Julia render lost the line that names its error.** Makie's stack
+  traces run to 7,500 characters and more, so the 2,000-character stderr tail
+  lost Julia's first `ERROR:` line and the repair read "an error (the tail cut
+  off its first line)". The Julia row now keeps that line in front of the
+  tail within the same 2,000 characters (`RuntimeCommand.stderr_head`), and
+  every other row's tail is unchanged. The Julia error summary also names the
+  line of the code the adapter edits, not the line of the code that ran, which
+  the loader shifts by 15 lines and more. (#12464)
+- **Render cancellation test waits longer and fails clearly.**
+  `test_local_backend_kills_the_container_on_cancellation` waited at most 10 s
+  for both fake theme containers and then cancelled anyway, so a loaded runner
+  could fail with a misleading "only one container killed" assertion. It now
+  waits up to 25 s and raises a clear timeout error when the containers never
+  start. Written by Google Jules; the race could not be reproduced locally.
+  (#12449)
+- **One title and description per page.** The SPA shell in `app/index.html`
+  kept its default `<title>`, description, and Open Graph and Twitter tags
+  after a page rendered its own, so every route carried two of each and the
+  shell's description came first. The six defaults are now marked
+  `data-shell-default` and step aside only while a page renders a tag of the
+  same kind (`watchShellDefaults` in `app/src/main.tsx`), so they still serve
+  clients without JavaScript, a route whose chunk is loading, the error
+  boundary, and pages without a description of their own; `/debug` has its
+  own title. Built from the better of two Google Jules variants, measured on
+  the built pages; the other deleted the shell defaults outright. (#12442)
+- **A plot without a text probe that showed the requested text still needed attention.**
+  R, altair, pygal and lets-plot write no probe, so the agent chat could not
+  check a text the user asked for, such as a title or an axis label, and every
+  such request shipped as `needs attention` with "the requested texts could not
+  be checked", although the image showed the text (ggplot2 live test of
+  2026-10-29). The reviewer now checks these texts in the image, in the review
+  call it already makes (owner decision of 2026-10-29). Only a render without
+  drawn texts on a library that opts in (`RuntimeAdapter.review_texts`) sends
+  the texts to the reviewer, so the reviewer prompt and every review request of
+  a matplotlib, seaborn or plotnine render stay unchanged. The reviewer reports
+  a text it cannot find as an `SC-04` line that quotes it (`SC-02` for a number
+  format), and the pipeline handles that line like the probe's miss: under
+  `AGENT_EXPECT_CHECK=repair` it sends the round to the repair whatever the
+  points, and if no round fixes it, the plot ships with the line and the text in
+  `requested_not_found`. The "could not be checked" note now appears only when
+  no readable review answered for the texts. (#12454)
+- **The scope judge refused served libraries as another library.** Its
+  rubric named matplotlib and seaborn as the only libraries the assistant
+  adapts, so this plot in plotnine, altair, pygal, lets-plot or ggplot2, all
+  served to the admin, could get the `other_library` pointer. The rubric now
+  gets the served libraries from `AGENT_LIBRARIES` and the catalogue's others,
+  grouped by language, and a question about the session's code is in scope in
+  any served language. The fixed `other_library` reply names the served
+  libraries in each of its eleven languages instead of "only in Python, with
+  matplotlib or seaborn". The adapter prompt's sentences that only matplotlib's
+  probe makes true moved into the Python passages, so the R prompt says that
+  the host gates judge an R render without a probe. (#12448)
+- **Agent result code highlighted in the wrong language.** The result card
+  highlighted every version in the page's current language, so after a
+  library switch a matplotlib version showed as R; it now takes the language
+  of the version's own library. (#12448)
+- **The renderer deploy builds its toolchain again: R survives a killed child on
+  older kernels.** The first deploy of the toolchain image failed in its R check
+  with "Bad system call": the exec filter kills the child R's `popen` and
+  `system()` start with `vfork`, and before Linux 5.16 that child's core dump
+  killed every process sharing its memory, R included. The preload library now
+  makes the process non-dumpable before it installs the filter, so the child dies
+  alone on every kernel. (#12427)
+- **The eval fixtures count pygal's `histogram-basic` as eligible again.** Its
+  regeneration (#12416) dropped the PIL overlay that blocked it, which turned the
+  fixture test that still pinned it as blocked red on `main`; only pygal's
+  `line-timeseries`, whose regeneration kept the standard `random` module, stays
+  blocked. (#12418)
+- **Missing values in a converted NumPy array keep their rows.** A row whose cells
+  were all missing reached the paste box as a blank line, which the parser skips, so
+  every later value moved up one row. The converter now writes such a row as `NaN`,
+  which the parser reads as missing and reports. An array without any value is now
+  refused as `file_empty` instead of failing later in the paste. (#12413)
+- **NavBar debug rapid clicks.** Fixed an issue where clicking the logo a 6th
+  time rapidly navigated to home instead of staying in debug. The counter no
+  longer resets when reaching 5 clicks. (#12409)
+- **Quick feedback widget contrast.** The active/selected background color for
+  the reaction toggle buttons was nearly identical to the popover's background
+  color. They are now styled with a stronger contrast mix so that the selected
+  option clearly stands out. (#12408)
+- **The validator no longer lets a renamed save, a rebound `THEME` or a match
+  capture through.** In plotnine's profile a save name imported under another name or
+  used as a value (`from plotnine import ggsave as keep`, `g = ggsave`,
+  `[ggsave][0]`, `functools.partial(ggsave, plot)`) escaped the save rule, so the
+  exported code could write anywhere. In the matplotlib, seaborn, plotnine and altair
+  profiles a second binding of `THEME` (`THEME = "x/../../elsewhere"` after the theme
+  block) moved every save the same way, because the save rule checks the target's
+  form, not the value of `THEME`. And a `match` capture could rebind a name that
+  plotnine's expression rule read as a fixed string, handing plotnine code to
+  evaluate. Every profile now refuses the first as a `banned-call` and any binding of
+  `THEME` but its theme block as a `savefig-target`, and the expression rule counts a
+  match capture as a binding. (#12405)
+- **The fence regex no longer backtracks quadratically on user text.** The tag
+  pattern `policy.fence` neutralises fence tags with put two blank runs around an
+  optional slash, one ambiguous run that backtracked quadratically on `<` followed
+  by a long run of blanks (CodeQL py/polynomial-redos). The blanks after the slash
+  now sit inside the slash's own group; the matches are the same. (#12404)
+- **JavaScript implementations get exactly one header.** impl-review's header
+  writer stopped at a `//# anyplot-orientation:` directive on line 1 and
+  prepended the new header above it, so the generator's header stayed below
+  the directive with its old score, date and library line, and the site's code
+  view showed both. The writer now lives in `automation/scripts/impl_header.py`:
+  the header goes on line 1, a directive that sat above it moves directly below
+  it, and a stale second header block among the leading lines is dropped. The
+  five JavaScript library prompts now place the directive directly below the
+  header. The stale block was removed from the 182 catalogue files that carried
+  it (139 muix, 19 Highcharts, 14 ECharts, 9 D3, 1 Chart.js). (#12299)
+- **The R setup installs packages built for the Ubuntu 26.04 runner image.** The
+  setup-r action installed Posit's `noble` (Ubuntu 24.04) binaries. On the 26.04
+  image they install without error, but stringi links ICU 74 while 26.04 ships
+  ICU 78, so loading stringr fails. No catalogue implementation reaches stringi
+  today: all 325 render the same on both builds. A generated implementation that
+  used stringr, or tidyr's `separate()` or `extract()`, would have failed
+  mid-run. The action now installs the `resolute` binaries from the same
+  2026-10-20 snapshot. Its smoke test also loads tidyr and stringr, so a binary
+  built for another Ubuntu release fails the setup step instead of a generation
+  run. (#12263)
+- **The JavaScript render harness installs again on the Ubuntu 26.04 runner
+  image.** GitHub moved `ubuntu-latest` to Ubuntu 26.04, and Playwright 1.55.1
+  refused to install Chromium there, so every `impl-generate` and `impl-repair`
+  run for Chart.js, D3, ECharts, Highcharts and MUI X failed in its setup step.
+  Playwright moves to 1.64.1, which knows the new image and brings Chromium 156
+  instead of 140; a sample of 17 catalogue snippets in both themes renders
+  pixel-identical to the 1.55.1 renders. (#12259)
+- **The stuck-launcher executor test no longer fails on a slow CI runner.** The fake
+  launcher execs the harness, so the process the test keeps alive carried the job's
+  one-second `RLIMIT_CPU`; when the harness start spent that second, the kernel killed
+  the "stuck" launcher inside the grace window and `stuck` read 0. The test now gives
+  the run the host's full CPU cap, which a real `sandbox do` outside the sandbox always
+  has, and asserts that limit on the survivor, so it fails every time without the fix
+  (#12260).
+- **JavaScript render harness waits 2.5 s, not 30 s, for the ready signal.**
+  `automation/js-render/render.mjs` passed the `{ timeout: 2500 }` options to
+  `page.waitForFunction` in the argument slot, so every snippet without
+  `window.__anyplotReady` sat through Playwright's 30 s default before the
+  fonts-ready fallback ran. The options now sit in the third slot, which
+  shortens every such render by about 27 s across all JavaScript libraries.
+  (#12248)
+- **The pipeline installs the Python libraries from `uv.lock`.**
+  `impl-generate.yml` and `impl-repair.yml` ran `uv pip install -e ".[lib-X]"`,
+  which resolved `pyproject.toml`'s ranges afresh, so Dependabot's lock bumps
+  never reached the pipeline and recorded versions drifted from the lock
+  (plotnine 0.15.8 recorded, 0.15.7 locked). Both now run
+  `uv sync --frozen --extra lib-X`, as the renderer image does. (#12240)
+- **Implementation PRs can no longer change dependency files.** #9398 committed
+  a `Manifest.toml` that a `Pkg.add` had re-resolved, which moved Makie from
+  0.22.10 to 0.21.9 for every Julia implementation. `impl-generate.yml` now
+  fails such a generation, `impl-merge.yml` refuses such a PR, and the
+  generator and repair prompts say so. (#12240)
+- **The site renders again after the Vite 8.1 bump.** Since Vite 8.1.6, every
+  page of anyplot.ai stayed blank: Rolldown put its CommonJS runtime helper
+  into the app's `theme` chunk, which imports `mui`, while `mui` imported the
+  helper back, so the browser threw `t is not a function` on load. Vite 8.3.5
+  emits the helper as its own `rolldown-runtime` chunk, which removes the cycle.
+  (#12235)
+- **Currency columns read three-digit comma groups as thousands.** A pasted
+  price column such as `"$1,200"`, `"$950"`, `"$12,500"` (also `1,200 USD`,
+  `€ 1,200`, `CHF 12,500`) read as 1.2, 950 and 12.5; it now reads as 1200,
+  950 and 12500 with a warning, since a money amount mostly has at most two
+  decimals. A cell with a one- or two-digit fraction (`$1,25`) keeps the
+  decimal comma, and a file that speaks for decimal commas keeps the question:
+  one delimited by semicolons, or with a column of dot groups or of `1.234`
+  shapes, so a fuel price of `1,789 €` stays 1.789. (#12228)
+- **API redirects stay on https.** A request to `https://api.anyplot.ai/specs/`
+  was redirected to `http://api.anyplot.ai/specs`, because uvicorn ignores
+  Cloud Run's `X-Forwarded-Proto` header. The API now takes only the scheme from
+  that header, so the trailing-slash redirect keeps https, while the client
+  address keeps coming from the trusted headers as before. (#12227)
+- **Two merges in a row no longer leave production on the older commit.** Two
+  builds of the same service deployed side by side, the later deploy moved the
+  shared `candidate` tag, and the other build's smoke refused to promote; when
+  that was the newer commit's build, the service stayed on the older one until
+  the trigger was rerun (`deploy-app` on 2026-10-16 and 2026-10-21, `deploy-api`
+  and `deploy-agents` on 2026-10-12). A `wait-turn` step in all four Cloud Build
+  configs (`scripts/cloudbuild-wait-turn.sh`) now holds each deploy until every
+  older build of the same service has finished, so the newest commit deploys
+  last; image builds still run in parallel. (#12222)
+- **Related plots load in about a millisecond instead of about 750 ms.** The
+  related-plots block on every spec and implementation page was cached per spec,
+  library, mode and limit. Those thousands of keys evicted each other from the
+  shared 1,000-entry cache, so nearly every call reloaded all specs from the
+  database (p50 755 ms, p99 1.6 s in the LinkedIn traffic of 2026-10-18/19).
+  `/insights/related` now caches the catalogue once as a plain-value index under
+  a single key and ranks against it in memory. The results are identical: 1,266
+  spec, library, mode and limit combinations on the live catalogue gave
+  byte-equal responses. (#12214)
+
+### Security
+
+- **Gemini reads only the owner's issue comments.** The `gemini-task` skill
+  fed every comment on a `gemini` issue to Gemini, while it already filtered
+  PR comments to the owner's; on a public repository anyone can comment, so
+  issue comments are now filtered the same way. (#12458)
+- **No CI on pushes to `feature/**`.** Google Jules names its own branch after
+  the feature branch it starts from (`feature/<slug>-<session id>`), and a
+  push run has no PR author, so the checks keyed on the PR author treated
+  unread Jules code as trusted: the first such push gave `renderer-image` its
+  GCP login before the run was cancelled. `ci-lint`, `ci-tests`,
+  `ci-migrations`, and `ci-image` no longer run on pushes to `feature/**`;
+  feature branches get CI through their pull requests. `Run E2E Tests` and
+  `renderer-image` also refuse to run for any `feature/` ref, a merge queue
+  into a feature branch, and, for the e2e job, any PR into a feature branch.
+  (#12441)
+- **Jules and Dependabot PRs run CI without secrets or an OIDC token.**
+  `ci-tests.yml` splits into `Run Tests` (unit and integration, no
+  `id-token` permission, every author) and `Run E2E Tests`, the only job that
+  logs in to GCP, starts the Cloud SQL proxy, and holds the database password;
+  it runs after `Run Tests` and skips PRs by `dependabot[bot]` and
+  `google-labs-jules[bot]`. `ci-image.yml`'s `renderer-image` skips Jules PRs,
+  and Jules opens PRs only into `feature/*`. Before, a Jules PR ran its tests
+  with production database access the moment it opened. Every condition uses
+  the PR author, because `github.actor` on Jules branches is often the
+  repository owner and a re-run can change it. (#12429)
+- **Every in-process run requires the harness's exec filter.** The seccomp filter
+  that has the kernel refuse every program start was required for lets-plot alone.
+  The renderer's logs show that Cloud Run's sandbox admits it, so the renderer and
+  the local backend now require it for every render, data run and conversion. A run
+  whose filter is not in place stops before its code starts: a
+  data run reports that the fault is not the code's, and a conversion answers
+  `503 convert_unavailable`. `RENDERER_EXEC_DENY=optional` lifts the requirement
+  without a code change, should the platform stop admitting the filter. (#12414)
+- **The render harness has the kernel refuse every program start.** Arming a guard
+  now installs a seccomp filter (`install_exec_deny` in
+  `agents/anyplot/render/harness.py`) under which the kernel refuses every `execve`
+  and `execveat` of the process, its threads (those already running included) and
+  its children. So native code the audit hook cannot see, such as the ImageMagick
+  delegates in lets-plot's bridge, starts no program, whatever is on `PATH`. The
+  filter covers every in-process run (Python renders, data runs and conversions);
+  `fork` and threads stay allowed. lets-plot's command row requires it
+  (`ANYPLOT_DENY_EXEC=required`): without the filter, its render stops before the
+  plot. Every other run goes on and reports the filter's state in the harness's end
+  line, which the renderer logs with every launch. `ci-image.yml` checks the routes in
+  the built image. (#12410)
+- **The renderer sandbox stays tight on Python 3.14.** 3.14 raises an audit event
+  for every ctypes call, so the plot guard refused the `ctypes.cast` that scipy
+  makes while it is imported, and with it every plot that uses scipy, statsmodels,
+  scikit-learn or seaborn. The plot guard now lets exactly that call through, and
+  only from an import; the same cast from plot code, `memmove`, `memset` and every
+  other foreign function stay refused, and the data and convert guards allow none
+  (narrowed after a Fable review). The sandbox interpreter also runs with
+  `-X disable-remote-debug`, and the guards refuse `sys.remote_exec`, so 3.14's
+  remote debugging cannot run a script in it. Subinterpreters (PEP 734, public
+  from 3.14), whose code runs outside the guard's audit hook, cannot be created
+  or entered, and the validator bans their modules. The code validator bans
+  `annotationlib` and `typing.evaluate_forward_ref`, which 3.14 added and which
+  evaluate annotation strings. (#12247)
+
+*Catalog: no new implementations and no spec PRs; 138 regenerations. 127 are the MUI X 9
+migration (#12264 to #12403), forced regenerations that took 127 of the 323 MUI X
+implementations from @mui/x-charts 7.29.1 to 9.16: 118 written by Gemini 4 Argon and fed
+in through adopt mode, 8 generated by Opus in the pilot of 2026-10-23, and one adopted from
+`main`; the other 196 stay on 7.29.1. 11 are
+daily-regen improvements (`ggplot2` 4, `pygal` 2, and one each for `matplotlib`, `altair`,
+`letsplot`, `bokeh` and `highcharts`), and 3 kept regenerations stored their re-score
+(#12436, #12437, #12492). 315 of 325 specs stay at full 15-library coverage.*
+
 ## [3.5.0] — 2026-10-16 — Bring your own data
 
 anyplot 3.5 adds the agent network behind "Use with my data": an admin-only chat that takes a
@@ -4596,7 +6069,8 @@ interactive HTML previews.
   Actions workflows (spec creation, impl generation, AI review, auto-merge); Cloud Run +
   Cloud SQL + GCS; 1,081 unit tests.
 
-[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v3.5.0...HEAD
+[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v3.6.0...HEAD
+[3.6.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.5.0...v3.6.0
 [3.5.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.4.0...v3.5.0
 [3.4.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.2.0...v3.3.0
