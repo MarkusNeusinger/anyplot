@@ -7,4 +7,4 @@
   in `agents/renderer/deploy_smoke.sh`, which the smoke step calls with the token in the
   environment, a new unit test keeps every Cloud Build config's arguments under the limit,
   and `ci-tests.yml` runs the unit tests when a Cloud Build config or the smoke script
-  changes.
+  changes. (#12497)
