@@ -5,7 +5,7 @@ Only the service writes these keys: the `/v1` routes through
 after `apply_bindings` accepted the bindings, the `prepare_data` tool after
 `apply_operations` produced the next dataset version (`dataset_versions.py`), the
 scope guard, which records the detected session language once (`LANGUAGE`,
-`LANGUAGE_SOURCE`), and the `set_language` tool. No model output and no client body
+`LANGUAGE_SOURCE`), and the `set_language` tool (also `PLOT_LANGUAGE`). No model output and no client body
 ever becomes a state value unchecked, and `plot_pipeline` reads spec, library,
 dataset, bindings and language from here, never from its arguments.
 
@@ -35,14 +35,18 @@ LIBRARY = PREFIX + "library"
 LOCALE = PREFIX + "locale"
 """The browser's locale the session opened with: metadata for the feedback case, never the session language."""
 LANGUAGE = PREFIX + "language"
-"""The session language: the replies and every text in the plot. A short language name or
-code that matches `language.LANGUAGE_PATTERN` (`de`, `English`, `Swedish`). Absent means `en`."""
+"""The session language: the language of the replies, and of the first plot's text (`plot_language`). A short
+language name or code that matches `language.LANGUAGE_PATTERN` (`de`, `English`, `Swedish`). Absent means `en`."""
 LANGUAGE_SOURCE = PREFIX + "language_source"
 """How it was set: `default` (nobody yet), `pasted` (the judges' code for the notes or the column
 names of a paste before any typed message, `language.pasted_language`), `detected` (the scope
 judge's code for the session's first in-scope typed message), `chosen` (the language route or the
 root's `set_language`). Absent means `default`. Only `chosen` is final: detection writes only over
 `default` and `pasted`, a paste only over `default` and `pasted`."""
+PLOT_LANGUAGE = PREFIX + "plot_language"
+"""The language the user asked for the plot's text: the language route (the chip, which sets the session language
+too) or the root's `set_language`, or the page session's plot language for a fan-out copy. Absent until then: the
+plot then keeps the language its latest version is written in (`plot_language`). Owner decision of 2026-11-01."""
 SNAPSHOT = PREFIX + "snapshot"
 NORMALISED = PREFIX + "normalised"
 HINTS = PREFIX + "hints"
@@ -145,6 +149,9 @@ class SessionView:
     """The session language (`LANGUAGE`), validated: a value outside the pattern reads as `en`."""
     language_source: LanguageSource = "default"
     """How the session language was set (`LANGUAGE_SOURCE`): `default`, `pasted`, `detected` or `chosen`."""
+    plot_language_choice: str | None = None
+    """The language the user asked for the plot's text (`PLOT_LANGUAGE`), validated; None when none was asked for
+    (or the stored value is outside the pattern). `plot_language` resolves the language a run writes in."""
     readiness: str | None = None
     """The readiness status of the catalogue file the session's library opened with (`READINESS`), for the usage
     telemetry; None when the state holds none."""
@@ -213,14 +220,32 @@ def language_delta(language: str, source: LanguageSource) -> dict[str, Any]:
     return {LANGUAGE: language, LANGUAGE_SOURCE: source}
 
 
+def plot_language(view: SessionView, latest: str | None) -> str:
+    """The language the next plot version writes its text in (owner decision of 2026-11-01).
+
+    The user's request for the plot's text (`PLOT_LANGUAGE`) comes first. Without one, the
+    plot keeps `latest`, the language the session's latest rendered version is written in
+    (`CodeVersion.language`, in any library), so a follow-up message in another language
+    never rewrites the text of a plot the user already has: the live test of 2026-11-01
+    had "Use a log scale on y" turn a German plot's title and numbers English, while its
+    axes and months stayed German. Before the first plot, the session language decides, so
+    the first plot follows the paste, the first typed message or the chip as before.
+    """
+    if view.plot_language_choice is not None:
+        return view.plot_language_choice
+    if latest is not None and is_valid(latest):
+        return latest
+    return view.language
+
+
 def initial_state(
     *, spec_id: str, library: str, locale: str, snapshot: CatalogueSnapshot, normalised: str, readiness: dict[str, Any]
 ) -> dict[str, Any]:
     """The state delta that opens a session (or switches its library).
 
     The session language is not part of it: ADK applies a delta key by key, so a library
-    switch keeps `LANGUAGE` and `LANGUAGE_SOURCE`, and a new session reads them as `en`
-    and `default` (`read_session`).
+    switch keeps `LANGUAGE`, `LANGUAGE_SOURCE` and `PLOT_LANGUAGE`, and a new session reads
+    them as `en`, `default` and no choice for the plot (`read_session`).
     """
     return {
         SPEC_ID: spec_id,
@@ -249,6 +274,10 @@ def read_session(state: Any) -> SessionView | None:
     language_source: LanguageSource = "default"
     if raw_source in SOURCES and language == raw_language:
         language_source = raw_source
+    raw_plot_language = state.get(PLOT_LANGUAGE)
+    plot_language_choice = (
+        raw_plot_language if isinstance(raw_plot_language, str) and is_valid(raw_plot_language) else None
+    )
     raw_readiness = state.get(READINESS)
     status = raw_readiness.get("status") if isinstance(raw_readiness, dict) else None
     return SessionView(
@@ -267,6 +296,7 @@ def read_session(state: Any) -> SessionView | None:
         dataset_version=max(1, int(state.get(DATASET_VERSION) or 1)),
         language=language,
         language_source=language_source,
+        plot_language_choice=plot_language_choice,
         readiness=status if isinstance(status, str) else None,
     )
 

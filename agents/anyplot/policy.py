@@ -84,6 +84,7 @@ FENCE_TAGS = (
     "spec_text",
     "tool_notes",
     "plot_language",
+    "reply_language",
     "user_notes",
 )
 _FENCE_TAG = re.compile(r"[<＜﹤]\s*(?:([/／])\s*)?([\w＿]+)")
