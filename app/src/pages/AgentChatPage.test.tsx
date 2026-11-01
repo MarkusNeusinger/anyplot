@@ -330,10 +330,12 @@ function renderAt(url: string) {
 const PAGE = '/debug/agent?spec=scatter-basic&library=matplotlib&language=python';
 const agentCalls = () =>
   fetchMock.mock.calls.filter(([input]) => String(input).includes('/debug/agent'));
+/** The path of a call, without the query (a turn carries the site theme there). */
+const pathOf = (input: unknown) => new URL(String(input)).pathname;
 /** The bodies of the chat turns the page posted, in order. */
 const turnBodies = () =>
   agentCalls()
-    .filter(([input]) => String(input).endsWith('/messages'))
+    .filter(([input]) => pathOf(input).endsWith('/messages'))
     .map(([, init]) => JSON.parse(String((init as RequestInit).body)) as Record<string, string>);
 const lastTurn = () => turnBodies().slice(-1)[0];
 
@@ -1540,7 +1542,7 @@ describe('AgentChatPage .plot_all()', () => {
   const fanOutCalls = (rest: string) =>
     agentCalls()
       .filter(([input]) => /\/sessions\/F-[a-z0-9]+/.test(String(input)))
-      .filter(([input]) => String(input).endsWith(rest))
+      .filter(([input]) => pathOf(input).endsWith(rest))
       .map(([input, init]) => ({
         session: String(input).match(/F-[a-z0-9]+/)?.[0],
         body: (init as RequestInit).body ? JSON.parse(String((init as RequestInit).body)) : null,

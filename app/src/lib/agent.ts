@@ -1063,9 +1063,20 @@ export const agentApi = {
     if (!dataset) throw new AgentApiError(502, 'upstream');
     return dataset;
   },
-  /** Opens the chat turn's SSE stream; the caller reads it with `readSseEvents`. */
-  postMessage: (token: string, sid: string, body: TurnBody, signal: AbortSignal) =>
-    agentFetch(`${sessionPath(sid)}/messages`, token, {
+  /**
+   * Opens the chat turn's SSE stream; the caller reads it with `readSseEvents`.
+   * `siteTheme`, the theme the site shows, is the theme a plot of the turn
+   * renders in unless the user asks for one in the chat. It travels in the
+   * query, not the strict body, so a page deployed before the API is no `422`.
+   */
+  postMessage: (
+    token: string,
+    sid: string,
+    body: TurnBody,
+    signal: AbortSignal,
+    siteTheme?: Theme
+  ) =>
+    agentFetch(`${sessionPath(sid)}/messages${siteTheme ? `?theme=${siteTheme}` : ''}`, token, {
       ...post(body),
       headers: { Accept: 'text/event-stream' },
       signal,

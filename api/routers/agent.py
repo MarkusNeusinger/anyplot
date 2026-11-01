@@ -1067,17 +1067,22 @@ class UpstreamStream:
 
 
 async def open_message_stream(
-    sid: SessionId, body: MessageBody, ctx: Ctx, client: Client
+    sid: SessionId, body: MessageBody, ctx: Ctx, client: Client, theme: Literal["light", "dark"] | None = None
 ) -> AsyncIterator[UpstreamStream]:
     """Open the upstream stream BEFORE the SSE response starts.
 
     A dependency rather than the generator itself, so a 413 here or an upstream
     409 `run_active` still reaches the browser as an HTTP status: once the
     generator runs, the 200 is already on the wire.
+
+    `theme` is the site theme the page shows, which a plot of the turn renders in
+    unless the user asks for one; forwarded as a query parameter, which an agents
+    service deployed before it ignores, where its strict body would refuse a field.
     """
     if body.text is not None and len(body.text) > MAX_MESSAGE_CHARS:
         raise AgentHTTPError(413, "too_long", ctx.request_id)
     payload = {"text": body.text} if body.text is not None else {"action": body.action}
+    params: dict[str, str | int] | None = {"theme": theme} if theme is not None else None
     path = f"/sessions/{sid}/messages"
     # One wall-clock budget for the whole turn: the ID token, the connection
     # and the upstream's response headers spend from it too.
@@ -1085,7 +1090,9 @@ async def open_message_stream(
     response: httpx.Response | None
     try:
         async with asyncio.timeout_at(deadline.at):
-            response = await _open_stream(client, ctx, "POST", path, json_body=payload, accept="text/event-stream")
+            response = await _open_stream(
+                client, ctx, "POST", path, json_body=payload, params=params, accept="text/event-stream"
+            )
     except (*_UNREACHABLE, TimeoutError) as exc:
         _log_unreachable(ctx, "POST", path, exc)
         response = None

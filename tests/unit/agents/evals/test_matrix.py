@@ -248,6 +248,21 @@ async def test_the_attempt_bound_reaches_the_pipeline_and_the_stamp(
     assert "at most 3 attempts per run" in result.summary_path.read_text()
 
 
+async def test_theme_dark_sends_the_site_theme_and_renders_dark(
+    tmp_path: Path, services: Services, swap_models, backend: FakeBackend
+) -> None:
+    """`--theme dark` measures dark first renders: every turn sends the site theme the page would."""
+    swap_models("anthropic-vertex", script())
+
+    # Without the model-free preflight, which checks only the renderer and stays light, every render is the pipeline's.
+    dark = config(tmp_path, theme="dark", preflight=False)
+    result = await run_matrix(two_fixtures(), dark, services=services, runtime=runtime(), echo=lambda _: None)
+
+    assert backend.jobs and {job.themes for job in backend.jobs} == {("dark",)}
+    assert result.report["stamp"]["theme"] == "dark"
+    assert result.report["runs"][1]["status"] == "ok"
+
+
 async def test_outputs_include_both_gallery_pages(tmp_path: Path, services: Services, swap_models) -> None:
     swap_models("anthropic-vertex", script())
 

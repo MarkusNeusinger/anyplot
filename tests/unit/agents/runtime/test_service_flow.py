@@ -1468,6 +1468,150 @@ async def test_a_change_without_a_theme_keeps_the_dark_theme(
     assert [job.themes for job in backend.jobs] == [("dark",), ("dark",)]
 
 
+# --- The site theme (owner decision of 2026-11-01) ---------------------------------------
+
+CHANGE_ROOT = [{"call": "plot_pipeline", "args": {"change_request": CHANGE_REQUEST, "base": "previous"}}]
+
+
+def two_plot_script(first_args: dict[str, Any]) -> dict[str, list[Any]]:
+    """A first plot with `first_args`, then a change that leaves `theme` out, as the root does on a refinement."""
+    return {
+        "root": [
+            {"call": "plot_pipeline", "args": first_args},
+            {"text": ROOT_REPLY},
+            *CHANGE_ROOT,
+            {"text": "Done: bigger markers."},
+        ],
+        "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
+        "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+    }
+
+
+async def post_turn(client: httpx.AsyncClient, sid: str, body: dict[str, str], theme: str | None) -> dict[str, Any]:
+    """One turn with the page's site theme in the query (none without), and its plot event."""
+    params = {"theme": theme} if theme is not None else None
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json=body, params=params)
+    assert response.status_code == 200, response.text
+    return next(data for name, data in parse_sse(response.text) if name == "plot")
+
+
+async def test_a_dark_site_gets_a_dark_first_plot_reviewed_in_dark(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """User test E2 of 2026-11-01: on the dark site the first plot rendered light, a bright card on a dark page."""
+    fake = swap_models("gemini", default_script())
+    sid = await open_session(client)
+
+    plot = await post_turn(client, sid, {"action": "create_plot"}, "dark")
+
+    assert (plot["status"], plot["artifacts"]) == ("ok", ["plot-dark.png", "plot.py", "data.csv"])
+    assert [job.themes for job in backend.jobs] == [("dark",)]  # still one render per version
+    review = next(request for request in fake.requests if (request.config.labels or {})["agent_kind"] == "reviewer")
+    texts = [part.text or "" for content in review.contents for part in content.parts or []]
+    assert "Dark render (plot-dark.png):" in texts and "Light render (plot-light.png):" not in texts
+    code = await client.get(f"/v1/sessions/{sid}/artifacts/plot.py", headers=HEADERS)
+    assert code.text.splitlines()[1] == "# run: ANYPLOT_THEME=dark python plot.py"
+
+
+async def test_a_light_site_gets_a_light_first_plot(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+
+    plot = await post_turn(client, sid, {"action": "create_plot"}, "light")
+
+    assert plot["artifacts"] == ["plot-light.png", "plot.py", "data.csv"]
+    assert [job.themes for job in backend.jobs] == [("light",)]
+
+
+async def test_a_change_follows_the_site_theme_of_its_own_turn(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """The user switched the site to dark after the first plot: the next version follows the switch."""
+    swap_models("gemini", two_plot_script({}))
+    sid = await open_session(client)
+    await post_turn(client, sid, {"action": "create_plot"}, "light")
+
+    plot = await post_turn(client, sid, {"text": CHANGE_REQUEST}, "dark")
+
+    assert plot["artifacts"] == ["plot-dark.png", "plot.py", "data.csv"]
+    assert [job.themes for job in backend.jobs] == [("light",), ("dark",)]
+
+
+@pytest.mark.parametrize(("asked", "site"), [("dark", "light"), ("light", "dark")])
+async def test_a_theme_asked_for_in_the_chat_holds_over_the_site_theme(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, asked: str, site: str
+) -> None:
+    """A theme the user asked for against the site's stays through a change that leaves `theme` out."""
+    swap_models("gemini", two_plot_script({"theme": asked}))
+    sid = await open_session(client)
+    await post_turn(client, sid, {"text": f"a {asked} plot"}, site)
+
+    plot = await post_turn(client, sid, {"text": CHANGE_REQUEST}, site)
+
+    assert plot["artifacts"] == [f"plot-{asked}.png", "plot.py", "data.csv"]
+    assert [job.themes for job in backend.jobs] == [(asked,), (asked,)]
+
+
+async def test_a_new_plot_after_an_asked_theme_follows_the_site_again(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """`.start_over()` is a new plot from the catalogue (`base="catalogue"`): the asked theme stays with the old one."""
+    script = two_plot_script({"theme": "dark"})
+    script["root"][2] = {"call": "plot_pipeline", "args": {}}
+    script["adapter"] = [{"json": SCATTER_PLAN}, {"json": SCATTER_PLAN}]  # each adapts the catalogue code
+    swap_models("gemini", script)
+    sid = await open_session(client)
+    await post_turn(client, sid, {"text": "a dark plot"}, "light")
+
+    plot = await post_turn(client, sid, {"action": "create_plot"}, "light")
+
+    assert plot["artifacts"] == ["plot-light.png", "plot.py", "data.csv"]
+    assert [job.themes for job in backend.jobs] == [("dark",), ("light",)]
+
+
+async def test_the_theme_toggle_is_no_choice_for_the_next_version(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """Looking at a version in the other theme renders it on demand; the next version still follows the site."""
+    swap_models("gemini", two_plot_script({}))
+    sid = await open_session(client)
+    await post_turn(client, sid, {"action": "create_plot"}, "dark")
+    toggled = await render_theme(client, sid, "light")
+    assert toggled.status_code == 200, toggled.text
+
+    plot = await post_turn(client, sid, {"text": CHANGE_REQUEST}, "dark")
+
+    assert plot["artifacts"] == ["plot-dark.png", "plot.py", "data.csv"]
+    assert [job.themes for job in backend.jobs] == [("dark",), ("light",), ("dark",)]
+
+
+async def test_a_turn_without_a_site_theme_keeps_the_previous_versions_theme(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """A caller without a page (`adk web`, an eval, an older BFF) keeps the behaviour from before the site theme."""
+    swap_models("gemini", two_plot_script({}))
+    sid = await open_session(client)
+    await post_turn(client, sid, {"action": "create_plot"}, "dark")
+
+    plot = await post_turn(client, sid, {"text": CHANGE_REQUEST}, None)
+
+    assert plot["artifacts"] == ["plot-dark.png", "plot.py", "data.csv"]
+    assert [job.themes for job in backend.jobs] == [("dark",), ("dark",)]
+
+
+async def test_an_unknown_site_theme_is_refused(client: httpx.AsyncClient, swap_models) -> None:
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+
+    response = await client.post(
+        f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "create_plot"}, params={"theme": "sepia"}
+    )
+
+    assert response.status_code == 422
+
+
 async def test_reviewer_defects_name_the_rendered_theme(client: httpx.AsyncClient, swap_models) -> None:
     """The reviewer saw the dark render only: a line it filed under light or both names dark; code stays code."""
     defect = VERDICT_REJECT["defects"][0]

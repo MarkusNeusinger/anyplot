@@ -109,7 +109,9 @@
  *   a data change, see above, and a reply naming it;
  * - ends with "?": a reply only, no pipeline run;
  * - anything else: a refinement with a repair round, shipped as
- *   `needs_attention`; "dark" in the text renders the dark theme.
+ *   `needs_attention`; the word "dark" or "light" in the text renders that theme.
+ * A plot renders in the site theme the page sends (`POST .../messages?theme=`), unless
+ * the text asked for a theme or the refined version was asked for one (`pipeline.run_theme`).
  * Pasted data containing "ignore previous" answers `403 data_refused`; pasted
  * text that looks like a formula answers `422 formula`. `POST .../dataset/convert`
  * (a dropped binary file) answers by the first bytes: a zip is a workbook with two
@@ -984,7 +986,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // ---------------------------------------------------------------- the chat turn
 
-async function streamTurn(req, res, session, body, ref) {
+async function streamTurn(req, res, session, body, ref, siteTheme = null) {
   const text = typeof body.text === 'string' ? body.text : '';
   const lower = text.toLowerCase();
   let closed = false;
@@ -1185,12 +1187,22 @@ async function streamTurn(req, res, session, body, ref) {
         if (session.cancelled && !closed) await sleep(STOP_MS);
       }
       if (stopped()) return;
-      const previous = session.versions[session.versions.length - 1];
-      const theme = lower.includes('dark') ? 'dark' : refine && previous ? previous.theme : 'light';
+      // The service's `pipeline.run_theme`: a theme asked for (the word "dark" or "light" in the text), the
+      // asked theme of the version a refinement changes, the site theme of the turn, else the version it
+      // changes or light.
+      // The version a refinement changes is this library's latest, as `latest_rendered(library=)` picks it.
+      const previous = refine
+        ? session.versions.findLast(item => item.library === session.library)
+        : undefined;
+      let askedTheme = previous?.themeAsked ? previous.theme : null;
+      if (/\blight\b/.test(lower)) askedTheme = 'light';
+      else if (/\bdark\b/.test(lower)) askedTheme = 'dark';
+      const theme = askedTheme ?? siteTheme ?? previous?.theme ?? 'light';
       const version = {
         number: session.versions.length + 1,
         library: session.library,
         theme,
+        themeAsked: askedTheme !== null,
         dataset: session.dataset,
         bindings: session.bindings,
         // The session language the version's text was written in, as the service keeps it.
@@ -2142,10 +2154,14 @@ async function route(req, res) {
     );
   }
   if (method === 'POST' && rest === '/messages') {
+    // The page's site theme rides in the query, as at the BFF; any other value is its `422`.
+    const siteTheme = url.searchParams.get('theme');
+    if (siteTheme !== null && siteTheme !== 'light' && siteTheme !== 'dark')
+      return fail(res, 422, 'invalid', ref);
     if (session.active) return fail(res, 409, 'run_active', ref);
     if (typeof body?.text === 'string' && body.text.length > 2000)
       return fail(res, 413, 'too_long', ref);
-    return streamTurn(req, res, session, body ?? {}, ref);
+    return streamTurn(req, res, session, body ?? {}, ref, siteTheme);
   }
   if (method === 'POST' && rest === '/outcome') {
     // The content-free usage beacon (`telemetry.OutcomeAction`): checked like the BFF's body, answered 204.

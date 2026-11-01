@@ -20,7 +20,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
 | `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (version 1) plus `confirmed: true`, `complete`, `missing_roles` and `copied_from` (the source's version number): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`), `503 capacity` |
-| `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` (`create_plot`, `summarize_data`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data | `413 too_long`, `409 run_active` |
+| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, `summarize_data`); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
@@ -2000,8 +2000,12 @@ def _error_code(exc: BaseException) -> str:
 
 @app.post("/v1/sessions/{sid}/messages", dependencies=v1_dependencies)
 async def post_message(
-    sid: SessionId, body: MessageBody, user: User, runtime: RuntimeDep, rid: RequestId
+    sid: SessionId, body: MessageBody, user: User, runtime: RuntimeDep, rid: RequestId, theme: Theme | None = None
 ) -> StreamingResponse:
+    """One chat turn as SSE. `theme` is the site theme the page shows, the theme a plot run of the turn renders
+    unless the user asked for one (`pipeline.run_theme`). A query parameter, not a body field: the strict bodies of
+    this service and the BFF would refuse it from a page deployed before them, while an unknown parameter is ignored.
+    """
     if body.text is not None and len(body.text) > MAX_MESSAGE_CHARS:
         raise AgentsError(413, "too_long")
     session = await runtime.session(user, sid)
@@ -2017,6 +2021,7 @@ async def post_message(
         # The refusals sent before the judge (the budget, unsupported content) follow the
         # session language, never the browser's locale; after the judge, the message's.
         lang=refusal_lang(view.language) if view else DEFAULT_LANGUAGE,
+        site_theme=theme,
     )
     _stamp(ledger, view, session)
     ledger.turn += 1  # this turn's number: the user turns before it, plus one

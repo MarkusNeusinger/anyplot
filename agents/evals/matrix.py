@@ -253,6 +253,11 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         type=float,
         help="stop before a case that could take the estimated list-price cost past this (spent + costliest case)",
     )
+    parser.add_argument(
+        "--theme",
+        choices=("light", "dark"),
+        help="the site theme every turn sends (`?theme=`), the theme the plots render in (default: none, light)",
+    )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="output directory (default agents/evals/reports)")
     parser.add_argument("--baseline", type=Path, help="baseline report (default: baselines/<pinned model>.json)")
     parser.add_argument("--no-baseline", action="store_true", help="do not compare with any baseline")
@@ -359,6 +364,8 @@ class MatrixConfig:
     preflight: bool = True
     render_token: "RenderToken | None" = None
     keep_attempts: bool = False
+    theme: str | None = None
+    """`--theme`: the site theme every turn sends, as the page does; None sends none, and the plots render light."""
     argv: list[str] = field(default_factory=list)
 
 
@@ -1011,6 +1018,7 @@ class CaseRunner:
     settings: "AgentSettings"
     renders_dir: Path
     recorder: AttemptRecorder | None = None
+    theme: str | None = None
 
     async def run(self, case: "EvalCase", repeat: int) -> dict[str, Any]:
         """One case and repeat, from opening the session to deleting it; never raises for a broken case."""
@@ -1155,7 +1163,8 @@ class CaseRunner:
     ) -> dict[str, Any] | None:
         self.timed.chunks.clear()
         started = time.monotonic()
-        response = await self.client.post(f"/v1/sessions/{sid}/messages", headers=headers, json=body)
+        params = {"theme": self.theme} if self.theme else None
+        response = await self.client.post(f"/v1/sessions/{sid}/messages", headers=headers, json=body, params=params)
         turn = Turn(
             response.status_code,
             None if response.status_code == 200 else _detail(response),
@@ -1278,6 +1287,7 @@ def build_stamp(
         "tolerance": config.tolerance,
         "gallery_seed": config.seed,
         "baseline": str(config.baseline_path) if config.baseline_path else None,
+        "theme": config.theme,
         "argv": list(config.argv),
     }
 
@@ -1395,7 +1405,7 @@ async def _run_matrix(
     try:
         transport = httpx.ASGITransport(app=timed)
         async with httpx.AsyncClient(transport=transport, base_url="http://agents", timeout=None) as client:
-            runner = CaseRunner(client, timed, collector, settings, config.out / "renders", recorder)
+            runner = CaseRunner(client, timed, collector, settings, config.out / "renders", recorder, config.theme)
             for index, (case, repeat) in enumerate(plan, start=1):
                 if config.budget_usd is not None and runs and total + costliest > config.budget_usd:
                     stopped = "budget"
@@ -1667,6 +1677,7 @@ def _prepare_and_run(args: argparse.Namespace, settings: "AgentSettings", argv: 
         save_baseline=args.save_baseline,
         preflight=not args.no_preflight,
         keep_attempts=args.keep_attempts,
+        theme=args.theme,
         render_token=RenderToken(os.environ) if args.gcloud_token else None,
         argv=list(sys.argv[1:] if argv is None else argv),
     )

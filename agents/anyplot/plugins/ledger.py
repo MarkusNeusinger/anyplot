@@ -44,6 +44,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any, Literal
 
+from ..schemas import Theme
 from ..settings import AgentSettings
 
 
@@ -158,6 +159,9 @@ class RequestLedger:
     """The operation names of every `prepare_data` call that changed the data (closed: `telemetry.PREP_OPS`)."""
     reply_question: bool = False
     """The root's last reply sent to the page ends with a question mark (`stream.Translator`); the text is never kept."""
+    site_theme: Theme | None = None
+    """The theme the page showed the site in when the user sent the turn (`/messages?theme=`), which a plot run takes
+    when neither the user nor the version it changes asked for one (`pipeline.run_theme`); None without a page."""
 
     def book_step(self, agent: str, *, model: str | None, usage: dict[str, int], cached: int) -> None:
         """Add one model call to the agent's step usage (`usage` as `usage_breakdown` counts it)."""
