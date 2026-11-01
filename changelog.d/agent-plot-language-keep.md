@@ -11,4 +11,4 @@
   chip as before, and later versions keep it. The root's `set_language` takes
   `applies_to` (`plot`, `replies` or `both`, the default for a request that
   names no target), the chip sets both and now says it names the replies'
-  language, and the admin fan-out copies the page's plot language.
+  language, and the admin fan-out copies the page's plot language. (#12504)
