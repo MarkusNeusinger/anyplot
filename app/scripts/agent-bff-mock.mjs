@@ -109,9 +109,9 @@
  *   a data change, see above, and a reply naming it;
  * - ends with "?": a reply only, no pipeline run;
  * - anything else: a refinement with a repair round, shipped as
- *   `needs_attention`; "dark" in the text renders the dark theme.
+ *   `needs_attention`; the word "dark" or "light" in the text renders that theme.
  * A plot renders in the site theme the page sends (`POST .../messages?theme=`), unless
- * the text asked for dark or the refined version was asked for dark (`pipeline.run_theme`).
+ * the text asked for a theme or the refined version was asked for one (`pipeline.run_theme`).
  * Pasted data containing "ignore previous" answers `403 data_refused`; pasted
  * text that looks like a formula answers `422 formula`. `POST .../dataset/convert`
  * (a dropped binary file) answers by the first bytes: a zip is a workbook with two
@@ -1187,11 +1187,13 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         if (session.cancelled && !closed) await sleep(STOP_MS);
       }
       if (stopped()) return;
-      // The service's `pipeline.run_theme`: a theme asked for ("dark" in the text), the asked theme of
-      // the version a refinement changes, the site theme of the turn, else the version it changes or light.
+      // The service's `pipeline.run_theme`: a theme asked for (the word "dark" or "light" in the text), the
+      // asked theme of the version a refinement changes, the site theme of the turn, else the version it
+      // changes or light.
       const previous = refine ? session.versions[session.versions.length - 1] : undefined;
       let askedTheme = previous?.themeAsked ? previous.theme : null;
-      if (lower.includes('dark')) askedTheme = 'dark';
+      if (/\blight\b/.test(lower)) askedTheme = 'light';
+      else if (/\bdark\b/.test(lower)) askedTheme = 'dark';
       const theme = askedTheme ?? siteTheme ?? previous?.theme ?? 'light';
       const version = {
         number: session.versions.length + 1,
