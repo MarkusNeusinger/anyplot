@@ -857,14 +857,18 @@ class TestRendererToolchainSteps:
 
 
 FAKE_RENDERER_CURL = """#!/bin/sh
-# curl as the smoke script calls it: the URL comes last, `-o` names the response file, `--data @file` the job.
+# curl as the smoke script calls it: `-o` names the response file, `--data @file` the job, the URL is the one
+# argument that is no flag and no flag's value; an unknown flag fails the probe.
 out=""; data=""; auth=""; url=""
 while [ $# -gt 0 ]; do
   case "$1" in
     -o) out="$2"; shift 2 ;;
     --data) data="${2#@}"; shift 2 ;;
     -H) case "$2" in Authorization:*) auth="$2" ;; esac; shift 2 ;;
-    *) url="$1"; shift ;;
+    --retry|--retry-delay|--max-time) shift 2 ;;
+    -fsS|--retry-all-errors) shift ;;
+    -*) echo "unexpected curl flag $1" >&2; exit 2 ;;
+    *) [ -z "$url" ] || { echo "two URLs: $url $1" >&2; exit 2; }; url="$1"; shift ;;
   esac
 done
 echo "$auth $url $data" >> "$FAKE_CURL_LOG"
