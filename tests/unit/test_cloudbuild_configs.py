@@ -7,6 +7,7 @@ deployed, and the renderer did not (build dc1cf3ae, 2026-11-01). The length is m
 written, before Cloud Build substitutes `$NAME` and `${NAME}`.
 """
 
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -16,10 +17,16 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ARG_LIMIT = 10_000
+# Every tracked config at any depth; git, not a recursive glob, because a checkout's untracked
+# `.claude/worktrees/` and `node_modules/` hold copies that are not this tree's configs.
 CONFIGS = sorted(
-    path.relative_to(REPO_ROOT).as_posix()
-    for pattern in ("*/cloudbuild.yaml", "*/*/cloudbuild.yaml")
-    for path in REPO_ROOT.glob(pattern)
+    subprocess.run(
+        ["git", "ls-files", "--", "*cloudbuild*.yaml", "*cloudbuild*.yml"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.split()
 )
 
 
