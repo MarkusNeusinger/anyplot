@@ -296,13 +296,16 @@ describe('DataPanel bindings', () => {
         locked={locked}
       />
     );
-    const changed = stateWith(
+    const changed: AgentSessionState = stateWith(
       { x: 'month', y1: 'shoes' },
       { dataChange: { kind: 'changed', changes: ['dropped 1 row'], version: 2 } }
     );
-    const versioned = {
+    const stored = changed.dataset;
+    if (!stored) throw new Error('stateWith always holds a dataset');
+    // Version 2, so `.undo()` shows and has something to undo once the panel closes.
+    const versioned: AgentSessionState = {
       ...changed,
-      dataset: { ...changed.dataset, parsed: { ...changed.dataset.parsed, version: 2 } },
+      dataset: { ...stored, parsed: { ...stored.parsed, version: 2 } },
     };
     const { rerender } = render(panel(versioned, true));
     const card = screen.getByRole('region', { name: 'Your data' });
