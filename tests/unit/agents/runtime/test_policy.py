@@ -93,9 +93,10 @@ class TestAdapterPromptPerLanguage:
     """SHA-256 of `adapter.md` as `own_prompt` read it before the split (51ceaac6c, stripped, 18,703 characters),
     since 2026-11-01 with the `changes` notes in the plot language and in plain words (19,301 characters)."""
 
-    def test_the_python_adapter_prompt_is_byte_identical_to_the_one_before_the_split(self) -> None:
-        """Golden: the Python libraries' adapters read exactly what they read before R joined. A deliberate change of
-        a shared rule or a Python passage updates the hash in the same commit."""
+    def test_the_python_adapter_prompt_matches_its_pinned_hash(self) -> None:
+        """Golden: the Python libraries' adapters read exactly the pinned prompt. It was the one they read before R
+        joined until the notes rule of 2026-11-01; a deliberate change of a shared rule or a Python passage updates
+        the hash in the same commit."""
         prompt = policy.adapter_prompt("python")
 
         assert hashlib.sha256(prompt.encode("utf-8")).hexdigest() == self.PYTHON_SHA256, (

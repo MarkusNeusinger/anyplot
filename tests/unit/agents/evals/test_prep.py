@@ -405,6 +405,7 @@ class TestScore:
         summary = scored["summary"]
         assert summary["exact"] == 1.0 and summary["replies"] == 2 and summary["closing_questions"] == 1
         assert summary["questions_per_reply"] == 0.5 and summary["reply_words_max"] == 20
+        assert summary["reply_words_median"] == 16  # the mean of the two middle values of an even count
         assert summary["reply_misses"] == 1 and summary["reply_miss_rate"] == 0.5
         assert summary["reply_miss_kinds"] == {"closing_question": 1}
         assert scored["misses"] == [] and scored["reply_misses"] == [

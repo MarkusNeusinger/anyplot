@@ -95,6 +95,7 @@ import json
 import logging
 import os
 import re
+import statistics
 import sys
 import time
 from collections import Counter, defaultdict
@@ -141,7 +142,8 @@ DEFAULT_MAX_REPLY_MISSES = 0.1
 MAX_REPLY_WORDS = 100
 """The longest reply that is no reply miss, in words: about the five sentences `root.md` allows at most. A data
 change with its counts, the confirmation and an open role fits; a reply padded with the request repeated back or a
-list of what stayed the same does not (the prep run of 2026-11-01: median 61 words, 3 of 51 replies over 90)."""
+list of what stayed the same does not (prep runs of 2026-11-01: on the main prompt a median of 69 words and 5 of 52
+replies over 100, on the "Replies" rules 57 words and 2 of 52)."""
 BLOCKED_TAGS = frozenset({"ask_back"})
 """A case with one of these tags cannot go on without the user's answer, so its reply may close with a question."""
 QUESTION = re.compile(r"[?？؟]+")
@@ -727,12 +729,12 @@ def _block(results: Sequence[CaseResult]) -> dict[str, Any]:
 def _replies(answered: Sequence[CaseResult]) -> dict[str, Any]:
     """The reply shape of the answered cases that have a reply: words, questions, closing questions, reply misses."""
     measured = [result for result in answered if result.reply_words is not None]
-    words = sorted(result.reply_words or 0 for result in measured)
+    words = [result.reply_words or 0 for result in measured]
     misses = Counter(result.reply_miss for result in measured if result.reply_miss)
     return {
         "replies": len(measured),
-        "reply_words_median": words[len(words) // 2] if words else None,
-        "reply_words_max": words[-1] if words else None,
+        "reply_words_median": statistics.median(words) if words else None,
+        "reply_words_max": max(words) if words else None,
         "questions_per_reply": round(sum(result.reply_questions for result in measured) / len(measured), 2)
         if measured
         else None,
