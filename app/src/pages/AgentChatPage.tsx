@@ -54,6 +54,12 @@
  * copies the same confirmed data. The pill is in the URL as `&all=1`,
  * so a reload presses it again once the libraries are known.
  *
+ * The session itself is not in the URL and nothing restores it: while it holds
+ * data, a plot or work in flight, a reload, a closed tab or a link off the page
+ * asks first (`useLeaveWarning`: the browser's `beforeunload` dialog, and for a
+ * link inside the site or the back button the router's blocker with a
+ * `confirm`). The page's own query edits pass.
+ *
  * Gates, outermost first:
  * 1. `CONFIG.features.agentChat` (build-time `VITE_ENABLE_AGENT_CHAT`): off, the
  *    route renders the 404 page and this chunk is not even built.
@@ -78,10 +84,12 @@ import {
   type BindingMap,
   type DatasetUpload,
   sessionBusy,
+  sessionHoldsWork,
   useAgentSession,
 } from 'src/hooks/useAgentSession';
 import { useAnalytics } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
+import { useLeaveWarning } from 'src/hooks/useLeaveWarning';
 import { agentApi, browserLocale, DEFAULT_AGENT_LIBRARIES, MAX_MESSAGE_CHARS } from 'src/lib/agent';
 import { apiGet, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
@@ -92,7 +100,7 @@ import { DATA_SUMMARY_ID, DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { FanOut } from 'src/sections/agent-chat/FanOut';
 import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
-import { ERROR_TEXT } from 'src/sections/agent-chat/messages';
+import { ERROR_TEXT, LEAVE_TEXT } from 'src/sections/agent-chat/messages';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { SaveButton } from 'src/sections/agent-chat/SaveButton';
@@ -391,6 +399,11 @@ function AgentChat({
   useEffect(() => {
     if (gateShown) gateRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
   }, [gateShown]);
+
+  // Data, a plot or work in flight: a reload, a closed tab or a link off the page asks first,
+  // since nothing restores the session. The fan-out's panel opens only on this session's
+  // confirmed data, so its sessions are covered too.
+  useLeaveWarning(sessionHoldsWork(state), LEAVE_TEXT);
 
   // A turn, a theme render, a parse, an undo or a binding change in flight: the
   // server runs one at a time and would refuse or race a second.

@@ -7,7 +7,7 @@
 
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider } from '@mui/material/styles';
@@ -116,12 +116,14 @@ function stubFetch() {
   );
 }
 
+/** A data router, as in the app: the page's leave warning uses the router's blocker. */
 function renderPage() {
+  const router = createMemoryRouter([{ path: '/debug/agent', element: <AgentChatPage /> }], {
+    initialEntries: [PAGE],
+  });
   return render(
     <ThemeProvider theme={theme}>
-      <MemoryRouter initialEntries={[PAGE]}>
-        <AgentChatPage />
-      </MemoryRouter>
+      <RouterProvider router={router} />
     </ThemeProvider>
   );
 }

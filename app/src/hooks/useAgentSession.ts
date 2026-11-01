@@ -90,7 +90,9 @@
  *
  * Session lifetime: the session, with the pasted data and its renders, is
  * deleted when the page unmounts and on `pagehide` (a reload or a closed tab,
- * sent with `keepalive`); the server's idle sweep is the backstop.
+ * sent with `keepalive`); the server's idle sweep is the backstop. Nothing
+ * restores it, so while it holds data, a plot or work in flight
+ * (`sessionHoldsWork`) the page asks before it lets the user leave.
  *
  * Saving: `saveSession` (`.save()`) downloads the session's feedback case,
  * the conversation, code, images and config the agents service assembles,
@@ -2135,5 +2137,23 @@ export function sessionBusy(state: AgentSessionState): boolean {
     state.themeBusy ||
     state.pageBusy ||
     state.languageBusy
+  );
+}
+
+/**
+ * Whether leaving the page would lose something: stored data, a table read
+ * from text that waits for its decision, a plot, or work in flight. The
+ * session lives only in this page's memory and the server's (see the module
+ * notes), so the page asks before a reload, a closed tab or a navigation ends
+ * it. Only while the page shows the session (`ready`): an expired or refused
+ * one shows nothing that leaving would take away.
+ */
+export function sessionHoldsWork(state: AgentSessionState): boolean {
+  return (
+    state.phase === 'ready' &&
+    (!!state.dataset ||
+      !!state.transcription ||
+      Object.keys(state.versions).length > 0 ||
+      sessionBusy(state))
   );
 }
