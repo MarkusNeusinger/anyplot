@@ -30,6 +30,7 @@ from agents.anyplot.pipeline import (
     render_adapt_request,
     render_review_request,
     render_score_request,
+    run_theme,
     ship_compare,
     shipped_candidate,
     standing_requests,
@@ -48,6 +49,7 @@ from agents.anyplot.schemas import (
     PlotResult,
     ReviewRequest,
     Round,
+    Theme,
 )
 from agents.anyplot.services import CodeVersion, VersionStore
 from agents.anyplot.session_state import SessionView
@@ -313,6 +315,44 @@ def test_versions_of_another_library_are_not_the_base() -> None:
     assert latest_here is not None and latest_here.number == 1
     assert store.get("s", 2, library="matplotlib") is None
     assert latest_any is not None and latest_any.number == 2
+
+
+def base_version(theme: Theme, *, asked: bool) -> CodeVersion:
+    result = PlotResult(status="ok", attempts=1, artifacts=["plot.py"])
+    return CodeVersion(
+        number=1,
+        working="w",
+        run_form="r",
+        export="e",
+        data_csv="a\n1\n",
+        render_id="r1",
+        result=result,
+        theme=theme,
+        theme_asked=asked,
+    )
+
+
+@pytest.mark.parametrize(
+    ("asked", "site", "previous", "expected"),
+    [
+        # The user's word in the chat wins over the site, on a first plot and on a change.
+        ("dark", "light", None, ("dark", True)),
+        ("light", "dark", base_version("dark", asked=True), ("light", True)),
+        # A change of a version whose theme the user asked for keeps it, whatever the site shows.
+        (None, "light", base_version("dark", asked=True), ("dark", True)),
+        # Otherwise the site theme of the turn, also when it switched since the version it changes.
+        (None, "dark", None, ("dark", False)),
+        (None, "light", None, ("light", False)),
+        (None, "dark", base_version("light", asked=False), ("dark", False)),
+        # Without a page: the version it changes, else light (the behaviour before the site theme).
+        (None, None, base_version("dark", asked=False), ("dark", False)),
+        (None, None, None, ("light", False)),
+    ],
+)
+def test_run_theme(
+    asked: Theme | None, site: Theme | None, previous: CodeVersion | None, expected: tuple[Theme, bool]
+) -> None:
+    assert run_theme(asked, site, previous) == expected
 
 
 def test_dataset_judge_sees_every_header() -> None:

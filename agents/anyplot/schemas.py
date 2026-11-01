@@ -297,11 +297,11 @@ class Binding(_ServerContract):
 class PipelineArgs(_ServerContract):
     """The `plot_pipeline` tool input. Spec, library and dataset come from server state.
 
-    `theme` is the one theme the run renders and the reviewer sees. Omitted (None), a
-    change on `base="previous"` keeps the previous version's theme and a new plot is
-    light; the root passes `dark` only when the user asks for a dark plot. The other
-    theme of a finished version is rendered on demand by the theme toggle route,
-    without any model call.
+    `theme` is the one theme the run renders and the reviewer sees; the root passes it
+    only when the user asks for a theme. Omitted (None), the run takes the site theme
+    the page sent with the turn, unless it changes a version whose theme the user asked
+    for (`pipeline.run_theme`). The other theme of a finished version is rendered on
+    demand by the theme toggle route, without any model call.
     """
 
     change_request: str = Field(default="", max_length=MAX_CHANGE_REQUEST_CHARS)

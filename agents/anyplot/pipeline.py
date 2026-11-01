@@ -3,10 +3,10 @@
 `run_pipeline` is the single node of the `plot_pipeline` workflow (`tools/session.py`).
 It reads spec, library, dataset and bindings from server-set session state, never from
 its input: `PipelineArgs` carries only `change_request`, `base` and `theme` (the one
-theme to render; omitted, a change keeps the previous version's theme and a new plot
-is light). The session language is read once per run, so the adapter, which writes the
-plot's own text in it, and the reviewer, which judges that text against it, share one
-value; each prompt gets it fenced as `<plot_language>`. It runs at most
+theme to render; omitted, the theme `run_theme` picks, the site's unless the user
+asked for one). The session language is read once per run, so the adapter, which
+writes the plot's own text in it, and the reviewer, which judges that text against it,
+share one value; each prompt gets it fenced as `<plot_language>`. It runs at most
 `AGENT_MAX_ATTEMPTS` attempts, two by default (the first and one repair round; the
 eval harness may set one or three):
 
@@ -29,7 +29,7 @@ eval harness may set one or three):
    literal text the plan replaces, up to `MAX_NEW_LITERAL_CHARS`;
 3. **render**: `normalise`, the loader substitution (the runtime's `loader_block`, typed
    from the parser's dtypes and the column kinds), then the one
-   theme the call asks for (`PipelineArgs.theme`, light by default) through the
+   theme of the run (`run_theme`: the one the user asked for, else the site's) through the
    render backend, and the host gates (`render/gates.py`) on exactly that theme; a failed
    render's summary is the runtime's error grammar over the code that ran
    (`RuntimeAdapter.error_summary` with the run form, so Julia's names the working form's
@@ -415,6 +415,8 @@ class Run:
     view: SessionView
     dataset: StoredDataset
     theme: Theme = "light"
+    theme_asked: bool = False
+    """The user asked for `theme` (`run_theme`); the shipped version keeps it as `CodeVersion.theme_asked`."""
     language: str = DEFAULT_LANGUAGE
     """The session language, read once per run: the adapter writes the plot text in it, the reviewer judges it."""
     attempts: int = 0
@@ -1249,6 +1251,7 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
             title=shipped.plan.title,
             library=run.view.library,
             theme=run.theme,
+            theme_asked=run.theme_asked,
             language=run.language,
             requests=standing_requests([*run.user_requests, run.change_request]),
             themes={run.theme: ThemeRender("needs_attention", PADDED_REASON) if shipped.padded else ThemeRender("ok")},
@@ -1387,17 +1390,23 @@ def _reraise_unless_schema(exc: Exception) -> None:
     logger.warning("sub-agent answer failed its schema: %s", type(exc).__name__)
 
 
-def _default_theme(services: Services, session_id: str, library: str, base: str) -> Theme:
-    """An omitted theme keeps the previous version's theme on a change; a new plot is light.
+def run_theme(asked: Theme | None, site: Theme | None, previous: CodeVersion | None) -> tuple[Theme, bool]:
+    """The one theme a run renders, and whether the user asked for it (`CodeVersion.theme_asked`).
 
-    The root may leave `theme` out of a refinement call, so a dark plot must not
-    silently come back light.
+    In order: the theme the root passed (`PipelineArgs.theme`), which the user asked for in the chat; on a
+    change, the theme of the version it changes (`previous`) when the user asked for that one, because the root
+    leaves `theme` out of a refinement and a dark plot asked for must not silently come back light; the site
+    theme the page sent with the turn (`RequestLedger.site_theme`; owner decision of 2026-11-01: a user on the
+    dark site gets a dark plot, the other theme one click away on the toggle), so a change after a switch of the
+    site theme follows the switch; without a page (`adk web`, the evals) the version it changes, else light.
     """
-    if base == "previous":
-        previous = services.versions.latest_rendered(session_id, library=library)
-        if previous is not None:
-            return previous.theme
-    return "light"
+    if asked is not None:
+        return asked, True
+    if previous is not None and previous.theme_asked:
+        return previous.theme, True
+    if site is not None:
+        return site, False
+    return (previous.theme if previous is not None else "light"), False
 
 
 @node(name="run_pipeline", rerun_on_resume=True)
@@ -1434,11 +1443,17 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         return
     # Taken only once the run has its slot: a run that never starts leaves the user's note for the next one.
     node_input = take_pending_request(ctx.state, node_input)
-    theme = node_input.theme or _default_theme(services, ctx.session.id, view.library, node_input.base)
+    previous = (
+        services.versions.latest_rendered(ctx.session.id, library=view.library)
+        if node_input.base == "previous"
+        else None
+    )
+    theme, theme_asked = run_theme(node_input.theme, ledger.site_theme, previous)
     run = Run(
         view=view,
         dataset=dataset,
         theme=theme,
+        theme_asked=theme_asked,
         language=view.language,
         change_request=node_input.change_request,
         expected_texts=list(node_input.expected_texts),

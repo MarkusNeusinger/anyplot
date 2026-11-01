@@ -72,6 +72,9 @@ class CodeVersion:
     """The library the version was adapted for; a session can switch library."""
     theme: Theme = "light"
     """The theme the run rendered and the reviewer saw."""
+    theme_asked: bool = False
+    """The user asked for `theme` in the chat, for this version or for the one it changed, so a change of it keeps
+    the theme; otherwise a change follows the site theme of its turn (`pipeline.run_theme`)."""
     language: str = "en"
     """The session language the version's plot text was written in."""
     requests: list[str] = field(default_factory=list)
