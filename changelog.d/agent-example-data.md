@@ -9,3 +9,4 @@
   roles and writes seeded Python that `run_data_code` runs in the sandbox, so
   no model writes a row; the data panel's change line says
   `generated example data`, and the same works when asked in the chat.
+  (#12509)
