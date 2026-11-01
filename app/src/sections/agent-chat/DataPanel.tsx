@@ -826,6 +826,15 @@ export function DataPanel({
   // The box's text as of the last render, for a file read that ends after an edit.
   const textRef = useRef(text);
   textRef.current = text;
+  // A request for data moved to the chat as the user's message (`dataRequests` counts them), as `.send()` moves a
+  // formula: the box is free for a table. Adjusted during render, as React adjusts state when a prop changes.
+  const [requestsSeen, setRequestsSeen] = useState(state.dataRequests);
+  if (state.dataRequests !== requestsSeen) {
+    setRequestsSeen(state.dataRequests);
+    setText('');
+    setSource(null);
+    setConverted(null);
+  }
   // Step 2 only: whether the full card shows below the pinned header.
   const [expanded, setExpanded] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
@@ -1230,10 +1239,10 @@ export function DataPanel({
         # your data — paste or drop CSV, TSV, JSON, plain text, Excel, ODS, Parquet, Feather or
         NumPy
       </Box>
-      {/* Until there is data, the other source: a curve the assistant computes. */}
+      {/* Until there is data, the other sources: example data the assistant makes up, a curve it computes. */}
       {!dataset && (
         <Box id="agent-data-hint" sx={{ ...labelSx, mb: 0.75 }}>
-          or ask for a curve in the chat: y = sin(x), x from{' '}
+          or type example data here, or ask for a curve in the chat: y = sin(x), x from{' '}
           <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
             -pi
           </Box>{' '}

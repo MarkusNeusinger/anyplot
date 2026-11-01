@@ -1,0 +1,7 @@
+{
+  "message": "Beispieldaten mit 4 Regionen und 3 Jahren",
+  "expected_operations": [{"op": "run_data_code", "rows": 12, "columns": 3}],
+  "locale": "de",
+  "spec_id": "bar-grouped",
+  "tags": ["run_data_code", "example_data", "no_dataset"]
+}

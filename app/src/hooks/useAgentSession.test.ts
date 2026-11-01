@@ -1350,6 +1350,31 @@ describe('useAgentSession: formulas', () => {
     expect(result.current.state).toMatchObject({ formula: FORMULA, formulaKind: 'formula' });
   });
 
+  it('sends a request for data to the chat at once, as the user message, with no error', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'data_request', ref: 'r-d' });
+    routes['POST /sessions/S1/messages'] = generatedStream;
+    const { result } = await openSession(routes);
+
+    // The parse ends with the turn it started, whose generated table is version 1.
+    await act(() => result.current.parseData('  Beispieldaten\n'));
+    expect(turnBodies()).toEqual([{ text: 'Beispieldaten' }]);
+    expect(result.current.state.items[0]).toMatchObject({ kind: 'user', text: 'Beispieldaten' });
+    expect(result.current.state).toMatchObject({
+      datasetError: null,
+      formula: null,
+      dataRequests: 1,
+      parsing: false,
+    });
+    expect(result.current.state.dataset?.parsed.version).toBe(1);
+    expect(trackEvent).toHaveBeenCalledWith('agent_data_parsed', {
+      status: 'data_request',
+      size_bucket: 'lt_1kb',
+    });
+    // No summary follows: the turn's own reply describes the generated table.
+    expect(turnBodies()).toHaveLength(1);
+  });
+
   it('clears the offer on the next parse and on data the chat computed', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'formula', ref: 'r-f' });

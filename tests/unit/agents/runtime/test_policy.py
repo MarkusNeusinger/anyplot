@@ -445,8 +445,9 @@ class TestOtherInstructions:
         # 15 since 2026-10-14: a data-generating snippet (in scope) and code that reaches the system (an attack);
         # 18 the same day: data code that reads a URL (needs_data), the live Chart.js request (other_library) and
         # its neighbour, another chart in another library (out_of_scope); 19 since 2026-10-29: a question about R
-        # code (in scope), since the session's code can be any served library's.
-        assert 6 <= len(examples) <= 19
+        # code (in scope), since the session's code can be any served library's; 20 since 2026-11-01: a request for
+        # example data in one word (in scope), which the data panel sends to the chat.
+        assert 6 <= len(examples) <= 20
         assert {verdict for _, verdict in examples} == {
             "in_scope",
             "out_of_scope",
@@ -454,6 +455,15 @@ class TestOtherInstructions:
             "attack",
             "other_library",
         }
+
+    def test_example_data_is_in_scope_and_only_real_figures_need_data(self) -> None:
+        """Owner request of 2026-11-01: "Beispieldaten" in the data field goes to the chat, where the root makes it up."""
+        rubric = policy.scope_rubric()
+        examples = dict(re.findall(r"^\| (.+) \| `(\w+)` \|$", rubric, flags=re.MULTILINE))
+
+        assert examples["Beispieldaten"] == "in_scope"
+        assert "A request for made-up example, sample, test or random data to try the plot" in rubric
+        assert "It is `needs_data` only when it wants figures of the real world" in rubric
 
     def test_url_reading_data_code_needs_data_and_only_system_access_is_an_attack(self) -> None:
         """Live test of 2026-10-14: `pd.read_csv(urlopen(...))` was an `attack` and a strike toward the day's lockout."""

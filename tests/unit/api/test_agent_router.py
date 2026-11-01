@@ -2092,6 +2092,8 @@ class TestUpstreamMapping:
             (422, {"detail": "nothing_to_undo"}, 422, "nothing_to_undo"),
             (422, {"detail": "formula"}, 422, "formula"),
             (422, {"detail": "code"}, 422, "code"),
+            # "Beispieldaten" in the data field since 2026-11-01: the page sends it to the chat.
+            (422, {"detail": "data_request"}, 422, "data_request"),
             (429, {"detail": "rate_limited"}, 429, "rate_limited"),
             # The paste route's limits and guards since 2026-10-14; a 403 with a documented code is no IAM error.
             (429, {"detail": "daily_limit"}, 429, "daily_limit"),

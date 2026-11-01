@@ -256,6 +256,13 @@
     {"id": "in-081", "text": "Quelle année a la plus forte proportion de naissances hors mariage ?", "last_turns": [], "expected": "in_scope", "lang": "fr", "tags": ["inscope", "data_question", "derived_quantity"]},
     {"id": "in-082", "text": "¿Cómo ha evolucionado la población extranjera a lo largo de los años?", "last_turns": [], "expected": "in_scope", "lang": "es", "tags": ["inscope", "data_question", "derived_quantity"]},
     {"id": "in-083", "text": "Qual è la quota media di esportazioni per paese?", "last_turns": [], "expected": "in_scope", "lang": "it", "tags": ["inscope", "data_question", "derived_quantity"]},
-    {"id": "lib-008", "text": "Can you draw this plot in seaborn instead?", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "other_library_contrast"]}
+    {"id": "lib-008", "text": "Can you draw this plot in seaborn instead?", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "other_library_contrast"]},
+    {"id": "example-001", "text": "Beispieldaten", "last_turns": [], "expected": "in_scope", "lang": "de", "tags": ["inscope", "example_data", "german"]},
+    {"id": "example-002", "text": "generiere Zufallszahlen mit Kategorien", "last_turns": [], "expected": "in_scope", "lang": "de", "tags": ["inscope", "example_data", "german"]},
+    {"id": "example-003", "text": "Make up some example data for this plot: monthly sales for 4 regions.", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "example_data"]},
+    {"id": "example-004", "text": "random numbers with 3 categories and 20 rows each", "last_turns": [], "expected": "in_scope", "lang": "en", "tags": ["inscope", "example_data"]},
+    {"id": "example-005", "text": "Des données d'exemple, s'il te plaît.", "last_turns": [], "expected": "in_scope", "lang": "fr", "tags": ["inscope", "example_data"]},
+    {"id": "example-006", "text": "Use Apple's real monthly revenue since 2020 as the data.", "last_turns": [], "expected": "needs_data", "lang": "en", "tags": ["adversarial", "needs_data", "example_data_contrast"]},
+    {"id": "example-007", "text": "Nimm die echten Monatsumsätze von Siemens seit 2020 als Daten.", "last_turns": [], "expected": "needs_data", "lang": "de", "tags": ["adversarial", "needs_data", "example_data_contrast", "german"]}
   ]
 }

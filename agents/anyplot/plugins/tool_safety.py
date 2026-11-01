@@ -151,12 +151,17 @@ class _PrepareArgs(BaseModel):
     operations: list[Operation] = Field(min_length=1, max_length=MAX_OPERATIONS)
 
 
+DataCodeSource = Literal["python", "javascript", "r", "math", "other", "example"]
+"""What the user gave `run_data_code`'s Python from: code or a formula in a language, or `example` for example data the
+user asked for without giving any (`tools/session.py` `SOURCE_LANGUAGES`, pinned equal by a test)."""
+
+
 class _DataCodeArgs(BaseModel):
-    """`run_data_code`: Python of at most `MAX_DATA_CODE_CHARS`, and what the user wrote it in (attribution only)."""
+    """`run_data_code`: Python of at most `MAX_DATA_CODE_CHARS`, and what the user gave it from (`DataCodeSource`)."""
 
     model_config = ConfigDict(extra="forbid")
     code: str = Field(min_length=1, max_length=MAX_DATA_CODE_CHARS)
-    source_language: Literal["python", "javascript", "r", "math", "other"]
+    source_language: DataCodeSource
 
 
 ARGUMENTS: dict[str, type[BaseModel]] = {

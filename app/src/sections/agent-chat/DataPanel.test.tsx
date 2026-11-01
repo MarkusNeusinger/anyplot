@@ -864,7 +864,8 @@ describe('DataPanel formulas', () => {
 
   it('names the chat as the other source of data until there is some', () => {
     const { rerender } = renderPanel(empty());
-    const hint = 'or ask for a curve in the chat: y = sin(x), x from -pi to pi';
+    const hint =
+      'or type example data here, or ask for a curve in the chat: y = sin(x), x from -pi to pi';
     expect(screen.getByLabelText(/# your data/)).toHaveAccessibleDescription(hint);
 
     rerender(stateWith({ x: 'month', y1: 'shoes' }));
@@ -889,6 +890,28 @@ describe('DataPanel formulas', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     await userEvent.click(send);
     expect(onSendFormula).toHaveBeenCalledTimes(1);
+    expect(textbox).toHaveValue('');
+  });
+
+  it('empties the box once a request for data went to the chat, and only then', async () => {
+    const { onParse, rerender } = renderPanel(empty());
+    const textbox = screen.getByLabelText(/# your data/);
+    await userEvent.type(textbox, 'Beispieldaten');
+    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    expect(onParse).toHaveBeenCalledWith('Beispieldaten');
+
+    // A refusal leaves the box as it is; the hand-off to the chat (`dataRequests`) empties it.
+    rerender(empty());
+    expect(textbox).toHaveValue('Beispieldaten');
+    rerender(empty({ dataRequests: 1 }));
+    expect(textbox).toHaveValue('');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+
+    // A new text stays until the next hand-off.
+    await userEvent.type(textbox, 'x,y');
+    rerender(empty({ dataRequests: 1 }));
+    expect(textbox).toHaveValue('x,y');
+    rerender(empty({ dataRequests: 2 }));
     expect(textbox).toHaveValue('');
   });
 

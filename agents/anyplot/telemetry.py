@@ -152,6 +152,7 @@ InputFormat = Literal[
     "transcribed",
     "formula",
     "code",
+    "data_request",
     "other",
 ]
 Entry = Literal["paste", "file"]
@@ -162,6 +163,7 @@ DataOutcome = Literal[
     "too_large",
     "code",
     "formula",
+    "data_request",
     "data_refused",
     "guard_unavailable",
     "capacity",
@@ -190,6 +192,7 @@ DataCause = Literal[
     "timeout",
     "transcribed_unparseable",
     "transcribed_no_table",
+    "transcribed_data_request",
     # the file conversion's (`wire.ConvertRefusal` and `main.CONVERT_FAILURES`)
     "unsupported",
     "encrypted",
@@ -214,7 +217,7 @@ CategoriesBucket = Literal["le5", "6_12", "13_50", "gt50"]
 MissingBucket = Literal["none", "lt5", "5_30", "gt30"]
 SpecFit = Literal["direct", "needs_reshape", "missing_role", "incompatible"]
 
-TurnKind = Literal["plot", "prep", "formula", "code", "talk", "refused", "error"]
+TurnKind = Literal["plot", "prep", "formula", "code", "example", "talk", "refused", "error"]
 TurnAction = Literal["text", "create_plot", "summarize_data"]
 ToolName = Literal[
     "get_dataset_profile",
@@ -872,13 +875,16 @@ def user_turns(events: Iterable[Event]) -> int:
 
 
 def turn_kind(ledger: RequestLedger) -> TurnKind:
-    """What a turn did, in order of weight: a refusal, an error, a plot, data from code or a formula, a prep, talk."""
+    """What a turn did, in order of weight: a refusal, an error, a plot, example data, data from code or a formula, a
+    prep, talk. `example` is a `run_data_code` call that stored example data the user asked for (`example_data`)."""
     if ledger.refusal is not None:
         return "refused"
     if ledger.error is not None:
         return "error"
     if "plot_pipeline" in ledger.tools:
         return "plot"
+    if ledger.example_data:
+        return "example"
     if "run_data_code" in ledger.tools:
         return "code"
     if "generate_data" in ledger.tools:
@@ -1008,6 +1014,7 @@ REFUSAL_OUTCOMES: dict[str, DataOutcome] = {
     "unparseable": "unparseable",
     "code": "code",
     "formula": "formula",
+    "data_request": "data_request",
     "data_refused": "data_refused",
     "guard_unavailable": "guard_unavailable",
     "capacity": "capacity",
@@ -1024,7 +1031,7 @@ class InputFacts:
     """The content-free facts of one dataset input, collected along the route and written once (`write`).
 
     `format` is fixed up front for a dropped binary file (its kind) and a confirmed transcription, set by the
-    parse for every other paste (`parsed`), and by the refusal for code and formulas (`refused`).
+    parse for every other paste (`parsed`), and by the refusal for code, formulas and data requests (`refused`).
     """
 
     session_id: str
@@ -1066,7 +1073,7 @@ class InputFacts:
         self.outcome = "ok"
 
     def refused(self, code: str) -> None:
-        if code in ("code", "formula"):
+        if code in ("code", "formula", "data_request"):
             self.format = code
         if self.outcome is None:
             self.outcome = REFUSAL_OUTCOMES.get(code, "other")

@@ -809,13 +809,14 @@ function AgentChat({
 
           {state.items.length === 0 && !state.run && (
             <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
-              paste your data above, or ask here for a curve: &quot;y = sin(x), x from{' '}
+              paste your data above, or ask here for example data or a curve: &quot;y = sin(x), x
+              from{' '}
               <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
                 -pi
               </Box>{' '}
-              to pi&quot;, and the assistant computes the table. it sums your data up here, and you
-              can ask it to fix the data in plain words, such as &quot;read Anteil as numbers&quot;
-              or &quot;sum per month&quot;. check the preview and the bindings, confirm, then{' '}
+              to pi&quot;, and the assistant makes the table. it sums your data up here, and you can
+              ask it to fix the data in plain words, such as &quot;read Anteil as numbers&quot; or
+              &quot;sum per month&quot;. check the preview and the bindings, confirm, then{' '}
               <code>.create_plot()</code>, with a note first if the plot should do something
               differently. afterwards, ask for changes to the plot: &quot;log scale on y&quot;,
               &quot;dark version&quot;, &quot;label the outliers&quot;.
@@ -886,12 +887,13 @@ function AgentChat({
                 aria-label="Message"
                 placeholder={
                   // Step 1 talks about the data, step 2 about the plot. Without
-                  // data, the chat is the other way to get some: a formula. While
-                  // `all` is pressed in step 2 the box waits: the fan-out takes no text.
+                  // data, the chat is the other way to get some: example data or a
+                  // formula. While `all` is pressed in step 2 the box waits: the
+                  // fan-out takes no text.
                   chatLocked
                     ? 'all libraries: the table goes as it is · turn all off to chat'
                     : !state.dataset
-                      ? 'ask for a curve: "y = sin(x), x from -pi to pi"'
+                      ? 'ask for example data or a curve: "y = sin(x), x from -pi to pi"'
                       : !step2
                         ? 'ask about your data, or for a fix: "sum per month"'
                         : firstPlot
