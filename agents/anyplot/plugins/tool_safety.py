@@ -7,7 +7,8 @@
   operations of the `Operation` union, `query_data` up to five of them with its
   `query.QueryArgs` bounds, `generate_data` the `generate.Generate`
   spec and `set_language` one value that matches `language.LANGUAGE_PATTERN`, as the
-  language route does, and the `invalid_arguments` refusal of the first two carries
+  language route does, with an `applies_to` of `language.LANGUAGE_TARGETS`,
+  and the `invalid_arguments` refusal of the first two carries
   the validation lines
   fenced as `errors`, like the tools' own refusals, so the model can fix the one
   field that was wrong); no link (a scheme such as
@@ -55,7 +56,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from ..data.generate import Generate
 from ..data.prepare import MAX_OPERATIONS, Operation, validation_lines
 from ..data.query import QueryArgs
-from ..language import LANGUAGE_PATTERN, MAX_LANGUAGE_CHARS
+from ..language import LANGUAGE_PATTERN, MAX_LANGUAGE_CHARS, LanguageTarget
 from ..policy import DATA_PREAMBLE, fence
 from ..schemas import MAX_COLUMNS, Binding, KeepRequestArgs, PipelineArgs, PlotResult
 from .ledger import argument_hash, attribution, ledger_for
@@ -140,10 +141,12 @@ class _BindingArgs(BaseModel):
 
 
 class _LanguageArgs(BaseModel):
-    """`set_language`: a language name or code, the same pattern as `PUT /v1/sessions/{sid}/language`."""
+    """`set_language`: a language name or code, the same pattern as `PUT /v1/sessions/{sid}/language`, and what it
+    sets (`applies_to`: the replies, the plot's text, or both)."""
 
     model_config = ConfigDict(extra="forbid")
     language: str = Field(min_length=1, max_length=MAX_LANGUAGE_CHARS, pattern=LANGUAGE_PATTERN)
+    applies_to: LanguageTarget = "both"
 
 
 class _PrepareArgs(BaseModel):

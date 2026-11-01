@@ -133,7 +133,7 @@ describe('AgentChatPage language chip', () => {
     open();
     await waitFor(() => expect(chip()).toBeEnabled());
     await user.click(chip());
-    const list = screen.getByRole('dialog', { name: 'Plot language' });
+    const list = screen.getByRole('dialog', { name: 'Language of the replies and the plot' });
     await user.click(within(list).getByRole('button', { name: /German/ }));
 
     await waitFor(() => expect(chip()).toHaveTextContent(/^lang: de · chosen$/));
@@ -184,7 +184,7 @@ describe('AgentChatPage language chip', () => {
     expect(chip()).toBeEnabled();
     expect(
       screen.getByText(
-        '# language: de · detected from your message · the lang chip in the header changes it'
+        '# reply language: de · detected from your message · a plot you have keeps its language · the lang chip in the header changes both'
       )
     ).toBeInTheDocument();
     expect(puts).toEqual([]);

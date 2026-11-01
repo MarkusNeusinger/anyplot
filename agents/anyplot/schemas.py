@@ -367,9 +367,13 @@ class AdaptRequest(_ServerContract):
     previous_plan: AdaptPlan | None = None
     allow_full: bool = False
     plot_language: str = Field(default=DEFAULT_LANGUAGE, pattern=LANGUAGE_PATTERN)
-    """The session language, which the plot's own text (title, axis titles, legend, annotations) is written in."""
+    """The plot language (`session_state.plot_language`), which the plot's own text (title, axis titles, legend,
+    annotations) is written in."""
     language_changed: bool = False
     """The base version's plot text is in another language than `plot_language`: rewrite it."""
+    reply_language: str | None = Field(default=None, pattern=LANGUAGE_PATTERN)
+    """The session language, which the user chats in, only when it differs from `plot_language`: the `changes`
+    notes are written in it, since they explain the plot to the user (owner, 2026-11-01)."""
     expected_texts: list[ExpectedText] = Field(default_factory=list, max_length=MAX_EXPECTED_TEXTS)
     """The texts and number formats the user asked to see in the plot (`PipelineArgs.expected_texts`)."""
     dataset_context: str = Field(default="", max_length=MAX_DATASET_CONTEXT_CHARS)
