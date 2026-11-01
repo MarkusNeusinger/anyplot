@@ -41,8 +41,8 @@ interface SpecTabsProps {
   notes?: string[];
   tags?: Record<string, string[]>;
   created?: string;
-  updated?: string;
   // Implementation tab
+  updated?: string;
   imageDescription?: string;
   strengths?: string[];
   weaknesses?: string[];

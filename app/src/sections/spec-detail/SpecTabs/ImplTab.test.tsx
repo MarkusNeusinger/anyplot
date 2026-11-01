@@ -31,7 +31,7 @@ describe('ImplTab', () => {
     expect(screen.getByText('No implementation review data available.')).toBeInTheDocument();
   });
 
-  it('prefers generatedAt over updated and created in the metadata line', () => {
+  it('prefers updated over generatedAt and created in the metadata line', () => {
     render(
       <ImplTab
         {...baseProps}
@@ -40,14 +40,14 @@ describe('ImplTab', () => {
         created="2025-03-25T00:00:00Z"
       />
     );
-    expect(screen.getByText(/scatter-basic · matplotlib · Jan 15, 2025/)).toBeInTheDocument();
+    expect(screen.getByText(/scatter-basic · matplotlib · Feb 20, 2025/)).toBeInTheDocument();
   });
 
-  it('falls back to updated, then created, for the metadata date', () => {
+  it('falls back to generatedAt, then created, for the metadata date', () => {
     const { rerender } = render(
-      <ImplTab {...baseProps} updated="2025-02-20T00:00:00Z" created="2025-03-25T00:00:00Z" />
+      <ImplTab {...baseProps} generatedAt="2025-01-15T00:00:00Z" created="2025-03-25T00:00:00Z" />
     );
-    expect(screen.getByText(/scatter-basic · matplotlib · Feb 20, 2025/)).toBeInTheDocument();
+    expect(screen.getByText(/scatter-basic · matplotlib · Jan 15, 2025/)).toBeInTheDocument();
 
     rerender(<ImplTab {...baseProps} created="2025-03-25T00:00:00Z" />);
     expect(screen.getByText(/scatter-basic · matplotlib · Mar 25, 2025/)).toBeInTheDocument();
