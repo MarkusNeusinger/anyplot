@@ -9,4 +9,4 @@
   after a site-theme switch follows the switch. A theme the user asked for in
   the chat holds for later changes of that plot. The admin fan-out
   (`.plot_all()`) plots every library in the same theme. This fixes user test
-  E2 of 2026-11-01, where the dark site showed a bright plot card.
+  E2 of 2026-11-01, where the dark site showed a bright plot card. (#12505)
