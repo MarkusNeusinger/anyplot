@@ -8,9 +8,11 @@
   to 100. On seven chat scenarios from the user test of 2026-11-01, questions per reply fell from 0.75 to 0 and the
   words per reply from 58.7 to 50.4 on average (plot replies from 50 to 37). The version's "what changed" notes are
   written in the plot language and in plain words, without the code's own names such as `load_user_data()`.
+  (#12506)
 
 ### Added
 
 - **The prep eval measures the root's replies.** Every reply's words, questions and closing question are counted;
   a closing question the turn was not blocked for, or a reply over 100 words, is a reply miss, gated at 10 %
   (`--max-reply-misses`). A case can send the page's summary action, and four step-1 summary cases join the set.
+  (#12506)
