@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-basic: Basic Line Plot
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: pending | Updated: 2026-04-29
+Library: matplotlib 3.11.2 | Python 3.14.9
+Quality: 83/100 | Updated: 2026-11-01
 """
 
 import os
