@@ -9,6 +9,7 @@
   and theme, patterns its code must add or keep, drawn texts that must
   change, and an empty `requested_not_found`. A run passes only when every
   check holds, and the report lists each failed one under `check_failures`.
+  (#12510)
 
 ### Fixed
 
@@ -21,4 +22,4 @@
   root's change request carries only the user's other changes, and a run with
   none gets the server's own rewrite request. The root also sends a theme only
   as `theme`: written into the change request, "a dark background" made the
-  adapter replace the theme tokens with fixed dark colours.
+  adapter replace the theme tokens with fixed dark colours. (#12510)
