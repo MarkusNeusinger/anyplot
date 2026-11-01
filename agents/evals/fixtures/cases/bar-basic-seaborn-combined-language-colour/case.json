@@ -12,6 +12,6 @@
   "checks": {
     "language": "de",
     "texts_changed": ["title"],
-    "code_added": ["(?i)#4467A3|[\"'](?:tab:)?blue[\"']|#0072B2"]
+    "code_added": ["(?i)#4467A3|#0072B2|#1F77B4|[\"'](?:tab:|xkcd:)?(?:steel|royal|dodger|dark|navy)?blue[\"']|[\"']navy[\"']"]
   }
 }

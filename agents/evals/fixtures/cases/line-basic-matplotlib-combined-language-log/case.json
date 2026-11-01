@@ -12,6 +12,6 @@
   "checks": {
     "language": "de",
     "texts_changed": ["title"],
-    "code_added": ["yscale\\s*(?:\\(\\s*|=\\s*)[\"'](?:sym)?log[\"']|semilogy\\(|loglog\\("]
+    "code_added": ["yscale\\s*(?:\\(\\s*(?:value\\s*=\\s*)?|=\\s*)[\"'](?:sym)?log[\"']|semilogy\\(|loglog\\("]
   }
 }

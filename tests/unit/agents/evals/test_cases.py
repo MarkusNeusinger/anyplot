@@ -167,6 +167,7 @@ def test_the_combined_request_cases_check_every_part_of_their_follow_up(case_id:
         ("log", "plt.yscale('log')", True),
         ("log", 'ax.set(yscale="log")', True),
         ("log", "ax.semilogy(x, y)", True),
+        ("log", 'ax.set_yscale(value="log")', True),
         ("log", 'ax.set_xscale("log")', False),
         # Vertical grid lines: the x axis's grid, both axes, or a grid call without an axis.
         ("grid", "ax.xaxis.grid(True, alpha=0.1)", True),
@@ -174,14 +175,21 @@ def test_the_combined_request_cases_check_every_part_of_their_follow_up(case_id:
         ("grid", "ax.grid(True, alpha=0.1)", True),
         ("grid", "ax.yaxis.grid(True, alpha=0.1)", False),  # the catalogue's horizontal lines
         ("grid", 'ax.grid(True, axis="y")', False),
-        # Blue bars: the palette's blue, matplotlib's blue, or Okabe-Ito's.
+        ("grid", 'ax.grid(True, "major", "y")', False),
+        # Blue bars: the palette's blue, matplotlib's blue, Okabe-Ito's, or a named blue.
         ("colour", 'color="#4467a3"', True),
         ("colour", "palette=['tab:blue']", True),
+        ("colour", 'color="#1f77b4"', True),
+        ("colour", 'color="steelblue"', True),
         ("colour", 'BRAND = "#009E73"', False),
         # The theme tokens a dark plot keeps (a live run of 2026-11-01 wrote the dark colours over them).
         ("tokens", "fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)", True),
+        ("tokens", "fig, ax = plt.subplots(\n    figsize=(8, 4.5),\n    facecolor=PAGE_BG,\n)", True),
         ("tokens", 'fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor="#1A1A17")', False),
+        # Never across calls: a later `savefig(facecolor=PAGE_BG)` is no subplots token.
+        ("tokens", 'plt.subplots(facecolor="#1A1A17")\nplt.savefig("p.png", facecolor=PAGE_BG)', False),
         ("labels", 'ax.set_xlabel("Ad Spend (kCHF)", fontsize=10, color=INK)', True),
+        ("labels", 'ax.set_xlabel(\n    "Ad Spend (kCHF)",\n    color=INK,\n)', True),
         ("labels", 'ax.set_xlabel("Ad Spend (kCHF)", fontsize=10, color="#F0EFE8")', False),
     ],
 )

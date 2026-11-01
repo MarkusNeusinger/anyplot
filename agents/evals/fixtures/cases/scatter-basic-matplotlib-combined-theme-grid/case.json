@@ -11,7 +11,7 @@
   "source": "hand-written synthetic data: a theme change and a grid in one message",
   "checks": {
     "theme": "dark",
-    "code_added": ["xaxis\\.grid\\(\\s*(?:True|visible\\s*=\\s*True)|\\.grid\\([^)]*\\baxis\\s*=\\s*[\"'](?:x|both)[\"']|\\bax\\.grid\\((?![^)]*\\baxis\\s*=)"],
-    "code_kept": ["subplots\\(.*facecolor=PAGE_BG\\b", "set_xlabel\\(.*color=INK\\b"]
+    "code_added": ["xaxis\\.grid\\(\\s*(?:True|visible\\s*=\\s*True)|\\.grid\\([^)]*\\baxis\\s*=\\s*[\"'](?:x|both)[\"']|\\bax\\.grid\\((?![^)]*\\baxis\\s*=)(?![^)]*[\"']y[\"'])"],
+    "code_kept": ["subplots\\((?:[^()]|\\([^()]*\\))*\\bfacecolor=PAGE_BG\\b", "set_xlabel\\((?:[^()]|\\([^()]*\\))*\\bcolor=INK\\b"]
   }
 }

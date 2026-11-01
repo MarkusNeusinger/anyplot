@@ -11,6 +11,6 @@
   "source": "hand-written synthetic data, the single-request control of line-basic-matplotlib-combined-language-log",
   "checks": {
     "language": "en",
-    "code_added": ["yscale\\s*(?:\\(\\s*|=\\s*)[\"'](?:sym)?log[\"']|semilogy\\(|loglog\\("]
+    "code_added": ["yscale\\s*(?:\\(\\s*(?:value\\s*=\\s*)?|=\\s*)[\"'](?:sym)?log[\"']|semilogy\\(|loglog\\("]
   }
 }

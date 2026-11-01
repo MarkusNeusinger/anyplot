@@ -722,8 +722,11 @@ class TestSessionLanguage:
         # Every part of a combined message, a theme only as `theme` (a live run wrote dark colours over the tokens).
         assert 'A message that asks for several changes ("make it dark and add a grid"' in root
         assert "a theme only into `theme`" in root
-        assert "a part that cannot be done gets one sentence that says so" in root
+        # Only an in-scope part: a message with an out-of-scope part stays refused as a whole.
+        assert "an in-scope part that cannot be done gets one sentence that says so" in root
+        assert "a message with an out-of-scope part is refused as a whole" in root
         assert "A theme asked for together with another change is a change" in root
+        assert "with only a language besides, `change_request` stays out" in root
 
     def test_the_adapter_writes_the_plot_text_in_the_plot_language(self) -> None:
         adapter = policy.adapter_instruction("matplotlib")
