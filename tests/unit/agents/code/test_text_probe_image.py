@@ -97,6 +97,40 @@ def test_a_makie_figure_leaves_its_drawn_texts_by_role() -> None:
     assert ("annotation", "Rekord") in labels
 
 
+def test_a_makie_label_is_the_title_only_when_it_stands_alone() -> None:
+    """No axes title: the one largest `Label` is the title; labels of one size (panel letters) are other texts; a
+    colorbar's label is its own kind (Gemini Flash review of #12503)."""
+    source = """using CairoMakie
+const THEME = get(ENV, "ANYPLOT_THEME", "light")
+fig = Figure(size = (1600, 900))
+Label(fig[0, 1:2], "Wetter"; fontsize = 30)
+for (column, letter) in enumerate(["A", "B"])
+    Label(fig[1, column, TopLeft()], letter; fontsize = 14)
+end
+ax = Axis(fig[1, 1]; xlabel = "Tag")
+hm = heatmap!(ax, rand(4, 4))
+Colorbar(fig[1, 2], hm; label = "Grad")
+save("plot-$(THEME).png", fig; px_per_unit = 2)
+"""
+    code, probe = render("makie", source)
+
+    assert code == 0
+    labels = kinds_and_texts(probe)
+    assert {("title", "Wetter"), ("text", "A"), ("text", "B"), ("colorbar label", "Grad")} <= labels
+    assert not {("title", "A"), ("title", "B")} & labels
+
+
+def test_a_ggplot2_patchwork_names_each_plot_s_title_and_its_own() -> None:
+    combined = 'plot <- patchwork::wrap_plots(plot, plot) + patchwork::plot_annotation(title = "Gesamt"); '
+    source = GGPLOT.replace("ggsave(sprintf", combined + "ggsave(sprintf")
+
+    code, probe = render("ggplot2", source)
+
+    assert code == 0
+    labels = kinds_and_texts(probe)
+    assert {("title", "Gesamt"), ("title", "Umsatz – Übersicht"), ("legend text", "Gebiet")} <= labels
+
+
 def test_a_ggplot2_probe_that_fails_leaves_an_error_and_the_render_stands() -> None:
     """`ggsave` takes a grid grob too, which `ggplotGrob` cannot build: the probe fails, the save does not."""
     grob = GGPLOT.replace("ggsave(sprintf", "plot <- grid::textGrob('Umsatz'); ggsave(sprintf")

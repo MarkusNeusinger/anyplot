@@ -18,17 +18,19 @@
 local({
   theme <- Sys.getenv("ANYPLOT_THEME", "light")
   limit <- 2000L
+  # From the outermost cell in: a legend's own `title` cell sits inside `guide-box-*`, so the box names it first. A
+  # patchwork numbers its plots' cells (`title-2`, `axis-l-2`), its own title is `title`.
   kind_of <- function(names) {
     for (name in names) {
-      if (identical(name, "title")) return("title")
-      if (identical(name, "subtitle")) return("subtitle")
+      if (startsWith(name, "title")) return("title")
+      if (startsWith(name, "subtitle")) return("subtitle")
       if (startsWith(name, "xlab")) return("x axis label")
       if (startsWith(name, "ylab")) return("y axis label")
       if (startsWith(name, "axis-b") || startsWith(name, "axis-t")) return("x tick label")
       if (startsWith(name, "axis-l") || startsWith(name, "axis-r")) return("y tick label")
       if (startsWith(name, "guide-box")) return("legend text")
       if (startsWith(name, "panel")) return("annotation")
-      if (startsWith(name, "strip") || name %in% c("caption", "tag")) return("text")
+      if (startsWith(name, "strip") || startsWith(name, "caption") || startsWith(name, "tag")) return("text")
     }
     "text"
   }
