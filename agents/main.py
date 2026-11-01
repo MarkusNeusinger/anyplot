@@ -1786,6 +1786,13 @@ async def copy_dataset(
         raise AgentsError(422, "no_dataset")
     services.usage.add_copy(user)
     bindings = origin.bindings
+    # The page's plot language, which can differ from its reply language: its user's choice for the plot, else the
+    # language its latest plot shows. Without either the page's plot would follow its session language, which the
+    # copy carries anyway, so no choice is made up for the target.
+    origin_latest = services.versions.latest_language(body.from_session)
+    shown: dict[str, Any] = {}
+    if origin.plot_language_choice is not None or origin_latest is not None:
+        shown[PLOT_LANGUAGE] = plot_language(origin, origin_latest)
     # From the reads above to this write nothing suspends (see `_ingest_paste`): the source's state cannot change
     # between the confirmation check and the copy.
     await runtime.write_state(
@@ -1798,8 +1805,7 @@ async def copy_dataset(
             DATASET_COPIED_FROM: origin.dataset_version,
             CONFIRMED: confirmation_fingerprint(copied.dataset_id, bindings),
             **language_delta(origin.language, origin.language_source),
-            # The page's plot language, which can differ from its reply language once it has a plot.
-            PLOT_LANGUAGE: plot_language(origin, services.versions.latest_language(body.from_session)),
+            **shown,
             **PENDING_CLEARED,
         },
     )

@@ -197,6 +197,8 @@ async def test_a_copy_is_the_confirmed_version_byte_for_byte(
     assert copied_view.bindings == origin.bindings and copied_view.data_confirmed
     assert copied_view.dataset_version == 1 and copied_view.dataset_history == []
     assert state[DATASET_COPIED_FROM] == 1
+    # A page without a plot or a choice for the plot gives the copy none either: it follows its session language.
+    assert PLOT_LANGUAGE not in state
     # The source is untouched.
     after, _ = await view_of(runtime, source)
     assert after.dataset_id == original.dataset_id and after.data_confirmed
