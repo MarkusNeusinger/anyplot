@@ -10,6 +10,7 @@ import {
   initialAgentState,
   missingRolesOf,
   sessionBusy,
+  sessionHoldsWork,
   type TranscriptionState,
   useAgentSession,
   type UseAgentSessionOptions,
@@ -2491,6 +2492,85 @@ describe('agentReducer', () => {
       { name: 'y', kinds: [], required: false, variadic: false, description: '' },
     ]);
     expect(state.bindingsComplete).toBe(true);
+  });
+});
+
+describe('sessionHoldsWork', () => {
+  const ready: AgentSessionState = {
+    ...initialAgentState('matplotlib'),
+    phase: 'ready',
+    sessionId: 'S1',
+  };
+
+  it('holds nothing for an empty session, open or not', () => {
+    expect(sessionHoldsWork(initialAgentState('matplotlib'))).toBe(false);
+    expect(sessionHoldsWork(ready)).toBe(false);
+    // A thread without data or a plot (a question, a refused paste) is nothing to lose either.
+    const asked = agentReducer(ready, { type: 'item', item: { kind: 'user', text: 'hi' } });
+    expect(sessionHoldsWork(asked)).toBe(false);
+  });
+
+  it('holds stored data, confirmed or not, a table read from text, a plot and work in flight', () => {
+    const parsed = agentReducer(ready, {
+      type: 'parse_done',
+      parsed: DATASET as DatasetParsed,
+      bytes: 30,
+    });
+    expect(sessionHoldsWork(parsed)).toBe(true);
+    expect(sessionHoldsWork(agentReducer(parsed, { type: 'confirm_done' }))).toBe(true);
+
+    const transcription: TranscriptionState = {
+      text: TRANSCRIBED.text,
+      preview: TRANSCRIBED.preview,
+      profile: { ...TRANSCRIBED.profile, columns: [] },
+      warnings: [],
+      note: '',
+      bytes: 26,
+    };
+    expect(sessionHoldsWork(agentReducer(ready, { type: 'transcribed', transcription }))).toBe(
+      true
+    );
+
+    const plotted: AgentSessionState = {
+      ...ready,
+      versions: {
+        1: {
+          number: 1,
+          library: 'matplotlib',
+          result: {
+            status: 'ok',
+            attempts: 1,
+            artifacts: [],
+            changes: [],
+            residual_defects: [],
+            version: 1,
+          },
+          theme: 'light',
+          images: {},
+          code: { state: 'loading' },
+        },
+      },
+    };
+    expect(sessionHoldsWork(plotted)).toBe(true);
+
+    // A paste or a formula turn still in flight, before anything is stored.
+    expect(sessionHoldsWork(agentReducer(ready, { type: 'parse_start' }))).toBe(true);
+    expect(sessionHoldsWork(agentReducer(ready, { type: 'run_start', kind: 'message' }))).toBe(
+      true
+    );
+  });
+
+  it('holds nothing once the page no longer shows the session', () => {
+    const parsed = agentReducer(ready, {
+      type: 'parse_done',
+      parsed: DATASET as DatasetParsed,
+      bytes: 30,
+    });
+    const failure = { code: 'session_expired', ref: null };
+    expect(
+      sessionHoldsWork(agentReducer(parsed, { type: 'open_failed', phase: 'error', failure }))
+    ).toBe(false);
+    expect(sessionHoldsWork(agentReducer(parsed, { type: 'unauthorized' }))).toBe(false);
   });
 });
 
