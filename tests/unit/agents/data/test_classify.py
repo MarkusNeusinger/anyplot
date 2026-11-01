@@ -133,12 +133,16 @@ def test_a_data_request_is_one_short_line_the_chat_takes() -> None:
     assert not looks_like_data_request("Beispieldaten " + "x" * MAX_MESSAGE_CHARS)
 
 
-def test_the_transcribers_data_request_goes_to_the_chat_only_without_values() -> None:
-    """`asks_for_data` from the model is trusted for text the chat takes that holds no data of its own."""
-    assert request_for_chat("monthly sales for 4 regions over 12 months")
-    assert request_for_chat("Umsätze pro Monat für vier Filialen\nim Jahr 2025")
-    assert not request_for_chat("sales: north 12, south 14, east 9")
-    assert not request_for_chat("monthly sales " * 200) and not request_for_chat("   ")
+def test_the_transcribers_data_request_goes_to_the_chat_without_a_table_or_values() -> None:
+    """`asks_for_data` from the model is trusted for text the chat takes, unless the model read a table from values."""
+    assert request_for_chat("monthly sales for 4 regions over 12 months", without_table=False)
+    assert request_for_chat("Umsätze pro Monat für vier Filialen\nim Jahr 2025", without_table=False)
+    # Three sizes are three numbers: the rules leave such a request to the model, whose no-table answer counts.
+    sizes = "Beispieldaten mit 3 Kategorien, 4 Regionen und 12 Monaten"
+    assert not looks_like_data_request(sizes) and request_for_chat(sizes, without_table=True)
+    assert not request_for_chat("sales: north 12, south 14, east 9", without_table=False)
+    assert not request_for_chat("monthly sales " * 200, without_table=True)
+    assert not request_for_chat("   ", without_table=True)
 
 
 def test_the_request_pattern_runs_in_linear_time() -> None:

@@ -1242,7 +1242,7 @@ export function DataPanel({
       {/* Until there is data, the other sources: example data the assistant makes up, a curve it computes. */}
       {!dataset && (
         <Box id="agent-data-hint" sx={{ ...labelSx, mb: 0.75 }}>
-          or type example data here, or ask for a curve in the chat: y = sin(x), x from{' '}
+          or type &quot;example data&quot; here, or ask for a curve in the chat: y = sin(x), x from{' '}
           <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
             -pi
           </Box>{' '}

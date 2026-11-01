@@ -46,8 +46,8 @@ class TranscribedTable(BaseModel):
 
     `asks_for_data` is the transcriber's half of the data-request guard (`classify.looks_like_data_request` is the
     rule-based half, before any model): text such as "monthly sales for 4 regions" or a request in a language the
-    rules do not read. The route answers it `422 data_request`, which the page sends to the chat, only for text
-    without values of its own that the chat takes (`main._transcribe`).
+    rules do not read. The route answers it `422 data_request`, which the page sends to the chat, for text the chat
+    takes that holds no table by this answer or no values of its own (`classify.request_for_chat`).
     """
 
     model_config = ConfigDict(extra="forbid")

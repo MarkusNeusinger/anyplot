@@ -865,7 +865,7 @@ describe('DataPanel formulas', () => {
   it('names the chat as the other source of data until there is some', () => {
     const { rerender } = renderPanel(empty());
     const hint =
-      'or type example data here, or ask for a curve in the chat: y = sin(x), x from -pi to pi';
+      'or type "example data" here, or ask for a curve in the chat: y = sin(x), x from -pi to pi';
     expect(screen.getByLabelText(/# your data/)).toHaveAccessibleDescription(hint);
 
     rerender(stateWith({ x: 'month', y1: 'shoes' }));

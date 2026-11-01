@@ -631,7 +631,7 @@ describe('AgentChatPage gating', () => {
     const textbox = await screen.findByLabelText(/# your data/);
     // Without data, both boxes name the other sources: example data, and a curve the assistant computes.
     expect(textbox).toHaveAccessibleDescription(
-      'or type example data here, or ask for a curve in the chat: y = sin(x), x from -pi to pi'
+      'or type "example data" here, or ask for a curve in the chat: y = sin(x), x from -pi to pi'
     );
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',

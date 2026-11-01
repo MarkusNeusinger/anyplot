@@ -140,12 +140,16 @@ def looks_like_data_request(text: str) -> bool:
     return _REQUEST.search(stripped) is not None and stated_values(stripped) < MIN_DATA_VALUES
 
 
-def request_for_chat(text: str) -> bool:
+def request_for_chat(text: str, *, without_table: bool) -> bool:
     """Whether text the transcriber says asks for data (`TranscribedTable.asks_for_data`) goes to the chat as a data
-    request: the chat takes it (`MAX_MESSAGE_CHARS`), and it holds fewer than `MIN_DATA_VALUES` values of its own, so
-    a table in words is never sent away on a misreading."""
+    request: the chat takes it (`MAX_MESSAGE_CHARS`), and the transcriber found no table in it (`without_table`, the
+    rubric's one `text` column) or it holds fewer than `MIN_DATA_VALUES` values of its own. A request that names its
+    sizes ("3 Kategorien, 4 Regionen und 12 Monate") goes, while a table in words that the model also read as one is
+    never sent away on a misreading."""
     stripped = text.strip()
-    return 0 < len(stripped) <= MAX_MESSAGE_CHARS and stated_values(stripped) < MIN_DATA_VALUES
+    if not 0 < len(stripped) <= MAX_MESSAGE_CHARS:
+        return False
+    return without_table or stated_values(stripped) < MIN_DATA_VALUES
 
 
 def classify_paste(text: str) -> PasteKind | None:

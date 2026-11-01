@@ -100,25 +100,33 @@ class TestTheDataField:
             "transcribed_data_request",
         )
 
-    async def test_text_with_its_own_values_is_never_sent_away(
+    async def test_a_table_read_from_values_stays_a_transcription(
         self, client: httpx.AsyncClient, judge: FakeJudge
     ) -> None:
-        """A table in words stays the transcriber's, whatever its answer says about a request."""
+        """A table in words stays the transcriber's for the user to check, whatever its answer says about a request."""
         sid = await open_session(client, with_data=False)
         judge.transcriptions = [
-            _reading(["region", "sales"], [["north", "12"], ["south", "14"], ["east", "9"]], asks_for_data=True),
-            _reading(["text"], [["sales: north 12, south 14, east 9"]], asks_for_data=True),
+            _reading(["region", "sales"], [["north", "12"], ["south", "14"], ["east", "9"]], asks_for_data=True)
         ]
 
         read = await client.post(
             f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "sales: north 12, south 14, east 9"}
         )
+
         assert read.status_code == 200 and read.json()["transcribed"] is True
 
-        no_table = await client.post(
-            f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "sales: north 12, south 14, east 9"}
-        )
-        assert no_table.status_code == 422 and no_table.json()["detail"] == "unparseable"
+    async def test_a_request_that_names_three_sizes_goes_by_the_transcribers_answer(
+        self, client: httpx.AsyncClient, judge: FakeJudge
+    ) -> None:
+        """Three numbers keep the rules away (`MIN_DATA_VALUES`); the model's no-table answer sends it all the same."""
+        sid = await open_session(client, with_data=False)
+        text = "Beispieldaten mit 3 Kategorien, 4 Regionen und 12 Monaten"
+        judge.transcriptions = [_reading(["text"], [[text]], asks_for_data=True)]
+
+        refused = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text})
+
+        assert (refused.status_code, refused.json()) == (422, {"detail": "data_request"})
+        assert len(judge.transcribe_calls) == 1
 
     async def test_a_request_the_chat_could_not_take_keeps_the_old_answer(
         self, client: httpx.AsyncClient, judge: FakeJudge

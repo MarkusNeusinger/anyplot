@@ -1444,9 +1444,10 @@ async def _transcribe(
     a reading that is no table (one column of prose) is `422 unparseable` here too. Text
     the transcriber says asks for data (`asks_for_data`: "monthly sales for 4 regions", a
     request in a language `classify._REQUEST` does not read) is `422 data_request`, which
-    the page sends to the chat, when the chat takes it and it holds no values of its own
-    (`classify.request_for_chat`); whatever table came with that answer is not the text's
-    and is dropped. The call books its tokens like a judge call and writes a
+    the page sends to the chat, when the chat takes it and the transcriber found no table
+    in it or it holds no values of its own (`classify.request_for_chat`); whatever table
+    came with that answer is not the text's and is dropped. A table read from text with
+    values of its own stays a transcription for the user to check, the flag or not. The call books its tokens like a judge call and writes a
     `data_transcribe` attribution line.
     """
     user = ledger.user_id
@@ -1474,7 +1475,7 @@ async def _transcribe(
         user,
         judge_budget_tokens(reading.tokens, reading.input_tokens, reading.output_tokens, get_settings().judge_model),
     )
-    if reading.table.asks_for_data and request_for_chat(text):
+    if reading.table.asks_for_data and request_for_chat(text, without_table=reading.table.columns == ["text"]):
         facts.cause = "transcribed_data_request"
         attribution("data_transcribe", ledger, outcome="data_request", judge_tokens=reading.tokens)
         raise AgentsError(422, "data_request")
