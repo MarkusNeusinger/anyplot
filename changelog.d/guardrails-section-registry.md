@@ -7,5 +7,6 @@
   The section and the classifier-denial rule are now registered with their
   CLAUDE.md anchors, and `ci-tests.yml` also runs the tests for changes to
   `CLAUDE.md`, `AGENTS.md`, `.github/copilot-instructions.md`,
-  `.claude/guardrails.md`, `.claude/skills/` and `agentic/commands/`, which
+  `.claude/guardrails.md`, `agentic/docs/project-guide.md`, `.claude/skills/`
+  and `agentic/commands/`, which
   `tests/unit/test_agent_instructions.py` and `tests/unit/skills` read. (#12494)
