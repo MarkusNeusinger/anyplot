@@ -615,6 +615,39 @@ class TestNewDateColumn:
 
         assert carry_bindings(bind(("value", "value")), roles, data) == bind(("value", "value"))
 
+    def test_a_converted_number_column_fills_the_open_number_role(self) -> None:
+        """Live test of 2026-11-01: the conversion an open role asked for is bound to it (`Prepared.converted`)."""
+        roles = parse_roles(ROLLING)
+        text = "when,price\n2024-01-01,$5\n2024-01-02,7\n"
+        before = profile(text)
+        bindings = default_bindings(roles, before)
+        operation = {"op": "set_type", "column": "price", "type": "number", "name": "price (number)"}
+        prepared = apply_operations(parse_dataset(text), OPERATIONS.validate_python([operation]))
+        after = parse_dataset(prepared.csv)
+
+        assert as_pairs(bindings) == [("date", "when")]
+        assert as_pairs(carry_bindings(bindings, roles, after.profile, before, prepared.converted)) == [
+            ("date", "when"),
+            ("value", "price (number)"),
+        ]
+
+    def test_a_derived_number_column_fills_no_open_role(self) -> None:
+        """Only a conversion is meant for the open role; a `derive` adds a column the user asked for by its name."""
+        roles = parse_roles(ROLLING)
+        text = "when,a,b\n2024-01-01,x,y\n2024-01-02,z,w\n"
+        data = profile("when,a,b,share\n2024-01-01,x,y,0.5\n2024-01-02,z,w,0.5\n")
+
+        assert as_pairs(carry_bindings(bind(("date", "when")), roles, data, profile(text))) == [("date", "when")]
+
+    def test_a_converted_column_fills_a_required_family_as_its_first_member(self) -> None:
+        roles = [role("x", "datetime"), role("y", "numeric", variadic=True)]
+        before = profile("t,p\n2024-01-01,$5\n2024-01-02,7\n")
+        after = profile("t,p,p (number)\n2024-01-01,$5,5\n2024-01-02,7,7\n")
+
+        carried = carry_bindings(bind(("x", "t")), roles, after, before, ["p (number)"])
+
+        assert as_pairs(carried) == [("x", "t"), ("y1", "p (number)")]
+
 
 class TestNamesOverCodes:
     def test_a_series_takes_the_name_column_over_its_codes(self) -> None:

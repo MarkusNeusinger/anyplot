@@ -38,6 +38,7 @@ candidate or stays unbound. Bound by hand, it is valid but warned about
 
 import itertools
 import re
+from collections.abc import Collection
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 
@@ -413,16 +414,23 @@ def _default_bindings(
 
 
 def carry_bindings(
-    bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile, previous: DatasetProfile | None = None
+    bindings: list[Binding],
+    roles: list[DataRole],
+    profile: DatasetProfile,
+    previous: DatasetProfile | None = None,
+    converted: Collection[str] = (),
 ) -> list[Binding]:
     """The bindings after the dataset changed under them (`prepare_data`, undo): the valid ones stay.
 
     A binding stays when its column is still in `profile` with a dtype its role accepts
     (`check_bindings` on it alone finds no error). When every binding stayed, nothing
-    changes, so a role the user left unbound stays unbound, with one exception: a date
+    changes, so a role the user left unbound stays unbound, with two exceptions: a date
     column the change made (`make_date`, or `set_type` to a date; a datetime column that
     `previous`, the version before, did not have) fills an open required role that takes
-    dates (owner decision of 2026-10-15: the code binds it, not the model). When a binding
+    dates (owner decision of 2026-10-15: the code binds it, not the model), and a number
+    column a `set_type` with a new name made (`converted`, `Prepared.converted`) fills an
+    open required role that takes numbers, the conversion that role asked for
+    (`conversions.py`, live test of 2026-11-01). When a binding
     went (its column dropped, renamed or re-typed), the roles without a binding are bound
     as `default_bindings` would bind them on the columns no kept binding uses: the
     defaults are computed on that reduced view, so a role whose first choice a kept
@@ -433,7 +441,9 @@ def carry_bindings(
     kept = [binding for binding in bindings if not check_bindings([binding], roles, profile).errors]
     if len(kept) == len(bindings):
         dated = _new_dates(kept, roles, profile, previous)
-        return _in_spec_order([*kept, *dated], roles, profile) if dated else list(bindings)
+        numbered = _new_numbers([*kept, *dated], roles, profile, converted)
+        added = [*dated, *numbered]
+        return _in_spec_order([*kept, *added], roles, profile) if added else list(bindings)
     return filled_bindings(kept, roles, profile)
 
 
@@ -484,6 +494,31 @@ def _new_dates(
             column = max(fresh, key=lambda column: name_similarity(role.name, column.name))  # first on a tie
             fresh.remove(column)
             added.append(Binding(role=role.name, column=column.name))
+    return added
+
+
+def _new_numbers(
+    kept: list[Binding], roles: list[DataRole], profile: DatasetProfile, converted: Collection[str]
+) -> list[Binding]:
+    """Bindings of the open required roles that take numbers to the number columns a conversion made (`converted`).
+
+    A required family without a member takes the column as its first member (`y1`).
+    """
+    used = {binding.column for binding in kept}
+    fresh = [
+        column
+        for column in profile.columns
+        if column.name in converted and column.dtype in ("number", "integer") and column.name not in used
+    ]
+    if not fresh:
+        return []
+    bound = {role.name for binding in kept if (role := resolve_role(binding.role, roles)) is not None}
+    added: list[Binding] = []
+    for role in roles:
+        if not fresh or not role.required or role.computed or role.name in bound or "numeric" not in role.kinds:
+            continue
+        column = fresh.pop(0)
+        added.append(Binding(role=role.member(1) if role.variadic else role.name, column=column.name))
     return added
 
 

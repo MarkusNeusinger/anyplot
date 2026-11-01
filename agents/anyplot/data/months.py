@@ -1,10 +1,12 @@
-"""Month names and abbreviations, for `make_date` (`prepare.py`) and the profile's month hint (`parse.py`).
+"""Month names and abbreviations, for `make_date` and `set_type` (`prepare.py`) and the parser (`parse.py`).
 
 No import of the other data modules, so both the parser and the operations can use it.
 The table covers the eleven languages of the fixed refusals (en, de, fr, es, it, pt, nl,
 pl with its genitive, zh, vi, ru with its genitive); a name is compared without case and
 diacritics and without a trailing dot (`Jan.`, `März`, `févr.`), and `3月`, `tháng 3`
-and the digits 1 to 12 are months too (owner decision of 2026-10-15).
+and the digits 1 to 12 are months too (owner decision of 2026-10-15). A month name with a
+year in one cell (`Nov 2026`, `Okt. 2026`, `2026 Nov`) is a month of that year
+(`month_year`, live test of 2026-11-01).
 """
 
 import re
@@ -64,6 +66,10 @@ MIN_NAMED_MONTHS = 3
 """The distinct months from which a text column of month names is a calendar (`named_months`)."""
 _NUMBERED_MONTH = re.compile(r"(?:thang\s*)?([0-9]{1,2})\s*(?:月)?")
 """A month written with its number: `3月` (Chinese), `tháng 3` (Vietnamese, folded to `thang 3`), `03`."""
+_NAME_THEN_YEAR = re.compile(r"(?P<name>.+?)[\s,./-]+(?:n[aă]m\s+)?(?P<year>[0-9]{4})", re.IGNORECASE)
+"""A month, then a year of four ASCII digits: `Nov 2026`, `Okt. 2026`, `März-2026`, `tháng 3 năm 2026`."""
+_YEAR_THEN_NAME = re.compile(r"(?P<year>[0-9]{4})(?:\s*年\s*|[\s,./-]+)(?P<name>.+)")
+"""A year of four ASCII digits, then a month: `2026 Nov`, `2026-Nov`, `2026年3月`."""
 
 
 def fold(text: str) -> str:
@@ -85,6 +91,30 @@ def month_number(text: str) -> int | None:
         number = int(match.group(1))
         return number if 1 <= number <= 12 else None
     return MONTH_NAMES.get(key)
+
+
+def month_year(text: str) -> tuple[int, int] | None:
+    """The year and the month of a cell that names a month and a year, as `(year, month)`; else None.
+
+    `Nov 2026`, `November 2026`, `Okt. 2026`, `März 2026`, `2026 Nov`, `Nov-2026`,
+    `2026年3月` and `tháng 3 năm 2026` all read. The month is a name or abbreviation
+    (`month_number`, so `3月` and `tháng 3` count), never digits alone: `03/2026` and
+    `2026-03` are numeric formats, which the parser (`YYYY-MM`) and `set_type`
+    (`MM/YYYY`) read by their own rules. The year has exactly four ASCII digits, and the
+    caller checks its range. A two-digit year is no year here (decision of 2026-11-01):
+    `Nov 26` is 26 November as often as November 2026, and the century would be a guess,
+    as `make_date` refuses a year `24`. A cell with a day (`26 Nov 2026`) is a date, not a
+    month, and is None too.
+    """
+    cell = text.strip()
+    match = _NAME_THEN_YEAR.fullmatch(cell) or _YEAR_THEN_NAME.fullmatch(cell)
+    if match is None:
+        return None
+    name = match.group("name")
+    if fold(name).rstrip(".").strip().isdigit():
+        return None
+    month = month_number(name)
+    return None if month is None else (int(match.group("year")), month)
 
 
 def named_months(cells: list[str]) -> list[int] | None:

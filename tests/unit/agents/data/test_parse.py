@@ -61,6 +61,31 @@ ACUTE = "\N{COMBINING ACUTE ACCENT}"
 E_ACUTE = "\N{LATIN SMALL LETTER E WITH ACUTE}"
 ARABIC_12 = "\N{ARABIC-INDIC DIGIT ONE}\N{ARABIC-INDIC DIGIT TWO}"
 
+RTX_PRICES = (
+    "RTX 4090 Price History Table\n"
+    "Typical (median) lowest daily price in each month, newest first. Δ is the change from the previous month in $.\n"
+    "\n"
+    "Month\tNew\tΔ\tUsed\tΔ\n"
+    + "".join(
+        f"{month}\t\t\t${price}\t{change}\n"
+        for month, price, change in (
+            ("Nov 2026", 3000, "+75"),
+            ("Oct 2026", 2925, "+275"),
+            ("Sep 2026", 2650, "+250"),
+            ("Aug 2026", 2400, "+201"),
+            ("Jul 2026", 2199, "−100"),
+            ("Jun 2026", 2299, "−120"),
+            ("May 2026", 2419, "+1270"),
+            ("Apr 2026", 1149, "−1051"),
+            ("Mar 2026", 2200, "0"),
+            ("Feb 2026", 2200, "+1"),
+            ("Jan 2026", 2199, "0"),
+            ("Dec 2025", 2199, "+19"),
+        )
+    )
+)
+"""The owner's paste of the live test of 2026-11-01, tab-separated as a copied web table is (the `−` is U+2212)."""
+
 
 def read_back(parsed: ParsedDataset) -> pd.DataFrame:
     """What the loader does with the exported data.csv: only the empty cell is missing (`code/loader.py`)."""
@@ -1151,6 +1176,83 @@ class TestMonthsAndQuarters:
         assert parsed.column_dtypes["Jahr"] == "text"
         assert not any("read as months" in line for line in parsed.warnings)
 
+    @pytest.mark.parametrize(
+        ("cells", "firsts"),
+        [
+            (["Nov 2026", "Oct 2026", "Dec 2025"], ["2026-11-01", "2026-10-01", "2025-12-01"]),
+            (["November 2026", "Oktober 2026"], ["2026-11-01", "2026-10-01"]),
+            (["Okt. 2026", "Sept. 2026", "März 2026"], ["2026-10-01", "2026-09-01", "2026-03-01"]),
+            (["2026 Nov", "2026-Dez"], ["2026-11-01", "2026-12-01"]),
+            (["févr. 2026", "janv. 2026"], ["2026-02-01", "2026-01-01"]),
+            (["ноября 2026", "Декабрь 2025"], ["2026-11-01", "2025-12-01"]),
+            (["2026年3月", "2026年11月"], ["2026-03-01", "2026-11-01"]),
+            (["tháng 3 năm 2026", "Tháng 4/2026"], ["2026-03-01", "2026-04-01"]),
+            (["Nov\N{NO-BREAK SPACE}2026", "Nov 2026"], ["2026-11-01", "2026-11-01"]),
+        ],
+    )
+    def test_a_month_name_with_a_year_is_a_month(self, cells: list[str], firsts: list[str]) -> None:
+        """Live test of 2026-11-01: `Nov 2026` stayed text and left a time series' date role open."""
+        parsed = parse_dataset("Month;Price\n" + "".join(f"{cell};{index}\n" for index, cell in enumerate(cells)))
+
+        assert parsed.column_dtypes["Month"] == "datetime"
+        assert [row.split(",")[0] for row in parsed.csv.splitlines()[1:]] == firsts
+        assert warned(
+            parsed,
+            f"column 'Month': {len(cells)} cells read as months (a month name and a year, "
+            "each as the first day of the month)",
+        )
+
+    @pytest.mark.parametrize(
+        "cells",
+        [
+            ["Nov 26", "Oct 26", "Sep 26"],  # a two-digit year is as often a day: 26 November
+            ["May", "June", "April"],  # names that look like months, no year
+            ["Nov 2026", "Oct 2026", "n/a yet"],  # one cell of neither
+            ["Nov 2026", "2026-10", "2026-09"],  # two forms in one column
+            ["26 Nov 2026", "25 Nov 2026"],  # a day: a date, never its month
+            ["Q1 2026", "Q2 2026"],
+            ["Nov 0900", "Dec 0900"],  # outside the years a month may hold
+        ],
+    )
+    def test_text_that_only_looks_like_a_month_and_a_year_stays_text(self, cells: list[str]) -> None:
+        parsed = parse_dataset("Month;Price\n" + "".join(f"{cell};{index}\n" for index, cell in enumerate(cells)))
+
+        assert parsed.column_dtypes["Month"] == "text"
+        assert not warned(parsed, "read as months")
+
+    def test_a_person_named_may_stays_a_name(self) -> None:
+        parsed = parse_dataset("Person,Score\nMay,1\nJune,2\nApril,3\n")
+
+        assert parsed.column_dtypes["Person"] == "text"
+
+    @pytest.mark.parametrize("name", ["Code", "Saison"])
+    def test_a_name_that_says_code_or_season_keeps_month_names_text(self, name: str) -> None:
+        assert parse_dataset(f"{name},v\nNov 2026,1\nOct 2026,2\n").column_dtypes[name] == "text"
+
+    def test_month_names_with_years_read_as_set_type_reads_them(self) -> None:
+        text = "Monat,v\nOkt. 2026,1\nNov. 2026,2\nDez. 2026,3\n"
+        operations = TypeAdapter(list[Operation]).validate_python([{"op": "set_type", "column": "Monat", "type": "datetime"}])
+
+        converted = apply_operations(parse_dataset(text, text_columns=["Monat"]), operations)
+
+        assert converted.csv == parse_dataset(text).csv
+        assert converted.changes == [
+            "Monat: 3 cells read as months (a month name and a year, each as the first day of the month)"
+        ]
+
+    def test_the_rtx_price_table_of_the_live_test(self) -> None:
+        """The owner's paste of 2026-11-01, tab-separated as a web table copies: a date column, two number columns."""
+        parsed = parse_dataset(RTX_PRICES)
+
+        assert parsed.column_dtypes == {"Month": "datetime", "Used ($)": "integer", "Δ": "integer"}
+        assert parsed.csv.splitlines()[1] == "2026-11-01,3000,75"
+        assert parsed.csv.splitlines()[5] == "2026-07-01,2199,-100"
+        assert column(parsed, "Month").order == "descending"
+        assert column(parsed, "Δ").min == -1051
+        assert warned(parsed, "column 'Δ': 3 cells with the minus sign '−' read as negative numbers")
+        assert warned(parsed, "7 numbers written in another form with the same value")  # the seven `+` signs
+        assert parsed.context_lines[0] == "RTX 4090 Price History Table"
+
     def test_month_headers_stay_labels_through_to_long(self) -> None:
         """Review of #12204: the pivot's names must not turn into dates the heatmap's `y` would read as such."""
         text = "Region,2025-01,2025-02,2025-03\nNord,1,2,3\nSüd,4,5,6\nOst,7,8,9\n"
@@ -1163,6 +1265,86 @@ class TestMonthsAndQuarters:
         assert "y" in prepared.text_columns
         again = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)
         assert again.column_dtypes["y"] == "text" and again.csv.splitlines()[1] == "Nord,2025-01,1"
+
+
+class TestTypographicMinus:
+    """Live test of 2026-11-01: a change column of `+75` and `−100` (U+2212) stayed text."""
+
+    def test_the_minus_sign_is_a_sign_with_its_count(self) -> None:
+        parsed = parse_dataset("d,v\n1,+75\n2,−100\n3,0\n4,−1.5\n")
+
+        assert parsed.column_dtypes["v"] == "number"
+        assert parsed.csv.splitlines()[1:] == ["1,75", "2,-100", "3,0", "4,-1.5"]
+        assert warned(parsed, "column 'v': 2 cells with the minus sign '−' read as negative numbers")
+        assert warned(parsed, "1 number written in another form with the same value")  # the `+` of `+75`
+
+    def test_an_en_dash_before_a_number_is_a_minus_too(self) -> None:
+        parsed = parse_dataset("d;v\n1;–5\n2;−3\n3;4\n")
+
+        assert parsed.csv.splitlines()[1:] == ["1,-5", "2,-3", "3,4"]
+        assert warned(
+            parsed,
+            "column 'v': 1 cell with the minus sign '−' and 1 with an en dash '–' as the minus read as negative numbers",
+        )
+
+    @pytest.mark.parametrize(
+        "cells",
+        [
+            ["10–20", "20–30", "−5"],  # a range keeps its dash, so the column stays text
+            ["A–5", "B–6"],  # a code
+            ["−", "5"],  # a dash alone is no number
+            ["5−3", "4"],
+        ],
+    )
+    def test_a_dash_that_is_no_sign_keeps_the_column_text(self, cells: list[str]) -> None:
+        parsed = parse_dataset("v\n" + "\n".join(cells) + "\n")
+
+        assert parsed.column_dtypes["v"] == "text"
+        assert parsed.csv.splitlines()[1:] == cells
+        assert not warned(parsed, "negative numbers")
+
+    def test_behind_a_currency_and_with_a_unit(self) -> None:
+        parsed = parse_dataset("a;b\n$−5;−3 %\n$7;4 %\n−€ 2;1 %\n")
+
+        assert column(parsed, "a").dtype == "text"  # `$` and `€` are two units: no number column, as before
+        assert parsed.column_dtypes["b (%)"] == "integer"
+        assert parsed.csv.splitlines()[1].endswith(",-3")
+        assert warned(parsed, "column 'b (%)': 1 cell with the minus sign '−' read as negative numbers")
+
+    def test_a_leading_minus_sign_with_a_currency(self) -> None:
+        parsed = parse_dataset("p\n$−5\n$7\n")
+
+        assert parsed.column_dtypes["p ($)"] == "integer"
+        assert parsed.csv.splitlines()[1:] == ["-5", "7"]
+
+    def test_a_negative_column_feeds_the_sign_check(self) -> None:
+        """A non-negative role sees the minimum: `−3` is below 0 like `-3`."""
+        assert column(parse_dataset("v\n−3\n4\n"), "v").min == -3
+
+
+class TestDateOrder:
+    """`ColumnProfile.order`: a time series is drawn oldest first, so the root sorts a newest-first column."""
+
+    @pytest.mark.parametrize(
+        ("cells", "order"),
+        [
+            (["2024-01-01", "2024-02-01", "2024-02-01", "2024-03-01"], "ascending"),
+            (["2024-03-01", "2024-02-01", "", "2024-01-01"], "descending"),  # a missing cell aside
+            (["2024-03-01", "2024-01-01", "2024-02-01"], None),
+            (["2024-03-01", "2024-03-01"], None),  # one moment
+            (["2024-01-01T10:00:00", "2024-01-01T09:00:00"], "descending"),
+        ],
+    )
+    def test_the_direction_of_a_date_column(self, cells: list[str], order: str | None) -> None:
+        parsed = parse_dataset("t,v\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells)))
+
+        assert column(parsed, "t").order == order
+        assert column(parsed, "v").order is None  # a number column has none
+
+    def test_an_order_is_a_profile_fact_the_model_reads(self) -> None:
+        profile = parse_dataset("t,v\n2024-02-01,1\n2024-01-01,2\n").profile
+
+        assert '"order":"descending"' in profile.model_dump_json(exclude_none=True)
 
 
 class TestProfile:

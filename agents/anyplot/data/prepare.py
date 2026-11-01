@@ -39,14 +39,23 @@ The operations:
   and stored at microseconds, so any year from 1 to 9999 fits (a datetime64[ns] holds
   only 1677 to 2262; a date pandas still cannot hold is an `invalid_operation`, never a
   crash). Without `date_format`
-  pandas infers the format per cell, day before month when ambiguous, as the parser
+  a month name with a four-digit year (`Nov 2026`, `Okt. 2026`, `2026 Nov`, in the eleven
+  languages of `months.py`) is its month's first day, as the parser reads it, and pandas
+  infers the format of every other cell, day before month when ambiguous, as the parser
   reads a slash date, except for a cell that starts with a year (`2024-06-01T13:00:00Z`
-  is 1 June; the order is chosen per cell); a fraction of a second and a UTC offset are
+  is 1 June; the order is chosen per cell); a cell pandas would only fill in (no digit, as
+  `May` or `now`; a time alone, which it puts on today; no year, which it makes the year
+  1) is a failure, never a made-up date (since 2026-11-01); a fraction of a second and a UTC offset are
   kept (`_cell_text`), different offsets in one column are read in UTC with the offsets
   named in the change line (owner decision of 2026-10-15, as the parser writes such a
   column), and times with and without an offset are a `type_mismatch`. Either way a cell that cannot be read becomes missing and the
   change line counts it; when more than 10 % of the non-missing cells fail, the
-  operation is a `type_mismatch` instead. To text: every cell becomes its canonical
+  operation is a `type_mismatch` instead. To number, a minus written as the minus sign
+  `−` or an en dash `–` before the number is a sign, as the parser reads it, and the
+  change line counts those cells. With `name`, a conversion to number or datetime
+  writes a new column of that name, appended last, and keeps the source column as it
+  is: the conversion an open required role asks for (`conversions.py`), which the
+  service then binds to that role (`Prepared.converted`). To text: every cell becomes its canonical
   text and the column is kept text through the re-parse (`Prepared.text_columns`,
   `parse_dataset(text_columns=...)`), so a column of years or ids stays a category in
   every later version. A column that already is a number or a datetime column is left
@@ -159,6 +168,7 @@ import math
 import re
 import unicodedata
 import warnings
+from collections import Counter
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta, tzinfo
@@ -172,15 +182,17 @@ from pandas.api.types import is_bool_dtype, is_datetime64_any_dtype, is_integer_
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
 from ..schemas import MAX_CELL_CHARS, MAX_COLUMNS, MAX_NOTE_CHARS, MAX_ROWS, MAX_WARNINGS, ColumnName
-from .months import month_number, named_months
+from .months import month_number, month_year, named_months
 from .parse import (
     AMBIGUOUS_DATE_ORDER,
     MAX_COMPUTED_BYTES,
     MISSING_VALUES,
     YEAR_MONTH,
     ParsedDataset,
+    ascii_minus,
     canonical_names,
     keeps_value,
+    minus_note,
     pandas_dtypes,
     rounded_note,
 )
@@ -315,6 +327,9 @@ class Prepared:
     date_notes: list[str] = field(default_factory=list)
     """`column '<name>': <order note>` per date column whose day and month order is still a guess: the caller adds
     them to the re-parsed version's warnings (`with_date_notes`), so a later call can still switch the order."""
+    converted: list[str] = field(default_factory=list)
+    """The new columns a `set_type` with `name` made: the caller binds each to the open required role that takes it
+    (`bindings.carry_bindings`), as the conversion for that role was made."""
 
 
 def with_date_notes(parsed: ParsedDataset, prepared: Prepared) -> ParsedDataset:
@@ -349,6 +364,7 @@ class _Carried:
     date_order: dict[str, str] = field(default_factory=dict)
     text_columns: set[str] = field(default_factory=set)
     with_time: dict[str, bool] = field(default_factory=dict)
+    converted: set[str] = field(default_factory=set)  # the new columns of a `set_type` with `name`
 
     @classmethod
     def of(cls, parsed: ParsedDataset) -> "_Carried":
@@ -373,16 +389,20 @@ class _Carried:
             self.date_order[new] = self.date_order.pop(old)
         if old in self.with_time:
             self.with_time[new] = self.with_time.pop(old)
+        if old in self.converted:
+            self.converted.remove(old)
+            self.converted.add(new)
 
     def forget(self, names: Iterable[str]) -> None:
         for name in names:
             self.date_order.pop(name, None)
             self.text_columns.discard(name)
             self.with_time.pop(name, None)
+            self.converted.discard(name)
 
     def keep_only(self, names: Iterable[str]) -> None:
         kept = set(names)
-        self.forget({*self.date_order, *self.text_columns, *self.with_time} - kept)
+        self.forget({*self.date_order, *self.text_columns, *self.with_time, *self.converted} - kept)
 
 
 # --- Operation models -----------------------------------------------------------------------
@@ -456,13 +476,19 @@ class DropRows(_Strict):
 
 
 class SetType(_Strict):
-    """`decimal` defaults to the dataset's own; `date_format` left out lets pandas infer the format."""
+    """`decimal` defaults to the dataset's own; `date_format` left out lets pandas infer the format.
+
+    `name` writes the converted cells into a new column of that name, appended last, and keeps
+    `column` as it is (to number or datetime only): the conversion a role left open asks for
+    (`conversions.py`), which `.undo()` takes back like any other.
+    """
 
     op: Literal["set_type"]
     column: ColumnName
     type: TargetType
     date_format: DateFormat | None = None
     decimal: Decimal | None = None
+    name: NewName | None = None
 
 
 class Aggregate(_Strict):
@@ -601,7 +627,10 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation]) -> Prep
         for name, canon in zip(names, canonical, strict=True)
         if name in carried.date_order and _kind(frame[name]) == "datetime"
     ]
-    return Prepared(csv=csv_text, changes=changes, text_columns=text_columns, date_notes=date_notes)
+    converted = [canon for name, canon in zip(names, canonical, strict=True) if name in carried.converted]
+    return Prepared(
+        csv=csv_text, changes=changes, text_columns=text_columns, date_notes=date_notes, converted=converted
+    )
 
 
 def _apply(frame: pd.DataFrame, operation: Operation, carried: _Carried) -> tuple[pd.DataFrame, str]:
@@ -693,8 +722,9 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
     series = frame[op.column]
     present = int(series.notna().sum())
     kind = _kind(series)
+    if op.name is not None:
+        _check_new_column(frame, op, kind)
     result = frame.copy()
-    zone_notice = ""  # different UTC offsets converted to UTC by a read as dates
     if op.type == "text":
         # Kept text through the re-parse either way: a text column stays one when a later change makes its cells typeable.
         carried.text_columns.add(op.column)
@@ -708,56 +738,227 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
         if kind == "number":
             # The canonical text of a number is a dot decimal; re-reading it under a decimal comma would be wrong.
             return frame, f"{op.column}: already numbers, nothing changed"
-        requested = op.decimal or carried.decimal
-        converted, unit, failed, used, rounded = _to_numbers(series, requested)
-        _check_failed(op.column, failed, present, "numbers")
-        result[op.column] = converted
-        carried.with_time.pop(op.column, None)
-        carried.date_order.pop(op.column, None)
-        change = f"{op.column}: {_count(present - failed, 'cell')} read as numbers"
-        if used != requested:
-            change += " (decimal comma)" if used == "," else " (decimal point)"
-        if unit:
-            change += f", unit '{_clip(unit, MAX_CELL_CHARS)}' removed"
-        if rounded:
-            change = _with_notice(change, rounded_note(rounded))
+        conversion = _number_conversion(series, op.decimal or carried.decimal)
     else:
         if kind == "datetime":
             return _reread_dates(frame, op, present, carried)
-        converted, failed, with_time, zone_notice = _to_dates(series, op.date_format)
-        _check_failed(op.column, failed, present, "dates")
-        result[op.column] = converted
-        carried.with_time[op.column] = with_time
-        carried.date_order.pop(op.column, None)
-        year_first = op.date_format is None and any(
-            isinstance(text, str) and _YEAR_FIRST.match(text) for text in _texts(series)
-        )
-        if op.date_format in (None, "MM/DD/YYYY", *_DAY_FIRST_FORMATS) and not year_first and _order_open(converted):
+        conversion = _date_conversion(series, op.date_format)
+    _check_failed(op.column, conversion.failed, present, "numbers" if op.type == "number" else "dates")
+    # A conversion into a new column keeps the source as it is: what the cells said stays beside what was read.
+    target = op.name or op.column
+    result[target] = conversion.values
+    carried.with_time.pop(target, None)
+    carried.date_order.pop(target, None)
+    if op.type == "datetime":
+        carried.with_time[target] = conversion.with_time
+        if conversion.order is not None:
             # Every day is at most 12: the cells read the other way too, so a later request may still swap them.
-            carried.date_order[op.column] = "month" if op.date_format == "MM/DD/YYYY" else "day"
-        if op.date_format == "YYYY":
-            # A number column of 1450, 1890 and 2100 reads as years too: the change line says so, the user checks it.
-            change = f"{op.column}: {_count(present - failed, 'cell')} read as years (YYYY, each as 1 January)"
+            carried.date_order[target] = conversion.order
+    carried.text_columns.discard(target)
+    if op.name is not None:
+        carried.converted.add(op.name)
+    read = present - conversion.failed
+    if op.name is None:
+        change = f"{op.column}: {_count(read, 'cell')} {conversion.reading}"
+    else:
+        change = f"new column {op.name}: {_count(read, 'cell')} of {op.column} {conversion.reading}"
+    if conversion.failed:
+        change += f", {_count(conversion.failed, 'cell')} could not be read and {_be(conversion.failed)} now missing"
+    if op.name is not None:
+        change += f"; {op.column} stays as it is"
+    return result, _with_notice(change, conversion.notice)
+
+
+def _check_new_column(frame: pd.DataFrame, op: SetType, kind: Kind) -> None:
+    """A `set_type` with `name` makes a new column of numbers or dates, from a column not of that type yet."""
+    if op.type == "text":
+        raise PrepareError("invalid_operation", "set_type to text changes the column itself: leave name out")
+    if op.name in frame.columns:
+        raise PrepareError("invalid_operation", f"a column named '{op.name}' already exists")
+    if kind == "number" and op.type == "number":
+        raise PrepareError("invalid_operation", f"column '{op.column}' already holds numbers: bind it as it is")
+    if kind == "datetime" and op.type == "datetime":
+        raise PrepareError("invalid_operation", f"column '{op.column}' already holds dates: bind it as it is")
+
+
+@dataclass(frozen=True)
+class Conversion:
+    """A `set_type` of one column to numbers or dates before it is stored: the cells, the failures and the words.
+
+    `reading` is the change line after the count (`read as dates (format inferred, year
+    first)`); `notice` follows the failures and is never cut (a rounding count, the UTC
+    offsets, the typographic minus). `order` is the day and month order a date reading
+    chose by guess (`day` or `month`, every day at most 12, `_order_open`). `guess` names
+    what the reading guessed, for the dry run of an open role (`dry_run`): the day and
+    month order, a two-digit year, the decimal mark, spaces or apostrophes as thousands
+    separators; None when the cells say how they read.
+    """
+
+    values: pd.Series
+    failed: int
+    reading: str
+    notice: str = ""
+    with_time: bool = False
+    order: str | None = None
+    guess: str | None = None
+    unit: str | None = None
+
+
+def _number_conversion(series: pd.Series, requested: str) -> Conversion:
+    """The cells of a column that is no number column yet as numbers, read with `requested` first (`_to_numbers`)."""
+    converted, unit, failed, used, rounded, minus = _to_numbers(series, requested)
+    reading = "read as numbers"
+    if used != requested:
+        reading += " (decimal comma)" if used == "," else " (decimal point)"
+    if unit:
+        reading += f", unit '{_clip(unit, MAX_CELL_CHARS)}' removed"
+    notices = [note for note in (minus_note(minus) if minus else "", rounded_note(rounded) if rounded else "") if note]
+    guess = _number_guess(series, used)
+    return Conversion(converted, failed, reading, "; ".join(notices), guess=guess, unit=unit)
+
+
+def _number_guess(series: pd.Series, used: str) -> str | None:
+    """What a read as numbers guessed: thousands separators of spaces or apostrophes (`123 456` may be an id), or
+    the decimal mark, when the other mark reads every cell too, to other values (`1,234` is 1.234 or 1234)."""
+    texts = [ascii_minus([text])[0][0] for text in _texts(series) if isinstance(text, str)]
+    if any(_GROUP_INSIDE.search(text.strip()) for text in texts):
+        return "that spaces or apostrophes separate thousands"
+    other = "," if used == "." else "."
+    first, _, failed = _read_numbers(list(texts), used)
+    second, _, other_failed = _read_numbers(list(texts), other)
+    if not failed and not other_failed and first != second:
+        return "the decimal mark"
+    return None
+
+
+_GROUP_INSIDE = re.compile(r"[0-9][\s'’]+[0-9]")
+"""A space or an apostrophe between digits: `set_type` reads it as a thousands separator, the parser only by rule."""
+
+
+def _date_conversion(series: pd.Series, date_format: str | None) -> Conversion:
+    """The cells of a column that is no date column yet as dates (`_to_dates`), with the words of the change line."""
+    converted, failed, with_time, notice = _to_dates(series, date_format)
+    originals = _texts(series)
+    read = converted.notna()
+    texts = [text for text, ok in zip(originals, read, strict=True) if ok and isinstance(text, str)]
+    named = {text for text in texts if _month_iso(text) is not None} if date_format is None else set()
+    # A month name says which part is the month (`1 Nov 2026`): only the other cells leave the order open.
+    unnamed = pd.Series(
+        [isinstance(text, str) and text not in named and not _names_month(text) for text in originals],
+        index=series.index,
+    )
+    order: str | None = None
+    year_first = date_format is None and any(_YEAR_FIRST.match(text) for text in texts if text not in named)
+    if (
+        date_format in (None, "MM/DD/YYYY", *_DAY_FIRST_FORMATS)
+        and not year_first
+        and _order_open(converted[read & unnamed])
+    ):
+        order = "month" if date_format == "MM/DD/YYYY" else "day"
+    guess = "the day and month order" if order else None
+    if date_format is None and any(not _FOUR_DIGITS.search(text) for text in texts):
+        guess = "the century of two-digit years"
+    if date_format == "YYYY":
+        # A number column of 1450, 1890 and 2100 reads as years too: the change line says so, the user checks it.
+        return Conversion(converted, failed, "read as years (YYYY, each as 1 January)", notice, with_time, order, guess)
+    if date_format:
+        how = date_format
+    elif texts and len(named) == len(texts):
+        return Conversion(converted, failed, MONTH_NAMES_READING, notice, with_time, order, guess)
+    else:
+        # The cells that were read decide the wording; an unreadable one is counted by the caller.
+        others = [text for text in texts if text not in named]
+        year_cells = sum(1 for text in others if _YEAR_FIRST.match(text))
+        if year_cells == len(others):
+            how = "format inferred, year first"  # `2024-06-01` is 1 June, no day-before-month guess
+        elif year_cells:
+            how = "format inferred, year first where a cell starts with one, else day before month"
         else:
-            # The cells that were read decide the wording; an unreadable one is counted below.
-            read = converted.notna()
-            texts = [text for text, ok in zip(_texts(series), read, strict=True) if ok and isinstance(text, str)]
-            year_cells = sum(1 for text in texts if _YEAR_FIRST.match(text))
-            how: str
-            if op.date_format:
-                how = op.date_format
-            elif year_cells == len(texts):
-                how = "format inferred, year first"  # `2024-06-01` is 1 June, no day-before-month guess
-            elif year_cells:
-                how = "format inferred, year first where a cell starts with one, else day before month"
-            else:
-                how = "format inferred, day before month"
-            change = f"{op.column}: {_count(present - failed, 'cell')} read as dates ({how})"
-    carried.text_columns.discard(op.column)
-    if failed:
-        verb = "is" if failed == 1 else "are"
-        change += f", {_count(failed, 'cell')} could not be read and {verb} now missing"
-    return result, _with_notice(change, zone_notice)
+            how = "format inferred, day before month"
+        if named:
+            how += f"; {_count(len(named), 'cell')} with a month name and a year as the first day of the month"
+    return Conversion(converted, failed, f"read as dates ({how})", notice, with_time, order, guess)
+
+
+DRY_RUN_SAMPLE = 20
+"""The distinct cells a dry run reads first: a column that fails more than `MAX_FAILED_SHARE` of them is no candidate."""
+
+
+@dataclass(frozen=True)
+class DryRun:
+    """What a `set_type` of one text column to numbers or dates would do, nothing stored (`dry_run`).
+
+    `read` of `present` cells would convert; `reading` is the change line's words after the
+    count; `guess` what the reading would guess (`Conversion.guess`); `order` the direction
+    the read dates would run down the rows (`ColumnProfile.order`), for a sort the plot needs.
+    """
+
+    column: str
+    type: Literal["number", "datetime"]
+    present: int
+    read: int
+    reading: str
+    guess: str | None = None
+    order: Literal["ascending", "descending"] | None = None
+
+    @property
+    def certain(self) -> bool:
+        """Every cell converts and the reading guesses nothing: the conversion can be made without a question."""
+        return self.read == self.present and self.guess is None
+
+
+def dry_run(
+    frame: pd.DataFrame, column: str, target: Literal["number", "datetime"], decimal: str = "."
+) -> DryRun | None:
+    """`set_type` of the text column `column` of `frame` (`read_frame`) to `target`, counted, not applied.
+
+    `decimal` is the dataset's own, as `set_type` reads numbers with it first. None when the
+    conversion would be refused (`type_mismatch`: more than `MAX_FAILED_SHARE` of the cells
+    fail, two units, times with and without an offset): such a column is no candidate. The
+    first `DRY_RUN_SAMPLE` distinct cells are tried first, so a column of names or notes
+    costs no full read.
+    """
+    series = frame[column]
+    present = int(series.notna().sum())
+    if not present or _kind(series) != "text":
+        return None
+    distinct = pd.Series(series.dropna().unique()[:DRY_RUN_SAMPLE], dtype="str", name=column)
+    try:
+        sample = _convert(distinct, target, decimal)
+        if sample.failed > MAX_FAILED_SHARE * len(distinct):
+            return None
+        conversion = _convert(series, target, decimal)
+    except PrepareError:
+        return None
+    if conversion.failed > MAX_FAILED_SHARE * present:
+        return None
+    if conversion.unit is not None and _names_month(conversion.unit):
+        return None  # `Nov 26, 2026` is a date, never the number 26.2026 behind a unit `Nov`
+    order: Literal["ascending", "descending"] | None = None
+    values = conversion.values.dropna()
+    if target == "datetime" and values.nunique() > 1:
+        order = "ascending" if values.is_monotonic_increasing else "descending" if values.is_monotonic_decreasing else None
+    return DryRun(column, target, present, present - conversion.failed, conversion.reading, conversion.guess, order)
+
+
+def _convert(series: pd.Series, target: Literal["number", "datetime"], decimal: str) -> Conversion:
+    return _number_conversion(series, decimal) if target == "number" else _date_conversion(series, None)
+
+
+def read_frame(parsed: ParsedDataset) -> pd.DataFrame:
+    """The dataset's frame as the operations read it, for `dry_run`."""
+    return _read(parsed)
+
+
+MONTH_NAMES_READING = "read as months (a month name and a year, each as the first day of the month)"
+"""The change line of a `set_type` to dates whose every read cell names a month and a year, as the parser's note says."""
+_FOUR_DIGITS = re.compile(r"[0-9]{4}")
+_LETTERS = re.compile(r"[^\W\d_]+")
+
+
+def _names_month(text: str) -> bool:
+    """Whether a cell holds a month name or abbreviation as one of its words (`1 Nov 2026`, `März`)."""
+    return any(month_number(word) is not None for word in _LETTERS.findall(text))
 
 
 def _reread_dates(frame: pd.DataFrame, op: SetType, present: int, carried: _Carried) -> tuple[pd.DataFrame, str]:
@@ -1518,9 +1719,10 @@ def _bools(mask: pd.Series) -> pd.Series:
 # --- Conversions -----------------------------------------------------------------------------
 
 
-def _to_numbers(series: pd.Series, decimal: str) -> tuple[pd.Series, str | None, int, str, int]:
+def _to_numbers(series: pd.Series, decimal: str) -> tuple[pd.Series, str | None, int, str, int, Counter[str]]:
     """The cells as numbers (`Int64` when every value is whole, else `float64`), the unit removed, the failures, the decimal used,
-    and the cells a float64 holds only rounded (more significant digits than it keeps, see `parse.keeps_value`).
+    the cells a float64 holds only rounded (more significant digits than it keeps, see `parse.keeps_value`), and the
+    read cells whose minus was typographic, by mark (`parse.ascii_minus`: `−100` is -100, `10–20` no number).
 
     The cells are read with `decimal` first. When some fail and fewer fail with the
     other mark, the column is written that way (a `12,5 %` column in a dot-decimal
@@ -1528,8 +1730,17 @@ def _to_numbers(series: pd.Series, decimal: str) -> tuple[pd.Series, str | None,
     one decimal per column, never a mix.
     """
     if _kind(series) == "boolean":
-        return series.astype("Int64"), None, 0, decimal, 0
-    texts = [text if isinstance(text, str) else None for text in _texts(series)]
+        return series.astype("Int64"), None, 0, decimal, 0, Counter()
+    texts: list[str | None] = []
+    marks: list[str | None] = []
+    for text in _texts(series):
+        if not isinstance(text, str):
+            texts.append(None)
+            marks.append(None)
+            continue
+        signed, found = ascii_minus([text])
+        texts.append(signed[0])
+        marks.append(next(iter(found), None))
     numbers, units, failed = _read_numbers(texts, decimal)
     if failed:
         other = "," if decimal == "." else "."
@@ -1539,6 +1750,7 @@ def _to_numbers(series: pd.Series, decimal: str) -> tuple[pd.Series, str | None,
     if len(units) > 1:
         raise PrepareError("type_mismatch", f"column '{series.name}' mixes {len(units)} different units")
     unit = next(iter(units)) if units else None
+    minus = Counter(mark for mark, number in zip(marks, numbers, strict=True) if mark and number is not None)
     # Whole numbers are read exactly, never through a float64, which rounds past 2**53 (`9007199254740993`).
     exact = [None if number is None else _exact(number) for number in numbers]
     integers = [None if value is None or value != value.to_integral_value() else int(value) for value in exact]
@@ -1546,10 +1758,10 @@ def _to_numbers(series: pd.Series, decimal: str) -> tuple[pd.Series, str | None,
         number is None or (integer is not None and _INT64_MIN <= integer <= _INT64_MAX)
         for number, integer in zip(numbers, integers, strict=True)
     ):
-        return pd.Series(pd.array(integers, dtype="Int64"), index=series.index), unit, failed, decimal, 0
+        return pd.Series(pd.array(integers, dtype="Int64"), index=series.index), unit, failed, decimal, 0, minus
     values = [None if number is None else float(number) for number in numbers]
     rounded = sum(not keeps_value(number, float(number)) for number in numbers if number is not None)
-    return pd.Series(values, index=series.index, dtype="float64"), unit, failed, decimal, rounded
+    return pd.Series(values, index=series.index, dtype="float64"), unit, failed, decimal, rounded, minus
 
 
 def _exact(number: str) -> ExactDecimal | None:
@@ -1628,6 +1840,10 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
         values = [_read_date(text, date_format) if isinstance(text, str) else None for text in texts]
         result = pd.Series(values, index=series.index, dtype="datetime64[us]")
     else:
+        # A month name with a year (`Nov 2026`, `Okt. 2026`) is its month's first day, in the eleven languages of
+        # `months.py`, as the parser reads it; pandas knows English names only (live test of 2026-11-01).
+        original = texts
+        texts = pd.Series([_month_iso(text) or text for text in texts], index=series.index, dtype="str")
         # A year-first cell (`2024-06-01T13:00:00Z`) reads year, month, day: with `dayfirst` pandas would read it as
         # 6 January (review of 2026-10-15). Day before month is for the other shapes only, decided per cell, so one
         # cell of another shape never turns the year-first ones around (review of #12196).
@@ -1654,6 +1870,7 @@ def _to_dates(series: pd.Series, date_format: str | None) -> tuple[pd.Series, in
         if converted:
             notice = f"times with the UTC offsets {', '.join(_offsets(texts))} converted to UTC (+00:00); "
             notice += "the instants are the same"
+        result = _without_filled_in(result, original)
     failed = int((result.isna() & texts.notna()).sum())
     with_time = any(":" in text for text in texts if isinstance(text, str))
     return result, failed, with_time, notice
@@ -1707,6 +1924,38 @@ def _naive_and_zoned(column: object) -> PrepareError:
         f"column '{column}' holds times with a UTC offset and times without one; no time is given a zone by guess, "
         "so the column stays as it is",
     )
+
+
+def _without_filled_in(result: pd.Series, texts: pd.Series) -> pd.Series:
+    """The inferred dates without those pandas made up by filling in what the cell lacks, which become failures.
+
+    pandas reads a cell without a year as the year 1 (`May` as 0001-05-01, `Nov 26` as
+    0001-11-26), a time alone as today (`13:00`) and `now` and `today` as the moment of the
+    run: none of them is a date the user wrote (review of 2026-11-01: a column of names with
+    one `May` would have read as dates, and `Nov 26` as the year 1). A cell without a digit,
+    a time alone, and a year 1 not written as `0001` fail and are counted like any other.
+    """
+    made_up = pd.Series(
+        [isinstance(text, str) and (not _DIGIT.search(text) or bool(_TIME_ONLY.fullmatch(text.strip()))) for text in texts],
+        index=result.index,
+    )
+    year_one = (result.dt.year == 1).fillna(False).astype(bool)
+    unwritten = pd.Series([not (isinstance(text, str) and "0001" in text) for text in texts], index=result.index)
+    return result.mask(made_up | (year_one & unwritten))
+
+
+_DIGIT = re.compile(r"[0-9]")
+_TIME_ONLY = re.compile(r"[0-9]{1,2}:[0-9]{2}(?::[0-9]{2}(?:[.,][0-9]+)?)?\s*(?:[ap]\.?\s?m\.?)?", re.IGNORECASE)
+
+
+def _month_iso(text: object) -> str | None:
+    """`YYYY-MM-01` for a cell that names a month and a year (`months.month_year`) within `MONTH_YEAR_RANGE`, else None."""
+    found = month_year(text) if isinstance(text, str) else None
+    if found is None:
+        return None
+    year, month = found
+    low, high = MONTH_YEAR_RANGE
+    return f"{year:04d}-{month:02d}-01" if low <= year <= high else None
 
 
 def _read_date(text: str, date_format: str) -> datetime | None:

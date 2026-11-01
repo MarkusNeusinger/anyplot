@@ -1,5 +1,6 @@
 """The warning sentences map to closed codes (`data/warning_codes.py`), never to their own text."""
 
+from collections import Counter
 from pathlib import Path
 from typing import get_args
 
@@ -10,6 +11,7 @@ from agents.anyplot.data.parse import (
     HEADERLESS_LIST_WARNING,
     NS_OUT_OF_RANGE,
     ParseError,
+    minus_note,
     parse_dataset,
     rounded_note,
 )
@@ -99,6 +101,12 @@ SAMPLES: dict[str, str] = {
     f"column 'd': {AMBIGUOUS_DATE_ORDER}": "date_order_ambiguous",
     f"column 'd': {AMBIGUOUS_MONTH_FIRST}": "date_order_ambiguous",
     "column 'm': 12 cells read as months (YYYY-MM, each as the first day of the month)": "months_read",
+    "column 'm': 12 cells read as months (a month name and a year, each as the first day of the month)": (
+        "month_names_read"
+    ),
+    f"column 'v': {minus_note(Counter({'−': 3}))}": "typographic_minus_read",
+    f"column 'v': {minus_note(Counter({'–': 1}))}": "typographic_minus_read",
+    f"column 'v': {minus_note(Counter({'−': 3, '–': 1}))}": "typographic_minus_read",
     "column 'country': NA read as a code (such as Namibia or North America), not as a missing cell": "na_as_code",
     f"column 'v': {rounded_note(3)}": "digits_rounded",
     "column 'name': spaces around the text removed in 4 cells": "cells_trimmed",

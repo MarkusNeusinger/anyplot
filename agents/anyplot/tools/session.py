@@ -370,7 +370,7 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     except ParseError:  # the operations keep every parser cap (rows, columns, size), so a refusal here is a bug
         return _error("internal")
     try:
-        version = push_version(services.datasets, session_id, view, parsed, view.snapshot)
+        version = push_version(services.datasets, session_id, view, parsed, view.snapshot, converted=prepared.converted)
     except StoreFull:
         return _error("capacity")
     # The new dataset id leaves the confirmation's fingerprint behind: the user confirms the new version.

@@ -71,6 +71,8 @@ WarningCode = Literal[
     "sub_microsecond_text",
     "date_order_ambiguous",
     "months_read",
+    "month_names_read",
+    "typographic_minus_read",
     "na_as_code",
     "digits_rounded",
     "cells_trimmed",
@@ -191,6 +193,14 @@ _RULES: tuple[tuple[re.Pattern[str], WarningCode], ...] = tuple(
         (_COLUMN + r"kept as text: times with fractions below a microsecond .*$", "sub_microsecond_text"),
         (_COLUMN + r"day and month order is ambiguous; read as (?:DD/MM/YYYY|MM/DD/YYYY)$", "date_order_ambiguous"),
         (_COLUMN + r"[0-9,]+ cells? read as months \(YYYY-MM, each as the first day of the month\)$", "months_read"),
+        (
+            _COLUMN + r"[0-9,]+ cells? read as months \(a month name and a year, each as the first day of the month\)$",
+            "month_names_read",
+        ),
+        (
+            _COLUMN + r"[0-9,]+ cells? with (?:the minus sign|an en dash) .* read as negative numbers$",
+            "typographic_minus_read",
+        ),
         (_COLUMN + r"NA read as a code \(such as Namibia or North America\), not as a missing cell$", "na_as_code"),
         (_COLUMN + r"[0-9,]+ values? with more significant digits than a number holds .*$", "digits_rounded"),
         (_COLUMN + r"spaces around the text removed in [0-9,]+ cells?$", "cells_trimmed"),

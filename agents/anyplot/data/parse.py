@@ -91,9 +91,11 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    (R's `write.csv`: an empty header over `1` to `n`; pandas' `Unnamed: 0` over `0` to
    `n - 1`), with a warning that counts its cells (`_without_row_names`, live test round 5
    of 2026-10-15).
-5. **Type each column**, see `_type_column`: dates, then booleans, integers,
-   numbers (also with unambiguous thousands groups: `7.184.003`, `1'234'567`,
-   `1 234,5`, `1,234,567`, see `_as_grouped_numbers`; a column of `1,234` shapes reads
+5. **Type each column**, see `_type_column`: dates (months too: `2025-01` and, since
+   2026-11-01, `Nov 2026` in the eleven languages of `months.py`, each the first day of
+   its month), then booleans, integers, numbers (a minus written `−` or `–` before the
+   number is a sign, counted in a note; also with unambiguous thousands groups:
+   `7.184.003`, `1'234'567`, `1 234,5`, `1,234,567`, see `_as_grouped_numbers`; a column of `1,234` shapes reads
    as comma thousands beside a comma-grouped column, or in a currency column of a file
    that speaks for no decimal comma, `_commas_as_thousands`), then the
    same numbers behind one unit shared by every cell (`65 %`, `15,6 h`, `€ 5`, also
@@ -110,7 +112,8 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    category does, unless fewer than `MIN_KEPT_COLUMNS` columns would remain.
 8. **Write the canonical `data.csv`** (comma, dot decimal, ISO dates, canonical
    headers, missing as an empty cell, `\\n` line ends) and profile it. The profile
-   names the months of a text column of month names (`ColumnProfile.months`) and, for
+   names the months of a text column of month names (`ColumnProfile.months`), the
+   direction a date column runs down the rows (`ColumnProfile.order`) and, for
    JSON records whose list fields expanded into rows, the columns that came from those
    lists (`DatasetProfile.list_columns`; live test round 4 of 2026-10-15).
 
@@ -166,7 +169,7 @@ from ..schemas import (
     SourceFormat,
     listed_values,
 )
-from .months import named_months
+from .months import month_year, named_months
 
 
 MAX_INPUT_BYTES = 1024 * 1024
@@ -366,6 +369,12 @@ _TRAILING_UNIT = re.compile(
 )
 _LEADING_UNIT = re.compile(rf"(?P<sign>[+-])?(?P<unit>{_CURRENCY}){_UNIT_SPACE}(?P<number>{_NUMBER_PART})")
 
+# A minus written as the minus sign (U+2212, as typeset tables and web pages write it) or as an en dash (U+2013,
+# as word processors and German typography put it) where a sign stands: before the number or a leading currency,
+# never after a letter, a digit or a mark inside a number, so a range `10–20` or a code `A–5` keeps its dash.
+MINUS_MARKS: dict[str, str] = {"\N{MINUS SIGN}": "the minus sign '−'", "\N{EN DASH}": "an en dash '–' as the minus"}
+_TYPOGRAPHIC_MINUS = re.compile(rf"(?<![\w.,'’])[\N{{MINUS SIGN}}\N{{EN DASH}}](?=\.?[0-9]|{_CURRENCY})")
+
 # Letters after a number that are no unit: a month (`5 Jan` is a date fragment), a boolean,
 # a missing-value token, an ordinal suffix (`1st`) or a meridiem (`5 pm`). Compared without
 # case and without the abbreviating dot; such a column stays text.
@@ -515,6 +524,7 @@ class _Column:
     integers: list[int] = field(default_factory=list)  # an integer column's values, exact (`numbers` are floats)
     rounded: int = 0  # the cells a number column holds only rounded: more digits than a float64 keeps
     respelled: int = 0  # the number cells that keep their value but not their spelling (`1.50` as `1.5`)
+    minus: Counter[str] = field(default_factory=Counter)  # the cells whose sign was a typographic minus, by mark
     trimmed: int = 0  # the cells whose surrounding whitespace the cleaning removed
     missing_tokens: Counter[str] = field(default_factory=Counter)  # `MISSING_VALUES` tokens read as missing
     mark_tokens: Counter[str] = field(default_factory=Counter)  # those of them that are a declared mark too
@@ -1347,9 +1357,18 @@ def value_like(cell: str) -> bool:
 
 
 def _value_like(cell: str) -> bool:
-    """A cell that reads as a number or a date, also behind a unit (`65 %`, `€ 5`)."""
-    cell = cell.strip()
-    return bool(cell and (_looks_like_value(cell) or _TRAILING_UNIT.fullmatch(cell) or _LEADING_UNIT.fullmatch(cell)))
+    """A cell that reads as a number or a date, also behind a unit (`65 %`, `€ 5`), with a typographic minus (`−5`)
+    or as a month of a year (`Nov 2026`)."""
+    cell = _TYPOGRAPHIC_MINUS.sub("-", cell.strip())
+    return bool(
+        cell
+        and (
+            _looks_like_value(cell)
+            or _TRAILING_UNIT.fullmatch(cell)
+            or _LEADING_UNIT.fullmatch(cell)
+            or month_year(cell) is not None
+        )
+    )
 
 
 def _missing(cell: str, marks: frozenset[str] = frozenset()) -> bool:
@@ -2628,9 +2647,13 @@ def _type_column(column: _Column) -> None:
        month. A slash column is day-first when a first part exceeds 12, month-first
        when a second part does, not a date when both happen, and day-first with a
        warning when neither does. Written as `YYYY-MM-DD`, or `YYYY-MM-DDTHH:MM:SS`
-       for the whole column when any cell has a time.
+       for the whole column when any cell has a time. Months, `YYYY-MM` or a month name
+       with a four-digit year (`Nov 2026`, `Okt. 2026`), are the first day of each month,
+       with a note (`_as_periods`).
     2. **boolean**: `true` / `false` in any letter case, written `True` / `False`.
-    3. **integer**: ASCII digits with an optional sign within int64. A column with a
+    3. **integer**: ASCII digits with an optional sign within int64; a minus written as
+       the minus sign `−` or an en dash `–` before the number is a sign too, with a note
+       that counts the cells (`ascii_minus`; `10–20` stays text). A column with a
        leading zero (`007`) stays text, because the zeros are part of the value, and so
        does a column with a whole number past int64 (`BIG_INTEGERS`): a float64 would
        round its last digits.
@@ -2660,16 +2683,45 @@ def _type_column(column: _Column) -> None:
         column.dtype = "boolean"
         column.cells = [("True" if cell.casefold() == "true" else "False") if cell else "" for cell in column.source]
         return
-    if _as_plain_numbers(column, column.source, present):
+    # A typographic minus is a sign (`−100`, live test of 2026-11-01): the number rules read the cells with an ASCII
+    # one, and only a column they type keeps that reading; any other keeps its cells as pasted.
+    signed, minus = ascii_minus(column.source)
+    signed_present = [cell for cell in signed if cell]
+    if _as_plain_numbers(column, signed, signed_present):
+        column.bare, column.minus = signed, minus
         return
-    split = _split_units(present)
+    split = _split_units(signed_present)
     if split is None:
         return
     unit, numbers = split
-    bare = [numbers[cell] if cell else "" for cell in column.source]
-    if _as_plain_numbers(column, bare, [numbers[cell] for cell in present]):
+    bare = [numbers[cell] if cell else "" for cell in signed]
+    if _as_plain_numbers(column, bare, [numbers[cell] for cell in signed_present]):
         column.unit = unit
-        column.bare = bare
+        column.bare, column.minus = bare, minus
+
+
+def ascii_minus(cells: Sequence[str]) -> tuple[list[str], Counter[str]]:
+    """The cells with each typographic minus where a sign stands (`MINUS_MARKS`) written `-`, and the cells changed per mark.
+
+    `−100`, `–5`, `$−5` and `−€ 5` change; `10–20`, `A–5` and a lone `−` do not. The parser and `set_type`
+    (`prepare.py`) read a number this way, so both count the same cells.
+    """
+    marks: Counter[str] = Counter()
+    signed: list[str] = []
+    for cell in cells:
+        found = _TYPOGRAPHIC_MINUS.search(cell)
+        if found is not None:
+            marks[found.group()] += 1
+            cell = _TYPOGRAPHIC_MINUS.sub("-", cell)
+        signed.append(cell)
+    return signed, marks
+
+
+def minus_note(marks: Counter[str]) -> str:
+    """The note of a number column whose cells wrote their minus typographically: the cells by mark, in `MINUS_MARKS` order."""
+    (count, words), *rest = [(marks[mark], words) for mark, words in MINUS_MARKS.items() if marks[mark]]
+    parts = [f"{_count(count, 'cell')} with {words}", *(f"{other} with {more}" for other, more in rest)]
+    return f"{' and '.join(parts)} read as negative numbers"
 
 
 def _as_plain_numbers(column: _Column, cells: list[str], present: list[str]) -> bool:
@@ -3166,7 +3218,7 @@ def _as_dates(column: _Column, present: list[str]) -> bool:
 
 
 def _as_periods(column: _Column, present: list[str]) -> bool:
-    """Months (`2025-01`) as dates, each its first day, with a note (live test round 7 of 2026-10-16).
+    """Months (`2025-01`, `Nov 2026`) as dates, each its first day, with a note (live test round 7 of 2026-10-16).
 
     The month of `YYYY-MM` read as text made a monthly series' `x` fall on the GWh column, and the root
     converted it on request with `set_type` (`YYYY-MM`, the first day of each month); the parser now reads it
@@ -3176,24 +3228,50 @@ def _as_periods(column: _Column, present: list[str]) -> bool:
     a column whose name says ids, codes or seasons (`ID_WORDS`, `SPAN_WORDS`): turning those into dates would
     change what the cells mean.
 
+    Since the live test of 2026-11-01 a month name with a four-digit year in every cell (`Nov 2026`,
+    `Okt. 2026`, `2026 Nov`, `März 2026`, in the eleven languages of `months.py`, `months.month_year`) reads
+    the same way, with its own note: a price table of `Nov 2026` to `Dec 2025` had left a time series' date
+    role open, and the root asked the user for a date column. A column that mixes the two forms, or holds
+    one cell of neither (`Total`), stays text, and so does a two-digit year (`Nov 26`, which is as often
+    26 November).
+
     Quarters (`2025-Q1`) stay text: as a date they would read `2025-01-01` and lose the spelling that says
     quarter; `set_type` reads them on request.
     """
+    if column.id_like or column.span_like:
+        return False
     fields = _match_all(YEAR_MONTH, present)
-    if fields is None or column.id_like or column.span_like:
+    how = "YYYY-MM"
+    if fields is not None and _year_spans(list(fields.values())):
+        return False
+    if fields is None:
+        fields = _month_years(present)
+        how = "a month name and a year"
+    if fields is None:
         return False
     low, high = MONTH_YEARS
     if not all(low <= year <= high and 1 <= month <= 12 for year, month in fields.values()):
-        return False
-    if _year_spans(list(fields.values())):
         return False
     firsts = {cell: datetime(year, month, 1) for cell, (year, month) in fields.items()}
     column.dtype = "datetime"
     column.with_time = False
     column.dates = [firsts[cell] for cell in column.source if cell]
     column.cells = [_iso(firsts[cell], False) if cell else "" for cell in column.source]
-    column.notes.append(f"{_count(len(present), 'cell')} read as months (YYYY-MM, each as the first day of the month)")
+    column.notes.append(f"{_count(len(present), 'cell')} read as months ({how}, each as the first day of the month)")
     return True
+
+
+def _month_years(cells: list[str]) -> dict[str, tuple[int, int]] | None:
+    """Each distinct cell's year and month when every cell names a month and a year (`months.month_year`), else None."""
+    fields: dict[str, tuple[int, int]] = {}
+    for cell in cells:
+        if cell in fields:
+            continue
+        found = month_year(cell)
+        if found is None:
+            return None
+        fields[cell] = found
+    return fields
 
 
 def _year_spans(pairs: list[tuple[int, ...]]) -> bool:
@@ -3475,8 +3553,11 @@ def _fidelity_notes(column: _Column, *, layout_padding: bool) -> None:
     as `NA`, `None` or `-` read as missing. Until live test round 5 of 2026-10-15 only a
     text column said so, where the token could have been a category; a number column's
     `NA` went unsaid, so the user saw four missing values in `sex` and none in
-    `body_mass_g`, which had as many. Whitespace is no part of a number.
+    `body_mass_g`, which had as many. Whitespace is no part of a number. A number column whose minus
+    was typographic (`−100`, `ascii_minus`) says how many cells (live test of 2026-11-01).
     """
+    if column.dtype in ("integer", "number") and column.minus:
+        column.notes.append(minus_note(column.minus))
     if column.dtype == "number" and column.rounded:
         column.notes.append(rounded_note(column.rounded))
     if column.dtype == "text" and column.trimmed and not layout_padding:
@@ -3645,7 +3726,21 @@ def _profile_column(column: _Column) -> ColumnProfile:
         median=median,
         top=top,
         months=named_months(column.cells) if column.dtype == "text" else None,
+        order=_date_order(column) if column.dtype == "datetime" else None,
     )
+
+
+def _date_order(column: _Column) -> Literal["ascending", "descending"] | None:
+    """The direction a datetime column's dates run down the rows (`ColumnProfile.order`), missing cells aside."""
+    rests = column.date_rests if len(column.date_rests) == len(column.dates) else [0] * len(column.dates)
+    moments = list(zip(column.dates, rests, strict=True))
+    if len(set(moments)) < 2:
+        return None
+    if all(earlier <= later for earlier, later in pairwise(moments)):
+        return "ascending"
+    if all(earlier >= later for earlier, later in pairwise(moments)):
+        return "descending"
+    return None
 
 
 def _statistics(numbers: Sequence[float]) -> tuple[float | None, float | None]:
