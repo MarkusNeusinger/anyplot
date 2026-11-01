@@ -152,6 +152,7 @@ import {
   type ConvertAnswer,
   countBucket,
   type DatasetChanged,
+  type DatasetCopied,
   type DatasetParsed,
   type DatasetProfile,
   type Eligibility,
@@ -284,10 +285,11 @@ export interface DatasetState {
    */
   paste?: { text: string; source?: string };
   /**
-   * The upload this version was stored from, exactly as it was posted, for the
-   * admin fan-out (`replayData`), which stores the same table in a session per
-   * library. Only the parse's own version carries it: data the assistant changed
-   * or computed, and an undo, have no upload to replay.
+   * The upload this version was stored from, exactly as it was posted. The admin
+   * fan-out has the server copy the confirmed version into each library's
+   * session (`copyData`); only against a server without that copy does it
+   * post this upload again (`replayData`). Only the parse's own version carries
+   * it: data the assistant changed or computed, and an undo, have none.
    */
   upload?: DatasetUpload;
 }
@@ -443,6 +445,8 @@ type Action =
   | { type: 'server_sync'; bindings: BindingMap | null; dataConfirmed: boolean | null }
   /** A turn's `done` carried the data version the assistant's `prepare_data` made. */
   | { type: 'data_prepared'; dataset: DatasetChanged }
+  /** The admin fan-out's copy stored another session's confirmed data here, bound and confirmed. */
+  | { type: 'data_copied'; dataset: DatasetCopied }
   | { type: 'to_long_start' }
   | { type: 'to_long_failed'; failure: Failure }
   | { type: 'undo_start' }
@@ -887,6 +891,25 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         { ...parsed, version },
         { kind: 'changed', changes, version: versionOf(version) }
       );
+    }
+    case 'data_copied': {
+      const { dataset } = action;
+      return {
+        ...state,
+        parsing: false,
+        // The copy is this session's version 1; no paste was made here, so there is no size to bucket.
+        dataset: { parsed: { ...dataset, version: versionOf(dataset.version) }, bytes: 0 },
+        dataChange: null,
+        undoError: null,
+        roles: dataset.roles ?? dataset.bindings.map(binding => bareRole(binding.role, false)),
+        bindings: toMap(dataset.bindings),
+        bindingsComplete: dataset.complete,
+        missingRoles: dataset.missing_roles,
+        bindingsError: null,
+        // The server confirmed the copy with the bindings the page session confirmed.
+        dataConfirmed: true,
+        confirmError: null,
+      };
     }
     case 'to_long_start':
       return { ...state, toLongBusy: true, toLongError: null };
@@ -1341,11 +1364,45 @@ export function useAgentSession({
   }, [token, safeDispatch, handleFailure, trackEvent, busy]);
 
   /**
-   * The admin fan-out (`FanOut`): store another session's upload in this one,
-   * bind the columns as that session had them and confirm, all without the
-   * summary turn a paste asks for (`parseData`), so a library costs one chat
-   * turn, its `create_plot`, against the user's message limits. Resolves to the
-   * failure that stopped it, or `null` once the data is confirmed.
+   * The admin fan-out (`FanOut`): the server copies the confirmed current data
+   * of `fromSession`, the page's own session, into this one, whatever its origin
+   * (a paste, a file, a table the assistant changed or computed), byte for byte
+   * with its bindings, their confirmation and the session language
+   * (`POST .../dataset/copy`). No summary turn, so a library costs one chat
+   * turn, its `create_plot`, against the user's message limits, and no paste.
+   * Resolves to the failure that stopped it, or `null` once the data is
+   * confirmed; `not_found` is a server without the copy, on which `FanOut`
+   * posts the paste again where there is one (`replayData`).
+   */
+  const copyData = useCallback(
+    async (fromSession: string): Promise<Failure | null> => {
+      const sid = stateRef.current.sessionId;
+      if (!sid || busy()) return { code: 'run_active', ref: null };
+      parseRef.current = true;
+      safeDispatch({ type: 'parse_start' });
+      try {
+        const dataset = await agentApi.copyDataset(token, sid, fromSession);
+        safeDispatch({ type: 'data_copied', dataset });
+        const copiedLanguage = readPlotLanguage(dataset.language);
+        if (copiedLanguage) safeDispatch({ type: 'language_sync', plotLanguage: copiedLanguage });
+        return dataset.complete ? null : { code: 'bindings_incomplete', ref: null };
+      } catch (err) {
+        const failure = handleFailure(err);
+        safeDispatch({ type: 'parse_failed', failure });
+        return failure;
+      } finally {
+        parseRef.current = false;
+      }
+    },
+    [token, safeDispatch, handleFailure, busy]
+  );
+
+  /**
+   * The admin fan-out against a server without the copy (`copyData` answered
+   * `not_found`): store another session's upload in this one, bind the columns
+   * as that session had them and confirm, all without the summary turn a paste
+   * asks for (`parseData`). Resolves to the failure that stopped it, or `null`
+   * once the data is confirmed.
    */
   const replayData = useCallback(
     async (upload: DatasetUpload, bindings: BindingMap): Promise<Failure | null> => {
@@ -2042,6 +2099,7 @@ export function useAgentSession({
     state,
     toLongData,
     parseData,
+    copyData,
     replayData,
     confirmTranscription,
     discardTranscription,

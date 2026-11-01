@@ -19,6 +19,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
 | `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
+| `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (version 1) plus `confirmed: true`, `complete`, `missing_roles` and `copied_from` (the source's version number): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`), `503 capacity` |
 | `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` (`create_plot`, `summarize_data`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data | `413 too_long`, `409 run_active` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
@@ -194,6 +195,7 @@ from agents.anyplot.plugins.ledger import (
     attribution,
     budget_allows,
     judge_budget_tokens,
+    session_hash,
 )
 from agents.anyplot.plugins.scope_guard import LOCKED_OUT, SESSION_CLOSED, scope_refusals
 from agents.anyplot.policy import fence, file_name_block, refusal, scope_rubric, transcribe_rubric, user_notes_block
@@ -224,7 +226,12 @@ from agents.anyplot.services import CodeVersion, Services, get_services
 from agents.anyplot.session_state import (
     BINDINGS,
     CONFIRMED,
+    DATASET_COPIED_FROM,
+    DATASET_HISTORY,
+    DATASET_ID,
+    DATASET_VERSION,
     PENDING_BINDINGS,
+    PENDING_CLEARED,
     TELEMETRY_SOURCE,
     CatalogueSnapshot,
     SessionView,
@@ -778,6 +785,12 @@ class DatasetBody(_Body):
     `tables`, 1-based); None reads the first. A number past the tables found is `422 unparseable`."""
 
 
+class CopyDatasetBody(_Body):
+    """The admin fan-out's copy: the session whose confirmed data the fan-out session in the path takes."""
+
+    from_session: str = Field(pattern=SESSION_PATTERN)
+
+
 class ConvertBody(_Body):
     """A dropped binary data file as base64 (the BFF's CSRF guard takes JSON only), and the sheet the page chose."""
 
@@ -927,7 +940,8 @@ def _active(runtime: Runtime, sid: str, *, paste: bool = True) -> None:
     from it, so a version stored meanwhile in the same session (a data route, a turn's `prepare_data`) would be
     dropped silently. Every guard is keyed by the session id, so it holds whoever sends the request, also two tabs
     that share one session id; the page opens a session per window and keeps its id in memory only, so its tabs
-    never share one. Sessions never share data: the stores are keyed by session id, and no state is user-scoped.
+    never share one. Sessions never share data: the stores are keyed by session id, and no state is user-scoped; the
+    one copy between sessions is the admin fan-out's (`/dataset/copy`), between two sessions of the same user only.
     The language chip passes `paste=False`: the paste reads the session again before it writes the language, so a
     choice that lands while the judges run is kept.
     """
@@ -1706,6 +1720,109 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     )
 
 
+@app.post("/v1/sessions/{sid}/dataset/copy", dependencies=v1_dependencies)
+async def copy_dataset(
+    sid: SessionId, body: CopyDatasetBody, user: User, runtime: RuntimeDep, rid: RequestId
+) -> JSONResponse:
+    """The admin fan-out's copy: the confirmed current data version of `from_session` becomes this session's data.
+
+    Owner decision of 2026-11-01: `.plot_all()` plots exactly the data the user confirmed, whether it was pasted,
+    opened, computed or changed by the assistant, so the server copies that version instead of the page posting
+    the paste again. Both sessions must be the caller's: each one is looked up under the caller's user id, so
+    another user's session id is `404 session_expired` as on every route, and no data ever crosses users. The
+    target must be a fan-out session (`source: fanout` at its opening) of the same spec without data
+    (`409 has_dataset`); the source another session with data (`422 no_dataset`) that the user confirmed with its
+    current bindings (`422 unconfirmed`). `422 invalid` for the same session twice, a target that is no fan-out
+    session, another spec, or bindings the target's roles refuse. Neither session may have a turn, a theme render
+    or a paste in flight (`409 run_active`), since the source's data would be about to change.
+
+    The copy is the stored version as it is (`DatasetStore.copy`): the same canonical CSV, dtypes, column order,
+    notes, file name, source and code, nothing parsed or judged again, so it costs no model call and counts as no
+    paste; its own counter (`COPIES_PER_MINUTE`, `_PER_DAY`) bounds what one user puts in the store. The bindings,
+    their confirmation and the session language come along. The copy is the target's version 1 with no undo
+    history, and `DATASET_COPIED_FROM` records the source's version number. The answer is the paste route's
+    dataset shape plus `confirmed`, `complete`, `missing_roles` and `copied_from`. The `dataset_copy` attribution
+    line carries the counts, the version number and the source session's salted hash, never data; a copy writes
+    no `data_input` telemetry line, because no input reached the dataset route.
+    """
+    services = get_services()
+    if body.from_session == sid:
+        raise AgentsError(422, "invalid")
+    session = await runtime.session(user, sid)
+    source = await runtime.session(user, body.from_session)  # another user's session is not found either
+    _active(runtime, sid)
+    _active(runtime, body.from_session)
+    view = read_session(session.state)
+    origin = read_session(source.state)
+    if view is None or origin is None:
+        raise AgentsError(404, "session_expired")
+    if session.state.get(TELEMETRY_SOURCE) != "fanout" or origin.spec_id != view.spec_id:
+        raise AgentsError(422, "invalid")
+    if view.dataset_id:
+        raise AgentsError(409, "has_dataset")
+    stored = services.datasets.get(origin.dataset_id, body.from_session) if origin.dataset_id else None
+    if stored is None:
+        raise AgentsError(422, "no_dataset")
+    if not origin.data_confirmed:
+        raise AgentsError(422, "unconfirmed")
+    roles = view.snapshot.roles()
+    check = check_bindings(origin.bindings, roles, stored.profile)
+    if check.errors:
+        raise AgentsError(422, "invalid")
+    ledger = _stamp(RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action"), view, session)
+    limit = services.usage.copy_limit(user)
+    if limit is not None:
+        attribution("dataset_copy", ledger, outcome=limit)
+        raise AgentsError(429, limit)
+    try:
+        dataset_id = services.datasets.copy(stored.dataset_id, body.from_session, sid)
+    except StoreFull:
+        attribution("dataset_copy", ledger, outcome="capacity")
+        raise AgentsError(503, "capacity") from None
+    copied = services.datasets.get(dataset_id, sid) if dataset_id else None
+    if copied is None:  # read above with no `await` in between: only a store emptied behind the state
+        raise AgentsError(422, "no_dataset")
+    services.usage.add_copy(user)
+    bindings = origin.bindings
+    # From the reads above to this write nothing suspends (see `_ingest_paste`): the source's state cannot change
+    # between the confirmation check and the copy.
+    await runtime.write_state(
+        session,
+        {
+            DATASET_ID: copied.dataset_id,
+            BINDINGS: [binding.model_dump() for binding in bindings],
+            DATASET_HISTORY: [],
+            DATASET_VERSION: 1,
+            DATASET_COPIED_FROM: origin.dataset_version,
+            CONFIRMED: confirmation_fingerprint(copied.dataset_id, bindings),
+            **language_delta(origin.language, origin.language_source),
+            **PENDING_CLEARED,
+        },
+    )
+    attribution(
+        "dataset_copy",
+        ledger,
+        outcome="ok",
+        rows=copied.profile.rows,
+        columns=len(copied.profile.columns),
+        version=origin.dataset_version,
+        from_session=session_hash(body.from_session),
+    )
+    return JSONResponse(
+        {
+            **dataset_payload(copied, bindings, 1),
+            "roles": _page_roles(roles),
+            "suggestion": _suggestion(view, copied.profile, origin.language),
+            "language": {"language": origin.language, "source": origin.language_source},
+            "confirmed": True,
+            "complete": check.complete,
+            "missing_roles": check.missing_roles,
+            "copied_from": origin.dataset_version,
+        },
+        headers=_NO_STORE,
+    )
+
+
 def _suggestion(view: SessionView, profile: DatasetProfile, language: str | None = None) -> dict[str, Any] | None:
     """The wide-table suggestion for a dataset answer (`data/shape.py`), or None.
 
@@ -2200,7 +2317,8 @@ async def bundle(
     Without `version` every version; with a number above 0 that version only (`404 not_found`
     when the session lacks it); with `version=0` the conversation alone, the feedback on a chat
     that made no plot: no version, and with `include_data` the session's current `data.csv` as
-    the top-level `data_csv`.
+    the top-level `data_csv`. A fan-out session whose data is a copy names the source's data version
+    as `session.dataset_copied_from`.
     """
     session = await runtime.session(user, sid)
     services = get_services()
@@ -2277,6 +2395,10 @@ async def bundle(
             "prompt_hashes": _prompt_hashes(),
         },
     }
+    copied_from = session.state.get(DATASET_COPIED_FROM)
+    if isinstance(copied_from, int):
+        # A fan-out session's data is a copy of the page session's version of this number (`/dataset/copy`).
+        payload["session"]["dataset_copied_from"] = copied_from
     if version == 0 and include_data:
         # The chat's case has no version to carry the data: the session's current dataset, or none yet.
         payload["data_csv"] = dataset.csv if dataset else None

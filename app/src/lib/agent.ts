@@ -337,6 +337,20 @@ export interface DatasetTranscribed {
 
 export type DatasetAnswer = DatasetParsed | DatasetTranscribed;
 
+/**
+ * The answer of `POST .../dataset/copy`, the admin fan-out's copy of the page
+ * session's confirmed data into a fan-out session: the dataset route's shape
+ * (version 1), already bound and confirmed on the server.
+ */
+export interface DatasetCopied extends DatasetParsed {
+  confirmed: true;
+  /** Whether every required role has a column (the server's binding check). */
+  complete: boolean;
+  missing_roles: string[];
+  /** The page session's data version the copy was taken from. */
+  copied_from: number;
+}
+
 /** The tables of one paste the page may choose from (the service's `MAX_TABLES`). */
 export const MAX_DATASET_TABLES = 10;
 
@@ -1022,6 +1036,20 @@ export const agentApi = {
    */
   undoDataset: (token: string, sid: string) =>
     agentJson<DatasetParsed>(`${sessionPath(sid)}/dataset/undo`, token, post()),
+  /**
+   * The admin fan-out: the server copies the confirmed current data of
+   * `fromSession` (the page's own session), byte for byte with its bindings and
+   * their confirmation, into the fan-out session `sid`. Both must be this
+   * admin's. `422 unconfirmed` / `no_dataset` for a source without confirmed
+   * data, `409 has_dataset` for a target with data; a server without the route
+   * answers `404 not_found`.
+   */
+  copyDataset: (token: string, sid: string, fromSession: string) =>
+    agentJson<DatasetCopied>(
+      `${sessionPath(sid)}/dataset/copy`,
+      token,
+      post({ from_session: fromSession })
+    ),
 
   /**
    * `.to_long()`: the service applies its own wide-table suggestion, without a

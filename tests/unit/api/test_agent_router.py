@@ -331,6 +331,7 @@ ALL_ROUTES = [
     ("POST", "/debug/agent/sessions/s1/dataset/confirm", None),
     ("POST", "/debug/agent/sessions/s1/dataset/undo", None),
     ("POST", "/debug/agent/sessions/s1/dataset/to_long", None),
+    ("POST", "/debug/agent/sessions/s1/dataset/copy", {"from_session": "s0"}),
     ("POST", "/debug/agent/sessions/s1/messages", {"action": "create_plot"}),
     ("POST", "/debug/agent/sessions/s1/cancel", None),
     ("POST", "/debug/agent/sessions/s1/outcome", {"action": "copied_code", "version": 1}),
@@ -714,6 +715,54 @@ class TestBodies:
         upstream.handler = lambda request: httpx.Response(422, json={"detail": "no_suggestion"})
         refused = client.post("/debug/agent/sessions/s1/dataset/to_long", headers=CLIENT_HEADERS)
         assert (refused.status_code, refused.json()["detail"]) == (422, "no_suggestion")
+
+    def test_dataset_copy_forwards_the_source_session_only(self, client, upstream) -> None:
+        """The fan-out's copy: one session id, under the admin's own user id; the agents service checks both."""
+        copied = {"preview": [], "profile": {}, "bindings": [], "version": 1, "confirmed": True, "copied_from": 3}
+        upstream.handler = lambda request: httpx.Response(200, json=copied)
+        response = client.post(
+            "/debug/agent/sessions/s1/dataset/copy", json={"from_session": "page-sid"}, headers=CLIENT_HEADERS
+        )
+        assert response.status_code == 200 and response.json() == copied
+        sent = upstream.requests[-1]
+        assert (sent.method, sent.url.path) == ("POST", "/v1/sessions/s1/dataset/copy")
+        assert upstream.last_json == {"from_session": "page-sid"}
+        assert sent.headers["X-Anyplot-User"] == derive_user_id(KEY.encode(), ADMIN)
+
+    @pytest.mark.parametrize(
+        "body", [{}, {"from_session": "a/b"}, {"from_session": ""}, {"from_session": "s0", "user": "adm_other"}]
+    )
+    def test_dataset_copy_takes_one_session_id_and_nothing_else(self, client, upstream, body) -> None:
+        """No user id, no dataset id, no bindings ride along: the caller cannot name whose data it copies."""
+        response = client.post("/debug/agent/sessions/s1/dataset/copy", json=body, headers=CLIENT_HEADERS)
+        assert response.status_code == 422
+        assert upstream.requests == []
+
+    @pytest.mark.parametrize(
+        ("status", "detail"),
+        [
+            (404, "session_expired"),
+            (409, "has_dataset"),
+            (422, "unconfirmed"),
+            (422, "no_dataset"),
+            (409, "run_active"),
+        ],
+    )
+    def test_dataset_copy_refusals_pass_through(self, client, upstream, status, detail) -> None:
+        upstream.handler = lambda request: httpx.Response(status, json={"detail": detail})
+        response = client.post(
+            "/debug/agent/sessions/s1/dataset/copy", json={"from_session": "s0"}, headers=CLIENT_HEADERS
+        )
+        assert (response.status_code, response.json()["detail"]) == (status, detail)
+
+    def test_an_agents_service_without_the_copy_route_reads_as_not_found(self, client, upstream) -> None:
+        """Deploy order: before the agents service has the route, FastAPI's own 404 reaches the page as `not_found`,
+        apart from a missing session's `session_expired`, so the page replays the paste instead."""
+        upstream.handler = lambda request: httpx.Response(404, json={"detail": "Not Found"})
+        response = client.post(
+            "/debug/agent/sessions/s1/dataset/copy", json={"from_session": "s0"}, headers=CLIENT_HEADERS
+        )
+        assert (response.status_code, response.json()["detail"]) == (404, "not_found")
 
     def test_the_summarize_data_action_is_forwarded(self, client, upstream) -> None:
         upstream.handler = lambda request: httpx.Response(

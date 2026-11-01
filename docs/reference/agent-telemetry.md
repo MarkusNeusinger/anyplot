@@ -87,7 +87,12 @@ error the beacon gets.
 ### Fan-out sessions
 
 The admin's "plot in all libraries" (`.plot_all()`, `app/src/sections/agent-chat/FanOut.tsx`) opens one session
-per library, replays the upload in each and runs `create_plot` in each. None of these sessions ever keeps a plot,
+per library, has the agents service copy the page session's confirmed data into each
+(`POST /v1/sessions/{sid}/dataset/copy`) and runs `create_plot` in each. Since 2026-11-01 a copy writes no
+`data_input` line, because no input reaches the dataset route; its `dataset_copy` attribution log line carries the
+outcome, the row and column counts, the version number and the source session's salted hash, never data. Before,
+the page posted the paste again in each session, which wrote one `data_input` line per library, and it still does
+against an agents service without the copy route. None of these sessions ever keeps a plot,
 so counted as `live` they would multiply sessions and data inputs and push the kept rate down. The page marks each
 session it opens for the fan-out (`useAgentSession` with `fanout`, `POST /debug/agent/sessions` with
 `source: "fanout"`), the BFF forwards the value, and the agents service accepts `fanout` only (any other value is

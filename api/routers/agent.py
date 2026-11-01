@@ -243,6 +243,8 @@ _UPSTREAM_CODES = frozenset(
         "no_dataset",
         "nothing_to_undo",
         "no_suggestion",
+        "has_dataset",
+        "unconfirmed",
         "rate_limited",
         "daily_limit",
         "locked_out",
@@ -558,6 +560,12 @@ class DatasetBody(_StrictBody):
     # Which of several tables in `text` to read (the page's table picker, from the previous answer's
     # `tables`, 1-based); the agents service reads the first without it.
     table: Annotated[int, Field(strict=True, ge=1, le=MAX_DATASET_TABLES)] | None = None
+
+
+class CopyDatasetBody(_StrictBody):
+    # The admin fan-out's copy: the page's own session, whose confirmed data the fan-out session in the path
+    # takes. The agents service looks both up under the one user id this BFF derives for the admin.
+    from_session: Annotated[str, Field(pattern=SESSION_ID_PATTERN)]
 
 
 class ConvertBody(_StrictBody):
@@ -1252,6 +1260,22 @@ async def dataset_to_long(sid: SessionId, ctx: Ctx, client: Client) -> Any:
     for this spec, `409 run_active` while a turn or a render is in flight.
     """
     return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset/to_long")
+
+
+@router.post("/sessions/{sid}/dataset/copy")
+async def copy_dataset(sid: SessionId, body: CopyDatasetBody, ctx: Ctx, client: Client) -> Any:
+    """The admin fan-out's `.plot_all()`: copy the confirmed current data of `from_session` into this fan-out session.
+
+    The agents service copies the stored version as it is, with its bindings, their confirmation and the session
+    language, and answers like the dataset route plus `confirmed`, `complete`, `missing_roles` and `copied_from`.
+    Both sessions are looked up under this admin's user id, so another user's session is `404 session_expired`;
+    `409 has_dataset` for a target with data, `422 no_dataset` and `422 unconfirmed` for a source without
+    confirmed data, `422 invalid` for a target that is no fan-out session or another spec, `409 run_active`,
+    `429 rate_limited` / `daily_limit` and `503 capacity`, passed through. An agents service without the route
+    answers `404 not_found`, on which the page replays the paste instead.
+    """
+    payload = {"from_session": body.from_session}
+    return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset/copy", json_body=payload)
 
 
 @router.post("/sessions/{sid}/messages", response_class=EventSourceResponse)

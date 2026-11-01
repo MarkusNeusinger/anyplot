@@ -23,6 +23,12 @@ export const ERROR_TEXT: Record<string, string> = {
   not_eligible: 'this plot cannot be adapted in that library',
   not_found: 'that plot or library is not in the catalogue',
   session_expired: 'the session expired',
+  // The admin fan-out's copy of the page session's data (`.plot_all()`).
+  unconfirmed: 'the data is not confirmed any more; confirm it again, then .plot_all()',
+  has_dataset: 'this library already holds data; close the panel and .plot_all() again',
+  // A server without the copy, and data the assistant changed or computed, which has no paste to post again.
+  copy_unavailable:
+    'this server cannot copy changed or computed data yet; paste or open the table, or try again after the deploy',
   rate_limited: 'the daily limit is reached; try again tomorrow',
   unreachable:
     'no answer from the server: your sign-in may have expired, or the connection dropped',
