@@ -9,7 +9,8 @@
   admin` from the identity its admin gate verified; a missing or other value
   is the public tier, so public users keep exactly today's limits and the
   two services deploy in either order. `GET /status` reports the caller's own
-  cap, and the fan-out panel follows it.
+  cap, and the fan-out panel follows it. A live fan-out took 355 s, every
+  library `ok` (#12507).
 
 ### Changed
 
@@ -19,4 +20,4 @@
   of the SDK's two; a 429 or 529 that outlasts them ends the run as `busy`, which
   the page words as "the model service is busy; try again in a minute".
   The render gates run in a worker thread, so one run's PNG checks never
-  stall the other runs in flight.
+  stall the other runs in flight (#12507).
