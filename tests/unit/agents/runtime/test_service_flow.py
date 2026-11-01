@@ -50,7 +50,7 @@ from agents.anyplot.models import (
     Transcription,
 )
 from agents.anyplot.opening import NOTES_INSTRUCTION_WARNING, NOTES_REFUSED_WARNING, NOTES_UNCHECKED_WARNING, assess
-from agents.anyplot.pipeline import SoftDeadline
+from agents.anyplot.pipeline import REPLY_LANGUAGE_HEADING, SoftDeadline
 from agents.anyplot.policy import refusal, scope_rubric
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome, fixture_page
 from agents.anyplot.render.contract import PageFailed, PageJob, PageUnsupported, RendererUnavailable, RenderJob, Theme
@@ -3489,6 +3489,9 @@ async def test_a_message_in_another_language_keeps_the_plots_language(
     for adapted in (first, second):
         assert "Plot language:\n<plot_language>\nen\n</plot_language>" in adapted
         assert "language_changed" not in adapted
+    # The notes explain the plot to the user: v2's go in German, the language the user now chats in.
+    assert "<reply_language>" not in first
+    assert f"{REPLY_LANGUAGE_HEADING}\n<reply_language>\nde\n</reply_language>" in second
     reviews = [request_text(request) for request in requests_of(fake, "reviewer")]
     assert all("Plot language:\n<plot_language>\nen\n</plot_language>" in review for review in reviews)
     # The root replies in German and reads that the plot is English.
@@ -3531,6 +3534,9 @@ async def test_an_english_message_keeps_a_german_paste_plot_german(
     assert "Plot language:\n<plot_language>\nde\n</plot_language>" in first
     assert "Plot language:\n<plot_language>\nde\n</plot_language>" in second and "language_changed" not in second
     assert [version.language for version in get_services().versions.all(sid)] == ["de", "de"]
+    # The plot stays German, its notes follow the replies into English.
+    assert "<reply_language>" not in first
+    assert f"{REPLY_LANGUAGE_HEADING}\n<reply_language>\nen\n</reply_language>" in second
 
 
 @pytest.mark.parametrize("lang", ["en", "de"])
