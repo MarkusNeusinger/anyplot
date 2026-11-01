@@ -161,6 +161,233 @@ def test_a_clean_chartjs_render_in_sandbox_mode(harness: Harness, tmp_path: Path
     assert "render: error:" not in run.stderr and "render: wrote" not in run.stdout
 
 
+def probe_labels(run: Run) -> tuple[list[tuple[str, str]], bool]:
+    """The `(kind, text)` pairs of the text probe (`writeTextProbe`) and its `labels_truncated`."""
+    probe = json.loads((run.work / "probe-light.json").read_text(encoding="utf-8"))
+    assert set(probe) == {"labels", "labels_truncated"}
+    return [(label["kind"], label["text"]) for label in probe["labels"]], probe["labels_truncated"]
+
+
+# --- The text probe: what the plot draws, for the agents' reply (user test of 2026-11-01) --------
+
+
+def test_a_chartjs_probe_reads_the_charts_model(harness: Harness, tmp_path: Path) -> None:
+    source = (
+        CANVAS + "new Chart(canvas, { type: 'bar', options: { animation: false, plugins: {"
+        " title: { display: true, text: 'Bevölkerung' }, legend: { display: true } },"
+        " scales: { y: { title: { display: true, text: 'Personen' } } } },"
+        " data: { labels: ['Bern', 'Zürich'], datasets: [{ label: 'Schweizer', data: [1, 2] }] } });\n"
+    )
+    run = harness.render(tmp_path, source)
+
+    assert run.returncode == 0, run.stderr
+    labels, truncated = probe_labels(run)
+    assert labels[:3] == [("title", "Bevölkerung"), ("y axis label", "Personen"), ("legend text", "Schweizer")]
+    assert ("x tick label", "Zürich") in labels and any(kind == "y tick label" for kind, _ in labels)
+    assert truncated is True  # a plugin's own drawing is in no model
+
+
+def test_a_d3_probe_names_the_ticks_by_axis_and_the_largest_top_text_the_title(
+    harness: Harness, tmp_path: Path
+) -> None:
+    source = (
+        "const svg = d3.select('#container').append('svg').attr('width', 1600).attr('height', 900);\n"
+        "svg.append('text').attr('x', 800).attr('y', 40).attr('font-size', 32).text('Geburten');\n"
+        "svg.append('text').attr('transform', 'rotate(-90)').attr('x', -450).attr('y', 20).text('Anzahl');\n"
+        "for (const [x, name] of [[300, 'Nord'], [600, 'Süd']]) svg.append('text').attr('x', x).attr('y', 80).text(name);\n"
+        "svg.append('g').attr('transform', 'translate(0,800)').call(d3.axisBottom(d3.scaleBand().domain(['Bern', 'Zug']).range([100, 1500])));\n"
+        "svg.append('g').attr('transform', 'translate(100,0)').call(d3.axisLeft(d3.scaleLinear().domain([0, 5]).range([800, 100])));\n"
+        "svg.append('text').attr('x', 10).attr('y', 10).attr('opacity', 0).text('unsichtbar');\n"
+    )
+    run = harness.render(tmp_path, source, library="d3")
+
+    assert run.returncode == 0, run.stderr
+    labels, truncated = probe_labels(run)
+    assert {("title", "Geburten"), ("y axis label", "Anzahl"), ("x tick label", "Zug"), ("y tick label", "5.0")} <= set(
+        labels
+    )
+    assert {("text", "Nord"), ("text", "Süd")} <= set(labels) and "unsichtbar" not in dict(labels).values()
+    assert truncated is False
+
+
+def test_two_top_texts_of_one_size_are_no_title(harness: Harness, tmp_path: Path) -> None:
+    """A legend across the top writes its entries at one size: none of them is taken for the title."""
+    source = (
+        "const svg = d3.select('#container').append('svg').attr('width', 1600).attr('height', 900);\n"
+        "for (const [x, name] of [[300, 'Nord'], [600, 'Süd']]) svg.append('text').attr('x', x).attr('y', 40)"
+        ".attr('font-size', 24).text(name);\n"
+        "svg.append('g').attr('transform', 'translate(0,800)').call(d3.axisBottom(d3.scaleBand().domain(['Bern']).range([100, 1500])));\n"
+    )
+    run = harness.render(tmp_path, source, library="d3")
+
+    assert run.returncode == 0, run.stderr
+    labels, _ = probe_labels(run)
+    assert not any(kind == "title" for kind, _ in labels) and ("text", "Nord") in labels
+
+
+def test_a_rotated_d3_value_label_is_no_axis_label(harness: Harness, tmp_path: Path) -> None:
+    """Second opinion of 2026-11-01: only the one rotated text beside the plot is the y axis label; rotated value labels
+    over the bars stay other texts, and two rotated texts at the edges name none."""
+    rotated = "svg.append('text').attr('transform', 'translate({x},{y}) rotate(-90)').text('{text}');\n"
+    head = "const svg = d3.select('#container').append('svg').attr('width', 1600).attr('height', 900);\n"
+    values = "".join(rotated.format(x=x, y=400, text=text) for x, text in [(500, "12,5"), (900, "7,0")])
+    one = harness.render(tmp_path / "one", head + rotated.format(x=30, y=450, text="Anzahl") + values, library="d3")
+    two = harness.render(
+        tmp_path / "two",
+        head + rotated.format(x=30, y=450, text="Links") + rotated.format(x=1570, y=450, text="Rechts") + values,
+        library="d3",
+    )
+
+    assert one.returncode == 0 and two.returncode == 0, one.stderr + two.stderr
+    labels, _ = probe_labels(one)
+    assert ("y axis label", "Anzahl") in labels and {("text", "12,5"), ("text", "7,0")} <= set(labels)
+    labels, _ = probe_labels(two)
+    assert not any(kind == "y axis label" for kind, _ in labels)
+
+
+def test_a_highcharts_probe_reads_its_classes_and_an_outlined_label_once(harness: Harness, tmp_path: Path) -> None:
+    source = (
+        "Highcharts.chart('container', { chart: { type: 'column', animation: false }, credits: { enabled: false },"
+        " title: { text: 'Umsatz' }, xAxis: { categories: ['Bern', 'Zug'], title: { text: 'Filiale' } },"
+        " yAxis: { title: { text: 'CHF' } }, plotOptions: { series: { animation: false,"
+        " dataLabels: { enabled: true, style: { textOutline: '1px contrast' } } } },"
+        " series: [{ name: 'Nord', data: [3, 5] }] });\n"
+    )
+    run = harness.render(tmp_path, source, library="highcharts")
+
+    assert run.returncode == 0, run.stderr
+    labels, truncated = probe_labels(run)
+    assert {("title", "Umsatz"), ("x axis label", "Filiale"), ("y axis label", "CHF")} <= set(labels)
+    assert {("legend text", "Nord"), ("x tick label", "Zug"), ("annotation", "5")} <= set(labels)
+    assert labels.count(("annotation", "5")) == 1 and truncated is False
+
+
+def test_an_inverted_highcharts_chart_names_the_axes_it_draws(harness: Harness, tmp_path: Path) -> None:
+    """A bar chart draws xAxis (its categories) vertically: the kinds name the drawn axis, as matplotlib's do."""
+    source = (
+        "Highcharts.chart('container', { chart: { type: 'bar', animation: false }, credits: { enabled: false },"
+        " xAxis: { categories: ['Bern', 'Zug'], title: { text: 'Filiale' } }, yAxis: { title: { text: 'CHF' } },"
+        " plotOptions: { series: { animation: false } }, series: [{ name: 'Nord', data: [3, 5] }] });\n"
+    )
+    run = harness.render(tmp_path, source, library="highcharts")
+
+    assert run.returncode == 0, run.stderr
+    labels, _ = probe_labels(run)
+    assert {("y axis label", "Filiale"), ("y tick label", "Zug"), ("x axis label", "CHF")} <= set(labels)
+    assert any(kind == "x tick label" for kind, _ in labels) and ("x tick label", "Zug") not in labels
+
+
+def test_an_echarts_category_that_reads_like_the_axis_name_stays_a_tick(harness: Harness, tmp_path: Path) -> None:
+    """The axis view marks its texts (`anid`), so a category spelled as the axis name is still a tick label."""
+    source = (
+        "const chart = echarts.init(document.getElementById('container'));\n"
+        "chart.setOption({ animation: false, xAxis: { type: 'category', name: 'Filiale', data: ['Bern', 'Filiale'] },"
+        " yAxis: { type: 'value' }, series: [{ type: 'bar', data: [3, 5] }] });\n"
+    )
+    run = harness.render(tmp_path, source, library="echarts")
+
+    assert run.returncode == 0, run.stderr
+    labels, _ = probe_labels(run)
+    assert labels.count(("x axis label", "Filiale")) == 1 and ("x tick label", "Filiale") in labels
+
+
+def test_the_probe_is_never_written_through_a_link(harness: Harness, tmp_path: Path) -> None:
+    """A link left at the probe's name is not followed: its target stays as it was, and the render stands."""
+    work = tmp_path / "work"
+    work.mkdir(parents=True)
+    target = tmp_path / "elsewhere.txt"
+    target.write_text("untouched", encoding="utf-8")
+    (work / "probe-light.json").symlink_to(target)
+
+    run = harness.render(tmp_path, CHART)
+
+    assert run.returncode == 0, run.stderr
+    assert target.read_text(encoding="utf-8") == "untouched" and (work / "probe-light.json").is_symlink()
+
+
+@pytest.mark.parametrize("renderer", ["canvas", "svg"])
+def test_an_echarts_probe_names_each_text_by_the_view_that_draws_it(
+    harness: Harness, tmp_path: Path, renderer: str
+) -> None:
+    """The SVG renderer draws `<text>` elements too: the display list reports each once (Copilot review of #12503)."""
+    source = (
+        f"const chart = echarts.init(document.getElementById('container'), null, {{ renderer: '{renderer}' }});\n"
+        "chart.setOption({ animation: false, title: { text: 'Umsatz', subtext: 'in CHF' }, legend: {},"
+        " xAxis: { type: 'category', name: 'Filiale', data: ['Bern', 'Zug'] }, yAxis: { type: 'value' },"
+        " series: [{ type: 'bar', name: 'Nord', data: [3, 5], label: { show: true },"
+        " markLine: { data: [{ type: 'average', name: 'Schnitt' }] } }] });\n"
+    )
+    run = harness.render(tmp_path, source, library="echarts")
+
+    assert run.returncode == 0, run.stderr
+    labels, truncated = probe_labels(run)
+    assert {("title", "Umsatz"), ("subtitle", "in CHF"), ("x axis label", "Filiale"), ("legend text", "Nord")} <= set(
+        labels
+    )
+    assert {("x tick label", "Zug"), ("annotation", "5")} <= set(labels) and any(k == "y tick label" for k, _ in labels)
+    assert labels.count(("title", "Umsatz")) == 1 and not any(kind == "text" for kind, _ in labels)
+    assert truncated is False  # zrender's display list holds every text it draws
+
+
+def test_a_muix_probe_reads_the_axes_and_an_html_heading_as_the_title(harness: Harness, tmp_path: Path) -> None:
+    source = (
+        'import { BarChart } from "@mui/x-charts/BarChart";\n\n'
+        "export default function Chart() {\n  return (\n    <div>\n"
+        "      <h1 style={{ fontSize: 40, margin: 0 }}>Umsatz</h1>\n"
+        "      <BarChart width={1500} height={800} skipAnimation"
+        ' xAxis={[{ scaleType: "band", data: ["Bern", "Zug"], label: "Filiale" }]}'
+        ' series={[{ data: [3, 5], label: "Nord" }]} />\n    </div>\n  );\n}\n'
+    )
+    run = harness.render(tmp_path, source, library="muix")
+
+    assert run.returncode == 0, run.stderr
+    labels, _ = probe_labels(run)
+    assert {("title", "Umsatz"), ("x axis label", "Filiale"), ("x tick label", "Zug"), ("legend text", "Nord")} <= set(
+        labels
+    )
+
+
+CHART = (
+    CANVAS + "new Chart(canvas, { type: 'bar', options: { animation: false },"
+    " data: { labels: ['a'], datasets: [{ data: [1] }] } });\n"
+)
+
+
+def test_a_page_that_tampers_with_the_model_drops_the_labels_and_renders(harness: Harness, tmp_path: Path) -> None:
+    """The snippet shares the page: a model that throws when read leaves the labels out, names the error for the
+    agents' log, and never fails the render."""
+    source = CHART + "Object.defineProperty(Chart, 'instances', { get() { throw new Error('no'); } });\n"
+    run = harness.render(tmp_path, source)
+
+    assert run.returncode == 0, run.stderr
+    assert run.png_size() == (3200, 1800)
+    assert json.loads((run.work / "probe-light.json").read_text(encoding="utf-8")) == {"error": "Error"}
+    assert "render: the text probe left the labels out (Error)" in run.stdout
+
+
+def test_a_probe_that_never_returns_is_given_up_within_its_bound(harness: Harness, tmp_path: Path) -> None:
+    """A model whose read never ends blocks the page: the probe's own bound (2 s) gives up, the browser still closes,
+    and the render takes about that much longer than a clean one, never the job's timeout."""
+    started = time.monotonic()
+    clean = harness.render(tmp_path / "clean", CHART)
+    clean_s = time.monotonic() - started
+    started = time.monotonic()
+    run = harness.render(tmp_path, CHART + "Object.defineProperty(Chart, 'instances', { get() { for (;;) {} } });\n")
+    hung_s = time.monotonic() - started
+
+    assert clean.returncode == 0 and run.returncode == 0, run.stderr
+    assert run.png_size() == (3200, 1800) and "render: error:" not in run.stderr
+    assert json.loads((run.work / "probe-light.json").read_text(encoding="utf-8")) == {"error": "TimeoutError"}
+    assert hung_s - clean_s < 6, (clean_s, hung_s)
+
+
+def test_without_the_variables_there_is_no_probe(harness: Harness, tmp_path: Path) -> None:
+    run = harness.render(tmp_path, "const t = window.ANYPLOT_TOKENS;\n" + CANVAS, sandbox=False)
+
+    assert run.returncode == 0, run.stderr
+    assert not (run.work / "probe-light.json").exists()  # the catalogue's output stays as it was
+
+
 def test_without_the_variables_the_harness_is_the_pipelines(harness: Harness, tmp_path: Path) -> None:
     """No sandbox variable: the interactive page is written and carries none of the sandbox's additions, a MUI X
     snippet may import a file next to it, and a failure prints Node's error with its stack, not the final line."""

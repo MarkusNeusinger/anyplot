@@ -233,6 +233,61 @@ class TestTheCanvas:
         assert run.png_size("dark") == (3200, 1800)
 
 
+def probe_labels(run: Run, theme: str = "light") -> set[tuple[str, str]]:
+    """The `(kind, text)` pairs of the text probe the screenshot step wrote (`writeTextProbe`)."""
+    probe = json.loads((run.work / f"probe-{theme}.json").read_text(encoding="utf-8"))
+    assert set(probe) == {"labels", "labels_truncated"}
+    return {(label["kind"], label["text"]) for label in probe["labels"]}
+
+
+class TestTheTextProbe:
+    """User test of 2026-11-01: the reply had no text of a plotly or bokeh plot to quote."""
+
+    def test_a_plotly_figures_texts_are_read_by_role(self, harness: Harness, tmp_path: Path) -> None:
+        figure = plotly_figure(
+            800,
+            450,
+            xaxis={"title": {"text": "Kanton"}},
+            yaxis={"title": {"text": "Personen"}},
+            showlegend=True,
+            annotations=[{"x": "b", "y": 1, "text": "Tiefpunkt"}],
+        )
+        figure["data"][0]["name"] = "Schweizer"
+
+        run = harness.draw(tmp_path, figure)
+
+        assert run.returncode == 0, run.stderr
+        labels = probe_labels(run)
+        assert {("title", "bars"), ("x axis label", "Kanton"), ("y axis label", "Personen")} <= labels
+        assert {("legend text", "Schweizer"), ("annotation", "Tiefpunkt"), ("x tick label", "a")} <= labels
+        assert any(kind == "y tick label" for kind, _ in labels)
+
+    def test_a_bokeh_figures_texts_come_from_its_models(self, harness: Harness, tmp_path: Path) -> None:
+        bokeh = bokeh_or_skip()
+        factors = [("Q1", "Nord"), ("Q1", "Süd"), ("Q2", "Nord"), ("Q2", "Süd")]
+        plot = bokeh.plotting.figure(
+            x_range=bokeh.models.FactorRange(*factors), width=800, height=450, toolbar_location=None, title="Umsatz"
+        )
+        plot.vbar(x=factors, top=[1, 2, 3, 4], width=0.8, legend_label="Filialen")
+        plot.yaxis.axis_label = "CHF"
+        plot.add_layout(bokeh.models.Label(x=1, y=3, text="Rekord"))
+
+        run = harness.draw(tmp_path, bokeh.embed.json_item(plot), library="bokeh")
+
+        assert run.returncode == 0, run.stderr
+        labels = probe_labels(run)
+        assert {("title", "Umsatz"), ("y axis label", "CHF"), ("legend text", "Filialen")} <= labels
+        # A nested categorical axis draws one row per level: the stores, then the quarters.
+        assert {
+            ("x tick label", "Nord"),
+            ("x tick label", "Süd"),
+            ("x tick label", "Q1"),
+            ("annotation", "Rekord"),
+        } <= labels
+        probe = json.loads((run.work / "probe-light.json").read_text(encoding="utf-8"))
+        assert probe["labels_truncated"] is True  # a model walk is never all of a canvas's texts
+
+
 class TestTheFigureIsData:
     def test_markup_in_a_text_stays_text(self, harness: Harness, tmp_path: Path) -> None:
         """A title that would close the JSON element and open a script draws as text and runs nothing."""

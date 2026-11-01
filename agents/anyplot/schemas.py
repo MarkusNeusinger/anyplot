@@ -620,6 +620,7 @@ class Round(_ServerContract):
 
 ShownGroup = Literal[
     "title",
+    "subtitle",
     "x axis label",
     "y axis label",
     "z axis label",

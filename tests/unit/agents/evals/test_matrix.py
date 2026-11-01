@@ -835,11 +835,15 @@ def test_book_attribution_keeps_the_attempt_order_and_reads_old_finish_reasons()
             "shipped_attempt": 2,
             "reviewed_attempt": None,
             "advisory": ["G3"],
+            "texts": ["title", "y tick labels"],
+            "texts_expected": True,
         },
     ]
 
     matrix.book_attribution(record, lines, settings)
 
+    assert record["texts"] == ["title", "y tick labels"]  # the roles the reply could quote, never a text
+    assert record["texts_expected"] is True and record["probe_errors"] == {}
     assert record["finish_reasons"] == {"adapter": {"MAX_TOKENS": 1, "STOP": 1}, "root": {"STOP": 1}}
     assert [call["finish_reason"] for call in record["calls"]] == ["STOP", "MAX_TOKENS", "STOP"]
     assert record["calls"][1] == {
@@ -864,6 +868,43 @@ def test_book_attribution_keeps_the_attempt_order_and_reads_old_finish_reasons()
     }
     assert (second["edits"], second["render"]["gates"], second["stage"]) == (4, ["G3"], "deadline")
     assert (record["stage"], record["shipped_attempt"], record["reviewed_attempt"]) == ("deadline", 2, None)
+
+
+def test_book_attribution_counts_the_failed_probes_by_class() -> None:
+    settings = AgentSettings(provider="gemini", model="gemini-3.8-flash", judge_model="gemini-3.5-flash-lite")
+    record = matrix.base_record(two_fixtures()[1], 1)
+    lines: list[dict[str, Any]] = [
+        {"hook": "pipeline_render", "attempt": 1, "gates": [], "probe_error": "TimeoutError"},
+        {"hook": "pipeline_render", "attempt": 2, "gates": [], "probe_error": None},
+        {"hook": "pipeline_result", "status": "ok", "texts": None, "texts_expected": True},
+    ]
+
+    matrix.book_attribution(record, lines, settings)
+
+    assert record["probe_errors"] == {"TimeoutError": 1}
+    assert (record["texts"], record["texts_expected"]) == (None, True)
+
+
+SHOWN = {
+    "texts": {"title": ["Durchschnittspunkte nach Fach und Jahrgangsstufe"], "y axis label": ["Punkte (Ø)"]},
+    "requested_not_found": ["6,5 Mio."],
+}
+
+
+@pytest.mark.parametrize(
+    ("reply", "count"),
+    [
+        ("Titel: „Durchschnittspunkte nach Fach und Jahrgangsstufe“, die y-Achse heißt „Punkte (Ø)“.", 0),
+        ('The title reads "durchschnittspunkte nach fach". The format "6,5 Mio." is not shown yet.', 0),
+        ("Der Titel lautet „Punkte je Fach“, die Legende «Jahrgang».", 2),
+        ("Press `.download('plot.py')` to get the code.", 0),
+    ],
+    ids=["german quotes", "part and requested", "invented", "backticks"],
+)
+def test_a_quote_in_the_reply_must_stand_in_a_drawn_or_requested_text(reply: str, count: int) -> None:
+    """The root quotes a plot's texts only from `shows` (root.md); the matrix counts what no text holds."""
+    assert matrix.unbacked_quotes([reply], SHOWN) == count
+    assert matrix.unbacked_quotes(["„Punkte (Ø)“"], None) == 1  # no texts: every quote is unbacked
 
 
 def test_book_attribution_counts_answers_that_failed_their_schema_by_rule() -> None:

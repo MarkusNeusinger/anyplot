@@ -35,7 +35,7 @@
   for `get_dataset_profile`, whose 16 KB of profile sit next to the pasted notes); a result outside them becomes an error. The `plot_pipeline` result
   reaches the root with its model-written `changes` and `residual_defects` fenced as
   `<tool_notes>` under `notes`, and what the shipped render shows (`PlotShows`) fenced
-  the same way under `shows`.
+  the same way under `shows`, without `texts` when the render reported none.
 * `on_tool_error_callback`: any exception becomes `{"status": "error", "code": ...}`
   with a fixed code; the exception text never reaches the model.
 
@@ -242,18 +242,22 @@ def fence_pipeline_notes(result: dict[str, Any]) -> dict[str, Any]:
         notes = {key: result.get(key) or [] for key in PIPELINE_NOTE_FIELDS}
         fenced[NOTES_KEY] = DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(notes, ensure_ascii=False))
     if result.get(SHOWS_KEY):
-        shows = json.dumps(result[SHOWS_KEY], ensure_ascii=False)
-        fenced[SHOWS_KEY] = SHOWS_PREAMBLE + "\n" + fence("tool_notes", shows)
+        shown = result[SHOWS_KEY]
+        if isinstance(shown, dict) and shown.get("texts") is None:
+            # No drawn texts (a probe that reported none, or `shrunk_shows`): the root gets no `texts` at all, so it
+            # has nothing to quote and no null to narrate (user test of 2026-11-01: "I couldn't read the title back").
+            shown = {key: value for key, value in shown.items() if key != "texts"}
+        fenced[SHOWS_KEY] = SHOWS_PREAMBLE + "\n" + fence("tool_notes", json.dumps(shown, ensure_ascii=False))
     return fenced
 
 
-SHOWS_KEPT_GROUPS = ("title", "x axis label", "y axis label", "z axis label", "legend")
+SHOWS_KEPT_GROUPS = ("title", "subtitle", "x axis label", "y axis label", "z axis label", "legend")
 """The `shows` texts a result over its cap keeps: what a reply quotes most; tick labels and the rest go first."""
 
 
 def shrunk_shows(result: dict[str, Any]) -> list[dict[str, Any]]:
     """Smaller versions of a `plot_pipeline` result, in order: `shows.texts` without tick labels and other texts,
-    then without any texts (`null`, which the root reads as "not measured" and then quotes no plot text)."""
+    then without any texts (`null`, which `fence_pipeline_notes` leaves out, so the root quotes no plot text)."""
     shows = result.get(SHOWS_KEY)
     if not isinstance(shows, dict) or not isinstance(shows.get("texts"), dict):
         return []

@@ -12,7 +12,8 @@ started with `asyncio.create_subprocess_exec` (never a shell) in its own process
 group. The image is `AGENT_RENDER_IMAGE`, the production renderer image built from
 `agents/renderer/Dockerfile` (it has the plotting venv at `/app/.venv`). The harness
 is mounted read-only from this checkout, so a render uses the harness of the code
-under development; a JavaScript container also gets the checkout's browser harness
+under development, and so are the R and Julia text probes (`TEXT_PROBE_MOUNTS`); a
+JavaScript container also gets the checkout's browser harness
 (`automation/js-render/render.mjs`) over the image's, renders and page builds alike, so
 the PNG and the page of one version come from the same harness (JS-4b; a checkout without
 the file, an agents image, keeps the image's), and so does a plotly or bokeh container,
@@ -51,7 +52,7 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
-from agents.renderer.commands import JS_HARNESS, command_for
+from agents.renderer.commands import JS_HARNESS, JULIA_TEXT_PROBE, R_TEXT_PROBE, command_for
 from agents.renderer.executor import DATA_JSON_ENV, DATA_JSON_FILE, WORKDIR, stderr_tail
 from agents.renderer.wire import (
     CONVERT_META_FILE,
@@ -96,6 +97,12 @@ from ..runtimes.python import (
 )
 
 
+TEXT_PROBE_MOUNTS = (
+    (HARNESS_SOURCE.with_name("text_probe.R"), R_TEXT_PROBE),
+    (HARNESS_SOURCE.with_name("text_probe.jl"), JULIA_TEXT_PROBE),
+)
+"""The checkout's R and Julia text probes over the image's, as the harness is, so a render uses the probes under
+development (`harness.collect_text_probe`)."""
 MEMORY_LIMIT = "2g"
 PIDS_LIMIT = "256"
 STDERR_LIMIT = 64 * 1024
@@ -215,6 +222,9 @@ class LocalDockerBackend:
 
         A JavaScript container also mounts the checkout's browser harness over the image's (module docstring)."""
         harness = ["-v", f"{JS_HARNESS_SOURCE}:{JS_HARNESS}:ro"] if javascript and JS_HARNESS_SOURCE.is_file() else []
+        for source, target in TEXT_PROBE_MOUNTS:
+            if source.is_file():
+                harness += ["-v", f"{source}:{target}:ro"]
         return [
             self.docker,
             "run",
