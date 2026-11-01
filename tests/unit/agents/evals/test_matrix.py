@@ -27,7 +27,7 @@ from agents.anyplot.schemas import MAX_ATTEMPTS
 from agents.anyplot.services import Services
 from agents.anyplot.settings import MAX_THINKING_BUDGET, AgentSettings, get_settings
 from agents.evals import matrix
-from agents.evals.cases import EvalCase, load_cases, select_cases
+from agents.evals.cases import EvalCase, FollowUpChecks, load_cases, select_cases
 from agents.evals.matrix import (
     EXIT_OK,
     EXIT_OUTAGE,
@@ -905,6 +905,136 @@ def test_a_quote_in_the_reply_must_stand_in_a_drawn_or_requested_text(reply: str
     """The root quotes a plot's texts only from `shows` (root.md); the matrix counts what no text holds."""
     assert matrix.unbacked_quotes([reply], SHOWN) == count
     assert matrix.unbacked_quotes(["„Punkte (Ø)“"], None) == 1  # no texts: every quote is unbacked
+
+
+LOG_CHECKS = FollowUpChecks(
+    language="de",
+    theme="dark",
+    code_added=(r"set_yscale\(", "grid"),
+    code_kept=(r"yaxis\.grid",),
+    texts_changed=("title",),
+)
+LOG_CHECK_NAMES = ["shipped", "language", "theme", "code:1", "code:2", "kept:1", "texts:title"]
+FIRST = {
+    "number": 1,
+    "code": "ax.yaxis.grid(True)\n",
+    "language": "en",
+    "theme": "light",
+    "texts": {"title": ["Active Users by Week"]},
+    "requested_not_found": [],
+}
+SECOND = {
+    **FIRST,
+    "number": 2,
+    "code": 'ax.yaxis.grid(True)\nax.set_yscale("log")\n',
+    "language": "Deutsch",
+    "theme": "dark",
+    "texts": {"title": ["Aktive Nutzer pro Woche"]},
+}
+
+
+@pytest.mark.parametrize(
+    ("shipped", "failed"),
+    [
+        (SECOND, {"code:2"}),  # the grid was in the first version already: no proof of a change
+        ({**SECOND, "code": FIRST["code"]}, {"code:1", "code:2"}),  # the log scale dropped
+        ({**SECOND, "code": 'ax.set_yscale("log")\n'}, {"code:2", "kept:1"}),  # a line it was not asked to touch
+        ({**SECOND, "language": "en"}, {"language", "code:2"}),
+        ({**SECOND, "theme": "light"}, {"theme", "code:2"}),
+        ({**SECOND, "texts": FIRST["texts"]}, {"texts:title", "code:2"}),  # not translated
+        ({**SECOND, "texts": None}, {"texts:title", "code:2"}),  # no probe: nothing proves the change
+        ({**SECOND, "requested_not_found": ["Nutzer"]}, {"requested_found", "code:2"}),
+        (FIRST, {*LOG_CHECK_NAMES, "requested_found"}),  # the follow-up shipped no version of its own
+        (None, {*LOG_CHECK_NAMES, "requested_found"}),
+    ],
+    ids=[
+        "changed",
+        "log dropped",
+        "not kept",
+        "language",
+        "theme",
+        "title",
+        "no texts",
+        "requested",
+        "no new version",
+        "none",
+    ],
+)
+def test_follow_up_checks_measure_each_part_in_the_shipped_version(
+    shipped: dict[str, Any] | None, failed: set[str]
+) -> None:
+    """User test of 2026-11-01: the log scale of "make the title German and use a log scale" never reached the plot.
+    Each part of a combined follow-up is a check of its own, measured in the version the follow-up shipped."""
+    found = matrix.follow_up_checks(LOG_CHECKS, FIRST, shipped)
+
+    assert list(found) == [*LOG_CHECK_NAMES, "requested_found"]
+    assert {name for name, held in found.items() if not held} == failed
+
+
+def test_a_failed_check_fails_the_run_and_the_summary_names_it() -> None:
+    record = matrix.base_record(two_fixtures()[1], 1)
+    record.update(status="ok", checks={"shipped": True, "code:1": False}, checks_passed=False)
+    unchecked = matrix.base_record(two_fixtures()[0], 1)
+    unchecked["status"] = "ok"
+
+    matrix.finish_record(record)
+    matrix.finish_record(unchecked)
+
+    assert (record["passed"], unchecked["passed"]) == (False, True)  # a case without checks passes as before
+    summary = summarize([record, unchecked])
+    assert (summary["checked"], summary["check_failures"]) == (1, ["scatter-basic-matplotlib r1: code:1"])
+    report = {"stamp": {}, "summary": summary, "runs": [record, unchecked]}
+    assert "| Follow-up checks that failed | 1 in 1 checked runs; scatter-basic-matplotlib r1: code:1 |" in (
+        summary_markdown(report)
+    )
+
+
+LOG_SCALE_PLAN: dict[str, Any] = {
+    "edits": [
+        {"find": 'title = "Exam Score by Study Hours"', "replace": 'title = "Prüfungspunkte nach Lernstunden"'},
+        {"find": "ax.yaxis.grid(True", "replace": 'ax.set_yscale("log")\nax.yaxis.grid(True'},
+    ],
+    "title": "Prüfungspunkte nach Lernstunden",
+    "changes": ["Titel auf Deutsch", "Logarithmische y-Achse"],
+}
+TITLE_ONLY_PLAN: dict[str, Any] = {**LOG_SCALE_PLAN, "edits": LOG_SCALE_PLAN["edits"][:1], "changes": ["Titel"]}
+
+
+@pytest.mark.parametrize(("plan", "passed"), [(LOG_SCALE_PLAN, True), (TITLE_ONLY_PLAN, False)])
+async def test_a_combined_follow_up_is_checked_in_the_version_it_shipped(
+    tmp_path: Path, services: Services, swap_models, plan: dict[str, Any], passed: bool
+) -> None:
+    """The follow-up sets the plot language and changes the plot in one turn; the checks read the shipped version."""
+    swap_models(
+        "anthropic-vertex",
+        {
+            "root": [
+                {"call": "plot_pipeline", "args": {}},
+                {"text": ROOT_REPLY},
+                {"call": "set_language", "args": {"language": "de", "applies_to": "plot"}},
+                {"call": "plot_pipeline", "args": {"change_request": "Log scale on y", "base": "previous"}},
+                {"text": "The title is German now, and the y axis is logarithmic."},
+            ],
+            "adapter": [{"json": SCATTER_PLAN}, {"json": plan}],
+            "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+        },
+    )
+    checks = FollowUpChecks(language="de", code_added=(r"set_yscale\(\s*[\"']log",))
+    case = dataclasses.replace(
+        two_fixtures()[1], change_request="Make the title German and use a log scale on the y axis.", checks=checks
+    )
+    notes: list[str] = []
+
+    result = await run_matrix(
+        [case], config(tmp_path, cases=case.case_id), services=services, runtime=runtime(), echo=notes.append
+    )
+
+    (run,) = result.report["runs"]
+    assert run["status"] == "ok" and run["turns"] == 2
+    assert run["checks"] == {"shipped": True, "language": True, "code:1": passed, "requested_found": True}
+    assert (run["checks_passed"], run["passed"]) == (passed, passed)
+    assert result.report["summary"]["check_failures"] == ([] if passed else ["scatter-basic-matplotlib r1: code:1"])
+    assert any("follow-up checks failed" in note for note in result.notes) is not passed
 
 
 def test_book_attribution_counts_answers_that_failed_their_schema_by_rule() -> None:

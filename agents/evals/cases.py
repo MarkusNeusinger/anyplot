@@ -19,7 +19,7 @@ one generated matplotlib or seaborn case per spec, one plotnine and one altair c
 2026-10-29, one makie case and one each for chartjs, d3, echarts and highcharts since
 2026-10-30, one muix case and one each for plotly and bokeh since 2026-10-31, plus the
 hand-written `scatter-basic-matplotlib` and `bar-grouped-seaborn`: 25), `full` (every case
-except the stress cases: the 900 generated and the seven hand-written ones, 907 since PB-2a;
+except the stress cases: the 900 generated and the eleven hand-written ones, 911 since 2026-11-01, 907 since PB-2a;
 787 before plotly and bokeh, 727 before MUI X, 487 before the other JavaScript libraries, 427
 before makie, 367 before ggplot2, 247 before pygal and lets-plot, 127 before plotnine and
 altair), `stress` (the
@@ -34,11 +34,11 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 from agents.anyplot.dev_fixture import CASES_DIR, snapshot_from_repo
 from agents.anyplot.language import LANGUAGE_PATTERN, is_valid
-from agents.anyplot.schemas import Binding
+from agents.anyplot.schemas import Binding, ShownGroup, Theme
 from agents.anyplot.session_state import CatalogueSnapshot
 from agents.anyplot.settings import FIXTURE_PATTERN
 from core.constants import SUPPORTED_LIBRARIES
@@ -56,6 +56,32 @@ _CASE_ID = re.compile(FIXTURE_PATTERN)
 
 class CaseError(ValueError):
     """A case directory that cannot be run: a missing file or an invalid field."""
+
+
+@dataclass(frozen=True)
+class FollowUpChecks:
+    """What the version the follow-up message shipped must show (`checks` in `case.json`), measured in code.
+
+    A combined follow-up ("make the title German and use a log scale on y") once reached the
+    plot with its language part only (user test of 2026-11-01): every part of such a message
+    is a check of its own. `language` and `theme` are the shipped version's plot language and
+    render theme; each `code_added` pattern must match the shipped code and not the first
+    version's (the change the message asked for, not a line the catalogue already had); each
+    `code_kept` pattern must match both (a part the message did not ask to change, such as the
+    theme tokens a dark background must keep: the theme is the run's, never colours written in);
+    each role in `texts_changed` must draw other texts than in the first version (a translated
+    title). Every checked follow-up also needs an empty `requested_not_found`: a text the
+    root asked the plot to show is there (`matrix.follow_up_checks`).
+    """
+
+    language: str | None = None
+    theme: Theme | None = None
+    code_added: tuple[str, ...] = ()
+    code_kept: tuple[str, ...] = ()
+    texts_changed: tuple[ShownGroup, ...] = ()
+
+
+MAX_CODE_PATTERNS = 5
 
 
 @dataclass(frozen=True)
@@ -77,6 +103,8 @@ class EvalCase:
     change_request: str | None = None
     language: str | None = None
     """The session language the harness chooses before the first turn (source `chosen`), or `None`."""
+    checks: FollowUpChecks | None = None
+    """What the follow-up's shipped version must show; only a case with a `change_request` has them."""
     snapshot_file: Path | None = field(default=None, repr=False)
 
     def snapshot(self) -> CatalogueSnapshot:
@@ -117,6 +145,9 @@ def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
     language = raw.get("language")
     if language is not None and not (isinstance(language, str) and is_valid(language)):
         raise CaseError(f"{directory}/case.json: language must match {LANGUAGE_PATTERN}")
+    checks = _checks(raw.get("checks"), directory)
+    if checks is not None and change_request is None:
+        raise CaseError(f"{directory}/case.json: checks need a change_request.txt, the follow-up they measure")
     snapshot_file = directory / "snapshot.json"
     perturbation = raw.get("perturbation")
     return EvalCase(
@@ -134,8 +165,51 @@ def load_case(directory: Path, origin: Origin = "fixtures") -> EvalCase:
         directory=directory,
         change_request=change_request,
         language=language,
+        checks=checks,
         snapshot_file=snapshot_file if snapshot_file.is_file() else None,
     )
+
+
+def _checks(value: Any, directory: Path) -> FollowUpChecks | None:
+    """`checks` of `case.json` as `FollowUpChecks`: every field optional, but at least one, and none unknown."""
+    if value is None:
+        return None
+    where = f"{directory}/case.json: checks"
+    fields = {"language", "theme", "code_added", "code_kept", "texts_changed"}
+    if not isinstance(value, dict) or not value or set(value) - fields:
+        raise CaseError(f"{where} must be an object with some of {', '.join(sorted(fields))}")
+    language, theme = value.get("language"), value.get("theme")
+    if language is not None and not (isinstance(language, str) and is_valid(language)):
+        raise CaseError(f"{where}.language must match {LANGUAGE_PATTERN}")
+    if theme is not None and theme not in get_args(Theme):
+        raise CaseError(f"{where}.theme must be one of {', '.join(get_args(Theme))}")
+    roles = value.get("texts_changed", [])
+    if not isinstance(roles, list) or not all(role in get_args(ShownGroup) for role in roles):
+        raise CaseError(f"{where}.texts_changed must be a list of drawn-text roles (`PlotShows.texts`)")
+    checks = FollowUpChecks(
+        language=language,
+        theme=theme,
+        code_added=_patterns(value, "code_added", where),
+        code_kept=_patterns(value, "code_kept", where),
+        texts_changed=tuple(roles),
+    )
+    if checks == FollowUpChecks():
+        # Only `shipped` and `requested_found` would be left, which a follow-up that changed nothing passes.
+        raise CaseError(f"{where} must check something: a language, a theme, a code pattern or a drawn-text role")
+    return checks
+
+
+def _patterns(value: dict[str, Any], key: str, where: str) -> tuple[str, ...]:
+    """A list of at most `MAX_CODE_PATTERNS` regular expressions that compile."""
+    patterns = value.get(key, [])
+    if not isinstance(patterns, list) or len(patterns) > MAX_CODE_PATTERNS:
+        raise CaseError(f"{where}.{key} must be a list of at most {MAX_CODE_PATTERNS} patterns")
+    for pattern in patterns:
+        try:
+            re.compile(pattern)
+        except (TypeError, re.error) as exc:
+            raise CaseError(f"{where}.{key} holds a pattern that does not compile ({type(exc).__name__})") from exc
+    return tuple(patterns)
 
 
 def _bindings(value: Any, directory: Path) -> list[Binding] | None:

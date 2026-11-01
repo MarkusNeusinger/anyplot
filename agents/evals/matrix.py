@@ -155,7 +155,7 @@ if TYPE_CHECKING:  # importing agents.anyplot builds the agents, so the runtime 
     from agents.anyplot.render.contract import RuntimeAdapter
     from agents.anyplot.services import Services
     from agents.anyplot.settings import AgentSettings
-    from agents.evals.cases import EvalCase
+    from agents.evals.cases import EvalCase, FollowUpChecks
     from agents.main import Runtime
 
 
@@ -725,6 +725,8 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "texts_expected": None,
         "probe_errors": {},
         "unbacked_quotes": 0,
+        "checks": {},
+        "checks_passed": None,
         "residual_defects": [],
         "gate_failures": {},
         "validator_rejections": {},
@@ -1065,12 +1067,84 @@ def shipped_shows(sid: str, number: Any) -> dict[str, Any] | None:
     return shows.model_dump(mode="json") if shows is not None else None
 
 
+def version_facts(sid: str, number: Any) -> dict[str, Any] | None:
+    """What `follow_up_checks` reads of the shipped version `number`: its code, plot language, theme, drawn texts
+    and missed requested texts, from the in-process services; None for a version it does not hold."""
+    from agents.anyplot.services import get_services
+
+    if not isinstance(number, int) or isinstance(number, bool) or number < 1:
+        return None
+    version = get_services().versions.get(sid, number)
+    if version is None:
+        return None
+    shows = version.result.shows
+    return {
+        "number": number,
+        "code": version.export,
+        "language": version.language,
+        "theme": version.theme,
+        "texts": dict(shows.texts) if shows is not None and shows.texts is not None else None,
+        "requested_not_found": list(shows.requested_not_found) if shows is not None else [],
+    }
+
+
+def follow_up_checks(
+    checks: "FollowUpChecks", first: dict[str, Any] | None, shipped: dict[str, Any] | None
+) -> dict[str, bool]:
+    """Each check of a case's follow-up (`case.json` `checks`) against the version it shipped and the first plot.
+
+    `shipped` holds when the follow-up stored a version after the first one; without it every other check fails.
+    `language` compares the version's plot language (`same_language`, so `de` is `Deutsch`) and `theme` its
+    render theme; `code:<n>` holds when the n-th `code_added` pattern (from 1) matches the shipped code and not
+    the first version's, so a line the catalogue already had proves nothing; `kept:<n>` when the n-th
+    `code_kept` pattern matches both (a live run of 2026-11-01 asked for "a dark background" in the change
+    request as well as the theme, and the adapter wrote the dark colours over the theme tokens); `texts:<role>` when that role
+    draws texts that differ from the first version's; `requested_found` when `requested_not_found` is empty,
+    so a text the root asked the plot to show is drawn. The results are booleans only: no code or text of the
+    run reaches the report.
+    """
+    from agents.anyplot.language import same_language
+
+    base = first or {}
+    ok = shipped is not None and shipped.get("number") != base.get("number")
+    found: dict[str, bool] = {"shipped": ok}
+    shipped = shipped if ok and shipped is not None else {}
+    if checks.language is not None:
+        found["language"] = ok and same_language(str(shipped.get("language") or ""), checks.language)
+    if checks.theme is not None:
+        found["theme"] = ok and shipped.get("theme") == checks.theme
+    for index, pattern in enumerate(checks.code_added, 1):
+        compiled = re.compile(pattern)
+        found[f"code:{index}"] = (
+            ok
+            and compiled.search(str(shipped.get("code") or "")) is not None
+            and compiled.search(str(base.get("code") or "")) is None
+        )
+    for index, pattern in enumerate(checks.code_kept, 1):
+        compiled = re.compile(pattern)
+        found[f"kept:{index}"] = (
+            ok
+            and compiled.search(str(shipped.get("code") or "")) is not None
+            and compiled.search(str(base.get("code") or "")) is not None
+        )
+    for role in checks.texts_changed:
+        texts = (shipped.get("texts") or {}).get(role)
+        found[f"texts:{role}"] = ok and bool(texts) and texts != (base.get("texts") or {}).get(role)
+    found["requested_found"] = ok and not shipped.get("requested_not_found")
+    return found
+
+
 def finish_record(record: dict[str, Any]) -> None:
     """Derive pass, the harness outcome and the accept match from the booked fields (see `report.py`)."""
     if record["status"] == "harness_error":
         return
     record["accepted"] = record["status"] == "ok"
-    record["passed"] = record["status"] in SHIPPED and not record["padded"] and not record["adaptation"]
+    record["passed"] = (
+        record["status"] in SHIPPED
+        and not record["padded"]
+        and not record["adaptation"]
+        and record.get("checks_passed") is not False
+    )
     expected = record["expected"]
     record["accept_match"] = None if expected == "unknown" else record["accepted"] == (expected == "accepted")
 
@@ -1137,7 +1211,12 @@ class CaseRunner:
             return
         plot = await self._kept_turn(record, case, repeat, sid, {"action": "create_plot"}, headers("m1"), "m1")
         if case.change_request and record["status"] in SHIPPED:
+            first = version_facts(sid, plot.get("version")) if plot is not None else None
             plot = await self._kept_turn(record, case, repeat, sid, {"text": case.change_request}, headers("m2"), "m2")
+            if case.checks is not None:
+                shipped = version_facts(sid, plot.get("version")) if plot is not None else None
+                record["checks"] = follow_up_checks(case.checks, first, shipped)
+                record["checks_passed"] = all(record["checks"].values())
         if plot is not None and record["status"] in SHIPPED:
             await self._save_png(record, case, repeat, sid, plot, headers("a"))
 
@@ -1558,6 +1637,11 @@ async def _run_matrix(
         result.notes.append(
             f"{summary['unbacked_quotes']} quoted passages in replies to a shipped plot stand in no drawn text "
             f"({', '.join(summary['unbacked_quote_runs'])}): check that the reply quoted only what the plot shows"
+        )
+    if summary.get("check_failures"):
+        result.notes.append(
+            f"{len(summary['check_failures'])} follow-up checks failed ({'; '.join(summary['check_failures'])}): "
+            "a part of the follow-up did not reach the shipped plot"
         )
     if stopped == "outage":
         result.exit_code = EXIT_OUTAGE
