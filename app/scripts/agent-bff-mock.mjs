@@ -1190,7 +1190,10 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       // The service's `pipeline.run_theme`: a theme asked for (the word "dark" or "light" in the text), the
       // asked theme of the version a refinement changes, the site theme of the turn, else the version it
       // changes or light.
-      const previous = refine ? session.versions[session.versions.length - 1] : undefined;
+      // The version a refinement changes is this library's latest, as `latest_rendered(library=)` picks it.
+      const previous = refine
+        ? session.versions.findLast(item => item.library === session.library)
+        : undefined;
       let askedTheme = previous?.themeAsked ? previous.theme : null;
       if (/\blight\b/.test(lower)) askedTheme = 'light';
       else if (/\bdark\b/.test(lower)) askedTheme = 'dark';
