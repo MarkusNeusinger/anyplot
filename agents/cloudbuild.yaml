@@ -116,8 +116,12 @@ substitutions:
   # public release instead. AGENT_LIBRARIES' default stays matplotlib,seaborn.
   _LIBRARIES: matplotlib,seaborn,plotnine,altair,pygal,letsplot,plotly,bokeh,ggplot2,makie,chartjs,d3,echarts,highcharts,muix
   # "1" keeps an instance warm; "0" scales to zero between sessions (and so
-  # forgets every in-memory session, which the client shows as "session expired").
-  _MIN_INSTANCES: "0"
+  # forgets every in-memory session, which the client shows as "session expired",
+  # and resets the in-memory day counters). "1" since 2026-11-02 (owner decision):
+  # the idle instance costs about 0.44 CHF a day at list price, which the account's
+  # unused Compute Flexible commitment absorbs until its first part ends on
+  # 2027-01-15; revisit before then.
+  _MIN_INSTANCES: "1"
   # "true": the smoke step calls /v1/status with an ID token minted for
   # _SERVICE_ACCOUNT and checks the configuration it reports. That needs the
   # service URL in AGENT_SERVICE_URLS, roles/run.invoker on the service for
