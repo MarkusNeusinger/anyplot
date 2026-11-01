@@ -1122,6 +1122,7 @@ export function useAgentSession({
   siteThemeRef.current = siteTheme;
   const abortRef = useRef<AbortController | null>(null);
   const stoppedRef = useRef(false);
+  const turnErrorRef = useRef<string | null>(null);
   const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Set synchronously, before the state catches up, so a double click starts nothing twice.
   const themeRef = useRef(false);
@@ -1730,11 +1731,15 @@ export function useAgentSession({
     [safeDispatch, addItem, onPlot, trackEvent]
   );
 
+  /** One turn; the code of the error that ended it (`run_limit`, `capacity`, a failed request) lands in
+   * `turnErrorRef`, null when it ended without one or never started (`plotTurn`). */
   const runTurn = useCallback(
     async (body: TurnBody) => {
       const current = stateRef.current;
       const sid = current.sessionId;
+      turnErrorRef.current = null;
       if (!sid || current.run || busy()) return;
+      let errorCode: string | null = null;
       const controller = new AbortController();
       abortRef.current = controller;
       stoppedRef.current = false;
@@ -1758,6 +1763,7 @@ export function useAgentSession({
           const event = parseAgentEvent(raw);
           if (!event) continue;
           onEvent(event);
+          if (event.type === 'error') errorCode = event.code;
           if (event.type === 'done') {
             finished = true;
             break;
@@ -1766,17 +1772,20 @@ export function useAgentSession({
         if (!finished && !stoppedRef.current) {
           // The BFF always ends a turn with `done`; a stream without it was cut.
           addItem({ kind: 'error', code: 'upstream', ref: null });
+          errorCode = 'upstream';
         }
       } catch (err) {
         if (!stoppedRef.current && !isAbort(err)) {
           const failure = handleFailure(err);
           addItem({ kind: 'error', code: failure.code, ref: failure.ref });
+          errorCode = failure.code;
         }
       } finally {
         if (stopTimer.current) clearTimeout(stopTimer.current);
         stopTimer.current = null;
         if (stoppedRef.current) addItem({ kind: 'notice', text: 'stopped' });
         if (abortRef.current === controller) abortRef.current = null;
+        turnErrorRef.current = errorCode;
         safeDispatch({ type: 'run_end' });
       }
     },
@@ -1784,6 +1793,13 @@ export function useAgentSession({
   );
 
   const createPlot = useCallback(() => runTurn({ action: 'create_plot' }), [runTurn]);
+
+  /** `createPlot`, resolving to the code of the error that ended the turn, or null. The fan-out tells a turn the
+   * user's cap refused (`run_limit`) from a turn that ran (`FanOut`). */
+  const plotTurn = useCallback(async (): Promise<string | null> => {
+    await runTurn({ action: 'create_plot' });
+    return turnErrorRef.current;
+  }, [runTurn]);
 
   const sendMessage = useCallback(
     (text: string) => {
@@ -2127,6 +2143,7 @@ export function useAgentSession({
     confirmData,
     undoData,
     createPlot,
+    plotTurn,
     sendMessage,
     stop,
     switchLibrary,
