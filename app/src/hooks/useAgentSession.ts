@@ -1522,6 +1522,16 @@ export function useAgentSession({
     [token]
   );
 
+  // `.view_all()`: the current data version's canonical CSV, read-only; the view keeps it, the session state does not.
+  const fetchDataCsv = useCallback(
+    async (signal?: AbortSignal): Promise<string> => {
+      const sid = stateRef.current.sessionId;
+      if (!sid) throw new AgentApiError(0, 'no_session');
+      return agentApi.datasetCsv(token, sid, signal);
+    },
+    [token]
+  );
+
   // A dropped binary file read on the server; the data card keeps its own state for it (nothing is stored).
   const convertFile = useCallback(
     async (dataBase64: string, sheet?: string): Promise<ConvertAnswer> => {
@@ -2134,6 +2144,7 @@ export function useAgentSession({
     fetchArtifact,
     reportOutcome,
     convertFile,
+    fetchDataCsv,
     saveSession,
     setLanguage,
     sendFeedback,

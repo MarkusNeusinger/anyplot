@@ -805,6 +805,9 @@ function AgentChat({
             decisionRef={decisionRef}
             // Not while the fan-out's panel is open: its sessions copy this session's confirmed data.
             locked={!!fanOut}
+            onLoadData={session.fetchDataCsv}
+            // A look at the session's data, not at a result: version 0.
+            onDataViewShown={() => session.reportOutcome('opened_data_view', 0)}
           />
 
           {state.items.length === 0 && !state.run && (

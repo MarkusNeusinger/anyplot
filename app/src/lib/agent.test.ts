@@ -862,6 +862,38 @@ describe('agentApi.reportOutcome', () => {
   });
 });
 
+describe('agentApi.datasetCsv', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('reads the current version as text with a GET, never parsing it', async () => {
+    const csv = 'city,value\n"Köln, Nord",1.50\nBonn,\n';
+    const fetchMock = vi.fn(async () => new Response(csv, { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const controller = new AbortController();
+
+    await expect(agentApi.datasetCsv('', 'S/1', controller.signal)).resolves.toBe(csv);
+
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toMatch(/\/debug\/agent\/sessions\/S%2F1\/dataset\/data\.csv$/);
+    expect(init.method ?? 'GET').toBe('GET');
+    expect(init.signal).toBe(controller.signal);
+  });
+
+  it('throws the route code, such as no_dataset before any data', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('{"detail":"no_dataset","ref":"r1"}', { status: 422 }))
+    );
+    await expect(agentApi.datasetCsv('', 'S1')).rejects.toMatchObject({
+      status: 422,
+      code: 'no_dataset',
+      ref: 'r1',
+    });
+  });
+});
+
 describe('helpers', () => {
   it('buckets sizes without exposing them', () => {
     expect(sizeBucket(10)).toBe('lt_1kb');

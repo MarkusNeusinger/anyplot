@@ -474,6 +474,8 @@ export const OUTCOME_ACTIONS = [
   'downloaded_page',
   // The same page shown in the card (since JS-4b-2); a look, not a keep.
   'opened_preview',
+  // The data panel's view of every row (`.view_all()`, version 0); a look at the data, not a keep.
+  'opened_data_view',
   'downloaded_data',
   'saved_session',
   'feedback',
@@ -1050,6 +1052,15 @@ export const agentApi = {
       token,
       post({ from_session: fromSession })
     ),
+  /**
+   * `.view_all()`: the current data version's canonical `data.csv` as the server
+   * stores it, at most 4 MiB, for the data panel's full view. Read-only; `422
+   * no_dataset` before any data.
+   */
+  datasetCsv: async (token: string, sid: string, signal?: AbortSignal): Promise<string> => {
+    const response = await agentFetch(`${sessionPath(sid)}/dataset/data.csv`, token, { signal });
+    return response.text();
+  },
 
   /**
    * `.to_long()`: the service applies its own wide-table suggestion, without a

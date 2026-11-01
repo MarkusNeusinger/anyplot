@@ -99,9 +99,16 @@
  * below the other (a report sheet) is read as its first table, and a table
  * picker beside the preview parses the same text again for another one
  * (`tables` in the dataset route's answer).
+ *
+ * `.view_all()` next to the preview's label opens every row of the current
+ * version in a read-only grid (`DataView.tsx`, loaded on demand): the
+ * canonical `data.csv` with each value as the data holds it, to search, sort
+ * and filter without changing the data. Read-only, so it opens while a step
+ * runs and while the fan-out's panel is open; the focus returns to the button
+ * when it closes.
  */
 
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import Box from '@mui/material/Box';
 import GlobalStyles from '@mui/material/GlobalStyles';
@@ -153,7 +160,7 @@ import {
   FILE_CONVERTING_TEXT,
   FILE_LOCKED_TEXT,
 } from 'src/sections/agent-chat/messages';
-import { previewSegments } from 'src/sections/agent-chat/previewCell';
+import { PreviewCell } from 'src/sections/agent-chat/PreviewCell';
 import { inStep2 } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
@@ -169,36 +176,16 @@ import {
 } from 'src/sections/agent-chat/styles';
 import { colors, fontSize, typography } from 'src/theme';
 
+// The full view's chunk holds the Data Grid: it loads when the user first opens the view (or points at the button).
+const loadDataView = () => import('src/sections/agent-chat/DataView');
+const DataView = lazy(loadDataView);
+
 function formatKb(bytes: number): string {
   return `${(bytes / 1024).toFixed(bytes < 10 * 1024 ? 1 : 0)} KB`;
 }
 
 function countOf(count: number, noun: string): string {
   return `${count.toLocaleString('en-US')} ${noun}${count === 1 ? '' : 's'}`;
-}
-
-/** One preview cell, its line breaks and space runs drawn as muted marks a screen reader names. */
-function PreviewCell({ cell }: { cell: string }) {
-  return (
-    <>
-      {previewSegments(cell).map((segment, index) => {
-        if (!segment.mark) return <span key={index}>{segment.text}</span>;
-        const label = { break: 'line break', tab: 'tab', spaces: `${segment.text.length} spaces` }[
-          segment.mark
-        ];
-        return (
-          <span key={index} title={label}>
-            <Box component="span" aria-hidden="true" sx={{ color: 'var(--ink-muted)' }}>
-              {segment.text}
-            </Box>
-            <Box component="span" sx={visuallyHiddenSx}>
-              {` (${label}) `}
-            </Box>
-          </span>
-        );
-      })}
-    </>
-  );
 }
 
 /** The first rows of a table under its column names and types. */
@@ -771,6 +758,13 @@ interface DataPanelProps {
    * runs, and a line at the top of the card says why.
    */
   locked?: boolean;
+  /**
+   * `.view_all()`: the current data version's canonical `data.csv` (`GET .../dataset/data.csv`)
+   * for the full view of every row. Without it the preview has no `.view_all()`.
+   */
+  onLoadData?: (signal: AbortSignal) => Promise<string>;
+  /** The full view showed its rows, once per opening: the `opened_data_view` beacon. */
+  onDataViewShown?: () => void;
 }
 
 /** The card's line while the fan-out's panel is open, which the card names as its description. */
@@ -794,8 +788,13 @@ export function DataPanel({
   onTrack,
   onConvert,
   locked = false,
+  onLoadData,
+  onDataViewShown,
 }: DataPanelProps) {
   const [text, setText] = useState('');
+  // `.view_all()`: the full view of every row is open. Read-only, so it opens while a step runs too.
+  const [viewOpen, setViewOpen] = useState(false);
+  const viewButtonRef = useRef<HTMLButtonElement>(null);
   // A binary file on its way to the server and back, as the line the box shows meanwhile
   // (`reading "x.parquet" on the server`); the box, `.open()` and `.parse()` wait for it.
   const [convertLine, setConvertLine] = useState<string | null>(null);
@@ -1641,10 +1640,56 @@ export function DataPanel({
           <CodeBlock code={dataset.parsed.code} />
 
           <Box sx={{ minWidth: 0 }}>
-            <Box sx={{ ...labelSx, mb: 0.5 }}>
-              # preview — first {dataset.parsed.preview.length} rows
+            <Box
+              sx={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                columnGap: 1,
+                mb: 0.5,
+              }}
+            >
+              <Box sx={labelSx}># preview — first {dataset.parsed.preview.length} rows</Box>
+              {onLoadData && (
+                <Box
+                  component="button"
+                  type="button"
+                  ref={viewButtonRef}
+                  onClick={() => setViewOpen(true)}
+                  // The grid's chunk starts loading as the pointer or the focus reaches the button.
+                  onPointerEnter={() => void loadDataView()}
+                  onFocus={() => void loadDataView()}
+                  aria-haspopup="dialog"
+                  aria-label={`View all ${countOf(dataset.parsed.profile.rows, 'row')}`}
+                  // Flush right, also on its own line at phone width.
+                  sx={{ ...actionButtonSx, ml: 'auto', mr: -1.25 }}
+                >
+                  .view_all()
+                </Box>
+              )}
             </Box>
             <PreviewTable columns={columns} rows={dataset.parsed.preview} />
+            {viewOpen && onLoadData && (
+              <Suspense
+                fallback={
+                  <Box role="status" sx={{ ...labelSx, mt: 0.5 }}>
+                    # loading the table view <Ellipsis />
+                  </Box>
+                }
+              >
+                <DataView
+                  profile={dataset.parsed.profile}
+                  version={dataset.parsed.version ?? 1}
+                  load={onLoadData}
+                  onShown={onDataViewShown}
+                  onClose={() => {
+                    setViewOpen(false);
+                    viewButtonRef.current?.focus({ preventScroll: true });
+                  }}
+                />
+              </Suspense>
+            )}
           </Box>
 
           <Box>

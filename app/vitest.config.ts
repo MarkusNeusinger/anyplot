@@ -13,6 +13,9 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     setupFiles: ['./src/setupTests.ts'],
+    // CSS reads as empty in tests, also through `?raw`; the design tokens stay readable, so a
+    // test can pin a TypeScript copy of them (`dataViewTheme.test.ts`).
+    css: { include: [/src\/styles\/tokens\.css/] },
     // MUI >= 9.1 ships .mjs files with directory imports (e.g.
     // react-transition-group/TransitionGroupContext) that Node's native ESM
     // loader rejects; inline MUI so Vite's resolver handles those imports.

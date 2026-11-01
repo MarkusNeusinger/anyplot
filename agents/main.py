@@ -20,6 +20,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
 | `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (version 1) plus `confirmed: true`, `complete`, `missing_roles` and `copied_from` (the source's version number): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`), `503 capacity` |
+| `GET /v1/sessions/{sid}/dataset/data.csv` | | the current dataset version's canonical CSV as stored (at most 4 MiB, `parse.MAX_CANONICAL_BYTES`), for the data panel's full view; no model call, no state write | `422 no_dataset` |
 | `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, `summarize_data`); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
@@ -1830,6 +1831,31 @@ async def copy_dataset(
             "copied_from": origin.dataset_version,
         },
         headers=_NO_STORE,
+    )
+
+
+@app.get("/v1/sessions/{sid}/dataset/data.csv", dependencies=v1_dependencies)
+async def dataset_csv(sid: SessionId, user: User, runtime: RuntimeDep) -> Response:
+    """The current dataset version's canonical `data.csv` as stored: the data panel's full view (`.view_all()`).
+
+    The bytes the next plot run reads (`StoredDataset.csv`, at most `parse.MAX_CANONICAL_BYTES`), never formatted
+    again, so the page shows every value as the data holds it. A version's `GET .../artifacts/data.csv` is the data
+    a plot was made from; this is the data the panel shows now, also in step 1 before any plot. A read with no model
+    call and no state write, so no `_active` check: it neither races nor blocks a turn, and when a turn stores a
+    new version meanwhile, the page fetches again. `422 no_dataset` without data, as on the other dataset routes.
+    """
+    services = get_services()
+    session = await runtime.session(user, sid)
+    view = read_session(session.state)
+    if view is None:
+        raise AgentsError(404, "session_expired")
+    stored = services.datasets.get(view.dataset_id, sid) if view.dataset_id else None
+    if stored is None:
+        raise AgentsError(422, "no_dataset")
+    return Response(
+        stored.csv.encode("utf-8"),
+        media_type=ARTIFACT_TYPES["data.csv"],
+        headers={**_NO_STORE, "X-Content-Type-Options": "nosniff"},
     )
 
 

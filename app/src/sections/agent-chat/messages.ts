@@ -72,6 +72,22 @@ export const DATA_FAILURE: Record<string, string> = {
 };
 
 /**
+ * The full data view's line when it could not read the data (`DataView.tsx`): a code of the
+ * data route, or `csv` with the reader's sentence for a file that breaks the canonical format.
+ */
+export function describeViewFailure(code: string, ref: string | null, detail?: string): string {
+  const text =
+    code === 'csv'
+      ? `the file is not the CSV it should be (${detail ?? 'unreadable'})`
+      : code === 'not_found'
+        ? 'this server cannot show every row yet'
+        : code === 'too_large'
+          ? 'the data is larger than the view reads (4 MB)'
+          : (DATA_FAILURE[code] ?? `request failed (${code})`);
+  return `could not show every row: ${text}${ref ? ` · ref ${ref}` : ''}`;
+}
+
+/**
  * What dropped a confirmation the user had given: the thread's warning notice
  * and the data card's step line next to `.confirm()` say it in these words.
  */
