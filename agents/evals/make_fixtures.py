@@ -1,9 +1,9 @@
-"""Generate the synthetic spike-X fixture cases: 10 specs x 13 libraries x 6 perturbations.
+"""Generate the synthetic spike-X fixture cases: 10 specs x 15 libraries x 6 perturbations.
 
 Every dataset is invented and drawn from a seeded NumPy generator, so a rerun writes
 byte-identical files. Run it from the repository root:
 
-    uv run --extra agents python -m agents.evals.make_fixtures          # (re)write the 780 cases
+    uv run --extra agents python -m agents.evals.make_fixtures          # (re)write the 900 cases
     uv run --extra agents python -m agents.evals.make_fixtures --check  # exit 1 when a file is stale
 
 It writes `agents/evals/fixtures/cases/<spec>-<library>-<perturbation>/` with
@@ -18,14 +18,15 @@ since 2026-10-26, step 1c), ggplot2 (since 2026-10-29, step 2c, PR 3b: the first
 library of another language, R, whose files the R runtime scans), Makie (`makie`,
 since 2026-10-30, J2b of step 5: Julia, whose files the Julia runtime scans) and Chart.js,
 D3, ECharts and Highcharts (`chartjs`, `d3`, `echarts`, `highcharts`, since 2026-10-30,
-JS-4a of step 3: JavaScript, whose files the JavaScript runtime scans) and MUI X (`muix`,
-since 2026-10-31, JS-4c: TSX, which the same runtime scans); every
+JS-4a of step 3: JavaScript, whose files the JavaScript runtime scans), MUI X (`muix`,
+since 2026-10-31, JS-4c: TSX, which the same runtime scans) and plotly and bokeh (since
+2026-10-31, PB-2a of step 4: Python, drawn by the renderer's figure mode); every
 library of a spec gets the same datasets and bindings, so only `library` and the case id
 differ between them. A new library adds case directories and changes none that exist.
 
 **The ten specs.** Each covers another plot family, and the readiness scan
 (`RuntimeAdapter.readiness` of the library's runtime, through `opening.assess` with the
-thirteen libraries enabled) marks each of its thirteen files `clean` or `coupled`, except one
+fifteen libraries enabled) marks each of its fifteen files `clean` or `coupled`, except one
 pygal file that it blocks (`tests/unit/agents/evals/test_make_fixtures.py` asserts it and names
 it). The cells below were computed on 2026-10-26, pygal's `histogram-basic` on
 2026-10-28, the ggplot2 column on 2026-10-29 and the makie column on 2026-10-30; the first four columns are unchanged since 2026-10-25. The heatmap's matplotlib file, `clean` in the table's first
@@ -46,20 +47,24 @@ splits by the version each file was written for: the five files regenerated for 
 (box, heatmap, area, violin, pie) are `clean`, and the five written for MUI X 7.29 are
 `coupled` with the `data-block` hint; `scatter-basic`'s file imports MUI X 7's
 `ChartContainer` and carries the `deprecated-api` hint too, which the adapter rewrites (the
-plan's question 13: such a file is served, never blocked for its version):
+plan's question 13: such a file is served, never blocked for its version). Every plotly
+file is `coupled` and every bokeh file but `bar-grouped`'s too (2026-10-31): the readiness
+scan's plotly and bokeh rules flag their literal axis ranges, annotations and synthetic
+data, and bokeh's `histogram-basic` is eligible through the normaliser's `.format` rewrite
+of its hex colours:
 
-| Spec | Family | matplotlib | seaborn | plotnine | altair | pygal | letsplot | ggplot2 | makie | muix |
-|---|---|---|---|---|---|---|---|---|---|---|
-| `scatter-basic` | scatter | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled (7.29, `deprecated-api`) |
-| `line-basic` | line (numeric x) | coupled | coupled | coupled | coupled | clean | coupled | clean | coupled | coupled (7.29) |
-| `bar-grouped` | bar (grouped) | coupled | coupled | coupled | coupled | clean | coupled | coupled | coupled | coupled (7.29) |
-| `histogram-basic` | histogram | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled (7.29) |
-| `box-basic` | box | coupled | coupled | coupled | coupled | coupled | coupled | clean | coupled | clean |
-| `heatmap-basic` | heatmap | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | clean |
-| `area-basic` | area | coupled | coupled | coupled | coupled | clean | coupled | clean | coupled | clean |
-| `violin-basic` | violin | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | clean |
-| `pie-basic` | pie | coupled | clean | clean | clean | clean | clean | coupled | coupled | clean |
-| `line-timeseries` | time series | coupled | coupled | coupled | coupled | blocked | coupled | clean | coupled | coupled (7.29) |
+| Spec | Family | matplotlib | seaborn | plotnine | altair | pygal | letsplot | plotly | bokeh | ggplot2 | makie | muix |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `scatter-basic` | scatter | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled (7.29, `deprecated-api`) |
+| `line-basic` | line (numeric x) | coupled | coupled | coupled | coupled | clean | coupled | coupled | coupled | clean | coupled | coupled (7.29) |
+| `bar-grouped` | bar (grouped) | coupled | coupled | coupled | coupled | clean | coupled | coupled | clean | coupled | coupled | coupled (7.29) |
+| `histogram-basic` | histogram | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled (7.29) |
+| `box-basic` | box | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | clean | coupled | clean |
+| `heatmap-basic` | heatmap | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | clean |
+| `area-basic` | area | coupled | coupled | coupled | coupled | clean | coupled | coupled | coupled | clean | coupled | clean |
+| `violin-basic` | violin | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | clean |
+| `pie-basic` | pie | coupled | clean | clean | clean | clean | clean | coupled | coupled | coupled | coupled | clean |
+| `line-timeseries` | time series | coupled | coupled | coupled | coupled | blocked | coupled | coupled | coupled | clean | coupled | coupled (7.29) |
 
 The blocked pygal file has a shape that step 1c does not adapt, so the readiness scan
 blocks the session of each of its 6 cases until the catalogue file changes:
@@ -92,8 +97,10 @@ customers and stations are invented.
 perturbations and alternating matplotlib and seaborn (`SMOKE_CYCLE`, as since the first
 fixtures), and one case for each library outside that cycle (`LIBRARY_SMOKE`):
 `scatter-basic-<library>-renamed` for plotnine and altair (since step 1b), for pygal
-and letsplot (since step 1c), for ggplot2 (since PR 3b), for makie (since J2b) and for
-chartjs, d3, echarts and highcharts (since JS-4a). `scatter-basic` is the spec whose files
+and letsplot (since step 1c), for ggplot2 (since PR 3b), for makie (since J2b), for
+chartjs, d3, echarts and highcharts (since JS-4a) and for plotly and bokeh (since PB-2a,
+whose `renamed` headers reach a plotly trace and a bokeh `ColumnDataSource` through column
+constants in `df[...]`). `scatter-basic` is the spec whose files
 of each of these libraries were rendered when the library's step landed, and it is
 eligible for all ten. MUI X's smoke case (since JS-4c) is `pie-basic-muix-renamed`
 instead: its `scatter-basic` file is written for MUI X 7 and does not bundle as it stands,
@@ -146,6 +153,8 @@ LIBRARIES: tuple[str, ...] = (
     "altair",
     "pygal",
     "letsplot",
+    "plotly",
+    "bokeh",
     "ggplot2",
     "makie",
     "chartjs",
@@ -163,6 +172,8 @@ LIBRARY_SMOKE: dict[str, tuple[str, str]] = {
     "altair": ("scatter-basic", "renamed"),
     "pygal": ("scatter-basic", "renamed"),
     "letsplot": ("scatter-basic", "renamed"),
+    "plotly": ("scatter-basic", "renamed"),
+    "bokeh": ("scatter-basic", "renamed"),
     "ggplot2": ("scatter-basic", "renamed"),
     "makie": ("scatter-basic", "renamed"),
     "chartjs": ("scatter-basic", "renamed"),

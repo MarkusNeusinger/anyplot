@@ -27,7 +27,9 @@ conventions that the adapter must keep and the normaliser rewrites:
   `chart.render_to_file(f"plot-{THEME}.html")`), and
   `ggsave(plot, f"plot-{THEME}.png", path=".", scale=2)` for lets-plot (with the HTML
   save). Every call of the library's save names is a save call; the protected final one
-  is the last module-level statement among those that write the PNG;
+  is the last module-level statement among those that write the PNG. plotly and bokeh
+  have no save name: their save is the pinned statement that writes the figure as
+  `f"plot-{THEME}.json"` (`code/figure.py`), and the last module-level one is protected;
 * the canvas: `figsize=` and `dpi=` on the figure creation call (`plt.subplots`,
   `plt.figure`, `plt.subplot_mosaic`, `sns.clustermap`), `set_size_inches` and
   `set_dpi` on the figure of a seaborn grid, and `dpi=` on savefig (the other libraries
@@ -47,6 +49,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import Literal
+
+from .figure import FIGURE_TARGET, FigureKind, figure_saves
 
 
 PLACEHOLDER = "df = load_user_data()"
@@ -90,7 +94,9 @@ class SaveRule:
     the one suffix a save name may write where the names each write one kind of file
     (pygal: `render_to_file` writes SVG text, so only the HTML; a name not listed writes any
     target of the rule), and `canvas` names the normaliser's canvas rewrite for the library,
-    None where it has none yet.
+    None where it has none yet. `figure` names a library that saves its figure as JSON through
+    one pinned statement (`code/figure.py`: plotly and bokeh, drawn by the renderer's figure
+    mode) and has no save name at all.
     """
 
     names: frozenset[str]
@@ -103,6 +109,7 @@ class SaveRule:
     directory: str | None = None
     writes: Mapping[str, str] = field(default_factory=lambda: MappingProxyType({}))
     canvas: CanvasRewrite | None = "figure"
+    figure: FigureKind | None = None
 
     @property
     def verb(self) -> str:
@@ -211,11 +218,19 @@ SAVE_RULES: Mapping[str, SaveRule] = MappingProxyType(
             directory=".",
             canvas="letsplot",
         ),
+        # The figure as JSON through one pinned statement (`code/figure.py`), which the renderer's figure mode draws:
+        # `fig.update_layout(width=800, height=450).write_json(f"plot-{THEME}.json")` for plotly, `with open(...) as
+        # figure_file: json.dump(json_item(p), figure_file)` for bokeh. No save name: the catalogue's `write_image`,
+        # `write_html`, `export_png` and `save` start a browser or write HTML, so the normaliser replaces them and the
+        # validator refuses them (PB-2a, 2026-10-31).
+        "plotly": SaveRule(names=frozenset(), target_keywords=frozenset(), canvas=None, figure="plotly"),
+        "bokeh": SaveRule(names=frozenset(), target_keywords=frozenset(), canvas=None, figure="bokeh"),
     }
 )
 """The save rule of every library with a Python code profile; `SUPPORTED_LIBRARIES` of the normaliser is its keys."""
 SAVE_NAMES: frozenset[str] = frozenset(name for rule in SAVE_RULES.values() for name in rule.names)
-"""Every save name of every rule: a call by one of them is a save call in every profile, allowed or not."""
+"""Every save name of every rule: a call by one of them is a save call in every profile, allowed or not. plotly's and
+bokeh's rules name none (`SaveRule.figure`)."""
 
 
 def save_rule(library: str) -> SaveRule:
@@ -618,6 +633,27 @@ def _savefig_call(index: SourceIndex, call: ast.Call, statement: Span | None, ru
     )
 
 
+def _figure_names(tree: ast.Module, kind: FigureKind) -> list[tuple[ast.stmt, str]]:
+    """Each module-level pinned figure save of `kind` with its save's callee: `write_json` or `json.dump`."""
+    return [(stmt, "write_json" if kind == "plotly" else "json.dump") for stmt, _ in figure_saves(tree, kind)]
+
+
+def _figure_call(index: SourceIndex, stmt: ast.stmt, func: str) -> SavefigCall:
+    """A pinned figure save as the region's save call: the whole statement, the figure's own target."""
+    return SavefigCall(
+        func=func,
+        span=index.node_span(stmt),
+        statement=index.lines_span(stmt),
+        target=FIGURE_TARGET,
+        standard_target=True,
+        literal_target=None,
+        dpi=None,
+        keywords=(),
+        items=(),
+        has_splat=False,
+    )
+
+
 def find_regions(code: str, tree: ast.Module | None = None, *, library: str = "matplotlib") -> Regions:
     """Locate the conventions in `code`; raises `SyntaxError` when it does not parse.
 
@@ -681,6 +717,10 @@ def find_regions(code: str, tree: ast.Module | None = None, *, library: str = "m
                     )
                 )
 
+    if rule.figure is not None:
+        # plotly and bokeh have no save name: their save is the pinned figure statement (`code/figure.py`), and the
+        # last module-level one is the protected final save.
+        savefig_calls = [_figure_call(index, stmt, name) for stmt, name in _figure_names(tree, rule.figure)]
     by_start = sorted(savefig_calls, key=lambda call: call.span.start)
     # The protected final save is the last module-level statement that writes the PNG: altair's files end on
     # the HTML save and pad the PNG inside an `if` (`_canvas.save(...)`), after the save that is protected.

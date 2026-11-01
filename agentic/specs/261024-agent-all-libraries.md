@@ -2271,6 +2271,12 @@ Found for later (not decided here):
   v9 API"), so their styling may silently go; the adapter reads that section with the
   library rules, and the eval matrix's MUI X run will show how often it matters.
 
+**The eval matrix's MUI X run** (2026-10-31 on 1111b8a15, Haiku in eu, the remote
+renderer, per spec): 60 of 60 cases passed, 60 `ok` (100 %), 58 on the first attempt, for
+$0.97; end to end p50 70 s and p95 151 s, the render p50 8.5 s. The scatter-basic cases,
+whose file was written for MUI X 7.29 with `ChartContainer`, were 6 of 6 `ok` on the first
+attempt; the preflight rendered the smoke case `pie-basic-muix-renamed` instead.
+
 ### 4. plotly and bokeh (through the JavaScript harness's Chromium)
 
 Revised on 2026-10-30 after the second opinion on steps 3 and 4. Two PRs after JS-2: PB-1
@@ -2524,6 +2530,278 @@ the export stacks are absent.
 | The vendored `plotly.min.js` or BokehJS | the installed packages' own bundles, BokehJS's WebGL, widget and table bundles included, found by the harness | the page's version is the plot's; a model of another bundle would not draw |
 | Sandbox mode's page rules | the same with a nonce for scripts instead of `'unsafe-inline'` (tighter) | a bokeh `Div`'s handler ran under `'unsafe-inline'` (measured) |
 | The `lib-plotly` and `lib-bokeh` extras | without the export stacks, and trimmed | they start browsers, which the guard refuses; 27 MB of Selenium drivers; the image grows by 69 MB |
+
+#### What PB-2a built (2026-10-31): plotly and bokeh served for the admin
+
+plotly and bokeh join `PYTHON_LIBRARIES` and the admin deploy's `_LIBRARIES`, rendered by
+PB-1's figure mode: all 15 catalogue libraries are served. The interactive `plot.html` and
+`.interactive()` for the two (question 10's second half) are PB-2b; WebGL is PB-2c.
+
+- **The figure save** (`agents/anyplot/code/figure.py`). The run form ends on one pinned
+  statement that writes the figure as `f"plot-{THEME}.json"`:
+  `fig.update_layout(width=800, height=450).write_json(f"plot-{THEME}.json")` for plotly
+  (the size is the catalogue's `write_image(width=, height=)`, moved into the figure, so the
+  figure mode's device scale draws the catalogue's layout: 800 x 450 at 4, 1600 x 900 at 2,
+  600 x 600 at 4), and `with open(f"plot-{THEME}.json", "w", encoding="utf-8") as
+  figure_file: json.dump(json_item(p), figure_file)` for bokeh (the figure keeps its own
+  `width` and `height`). Nothing in either but the plot's name is free. The save rules of
+  both libraries name no save call (`SaveRule.figure`), so `SAVE_NAMES`, and with it every
+  other profile, is unchanged; the regions protect the pinned statement as the final save.
+- **The export** (question 10, decided): `figure.export_form` swaps the statement back for
+  the library's normal save, `fig.write_image(f"plot-{THEME}.png", width=800, height=450,
+  scale=4)` and `fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")`, or
+  `export_png(p, filename=...)`, `output_file(...)` and `save(p)` with bokeh's imports
+  swapped (`import json` and `json_item` out, `from bokeh.io import export_png, output_file,
+  save` in). plotly's scale is the figure mode's, so the exported PNG has the chat's pixels.
+  Everything else stays the run form byte for byte; the export of an export is the export.
+- **Normaliser** (step 7 of `code/normalise.py`, after the guard steps so a guard's hoisted
+  imports are seen). plotly: the last module-level theme-PNG `write_image` becomes the
+  figure save (318 of 325 files; the other 7 save a single-theme `"plot.png"`), every
+  `write_image`, `write_html` and `show()` above it goes, every statement after it goes (the
+  HTML save, and a range slider in 4 files that only the HTML showed), and an unread
+  `kaleido`, `plotly.io` or `plotly.offline` import goes; plotly express's `scatter`, `line`,
+  `scatter_polar`, `line_polar` and `ecdf` get `render_mode="svg"` unless they name one (they
+  switch to WebGL above 1,000 points). bokeh: the first module-level `save`, `export_png` or
+  `show` of a named plot (through `bokeh.io`, `bokeh.plotting`, an import alias or a
+  `save = bokeh.io.save` assignment) becomes the figure save and everything after it goes,
+  the catalogue's screenshot block (306 files open Selenium's Chrome and crop the PNG with
+  PIL); `output_file` above it, unread aliases of the saving names and unread imports of the
+  block's modules go, and `import json` and `from bokeh.embed import json_item` are added in
+  sorted order (321 of 325 files; 4 save no named plot at module level). The sys.path step
+  runs once more after it (the save block was the last reader of `html_path = Path(...)`).
+  For both, `"<literal>".format(<arguments>)` becomes the f-string it stands for (19 bokeh
+  files build hex colours that way; 9 with a `*` argument stay). The normalised output of
+  the other 13 libraries is unchanged: their normalised code, SECURITY findings and
+  readiness are identical to `origin/main` on all 4,213 catalogue files.
+- **Validator.** plotly admits `plotly.graph_objects` (and `graph_objs`), `plotly.express`,
+  `plotly.subplots`, `plotly.colors` and `plotly.figure_factory`, never the package root, so
+  `plotly.io`, `plotly.offline` and `plotly.tools` stay out of reach; `plotly.express.data`
+  (bundled CSVs) is banned on its module. bokeh admits `bokeh.plotting`, `bokeh.models`,
+  `bokeh.layouts`, `bokeh.palettes`, `bokeh.transform`, `bokeh.colors`, `bokeh.util.hex`
+  and `bokeh.embed.json_item`; its `callbacks`, `css`, `dom`, `map_plots` and `tiles`
+  submodules and `plotting.gmap` are banned on their modules. `LIBRARY_BANS` holds plotly's
+  `write_image`, `write_html`, `to_image`, `full_figure_for_development`, the widget, the
+  bundle getter, the map token, `create_county_choropleth`, `optional_imports` and
+  `get_module`, `plotly_relayout`, `plotly_update` and `plotly_restyle` (they write past
+  plotly's validators, and the exported HTML puts the layout's size into a `style`
+  attribute unescaped), and the geo and map traces, `px` functions and `update_geos`
+  (their maps load from the network); and bokeh's JavaScript (every `CustomJS...` model,
+  `CustomAction`, `OpenURL`, `HTMLTemplateFormatter`, the `js_*` callbacks), its markup
+  models (`Div`, `Paragraph`, `PreText`, the HTML labels and title, dialogs, menus), its URL
+  fetchers (the remote data sources, `ImageURL`, `image_url`, imported stylesheets, tile
+  sources, `add_tile`, Google Maps), the writers `bokeh.plotting` re-exports, its import by
+  name (`instance_type`, `Model.lookup`, `import_optional`, `import_required`, and the other
+  routes to a property object, whose type builds an `Instance("module.Class")`, or to a
+  model class by name: a class-level descriptor's `.property`, `descriptors()`,
+  `properties_with_refs()`, `dataspecs()`, `query_properties_with_values()`, `parameters()`,
+  `model_class_reverse_map`), `set_from_json` (a property named by string) and
+  `apply_theme` (values bokeh never validates), `Document`, and the `icon`, `on_icon` and
+  `off_icon` properties, which inline the file a string names. `LIBRARY_KEYWORD_BANS` refuses bokeh's three icons and plotly's
+  `trendline_options` (its `function` names the pandas method a rolling trendline calls) as
+  keywords. The owner's decisions on the survey's open questions (2026-10-31): neither
+  profile admits a private name, as an attribute on anything or as a keyword
+  (`PRIVATE_NAME_LIBRARIES`; plotly's `_validate=False` skips its validators), and
+  `bokeh.core.properties` left the surface with it; where the library expects a URL
+  (`URL_CONTEXTS`: plotly's `geojson`, `include_plotlyjs`, `include_mathjax` and an image's
+  `source`, a flat update key such as `"images[0].source"` in a button's `args` included,
+  bokeh's `url` and `urls`) anything but `None` or a bool is a `url-literal`, a string of
+  any scheme or none and a call that builds one (`"".join(...)`) alike, and plotly's
+  `geojson` takes a dict literal (tightened by Fable's review); the URL rule of every
+  profile (Python, R, Julia, as the JavaScript one since JS-3) refuses a protocol-relative
+  `//host/...` and `ws`, `wss`, `blob:` and `javascript:` too; bokeh's tooltips are HTML
+  templates as the catalogue writes them, never with `{safe}`. BokehJS parses a template
+  string and each pair's value with the DOM parser and escapes only the `@field` values it
+  inserts, so the profile reads every text a `tooltips` value can take (a literal, a module
+  constant or theme conditional, an f-string over those and over numbers with a numeric
+  spec) and admits only text tags (`BOKEH_TEMPLATE_TAGS`) with quoted `style` or `class`
+  attributes that load nothing; a value it cannot read is refused, `.tooltips` is only
+  assigned, and every other bokeh string with markup, `{safe}` or MathJax's HTML commands
+  (`\href`, `\style`, which bokeh's MathJax bundle loads) is refused (`banned-keyword`).
+  After Fable's review (it built tooltips the static rules did not see and had them run
+  script on hover in the exported HTML): a `**` argument in bokeh is a dict literal with
+  string keys or a name bound once at module level to one and read only by `**`, so a key
+  built at run time (`**{"tool" + "tips": s}`) or a dict filled by subscript is refused;
+  `js_event_callbacks`, `js_property_callbacks`, `styles` and `stylesheets` are refused as
+  keywords and dict keys; every model of `bokeh.models.callbacks` (`SetValue`,
+  `ToggleVisibility`), `set_select`, every stylesheet model and `Styles`, and MathML are
+  banned; a read of the save's `figure_file` handle elsewhere is a `savefig-target`. These
+  static rules answer the adapter early; the barrier is the renderer's check of the figure
+  JSON (Harness, below). Map tiles and geo traces need the network the sandbox does not
+  have, so they are refused in the run form; the exported `plot.py` is the run form with
+  the catalogue's save. `_lift_figure_save` takes the
+  pinned statement out of the scanned tree in exactly its shape (and bokeh's `import json`
+  when nothing else reads the name); a missing or second save, a plot name bound by an
+  import, and a binding of `json`, `json_item` or `open` are findings. The import-machinery
+  walk (`test_no_admitted_module_hands_out_import_machinery`) passes with both surfaces
+  admitted, and `REVIEWED_SUBMODULES` pins their public submodules.
+- **Readiness.** A plotly WebGL trace (`Scattergl`, `Scatter3d`, `Surface`, `Mesh3d`,
+  `Parcoords`, `Splom`, the map traces, plotly express functions that make one,
+  `render_mode="webgl"`, a dict trace of such a `type`) blocks as `webgl`. The coupling scan
+  flags plotly's literal `range`, `tickvals` and `dtick` (keywords and dict keys) and shapes
+  and annotations at data coordinates, and bokeh's literal `x_range`/`y_range`, `Range1d`,
+  `FixedTicker`, range stores, `Span`, `Label`, `BoxAnnotation`, `Arrow` and a colour
+  mapper's `low`/`high`; the other libraries' scan is unchanged. The canvas is never a
+  note: the figure mode draws every figure on its canvas or fails.
+- **Runtime.** `PythonRuntime` runs plotly and bokeh with the row's two-step argv
+  (`--figure <library> plot.py -- <screenshot command>`, `executor.build_argv`'s) and
+  environment (`sandbox_env` key for key, pinned by the existing row test),
+  `review_texts` on (no probe), `figure_error_summary` for the figure mode's final error
+  line (a plot exception's class and line from its traceback, every other kind a fixed text,
+  `draw NoWebGL` naming the 2D trace instead), and the export above. The local Docker
+  backend mounts the checkout's `render.mjs` for a figure row too.
+- **Harness.** A plotly figure with a WebGL trace type (compared without case) fails as
+  `draw NoWebGL` before the page is drawn (`render.mjs`, `PLOTLY_WEBGL_TYPES`): a 3D scene
+  draws no notice in the headless shell, which hands out a WebGL context, but nothing but
+  its colour bar, and the host gates passed that render (scatter-3d, measured). No CSP,
+  page or frame change.
+- **The markup check** (`render.mjs`, `figureMarkupProblem`, after Fable's review). Before
+  a page opens, the harness reads the figure the plot wrote and refuses what a browser
+  would run, load or link, whatever built it, as `figure UnsafeMarkup`. bokeh: every model
+  that runs JavaScript, inserts HTML or CSS or loads a URL (`CustomJS...`, the callback
+  models, `Div`, the HTML labels, the DOM models, stylesheets, tiles, `ImageURL`, MathML,
+  menus, dialogs, panes and tooltips), `js_event_callbacks` and `js_property_callbacks`,
+  CSS that loads a URL or escapes in `styles` or `stylesheets` (a layout's `background=`
+  colour passes), MathJax's HTML commands in any string, and each
+  `HoverTool`'s tooltips against the validator's template rule (`templateProblem`, the
+  same tags, attributes and `{safe}` as `_template_problem`). After Fable's second review
+  the denylist sits on an allowlist: a bokeh model outside `BOKEH_CATALOGUE_MODELS`, the 97
+  names the figure JSON of the 252 eligible catalogue files holds in both themes, nested
+  models included, is refused too ("a Slope model, which no catalogue plot uses"), and the
+  validator bans `Tooltip`, `Pane`, `Panel`, `Drawer` and `Examiner` by name, so both
+  layers agree (0 catalogue files affected). `tests/unit/automation/bokeh_catalogue_models.json`
+  holds the names with the files that use them; a test keeps the set equal to it, and an
+  opt-in test (`ANYPLOT_CATALOGUE_MODELS=1`, about 8 CPU minutes, 35 s on 32 CPUs)
+  recollects it from the catalogue after a bokeh regeneration. plotly: no link at all, an
+  `<a>` tag or an `href` in any string plotly.js reads as markup, an `https` one included
+  (no eligible catalogue file writes one; the exported page would follow it), a `style`
+  that loads a URL or escapes, entities decoded, an image `source` that is not a `data:`
+  image (in `images`, in a flat update key), and a `geojson` string; the validator refuses
+  a link in a plotly string as a `url-literal`. It lives in `render.mjs`, not in the Python
+  harness, because the page already parses the figure there and the final error line is
+  the figure mode's own; the gate's text for it is in `FIGURE_KIND_TEXTS`. It guards the
+  export because the export is the same code on the same data: a figure refused here is
+  never a version the user downloads. plotly.js 4.1.1 drops a `javascript:` link itself,
+  entity-encoded too (measured in Chromium on 2026-10-31; a relative link it keeps). The
+  toolchain image copies `render.mjs` (`toolchain.Dockerfile`), whose hash covers
+  `automation/js-render`, so a change rebuilds the toolchain in CI and on deploy; the
+  `deploy-renderer` trigger includes `automation/js-render/**` (read on 2026-10-31). The
+  image CI job builds from the PR's tree and asserts that a plotly link and a bokeh `Div`,
+  both built with `chr(60)`, fail as `figure UnsafeMarkup` through the image's own
+  harness, and the figure image test runs the same cases with and without the checkout's
+  `render.mjs` mounted, so a stale local image fails it.
+- **Prompt.** plotly and bokeh read a section of their own right after the Python adapter
+  prompt (`prompts/adapter_plotly.md`, `adapter_bokeh.md`, `policy.LIBRARY_PROMPTS`), which
+  replaces the matplotlib conventions for them; the Python prompt's pinned SHA-256 and every
+  other library's instruction are unchanged. Measured in the renderer image: the save and its
+  size, the theme tokens on the figure, Helvetica and Arial (Liberation Sans in the image),
+  rows a mark needs dropped before a statistic, plotly drawing a tz-aware timestamp's clock
+  time as given (07:00 for `+01:00`), so the idiom converts to UTC, bokeh's datetime axis in
+  UTC, plotly's `separators` writing the plot language's marks in every d3 format, BokehJS's
+  formatters writing English marks whatever their `language` (`NumeralTickFormatter(format=
+  "0,0", language="de")` wrote `2,800,000`), so bokeh's idiom puts the ticks on fixed values
+  with Python-written labels, `render_mode="svg"`, and no WebGL. Each library's idiom form
+  (`conftest.FIGURE_PROMPT_IDIOMS`) passes both validator profiles and renders 3200 x 1800
+  in both themes from a table with missing dates, numbers, an integer and a text cell, a
+  `+01:00` timestamp and a column name with a quote and a backslash
+  (`test_profile_python_figure_image.py`). The scope judge's `other_library` example "Gibt es
+  das auch in Plotly?" became Excel, and root.md says how the exported `plot.py` writes its
+  PNG.
+- **Fixtures.** 120 cases (`*-plotly-*`, `*-bokeh-*`, 900 generated in all) and the smoke
+  cases `scatter-basic-plotly-renamed` and `scatter-basic-bokeh-renamed` (25 in all). All
+  ten plotly files are `coupled`, nine bokeh files `coupled` and `bar-grouped` `clean`;
+  bokeh's `histogram-basic` is eligible through the `.format` rewrite.
+- **Deploy.** The renderer's candidate smoke renders a plotly figure from `data.csv` with an
+  axis range (plotly's `build_validator` under the guard) through both steps as a gate, with
+  the Chart.js render's two tries. The agents image's CI scans a plotly and a bokeh file and
+  checks their export; the image's build check reads both new prompt files.
+
+Readiness of the catalogue (`agents.evals.eligibility`, 2026-10-31):
+
+| Library | Files | Eligible | Clean | Coupled | Blocked |
+|---|---|---|---|---|---|
+| plotly | 325 | 273 (84.0 %) | 12 | 261 | 52 |
+| bokeh | 325 | 252 (77.5 %) | 11 | 241 | 73 |
+
+Blocked, first cause per file: plotly 13 map specs, 9 WebGL traces (15 files carry a
+`webgl` reason, 4 of them map specs and 1 blocked for its `THEME` too), 10 sklearn
+datasets, 6 single-theme `"plot.png"` saves, 6 `sys` imports a guard shape leaves, 3
+strings over 200 characters, 5 one-offs (seaborn, qrcode, matplotlib, a second `THEME`, a
+map trace); bokeh 13 map specs, 13 old-form files without a `THEME` block, 10 `CustomJS`
+models (7 `CustomJSTickFormatter`), 8 sklearn datasets, 8 `.format` with a `*` argument,
+3 strings over 200 characters (indicator-ichimoku's tooltip template among them), 2 `Div`,
+2 tooltip values that put a Python variable's text into the HTML (ecg-twelve-lead's
+`("Lead", label)`, horizon-basic's `("Server", name)`), 2 `**` arguments the rules cannot
+read (strip-basic's `**legend_kw` bound in a loop, timeseries-decomposition's
+`figure(**kwargs)` in a function), and 12 one-offs (imports such as `time`, `base64`,
+`bokeh.events`, matplotlib, contourpy and qrcode, dunders, `__import__`, `add_tile`). The
+tooltip templates the catalogue writes pass: chord-basic, heatmap-correlation and
+tree-decision, blocked by the first draft's string ban, are eligible and render on target
+in both themes.
+
+**The catalogue sweep** (2026-10-31, rerun with the markup check and the model allowlist;
+`anyplot-renderer:figure`, rebuilt from this branch's toolchain and renderer Dockerfiles,
+its own `render.mjs` the checkout's byte for byte; every catalogue file normalised and
+rendered through the local Docker backend's figure mode in both themes, ten jobs at a time
+on 32 CPUs, the checkout's harnesses mounted):
+
+| Measurement | plotly | bokeh |
+|---|---|---|
+| Eligible files that render on target in both themes | 254 of 273 (93.0 %) | 245 of 252 (97.2 %) |
+| Failures among them | 19, all `ZeroDivisionError`: the code divides by the length of the emptied catalogue title | 7, the same |
+| Markup check (`figure UnsafeMarkup`) | no file | no eligible file; 22 blocked files: 8 map specs with a `MercatorAxis` (and tiles), 9 `CustomJS...` models, 2 `Div`, 1 `js_event_callbacks`, and 2 models outside the allowlist in files blocked for `.format` (donut-nested's `Annulus`, heatmap-rainflow's `LogColorMapper`). A layout's `background=` colour, which bokeh writes into `styles`, passes (subplot-mosaic, ecg-twelve-lead; the first draft of the check refused any `styles`) |
+| Canvas | 452 PNGs 3200 x 1800, 96 2400 x 2400, no other size | 446 and 102 |
+| Wall time per theme, container start included, under the sweep's load | p50 3.6 s, p95 5.1 s, max 11.4 s | p50 3.4 s, p95 5.2 s, max 16.8 s |
+| Blocked files | 20 of 52 render; 15 fail `draw NoWebGL` (exactly the 15 with a `webgl` reason), 7 `page Error` (map specs: no topojson offline), 7 `RuntimeError` (the files the normaliser leaves on `write_image`, whose kaleido the image does not install), 3 others | 29 of 73 render; 22 `figure UnsafeMarkup`, 14 `NameError` (no `THEME`), 5 `ModuleNotFoundError` (Selenium), 1 timeout, 2 others |
+
+**End to end without a model** (2026-10-31, the same image through the local Docker
+backend): 60 pasted rows, semicolon-separated with decimal commas, with a text group, two
+number columns with gaps, an integer column with a gap, a timestamp column with `+01:00`,
+microseconds and two gaps, and an integer column past 2^53, through the parser (datetime,
+number, number, integer, text, integer), each library's idiom form, `pipeline._check` (no
+finding), the Python loader, the figure mode and the host gates: R1 to R3 pass in both
+themes at 3200 x 1800, 2.8 s for plotly's two-theme job and 2.7 s for bokeh's; the export
+ends on the normal save.
+
+| Text above | Built | Why |
+|---|---|---|
+| PB-2: the profiles, the normaliser rules and the fixtures | PB-2a serves both; the interactive page (PB-2b) and WebGL (PB-2c) follow | owner decisions of 2026-10-31 |
+| bokeh's JSON save through `json_item` | the pinned `with open(...)` block, lifted out of the scan in exactly that shape | no admitted call writes a file; `open`, `json` and `.dump` stay refused everywhere else, and the renderer's plot step may write that one file alone |
+| plotly's `fig.write_json` | `fig.update_layout(width=W, height=H).write_json(...)`, one protected statement | the size must reach the figure for the device scale, and the adapter must not be able to drop it |
+| Not in the text | every statement after the save goes (plotly's range sliders, bokeh's screenshot block) | the PNG is the figure as the save saw it; the save stays the last statement the prompt names |
+| Not in the text | `.format` to an f-string for plotly and bokeh | 19 bokeh files; the same rule would unlock pygal's and lets-plot's hex colours, which is the owner's call (it changes served libraries) |
+| Not in the text | a WebGL trace fails before the page draws | a 3D scene drew a blank plot with its colour bar, which passed R1 to R3 |
+| Not in the text | bokeh's markup models refused; tooltip templates only of text tags with quoted `style` or `class`, every text read, no `{safe}` | owner decision of 2026-10-31: the exported HTML runs them in the user's browser without a policy, and BokehJS parses a pair's value as HTML too |
+| Not in the text | no private names in either profile; a string at a URL keyword refused whatever its scheme; `//host` refused by every profile's URL rule | owner decisions of 2026-10-31 on the survey's open questions; no served library's catalogue outcome changed (0 of 4,213 files) |
+| Not in the text | plotly's geo and map traces and bokeh's tiles refused in the run form | they load from the network, which the sandbox does not have; the exported `plot.py` keeps the catalogue's save, nothing else |
+| Not in the text | the renderer checks the figure JSON for markup before the page draws it (`figure UnsafeMarkup`); bokeh's `**` only of literal options | Fable's review measured tooltips built at run time running script on hover in the exported HTML; the static rules cannot see a `<` that `chr(60)` builds, the figure holds it |
+| Not in the text | bokeh models only from the catalogue's 97 (an allowlist under the denylist); no link at all in plotly text | Fable's second review: a denylist misses what nobody listed, and an https link still sends the user's click wherever the code pointed it; no eligible catalogue file loses anything |
+
+Found for later (not decided here):
+
+- **The emptied title divides by zero** in 19 plotly and 7 bokeh eligible files (and 13
+  pygal, 10 lets-plot, 54 matplotlib as 1c counted): code that sizes the title by
+  `len(title)`. The adapter writes a title and fixes it, but a non-empty placeholder in the
+  normaliser would spare the repair; it changes every library's normalised form.
+- **The `.format` rewrite for every library**: 6 pygal and 4 lets-plot files are blocked
+  for the same hex-colour `.format`.
+- **bokeh's 13 old-form files** without a `THEME` block and plotly's 6 single-theme saves
+  stay blocked until their regeneration.
+- **PB-2b's seams**: `schemas.PAGE_CODE_ARTIFACTS` keys the page artifact by the code
+  file, so plotly and bokeh (`plot.py`) need it by library; `render.mjs` refuses
+  `ANYPLOT_PAGE_ONLY` with `--figure`; the export's HTML save is the library's own and
+  carries no script policy, which the markup check guards. PB-2b's interactive page
+  should run the same check on the figure it embeds.
+- **bokeh models outside the catalogue's 97** (`Slope`, `HArea`, `PolyAnnotation`, a
+  widget) fail the render even where they are harmless; the adapter reads the gate's text
+  and draws with the catalogue's glyphs instead. The eval matrix will show how often that
+  costs a case; a model goes on the list when a catalogue regeneration or a measured need
+  brings it, with the snapshot.
+- **The markup check assumes the export is the render**: the same code on the same data
+  writes the same figure. Code that draws differently from run to run (an unseeded
+  generator, the clock) could pass the render and export something else; the validator's
+  `rng` rule narrows that, and the plot reads no other input.
+- **PB-2c**: the 10 files blocked for WebGL alone (and the users' 3D plots) wait for a
+  software renderer; the `webgl` readiness reason and `PLOTLY_WEBGL_TYPES` go with it.
 
 ### 5. Julia: Makie
 
@@ -3527,7 +3805,11 @@ Defaults apply until answered; each is marked where the plan uses it.
     the run form saves the figure for the sandbox (JSON since the revision of
     2026-10-30): the one place where the export is not byte for byte the run form
     (agent-network.md, "Fencing and exported code"). Default: accept the deviation for
-    these two libraries and document it there.
+    these two libraries and document it there. **Decided by the owner on 2026-10-31:**
+    accepted; the export keeps the library's normal save, which runs unchanged on the
+    user's machine with `data.csv`, and an interactive `plot.html` with `.interactive()`
+    follows for both libraries (PB-2b). Built in PB-2a (`code/figure.py`, "What PB-2a
+    built") and documented in agent-network.md.
 11. **Highcharts in a public toolchain image**: the free licence covers non-commercial
     use, and a public GHCR image redistributes the bundle. **Settled by question 1
     (2026-10-25):** the base image is private in Artifact Registry, so it redistributes

@@ -1,4 +1,4 @@
-"""The Python runtime: matplotlib, seaborn, plotnine, altair, pygal and lets-plot (`runtimes.PYTHON_LIBRARIES`).
+"""The Python runtime: matplotlib, seaborn, plotnine, altair, pygal, lets-plot, plotly and bokeh (`PYTHON_LIBRARIES`).
 
 The command is the catalogue's CI render command (`MPLBACKEND=Agg
 ANYPLOT_THEME=<theme> python plot.py`) with the isolated interpreter (no remote
@@ -11,6 +11,14 @@ has one (lets-plot), as the renderer's `sandbox_env` passes them. The library pi
 PIL padding) and the validator profile; plotnine draws through matplotlib and so gets a
 probe, altair renders in vl-convert's V8, pygal through cairosvg and lets-plot in its native
 bridge, and none of those three writes one (the host gates still run).
+
+plotly and bokeh (PB-2a of step 4, 2026-10-31) run in the row's two steps (`FIGURE_FLAG`,
+`RuntimeCommand.figure`): the harness forks the plot, which writes its figure as JSON through
+the pinned save (`code/figure.py`), then draws it with the JavaScript row's harness in
+Chromium, so the command carries that row's argv after `--` and the environment its `JS_ENV`
+after the Python settings, as the renderer's `sandbox_env` builds them. Neither writes a probe;
+a failure ends with the figure mode's final error line (`gates.figure_error_summary`); the
+export swaps the JSON save for the library's normal save (the plan's question 10).
 
 `normalise`, `loader_block`, `validate` and the rest (`regions`, `readiness`, `security`,
 `adaptation`, `apply_plan`, `restore_protected`, `new_literals`, `error_summary`, `export`)
@@ -30,21 +38,22 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from agents.renderer.commands import EXEC_DENY_ENV, command_for
+from agents.renderer.commands import EXEC_DENY_ENV, FIGURE_FLAG, command_for
 from agents.renderer.executor import SANDBOX_PATH
 from agents.renderer.wire import run_cpu_seconds
 
 from ...code.edits import AppliedPlan, apply_plan, new_literals, restore_protected
 from ...code.export import export_code
+from ...code.figure import export_form
 from ...code.loader import to_run_form
 from ...code.normalise import normalise
 from ...code.readiness import Readiness, scan
-from ...code.regions import PLACEHOLDER, Regions, find_regions
+from ...code.regions import PLACEHOLDER, Regions, find_regions, save_rule
 from ...code.validate import Finding, validate_adaptation, validate_security
 from ...data.kinds import ColumnKinds
 from ...schemas import AdaptPlan, CodeArtifact
 from ..contract import BLOCKING_RULES, Theme
-from ..gates import error_summary
+from ..gates import error_summary, figure_error_summary
 from ..harness import CONVERT_FLAG, DATA_FLAG, INTERPRETER_FLAGS
 from ..png import MAX_PNG_BYTES, MAX_PROBE_BYTES, read_output
 
@@ -85,14 +94,14 @@ computed palette list, the fix the old shared target ("derive it from df and the
 Imprint palette") suggested."""
 
 
-TEXTLESS_LIBRARIES = frozenset({"altair", "pygal", "letsplot"})
+TEXTLESS_LIBRARIES = frozenset({"altair", "pygal", "letsplot", "plotly", "bokeh"})
 """The Python libraries that render without matplotlib and so write no probe: no drawn texts to check the user's
 requested texts against (`PythonRuntime.review_texts`)."""
 
 
 class PythonRuntime:
-    """Python plot code (matplotlib, seaborn, plotnine, altair, pygal, lets-plot), run as `plot.py` under the probe
-    harness."""
+    """Python plot code (matplotlib, seaborn, plotnine, altair, pygal, lets-plot, plotly, bokeh), run as `plot.py`
+    under the probe harness, plotly and bokeh in its figure mode."""
 
     language = "python"
     file_name = "plot.py"
@@ -106,8 +115,8 @@ class PythonRuntime:
     @property
     def review_texts(self) -> bool:
         """matplotlib, seaborn and plotnine draw through matplotlib's probe, which reports the drawn texts the
-        requested ones are checked against, as before 2026-10-29. altair, pygal and lets-plot write no probe, as R
-        does not, so their reviewer finds the requested texts in the image (`TEXTLESS_LIBRARIES`)."""
+        requested ones are checked against, as before 2026-10-29. altair, pygal, lets-plot, plotly and bokeh write no
+        probe, as R does not, so their reviewer finds the requested texts in the image (`TEXTLESS_LIBRARIES`)."""
         return self.library in TEXTLESS_LIBRARIES
 
     def __init__(
@@ -128,7 +137,26 @@ class PythonRuntime:
         self.render_p95_s = render_p95_s
         """Seconds a repair attempt's render is budgeted at against the soft deadline (`commands.py`)."""
 
+    @property
+    def figure(self) -> str:
+        """The package of a two-step row (plotly, bokeh: `RuntimeCommand.figure`), empty for every other library."""
+        return command_for(self.language, self.library).figure
+
     def command(self, theme: Theme) -> list[str]:
+        """The renderer's argv for the library's row (`executor.build_argv`): the harness in plot mode, or for plotly
+        and bokeh in figure mode, with the row's screenshot command after `--`."""
+        row = command_for(self.language, self.library)
+        if row.figure:
+            return [
+                self.python,
+                *INTERPRETER_FLAGS,
+                self.harness,
+                FIGURE_FLAG,
+                row.figure,
+                self.file_name,
+                "--",
+                *row.argv,
+            ]
         return [self.python, *INTERPRETER_FLAGS, self.harness, self.file_name]
 
     def env(self, theme: Theme) -> dict[str, str]:
@@ -248,11 +276,16 @@ class PythonRuntime:
         return new_literals(base, code)
 
     def error_summary(self, stderr_tail: str, *, run_form: str | None = None) -> str:
-        """The exception class and the `plot.py` line of a failed render, never the message (`gates.error_summary`).
-        The line counts the run form, as it always has; the run form goes unread."""
+        """The exception class and the `plot.py` line of a failed render, never the message (`gates.error_summary`);
+        for plotly and bokeh the figure mode's final error line (`gates.figure_error_summary`). The line counts the run
+        form, as it always has; the run form goes unread."""
+        if self.figure:
+            return figure_error_summary(stderr_tail, code_file=self.file_name)
         return error_summary(stderr_tail, code_file=self.file_name)
 
     def export(self, run_form: str, *, spec_id: str, library_version: str | None, theme: str = "light") -> str:
-        return export_code(
-            run_form, spec_id=spec_id, library=self.library, library_version=library_version, theme=theme
-        )
+        """The run form under the attribution header (`code/export.py`); for plotly and bokeh with the figure's JSON
+        save swapped for the library's normal save (`code/figure.py`, the plan's question 10)."""
+        rule = save_rule(self.library)
+        code = export_form(run_form, rule.figure) if rule.figure is not None else run_form
+        return export_code(code, spec_id=spec_id, library=self.library, library_version=library_version, theme=theme)

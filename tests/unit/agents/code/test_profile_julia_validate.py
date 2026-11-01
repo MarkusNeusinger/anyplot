@@ -170,6 +170,9 @@ def test_the_working_form_in_miniature_passes_both_profiles() -> None:
         "Random = 1",
         # literals
         'url = "https://example.org/data.csv"',
+        'url = "//cdn.example.org/data.csv"',
+        'url = "//localhost/data.csv"',
+        'url = "//[::1]/data.csv"',
         'big = "' + "x" * 201 + '"',
     ],
 )
@@ -205,6 +208,9 @@ def test_refused(body: str) -> None:
         "x = 2.5f0",
         'quote_text = "say \\"hi\\""',
         "b = 1 // 2",
+        "b = 1//2",
+        "b = 1  # see //intranet: a comment is no string",
+        'hatch = "a // b"',
         "@assert length(xs) > 0",
         'g = cgrad([colorant"#009E73", colorant"#4467A3"])',
         "using DataFrames\ncol = df[!, COLUMN]",

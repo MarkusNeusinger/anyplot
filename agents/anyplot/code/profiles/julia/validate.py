@@ -417,8 +417,11 @@ RNG_DRAWS = frozenset({"randn", "randn!", "randexp", "randexp!"})
 """Random draws that fabricate data; `rand`, `shuffle`, `randperm` and `Random.seed!` stay allowed for jitter and
 subsampling (R's precedent, owner 2026-10-29)."""
 
-_URL_IN_TEXT = re.compile(r"(?i)(?:https?|ftp)://|\b(?:file|data):\S")
-"""The Python profile's URL rule (`validate._URL_IN_TEXT`)."""
+_URL_IN_TEXT = re.compile(
+    r"(?i)(?:https?|ftp|wss?)://|\b(?:file|data|blob|javascript):\S|(?:^|[\s\"'(=,])/{2,}[a-z0-9_\[%]"
+)
+"""The Python profile's URL rule (`validate._URL_IN_TEXT`), protocol-relative URLs to any host included since PB-2a.
+It reads string literals only, so a comment and Julia's rational `1//2` are never matched."""
 _HEX = re.compile(r"#[0-9A-Fa-f]{6}(?:[0-9A-Fa-f]{2})?")
 _WHITESPACE = re.compile(r"\s+")
 _IMPORTS = frozenset({"using_statement", "import_statement"})

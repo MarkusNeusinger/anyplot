@@ -15,7 +15,8 @@ is mounted read-only from this checkout, so a render uses the harness of the cod
 under development; a JavaScript container also gets the checkout's browser harness
 (`automation/js-render/render.mjs`) over the image's, renders and page builds alike, so
 the PNG and the page of one version come from the same harness (JS-4b; a checkout without
-the file, an agents image, keeps the image's). On timeout the container is killed by name.
+the file, an agents image, keeps the image's), and so does a plotly or bokeh container,
+whose screenshot step is that harness (PB-2a). On timeout the container is killed by name.
 The run directory is a fresh temporary directory that is removed afterwards. stdout is discarded and stderr
 is read while the container runs, keeping only its last `STDERR_LIMIT` bytes: the
 code under test writes it, so it can be arbitrarily large. A theme's stderr tail is then
@@ -184,7 +185,9 @@ class LocalDockerBackend:
     def argv(self, job: RenderJob, theme: Theme, run_dir: Path) -> list[str]:
         """The docker command of one theme; asserted to keep the network off."""
         runtime = self._runtime(job.library)
-        argv = self._isolation(f"r-{job.job_id}-{theme}", run_dir, javascript=runtime.language == "javascript")
+        # plotly's and bokeh's screenshot step is the browser harness too (`RuntimeCommand.figure`).
+        browser = runtime.language == "javascript" or bool(command_for(runtime.language, runtime.library).figure)
+        argv = self._isolation(f"r-{job.job_id}-{theme}", run_dir, javascript=browser)
         for key, value in runtime.env(theme).items():
             argv += ["-e", f"{key}={value}"]
         if job.data_json is not None:

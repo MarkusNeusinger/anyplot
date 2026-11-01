@@ -1,8 +1,8 @@
 """The normaliser: catalogue code in, code that renders the exact canvas out.
 
 `normalise(code, library=...)` serves every library with a save rule
-(`regions.SAVE_RULES`: matplotlib, seaborn, plotnine, altair, pygal, letsplot) and makes
-these rewrites, in the order `_steps` runs them, each only when it applies:
+(`regions.SAVE_RULES`: matplotlib, seaborn, plotnine, altair, pygal, letsplot, plotly,
+bokeh) and makes these rewrites, in the order `_steps` runs them, each only when it applies:
 
 1. **Catalogue header and title.** The four-line module docstring that opens every
    catalogue file (lines `anyplot.ai`, `<spec-id>: <title>`, `Library: ...`,
@@ -85,7 +85,35 @@ these rewrites, in the order `_steps` runs them, each only when it applies:
    their modules through `NAME = importlib.import_module("dotted.name")[.ATTR]`, also
    after `from importlib import import_module`, get `import dotted.name as NAME` or
    `from dotted.name import ATTR as NAME`, and the importlib import goes once unused.
-7. **Canvas** (`SaveRule.canvas`), last:
+7. **Figure save** (plotly and bokeh, PB-2a of step 4, 2026-10-31). Both draw in a browser,
+   which plot code in the sandbox must not start, so the save block becomes the pinned
+   statement that writes the figure as JSON (`code/figure.py`), which the renderer's figure
+   mode draws. plotly: the last module-level `X.write_image(<the theme PNG or a path to
+   it>, width=W, height=H, scale=S)` becomes `X.update_layout(width=W, height=H).write_json(
+   f"plot-{THEME}.json")` (W and H literals or module-level names bound once to whole
+   numbers, from 320 to 6400; else the save has no size, with a note), every module-level
+   `write_image` or `write_html` of a theme file and every `show()` above it goes, every
+   statement after it goes too (the PNG is the figure as that save saw it; what follows only
+   shapes the HTML: `write_html`, and a range slider in 4 files), and so does an import of
+   `kaleido`, `plotly.io` or `plotly.offline` that nothing reads (318 of the 325 catalogue
+   files; the other 7 save a single-theme `"plot.png"`). Every plotly express
+   `scatter`, `line`, `scatter_polar`, `line_polar` and `ecdf` without `render_mode` gets
+   `render_mode="svg"`: above 1,000 points they switch to WebGL, which the figure mode's
+   browser lacks. bokeh: the first module-level `save(p)`, `export_png(p, ...)` or `show(p)`
+   (also as `bokeh.io.save`, an alias bound to it, or through `bokeh.plotting`) becomes `with
+   open(f"plot-{THEME}.json", "w", encoding="utf-8") as figure_file: json.dump(json_item(p),
+   figure_file)`, and every module-level statement after it goes: the PNG is the plot as that
+   save saw it, and what follows is the catalogue's screenshot block (the HTML save,
+   Selenium's browser, the PIL crop and padding; 306 files). `output_file(...)` before it
+   goes, an alias of a saving name that nothing reads goes, unread imports of the block's
+   modules (`selenium`, `PIL`, `io`, `time`, `base64`, `pathlib`, `bokeh.io`, ...) go, unread
+   names leave a `from bokeh.io` or `bokeh.plotting` import, and `import json` and `from
+   bokeh.embed import json_item` are added in sorted order (321 of 325 files). For both, the
+   sys.path step runs again after it, since the save block was the last reader of the
+   file-location helpers above it, and a `"<literal>".format(<arguments>)` call becomes the
+   f-string it stands for (`_format_to_fstring`: 19 bokeh files build hex colours that way,
+   which the validator's `.format` ban refuses; 9 with a `*` argument stay).
+8. **Canvas** (`SaveRule.canvas`), last:
    * matplotlib and seaborn (`figure`): every `savefig` loses `bbox_inches=` and
      `pad_inches=` (`"tight"` crops the canvas by 30 to 50 px, the documented cause of
      the drift that the `impl-review.yml` canvas gate catches), and the dpi is rescaled
@@ -144,6 +172,9 @@ these rewrites, in the order `_steps` runs them, each only when it applies:
      `height=`, `units=`, `dpi=`, 3200x1800 in most catalogue files) and altair through
      its chart's `width` and `height` times `scale_factor`, padded by its PIL block, so
      for those two the step only notes that the render relies on the R3 canvas gate.
+   * plotly and bokeh: nothing, and no note: the figure mode draws every figure on its
+     canvas by the device scale, from the size the figure save sets (plotly) or the
+     figure's own (bokeh), and fails any other screenshot.
 
 Each step is checked with `ast.parse` and dropped with a note if it would not parse.
 The result is idempotent: `normalise(normalise(x)) == normalise(x)`.
@@ -152,6 +183,7 @@ The result is idempotent: `normalise(normalise(x)) == normalise(x)`.
 import ast
 import math
 import re
+import string
 import symtable
 import textwrap
 from collections.abc import Callable
@@ -159,6 +191,7 @@ from dataclasses import dataclass
 from fractions import Fraction
 from functools import partial
 
+from .figure import MAX_SIDE, MIN_SIDE, figure_saves, json_save
 from .letsplot_names import LETS_PLOT_NAMES
 from .regions import (
     HTML_SUFFIX,
@@ -243,6 +276,44 @@ EPILOGUE_METHODS = frozenset({"exists", "glob", "iterdir", "is_file", "rename", 
 """The `pathlib.Path` methods an epilogue may call on any receiver."""
 EPILOGUE_MODULES = frozenset({"shutil", "pathlib"})
 """The modules an epilogue may import inside itself; `import shutil` goes once nothing kept uses it."""
+
+FIGURE_LIBRARIES = frozenset(library for library, rule in SAVE_RULES.items() if rule.figure is not None)
+"""plotly and bokeh: their save is the pinned figure statement (`code/figure.py`), drawn by the figure mode."""
+PLOTLY_EXPORT_MODULES = frozenset({"kaleido", "plotly.io", "plotly.offline"})
+"""What only plotly's PNG and HTML saves need; an import of one goes once nothing kept reads it."""
+PX_RENDER_MODE = frozenset({"scatter", "line", "scatter_polar", "line_polar", "ecdf"})
+"""The plotly express functions with `render_mode`, which is WebGL above 1,000 points unless it says `"svg"` (plotly
+7.1.0); the figure mode's browser has no WebGL (PB-1)."""
+BOKEH_SAVES = frozenset(
+    {
+        f"bokeh.{module}.{name}"
+        for module in ("io", "plotting", "io.saving", "io.export", "io.showing")
+        for name in ("save", "export_png", "export_svg", "export_svgs", "show")
+    }
+)
+"""The calls that save or show a bokeh plot: the first module-level one names the plot whose figure is saved."""
+BOKEH_OUTPUT_CALLS = frozenset(
+    {f"bokeh.{module}.{name}" for module in ("io", "plotting", "io.output") for name in ("output_file", "reset_output")}
+)
+"""The calls that only name the HTML file (or reset it) before a bokeh save."""
+BOKEH_EXPORT_MODULES = frozenset(
+    {
+        "selenium",
+        "PIL",
+        "io",
+        "time",
+        "base64",
+        "pathlib",
+        "tempfile",
+        "shutil",
+        "webbrowser",
+        "bokeh.io",
+        "bokeh.resources",
+    }
+)
+"""What only the catalogue's screenshot block and HTML save need; an import of one goes once nothing kept reads it."""
+BOKEH_IO_MODULES = frozenset({"bokeh.io", "bokeh.plotting", "bokeh.embed", "bokeh.resources"})
+"""The bokeh modules whose saving names the figure save leaves unread: each unread name leaves their imports."""
 
 _MODULE_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*")
 _COMMA_GAP = re.compile(r"\s*,\s*")
@@ -347,9 +418,15 @@ def _steps(library: str) -> list[tuple[str, Step]]:
         ("find_spec guard", _strip_find_spec_guard),
         ("try guard", _hoist_try_guard),
         ("sys.path guard", _strip_path_guard),
-        ("title", _strip_title),
-        ("canvas", partial(_normalise_canvas, library=library)),
     ]
+    if library == "plotly":
+        steps += [("figure save", _plotly_figure_save), ("render mode", _plotly_render_mode)]
+    if library == "bokeh":
+        steps.append(("figure save", _bokeh_figure_save))
+    if library in FIGURE_LIBRARIES:
+        # The save block was the last reader of the file-location helpers above it (`html_path = Path(...)`).
+        steps += [("file paths", _strip_path_guard), ("str.format", _format_to_fstring)]
+    steps += [("title", _strip_title), ("canvas", partial(_normalise_canvas, library=library))]
     return steps
 
 
@@ -403,7 +480,12 @@ def measure_canvas(code: str, *, library: str = "matplotlib") -> Canvas:
     lets-plot's plot size times the save's scale can be read (`SaveRule.canvas`); for
     plotnine and altair the canvas is a note that the render relies on the R3 gate.
     """
-    kind = save_rule(library).canvas
+    rule = save_rule(library)
+    if rule.figure is not None:
+        # The figure mode draws every plotly and bokeh figure on its canvas by the device scale (`code/figure.py`)
+        # and fails any other screenshot (`harness CanvasError`): there is nothing to measure.
+        return Canvas(None, None, None, None, None)
+    kind = rule.canvas
     if kind == "pygal":
         return _measure_pygal(code)
     if kind == "letsplot":
@@ -549,6 +631,8 @@ def _same_dpi(value: object, literal: str, size: tuple[Number, Number], target: 
 
 
 def _normalise_canvas(code: str, *, library: str) -> StepResult:
+    if library in FIGURE_LIBRARIES:
+        return code, [], []  # the size is the figure save's (`_plotly_figure_save`) or the figure's own (bokeh)
     kind = save_rule(library).canvas
     if kind == "pygal":
         return _pygal_canvas(code)
@@ -1985,6 +2069,417 @@ def _theme_write(
     encodings = [kw.value for kw in call.keywords if kw.arg == "encoding"]
     utf8 = all(isinstance(e, ast.Constant) and str(e.value).lower() in ("utf-8", "utf8") for e in encodings)
     return target, suffix, mode, utf8, values, assignments
+
+
+# --- plotly and bokeh: the figure save ------------------------------------------------------
+
+
+def _theme_png(node: ast.expr) -> bool:
+    """`f"plot-{THEME}.png"` or a path whose file name is it (`_theme_file_path`)."""
+    return is_theme_target(node, PNG_SUFFIX) or _theme_file_path(node, PNG_SUFFIX)
+
+
+def _theme_html(node: ast.expr) -> bool:
+    return is_theme_target(node, HTML_SUFFIX) or _theme_file_path(node, HTML_SUFFIX)
+
+
+def _method_call(stmt: ast.stmt, names: frozenset[str]) -> tuple[ast.Call, str] | None:
+    """`(call, method)` for a module-level expression statement `X.<method>(...)` with a method of `names`."""
+    if isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call) and isinstance(stmt.value.func, ast.Attribute):
+        if stmt.value.func.attr in names:
+            return stmt.value, stmt.value.func.attr
+    return None
+
+
+def _first_argument(call: ast.Call, keyword: str) -> ast.expr | None:
+    """The first positional argument of `call`, else its `keyword=` value."""
+    if call.args and not isinstance(call.args[0], ast.Starred):
+        return call.args[0]
+    return next((kw.value for kw in call.keywords if kw.arg == keyword), None)
+
+
+def _plotly_side(tree: ast.Module, node: ast.expr | None) -> int | None:
+    """A side of `write_image`: a whole-number literal or a module-level name bound once to one, inside the figure
+    mode's range (`figure.MIN_SIDE` to `MAX_SIDE`), else None."""
+    if node is None:
+        return None
+    value = _module_number(tree, node.id) if isinstance(node, ast.Name) else as_number(_literal_value(node))
+    if value is None or value != int(value) or not MIN_SIDE <= value <= MAX_SIDE:
+        return None
+    return int(value)
+
+
+def _drop_unused_imports(code: str, modules: frozenset[str], changes: list[str]) -> str:
+    """Remove each module-level import of one of `modules` (by its full name or a parent) whose names nothing reads;
+    `import a.b` without an alias counts as read only by an attribute chain through `a.b`, since `a` is bound by every
+    `import a.<x>` (`import bokeh.io` next to `import bokeh.models`)."""
+    tree = ast.parse(code)
+    index = SourceIndex(code)
+    kept = [stmt for stmt in tree.body if not isinstance(stmt, ast.Import | ast.ImportFrom)]
+    loads = set().union(*(_loads(stmt) for stmt in kept))
+    chains = {
+        name
+        for stmt in kept
+        for node in ast.walk(stmt)
+        if (name := dotted_name(node) if isinstance(node, ast.Attribute) else None)
+    }
+    remove: set[int] = set()
+    for stmt in tree.body:
+        if not isinstance(stmt, ast.Import | ast.ImportFrom):
+            continue
+        names = [alias.name for alias in stmt.names] if isinstance(stmt, ast.Import) else [stmt.module or ""]
+        if not all(any(name == m or name.startswith(m + ".") for m in modules) for name in names):
+            continue
+        if isinstance(stmt, ast.Import) and all(alias.asname is None and "." in alias.name for alias in stmt.names):
+            if any(
+                chain == alias.name or chain.startswith(alias.name + ".") for alias in stmt.names for chain in chains
+            ):
+                continue
+        elif _import_bindings(stmt)[0] & loads:
+            continue
+        span = index.lines_span(stmt)
+        remove |= set(range(span.first_line, span.last_line + 1))
+        changes.append(f"removed the unused `{ast.unparse(stmt)}` at {span.lines()}")
+    return _rewrite_lines(code, remove, {}) if remove else code
+
+
+def _plotly_figure_save(code: str) -> StepResult:
+    """plotly's save block -> the pinned JSON save, its size moved into the figure (module docstring)."""
+    tree = ast.parse(code)
+    if figure_saves(tree, "plotly"):
+        return code, [], []
+    index = SourceIndex(code)
+    saves = [
+        (stmt, call)
+        for stmt in tree.body
+        if (found := _method_call(stmt, frozenset({"write_image"}))) is not None
+        and (call := found[0]) is not None
+        and (target := _first_argument(call, "file")) is not None
+        and _theme_png(target)
+    ]
+    if not saves:
+        return code, [], ["figure save: no module-level write_image of the theme PNG; left unchanged"]
+    stmt, call = saves[-1]
+    span = index.lines_span(stmt)
+    receiver = call.func.value if isinstance(call.func, ast.Attribute) else None
+    if not isinstance(receiver, ast.Name):
+        return code, [], [f"figure save: the write_image at {span.lines()} saves no named figure; left unchanged"]
+    notes: list[str] = []
+    keywords = {kw.arg: kw.value for kw in call.keywords}
+    size: tuple[int, int] | None = None
+    if len(call.args) > 1 or None in keywords:
+        notes.append(f"figure save: the write_image at {span.lines()} passes its size by position or **; no size")
+    else:
+        width, height = _plotly_side(tree, keywords.get("width")), _plotly_side(tree, keywords.get("height"))
+        if width is not None and height is not None:
+            size = (width, height)
+        else:
+            notes.append(f"figure save: the write_image size at {span.lines()} is no literal; the figure keeps its own")
+    statement = json_save("plotly", receiver.id, size)
+    replace = {span.first_line: (span.last_line, statement + (_newline(index, span.last_line) or "\n"))}
+    changes = [f"the PNG save at {span.lines()} -> {statement}"]
+    remove: set[int] = set()
+    position = tree.body.index(stmt)
+    for other in tree.body[:position]:
+        found = _method_call(other, frozenset({"write_image", "write_html", "show"}))
+        if found is None:
+            continue
+        other_call, method = found
+        target = _first_argument(other_call, "file")
+        if method == "show" or (target is not None and (_theme_png(target) or _theme_html(target))):
+            other_span = index.lines_span(other)
+            remove |= _with_comments(index, other_span)
+            changes.append(f"removed the {method} at {other_span.lines()}")
+    # The PNG is the figure as the save saw it: what follows only shapes the HTML (`write_html`, a range slider in 4
+    # catalogue files), so it goes, and the figure save stays the file's last statement.
+    tail = tree.body[position + 1 :]
+    if tail:
+        first, last = index.lines_span(tail[0]).first_line, index.lines_span(tail[-1]).last_line
+        remove |= set(range(span.last_line + 1, last + 1))
+        changes.append(f"removed the HTML block after the save at lines {first}-{last}")
+    code = _rewrite_lines(code, remove, replace)
+    code = _drop_unused_imports(code, PLOTLY_EXPORT_MODULES, changes)
+    return code, changes, notes
+
+
+def _plotly_render_mode(code: str) -> StepResult:
+    """`render_mode="svg"` on every plotly express call that switches to WebGL above 1,000 points (`PX_RENDER_MODE`)."""
+    tree = ast.parse(code)
+    express: set[str] = set()
+    functions: dict[str, str] = {}
+    for stmt in ast.walk(tree):
+        if isinstance(stmt, ast.Import):
+            express |= {alias.asname or alias.name for alias in stmt.names if alias.name == "plotly.express"}
+        elif isinstance(stmt, ast.ImportFrom) and stmt.module == "plotly.express" and stmt.level == 0:
+            functions |= {alias.asname or alias.name: alias.name for alias in stmt.names}
+        elif isinstance(stmt, ast.ImportFrom) and stmt.module == "plotly" and stmt.level == 0:
+            express |= {alias.asname or alias.name for alias in stmt.names if alias.name == "express"}
+    if not express and not functions:
+        return code, [], []
+    index = SourceIndex(code)
+    edits: list[TextEdit] = []
+    changes: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        name = None
+        if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name) and func.value.id in express:
+            name = func.attr
+        elif isinstance(func, ast.Name):
+            name = functions.get(func.id)
+        if name not in PX_RENDER_MODE or any(kw.arg in ("render_mode", None) for kw in node.keywords):
+            continue
+        edits.append(_append_keywords(code, index, node, 'render_mode="svg"'))
+        changes.append(f'added render_mode="svg" to {ast.unparse(func)} at {index.node_span(node).lines()}')
+    if not edits:
+        return code, [], []
+    return _apply(code, edits), changes, []
+
+
+def _bokeh_plot(call: ast.Call) -> ast.expr | None:
+    """The plot a bokeh save writes: `save(p)`, `export_png(p, ...)`, `show(p)`, by position or `obj=`."""
+    return _first_argument(call, "obj")
+
+
+def _bokeh_figure_save(code: str) -> StepResult:
+    """bokeh's save block -> the pinned JSON save of the plot it saved (module docstring)."""
+    tree = ast.parse(code)
+    if figure_saves(tree, "bokeh"):
+        return code, [], []
+    index = SourceIndex(code)
+    body = tree.body
+    imports = _import_targets(body)
+    for stmt in body:  # `save = bokeh.io.save` (box-horizontal, contour-filled)
+        if isinstance(stmt, ast.Assign) and len(stmt.targets) == 1 and isinstance(stmt.targets[0], ast.Name):
+            resolved = _resolved(stmt.value, imports) if dotted_name(stmt.value) else None
+            if resolved is not None and resolved.startswith("bokeh."):
+                imports[stmt.targets[0].id] = resolved
+    position = None
+    for number, stmt in enumerate(body):
+        if isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
+            resolved = _resolved(stmt.value.func, imports)
+            if resolved in BOKEH_SAVES and _bokeh_plot(stmt.value) is not None:
+                position = number
+                break
+    if position is None:
+        return code, [], ["figure save: no module-level save, export_png or show of a plot; left unchanged"]
+    save = body[position]
+    assert isinstance(save, ast.Expr) and isinstance(save.value, ast.Call)
+    plot = _bokeh_plot(save.value)
+    span = index.lines_span(save)
+    if not isinstance(plot, ast.Name):
+        return code, [], [f"figure save: the save at {span.lines()} saves no named plot; left unchanged"]
+    # The PNG is the plot as the first save or export saw it: nothing after it draws into it, so the screenshot block
+    # (the HTML save, Selenium's browser, the PIL crop and padding) goes with every statement after it.
+    remove: set[int] = set()
+    tail = body[position + 1 :]
+    for stmt in tail:
+        stmt_span = index.lines_span(stmt)
+        remove |= set(range(stmt_span.first_line, stmt_span.last_line + 1))
+    changes = [f"the save at {span.lines()} -> the figure's JSON save of {plot.id}"]
+    if tail:
+        first, last = index.lines_span(tail[0]).first_line, index.lines_span(tail[-1]).last_line
+        remove |= set(range(span.last_line + 1, first))  # the comments and blank lines between them
+        changes.append(f"removed the screenshot and HTML block after it at lines {first}-{last}")
+    # `output_file(...)` before the save only names the HTML file.
+    dropped = {id(stmt) for stmt in tail} | {id(save)}
+    for stmt in body[:position]:
+        if isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
+            if _resolved(stmt.value.func, imports) in BOKEH_OUTPUT_CALLS:
+                other = index.lines_span(stmt)
+                remove |= _with_comments(index, other)
+                dropped.add(id(stmt))
+                changes.append(f"removed the {ast.unparse(stmt.value.func)} at {other.lines()}")
+    # An alias of a saving name that nothing kept reads (`save = bokeh.io.save`) goes too.
+    aliases = [
+        stmt
+        for stmt in body[:position]
+        if isinstance(stmt, ast.Assign)
+        and len(stmt.targets) == 1
+        and isinstance(stmt.targets[0], ast.Name)
+        and imports.get(stmt.targets[0].id) in BOKEH_SAVES | BOKEH_OUTPUT_CALLS
+    ]
+    kept = set().union(*(_loads(stmt) for stmt in body if id(stmt) not in dropped and stmt not in aliases))
+    for stmt in aliases:
+        target = stmt.targets[0]
+        if isinstance(target, ast.Name) and target.id not in kept:
+            other = index.lines_span(stmt)
+            remove |= set(range(other.first_line, other.last_line + 1))
+            changes.append(f"removed the unused alias {target.id} at {other.lines()}")
+    newline = _newline(index, span.last_line) or "\n"
+    replace = {span.first_line: (span.last_line, json_save("bokeh", plot.id).replace("\n", newline) + newline)}
+    code = _rewrite_lines(code, remove, replace)
+    code = _drop_unused_imports(code, BOKEH_EXPORT_MODULES, changes)
+    code = _drop_unused_from_names(code, BOKEH_IO_MODULES, changes)
+    code = _add_import(code, "import json", changes)
+    code = _add_import(code, "from bokeh.embed import json_item", changes)
+    return code, changes, []
+
+
+_FSTRING_ESCAPES = {"\\": "\\\\", '"': '\\"', "\n": "\\n", "\r": "\\r", "\t": "\\t", "{": "{{", "}": "}}"}
+
+
+def _fstring_text(text: str) -> str:
+    """`text` as the literal part of a double-quoted f-string: escapes, quotes and braces escaped."""
+    out = []
+    for char in text:
+        if char in _FSTRING_ESCAPES:
+            out.append(_FSTRING_ESCAPES[char])
+        elif ord(char) < 32 or ord(char) == 127:
+            out.append(f"\\x{ord(char):02x}")
+        else:
+            out.append(char)
+    return "".join(out)
+
+
+def _format_call(code: str, call: ast.Call) -> str | None:
+    """The f-string a `"<literal>".format(<arguments>)` call stands for, or None: positional arguments only, each
+    field `{}`, `{n}` or with a conversion and a format spec of plain text (no attribute, index or nested field)."""
+    func = call.func
+    if not (
+        isinstance(func, ast.Attribute) and isinstance(func.value, ast.Constant) and isinstance(func.value.value, str)
+    ):
+        return None
+    if call.keywords or any(isinstance(arg, ast.Starred) for arg in call.args):
+        return None
+    try:
+        fields = list(string.Formatter().parse(func.value.value))
+    except ValueError:
+        return None
+    sources = []
+    for arg in call.args:  # the argument as written, unless it spans lines or holds a backslash
+        source = ast.get_source_segment(code, arg) or ""
+        sources.append(source if source and "\n" not in source and "\\" not in source else ast.unparse(arg))
+    parts: list[str] = []
+    automatic = 0
+    numbered = False
+    for literal, field, spec, conversion in fields:
+        parts.append(_fstring_text(literal))
+        if field is None:
+            continue
+        if field == "":
+            if numbered:
+                return None
+            position, automatic = automatic, automatic + 1
+        elif field.isdigit():
+            if automatic:
+                return None
+            position, numbered = int(field), True
+        else:
+            return None
+        if position >= len(sources) or (spec and ("{" in spec or "}" in spec)):
+            return None
+        atom = isinstance(call.args[position], ast.Name | ast.Attribute | ast.Subscript | ast.Call | ast.Constant)
+        expression = sources[position] if atom else f"({sources[position]})"
+        parts.append("{" + expression + (f"!{conversion}" if conversion else "") + (f":{spec}" if spec else "") + "}")
+    if not numbered and automatic != len(sources):
+        return None  # an argument no field reads is still evaluated by `.format`
+    return 'f"' + "".join(parts) + '"'
+
+
+def _format_to_fstring(code: str) -> StepResult:
+    """`"#{:02X}{:02X}{:02X}".format(r, g, b)` -> `f"#{r:02X}{g:02X}{b:02X}"` (plotly and bokeh): the validator bans
+    `.format`, and 19 catalogue bokeh files build their hex colours that way (2026-10-31). The f-string evaluates the
+    same expressions in the same order, each in parentheses unless it is a name, an attribute, a subscript, a call or
+    a literal; a call this rule cannot read (a `*` argument, an attribute or index field) stays with a note."""
+    tree = ast.parse(code)
+    index = SourceIndex(code)
+    edits: list[TextEdit] = []
+    changes: list[str] = []
+    notes: list[str] = []
+    calls = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "format"
+        and isinstance(node.func.value, ast.Constant)
+        and isinstance(node.func.value.value, str)
+    ]
+    outer = [call for call in calls if not any(other is not call and _inside_node(call, other) for other in calls)]
+    for call in outer:
+        span = index.node_span(call)
+        text = _format_call(code, call)
+        if text is None:
+            notes.append(
+                f"str.format: the .format call at {span.lines()} has a field this rule does not read; left unchanged"
+            )
+            continue
+        edits.append((span.start, span.end, text))
+        changes.append(f"str.format at {span.lines()} -> an f-string")
+    if not edits:
+        return code, [], notes
+    return _apply(code, edits), changes, notes
+
+
+def _inside_node(inner: ast.AST, outer: ast.AST) -> bool:
+    """Whether `inner`'s source position lies within `outer`'s."""
+    start = (getattr(inner, "lineno", 0), getattr(inner, "col_offset", 0))
+    end = (getattr(inner, "end_lineno", 0) or 0, getattr(inner, "end_col_offset", 0) or 0)
+    return (getattr(outer, "lineno", 0), getattr(outer, "col_offset", 0)) <= start and end <= (
+        getattr(outer, "end_lineno", 0) or 0,
+        getattr(outer, "end_col_offset", 0) or 0,
+    )
+
+
+def _drop_unused_from_names(code: str, modules: frozenset[str], changes: list[str]) -> str:
+    """In each module-level `from <module> import a, b` of `modules`, drop the names nothing reads, and the import when
+    none is left (`from bokeh.plotting import figure, output_file, save` keeps `figure`)."""
+    tree = ast.parse(code)
+    index = SourceIndex(code)
+    loads = set().union(*(_loads(stmt) for stmt in tree.body if not isinstance(stmt, ast.Import | ast.ImportFrom)))
+    remove: set[int] = set()
+    replace: dict[int, tuple[int, str]] = {}
+    for stmt in tree.body:
+        if not (isinstance(stmt, ast.ImportFrom) and stmt.level == 0 and stmt.module in modules):
+            continue
+        kept = [alias for alias in stmt.names if (alias.asname or alias.name) in loads]
+        if len(kept) == len(stmt.names):
+            continue
+        span = index.lines_span(stmt)
+        dropped = sorted(alias.name for alias in stmt.names if alias not in kept)
+        if kept:
+            names = ", ".join(
+                alias.name if alias.asname is None else f"{alias.name} as {alias.asname}" for alias in kept
+            )
+            text = f"from {stmt.module} import {names}{_newline(index, span.last_line) or chr(10)}"
+            replace[span.first_line] = (span.last_line, text)
+        else:
+            remove |= set(range(span.first_line, span.last_line + 1))
+        changes.append(f"dropped the unused {', '.join(dropped)} from the {stmt.module} import at {span.lines()}")
+    return _rewrite_lines(code, remove, replace) if remove or replace else code
+
+
+def _add_import(code: str, statement: str, changes: list[str]) -> str:
+    """`statement` (an `import` or `from` import) among the module-level imports of its kind in sorted order: before
+    the first one whose module sorts after its own, else after the last of its kind, else after the last import;
+    unless the file has it."""
+    tree = ast.parse(code)
+    new = ast.parse(statement).body[0]
+    if any(ast.dump(stmt) == ast.dump(new) for stmt in tree.body):
+        return code
+
+    def module(stmt: ast.stmt) -> str:
+        return (stmt.names[0].name if isinstance(stmt, ast.Import) else getattr(stmt, "module", "") or "").lower()
+
+    imports = [stmt for stmt in tree.body if isinstance(stmt, ast.Import | ast.ImportFrom)]
+    same = [stmt for stmt in imports if type(stmt) is type(new)]
+    index = SourceIndex(code)
+    # The nearest import that sorts after it, by module (the file's imports are in ruff's order).
+    before = min((stmt for stmt in same if module(stmt) > module(new)), key=module, default=None)
+    changes.append(f"added `{statement}`")
+    if before is not None:
+        offset = index.line_start(before.lineno)
+        return code[:offset] + statement + (_newline(index, before.lineno) or "\n") + code[offset:]
+    anchor = same[-1] if same else (imports[-1] if imports else None)
+    if anchor is None:
+        return statement + "\n" + code
+    line = anchor.end_lineno or anchor.lineno
+    offset = index.line_end(line)
+    newline = _newline(index, line) or "\n"
+    text = (newline if offset == len(code) and not code.endswith(("\n", "\r")) else "") + statement + newline
+    return code[:offset] + text + code[offset:]
 
 
 # --- guards and file paths ---------------------------------------------------------------

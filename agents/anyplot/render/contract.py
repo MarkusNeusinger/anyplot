@@ -34,10 +34,11 @@ and the target of each other one, `adaptation_targets`), what its loader changes
 it reads `data.csv` (`loader_notes`), the typed table a language without a reader of its
 own takes (`data_json`), its error grammar (`error_summary`) and its export (`export`,
 `code_artifact`). `runtimes/__init__.py` maps a library to the runtime of its language:
-Python (`runtimes/python.py`) for six libraries, R (`runtimes/r.py`) for ggplot2 since
-2026-10-29, Julia (`runtimes/julia.py`) for Makie since 2026-10-30 and JavaScript
-(`runtimes/javascript.py`) for Chart.js, D3, ECharts and Highcharts since 2026-10-30 and
-MUI X since 2026-10-31; later languages add runtimes, not backends.
+Python (`runtimes/python.py`) for six libraries and plotly and bokeh since 2026-10-31, R
+(`runtimes/r.py`) for ggplot2 since 2026-10-29, Julia (`runtimes/julia.py`) for Makie
+since 2026-10-30 and JavaScript (`runtimes/javascript.py`) for Chart.js, D3, ECharts and
+Highcharts since 2026-10-30 and MUI X since 2026-10-31; later languages add runtimes, not
+backends.
 
 No ADK import: the render layer is plain code.
 """

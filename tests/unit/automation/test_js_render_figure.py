@@ -243,32 +243,277 @@ class TestTheFigureIsData:
         assert "refused" not in run.stderr and "console error" not in run.stderr
 
     def test_an_event_handler_in_bokehs_markup_never_runs(self, harness: Harness, tmp_path: Path) -> None:
-        """Sandbox mode's policy allows inline handlers; a figure page's admits scripts by its nonce alone."""
+        """A bokeh Div's markup is refused before a page opens (`figure UnsafeMarkup`, the review of PB-2a); behind
+        that, the figure page admits scripts by its nonce alone. The handler would log a marker it builds at run time,
+        so no quoted source holds it; the assertions read what ran, not Chromium's wording."""
         bokeh = bokeh_or_skip()
         plot = bokeh.plotting.figure(width=800, height=450, toolbar_location=None)
         plot.line([1, 2], [3, 4])
-        div = bokeh.models.Div(text="<img src=x onerror=\"fetch('http://127.0.0.1:9/div')\"><b>bold</b>")
+        handler = "console.error('handler' + '-ran'); fetch('http://127.0.0.1:9/div')"
+        div = bokeh.models.Div(text=f'<img src=x onerror="{handler}"><b>bold</b>')
         run = harness.draw(tmp_path, bokeh.embed.json_item(bokeh.layouts.column(div, plot)), library="bokeh")
 
-        assert run.returncode == 0, run.stderr
-        assert "Executing inline event handler violates the following Content Security Policy" in run.stderr
+        assert "a Div model" in assert_final_line(run, "figure", "UnsafeMarkup")
+        assert "handler-ran" not in run.stderr
         assert "refused" not in run.stderr and "Failed to fetch" not in run.stderr
+        assert not (run.work / "plot-light.png").exists()
 
-    def test_custom_js_cannot_compile(self, harness: Harness, tmp_path: Path) -> None:
+    def test_custom_js_is_refused_before_it_could_compile(self, harness: Harness, tmp_path: Path) -> None:
         bokeh = bokeh_or_skip()
         plot = bokeh.plotting.figure(width=800, height=450)
         plot.line([1, 2], [3, 4])
         plot.xaxis.formatter = bokeh.models.CustomJSTickFormatter(code="return 'x'")
         run = harness.draw(tmp_path, bokeh.embed.json_item(plot), library="bokeh")
 
-        assert "unsafe-eval" in assert_final_line(run, "page", "EvalError")
+        assert "CustomJSTickFormatter" in assert_final_line(run, "figure", "UnsafeMarkup")
         assert not (run.work / "plot-light.png").exists()
+
+
+def bokeh_plot_with(**changes: object) -> object:
+    """A bokeh plot with a HoverTool, to which a test adds what a candidate of the PB-2a review built at run time."""
+    bokeh = bokeh_or_skip()
+    plot = bokeh.plotting.figure(width=800, height=450, toolbar_location=None)
+    plot.line([1, 2], [3, 4])
+    hover = bokeh.models.HoverTool(tooltips=[("a", "@y{0.0}")])
+    plot.add_tools(hover)
+    for name, value in changes.items():
+        setattr(plot, name, value)
+    return plot, hover
+
+
+class TestTheMarkupCheck:
+    """`figureMarkupProblem` reads the figure the plot wrote, whatever built its values (Fable review of PB-2a: the
+    validator reads code, and `chr(60)` builds a `<` no literal shows); a refusal fails as `figure UnsafeMarkup` before
+    a page opens, so the export, the same code on the same data, never writes it."""
+
+    def bokeh_run(self, harness: Harness, tmp_path: Path, root: object) -> Run:
+        bokeh = bokeh_or_skip()
+        return harness.draw(tmp_path, bokeh.embed.json_item(root), library="bokeh")
+
+    @pytest.mark.parametrize(
+        "tooltips",
+        [
+            pytest.param("<img src=x onerror=alert(1)>", id="a template that runs a handler"),
+            pytest.param([("a", "<img src=x>")], id="a pair's value"),
+            pytest.param([("a", "@y{safe}")], id="{safe}"),
+            pytest.param('<div style="background:url(x.png)">@y</div>', id="a CSS URL"),
+            pytest.param('<a href="#">@y</a>', id="a link"),
+        ],
+    )
+    def test_a_hover_tooltip_is_a_text_template(self, harness: Harness, tmp_path: Path, tooltips: object) -> None:
+        plot, hover = bokeh_plot_with()
+        hover.tooltips = tooltips
+        assert "HoverTool" in assert_final_line(self.bokeh_run(harness, tmp_path, plot), "figure", "UnsafeMarkup")
+
+    def test_a_layouts_background_colour_draws(self, harness: Harness, tmp_path: Path) -> None:
+        """`background=` writes the layout's `styles` (subplot-mosaic, ecg-twelve-lead): a colour loads nothing."""
+        bokeh = bokeh_or_skip()
+        plot, _ = bokeh_plot_with()
+        spacer = bokeh.models.Spacer(width=800, height=40, background="#FAF8F1")
+        run = self.bokeh_run(harness, tmp_path, bokeh.layouts.column(spacer, plot, background="#FAF8F1"))
+        assert run.returncode == 0, run.stderr
+
+    def test_the_catalogues_templates_draw(self, harness: Harness, tmp_path: Path) -> None:
+        plot, hover = bokeh_plot_with()
+        hover.tooltips = (
+            '<div style="color:#1A1A17;padding:8px"><b>@x</b> &times; <span class="v">@y{0.00}</span></div>'
+        )
+        run = self.bokeh_run(harness, tmp_path, plot)
+        assert run.returncode == 0, run.stderr
+
+    @pytest.mark.parametrize("case", ["set_value", "property_callback", "stylesheet", "styles", "mathjax"])
+    def test_what_runs_or_loads_is_refused(self, harness: Harness, tmp_path: Path, case: str) -> None:
+        bokeh = bokeh_or_skip()
+        plot, hover = bokeh_plot_with()
+        root: object = plot
+        if case == "set_value":  # the review's candidate (d)
+            setter = bokeh.models.SetValue(obj=hover, attr="tooltips", value="<img src=x onerror=alert(1)>")
+            button = bokeh.models.Button(label="x", js_event_callbacks={"button_click": [setter]})
+            root = bokeh.layouts.column(button, plot)
+        elif case == "property_callback":
+            slider = bokeh.models.Slider(start=0, end=1, value=0, step=1)
+            slider.js_property_callbacks = {"change:value": [bokeh.models.CustomJS(code="")]}
+            root = bokeh.layouts.column(slider, plot)
+        elif case == "stylesheet":
+            plot.stylesheets = [":host { background: url(http://127.0.0.1:9/css) }"]
+        elif case == "styles":
+            plot.styles = {"background-image": "url(http://127.0.0.1:9/css)"}
+        else:
+            plot.add_layout(bokeh.models.Label(x=1, y=3, text=r"$$\href{javascript:alert(1)}{x}$$"))
+        run = self.bokeh_run(harness, tmp_path, root)
+        assert_final_line(run, "figure", "UnsafeMarkup")
+        assert not (run.work / "plot-light.png").exists()
+
+    @pytest.mark.parametrize("case", ["tooltip_in_tags", "an_unlisted_model"])
+    def test_a_model_no_catalogue_plot_uses_is_refused(self, harness: Harness, tmp_path: Path, case: str) -> None:
+        """Fable's second review: the denylist names what is known to run or load; every other model outside
+        `BOKEH_CATALOGUE_MODELS` is refused too, wherever the figure holds it (a plot's `tags` included)."""
+        bokeh = bokeh_or_skip()
+        plot, _ = bokeh_plot_with()
+        if case == "tooltip_in_tags":
+            plot.tags = [bokeh.models.Tooltip(content="x")]
+            expected = "a Tooltip model"
+        else:
+            plot.add_layout(bokeh.models.Slope(gradient=1, y_intercept=0))
+            expected = "a Slope model, which no catalogue plot uses"
+        run = self.bokeh_run(harness, tmp_path, plot)
+        assert expected in assert_final_line(run, "figure", "UnsafeMarkup")
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            pytest.param('<a href="jav&#x61;script:alert(1)">x</a>', id="an entity-encoded javascript: link"),
+            pytest.param("<a href='javascript:alert(1)'>x</a>", id="a javascript: link"),
+            pytest.param('<a href="page.html">x</a>', id="a relative link"),
+            pytest.param('<a href="https://example.org">x</a>', id="an https link"),
+            pytest.param('<span xlink:href="https://example.org">x</span>', id="an href elsewhere"),
+            pytest.param('<span style="fill:url(http://127.0.0.1:9/x)">x</span>', id="a style that loads"),
+        ],
+    )
+    def test_a_plotly_text_holds_no_link(self, harness: Harness, tmp_path: Path, text: str) -> None:
+        """No eligible catalogue file writes a link, and the exported page would follow one wherever the code pointed
+        it (Fable's second review). plotly.js 4.1.1 drops a `javascript:` href itself, entity-encoded too (measured on
+        2026-10-31); the check refuses every link before plotly.js sees it."""
+        figure = plotly_figure(800, 450, annotations=[{"x": "a", "y": 3, "text": text}])
+        assert_final_line(harness.draw(tmp_path, figure), "figure", "UnsafeMarkup")
+
+    @pytest.mark.parametrize(
+        "place",
+        [
+            pytest.param({"hovertemplate": '<a href="javascript:alert(1)">%{y}</a>'}, id="a hovertemplate"),
+            pytest.param(
+                {
+                    "marker": {
+                        "colorbar": {"title": {"text": "<a href='javascript:alert(1)'>t</a>"}},
+                        "color": [1, 2, 3],
+                    }
+                },
+                id="a colour bar title",
+            ),
+        ],
+    )
+    def test_a_link_in_a_trace_is_refused(self, harness: Harness, tmp_path: Path, place: dict[str, object]) -> None:
+        figure = plotly_figure(800, 450)
+        figure["data"][0].update(place)
+        assert_final_line(harness.draw(tmp_path, figure), "figure", "UnsafeMarkup")
+
+    @pytest.mark.parametrize(
+        "change",
+        [
+            pytest.param({"images": [{"source": "logo.png", "x": 0, "y": 0}]}, id="an image URL"),
+            pytest.param(
+                {"updatemenus": [{"buttons": [{"method": "relayout", "args": [{"images[0].source": "x.png"}]}]}]},
+                id="an image URL in an update's flat key",
+            ),
+        ],
+    )
+    def test_a_plotly_image_is_a_data_image(self, harness: Harness, tmp_path: Path, change: dict[str, object]) -> None:
+        assert_final_line(harness.draw(tmp_path, plotly_figure(800, 450, **change)), "figure", "UnsafeMarkup")
+
+    def test_a_plotly_geojson_url_is_refused(self, harness: Harness, tmp_path: Path) -> None:
+        figure = plotly_figure(800, 450)
+        figure["data"].append({"type": "choropleth", "geojson": "counties.json", "locations": ["a"], "z": [1]})
+        assert_final_line(harness.draw(tmp_path, figure), "figure", "UnsafeMarkup")
+
+    def test_plotlys_own_markup_draws(self, harness: Harness, tmp_path: Path) -> None:
+        text = '<b>bold</b><br><span style="color:#009E73">x<sup>2</sup></span> <i>i</i><extra></extra>'
+        figure = plotly_figure(800, 450, annotations=[{"x": "a", "y": 3, "text": text}])
+        run = harness.draw(tmp_path, figure)
+        assert run.returncode == 0, run.stderr
+
+
+BOKEH_MODELS_SNAPSHOT = Path(__file__).with_name("bokeh_catalogue_models.json")
+"""Every model name the figure JSON of an eligible catalogue bokeh file holds, with how many files use it and one of
+them (collected on 2026-10-31 from all 252 eligible files, both themes; `test_the_catalogue_still_holds_...` below
+recollects it)."""
+
+
+def allowed_bokeh_models() -> set[str]:
+    """`BOKEH_CATALOGUE_MODELS` as `render.mjs` writes it."""
+    body = re.search(r"const BOKEH_CATALOGUE_MODELS = new Set\(\[(.*?)\]\);", HARNESS.read_text(), re.S)
+    assert body is not None, "render.mjs has no BOKEH_CATALOGUE_MODELS"
+    return set(re.findall(r'"([^"]+)"', body.group(1)))
+
+
+def test_the_allowlist_holds_every_catalogue_model() -> None:
+    """The renderer refuses a bokeh model outside the list, so the list holds every model the catalogue's eligible
+    files draw, and no other: a model added here is a decision, never a stray."""
+    assert allowed_bokeh_models() == set(json.loads(BOKEH_MODELS_SNAPSHOT.read_text()))
+
+
+@pytest.mark.skipif(
+    os.environ.get("ANYPLOT_CATALOGUE_MODELS") != "1",
+    reason="runs every eligible catalogue bokeh file (about 8 CPU minutes); set ANYPLOT_CATALOGUE_MODELS=1",
+)
+def test_the_catalogue_still_holds_only_listed_models(tmp_path: Path) -> None:
+    """Recollects the snapshot: each eligible catalogue bokeh file, normalised as the chat serves it, runs in both
+    themes outside any sandbox (the catalogue's own code) and its figure's model names must be in the list. A file
+    whose emptied title divides by zero runs with a title. Run it after a bokeh regeneration, and update the list and
+    the snapshot together when it fails."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    from agents.anyplot.code.normalise import normalise
+    from agents.anyplot.code.readiness import scan
+
+    bokeh_or_skip()
+    allowed = allowed_bokeh_models()
+
+    def models(path: Path) -> tuple[str, set[str]]:
+        spec = path.parts[-4]
+        code = normalise(path.read_text(encoding="utf-8"), library="bokeh")
+        if scan(code, spec_id=spec, library="bokeh", enabled_libraries=["bokeh"]).status == "blocked":
+            return spec, set()
+        code = re.sub(r'(?m)^(\w*title\w*) = ""$', r'\1 = "A title"', code)
+        work = tmp_path / spec
+        work.mkdir()
+        (work / "plot.py").write_text(code, encoding="utf-8")
+        found: set[str] = set()
+        for theme in ("light", "dark"):
+            done = subprocess.run(
+                [sys.executable, "plot.py"],
+                cwd=work,
+                env={**os.environ, "ANYPLOT_THEME": theme},
+                capture_output=True,
+                text=True,
+                timeout=300,
+                check=False,
+            )
+            assert done.returncode == 0, (spec, theme, done.stderr[-500:])
+            pending: list[object] = [json.loads((work / f"plot-{theme}.json").read_text())["doc"]]
+            while pending:
+                value = pending.pop()
+                if isinstance(value, list):
+                    pending.extend(value)
+                elif isinstance(value, dict):
+                    if value.get("type") == "object" and isinstance(value.get("name"), str):
+                        found.add(value["name"])
+                    pending.extend(value.values())
+        return spec, found
+
+    paths = sorted((REPO_ROOT / "plots").glob("*/implementations/python/bokeh.py"))
+    with ThreadPoolExecutor(max_workers=os.cpu_count() or 4) as pool:
+        results = dict(pool.map(models, paths))
+    unlisted = {spec: sorted(found - allowed) for spec, found in results.items() if found - allowed}
+    assert not unlisted, unlisted
+    assert set().union(*results.values()) == set(json.loads(BOKEH_MODELS_SNAPSHOT.read_text()))
 
     def test_a_webgl_trace_fails_instead_of_drawing_the_notice(self, harness: Harness, tmp_path: Path) -> None:
         figure = {"data": [{"type": "scattergl", "x": [1, 2], "y": [2, 1]}], "layout": {"width": 800, "height": 450}}
         run = harness.draw(tmp_path, figure)
 
         assert_final_line(run, "draw", "NoWebGL")
+        assert not (run.work / "plot-light.png").exists()
+
+    @pytest.mark.parametrize("trace", ["scatter3d", "surface", "parcoords", "scattermap"])
+    def test_a_webgl_trace_without_a_notice_fails_before_it_draws(
+        self, harness: Harness, tmp_path: Path, trace: str
+    ) -> None:
+        """PB-2a: a 3D scene shows no notice, it draws nothing but its colour bar, which the host gates pass; every
+        WebGL trace type fails before the page is drawn, until the renderer draws WebGL."""
+        figure = {"data": [{"type": trace}], "layout": {"width": 800, "height": 450}}
+        run = harness.draw(tmp_path, figure)
+
+        assert trace in assert_final_line(run, "draw", "NoWebGL")
         assert not (run.work / "plot-light.png").exists()
 
 

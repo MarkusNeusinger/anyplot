@@ -107,7 +107,7 @@ RUN .venv/bin/python -m compileall -q agents core
 # library rules. None of it needs credentials or makes a network call.
 # tests/unit/agents/test_image.py runs this command and holds it against every file the
 # service reads.
-RUN .venv/bin/python -c "import agents.main; from agents.anyplot import policy, scoring; policy.scope_rubric(); policy.data_rubric(); policy.transcribe_rubric(); scoring.system_prompt(highlights=True); policy.catalogue_reviewer_instruction(); policy.reviewer_instruction(); policy.highlights_prompt('python'); policy.highlights_prompt('r'); policy.highlights_prompt('julia'); policy.highlights_prompt('javascript'); policy.adapter_instruction('matplotlib'); policy.adapter_instruction('ggplot2'); policy.adapter_instruction('makie'); policy.adapter_instruction('chartjs')"
+RUN .venv/bin/python -c "import agents.main; from agents.anyplot import policy, scoring; policy.scope_rubric(); policy.data_rubric(); policy.transcribe_rubric(); scoring.system_prompt(highlights=True); policy.catalogue_reviewer_instruction(); policy.reviewer_instruction(); policy.highlights_prompt('python'); policy.highlights_prompt('r'); policy.highlights_prompt('julia'); policy.highlights_prompt('javascript'); policy.adapter_instruction('matplotlib'); policy.adapter_instruction('plotly'); policy.adapter_instruction('bokeh'); policy.adapter_instruction('ggplot2'); policy.adapter_instruction('makie'); policy.adapter_instruction('chartjs')"
 
 ENV PYTHONUNBUFFERED=1
 ENV PORT=8080

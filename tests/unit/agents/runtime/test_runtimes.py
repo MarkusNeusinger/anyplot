@@ -30,6 +30,7 @@ from agents.anyplot.render.runtimes import (
 from agents.anyplot.render.runtimes.python import ADAPTATION_TARGETS as PYTHON_TARGETS
 from agents.anyplot.schemas import CODE_ARTIFACTS, AdaptPlan, Edit
 from agents.anyplot.settings import AgentSettings
+from agents.renderer import commands
 from core.constants import SUPPORTED_LIBRARIES
 from tests.unit.agents.code.conftest import (
     JS_CATALOGUE,
@@ -47,7 +48,17 @@ from tests.unit.agents.code.conftest import (
 class TestRegistry:
     def test_the_registry_serves_the_python_r_julia_and_javascript_libraries(self) -> None:
         assert PYTHON_LIBRARIES == NORMALISED_LIBRARIES
-        assert PYTHON_LIBRARIES == {"matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot"}
+        # plotly and bokeh joined through the renderer's figure mode (PB-2a, 2026-10-31).
+        assert PYTHON_LIBRARIES == {
+            "matplotlib",
+            "seaborn",
+            "plotnine",
+            "altair",
+            "pygal",
+            "letsplot",
+            "plotly",
+            "bokeh",
+        }
         assert R_LIBRARIES == edits.R_LIBRARIES == {"ggplot2"}
         assert JULIA_LIBRARIES == edits.JULIA_LIBRARIES == {"makie"}
         # MUI X joined the four with its fixtures (JS-4c, 2026-10-31).
@@ -69,8 +80,23 @@ class TestRegistry:
         assert runtime.placeholder == PLACEHOLDER and runtime.cpu_seconds == 45 and runtime.render_p95_s == 15.0
         assert runtime.blocking_rules == BLOCKING_RULES and runtime.adaptation_targets == PYTHON_TARGETS
         # matplotlib's probe reports the drawn texts; the libraries that render without it hand them to the review
-        assert runtime.review_texts is (library in {"altair", "pygal", "letsplot"})
+        assert runtime.review_texts is (library in {"altair", "pygal", "letsplot", "plotly", "bokeh"})
         assert has_runtime(library)
+        # plotly and bokeh render in the row's two steps (PB-2a): the harness in figure mode before the screenshot's
+        # command; every other library's command is plot mode's, as before.
+        command = runtime.command("light")
+        if library in ("plotly", "bokeh"):
+            assert runtime.figure == library
+            start = command.index("--figure")
+            assert command[start - 1] == runtime.harness and command[start : start + 4] == [
+                "--figure",
+                library,
+                "plot.py",
+                "--",
+            ]
+            assert command[start + 4 :] == list(commands.command_for("python", library).argv)
+        else:
+            assert runtime.figure == "" and command[-1] == "plot.py" and "--figure" not in command
 
     def test_the_r_runtime_is_bound_to_ggplot2(self) -> None:
         """Dispatched by the library's language (`RUNTIME_CLASSES`), with the R row's reserve (`commands.py`)."""
@@ -126,23 +152,24 @@ class TestRegistry:
         assert runtime.command("light")[-1] == "plot.tsx"
         assert runtime.security(MUIX_WORKING) == []
 
-    def test_a_library_without_a_runtime_is_refused_but_known(self) -> None:
-        assert language_of("plotly") == "python" and not has_runtime("plotly")
-        assert language_of("bokeh") == "python" and not has_runtime("bokeh")
+    def test_every_catalogue_library_has_a_runtime_and_another_is_refused(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """All 15 catalogue libraries are served since PB-2a (2026-10-31); a registry without one still refuses it."""
+        assert RUNTIME_LIBRARIES == SUPPORTED_LIBRARIES
+        assert language_of("plotly") == "python" and has_runtime("plotly") and has_runtime("bokeh")
+        monkeypatch.setattr("agents.anyplot.render.runtimes.RUNTIME_LIBRARIES", RUNTIME_LIBRARIES - {"plotly"})
         with pytest.raises(ValueError, match="no runtime for 'plotly'"):
             runtime_for("plotly")
         with pytest.raises(ValueError, match="unknown library"):
             language_of("excel")
 
-    def test_the_settings_accept_the_served_libraries_and_refuse_one_the_registry_does_not_serve(self) -> None:
-        assert AgentSettings(libraries=["matplotlib", "ggplot2", "makie", "d3", "highcharts", "muix"]).libraries == [
-            "matplotlib",
-            "ggplot2",
-            "makie",
-            "d3",
-            "highcharts",
-            "muix",
-        ]
+    def test_the_settings_accept_the_served_libraries_and_refuse_one_the_registry_does_not_serve(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        served = ["matplotlib", "plotly", "bokeh", "ggplot2", "makie", "d3", "highcharts", "muix"]
+        assert AgentSettings(libraries=served).libraries == served
+        monkeypatch.setattr("agents.anyplot.settings.RUNTIME_LIBRARIES", RUNTIME_LIBRARIES - {"plotly"})
         with pytest.raises(ValueError, match="no runtime"):
             AgentSettings(libraries=["matplotlib", "plotly"])
 

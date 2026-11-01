@@ -352,6 +352,42 @@ steps:
             if [ "$$try" = 1 ]; then sleep 30; fi
           done
           [ -n "$$chartjs_ok" ] || { echo "the Chart.js smoke render failed twice"; exit 1; }
+          # 2d. A plotly render through the two-step figure mode (PB-1, a gate since PB-2a served
+          #     plotly and bokeh): the harness forks the plot under its guard and the exec filter,
+          #     the plot reads data.csv and writes its figure as JSON through the pinned save (an
+          #     axis range included, which runs plotly's `build_validator` under the guard), and
+          #     the JavaScript row's harness draws it in Chromium under gVisor, which no local run
+          #     can. The same two tries as the Chart.js render; a failure refuses the promotion.
+          python3 - <<'EOF'
+        import json
+        source = "\n".join([
+            "import os",
+            "",
+            "import pandas as pd",
+            "import plotly.graph_objects as go",
+            "",
+            "THEME = os.getenv('ANYPLOT_THEME', 'light')",
+            "df = pd.read_csv('data.csv')",
+            "fig = go.Figure(go.Bar(x=df['Gruppe'], y=df['Wert'], marker_color='#009E73'))",
+            "fig.update_layout(title={'text': 'Größe – smoke'}, yaxis={'range': [0, 3.5]})",
+            "fig.update_layout(width=800, height=450).write_json(f'plot-{THEME}.json')",
+        ])
+        job = {"job_id": "smoke-plotly", "language": "python", "library": "plotly", "source": source,
+               "data_csv": "Gruppe,Wert\na,3\nb,1\nc,2\n", "themes": ["light"], "timeout_s": 60}
+        json.dump(job, open("plotly_job.json", "w"))
+        EOF
+          plotly_ok=""
+          for try in 1 2; do
+            if curl -fsS --retry 3 --retry-delay 10 --retry-all-errors --max-time 200 -H "Authorization: Bearer $$TOKEN" \
+              -H "Content-Type: application/json" --data @plotly_job.json -o plotly.json "$$URL/render" \
+              && python3 -c "import json; r=json.load(open('plotly.json')); o=r['outputs']['light']; assert o['exit_code']==0 and o['png_base64'], {k: o[k] for k in ('exit_code','reason','attempts','wall_s','stderr_tail')}; print('OK: plotly figure smoke render', o['wall_s'], 's wall,', o['cpu_s'], 's CPU,', o['max_rss_mb'], 'MiB,', o['attempts'], 'attempt(s)')"; then
+              plotly_ok=1
+              break
+            fi
+            echo "the plotly figure smoke render failed (try $$try of 2)"
+            if [ "$$try" = 1 ]; then sleep 30; fi
+          done
+          [ -n "$$plotly_ok" ] || { echo "the plotly figure smoke render failed twice"; exit 1; }
           # 3. A real data run (POST /run-data, run_data_code): the harness in
           #    data mode with its audit-hook guard armed returns a 2-row table.
           python3 - <<'EOF'

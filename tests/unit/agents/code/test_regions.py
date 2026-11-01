@@ -138,7 +138,8 @@ def test_every_catalogue_theme_conditional_but_the_listed_ones_is_a_token() -> N
     data-dependent; on 2026-10-25, 5,438 in the 1,296 files of the four libraries, five of them (a colour taken from
     a palette index or another plot colour, a tuple of channel arithmetic, a list of layers); on 2026-10-26, 8,020
     in the 1,946 files of the six libraries, eleven of them (lets-plot adds two `flavor_*()` calls, a theme call, a
-    tile set and two colours read from constants that test no theme)."""
+    tile set and two colours read from constants that test no theme); on 2026-10-31, in the 2,596 files of the eight
+    libraries, seventeen (plotly and bokeh add a label text, four label colours and a tile provider)."""
     narrowed = []
     for path in CATALOGUE_FILES:
         code = path.read_text(encoding="utf-8")
@@ -162,6 +163,12 @@ def test_every_catalogue_theme_conditional_but_the_listed_ones_is_a_token() -> N
         "ks-test-comparison/letsplot.py:ribbon_color",
         "map-tile-background/letsplot.py:map_tiles",
         "nyquist-basic/letsplot.py:PM_LABEL_TEXT",
+        "psychrometric-basic/plotly.py:RH_LABEL",
+        "burndown-sprint/bokeh.py:SCOPE_ANNOTATION_CLR",
+        "map-tile-background/bokeh.py:tile_provider",
+        "scatter-hr-diagram/bokeh.py:SPECTRAL_LABEL_COLORS",
+        "slope-basic/bokeh.py:LABEL_INCREASE_COLOR",
+        "slope-basic/bokeh.py:LABEL_DECREASE_COLOR",
     ]
 
 
@@ -285,15 +292,40 @@ class TestSaveRules:
     """One save rule per library (`SAVE_RULES`): which calls save, where the file is, what is protected."""
 
     def test_every_rule_names_its_save_calls(self) -> None:
-        assert set(SAVE_RULES) == {"matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot"}
+        python = {"matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot", "plotly", "bokeh"}
+        assert set(SAVE_RULES) == python
+        # plotly and bokeh save through the pinned figure statement and add no save name (PB-2a).
         assert SAVE_NAMES == {"savefig", "save", "ggsave", "render_to_png", "render_to_file", "svg2png"}
         assert save_rule("matplotlib").verb == "savefig" and save_rule("plotnine").verb == "save"
         assert save_rule("altair").html and save_rule("altair").reopens and save_rule("altair").canvas is None
         assert save_rule("seaborn").canvas == "figure" and save_rule("plotnine").canvas is None
         assert save_rule("pygal").canvas == "pygal" and save_rule("letsplot").canvas == "letsplot"
         assert save_rule("letsplot").directory == "." and save_rule("pygal").directory is None
+        assert {library for library in python if save_rule(library).figure} == {"plotly", "bokeh"}
+        assert not save_rule("plotly").names and not save_rule("bokeh").names
         with pytest.raises(ValueError, match="no save rule"):
-            save_rule("plotly")
+            save_rule("ggplot2")
+
+    @pytest.mark.parametrize(
+        ("library", "save", "func"),
+        [
+            ("plotly", 'fig.update_layout(width=800, height=450).write_json(f"plot-{THEME}.json")\n', "write_json"),
+            (
+                "bokeh",
+                'with open(f"plot-{THEME}.json", "w", encoding="utf-8") as figure_file:\n'
+                "    json.dump(json_item(p), figure_file)\n",
+                "json.dump",
+            ),
+        ],
+    )
+    def test_the_figure_save_is_the_protected_final_save(self, library: str, save: str, func: str) -> None:
+        code = 'import os\n\nTHEME = os.getenv("ANYPLOT_THEME", "light")\nfig.write_image("x.png")\n' + save
+        regions = find_regions(code, library=library)
+
+        assert regions.savefig is not None and regions.savefig.func == func and regions.savefig.standard_target
+        assert regions.savefig.statement is not None and regions.savefig.statement.first_line == 5
+        assert [region.kind for region in regions.protected] == ["theme", "savefig"]
+        assert len(regions.savefig_calls) == 1  # the catalogue's own saves are no save calls of these rules
 
     def test_pygal_svg2png_takes_the_file_by_keyword_only(self) -> None:
         regions = find_regions(PYGAL, library="pygal")
