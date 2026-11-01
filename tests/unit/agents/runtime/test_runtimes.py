@@ -709,10 +709,16 @@ class TestJavaScriptRuntimeBindings:
         assert runtime.data_command() == python.data_command() and runtime.data_env(20) == python.data_env(20)
         assert runtime.convert_command() == python.convert_command() and runtime.convert_env() == python.convert_env()
 
-    def test_collect_reads_the_png_and_no_probe(self, tmp_path: Path) -> None:
+    def test_collect_reads_the_png_and_the_text_probe(self, tmp_path: Path) -> None:
+        """The browser harness writes the drawn texts (`render.mjs`, `writeTextProbe`); a probe that is no JSON
+        object is simply absent, as Python's is."""
         (tmp_path / "plot-dark.png").write_bytes(b"\x89PNG data")
-        (tmp_path / "probe-dark.json").write_text('{"texts": []}')
-        assert runtime_for("d3").collect(tmp_path, "dark") == (b"\x89PNG data", None)
+        (tmp_path / "probe-dark.json").write_text('{"labels": [{"kind": "title", "text": "Umsatz"}]}')
+        (tmp_path / "probe-light.json").write_text("[1, 2]")
+        assert runtime_for("d3").collect(tmp_path, "dark") == (
+            b"\x89PNG data",
+            {"labels": [{"kind": "title", "text": "Umsatz"}]},
+        )
         assert runtime_for("d3").collect(tmp_path, "light") == (None, None)
 
 

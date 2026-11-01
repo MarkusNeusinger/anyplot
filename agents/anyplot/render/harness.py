@@ -46,7 +46,10 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    line plot of spike X (a false G3); for a figure with polar axes, `polar` adds each
    one's radial-label angle, its visible theta span and a histogram of the plotted
    points by angle and radius (`polar_report`), from which the host computes the free direction for the
-   radial labels (`agents/anyplot/render/polar.py`);
+   radial labels (`agents/anyplot/render/polar.py`); a plot that draws without matplotlib gets a
+   probe of its drawn texts alone (`install_text_probes`): pygal's SVG as cairosvg receives it,
+   altair's scenegraph from vl-convert and lets-plot's SVG from its bridge, each read by the roles
+   the library's own classes name, and nothing else of the probe above;
 5. compiles the plot file and runs it as `__main__` (`run_plot`, which `runpy.run_path`
    did before) under `PlotGuard`, an audit hook armed just before: from there on the
    interpreter refuses every `exec` but the plot's own run, the module bodies of an import
@@ -2240,6 +2243,275 @@ def install_probe(theme):
     Figure.savefig = savefig
 
 
+# --- Text probes of the libraries that draw without matplotlib -------------------------------------------------------
+# pygal, altair and lets-plot write no matplotlib figure, so `probe` never runs for them; what their plot draws is still
+# there as text when the PNG is made, in the library's own role vocabulary. Each save writes a probe of the drawn texts
+# alone (`labels`, `labels_truncated`), under `drawn_labels`'s caps; the advisory gates have nothing else to read.
+
+SVG_HIDDEN_CLASSES = frozenset({"tooltip", "showable"})
+"""pygal's classes of text it draws only on hover (`graph.css`: `.showable` is hidden until `.shown`)."""
+VEGA_TEXT_KINDS = {
+    "title-text": "title",
+    "title-subtitle": "subtitle",
+    "legend-title": "legend text",
+    "legend-label": "legend text",
+    "mark": "annotation",
+}
+"""The probe kind of a Vega text mark's role; an axis's `axis-title` and `axis-label` take the axis's orientation."""
+LETSPLOT_TEXT_KINDS = {
+    "plot-title": "title",
+    "plot-subtitle": "subtitle",
+    "axis-title-x": "x axis label",
+    "axis-title-y": "y axis label",
+    "axis-text-x": "x tick label",
+    "axis-text-y": "y tick label",
+    "legend-title": "legend text",
+    "legend-item": "legend text",
+}
+"""The probe kind of a lets-plot SVG text by its class; a text without a class is a `geom_text` label (`annotation`)."""
+
+
+def text_labels(entries):
+    """`labels` and `labels_truncated` from `(kind, text)` pairs in draw order, under `drawn_labels`'s caps.
+
+    Whitespace is collapsed (lets-plot indents its SVG text) and empty texts are left out;
+    titles, axis labels, legend texts and annotations come first, then tick labels, at most
+    `TICK_LABELS_PER_AXIS` of one kind, then any other text.
+    """
+    ranked = []
+    per_kind = {}
+    truncated = False
+    for kind, text in entries:
+        content = " ".join(str(text).split())
+        if not content:
+            continue
+        if kind.endswith("tick label"):
+            per_kind[kind] = per_kind.get(kind, 0) + 1
+            if per_kind[kind] > TICK_LABELS_PER_AXIS:
+                truncated = True
+                continue
+        rank = 1 if kind.endswith("tick label") else 2 if kind == "text" else 0
+        ranked.append((rank, kind, content))
+    ranked.sort(key=lambda entry: entry[0])
+    labels = []
+    budget = LABEL_TOTAL_CHARS
+    for _, kind, content in ranked[:LABEL_LIMIT]:
+        if min(len(content), LABEL_CHARS) > budget:
+            truncated = True
+            break
+        budget -= min(len(content), LABEL_CHARS)
+        truncated = truncated or len(content) > LABEL_CHARS
+        labels.append({"kind": kind, "text": content[:LABEL_CHARS]})
+    return labels, truncated or len(ranked) > LABEL_LIMIT
+
+
+def _svg_hidden(element):
+    """Whether an SVG element draws nothing: `display="none"`, `visibility="hidden"` or `opacity="0"`."""
+    style = (element.get("style") or "").replace(" ", "")
+    return (
+        element.get("display") == "none"
+        or element.get("visibility") == "hidden"
+        or element.get("opacity") in ("0", "0.0")
+        or "display:none" in style
+        or "visibility:hidden" in style
+    )
+
+
+def svg_texts(svg, kind_of):
+    """`(kind, text)` of every `<text>` of an SVG document that draws, in document order.
+
+    `kind_of(classes, element)` names a text's kind from the class sets of its ancestors and
+    itself (the text's own last), or None to leave it out.
+    """
+    from xml.etree import ElementTree
+
+    entries = []
+    stack = [(ElementTree.fromstring(svg), ())]
+    while stack:
+        element, classes = stack.pop()
+        if _svg_hidden(element):
+            continue
+        own = (*classes, frozenset((element.get("class") or "").split()))
+        if element.tag.rpartition("}")[2] == "text":
+            kind = kind_of(own, element)
+            if kind is not None:
+                entries.append((kind, "".join(element.itertext())))
+            continue
+        stack.extend((child, own) for child in reversed(list(element)))
+    return entries
+
+
+def pygal_kind(classes, element):
+    """A pygal text's kind: the chart title, an axis title (the y one rotated), a tick, a legend entry or a value."""
+    if any(SVG_HIDDEN_CLASSES & names and "shown" not in names for names in classes):
+        return None
+    own = classes[-1]
+    if "plot_title" in own:
+        return "title"
+    if "title" in own and any("titles" in names for names in classes[:-1]):
+        return "y axis label" if "rotate" in (element.get("transform") or "") else "x axis label"
+    for names in classes:
+        if "axis" in names and "x" in names:
+            return "x tick label"
+        if "axis" in names and names & {"y", "y2"}:
+            return "y tick label"
+    if any(names & {"legends", "legend"} for names in classes):
+        return "legend text"
+    return "annotation" if "value" in own else "text"
+
+
+def letsplot_kind(classes, element):
+    """A lets-plot text's kind by its own class (`LETSPLOT_TEXT_KINDS`); a facet strip or caption is another text."""
+    own = classes[-1]
+    for name in own:
+        if name in LETSPLOT_TEXT_KINDS:
+            return LETSPLOT_TEXT_KINDS[name]
+    return "text" if own else "annotation"
+
+
+def vega_texts(scenegraph):
+    """`(kind, text)` of every text item of a Vega scenegraph that draws: an item at opacity 0 (an axis label that
+    `labelOverlap` removed) draws nothing. An axis group's `orient` names the axis of its title and labels."""
+    entries = []
+    root = scenegraph.get("scenegraph") if isinstance(scenegraph, dict) else None
+    stack = [(root, None)]
+    while stack:
+        node, orient = stack.pop()
+        if isinstance(node, list):
+            stack.extend((item, orient) for item in reversed(node))
+            continue
+        if not isinstance(node, dict):
+            continue
+        if isinstance(node.get("orient"), str):
+            orient = node["orient"]
+        if node.get("marktype") == "text":
+            role = node.get("role")
+            axis = "y" if orient in ("left", "right") else "x"
+            if role == "axis-title":
+                kind = f"{axis} axis label"
+            elif role == "axis-label":
+                kind = f"{axis} tick label"
+            else:
+                kind = VEGA_TEXT_KINDS.get(role, "text")
+            for item in node.get("items") or []:
+                if not isinstance(item, dict) or item.get("opacity") == 0 or item.get("fillOpacity") == 0:
+                    continue
+                text = item.get("text")
+                if isinstance(text, list):  # a multi-line text: one line per entry
+                    text = " ".join(str(line) for line in text)
+                if isinstance(text, str | int | float):
+                    entries.append((kind, str(text)))
+            continue
+        stack.append((node.get("items"), orient))
+    return entries
+
+
+def write_text_probe(theme, entries):
+    """`probe-<theme>.json` with the drawn texts alone (`text_labels`); a failed write leaves no probe."""
+    labels, truncated = text_labels(entries)
+    try:
+        with open(f"probe-{theme}.json", "w", encoding="utf-8") as handle:
+            handle.write(json.dumps({"labels": labels, "labels_truncated": truncated}))
+    except OSError:
+        pass
+
+
+def wrap_text_probe(owner, name, theme, read):
+    """Wrap `owner.name`, the call that makes the PNG, so that it also writes the text probe of what it draws.
+
+    `read` takes the call's arguments and returns the `(kind, text)` pairs; it runs first and
+    never breaks the render (a failure leaves no probe), and the probe is written only after
+    the call returned, so a failed save leaves none either.
+    """
+    original = getattr(owner, name, None)
+    if original is None:
+        return
+
+    def wrapped(*args, **kwargs):
+        try:
+            entries = read(*args, **kwargs)
+        except Exception:  # the probe never breaks a render
+            entries = None
+        result = original(*args, **kwargs)
+        if entries is not None:
+            write_text_probe(theme, entries)
+        return result
+
+    setattr(owner, name, wrapped)
+
+
+def install_text_probes(path, theme):
+    """Wrap the PNG export of each library the plot file names that draws without matplotlib (module docstring, 4).
+
+    pygal: `cairosvg.svg2png`, which `render_to_png` hands the chart's SVG; altair:
+    vl-convert's `vegalite_to_png` and `vega_to_png`, whose spec vl-convert also lays out as a
+    scenegraph (`vega_texts`, about 0.3 s); lets-plot: its bridge's `_generate_png`, whose spec
+    the bridge also exports as SVG. The modules are imported here, before the guard is armed,
+    as `warm_cairo` imports cairosvg; one that is missing is skipped.
+    """
+    import importlib
+
+    try:
+        with open(path, "rb") as handle:
+            source = handle.read()
+    except OSError:
+        return
+
+    def module(name):
+        try:
+            return importlib.import_module(name)
+        except Exception:
+            return None
+
+    if module("xml.etree.ElementTree") is None:  # `svg_texts`' parser, imported before the guard like the libraries
+        return
+    if b"pygal" in source or b"cairosvg" in source:
+        cairosvg = module("cairosvg")
+        if cairosvg is not None:
+            wrap_text_probe(cairosvg, "svg2png", theme, _pygal_reader)
+    if b"altair" in source or b"vl_convert" in source:
+        vl_convert = module("vl_convert")
+        if vl_convert is not None:
+            for png, scenegraph, options in (
+                ("vegalite_to_png", "vegalite_to_scenegraph", ("vl_version", "config", "theme")),
+                ("vega_to_png", "vega_to_scenegraph", ()),
+            ):
+                lay_out = getattr(vl_convert, scenegraph, None)
+                if lay_out is not None:
+                    wrap_text_probe(vl_convert, png, theme, _vega_reader(lay_out, options))
+    if b"lets_plot" in source:
+        bridge = module("lets_plot._kbridge")
+        if bridge is not None and hasattr(bridge, "_generate_svg"):
+            wrap_text_probe(bridge, "_generate_png", theme, _letsplot_reader(bridge._generate_svg))
+
+
+def _pygal_reader(bytestring=None, **_):
+    """A `read` for `wrap_text_probe` on `cairosvg.svg2png`: the texts of the SVG it converts, by pygal's roles."""
+    return svg_texts(bytestring, pygal_kind)
+
+
+def _vega_reader(lay_out, options):
+    """A `read` for `wrap_text_probe`: the spec laid out as a scenegraph with the PNG call's own options and
+    locales, so the texts are the ones the PNG draws."""
+    keys = (*options, "format_locale", "time_format_locale")
+
+    def read(spec, *args, **kwargs):
+        chosen = {key: kwargs[key] for key in keys if kwargs.get(key) is not None}
+        return vega_texts(lay_out(spec, **chosen))
+
+    return read
+
+
+def _letsplot_reader(export_svg):
+    """A `read` for `wrap_text_probe` on the bridge's `_generate_png`: the same spec exported as SVG at the same size,
+    so the axes break where the PNG's do."""
+
+    def read(bytestring, output_width=None, output_height=None, unit=None, *_, **__):
+        return svg_texts(export_svg(bytestring, output_width, output_height, unit), letsplot_kind)
+
+    return read
+
+
 def frame_csv(frame, measure=None):
     """The CSV text of a snippet's `df`, or the `DATA_EXIT` key of why there is none.
 
@@ -3113,6 +3385,7 @@ def main(argv):
     install_fallback_fonts()
     install_glyph_capture()
     install_probe(theme)
+    install_text_probes(argv[1], theme)
     # The HTML is altair's second file (314 of 325 catalogue files); it stays in the sandbox, nothing collects it.
     guard = PlotGuard((f"plot-{theme}.png", f"probe-{theme}.json", f"plot-{theme}.html"))
     try:

@@ -39,10 +39,11 @@ eval harness may set one or three):
    allowed attempt), and once more on the repaired render after a rejection
    (`MAX_REVIEWS` reviewer calls in all, every round with `AGENT_SHIP_BEST`); the
    reviewer agent sees the rendered theme's PNG, so each of its image defects is
-   filed under that theme, whatever theme the reviewer named. A render without drawn
-   texts on a runtime whose reviewer checks them (`RuntimeAdapter.review_texts`: R, Julia,
-   altair, pygal and lets-plot) hands the review the requested texts, and each one it
-   cannot find in the image is a miss like the probe's (`grounding.reviewed_misses`), in the same call;
+   filed under that theme, whatever theme the reviewer named. A render on a runtime
+   whose reviewer checks the requested texts (`RuntimeAdapter.review_texts`: every library
+   but matplotlib, seaborn and plotnine, whose probes read their texts for the reply only)
+   hands the review the requested texts, and each one it cannot find in the image is a miss
+   like the probe's (`grounding.reviewed_misses`), in the same call;
 5. **repair**: when an attempt left feedback (an answer that missed the schema or was
    cut off at the output limit, each with its own line, failed edits, validator
    findings, a failed render, a missed canvas, reviewer defects, and measured
@@ -394,18 +395,19 @@ class Candidate:
     """What this render's code changed, for `PlotResult.changes`: the notes of every adapter call of the run
     up to this render that changed the code (`Run.changes`), so a best-scored earlier render reports its own."""
     texts: dict[ShownGroup, list[str]] | None = None
-    """This render's drawn texts by role (`grounding.plot_texts`), for `PlotShows`; None without probe labels."""
+    """This render's drawn texts by role (`grounding.plot_texts`), for `PlotShows`; None without probe labels, which
+    the root never sees (`tool_safety.fence_pipeline_notes`)."""
     expect_lines: list[str] = field(default_factory=list)
     """The requested texts and number formats this render does not show (`grounding.expected_misses`), as lines."""
     expect_misses: list[str] = field(default_factory=list)
     """The same misses as the requested texts themselves, for `PlotShows.requested_not_found`."""
     expect_note: str | None = None
-    """`grounding.UNVERIFIED_LINE` when the run had requested texts but the probe reported no drawn texts, and no
-    readable review of this render answered for them (`expect_review`)."""
+    """`grounding.UNVERIFIED_LINE` when the run had requested texts but no drawn texts checked them, and no readable
+    review of this render answered for them (`expect_review`)."""
     expect_review: bool = False
-    """The requested texts go to this render's review, since it reports no drawn texts and its runtime's reviewer
-    checks them (`RuntimeAdapter.review_texts`): a readable review replaces `expect_note` with the misses it
-    reports (`grounding.reviewed_misses`), as `expect_lines` and `expect_misses`."""
+    """The requested texts go to this render's review, since its runtime's reviewer checks them
+    (`RuntimeAdapter.review_texts`): a readable review replaces `expect_note` with the misses it reports
+    (`grounding.reviewed_misses`), as `expect_lines` and `expect_misses`."""
 
 
 @dataclass
@@ -1484,7 +1486,10 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
     """The content-free outcome line of one pipeline run: what the eval harness's pass and gate counts read.
 
     `padded`, `adaptation` (ADAPTATION rule ids) and `advisory` (probe gate ids) describe
-    the shipped render; a failed run has none. `error` is the exception class behind
+    the shipped render; a failed run has none. `texts` names the roles of the drawn texts
+    `PlotShows.texts` reports for the shipped render (`title`, `x tick labels`, ...; role
+    names only, never a text), or is None when its probe reported none: the eval harness
+    counts such runs (`agents/evals/report.py`, `untexted`). `error` is the exception class behind
     reason `error` (for example `RendererUnavailable`, which the harness treats as an
     outage rather than a model failure), never its message. `stage` names what stopped
     the run and `stages` what ended each attempt (`Stage`); `shipped_attempt` and
@@ -1509,6 +1514,7 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
         padded=bool(shipped and shipped.padded),
         adaptation=list(shipped.adaptation_rules) if shipped else [],
         advisory=list(shipped.advisory_gates) if shipped else [],
+        texts=sorted(shipped.texts) if shipped and shipped.texts is not None else None,
         residual=len(result.residual_defects),
         error=run.error_type if result.reason == "error" else None,
     )
@@ -1863,15 +1869,18 @@ async def _attempts(
             _end_attempt(run, "render", feedback)
             continue
         output = rendered.outputs.get(run.theme)
-        # The check reads every drawn text; `shows` gets the clipped summary of them.
+        # `shows` gets the clipped summary of every drawn text the probe reports.
         drawn = drawn_texts(output.probe if output is not None else None)
         texts = plot_texts(drawn)
         checking = settings.expect_check != "off" and bool(run.expected_texts)
-        misses = expected_misses(run.expected_texts, drawn) if checking else []
+        # The requested texts are checked against matplotlib's drawn texts; where the runtime's reviewer checks them
+        # (`review_texts`: every library without matplotlib), its probe's texts ground the reply alone.
+        measured_texts = None if runtime.review_texts else drawn
+        misses = expected_misses(run.expected_texts, measured_texts) if checking else []
         expect_lines = [miss.line(run.theme) for miss in misses]
-        # No drawn texts to check against (a renderer without `labels`): a note, never a pass. Where the runtime says
-        # so (R), the review finds the texts in the image instead, and only its answer lifts the note.
-        unverified = checking and drawn is None
+        # No drawn texts to check against: a note, never a pass. Where the runtime says so, the review finds the texts
+        # in the image instead, and only its answer lifts the note.
+        unverified = checking and measured_texts is None
         expect_note = UNVERIFIED_LINE.format(theme=run.theme) if unverified else None
         candidate = Candidate(
             working=working,

@@ -725,6 +725,32 @@ async def test_without_drawn_texts_an_unread_review_keeps_the_note(client: httpx
     assert UNVERIFIED_LINE.format(theme="light") in plot["residual_defects"]
 
 
+@pytest.mark.usefixtures("reviewer_checks_texts")
+async def test_a_text_probe_grounds_the_reply_and_the_review_checks_the_requested_texts(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """User test of 2026-11-01 (Chart.js, bokeh, pygal): the probe of a library without matplotlib reports its drawn
+    texts, which reach the root, while the requested texts stay the review's to find, never the probe's to miss."""
+    script = default_script(plans=[SCATTER_PLAN, EMPTY_PLAN])
+    ask_for(script, TEMPERATURE)
+    script["reviewer"] = [{"json": score()}]
+    probe = {"labels": [{"kind": "title", "text": "Prüfungen"}, {"kind": "y axis label", "text": "Punkte"}]}
+    backend.script = lambda job, theme: FakeOutcome(probe=probe)
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+
+    events = await create_plot(client, sid)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["residual_defects"]) == ("ok", [])  # the probe's texts claim no miss
+    (review,) = reviewer_inputs(fake)
+    assert REVIEW_TASK in review
+    shipped = get_services().versions.get(sid)
+    assert shipped is not None and shipped.result.shows is not None
+    assert shipped.result.shows.texts == {"title": ["Prüfungen"], "y axis label": ["Punkte"]}
+    assert "Prüfungen" in root_inputs(fake)[-1]
+
+
 CHECKLIST_MISS: dict[str, Any] = {
     "ok": False,
     "defects": [

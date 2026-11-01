@@ -320,9 +320,12 @@ class RuntimeAdapter(Protocol):
 
     @property
     def review_texts(self) -> bool:
-        """Whether the reviewer checks the user's requested texts in the image when a render reports no drawn texts
-        (owner decision of 2026-10-29, for a library without the text probe): False leaves such a render with the
-        `grounding.UNVERIFIED_LINE` note, True hands the texts to its review (`grounding.reviewed_misses`)."""
+        """Whether the reviewer, not the probe, checks the user's requested texts (owner decision of 2026-10-29):
+        True hands the texts to the render's review (`grounding.reviewed_misses`), whatever the probe reports, since
+        this library's probe reads its texts for the closing reply only (the libraries without matplotlib's probe,
+        whose text probes came on 2026-11-01); False checks them against the probe's drawn texts
+        (`grounding.expected_misses`) and leaves a render whose probe reports none with the
+        `grounding.UNVERIFIED_LINE` note."""
         ...
 
     def command(self, theme: Theme) -> list[str]:

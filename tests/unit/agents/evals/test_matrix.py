@@ -820,11 +820,13 @@ def test_book_attribution_keeps_the_attempt_order_and_reads_old_finish_reasons()
             "shipped_attempt": 2,
             "reviewed_attempt": None,
             "advisory": ["G3"],
+            "texts": ["title", "y tick labels"],
         },
     ]
 
     matrix.book_attribution(record, lines, settings)
 
+    assert record["texts"] == ["title", "y tick labels"]  # the roles the reply could quote, never a text
     assert record["finish_reasons"] == {"adapter": {"MAX_TOKENS": 1, "STOP": 1}, "root": {"STOP": 1}}
     assert [call["finish_reason"] for call in record["calls"]] == ["STOP", "MAX_TOKENS", "STOP"]
     assert record["calls"][1] == {

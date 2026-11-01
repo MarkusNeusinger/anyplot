@@ -7,12 +7,16 @@ user asked for "6,5 Mio." on the axis, the axis showed "6.0 M", and the reply cl
 
 Two measurements, both code:
 
-* `drawn_texts` reads the drawn texts the render's probe reports (`harness.drawn_labels`,
-  the `labels` field) by role, every one of them; `plot_texts` clips them into
-  `PlotShows.texts`, which the root reads fenced next to the result. The probe is written by
-  the code under test, so every value is checked for type and clipped; a probe without
-  `labels` (a renderer older than the field, or a failed text report) yields None, and a
-  run with requested texts then carries `UNVERIFIED_LINE` instead of a silent pass.
+* `drawn_texts` reads the drawn texts the render's probe reports (the `labels` field) by
+  role, every one of them; `plot_texts` clips them into `PlotShows.texts`, which the root
+  reads fenced next to the result. Every library's render reports them since 2026-11-01:
+  matplotlib, seaborn and plotnine through `harness.drawn_labels`, pygal, altair and
+  lets-plot through `harness.install_text_probes`, the JavaScript libraries, plotly and bokeh
+  through the browser harness (`render.mjs`, `writeTextProbe`); ggplot2 and Makie do not yet.
+  The probe is written by the code under test, so every value is checked for type and
+  clipped; a probe without `labels` (a failed text report) yields None, which the root never
+  sees (`plugins/tool_safety.fence_pipeline_notes` drops it), and a run with requested texts
+  then carries `UNVERIFIED_LINE` instead of a silent pass.
 * `expected_misses` checks each of the run's `expected_texts` (the texts and number formats
   the user asked to see, verbatim) against all drawn texts, never the clipped summary. A
   text (`Population 2025`, `Top 10`) must stand whole in one drawn text (case, spacing,
@@ -23,12 +27,13 @@ Two measurements, both code:
   Each miss becomes a residual line, so the result says it honestly, and with
   `AGENT_EXPECT_CHECK=repair` a measured finding the repair round gets.
 
-A render without drawn texts (R, altair, pygal and lets-plot, which write no probe) is checked by the
-reviewer instead where its runtime says so (`RuntimeAdapter.review_texts`, owner decision of
-2026-10-29): the review request carries the requested texts, the reviewer reports each one it
-cannot find in the image as a defect line under `EXPECT_LINE_ID` that quotes it, and
-`reviewed_misses` reads those lines back. Only a render no readable review answered for keeps
-`UNVERIFIED_LINE`.
+`expected_misses` reads matplotlib's drawn texts only. Every other library is checked by the
+reviewer instead (`RuntimeAdapter.review_texts`, owner decision of 2026-10-29): its probe reads
+the texts from the library's own roles or chart model, which a plugin's own drawing is not in,
+so it grounds the reply but never claims a requested text missing. The review request carries
+the requested texts, the reviewer reports each one it cannot find in the image as a defect line
+under `EXPECT_LINE_ID` that quotes it, and `reviewed_misses` reads those lines back. Only a
+render no readable review answered for keeps `UNVERIFIED_LINE`.
 """
 
 import re
@@ -62,11 +67,11 @@ GROUP_LIMITS: dict[ShownGroup, int] = {
 """Distinct texts `PlotShows.texts` keeps per role: enough to quote a title or read a tick format, and
 at most 62 texts of `MAX_SHOWN_TEXT_CHARS` (about 5 KB) next to the result's other fields."""
 UNVERIFIED_LINE = (
-    "SC-04 ({theme}): the requested texts could not be checked, since the renderer reported no drawn texts "
-    "→ compare them with the image. Likely cause: a renderer without the probe's text report."
+    "SC-04 ({theme}): the requested texts could not be checked against the render "
+    "→ compare them with the image. Likely cause: no drawn texts to check them against and no readable review."
 )
-"""The residual line of a render with requested texts but no `labels` in its probe, unless a readable review
-answered for them (`reviewed_misses`): never a silent pass."""
+"""The residual line of a render with requested texts that neither matplotlib's drawn texts nor a readable review
+answered for (`expected_misses`, `reviewed_misses`): never a silent pass."""
 EXPECT_LINE_ID = {"text": "SC-04", "format": "SC-02"}
 """The rubric id a missing requested text (title, legend, label) or number format is reported under."""
 _QUOTED = re.compile(r'["“”„«»]([^"“”„«»\n]+)["“”„«»]')

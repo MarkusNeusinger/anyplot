@@ -699,12 +699,13 @@ def _number_format_lines(
     `tick_axes`, which say which tick labels are numbers (`_number_label_kind`). No label text
     reaches the line: a tick label can be a cell of the user's data. The language is named
     by its English name from the server's table, never by the session's free-text value.
+    Only matplotlib's probe has `tick_axes`; a probe without it (the text probe of a library
+    that draws without matplotlib, whose formatters the line's advice does not name) gets no line.
     """
     labels = probe.get("labels") if isinstance(probe, dict) else None
-    if numbers is None or not isinstance(labels, list):
-        return []
     ticks = probe.get("tick_axes") if isinstance(probe, dict) else None
-    ticks = ticks if isinstance(ticks, list) else None
+    if numbers is None or not isinstance(labels, list) or not isinstance(ticks, list):
+        return []
     numeric = foreign = 0
     kinds: set[str] = set()
     for label in labels:

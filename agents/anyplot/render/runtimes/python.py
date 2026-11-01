@@ -10,13 +10,15 @@ has one (lets-plot), as the renderer's `sandbox_env` passes them. The library pi
 (`regions.SAVE_RULES`: the save call, altair's second `plot-<theme>.html` file and its
 PIL padding) and the validator profile; plotnine draws through matplotlib and so gets a
 probe, altair renders in vl-convert's V8, pygal through cairosvg and lets-plot in its native
-bridge, and none of those three writes one (the host gates still run).
+bridge, and those three get a probe of their drawn texts alone (`harness.install_text_probes`,
+since 2026-11-01), for the closing reply; the advisory gates have nothing to read there.
 
 plotly and bokeh (PB-2a of step 4, 2026-10-31) run in the row's two steps (`FIGURE_FLAG`,
 `RuntimeCommand.figure`): the harness forks the plot, which writes its figure as JSON through
 the pinned save (`code/figure.py`), then draws it with the JavaScript row's harness in
 Chromium, so the command carries that row's argv after `--` and the environment its `JS_ENV`
-after the Python settings, as the renderer's `sandbox_env` builds them. Neither writes a probe;
+after the Python settings, as the renderer's `sandbox_env` builds them. The screenshot step
+writes the text probe of what the page draws (`render.mjs`, `writeTextProbe`), nothing more;
 a failure ends with the figure mode's final error line (`gates.figure_error_summary`); the
 export swaps the JSON save for the library's normal save (the plan's question 10).
 
@@ -32,7 +34,6 @@ the soft ones (`ADAPTATION_TARGETS`) were the pipeline's until 2026-10-29, when 
 its own; the Python values are unchanged.
 """
 
-import json
 from collections.abc import Mapping
 from pathlib import Path
 from types import MappingProxyType
@@ -55,7 +56,7 @@ from ...schemas import AdaptPlan, CodeArtifact
 from ..contract import BLOCKING_RULES, Theme
 from ..gates import error_summary, figure_error_summary
 from ..harness import CONVERT_FLAG, DATA_FLAG, INTERPRETER_FLAGS
-from ..png import MAX_PNG_BYTES, MAX_PROBE_BYTES, read_output
+from ..png import MAX_PNG_BYTES, read_output, read_probe
 
 
 IMAGE_PYTHON = "/app/.venv/bin/python"
@@ -94,9 +95,10 @@ computed palette list, the fix the old shared target ("derive it from df and the
 Imprint palette") suggested."""
 
 
-TEXTLESS_LIBRARIES = frozenset({"altair", "pygal", "letsplot", "plotly", "bokeh"})
-"""The Python libraries that render without matplotlib and so write no probe: no drawn texts to check the user's
-requested texts against (`PythonRuntime.review_texts`)."""
+REVIEWED_TEXT_LIBRARIES = frozenset({"altair", "pygal", "letsplot", "plotly", "bokeh"})
+"""The Python libraries that render without matplotlib: their probe reports the drawn texts alone, read from the
+library's own roles for the closing reply, so the reviewer checks the user's requested texts in the image
+(`PythonRuntime.review_texts`)."""
 
 
 class PythonRuntime:
@@ -115,9 +117,10 @@ class PythonRuntime:
     @property
     def review_texts(self) -> bool:
         """matplotlib, seaborn and plotnine draw through matplotlib's probe, which reports the drawn texts the
-        requested ones are checked against, as before 2026-10-29. altair, pygal, lets-plot, plotly and bokeh write no
-        probe, as R does not, so their reviewer finds the requested texts in the image (`TEXTLESS_LIBRARIES`)."""
-        return self.library in TEXTLESS_LIBRARIES
+        requested ones are checked against, as before 2026-10-29. altair, pygal, lets-plot, plotly and bokeh report
+        their drawn texts for the reply only (`REVIEWED_TEXT_LIBRARIES`), so their reviewer finds the requested texts
+        in the image, as R's does."""
+        return self.library in REVIEWED_TEXT_LIBRARIES
 
     def __init__(
         self,
@@ -242,15 +245,7 @@ class PythonRuntime:
         return [f"{finding.rule}: {finding.message}" for finding in validate_security(code, library=library)]
 
     def collect(self, run_dir: Path, theme: Theme) -> tuple[bytes | None, dict[str, Any] | None]:
-        png = read_output(run_dir / f"plot-{theme}.png", MAX_PNG_BYTES)
-        probe: dict[str, Any] | None = None
-        try:
-            raw = read_output(run_dir / f"probe-{theme}.json", MAX_PROBE_BYTES)
-            loaded = json.loads(raw) if raw else None
-            probe = loaded if isinstance(loaded, dict) else None
-        except ValueError, OSError:
-            probe = None  # the probe is advisory; a broken one is simply absent
-        return png, probe
+        return read_output(run_dir / f"plot-{theme}.png", MAX_PNG_BYTES), read_probe(run_dir / f"probe-{theme}.json")
 
     # The code conventions of the language, for the pipeline (`agents/anyplot/code/`).
 

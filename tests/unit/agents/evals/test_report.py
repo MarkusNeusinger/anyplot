@@ -218,6 +218,22 @@ def test_flips_with_repeats_compare_the_share_of_passed_runs() -> None:
     assert "1 of 2 passed → 0 of 2" in diff_markdown(compare(baseline, worse, tolerance=0.05))
 
 
+def test_shipped_runs_without_drawn_texts_are_counted_per_library() -> None:
+    """User test of 2026-11-01: a shipped render without drawn texts left the reply nothing to quote."""
+    runs = [
+        run("a-matplotlib-x", texts=["title", "x tick labels"]),
+        run("b-chartjs-x", library="chartjs", texts=None),
+        run("c-ggplot2-x", library="ggplot2", status="needs_attention", texts=None),
+        run("d-ggplot2-x", library="ggplot2", status="failed", passed=False, texts=None),  # nothing shipped
+        run("e-pygal-x", library="pygal"),  # a report older than the field
+    ]
+
+    summary = summarize(runs)
+
+    assert (summary["untexted"], summary["untexted_by_library"]) == (2, {"chartjs": 1, "ggplot2": 1})
+    assert "| Shipped without drawn texts | 2, chartjs 1, ggplot2 1 |" in summary_markdown(report_of(runs))
+
+
 def test_summary_markdown_has_every_section() -> None:
     runs = [run("a-matplotlib-x"), run("b-matplotlib-x", status="failed", reason="render", passed=False)]
     report = report_of(runs, provider="anthropic-vertex", location="eu", renderer="fake")

@@ -708,6 +708,7 @@ def base_record(case: "EvalCase", repeat: int) -> dict[str, Any]:
         "padded": False,
         "adaptation": [],
         "advisory": [],
+        "texts": None,
         "residual_defects": [],
         "gate_failures": {},
         "validator_rejections": {},
@@ -911,6 +912,8 @@ def book_attribution(record: dict[str, Any], lines: list[dict[str, Any]], settin
             record["padded"] = bool(line.get("padded"))
             record["adaptation"] = [str(rule) for rule in line.get("adaptation") or []]
             record["advisory"] = [str(gate) for gate in line.get("advisory") or []]
+            texts = line.get("texts")
+            record["texts"] = [str(role) for role in texts] if isinstance(texts, list) else None
             if line.get("error"):
                 record["pipeline_error"] = str(line["error"])
             _book_stages(record, line)
@@ -1467,6 +1470,12 @@ async def _run_matrix(
         result.notes.append(
             f"{harness_errors} runs crashed in the harness (the `error` field of each run names the class); "
             "they count as failures"
+        )
+    if summary.get("untexted"):
+        libraries = ", ".join(f"{library} {count}" for library, count in summary["untexted_by_library"].items())
+        result.notes.append(
+            f"{summary['untexted']} shipped runs reported no drawn texts, so the closing reply had none to quote "
+            f"({libraries}); every library's probe should report them"
         )
     if stopped == "outage":
         result.exit_code = EXIT_OUTAGE
