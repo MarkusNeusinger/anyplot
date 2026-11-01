@@ -25,13 +25,17 @@ from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.plugins import ledger
 from agents.anyplot.plugins.ledger import ATTRIBUTION_LOGGER
 from agents.anyplot.run_queue import RunQueue
+from agents.anyplot.schemas import Binding
 from agents.anyplot.services import Services
 from agents.anyplot.session_state import (
+    BINDINGS,
+    CONFIRMED,
     DATASET_COPIED_FROM,
     DATASET_VERSION,
     LANGUAGE,
     LANGUAGE_SOURCE,
     SessionView,
+    confirmation_fingerprint,
     read_session,
 )
 from agents.main import APP_NAME, Runtime, app, get_runtime
@@ -356,9 +360,12 @@ async def test_the_body_is_one_session_id(client: httpx.AsyncClient, body: dict[
     assert response.status_code == status
 
 
-async def test_copies_are_counted_per_user(client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.mark.parametrize(("cap", "code"), [("COPIES_PER_MINUTE", "rate_limited"), ("COPIES_PER_DAY", "daily_limit")])
+async def test_copies_are_counted_per_user(
+    client: httpx.AsyncClient, runtime: Runtime, monkeypatch: pytest.MonkeyPatch, cap: str, code: str
+) -> None:
     """No parse and no model call, but each copy takes the dataset's size in the store again: a cap of its own."""
-    monkeypatch.setattr(ledger, "COPIES_PER_MINUTE", 1)
+    monkeypatch.setattr(ledger, cap, 1)
     source = await open_session(client)
     await paste(client, source)
     first = await open_session(client, library="seaborn", fanout=True)
@@ -367,7 +374,47 @@ async def test_copies_are_counted_per_user(client: httpx.AsyncClient, monkeypatc
     assert (await copy(client, first, source)).status_code == 200
     response = await copy(client, second, source)
 
-    assert (response.status_code, response.json()) == (429, {"detail": "rate_limited"})
+    assert (response.status_code, response.json()) == (429, {"detail": code})
+    refused, _ = await view_of(runtime, second)
+    assert refused.dataset_id is None
+
+
+async def test_a_full_store_refuses_the_copy_and_keeps_nothing(
+    client: httpx.AsyncClient, runtime: Runtime, services: Services
+) -> None:
+    source = await open_session(client)
+    await paste(client, source)
+    target = await open_session(client, library="seaborn", fanout=True)
+    services.datasets.max_bytes = services.datasets.used_bytes  # no room for one more byte
+    stored = len(services.datasets)
+
+    response = await copy(client, target, source)
+
+    assert (response.status_code, response.json()) == (503, {"detail": "capacity"})
+    assert len(services.datasets) == stored
+    target_view, state = await view_of(runtime, target)
+    assert target_view.dataset_id is None and DATASET_COPIED_FROM not in state
+
+
+async def test_bindings_the_target_refuses_are_never_copied(
+    client: httpx.AsyncClient, runtime: Runtime, services: Services
+) -> None:
+    """Defence in depth: the bindings must hold for the target's roles too. Here the source's state holds a text
+    column on the numeric `x`, confirmed as it is, which no route of the service would store."""
+    source = await open_session(client)
+    await paste(client, source)
+    view, _ = await view_of(runtime, source)
+    bad = [{"role": "x", "column": "Student"}, {"role": "y", "column": "Exam Score"}]
+    assert view.dataset_id is not None
+    fingerprint = confirmation_fingerprint(view.dataset_id, [Binding.model_validate(item) for item in bad])
+    await runtime.write_state(await runtime.session(USER, source), {BINDINGS: bad, CONFIRMED: fingerprint})
+    target = await open_session(client, library="seaborn", fanout=True)
+    stored = len(services.datasets)
+
+    response = await copy(client, target, source)
+
+    assert (response.status_code, response.json()) == (422, {"detail": "invalid"})
+    assert len(services.datasets) == stored
 
 
 async def test_a_copy_logs_counts_and_no_data(client: httpx.AsyncClient, caplog: pytest.LogCaptureFixture) -> None:

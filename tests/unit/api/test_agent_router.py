@@ -746,6 +746,8 @@ class TestBodies:
             (422, "unconfirmed"),
             (422, "no_dataset"),
             (409, "run_active"),
+            (429, "daily_limit"),
+            (503, "capacity"),
         ],
     )
     def test_dataset_copy_refusals_pass_through(self, client, upstream, status, detail) -> None:
