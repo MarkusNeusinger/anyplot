@@ -78,7 +78,13 @@ describe('readCsvTable', () => {
     expect(() => readCsvTable('')).toThrow(CsvError);
   });
 
-  it('reads the largest table the service stores: 20,000 rows of 50 columns', () => {
+  it('names a bare carriage return outside a quoted cell, after a quoted cell too', () => {
+    const message = 'row 2: a carriage return outside a quoted cell';
+    expect(() => readCsvTable('a\nx\ry\n')).toThrow(message);
+    expect(() => readCsvTable('a\n"x"\ry\n')).toThrow(message);
+  });
+
+  it('reads 20,000 rows of 50 columns, about twice what the service stores', () => {
     const header = Array.from({ length: 50 }, (_, index) => `col_${index}`).join(',');
     const row = Array.from({ length: 50 }, (_, index) =>
       index % 7 === 0 ? '"a, b"' : '123.4567'

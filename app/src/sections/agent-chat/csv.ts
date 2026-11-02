@@ -76,8 +76,9 @@ export function parseCsv(text: string): string[][] {
       continue;
     }
     if (code === LF) at += 1;
-    else if (code === CR && text.charCodeAt(at + 1) === LF) at += 2;
-    else throw new CsvError(`row ${rows.length + 1}: text after a quoted cell`);
+    else if (code !== CR) throw new CsvError(`row ${rows.length + 1}: text after a quoted cell`);
+    else if (text.charCodeAt(at + 1) === LF) at += 2;
+    else throw new CsvError(`row ${rows.length + 1}: a carriage return outside a quoted cell`);
     rows.push(row);
     row = [];
     if (at >= end) break;

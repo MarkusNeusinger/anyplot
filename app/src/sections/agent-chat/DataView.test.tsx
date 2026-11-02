@@ -77,6 +77,13 @@ describe('DataView', () => {
     );
   });
 
+  it('says so when no answer comes at all', async () => {
+    renderView(() => Promise.reject(new TypeError('Failed to fetch')));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'could not show every row: no answer'
+    );
+  });
+
   it('closes with .close() and with Escape', async () => {
     const { onClose } = renderView(() => Promise.resolve(CSV));
     await screen.findByRole('grid');
