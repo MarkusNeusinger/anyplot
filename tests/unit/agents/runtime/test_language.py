@@ -268,6 +268,7 @@ def rendered(number: int, library: str, language: str) -> CodeVersion:
         render_id=f"r{number}",
         result=result,
         library=library,
+        spec_id="scatter-basic",  # the spec `opened` opens: a version is filed under its (spec, library) pair
         language=language,
     )
 

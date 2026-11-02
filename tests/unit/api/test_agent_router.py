@@ -326,6 +326,8 @@ ALL_ROUTES = [
     ("GET", "/debug/agent/eligibility?spec=scatter-basic&library=matplotlib", None),
     ("POST", "/debug/agent/sessions", {"spec_id": "scatter-basic", "library": "matplotlib", "locale": "en"}),
     ("POST", "/debug/agent/sessions/s1/library", {"spec_id": "scatter-basic", "library": "seaborn"}),
+    ("GET", "/debug/agent/sessions/s1/memory", None),
+    ("DELETE", "/debug/agent/sessions/s1/memory/m1", None),
     ("POST", "/debug/agent/sessions/s1/dataset", {"text": "a,b\n1,2\n"}),
     ("POST", "/debug/agent/sessions/s1/dataset/convert", {"data_base64": "UEsFBg=="}),
     ("PUT", "/debug/agent/sessions/s1/bindings", [{"role": "x", "column": "a"}]),
@@ -594,6 +596,43 @@ class TestSnapshot:
         assert str(upstream.requests[0].url) == f"{SERVICE_URL}/v1/sessions/s1/library"
         assert upstream.last_json["library"] == "seaborn"
         assert upstream.last_json["snapshot"]["code"] == "sns = 1"
+        assert upstream.last_json["source"] == "menu"  # the page's library menu, unless it says otherwise
+
+    def test_switch_library_forwards_a_chat_source_and_refuses_any_other(self, client, upstream, db_with_spec) -> None:
+        db_with_spec.get_by_id_with_code.return_value = _make_spec([_make_impl("seaborn", "sns = 1")])
+        body = {"spec_id": "scatter-basic", "library": "seaborn", "source": "chat"}
+        assert client.post("/debug/agent/sessions/s1/library", json=body, headers=CLIENT_HEADERS).status_code == 200
+        assert upstream.last_json["source"] == "chat"
+
+        body["source"] = "elsewhere"
+        refused = client.post("/debug/agent/sessions/s1/library", json=body, headers=CLIENT_HEADERS)
+        assert refused.status_code == 422 and len(upstream.requests) == 1
+
+
+class TestPlotMemory:
+    """The page's "Gemerkt" list: the agents service's plot memory, read and removed by entry id (2026-11-02)."""
+
+    def test_the_memory_is_read_and_an_entry_removed(self, client, upstream) -> None:
+        listed = {"entries": [{"id": "m1", "kind": "title", "target": None, "text": "t", "expect": None, "turn": 1}]}
+        upstream.handler = lambda request: httpx.Response(200, json={**listed, "max_entries": 30})
+        response = client.get("/debug/agent/sessions/s1/memory", headers=CLIENT_HEADERS)
+        assert response.status_code == 200 and response.json()["entries"][0]["id"] == "m1"
+        assert (upstream.requests[-1].method, upstream.requests[-1].url.path) == ("GET", "/v1/sessions/s1/memory")
+
+        upstream.handler = lambda request: httpx.Response(200, json={"entries": [], "max_entries": 30})
+        removed = client.delete("/debug/agent/sessions/s1/memory/m1", headers=CLIENT_HEADERS)
+        assert removed.status_code == 200 and removed.json()["entries"] == []
+        sent = upstream.requests[-1]
+        assert (sent.method, sent.url.path) == ("DELETE", "/v1/sessions/s1/memory/m1")
+
+    def test_an_unknown_entry_is_not_found_and_a_malformed_id_never_leaves(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(404, json={"detail": "not_found"})
+        missing = client.delete("/debug/agent/sessions/s1/memory/m9", headers=CLIENT_HEADERS)
+        assert missing.status_code == 404 and missing.json()["detail"] == "not_found"
+
+        before = len(upstream.requests)
+        assert client.delete("/debug/agent/sessions/s1/memory/title", headers=CLIENT_HEADERS).status_code == 422
+        assert len(upstream.requests) == before
 
 
 class TestBodies:

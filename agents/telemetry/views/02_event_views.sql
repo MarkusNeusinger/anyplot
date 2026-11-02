@@ -1,4 +1,4 @@
--- Typed views of the four telemetry events, one column per field of `agents/anyplot/telemetry.py`.
+-- Typed views of the five telemetry events, one column per field of `agents/anyplot/telemetry.py`.
 -- Run after 01_events.sql. Each statement is its own view; `bq query` runs the script as one job.
 --
 -- A field added to a line later (schema 1 grows by optional fields only) reads NULL on the lines written before it:
@@ -122,9 +122,34 @@ SELECT
   LAX_INT64(payload.queue_position) AS queue_position,
   JSON_VALUE(payload.user_runs_today) AS user_runs_today,
   JSON_VALUE(payload.user_tokens_today) AS user_tokens_today,
+  -- The library switch with the plot memory (2026-11-02): the run took a switch's carry, was the page's fresh
+  -- `.create_plot()` or `.start_over()`, handed this many memory entries on, stored this many new ones once it
+  -- shipped, and found the memory full. NULL before that day.
+  LAX_BOOL(payload.carried) AS carried,
+  LAX_BOOL(payload.fresh) AS fresh,
+  LAX_INT64(payload.memory_entries) AS memory_entries,
+  LAX_INT64(payload.remembered) AS remembered,
+  LAX_BOOL(payload.memory_full) AS memory_full,
   JSON_VALUE(payload.status) IN ('ok', 'needs_attention') AS shipped
 FROM `anyplot.agent_telemetry.events`
 WHERE event = 'pipeline_run';
+
+-- One row per switch of a session's (spec, library) target (2026-11-02): where it came from, what changed, what
+-- would carry and whether the page offered the carry run; `memory_kinds` counts the memory's entries by kind.
+CREATE OR REPLACE VIEW `anyplot.agent_telemetry.plot_switches` AS
+SELECT
+  ts, source, session, spec_id, library, turn, idempotency_key, revision,
+  JSON_VALUE(payload.switch_source) AS switch_source,
+  JSON_VALUE(payload.from_library) AS from_library,
+  LAX_BOOL(payload.spec_changed) AS spec_changed,
+  LAX_BOOL(payload.library_changed) AS library_changed,
+  LAX_INT64(payload.carried_count) AS carried_count,
+  LAX_INT64(payload.newer_count) AS newer_count,
+  LAX_BOOL(payload.target_has_plot) AS target_has_plot,
+  LAX_BOOL(payload.offered) AS offered,
+  payload.memory_kinds AS memory_kinds
+FROM `anyplot.agent_telemetry.events`
+WHERE event = 'plot_switch';
 
 CREATE OR REPLACE VIEW `anyplot.agent_telemetry.outcomes` AS
 SELECT

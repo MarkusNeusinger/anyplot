@@ -72,6 +72,7 @@ class TestRegistry:
             "set_bindings",
             "set_language",
             "keep_plot_request",
+            "forget",
             "prepare_data",
             "query_data",
             "generate_data",
@@ -82,7 +83,7 @@ class TestRegistry:
         pipeline = next(tool for tool in root.tools if tool_name(tool) == "plot_pipeline")
         assert isinstance(pipeline.node, Workflow)
         assert pipeline.node.input_schema is PipelineArgs
-        assert set(PipelineArgs.model_fields) == {"change_request", "base", "theme", "expected_texts"}
+        assert set(PipelineArgs.model_fields) == {"change_request", "base", "theme", "expected_texts", "remember"}
 
     def test_sub_agents_are_single_turn_and_tool_less(self) -> None:
         for agent in [*agent_module.ADAPTERS.values(), agent_module.reviewer]:

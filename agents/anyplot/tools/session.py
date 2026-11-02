@@ -30,12 +30,18 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   reply, and whether the plot is `plot_outdated`: this library's latest rendered
   version has its text in another language than the plot language, so a rewrite of
   the plot's text is due.
-* `keep_plot_request(change_request, expected_texts)`: a request for the first plot
+* `keep_plot_request(change_request, expected_texts, remember)`: a request for the first plot
   kept without a run (`pipeline.hold_request`, the note the next first-plot run takes),
   for a wish before the confirmation, typed or in the pasted notes (live round 9 of
-  2026-10-16). It answers `request_kept`, the only basis on which the root may say a
+  2026-10-16), with its lasting decisions for the plot memory, stored once that plot ships.
+  It answers `request_kept`, the only basis on which the root may say a
   request is kept; `false` with `plot_exists` when this library already has a plot.
   Refused while the pipeline runs.
+* `forget(entry_id)`: removes an entry of the user's plot memory (`memory.py`, since
+  2026-11-02), the standing decisions the page shows and every later run hands the
+  adapter and the reviewer, in any library. Entries come in with a run
+  (`PipelineArgs.remember`), since the root cannot call a tool after a shipped plot.
+  The result carries the count, never a text. Refused while the pipeline runs.
 * `prepare_data(operations)`: at most five operations of the fixed set
   (`data/prepare.py`), applied by the server to the session's current dataset and
   stored as its next version (`dataset_versions.py`): the previous version stays for
@@ -97,6 +103,8 @@ from ..dataset_context import code_source, generated_source
 from ..dataset_guard import DataRefused, GuardUnavailable, check_dataset
 from ..dataset_versions import push_version
 from ..language import LANGUAGE_TARGETS, is_valid, normalise, same_language
+from ..memory import ForgetArgs, MemoryRefused, memory_delta, read_memory
+from ..memory import forget as memory_forget
 from ..opening import store_dataset
 from ..pipeline import hold_request, run_pipeline
 from ..plugins.ledger import attribution, ledger_for
@@ -218,8 +226,8 @@ async def get_current_code(version: int, tool_context: ToolContext) -> dict[str,
     view = _view(tool_context)
     if view is None:
         return _error("session_not_open")
-    # Versions of another library (before a library switch) are not this plot's code.
-    stored = get_services().versions.get(tool_context.session.id, version or None, library=view.library)
+    # Versions of another library or spec (before a switch) are not this plot's code.
+    stored = get_services().versions.get(tool_context.session.id, version or None, target=view.target)
     if stored is None and version:
         return _error("unknown_version")
     code = stored.export if stored is not None else view.normalised
@@ -293,7 +301,7 @@ async def set_language(language: str, tool_context: ToolContext, applies_to: str
     changed = replies and not same_language(view.language, value)
     # The plot the user sees is this library's latest render; its text may be in another language than the
     # plot language (made before a choice in another library), so the rewrite is decided against it.
-    latest = versions.latest_rendered(tool_context.session.id, library=view.library)
+    latest = versions.latest_rendered(tool_context.session.id, target=view.target)
     plot_outdated = latest is not None and not same_language(latest.language, plot)
     # A choice is final either way: detection never writes over `chosen`, and nothing but a choice writes the plot's.
     delta = {**(language_delta(value, "chosen") if replies else {}), PLOT_LANGUAGE: plot}
@@ -303,23 +311,48 @@ async def set_language(language: str, tool_context: ToolContext, applies_to: str
 
 
 async def keep_plot_request(
-    change_request: str, tool_context: ToolContext, expected_texts: list[str] | None = None
+    change_request: str,
+    tool_context: ToolContext,
+    expected_texts: list[str] | None = None,
+    remember: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Keep a request for the first plot of this library without starting a run: the next "Create plot" draws it. Use it for a plot wish before the data is confirmed (a title, a scale), typed or in the pasted notes. `change_request` is a short English description (at most 600 characters); `expected_texts` lists the texts and number formats the user wrote out, verbatim. Returns request_kept: true when the server keeps it; false, with a reason, when this library already has a plot (then call plot_pipeline with base "previous" once the data is confirmed)."""
+    """Keep a request for the first plot of this library without starting a run: the next "Create plot" draws it. Use it for a plot wish before the data is confirmed (a title, a scale), typed or in the pasted notes. `change_request` is a short English description (at most 600 characters); `expected_texts` lists the texts and number formats the user wrote out, verbatim; `remember` the request's lasting decisions, as for plot_pipeline. Returns request_kept: true when the server keeps it; false, with a reason, when this library already has a plot (then call plot_pipeline with base "previous" once the data is confirmed)."""
     view = _view(tool_context)
     if view is None:
         return _error("session_not_open")
     if ledger_for(tool_context.invocation_id).pipeline_active:
         return _error("run_active")
     try:
-        args = KeepRequestArgs(change_request=change_request, expected_texts=expected_texts or [])
+        args = KeepRequestArgs.model_validate(
+            {"change_request": change_request, "expected_texts": expected_texts or [], "remember": remember or []}
+        )
     except ValidationError:
         return _error("invalid_arguments")
-    if get_services().versions.latest_rendered(tool_context.session.id, library=view.library) is not None:
+    if get_services().versions.latest_rendered(tool_context.session.id, target=view.target) is not None:
         # A change of an existing plot is no first-plot note: the root repeats it once the data is confirmed.
         return {"status": "ok", "request_kept": False, "reason": "plot_exists"}
     hold_request(tool_context.state, PipelineArgs(**args.model_dump()))
     return {"status": "ok", "request_kept": True}
+
+
+async def forget(entry_id: str, tool_context: ToolContext) -> dict[str, Any]:
+    """Remove a decision from the user's plot memory by its id, as the session block lists it, when the user takes it back ("no reference line after all") or asks you to forget it. The plot itself changes only through plot_pipeline. Returns the number of entries left."""
+    view = _view(tool_context)
+    if view is None:
+        return _error("session_not_open")
+    if ledger_for(tool_context.invocation_id).pipeline_active:
+        return _error("run_active")
+    try:
+        args = ForgetArgs(entry_id=entry_id)
+    except ValidationError:
+        return _error("invalid_arguments")
+    try:
+        entries = memory_forget(read_memory(tool_context.state), args.entry_id)
+    except MemoryRefused as exc:
+        return _error(exc.code)
+    for key, value in memory_delta(entries).items():
+        tool_context.state[key] = value
+    return {"status": "ok", "entries": len(entries)}
 
 
 def _conversion_outcome(prepared: Prepared, profile: DatasetProfile) -> telemetry.ConversionOutcome | None:
@@ -776,7 +809,9 @@ plot_pipeline = Workflow(
         "then follows the theme of the user's page, and a change keeps a theme the user asked for; pass "
         "theme='dark' only when the user asks for a dark plot, and theme='light' only when they ask for a light "
         "one. Pass expected_texts (at most five) with the texts and number formats the user wrote out for "
-        "the plot, verbatim. Returns the PlotResult, with what the shipped plot shows under shows."
+        "the plot, verbatim. Pass remember (at most five) with the change's lasting decisions for the user's plot "
+        "memory, each {kind, text, target, expected_text}, stored once the plot ships. Returns the PlotResult, with "
+        "what the shipped plot shows under shows."
     ),
     input_schema=PipelineArgs,
     edges=[("START", run_pipeline)],
@@ -789,6 +824,7 @@ SESSION_TOOLS = (
     set_bindings,
     set_language,
     keep_plot_request,
+    forget,
     prepare_data,
     query_data,
     generate_data,

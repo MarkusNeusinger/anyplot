@@ -1,4 +1,4 @@
-"""Content-free usage telemetry: four canonical events, one wide JSON line each.
+"""Content-free usage telemetry: five canonical events, one wide JSON line each.
 
 The admin-only chat ("Use with my data") writes one line per event to stdout on its own
 logger (`TELEMETRY_LOGGER`, shipped by `enable_attribution_log` in `agents/main.py`), and a
@@ -22,6 +22,7 @@ feedback-case submission (`api/agent_cases.py`).
 | `data_input` | a paste or a dropped file reached the dataset route (or the conversion refused the file) | input |
 | `chat_turn` | a `/messages` turn ended | turn |
 | `pipeline_run` | a `plot_pipeline` run ended | run (`run_index` 1 is the session's first plot) |
+| `plot_switch` | the session switched its (spec, library) target | switch |
 | `outcome` | the page's beacon: copied code or image, downloaded a file, saved the session, sent feedback | action and version |
 
 Envelope (every line): `log_type`, `schema`, `event`, `service` and `revision` (Cloud
@@ -62,6 +63,7 @@ from core.constants import MAX_AGENT_VERSION, SUPPORTED_LIBRARIES
 
 from .data.warning_codes import BindingWarningCode, WarningCode, binding_warning_codes, warning_codes
 from .language import canonical
+from .memory import MemoryKind
 from .plugins.ledger import RequestLedger, StepUsage, salted
 
 
@@ -219,7 +221,8 @@ MissingBucket = Literal["none", "lt5", "5_30", "gt30"]
 SpecFit = Literal["direct", "needs_reshape", "missing_role", "incompatible"]
 
 TurnKind = Literal["plot", "prep", "formula", "code", "example", "talk", "refused", "error"]
-TurnAction = Literal["text", "create_plot", "summarize_data"]
+TurnAction = Literal["text", "create_plot", "carry_plot", "summarize_data"]
+"""`carry_plot` (2026-11-02): the page's "plot in <library> with your decisions" after a switch (`switch.py`)."""
 ToolName = Literal[
     "get_dataset_profile",
     "get_spec_brief",
@@ -227,12 +230,15 @@ ToolName = Literal[
     "set_bindings",
     "set_language",
     "keep_plot_request",
+    "forget",
     "prepare_data",
     "query_data",
     "generate_data",
     "run_data_code",
     "plot_pipeline",
 ]
+SwitchSource = Literal["menu", "chat"]
+"""Where a switch of the plot's target came from: the page's library menu, or the chat (the root's `switch_plot`)."""
 TOOL_NAMES: frozenset[str] = frozenset(get_args(ToolName))
 PrepOp = Literal[
     "rename",
@@ -562,6 +568,40 @@ class PipelineRun(_Event):
     user_tokens_today: TokensTodayBucket | None = None
     """The bucket of the share of the public per-user daily token budget the user had spent when the run was booked,
     an admin's measured against the same budget. None for a `not_ready` run."""
+    carried: bool = False
+    """The run took a switch's carry (`switch.Carry`): the first run in a new (spec, library) target, from that
+    library's catalogue code with the user's decisions (2026-11-02)."""
+    fresh: bool = False
+    """The run was the page's `.create_plot()` or `.start_over()` on the catalogue plot: no carry, no memory."""
+    memory_entries: Count = 0
+    """The plot memory's entries the run handed the adapter and the reviewer as standing decisions."""
+    remembered: Count = 0
+    """The entries the shipped run stored in the plot memory (`PipelineArgs.remember`); 0 for a run that shipped
+    nothing, which stores none."""
+    memory_full: bool = False
+    """The shipped run's decisions found no room in the plot memory (`PlotResult.memory_full`)."""
+
+
+class PlotSwitch(_Event):
+    """A switch of the session's (spec, library) target (`POST /v1/sessions/{sid}/library`, since 2026-11-02)."""
+
+    event: Literal["plot_switch"] = "plot_switch"
+    switch_source: SwitchSource
+    """`menu`: the page's library menu; `chat`: the root's `switch_plot` asked for by the user in the chat. Not
+    `source`, which the envelope holds (`live`, `fanout`, `harness`)."""
+    from_library: Library | None = None
+    """The library before the switch; the envelope's `library` is the one after it."""
+    spec_changed: bool = False
+    library_changed: bool = False
+    carried_count: Count = 0
+    """The standing decisions a carry run would hand over (`switch.SwitchSummary.decisions`)."""
+    newer_count: Count = 0
+    """Memory entries written after the target's latest version (`switch.SwitchSummary.newer`)."""
+    target_has_plot: bool = False
+    offered: bool = False
+    """The answer offered the carry run (`switch.SwitchSummary.offer`)."""
+    memory_kinds: dict[MemoryKind, Count] = Field(default_factory=dict)
+    """The plot memory's entries by kind (`memory.kind_counts`): counts only, never a text."""
 
 
 class Outcome(_Event):
@@ -571,8 +611,8 @@ class Outcome(_Event):
     reaction: Reaction | None = None
 
 
-AnyEvent = DataInput | ChatTurn | PipelineRun | Outcome
-EVENTS: tuple[str, ...] = ("data_input", "chat_turn", "pipeline_run", "outcome")
+AnyEvent = DataInput | ChatTurn | PipelineRun | PlotSwitch | Outcome
+EVENTS: tuple[str, ...] = ("data_input", "chat_turn", "pipeline_run", "plot_switch", "outcome")
 
 
 class _Envelope(_Event):

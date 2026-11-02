@@ -436,11 +436,10 @@ class TestPendingRequest:
         "change",
         [
             ("put", "bindings", [{"role": "x", "column": "Exam Score"}, {"role": "y", "column": "Study Hours"}]),
-            ("post", "library", {"library": "seaborn", "snapshot": snapshot_body(library="seaborn")}),
             ("post", "dataset", {"text": OWID}),
         ],
     )
-    async def test_a_binding_change_new_data_or_a_library_switch_drops_the_note(
+    async def test_a_binding_change_or_new_data_drops_the_note(
         self, client: httpx.AsyncClient, change: tuple[str, str, Any]
     ) -> None:
         sid = await open_session(client)
@@ -455,17 +454,36 @@ class TestPendingRequest:
         state = await _session_state(client, sid)
         assert state.get(PENDING_REQUEST) is None and state.get(PENDING_EXPECTED_TEXTS) is None
 
+    async def test_a_library_switch_keeps_the_note(self, client: httpx.AsyncClient) -> None:
+        """Owner decision of 2026-11-02: the switch keeps the data and the bindings the note was written for, so the
+        note waits for the first plot in the new library."""
+        sid = await open_session(client)
+        runtime = app.dependency_overrides[get_runtime]()
+        kept = {PENDING_REQUEST: "Title: A", PENDING_EXPECTED_TEXTS: ["A"]}
+        await runtime.write_state(await runtime.session(USER, sid), kept)
+
+        response = await client.post(
+            f"/v1/sessions/{sid}/library",
+            headers=HEADERS,
+            json={"library": "seaborn", "snapshot": snapshot_body(library="seaborn")},
+        )
+
+        assert response.status_code == 200, response.text
+        state = await _session_state(client, sid)
+        assert state.get(PENDING_REQUEST) == "Title: A" and state.get(PENDING_EXPECTED_TEXTS) == ["A"]
+
     def test_every_state_write_of_new_bindings_or_data_drops_the_note(self) -> None:
         from agents.anyplot.dataset_versions import _delta
         from agents.anyplot.session_state import apply_bindings, initial_state
 
         _, delta = apply_bindings([], roles(), parse_dataset(OWID).profile)
+        for written in (_delta("d", [], [], 2), delta):
+            assert written[PENDING_REQUEST] is None and written[PENDING_EXPECTED_TEXTS] is None
         snapshot = snapshot_from_repo("line-multi", "matplotlib")
         state = initial_state(
             spec_id="line-multi", library="seaborn", locale="de", snapshot=snapshot, normalised="", readiness={}
         )
-        for written in (_delta("d", [], [], 2), delta, state):
-            assert written[PENDING_REQUEST] is None and written[PENDING_EXPECTED_TEXTS] is None
+        assert PENDING_REQUEST not in state and PENDING_EXPECTED_TEXTS not in state  # a switch writes neither
 
     def test_the_texts_travel_with_the_note(self) -> None:
         state: dict[str, Any] = {BINDINGS: []}

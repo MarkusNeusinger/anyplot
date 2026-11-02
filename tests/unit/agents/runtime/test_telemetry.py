@@ -694,9 +694,13 @@ async def test_a_library_switch_keeps_the_fanout_source(
 
     lines = telemetry_lines(caplog)
     assert [(line["event"], line["library"], line["source"]) for line in lines] == [
+        ("plot_switch", "seaborn", "fanout"),  # the switch's own line names the target, `from_library` the source
         ("data_input", "seaborn", "fanout"),
         ("outcome", "seaborn", "fanout"),
     ]
+    switch = lines[0]
+    assert switch["from_library"] == "matplotlib" and switch["switch_source"] == "menu"
+    assert (switch["library_changed"], switch["spec_changed"], switch["carried_count"]) == (True, False, 0)
 
 
 async def test_a_cancelled_turn_records_the_language_the_turn_set(
@@ -934,7 +938,12 @@ async def test_the_run_prompt_hashes_are_the_bundle_hashes(
 
 
 @pytest.mark.parametrize(
-    ("event", "view"), [(telemetry.PipelineRun, "pipeline_runs"), (telemetry.ChatTurn, "chat_turns")]
+    ("event", "view"),
+    [
+        (telemetry.PipelineRun, "pipeline_runs"),
+        (telemetry.ChatTurn, "chat_turns"),
+        (telemetry.PlotSwitch, "plot_switches"),
+    ],
 )
 def test_every_field_has_its_typed_column_in_the_views(event: type[telemetry._Event], view: str) -> None:
     """`agents/telemetry/views/02_event_views.sql` reads every field of the line, so a field added to the model (the

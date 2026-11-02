@@ -36,6 +36,7 @@ The agents service writes one wide JSON line per event to stdout on its own logg
 | `data_input` | A paste or a dropped file reaches the dataset route, or the file conversion refuses a file | `format`, `entry` (`paste` or `file`), `outcome`, `cause`, `size_bucket`, `rows_bucket`, `cols_bucket`, column counts by type, `max_categories_bucket`, `missing_bucket`, `warnings` (codes), `tables`, `sheets`, `notes` and `file_name` (booleans), `spec_fit`, judge tokens, `latency_ms` |
 | `chat_turn` | A `/messages` turn ends, refused ones included; `manual_binding_changed` counts only a `PUT /bindings` whose bindings differ from the ones the session held, because the page echoes the parse's defaults after every paste | `kind` (`plot`, `prep`, `formula`, `code`, `example`, `talk`, `refused`, `error`), `action`, `asked_question`, `tools`, `prep_ops`, `conversion` (what the turn did about a required role left open: `none` when the session block listed no conversion, `date`, `number` or `index` for the column `prepare_data` made, `asked` when one was listed and none was made; `asked_question` tells a question from a skip), `undo`, `to_long`, `manual_binding_changed`, `binding_warnings`, `refusal`, `error`, `reply_reasked`, `language_source` and `plot_language` (both as the turn left them), `steps` (calls, tokens, thinking tokens and model per agent), `latency_ms` |
 | `pipeline_run` | A `plot_pipeline` run ends, or the root asked for one before the data was ready (`status: not_ready` with its reason) | `run_index` (1 is the session's first plot), `base`, `status`, `reason`, `stage`, `stages`, `attempts`, `rounds`, `round_scores`, `score_round1`, `score_round2` (buckets), `shipped_attempt`, `version` (the shipped version's number, which `outcome.version` names), `shipped_score`, `forced_repair`, `gates_failed`, `reviewer_defects`, `residual_defects`, `sandbox_failures` (`syntax`, `name`, `key`, `value`, `type`, `timeout`, `memory`, `other`), `drift_restored` (true when a plan that only changed the protected theme statements had them restored after the round's check retry), `plot_language`, `readiness`, `loader_notes`, `edit_failures`, `validator_rules`, `adaptation_rules`, the pipeline configuration and prompt hashes, time per stage, `steps`, and since 2026-11-01 `lane`, `queue_wait_ms`, `queue_position`, `user_runs_today`, `user_tokens_today` (see [Fields added on 2026-11-01](#fields-added-on-2026-11-01)) |
+| `plot_switch` | The session switches its (spec, library) target, since 2026-11-02 | `switch_source`, `from_library`, `spec_changed`, `library_changed`, `carried_count`, `newer_count`, `target_has_plot`, `offered`, `memory_kinds` (see [Fields added on 2026-11-02](#fields-added-on-2026-11-02)) |
 | `outcome` | The page's beacon after a copy, a download, a session save, or a feedback send | `action` (`copied_code`, `copied_image`, `downloaded_png`, `downloaded_code`, `downloaded_page`, `opened_preview`, `opened_data_view`, `downloaded_data`, `saved_session`, `feedback`; `downloaded_page` is a JavaScript plot's interactive `plot.html`, and `opened_preview` that page shown in the card, a look that keeps nothing, both since 2026-10-31; `opened_data_view` is the data panel's view of every row once it shows the rows, with version 0 because it looks at the session's data and not at a result, a look that keeps nothing either, since 2026-11-02), `version`, `reaction` |
 
 Every line carries the same envelope:
@@ -44,7 +45,7 @@ Every line carries the same envelope:
 |---|---|
 | `log_type` | Always `agent_telemetry`: the sink selects on it |
 | `schema` | The line format's version, `1`. A renamed or removed field is a new schema; an added field is not |
-| `event` | One of the four events |
+| `event` | One of the five events (`plot_switch` since 2026-11-02) |
 | `service`, `revision` | Cloud Run's `K_SERVICE` and `K_REVISION` |
 | `source` | `live`; `fanout` for every line of a session the admin's "plot in all libraries" fan-out opened; or `harness` for the eval harnesses (`agents/evals/matrix.py`, `agents/evals/prep.py`). The card and the `source = 'live'` filters count `live` only. See [Fan-out sessions](#fan-out-sessions) |
 | `session` | An HMAC-SHA256 of the session id under a random per-process salt, 16 hex characters |
@@ -191,6 +192,26 @@ Example data on request adds values to two closed sets:
 - **`chat_turn.kind` `example`.** A turn whose `run_data_code` stored example data the user asked for
   (`source_language` `example`); such a turn was `code` before.
 
+### Fields added on 2026-11-02
+
+The library switch with the plot memory adds one event and five fields. Like every other field, they hold counts,
+booleans and closed sets, never a decision's text.
+
+| Event | Field | Meaning |
+|---|---|---|
+| `plot_switch` | `switch_source` | `menu` for the page's library menu, `chat` for a switch the user asked for in the chat. Not `source`, which the envelope holds (`live`, `fanout`, `harness`) |
+| `plot_switch` | `from_library`, `spec_changed`, `library_changed` | The library before the switch (the envelope's `library` is the one after it), and what the switch changed. Another spec is refused until the plot-type switch, so `spec_changed` is `false` for now |
+| `plot_switch` | `carried_count`, `newer_count`, `target_has_plot`, `offered` | How many decisions a plot in the new library would take over, how many of them came after that library's own latest plot, whether it has one, and whether the answer offered the carry run |
+| `plot_switch` | `memory_kinds` | The plot memory's entries counted by kind (`title`, `axis_label`, `reference_line`, `annotation`, `marker` and the other kinds of the closed set) |
+| `pipeline_run` | `carried` | The run took a switch's carry: the first plot in a new library, from its catalogue plot with the user's decisions |
+| `pipeline_run` | `fresh` | The run was the page's `.create_plot()` or `.start_over()`: no carry, no decisions, and once it ships the memory starts over |
+| `pipeline_run` | `memory_entries`, `remembered`, `memory_full` | The plot memory's entries the run handed the adapter, the entries it stored once it shipped, and whether the memory had no room for them |
+| `chat_turn` | `action` `carry_plot`, `tools` `forget` | The page's carry run after a switch, and the root removing a decision |
+
+The typed columns are in `agents/telemetry/views/02_event_views.sql` (`pipeline_runs` and the new `plot_switches`).
+Applying the changed views waits for the owner's approval, as on 2026-11-01; until then the fields sit in `payload`
+of the `events` view.
+
 ## Where the lines go
 
 | Resource | Name | Notes |
@@ -219,7 +240,7 @@ and dataset names written out.
 | File | Views | Content |
 |---|---|---|
 | `01_events.sql` | `events` | One row per line, deduplicated by `idempotency_key` (`QUALIFY ROW_NUMBER()`), with the envelope as columns and the line as `payload` |
-| `02_event_views.sql` | `data_inputs`, `chat_turns`, `pipeline_runs`, `outcomes` | One typed column per field, `NULL` where a line predates the field; `pipeline_runs` also has `adapter_truncations`, the count of `adapter_truncated` in `stages` |
+| `02_event_views.sql` | `data_inputs`, `chat_turns`, `pipeline_runs`, `plot_switches` (since 2026-11-02), `outcomes` | One typed column per field, `NULL` where a line predates the field; `pipeline_runs` also has `adapter_truncations`, the count of `adapter_truncated` in `stages` |
 | `03_sessions.sql` | `sessions` | One row per session: data inputs, transcription offers, turns, runs, `not_ready` asks, shipped plots, `turns_to_first_plot`, keeps (copies and downloads), saves, feedback, rejections (feedback with `thumbs_down` or `bug`), `kept`, `funnel_last_step` (from `outcome_only` and `data_refused` through `transcription_offered`, `data_ok`, `chatted`, `plot_not_ready`, `plot_run` and `plot_shipped` to `kept`), and `state` under a 30-minute inactivity rule (`active`, `rejected`, `kept`, `saved`, `refined`, `abandoned_after_plot`, `abandoned_before_plot`). A session is `kept` when, after its last pipeline run, the user copied or downloaded a result (`copied_code`, `copied_image`, `downloaded_png`, `downloaded_code`, `downloaded_data`) and sent no feedback with `thumbs_down` or `bug`. A saved session is never a keep, because users also save a session to report a plot they did not like: a session whose only take-away is a save ends `saved`, and one with a `thumbs_down` or `bug` ends `rejected`. The view's header lists example sessions and how each is classified. A transcription writes two `data_input` rows, the offer (outcome `transcribed`) and the confirmed paste; every view counts the input once and the offers apart. `not_ready` runs are never counted as runs or in the repair rate |
 | `04_usage_failures.sql` | `usage`, `input_formats`, `failures`, `attempts` | Usage by day, spec and library (each line under the library it was written under, so a library switch splits a session's runs correctly; `sessions_kept` counts each session the `sessions` view calls `kept` once, under the day, spec and library of its last shipped run, so run it after `03_sessions.sql`); data inputs by format and entry, each input under its own format; one row per failure with its kind and closed code (since 2026-10-30 also the kinds `edit` and `validator`); one row per adapter attempt of a run with the stage that ended it |
 | `05_prices_cost.sql` | `model_prices`, `cost` | The `eu` list prices of `agents/evals/pricing.py` (a test keeps both equal) and the cost of every turn step and data-input judge call, with `thoughts_tokens`, the thinking part of `output_tokens` |
