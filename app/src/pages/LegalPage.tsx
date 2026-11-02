@@ -341,7 +341,17 @@ export function LegalPage() {
                 ],
                 [
                   'feedback',
-                  'kept only when you send feedback: the conversation, a profile of your data with its first 5 rows, the plot\'s code and images, and the whole data file only if you tick "# include data.csv". it starts unticked, which leaves out that file only. files go to a private bucket in the Netherlands; a triage row keeps your reaction, message, a hash of your tab id and the run\'s details.',
+                  <>
+                    kept only when you send feedback: the conversation, a profile of your data with
+                    its first 5 rows, the plot&apos;s code and images, and the whole data file only
+                    if you tick{' '}
+                    <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
+                      &quot;# include data.csv&quot;
+                    </Box>
+                    . it starts unticked, which leaves out that file only. files go to a private
+                    bucket in the Netherlands; a triage row keeps your reaction, message, a hash of
+                    your tab id and the run&apos;s details.
+                  </>,
                 ],
                 [
                   'limits',

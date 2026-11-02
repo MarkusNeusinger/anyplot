@@ -1186,6 +1186,15 @@ class TestSeoProxyRouter:
         # The page states the current state only: no notes on what older entries still carry.
         assert "before the move" not in response.text
         assert "unsalted" not in response.text
+        # The site-wide facts the human page states once each.
+        for fact in (
+            "legitimate interest (Art. 6(1)(f) GDPR)",
+            "the Cloudflare Access login cookie",
+            "a complaint to a supervisory authority",
+            "transfers outside Switzerland and the EU",
+            "cleared after ten minutes",
+        ):
+            assert fact in response.text, fact
 
     def test_seo_legal_mirrors_the_data_assistant_section(self, client: TestClient) -> None:
         """The crawler body carries the assistant's facts the human page states (LegalPage.tsx `#assistant`)."""
@@ -1200,16 +1209,12 @@ class TestSeoProxyRouter:
             "it starts unticked",
             "180 days",
             "a licence from Highsoft",
-            "transfers outside Switzerland and the EU",
-            "cleared after ten minutes",
             "consent (Art. 6(1)(a) GDPR)",
             "your request (Art. 6(1)(b) GDPR)",
-            "legitimate interest (Art. 6(1)(f) GDPR)",
             "Telemetry: up to 180 days",
             "cleared after an hour idle",
-            "never used for training",
-            "the Cloudflare Access login cookie",
-            "a complaint to a supervisory authority",
+            "it is not used for training",
+            "The triage row stays until you ask to delete it",
         ):
             assert fact in response.text, fact
 
