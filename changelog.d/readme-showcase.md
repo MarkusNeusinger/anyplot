@@ -6,4 +6,4 @@
   repair down to 50, in place of the old "score ≥ 50 required"), the experimental "Use with my data" agent, the MCP
   server, the tech stack and a project structure that now includes `agents/`. The "natural language search" it claimed
   never existed: it now describes the typo-tolerant tag and title search the site has. `docs/concepts/vision.md` counts
-  15 libraries across four languages instead of eleven across three, and lists the MCP server as live.
+  15 libraries across four languages instead of eleven across three, and lists the MCP server as live. (#12524)
