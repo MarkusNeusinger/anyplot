@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider } from '@mui/material/styles';
 
+import type { MemoryEntry } from 'src/lib/agent';
 import { AgentChatPage } from 'src/pages/AgentChatPage';
 import { LEAVE_TEXT, servicePausedText } from 'src/sections/agent-chat/messages';
 import { theme } from 'src/theme';
@@ -405,6 +406,38 @@ const currentStep = () =>
     .filter(item => item.getAttribute('aria-current') === 'step')
     .map(item => item.textContent);
 
+/** The header's library menu: its chip, which names the library (or `all`). */
+const libraryChip = () => screen.getByTestId('library-chip');
+const MENU = { name: 'Library of the plot' } as const;
+
+/**
+ * Open the library menu, as a click does (the chip takes the focus first, so the
+ * popover returns it there); the page behind it is hidden from the queries meanwhile.
+ */
+async function openLibraryMenu() {
+  await waitFor(() => expect(screen.queryByRole('dialog', MENU)).not.toBeInTheDocument());
+  const chip = libraryChip();
+  await waitFor(() => expect(chip).toBeEnabled());
+  chip.focus();
+  fireEvent.click(chip);
+  return screen.findByRole('dialog', MENU);
+}
+
+/** Close the open library menu with Escape, and wait until the page is back. */
+async function closeLibraryMenu() {
+  fireEvent.keyDown(screen.getByRole('dialog', MENU), { key: 'Escape' });
+  await waitFor(() => expect(screen.queryByRole('dialog', MENU)).not.toBeInTheDocument());
+}
+
+/** Pick `name` in the library menu (a library, or `All libraries`), and wait until it closed. */
+async function pickInMenu(name: string) {
+  const menu = await openLibraryMenu();
+  const option = await within(menu).findByRole('button', { name });
+  await waitFor(() => expect(option).toBeEnabled());
+  fireEvent.click(option);
+  await waitFor(() => expect(screen.queryByRole('dialog', MENU)).not.toBeInTheDocument());
+}
+
 beforeEach(() => {
   flags.agentChat = true;
   flags.isDev = false;
@@ -483,13 +516,15 @@ describe('AgentChatPage gating', () => {
     renderAt(PAGE);
     expect(await screen.findByText('not eligible · ref r1')).toBeInTheDocument();
     // No session exists to switch, so a pick opens the page anew with its own session.
+    const menu = await openLibraryMenu();
     await waitFor(() =>
-      expect(screen.getByRole('link', { name: 'seaborn' })).toHaveAttribute(
+      expect(within(menu).getByRole('link', { name: 'seaborn' })).toHaveAttribute(
         'href',
         '/debug/agent?spec=scatter-basic&library=seaborn&language=python'
       )
     );
-    expect(screen.getByRole('button', { name: 'matplotlib' })).toBeDisabled();
+    expect(within(menu).getByRole('button', { name: 'matplotlib' })).toBeDisabled();
+    expect(within(menu).queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
   });
 
   it('walks the two steps: confirm the data, then create the plot', async () => {
@@ -819,7 +854,7 @@ describe('AgentChatPage gating', () => {
     expect(startOver).toBeEnabled();
     expect(startOver).toHaveTextContent('.start_over()');
     expect(startOver).toHaveAccessibleDescription(
-      expect.stringContaining('new from the catalogue plot, without your changes')
+      expect.stringContaining('new from the catalogue plot; keeps your remembered decisions')
     );
     expect(screen.getByTestId('data-pinned')).toBeInTheDocument();
   });
@@ -1041,10 +1076,8 @@ describe('AgentChatPage leave warning', () => {
     await parseAndConfirm();
     expect(unload()).toBe(true);
 
-    // The `all` pill writes the query on the same path: nothing to ask.
-    const all = await screen.findByRole('button', { name: 'All libraries' });
-    await waitFor(() => expect(all).toBeEnabled());
-    fireEvent.click(all);
+    // The library menu's `all` writes the query on the same path: nothing to ask.
+    await pickInMenu('All libraries');
     await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('all=1'));
     expect(confirm).not.toHaveBeenCalled();
 
@@ -1291,8 +1324,6 @@ describe('AgentChatPage .plot_all()', () => {
   /** The fetch stub as `stubFetch` set it, for a test that answers one route differently. */
   const baseFetch = () =>
     fetchMock.getMockImplementation() as (input: string, init?: RequestInit) => Promise<Response>;
-  const libraryGroup = () => screen.getByRole('group', { name: 'Library' });
-  const libraryPill = (name: string) => within(libraryGroup()).getByRole('button', { name });
   const plotAllButton = () => screen.getByRole('button', { name: 'Plot in all libraries' });
 
   it('offers all once the lists are in, and plots the confirmed table in every library', async () => {
@@ -1310,21 +1341,36 @@ describe('AgentChatPage .plot_all()', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndConfirm();
-    expect(screen.queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
+    let menu = await openLibraryMenu();
+    expect(within(menu).queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
+    await closeLibraryMenu();
     releaseStatus();
 
-    const all = await screen.findByRole('button', { name: 'All libraries' });
-    expect(all).toHaveTextContent('all');
-    expect(all.parentElement).toBe(libraryGroup());
+    menu = await openLibraryMenu();
+    const all = await within(menu).findByRole('button', { name: 'All libraries' });
+    expect(all).toHaveTextContent('all libraries');
+    expect(within(menu).getByRole('group', { name: 'Admin' })).toContainElement(all);
     expect(all).toHaveAttribute('aria-pressed', 'false');
-    expect(libraryPill('matplotlib')).toHaveAttribute('aria-pressed', 'true');
+    expect(within(menu).getByRole('button', { name: 'matplotlib' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    await closeLibraryMenu();
     expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
 
-    // Pressed, `all` is the pressed pill, and the composer's create action plots everywhere.
-    fireEvent.click(all);
-    expect(all).toHaveAttribute('aria-pressed', 'true');
-    expect(libraryPill('matplotlib')).toHaveAttribute('aria-pressed', 'false');
-    expect(libraryPill('matplotlib')).toBeEnabled();
+    // Pressed, `all` is what the chip names, and the composer's create action plots everywhere.
+    await pickInMenu('All libraries');
+    expect(libraryChip()).toHaveTextContent('lib: all · 2 libraries');
+    expect(libraryChip()).toHaveAccessibleName('Library: all 2 libraries. Change');
+    menu = await openLibraryMenu();
+    expect(within(menu).getByRole('button', { name: 'All libraries' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    const own = within(menu).getByRole('button', { name: 'matplotlib' });
+    expect(own).toHaveAttribute('aria-pressed', 'false');
+    expect(own).toBeEnabled();
+    await closeLibraryMenu();
     expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
     const plotAll = plotAllButton();
     expect(plotAll).toHaveTextContent('.plot_all()');
@@ -1355,10 +1401,8 @@ describe('AgentChatPage .plot_all()', () => {
     // While the panel is open, nothing starts another fan-out or changes the library, whose
     // session the panel's sessions copy their data from; `all` stays pressed.
     expect(plotAllButton()).toBeDisabled();
-    expect(all).toBeDisabled();
-    expect(all).toHaveAttribute('aria-pressed', 'true');
-    expect(libraryPill('matplotlib')).toBeDisabled();
-    expect(libraryPill('seaborn')).toBeDisabled();
+    expect(libraryChip()).toBeDisabled();
+    expect(libraryChip()).toHaveTextContent('lib: all · 2 libraries');
 
     // `.close()` goes with the panel: the focus returns to `.plot_all()`, which opened it.
     const close = within(panel).getByRole('button', { name: 'Close all libraries' });
@@ -1367,9 +1411,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(screen.queryByRole('region', { name: 'All libraries' })).not.toBeInTheDocument();
     expect(plotAllButton()).toBeEnabled();
     expect(plotAllButton()).toHaveFocus();
-    expect(all).toBeEnabled();
-    expect(libraryPill('matplotlib')).toBeEnabled();
-    expect(libraryPill('seaborn')).toBeEnabled();
+    expect(libraryChip()).toBeEnabled();
 
     // A key press (a click with `detail` 0) continues in the panel it opened.
     fireEvent.click(plotAllButton(), { detail: 0 });
@@ -1386,14 +1428,16 @@ describe('AgentChatPage .plot_all()', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndConfirm();
+    const menu = await openLibraryMenu();
     await waitFor(() =>
-      expect(within(libraryGroup()).queryByRole('button', { name: 'seaborn' })).toBeNull()
+      expect(within(menu).queryByRole('button', { name: 'seaborn' })).not.toBeInTheDocument()
     );
-    expect(screen.queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
+    expect(within(menu).queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
+    await closeLibraryMenu();
     expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
   });
 
-  it('turns all off from any library pill: the own one only that, another switches', async () => {
+  it('turns all off from any library in the menu: the own one only that, another switches', async () => {
     const base = baseFetch();
     fetchMock.mockImplementation((input: string, init?: RequestInit) =>
       input.endsWith('/sessions/S1/library')
@@ -1408,51 +1452,50 @@ describe('AgentChatPage .plot_all()', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndConfirm();
-    const all = await screen.findByRole('button', { name: 'All libraries' });
     fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'log scale on y' } });
 
-    // `all` itself is a toggle: a second click turns it off again.
-    fireEvent.click(all);
+    // `all` itself is a toggle: a second pick turns it off again.
+    await pickInMenu('All libraries');
     expect(screen.getByLabelText('Message')).toBeDisabled();
-    fireEvent.click(all);
-    expect(all).toHaveAttribute('aria-pressed', 'false');
-    expect(libraryPill('matplotlib')).toHaveAttribute('aria-pressed', 'true');
+    await pickInMenu('All libraries');
+    expect(libraryChip()).toHaveTextContent('lib: matplotlib · python');
     expect(screen.getByRole('button', { name: 'Create plot' })).toHaveTextContent('.create_plot()');
     expect(screen.getByLabelText('Message')).toBeEnabled();
     expect(screen.getByLabelText('Message')).not.toHaveAccessibleDescription();
 
-    fireEvent.click(all);
-    fireEvent.click(libraryPill('matplotlib'));
-    expect(all).toHaveAttribute('aria-pressed', 'false');
-    // The pill pressed now is disabled: the keyboard continues at `all`.
-    expect(all).toHaveFocus();
-    expect(libraryPill('matplotlib')).toHaveAttribute('aria-pressed', 'true');
-    expect(libraryPill('matplotlib')).toBeDisabled();
+    await pickInMenu('All libraries');
+    await pickInMenu('matplotlib');
+    expect(libraryChip()).toHaveTextContent('lib: matplotlib · python');
+    // The menu closed and gave the focus back to its chip.
+    await waitFor(() => expect(libraryChip()).toHaveFocus());
+    const menu = await openLibraryMenu();
+    const own = within(menu).getByRole('button', { name: 'matplotlib' });
+    expect(own).toHaveAttribute('aria-pressed', 'true');
+    expect(own).toBeDisabled();
+    await closeLibraryMenu();
     expect(screen.getByRole('button', { name: 'Create plot' })).toHaveTextContent('.create_plot()');
     // The draft waited in the box, and nothing switched.
     expect(screen.getByLabelText('Message')).toBeEnabled();
     expect(screen.getByLabelText('Message')).toHaveValue('log scale on y');
     expect(agentCalls().filter(([input]) => String(input).endsWith('/library'))).toEqual([]);
 
-    fireEvent.click(all);
-    fireEvent.click(libraryPill('seaborn'));
-    expect(all).toHaveAttribute('aria-pressed', 'false');
+    await pickInMenu('All libraries');
+    await pickInMenu('seaborn');
     await waitFor(() =>
       expect(screen.getByTestId('location')).toHaveTextContent('library=seaborn')
     );
-    expect(libraryPill('seaborn')).toHaveAttribute('aria-pressed', 'true');
-    expect(libraryPill('matplotlib')).toHaveAttribute('aria-pressed', 'false');
+    expect(libraryChip()).toHaveTextContent('lib: seaborn · python');
+    expect(screen.getByTestId('location')).not.toHaveTextContent('all=1');
   });
 
   it('leaves the chat about the data usable with all pressed, before data and in step 1', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    const all = await screen.findByRole('button', { name: 'All libraries' });
-    await waitFor(() => expect(all).toBeEnabled());
+    await screen.findByLabelText(/# your data/);
 
     // Without data: nothing to plot yet, and the box asks for a curve as without `all`.
-    fireEvent.click(all);
-    expect(all).toHaveAttribute('aria-pressed', 'true');
+    await pickInMenu('All libraries');
+    expect(libraryChip()).toHaveTextContent('lib: all');
     expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
     const box = screen.getByLabelText('Message');
     expect(box).toBeEnabled();
@@ -1480,7 +1523,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
     await turnEnded();
     expect(lastTurn()).toEqual({ text: 'what is the mean score?' });
-    expect(all).toHaveAttribute('aria-pressed', 'true');
+    expect(libraryChip()).toHaveTextContent('lib: all');
 
     // Confirmed, step 2 is where `.plot_all()` is the action: the box waits from here.
     const confirm = screen.getByRole('button', { name: '.confirm()' });
@@ -1501,7 +1544,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
     await turnEnded();
 
-    fireEvent.click(await screen.findByRole('button', { name: 'All libraries' }));
+    await pickInMenu('All libraries');
     const plotAll = plotAllButton();
     expect(plotAll).toHaveAttribute('type', 'button');
     expect(plotAll).toBeEnabled();
@@ -1572,7 +1615,7 @@ describe('AgentChatPage .plot_all()', () => {
     fireEvent.click(confirm);
     await waitFor(() => expect(currentStep()).toEqual(['·2 plot']));
 
-    fireEvent.click(await screen.findByRole('button', { name: 'All libraries' }));
+    await pickInMenu('All libraries');
     // Computed data has no paste, and `.plot_all()` needs none: it is the action, with no hint.
     const plotAll = plotAllButton();
     expect(plotAll).toBeEnabled();
@@ -1602,7 +1645,7 @@ describe('AgentChatPage .plot_all()', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndConfirm();
-    fireEvent.click(await screen.findByRole('button', { name: 'All libraries' }));
+    await pickInMenu('All libraries');
     fireEvent.click(plotAllButton(), { detail: 1 });
     const panel = await screen.findByRole('region', { name: 'All libraries' });
 
@@ -1632,7 +1675,7 @@ describe('AgentChatPage .plot_all()', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndConfirm();
-    fireEvent.click(await screen.findByRole('button', { name: 'All libraries' }));
+    await pickInMenu('All libraries');
     fireEvent.click(plotAllButton(), { detail: 1 });
 
     await waitFor(() => expect(fanOutCalls('/messages')).toHaveLength(2));
@@ -1648,7 +1691,6 @@ describe('AgentChatPage .plot_all()', () => {
 });
 
 describe('AgentChatPage URL', () => {
-  const libraryGroup = () => screen.getByRole('group', { name: 'Library' });
   const location = () => screen.getByTestId('location').textContent ?? '';
   const query = () => new URLSearchParams(location().split('?')[1]);
 
@@ -1684,39 +1726,36 @@ describe('AgentChatPage URL', () => {
     threeLibraries();
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt('/debug/agent?spec=scatter-basic&library=matplotlib&language=javascript');
-    // The header moves into the chat column once the session is open: look for the pills there.
+    // The header moves into the chat column once the session is open: look for the menu there.
     await screen.findByLabelText(/# your data/);
-    const ggplot2 = await within(libraryGroup()).findByRole('button', { name: 'ggplot2' });
-    await waitFor(() => expect(ggplot2).toBeEnabled());
+    expect(libraryChip()).toHaveTextContent('lib: matplotlib · python');
 
-    fireEvent.click(ggplot2);
+    await pickInMenu('ggplot2');
     await waitFor(() => expect(query().get('library')).toBe('ggplot2'));
     expect(query().get('language')).toBe('r');
-    expect(within(libraryGroup()).getByText('r ·')).toBeInTheDocument();
+    expect(libraryChip()).toHaveTextContent('lib: ggplot2 · r');
+    expect(libraryChip()).toHaveAccessibleName('Library: ggplot2, R. Change');
 
-    const seaborn = within(libraryGroup()).getByRole('button', { name: 'seaborn' });
-    await waitFor(() => expect(seaborn).toBeEnabled());
-    fireEvent.click(seaborn);
+    await pickInMenu('seaborn');
     await waitFor(() => expect(query().get('library')).toBe('seaborn'));
     expect(query().get('language')).toBe('python');
     expect(query().get('spec')).toBe('scatter-basic');
   });
 
-  it('keeps the all pill in the URL, and presses it again from there once the lists are in', async () => {
+  it('keeps all in the URL, and presses it again from there once the lists are in', async () => {
     let releaseStatus!: () => void;
     threeLibraries(new Promise<void>(resolve => (releaseStatus = resolve)));
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     const first = renderAt(PAGE);
     releaseStatus();
-    const all = await screen.findByRole('button', { name: 'All libraries' });
-    await waitFor(() => expect(all).toBeEnabled());
+    await screen.findByLabelText(/# your data/);
     expect(query().has('all')).toBe(false);
 
-    fireEvent.click(all);
+    await pickInMenu('All libraries');
     await waitFor(() => expect(query().get('all')).toBe('1'));
-    fireEvent.click(all);
+    await pickInMenu('All libraries');
     await waitFor(() => expect(query().has('all')).toBe(false));
-    fireEvent.click(all);
+    await pickInMenu('All libraries');
     await waitFor(() => expect(query().get('all')).toBe('1'));
     const reloaded = location();
     first.unmount();
@@ -1725,31 +1764,38 @@ describe('AgentChatPage URL', () => {
     threeLibraries(new Promise<void>(resolve => (releaseStatus = resolve)));
     renderAt(reloaded);
     await screen.findByLabelText(/# your data/);
-    expect(screen.queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
+    let menu = await openLibraryMenu();
+    expect(within(menu).queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
+    await closeLibraryMenu();
+    expect(libraryChip()).toHaveTextContent('lib: matplotlib');
     expect(query().get('all')).toBe('1');
     releaseStatus();
-    const again = await screen.findByRole('button', { name: 'All libraries' });
-    expect(again).toHaveAttribute('aria-pressed', 'true');
-    expect(within(libraryGroup()).getByRole('button', { name: 'matplotlib' })).toHaveAttribute(
+    await waitFor(() => expect(libraryChip()).toHaveTextContent('lib: all · 3 libraries'));
+    menu = await openLibraryMenu();
+    expect(within(menu).getByRole('button', { name: 'All libraries' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(within(menu).getByRole('button', { name: 'matplotlib' })).toHaveAttribute(
       'aria-pressed',
       'false'
     );
+    await closeLibraryMenu();
     expect(query().get('all')).toBe('1');
   });
 
-  it('drops all from the URL with the pill: a library pill, and a page that offers none', async () => {
+  it('drops all from the URL: a library picked, and a page that offers none', async () => {
     threeLibraries();
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     const first = renderAt(`${PAGE}&all=1`);
-    const all = await screen.findByRole('button', { name: 'All libraries' });
-    await waitFor(() => expect(all).toBeEnabled());
-    expect(all).toHaveAttribute('aria-pressed', 'true');
+    await waitFor(() => expect(libraryChip()).toHaveTextContent('lib: all · 3 libraries'));
+    await waitFor(() => expect(libraryChip()).toBeEnabled());
 
     // Another library switches and turns `all` off: the URL names the new library, without `all`.
-    fireEvent.click(within(libraryGroup()).getByRole('button', { name: 'seaborn' }));
+    await pickInMenu('seaborn');
     await waitFor(() => expect(query().get('library')).toBe('seaborn'));
     expect(query().has('all')).toBe(false);
-    expect(all).toHaveAttribute('aria-pressed', 'false');
+    expect(libraryChip()).toHaveTextContent('lib: seaborn · python');
     first.unmount();
 
     // One library: no `all` to press, so the URL does not keep it.
@@ -1764,7 +1810,7 @@ describe('AgentChatPage URL', () => {
     );
     renderAt(`${PAGE}&all=1`);
     await waitFor(() => expect(query().has('all')).toBe(false));
-    expect(screen.queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
+    expect(libraryChip()).toHaveTextContent('lib: matplotlib · python');
     expect(query().get('library')).toBe('matplotlib');
   });
 });
@@ -1815,5 +1861,288 @@ describe('AgentChatPage service pause', () => {
     renderAt(PAGE);
     await screen.findByLabelText('Message');
     expect(screen.queryByTestId('service-paused')).not.toBeInTheDocument();
+  });
+});
+
+describe('AgentChatPage library switch and plot memory', () => {
+  const LINE: MemoryEntry = {
+    id: 'm1',
+    kind: 'reference_line',
+    target: 'y',
+    text: 'horizontal reference line at y = 7',
+    expect: null,
+    turn: 2,
+  };
+  const LABEL: MemoryEntry = {
+    id: 'm2',
+    kind: 'axis_label',
+    target: 'x',
+    text: "x-axis label: 'Zeit (h)'",
+    expect: 'Zeit (h)',
+    turn: 2,
+  };
+  const OFFER = { decisions: 2, newer: 2, target_has_plot: false, from_plot: true, offer: true };
+
+  /**
+   * The routes of the switch, the plot memory and a plot per run (the next version each): `carry`
+   * answers each switch; `memory` lists the entries, which a DELETE removes; `holdNextTurn` keeps
+   * the next turn's stream until `releaseTurn`.
+   */
+  function switchRoutes(state: {
+    carry: unknown;
+    memory: MemoryEntry[];
+    libraryStatus?: number;
+    /** `done.switch` of a typed turn: the switch the assistant's `switch_plot` asked for. */
+    chatSwitch?: { library: string; plot: boolean };
+  }) {
+    const base = fetchMock.getMockImplementation() as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    let version = 0;
+    fetchMock.mockImplementation(async (input: string, init: RequestInit = {}) => {
+      const path = new URL(input).pathname;
+      const method = init.method ?? 'GET';
+      if (path.endsWith('/sessions/S1/library')) {
+        if (state.libraryStatus) {
+          return json(state.libraryStatus, { detail: 'not_eligible', ref: 'r-sw' });
+        }
+        const { library } = JSON.parse(String(init.body)) as { library: string };
+        return json(200, {
+          session_id: 'S1',
+          eligibility: { eligible: true, status: 'clean', reasons: [] },
+          target: { spec_id: 'scatter-basic', library },
+          carry: state.carry,
+        });
+      }
+      if (path.endsWith('/sessions/S1/memory') && method === 'GET') {
+        return json(200, { entries: state.memory, max_entries: 30 });
+      }
+      const forget = path.match(/\/sessions\/S1\/memory\/(m\d+)$/);
+      if (forget && method === 'DELETE') {
+        state.memory = state.memory.filter(item => item.id !== forget[1]);
+        return json(200, { entries: state.memory, max_entries: 30 });
+      }
+      if (path.endsWith('/sessions/S1/messages') && method === 'POST') {
+        const body = JSON.parse(String(init.body)) as { action?: string; text?: string };
+        if (body.action === 'summarize_data') return base(input, init);
+        if (body.text && state.chatSwitch) {
+          // The assistant asked for the switch and ran no plot: the page carries it out.
+          return sse([
+            ['message', { text: 'The plot comes in seaborn with your decisions.' }],
+            ['done', { llm_calls: 2, data_confirmed: true, switch: state.chatSwitch }],
+          ]);
+        }
+        version += 1;
+        const response = sse([
+          ['plot', { ...PLOT, version }],
+          ['message', { text: `Plot ${version}.` }],
+          ['done', { llm_calls: 2, data_confirmed: true }],
+        ]);
+        if (!holdNextTurn) return response;
+        holdNextTurn = false;
+        return new Promise<Response>(resolve => {
+          releaseTurn = () => resolve(response);
+        });
+      }
+      return base(input, init);
+    });
+  }
+
+  const memoryList = () => screen.getByRole('region', { name: /remembered/ });
+
+  /** Paste, confirm and plot in matplotlib: version 1, whose run left `memory` behind. */
+  async function plotInMatplotlib() {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
+    expect(await screen.findByText('Plot 1.')).toBeInTheDocument();
+    await turnEnded();
+  }
+
+  it('offers the plot in the new library with the remembered decisions, and the offer ends once it ships', async () => {
+    switchRoutes({ carry: OFFER, memory: [LINE, LABEL] });
+    await plotInMatplotlib();
+    // The run's decisions stand above the composer.
+    expect(await screen.findByRole('region', { name: /remembered · 2 decisions/ })).toBeVisible();
+    const turns = turnBodies().length;
+
+    await pickInMenu('seaborn');
+    // Browsing costs nothing: the switch runs no turn.
+    const carry = await screen.findByTestId('carry-plot');
+    expect(turnBodies()).toHaveLength(turns);
+    expect(carry).toHaveTextContent('plot in seaborn with your 2 decisions');
+    expect(carry).toHaveAccessibleName('plot in seaborn with your 2 decisions');
+    // Seaborn has no plot yet: the offer is the step's action and takes typed text with it.
+    expect(carry).toHaveAttribute('type', 'submit');
+    expect(
+      screen.getByText(/^# step 2 — plot in seaborn with your 2 decisions, or say/)
+    ).toBeVisible();
+    const fresh = screen.getByRole('button', { name: 'Create plot' });
+    expect(fresh).toHaveTextContent('.create_plot()');
+    expect(fresh).toHaveAccessibleDescription(
+      expect.stringContaining('keeps your remembered decisions')
+    );
+    expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
+
+    fireEvent.click(carry, { detail: 1 });
+    expect(await screen.findByText('Plot 2.')).toBeInTheDocument();
+    await turnEnded();
+    expect(lastTurn()).toEqual({ action: 'carry_plot' });
+    const thread = screen.getByRole('log', { name: 'Conversation' });
+    expect(within(thread).getByText('.carry_plot()')).toBeInTheDocument();
+    expect(within(thread).getByText('# seaborn')).toBeInTheDocument();
+    // Shipped in seaborn: the offer is spent, the composer refines this plot.
+    expect(screen.queryByTestId('carry-plot')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '.send()' })).toBeInTheDocument();
+  });
+
+  it('carries out a switch asked for in the chat and plots there without a second click', async () => {
+    switchRoutes({
+      carry: OFFER,
+      memory: [LINE, LABEL],
+      chatSwitch: { library: 'seaborn', plot: true },
+    });
+    await plotInMatplotlib();
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Message' }), {
+      target: { value: 'mach den Plot bitte in seaborn' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '.send()' }));
+
+    expect(await screen.findByText('Plot 2.')).toBeInTheDocument();
+    await turnEnded();
+    const switches = fetchMock.mock.calls.filter(([input]) =>
+      String(input).endsWith('/sessions/S1/library')
+    );
+    expect(switches).toHaveLength(1);
+    expect(JSON.parse(String((switches[0][1] as RequestInit).body))).toEqual({
+      spec_id: 'scatter-basic',
+      library: 'seaborn',
+      source: 'chat',
+    });
+    expect(lastTurn()).toEqual({ action: 'carry_plot' });
+    expect(screen.getByRole('button', { name: /^Library: seaborn/ })).toBeInTheDocument();
+  });
+
+  it('shows a switch the server refused in the thread, and plots nothing', async () => {
+    switchRoutes({
+      carry: OFFER,
+      memory: [],
+      libraryStatus: 422,
+      chatSwitch: { library: 'seaborn', plot: true },
+    });
+    await plotInMatplotlib();
+    const turns = turnBodies().length;
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Message' }), {
+      target: { value: 'make it in seaborn' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '.send()' }));
+
+    const thread = screen.getByRole('log', { name: 'Conversation' });
+    expect(await within(thread).findByText(/r-sw/)).toBeInTheDocument();
+    await turnEnded();
+    expect(turnBodies()).toHaveLength(turns + 1); // the typed turn alone: no carry run
+  });
+
+  it('sends .create_plot() beside the offer as the fresh plot, which ends the offer too', async () => {
+    switchRoutes({ carry: OFFER, memory: [LINE, LABEL] });
+    await plotInMatplotlib();
+    await pickInMenu('seaborn');
+    await screen.findByTestId('carry-plot');
+    fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
+    expect(await screen.findByText('Plot 2.')).toBeInTheDocument();
+    await turnEnded();
+    expect(lastTurn()).toEqual({ action: 'create_plot' });
+    expect(screen.queryByTestId('carry-plot')).not.toBeInTheDocument();
+  });
+
+  it('keeps .start_over() and .send() beside the offer in a library with an older plot; text goes as a turn', async () => {
+    const routes = { carry: OFFER as unknown, memory: [LINE] };
+    switchRoutes(routes);
+    await plotInMatplotlib();
+    await pickInMenu('seaborn');
+    fireEvent.click(await screen.findByTestId('carry-plot'));
+    expect(await screen.findByText('Plot 2.')).toBeInTheDocument();
+    await turnEnded();
+
+    // Back to matplotlib, whose plot misses a newer decision: the server offers the carry again.
+    routes.carry = { decisions: 1, newer: 1, target_has_plot: true, from_plot: true, offer: true };
+    await pickInMenu('matplotlib');
+    const carry = await screen.findByTestId('carry-plot');
+    expect(carry).toHaveTextContent('plot in matplotlib with your 1 decision');
+    expect(carry).toHaveAttribute('type', 'button');
+    expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();
+    const send = screen.getByRole('button', { name: '.send()' });
+
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'dashed line' } });
+    expect(send).toBeEnabled();
+    fireEvent.click(send);
+    expect(await screen.findByText('Plot 3.')).toBeInTheDocument();
+    await turnEnded();
+    expect(lastTurn()).toEqual({ text: 'dashed line' });
+    // The typed change shipped in matplotlib: that ends the offer as well.
+    expect(screen.queryByTestId('carry-plot')).not.toBeInTheDocument();
+  });
+
+  it('offers nothing after a switch whose answer has no offer', async () => {
+    switchRoutes({
+      carry: { decisions: 0, newer: 0, target_has_plot: false, from_plot: false, offer: false },
+      memory: [],
+    });
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    await pickInMenu('seaborn');
+    await waitFor(() => expect(libraryChip()).toHaveTextContent('lib: seaborn'));
+    expect(screen.queryByTestId('carry-plot')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create plot' })).toHaveTextContent('.create_plot()');
+    expect(screen.queryByRole('region', { name: /remembered/ })).not.toBeInTheDocument();
+  });
+
+  it('forgets a remembered decision, and holds the list while a turn runs', async () => {
+    switchRoutes({ carry: OFFER, memory: [LINE, LABEL] });
+    await plotInMatplotlib();
+    const list = await screen.findByRole('region', { name: /remembered · 2 decisions/ });
+    const forgetLine = within(list).getByRole('button', { name: `Forget: ${LINE.text}` });
+
+    // While a turn runs, the server would refuse a removal: the list waits.
+    holdNextTurn = true;
+    sendFromComposer('thicker markers');
+    await waitFor(() => expect(releaseTurn).not.toBeNull());
+    expect(forgetLine).toBeDisabled();
+    releaseTurn?.();
+    await turnEnded();
+
+    await waitFor(() => expect(forgetLine).toBeEnabled());
+    fireEvent.click(forgetLine);
+    await waitFor(() => expect(memoryList()).toHaveAccessibleName(/^# remembered · 1 decision · /));
+    expect(
+      agentCalls()
+        .filter(([, init]) => (init as RequestInit | undefined)?.method === 'DELETE')
+        .map(([input]) => pathOf(input))
+    ).toContain('/debug/agent/sessions/S1/memory/m1');
+    expect(within(memoryList()).queryByText(LINE.text)).not.toBeInTheDocument();
+    expect(within(memoryList()).getByText(LABEL.text)).toBeInTheDocument();
+  });
+
+  it('shows a refused switch under the menu, and the library and the URL stay', async () => {
+    switchRoutes({ carry: OFFER, memory: [], libraryStatus: 422 });
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    await pickInMenu('seaborn');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'could not switch: this plot cannot be adapted in that library · ref r-sw'
+    );
+    expect(libraryChip()).toHaveTextContent('lib: matplotlib · python');
+    expect(screen.getByTestId('location')).toHaveTextContent('library=matplotlib');
+    // Said where the user picked, not again in the thread.
+    expect(
+      within(screen.getByRole('log', { name: 'Conversation' })).queryByText(/error ·/)
+    ).not.toBeInTheDocument();
   });
 });

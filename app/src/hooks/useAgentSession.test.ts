@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   agentReducer,
   type AgentSessionState,
+  carryDecisions,
   type ChatItem,
   compactFamilies,
   familyOf,
@@ -829,6 +830,35 @@ describe('useAgentSession: copying the confirmed data (the admin fan-out)', () =
     expect(failure).toEqual({ code: 'bindings_incomplete', ref: null });
     expect(third.result.current.state.missingRoles).toEqual(['y']);
   });
+
+  it.each([
+    [
+      { decisions: 2, newer: 2, target_has_plot: false, from_plot: true, offer: true },
+      'carry_plot',
+    ],
+    [
+      { decisions: 0, newer: 0, target_has_plot: false, from_plot: false, offer: false },
+      'create_plot',
+    ],
+    [undefined, 'create_plot'],
+  ])(
+    "plots with the page session's tuning when the copy carried it (%o)",
+    async (carry, action) => {
+      const routes = baseRoutes();
+      routes['POST /sessions/S1/dataset/copy'] = () => json(200, { ...COPIED, carry });
+      routes['POST /sessions/S1/messages'] = () =>
+        sse([['done', { llm_calls: 1, data_confirmed: true }]]);
+      const { result } = await openSession(routes);
+      await act(async () => {
+        await result.current.copyData('PAGE');
+      });
+
+      await act(() => result.current.plotTurn());
+
+      const turn = calls.find(call => call.path === '/sessions/S1/messages');
+      expect(turn?.body).toEqual({ action });
+    }
+  );
 });
 
 describe('useAgentSession: replaying an upload (a server without the copy)', () => {
@@ -2034,6 +2064,295 @@ describe('useAgentSession: versions and library', () => {
   });
 });
 
+describe('useAgentSession: library switch carry and plot memory', () => {
+  const entry = (id: string, text: string) => ({
+    id,
+    kind: 'other',
+    target: null,
+    text,
+    expect: null,
+    turn: 2,
+  });
+  const LINE = entry('m1', 'horizontal reference line at y = 7');
+  const LABEL = entry('m2', "x-axis label: 'Zeit (h)'");
+  const OFFER = { decisions: 2, newer: 2, target_has_plot: false, from_plot: true, offer: true };
+  const NO_OFFER = { decisions: 2, newer: 0, target_has_plot: true, from_plot: true, offer: false };
+  const switched = (library: string, carry: unknown) =>
+    json(200, {
+      session_id: 'S1',
+      eligibility: { eligible: true, status: 'clean', reasons: [] },
+      target: { spec_id: 'scatter-basic', library },
+      carry,
+    });
+  const memoryReads = () =>
+    calls.filter(call => call.method === 'GET' && call.path === '/sessions/S1/memory');
+
+  /**
+   * A session whose plot runs ship the next version, a memory of `entries` behind the GET and
+   * the DELETE, and a library switch answered with `carry`.
+   */
+  async function withMemory(
+    entries: ReturnType<typeof entry>[],
+    { carry = OFFER as unknown, fanout = false, extra = {} as Record<string, Handler> } = {}
+  ) {
+    let memory = [...entries];
+    let version = 0;
+    const forget = (id: string) => () => {
+      if (!memory.some(item => item.id === id)) return json(404, { detail: 'not_found' });
+      memory = memory.filter(item => item.id !== id);
+      return json(200, { entries: memory, max_entries: 30 });
+    };
+    mockFetch({
+      ...baseRoutes(),
+      'POST /sessions/S1/messages': call => {
+        const body = call.body as { action?: string; text?: string };
+        if (body.text?.endsWith('?')) {
+          return sse([
+            ['message', { text: 'An answer.' }],
+            ['done', {}],
+          ]);
+        }
+        version += 1;
+        return sse([
+          ['plot', { ...PLOT_OK, version }],
+          ['done', {}],
+        ]);
+      },
+      'POST /sessions/S1/library': call =>
+        switched((call.body as { library: string }).library, carry),
+      'GET /sessions/S1/memory': () => json(200, { entries: memory, max_entries: 30 }),
+      'DELETE /sessions/S1/memory/m1': forget('m1'),
+      'DELETE /sessions/S1/memory/m2': forget('m2'),
+      'DELETE /sessions/S1/memory': () => {
+        memory = [];
+        return json(200, { entries: memory, max_entries: 30, written: true });
+      },
+      ...extra,
+    });
+    const hook = renderHook(() => useAgentSession({ ...options, fanout }));
+    await waitFor(() => expect(hook.result.current.state.phase).toBe('ready'));
+    return hook;
+  }
+
+  it('reads the memory after every done and after a switch, and the fan-out reads none', async () => {
+    const { result } = await withMemory([LINE, LABEL]);
+    expect(result.current.state.memory).toBeNull();
+    await act(() => result.current.createPlot());
+    await waitFor(() => expect(result.current.state.memory?.entries).toEqual([LINE, LABEL]));
+    expect(memoryReads()).toHaveLength(1);
+    await act(async () => {
+      await result.current.switchLibrary('seaborn');
+    });
+    await waitFor(() => expect(memoryReads()).toHaveLength(2));
+
+    const fanout = await withMemory([LINE], { fanout: true });
+    await act(() => fanout.result.current.plotTurn());
+    expect(memoryReads()).toEqual([]);
+    expect(fanout.result.current.state.memory).toBeNull();
+  });
+
+  it('offers the carry after a switch that says so, sends carry_plot, and ends it once a plot ships there', async () => {
+    const { result } = await withMemory([LINE, LABEL]);
+    await act(() => result.current.createPlot());
+    await waitFor(() => expect(result.current.state.memory).not.toBeNull());
+    await act(async () => {
+      await result.current.switchLibrary('seaborn');
+    });
+    expect(result.current.state.carryOffer).toEqual({
+      target: { spec_id: 'scatter-basic', library: 'seaborn' },
+      decisions: 2,
+      memoryBacked: true,
+    });
+    expect(carryDecisions(result.current.state.carryOffer!, result.current.state.memory)).toBe(2);
+    // From the menu nothing runs until the click.
+    expect(calls.filter(call => call.path.endsWith('/messages'))).toHaveLength(1);
+
+    await act(() => result.current.carryPlot());
+    const turns = calls.filter(call => call.path.endsWith('/messages'));
+    expect(turns[turns.length - 1].body).toEqual({ action: 'carry_plot' });
+    expect(result.current.state.items).toContainEqual(
+      expect.objectContaining({ kind: 'action', action: 'carry_plot', library: 'seaborn' })
+    );
+    expect(result.current.state.versions[2].library).toBe('seaborn');
+    expect(result.current.state.carryOffer).toBeNull();
+  });
+
+  it('counts the decisions from a list that arrives after the switch', async () => {
+    // The switch lands before any list: the offer counts the answer's decisions until one arrives.
+    const { result } = await withMemory([LINE, LABEL]);
+    await act(async () => {
+      await result.current.switchLibrary('seaborn');
+    });
+    await waitFor(() => expect(result.current.state.memory?.entries).toHaveLength(2));
+    expect(result.current.state.carryOffer?.memoryBacked).toBe(true);
+
+    await act(() => result.current.forgetMemory('m1'));
+    expect(carryDecisions(result.current.state.carryOffer!, result.current.state.memory)).toBe(1);
+  });
+
+  it('keeps the offer through a turn that ships nothing, and ends it with a switch that offers none', async () => {
+    let carry: unknown = OFFER;
+    const { result } = await withMemory([LINE], {
+      extra: {
+        'POST /sessions/S1/library': call =>
+          switched((call.body as { library: string }).library, carry),
+      },
+    });
+    await act(async () => {
+      await result.current.switchLibrary('seaborn');
+    });
+    expect(result.current.state.carryOffer).not.toBeNull();
+    // A question answers without a plot: the offer stays.
+    await act(() => result.current.sendMessage('which column is on x?'));
+    expect(result.current.state.carryOffer).not.toBeNull();
+
+    carry = NO_OFFER;
+    await act(async () => {
+      await result.current.switchLibrary('matplotlib');
+    });
+    expect(result.current.state.carryOffer).toBeNull();
+
+    // A server without the plot memory answers no carry at all: no offer either.
+    carry = undefined;
+    await act(async () => {
+      await result.current.switchLibrary('seaborn');
+    });
+    expect(result.current.state.carryOffer).toBeNull();
+  });
+
+  it('forgets an entry: the list and the offer count follow the answer', async () => {
+    const { result } = await withMemory([LINE, LABEL]);
+    await act(() => result.current.createPlot());
+    await waitFor(() => expect(result.current.state.memory?.entries).toHaveLength(2));
+    await act(async () => {
+      await result.current.switchLibrary('seaborn');
+    });
+
+    await act(() => result.current.forgetMemory('m1'));
+    expect(calls.filter(call => call.method === 'DELETE').map(call => call.path)).toEqual([
+      '/sessions/S1/memory/m1',
+    ]);
+    expect(result.current.state.memory?.entries).toEqual([LABEL]);
+    expect(result.current.state.memoryBusy).toBe(false);
+    expect(carryDecisions(result.current.state.carryOffer!, result.current.state.memory)).toBe(1);
+  });
+
+  it("keeps the switch answer's count only while the memory was never written, as the server counts", () => {
+    const offer = {
+      target: { spec_id: 'scatter-basic', library: 'seaborn' },
+      decisions: 3,
+      memoryBacked: false,
+    };
+    const never = { entries: [], max_entries: 30, written: false };
+    expect(carryDecisions(offer, never)).toBe(3); // the server counted the source plot's requests
+    // Once the memory held a decision, what the user removed never comes back through them.
+    expect(carryDecisions(offer, { ...never, written: true })).toBe(0);
+    expect(carryDecisions({ ...offer, memoryBacked: true }, never)).toBe(0);
+    expect(carryDecisions({ ...offer, memoryBacked: true }, null)).toBe(3);
+  });
+
+  it('forgets every decision with forget_all and counts the offer down to none', async () => {
+    const { result } = await withMemory([LINE, LABEL]);
+    await act(async () => {
+      await result.current.switchLibrary('seaborn');
+    });
+    await waitFor(() => expect(result.current.state.memory?.entries).toHaveLength(2));
+
+    await act(() => result.current.forgetAllMemory());
+
+    const removal = calls.find(
+      call => call.method === 'DELETE' && call.path === '/sessions/S1/memory'
+    );
+    expect(removal).toBeDefined();
+    expect(result.current.state.memory).toMatchObject({ entries: [], written: true });
+    expect(carryDecisions(result.current.state.carryOffer!, result.current.state.memory)).toBe(0);
+  });
+
+  it('drops a memory read that a removal overtook', async () => {
+    const gate = deferred<Response>();
+    let reads = 0;
+    const { result } = await withMemory([LINE, LABEL], {
+      extra: {
+        'GET /sessions/S1/memory': () => {
+          reads += 1;
+          // The first read waits; it lists the memory as it was before the removal.
+          return reads === 1 ? gate.promise : json(200, { entries: [LABEL], max_entries: 30 });
+        },
+      },
+    });
+    await act(() => result.current.createPlot());
+    await waitFor(() => expect(reads).toBe(1));
+    await act(() => result.current.forgetMemory('m1'));
+    expect(result.current.state.memory?.entries).toEqual([LABEL]);
+
+    await act(async () => {
+      gate.resolve(json(200, { entries: [LINE, LABEL], max_entries: 30 }));
+      await gate.promise;
+    });
+    expect(result.current.state.memory?.entries).toEqual([LABEL]);
+  });
+
+  it('reads the list again after a removal of an entry that was gone, and rejects', async () => {
+    const { result } = await withMemory([LABEL]);
+    await act(async () => {
+      await expect(result.current.forgetMemory('m1')).rejects.toMatchObject({
+        code: 'not_found',
+      });
+    });
+    await waitFor(() => expect(result.current.state.memory?.entries).toEqual([LABEL]));
+    expect(result.current.state.memoryBusy).toBe(false);
+  });
+
+  it('holds a removal back while a turn runs, and holds everything else back during one', async () => {
+    const gate = deferred<Response>();
+    const { result } = await withMemory([LINE], {
+      extra: { 'DELETE /sessions/S1/memory/m1': () => gate.promise },
+    });
+    let removal: Promise<void> = Promise.resolve();
+    act(() => {
+      removal = result.current.forgetMemory('m1');
+    });
+    await waitFor(() => expect(result.current.state.memoryBusy).toBe(true));
+    expect(sessionBusy(result.current.state)).toBe(true);
+    await act(() => result.current.createPlot());
+    expect(calls.some(call => call.path.endsWith('/messages'))).toBe(false);
+    gate.resolve(json(200, { entries: [], max_entries: 30 }));
+    await act(() => removal);
+    expect(result.current.state.memory?.entries).toEqual([]);
+
+    // A turn in flight: no removal starts, which the server would refuse with `409 run_active`.
+    const stream = liveSse([]);
+    mockFetch({ ...baseRoutes(), 'POST /sessions/S1/messages': () => stream.response });
+    act(() => {
+      void result.current.createPlot();
+    });
+    await waitFor(() => expect(result.current.state.run).not.toBeNull());
+    await act(() => result.current.forgetMemory('m2'));
+    expect(calls.some(call => call.method === 'DELETE')).toBe(false);
+    await act(async () => {
+      stream.push('done', {});
+      stream.close();
+    });
+  });
+
+  it('rejects a refused switch for the menu, without a thread error, and keeps the library', async () => {
+    const { result } = await withMemory([], {
+      extra: {
+        'POST /sessions/S1/library': () => json(422, { detail: 'not_eligible', ref: 'r-s' }),
+      },
+    });
+    await act(async () => {
+      await expect(result.current.switchLibrary('seaborn')).rejects.toMatchObject({
+        code: 'not_eligible',
+        ref: 'r-s',
+      });
+    });
+    expect(result.current.state.library).toBe('matplotlib');
+    expect(result.current.state.libraryBusy).toBe(false);
+    expect(result.current.state.items).toEqual([]);
+  });
+});
+
 describe('useAgentSession: session language', () => {
   const languageNotices = (items: ChatItem[]) =>
     items.filter(item => item.kind === 'notice' && /^(reply )?language:/.test(item.text));
@@ -2287,7 +2606,13 @@ describe('agentReducer', () => {
       agentReducer(state, { type: 'transcription_clear' }),
       agentReducer(state, { type: 'parse_start' }),
       agentReducer(state, { type: 'parse_failed', failure: { code: 'too_long', ref: null } }),
-      agentReducer(state, { type: 'library_done', library: 'seaborn', eligibility }),
+      agentReducer(state, {
+        type: 'library_done',
+        library: 'seaborn',
+        eligibility,
+        target: { spec_id: 'scatter-basic', library: 'seaborn' },
+        carry: null,
+      }),
       agentReducer(state, { type: 'open_failed', phase: 'error', failure }),
       agentReducer(state, { type: 'unauthorized' }),
     ]) {
@@ -2314,7 +2639,15 @@ describe('agentReducer', () => {
     const failure = { code: 'invalid', ref: null };
     const kept = (next: AgentSessionState) => expect(next.dataConfirmed).toBe(true);
     const dropped = (next: AgentSessionState) => expect(next.dataConfirmed).toBe(false);
-    kept(agentReducer(state, { type: 'library_done', library: 'seaborn', eligibility }));
+    kept(
+      agentReducer(state, {
+        type: 'library_done',
+        library: 'seaborn',
+        eligibility,
+        target: { spec_id: 'scatter-basic', library: 'seaborn' },
+        carry: null,
+      })
+    );
     kept(agentReducer(state, { type: 'bindings_failed', bindings: {}, failure }));
     kept(agentReducer(state, { type: 'parse_failed', failure }));
     const profile = { ...DATASET.profile, columns: [] };

@@ -176,6 +176,7 @@ class Translator:
         dataset: dict[str, Any] | None = None,
         language: dict[str, Any] | None = None,
         suggestion: object = NO_SUGGESTION,
+        switch: dict[str, Any] | None = None,
     ) -> str:
         """The closing event; with the session's bindings, confirmation state and a changed dataset when the route has them.
 
@@ -192,6 +193,8 @@ class Translator:
         chip follows it. `suggestion` is the wide-table offer (`.to_long()`) as the dataset route answers it, or
         `null` for none, after every run on a session with data: its new column names follow the session
         language, which the turn may have changed, so the page's card always names what `.to_long()` applies.
+        `switch` is `{library, plot}` after a turn whose root asked for a switch the user wanted in the chat
+        (`switch_plot`, 2026-11-02): the page carries it out with the switch route and, with `plot`, the carry run.
         """
         payload: dict[str, Any] = {
             "llm_calls": self.ledger.llm_calls,
@@ -207,4 +210,6 @@ class Translator:
             payload["language"] = language
         if suggestion is not NO_SUGGESTION:
             payload["suggestion"] = suggestion
+        if switch is not None:
+            payload["switch"] = switch
         return sse("done", payload)

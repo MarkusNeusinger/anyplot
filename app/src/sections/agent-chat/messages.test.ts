@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  carryActionText,
   describeConvertFailure,
   describeDataFailure,
+  describeLibraryFailure,
+  describeMemoryFailure,
   describeViewFailure,
   localClock,
   nextUtcMidnight,
@@ -122,6 +125,39 @@ describe('describeConvertFailure', () => {
   it('keeps the generic line without a known kind', () => {
     expect(describeConvertFailure('a.bin', 'file_corrupt', null, null, null)).toBe(
       '"a.bin" could not be read: the file looks damaged, or it is not the format it seems to be'
+    );
+  });
+});
+
+describe('carryActionText', () => {
+  it.each([
+    [0, 'plot in seaborn'],
+    [1, 'plot in seaborn with your 1 decision'],
+    [3, 'plot in seaborn with your 3 decisions'],
+  ])('reads %i decisions as the owner worded it', (decisions, text) => {
+    expect(carryActionText('seaborn', decisions)).toBe(text);
+  });
+});
+
+describe('library and memory failures', () => {
+  it('says the switch failed, with the reason and the ref', () => {
+    expect(describeLibraryFailure('not_eligible', 'r-1')).toBe(
+      'could not switch: this plot cannot be adapted in that library · ref r-1'
+    );
+    expect(describeLibraryFailure('invalid', null)).toBe(
+      'could not switch: the server refused this switch'
+    );
+    expect(describeLibraryFailure('teapot', null)).toBe(
+      'could not switch: request failed (teapot)'
+    );
+  });
+
+  it('says the removal failed, with the reason and the ref', () => {
+    expect(describeMemoryFailure('not_found', null)).toBe(
+      'could not forget: that decision was already forgotten'
+    );
+    expect(describeMemoryFailure('unreachable', 'r-2')).toMatch(
+      /^could not forget: no answer from the server.* · ref r-2$/
     );
   });
 });

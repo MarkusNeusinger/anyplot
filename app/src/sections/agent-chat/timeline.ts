@@ -14,7 +14,14 @@
  */
 
 import type { RunState } from 'src/hooks/useAgentSession';
-import type { PipelineStep, PlotResult, PlotStatus, Round, RoundOutcome } from 'src/lib/agent';
+import {
+  isPlotAction,
+  type PipelineStep,
+  type PlotResult,
+  type PlotStatus,
+  type Round,
+  type RoundOutcome,
+} from 'src/lib/agent';
 
 const FIRST_TRY: PipelineStep[] = ['adapting', 'checking', 'rendering', 'reviewing'];
 const REPAIR: PipelineStep[] = ['repairing', 'checking', 'rendering', 'reviewing'];
@@ -252,13 +259,13 @@ export function gridRows(
 
 /**
  * The grid of a running turn: its finished rounds and the round in progress. A
- * `create_plot` run shows its first try's path before the first step arrives
- * (while it starts or waits in the queue); any other turn shows rows only once
- * it reached a pipeline step.
+ * plot run (`create_plot`, `carry_plot`) shows its first try's path before the
+ * first step arrives (while it starts or waits in the queue); any other turn
+ * shows rows only once it reached a pipeline step.
  */
 export function liveRows(run: RunState): GridRow[] {
   const rows = gridRows(run.rounds ?? [], run.steps);
-  if (rows.length || run.kind !== 'create_plot') return rows;
+  if (rows.length || !isPlotAction(run.kind)) return rows;
   return [
     {
       attempt: 1,

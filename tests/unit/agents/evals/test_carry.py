@@ -25,7 +25,17 @@ p <- ggplot(df, aes(x = Zeit, y = Messwert)) +
 """
 
 
-@pytest.mark.parametrize(("library", "code"), [("plotly", PLOTLY), ("ggplot2", GGPLOT2)])
+SEABORN = """
+sns.scatterplot(data=df, x="Zeit", y="Messwert", ax=ax)
+ax.scatter(out["Zeit"], out["Messwert"], marker="*", s=300, color="#B71D27", zorder=3)
+ax.axhline(7, color=INK_SOFT, linestyle="--")
+ax.text(0.02, 0.95, r"$y = ax^2 + b$", transform=ax.transAxes)
+ax.set_xlabel("Zeit (h)")
+ax.set_xlim(0, 100)
+"""
+
+
+@pytest.mark.parametrize(("library", "code"), [("plotly", PLOTLY), ("ggplot2", GGPLOT2), ("seaborn", SEABORN)])
 def test_every_intent_is_found_in_the_libraries_own_api(library: str, code: str) -> None:
     found = check_code(library, code)
 
@@ -82,6 +92,18 @@ def test_the_examples_are_valid_memory_items_and_the_data_parses() -> None:
         "limits",
     ]
     assert parse_dataset(DATA).profile.rows == 25
+
+
+def test_the_chat_path_passes_only_when_the_switch_was_asked_for() -> None:
+    from agents.evals.carry import done_of
+
+    stream = 'event: message\ndata: {"text": "ok"}\n\nevent: done\ndata: {"switch": {"library": "seaborn"}}\n\n'
+    assert done_of(stream) == {"switch": {"library": "seaborn"}}
+    assert done_of("event: message\ndata: {}\n\n") == {}
+    checks = {"a": True}
+    assert Outcome("seaborn", status="ok", checks=checks, via="chat", switch={"library": "seaborn"}).passed
+    assert not Outcome("seaborn", status="ok", checks=checks, via="chat", switch=None).passed
+    assert not Outcome("seaborn", status="ok", checks=checks, via="chat", switch={"library": "plotly"}).passed
 
 
 def test_a_target_passes_only_with_every_check_and_the_label_found() -> None:
