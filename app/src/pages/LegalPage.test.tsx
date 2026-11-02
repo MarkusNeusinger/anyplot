@@ -64,8 +64,11 @@ describe('LegalPage', () => {
   it('gives each store its own retention, and no store a borrowed one', () => {
     render(<LegalPage />);
 
-    // Cloud Logging has the 30 days; the feedback table has no timer at all.
-    expect(screen.getByText(/retained for 30 days/)).toBeInTheDocument();
+    // Cloud Logging has the 30 days, in the EU since 2026-11-02; the feedback table has no timer at all.
+    expect(screen.getByText(/kept for 30 days in/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/in the Netherlands \(europe-west4\), for security and debugging purposes/)
+    ).toBeInTheDocument();
     expect(screen.getByText(/nothing deletes them on a timer/)).toBeInTheDocument();
   });
 

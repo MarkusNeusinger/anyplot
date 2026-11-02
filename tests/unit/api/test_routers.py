@@ -1181,6 +1181,8 @@ class TestSeoProxyRouter:
         # that figure silently spreads over the store it is not true for.
         assert "kept 30 days" in response.text
         assert "until it is deleted by hand" in response.text
+        # The server logs sit in the EU since 2026-11-02 (the `_Default` sink's new bucket).
+        assert "kept 30 days in Google Cloud Logging in the Netherlands (europe-west4)" in response.text
 
     def test_seo_legal_mirrors_the_data_assistant_section(self, client: TestClient) -> None:
         """The crawler body carries the assistant's facts the human page states (LegalPage.tsx `#assistant`)."""

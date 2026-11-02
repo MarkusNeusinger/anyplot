@@ -222,7 +222,7 @@ export function LegalPage() {
             </Typography>
             <Typography sx={textStyle}>
               <strong>server logs.</strong> technical server logs including IP addresses, request
-              URLs, and user agents are retained for 30 days via{' '}
+              URLs, and user agents are kept for 30 days in{' '}
               <Link
                 href="https://cloud.google.com/logging"
                 target="_blank"
@@ -231,7 +231,9 @@ export function LegalPage() {
               >
                 Google Cloud Logging
               </Link>{' '}
-              for security and debugging purposes.
+              in the Netherlands (europe-west4), for security and debugging purposes. entries from
+              before 2 November 2026 stay in Google&apos;s global log storage until their 30 days
+              are over.
             </Typography>
             <Typography sx={textStyle}>
               <strong>feedback.</strong> the feedback widget keeps what you send it: the message,

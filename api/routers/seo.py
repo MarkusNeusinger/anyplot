@@ -1206,7 +1206,9 @@ _LEGAL_BOT_BODY = (
     'contact details on the <a href="https://anyplot.ai/legal">interactive page</a>.</p>'
     "<h2>Privacy</h2>"
     "<p>Analytics: Plausible Analytics (EU), served over a path on this domain — no cookies, no "
-    "cross-site identifier, no IP address stored. Server logs are kept 30 days; a feedback entry "
+    "cross-site identifier, no IP address stored. Server logs are kept 30 days in Google Cloud Logging "
+    "in the Netherlands (europe-west4); entries from before 2 November 2026 stay in Google's global log "
+    "storage until their 30 days are over. A feedback entry "
     "is kept until it is deleted by hand and is readable only by the operator, and the salted "
     "hash of the IP address that limits feedback spam is cleared after ten minutes. Hosting: "
     "Google Cloud Run (Netherlands), with Cloudflare at the edge.</p>"
