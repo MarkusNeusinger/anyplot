@@ -9,4 +9,4 @@
   `source=plot_page`. The carousel now sits centred over the image, so the
   action fades in after the eligibility check without moving anything; on a
   phone or tablet the two actions share the line above the carousel, with
-  room for the tag kept in place.
+  room for the tag kept in place (#12539).
