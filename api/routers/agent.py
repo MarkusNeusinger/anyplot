@@ -236,6 +236,7 @@ _UPSTREAM_CODES = frozenset(
         "unparseable",
         "formula",
         "code",
+        "data_request",
         "data_refused",
         "session_expired",
         "guard_unavailable",
@@ -1169,8 +1170,10 @@ async def upload_dataset(sid: SessionId, body: DatasetBody, ctx: Ctx, client: Cl
     names' language set it before any typed message or choice); or, for free text the
     parser cannot read, the agents service's `{transcribed, text, preview, profile, warnings, note}`, a
     model's reading that the page shows for confirmation and nothing stored. 413 above 1 MB of UTF-8;
-    `422 formula` for text that asks for a formula, which the assistant computes in the chat instead, and
-    `422 code` for a program (Python, JavaScript, R) that generates data, which the assistant runs in the chat;
+    `422 formula` for text that asks for a formula, which the assistant computes in the chat instead,
+    `422 code` for a program (Python, JavaScript, R) that generates data, which the assistant runs in the chat, and
+    `422 data_request` for text that asks for data ("Beispieldaten"), which the page sends to the chat, where the
+    assistant generates example data;
     `403 session_closed` in a closed session, `429 rate_limited` / `daily_limit` past the paste limits and
     `429 locked_out` past the day's attack strikes, passed through from the agents service."""
     if len(body.text.encode("utf-8")) > MAX_DATASET_BYTES:

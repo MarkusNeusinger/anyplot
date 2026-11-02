@@ -131,6 +131,9 @@ class RequestLedger:
     """The change lines of every `prepare_data` call of the turn, in order: the `done` event's `dataset.changes`."""
     data_code_calls: int = 0
     """`run_data_code` calls of this invocation; ToolSafety allows `MAX_DATA_CODE_CALLS`."""
+    example_data: bool = False
+    """A `run_data_code` call of this invocation stored example data the user asked for (`source_language` `example`):
+    the `chat_turn` line's `kind` is `example`."""
     root_request: Any = None
     """The root's latest `LlmRequest`, kept by the reply-language plugin so a reply in the wrong language can be
     asked again once with the same context (`plugins/reply_language.py`)."""
