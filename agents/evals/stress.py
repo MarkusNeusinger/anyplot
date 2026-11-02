@@ -54,7 +54,7 @@ import pandas as pd
 
 from agents.anyplot.briefs import adapter_profile, profile_json, profile_summary, spec_brief
 from agents.anyplot.code.edits import apply_plan, new_literal_chars
-from agents.anyplot.code.loader import ISO_DATES, ROUND_TRIP, loader_arguments, na_values, round_trip
+from agents.anyplot.code.loader import ISO_DATES, loader_arguments, na_values
 from agents.anyplot.code.regions import find_regions
 from agents.anyplot.data.bindings import check_bindings, default_bindings
 from agents.anyplot.data.parse import MAX_INPUT_BYTES, ParsedDataset, ParseError, parse_dataset
@@ -176,7 +176,6 @@ def loader_outcome(parsed: ParsedDataset) -> tuple[str, float]:
             parse_dates=dates,
             keep_default_na=missing is None,
             na_values=missing,
-            float_precision=ROUND_TRIP if round_trip(dtypes) else None,
             date_format=ISO_DATES if dates else None,
         )
     except Exception as exc:  # the class is the finding; the message could quote the data

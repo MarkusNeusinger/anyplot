@@ -65,8 +65,7 @@ def test_placeholder_becomes_read_csv() -> None:
     assert result == WORKING.replace(
         "df = load_user_data()",
         'df = pd.read_csv(\n    "data.csv",\n    dtype={\n        "x": "Int64",\n        "y": "float64",\n'
-        '        "b": "boolean",\n    },\n    parse_dates=[\n        "when",\n    ],\n    date_format="ISO8601",\n'
-        '    float_precision="round_trip",\n)',
+        '        "b": "boolean",\n    },\n    parse_dates=[\n        "when",\n    ],\n    date_format="ISO8601",\n)',
     )
 
 
