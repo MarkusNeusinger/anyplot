@@ -81,7 +81,15 @@ from ..briefs import bindings_text, spec_brief, trimmed_profiles
 from ..code.data_code import check_data_code
 from ..data.generate import Generate, GenerateError, generate
 from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
-from ..data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations, validation_lines, with_date_notes
+from ..data.prepare import (
+    MAX_OPERATIONS,
+    Operation,
+    Prepared,
+    PrepareError,
+    apply_operations,
+    validation_lines,
+    with_date_notes,
+)
 from ..data.query import DEFAULT_QUERY_ROWS, QueryArgs, QueryResult, run_query
 from ..data.shape import long_suggestion
 from ..data.store import StoredDataset, StoreFull
@@ -314,6 +322,16 @@ async def keep_plot_request(
     return {"status": "ok", "request_kept": True}
 
 
+def _conversion_outcome(prepared: Prepared, profile: DatasetProfile) -> telemetry.ConversionOutcome | None:
+    """What `prepare_data` made for an open role, as the `chat_turn` reports it (`telemetry.ConversionOutcome`)."""
+    if prepared.row_numbers:
+        return "index"
+    dtypes = {column.name: column.dtype for column in profile.columns}
+    if not prepared.converted:
+        return None
+    return "date" if any(dtypes.get(name) == "datetime" for name in prepared.converted) else "number"
+
+
 async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolContext) -> dict[str, Any]:
     """Change the user's dataset with one to five operations, applied in order by the server; the result becomes the next version of the data, which the user then checks and confirms.
 
@@ -328,8 +346,9 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     the group's total, or, in the order of a number or date column order, the percent change from the previous row,
     the running total, or an index with the group's first row = 100); make_date (name, year, and month with an
     optional day, or quarter, or week; adds the date column name built from whole-number columns holding the parts of
-    a date, a part left out being its first: year and month give the first day of each month). Returns the change
-    lines and the new profile, or an error with a code and a message.
+    a date, a part left out being its first: year and month give the first day of each month); row_number (name; adds
+    the whole-number column name, default index, the rows numbered 1 to n). Returns the change lines and the new
+    profile, or an error with a code and a message.
     """
     view = _view(tool_context)
     if view is None:
@@ -370,12 +389,22 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     except ParseError:  # the operations keep every parser cap (rows, columns, size), so a refusal here is a bug
         return _error("internal")
     try:
-        version = push_version(services.datasets, session_id, view, parsed, view.snapshot)
+        version = push_version(
+            services.datasets,
+            session_id,
+            view,
+            parsed,
+            view.snapshot,
+            converted=prepared.converted,
+            row_numbers=prepared.row_numbers,
+        )
     except StoreFull:
         return _error("capacity")
     # The new dataset id leaves the confirmation's fingerprint behind: the user confirms the new version.
     for key, value in version.delta.items():
         tool_context.state[key] = value
+    if outcome := _conversion_outcome(prepared, parsed.profile):
+        telemetry.note_conversion(session_id, outcome)
     ledger.dataset_changes.extend(prepared.changes)
     ledger.prep_ops.extend(operation.op for operation in parsed_operations)  # the names only, for the telemetry
     base = {

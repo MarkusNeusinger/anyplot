@@ -1,0 +1,12 @@
+{
+  "dataset_text": "Datum;Besucher\n03.11.26;412\n04.11.26;398\n05.11.26;455\n06.11.26;430\n07.11.26;377\n",
+  "action": "summarize_data",
+  "expected_operations": [],
+  "locale": "de",
+  "spec_id": "line-timeseries-rolling",
+  "tags": [
+    "summary",
+    "conversion",
+    "ask_back"
+  ]
+}

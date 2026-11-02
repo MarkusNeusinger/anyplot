@@ -26,7 +26,8 @@ column instead of the first number. A role without kinds accepts any column in
 A role that labels (`categorical`, `text`) takes a datetime column too, since live
 test round 7 of 2026-10-16: the paste reads `2025-01` as a date, and the months
 of a heatmap or a grouped bar chart are its labels as they were when the column
-was text. By default only a required role, only up to `MAX_CATEGORIES` dates, and
+was text. By default only a required role, only up to `MAX_CATEGORIES` dates (a column
+of months, `ColumnProfile.monthly`, past them too, as it bound when it was text), and
 after a real text category (`_dates_may_label`, `_category_rank`): an optional group
 or color role, 20,000 timestamps and `ts` beside `host` stay out (review of #12204).
 
@@ -38,6 +39,7 @@ candidate or stays unbound. Bound by hand, it is valid but warned about
 
 import itertools
 import re
+from collections.abc import Collection, Mapping
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 
@@ -109,6 +111,8 @@ ROW_NUMBER_NAMES: frozenset[str] = frozenset(
 )
 """Column names a tool gives the row numbers it writes (R's `read.csv` names an empty header `X`, pandas `Unnamed: 0`,
 readr `...1`); with `column_<n>`, the parser's name for an empty header (`row_number_columns`)."""
+ROW_LABEL_ROLES: frozenset[str] = frozenset({"category", "label", "name"})
+"""The roles that name each row (a bar, a slice), where row numbers can stand in for labels on a yes (`row_slot`)."""
 _GENERATED_NAME = re.compile(r"column_[0-9]+")
 _NOT_ALNUM = re.compile(r"[^0-9a-z]+")
 _CODE_VALUE = re.compile(r"[A-Z][A-Z0-9]{1,3}")
@@ -130,6 +134,26 @@ class BindingCheck:
     errors: list[str]
     missing_roles: list[str]
     warnings: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class AxisSlot:
+    """The required axis a new column can take while one required role stays open (`axis_slot`).
+
+    `moved` is what happens to the column on that axis, when it holds one: it goes to the open measure.
+    """
+
+    role: DataRole
+    moved: Binding | None = None
+
+
+@dataclass(frozen=True)
+class RowSlot:
+    """Where row numbers would go (`row_slot`): the role, and whether that needs no question."""
+
+    role: str
+    certain: bool
+    moved: Binding | None = None
 
 
 def row_number_columns(profile: DatasetProfile) -> set[str]:
@@ -224,7 +248,8 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
     `height`). When the required roles need it all the same (`X, weight` for x and y), the
     decision is made for the role set, not role by role: the bindings are those of an
     ordinary table, so the row number keeps its natural slot (x) instead of falling onto
-    the last role (y), which would transpose the plot (Fable review of #12200).
+    the last role (y), which would transpose the plot (Fable review of #12200), also when
+    it stands after the measure (`weight, X`, `_row_number_on_axis`).
 
     Each column is bound at most once. Members of a family are numbered `<name>1`,
     `<name>2`, ... in column order. Roles without kinds stay unbound.
@@ -242,7 +267,40 @@ def _with_row_numbers(roles: list[DataRole], profile: DatasetProfile, siblings: 
     row_numbers = row_number_columns(profile)
     bindings = _default_bindings(roles, profile, row_numbers, siblings)
     if row_numbers and any(binding.column in row_numbers for binding in bindings):
-        return _default_bindings(roles, profile, set(), siblings)
+        ordinary = _default_bindings(roles, profile, set(), siblings)
+        # Never fewer roles than the first reading: in `day, X` a name match would take x from the dates and leave y open.
+        return (
+            _row_number_on_axis(ordinary, roles, profile, row_numbers) if len(ordinary) >= len(bindings) else bindings
+        )
+    return bindings
+
+
+def _row_number_on_axis(
+    bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile, row_numbers: set[str]
+) -> list[Binding]:
+    """`bindings` with a row number that fell on a measure swapped with the column on the axis, which the spec's
+    order put first (`weight, X` for x and y): a row number is where a value sits, never the value. Only when each
+    role takes the other's column: `date, X` keeps its dates on x."""
+    dtypes = {column.name: column.dtype for column in profile.columns}
+    for axis in bindings:
+        axis_role = resolve_role(axis.role, roles)
+        if axis_role is None or not is_axis(axis_role) or axis.column in row_numbers:
+            continue
+        for measure in bindings:
+            role = resolve_role(measure.role, roles)
+            if (
+                role is not None
+                and measure.column in row_numbers
+                and not is_axis(role)
+                and is_measure(role)
+                and accepts(role, dtypes[axis.column])
+                and accepts(axis_role, dtypes[measure.column])
+            ):
+                swapped = {
+                    axis.role: Binding(role=axis.role, column=measure.column),
+                    measure.role: Binding(role=measure.role, column=axis.column),
+                }
+                return [swapped.get(binding.role, binding) for binding in bindings]
     return bindings
 
 
@@ -413,28 +471,135 @@ def _default_bindings(
 
 
 def carry_bindings(
-    bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile, previous: DatasetProfile | None = None
+    bindings: list[Binding],
+    roles: list[DataRole],
+    profile: DatasetProfile,
+    previous: DatasetProfile | None = None,
+    converted: Mapping[str, str] | None = None,
+    row_numbers: Collection[str] = (),
 ) -> list[Binding]:
     """The bindings after the dataset changed under them (`prepare_data`, undo): the valid ones stay.
 
     A binding stays when its column is still in `profile` with a dtype its role accepts
     (`check_bindings` on it alone finds no error). When every binding stayed, nothing
-    changes, so a role the user left unbound stays unbound, with one exception: a date
+    changes, so a role the user left unbound stays unbound, with these exceptions: a date
     column the change made (`make_date`, or `set_type` to a date; a datetime column that
     `previous`, the version before, did not have) fills an open required role that takes
-    dates (owner decision of 2026-10-15: the code binds it, not the model). When a binding
+    dates (owner decision of 2026-10-15: the code binds it, not the model); a number
+    column a `set_type` with a new name made (`converted`, `Prepared.converted`, its keys)
+    fills an open required role that takes numbers, the conversion that role asked for
+    (`conversions.py`, live test of 2026-11-01); and a column `row_numbers` names takes
+    the role `row_slot` finds. A date column or a row number the axis takes moves a number
+    column off the axis to the open measure (`axis_slot`). When a binding
     went (its column dropped, renamed or re-typed), the roles without a binding are bound
     as `default_bindings` would bind them on the columns no kept binding uses: the
     defaults are computed on that reduced view, so a role whose first choice a kept
     binding holds takes its next candidate rather than staying open. A family keeps
     its members and gains the defaults' members under the next free numbers. The
     result is in the order the defaults list them.
+
+    A converted column that a role took leaves its source (`converted`, its values) out of the
+    optional roles: `Month` on `series` beside `Month (date)` on x would split the plot into
+    one series per row (owner's second opinion of 2026-11-02). A required role keeps it.
     """
+    sources = converted or {}
     kept = [binding for binding in bindings if not check_bindings([binding], roles, profile).errors]
-    if len(kept) == len(bindings):
-        dated = _new_dates(kept, roles, profile, previous)
-        return _in_spec_order([*kept, *dated], roles, profile) if dated else list(bindings)
-    return filled_bindings(kept, roles, profile)
+    if len(kept) != len(bindings):
+        return _without_sources(filled_bindings(kept, roles, profile), roles, sources)
+    current = _with_row_numbers_placed(kept, roles, profile, row_numbers)
+    fresh = _fresh_dates(current, profile, previous)
+    freed = _axis_freed(current, roles, profile) if fresh else current
+    dated = _new_dates(freed, roles, fresh)
+    if dated:
+        current = [*freed, *dated]
+    current = [*current, *_new_numbers(current, roles, profile, sources)]
+    if current == kept:
+        return list(bindings)
+    return _without_sources(_in_spec_order(current, roles, profile), roles, sources)
+
+
+def _without_sources(bindings: list[Binding], roles: list[DataRole], sources: Mapping[str, str]) -> list[Binding]:
+    """`bindings` without the optional roles on the source of a converted column that a role took."""
+    bound = {binding.column for binding in bindings}
+    gone = {source for column, source in sources.items() if column in bound}
+
+    def optional(binding: Binding) -> bool:
+        role = resolve_role(binding.role, roles)
+        return role is not None and not role.required
+
+    return [binding for binding in bindings if not (binding.column in gone and optional(binding))]
+
+
+def axis_slot(bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile) -> AxisSlot | None:
+    """The axis a new column could take when one required role stays open, else None.
+
+    Two cases: the open role is the axis itself, or a measure is open while the axis holds a
+    number column. The defaults fill the roles in spec order, so one number column sits on
+    `x` and `y` stays open (owner's live test of 2026-11-02, `1,3,5,4,6,2` on a line plot): a
+    new axis column then frees that column for `y`. A year or another weak measure on the
+    axis stays there (`weak_measures`): it says where a value sits.
+    """
+    check = check_bindings(bindings, roles, profile)
+    if check.errors or len(check.missing_roles) != 1:
+        return None
+    opened = next(role for role in roles if role.name == check.missing_roles[0])
+    axes = [role for role in roles if role.required and is_axis(role) and not role.variadic and not role.computed]
+    if opened in axes:
+        return AxisSlot(opened)
+    if "numeric" not in opened.kinds or opened.computed:
+        return None
+    columns = {column.name: column for column in profile.columns}
+    staying = weak_measures(profile) | row_number_columns(profile)
+    for role in axes:
+        held = next((binding.column for binding in bindings if binding.role == role.name), None)
+        if held is None or held in staying or columns[held].dtype not in ("integer", "number"):
+            continue
+        return AxisSlot(role, Binding(role=opened.member(1) if opened.variadic else opened.name, column=held))
+    return None
+
+
+def row_slot(bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile) -> RowSlot | None:
+    """Where row numbers would go when one required role stays open and nothing else can fill it, else None.
+
+    On a required axis (`axis_slot`) they need no question: a list of values drawn by position
+    is what every plotting tool draws (`plt.plot(y)`). A role that names each row
+    (`ROW_LABEL_ROLES`) takes them only on a yes, decision of 2026-11-02: a number says nothing as
+    a label (slices `1` to `6`), and of the 21 specs with such a role and one measure, 8 are
+    distributions by group (box, violin, strip, swarm, raincloud), where it would make one
+    group per row. Any other role never takes them: a measure, a date, a series.
+    """
+    if profile.rows < 2:
+        return None
+    slot = axis_slot(bindings, roles, profile)
+    if slot is not None:
+        return RowSlot(slot.role.name, True, slot.moved) if accepts(slot.role, "integer") else None
+    check = check_bindings(bindings, roles, profile)
+    if check.errors or len(check.missing_roles) != 1 or check.missing_roles[0] not in ROW_LABEL_ROLES:
+        return None
+    role = next(role for role in roles if role.name == check.missing_roles[0])
+    return RowSlot(role.name, False) if takes_labels(role) and accepts(role, "integer") else None
+
+
+def _with_row_numbers_placed(
+    kept: list[Binding], roles: list[DataRole], profile: DatasetProfile, row_numbers: Collection[str]
+) -> list[Binding]:
+    """`kept` with the first of `row_numbers` on the role `row_slot` finds, the axis's column moved to the measure."""
+    bound = {binding.column for binding in kept}
+    column = next((name for name in row_numbers if name not in bound), None)
+    slot = row_slot(kept, roles, profile) if column is not None else None
+    if column is None or slot is None:
+        return kept
+    others = [binding for binding in kept if binding.role != slot.role]
+    moved = [slot.moved] if slot.moved is not None else []
+    return [*others, Binding(role=slot.role, column=column), *moved]
+
+
+def _axis_freed(kept: list[Binding], roles: list[DataRole], profile: DatasetProfile) -> list[Binding]:
+    """`kept` with an axis that takes dates freed for a new date column, its number column moved to the open measure."""
+    slot = axis_slot(kept, roles, profile)
+    if slot is None or slot.moved is None or "datetime" not in slot.role.kinds:
+        return kept
+    return [*(binding for binding in kept if binding.role != slot.role.name), slot.moved]
 
 
 def filled_bindings(kept: list[Binding], roles: list[DataRole], profile: DatasetProfile) -> list[Binding]:
@@ -462,20 +627,23 @@ def filled_bindings(kept: list[Binding], roles: list[DataRole], profile: Dataset
     return _in_spec_order(kept, roles, profile)
 
 
-def _new_dates(
-    kept: list[Binding], roles: list[DataRole], profile: DatasetProfile, previous: DatasetProfile | None
-) -> list[Binding]:
-    """Bindings of the open required roles that take dates to the date columns `previous` did not have."""
+def _fresh_dates(kept: list[Binding], profile: DatasetProfile, previous: DatasetProfile | None) -> list[ColumnProfile]:
+    """The date columns that `previous` did not have and no binding holds."""
     if previous is None:
         return []
     before = {column.name for column in previous.columns if column.dtype == "datetime"}
     used = {binding.column for binding in kept}
-    taken = {binding.role for binding in kept}
-    fresh = [
+    return [
         column
         for column in profile.columns
         if column.dtype == "datetime" and column.name not in before and column.name not in used
     ]
+
+
+def _new_dates(kept: list[Binding], roles: list[DataRole], fresh: list[ColumnProfile]) -> list[Binding]:
+    """Bindings of the open required roles that take dates to the new date columns `fresh`."""
+    fresh = list(fresh)
+    taken = {binding.role for binding in kept}
     added: list[Binding] = []
     for role in roles:
         if not fresh or not role.required or role.variadic or role.computed or role.name in taken:
@@ -484,6 +652,31 @@ def _new_dates(
             column = max(fresh, key=lambda column: name_similarity(role.name, column.name))  # first on a tie
             fresh.remove(column)
             added.append(Binding(role=role.name, column=column.name))
+    return added
+
+
+def _new_numbers(
+    kept: list[Binding], roles: list[DataRole], profile: DatasetProfile, converted: Collection[str]
+) -> list[Binding]:
+    """Bindings of the open required roles that take numbers to the number columns a conversion made (`converted`).
+
+    A required family without a member takes the column as its first member (`y1`).
+    """
+    used = {binding.column for binding in kept}
+    fresh = [
+        column
+        for column in profile.columns
+        if column.name in converted and column.dtype in ("number", "integer") and column.name not in used
+    ]
+    if not fresh:
+        return []
+    bound = {role.name for binding in kept if (role := resolve_role(binding.role, roles)) is not None}
+    added: list[Binding] = []
+    for role in roles:
+        if not fresh or not role.required or role.computed or role.name in bound or "numeric" not in role.kinds:
+            continue
+        column = fresh.pop(0)
+        added.append(Binding(role=role.member(1) if role.variadic else role.name, column=column.name))
     return added
 
 
@@ -672,11 +865,13 @@ def _label_dates(role: DataRole, column: ColumnProfile) -> bool:
 
 def _dates_may_label(role: DataRole, column: ColumnProfile) -> bool:
     """Whether the defaults may give a role that takes dates only as labels this date column: a required role and
-    at most `MAX_CATEGORIES` dates (review of #12204: 20,000 timestamps became a stacked bar's components). Any
-    other column, and any role that takes `datetime`, passes."""
+    at most `MAX_CATEGORIES` dates (review of #12204: 20,000 timestamps became a stacked bar's components), or a
+    column of months of any length, which bound as text before the parser read `Nov 2026` as dates (owner's second
+    opinion of 2026-11-02: 70 months left a bar chart's category open). Any other column, and any role that takes
+    `datetime`, passes."""
     if not _label_dates(role, column):
         return True
-    return role.required and column.unique <= MAX_CATEGORIES
+    return role.required and (column.unique <= MAX_CATEGORIES or column.monthly is True)
 
 
 def _ordinal(column: ColumnProfile) -> bool:
@@ -775,7 +970,7 @@ def weak_measures(profile: DatasetProfile) -> set[str]:
     }
 
 
-def _code_like(column: ColumnProfile) -> bool:
+def code_like(column: ColumnProfile) -> bool:
     """A text column of codes: named so (`country.id`, `iso3code`), or its frequent values are short capitals (`AT`, `CHE`)."""
     if column.dtype != "text":
         return False
@@ -798,14 +993,14 @@ def _code_rank(role: DataRole, column: ColumnProfile, columns: list[ColumnProfil
     2026-10-15). The rank comes after name similarity, so a role named like the code column
     keeps it unless the name column is as similar.
     """
-    if not role.kinds or any(kind not in GROUPING_KINDS for kind in role.kinds) or not _code_like(column):
+    if not role.kinds or any(kind not in GROUPING_KINDS for kind in role.kinds) or not code_like(column):
         return 0
     stem = _stem(column.name, CODE_WORDS)
     twin = any(
         other.name != column.name
         and other.dtype == "text"
         and not numeric_text(other)
-        and not _code_like(other)
+        and not code_like(other)
         and other.unique == column.unique
         and other.missing == column.missing
         and _related(stem, _stem(other.name, NAME_WORDS))

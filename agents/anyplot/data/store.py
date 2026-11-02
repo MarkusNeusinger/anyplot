@@ -20,6 +20,7 @@ import secrets
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
+from typing import Any
 
 from ..schemas import ColumnDtype, DatasetProfile
 from .parse import ParsedDataset
@@ -65,6 +66,9 @@ class StoredDataset:
     (`main._screen_file_name`; `dataset_context.FILE_NAME_WITHHELD` when the screen refused it); None for text pasted or
     computed. Never a note: the root reads it fenced as data, a name and never a request. A change of the data
     carries it on, a computed table (`generate_data`, `run_data_code`) does not (`push_version`)."""
+    dry_runs: dict[tuple[str, str], Any] = field(default_factory=dict, init=False, repr=False, compare=False)
+    """The dry runs of converting a text column to numbers or dates (`conversions.py`), by column and type, each made
+    once: the data under an id never changes. A copy (`replace`) starts without them."""
 
     def as_parsed(self) -> ParsedDataset:
         """The dataset as `parse_dataset` returned it (the profile's warnings are the parse's), for `apply_operations`."""

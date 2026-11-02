@@ -2727,6 +2727,82 @@ async def test_a_prepare_data_turn_carries_the_new_dataset_version_in_done(
     assert (nothing.status_code, nothing.json()) == (422, {"detail": "nothing_to_undo"})
 
 
+async def test_an_open_role_lists_its_conversion_and_the_conversion_fills_it(
+    client: httpx.AsyncClient, swap_models, services: Services
+) -> None:
+    """Live test of 2026-11-01: the server dry-runs the conversion an open role needs; made, it binds that role."""
+    from types import SimpleNamespace
+
+    convert = {"op": "set_type", "column": "Price", "type": "number", "name": "Price (number)"}
+    script = default_script()
+    script["root"] = [prepare_call(convert), {"text": "I read Price as numbers in a new column, 3 cells."}]
+    swap_models("anthropic-vertex", script)
+    sid = await open_session(client, with_data=False)
+    pasted = await client.post(
+        f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "Hours,Price\n1,$5\n2,7\n3,$12\n"}
+    )
+    assert pasted.status_code == 200, pasted.text
+    assert pasted.json()["bindings"] == [{"role": "x", "column": "Hours"}]  # y has no number column yet
+
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    block = await session_context(context)  # type: ignore[arg-type]
+    assert "- Bindings: incomplete; missing roles: y;" in block
+    assert "- Conversions for open roles: 1, columns that a set_type turns into what the role takes" in block
+    line = (
+        "y: column 'Price' (text): 3 of 3 cells would be read as numbers, unit '$' removed; certain: every cell "
+        f"reads and nothing is guessed; operations: {json.dumps([convert])}"
+    )
+    assert f"<user_data>\n{line}\n</user_data>" in block  # the line names the user's columns: fenced
+
+    turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "summarize_data"})
+
+    name, done = parse_sse(turn.text)[-1]
+    assert name == "done" and done["dataset"]["version"] == 2
+    assert done["dataset"]["changes"] == [
+        "new column Price (number): 3 cells of Price read as numbers, unit '$' removed; Price stays as it is"
+    ]
+    assert done["bindings"] == [{"role": "x", "column": "Hours"}, {"role": "y", "column": "Price (number)"}]
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    after = await session_context(context)  # type: ignore[arg-type]
+    assert "- Bindings: complete" in after and "Conversions for open roles" not in after
+
+    undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+    assert undone.status_code == 200 and undone.json()["bindings"] == [{"role": "x", "column": "Hours"}]
+
+
+async def test_a_list_of_values_gets_its_row_numbers_and_undo_takes_them_back(
+    client: httpx.AsyncClient, swap_models, services: Services
+) -> None:
+    """Live test of 2026-11-02: one number column sits on x and y stays open; the row numbers take x, it moves to y."""
+    from types import SimpleNamespace
+
+    script = default_script()
+    script["root"] = [
+        prepare_call({"op": "row_number", "name": "index"}),
+        {"text": "x: row number 1 to 6, because the table has no x column."},
+    ]
+    swap_models("anthropic-vertex", script)
+    sid = await open_session(client, with_data=False)
+    pasted = await client.post(
+        f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "value\n1\n3\n5\n4\n6\n2\n"}
+    )
+    assert pasted.json()["bindings"] == [{"role": "x", "column": "value"}]
+
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    block = await session_context(context)  # type: ignore[arg-type]
+    assert "y then takes 'value', which x holds now" in block
+
+    turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "summarize_data"})
+
+    name, done = parse_sse(turn.text)[-1]
+    assert name == "done" and done["dataset"]["version"] == 2
+    assert done["dataset"]["changes"] == ["new column index: the rows numbered 1 to 6"]
+    assert done["bindings"] == [{"role": "x", "column": "index"}, {"role": "y", "column": "value"}]
+
+    undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+    assert undone.status_code == 200 and [column["name"] for column in undone.json()["profile"]["columns"]] == ["value"]
+
+
 async def test_a_column_set_to_text_stays_text_in_later_versions_until_undone(
     client: httpx.AsyncClient, swap_models, services: Services
 ) -> None:

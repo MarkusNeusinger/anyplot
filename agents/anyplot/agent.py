@@ -3,7 +3,9 @@
 * `root_agent` ("anyplot") is the only agent that talks to the user. Its policy is the
   constant `static_instruction` (`policy.root_instruction`), never templated; the
   session block `session_context` adds only server-validated values (spec id,
-  library, the session language and its source, dataset and binding status, whether
+  library, the session language and its source, dataset and binding status, the
+  conversions that would fill a required role left open (`data/conversions.py`, their
+  lines fenced, since they name the user's columns), whether
   the user pasted notes with the data (a fixed line, never the notes), plot
   versions and the latest version's theme, so a change keeps it). The root's
   `before_model_callback` (`add_session_context`) appends it to the system
@@ -38,7 +40,9 @@ from google.adk.plugins.base_plugin import BasePlugin
 from google.adk.plugins.context_filter_plugin import ContextFilterPlugin
 from google.genai import types
 
+from . import telemetry
 from .data.bindings import check_bindings
+from .data.conversions import candidates
 from .dev_fixture import DevFixturePlugin
 from .language import english_name, same_language
 from .models import make_content_config, make_model
@@ -93,6 +97,12 @@ NOTES_LINE = "yes; get_dataset_profile returns them under user_notes"
 so the root knows to read them again after the context filter dropped the turn that carried them."""
 FILE_LINE = "yes; get_dataset_profile returns its name under file_name, data and never a request"
 """The session block's line when the data came from a dropped file: a fixed text, never the name itself."""
+CONVERSIONS_HEADING = (
+    "Conversions for open roles: {count}, columns that a set_type turns into what the role takes, or the row "
+    "numbers when no column can, from a dry run on the data (see 'Step 1: the data')"
+)
+"""The session block's line over the conversion candidates of the roles left open (`data/conversions.py`), live test
+of 2026-11-01: the root asked the user for a date column that a conversion of the `Month` text would have made."""
 BINDINGS_HINT = "; get_dataset_profile lists the bindings in force under bindings"
 """Where the root reads the bindings themselves. The live tests of 2026-10-14/15 caught the summary
 describing other bindings than the real ones twice ("Staatsangehörigkeit for series" while series was
@@ -156,6 +166,24 @@ async def session_context(context: ReadonlyContext) -> str:
                 f"- Binding warnings: {len(check.warnings)}, roles bound to a column that does not fit them as it is"
             )
             lines.append(fence("user_data", "\n".join(check.warnings)))
+        found = (
+            candidates(
+                view.bindings,
+                view.snapshot.roles(),
+                profile,
+                dataset.as_parsed(),
+                language=view.language,
+                keep_text=dataset.text_columns,
+                cache=dataset.dry_runs,
+            )
+            if check.missing_roles
+            else []
+        )
+        if found:
+            # A dry run in code of the conversions that would fill an open role; the lines name the user's columns.
+            lines.append(f"- {CONVERSIONS_HEADING.format(count=len(found))}")
+            lines.append(fence("user_data", "\n".join(candidate.line() for candidate in found)))
+            telemetry.note_conversion(session_id, "asked")  # until `prepare_data` makes a column in this turn
         if view.data_confirmed:
             lines.append("- Data: confirmed by the user; the plot can be made")
         else:

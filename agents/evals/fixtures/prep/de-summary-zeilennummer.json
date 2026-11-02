@@ -1,0 +1,8 @@
+{
+  "dataset_text": "Messung\n12,5\n13,1\n11,8\n12,9\n13,4\n",
+  "action": "summarize_data",
+  "expected_operations": [{"op": "row_number", "name": "index"}],
+  "locale": "de",
+  "spec_id": "line-basic",
+  "tags": ["summary", "row_number"]
+}

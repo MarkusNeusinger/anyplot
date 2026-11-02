@@ -242,8 +242,13 @@ PrepOp = Literal[
     "classify",
     "derive",
     "make_date",
+    "row_number",
 ]
 PREP_OPS: frozenset[str] = frozenset(get_args(PrepOp))
+ConversionOutcome = Literal["none", "date", "number", "index", "asked"]
+"""What a turn did about a required role left open (`data/conversions.py`): `none` when the session block listed no
+conversion; `date`, `number` or `index` for the column `prepare_data` made; `asked` when a conversion was listed and
+none was made, so the root asked or skipped it (`asked_question` tells the two apart)."""
 RefusalCode = Literal[
     "out_of_scope",
     "needs_data",
@@ -445,6 +450,7 @@ class ChatTurn(_Event):
     tools: list[ToolName] = _list()
     prep_ops: list[PrepOp] = _list()
     prep_calls: Count = 0
+    conversion: ConversionOutcome = "none"
     undo: bool = False
     to_long: bool = False
     manual_binding_changed: bool = False
@@ -947,6 +953,7 @@ class SessionMarks:
     to_long: bool = False
     manual_binding_changed: bool = False
     binding_warnings: set[str] = field(default_factory=set)
+    conversion: ConversionOutcome = "none"
     runs: dict[str, int] = field(default_factory=dict)
 
 
@@ -976,15 +983,24 @@ def take_turn_marks(session_id: str) -> dict[str, Any]:
         "to_long": mark.to_long,
         "manual_binding_changed": mark.manual_binding_changed,
         "binding_warnings": sorted(mark.binding_warnings),
+        "conversion": mark.conversion,
     }
     mark.undo = mark.to_long = mark.manual_binding_changed = False
     mark.binding_warnings = set()
+    mark.conversion = "none"
     return taken
 
 
 def note_binding_warnings(session_id: str, sentences: list[str]) -> None:
     if sentences:
         marks(session_id).binding_warnings.update(binding_warning_codes(sentences))
+
+
+def note_conversion(session_id: str, outcome: ConversionOutcome) -> None:
+    """What this turn did about an open role; a column made stands, `asked` only fills a turn that made none."""
+    mark = marks(session_id)
+    if outcome != "asked" or mark.conversion == "none":
+        mark.conversion = outcome
 
 
 def run_index(session_id: str, invocation_id: str | None) -> int:
