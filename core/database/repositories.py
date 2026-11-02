@@ -439,8 +439,9 @@ class FeedbackRepository(BaseRepository[Feedback]):
 
         The feedback router stores a per-process salted hash (`api/routers/feedback.py`
         `_hash_ip`) only for its rate-limit and duplicate windows and clears it here once
-        they have passed. `prefix` keeps the statement to the hashes of that scheme: the
-        unsalted hashes of older rows are left for a reviewed migration.
+        they have passed. `prefix` keeps the statement to the hashes of that scheme; the
+        unsalted hashes of older rows were cleared once by hand on 2026-11-02 after a
+        snapshot, so no migration is needed.
         `before` must be tz-naive UTC, like `feedback.created_at`."""
         result = await self.session.execute(
             update(Feedback)
