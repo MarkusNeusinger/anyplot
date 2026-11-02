@@ -78,6 +78,8 @@ describe('LegalPage', () => {
         screen.getByRole('row', { name: new RegExp(`^${store}\\s*${kept}$`) })
       ).toBeInTheDocument();
     }
+    // The label is the row's header, so a screen reader announces "feedback IP hash, ten minutes".
+    expect(screen.getByRole('rowheader', { name: 'feedback IP hash' })).toBeInTheDocument();
     // Google Cloud, its logs included, runs in the EU region.
     expect(
       screen.getByText(

@@ -1186,8 +1186,10 @@ class TestSeoProxyRouter:
         # The page states the current state only: no notes on what older entries still carry.
         assert "before the move" not in response.text
         assert "unsalted" not in response.text
-        # The site-wide facts the human page states once each.
+        # The site-wide facts the human page states once each, the stored feedback fields included.
         for fact in (
+            "a random id that ties your own submissions together",
+            "the optional contact field",
             "legitimate interest (Art. 6(1)(f) GDPR)",
             "the Cloudflare Access login cookie",
             "a complaint to a supervisory authority",

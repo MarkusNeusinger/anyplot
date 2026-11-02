@@ -30,7 +30,7 @@ const firstColStyle = {
 
 const AVATAR_URL = 'https://storage.googleapis.com/anyplot-static/images/markusneusinger.webp';
 
-/** A two-column fact table: a short label, then the fact. */
+/** A two-column fact table: a short label as the row header, then the fact. */
 function FactTable({ rows }: { rows: [string, ReactNode][] }) {
   return (
     <Table
@@ -39,7 +39,9 @@ function FactTable({ rows }: { rows: [string, ReactNode][] }) {
       <TableBody>
         {rows.map(([label, fact]) => (
           <TableRow key={label}>
-            <TableCell>{label}</TableCell>
+            <TableCell component="th" scope="row">
+              {label}
+            </TableCell>
             <TableCell>{fact}</TableCell>
           </TableRow>
         ))}
