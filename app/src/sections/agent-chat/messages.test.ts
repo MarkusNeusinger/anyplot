@@ -15,11 +15,11 @@ describe('the service pause', () => {
     expect(nextUtcMidnight(Date.parse('2026-12-31T00:00:00Z'))).toBe('2027-01-01T00:00:00.000Z');
   });
 
-  it("names the end in the user's own time, and says their own limit is untouched", () => {
+  it("names the end in the user's own time, and claims nothing about their own limit", () => {
     const until = '2026-11-03T00:00:00Z';
     expect(localClock(until)).toMatch(/^\d{2}:\d{2}/);
     expect(servicePausedText(until)).toBe(
-      `the chat has reached today's overall limit and is paused until ${localClock(until)} · your own limit is not affected`
+      `the chat has reached today's overall limit and is paused until ${localClock(until)}`
     );
     expect(localClock('not a time')).toBeNull();
     expect(servicePausedText('not a time')).toContain('paused until 00:00 UTC');

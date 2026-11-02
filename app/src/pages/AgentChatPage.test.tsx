@@ -1791,7 +1791,8 @@ describe('AgentChatPage service pause', () => {
     const note = await screen.findByTestId('service-paused');
     expect(note).toHaveAttribute('role', 'note');
     expect(note).toHaveTextContent(`# ${servicePausedText(resetsAt)}`);
-    expect(note).toHaveTextContent(/your own limit is not affected$/);
+    // `/status` is the same for everyone: a user whose own budget is spent too must not read otherwise.
+    expect(note).not.toHaveTextContent('your own limit');
     // The composer stays: the note may go stale at midnight, the server decides each turn.
     expect(screen.getByLabelText('Message')).toBeInTheDocument();
   });

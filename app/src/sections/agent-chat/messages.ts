@@ -66,12 +66,14 @@ export function nextUtcMidnight(now: number = Date.now()): string {
 }
 
 /**
- * The whole chat paused for the day (`service_paused`): the service's day budget is
- * spent, not the user's own. `until` is the reset in the user's time; the server's
- * own refusal says 00:00 UTC, since it does not know the user's time zone.
+ * The whole chat paused for the day: the service's day budget is spent. `until` is
+ * the reset in the user's time; the server's own refusal says 00:00 UTC, since it
+ * does not know the user's time zone. Only that refusal says the user's own limit
+ * is untouched: `/status` reports the pause for everyone, so a note from it cannot
+ * know, and a user whose own budget is spent too gets `budget` on the next turn.
  */
 export function servicePausedText(until: string = nextUtcMidnight()): string {
-  return `the chat has reached today's overall limit and is paused until ${localClock(until) ?? '00:00 UTC'} · your own limit is not affected`;
+  return `the chat has reached today's overall limit and is paused until ${localClock(until) ?? '00:00 UTC'}`;
 }
 
 /** Failures of the dataset, bindings, confirmation and undo calls. */
