@@ -35,10 +35,13 @@ const json = (status: number, body: unknown) =>
 const PAGE = '/debug/agent?spec=scatter-basic&library=matplotlib&language=python';
 
 let bundleSearch: string[];
+/** The bundle route's answer; the default is a small bundle. */
+let bundleAnswer: () => Response;
 
 /** `opened` holds the session's opening until it resolves. */
 function stubFetch(openStatus = 200, opened: Promise<void> = Promise.resolve()) {
   bundleSearch = [];
+  bundleAnswer = () => json(200, { transcript: [], versions: [] });
   vi.stubGlobal(
     'fetch',
     vi.fn(async (input: string, init: RequestInit = {}) => {
@@ -55,7 +58,7 @@ function stubFetch(openStatus = 200, opened: Promise<void> = Promise.resolve()) 
       }
       if (url.pathname.endsWith('/sessions/S1/bundle')) {
         bundleSearch.push(url.search);
-        return json(200, { transcript: [], versions: [] });
+        return bundleAnswer();
       }
       if (url.pathname.endsWith('/debug/agent/status')) {
         return json(200, { libraries: ['matplotlib', 'seaborn'], enabled: true });
@@ -146,13 +149,7 @@ describe('AgentChatPage .save()', () => {
   it('keeps the menu open with the failure line when a save fails', async () => {
     const user = userEvent.setup();
     stubFetch();
-    const fetch = globalThis.fetch as ReturnType<typeof vi.fn>;
-    const base = fetch.getMockImplementation()!;
-    fetch.mockImplementation(async (input: string, init?: RequestInit) =>
-      new URL(input).pathname.endsWith('/sessions/S1/bundle')
-        ? json(413, { detail: 'too_large', ref: 'r-big' })
-        : base(input, init)
-    );
+    bundleAnswer = () => json(413, { detail: 'too_large', ref: 'r-big' });
     renderPage();
     await waitFor(() => expect(menuButton()).toBeEnabled());
 

@@ -15,10 +15,7 @@ import { ThemeProvider } from '@mui/material/styles';
 
 import { resetAgentLaneProbe } from 'src/hooks/useAgentLaneOpen';
 import { HIGHCHARTS_NOTE, PublicAgentChatPage } from 'src/pages/AgentChatPage';
-import {
-  EXPERIMENTAL_DETAILS,
-  EXPERIMENTAL_LINE,
-} from 'src/sections/agent-chat/ExperimentalNotice';
+import { EXPERIMENTAL_DETAILS, EXPERIMENTAL_LINE } from 'src/sections/agent-chat/lane';
 import { theme } from 'src/theme';
 import { ADMIN_HINT_KEY } from 'src/utils/adminAuth';
 

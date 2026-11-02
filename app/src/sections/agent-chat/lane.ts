@@ -5,8 +5,9 @@
  * component rendered on its own behaves as it always has.
  *
  * What differs on the public lane: the feedback and `.save()` boxes start
- * unticked, and the feedback form says what sending stores (the owner's privacy
- * rule: explicit consent at the moment of sending).
+ * unticked, the feedback form says what sending stores (the owner's privacy
+ * rule: explicit consent at the moment of sending), and the experimental notice
+ * says that an AI does the work.
  */
 
 import { createContext, useContext } from 'react';
@@ -18,6 +19,19 @@ export const AgentLaneContext = createContext<AgentLane>('admin');
 export function useAgentLane(): AgentLane {
   return useContext(AgentLaneContext);
 }
+
+/**
+ * The public lane's notice above the first input (`ExperimentalNotice`): one line, always in
+ * view, and the lines its ⓘ button opens, above the link to the legal page. The owner reads
+ * every user-facing text: keep them in the PR's "Texts to read".
+ */
+export const EXPERIMENTAL_LINE =
+  'experimental AI · results can be wrong · stored only if you send feedback';
+export const EXPERIMENTAL_DETAILS = [
+  'Claude by Anthropic, through Google Cloud Vertex AI in the EU',
+  "don't paste data you may not share",
+  'daily limits apply',
+] as const;
 
 /**
  * The consent line under the public feedback form, next to `# include data.csv`.

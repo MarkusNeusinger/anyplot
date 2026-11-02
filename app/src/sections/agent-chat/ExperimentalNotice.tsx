@@ -8,9 +8,8 @@
  *
  * A popover rather than a tooltip: it opens on a tap as on a click, it holds a link, and it
  * keeps the keyboard focus inside until Escape or a click outside closes it, which returns the
- * focus to the button. The link opens a new tab: leaving the page would end the session.
- *
- * The owner reads every user-facing text: keep them in the PR's "Texts to read".
+ * focus to the button. The link opens a new tab: leaving the page would end the session. The
+ * texts live in `lane.ts`, with the public lane's consent line.
  */
 
 import { useId, useState } from 'react';
@@ -21,25 +20,15 @@ import IconButton from '@mui/material/IconButton';
 import Popover from '@mui/material/Popover';
 
 import { paths } from 'src/routes/paths';
+import { EXPERIMENTAL_DETAILS, EXPERIMENTAL_LINE } from 'src/sections/agent-chat/lane';
 import { labelSx } from 'src/sections/agent-chat/styles';
 import { colors, proseLinkStyle } from 'src/theme';
 
-/** The notice's one line, always in view; the ⓘ button follows its last word. */
-export const EXPERIMENTAL_LINE =
-  'experimental AI · results can be wrong · stored only if you send feedback';
-
-/** The lines behind the ⓘ button, above the link to the legal page. */
-export const EXPERIMENTAL_DETAILS = [
-  'Claude by Anthropic, through Google Cloud Vertex AI in the EU',
-  "don't paste data you may not share",
-  'daily limits apply',
-] as const;
-
 /**
- * The ⓘ button of the chat's notices and status lines: 32 px to tap, which the negative margin
- * keeps out of the line height, so the line it ends reads as text.
+ * The ⓘ button: 32 px to tap, which the negative margin keeps out of the line height, so the
+ * line it ends reads as text.
  */
-export const infoButtonSx = {
+const infoButtonSx = {
   p: 0.75,
   my: -0.75,
   ml: 0.25,
