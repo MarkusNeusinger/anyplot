@@ -684,7 +684,9 @@ async def test_a_cancelled_turn_records_the_language_the_turn_set(
     judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
     sid = await open_session(client)
 
-    response = await post_message(sid, MessageBody(text="Mach die Punkte größer"), USER, runtime, "req-cancelled")
+    response = await post_message(
+        sid, MessageBody(text="Mach die Punkte größer"), USER, "public", runtime, "req-cancelled"
+    )
     stream = cast(AsyncIterator[str], response.body_iterator)
     chunks = []
     async for chunk in stream:
@@ -900,3 +902,16 @@ async def test_the_run_prompt_hashes_are_the_bundle_hashes(
     assert run["reviewer_prompt"] == bundle["reviewer"]  # the conftest's checklist mode
     assert run_hashes("matplotlib", "catalogue")["reviewer_prompt"] == bundle_hashes()["reviewer_catalogue"]
     assert bundle["reviewer_catalogue"] != bundle["reviewer"]
+
+
+@pytest.mark.parametrize(
+    ("event", "view"), [(telemetry.PipelineRun, "pipeline_runs"), (telemetry.ChatTurn, "chat_turns")]
+)
+def test_every_field_has_its_typed_column_in_the_views(event: type[telemetry._Event], view: str) -> None:
+    """`agents/telemetry/views/02_event_views.sql` reads every field of the line, so a field added to the model (the
+    limit fields of 2026-11-01 among them) cannot be forgotten in the view a report reads."""
+    sql = (Path(__file__).resolve().parents[4] / "agents" / "telemetry" / "views" / "02_event_views.sql").read_text()
+    body = sql.split(f"`anyplot.agent_telemetry.{view}` AS", 1)[1].split("CREATE OR REPLACE VIEW", 1)[0]
+
+    missing = [name for name in event.model_fields if name != "event" and not re.search(rf"payload\.{name}\b", body)]
+    assert missing == [], f"{view} lacks {missing}"

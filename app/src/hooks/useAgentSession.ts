@@ -83,7 +83,12 @@
  * (`.send()`) sends it to the chat as the user's turn. Code that generates
  * data (Python, JavaScript, R) is refused the same way with `422 code`
  * (`formulaKind`), and the assistant's `run_data_code` runs it in the chat;
- * the version it stores carries the Python that ran (`code`).
+ * the version it stores carries the Python that ran (`code`). Text that asks
+ * for data instead of holding it ("Beispieldaten", "random numbers with three
+ * categories") answers `422 data_request`: `parseData` sends it to the chat as
+ * the user's turn at once, with no offer to click, and the assistant generates
+ * example data with code it writes (`run_data_code`), which the turn's `done`
+ * carries like a formula's table (`dataRequest` names the last hand-off).
  *
  * One thing at a time: the agents service runs one turn, theme render, page
  * build (a JavaScript version's `plot.html`) or paste
@@ -372,6 +377,13 @@ export interface AgentSessionState {
   formula: string | null;
   /** What `formula` was refused as: a formula, or code that generates data. */
   formulaKind: FormulaKind;
+  /**
+   * The last paste the dataset route answered `422 data_request` and the hook
+   * sent to the chat as the user's turn, with `seq` counting these hand-offs:
+   * the data panel empties its box on each while it still holds that text,
+   * because the text is now the user's message there.
+   */
+  dataRequest: { text: string; seq: number } | null;
   /** A table read from free text that awaits `.use()` or `.discard()`. */
   transcription: TranscriptionState | null;
   /** The spec's roles, in spec order; the data panel shows a column choice for each. */
@@ -441,6 +453,8 @@ type Action =
   | { type: 'parse_failed'; failure: Failure; formula?: string; formulaKind?: FormulaKind }
   /** The refused formula went to the chat as a turn. */
   | { type: 'formula_sent' }
+  /** The paste asked for data (`422 data_request`): no error, `text` goes to the chat as the user's turn. */
+  | { type: 'data_requested'; text: string }
   | { type: 'transcribed'; transcription: TranscriptionState }
   | { type: 'transcription_clear' }
   | { type: 'bindings_start'; bindings: BindingMap }
@@ -507,6 +521,7 @@ export function initialAgentState(library: string): AgentSessionState {
     datasetError: null,
     formula: null,
     formulaKind: 'formula',
+    dataRequest: null,
     transcription: null,
     roles: [],
     bindings: {},
@@ -833,6 +848,15 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
       };
     case 'formula_sent':
       return { ...state, formula: null };
+    case 'data_requested':
+      return {
+        ...state,
+        parsing: false,
+        datasetError: null,
+        formula: null,
+        transcription: null,
+        dataRequest: { text: action.text, seq: (state.dataRequest?.seq ?? 0) + 1 },
+      };
     case 'transcribed':
       // Nothing is stored yet: the dataset, its bindings and their confirmation stay until
       // the user decides (the server kept them too); the page holds step 1 while the
@@ -1122,6 +1146,7 @@ export function useAgentSession({
   siteThemeRef.current = siteTheme;
   const abortRef = useRef<AbortController | null>(null);
   const stoppedRef = useRef(false);
+  const turnErrorRef = useRef<string | null>(null);
   const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Set synchronously, before the state catches up, so a double click starts nothing twice.
   const themeRef = useRef(false);
@@ -1730,11 +1755,15 @@ export function useAgentSession({
     [safeDispatch, addItem, onPlot, trackEvent]
   );
 
+  /** One turn; the code of the error that ended it (`run_limit`, `capacity`, a failed request) lands in
+   * `turnErrorRef`, null when it ended without one or never started (`plotTurn`). */
   const runTurn = useCallback(
     async (body: TurnBody) => {
       const current = stateRef.current;
       const sid = current.sessionId;
+      turnErrorRef.current = null;
       if (!sid || current.run || busy()) return;
+      let errorCode: string | null = null;
       const controller = new AbortController();
       abortRef.current = controller;
       stoppedRef.current = false;
@@ -1758,6 +1787,7 @@ export function useAgentSession({
           const event = parseAgentEvent(raw);
           if (!event) continue;
           onEvent(event);
+          if (event.type === 'error') errorCode = event.code;
           if (event.type === 'done') {
             finished = true;
             break;
@@ -1766,17 +1796,20 @@ export function useAgentSession({
         if (!finished && !stoppedRef.current) {
           // The BFF always ends a turn with `done`; a stream without it was cut.
           addItem({ kind: 'error', code: 'upstream', ref: null });
+          errorCode = 'upstream';
         }
       } catch (err) {
         if (!stoppedRef.current && !isAbort(err)) {
           const failure = handleFailure(err);
           addItem({ kind: 'error', code: failure.code, ref: failure.ref });
+          errorCode = failure.code;
         }
       } finally {
         if (stopTimer.current) clearTimeout(stopTimer.current);
         stopTimer.current = null;
         if (stoppedRef.current) addItem({ kind: 'notice', text: 'stopped' });
         if (abortRef.current === controller) abortRef.current = null;
+        turnErrorRef.current = errorCode;
         safeDispatch({ type: 'run_end' });
       }
     },
@@ -1784,6 +1817,13 @@ export function useAgentSession({
   );
 
   const createPlot = useCallback(() => runTurn({ action: 'create_plot' }), [runTurn]);
+
+  /** `createPlot`, resolving to the code of the error that ended the turn, or null. The fan-out tells a turn the
+   * user's cap refused (`run_limit`) from a turn that ran (`FanOut`). */
+  const plotTurn = useCallback(async (): Promise<string | null> => {
+    await runTurn({ action: 'create_plot' });
+    return turnErrorRef.current;
+  }, [runTurn]);
 
   const sendMessage = useCallback(
     (text: string) => {
@@ -1801,8 +1841,11 @@ export function useAgentSession({
    * its default bindings are applied, and the assistant's summary of it follows
    * as the turn `summarize_data`; the returned promise ends with that turn.
    * Text that is no table comes back as a transcription to decide on, which
-   * stores nothing and asks for no summary. `table` reads another of the
-   * tables the previous answer named (the data panel's table picker).
+   * stores nothing and asks for no summary. Text that asks for data instead
+   * (`422 data_request`, "Beispieldaten") goes to the chat as the user's turn,
+   * where the assistant generates example data; the promise ends with that
+   * turn. `table` reads another of the tables the previous answer named (the
+   * data panel's table picker).
    */
   const parseData = useCallback(
     async (text: string, confirmed = false, source?: string, table?: number) => {
@@ -1816,6 +1859,7 @@ export function useAgentSession({
         return;
       }
       let stored = false;
+      let request: string | null = null;
       parseRef.current = true;
       safeDispatch({ type: 'parse_start' });
       try {
@@ -1856,24 +1900,33 @@ export function useAgentSession({
         await applyBindings(defaults, defaults);
       } catch (err) {
         const failure = handleFailure(err);
-        // A formula or code is refused so that the chat computes or runs it (`sendFormula`).
-        safeDispatch({
-          type: 'parse_failed',
-          failure,
-          ...(failure.code === 'formula' || failure.code === 'code'
-            ? { formula: text, formulaKind: failure.code }
-            : {}),
-        });
-        const status = ['too_long', 'unparseable', 'data_refused'].includes(failure.code)
-          ? failure.code
-          : 'error';
-        trackEvent('agent_data_parsed', { status, size_bucket: bucket });
-        if (PASTE_GUARDRAIL_REASONS.has(failure.code)) {
-          trackEvent('agent_guardrail_block', { reason: failure.code });
+        if (failure.code === 'data_request' && text.trim().length <= MAX_MESSAGE_CHARS) {
+          // A request for data holds no table: the chat answers it, with no offer to click first.
+          request = text.trim();
+          safeDispatch({ type: 'data_requested', text: request });
+          trackEvent('agent_data_parsed', { status: 'data_request', size_bucket: bucket });
+        } else {
+          // A formula or code is refused so that the chat computes or runs it (`sendFormula`).
+          safeDispatch({
+            type: 'parse_failed',
+            failure,
+            ...(failure.code === 'formula' || failure.code === 'code'
+              ? { formula: text, formulaKind: failure.code }
+              : {}),
+          });
+          const status = ['too_long', 'unparseable', 'data_refused'].includes(failure.code)
+            ? failure.code
+            : 'error';
+          trackEvent('agent_data_parsed', { status, size_bucket: bucket });
+          if (PASTE_GUARDRAIL_REASONS.has(failure.code)) {
+            trackEvent('agent_guardrail_block', { reason: failure.code });
+          }
         }
       } finally {
         parseRef.current = false;
       }
+      // The request becomes the user's message, as if typed into the chat.
+      if (request !== null && mounted.current) await runTurn({ text: request });
       // The assistant describes the stored data first thing, so the user can
       // correct it in words before confirming it.
       if (stored && mounted.current) await runTurn({ action: 'summarize_data' });
@@ -2127,6 +2180,7 @@ export function useAgentSession({
     confirmData,
     undoData,
     createPlot,
+    plotTurn,
     sendMessage,
     stop,
     switchLibrary,

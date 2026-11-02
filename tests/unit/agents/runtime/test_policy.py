@@ -447,8 +447,9 @@ class TestOtherInstructions:
         # 15 since 2026-10-14: a data-generating snippet (in scope) and code that reaches the system (an attack);
         # 18 the same day: data code that reads a URL (needs_data), the live Chart.js request (other_library) and
         # its neighbour, another chart in another library (out_of_scope); 19 since 2026-10-29: a question about R
-        # code (in scope), since the session's code can be any served library's.
-        assert 6 <= len(examples) <= 19
+        # code (in scope), since the session's code can be any served library's; 20 since 2026-11-01: a request for
+        # example data in one word (in scope), which the data panel sends to the chat.
+        assert 6 <= len(examples) <= 20
         assert {verdict for _, verdict in examples} == {
             "in_scope",
             "out_of_scope",
@@ -456,6 +457,15 @@ class TestOtherInstructions:
             "attack",
             "other_library",
         }
+
+    def test_example_data_is_in_scope_and_only_real_figures_need_data(self) -> None:
+        """Owner request of 2026-11-01: "Beispieldaten" in the data field goes to the chat, where the root makes it up."""
+        rubric = policy.scope_rubric()
+        examples = dict(re.findall(r"^\| (.+) \| `(\w+)` \|$", rubric, flags=re.MULTILINE))
+
+        assert examples["Beispieldaten"] == "in_scope"
+        assert "A request for made-up example, sample, test or random data to try the plot" in rubric
+        assert "It is `needs_data` only when it wants figures of the real world" in rubric
 
     def test_url_reading_data_code_needs_data_and_only_system_access_is_an_attack(self) -> None:
         """Live test of 2026-10-14: `pd.read_csv(urlopen(...))` was an `attack` and a strike toward the day's lockout."""
@@ -689,7 +699,7 @@ class TestSessionLanguage:
         root = policy.root_instruction()
 
         assert "- `set_language(language, applies_to)`: sets the language of your replies" in root
-        assert 'call `set_language` with that language and `applies_to` `"plot"`, alone, before any other tool' in root
+        assert 'call `set_language` with that language and `applies_to` `"plot"` before any other tool' in root
         # Live test of 2026-11-01: "Make the title German" turned the replies German too; `plot` keeps them.
         assert "your replies stay in the session language" in root
         assert 'When the user asks for your replies in another language ("answer in French")' in root
@@ -699,7 +709,6 @@ class TestSessionLanguage:
         assert '"make the title German"' in root
         # A rewrite only when the shown plot's text is in another language, whatever the plot language was.
         assert "When its result says `plot_outdated` is `true`, the latest plot's text is in another language" in root
-        assert '"Write the title, axis titles, legend entries and annotations in the plot language;' in root
         assert "When `plot_outdated` is `false` and this library already has a plot, the plot is already" in root
         assert "`changed` says only whether the session language, the one of your replies, changed" in root
         assert "`set_language` answers `run_active` while a plot run is in progress" in root
@@ -707,6 +716,27 @@ class TestSessionLanguage:
         assert '("labels in English", "Beschriftung auf Deutsch") is not a translation' in root
         # The change request to the adapter stays internal, in English.
         assert "a short English description of the change" in root
+
+    def test_a_combined_message_keeps_every_part_after_set_language(self) -> None:
+        """User test of 2026-11-01: "make the title German and use a log scale" lost the log scale. The root followed
+        `set_language` with a fixed rewrite request ending "change nothing else"; the rewrite is the server's now."""
+        root = policy.root_instruction()
+
+        assert "change nothing else" not in root
+        assert "Write the title, axis titles, legend entries and annotations in the plot language" not in root
+        assert "go into the one `plot_pipeline` call of the turn" in root
+        assert "the server has the plot's text rewritten in the plot language by itself" in root
+        assert "`change_request` holds only the message's other changes and stays out when it asks for none" in root
+        assert "call `plot_pipeline` only for the message's other changes" in root
+        assert "a message that also asks for something about the plot is the first plot's request" in root
+        # Every part of a combined message, a theme only as `theme` (a live run wrote dark colours over the tokens).
+        assert 'A message that asks for several changes ("make it dark and add a grid"' in root
+        assert "a theme only into `theme`" in root
+        # Only an in-scope part: a message with an out-of-scope part stays refused as a whole.
+        assert "an in-scope part that cannot be done gets one sentence that says so" in root
+        assert "a message with an out-of-scope part is refused as a whole" in root
+        assert "A theme asked for together with another change is a change" in root
+        assert "with only a language besides, `change_request` stays out" in root
 
     def test_the_adapter_writes_the_plot_text_in_the_plot_language(self) -> None:
         adapter = policy.adapter_instruction("matplotlib")

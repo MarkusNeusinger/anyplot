@@ -578,7 +578,8 @@ class TestJudge:
         call = client.calls[0]
         assert call["max_tokens"] == TRANSCRIBE_MAX_OUTPUT_TOKENS and call["thinking"] == {"type": "disabled"}
         schema = call["output_config"]["format"]["schema"]
-        assert set(schema["properties"]) == {"columns", "rows", "note"} and schema["additionalProperties"] is False
+        assert set(schema["properties"]) == {"columns", "rows", "note", "asks_for_data"}
+        assert schema["additionalProperties"] is False and not reading.table.asks_for_data  # left out: no data request
         assert call["system"] == "# Table transcriber" and "tools" not in call
 
     async def test_gemini_judge_transcribes_under_the_response_schema(self) -> None:

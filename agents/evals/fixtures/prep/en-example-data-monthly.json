@@ -1,0 +1,7 @@
+{
+  "message": "Make up some example data for this plot: 24 monthly values.",
+  "expected_operations": [{"op": "run_data_code", "rows": 24, "columns": 2}],
+  "locale": "en",
+  "spec_id": "line-timeseries",
+  "tags": ["run_data_code", "example_data", "no_dataset"]
+}

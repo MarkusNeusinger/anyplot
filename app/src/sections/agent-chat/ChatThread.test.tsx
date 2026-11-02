@@ -100,7 +100,7 @@ describe('ChatThread', () => {
     expect(screen.getByText('# stopped')).toBeInTheDocument();
   });
 
-  it("says in plain words that the user's other windows hold their three runs", () => {
+  it("says in plain words that the user's other windows hold their runs, without a number of its own", () => {
     renderThread({
       ...initialAgentState('matplotlib'),
       phase: 'ready',
@@ -109,9 +109,36 @@ describe('ChatThread', () => {
     });
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent('error · run_limit · ref r-lim');
+    // The cap is the caller's own (3, or 5 for an admin), so the sentence names none.
     expect(alert).toHaveTextContent(
-      'you already have 3 plots or data runs in progress in other windows; wait until one finishes, then try again'
+      'your plots and data runs in other windows already fill your share; wait until one finishes, then try again'
     );
+  });
+
+  it('reads a run the model service refused for its quota as busy, not as a fault', () => {
+    renderThread({
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      items: [
+        {
+          id: 1,
+          kind: 'plot_failed',
+          result: {
+            status: 'failed',
+            reason: 'busy',
+            attempts: 1,
+            artifacts: [],
+            changes: [],
+            residual_defects: [],
+            version: null,
+          },
+        },
+      ],
+    });
+    expect(
+      screen.getByText(/the model service is busy; try again in a minute/)
+    ).toBeInTheDocument();
   });
 
   it('names this window, not the others, for a run_active turn', () => {

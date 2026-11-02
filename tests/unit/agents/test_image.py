@@ -517,7 +517,8 @@ class TestCloudBuild:
                 "matplotlib,seaborn,plotnine,altair,pygal,letsplot,plotly,bokeh,ggplot2,makie,chartjs,d3,echarts,"
                 "highcharts,muix"
             ),
-            "_MIN_INSTANCES": "0",
+            # One warm instance since 2026-11-02 (owner): the unused Compute Flexible commitment absorbs it.
+            "_MIN_INSTANCES": "1",
             "_SMOKE_AUTH": "true",
         }
         deployed = _config(CLOUDBUILD)["substitutions"]["_LIBRARIES"].split(",")
@@ -550,7 +551,8 @@ class TestCloudBuild:
             "--memory=2Gi",
             "--min-instances=${_MIN_INSTANCES}",
             "--max-instances=1",
-            "--concurrency=20",
+            # The queue's 60 waiting streams and 5 runs, plus the other routes (2026-11-01)
+            "--concurrency=80",
             "--timeout=1200",
             "TRAFFIC=(--no-traffic)",
             "--tag=candidate",

@@ -109,8 +109,13 @@ export interface AgentStatus {
   provider?: string;
   waiting?: number;
   in_flight?: number;
-  /** `AGENT_USER_MAX_RUNS`: one user's sandbox runs queued or running at once; absent from an older server. */
+  /**
+   * The caller's own cap of sandbox runs queued or running at once: `AGENT_USER_MAX_RUNS`, or
+   * `AGENT_ADMIN_USER_MAX_RUNS` for an admin; absent from an older server.
+   */
   user_max_runs?: number;
+  /** The tier the agents service served the request as (`X-Anyplot-Tier`); absent from an older server. */
+  tier?: 'admin' | 'public';
   enabled: boolean;
 }
 
@@ -954,7 +959,9 @@ export const agentApi = {
    * Text that asks for a formula (`sin(x) von -pi bis pi`) answers `422 formula` and
    * stores nothing: the chat's `generate_data` computes such a table. Code that
    * generates data (Python, JavaScript, R) answers `422 code` the same way: the
-   * chat's `run_data_code` runs it.
+   * chat's `run_data_code` runs it. Text that asks for data instead of holding
+   * it ("Beispieldaten") answers `422 data_request`: the hook sends it to the
+   * chat as the user's turn, where the assistant generates example data.
    * `source` is the name of the file the text was read from (a drop, `.open()`,
    * a pasted file): it travels beside the text, which stays as in the file; the
    * server screens it and answers it as `file_name`, never as a note.
@@ -1201,7 +1208,7 @@ export type PipelineStep = (typeof PIPELINE_STEPS)[number];
 
 export const STREAM_ERROR_CODES = [
   'capacity',
-  // The user already has `AGENT_USER_MAX_RUNS` (3) sandbox runs queued or running in other windows.
+  // The user already has their cap of sandbox runs (`user_max_runs`) queued or running in other windows.
   'run_limit',
   'deadline',
   'guard_unavailable',

@@ -8,18 +8,18 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 
 | Route | Body | Result | Errors |
 |---|---|---|---|
-| `GET /v1/status` | | `{libraries, model, location, version, provider, waiting, in_flight, user_max_runs}` (`user_max_runs`: `AGENT_USER_MAX_RUNS`) | |
+| `GET /v1/status` | | `{libraries, model, location, version, provider, waiting, in_flight, user_max_runs, tier}` (`waiting` and `in_flight`: every lane of the run queue; `user_max_runs`: the caller's own cap, `AGENT_USER_MAX_RUNS` or, for an admin, `AGENT_ADMIN_USER_MAX_RUNS`; `tier`: `admin` or `public`, as the request was served) | |
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot, source?}` (`source`: `fanout` for a session the admin's "plot in all libraries" opens; its telemetry lines carry that source) | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn, a theme toggle or another paste in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `422 code` (a program that generates data, which the chat's `run_data_code` runs), `422 data_request` (text of at most 2,000 characters that asks for data instead of holding it, such as "Beispieldaten": found by `data/classify.py` before any model, or by the transcriber's `asks_for_data`; the page sends it to the chat, where the root generates example data), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn, a theme toggle or another paste in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
 | `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings, dropped}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), every value with the precision it came with, the sheet read and at most 10 visible ones with cells (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`, `utc_timestamps`, `renamed_columns`), `dropped` the names of the columns left out; nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex` (also a reader that died without its `status.json`), `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the daily token budgets), `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, one without `/convert`, or a sandbox without the harness's required exec filter) |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source, suggestion?}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides; `suggestion`, when the session has data, the `.to_long()` offer (or null) with its new column names in that language | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
 | `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
-| `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (version 1) plus `confirmed: true`, `complete`, `missing_roles` and `copied_from` (the source's version number): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`), `503 capacity` |
+| `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (version 1) plus `confirmed: true`, `complete`, `missing_roles` and `copied_from` (the source's version number): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`; never for an admin), `503 capacity` |
 | `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, `summarize_data`); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
@@ -36,6 +36,18 @@ already verified it and replaced the signature) and requires its `aud` in
 `X-Serverless-Authorization` whenever that header is present, because Cloud Run then
 checks only that one and passes `Authorization` through unverified.
 
+`X-Anyplot-Tier: admin` puts the request in the admin tier (owner decision of 2026-11-01):
+its sandbox runs go into the run queue's admin lane, which shares the instance's
+concurrency and start rate with everyone's and allows five runs per admin
+(`AGENT_ADMIN_USER_MAX_RUNS`), and it is exempt from the per-user day caps and the chat
+turns' minute (`plugins/ledger.py`); the global day budget binds it like everyone. The BFF sets the
+header from the identity its admin gate verified, and only an allowed caller gets past the
+caller check, so nobody else can claim the tier. A missing or other value is the public
+tier, never an error: a BFF deployed before the header keeps today's limits for everyone.
+A header, not the `adm_` prefix of the user id: the id stays opaque, the tier stays one
+explicit assertion in one place of the BFF (`agent_context`), and a later tier (`premium`)
+needs no new id format.
+
 A `/messages` turn starts at once: the stream sends `ready` and the run begins, so a
 plain answer, a refusal, `prepare_data` or `generate_data` never waits (owner decision
 of 2026-10-14). Only sandbox work goes through the run queue (`anyplot/run_queue.py`):
@@ -51,7 +63,8 @@ browser window, and a user's windows work in parallel. A session runs one thing 
 a second turn while its turn runs is `409 run_active`, and a paste in flight blocks the
 session's turns, its theme toggle and its data routes; the user's other sessions never block
 it. What the sessions of one user share is the run queue: a user may have at most
-`AGENT_USER_MAX_RUNS` sandbox runs queued or running at the same time, across sessions, and the
+`AGENT_USER_MAX_RUNS` sandbox runs (an admin `AGENT_ADMIN_USER_MAX_RUNS`) queued or running at
+the same time, across sessions, and the
 turn whose sandbox run would be one more ends with `error{code:"run_limit"}` (`TurnSlot`),
 before the queue's length is looked at. The per-user rate limits and daily budgets stay per
 user.
@@ -62,7 +75,9 @@ refusal right after `ready`: `locked_out` for a user past the day's `attack` str
 `session_closed` in a session the scope judge closed (`AGENT_SESSION_REFUSALS`
 refusals of type `out_of_scope` or `attack`), and `rate_limited` or `daily_limit` past
 the user's message limits (`AGENT_USER_MESSAGES_PER_MINUTE`,
-`AGENT_USER_MESSAGES_PER_DAY`, counted in the usage book; actions count too).
+`AGENT_USER_MESSAGES_PER_DAY`, counted in the usage book; actions count too). An admin is
+exempt from the user's daily token budget and both message limits; the strikes, the global
+budget and a closed session bind every tier.
 
 The theme toggle (`/versions/{version}/render`) renders the other theme of a finished
 version outside the queue, because it costs no tokens, but behind waiting pipeline
@@ -136,7 +151,7 @@ from starlette.background import BackgroundTask
 from agents.anyplot import agent as agent_module
 from agents.anyplot import telemetry
 from agents.anyplot.data.bindings import check_bindings, label_siblings
-from agents.anyplot.data.classify import classify_paste
+from agents.anyplot.data.classify import classify_paste, request_for_chat
 from agents.anyplot.data.parse import (
     MAX_COMPUTED_BYTES,
     MAX_INPUT_BYTES,
@@ -171,7 +186,7 @@ from agents.anyplot.language import (
     pasted_language,
     refusal_lang,
 )
-from agents.anyplot.models import JudgeFailure, JudgeUnavailable
+from agents.anyplot.models import JudgeFailure, JudgeUnavailable, model_busy
 from agents.anyplot.opening import (
     INSTRUCTION_LIKE,
     MAX_SOURCE_RAW_CHARS,
@@ -192,6 +207,7 @@ from agents.anyplot.plugins.ledger import (
     ATTRIBUTION_LOGGER,
     CURRENT_LEDGER,
     RequestLedger,
+    Tier,
     attribution,
     budget_allows,
     judge_budget_tokens,
@@ -205,6 +221,7 @@ from agents.anyplot.render.store import RenderStoreFull
 from agents.anyplot.render.watermark import add_footer
 from agents.anyplot.run_queue import (
     HEARTBEAT_S,
+    Lane,
     QueueFull,
     QueuePosition,
     QueueTimeout,
@@ -465,6 +482,10 @@ class RunDeadline:
 StreamNote = tuple[Literal["queued"], QueuePosition] | tuple[Literal["event"], Event] | tuple[Literal["end"], None]
 """What the stream's outbox carries: a queue position of a waiting sandbox run, an ADK event, or the run's end."""
 
+TIER_LANES: dict[Tier, Lane] = {"admin": "admin", "public": "normal"}
+"""The run queue's lane of each tier (`run_queue.py`): an admin's runs share the concurrency and the rate with
+everyone's and have a per-user cap of their own."""
+
 
 @dataclass
 class TurnSlot:
@@ -475,12 +496,14 @@ class TurnSlot:
     window and the run slot), pauses the deadline while the entry waits, puts every
     position into the stream's outbox as it changes (the stream sends it as
     `status{step:"queued"}`), and resumes the deadline with the time it had left when the entry starts.
-    A later call in the same turn answers at once: one start per turn. A full queue or
+    A later call in the same turn answers at once: one start per turn. The entry goes into
+    the lane of the turn's tier (`TIER_LANES`), and its position at submit and its wait go into
+    the ledger for the run's usage telemetry (`RequestLedger.queue_position`, `queue_wait_s`). A full queue or
     an expired wait fails the turn with `capacity` and aborts the run, so the stream ends
     with `error{code:"capacity"}` and the root spends no further call; a user who already
-    holds `AGENT_USER_MAX_RUNS` entries in other sessions fails it the same way with
-    `run_limit` (`QueueUserLimit`); a cancelled wait ends the run like any cancel. The entry
-    is released with the turn (`Runtime.finish`).
+    holds their lane's cap of entries (`AGENT_USER_MAX_RUNS`, `AGENT_ADMIN_USER_MAX_RUNS`) in
+    other sessions fails it the same way with `run_limit` (`QueueUserLimit`); a cancelled
+    wait ends the run like any cancel. The entry is released with the turn (`Runtime.finish`).
     """
 
     runtime: "Runtime"
@@ -499,15 +522,16 @@ class TurnSlot:
         # start already swept (`_active`); this catches a run that went stale during this turn's root call.
         self.runtime.drop_stale(get_settings())
         queue = self.runtime.run_queue()
+        lane = TIER_LANES[self.ledger.tier]
         try:
-            ticket = queue.submit(self.run.user, self.session_id)
+            ticket = queue.submit(self.run.user, self.session_id, lane)
         except QueueUserLimit:  # the user's runs in their other sessions fill their share: not `capacity`
-            attribution("queue", self.ledger, verdict="run_limit", waited_s=0.0)
+            attribution("queue", self.ledger, verdict="run_limit", waited_s=0.0, lane=lane)
             self._fail("run_limit")
             return False
         except QueueFull:
             logger.info("run queue full (ref %s): %d waiting", self.ledger.request_id, queue.waiting_count)
-            attribution("queue", self.ledger, verdict="full", waited_s=0.0)
+            attribution("queue", self.ledger, verdict="full", waited_s=0.0, lane=lane)
             self._fail("capacity")
             return False
         self.run.ticket = ticket
@@ -524,7 +548,10 @@ class TurnSlot:
             outcome = "expired"
         except QueueWithdrawn:  # cancelled or purged while it waited: nothing to report
             outcome = "withdrawn"
-        attribution("queue", self.ledger, verdict=outcome, waited_s=round(self.runtime.now() - ticket.enqueued_at, 1))
+        waited_s = round(self.runtime.now() - ticket.enqueued_at, 1)
+        attribution("queue", self.ledger, verdict=outcome, waited_s=waited_s, lane=lane)
+        if ticket.waited_s is not None:  # it started: what the run's telemetry line reports, never who waited
+            self.ledger.queue_position, self.ledger.queue_wait_s = ticket.submitted_position, ticket.waited_s
         if outcome == "expired":
             self._fail("capacity")
         if outcome != "started":
@@ -729,6 +756,17 @@ def require_user(x_anyplot_user: Annotated[str | None, Header()] = None) -> str:
     return x_anyplot_user
 
 
+def caller_tier(x_anyplot_tier: Annotated[str | None, Header()] = None) -> Tier:
+    """The caller's tier as the BFF asserts it: `admin` only for exactly `X-Anyplot-Tier: admin`, else `public`.
+
+    Trusted because only an allowed caller reaches a `/v1` route (`check_caller`); the browser never talks to this
+    service, and the BFF sets the header from the identity its admin gate verified, never from a request field.
+    A missing or unknown value is `public`, never an error, so a BFF deployed before the header keeps every user
+    in the public lane.
+    """
+    return "admin" if x_anyplot_tier == "admin" else "public"
+
+
 def request_id(x_request_id: Annotated[str | None, Header()] = None) -> str:
     if x_request_id and re.fullmatch(r"^[A-Za-z0-9-]{1,64}$", x_request_id):
         return x_request_id
@@ -736,6 +774,7 @@ def request_id(x_request_id: Annotated[str | None, Header()] = None) -> str:
 
 
 User = Annotated[str, Depends(require_user)]
+CallerTier = Annotated[Tier, Depends(caller_tier)]
 RequestId = Annotated[str, Depends(request_id)]
 SessionId = Annotated[str, Path(pattern=SESSION_PATTERN)]
 RuntimeDep = Annotated[Runtime, Depends(get_runtime)]
@@ -837,10 +876,12 @@ def _stamp(ledger: RequestLedger, view: SessionView | None, session: Session) ->
 
 
 @app.get("/v1/status", dependencies=v1_dependencies)
-async def status(runtime: RuntimeDep) -> dict[str, Any]:
-    """The service's configuration, plus the run queue: `waiting` entries and runs `in_flight`.
+async def status(runtime: RuntimeDep, tier: CallerTier) -> dict[str, Any]:
+    """The service's configuration, plus the run queue: `waiting` entries and runs `in_flight`, in every lane.
 
-    `user_max_runs` is `AGENT_USER_MAX_RUNS`, which the admin chat's fan-out over every library keeps to.
+    `user_max_runs` is the caller's own cap in their tier's lane (`AGENT_USER_MAX_RUNS`, or
+    `AGENT_ADMIN_USER_MAX_RUNS` for an admin), which the admin chat's fan-out over every library keeps to; `tier` is
+    the tier the request was served as.
     """
     settings = get_settings()
     queue = runtime.run_queue()
@@ -853,7 +894,8 @@ async def status(runtime: RuntimeDep) -> dict[str, Any]:
         "version": _version(),
         "waiting": queue.waiting_count,
         "in_flight": queue.in_flight,
-        "user_max_runs": settings.user_max_runs,
+        "user_max_runs": queue.user_cap(TIER_LANES[tier]),
+        "tier": tier,
     }
 
 
@@ -978,7 +1020,7 @@ async def switch_library(sid: SessionId, body: SwitchLibraryBody, user: User, ru
 
 @app.post("/v1/sessions/{sid}/dataset", dependencies=v1_dependencies)
 async def upload_dataset(
-    sid: SessionId, body: DatasetBody, user: User, runtime: RuntimeDep, rid: RequestId
+    sid: SessionId, body: DatasetBody, user: User, tier: CallerTier, runtime: RuntimeDep, rid: RequestId
 ) -> JSONResponse:
     services = get_services()
     settings = get_settings()
@@ -990,7 +1032,9 @@ async def upload_dataset(
     view = read_session(session.state)
     if view is None:
         raise AgentsError(404, "session_expired")
-    ledger = _stamp(RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action"), view, session)
+    ledger = _stamp(
+        RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action", tier=tier), view, session
+    )
     size = len(body.text.encode("utf-8", errors="surrogatepass"))
     facts = telemetry.InputFacts.for_paste(sid, size=size, source=body.source is not None, confirmed=body.confirmed)
     clock = telemetry.Clock()
@@ -1002,7 +1046,7 @@ async def upload_dataset(
         # of another session slips in between and the counts never overshoot. The daily token budget is checked here,
         # before the judges, and booked after each judge call: pastes in several sessions at once can overshoot it
         # by the judge calls they have in flight, a few thousand tokens each.
-        _paste_budget(services, user, settings)
+        _paste_budget(services, user, settings, tier)
         limit = services.usage.paste_limit(user, settings)
         if limit is not None:
             attribution("paste_limit", ledger, verdict=limit)
@@ -1033,7 +1077,7 @@ raised, the guard refused an operation) is `file_unreadable`."""
 
 @app.post("/v1/sessions/{sid}/dataset/convert", dependencies=v1_dependencies)
 async def convert_dataset_file(
-    sid: SessionId, body: ConvertBody, user: User, runtime: RuntimeDep, rid: RequestId
+    sid: SessionId, body: ConvertBody, user: User, tier: CallerTier, runtime: RuntimeDep, rid: RequestId
 ) -> JSONResponse:
     """A dropped binary data file read in the renderer's sandbox into the text the paste box takes.
 
@@ -1066,7 +1110,9 @@ async def convert_dataset_file(
     if not data:
         raise AgentsError(422, "invalid")
     ledger = _stamp(
-        RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action"), read_session(session.state), session
+        RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action", tier=tier),
+        read_session(session.state),
+        session,
     )
     clock = telemetry.Clock()
     try:
@@ -1091,7 +1137,7 @@ async def _convert(
     `data_input` line of a refusal raised here, this function the one of a file the converter refused."""
     if len(data) > MAX_CONVERT_INPUT_BYTES:
         raise AgentsError(413, "too_long")
-    _paste_budget(services, user, settings)
+    _paste_budget(services, user, settings, ledger.tier)
     limit = services.usage.convert_limit(user, settings)
     if limit is not None:
         attribution("convert_limit", ledger, verdict=limit)
@@ -1182,9 +1228,10 @@ async def _convert(
     return JSONResponse(status_code=422, content=content, headers=_NO_STORE)
 
 
-def _paste_budget(services: Services, user: str, settings: AgentSettings) -> None:
-    """`429 locked_out` past the day's `attack` strikes, `429 daily_limit` past the daily token budgets."""
-    if services.usage.daily_ok(user, settings):
+def _paste_budget(services: Services, user: str, settings: AgentSettings, tier: Tier) -> None:
+    """`429 locked_out` past the day's `attack` strikes, `429 daily_limit` past the daily token budgets (the global
+    one only, for an admin)."""
+    if services.usage.daily_ok(user, settings, tier=tier):
         return
     raise AgentsError(429, LOCKED_OUT if services.usage.locked_out(user, settings) else "daily_limit")
 
@@ -1204,7 +1251,7 @@ async def _ingest_paste(
     `facts` collects the paste's content-free facts for its `data_input` telemetry line, which the route writes.
     """
     if not body.confirmed:  # a confirmed transcription is the service's own CSV
-        _refuse_code_or_formula(ledger, body.text)
+        _refuse_for_chat(ledger, body.text)
     try:
         # A confirmed transcription is the service's own CSV, which the user has seen row by row: no row is left out.
         # A dropped `.jsonl` or `.ndjson` file is JSON Lines by its name, so a file of one record is one row.
@@ -1395,19 +1442,22 @@ async def _screen_notes(
     return parsed, answer.lang
 
 
-def _refuse_code_or_formula(ledger: RequestLedger, text: str) -> None:
-    """`422 code` or `422 formula` for pasted text that is a program or asks for a formula, before any parser or
-    model reads it (`data/classify.py`).
+def _refuse_for_chat(ledger: RequestLedger, text: str) -> None:
+    """`422 code`, `422 data_request` or `422 formula` for pasted text that is a program, asks for data or asks for a
+    formula, before any parser or model reads it (`data/classify.py`).
 
     A snippet such as `np.linspace(0, 10, 100)` would parse as a one-row table, and the
     transcriber would compute a formula's rows, which is the one thing no model may do:
     code is the root's `run_data_code` and a formula its `generate_data`, asked for in
-    the chat, where the server computes the table. A formula is refused only within the
-    chat's cap (`MAX_MESSAGE_CHARS`), because the page's offer sends the refused text to
-    the chat as a turn; longer text goes on to the transcriber, whose rubric computes
-    nothing. Code is refused at any length, because it is never a table; the page asks
-    to shorten what the chat cannot take. Writes a `data_transcribe` attribution line
-    with the outcome `code` or `formula` (no text, no tokens).
+    the chat, where the server computes the table. A request for example data
+    ("Beispieldaten") holds no table: the page sends it to the chat as the user's turn,
+    where the root's `run_data_code` runs the code it writes for it. A formula or a data
+    request is refused only within the chat's cap (`MAX_MESSAGE_CHARS`), because the
+    page sends the refused text to the chat as a turn; a longer formula goes on to the
+    transcriber, whose rubric computes nothing. Code is refused at any length, because it
+    is never a table; the page asks to shorten what the chat cannot take. Writes a
+    `data_transcribe` attribution line with the outcome `code`, `data_request` or
+    `formula` (no text, no tokens); none of them counts as a paste.
     """
     kind = classify_paste(text)
     if kind is not None:
@@ -1438,8 +1488,14 @@ async def _transcribe(
     confirms the preview, and the confirmation posts that CSV through the ordinary path
     (parse, pre-filter, judge, store). The model reads the raw text, so the pre-filter runs
     on it first; its answer is bound to `TranscribedTable`, then parsed like any paste, so
-    a reading that is no table (one column of prose) is `422 unparseable` here too. The
-    call books its tokens like a judge call and writes a `data_transcribe` attribution line.
+    a reading that is no table (one column of prose) is `422 unparseable` here too. Text
+    the transcriber says asks for data (`asks_for_data`: "monthly sales for 4 regions", a
+    request in a language `classify._REQUEST` does not read) is `422 data_request`, which
+    the page sends to the chat, when the chat takes it and the transcriber found no table
+    in it or it holds no values of its own (`classify.request_for_chat`); whatever table
+    came with that answer is not the text's and is dropped. A table read from text with
+    values of its own stays a transcription for the user to check, the flag or not. The call books its tokens like a judge call and writes a
+    `data_transcribe` attribution line.
     """
     user = ledger.user_id
     facts.format = "transcribed"  # free text the transcriber reads: the input's format, whatever it parsed as
@@ -1466,6 +1522,10 @@ async def _transcribe(
         user,
         judge_budget_tokens(reading.tokens, reading.input_tokens, reading.output_tokens, get_settings().judge_model),
     )
+    if reading.table.asks_for_data and request_for_chat(text, without_table=reading.table.columns == ["text"]):
+        facts.cause = "transcribed_data_request"
+        attribution("data_transcribe", ledger, outcome="data_request", judge_tokens=reading.tokens)
+        raise AgentsError(422, "data_request")
     csv_text = table_to_csv(reading.table)
     try:
         parsed = parse_dataset(csv_text, find_table=False)
@@ -1724,7 +1784,7 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
 
 @app.post("/v1/sessions/{sid}/dataset/copy", dependencies=v1_dependencies)
 async def copy_dataset(
-    sid: SessionId, body: CopyDatasetBody, user: User, runtime: RuntimeDep, rid: RequestId
+    sid: SessionId, body: CopyDatasetBody, user: User, tier: CallerTier, runtime: RuntimeDep, rid: RequestId
 ) -> JSONResponse:
     """The admin fan-out's copy: the confirmed current data version of `from_session` becomes this session's data.
 
@@ -1740,7 +1800,8 @@ async def copy_dataset(
 
     The copy is the stored version as it is (`DatasetStore.copy`): the same canonical CSV, dtypes, column order,
     notes, file name, source and code, nothing parsed or judged again, so it costs no model call and counts as no
-    paste; its own counter (`COPIES_PER_MINUTE`, `_PER_DAY`) bounds what one user puts in the store. The bindings,
+    paste; its own counter (`COPIES_PER_MINUTE`, `_PER_DAY`) bounds what one user puts in the store, except for an
+    admin, whose fan-outs in several windows copy more at once and whom only the store's byte cap bounds. The bindings,
     their confirmation, the session language and the plot language come along. The copy is the target's version 1
     with no undo history, and `DATASET_COPIED_FROM` records the source's version number. The answer is the paste route's
     dataset shape plus `confirmed`, `complete`, `missing_roles` and `copied_from`. The `dataset_copy` attribution
@@ -1771,8 +1832,10 @@ async def copy_dataset(
     check = check_bindings(origin.bindings, roles, stored.profile)
     if check.errors:
         raise AgentsError(422, "invalid")
-    ledger = _stamp(RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action"), view, session)
-    limit = services.usage.copy_limit(user)
+    ledger = _stamp(
+        RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action", tier=tier), view, session
+    )
+    limit = services.usage.copy_limit(user, tier)  # never a limit for an admin; the store's byte cap still binds
     if limit is not None:
         attribution("dataset_copy", ledger, outcome=limit)
         raise AgentsError(429, limit)
@@ -2000,17 +2063,22 @@ async def _produce(
 
 
 def _error_code(exc: BaseException) -> str:
-    name = type(exc).__name__
-    if "RateLimit" in name or "ResourceExhausted" in name or getattr(exc, "code", None) == 429:
+    if model_busy(exc):  # a model quota or overload after the SDK's retries: busy, like a full queue
         return "capacity"
-    if name == "LlmCallsLimitExceededError":
+    if type(exc).__name__ == "LlmCallsLimitExceededError":
         return "capacity"
     return "internal"
 
 
 @app.post("/v1/sessions/{sid}/messages", dependencies=v1_dependencies)
 async def post_message(
-    sid: SessionId, body: MessageBody, user: User, runtime: RuntimeDep, rid: RequestId, theme: Theme | None = None
+    sid: SessionId,
+    body: MessageBody,
+    user: User,
+    tier: CallerTier,
+    runtime: RuntimeDep,
+    rid: RequestId,
+    theme: Theme | None = None,
 ) -> StreamingResponse:
     """One chat turn as SSE. `theme` is the site theme the page shows, the theme a plot run of the turn renders
     unless the user asked for one (`pipeline.run_theme`). A query parameter, not a body field: the strict bodies of
@@ -2028,6 +2096,7 @@ async def post_message(
         user_id=user,
         session_id=sid,
         kind="action" if body.action else "text",
+        tier=tier,
         # The refusals sent before the judge (the budget, unsupported content) follow the
         # session language, never the browser's locale; after the judge, the message's.
         lang=refusal_lang(view.language) if view else DEFAULT_LANGUAGE,
@@ -2051,6 +2120,7 @@ async def post_message(
     # - daily pipeline runs: checked and counted in one step (`BudgetPlugin.before_tool_callback`), no overshoot;
     # - daily data runs: checked before the queue wait and counted after it (`tools/session.run_data_code`), so the
     #   user's runs waiting in other sessions, at most `AGENT_USER_MAX_RUNS` - 1, can overshoot it by as many.
+    # An admin is exempt from all but the strikes and the global budget (`plugins/ledger.py`, the ledger's tier).
     refused = scope_refusals(session.events)
     if refused >= settings.session_refusals:
         return _refuse_now(translator, ledger, facts, SESSION_CLOSED, "session_closed", refusals=refused)
@@ -2060,7 +2130,7 @@ async def post_message(
     if not budget_allows(ledger, services.usage, settings):
         # The refusal the root would send, sent now: a user over the daily budget spends nothing.
         return _refuse_now(translator, ledger, facts, "budget", "budget_halt", agent="route")
-    limit = services.usage.message_limit(user, settings)
+    limit = services.usage.message_limit(user, settings, tier)
     if limit is not None:
         return _refuse_now(translator, ledger, facts, limit, "message_limit")
     services.usage.add_message(user)
