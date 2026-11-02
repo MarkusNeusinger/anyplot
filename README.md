@@ -41,8 +41,8 @@ shows the current numbers.
 
 ## What you can do on the site
 
-- **Compare libraries.** Each spec page shows every library's implementation of the same plot, in a light and a dark
-  theme, with its code and its review score.
+- **Compare libraries.** Each spec page shows the available implementations of the same plot, in a light and a dark
+  theme, each with its code and its review score.
 - **Search and filter.** A typo-tolerant search matches spec titles and tag values, and the matches become filters:
   language, library, plot type, data structure, domain, and features, plus implementation tags such as techniques,
   dependencies, and styling.
@@ -81,7 +81,8 @@ plot.
 
 ### Nightly regeneration
 
-`daily-regen.yml` regenerates the catalogue's oldest implementations every night. A regeneration replaces the live
+`daily-regen.yml` regenerates the oldest part of the catalogue every night: by default the oldest spec in every
+library, and since 2026-10-31 the two oldest single implementations instead. A regeneration replaces the live
 implementation only when its review, which scores both versions, finds a fixed defect and no regression (the regen
 gate).
 
@@ -89,7 +90,7 @@ For the labels, retries, and every workflow, see [Workflows](docs/workflows/over
 
 ## Use with my data (agent chat)
 
-> **Status:** experimental, rolling out.
+> **Status:** experimental, rolling out. It isn't open to every visitor yet.
 
 On a plot page, you paste your own data. An agent adapts that plot's catalogue code to your data, renders it in a
 sandbox, reviews the render against the catalogue's rubric, repairs it once if needed, and returns the image and the
