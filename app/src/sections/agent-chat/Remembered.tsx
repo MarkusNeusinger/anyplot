@@ -5,7 +5,9 @@
  * label: 'Zeit (h)'"). The page shows it above the composer, where the next
  * plot is asked for and where the offer after a library switch counts these
  * decisions. Each entry has `.forget()`, which removes it from the memory: the
- * plot itself does not change, the next one no longer takes it over. Editing
+ * plot itself does not change, the next one no longer takes it over;
+ * `.forget_all()` removes every entry, for a blank start. Nothing else clears
+ * the memory: `.start_over()` keeps it (owner decision of 2026-11-02). Editing
  * an entry comes later; until then a change in words goes through the chat.
  *
  * While the memory is empty (or the server has none) nothing shows but a hidden
@@ -41,11 +43,22 @@ export interface RememberedProps {
   disabled: boolean;
   /** Remove one entry; rejects with an `AgentApiError` on failure. */
   onForget: (entryId: string) => Promise<void>;
+  /** Remove every entry, a blank start; rejects with an `AgentApiError` on failure. */
+  onForgetAll?: () => Promise<void>;
   /** Where the focus goes once the last entry is gone with the list. */
   fallbackFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
-export function Remembered({ memory, disabled, onForget, fallbackFocusRef }: RememberedProps) {
+/** The pending marker of `.forget_all()`, which no entry id matches (`m` and digits). */
+const ALL = '*';
+
+export function Remembered({
+  memory,
+  disabled,
+  onForget,
+  onForgetAll,
+  fallbackFocusRef,
+}: RememberedProps) {
   const entries = useMemo(() => memory?.entries ?? [], [memory]);
   const [expanded, setExpanded] = useState(true);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -91,8 +104,10 @@ export function Remembered({ memory, disabled, onForget, fallbackFocusRef }: Rem
     setFailure(null);
     removedAt.current = { id: entryId, index };
     try {
-      await onForget(entryId);
-      if (mounted.current) setAnnouncement(`forgot: ${text}`);
+      if (entryId === ALL) await onForgetAll?.();
+      else await onForget(entryId);
+      if (mounted.current)
+        setAnnouncement(entryId === ALL ? 'forgot every decision' : `forgot: ${text}`);
     } catch (err) {
       removedAt.current = null;
       if (mounted.current) {
@@ -155,6 +170,25 @@ export function Remembered({ memory, disabled, onForget, fallbackFocusRef }: Rem
         >
           {expanded ? '.hide()' : '.show()'}
         </Box>
+        {onForgetAll && (
+          <Box
+            component="button"
+            type="button"
+            onClick={() => void forget(ALL, 0, '')}
+            disabled={(disabled || pendingId !== null) && pendingId !== ALL}
+            aria-disabled={pendingId === ALL || undefined}
+            aria-label="Forget all remembered decisions"
+            title="a blank start: every next plot takes none of them over"
+            sx={{
+              ...actionButtonSx,
+              minHeight: 28,
+              py: 0.25,
+              '&[aria-disabled="true"]': { opacity: 0.45, cursor: 'default' },
+            }}
+          >
+            {pendingId === ALL ? '.forget_all() …' : '.forget_all()'}
+          </Box>
+        )}
       </Box>
       <Box
         component="ul"

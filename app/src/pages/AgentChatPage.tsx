@@ -17,8 +17,9 @@
  * with text the text goes as a turn and the assistant makes the first plot
  * with that change. Once the library has a plot, the composer refines in plain
  * words (`.send()`, on the latest version), and the same button becomes
- * `.start_over()`: a new plot from the catalogue plot with this data, without
- * the earlier changes; every shipped version gets a result card with the image,
+ * `.start_over()`: a new plot from the catalogue plot with this data, the way
+ * out of code that went wrong, which keeps the remembered decisions (owner
+ * decision of 2026-11-02); every shipped version gets a result card with the image,
  * the code and the downloads. A line above the column names the current step. The header
  * carries the library menu (`LibraryChip`, since 2026-11-02 in place of a pill
  * per library: the libraries grouped by language, `all` for the admin) and,
@@ -33,11 +34,13 @@
  * the plot in the new library from its catalogue code, with the decisions the
  * user made so far; picking a library from the menu runs nothing, so browsing
  * costs nothing. `.create_plot()` (or `.start_over()` once the library has a
- * plot) stays beside it as the quiet fresh plot without them, and text typed
- * into the box goes as a normal turn, which the server also gives the
- * decisions. The offer ends once a plot in that library ships, or with a
- * switch whose answer has none. The decisions themselves stand above the
- * composer as the remembered list (`Remembered`), each with `.forget()`.
+ * plot) stays beside it as the quiet plot from the catalogue code, which keeps
+ * the decisions too but not the switch's carry (the theme asked for before),
+ * and text typed into the box goes as a normal turn, which the server also
+ * gives the decisions. The offer ends once a plot in that library ships, or
+ * with a switch whose answer has none. The decisions themselves stand above the
+ * composer as the remembered list (`Remembered`), each with `.forget()`, and
+ * `.forget_all()` for a blank start: nothing else clears them.
  *
  * `.create_plot()` is in the composer as soon as there is data. Before the
  * confirmation it is the quiet button, and a click calls nothing: a notice
@@ -150,10 +153,10 @@ const OPEN_SOURCES = new Set(['plot_page']);
 const COLUMN_MAX_WIDTH = 960;
 /**
  * What `.start_over()` does, unlike `.send()` beside it (the owner could not tell the two apart),
- * and the quiet `.create_plot()` beside the offer after a switch: once the fresh plot ships, the
- * plot memory starts over too.
+ * and the quiet `.create_plot()` beside the offer after a switch: the catalogue code again, with the
+ * remembered decisions, which only the user clears (owner decision of 2026-11-02).
  */
-const START_OVER_HELP = 'new from the catalogue plot, without your changes or remembered decisions';
+const START_OVER_HELP = 'new from the catalogue plot; keeps your remembered decisions';
 const START_OVER_HELP_ID = 'agent-start-over-help';
 
 /** The first of these controls that can take the focus now, in order of preference. */
@@ -882,6 +885,7 @@ function AgentChat({
               memory={state.memory}
               disabled={busy || state.phase !== 'ready'}
               onForget={session.forgetMemory}
+              onForgetAll={session.forgetAllMemory}
               fallbackFocusRef={messageRef}
             />
 
@@ -1026,7 +1030,7 @@ function AgentChat({
                     </Box>
                   )}
                   {/* Step 2 after a plot: start over from the catalogue plot with this data.
-                      Beside the offer: the fresh plot without the decisions. Step 1: the step is
+                      Beside the offer: the plot from the catalogue code, without the carry. Step 1: the step is
                       visible from the foot too, and a click says what comes first instead of
                       calling the server. With `all`, `.plot_all()`. */}
                   {state.dataset && plotAll && plotAllButton}

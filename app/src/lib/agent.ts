@@ -193,6 +193,12 @@ export interface MemoryEntry {
 export interface PlotMemory {
   entries: MemoryEntry[];
   max_entries: number;
+  /**
+   * The memory ever held a decision: from then on its entries alone (also
+   * none) are what a plot in another library takes over, so the offer counts
+   * them. `false` from a server that names none.
+   */
+  written: boolean;
 }
 
 /** An entry id as the BFF takes it in the DELETE path (`MEMORY_ENTRY_ID_PATTERN`). */
@@ -1078,6 +1084,19 @@ export const agentApi = {
     return memory;
   },
   /**
+   * Forget every decision of the plot memory (the remembered list's
+   * `.forget_all()`, a blank start): the answer is the memory after it. Only
+   * the user clears the memory; `.start_over()` keeps it. `409 run_active`
+   * while a turn runs.
+   */
+  forgetAllMemory: async (token: string, sid: string): Promise<PlotMemory> => {
+    const memory = plotMemory(
+      await agentJson<unknown>(`${sessionPath(sid)}/memory`, token, { method: 'DELETE' })
+    );
+    if (!memory) throw new AgentApiError(502, 'upstream');
+    return memory;
+  },
+  /**
    * A stored dataset, or a transcription of free text to confirm first (`isTranscribed`).
    * `confirmed` marks the table the user accepted with `.use()`: the server then never
    * hands the text to its transcriber again (a one-column table would otherwise be read
@@ -1516,6 +1535,7 @@ export function plotMemory(value: unknown): PlotMemory | null {
   return {
     entries,
     max_entries: isInt(max) && max > 0 ? max : DEFAULT_MAX_MEMORY_ENTRIES,
+    written: value.written === true,
   };
 }
 /** A profile's `min` or `max`: a number, a string, or `null` for anything else. */

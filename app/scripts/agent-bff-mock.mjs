@@ -167,9 +167,10 @@
  * plot or a plot older than some decisions. A shipped typed change remembers one decision in the user's words
  * (its kind read from keywords such as "title", "label", "line", "red", "log"; a title, a label, a scale or a
  * colour replaces the one of its kind and axis, a line or a marker is added beside the others, at most 30); a
- * shipped `create_plot` empties the memory; `{action: "carry_plot"}` plots from the catalogue code like
- * `create_plot`, in the theme the user asked for in the library before, keeps the memory and spends the carry.
- * `GET .../memory` lists the entries, `DELETE .../memory/{id}` removes one (`404 not_found`, `409 run_active`).
+ * shipped `create_plot` keeps the memory, which only the user clears; `{action: "carry_plot"}` plots from the
+ * catalogue code like `create_plot`, in the theme the user asked for in the library before, and spends the
+ * carry. `GET .../memory` lists the entries with `written` (the memory ever held one), `DELETE .../memory/{id}`
+ * removes one (`404 not_found`, `409 run_active`) and `DELETE .../memory` forgets all.
  *
  * The data panel's full view (`.view_all()`): `GET .../dataset/data.csv` answers the current version's CSV
  * (`422 no_dataset` without data). A chat message naming a size such as "10000 rows x 30 columns" (also `×` or
@@ -1269,10 +1270,10 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         rounds,
       };
       send('plot', version.result);
-      // The plot memory once the run shipped (`pipeline.settle_memory`): a fresh plot starts it
-      // over, a typed change keeps its decision, and the switch's carry is spent.
-      if (body.action === 'create_plot') session.memory = [];
-      else if (refine) rememberChange(session, text);
+      // The plot memory once the run shipped (`pipeline.settle_memory`): a typed change keeps its
+      // decision, a start over keeps the memory as it is (only the user clears it), and the
+      // switch's carry is spent.
+      if (refine) rememberChange(session, text);
       if (carried) session.carry = null;
       await sleep(STEP_MS / 2);
       const decisions = session.memory.length;
@@ -1353,7 +1354,11 @@ function rememberChange(session, text) {
 }
 
 /** `GET` and `DELETE .../memory`'s answer. */
-const memoryPayload = session => ({ entries: session.memory, max_entries: MAX_MEMORY_ENTRIES });
+const memoryPayload = session => ({
+  entries: session.memory,
+  max_entries: MAX_MEMORY_ENTRIES,
+  written: session.memorySeq > 0,
+});
 
 // ---------------------------------------------------------------- session language
 
@@ -2120,6 +2125,11 @@ async function route(req, res) {
     );
   }
   if (method === 'GET' && rest === '/memory') return json(res, 200, memoryPayload(session), ref);
+  if (method === 'DELETE' && rest === '/memory') {
+    if (session.active) return fail(res, 409, 'run_active', ref);
+    session.memory = [];
+    return json(res, 200, memoryPayload(session), ref);
+  }
   const memoryMatch = rest.match(/^\/memory\/(m[0-9]{1,6})$/);
   if (method === 'DELETE' && memoryMatch) {
     if (session.active) return fail(res, 409, 'run_active', ref);
