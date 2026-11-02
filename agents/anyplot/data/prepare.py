@@ -631,7 +631,7 @@ def _apply(frame: pd.DataFrame, operation: Operation, carried: _Carried) -> tupl
 
 
 def _read(parsed: ParsedDataset) -> pd.DataFrame:
-    """The canonical CSV as the loader reads it; `round_trip` keeps every number's shortest form stable.
+    """The canonical CSV as the loader reads it; pandas' reader keeps every number's shortest form stable.
 
     Only an empty cell is missing (`keep_default_na=False`, as the run form's loader reads
     it): a text category `NA` (Namibia, North America) that the parse kept is a category here too.
@@ -641,7 +641,6 @@ def _read(parsed: ParsedDataset) -> pd.DataFrame:
         dtype=pandas_dtypes(parsed.column_dtypes),
         parse_dates=list(parsed.parse_dates),
         date_format="ISO8601",  # `data.csv` writes ISO dates only: no per-column guess, no "Could not infer" warning
-        float_precision="round_trip",
         keep_default_na=False,
         na_values=[""],
     )
@@ -793,6 +792,35 @@ def _order_open(dates: pd.Series) -> bool:
     return bool(present) and all(value.day <= 12 for value in present) and any(v.day != v.month for v in present)
 
 
+def _decimal_total(values: pd.Series) -> ExactDecimal:
+    """The total of a float column's cells as `data.csv` writes them, added in decimals.
+
+    A float's `repr` is its shortest form, the text the user reads, so this is the sum they
+    would get by hand. Adding the floats themselves leaves the noise of their binary form in
+    a total of decimal numbers, and how much depends on the method: pandas 3.1 dropped its
+    compensated group sum for sorted keys (`4024.2` came back as `4024.2000000000003`), and
+    even an exactly rounded `math.fsum` gives `377.78000000000003` for cells that add up to
+    `377.78`. Such a total would reach `data.csv` and the plot as a value no one wrote.
+    `decimal` keeps 28 significant digits, more than a float holds. Infinities of both signs
+    have no total: the result is then not a number.
+    """
+    try:
+        return sum((ExactDecimal(repr(value)) for value in values.dropna().tolist()), ExactDecimal(0))
+    except InvalidOperation:
+        return ExactDecimal("NaN")
+
+
+def _group_sum(values: pd.Series) -> float:
+    """A float group's total (`_decimal_total`); a group with no value totals 0, as in pandas."""
+    return float(_decimal_total(values))
+
+
+def _group_mean(values: pd.Series) -> float:
+    """A float group's mean from its decimal total; a group with no value has none."""
+    count = values.count()
+    return float(_decimal_total(values) / count) if count else math.nan
+
+
 def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[pd.DataFrame, str]:
     keys = _distinct(op.by)
     for name in [*keys, op.column]:
@@ -827,11 +855,12 @@ def _aggregate(frame: pd.DataFrame, op: Aggregate, carried: _Carried) -> tuple[p
             totals = [sum(int(value) for value in values.dropna()) for _, values in grouped]
             aggregated, rounded = _whole_numbers(totals, grouped.size().index)
         case "sum":
-            aggregated = grouped.sum()
-        case "mean":
+            aggregated = grouped.agg(_group_sum)
+        case "mean" if is_integer_dtype(work[op.column].dtype):
             aggregated = grouped.mean()
-            if is_integer_dtype(work[op.column].dtype):  # a mean is a float: inputs past 2**53 are counted
-                cast = _past_exact(work[op.column])
+            cast = _past_exact(work[op.column])  # a mean is a float: inputs past 2**53 are counted
+        case "mean":
+            aggregated = grouped.agg(_group_mean)
         case "count":
             aggregated = grouped.count()
         case "min":
@@ -1074,9 +1103,9 @@ def _derive(frame: pd.DataFrame, op: Derive, carried: _Carried) -> tuple[pd.Data
             what = f"sum of {', '.join(columns)}"
         case "share":
             if keys:
-                total = values[0].groupby([frame[key] for key in keys], dropna=False).transform("sum")
+                total = values[0].groupby([frame[key] for key in keys], dropna=False).transform(_group_sum)
             else:
-                total = pd.Series(values[0].sum(), index=frame.index)
+                total = pd.Series(_group_sum(values[0]), index=frame.index)
             # A total that overflowed to infinity would give finite shares of 0: no share for its group instead.
             result = values[0] / total.where((total != 0) & np.isfinite(total))
             what = f"share of {columns[0]} in the total" + (f" of each {' and '.join(keys)}" if keys else "")
@@ -1787,7 +1816,7 @@ def _period_starts(series: pd.Series, period: str) -> pd.Series:
     days = pd.Series(series.dt.normalize(), index=series.index)
     if period == "day":
         return days
-    return pd.Series(days - pd.to_timedelta(days.dt.weekday, unit="D"), index=series.index)
+    return pd.Series(days - pd.to_timedelta(days.dt.day_of_week, unit="D"), index=series.index)
 
 
 def _period_labels(series: pd.Series, period: str) -> pd.Series:

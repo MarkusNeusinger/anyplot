@@ -662,6 +662,19 @@ class TestAggregate:
         assert prepared.changes[1] == "summed Umsatz by Datum (month): 3 rows, 2 other columns dropped"
         assert dtypes(prepared) == {"Datum": "text", "Umsatz": "number"}
 
+    @pytest.mark.parametrize(("how", "result"), [("sum", "25.3"), ("mean", "6.325")])
+    def test_a_float_total_adds_up_the_cells_as_they_are_written(self, how: str, result: str) -> None:
+        """Added as floats these cells give 25.299999999999997, a value no one wrote (`_decimal_total`)."""
+        operation = {"op": "aggregate", "by": ["k"], "column": "v", "how": how}
+
+        assert rows(prepare("k,v\na,19.99\na,5.01\na,0.1\na,0.2\n", operation)) == ["k,v", f"a,{result}"]
+
+    @pytest.mark.parametrize(("how", "cell"), [("sum", "0"), ("mean", "")])
+    def test_a_group_without_a_value_totals_zero_and_has_no_mean(self, how: str, cell: str) -> None:
+        operation = {"op": "aggregate", "by": ["k"], "column": "v", "how": how}
+
+        assert rows(prepare("k,v\na,1.5\nb,\n", operation)) == ["k,v", "a,1.5", f"b,{cell}"]
+
     def test_count_names_its_column_count(self) -> None:
         prepared = prepare(SALES, {"op": "aggregate", "by": ["Tier"], "column": "Anteil", "how": "count"})
 
@@ -1260,6 +1273,12 @@ class TestDerive:
 
         assert cells(prepared, 2) == ["0.25", "0.75"]
 
+    @pytest.mark.parametrize("within", [[], ["k"]])
+    def test_a_share_divides_by_the_total_of_the_cells(self, within: list[str]) -> None:
+        prepared = prepare("k,v\na,19.99\na,5.01\na,0.1\na,0.2\n", derive("s", "share", "v", within=within))
+
+        assert cells(prepared, 2) == [repr(value / 25.3) for value in (19.99, 5.01, 0.1, 0.2)]
+
     def test_ratio_and_difference_keep_the_column_order(self) -> None:
         text = "k,a,b\nx,6,3\ny,1,0\nz,,2\n"
         ratio = prepare(text, derive("r", "ratio", "a", "b"))
@@ -1696,7 +1715,7 @@ class TestFidelity:
         text = "k,v,n\n" + "".join(f"{p % 3},{v!r},{n}\n" for p, (v, n) in enumerate(zip(values, whole, strict=True)))
         prepared = prepare(text, {"op": "sort", "column": "k", "descending": True}, {"op": "sort", "column": "k"})
         again = reparse(prepared)
-        frame = pd.read_csv(io.StringIO(again.csv), float_precision="round_trip", dtype={"n": "Int64"})
+        frame = pd.read_csv(io.StringIO(again.csv), dtype={"n": "Int64"})
 
         # The shortest round-trip text, a whole number below 2**53 without `.0` (owner decision of 2026-10-15).
         canonical = [

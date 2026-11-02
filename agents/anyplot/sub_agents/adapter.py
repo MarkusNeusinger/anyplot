@@ -4,7 +4,7 @@ Each adapter has a constant static instruction (`policy.adapter_instruction`: th
 adapter prompt plus the verbatim catalogue sources for its library), so its prompt
 prefix stays cacheable, and it never sees the conversation: `include_contents='none'`
 and the `before_model_callback` keeps only the last content, the fenced
-`AdaptRequest` the pipeline passes as node input. (ADK 2.11 also prepends the
+`AdaptRequest` the pipeline passes as node input. (ADK 2.13 also prepends the
 invocation's user message to a single-turn agent that runs under its own isolation
 scope; the callback removes it, so the adapter reads nothing but the request.)
 

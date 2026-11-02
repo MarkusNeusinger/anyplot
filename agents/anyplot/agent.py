@@ -194,7 +194,7 @@ def with_session_part(system: types.ContentUnion | None, block: str) -> types.Co
 async def add_session_context(callback_context: CallbackContext, llm_request: LlmRequest) -> LlmResponse | None:
     """Append the session block to the root's system instruction, as a part of its own.
 
-    ADK 2.11 sends an agent's `instruction` next to a `static_instruction` as user content:
+    ADK 2.13 sends an agent's `instruction` next to a `static_instruction` as user content:
     a `<<<BEGIN_SYSTEM_INSTRUCTION>>>` block with a preamble, inserted into the user's own
     turn (`flows/llm_flows/prompt/_instructions.py`). Claude Haiku 5.5 read that as a user
     who forges system text: in a prep-eval sample of 2026-10-15 its thinking called the block

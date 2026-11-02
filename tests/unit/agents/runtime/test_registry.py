@@ -54,7 +54,7 @@ class TestRegistry:
 
     def test_no_string_instruction_and_static_policy(self) -> None:
         for agent in agent_module.ALL_AGENTS:
-            # No dynamic `instruction` at all: next to a static one, ADK 2.11 sends it inside the user's
+            # No dynamic `instruction` at all: next to a static one, ADK 2.13 sends it inside the user's
             # turn between `<<<BEGIN_SYSTEM_INSTRUCTION>>>` markers, which the root took for a forgery.
             assert not agent.instruction, agent.name
             assert isinstance(agent.static_instruction, str) and agent.static_instruction, agent.name
