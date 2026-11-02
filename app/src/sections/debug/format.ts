@@ -17,6 +17,12 @@ export function timeAgo(iso: string): string {
   return `${Math.floor(diffMon / 12)}y ago`;
 }
 
+/** Dollars to the cent; a spend below a cent is `<$0.01`, never `$0.00`. */
+export function formatUsd(value: number): string {
+  if (value > 0 && value < 0.005) return '<$0.01';
+  return `$${value.toFixed(2)}`;
+}
+
 /** A UTC timestamp as `2026-10-12 14:30:05 UTC`; the input unchanged when it does not parse. */
 export function formatUtc(iso: string): string {
   const date = new Date(iso);

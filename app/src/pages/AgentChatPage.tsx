@@ -102,7 +102,7 @@ import { DATA_SUMMARY_ID, DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { FanOut } from 'src/sections/agent-chat/FanOut';
 import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
-import { ERROR_TEXT, LEAVE_TEXT } from 'src/sections/agent-chat/messages';
+import { ERROR_TEXT, LEAVE_TEXT, servicePausedText } from 'src/sections/agent-chat/messages';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { SaveButton } from 'src/sections/agent-chat/SaveButton';
@@ -310,6 +310,8 @@ function AgentChat({
   const [maxRuns, setMaxRuns] = useState(DEFAULT_USER_MAX_RUNS);
   // Both answers below are in (or failed): before that, the libraries and the limit are fallbacks.
   const [listsSettled, setListsSettled] = useState(false);
+  // The service's day budget is spent: until when (ISO), for the note above the composer.
+  const [pausedUntil, setPausedUntil] = useState<string | null>(null);
   const [fanOut, setFanOut] = useState<{
     sourceSession: string;
     upload?: DatasetUpload;
@@ -377,11 +379,28 @@ function AgentChat({
         if (typeof status.user_max_runs === 'number' && status.user_max_runs > 0) {
           setMaxRuns(status.user_max_runs);
         }
+        if (
+          status.paused === true &&
+          typeof status.resets_at === 'string' &&
+          Date.parse(status.resets_at) > Date.now()
+        ) {
+          setPausedUntil(status.resets_at);
+        }
       })
       .catch(() => undefined)
       .finally(settle);
     return () => controller.abort();
   }, [specId, token]);
+
+  // The pause ends with the service's new day: the note goes at that moment, without a reload.
+  useEffect(() => {
+    if (!pausedUntil) return;
+    const timer = window.setTimeout(
+      () => setPausedUntil(null),
+      Math.max(0, Date.parse(pausedUntil) - Date.now())
+    );
+    return () => window.clearTimeout(timer);
+  }, [pausedUntil]);
 
   useEffect(() => {
     if (state.phase === 'unauthorized') setAdminHint(false);
@@ -875,6 +894,22 @@ function AgentChat({
                 {chatLocked
                   ? `# ${firstPlot ? 'step 2 — ' : ''}plot the table as it is in all ${libraries.length} libraries at once · turn all off to chat`
                   : '# step 2 — create the plot as it is, or say first what it should do differently'}
+              </Box>
+            )}
+            {/* Told before the user types: every turn would get `service_paused` until then. */}
+            {pausedUntil && (
+              <Box
+                role="note"
+                data-testid="service-paused"
+                sx={{
+                  ...labelSx,
+                  color: 'var(--ink)',
+                  borderLeft: `3px solid ${colors.warning}`,
+                  pl: 1.5,
+                  lineHeight: 1.6,
+                }}
+              >
+                # {servicePausedText(pausedUntil)}
               </Box>
             )}
             <Box

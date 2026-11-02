@@ -98,7 +98,9 @@ session it opens for the fan-out (`useAgentSession` with `fanout`, `POST /debug/
 `source: "fanout"`), the BFF forwards the value, and the agents service accepts `fanout` only (any other value is
 `422`). The service keeps the mark in session state (`anyplot.telemetry_source`), and every line of the session,
 whatever its event, carries `source = "fanout"` instead of `live`. Every existing `source = 'live'` filter (the
-`/debug` card, `api/agent_usage.py`) leaves them out, and the views keep them apart by `source`.
+`/debug` card, `api/agent_usage.py`) leaves them out, and the views keep them apart by `source`. The one exception
+is the per-day table's `fan-out` column ([The /debug card](#the-debug-card)): these sessions spend the same day
+budget, so their cost is shown beside the live cost, never inside it.
 
 Only an admin can open the chat today, so the value labels the owner's own test sessions. Once the chat is
 public, a user who sends the mark by hand only files their own lines as tests.
@@ -388,6 +390,52 @@ the same query and BigQuery may answer from its result cache; on top of that the
 minutes, so reloading `/debug` runs no query at all. The answer holds aggregates only. `status` is
 `not_configured` while the variable is unset, and `unavailable` when the query fails (no table yet, no
 permission, a timeout); both come with zeros, the card shows its empty state, and a failure is never kept.
+
+Below the tiles the card shows two views of the day that do not follow the 7 or 30 days toggle.
+
+### Per day
+
+A table of the last 14 UTC days, newest first, reads `GET /debug/agent-usage/daily` (`daily_sql` and `read_daily`
+in `api/agent_usage.py`). A day without a line shows zeros.
+
+| Column | What it counts |
+|---|---|
+| new chats | Live sessions whose first line falls on that day. A chat that was opened and never sent anything wrote no line and does not count. |
+| plots | `pipeline_run` lines with the status `ok` or `needs_attention`. |
+| cost | Live `chat_turn` steps and `data_input` judge calls, priced as `agents/telemetry/views/05_prices_cost.sql` prices them, from the views dataset's `model_prices`. `pipeline_run.steps` repeats its turn's tokens and is left out. A `+` means a step's model has no price row, so the sum is too low; the cell's tooltip says how many steps. |
+| fan-out | The same cost for `source = 'fanout'` sessions. |
+| limit hits | The counts of `service_paused`, `budget`, `daily_limit`, `rate_limited`, `run_limit` and `capacity`, from a `chat_turn`'s `refusal` or `error` and a `data_input`'s `outcome`. |
+| p95 queue wait | The 95th percentile of `queue_wait_ms` on live `pipeline_run` lines, read from the line itself rather than the `pipeline_runs` view, so it fills from the deploy that writes the field. It reads `—` on a day whose runs do not carry the field. |
+
+`locked_out` is a safety lockout, not a usage limit, so it stays in the card's refusal list and out of this column.
+`service_paused` exists since 2026-11-02. Before that, a spent service budget read `budget` in a turn and
+`daily_limit` in a paste, so those two columns hold both causes on older days.
+
+Which lines count depends on their `source`:
+
+- `live` lines fill every column.
+- `fanout` lines fill the `fan-out` column only.
+- `harness` lines are never read.
+
+The query keeps the card's scan rules: it filters `timestamp` before it deduplicates, and the API keeps each answer
+for 10 minutes. Its window is floored to the day instead of to 10 minutes, because the table's oldest row has to be
+a whole day: it starts at 00:00 UTC 13 days ago, so the query text and its parameter stay the same all day. It also
+reads the 2 days before the window, only to find each chat's first line, so a chat that began before the window is
+not new on the window's first day. `model_prices` is a literal `UNNEST`, so the join reads no bytes.
+
+### Today, live
+
+The line above the table comes from the agents service's memory, not from BigQuery, through
+`GET /debug/agent/budget`. It shows the service's spend against `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` and how many
+users are at their own limits, counts only, never an id. An admin counts only at the limits that bind every tier:
+the pastes, the conversions and the strikes. The line says since when it counts, because a redeploy or
+a scale-to-zero starts the usage book again at zero: `since` is 00:00 UTC, or the instance's start if that came
+later. A cold agents service also starts at the moment the page asks, so right after one the line reads zero.
+
+The dollar amounts are the weighted tokens at the main model's uncached input list price in the service's location,
+so they carry `eu`'s 10 %: 100 M weighted tokens of Claude Haiku 5.5 read `$11.00`, not `$10.00`. Both the spend and
+the budget use the same price, so the share is exact. The per-day table's cost comes from the telemetry's model and
+token counts instead, so the two can differ for today.
 
 ## On the legal page
 

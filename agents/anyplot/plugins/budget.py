@@ -3,9 +3,11 @@
 * `before_model_callback` halts **only the root** with the fixed `budget` reply when
   the request has spent `AGENT_MAX_LLM_CALLS` calls or `AGENT_REQUEST_TOKEN_BUDGET`
   cost-weighted tokens (`ledger.BUDGET_WEIGHTS`), or the user or the service has spent
-  its daily ones. A halt inside the adapter or the reviewer would break their schema
-  parsing, so the pipeline checks `ledger.budget_allows` before each `run_node` and
-  finishes with `PlotResult(failed, reason=budget)` instead. Before a review it keeps
+  its daily ones: `service_paused` when only the service's day budget is spent, and
+  `locked_out` past the day's strikes (`ledger.day_refusal`). A halt inside the adapter
+  or the reviewer would break their schema parsing, so the pipeline checks
+  `ledger.budget_allows` before each `run_node` and finishes with
+  `PlotResult(failed, reason=budget)` instead. Before a review it keeps
   room for the review and the root's closing reply (`pipeline.REVIEW_RESERVE_TOKENS`,
   the measured need), and once a plot has shipped in the invocation
   (`ledger.plot_shipped`) the root's next call is exempt from the halt, once and with
@@ -50,8 +52,10 @@ from .ledger import (
     attribution,
     budget_allows,
     budget_tokens,
+    day_refusal,
     finish_name,
     ledger_for,
+    request_ok,
     usage_breakdown,
     usage_tokens,
 )
@@ -121,6 +125,7 @@ class BudgetPlugin(BasePlugin):
         ledger = ledger_for(callback_context.invocation_id)
         if callback_context.agent_name != ROOT_AGENT:
             return None
+        code = "budget"
         try:
             settings = get_settings()
             if not ledger.user_id:
@@ -130,12 +135,15 @@ class BudgetPlugin(BasePlugin):
                 strip_tools(llm_request)
                 attribution("budget_exempt", ledger, agent=callback_context.agent_name)
                 return None
-            if budget_allows(ledger, get_services().usage, settings):
+            usage = get_services().usage
+            if budget_allows(ledger, usage, settings):
                 return None
+            if request_ok(ledger, settings):  # the day's budgets, not the request's: say which one
+                code = day_refusal(usage, ledger.user_id or "anonymous", settings, tier=ledger.tier)
         except Exception as exc:
             logger.warning("budget check failed: %s", type(exc).__name__)
-        text = refusal("budget", ledger.lang)
-        ledger.refuse("budget", text)
+        text = refusal(code, ledger.lang)
+        ledger.refuse(code, text)
         attribution("budget_halt", ledger, agent=callback_context.agent_name)
         return budget_response(text)
 

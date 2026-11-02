@@ -116,6 +116,10 @@ export interface AgentStatus {
   user_max_runs?: number;
   /** The tier the agents service served the request as (`X-Anyplot-Tier`); absent from an older server. */
   tier?: 'admin' | 'public';
+  /** The service's day budget is spent: every turn gets `service_paused` until `resets_at`. */
+  paused?: boolean;
+  /** The next 00:00 UTC, when the day budget starts again (ISO 8601). */
+  resets_at?: string;
   enabled: boolean;
 }
 

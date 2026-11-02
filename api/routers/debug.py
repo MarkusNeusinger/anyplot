@@ -16,7 +16,7 @@ from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.agent_usage import USAGE_WINDOWS, AgentUsage, UsageQuery, read_usage, usage_query
+from api.agent_usage import USAGE_WINDOWS, AgentUsage, AgentUsageDaily, UsageQuery, read_daily, read_usage, usage_query
 from api.cache import clear_cache, get_cache_stats
 from api.dependencies import require_db
 from api.exceptions import raise_validation_error
@@ -529,6 +529,17 @@ async def agent_usage(
     if days not in USAGE_WINDOWS:
         raise_validation_error(f"days must be one of {', '.join(map(str, USAGE_WINDOWS))}")
     return await run_in_threadpool(read_usage, query, settings.agent_telemetry_dataset, days)
+
+
+@router.get("/agent-usage/daily", response_model=AgentUsageDaily, dependencies=[Depends(require_admin)])
+async def agent_usage_daily(query: UsageQuery | None = Depends(get_usage_query)) -> AgentUsageDaily:
+    """The agent chat's last 14 UTC days, one row each, newest first, read-only from the BigQuery telemetry.
+
+    Per day: new live chats, plots shipped, the cost in USD (live, and the admin fan-out's apart), the limit
+    refusals by code and the run queue's 95th-percentile wait. The same statuses as `/agent-usage`, with no rows
+    (`api/agent_usage.py` `read_daily`, `docs/reference/agent-telemetry.md`).
+    """
+    return await run_in_threadpool(read_daily, query, settings.agent_telemetry_dataset)
 
 
 class CacheInvalidateResponse(BaseModel):

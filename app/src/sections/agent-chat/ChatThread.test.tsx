@@ -7,6 +7,7 @@ import {
   type RunState,
 } from 'src/hooks/useAgentSession';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
+import { localClock } from 'src/sections/agent-chat/messages';
 import { pendingReply } from 'src/sections/agent-chat/steps';
 import { render, screen } from 'src/test-utils';
 
@@ -59,6 +60,27 @@ describe('ChatThread', () => {
   it('keeps a generic line for a reason it does not know', () => {
     renderThread(notReady('something_new'));
     expect(screen.getByText('no plot this time')).toBeInTheDocument();
+  });
+
+  it("adds the user's own time to the service's pause, which names only UTC", () => {
+    const until = '2026-11-03T00:00:00.000Z';
+    const text =
+      "The chat has reached today's overall limit and is paused until 00:00 UTC. Your own limit is not affected.";
+    renderThread({
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      items: [
+        { id: 1, kind: 'user', text: 'log scale on y' },
+        { id: 2, kind: 'refusal', code: 'service_paused', text, until },
+        { id: 3, kind: 'refusal', code: 'budget', text: 'The usage limit for now is reached.' },
+      ],
+    });
+    const [paused, own] = screen.getAllByTestId('refusal');
+    expect(paused).toHaveTextContent(
+      `refusal · service_paused · until ${localClock(until)}${text}`
+    );
+    expect(own).toHaveTextContent(/^refusal · budgetThe usage limit/);
   });
 
   it("shows the page's own turns: the summary without a library, create_plot with it", () => {

@@ -8,12 +8,13 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 
 | Route | Body | Result | Errors |
 |---|---|---|---|
-| `GET /v1/status` | | `{libraries, model, location, version, provider, waiting, in_flight, user_max_runs, tier}` (`waiting` and `in_flight`: every lane of the run queue; `user_max_runs`: the caller's own cap, `AGENT_USER_MAX_RUNS` or, for an admin, `AGENT_ADMIN_USER_MAX_RUNS`; `tier`: `admin` or `public`, as the request was served) | |
+| `GET /v1/status` | | `{libraries, model, location, version, provider, waiting, in_flight, user_max_runs, tier, paused, resets_at}` (`waiting` and `in_flight`: every lane of the run queue; `user_max_runs`: the caller's own cap, `AGENT_USER_MAX_RUNS` or, for an admin, `AGENT_ADMIN_USER_MAX_RUNS`; `tier`: `admin` or `public`, as the request was served; `paused`: the service's day budget is spent, so every turn gets `service_paused` until `resets_at`, the next 00:00 UTC) | |
+| `GET /v1/budget` | | `{date, since, started_at, resets_at, paused, model, tokens, budget_tokens, usd, budget_usd, users, users_at_limit, limits}`: the admin's live view of the day from the usage book (`UsageBook.snapshot`), counts only, never a user id: the service's weighted tokens against `AGENT_GLOBAL_DAILY_TOKEN_BUDGET`, both in USD at the main model's list price (`ledger.weighted_usd`, null for a model without one), the users seen today, how many are at one or more of their own day caps, and how many at each (`limits`: `tokens`, `runs`, `data_runs`, `messages`, `pastes`, `conversions`, `locked_out`; an admin counts only at `pastes`, `conversions` and `locked_out`, the caps that bind every tier). In memory: `since` is when today's counts began, the instance's start or 00:00 UTC | |
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot, source?}` (`source`: `fanout` for a session the admin's "plot in all libraries" opens; its telemetry lines carry that source) | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
-| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `422 code` (a program that generates data, which the chat's `run_data_code` runs), `422 data_request` (text of at most 2,000 characters that asks for data instead of holding it, such as "Beispieldaten": found by `data/classify.py` before any model, or by the transcriber's `asks_for_data`; the page sends it to the chat, where the root generates example data), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn, a theme toggle or another paste in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
-| `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings, dropped}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), every value with the precision it came with, the sheet read and at most 10 visible ones with cells (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`, `utc_timestamps`, `renamed_columns`), `dropped` the names of the columns left out; nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex` (also a reader that died without its `status.json`), `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the daily token budgets), `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, one without `/convert`, or a sandbox without the harness's required exec filter) |
+| `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `422 code` (a program that generates data, which the chat's `run_data_code` runs), `422 data_request` (text of at most 2,000 characters that asks for data instead of holding it, such as "Beispieldaten": found by `data/classify.py` before any model, or by the transcriber's `asks_for_data`; the page sends it to the chat, where the root generates example data), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn, a theme toggle or another paste in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the user's daily token budget for `daily_limit`), `429 service_paused` (the service's day budget), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
+| `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings, dropped}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), every value with the precision it came with, the sheet read and at most 10 visible ones with cells (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`, `utc_timestamps`, `renamed_columns`), `dropped` the names of the columns left out; nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex` (also a reader that died without its `status.json`), `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the user's daily token budget), `429 service_paused`, `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, one without `/convert`, or a sandbox without the harness's required exec filter) |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
 | `PUT /v1/sessions/{sid}/language` | `{language}` (a short name or code, `^[A-Za-z][A-Za-z -]{0,39}$`) | `{language, source, suggestion?}`: the session language in its stored form (`English` is `en`), source `chosen`, which detection never overrides; `suggestion`, when the session has data, the `.to_long()` offer (or null) with its new column names in that language | `409 run_active`, `422` (the pattern) |
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
@@ -72,6 +73,8 @@ user.
 Before the scope judge runs, and before any model call, the route answers with a fixed
 refusal right after `ready`: `locked_out` for a user past the day's `attack` strikes
 (`AGENT_ATTACK_STRIKES`), `budget` for a user over the daily token budget,
+`service_paused` for everyone else once the service's day budget is spent
+(`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`; a paste or a conversion `429 service_paused`),
 `session_closed` in a session the scope judge closed (`AGENT_SESSION_REFUSALS`
 refusals of type `out_of_scope` or `attack`), and `rate_limited` or `daily_limit` past
 the user's message limits (`AGENT_USER_MESSAGES_PER_MINUTE`,
@@ -210,8 +213,12 @@ from agents.anyplot.plugins.ledger import (
     Tier,
     attribution,
     budget_allows,
+    day_refusal,
     judge_budget_tokens,
+    next_reset,
     session_hash,
+    utc_stamp,
+    weighted_usd,
 )
 from agents.anyplot.plugins.scope_guard import LOCKED_OUT, SESSION_CLOSED, scope_refusals
 from agents.anyplot.policy import fence, file_name_block, refusal, scope_rubric, transcribe_rubric, user_notes_block
@@ -869,6 +876,8 @@ def _stamp(ledger: RequestLedger, view: SessionView | None, session: Session) ->
         ledger.spec_id, ledger.library = view.spec_id, view.library
     ledger.turn = telemetry.user_turns(session.events)
     ledger.fanout = session.state.get(TELEMETRY_SOURCE) == "fanout"
+    if ledger.tier == "admin":  # the usage book holds no tier: its live view reads it from here
+        get_services().usage.mark_admin(ledger.user_id)
     return ledger
 
 
@@ -881,7 +890,8 @@ async def status(runtime: RuntimeDep, tier: CallerTier) -> dict[str, Any]:
 
     `user_max_runs` is the caller's own cap in their tier's lane (`AGENT_USER_MAX_RUNS`, or
     `AGENT_ADMIN_USER_MAX_RUNS` for an admin), which the admin chat's fan-out over every library keeps to; `tier` is
-    the tier the request was served as.
+    the tier the request was served as. `paused` says the service's day budget is spent, so every turn gets
+    `service_paused` until `resets_at` (the next 00:00 UTC): the page shows the note before the user types.
     """
     settings = get_settings()
     queue = runtime.run_queue()
@@ -896,7 +906,40 @@ async def status(runtime: RuntimeDep, tier: CallerTier) -> dict[str, Any]:
         "in_flight": queue.in_flight,
         "user_max_runs": queue.user_cap(TIER_LANES[tier]),
         "tier": tier,
+        "paused": get_services().usage.paused(settings),
+        "resets_at": utc_stamp(next_reset()),
     }
+
+
+@app.get("/v1/budget", dependencies=v1_dependencies)
+async def day_budget() -> dict[str, Any]:
+    """The admin's live view of the day (the BFF's `/debug/agent/budget`, behind its admin gate): the service's spend
+    against `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` and how many users are at their own day caps. Counts only, never a user
+    id. The counts live in this instance's memory: `since` is when they began today, and a redeploy or a
+    scale-to-zero starts them again at zero (`ledger.UsageBook.snapshot`)."""
+    settings = get_settings()
+    usage = get_services().usage
+    day = usage.snapshot(settings)
+    budget_tokens = settings.global_daily_token_budget
+    return {
+        "date": day.date,
+        "since": utc_stamp(day.since),
+        "started_at": utc_stamp(day.started_at),
+        "resets_at": utc_stamp(next_reset()),
+        "paused": usage.paused(settings),
+        "model": settings.model,
+        "tokens": day.global_tokens,
+        "budget_tokens": budget_tokens,
+        "usd": _usd(weighted_usd(day.global_tokens, settings.model, settings.location)),
+        "budget_usd": _usd(weighted_usd(budget_tokens, settings.model, settings.location)),
+        "users": day.users,
+        "users_at_limit": day.at_limit,
+        "limits": day.limits,
+    }
+
+
+def _usd(value: float | None) -> float | None:
+    return round(value, 4) if value is not None else None
 
 
 @app.get("/v1/eligibility", dependencies=v1_dependencies)
@@ -1229,11 +1272,12 @@ async def _convert(
 
 
 def _paste_budget(services: Services, user: str, settings: AgentSettings, tier: Tier) -> None:
-    """`429 locked_out` past the day's `attack` strikes, `429 daily_limit` past the daily token budgets (the global
-    one only, for an admin)."""
+    """`429 locked_out` past the day's `attack` strikes, `429 daily_limit` past the user's daily token budget, and
+    `429 service_paused` when only the service's is spent, always for an admin (`ledger.day_refusal`)."""
     if services.usage.daily_ok(user, settings, tier=tier):
         return
-    raise AgentsError(429, LOCKED_OUT if services.usage.locked_out(user, settings) else "daily_limit")
+    code = day_refusal(services.usage, user, settings, tier=tier)
+    raise AgentsError(429, "daily_limit" if code == "budget" else code)
 
 
 async def _ingest_paste(
@@ -2128,8 +2172,10 @@ async def post_message(
         # Past the day's `attack` strikes: its own refusal, never the misleading "usage limit" text (2026-10-14).
         return _refuse_now(translator, ledger, facts, LOCKED_OUT, "budget_halt", agent="route")
     if not budget_allows(ledger, services.usage, settings):
-        # The refusal the root would send, sent now: a user over the daily budget spends nothing.
-        return _refuse_now(translator, ledger, facts, "budget", "budget_halt", agent="route")
+        # The refusal the root would send, sent now: a user over the daily budget spends nothing. When only the
+        # service's day budget is spent, every user gets `service_paused`, which says their own limit is untouched.
+        code = day_refusal(services.usage, user, settings, tier=tier)
+        return _refuse_now(translator, ledger, facts, code, "budget_halt", agent="route")
     limit = services.usage.message_limit(user, settings, tier)
     if limit is not None:
         return _refuse_now(translator, ledger, facts, limit, "message_limit")

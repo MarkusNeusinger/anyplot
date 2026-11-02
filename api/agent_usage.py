@@ -20,6 +20,16 @@ BigQuery may answer from its result cache, and on top of that this module keeps 
 `AGENT_TELEMETRY_DATASET` unset answers `not_configured`; a query that fails (no table yet, no
 permission, a timeout) answers `unavailable`, logged with the exception class only. Both carry
 zeros, so the page shows its empty state and never an error. Neither is cached.
+
+The per-day table (`GET /debug/agent-usage/daily`, `daily_sql`, `read_daily`) answers the last
+`DAILY_DAYS` UTC days, newest first, from a second query under the same rules: its window starts
+at 00:00 UTC `DAILY_DAYS - 1` days before today, constant for the whole day, so within a day the
+query text and its parameter stay byte-identical too. Each day counts the live chats that began
+on it, the plots shipped, the cost (the `cost` view's sum of every turn step and data-input judge
+call, priced by the views dataset's `model_prices`), the limit refusals by code
+(`LIMIT_CODES`) and the 95th percentile of the run queue's wait (`pipeline_run.queue_wait_ms`,
+null on a day without it). Fan-out lines cost real money against the same day budget, so their
+cost is counted apart (`fanout_cost_usd`); everything else is live only.
 """
 
 from __future__ import annotations
@@ -63,6 +73,15 @@ KEEP_ACTIONS = (
 `downloaded_page` (a JavaScript plot's `plot.html`, since JS-4b) keeps one like the code download."""
 REJECT_REACTIONS = ("thumbs_down", "bug")
 """Feedback reactions that make a session not kept, whatever else the user did."""
+DAILY_DAYS = 14
+"""The per-day table's rows: today and the 13 UTC days before it."""
+LIMIT_CODES = ("service_paused", "budget", "daily_limit", "rate_limited", "run_limit", "capacity")
+"""The refusals and errors a limit gives, counted per day wherever a line records one: a `chat_turn`'s `refusal` or
+`error`, a `data_input`'s `outcome`. `service_paused` is the service's day budget (since 2026-11-02; before, the same
+event read `budget` in a turn and `daily_limit` in a paste), `budget` a user's own token budget, `daily_limit` and
+`rate_limited` a user's turns or pastes per day and per minute, `run_limit` a user's sandbox runs at once, `capacity`
+a full run queue or an expired wait. `locked_out` is a safety lockout, not a usage limit: the card's refusal list has
+it."""
 REJECT_LOOKBACK_DAYS = 2
 """How far before the window a session's rejections and runs are still read (reviews of #12207): a session that
 straddles the window's start keeps a thumbs_down sent before it, and a plot shipped before it and kept inside it
@@ -94,6 +113,35 @@ class AgentUsage(BaseModel):
     top_specs: list[UsageItem] = Field(default_factory=list)
     top_formats: list[UsageItem] = Field(default_factory=list)
     top_refusals: list[UsageItem] = Field(default_factory=list)
+    generated_at: str
+
+
+class UsageDay(BaseModel):
+    """One UTC day of the per-day table."""
+
+    date: str
+    sessions: int = Field(default=0, ge=0)
+    """Live chats whose first line falls on this day; a chat that wrote no line (opened, nothing sent) is not one."""
+    plots_shipped: int = Field(default=0, ge=0)
+    cost_usd: float = Field(default=0.0, ge=0)
+    """The live lines' model cost at list price, as the `cost` view prices it."""
+    fanout_cost_usd: float = Field(default=0.0, ge=0)
+    """The same for the admin fan-out's sessions, counted apart."""
+    unpriced_calls: int = Field(default=0, ge=0)
+    """Steps with tokens whose model has no `model_prices` row: their cost is missing from both sums."""
+    limit_hits: dict[str, int] = Field(default_factory=dict)
+    """The count of each of `LIMIT_CODES`, every code present."""
+    queue_wait_p95_ms: int | None = None
+    """The 95th percentile of the live runs' queue wait; None on a day whose runs predate the field."""
+    queue_waits: int = Field(default=0, ge=0)
+    """The runs behind that percentile."""
+
+
+class AgentUsageDaily(BaseModel):
+    status: UsageStatus
+    days: int = DAILY_DAYS
+    rows: list[UsageDay] = Field(default_factory=list)
+    """Every day of the window, newest first, a day without lines with zeros; empty unless `status` is `ok`."""
     generated_at: str
 
 
@@ -294,6 +342,124 @@ SELECT
 """
 
 
+def daily_start(now: datetime | None = None) -> datetime:
+    """The per-day table's start: 00:00 UTC `DAILY_DAYS - 1` days before today, the same for the whole day."""
+    current = (now or datetime.now(UTC)).astimezone(UTC)
+    return datetime.combine(current.date() - timedelta(days=DAILY_DAYS - 1), datetime.min.time(), UTC)
+
+
+SESSION_LOOKBACK_DAYS = REJECT_LOOKBACK_DAYS
+"""How far before the per-day window a chat's first line is still looked for: a chat that began before the window and
+went on inside it is not a new one on the window's first day. Sessions live in one instance's memory."""
+MODEL_SUFFIX = r"(@.*|-[0-9]{8})$"
+"""What the `cost` view strips from a step's model id before it looks up the price: a version suffix."""
+
+
+def daily_sql(dataset: str) -> str:
+    """The query behind the per-day table: the window's lines of the linked log dataset, deduplicated, per UTC day.
+
+    The `timestamp` filter comes before the deduplication, as in `usage_sql`; the lines from up to
+    `SESSION_LOOKBACK_DAYS` before the window only date the chats, every count reads `ts >= @since`. The cost
+    is the `cost` view's (`agents/telemetry/views/05_prices_cost.sql`) over the window: every `chat_turn` step and
+    every data input's judge calls, priced from the views dataset's `model_prices`, which reads nothing; a
+    `pipeline_run`'s steps repeat its turn's and are left out, so no token is priced twice. A model without a
+    price row counts in `unpriced_calls` instead of the sums. The limit codes are counted wherever a line records
+    one (`LIMIT_CODES`), and the queue wait from the `pipeline_run` lines that carry `queue_wait_ms`.
+    """
+    hits = ",\n    ".join(f"COUNTIF(code = '{code}') AS hits_{code}" for code in LIMIT_CODES)
+    return f"""
+WITH ev AS (
+  SELECT
+    timestamp AS ts,
+    JSON_VALUE(json_payload.event) AS event,
+    JSON_VALUE(json_payload.source) AS source,
+    JSON_VALUE(json_payload.session) AS session,
+    json_payload AS payload
+  FROM `{dataset}{LOGS_SUFFIX}._AllLogs`
+  WHERE timestamp >= TIMESTAMP_SUB(@since, INTERVAL {SESSION_LOOKBACK_DAYS} DAY)
+    AND JSON_VALUE(json_payload.log_type) = 'agent_telemetry'
+    AND JSON_VALUE(json_payload.source) IN ('live', 'fanout')
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY JSON_VALUE(json_payload.idempotency_key) ORDER BY timestamp) = 1
+),
+chats AS (
+  SELECT DATE(first_ts) AS day, COUNT(*) AS sessions
+  FROM (SELECT session, MIN(ts) AS first_ts FROM ev WHERE source = 'live' AND session IS NOT NULL GROUP BY session)
+  WHERE first_ts >= @since
+  GROUP BY day
+),
+lines AS (
+  SELECT
+    DATE(ts) AS day,
+    COUNTIF(event = 'pipeline_run' AND JSON_VALUE(payload.status) IN ('ok', 'needs_attention')) AS plots_shipped,
+    {hits},
+    APPROX_QUANTILES(queue_wait_ms, 100 IGNORE NULLS)[SAFE_OFFSET(95)] AS queue_wait_p95_ms,
+    COUNT(queue_wait_ms) AS queue_waits
+  FROM (
+    SELECT
+      ts, event, payload,
+      CASE event
+        WHEN 'chat_turn' THEN IFNULL(JSON_VALUE(payload.refusal), JSON_VALUE(payload.error))
+        WHEN 'data_input' THEN JSON_VALUE(payload.outcome)
+      END AS code,
+      IF(event = 'pipeline_run', LAX_INT64(payload.queue_wait_ms), NULL) AS queue_wait_ms
+    FROM ev
+    WHERE ts >= @since AND source = 'live'
+  )
+  GROUP BY day
+),
+steps AS (
+  SELECT
+    DATE(ts) AS day,
+    source,
+    REGEXP_REPLACE(JSON_VALUE(step.model), r'{MODEL_SUFFIX}', '') AS model,
+    IFNULL(LAX_INT64(step.input), 0) AS input_tokens,
+    IFNULL(LAX_INT64(step.output), 0) AS output_tokens,
+    IFNULL(LAX_INT64(step.cached), 0) AS cached_tokens,
+    IFNULL(LAX_INT64(step.cache_write), 0) AS cache_write_tokens
+  FROM ev, UNNEST(JSON_QUERY_ARRAY(payload.steps)) AS step
+  WHERE ts >= @since AND event = 'chat_turn'
+  UNION ALL
+  SELECT
+    DATE(ts),
+    source,
+    REGEXP_REPLACE(JSON_VALUE(payload.judge_model), r'{MODEL_SUFFIX}', ''),
+    IFNULL(LAX_INT64(payload.judge_input), 0),
+    IFNULL(LAX_INT64(payload.judge_output), 0),
+    0,
+    0
+  FROM ev
+  WHERE ts >= @since AND event = 'data_input'
+),
+costs AS (
+  SELECT
+    day,
+    SUM(IF(source = 'live', usd, 0)) AS cost_usd,
+    SUM(IF(source = 'fanout', usd, 0)) AS fanout_cost_usd,
+    COUNTIF(usd IS NULL) AS unpriced_calls
+  FROM (
+    SELECT
+      steps.day,
+      steps.source,
+      (
+        GREATEST(steps.input_tokens - steps.cached_tokens - steps.cache_write_tokens, 0) * prices.input_usd_per_m
+        + steps.cached_tokens * prices.input_usd_per_m * 0.1
+        + steps.cache_write_tokens * prices.input_usd_per_m * 1.25
+        + steps.output_tokens * prices.output_usd_per_m
+      ) / 1e6 AS usd
+    FROM steps
+    LEFT JOIN `{dataset}.model_prices` AS prices USING (model)
+    WHERE steps.input_tokens + steps.output_tokens > 0
+  )
+  GROUP BY day
+)
+SELECT *
+FROM chats
+FULL JOIN lines USING (day)
+FULL JOIN costs USING (day)
+ORDER BY day DESC
+"""
+
+
 def _now() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
 
@@ -317,7 +483,18 @@ def _rate(value: Any) -> float | None:
     return round(float(value), 4) if isinstance(value, int | float) else None
 
 
+def _usd(value: Any) -> float:
+    return (
+        round(float(value), 4) if isinstance(value, int | float) and not isinstance(value, bool) and value > 0 else 0.0
+    )
+
+
+def _ms(value: Any) -> int | None:
+    return value if isinstance(value, int) and not isinstance(value, bool) and value >= 0 else None
+
+
 _CACHE: dict[tuple[str, int], tuple[float, AgentUsage]] = {}
+_DAILY_CACHE: dict[tuple[str, str], tuple[float, AgentUsageDaily]] = {}
 _CACHE_LOCK = threading.Lock()
 
 
@@ -325,6 +502,7 @@ def clear_usage_cache() -> None:
     """Forget every kept answer (tests, and a dataset change at runtime)."""
     with _CACHE_LOCK:
         _CACHE.clear()
+        _DAILY_CACHE.clear()
 
 
 def read_usage(
@@ -368,6 +546,54 @@ def read_usage(
     with _CACHE_LOCK:
         _CACHE[(dataset, days)] = (clock() + CACHE_TTL_S, usage)
     return usage
+
+
+def _usage_day(date: str, row: dict[str, Any]) -> UsageDay:
+    return UsageDay(
+        date=date,
+        sessions=_count(row.get("sessions")),
+        plots_shipped=_count(row.get("plots_shipped")),
+        cost_usd=_usd(row.get("cost_usd")),
+        fanout_cost_usd=_usd(row.get("fanout_cost_usd")),
+        unpriced_calls=_count(row.get("unpriced_calls")),
+        limit_hits={code: _count(row.get(f"hits_{code}")) for code in LIMIT_CODES},
+        queue_wait_p95_ms=_ms(row.get("queue_wait_p95_ms")),
+        queue_waits=_count(row.get("queue_waits")),
+    )
+
+
+def read_daily(
+    query: UsageQuery | None,
+    dataset: str | None,
+    *,
+    now: datetime | None = None,
+    clock: Callable[[], float] = time.monotonic,
+) -> AgentUsageDaily:
+    """The per-day table for the last `DAILY_DAYS` UTC days, newest first; `not_configured` or `unavailable` without
+    rows otherwise. Kept like `read_usage`'s answer, per dataset and window start, so a new UTC day queries anew."""
+    if not dataset or not DATASET_PATTERN.fullmatch(dataset):
+        return AgentUsageDaily(status="not_configured", generated_at=_now())
+    since = daily_start(now)
+    key = (dataset, since.date().isoformat())
+    with _CACHE_LOCK:
+        kept = _DAILY_CACHE.get(key)
+    if kept is not None and clock() < kept[0]:
+        return kept[1]
+    if query is None:
+        return AgentUsageDaily(status="unavailable", generated_at=_now())
+    try:
+        rows = query.rows(daily_sql(dataset), since)
+    except Exception as exc:  # as in `read_usage`: the table shows its empty state
+        logger.warning("agent daily usage query failed: %s", type(exc).__name__)
+        return AgentUsageDaily(status="unavailable", generated_at=_now())
+    by_day = {row["day"]: row for row in rows if isinstance(row.get("day"), str)}
+    dates = [(since + timedelta(days=offset)).date().isoformat() for offset in reversed(range(DAILY_DAYS))]
+    daily = AgentUsageDaily(
+        status="ok", rows=[_usage_day(date, by_day.get(date, {})) for date in dates], generated_at=_now()
+    )
+    with _CACHE_LOCK:
+        _DAILY_CACHE[key] = (clock() + CACHE_TTL_S, daily)
+    return daily
 
 
 _CLIENTS: dict[str, UsageQuery] = {}

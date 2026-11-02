@@ -20,7 +20,7 @@ import {
 } from 'src/hooks/useAgentSession';
 import type { ArtifactName, Theme } from 'src/lib/agent';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
-import { ERROR_TEXT, PLOT_FAILED_TEXT } from 'src/sections/agent-chat/messages';
+import { ERROR_TEXT, localClock, PLOT_FAILED_TEXT } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { type CardOutcome, ResultCard } from 'src/sections/agent-chat/ResultCard';
 import { type PendingReply, pendingReply } from 'src/sections/agent-chat/steps';
@@ -99,7 +99,11 @@ function Item({
     case 'refusal':
       return (
         <Box sx={{ borderLeft: `2px solid ${colors.warning}`, pl: 1.5 }} data-testid="refusal">
-          <Box sx={labelSx}>refusal · {item.code}</Box>
+          <Box sx={labelSx}>
+            refusal · {item.code}
+            {/* The service's own text says 00:00 UTC: the page adds the user's own time. */}
+            {item.until && localClock(item.until) ? ` · until ${localClock(item.until)}` : ''}
+          </Box>
           <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>{item.text}</Box>
         </Box>
       );
