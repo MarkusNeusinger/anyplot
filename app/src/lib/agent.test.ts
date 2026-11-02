@@ -184,7 +184,23 @@ describe('parseAgentEvent', () => {
       dataConfirmed: null,
       dataset: null,
       language: null,
+      switch: null,
     });
+  });
+
+  it("reads done's switch the user asked for in the chat, and drops one the page cannot make", () => {
+    const done = (value: unknown) => parseAgentEvent(raw('done', { switch: value }));
+    expect(done({ library: 'seaborn', plot: true })).toMatchObject({
+      switch: { library: 'seaborn', plot: true },
+    });
+    expect(done({ library: 'ggplot2', plot: false })).toMatchObject({
+      switch: { library: 'ggplot2', plot: false },
+    });
+    expect(done({ library: 'ggplot2' })).toMatchObject({
+      switch: { library: 'ggplot2', plot: true },
+    });
+    expect(done({ library: 'excel', plot: true })).toMatchObject({ switch: null });
+    expect(done('seaborn')).toMatchObject({ switch: null });
   });
 
   it("reads done's sync of the bindings and the step state", () => {
@@ -211,6 +227,7 @@ describe('parseAgentEvent', () => {
       dataConfirmed: false,
       dataset: null,
       language: null,
+      switch: null,
     });
     expect(parseAgentEvent(raw('done', { bindings: [], data_confirmed: true }))).toMatchObject({
       bindings: [],
@@ -939,6 +956,27 @@ describe('agentApi library switch and plot memory', () => {
     expect(JSON.parse(init.body as string)).toEqual({
       spec_id: 'scatter-basic',
       library: 'plotly',
+    });
+  });
+
+  it('names the chat as the source of a switch the user asked for there', async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            session_id: 'S1',
+            eligibility: { eligible: true, status: 'clean', reasons: [] },
+          }),
+          { status: 200 }
+        )
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    await agentApi.switchLibrary('', 'S1', 'scatter-basic', 'seaborn', 'chat');
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toEqual({
+      spec_id: 'scatter-basic',
+      library: 'seaborn',
+      source: 'chat',
     });
   });
 

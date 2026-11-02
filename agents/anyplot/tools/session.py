@@ -42,6 +42,12 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   adapter and the reviewer, in any library. Entries come in with a run
   (`PipelineArgs.remember`), since the root cannot call a tool after a shipped plot.
   The result carries the count, never a text. Refused while the pipeline runs.
+* `switch_plot(library, plot, spec_id)`: a library switch the user asked for in the chat
+  ("make it in seaborn"). It writes nothing: the ledger keeps the request, the turn's `done`
+  carries it as `switch`, and the page makes the switch with the route and, with `plot`, the
+  carry run. Another spec (`plot_type_switch_unavailable`, until the plot-type switch), the
+  current library (`same_library`) and a library the service does not serve
+  (`library_unavailable`) are refused.
 * `prepare_data(operations)`: at most five operations of the fixed set
   (`data/prepare.py`), applied by the server to the session's current dataset and
   stored as its next version (`dataset_versions.py`): the previous version stays for
