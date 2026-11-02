@@ -856,11 +856,11 @@ class TestDryRun:
 
 
 class TestRowNumber:
-    def test_a_new_column_numbers_the_rows(self) -> None:
-        prepared = prepare("value\n1\n3\n5\n4\n", {"op": "row_number"})
+    def test_a_new_first_column_numbers_the_rows(self) -> None:
+        prepared = prepare("value,note\n1,a\n3,b\n5,c\n4,d\n", {"op": "row_number"})
 
-        assert prepared.csv.splitlines() == ["value,index", "1,1", "3,2", "5,3", "4,4"]
-        assert prepared.changes == ["new column index: the rows numbered 1 to 4"]
+        assert prepared.csv.splitlines() == ["index,value,note", "1,1,a", "2,3,b", "3,5,c", "4,4,d"]
+        assert prepared.changes == ["new first column index: the rows numbered 1 to 4"]
         assert prepared.row_numbers == ["index"]
 
     def test_it_stays_a_whole_number_column_through_the_reparse(self) -> None:
@@ -870,13 +870,21 @@ class TestRowNumber:
         assert parsed.column_dtypes["Nr"] == "integer"
 
     @pytest.mark.parametrize(
-        "text", ["value,index\n1,1\n3,2\n5,3\n", "value,index\n1,0\n3,1\n5,2\n", "value,index\n1,3\n3,1\n5,2\n"]
+        "text", ["index,value\n1,1\n2,3\n3,5\n", "index,value\n0,1\n1,3\n2,5\n", "index,value\n3,1\n1,3\n2,5\n"]
     )
-    def test_a_pasted_row_number_is_reused(self, text: str) -> None:
+    def test_a_pasted_row_number_in_front_is_reused_as_it_is(self, text: str) -> None:
         prepared = prepare(text, {"op": "row_number", "name": "index"})
 
         assert prepared.csv == parse_dataset(text).csv
         assert prepared.changes == ["index already numbers the rows"]
+        assert prepared.row_numbers == ["index"]
+
+    def test_a_pasted_row_number_elsewhere_moves_to_the_front_with_its_values(self) -> None:
+        prepared = prepare("value,index,note\n1,3,a\n3,1,b\n5,2,c\n", {"op": "row_number", "name": "index"})
+
+        # Only the column order changes: the rows keep their order and every cell its value.
+        assert prepared.csv.splitlines() == ["index,value,note", "3,1,a", "1,3,b", "2,5,c"]
+        assert prepared.changes == ["index already numbers the rows; moved to the first column"]
         assert prepared.row_numbers == ["index"]
 
     def test_a_column_of_that_name_with_other_values_is_refused(self) -> None:

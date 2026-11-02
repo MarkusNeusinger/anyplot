@@ -270,7 +270,7 @@ class TestRowNumbers:
 
         after = applied(parsed, candidate)
 
-        assert after.csv.splitlines()[:2] == ["value,index", "1,1"]
+        assert after.csv.splitlines()[:2] == ["index,value", "1,1"]
         carried = carry_bindings(default_bindings(roles, parsed.profile), roles, after.profile, None, None, ["index"])
         assert [(binding.role, binding.column) for binding in carried] == [("x", "index"), ("y", "value")]
         assert check_bindings(carried, roles, after.profile).complete

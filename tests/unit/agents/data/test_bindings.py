@@ -1,13 +1,16 @@
 """Tests for agents/anyplot/data/bindings.py: default bindings and their validation."""
 
 import json
+import re
 from datetime import date
+from pathlib import Path
 
 import pytest
 from pydantic import TypeAdapter
 
 from agents.anyplot.data.bindings import (
     MAX_VARIADIC_DEFAULT,
+    ROW_NUMBER_NAMES,
     RowSlot,
     accepts,
     axis_slot,
@@ -28,6 +31,17 @@ from tests.unit.core.test_spec_roles import AREA_STACKED, LINE_MULTI
 
 
 OPERATIONS = TypeAdapter(list[Operation])
+
+
+def test_the_data_view_knows_the_same_row_number_names() -> None:
+    """The data view leads with a row-number column by the same names (`app/.../viewTable.ts` `ROW_NUMBER_NAMES`)."""
+    page = (Path(__file__).resolve().parents[4] / "app/src/sections/agent-chat/viewTable.ts").read_text(
+        encoding="utf-8"
+    )
+    listed = re.search(r"export const ROW_NUMBER_NAMES = \[(.*?)\];", page, re.DOTALL)
+
+    assert listed is not None
+    assert set(re.findall(r"'([^']*)'", listed.group(1))) == ROW_NUMBER_NAMES
 
 
 def profile(csv: str) -> DatasetProfile:

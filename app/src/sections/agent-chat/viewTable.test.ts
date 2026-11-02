@@ -43,18 +43,53 @@ describe('viewTable', () => {
   });
 });
 
+describe('rowNumberColumn', () => {
+  const read = (csv: string, dtypes: Record<string, ColumnProfile['dtype']>) =>
+    viewTable(
+      csv,
+      Object.entries(dtypes).map(([name, dtype]) => column(name, dtype))
+    ).rowLabel;
+
+  it.each([
+    ['1 to n', 'value,index\n7,1\n8,2\n9,3\n', 1],
+    ['0 to n - 1', 'X,value\n0,7\n1,8\n2,9\n', 0],
+    ['after a sort', 'value,index\n9,3\n7,1\n8,2\n', 1],
+    ['an empty header', 'column_1,value\n1,7\n2,8\n', 0],
+  ])('finds a row-number column over %s', (_, csv, at) => {
+    expect(
+      read(csv, { value: 'integer', index: 'integer', X: 'integer', column_1: 'integer' })
+    ).toBe(at);
+  });
+
+  it.each([
+    ['another name', 'value,id\n7,1\n8,2\n', { id: 'integer' }],
+    ['a text dtype', 'value,index\n7,1\n8,2\n', { index: 'text' }],
+    ['a gap', 'value,index\n7,1\n8,3\n', { index: 'integer' }],
+    ['a repeat', 'value,index\n7,1\n8,1\n', { index: 'integer' }],
+    ['a missing cell', 'value,index\n7,1\n8,\n', { index: 'integer' }],
+    ['one row', 'value,index\n7,1\n', { index: 'integer' }],
+  ] as const)('leaves the counter for %s', (_, csv, dtypes) => {
+    expect(read(csv, { value: 'integer', ...dtypes })).toBeNull();
+  });
+
+  it('takes the first of two', () => {
+    expect(read('index,X\n1,0\n2,1\n', { index: 'integer', X: 'integer' })).toBe(0);
+  });
+});
+
 describe('columnWidth', () => {
   it('fits the name, the dtype and the longest value within the bounds', () => {
     // `number` is the header's longer line: six characters beside the sort arrow and the menu.
-    expect(columnWidth('x', 'number', [['1']], 0)).toBe(6 * 8 + 64);
-    expect(columnWidth('x', null, [['1']], 0)).toBe(MIN_COLUMN_PX);
+    expect(columnWidth('x', 'number', [['1']], 0)).toBe(6 * 8 + 72);
+    expect(columnWidth('x', null, [['1']], 0)).toBe(1 * 8 + 72);
+    expect(columnWidth('', null, [['']], 0)).toBe(MIN_COLUMN_PX);
     expect(columnWidth('note', 'text', [['a'.repeat(30)]], 0)).toBe(30 * 8 + 24);
     expect(columnWidth('note', 'text', [['a'.repeat(200)]], 0)).toBe(MAX_COLUMN_PX);
   });
 
   it('measures the first thousand rows only', () => {
     const rows = [...Array.from({ length: 1000 }, () => ['a']), ['b'.repeat(100)]];
-    expect(columnWidth('n', null, rows, 0)).toBe(MIN_COLUMN_PX);
+    expect(columnWidth('n', null, rows, 0)).toBe(1 * 8 + 72);
   });
 });
 
