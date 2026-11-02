@@ -306,7 +306,7 @@ class _Day:
     user_copies: dict[str, int] = field(default_factory=dict)
     admins: set[str] = field(default_factory=set)
     """The users who came in the admin tier today (`mark_admin`): the book has no tier of its own, each request does."""
-    user_networks: dict[str, str] = field(default_factory=dict)
+    user_networks: "OrderedDict[str, str]" = field(default_factory=OrderedDict)
     """The network key (`network_key`) each anonymous user's latest request came from today (`bind_network`)."""
     network_tokens: dict[str, int] = field(default_factory=dict)
     network_runs: dict[str, int] = field(default_factory=dict)
@@ -317,6 +317,9 @@ class _Day:
 
 MESSAGE_WINDOW_S = 60.0
 """The sliding window of `AGENT_USER_MESSAGES_PER_MINUTE` and `AGENT_USER_PASTES_PER_MINUTE`."""
+MAX_BOUND_USERS = 50_000
+"""The anonymous users the usage book keeps a network binding for (`UsageBook.bind_network`), the least recently
+bound leaving first: a few MiB at most, however many tab ids a client mints."""
 IP_WINDOW_FACTOR = 2
 """How many users' worth of pastes, conversions, chat turns and beacons the anonymous users of one network share, per
 minute and per day: twice the per-user caps, as for the network's runs and tokens (`AGENT_IP_*`), for shared networks.
@@ -393,8 +396,15 @@ class UsageBook:
         """Count the anonymous user's tokens and pipeline runs against `network` (a `network_key`) from now on, as
         well as against the user: the per-IP caps (`AGENT_IP_*`). The latest request's network wins, so a phone that
         changes networks moves on; what it booked stays where it was booked. Bound for the UTC day, and into the next
-        one until the user's next request, so a turn that runs across midnight keeps counting (`_network`)."""
-        self._current().user_networks[user_id] = network
+        one until the user's next request, so a turn that runs across midnight keeps counting (`_network`).
+
+        At most `MAX_BOUND_USERS` bindings are kept, the least recently bound one leaving first: every request binds
+        again, so an active user is always bound, while a flood of fresh tab ids cannot grow the map without end."""
+        bindings = self._current().user_networks
+        bindings[user_id] = network
+        bindings.move_to_end(user_id)
+        while len(bindings) > MAX_BOUND_USERS:
+            bindings.popitem(last=False)
 
     def network_of(self, user_id: str) -> str | None:
         """The network the user is bound to (`bind_network`); None for every caller but an anonymous one."""

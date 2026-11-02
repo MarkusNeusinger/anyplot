@@ -1071,25 +1071,33 @@ async def create_session(body: CreateSessionBody, user: User, named: NamedUser, 
     if not result.eligible:
         raise AgentsError(422, "not_eligible")
     services = get_services()
-    # An anonymous caller's network holds at most `AGENT_IP_MAX_SESSIONS` live sessions: tab ids cost nothing.
+    # An anonymous caller's network holds at most `AGENT_IP_MAX_SESSIONS` live sessions: tab ids cost nothing. The
+    # place is taken here, with no `await` between the check and the binding, so parallel requests cannot all pass
+    # the check; it is given back if the session is never created.
     network = services.usage.network_of(user)
     if network is not None and services.network_sessions(network) >= settings.ip_max_sessions:
         raise AgentsError(429, "session_limit")
     session_id = secrets.token_urlsafe(24)
-    state = opening_state(
-        spec_id=body.spec_id,
-        library=library,
-        locale=body.locale,
-        snapshot=body.snapshot,
-        normalised=normalised,
-        eligibility=result,
-    )
-    state.update(_fixture_seed(body.spec_id, library, session_id, body.snapshot, settings))
-    if body.source is not None:
-        state[TELEMETRY_SOURCE] = body.source
-    await runtime.session_service.create_session(app_name=APP_NAME, user_id=user, state=state, session_id=session_id)
     if network is not None:
         services.bind_session(session_id, network)
+    try:
+        state = opening_state(
+            spec_id=body.spec_id,
+            library=library,
+            locale=body.locale,
+            snapshot=body.snapshot,
+            normalised=normalised,
+            eligibility=result,
+        )
+        state.update(_fixture_seed(body.spec_id, library, session_id, body.snapshot, settings))
+        if body.source is not None:
+            state[TELEMETRY_SOURCE] = body.source
+        await runtime.session_service.create_session(
+            app_name=APP_NAME, user_id=user, state=state, session_id=session_id
+        )
+    except BaseException:
+        services.session_networks.pop(session_id, None)
+        raise
     return JSONResponse({"session_id": session_id, "eligibility": result.public()}, headers=_NO_STORE)
 
 
