@@ -3,10 +3,44 @@ import { describe, expect, it } from 'vitest';
 import {
   describeConvertFailure,
   describeDataFailure,
+  describeViewFailure,
   localClock,
   nextUtcMidnight,
   servicePausedText,
 } from './messages';
+
+describe('describeViewFailure', () => {
+  it.each([
+    ['no_dataset', null, undefined, 'could not show every row: parse the data first'],
+    [
+      'not_found',
+      'r-2',
+      undefined,
+      'could not show every row: this server cannot show every row yet · ref r-2',
+    ],
+    [
+      'too_large',
+      null,
+      undefined,
+      'could not show every row: the data is larger than the view reads (4 MB)',
+    ],
+    [
+      'csv',
+      null,
+      'row 3: a quote inside an unquoted cell',
+      'could not show every row: the file is not the CSV it should be (row 3: a quote inside an unquoted cell)',
+    ],
+    ['boom', null, undefined, 'could not show every row: request failed (boom)'],
+  ])('names %s', (code, ref, detail, text) => {
+    expect(describeViewFailure(code, ref, detail)).toBe(text);
+  });
+
+  it('names the service pause like the other data calls', () => {
+    expect(describeViewFailure('service_paused', null)).toBe(
+      `could not show every row: ${servicePausedText()}`
+    );
+  });
+});
 
 describe('the service pause', () => {
   it('ends at the next 00:00 UTC, also a second before it', () => {

@@ -47,6 +47,14 @@ def test_the_bff_sends_the_pages_headers_of_the_agents_service() -> None:
     assert PAGE_HEADERS["Content-Security-Policy"] == "sandbox"
 
 
+def test_the_bff_relays_the_current_data_up_to_the_canonical_cap() -> None:
+    """The data view's `data.csv` is the stored canonical CSV, which a parse never lets grow past its cap."""
+    from agents.anyplot.data.parse import MAX_CANONICAL_BYTES
+    from api.routers.agent import MAX_DATASET_CSV_BYTES
+
+    assert MAX_DATASET_CSV_BYTES == MAX_CANONICAL_BYTES
+
+
 class TestArtifactNames:
     def test_python_stays_plot_py(self) -> None:
         assert DEFAULT_CODE_ARTIFACT == "plot.py"

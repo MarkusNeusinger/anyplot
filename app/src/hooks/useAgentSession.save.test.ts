@@ -59,6 +59,9 @@ function mockFetch() {
         });
       }
       if (call.method === 'GET' && call.path === '/sessions/S1abcdefgh/bundle') return bundle(call);
+      if (call.method === 'GET' && call.path === '/sessions/S1abcdefgh/dataset/data.csv') {
+        return new Response('a,b\n1.50,2\n');
+      }
       if (call.method === 'POST' && call.path === '/sessions/S1abcdefgh/dataset') {
         return dataset(call);
       }
@@ -105,6 +108,21 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
+});
+
+describe('useAgentSession: .view_all()', () => {
+  it('reads the current version of the session as its text', async () => {
+    const { result } = await openSession();
+    await expect(result.current.fetchDataCsv()).resolves.toBe('a,b\n1.50,2\n');
+  });
+
+  it('refuses before a session exists, without a request', async () => {
+    mockFetch();
+    const { result } = renderHook(() => useAgentSession(options));
+    await expect(result.current.fetchDataCsv()).rejects.toMatchObject({ code: 'no_session' });
+    expect(calls.map(call => call.path)).not.toContain('/sessions/S1abcdefgh/dataset/data.csv');
+    await waitFor(() => expect(result.current.state.phase).toBe('ready'));
+  });
 });
 
 describe('useAgentSession: .save()', () => {

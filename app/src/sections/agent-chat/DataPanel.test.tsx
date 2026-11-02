@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import {
   type AgentSessionState,
@@ -7,7 +7,7 @@ import {
 } from 'src/hooks/useAgentSession';
 import { AgentApiError, type ConvertAnswer, type RoleSpec } from 'src/lib/agent';
 import { bindingRows } from 'src/sections/agent-chat/bindings';
-import { DataPanel } from 'src/sections/agent-chat/DataPanel';
+import { DataPanel, DataViewUnavailable } from 'src/sections/agent-chat/DataPanel';
 import { fireEvent, render, screen, userEvent, waitFor, within } from 'src/test-utils';
 
 /** `scrollIntoView` as a spy: jsdom has none. */
@@ -751,6 +751,80 @@ describe('DataPanel data changes', () => {
     expect(screen.queryByRole('button', { name: /\.undo\(\)/ })).not.toBeInTheDocument();
     // Generated data is unconfirmed like a paste: step 1 ends with .confirm().
     expect(screen.getByRole('button', { name: '.confirm()' })).toBeEnabled();
+  });
+});
+
+describe('DataPanel full view', () => {
+  const CSV = 'month,shoes,hats,scarves,region\n2026-01,1,2,3,north\n';
+
+  // The view is a lazy chunk with the whole grid: loaded once up front, so a busy test run
+  // does not spend the queries' time on the first import.
+  beforeAll(async () => {
+    await import('src/sections/agent-chat/DataView');
+  }, 30_000);
+
+  function renderPanel(state: AgentSessionState, extra: Record<string, unknown> = {}) {
+    render(
+      <DataPanel
+        state={state}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onSendFormula={vi.fn()}
+        onBind={vi.fn()}
+        onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
+        {...extra}
+      />
+    );
+  }
+
+  it('says in the card when the view did not load, and .close() leaves the page as it was', async () => {
+    const onClose = vi.fn();
+    render(<DataViewUnavailable onClose={onClose} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('the table view did not load');
+
+    await userEvent.click(screen.getByRole('button', { name: '.close()' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers .view_all() only where the page can load the data', () => {
+    renderPanel(stateWith({ x: 'month', y1: 'shoes' }));
+    expect(screen.queryByRole('button', { name: /^View all/ })).not.toBeInTheDocument();
+  });
+
+  it('opens every row in the view, reports it once and gives the focus back on .close()', async () => {
+    const load = vi.fn(() => Promise.resolve(CSV));
+    const onDataViewShown = vi.fn();
+    renderPanel(stateWith({ x: 'month', y1: 'shoes' }), { onLoadData: load, onDataViewShown });
+    const open = screen.getByRole('button', { name: 'View all 1 row' });
+    expect(open).toHaveTextContent('.view_all()');
+    expect(open).toHaveAttribute('aria-haspopup', 'dialog');
+
+    await userEvent.click(open);
+    const dialog = await screen.findByRole('dialog', { name: /every row · 1 row · 5 columns/ });
+    expect(await within(dialog).findByText('north')).toBeInTheDocument();
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(onDataViewShown).toHaveBeenCalledTimes(1);
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Close the data view' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(open).toHaveFocus();
+  });
+
+  it('opens while a step runs and while the fan-out panel holds the data: it only reads', async () => {
+    const load = vi.fn(() => Promise.resolve(CSV));
+    renderPanel(
+      stateWith(
+        { x: 'month', y1: 'shoes' },
+        { run: { kind: 'message', steps: [], queue: null, stopping: false } }
+      ),
+      { onLoadData: load, locked: true }
+    );
+    const open = screen.getByRole('button', { name: 'View all 1 row' });
+    expect(open).toBeEnabled();
+    await userEvent.click(open);
+    expect(await screen.findByRole('grid')).toBeInTheDocument();
   });
 });
 
