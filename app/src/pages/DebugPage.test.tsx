@@ -2,6 +2,7 @@ import { fireEvent } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DebugPage } from 'src/pages/DebugPage';
+import { localClock } from 'src/sections/agent-chat/messages';
 import { render, screen, waitFor, within } from 'src/test-utils';
 
 const mockDebugData = {
@@ -634,9 +635,7 @@ describe('DebugPage agent usage', () => {
     const days = await screen.findByRole('group', { name: 'Per day' });
     const table = await within(days).findByRole('table');
     const [head, today, quiet] = within(table).getAllByRole('row');
-    expect(head).toHaveTextContent(
-      'day (UTC)new chatsplotscostfan-outlimit hitsp95 queue wait'
-    );
+    expect(head).toHaveTextContent('day (UTC)new chatsplotscostfan-outlimit hitsp95 queue wait');
     expect(today).toHaveTextContent(
       '2026-11-02 · so far43$0.02$0.12service_paused 2 · capacity 112.4 s'
     );
@@ -699,7 +698,10 @@ describe('DebugPage agent usage', () => {
     render(<DebugPage />);
 
     expect(await screen.findByTestId('agent-today-paused')).toHaveTextContent(
-      'paused · the day budget is spent: every turn gets service_paused until'
+      'paused · the day budget is spent: every turn gets service_paused until 00:00 UTC ('
+    );
+    expect(screen.getByTestId('agent-today-paused')).toHaveTextContent(
+      `(${localClock(BUDGET.resets_at)} your time)`
     );
     // No price for the model: the tokens alone.
     expect(screen.getByTestId('agent-today')).toHaveTextContent(

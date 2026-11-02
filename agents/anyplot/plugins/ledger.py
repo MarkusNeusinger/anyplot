@@ -367,10 +367,10 @@ class UsageBook:
         `daily_ok` folds into its answer, told apart from a spent token budget."""
         return self.user_strikes(user_id) >= settings.attack_strikes
 
-    def paused(self, settings: AgentSettings, *, reserve: int = 0) -> bool:
-        """Whether the service's day budget (`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`) is spent, `reserve` tokens beyond the
-        spend: the `service_paused` refusal for everyone until 00:00 UTC, which `daily_ok` folds into its answer."""
-        return self.global_tokens() + reserve >= settings.global_daily_token_budget
+    def paused(self, settings: AgentSettings) -> bool:
+        """Whether the service's day budget (`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`) is spent: the `service_paused` refusal
+        for everyone until 00:00 UTC, which `daily_ok` folds into its answer."""
+        return self.global_tokens() >= settings.global_daily_token_budget
 
     def snapshot(self, settings: AgentSettings) -> DaySnapshot:
         """Today's global spend and how many users are at their own day caps, as counts (`DaySnapshot`)."""
@@ -536,13 +536,12 @@ def _at_least(counts: dict[str, int], cap: int) -> set[str]:
     return {user for user, count in counts.items() if count >= cap}
 
 
-def day_refusal(usage: UsageBook, user_id: str, settings: AgentSettings, *, reserve: int = 0) -> str:
+def day_refusal(usage: UsageBook, user_id: str, settings: AgentSettings) -> str:
     """Which refusal a failed `daily_ok` is: `locked_out` past the day's strikes, `budget` when the user's own day
     budget is spent, `service_paused` when only the service's is (its text says the user's own limit is untouched)."""
     if usage.locked_out(user_id, settings):
         return "locked_out"
-    own_left = usage.user_tokens(user_id) + reserve < settings.daily_token_budget
-    if own_left and usage.paused(settings, reserve=reserve):
+    if usage.user_tokens(user_id) < settings.daily_token_budget and usage.paused(settings):
         return SERVICE_PAUSED
     return "budget"
 

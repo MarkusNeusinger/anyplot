@@ -22,7 +22,7 @@ import Typography from '@mui/material/Typography';
 import { DEBUG_API_URL } from 'src/constants';
 import { fetchWithAuth } from 'src/lib/api';
 import { localClock } from 'src/sections/agent-chat/messages';
-import { formatUtc, timeAgo } from 'src/sections/debug/format';
+import { formatUsd, formatUtc, timeAgo } from 'src/sections/debug/format';
 import { listMutedSx, listTextSx } from 'src/sections/debug/styles';
 import { colors } from 'src/theme';
 
@@ -159,12 +159,6 @@ function readDaily(body: unknown): AgentUsageDaily | null {
 // Formatting
 // ============================================================================
 
-/** Dollars to the cent; a spend below a cent is `<$0.01`, never `$0.00`. */
-export function formatUsd(value: number): string {
-  if (value > 0 && value < 0.005) return '<$0.01';
-  return `$${value.toFixed(2)}`;
-}
-
 const millions = (tokens: number): string => `${(tokens / 1e6).toFixed(1)} M`;
 
 /** The time of day of a UTC instant, `14:05 UTC`. */
@@ -229,12 +223,7 @@ const subheadSx = {
 } as const;
 
 export function AgentTodayLine({ token, reloadCounter }: DayViewProps) {
-  const budget = useAnswer(
-    `${DEBUG_API_URL}/debug/agent/budget`,
-    token,
-    reloadCounter,
-    readBudget
-  );
+  const budget = useAnswer(`${DEBUG_API_URL}/debug/agent/budget`, token, reloadCounter, readBudget);
 
   return (
     <Box role="group" aria-label="Today, live">
@@ -253,7 +242,8 @@ export function AgentTodayLine({ token, reloadCounter }: DayViewProps) {
 }
 
 function TodayText({ budget }: { budget: AgentBudget }) {
-  const share = budget.budget_tokens > 0 ? Math.round((budget.tokens / budget.budget_tokens) * 100) : null;
+  const share =
+    budget.budget_tokens > 0 ? Math.round((budget.tokens / budget.budget_tokens) * 100) : null;
   const spend =
     budget.usd !== null && budget.budget_usd !== null
       ? `${formatUsd(budget.usd)} of ${formatUsd(budget.budget_usd)}`
@@ -264,7 +254,9 @@ function TodayText({ budget }: { budget: AgentBudget }) {
       : '';
   const breakdown = limitBreakdown(budget.limits);
   const startedToday = budget.since === budget.started_at;
-  const resets = localClock(budget.resets_at) ?? utcClock(budget.resets_at);
+  // UTC like the rest of the line, then the reader's own clock.
+  const local = localClock(budget.resets_at);
+  const resets = `${utcClock(budget.resets_at)}${local ? ` (${local} your time)` : ''}`;
   return (
     <>
       {budget.paused && (
@@ -289,7 +281,8 @@ function TodayText({ budget }: { budget: AgentBudget }) {
         {startedToday
           ? `counted since ${utcClock(budget.since)}, when this instance started`
           : `counted since 00:00 UTC; this instance has run since ${formatUtc(budget.started_at)}`}
-        {' · '}a redeploy or a scale to zero starts the counts again · the new day starts at {resets}
+        {' · '}a redeploy or a scale to zero starts the counts again · the new day starts at{' '}
+        {resets}
       </Typography>
     </>
   );
@@ -378,9 +371,9 @@ export function AgentDailyTable({ token, reloadCounter }: DayViewProps) {
             </Box>
           </Box>
           <Typography sx={{ ...listMutedSx, mt: 0.75 }}>
-            new chats: live sessions by the day of their first line · cost: list price, the fan-out's
-            apart · limit hits: refusals and errors by code · — : no run on that day carried the
-            queue wait yet
+            new chats: live sessions by the day of their first line · cost: list price, the
+            fan-out's apart · limit hits: refusals and errors by code · — : no run on that day
+            carried the queue wait yet
             {daily.generated_at ? ` · generated ${timeAgo(daily.generated_at)}` : ''}
           </Typography>
         </>
@@ -412,7 +405,7 @@ function DayRow({ day, today }: { day: UsageDay; today: boolean }) {
       <Box component="td" sx={{ ...cellSx, color: 'var(--ink-soft)' }}>
         {formatUsd(day.fanout_cost_usd)}
       </Box>
-      <Box component="td" sx={{ ...cellSx, textAlign: 'left', whiteSpace: 'normal' }}>
+      <Box component="td" sx={{ ...cellSx, textAlign: 'left' }}>
         {hits.length === 0 ? (
           <Box component="span" sx={{ color: 'var(--ink-muted)' }}>
             0

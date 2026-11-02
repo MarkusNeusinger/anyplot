@@ -26,9 +26,7 @@ describe('the service pause', () => {
   });
 
   it('is the line of a paused paste or file, never the daily limit of the user', () => {
-    expect(describeDataFailure('service_paused', 'r-9')).toBe(
-      `${servicePausedText()} · ref r-9`
-    );
+    expect(describeDataFailure('service_paused', 'r-9')).toBe(`${servicePausedText()} · ref r-9`);
     expect(describeConvertFailure('a.xlsx', 'service_paused', null, null, null)).toBe(
       `"a.xlsx" ${servicePausedText()}`
     );

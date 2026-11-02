@@ -388,6 +388,8 @@ class TestDailyQuery:
         assert "CURRENT_TIMESTAMP" not in sql and "CURRENT_DATE" not in sql
         # The lookback only dates the chats: every count of the window reads from its start.
         assert sql.count("WHERE ts >= @since") == 3 and "WHERE first_ts >= @since" in sql
+        # As the card's `COUNT(DISTINCT session)`: a line without a session is no chat.
+        assert "source = 'live' AND session IS NOT NULL GROUP BY session" in sql
 
     def test_counts_live_lines_and_the_fanout_cost_apart(self) -> None:
         sql = daily_sql(DATASET)

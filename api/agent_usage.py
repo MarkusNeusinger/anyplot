@@ -383,7 +383,7 @@ WITH ev AS (
 ),
 chats AS (
   SELECT DATE(first_ts) AS day, COUNT(*) AS sessions
-  FROM (SELECT session, MIN(ts) AS first_ts FROM ev WHERE source = 'live' GROUP BY session)
+  FROM (SELECT session, MIN(ts) AS first_ts FROM ev WHERE source = 'live' AND session IS NOT NULL GROUP BY session)
   WHERE first_ts >= @since
   GROUP BY day
 ),

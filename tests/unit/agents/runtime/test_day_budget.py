@@ -81,7 +81,7 @@ class TestUsageBook:
         usage.add_tokens("a", 400)
         assert not usage.paused(settings) and usage.daily_ok("b", settings)
         usage.add_tokens("a", 599)
-        assert usage.paused(settings, reserve=1) and not usage.paused(settings)
+        assert not usage.paused(settings)
         usage.add_tokens("c", 1)
         # Spent by others: `b` still has their own budget, so the refusal says the whole service paused.
         assert usage.paused(settings) and not usage.daily_ok("b", settings)
@@ -188,9 +188,7 @@ class TestPauseRefusal:
     ) -> None:
         """The Budget plugin's halt before a root call names the pause too, not the user's own `budget`."""
         ledger = RequestLedger(user_id=USER, lang="de")
-        context = SimpleNamespace(
-            invocation_id="inv-1", agent_name=ROOT_AGENT, session=SimpleNamespace(user_id=USER)
-        )
+        context = SimpleNamespace(invocation_id="inv-1", agent_name=ROOT_AGENT, session=SimpleNamespace(user_id=USER))
         services.usage.add_tokens(OTHER, small_budget.global_daily_token_budget)
         token = CURRENT_LEDGER.set(ledger)
         try:
