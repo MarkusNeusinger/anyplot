@@ -14,8 +14,9 @@
   it.
 - **Per-IP limits for anonymous callers.** The users of one network (an IPv4
   address or an IPv6 /64) share 4 sandbox runs at once, 100 pipeline runs and
-  20,000,000 weighted tokens a day, twice the per-user caps, because a tab id
-  costs nothing to mint. The public lane holds at most 10 waiting runs in the
+  20,000,000 weighted tokens a day, and twice the per-user minute and day of
+  pastes, conversions, chat turns and beacons: twice the per-user caps,
+  because a tab id costs nothing to mint. The public lane holds at most 10 waiting runs in the
   agents queue, one API instance relays at most 20 public chat turns at once
   so the catalogue keeps half its request slots, and a network stores at most
   20 feedback cases an hour.

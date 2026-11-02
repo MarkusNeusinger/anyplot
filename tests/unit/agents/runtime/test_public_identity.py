@@ -90,6 +90,14 @@ class TestIdentity:
         assert raw.status_code == 404  # the tab id as a plain user id is somebody else
         assert services.usage.network_of(anonymous_user(TAB)) == network_key(NETWORK)
 
+    async def test_eligibility_binds_no_network(self, client: httpx.AsyncClient, services: Services) -> None:
+        response = await client.get(
+            "/v1/eligibility", params={"spec": "scatter-basic", "library": "matplotlib"}, headers=anon_headers()
+        )
+
+        assert response.status_code == 200
+        assert services.usage.network_of(anonymous_user(TAB)) is None  # the plot page asks on every visit
+
     async def test_the_body_names_the_tab_id_as_sent(self, client: httpx.AsyncClient) -> None:
         body = {
             "user": anonymous_user(TAB),
@@ -167,6 +175,32 @@ class TestNetworkDay:
 
         assert book.network_tokens(user) == 10  # the old network keeps the 100 it booked
         assert book.user_tokens(user) == 110
+
+    def test_the_tabs_of_one_network_share_its_pastes_minute_and_day(self) -> None:
+        settings = AgentSettings(user_pastes_per_minute=2, user_pastes_per_day=3)
+        clock = Clock()
+        book = UsageBook(clock=clock)
+        tabs = self.bound(book, *(f"{index:02d}{TAB[2:]}" for index in range(4)))
+
+        for user in tabs[:2]:  # two tabs fill the network's minute: twice the per-user 2
+            for _ in range(2):
+                assert book.paste_limit(user, settings) is None
+                book.add_paste(user)
+        assert book.paste_limit(tabs[2], settings) == "rate_limited"  # a fresh tab, the same machine
+
+        clock.advance(61)
+        book.add_paste(tabs[2])
+        book.add_paste(tabs[2])
+        assert book.paste_limit(tabs[3], settings) == "daily_limit"  # six of the network's twice-three today
+        assert book.paste_limit(anonymous_user(OTHER_TAB), settings) is None  # unbound: only its own caps
+
+    def test_the_admin_and_other_named_callers_keep_their_own_windows(self) -> None:
+        settings = AgentSettings(user_messages_per_minute=1, user_messages_per_day=5)
+        book = UsageBook(clock=Clock())
+        book.add_message("adm_0123456789abcdef")
+
+        assert book.message_limit("adm_0123456789abcdef", settings) == "rate_limited"
+        assert book.message_limit("adm_fedcba9876543210", settings) is None  # no network ties the two
 
     def test_a_turn_across_midnight_still_books_to_its_network(self, monkeypatch: pytest.MonkeyPatch) -> None:
         book = UsageBook()

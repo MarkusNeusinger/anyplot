@@ -532,7 +532,10 @@ functions as the admin lane, so each route behaves as its admin twin in
   `error {"code": "run_limit"}`), 100 pipeline runs and 20,000,000
   cost-weighted tokens a UTC day (`AGENT_IP_DAILY_PIPELINE_RUNS`,
   `AGENT_IP_DAILY_TOKEN_BUDGET`; past either, the turn gets the `budget`
-  refusal). These are twice the per-user limits, for shared networks. The run
+  refusal), and twice the per-user limits on pastes, file conversions, chat
+  turns and outcome beacons, per minute and per UTC day (the same
+  `rate_limited` and `daily_limit` answers). These are twice the per-user
+  limits, for shared networks. The run
   queue holds at most 10 waiting public runs (`AGENT_PUBLIC_QUEUE_MAX_WAITING`),
   and one anyplot-api instance relays at most 20 public chat turns at once
   (`AGENT_PUBLIC_MAX_STREAMS`; one more is `503 capacity` before it reaches
