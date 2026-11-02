@@ -1,7 +1,7 @@
 """anyplot-agents: the private `/v1` API in front of the ADK runner.
 
-The service is called only by the BFF (`api/routers/agent.py`, `/debug/agent/*`)
-through Cloud Run IAM. It never exposes ADK's own server (`adk web`,
+The service is called only by the BFF (`api/routers/agent.py`, `/debug/agent/*` for admins, and
+`api/routers/agent_public.py`, `/agent/*` for everyone) through Cloud Run IAM. It never exposes ADK's own server (`adk web`,
 `get_fast_api_app`): the client cannot choose a user id or write state, events or
 artifacts. Sessions, datasets, renders and versions live in memory for one instance
 lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
@@ -52,6 +52,17 @@ tier, never an error: a BFF deployed before the header keeps today's limits for 
 A header, not the `adm_` prefix of the user id: the id stays opaque, the tier stays one
 explicit assertion in one place of the BFF (`agent_context`), and a later tier (`premium`)
 needs no new id format.
+
+The public BFF (`api/routers/agent_public.py`, launch package of 2026-11-02) sends
+`X-Anyplot-Anon`, its page's random tab id, instead of `X-Anyplot-User`, plus
+`X-Anyplot-Network`, the client's IPv4 address or IPv6 /64. Such a caller is always `public`.
+`require_user` keys it on the tab id salted with this process's salt (`pub_` + 16 hex digits,
+`ledger.anonymous_user`), and binds it for the day to the salted network
+(`ledger.network_key`), which the per-IP caps count: `AGENT_IP_MAX_RUNS` in the run queue,
+`AGENT_IP_DAILY_TOKEN_BUDGET` and `AGENT_IP_DAILY_PIPELINE_RUNS` in the usage book. Neither
+header is stored or logged as sent, and the salt dies with the process, so nothing outlives
+the instance that could map an id back to a tab or an address. `POST /v1/sessions` checks its
+body's `user` against the id as sent (`named_user`).
 
 A `/messages` turn starts at once: the stream sends `ready` and the run begins, so a
 plain answer, a refusal, `prepare_data` or `generate_data` never waits (owner decision
@@ -226,10 +237,12 @@ from agents.anyplot.plugins.ledger import (
     CURRENT_LEDGER,
     RequestLedger,
     Tier,
+    anonymous_user,
     attribution,
     budget_allows,
     day_refusal,
     judge_budget_tokens,
+    network_key,
     next_reset,
     session_hash,
     utc_stamp,
@@ -350,6 +363,14 @@ PAGE_HEADERS: dict[str, str] = {
 never a page of this origin. A browser that renders it anyway gives it an opaque origin without scripts; the file
 opened from disk carries its own policy and frame (`render/page.py`)."""
 _USER = re.compile(USER_PATTERN)
+ANON_PATTERN = r"^[A-Za-z0-9_-]{22,64}$"
+"""An anonymous caller's tab id (`X-Anyplot-Anon`): the public BFF's `ANON_ID_PATTERN`, copied, because neither
+image ships the other's package."""
+NETWORK_PATTERN = r"^[0-9a-f.:/]{1,64}$|^unknown$"
+"""The client network the public BFF forwards (`X-Anyplot-Network`): an IPv4 address, an IPv6 /64 in its compressed
+form, or `unknown` for a client address the BFF could not read (`api/routers/agent_public.py` `client_network`)."""
+_ANON = re.compile(ANON_PATTERN)
+_NETWORK = re.compile(NETWORK_PATTERN)
 _NO_STORE = {"Cache-Control": "private, no-store"}
 OPERATIONS = TypeAdapter(list[Operation])
 
@@ -529,11 +550,13 @@ class TurnSlot:
     `status{step:"queued"}`), and resumes the deadline with the time it had left when the entry starts.
     A later call in the same turn answers at once: one start per turn. The entry goes into
     the lane of the turn's tier (`TIER_LANES`), and its position at submit and its wait go into
-    the ledger for the run's usage telemetry (`RequestLedger.queue_position`, `queue_wait_s`). A full queue or
+    the ledger for the run's usage telemetry (`RequestLedger.queue_position`, `queue_wait_s`). A full queue,
+    a public lane at `AGENT_PUBLIC_QUEUE_MAX_WAITING`, or
     an expired wait fails the turn with `capacity` and aborts the run, so the stream ends
     with `error{code:"capacity"}` and the root spends no further call; a user who already
     holds their lane's cap of entries (`AGENT_USER_MAX_RUNS`, `AGENT_ADMIN_USER_MAX_RUNS`) in
-    other sessions fails it the same way with `run_limit` (`QueueUserLimit`); a cancelled
+    other sessions, or an anonymous user whose network holds `AGENT_IP_MAX_RUNS`,
+    fails it the same way with `run_limit` (`QueueUserLimit`); a cancelled
     wait ends the run like any cancel. The entry is released with the turn (`Runtime.finish`).
     """
 
@@ -554,9 +577,11 @@ class TurnSlot:
         self.runtime.drop_stale(get_settings())
         queue = self.runtime.run_queue()
         lane = TIER_LANES[self.ledger.tier]
+        # An anonymous user's network (`require_user`) counts toward `AGENT_IP_MAX_RUNS`; None for everyone else.
+        network = get_services().usage.network_of(self.run.user)
         try:
-            ticket = queue.submit(self.run.user, self.session_id, lane)
-        except QueueUserLimit:  # the user's runs in their other sessions fill their share: not `capacity`
+            ticket = queue.submit(self.run.user, self.session_id, lane, network=network)
+        except QueueUserLimit:  # the user's or their network's runs fill their share: not `capacity`
             attribution("queue", self.ledger, verdict="run_limit", waited_s=0.0, lane=lane)
             self._fail("run_limit")
             return False
@@ -781,21 +806,54 @@ def check_caller(request: Request) -> None:
         raise AgentsError(403, "forbidden")
 
 
-def require_user(x_anyplot_user: Annotated[str | None, Header()] = None) -> str:
+def named_user(
+    x_anyplot_user: Annotated[str | None, Header()] = None, x_anyplot_anon: Annotated[str | None, Header()] = None
+) -> str:
+    """The caller's id as the BFF sent it: `X-Anyplot-User` (the admin's keyed id, or a test's), or the anonymous
+    tab id of `X-Anyplot-Anon` (the public BFF), never both. `POST /v1/sessions` checks its body's `user` against it."""
+    if x_anyplot_anon is not None:
+        if x_anyplot_user is not None or not _ANON.fullmatch(x_anyplot_anon):
+            raise AgentsError(400, "user_required")
+        return x_anyplot_anon
     if not x_anyplot_user or not _USER.fullmatch(x_anyplot_user):
         raise AgentsError(400, "user_required")
     return x_anyplot_user
 
 
-def caller_tier(x_anyplot_tier: Annotated[str | None, Header()] = None) -> Tier:
+def require_user(
+    named: Annotated[str, Depends(named_user)],
+    x_anyplot_anon: Annotated[str | None, Header()] = None,
+    x_anyplot_network: Annotated[str | None, Header()] = None,
+) -> str:
+    """The user id every session, limit and attribution line is keyed on.
+
+    `X-Anyplot-User` is taken as sent. An anonymous public caller (`X-Anyplot-Anon`, its page's random tab id) gets
+    `ledger.anonymous_user`: the id salted with this process's salt, so nothing that outlives the process can map it
+    back, and every anyplot-api instance reaches the same user. Its `X-Anyplot-Network` (the client's IPv4 address
+    or IPv6 /64, which the public BFF always sends with the tab id) is required, salted at once (`network_key`) and
+    bound to the user in the usage book for the day (`UsageBook.bind_network`), so the per-IP caps count it; neither
+    header is ever stored or logged as sent.
+    """
+    if x_anyplot_anon is None:
+        return named
+    if x_anyplot_network is None or not _NETWORK.fullmatch(x_anyplot_network):
+        raise AgentsError(400, "network_required")
+    user = anonymous_user(named)
+    get_services().usage.bind_network(user, network_key(x_anyplot_network))
+    return user
+
+
+def caller_tier(
+    x_anyplot_tier: Annotated[str | None, Header()] = None, x_anyplot_anon: Annotated[str | None, Header()] = None
+) -> Tier:
     """The caller's tier as the BFF asserts it: `admin` only for exactly `X-Anyplot-Tier: admin`, else `public`.
 
     Trusted because only an allowed caller reaches a `/v1` route (`check_caller`); the browser never talks to this
     service, and the BFF sets the header from the identity its admin gate verified, never from a request field.
     A missing or unknown value is `public`, never an error, so a BFF deployed before the header keeps every user
-    in the public lane.
+    in the public lane. An anonymous caller (`X-Anyplot-Anon`) is `public` whatever the tier header says.
     """
-    return "admin" if x_anyplot_tier == "admin" else "public"
+    return "admin" if x_anyplot_tier == "admin" and x_anyplot_anon is None else "public"
 
 
 def request_id(x_request_id: Annotated[str | None, Header()] = None) -> str:
@@ -805,6 +863,7 @@ def request_id(x_request_id: Annotated[str | None, Header()] = None) -> str:
 
 
 User = Annotated[str, Depends(require_user)]
+NamedUser = Annotated[str, Depends(named_user)]
 CallerTier = Annotated[Tier, Depends(caller_tier)]
 RequestId = Annotated[str, Depends(request_id)]
 SessionId = Annotated[str, Path(pattern=SESSION_PATTERN)]
@@ -996,9 +1055,10 @@ def _assess(runtime: Runtime, snapshot: CatalogueSnapshot, library: str) -> tupl
 
 
 @app.post("/v1/sessions", dependencies=v1_dependencies)
-async def create_session(body: CreateSessionBody, user: User, runtime: RuntimeDep) -> JSONResponse:
+async def create_session(body: CreateSessionBody, user: User, named: NamedUser, runtime: RuntimeDep) -> JSONResponse:
     settings = get_settings()
-    if body.user != user or body.snapshot.spec_id != body.spec_id:
+    # The body names the caller as the BFF sent it; an anonymous caller's session is owned by the salted id.
+    if body.user != named or body.snapshot.spec_id != body.spec_id:
         raise AgentsError(422, "invalid")
     library = _library(body.library, settings)
     result, normalised = _assess(runtime, body.snapshot, library)

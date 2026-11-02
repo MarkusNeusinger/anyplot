@@ -35,6 +35,7 @@ from api.exceptions import (  # noqa: E402
 from api.mcp.server import mcp_server  # noqa: E402
 from api.origin_gate import OriginSecretMiddleware  # noqa: E402
 from api.routers import (  # noqa: E402
+    agent_public_router,
     agent_router,
     debug_router,
     download_router,
@@ -381,6 +382,7 @@ app.include_router(proxy_router)
 app.include_router(preview_router)
 app.include_router(debug_router)
 app.include_router(agent_router)
+app.include_router(agent_public_router)
 app.include_router(feedback_router)
 
 

@@ -5,6 +5,7 @@ from the database. Integration coverage (real persistence, rate limiting against
 SQLite) lives in tests/integration/api/test_api_endpoints.py.
 """
 
+import hashlib
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -12,7 +13,7 @@ from fastapi.testclient import TestClient
 
 from api.cache import clear_cache
 from api.main import app, fastapi_app
-from api.routers.feedback import _client_ip
+from api.routers.feedback import _client_ip, _hash_ip
 from core.database import get_db
 
 
@@ -137,8 +138,33 @@ class TestFeedbackRouter:
         assert kwargs["reaction"] == "thumbs_up"
         assert kwargs["contact"] == "@someone"  # trimmed
         assert kwargs["spec_id"] == "scatter-basic"
-        assert kwargs["ip_hash"]  # sha256 hex, not raw IP
+        assert kwargs["ip_hash"].startswith("hmac:") and len(kwargs["ip_hash"]) == 37  # salted, never the address
         assert "198.51.100.7" not in kwargs["ip_hash"]
+        # The salted hashes past the longest window are cleared with every submission.
+        instance.clear_ip_hashes.assert_awaited_once()
+        prefix, before = instance.clear_ip_hashes.await_args.args
+        assert prefix == "hmac:" and before.tzinfo is None
+
+    def test_the_ip_hash_is_salted_per_process(self):
+        """A plain SHA-256 of an IPv4 address is undone by trying all four billion; the salt never leaves memory."""
+        first, again, other = _hash_ip("198.51.100.7"), _hash_ip("198.51.100.7"), _hash_ip("198.51.100.8")
+
+        assert first == again != other
+        assert first.removeprefix("hmac:") not in hashlib.sha256(b"198.51.100.7").hexdigest()
+        assert _hash_ip("") == ""
+
+    def test_a_failed_cleanup_never_fails_the_submission(self, client):
+        instance = AsyncMock()
+        instance.count_recent_by_ip = AsyncMock(return_value=0)
+        instance.has_recent_duplicate = AsyncMock(return_value=False)
+        instance.create = AsyncMock(return_value=None)
+        instance.clear_ip_hashes = AsyncMock(side_effect=RuntimeError("pool exhausted"))
+
+        with patch("api.routers.feedback.FeedbackRepository", return_value=instance):
+            response = client.post("/feedback", json={"reaction": "thumbs_up"})
+
+        assert response.status_code == 200
+        instance.create.assert_awaited_once()
 
     def test_plot_vote_persists_library_and_language(self, client):
         """A 👍 from the plot overlay carries the implementation it is about."""

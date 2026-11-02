@@ -426,11 +426,29 @@ class ImplRepository(BaseRepository[Impl]):
 
 class FeedbackRepository(BaseRepository[Feedback]):
     """Repository for in-app feedback entries (issue #5662). Message/reaction/contact
-    are immutable once written; only `status` can change as admins triage entries.
+    are immutable once written; only `status` can change as admins triage entries,
+    and `ip_hash` is cleared once its rate-limit window has passed
+    (`clear_ip_hashes`).
     """
 
     model = Feedback
     updatable_fields = frozenset({"status"})
+
+    async def clear_ip_hashes(self, prefix: str, before: datetime) -> int:
+        """Null the `ip_hash` of every row created before `before` whose hash starts with `prefix`; the count.
+
+        The feedback router stores a per-process salted hash (`api/routers/feedback.py`
+        `_hash_ip`) only for its rate-limit and duplicate windows and clears it here once
+        they have passed. `prefix` keeps the statement to the hashes of that scheme: the
+        unsalted hashes of older rows are left for a reviewed migration.
+        `before` must be tz-naive UTC, like `feedback.created_at`."""
+        result = await self.session.execute(
+            update(Feedback)
+            .where(Feedback.ip_hash.startswith(prefix, autoescape=True), Feedback.created_at < before)
+            .values(ip_hash=None)
+        )
+        await self.session.commit()
+        return int(getattr(result, "rowcount", 0) or 0)
 
     async def count_recent_by_ip(self, ip_hash: str, since: datetime, messages_only: bool = False) -> int:
         """Count entries from this IP hash since the given UTC datetime — used for rate limiting.

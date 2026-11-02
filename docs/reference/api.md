@@ -420,8 +420,13 @@ The result card frames it with `sandbox="allow-scripts"`. Once its listener is i
 
 ---
 
-## Agent chat (admin only)
+## Agent chat
 
+> **Status (2026-11-02):** the admin routes under `/debug/agent` are live, and
+> the public lane under `/agent` ships dark: it answers `404` until the owner
+> sets `_AGENT_PUBLIC_ENABLED=true` on the deploy-api trigger (see
+> [Public lane](#public-lane)).
+>
 > **Status (2026-10-12):** the routes are switched on in production since
 > 2026-10-11: the deploy-api trigger sets `AGENT_ENABLED=true` and
 > `AGENT_SERVICE_URL`, the `AGENT_USER_ID_KEY` secret is bound, and the
@@ -492,6 +497,76 @@ the API-wide shape (see [Standard error format](#standard-error-format)).
 Upstream calls carry a Cloud Run ID token whose
 audience is `AGENT_SERVICE_URL`; for a `localhost` or `127.0.0.1` URL no token
 is fetched.
+
+### Public lane
+
+The `/agent/*` routes (`api/routers/agent_public.py`, since 2026-11-02) open
+the chat to everyone, labelled experimental. They call the same route
+functions as the admin lane, so each route behaves as its admin twin in
+[Routes](#routes), with these differences:
+
+- **Door.** Every public route answers `404 {"detail": "agent chat is not enabled"}`
+  unless `AGENT_PUBLIC_ENABLED` is true on top of the admin lane's switch and
+  configuration. `AGENT_ENABLED` stays the master switch, so closing the
+  public door leaves the admin lane open. The deploy sets it from the
+  trigger's `_AGENT_PUBLIC_ENABLED`, and its smoke test checks that
+  `GET /agent/lane` answers `404` while the door is closed, and `200` plus a
+  public `GET /agent/status` that reaches the agents service while it is
+  open.
+- **Identity.** No login. Your page keeps a random id per browser tab in
+  sessionStorage and sends it as `X-Anyplot-Anon` (22 to 64 characters of
+  `[A-Za-z0-9_-]`; without it, `400 anon_required`). The BFF forwards it with
+  your network: the IPv4 address, or the /64 prefix of the IPv6 address, from
+  Cloudflare's `CF-Connecting-IP`. The agents service salts both with a random
+  per-process salt before it keys anything on them, keeps them in memory
+  only, and logs neither, so no durable key links your usage to an address.
+  Every request asserts `X-Anyplot-Tier: public`.
+  `require_public_identity` is the one place a bot check plugs in later.
+- **Session id in a header.** Cloud Run's request log keeps every URL with the
+  client address for 30 days, so the session id travels as
+  `X-Anyplot-Session` instead of in the path, and the BFF's own log lines
+  never name it.
+- **Limits.** The public tier's per-user limits apply to your tab id, and the
+  per-IP limits to your network: at most 4 sandbox runs queued or running at
+  once (`AGENT_IP_MAX_RUNS`; one more ends the turn with
+  `error {"code": "run_limit"}`), 100 pipeline runs and 20,000,000
+  cost-weighted tokens a UTC day (`AGENT_IP_DAILY_PIPELINE_RUNS`,
+  `AGENT_IP_DAILY_TOKEN_BUDGET`; past either, the turn gets the `budget`
+  refusal). These are twice the per-user limits, for shared networks. The run
+  queue holds at most 10 waiting public runs (`AGENT_PUBLIC_QUEUE_MAX_WAITING`),
+  and one anyplot-api instance relays at most 20 public chat turns at once
+  (`AGENT_PUBLIC_MAX_STREAMS`; one more is `503 capacity` before it reaches
+  the agents service), so the catalogue keeps the other half of the
+  instance's 40 request slots. A network may store at most 20 feedback cases
+  an hour per instance (`AGENT_PUBLIC_FEEDBACK_PER_HOUR`; one more is
+  `429 rate_limited`).
+
+All paths start with `/agent`. A session route takes the session id as
+`X-Anyplot-Session` and has no `{sid}` in its path.
+
+| Route | Admin twin, or what differs |
+|---|---|
+| `GET /lane` | Public only: `{"open": true}` with `Cache-Control: public, max-age=60`, no identity needed and no upstream call, so the landing page and every spec page can ask whether to show the entry points. Closed, it is the router's `404` |
+| `GET /status` | `GET /status`, with only the fields `enabled`, `libraries`, `model`, `location`, `provider`, `version`, `waiting`, `in_flight`, `user_max_runs`, `tier`, `paused` and `resets_at`; a field the agents service adds later stays out until it is named in `PUBLIC_STATUS_FIELDS` |
+| `GET /eligibility?spec=&library=` | `GET /eligibility` |
+| `POST /sessions` | `POST /sessions` with `{spec_id, library, locale}`: `source` is admin-only (the fan-out) and a `422` here |
+| `DELETE /session` | `DELETE /sessions/{sid}` |
+| `POST /session/library` | `POST /sessions/{sid}/library` |
+| `GET`, `DELETE /session/memory`; `DELETE /session/memory/{entry_id}` | The plot memory routes |
+| `POST /session/dataset`, `POST /session/dataset/convert` | The paste and the file conversion |
+| `PUT /session/bindings`, `PUT /session/language` | The bindings and the session language |
+| `POST /session/dataset/confirm`, `/undo`, `/to_long`; `GET /session/dataset/data.csv` | The data steps and the data view |
+| `POST /session/messages?theme=` | The chat turn, behind the per-instance stream cap |
+| `POST /session/cancel`, `POST /session/outcome` | Stop, and the outcome beacon |
+| `POST /session/versions/{version}/render`, `GET /session/artifacts/{name}?v=&theme=` | The theme toggle and the result files |
+| `GET /session/bundle?include_data=&version=` | `.save()`: your session as a file; anyplot keeps no copy |
+| `POST /session/feedback` | The feedback case, behind the per-network hourly cap. The case's `user_hash` is a salted hash of your tab id, never the id itself |
+
+The admin lane's fan-out copy (`POST /sessions/{sid}/dataset/copy`), the day
+budget (`GET /budget`) and the feedback triage (`/cases*`) have no public
+twin. A test maps every admin route onto a public one or onto that list, so
+a new admin route fails the build until someone decides it for the public
+lane.
 
 ### Routes
 

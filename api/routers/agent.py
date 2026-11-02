@@ -14,6 +14,10 @@ chat").
 Shipped dark: while `AGENT_ENABLED` is off, or the service URL or the user-id
 key is unset, every route answers 404, so a deploy that carries this router but
 not its configuration never breaks.
+
+The public lane (`api/routers/agent_public.py`, `/agent/*`) reuses these route
+functions with its own context: an anonymous identity, the `public` tier, the
+session id in a header instead of the path, and no admin-only route.
 """
 
 from __future__ import annotations
@@ -465,14 +469,21 @@ class AgentContext:
 
     `tier` is asserted here and only here, from the identity the admin gate verified: never
     from a request field (the client's `source: fanout` only labels telemetry). Every route of
-    this router passes the admin gate, so every caller is `admin`; a public path, once there is
-    one, builds its context with `public`.
+    this router passes the admin gate, so every caller is `admin`; the public lane
+    (`api/routers/agent_public.py`) builds its context with `public`.
     """
 
     base_url: str
     user_id: str
     request_id: str
     tier: AgentTier = "public"
+    network: str | None = None
+    """The public lane's client network (an IPv4 address or an IPv6 /64), which also marks `user_id` as the page's
+    anonymous tab id: the two go upstream as `X-Anyplot-Anon` and `X-Anyplot-Network`, and the agents service salts
+    both with its per-process salt. None for an admin, whose keyed id goes as `X-Anyplot-User`."""
+    case_user: str | None = None
+    """The `user_hash` a stored feedback case records; None records `user_id`. The public lane sets a salted hash of
+    the tab id, so no case stores the id the browser sent."""
 
 
 def agent_context(
@@ -747,17 +758,28 @@ def _fetch_id_token(audience: str) -> str:
 
 
 async def _upstream_headers(ctx: AgentContext) -> dict[str, str]:
-    headers = {"X-Anyplot-User": ctx.user_id, "X-Anyplot-Tier": ctx.tier, "X-Request-Id": ctx.request_id}
+    headers = {"X-Anyplot-Tier": ctx.tier, "X-Request-Id": ctx.request_id}
+    if ctx.network is None:
+        headers["X-Anyplot-User"] = ctx.user_id
+    else:  # the public lane: the agents service salts the tab id and the network itself (`require_user` there)
+        headers["X-Anyplot-Anon"] = ctx.user_id
+        headers["X-Anyplot-Network"] = ctx.network
     if not _is_local(ctx.base_url):
         token = await run_in_threadpool(_fetch_id_token, ctx.base_url)
         headers["Authorization"] = f"Bearer {token}"
     return headers
 
 
+_SESSION_IN_PATH = re.compile(r"/sessions/[^/]+")
+
+
 def _log_unreachable(ctx: AgentContext, method: str, path: str, exc: BaseException) -> None:
     # The exception class only: the message of a transport or auth error can
     # carry URLs and token fragments, and request content never belongs in logs.
-    logger.warning("agent upstream %s %s unreachable (ref %s): %s", method, path, ctx.request_id, type(exc).__name__)
+    # The session id is left out too: the public lane keeps it out of its URLs, so
+    # no log line pairs it with a request that carries the client's address.
+    route = _SESSION_IN_PATH.sub("/sessions/{sid}", path)
+    logger.warning("agent upstream %s %s unreachable (ref %s): %s", method, route, ctx.request_id, type(exc).__name__)
 
 
 def _binding_errors(body: Any) -> list[str] | None:
@@ -1103,7 +1125,7 @@ class UpstreamStream:
 
 async def open_message_stream(
     sid: SessionId, body: MessageBody, ctx: Ctx, client: Client, theme: Literal["light", "dark"] | None = None
-) -> AsyncIterator[UpstreamStream]:
+) -> AsyncGenerator[UpstreamStream, None]:
     """Open the upstream stream BEFORE the SSE response starts.
 
     A dependency rather than the generator itself, so a 413 here or an upstream
@@ -1421,7 +1443,9 @@ async def get_dataset_csv(sid: SessionId, request: Request, ctx: Ctx, client: Cl
 
 
 @router.post("/sessions/{sid}/messages", response_class=EventSourceResponse)
-async def post_message(upstream: UpstreamStream = Depends(open_message_stream)) -> AsyncIterator[ServerSentEvent]:
+async def post_message(
+    upstream: UpstreamStream = Depends(open_message_stream),
+) -> AsyncGenerator[ServerSentEvent, None]:
     """Relay one chat turn as SSE `anyplot/1`; always ends with a `done` event.
 
     Queued time does not count toward the turn's budget, as it does not count
@@ -1619,7 +1643,7 @@ async def submit_feedback(
             case_id=new_case_id(created_at),
             created_at=created_at,
             bucket=settings.agent_cases_bucket,
-            user_hash=ctx.user_id,
+            user_hash=ctx.case_user or ctx.user_id,
             session_id=sid,
         )
     except NoChatData as exc:

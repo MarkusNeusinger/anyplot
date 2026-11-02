@@ -31,6 +31,12 @@ and sandbox time, not model spend. The fan-out's copies bind no admin (`copy_lim
 windows of `.plot_all()` copy 45 datasets within a minute, and the store's byte cap still
 refuses a copy it has no room for.
 
+An anonymous public caller (the public BFF's `X-Anyplot-Anon`) is also bound to the network it
+came from (`bind_network`, a salted key of its IPv4 address or IPv6 /64), and its tokens and
+pipeline runs count against that network's day too: `AGENT_IP_DAILY_TOKEN_BUDGET` and
+`AGENT_IP_DAILY_PIPELINE_RUNS`, twice the per-user caps for shared networks. A tab id costs
+nothing to mint, so the per-user caps alone would not bound one machine; the network's caps do.
+
 The global day budget binds the whole service: once it is spent (`UsageBook.paused`),
 every user gets the `service_paused` refusal (`day_refusal`) until 00:00 UTC, told apart
 from a user's own spent budget (`budget`, a paste's `daily_limit`). `UsageBook.snapshot`
@@ -294,6 +300,11 @@ class _Day:
     user_copies: dict[str, int] = field(default_factory=dict)
     admins: set[str] = field(default_factory=set)
     """The users who came in the admin tier today (`mark_admin`): the book has no tier of its own, each request does."""
+    user_networks: dict[str, str] = field(default_factory=dict)
+    """The network key (`network_key`) each anonymous user's latest request came from today (`bind_network`)."""
+    network_tokens: dict[str, int] = field(default_factory=dict)
+    network_runs: dict[str, int] = field(default_factory=dict)
+    """The per-IP day counts: what every anonymous user bound to a network booked while bound to it."""
 
 
 MESSAGE_WINDOW_S = 60.0
@@ -357,15 +368,51 @@ class UsageBook:
             self._day = _Day(date)
         return self._day
 
+    def bind_network(self, user_id: str, network: str) -> None:
+        """Count the anonymous user's tokens and pipeline runs against `network` (a `network_key`) from now on, as
+        well as against the user: the per-IP caps (`AGENT_IP_*`). The latest request's network wins, so a phone that
+        changes networks moves on; what it booked stays where it was booked. Bound for the UTC day only."""
+        self._current().user_networks[user_id] = network
+
+    def network_of(self, user_id: str) -> str | None:
+        """The network the user is bound to today (`bind_network`); None for every caller but an anonymous one."""
+        return self._current().user_networks.get(user_id)
+
     def add_tokens(self, user_id: str, tokens: int) -> None:
-        """Book cost-weighted tokens (`weighted_tokens`) against the user's and the service's day."""
+        """Book cost-weighted tokens (`weighted_tokens`) against the user's, their network's and the service's day."""
         day = self._current()
         day.user_tokens[user_id] = day.user_tokens.get(user_id, 0) + tokens
         day.global_tokens += tokens
+        network = day.user_networks.get(user_id)
+        if network is not None:
+            day.network_tokens[network] = day.network_tokens.get(network, 0) + tokens
 
     def add_pipeline_run(self, user_id: str) -> None:
         day = self._current()
         day.user_runs[user_id] = day.user_runs.get(user_id, 0) + 1
+        network = day.user_networks.get(user_id)
+        if network is not None:
+            day.network_runs[network] = day.network_runs.get(network, 0) + 1
+
+    def network_tokens(self, user_id: str) -> int:
+        """The weighted tokens booked today on the user's network; 0 for a user bound to none."""
+        day = self._current()
+        network = day.user_networks.get(user_id)
+        return 0 if network is None else day.network_tokens.get(network, 0)
+
+    def network_runs(self, user_id: str) -> int:
+        """The pipeline runs booked today on the user's network; 0 for a user bound to none."""
+        day = self._current()
+        network = day.user_networks.get(user_id)
+        return 0 if network is None else day.network_runs.get(network, 0)
+
+    def own_tokens_left(self, user_id: str, settings: AgentSettings, reserve: int = 0) -> bool:
+        """The public caps on model spend, `reserve` tokens beyond today's: the user's day budget and, for an
+        anonymous user, their network's."""
+        return (
+            self.user_tokens(user_id) + reserve < settings.daily_token_budget
+            and self.network_tokens(user_id) + reserve < settings.ip_daily_token_budget
+        )
 
     def user_tokens(self, user_id: str) -> int:
         return self._current().user_tokens.get(user_id, 0)
@@ -393,10 +440,11 @@ class UsageBook:
     def daily_ok(self, user_id: str, settings: AgentSettings, *, reserve: int = 0, tier: Tier = "public") -> bool:
         """Whether the user and the service still have daily token budget, `reserve` tokens beyond the spend, and strikes left.
 
-        An `admin` has no daily token budget of their own: only the service's and the strikes bind them.
+        An `admin` has no daily token budget of their own: only the service's and the strikes bind them. An anonymous
+        user also needs their network's day budget (`AGENT_IP_DAILY_TOKEN_BUDGET`, `bind_network`).
         """
         return (
-            (tier == "admin" or self.user_tokens(user_id) + reserve < settings.daily_token_budget)
+            (tier == "admin" or self.own_tokens_left(user_id, settings, reserve))
             and self.global_tokens() + reserve < settings.global_daily_token_budget
             and self.user_strikes(user_id) < settings.attack_strikes
         )
@@ -452,8 +500,12 @@ class UsageBook:
         )
 
     def runs_ok(self, user_id: str, settings: AgentSettings, tier: Tier = "public") -> bool:
-        """Whether the user may start another pipeline run today (`AGENT_DAILY_PIPELINE_RUNS`); always for an admin."""
-        return tier == "admin" or self.user_runs(user_id) < settings.daily_pipeline_runs
+        """Whether the user may start another pipeline run today (`AGENT_DAILY_PIPELINE_RUNS`, and for an anonymous
+        user their network's `AGENT_IP_DAILY_PIPELINE_RUNS`); always for an admin."""
+        return tier == "admin" or (
+            self.user_runs(user_id) < settings.daily_pipeline_runs
+            and self.network_runs(user_id) < settings.ip_daily_pipeline_runs
+        )
 
     def add_data_run(self, user_id: str) -> None:
         """Count one `run_data_code` run against the user's day, before it runs."""
@@ -596,7 +648,7 @@ def day_refusal(usage: UsageBook, user_id: str, settings: AgentSettings, *, tier
     An admin has no own day budget (`UsageBook.daily_ok`), so only the service's can stop them."""
     if usage.locked_out(user_id, settings):
         return "locked_out"
-    own_left = tier == "admin" or usage.user_tokens(user_id) < settings.daily_token_budget
+    own_left = tier == "admin" or usage.own_tokens_left(user_id, settings)
     if own_left and usage.paused(settings):
         return SERVICE_PAUSED
     return "budget"
@@ -776,7 +828,8 @@ logged, never configured."""
 
 def salted(session_id: str, domain: str, length: int) -> str:
     """HMAC-SHA256 of the session id under `SESSION_SALT`, separated by `domain`, so the attribution hash and the
-    telemetry hash of one session differ and the two kinds of lines cannot be joined by it."""
+    telemetry hash of one session differ and the two kinds of lines cannot be joined by it. The anonymous caller's
+    ids go through it too (`anonymous_user`, `network_key`), each under a domain of its own."""
     if not session_id:
         return ""
     return hmac.new(SESSION_SALT, f"{domain}:{session_id}".encode(), hashlib.sha256).hexdigest()[:length]
@@ -785,6 +838,28 @@ def salted(session_id: str, domain: str, length: int) -> str:
 def session_hash(session_id: str) -> str:
     """The attribution lines' `session`: 12 hex digits, salted (`salted`)."""
     return salted(session_id, "attribution", 12)
+
+
+ANONYMOUS_PREFIX = "pub_"
+NETWORK_PREFIX = "net_"
+
+
+def anonymous_user(anon_id: str) -> str:
+    """The user id of an anonymous public caller: `pub_` and 16 hex digits of the browser tab's random id, salted.
+
+    The public BFF sends the id its page keeps per tab (`X-Anyplot-Anon`, `agents/main.py` `require_user`); the
+    salt dies with the process, so no id this service keys its sessions, limits and attribution lines on can be
+    recomputed later, and every anyplot-api instance maps the same tab to the same user while this instance lives
+    (`max-instances=1`)."""
+    return ANONYMOUS_PREFIX + salted(anon_id, "user", 16)
+
+
+def network_key(network: str) -> str:
+    """The key the per-IP caps count an anonymous caller's network under: `net_` and 16 hex digits, salted.
+
+    `network` is the client's IPv4 address or the /64 of its IPv6 address, as the public BFF forwards it
+    (`X-Anyplot-Network`). It is turned into this key at once and never stored or logged as sent."""
+    return NETWORK_PREFIX + salted(network, "network", 16)
 
 
 def attribution(hook: str, ledger: RequestLedger, **fields: Any) -> None:
