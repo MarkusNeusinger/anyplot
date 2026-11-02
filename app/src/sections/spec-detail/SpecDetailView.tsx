@@ -12,7 +12,6 @@ import DownloadIcon from '@mui/icons-material/Download';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import ThumbDownOutlinedIcon from '@mui/icons-material/ThumbDownOutlined';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
@@ -51,13 +50,6 @@ interface SpecDetailViewProps {
   onCopyCode: (impl: Implementation) => void;
   onDownload: (impl: Implementation) => void;
   onTrackEvent: (event: string, props?: Record<string, string | undefined>) => void;
-  /**
-   * "Use with my data": present only when the agent chat is built, the pair is
-   * eligible, and this browser is an admin's (or local development) or the
-   * public lane is open — SpecPage decides (`useAgentEligibility`). Renders the
-   * fourth overlay button.
-   */
-  onUseWithMyData?: () => void;
 }
 
 export function SpecDetailView({
@@ -75,7 +67,6 @@ export function SpecDetailView({
   onCopyCode,
   onDownload,
   onTrackEvent,
-  onUseWithMyData,
 }: SpecDetailViewProps) {
   const sortedImpls = [...implementations].sort((a, b) => a.library_id.localeCompare(b.library_id));
   const currentIndex = sortedImpls.findIndex(impl => impl.library_id === selectedLibrary);
@@ -608,21 +599,6 @@ export function SpecDetailView({
                   size="medium"
                 >
                   <PlayArrowIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-            )}
-            {currentImpl && onUseWithMyData && (
-              <Tooltip title=".adapt() · use with my data · experimental" disableFocusListener>
-                <IconButton
-                  onClick={(e: React.MouseEvent) => {
-                    (e.currentTarget as HTMLElement).blur();
-                    onUseWithMyData();
-                  }}
-                  aria-label="Use with my data (experimental)"
-                  sx={overlayBtnSx}
-                  size="medium"
-                >
-                  <TableChartOutlinedIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
             )}

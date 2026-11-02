@@ -12,7 +12,7 @@ interface GlobalConfig {
   };
   isDev: boolean;
   features: {
-    /** The admin-only "Use with my data" agent chat (`/debug/agent`). */
+    /** The "Use with my data" agent chat (`/agent`, and `/debug/agent` for admins). */
     agentChat: boolean;
   };
 }
@@ -22,7 +22,7 @@ const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 /**
  * Build-time switch for the agent chat (`docs/concepts/agent-network.md`).
  * Vite inlines the variable, so with the flag unset this is the literal
- * `false` and the bundler drops every branch behind it, the `.adapt()` probe
+ * `false` and the bundler drops every branch behind it, the `.use_my_data()` probe
  * included. The route in `src/routes/index.tsx` reads the variable inline for
  * the same reason, so the chat page's chunk is not even built.
  */

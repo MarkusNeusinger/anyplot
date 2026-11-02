@@ -209,7 +209,11 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
             />
           </Box>
         </Box>
-        <AgentLaneLine />
+        <AgentLaneLine
+          onClick={() =>
+            trackEvent('nav_click', { source: 'hero_use_my_data', target: paths.plots })
+          }
+        />
       </Box>
 
       {/* Right: terminal plot */}
@@ -222,19 +226,25 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
 }
 
 /**
- * The one line that points to the public agent chat, shown only while its lane is open
- * (`useAgentLaneOpen`), so closing the lane on the server removes it too. It opens the chat
- * on a plot everyone knows; `source=landing` feeds `agent_open`.
+ * The one line that announces "use with my data", shown only while the public agent lane
+ * is open (`useAgentLaneOpen`), so closing the lane on the server removes it too. It leads
+ * to the catalogue rather than into the chat: the entry is `.use_my_data()` beside a plot
+ * page's library carousel, so the visitor picks the plot first. Tracked as
+ * `nav_click{source: hero_use_my_data}`. No "experimental" here: the chat's notice says it.
  */
-export const AGENT_LANE_LINE = 'experimental: adapt any plot to your own data';
+export const AGENT_LANE_LINE = 'new: pick any plot, then .use_my_data()';
+/** The line's accessible name, in words rather than the method-call style. */
+export const AGENT_LANE_LABEL = 'New: pick any plot, then use it with my data';
 
-function AgentLaneLine() {
+function AgentLaneLine({ onClick }: { onClick: () => void }) {
   const open = useAgentLaneOpen();
   if (open !== true) return null;
   return (
     <Box
       component={RouterLink}
-      to={paths.publicAgentChat('scatter-basic', 'matplotlib', 'python', 'landing')}
+      to={paths.plots}
+      onClick={onClick}
+      aria-label={AGENT_LANE_LABEL}
       sx={{
         animation: 'rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s backwards',
         display: 'inline-block',
@@ -252,7 +262,10 @@ function AgentLaneLine() {
         },
       }}
     >
-      # {AGENT_LANE_LINE} →
+      {/* A no-break space keeps the arrow with `.use_my_data()` when a narrow phone wraps
+          the line. */}
+      # {AGENT_LANE_LINE}
+      {' '}→
     </Box>
   );
 }

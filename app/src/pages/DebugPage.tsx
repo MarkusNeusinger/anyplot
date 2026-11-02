@@ -106,7 +106,7 @@ const PING_HISTORY = 30;
 //     in sessionStorage so it survives reloads of the same tab without
 //     persisting across browser sessions (src/utils/adminAuth.ts).
 // A 200 from /debug/status also sets the admin hint that lets the plot page
-// show the agent chat's `.adapt()` button; a refusal clears it.
+// show the agent chat's `.use_my_data()` entry; a refusal clears it.
 
 export function DebugPage() {
   const { trackPageview } = useAnalytics();

@@ -9,7 +9,7 @@
  * - The admin hint is a localStorage flag that `DebugPage` sets once
  *   `/debug/status` answered 200 and clears when it is refused. It is a UI
  *   hint, never an authorization: it only decides whether a public page may
- *   probe `/debug/agent/*` at all (the `.adapt()` button), so public visitors
+ *   probe `/debug/agent/*` at all (the `.use_my_data()` entry), so public visitors
  *   never send a request to the debug API. The server's admin gate still
  *   decides every call.
  *
