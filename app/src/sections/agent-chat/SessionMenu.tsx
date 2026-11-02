@@ -8,8 +8,9 @@
  * A popover, as the language chip's: it opens on a tap as on a click and returns the focus to
  * the button when it closes. It stays mounted while closed, so the data box keeps the user's
  * choice from one save to the next. A save that started its download closes it; a failure keeps
- * it open with its line. Like the chip, the button waits until the session is open and while
- * anything else is in flight, which also closes an open menu.
+ * it open with its line, which goes when the menu closes, so a later opening never shows a stale
+ * one. Like the chip, the button waits until the session is open and while anything else is in
+ * flight, which also closes an open menu.
  */
 
 import { useId, useState } from 'react';
@@ -77,7 +78,8 @@ export function SessionMenu({ disabled, onSave }: SessionMenuProps) {
         }}
       >
         <Box sx={{ ...labelSx, mb: 0.75 }}># save the session as a json file</Box>
-        <SaveButton disabled={disabled} onSave={onSave} onSaved={() => setAnchor(null)} />
+        {/* Closed counts as disabled for the button: its failure line from an earlier attempt goes. */}
+        <SaveButton disabled={disabled || !open} onSave={onSave} onSaved={() => setAnchor(null)} />
       </Popover>
     </Box>
   );
