@@ -1,0 +1,15 @@
+{
+  "dataset_text": "Date,Visitors\n8 Nov 2026,412\n7 Nov 2026,398\n6 Nov 2026,455\n5 Nov 2026,430\n4 Nov 2026,377\n3 Nov 2026,402\n2 Nov 2026,389\n1 Nov 2026,366\n",
+  "action": "summarize_data",
+  "expected_operations": [
+    {"op": "set_type", "column": "Date", "type": "datetime", "name": "Date (date)"},
+    {"op": "sort", "column": "Date (date)"}
+  ],
+  "locale": "en",
+  "spec_id": "line-timeseries-rolling",
+  "tags": [
+    "summary",
+    "conversion",
+    "date_order"
+  ]
+}

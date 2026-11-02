@@ -10,6 +10,7 @@ from agents.anyplot.data.parse import (
     HEADERLESS_LIST_WARNING,
     NS_OUT_OF_RANGE,
     ParseError,
+    minus_note,
     parse_dataset,
     rounded_note,
 )
@@ -33,6 +34,8 @@ SAMPLES: dict[str, str] = {
     "single spaces read as the column separator; check that no value was split in two": "single_space_separator",
     "left out 2 lines above the table (a title, notes or metadata)": "lines_above_left_out",
     "left out 1 line below the table (notes or a source line)": "lines_below_left_out",
+    "left out 1 line inside the table that is no row of it (line 17)": "lines_inside_left_out",
+    "left out 2 lines inside the table that are no row of it (lines 17, 30)": "lines_inside_left_out",
     "left out 1 summary row at the end of the table (a total, sum, mean or similar)": "summary_rows_left_out",
     "2 rows had fewer fields than the header; their cells were placed under the header's columns by their "
     "position, and the cells left over are empty (lines 3, 4)": "short_rows_positional",
@@ -99,6 +102,11 @@ SAMPLES: dict[str, str] = {
     f"column 'd': {AMBIGUOUS_DATE_ORDER}": "date_order_ambiguous",
     f"column 'd': {AMBIGUOUS_MONTH_FIRST}": "date_order_ambiguous",
     "column 'm': 12 cells read as months (YYYY-MM, each as the first day of the month)": "months_read",
+    "column 'm': 12 cells read as months (a month name and a year, each as the first day of the month)": (
+        "month_names_read"
+    ),
+    f"column 'v': {minus_note(3)}": "typographic_minus_read",
+    f"column 'v': {minus_note(1)}": "typographic_minus_read",
     "column 'country': NA read as a code (such as Namibia or North America), not as a missing cell": "na_as_code",
     f"column 'v': {rounded_note(3)}": "digits_rounded",
     "column 'name': spaces around the text removed in 4 cells": "cells_trimmed",

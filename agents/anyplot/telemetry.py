@@ -152,6 +152,7 @@ InputFormat = Literal[
     "transcribed",
     "formula",
     "code",
+    "data_request",
     "other",
 ]
 Entry = Literal["paste", "file"]
@@ -162,11 +163,13 @@ DataOutcome = Literal[
     "too_large",
     "code",
     "formula",
+    "data_request",
     "data_refused",
     "guard_unavailable",
     "capacity",
     "rate_limited",
     "daily_limit",
+    "service_paused",
     "locked_out",
     "file_refused",
     "file_failed",
@@ -190,6 +193,7 @@ DataCause = Literal[
     "timeout",
     "transcribed_unparseable",
     "transcribed_no_table",
+    "transcribed_data_request",
     # the file conversion's (`wire.ConvertRefusal` and `main.CONVERT_FAILURES`)
     "unsupported",
     "encrypted",
@@ -214,7 +218,7 @@ CategoriesBucket = Literal["le5", "6_12", "13_50", "gt50"]
 MissingBucket = Literal["none", "lt5", "5_30", "gt30"]
 SpecFit = Literal["direct", "needs_reshape", "missing_role", "incompatible"]
 
-TurnKind = Literal["plot", "prep", "formula", "code", "talk", "refused", "error"]
+TurnKind = Literal["plot", "prep", "formula", "code", "example", "talk", "refused", "error"]
 TurnAction = Literal["text", "create_plot", "summarize_data"]
 ToolName = Literal[
     "get_dataset_profile",
@@ -242,8 +246,13 @@ PrepOp = Literal[
     "classify",
     "derive",
     "make_date",
+    "row_number",
 ]
 PREP_OPS: frozenset[str] = frozenset(get_args(PrepOp))
+ConversionOutcome = Literal["none", "date", "number", "index", "asked"]
+"""What a turn did about a required role left open (`data/conversions.py`): `none` when the session block listed no
+conversion; `date`, `number` or `index` for the column `prepare_data` made; `asked` when a conversion was listed and
+none was made, so the root asked or skipped it (`asked_question` tells the two apart)."""
 RefusalCode = Literal[
     "out_of_scope",
     "needs_data",
@@ -252,10 +261,12 @@ RefusalCode = Literal[
     "locked_out",
     "session_closed",
     "budget",
+    "service_paused",
     "rate_limited",
     "daily_limit",
     "other",
 ]
+"""`service_paused` (since 2026-11-02): the service's day budget is spent, not the user's own (`ledger.day_refusal`)."""
 ErrorCode = Literal["guard_unavailable", "capacity", "run_limit", "deadline", "internal", "cancelled", "other"]
 """`cancelled`: the client closed the stream before the turn ended (the page's cancel, a reload, a lost connection);
 `run_limit`: the turn's sandbox run would have been one more than `AGENT_USER_MAX_RUNS` across the user's sessions."""
@@ -263,10 +274,19 @@ LanguageSource = Literal["default", "pasted", "detected", "chosen"]
 Step = Literal["root", "adapter", "reviewer", "judge", "other"]
 
 PlotStatus = Literal["ok", "needs_attention", "failed", "not_ready"]
-FailureReason = Literal["validation", "render", "deadline", "budget", "error"]
+FailureReason = Literal["validation", "render", "deadline", "budget", "busy", "error"]
 NotReadyReason = Literal["no_dataset", "incomplete_bindings", "data_unconfirmed"]
 """`schemas.NotReadyReason`: why a `not_ready` run did not start (pinned equal by a test)."""
 ScoreBucket = Literal["lt50", "50_69", "70_79", "80_89", "90_plus"]
+Lane = Literal["admin", "public"]
+"""The tier a run was served in (`X-Anyplot-Tier`): never a user, only whether the admin's limits applied."""
+RunsTodayBucket = Literal["1", "2_5", "6_10", "11_20", "21_30", "31_40", "41_plus"]
+"""This run's ordinal among one user's pipeline runs of the UTC day, bucketed (`runs_today_bucket`)."""
+TokensTodayBucket = Literal["lt25", "25_50", "50_75", "75_90", "90_100", "over"]
+"""The share in percent of the public per-user daily token budget spent when the run was booked
+(`tokens_today_bucket`); `over` is past it, which only an admin, who is exempt, can reach."""
+QueuePositionValue = Annotated[int, Field(ge=0, le=1_000)]
+"""Where a run's queue entry stood at submit: 0 started at once, 1 ran next. The queue holds at most 60."""
 SandboxFailure = Literal["syntax", "name", "key", "value", "type", "timeout", "memory", "other"]
 PipelineStage = Literal[
     "budget",
@@ -447,6 +467,7 @@ class ChatTurn(_Event):
     tools: list[ToolName] = _list()
     prep_ops: list[PrepOp] = _list()
     prep_calls: Count = 0
+    conversion: ConversionOutcome = "none"
     undo: bool = False
     to_long: bool = False
     manual_binding_changed: bool = False
@@ -528,6 +549,19 @@ class PipelineRun(_Event):
     review_ms: Ms = 0
     total_ms: Ms = 0
     steps: list[StepTokens] = _list()
+    lane: Lane | None = None
+    """`admin` or `public`, the tier the run was served in (2026-11-01). None on a line from before that day."""
+    queue_wait_ms: Ms | None = None
+    """How long the turn's run-queue entry waited before this run could start, 0 when it started at once; None for a
+    `not_ready` run, which never enters the queue."""
+    queue_position: QueuePositionValue | None = None
+    """Where the entry stood at submit, 0 when it started at once; None like `queue_wait_ms`."""
+    user_runs_today: RunsTodayBucket | None = None
+    """The bucket of this run's ordinal among the same user's runs of the UTC day, from the in-memory usage book; a
+    redeploy or a scale-to-zero starts the count again. None for a `not_ready` run."""
+    user_tokens_today: TokensTodayBucket | None = None
+    """The bucket of the share of the public per-user daily token budget the user had spent when the run was booked,
+    an admin's measured against the same budget. None for a `not_ready` run."""
 
 
 class Outcome(_Event):
@@ -675,6 +709,26 @@ def missing_bucket(missing: int, cells: int) -> MissingBucket:
     if share <= 0.30:
         return "5_30"
     return "gt30"
+
+
+def runs_today_bucket(ordinal: int | None) -> RunsTodayBucket | None:
+    """`RunsTodayBucket` of a run's ordinal among the user's runs of the day (1 is the first)."""
+    if ordinal is None or ordinal < 1:
+        return None
+    for bound, bucket in ((1, "1"), (5, "2_5"), (10, "6_10"), (20, "11_20"), (30, "21_30"), (40, "31_40")):
+        if ordinal <= bound:
+            return cast(RunsTodayBucket, bucket)
+    return "41_plus"
+
+
+def tokens_today_bucket(share: float | None) -> TokensTodayBucket | None:
+    """`TokensTodayBucket` of the share (0.0 to 1.0 and past it) of the daily token budget spent."""
+    if share is None or share < 0:
+        return None
+    for bound, bucket in ((0.25, "lt25"), (0.50, "25_50"), (0.75, "50_75"), (0.90, "75_90")):
+        if share < bound:
+            return cast(TokensTodayBucket, bucket)
+    return "90_100" if share <= 1.0 else "over"
 
 
 def score_bucket(score: int | None) -> ScoreBucket | None:
@@ -874,13 +928,16 @@ def user_turns(events: Iterable[Event]) -> int:
 
 
 def turn_kind(ledger: RequestLedger) -> TurnKind:
-    """What a turn did, in order of weight: a refusal, an error, a plot, data from code or a formula, a prep, talk."""
+    """What a turn did, in order of weight: a refusal, an error, a plot, example data, data from code or a formula, a
+    prep, talk. `example` is a `run_data_code` call that stored example data the user asked for (`example_data`)."""
     if ledger.refusal is not None:
         return "refused"
     if ledger.error is not None:
         return "error"
     if "plot_pipeline" in ledger.tools:
         return "plot"
+    if ledger.example_data:
+        return "example"
     if "run_data_code" in ledger.tools:
         return "code"
     if "generate_data" in ledger.tools:
@@ -949,6 +1006,7 @@ class SessionMarks:
     to_long: bool = False
     manual_binding_changed: bool = False
     binding_warnings: set[str] = field(default_factory=set)
+    conversion: ConversionOutcome = "none"
     runs: dict[str, int] = field(default_factory=dict)
 
 
@@ -978,15 +1036,24 @@ def take_turn_marks(session_id: str) -> dict[str, Any]:
         "to_long": mark.to_long,
         "manual_binding_changed": mark.manual_binding_changed,
         "binding_warnings": sorted(mark.binding_warnings),
+        "conversion": mark.conversion,
     }
     mark.undo = mark.to_long = mark.manual_binding_changed = False
     mark.binding_warnings = set()
+    mark.conversion = "none"
     return taken
 
 
 def note_binding_warnings(session_id: str, sentences: list[str]) -> None:
     if sentences:
         marks(session_id).binding_warnings.update(binding_warning_codes(sentences))
+
+
+def note_conversion(session_id: str, outcome: ConversionOutcome) -> None:
+    """What this turn did about an open role; a column made stands, `asked` only fills a turn that made none."""
+    mark = marks(session_id)
+    if outcome != "asked" or mark.conversion == "none":
+        mark.conversion = outcome
 
 
 def run_index(session_id: str, invocation_id: str | None) -> int:
@@ -1010,11 +1077,13 @@ REFUSAL_OUTCOMES: dict[str, DataOutcome] = {
     "unparseable": "unparseable",
     "code": "code",
     "formula": "formula",
+    "data_request": "data_request",
     "data_refused": "data_refused",
     "guard_unavailable": "guard_unavailable",
     "capacity": "capacity",
     "rate_limited": "rate_limited",
     "daily_limit": "daily_limit",
+    "service_paused": "service_paused",
     "locked_out": "locked_out",
     "convert_unavailable": "convert_unavailable",
 }
@@ -1026,7 +1095,7 @@ class InputFacts:
     """The content-free facts of one dataset input, collected along the route and written once (`write`).
 
     `format` is fixed up front for a dropped binary file (its kind) and a confirmed transcription, set by the
-    parse for every other paste (`parsed`), and by the refusal for code and formulas (`refused`).
+    parse for every other paste (`parsed`), and by the refusal for code, formulas and data requests (`refused`).
     """
 
     session_id: str
@@ -1068,7 +1137,7 @@ class InputFacts:
         self.outcome = "ok"
 
     def refused(self, code: str) -> None:
-        if code in ("code", "formula"):
+        if code in ("code", "formula", "data_request"):
             self.format = code
         if self.outcome is None:
             self.outcome = REFUSAL_OUTCOMES.get(code, "other")

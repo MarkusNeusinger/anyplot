@@ -34,8 +34,8 @@ The agents service writes one wide JSON line per event to stdout on its own logg
 | Event | When | Main fields |
 |---|---|---|
 | `data_input` | A paste or a dropped file reaches the dataset route, or the file conversion refuses a file | `format`, `entry` (`paste` or `file`), `outcome`, `cause`, `size_bucket`, `rows_bucket`, `cols_bucket`, column counts by type, `max_categories_bucket`, `missing_bucket`, `warnings` (codes), `tables`, `sheets`, `notes` and `file_name` (booleans), `spec_fit`, judge tokens, `latency_ms` |
-| `chat_turn` | A `/messages` turn ends, refused ones included; `manual_binding_changed` counts only a `PUT /bindings` whose bindings differ from the ones the session held, because the page echoes the parse's defaults after every paste | `kind` (`plot`, `prep`, `formula`, `code`, `talk`, `refused`, `error`), `action`, `asked_question`, `tools`, `prep_ops`, `undo`, `to_long`, `manual_binding_changed`, `binding_warnings`, `refusal`, `error`, `reply_reasked`, `language_source` and `plot_language` (both as the turn left them), `steps` (calls, tokens, thinking tokens and model per agent), `latency_ms` |
-| `pipeline_run` | A `plot_pipeline` run ends, or the root asked for one before the data was ready (`status: not_ready` with its reason) | `run_index` (1 is the session's first plot), `base`, `status`, `reason`, `stage`, `stages`, `attempts`, `rounds`, `round_scores`, `score_round1`, `score_round2` (buckets), `shipped_attempt`, `version` (the shipped version's number, which `outcome.version` names), `shipped_score`, `forced_repair`, `gates_failed`, `reviewer_defects`, `residual_defects`, `sandbox_failures` (`syntax`, `name`, `key`, `value`, `type`, `timeout`, `memory`, `other`), `drift_restored` (true when a plan that only changed the protected theme statements had them restored after the round's check retry), `plot_language`, `readiness`, `loader_notes`, `edit_failures`, `validator_rules`, `adaptation_rules`, the pipeline configuration and prompt hashes, time per stage, `steps` |
+| `chat_turn` | A `/messages` turn ends, refused ones included; `manual_binding_changed` counts only a `PUT /bindings` whose bindings differ from the ones the session held, because the page echoes the parse's defaults after every paste | `kind` (`plot`, `prep`, `formula`, `code`, `example`, `talk`, `refused`, `error`), `action`, `asked_question`, `tools`, `prep_ops`, `conversion` (what the turn did about a required role left open: `none` when the session block listed no conversion, `date`, `number` or `index` for the column `prepare_data` made, `asked` when one was listed and none was made; `asked_question` tells a question from a skip), `undo`, `to_long`, `manual_binding_changed`, `binding_warnings`, `refusal`, `error`, `reply_reasked`, `language_source` and `plot_language` (both as the turn left them), `steps` (calls, tokens, thinking tokens and model per agent), `latency_ms` |
+| `pipeline_run` | A `plot_pipeline` run ends, or the root asked for one before the data was ready (`status: not_ready` with its reason) | `run_index` (1 is the session's first plot), `base`, `status`, `reason`, `stage`, `stages`, `attempts`, `rounds`, `round_scores`, `score_round1`, `score_round2` (buckets), `shipped_attempt`, `version` (the shipped version's number, which `outcome.version` names), `shipped_score`, `forced_repair`, `gates_failed`, `reviewer_defects`, `residual_defects`, `sandbox_failures` (`syntax`, `name`, `key`, `value`, `type`, `timeout`, `memory`, `other`), `drift_restored` (true when a plan that only changed the protected theme statements had them restored after the round's check retry), `plot_language`, `readiness`, `loader_notes`, `edit_failures`, `validator_rules`, `adaptation_rules`, the pipeline configuration and prompt hashes, time per stage, `steps`, and since 2026-11-01 `lane`, `queue_wait_ms`, `queue_position`, `user_runs_today`, `user_tokens_today` (see [Fields added on 2026-11-01](#fields-added-on-2026-11-01)) |
 | `outcome` | The page's beacon after a copy, a download, a session save, or a feedback send | `action` (`copied_code`, `copied_image`, `downloaded_png`, `downloaded_code`, `downloaded_page`, `opened_preview`, `opened_data_view`, `downloaded_data`, `saved_session`, `feedback`; `downloaded_page` is a JavaScript plot's interactive `plot.html`, and `opened_preview` that page shown in the card, a look that keeps nothing, both since 2026-10-31; `opened_data_view` is the data panel's view of every row once it shows the rows, with version 0 because it looks at the session's data and not at a result, a look that keeps nothing either, since 2026-11-02), `version`, `reaction` |
 
 Every line carries the same envelope:
@@ -98,7 +98,9 @@ session it opens for the fan-out (`useAgentSession` with `fanout`, `POST /debug/
 `source: "fanout"`), the BFF forwards the value, and the agents service accepts `fanout` only (any other value is
 `422`). The service keeps the mark in session state (`anyplot.telemetry_source`), and every line of the session,
 whatever its event, carries `source = "fanout"` instead of `live`. Every existing `source = 'live'` filter (the
-`/debug` card, `api/agent_usage.py`) leaves them out, and the views keep them apart by `source`.
+`/debug` card, `api/agent_usage.py`) leaves them out, and the views keep them apart by `source`. The one exception
+is the per-day table's `fan-out` column ([The /debug card](#the-debug-card)): these sessions spend the same day
+budget, so their cost is shown beside the live cost, never inside it.
 
 Only an admin can open the chat today, so the value labels the owner's own test sessions. Once the chat is
 public, a user who sends the mark by hand only files their own lines as tests.
@@ -149,6 +151,45 @@ step that is not a change in use:
 - **The feedback case's `prompt_hash`.** The bundle's `prompt_hashes` gain `reviewer_catalogue`, the hash of the
   catalogue reviewer's instruction, which the live reviewer runs. The combined `prompt_hash` of every case shifts
   once on that day without any prompt changing; every case before it is an admin test case.
+
+### Fields added on 2026-11-01
+
+These fields show whether anyone waits long in the run queue or comes close to a limit, without saying who
+(owner request of 2026-11-01). The owner's rule of 2026-10-30 holds for each of them: no user id, no hash of one,
+no key that stays stable across sessions. Each field is a closed set or a bounded integer, so nothing that names a
+user fits into it, and a test checks that the user id of the run appears nowhere in its line. They sit on
+`pipeline_run` rather than `chat_turn`, because the per-user counts are counts of pipeline runs and the queue entry
+is the run's. A `not_ready` run never enters the queue, so it carries `lane` only, and lines written before
+2026-11-01 lack all five; the views read both as `NULL`.
+
+| Event | Field | Meaning |
+|---|---|---|
+| `pipeline_run` | `lane` | `admin` or `public`: the tier the run was served in (`X-Anyplot-Tier`, which the BFF sets for an admin). It tells the admin's test runs, which skip the per-user day caps, from the runs the public limits bound |
+| `pipeline_run` | `queue_wait_ms` | How long the turn's run-queue entry waited before the run could start, in milliseconds; `0` when it started at once. The queue starts at most one run every 10 seconds and holds at most 5 runs in flight, so a fan-out's later libraries wait by design |
+| `pipeline_run` | `queue_position` | Where the entry stood when it was submitted: `0` when it started at once, `1` when it ran next, at most the queue's capacity (60 at the defaults) |
+| `pipeline_run` | `user_runs_today` | A bucket of the run's ordinal among the same user's pipeline runs of the UTC day: `1`, `2_5`, `6_10`, `11_20`, `21_30`, `31_40`, `41_plus`. The count lives only in the service's memory (`UsageBook`), so a redeploy or a scale-to-zero starts it again; the public cap is 50 runs a day (`AGENT_DAILY_PIPELINE_RUNS`) |
+| `pipeline_run` | `user_tokens_today` | A bucket of the share of the per-user daily token budget (`AGENT_DAILY_TOKEN_BUDGET`, 10,000,000 weighted tokens, about $1) the user had spent when the run was booked: `lt25`, `25_50`, `50_75`, `75_90`, `90_100`, `over`. An admin's share is measured against the same public budget, so the buckets stay comparable; `over` is a share past the budget, which only an admin, who is exempt from it, can reach |
+
+The limit refusals were recorded before and stay where they were: `chat_turn.refusal` is `rate_limited` or
+`daily_limit` for the message limits, and `chat_turn.error` is `capacity` (a full queue, a wait that ran out, or a
+model service still refusing a call after its retries) or `run_limit` (the user's cap of runs in flight across
+their windows). An admin's turns land there the same way. The `failures` view lists both.
+
+The typed columns are in `agents/telemetry/views/02_event_views.sql` (`pipeline_runs`). Applying the changed view
+in BigQuery is a write to the shared dataset: it waits for the owner's approval after the merge, and until then the
+fields sit in `payload` of the `events` view. See [Set up the BigQuery side](#set-up-the-bigquery-side).
+
+#### Shifts a report notices on 2026-11-01
+
+Example data on request adds values to two closed sets:
+
+- **`data_input.format` and `data_input.outcome` `data_request`.** A paste that asks for data instead of holding it
+  ("Beispieldaten") goes to the chat. Its `cause` is `transcribed_data_request` when the free-text reader said so,
+  and null when the fixed phrases of `data/classify.py` found it before any model. Like `formula` and `code`, the
+  `sessions` and `input_formats` views count it among the refused inputs; the session's next `chat_turn` shows
+  what the chat made of it.
+- **`chat_turn.kind` `example`.** A turn whose `run_data_code` stored example data the user asked for
+  (`source_language` `example`); such a turn was `code` before.
 
 ## Where the lines go
 
@@ -349,6 +390,52 @@ the same query and BigQuery may answer from its result cache; on top of that the
 minutes, so reloading `/debug` runs no query at all. The answer holds aggregates only. `status` is
 `not_configured` while the variable is unset, and `unavailable` when the query fails (no table yet, no
 permission, a timeout); both come with zeros, the card shows its empty state, and a failure is never kept.
+
+Below the tiles the card shows two views of the day that do not follow the 7 or 30 days toggle.
+
+### Per day
+
+A table of the last 14 UTC days, newest first, reads `GET /debug/agent-usage/daily` (`daily_sql` and `read_daily`
+in `api/agent_usage.py`). A day without a line shows zeros.
+
+| Column | What it counts |
+|---|---|
+| new chats | Live sessions whose first line falls on that day. A chat that was opened and never sent anything wrote no line and does not count. |
+| plots | `pipeline_run` lines with the status `ok` or `needs_attention`. |
+| cost | Live `chat_turn` steps and `data_input` judge calls, priced as `agents/telemetry/views/05_prices_cost.sql` prices them, from the views dataset's `model_prices`. `pipeline_run.steps` repeats its turn's tokens and is left out. A `+` means a step's model has no price row, so the sum is too low; the cell's tooltip says how many steps. |
+| fan-out | The same cost for `source = 'fanout'` sessions. |
+| limit hits | The counts of `service_paused`, `budget`, `daily_limit`, `rate_limited`, `run_limit` and `capacity`, from a `chat_turn`'s `refusal` or `error` and a `data_input`'s `outcome`. |
+| p95 queue wait | The 95th percentile of `queue_wait_ms` on live `pipeline_run` lines, read from the line itself rather than the `pipeline_runs` view, so it fills from the deploy that writes the field. It reads `—` on a day whose runs do not carry the field. |
+
+`locked_out` is a safety lockout, not a usage limit, so it stays in the card's refusal list and out of this column.
+`service_paused` exists since 2026-11-02. Before that, a spent service budget read `budget` in a turn and
+`daily_limit` in a paste, so those two columns hold both causes on older days.
+
+Which lines count depends on their `source`:
+
+- `live` lines fill every column.
+- `fanout` lines fill the `fan-out` column only.
+- `harness` lines are never read.
+
+The query keeps the card's scan rules: it filters `timestamp` before it deduplicates, and the API keeps each answer
+for 10 minutes. Its window is floored to the day instead of to 10 minutes, because the table's oldest row has to be
+a whole day: it starts at 00:00 UTC 13 days ago, so the query text and its parameter stay the same all day. It also
+reads the 2 days before the window, only to find each chat's first line, so a chat that began before the window is
+not new on the window's first day. `model_prices` is a literal `UNNEST`, so the join reads no bytes.
+
+### Today, live
+
+The line above the table comes from the agents service's memory, not from BigQuery, through
+`GET /debug/agent/budget`. It shows the service's spend against `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` and how many
+users are at their own limits, counts only, never an id. An admin counts only at the limits that bind every tier:
+the pastes, the conversions and the strikes. The line says since when it counts, because a redeploy or
+a scale-to-zero starts the usage book again at zero: `since` is 00:00 UTC, or the instance's start if that came
+later. A cold agents service also starts at the moment the page asks, so right after one the line reads zero.
+
+The dollar amounts are the weighted tokens at the main model's uncached input list price in the service's location,
+so they carry `eu`'s 10 %: 100 M weighted tokens of Claude Haiku 5.5 read `$11.00`, not `$10.00`. Both the spend and
+the budget use the same price, so the share is exact. The per-day table's cost comes from the telemetry's model and
+token counts instead, so the two can differ for today.
 
 ## On the legal page
 

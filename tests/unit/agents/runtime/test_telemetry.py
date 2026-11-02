@@ -396,9 +396,38 @@ def test_the_turn_marks_are_taken_once() -> None:
         "to_long": False,
         "manual_binding_changed": False,
         "binding_warnings": ["other"],
+        "conversion": "none",
     }
     assert telemetry.take_turn_marks("sess-y")["undo"] is False
     telemetry.forget("sess-y")
+
+
+@pytest.mark.parametrize(
+    ("notes", "outcome"),
+    [
+        ([], "none"),
+        (["asked"], "asked"),
+        (["asked", "date"], "date"),  # the block listed it before the first model call, and the root made it
+        (["asked", "index", "asked"], "index"),  # the next model call in the turn changes nothing
+        (["number"], "number"),
+    ],
+)
+def test_a_turn_reports_one_conversion_outcome(notes: list[telemetry.ConversionOutcome], outcome: str) -> None:
+    telemetry.forget("sess-c")
+    for note in notes:
+        telemetry.note_conversion("sess-c", note)
+
+    assert telemetry.take_turn_marks("sess-c")["conversion"] == outcome
+    assert telemetry.take_turn_marks("sess-c")["conversion"] == "none"
+    telemetry.forget("sess-c")
+
+
+def test_the_conversion_outcome_is_a_closed_enum() -> None:
+    event = telemetry.ChatTurn(kind="prep", action="summarize_data", conversion="index")  # type: ignore[arg-type]
+
+    assert event.model_dump()["conversion"] == "index"
+    with pytest.raises(ValidationError):
+        telemetry.ChatTurn(kind="prep", action="summarize_data", conversion="Month (date)")  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(
@@ -684,7 +713,9 @@ async def test_a_cancelled_turn_records_the_language_the_turn_set(
     judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
     sid = await open_session(client)
 
-    response = await post_message(sid, MessageBody(text="Mach die Punkte größer"), USER, runtime, "req-cancelled")
+    response = await post_message(
+        sid, MessageBody(text="Mach die Punkte größer"), USER, "public", runtime, "req-cancelled"
+    )
     stream = cast(AsyncIterator[str], response.body_iterator)
     chunks = []
     async for chunk in stream:
@@ -900,3 +931,16 @@ async def test_the_run_prompt_hashes_are_the_bundle_hashes(
     assert run["reviewer_prompt"] == bundle["reviewer"]  # the conftest's checklist mode
     assert run_hashes("matplotlib", "catalogue")["reviewer_prompt"] == bundle_hashes()["reviewer_catalogue"]
     assert bundle["reviewer_catalogue"] != bundle["reviewer"]
+
+
+@pytest.mark.parametrize(
+    ("event", "view"), [(telemetry.PipelineRun, "pipeline_runs"), (telemetry.ChatTurn, "chat_turns")]
+)
+def test_every_field_has_its_typed_column_in_the_views(event: type[telemetry._Event], view: str) -> None:
+    """`agents/telemetry/views/02_event_views.sql` reads every field of the line, so a field added to the model (the
+    limit fields of 2026-11-01 among them) cannot be forgotten in the view a report reads."""
+    sql = (Path(__file__).resolve().parents[4] / "agents" / "telemetry" / "views" / "02_event_views.sql").read_text()
+    body = sql.split(f"`anyplot.agent_telemetry.{view}` AS", 1)[1].split("CREATE OR REPLACE VIEW", 1)[0]
+
+    missing = [name for name in event.model_fields if name != "event" and not re.search(rf"payload\.{name}\b", body)]
+    assert missing == [], f"{view} lacks {missing}"

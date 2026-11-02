@@ -89,9 +89,10 @@ class TestAdapterInstruction:
 class TestAdapterPromptPerLanguage:
     """`adapter.md` holds the shared rules, each language's runtime prompt fills its slots (2026-10-29)."""
 
-    PYTHON_SHA256 = "0a9e053f1ee1695358e4998b6d9dd62c270c6e9f5db6e3be94fee907f4caa6e9"
+    PYTHON_SHA256 = "a8292d96b9d0d6d37d0a2fe2c48ef202e8d0528a8243cd4b8357e0d0848b1147"
     """SHA-256 of `adapter.md` as `own_prompt` read it before the split (51ceaac6c, stripped, 18,703 characters),
-    since 2026-11-01 with the `changes` notes in plain words and in the reply language (19,615 characters)."""
+    since 2026-11-01 with the `changes` notes in plain words and in the reply language (19,615 characters), since
+    2026-11-02 with a date column on a label role written as labels (20,006 characters)."""
 
     def test_the_python_adapter_prompt_matches_its_pinned_hash(self) -> None:
         """Golden: the Python libraries' adapters read exactly the pinned prompt. It was the one they read before R
@@ -102,7 +103,7 @@ class TestAdapterPromptPerLanguage:
         assert hashlib.sha256(prompt.encode("utf-8")).hexdigest() == self.PYTHON_SHA256, (
             "the Python adapter prompt changed; if that is intended, pin its new SHA-256 here"
         )
-        assert len(prompt) == 19_615 and "{{" not in prompt
+        assert len(prompt) == 20_006 and "{{" not in prompt
 
     HIGHLIGHTS_SHA256 = "b810744bed4b986e2a76d4480f72ee986c69b12d12f964f0d988d815141d3567"
     """SHA-256 of `adapter_highlights.md` as `own_prompt` read it before its slot (51ceaac6c, 1,058 characters)."""
@@ -447,8 +448,9 @@ class TestOtherInstructions:
         # 15 since 2026-10-14: a data-generating snippet (in scope) and code that reaches the system (an attack);
         # 18 the same day: data code that reads a URL (needs_data), the live Chart.js request (other_library) and
         # its neighbour, another chart in another library (out_of_scope); 19 since 2026-10-29: a question about R
-        # code (in scope), since the session's code can be any served library's.
-        assert 6 <= len(examples) <= 19
+        # code (in scope), since the session's code can be any served library's; 20 since 2026-11-01: a request for
+        # example data in one word (in scope), which the data panel sends to the chat.
+        assert 6 <= len(examples) <= 20
         assert {verdict for _, verdict in examples} == {
             "in_scope",
             "out_of_scope",
@@ -456,6 +458,15 @@ class TestOtherInstructions:
             "attack",
             "other_library",
         }
+
+    def test_example_data_is_in_scope_and_only_real_figures_need_data(self) -> None:
+        """Owner request of 2026-11-01: "Beispieldaten" in the data field goes to the chat, where the root makes it up."""
+        rubric = policy.scope_rubric()
+        examples = dict(re.findall(r"^\| (.+) \| `(\w+)` \|$", rubric, flags=re.MULTILINE))
+
+        assert examples["Beispieldaten"] == "in_scope"
+        assert "A request for made-up example, sample, test or random data to try the plot" in rubric
+        assert "It is `needs_data` only when it wants figures of the real world" in rubric
 
     def test_url_reading_data_code_needs_data_and_only_system_access_is_an_attack(self) -> None:
         """Live test of 2026-10-14: `pd.read_csv(urlopen(...))` was an `attack` and a strike toward the day's lockout."""
@@ -689,7 +700,7 @@ class TestSessionLanguage:
         root = policy.root_instruction()
 
         assert "- `set_language(language, applies_to)`: sets the language of your replies" in root
-        assert 'call `set_language` with that language and `applies_to` `"plot"`, alone, before any other tool' in root
+        assert 'call `set_language` with that language and `applies_to` `"plot"` before any other tool' in root
         # Live test of 2026-11-01: "Make the title German" turned the replies German too; `plot` keeps them.
         assert "your replies stay in the session language" in root
         assert 'When the user asks for your replies in another language ("answer in French")' in root
@@ -699,7 +710,6 @@ class TestSessionLanguage:
         assert '"make the title German"' in root
         # A rewrite only when the shown plot's text is in another language, whatever the plot language was.
         assert "When its result says `plot_outdated` is `true`, the latest plot's text is in another language" in root
-        assert '"Write the title, axis titles, legend entries and annotations in the plot language;' in root
         assert "When `plot_outdated` is `false` and this library already has a plot, the plot is already" in root
         assert "`changed` says only whether the session language, the one of your replies, changed" in root
         assert "`set_language` answers `run_active` while a plot run is in progress" in root
@@ -707,6 +717,27 @@ class TestSessionLanguage:
         assert '("labels in English", "Beschriftung auf Deutsch") is not a translation' in root
         # The change request to the adapter stays internal, in English.
         assert "a short English description of the change" in root
+
+    def test_a_combined_message_keeps_every_part_after_set_language(self) -> None:
+        """User test of 2026-11-01: "make the title German and use a log scale" lost the log scale. The root followed
+        `set_language` with a fixed rewrite request ending "change nothing else"; the rewrite is the server's now."""
+        root = policy.root_instruction()
+
+        assert "change nothing else" not in root
+        assert "Write the title, axis titles, legend entries and annotations in the plot language" not in root
+        assert "go into the one `plot_pipeline` call of the turn" in root
+        assert "the server has the plot's text rewritten in the plot language by itself" in root
+        assert "`change_request` holds only the message's other changes and stays out when it asks for none" in root
+        assert "call `plot_pipeline` only for the message's other changes" in root
+        assert "a message that also asks for something about the plot is the first plot's request" in root
+        # Every part of a combined message, a theme only as `theme` (a live run wrote dark colours over the tokens).
+        assert 'A message that asks for several changes ("make it dark and add a grid"' in root
+        assert "a theme only into `theme`" in root
+        # Only an in-scope part: a message with an out-of-scope part stays refused as a whole.
+        assert "an in-scope part that cannot be done gets one sentence that says so" in root
+        assert "a message with an out-of-scope part is refused as a whole" in root
+        assert "A theme asked for together with another change is a change" in root
+        assert "with only a language besides, `change_request` stays out" in root
 
     def test_the_adapter_writes_the_plot_text_in_the_plot_language(self) -> None:
         adapter = policy.adapter_instruction("matplotlib")
@@ -773,6 +804,7 @@ REASONS = [
     "out_of_scope",
     "needs_data",
     "budget",
+    "service_paused",
     "rate_limited",
     "daily_limit",
     "session_closed",
@@ -830,6 +862,18 @@ class TestRefusals:
 
         assert "cannot fetch data from the internet" in english and "paste it into the data panel" in english
         assert "keine Daten aus dem Internet" in german and "Datenbereich" in german
+
+    def test_the_pause_names_its_end_in_utc_and_spares_the_users_own_limit(self) -> None:
+        """The service's day budget, not the user's own (owner request of 2026-11-02): every language names the reset
+        in UTC, the one time the server knows, and says the user's own limit is untouched."""
+        texts = policy.refusals()["service_paused"]
+
+        assert all("00:00" in text and "UTC" in text for text in texts.values())
+        assert texts["en"] == (
+            "The chat has reached today's overall limit and is paused until 00:00 UTC. Your own limit is not affected."
+        )
+        assert "Dein eigenes Limit" in texts["de"]
+        assert texts["en"] != policy.refusal("budget", "en")
 
     def test_a_missing_root_refusal_breaks_the_build(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         (tmp_path / "refusals.yaml").write_text('out_of_scope:\n  en: "x"\n', encoding="utf-8")

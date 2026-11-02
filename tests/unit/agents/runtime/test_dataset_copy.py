@@ -147,12 +147,9 @@ def rendered_version(*, language: str) -> CodeVersion:
 
 
 def frame(stored: StoredDataset) -> pd.DataFrame:
-    """The table as the plot code's loader reads `data.csv` (`code/loader.py`: dtypes, dates, round-trip floats)."""
+    """The table as the plot code's loader reads `data.csv` (`code/loader.py`: dtypes, dates)."""
     return pd.read_csv(
-        io.StringIO(stored.csv),
-        dtype=pandas_dtypes(stored.column_dtypes),
-        parse_dates=stored.parse_dates,
-        float_precision="round_trip",
+        io.StringIO(stored.csv), dtype=pandas_dtypes(stored.column_dtypes), parse_dates=stored.parse_dates
     )
 
 
@@ -418,6 +415,26 @@ async def test_copies_are_counted_per_user(
     assert (response.status_code, response.json()) == (429, {"detail": code})
     refused, _ = await view_of(runtime, second)
     assert refused.dataset_id is None
+
+
+@pytest.mark.parametrize("cap", ["COPIES_PER_MINUTE", "COPIES_PER_DAY"])
+async def test_an_admin_is_exempt_from_the_copy_caps(
+    client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch, cap: str
+) -> None:
+    """Owner decision of 2026-11-01: three windows of `.plot_all()` copy 45 datasets within a minute; only the
+    store's byte cap bounds an admin's copies."""
+    monkeypatch.setattr(ledger, cap, 1)
+    source = await open_session(client)
+    await paste(client, source)
+    targets = [await open_session(client, library=library, fanout=True) for library in ("seaborn", "matplotlib")]
+    admin = {**headers(), "X-Anyplot-Tier": "admin"}
+
+    answers = [
+        await client.post(f"/v1/sessions/{target}/dataset/copy", headers=admin, json={"from_session": source})
+        for target in targets
+    ]
+
+    assert [answer.status_code for answer in answers] == [200, 200]
 
 
 async def test_a_full_store_refuses_the_copy_and_keeps_nothing(

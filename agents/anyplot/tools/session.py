@@ -81,7 +81,15 @@ from ..briefs import bindings_text, spec_brief, trimmed_profiles
 from ..code.data_code import check_data_code
 from ..data.generate import Generate, GenerateError, generate
 from ..data.parse import MAX_CANONICAL_BYTES, MAX_COMPUTED_BYTES, ParsedDataset, ParseError, parse_dataset
-from ..data.prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations, validation_lines, with_date_notes
+from ..data.prepare import (
+    MAX_OPERATIONS,
+    Operation,
+    Prepared,
+    PrepareError,
+    apply_operations,
+    validation_lines,
+    with_date_notes,
+)
 from ..data.query import DEFAULT_QUERY_ROWS, QueryArgs, QueryResult, run_query
 from ..data.shape import long_suggestion
 from ..data.store import StoredDataset, StoreFull
@@ -314,6 +322,16 @@ async def keep_plot_request(
     return {"status": "ok", "request_kept": True}
 
 
+def _conversion_outcome(prepared: Prepared, profile: DatasetProfile) -> telemetry.ConversionOutcome | None:
+    """What `prepare_data` made for an open role, as the `chat_turn` reports it (`telemetry.ConversionOutcome`)."""
+    if prepared.row_numbers:
+        return "index"
+    dtypes = {column.name: column.dtype for column in profile.columns}
+    if not prepared.converted:
+        return None
+    return "date" if any(dtypes.get(name) == "datetime" for name in prepared.converted) else "number"
+
+
 async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolContext) -> dict[str, Any]:
     """Change the user's dataset with one to five operations, applied in order by the server; the result becomes the next version of the data, which the user then checks and confirms.
 
@@ -328,8 +346,9 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     the group's total, or, in the order of a number or date column order, the percent change from the previous row,
     the running total, or an index with the group's first row = 100); make_date (name, year, and month with an
     optional day, or quarter, or week; adds the date column name built from whole-number columns holding the parts of
-    a date, a part left out being its first: year and month give the first day of each month). Returns the change
-    lines and the new profile, or an error with a code and a message.
+    a date, a part left out being its first: year and month give the first day of each month); row_number (name; adds
+    the whole-number column name, default index, the rows numbered 1 to n). Returns the change lines and the new
+    profile, or an error with a code and a message.
     """
     view = _view(tool_context)
     if view is None:
@@ -370,12 +389,22 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     except ParseError:  # the operations keep every parser cap (rows, columns, size), so a refusal here is a bug
         return _error("internal")
     try:
-        version = push_version(services.datasets, session_id, view, parsed, view.snapshot)
+        version = push_version(
+            services.datasets,
+            session_id,
+            view,
+            parsed,
+            view.snapshot,
+            converted=prepared.converted,
+            row_numbers=prepared.row_numbers,
+        )
     except StoreFull:
         return _error("capacity")
     # The new dataset id leaves the confirmation's fingerprint behind: the user confirms the new version.
     for key, value in version.delta.items():
         tool_context.state[key] = value
+    if outcome := _conversion_outcome(prepared, parsed.profile):
+        telemetry.note_conversion(session_id, outcome)
     ledger.dataset_changes.extend(prepared.changes)
     ledger.prep_ops.extend(operation.op for operation in parsed_operations)  # the names only, for the telemetry
     base = {
@@ -385,6 +414,10 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
         "version": version.version,
         "changes": DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(prepared.changes, ensure_ascii=False)),
     }
+    if version.bindings != view.bindings:
+        # The server moved them (`carry_bindings`): the reply names these, not the ones the turn started from (live
+        # run of 2026-11-02: the root saw x on `value` and called the row numbers a mistake).
+        base["bindings"] = DATA_PREAMBLE + "\n" + fence("user_data", bindings_text(version.bindings))
     return _with_profile(base, parsed.profile, "prepare_data")
 
 
@@ -520,8 +553,12 @@ def _store_generated(
 
 DATA_CODE_CHANGE = "computed from your code"
 """The change line of a `run_data_code` version; the rows and columns follow it."""
-SOURCE_LANGUAGES = frozenset({"python", "javascript", "r", "math", "other"})
-"""`run_data_code`'s `source_language`: what the user wrote before the root's translation, for attribution only."""
+EXAMPLE_DATA_CHANGE = "generated example data"
+"""The change line of a `run_data_code` version the root wrote for a request for example data (`source_language`
+`example`): the data panel says plainly that the table is made up, not the user's."""
+SOURCE_LANGUAGES = frozenset({"python", "javascript", "r", "math", "other", "example"})
+"""`run_data_code`'s `source_language`: what the user wrote before the root's translation, for attribution, or
+`example` for example data the user asked for, which also sets the change line and the source line."""
 RUN_FAILURES: dict[str, str] = {
     "no_frame": "the code defined no table: assign a pandas DataFrame to df at the top level",
     "frame_shape": "df has nested column headers (a MultiIndex) or an index that cannot become columns: flatten it",
@@ -553,7 +590,7 @@ def _error_lines(code: str, lines: list[str]) -> dict[str, Any]:
 
 
 async def run_data_code(code: str, source_language: str, tool_context: ToolContext) -> dict[str, Any]:
-    """Run Python that generates the data for the plot (a snippet the user pasted or typed, translated by you to Python if it was JavaScript, R, a formula or anything else); the server validates it, runs it in a sandbox without network or files, and stores the table it computed in df as the next version of the data, which the user then checks and confirms.
+    """Run Python that generates the data for the plot (a snippet the user pasted or typed, translated by you to Python if it was JavaScript, R, a formula or anything else, or code you write for example data the user asked for); the server validates it, runs it in a sandbox without network or files, and stores the table it computed in df as the next version of the data, which the user then checks and confirms.
 
     code: Python of at most 6,000 characters using only numpy, pandas, math, random, statistics or scipy.stats (and
     the other scipy computing modules); it must assign the final table to df at the top level as a pandas DataFrame
@@ -563,8 +600,8 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
     draw nothing (no matplotlib, no plot(),
     no hist()). Never write data values from memory: more than 20 numbers or 20 text values written out in one list,
     tuple or dict (a list repeated with * counts every copy), or 40 in the code, are refused. source_language:
-    what the user wrote, one of python, javascript, r, math or other. Returns the change lines and the new profile,
-    or an error with a code and a message.
+    what the user wrote, one of python, javascript, r, math or other, or example when the user asked for example data
+    and wrote no code. Returns the change lines and the new profile, or an error with a code and a message.
     """
     view = _view(tool_context)
     if view is None:
@@ -588,7 +625,7 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
     # Checked before the queue wait and counted after it, so a run that never starts is never counted; the user's
     # runs waiting in their other sessions at the same time (at most `AGENT_USER_MAX_RUNS` - 1) can each pass this
     # check and overshoot the day's count by as many, a small overshoot accepted with the parallel windows (2026-10-21).
-    if not services.usage.data_runs_ok(user, settings):
+    if not services.usage.data_runs_ok(user, settings, ledger.tier):
         attribution("data_code", ledger, outcome="daily_limit", language=language)
         return _error("daily_limit")
     if ledger.run_slot is not None and not await ledger.run_slot():  # the run queue's slot and the turn's start
@@ -641,7 +678,10 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
         return _error("capacity")
     for key, value in delta.items():
         tool_context.state[key] = value
-    changes = [f"{DATA_CODE_CHANGE}: {parsed.profile.rows} rows, {len(parsed.profile.columns)} columns"]
+    example = language == "example"
+    change = EXAMPLE_DATA_CHANGE if example else DATA_CODE_CHANGE
+    changes = [f"{change}: {parsed.profile.rows} rows, {len(parsed.profile.columns)} columns"]
+    ledger.example_data = ledger.example_data or example
     ledger.dataset_changes.extend(changes)
     base = {
         "status": "ok",

@@ -7,6 +7,7 @@ import {
   type RunState,
 } from 'src/hooks/useAgentSession';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
+import { localClock } from 'src/sections/agent-chat/messages';
 import { pendingReply } from 'src/sections/agent-chat/steps';
 import { render, screen } from 'src/test-utils';
 
@@ -61,6 +62,27 @@ describe('ChatThread', () => {
     expect(screen.getByText('no plot this time')).toBeInTheDocument();
   });
 
+  it("adds the user's own time to the service's pause, which names only UTC", () => {
+    const until = '2026-11-03T00:00:00.000Z';
+    const text =
+      "The chat has reached today's overall limit and is paused until 00:00 UTC. Your own limit is not affected.";
+    renderThread({
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      items: [
+        { id: 1, kind: 'user', text: 'log scale on y' },
+        { id: 2, kind: 'refusal', code: 'service_paused', text, until },
+        { id: 3, kind: 'refusal', code: 'budget', text: 'The usage limit for now is reached.' },
+      ],
+    });
+    const [paused, own] = screen.getAllByTestId('refusal');
+    expect(paused).toHaveTextContent(
+      `refusal · service_paused · until ${localClock(until)}${text}`
+    );
+    expect(own).toHaveTextContent(/^refusal · budgetThe usage limit/);
+  });
+
   it("shows the page's own turns: the summary without a library, create_plot with it", () => {
     renderThread({
       ...initialAgentState('matplotlib'),
@@ -100,7 +122,7 @@ describe('ChatThread', () => {
     expect(screen.getByText('# stopped')).toBeInTheDocument();
   });
 
-  it("says in plain words that the user's other windows hold their three runs", () => {
+  it("says in plain words that the user's other windows hold their runs, without a number of its own", () => {
     renderThread({
       ...initialAgentState('matplotlib'),
       phase: 'ready',
@@ -109,9 +131,36 @@ describe('ChatThread', () => {
     });
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent('error · run_limit · ref r-lim');
+    // The cap is the caller's own (3, or 5 for an admin), so the sentence names none.
     expect(alert).toHaveTextContent(
-      'you already have 3 plots or data runs in progress in other windows; wait until one finishes, then try again'
+      'your plots and data runs in other windows already fill your share; wait until one finishes, then try again'
     );
+  });
+
+  it('reads a run the model service refused for its quota as busy, not as a fault', () => {
+    renderThread({
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      items: [
+        {
+          id: 1,
+          kind: 'plot_failed',
+          result: {
+            status: 'failed',
+            reason: 'busy',
+            attempts: 1,
+            artifacts: [],
+            changes: [],
+            residual_defects: [],
+            version: null,
+          },
+        },
+      ],
+    });
+    expect(
+      screen.getByText(/the model service is busy; try again in a minute/)
+    ).toBeInTheDocument();
   });
 
   it('names this window, not the others, for a run_active turn', () => {

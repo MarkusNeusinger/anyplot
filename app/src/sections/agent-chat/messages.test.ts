@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { describeConvertFailure, describeDataFailure, describeViewFailure } from './messages';
+import {
+  describeConvertFailure,
+  describeDataFailure,
+  describeViewFailure,
+  localClock,
+  nextUtcMidnight,
+  servicePausedText,
+} from './messages';
 
 describe('describeViewFailure', () => {
   it.each([
@@ -26,6 +33,40 @@ describe('describeViewFailure', () => {
     ['boom', null, undefined, 'could not show every row: request failed (boom)'],
   ])('names %s', (code, ref, detail, text) => {
     expect(describeViewFailure(code, ref, detail)).toBe(text);
+  });
+
+  it('names the service pause like the other data calls', () => {
+    expect(describeViewFailure('service_paused', null)).toBe(
+      `could not show every row: ${servicePausedText()}`
+    );
+  });
+});
+
+describe('the service pause', () => {
+  it('ends at the next 00:00 UTC, also a second before it', () => {
+    expect(nextUtcMidnight(Date.parse('2026-11-02T14:05:00Z'))).toBe('2026-11-03T00:00:00.000Z');
+    expect(nextUtcMidnight(Date.parse('2026-11-02T23:59:59Z'))).toBe('2026-11-03T00:00:00.000Z');
+    expect(nextUtcMidnight(Date.parse('2026-12-31T00:00:00Z'))).toBe('2027-01-01T00:00:00.000Z');
+  });
+
+  it("names the end in the user's own time, and claims nothing about their own limit", () => {
+    const until = '2026-11-03T00:00:00Z';
+    expect(localClock(until)).toMatch(/^\d{2}:\d{2}/);
+    expect(servicePausedText(until)).toBe(
+      `the chat has reached today's overall limit and is paused until ${localClock(until)}`
+    );
+    expect(localClock('not a time')).toBeNull();
+    expect(servicePausedText('not a time')).toContain('paused until 00:00 UTC');
+  });
+
+  it('is the line of a paused paste or file, never the daily limit of the user', () => {
+    expect(describeDataFailure('service_paused', 'r-9')).toBe(`${servicePausedText()} · ref r-9`);
+    expect(describeConvertFailure('a.xlsx', 'service_paused', null, null, null)).toBe(
+      `"a.xlsx" ${servicePausedText()}`
+    );
+    expect(describeDataFailure('daily_limit', null)).toBe(
+      "today's limit is reached; try again tomorrow"
+    );
   });
 });
 

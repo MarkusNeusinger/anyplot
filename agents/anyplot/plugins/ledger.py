@@ -20,6 +20,23 @@ for the rest of the day, so a turn gets the budget refusal and a dataset
 which the `/messages` route checks before the scope judge (`message_limit`). Only a new
 UTC day, a redeploy or a scale-to-zero resets them.
 
+Every check takes the caller's `Tier`, which the `/v1` route reads from the header the BFF
+sets (`agents/main.py` `caller_tier`). An `admin` is exempt from the per-user day caps (the
+token budget, the pipeline runs, the data runs, the chat turns) and from the chat turns'
+minute (owner decision of 2026-11-01: a fan-out over every library starts a turn and a run
+per library); the global day budget and the `attack` strikes bind every tier, the one as
+the service's runaway guard, the other as a safety rule rather than a usage cap. Pastes,
+file conversions and outcome beacons keep their limits for every tier: they bound memory
+and sandbox time, not model spend. The fan-out's copies bind no admin (`copy_limit`): three
+windows of `.plot_all()` copy 45 datasets within a minute, and the store's byte cap still
+refuses a copy it has no room for.
+
+The global day budget binds the whole service: once it is spent (`UsageBook.paused`),
+every user gets the `service_paused` refusal (`day_refusal`) until 00:00 UTC, told apart
+from a user's own spent budget (`budget`, a paste's `daily_limit`). `UsageBook.snapshot`
+answers the admin's live view of the day (`GET /v1/budget`): the global spend and how many
+users are at their own limits, counts only, for the instance's lifetime.
+
 The request, user-day and global-day budgets count cost-weighted tokens: each kind
 weighted by its price relative to an uncached input token (`BUDGET_WEIGHTS`), so a
 cache read counts a tenth and an output token five times. `RequestLedger.tokens` and
@@ -41,7 +58,7 @@ from collections import OrderedDict, deque
 from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 
 from ..schemas import Theme
@@ -54,6 +71,9 @@ ATTRIBUTION_LOGGER = "anyplot.agents.attribution"
 logger = logging.getLogger(ATTRIBUTION_LOGGER)
 
 RequestKind = Literal["action", "text"]
+Tier = Literal["admin", "public"]
+"""Who the caller is to the limits: `admin` (the BFF asserts it for an admin identity) or `public` (everyone else,
+and every request without the assertion)."""
 MAX_ADHOC_LEDGERS = 64
 
 
@@ -104,6 +124,9 @@ class RequestLedger:
     user_id: str = ""
     session_id: str = ""
     kind: RequestKind = "text"
+    tier: Tier = "public"
+    """The caller's tier, set by the `/messages` route from the BFF's assertion: the run queue's lane and the day
+    caps' exemptions follow it. `public` without a route (`adk web`)."""
     invocation_id: str | None = None
     llm_calls: int = 0
     tokens: int = 0
@@ -131,6 +154,9 @@ class RequestLedger:
     """The change lines of every `prepare_data` call of the turn, in order: the `done` event's `dataset.changes`."""
     data_code_calls: int = 0
     """`run_data_code` calls of this invocation; ToolSafety allows `MAX_DATA_CODE_CALLS`."""
+    example_data: bool = False
+    """A `run_data_code` call of this invocation stored example data the user asked for (`source_language` `example`):
+    the `chat_turn` line's `kind` is `example`."""
     root_request: Any = None
     """The root's latest `LlmRequest`, kept by the reply-language plugin so a reply in the wrong language can be
     asked again once with the same context (`plugins/reply_language.py`)."""
@@ -159,6 +185,16 @@ class RequestLedger:
     """The operation names of every `prepare_data` call that changed the data (closed: `telemetry.PREP_OPS`)."""
     reply_question: bool = False
     """The root's last reply sent to the page ends with a question mark (`stream.Translator`); the text is never kept."""
+    queue_position: int | None = None
+    queue_wait_s: float | None = None
+    """Where the turn's run-queue entry stood at submit (0: it started at once) and how long it waited, set by the
+    route once the entry starts (`TurnSlot.take`); None for a turn that never ran sandbox work. The usage telemetry's
+    `queue_position` and `queue_wait_ms` (`pipeline_run`)."""
+    user_runs_today: int | None = None
+    user_tokens_share: float | None = None
+    """This run's ordinal among the user's pipeline runs of the UTC day, and the share of the public per-user daily
+    token budget (`AGENT_DAILY_TOKEN_BUDGET`) the user had spent when it was booked, admins measured against it too,
+    set by the Budget plugin (`before_tool_callback`). Only their buckets reach the telemetry, never the user."""
     site_theme: Theme | None = None
     """The theme the page showed the site in when the user sent the turn (`/messages?theme=`), which a plot run takes
     when neither the user nor the version it changes asked for one (`pipeline.run_theme`); None without a page."""
@@ -222,6 +258,23 @@ def today() -> str:
     return datetime.now(UTC).date().isoformat()
 
 
+def utc_stamp(moment: datetime) -> str:
+    """An instant as the API writes one: ISO 8601 in UTC to the second, with a `Z`."""
+    return moment.astimezone(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def next_reset(now: datetime | None = None) -> datetime:
+    """The next 00:00 UTC: when the usage book starts a new day and every daily counter, the global one included,
+    starts again from zero."""
+    current = (now or datetime.now(UTC)).astimezone(UTC)
+    return datetime.combine(current.date() + timedelta(days=1), datetime.min.time(), UTC)
+
+
+SERVICE_PAUSED = "service_paused"
+"""The refusal and the paste route's `429` once the global day budget is spent: the whole service pauses until
+00:00 UTC, whatever the user's own counts (owner request of 2026-11-02: tell it apart from the user's own limit)."""
+
+
 @dataclass
 class _Day:
     date: str
@@ -235,6 +288,8 @@ class _Day:
     user_conversions: dict[str, int] = field(default_factory=dict)
     user_outcomes: dict[str, int] = field(default_factory=dict)
     user_copies: dict[str, int] = field(default_factory=dict)
+    admins: set[str] = field(default_factory=set)
+    """The users who came in the admin tier today (`mark_admin`): the book has no tier of its own, each request does."""
 
 
 MESSAGE_WINDOW_S = 60.0
@@ -254,7 +309,31 @@ COPIES_PER_DAY = 150
 review of 2026-11-01: 600 let one user put about 3 GiB a day into the 256 MiB store). A copy parses nothing and calls
 no model, so it is no paste, but each one takes the dataset's size in the store again: the cap bounds what one user
 can put there. A per-user byte budget in the store is the follow-up before the chat goes public. Constants, not
-settings, like the outcome beacons'."""
+settings, like the outcome beacons'. An admin is exempt from both (owner decision of 2026-11-01, `copy_limit`)."""
+
+
+LimitKind = Literal["tokens", "runs", "data_runs", "messages", "pastes", "conversions", "locked_out"]
+"""The day caps of one user that `UsageBook.snapshot` counts users at: the token budget, the pipeline runs, the
+`run_data_code` runs, the chat turns, the pastes, the file conversions, and the `attack` strikes."""
+LIMIT_KINDS: tuple[LimitKind, ...] = ("tokens", "runs", "data_runs", "messages", "pastes", "conversions", "locked_out")
+
+
+@dataclass(frozen=True)
+class DaySnapshot:
+    """The usage book's day as the admin's live view reads it (`GET /v1/budget`): counts only, never a user id."""
+
+    date: str
+    since: datetime
+    """When this day's counts began: the book's start when the instance started today, else 00:00 UTC."""
+    started_at: datetime
+    """When this instance's usage book started: a redeploy or a scale-to-zero starts a new one at zero."""
+    global_tokens: int
+    users: int
+    """Users with a chat turn, a paste, a conversion, a run, booked tokens or a strike today."""
+    at_limit: int
+    """Users at one or more of their own day caps (`limits`), each counted once."""
+    limits: dict[LimitKind, int]
+    """Users at each day cap; a user at two caps counts under both, an admin never under one they are exempt from."""
 
 
 class UsageBook:
@@ -265,6 +344,8 @@ class UsageBook:
         self._day = _Day(today())
         self._clock = clock
         self._recent: dict[tuple[WindowKind, str], deque[float]] = {}
+        self.started_at = datetime.now(UTC)
+        """When the book began counting: in production the instance's first request (`services.get_services`)."""
 
     def _current(self) -> _Day:
         date = today()
@@ -305,10 +386,13 @@ class UsageBook:
     def user_strikes(self, user_id: str) -> int:
         return len(self._current().user_strikes.get(user_id, ()))
 
-    def daily_ok(self, user_id: str, settings: AgentSettings, *, reserve: int = 0) -> bool:
-        """Whether the user and the service still have daily token budget, `reserve` tokens beyond the spend, and strikes left."""
+    def daily_ok(self, user_id: str, settings: AgentSettings, *, reserve: int = 0, tier: Tier = "public") -> bool:
+        """Whether the user and the service still have daily token budget, `reserve` tokens beyond the spend, and strikes left.
+
+        An `admin` has no daily token budget of their own: only the service's and the strikes bind them.
+        """
         return (
-            self.user_tokens(user_id) + reserve < settings.daily_token_budget
+            (tier == "admin" or self.user_tokens(user_id) + reserve < settings.daily_token_budget)
             and self.global_tokens() + reserve < settings.global_daily_token_budget
             and self.user_strikes(user_id) < settings.attack_strikes
         )
@@ -318,8 +402,54 @@ class UsageBook:
         `daily_ok` folds into its answer, told apart from a spent token budget."""
         return self.user_strikes(user_id) >= settings.attack_strikes
 
-    def runs_ok(self, user_id: str, settings: AgentSettings) -> bool:
-        return self.user_runs(user_id) < settings.daily_pipeline_runs
+    def paused(self, settings: AgentSettings) -> bool:
+        """Whether the service's day budget (`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`) is spent: the `service_paused` refusal
+        for everyone until 00:00 UTC, which `daily_ok` folds into its answer."""
+        return self.global_tokens() >= settings.global_daily_token_budget
+
+    def mark_admin(self, user_id: str) -> None:
+        """Remember for today that this user came in the admin tier, for `snapshot`: `agents/main.py` `_stamp`, which
+        every route that spends passes."""
+        self._current().admins.add(user_id)
+
+    def snapshot(self, settings: AgentSettings) -> DaySnapshot:
+        """Today's global spend and how many users are at their own day caps, as counts (`DaySnapshot`). An admin
+        counts only at the caps that bind every tier: the pastes, the conversions and the strikes."""
+        day = self._current()
+        reached: dict[LimitKind, set[str]] = {
+            "tokens": _at_least(day.user_tokens, settings.daily_token_budget) - day.admins,
+            "runs": _at_least(day.user_runs, settings.daily_pipeline_runs) - day.admins,
+            "data_runs": _at_least(day.user_data_runs, settings.daily_data_runs) - day.admins,
+            "messages": _at_least(day.user_messages, settings.user_messages_per_day) - day.admins,
+            "pastes": _at_least(day.user_pastes, settings.user_pastes_per_day),
+            "conversions": _at_least(day.user_conversions, settings.user_conversions_per_day),
+            "locked_out": {
+                user for user, strikes in day.user_strikes.items() if len(strikes) >= settings.attack_strikes
+            },
+        }
+        users = set().union(
+            day.user_tokens,
+            day.user_runs,
+            day.user_data_runs,
+            day.user_messages,
+            day.user_pastes,
+            day.user_conversions,
+            day.user_strikes,
+        )
+        midnight = datetime.fromisoformat(day.date).replace(tzinfo=UTC)
+        return DaySnapshot(
+            date=day.date,
+            since=max(self.started_at, midnight),
+            started_at=self.started_at,
+            global_tokens=day.global_tokens,
+            users=len(users),
+            at_limit=len(set().union(*reached.values())),
+            limits={kind: len(reached[kind]) for kind in LIMIT_KINDS},
+        )
+
+    def runs_ok(self, user_id: str, settings: AgentSettings, tier: Tier = "public") -> bool:
+        """Whether the user may start another pipeline run today (`AGENT_DAILY_PIPELINE_RUNS`); always for an admin."""
+        return tier == "admin" or self.user_runs(user_id) < settings.daily_pipeline_runs
 
     def add_data_run(self, user_id: str) -> None:
         """Count one `run_data_code` run against the user's day, before it runs."""
@@ -329,16 +459,20 @@ class UsageBook:
     def user_data_runs(self, user_id: str) -> int:
         return self._current().user_data_runs.get(user_id, 0)
 
-    def data_runs_ok(self, user_id: str, settings: AgentSettings) -> bool:
-        return self.user_data_runs(user_id) < settings.daily_data_runs
+    def data_runs_ok(self, user_id: str, settings: AgentSettings, tier: Tier = "public") -> bool:
+        """Whether the user may run another data snippet today (`AGENT_DAILY_DATA_RUNS`); always for an admin."""
+        return tier == "admin" or self.user_data_runs(user_id) < settings.daily_data_runs
 
     def user_messages(self, user_id: str) -> int:
         """The user's chat turns today (typed messages and actions alike) that passed `message_limit`."""
         return self._current().user_messages.get(user_id, 0)
 
-    def message_limit(self, user_id: str, settings: AgentSettings) -> MessageLimit | None:
+    def message_limit(self, user_id: str, settings: AgentSettings, tier: Tier = "public") -> MessageLimit | None:
         """Why the user may not send another chat turn now, or None; checked before the scope judge, so a flood costs
-        no model call. A refused turn is not counted: the window frees itself one minute after the last counted one."""
+        no model call. A refused turn is not counted: the window frees itself one minute after the last counted one.
+        Never a limit for an admin, whose turns are still counted."""
+        if tier == "admin":
+            return None
         return self._limit(
             "message",
             user_id,
@@ -401,9 +535,13 @@ class UsageBook:
         day.user_outcomes[user_id] = day.user_outcomes.get(user_id, 0) + 1
         self._stamp("outcome", user_id)
 
-    def copy_limit(self, user_id: str) -> MessageLimit | None:
+    def copy_limit(self, user_id: str, tier: Tier = "public") -> MessageLimit | None:
         """Why the user may not copy another dataset into a fan-out session now, or None (`COPIES_PER_MINUTE`,
-        `_PER_DAY`)."""
+        `_PER_DAY`). Never a limit for an admin (owner decision of 2026-11-01), whose copies are still counted: three
+        windows of `.plot_all()` copy 45 datasets within a minute, and the store's own byte cap still refuses a copy
+        it has no room for (`503 capacity`)."""
+        if tier == "admin":
+            return None
         count = self._current().user_copies.get(user_id, 0)
         return self._limit("copy", user_id, count, COPIES_PER_MINUTE, COPIES_PER_DAY)
 
@@ -444,6 +582,22 @@ class UsageBook:
         return recent
 
 
+def _at_least(counts: dict[str, int], cap: int) -> set[str]:
+    return {user for user, count in counts.items() if count >= cap}
+
+
+def day_refusal(usage: UsageBook, user_id: str, settings: AgentSettings, *, tier: Tier = "public") -> str:
+    """Which refusal a failed `daily_ok` is: `locked_out` past the day's strikes, `budget` when the user's own day
+    budget is spent, `service_paused` when only the service's is (its text says the user's own limit is untouched).
+    An admin has no own day budget (`UsageBook.daily_ok`), so only the service's can stop them."""
+    if usage.locked_out(user_id, settings):
+        return "locked_out"
+    own_left = tier == "admin" or usage.user_tokens(user_id) < settings.daily_token_budget
+    if own_left and usage.paused(settings):
+        return SERVICE_PAUSED
+    return "budget"
+
+
 def request_ok(ledger: RequestLedger, settings: AgentSettings, *, next_calls: int = 1, reserve: int = 0) -> bool:
     """Whether the request may make `next_calls` more LLM calls and still has `reserve` cost-weighted tokens left."""
     return (
@@ -460,10 +614,10 @@ def budget_allows(
     `reserve` is what the caller still needs after the check, in cost-weighted tokens:
     the pipeline keeps room for a review and the root's closing reply
     (`pipeline.REVIEW_RESERVE_TOKENS`), so a review never leaves the reply to a shipped
-    plot to the `budget` refusal.
+    plot to the `budget` refusal. The user-day budget follows the ledger's tier (`UsageBook.daily_ok`).
     """
     return request_ok(ledger, settings, next_calls=next_calls, reserve=reserve) and usage.daily_ok(
-        ledger.user_id or "anonymous", settings, reserve=reserve
+        ledger.user_id or "anonymous", settings, reserve=reserve, tier=ledger.tier
     )
 
 
@@ -531,6 +685,22 @@ attempts books a median of 77,747 (95th percentile 87,180, at most 103,800), and
 115,046 at most with a second review; with three attempts (`AGENT_MAX_ATTEMPTS=3`, the
 three-attempt rerun) at most 106,042, and about 117,300 with a second review. The
 160,000 of `AGENT_REQUEST_TOKEN_BUDGET` stays about 36 % above the costliest of these."""
+
+
+UNIT_PRICES: dict[str, float] = {"claude-haiku-5-5": 0.10, "gemini-3.8-flash": 1.50}
+"""The uncached input list price, USD per million tokens at the `global` endpoint, of each main model the budgets
+are counted in: one weighted token (`BUDGET_WEIGHTS`, `JUDGE_WEIGHTS`) costs this much. The prices of
+`agents/evals/pricing.py`, which the image does not ship (a test keeps both equal)."""
+LOCATION_SURCHARGES: dict[str, float] = {"global": 0.0, "eu": 0.10, "us": 0.10}
+"""`pricing.LOCATION_SURCHARGE`: the multi-regions add 10 % to the global list price (a test keeps both equal)."""
+
+
+def weighted_usd(tokens: int, model: str, location: str) -> float | None:
+    """Weighted tokens of `model` at `location` in USD at list price; None for a model without a price here."""
+    price = UNIT_PRICES.get(model)
+    if price is None:
+        return None
+    return tokens * price * (1.0 + LOCATION_SURCHARGES.get(location, 0.0)) / 1e6
 
 
 def weighted_tokens(*, uncached: int = 0, cached: int = 0, cache_write: int = 0, output: int = 0) -> int:

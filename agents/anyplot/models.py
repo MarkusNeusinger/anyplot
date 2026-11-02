@@ -11,7 +11,7 @@ location of every call come from `AGENT_PROVIDER`, `AGENT_MODEL`,
 `google.adk.models.anthropic_llm.Claude` with an `AsyncAnthropicVertex` client built
 from the settings (ADK's own builds one from `GOOGLE_CLOUD_PROJECT` and
 `GOOGLE_CLOUD_LOCATION`, which would let the environment pick the project).
-Reasoning depth is the Claude `effort` of `AnthropicGenerateContentConfig`; ADK 2.11
+Reasoning depth is the Claude `effort` of `AnthropicGenerateContentConfig`; ADK 2.13
 ignores `thinking_config.thinking_level` for Claude and raises when both are set.
 
 Claude thinks adaptively by default (since 2026-10-11): the root with
@@ -27,7 +27,7 @@ measured headroom however much the thinking uses. The summary comes back as thou
 parts, which the answer guard, ADK's output parsing and the stream translator all skip.
 
 Two details keep the replayed thinking blocks harmless. Left unset, Haiku 5.5 would
-think with the display omitted, and ADK 2.11 sends such a signature-only block back as
+think with the display omitted, and ADK 2.13 sends such a signature-only block back as
 `redacted_thinking`, which breaks the root's call after a tool result; the summarized
 display avoids that. And the root replays its thinking block after a tool result while
 the session block between the two calls changed (until 2026-10-15 ADK also moved it
@@ -43,13 +43,16 @@ A system instruction of several parts (the root's: its static policy, then the s
 block) goes to Claude as one system block per part, with ADK's prompt-cache breakpoint on
 the first only (`system_blocks`), so a session block that changes leaves the policy cached.
 
-ADK 2.11 sends no response schema to Claude: `basic.py` sets
-`config.response_schema` for a tool-less agent with an `output_schema`, and
-`anthropic_llm.py` never reads it, so the adapter and reviewer would get free text.
-`VertexClaude` closes that gap with Claude's structured outputs: when a request
-carries a response schema and no tools, it sets `output_config.format` to that
-schema (`structured_output_format`), so constrained decoding makes the answer text
-valid JSON of exactly that shape, and ADK's `validate_schema` parses it as it is.
+ADK 2.13 delivers a response schema to Claude as a `structured_output` tool
+(`anthropic_llm._OutputSchemaTool`; ADK 2.11 did not send the schema at all): `basic.py`
+sets `config.response_schema` for a tool-less agent with an `output_schema`, and the
+tool is forced with thinking off and only offered with thinking on, so a thinking
+adapter or reviewer could still answer in free text. `VertexClaude` uses Claude's
+structured outputs instead: when a request carries a response schema and no tools,
+it drops ADK's tool and sets `output_config.format` to that schema
+(`structured_output_format`), so constrained decoding makes the answer text valid
+JSON of exactly that shape, and ADK's `validate_schema` parses it as it is. ADK's
+unwrapping of the tool call finds no call and leaves the answer alone.
 The judge answers the same way. The grammar enforces types, enums, required fields
 and `additionalProperties: false`; what it cannot enforce (string lengths, item
 counts, a verdict's `ok` agreeing with its defects) the SDK's `transform_schema`
@@ -91,7 +94,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import Any, Literal, Protocol
 
-from anthropic import transform_schema
+from anthropic import NOT_GIVEN, transform_schema
 from google.adk.models.anthropic_llm import AnthropicGenerateContentConfig, Claude
 from google.adk.models.base_llm import BaseLlm
 from google.adk.models.google_llm import Gemini
@@ -163,6 +166,12 @@ request whose `max_tokens` could take longer than ten minutes at its assumed rat
 (about 21,333 tokens) unless the client sets a timeout of its own. The adapter's
 49,152 take about 143 s at the measured rate; 300 s leaves twice that, and the
 pipeline's deadlines bound a run long before the SDK's retries could add up."""
+CLAUDE_MAX_RETRIES = 4
+"""The SDK retries of the root's, the adapter's and the reviewer's Claude calls (`VertexClaude`), twice the SDK's
+default of 2 since 2026-11-01: the admin lane runs five pipelines at once, and a 429 on a shared Vertex AI quota
+passes within seconds (the SDK backs off 0.5, 1, 2 and 4 s with jitter, or as long as the answer's `retry-after`
+asks). A call still refused after them ends the turn as busy (`model_busy`). The judge keeps 0: its own budget of
+`AGENT_JUDGE_TIMEOUT_S` is the only clock it may spend (`_within_budget`)."""
 GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS = 12_288
 """The Gemini adapter's cap when a full file is allowed, thinking included.
 
@@ -285,8 +294,13 @@ THINKING_BINDING_BETA = "thinking-binding-controls-2026-08-01"
 signature no longer matches the conversation prefix (`thinking.block_binding`)."""
 
 
-def _has_tools(llm_request: LlmRequest) -> bool:
-    return bool(llm_request.config and llm_request.config.tools)
+def _structured_schema(llm_request: LlmRequest) -> Any:
+    """The schema a request answers under as a structured output, or None.
+
+    A request with tools of its own (the root) has none: its answer is chat.
+    """
+    config = llm_request.config
+    return config.response_schema if config and not config.tools else None
 
 
 def system_parts(llm_request: LlmRequest) -> list[str]:
@@ -337,22 +351,27 @@ class VertexClaude(Claude):
             project_id=self.vertex_project,
             region=self.vertex_region,
             timeout=Timeout(CLAUDE_REQUEST_TIMEOUT_S, connect=10.0),
+            max_retries=CLAUDE_MAX_RETRIES,
         )
 
     def _build_anthropic_kwargs(
         self, llm_request: LlmRequest, messages: Any, tools: Any, tool_choice: Any, thinking: Any
     ) -> dict[str, Any]:
-        """ADK's request arguments, plus the structured-output format when a response schema is set.
+        """ADK's request arguments, with a response schema sent as the structured-output format.
 
-        The format joins ADK's `output_config` (which holds the effort) rather than
-        replacing it. A request with tools (the root) gets no format: its answer is chat.
+        The format replaces the `structured_output` tool ADK delivers a schema as (a tool
+        and a format on one call would leave two ways to answer), so it goes before ADK
+        builds the arguments, whose cache breakpoints also look at the tools. The format
+        joins ADK's `output_config` (which holds the effort) rather than replacing it.
         """
+        schema = _structured_schema(llm_request)
+        if schema:
+            tools, tool_choice = NOT_GIVEN, NOT_GIVEN
         kwargs: dict[str, Any] = super()._build_anthropic_kwargs(llm_request, messages, tools, tool_choice, thinking)
         parts = system_parts(llm_request)
         if len(parts) > 1:
             kwargs["system"] = system_blocks(parts, kwargs.get("system"))
-        schema = llm_request.config.response_schema if llm_request.config else None
-        if schema is not None and not _has_tools(llm_request):
+        if schema:
             kwargs["output_config"] = {
                 **(kwargs.get("output_config") or {}),
                 "format": structured_output_format(schema),
@@ -374,8 +393,8 @@ class VertexClaude(Claude):
     async def generate_content_async(
         self, llm_request: LlmRequest, stream: bool = False
     ) -> AsyncGenerator[LlmResponse, None]:
-        structured = bool(llm_request.config and llm_request.config.response_schema) and not _has_tools(llm_request)
         # A structured answer is read whole, so it never streams.
+        structured = bool(_structured_schema(llm_request))
         async for response in super().generate_content_async(llm_request, stream=stream and not structured):
             yield response
 
@@ -440,7 +459,11 @@ def cli_client(settings: AgentSettings | None = None, *, fallback: bool = True) 
     key = (settings.project if fallback else "", settings.location, settings.cli_concurrency, settings.cli_call_log)
     client = _CLI_CLIENTS.get(key)
     if client is None:
-        vertex = make_anthropic_client(settings.project, settings.location, max_retries=2) if fallback else None
+        vertex = (
+            make_anthropic_client(settings.project, settings.location, max_retries=CLAUDE_MAX_RETRIES)
+            if fallback
+            else None
+        )
         log = Path(settings.cli_call_log) if settings.cli_call_log else None
         client = ClaudeCliClient(fallback=vertex, concurrency=settings.cli_concurrency, call_log=log)
         _CLI_CLIENTS[key] = client
@@ -902,6 +925,41 @@ def make_anthropic_client(project: str, location: str, *, max_retries: int = 0) 
     from anthropic import AsyncAnthropicVertex
 
     return AsyncAnthropicVertex(project_id=project, region=location, max_retries=max_retries)
+
+
+BUSY_STATUSES = frozenset({429, 529})
+"""The HTTP statuses of a model call that mean the service is busy, not broken: a quota (429) and Anthropic's
+overload (529, the SDK's `OverloadedError`). Both pass within seconds to minutes."""
+
+
+def error_chain(exc: BaseException) -> list[BaseException]:
+    """`exc` and the errors behind it, outermost first: through ADK's `DynamicNodeFailError` (its `error`) and explicit
+    causes (`raise ... from`). Never an implicit `__context__`: an unrelated failure raised while handling a quota
+    error is that failure, not the quota."""
+    chain: list[BaseException] = []
+    current: BaseException | None = exc
+    while current is not None and all(current is not seen for seen in chain):
+        chain.append(current)
+        wrapped = getattr(current, "error", None)
+        current = wrapped if isinstance(wrapped, BaseException) else current.__cause__
+    return chain
+
+
+def model_busy(exc: BaseException) -> bool:
+    """Whether a model call failed because the model service is busy, after its retries: a quota (Anthropic's
+    `RateLimitError`, Gemini's `RESOURCE_EXHAUSTED`) or an overload (`OverloadedError`), anywhere in `error_chain`.
+
+    Read from the type names and the status codes only, never from a message. The `/messages` stream ends such a turn
+    with `capacity` and the pipeline its run with `busy`: both read as "busy, try again shortly", not as a fault.
+    """
+    for link in error_chain(exc):
+        name = type(link).__name__
+        if "RateLimit" in name or "ResourceExhausted" in name or "Overloaded" in name:
+            return True
+        statuses = (getattr(link, "code", None), getattr(link, "status_code", None))
+        if any(isinstance(status, int) and status in BUSY_STATUSES for status in statuses):
+            return True
+    return False
 
 
 def parse_judge_answer(text: str) -> JudgeVerdict:

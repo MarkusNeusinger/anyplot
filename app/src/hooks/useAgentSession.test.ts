@@ -19,6 +19,7 @@ import {
 } from 'src/hooks/useAgentSession';
 import { type EffectiveTheme, ThemeContext } from 'src/hooks/useLayoutContext';
 import type { DatasetChanged, DatasetParsed, RoleSpec } from 'src/lib/agent';
+import { nextUtcMidnight } from 'src/sections/agent-chat/messages';
 import { pendingReply } from 'src/sections/agent-chat/steps';
 
 const lastItem = (items: ChatItem[]) => items[items.length - 1];
@@ -491,6 +492,7 @@ describe('useAgentSession: data and bindings', () => {
   it.each([
     [429, 'rate_limited'],
     [429, 'daily_limit'],
+    [429, 'service_paused'],
     [429, 'locked_out'],
     [403, 'session_closed'],
   ])('reports the paste route’s %i %s as a guardrail block', async (status, code) => {
@@ -1353,6 +1355,31 @@ describe('useAgentSession: formulas', () => {
     expect(result.current.state).toMatchObject({ formula: FORMULA, formulaKind: 'formula' });
   });
 
+  it('sends a request for data to the chat at once, as the user message, with no error', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'data_request', ref: 'r-d' });
+    routes['POST /sessions/S1/messages'] = generatedStream;
+    const { result } = await openSession(routes);
+
+    // The parse ends with the turn it started, whose generated table is version 1.
+    await act(() => result.current.parseData('  Beispieldaten\n'));
+    expect(turnBodies()).toEqual([{ text: 'Beispieldaten' }]);
+    expect(result.current.state.items[0]).toMatchObject({ kind: 'user', text: 'Beispieldaten' });
+    expect(result.current.state).toMatchObject({
+      datasetError: null,
+      formula: null,
+      dataRequest: { text: 'Beispieldaten', seq: 1 },
+      parsing: false,
+    });
+    expect(result.current.state.dataset?.parsed.version).toBe(1);
+    expect(trackEvent).toHaveBeenCalledWith('agent_data_parsed', {
+      status: 'data_request',
+      size_bucket: 'lt_1kb',
+    });
+    // No summary follows: the turn's own reply describes the generated table.
+    expect(turnBodies()).toHaveLength(1);
+  });
+
   it('clears the offer on the next parse and on data the chat computed', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'formula', ref: 'r-f' });
@@ -1671,24 +1698,48 @@ describe('useAgentSession: turns', () => {
     expect(JSON.stringify(trackEvent.mock.calls)).not.toContain('Munich');
   });
 
-  it.each(['rate_limited', 'daily_limit', 'session_closed', 'other_library', 'locked_out'])(
-    'shows the %s refusal and records it as its own guardrail reason',
-    async code => {
-      const routes = baseRoutes();
-      routes['POST /sessions/S1/messages'] = () =>
-        sse([
-          ['ready', { v: 'anyplot/1', run_id: 'r' }],
-          ['refusal', { code, text: 'A fixed reply.' }],
-          ['done', {}],
-        ]);
-      const { result } = await openSession(routes);
-      await act(() => result.current.sendMessage('another question'));
-      expect(result.current.state.items).toContainEqual(
-        expect.objectContaining({ kind: 'refusal', code, text: 'A fixed reply.' })
-      );
-      expect(trackEvent).toHaveBeenCalledWith('agent_guardrail_block', { reason: code });
-    }
-  );
+  it.each([
+    'rate_limited',
+    'daily_limit',
+    'service_paused',
+    'session_closed',
+    'other_library',
+    'locked_out',
+  ])('shows the %s refusal and records it as its own guardrail reason', async code => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['ready', { v: 'anyplot/1', run_id: 'r' }],
+        ['refusal', { code, text: 'A fixed reply.' }],
+        ['done', {}],
+      ]);
+    const { result } = await openSession(routes);
+    await act(() => result.current.sendMessage('another question'));
+    expect(result.current.state.items).toContainEqual(
+      expect.objectContaining({ kind: 'refusal', code, text: 'A fixed reply.' })
+    );
+    expect(trackEvent).toHaveBeenCalledWith('agent_guardrail_block', { reason: code });
+  });
+
+  it('dates the service pause to the next 00:00 UTC, and no other refusal', async () => {
+    const routes = baseRoutes();
+    let code = 'service_paused';
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['ready', { v: 'anyplot/1', run_id: 'r' }],
+        ['refusal', { code, text: 'A fixed reply.' }],
+        ['done', {}],
+      ]);
+    const { result } = await openSession(routes);
+    await act(() => result.current.sendMessage('first'));
+    code = 'budget';
+    await act(() => result.current.sendMessage('second'));
+
+    const refusals = result.current.state.items.filter(item => item.kind === 'refusal');
+    expect(refusals.map(item => item.code)).toEqual(['service_paused', 'budget']);
+    expect(refusals[0].until).toBe(nextUtcMidnight());
+    expect(refusals[1].until).toBeUndefined();
+  });
 
   it('turns an HTTP 409 and a stream without done into errors with their ref', async () => {
     const routes = baseRoutes();

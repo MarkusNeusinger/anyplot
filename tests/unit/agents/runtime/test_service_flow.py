@@ -15,6 +15,7 @@ import asyncio
 import base64
 import json
 import logging
+import re
 from collections.abc import AsyncIterator, Iterator
 from typing import Any
 
@@ -50,7 +51,7 @@ from agents.anyplot.models import (
     Transcription,
 )
 from agents.anyplot.opening import NOTES_INSTRUCTION_WARNING, NOTES_REFUSED_WARNING, NOTES_UNCHECKED_WARNING, assess
-from agents.anyplot.pipeline import REPLY_LANGUAGE_HEADING, SoftDeadline
+from agents.anyplot.pipeline import LANGUAGE_REWRITE_REQUEST, REPLY_LANGUAGE_HEADING, SoftDeadline
 from agents.anyplot.policy import refusal, scope_rubric
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome, fixture_page
 from agents.anyplot.render.contract import PageFailed, PageJob, PageUnsupported, RendererUnavailable, RenderJob, Theme
@@ -2727,6 +2728,88 @@ async def test_a_prepare_data_turn_carries_the_new_dataset_version_in_done(
     assert (nothing.status_code, nothing.json()) == (422, {"detail": "nothing_to_undo"})
 
 
+async def test_an_open_role_lists_its_conversion_and_the_conversion_fills_it(
+    client: httpx.AsyncClient, swap_models, services: Services
+) -> None:
+    """Live test of 2026-11-01: the server dry-runs the conversion an open role needs; made, it binds that role."""
+    from types import SimpleNamespace
+
+    convert = {"op": "set_type", "column": "Price", "type": "number", "name": "Price (number)"}
+    script = default_script()
+    script["root"] = [prepare_call(convert), {"text": "I read Price as numbers in a new column, 3 cells."}]
+    swap_models("anthropic-vertex", script)
+    sid = await open_session(client, with_data=False)
+    pasted = await client.post(
+        f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "Hours,Price\n1,$5\n2,7\n3,$12\n"}
+    )
+    assert pasted.status_code == 200, pasted.text
+    assert pasted.json()["bindings"] == [{"role": "x", "column": "Hours"}]  # y has no number column yet
+
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    block = await session_context(context)  # type: ignore[arg-type]
+    assert "- Bindings: incomplete; missing roles: y;" in block
+    assert "- Conversions for open roles: 1, columns that a set_type turns into what the role takes" in block
+    line = (
+        "y: column 'Price' (text): 3 of 3 cells would be read as numbers, unit '$' removed; certain: every cell "
+        f"reads and nothing is guessed; operations: {json.dumps([convert])}"
+    )
+    assert f"<user_data>\n{line}\n</user_data>" in block  # the line names the user's columns: fenced
+
+    turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "summarize_data"})
+
+    name, done = parse_sse(turn.text)[-1]
+    assert name == "done" and done["dataset"]["version"] == 2
+    assert done["dataset"]["changes"] == [
+        "new column Price (number): 3 cells of Price read as numbers, unit '$' removed; Price stays as it is"
+    ]
+    assert done["bindings"] == [{"role": "x", "column": "Hours"}, {"role": "y", "column": "Price (number)"}]
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    after = await session_context(context)  # type: ignore[arg-type]
+    assert "- Bindings: complete" in after and "Conversions for open roles" not in after
+
+    undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+    assert undone.status_code == 200 and undone.json()["bindings"] == [{"role": "x", "column": "Hours"}]
+
+
+async def test_a_list_of_values_gets_its_row_numbers_and_undo_takes_them_back(
+    client: httpx.AsyncClient, swap_models, services: Services
+) -> None:
+    """Live test of 2026-11-02: one number column sits on x and y stays open; the row numbers take x, it moves to y."""
+    from types import SimpleNamespace
+
+    script = default_script()
+    script["root"] = [
+        prepare_call({"op": "row_number", "name": "index"}),
+        {"text": "x: row number 1 to 6, because the table has no x column."},
+    ]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await open_session(client, with_data=False)
+    pasted = await client.post(
+        f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "value\n1\n3\n5\n4\n6\n2\n"}
+    )
+    assert pasted.json()["bindings"] == [{"role": "x", "column": "value"}]
+
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    block = await session_context(context)  # type: ignore[arg-type]
+    assert "y takes 'value', which x holds now" in block
+
+    turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "summarize_data"})
+
+    name, done = parse_sse(turn.text)[-1]
+    assert name == "done" and done["dataset"]["version"] == 2
+    assert done["dataset"]["changes"] == ["new column index: the rows numbered 1 to 6"]
+    assert done["bindings"] == [{"role": "x", "column": "index"}, {"role": "y", "column": "value"}]
+    answered = json.dumps(fake.calls[-1]["messages"])
+    assert "x: index" in answered and "y: value" in answered  # the reply names the bindings now in force
+
+    undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+    assert undone.status_code == 200 and [column["name"] for column in undone.json()["profile"]["columns"]] == ["value"]
+    # The column stays on y, so x is the open role now, and the offer still stands.
+    assert undone.json()["bindings"] == [{"role": "y", "column": "value"}]
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    assert "a new column 'index' with the row numbers 1 to 6 takes x" in await session_context(context)  # type: ignore[arg-type]
+
+
 async def test_a_column_set_to_text_stays_text_in_later_versions_until_undone(
     client: httpx.AsyncClient, swap_models, services: Services
 ) -> None:
@@ -3720,10 +3803,10 @@ async def test_set_language_on_a_session_already_in_that_language_is_no_change(
     assert responses == [{"status": "ok", "source": "chosen", "changed": False, "plot_outdated": False}]
 
 
-REWRITE_REQUEST = (
-    "Write the title, axis titles, legend entries and annotations in the plot language; change nothing else."
-)
-"""The root's change request after a `set_language` that left the shown plot outdated (`root.md`, "Language")."""
+def change_request_of(adapter_input: str) -> str | None:
+    """The `Change request:` block of an adapter input, or None without one."""
+    found = re.search(r"Change request:\n<user_message>\n(.*?)\n</user_message>", adapter_input, re.DOTALL)
+    return found.group(1) if found else None
 
 
 async def test_a_plot_drawn_before_detection_is_rewritten_when_the_user_asks(
@@ -3738,7 +3821,7 @@ async def test_a_plot_drawn_before_detection_is_rewritten_when_the_user_asks(
             {"text": ROOT_REPLY},
             {"text": "Die x-Achse zeigt die Lernstunden."},
             {"call": "set_language", "args": {"language": "de", "applies_to": "plot"}},
-            {"call": "plot_pipeline", "args": {"change_request": REWRITE_REQUEST, "base": "previous"}},
+            {"call": "plot_pipeline", "args": {"base": "previous"}},
             {"text": "Die Beschriftung ist jetzt auf Deutsch."},
         ],
         "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
@@ -3768,14 +3851,15 @@ async def test_a_plot_drawn_before_detection_is_rewritten_when_the_user_asks(
 async def test_a_chat_request_on_a_plot_remakes_it_in_the_new_language(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:
-    """D-8: `set_language` alone, then the rewrite on the previous version, in one turn; v1 keeps its text. Live test
-    of 2026-11-01 (A1): an English request for German plot text leaves the replies English."""
+    """D-8: `set_language`, then the rewrite on the previous version, in one turn; v1 keeps its text. Live test
+    of 2026-11-01 (A1): an English request for German plot text leaves the replies English. The root asks for nothing
+    else, so the server writes the rewrite request itself."""
     script = {
         "root": [
             {"call": "plot_pipeline", "args": {}},
             {"text": ROOT_REPLY},
             {"call": "set_language", "args": {"language": "Deutsch", "applies_to": "plot"}},
-            {"call": "plot_pipeline", "args": {"change_request": REWRITE_REQUEST, "base": "previous"}},
+            {"call": "plot_pipeline", "args": {"base": "previous"}},
             {"text": "The labels are German now."},
         ],
         "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
@@ -3794,8 +3878,55 @@ async def test_a_chat_request_on_a_plot_remakes_it_in_the_new_language(
     assert (state[LANGUAGE], state[PLOT_LANGUAGE]) == ("en", "de")
     second = adapter_inputs(fake)[1]
     assert "Plot language:\n<plot_language>\nde\n</plot_language>" in second and '"language_changed": true' in second
+    assert change_request_of(second) == LANGUAGE_REWRITE_REQUEST
     versions = get_services().versions.all(sid)
     assert [version.language for version in versions] == ["en", "de"]
+    assert versions[1].requests == [LANGUAGE_REWRITE_REQUEST]
+
+
+@pytest.mark.parametrize(
+    ("message", "language", "args"),
+    [
+        (
+            "Make the title German and use a log scale on the y axis.",
+            "de",
+            {"change_request": "Use a log scale on the y axis", "base": "previous"},
+        ),
+        ("Labels in German and the points blue.", "de", {"change_request": "Points in blue", "base": "previous"}),
+    ],
+    ids=["log scale", "colour"],
+)
+async def test_a_language_change_and_another_change_reach_the_adapter_in_one_run(
+    client: httpx.AsyncClient, swap_models, message: str, language: str, args: dict[str, str]
+) -> None:
+    """User test of 2026-11-01: "make the title German and use a log scale" got the German title only, because the
+    root sent the fixed rewrite request, which ended "change nothing else". The root now sends the user's other
+    change; the adapter gets it with `language_changed`, and the version keeps it among its requests."""
+    script = {
+        "root": [
+            {"call": "plot_pipeline", "args": {}},
+            {"text": ROOT_REPLY},
+            {"call": "set_language", "args": {"language": language, "applies_to": "plot"}},
+            {"call": "plot_pipeline", "args": args},
+            {"text": "The title is German now, and the change is in."},
+        ],
+        "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
+        "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+    }
+    fake = swap_models("gemini", script)
+    sid = await open_session(client)
+    await create_plot(client, sid)
+
+    events = await say(client, sid, message)
+
+    plot = next(data for name, data in events if name == "plot")
+    assert (plot["status"], plot["version"]) == ("ok", 2)
+    second = adapter_inputs(fake)[1]
+    assert '"language_changed": true' in second
+    assert change_request_of(second) == args["change_request"]
+    versions = get_services().versions.all(sid)
+    assert [version.language for version in versions] == ["en", language]
+    assert versions[1].requests == [args["change_request"]]
 
 
 async def test_a_library_switch_keeps_the_language(client: httpx.AsyncClient, swap_models) -> None:

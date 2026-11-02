@@ -102,7 +102,7 @@ import { DATA_SUMMARY_ID, DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { FanOut } from 'src/sections/agent-chat/FanOut';
 import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
-import { ERROR_TEXT, LEAVE_TEXT } from 'src/sections/agent-chat/messages';
+import { ERROR_TEXT, LEAVE_TEXT, servicePausedText } from 'src/sections/agent-chat/messages';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { SaveButton } from 'src/sections/agent-chat/SaveButton';
@@ -305,10 +305,13 @@ function AgentChat({
   const [draft, setDraft] = useState('');
   const [title, setTitle] = useState<string | null>(null);
   const [libraries, setLibraries] = useState<string[]>([...DEFAULT_AGENT_LIBRARIES]);
-  // `.plot_all()`: the server's run limit, and the session whose confirmed data the open fan-out copies.
+  // `.plot_all()`: the caller's own run cap (`user_max_runs`, 5 for an admin), and the session whose
+  // confirmed data the open fan-out copies.
   const [maxRuns, setMaxRuns] = useState(DEFAULT_USER_MAX_RUNS);
   // Both answers below are in (or failed): before that, the libraries and the limit are fallbacks.
   const [listsSettled, setListsSettled] = useState(false);
+  // The service's day budget is spent: until when (ISO), for the note above the composer.
+  const [pausedUntil, setPausedUntil] = useState<string | null>(null);
   const [fanOut, setFanOut] = useState<{
     sourceSession: string;
     upload?: DatasetUpload;
@@ -376,11 +379,28 @@ function AgentChat({
         if (typeof status.user_max_runs === 'number' && status.user_max_runs > 0) {
           setMaxRuns(status.user_max_runs);
         }
+        if (
+          status.paused === true &&
+          typeof status.resets_at === 'string' &&
+          Date.parse(status.resets_at) > Date.now()
+        ) {
+          setPausedUntil(status.resets_at);
+        }
       })
       .catch(() => undefined)
       .finally(settle);
     return () => controller.abort();
   }, [specId, token]);
+
+  // The pause ends with the service's new day: the note goes at that moment, without a reload.
+  useEffect(() => {
+    if (!pausedUntil) return;
+    const timer = window.setTimeout(
+      () => setPausedUntil(null),
+      Math.max(0, Date.parse(pausedUntil) - Date.now())
+    );
+    return () => window.clearTimeout(timer);
+  }, [pausedUntil]);
 
   useEffect(() => {
     if (state.phase === 'unauthorized') setAdminHint(false);
@@ -812,13 +832,14 @@ function AgentChat({
 
           {state.items.length === 0 && !state.run && (
             <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
-              paste your data above, or ask here for a curve: &quot;y = sin(x), x from{' '}
+              paste your data above, or ask here for example data or a curve: &quot;y = sin(x), x
+              from{' '}
               <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
                 -pi
               </Box>{' '}
-              to pi&quot;, and the assistant computes the table. it sums your data up here, and you
-              can ask it to fix the data in plain words, such as &quot;read Anteil as numbers&quot;
-              or &quot;sum per month&quot;. check the preview and the bindings, confirm, then{' '}
+              to pi&quot;, and the assistant makes the table. it sums your data up here, and you can
+              ask it to fix the data in plain words, such as &quot;read Anteil as numbers&quot; or
+              &quot;sum per month&quot;. check the preview and the bindings, confirm, then{' '}
               <code>.create_plot()</code>, with a note first if the plot should do something
               differently. afterwards, ask for changes to the plot: &quot;log scale on y&quot;,
               &quot;dark version&quot;, &quot;label the outliers&quot;.
@@ -878,6 +899,22 @@ function AgentChat({
                   : '# step 2 — create the plot as it is, or say first what it should do differently'}
               </Box>
             )}
+            {/* Told before the user types: every turn would get `service_paused` until then. */}
+            {pausedUntil && (
+              <Box
+                role="note"
+                data-testid="service-paused"
+                sx={{
+                  ...labelSx,
+                  color: 'var(--ink)',
+                  borderLeft: `3px solid ${colors.warning}`,
+                  pl: 1.5,
+                  lineHeight: 1.6,
+                }}
+              >
+                # {servicePausedText(pausedUntil)}
+              </Box>
+            )}
             <Box
               component="form"
               onSubmit={handleSend}
@@ -889,12 +926,13 @@ function AgentChat({
                 aria-label="Message"
                 placeholder={
                   // Step 1 talks about the data, step 2 about the plot. Without
-                  // data, the chat is the other way to get some: a formula. While
-                  // `all` is pressed in step 2 the box waits: the fan-out takes no text.
+                  // data, the chat is the other way to get some: example data or a
+                  // formula. While `all` is pressed in step 2 the box waits: the
+                  // fan-out takes no text.
                   chatLocked
                     ? 'all libraries: the table goes as it is · turn all off to chat'
                     : !state.dataset
-                      ? 'ask for a curve: "y = sin(x), x from -pi to pi"'
+                      ? 'ask for example data or a curve: "y = sin(x), x from -pi to pi"'
                       : !step2
                         ? 'ask about your data, or for a fix: "sum per month"'
                         : firstPlot

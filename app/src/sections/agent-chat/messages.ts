@@ -8,10 +8,14 @@ import type { ConfirmLoss } from 'src/hooks/useAgentSession';
 
 /** Errors of a turn (stream `error` events and failed requests). */
 export const ERROR_TEXT: Record<string, string> = {
-  capacity: 'the run queue is full or the wait ran out; try again in a few minutes',
-  // The server's `AGENT_USER_MAX_RUNS` (3): plots and data runs queued or running across the user's windows.
+  // The agents service's `capacity`: a full run queue, a wait that ran out, or a model call the model service still
+  // refused for its quota or an overload after the retries (`model_busy`, the root's call before any plot run).
+  capacity:
+    'the server is busy: the run queue is full, the wait ran out, or the model service is overloaded; try again in a few minutes',
+  // The user's own cap (`user_max_runs` of `/status`: 3, or 5 for an admin): plots and data runs queued or
+  // running across the user's windows.
   run_limit:
-    'you already have 3 plots or data runs in progress in other windows; wait until one finishes, then try again',
+    'your plots and data runs in other windows already fill your share; wait until one finishes, then try again',
   deadline: 'the run took too long and was stopped',
   guard_unavailable: 'the scope check is unavailable right now; try again',
   upstream: 'the agents service did not answer or cut the stream',
@@ -41,11 +45,42 @@ export const PLOT_FAILED_TEXT: Record<string, string> = {
   render: 'the plot did not render',
   deadline: 'the run ran out of time before a render passed',
   budget: 'the usage limit is reached',
+  // The model service refused a call for its quota or an overload, also after the retries.
+  busy: 'the model service is busy; try again in a minute',
   error: 'something went wrong while adapting',
   no_dataset: 'paste and parse your data first',
   incomplete_bindings: 'pick a column for every required role first',
   data_unconfirmed: 'confirm your data first: check the preview and the bindings, then .confirm()',
 };
+
+/**
+ * An instant on the browser's own clock (`01:00`), or null for one that does not
+ * parse: the agents service counts its days in UTC, the user reads their own time.
+ */
+export function localClock(iso: string): string | null {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+}
+
+/** The next 00:00 UTC, when the agents service's day budget starts again from zero. */
+export function nextUtcMidnight(now: number = Date.now()): string {
+  const date = new Date(now);
+  return new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + 1)
+  ).toISOString();
+}
+
+/**
+ * The whole chat paused for the day: the service's day budget is spent. `until` is
+ * the reset in the user's time; the server's own refusal says 00:00 UTC, since it
+ * does not know the user's time zone. Only that refusal says the user's own limit
+ * is untouched: `/status` reports the pause for everyone, so a note from it cannot
+ * know, and a user whose own budget is spent too gets `budget` on the next turn.
+ */
+export function servicePausedText(until: string = nextUtcMidnight()): string {
+  return `the chat has reached today's overall limit and is paused until ${localClock(until) ?? '00:00 UTC'}`;
+}
 
 /** Failures of the dataset, bindings, confirmation and undo calls. */
 export const DATA_FAILURE: Record<string, string> = {
@@ -72,6 +107,14 @@ export const DATA_FAILURE: Record<string, string> = {
 };
 
 /**
+ * A data call's failure text: `DATA_FAILURE`, except the service's pause
+ * (`429 service_paused`), which names its end in the user's own time.
+ */
+function dataFailureText(code: string): string | undefined {
+  return code === 'service_paused' ? servicePausedText() : DATA_FAILURE[code];
+}
+
+/**
  * The full data view's line when it could not read the data (`DataView.tsx`): a code of the
  * data route, or `csv` with the reader's sentence for a file that breaks the canonical format.
  */
@@ -83,7 +126,7 @@ export function describeViewFailure(code: string, ref: string | null, detail?: s
         ? 'this server cannot show every row yet'
         : code === 'too_large'
           ? 'the data is larger than the view reads (4 MB)'
-          : (DATA_FAILURE[code] ?? `request failed (${code})`);
+          : (dataFailureText(code) ?? `request failed (${code})`);
   return `could not show every row: ${text}${ref ? ` · ref ${ref}` : ''}`;
 }
 
@@ -238,7 +281,7 @@ export function describeConvertFailure(
   kind: string | null = null,
   damage: string | null = null
 ): string {
-  let text = CONVERT_FAILURE[code] ?? DATA_FAILURE[code] ?? `could not be read (${code})`;
+  let text = CONVERT_FAILURE[code] ?? dataFailureText(code) ?? `could not be read (${code})`;
   // A damaged file names the format its first bytes claimed, and the part the server found broken.
   if (code === 'file_corrupt' && damage && DAMAGE_TEXT[damage]) {
     const as = kind && KIND_NAME[kind] ? ` as ${KIND_NAME[kind]}` : '';
@@ -332,6 +375,6 @@ export function describeDataFailure(
   ref: string | null,
   cause: string | null = null
 ): string {
-  const text = cause || (DATA_FAILURE[code] ?? `request failed (${code})`);
+  const text = cause || (dataFailureText(code) ?? `request failed (${code})`);
   return ref ? `${text} · ref ${ref}` : text;
 }
