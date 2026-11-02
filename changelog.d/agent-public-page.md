@@ -10,17 +10,17 @@
   without feedback, and that daily limits apply. The plot page's `.adapt()`
   button shows for everyone while the lane is open, and the landing page
   points to the chat with one line. Admins keep `/debug/agent` with
-  everything.
+  everything (#12528).
 
 ### Changed
 
 - **Feedback and `.save()` leave the data file out unless you tick the box.**
   On the public page both `# include data.csv` boxes start unticked, and the
-  feedback form says what sending stores; admins keep their default.
+  feedback form says what sending stores; admins keep their default (#12528).
 - **The legal page covers the public assistant.** Its section (now
   `#assistant`) says the assistant is experimental, open to everyone and
   pausable, how ids and IP addresses are salted and never written down, adds
   use and warranty, the generated code's licence with the Highcharts note, and
   the transfers under Google Cloud's and Cloudflare's terms; the feedback IP
   hash wording follows the salted hash, and the bot-facing legal page mirrors
-  the facts.
+  the facts (#12528).
