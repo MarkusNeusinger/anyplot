@@ -16,10 +16,10 @@ code.
 
 Built by [Markus Neusinger](https://linkedin.com/in/markus-neusinger/).
 
-[![The ridgeline-basic spec drawn by six libraries](https://api.anyplot.ai/og/ridgeline-basic.png)](https://anyplot.ai/ridgeline-basic)
+[![The ridgeline-basic spec, six of its 15 library implementations](https://api.anyplot.ai/og/ridgeline-basic.png)](https://anyplot.ai/ridgeline-basic)
 
-*One spec, six of its implementations: the site's live preview card for
-[ridgeline-basic](https://anyplot.ai/ridgeline-basic), which shows its six best-scored implementations.*
+*One spec in 15 libraries: the site's live preview card for [ridgeline-basic](https://anyplot.ai/ridgeline-basic)
+shows six of them; the spec page shows all 15.*
 
 ---
 
@@ -30,7 +30,8 @@ Built by [Markus Neusinger](https://linkedin.com/in/markus-neusinger/).
 | 325 | 4,863 | 15 | 4 |
 
 Counted on 2026-11-02 from the public API (`https://api.anyplot.ai/stats`); the [stats page](https://anyplot.ai/stats)
-shows the current numbers.
+shows the current numbers. 316 of the 325 specs exist in all 15 libraries; the other nine, mostly 3D and map plots,
+lack one or two.
 
 | Language | Libraries |
 |----------|-----------|
@@ -41,7 +42,7 @@ shows the current numbers.
 
 ## What you can do on the site
 
-- **Compare libraries.** Each spec page shows the available implementations of the same plot, in a light and a dark
+- **Compare libraries.** Each spec page shows the same plot in every library, usually all 15, in a light and a dark
   theme, each with its code and its review score.
 - **Search and filter.** A typo-tolerant search matches spec titles and tag values, and the matches become filters:
   language, library, plot type, data structure, domain, and features, plus implementation tags such as techniques,
