@@ -134,6 +134,74 @@ export interface SessionOpened {
   eligibility: Eligibility;
 }
 
+/**
+ * What a session adapts: a (spec, library) pair. Today only the library
+ * switches (`POST .../library` refuses another spec with `422 invalid`); the
+ * later plot-type switch changes the spec through the same pair.
+ */
+export interface PlotTarget {
+  spec_id: string;
+  library: string;
+}
+
+/**
+ * The switch answer's `carry`: how much a plot in the new library would take
+ * over, and whether the page should offer it (the `carry_plot` action).
+ * `decisions` counts the plot memory's entries (or, with an empty memory, the
+ * source plot's requests), `newer` the entries written after the new
+ * library's own latest plot; `offer` is true when something carries and the
+ * library has no plot yet or its plot misses newer decisions.
+ */
+export interface SwitchCarry {
+  decisions: number;
+  newer: number;
+  target_has_plot: boolean;
+  from_plot: boolean;
+  offer: boolean;
+}
+
+/**
+ * `POST .../library`'s answer. `target` and `carry` come from a server with the
+ * plot memory (since 2026-11-02); an older one answers neither, read as `null`:
+ * no offer, the page behaves as before.
+ */
+export interface LibrarySwitched extends SessionOpened {
+  target: PlotTarget | null;
+  carry: SwitchCarry | null;
+}
+
+/** Where a decision of the plot memory applies: an axis, the colour, the series, the whole plot, or unnamed. */
+export type MemoryTarget = 'x' | 'y' | 'color' | 'series' | 'plot';
+const MEMORY_TARGETS = new Set<string>(['x', 'y', 'color', 'series', 'plot']);
+
+/**
+ * One decision the plot memory keeps (`agents/anyplot/memory.py`): `kind` is
+ * one of the server's closed set (`axis_label`, `reference_line`, ...), `text`
+ * the decision in plain words (at most 200 characters), `expect` the text it
+ * puts in the plot verbatim, and `turn` the user turn it came in.
+ */
+export interface MemoryEntry {
+  id: string;
+  kind: string;
+  target: MemoryTarget | null;
+  text: string;
+  expect: string | null;
+  turn: number;
+}
+
+/** The plot memory as `GET .../memory` answers it, oldest first; the DELETE answers the same after the removal. */
+export interface PlotMemory {
+  entries: MemoryEntry[];
+  max_entries: number;
+}
+
+/** An entry id as the BFF takes it in the DELETE path (`MEMORY_ENTRY_ID_PATTERN`). */
+export const MEMORY_ENTRY_ID = /^m[0-9]{1,6}$/;
+/** The service's cap of entries (`memory.MAX_ENTRIES`), for an answer that names none. */
+const DEFAULT_MAX_MEMORY_ENTRIES = 30;
+/** The service's cap of an entry's text (`memory.MAX_TEXT_CHARS`); a longer one is cut, never shown whole. */
+const MAX_MEMORY_TEXT_CHARS = 200;
+
 export type ColumnDtype = 'integer' | 'number' | 'datetime' | 'boolean' | 'text';
 const COLUMN_DTYPES = new Set<string>(['integer', 'number', 'datetime', 'boolean', 'text']);
 
@@ -644,10 +712,16 @@ export function caseListQuery(query: CaseListQuery): string {
 
 /**
  * The page's own chat turns: `summarize_data` asks the assistant for the step-1
- * summary of the stored data, `create_plot` starts step 2. Neither passes the
- * scope judge.
+ * summary of the stored data, `create_plot` starts step 2 (the fresh plot from
+ * the catalogue code, also `.start_over()`), and `carry_plot` makes the plot in
+ * the library the user switched to, with the plot memory's decisions. None of
+ * them passes the scope judge.
  */
-export type TurnAction = 'create_plot' | 'summarize_data';
+export type TurnAction = 'create_plot' | 'carry_plot' | 'summarize_data';
+
+/** Whether a turn of this kind is a plot run from the start: its path shows up front, it has no in-progress line. */
+export const isPlotAction = (kind: string): boolean =>
+  kind === 'create_plot' || kind === 'carry_plot';
 
 /** The body of `POST .../messages`: the user's words or one of the page's actions. */
 export type TurnBody = { text: string } | { action: TurnAction };
@@ -950,12 +1024,59 @@ export const agentApi = {
       token,
       post({ spec_id: specId, library, locale, ...(fanout ? { source: 'fanout' } : {}) })
     ),
-  switchLibrary: (token: string, sid: string, specId: string, library: string) =>
-    agentJson<SessionOpened>(
+  /**
+   * The library switch (the header's library menu). The body leaves `source`
+   * out, which the BFF reads as `menu`, so a page deployed before the API is no
+   * `422`. The answer's `target` and `carry` are checked field by field: an
+   * older server, or anything malformed, reads as `null`, which offers nothing.
+   */
+  switchLibrary: async (
+    token: string,
+    sid: string,
+    specId: string,
+    library: string
+  ): Promise<LibrarySwitched> => {
+    const answer = await agentJson<SessionOpened & Record<string, unknown>>(
       `${sessionPath(sid)}/library`,
       token,
       post({ spec_id: specId, library })
-    ),
+    );
+    return {
+      session_id: answer.session_id,
+      eligibility: answer.eligibility,
+      target: plotTarget(answer.target),
+      carry: switchCarry(answer.carry),
+    };
+  },
+  /**
+   * The plot memory, oldest first (`GET .../memory`). An answer that is not
+   * that shape is `502 upstream`; a server without the route answers `404
+   * not_found`.
+   */
+  memory: async (token: string, sid: string, signal?: AbortSignal): Promise<PlotMemory> => {
+    const memory = plotMemory(
+      await agentJson<unknown>(`${sessionPath(sid)}/memory`, token, { signal })
+    );
+    if (!memory) throw new AgentApiError(502, 'upstream');
+    return memory;
+  },
+  /**
+   * Remove one decision from the plot memory (the remembered list's
+   * `.forget()`): the answer is the memory after it. The plot itself does not
+   * change; the next plot no longer takes the decision over. `404 not_found`
+   * for an id the memory does not hold, `409 run_active` while a turn runs. An
+   * id outside the BFF's pattern is refused here, before any request.
+   */
+  forgetMemory: async (token: string, sid: string, entryId: string): Promise<PlotMemory> => {
+    if (!MEMORY_ENTRY_ID.test(entryId)) throw new AgentApiError(0, 'invalid');
+    const memory = plotMemory(
+      await agentJson<unknown>(`${sessionPath(sid)}/memory/${entryId}`, token, {
+        method: 'DELETE',
+      })
+    );
+    if (!memory) throw new AgentApiError(502, 'upstream');
+    return memory;
+  },
   /**
    * A stored dataset, or a transcription of free text to confirm first (`isTranscribed`).
    * `confirmed` marks the table the user accepted with `.use()`: the server then never
@@ -1337,6 +1458,65 @@ export function plotLanguage(value: unknown): PlotLanguage | null {
   if (typeof language !== 'string' || !LANGUAGE_PATTERN.test(language)) return null;
   if (typeof source !== 'string' || !LANGUAGE_SOURCES.has(source)) return null;
   return { language, source: source as LanguageSource };
+}
+
+/** A switch answer's `target`, or `null` for anything but two non-empty strings. */
+export function plotTarget(value: unknown): PlotTarget | null {
+  if (!isRecord(value)) return null;
+  const { spec_id, library } = value;
+  if (typeof spec_id !== 'string' || !spec_id || typeof library !== 'string' || !library) {
+    return null;
+  }
+  return { spec_id, library };
+}
+
+/**
+ * A switch answer's `carry`, or `null`: two counts and three flags, else
+ * nothing. An offer is a button the page shows, so a half-read one offers
+ * nothing rather than a count that is not the server's.
+ */
+export function switchCarry(value: unknown): SwitchCarry | null {
+  if (!isRecord(value)) return null;
+  const { decisions, newer, target_has_plot, from_plot, offer } = value;
+  if (!isInt(decisions) || decisions < 0 || !isInt(newer) || newer < 0) return null;
+  if (typeof target_has_plot !== 'boolean' || typeof from_plot !== 'boolean') return null;
+  if (typeof offer !== 'boolean') return null;
+  return { decisions, newer, target_has_plot, from_plot, offer };
+}
+
+/** One entry of the plot memory, its documented fields only; `null` without an id, a kind or a text. */
+function memoryEntry(value: unknown): MemoryEntry | null {
+  if (!isRecord(value)) return null;
+  const { id, kind, target, text, expect, turn } = value;
+  if (typeof id !== 'string' || !MEMORY_ENTRY_ID.test(id)) return null;
+  if (typeof kind !== 'string' || !kind || typeof text !== 'string' || !text.trim()) return null;
+  return {
+    id,
+    kind,
+    target:
+      typeof target === 'string' && MEMORY_TARGETS.has(target) ? (target as MemoryTarget) : null,
+    text: text.slice(0, MAX_MEMORY_TEXT_CHARS),
+    expect: typeof expect === 'string' && expect ? expect : null,
+    turn: isInt(turn) ? turn : 0,
+  };
+}
+
+/**
+ * The memory route's answer, or `null` when it is not `{entries: [...]}`. The
+ * list is shown with a remove control per entry, so an entry the page cannot
+ * read is left out rather than shown half (the server's own validation makes
+ * that a case that does not happen).
+ */
+export function plotMemory(value: unknown): PlotMemory | null {
+  if (!isRecord(value) || !Array.isArray(value.entries)) return null;
+  const entries = value.entries
+    .map(memoryEntry)
+    .filter((entry): entry is MemoryEntry => entry !== null);
+  const max = value.max_entries;
+  return {
+    entries,
+    max_entries: isInt(max) && max > 0 ? max : DEFAULT_MAX_MEMORY_ENTRIES,
+  };
 }
 /** A profile's `min` or `max`: a number, a string, or `null` for anything else. */
 const scalar = (value: unknown): number | string | null =>
