@@ -128,7 +128,7 @@ counts as a boundary because OR-filtered gallery views record
 - `spec_detail`: SpecPage showing single library implementation
 - `agent_chat`: the agent chat, the admin's (`/debug/agent`) and the public one (`/agent`)
 
-### Agent chat (admin only)
+### Agent chat
 
 The "Use with my data" chat (`app/src/pages/AgentChatPage.tsx`, design in
 [Agent network design](../concepts/agent-network.md)) records enum properties

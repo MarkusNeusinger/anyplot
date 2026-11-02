@@ -52,9 +52,10 @@ interface SpecDetailViewProps {
   onDownload: (impl: Implementation) => void;
   onTrackEvent: (event: string, props?: Record<string, string | undefined>) => void;
   /**
-   * "Use with my data": present only when the agent chat is built, this browser
-   * is an admin's (or local development) and the pair is eligible — SpecPage
-   * decides (`useAgentEligibility`). Renders the fourth overlay button.
+   * "Use with my data": present only when the agent chat is built, the pair is
+   * eligible, and this browser is an admin's (or local development) or the
+   * public lane is open — SpecPage decides (`useAgentEligibility`). Renders the
+   * fourth overlay button.
    */
   onUseWithMyData?: () => void;
 }

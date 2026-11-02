@@ -195,9 +195,18 @@ const CREATE_GATE: Record<CreateGate, { text: string; action: string }> = {
   },
 };
 
+/**
+ * The page is a tool on one catalogue pair, never a page to index: every branch (a notice, the door
+ * still being asked, the session opening or failing, the chat) carries `noindex, nofollow`.
+ */
+function NoIndex() {
+  return <meta name="robots" content="noindex, nofollow" />;
+}
+
 function Notice({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <Box sx={{ py: 4, maxWidth: 560, mx: 'auto' }}>
+      <NoIndex />
       <SectionHeader prompt="❯" title={<em>{title}</em>} />
       <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>{children}</Box>
     </Box>
@@ -346,7 +355,7 @@ export function AgentChatPage({ lane = 'admin' }: { lane?: AgentLane } = {}) {
   }, [allowed, valid, params, setParams, library, spec, trackEvent, trackPageview, lane]);
 
   if (!CONFIG.features.agentChat) return <NotFoundPage />;
-  if (lane === 'public' && laneOpen === null) return null;
+  if (lane === 'public' && laneOpen === null) return <NoIndex />;
   if (!allowed) return lane === 'public' ? <LaneClosed /> : <AdminRequired />;
   const chatPath = lane === 'public' ? paths.publicAgentChat : paths.agentChat;
   if (!valid) {
@@ -862,6 +871,7 @@ function AgentChat({
   if (state.phase === 'opening' || state.phase === 'ineligible' || state.phase === 'error') {
     return (
       <Box sx={{ py: 2, maxWidth: COLUMN_MAX_WIDTH, mx: 'auto' }}>
+        <NoIndex />
         {header}
         {state.phase === 'opening' ? (
           <Box sx={labelSx}>opening a session…</Box>
@@ -891,7 +901,7 @@ function AgentChat({
     <>
       <>
         <title>{`agent · ${specId} | anyplot.ai`}</title>
-        <meta name="robots" content="noindex, nofollow" />
+        <NoIndex />
       </>
       {/* `colorScheme` gives the native controls (scrollbars, select menus) the site theme. */}
       <Box
