@@ -292,8 +292,9 @@ async def run_target(library: str, source: str, out: Path, lines: _Lines, via: s
             "snapshot": snapshot_from_repo(SPEC_ID, library).model_dump(),
         }
         if via == "chat":
-            for body in ({"action": "create_plot"}, {"text": TUNE_MESSAGE}):
-                (await client.post(f"/v1/sessions/{sid}/messages", headers=headers, json=body)).raise_for_status()
+            for turn_body in ({"action": "create_plot"}, {"text": TUNE_MESSAGE}):
+                sent = await client.post(f"/v1/sessions/{sid}/messages", headers=headers, json=turn_body)
+                sent.raise_for_status()
             outcome.remembered = len(read_memory((await runtime.session(USER, sid)).state))
             asked = await client.post(
                 f"/v1/sessions/{sid}/messages", headers=headers, json={"text": SWITCH_MESSAGE.format(library=library)}
