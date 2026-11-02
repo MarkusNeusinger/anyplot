@@ -452,7 +452,10 @@ class TestFeedbackRepository:
         assert await repo.count_recent_by_ip("aaa", since, messages_only=True) == 1
 
     async def test_clear_ip_hashes_clears_only_the_salted_ones_past_the_window(self, test_session):
-        """The router's salted hashes outlive no window; the unsalted ones of older rows are left for a migration."""
+        """The router's salted hashes outlive no window; a hash of any other scheme is not this statement's to clear.
+
+        Production holds no unsalted hashes since the one-off clean-up of 2026-11-02; the legacy row here
+        pins that the statement stays scoped to its own prefix."""
         from datetime import datetime, timedelta, timezone
 
         repo = FeedbackRepository(test_session)

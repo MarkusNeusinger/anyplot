@@ -48,8 +48,8 @@ DUPLICATE_LOOKBACK = timedelta(minutes=10)
 
 
 IP_HASH_PREFIX = "hmac:"
-"""Marks a salted `ip_hash` (`_hash_ip`). Rows written before it carry an unsalted SHA-256 of
-the address, which a migration has to clear: it is left alone here."""
+"""Marks a salted `ip_hash` (`_hash_ip`). The unsalted SHA-256 hashes that rows written before it
+carried were cleared once by hand on 2026-11-02 after a snapshot; no migration is needed."""
 _IP_SALT = secrets.token_bytes(32)
 """This process's salt for `_hash_ip`. Never logged and never configured, so it dies with the
 process, and with it every way to tell which address a stored hash came from."""
