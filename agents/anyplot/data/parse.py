@@ -1307,13 +1307,12 @@ def table_block(records: Sequence[Sequence[str]], *, extra_missing: frozenset[st
       it is the header, as before.
     * The rows end after the last data row and the records right below it that hold data at
       the table's width or wider, whose value cells are missing (`2024-01-11,,`), or that hold
-      the rows' values but lost their empty last cells (`Dec 2022`, two empty cells, `$2099`
-      under five columns, the last row of a copied web table, `short_row`); anything after that is
+      two of the rows' values at least but lost their empty last cells (`Dec 2022`, two empty cells,
+      `$2099` under five columns, the last row of a copied web table, `short_row`); anything after that is
       left out, such as a source line or a sentence, also one that its commas split into
       the table's width.
-    * A line between the data rows that has fewer fields than the table and holds text, and no
-      value, in the value columns is no row: a button copied with a web table (`Show 36 earlier
-      months`), a note. It is left out (`skipped`, owner's live test of 2026-11-02: it stayed a
+    * A line between the data rows that fills one cell, text under a value column, is no row: a
+      button copied with a web table (`Show 36 earlier months`), a note. It is left out (`skipped`, owner's live test of 2026-11-02: it stayed a
       row of empty cells, which also kept the month column text), with a warning that names its
       line, and it is no note either: the words of a page are not the user's, and the root took
       that button for a wish to plot 36 months (live run of 2026-11-02). A short line whose value
@@ -1358,13 +1357,18 @@ def table_block(records: Sequence[Sequence[str]], *, extra_missing: frozenset[st
         return [record[j] for j in values if j < len(record) and not _missing(record[j], extra_missing)]
 
     def short_row(record: Sequence[str]) -> bool:
-        # A row that lost its empty last cells: its values stand under the value columns, as a data row's do.
+        # A row that lost its empty last cells: two values at least stand under the value columns, as a data row's do.
+        # One is no evidence (`* See note, 2024`): a footer read as a row would be plotted, a row left below is said.
         cells = filled_values(record)
-        return 2 <= len(record) < width and 2 * len(cells) >= len(values) and all(_value_like(cell) for cell in cells)
+        return (
+            len(record) < width and len(cells) >= 2 and 2 * len(cells) >= len(values) and all(map(_value_like, cells))
+        )
 
     def stray_row(record: Sequence[str]) -> bool:
+        # One filled cell, text under a value column: with more cells it may be a row (`Bob,A,absent`) that lost its end.
         cells = filled_values(record)
-        return len(record) < width and bool(cells) and not any(_value_like(cell) for cell in cells)
+        filled = sum(1 for cell in record if cell.strip())
+        return len(record) < width and filled == 1 and len(cells) == 1 and not _value_like(cells[0])
 
     rows = [index for index, record in enumerate(records) if data_row(record)]
     first, last = rows[0], rows[-1]

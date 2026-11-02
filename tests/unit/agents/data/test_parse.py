@@ -3770,6 +3770,8 @@ class TestLinesThatAreNoRows:
             ("a,b,c\n1,2,3\n4,5,6\n7,8,9\nThis note, with a comma\n", 3, "This note"),
             ("d,v\n2024-01-01,1\n2024-01-02,2\n2024-01-03,3\n2024-01-04\n", 3, "2024-01-04"),  # one field is no row
             ("d\tv\tw\n2024-01-01\t1\t2\n2024-01-02\t3\t4\n2024-01-03\t5\t6\nStand 2024\t\n", 3, "Stand 2024"),
+            # One value is no evidence of a row: a footer read as a row would be plotted (Flash pre-check of #12512).
+            ("Item,Price,Discount\na,1,2\nb,3,4\nc,5,6\n* See note,2024\n", 3, "* See note"),
         ],
     )
     def test_a_footer_stays_out(self, text: str, rows: int, note: str) -> None:
@@ -3784,6 +3786,7 @@ class TestLinesThatAreNoRows:
             "Name\tScore\nAnna\t5\nBen\nClara\t7\nDora\t9\n",  # a sparse row of a text column
             "Name,Score\nAnna,5\nBen,pending\nClara,7\nDora,on hold\nEva,9\n",  # text in the table's width
             "Region,Sales\nGermany,10\nFrance,20\nAsia\nChina,30\nJapan,40\n",  # a heading among the labels
+            "Name,Team,S1,S2\nAnna,A,5,6\nBen,B,7,8\nBob,A,absent\nClara,B,9,1\nDora,A,2,3\n",  # a row that lost its end
         ],
     )
     def test_a_sparse_row_stays(self, text: str) -> None:

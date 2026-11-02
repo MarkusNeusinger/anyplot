@@ -741,6 +741,12 @@ class TestAxisAndRowNumbers:
 
         assert row_slot(default_bindings(roles, data), roles, data) is None
 
+    def test_a_free_column_that_fits_goes_first(self) -> None:
+        """Flash pre-check of #12512: a column the role accepts fills it; the user only unbound it."""
+        data = profile("step,value\n5,1\n7,3\n9,2\n")
+
+        assert row_slot(bind(("y", "value")), LINE, data) is None
+
     def test_a_row_number_column_takes_the_axis_and_moves_the_measure(self) -> None:
         before = profile(VALUES)
         after = profile("value,index\n1,1\n3,2\n5,3\n4,4\n6,5\n2,6\n")

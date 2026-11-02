@@ -506,7 +506,7 @@ def carry_bindings(
     kept = [binding for binding in bindings if not check_bindings([binding], roles, profile).errors]
     if len(kept) != len(bindings):
         return _without_sources(filled_bindings(kept, roles, profile), roles, sources)
-    current = _with_row_numbers_placed(kept, roles, profile, row_numbers)
+    current = _row_number_placed(kept, roles, profile, row_numbers)
     fresh = _fresh_dates(current, profile, previous)
     freed = _axis_freed(current, roles, profile) if fresh else current
     dated = _new_dates(freed, roles, fresh)
@@ -558,8 +558,13 @@ def axis_slot(bindings: list[Binding], roles: list[DataRole], profile: DatasetPr
     return None
 
 
-def row_slot(bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile) -> RowSlot | None:
+def row_slot(
+    bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile, new: str | None = None
+) -> RowSlot | None:
     """Where row numbers would go when one required role stays open and nothing else can fill it, else None.
+
+    A free column the open role accepts fills it, so row numbers are no slot (a pasted row number, or `new`, the
+    column just made for this, excepted).
 
     On a required axis (`axis_slot`) they need no question: a list of values drawn by position
     is what every plotting tool draws (`plt.plot(y)`). A role that names each row
@@ -568,25 +573,28 @@ def row_slot(bindings: list[Binding], roles: list[DataRole], profile: DatasetPro
     distributions by group (box, violin, strip, swarm, raincloud), where it would make one
     group per row. Any other role never takes them: a measure, a date, a series.
     """
-    if profile.rows < 2:
+    check = check_bindings(bindings, roles, profile)
+    if profile.rows < 2 or check.errors or len(check.missing_roles) != 1:
+        return None
+    role = next(role for role in roles if role.name == check.missing_roles[0])
+    bound = {binding.column for binding in bindings} | row_number_columns(profile) | {new}
+    if any(column.name not in bound and accepts(role, column.dtype) for column in profile.columns):
         return None
     slot = axis_slot(bindings, roles, profile)
     if slot is not None:
         return RowSlot(slot.role.name, True, slot.moved) if accepts(slot.role, "integer") else None
-    check = check_bindings(bindings, roles, profile)
-    if check.errors or len(check.missing_roles) != 1 or check.missing_roles[0] not in ROW_LABEL_ROLES:
+    if role.name not in ROW_LABEL_ROLES or not takes_labels(role) or not accepts(role, "integer"):
         return None
-    role = next(role for role in roles if role.name == check.missing_roles[0])
-    return RowSlot(role.name, False) if takes_labels(role) and accepts(role, "integer") else None
+    return RowSlot(role.name, False)
 
 
-def _with_row_numbers_placed(
+def _row_number_placed(
     kept: list[Binding], roles: list[DataRole], profile: DatasetProfile, row_numbers: Collection[str]
 ) -> list[Binding]:
     """`kept` with the first of `row_numbers` on the role `row_slot` finds, the axis's column moved to the measure."""
     bound = {binding.column for binding in kept}
     column = next((name for name in row_numbers if name not in bound), None)
-    slot = row_slot(kept, roles, profile) if column is not None else None
+    slot = row_slot(kept, roles, profile, column) if column is not None else None
     if column is None or slot is None:
         return kept
     others = [binding for binding in kept if binding.role != slot.role]

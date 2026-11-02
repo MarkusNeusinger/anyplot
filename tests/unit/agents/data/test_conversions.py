@@ -249,10 +249,7 @@ class TestRowNumbers:
         assert "y then takes 'Preis', which x holds now" in candidate.line()
 
     def test_a_taken_name_gets_a_number(self) -> None:
-        parsed = parse_dataset("index,value\n5,1\n7,2\n9,3\n")
-        bindings = [Binding(role="y", column="value")]
-
-        [candidate] = candidates(bindings, parse_roles(LINE), parsed.profile, parsed)
+        [candidate] = found("index,value\na,1\nb,2\nc,3\n", roles=parse_roles(LINE))
 
         assert isinstance(candidate, RowNumbers) and candidate.name == "index_2"
 
