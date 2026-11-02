@@ -572,7 +572,8 @@ class PipelineRun(_Event):
     """The run took a switch's carry (`switch.Carry`): the first run in a new (spec, library) target, from that
     library's catalogue code with the user's decisions (2026-11-02)."""
     fresh: bool = False
-    """The run was the page's `.create_plot()` or `.start_over()` on the catalogue plot: no carry, no memory."""
+    """The run was the page's `.create_plot()` or `.start_over()`: the catalogue code again, no carry, the memory
+    applied."""
     memory_entries: Count = 0
     """The plot memory's entries the run handed the adapter and the reviewer as standing decisions."""
     remembered: Count = 0

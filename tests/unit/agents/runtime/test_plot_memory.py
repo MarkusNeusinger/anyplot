@@ -28,6 +28,7 @@ from agents.anyplot.memory import (
     forget,
     kind_counts,
     memory_delta,
+    memory_written,
     newer_than,
     next_seq,
     plan,
@@ -274,6 +275,14 @@ class TestCarry:
         assert not summary(carry, held, 4).offer  # the target's plot already has every decision
         assert not summary(None, [], None).offer
 
+    def test_the_raw_requests_count_only_while_the_memory_was_never_written(self) -> None:
+        carry = Carry(source=MATPLOTLIB, target=SEABORN, from_plot=True, requests=["add a line at 7"])
+
+        assert summary(carry, [], None).decisions == 1
+        assert summary(carry, [], None, written=True).decisions == 0  # the user removed every entry
+        assert summary(carry, [], None, written=True).offer  # the plot itself still carries (its theme)
+        assert memory_written({MEMORY_SEQ: 3}) and not memory_written({MEMORY_SEQ: 1}) and not memory_written({})
+
 
 # --- Turns through /v1 ----------------------------------------------------------------------
 
@@ -473,7 +482,9 @@ async def test_the_switch_carries_the_memory_and_the_theme_into_the_new_library(
     ]
 
 
-async def test_start_over_is_fresh_and_starts_the_memory_over(client: httpx.AsyncClient, swap_models) -> None:
+async def test_start_over_keeps_the_memory_and_applies_it(client: httpx.AsyncClient, swap_models) -> None:
+    """Owner decision of 2026-11-02: `.start_over()` is the way out of broken code, not a blank start. It starts from
+    the catalogue code and hands the visible memory on; nothing but the user clears it."""
     fake = swap_models(
         "gemini",
         {
@@ -484,14 +495,16 @@ async def test_start_over_is_fresh_and_starts_the_memory_over(client: httpx.Asyn
     )
     sid = await open_session(client)
     await create_plot(client, sid)
-    await seed_memory(sid, entries(LINE, STARS))
+    held = entries(LINE, STARS)
+    await seed_memory(sid, held)
 
     events = await create_plot(client, sid)  # `.start_over()` sends the same action
 
-    assert plot_of(events)["status"] == "ok"
-    assert DECISIONS_HEADING not in adapter_inputs(fake)[1]
+    assert plot_of(events)["status"] == "ok"  # SCATTER_PLAN applies to the catalogue code only
+    start_over = adapter_inputs(fake)[1]
+    assert DECISIONS_HEADING in start_over and LINE.text in start_over and STARS.text in start_over
     state = await _session_state(client, sid)
-    assert state[MEMORY] == [] and state[MEMORY_SEQ] == 3  # emptied; the ids go on
+    assert read_memory(state) == held and state[MEMORY_SEQ] == 3  # kept as it was
 
 
 async def test_start_over_stays_fresh_when_the_root_asks_for_the_previous_version(
@@ -518,8 +531,80 @@ async def test_start_over_stays_fresh_when_the_root_asks_for_the_previous_versio
     events = await create_plot(client, sid)
 
     assert plot_of(events)["status"] == "ok"  # SCATTER_PLAN applies to the catalogue code only
-    assert DECISIONS_HEADING not in adapter_inputs(fake)[1]
-    assert (await _session_state(client, sid))[MEMORY] == []
+    assert LINE.text in adapter_inputs(fake)[1]  # with the memory
+    assert len(read_memory(await _session_state(client, sid))) == 1
+
+
+CHANGE_WITHOUT_MEMORY = {"change_request": "add a horizontal reference line at y = 7", "base": "previous"}
+
+
+async def test_a_session_that_never_remembered_carries_its_raw_requests(client: httpx.AsyncClient, swap_models) -> None:
+    """The raw lineage requests are the fallback while the memory was never written: the carry run hands them on."""
+    fake = swap_models(
+        "gemini",
+        {
+            "root": [
+                {"call": "plot_pipeline", "args": {}},
+                {"text": "Here."},
+                {"call": "plot_pipeline", "args": CHANGE_WITHOUT_MEMORY},
+                {"text": "Line added."},
+                {"call": "plot_pipeline", "args": {}},
+                {"text": "In seaborn."},
+            ],
+            "adapter": [{"json": SCATTER_PLAN}, {"json": KEEP_PLAN}, {"json": seaborn_plan()}],
+            "reviewer": [{"json": VERDICT_OK}] * 3,
+        },
+    )
+    sid = await open_session(client)
+    await create_plot(client, sid)
+    await say(client, sid, {"text": "add a line at 7"})
+
+    switched = await switch(client, sid, "seaborn")
+
+    assert switched.json()["carry"]["decisions"] == 1  # the request behind the matplotlib plot
+    await say(client, sid, {"action": "carry_plot"})
+    carried = adapter_inputs(fake)[2]
+    assert EARLIER_REQUESTS_HEADING in carried and CHANGE_WITHOUT_MEMORY["change_request"] in carried
+
+
+async def test_what_the_user_removed_never_comes_back_through_the_raw_requests(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """Owner decision of 2026-11-02: once the memory held a decision, the visible memory alone travels. The user
+    removes every entry after the switch: the carry run gets no decision, no raw request and no carried label."""
+    remembered = {**CHANGE, "remember": [LINE.model_dump(exclude_none=True), LABEL.model_dump(exclude_none=True)]}
+    fake = swap_models(
+        "gemini",
+        {
+            "root": [
+                {"call": "plot_pipeline", "args": {}},
+                {"text": "Here."},
+                {"call": "plot_pipeline", "args": remembered},
+                {"text": "Line and label added."},
+                {"call": "plot_pipeline", "args": {}},
+                {"text": "In seaborn."},
+            ],
+            "adapter": [{"json": SCATTER_PLAN}, {"json": KEEP_PLAN}, {"json": seaborn_plan()}],
+            "reviewer": [{"json": VERDICT_OK}] * 3,
+        },
+    )
+    sid = await open_session(client)
+    await create_plot(client, sid)
+    await say(client, sid, {"text": "add a line at 7 and call the x axis 'Zeit (h)'"})
+    switched = await switch(client, sid, "seaborn")
+    assert switched.json()["carry"]["decisions"] == 2
+
+    forgot = await client.delete(f"/v1/sessions/{sid}/memory", headers=HEADERS)
+    assert forgot.json() == {"entries": [], "max_entries": MAX_ENTRIES, "written": True}
+    after = await switch(client, sid, "matplotlib")
+    assert after.json()["carry"]["decisions"] == 0  # nothing travels any more
+    assert (await switch(client, sid, "seaborn")).json()["carry"]["decisions"] == 0
+
+    await say(client, sid, {"action": "carry_plot"})
+
+    carried = adapter_inputs(fake)[2]
+    assert DECISIONS_HEADING not in carried and EARLIER_REQUESTS_HEADING not in carried
+    assert CHANGE["change_request"] not in carried and "Zeit (h)" not in carried
 
 
 async def test_a_note_of_decisions_alone_is_kept_for_the_first_plot() -> None:
@@ -605,6 +690,7 @@ async def test_the_page_lists_and_removes_entries(client: httpx.AsyncClient, run
     assert (await client.get(f"/v1/sessions/{sid}/memory", headers=HEADERS)).json() == {
         "entries": [],
         "max_entries": MAX_ENTRIES,
+        "written": False,  # never held an entry: the raw requests are still the fallback
     }
     await seed_memory(sid, entries(LINE, STARS))
 

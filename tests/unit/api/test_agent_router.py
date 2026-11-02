@@ -328,6 +328,7 @@ ALL_ROUTES = [
     ("POST", "/debug/agent/sessions/s1/library", {"spec_id": "scatter-basic", "library": "seaborn"}),
     ("GET", "/debug/agent/sessions/s1/memory", None),
     ("DELETE", "/debug/agent/sessions/s1/memory/m1", None),
+    ("DELETE", "/debug/agent/sessions/s1/memory", None),
     ("POST", "/debug/agent/sessions/s1/dataset", {"text": "a,b\n1,2\n"}),
     ("POST", "/debug/agent/sessions/s1/dataset/convert", {"data_base64": "UEsFBg=="}),
     ("PUT", "/debug/agent/sessions/s1/bindings", [{"role": "x", "column": "a"}]),
@@ -625,6 +626,14 @@ class TestPlotMemory:
         assert removed.status_code == 200 and removed.json()["entries"] == []
         sent = upstream.requests[-1]
         assert (sent.method, sent.url.path) == ("DELETE", "/v1/sessions/s1/memory/m1")
+
+    def test_forget_all_is_forwarded(self, client, upstream) -> None:
+        cleared = {"entries": [], "max_entries": 30, "written": True}
+        upstream.handler = lambda request: httpx.Response(200, json=cleared)
+        response = client.delete("/debug/agent/sessions/s1/memory", headers=CLIENT_HEADERS)
+        assert response.status_code == 200 and response.json() == cleared
+        sent = upstream.requests[-1]
+        assert (sent.method, sent.url.path) == ("DELETE", "/v1/sessions/s1/memory")
 
     def test_an_unknown_entry_is_not_found_and_a_malformed_id_never_leaves(self, client, upstream) -> None:
         upstream.handler = lambda request: httpx.Response(404, json={"detail": "not_found"})
