@@ -2423,7 +2423,11 @@ def write_text_probe(theme, report):
     left one at the probe's name. The path is absolute, which the plot guard asks of an `os.open` write, and the text
     goes out through `os.write` on that descriptor: `os.fdopen(descriptor, "w")` raises an `open` event for the bare
     descriptor, which the plot guard refuses as a write that names no path (`writes_elsewhere`), so the probes of
-    pygal, altair and lets-plot, written while the guard is armed, stayed empty (found 2026-11-02).
+    pygal, altair and lets-plot, written while the guard is armed, stayed empty (found 2026-11-02). `os.write` raises no
+    audit event, and plot code never reaches this function: it can only call the exporter `wrap_text_probe` wrapped,
+    whose probe goes to this one fixed name. It can call that exporter again after its real save, with a spec of its
+    own, and the last call's probe wins, so the probe is advisory like matplotlib's (module docstring): it can differ
+    from the PNG the reviewer scores, and it never leaves the run directory.
     """
     flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NOFOLLOW", 0)
     data = json.dumps(report).encode("utf-8")

@@ -25,6 +25,7 @@ from core.palette import (
     neutral_for,
     palette,
 )
+from tests.libraries import import_library
 
 
 HEX_RE = re.compile(r"^#[0-9A-F]{6}$")
@@ -130,7 +131,7 @@ class TestCmaps:
         assert result.stdout.strip() == "#009E73"
 
     def test_lazy_cmap_attributes(self) -> None:
-        matplotlib = pytest.importorskip("matplotlib")
+        matplotlib = import_library("matplotlib")
         import core.palette as pal
 
         assert pal.imprint_seq.name == "imprint_seq"
@@ -139,7 +140,7 @@ class TestCmaps:
         assert isinstance(pal.imprint_seq, matplotlib.colors.LinearSegmentedColormap)
 
     def test_diverging_factory_flips_midpoint(self) -> None:
-        pytest.importorskip("matplotlib")
+        import_library("matplotlib")
         from core.palette import diverging
 
         light = diverging("light")
@@ -155,7 +156,7 @@ class TestCmaps:
             getattr(pal, name)
 
     def test_register_with_matplotlib_idempotent(self) -> None:
-        matplotlib = pytest.importorskip("matplotlib")
+        matplotlib = import_library("matplotlib")
         from core.palette import register_with_matplotlib
 
         register_with_matplotlib()

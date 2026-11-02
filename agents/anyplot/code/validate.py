@@ -853,8 +853,10 @@ ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
         # `callable(x)` is a name, not an attribute, and stays allowed.
         "callable",
         # statsmodels' `regression.mixed_linear_model` re-exports the standard `tokenize`, whose `open` reads any file
-        # (the same walk).
+        # (the same walk), and fontTools under matplotlib's banned `dviread` the standard `timeit`, whose `Timer`
+        # compiles and runs its statement text (the Fable review of the walk).
         "tokenize",
+        "timeit",
         "attrgetter",
         "methodcaller",
         "global_enum",
@@ -1291,7 +1293,19 @@ _RC_FILE_READERS = frozenset({"rc_context", "theme_matplotlib"})
 """`rc_context(rc, fname)` and plotnine's `theme_matplotlib(rc, fname)` load every setting from the file `fname`
 names (`rc_params_from_file`), whose keys the string rule never sees: no second positional, no `fname=`."""
 BANNED_KEYWORDS = frozenset(
-    {"usetex", "backend", "memory", "temp_folder", "cachedir", "formula", "url", "file_obj", "unsafe", "url_fetcher"}
+    {
+        "usetex",
+        "backend",
+        "memory",
+        "temp_folder",
+        "cachedir",
+        "formula",
+        "url",
+        "file_obj",
+        "unsafe",
+        "url_fetcher",
+        "eval_str",
+    }
 )
 """Keyword arguments banned on any call: `usetex=True` sends a text through LaTeX (`ax.text`, `TextPath`, `plt.rc`),
 `backend=` imports a backend module by name (`savefig(backend="module://...")`). `memory=` is a joblib cache
@@ -1308,7 +1322,9 @@ matplotlib or seaborn catalogue file uses it). `url=` names an image mark's href
 which a PNG never carries (one catalogue file, altair's image mark, uses it); cairosvg's `svg2png` reads its main
 input from any path or URL with `url=` (2 pygal catalogue files) and from a file object with `file_obj=`,
 `unsafe=True` lets the SVG's entities and hrefs read files and fetch, and `url_fetcher=` replaces the fetcher that
-keeps hrefs to `data:` URLs (survey of 2026-10-24; no catalogue file passes any of the three)."""
+keeps hrefs to `data:` URLs (survey of 2026-10-24; no catalogue file passes any of the three). `eval_str=True` makes
+`inspect.signature` and `Signature.from_callable`, which matplotlib, seaborn and scikit-learn re-export, evaluate the
+string annotations of a function the plot defined, which is `eval` (the Fable review of 2026-11-02)."""
 LIBRARY_BANS: dict[str, frozenset[str]] = {
     # `Chart.from_dict` and `from_json` build a chart from a spec the string rules cannot read (an image mark with
     # a `file://` href); pandas' `DataFrame.from_dict` is ordinary with the other libraries, so the ban is altair's.
