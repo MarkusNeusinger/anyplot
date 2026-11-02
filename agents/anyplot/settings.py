@@ -36,12 +36,13 @@ another provider, model or location.
 | `AGENT_RENDER_IMAGE` | `anyplot-renderer:dev` | Image the `local` renderer runs with Docker (build it from `agents/renderer/Dockerfile`) |
 | `AGENT_RENDER_CONCURRENCY` | `1` | Renders (one theme each) that may run at the same time; serial, because one 4 GiB instance holds one sandbox safely (spikes S and S2) |
 | `AGENT_WATERMARK` | `true` | Append the footer strip ("made with any.plot()", "anyplot.ai/<spec-id>") to the PNGs the artifact route and the feedback bundle serve; `false` serves the raw renders. Gates, reviewer and `plot.py` always see the raw render |
-| `AGENT_RUN_CONCURRENCY` | `1` | Sandbox runs (a `plot_pipeline` or `run_data_code` call, held until its turn ends) in flight per instance; the run queue holds the rest. A chat turn without one never enters the queue |
-| `AGENT_RUNS_PER_MINUTE` | `1` | Sandbox runs that may start within any 60 seconds (a sliding window); one start per turn |
-| `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue; it also sizes the queue (`AGENT_RUNS_PER_MINUTE` x this / 60 entries) |
-| `AGENT_USER_MAX_RUNS` | `3` | Sandbox runs one user may have queued or running at the same time, across all their sessions (browser windows); one more ends its turn with `error{code:"run_limit"}`. Everything else in a session (chat turns, pastes, data steps, the theme toggle, file conversions) runs at once, whatever the user's other sessions do |
-| `AGENT_USER_MESSAGES_PER_MINUTE` | `10` | Chat turns (typed messages and actions) per user within any 60 seconds; more get the `rate_limited` refusal before the scope judge runs |
-| `AGENT_USER_MESSAGES_PER_DAY` | `200` | Chat turns per user and UTC day; more get the `daily_limit` refusal before the scope judge runs |
+| `AGENT_RUN_CONCURRENCY` | `5` | Sandbox runs (a `plot_pipeline` or `run_data_code` call, held until its turn ends) in flight in the whole instance, every lane together (1 before 2026-11-01); the run queue holds the rest. A chat turn without one never enters the queue |
+| `AGENT_RUNS_PER_MINUTE` | `6` | Sandbox runs that may start within any 60 seconds (a sliding window), spaced at least 60 / this seconds apart: one start every 10 seconds at the default, in every lane (1 a minute before 2026-11-01); one start per turn |
+| `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue; it also sizes the queue (`AGENT_RUNS_PER_MINUTE` x this / 60 entries, 60 at the defaults) |
+| `AGENT_USER_MAX_RUNS` | `2` | Sandbox runs one public user may have queued or running at the same time, across all their sessions (browser windows; 3 before 2026-11-01); one more ends its turn with `error{code:"run_limit"}`. Everything else in a session (chat turns, pastes, data steps, the theme toggle, file conversions) runs at once, whatever the user's other sessions do |
+| `AGENT_ADMIN_USER_MAX_RUNS` | `5` | The same for an admin (`X-Anyplot-Tier: admin` from an allowed caller), whose runs share the concurrency and the rate with everyone's; `GET /v1/status` reports it to an admin as `user_max_runs`, which the fan-out keeps to |
+| `AGENT_USER_MESSAGES_PER_MINUTE` | `10` | Chat turns (typed messages and actions) per user within any 60 seconds; more get the `rate_limited` refusal before the scope judge runs. An admin is exempt |
+| `AGENT_USER_MESSAGES_PER_DAY` | `200` | Chat turns per user and UTC day; more get the `daily_limit` refusal before the scope judge runs. An admin is exempt |
 | `AGENT_SESSION_REFUSALS` | `3` | Scope-judge refusals (`out_of_scope` or `attack`, not `needs_data`, and `other_library` only with `AGENT_OTHER_LIBRARY_COUNTS`) after which the session is closed: the last of them and every later turn, and every paste, get the `session_closed` refusal |
 | `AGENT_OTHER_LIBRARY_COUNTS` | `false` | Whether an `other_library` refusal (this plot in another library or language) counts toward `AGENT_SESSION_REFUSALS` |
 | `AGENT_SESSION_CLOSE_WARNING` | `true` | The counted refusal one before the closing one carries the fixed `close_warning` suffix |
@@ -58,13 +59,13 @@ another provider, model or location.
 | `AGENT_ROOT_EFFORT`, `AGENT_ADAPTER_EFFORT`, `AGENT_REVIEWER_EFFORT` | `medium`, `high`, `high` | Claude's effort per agent kind (`low`, `medium`, `high`), set by the 2026-10-13 measurements; on the claude-cli transport also how much the CLI thinks |
 | `AGENT_MAX_LLM_CALLS` | `16` | LLM calls per request (the `RunConfig` cap) |
 | `AGENT_REQUEST_TOKEN_BUDGET` | `800000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
-| `AGENT_DAILY_TOKEN_BUDGET` | `8000000` | Cost-weighted tokens per user and day, weighted the same way; about 30 median runs of the live flow of 2026-10-13 |
-| `AGENT_DAILY_PIPELINE_RUNS` | `40` | Pipeline runs per user and day |
-| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `24000000` | Cost-weighted tokens per day across all users, three users at their daily budget; reaching it pauses the service |
+| `AGENT_DAILY_TOKEN_BUDGET` | `10000000` | Cost-weighted tokens per user and day, weighted the same way: about $1 at Claude Haiku 5.5's $0.10 per million input-token equivalents (8,000,000 before 2026-11-01). An admin is exempt |
+| `AGENT_DAILY_PIPELINE_RUNS` | `50` | Pipeline runs per user and day (40 before 2026-11-01). An admin is exempt |
+| `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `100000000` | Cost-weighted tokens per day across all users, admins included: about $10, the runaway guard of the whole service (24,000,000 before 2026-11-01); reaching it pauses the service |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per render, host-enforced |
 | `AGENT_DATA_CODE` | `true` | Whether the root has `run_data_code`: a data-generating snippet (Python, JavaScript, R, a formula) translated to Python, validated and run in the renderer's sandbox |
 | `AGENT_DATA_RUN_TIMEOUT_S` | `20` | Seconds one data snippet may run, at most 30 |
-| `AGENT_DAILY_DATA_RUNS` | `30` | `run_data_code` runs per user and day |
+| `AGENT_DAILY_DATA_RUNS` | `30` | `run_data_code` runs per user and day. An admin is exempt |
 | `AGENT_NARROWED_BINDINGS` | `keep` | The root's `set_bindings` that only leaves out confirmed number series (`y2`, `y3`, ...): `keep` keeps the user's confirmation, `reset` asks for `.confirm()` again |
 | `AGENT_REQUEST_DEADLINE_S` | `540` | Hard request deadline, enforced through `abort_signal` |
 | `AGENT_SOFT_DEADLINE_S` | `480` | Soft deadline inside the pipeline; below the hard one |
@@ -320,33 +321,46 @@ class AgentSettings(BaseSettings):
     render store and the exported `plot.py` always work with the raw render. Off, both routes
     serve the raw PNGs; the eval harness turns it off so its renders compare with its baselines."""
 
-    run_concurrency: PositiveInt = 1
-    """Sandbox runs in flight per instance (`AGENT_RUN_CONCURRENCY`); the run queue holds the rest. Only a turn whose
-    root calls `plot_pipeline` or `run_data_code` takes a run, from that call to the end of the turn."""
+    run_concurrency: PositiveInt = 5
+    """Sandbox runs in flight in the whole instance, every lane together (`AGENT_RUN_CONCURRENCY`); the run queue holds
+    the rest. Only a turn whose root calls `plot_pipeline` or `run_data_code` takes a run, from that call to the end of
+    the turn. 5 since 2026-11-01 (owner decision; 1 before): a 15-library fan-out took about 20 minutes through one
+    slot and one start a minute, while each run renders for about 5 s of its 60 to 240 s and spends the rest in model
+    calls that wait on the network. Renders stay serial in the one render slot (`AGENT_RENDER_CONCURRENCY`)."""
 
-    runs_per_minute: PositiveInt = 1
-    """Sandbox runs that may start within any 60 seconds (`AGENT_RUNS_PER_MINUTE`), a sliding window; a chat turn
-    without a sandbox run never counts."""
+    runs_per_minute: PositiveInt = 6
+    """Sandbox runs that may start within any 60 seconds (`AGENT_RUNS_PER_MINUTE`), a sliding window, and spaced at
+    least `60 / runs_per_minute` seconds apart (`RunQueue.start_gap_s`), in every lane; a chat turn without a sandbox
+    run never counts. 6 since 2026-11-01 (owner decision, "1 start every 10 s"; 1 before): the gap keeps the five
+    runs of a fan-out from reaching the render slot at the same moment."""
 
     queue_max_wait_s: PositiveInt = 600
     """Longest wait in the run queue in seconds (`AGENT_QUEUE_MAX_WAIT_S`). Queued time does not
     count toward the request deadline; the queue holds `runs_per_minute * queue_max_wait_s / 60`
-    entries and refuses more with `capacity`. That length assumes runs shorter than the 60 s
-    rate window: longer runs delay later starts, so admission does not guarantee a start."""
+    entries (60 at the defaults) and refuses more with `capacity`. That length assumes runs end
+    within the time their starts take: longer runs delay later starts, so admission does not
+    guarantee a start."""
 
-    user_max_runs: PositiveInt = 3
-    """Sandbox runs one user may have in the run queue at the same time, waiting and running together, across all
-    their sessions (`AGENT_USER_MAX_RUNS`). Owner decision of 2026-10-21: a user's browser windows work in parallel,
-    and only their sandbox runs share the queue; one more than this ends its turn with `error{code:"run_limit"}`
-    instead of `capacity`, so the page can say that the user's own runs fill it."""
+    user_max_runs: PositiveInt = 2
+    """Sandbox runs one public user may have in the run queue at the same time, waiting and running together, across
+    all their sessions (`AGENT_USER_MAX_RUNS`; 2 since 2026-11-01, 3 before). Owner decision of 2026-10-21: a user's
+    browser windows work in parallel, and only their sandbox runs share the queue; one more than this ends its turn
+    with `error{code:"run_limit"}` instead of `capacity`, so the page can say that the user's own runs fill it."""
+
+    admin_user_max_runs: PositiveInt = 5
+    """The same for an admin (`AGENT_ADMIN_USER_MAX_RUNS`, owner decision of 2026-11-01): the admin's runs share the
+    concurrency and the rate with everyone's; `GET /v1/status` reports this cap to an admin as `user_max_runs`, and
+    the fan-out starts at most that many plots at once."""
 
     user_messages_per_minute: PositiveInt = 10
     """Chat turns per user within any 60 seconds (`AGENT_USER_MESSAGES_PER_MINUTE`), typed messages and actions
     alike, counted in the usage book. Checked before the scope judge, so a flood costs no model call: since chat turns
-    no longer wait in the run queue (2026-10-14), this is what bounds them."""
+    no longer wait in the run queue (2026-10-14), this is what bounds them. An admin is exempt (2026-11-01): a fan-out
+    starts a turn per library."""
 
     user_messages_per_day: PositiveInt = 200
-    """Chat turns per user and UTC day (`AGENT_USER_MESSAGES_PER_DAY`), checked like the minute's."""
+    """Chat turns per user and UTC day (`AGENT_USER_MESSAGES_PER_DAY`), checked like the minute's; an admin is
+    exempt."""
 
     session_refusals: PositiveInt = 3
     """Scope-judge refusals of type `out_of_scope` or `attack` after which a session is closed
@@ -463,19 +477,23 @@ class AgentSettings(BaseSettings):
     A review starts only while `pipeline.REVIEW_RESERVE_TOKENS` is left for it and the root's
     closing reply."""
 
-    daily_token_budget: PositiveInt = 8_000_000
-    """Cost-weighted tokens per user and day (`AGENT_DAILY_TOKEN_BUDGET`), weighted like the request
-    budget; raised on 2026-10-13 (2,000,000 before) to about 30 median runs of the live flow. The old
-    flow's numbers: about 54 median runs with a warm cache, where the 40 runs of `daily_pipeline_runs`
-    bind first, and about 26 for a user whose every request starts cold (77,700 each), where
-    this budget binds."""
+    daily_token_budget: PositiveInt = 10_000_000
+    """Cost-weighted tokens per user and day (`AGENT_DAILY_TOKEN_BUDGET`), weighted like the request budget: about $1
+    at Claude Haiku 5.5's $0.10 per million input-token equivalents (`agents/evals/pricing.py`). 10,000,000 since
+    2026-11-01 (owner decision; 8,000,000 from 2026-10-13, 2,000,000 before). The old flow's numbers: about 54 median
+    runs with a warm cache and about 26 for a user whose every request starts cold (77,700 each). An admin is exempt
+    (owner decision of 2026-11-01): one fan-out over the 15 libraries booked 3,047,083 in the measurement of that day,
+    so the global budget is an admin's only daily cap on model spend."""
 
-    daily_pipeline_runs: PositiveInt = 40
-    """Pipeline runs per user and day (`AGENT_DAILY_PIPELINE_RUNS`)."""
+    daily_pipeline_runs: PositiveInt = 50
+    """Pipeline runs per user and day (`AGENT_DAILY_PIPELINE_RUNS`; 50 since 2026-11-01, 40 before); an admin is
+    exempt."""
 
-    global_daily_token_budget: PositiveInt = 24_000_000
-    """Cost-weighted tokens per day across all users (`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`), three users
-    at their daily budget; reaching it pauses the service."""
+    global_daily_token_budget: PositiveInt = 100_000_000
+    """Cost-weighted tokens per day across all users (`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`), admins included: about $10,
+    the runaway guard of the whole service, which binds every tier; reaching it pauses the service. 100,000,000 since
+    2026-11-01 (owner decision; 24,000,000, three users at their daily budget, before): ten public users at their
+    daily budget, or about thirty admin fan-outs. The Vertex AI spend cap stays the money limit."""
 
     render_timeout_s: PositiveInt = 60
     """Seconds per render, host-enforced (`AGENT_RENDER_TIMEOUT_S`)."""
@@ -491,7 +509,7 @@ class AgentSettings(BaseSettings):
     renderer's 30 s (`wire.MAX_DATA_TIMEOUT_S`)."""
 
     daily_data_runs: PositiveInt = 30
-    """`run_data_code` runs per user and day (`AGENT_DAILY_DATA_RUNS`), counted before each run."""
+    """`run_data_code` runs per user and day (`AGENT_DAILY_DATA_RUNS`), counted before each run; an admin is exempt."""
 
     narrowed_bindings: Literal["keep", "reset"] = "keep"
     """What the root's `set_bindings` does to the user's confirmation when the new bindings only leave out members

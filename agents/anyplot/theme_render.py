@@ -34,6 +34,7 @@ that run already handled. Every answer lists the version's artifacts after the c
 No ADK import.
 """
 
+import asyncio
 import logging
 import secrets
 from dataclasses import dataclass
@@ -107,7 +108,8 @@ async def render_theme(
     except Exception as exc:  # no Docker, the sandbox stub: the class is logged, never the message
         logger.warning("theme render could not run: %s", type(exc).__name__)
         return ThemeResult("failed", "error", version.artifacts())
-    report = evaluate(
+    report = await asyncio.to_thread(  # CPU work on the PNG: off the loop, like the pipeline's gates
+        evaluate,
         result,
         themes=job.themes,
         library=version.library,
