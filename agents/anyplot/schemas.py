@@ -418,6 +418,15 @@ class KeepRequestArgs(_ServerContract):
         return self
 
 
+class SwitchArgs(_ServerContract):
+    """The `switch_plot` tool input (2026-11-02): the library the user asked for in the chat, whether to plot there at
+    once, and the spec for the later plot-type switch (the route refuses another spec until then)."""
+
+    library: str = Field(pattern=r"^[a-z0-9]{1,32}$")
+    plot: bool = True
+    spec_id: str | None = Field(default=None, pattern=r"^[a-z0-9-]{1,100}$")
+
+
 class Edit(_ModelOutput):
     """One search-and-replace hunk; the applier requires exactly one match of `find`."""
 

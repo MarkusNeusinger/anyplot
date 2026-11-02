@@ -123,7 +123,7 @@ from ..render.gates import error_summary
 from ..render.harness import DATA_EXIT
 from ..render.runtimes.python import DATA_FILE_NAME
 from ..render.serial import RenderBusy
-from ..schemas import MAX_COLUMNS, MAX_ROWS, Binding, DatasetProfile, KeepRequestArgs, PipelineArgs
+from ..schemas import MAX_COLUMNS, MAX_ROWS, Binding, DatasetProfile, KeepRequestArgs, PipelineArgs, SwitchArgs
 from ..services import get_services
 from ..session_state import (
     PENDING_BINDINGS,
@@ -353,6 +353,30 @@ async def forget(entry_id: str, tool_context: ToolContext) -> dict[str, Any]:
     for key, value in memory_delta(entries).items():
         tool_context.state[key] = value
     return {"status": "ok", "entries": len(entries)}
+
+
+async def switch_plot(
+    library: str, tool_context: ToolContext, plot: bool = True, spec_id: str | None = None
+) -> dict[str, Any]:
+    """Move the plot to another library when the user asks for it ("make it in seaborn", "zeig das in ggplot2"): after this turn the page switches the library and, with plot true, makes the plot there at once from that library's catalogue plot with the user's decisions (the plot memory). library: one of the libraries the session block lists to switch to. plot: false only when the user wants to switch without a plot yet. spec_id: leave it out; another plot type is not offered yet. Writes nothing and starts no run: call no plot_pipeline in the same turn. Returns switch_requested: true, or an error code."""
+    view = _view(tool_context)
+    if view is None:
+        return _error("session_not_open")
+    try:
+        args = SwitchArgs.model_validate({"library": library, "plot": plot, "spec_id": spec_id})
+    except ValidationError:
+        return _error("invalid_arguments")
+    if args.spec_id is not None and args.spec_id != view.spec_id:
+        return _error("plot_type_switch_unavailable")  # the target is a pair already; the route refuses another spec
+    if args.library not in get_settings().libraries:
+        return _error("library_unavailable")
+    if args.library == view.library:
+        return _error("same_library")
+    request: dict[str, Any] = {"library": args.library, "plot": args.plot}
+    if args.spec_id is not None:
+        request["spec_id"] = args.spec_id
+    ledger_for(tool_context.invocation_id).switch_request = request
+    return {"status": "ok", "switch_requested": True}
 
 
 def _conversion_outcome(prepared: Prepared, profile: DatasetProfile) -> telemetry.ConversionOutcome | None:
@@ -825,6 +849,7 @@ SESSION_TOOLS = (
     set_language,
     keep_plot_request,
     forget,
+    switch_plot,
     prepare_data,
     query_data,
     generate_data,

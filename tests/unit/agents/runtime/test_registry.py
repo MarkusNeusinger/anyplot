@@ -73,6 +73,7 @@ class TestRegistry:
             "set_language",
             "keep_plot_request",
             "forget",
+            "switch_plot",
             "prepare_data",
             "query_data",
             "generate_data",
@@ -181,6 +182,7 @@ class TestSessionContext:
             "Session (set by the server):",
             "- Plot: spec scatter-basic, library matplotlib",
             "- Language: the default, English",
+            "- Libraries to switch to (switch_plot): seaborn",  # the server's own ids (`AGENT_LIBRARIES`)
             "- Dataset: none yet; the user pastes it in the data panel, or generate_data computes it from a formula, "
             "or run_data_code from the user's code",
             "- Plot versions: none yet",

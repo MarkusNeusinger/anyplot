@@ -197,6 +197,7 @@ from agents.anyplot.memory import (
     MemoryRefused,
     kind_counts,
     memory_delta,
+    next_seq,
     public_entries,
     read_memory,
 )
@@ -281,7 +282,7 @@ from agents.anyplot.session_state import (
     read_session,
 )
 from agents.anyplot.settings import AgentSettings, get_settings
-from agents.anyplot.switch import CARRY, SourcePlot, Target, carry_for, read_carry
+from agents.anyplot.switch import CARRY, Target, carry_for, read_carry, source_plot
 from agents.anyplot.switch import summary as switch_summary
 from agents.anyplot.telemetry import SwitchSource
 from agents.anyplot.theme_render import RenderGone, render_theme
@@ -1090,17 +1091,7 @@ async def switch_library(
     if target.pair() == source.pair():
         carry = read_carry(session.state, target.pair())  # the same target again: a carry made for it stays
     else:
-        latest = services.versions.latest_rendered(sid, target=source.pair())
-        plot = (
-            SourcePlot(
-                theme=latest.theme,
-                theme_asked=latest.theme_asked,
-                expected_texts=list(latest.expected_texts),
-                requests=list(latest.requests),
-            )
-            if latest is not None
-            else None
-        )
+        plot = source_plot(services.versions.latest_rendered(sid, target=source.pair()))
         pending = read_carry(session.state, source.pair())
         carry = carry_for(source=source, target=target, plot=plot, pending=pending, memory=memory)
     target_latest = services.versions.latest_rendered(sid, target=target.pair())
@@ -2004,6 +1995,19 @@ async def copy_dataset(
     shown: dict[str, Any] = {}
     if origin.plot_language_choice is not None or origin_latest is not None:
         shown[PLOT_LANGUAGE] = plot_language(origin, origin_latest)
+    # `.plot_all()` plots the user's tuned plot in every library (2026-11-02): the memory comes along, and a carry for
+    # this session's library from the page session's latest plot, so the fan-out's `carry_plot` takes both.
+    memory = read_memory(source.state)
+    carry = carry_for(
+        source=Target(spec_id=origin.spec_id, library=origin.library),
+        target=Target(spec_id=view.spec_id, library=view.library),
+        plot=source_plot(services.versions.latest_rendered(body.from_session, target=origin.target)),
+        pending=read_carry(source.state, origin.target),
+        memory=memory,
+    )
+    carried = switch_summary(carry, memory, None)
+    shown.update(memory_delta(memory, next_seq(source.state, memory)))
+    shown[CARRY] = carry.model_dump(mode="json") if carry is not None else None
     # From the reads above to this write nothing suspends (see `_ingest_paste`): the source's state cannot change
     # between the confirmation check and the copy.
     await runtime.write_state(
@@ -2039,6 +2043,8 @@ async def copy_dataset(
             "complete": check.complete,
             "missing_roles": check.missing_roles,
             "copied_from": origin.dataset_version,
+            # What the fan-out's run takes over: with `offer`, it sends `carry_plot` instead of `create_plot`.
+            "carry": carried.body(),
         },
         headers=_NO_STORE,
     )
@@ -2396,7 +2402,10 @@ async def post_message(
             sync = await _session_sync(runtime, user, sid, dataset_before=dataset_before, ledger=ledger)
         finally:
             runtime.finish(sid, run)
-        yield translator.done(**sync)
+        # A switch the root asked for goes to the page only with a turn that ended well: after a failure the page
+        # shows the error and the user asks again.
+        switch = ledger.switch_request if failure is None else None
+        yield translator.done(**sync, switch=switch)
 
     return StreamingResponse(
         stream(),

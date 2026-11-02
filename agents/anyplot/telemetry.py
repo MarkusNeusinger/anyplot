@@ -231,6 +231,7 @@ ToolName = Literal[
     "set_language",
     "keep_plot_request",
     "forget",
+    "switch_plot",
     "prepare_data",
     "query_data",
     "generate_data",

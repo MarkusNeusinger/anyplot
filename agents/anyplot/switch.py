@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
@@ -41,6 +41,10 @@ from .schemas import (
     Theme,
     UserRequest,
 )
+
+
+if TYPE_CHECKING:
+    from .services import CodeVersion
 
 
 def _library(value: str) -> str:
@@ -104,6 +108,18 @@ class SourcePlot:
     theme_asked: bool
     expected_texts: list[str]
     requests: list[str]
+
+
+def source_plot(version: CodeVersion | None) -> SourcePlot | None:
+    """What a carry reads of the source's latest rendered version, or None without one."""
+    if version is None:
+        return None
+    return SourcePlot(
+        theme=version.theme,
+        theme_asked=version.theme_asked,
+        expected_texts=list(version.expected_texts),
+        requests=list(version.requests),
+    )
 
 
 def carry_for(

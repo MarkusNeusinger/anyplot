@@ -59,7 +59,7 @@ from ..data.query import QueryArgs
 from ..language import LANGUAGE_PATTERN, MAX_LANGUAGE_CHARS, LanguageTarget
 from ..memory import ForgetArgs
 from ..policy import DATA_PREAMBLE, fence
-from ..schemas import MAX_COLUMNS, Binding, KeepRequestArgs, PipelineArgs, PlotResult
+from ..schemas import MAX_COLUMNS, Binding, KeepRequestArgs, PipelineArgs, PlotResult, SwitchArgs
 from .ledger import argument_hash, attribution, ledger_for
 
 
@@ -176,6 +176,7 @@ ARGUMENTS: dict[str, type[BaseModel]] = {
     "set_language": _LanguageArgs,
     "keep_plot_request": KeepRequestArgs,
     "forget": ForgetArgs,
+    "switch_plot": SwitchArgs,
     PREPARE_TOOL: _PrepareArgs,
     QUERY_TOOL: QueryArgs,
     GENERATE_TOOL: Generate,
@@ -204,6 +205,8 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
     "keep_plot_request": frozenset({"status", "code", "request_kept", "reason"}),
     # No text either: the count; the session block lists the entries fenced.
     "forget": frozenset({"status", "code", "entries"}),
+    # Whether the page will switch after the turn; the library is the root's own argument, nothing to echo.
+    "switch_plot": frozenset({"status", "code", "switch_requested"}),
     PREPARE_TOOL: _DATA_VERSION_KEYS | {"bindings"},  # when a conversion moved them, fenced as in `get_dataset_profile`
     QUERY_TOOL: frozenset({"status", "reason", "code", "message", "errors", "rows", "table", "truncated", "changes"}),
     GENERATE_TOOL: _DATA_VERSION_KEYS,
