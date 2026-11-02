@@ -36,6 +36,7 @@ from .schemas import (
     MAX_DECISION_CHARS,
     MAX_DECISIONS,
     MAX_EXPECTED_TEXTS,
+    MEMORY_ENTRY_ID_PATTERN,
     ExpectedText,
     MemoryKind,
     MemoryTarget,
@@ -62,7 +63,7 @@ MAX_ENTRIES = MAX_DECISIONS
 MAX_TEXT_CHARS = MAX_DECISION_CHARS
 MAX_TOTAL_CHARS = 3_000
 """The texts of all entries together: 30 entries of 100 characters, or 15 at the text cap."""
-ENTRY_ID_PATTERN = r"^m[0-9]{1,6}$"
+ENTRY_ID_PATTERN = MEMORY_ENTRY_ID_PATTERN
 
 
 class MemoryEntry(BaseModel):
@@ -130,9 +131,10 @@ def remember(entries: Sequence[MemoryEntry], item: RememberItem, *, seq: int, tu
         same = (entry.kind, entry.target, entry.text, entry.expect)
         if same == (item.kind, item.target, item.text, item.expected_text):
             return list(entries)
-    kept = list(entries)
+    # A correction names the entry it corrects; one that is gone already (the user removed it) corrects nothing.
+    kept = [entry for entry in entries if entry.id != item.replaces]
     if item.kind in SINGLE_KINDS:
-        kept = [entry for entry in entries if (entry.kind, entry.target) != (item.kind, item.target)]
+        kept = [entry for entry in kept if (entry.kind, entry.target) != (item.kind, item.target)]
     entry = MemoryEntry(
         id=f"m{seq}", kind=item.kind, target=item.target, text=item.text, expect=item.expected_text, turn=turn
     )

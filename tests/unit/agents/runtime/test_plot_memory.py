@@ -39,7 +39,7 @@ from agents.anyplot.pipeline import DECISIONS_HEADING, EARLIER_REQUESTS_HEADING,
 from agents.anyplot.render.backends.fake import FakeBackend
 from agents.anyplot.schemas import PipelineArgs, PlotResult, RememberItem
 from agents.anyplot.services import CodeVersion, Services, get_services
-from agents.anyplot.session_state import PENDING_REMEMBER
+from agents.anyplot.session_state import PENDING_EXPECTED_TEXTS, PENDING_REMEMBER, PENDING_REQUEST
 from agents.anyplot.settings import get_settings
 from agents.anyplot.switch import CARRY, Carry, SourcePlot, Target, carry_for, read_carry, summary
 from agents.main import ActiveRun, Runtime, app, get_runtime
@@ -93,6 +93,18 @@ class TestRemember:
 
         assert [entry.text for entry in after] == [LINE.text, second.text]
 
+    def test_a_correction_replaces_the_entry_it_names(self) -> None:
+        """A second reference line is added beside the first; one that `replaces` it takes its place (Copilot on
+        #12520)."""
+        moved = RememberItem(kind="reference_line", text="horizontal reference line at y = 8", replaces="m1")
+
+        after = remember(entries(LINE, STARS), moved, seq=3, turn=2)
+
+        assert [(entry.id, entry.text) for entry in after] == [("m2", STARS.text), ("m3", moved.text)]
+        assert remember(entries(STARS), moved, seq=2, turn=2)[-1].text == moved.text  # m1 gone already: just added
+        with pytest.raises(ValueError):
+            RememberItem(kind="marker", text="x", replaces="title")
+
     def test_the_same_decision_twice_is_one_entry(self) -> None:
         once = entries(LINE)
 
@@ -138,6 +150,69 @@ class TestReadMemory:
         assert next_seq({MEMORY_SEQ: 7}, held) == 7
         assert next_seq({MEMORY_SEQ: 1}, held) == 3  # never below one past the highest id in use
         assert next_seq({}, []) == 1
+
+
+class TestForgetTool:
+    """`forget` refuses before it writes: no session, a run in flight, a malformed or unknown id."""
+
+    @staticmethod
+    def context(state: dict[str, Any], invocation_id: str) -> Any:
+        from types import SimpleNamespace
+
+        return SimpleNamespace(state=state, invocation_id=invocation_id, session=SimpleNamespace(id="s1"))
+
+    @staticmethod
+    def opened(**extra: Any) -> dict[str, Any]:
+        from agents.anyplot.dev_fixture import snapshot_from_repo
+        from agents.anyplot.session_state import initial_state
+
+        state = initial_state(
+            spec_id="scatter-basic",
+            library="matplotlib",
+            locale="en",
+            snapshot=snapshot_from_repo("scatter-basic", "matplotlib"),
+            normalised="x = 1",
+            readiness={},
+        )
+        return {**state, **extra}
+
+    async def test_each_refusal_leaves_the_memory_as_it_was(self) -> None:
+        from agents.anyplot.plugins.ledger import ledger_for
+        from agents.anyplot.tools.session import forget as forget_tool
+
+        held = memory_delta(entries(LINE, STARS), 3)
+        assert await forget_tool("m1", self.context({}, "inv-forget-1")) == {
+            "status": "error",
+            "code": "session_not_open",
+        }
+        state = self.opened(**held)
+        for entry_id, code in (("title", "invalid_arguments"), ("m9", "unknown_entry")):
+            assert await forget_tool(entry_id, self.context(state, "inv-forget-2")) == {"status": "error", "code": code}
+        ledger_for("inv-forget-3").pipeline_active = True
+        try:
+            refused = await forget_tool("m1", self.context(state, "inv-forget-3"))
+        finally:
+            ledger_for("inv-forget-3").pipeline_active = False
+        assert refused == {"status": "error", "code": "run_active"}
+        assert state[MEMORY] == held[MEMORY]
+
+        assert await forget_tool("m1", self.context(state, "inv-forget-4")) == {"status": "ok", "entries": 1}
+        assert [entry.id for entry in read_memory(state)] == ["m2"]
+
+
+def test_stored_values_that_fail_their_checks_are_dropped() -> None:
+    from agents.anyplot.pipeline import merged_remember, take_carried_texts
+
+    assert merged_remember([{"kind": "title"}, LINE.model_dump(), "x"], [STARS]) == [LINE, STARS]
+    assert merged_remember("not a list", []) == []
+    carry = Carry(source=MATPLOTLIB, target=SEABORN)
+    assert take_carried_texts(PipelineArgs(change_request="c"), carry) == PipelineArgs(change_request="c")
+    assert read_carry({CARRY: "text"}, SEABORN.pair()) is None
+    assert read_carry({CARRY: {"source": {"spec_id": "x"}}}, SEABORN.pair()) is None
+    with pytest.raises(ValueError):
+        Target(spec_id="scatter-basic", library="excel")
+    with pytest.raises(ValueError):
+        RememberItem(kind="title", text=" \n ")  # nothing left once the whitespace is collapsed
 
 
 def test_the_owner_examples_become_decisions_and_texts() -> None:
@@ -476,14 +551,16 @@ async def test_a_carry_run_that_ships_nothing_keeps_the_carry(client: httpx.Asyn
     )
     sid = await open_session(client)
     await create_plot(client, sid)
-    await seed_memory(sid, entries(LINE))
+    await seed_memory(sid, entries(LINE, LABEL))
     assert (await switch(client, sid, "seaborn")).status_code == 200
 
     events = await say(client, sid, {"action": "carry_plot"})
 
     assert plot_of(events)["status"] == "failed"
     state = await _session_state(client, sid)
-    assert read_carry(state, ("scatter-basic", "seaborn")) is not None and len(read_memory(state)) == 1
+    assert read_carry(state, ("scatter-basic", "seaborn")) is not None and len(read_memory(state)) == 2
+    # The carried label fed the run's checks only: it never became a text of the user's kept note (Copilot on #12520).
+    assert state.get(PENDING_EXPECTED_TEXTS) is None and state.get(PENDING_REQUEST) is None
 
 
 async def test_switching_back_counts_the_decisions_the_older_plot_misses(
@@ -580,7 +657,7 @@ async def test_a_kept_first_plot_note_brings_its_decisions_to_the_memory(
     sid = await open_session(client)
     await say(client, sid, {"text": "Titel 'Lernzeit' bitte"})
     assert (await _session_state(client, sid))[PENDING_REMEMBER] == [
-        {"kind": "title", "text": "title: 'Lernzeit'", "target": None, "expected_text": "Lernzeit"}
+        {"kind": "title", "text": "title: 'Lernzeit'", "target": None, "expected_text": "Lernzeit", "replaces": None}
     ]
 
     await create_plot(client, sid)

@@ -1229,7 +1229,10 @@ async def switch_library(
     the session's, `422 not_eligible`, `409 run_active` while a turn runs.
     """
     snapshot = await _snapshot_or_404(db, body.spec_id, body.library, ctx)
-    payload = {"library": body.library, "snapshot": snapshot.model_dump(), "source": body.source}
+    payload: dict[str, Any] = {"library": body.library, "snapshot": snapshot.model_dump()}
+    if body.source != "menu":
+        # The default stays out: an agents service deployed before `source` forbids unknown fields (Copilot on #12520).
+        payload["source"] = body.source
     return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/library", json_body=payload)
 
 
