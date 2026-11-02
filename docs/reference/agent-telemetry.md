@@ -358,8 +358,9 @@ Run these steps once, as a project owner. They write nothing but the resources n
      --format='value(spec.template.spec.serviceAccountName)'
    ```
 
-   An empty answer means the Compute Engine default service account,
-   `239660669828-compute@developer.gserviceaccount.com`.
+   Since 2026-11-02 that is `anyplot-api@anyplot.iam.gserviceaccount.com`, which already holds the grants of
+   steps 8 and 9. An empty answer would mean the Compute Engine default service account,
+   `239660669828-compute@developer.gserviceaccount.com`, the identity before that day.
 
 8. Grant that identity `roles/bigquery.jobUser` on the project:
 
@@ -368,16 +369,27 @@ Run these steps once, as a project owner. They write nothing but the resources n
      --member=serviceAccount:API_SERVICE_ACCOUNT --role=roles/bigquery.jobUser
    ```
 
-9. Grant it `roles/bigquery.dataViewer` on both datasets: the views read the linked dataset with the
-   caller's rights. In the console, open each dataset (`agent_telemetry`, `agent_telemetry_logs`) and choose
-   **Sharing > Permissions > Add principal**, or use `bq add-iam-policy-binding`:
+9. Give it read access on both datasets: the views read the linked dataset with the caller's rights. In the
+   console, open each dataset (`agent_telemetry`, `agent_telemetry_logs`) and choose **Sharing >
+   Permissions > Add principal** with `roles/bigquery.dataViewer`. On the command line,
+   `bq add-iam-policy-binding` answers "This feature requires allowlisting" for datasets (bq 2.1.39), so add
+   a `READER` entry to each dataset's access list instead:
 
-   ```bash
-   bq add-iam-policy-binding --member=serviceAccount:API_SERVICE_ACCOUNT \
-     --role=roles/bigquery.dataViewer anyplot:agent_telemetry
-   bq add-iam-policy-binding --member=serviceAccount:API_SERVICE_ACCOUNT \
-     --role=roles/bigquery.dataViewer anyplot:agent_telemetry_logs
-   ```
+   1. Save the dataset's access list:
+
+      ```bash
+      bq show --format=prettyjson anyplot:agent_telemetry > agent_telemetry.json
+      ```
+
+   2. Append `{"role": "READER", "userByEmail": "API_SERVICE_ACCOUNT"}` to its `access` array and keep only
+      that key: `{"access": [...]}`.
+   3. Write it back:
+
+      ```bash
+      bq update --source agent_telemetry.json anyplot:agent_telemetry
+      ```
+
+   4. Repeat for `agent_telemetry_logs`.
 
 10. Point the API at the views through the deploy pipeline, like `_AGENT_SERVICE_URL`: set the
     `_AGENT_TELEMETRY_DATASET` substitution on the `deploy-api` trigger. The pipeline writes the variable on

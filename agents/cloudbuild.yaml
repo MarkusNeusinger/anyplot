@@ -21,9 +21,10 @@
 #
 # Owner steps for the first deploy (docs/concepts/agent-network.md, owner tasks 2
 # and 8). Every build of this config runs as the Compute Engine default service
-# account 239660669828-compute@developer.gserviceaccount.com, which is also
-# anyplot-api's runtime identity (_API_CALLER), so it is both the deployer and the
-# BFF's caller identity. The triggers already run as that account
+# account 239660669828-compute@developer.gserviceaccount.com, the deployer. Until
+# 2026-11-02 it was also anyplot-api's runtime identity and so the BFF's caller;
+# since then anyplot-api runs as anyplot-api@ (_API_CALLER below), and step 3's
+# invoker grant for the BFF names that account. The triggers already run as that account
 # (infra/cloudflare/README.md). A manual `gcloud builds submit` runs as the
 # project's default build account instead, which may still be the legacy
 # 239660669828@cloudbuild.gserviceaccount.com, so the commands below name the
@@ -57,7 +58,7 @@
 #
 #   3. Let the API (the BFF) and the smoke's identity call the new service:
 #
-#        for member in serviceAccount:239660669828-compute@developer.gserviceaccount.com \
+#        for member in serviceAccount:anyplot-api@anyplot.iam.gserviceaccount.com \
 #                      serviceAccount:anyplot-agents@anyplot.iam.gserviceaccount.com; do
 #          gcloud run services add-iam-policy-binding anyplot-agents --region=europe-west4 \
 #            --member="$member" --role=roles/run.invoker
@@ -90,11 +91,13 @@ substitutions:
   _REGION: europe-west4
   _SERVICE_ACCOUNT: anyplot-agents@anyplot.iam.gserviceaccount.com
   # anyplot-api's runtime identity, the BFF and the only caller in production: the
-  # Compute Engine default service account. The deploy step sets
-  # AGENT_ALLOWED_CALLERS to it plus _SERVICE_ACCOUNT (the smoke below calls the
-  # candidate as that account), so a build without substitutions keeps both. The
-  # step refuses a value that is not one service-account email.
-  _API_CALLER: 239660669828-compute@developer.gserviceaccount.com
+  # dedicated anyplot-api@ account since 2026-11-02 (the Compute Engine default
+  # service account before; _RUNTIME_SERVICE_ACCOUNT in api/cloudbuild.yaml, change
+  # both together). The deploy step sets AGENT_ALLOWED_CALLERS to it plus
+  # _SERVICE_ACCOUNT (the smoke below calls the candidate as that account), so a
+  # build without substitutions keeps both. The step refuses a value that is not one
+  # service-account email.
+  _API_CALLER: anyplot-api@anyplot.iam.gserviceaccount.com
   # AGENT_SERVICE_URLS beyond the service URL, separated by commas. The deploy step
   # always adds the service's own URL (status.url): Cloud Run accepts no other
   # audience for a service account's token, not even a tag URL.

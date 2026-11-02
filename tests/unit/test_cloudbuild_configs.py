@@ -39,9 +39,28 @@ def test_every_deploy_config_is_checked() -> None:
     } <= set(CONFIGS)
 
 
+def _load(config: str) -> dict[str, Any]:
+    loaded: dict[str, Any] = yaml.safe_load((REPO_ROOT / config).read_text(encoding="utf-8"))
+    return loaded
+
+
+def test_api_runs_as_the_caller_the_agents_service_accepts() -> None:
+    """anyplot-api deploys as its dedicated account, and anyplot-agents admits exactly that account.
+
+    A mismatch passes every PR check and both deploys, then the BFF gets 403 on every agent call.
+    """
+    api = _load("api/cloudbuild.yaml")
+    runtime = api["substitutions"]["_RUNTIME_SERVICE_ACCOUNT"]
+    deploy_args = [arg for step in api["steps"] for arg in step.get("args", [])]
+
+    assert runtime == "anyplot-api@anyplot.iam.gserviceaccount.com"
+    assert "--service-account=${_RUNTIME_SERVICE_ACCOUNT}" in deploy_args
+    assert _load("agents/cloudbuild.yaml")["substitutions"]["_API_CALLER"] == runtime
+
+
 @pytest.mark.parametrize("config", CONFIGS)
 def test_every_step_argument_fits_cloud_build(config: str) -> None:
-    loaded: dict[str, Any] = yaml.safe_load((REPO_ROOT / config).read_text(encoding="utf-8"))
+    loaded = _load(config)
     too_long = [
         f"step {index} ({step.get('id', step.get('name'))}) arg {position}: {len(arg)} characters"
         for index, step in enumerate(loaded["steps"])
