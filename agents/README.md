@@ -88,6 +88,8 @@ Three rules hold for everything here:
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue, after which the turn ends with `error{code:"capacity"}`; the queue holds rate x wait / 60 entries (60), and a sandbox run beyond that ends its turn the same way. Through the BFF the whole turn, this wait included, ends by `AGENT_TURN_MAX_S` (1,190 s, see `docs/reference/api.md`), which the root's first call, the full wait and the 540 s run fit into |
 | `AGENT_USER_MAX_RUNS` | `2` | Sandbox runs one public user may have queued or running at the same time, across all their sessions (browser windows; 3 before 2026-11-01); the turn whose run would be one more ends with `error{code:"run_limit"}`, before the queue's length is checked. Everything else runs per session at once: a session answers `409 run_active` only to a second thing of its own |
 | `AGENT_ADMIN_USER_MAX_RUNS` | `5` | The same for an admin (a request with `X-Anyplot-Tier: admin` from an allowed caller, the BFF for its admins), whose runs share the concurrency and the rate with everyone's; `GET /v1/status` reports it to an admin as `user_max_runs`, and `.plot_all()` starts that many plots at once |
+| `AGENT_IP_MAX_RUNS` | `4` | The same for the anonymous users of one network (an IPv4 address or an IPv6 /64, from the public BFF's `X-Anyplot-Network`), together; one more ends its turn with `error{code:"run_limit"}` |
+| `AGENT_PUBLIC_QUEUE_MAX_WAITING` | `10` | Waiting entries the public lane may hold in the run queue (of its 60); one more ends its turn with `error{code:"capacity"}`, so open public streams keep to a share of anyplot-api's request slots |
 | `AGENT_USER_MESSAGES_PER_MINUTE` | `10` | Chat turns (typed messages and actions) per user within any 60 seconds; one more gets the fixed `rate_limited` refusal before the scope judge, so it costs no model call. An admin is exempt |
 | `AGENT_USER_MESSAGES_PER_DAY` | `200` | Chat turns per user and UTC day; one more gets the fixed `daily_limit` refusal before the scope judge. An admin is exempt |
 | `AGENT_SESSION_REFUSALS` | `3` | Scope-judge refusals of type `out_of_scope` or `attack` (never `needs_data`; `other_library` only with `AGENT_OTHER_LIBRARY_COUNTS`) after which a session is closed: that refusal and every later turn answer `session_closed`, a paste `403 session_closed`, and the user reloads the page for a new session |
@@ -117,6 +119,8 @@ Three rules hold for everything here:
 | `AGENT_REQUEST_TOKEN_BUDGET` | `800000` | Cost-weighted tokens per request (see [Token budgets and output caps](#token-budgets-and-output-caps)) |
 | `AGENT_DAILY_TOKEN_BUDGET` | `10000000` | Cost-weighted tokens per user and day, about $1 (8,000,000 before 2026-11-01); an admin is exempt |
 | `AGENT_DAILY_PIPELINE_RUNS` | `50` | Pipeline runs per user and day (40 before 2026-11-01); an admin is exempt |
+| `AGENT_IP_DAILY_TOKEN_BUDGET` | `20000000` | Cost-weighted tokens per network and day, booked by its anonymous users: twice the per-user budget, for shared networks |
+| `AGENT_IP_DAILY_PIPELINE_RUNS` | `100` | Pipeline runs per network and day, counted the same way |
 | `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `100000000` | Cost-weighted tokens per day for the whole service, about $10, admins included (24,000,000 before 2026-11-01) |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per theme render |
 | `AGENT_DATA_CODE` | `true` | Whether the root's `run_data_code` runs; `false` makes it answer `unavailable`. The tool also answers `unavailable` while the renderer has no `POST /run-data` (`404`) |
