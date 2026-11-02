@@ -37,7 +37,7 @@ anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the websit
 
 **Feedback:**
 - Site feedback from the feedback widget and the plot votes (`feedback`), with its triage status
-- One row per quick-feedback case of the admin-only agent chat (`agent_feedback`): the reaction, the message, hashed user and session ids, the run's metadata, and the triage state (status, tags, expected outcome, promotion, supersession); never the conversation, code, images or data
+- One row per quick-feedback case of the agent chat (`agent_feedback`): the reaction, the message, hashed user and session ids, the run's metadata, and the triage state (status, tags, expected outcome, promotion, supersession); never the conversation, code, images or data
 
 **Other:**
 - Library information (name, version, docs URL)
@@ -190,7 +190,7 @@ CREATE INDEX ix_feedback_created_at ON feedback (created_at DESC);
 CREATE INDEX ix_feedback_ip_hash_created_at ON feedback (ip_hash, created_at DESC);
 CREATE INDEX ix_feedback_spec_library ON feedback (spec_id, library_id);
 
--- Quick-feedback cases of the admin-only agent chat (written by the API)
+-- Quick-feedback cases of the agent chat (written by the API)
 CREATE TABLE agent_feedback
 (
     id              VARCHAR(25) PRIMARY KEY,    -- the case id: "20261012T143005Z-1a2b3c4d"
@@ -333,7 +333,7 @@ INSERT INTO libraries (id, name, version, documentation_url) VALUES
 
 ### `agent_feedback`
 
-**Purpose**: Index the quick-feedback cases of the admin-only agent chat and hold their triage state. The feedback route `POST /debug/agent/sessions/{sid}/feedback` inserts one row per case right after the case's files are in `gs://anyplot-agent-cases`, and the "agent cases" section of `/debug` reads and updates it through the case routes ([Feedback triage](api.md#feedback-triage)). The row is the source of truth for the triage; the bucket holds the files until its lifecycle rule deletes them after 180 days, and the row stays, so the class statistics outlive the files. Created by migration `b4e7a9c2d6f1`.
+**Purpose**: Index the quick-feedback cases of the agent chat and hold their triage state. The feedback route (`POST /debug/agent/sessions/{sid}/feedback` for admins, its public twin under `/agent/`) inserts one row per case right after the case's files are in `gs://anyplot-agent-cases`, and the "agent cases" section of `/debug` reads and updates it through the case routes ([Feedback triage](api.md#feedback-triage)). The row is the source of truth for the triage; the bucket holds the files until its lifecycle rule deletes them after 180 days, and the row stays, so the class statistics outlive the files. Created by migration `b4e7a9c2d6f1`.
 
 **Key Fields**:
 - `id` - The bucket's case id: the UTC time in ISO 8601 basic format and eight random hex digits, so ids sort by time and link a row to its files under `cases/<id>/`
@@ -652,7 +652,7 @@ await session.execute(f"SELECT * FROM specs WHERE id = '{spec_id}'")
 
 ### Data privacy
 
-- No user data stored permanently, with one exception: the quick-feedback cases of the admin-only agent chat. When an admin submits one, the case (the conversation, the code, the images, the message, a hashed user id, and `data.csv` when the box is ticked) is stored in the private bucket `gs://anyplot-agent-cases` until the lifecycle rule deletes it after 180 days. Its row in `agent_feedback` holds the message and the hashed ids, but no conversation, code, images or data, and stays
+- No user data stored permanently, with one exception: the quick-feedback cases of the agent chat. When someone submits one, the case (the conversation, the code, the images, the message, a hashed user id, and `data.csv` when the box is ticked) is stored in the private bucket `gs://anyplot-agent-cases` until the lifecycle rule deletes it after 180 days. Its row in `agent_feedback` holds the message and the hashed ids, but no conversation, code, images or data, and stays
 - Anonymous session IDs only
 - Usage data auto-deleted after 90 days
 - GDPR-compliant (no personal data)

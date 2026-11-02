@@ -6,7 +6,7 @@
 > deployed, and reach the typed views after you create the views again (step 6 of
 > [Set up the BigQuery side](#set-up-the-bigquery-side)).
 
-The admin-only agent chat ("Use with my data") records how it is used, without recording what anyone
+The agent chat ("Use with my data") records how it is used, without recording what anyone
 used it for. This page lists what is recorded, where it goes, how long it stays, and how to read it.
 
 ## What is recorded, and what never is

@@ -91,9 +91,9 @@ For the labels, retries, and every workflow, see [Workflows](docs/workflows/over
 
 ## Use with my data (agent chat)
 
-> **Status:** experimental, rolling out. It isn't open to every visitor yet.
+> **Status:** experimental, open to every visitor since 2 November 2026.
 
-On a plot page, you paste your own data. An agent adapts that plot's catalogue code to your data, renders it in a
+On a plot page, choose **use with my data** and paste your own data. An agent adapts that plot's catalogue code to your data, renders it in a
 sandbox, reviews the render against the catalogue's rubric, repairs it once if needed, and returns the image and the
 code.
 

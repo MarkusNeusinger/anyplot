@@ -38,7 +38,7 @@ anyplot is different: **AI curates and maintains, humans discover and choose.**
 2. **AI Code Generation**: Automatically creates implementations for all major libraries
 3. **Continuous Quality**: AI validates, tests, and improves examples constantly
 4. **Smart Discovery**: Typo-tolerant search over tags and titles + dynamic tagging + a similarity map of the catalogue
-5. **Your Data**: Paste your data on a plot page, and an agent adapts that plot's code to it (experimental, rolling out)
+5. **Your Data**: Paste your data on a plot page, and an agent adapts that plot's code to it (experimental)
 
 ### What makes it different
 
