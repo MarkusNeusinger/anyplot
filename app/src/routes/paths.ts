@@ -29,6 +29,20 @@ export function agentChatPath(
 }
 
 /**
+ * The public agent chat for one catalogue pair, the same query as the admin's:
+ * `/agent?spec=&library=&language=` (plus `source` for `agent_open`). An
+ * ordinary route; it opens while the public lane is (`GET /agent/lane`).
+ */
+export function publicAgentChatPath(
+  spec: string,
+  library: string,
+  language: string,
+  source?: string
+): string {
+  return agentChatPath(spec, library, language, source).replace(/^\/debug\/agent/, '/agent');
+}
+
+/**
  * Reserved top-level paths that must never be assigned as spec ids.
  *
  * Keep in sync with `RESERVED_SLUGS` in `.github/workflows/spec-create.yml`.
@@ -43,6 +57,7 @@ export const RESERVED_TOP_LEVEL = new Set([
   'mcp',
   'stats',
   'debug',
+  'agent',
   'map',
   'api',
   'og',
@@ -80,7 +95,9 @@ export function specIdFromPath(pathname: string): string | undefined {
 export const paths = {
   home: '/',
   about: '/about',
+  agent: '/agent',
   agentChat: agentChatPath,
+  publicAgentChat: publicAgentChatPath,
   debug: '/debug',
   legal: '/legal',
   libraries: '/libraries',

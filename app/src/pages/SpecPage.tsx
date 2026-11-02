@@ -15,7 +15,7 @@ import { useAppData } from 'src/hooks';
 import { useAgentEligibility } from 'src/hooks/useAgentEligibility';
 import { ApiError, apiGet, apiUrl, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
-import { agentChatPath, paths, specPath } from 'src/routes/paths';
+import { agentChatPath, paths, publicAgentChatPath, specPath } from 'src/routes/paths';
 import { LibraryPills } from 'src/sections/spec-detail/LibraryPills';
 import { RelatedSpecs } from 'src/sections/spec-detail/RelatedSpecs';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
@@ -309,19 +309,24 @@ export function SpecPage() {
     [specId, trackEvent, mode, fetchCode]
   );
 
-  // "Use with my data" (`.adapt()`): only for admins with the agent chat built
-  // and an eligible pair. A full navigation, so Cloudflare Access can intercept
-  // the /debug path; the chat page records `agent_open{source: plot_page}`.
-  const agentEligible = useAgentEligibility(
-    mode === 'detail' ? specId : null,
-    currentImpl?.library_id
-  );
+  // "Use with my data": for an eligible pair, while the agent chat is built.
+  // An admin gets the admin chat, through a full navigation so Cloudflare
+  // Access can intercept the /debug path; everyone else gets the public chat
+  // while its lane is open, through the router. The chat page records
+  // `agent_open{source: plot_page}`.
+  const agentLane = useAgentEligibility(mode === 'detail' ? specId : null, currentImpl?.library_id);
   const handleUseWithMyData = useCallback(() => {
     if (!specId || !currentImpl) return;
+    if (agentLane === 'public') {
+      navigate(
+        publicAgentChatPath(specId, currentImpl.library_id, currentImpl.language, 'plot_page')
+      );
+      return;
+    }
     window.location.assign(
       agentChatPath(specId, currentImpl.library_id, currentImpl.language, 'plot_page')
     );
-  }, [specId, currentImpl]);
+  }, [specId, currentImpl, agentLane, navigate]);
 
   const buildReportUrl = useCallback(() => {
     const params = new URLSearchParams({
@@ -636,7 +641,7 @@ export function SpecPage() {
                 onCopyCode={handleCopyCode}
                 onDownload={handleDownload}
                 onTrackEvent={trackEvent}
-                onUseWithMyData={agentEligible ? handleUseWithMyData : undefined}
+                onUseWithMyData={agentLane ? handleUseWithMyData : undefined}
               />
 
               <SpecTabs

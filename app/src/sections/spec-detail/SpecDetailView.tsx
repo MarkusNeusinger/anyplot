@@ -611,13 +611,13 @@ export function SpecDetailView({
               </Tooltip>
             )}
             {currentImpl && onUseWithMyData && (
-              <Tooltip title=".adapt()" disableFocusListener>
+              <Tooltip title=".adapt() · use with my data · experimental" disableFocusListener>
                 <IconButton
                   onClick={(e: React.MouseEvent) => {
                     (e.currentTarget as HTMLElement).blur();
                     onUseWithMyData();
                   }}
-                  aria-label="Use with my data"
+                  aria-label="Use with my data (experimental)"
                   sx={overlayBtnSx}
                   size="medium"
                 >
