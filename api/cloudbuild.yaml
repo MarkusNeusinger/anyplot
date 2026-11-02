@@ -54,6 +54,13 @@ substitutions:
   # bound in `--update-secrets` below (Cloud Run refuses a deploy that names a
   # secret which does not exist, so the binding followed the secret).
   _AGENT_ENABLED: "false"
+  # The public door of the agent chat (/agent/*, api/routers/agent_public.py),
+  # on top of _AGENT_ENABLED, which stays the master switch: while this is
+  # "false" every public route answers 404 and the admin lane is untouched.
+  # Flipping it to "true" on the deploy-api trigger IS the public launch, and
+  # flipping it back closes the door on the next deploy. Same rule as above:
+  # change it here, never with `gcloud run services update`.
+  _AGENT_PUBLIC_ENABLED: "false"
   _AGENT_SERVICE_URL: ""
   # `<project>.<dataset>` of the agent usage telemetry's BigQuery views, which the
   # admin card on /debug reads (docs/reference/agent-telemetry.md). Empty: the card
@@ -137,14 +144,16 @@ steps:
       # both flags means one deploy cannot undo an out-of-band change; the cost
       # is that a variable dropped from this line is no longer removed by the
       # next deploy, which is the trade already accepted for the secrets.
-      - "--update-env-vars=^|^ENVIRONMENT=production|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GCS_BUCKET=anyplot-images|CF_ACCESS_TEAM_DOMAIN=${_CF_ACCESS_TEAM_DOMAIN}|CF_ACCESS_AUD=${_CF_ACCESS_AUD}|ADMIN_ALLOWED_EMAILS=${_ADMIN_ALLOWED_EMAILS}|AGENT_ENABLED=${_AGENT_ENABLED}|AGENT_SERVICE_URL=${_AGENT_SERVICE_URL}|AGENT_TELEMETRY_DATASET=${_AGENT_TELEMETRY_DATASET}"
+      - "--update-env-vars=^|^ENVIRONMENT=production|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GCS_BUCKET=anyplot-images|CF_ACCESS_TEAM_DOMAIN=${_CF_ACCESS_TEAM_DOMAIN}|CF_ACCESS_AUD=${_CF_ACCESS_AUD}|ADMIN_ALLOWED_EMAILS=${_ADMIN_ALLOWED_EMAILS}|AGENT_ENABLED=${_AGENT_ENABLED}|AGENT_PUBLIC_ENABLED=${_AGENT_PUBLIC_ENABLED}|AGENT_SERVICE_URL=${_AGENT_SERVICE_URL}|AGENT_TELEMETRY_DATASET=${_AGENT_TELEMETRY_DATASET}"
       - "--cpu-throttling"
       # 40, not 15: with _MAX_INSTANCES=1 this limit is the only capacity the
       # service has, and 15 was a default nobody had measured against. On this
       # async stack everything cached answers in milliseconds; the one CPU-heavy
       # path, OG image compositing, runs in a worker thread behind its own
       # two-slot semaphore (api/routers/og_images.py), so 40 in-flight requests
-      # cannot become 40 concurrent PIL renders.
+      # cannot become 40 concurrent PIL renders. A public agent chat turn holds
+      # its slot for as long as it streams; AGENT_PUBLIC_MAX_STREAMS (20) caps
+      # those per instance, so the catalogue always keeps the other half.
       - "--concurrency=40"
       # 1200 s: an agent chat turn may wait up to 600 s in the agents service's
       # run queue and then run for 540 s; the BFF caps a turn at
@@ -275,6 +284,23 @@ steps:
           test "$$code" = "200" || { echo "agent BFF status with an admin token expected 200, got $$code"; exit 1; }
           grep -qF '"libraries"' body.out || { echo "agent BFF status did not relay the agents service's status"; exit 1; }
           echo "OK: /debug/agent/status reaches anyplot-agents"
+        fi
+        # The public door answers exactly as the trigger set it: 404 while
+        # closed, so a revision never opens it by accident, and while open
+        # `{"open": true}` plus a public status call that reaches the agents
+        # service as an anonymous caller (it books nothing, and no login is
+        # involved). The tab id is a fixed smoke value, never a real visitor's.
+        code=$$(curl -s $$RETRY "$${HDR[@]}" -o body.out -w '%{http_code}' "$$URL/agent/lane")
+        if [ "${_AGENT_ENABLED}" = "true" ] && [ "${_AGENT_PUBLIC_ENABLED}" = "true" ]; then
+          test "$$code" = "200" && grep -qF '"open":true' body.out \
+            || { echo "public agent lane expected open (200), got $$code (in production it opens only while ORIGIN_SECRET arms the origin gate)"; exit 1; }
+          code=$$(curl -s $$RETRY "$${HDR[@]}" -H "X-Anyplot-Anon: deploy-smoke-0000000000000000" -o body.out -w '%{http_code}' "$$URL/agent/status")
+          test "$$code" = "200" || { echo "public agent status expected 200, got $$code"; exit 1; }
+          grep -qF '"libraries"' body.out || { echo "public agent status did not relay the agents service's status"; exit 1; }
+          echo "OK: /agent/* is open and reaches anyplot-agents"
+        else
+          test "$$code" = "404" || { echo "public agent lane expected closed (404), got $$code"; exit 1; }
+          echo "OK: /agent/* is closed"
         fi
         # Re-assert the tag AFTER the probes. `candidate` is a shared tag, so a
         # concurrent build could move it between the check above and the last

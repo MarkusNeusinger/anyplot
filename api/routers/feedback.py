@@ -7,8 +7,10 @@ field, hard length caps, reaction allow-list, and per-IP rate limit.
 """
 
 import hashlib
+import hmac
 import logging
 import re
+import secrets
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -45,9 +47,25 @@ MAX_URLS_IN_MESSAGE = 1  # 2+ links treated as link-stuffing SEO spam
 DUPLICATE_LOOKBACK = timedelta(minutes=10)
 
 
+IP_HASH_PREFIX = "hmac:"
+"""Marks a salted `ip_hash` (`_hash_ip`). Rows written before it carry an unsalted SHA-256 of
+the address, which a migration has to clear: it is left alone here."""
+_IP_SALT = secrets.token_bytes(32)
+"""This process's salt for `_hash_ip`. Never logged and never configured, so it dies with the
+process, and with it every way to tell which address a stored hash came from."""
+
+
 def _hash_ip(ip: str) -> str:
-    """SHA-256 of the IP, hex. Used for rate-limit lookups only — never reversed."""
-    return hashlib.sha256(ip.encode("utf-8")).hexdigest() if ip else ""
+    """The client address as this process's rate-limit key: `hmac:` and 32 hex digits.
+
+    An HMAC-SHA256 under a random per-process salt, not a plain hash: there are only about
+    four billion IPv4 addresses, so a plain SHA-256 of one is undone by trying them all. The
+    windows below need the key only within one process, and the row keeps it only until the
+    longest of them has passed (`FeedbackRepository.clear_ip_hashes`). With more than one
+    instance, each counts its own requests: a limit then binds per instance."""
+    if not ip:
+        return ""
+    return IP_HASH_PREFIX + hmac.new(_IP_SALT, ip.encode("utf-8"), hashlib.sha256).hexdigest()[:32]
 
 
 def _is_link_stuffed(message: str | None) -> bool:
@@ -93,6 +111,9 @@ async def submit_feedback(
     # `feedback.created_at` is TIMESTAMP WITHOUT TIME ZONE (UTC) in Postgres,
     # so any cutoff used in WHERE clauses must be tz-naive UTC too.
     now_utc_naive = datetime.now(timezone.utc).replace(tzinfo=None)
+    # The hash outlives no window: every submission that reaches the database, refused or
+    # stored, first clears the salted hashes past the longest window.
+    await _clear_expired_ip_hashes(repo, now_utc_naive)
 
     if ip_hash:
         since = now_utc_naive - RATE_LIMIT_WINDOW
@@ -148,3 +169,16 @@ async def submit_feedback(
     )
 
     return FeedbackResponse(status="ok")
+
+
+async def _clear_expired_ip_hashes(repo: FeedbackRepository, now_utc_naive: datetime) -> None:
+    """Null the salted hashes older than `DUPLICATE_LOOKBACK`, the longest window that reads them.
+
+    A failure costs the visitor nothing: it is rolled back and logged, and the next submission
+    clears them instead. A hash that a stopped process wrote cannot be recomputed by anyone, since
+    its salt died with that process."""
+    try:
+        await repo.clear_ip_hashes(IP_HASH_PREFIX, now_utc_naive - DUPLICATE_LOOKBACK)
+    except Exception as exc:  # the driver, the pool: never the visitor's problem
+        await repo.session.rollback()
+        logger.warning("feedback ip_hash cleanup failed: %s", type(exc).__name__)

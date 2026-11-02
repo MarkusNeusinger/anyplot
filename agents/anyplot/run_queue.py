@@ -63,6 +63,14 @@ the queue's length: a user at the cap learns that from their own runs, not from
 with its user; it changes neither the queue's capacity nor its order, and an entry the
 cap refuses never took a place, a start or a position.
 
+**Per network and public length** (launch package of 2026-11-02). An anonymous public user's
+entry also carries the salted key of the network it came from (`ledger.network_key`): the
+entries of one network may number at most `AGENT_IP_MAX_RUNS`, checked like the per-user cap
+and refused the same way (`QueueUserLimit`), because a tab id costs nothing to mint. And the
+`normal` lane may hold at most `AGENT_PUBLIC_QUEUE_MAX_WAITING` waiting entries, refused like
+a full queue (`QueueFull`): every waiting entry is an open chat stream through anyplot-api,
+whose request slots also serve the catalogue.
+
 **Waiting.** `wait(ticket)` is an async generator that yields the entry's
 `QueuePosition` at once, on every change of its position or of the queue length, and
 again every `heartbeat_s` while nothing changes, so a quiet stream stays alive behind
@@ -137,6 +145,8 @@ class Ticket:
     lane: Lane
     seq: int
     enqueued_at: float
+    network: str | None = None
+    """The salted network key of an anonymous user's entry (`AGENT_IP_MAX_RUNS`); None for every other caller."""
     state: TicketState = "waiting"
     started_at: float | None = None
     submitted_position: int = 0
@@ -175,11 +185,13 @@ class RunQueue:
         per_user: int | None = None,
         admin_per_user: int | None = None,
         start_gap_s: float = 0.0,
+        per_network: int | None = None,
+        public_waiting: int | None = None,
     ) -> None:
         if concurrency < 1 or per_minute < 1 or max_wait_s <= 0 or window_s <= 0:
             raise ValueError("concurrency, rate, maximum wait and window must be positive")
-        if any(cap is not None and cap < 1 for cap in (per_user, admin_per_user)):
-            raise ValueError("the per-user cap must be positive")
+        if any(cap is not None and cap < 1 for cap in (per_user, admin_per_user, per_network, public_waiting)):
+            raise ValueError("the per-user, per-network and public caps must be positive")
         if start_gap_s < 0:
             raise ValueError("the start gap must not be negative")
         self.concurrency = concurrency
@@ -194,6 +206,12 @@ class RunQueue:
         self.start_gap_s = start_gap_s
         """The least seconds between two starts, every lane together (`60 / AGENT_RUNS_PER_MINUTE` from the
         settings); 0 leaves only the window."""
+        self.per_network = per_network
+        """Entries the anonymous users of one network may hold together, waiting and running (`AGENT_IP_MAX_RUNS`);
+        None sets no cap."""
+        self.public_waiting = public_waiting
+        """Waiting entries the `normal` lane may hold (`AGENT_PUBLIC_QUEUE_MAX_WAITING`); None leaves only
+        `capacity`."""
         self._clock = clock
         self._waiting: list[Ticket] = []
         self._running: list[Ticket] = []
@@ -211,6 +229,8 @@ class RunQueue:
             per_user=settings.user_max_runs,
             admin_per_user=settings.admin_user_max_runs,
             start_gap_s=RATE_WINDOW_S / settings.runs_per_minute,
+            per_network=settings.ip_max_runs,
+            public_waiting=settings.public_queue_max_waiting,
         )
 
     def now(self) -> float:
@@ -238,21 +258,38 @@ class RunQueue:
         """The user's entries in the queue, waiting and running, in every session."""
         return sum(1 for entry in (*self._waiting, *self._running) if entry.user == user)
 
-    def submit(self, user: str, session_id: str, lane: Lane = "normal") -> Ticket:
+    def network_entries(self, network: str) -> int:
+        """The entries of every anonymous user of the network, waiting and running."""
+        return sum(1 for entry in (*self._waiting, *self._running) if entry.network == network)
+
+    @property
+    def public_waiting_count(self) -> int:
+        """Waiting entries in the `normal` lane: the public tier's open streams that wait for a start."""
+        return sum(1 for entry in self._waiting if entry.lane == "normal")
+
+    def submit(self, user: str, session_id: str, lane: Lane = "normal", network: str | None = None) -> Ticket:
         """Queue a run, or start it at once.
 
-        Raises `QueueUserLimit` when the user already holds their lane's cap of entries (checked first), and
-        `QueueFull` when the run would wait past the maximum.
+        Raises `QueueUserLimit` when the user already holds their lane's cap of entries (checked first), or their
+        network its `per_network` cap, and `QueueFull` when the run would wait past the maximum, or would be one
+        waiting `normal` entry more than `public_waiting`.
         """
         now = self._clock()
         self._pump(now)  # an entry that expired just now no longer counts against its user
         cap = self.user_cap(lane)
         if cap is not None and self.user_entries(user) >= cap:
             raise QueueUserLimit(f"the user already holds {cap} entries")
-        ticket = Ticket(user=user, session_id=session_id, lane=lane, seq=next(self._seq), enqueued_at=now)
+        if network is not None and self.per_network is not None and self.network_entries(network) >= self.per_network:
+            raise QueueUserLimit(f"the network already holds {self.per_network} entries")
+        ticket = Ticket(
+            user=user, session_id=session_id, lane=lane, seq=next(self._seq), enqueued_at=now, network=network
+        )
         position = 1 + sum(1 for other in self._waiting if other.order < ticket.order)
         if position > self.capacity and not (position == 1 and self._can_start(now)):
             raise QueueFull(f"position {position} is past the queue's capacity of {self.capacity}")
+        # Whenever a `normal` entry waits, a new one waits behind it, so this never refuses one that could start.
+        if lane == "normal" and self.public_waiting is not None and self.public_waiting_count >= self.public_waiting:
+            raise QueueFull(f"the public lane already holds {self.public_waiting} waiting entries")
         self._waiting.append(ticket)
         self._waiting.sort(key=lambda entry: entry.order)
         self._wake(self._waiting)

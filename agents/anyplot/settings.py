@@ -41,6 +41,10 @@ another provider, model or location.
 | `AGENT_QUEUE_MAX_WAIT_S` | `600` | Longest wait in the run queue; it also sizes the queue (`AGENT_RUNS_PER_MINUTE` x this / 60 entries, 60 at the defaults) |
 | `AGENT_USER_MAX_RUNS` | `2` | Sandbox runs one public user may have queued or running at the same time, across all their sessions (browser windows; 3 before 2026-11-01); one more ends its turn with `error{code:"run_limit"}`. Everything else in a session (chat turns, pastes, data steps, the theme toggle, file conversions) runs at once, whatever the user's other sessions do |
 | `AGENT_ADMIN_USER_MAX_RUNS` | `5` | The same for an admin (`X-Anyplot-Tier: admin` from an allowed caller), whose runs share the concurrency and the rate with everyone's; `GET /v1/status` reports it to an admin as `user_max_runs`, which the fan-out keeps to |
+| `AGENT_IP_MAX_RUNS` | `4` | The same for the anonymous users of one network (an IPv4 address or an IPv6 /64, `X-Anyplot-Network` from the public BFF), together; one more ends its turn with `error{code:"run_limit"}` |
+| `AGENT_IP_MAX_SESSIONS` | `8` | Live sessions the anonymous users of one network may hold at once; one more is `429 session_limit` |
+| `AGENT_IP_DATASET_BYTES` | `67108864` | Bytes of the dataset store (64 MiB of its 256 MiB) the sessions of one network may hold; past it a paste is refused like a full store |
+| `AGENT_PUBLIC_QUEUE_MAX_WAITING` | `10` | Waiting entries the public lane may hold in the run queue; one more ends its turn with `error{code:"capacity"}`, so open public streams keep to a share of anyplot-api's request slots |
 | `AGENT_USER_MESSAGES_PER_MINUTE` | `10` | Chat turns (typed messages and actions) per user within any 60 seconds; more get the `rate_limited` refusal before the scope judge runs. An admin is exempt |
 | `AGENT_USER_MESSAGES_PER_DAY` | `200` | Chat turns per user and UTC day; more get the `daily_limit` refusal before the scope judge runs. An admin is exempt |
 | `AGENT_SESSION_REFUSALS` | `3` | Scope-judge refusals (`out_of_scope` or `attack`, not `needs_data`, and `other_library` only with `AGENT_OTHER_LIBRARY_COUNTS`) after which the session is closed: the last of them and every later turn, and every paste, get the `session_closed` refusal |
@@ -61,6 +65,8 @@ another provider, model or location.
 | `AGENT_REQUEST_TOKEN_BUDGET` | `800000` | Cost-weighted tokens per request, in input-token equivalents: an uncached input token counts 1, a cache read 0.1, a cache write 1.25, an output token 5 (`plugins/ledger.BUDGET_WEIGHTS`, the list-price ratios) |
 | `AGENT_DAILY_TOKEN_BUDGET` | `10000000` | Cost-weighted tokens per user and day, weighted the same way: about $1 at Claude Haiku 5.5's $0.10 per million input-token equivalents (8,000,000 before 2026-11-01). An admin is exempt |
 | `AGENT_DAILY_PIPELINE_RUNS` | `50` | Pipeline runs per user and day (40 before 2026-11-01). An admin is exempt |
+| `AGENT_IP_DAILY_TOKEN_BUDGET` | `20000000` | Cost-weighted tokens per network and day, booked by its anonymous users (twice the per-user budget, for shared networks) |
+| `AGENT_IP_DAILY_PIPELINE_RUNS` | `100` | Pipeline runs per network and day, counted the same way |
 | `AGENT_GLOBAL_DAILY_TOKEN_BUDGET` | `100000000` | Cost-weighted tokens per day across all users, admins included: about $10, the runaway guard of the whole service (24,000,000 before 2026-11-01); reaching it pauses the service |
 | `AGENT_RENDER_TIMEOUT_S` | `60` | Seconds per render, host-enforced |
 | `AGENT_DATA_CODE` | `true` | Whether the root has `run_data_code`: a data-generating snippet (Python, JavaScript, R, a formula) translated to Python, validated and run in the renderer's sandbox |
@@ -352,6 +358,30 @@ class AgentSettings(BaseSettings):
     concurrency and the rate with everyone's; `GET /v1/status` reports this cap to an admin as `user_max_runs`, and
     the fan-out starts at most that many plots at once."""
 
+    ip_max_runs: PositiveInt = 4
+    """Sandbox runs the anonymous users of one network (an IPv4 address, or an IPv6 /64) may have in the run queue at
+    the same time, waiting and running together (`AGENT_IP_MAX_RUNS`); one more ends its turn with
+    `error{code:"run_limit"}`. Twice `AGENT_USER_MAX_RUNS` for shared networks: a tab id costs nothing to mint, so this
+    is what bounds one machine (launch package of 2026-11-02)."""
+
+    ip_max_sessions: PositiveInt = 8
+    """Live sessions the anonymous users of one network may hold at once (`AGENT_IP_MAX_SESSIONS`); one more is
+    `429 session_limit` at `POST /v1/sessions`. A session lives until its page deletes it or the idle sweep
+    (`AGENT_SESSION_IDLE_S`) drops it, so without this one machine minting tab ids could fill the instance's memory
+    (Copilot and Fable reviews of the launch package, 2026-11-02)."""
+
+    ip_dataset_bytes: PositiveInt = 64 * 1024 * 1024
+    """The bytes of the dataset store (`DatasetStore`, 256 MiB in all) the sessions of one network may hold
+    (`AGENT_IP_DATASET_BYTES`, 64 MiB): past it a paste or a data change is refused like a full store, so one machine
+    cannot fill the store every user's data shares. A quarter of the store, about eight sessions with a 1 MB paste and
+    its five undo versions each."""
+
+    public_queue_max_waiting: PositiveInt = 10
+    """Waiting entries the public lane (`normal`) may hold in the run queue (`AGENT_PUBLIC_QUEUE_MAX_WAITING`); one
+    more ends its turn with `error{code:"capacity"}`. Every waiting entry holds a chat stream open through anyplot-api,
+    whose 40 request slots also serve the catalogue, so the public lane gets 10 of the queue's 60 places; the admin
+    lane keeps the rest (launch package of 2026-11-02)."""
+
     user_messages_per_minute: PositiveInt = 10
     """Chat turns per user within any 60 seconds (`AGENT_USER_MESSAGES_PER_MINUTE`), typed messages and actions
     alike, counted in the usage book. Checked before the scope judge, so a flood costs no model call: since chat turns
@@ -488,6 +518,16 @@ class AgentSettings(BaseSettings):
     daily_pipeline_runs: PositiveInt = 50
     """Pipeline runs per user and day (`AGENT_DAILY_PIPELINE_RUNS`; 50 since 2026-11-01, 40 before); an admin is
     exempt."""
+
+    ip_daily_token_budget: PositiveInt = 20_000_000
+    """Cost-weighted tokens per network and day (`AGENT_IP_DAILY_TOKEN_BUDGET`): what every anonymous user of one IPv4
+    address or IPv6 /64 booked while they came from it, twice `AGENT_DAILY_TOKEN_BUDGET` for shared networks. Without
+    it, one machine that mints a new tab id per request could spend the whole global budget and pause the chat for
+    everyone (launch package of 2026-11-02)."""
+
+    ip_daily_pipeline_runs: PositiveInt = 100
+    """Pipeline runs per network and day (`AGENT_IP_DAILY_PIPELINE_RUNS`), twice `AGENT_DAILY_PIPELINE_RUNS`, counted
+    like `ip_daily_token_budget`."""
 
     global_daily_token_budget: PositiveInt = 100_000_000
     """Cost-weighted tokens per day across all users (`AGENT_GLOBAL_DAILY_TOKEN_BUDGET`), admins included: about $10,

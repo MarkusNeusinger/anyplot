@@ -174,7 +174,9 @@ CREATE TABLE feedback
     user_agent  VARCHAR(500),
     viewport    VARCHAR(20),
     session_id  VARCHAR(64),
-    ip_hash     VARCHAR(64),                -- SHA-256 of the client IP, for the rate limit
+    ip_hash     VARCHAR(64),                -- "hmac:" + a per-process salted HMAC of the client IP, for the rate limit;
+                                            -- cleared once its 10-minute window has passed (rows from before
+                                            -- 2026-11-02 still hold an unsalted SHA-256 until a migration clears them)
     status      VARCHAR(20) NOT NULL,       -- new, in_progress, done, wont_solve
     created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
 
@@ -195,7 +197,8 @@ CREATE TABLE agent_feedback
     manifest_schema INTEGER NOT NULL,           -- the manifest's schema (1)
     created_at      TIMESTAMP NOT NULL,         -- UTC, from the manifest
     case_uri        VARCHAR(255) NOT NULL,      -- gs://anyplot-agent-cases/cases/<id>/
-    user_hash       VARCHAR(20) NOT NULL,       -- the HMAC user id the agents service sees
+    user_hash       VARCHAR(20) NOT NULL,       -- an admin's HMAC user id, or "pub_" + a per-process salted hash
+                                                -- of a public caller's tab id
     session_hash    VARCHAR(16) NOT NULL,       -- first 16 hex digits of the session id's SHA-256
     spec_id         VARCHAR(100),
     library_id      VARCHAR(50),

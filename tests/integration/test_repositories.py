@@ -451,6 +451,27 @@ class TestFeedbackRepository:
         assert await repo.count_recent_by_ip("aaa", since) == 3
         assert await repo.count_recent_by_ip("aaa", since, messages_only=True) == 1
 
+    async def test_clear_ip_hashes_clears_only_the_salted_ones_past_the_window(self, test_session):
+        """The router's salted hashes outlive no window; the unsalted ones of older rows are left for a migration."""
+        from datetime import datetime, timedelta, timezone
+
+        repo = FeedbackRepository(test_session)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        old_salted = await repo.create(
+            {"message": "a", "ip_hash": "hmac:aaa", "created_at": now - timedelta(minutes=11)}
+        )
+        new_salted = await repo.create({"message": "b", "ip_hash": "hmac:bbb", "created_at": now})
+        legacy = await repo.create({"message": "c", "ip_hash": "f" * 64, "created_at": now - timedelta(days=30)})
+        lookalike = await repo.create({"message": "d", "ip_hash": "hmacXccc", "created_at": now - timedelta(days=1)})
+
+        cleared = await repo.clear_ip_hashes("hmac:", now - timedelta(minutes=10))
+
+        assert cleared == 1
+        for row in (old_salted, new_salted, legacy, lookalike):
+            await test_session.refresh(row)
+        assert old_salted.ip_hash is None
+        assert (new_salted.ip_hash, legacy.ip_hash, lookalike.ip_hash) == ("hmac:bbb", "f" * 64, "hmacXccc")
+
     async def test_has_plot_vote(self, test_session):
         """A session's earlier 👍/👎 on the same implementation is found; others are not."""
         repo = FeedbackRepository(test_session)

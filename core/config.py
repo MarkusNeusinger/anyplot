@@ -269,6 +269,24 @@ class Settings(BaseSettings):
     `agent_service_url` or `agent_user_id_key` is unset — so a deploy that
     carries the router but not its configuration never breaks."""
 
+    agent_public_enabled: bool = False
+    """The public door of the agent chat (`/agent/*`, api/routers/agent_public.py).
+    Off by default, and every public route answers 404 while it is off. It opens
+    only on top of `agent_enabled` and its configuration, which stays the master
+    switch; closing it leaves the admin lane under /debug/agent/* untouched."""
+
+    agent_public_max_streams: int = 20
+    """Public chat turns (SSE streams) one anyplot-api instance relays at once;
+    one more answers `503 capacity` before it reaches the agents service. Half
+    of the instance's 40 request slots (`--concurrency` in api/cloudbuild.yaml),
+    so the catalogue keeps the other half however busy the chat gets."""
+
+    agent_public_feedback_per_hour: int = 20
+    """Feedback cases one network (an IPv4 address or an IPv6 /64) may store
+    through the public lane per hour and anyplot-api instance; one more answers
+    `429 rate_limited`. Each case writes the session to the private bucket and a
+    row to `agent_feedback`, so a looping page must not fill either."""
+
     agent_service_url: str | None = None
     """Base URL of the private anyplot-agents Cloud Run service, without the
     `/v1` suffix (`http://localhost:8001` locally). Also the audience of the ID

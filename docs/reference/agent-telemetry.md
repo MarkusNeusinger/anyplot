@@ -70,10 +70,16 @@ line by its timestamp and its kind of request (a paste, a turn, a beacon). After
 is why the lines stay pseudonymous rather than anonymous, and it holds for every field, not only the ones added
 later.
 
+For the public lane (since 2026-11-02) the API's request log no longer holds the session id: the page sends it
+in the `X-Anyplot-Session` header, and anyplot-api's log lines leave it out. The agents service's request log
+still holds it in its URLs, next to anyplot-api's address rather than the client's. The join by time stays
+possible there for the same 30 days.
+
 ### No user id
 
 The attribution lines (one per plugin hook, for debugging) carry the HMAC user id for the rate limits and
-the security review. The telemetry lines never do: they come from a different logger, and the sink filter
+the security review; for a public caller that id is `pub_` and 16 hex digits of the browser tab's random id,
+salted with the same per-process salt under its own domain, so it cannot be recomputed once the process ends. The telemetry lines never do: they come from a different logger, and the sink filter
 takes only `log_type="agent_telemetry"`, so no attribution line reaches the telemetry bucket.
 
 ### Outcome beacon
