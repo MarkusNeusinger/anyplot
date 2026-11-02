@@ -191,6 +191,7 @@ import {
   type Eligibility,
   type FeedbackReaction,
   isTranscribed,
+  laneOf,
   type LanguageSource,
   type LongSuggestion,
   MAX_DATASET_BYTES,
@@ -1381,8 +1382,13 @@ export function useAgentSession({
           safeDispatch({ type: 'unauthorized' });
         } else if (failure.code === 'not_eligible') {
           safeDispatch({ type: 'open_failed', phase: 'ineligible', failure });
-        } else if (failure.code === 'unreachable' && reloadOnceForAccess()) {
-          // An expired Access session: the reload lets Access sign the admin in.
+        } else if (
+          failure.code === 'unreachable' &&
+          laneOf(token) === 'admin' &&
+          reloadOnceForAccess()
+        ) {
+          // An expired Access session: the reload lets Access sign the admin in. The public
+          // lane has no Access in front of it, so there a reload would change nothing.
         } else {
           safeDispatch({ type: 'open_failed', phase: 'error', failure });
         }

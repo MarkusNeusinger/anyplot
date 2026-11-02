@@ -131,9 +131,10 @@ describe('ChatThread', () => {
     });
     const alert = screen.getByRole('alert');
     expect(alert).toHaveTextContent('error · run_limit · ref r-lim');
-    // The cap is the caller's own (3, or 5 for an admin), so the sentence names none.
+    // The cap is the caller's own (2, or 5 for an admin), or on the public lane the network's,
+    // so the sentence names no number.
     expect(alert).toHaveTextContent(
-      'your plots and data runs in other windows already fill your share; wait until one finishes, then try again'
+      'your plots and data runs in other windows, or others on your network, already fill the share; wait until one finishes, then try again'
     );
   });
 

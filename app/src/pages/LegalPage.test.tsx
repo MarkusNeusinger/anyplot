@@ -64,8 +64,15 @@ describe('LegalPage', () => {
   it('gives each store its own retention, and no store a borrowed one', () => {
     render(<LegalPage />);
 
-    // Cloud Logging has the 30 days; the feedback table has no timer at all.
-    expect(screen.getByText(/retained for 30 days/)).toBeInTheDocument();
+    // Cloud Logging has the 30 days, in the EU since 2026-11-02; the feedback table has no timer at all.
+    expect(screen.getByText(/kept for 30 days in/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/in the Netherlands \(europe-west4\), for security and debugging purposes/)
+    ).toBeInTheDocument();
+    // The move happened mid-day, so the cut is the move itself, not the date.
+    expect(
+      screen.getByText(/written before the move on 2 November 2026 stay in Google.s global/)
+    ).toBeInTheDocument();
     expect(screen.getByText(/nothing deletes them on a timer/)).toBeInTheDocument();
   });
 
@@ -81,8 +88,11 @@ describe('LegalPage', () => {
     // quietly drop the two identifiers a reader would care about most.
     expect(screen.getByText(/your window size/)).toBeInTheDocument();
     expect(
-      screen.getByText(/a random id that ties your own submissions together/)
+      screen.getByText(/a random id that ties your own submissions\s+together/)
     ).toBeInTheDocument();
+    // The feedback's IP hash is salted and short-lived, and the older rows are named, not hidden.
+    expect(screen.getByText(/clears it after ten minutes/)).toBeInTheDocument();
+    expect(screen.getByText(/older, unsalted hash until it is cleared/)).toBeInTheDocument();
     // Plausible's real property is cookieless and identifier-free, not that
     // the script is ours — it is Plausible's, only served from our domain.
     expect(screen.getByText(/the script is theirs/)).toBeInTheDocument();
@@ -90,14 +100,17 @@ describe('LegalPage', () => {
   });
 
   // The data assistant's section, each claim pinned with the qualifier that
-  // makes it true: a preview only admins reach, training excluded only under
-  // Vertex AI's terms, telemetry pseudonymous (not anonymous), the data file
-  // ticked by default, and a case row that has no timer while its files do.
-  it('describes the data assistant preview without overclaiming', () => {
+  // makes it true: experimental and open to everyone but pausable, training
+  // excluded only under Vertex AI's terms, telemetry pseudonymous (not
+  // anonymous), the data file unticked by default, and a case row that has no
+  // timer while its files do.
+  it('describes the experimental data assistant without overclaiming', () => {
     render(<LegalPage />);
 
     expect(
-      screen.getByText(/only the operator and the\s+site.s admins can open/)
+      screen.getByText(
+        /open to everyone as an\s+experimental feature, and the operator may pause it/
+      )
     ).toBeInTheDocument();
     expect(
       screen.getByText(/served through Google Cloud Vertex AI in the\s+EU/)
@@ -117,17 +130,46 @@ describe('LegalPage', () => {
       )
     ).toBeInTheDocument();
     expect(screen.getByText(/up to 180 days/)).toBeInTheDocument();
+    // A public user's id is a salted random tab id that dies with the instance; only admins get the HMAC.
+    expect(
+      screen.getByText(/salted with a value that lives only as\s+long as the server instance/)
+    ).toBeInTheDocument();
     expect(screen.getByText(/keyed hash \(HMAC\)/)).toBeInTheDocument();
-    // Unticking the box drops data.csv only; the profile sample stays.
-    expect(screen.getByText(/unticking leaves out that file only/)).toBeInTheDocument();
+    expect(screen.getByText(/salted, in memory only, never written down/)).toBeInTheDocument();
+    // The box starts unticked, and leaving it so drops data.csv only; the profile sample stays.
+    expect(screen.getByText(/it starts\s+unticked/)).toBeInTheDocument();
+    expect(screen.getByText(/leaving it unticked leaves out that file only/)).toBeInTheDocument();
     expect(screen.getByText(/first 5 rows as a sample/)).toBeInTheDocument();
     // The renderer's answer cache has no idle timer of its own.
     expect(screen.getByText(/keeps its last 16 results/)).toBeInTheDocument();
     expect(screen.getByText(/nothing deletes it on a timer/)).toBeInTheDocument();
     expect(screen.getByText(/Art\. 6\(1\)\(b\) GDPR/)).toBeInTheDocument();
     expect(screen.getByText(/Art\. 6\(1\)\(f\) GDPR/)).toBeInTheDocument();
-    // Scope: the assistant's processing touches only the people who use it.
-    expect(screen.getByText('only if you use the data assistant (preview)')).toBeInTheDocument();
+    // A feedback case rests on consent, given at the send and withdrawable.
+    expect(
+      screen.getByText(/a feedback case rests on your consent \(Art\. 6\(1\)\(a\)\s+GDPR\)/)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/which you can withdraw at any time by asking/)).toBeInTheDocument();
+    // The two 30-day logs could only be joined by timestamp; the salted ids map to nothing else.
+    expect(screen.getByText(/could only be lined up by their\s+timestamps/)).toBeInTheDocument();
+    // "No cookies" holds for visitors; admins get Cloudflare Access's login cookie.
+    expect(screen.getByText(/no cookies for visitors/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Cloudflare Access, which sets its own login cookie/)
+    ).toBeInTheDocument();
+    // Scope: the assistant's processing touches only the people who use it; the chat links here.
+    const heading = screen.getByText('only if you use the data assistant (experimental)');
+    expect(heading).toHaveAttribute('id', 'assistant');
+    // Use, warranty, the code's licence with the Highcharts exception, and the transfers.
+    expect(screen.getByText(/comes with no\s+warranty/)).toBeInTheDocument();
+    expect(screen.getByText(/nobody checks them by hand/)).toBeInTheDocument();
+    expect(screen.getByText(/yours to\s+use, as is/)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Highcharts is free for non-commercial use, and a\s+commercial use needs a licence from Highsoft/
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText(/transfers\s+outside Switzerland and the EU/)).toBeInTheDocument();
     expect(screen.getByText(/if you\s+only browse the catalogue, none of it/)).toBeInTheDocument();
     expect(
       screen.getByText(/Claude models by Anthropic \(EU\) — only when you use the\s+data assistant/)

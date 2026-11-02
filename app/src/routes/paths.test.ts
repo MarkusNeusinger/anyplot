@@ -101,6 +101,7 @@ describe('paths registry', () => {
       paths.mcp,
       paths.stats,
       paths.debug,
+      paths.agent,
     ];
     for (const route of staticRoutes) {
       expect(RESERVED_TOP_LEVEL.has(route.slice(1))).toBe(true);

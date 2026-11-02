@@ -106,6 +106,17 @@ const router = createBrowserRouter([
                   import('src/pages/AgentChatPage').then(m => ({ Component: m.AgentChatPage })),
               }
             : { path: 'debug/agent', element: <NotFoundPage /> },
+          // The public agent chat, the same page on the public lane: it opens while
+          // the API's public lane is open (`GET /agent/lane`) and says so otherwise.
+          import.meta.env.VITE_ENABLE_AGENT_CHAT === 'true'
+            ? {
+                path: 'agent',
+                lazy: () =>
+                  import('src/pages/AgentChatPage').then(m => ({
+                    Component: m.PublicAgentChatPage,
+                  })),
+              }
+            : { path: 'agent', element: <NotFoundPage /> },
           { path: ':specId', lazy: lazySpec },
           { path: ':specId/:language', element: <SpecLanguageRedirect /> },
           { path: ':specId/:language/:library', lazy: lazySpec },

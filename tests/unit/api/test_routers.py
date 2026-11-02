@@ -1181,6 +1181,28 @@ class TestSeoProxyRouter:
         # that figure silently spreads over the store it is not true for.
         assert "kept 30 days" in response.text
         assert "until it is deleted by hand" in response.text
+        # The server logs sit in the EU since 2026-11-02 (the `_Default` sink's new bucket).
+        assert "kept 30 days in Google Cloud Logging in the Netherlands (europe-west4)" in response.text
+        assert "written before the move on 2 November 2026" in response.text
+
+    def test_seo_legal_mirrors_the_data_assistant_section(self, client: TestClient) -> None:
+        """The crawler body carries the assistant's facts the human page states (LegalPage.tsx `#assistant`)."""
+        response = client.get("/seo-proxy/legal")
+        assert response.status_code == 200
+        for fact in (
+            'id="assistant"',
+            "experimental feature, and the operator may pause it",
+            "Google Cloud Vertex AI in the EU",
+            "nobody checks them by hand",
+            "salted with a value that lives as long as the server instance",
+            "it starts unticked",
+            "180 days",
+            "a licence from Highsoft",
+            "transfers outside Switzerland and the EU",
+            "cleared after ten minutes",
+            "consent (Art. 6(1)(a) GDPR)",
+        ):
+            assert fact in response.text, fact
 
     def test_seo_mcp_tells_agents_how_to_connect(self, client: TestClient) -> None:
         """The /mcp page's audience is AI agents — the bot body must carry the

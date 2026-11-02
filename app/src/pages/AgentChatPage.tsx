@@ -1,7 +1,9 @@
 /**
- * "Use with my data": the admin-only agent chat at `/debug/agent?spec=&library=&language=`,
- * plus `&all=1` while the library menu's `all` is pressed. The query follows the
- * session: a library switch writes `library` and its `language`.
+ * "Use with my data": the agent chat, for admins at `/debug/agent?spec=&library=&language=`
+ * (plus `&all=1` while the library menu's `all` is pressed) and for everyone at
+ * `/agent?spec=&library=&language=` while the public lane is open (`PublicAgentChatPage`,
+ * experimental). The query follows the session: a library switch writes `library` and its
+ * `language`.
  *
  * One column, chat first, two steps, data first. The data card is the first
  * turn of the thread: paste data (or ask in the chat for a curve, whose table
@@ -82,10 +84,15 @@
  * Gates, outermost first:
  * 1. `CONFIG.features.agentChat` (build-time `VITE_ENABLE_AGENT_CHAT`): off, the
  *    route renders the 404 page and this chunk is not even built.
- * 2. The admin hint (`src/utils/adminAuth.ts`), or local development: without
- *    it the page asks for a sign-in on `/debug` first. The BFF's admin gate is
- *    the real check; a 401 or 403 from it clears the hint and shows the same
- *    notice.
+ * 2. The admin lane: the admin hint (`src/utils/adminAuth.ts`), or local
+ *    development; without it the page asks for a sign-in on `/debug` first. The
+ *    BFF's admin gate is the real check; a 401 or 403 from it clears the hint
+ *    and shows the same notice.
+ *    The public lane: the API's `GET /agent/lane` (`useAgentLaneOpen`); closed,
+ *    the page says so. It talks to `/agent/*` with `PUBLIC_LANE` in place of the
+ *    admin token, shows the experimental notice above the first input, offers
+ *    no `all`, and leaves the data boxes of feedback and `.save()` unticked
+ *    (`sections/agent-chat/lane.ts`).
  *
  * Design: docs/concepts/agent-network.md ("Frontend", "Request flow").
  */
@@ -99,6 +106,7 @@ import Box from '@mui/material/Box';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { LIB_TO_LANG, LIBRARIES } from 'src/constants';
 import { CONFIG } from 'src/global-config';
+import { useAgentLaneOpen } from 'src/hooks/useAgentLaneOpen';
 import {
   type BindingMap,
   carryDecisions,
@@ -110,7 +118,14 @@ import {
 import { useAnalytics } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { useLeaveWarning } from 'src/hooks/useLeaveWarning';
-import { agentApi, browserLocale, DEFAULT_AGENT_LIBRARIES, MAX_MESSAGE_CHARS } from 'src/lib/agent';
+import {
+  agentApi,
+  type AgentLane,
+  browserLocale,
+  DEFAULT_AGENT_LIBRARIES,
+  MAX_MESSAGE_CHARS,
+  PUBLIC_LANE,
+} from 'src/lib/agent';
 import { apiGet, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
 import { paths, specPath } from 'src/routes/paths';
@@ -119,6 +134,7 @@ import { ChatThread } from 'src/sections/agent-chat/ChatThread';
 import { DATA_SUMMARY_ID, DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { FanOut } from 'src/sections/agent-chat/FanOut';
 import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
+import { AgentLaneContext } from 'src/sections/agent-chat/lane';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
 import { LibraryChip } from 'src/sections/agent-chat/LibraryChip';
 import {
@@ -148,7 +164,7 @@ import { colors, fontSize, proseLinkStyle, typography } from 'src/theme';
 import { readAdminHint, readAdminToken, setAdminHint } from 'src/utils/adminAuth';
 
 const SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
-const OPEN_SOURCES = new Set(['plot_page']);
+const OPEN_SOURCES = new Set(['plot_page', 'landing']);
 /** The chat column's width: a thread to read, and a plot that fits the screen with its composer. */
 const COLUMN_MAX_WIDTH = 960;
 /**
@@ -179,9 +195,18 @@ const CREATE_GATE: Record<CreateGate, { text: string; action: string }> = {
   },
 };
 
+/**
+ * The page is a tool on one catalogue pair, never a page to index: every branch (a notice, the door
+ * still being asked, the session opening or failing, the chat) carries `noindex, nofollow`.
+ */
+function NoIndex() {
+  return <meta name="robots" content="noindex, nofollow" />;
+}
+
 function Notice({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <Box sx={{ py: 4, maxWidth: 560, mx: 'auto' }}>
+      <NoIndex />
       <SectionHeader prompt="❯" title={<em>{title}</em>} />
       <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>{children}</Box>
     </Box>
@@ -200,10 +225,77 @@ function AdminRequired() {
   );
 }
 
-export function AgentChatPage() {
+/**
+ * The public lane's notice above the first input: that this is an AI and which one, that it
+ * can be wrong, what not to paste, what is stored, and the limits (also the EU AI Act's
+ * Art. 50 duty to say that a person talks to an AI). The owner reads every user-facing text:
+ * keep it in the PR's "Texts to read".
+ */
+export const EXPERIMENTAL_NOTICE =
+  'an AI does the work here: Claude by Anthropic, through Google Cloud Vertex AI in the EU, reads what you paste and writes the plot and its code. results can be wrong, and nobody checks them by hand. do not paste data you may not share. nothing is stored unless you send feedback. daily limits apply.';
+
+/** The chat's Highcharts note, shown while the session plots in Highcharts (the legal page says the same). */
+export const HIGHCHARTS_NOTE =
+  'highcharts is free for non-commercial use; a commercial use needs a licence from Highsoft.';
+
+function ExperimentalNotice() {
+  return (
+    <Box
+      role="note"
+      data-testid="experimental-notice"
+      sx={{
+        ...labelSx,
+        color: 'var(--ink)',
+        borderLeft: `3px solid ${colors.primary}`,
+        pl: 1.5,
+        mb: 2,
+        lineHeight: 1.6,
+      }}
+    >
+      # experimental · {EXPERIMENTAL_NOTICE}{' '}
+      {/* A new tab: leaving the page would end the session. */}
+      <Box
+        component="a"
+        href={`${paths.legal}#assistant`}
+        target="_blank"
+        rel="noopener"
+        sx={proseLinkStyle}
+      >
+        how the assistant works
+      </Box>
+    </Box>
+  );
+}
+
+/** The public lane's page while the lane is closed (`GET /agent/lane` answered no). */
+function LaneClosed() {
+  return (
+    <Notice title="use with my data · experimental">
+      the assistant is closed right now. please try again later; the{' '}
+      <Box component={RouterLink} to={paths.plots} sx={proseLinkStyle}>
+        catalogue
+      </Box>{' '}
+      stays open.
+    </Notice>
+  );
+}
+
+/**
+ * The public chat at `/agent`: the same page on the public lane (`PUBLIC_LANE`), open to
+ * everyone while the API's public lane is (`useAgentLaneOpen`), labelled experimental, with
+ * the admin-only parts left out (the fan-out's `all`) and the data boxes unticked.
+ */
+export function PublicAgentChatPage() {
+  return <AgentChatPage lane="public" />;
+}
+
+export function AgentChatPage({ lane = 'admin' }: { lane?: AgentLane } = {}) {
   const [params, setParams] = useSearchParams();
   const { trackPageview, trackEvent } = useAnalytics();
-  const allowed = CONFIG.features.agentChat && (CONFIG.isDev || readAdminHint());
+  const laneOpen = useAgentLaneOpen();
+  const allowed =
+    CONFIG.features.agentChat &&
+    (lane === 'public' ? laneOpen === true : CONFIG.isDev || readAdminHint());
 
   const spec = params.get('spec') ?? '';
   const library = params.get('library') ?? '';
@@ -248,7 +340,7 @@ export function AgentChatPage() {
   useEffect(() => {
     if (!allowed || !valid || openTracked.current) return;
     openTracked.current = true;
-    trackPageview('/debug/agent');
+    trackPageview(lane === 'public' ? paths.agent : '/debug/agent');
     const source = params.get('source');
     trackEvent('agent_open', {
       library,
@@ -260,10 +352,12 @@ export function AgentChatPage() {
       next.delete('source');
       setParams(next, { replace: true });
     }
-  }, [allowed, valid, params, setParams, library, spec, trackEvent, trackPageview]);
+  }, [allowed, valid, params, setParams, library, spec, trackEvent, trackPageview, lane]);
 
   if (!CONFIG.features.agentChat) return <NotFoundPage />;
-  if (!allowed) return <AdminRequired />;
+  if (lane === 'public' && laneOpen === null) return <NoIndex />;
+  if (!allowed) return lane === 'public' ? <LaneClosed /> : <AdminRequired />;
+  const chatPath = lane === 'public' ? paths.publicAgentChat : paths.agentChat;
   if (!valid) {
     return (
       <Notice title="use with my data">
@@ -271,7 +365,7 @@ export function AgentChatPage() {
         library, such as{' '}
         <Box
           component={RouterLink}
-          to={paths.agentChat('scatter-basic', 'matplotlib', 'python')}
+          to={chatPath('scatter-basic', 'matplotlib', 'python')}
           sx={proseLinkStyle}
         >
           scatter-basic in matplotlib
@@ -280,18 +374,21 @@ export function AgentChatPage() {
       </Notice>
     );
   }
-  const token = readAdminToken();
+  const token = lane === 'public' ? PUBLIC_LANE : readAdminToken();
   return (
-    <AgentChat
-      key={`${spec}|${token}`}
-      specId={spec}
-      library={library}
-      language={language}
-      token={token}
-      allInUrl={allInUrl}
-      onLibraryChange={onLibraryChange}
-      onAllChange={onAllChange}
-    />
+    <AgentLaneContext.Provider value={lane}>
+      <AgentChat
+        key={`${spec}|${token}`}
+        specId={spec}
+        library={library}
+        language={language}
+        token={token}
+        lane={lane}
+        allInUrl={lane === 'admin' && allInUrl}
+        onLibraryChange={onLibraryChange}
+        onAllChange={onAllChange}
+      />
+    </AgentLaneContext.Provider>
   );
 }
 
@@ -299,7 +396,10 @@ interface AgentChatProps {
   specId: string;
   library: string;
   language: string;
+  /** The admin token, or `PUBLIC_LANE` on the public lane. */
   token: string;
+  /** The lane the page runs on: the public one offers no `all` and says it is experimental. */
+  lane: AgentLane;
   /** `&all=1` at the mount: the menu's `all` starts pressed, once the libraries are known. */
   allInUrl: boolean;
   onLibraryChange: (library: string) => void;
@@ -312,6 +412,7 @@ function AgentChat({
   library,
   language,
   token,
+  lane,
   allInUrl,
   onLibraryChange,
   onAllChange,
@@ -462,7 +563,8 @@ function AgentChat({
   const firstPlot = step2 && !hasPlot;
   // `all` in the menu only once the libraries and the limit are the server's: a snapshot of the
   // fallbacks would leave libraries out or start more runs than the server takes (`run_limit`).
-  const offerAll = listsSettled && libraries.length > 1 && !reopen;
+  // `.plot_all()` is the admin's test run: never on the public lane, whose BFF has no copy route.
+  const offerAll = lane === 'admin' && listsSettled && libraries.length > 1 && !reopen;
   const plotAll = allPressed && offerAll;
   // The chat waits only where `.plot_all()` is the action, in step 2: the fan-out takes no
   // text. Before it, with or without data, the box talks about the data as without `all`.
@@ -668,7 +770,8 @@ function AgentChat({
     if (target && !target.disabled) target.focus({ preventScroll: true });
   };
 
-  if (state.phase === 'unauthorized') return <AdminRequired />;
+  if (state.phase === 'unauthorized') return lane === 'public' ? <LaneClosed /> : <AdminRequired />;
+  const chatPath = lane === 'public' ? paths.publicAgentChat : paths.agentChat;
 
   const backHref = specPath(specId, language, state.library);
   // The composer's create action while `all` is pressed, for every library at once: the CTA
@@ -738,9 +841,7 @@ function AgentChat({
           allPressed={plotAll}
           // No session to switch: another library opens the page anew, with its own
           // session (a full navigation, like the `.adapt()` button).
-          hrefFor={
-            reopen ? lib => paths.agentChat(specId, lib, LIB_TO_LANG[lib] ?? 'python') : undefined
-          }
+          hrefFor={reopen ? lib => chatPath(specId, lib, LIB_TO_LANG[lib] ?? 'python') : undefined}
           // Not during a run (the server refuses a switch then) or while the fan-out's panel
           // is open: its sessions run on this one's data.
           disabled={!reopen && (busy || !!fanOut || state.phase !== 'ready')}
@@ -770,6 +871,7 @@ function AgentChat({
   if (state.phase === 'opening' || state.phase === 'ineligible' || state.phase === 'error') {
     return (
       <Box sx={{ py: 2, maxWidth: COLUMN_MAX_WIDTH, mx: 'auto' }}>
+        <NoIndex />
         {header}
         {state.phase === 'opening' ? (
           <Box sx={labelSx}>opening a session…</Box>
@@ -783,7 +885,9 @@ function AgentChat({
               {state.phase === 'ineligible'
                 ? 'this plot cannot be adapted in this library yet; pick another library above.'
                 : state.failure?.code === 'not_enabled'
-                  ? 'the agent chat is switched off on this server (AGENT_ENABLED).'
+                  ? lane === 'public'
+                    ? 'the assistant is closed right now. please try again later.'
+                    : 'the agent chat is switched off on this server (AGENT_ENABLED).'
                   : (ERROR_TEXT[state.failure?.code ?? ''] ?? 'the session could not be opened.')}
               {state.phase === 'error' && <ReloadHint code={state.failure?.code} />}
             </Box>
@@ -797,7 +901,7 @@ function AgentChat({
     <>
       <>
         <title>{`agent · ${specId} | anyplot.ai`}</title>
-        <meta name="robots" content="noindex, nofollow" />
+        <NoIndex />
       </>
       {/* `colorScheme` gives the native controls (scrollbars, select menus) the site theme. */}
       <Box
@@ -809,6 +913,12 @@ function AgentChat({
         }}
       >
         {header}
+        {lane === 'public' && <ExperimentalNotice />}
+        {state.library === 'highcharts' && (
+          <Box role="note" data-testid="highcharts-licence" sx={{ ...labelSx, mb: 2 }}>
+            # {HIGHCHARTS_NOTE}
+          </Box>
+        )}
         <StepHeader current={step2 ? 2 : 1} />
         <Box
           component="section"

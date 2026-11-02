@@ -1,11 +1,15 @@
 /**
- * Client for the admin-only agent chat BFF (`/debug/agent/*`, api/routers/agent.py).
+ * Client for the agent chat BFF: the admin lane (`/debug/agent/*`,
+ * api/routers/agent.py) and the public lane (`/agent/*`,
+ * api/routers/agent_public.py), which take the same requests.
  *
  * The contract is documented in docs/reference/api.md ("Agent chat"); the
- * design in docs/concepts/agent-network.md. Every call goes through
- * `fetchWithAuth` (Cloudflare Access cookie or the admin token) against the
- * debug API base, and every state-changing call carries the CSRF header
- * `X-Anyplot-Client: agent-chat/1`. Errors arrive as
+ * design in docs/concepts/agent-network.md. On the admin lane every call goes
+ * through `fetchWithAuth` (Cloudflare Access cookie or the admin token)
+ * against the debug API base; on the public lane it goes to the API base
+ * without a cookie, with the tab's anonymous id and the session id as headers
+ * (`PUBLIC_LANE`, `publicRoute`). Every state-changing call carries the CSRF
+ * header `X-Anyplot-Client: agent-chat/1`. Errors arrive as
  * `{"detail": "<code>", "ref": "<request id>"}` and become `AgentApiError`.
  */
 
@@ -960,34 +964,140 @@ const MAX_BINDING_ERRORS = 20;
 // Requests
 // ============================================================================
 
-export function agentUrl(path: string): string {
+/**
+ * Which BFF the chat talks to: the admin lane (`/debug/agent/*` behind the
+ * admin gate, `api/routers/agent.py`) or the public lane (`/agent/*`,
+ * anonymous, `api/routers/agent_public.py`). The two take the same requests;
+ * the public one takes the session id in the `X-Anyplot-Session` header
+ * instead of the path, and the page's tab id in `X-Anyplot-Anon`.
+ */
+export type AgentLane = 'admin' | 'public';
+
+/**
+ * The credential of the public lane, passed where an admin passes the admin
+ * token (`agentApi.*(token, ...)`): a call with it goes to `/agent/*` without a
+ * cookie, with the tab's anonymous id. It holds a NUL character, which no
+ * header can carry, so no admin token is ever mistaken for it and it is never
+ * sent anywhere itself.
+ */
+export const PUBLIC_LANE = '\u0000public';
+
+/** The lane a credential calls: the public one for `PUBLIC_LANE`, else the admin one. */
+export function laneOf(token: string): AgentLane {
+  return token === PUBLIC_LANE ? 'public' : 'admin';
+}
+
+/** sessionStorage key of the public lane's tab id. */
+export const ANONYMOUS_ID_KEY = 'anyplot.agentTab';
+let fallbackAnonymousId: string | null = null;
+
+function randomId(): string {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * The public lane's anonymous id: random, one per browser tab
+ * (sessionStorage), sent only to the public BFF as `X-Anyplot-Anon`. The
+ * agents service salts it with a per-process salt before it keys the
+ * per-user limits on it, so it ties nothing to a person. Where storage is
+ * unavailable it lives as long as the page.
+ */
+export function anonymousId(): string {
+  try {
+    const stored = sessionStorage.getItem(ANONYMOUS_ID_KEY);
+    if (stored && /^[A-Za-z0-9_-]{22,64}$/.test(stored)) return stored;
+    const fresh = randomId();
+    sessionStorage.setItem(ANONYMOUS_ID_KEY, fresh);
+    return fresh;
+  } catch {
+    fallbackAnonymousId ??= randomId();
+    return fallbackAnonymousId;
+  }
+}
+
+const SESSION_ROUTE = /^\/sessions\/([^/?]+)(.*)$/;
+
+/**
+ * A request path of the admin lane as the public lane takes it: the session
+ * id leaves the path for the `X-Anyplot-Session` header (Cloud Run logs every
+ * URL with the client's address), so `/sessions/<sid>/dataset` becomes
+ * `/session/dataset`. Paths without a session stay as they are.
+ */
+export function publicRoute(path: string): { path: string; session: string | null } {
+  const match = SESSION_ROUTE.exec(path);
+  if (!match) return { path, session: null };
+  return { path: `/session${match[2]}`, session: decodeURIComponent(match[1]) };
+}
+
+export function agentUrl(path: string, lane: AgentLane = 'admin'): string {
+  if (lane === 'public') return `${API_URL}/agent${publicRoute(path).path}`;
   return `${DEBUG_API_URL}/debug/agent${path}`;
+}
+
+/** The public lane's request: no cookie and no admin token, the tab id and the session id as headers. */
+function publicFetch(path: string, init: RequestInit): Promise<Response> {
+  const route = publicRoute(path);
+  const headers: Record<string, string> = {
+    ...AGENT_CLIENT_HEADERS,
+    'X-Anyplot-Anon': anonymousId(),
+    ...(route.session ? { 'X-Anyplot-Session': route.session } : {}),
+    ...((init.headers as Record<string, string>) || {}),
+  };
+  if (init.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+  return fetch(agentUrl(path, 'public'), { ...init, credentials: 'omit', headers });
 }
 
 /**
  * A raw BFF call with the CSRF header; throws `AgentApiError` on a non-2xx status.
+ * `token` is the admin token, or `PUBLIC_LANE` for the public lane (`laneOf`).
  *
- * A request that gets no readable answer becomes code `unreachable`. In
- * production that is usually an expired Cloudflare Access session: the API
- * answers with a cross-origin redirect to the Access login, which `fetch`
- * cannot follow and reports as a `TypeError`, exactly like a dropped
- * connection. The page offers a reload, which lets Access sign the admin in
- * again (`reloadOnceForAccess`). Any answer clears that reload's one-shot guard.
+ * A request that gets no readable answer becomes code `unreachable`. On the
+ * admin lane in production that is usually an expired Cloudflare Access
+ * session: the API answers with a cross-origin redirect to the Access login,
+ * which `fetch` cannot follow and reports as a `TypeError`, exactly like a
+ * dropped connection. The page offers a reload, which lets Access sign the
+ * admin in again (`reloadOnceForAccess`). Any answer clears that reload's
+ * one-shot guard.
  */
 export async function agentFetch(path: string, token: string, init: RequestInit = {}) {
+  const lane = laneOf(token);
   let response: Response;
   try {
-    response = await fetchWithAuth(agentUrl(path), token, {
-      ...init,
-      headers: { ...AGENT_CLIENT_HEADERS, ...((init.headers as Record<string, string>) || {}) },
-    });
+    response =
+      lane === 'public'
+        ? await publicFetch(path, init)
+        : await fetchWithAuth(agentUrl(path, 'admin'), token, {
+            ...init,
+            headers: {
+              ...AGENT_CLIENT_HEADERS,
+              ...((init.headers as Record<string, string>) || {}),
+            },
+          });
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') throw err;
     throw new AgentApiError(0, 'unreachable');
   }
-  clearAccessReloadGuard();
+  if (lane === 'admin') clearAccessReloadGuard();
   if (!response.ok) throw await toAgentApiError(response);
   return response;
+}
+
+/**
+ * Whether the public lane is open (`GET /agent/lane`): one plain request with
+ * no identity, which the API lets browsers cache for a minute. Any failure
+ * reads as closed.
+ */
+export async function publicLaneOpen(signal?: AbortSignal): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_URL}/agent/lane`, { credentials: 'omit', signal });
+    if (!response.ok) return false;
+    const body: unknown = await response.json();
+    return isRecord(body) && body.open === true;
+  } catch {
+    return false;
+  }
 }
 
 async function agentJson<T>(path: string, token: string, init: RequestInit = {}): Promise<T> {

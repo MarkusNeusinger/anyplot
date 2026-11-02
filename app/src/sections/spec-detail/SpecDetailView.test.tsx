@@ -126,10 +126,12 @@ describe('SpecDetailView', () => {
     const onUseWithMyData = vi.fn();
     const user = userEvent.setup();
     const { rerender } = render(<SpecDetailView {...defaultProps} />);
-    expect(screen.queryByRole('button', { name: 'Use with my data' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Use with my data (experimental)' })
+    ).not.toBeInTheDocument();
 
     rerender(<SpecDetailView {...defaultProps} onUseWithMyData={onUseWithMyData} />);
-    await user.click(screen.getByRole('button', { name: 'Use with my data' }));
+    await user.click(screen.getByRole('button', { name: 'Use with my data (experimental)' }));
     expect(onUseWithMyData).toHaveBeenCalledTimes(1);
   });
 
