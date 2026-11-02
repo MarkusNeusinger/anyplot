@@ -16,6 +16,7 @@ from agents.anyplot.pipeline import (
     ADAPTER_P95_S,
     EARLIER_REQUESTS_HEADING,
     FILE_NAME_HEADING,
+    LANGUAGE_REWRITE_REQUEST,
     LOW_SCORE_LINE,
     NOT_REVIEWED_LINE,
     PADDED_LINE,
@@ -30,6 +31,7 @@ from agents.anyplot.pipeline import (
     render_adapt_request,
     render_review_request,
     render_score_request,
+    rewrite_request,
     run_theme,
     ship_compare,
     shipped_candidate,
@@ -46,6 +48,7 @@ from agents.anyplot.schemas import (
     AdaptRequest,
     Binding,
     Edit,
+    PipelineArgs,
     PlotResult,
     ReviewRequest,
     Round,
@@ -353,6 +356,30 @@ def test_run_theme(
     asked: Theme | None, site: Theme | None, previous: CodeVersion | None, expected: tuple[Theme, bool]
 ) -> None:
     assert run_theme(asked, site, previous) == expected
+
+
+@pytest.mark.parametrize(
+    ("change_request", "language_changed", "expected"),
+    [
+        # User test of 2026-11-01: the user's other change stands alone; the adapter rewrites the text by itself.
+        ("Use a log scale on the y axis", True, "Use a log scale on the y axis"),
+        # A language-only change: the server writes the rewrite request, never the root.
+        ("", True, LANGUAGE_REWRITE_REQUEST),
+        ("  ", True, LANGUAGE_REWRITE_REQUEST),
+        # Without a change of language nothing is added.
+        ("", False, ""),
+        ("Use a log scale on the y axis", False, "Use a log scale on the y axis"),
+    ],
+)
+def test_the_language_rewrite_is_the_servers_and_never_replaces_the_users_change(
+    change_request: str, language_changed: bool, expected: str
+) -> None:
+    args = PipelineArgs(change_request=change_request, base="previous", theme="dark", expected_texts=["Woche"])
+
+    rewritten = rewrite_request(args, language_changed)
+
+    assert rewritten.change_request == expected
+    assert (rewritten.base, rewritten.theme, rewritten.expected_texts) == ("previous", "dark", ["Woche"])
 
 
 def test_dataset_judge_sees_every_header() -> None:

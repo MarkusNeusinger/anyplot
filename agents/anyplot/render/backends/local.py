@@ -409,7 +409,13 @@ class LocalDockerBackend:
             (run_dir / "data.csv").write_text(job.data_csv, encoding="utf-8")
             if job.data_json is not None:
                 (run_dir / DATA_JSON_FILE).write_text(job.data_json, encoding="utf-8")
-            outputs = await asyncio.gather(*(self._run_theme(job, theme, run_dir) for theme in job.themes))
+            runs = [asyncio.create_task(self._run_theme(job, theme, run_dir)) for theme in job.themes]
+            try:
+                outputs = await asyncio.gather(*runs)
+            except asyncio.CancelledError:
+                # `gather` raises when the first theme ends; the other's container may still be dying, so wait for it.
+                await asyncio.gather(*runs, return_exceptions=True)
+                raise
             return RenderResult(job.job_id, {output.theme: output for output in outputs})
         finally:
             shutil.rmtree(run_dir, ignore_errors=True)
