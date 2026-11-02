@@ -305,7 +305,8 @@ function AgentChat({
   const [draft, setDraft] = useState('');
   const [title, setTitle] = useState<string | null>(null);
   const [libraries, setLibraries] = useState<string[]>([...DEFAULT_AGENT_LIBRARIES]);
-  // `.plot_all()`: the server's run limit, and the session whose confirmed data the open fan-out copies.
+  // `.plot_all()`: the caller's own run cap (`user_max_runs`, 5 for an admin), and the session whose
+  // confirmed data the open fan-out copies.
   const [maxRuns, setMaxRuns] = useState(DEFAULT_USER_MAX_RUNS);
   // Both answers below are in (or failed): before that, the libraries and the limit are fallbacks.
   const [listsSettled, setListsSettled] = useState(false);
