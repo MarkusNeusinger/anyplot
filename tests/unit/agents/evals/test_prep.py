@@ -54,6 +54,7 @@ OPERATIONS = (
     "classify",
     "derive",
     "make_date",
+    "row_number",
 )
 HOURS = "Study Hours,Exam Score\n2,55\n5,70\n8,85\n3,60\n"
 RENAME = {"op": "rename", "column": "Study Hours", "name": "Hours"}
@@ -81,8 +82,8 @@ class TestFixtures:
 
         # 30 single-step cases (two of them `derive`, two `make_date`, one month-only date format, one sort of month
         # names, one daily mean per sensor), 10 `hard` ones (chains, ambiguity, unsupported asks), 11 data-code
-        # cases and 8 step-1 summaries.
-        assert len(cases) == 59
+        # cases and 11 step-1 summaries.
+        assert len(cases) == 62
         assert {item.locale for item in cases if "derive" in item.tags} == {"de", "en"}
         assert sum(1 for item in cases if "hard" in item.tags) == 10
         assert locales["de"] >= 5 and locales["en"] >= 5
@@ -117,14 +118,16 @@ class TestFixtures:
         """The step-1 summary, where 10 of 11 replies of the user test of 2026-11-01 closed with a question."""
         cases = [item for item in load_cases(DEFAULT_CASES) if item.action is not None]
 
-        assert len(cases) == 8 and {item.locale for item in cases} == {"de", "en"}
+        assert len(cases) == 11 and {item.locale for item in cases} == {"de", "en"}
         assert all(item.message is None and item.dataset_text for item in cases)
         assert all("summary" in item.tags for item in cases)
-        # A summary changes the data only for what the server found in code (live test of 2026-11-01): a newest-first
-        # date column gets its sort, a text column that converts for certain fills an open role.
+        # A summary changes the data only for what the server found in code (live tests of 2026-11-01 and 11-02): a
+        # newest-first date column gets its sort, a column that converts for certain fills an open role, and a list
+        # of values gets its row numbers.
+        sorted_dates = {"en-summary-rtx-prices", "de-summary-preise-monatsnamen", "en-summary-convert-day-dates"}
         changing = {item.id for item in cases if item.expected_operations}
-        assert changing == {"en-summary-rtx-prices", "de-summary-preise-monatsnamen", "en-summary-convert-day-dates"}
-        assert all("date_order" in item.tags for item in cases if item.id in changing)
+        assert changing == {*sorted_dates, "en-summary-year-column", "en-summary-row-number", "de-summary-zeilennummer"}
+        assert all("date_order" in item.tags for item in cases if item.id in sorted_dates)
         # Dates whose day and month order reads both ways, and a conversion that would guess the century: the
         # summaries that may close with their question.
         assert [item.id for item in cases if prep.BLOCKED_TAGS & set(item.tags)] == [
@@ -254,6 +257,7 @@ class TestCanonical:
                     "rules": [{"where": [{"column": "y", "test": "gt", "value": 0}], "label": "Klasse 1"}],
                     "otherwise": "Klasse 2",
                 },
+                {"op": "row_number"},
             ],
             ".",
         )
@@ -263,6 +267,7 @@ class TestCanonical:
             "classify Klasse: 'Klasse 1' if y gt '0'; else 'Klasse 2'",
             "drop_rows Tier eq 'Gesamt'",
             "pivot_wider p with v by m",
+            "row_number index",
             "set_type share number (,)",
         ]
 
@@ -590,10 +595,10 @@ class TestRun:
                 locale="en",
                 tags=["ask_back"],
             ),
-            # One number column for a scatter plot: y stays open, so the turn is blocked.
+            # Years and text for a scatter plot: y stays open and no conversion fills it, so the turn is blocked.
             PrepCase(
                 id="y-003",
-                dataset_text="Product,Revenue\nShoes,10\nHats,5\nBags,8\n",
+                dataset_text="Year,Product\n2020,Shoes\n2021,Hats\n2022,Bags\n",
                 action="summarize_data",
                 expected_operations=[],
                 locale="en",
@@ -615,6 +620,47 @@ class TestRun:
         assert results[0].reply_words == 16 and results[0].reply_questions == 1
         # The action reached the root as the page's summary turn, never as typed text.
         assert "[action] Summarize the dataset for the user." in json.dumps(fake.calls[0]["messages"])
+
+    def test_a_root_that_skips_a_certain_conversion_is_a_miss(self, services: Services, swap_models) -> None:
+        """The original failure of the live test of 2026-11-01, whatever the case expected."""
+        text = "value\n1\n3\n5\n4\n6\n2\n"
+        cases = [
+            PrepCase(
+                id=f"z-00{index}",
+                dataset_text=text,
+                action="summarize_data",
+                expected_operations=expected,
+                locale="en",
+                spec_id="line-basic",
+            )
+            for index, expected in enumerate(([], [{"op": "row_number", "name": "index"}]), start=1)
+        ]
+        made = {"call": "prepare_data", "args": {"operations": [{"op": "row_number"}]}}
+        root_turns: list[list[dict[str, Any]]] = [
+            [{"text": "6 rows; y has no column yet."}],
+            [made, {"text": "x: row number 1 to 6, because the table has no x column."}],
+        ]
+        swap_models("anthropic-vertex", script_for(*root_turns))
+
+        results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        assert [result.match for result in results] == [False, True]
+        assert [result.conversion_skipped for result in results] == [True, False]
+        assert [(result.conversions_owed, result.conversions_made) for result in results] == [(1, 0), (1, 1)]
+        scored = prep.score(cases, results)
+        assert scored["misses"][0]["conversion_skipped"] is True
+        assert (scored["summary"]["conversions_owed"], scored["summary"]["conversions_made"]) == (2, 1)
+        code, reasons = verdict_of(scored["summary"], Gates(min_exact=0))
+        assert code == EXIT_FAILED and reasons == ["the root skipped 1 certain conversions of 2"]
+        assert "certain conversions made: 1 of 2" in prep.summary_text(scored, reasons)
+
+    def test_a_message_turn_owes_no_conversion(self) -> None:
+        """A certain conversion is automatic in the summary turn only: in a later turn the root asks."""
+        result = CaseResult("z-003", [], [], [], True)
+
+        prep.score_conversions(result, [], ".")
+
+        assert result.match is True and not result.conversion_skipped and result.conversions_owed == 0
 
     def test_generate_data_calls_are_read_and_scored_like_operations(self, services: Services, swap_models) -> None:
         """A formula case may come without a dataset; a formula the server cannot compute is a miss (`failed_calls`)."""

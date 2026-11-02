@@ -28,7 +28,7 @@ with a change list, and the user can undo. The state keys (`session_state.py`):
 `changes`). No ADK import.
 """
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Any
 
@@ -95,14 +95,16 @@ def push_version(
     pinned: list[Binding] | None = None,
     code: str | None = None,
     source: str | None = None,
-    converted: Sequence[str] = (),
+    converted: Mapping[str, str] | None = None,
+    row_numbers: Sequence[str] = (),
 ) -> DatasetVersion:
     """Store `parsed` as the session's next dataset version; raises `StoreFull` (nothing changes then).
 
     The current dataset joins the history; the oldest entries past `MAX_DATASET_HISTORY`
     leave the store. The bindings are carried over (`carry_bindings`) for a change of the
-    data (`prepare_data`), a column `converted` by a `set_type` with a new name filling the
-    open required role that takes it; `rebind` gives the defaults for the new profile instead
+    data (`prepare_data`), a column `converted` by a `set_type` with a new name (each with its
+    source) filling the open required role that takes it, and a column of `row_numbers` the
+    role left for them; `rebind` gives the defaults for the new profile instead
     (`default_bindings`), for a table that replaces the data (`generate_data`), where a
     choice made for the old columns says nothing about the new ones even when a name
     such as `x` returns. `pinned` gives those bindings, keeps the current bindings that
@@ -149,7 +151,7 @@ def push_version(
     elif rebind:
         bindings = default_bindings(roles, stored.profile)
     else:
-        bindings = carry_bindings(view.bindings, roles, stored.profile, previous, converted)
+        bindings = carry_bindings(view.bindings, roles, stored.profile, previous, converted, row_numbers)
     version = view.dataset_version + 1
     return DatasetVersion(dataset_id, stored, bindings, version, _delta(dataset_id, bindings, history, version))
 

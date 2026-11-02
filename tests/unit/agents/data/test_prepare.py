@@ -617,6 +617,21 @@ class TestSetTypeDatetime:
             f"t: {len(months)} cells read as months (a month name and a year, each as the first day of the month)"
         ]
 
+    def test_a_month_that_repeats_counts_every_cell(self) -> None:
+        """Review of #12512: distinct month texts were compared with the cells, so a repeat fell to the inferred wording."""
+        text = "t;v\nOkt. 2026;1\nOkt. 2026;2\nNov. 2026;3\n"
+        to_dates = OPERATIONS.validate_python([{"op": "set_type", "column": "t", "type": "datetime"}])
+
+        assert apply_operations(parse_dataset(text, text_columns=["t"]), to_dates).changes == [
+            "t: 3 cells read as months (a month name and a year, each as the first day of the month)"
+        ]
+
+        mixed = "t;v\nOkt. 2026;1\nOkt. 2026;2\n15.03.2026;3\n"
+        assert apply_operations(parse_dataset(mixed, text_columns=["t"]), to_dates).changes == [
+            "t: 3 cells read as dates (format inferred, day before month; 2 cells with a month name and a year as the "
+            "first day of the month)"
+        ]
+
     def test_month_names_leave_no_day_and_month_order_open(self) -> None:
         """`1 Nov 2026` names its month: no `AMBIGUOUS_DATE_ORDER` note travels with it, unlike `01/11/2026`."""
         to_dates = OPERATIONS.validate_python([{"op": "set_type", "column": "t", "type": "datetime"}])
@@ -671,7 +686,7 @@ class TestSetTypeIntoNewColumn:
             "new column Datum (Datum): 3 cells of Datum read as dates (format inferred, day before month); "
             "Datum stays as it is"
         ]
-        assert prepared.converted == ["Datum (Datum)"]
+        assert prepared.converted == {"Datum (Datum)": "Datum"}
         assert dtypes(prepared) == {"Datum": "text", "Preis": "text", "Datum (Datum)": "datetime"}
 
     def test_numbers_go_into_a_new_column_with_the_unit_named(self) -> None:
@@ -689,8 +704,8 @@ class TestSetTypeIntoNewColumn:
         renamed = prepare(self.TEXT, convert, {"op": "rename", "column": "neu", "name": "Tag"})
         dropped = prepare(self.TEXT, convert, {"op": "drop_columns", "columns": ["neu"]})
 
-        assert renamed.converted == ["Tag"]
-        assert dropped.converted == []
+        assert renamed.converted == {"Tag": "Datum"}
+        assert dropped.converted == {}
 
     def test_a_sort_on_the_new_column_puts_the_dates_oldest_first(self) -> None:
         prepared = prepare(
@@ -733,6 +748,9 @@ class TestSetTypeMinus:
 
     def test_a_range_is_no_number(self) -> None:
         assert failure("v\n10–20\n5\n", {"op": "set_type", "column": "v", "type": "number"})[0] == "type_mismatch"
+
+    def test_an_en_dash_is_no_minus(self) -> None:
+        assert failure("v;w\n–5;a\n–7;b\n", {"op": "set_type", "column": "v", "type": "number"})[0] == "type_mismatch"
 
 
 class TestDryRun:
@@ -810,6 +828,76 @@ class TestDryRun:
     def test_a_date_with_a_month_name_is_no_number(self) -> None:
         """`Nov 26, 2026` read as a number behind a unit `Nov` would be 26.2026."""
         assert self.run("d;v\nNov 26, 2026;1\nNov 25, 2026;2\n", "d", "number") is None
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "Season,Wins\n2009-10,5\n2010-11,6\n2011-12,7\n",  # pandas reads each as a month
+            "Bin,Share\n2000-05,1\n2005-10,2\n",
+            "Saison,Wins\n2024-01,5\n2024-02,6\n",  # shaped like months, its name says spans
+            "Version,n\n2024-01,5\n2024-02,6\n",
+        ],
+    )
+    def test_a_column_of_year_spans_is_no_date_candidate(self, text: str) -> None:
+        """The parser keeps these text (`_as_periods`), and a `certain` conversion must not rewrite them."""
+        parsed = parse_dataset(text)
+        column = parsed.profile.columns[0].name
+
+        assert parsed.column_dtypes[column] == "text"
+        assert prepare_module.dry_run(prepare_module.read_frame(parsed), column, "datetime") is None
+
+    def test_a_year_run_reads_a_year_column(self) -> None:
+        parsed = parse_dataset("Jahr,v\n2022,1\n2021,2\n2020,3\n")
+
+        dry = prepare_module.year_run(prepare_module.read_frame(parsed), "Jahr")
+
+        assert dry.certain and (dry.read, dry.order, dry.date_format) == (3, "descending", "YYYY")
+        assert dry.reading == "read as years (YYYY, each as 1 January)"
+
+
+class TestRowNumber:
+    def test_a_new_column_numbers_the_rows(self) -> None:
+        prepared = prepare("value\n1\n3\n5\n4\n", {"op": "row_number"})
+
+        assert prepared.csv.splitlines() == ["value,index", "1,1", "3,2", "5,3", "4,4"]
+        assert prepared.changes == ["new column index: the rows numbered 1 to 4"]
+        assert prepared.row_numbers == ["index"]
+
+    def test_it_stays_a_whole_number_column_through_the_reparse(self) -> None:
+        prepared = prepare("value\n1\n3\n5\n", {"op": "row_number", "name": "Nr"})
+        parsed = parse_dataset(prepared.csv, find_table=False, canonical=True)
+
+        assert parsed.column_dtypes["Nr"] == "integer"
+
+    @pytest.mark.parametrize(
+        "text", ["value,index\n1,1\n3,2\n5,3\n", "value,index\n1,0\n3,1\n5,2\n", "value,index\n1,3\n3,1\n5,2\n"]
+    )
+    def test_a_pasted_row_number_is_reused(self, text: str) -> None:
+        prepared = prepare(text, {"op": "row_number", "name": "index"})
+
+        assert prepared.csv == parse_dataset(text).csv
+        assert prepared.changes == ["index already numbers the rows"]
+        assert prepared.row_numbers == ["index"]
+
+    def test_a_column_of_that_name_with_other_values_is_refused(self) -> None:
+        assert failure("value,index\n1,5\n3,5\n", {"op": "row_number"}) == (
+            "invalid_operation",
+            "a column named 'index' already exists",
+        )
+
+    def test_it_follows_a_rename_in_the_same_call(self) -> None:
+        prepared = apply_operations(
+            parse_dataset("value\n1\n3\n"),
+            OPERATIONS.validate_python([{"op": "row_number"}, {"op": "rename", "column": "index", "name": "Nr"}]),
+        )
+
+        assert prepared.row_numbers == ["Nr"]
+
+    def test_a_full_table_takes_no_more_columns(self) -> None:
+        header = ",".join(f"c{index}" for index in range(MAX_COLUMNS))
+        row = ",".join("1" for _ in range(MAX_COLUMNS))
+
+        assert failure(f"{header}\n{row}\n{row}\n", {"op": "row_number"})[0] == "too_wide"
 
 
 class TestSetTypeText:

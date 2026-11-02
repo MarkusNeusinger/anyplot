@@ -66,10 +66,12 @@ MIN_NAMED_MONTHS = 3
 """The distinct months from which a text column of month names is a calendar (`named_months`)."""
 _NUMBERED_MONTH = re.compile(r"(?:thang\s*)?([0-9]{1,2})\s*(?:月)?")
 """A month written with its number: `3月` (Chinese), `tháng 3` (Vietnamese, folded to `thang 3`), `03`."""
-_NAME_THEN_YEAR = re.compile(r"(?P<name>.+?)[\s,./-]+(?:n[aă]m\s+)?(?P<year>[0-9]{4})", re.IGNORECASE)
-"""A month, then a year of four ASCII digits: `Nov 2026`, `Okt. 2026`, `März-2026`, `tháng 3 năm 2026`."""
-_YEAR_THEN_NAME = re.compile(r"(?P<year>[0-9]{4})(?:\s*年\s*|[\s,./-]+)(?P<name>.+)")
-"""A year of four ASCII digits, then a month: `2026 Nov`, `2026-Nov`, `2026年3月`."""
+_SEPARATORS = ",./-"
+"""What may stand between a month and its year besides whitespace (`Okt. 2026`, `Nov-2026`, `Tháng 4/2026`), and `年`
+after a year (`2026年3月`). `month_year` trims them by hand: a regular expression with a lazy name before a run of
+separators backtracks polynomially (CodeQL `py/polynomial-redos`, review of #12512)."""
+_YEAR_WORD = "nam"
+"""Vietnamese `năm` (year), folded, which may stand between the month and the year (`tháng 3 năm 2026`)."""
 
 
 def fold(text: str) -> str:
@@ -107,14 +109,48 @@ def month_year(text: str) -> tuple[int, int] | None:
     month, and is None too.
     """
     cell = text.strip()
-    match = _NAME_THEN_YEAR.fullmatch(cell) or _YEAR_THEN_NAME.fullmatch(cell)
-    if match is None:
+    if _is_year(cell[-4:]) and len(cell) > 4:
+        year, name = cell[-4:], _name_before_year(cell[:-4])
+    elif _is_year(cell[:4]) and len(cell) > 4:
+        year, name = cell[:4], _name_after_year(cell[4:])
+    else:
         return None
-    name = match.group("name")
-    if fold(name).rstrip(".").strip().isdigit():
+    if not name or fold(name).rstrip(".").strip().isdigit():
         return None
     month = month_number(name)
-    return None if month is None else (int(match.group("year")), month)
+    return None if month is None else (int(year), month)
+
+
+def _is_year(text: str) -> bool:
+    return len(text) == 4 and text.isascii() and text.isdigit()
+
+
+def _is_separator(char: str, extra: str = "") -> bool:
+    return char.isspace() or char in _SEPARATORS or char in extra
+
+
+def _without_separators(text: str) -> str:
+    end = len(text)
+    while end and _is_separator(text[end - 1]):
+        end -= 1
+    return text[:end]
+
+
+def _name_before_year(head: str) -> str | None:
+    """The month before a year: `head` without its trailing separators (one at least) and a trailing `năm`."""
+    name = _without_separators(head)
+    if name == head:
+        return None  # `Nov2026`, `Nov 12026`: no separator before the four digits
+    words = name.rsplit(None, 1)
+    return _without_separators(words[0]) if len(words) == 2 and fold(words[1]) == _YEAR_WORD else name
+
+
+def _name_after_year(tail: str) -> str | None:
+    """The month after a year: `tail` without its leading separators (one at least, `年` among them)."""
+    start = 0
+    while start < len(tail) and _is_separator(tail[start], "年"):
+        start += 1
+    return tail[start:] if start else None
 
 
 def named_months(cells: list[str]) -> list[int] | None:

@@ -26,6 +26,7 @@ WarningCode = Literal[
     "single_space_separator",
     "lines_above_left_out",
     "lines_below_left_out",
+    "lines_inside_left_out",
     "summary_rows_left_out",
     "short_rows_positional",
     "short_rows_padded",
@@ -111,6 +112,7 @@ _RULES: tuple[tuple[re.Pattern[str], WarningCode], ...] = tuple(
         ),
         (r"^left out [0-9,]+ lines? above the table \(a title, notes or metadata\)$", "lines_above_left_out"),
         (r"^left out [0-9,]+ lines? below the table \(notes or a source line\)$", "lines_below_left_out"),
+        (r"^left out [0-9,]+ lines? inside the table that (?:is|are) no row of it \(.*\)$", "lines_inside_left_out"),
         (r"^left out [0-9,]+ summary rows? at the end of the table .*$", "summary_rows_left_out"),
         (
             r"^[0-9,]+ rows? had fewer fields than the header; their cells were placed under the header's columns by their position.*$",
@@ -197,10 +199,7 @@ _RULES: tuple[tuple[re.Pattern[str], WarningCode], ...] = tuple(
             _COLUMN + r"[0-9,]+ cells? read as months \(a month name and a year, each as the first day of the month\)$",
             "month_names_read",
         ),
-        (
-            _COLUMN + r"[0-9,]+ cells? with (?:the minus sign|an en dash) .* read as negative numbers$",
-            "typographic_minus_read",
-        ),
+        (_COLUMN + r"[0-9,]+ cells? with the minus sign '−' read as negative numbers$", "typographic_minus_read"),
         (_COLUMN + r"NA read as a code \(such as Namibia or North America\), not as a missing cell$", "na_as_code"),
         (_COLUMN + r"[0-9,]+ values? with more significant digits than a number holds .*$", "digits_rounded"),
         (_COLUMN + r"spaces around the text removed in [0-9,]+ cells?$", "cells_trimmed"),

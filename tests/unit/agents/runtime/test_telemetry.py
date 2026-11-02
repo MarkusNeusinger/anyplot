@@ -396,9 +396,38 @@ def test_the_turn_marks_are_taken_once() -> None:
         "to_long": False,
         "manual_binding_changed": False,
         "binding_warnings": ["other"],
+        "conversion": "none",
     }
     assert telemetry.take_turn_marks("sess-y")["undo"] is False
     telemetry.forget("sess-y")
+
+
+@pytest.mark.parametrize(
+    ("notes", "outcome"),
+    [
+        ([], "none"),
+        (["asked"], "asked"),
+        (["asked", "date"], "date"),  # the block listed it before the first model call, and the root made it
+        (["asked", "index", "asked"], "index"),  # the next model call in the turn changes nothing
+        (["number"], "number"),
+    ],
+)
+def test_a_turn_reports_one_conversion_outcome(notes: list[telemetry.ConversionOutcome], outcome: str) -> None:
+    telemetry.forget("sess-c")
+    for note in notes:
+        telemetry.note_conversion("sess-c", note)
+
+    assert telemetry.take_turn_marks("sess-c")["conversion"] == outcome
+    assert telemetry.take_turn_marks("sess-c")["conversion"] == "none"
+    telemetry.forget("sess-c")
+
+
+def test_the_conversion_outcome_is_a_closed_enum() -> None:
+    event = telemetry.ChatTurn(kind="prep", action="summarize_data", conversion="index")  # type: ignore[arg-type]
+
+    assert event.model_dump()["conversion"] == "index"
+    with pytest.raises(ValidationError):
+        telemetry.ChatTurn(kind="prep", action="summarize_data", conversion="Month (date)")  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(

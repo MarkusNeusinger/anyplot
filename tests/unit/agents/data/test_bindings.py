@@ -1,13 +1,16 @@
 """Tests for agents/anyplot/data/bindings.py: default bindings and their validation."""
 
 import json
+from datetime import date
 
 import pytest
 from pydantic import TypeAdapter
 
 from agents.anyplot.data.bindings import (
     MAX_VARIADIC_DEFAULT,
+    RowSlot,
     accepts,
+    axis_slot,
     carry_bindings,
     check_bindings,
     default_bindings,
@@ -15,6 +18,7 @@ from agents.anyplot.data.bindings import (
     name_similarity,
     record_values,
     resolve_role,
+    row_slot,
 )
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.prepare import Operation, apply_operations
@@ -644,9 +648,173 @@ class TestNewDateColumn:
         before = profile("t,p\n2024-01-01,$5\n2024-01-02,7\n")
         after = profile("t,p,p (number)\n2024-01-01,$5,5\n2024-01-02,7,7\n")
 
-        carried = carry_bindings(bind(("x", "t")), roles, after, before, ["p (number)"])
+        carried = carry_bindings(bind(("x", "t")), roles, after, before, {"p (number)": "p"})
 
         assert as_pairs(carried) == [("x", "t"), ("y1", "p (number)")]
+
+    def test_a_converted_column_takes_its_source_off_the_optional_roles(self) -> None:
+        """Second opinion of 2026-11-02: `Month` on `series` beside `Month (date)` on the date role is one series a row."""
+        roles = [role("date", "datetime"), role("value", "numeric"), role("series", "categorical", required=False)]
+        before = profile("Month,p\n8 Nov 2026,5\n9 Nov 2026,7\n")
+        after = profile("Month,p,Month (date)\n8 Nov 2026,5,2026-11-08\n9 Nov 2026,7,2026-11-09\n")
+        bindings = bind(("value", "p"), ("series", "Month"))
+
+        carried = carry_bindings(bindings, roles, after, before, {"Month (date)": "Month"})
+
+        assert as_pairs(carried) == [("date", "Month (date)"), ("value", "p")]
+
+    def test_a_required_role_keeps_the_source(self) -> None:
+        roles = [role("date", "datetime"), role("value", "numeric"), role("label", "text")]
+        before = profile("Month,p\n8 Nov 2026,5\n9 Nov 2026,7\n")
+        after = profile("Month,p,Month (date)\n8 Nov 2026,5,2026-11-08\n9 Nov 2026,7,2026-11-09\n")
+        bindings = bind(("value", "p"), ("label", "Month"))
+
+        carried = carry_bindings(bindings, roles, after, before, {"Month (date)": "Month"})
+
+        assert as_pairs(carried) == [("date", "Month (date)"), ("value", "p"), ("label", "Month")]
+
+    def test_a_conversion_no_role_took_leaves_the_source_alone(self) -> None:
+        roles = [role("x", "numeric"), role("series", "categorical", required=False)]
+        before = profile("x,Month\n1,8 Nov 2026\n2,9 Nov 2026\n")
+        after = profile("x,Month,Month (date)\n1,8 Nov 2026,2026-11-08\n2,9 Nov 2026,2026-11-09\n")
+        bindings = bind(("x", "x"), ("series", "Month"))
+
+        assert as_pairs(carry_bindings(bindings, roles, after, before, {"Month (date)": "Month"})) == as_pairs(bindings)
+
+    def test_an_undo_gives_the_source_back(self) -> None:
+        roles = [role("date", "datetime"), role("value", "numeric"), role("series", "categorical", required=False)]
+        before = profile("Month,p\n8 Nov 2026,5\n9 Nov 2026,7\n")
+
+        assert as_pairs(carry_bindings(bind(("date", "Month (date)"), ("value", "p")), roles, before)) == [
+            ("value", "p"),
+            ("series", "Month"),
+        ]
+
+
+LINE = [role("x", "numeric", "datetime"), role("y", "numeric")]
+"""The required roles of `line-basic`: one number column binds to `x`, and `y` stays open."""
+BAR = [role("category", "categorical"), role("value", "numeric")]
+VALUES = "value\n1\n3\n5\n4\n6\n2\n"
+
+
+class TestAxisAndRowNumbers:
+    def test_the_one_number_column_sits_on_the_axis_and_the_measure_stays_open(self) -> None:
+        data = profile(VALUES)
+
+        bindings = default_bindings(LINE, data)
+        slot = axis_slot(bindings, LINE, data)
+
+        assert as_pairs(bindings) == [("x", "value")]
+        assert slot is not None and slot.role.name == "x" and slot.moved == Binding(role="y", column="value")
+
+    def test_row_numbers_take_the_axis_without_a_question(self) -> None:
+        data = profile(VALUES)
+
+        assert row_slot(default_bindings(LINE, data), LINE, data) == RowSlot(
+            "x", True, Binding(role="y", column="value")
+        )
+
+    def test_an_open_axis_takes_them_with_nothing_to_move(self) -> None:
+        data = profile("y\n1\n3\n5\n")
+
+        assert as_pairs(default_bindings(LINE, data)) == [("y", "y")]
+        assert row_slot(default_bindings(LINE, data), LINE, data) == RowSlot("x", True)
+
+    def test_a_category_takes_them_only_on_a_yes(self) -> None:
+        data = profile(VALUES)
+
+        assert row_slot(default_bindings(BAR, data), BAR, data) == RowSlot("category", False)
+
+    @pytest.mark.parametrize(
+        ("roles", "csv"),
+        [
+            ([role("date", "datetime"), role("value", "numeric")], VALUES),  # a date role takes no number
+            ([role("x", "numeric"), role("y", "numeric"), role("z", "numeric")], VALUES),  # two roles stay open
+            ([role("values", "numeric"), role("group", "categorical")], VALUES),  # one group per row says nothing
+            (LINE, "Year,Product\n2020,Shoes\n2021,Hats\n2022,Bags\n"),  # a year on x says where a value sits
+            (LINE, "value\n1\n"),  # a single row
+            (LINE, "x,y\n1,2\n3,4\n"),  # nothing open
+        ],
+    )
+    def test_no_slot(self, roles: list[DataRole], csv: str) -> None:
+        data = profile(csv)
+
+        assert row_slot(default_bindings(roles, data), roles, data) is None
+
+    def test_a_row_number_column_takes_the_axis_and_moves_the_measure(self) -> None:
+        before = profile(VALUES)
+        after = profile("value,index\n1,1\n3,2\n5,3\n4,4\n6,5\n2,6\n")
+
+        carried = carry_bindings(default_bindings(LINE, before), LINE, after, before, None, ["index"])
+
+        assert as_pairs(carried) == [("x", "index"), ("y", "value")]
+
+    def test_a_family_takes_the_moved_column_as_its_first_member(self) -> None:
+        roles = [role("x", "numeric", "datetime"), role("y", "numeric", variadic=True)]
+        before = profile(VALUES)
+        after = profile("value,index\n1,1\n3,2\n5,3\n4,4\n6,5\n2,6\n")
+
+        carried = carry_bindings(default_bindings(roles, before), roles, after, before, None, ["index"])
+
+        assert as_pairs(carried) == [("x", "index"), ("y1", "value")]
+
+    def test_a_yes_binds_them_to_the_category(self) -> None:
+        before = profile(VALUES)
+        after = profile("value,index\n1,1\n3,2\n5,3\n4,4\n6,5\n2,6\n")
+
+        carried = carry_bindings(default_bindings(BAR, before), BAR, after, before, None, ["index"])
+
+        assert as_pairs(carried) == [("category", "index"), ("value", "value")]
+
+    def test_a_new_date_column_takes_the_axis_and_moves_the_measure(self) -> None:
+        before = profile("Datum;Preis\n8 Nov 2026;1\n9 Nov 2026;3\n")
+        after = profile("Datum,Preis,Datum (Datum)\n8 Nov 2026,1,2026-11-08\n9 Nov 2026,3,2026-11-09\n")
+
+        carried = carry_bindings(default_bindings(LINE, before), LINE, after, before, {"Datum (Datum)": "Datum"})
+
+        assert as_pairs(carried) == [("x", "Datum (Datum)"), ("y", "Preis")]
+
+    def test_a_pasted_row_number_stays_on_the_axis_wherever_it_stands(self) -> None:
+        """`weight, X` fell onto y by the spec's order, which transposes the plot (as `X, weight` once did)."""
+        roles = [role("x", "numeric"), role("y", "numeric")]
+
+        assert as_pairs(default_bindings(roles, profile("weight,X\n10,1\n12,2\n11,3\n"))) == [
+            ("x", "X"),
+            ("y", "weight"),
+        ]
+        assert as_pairs(default_bindings(roles, profile("X,weight\n1,10\n2,12\n3,11\n"))) == [
+            ("x", "X"),
+            ("y", "weight"),
+        ]
+
+    def test_dates_keep_the_axis_beside_a_pasted_row_number(self) -> None:
+        data = profile("day,X\n2024-01-01,1\n2024-01-02,2\n2024-01-03,3\n")
+
+        assert as_pairs(default_bindings(LINE, data)) == [("x", "day"), ("y", "X")]
+
+
+class TestMonthsAsLabels:
+    def test_a_column_of_months_labels_a_bar_chart_past_the_cap(self) -> None:
+        """Over 60 months the date reading left the category open, which the text reading had bound."""
+        names = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+        rows = "".join(f"{names[index % 12]} {2020 + index // 12},{index}\n" for index in range(70))
+
+        assert as_pairs(default_bindings(BAR, profile("Month,Price\n" + rows))) == [
+            ("category", "Month"),
+            ("value", "Price"),
+        ]
+
+    def test_other_dates_stay_out_past_the_cap(self) -> None:
+        """Review of #12204: 20,000 timestamps became a stacked bar's components."""
+        rows = "".join(f"{date.fromordinal(738886 + index).isoformat()},{index}\n" for index in range(70))
+
+        assert "Day" not in [binding.column for binding in default_bindings(BAR, profile("Day,Price\n" + rows))]
+
+    def test_an_optional_role_takes_no_months(self) -> None:
+        roles = [role("x", "numeric"), role("group", "categorical", required=False)]
+        data = profile("v,Month\n1,Nov 2026\n2,Oct 2026\n3,Sep 2026\n")
+
+        assert as_pairs(default_bindings(roles, data)) == [("x", "v")]
 
 
 class TestNamesOverCodes:

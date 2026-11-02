@@ -1280,14 +1280,22 @@ class TestTypographicMinus:
         assert warned(parsed, "column 'v': 2 cells with the minus sign '−' read as negative numbers")
         assert warned(parsed, "1 number written in another form with the same value")  # the `+` of `+75`
 
-    def test_an_en_dash_before_a_number_is_a_minus_too(self) -> None:
+    def test_an_en_dash_is_no_minus(self) -> None:
         parsed = parse_dataset("d;v\n1;–5\n2;−3\n3;4\n")
 
-        assert parsed.csv.splitlines()[1:] == ["1,-5", "2,-3", "3,4"]
-        assert warned(
-            parsed,
-            "column 'v': 1 cell with the minus sign '−' and 1 with an en dash '–' as the minus read as negative numbers",
-        )
+        assert parsed.column_dtypes["v"] == "text"
+        assert parsed.csv.splitlines()[1:] == ["1,–5", "2,−3", "3,4"]
+
+    def test_a_column_of_months_says_so_in_the_profile(self) -> None:
+        columns = {
+            column.name: column.monthly
+            for column in parse_dataset(
+                "m,y,d,t\nNov 2026,2020-01-01,2024-01-05,2024-01-01T10:00:00\n"
+                "Oct 2026,2021-01-01,2024-01-06,2024-02-01T10:00:00\n"
+            ).profile.columns
+        }
+
+        assert columns == {"m": True, "y": None, "d": None, "t": None}
 
     @pytest.mark.parametrize(
         "cells",
@@ -3689,6 +3697,99 @@ class TestHeaderlessList:
             f"the list has {MAX_ROWS + 1:,} values and no header line; at most {MAX_ROWS:,} rows are read"
         )
         assert parse_dataset("1\n" * MAX_ROWS).profile.rows == MAX_ROWS  # at the cap every value is a row
+
+
+def web_table(rows: int = 48, *, button_after: int = 12) -> str:
+    """A web table copied to the clipboard, the shape of the owner's paste of 2026-11-02 with invented prices: two
+    columns empty, the months newest first, a button's text between the rows and no last change in the last row."""
+    names = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+    lines = ["Widget price history", "Typical price per month, newest first.", "", "Month\tNew\tΔ\tUsed\tΔ"]
+    for index in range(rows):
+        months = 2026 * 12 + 10 - index
+        change = f"−{index + 1}" if index % 3 else f"+{index + 1}"
+        cells = [f"{names[months % 12]} {months // 12}", "", "", f"${2000 + 7 * index}", change]
+        lines.append("\t".join(cells[:-1] if index == rows - 1 else cells))
+        if index == button_after - 1:
+            lines.append(f"Show {rows - button_after} earlier months (Dec 2022 – Nov 2025)")
+    return "\n".join(lines) + "\n"
+
+
+class TestLinesThatAreNoRows:
+    """Owner's live test of 2026-11-02: a line that lacks the rows' shape stays out, a last line that has it stays in."""
+
+    def test_the_button_goes_and_the_last_row_stays(self) -> None:
+        parsed = parse_dataset(web_table())
+
+        assert parsed.profile.rows == 48
+        assert parsed.column_dtypes == {"Month": "datetime", "Used ($)": "integer", "Δ": "integer"}
+        rows = parsed.csv.splitlines()
+        assert rows[1] == "2026-11-01,2000,1" and rows[-1] == "2022-12-01,2329,"
+        assert not any("Show" in row for row in rows)
+
+    def test_the_counts_are_said_and_the_line_stays_a_note(self) -> None:
+        parsed = parse_dataset(web_table())
+
+        assert warned(parsed, "left out 1 line inside the table that is no row of it (line 17)")
+        assert warned(parsed, "1 row had fewer fields than the header; the missing cells are empty (line 53)")
+        assert not warned(parsed, "below the table")
+        assert "Show 36 earlier months (Dec 2022 – Nov 2025)" in parsed.context_lines
+
+    def test_two_lines_are_counted(self) -> None:
+        text = "d\tv\tw\n2024-01-01\t1\t2\n2024-01-02\t3\t4\nmore\n2024-01-03\t5\t6\nmore\n2024-01-04\t7\t8\n"
+
+        parsed = parse_dataset(text)
+
+        assert parsed.profile.rows == 4
+        assert warned(parsed, "left out 2 lines inside the table that are no row of it (lines 4, 6)")
+
+    def test_a_table_aligned_with_spaces_too(self) -> None:
+        """A note between the rows would stop a space-aligned table with `does not line up` otherwise."""
+        text = "day         value    note\n2024-01-01  1        a\n2024-01-02  2        b\n"
+        text += "Show all\n2024-01-03  3        c\n2024-01-04  4        d\n"
+
+        parsed = parse_dataset(text)
+
+        assert parsed.profile.rows == 4 and parsed.column_dtypes["day"] == "datetime"
+
+    def test_a_chosen_table_counts_without_the_line(self) -> None:
+        text = "a,b\n2024-01-01,1\n2024-01-02,2\nmore\n2024-01-03,3\n\nc,d\n1,x\n2,y\n3,z\n"
+
+        assert parse_dataset(text).tables is not None
+        assert parse_dataset(text).tables[0] == "a, b · 3 rows"  # type: ignore[index]
+
+    @pytest.mark.parametrize(
+        ("text", "rows", "note"),
+        [
+            # A real footer or source line below a table still goes.
+            (
+                "m\tu\tc\nNov 2026\t$5\t+1\nOct 2026\t$6\t+2\nSep 2026\t$7\t+3\nSource: shop.example\n",
+                3,
+                "Source: shop",
+            ),
+            ("a,b,c\n1,2,3\n4,5,6\n7,8,9\nThis note, with a comma\n", 3, "This note"),
+            ("d,v\n2024-01-01,1\n2024-01-02,2\n2024-01-03,3\n2024-01-04\n", 3, "2024-01-04"),  # one field is no row
+            ("d\tv\tw\n2024-01-01\t1\t2\n2024-01-02\t3\t4\n2024-01-03\t5\t6\nStand 2024\t\n", 3, "Stand 2024"),
+        ],
+    )
+    def test_a_footer_stays_out(self, text: str, rows: int, note: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert parsed.profile.rows == rows
+        assert any(note in line for line in parsed.context_lines)
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "Name\tScore\nAnna\t5\nBen\nClara\t7\nDora\t9\n",  # a sparse row of a text column
+            "Name,Score\nAnna,5\nBen,pending\nClara,7\nDora,on hold\nEva,9\n",  # text in the table's width
+            "Region,Sales\nGermany,10\nFrance,20\nAsia\nChina,30\nJapan,40\n",  # a heading among the labels
+        ],
+    )
+    def test_a_sparse_row_stays(self, text: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert parsed.profile.rows == len(text.splitlines()) - 1
+        assert not warned(parsed, "inside the table")
 
 
 XY_ROLES = [

@@ -40,6 +40,7 @@ from google.adk.plugins.base_plugin import BasePlugin
 from google.adk.plugins.context_filter_plugin import ContextFilterPlugin
 from google.genai import types
 
+from . import telemetry
 from .data.bindings import check_bindings
 from .data.conversions import candidates
 from .dev_fixture import DevFixturePlugin
@@ -97,8 +98,8 @@ so the root knows to read them again after the context filter dropped the turn t
 FILE_LINE = "yes; get_dataset_profile returns its name under file_name, data and never a request"
 """The session block's line when the data came from a dropped file: a fixed text, never the name itself."""
 CONVERSIONS_HEADING = (
-    "Conversions for open roles: {count}, text columns that a set_type turns into what the role takes, "
-    "from a dry run on the data (see 'Step 1: the data')"
+    "Conversions for open roles: {count}, columns that a set_type turns into what the role takes, or the row "
+    "numbers when no column can, from a dry run on the data (see 'Step 1: the data')"
 )
 """The session block's line over the conversion candidates of the roles left open (`data/conversions.py`), live test
 of 2026-11-01: the root asked the user for a date column that a conversion of the `Month` text would have made."""
@@ -182,6 +183,7 @@ async def session_context(context: ReadonlyContext) -> str:
             # A dry run in code of the conversions that would fill an open role; the lines name the user's columns.
             lines.append(f"- {CONVERSIONS_HEADING.format(count=len(found))}")
             lines.append(fence("user_data", "\n".join(candidate.line() for candidate in found)))
+            telemetry.note_conversion(session_id, "asked")  # until `prepare_data` makes a column in this turn
         if view.data_confirmed:
             lines.append("- Data: confirmed by the user; the plot can be made")
         else:

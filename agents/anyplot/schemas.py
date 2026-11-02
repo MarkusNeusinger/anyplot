@@ -233,6 +233,12 @@ class ColumnProfile(_ServerContract):
     history lists its months); None when they go back and forth or hold one moment. A
     time series is drawn in date order, so the root sorts a newest-first date column of
     the plot instead of asking about it (live test of 2026-11-01).
+
+    `monthly` is True for a datetime column of months: every date the first of its month,
+    no time, at least two months of the year (`Nov 2026` as the parser writes it). Such a
+    column is a calendar of labels as much as a time axis: the plot writes it as months,
+    never as ISO dates, and it may label a bar chart past `MAX_CATEGORIES` dates. None
+    otherwise, so a model's profile JSON leaves it out.
     """
 
     name: ColumnName
@@ -246,6 +252,7 @@ class ColumnProfile(_ServerContract):
     top: list[Cell] = Field(default_factory=list, max_length=MAX_LISTED_VALUES)
     months: list[Annotated[int, Field(ge=1, le=12)]] | None = Field(default=None, max_length=12)
     order: Literal["ascending", "descending"] | None = None
+    monthly: Literal[True] | None = None
 
 
 def listed_values(distinct: int) -> int:

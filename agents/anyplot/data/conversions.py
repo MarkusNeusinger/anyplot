@@ -11,8 +11,12 @@ dates and numbers for one that takes numbers, with a dry run of the conversion o
 column (`prepare.dry_run`) and its counts. A column that reads as dates is never a number
 candidate (`Nov 26, 2026` is no 26.2026), a column kept text on request (`set_type text`) is
 none at all, and neither is one where more than a tenth of the cells would fail, which
-`set_type` refuses anyway. The session block shows the root one line per candidate
-(`Candidate.line`, at most `MAX_CANDIDATES`), with the operations that make it:
+`set_type` refuses anyway. A column whose name or cells say ids, codes or spans of years
+(`stays_text`) is none either: such cells may read as numbers or dates, and it would change
+what they mean (owner's second opinion of 2026-11-02). For a role that takes dates, a column
+of whole numbers is a candidate too, as years, only with a year header (`temporal.year_score`
+2): prices of 1149 to 3000 look like years. The session block shows the root one line per
+candidate (`Candidate.line`, at most `MAX_CANDIDATES`), with the operations that make it:
 
 * `certain`: every cell converts and the reading guesses nothing. The root makes the
   conversion in the summary turn without asking, as a new column beside the original
@@ -26,6 +30,18 @@ none at all, and neither is one where more than a tenth of the cells would fail,
 
 When the converted dates would run newest first, the operations end with a `sort` of the
 new column: a time series is drawn in date order, so the root never asks about it.
+
+A date column for the axis counts even when the axis is taken: the defaults fill the roles in
+spec order, so `8 Nov 2026,3000` on a line plot has its one number column on `x` and `y`
+open. The dates then take the axis, and the numbers move to `y` (`bindings.axis_slot`).
+
+Last comes the row number, when no column and no conversion can fill the open role
+(`RowNumbers`, `bindings.row_slot`, the owner's live test of 2026-11-02: `1,3,5,4,6,2` on a
+line plot). On a required axis it counts as `certain`: the column `index` holds 1 to n, the axis
+takes it, and a number column that sat there moves to the open measure, with one line in
+the reply. On a role that names each row (a bar chart without labels) it is `uncertain`: the
+root offers it as its one question. A row-number column the paste already has is reused, and
+nothing here runs for `/dataset/copy`, which copies confirmed data byte for byte.
 
 The new column is named after its source with the type in the session language
 (`Month (date)`, `Monat (Datum)`, `TYPE_WORDS`): the root takes the operations as given, so
@@ -41,16 +57,18 @@ from typing import Any, Literal
 from core.spec_roles import DataRole
 
 from ..language import DEFAULT_LANGUAGE, canonical
-from ..schemas import MAX_COLUMN_NAME_CHARS, Binding, DatasetProfile
-from .bindings import check_bindings
-from .parse import ParsedDataset
-from .prepare import DryRun, dry_run, read_frame
+from ..schemas import MAX_COLUMN_NAME_CHARS, Binding, ColumnProfile, DatasetProfile
+from .bindings import RowSlot, axis_slot, check_bindings, code_like, row_number_columns, row_slot
+from .parse import ParsedDataset, id_like, span_like
+from .prepare import ROW_NUMBER_NAME, DryRun, dry_run, read_frame, year_run
+from .temporal import year_score
 
 
 MAX_CANDIDATES = 3
 """The candidate lines the session block carries at most: one per open role is the usual case."""
 
 Target = Literal["number", "datetime"]
+Outcome = Literal["date", "number", "index"]
 
 TYPE_WORDS: dict[str, dict[Target, str]] = {
     "en": {"datetime": "date", "number": "number"},
@@ -68,18 +86,29 @@ generated text follows the session language, the user's own column names never c
 
 @dataclass(frozen=True)
 class Candidate:
-    """A text column that a conversion turns into what the open role `role` takes, with its dry run."""
+    """A column that a conversion turns into what the open role `role` takes, with its dry run."""
 
     role: str
     dry: DryRun
     name: str
     """The new column's name (`new_name`)."""
+    moved: Binding | None = None
+    """What happens to the column on the axis the conversion takes (`bindings.axis_slot`)."""
+
+    @property
+    def certain(self) -> bool:
+        return self.dry.certain
+
+    @property
+    def outcome(self) -> Outcome:
+        return "date" if self.dry.type == "datetime" else "number"
 
     def operations(self) -> list[dict[str, Any]]:
         """The `prepare_data` operations that make the conversion: the new column, then a sort when it runs newest first."""
-        operations: list[dict[str, Any]] = [
-            {"op": "set_type", "column": self.dry.column, "type": self.dry.type, "name": self.name}
-        ]
+        conversion: dict[str, Any] = {"op": "set_type", "column": self.dry.column, "type": self.dry.type}
+        if self.dry.date_format is not None:
+            conversion["date_format"] = self.dry.date_format
+        operations = [{**conversion, "name": self.name}]
         if self.dry.order == "descending":
             operations.append({"op": "sort", "column": self.name})
         return operations
@@ -87,7 +116,8 @@ class Candidate:
     def line(self) -> str:
         """The session block's line: the role, the column, the counts, certain or why not, and the operations."""
         dry = self.dry
-        line = f"{self.role}: column '{dry.column}' (text): {dry.read} of {dry.present} cells would be {dry.reading}"
+        kind = "text" if dry.date_format is None else "whole numbers"
+        line = f"{self.role}: column '{dry.column}' ({kind}): {dry.read} of {dry.present} cells would be {dry.reading}"
         if dry.certain:
             line += "; certain: every cell reads and nothing is guessed"
         else:
@@ -100,7 +130,49 @@ class Candidate:
             line += f"; uncertain: {' and '.join(reasons)}"
         if dry.order == "descending":
             line += "; the dates run newest first, so the sort puts them oldest first"
+        if self.moved is not None:
+            line += f"; {self.moved.role} then takes '{self.moved.column}', which {self.role} holds now"
         return f"{line}; operations: {json.dumps(self.operations(), ensure_ascii=False)}"
+
+
+@dataclass(frozen=True)
+class RowNumbers:
+    """The row numbers for a role that no column and no conversion can fill (`bindings.row_slot`)."""
+
+    slot: RowSlot
+    name: str
+    rows: int
+
+    @property
+    def role(self) -> str:
+        return self.slot.role
+
+    @property
+    def certain(self) -> bool:
+        return self.slot.certain
+
+    @property
+    def outcome(self) -> Outcome:
+        return "index"
+
+    def operations(self) -> list[dict[str, Any]]:
+        return [{"op": "row_number", "name": self.name}]
+
+    def line(self) -> str:
+        """The session block's line: the role, what would fill it, certain or why not, and the operations."""
+        line = f"{self.role}: no column or conversion fills it; column '{self.name}' holds the row numbers 1 to {self.rows}"
+        if self.certain:
+            line += "; certain: a list of values is drawn by position"
+        else:
+            line += f"; uncertain: the table has no labels for {self.role}, and a row number says nothing as a label"
+        if self.slot.moved is not None:
+            line += f"; {self.slot.moved.role} then takes '{self.slot.moved.column}', which {self.role} holds now"
+        return f"{line}; operations: {json.dumps(self.operations(), ensure_ascii=False)}"
+
+
+def stays_text(column: ColumnProfile) -> bool:
+    """A column no conversion touches: ids, codes or spans of years, by its name or its frequent cells."""
+    return id_like(column.name) or span_like(column.name) or code_like(column)
 
 
 def candidates(
@@ -112,22 +184,26 @@ def candidates(
     language: str = DEFAULT_LANGUAGE,
     keep_text: Collection[str] = (),
     cache: MutableMapping[tuple[str, str], DryRun | None] | None = None,
-) -> list[Candidate]:
+) -> list[Candidate | RowNumbers]:
     """The conversions that would fill the required roles `bindings` leave open, at most `MAX_CANDIDATES`.
 
-    The roles in spec order, each taking the first free text column (in column order) whose
-    dry run reads it as the role's type; a column serves one role. `keep_text` names the
+    The roles in spec order, each taking the first free column (in column order) whose dry
+    run reads it as the role's type; a column serves one role. `keep_text` names the
     columns kept text on request, `cache` holds the dry runs by column and type
     (`StoredDataset.dry_runs`); `parsed` is read into a frame only when a dry run is due.
+    With no conversion at all, the row numbers (`RowNumbers`).
     """
     missing = set(check_bindings(bindings, roles, profile).missing_roles)
     if not missing:
         return []
     used = {binding.column for binding in bindings}
-    free = [column.name for column in profile.columns if column.dtype == "text" and column.name not in used]
-    free = [name for name in free if name not in keep_text]
-    if not free:
-        return []
+    columns = [column for column in profile.columns if column.name not in used]
+    free = [
+        column.name
+        for column in columns
+        if column.dtype == "text" and column.name not in keep_text and not stays_text(column)
+    ]
+    years = [column.name for column in columns if year_score(column) == 2]
     runs = cache if cache is not None else {}
     frame = None
 
@@ -137,16 +213,23 @@ def candidates(
         if key not in runs:
             if frame is None:
                 frame = read_frame(parsed)
-            runs[key] = dry_run(frame, column, target, profile.decimal)
+            runs[key] = year_run(frame, column) if column in years else dry_run(frame, column, target, profile.decimal)
         return runs[key]
 
+    slot = axis_slot(bindings, roles, profile)
+    moved = slot.moved if slot is not None else None
+    wanted = {role.name for role in roles if role.name in missing}
+    if slot is not None and moved is not None and "datetime" in slot.role.kinds:
+        wanted.add(slot.role.name)
     taken: set[str] = set()
     names = {column.name for column in profile.columns}
-    found: list[Candidate] = []
+    found: list[Candidate | RowNumbers] = []
     for role in roles:
-        if role.name not in missing or len(found) == MAX_CANDIDATES:
+        if role.name not in wanted or len(found) == MAX_CANDIDATES:
             continue
-        for column in free:
+        if role.name in missing and found and moved is not None:
+            continue  # the dates that take the axis leave this role the axis's column
+        for column in [*free, *(years if "datetime" in role.kinds else [])]:
             if column in taken:
                 continue
             dates = run(column, "datetime")
@@ -158,9 +241,26 @@ def candidates(
             name = new_name(column, dry.type, language, names)
             names.add(name)
             taken.add(column)
-            found.append(Candidate(role.name, dry, name))
+            on_axis = slot is not None and role.name == slot.role.name
+            found.append(Candidate(role.name, dry, name, moved if on_axis else None))
             break
-    return found
+    return found or _row_numbers(bindings, roles, profile, used)
+
+
+def _row_numbers(
+    bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile, used: Collection[str]
+) -> list[Candidate | RowNumbers]:
+    """The row numbers as the one candidate, when `bindings.row_slot` finds them a role."""
+    slot = row_slot(bindings, roles, profile)
+    if slot is None:
+        return []
+    names = {column.name for column in profile.columns}
+    pasted = sorted(row_number_columns(profile) - set(used))
+    name, number = (pasted[0] if pasted else ROW_NUMBER_NAME), 2
+    while not pasted and name in names:
+        name = f"{ROW_NUMBER_NAME}_{number}"
+        number += 1
+    return [RowNumbers(slot, name, profile.rows)]
 
 
 def new_name(column: str, target: Target, language: str, taken: Collection[str]) -> str:
