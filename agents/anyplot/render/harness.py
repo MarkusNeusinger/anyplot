@@ -2416,18 +2416,28 @@ def vega_texts(scenegraph):
 
 
 def write_text_probe(theme, report):
-    """`probe-<theme>.json` from `report`, a text probe or `{"error": <class>}`; a failed write leaves no probe.
+    """`probe-<theme>.json` from `report`, a text probe or `{"error": <class>}`; a failed write leaves no probe that
+    parses, which the host reads as none (`read_probe`).
 
     Opened without following a link, as `collect_text_probe` reads: in exec mode the child that ran before could have
-    left one at the probe's name. The path is absolute, which the plot guard asks of an `os.open` write.
+    left one at the probe's name. The path is absolute, which the plot guard asks of an `os.open` write, and the text
+    goes out through `os.write` on that descriptor: `os.fdopen(descriptor, "w")` raises an `open` event for the bare
+    descriptor, which the plot guard refuses as a write that names no path (`writes_elsewhere`), so the probes of
+    pygal, altair and lets-plot, written while the guard is armed, stayed empty (found 2026-11-02).
     """
     flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NOFOLLOW", 0)
+    data = json.dumps(report).encode("utf-8")
     try:
         descriptor = os.open(os.path.abspath(f"probe-{theme}.json"), flags, 0o644)
-        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
-            handle.write(json.dumps(report))
+    except OSError:
+        return
+    try:
+        while data:
+            data = data[os.write(descriptor, data) :]
     except OSError:
         pass
+    finally:
+        os.close(descriptor)
 
 
 def wrap_text_probe(owner, name, theme, read):

@@ -78,7 +78,12 @@ Decisions this module takes where the design leaves room:
   `from` imports, and a private name (one leading underscore) is banned on anything an
   import bound, and as a `from` import. Both are banned as a component of an import
   path below its root too, where an alias would hide them from the attribute check
-  (`import scipy.fft._backend as backend`). No catalogue file uses either.
+  (`import scipy.fft._backend as backend`). No catalogue file uses either. A banned object
+  can also sit under a name no ban lists (pygal binds `types.FunctionType` as
+  `config.callable`), so a test walks every public attribute path from the admitted modules
+  and fails on each one that reaches, by identity, an object these rules ban, a member of a
+  module they ban, or a frame (`test_no_admitted_module_hands_out_a_banned_object`); CI runs
+  it with every plotting library installed, and the names it found are banned below.
 * **Exec, process and import-by-name routes through allowed modules** (review of
   2026-10-14: `np.testing.measure("...")` compiled and ran any string). A survey of every
   public function of the allowed packages for `exec`, `eval`, `compile`, `subprocess`,
@@ -844,6 +849,12 @@ ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
         "CodeType",
         "FunctionType",
         "LambdaType",  # `types.FunctionType` under its other name (the walk of 2026-10-31)
+        # `pygal.config` binds `types.FunctionType` as `callable` (the identity walk of 2026-11-02). The builtin
+        # `callable(x)` is a name, not an attribute, and stays allowed.
+        "callable",
+        # statsmodels' `regression.mixed_linear_model` re-exports the standard `tokenize`, whose `open` reads any file
+        # (the same walk).
+        "tokenize",
         "attrgetter",
         "methodcaller",
         "global_enum",
@@ -1104,6 +1115,11 @@ UNSAFE_HELPERS: frozenset[str] = frozenset(
         "new_class",
         "prepare_class",
         "ModuleType",
+        # The identity walk of 2026-11-02 (`test_no_admitted_module_hands_out_a_banned_object`): statsmodels'
+        # `graphics.functional` re-exports multiprocessing's `Pool`, which starts worker processes, and altair's
+        # `utils.schemapi` binds `importlib.metadata.version` as `importlib_version` (`altair.version` below).
+        "Pool",
+        "importlib_version",
     }
 )
 """Public functions and classes of the allowed modules that exec, start a process, import by name, fetch or write
@@ -1123,6 +1139,14 @@ MODULE_ESCAPES: frozenset[str] = frozenset(
         "plotnine.ggplot.Path",
         "altair.utils.data.Path",
         "altair.vegalite.v6.display.Path",
+        # The same class where matplotlib and statsmodels re-export it (the identity walk of 2026-11-02); matplotlib's
+        # own `matplotlib.path.Path`, which markers and patches use, is another class and stays.
+        "matplotlib.Path",
+        "matplotlib.cbook.Path",
+        "matplotlib.font_manager.Path",
+        "matplotlib.image.Path",
+        "matplotlib.style.Path",
+        "statsmodels.tsa.vector_ar.util.Path",
         "altair.version",
         "mizani.version",
         # cairosvg (surveys of 2026-10-24): `parser` reads the main input from any path or URL with an unrestricted

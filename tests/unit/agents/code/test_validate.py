@@ -5,8 +5,12 @@ bypass the design doc names, and the catalogue (never raises, runs under a time 
 and prints a per-rule summary under `-s`; the catalogue is not clean by design).
 """
 
+import importlib
 import pkgutil
+import sys
 import time
+import types
+import warnings
 from collections import Counter
 from pathlib import Path
 from typing import get_args
@@ -35,6 +39,7 @@ from agents.anyplot.code.validate import (
 )
 from agents.anyplot.schemas import MAX_CODE_CHARS
 from core.palette import IMPRINT
+from tests.libraries import REQUIRE_LIBRARIES_ENV, import_library, libraries_required
 
 from .conftest import CATALOGUE_FILES, CODE_LIBRARIES
 
@@ -1617,7 +1622,7 @@ REVIEWED_SUBMODULES: dict[str, frozenset[str]] = {
 @pytest.mark.parametrize("root", sorted(REVIEWED_SUBMODULES))
 def test_every_submodule_is_reviewed(root: str) -> None:
     """A public submodule is reviewed as safe, or the validator bans its name on every receiver or on its module."""
-    package = pytest.importorskip(root)
+    package = import_library(root)
     on_module = {path.rpartition(".")[2] for path in MODULE_ESCAPES if path.rpartition(".")[0] == root}
     banned = ESCAPE_ATTRIBUTES | UNSAFE_SUBMODULES | UNSAFE_HELPERS | BANNED_ATTRIBUTES | BANNED_IO | on_module
     found = {info.name for info in pkgutil.iter_modules(package.__path__) if not info.name.startswith("_")}
@@ -1626,7 +1631,8 @@ def test_every_submodule_is_reviewed(root: str) -> None:
     assert not REVIEWED_SUBMODULES[root] & banned
 
 
-# --- import machinery reachable from the admitted modules (F6 and F7 of PB-1's review, 2026-10-31) -----------------
+# --- banned objects reachable from the admitted modules under any name (F6 and F7 of PB-1's review, 2026-10-31; the
+# identity walk of 2026-11-02) ---------------------------------------------------------------------------------------
 
 IMPORT_MACHINERY_MODULES = frozenset(
     {
@@ -1647,55 +1653,181 @@ IMPORT_MACHINERY_MODULES = frozenset(
 )
 """Modules whose mere reach is a route. The `types` module is not one: typing, dataclasses, matplotlib.cbook and pandas
 re-export it, and its dangerous members (`new_class`, `ModuleType`, `FunctionType`, `CodeType`) are banned by name."""
-IMPORT_MACHINERY_FUNCTIONS = frozenset(
-    {"importlib", "importlib.util", "_frozen_importlib", "_frozen_importlib_external", "zipimport", "pkgutil", "runpy"}
+BANNED_MODULES = (
+    frozenset(name for name in ESCAPE_ATTRIBUTES | UNSAFE_SUBMODULES if name in sys.stdlib_module_names)
+    | IMPORT_MACHINERY_MODULES
+    | {"builtins", "posix", "gc", "marshal", "io", "_io", "tokenize"}
 )
+"""Modules the walk treats as banned together with every function and class they define, matched by the root of the
+object's `__module__` (`pathlib._local.Path` is pathlib's): the standard modules the validator bans by name, the
+import machinery, and the modules that hand out what those bans keep out: `builtins` every builtin, `posix` the
+functions of `os` under their C module's name, `gc.get_objects` every live object, `marshal.loads` code objects,
+`io.FileIO` and `io.open_code` any path, and `tokenize.open` any file."""
+REVIEWED_MEMBERS: dict[str, str] = {
+    "_io.StringIO": "an in-memory text buffer",
+    "_io.BytesIO": "an in-memory byte buffer",
+    "inspect.signature": "reads a callable's parameters: no source, no attribute by string",
+    "inspect.Signature": "a callable's parameters",
+    "inspect.Parameter": "one parameter of a signature",
+    "inspect._empty": "the marker of a parameter without a default or an annotation",
+    "sys.getsizeof": "an object's size in bytes",
+    "shutil.get_terminal_size": "the terminal's size, from the environment or standard output",
+    "threading.RLock": "a reentrant lock",
+    "urllib.parse.quote_plus": "escapes text for a URL query; fetches nothing",
+    "urllib.parse.urlencode": "builds a URL query string; fetches nothing",
+    "uuid.uuid4": "a random UUID",
+    "importlib.metadata.PackageNotFoundError": "an exception class",
+}
+"""Functions and classes of `BANNED_MODULES` that an admitted module re-exports, reviewed as harmless (the walk of
+2026-11-02), keyed by the object's own `__module__` and `__qualname__`: a re-export anywhere is the same object, and a
+reviewed class covers its methods (`inspect.Signature.bind`)."""
+HARMLESS_BY_NAME = frozenset({"memoryview"})
+"""Builtins the validator bans by name whose class is no route: every numpy array hands out a `memoryview` as
+`.data`, and `numpy.ScalarType` lists the class among the scalar types."""
+FRAME_KINDS = (
+    types.FrameType,
+    types.TracebackType,
+    types.CodeType,
+    types.GeneratorType,
+    types.CoroutineType,
+    types.AsyncGeneratorType,
+)
+"""Values that are a frame, hand one out (`tb_frame`, `gi_frame`, `cr_frame`, `ag_frame`) or run as code. The types
+themselves build none of these, so they are no finding (`types.FrameType`, `collections.abc.generator`)."""
+WALK_ITEMS = 400
+"""Attributes of a class and items of a container the walk reads, in order: the longest class (bokeh's models) has
+fewer public attributes than this."""
 
 
-def _import_machinery(value: object) -> bool:
-    """A module of the import machinery, a loader class or `ModuleType`, a function of the machinery's modules, or one
-    of the `types` members that build classes and functions."""
+def _objects_banned_by_name() -> dict[int, object]:
+    """`id` → object of everything the validator bans by name, where the walk can meet it under another name: the
+    builtins of `BANNED_NAMES`, and each function or class of `types`, the import machinery's modules and the admitted
+    standard modules whose name an attribute ban lists (`types.FunctionType`, `types.LambdaType`, `operator.attrgetter`,
+    `typing.get_type_hints`, `pkgutil.get_data`, `importlib.metadata.entry_points`, ...). Only objects a standard
+    module defines count: plotnine replaces `warnings.formatwarning` with its own formatter when it is imported, which
+    reads no file. Modules are left to `BANNED_MODULES`; the builtins an attribute ban names for another object (the
+    builtin `callable`, pygal's `config.callable` being `types.FunctionType`) are no finding."""
+    import builtins
+
+    found: dict[int, object] = {}
+    for name in validate.BANNED_NAMES - HARMLESS_BY_NAME:
+        value = getattr(builtins, name, None)
+        if value is not None:
+            found[id(value)] = value
+    names = ESCAPE_ATTRIBUTES | UNSAFE_SUBMODULES | UNSAFE_HELPERS | BANNED_ATTRIBUTES | BANNED_IO
+    homes = ("types", "importlib", "importlib.util", "importlib.metadata", "pkgutil")
+    for home in sorted({*homes, *(module for module in validate.DATA_IMPORTS if module in sys.stdlib_module_names)}):
+        namespace = vars(importlib.import_module(home))
+        for name in names:
+            value = namespace.get(name)
+            if not callable(value) or isinstance(value, types.ModuleType):
+                continue
+            module = getattr(value, "__module__", None)
+            if isinstance(module, str) and module.split(".")[0] in sys.stdlib_module_names:
+                found[id(value)] = value
+    return found
+
+
+def _in_banned_module(module: str) -> bool:
+    return module in BANNED_MODULES or module.split(".")[0] in BANNED_MODULES
+
+
+def _banned_object(value: object, by_name: dict[int, object]) -> bool:
+    """A frame, traceback, code object, generator or coroutine (`FRAME_KINDS`); a module of `BANNED_MODULES`; an object
+    the validator bans by name (`_objects_banned_by_name`); a loader class; or a function or class of a banned module
+    that is not in `REVIEWED_MEMBERS`. Decided by what the object is, never by the name it is reached under."""
     import importlib.abc
-    import types
 
+    if isinstance(value, FRAME_KINDS):
+        return True
     if isinstance(value, types.ModuleType):
-        return value.__name__ in IMPORT_MACHINERY_MODULES
+        return _in_banned_module(value.__name__)
+    if id(value) in by_name and by_name[id(value)] is value:
+        return True
     if isinstance(value, type):
         try:
-            return issubclass(value, importlib.abc.Loader) or value in (
-                types.ModuleType,
-                types.FunctionType,
-                types.CodeType,
-            )
+            if issubclass(value, importlib.abc.Loader):
+                return True
         except TypeError:
             return False
-    if value is types.new_class or value is types.prepare_class:
-        return True
-    return callable(value) and getattr(value, "__module__", None) in IMPORT_MACHINERY_FUNCTIONS
+    if not callable(value):
+        return False
+    try:
+        module = value.__module__
+        name = getattr(value, "__qualname__", type(value).__qualname__)
+    except Exception:
+        return False
+    # The builtins' own types and functions (`int`, `len`, `property`) are everywhere; the ones the validator bans
+    # are matched by identity above.
+    if not isinstance(module, str) or module == "builtins" or not _in_banned_module(module):
+        return False
+    return f"{module}.{name}" not in REVIEWED_MEMBERS and f"{module}.{name.partition('.')[0]}" not in REVIEWED_MEMBERS
 
 
-def _reachable_import_machinery(depth: int = 4) -> list[tuple[str, str]]:
-    """`(root, path)` of every import-machinery value a public attribute chain reaches from the admitted modules: the
-    modules below a root up to `depth` attributes, and one level of attributes of the classes found there."""
-    import importlib
-    import types
-    import warnings
+def _banned_members(value: object, path: str, by_name: dict[int, object]) -> list[str]:
+    """The paths of the banned objects one level below `value`: a class's public attributes, another object's public
+    instance attributes, and the items of a dict (by key), list or tuple; at most `WALK_ITEMS` of each."""
+    members: list[tuple[str, object]] = []
+    if isinstance(value, type):
+        for attribute in [name for name in dir(value) if not name.startswith("_")][:WALK_ITEMS]:
+            try:
+                members.append((f"{path}.{attribute}", getattr(value, attribute)))
+            except Exception:
+                continue
+    elif isinstance(value, dict):
+        members = [(f"{path}[{key!r}]", item) for key, item in list(value.items())[:WALK_ITEMS]]
+    elif isinstance(value, list | tuple):
+        members = [(f"{path}[{index}]", item) for index, item in enumerate(value[:WALK_ITEMS])]
+    elif not callable(value):
+        try:
+            attributes = dict(vars(value))
+        except TypeError:
+            attributes = {}
+        members = [(f"{path}.{name}", item) for name, item in attributes.items() if not name.startswith("_")]
+    return [member for member, item in members if _banned_object(item, by_name)]
 
+
+def _import_root(root: str) -> tuple[types.ModuleType | None, bool]:
+    """The admitted module `root` (None for a root that names a function, `bokeh.embed.json_item`) and whether it
+    imported here."""
+    try:
+        return importlib.import_module(root), True
+    except ModuleNotFoundError as exc:
+        parent, _, name = root.rpartition(".")
+        if not parent or exc.name != root:
+            return None, False
+        try:
+            return None, hasattr(importlib.import_module(parent), name)
+        except Exception:
+            return None, False
+    except Exception:  # cairosvg raises OSError without libcairo
+        return None, False
+
+
+def _reachable_banned_objects(depth: int = 4) -> tuple[list[tuple[str, str]], list[str]]:
+    """`(root, path)` of every banned object (`_banned_object`) a public attribute chain reaches from the admitted
+    modules, and the admitted modules that did not import. The walk follows the modules below a root up to `depth`
+    attributes and reads one level below everything else it finds there (`_banned_members`); it stops at a banned
+    object, which it reports once."""
+    by_name = _objects_banned_by_name()
     roots = sorted(
         frozenset(validate.COMMON_IMPORTS)
         | validate.SHARED_SCIENCE_IMPORTS
+        | validate.DATA_IMPORTS
         | frozenset().union(*validate.LIBRARY_IMPORTS.values())
     )
     found: list[tuple[str, str]] = []
+    missing: list[str] = []
     seen: set[int] = set()
     queue: list[tuple[types.ModuleType, str, str, int]] = []
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         for root in roots:
-            try:
-                queue.append((importlib.import_module(root), root, root, 0))
-            except Exception:
-                continue  # a library this test environment does not install
+            module, imported = _import_root(root)
+            if not imported:
+                missing.append(root)
+            elif module is not None:
+                queue.append((module, root, root, 0))
         while queue:
             module, root, path, level = queue.pop(0)
             if id(module) in seen:
@@ -1707,38 +1839,58 @@ def _reachable_import_machinery(depth: int = 4) -> list[tuple[str, str]]:
                 except Exception:
                     continue
                 here = f"{path}.{name}"
-                if _import_machinery(value):
+                if _banned_object(value, by_name):
                     found.append((root, here))
-                if isinstance(value, types.ModuleType) and level < depth:
-                    queue.append((value, root, here, level + 1))
-                elif isinstance(value, type) and level < depth:
-                    for attribute in [a for a in dir(value) if not a.startswith("_")][:400]:
-                        try:
-                            if _import_machinery(getattr(value, attribute)):
-                                found.append((root, f"{here}.{attribute}"))
-                        except Exception:
-                            continue
-    return found
+                elif isinstance(value, types.ModuleType):
+                    if level < depth:
+                        queue.append((value, root, here, level + 1))
+                else:
+                    found.extend((root, member) for member in _banned_members(value, here, by_name))
+    return found, missing
 
 
-def test_no_admitted_module_hands_out_import_machinery(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Every public attribute path from an admitted module to the import machinery (loaders, spec builders, `pkgutil`,
-    `types`, `sys`) is refused, so plot code cannot drive an import of its own (F6) or read package files by name
-    (F7: matplotlib's `dateutil.zoneinfo.get_data` and `dateutil.tz.six.spec_from_loader`, found by this walk). A
-    library upgrade that adds such a path fails here until it is banned."""
+def _refused(root: str, path: str) -> bool:
+    """Whether the validator refuses `x = <path>` after `import <root>`, in a profile that admits `root`: the DATA
+    profile for `random`, the library's for a library module, matplotlib's for the rest."""
+    code = f"import {root}\nx = {path}\n"
+    library = next((name for name, modules in validate.LIBRARY_IMPORTS.items() if root in modules), None)
+    if library is None and root not in validate.COMMON_IMPORTS | validate.SHARED_SCIENCE_IMPORTS:
+        return any(f.rule != "data-frame" for f in validate_data_code(code))
+    return any(f.rule != "savefig-target" for f in validate_security(code, library=library or "matplotlib"))
+
+
+def test_no_admitted_module_hands_out_a_banned_object(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Every public path from an admitted module to an object the validator bans is refused, whatever the path calls
+    it, because the walk decides by what the object is: the import machinery, so plot code cannot drive an import of
+    its own (F6) or read package files by name (F7: matplotlib's `dateutil.zoneinfo.get_data` and
+    `dateutil.tz.six.spec_from_loader`); a builtin or `types` member the validator bans by name, met under another
+    (pygal's `config.callable` is `types.FunctionType`, the walk of 2026-11-02); a module the validator bans, or one
+    of its functions or classes (statsmodels' `functional.Pool`, matplotlib's `Path`, which is pathlib's); and a
+    frame, a generator or a code object. A library upgrade that adds such a path fails here until the validator bans
+    it, or until a member of a banned module is reviewed as harmless (`REVIEWED_MEMBERS`). Where CI requires the
+    libraries (`ANYPLOT_REQUIRE_LIBRARIES=1`), every admitted module must import, so no library drops out unseen."""
     monkeypatch.setenv("MPLBACKEND", "Agg")
-    profiles = validate.LIBRARY_IMPORTS
-    admitted = []
-    paths = _reachable_import_machinery()
+    paths, missing = _reachable_banned_objects()
+    if missing and libraries_required():
+        pytest.fail(f"admitted modules that do not import ({REQUIRE_LIBRARIES_ENV}=1): {missing}")
     assert paths, "the walk reached nothing: the admitted modules did not import"
-    for root, path in paths:
-        library = next((name for name, modules in profiles.items() if root in modules), "matplotlib")
-        findings = [
-            f for f in validate_security(f"import {root}\nx = {path}\n", library=library) if f.rule != "savefig-target"
-        ]
-        if not findings:
-            admitted.append(path)
-    assert not admitted, f"the validator admits import machinery: {admitted[:10]}"
+    admitted = [path for root, path in paths if not _refused(root, path.split("[")[0])]
+    assert not admitted, f"the validator admits a banned object under another name: {admitted[:10]}"
+
+
+def test_the_walk_decides_by_identity() -> None:
+    """`types.FunctionType` is banned under any name it is reached by, a member of a banned module is banned unless it
+    was reviewed, and the types of frames and generators are no finding."""
+    by_name = _objects_banned_by_name()
+    renamed = types.SimpleNamespace(callable=types.FunctionType, reader=types.LambdaType)
+    assert _banned_members(renamed, "renamed", by_name) == ["renamed.callable", "renamed.reader"]
+    import io
+    import pathlib
+
+    assert _banned_object(pathlib.Path, by_name) and _banned_object(io.FileIO, by_name)
+    assert not _banned_object(io.StringIO, by_name)
+    assert not _banned_object(types.FrameType, by_name) and not _banned_object(types.GeneratorType, by_name)
+    assert _banned_object((i for i in ()), by_name)
 
 
 @pytest.mark.parametrize(
@@ -1764,6 +1916,42 @@ def test_no_admitted_module_hands_out_import_machinery(monkeypatch: pytest.Monke
 )
 def test_the_package_data_and_spec_routes_are_refused(code: str) -> None:
     assert [f for f in validate_security(code, library="matplotlib") if f.rule != "savefig-target"]
+
+
+@pytest.mark.parametrize(
+    ("library", "code"),
+    [
+        pytest.param("pygal", "import pygal\nmake = pygal.config.callable\n", id="pygal's FunctionType alias"),
+        pytest.param("pygal", "from pygal.config import callable\n", id="the alias imported"),
+        pytest.param("pygal", "import pygal\nmake = [pygal.config][0].callable\n", id="the alias on any receiver"),
+        pytest.param("matplotlib", "import matplotlib\np = matplotlib.Path('.')\n", id="matplotlib's pathlib.Path"),
+        pytest.param("matplotlib", "from matplotlib.cbook import Path\n", id="pathlib.Path imported from cbook"),
+        pytest.param(
+            "matplotlib",
+            "import statsmodels.tsa\np = statsmodels.tsa.vector_ar.util.Path('.')\n",
+            id="statsmodels' pathlib.Path",
+        ),
+        pytest.param(
+            "matplotlib",
+            "import statsmodels.graphics.functional as functional\npool = functional.Pool()\n",
+            id="multiprocessing's Pool",
+        ),
+        pytest.param(
+            "altair",
+            "import altair as alt\nv = alt.utils.schemapi.importlib_version('pyarrow')\n",
+            id="importlib.metadata.version",
+        ),
+        pytest.param(
+            "matplotlib",
+            "import statsmodels.api as sm\nt = sm.regression.mixed_linear_model.tokenize\n",
+            id="the tokenize module",
+        ),
+    ],
+)
+def test_the_aliases_of_banned_objects_are_refused(library: str, code: str) -> None:
+    """The paths the identity walk of 2026-11-02 found (`test_no_admitted_module_hands_out_a_banned_object`); the
+    validator never imports a library, so these hold where none is installed."""
+    assert [f for f in validate_security(code, library=library) if f.rule != "savefig-target"]
 
 
 # --- plotnine and altair (step 1b of agentic/specs/261024-agent-all-libraries.md) ------------------------------

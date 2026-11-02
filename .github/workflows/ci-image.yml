@@ -805,8 +805,9 @@ jobs:
       # and less (measured 2026-10-25, 1024 MB included). This run leaves
       # ANYPLOT_RLIMIT_AS_MB out, as the altair row of agents/renderer/commands.py does;
       # every other flag is the seaborn step's. The PIL block is the catalogue's padding
-      # to 3200 x 1800, which reopens the PNG. vl-convert draws no matplotlib figure, so
-      # the run writes no probe: the PNG's size and the HTML are the asserts.
+      # to 3200 x 1800, which reopens the PNG. vl-convert draws no matplotlib figure: the
+      # probe holds the texts of its scenegraph (install_text_probes in harness.py), written
+      # while the guard is armed. The PNG's size, the HTML and those texts are the asserts.
       - name: Render an altair plot through the harness
         if: steps.check.outputs.should_build == 'true'
         run: |
@@ -847,6 +848,7 @@ jobs:
           grep -qxF 'HARNESS {"event": "start"}' work-altair/harness.out || { echo "::error::no HARNESS start line"; cat work-altair/harness.out; exit 1; }
           grep -q '^HARNESS {"event": "end"' work-altair/harness.out || { echo "::error::no HARNESS end line"; cat work-altair/harness.out; exit 1; }
           python3 - <<'EOF'
+          import json
           import struct
           png = open("work-altair/plot-light.png", "rb").read()
           assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
@@ -854,7 +856,10 @@ jobs:
           assert (width, height) == (3200, 1800), (width, height)
           html = open("work-altair/plot-light.html", encoding="utf-8").read()
           assert "vega" in html, "plot-light.html holds no Vega chart"
+          labels = {(label["kind"], label["text"]) for label in json.load(open("work-altair/probe-light.json"))["labels"]}
+          assert ("x axis label", "x") in labels, sorted(labels)
           print(f"OK: altair plot-light.png {width}x{height}, {len(png)} bytes; plot-light.html {len(html)} characters")
+          print(f"OK: altair probe with {len(labels)} drawn texts")
           EOF
           tail -n 1 work-altair/harness.out
 
@@ -862,7 +867,8 @@ jobs:
       # seaborn step's flags, as its row of agents/renderer/commands.py keeps the Python
       # defaults. Its PNG is cairosvg's: libcairo from the image's apt layer, loaded before the
       # guard (warm_cairo in harness.py), and cssselect2's selector lambdas (CODE_BUILDERS).
-      # The HTML twin is the chart's SVG, written by render_to_file; pygal writes no probe.
+      # The HTML twin is the chart's SVG, written by render_to_file; the probe holds the texts
+      # of the SVG svg2png receives (install_text_probes), written while the guard is armed.
       # Two forms: render_to_png on a 3200x1800 chart, and the form the normaliser's canvas
       # rewrite gives oversized charts (agents/anyplot/code/normalise.py; 94 catalogue files
       # on 2026-10-26, 89 of them 4800x2700): the plot itself imports cairosvg and calls
@@ -883,6 +889,7 @@ jobs:
             grep -qxF 'HARNESS {"event": "start"}' "$work/harness.out" || { echo "::error::no HARNESS start line in $work"; cat "$work/harness.out"; exit 1; }
             grep -q '^HARNESS {"event": "end"' "$work/harness.out" || { echo "::error::no HARNESS end line in $work"; cat "$work/harness.out"; exit 1; }
             python3 - "$work" <<'EOF'
+          import json
           import struct
           import sys
 
@@ -893,7 +900,10 @@ jobs:
           assert (width, height) == (3200, 1800), (width, height)
           html = open(f"{work}/plot-light.html", encoding="utf-8").read()
           assert "pygal-chart" in html, "plot-light.html holds no pygal chart"
+          labels = {(label["kind"], label["text"]) for label in json.load(open(f"{work}/probe-light.json"))["labels"]}
+          assert {("title", "pygal"), ("x axis label", "x")} <= labels, sorted(labels)
           print(f"OK: {work} plot-light.png {width}x{height}, {len(png)} bytes; plot-light.html {len(html)} characters")
+          print(f"OK: {work} probe with {len(labels)} drawn texts")
           EOF
             tail -n 1 "$work/harness.out"
           }
@@ -939,7 +949,8 @@ jobs:
       # the command table itself (commands.py imports only the standard library, so the
       # runner's Python reads it), in the order the sandbox's environment has them. Every
       # other flag is the seaborn step's. Without the fontconfig file every export writes
-      # "Fontconfig error" to stderr, which is the extra assert. No probe.
+      # "Fontconfig error" to stderr, which is the extra assert. The probe holds the texts of
+      # the SVG the bridge exports from the same spec (install_text_probes).
       - name: Render a lets-plot plot through the harness
         if: steps.check.outputs.should_build == 'true'
         run: |
@@ -990,6 +1001,7 @@ jobs:
             echo "::error::lets-plot's fontconfig found no configuration"; cat work-letsplot/harness.err; exit 1
           fi
           python3 - <<'EOF'
+          import json
           import struct
           png = open("work-letsplot/plot-light.png", "rb").read()
           assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
@@ -997,7 +1009,10 @@ jobs:
           assert (width, height) == (3200, 1800), (width, height)
           html = open("work-letsplot/plot-light.html", encoding="utf-8").read()
           assert "data-lets-plot-script" in html, "plot-light.html holds no lets-plot chart"
+          labels = {(label["kind"], label["text"]) for label in json.load(open("work-letsplot/probe-light.json"))["labels"]}
+          assert {("title", "lets-plot"), ("x axis label", "x")} <= labels, sorted(labels)
           print(f"OK: lets-plot plot-light.png {width}x{height}, {len(png)} bytes; plot-light.html {len(html)} characters")
+          print(f"OK: lets-plot probe with {len(labels)} drawn texts")
           EOF
           tail -n 1 work-letsplot/harness.out
           # Every in-process run requires the harness's kernel filter against program starts

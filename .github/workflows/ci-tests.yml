@@ -61,6 +61,11 @@ jobs:
 
     env:
       ENVIRONMENT: test
+      # Every plotting library is installed below, so a test that needs one fails
+      # when it does not import instead of skipping (tests/libraries.py). Without
+      # them the validator's walk of the admitted modules saw matplotlib alone and
+      # missed pygal's alias of types.FunctionType (2026-11-02).
+      ANYPLOT_REQUIRE_LIBRARIES: "1"
 
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -160,9 +165,14 @@ jobs:
       if: steps.check.outputs.should_test == 'true'
       run: uv lock --check
 
+    # The eight `lib-*` extras the renderer image installs: the validator tests
+    # walk every module it admits, and the harness tests render each library.
     - name: Install dependencies
       if: steps.check.outputs.should_test == 'true'
-      run: uv sync --extra test --extra agents
+      run: >-
+        uv sync --extra test --extra agents
+        --extra lib-matplotlib --extra lib-seaborn --extra lib-plotnine --extra lib-altair
+        --extra lib-pygal --extra lib-letsplot --extra lib-plotly --extra lib-bokeh
 
     # Unit tests (mocked dependencies) and integration tests (SQLite in memory)
     # for every author; the e2e tests against real PostgreSQL are in test-e2e.
