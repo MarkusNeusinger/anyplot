@@ -1,8 +1,12 @@
-import { fireEvent } from '@testing-library/react';
+import { fireEvent, render as rtlRender } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
+
+import { ThemeProvider } from '@mui/material/styles';
 
 import { LegalPage } from 'src/pages/LegalPage';
 import { render, screen } from 'src/test-utils';
+import { theme } from 'src/theme';
 
 const trackEvent = vi.fn();
 vi.mock('src/hooks', () => ({
@@ -209,6 +213,53 @@ describe('LegalPage', () => {
     expect(screen.getByRole('link', { name: 'React' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /FastAPI/ })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /PostgreSQL/ })).toBeInTheDocument();
+    // Eight grouped rows, each label a row header.
+    for (const group of [
+      'site',
+      'api',
+      'catalogue pipeline',
+      'data assistant',
+      'google cloud',
+      'edge & analytics',
+      'reviews',
+      'editor, typography',
+    ]) {
+      expect(screen.getAllByRole('rowheader', { name: group }).length).toBeGreaterThan(0);
+    }
+    expect(
+      screen.getByRole('row', {
+        name: /^data assistant\s*Google ADK, Claude Haiku 5\.5 via Vertex AI \(EU\)/,
+      })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/15\s+plotting libraries in Python, R, Julia and JavaScript/)
+    ).toBeInTheDocument();
+    // Only the services the repository pins to europe-west4 carry the region.
+    expect(
+      screen.getByText(
+        /Cloud Build and Artifact Registry in the\s+Netherlands \(europe-west4\), plus Secret Manager and Cloud Monitoring/
+      )
+    ).toBeInTheDocument();
+  });
+
+  it('opens a fresh load of /legal#assistant at the assistant section', () => {
+    // The route is lazy, so the browser's own jump to the fragment finds nothing; the page scrolls itself.
+    const original = Element.prototype.scrollIntoView;
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    try {
+      rtlRender(
+        <ThemeProvider theme={theme}>
+          <MemoryRouter initialEntries={['/legal#assistant']}>
+            <LegalPage />
+          </MemoryRouter>
+        </ThemeProvider>
+      );
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(scrollIntoView.mock.contexts[0]).toHaveAttribute('id', 'assistant');
+    } finally {
+      Element.prototype.scrollIntoView = original;
+    }
   });
 
   // The repository vendors JetBrains Mono (agents/anyplot/render/fonts/) under
@@ -233,10 +284,31 @@ describe('LegalPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders hosting costs', () => {
+  it('renders the running costs of one named month, with what they leave out', () => {
     render(<LegalPage />);
 
-    expect(screen.getByText('~$34/month')).toBeInTheDocument();
+    expect(screen.getByText('monthly running costs (October 2026)')).toBeInTheDocument();
+    const costs: [string, string][] = [
+      ['hosting: Cloud Run \\(site, api, data assistant, renderer\\)', '~\\$10'],
+      ['database: Cloud SQL', '~\\$25'],
+      ['data assistant model: Claude Haiku via Vertex AI', '~\\$15'],
+      ['storage, logs and builds', '~\\$1'],
+      ['domain \\(\\.ai\\)', '~\\$8'],
+      ['total', '~\\$60/month'],
+    ];
+    for (const [item, cost] of costs) {
+      expect(
+        screen.getByRole('row', { name: new RegExp(`^${item}\\s*${cost}$`) })
+      ).toBeInTheDocument();
+    }
+    // Paid after discounts, so the note says which ones, and that the model cost moves with use.
+    expect(
+      screen.getByText(/after three-year commitments and promotional credits/)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/the assistant.s model cost\s+grows with use/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/development tools and subscriptions are not included/)
+    ).toBeInTheDocument();
   });
 
   it('renders other projects links without noreferrer', () => {

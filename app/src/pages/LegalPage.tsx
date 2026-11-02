@@ -1,5 +1,7 @@
 import { type ReactNode, useEffect } from 'react';
 
+import { useLocation } from 'react-router-dom';
+
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import Table from '@mui/material/Table';
@@ -20,21 +22,40 @@ import {
   textStyle,
 } from 'src/theme';
 
-const firstColStyle = {
-  '& .MuiTableCell-root:first-of-type': {
-    fontWeight: 500,
-    color: 'var(--ink-soft)',
-    width: '25%',
-  },
-};
-
 const AVATAR_URL = 'https://storage.googleapis.com/anyplot-static/images/markusneusinger.webp';
 
+/** Where a linked section lands: below the sticky masthead (42 to 44 px), with a little air. */
+const ANCHOR_SX = { scrollMarginTop: '56px' } as const;
+
+/** An external link in the page's prose style, opened in a new tab. */
+function Ext({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link href={href} target="_blank" rel="noopener" sx={proseLinkStyle}>
+      {children}
+    </Link>
+  );
+}
+
 /** A two-column fact table: a short label as the row header, then the fact. */
-function FactTable({ rows }: { rows: [string, ReactNode][] }) {
+function FactTable({
+  rows,
+  labelWidth = '25%',
+}: {
+  rows: [string, ReactNode][];
+  labelWidth?: string;
+}) {
   return (
     <Table
-      sx={{ ...tableStyle, ...firstColStyle, '& .MuiTableCell-body': { verticalAlign: 'top' } }}
+      sx={{
+        ...tableStyle,
+        '& .MuiTableCell-body': { verticalAlign: 'top' },
+        // :first-child, not :first-of-type: the label is a <th>, so the value <td> is a first of its type too.
+        '& .MuiTableCell-root:first-child': {
+          fontWeight: 500,
+          color: 'var(--ink-soft)',
+          width: labelWidth,
+        },
+      }}
     >
       <TableBody>
         {rows.map(([label, fact]) => (
@@ -52,10 +73,19 @@ function FactTable({ rows }: { rows: [string, ReactNode][] }) {
 
 export function LegalPage() {
   const { trackPageview, trackEvent } = useAnalytics();
+  const { hash } = useLocation();
 
   useEffect(() => {
     trackPageview('/legal');
   }, [trackPageview]);
+
+  // The route loads lazily, after the browser has looked for the fragment and not found it, so a
+  // fresh load of /legal#assistant (the chat's notice opens one in a new tab) would stay at the top.
+  // Scroll to it once the page is there; ANCHOR_SX keeps it clear of the sticky masthead.
+  useEffect(() => {
+    if (!hash) return;
+    document.getElementById(hash.slice(1))?.scrollIntoView?.();
+  }, [hash]);
 
   const operatorContactBlock = (
     <>
@@ -168,7 +198,7 @@ export function LegalPage() {
 
       <Box sx={{ pb: 4 }}>
         {/* Legal Notice */}
-        <Box component="section" id="legal-notice" sx={{ py: { xs: 2, md: 3 } }}>
+        <Box component="section" id="legal-notice" sx={{ py: { xs: 2, md: 3 }, ...ANCHOR_SX }}>
           <SectionHeader prompt="❯" title={<em>legal notice</em>} />
 
           <Box sx={{ maxWidth: 760, mx: 'auto' }}>
@@ -199,7 +229,7 @@ export function LegalPage() {
         </Box>
 
         {/* Privacy Policy */}
-        <Box component="section" id="privacy" sx={{ py: { xs: 2, md: 3 } }}>
+        <Box component="section" id="privacy" sx={{ py: { xs: 2, md: 3 }, ...ANCHOR_SX }}>
           <SectionHeader prompt="❯" title={<em>privacy policy</em>} />
 
           <Box sx={{ maxWidth: 760, mx: 'auto' }}>
@@ -313,7 +343,7 @@ export function LegalPage() {
               build time, so browsing never reaches a model
             </Typography>
 
-            <Typography id="assistant" sx={subheadingStyle}>
+            <Typography id="assistant" sx={{ ...subheadingStyle, ...ANCHOR_SX }}>
               only if you use the data assistant (experimental)
             </Typography>
             <Typography sx={textStyle}>
@@ -380,229 +410,87 @@ export function LegalPage() {
         </Box>
 
         {/* Transparency */}
-        <Box component="section" id="transparency" sx={{ py: { xs: 2, md: 3 } }}>
+        <Box component="section" id="transparency" sx={{ py: { xs: 2, md: 3 }, ...ANCHOR_SX }}>
           <SectionHeader prompt="❯" title={<em>transparency</em>} />
 
           <Box sx={{ maxWidth: 760, mx: 'auto' }}>
             <Typography sx={textStyle}>open source, down to what it costs to run.</Typography>
 
             <Typography sx={subheadingStyle}>technology stack</Typography>
-            <Table sx={{ ...tableStyle, ...firstColStyle }}>
-              <TableBody>
-                <TableRow>
-                  <TableCell>editor</TableCell>
-                  <TableCell>
-                    <Link
-                      href="https://www.jetbrains.com/pycharm/"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      JetBrains PyCharm
-                    </Link>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>frontend</TableCell>
-                  <TableCell>
-                    <Link
-                      href="https://react.dev"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      React
-                    </Link>{' '}
-                    19,{' '}
-                    <Link
-                      href="https://vite.dev"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      Vite
-                    </Link>
-                    ,{' '}
-                    <Link href="https://mui.com" target="_blank" rel="noopener" sx={proseLinkStyle}>
-                      MUI
-                    </Link>{' '}
-                    9,{' '}
-                    <Link
-                      href="https://typescriptlang.org"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      TypeScript
-                    </Link>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>backend</TableCell>
-                  <TableCell>
-                    <Link
-                      href="https://python.org"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      Python
-                    </Link>{' '}
-                    3.14,{' '}
-                    <Link
-                      href="https://fastapi.tiangolo.com"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      FastAPI
-                    </Link>
-                    ,{' '}
-                    <Link
-                      href="https://sqlalchemy.org"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      SQLAlchemy
-                    </Link>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>database</TableCell>
-                  <TableCell>
-                    <Link
-                      href="https://postgresql.org"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      PostgreSQL
-                    </Link>{' '}
-                    18
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>hosting</TableCell>
-                  <TableCell>
-                    <Link
-                      href="https://cloud.google.com/run"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      Google Cloud Run
-                    </Link>{' '}
-                    (Netherlands)
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>cdn / ddos</TableCell>
-                  <TableCell>
-                    <Link
-                      href="https://cloudflare.com"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      Cloudflare
-                    </Link>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>storage</TableCell>
-                  <TableCell>
-                    <Link
-                      href="https://cloud.google.com/storage"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      Google Cloud Storage
-                    </Link>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>analytics</TableCell>
-                  <TableCell>
-                    <Link
-                      href="https://plausible.io"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      Plausible
-                    </Link>{' '}
-                    (privacy-friendly, no cookies,{' '}
-                    <Link
-                      href="https://plausible.io/anyplot.ai"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      public dashboard
-                    </Link>
-                    )
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>code generation</TableCell>
-                  <TableCell>
-                    <Link
-                      href="https://anthropic.com"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      Anthropic Claude
-                    </Link>{' '}
-                    (code generation &amp; review),{' '}
-                    <Link
-                      href="https://github.com/features/copilot"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      GitHub Copilot
-                    </Link>{' '}
-                    (PR reviews)
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>typography</TableCell>
-                  <TableCell>
-                    <Link
-                      href="https://www.monolisa.dev/"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      MonoLisa
-                    </Link>{' '}
-                    by Marcus Sterz
-                    <br />
-                    <Link
-                      href="https://github.com/JetBrains/JetBrainsMono"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      JetBrains Mono
-                    </Link>{' '}
-                    2.304 (
-                    <Link
-                      href="https://openfontlicense.org"
-                      target="_blank"
-                      rel="noopener"
-                      sx={proseLinkStyle}
-                    >
-                      SIL Open Font License 1.1
-                    </Link>
-                    ) — for the attribution strip under plots created from your own data
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+            <FactTable
+              rows={[
+                [
+                  'site',
+                  <>
+                    <Ext href="https://react.dev">React</Ext> 19,{' '}
+                    <Ext href="https://vite.dev">Vite</Ext>, <Ext href="https://mui.com">MUI</Ext> 9
+                    with <Ext href="https://mui.com/x/">MUI X</Ext>,{' '}
+                    <Ext href="https://typescriptlang.org">TypeScript</Ext>
+                  </>,
+                ],
+                [
+                  'api',
+                  <>
+                    <Ext href="https://python.org">Python</Ext> 3.14,{' '}
+                    <Ext href="https://fastapi.tiangolo.com">FastAPI</Ext>,{' '}
+                    <Ext href="https://sqlalchemy.org">SQLAlchemy</Ext>,{' '}
+                    <Ext href="https://postgresql.org">PostgreSQL</Ext> 18
+                  </>,
+                ],
+                [
+                  'catalogue pipeline',
+                  <>
+                    <Ext href="https://github.com/features/actions">GitHub Actions</Ext> with Claude
+                    (<Ext href="https://www.anthropic.com/claude-code">Claude Code</Ext>); 15
+                    plotting libraries in Python, R, Julia and JavaScript
+                  </>,
+                ],
+                [
+                  'data assistant',
+                  <>
+                    <Ext href="https://google.github.io/adk-docs/">Google ADK</Ext>,{' '}
+                    <Ext href="https://www.anthropic.com/claude/haiku">Claude Haiku 5.5</Ext> via{' '}
+                    <Ext href="https://cloud.google.com/vertex-ai">Vertex AI</Ext> (EU), plots
+                    rendered in Cloud Run sandboxes (<Ext href="https://gvisor.dev">gVisor</Ext>)
+                  </>,
+                ],
+                [
+                  'google cloud',
+                  <>
+                    <Ext href="https://cloud.google.com/run">Cloud Run</Ext>, Cloud SQL, Cloud
+                    Storage, Cloud Logging, BigQuery, Cloud Build and Artifact Registry in the
+                    Netherlands (europe-west4), plus Secret Manager and Cloud Monitoring
+                  </>,
+                ],
+                [
+                  'edge & analytics',
+                  <>
+                    <Ext href="https://cloudflare.com">Cloudflare</Ext>,{' '}
+                    <Ext href="https://plausible.io">Plausible</Ext> (no cookies,{' '}
+                    <Ext href="https://plausible.io/anyplot.ai">public dashboard</Ext>)
+                  </>,
+                ],
+                [
+                  'reviews',
+                  <>
+                    <Ext href="https://deepmind.google/technologies/gemini/">Gemini</Ext> via Vertex
+                    AI for second opinions,{' '}
+                    <Ext href="https://github.com/features/copilot">GitHub Copilot</Ext> for pull
+                    requests
+                  </>,
+                ],
+                [
+                  'editor, typography',
+                  <>
+                    <Ext href="https://www.jetbrains.com/pycharm/">JetBrains PyCharm</Ext>;{' '}
+                    <Ext href="https://www.monolisa.dev/">MonoLisa</Ext> by Marcus Sterz;{' '}
+                    <Ext href="https://github.com/JetBrains/JetBrainsMono">JetBrains Mono</Ext>{' '}
+                    2.304 (<Ext href="https://openfontlicense.org">SIL Open Font License 1.1</Ext>)
+                    for the attribution strip under plots created from your own data
+                  </>,
+                ],
+              ]}
+            />
 
             <Typography sx={subheadingStyle}>source code</Typography>
             <Typography sx={textStyle}>
@@ -616,40 +504,24 @@ export function LegalPage() {
               Open Font License 1.1.
             </Typography>
 
-            <Typography sx={subheadingStyle}>monthly hosting costs (approximate)</Typography>
-            <Table sx={{ ...tableStyle, ...firstColStyle }}>
-              <TableBody>
-                <TableRow>
-                  <TableCell>Cloud Run</TableCell>
-                  <TableCell>~$15</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Cloud SQL</TableCell>
-                  <TableCell>~$10</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Cloud Storage</TableCell>
-                  <TableCell>~$1</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Domain (.ai)</TableCell>
-                  <TableCell>~$8</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>
-                    <strong>total</strong>
-                  </TableCell>
-                  <TableCell>
-                    <strong>~$34/month</strong>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+            <Typography sx={subheadingStyle}>monthly running costs (October 2026)</Typography>
+            <FactTable
+              labelWidth="75%"
+              rows={[
+                ['hosting: Cloud Run (site, api, data assistant, renderer)', '~$10'],
+                ['database: Cloud SQL', '~$25'],
+                ['data assistant model: Claude Haiku via Vertex AI', '~$15'],
+                ['storage, logs and builds', '~$1'],
+                ['domain (.ai)', '~$8'],
+                ['total', <strong key="total">~$60/month</strong>],
+              ]}
+            />
             <Typography
               sx={{ ...textStyle, fontSize: fontSize.sm, color: semanticColors.mutedText, mt: 1 }}
             >
-              direct hosting costs only. subscriptions (GitHub Pro, Plausible, Claude MAX, PyCharm,
-              etc.) are shared across projects. all costs are currently covered privately.
+              after three-year commitments and promotional credits; the assistant&apos;s model cost
+              grows with use. development tools and subscriptions are not included. all costs are
+              covered privately.
             </Typography>
           </Box>
         </Box>

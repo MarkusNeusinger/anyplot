@@ -1244,7 +1244,7 @@ _LEGAL_BOT_BODY = (
     "<h2>Transparency</h2>"
     "<p>The whole stack — specs, pipeline, API and frontend — is open source at "
     '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a>; '
-    "the catalogue content is MIT-licensed.</p>"
+    "the catalogue content is MIT-licensed. Running costs about $60 a month (October 2026).</p>"
 )
 
 

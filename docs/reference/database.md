@@ -175,8 +175,8 @@ CREATE TABLE feedback
     viewport    VARCHAR(20),
     session_id  VARCHAR(64),
     ip_hash     VARCHAR(64),                -- "hmac:" + a per-process salted HMAC of the client IP, for the rate limit;
-                                            -- cleared once its 10-minute window has passed (rows from before
-                                            -- 2026-11-02 still hold an unsalted SHA-256 until a migration clears them)
+                                            -- cleared once its 10-minute window has passed (the unsalted SHA-256
+                                            -- of older rows was cleared once by hand on 2026-11-02 after a snapshot)
     status      VARCHAR(20) NOT NULL,       -- new, in_progress, done, wont_solve
     created_at  TIMESTAMP NOT NULL DEFAULT NOW(),
 

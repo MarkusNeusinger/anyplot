@@ -1188,6 +1188,7 @@ class TestSeoProxyRouter:
         assert "unsalted" not in response.text
         # The site-wide facts the human page states once each, the stored feedback fields included.
         for fact in (
+            "Running costs about $60 a month (October 2026).",
             "a random id that ties your own submissions together",
             "the optional contact field",
             "legitimate interest (Art. 6(1)(f) GDPR)",
