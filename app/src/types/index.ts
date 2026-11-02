@@ -54,7 +54,7 @@ export const FILTER_LABELS: Record<FilterCategory, string> = {
 // Tooltip descriptions for filter categories
 export const FILTER_TOOLTIPS: Record<FilterCategory, string> = {
   // Spec-level: WHAT is visualized
-  lang: 'programming language of the implementation (Python or R)',
+  lang: 'programming language of the implementation (Python, R, Julia, or JavaScript)',
   lib: 'plotting library',
   spec: 'plot specification by identifier',
   plot: 'type of visualization or chart',

@@ -423,9 +423,10 @@ gs://anyplot-images/
 **Layout**:
 ```
 plots/{spec-id}/implementations/
-├── python/   # 9 Python libraries (.py)
-├── r/        # ggplot2 (.R)
-└── julia/    # Makie.jl (.jl)
+├── python/       # 8 Python libraries (.py)
+├── r/            # ggplot2 (.R)
+├── julia/        # Makie.jl (.jl)
+└── javascript/   # 5 JavaScript libraries (.js, MUI X as .tsx)
 ```
 
 **File Naming** (by language):
@@ -438,7 +439,6 @@ Python (`python/`, `.py`):
 - `altair.py`
 - `plotnine.py`
 - `pygal.py`
-- `highcharts.py`
 - `letsplot.py`
 
 R (`r/`, `.R`):
@@ -446,6 +446,13 @@ R (`r/`, `.R`):
 
 Julia (`julia/`, `.jl`):
 - `makie.jl`
+
+JavaScript (`javascript/`):
+- `chartjs.js`
+- `d3.js`
+- `echarts.js`
+- `highcharts.js`
+- `muix.tsx` (MUI X Charts, a React module)
 
 **Code Style** (KISS):
 ```python

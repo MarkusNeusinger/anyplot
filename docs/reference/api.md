@@ -219,14 +219,27 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
 
 **Purpose**: Platform statistics
 
-**Response**:
+**Response** (live values on 2026-11-02):
 ```json
 {
-  "specs": 42,
-  "plots": 378,
-  "libraries": 9
+  "specs": 325,
+  "plots": 4863,
+  "libraries": 15,
+  "languages": 4,
+  "lines_of_code": 896029
 }
 ```
+
+| Field | Meaning |
+|-------|---------|
+| `specs` | Specifications with at least one implementation |
+| `plots` | Implementations across all libraries |
+| `libraries` | Libraries in the `libraries` table |
+| `languages` | Distinct languages of those libraries |
+| `lines_of_code` | Lines of code summed over all implementations |
+
+Without a database, the endpoint answers `0` for `specs`, `plots`, and `lines_of_code`, and the library and language
+counts from `core/constants.py`.
 
 ---
 
