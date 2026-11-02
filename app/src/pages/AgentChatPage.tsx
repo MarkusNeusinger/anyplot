@@ -27,9 +27,9 @@
  * per library: the libraries grouped by language, `all` for the admin) and,
  * next to it, the session language chip (`LanguageChip`): the language of the
  * replies and of the text in the plot, English until the first typed message
- * or a choice sets another. At the header's end, the "⋯" menu (`SessionMenu`) holds
- * `.save()` with its `# include data.csv` box (out of the header row since 2026-11-02,
- * owner: less text). The page talks only to the BFF under
+ * or a choice sets another. On the admin lane, the "⋯" menu (`SessionMenu`) at the
+ * header's end holds `.save()` with its `# include data.csv` box (out of the header row
+ * since 2026-11-02, owner: less text); the public lane has neither. The page talks only to the BFF under
  * `/debug/agent/*` (`src/lib/agent.ts`, `src/hooks/useAgentSession.ts`).
  *
  * A library switch keeps the data, the bindings, their confirmation, the
@@ -93,9 +93,10 @@
  *    The public lane: the API's `GET /agent/lane` (`useAgentLaneOpen`); closed,
  *    the page says so. It talks to `/agent/*` with `PUBLIC_LANE` in place of the
  *    admin token, shows the experimental notice above the first input (one line, the
- *    details behind its ⓘ button: `ExperimentalNotice`), offers
- *    no `all`, and leaves the data boxes of feedback and `.save()` unticked
- *    (`sections/agent-chat/lane.ts`).
+ *    details behind its ⓘ button: `ExperimentalNotice`), offers no `all` and no
+ *    `.save()` (owner decision of 2026-11-02: a visitor cannot resume a saved session,
+ *    and the feedback form covers "something went wrong"), and leaves the feedback
+ *    form's data box unticked (`sections/agent-chat/lane.ts`).
  *
  * Design: docs/concepts/agent-network.md ("Frontend", "Request flow").
  */
@@ -249,7 +250,8 @@ function LaneClosed() {
 /**
  * The public chat at `/agent`: the same page on the public lane (`PUBLIC_LANE`), open to
  * everyone while the API's public lane is (`useAgentLaneOpen`), labelled experimental, with
- * the admin-only parts left out (the fan-out's `all`) and the data boxes unticked.
+ * the admin-only parts left out (the fan-out's `all`, `.save()` and its "⋯" menu) and the
+ * feedback form's data box unticked.
  */
 export function PublicAgentChatPage() {
   return <AgentChatPage lane="public" />;
@@ -822,9 +824,10 @@ function AgentChat({
             onSet={session.setLanguage}
           />
         )}
-        {/* The "⋯" menu holds `.save()`, which downloads the session; without one (ineligible,
-            error) there is nothing to save. */}
-        {!reopen && (
+        {/* The "⋯" menu holds `.save()`, the admin's debugging bundle, which downloads the
+            session; without one (ineligible, error) there is nothing to save. The public lane
+            has no `.save()`, so no menu either (owner decision of 2026-11-02). */}
+        {lane === 'admin' && !reopen && (
           <SessionMenu
             disabled={state.phase !== 'ready' || !state.sessionId || busy}
             onSave={session.saveSession}

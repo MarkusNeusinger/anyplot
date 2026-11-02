@@ -1,11 +1,11 @@
 /**
  * `.save()` in the chat header's "⋯" menu (`SessionMenu`, since 2026-11-02; in the header
- * row before): downloads the session as one JSON file, the
- * feedback case the agents service assembles (the conversation, every version's
+ * row before), on the admin lane only since then: downloads the session as one JSON file,
+ * the feedback case the agents service assembles (the conversation, every version's
  * code, plan, result and images, the data profile, the bindings and the config
- * stamp), to keep or to hand on when something went wrong. `# include data.csv`
- * adds each version's data file; it is on by default for an admin, who saves
- * their own test data, and off on the public lane (`lane.ts`,
+ * stamp), the owner's debugging bundle. `# include data.csv` adds each version's data
+ * file; it is on by default for an admin, who saves their own test data. Rendered on
+ * the public lane, which the page no longer does, it would start off (`lane.ts`,
  * docs/concepts/agent-network.md, "Feedback capture").
  *
  * The button holds its own saving flag and failure line: a save only reads the

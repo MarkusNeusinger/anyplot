@@ -8,9 +8,11 @@
   the change list sit behind one status line and the code behind
   `.show_code()`, with `.copy()` and the downloads in view; each card keeps its
   choice for the session, and a new version starts folded. The quick feedback
-  shows only the reactions until one is picked. `.save()` and its data box
-  moved from the header row into a "⋯" menu, not into the feedback area,
-  because a save downloads the session and stores nothing. The data card's
+  shows only the reactions until one is picked. On the admin lane `.save()`
+  and its data box moved from the header row into a "⋯" menu, not into the
+  feedback area, because a save downloads the session and stores nothing; the
+  public lane has neither, since a visitor cannot resume a saved session and
+  the feedback form covers what went wrong. The data card's
   header is `# your data ⓘ`, its how-to behind the button, and the long hint
   and the how-to paragraph under the card gave way to short placeholders.
   (#12540)

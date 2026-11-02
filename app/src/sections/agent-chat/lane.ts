@@ -4,10 +4,11 @@
  * provides it (`AgentChatPage`); without a provider it is the admin lane, so a
  * component rendered on its own behaves as it always has.
  *
- * What differs on the public lane: the feedback and `.save()` boxes start
- * unticked, the feedback form says what sending stores (the owner's privacy
- * rule: explicit consent at the moment of sending), and the experimental notice
- * says that an AI does the work.
+ * What differs on the public lane: the feedback form's data box starts
+ * unticked, the form says what sending stores (the owner's privacy rule:
+ * explicit consent at the moment of sending), the experimental notice says that
+ * an AI does the work, and there is no `.save()` (since 2026-11-02; the page
+ * leaves the "⋯" menu out).
  */
 
 import { createContext, useContext } from 'react';

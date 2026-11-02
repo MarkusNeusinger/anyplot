@@ -2,7 +2,8 @@
  * The public chat at `/agent`: the same page on the public lane. It opens only while
  * the API's public lane is open, talks to `/agent/*` anonymously (the tab id and the
  * session id as headers, no cookie, no admin token), says it is experimental above
- * the first input, offers no `all`, and starts the data boxes unticked. The page's
+ * the first input, offers no `all` and no `.save()`, and starts the feedback form's data
+ * box unticked. The page's
  * flows are in AgentChatPage.test.tsx; this file stubs only what the lane changes.
  */
 
@@ -97,7 +98,7 @@ describe('PublicAgentChatPage', () => {
     // Even a browser with the admin hint stays on the public lane at /agent.
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderPage();
-    await waitFor(() => expect(screen.getByRole('button', { name: 'More actions' })).toBeEnabled());
+    await waitFor(() => expect(screen.getByTestId('language-chip')).toBeEnabled());
 
     const open = calls.find(
       call => call.url.pathname.endsWith('/agent/sessions') && call.init.method === 'POST'
@@ -142,13 +143,16 @@ describe('PublicAgentChatPage', () => {
     expect(about).toHaveFocus();
   });
 
-  it('offers no "all" and starts the .save() box unticked', async () => {
+  it('offers no "all", no .save() and no "⋯" menu', async () => {
     const user = userEvent.setup();
     renderPage();
-    await waitFor(() => expect(screen.getByRole('button', { name: 'More actions' })).toBeEnabled());
-    await user.click(screen.getByRole('button', { name: 'More actions' }));
-    expect(screen.getByRole('checkbox', { name: '# include data.csv' })).not.toBeChecked();
-    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.getByTestId('language-chip')).toBeEnabled());
+    // Owner decision of 2026-11-02: a visitor cannot resume a saved session, and the feedback
+    // form covers "something went wrong"; the menu would hold nothing else.
+    expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: '# include data.csv' })).not.toBeInTheDocument();
+    expect(calls.some(call => call.url.pathname.endsWith('/bundle'))).toBe(false);
 
     await user.click(screen.getByRole('button', { name: /^Library: matplotlib/ }));
     const dialog = await screen.findByRole('dialog');

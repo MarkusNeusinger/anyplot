@@ -3,7 +3,9 @@
  * (`SaveButton`), out of the header row since 2026-11-02 (owner: less text). In a menu of its
  * own rather than in the feedback area, because the two do different things: `.save()` downloads
  * the session to the user's own computer and stores nothing, while feedback stores a case on the
- * server for the operator to read; one box for both would blur what goes where.
+ * server for the operator to read; one box for both would blur what goes where. The admin
+ * lane's only (owner decision of 2026-11-02): the page leaves it out on the public lane, where
+ * a visitor cannot resume a saved session and the feedback form covers "something went wrong".
  *
  * A popover, as the language chip's: it opens on a tap as on a click and returns the focus to
  * the button when it closes. It stays mounted while closed, so the data box keeps the user's
