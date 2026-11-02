@@ -548,7 +548,7 @@ All paths start with `/agent`. A session route takes the session id as
 |---|---|
 | `GET /lane` | Public only: `{"open": true}` with `Cache-Control: public, max-age=60`, no identity needed and no upstream call, so the landing page and every spec page can ask whether to show the entry points. Closed, it is the router's `404` |
 | `GET /status` | `GET /status`, with only the fields `enabled`, `libraries`, `model`, `location`, `provider`, `version`, `waiting`, `in_flight`, `user_max_runs`, `tier`, `paused` and `resets_at`; a field the agents service adds later stays out until it is named in `PUBLIC_STATUS_FIELDS` |
-| `GET /eligibility?spec=&library=` | `GET /eligibility` |
+| `GET /eligibility?spec=&library=` | `GET /eligibility`, with `Cache-Control: public, max-age=300`: the answer is the same for every caller, and the plot page asks on every visit |
 | `POST /sessions` | `POST /sessions` with `{spec_id, library, locale}`: `source` is admin-only (the fan-out) and a `422` here |
 | `DELETE /session` | `DELETE /sessions/{sid}` |
 | `POST /session/library` | `POST /sessions/{sid}/library` |

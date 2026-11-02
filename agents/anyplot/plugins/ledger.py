@@ -361,6 +361,8 @@ class UsageBook:
 
     def __init__(self, clock: Callable[[], float] = time.monotonic) -> None:
         self._day = _Day(today())
+        self._previous_networks: dict[str, str] = {}
+        """Yesterday's network bindings (`bind_network`), for a turn that started before 00:00 UTC and books after it."""
         self._clock = clock
         self._recent: dict[tuple[WindowKind, str], deque[float]] = {}
         self.started_at = datetime.now(UTC)
@@ -369,46 +371,52 @@ class UsageBook:
     def _current(self) -> _Day:
         date = today()
         if self._day.date != date:
+            self._previous_networks = self._day.user_networks
             self._day = _Day(date)
         return self._day
+
+    def _network(self, user_id: str) -> str | None:
+        """The user's network: today's binding, else yesterday's, so a turn that runs across midnight still counts
+        toward the network it came from until the user's next request binds them anew."""
+        day = self._current()
+        return day.user_networks.get(user_id) or self._previous_networks.get(user_id)
 
     def bind_network(self, user_id: str, network: str) -> None:
         """Count the anonymous user's tokens and pipeline runs against `network` (a `network_key`) from now on, as
         well as against the user: the per-IP caps (`AGENT_IP_*`). The latest request's network wins, so a phone that
-        changes networks moves on; what it booked stays where it was booked. Bound for the UTC day only."""
+        changes networks moves on; what it booked stays where it was booked. Bound for the UTC day, and into the next
+        one until the user's next request, so a turn that runs across midnight keeps counting (`_network`)."""
         self._current().user_networks[user_id] = network
 
     def network_of(self, user_id: str) -> str | None:
-        """The network the user is bound to today (`bind_network`); None for every caller but an anonymous one."""
-        return self._current().user_networks.get(user_id)
+        """The network the user is bound to (`bind_network`); None for every caller but an anonymous one."""
+        return self._network(user_id)
 
     def add_tokens(self, user_id: str, tokens: int) -> None:
         """Book cost-weighted tokens (`weighted_tokens`) against the user's, their network's and the service's day."""
         day = self._current()
         day.user_tokens[user_id] = day.user_tokens.get(user_id, 0) + tokens
         day.global_tokens += tokens
-        network = day.user_networks.get(user_id)
+        network = self._network(user_id)
         if network is not None:
             day.network_tokens[network] = day.network_tokens.get(network, 0) + tokens
 
     def add_pipeline_run(self, user_id: str) -> None:
         day = self._current()
         day.user_runs[user_id] = day.user_runs.get(user_id, 0) + 1
-        network = day.user_networks.get(user_id)
+        network = self._network(user_id)
         if network is not None:
             day.network_runs[network] = day.network_runs.get(network, 0) + 1
 
     def network_tokens(self, user_id: str) -> int:
         """The weighted tokens booked today on the user's network; 0 for a user bound to none."""
-        day = self._current()
-        network = day.user_networks.get(user_id)
-        return 0 if network is None else day.network_tokens.get(network, 0)
+        network = self._network(user_id)
+        return 0 if network is None else self._current().network_tokens.get(network, 0)
 
     def network_runs(self, user_id: str) -> int:
         """The pipeline runs booked today on the user's network; 0 for a user bound to none."""
-        day = self._current()
-        network = day.user_networks.get(user_id)
-        return 0 if network is None else day.network_runs.get(network, 0)
+        network = self._network(user_id)
+        return 0 if network is None else self._current().network_runs.get(network, 0)
 
     def own_tokens_left(self, user_id: str, settings: AgentSettings, reserve: int = 0) -> bool:
         """The public caps on model spend, `reserve` tokens beyond today's: the user's day budget and, for an

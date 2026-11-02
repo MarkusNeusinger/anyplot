@@ -111,6 +111,7 @@ cap and the day's pause. A field the service adds later stays upstream until it 
 FEEDBACK_WINDOW_S = 3600.0
 _NO_STORE = "private, no-store"
 _LANE_MAX_AGE_S = 60
+_ELIGIBILITY_MAX_AGE_S = 300
 
 _SALT = secrets.token_bytes(32)
 """This process's salt for the case `user_hash` and the feedback limiter's network key; never logged, gone with the
@@ -307,11 +308,17 @@ async def status(ctx: Ctx, client: Client) -> dict[str, Any]:
 async def eligibility(
     ctx: Ctx,
     client: Client,
+    response: Response,
     spec: Annotated[str, Query(pattern=SPEC_ID_PATTERN)],
     library: Annotated[LibraryId, Query()],
 ) -> Any:
-    """Whether the page may offer the chat for this pair; the agents service decides."""
-    return await agent.agent_eligibility(ctx, client, spec, library)
+    """Whether the page may offer the chat for this pair; the agents service decides.
+
+    The plot page asks on every visit, crawlers that render it too, and the answer is the same for every
+    caller, so browsers may keep it for five minutes (`_ELIGIBILITY_MAX_AGE_S`)."""
+    answer = await agent.agent_eligibility(ctx, client, spec, library)
+    response.headers["Cache-Control"] = f"public, max-age={_ELIGIBILITY_MAX_AGE_S}"
+    return answer
 
 
 @router.post("/sessions")
