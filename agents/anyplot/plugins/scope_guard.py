@@ -37,7 +37,8 @@
   `close_warning` suffix. The strikes above are per user and day and count `attack`
   only; this count is per session and needs no state of its own;
 * the judge's `lang` for the session's first in-scope typed message becomes the
-  session language with the source `detected` (`session_state.LANGUAGE`), unless one
+  session language with the source `detected` (`session_state.LANGUAGE`, the replies'
+  language; a plot the session already has keeps its own, `session_state.plot_language`), unless one
   is set: a later message never changes it, a choice (`chosen`) never yields to it, a
   refused message never sets it, and an `en` verdict counts only for a message of at
   least three words, because the judge also answers `en` for a message without a clear

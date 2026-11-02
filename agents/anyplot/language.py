@@ -1,4 +1,4 @@
-"""The session language: one language for the root's replies and every text in the plot.
+"""The session language, the language of the root's replies, and the plot language, the language of the plot's text.
 
 Owner decision of 2026-10-12. A session starts in English (`en`, source `default`),
 whatever the browser's locale. A paste before any typed message sets the language its
@@ -8,9 +8,15 @@ language the scope judge names for it (source `detected`), also over `pasted`; a
 `PUT /v1/sessions/{sid}/language` or the root's `set_language` tool sets it for good
 (source `chosen`), and detection never writes over a choice.
 
+Owner decision of 2026-11-01: the plot's text keeps its language. The first plot is written
+in the session language; every later version keeps the language of the session's latest
+plot, until the user asks for the plot's text in another language (the chip, or
+`set_language` with `applies_to` `plot` or `both`; `session_state.plot_language`). A
+follow-up message in another language changes the replies, never the plot.
+
 A language is a short name or code that matches `LANGUAGE_PATTERN` (`de`, `English`,
 `Swedish`). Because a chosen one is free text that only the pattern bounds, every
-prompt that carries it fences it as `<plot_language>`: data, never an instruction.
+prompt that carries it fences it (`<reply_language>`, `<plot_language>`): data, never an instruction.
 
 This module imports nothing from the package, so `schemas.py`, `session_state.py`,
 the tools, the plugins and the routes can all share it without a cycle. The state
@@ -30,6 +36,9 @@ LanguageSource = Literal["default", "pasted", "detected", "chosen"]
 SOURCES: frozenset[str] = frozenset(("default", "pasted", "detected", "chosen"))
 PASTE_OVERWRITES: frozenset[str] = frozenset(("default", "pasted"))
 """The sources a paste may write over: nothing the user typed or chose."""
+LanguageTarget = Literal["both", "plot", "replies"]
+LANGUAGE_TARGETS: frozenset[str] = frozenset(("both", "plot", "replies"))
+"""What the root's `set_language` sets (`applies_to`): the replies, the plot's text, or both."""
 DEFAULT_LANGUAGE = "en"
 COMMON_LANGUAGES = ("en", "zh", "de", "vi", "es", "fr", "nl", "pt", "ru", "it")
 """The chip's list: the site's ten most used visitor languages (Plausible, owner's choice of 2026-10-12).

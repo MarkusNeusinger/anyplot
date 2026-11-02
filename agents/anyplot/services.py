@@ -76,7 +76,7 @@ class CodeVersion:
     """The user asked for `theme` in the chat, for this version or for the one it changed, so a change of it keeps
     the theme; otherwise a change follows the site theme of its turn (`pipeline.run_theme`)."""
     language: str = "en"
-    """The session language the version's plot text was written in."""
+    """The plot language the version's text was written in (`session_state.plot_language`)."""
     requests: list[str] = field(default_factory=list)
     """The change requests the version carries out, oldest first: its lineage's earlier ones and its own,
     within `MAX_USER_REQUESTS` and `MAX_USER_REQUESTS_CHARS`. A change of this version hands them to the
@@ -163,6 +163,12 @@ class VersionStore:
             if version.render_id is not None and (library is None or version.library == library):
                 return version
         return None
+
+    def latest_language(self, session_id: str) -> str | None:
+        """The language the session's latest rendered version is written in, of any library; None before the first
+        (`session_state.plot_language`)."""
+        latest = self.latest_rendered(session_id)
+        return latest.language if latest is not None else None
 
     def delete_session(self, session_id: str) -> None:
         self._versions.pop(session_id, None)

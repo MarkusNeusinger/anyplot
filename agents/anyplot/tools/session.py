@@ -19,13 +19,17 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   pipeline runs. Its result says whether the data is still `data_confirmed`: bindings that
   only leave out confirmed number series (`y2`) keep the confirmation (`narrowed_confirmation`,
   `AGENT_NARROWED_BINDINGS=keep`, since 2026-10-15), any other change drops it.
-* `set_language(language)`: the session language with the source `chosen`
-  (`session_state.LANGUAGE`), validated like the language route (`language.py`);
-  refused while the pipeline runs. Its result carries no value, only whether the
-  session language `changed` (`de` against `Deutsch` is no change), for the reply,
-  and whether the plot is `plot_outdated`: this library's latest rendered version has
-  its text in another language, so a rewrite of the plot's text is due. The two can
-  differ, because a plot made before detection recorded the language keeps English.
+* `set_language(language, applies_to)`: the reply language (the session language,
+  `session_state.LANGUAGE`, with the source `chosen`), the plot's text
+  (`session_state.PLOT_LANGUAGE`) or both (the default), validated like the language
+  route (`language.py`); refused while the pipeline runs. `replies` stores the plot
+  language as it resolves at that moment, so a first plot does not follow the new reply
+  language. Since 2026-11-01 the two are apart: the live test of that day had "Make
+  the title German" turn the replies German too. Its result carries no value, only
+  whether the reply language `changed` (`de` against `Deutsch` is no change), for the
+  reply, and whether the plot is `plot_outdated`: this library's latest rendered
+  version has its text in another language than the plot language, so a rewrite of
+  the plot's text is due.
 * `keep_plot_request(change_request, expected_texts)`: a request for the first plot
   kept without a run (`pipeline.hold_request`, the note the next first-plot run takes),
   for a wish before the confirmation, typed or in the pasted notes (live round 9 of
@@ -84,7 +88,7 @@ from ..data.store import StoredDataset, StoreFull
 from ..dataset_context import code_source, generated_source
 from ..dataset_guard import DataRefused, GuardUnavailable, check_dataset
 from ..dataset_versions import push_version
-from ..language import is_valid, normalise, same_language
+from ..language import LANGUAGE_TARGETS, is_valid, normalise, same_language
 from ..opening import store_dataset
 from ..pipeline import hold_request, run_pipeline
 from ..plugins.ledger import attribution, ledger_for
@@ -107,10 +111,12 @@ from ..schemas import MAX_COLUMNS, MAX_ROWS, Binding, DatasetProfile, KeepReques
 from ..services import get_services
 from ..session_state import (
     PENDING_BINDINGS,
+    PLOT_LANGUAGE,
     SessionView,
     apply_bindings,
     language_delta,
     narrowed_confirmation,
+    plot_language,
     read_session,
 )
 from ..settings import get_settings
@@ -255,8 +261,8 @@ async def set_bindings(bindings: list[dict[str, str]], tool_context: ToolContext
     return result
 
 
-async def set_language(language: str, tool_context: ToolContext) -> dict[str, Any]:
-    """Set the session language: the language of your replies and of every text in the plot (title, axis titles, legend entries, annotations). `language` is a short language name or code such as "de", "English" or "Swedish". The next plot version uses it; code, comments and column names stay as they are."""
+async def set_language(language: str, tool_context: ToolContext, applies_to: str = "both") -> dict[str, Any]:
+    """Set the language of your replies, of the text in the plot (title, axis titles, legend entries, annotations), or of both. `language` is a short language name or code such as "de", "English" or "Swedish". `applies_to`: "plot" when the user asks for the plot's text in a language ("labels in English", "make the title German"), "replies" when they ask for your answers in one ("answer in French"), "both" when they ask for both or for the whole session in one. The next plot version uses the plot language; code, comments and column names stay as they are."""
     view = _view(tool_context)
     if view is None:
         return _error("session_not_open")
@@ -264,16 +270,26 @@ async def set_language(language: str, tool_context: ToolContext) -> dict[str, An
         return _error("run_active")
     if not isinstance(language, str):
         return _error("invalid_language")
+    if applies_to not in LANGUAGE_TARGETS:
+        return _error("invalid_arguments")
     value = normalise(language)
     if not is_valid(value):
         return _error("invalid_language")
-    changed = not same_language(view.language, value)
+    versions = get_services().versions
+    replies = applies_to in ("both", "replies")
+    plot = value
+    if applies_to == "replies":
+        # The plot keeps its language as it resolves now, also before the first plot, which would otherwise follow
+        # the new reply language (`plot_language`).
+        plot = plot_language(view, versions.latest_language(tool_context.session.id))
+    changed = replies and not same_language(view.language, value)
     # The plot the user sees is this library's latest render; its text may be in another language than the
-    # session's (a plot made before detection recorded the language), so the rewrite is decided against it.
-    latest = get_services().versions.latest_rendered(tool_context.session.id, library=view.library)
-    plot_outdated = latest is not None and not same_language(latest.language, value)
-    # A choice is final either way: detection never writes over `chosen`.
-    for key, item in language_delta(value, "chosen").items():
+    # plot language (made before a choice in another library), so the rewrite is decided against it.
+    latest = versions.latest_rendered(tool_context.session.id, library=view.library)
+    plot_outdated = latest is not None and not same_language(latest.language, plot)
+    # A choice is final either way: detection never writes over `chosen`, and nothing but a choice writes the plot's.
+    delta = {**(language_delta(value, "chosen") if replies else {}), PLOT_LANGUAGE: plot}
+    for key, item in delta.items():
         tool_context.state[key] = item
     return {"status": "ok", "source": "chosen", "changed": changed, "plot_outdated": plot_outdated}
 
