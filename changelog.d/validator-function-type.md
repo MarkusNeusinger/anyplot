@@ -8,7 +8,9 @@
   functions and classes, a loader, or a frame, wherever a public path reaches
   it. The walk found five more routes, now refused: `pathlib.Path`, re-exported
   by matplotlib and statsmodels; multiprocessing's `Pool`; altair's
-  `importlib_version`; and the `tokenize` module.
+  `importlib_version`; and the `tokenize` module. The review also bans
+  `timeit` on every receiver and the `eval_str=` keyword, with which
+  `inspect.signature` evaluates a function's annotations.
 
 ### Fixed
 
