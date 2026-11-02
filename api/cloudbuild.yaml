@@ -21,6 +21,19 @@ substitutions:
   # (deploys, Google's roughly daily instance replacement) are exactly what a
   # warm instance is for.
   _MAX_INSTANCES: "1"
+  # The runtime identity, a dedicated least-privilege account since 2026-11-02 (before:
+  # the Compute Engine default service account, which holds roles/editor). Its grants:
+  # roles/cloudsql.client and roles/bigquery.jobUser on the project, secretAccessor on
+  # the six secrets the service reads (DATABASE_URL, CACHE_INVALIDATE_TOKEN, ADMIN_TOKEN,
+  # PLAUSIBLE_API_KEY, AGENT_USER_ID_KEY and the hand-attached ORIGIN_SECRET),
+  # objectCreator and objectViewer on gs://anyplot-agent-cases, objectViewer on
+  # gs://anyplot-static (fonts), READER on the BigQuery datasets agent_telemetry and
+  # agent_telemetry_logs, and run.invoker on anyplot-agents. The build account (the
+  # Compute Engine default service account) holds iam.serviceAccountUser on it to
+  # deploy as it. A new secret or bucket the service reads needs a grant here first.
+  # anyplot-agents accepts this account as its caller (_API_CALLER in
+  # agents/cloudbuild.yaml); change both together.
+  _RUNTIME_SERVICE_ACCOUNT: anyplot-api@anyplot.iam.gserviceaccount.com
   # Cloudflare Access (Zero Trust) for /debug/* — the team domain is stable;
   # the AUD must be filled in once the Self-hosted Application is created in
   # the Cloudflare Zero Trust dashboard. With AUD unset (or with no email
@@ -101,6 +114,7 @@ steps:
       - "--max-instances=${_MAX_INSTANCES}"
       - "--port=8000"
       - "--allow-unauthenticated"
+      - "--service-account=${_RUNTIME_SERVICE_ACCOUNT}"
       - "--add-cloudsql-instances=anyplot:europe-west4:anyplot-db"
       # PLAUSIBLE_API_KEY: bearer token for the Plausible Stats API (powers
        #   /insights/visitors on the public stats page). The Secret Manager

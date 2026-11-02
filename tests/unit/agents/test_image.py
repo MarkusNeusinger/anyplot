@@ -51,8 +51,8 @@ DEPLOY_SMOKE = REPO_ROOT / "agents" / "renderer" / "deploy_smoke.sh"
 CLOUD_BUILD_BUILTINS = frozenset({"PROJECT_ID", "PROJECT_NUMBER", "BUILD_ID", "LOCATION"})
 """The built-in substitutions these configs use; anything else unescaped must be a `_NAME`."""
 
-API_CALLER = "239660669828-compute@developer.gserviceaccount.com"
-"""anyplot-api's runtime identity, the Compute Engine default service account (api/cloudbuild.yaml sets none)."""
+API_CALLER = "anyplot-api@anyplot.iam.gserviceaccount.com"
+"""anyplot-api's runtime identity, its dedicated account (`_RUNTIME_SERVICE_ACCOUNT` in api/cloudbuild.yaml)."""
 
 DEPLOYED_SETTINGS = frozenset(
     {

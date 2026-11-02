@@ -8,13 +8,14 @@ anyplot follows a **plot-centric repository pattern** where everything for one p
 plots/{specification-id}/
 ├── specification.md     # Description, Applications, Data, Notes, What a good version looks like
 ├── specification.yaml   # Spec-level metadata (tags, created, issue, suggested)
-├── metadata/            # Per-library metadata (one file per library)
-│   ├── matplotlib.yaml
-│   ├── seaborn.yaml
+├── metadata/            # Per-library metadata (one file per library), grouped by language
+│   ├── python/matplotlib.yaml
 │   └── ...
-└── implementations/     # Library implementations
-    ├── matplotlib.py
-    ├── seaborn.py
+└── implementations/     # Library implementations, grouped by language
+    ├── python/matplotlib.py
+    ├── r/ggplot2.R
+    ├── julia/makie.jl
+    ├── javascript/d3.js
     └── ...
 ```
 
@@ -32,20 +33,17 @@ anyplot/
 │   ├── scatter-basic/                 # Everything for basic scatter plot
 │   │   ├── specification.md           # Library-agnostic specification
 │   │   ├── specification.yaml         # Spec-level metadata (tags, created, issue)
-│   │   ├── metadata/                  # Per-library metadata
-│   │   │   ├── matplotlib.yaml
-│   │   │   ├── seaborn.yaml
-│   │   │   └── ...
-│   │   └── implementations/           # Library-specific code
-│   │       ├── matplotlib.py
-│   │       ├── seaborn.py
-│   │       ├── plotly.py
-│   │       ├── bokeh.py
-│   │       ├── altair.py
-│   │       ├── plotnine.py
-│   │       ├── pygal.py
-│   │       ├── highcharts.py
-│   │       └── letsplot.py
+│   │   ├── metadata/                  # Per-library metadata, by language
+│   │   │   ├── python/                # matplotlib.yaml, seaborn.yaml, …
+│   │   │   ├── r/                     # ggplot2.yaml
+│   │   │   ├── julia/                 # makie.yaml
+│   │   │   └── javascript/            # chartjs.yaml, d3.yaml, …
+│   │   └── implementations/           # Library-specific code, by language
+│   │       ├── python/                # matplotlib.py, seaborn.py, plotly.py, bokeh.py,
+│   │       │                          # altair.py, plotnine.py, pygal.py, letsplot.py
+│   │       ├── r/                     # ggplot2.R
+│   │       ├── julia/                 # makie.jl
+│   │       └── javascript/            # chartjs.js, d3.js, echarts.js, highcharts.js, muix.tsx
 │   │
 │   ├── bar-basic/
 │   │   ├── specification.md
@@ -235,12 +233,12 @@ anyplot/
 plots/{specification-id}/
 ├── specification.md     # Library-agnostic specification
 ├── specification.yaml   # Spec-level metadata (tags, created, issue, suggested)
-├── metadata/            # Per-library metadata
-│   ├── matplotlib.yaml  # Quality score, preview URL, generation history
+├── metadata/            # Per-library metadata, grouped by language
+│   ├── python/matplotlib.yaml  # Quality score, preview URL, generation history
 │   └── ...
-└── implementations/     # Library-specific implementations
-    ├── matplotlib.py
-    ├── seaborn.py
+└── implementations/     # Library-specific implementations, grouped by language
+    ├── python/matplotlib.py
+    ├── javascript/muix.tsx
     └── ...
 ```
 
@@ -423,9 +421,10 @@ gs://anyplot-images/
 **Layout**:
 ```
 plots/{spec-id}/implementations/
-├── python/   # 9 Python libraries (.py)
-├── r/        # ggplot2 (.R)
-└── julia/    # Makie.jl (.jl)
+├── python/       # 8 Python libraries (.py)
+├── r/            # ggplot2 (.R)
+├── julia/        # Makie.jl (.jl)
+└── javascript/   # 5 JavaScript libraries (.js, MUI X as .tsx)
 ```
 
 **File Naming** (by language):
@@ -438,7 +437,6 @@ Python (`python/`, `.py`):
 - `altair.py`
 - `plotnine.py`
 - `pygal.py`
-- `highcharts.py`
 - `letsplot.py`
 
 R (`r/`, `.R`):
@@ -446,6 +444,13 @@ R (`r/`, `.R`):
 
 Julia (`julia/`, `.jl`):
 - `makie.jl`
+
+JavaScript (`javascript/`):
+- `chartjs.js`
+- `d3.js`
+- `echarts.js`
+- `highcharts.js`
+- `muix.tsx` (MUI X Charts, a React module)
 
 **Code Style** (KISS):
 ```python
@@ -616,8 +621,8 @@ Format: `{type}-{variant}` or `{type}-{variant}-{modifier}`
 
 ### Implementation files
 
-Always named by library: `{library}.py`
-- `matplotlib.py`, `seaborn.py`, `plotly.py`, etc.
+Always named by library, under the language's directory: `implementations/{language}/{library}.{ext}`
+- `python/matplotlib.py`, `r/ggplot2.R`, `julia/makie.jl`, `javascript/d3.js`, `javascript/muix.tsx`
 
 ---
 
