@@ -498,7 +498,14 @@ describe('AgentChatPage gating', () => {
   it('explains the missing parameters instead of calling the BFF', () => {
     flags.isDev = true;
     renderAt('/debug/agent?spec=scatter-basic&library=excel');
-    expect(screen.getByText(/open this page from a plot/)).toBeInTheDocument();
+    // The plot page's entry since 2026-11-02 is `.use_my_data()`.
+    expect(screen.getByText(/open it from a plot/)).toHaveTextContent(
+      "open it from a plot's .use_my_data(), or start with scatter-basic in matplotlib."
+    );
+    expect(screen.getByRole('link', { name: 'scatter-basic in matplotlib' })).toHaveAttribute(
+      'href',
+      '/debug/agent?spec=scatter-basic&library=matplotlib&language=python'
+    );
     expect(agentCalls()).toHaveLength(0);
   });
 
@@ -532,9 +539,9 @@ describe('AgentChatPage gating', () => {
     renderAt(PAGE);
     expect(await screen.findByLabelText(/# your data/)).toBeInTheDocument();
     expect(currentStep()).toEqual(['1 data']);
-    expect(
-      screen.getByText(/check the preview and the bindings, confirm, then/)
-    ).toBeInTheDocument();
+    // The steps are behind the data card's ⓘ, not in a paragraph on the page (2026-11-02).
+    expect(screen.queryByText(/check the preview and the bindings/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'How the data card works' })).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/# your data/), {
       target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
@@ -617,7 +624,7 @@ describe('AgentChatPage gating', () => {
     expect(thread.firstElementChild).toHaveTextContent('.summarize_data()');
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
-      'ask about your data, or for a fix: "sum per month"'
+      'ask for example data, a curve, or a fix to your data'
     );
 
     // A correction in words, before the confirmation: the card shows it in place.
@@ -664,15 +671,17 @@ describe('AgentChatPage gating', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     const textbox = await screen.findByLabelText(/# your data/);
-    // Without data, both boxes name the other sources: example data, and a curve the assistant computes.
-    expect(textbox).toHaveAccessibleDescription(
-      'or type "example data" here, or ask for a curve in the chat: y = sin(x), x from -pi to pi'
+    // Without data, both boxes name the other sources in their placeholders: example data, and a
+    // curve the assistant computes; the how-to paragraph under the card is gone (2026-11-02).
+    expect(textbox).toHaveAttribute(
+      'placeholder',
+      expect.stringContaining('or ask for a curve: y = sin(x), x from -pi to pi')
     );
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
-      'ask for example data or a curve: "y = sin(x), x from -pi to pi"'
+      'ask for example data, a curve, or a fix to your data'
     );
-    expect(screen.getByText(/or ask here for example data or a curve/)).toBeInTheDocument();
+    expect(screen.queryByText(/paste your data above/)).not.toBeInTheDocument();
 
     fireEvent.change(textbox, { target: { value: FORMULA } });
     fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
@@ -751,7 +760,7 @@ describe('AgentChatPage gating', () => {
     expect(quietCreate()).toBeEnabled();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
-      'ask about your data, or for a fix: "sum per month"'
+      'ask for example data, a curve, or a fix to your data'
     );
     // The loss is named where it happened, right after the change, and next to `.confirm()`.
     expect(lastInThread()).toHaveTextContent('# bindings changed · confirm the data again');
@@ -846,7 +855,7 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByRole('article', { name: 'Plot version 1' })).toBeInTheDocument();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
-      'ask about this plot, or ask for a change'
+      'ask for a change, e.g. log scale on y'
     );
     expect(screen.getByRole('button', { name: '.send()' })).toBeDisabled();
     expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
@@ -929,7 +938,7 @@ describe('AgentChatPage gating', () => {
     expect(quietCreate()).toBeEnabled();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
-      'ask about your data, or for a fix: "sum per month"'
+      'ask for example data, a curve, or a fix to your data'
     );
 
     // Discarded, the stored data is the confirmed data again.
@@ -1501,7 +1510,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(box).toBeEnabled();
     expect(box).toHaveAttribute(
       'placeholder',
-      'ask for example data or a curve: "y = sin(x), x from -pi to pi"'
+      'ask for example data, a curve, or a fix to your data'
     );
     expect(box).not.toHaveAccessibleDescription();
 
@@ -1517,7 +1526,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(screen.getByLabelText('Message')).toBeEnabled();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
-      'ask about your data, or for a fix: "sum per month"'
+      'ask for example data, a curve, or a fix to your data'
     );
     sendFromComposer('what is the mean score?');
     expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();

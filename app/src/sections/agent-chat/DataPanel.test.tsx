@@ -8,6 +8,7 @@ import {
 import { AgentApiError, type ConvertAnswer, type RoleSpec } from 'src/lib/agent';
 import { bindingRows } from 'src/sections/agent-chat/bindings';
 import { DataPanel, DataViewUnavailable } from 'src/sections/agent-chat/DataPanel';
+import { DATA_HOWTO, DATA_PLACEHOLDER } from 'src/sections/agent-chat/messages';
 import { fireEvent, render, screen, userEvent, waitFor, within } from 'src/test-utils';
 
 /** `scrollIntoView` as a spy: jsdom has none. */
@@ -936,15 +937,34 @@ describe('DataPanel formulas', () => {
     ...overrides,
   });
 
-  it('names the chat as the other source of data until there is some', () => {
-    const { rerender } = renderPanel(empty());
-    const hint =
-      'or type "example data" here, or ask for a curve in the chat: y = sin(x), x from -pi to pi';
-    expect(screen.getByLabelText(/# your data/)).toHaveAccessibleDescription(hint);
+  it('names example data and a curve in the placeholder, under a one-line label', () => {
+    renderPanel(empty());
+    const box = screen.getByRole('textbox', { name: '# your data' });
+    expect(box).toHaveAttribute('placeholder', DATA_PLACEHOLDER);
+    expect(DATA_PLACEHOLDER.split('\n')).toEqual([
+      'paste a table or drop a file (csv, excel, json …)',
+      'or type: example data',
+      'or ask for a curve: y = sin(x), x from -pi to pi',
+    ]);
+    // The how-to is behind the ⓘ, never a line of its own.
+    expect(box).not.toHaveAccessibleDescription();
+    expect(screen.queryByText(/Parquet/)).not.toBeInTheDocument();
+  });
 
-    rerender(stateWith({ x: 'month', y1: 'shoes' }));
-    expect(screen.queryByText(hint)).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/# your data/)).not.toHaveAccessibleDescription();
+  it('opens the how-to from the ⓘ beside the label, and closes it with Escape', async () => {
+    const user = userEvent.setup();
+    renderPanel(empty());
+    const info = screen.getByRole('button', { name: 'How the data card works' });
+    expect(info).toHaveAttribute('aria-haspopup', 'dialog');
+
+    await user.click(info);
+    const dialog = screen.getByRole('dialog', { name: 'How the data card works' });
+    for (const line of DATA_HOWTO) expect(dialog).toHaveTextContent(line);
+    expect(within(dialog).getByTestId('data-howto').children).toHaveLength(DATA_HOWTO.length);
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(info).toHaveFocus();
   });
 
   it('offers .send() for a refused formula, which empties the box', async () => {

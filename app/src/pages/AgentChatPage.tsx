@@ -327,8 +327,7 @@ export function AgentChatPage({ lane = 'admin' }: { lane?: AgentLane } = {}) {
   if (!valid) {
     return (
       <Notice title="use with my data">
-        open this page from a plot&apos;s <code>.adapt()</code> button: it needs a spec and a
-        library, such as{' '}
+        open it from a plot&apos;s <code>.use_my_data()</code>, or start with{' '}
         <Box
           component={RouterLink}
           to={chatPath('scatter-basic', 'matplotlib', 'python')}
@@ -806,7 +805,7 @@ function AgentChat({
           offerAll={offerAll}
           allPressed={plotAll}
           // No session to switch: another library opens the page anew, with its own
-          // session (a full navigation, like the `.adapt()` button).
+          // session (a full navigation, like the plot page's `.use_my_data()`).
           hrefFor={reopen ? lib => chatPath(specId, lib, LIB_TO_LANG[lib] ?? 'python') : undefined}
           // Not during a run (the server refuses a switch then) or while the fan-out's panel
           // is open: its sessions run on this one's data.
@@ -921,22 +920,6 @@ function AgentChat({
             onDataViewShown={() => session.reportOutcome('opened_data_view', 0)}
           />
 
-          {state.items.length === 0 && !state.run && (
-            <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
-              paste your data above, or ask here for example data or a curve: &quot;y = sin(x), x
-              from{' '}
-              <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
-                -pi
-              </Box>{' '}
-              to pi&quot;, and the assistant makes the table. it sums your data up here, and you can
-              ask it to fix the data in plain words, such as &quot;read Anteil as numbers&quot; or
-              &quot;sum per month&quot;. check the preview and the bindings, confirm, then{' '}
-              <code>.create_plot()</code>, with a note first if the plot should do something
-              differently. afterwards, ask for changes to the plot: &quot;log scale on y&quot;,
-              &quot;dark version&quot;, &quot;label the outliers&quot;.
-            </Box>
-          )}
-
           <ChatThread
             state={state}
             specId={specId}
@@ -1028,19 +1011,18 @@ function AgentChat({
                 ref={messageRef}
                 aria-label="Message"
                 placeholder={
-                  // Step 1 talks about the data, step 2 about the plot. Without
-                  // data, the chat is the other way to get some: example data or a
-                  // formula. While `all` is pressed in step 2 the box waits: the
-                  // fan-out takes no text.
+                  // Step 1 talks about the data, step 2 about the plot; short since
+                  // 2026-11-02, the how-to is behind the data card's ⓘ. Without data,
+                  // the chat is the other way to get some: example data or a formula.
+                  // While `all` is pressed in step 2 the box waits: the fan-out takes
+                  // no text.
                   chatLocked
                     ? 'all libraries: the table goes as it is · turn all off to chat'
-                    : !state.dataset
-                      ? 'ask for example data or a curve: "y = sin(x), x from -pi to pi"'
-                      : !step2
-                        ? 'ask about your data, or for a fix: "sum per month"'
-                        : firstPlot
-                          ? 'optional: what the first plot should do differently'
-                          : 'ask about this plot, or ask for a change'
+                    : !step2
+                      ? 'ask for example data, a curve, or a fix to your data'
+                      : firstPlot
+                        ? 'optional: what the first plot should do differently'
+                        : 'ask for a change, e.g. log scale on y'
                 }
                 value={draft}
                 maxLength={MAX_MESSAGE_CHARS}

@@ -163,6 +163,24 @@ export const LANGUAGE_PASTED_TEXT = (language: string) =>
 export const LEAVE_TEXT =
   'leave the chat? the session ends here, and its data and plots cannot be restored';
 
+/**
+ * The how-to behind the data card's `# your data ⓘ` (since 2026-11-02, a label and a paragraph
+ * under the card before; owner: far too long, and interesting only once): the formats, the
+ * steps, a fix in plain words and changes afterwards. Example data and a curve are named by the
+ * two boxes' placeholders. The owner reads every user-facing text: keep them in the PR's "Texts
+ * to read".
+ */
+export const DATA_HOWTO = [
+  'formats: CSV, TSV, JSON, plain text, Excel, ODS, Parquet, Feather or NumPy',
+  'paste or drop → check the preview and the bindings → .confirm() → .create_plot()',
+  'the assistant fixes your data in plain words: "sum per month"',
+  'afterwards, ask for changes: "log scale on y", "label the outliers"',
+] as const;
+
+/** The data box's placeholder: a table or a file, example data, or a curve. */
+export const DATA_PLACEHOLDER =
+  'paste a table or drop a file (csv, excel, json …)\nor type: example data\nor ask for a curve: y = sin(x), x from -pi to pi';
+
 /** Failures only the language chip meets; any other code reads as the page's turn errors do. */
 export const LANGUAGE_FAILURE: Record<string, string> = {
   invalid: 'the server refused this language name',
