@@ -1063,7 +1063,16 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
     case 'library_failed':
       return { ...state, libraryBusy: false };
     case 'memory_sync':
-      return { ...state, memory: action.memory };
+      return {
+        ...state,
+        memory: action.memory,
+        // A list that arrives after the switch (its read was still in flight) backs the offer's count
+        // too, so a removal counts the composer's decisions down (Flash review, 2026-11-02).
+        carryOffer:
+          state.carryOffer && action.memory.entries.length > 0
+            ? { ...state.carryOffer, memoryBacked: true }
+            : state.carryOffer,
+      };
     case 'memory_busy':
       return { ...state, memoryBusy: action.busy };
     case 'chat_switch':

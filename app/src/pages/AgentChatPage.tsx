@@ -467,7 +467,10 @@ function AgentChat({
   // After a switch whose answer offered it: the plot in this library with the remembered
   // decisions (`carry_plot`), the composer's create action. Not while `all` is pressed, whose
   // fan-out makes fresh plots everywhere.
-  const carry = state.carryOffer && state.dataset && !plotAll ? state.carryOffer : null;
+  const carry =
+    state.carryOffer?.target.library === state.library && state.dataset && !plotAll
+      ? state.carryOffer
+      : null;
   const carryText = carry
     ? carryActionText(carry.target.library, carryDecisions(carry, state.memory))
     : '';
