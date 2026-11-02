@@ -1195,7 +1195,11 @@ class TestSeoProxyRouter:
             "the Cloudflare Access login cookie",
             "a complaint to a supervisory authority",
             "transfers outside Switzerland and the EU",
-            "cleared after ten minutes",
+            "cleared by the next feedback after ten minutes, and its salt dies with the server instance",
+            "uses your IP address to rate-limit, filter bots and absorb DDoS attacks",
+            "no name or email unless you type one",
+            "may credit your public username",
+            "browsing the catalogue never reaches a model",
         ):
             assert fact in response.text, fact
 

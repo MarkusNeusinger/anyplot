@@ -310,7 +310,10 @@ export function LegalPage() {
             <FactTable
               rows={[
                 ['server logs', '30 days'],
-                ['feedback IP hash', 'ten minutes'],
+                [
+                  'feedback IP hash',
+                  'cleared by the next feedback after ten minutes; its salt dies with the server instance',
+                ],
                 ['assistant telemetry', 'up to 180 days'],
                 ['feedback case files', '180 days'],
                 ['feedback entries, case rows', 'until you ask to delete them'],

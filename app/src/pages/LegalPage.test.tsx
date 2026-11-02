@@ -69,10 +69,15 @@ describe('LegalPage', () => {
     render(<LegalPage />);
 
     // One table row per store, each with its own figure: the 30 days belong to
-    // the server logs only, and the feedback rows have no timer at all.
+    // the server logs only, and the feedback rows have no timer at all. The IP
+    // hash is cleared only when the next feedback arrives (api/routers/feedback.py
+    // `_clear_expired_ip_hashes`), so the row says so instead of a flat "ten minutes".
     const retention: [string, string][] = [
       ['server logs', '30 days'],
-      ['feedback IP hash', 'ten minutes'],
+      [
+        'feedback IP hash',
+        'cleared by the next feedback after ten minutes; its salt dies with the server instance',
+      ],
       ['assistant telemetry', 'up to 180 days'],
       ['feedback case files', '180 days'],
       ['feedback entries, case rows', 'until you ask to delete them'],
@@ -82,7 +87,7 @@ describe('LegalPage', () => {
         screen.getByRole('row', { name: new RegExp(`^${store}\\s*${kept}$`) })
       ).toBeInTheDocument();
     }
-    // The label is the row's header, so a screen reader announces "feedback IP hash, ten minutes".
+    // The label is the row's header, so a screen reader announces it before the figure.
     expect(screen.getByRole('rowheader', { name: 'feedback IP hash' })).toBeInTheDocument();
     // Google Cloud, its logs included, runs in the EU region.
     expect(
@@ -109,7 +114,7 @@ describe('LegalPage', () => {
     expect(
       screen.getByText(/a random id that ties your own submissions together/)
     ).toBeInTheDocument();
-    // The feedback's IP hash is salted; its ten minutes sit in the retention table.
+    // The feedback's IP hash is salted; when it goes sits in the retention table.
     expect(screen.getByText(/a salted hash of your IP address limits spam/)).toBeInTheDocument();
     // Plausible's real property is cookieless and identifier-free, not that
     // the script is ours — it is Plausible's, only served from our domain.
