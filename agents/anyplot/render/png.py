@@ -91,16 +91,21 @@ def read_output(path: Path, max_bytes: int) -> bytes | None:
 
 
 def read_probe(path: Path) -> dict[str, Any] | None:
-    """`probe-<theme>.json` as a JSON object, or None: missing, refused by `read_output`, or not an object.
-
-    The probe is advisory, so a broken one is simply absent, as the renderer's `wire.clean_probe` treats it.
+    """`probe-<theme>.json` as a JSON object; None when it is missing or refused by `read_output` (a link, an oversize
+    file); `{"error": "InvalidProbe"}` when it exists but is empty, does not parse or is no object, so the pipeline
+    logs it as `probe_error`, as the renderer's `wire.clean_probe` answers it.
     """
     try:
         raw = read_output(path, MAX_PROBE_BYTES)
-        loaded = json.loads(raw) if raw else None
     except ValueError, OSError:
         return None
-    return loaded if isinstance(loaded, dict) else None
+    if raw is None:
+        return None
+    try:
+        loaded = json.loads(raw)
+    except ValueError, RecursionError:
+        return {"error": "InvalidProbe"}
+    return loaded if isinstance(loaded, dict) else {"error": "InvalidProbe"}
 
 
 def harden(data: bytes) -> HardenedPng:

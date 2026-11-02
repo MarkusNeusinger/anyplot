@@ -69,6 +69,26 @@ describe('gridColumns', () => {
     expect(operators).toContain('contains');
     expect(operators).toContain('isEmpty');
   });
+
+  it('leads with the data’s own row numbers in place of the counter, as data', () => {
+    const table = viewTable('value,index\n9,3\n7,1\n8,2\n', [
+      { name: 'value', dtype: 'integer', missing: 0, unique: 3 },
+      { name: 'index', dtype: 'integer', missing: 0, unique: 3 },
+    ]);
+    const columns = gridColumns(table);
+
+    expect(columns.map(column => column.field)).toEqual(['c1', 'c0']);
+    expect(columns[0]).toMatchObject({
+      headerName: 'index',
+      cellClassName: 'data-view-row',
+      description: 'index · integer · numbers the rows',
+    });
+    // Data like any column: no `sortable: false`, and a number filter.
+    expect(columns[0].sortable).toBeUndefined();
+    expect(columns[0].filterOperators?.[0].value).toBe('>');
+    // The cells stay the file's, in the file's row order: 3, 1, 2 after a sort.
+    expect(gridRows(table).map(row => row.c1)).toEqual(['3', '1', '2']);
+  });
 });
 
 describe('NUMBER_OPERATORS', () => {

@@ -136,9 +136,11 @@ The operations:
   which the change line counts. It came from the live test of 2026-10-15: a MeteoSwiss
   table of `Year` and `Month` had no date column for a time series, and the root could
   only ask the user to add one by hand.
-* `row_number`: a new whole-number column `name` (`index` when left out), appended last,
-  that numbers the rows 1 to n in their current order. A column of that name that already
-  numbers the rows (`1` to `n` or `0` to `n - 1`, each once) is reused, nothing added. The
+* `row_number`: a new whole-number column `name` (`index` when left out), inserted as the
+  first column, that numbers the rows 1 to n in their current order. A column of that name
+  that already numbers the rows (`1` to `n` or `0` to `n - 1`, each once) is reused, nothing
+  added, and moved to the first column when it stands elsewhere, which the change line says
+  (owner decision of 2026-11-02: the row numbers label the rows, as the data view shows them). The
   service binds it to the role it was made for (`Prepared.row_numbers`,
   `bindings.carry_bindings`). It came from the owner's live test of 2026-11-02: a pasted
   list `1,3,5,4,6,2` on a line plot had no x, and the root stopped to ask. It is an
@@ -1559,17 +1561,21 @@ def _ordered(
 
 
 def _row_number(frame: pd.DataFrame, op: RowNumber, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    # The row numbers label the rows, so they stand first; only the order of the columns changes, never a value.
     if op.name in frame.columns:
         if not _numbers_the_rows(frame[op.name]):
             raise PrepareError("invalid_operation", f"a column named '{op.name}' already exists")
         carried.row_numbers.add(op.name)
-        return frame, f"{op.name} already numbers the rows"
+        if frame.columns[0] == op.name:
+            return frame, f"{op.name} already numbers the rows"
+        moved = frame[[op.name, *(column for column in frame.columns if column != op.name)]]
+        return moved, f"{op.name} already numbers the rows; moved to the first column"
     if frame.shape[1] >= MAX_COLUMNS:
         raise PrepareError("too_wide", f"the data already has {frame.shape[1]} columns; at most {MAX_COLUMNS} fit")
     result = frame.copy()
-    result[op.name] = pd.array(range(1, len(frame) + 1), dtype="Int64")
+    result.insert(0, op.name, pd.Series(range(1, len(frame) + 1), index=frame.index, dtype="Int64"))
     carried.row_numbers.add(op.name)
-    return result, f"new column {op.name}: the rows numbered 1 to {len(frame):,}"
+    return result, f"new first column {op.name}: the rows numbered 1 to {len(frame):,}"
 
 
 def _numbers_the_rows(series: pd.Series) -> bool:

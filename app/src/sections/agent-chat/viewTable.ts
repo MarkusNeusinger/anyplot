@@ -22,12 +22,32 @@ export interface ViewColumn {
 export interface ViewTable {
   columns: ViewColumn[];
   rows: string[][];
+  /** The column that numbers the rows (`rowNumberColumn`), which labels them in place of a counter; or null. */
+  rowLabel: number | null;
 }
+
+/**
+ * The names a tool gives the row numbers it writes, and the `row_number` operation's default
+ * `index` (`agents/anyplot/data/bindings.py` `ROW_NUMBER_NAMES`, pinned equal by a test there).
+ */
+export const ROW_NUMBER_NAMES = [
+  'X',
+  'Unnamed: 0',
+  '...1',
+  'index',
+  'Index',
+  'rownames',
+  'row.names',
+  'row_names',
+];
+/** The parser's name for a column with an empty header. */
+const GENERATED_NAME = /^column_[0-9]+$/;
+const WHOLE_NUMBER = /^[0-9]+$/;
 
 /** The grid's monospace text at 13 px: one character's advance, in pixels, a little generous. */
 const CHAR_PX = 8;
-/** A header's name or dtype line beside the sort arrow and the menu button. */
-const HEADER_EXTRA_PX = 64;
+/** A header's name or dtype line beside the sort arrow and the menu button, which a sorted column shows both. */
+const HEADER_EXTRA_PX = 72;
 /** A cell's text and its padding. */
 const CELL_EXTRA_PX = 24;
 export const MIN_COLUMN_PX = 72;
@@ -48,7 +68,39 @@ export function viewTable(csv: string, profile: ColumnProfile[]): ViewTable {
       width: columnWidth(name, dtype, rows, index),
     };
   });
-  return { columns, rows };
+  return { columns, rows, rowLabel: rowNumberColumn(columns, rows) };
+}
+
+/**
+ * The first column that only numbers the rows, as the service reads one (`bindings.row_number_columns`):
+ * a row-number name (`ROW_NUMBER_NAMES`, `column_<n>`) over the whole numbers 1 to n or 0 to n - 1, each
+ * once, none missing, on at least two rows. The values count as a set, so a sort after the numbering
+ * leaves it a row-number column: it still labels each row with the data's own number. Null without one.
+ */
+export function rowNumberColumn(columns: ViewColumn[], rows: string[][]): number | null {
+  if (rows.length < 2) return null;
+  const index = columns.findIndex(
+    ({ name, dtype }, at) =>
+      dtype === 'integer' &&
+      (ROW_NUMBER_NAMES.includes(name) || GENERATED_NAME.test(name)) &&
+      numbersTheRows(rows, at)
+  );
+  return index < 0 ? null : index;
+}
+
+/** Whether column `at` holds n distinct whole numbers that are 1 to n or 0 to n - 1. */
+function numbersTheRows(rows: string[][], at: number): boolean {
+  const count = rows.length;
+  const seen = new Uint8Array(count + 1);
+  for (const row of rows) {
+    const cell = row[at];
+    if (!WHOLE_NUMBER.test(cell)) return false;
+    const value = Number(cell);
+    if (value > count || seen[value]) return false;
+    seen[value] = 1;
+  }
+  // n distinct values out of 0..n leave exactly one out: 0 for 1..n, or n for 0..n - 1.
+  return !seen[0] || !seen[count];
 }
 
 /** Wide enough for the name, the dtype and the longest of the first values, within the bounds. */

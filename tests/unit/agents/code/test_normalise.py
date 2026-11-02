@@ -18,6 +18,7 @@ from agents.anyplot.code.normalise import (
     plan_dpi,
 )
 from agents.anyplot.code.regions import find_regions
+from tests.libraries import import_library
 
 from .conftest import CATALOGUE, CATALOGUE_FILES, CATALOGUE_NORMALISED, source
 
@@ -790,7 +791,7 @@ def test_html_writes_stay_for_the_other_libraries() -> None:
 
 def test_pygal_html_open_writes_the_same_bytes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """The rewrite's claim, for the three write forms: pygal's `render_to_file` writes what `open()` wrote."""
-    pytest.importorskip("pygal")
+    import_library("pygal")
     import pygal.graph.base
 
     monkeypatch.setattr(pygal.graph.base, "uuid4", lambda: "00000000-0000-0000-0000-000000000000")
