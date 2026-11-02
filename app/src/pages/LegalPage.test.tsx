@@ -69,6 +69,10 @@ describe('LegalPage', () => {
     expect(
       screen.getByText(/in the Netherlands \(europe-west4\), for security and debugging purposes/)
     ).toBeInTheDocument();
+    // The move happened mid-day, so the cut is the move itself, not the date.
+    expect(
+      screen.getByText(/written before the move on 2 November 2026 stay in Google.s global/)
+    ).toBeInTheDocument();
     expect(screen.getByText(/nothing deletes them on a timer/)).toBeInTheDocument();
   });
 
