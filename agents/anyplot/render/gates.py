@@ -22,10 +22,14 @@ themes and both share the finding.
 
 The probe is written inside the sandbox by code under test, so G-gates only ever add
 feedback lines; they never fail a render. Feedback lines use the defect grammar of
-`core/defects.py` where they name a criterion. A render error is summarised as the
-exception class and the line of the code file that raised it, never the message: code
-under test can raise `ValueError(df["secret"].iloc[0])`, so the message may be a cell
-of the user's data.
+`core/defects.py` where they name a criterion. A render error is summarised by the
+runtime's error grammar (`RuntimeAdapter.error_summary`), never by its message: code
+under test can raise `ValueError(df["secret"].iloc[0])` or `stop(df$secret[1])`, so the
+message may be a cell of the user's data. Python's grammar (`error_summary` here) names
+the exception class and the line of `plot.py` that raised it; R's
+(`code/profiles/r/errors.py`) the erroring function, its cause and its last calls,
+because R prints no line numbers for a script. Only R1 to R3 judge a render without a
+probe (R, altair, pygal, lets-plot): the G-gates then have nothing to read.
 """
 
 import builtins
@@ -59,6 +63,7 @@ TEXT_KINDS = frozenset(
         "figure axis label",
         "title",
         "suptitle",
+        "subtitle",
         "annotation",
         "legend text",
         "text",
@@ -91,7 +96,7 @@ GLYPH_LINE_PREFIX = "VQ-01 ("  # only G10 writes VQ-01
 G10_TARGET = "in text the code writes, use characters the fonts cover; a user's column name stays"
 G10_MATH_TARGET = "keep non-Latin text outside $…$ math strings; a user's column name stays"
 CODE_FILE = "plot.py"
-"""The file the Python runtime writes the code to; its frames give the error line."""
+"""The file the Python runtime writes the code to; its frames give the error line of Python's grammar."""
 ERROR_CLASSES = frozenset(
     {
         "pandas.errors.ParserError",
@@ -220,6 +225,60 @@ def error_summary(stderr_tail: str, *, code_file: str = CODE_FILE) -> str:
     return f"{names[-1]} at line {int(frames[-1])}" if frames else names[-1]
 
 
+NO_FINAL_LINE = "an error that printed no final error line"
+FIGURE_KIND_TEXTS: dict[tuple[str, str | None], str] = {
+    ("figure", "NoFigure"): "the plot wrote no figure: keep the final save statement, and let the code reach it",
+    ("figure", "FigureTooLarge"): "a figure over 16 MiB: draw fewer points, or aggregate them",
+    ("figure", "UnsafeMarkup"): (
+        "the figure holds what a browser would run, load or link, or a bokeh model no catalogue plot uses (a"
+        " JavaScript, HTML or CSS model, a widget, a tooltip with more than text tags, a link, an image URL): draw"
+        " with the catalogue's glyphs, annotations and tools, and write plain text and @column fields"
+    ),
+    ("figure", None): "a figure the page cannot take (a size outside 320 to 6400 pixels a side, or no figure)",
+    ("crash", None): "the plot crashed (out of memory, most likely)",
+    ("page", None): "the page could not draw the figure (a part it cannot draw, such as a JavaScript callback)",
+    (
+        "draw",
+        "NoWebGL",
+    ): 'a WebGL trace, which the renderer cannot draw: use a 2D trace (go.Scatter, render_mode="svg")',
+    ("draw", None): "the figure drew nothing",
+    ("timeout", None): "the figure's page did not settle within 15 s",
+    ("harness", None): "a harness error (a toolchain fault, not the code)",
+}
+"""The fixed text of each kind of plotly's and bokeh's figure mode with a class where the kind has several (`None` for
+the rest of that kind): the plot step's `figure`, `crash` and `harness` lines (`harness.figure_error_line`) and the
+screenshot step's (`render.mjs` with `--figure`)."""
+_FIGURE_FINAL = re.compile(
+    r"^render: error: (?P<kind>[a-z]{1,16}) (?P<cls>[A-Za-z_$][\w$]{0,63}) (?:-|[^\s:]{1,64}:(?P<line>\d{1,7})): "
+)
+
+
+def figure_error_summary(stderr_tail: str, *, code_file: str = CODE_FILE) -> str:
+    """Where a plotly or bokeh render failed (the renderer's figure mode, `harness.py --figure`), never the message.
+
+    Both steps end a failure with the JavaScript harness's final error line, `render: error: <kind> <Class>
+    <where>: <message>`, the last on stderr. A `plot` line is the plot's own exception: its class and line come from
+    the traceback the plot step prints above it, as for every Python plot (`error_summary`), else from the line when
+    its class is a builtin exception (`sys.exit` prints no traceback). Every other kind is a fixed text
+    (`FIGURE_KIND_TEXTS`). Only the last line counts, since everything above it can quote what the plot printed."""
+    lines = [line.rstrip() for line in stderr_tail.splitlines() if line.strip()]
+    if not lines:
+        return "no error output"
+    match = _FIGURE_FINAL.match(lines[-1])
+    if match is None:
+        return NO_FINAL_LINE
+    kind, cls, line = match.group("kind"), match.group("cls"), match.group("line")
+    if kind == "plot":
+        summary = error_summary("\n".join(lines[:-1]), code_file=code_file)
+        if summary not in (NO_EXCEPTION_LINE, "no error output"):
+            return summary
+        named = _exception_class(cls)
+        if named is None:
+            return "an error"
+        return f"{named} at line {int(line)}" if line is not None else named
+    return FIGURE_KIND_TEXTS.get((kind, cls)) or FIGURE_KIND_TEXTS.get((kind, None)) or "an error"
+
+
 def _mib(value: int | None) -> str:
     return "more than allowed" if value is None else f"{value / (1024 * 1024):.1f} MiB"
 
@@ -257,8 +316,8 @@ def limit_line(theme: Theme, reason: str | None, measured: int | None, limit: in
                 "catalogue canvas size. Likely cause: a high dpi or a very large figure size."
             )
         return (
-            f'render ({theme}): {png} is not a regular file → save the figure with fig.savefig("{png}"), never a '
-            "link or a special file."
+            f"render ({theme}): {png} is not a regular file → save the plot to {png} with the code's own final save "
+            "statement, never a link or a special file."
         )
     return None
 
@@ -641,12 +700,13 @@ def _number_format_lines(
     `tick_axes`, which say which tick labels are numbers (`_number_label_kind`). No label text
     reaches the line: a tick label can be a cell of the user's data. The language is named
     by its English name from the server's table, never by the session's free-text value.
+    Only matplotlib's probe has `tick_axes`; a probe without it (the text probe of a library
+    that draws without matplotlib, whose formatters the line's advice does not name) gets no line.
     """
     labels = probe.get("labels") if isinstance(probe, dict) else None
-    if numbers is None or not isinstance(labels, list):
-        return []
     ticks = probe.get("tick_axes") if isinstance(probe, dict) else None
-    ticks = ticks if isinstance(ticks, list) else None
+    if numbers is None or not isinstance(labels, list) or not isinstance(ticks, list):
+        return []
     numeric = foreign = 0
     kinds: set[str] = set()
     for label in labels:

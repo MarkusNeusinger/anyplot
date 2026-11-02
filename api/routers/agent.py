@@ -71,7 +71,7 @@ from core.agent_cases import (
     row_from_manifest,
 )
 from core.config import settings
-from core.constants import SUPPORTED_LIBRARIES
+from core.constants import MAX_AGENT_VERSION, SUPPORTED_LIBRARIES
 from core.database import FEEDBACK_REACTIONS, AgentFeedback, AgentFeedbackRepository, ImplRepository, SpecRepository
 from core.utils import strip_noqa_comments
 
@@ -111,10 +111,23 @@ ARTIFACT_MEDIA_TYPES: dict[str, str] = {
     "plot.jl": "text/plain; charset=utf-8",
     "plot.js": "text/javascript; charset=utf-8",
     "plot.tsx": "text/plain; charset=utf-8",
+    "plot.html": "text/html; charset=utf-8",
     "data.csv": "text/csv; charset=utf-8",
 }
 """The only artifact names the BFF fetches (the agents' `schemas.ArtifactName`: the two PNGs, the exported
-code under its language's name, the data). The media type is set here and the upstream one is never forwarded."""
+code under its language's name, a JavaScript plot's page, the data). The media type is set here and the upstream
+one is never forwarded."""
+PAGE_ARTIFACT = "plot.html"
+PAGE_HEADERS: dict[str, str] = {
+    "Content-Disposition": 'attachment; filename="plot.html"',
+    "Content-Security-Policy": "sandbox",
+    "X-Content-Type-Options": "nosniff",
+    "Cache-Control": "private, no-store",
+    "Referrer-Policy": "no-referrer",
+}
+"""The headers of a JavaScript plot's `plot.html`, set here and never forwarded: a download, never a page of this
+origin (the agents service's `PAGE_HEADERS`, copied because the API image does not ship the agents package; pinned
+equal by a test). The file opened from disk carries its own policy and sandboxed frame."""
 
 MAX_BUNDLE_BYTES = 32 * 1024 * 1024
 """The cap of a session bundle the BFF relays: Cloud Run's 32 MiB limit on an HTTP/1 response that is
@@ -230,11 +243,15 @@ _UPSTREAM_CODES = frozenset(
         "no_dataset",
         "nothing_to_undo",
         "no_suggestion",
+        "has_dataset",
+        "unconfirmed",
         "rate_limited",
         "daily_limit",
         "locked_out",
         "session_closed",
         "convert_unavailable",
+        "page_unavailable",
+        "page_failed",
         *CONVERT_REFUSAL_CODES,
     }
 )
@@ -512,6 +529,9 @@ class CreateSessionBody(_StrictBody):
     spec_id: SpecId
     library: LibraryId
     locale: Locale
+    # The admin's "plot in all libraries" fan-out marks the sessions it opens, so the usage telemetry
+    # files their lines under the source `fanout` instead of `live`; a closed set, forwarded only when set.
+    source: Literal["fanout"] | None = None
 
 
 class SwitchLibraryBody(_StrictBody):
@@ -540,6 +560,12 @@ class DatasetBody(_StrictBody):
     # Which of several tables in `text` to read (the page's table picker, from the previous answer's
     # `tables`, 1-based); the agents service reads the first without it.
     table: Annotated[int, Field(strict=True, ge=1, le=MAX_DATASET_TABLES)] | None = None
+
+
+class CopyDatasetBody(_StrictBody):
+    # The admin fan-out's copy: the page's own session, whose confirmed data the fan-out session in the path
+    # takes. The agents service looks both up under the one user id this BFF derives for the admin.
+    from_session: Annotated[str, Field(pattern=SESSION_ID_PATTERN)]
 
 
 class ConvertBody(_StrictBody):
@@ -571,10 +597,18 @@ class RenderThemeBody(_StrictBody):
 
 
 OutcomeAction = Literal[
-    "copied_code", "copied_image", "downloaded_png", "downloaded_code", "downloaded_data", "saved_session", "feedback"
+    "copied_code",
+    "copied_image",
+    "downloaded_png",
+    "downloaded_code",
+    "downloaded_page",
+    "opened_preview",
+    "downloaded_data",
+    "saved_session",
+    "feedback",
 ]
 """What the page reports a user did with a result (`agents/anyplot/telemetry.py` `OutcomeAction`; copied, because
-the API image does not ship the agents package)."""
+the API image does not ship the agents package; pinned equal by a test)."""
 
 
 def _check_reaction(value: str) -> str:
@@ -587,7 +621,7 @@ class OutcomeBody(_StrictBody):
     # The page's content-free outcome beacon: a closed action, the version it was on (0 for the session),
     # and with `feedback` the reaction. Nothing the user wrote or the result held ever travels here.
     action: OutcomeAction
-    version: Annotated[int, Field(strict=True, ge=0, le=999)] = 0
+    version: Annotated[int, Field(strict=True, ge=0, le=MAX_AGENT_VERSION)] = 0
     reaction: Annotated[str, AfterValidator(_check_reaction)] | None = None
 
     @model_validator(mode="after")
@@ -615,7 +649,7 @@ class FeedbackBody(_StrictBody):
     # store a case the client never meant (`true` is version 1).
     include_data: Annotated[bool, Field(strict=True)]
     # The result version the feedback is about; 0 is the chat itself, for a session that made no plot.
-    result_version: Annotated[int, Field(ge=0, le=999, strict=True)]
+    result_version: Annotated[int, Field(ge=0, le=MAX_AGENT_VERSION, strict=True)]
     # The case id of the earlier submission for this version, when this one is an edit of it.
     replaces: Annotated[str | None, Field(pattern=CASE_ID_PATTERN)] = None
 
@@ -1033,17 +1067,22 @@ class UpstreamStream:
 
 
 async def open_message_stream(
-    sid: SessionId, body: MessageBody, ctx: Ctx, client: Client
+    sid: SessionId, body: MessageBody, ctx: Ctx, client: Client, theme: Literal["light", "dark"] | None = None
 ) -> AsyncIterator[UpstreamStream]:
     """Open the upstream stream BEFORE the SSE response starts.
 
     A dependency rather than the generator itself, so a 413 here or an upstream
     409 `run_active` still reaches the browser as an HTTP status: once the
     generator runs, the 200 is already on the wire.
+
+    `theme` is the site theme the page shows, which a plot of the turn renders in
+    unless the user asks for one; forwarded as a query parameter, which an agents
+    service deployed before it ignores, where its strict body would refuse a field.
     """
     if body.text is not None and len(body.text) > MAX_MESSAGE_CHARS:
         raise AgentHTTPError(413, "too_long", ctx.request_id)
     payload = {"text": body.text} if body.text is not None else {"action": body.action}
+    params: dict[str, str | int] | None = {"theme": theme} if theme is not None else None
     path = f"/sessions/{sid}/messages"
     # One wall-clock budget for the whole turn: the ID token, the connection
     # and the upstream's response headers spend from it too.
@@ -1051,7 +1090,9 @@ async def open_message_stream(
     response: httpx.Response | None
     try:
         async with asyncio.timeout_at(deadline.at):
-            response = await _open_stream(client, ctx, "POST", path, json_body=payload, accept="text/event-stream")
+            response = await _open_stream(
+                client, ctx, "POST", path, json_body=payload, params=params, accept="text/event-stream"
+            )
     except (*_UNREACHABLE, TimeoutError) as exc:
         _log_unreachable(ctx, "POST", path, exc)
         response = None
@@ -1102,6 +1143,8 @@ async def create_session(
         "locale": body.locale,
         "snapshot": snapshot.model_dump(),
     }
+    if body.source is not None:
+        payload["source"] = body.source
     return await _call_upstream(client, ctx, "POST", "/sessions", json_body=payload)
 
 
@@ -1226,6 +1269,22 @@ async def dataset_to_long(sid: SessionId, ctx: Ctx, client: Client) -> Any:
     return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset/to_long")
 
 
+@router.post("/sessions/{sid}/dataset/copy")
+async def copy_dataset(sid: SessionId, body: CopyDatasetBody, ctx: Ctx, client: Client) -> Any:
+    """The admin fan-out's `.plot_all()`: copy the confirmed current data of `from_session` into this fan-out session.
+
+    The agents service copies the stored version as it is, with its bindings, their confirmation and the session
+    language, and answers like the dataset route plus `confirmed`, `complete`, `missing_roles` and `copied_from`.
+    Both sessions are looked up under this admin's user id, so another user's session is `404 session_expired`;
+    `409 has_dataset` for a target with data, `422 no_dataset` and `422 unconfirmed` for a source without
+    confirmed data, `422 invalid` for a target that is no fan-out session or another spec, `409 run_active`,
+    `429 rate_limited` / `daily_limit` and `503 capacity`, passed through. An agents service without the route
+    answers `404 not_found`, on which the page replays the paste instead.
+    """
+    payload = {"from_session": body.from_session}
+    return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset/copy", json_body=payload)
+
+
 @router.post("/sessions/{sid}/messages", response_class=EventSourceResponse)
 async def post_message(upstream: UpstreamStream = Depends(open_message_stream)) -> AsyncIterator[ServerSentEvent]:
     """Relay one chat turn as SSE `anyplot/1`; always ends with a `done` event.
@@ -1294,7 +1353,11 @@ async def post_outcome(sid: SessionId, body: OutcomeBody, ctx: Ctx, client: Clie
 
 @router.post("/sessions/{sid}/versions/{version}/render")
 async def render_version_theme(
-    sid: SessionId, version: Annotated[int, Path(ge=0, le=999)], body: RenderThemeBody, ctx: Ctx, client: Client
+    sid: SessionId,
+    version: Annotated[int, Path(ge=0, le=MAX_AGENT_VERSION)],
+    body: RenderThemeBody,
+    ctx: Ctx,
+    client: Client,
 ) -> Any:
     """The theme toggle: render the other theme of a finished version (0 is the latest), with no model call.
 
@@ -1306,22 +1369,39 @@ async def render_version_theme(
 
 @router.get("/sessions/{sid}/artifacts/{name}")
 async def get_artifact(
-    sid: SessionId, name: str, ctx: Ctx, client: Client, v: Annotated[int | None, Query(ge=0, le=999)] = None
+    sid: SessionId,
+    name: str,
+    ctx: Ctx,
+    client: Client,
+    v: Annotated[int | None, Query(ge=0, le=MAX_AGENT_VERSION)] = None,
+    theme: Literal["light", "dark"] | None = None,
 ) -> Response:
-    """Stream one result file; only the four allowlisted names exist."""
+    """Stream one result file; only the allowlisted names exist.
+
+    `plot.html`, a JavaScript plot's self-contained page, is built by the agents service in `theme` (default: the
+    version's own) and answered as an attachment with `PAGE_HEADERS`; `theme` is forwarded for it alone.
+    """
     media_type = ARTIFACT_MEDIA_TYPES.get(name)
     if media_type is None:
         raise AgentHTTPError(404, "not_found", ctx.request_id)
     path = f"/sessions/{sid}/artifacts/{name}"
+    params: dict[str, str | int] = {}
+    if v is not None:
+        params["v"] = v
+    if name == PAGE_ARTIFACT and theme is not None:
+        params["theme"] = theme
     try:
-        response = await _open_stream(client, ctx, "GET", path, params={"v": v} if v is not None else None)
+        response = await _open_stream(client, ctx, "GET", path, params=params or None)
     except _UNREACHABLE as exc:
         _log_unreachable(ctx, "GET", path, exc)
         raise AgentHTTPError(502, "upstream", ctx.request_id) from exc
+    headers = (
+        PAGE_HEADERS if name == PAGE_ARTIFACT else {"Cache-Control": _NO_STORE, "X-Content-Type-Options": "nosniff"}
+    )
     return StreamingResponse(
         response.aiter_bytes(),
         media_type=media_type,
-        headers={"Cache-Control": _NO_STORE, "X-Content-Type-Options": "nosniff", "X-Request-Id": ctx.request_id},
+        headers={**headers, "X-Request-Id": ctx.request_id},
         background=BackgroundTask(response.aclose),
     )
 
@@ -1332,7 +1412,7 @@ async def get_bundle(
     request: Request,
     ctx: Ctx,
     client: Client,
-    version: Annotated[int | None, Query(ge=0, le=999)] = None,
+    version: Annotated[int | None, Query(ge=0, le=MAX_AGENT_VERSION)] = None,
     include_data: bool = False,
 ) -> Response:
     """The session's feedback case as a JSON file to save: the page's `.save()`.

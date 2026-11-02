@@ -52,6 +52,16 @@ false refusal stays visible. A reply of the root that talks about its own instru
 is a miss whatever the data calls did, and the summary counts such cases under
 `instruction_talk`. The gate is `--min-exact` (80 percent) of the answered cases.
 
+A case may send the step-1 summary action instead of a message (`action: "summarize_data"`, as the page
+does after a paste): it expects no data call, and only its reply is scored. Every root reply is also
+measured for its shape (owner decision of 2026-11-01: short, to the point, a question only when it
+matters): its words (`MAX_REPLY_WORDS`), its questions, and whether it closes with one. A closing
+question is a reply miss unless the turn is blocked: the case is tagged `ask_back` (a request that can
+mean two different changes), a data call of the turn failed, or the turn left a required role of the spec
+without a column (`roles_open`). A reply over `MAX_REPLY_WORDS` words is a
+reply miss too. The reply gate is `--max-reply-misses` (10 percent) of the answered cases with a reply;
+the reply text itself never enters the report.
+
 A case is `unavailable` when its dataset could not be stored (`503 guard_unavailable`)
 or its turn ended with an `error` event (the judge down, `capacity`); it counts in no
 rate, and more than `--max-unavailable` (10 percent) of them exit 4. A dataset the
@@ -59,12 +69,13 @@ judge refuses (`403 data_refused`) is a miss, because the fixtures are synthetic
 tables that must pass.
 
 A case makes about five model calls: the dataset judge, the scope judge, and the root
-two or three times (a profile read, the tool call, the reply). Under the 30 requests
-per minute Vertex quota for Claude Haiku in `eu` (see `scope.py`), `--calls-per-minute`
-(25 by default) spaces the starts of the cases `CALLS_PER_CASE` times further apart
-than the scope eval spaces its judge calls: 12 seconds at the default, so the 41 cases
-take about 8 minutes; the cases run one at a time. The cost is the list price of
-every call the attribution log booked (`pricing.call_cost`, `pricing.judge_cost`).
+two or three times (a profile read, the tool call, the reply). Under the Vertex quota
+for Claude Haiku in `eu` (150 requests per minute since 2026-10-31, see `scope.py`),
+`--calls-per-minute` (25 by default) spaces the starts of the cases `CALLS_PER_CASE`
+times further apart than the scope eval spaces its judge calls: 12 seconds at the
+default, so the 41 cases take about 8 minutes; the cases run one at a time. The cost
+is the list price of every call the attribution log booked (`pricing.call_cost`,
+`pricing.judge_cost`).
 
 It writes `<out>/<date>-prep-<model>.json` (the stamp, the gates, the summary, every
 case's canonical expected and found operations, its tool calls, refusal, cost and
@@ -84,6 +95,7 @@ import json
 import logging
 import os
 import re
+import statistics
 import sys
 import time
 from collections import Counter, defaultdict
@@ -91,10 +103,10 @@ from collections.abc import MutableMapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any, Literal
 
 import httpx
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 from agents.evals.matrix import (
     ATTRIBUTION_LOGGER,
@@ -126,6 +138,15 @@ CALLS_PER_CASE = 5
 DEFAULT_CALLS_PER_MINUTE = 25.0
 DEFAULT_MIN_EXACT = 0.8
 DEFAULT_MAX_UNAVAILABLE = 0.1
+DEFAULT_MAX_REPLY_MISSES = 0.1
+MAX_REPLY_WORDS = 100
+"""The longest reply that is no reply miss, in words: about the five sentences `root.md` allows at most. A data
+change with its counts, the confirmation and an open role fits; a reply padded with the request repeated back or a
+list of what stayed the same does not (prep runs of 2026-11-01: on the main prompt a median of 69 words and 5 of 52
+replies over 100, on the "Replies" rules 57 words and 2 of 52)."""
+BLOCKED_TAGS = frozenset({"ask_back"})
+"""A case with one of these tags cannot go on without the user's answer, so its reply may close with a question."""
+QUESTION = re.compile(r"[?？؟]+")
 EXIT_OK, EXIT_FAILED, EXIT_SETUP, EXIT_OUTAGE = 0, 1, 2, 4
 PREPARE_TOOL = "prepare_data"
 GENERATE_TOOL = "generate_data"
@@ -168,7 +189,9 @@ class PrepCase(BaseModel):
     id: str = Field(pattern=r"^[a-z0-9-]{1,64}$")
     dataset_text: str | None = Field(default=None, min_length=1, max_length=MAX_DATASET_CHARS)
     """Posted before the message; a formula case may leave it out (`generate_data` makes the first data)."""
-    message: str = Field(min_length=1, max_length=MAX_MESSAGE_CHARS)
+    message: str | None = Field(default=None, min_length=1, max_length=MAX_MESSAGE_CHARS)
+    action: Literal["summarize_data"] | None = None
+    """The page's step-1 summary action, sent instead of a message; a case has exactly one of the two."""
     expected_operations: list[dict[str, Any]]
     locale: str = Field(pattern=r"^[a-z]{2}$")
     spec_id: str = Field(default="scatter-basic", pattern=r"^[a-z0-9-]{1,100}$")
@@ -177,6 +200,14 @@ class PrepCase(BaseModel):
     refuse: bool = False
     """The case passes when no data tool call of the turn stored a version (a scope refusal, a validator refusal or
     no call at all): a snippet that reads a file or a script with another purpose than the plot's data."""
+
+    @model_validator(mode="after")
+    def _one_turn(self) -> PrepCase:
+        if (self.message is None) == (self.action is None):
+            raise ValueError("a case has either a message or an action")
+        if self.action is not None and self.dataset_text is None:
+            raise ValueError("a summary action needs a dataset")
+        return self
 
 
 Size = Annotated[int, Field(ge=1)]
@@ -433,6 +464,16 @@ class CaseResult:
     refusal: str | None = None
     instruction_talk: bool = False
     """The root's reply talked about its own instructions (`INSTRUCTION_TALK`): the case is a miss."""
+    reply_words: int | None = None
+    """The words of every reply text of the turn, as the user reads them; None when the root wrote none."""
+    reply_questions: int = 0
+    closing_question: bool = False
+    """The last reply text ends with a question mark (`telemetry.ends_with_question`)."""
+    reply_miss: str | None = None
+    """`closing_question` (one the turn was not blocked for, see `measure_reply`) or `long` (over `MAX_REPLY_WORDS`)."""
+    roles_open: bool = False
+    """The turn left a required role of the spec without a column, so the plot cannot be drawn until the user binds
+    one or brings other data: the reply may close with a question about it."""
     llm_calls: int = 0
     cost_usd: float = 0.0
     latency_s: float = 0.0
@@ -510,9 +551,8 @@ class CaseRunner:
                     else:
                         result.cause = f"dataset: {_detail(stored)}"
                     return result
-            turn = await self.client.post(
-                f"/v1/sessions/{sid}/messages", headers=headers("m"), json={"text": case.message}
-            )
+            message = {"action": case.action} if case.action is not None else {"text": case.message}
+            turn = await self.client.post(f"/v1/sessions/{sid}/messages", headers=headers("m"), json=message)
             _book(result, self.collector.take(f"{tag}-m"), self.settings)
             if turn.status_code != 200:
                 result.cause = f"turn: {_detail(turn)}"
@@ -524,7 +564,8 @@ class CaseRunner:
                     return result
                 if name == "refusal":
                     result.refusal = str(data.get("code"))
-            await self._read_calls(result, user, sid, decimal, refuse=case.refuse)
+            texts = await self._read_calls(result, user, sid, decimal, refuse=case.refuse)
+            measure_reply(result, texts, blocked=bool(BLOCKED_TAGS.intersection(case.tags)))
         finally:
             result.latency_s = round(time.monotonic() - started, 3)
             if sid is not None:
@@ -538,18 +579,31 @@ class CaseRunner:
                 self.collector.take(f"{tag}-{step}")
         return result
 
-    async def _read_calls(self, result: CaseResult, user: str, sid: str, decimal: str, *, refuse: bool = False) -> None:
+    async def _read_calls(
+        self, result: CaseResult, user: str, sid: str, decimal: str, *, refuse: bool = False
+    ) -> list[str]:
         """The tool calls of the turn from the session's events; the data calls' operations, canonical.
 
         A `run_data_code` call is read from its answer, not its arguments: the code varies
-        from run to run, so it counts as the size of the table it stored.
+        from run to run, so it counts as the size of the table it stored. Returns the root's reply
+        texts of the turn, in order, for `measure_reply`; they never enter the result.
         """
+        from agents.anyplot.data.bindings import check_bindings
+        from agents.anyplot.services import get_services
+        from agents.anyplot.session_state import read_session
+
         session = await self.runtime.session(user, sid)
+        view = read_session(session.state)
+        stored = get_services().datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
+        if view is not None and stored is not None:
+            result.roles_open = not check_bindings(view.bindings, view.snapshot.roles(), stored.profile).complete
         operations: list[dict[str, Any]] = []
+        texts: list[str] = []
         for event in session.events:
             if event.author == ROOT_AUTHOR and event.content is not None:
                 replies = [part.text for part in event.content.parts or [] if part.text and not part.thought]
                 result.instruction_talk |= any(INSTRUCTION_TALK.search(text) for text in replies)
+                texts.extend(text for text in replies if text.strip())
             for call in event.get_function_calls():
                 result.tool_calls.append(str(call.name))
                 if call.name == PREPARE_TOOL and isinstance(call.args, dict):
@@ -581,6 +635,29 @@ class CaseRunner:
         else:
             result.match = same_operations(result.found, result.expected) and not result.failed_calls
         result.match = result.match and not result.instruction_talk
+        return texts
+
+
+def measure_reply(result: CaseResult, texts: Sequence[str], *, blocked: bool) -> None:
+    """The reply's shape: its words and questions, whether it closes with a question, and its reply miss.
+
+    `blocked` says the turn cannot go on without the user's answer (`BLOCKED_TAGS`); a data call that failed
+    blocks it too, since the root then has to ask how to go on, and so does a required role the turn left
+    without a column (`roles_open`), the case `root.md` names for a question. A turn without a reply text (a
+    refusal) is measured as none.
+    """
+    from agents.anyplot.telemetry import ends_with_question
+
+    if not texts:
+        return
+    reply = "\n\n".join(texts)
+    result.reply_words = len(reply.split())
+    result.reply_questions = len(QUESTION.findall(reply))
+    result.closing_question = ends_with_question(texts[-1])
+    if result.closing_question and not (blocked or result.failed_calls or result.roles_open):
+        result.reply_miss = "closing_question"
+    elif result.reply_words > MAX_REPLY_WORDS:
+        result.reply_miss = "long"
 
 
 async def run_cases(
@@ -649,6 +726,25 @@ def _block(results: Sequence[CaseResult]) -> dict[str, Any]:
     }
 
 
+def _replies(answered: Sequence[CaseResult]) -> dict[str, Any]:
+    """The reply shape of the answered cases that have a reply: words, questions, closing questions, reply misses."""
+    measured = [result for result in answered if result.reply_words is not None]
+    words = [result.reply_words or 0 for result in measured]
+    misses = Counter(result.reply_miss for result in measured if result.reply_miss)
+    return {
+        "replies": len(measured),
+        "reply_words_median": statistics.median(words) if words else None,
+        "reply_words_max": max(words) if words else None,
+        "questions_per_reply": round(sum(result.reply_questions for result in measured) / len(measured), 2)
+        if measured
+        else None,
+        "closing_questions": sum(1 for result in measured if result.closing_question),
+        "reply_misses": sum(misses.values()),
+        "reply_miss_kinds": dict(sorted(misses.items())),
+        "reply_miss_rate": _rate(sum(misses.values()), len(measured)),
+    }
+
+
 def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str, Any]:
     """The summary, the per-tag table and the misses of one run."""
     by_id = {result.id: result for result in results}
@@ -657,6 +753,7 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
         **_block([result for _, result in pairs]),
         "unavailable_rate": _rate(sum(1 for _, result in pairs if result.operations is None), len(pairs)),
         "instruction_talk": sum(1 for _, result in pairs if result.instruction_talk),
+        **_replies([result for _, result in pairs if result.operations is not None]),
         "llm_calls": sum(result.llm_calls for _, result in pairs),
         "cost_usd": round(sum(result.cost_usd for _, result in pairs), 8),
     }
@@ -675,11 +772,17 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
         for case, result in pairs
         if result.operations is not None and not result.match
     ]
+    reply_misses = [
+        {"id": case.id, "reply_miss": result.reply_miss, "words": result.reply_words}
+        for case, result in pairs
+        if result.operations is not None and result.reply_miss
+    ]
     causes = Counter(result.cause or "unknown" for _, result in pairs if result.operations is None)
     return {
         "summary": summary,
         "per_tag": {tag: _block(items) for tag, items in sorted(tags.items())},
         "misses": misses,
+        "reply_misses": reply_misses,
         "unavailable_causes": dict(causes.most_common()),
     }
 
@@ -688,16 +791,23 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
 class Gates:
     min_exact: float = DEFAULT_MIN_EXACT
     max_unavailable: float = DEFAULT_MAX_UNAVAILABLE
+    max_reply_misses: float = DEFAULT_MAX_REPLY_MISSES
 
 
 def verdict_of(summary: dict[str, Any], gates: Gates) -> tuple[int, list[str]]:
-    """The exit code and the reasons for it: an outage first, then the exact-match gate."""
+    """The exit code and the reasons for it: an outage first, then the exact-match gate and the reply gate."""
     if (summary["unavailable_rate"] or 0.0) > gates.max_unavailable:
         return EXIT_OUTAGE, [f"{summary['unavailable']} cases got no answer (more than {gates.max_unavailable:.0%})"]
+    reasons = []
     exact = summary["exact"]
     if exact is None or exact < gates.min_exact:
-        return EXIT_FAILED, [f"exact match {exact} is below {gates.min_exact}"]
-    return EXIT_OK, []
+        reasons.append(f"exact match {exact} is below {gates.min_exact}")
+    if (summary["reply_miss_rate"] or 0.0) > gates.max_reply_misses:
+        reasons.append(
+            f"{summary['reply_misses']} of {summary['replies']} replies close with a question the turn was not "
+            f"blocked for or run over {MAX_REPLY_WORDS} words (more than {gates.max_reply_misses:.0%})"
+        )
+    return (EXIT_FAILED, reasons) if reasons else (EXIT_OK, [])
 
 
 def table(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> str:
@@ -716,6 +826,8 @@ def table(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> str:
                 f"no operation (refusal {result.refusal})" if result.refusal else "no operation"
             )
             outcome = "match" if result.match else "miss (instruction talk)" if result.instruction_talk else "miss"
+            if result.reply_miss:
+                outcome += f", reply: {result.reply_miss.replace('_', ' ')}"
         rows.append((case.id, expected, found, outcome))
     widths = [min(60, max(len(row[column]) for row in rows)) for column in range(4)]
     return "\n".join("  ".join(cell[: widths[i]].ljust(widths[i]) for i, cell in enumerate(row)) for row in rows)
@@ -742,6 +854,12 @@ def summary_text(scored: dict[str, Any], reasons: list[str]) -> str:
     ]
     if summary["instruction_talk"]:
         lines.append(f"replies about the root's own instructions: {summary['instruction_talk']}")
+    if summary["replies"]:
+        lines.append(
+            f"replies {summary['replies']}: median {summary['reply_words_median']} words (max "
+            f"{summary['reply_words_max']}), {summary['questions_per_reply']} questions per reply, "
+            f"{summary['closing_questions']} close with a question, {summary['reply_misses']} reply misses"
+        )
     if scored["unavailable_causes"]:
         lines.append(
             "unavailable: " + ", ".join(f"{count} x {cause}" for cause, count in scored["unavailable_causes"].items())
@@ -774,10 +892,16 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     )
     parser.add_argument("--min-exact", type=float, default=DEFAULT_MIN_EXACT)
     parser.add_argument("--max-unavailable", type=float, default=DEFAULT_MAX_UNAVAILABLE)
+    parser.add_argument(
+        "--max-reply-misses",
+        type=float,
+        default=DEFAULT_MAX_REPLY_MISSES,
+        help=f"replies that close with a question the turn was not blocked for, or run over {MAX_REPLY_WORDS} words",
+    )
     args = parser.parse_args(argv)
     if args.calls_per_minute < 0:
         parser.error("--calls-per-minute must be 0 (unpaced) or more")
-    for name in ("min_exact", "max_unavailable"):
+    for name in ("min_exact", "max_unavailable", "max_reply_misses"):
         if not 0 <= getattr(args, name) <= 1:
             parser.error(f"--{name.replace('_', '-')} is a fraction between 0 and 1")
     return args
@@ -893,7 +1017,7 @@ def main(argv: list[str] | None = None, *, runtime: Runtime | None = None, servi
         )
     )
     scored = score(cases, results)
-    gates = Gates(args.min_exact, args.max_unavailable)
+    gates = Gates(args.min_exact, args.max_unavailable, args.max_reply_misses)
     code, reasons = verdict_of(scored["summary"], gates)
     report = {
         "stamp": stamp(settings, cases),

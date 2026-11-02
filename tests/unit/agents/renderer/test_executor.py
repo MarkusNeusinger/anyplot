@@ -24,6 +24,7 @@ from agents.renderer.commands import EXEC_DENY_ENV, LIBRARY_LANGUAGES, command_f
 from agents.renderer.executor import (
     HARNESS_START,
     SANDBOX_PATH,
+    STDERR_HEAD_CHARS,
     Attempt,
     ExecutorConfig,
     OutputRejected,
@@ -36,10 +37,11 @@ from agents.renderer.executor import (
     read_tail,
     runs_volume_ok,
     sandbox_env,
+    stderr_tail,
     tree_size,
 )
 from agents.renderer.settings import RendererSettings
-from agents.renderer.wire import MAX_STDERR_CHARS, ThemeRun
+from agents.renderer.wire import MAX_STDERR_CHARS, RenderRequest, ThemeRun
 
 from .conftest import FakeLauncher
 from .helpers import PLOT, SLEEPER, convert_job, data_job, job
@@ -668,6 +670,62 @@ class TestConvert:
         attempt = Attempt(name="r", exit_code=0)
         executor._collect_convert(attempt, tmp_path)
         assert attempt.reason is None and attempt.csv_text == "a\n1\n" and attempt.convert_meta is not None
+
+
+class TestStderrTail:
+    """`stderr_tail`: the last characters, with a row's head line in front (J2b, the Julia row's `ERROR:` line)."""
+
+    LONG = "ERROR: LoadError: MethodError: no method matching f(::Int64)\n" + "frame\n" * 1_000 + "THE-END\n"
+
+    def test_only_the_julia_row_keeps_a_head_line(self) -> None:
+        heads = {library: command_for(language, library).stderr_head for library, language in LIBRARY_LANGUAGES.items()}
+        assert heads.pop("makie") == "ERROR:"
+        assert set(heads.values()) == {""}
+
+    @pytest.mark.parametrize(
+        "stderr",
+        [
+            LONG,
+            "x" * 5_000,
+            "short\nERROR: kept as it is\n",
+            "w\n" * 3_000 + "ERROR: LoadError: inside the tail\n" + "frame\n" * 10,
+        ],
+        ids=["long", "no-line", "short", "line-in-tail"],
+    )
+    def test_without_a_head_or_a_lost_line_the_tail_is_the_plain_last_characters(self, stderr: str) -> None:
+        plain = stderr[-MAX_STDERR_CHARS:]
+        assert stderr_tail(stderr) == plain  # every row but Julia's, byte for byte as before J2b
+        if not stderr.startswith("ERROR:"):
+            assert stderr_tail(stderr, "ERROR:") == plain
+
+    def test_a_lost_head_line_goes_in_front_within_the_bound(self) -> None:
+        kept = stderr_tail(self.LONG, "ERROR:")
+
+        assert len(kept) == MAX_STDERR_CHARS and kept.endswith("THE-END\n")
+        head, rest = kept.split("\n", 1)
+        assert head == "ERROR: LoadError: MethodError: no method matching f(::Int64)"
+        assert self.LONG.endswith(rest) and len(rest) == MAX_STDERR_CHARS - len(head) - 1
+        later = "warning\n" * 10 + self.LONG
+        assert stderr_tail(later, "ERROR:").startswith("ERROR: LoadError: MethodError")
+
+    def test_a_long_head_line_is_cut(self) -> None:
+        stderr = "ERROR: LoadError: MethodError: " + "T" * 5_000 + "\n" + "frame\n" * 1_000
+        kept = stderr_tail(stderr, "ERROR:")
+
+        assert len(kept) == MAX_STDERR_CHARS and kept.index("\n") == STDERR_HEAD_CHARS
+        assert kept.endswith("frame\n")
+
+    async def test_run_theme_cuts_by_the_jobs_row(
+        self, executor: SandboxExecutor, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        async def launch(*args: object, **kwargs: object) -> tuple[Attempt, int]:
+            return Attempt("r", exit_code=1, stderr=self.LONG), 1
+
+        monkeypatch.setattr(executor, "_launch", launch)
+        julia = RenderRequest(**{**job().model_dump(), "language": "julia", "library": "makie"})
+
+        assert (await executor.run_theme(julia, "light")).stderr_tail.startswith("ERROR: LoadError: MethodError")
+        assert (await executor.run_theme(job(), "light")).stderr_tail == self.LONG[-MAX_STDERR_CHARS:]
 
 
 class TestHelpers:

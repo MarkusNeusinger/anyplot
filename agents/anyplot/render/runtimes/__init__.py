@@ -5,31 +5,66 @@ A library's language is fixed by the catalogue (`agents/renderer/commands.py`,
 runtime is the `RuntimeAdapter` of that language, built for the library, which binds the
 deterministic code modules (normaliser, regions, readiness, validator, edits, loader,
 export) and the render command to one object the pipeline, the theme toggle, the local
-Docker backend and the eval harness use alike. `RUNTIME_LIBRARIES` is the set the registry
-serves; the settings refuse any other library in `AGENT_LIBRARIES`, and the readiness scan
-blocks it as `unsupported-library`.
+Docker backend and the eval harness use alike. `runtime_for` picks the runtime class by
+the library's language (`RUNTIME_CLASSES`), never by the class of an instance.
+`RUNTIME_LIBRARIES` is the set the registry serves; the settings refuse any other library
+in `AGENT_LIBRARIES`, and the readiness scan blocks it as `unsupported-library`.
 
 `PythonRuntime` serves matplotlib, seaborn, plotnine, altair, pygal and lets-plot
-(`letsplot`): each has a save rule (`code.regions.SAVE_RULES`) and a validator profile
-(`code.validate.LIBRARY_IMPORTS`), and the renderer image installs it. A later language
-adds a runtime module here and its libraries to `RUNTIME_LIBRARIES`; a later Python
-library (plotly, bokeh) adds its validator profile and save rule to the Python code
-modules and its id to `PYTHON_LIBRARIES` (`agentic/specs/261024-agent-all-libraries.md`).
+(`letsplot`), and plotly and bokeh since 2026-10-31 (PB-2a of step 4, through the renderer's
+two-step figure mode): each has a save rule (`code.regions.SAVE_RULES`) and a validator profile
+(`code.validate.LIBRARY_IMPORTS`), and the renderer image installs it. `RRuntime` serves
+ggplot2 since 2026-10-29 (PR 3b of the R pilot): the R code profile
+(`code/profiles/r/`) and the renderer's R row in exec mode. `JuliaRuntime` serves Makie
+since 2026-10-30 (J2b of step 5): the Julia code profile (`code/profiles/julia/`) and the
+renderer's Julia row in exec mode. `JavaScriptRuntime` serves Chart.js, D3, ECharts and
+Highcharts since 2026-10-30 (JS-4a of step 3) and MUI X since 2026-10-31 (JS-4c, as
+`plot.tsx`): the JavaScript code profile (`code/profiles/javascript/`) and the renderer's
+JavaScript row in exec mode. With those, the registry serves all 15 catalogue libraries.
+A later language adds a runtime module here, its class to `RUNTIME_CLASSES` and its
+libraries to `RUNTIME_LIBRARIES`; a later Python library adds its validator profile and
+save rule to the Python code modules and its id to `PYTHON_LIBRARIES`
+(`agentic/specs/261024-agent-all-libraries.md`).
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from types import MappingProxyType
 
 from agents.renderer.commands import LIBRARY_LANGUAGES, command_for
 
 from ..contract import RuntimeAdapter
+from .javascript import JavaScriptRuntime
+from .julia import JuliaRuntime
 from .python import PythonRuntime
+from .r import RRuntime
 
 
-PYTHON_LIBRARIES: frozenset[str] = frozenset({"matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot"})
-"""The Python libraries with a complete runtime profile (`code.normalise.SUPPORTED_LIBRARIES`, pinned equal)."""
+PYTHON_LIBRARIES: frozenset[str] = frozenset(
+    {"matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot", "plotly", "bokeh"}
+)
+"""The Python libraries with a complete runtime profile (`code.normalise.SUPPORTED_LIBRARIES`, pinned equal). plotly
+and bokeh joined on 2026-10-31 (PB-2a): their rows render in the renderer's figure mode."""
+R_LIBRARIES: frozenset[str] = frozenset({"ggplot2"})
+"""The R libraries with a complete runtime profile (`code.edits.R_LIBRARIES`, the edit applier's R dialect, pinned
+equal)."""
+JULIA_LIBRARIES: frozenset[str] = frozenset({"makie"})
+"""The Julia libraries with a complete runtime profile (`code.edits.JULIA_LIBRARIES`, the edit applier's Julia dialect,
+pinned equal)."""
+JAVASCRIPT_LIBRARIES: frozenset[str] = frozenset({"chartjs", "d3", "echarts", "highcharts", "muix"})
+"""The JavaScript libraries the registry serves: `code.edits.JAVASCRIPT_LIBRARIES` (the edit applier's JavaScript
+dialect, pinned equal). MUI X joined on 2026-10-31 with its fixtures (JS-4c, the plan's order: MUI X last); its files
+written for MUI X 7 are served `coupled` with the `deprecated-api` note, never blocked for their version (owner
+decision of 2026-10-30, the plan's question 13). Highcharts is served under its non-commercial licence (owner decision
+of 2026-10-30, the plan's question 6)."""
 
-RUNTIME_LIBRARIES: frozenset[str] = PYTHON_LIBRARIES
+RUNTIME_LIBRARIES: frozenset[str] = PYTHON_LIBRARIES | R_LIBRARIES | JULIA_LIBRARIES | JAVASCRIPT_LIBRARIES
 """Every library the registry serves; a library of `core.constants.SUPPORTED_LIBRARIES` outside it has no runtime yet."""
+
+RuntimeClass = type[PythonRuntime] | type[RRuntime] | type[JuliaRuntime] | type[JavaScriptRuntime]
+RUNTIME_CLASSES: Mapping[str, RuntimeClass] = MappingProxyType(
+    {"python": PythonRuntime, "r": RRuntime, "julia": JuliaRuntime, "javascript": JavaScriptRuntime}
+)
+"""The runtime class of each language with one; `runtime_for` builds it for the library."""
 
 RuntimeResolver = Callable[[str], RuntimeAdapter]
 """What a backend takes to find a job's runtime by its library."""
@@ -51,18 +86,27 @@ def runtime_for(library: str, *, cpu_seconds: int = 60) -> RuntimeAdapter:
     """The runtime of `library`; `ValueError` for a library without one.
 
     `cpu_seconds` is the render's CPU limit (`AGENT_RENDER_TIMEOUT_S`), which the local
-    Docker backend passes into the sandbox's environment.
+    Docker backend passes into the sandbox's environment; the render reserve is the
+    command row's (`RuntimeCommand.render_p95_s`).
     """
     if library not in RUNTIME_LIBRARIES:
         raise ValueError(f"no runtime for {library!r} yet (the registry serves {', '.join(sorted(RUNTIME_LIBRARIES))})")
-    command = command_for(language_of(library), library)
-    return PythonRuntime(library=library, cpu_seconds=cpu_seconds, render_p95_s=command.render_p95_s)
+    language = language_of(library)
+    command = command_for(language, library)
+    return RUNTIME_CLASSES[language](library=library, cpu_seconds=cpu_seconds, render_p95_s=command.render_p95_s)
 
 
 __all__ = [
+    "JAVASCRIPT_LIBRARIES",
+    "JULIA_LIBRARIES",
     "PYTHON_LIBRARIES",
+    "RUNTIME_CLASSES",
     "RUNTIME_LIBRARIES",
+    "R_LIBRARIES",
+    "JavaScriptRuntime",
+    "JuliaRuntime",
     "PythonRuntime",
+    "RRuntime",
     "RuntimeResolver",
     "has_runtime",
     "language_of",

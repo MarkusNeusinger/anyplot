@@ -2,45 +2,44 @@ library: matplotlib
 language: python
 specification_id: line-basic
 created: '2025-12-23T00:22:47Z'
-updated: '2026-04-29T15:12:02Z'
+updated: '2026-11-01T02:33:45Z'
 generated_by: claude-sonnet
-workflow_run: 25116674842
+workflow_run: 41265350487
 issue: 653
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.14.9
+library_version: 3.11.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 83
 review:
   strengths:
-  - Perfect theme adaptation with all chrome tokens correctly threaded through both
-    renders
-  - Elegant hollow marker style (PAGE_BG fill + BRAND edge) elevates the design above
-    generic defaults
-  - Confidence band (fill_between ±1σ) adds interpretive depth without clutter
-  - Correct omission of legend for single-series; tick marks removed cleanly
-  - 'Fully idiomatic matplotlib: Axes API throughout, deterministic seed, correct
-    output filenames'
+  - Theme tokens threaded through title, labels, ticks, spines and grid; both renders
+    readable
+  - Hollow markers filled with PAGE_BG keep the 12 monthly values visible while the
+    line still reads as one line
+  - Exact 3200x1800 canvas via figsize=(8, 4.5), dpi=400 without bbox_inches='tight'
+  - 'Adaptable-code structure: column constants, a tidy df, and plot code that reads
+    only df'
   weaknesses:
-  - 'DE-03: No focal emphasis or narrative annotation — a peak label at July or horizontal
-    annual-mean reference line would strengthen storytelling'
-  - 'DE-01: Design is polished but not exceptional — a secondary reference element
-    or richer typographic hierarchy would push it to top tier'
-  - Grid alpha (0.12) is slightly below style guide recommendation of 15-25%; nudge
-    to ~0.18
+  - 'SC-04 (both): the title reads ''Monthly Temperature Trend · line-basic · matplotlib
+    · anyplot.ai'' and omits the language segment → ''Monthly Temperature Trend ·
+    line-basic · python · matplotlib · anyplot.ai'' (shrink fontsize by the length
+    formula). Likely cause: the ax.set_title string.'
+  - 'Suggestion: a lighter weight for the descriptive title prefix would add typographic
+    hierarchy.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "Monthly Temperature Trend · line-basic · matplotlib · anyplot.ai" in dark ink (24pt), axis labels "Month" / "Temperature (°C)" at 20pt, tick labels (month abbreviations and numeric) at 16pt — all clearly readable against warm off-white surface
-      Data: Single brand green #009E73 line (lw=3) with hollow circle markers (markerfacecolor=PAGE_BG, markeredgecolor=BRAND, ms=10); semi-transparent confidence band (fill_between ±1σ, alpha=0.15) in same green; seasonal arc peaks in July (~27.5°C), troughs in February (~2°C)
+      Background: warm off-white #FAF8F1, not pure white
+      Chrome: title 'Monthly Temperature Trend · line-basic · matplotlib · anyplot.ai' in dark ink, axis titles 'Month' / 'Temperature (°C)' in INK, tick labels Jan–Dec and 5–25 in INK_SOFT; left/bottom spines only, subtle y-only grid; all readable
+      Data: one #009E73 line (lw 2.5) through 12 hollow circle markers; seasonal arc from about 1.8 °C in Feb to 27.5 °C in Jul; y axis spans the data without a forced zero
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, axis labels, and tick labels rendered in light #F0EFE8/#B8B7B0 tones — all clearly readable against dark surface; no dark-on-dark failures detected
-      Data: Data colors are identical to light render — same brand green #009E73 line, hollow markers, and confidence band; confidence band appears slightly darker against the near-black surface but remains visible and appropriate
+      Background: warm near-black #1A1A17, not pure black
+      Chrome: title and axis titles in light #F0EFE8, ticks in #B8B7B0, spines light, grid subtle; no dark-on-dark text
+      Data: identical #009E73 line and markers, hollow fill now the dark page color
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -52,72 +51,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes set per guidelines (24/20/16pt); fully readable in
-          both themes
+        comment: Title 12 pt, axis titles 10 pt, ticks 8 pt at dpi 400; all readable
+          in both themes via INK/INK_SOFT tokens
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Month labels well-spaced, no element collisions in either render
+        comment: No collisions; month ticks well spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line (lw=3), markers (ms=10), and confidence band all clearly distinguishable
+        comment: '12 points: 2.5 lw line with 6 pt hollow markers, prominent while
+          the line still reads as a line'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series in brand green; no red-green encoding conflict
+        comment: Single brand-green series with strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape, generous whitespace, nothing cut off
+        comment: 3200x1800 canvas (no gate file); plot fills about 75% of the canvas,
+          balanced margins, title about 66% of width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Month and Temperature (°C) with explicit units
+        comment: '''Month'' and ''Temperature (°C)'' with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1 (light) / #1A1A17 (dark)
-          correct'
+        comment: '#009E73 series; #FAF8F1 / #1A1A17 backgrounds; only chrome flips'
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Hollow markers and variability band are deliberate choices above
-          generic defaults; not yet exceptional
+        passed: false
+        comment: Hollow markers filled with the page color so the line reads through
+          them; otherwise the style-guide baseline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Top/right spines removed, tick length=0, subtle grid, no redundant
-          legend; clean execution
+        passed: false
+        comment: Tick marks removed (length=0) and a y-only grid chosen for this line
+          chart
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Seasonal arc reads clearly; confidence band adds depth; no focal
-          point annotation to guide viewer
+        passed: false
+        comment: Seasonal arc displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -125,28 +124,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct basic line chart
+        comment: Single basic line; no band, reference line or callout
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Single line, markers, grid lines, clean minimal design — all spec
-          requirements met
+        comment: Single line, both axis labels, grid, optional markers; C1, C3, C5,
+          C6 met; C4 n/a (no missing values)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = months (ordered), Y = temperature (continuous); 12 points within
-          spec range
+        comment: Months in order on x, temperature on y; straight segments, no smoothing;
+          y spans the data without a forced zero
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Monthly Temperature Trend · line-basic · matplotlib · anyplot.ai;
-          no legend correct for single series
+        passed: false
+        comment: Title 'Monthly Temperature Trend · line-basic · matplotlib · anyplot.ai'
+          omits the mandated 'python' language segment (defect line); no legend is
+          correct for a single series
     data_quality:
       score: 15
       max: 15
@@ -156,22 +156,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Trend over time, per-point markers, and inter-year variability band
-          all demonstrated
+        comment: Trend over an ordered sequence with a real-looking wiggle (Feb below
+          Jan)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly average temperatures (2–30°C temperate climate) plausible
-          and neutral
+        comment: Monthly mean temperatures of a temperate climate; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 monthly data points; realistic temperature range; appropriate
-          axis scaling
+        comment: About 2–27.5 °C, plausible; the spec has no Check values
     code_quality:
       score: 10
       max: 10
@@ -181,57 +179,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear top-level script
+        comment: Flat script in the adaptable-code zones; column constants, Data block
+          ends by binding df
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy — all used
+        comment: os, pyplot, numpy, pandas all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; appropriate complexity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct parameters
+        comment: plot-{THEME}.png at dpi=400, no bbox_inches='tight'
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Exclusively ax.* Axes API; fill_between, tick_params, spine visibility
-          all used correctly
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: fill_between for confidence bands and hollow marker styling are matplotlib-distinctive;
-          no advanced features
+        passed: false
+        comment: Axes API throughout; nothing beyond what the library prompt mandates
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-d922b380f3
+  rendered_at: '2026-11-01T02:30:25Z'
 impl_tags:
   dependencies: []
-  techniques:
-  - manual-ticks
+  techniques: []
   patterns:
   - data-generation
+  - explicit-figure
   dataprep: []
   styling:
-  - alpha-blending
-  - edge-highlighting
+  - grid-styling

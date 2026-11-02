@@ -7,12 +7,17 @@ user asked for "6,5 Mio." on the axis, the axis showed "6.0 M", and the reply cl
 
 Two measurements, both code:
 
-* `drawn_texts` reads the drawn texts the render's probe reports (`harness.drawn_labels`,
-  the `labels` field) by role, every one of them; `plot_texts` clips them into
-  `PlotShows.texts`, which the root reads fenced next to the result. The probe is written by
-  the code under test, so every value is checked for type and clipped; a probe without
-  `labels` (a renderer older than the field, or a failed text report) yields None, and a
-  run with requested texts then carries `UNVERIFIED_LINE` instead of a silent pass.
+* `drawn_texts` reads the drawn texts the render's probe reports (the `labels` field) by
+  role, every one of them; `plot_texts` clips them into `PlotShows.texts`, which the root
+  reads fenced next to the result. Every library's render reports them since 2026-11-01:
+  matplotlib, seaborn and plotnine through `harness.drawn_labels`, pygal, altair and
+  lets-plot through `harness.install_text_probes`, the JavaScript libraries, plotly and bokeh
+  through the browser harness (`render.mjs`, `writeTextProbe`), ggplot2 and Makie through the
+  text probes their rows load (`text_probe.R`, `text_probe.jl`, `harness.collect_text_probe`).
+  The probe is written by the code under test, so every value is checked for type and
+  clipped; a probe without `labels` (a failed text report) yields None, which the root never
+  sees (`plugins/tool_safety.fence_pipeline_notes` drops it), and a run with requested texts
+  then carries `UNVERIFIED_LINE` instead of a silent pass.
 * `expected_misses` checks each of the run's `expected_texts` (the texts and number formats
   the user asked to see, verbatim) against all drawn texts, never the clipped summary. A
   text (`Population 2025`, `Top 10`) must stand whole in one drawn text (case, spacing,
@@ -22,6 +27,14 @@ Two measurements, both code:
   label or ticks draw it) must use its decimal mark, dates and three-digit groups aside.
   Each miss becomes a residual line, so the result says it honestly, and with
   `AGENT_EXPECT_CHECK=repair` a measured finding the repair round gets.
+
+`expected_misses` reads matplotlib's drawn texts only. Every other library is checked by the
+reviewer instead (`RuntimeAdapter.review_texts`, owner decision of 2026-10-29): its probe reads
+the texts from the library's own roles or chart model, which a plugin's own drawing is not in,
+so it grounds the reply but never claims a requested text missing. The review request carries
+the requested texts, the reviewer reports each one it cannot find in the image as a defect line
+under `EXPECT_LINE_ID` that quotes it, and `reviewed_misses` reads those lines back. Only a
+render no readable review answered for keeps `UNVERIFIED_LINE`.
 """
 
 import re
@@ -29,6 +42,8 @@ import unicodedata
 from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
+
+from core.defects import DEFECT_RE
 
 from .schemas import MAX_SHOWN_TEXT_CHARS, ShownGroup
 
@@ -39,6 +54,7 @@ MAX_DRAWN_CHARS = 200
 """One drawn text as the check reads it (`harness.LABEL_CHARS`): longer than any requested text."""
 GROUP_LIMITS: dict[ShownGroup, int] = {
     "title": 3,
+    "subtitle": 2,
     "x axis label": 2,
     "y axis label": 2,
     "z axis label": 2,
@@ -51,14 +67,17 @@ GROUP_LIMITS: dict[ShownGroup, int] = {
     "other texts": 6,
 }
 """Distinct texts `PlotShows.texts` keeps per role: enough to quote a title or read a tick format, and
-at most 62 texts of `MAX_SHOWN_TEXT_CHARS` (about 5 KB) next to the result's other fields."""
+at most 64 texts of `MAX_SHOWN_TEXT_CHARS` (about 5 KB) next to the result's other fields."""
 UNVERIFIED_LINE = (
-    "SC-04 ({theme}): the requested texts could not be checked, since the renderer reported no drawn texts "
-    "→ compare them with the image. Likely cause: a renderer without the probe's text report."
+    "SC-04 ({theme}): the requested texts could not be checked against the render "
+    "→ compare them with the image. Likely cause: no drawn texts to check them against and no readable review."
 )
-"""The residual line of a render with requested texts but no `labels` in its probe: never a silent pass."""
+"""The residual line of a render with requested texts that neither matplotlib's drawn texts nor a readable review
+answered for (`expected_misses`, `reviewed_misses`): never a silent pass."""
 EXPECT_LINE_ID = {"text": "SC-04", "format": "SC-02"}
 """The rubric id a missing requested text (title, legend, label) or number format is reported under."""
+_QUOTED = re.compile(r'["“”„«»]([^"“”„«»\n]+)["“”„«»]')
+"""A passage of a reviewer's line in straight or typographic double quotes or guillemets."""
 _MATH_SPACE = re.compile(r"\\[,;:! ]|\\q?quad\b")
 """Mathtext that draws a space: read as a space."""
 MATH_SYMBOLS: dict[str, str] = {
@@ -85,6 +104,11 @@ _MATH_MARKUP = re.compile(r"[\\{}_^]")
 """Mathtext markup characters left after the commands: dropped, so `CO$_2$` reads `CO2`."""
 _DOLLAR = re.compile(r"(?<!\\)\$")
 _QUOTES = str.maketrans(dict.fromkeys("\"'„“”«»‚‘’`", ""))
+_QUOTE_MARKS = str.maketrans(dict.fromkeys("\"'„“”«»‚‘’`", '"'))
+"""Every quotation mark as `"`, for the comparison that keeps them (`_norm(quotes=True)`)."""
+REQUESTED_MARK = 'requested text "'
+"""How a review line cites a requested text it cannot find in the image, as the reviewer's heading prescribes
+(`pipeline.REVIEW_EXPECTED_HEADING`), read after `_norm(quotes=True)`."""
 _DASHES = str.maketrans({"−": "-", "–": "-", "—": "-", " ": " ", " ": " ", "\xa0": " "})
 _NUMBER = r"[+\-−]?\d(?:[\d.,'’ ]*\d)?"
 _FORMAT = re.compile(
@@ -101,6 +125,7 @@ _DATE = re.compile(r"\b\d{1,4}[./-]\d{1,2}[./-]\d{1,4}\b")
 KIND_GROUPS: dict[str, ShownGroup] = {
     "title": "title",
     "suptitle": "title",
+    "subtitle": "subtitle",
     "x axis label": "x axis label",
     "y axis label": "y axis label",
     "z axis label": "z axis label",
@@ -110,7 +135,9 @@ KIND_GROUPS: dict[str, ShownGroup] = {
     "z tick label": "z tick labels",
     "annotation": "annotations",
 }
-"""The `PlotShows.texts` role of each probe `kind` (`harness._text_kinds` and `drawn_labels`'s tick labels)."""
+"""The `PlotShows.texts` role of each probe `kind` (`harness._text_kinds` and `drawn_labels`'s tick labels); `subtitle`
+is the text probes' (`harness.text_labels`, `render.mjs`, `text_probe.R`, `text_probe.jl`), a role of its own so a
+subtitle is never trimmed with the other texts."""
 TICK_GROUPS: tuple[ShownGroup, ...] = ("y tick labels", "x tick labels", "z tick labels")
 
 
@@ -177,6 +204,44 @@ def drawn_texts(probe: Any) -> DrawnTexts | None:
     return DrawnTexts(labels, complete)
 
 
+PROBE_ERRORS = frozenset(
+    {
+        "Error",
+        "TimeoutError",
+        "TypeError",
+        "ValueError",
+        "RangeError",
+        "ReferenceError",
+        "ParseError",
+        "KeyError",
+        "IndexError",
+        "AttributeError",
+        "RecursionError",
+        "MemoryError",
+        "OSError",
+        "RuntimeError",
+        "UnicodeDecodeError",
+        "JSONDecodeError",
+        "MethodError",
+        "FieldError",
+        "BoundsError",
+        "UndefVarError",
+        "ArgumentError",
+    }
+)
+"""The exception classes a failed probe names (`{"error": <class>}`: matplotlib's probe, a text probe, Julia's types
+among them; R's probe names `Error`) that the attribution log keeps by name; any other value reads `other`, since the
+code under test can write the probe."""
+
+
+def probe_error(probe: Any) -> str | None:
+    """The class a probe names for a report that failed, for the `pipeline_render` line: None when it names none."""
+    error = probe.get("error") if isinstance(probe, dict) else None
+    if error is None:
+        return None
+    return error if isinstance(error, str) and error in PROBE_ERRORS else "other"
+
+
 def plot_texts(drawn: DrawnTexts | None) -> dict[ShownGroup, list[str]] | None:
     """`PlotShows.texts`: the drawn texts within `GROUP_LIMITS` and `MAX_SHOWN_TEXT_CHARS`, for the root's reply."""
     if drawn is None:
@@ -187,15 +252,16 @@ def plot_texts(drawn: DrawnTexts | None) -> dict[ShownGroup, list[str]] | None:
     }
 
 
-def _norm(text: str) -> str:
+def _norm(text: str, *, quotes: bool = False) -> str:
     """A text as the comparison reads it: NFKC, case-folded, without quotes and mathtext markup, one space.
 
     Mathtext is read as matplotlib draws it: a text with an even number of unescaped `$`
     is math, whose delimiters draw nothing, a command that draws one character
     (`MATH_SYMBOLS`) is that character, a spacing command is a space, and an escaped `\\$`
-    is a dollar sign; a lone `$` is a dollar sign too.
+    is a dollar sign; a lone `$` is a dollar sign too. With `quotes`, every quotation mark
+    stays, as `"`, so a quoted passage keeps its ends (`reviewed_misses`).
     """
-    text = unicodedata.normalize("NFKC", text).translate(_DASHES).translate(_QUOTES)
+    text = unicodedata.normalize("NFKC", text).translate(_DASHES).translate(_QUOTE_MARKS if quotes else _QUOTES)
     delimiters = len(_DOLLAR.findall(text))
     if delimiters and delimiters % 2 == 0:
         text = _DOLLAR.sub("", text)
@@ -347,4 +413,42 @@ def expected_misses(expected: Sequence[str], drawn: DrawnTexts | None) -> list[E
         wrong = None if mark is None else ("." if mark == "," else ",")
         if (not applies and drawn.complete) or (wrong is not None and any(_wrong_mark(t, wrong) for t in applies)):
             misses.append(ExpectMiss(token, "format", _observed(shown, "format")))
+    return misses
+
+
+def reviewed_misses(expected: Sequence[str], lines: Sequence[str]) -> list[tuple[str, str]]:
+    """The requested texts a review reports missing from the image, each with the first defect line that does.
+
+    For a render without drawn texts the reviewer gets the requested texts and reports each one
+    it cannot find as a defect line under `EXPECT_LINE_ID` (SC-04, or SC-02 for a number format)
+    in the form its heading prescribes, `the requested text "<text>"`. A line in that form names
+    exactly the texts it cites so, compared with every quotation mark kept (`_norm(quotes=True)`:
+    case, spacing and dashes aside), so a cited `Temperatur (°C)` never names a requested
+    `Temperatur`, a text with quotes of its own (`Zone "A"`) is still named whole, and a passage
+    the line quotes for what the image shows instead names nothing. A line in another form names
+    a text when one of its quoted passages reads as that text; when it quotes none, or the text
+    has quotes of its own or is a number format (a line may quote only the number it saw), when it
+    holds the text whole (`_contains`). Any other line, and a text no line names, is no miss: the
+    reviewer found it.
+    """
+    misses: list[tuple[str, str]] = []
+    for token in dict.fromkeys(" ".join(item.split()) for item in expected):
+        wanted = _norm(token)
+        if not wanted:
+            continue
+        cited = f'{REQUESTED_MARK}{_norm(token, quotes=True)}"'
+        loose = token.translate(_QUOTES) != token or format_unit(token) is not None
+        for line in lines:
+            match = DEFECT_RE.match(line)
+            if match is None or not set(EXPECT_LINE_ID.values()) & set(match["ids"].split(", ")):
+                continue
+            marked = _norm(line, quotes=True)
+            if REQUESTED_MARK in marked:
+                named = cited in marked
+            else:
+                quoted = [_norm(passage) for passage in _QUOTED.findall(line)]
+                named = wanted in quoted or ((loose or not quoted) and _contains(_norm(line), wanted))
+            if named:
+                misses.append((token, line))
+                break
     return misses

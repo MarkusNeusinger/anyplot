@@ -11,6 +11,7 @@ one test never wait for the rate window; `test_run_queue_flow.py` drives the que
 at its production defaults with a fake clock.
 """
 
+import asyncio
 import base64
 import json
 import logging
@@ -22,7 +23,13 @@ import pytest
 from google.genai import types
 
 from agents.anyplot import pipeline, telemetry
-from agents.anyplot.agent import LANGUAGE_SOURCE_LINES, NOTES_LINE, REPLY_LANGUAGE_LINE, session_context
+from agents.anyplot.agent import (
+    LANGUAGE_SOURCE_LINES,
+    NOTES_LINE,
+    PLOT_LANGUAGE_HEADING,
+    REPLY_LANGUAGE_LINE,
+    session_context,
+)
 from agents.anyplot.code.edits import apply_plan
 from agents.anyplot.data.generate import looks_like_formula
 from agents.anyplot.data.parse import HEADERLESS_LIST_WARNING, MAX_INPUT_BYTES
@@ -43,21 +50,32 @@ from agents.anyplot.models import (
     Transcription,
 )
 from agents.anyplot.opening import NOTES_INSTRUCTION_WARNING, NOTES_REFUSED_WARNING, NOTES_UNCHECKED_WARNING, assess
-from agents.anyplot.pipeline import SoftDeadline
+from agents.anyplot.pipeline import REPLY_LANGUAGE_HEADING, SoftDeadline
 from agents.anyplot.policy import refusal, scope_rubric
-from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
-from agents.anyplot.render.contract import RenderJob, Theme
+from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome, fixture_page
+from agents.anyplot.render.contract import PageFailed, PageJob, PageUnsupported, RendererUnavailable, RenderJob, Theme
+from agents.anyplot.render.page import WRAPPER_POLICY, frame_source
 from agents.anyplot.render.png import size_of
 from agents.anyplot.render.runtimes.python import PythonRuntime
+from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import StoredRender
 from agents.anyplot.render.watermark import add_footer
 from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.schemas import AdaptPlan, Verdict
 from agents.anyplot.services import Services, get_services
-from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE, PENDING_REQUEST, read_session
+from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE, PENDING_REQUEST, PLOT_LANGUAGE, read_session
 from agents.anyplot.settings import get_settings
 from agents.anyplot.sub_agents.adapter import ADAPTERS
-from agents.main import ACTION_LANGUAGE_LINE, MAX_CAUSE_CHARS, MAX_MESSAGE_CHARS, Runtime, app, clip_cause, get_runtime
+from agents.main import (
+    ACTION_LANGUAGE_LINE,
+    MAX_CAUSE_CHARS,
+    MAX_MESSAGE_CHARS,
+    PAGE_HEADERS,
+    Runtime,
+    app,
+    clip_cause,
+    get_runtime,
+)
 
 from .conftest import CASES
 from .fakes import (
@@ -1300,12 +1318,13 @@ async def test_the_repair_attempt_widens_the_adapter_request_only(
     else:
         assert isinstance(fake, FakeAnthropic)
         adapter_calls = [call for call in fake.calls if FakeAnthropic.kind(call) == "adapter"]
-        # The edit-only and the full-file cap, each plus the adapter's 8,192 tokens of thinking room.
-        assert [call["max_tokens"] for call in adapter_calls] == [8_192 + 8_192, 12_288 + 8_192]
+        # Since 2026-10-30 the edit-only and the full-file cap are the same 40,960, each plus the adapter's 8,192
+        # tokens of thinking room: a full file never has less room than the attempt before it.
+        assert [call["max_tokens"] for call in adapter_calls] == [40_960 + 8_192, 40_960 + 8_192]
         assert all(call.get("thinking") == ADAPTIVE_THINKING for call in adapter_calls)
     # The per-request change never reaches the agent's own config, so the next run starts narrow again.
     config = ADAPTERS["matplotlib"].generate_content_config
-    narrow_cap = 8_192 if provider == "gemini" else 8_192 + 8_192  # Claude's cap carries its thinking room
+    narrow_cap = 8_192 if provider == "gemini" else 40_960 + 8_192  # Claude's cap carries its thinking room
     assert config is not None and config.max_output_tokens == narrow_cap
     if provider == "gemini":
         assert config.thinking_config is not None
@@ -1361,6 +1380,29 @@ async def test_failed_render_twice_is_a_failed_result(
     assert len(backend.jobs) == 2
     (result,) = attribution_lines(caplog, "pipeline_result")
     assert (result["stage"], result["stages"]) == ("render", ["render", "render"])
+
+
+async def test_a_failed_render_is_summarised_over_the_code_that_ran(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The runtime's error grammar gets the run form, so a runtime whose loader shifts many lines (Julia, J2b) names
+    the working form's line in the repair's feedback; Python's summary leaves it unread."""
+    seen: list[str | None] = []
+    summary = PythonRuntime.error_summary
+
+    def recording(self: PythonRuntime, stderr_tail: str, *, run_form: str | None = None) -> str:
+        seen.append(run_form)
+        return summary(self, stderr_tail, run_form=run_form)
+
+    monkeypatch.setattr(PythonRuntime, "error_summary", recording)
+    backend.script = lambda job, theme: FakeOutcome(exit_code=1, stderr_tail="KeyError: 'Exam Score'\n")
+    fake = swap_models("gemini", default_script(plans=[SCATTER_PLAN, {"edits": [], "changes": []}]))
+    sid = await open_session(client)
+
+    await create_plot(client, sid)
+
+    assert seen == [job.source for job in backend.jobs] and len(seen) == 2
+    assert "the code failed with KeyError; fix the code" in adapter_inputs(fake)[1]
 
 
 async def test_canvas_miss_is_repaired_then_padded(
@@ -1430,6 +1472,150 @@ async def test_a_change_without_a_theme_keeps_the_dark_theme(
     plot = next(data for name, data in parse_sse(response.text) if name == "plot")
     assert (plot["status"], plot["artifacts"]) == ("ok", ["plot-dark.png", "plot.py", "data.csv"])
     assert [job.themes for job in backend.jobs] == [("dark",), ("dark",)]
+
+
+# --- The site theme (owner decision of 2026-11-01) ---------------------------------------
+
+CHANGE_ROOT = [{"call": "plot_pipeline", "args": {"change_request": CHANGE_REQUEST, "base": "previous"}}]
+
+
+def two_plot_script(first_args: dict[str, Any]) -> dict[str, list[Any]]:
+    """A first plot with `first_args`, then a change that leaves `theme` out, as the root does on a refinement."""
+    return {
+        "root": [
+            {"call": "plot_pipeline", "args": first_args},
+            {"text": ROOT_REPLY},
+            *CHANGE_ROOT,
+            {"text": "Done: bigger markers."},
+        ],
+        "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
+        "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+    }
+
+
+async def post_turn(client: httpx.AsyncClient, sid: str, body: dict[str, str], theme: str | None) -> dict[str, Any]:
+    """One turn with the page's site theme in the query (none without), and its plot event."""
+    params = {"theme": theme} if theme is not None else None
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json=body, params=params)
+    assert response.status_code == 200, response.text
+    return next(data for name, data in parse_sse(response.text) if name == "plot")
+
+
+async def test_a_dark_site_gets_a_dark_first_plot_reviewed_in_dark(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """User test E2 of 2026-11-01: on the dark site the first plot rendered light, a bright card on a dark page."""
+    fake = swap_models("gemini", default_script())
+    sid = await open_session(client)
+
+    plot = await post_turn(client, sid, {"action": "create_plot"}, "dark")
+
+    assert (plot["status"], plot["artifacts"]) == ("ok", ["plot-dark.png", "plot.py", "data.csv"])
+    assert [job.themes for job in backend.jobs] == [("dark",)]  # still one render per version
+    review = next(request for request in fake.requests if (request.config.labels or {})["agent_kind"] == "reviewer")
+    texts = [part.text or "" for content in review.contents for part in content.parts or []]
+    assert "Dark render (plot-dark.png):" in texts and "Light render (plot-light.png):" not in texts
+    code = await client.get(f"/v1/sessions/{sid}/artifacts/plot.py", headers=HEADERS)
+    assert code.text.splitlines()[1] == "# run: ANYPLOT_THEME=dark python plot.py"
+
+
+async def test_a_light_site_gets_a_light_first_plot(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+
+    plot = await post_turn(client, sid, {"action": "create_plot"}, "light")
+
+    assert plot["artifacts"] == ["plot-light.png", "plot.py", "data.csv"]
+    assert [job.themes for job in backend.jobs] == [("light",)]
+
+
+async def test_a_change_follows_the_site_theme_of_its_own_turn(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """The user switched the site to dark after the first plot: the next version follows the switch."""
+    swap_models("gemini", two_plot_script({}))
+    sid = await open_session(client)
+    await post_turn(client, sid, {"action": "create_plot"}, "light")
+
+    plot = await post_turn(client, sid, {"text": CHANGE_REQUEST}, "dark")
+
+    assert plot["artifacts"] == ["plot-dark.png", "plot.py", "data.csv"]
+    assert [job.themes for job in backend.jobs] == [("light",), ("dark",)]
+
+
+@pytest.mark.parametrize(("asked", "site"), [("dark", "light"), ("light", "dark")])
+async def test_a_theme_asked_for_in_the_chat_holds_over_the_site_theme(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, asked: str, site: str
+) -> None:
+    """A theme the user asked for against the site's stays through a change that leaves `theme` out."""
+    swap_models("gemini", two_plot_script({"theme": asked}))
+    sid = await open_session(client)
+    await post_turn(client, sid, {"text": f"a {asked} plot"}, site)
+
+    plot = await post_turn(client, sid, {"text": CHANGE_REQUEST}, site)
+
+    assert plot["artifacts"] == [f"plot-{asked}.png", "plot.py", "data.csv"]
+    assert [job.themes for job in backend.jobs] == [(asked,), (asked,)]
+
+
+async def test_a_new_plot_after_an_asked_theme_follows_the_site_again(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """`.start_over()` is a new plot from the catalogue (`base="catalogue"`): the asked theme stays with the old one."""
+    script = two_plot_script({"theme": "dark"})
+    script["root"][2] = {"call": "plot_pipeline", "args": {}}
+    script["adapter"] = [{"json": SCATTER_PLAN}, {"json": SCATTER_PLAN}]  # each adapts the catalogue code
+    swap_models("gemini", script)
+    sid = await open_session(client)
+    await post_turn(client, sid, {"text": "a dark plot"}, "light")
+
+    plot = await post_turn(client, sid, {"action": "create_plot"}, "light")
+
+    assert plot["artifacts"] == ["plot-light.png", "plot.py", "data.csv"]
+    assert [job.themes for job in backend.jobs] == [("dark",), ("light",)]
+
+
+async def test_the_theme_toggle_is_no_choice_for_the_next_version(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """Looking at a version in the other theme renders it on demand; the next version still follows the site."""
+    swap_models("gemini", two_plot_script({}))
+    sid = await open_session(client)
+    await post_turn(client, sid, {"action": "create_plot"}, "dark")
+    toggled = await render_theme(client, sid, "light")
+    assert toggled.status_code == 200, toggled.text
+
+    plot = await post_turn(client, sid, {"text": CHANGE_REQUEST}, "dark")
+
+    assert plot["artifacts"] == ["plot-dark.png", "plot.py", "data.csv"]
+    assert [job.themes for job in backend.jobs] == [("dark",), ("light",), ("dark",)]
+
+
+async def test_a_turn_without_a_site_theme_keeps_the_previous_versions_theme(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    """A caller without a page (`adk web`, an eval, an older BFF) keeps the behaviour from before the site theme."""
+    swap_models("gemini", two_plot_script({}))
+    sid = await open_session(client)
+    await post_turn(client, sid, {"action": "create_plot"}, "dark")
+
+    plot = await post_turn(client, sid, {"text": CHANGE_REQUEST}, None)
+
+    assert plot["artifacts"] == ["plot-dark.png", "plot.py", "data.csv"]
+    assert [job.themes for job in backend.jobs] == [("dark",), ("dark",)]
+
+
+async def test_an_unknown_site_theme_is_refused(client: httpx.AsyncClient, swap_models) -> None:
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+
+    response = await client.post(
+        f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "create_plot"}, params={"theme": "sepia"}
+    )
+
+    assert response.status_code == 422
 
 
 async def test_reviewer_defects_name_the_rendered_theme(client: httpx.AsyncClient, swap_models) -> None:
@@ -1534,6 +1720,179 @@ async def test_theme_toggle_renders_the_other_theme_without_a_model_call(
     bundle = (await client.get(f"/v1/sessions/{sid}/bundle", headers=HEADERS)).json()
     images = {theme: base64.b64decode(data) for theme, data in bundle["versions"][0]["images"].items()}
     assert images == {"light": light.content, "dark": dark.content}
+
+
+D3_PLAN: dict[str, Any] = {
+    "edits": [
+        {
+            "find": (
+                "const data = Array.from({ length: 100 }, () => {\n"
+                "  const spend = 10 + lcgRand() * 140;\n"
+                "  const sales = Math.max(0.3, 0.8 + spend * 0.035 + lcgRandn() * 1.2);\n"
+                "  return { x: spend, y: sales };\n"
+                "});\n"
+            ),
+            "replace": "const data = loadUserData();\n",
+        }
+    ],
+    "title": "Exam Score by Study Hours",
+    "changes": ["Plotted Exam Score against Study Hours from your data"],
+}
+"""A D3 adaptation of scatter-basic in its smallest form: the sample replaced by the placeholder (JS-4a)."""
+
+
+async def open_d3_session(client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch) -> str:
+    """A D3 session with the scatter data confirmed, its adapter answering `D3_PLAN`."""
+    from agents.anyplot.models import make_content_config
+    from agents.anyplot.settings import AgentSettings
+    from agents.anyplot.sub_agents.adapter import make_adapter
+
+    monkeypatch.setenv("AGENT_LIBRARIES", "matplotlib,d3")
+    get_settings.cache_clear()
+    fake = swap_models("gemini", default_script(plans=[D3_PLAN]))
+    adapter = make_adapter("d3")  # built at import for the default libraries only, so not among the swapped agents
+    adapter.model = fake
+    adapter.generate_content_config = make_content_config(
+        "adapter", AgentSettings(provider="gemini", model="gemini-3.8-flash", judge_model="gemini-3.5-flash-lite")
+    )
+    monkeypatch.setitem(ADAPTERS, "d3", adapter)
+    opened = await client.post(
+        "/v1/sessions",
+        headers=HEADERS,
+        json={
+            "user": USER,
+            "spec_id": "scatter-basic",
+            "library": "d3",
+            "locale": "en",
+            "snapshot": snapshot_body(library="d3"),
+        },
+    )
+    assert opened.status_code == 200 and opened.json()["eligibility"]["eligible"] is True, opened.text
+    sid = opened.json()["session_id"]
+    data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
+    loaded = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": data})
+    assert loaded.status_code == 200, loaded.text
+    await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
+    return sid
+
+
+async def test_a_javascript_plot_renders_and_toggles_from_its_typed_table(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, services: Services, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """JS-4a: the pipeline types the table once per run; the render job, the shipped version and the theme toggle's
+    job carry the same `data_json`, whose columns are the dataset's, and the run form reads it."""
+    sid = await open_d3_session(client, swap_models, monkeypatch)
+
+    plot = next(payload for name, payload in await create_plot(client, sid) if name == "plot")
+    toggled = await render_theme(client, sid, "dark")
+
+    assert plot["status"] == "ok" and plot["artifacts"] == ["plot-light.png", "plot.js", "plot.html", "data.csv"]
+    assert toggled.status_code == 200
+    assert toggled.json()["artifacts"] == ["plot-light.png", "plot-dark.png", "plot.js", "plot.html", "data.csv"]
+    first, toggle = backend.jobs[0], backend.jobs[-1]
+    assert (first.language, first.library, toggle.themes) == ("javascript", "d3", ("dark",))
+    assert first.data_json is not None and toggle.data_json == first.data_json
+    assert json.loads(first.data_json)["columns"] == first.data_csv.splitlines()[0].split(",")
+    assert "const data = window.ANYPLOT_DATA;" in first.source and "loadUserData" not in first.source
+    assert services.versions.latest_rendered(sid, library="d3").data_json == first.data_json
+
+    # JS-4b: the page is built on demand from the same run form and table, in the theme asked for (the version's
+    # by default), wrapped, and answered as an attachment; nothing of it is stored.
+    own = await client.get(f"/v1/sessions/{sid}/artifacts/plot.html", headers=HEADERS)
+    dark = await client.get(f"/v1/sessions/{sid}/artifacts/plot.html?v=1&theme=dark", headers=HEADERS)
+    assert own.status_code == 200 and dark.status_code == 200, (own.text, dark.text)
+    assert [job.theme for job in backend.page_jobs] == ["light", "dark"]
+    for job in backend.page_jobs:
+        assert (job.language, job.library, job.source, job.data_json) == (
+            "javascript",
+            "d3",
+            first.source,
+            first.data_json,
+        )
+    assert dark.headers["content-type"] == "text/html; charset=utf-8"
+    for key, value in PAGE_HEADERS.items():
+        assert dark.headers[key] == value, key
+    assert f"srcdoc='{frame_source(fixture_page(backend.page_jobs[1]))}'" in dark.text
+    assert 'data-theme="dark"' in dark.text and 'data-theme="light"' in own.text
+    assert f'content="{WRAPPER_POLICY}"' in dark.text
+
+
+def _raises(error: Exception):
+    def script(job: PageJob) -> str:
+        raise error
+
+    return script
+
+
+@pytest.mark.parametrize(
+    ("error", "status", "code"),
+    [
+        (PageUnsupported("no /page route"), 503, "page_unavailable"),
+        (RendererUnavailable("unreachable"), 503, "page_unavailable"),
+        (RenderBusy("no slot"), 503, "capacity"),
+        (PageFailed(exit_code=1, stderr_tail="render: error: data DataError -: broken\n"), 500, "page_failed"),
+    ],
+)
+async def test_a_page_that_cannot_be_built_answers_a_fixed_code(
+    client: httpx.AsyncClient,
+    swap_models,
+    backend: FakeBackend,
+    monkeypatch: pytest.MonkeyPatch,
+    error: Exception,
+    status: int,
+    code: str,
+) -> None:
+    """JS-4b: a renderer deployed before `POST /page` (the agents service deploys first) is `503 page_unavailable`, a
+    busy one `503 capacity` like the theme toggle, a build that left no page `500 page_failed`; the session is free
+    again afterwards."""
+    sid = await open_d3_session(client, swap_models, monkeypatch)
+    await create_plot(client, sid)
+    backend.page_script = _raises(error)
+
+    response = await client.get(f"/v1/sessions/{sid}/artifacts/plot.html", headers=HEADERS)
+
+    assert (response.status_code, response.json()) == (status, {"detail": code})
+    assert "content-disposition" not in response.headers
+    backend.page_script = None
+    assert (await client.get(f"/v1/sessions/{sid}/artifacts/plot.html", headers=HEADERS)).status_code == 200
+
+
+async def test_a_page_is_offered_for_a_javascript_version_only(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend
+) -> None:
+    swap_models("gemini", default_script())
+    sid = await open_session(client)
+    await create_plot(client, sid)
+
+    response = await client.get(f"/v1/sessions/{sid}/artifacts/plot.html?theme=dark", headers=HEADERS)
+
+    assert (response.status_code, response.json()) == (404, {"detail": "not_found"})
+    assert backend.page_jobs == []
+
+
+async def test_a_page_build_holds_the_session_like_the_theme_toggle(
+    client: httpx.AsyncClient, swap_models, backend: FakeBackend, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """While a page builds, the session's turn, toggle or second build is `409 run_active`, as for the toggle."""
+    sid = await open_d3_session(client, swap_models, monkeypatch)
+    await create_plot(client, sid)
+    started, release = asyncio.Event(), asyncio.Event()
+
+    async def slow(job: PageJob) -> str:
+        started.set()
+        await release.wait()
+        return fixture_page(job)
+
+    monkeypatch.setattr(backend, "page", slow)
+    first = asyncio.create_task(client.get(f"/v1/sessions/{sid}/artifacts/plot.html", headers=HEADERS))
+    await started.wait()
+    second = await client.get(f"/v1/sessions/{sid}/artifacts/plot.html", headers=HEADERS)
+    toggle = await render_theme(client, sid, "dark")
+    release.set()
+
+    assert (second.status_code, second.json()) == (409, {"detail": "run_active"})
+    assert toggle.status_code == 409
+    assert (await first).status_code == 200
 
 
 async def test_theme_toggle_pads_an_off_canvas_theme(
@@ -2979,7 +3338,7 @@ def request_text(request: Any) -> str:
 
 def language_block(language: str, source: str) -> tuple[str, str]:
     """The session block's language line and its fenced value."""
-    return LANGUAGE_SOURCE_LINES[source], f"<plot_language>\n{language}\n</plot_language>"
+    return LANGUAGE_SOURCE_LINES[source], f"<reply_language>\n{language}\n</reply_language>"
 
 
 async def say(client: httpx.AsyncClient, sid: str, text: str) -> list[tuple[str, dict[str, Any]]]:
@@ -3028,8 +3387,10 @@ async def test_a_language_chosen_in_the_chip_reaches_the_root_and_the_adapter(
     root = request_text(requests_of(fake, "root")[0])
     line, value = language_block("ja", "chosen")
     assert line in root and value in root
-    assert "write your replies and the plot text in it" in root
+    assert "write your replies in it" in root
+    assert "<plot_language>" not in root.split("Session (set by the server):")[-1]  # the plot follows: one fence
     assert "Plot language:\n<plot_language>\nja\n</plot_language>" in adapter_inputs(fake)[0]
+    assert (await _session_state(client, sid))[PLOT_LANGUAGE] == "ja"  # the chip sets the plot's language too
 
 
 async def test_the_first_typed_message_detects_the_language_once(
@@ -3099,10 +3460,11 @@ async def test_an_action_and_a_refused_message_never_detect(client: httpx.AsyncC
 GERMAN_CHANGE = "Mach die Punkte etwas größer."
 
 
-async def test_the_adapter_and_the_reviewer_get_the_plot_language(
+async def test_a_message_in_another_language_keeps_the_plots_language(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:
-    """v1 in English from the action; the German change sets `de`, so v2 is written in German and says so."""
+    """v1 in English from the action; the German change records `de` for the replies, and v2 keeps English: a
+    follow-up message never rewrites the plot's text (owner decision of 2026-11-01)."""
     script = {
         "root": [
             {"call": "plot_pipeline", "args": {}},
@@ -3124,23 +3486,65 @@ async def test_the_adapter_and_the_reviewer_get_the_plot_language(
     assert (plot["status"], plot["version"]) == ("ok", 2)
     assert done_language(events) == {"language": "de", "source": "detected"}
     first, second = adapter_inputs(fake)
-    assert "Plot language:\n<plot_language>\nen\n</plot_language>" in first and "language_changed" not in first
-    assert "Plot language:\n<plot_language>\nde\n</plot_language>" in second
-    assert '"language_changed": true' in second  # the rewrite instruction, inside the tool notes
+    for adapted in (first, second):
+        assert "Plot language:\n<plot_language>\nen\n</plot_language>" in adapted
+        assert "language_changed" not in adapted
+    # The notes explain the plot to the user: v2's go in German, the language the user now chats in.
+    assert "<reply_language>" not in first
+    assert f"{REPLY_LANGUAGE_HEADING}\n<reply_language>\nde\n</reply_language>" in second
     reviews = [request_text(request) for request in requests_of(fake, "reviewer")]
-    assert "Plot language:\n<plot_language>\nen\n</plot_language>" in reviews[0]
-    assert "Plot language:\n<plot_language>\nde\n</plot_language>" in reviews[1]
+    assert all("Plot language:\n<plot_language>\nen\n</plot_language>" in review for review in reviews)
+    # The root replies in German and reads that the plot is English.
+    block = request_text(requests_of(fake, "root")[-1]).split("Session (set by the server):")[-1]
+    assert "<reply_language>\nde\n</reply_language>" in block
+    assert f"{PLOT_LANGUAGE_HEADING}\n<plot_language>\nen\n</plot_language>" in block
     bundle = (await client.get(f"/v1/sessions/{sid}/bundle", headers=HEADERS)).json()
-    assert [version["language"] for version in bundle["versions"]] == ["en", "de"]  # v1 keeps its text
+    assert [version["language"] for version in bundle["versions"]] == ["en", "en"]
     assert bundle["session"]["locale"] == "en" and bundle["session"]["plot_language"] == "de"
 
 
-@pytest.mark.parametrize(("lang", "message"), [("en", "change the title"), ("de", "Ändere den Titel")])
-async def test_a_change_that_switches_the_language_may_grow_the_text_it_replaces(
-    client: httpx.AsyncClient, swap_models, judge, caplog: pytest.LogCaptureFixture, lang: str, message: str
+async def test_an_english_message_keeps_a_german_paste_plot_german(
+    client: httpx.AsyncClient, swap_models, judge
 ) -> None:
-    """A rewrite in another language gets a change's 300 characters plus 1.5 times the text it replaces; the same
-    change in the same language gets the 300 alone."""
+    """Live test of 2026-11-01 (B1): a German paste set `de`, the first plot was German, and "Use a log scale on y"
+    then recorded `en` and turned the plot's title and numbers English while its axes stayed German."""
+    script = {
+        "root": [
+            {"call": "plot_pipeline", "args": {}},
+            {"text": "Hier ist dein Plot."},
+            {"call": "plot_pipeline", "args": {"change_request": "Use a log scale on y.", "base": "previous"}},
+            {"text": "Done: the y axis is logarithmic."},
+        ],
+        "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
+        "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+    }
+    fake = swap_models("gemini", script)
+    sid = await open_session(client, with_data=False)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]  # the dataset judge reads the headers as German
+    data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
+    assert (await paste(client, sid, data))["language"] == {"language": "de", "source": "pasted"}
+    assert (await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)).status_code == 200
+    await create_plot(client, sid)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="en")]
+
+    events = await say(client, sid, "Use a log scale on y")
+
+    assert done_language(events) == {"language": "en", "source": "detected"}  # the replies follow the message
+    first, second = adapter_inputs(fake)
+    assert "Plot language:\n<plot_language>\nde\n</plot_language>" in first
+    assert "Plot language:\n<plot_language>\nde\n</plot_language>" in second and "language_changed" not in second
+    assert [version.language for version in get_services().versions.all(sid)] == ["de", "de"]
+    # The plot stays German, its notes follow the replies into English.
+    assert "<reply_language>" not in first
+    assert f"{REPLY_LANGUAGE_HEADING}\n<reply_language>\nen\n</reply_language>" in second
+
+
+@pytest.mark.parametrize("lang", ["en", "de"])
+async def test_a_change_that_switches_the_language_may_grow_the_text_it_replaces(
+    client: httpx.AsyncClient, swap_models, caplog: pytest.LogCaptureFixture, lang: str
+) -> None:
+    """A rewrite in another language (the chip chose German) gets a change's 300 characters plus 1.5 times the text
+    it replaces; the same change in the same language gets the 300 alone."""
     caplog.set_level(logging.INFO, logger="anyplot.agents.attribution")
     # 329 new characters (a title of 29 and two notes of 150) for the 25 of the English title they replace:
     # over 300, under 300 + ceil(1.5 * 25) = 338.
@@ -3163,9 +3567,9 @@ async def test_a_change_that_switches_the_language_may_grow_the_text_it_replaces
     swap_models("gemini", script)
     sid = await open_session(client)
     await create_plot(client, sid)
-    judge.script = [JudgeVerdict(verdict="in_scope", lang=lang)]
+    assert (await put_language(client, sid, {"language": lang})).status_code == 200
 
-    events = await say(client, sid, message)
+    events = await say(client, sid, "change the title")
 
     plot = next(data for name, data in events if name == "plot")
     change_check = attribution_lines(caplog, "pipeline_check")[1]
@@ -3316,21 +3720,25 @@ async def test_set_language_on_a_session_already_in_that_language_is_no_change(
     assert responses == [{"status": "ok", "source": "chosen", "changed": False, "plot_outdated": False}]
 
 
+REWRITE_REQUEST = (
+    "Write the title, axis titles, legend entries and annotations in the plot language; change nothing else."
+)
+"""The root's change request after a `set_language` that left the shown plot outdated (`root.md`, "Language")."""
+
+
 async def test_a_plot_drawn_before_detection_is_rewritten_when_the_user_asks(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:
-    """v1 comes from the action, in English; a German question then records `de`. "Beschriftung auf Deutsch" is no
-    change of the session language, but the shown plot is outdated, so the root remakes it in German."""
-    rewrite = (
-        "Write the title, axis titles, legend entries and annotations in the session language; change nothing else."
-    )
+    """v1 comes from the action, in English; a German question then records `de` for the replies and leaves the plot
+    English. "Beschriftung auf Deutsch" changes no reply language, but the shown plot is outdated, so the root remakes
+    it in German."""
     script = {
         "root": [
             {"call": "plot_pipeline", "args": {}},
             {"text": ROOT_REPLY},
             {"text": "Die x-Achse zeigt die Lernstunden."},
-            {"call": "set_language", "args": {"language": "de"}},
-            {"call": "plot_pipeline", "args": {"change_request": rewrite, "base": "previous"}},
+            {"call": "set_language", "args": {"language": "de", "applies_to": "plot"}},
+            {"call": "plot_pipeline", "args": {"change_request": REWRITE_REQUEST, "base": "previous"}},
             {"text": "Die Beschriftung ist jetzt auf Deutsch."},
         ],
         "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
@@ -3360,17 +3768,15 @@ async def test_a_plot_drawn_before_detection_is_rewritten_when_the_user_asks(
 async def test_a_chat_request_on_a_plot_remakes_it_in_the_new_language(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:
-    """D-8: `set_language` alone, then the rewrite on the previous version, in one turn; v1 keeps its text."""
-    rewrite = (
-        "Write the title, axis titles, legend entries and annotations in the session language; change nothing else."
-    )
+    """D-8: `set_language` alone, then the rewrite on the previous version, in one turn; v1 keeps its text. Live test
+    of 2026-11-01 (A1): an English request for German plot text leaves the replies English."""
     script = {
         "root": [
             {"call": "plot_pipeline", "args": {}},
             {"text": ROOT_REPLY},
-            {"call": "set_language", "args": {"language": "Deutsch"}},
-            {"call": "plot_pipeline", "args": {"change_request": rewrite, "base": "previous"}},
-            {"text": "Die Beschriftung ist jetzt auf Deutsch."},
+            {"call": "set_language", "args": {"language": "Deutsch", "applies_to": "plot"}},
+            {"call": "plot_pipeline", "args": {"change_request": REWRITE_REQUEST, "base": "previous"}},
+            {"text": "The labels are German now."},
         ],
         "adapter": [{"json": SCATTER_PLAN}, {"json": SECOND_PLAN}],
         "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
@@ -3379,11 +3785,13 @@ async def test_a_chat_request_on_a_plot_remakes_it_in_the_new_language(
     sid = await open_session(client)
     await create_plot(client, sid)
 
-    events = await say(client, sid, "Labels in German, please.")  # the unscripted judge: in_scope, en
+    events = await say(client, sid, "Make the title German")  # the unscripted judge: in_scope, en
 
     plot = next(data for name, data in events if name == "plot")
     assert (plot["status"], plot["version"]) == ("ok", 2)
-    assert done_language(events) == {"language": "de", "source": "chosen"}
+    assert done_language(events) == {"language": "en", "source": "detected"}  # the replies stay English
+    state = await _session_state(client, sid)
+    assert (state[LANGUAGE], state[PLOT_LANGUAGE]) == ("en", "de")
     second = adapter_inputs(fake)[1]
     assert "Plot language:\n<plot_language>\nde\n</plot_language>" in second and '"language_changed": true' in second
     versions = get_services().versions.all(sid)

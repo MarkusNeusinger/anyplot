@@ -1,8 +1,40 @@
 name: "Scheduled: Regen oldest specs"
-run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.event.inputs.count || '1' }} / ${{ github.event.inputs.model || 'auto' }})"
+run-name: "Scheduled regen (${{ github.event.inputs.specification_id || (github.event.inputs.pairs && format('{0} pairs', github.event.inputs.pairs)) || github.event.inputs.count || '1' }} / ${{ github.event.inputs.model || 'auto' }})"
 
 # Picks the N oldest specs (by most-recent implementation `updated` timestamp)
 # and re-dispatches `bulk-generate.yml` for each. Default N=1 per cron tick.
+#
+# Pair mode (off unless configured): with the repository variable
+# REGEN_PAIRS_PER_DAY set to N >= 1, the scheduled run instead picks the N
+# oldest implementations, single (spec, library) pairs across the catalogue
+# (automation/scripts/regen_pick_pairs.py), and dispatches each pair straight
+# to impl-generate.yml, skipping the spec polish. A manual run opts in with the
+# `pairs` input; the variable never changes a manual run, except the
+# watchdog's cron rescue, which forwards it as `pairs` because it replaces the
+# missed scheduled run. Unset, the schedule runs spec mode exactly as before.
+#
+# No re-pick loop: a pair's age is its newest touch, the metadata `updated`
+# or its last real attempt (a merged or closed implementation PR, `regen:kept`
+# included, or a failed generation's `impl-fail` comment on the spec issue).
+# A pair touched within the attempt window (`attempt_window_days`, else the
+# REGEN_ATTEMPT_WINDOW_DAYS variable, else 30 days) is not picked, and after
+# it queues behind every pair touched before it. Infrastructure failures and
+# generations Claude stopped are not attempts: the pair comes back on a later
+# night. Spec mode has no window; a spec's age is the newer of its metadata
+# and ANY activity on its issue, infrastructure failures included.
+#
+# When Claude stops a session (a spend or usage limit — the API's spend limit
+# or credit balance, the subscription's usage limit — or, with api/oidc,
+# refused credentials): a pre-flight session that is stopped skips the
+# night's dispatch for its spec. In pair mode each spec's audit runs before
+# its pairs are dispatched, so once a pair's chain is stopped, the later specs
+# of the night stop at their audit and dispatch nothing. Pairs already
+# dispatched fail fast at their first refused request: impl-generate parks
+# the pair without a retry or a counted attempt, and impl-review and
+# impl-repair pause the PR (`ai-review-paused`, `ai-repair-paused`, which the
+# watchdog skips). Pair mode resumes paused PRs first, oldest first, within
+# the night's N (job resume-paused), so they continue once the stop lifts
+# (docs/workflows/overview.md#when-claude-stops-a-session).
 #
 # Schedule: once per day at 02:17 UTC (04:17 Berlin under CEST, 03:17 under
 # CET — Actions cron is always UTC). Until 2026-09 it ticked every 2 hours
@@ -29,8 +61,9 @@ run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.e
 #
 # Triggers:
 #   - schedule: once daily at 02:17 UTC → auto (Sonnet regenerations, Opus reviews)
-#   - workflow_dispatch: manual, with inputs for spec id, model, count, dry-run
-#     (also used by the watchdog's cron-liveness rescue, with all defaults)
+#   - workflow_dispatch: manual, with inputs for spec id, model, count, dry-run,
+#     pairs (also used by the watchdog's cron-liveness rescue, with all
+#     defaults — plus `pairs` when REGEN_PAIRS_PER_DAY is set)
 
 on:
   schedule:
@@ -63,6 +96,14 @@ on:
         description: "Just print picks, do not trigger bulk-generate"
         type: boolean
         default: false
+      pairs:
+        description: "Pair mode: regen this many of the oldest implementations (spec × library) instead of whole specs, without spec polish (empty = spec mode; ignored when specification_id is set)"
+        required: false
+        default: ''
+      attempt_window_days:
+        description: "Pair mode only: skip pairs merged or attempted within this many days (empty = the REGEN_ATTEMPT_WINDOW_DAYS variable, else 30)"
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -77,24 +118,53 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      issues: read   # spec issue updatedAt = last regen attempt per spec
+      issues: read          # spec issue updatedAt = last regen attempt per spec
+      pull-requests: read   # pair mode: implementation PRs = last attempt per pair
     outputs:
-      specs: ${{ steps.pick.outputs.specs }}
-      specs_json: ${{ steps.pick.outputs.specs_json }}
-      count: ${{ steps.pick.outputs.count }}
+      mode: ${{ steps.mode.outputs.mode }}
+      specs: ${{ steps.pick.outputs.specs || steps.pick_pairs.outputs.specs }}
+      specs_json: ${{ steps.pick.outputs.specs_json || steps.pick_pairs.outputs.specs_json }}
+      count: ${{ steps.pick.outputs.count || steps.pick_pairs.outputs.count }}
+      pairs_json: ${{ steps.pick_pairs.outputs.pairs_json }}
+      resume_json: ${{ steps.pick_pairs.outputs.resume_json }}
+      resume_count: ${{ steps.pick_pairs.outputs.resume_count }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version: '3.14'
 
       - name: Install PyYAML
         run: pip install pyyaml
 
+      # Spec mode unless a pair count is given: the `pairs` input on a manual
+      # run (the watchdog's cron rescue forwards REGEN_PAIRS_PER_DAY there),
+      # the REGEN_PAIRS_PER_DAY variable on the schedule. A spec override
+      # always wins. Anything but a positive integer stops the run instead of
+      # falling back to a whole spec.
+      - name: Resolve regen mode
+        id: mode
+        env:
+          PAIRS: ${{ github.event_name == 'schedule' && vars.REGEN_PAIRS_PER_DAY || inputs.pairs }}
+          SPEC_OVERRIDE: ${{ inputs.specification_id }}
+        run: |
+          if [ -n "$SPEC_OVERRIDE" ] || [ -z "$PAIRS" ]; then
+            echo "mode=spec" >> "$GITHUB_OUTPUT"
+            echo "Regen mode: spec"
+          elif [[ "$PAIRS" =~ ^[1-9][0-9]*$ ]]; then
+            echo "mode=pairs" >> "$GITHUB_OUTPUT"
+            echo "pairs=$PAIRS" >> "$GITHUB_OUTPUT"
+            echo "::notice::Regen mode: pairs (${PAIRS} per run)"
+          else
+            echo "::error::The pair count (REGEN_PAIRS_PER_DAY or the pairs input) must be a positive integer, got '${PAIRS//[^A-Za-z0-9 ._-]/?}'"
+            exit 1
+          fi
+
       - name: Pick oldest spec(s) (or use override)
         id: pick
+        if: steps.mode.outputs.mode == 'spec'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
@@ -235,6 +305,81 @@ jobs:
               f.write(f"count={len(picks)}\n")
           PY
 
+      # Pair mode: the paused reviews and repairs to resume first, then the
+      # oldest (spec, library) pairs for the rest of the night's N (see the
+      # script's docstring and the header above). The picks go to the log and
+      # the run summary, also on a dry run. The script fails when the
+      # implementation PRs cannot be listed: they are the loop guard.
+      - name: Pick oldest pairs (pair mode)
+        id: pick_pairs
+        if: steps.mode.outputs.mode == 'pairs'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          COUNT: ${{ steps.mode.outputs.pairs }}
+          MIN_AGE_HOURS: ${{ inputs.min_age_hours || '20' }}
+          ATTEMPT_WINDOW_DAYS: ${{ inputs.attempt_window_days || vars.REGEN_ATTEMPT_WINDOW_DAYS || '30' }}
+        run: |
+          LIBRARIES=$(python3 -c "from core.constants import SUPPORTED_LIBRARIES; print(' '.join(sorted(SUPPORTED_LIBRARIES)))")
+          python3 automation/scripts/regen_pick_pairs.py --count "$COUNT" --min-age-hours "$MIN_AGE_HOURS" \
+            --attempt-window-days "$ATTEMPT_WINDOW_DAYS" --repo "$GH_REPO" --libraries "$LIBRARIES"
+
+  # ============================================================================
+  # Pair mode: resume the reviews and repairs that Claude stopped (a spend or
+  # usage limit, or refused credentials; labels `ai-review-paused` and
+  # `ai-repair-paused`, which the watchdog leaves alone), oldest first, before
+  # the new pairs; they count against the night's N. A refused request costs
+  # nothing, so a stop that is still active only pauses them again, and they
+  # resume on their own once the limit resets, is raised, or the credentials
+  # are fixed. The resumed run removes the pause label.
+  # ============================================================================
+  resume-paused:
+    needs: pick
+    if: ${{ needs.pick.outputs.mode == 'pairs' && needs.pick.outputs.resume_count != '0' && needs.pick.outputs.resume_count != '' && !inputs.dry_run }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write        # dispatch impl-review / impl-repair
+    steps:
+      - name: Re-dispatch paused reviews and repairs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RESUME_JSON: ${{ needs.pick.outputs.resume_json }}
+          PACE_SECONDS: ${{ (inputs.model == 'sonnet' || inputs.model == 'haiku') && '120' || '180' }}
+        run: |
+          set -u
+          failed=0
+          i=0
+          while IFS=$'\t' read -r kind pr spec library attempt; do
+            i=$((i + 1))
+            if [ "$i" -gt 1 ]; then
+              echo "Sleeping ${PACE_SECONDS}s before the next dispatch…"
+              sleep "$PACE_SECONDS"
+            fi
+            if [ "$kind" = "review" ]; then
+              args=(impl-review.yml -f pr_number="$pr")
+            else
+              args=(impl-repair.yml -f pr_number="$pr" -f specification_id="$spec" -f library="$library" -f attempt="$attempt")
+            fi
+            echo "::notice::resuming the paused ${kind} of PR #${pr} (${spec}/${library})"
+            dispatched=0
+            for try in 1 2 3; do
+              if gh workflow run "${args[@]}" --repo "${{ github.repository }}"; then
+                dispatched=1
+                break
+              fi
+              echo "::warning::Dispatch attempt $try failed for PR #${pr}, retrying in 10s"
+              sleep 10
+            done
+            if [ "$dispatched" = "0" ]; then
+              echo "::error::Failed to resume PR #${pr} after 3 attempts"
+              failed=$((failed + 1))
+            fi
+          done < <(jq -r '.[] | [.kind, (.pr | tostring), .spec, .library, (.attempt | tostring)] | @tsv' <<< "$RESUME_JSON")
+          if [ "$failed" -gt 0 ]; then
+            exit 1
+          fi
+
   # ============================================================================
   # Pre-flight: per spec, run autonomous spec polish + cross-library similarity
   # audit, then dispatch bulk-generate with the resulting change_requests.
@@ -248,6 +393,15 @@ jobs:
   # model ("auto" unless a manual run pins one) is passed through to
   # bulk-generate (and from there to impl-generate and repair) unchanged;
   # reviews always run on Opus.
+  #
+  # Pair mode: one matrix entry per spec among the picked pairs. The spec
+  # polish is skipped (a spec rewritten for one library would leave its other
+  # implementations written against the old text), the similarity audit runs
+  # as in spec mode, and each picked pair of the spec is dispatched straight
+  # to impl-generate.yml with bulk-generate's arguments and pacing — not via
+  # bulk-generate.yml, whose single concurrency group keeps at most one
+  # pending run and cancels the older one (see the watchdog's
+  # dispatch_generate).
   # ============================================================================
   preflight-dispatch:
     needs: pick
@@ -268,6 +422,65 @@ jobs:
     # Side-effect steps (polish, dispatch) are individually gated on
     # `!inputs.dry_run` below.
     steps:
+      # Claude credentials: the repository variable CLAUDE_AUTH picks one mode
+      # per run, and every Claude step below reads this step's outputs, so a
+      # new mode changes only this step. Unset or `subscription`:
+      # CLAUDE_CODE_OAUTH_TOKEN, as before; `api`: ANTHROPIC_API_KEY; `oidc`:
+      # workload identity federation with the four CLAUDE_WIF_* variables,
+      # which needs `id-token: write` on the job. Each Claude step gets
+      # exactly one credential. An unknown value, or a mode whose credential
+      # is missing, stops the job here, never a silent fallback to the
+      # subscription. Identical in every job that runs Claude
+      # (tests/unit/workflows/test_claude_auth.py);
+      # docs/workflows/overview.md#claude-credentials.
+      - name: Resolve Claude credentials
+        id: claude_auth
+        env:
+          CLAUDE_AUTH: ${{ vars.CLAUDE_AUTH }}
+          API_KEY_SET: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+          OAUTH_TOKEN_SET: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+          WIF_RULE_ID: ${{ vars.CLAUDE_WIF_RULE_ID }}
+          WIF_ORG_ID: ${{ vars.CLAUDE_WIF_ORG_ID }}
+          WIF_SERVICE_ACCOUNT_ID: ${{ vars.CLAUDE_WIF_SERVICE_ACCOUNT_ID }}
+          WIF_WORKSPACE_ID: ${{ vars.CLAUDE_WIF_WORKSPACE_ID }}
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+        run: |
+          fail() { echo "::error::$1; not falling back to the subscription"; exit 1; }
+          mode="${CLAUDE_AUTH,,}"
+          case "$mode" in
+            ''|subscription) mode=subscription ;;
+            api) [ "$API_KEY_SET" = "true" ] || fail "CLAUDE_AUTH is 'api' but the ANTHROPIC_API_KEY secret is missing" ;;
+            oidc)
+              # The federation rule accepts only `…:ref:refs/heads/main`. A
+              # pull-request event (`…:pull_request`), another ref, and a job
+              # without id-token run on the subscription instead, by design
+              # and logged, never on an error.
+              if [[ "$EVENT" == pull_request* || "$REF" != "refs/heads/main" || -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]]; then
+                where="${EVENT}/${REF//[^A-Za-z0-9\/._-]/?}$([ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ] || echo ' (no id-token)')"
+                if [ "$OAUTH_TOKEN_SET" != "true" ]; then
+                  echo "::error::oidc not available for ${where}, and the CLAUDE_CODE_OAUTH_TOKEN secret is missing"
+                  exit 1
+                fi
+                echo "::notice::oidc not available for ${where}; using subscription"
+                echo "- oidc not available for ${where}; using subscription" >> "$GITHUB_STEP_SUMMARY"
+                mode=subscription
+              else
+                for name in WIF_RULE_ID WIF_ORG_ID WIF_SERVICE_ACCOUNT_ID WIF_WORKSPACE_ID; do
+                  [[ "${!name}" =~ ^[A-Za-z0-9_-]+$ ]] || fail "CLAUDE_AUTH is 'oidc' but the variable CLAUDE_${name} is missing or not an ID"
+                done
+                {
+                  echo "federation_rule_id=$WIF_RULE_ID"
+                  echo "organization_id=$WIF_ORG_ID"
+                  echo "service_account_id=$WIF_SERVICE_ACCOUNT_ID"
+                  echo "workspace_id=$WIF_WORKSPACE_ID"
+                } >> "$GITHUB_OUTPUT"
+              fi ;;
+            *) fail "CLAUDE_AUTH must be unset, 'subscription', 'api' or 'oidc', got '${CLAUDE_AUTH//[^A-Za-z0-9 ._-]/?}'" ;;
+          esac
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "Claude credentials: $mode"
+
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -294,14 +507,20 @@ jobs:
           fi
 
       - name: Spec polish (autonomous, opens PR with auto-merge)
-        if: ${{ steps.gate.outputs.skip_polish == '0' && !inputs.dry_run }}
+        id: polish
+        if: ${{ steps.gate.outputs.skip_polish == '0' && !inputs.dry_run && needs.pick.outputs.mode != 'pairs' }}
         # Optional quality pass: a transient action failure here must not
         # block the main regeneration pipeline. Skip cleanly and continue.
         continue-on-error: true
         timeout-minutes: 15
-        uses: anthropics/claude-code-action@db77d4d3c98f3f6380e7cd45ffba2342a3dbde3c  # v1
+        uses: anthropics/claude-code-action@d70510b174a1244958df0b03166a54912811f3e6  # v1
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ steps.claude_auth.outputs.mode == 'api' && secrets.ANTHROPIC_API_KEY || '' }}
+          claude_code_oauth_token: ${{ steps.claude_auth.outputs.mode == 'subscription' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
+          anthropic_federation_rule_id: ${{ steps.claude_auth.outputs.federation_rule_id }}
+          anthropic_organization_id: ${{ steps.claude_auth.outputs.organization_id }}
+          anthropic_service_account_id: ${{ steps.claude_auth.outputs.service_account_id }}
+          anthropic_workspace_id: ${{ steps.claude_auth.outputs.workspace_id }}
           claude_args: '--model sonnet --settings ${{ github.workspace }}/.claude/settings.json'
           allowed_bots: '*'
           prompt: |
@@ -310,14 +529,77 @@ jobs:
             Variables for this run:
             - SPEC_ID: ${{ matrix.spec_id }}
 
+      # The session's cost (Claude Code's own estimate at API list price),
+      # model and credential mode, for the weekly regen review, and whether
+      # Claude stopped it: a spend or usage limit, or refused credentials
+      # (outputs stopped, stop_reason). Never fatal.
+      - name: Claude session summary (spec polish)
+        id: polish_cost
+        if: ${{ !cancelled() && (steps.polish.outcome == 'success' || steps.polish.outcome == 'failure') }}
+        continue-on-error: true
+        env:
+          EXECUTION_FILE: ${{ steps.polish.outputs.execution_file }}
+          CLAUDE_AUTH_MODE: ${{ steps.claude_auth.outputs.mode }}
+          CLAUDE_STEP: daily-regen/polish
+          # Only the error fields of a session that failed, because its own
+          # text may quote the same messages: the error result, Claude Code's
+          # error messages and its API retries, with their HTTP status.
+          SESSION_ERRORS: >-
+            ([.[] | select(.type == "result")] | last) as $result
+            | if $result != null and $result.is_error != true then empty else
+            (.[] | select((.type == "result" and .is_error == true) or (.type == "assistant" and .error != null) or (.type == "system" and .subtype == "api_retry"))
+            | (.result // ""), ((.errors // [])[] | tostring), (.error // "" | tostring), (if .type == "assistant" then ((.message.content // [])[] | .text? // "") else "" end), (if (.api_error_status // .error_status) then "api_error_status=\(.api_error_status // .error_status)" else "" end))
+            end
+          # A spend or usage limit, in every mode: the API's spend-limit,
+          # spend-cap and credit messages, Claude Code's billing_error and
+          # credit message, and its subscription usage-limit messages (the
+          # SDK's USAGE_LIMIT_ERROR_PREFIXES).
+          LIMIT_PATTERN: >-
+            reached your (specified )?(workspace )?API usage limits|enforced_spend_limit_reached|credit balance (is )?too low|billing_error|usage limit reached|You.{1,3}ve (hit|reached) your|You.{1,3}re out of (usage credits|extra usage)|Your org is out of usage|Your seat type doesn.{1,3}t include|Your usage allocation has been disabled|Your group.{1,3}s usage limit is set to \$0|requires usage credits
+          # Refused credentials, with api and oidc only (the subscription keeps
+          # its handling): HTTP 401 or 403, the API's authentication_error and
+          # permission_error, Claude Code's authentication_failed, a refused
+          # federation exchange ("Authentication failed"), a bad API key.
+          AUTH_PATTERN: >-
+            authentication_error|authentication_failed|permission_error|Authentication failed|invalid x-api-key|account_on_hold|api_error_status=40[13]
+        run: |
+          cost=$(jq -r '[.[] | select(.type == "result")] | last | .total_cost_usd // empty' "$EXECUTION_FILE" 2>/dev/null || true)
+          model=$(jq -r '[.[] | select(.type == "system" and .subtype == "init")] | first | .model // empty' "$EXECUTION_FILE" 2>/dev/null || true)
+          line="claude-cost step=${CLAUDE_STEP} auth=${CLAUDE_AUTH_MODE} model=${model:-n/a} total_cost_usd=${cost:-n/a}"
+          echo "$line"
+          echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
+          errors=$(jq -r "$SESSION_ERRORS" "$EXECUTION_FILE" 2>/dev/null || true)
+          reason=""
+          if grep -qiE "$LIMIT_PATTERN" <<< "$errors"; then
+            reason=limit
+            what="Claude spend/usage limit reached"
+          elif [[ "$CLAUDE_AUTH_MODE" =~ ^(api|oidc)$ ]] && grep -qiE "$AUTH_PATTERN" <<< "$errors"; then
+            reason=auth
+            what="Claude credentials refused"
+          fi
+          if [ -n "$reason" ]; then
+            echo "::error::${what} (auth=${CLAUDE_AUTH_MODE}) in ${CLAUDE_STEP}: no retry until it is resolved"
+            echo "- **${what} (auth=${CLAUDE_AUTH_MODE})** in \`${CLAUDE_STEP}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "stopped=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "stopped=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "stop_reason=${reason}" >> "$GITHUB_OUTPUT"
+
       - name: Cross-library similarity audit
+        id: similarity
         # Read-only audit; if it fails, fall back to empty change_requests
         # rather than aborting the dispatch.
         continue-on-error: true
         timeout-minutes: 15
-        uses: anthropics/claude-code-action@db77d4d3c98f3f6380e7cd45ffba2342a3dbde3c  # v1
+        uses: anthropics/claude-code-action@d70510b174a1244958df0b03166a54912811f3e6  # v1
         with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          anthropic_api_key: ${{ steps.claude_auth.outputs.mode == 'api' && secrets.ANTHROPIC_API_KEY || '' }}
+          claude_code_oauth_token: ${{ steps.claude_auth.outputs.mode == 'subscription' && secrets.CLAUDE_CODE_OAUTH_TOKEN || '' }}
+          anthropic_federation_rule_id: ${{ steps.claude_auth.outputs.federation_rule_id }}
+          anthropic_organization_id: ${{ steps.claude_auth.outputs.organization_id }}
+          anthropic_service_account_id: ${{ steps.claude_auth.outputs.service_account_id }}
+          anthropic_workspace_id: ${{ steps.claude_auth.outputs.workspace_id }}
           claude_args: '--model sonnet --settings ${{ github.workspace }}/.claude/settings.json'
           allowed_bots: '*'
           prompt: |
@@ -325,6 +607,59 @@ jobs:
 
             Variables for this run:
             - SPEC_ID: ${{ matrix.spec_id }}
+
+      - name: Claude session summary (similarity audit)
+        id: similarity_cost
+        if: ${{ !cancelled() && (steps.similarity.outcome == 'success' || steps.similarity.outcome == 'failure') }}
+        continue-on-error: true
+        env:
+          EXECUTION_FILE: ${{ steps.similarity.outputs.execution_file }}
+          CLAUDE_AUTH_MODE: ${{ steps.claude_auth.outputs.mode }}
+          CLAUDE_STEP: daily-regen/similarity
+          # Only the error fields of a session that failed, because its own
+          # text may quote the same messages: the error result, Claude Code's
+          # error messages and its API retries, with their HTTP status.
+          SESSION_ERRORS: >-
+            ([.[] | select(.type == "result")] | last) as $result
+            | if $result != null and $result.is_error != true then empty else
+            (.[] | select((.type == "result" and .is_error == true) or (.type == "assistant" and .error != null) or (.type == "system" and .subtype == "api_retry"))
+            | (.result // ""), ((.errors // [])[] | tostring), (.error // "" | tostring), (if .type == "assistant" then ((.message.content // [])[] | .text? // "") else "" end), (if (.api_error_status // .error_status) then "api_error_status=\(.api_error_status // .error_status)" else "" end))
+            end
+          # A spend or usage limit, in every mode: the API's spend-limit,
+          # spend-cap and credit messages, Claude Code's billing_error and
+          # credit message, and its subscription usage-limit messages (the
+          # SDK's USAGE_LIMIT_ERROR_PREFIXES).
+          LIMIT_PATTERN: >-
+            reached your (specified )?(workspace )?API usage limits|enforced_spend_limit_reached|credit balance (is )?too low|billing_error|usage limit reached|You.{1,3}ve (hit|reached) your|You.{1,3}re out of (usage credits|extra usage)|Your org is out of usage|Your seat type doesn.{1,3}t include|Your usage allocation has been disabled|Your group.{1,3}s usage limit is set to \$0|requires usage credits
+          # Refused credentials, with api and oidc only (the subscription keeps
+          # its handling): HTTP 401 or 403, the API's authentication_error and
+          # permission_error, Claude Code's authentication_failed, a refused
+          # federation exchange ("Authentication failed"), a bad API key.
+          AUTH_PATTERN: >-
+            authentication_error|authentication_failed|permission_error|Authentication failed|invalid x-api-key|account_on_hold|api_error_status=40[13]
+        run: |
+          cost=$(jq -r '[.[] | select(.type == "result")] | last | .total_cost_usd // empty' "$EXECUTION_FILE" 2>/dev/null || true)
+          model=$(jq -r '[.[] | select(.type == "system" and .subtype == "init")] | first | .model // empty' "$EXECUTION_FILE" 2>/dev/null || true)
+          line="claude-cost step=${CLAUDE_STEP} auth=${CLAUDE_AUTH_MODE} model=${model:-n/a} total_cost_usd=${cost:-n/a}"
+          echo "$line"
+          echo "- \`${line}\`" >> "$GITHUB_STEP_SUMMARY"
+          errors=$(jq -r "$SESSION_ERRORS" "$EXECUTION_FILE" 2>/dev/null || true)
+          reason=""
+          if grep -qiE "$LIMIT_PATTERN" <<< "$errors"; then
+            reason=limit
+            what="Claude spend/usage limit reached"
+          elif [[ "$CLAUDE_AUTH_MODE" =~ ^(api|oidc)$ ]] && grep -qiE "$AUTH_PATTERN" <<< "$errors"; then
+            reason=auth
+            what="Claude credentials refused"
+          fi
+          if [ -n "$reason" ]; then
+            echo "::error::${what} (auth=${CLAUDE_AUTH_MODE}) in ${CLAUDE_STEP}: no retry until it is resolved"
+            echo "- **${what} (auth=${CLAUDE_AUTH_MODE})** in \`${CLAUDE_STEP}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "stopped=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "stopped=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "stop_reason=${reason}" >> "$GITHUB_OUTPUT"
 
       - name: Collect change_requests
         id: collect
@@ -347,8 +682,21 @@ jobs:
           flagged=$(echo "$CR_COMPACT" | jq 'length')
           echo "::notice::change_requests for ${{ matrix.spec_id }}: ${flagged} lib(s) flagged — ${CR_COMPACT}"
 
+      # Claude stopped a pre-flight session (a spend or usage limit, or
+      # refused credentials): every generation dispatched now would be
+      # refused the same way, so this spec's dispatch is skipped and the entry
+      # fails. In pair mode the audit of each spec runs before that spec's
+      # pairs are dispatched, so once a pair's chain has hit the stop, every
+      # later spec of the night stops here (a refused request costs nothing),
+      # and its pairs stay in the queue for a later night.
+      - name: Stop when Claude stopped the session
+        if: ${{ steps.polish_cost.outputs.stopped == 'true' || steps.similarity_cost.outputs.stopped == 'true' }}
+        run: |
+          echo "::error::Claude stopped the pre-flight (${{ steps.polish_cost.outputs.stop_reason || steps.similarity_cost.outputs.stop_reason }}); nothing dispatched for ${{ matrix.spec_id }}"
+          exit 1
+
       - name: Dispatch bulk-generate with change_requests
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !inputs.dry_run && needs.pick.outputs.mode != 'pairs' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ matrix.spec_id }}
@@ -366,3 +714,57 @@ jobs:
           # the next matrix entry's dispatch (matrix is serialized via
           # max-parallel: 1, so this is between specs).
           sleep 5
+
+      # Pair mode: bulk-generate's per-pair dispatch for each picked library of
+      # this spec — the issue from specification.yaml, the library's
+      # divergence hint, the regen gate on, three dispatch attempts — with
+      # bulk-generate's default pace (180 s, 120 s for a pinned sonnet or
+      # haiku) before every dispatch but the run's first. impl-generate sets
+      # `impl:<lib>:pending` itself, so this job needs no issue permission.
+      - name: Dispatch impl-generate for each picked pair (pair mode)
+        if: ${{ !inputs.dry_run && needs.pick.outputs.mode == 'pairs' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SPEC_ID: ${{ matrix.spec_id }}
+          MODEL: ${{ inputs.model || 'auto' }}
+          CHANGE_REQUESTS: ${{ steps.collect.outputs.change_requests }}
+          PAIRS_JSON: ${{ needs.pick.outputs.pairs_json }}
+          PACE_SECONDS: ${{ (inputs.model == 'sonnet' || inputs.model == 'haiku') && '120' || '180' }}
+        run: |
+          set -u
+          ISSUE=""
+          if [ -f "plots/${SPEC_ID}/specification.yaml" ]; then
+            ISSUE=$(yq '.issue' "plots/${SPEC_ID}/specification.yaml" 2>/dev/null || echo "")
+            [ "$ISSUE" = "null" ] && ISSUE=""
+          fi
+          FIRST=$(echo "$PAIRS_JSON" | jq -r '.[0] | "\(.spec)/\(.library)"')
+          failed=0
+          for LIBRARY in $(echo "$PAIRS_JSON" | jq -r --arg spec "$SPEC_ID" '.[] | select(.spec == $spec) | .library'); do
+            if [ "${SPEC_ID}/${LIBRARY}" != "$FIRST" ]; then
+              echo "Sleeping ${PACE_SECONDS}s before the next dispatch…"
+              sleep "$PACE_SECONDS"
+            fi
+            HINT=$(echo "$CHANGE_REQUESTS" | jq -r --arg lib "$LIBRARY" '.[$lib] // ""')
+            args=(-f specification_id="${SPEC_ID}" -f library="${LIBRARY}" -f model="${MODEL}"
+                  -f change_request="${HINT}" -f regen_gate=true -f source_ref= -f source_model=)
+            if [ -n "$ISSUE" ]; then
+              args+=(-f issue_number="${ISSUE}")
+            fi
+            echo "::notice::$(date -u +%H:%M:%SZ)  dispatching impl-generate for ${SPEC_ID}/${LIBRARY} (issue: ${ISSUE:-none}, model=${MODEL}, change_request: ${HINT:-none})"
+            dispatched=0
+            for attempt in 1 2 3; do
+              if gh workflow run impl-generate.yml --repo "${{ github.repository }}" "${args[@]}"; then
+                dispatched=1
+                break
+              fi
+              echo "::warning::Dispatch attempt $attempt failed for ${SPEC_ID}/${LIBRARY}, retrying in 10s"
+              sleep 10
+            done
+            if [ "$dispatched" = "0" ]; then
+              echo "::error::Failed to dispatch ${SPEC_ID}/${LIBRARY} after 3 attempts — continuing"
+              failed=$((failed + 1))
+            fi
+          done
+          if [ "$failed" -gt 0 ]; then
+            exit 1
+          fi

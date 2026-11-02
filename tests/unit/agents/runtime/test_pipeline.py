@@ -21,13 +21,16 @@ from agents.anyplot.pipeline import (
     PADDED_LINE,
     RENDER_P95_S,
     Candidate,
+    CheckResult,
     Run,
     SoftDeadline,
     _check,
+    column_kinds_of,
     finish,
     render_adapt_request,
     render_review_request,
     render_score_request,
+    run_theme,
     ship_compare,
     shipped_candidate,
     standing_requests,
@@ -35,6 +38,7 @@ from agents.anyplot.pipeline import (
 )
 from agents.anyplot.policy import DATA_PREAMBLE
 from agents.anyplot.schemas import (
+    MAX_CHANGES,
     MAX_LINE_CHARS,
     MAX_USER_REQUESTS,
     MAX_USER_REQUESTS_CHARS,
@@ -45,10 +49,12 @@ from agents.anyplot.schemas import (
     PlotResult,
     ReviewRequest,
     Round,
+    Theme,
 )
 from agents.anyplot.services import CodeVersion, VersionStore
 from agents.anyplot.session_state import SessionView
 from agents.anyplot.settings import AgentSettings, get_settings
+from tests.unit.agents.code.conftest import JULIA_WORKING, R_CATALOGUE_NORMALISED
 
 from .fakes import gemini_call_s
 
@@ -309,6 +315,44 @@ def test_versions_of_another_library_are_not_the_base() -> None:
     assert latest_here is not None and latest_here.number == 1
     assert store.get("s", 2, library="matplotlib") is None
     assert latest_any is not None and latest_any.number == 2
+
+
+def base_version(theme: Theme, *, asked: bool) -> CodeVersion:
+    result = PlotResult(status="ok", attempts=1, artifacts=["plot.py"])
+    return CodeVersion(
+        number=1,
+        working="w",
+        run_form="r",
+        export="e",
+        data_csv="a\n1\n",
+        render_id="r1",
+        result=result,
+        theme=theme,
+        theme_asked=asked,
+    )
+
+
+@pytest.mark.parametrize(
+    ("asked", "site", "previous", "expected"),
+    [
+        # The user's word in the chat wins over the site, on a first plot and on a change.
+        ("dark", "light", None, ("dark", True)),
+        ("light", "dark", base_version("dark", asked=True), ("light", True)),
+        # A change of a version whose theme the user asked for keeps it, whatever the site shows.
+        (None, "light", base_version("dark", asked=True), ("dark", True)),
+        # Otherwise the site theme of the turn, also when it switched since the version it changes.
+        (None, "dark", None, ("dark", False)),
+        (None, "light", None, ("light", False)),
+        (None, "dark", base_version("light", asked=False), ("dark", False)),
+        # Without a page: the version it changes, else light (the behaviour before the site theme).
+        (None, None, base_version("dark", asked=False), ("dark", False)),
+        (None, None, None, ("light", False)),
+    ],
+)
+def test_run_theme(
+    asked: Theme | None, site: Theme | None, previous: CodeVersion | None, expected: tuple[Theme, bool]
+) -> None:
+    assert run_theme(asked, site, previous) == expected
 
 
 def test_dataset_judge_sees_every_header() -> None:
@@ -801,3 +845,130 @@ class TestCheck:
 
     def test_a_clean_check_names_no_module(self) -> None:
         assert _check("x = 1\n", library="matplotlib", palette=[], base="x = 1\n").banned_imports == []
+
+
+class TestRCheck:
+    """ggplot2 through the same check, with the R runtime's validators, blocking rules and targets (PR 3b)."""
+
+    BASE = R_CATALOGUE_NORMALISED.replace(
+        "set.seed(42)\ndf <- tibble::tibble(!!SPEND := runif(50, 5, 150), !!REVENUE := rnorm(50, 300, 40))\n",
+        "df <- load_user_data()\n",
+    )
+    PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+    def check(self, code: str) -> CheckResult:
+        return _check(code, library="ggplot2", palette=self.PALETTE, base=self.BASE)
+
+    def test_the_working_form_may_render(self) -> None:
+        check = self.check(self.BASE)
+        assert check.may_render and check.blocking == [] and check.defects == []
+
+    def test_a_kept_dataset_package_refuses_the_working_form(self) -> None:
+        """The readiness scan calls such a catalogue file `coupled`; the adapted working form must drop it."""
+        code = self.BASE.replace("library(ragg)\n", "library(ragg)\nlibrary(palmerpenguins)\n")
+
+        check = self.check(code)
+
+        assert not check.may_render and check.blocking_rules == ["dataset-package"]
+        assert check.blocking[0].startswith("validator dataset-package (line 3): 'palmerpenguins' is a dataset package")
+
+    def test_a_soft_finding_gets_its_r_target(self) -> None:
+        code = self.BASE.replace("df <- load_user_data()\n", "df <- load_user_data()\nnoise <- rnorm(10)\n")
+
+        check = self.check(code)
+
+        assert check.may_render and check.adaptation_rules == ["rng"]
+        assert check.defects[0].startswith("DQ-03 (code): random data generation 'rnorm' is not allowed")
+        assert "set.seed() with sample(), runif() or jitter()" in check.defects[0]
+        assert "np.random" not in check.defects[0]
+
+
+class TestJuliaCheck:
+    """Makie through the same check, with the Julia runtime's validators, blocking rules and targets (J2b)."""
+
+    PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+    def check(self, code: str) -> CheckResult:
+        return _check(code, library="makie", palette=self.PALETTE, base=JULIA_WORKING)
+
+    def test_the_working_form_may_render(self) -> None:
+        check = self.check(JULIA_WORKING)
+        assert check.may_render and check.blocking == [] and check.defects == []
+
+    def test_a_kept_dataset_package_refuses_the_working_form(self) -> None:
+        code = JULIA_WORKING.replace("using DataFrames\n", "using DataFrames\nusing PalmerPenguins\n")
+
+        check = self.check(code)
+
+        assert not check.may_render and check.blocking_rules == ["dataset-package"]
+
+    def test_a_loader_package_in_the_plot_is_a_security_refusal(self) -> None:
+        check = self.check(JULIA_WORKING.replace("using DataFrames\n", "using DataFrames\nusing CSV\n"))
+        assert not check.may_render and check.blocking_rules == ["banned-import"]
+
+    def test_a_soft_finding_gets_its_julia_target(self) -> None:
+        code = JULIA_WORKING.replace("df = load_user_data()\n", "df = load_user_data()\nnoise = randn(10)\n")
+
+        check = self.check(code)
+
+        assert check.may_render and check.adaptation_rules == ["rng"]
+        assert "Random.seed! with rand, shuffle or randperm" in check.defects[0]
+        assert "np.random" not in check.defects[0] and "set.seed" not in check.defects[0]
+
+
+class TestLoaderNotes:
+    NOTE = (
+        "R reads 2 integers past ±2^53 as the nearest double, so the plot can show them a unit or more off: 2 in 'id'"
+    )
+
+    def test_the_loaders_note_comes_first_in_what_changed_and_keeps_an_ok_plot_ok(self) -> None:
+        """Owner rule of 2026-10-15: a value the plot shows changed is announced, with its counts; owner decision of
+        2026-10-29: in "what changed", so the status is the render's."""
+        run = run_with(reviewed_ok=True)
+        run.loader_notes = [self.NOTE]
+
+        result = finish(run)
+
+        assert (result.status, result.residual_defects) == ("ok", [])
+        assert result.changes == [self.NOTE, "c"]
+
+    def test_the_cap_drops_adapter_notes_before_the_loaders(self) -> None:
+        notes = [f"note {index}" for index in range(8)]
+        run = run_with(reviewed_ok=True, changes=notes)
+        run.loader_notes = [self.NOTE]
+
+        changes = finish(run).changes
+
+        assert len(changes) == MAX_CHANGES and changes[0] == self.NOTE
+        assert changes[1:] == ["note 0", "note 1", "note 2", "note 7"]  # the first ones and the latest
+        assert summarise_changes(notes, limit=0) == [] and summarise_changes(notes, limit=1) == ["note 0"]
+
+        run = run_with(reviewed_ok=True, changes=notes)
+        run.loader_notes = [self.NOTE, "R converts 1 timestamp with a time-zone offset to UTC"]
+        both = finish(run).changes
+        assert len(both) == MAX_CHANGES and both[:2] == run.loader_notes  # both loader notes first, then three
+
+    def test_column_kinds_of_reads_the_stored_dataset(self) -> None:
+        store = DatasetStore()
+        dataset = store.get(store.put("s", parse_dataset("id,n\n9007199254740993,1\n2,2\n")), "s")
+        assert dataset is not None
+
+        kinds = column_kinds_of(dataset)
+
+        assert kinds is not None and kinds.kinds == {"id": "big-integer", "n": "integer"}
+        assert kinds.inexact == {"id": 1}
+
+    def test_only_a_kept_offset_counts_the_parser_announces_mixed_ones(self) -> None:
+        """The parser keeps one offset per column and writes a column of several in UTC with its own note
+        (`parse.py`), so the loaders' offset note counts only the cells that still carry an offset."""
+        store = DatasetStore()
+        kept = store.get(
+            store.put("s", parse_dataset("t,n\n2024-01-31T08:00:00+01:00,1\n2024-02-01T09:30:00+01:00,2\n")), "s"
+        )
+        mixed = store.get(
+            store.put("m", parse_dataset("t,n\n2024-01-31T08:00:00+01:00,1\n2024-06-30T08:00:00+02:00,2\n")), "m"
+        )
+        assert kept is not None and mixed is not None
+
+        assert (kinds := column_kinds_of(kept)) is not None and kinds.offset == {"t": 2}
+        assert (kinds := column_kinds_of(mixed)) is not None and kinds.offset == {}

@@ -7,7 +7,7 @@
 
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider } from '@mui/material/styles';
@@ -91,12 +91,14 @@ function stubFetch(opened: Promise<void> = Promise.resolve()) {
   );
 }
 
+/** A data router, as in the app: the page's leave warning uses the router's blocker. */
 function renderPage() {
+  const router = createMemoryRouter([{ path: '/debug/agent', element: <AgentChatPage /> }], {
+    initialEntries: [PAGE],
+  });
   return render(
     <ThemeProvider theme={theme}>
-      <MemoryRouter initialEntries={[PAGE]}>
-        <AgentChatPage />
-      </MemoryRouter>
+      <RouterProvider router={router} />
     </ThemeProvider>
   );
 }
@@ -131,7 +133,7 @@ describe('AgentChatPage language chip', () => {
     open();
     await waitFor(() => expect(chip()).toBeEnabled());
     await user.click(chip());
-    const list = screen.getByRole('dialog', { name: 'Plot language' });
+    const list = screen.getByRole('dialog', { name: 'Language of the replies and the plot' });
     await user.click(within(list).getByRole('button', { name: /German/ }));
 
     await waitFor(() => expect(chip()).toHaveTextContent(/^lang: de · chosen$/));
@@ -182,7 +184,7 @@ describe('AgentChatPage language chip', () => {
     expect(chip()).toBeEnabled();
     expect(
       screen.getByText(
-        '# language: de · detected from your message · the lang chip in the header changes it'
+        '# reply language: de · detected from your message · a plot you have keeps its language · the lang chip in the header changes both'
       )
     ).toBeInTheDocument();
     expect(puts).toEqual([]);

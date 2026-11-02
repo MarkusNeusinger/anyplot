@@ -109,13 +109,39 @@
  *   a data change, see above, and a reply naming it;
  * - ends with "?": a reply only, no pipeline run;
  * - anything else: a refinement with a repair round, shipped as
- *   `needs_attention`; "dark" in the text renders the dark theme.
+ *   `needs_attention`; the word "dark" or "light" in the text renders that theme.
+ * A plot renders in the site theme the page sends (`POST .../messages?theme=`), unless
+ * the text asked for a theme or the refined version was asked for one (`pipeline.run_theme`).
  * Pasted data containing "ignore previous" answers `403 data_refused`; pasted
  * text that looks like a formula answers `422 formula`. `POST .../dataset/convert`
  * (a dropped binary file) answers by the first bytes: a zip is a workbook with two
  * sheets, Parquet one table, bytes holding "TOO_MANY_ROWS" the row-cap refusal.
  * Pasted text with two or more comma tables separated by a blank line answers
  * `tables` and `table` and reads the first one, or the body's `table`.
+ *
+ * JavaScript plots (JS-4b): with a JavaScript library in `AGENT_LIBRARIES`
+ * (chartjs, d3, echarts, highcharts), a session of it gets JavaScript versions,
+ * whose artifacts are `plot-<theme>.png`, `plot.js`, `plot.html` and `data.csv`.
+ * `GET .../artifacts/plot.html?v=&theme=` builds the page on demand (MOCK_PAGE_MS)
+ * in the theme asked for, the version's by default: a small inline chart page
+ * under the harness's policy (the bound x and y on a canvas, with a hover
+ * readout; no library bundle) in the agents service's wrapper
+ * (`agents/anyplot/render/page.py`: no script of its own, the policy plus
+ * `frame-src 'none'`, a sandboxed `srcdoc` frame), with the headers both
+ * download routes set; `409 run_active` while a turn runs. Without such a
+ * library the mock answers exactly as before. `POST .../outcome` (the cards'
+ * usage beacon after a copy or a download) checks the body like the BFF and
+ * answers `204`. `GET /preview/relay`, the card's interactive preview (JS-4b-2),
+ * is the API's own relay page with its headers, which the mock reads from
+ * `python3 api/preview_relay.py` at start (`503` when python3 cannot run it).
+ * The card frames the relay at `VITE_API_URL` (`PREVIEW_RELAY_URL`), while the
+ * chat's own requests go to `VITE_DEBUG_API_URL`: point both at the mock, as
+ * above, or the frame comes from another host's relay (the production API's
+ * with only `VITE_DEBUG_API_URL` set), and the browser runs that relay instead
+ * of the checkout's.
+ *
+ *   AGENT_LIBRARIES=matplotlib,seaborn,chartjs node app/scripts/agent-bff-mock.mjs
+ *   open http://localhost:3000/debug/agent?spec=scatter-basic&library=chartjs&language=javascript
  *
  * Environment: PORT (8010), MOCK_STEP_MS (700, per pipeline step),
  * MOCK_QUEUE_MS (2500, per queue position), MOCK_QUEUE (2, the starting
@@ -127,10 +153,18 @@
  * 900 ms more). Slowed down, the page's working states stay visible:
  *
  *   MOCK_PARSE_MS=4000 MOCK_QUEUE=0 MOCK_STEP_MS=3000 node app/scripts/agent-bff-mock.mjs
+ *
+ * The admin fan-out (`.plot_all()`): `POST .../dataset/copy` with `{from_session}` copies the source session's
+ * confirmed data, bindings and session language into a session opened with `source: fanout`, with the service's
+ * refusals (`404 session_expired`, `409 has_dataset`, `422 no_dataset`, `422 unconfirmed`, `422 invalid`).
+ * MOCK_NO_COPY=1 answers it `404 not_found`, as an agents service deployed before the route does, so the page's
+ * fallback (the paste posted again, or `copy_unavailable`) can be driven.
  */
 
+import { execFileSync } from 'node:child_process';
 import http from 'node:http';
 import { randomBytes, randomUUID } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import zlib from 'node:zlib';
 
 const PORT = Number(process.env.PORT || 8010);
@@ -139,7 +173,23 @@ const QUEUE_MS = Number(process.env.MOCK_QUEUE_MS || 2500);
 const QUEUE_START = Number(process.env.MOCK_QUEUE ?? 2);
 const STOP_MS = Number(process.env.MOCK_STOP_MS ?? 2000);
 const PARSE_MS = Number(process.env.MOCK_PARSE_MS ?? 400);
+const NO_COPY = process.env.MOCK_NO_COPY === '1';
 const BASE = `http://localhost:${PORT}`;
+
+/**
+ * The preview relay (`GET /preview/relay`, JS-4b-2), exactly as the API serves it: its page and headers come from
+ * `api/preview_relay.py` itself (`python3 api/preview_relay.py`), so the mock holds no copy of the relay's script.
+ * The relay admits every `http://localhost:*` parent, the dev server's included. Null when python3 cannot run it.
+ */
+function loadRelay() {
+  try {
+    const script = fileURLToPath(new URL('../../api/preview_relay.py', import.meta.url));
+    return JSON.parse(execFileSync('python3', [script], { encoding: 'utf-8' }));
+  } catch {
+    return null;
+  }
+}
+const RELAY = loadRelay();
 
 const role = (name, kinds, description, { required = true, variadic = false } = {}) => ({
   name,
@@ -209,6 +259,20 @@ const AGENT_LIBRARIES = process.env.AGENT_LIBRARIES?.split(',').filter(Boolean) 
   'matplotlib',
   'seaborn',
 ];
+/**
+ * The JavaScript libraries the agents service serves (`runtimes.JAVASCRIPT_LIBRARIES`). A session of one,
+ * enabled through `AGENT_LIBRARIES`, gets JavaScript versions: `plot.js` instead of `plot.py`, and the
+ * self-contained `plot.html`, which the artifact route builds per theme (JS-4b).
+ */
+const JS_LIBRARIES = {
+  chartjs: 'Chart.js',
+  d3: 'D3',
+  echarts: 'ECharts',
+  highcharts: 'Highcharts',
+};
+const isJs = library => Object.hasOwn(JS_LIBRARIES, library);
+/** How long a page build takes: the renderer's `POST /page`, about 0.6 s with the container's start. */
+const PAGE_MS = Number(process.env.MOCK_PAGE_MS || 600);
 const MAX_DATASET_BYTES = 1024 * 1024;
 /** What the agents service stores as the user's message of an action turn (`ACTION_MESSAGES`). */
 const ACTION_MESSAGES = {
@@ -725,6 +789,151 @@ fig.savefig(f"plot-{THEME}.png", dpi=200, facecolor=PAGE_BG)
 `;
 }
 
+/** A JavaScript version's exported code: the run form under the JavaScript header (`code/export.py`). */
+function plotJs(session, version) {
+  const x = columnOf(version, 'x') ?? 'x';
+  const y = yColumns(version)[0] ?? 'y';
+  return `// Adapted by anyplot.ai from ${session.specId} (${version.library}) for your data.csv;
+// run: open plot.html in a browser, which runs this code with the chart library, the ${version.theme} theme and your data
+
+//# anyplot-orientation: landscape
+const t = window.ANYPLOT_TOKENS;
+
+const data = window.ANYPLOT_DATA;
+const X = ${JSON.stringify(x)};
+const Y = ${JSON.stringify(y)};
+
+const canvas = document.createElement("canvas");
+document.getElementById("container").appendChild(canvas);
+new Chart(canvas, {
+  type: "scatter",
+  data: { datasets: [{ data: data.map((d) => ({ x: d[X], y: d[Y] })), backgroundColor: t.palette[0] }] },
+  options: { animation: false, scales: { x: { title: { display: true, text: X } }, y: { title: { display: true, text: Y } } } },
+});
+`;
+}
+
+/** The harness's sandbox policy (`render.mjs`, `CONTENT_SECURITY_POLICY`), which the page carries. */
+const PAGE_POLICY =
+  "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; " +
+  "form-action 'none'; base-uri 'none'";
+const PAGE_BACKGROUNDS = { light: '#FAF8F1', dark: '#1A1A17' };
+const PAGE_INK = { light: '#1A1A17', dark: '#F0EFE8' };
+const PAGE_SCALES = [1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.25];
+/** What could close the page's JSON element or break its script, escaped as the harness does (`render.mjs`). */
+const SCRIPT_BREAKING = new RegExp('[<\\u2028\\u2029]', 'g');
+
+/**
+ * A stand-in for the harness's page of a JavaScript version in `theme`: the policy, the typed table in a
+ * JSON element (`<` and the line separators escaped), and a small inline script that draws the bound x
+ * and y on a canvas with a hover readout, instead of the library bundle (no code of the version runs).
+ */
+function chartPage(version, theme) {
+  const series = points(version)?.[0] ?? [];
+  const table = JSON.stringify({ columns: ['x', 'y'], data: series }).replace(
+    SCRIPT_BREAKING,
+    char => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`
+  );
+  const ink = PAGE_INK[theme];
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="${PAGE_POLICY}" />
+<title>anyplot</title>
+<style>
+  html, body { margin: 0; padding: 0; background: ${PAGE_BACKGROUNDS[theme]}; overflow: hidden; }
+  #container { width: 1600px; height: 900px; position: relative; color: ${ink}; font: 24px sans-serif; }
+  #readout { position: absolute; top: 24px; right: 40px; }
+</style>
+</head>
+<body>
+<div id="container" data-library="${version.library}" data-theme="${theme}"><canvas width="1600" height="900"></canvas><div id="readout"></div></div>
+<script type="application/json" id="anyplot-data">${table}</script>
+<script>
+  window.__anyplotError = null;
+  var table = JSON.parse(document.getElementById("anyplot-data").textContent);
+  var canvas = document.querySelector("canvas");
+  var context = canvas.getContext("2d");
+  var xs = table.data.map(function (p) { return p[0]; });
+  var ys = table.data.map(function (p) { return p[1]; });
+  var span = function (values) { var lo = Math.min.apply(null, values), hi = Math.max.apply(null, values); return [lo, hi === lo ? lo + 1 : hi]; };
+  var sx = span(xs.length ? xs : [0]), sy = span(ys.length ? ys : [0]);
+  var px = function (v) { return 100 + (v - sx[0]) / (sx[1] - sx[0]) * 1400; };
+  var py = function (v) { return 800 - (v - sy[0]) / (sy[1] - sy[0]) * 700; };
+  context.strokeStyle = ${JSON.stringify(ink)};
+  context.lineWidth = 2;
+  context.beginPath(); context.moveTo(100, 100); context.lineTo(100, 800); context.lineTo(1500, 800); context.stroke();
+  context.fillStyle = "#009E73";
+  table.data.forEach(function (p) { context.beginPath(); context.arc(px(p[0]), py(p[1]), 9, 0, 2 * Math.PI); context.fill(); });
+  canvas.addEventListener("mousemove", function (event) {
+    var box = canvas.getBoundingClientRect(), mx = (event.clientX - box.left) * 1600 / box.width, best = null;
+    table.data.forEach(function (p) { if (best === null || Math.abs(px(p[0]) - mx) < Math.abs(px(best[0]) - mx)) best = p; });
+    document.getElementById("readout").textContent = best ? "x " + best[0] + ", y " + best[1] : "";
+  });
+</script>
+</body>
+</html>`;
+}
+
+/**
+ * The downloadable `plot.html` (`agents/anyplot/render/page.py`, `wrap_page`): no script of its own, the
+ * page's policy plus `frame-src 'none'`, and the page in a single-quoted `srcdoc` of a frame sandboxed to
+ * `allow-scripts`, scaled down in steps by media queries until it fits the window.
+ */
+function wrapPage(page, theme, title) {
+  const [width, height] = [1600, 900];
+  const rules = [
+    `.frame { width: ${width}px; height: ${height}px; }`,
+    `iframe { width: ${width}px; height: ${height}px; transform-origin: 0 0; }`,
+  ];
+  PAGE_SCALES.slice(1).forEach((scale, index) => {
+    const larger = PAGE_SCALES[index];
+    rules.push(
+      `@media (max-width: ${Math.round(width * larger) + 31}px), (max-height: ${Math.round(height * larger) + 31}px) { ` +
+        `.frame { width: ${Math.round(width * scale)}px; height: ${Math.round(height * scale)}px; } ` +
+        `iframe { transform: scale(${scale}); } }`
+    );
+  });
+  const escaped = page.replace(/&/g, '&amp;').replace(/'/g, '&#39;');
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="Content-Security-Policy" content="${PAGE_POLICY}; frame-src 'none'" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>${title}</title>
+<style>
+  html, body { margin: 0; padding: 0; background: ${PAGE_BACKGROUNDS[theme]}; }
+  .frame { margin: 16px auto; overflow: hidden; }
+  iframe { display: block; border: 0; }
+  ${rules.join('\n  ')}
+</style>
+</head>
+<body>
+<div class="frame"><iframe sandbox="allow-scripts" title="${title}" srcdoc='${escaped}'></iframe></div>
+</body>
+</html>
+`;
+}
+
+/** The headers both download routes set on `plot.html` (`agents/main.py` and the BFF, `PAGE_HEADERS`). */
+const PAGE_HEADERS = {
+  'Content-Disposition': 'attachment; filename="plot.html"',
+  'Content-Security-Policy': 'sandbox',
+  'X-Content-Type-Options': 'nosniff',
+  'Cache-Control': 'private, no-store',
+  'Referrer-Policy': 'no-referrer',
+};
+
+/** A version's artifacts in the service's order: the rendered PNGs, the code, a JavaScript plot's page, the data. */
+function artifactNames(version) {
+  const pngs = ['light', 'dark'].filter(t => version.pngs[t]).map(t => `plot-${t}.png`);
+  return isJs(version.library)
+    ? [...pngs, 'plot.js', 'plot.html', 'data.csv']
+    : [...pngs, 'plot.py', 'data.csv'];
+}
+
 // ---------------------------------------------------------------- sessions
 
 const sessions = new Map();
@@ -777,7 +986,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // ---------------------------------------------------------------- the chat turn
 
-async function streamTurn(req, res, session, body, ref) {
+async function streamTurn(req, res, session, body, ref, siteTheme = null) {
   const text = typeof body.text === 'string' ? body.text : '';
   const lower = text.toLowerCase();
   let closed = false;
@@ -978,12 +1187,22 @@ async function streamTurn(req, res, session, body, ref) {
         if (session.cancelled && !closed) await sleep(STOP_MS);
       }
       if (stopped()) return;
-      const previous = session.versions[session.versions.length - 1];
-      const theme = lower.includes('dark') ? 'dark' : refine && previous ? previous.theme : 'light';
+      // The service's `pipeline.run_theme`: a theme asked for (the word "dark" or "light" in the text), the
+      // asked theme of the version a refinement changes, the site theme of the turn, else the version it
+      // changes or light.
+      // The version a refinement changes is this library's latest, as `latest_rendered(library=)` picks it.
+      const previous = refine
+        ? session.versions.findLast(item => item.library === session.library)
+        : undefined;
+      let askedTheme = previous?.themeAsked ? previous.theme : null;
+      if (/\blight\b/.test(lower)) askedTheme = 'light';
+      else if (/\bdark\b/.test(lower)) askedTheme = 'dark';
+      const theme = askedTheme ?? siteTheme ?? previous?.theme ?? 'light';
       const version = {
         number: session.versions.length + 1,
         library: session.library,
         theme,
+        themeAsked: askedTheme !== null,
         dataset: session.dataset,
         bindings: session.bindings,
         // The session language the version's text was written in, as the service keeps it.
@@ -999,7 +1218,7 @@ async function streamTurn(req, res, session, body, ref) {
         status: refine ? 'needs_attention' : 'ok',
         reason: null,
         attempts: refine ? 2 : 1,
-        artifacts: [`plot-${theme}.png`, 'plot.py', 'data.csv'],
+        artifacts: artifactNames(version),
         changes: refine
           ? ['Applied your change request', 'Marker size raised from 110 to 160']
           : [`x now reads ${x}, y reads ${y}`, 'Axis labels name your columns'],
@@ -1496,6 +1715,13 @@ function summarizeData(session) {
 const LIBRARY_META = {
   matplotlib: { id: 'matplotlib', name: 'matplotlib', language: 'python' },
   seaborn: { id: 'seaborn', name: 'seaborn', language: 'python' },
+  // A JavaScript library only when `AGENT_LIBRARIES` enables it, so the default catalogue stays as it was.
+  ...Object.fromEntries(
+    AGENT_LIBRARIES.filter(isJs).map(id => [
+      id,
+      { id, name: JS_LIBRARIES[id], language: 'javascript' },
+    ])
+  ),
 };
 
 function implementation(specId, library) {
@@ -1503,13 +1729,15 @@ function implementation(specId, library) {
   return {
     library_id: library,
     library_name: library,
-    language: 'python',
+    language: isJs(library) ? 'javascript' : 'python',
     preview_url: `${base}/plot-light.png`,
     preview_url_light: `${base}/plot-light.png`,
     preview_url_dark: `${base}/plot-dark.png`,
     quality_score: 92,
-    code: `# ${specId} (${library}) — catalogue code served by the mock\nimport matplotlib.pyplot as plt\n`,
-    library_version: '3.10.0',
+    code: isJs(library)
+      ? `// ${specId} (${library}) — catalogue code served by the mock\nconst t = window.ANYPLOT_TOKENS;\n`
+      : `# ${specId} (${library}) — catalogue code served by the mock\nimport matplotlib.pyplot as plt\n`,
+    library_version: isJs(library) ? '4.5.1' : '3.10.0',
   };
 }
 
@@ -1526,6 +1754,12 @@ async function route(req, res) {
 
   // Catalogue routes the layout and the plot page call.
   if (method === 'GET' && path === '/health') return json(res, 200, { status: 'ok' });
+  if (method === 'GET' && path === '/preview/relay') {
+    if (!RELAY) return fail(res, 503, 'relay_unavailable');
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', ...RELAY.headers });
+    res.end(RELAY.html);
+    return;
+  }
   if (method === 'GET' && path === '/specs')
     return json(
       res,
@@ -1535,7 +1769,12 @@ async function route(req, res) {
   if (method === 'GET' && path === '/libraries')
     return json(res, 200, { libraries: Object.values(LIBRARY_META) });
   if (method === 'GET' && path === '/languages')
-    return json(res, 200, { languages: [{ id: 'python', name: 'Python' }] });
+    return json(res, 200, {
+      languages: [
+        { id: 'python', name: 'Python' },
+        ...(AGENT_LIBRARIES.some(isJs) ? [{ id: 'javascript', name: 'JavaScript' }] : []),
+      ],
+    });
   if (method === 'GET' && path === '/stats')
     return json(res, 200, { specs: 2, plots: 4, libraries: 2 });
   const specMatch = path.match(/^\/specs\/([a-z0-9-]+)$/);
@@ -1646,6 +1885,8 @@ async function route(req, res) {
       // The session language: English by default, whatever the browser's locale.
       language: 'en',
       languageSource: 'default',
+      // Opened by the admin's `.plot_all()` (`source: fanout`): the only kind of session a copy may go into.
+      fanout: body.source === 'fanout',
       active: false,
       cancelled: false,
     });
@@ -1766,6 +2007,45 @@ async function route(req, res) {
       ref
     );
   }
+  if (method === 'POST' && rest === '/dataset/copy') {
+    // The admin fan-out's copy (`agents/main.py` `copy_dataset`): the source session's confirmed version, as it is.
+    if (NO_COPY) return fail(res, 404, 'not_found', ref);
+    const keys = body && typeof body === 'object' ? Object.keys(body) : [];
+    const from = body?.from_session;
+    if (keys.length !== 1 || typeof from !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(from))
+      return fail(res, 422, 'invalid', ref);
+    if (from === sid) return fail(res, 422, 'invalid', ref);
+    const origin = sessions.get(from);
+    if (!origin) return fail(res, 404, 'session_expired', ref);
+    if (session.active || origin.active) return fail(res, 409, 'run_active', ref);
+    if (!session.fanout || origin.specId !== session.specId) return fail(res, 422, 'invalid', ref);
+    if (session.dataset) return fail(res, 409, 'has_dataset', ref);
+    if (!origin.dataset) return fail(res, 422, 'no_dataset', ref);
+    if (!origin.confirmed) return fail(res, 422, 'unconfirmed', ref);
+    session.dataset = structuredClone(origin.dataset);
+    session.bindings = origin.bindings.map(binding => ({ ...binding }));
+    const checked = checkBindings(session, session.bindings);
+    session.complete = checked.complete;
+    session.confirmed = true; // the source's confirmation comes along
+    session.history = [];
+    session.version = 1;
+    session.language = origin.language;
+    session.languageSource = origin.languageSource;
+    return json(
+      res,
+      200,
+      {
+        ...datasetPayload(session),
+        roles: SPECS[session.specId].roles,
+        language: { language: session.language, source: session.languageSource },
+        confirmed: true,
+        complete: checked.complete,
+        missing_roles: checked.missing_roles,
+        copied_from: origin.version,
+      },
+      ref
+    );
+  }
   if (method === 'POST' && rest === '/dataset/undo') {
     if (session.active) return fail(res, 409, 'run_active', ref);
     const previous = session.history.pop();
@@ -1874,10 +2154,39 @@ async function route(req, res) {
     );
   }
   if (method === 'POST' && rest === '/messages') {
+    // The page's site theme rides in the query, as at the BFF; any other value is its `422`.
+    const siteTheme = url.searchParams.get('theme');
+    if (siteTheme !== null && siteTheme !== 'light' && siteTheme !== 'dark')
+      return fail(res, 422, 'invalid', ref);
     if (session.active) return fail(res, 409, 'run_active', ref);
     if (typeof body?.text === 'string' && body.text.length > 2000)
       return fail(res, 413, 'too_long', ref);
-    return streamTurn(req, res, session, body ?? {}, ref);
+    return streamTurn(req, res, session, body ?? {}, ref, siteTheme);
+  }
+  if (method === 'POST' && rest === '/outcome') {
+    // The content-free usage beacon (`telemetry.OutcomeAction`): checked like the BFF's body, answered 204.
+    const actions = [
+      'copied_code',
+      'copied_image',
+      'downloaded_png',
+      'downloaded_code',
+      'downloaded_page',
+      'opened_preview',
+      'downloaded_data',
+    ];
+    const valid =
+      body &&
+      [...actions, 'saved_session', 'feedback'].includes(body.action) &&
+      (body.version === undefined ||
+        (Number.isInteger(body.version) && body.version >= 0 && body.version <= 999)) &&
+      (body.action === 'feedback'
+        ? FEEDBACK_REACTIONS.includes(body.reaction)
+        : body.reaction === undefined) &&
+      Object.keys(body).every(key => ['action', 'version', 'reaction'].includes(key));
+    if (!valid) return fail(res, 422, 'invalid', ref);
+    res.writeHead(204, { 'X-Request-Id': ref });
+    res.end();
+    return;
   }
   if (method === 'POST' && rest === '/cancel') {
     session.cancelled = true;
@@ -1898,11 +2207,7 @@ async function route(req, res) {
       await sleep(1500);
       renderVersion(session, version, theme);
     }
-    const artifacts = ['light', 'dark']
-      .filter(t => version.pngs[t])
-      .map(t => `plot-${t}.png`)
-      .concat(['plot.py', 'data.csv']);
-    return json(res, 200, { status: 'ok', reason: null, artifacts }, ref);
+    return json(res, 200, { status: 'ok', reason: null, artifacts: artifactNames(version) }, ref);
   }
   const artifactMatch = rest.match(/^\/artifacts\/([a-z.-]+)$/);
   if (method === 'GET' && artifactMatch) {
@@ -1917,11 +2222,37 @@ async function route(req, res) {
       'X-Content-Type-Options': 'nosniff',
       'X-Request-Id': ref,
     };
-    if (name === 'plot.py') {
+    const js = isJs(version.library);
+    if (name === 'plot.py' && !js) {
       res.writeHead(200, { ...headers, 'Content-Type': 'text/x-python; charset=utf-8' });
       res.end(plotPy(session, version));
       return;
     }
+    if (name === 'plot.js' && js) {
+      res.writeHead(200, { ...headers, 'Content-Type': 'text/javascript; charset=utf-8' });
+      res.end(plotJs(session, version));
+      return;
+    }
+    if (name === 'plot.html') {
+      // Built on demand in the theme asked for, like the agents service; the session's turn and the build
+      // exclude each other there (`409 run_active`).
+      if (!js) return fail(res, 404, 'not_found', ref);
+      if (session.active) return fail(res, 409, 'run_active', ref);
+      const asked = url.searchParams.get('theme');
+      if (asked !== null && asked !== 'light' && asked !== 'dark')
+        return fail(res, 422, 'invalid', ref);
+      const theme = asked ?? version.theme;
+      await sleep(PAGE_MS);
+      const title = `${session.specId} · ${version.library} · v${version.number} · anyplot.ai`;
+      res.writeHead(200, {
+        ...PAGE_HEADERS,
+        'Content-Type': 'text/html; charset=utf-8',
+        'X-Request-Id': ref,
+      });
+      res.end(wrapPage(chartPage(version, theme), theme, title));
+      return;
+    }
+    if (name === 'plot.py' || name === 'plot.js') return fail(res, 404, 'not_found', ref);
     if (name === 'data.csv') {
       res.writeHead(200, { ...headers, 'Content-Type': 'text/csv; charset=utf-8' });
       res.end(csvText(version));
@@ -2041,7 +2372,8 @@ function sessionBundle(session, versions, includeData) {
     snapshot: { spec_id: session.specId, library_version: '3.10.0' },
     transcript: session.transcript,
     versions: versions.map(version => {
-      const code = plotPy(session, version);
+      const js = isJs(version.library);
+      const code = js ? plotJs(session, version) : plotPy(session, version);
       return {
         number: version.number,
         language: version.language,
@@ -2049,6 +2381,7 @@ function sessionBundle(session, versions, includeData) {
         working: code,
         run_form: code,
         plot_py: code,
+        ...(js ? { code_artifact: 'plot.js' } : {}),
         plan: null,
         result: version.result,
         theme: version.theme,

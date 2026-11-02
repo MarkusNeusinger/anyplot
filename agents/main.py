@@ -10,7 +10,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 |---|---|---|---|
 | `GET /v1/status` | | `{libraries, model, location, version, provider, waiting, in_flight, user_max_runs}` (`user_max_runs`: `AGENT_USER_MAX_RUNS`) | |
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
-| `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot}` | `{session_id, eligibility}` | `422 not_eligible` |
+| `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot, source?}` (`source`: `fanout` for a session the admin's "plot in all libraries" opens; its telemetry lines carry that source) | `{session_id, eligibility}` | `422 not_eligible` |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
 | `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn, a theme toggle or another paste in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the daily token budgets for `daily_limit`), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
 | `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings, dropped}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), every value with the precision it came with, the sheet read and at most 10 visible ones with cells (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`, `utc_timestamps`, `renamed_columns`), `dropped` the names of the columns left out; nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex` (also a reader that died without its `status.json`), `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the daily token budgets), `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, one without `/convert`, or a sandbox without the harness's required exec filter) |
@@ -19,11 +19,12 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/dataset/confirm` | | `{confirmed, rows, columns}`: step 1 of two, the user confirmed the dataset with its bindings; the pipeline runs only then | `409 run_active`, `422 no_dataset` |
 | `POST /v1/sessions/{sid}/dataset/undo` | | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version}`: the dataset version before the root's last `prepare_data` or `generate_data` is the current one again, its bindings carried over (`dataset_versions.py`); unconfirmed, like any version the user has not confirmed | `409 run_active`, `422 nothing_to_undo` |
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
-| `POST /v1/sessions/{sid}/messages` | `{text}` or `{action}` (`create_plot`, `summarize_data`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data | `413 too_long`, `409 run_active` |
+| `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (version 1) plus `confirmed: true`, `complete`, `missing_roles` and `copied_from` (the source's version number): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`), `503 capacity` |
+| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, `summarize_data`); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
-| `GET /v1/sessions/{sid}/artifacts/{name}?v=` | | the file | `404` |
+| `GET /v1/sessions/{sid}/artifacts/{name}?v=&theme=` | | the file; `plot.html` (a JavaScript version only) is the self-contained interactive page in `theme` (default: the version's), built on demand and answered as an attachment | `404`; for `plot.html` also `409 run_active`, `503 capacity`, `503 page_unavailable` (a renderer without `POST /page`), `500 page_failed` |
 | `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle: every version, or the one numbered `version`, or with `version=0` the conversation alone (no version; `data_csv`, the current data, with `include_data`); with `AGENT_KEEP_REFUSALS` also `refusals`, the session's refused messages `[{verdict, lang, text, at}]` | `404` |
 | `DELETE /v1/sessions/{sid}` | | `204` | |
 
@@ -108,7 +109,6 @@ import asyncio
 import base64
 import binascii
 import contextlib
-import hashlib
 import importlib.metadata
 import json
 import logging
@@ -118,7 +118,7 @@ import secrets
 import sys
 import time
 from collections.abc import AsyncIterator, Callable
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from typing import Annotated, Any, Literal, TextIO, get_args
 
 from fastapi import Body, Depends, FastAPI, Header, Path, Query, Request
@@ -187,6 +187,7 @@ from agents.anyplot.opening import (
     source_name,
     store_dataset,
 )
+from agents.anyplot.page_export import NoPage, page_download
 from agents.anyplot.plugins.ledger import (
     ATTRIBUTION_LOGGER,
     CURRENT_LEDGER,
@@ -194,10 +195,11 @@ from agents.anyplot.plugins.ledger import (
     attribution,
     budget_allows,
     judge_budget_tokens,
+    session_hash,
 )
 from agents.anyplot.plugins.scope_guard import LOCKED_OUT, SESSION_CLOSED, scope_refusals
 from agents.anyplot.policy import fence, file_name_block, refusal, scope_rubric, transcribe_rubric, user_notes_block
-from agents.anyplot.render.contract import ConvertJob, RendererUnavailable
+from agents.anyplot.render.contract import ConvertJob, PageFailed, PageUnsupported, RendererUnavailable
 from agents.anyplot.render.serial import RenderBusy
 from agents.anyplot.render.store import RenderStoreFull
 from agents.anyplot.render.watermark import add_footer
@@ -211,18 +213,34 @@ from agents.anyplot.run_queue import (
     RunQueue,
     Ticket,
 )
-from agents.anyplot.schemas import CODE_ARTIFACTS, MAX_COLUMNS, MAX_MESSAGE_CHARS, Binding, DatasetProfile, Theme
-from agents.anyplot.services import Services, get_services
+from agents.anyplot.schemas import (
+    CODE_ARTIFACTS,
+    MAX_COLUMNS,
+    MAX_MESSAGE_CHARS,
+    PAGE_ARTIFACT,
+    Binding,
+    DatasetProfile,
+    Theme,
+)
+from agents.anyplot.services import CodeVersion, Services, get_services
 from agents.anyplot.session_state import (
     BINDINGS,
     CONFIRMED,
+    DATASET_COPIED_FROM,
+    DATASET_HISTORY,
+    DATASET_ID,
+    DATASET_VERSION,
     PENDING_BINDINGS,
+    PENDING_CLEARED,
+    PLOT_LANGUAGE,
+    TELEMETRY_SOURCE,
     CatalogueSnapshot,
     SessionView,
     apply_bindings,
     confirm_delta,
     confirmation_fingerprint,
     language_delta,
+    plot_language,
     read_session,
 )
 from agents.anyplot.settings import AgentSettings, get_settings
@@ -236,7 +254,7 @@ from agents.renderer.wire import (
     MAX_SHEET_NAME_CHARS,
 )
 from agents.stream import MAX_DONE_ROLES, Translator
-from core.constants import SUPPORTED_LIBRARIES
+from core.constants import MAX_AGENT_VERSION, SUPPORTED_LIBRARIES
 from core.spec_roles import MAP_SPECS, DataRole
 
 
@@ -267,10 +285,22 @@ ARTIFACT_TYPES: dict[str, str] = {
     "plot.jl": "text/plain; charset=utf-8",
     "plot.js": "text/javascript; charset=utf-8",
     "plot.tsx": "text/plain; charset=utf-8",
+    "plot.html": "text/html; charset=utf-8",
     "data.csv": "text/csv; charset=utf-8",
 }
 """Every artifact name a version can have (`schemas.ArtifactName`) with its media type; a version serves its
-exported code under its runtime's name only (`CodeVersion.code_artifact`), the other code names are `404`."""
+exported code under its runtime's name only (`CodeVersion.code_artifact`), the other code names are `404`, and
+`plot.html` only for a JavaScript version."""
+PAGE_HEADERS: dict[str, str] = {
+    "Content-Disposition": 'attachment; filename="plot.html"',
+    "Content-Security-Policy": "sandbox",
+    "X-Content-Type-Options": "nosniff",
+    "Cache-Control": "private, no-store",
+    "Referrer-Policy": "no-referrer",
+}
+"""The headers of `plot.html`, which the BFF sets the same (`api/routers/agent.py`, pinned by a test): a download,
+never a page of this origin. A browser that renders it anyway gives it an opaque origin without scripts; the file
+opened from disk carries its own policy and frame (`render/page.py`)."""
 _USER = re.compile(USER_PATTERN)
 _NO_STORE = {"Cache-Control": "private, no-store"}
 OPERATIONS = TypeAdapter(list[Operation])
@@ -725,6 +755,9 @@ class CreateSessionBody(_Body):
     library: str
     locale: str = Field(max_length=16, pattern=LOCALE_PATTERN)
     snapshot: CatalogueSnapshot
+    source: Literal["fanout"] | None = None
+    """`fanout`: the admin's "plot in all libraries" opened the session, and every usage-telemetry line of it carries
+    that source instead of `live` (`session_state.TELEMETRY_SOURCE`). A closed set: any other value is `422`."""
 
 
 class SwitchLibraryBody(_Body):
@@ -752,6 +785,12 @@ class DatasetBody(_Body):
     table: int | None = Field(default=None, strict=True, ge=1, le=MAX_TABLES)
     """Which table to read when the text holds several (the page's table picker, from the previous answer's
     `tables`, 1-based); None reads the first. A number past the tables found is `422 unparseable`."""
+
+
+class CopyDatasetBody(_Body):
+    """The admin fan-out's copy: the session whose confirmed data the fan-out session in the path takes."""
+
+    from_session: str = Field(pattern=SESSION_PATTERN)
 
 
 class ConvertBody(_Body):
@@ -785,11 +824,12 @@ def _library(library: str, settings: AgentSettings) -> str:
 
 
 def _stamp(ledger: RequestLedger, view: SessionView | None, session: Session) -> RequestLedger:
-    """The ledger with the session's spec, library and user turns so far: the usage telemetry's envelope
-    (`telemetry.py`), set once per request from session state, never per call site."""
+    """The ledger with the session's spec, library, user turns so far and whether the fan-out opened it: the usage
+    telemetry's envelope (`telemetry.py`), set once per request from session state, never per call site."""
     if view is not None:
         ledger.spec_id, ledger.library = view.spec_id, view.library
     ledger.turn = telemetry.user_turns(session.events)
+    ledger.fanout = session.state.get(TELEMETRY_SOURCE) == "fanout"
     return ledger
 
 
@@ -862,6 +902,8 @@ async def create_session(body: CreateSessionBody, user: User, runtime: RuntimeDe
         eligibility=result,
     )
     state.update(_fixture_seed(body.spec_id, library, session_id, body.snapshot, settings))
+    if body.source is not None:
+        state[TELEMETRY_SOURCE] = body.source
     await runtime.session_service.create_session(app_name=APP_NAME, user_id=user, state=state, session_id=session_id)
     return JSONResponse({"session_id": session_id, "eligibility": result.public()}, headers=_NO_STORE)
 
@@ -900,7 +942,8 @@ def _active(runtime: Runtime, sid: str, *, paste: bool = True) -> None:
     from it, so a version stored meanwhile in the same session (a data route, a turn's `prepare_data`) would be
     dropped silently. Every guard is keyed by the session id, so it holds whoever sends the request, also two tabs
     that share one session id; the page opens a session per window and keeps its id in memory only, so its tabs
-    never share one. Sessions never share data: the stores are keyed by session id, and no state is user-scoped.
+    never share one. Sessions never share data: the stores are keyed by session id, and no state is user-scoped; the
+    one copy between sessions is the admin fan-out's (`/dataset/copy`), between two sessions of the same user only.
     The language chip passes `paste=False`: the paste reads the session again before it writes the language, so a
     choice that lands while the judges run is kept.
     """
@@ -1545,9 +1588,9 @@ async def put_bindings(
 
 @app.put("/v1/sessions/{sid}/language", dependencies=v1_dependencies)
 async def put_language(sid: SessionId, body: LanguageBody, user: User, runtime: RuntimeDep) -> JSONResponse:
-    """The user's choice (the chat header's chip): the session language with the source `chosen`.
+    """The user's choice (the chat header's chip): the session language with the source `chosen`, and the plot's.
 
-    Detection never writes over a choice, and the root's `set_language` tool makes the
+    Detection never writes over a choice, and the root's `set_language` tool with `applies_to` `both` makes the
     same change. The next reply and the next plot version use it; earlier versions keep
     their text. The pattern runs before `normalise` (a leading space is a `422`), and the
     answer carries the stored form, which the page shows: `English` comes back as `en`,
@@ -1562,7 +1605,7 @@ async def put_language(sid: SessionId, body: LanguageBody, user: User, runtime: 
     value = normalise(body.language)
     if not is_valid(value):
         raise AgentsError(422, "invalid")
-    await runtime.write_state(session, language_delta(value, "chosen"))
+    await runtime.write_state(session, {**language_delta(value, "chosen"), PLOT_LANGUAGE: value})
     answer: dict[str, Any] = {"language": value, "source": "chosen"}
     view = read_session(session.state)
     stored = get_services().datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
@@ -1679,6 +1722,117 @@ async def dataset_to_long(sid: SessionId, user: User, runtime: RuntimeDep) -> JS
     )
 
 
+@app.post("/v1/sessions/{sid}/dataset/copy", dependencies=v1_dependencies)
+async def copy_dataset(
+    sid: SessionId, body: CopyDatasetBody, user: User, runtime: RuntimeDep, rid: RequestId
+) -> JSONResponse:
+    """The admin fan-out's copy: the confirmed current data version of `from_session` becomes this session's data.
+
+    Owner decision of 2026-11-01: `.plot_all()` plots exactly the data the user confirmed, whether it was pasted,
+    opened, computed or changed by the assistant, so the server copies that version instead of the page posting
+    the paste again. Both sessions must be the caller's: each one is looked up under the caller's user id, so
+    another user's session id is `404 session_expired` as on every route, and no data ever crosses users. The
+    target must be a fan-out session (`source: fanout` at its opening) of the same spec without data
+    (`409 has_dataset`); the source another session with data (`422 no_dataset`) that the user confirmed with its
+    current bindings (`422 unconfirmed`). `422 invalid` for the same session twice, a target that is no fan-out
+    session, another spec, or bindings the target's roles refuse. Neither session may have a turn, a theme render
+    or a paste in flight (`409 run_active`), since the source's data would be about to change.
+
+    The copy is the stored version as it is (`DatasetStore.copy`): the same canonical CSV, dtypes, column order,
+    notes, file name, source and code, nothing parsed or judged again, so it costs no model call and counts as no
+    paste; its own counter (`COPIES_PER_MINUTE`, `_PER_DAY`) bounds what one user puts in the store. The bindings,
+    their confirmation, the session language and the plot language come along. The copy is the target's version 1
+    with no undo history, and `DATASET_COPIED_FROM` records the source's version number. The answer is the paste route's
+    dataset shape plus `confirmed`, `complete`, `missing_roles` and `copied_from`. The `dataset_copy` attribution
+    line carries the counts, the version number and the source session's salted hash, never data; a copy writes
+    no `data_input` telemetry line, because no input reached the dataset route.
+    """
+    services = get_services()
+    if body.from_session == sid:
+        raise AgentsError(422, "invalid")
+    session = await runtime.session(user, sid)
+    source = await runtime.session(user, body.from_session)  # another user's session is not found either
+    _active(runtime, sid)
+    _active(runtime, body.from_session)
+    view = read_session(session.state)
+    origin = read_session(source.state)
+    if view is None or origin is None:
+        raise AgentsError(404, "session_expired")
+    if session.state.get(TELEMETRY_SOURCE) != "fanout" or origin.spec_id != view.spec_id:
+        raise AgentsError(422, "invalid")
+    if view.dataset_id:
+        raise AgentsError(409, "has_dataset")
+    stored = services.datasets.get(origin.dataset_id, body.from_session) if origin.dataset_id else None
+    if stored is None:
+        raise AgentsError(422, "no_dataset")
+    if not origin.data_confirmed:
+        raise AgentsError(422, "unconfirmed")
+    roles = view.snapshot.roles()
+    check = check_bindings(origin.bindings, roles, stored.profile)
+    if check.errors:
+        raise AgentsError(422, "invalid")
+    ledger = _stamp(RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action"), view, session)
+    limit = services.usage.copy_limit(user)
+    if limit is not None:
+        attribution("dataset_copy", ledger, outcome=limit)
+        raise AgentsError(429, limit)
+    try:
+        dataset_id = services.datasets.copy(stored.dataset_id, body.from_session, sid)
+    except StoreFull:
+        attribution("dataset_copy", ledger, outcome="capacity")
+        raise AgentsError(503, "capacity") from None
+    copied = services.datasets.get(dataset_id, sid) if dataset_id else None
+    if copied is None:  # read above with no `await` in between: only a store emptied behind the state
+        raise AgentsError(422, "no_dataset")
+    services.usage.add_copy(user)
+    bindings = origin.bindings
+    # The page's plot language, which can differ from its reply language: its user's choice for the plot, else the
+    # language its latest plot shows. Without either the page's plot would follow its session language, which the
+    # copy carries anyway, so no choice is made up for the target.
+    origin_latest = services.versions.latest_language(body.from_session)
+    shown: dict[str, Any] = {}
+    if origin.plot_language_choice is not None or origin_latest is not None:
+        shown[PLOT_LANGUAGE] = plot_language(origin, origin_latest)
+    # From the reads above to this write nothing suspends (see `_ingest_paste`): the source's state cannot change
+    # between the confirmation check and the copy.
+    await runtime.write_state(
+        session,
+        {
+            DATASET_ID: copied.dataset_id,
+            BINDINGS: [binding.model_dump() for binding in bindings],
+            DATASET_HISTORY: [],
+            DATASET_VERSION: 1,
+            DATASET_COPIED_FROM: origin.dataset_version,
+            CONFIRMED: confirmation_fingerprint(copied.dataset_id, bindings),
+            **language_delta(origin.language, origin.language_source),
+            **shown,
+            **PENDING_CLEARED,
+        },
+    )
+    attribution(
+        "dataset_copy",
+        ledger,
+        outcome="ok",
+        rows=copied.profile.rows,
+        columns=len(copied.profile.columns),
+        version=origin.dataset_version,
+        from_session=session_hash(body.from_session),
+    )
+    return JSONResponse(
+        {
+            **dataset_payload(copied, bindings, 1),
+            "roles": _page_roles(roles),
+            "suggestion": _suggestion(view, copied.profile, origin.language),
+            "language": {"language": origin.language, "source": origin.language_source},
+            "confirmed": True,
+            "complete": check.complete,
+            "missing_roles": check.missing_roles,
+            "copied_from": origin.dataset_version,
+        },
+        headers=_NO_STORE,
+    )
+
+
 def _suggestion(view: SessionView, profile: DatasetProfile, language: str | None = None) -> dict[str, Any] | None:
     """The wide-table suggestion for a dataset answer (`data/shape.py`), or None.
 
@@ -1741,11 +1895,29 @@ async def _session_sync(
 @dataclass(frozen=True)
 class TurnFacts:
     """What the `chat_turn` telemetry line needs from the route besides the ledger: the action, the session
-    language's source before the turn, and the turn's stopwatch."""
+    language and its source (read before the turn, and again after its run, `_after_turn`), and the turn's
+    stopwatch."""
 
     action: Action | None
     language_source: str | None
+    language: str | None = None
     clock: telemetry.Clock = field(default_factory=telemetry.Clock)
+
+
+async def _after_turn(runtime: Runtime, user: str, sid: str, facts: TurnFacts) -> TurnFacts:
+    """`facts` with the session language and its source as the turn left them.
+
+    The scope guard's detection and the root's `set_language` set them inside the run (`_produce`), so the turn
+    that detects or switches the language records the new value, not the one it started with. The values from
+    before the turn stay when the session is gone.
+    """
+    try:
+        view = read_session((await runtime.session(user, sid)).state)
+    except Exception:  # expired or purged while the turn ran: the line keeps what the turn started with
+        return facts
+    if view is None:
+        return facts
+    return replace(facts, language=view.language, language_source=view.language_source)
 
 
 def _telemetry_turn(ledger: RequestLedger, facts: TurnFacts, failure: str | None = None) -> None:
@@ -1769,6 +1941,7 @@ def _telemetry_turn(ledger: RequestLedger, facts: TurnFacts, failure: str | None
         error=telemetry.closed(error, get_args(telemetry.ErrorCode)),
         reply_reasked=ledger.reply_reasked,
         language_source=telemetry.closed(facts.language_source, get_args(telemetry.LanguageSource), "default"),
+        plot_language=telemetry.plot_language(facts.language),
         llm_calls=ledger.llm_calls,
         steps=telemetry.step_tokens(
             ledger.steps, steps=("root", "adapter", "reviewer", "judge"), judge_model=get_settings().judge_model
@@ -1837,8 +2010,12 @@ def _error_code(exc: BaseException) -> str:
 
 @app.post("/v1/sessions/{sid}/messages", dependencies=v1_dependencies)
 async def post_message(
-    sid: SessionId, body: MessageBody, user: User, runtime: RuntimeDep, rid: RequestId
+    sid: SessionId, body: MessageBody, user: User, runtime: RuntimeDep, rid: RequestId, theme: Theme | None = None
 ) -> StreamingResponse:
+    """One chat turn as SSE. `theme` is the site theme the page shows, the theme a plot run of the turn renders
+    unless the user asked for one (`pipeline.run_theme`). A query parameter, not a body field: the strict bodies of
+    this service and the BFF would refuse it from a page deployed before them, while an unknown parameter is ignored.
+    """
     if body.text is not None and len(body.text) > MAX_MESSAGE_CHARS:
         raise AgentsError(413, "too_long")
     session = await runtime.session(user, sid)
@@ -1854,10 +2031,15 @@ async def post_message(
         # The refusals sent before the judge (the budget, unsupported content) follow the
         # session language, never the browser's locale; after the judge, the message's.
         lang=refusal_lang(view.language) if view else DEFAULT_LANGUAGE,
+        site_theme=theme,
     )
     _stamp(ledger, view, session)
     ledger.turn += 1  # this turn's number: the user turns before it, plus one
-    facts = TurnFacts(action=body.action, language_source=view.language_source if view else None)
+    facts = TurnFacts(
+        action=body.action,
+        language_source=view.language_source if view else None,
+        language=view.language if view else None,
+    )
     translator = Translator(ledger, run_id=secrets.token_hex(8), spec_id=view.spec_id if view else None)
     # The fixed refusals sent before the scope judge, so none of these turns costs a model call.
     # A closed session answers `session_closed` first: its third `attack` refusal also reaches the strike lockout,
@@ -1948,7 +2130,10 @@ async def post_message(
             CURRENT_LEDGER.reset(token)
             if closed_early:
                 # The client went: the turn's line still books what it spent, once, after the producer stopped.
-                _telemetry_turn(ledger, facts, "cancelled")
+                after = facts
+                with contextlib.suppress(BaseException):  # the original exit goes on after the line
+                    after = await _after_turn(runtime, user, sid, facts)
+                _telemetry_turn(ledger, after, "cancelled")
         try:
             if ledger.error is not None:
                 failure = ledger.error
@@ -1956,7 +2141,7 @@ async def post_message(
                 failure = "deadline"
             attribution("run", ledger, model_versions=sorted(ledger.model_versions), kind=ledger.kind)
             # Written before anything else is yielded: a client that goes during the error event loses no line.
-            _telemetry_turn(ledger, facts, failure)
+            _telemetry_turn(ledger, await _after_turn(runtime, user, sid, facts), failure)
             if failure is not None:
                 for chunk in translator.error(failure):
                     yield chunk
@@ -1991,7 +2176,11 @@ class RenderThemeBody(_Body):
 
 @app.post("/v1/sessions/{sid}/versions/{version}/render", dependencies=v1_dependencies)
 async def render_version_theme(
-    sid: SessionId, version: Annotated[int, Path(ge=0, le=999)], body: RenderThemeBody, user: User, runtime: RuntimeDep
+    sid: SessionId,
+    version: Annotated[int, Path(ge=0, le=MAX_AGENT_VERSION)],
+    body: RenderThemeBody,
+    user: User,
+    runtime: RuntimeDep,
 ) -> JSONResponse:
     """The theme toggle: render `theme` of a finished version from its stored run form, with no model call.
 
@@ -2040,9 +2229,18 @@ async def _served_png(services: Services, sid: str, render_id: str, theme: Theme
 
 @app.get("/v1/sessions/{sid}/artifacts/{name}", dependencies=v1_dependencies)
 async def artifact(
-    sid: SessionId, name: str, user: User, runtime: RuntimeDep, v: Annotated[int | None, Query(ge=0, le=999)] = None
+    sid: SessionId,
+    name: str,
+    user: User,
+    runtime: RuntimeDep,
+    v: Annotated[int | None, Query(ge=0, le=MAX_AGENT_VERSION)] = None,
+    theme: Theme | None = None,
 ) -> Response:
-    """One artifact of a version; the PNGs carry the footer strip (`AGENT_WATERMARK`), the code and data do not."""
+    """One artifact of a version; the PNGs carry the footer strip (`AGENT_WATERMARK`), the code and data do not.
+
+    `plot.html` (a JavaScript version only) is built on demand in `theme` (default: the version's own) and answered
+    as an attachment (`PAGE_HEADERS`); see `_page`. `theme` is read for it alone.
+    """
     media_type = ARTIFACT_TYPES.get(name)
     if media_type is None:
         raise AgentsError(404, "not_found")
@@ -2054,14 +2252,16 @@ async def artifact(
     version = services.versions.get(sid, v or None)
     if version is None:
         raise AgentsError(404, "not_found")
+    if name == PAGE_ARTIFACT:
+        return await _page(runtime, services, user, sid, version, theme or version.theme, view.spec_id)
     content: bytes | None
     if name in CODE_ARTIFACTS:
         content = version.export.encode("utf-8") if name == version.code_artifact else None
     elif name == "data.csv":
         content = version.data_csv.encode("utf-8")
     elif version.render_id:
-        theme: Theme = "light" if name == "plot-light.png" else "dark"
-        content = await _served_png(services, sid, version.render_id, theme, view.spec_id)
+        png_theme: Theme = "light" if name == "plot-light.png" else "dark"
+        content = await _served_png(services, sid, version.render_id, png_theme, view.spec_id)
     else:
         content = None
     if content is None:
@@ -2069,15 +2269,54 @@ async def artifact(
     return Response(content, media_type=media_type, headers={**_NO_STORE, "X-Content-Type-Options": "nosniff"})
 
 
+async def _page(
+    runtime: Runtime, services: Services, user: str, sid: str, version: CodeVersion, theme: Theme, spec_id: str
+) -> Response:
+    """A JavaScript version's `plot.html` in `theme`, built now (`page_export.page_download`), never stored.
+
+    Like the theme toggle it builds in the render slot's `toggle` lane and holds the session's
+    registry entry while it builds, so it and a turn, a paste or a toggle of the same session
+    refuse each other with `409 run_active`. `404 not_found` for a version without a page,
+    `503 capacity` when no slot came free in time, `503 page_unavailable` when the renderer
+    builds no pages (one deployed before `POST /page`, or none reachable), `500 page_failed`
+    when the build left none (its kind, class and line are logged, never its message).
+    """
+    if PAGE_ARTIFACT not in version.artifacts():
+        raise AgentsError(404, "not_found")
+    _active(runtime, sid)
+    build = ActiveRun(abort=asyncio.Event(), user=user, started=runtime.now())
+    runtime.active[sid] = build  # no await since the check above, so nothing slipped in between
+    try:
+        content = await page_download(services, get_settings(), version, theme, spec_id=spec_id)
+    except NoPage:
+        raise AgentsError(404, "not_found") from None
+    except RenderBusy:
+        raise AgentsError(503, "capacity") from None
+    except PageUnsupported, RendererUnavailable:
+        raise AgentsError(503, "page_unavailable") from None
+    except PageFailed:
+        raise AgentsError(500, "page_failed") from None
+    finally:
+        runtime.finish(sid, build)
+    return Response(content, media_type=ARTIFACT_TYPES[PAGE_ARTIFACT], headers=PAGE_HEADERS)
+
+
 def _prompt_hashes() -> dict[str, str]:
+    """The version stamp of every static instruction (`policy.prompt_hash`), for the feedback case's config.
+
+    Both reviewer modes have a key: `reviewer` is the checklist instruction, `reviewer_catalogue` the catalogue one
+    (the live mode). Before 2026-10-30 only `reviewer` was there, so a change of the catalogue rubric changed no
+    hash; adding the key shifted every case's combined `prompt_hash` once.
+    """
     from agents.anyplot import policy
 
     texts = {
         "root": policy.root_instruction(),
         "reviewer": policy.reviewer_instruction(),
+        "reviewer_catalogue": policy.catalogue_reviewer_instruction(),
         **{f"adapter_{library}": policy.adapter_instruction(library) for library in agent_module.ADAPTERS},
     }
-    return {name: hashlib.sha256(text.encode()).hexdigest()[:16] for name, text in texts.items()}
+    return {name: policy.prompt_hash(text) for name, text in texts.items()}
 
 
 @app.get("/v1/sessions/{sid}/bundle", dependencies=v1_dependencies)
@@ -2085,7 +2324,7 @@ async def bundle(
     sid: SessionId,
     user: User,
     runtime: RuntimeDep,
-    version: Annotated[int | None, Query(ge=0, le=999)] = None,
+    version: Annotated[int | None, Query(ge=0, le=MAX_AGENT_VERSION)] = None,
     include_data: bool = False,
 ) -> JSONResponse:
     """The feedback case: transcript, code versions, plans, results, profile, bindings, PNGs, config.
@@ -2093,7 +2332,8 @@ async def bundle(
     Without `version` every version; with a number above 0 that version only (`404 not_found`
     when the session lacks it); with `version=0` the conversation alone, the feedback on a chat
     that made no plot: no version, and with `include_data` the session's current `data.csv` as
-    the top-level `data_csv`.
+    the top-level `data_csv`. A fan-out session whose data is a copy names the source's data version
+    as `session.dataset_copied_from`.
     """
     session = await runtime.session(user, sid)
     services = get_services()
@@ -2170,6 +2410,10 @@ async def bundle(
             "prompt_hashes": _prompt_hashes(),
         },
     }
+    copied_from = session.state.get(DATASET_COPIED_FROM)
+    if isinstance(copied_from, int):
+        # A fan-out session's data is a copy of the page session's version of this number (`/dataset/copy`).
+        payload["session"]["dataset_copied_from"] = copied_from
     if version == 0 and include_data:
         # The chat's case has no version to carry the data: the session's current dataset, or none yet.
         payload["data_csv"] = dataset.csv if dataset else None
@@ -2183,7 +2427,7 @@ class OutcomeBody(_Body):
     """The page's outcome beacon: what the user did with a result, never what it held."""
 
     action: telemetry.OutcomeAction
-    version: int = Field(default=0, strict=True, ge=0, le=999)
+    version: int = Field(default=0, strict=True, ge=0, le=MAX_AGENT_VERSION)
     """The result version the action was on; 0 for a session-level action (`saved_session`, feedback on the chat)."""
     reaction: telemetry.Reaction | None = None
 

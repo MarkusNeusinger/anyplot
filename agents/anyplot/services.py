@@ -72,8 +72,11 @@ class CodeVersion:
     """The library the version was adapted for; a session can switch library."""
     theme: Theme = "light"
     """The theme the run rendered and the reviewer saw."""
+    theme_asked: bool = False
+    """The user asked for `theme` in the chat, for this version or for the one it changed, so a change of it keeps
+    the theme; otherwise a change follows the site theme of its turn (`pipeline.run_theme`)."""
     language: str = "en"
-    """The session language the version's plot text was written in."""
+    """The plot language the version's text was written in (`session_state.plot_language`)."""
     requests: list[str] = field(default_factory=list)
     """The change requests the version carries out, oldest first: its lineage's earlier ones and its own,
     within `MAX_USER_REQUESTS` and `MAX_USER_REQUESTS_CHARS`. A change of this version hands them to the
@@ -82,6 +85,9 @@ class CodeVersion:
     """Every theme rendered for the version, with its gate outcome; a rendered one has its PNG in the render."""
     code_artifact: CodeArtifact = DEFAULT_CODE_ARTIFACT
     """The name the exported code downloads under: the runtime's (`plot.py` for Python, `plot.R`, `plot.js`, ...)."""
+    data_json: str | None = None
+    """The version's table as typed JSON for a JavaScript plot (`RenderJob.data_json`), so the theme toggle renders the
+    other theme from the same job; None for every other language, whose code reads `data_csv`."""
 
     def artifacts(self) -> list[ArtifactName]:
         """The version's artifacts: the PNG of every rendered theme, the code under its language's name, `data.csv`."""
@@ -157,6 +163,12 @@ class VersionStore:
             if version.render_id is not None and (library is None or version.library == library):
                 return version
         return None
+
+    def latest_language(self, session_id: str) -> str | None:
+        """The language the session's latest rendered version is written in, of any library; None before the first
+        (`session_state.plot_language`)."""
+        latest = self.latest_rendered(session_id)
+        return latest.language if latest is not None else None
 
     def delete_session(self, session_id: str) -> None:
         self._versions.pop(session_id, None)

@@ -46,11 +46,18 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    line plot of spike X (a false G3); for a figure with polar axes, `polar` adds each
    one's radial-label angle, its visible theta span and a histogram of the plotted
    points by angle and radius (`polar_report`), from which the host computes the free direction for the
-   radial labels (`agents/anyplot/render/polar.py`);
+   radial labels (`agents/anyplot/render/polar.py`); a plot that draws without matplotlib gets a
+   probe of its drawn texts alone (`install_text_probes`): pygal's SVG as cairosvg receives it,
+   altair's scenegraph from vl-convert and lets-plot's SVG from its bridge, each read by the roles
+   the library's own classes name, and nothing else of the probe above; in exec mode, R's and
+   Julia's text probes (`text_probe.R`, `text_probe.jl`, which the renderer's rows load) leave
+   their drawn texts for the harness to turn into the same probe (`collect_text_probe`);
 5. compiles the plot file and runs it as `__main__` (`run_plot`, which `runpy.run_path`
    did before) under `PlotGuard`, an audit hook armed just before: from there on the
    interpreter refuses every `exec` but the plot's own run, the module bodies of an import
-   and `CODE_BUILDERS` (`namedtuple`, dataclasses, scipy's distributions, plotnine's
+   by the interpreter's own loaders (`ImportMachinery`; an import reads code only from the
+   install, and an extension module loads only from there: `IMPORT_CODE_READERS`, since
+   2026-10-31) and `CODE_BUILDERS` (`namedtuple`, dataclasses, scipy's distributions, plotnine's
    expression strings, and cssselect2's selector compiler, which pygal's PNG export runs for
    every CSS rule of the chart), a code object or
    function built by hand or a `__code__` assignment, every `open` that writes anything but
@@ -117,6 +124,34 @@ launcher reports every non-zero exit as its own SIGPIPE (-13) and so loses the c
 arms `PlotGuard` instead (step 5), which lets imports and reads through and refuses with
 `PermissionError`, so a plot that catches a refusal renders without what was refused.
 
+**Figure mode** (`harness.py --figure <package> plot.py -- <screenshot command...>`, the renderer's plotly and
+bokeh rows, PB-1 of step 4 in agentic/specs/261024-agent-all-libraries.md): two steps, because a plot-mode harness
+cannot start a browser once its guard is armed, and must not before. It prints the start line and sets the limits
+of both steps (CPU seconds, the largest file), then forks the plot step before anything is armed: the child sets
+the address-space and process limits, arms `PlotGuard` with the kernel filter first (`ANYPLOT_DENY_EXEC=required`
+holds here as in plot mode), runs the plot, which may write nothing but `plot-<theme>.json`, the figure as JSON
+(`fig.write_json` for plotly, `bokeh.embed.json_item` for bokeh), and ends with `os._exit`. The parent is never
+armed: once the child ended with exit code 0, it checks the figure (a regular file of at most `FIGURE_MAX_BYTES`)
+and starts the screenshot command, the JavaScript row's harness (`render.mjs --library=<package>`) with
+`--figure=plot-<theme>.json` appended, under the JavaScript row's limits and environment: the sandbox's without
+`FIGURE_PLOT_ONLY_ENV`, with `ANYPLOT_FIGURE_PACKAGE` naming the package's directory, whose own bundled JavaScript
+draws the figure, so the versions match. The plot step's failures end stderr with the final error line of the
+JavaScript harness (`figure_error_line`), the screenshot step's with the harness's own; the exit code is the failed
+step's, and the end line carries both steps' usage and the plot step's filter state (`main_figure`).
+
+**Security model.** `DataGuard` and `PlotGuard` are defense in depth, not the boundary: an audit hook shares the
+interpreter with the code it judges, so code that changes the interpreter's shared state in place (the harness's own
+objects, the import machinery's functions and module globals, the builtins) can change what the hook decides, and
+no audit event sees such a change. The tests name every route the guards close; the known limits of this layer are
+in the plan's PB-1 section (agentic/specs/261024-agent-all-libraries.md, step 4). The boundaries, in order: the
+validator (`agents/anyplot/code/validate.py`), which refuses the names those routes need (`sys`, `cffi`, every dunder
+name) before any code runs; the kernel's exec filter (`install_exec_deny`: seccomp, installed with
+`SECCOMP_FILTER_FLAG_TSYNC` on every thread and inherited by every child), which no code in the process can lift;
+the resource limits, soft and hard alike; and on Cloud Run the gVisor sandbox that `sandbox do` starts for each job
+(spikes S and S2): no egress (the metadata server, DNS and TCP all fail), none of the service's environment or
+tokens, a read-only root filesystem (the renderer passes no `--write`), no view of the sibling sandboxes, and a
+lifetime of one job.
+
 The probe feeds the advisory gates G3 (clipped text), G5 (annotation outside its
 axes), G7 (overlapping text: tick labels among themselves, any other text with any), G8 (more point marks than data rows), G9 (more
 plotted points than any dataset within the parser's caps can hold) and G10
@@ -141,6 +176,7 @@ import os
 import re
 import resource
 import shutil
+import stat
 import sys
 import traceback
 
@@ -240,6 +276,30 @@ EXEC_DENY_PREFLIGHT_ENV = "ANYPLOT_EXEC_DENY_PREFLIGHT"
 before its `main`, so no user code is read."""
 EXEC_DENY_PREFLIGHT_TIMEOUT_S = 30
 """The preflight ends in its library's constructor; a program that outlives this ignored the preload."""
+FIGURE_FLAG = "--figure"
+"""Figure mode (module docstring): `harness.py --figure <package> plot.py -- <screenshot command...>`."""
+FIGURE_PACKAGES = ("plotly", "bokeh")
+"""The packages whose figure the screenshot step draws with the package's own JavaScript (`render.mjs`, `BUNDLES`)."""
+FIGURE_FILE = "plot-{theme}.json"
+"""The one file the plot step may write: the figure as JSON, which the screenshot step reads (`--figure=<file>`)."""
+FIGURE_MAX_BYTES = 16 * 1024 * 1024
+"""The largest figure the screenshot step takes (`render.mjs` `FIGURE_MAX_BYTES`, pinned equal by a test): the wire's
+cap for a JavaScript job's typed table (`wire.MAX_DATA_JSON_CHARS`), whose worst case at the parser's 20,000 rows and
+50 columns measures 9.04 million characters; `RLIMIT_FSIZE` bounds the file itself."""
+FIGURE_PACKAGE_ENV = "ANYPLOT_FIGURE_PACKAGE"
+"""The package's directory (`find_figure_package`), which the screenshot step reads the bundled JavaScript from."""
+FIGURE_PLOT_ONLY_ENV = ("ANYPLOT_DENY_EXEC", "ANYPLOT_RLIMIT_AS_MB", "ANYPLOT_RLIMIT_NPROC")
+"""The variables of the plot step that the screenshot step does not get: the JavaScript row has no exec filter and
+neither `RLIMIT_AS` nor `RLIMIT_NPROC` (`agents/renderer/commands.py`)."""
+FIGURE_REPORT_BYTES = 64 * 1024
+"""What the parent reads of the plot step's report pipe (`plot_step`): its first line, the harness's own (`armed` or
+`refused` with the filter's state), is written before any plot code runs; the last, the error record, is advisory like
+every line the plot shares."""
+FIGURE_ERROR_CHARS = 200
+"""The final error line's message at most (`render.mjs` `ERROR_MESSAGE_CHARS`)."""
+FIGURE_ERROR_KINDS = ("plot", "figure", "crash", "harness")
+"""The final error line's kinds of the plot step: an exception in the plot, its figure file, a death by a signal, and
+the harness itself (usage, the filter, the package); the screenshot step prints its own (`render.mjs`)."""
 DATA_FLAG = "--data"
 DATA_OUT_FILE = "out.csv"
 DATA_STATUS_FILE = "status.json"
@@ -387,6 +447,7 @@ CODE_BUILDERS = frozenset(
         ("scipy/stats/_distn_infrastructure.py", "_attach_argparser_methods"),
         ("plotnine/mapping/_env.py", "eval"),
         ("cssselect2/compiler.py", "__init__"),
+        ("_plotly_utils/basevalidators.py", "build_validator"),
     }
 )
 """The `(file suffix, function)` pairs whose `exec` and `compile` both guards let through when they call them: each
@@ -410,11 +471,30 @@ payloads through every pygal channel, and read the generated source back with `a
 classes, id, attributes and `lang`, nothing else. Only Python objects handed to `compile_selector_list` in place of
 tokens (a forged `dimension` token whose `int_value` is a string) reach an unquoted slot; the validator admits neither
 `cssselect2` nor `tinycss2` nor `cairosvg.css`/`cairosvg.parser`, and a lambda the compiler built runs under the same
-guard as the plot (no write, process, socket or frame)."""
+guard as the plot (no write, process, socket or frame).
+
+plotly's `InfoArrayValidator.build_validator` (plotly 7.1.0, figure mode) evaluates the name of the validator class an
+info array's item needs: `eval(datatype.title().replace("_", "") + "Validator")`, the datatype read from the item's
+`valType`. `InfoArrayValidator.__init__` calls it for each item when plotly builds the validator of an info-array
+property, lazily, the first time a plot sets one (`xaxis.range`, a `domain`), so every plot that sets an axis range
+needs it. The items come from plotly's own schema (`plotly/validators/_validators.json`, read by `ValidatorCache`),
+whose info arrays name five types, `angle`, `any`, `enumerated`, `number` and `subplotid`, each a class of the module.
+A plot that calls `build_validator` itself controls the text, but the text is title-cased with every underscore
+removed and ends in `Validator` (a `#` can comment that out): no keyword but `True`, `False` and `None`, no lowercase
+name (no builtin function, no module), no dunder, so it can only read and call capitalised names, the module's 23
+globals of that kind (all validator classes) and the builtins' classes and constants, and whatever that runs stays under
+the same guard as the plot."""
 IMPORT_FRAME_FILES = ("<frozen importlib._bootstrap>", "<frozen importlib._bootstrap_external>")
 """The files of the frames that run an import. The plot guard lets an `exec` through when, walking up from its caller,
 it meets one of these frames before a frame of the plot: a module body the plot imports runs (and builds code: scipy's
-distributions, numpy's `f2py` rule tables, `typing.NamedTuple`) with no plot code between it and the import."""
+distributions, numpy's `f2py` rule tables, `typing.NamedTuple`) with no plot code between it and the import. Since
+2026-10-31 only an import of the interpreter's own loaders counts (`ImportMachinery.trusts`): a plot drove
+`importlib`'s machinery with a loader of its own, or with a stock loader on a file it wrote, and the module body it
+supplied read the frames up to the guard and disarmed it (F6 of PB-1, Fable's review)."""
+IMPORT_CODE_READERS = ("<frozen importlib._bootstrap_external>", "<frozen zipimport>")
+"""The files whose `open` events read code for an import: a file loader's `get_data` (source and bytecode) and
+zipimport's archive reader. The plot guard refuses such a read outside the interpreter's install (`install_prefixes`),
+whoever drives the loader, so no import reads code from the run directory or `/tmp`."""
 CODE_OBJECT_EVENTS = ("code.__new__", "function.__new__")
 """Building a code object or a function from one: the plot guard treats them, and a `__code__` assignment, like
 `exec`. `types.coroutine` assigns `__code__` when `asyncio` is imported, which a library may do lazily."""
@@ -474,6 +554,7 @@ PLOT_BLOCKED_PREFIXES = (
     "sys.monitoring.",
     "sys.remote_exec",
     "cpython.remote_debugger_script",
+    "fcntl.",
 )
 """Audit events `PlotGuard` refuses once it is armed (`ctypes.*` but `NATIVE_CALLERS`), next to `exec` and
 `CODE_OBJECT_EVENTS` and every `open` that writes anywhere but the plot's PNG and its probe. Unlike data mode it lets
@@ -488,7 +569,11 @@ code positions to (Fable review of #12181): `sys.settrace` and `sys.setprofile` 
 `setprofile` and their `_all_threads` forms raise, per thread) and `sys.monitoring.register_callback`, the one PEP 669
 call that raises an event (`use_tool_id` and `set_events` do nothing without a callback). A trace function gets the
 real frame and walks `f_back`, which no event sees, to `run_plot`'s locals. The signal handler, which gets a frame
-too, has no event and is replaced instead (`UNAUDITED_CALLS`).
+too, has no event and is replaced instead (`UNAUDITED_CALLS`). `fcntl.*` (since 2026-10-31, the review of PB-1) and
+`os.set_blocking`, which raises no event and is replaced in plot mode (`PLOT_UNAUDITED_CALLS`), would change the flags of
+a descriptor the plot shares with its parent: stdout and stderr are one open file description across figure mode's
+fork, and a plot that made them non-blocking would break the parent's writes. No admitted library calls either while
+it draws (the catalogue sweep of 2026-10-31).
 
 The guard's state (`armed`, `paused_depth`) stays a plain attribute, settable by anyone holding the guard: CPython
 gives in-process code no state that a reference cannot reach (a closure cell is writable through `cell_contents`, a
@@ -634,11 +719,17 @@ def refused_call(*args, **kwargs):
     raise PermissionError("blocked by the sandbox: a call the audit hook cannot see")
 
 
-def disable_unaudited_calls():
-    """Replace `UNAUDITED_CALLS` in the modules that are loaded or load without side effects."""
+PLOT_UNAUDITED_CALLS = (("os", "set_blocking"), ("posix", "set_blocking"))
+"""What plot mode replaces next to `UNAUDITED_CALLS`: `os.set_blocking` changes a shared descriptor's flags with no
+event, as `fcntl.fcntl` does with one (`PLOT_BLOCKED_PREFIXES`)."""
+
+
+def disable_unaudited_calls(calls=None):
+    """Replace `calls` (`UNAUDITED_CALLS` when None, read at call time) in the modules that are loaded or load without
+    side effects."""
     import importlib
 
-    for module_name, name in UNAUDITED_CALLS:
+    for module_name, name in UNAUDITED_CALLS if calls is None else calls:
         module = sys.modules.get(module_name)
         if module is None and module_name.startswith(("posix", "_posix", "signal", "_signal", "_interpreters")):
             try:
@@ -826,10 +917,11 @@ class DataGuard:
 
     def caller(self):
         """The frame that raised the event: the first frame above the guard's own (`sys._getframe` raises an audit
-        event of its own, which the data guard refuses, so the lookup runs paused)."""
+        event of its own, which the data guard refuses, so the lookup runs paused). The file names are compared as
+        exact `str` only (`plain_name`): a `str` subclass's `__eq__` would run code with the guard paused."""
         with self.paused():
             frame = sys._getframe(1)
-            while frame is not None and frame.f_code.co_filename == __file__:
+            while frame is not None and plain_name(frame.f_code.co_filename) == __file__:
                 frame = frame.f_back
         return frame
 
@@ -873,6 +965,160 @@ class DataGuard:
 WRITE_FLAGS = os.O_WRONLY | os.O_RDWR | os.O_APPEND | os.O_CREAT | os.O_TRUNC
 
 
+def install_prefixes():
+    """The real paths of the interpreter's own install, read from `sysconfig` before a guard is armed: the standard
+    library (`lib-dynload` in it) and its zipped form on `sys.path`, and the site packages. A read-only image holds them;
+    the run directory and `/tmp`, which the plot can write, are not among them."""
+    import sysconfig
+
+    paths = sysconfig.get_paths()
+    found = {paths[key] for key in ("stdlib", "platstdlib", "purelib", "platlib") if paths.get(key)}
+    found.add(os.path.join(sys.base_prefix, "lib", f"python{sys.version_info.major}{sys.version_info.minor}.zip"))
+    return tuple(sorted({os.path.realpath(path) for path in found}))
+
+
+def exact_path(path):
+    """`path` (a `str`, `bytes` or path object) as an exact `str`, or None: a path object's `__fspath__` runs here, so
+    the caller must not have paused its guard, and `str.join` copies a `str` subclass without calling its methods."""
+    try:
+        return "".join((os.fsdecode(path),))
+    except Exception:
+        return None
+
+
+def under_prefixes(path, prefixes):
+    """Whether `path`, an exact `str`, is one of `prefixes` or lies below one, after `realpath` (a link out of them
+    does not count)."""
+    real = os.path.realpath(path)
+    return any(real == prefix or real.startswith(prefix + os.sep) for prefix in prefixes)
+
+
+TYPE_MRO = type.__dict__["__mro__"]
+TYPE_DICT = type.__dict__["__dict__"]
+TYPE_FLAGS = type.__dict__["__flags__"]
+IMMUTABLE_TYPE = 1 << 8
+"""`Py_TPFLAGS_IMMUTABLETYPE`: a class whose attributes no code can set or delete (`object`)."""
+LAZY_CLASS_ENTRIES = frozenset({"__annotate_func__", "__annotations_cache__"})
+"""What Python 3.14 adds to a class's own dict when its annotations are first read (`typing.get_type_hints`,
+`inspect`); no attribute lookup of an import reads them."""
+ABSENT = object()
+"""A class entry that is not there (`ImportMachinery.intact`)."""
+
+
+def class_entries(cls):
+    """`cls`'s method resolution order and, for each class in it whose attributes can change, its own entries but
+    `LAZY_CLASS_ENTRIES`. Read through `type`'s own descriptors, so neither a metaclass nor a property runs; a class
+    dict's keys are exact `str`, which `type` copies a `str` subclass into."""
+    mro = TYPE_MRO.__get__(cls)
+    mutable = (base for base in mro if not TYPE_FLAGS.__get__(base) & IMMUTABLE_TYPE)
+    return mro, tuple(
+        (base, {name: value for name, value in TYPE_DICT.__get__(base).items() if name not in LAZY_CLASS_ENTRIES})
+        for base in mutable
+    )
+
+
+class ImportMachinery:
+    """What an import must look like for the plot guard to trust it (F6 of PB-1, Fable's review of 2026-10-31), read
+    before the guard is armed.
+
+    The import frames a walk up from an event meets first must be the interpreter's own: `_call_with_frames_removed`
+    called by the `exec_module` or `create_module` of a loader of exactly one of `loader_state`'s types (a subclass
+    may change any method) whose instance holds nothing but its own state and whose file lies in the install
+    (`install_prefixes`), or by `BuiltinImporter`, or `FrozenImporter.exec_module` itself. Every other import frame
+    (a loader the plot built, a finder or path hook it installed that is a builtin such as `exec`) earns no trust.
+    The frames and their code objects are the interpreter's; the loader is read with the guard armed, so a property or
+    a `str` subclass of the plot runs judged.
+
+    A class's attributes change without an audit event, so the stock loaders' classes are also read once here, before
+    arming (`class_entries`), and an import of a loader whose class no longer resolves every attribute to the same
+    object earns no trust: a `get_code` or `source_to_code` the plot set on the class (Fable's review of the F6 fix,
+    2026-10-31), a base class it swapped. Deeper patches of the machinery (the module globals of
+    `_frozen_importlib_external`, `_bootstrap._call_with_frames_removed`, `builtins.compile`) are F8's kind and out of
+    this layer's reach; the validator, which refuses every name that reaches them, is the barrier there (the module
+    docstring's security model). The reads of the code are what `IMPORT_CODE_READERS` and the `import` event of an
+    extension module bind to the install.
+    """
+
+    def __init__(self):
+        import importlib.machinery as machinery
+        import zipimport
+
+        bootstrap = sys.modules["_frozen_importlib"]
+        external = sys.modules["_frozen_importlib_external"]
+        self.prefixes = install_prefixes()
+        self.trampoline = bootstrap._call_with_frames_removed.__code__
+        self.frozen_exec = bootstrap.FrozenImporter.exec_module.__code__
+        # The entries whose loader is `self`, and the static ones of the builtin importer.
+        self.loader_entries = frozenset(
+            {
+                external._LoaderBasics.exec_module.__code__,
+                machinery.ExtensionFileLoader.create_module.__code__,
+                machinery.ExtensionFileLoader.exec_module.__code__,
+            }
+        )
+        self.static_entries = frozenset(
+            {bootstrap.BuiltinImporter.create_module.__code__, bootstrap.BuiltinImporter.exec_module.__code__}
+        )
+        file_state = (frozenset({"name", "path"}), "path")
+        self.loader_state = {
+            machinery.SourceFileLoader: file_state,
+            machinery.SourcelessFileLoader: file_state,
+            machinery.ExtensionFileLoader: file_state,
+            zipimport.zipimporter: (frozenset({"archive", "prefix"}), "archive"),
+        }
+        self.loader_classes = {loader: class_entries(loader) for loader in self.loader_state}
+
+    def trusts(self, frame):
+        """Whether `frame`, the first import frame (`IMPORT_FRAME_FILES`) of a walk up from an event, runs an import
+        of the interpreter's own loaders (the class docstring)."""
+        code = frame.f_code
+        if code is self.frozen_exec:
+            return True
+        if code is not self.trampoline:
+            return False
+        entry = frame.f_back
+        if entry is None:
+            return False
+        if entry.f_code in self.static_entries:
+            return True
+        if entry.f_code not in self.loader_entries:
+            return False
+        try:
+            return self.trusted_loader(entry.f_locals["self"])
+        except Exception:
+            return False
+
+    def trusted_loader(self, loader):
+        """Whether `loader` is exactly a stock loader of an intact class (`intact`) whose instance holds only its own
+        state, of exact `str` names, and whose file (or archive) lies in the install."""
+        cls = type(loader)
+        shape = self.loader_state.get(cls)
+        if shape is None or not self.intact(cls):
+            return False
+        names, path_key = shape
+        state = object.__getattribute__(loader, "__dict__")
+        if type(state) is not dict or not all(type(name) is str and name in names for name in state):
+            return False
+        path = state.get(path_key)
+        return type(path) is str and under_prefixes(path, self.prefixes)
+
+    def intact(self, cls):
+        """Whether the stock loader class `cls` resolves every attribute as it did before arming: the same classes in
+        its method resolution order, and each mutable one's own entries, the same names bound to the same objects
+        (`class_entries`). C-level reads alone: exact `str` keys, identity comparisons, no plot code."""
+        mro, classes = self.loader_classes[cls]
+        now = TYPE_MRO.__get__(cls)
+        if len(now) != len(mro) or not all(current is base for current, base in zip(now, mro, strict=True)):
+            return False
+        for base, entries in classes:
+            current = TYPE_DICT.__get__(base)
+            if sum(1 for name in current if name not in LAZY_CLASS_ENTRIES) != len(entries):
+                return False
+            if not all(current.get(name, ABSENT) is value for name, value in entries.items()):
+                return False
+        return True
+
+
 class PlotGuard(DataGuard):
     """The audit hook of plot mode: once armed, refuses `PLOT_BLOCKED_PREFIXES` (processes, sockets, native code,
     filesystem changes), every `open` that writes anywhere but `outputs`, a `__code__` assignment, every `exec`
@@ -888,14 +1134,18 @@ class PlotGuard(DataGuard):
         self.outputs = frozenset(os.path.realpath(path) for path in outputs)
         self.plot_file = None
         self.import_ctypes_helpers = ctypes_helper_addresses()
+        self.machinery = ImportMachinery()
 
     def arm(self, entry=None):
         self.plot_file = entry.co_filename if entry is not None else None
+        disable_unaudited_calls(PLOT_UNAUDITED_CALLS)
         super().arm(entry)
 
     def refuses(self, event, args):
         if event == "open":
-            return self.writes_elsewhere(args)
+            return self.writes_elsewhere(args) or self.reads_foreign_code(args)
+        if event == "import":
+            return self.loads_foreign_file(args)
         if event == "compile":
             return False
         if event == "exec" or event in CODE_OBJECT_EVENTS or sets_code(event, args):
@@ -946,15 +1196,36 @@ class PlotGuard(DataGuard):
 
     def nearest_origin(self, frame):
         """Walking up from `frame`: `"plot"` when a frame of the plot file comes first, `"import"` when an import
-        frame (`IMPORT_FRAME_FILES`) does, None when neither is on the stack."""
+        frame (`IMPORT_FRAME_FILES`) of the interpreter's own loaders does (`ImportMachinery.trusts`), `"untrusted"`
+        when another import frame does, None when none is on the stack."""
         while frame is not None:
             file_name = frame.f_code.co_filename
             if file_name == self.plot_file:
                 return "plot"
             if file_name in IMPORT_FRAME_FILES:
-                return "import"
+                return "import" if self.machinery.trusts(frame) else "untrusted"
             frame = frame.f_back
         return None
+
+    def reads_foreign_code(self, args):
+        """Whether an `open` event is a read of the import machinery's code readers (`IMPORT_CODE_READERS`: a file
+        loader's `get_data`, zipimport's archive) outside the install (`install_prefixes`). Checked whoever drives the
+        loader and before its bytes exist, so a stock loader on a file the plot wrote reads nothing (F6 of PB-1)."""
+        caller = self.caller()
+        if caller is None or plain_name(caller.f_code.co_filename) not in IMPORT_CODE_READERS:
+            return False
+        path = exact_path(args[0]) if args else None
+        return path is None or not under_prefixes(path, self.machinery.prefixes)
+
+    def loads_foreign_file(self, args):
+        """Whether an `import` event names a file outside the install: `_imp.create_dynamic` raises it with the path of
+        the extension module it is about to load, and no `open` event comes before the library's native code runs (an
+        `ExtensionFileLoader` on a file the plot wrote, measured on 2026-10-31). An `import` statement's event names no
+        file."""
+        if len(args) < 2 or args[1] is None:
+            return False
+        path = exact_path(args[1])
+        return path is None or not under_prefixes(path, self.machinery.prefixes)
 
     def native_caller(self):
         """Whether the first frame outside the `ctypes` package that raised a `ctypes.*` event is one of
@@ -972,6 +1243,11 @@ class PlotGuard(DataGuard):
         in another directory than the working one (`os.open("plot-light.png", flags, dir_fd=fd)`, or
         `open(..., opener=...)`, whose opener calls `os.open`): an `os.open` write passes only with an
         absolute path (#12177 review). `open` itself, which savefig and the probe use, takes no `dir_fd`.
+
+        The path becomes an exact `str` before the guard pauses for `realpath`: a path object's `__fspath__` (or a
+        `bytes` subclass's `decode`) runs while the guard is armed, and `realpath` never calls a method of a `str`
+        subclass the plot defined, whose `split` and `startswith` ran paused before and wrote files the armed guard
+        refuses (PB-1's review of the paused paths, 2026-10-31).
         """
         path, mode, flags = (*args, None, None, None)[:3]
         writes = (isinstance(mode, str) and any(letter in mode for letter in "wax+")) or (
@@ -981,11 +1257,16 @@ class PlotGuard(DataGuard):
             return False
         if not isinstance(path, str | bytes | os.PathLike):
             return True  # a file descriptor, or anything else that names no path
-        if mode is None and not os.path.isabs(os.fsdecode(path)):
+        try:
+            # `str.join` copies a `str` subclass's characters into an exact `str` and calls none of its methods.
+            name = "".join((os.fsdecode(path),))
+        except Exception:
+            return True
+        if mode is None and not os.path.isabs(name):
             return True
         with self.paused():
             try:
-                return os.path.realpath(os.fsdecode(path)) not in self.outputs
+                return os.path.realpath(name) not in self.outputs
             except OSError, ValueError, TypeError:
                 return True
 
@@ -1042,18 +1323,29 @@ def preload_data_modules():
     return zones
 
 
+def plain_name(value):
+    """`value` when it is an exact `str`, else `"?"`: a name a paused guard may compare or format, since a `str`
+    subclass's methods (`__eq__`, `__format__`) are code the snippet or plot defined. `type()` runs none of them."""
+    return value if type(value) is str else "?"
+
+
 def print_snippet_error(guard, exc):
     """The traceback of a snippet error on stderr: its frames' files and lines and the exception line.
 
     Written by hand, with the guard paused only to read the traceback's frames: the
-    `traceback` module reads source lines from files, which the armed guard refuses.
+    `traceback` module reads source lines from files, which the armed guard refuses. Nothing
+    the snippet defined may run while it is paused: the traceback is read through
+    `BaseException`'s own descriptor, which a `__traceback__` of the snippet's exception class
+    cannot replace (it could, and a property there wrote files the armed guard refuses), and
+    only exact `str` names are formatted (`plain_name`). The exception's class name and message
+    may run snippet code, which the armed guard judges.
     """
     lines = ["Traceback (most recent call last):"]
     with guard.paused():
-        tb = exc.__traceback__
+        tb = BaseException.__traceback__.__get__(exc)
         while tb is not None:
             code = tb.tb_frame.f_code
-            lines.append(f'  File "{code.co_filename}", line {tb.tb_lineno}, in {code.co_name}')
+            lines.append(f'  File "{plain_name(code.co_filename)}", line {tb.tb_lineno}, in {plain_name(code.co_name)}')
             tb = tb.tb_next
     kind = type(exc)
     name = kind.__qualname__ if kind.__module__ == "builtins" else f"{kind.__module__}.{kind.__qualname__}"
@@ -1079,10 +1371,21 @@ def _limit(kind: int, value: int) -> None:
 
 
 def set_limits() -> None:
+    set_run_limits()
+    set_plot_limits()
+
+
+def set_run_limits() -> None:
+    """CPU seconds and the largest file, which every process of a run inherits: both steps of figure mode."""
     cpu = int(os.environ.get("ANYPLOT_RLIMIT_CPU_S", "60"))
     fsize = int(os.environ.get("ANYPLOT_RLIMIT_FSIZE_MB", "32")) * 1024 * 1024
     _limit(resource.RLIMIT_CPU, cpu)
     _limit(resource.RLIMIT_FSIZE, fsize)
+
+
+def set_plot_limits() -> None:
+    """The address space and the processes, each only when set: in figure mode the plot step's alone, because the
+    screenshot step runs under the JavaScript row's limits, which set neither."""
     address_space = os.environ.get("ANYPLOT_RLIMIT_AS_MB")
     if address_space:
         _limit(resource.RLIMIT_AS, int(address_space) * 1024 * 1024)
@@ -1943,6 +2246,345 @@ def install_probe(theme):
     Figure.savefig = savefig
 
 
+# --- Text probes of the libraries that draw without matplotlib -------------------------------------------------------
+# pygal, altair and lets-plot write no matplotlib figure, so `probe` never runs for them; what their plot draws is still
+# there as text when the PNG is made, in the library's own role vocabulary. Each save writes a probe of the drawn texts
+# alone (`labels`, `labels_truncated`), under `drawn_labels`'s caps; the advisory gates have nothing else to read.
+
+SVG_HIDDEN_CLASSES = frozenset({"tooltip", "showable"})
+"""pygal's classes of text it draws only on hover (`graph.css`: `.showable` is hidden until `.shown`)."""
+VEGA_TEXT_KINDS = {
+    "title-text": "title",
+    "title-subtitle": "subtitle",
+    "legend-title": "legend text",
+    "legend-label": "legend text",
+    "mark": "annotation",
+}
+"""The probe kind of a Vega text mark's role; an axis's `axis-title` and `axis-label` take the axis's orientation."""
+LETSPLOT_TEXT_KINDS = {
+    "plot-title": "title",
+    "plot-subtitle": "subtitle",
+    "axis-title-x": "x axis label",
+    "axis-title-y": "y axis label",
+    "axis-text-x": "x tick label",
+    "axis-text-y": "y tick label",
+    "legend-title": "legend text",
+    "legend-item": "legend text",
+}
+"""The probe kind of a lets-plot SVG text by its class; a text without a class is a `geom_text` label (`annotation`)."""
+TEXT_PROBE_MAX_SVG_CHARS = 8_000_000
+"""The largest SVG a text probe parses: the bound on its time (a pygal chart of 20,000 points writes about 4 MB, read in
+a fraction of a second). A larger one leaves the probe out, as any failure does."""
+
+
+def text_labels(entries):
+    """`labels` and `labels_truncated` from `(kind, text)` pairs in draw order, under `drawn_labels`'s caps.
+
+    Whitespace is collapsed (lets-plot indents its SVG text) and empty texts are left out;
+    titles, axis labels, legend texts and annotations come first, then tick labels, at most
+    `TICK_LABELS_PER_AXIS` of one kind, then any other text.
+    """
+    ranked = []
+    per_kind = {}
+    truncated = False
+    for kind, text in entries:
+        content = " ".join(str(text).split())
+        if not content:
+            continue
+        if kind.endswith("tick label"):
+            per_kind[kind] = per_kind.get(kind, 0) + 1
+            if per_kind[kind] > TICK_LABELS_PER_AXIS:
+                truncated = True
+                continue
+        rank = 1 if kind.endswith("tick label") else 2 if kind == "text" else 0
+        ranked.append((rank, kind, content))
+    ranked.sort(key=lambda entry: entry[0])
+    labels = []
+    budget = LABEL_TOTAL_CHARS
+    for _, kind, content in ranked[:LABEL_LIMIT]:
+        if min(len(content), LABEL_CHARS) > budget:
+            truncated = True
+            break
+        budget -= min(len(content), LABEL_CHARS)
+        truncated = truncated or len(content) > LABEL_CHARS
+        labels.append({"kind": kind, "text": content[:LABEL_CHARS]})
+    return labels, truncated or len(ranked) > LABEL_LIMIT
+
+
+def _svg_hidden(element):
+    """Whether an SVG element draws nothing: `display="none"`, `visibility="hidden"` or `opacity="0"`."""
+    style = (element.get("style") or "").replace(" ", "")
+    return (
+        element.get("display") == "none"
+        or element.get("visibility") == "hidden"
+        or element.get("opacity") in ("0", "0.0")
+        or "display:none" in style
+        or "visibility:hidden" in style
+    )
+
+
+def svg_texts(svg, kind_of):
+    """`(kind, text)` of every `<text>` of an SVG document that draws, in document order.
+
+    `kind_of(classes, element)` names a text's kind from the class sets of its ancestors and
+    itself (the text's own last), or None to leave it out. A document over
+    `TEXT_PROBE_MAX_SVG_CHARS` is refused (`ValueError`).
+    """
+    from xml.etree import ElementTree
+
+    if svg is None or len(svg) > TEXT_PROBE_MAX_SVG_CHARS:
+        raise ValueError("no SVG, or one too large for the text probe")
+    entries = []
+    stack = [(ElementTree.fromstring(svg), ())]
+    while stack:
+        element, classes = stack.pop()
+        if _svg_hidden(element):
+            continue
+        own = (*classes, frozenset((element.get("class") or "").split()))
+        if element.tag.rpartition("}")[2] == "text":
+            kind = kind_of(own, element)
+            if kind is not None:
+                entries.append((kind, "".join(element.itertext())))
+            continue
+        stack.extend((child, own) for child in reversed(list(element)))
+    return entries
+
+
+def pygal_kind(classes, element):
+    """A pygal text's kind: the chart title, an axis title (the y one rotated), a tick, a legend entry or a value."""
+    if any(SVG_HIDDEN_CLASSES & names and "shown" not in names for names in classes):
+        return None
+    own = classes[-1]
+    if "plot_title" in own:
+        return "title"
+    if "title" in own and any("titles" in names for names in classes[:-1]):
+        return "y axis label" if "rotate" in (element.get("transform") or "") else "x axis label"
+    for names in classes:
+        if "axis" in names and "x" in names:
+            return "x tick label"
+        if "axis" in names and names & {"y", "y2"}:
+            return "y tick label"
+    if any(names & {"legends", "legend"} for names in classes):
+        return "legend text"
+    return "annotation" if "value" in own else "text"
+
+
+def letsplot_kind(classes, element):
+    """A lets-plot text's kind by its own class (`LETSPLOT_TEXT_KINDS`); a facet strip or caption is another text."""
+    own = classes[-1]
+    for name in own:
+        if name in LETSPLOT_TEXT_KINDS:
+            return LETSPLOT_TEXT_KINDS[name]
+    return "text" if own else "annotation"
+
+
+def vega_texts(scenegraph):
+    """`(kind, text)` of every text item of a Vega scenegraph that draws: an item at opacity 0 (an axis label that
+    `labelOverlap` removed) draws nothing. An axis group's `orient` names the axis of its title and labels."""
+    entries = []
+    root = scenegraph.get("scenegraph") if isinstance(scenegraph, dict) else None
+    stack = [(root, None)]
+    while stack:
+        node, orient = stack.pop()
+        if isinstance(node, list):
+            stack.extend((item, orient) for item in reversed(node))
+            continue
+        if not isinstance(node, dict):
+            continue
+        if isinstance(node.get("orient"), str):
+            orient = node["orient"]
+        if node.get("marktype") == "text":
+            role = node.get("role")
+            axis = "y" if orient in ("left", "right") else "x"
+            if role == "axis-title":
+                kind = f"{axis} axis label"
+            elif role == "axis-label":
+                kind = f"{axis} tick label"
+            else:
+                kind = VEGA_TEXT_KINDS.get(role, "text")
+            for item in node.get("items") or []:
+                if not isinstance(item, dict) or item.get("opacity") == 0 or item.get("fillOpacity") == 0:
+                    continue
+                text = item.get("text")
+                if isinstance(text, list):  # a multi-line text: one line per entry
+                    text = " ".join(str(line) for line in text)
+                if isinstance(text, str | int | float):
+                    entries.append((kind, str(text)))
+            continue
+        stack.append((node.get("items"), orient))
+    return entries
+
+
+def write_text_probe(theme, report):
+    """`probe-<theme>.json` from `report`, a text probe or `{"error": <class>}`; a failed write leaves no probe.
+
+    Opened without following a link, as `collect_text_probe` reads: in exec mode the child that ran before could have
+    left one at the probe's name. The path is absolute, which the plot guard asks of an `os.open` write.
+    """
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NOFOLLOW", 0)
+    try:
+        descriptor = os.open(os.path.abspath(f"probe-{theme}.json"), flags, 0o644)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(json.dumps(report))
+    except OSError:
+        pass
+
+
+def wrap_text_probe(owner, name, theme, read):
+    """Wrap `owner.name`, the call that makes the PNG, so that it also writes the text probe of what it draws.
+
+    `read` takes the call's arguments and returns the `(kind, text)` pairs. The probe is
+    best-effort: it runs before the call, never breaks or changes the render, and is written
+    only after the call returned, so a failed save leaves none. A read or a report that fails
+    leaves the labels out and writes `{"error": <class>}`, as matplotlib's probe does, which
+    the pipeline logs (`pipeline_render`, `probe_error`).
+    """
+    original = getattr(owner, name, None)
+    if original is None:
+        return
+
+    def wrapped(*args, **kwargs):
+        try:
+            labels, truncated = text_labels(read(*args, **kwargs))
+            report = {"labels": labels, "labels_truncated": truncated}
+        except Exception as exc:  # the probe never breaks a render
+            report = {"error": type(exc).__name__}
+        result = original(*args, **kwargs)
+        write_text_probe(theme, report)
+        return result
+
+    setattr(owner, name, wrapped)
+
+
+TEXT_ENTRIES_FILE = "texts-{theme}.json"
+"""What the R and Julia text probes (`text_probe.R`, `text_probe.jl`) leave in exec mode: `{"entries": [[kind, text],
+...]}` or `{"error": <class>}`, which `collect_text_probe` turns into the probe."""
+TEXT_ENTRIES_MAX_BYTES = 4 * 1024 * 1024
+TEXT_KIND_CHARS = 40
+"""The longest probe kind (`colorbar tick label` has 19 characters); a longer one is a tampered file."""
+
+
+def collect_text_probe(theme):
+    """Exec mode, after the child ended with exit code 0: `texts-<theme>.json` as `probe-<theme>.json`.
+
+    The file is read without following a link or blocking on a pipe, as a regular file only and
+    under `TEXT_ENTRIES_MAX_BYTES`, every entry is checked (two strings, a kind of at most
+    `TEXT_KIND_CHARS`) and the labels get the probe's caps (`text_labels`), so one cap and one
+    ordering hold for every language. A file the probe left with an error, or one that cannot be
+    read, becomes `{"error": <class>}`; no file, no probe.
+    """
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+    try:
+        descriptor = os.open(TEXT_ENTRIES_FILE.format(theme=theme), flags)
+    except FileNotFoundError:
+        return
+    except OSError as exc:
+        write_text_probe(theme, {"error": type(exc).__name__})
+        return
+    try:
+        with os.fdopen(descriptor, "rb") as handle:
+            if not stat.S_ISREG(os.fstat(handle.fileno()).st_mode):
+                raise ValueError("the drawn texts are no regular file")
+            raw = handle.read(TEXT_ENTRIES_MAX_BYTES + 1)
+        if len(raw) > TEXT_ENTRIES_MAX_BYTES:
+            raise ValueError("the drawn texts are larger than the probe reads")
+        loaded = json.loads(raw)
+        if not isinstance(loaded, dict):
+            raise ValueError("the drawn texts are no JSON object")
+        if isinstance(loaded.get("error"), str):
+            report = {"error": loaded["error"][:TEXT_KIND_CHARS]}
+        else:
+            entries = loaded.get("entries")
+            if not isinstance(entries, list):
+                raise ValueError("the drawn texts carry no entries")
+            pairs = [
+                (entry[0], entry[1])
+                for entry in entries
+                if isinstance(entry, list)
+                and len(entry) == 2
+                and isinstance(entry[0], str)
+                and isinstance(entry[1], str)
+                and len(entry[0]) <= TEXT_KIND_CHARS
+            ]
+            labels, truncated = text_labels(pairs)
+            report = {"labels": labels, "labels_truncated": truncated or len(pairs) < len(entries)}
+    except Exception as exc:  # the probe never breaks a render
+        report = {"error": type(exc).__name__}
+    write_text_probe(theme, report)
+
+
+def install_text_probes(path, theme):
+    """Wrap the PNG export of each library the plot file names that draws without matplotlib (module docstring, 4).
+
+    pygal: `cairosvg.svg2png`, which `render_to_png` hands the chart's SVG; altair:
+    vl-convert's `vegalite_to_png` and `vega_to_png`, whose spec vl-convert also lays out as a
+    scenegraph (`vega_texts`, about 0.3 s); lets-plot: its bridge's `_generate_png`, whose spec
+    the bridge also exports as SVG. The modules are imported here, before the guard is armed,
+    as `warm_cairo` imports cairosvg; one that is missing is skipped.
+    """
+    import importlib
+
+    try:
+        with open(path, "rb") as handle:
+            source = handle.read()
+    except OSError:
+        return
+
+    def module(name):
+        try:
+            return importlib.import_module(name)
+        except Exception:
+            return None
+
+    if module("xml.etree.ElementTree") is None:  # `svg_texts`' parser, imported before the guard like the libraries
+        return
+    if b"pygal" in source or b"cairosvg" in source:
+        cairosvg = module("cairosvg")
+        if cairosvg is not None:
+            wrap_text_probe(cairosvg, "svg2png", theme, _pygal_reader)
+    if b"altair" in source or b"vl_convert" in source:
+        vl_convert = module("vl_convert")
+        if vl_convert is not None:
+            for png, scenegraph, options in (
+                ("vegalite_to_png", "vegalite_to_scenegraph", ("vl_version", "config", "theme")),
+                ("vega_to_png", "vega_to_scenegraph", ()),
+            ):
+                lay_out = getattr(vl_convert, scenegraph, None)
+                if lay_out is not None:
+                    wrap_text_probe(vl_convert, png, theme, _vega_reader(lay_out, options))
+    if b"lets_plot" in source:
+        bridge = module("lets_plot._kbridge")
+        if bridge is not None and hasattr(bridge, "_generate_svg"):
+            wrap_text_probe(bridge, "_generate_png", theme, _letsplot_reader(bridge._generate_svg))
+
+
+def _pygal_reader(bytestring=None, **_):
+    """A `read` for `wrap_text_probe` on `cairosvg.svg2png`: the texts of the SVG it converts, by pygal's roles."""
+    return svg_texts(bytestring, pygal_kind)
+
+
+def _vega_reader(lay_out, options):
+    """A `read` for `wrap_text_probe`: the spec laid out as a scenegraph with the PNG call's own options and
+    locales, so the texts are the ones the PNG draws."""
+    keys = (*options, "format_locale", "time_format_locale")
+
+    def read(spec, *args, **kwargs):
+        chosen = {key: kwargs[key] for key in keys if kwargs.get(key) is not None}
+        return vega_texts(lay_out(spec, **chosen))
+
+    return read
+
+
+def _letsplot_reader(export_svg):
+    """A `read` for `wrap_text_probe` on the bridge's `_generate_png`: the same spec exported as SVG at the same size,
+    so the axes break where the PNG's do."""
+
+    def read(bytestring, output_width=None, output_height=None, unit=None, *_, **__):
+        return svg_texts(export_svg(bytestring, output_width, output_height, unit), letsplot_kind)
+
+    return read
+
+
 def frame_csv(frame, measure=None):
     """The CSV text of a snippet's `df`, or the `DATA_EXIT` key of why there is none.
 
@@ -2163,7 +2805,7 @@ def frame_for_readers():
         return None
 
 
-def run_plot(path, guard):
+def run_plot(path, guard, armed=None):
     """Run the plot file as `__main__` under `guard`, the way `runpy.run_path` would.
 
     The file is read and compiled before the guard is armed, and the guard lets exactly
@@ -2174,7 +2816,8 @@ def run_plot(path, guard):
     cairocffi, with the same `ldconfig` lookups) when the plot names pygal or cairosvg. No
     bytecode is written: the guard refuses the writes.
     The plot's frames carry the path as given, as under `runpy`, so a traceback still names
-    `plot.py`.
+    `plot.py`. `armed`, when given, is called with the kernel filter's state once the guard is
+    armed and before the plot runs (figure mode's report, `plot_step`).
     """
     import builtins
     import ctypes  # noqa: F401  (see the docstring)
@@ -2197,6 +2840,8 @@ def run_plot(path, guard):
         "__cached__": None,
     }
     guard.arm(code)
+    if armed is not None:
+        armed(guard.exec_deny)
     exec(code, namespace)
 
 
@@ -2345,6 +2990,10 @@ def main_exec(command):
        child returned (second opinion of 2026-10-28).
 
     Without the variable the child runs unfiltered, and `exec_deny` is `off`.
+
+    After a run that counts (exit code 0, the filter on where it is required), the drawn texts an R
+    or Julia text probe left become `probe-<theme>.json` (`collect_text_probe`); a failure there
+    never changes the exit code.
     """
     if command and command[0] == "--":
         command = command[1:]
@@ -2368,6 +3017,13 @@ def main_exec(command):
                 return EXEC_DENY_EXIT
         code, state = _run_child(command, preload=required)
         started = True
+        theme = os.environ.get(THEME_ENV, "light")
+        if code == 0 and (state == "on" or not required) and theme in ("light", "dark"):
+            # R's and Julia's text probes leave the drawn texts as `texts-<theme>.json` (best-effort, never the exit).
+            try:
+                collect_text_probe(theme)
+            except Exception:
+                pass
     except OSError as exc:
         print(f"{EXEC_FLAG}: cannot run {command[0]}: {type(exc).__name__}", file=sys.stderr)
         code = 127
@@ -2443,9 +3099,359 @@ def _child_usage():
     return {"max_rss_mb": round(usage.ru_maxrss / 1024, 1), "cpu_s": round(usage.ru_utime + usage.ru_stime, 3)}
 
 
+def main_figure(argv):
+    """Figure mode (module docstring): `<package> <plot file> -- <screenshot command...>`.
+
+    The start line goes out first and the end line last, as in exec mode; the end line's `max_rss_mb` and `cpu_s` are
+    both steps' (the largest process and the CPU time of all), `exec_deny` is the plot step's filter (`off` when the
+    plot never ran armed; the screenshot step has none by design), and `steps` holds each step's own figures. The exit
+    code is the failed step's: the plot's, 128 plus a signal, `EXEC_DENY_EXIT`, 1 for a missing or refused figure, or
+    the screenshot command's. Every failure of the plot step and of the harness ends stderr with the final error line
+    (`figure_error_line`); a failure of the screenshot step ends it with that step's own.
+    """
+    _report("start")
+    run = {"exec_deny": "off", "steps": {}}
+    code = 1
+    try:
+        code = run_figure(argv, run)
+    finally:
+        try:
+            _report("end", **_child_usage(), exec_deny=run["exec_deny"], steps=run["steps"])
+        except Exception:
+            pass  # a closed stdout must not hide the steps' own exit code
+    return code
+
+
+def run_figure(argv, run):
+    """`main_figure` after the start line: the arguments, the shared limits, the plot step, the figure's check and the
+    screenshot step, each failure with its final error line."""
+    if len(argv) < 4 or argv[2] != "--" or argv[0] not in FIGURE_PACKAGES:
+        packages = "|".join(FIGURE_PACKAGES)
+        print(f"usage: harness.py {FIGURE_FLAG} <{packages}> <plot file> -- <command> [args...]", file=sys.stderr)
+        figure_error_line("harness", "UsageError", None, "usage: the package, the plot file and the command")
+        return 2
+    package, path, command = argv[0], argv[1], argv[3:]
+    theme = os.environ.get(THEME_ENV, "light")
+    if theme not in ("light", "dark"):
+        figure_error_line("harness", "UsageError", None, f"{THEME_ENV} must be light or dark")
+        return 2
+    set_run_limits()
+    package_dir = find_figure_package(package)
+    if package_dir is None:
+        figure_error_line("harness", "PackageMissing", None, f"{package} is not installed where the harness runs")
+        return 2
+    figure = FIGURE_FILE.format(theme=theme)
+    try:
+        os.unlink(figure)  # only the plot step's own figure reaches the screenshot
+    except OSError:
+        pass  # missing, or no file at all, which `check_figure` refuses
+    code = plot_step(path, figure, run)
+    if code != 0:
+        return code
+    refusal = check_figure(figure)
+    if refusal is not None:
+        figure_error_line("figure", *refusal)
+        return 1
+    return screenshot_step(command, figure, package_dir, run)
+
+
+def find_figure_package(package):
+    """The directory of `package` as this interpreter would import it, found without importing it (a top-level name
+    runs no package code), or None when it is missing: the plot step imports the package from there, and the screenshot
+    step reads the package's bundled JavaScript from there, so the two versions are one."""
+    import importlib.util
+
+    try:
+        spec = importlib.util.find_spec(package)
+    except ImportError, ValueError:
+        return None
+    if spec is None or not spec.submodule_search_locations:
+        return None
+    return os.path.abspath(next(iter(spec.submodule_search_locations)))
+
+
+def plot_step(path, figure, run):
+    """Fork the plot step, wait for it and judge it: its exit code, 0 when it ran and ended well.
+
+    The child is forked before anything is armed, so this process never is: it starts the screenshot step afterwards.
+    The child reports through a pipe opened before the fork, its write end non-blocking, so a plot that fills the pipe
+    cannot hold the child's last write. Its first line is the harness's own and is written before any plot code runs,
+    so the plot cannot forge it: `armed <state>` once the guard is armed (`run_plot`'s `armed`), or `refused <state>`
+    when a required filter was not in place and the plot never ran. The last, an error record (`error {...}`), is
+    advisory, like everything the plot shares with the harness. The verdict is `plot_step_verdict`'s.
+    """
+    import time
+
+    read_end, write_end = os.pipe()
+    os.set_blocking(write_end, False)
+    os.set_blocking(read_end, False)
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.flush()  # the child inherits the buffers; a buffered line must not print twice
+        except Exception:
+            pass
+    started = time.monotonic()
+    pid = os.fork()
+    if pid == 0:
+        os.close(read_end)
+        plot_child(path, figure, write_end)  # never returns
+    os.close(write_end)
+    _, status, usage = os.wait4(pid, 0)
+    run["steps"]["plot"] = _step_usage(usage, time.monotonic() - started)
+    report = _read_figure_report(read_end)
+    run["exec_deny"] = report.state
+    code, error = plot_step_verdict(status, report, path)
+    if error is not None:
+        figure_error_line(*error)
+    return code
+
+
+def plot_step_verdict(status, report, path):
+    """The plot step's exit code and, when it failed, its final error line's `(kind, class, where, message)`, from its
+    wait status and its report (`FigureReport`).
+
+    A death by a signal is `crash PlotCrashed`. `EXEC_DENY_EXIT` is the harness's own refusal only after a `refused`
+    line, which comes before any plot code: a plot that ran (`armed`) and ended with the same code chose it itself
+    (`sys.exit(3)`, `os._exit(3)`), which is a `plot` error like every other code but 0.
+    """
+    if os.WIFSIGNALED(status):
+        number = os.WTERMSIG(status)
+        return 128 + number, ("crash", "PlotCrashed", None, f"the plot step died of {_signal_name(number)}")
+    code = os.waitstatus_to_exitcode(status)
+    if report.refused:
+        message = f"the sandbox could not refuse process starts ({report.state})"
+        return EXEC_DENY_EXIT, ("harness", "ExecDenyUnavailable", None, message)
+    if code == 0:
+        return 0, None
+    name, line, message = report.record or ("Error", None, f"the plot step ended with {code}")
+    return code, ("plot", name, None if line is None else f"{os.path.basename(path)}:{line}", message)
+
+
+def plot_child(path, figure, report):
+    """The plot step, in the forked child: the plot's limits, `PlotGuard` that lets it write `figure` alone, the plot
+    run as in plot mode, then `os._exit`, so no handler of the parent's stack, no `atexit` callback and no thread of the
+    plot outlives it. Its exit code is 0, the plot's own `sys.exit` code, `EXEC_DENY_EXIT` (the plot never ran), or 1
+    for an exception, whose traceback goes to stderr as the interpreter prints it and whose class, line and message go
+    to the report."""
+    code = 1
+    try:
+        set_plot_limits()
+        seed_mplconfig()
+        guard = PlotGuard((figure,))
+        try:
+            run_plot(path, guard, armed=lambda state: _report_line(report, f"armed {state}"))
+            code = 0
+        except ExecDenyUnavailable as exc:
+            _report_line(report, f"refused {guard.exec_deny}")
+            print(f"the sandbox could not refuse process starts ({exc}), which every run requires", file=sys.stderr)
+            code = EXEC_DENY_EXIT
+        except SystemExit as exc:
+            status = exc.code
+            if status is None or (isinstance(status, int) and status & 0xFF == 0):
+                code = 0
+            else:
+                code = status & 0xFF if isinstance(status, int) else 1
+                if not isinstance(status, int):
+                    print(status, file=sys.stderr)
+                _report_line(report, "error " + json.dumps(_error_record(path, exc, guard, str(status))))
+        except BaseException as exc:
+            try:
+                sys.__excepthook__(type(exc), exc, exc.__traceback__)
+            except BaseException:
+                pass
+            _report_line(report, "error " + json.dumps(_error_record(path, exc, guard)))
+    except BaseException:
+        pass  # the harness's own failure: exit code 1, no record
+    finally:
+        for stream in (sys.stdout, sys.stderr):
+            try:
+                stream.flush()
+            except BaseException:
+                pass
+        os._exit(code)
+
+
+def _error_record(path, exc, guard, message=None):
+    """`[class, line, message]` of an exception the plot raised: the class's name when it is an identifier, the line of
+    the innermost frame of the plot file (a syntax error's own line), and the message. The traceback is read with the
+    guard paused and through C attributes only (`BaseException.__traceback__`'s own descriptor, which a subclass's
+    `__traceback__` cannot replace), so no plot code runs while the guard is paused; the name and the message may run
+    plot code (a metaclass, `__str__`), which the armed guard then judges."""
+    try:
+        name = type(exc).__name__
+        name = name if isinstance(name, str) and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,63}", name) else "Error"
+    except BaseException:
+        name = "Error"
+    line = None
+    try:
+        if type(exc) in (SyntaxError, IndentationError, TabError) and exc.filename == path:
+            line = exc.lineno  # raised by `compile`, before the guard was armed
+        else:
+            with guard.paused():
+                tb = BaseException.__traceback__.__get__(exc)
+                while tb is not None:
+                    if plain_name(tb.tb_frame.f_code.co_filename) == path:
+                        line = tb.tb_lineno
+                    tb = tb.tb_next
+    except BaseException:
+        line = None
+    if message is None:
+        try:
+            message = str(exc)
+        except BaseException:
+            message = ""
+    if not isinstance(line, int) or isinstance(line, bool) or line < 1:
+        line = None
+    return [name, line, message[:FIGURE_ERROR_CHARS] if isinstance(message, str) else ""]
+
+
+def _report_line(report, line):
+    """One line to the plot step's report pipe, in one write (a pipe takes up to 4 KiB at once); a full pipe or a
+    closed descriptor loses the line, never the child."""
+    try:
+        os.write(report, (line[:4000] + "\n").encode("utf-8", errors="replace"))
+    except OSError:
+        pass
+
+
+class FigureReport:
+    """What the plot step's report pipe said (`plot_step`): the filter's `state` (`off` when the plot never ran armed),
+    whether the arming was `refused`, and the advisory error `record`, `(class, line, message)` or None."""
+
+    def __init__(self, state="off", refused=False, record=None):
+        self.state = state
+        self.refused = refused
+        self.record = record
+
+
+def _read_figure_report(read_end):
+    """The plot step's report from its pipe (`parse_figure_report`), which is closed after."""
+    data = b""
+    try:
+        while len(data) < FIGURE_REPORT_BYTES:
+            chunk = os.read(read_end, FIGURE_REPORT_BYTES - len(data))
+            if not chunk:
+                break
+            data += chunk
+    except BlockingIOError:
+        pass
+    finally:
+        os.close(read_end)
+    return parse_figure_report(data)
+
+
+def parse_figure_report(data):
+    """A `FigureReport` from the pipe's bytes: the first line, the harness's own, says `armed <state>` or
+    `refused <state>` (a state outside `install_exec_deny`'s reads as `unavailable`), and the record is the last line
+    that is one."""
+    lines = data.decode("utf-8", errors="replace").splitlines()
+    state, refused, first = "off", False, None
+    if lines and lines[0].startswith(("armed ", "refused ")):
+        first, state = lines[0].split(" ", 1)
+        state = state if state in ("on", "unavailable", "unsupported") else "unavailable"
+        refused = first == "refused"
+    record = None
+    for line in reversed(lines[1:] if first is not None else lines):
+        if not line.startswith("error "):
+            continue
+        try:
+            name, number, message = json.loads(line.split(" ", 1)[1])
+        except ValueError, TypeError, RecursionError:
+            continue
+        if isinstance(name, str) and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,63}", name) and isinstance(message, str):
+            number = number if isinstance(number, int) and not isinstance(number, bool) and number > 0 else None
+            record = (name, number, message)
+            break
+    return FigureReport(state, refused, record)
+
+
+def check_figure(figure):
+    """Why the screenshot step must not take `figure`, as `(class, where, message)`, or None: it is missing, not a
+    regular file (opened without following a link), empty, or larger than `FIGURE_MAX_BYTES`."""
+    import stat
+
+    try:
+        descriptor = os.open(figure, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except FileNotFoundError:
+        return "NoFigure", None, f"the plot wrote no {figure}"
+    except OSError as exc:
+        return "FigureError", None, f"{figure} could not be opened as a regular file ({type(exc).__name__})"
+    try:
+        info = os.fstat(descriptor)
+    finally:
+        os.close(descriptor)
+    if not stat.S_ISREG(info.st_mode):
+        return "FigureError", None, f"{figure} is not a regular file"
+    if info.st_size == 0:
+        return "FigureError", None, f"{figure} is empty"
+    if info.st_size > FIGURE_MAX_BYTES:
+        return "FigureTooLarge", None, f"{figure} is {info.st_size} bytes, more than the {FIGURE_MAX_BYTES}-byte limit"
+    return None
+
+
+def screenshot_step(command, figure, package_dir, run):
+    """Start the screenshot command with `--figure=<figure>` appended, in the sandbox's environment without the plot
+    step's variables (`FIGURE_PLOT_ONLY_ENV`) and with the package's directory, and return its exit code (128 plus a
+    signal; 127 when it cannot start). It runs under the limits this process set and nothing else: no guard, no
+    filter, no address-space or process limit, as the JavaScript row runs."""
+    import subprocess
+    import time
+
+    env = {key: value for key, value in os.environ.items() if key not in FIGURE_PLOT_ONLY_ENV}
+    env[FIGURE_PACKAGE_ENV] = package_dir
+    argv = [*command, f"--figure={figure}"]
+    started = time.monotonic()
+    try:
+        # As exec mode starts its child: descriptors past stderr closed, SIGPIPE and SIGXFSZ back to their defaults.
+        child = subprocess.Popen(argv, env=env)
+    except OSError as exc:
+        print(f"{FIGURE_FLAG}: cannot run {argv[0]}: {type(exc).__name__}", file=sys.stderr)
+        figure_error_line("harness", "SpawnError", None, f"cannot run {argv[0]} ({type(exc).__name__})")
+        return 127
+    # `wait4` for the step's own usage; the exit code goes back to the Popen, which then has nothing left to reap.
+    _, status, usage = os.wait4(child.pid, 0)
+    child.returncode = code = os.waitstatus_to_exitcode(status)
+    run["steps"]["screenshot"] = _step_usage(usage, time.monotonic() - started)
+    return code if code >= 0 else 128 - code
+
+
+def figure_error_line(kind, name, where, message):
+    """The final error line of the JavaScript harness (`render.mjs`), for the plot step and the harness:
+    `render: error: <kind> <Class> <file>:<line>: <message>`, `-` without a line, the message on one line and at most
+    `FIGURE_ERROR_CHARS` characters."""
+    text = " ".join(str(message).split())
+    if len(text) > FIGURE_ERROR_CHARS:
+        text = text[: FIGURE_ERROR_CHARS - 1] + "…"
+    try:
+        print(f"render: error: {kind} {name} {where or '-'}: {text}", file=sys.stderr, flush=True)
+    except Exception:
+        pass
+
+
+def _step_usage(usage, wall):
+    """One step's figures for the end line: its largest process, its CPU time with its waited-for children's, its
+    wall time."""
+    return {
+        "max_rss_mb": round(usage.ru_maxrss / 1024, 1),
+        "cpu_s": round(usage.ru_utime + usage.ru_stime, 3),
+        "wall_s": round(wall, 3),
+    }
+
+
+def _signal_name(number):
+    import signal
+
+    try:
+        return signal.Signals(number).name
+    except ValueError:
+        return f"signal {number}"
+
+
 def main(argv):
     if len(argv) >= 2 and argv[1] == EXEC_FLAG:
         return main_exec(argv[2:])
+    if len(argv) >= 2 and argv[1] == FIGURE_FLAG:
+        return main_figure(argv[2:])
     if len(argv) == 3 and argv[1] == DATA_FLAG:
         return main_data(argv[2])
     if len(argv) == 3 and argv[1] == CONVERT_FLAG:
@@ -2463,6 +3469,7 @@ def main(argv):
     install_fallback_fonts()
     install_glyph_capture()
     install_probe(theme)
+    install_text_probes(argv[1], theme)
     # The HTML is altair's second file (314 of 325 catalogue files); it stays in the sandbox, nothing collects it.
     guard = PlotGuard((f"plot-{theme}.png", f"probe-{theme}.json", f"plot-{theme}.html"))
     try:

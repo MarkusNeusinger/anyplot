@@ -2,11 +2,13 @@
  * A reload link after an error a reload fixes: `unreachable` (in production
  * usually an expired Cloudflare Access session, which only a top-level page
  * load can renew) and `session_expired` (the server forgot the session).
- * Renders nothing for any other code.
+ * Renders nothing for any other code. The user asked for this reload, so it
+ * passes the page's leave warning.
  */
 
 import Box from '@mui/material/Box';
 
+import { reloadWithoutWarning } from 'src/hooks/useLeaveWarning';
 import { colors } from 'src/theme';
 
 const RELOAD_CODES = new Set(['unreachable', 'session_expired']);
@@ -19,7 +21,7 @@ export function ReloadHint({ code }: { code: string | null | undefined }) {
       <Box
         component="button"
         type="button"
-        onClick={() => window.location.reload()}
+        onClick={() => reloadWithoutWarning()}
         sx={{
           all: 'unset',
           cursor: 'pointer',

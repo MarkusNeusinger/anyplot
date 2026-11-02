@@ -1,8 +1,7 @@
 """Ask Gemini for a second opinion through Vertex AI, with read-only tools.
 
-This replaces headless `agy -p`: Google's Antigravity FAQ and a staff reply of
-2026-10-16 forbid running agy from third-party coding agents under a consumer
-login. Vertex AI is plain Google Cloud usage, billed to the project's billing
+This replaces headless `agy -p`: Google's Antigravity FAQ forbids running agy
+from third-party coding agents under a consumer login. Vertex AI is plain Google Cloud usage, billed to the project's billing
 account (the Google AI Ultra Cloud credit applies).
 
 Gemini gets the briefing, the inlined diff and attachments, and five read-only

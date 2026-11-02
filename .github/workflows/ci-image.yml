@@ -41,6 +41,13 @@ on:
       - develop
       - 'specification/**'
       - 'implementation/**'
+    # A PR whose every file is in these paths starts no run. The plot pipeline opens such
+    # PRs with GITHUB_TOKEN; GitHub holds the runs of a bot-triggered PR for approval
+    # that never comes, and they end as `failure` at the merge (#12495, run 41265466065).
+    # A PR that also changes any other file keeps every run.
+    paths-ignore:
+      - 'plots/*/implementations/**'
+      - 'plots/*/metadata/**'
   merge_group:
   workflow_dispatch:
     inputs:
@@ -523,10 +530,13 @@ jobs:
       WIF_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
     # A cold build installs pandas, numpy, matplotlib, seaborn, plotnine,
     # altair with vl-convert, pygal with cairosvg and lets-plot, plus libcairo
-    # from apt, and builds the toolchain (R and its packages, about 2 minutes)
-    # when its tag is missing; 25 fails loudly instead of hanging on a slow
-    # package index.
-    timeout-minutes: 25
+    # from apt, and builds the toolchain when its tag is missing: R and its
+    # packages (about 2 minutes), Julia's instantiate and precompile of the
+    # catalogue's project (a cold toolchain took 7 minutes on 8 CPUs locally on
+    # 2026-10-29, the precompile 4 of them; a 4-vCPU runner takes longer) and Node
+    # with the harness's packages and Chromium's headless shell (under a minute,
+    # 2026-10-30). 60 fails loudly instead of hanging on a slow package index.
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -576,9 +586,15 @@ jobs:
           echo "$CHANGED_FILES"
 
           # What the image is built from: its Dockerfile, the service package,
-          # the harness it copies, the dependency lock, README.md (copied next
-          # to pyproject.toml) and the root .dockerignore (the build context).
-          RENDERER_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(agents/renderer/|agents/__init__\.py$|agents/anyplot/render/harness\.py$|agents/anyplot/render/convert\.py$|tests/image/|tests/unit/agents/runtime/convert_fixtures\.py$|pyproject\.toml$|uv\.lock$|README\.md$|\.dockerignore$|\.github/workflows/ci-image\.yml$)' || true)
+          # the harness and the R and Julia text probes it copies, the dependency lock, README.md (copied next
+          # to pyproject.toml), the catalogue's Julia project (the toolchain's
+          # Julia stage precompiles it), the catalogue's JavaScript harness and its
+          # lock (the toolchain's Node stage installs them) and the root .dockerignore
+          # (the build context); and the agents package's copy of the import allowlist
+          # and the JavaScript error grammar, which a step compares with the image, and
+          # the export page's wrapper and the API's preview relay, which steps probe in the
+          # image's Chromium.
+          RENDERER_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(agents/renderer/|agents/__init__\.py$|agents/anyplot/render/harness\.py$|agents/anyplot/render/convert\.py$|agents/anyplot/render/text_probe\.(R|jl)$|agents/anyplot/render/page\.py$|api/preview_relay\.py$|agents/anyplot/code/profiles/javascript/(import-allowlist\.json|errors\.py)$|tests/image/|tests/unit/agents/runtime/convert_fixtures\.py$|pyproject\.toml$|uv\.lock$|README\.md$|Project\.toml$|Manifest\.toml$|package\.json$|package-lock\.json$|automation/js-render/|\.dockerignore$|\.github/workflows/ci-image\.yml$)' || true)
 
           if [[ "$EVENT_NAME" == "workflow_dispatch" && "$FORCE_RUN" == "true" ]]; then
             echo "Manual trigger with force_run=true, will build the renderer image"
@@ -653,6 +669,17 @@ jobs:
             echo "tag=ci"
             echo "build=true"
           } >> "$GITHUB_OUTPUT"
+
+      # A toolchain built in the job holds Julia's install and precompiled depot and Node
+      # with Chromium (3.4 GB unpacked) several times over: in the builder, in the local
+      # registry, in the cache export and in the renderer image loaded below (4.5 GB). The runner's preinstalled
+      # SDKs this job never uses make the room.
+      - name: Free disk space for the toolchain build
+        if: steps.toolchain.outputs.build == 'true'
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          df -h /
 
       - name: Start a local registry for the toolchain
         if: steps.toolchain.outputs.build == 'true'
@@ -1040,8 +1067,502 @@ jobs:
           width, height = struct.unpack(">II", png[16:24])
           assert (width, height) == (3200, 1800), (width, height)
           print(f"OK: R plot-light.png {width}x{height}, {len(png)} bytes")
+          # The row's text probe (R_TEXT_PROBE) left the drawn texts, which the harness made the probe.
+          import json
+          labels = {(label["kind"], label["text"]) for label in json.load(open("work-r/probe-light.json"))["labels"]}
+          assert ("title", "Größe – Überblick") in labels, labels
+          assert ("x tick label", "b") in labels and ("x axis label", "x") in labels, labels
+          print(f"OK: R probe with {len(labels)} drawn texts")
           EOF
           tail -n 1 work-r/harness.out
+
+      # Julia (step 5 of agentic/specs/261024-agent-all-libraries.md) runs in exec mode like R:
+      # the launcher by its path with the row's flags and environment, the exec filter preloaded,
+      # and every package loaded from the toolchain's precompiled depot under
+      # --compiled-modules=strict, the precompile workload first (`-L warmup.jl`, J1.1). A catalogue
+      # file renders unchanged, then a forced cache miss (another --check-bounds, one of the cache
+      # flags) must fail within seconds: under strict a package image that does not match is an
+      # error, never a compile under the render's timeout. The miss fails on the workload's image,
+      # the first that `-L` loads.
+      - name: Render a Makie plot through the harness in exec mode
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p work-jl
+          python3 - > work-jl/row.flags <<'EOF'
+          from agents.renderer.commands import JULIA_TEXT_PROBE, JULIA_WARMUP, command_for
+
+          row = command_for("julia", "makie")
+          assert row.exec_deny and not row.rlimit_as, "the Julia row runs under the exec filter, without RLIMIT_AS"
+          assert "--compiled-modules=strict" in row.argv, row.argv
+          assert row.argv[-4:] == ("-L", JULIA_WARMUP, "-L", JULIA_TEXT_PROBE), row.argv
+          for key, value in row.env.items():
+              print(f"-e\n{key}={value}")
+          EOF
+          python3 - > work-jl/row.argv <<'EOF'
+          from agents.renderer.commands import command_for
+
+          row = command_for("julia", "makie")
+          print("\n".join([*row.argv, f"{row.code_flag}{row.code_file}"]))
+          EOF
+          mapfile -t ROW_FLAGS < work-jl/row.flags
+          mapfile -t ROW_ARGV < work-jl/row.argv
+          echo "the Julia row: ${ROW_ARGV[*]}"
+          cp plots/scatter-basic/implementations/julia/makie.jl work-jl/plot.jl
+          printf 'x\n1\n' > work-jl/data.csv
+          start=$(date +%s.%N)
+          docker run --rm --network none --read-only --tmpfs /tmp \
+            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+            -v "$PWD/work-jl:/work" -w /work \
+            -e ANYPLOT_THEME=light "${ROW_FLAGS[@]}" \
+            -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OMP_NUM_THREADS=1 \
+            -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_DENY_EXEC=required \
+            anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py \
+            --exec -- "${ROW_ARGV[@]}" \
+            > work-jl/harness.out 2> work-jl/harness.err \
+            || { echo "::error::the Makie render failed"; cat work-jl/harness.out work-jl/harness.err; exit 1; }
+          echo "wall time: $(python3 -c "import sys; print(round(float(sys.argv[2]) - float(sys.argv[1]), 1))" "$start" "$(date +%s.%N)") s"
+          grep -qxF 'HARNESS {"event": "start"}' work-jl/harness.out || { echo "::error::no HARNESS start line"; cat work-jl/harness.out; exit 1; }
+          tail -n 1 work-jl/harness.out | grep -qF '"exec_deny": "on"' \
+            || { echo "::error::the Makie render ran without the exec filter"; cat work-jl/harness.out work-jl/harness.err; exit 1; }
+          python3 - <<'EOF'
+          import struct
+          png = open("work-jl/plot-light.png", "rb").read()
+          assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
+          width, height = struct.unpack(">II", png[16:24])
+          assert (width, height) == (3200, 1800), (width, height)
+          print(f"OK: Makie plot-light.png {width}x{height}, {len(png)} bytes")
+          # The row's text probe (JULIA_TEXT_PROBE) left the figure's drawn texts, which the harness made the probe.
+          import json
+          kinds = {label["kind"] for label in json.load(open("work-jl/probe-light.json"))["labels"]}
+          assert {"x tick label", "y tick label"} <= kinds, kinds
+          print(f"OK: Makie probe with the kinds {sorted(kinds)}")
+          EOF
+          tail -n 1 work-jl/harness.out
+
+          # The forced cache miss: the same launcher, flags and environment, plus --check-bounds=yes.
+          start=$(date +%s)
+          if docker run --rm --network none --read-only --tmpfs /tmp \
+            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+            "${ROW_FLAGS[@]}" -e HOME=/tmp \
+            anyplot-renderer:ci "${ROW_ARGV[@]:0:${#ROW_ARGV[@]}-1}" --check-bounds=yes -e 'using CairoMakie' \
+            > work-jl/miss.out 2>&1; then
+            echo "::error::a cache miss loaded under --compiled-modules=strict"; cat work-jl/miss.out; exit 1
+          fi
+          took=$(( $(date +%s) - start ))
+          grep -q 'not available with flags' work-jl/miss.out \
+            || { echo "::error::the cache miss failed for another reason"; cat work-jl/miss.out; exit 1; }
+          test "$took" -le 30 || { echo "::error::the cache miss took ${took} s; strict must fail fast"; exit 1; }
+          echo "OK: a cache miss fails under strict in ${took} s: $(grep -m1 'not available with flags' work-jl/miss.out)"
+
+      # JavaScript (step 3 of agentic/specs/261024-agent-all-libraries.md, JS-1) runs in exec mode
+      # too, without the exec filter: Node by its path, with the row's environment, runs the
+      # catalogue's harness, which starts Playwright's Chromium headless shell. A catalogue Chart.js
+      # file and a catalogue MUI X file written for MUI X 9.16 (esbuild bundles it from the image's
+      # packages) render unchanged at 3200x1800, and Node is in the image but not on the sandbox's
+      # PATH, where agents/renderer/delegates.py refuses it.
+      - name: Render Chart.js and MUI X plots through the harness in exec mode
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p work-js/chartjs work-js/muix
+          python3 - > work-js/row.flags <<'EOF'
+          from agents.renderer.commands import NODE_BINARY, command_for
+
+          row = command_for("javascript", "chartjs")
+          assert not (row.exec_deny or row.rlimit_as or row.rlimit_nproc), "the JavaScript row runs without the exec filter, RLIMIT_AS and RLIMIT_NPROC"
+          assert row.argv[0] == NODE_BINARY and row.toolchain == (NODE_BINARY,), row.argv
+          assert command_for("javascript", "muix").env == row.env
+          for key, value in row.env.items():
+              print(f"-e\n{key}={value}")
+          EOF
+          python3 - <<'EOF'
+          from agents.renderer.commands import command_for
+
+          for library in ("chartjs", "muix"):
+              row = command_for("javascript", library)
+              with open(f"work-js/{library}.argv", "w") as handle:
+                  handle.write("\n".join([*row.argv, f"{row.code_flag}{row.code_file}"]) + "\n")
+          EOF
+          mapfile -t ROW_FLAGS < work-js/row.flags
+          for case in "chartjs scatter-basic chartjs.js" "muix bar-basic muix.tsx"; do
+            read -r library spec file <<< "$case"
+            mapfile -t ROW_ARGV < "work-js/$library.argv"
+            echo "the JavaScript row: ${ROW_ARGV[*]}"
+            cp "plots/$spec/implementations/javascript/$file" "work-js/$library/${ROW_ARGV[-1]}"
+            printf 'x\n1\n' > "work-js/$library/data.csv"
+            start=$(date +%s.%N)
+            docker run --rm --network none --read-only --tmpfs /tmp \
+              --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+              -v "$PWD/work-js/$library:/work" -w /work \
+              -e ANYPLOT_THEME=light "${ROW_FLAGS[@]}" \
+              -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+              -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 \
+              anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py \
+              --exec -- "${ROW_ARGV[@]}" \
+              > "work-js/$library/harness.out" 2> "work-js/$library/harness.err" \
+              || { echo "::error::the $library render failed"; cat "work-js/$library/harness.out" "work-js/$library/harness.err"; exit 1; }
+            echo "wall time: $(python3 -c "import sys; print(round(float(sys.argv[2]) - float(sys.argv[1]), 1))" "$start" "$(date +%s.%N)") s"
+            grep -qxF 'HARNESS {"event": "start"}' "work-js/$library/harness.out" \
+              || { echo "::error::no HARNESS start line"; cat "work-js/$library/harness.out"; exit 1; }
+            python3 - "work-js/$library/plot-light.png" "$library" <<'EOF'
+          import struct, sys
+
+          png = open(sys.argv[1], "rb").read()
+          assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
+          width, height = struct.unpack(">II", png[16:24])
+          assert (width, height) == (3200, 1800), (width, height)
+          print(f"OK: {sys.argv[2]} plot-light.png {width}x{height}, {len(png)} bytes")
+          EOF
+            tail -n 1 "work-js/$library/harness.out"
+            # The row's environment switches the harness's sandbox mode on (JS-2): no interactive page.
+            test ! -e "work-js/$library/plot-light.html" \
+              || { echo "::error::the $library render wrote plot-light.html in sandbox mode"; exit 1; }
+          done
+
+          # The sandbox mode's own checks, through the same row (JS-2): the typed data reaches the page
+          # as window.ANYPLOT_DATA with a cell that would close a script, the route aborts a navigation,
+          # and the import plugin refuses an image file, each failure ending stderr with the final error line.
+          sandboxed() {
+            local library=$1 dir=$2 data=$3
+            mapfile -t ROW_ARGV < "work-js/$library.argv"
+            printf 'x\n1\n' > "$dir/data.csv"
+            local extra=()
+            if [ -n "$data" ]; then extra=(-e ANYPLOT_DATA_JSON=/work/data.json); fi
+            docker run --rm --network none --read-only --tmpfs /tmp \
+              --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+              -v "$PWD/$dir:/work" -w /work \
+              -e ANYPLOT_THEME=light "${ROW_FLAGS[@]}" "${extra[@]}" \
+              -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+              -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 \
+              anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py \
+              --exec -- "${ROW_ARGV[@]}" > "$dir/harness.out" 2> "$dir/harness.err"
+          }
+          mkdir -p work-js/data work-js/navigate work-js/refused
+          printf '%s\n' '{"columns":["label","value"],"data":[["</script><script>window.pwned=1</script>",1.5],[null,2]]}' \
+            > work-js/data/data.json
+          cat > work-js/data/plot.js <<'EOF'
+          const data = window.ANYPLOT_DATA;
+          if (data.length !== 2 || data[0].label !== "</script><script>window.pwned=1</script>" || data[1].label !== null
+              || data[0].value !== 1.5 || data.columns.join() !== "label,value" || window.pwned) {
+            throw new Error("ANYPLOT_DATA is " + JSON.stringify(data));
+          }
+          const canvas = document.createElement("canvas");
+          document.getElementById("container").appendChild(canvas);
+          new Chart(canvas, { type: "bar", options: { animation: false },
+            data: { labels: data.map((row) => String(row.label)), datasets: [{ data: data.map((row) => row.value) }] } });
+          EOF
+          sandboxed chartjs work-js/data data \
+            || { echo "::error::the data render failed"; cat work-js/data/harness.err; exit 1; }
+          test -s work-js/data/plot-light.png || { echo "::error::the data render wrote no PNG"; exit 1; }
+          echo "OK: window.ANYPLOT_DATA reached the page intact"
+          # The policy does not govern a top-level navigation; the route aborts it, Chromium's error
+          # page replaces the plot, and the render fails as one that drew nothing. The comment names
+          # the ready signal, so the harness waits for it and the error page is in place.
+          printf '%s\n' 'const c = document.createElement("canvas");' 'document.getElementById("container").appendChild(c);' \
+            '// window.__anyplotReady stays unset' 'location.href = "http://example.com/";' > work-js/navigate/plot.js
+          if sandboxed chartjs work-js/navigate ""; then
+            echo "::error::the navigation render drew a plot"; cat work-js/navigate/harness.err; exit 1
+          fi
+          grep -qxF 'render: refused 1 request(s) and 0 WebSocket(s)' work-js/navigate/harness.err \
+            && test "$(tail -n 1 work-js/navigate/harness.err)" = 'render: error: draw NoOutput -: snippet did not draw into #container (no <canvas>/<svg> mounted).' \
+            || { echo "::error::the route did not abort the navigation"; cat work-js/navigate/harness.err; exit 1; }
+          echo "OK: the route aborted the page's navigation"
+          printf '%s\n' 'import text from "/etc/os-release";' 'export default function Chart() {' \
+            '  return <svg><text>{String(text)}</text></svg>;' '}' > work-js/refused/plot.tsx
+          if sandboxed muix work-js/refused ""; then
+            echo "::error::a MUI X snippet bundled an image file"; exit 1
+          fi
+          last=$(tail -n 1 work-js/refused/harness.err)
+          test "$last" = 'render: error: import ImportRefused plot.tsx:1: import "/etc/os-release" refused: relative, absolute, node: and URL imports are refused' \
+            || { echo "::error::unexpected final line: $last"; cat work-js/refused/harness.err; exit 1; }
+          echo "OK: $last"
+          docker run --rm --network none anyplot-renderer:ci /app/.venv/bin/python -c "
+          import os, shutil
+          from agents.renderer.commands import NODE_BINARY
+          from agents.renderer.executor import SANDBOX_PATH
+          assert os.access(NODE_BINARY, os.X_OK), NODE_BINARY
+          assert shutil.which('node', path=SANDBOX_PATH) is None, shutil.which('node', path=SANDBOX_PATH)
+          print(f'OK: {NODE_BINARY} is in the image, and no node is on {SANDBOX_PATH}')
+          "
+
+      # plotly and bokeh (PB-1 of step 4 in agentic/specs/261024-agent-all-libraries.md) render in
+      # two steps: the harness forks the plot before it arms anything, the plot writes its figure as
+      # JSON under the plot guard and the exec filter with the Python limits, and the harness, never
+      # armed, then runs the JavaScript row's harness on it, which draws it with the package's own
+      # bundled JavaScript. The sandbox's environment is a Python row's plus the JavaScript row's, as
+      # `executor.sandbox_env` builds it; each plot sets its size the way the catalogue's save does,
+      # and the canvas follows (plotly 800x450 at scale 4, bokeh 4800x2700 at 2/3). The image carries
+      # plotly and bokeh, and none of their export stacks.
+      - name: Render plotly and bokeh plots through the harness in figure mode
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p work-figure/plotly work-figure/bokeh
+          python3 - > work-figure/row.flags <<'EOF'
+          from agents.renderer.commands import FIGURE_FLAG, NODE_BINARY, command_for
+
+          for library in ("plotly", "bokeh"):
+              row = command_for("python", library)
+              assert row.figure == library and row.exec_deny and row.argv[0] == NODE_BINARY, row
+              with open(f"work-figure/{library}.argv", "w") as handle:
+                  handle.write("\n".join([FIGURE_FLAG, library, row.code_file, "--", *row.argv]) + "\n")
+          assert command_for("python", "plotly").env == command_for("python", "bokeh").env
+          for key, value in row.env.items():
+              print(f"-e\n{key}={value}")
+          EOF
+          mapfile -t ROW_FLAGS < work-figure/row.flags
+          cat > work-figure/plotly/plot.py <<'EOF'
+          import os
+
+          import plotly.graph_objects as go
+
+          THEME = os.getenv("ANYPLOT_THEME", "light")
+          fig = go.Figure(go.Bar(x=["a", "b", "c"], y=[1, 3, 2], marker={"color": "#009E73"}))
+          # An axis range builds plotly's info-array validator, an `eval` the guard admits (CODE_BUILDERS).
+          fig.update_layout(title={"text": "Größe – plotly"}, yaxis={"range": [0, 4]}, width=800, height=450)
+          fig.write_json(f"plot-{THEME}.json")
+          EOF
+          cat > work-figure/bokeh/plot.py <<'EOF'
+          import json
+          import os
+
+          from bokeh.embed import json_item
+          from bokeh.plotting import figure
+
+          THEME = os.getenv("ANYPLOT_THEME", "light")
+          p = figure(x_range=["a", "b", "c"], width=4800, height=2700, title="Größe – bokeh", toolbar_location=None)
+          p.vbar(x=["a", "b", "c"], top=[1, 3, 2], width=0.8, color="#009E73")
+          with open(f"plot-{THEME}.json", "w", encoding="utf-8") as handle:
+              json.dump(json_item(p), handle)
+          EOF
+          for library in plotly bokeh; do
+            mapfile -t ROW_ARGV < "work-figure/$library.argv"
+            echo "the $library row: ${ROW_ARGV[*]}"
+            printf 'x\n1\n' > "work-figure/$library/data.csv"
+            start=$(date +%s.%N)
+            docker run --rm --network none --read-only --tmpfs /tmp \
+              --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+              -v "$PWD/work-figure/$library:/work" -w /work \
+              -e ANYPLOT_THEME=light -e MPLBACKEND=Agg -e MPLCONFIGDIR=/tmp/mpl -e ANYPLOT_MPL_SEED=/opt/mplconfig \
+              "${ROW_FLAGS[@]}" \
+              -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+              -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_RLIMIT_AS_MB=1024 \
+              -e ANYPLOT_DENY_EXEC=required \
+              anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py \
+              "${ROW_ARGV[@]}" \
+              > "work-figure/$library/harness.out" 2> "work-figure/$library/harness.err" \
+              || { echo "::error::the $library render failed"; cat "work-figure/$library/harness.out" "work-figure/$library/harness.err"; exit 1; }
+            echo "wall time: $(python3 -c "import sys; print(round(float(sys.argv[2]) - float(sys.argv[1]), 1))" "$start" "$(date +%s.%N)") s"
+            grep -qxF 'HARNESS {"event": "start"}' "work-figure/$library/harness.out" \
+              || { echo "::error::no HARNESS start line"; cat "work-figure/$library/harness.out"; exit 1; }
+            python3 - "work-figure/$library" "$library" <<'EOF'
+          import json, os, struct, sys
+
+          work, library = sys.argv[1:]
+          png = open(f"{work}/plot-light.png", "rb").read()
+          assert png[:8] == b"\x89PNG\r\n\x1a\n", "not a PNG"
+          width, height = struct.unpack(">II", png[16:24])
+          assert (width, height) == (3200, 1800), (width, height)
+          end = json.loads(open(f"{work}/harness.out").read().splitlines()[-1].split(" ", 1)[1])
+          assert end["exec_deny"] == "on", f"the plot step ran without the exec filter: {end}"
+          assert set(end["steps"]) == {"plot", "screenshot"}, end
+          assert not os.path.exists(f"{work}/plot-light.html"), "the screenshot step wrote a page"
+          print(f"OK: {library} plot-light.png {width}x{height}, {len(png)} bytes; steps {end['steps']}")
+          EOF
+          done
+          docker run --rm --network none anyplot-renderer:ci /app/.venv/bin/python -c "
+          import importlib.util
+          for name in ('plotly', 'bokeh'):
+              assert importlib.util.find_spec(name), name
+          for name in ('kaleido', 'choreographer', 'selenium', 'webdriver_manager'):
+              assert importlib.util.find_spec(name) is None, f'{name} is in the image'
+          print('OK: plotly and bokeh are in the image, their export stacks are not')
+          "
+
+      # The image's own harness refuses a figure that holds what a browser would run or follow, built at run
+      # time where no validator rule reads it (`chr(60)`): the markup check in render.mjs, which the toolchain
+      # image copies, is the barrier for the exported HTML (the review of PB-2a). Same row and flags as above.
+      - name: A plotly and a bokeh figure with markup fail as figure UnsafeMarkup
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mapfile -t ROW_FLAGS < work-figure/row.flags
+          mkdir -p work-unsafe/plotly work-unsafe/bokeh
+          cat > work-unsafe/plotly/plot.py <<'EOF'
+          import os
+
+          import plotly.graph_objects as go
+
+          THEME = os.getenv("ANYPLOT_THEME", "light")
+          link = chr(60) + 'a href="javascript:alert(1)">%{y}' + chr(60) + "/a>"
+          fig = go.Figure(go.Bar(x=["a", "b"], y=[1, 2], hovertemplate=link))
+          fig.update_layout(width=800, height=450)
+          fig.write_json(f"plot-{THEME}.json")
+          EOF
+          cat > work-unsafe/bokeh/plot.py <<'EOF'
+          import json
+          import os
+
+          from bokeh.embed import json_item
+          from bokeh.models import Div
+          from bokeh.plotting import figure
+
+          THEME = os.getenv("ANYPLOT_THEME", "light")
+          p = figure(width=4800, height=2700, toolbar_location=None)
+          p.line([1, 2], [3, 4])
+          p.tags = [Div(text=chr(60) + "img src=x onerror=alert(1)>")]
+          with open(f"plot-{THEME}.json", "w", encoding="utf-8") as handle:
+              json.dump(json_item(p), handle)
+          EOF
+          for library in plotly bokeh; do
+            mapfile -t ROW_ARGV < "work-figure/$library.argv"
+            printf 'x\n1\n' > "work-unsafe/$library/data.csv"
+            status=0
+            docker run --rm --network none --read-only --tmpfs /tmp \
+              --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+              -v "$PWD/work-unsafe/$library:/work" -w /work \
+              -e ANYPLOT_THEME=light -e MPLBACKEND=Agg -e MPLCONFIGDIR=/tmp/mpl -e ANYPLOT_MPL_SEED=/opt/mplconfig \
+              "${ROW_FLAGS[@]}" \
+              -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+              -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 -e ANYPLOT_RLIMIT_AS_MB=1024 \
+              -e ANYPLOT_DENY_EXEC=required \
+              anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py \
+              "${ROW_ARGV[@]}" \
+              > "work-unsafe/$library/harness.out" 2> "work-unsafe/$library/harness.err" || status=$?
+            last=$(grep -v '^[[:space:]]*$' "work-unsafe/$library/harness.err" | tail -n 1 || true)
+            if [[ "$status" -eq 0 || "$last" != "render: error: figure UnsafeMarkup "* || -e "work-unsafe/$library/plot-light.png" ]]; then
+              echo "::error::the $library figure with markup was not refused as figure UnsafeMarkup (exit $status)"
+              cat "work-unsafe/$library/harness.out" "work-unsafe/$library/harness.err"
+              exit 1
+            fi
+            echo "OK: $library refused: $last"
+          done
+
+      # The downloadable plot.html of a JavaScript plot (JS-4b, step 3g of
+      # agentic/specs/261024-agent-all-libraries.md): the row builds the page with
+      # ANYPLOT_PAGE_ONLY=1 and starts no browser; the agents' wrapper (agents/anyplot/render/page.py,
+      # loaded by its path: it imports only the standard library) puts it into a sandboxed srcdoc
+      # frame; the probe (agents/renderer/page_probe.mjs) opens the wrapper from file:// in the image's
+      # Chromium, offline: the chart drew and answers a hover through the scaled frame, the frame's
+      # origin is null, and the snippet's attempts to set top.location, call window.open and fetch,
+      # read storage and cookies, and navigate its own frame to an http URL all fail, with no request
+      # reaching a listener on the loopback. Chart.js's page sits in work-page/, which the relay
+      # step below reuses; MUI X's (JS-4c), a React bundle the harness builds through its closed
+      # import plugin, in work-page/muix/.
+      - name: Build, wrap and probe a JavaScript plot's page
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p work-page/muix
+          mapfile -t ROW_FLAGS < work-js/row.flags
+          probe=(-v "$PWD/agents/renderer/page_probe.mjs:/probe/page_probe.mjs:ro")
+          for case in "chartjs work-page" "muix work-page/muix"; do
+            read -r library dir <<< "$case"
+            mapfile -t ROW_ARGV < "work-js/$library.argv"
+            docker run --rm --network none "${probe[@]}" anyplot-renderer:ci \
+              /opt/node/bin/node /probe/page_probe.mjs snippet "$library" > "$dir/${ROW_ARGV[-1]}"
+            printf '%s\n' '{"columns":["label","value"],"data":[["a</script>",3],["b",5],["c",2],["d",7],["e",4]]}' \
+              > "$dir/data.json"
+            start=$(date +%s.%N)
+            docker run --rm --network none --read-only --tmpfs /tmp \
+              --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+              -v "$PWD/$dir:/work" -w /work \
+              -e ANYPLOT_THEME=light "${ROW_FLAGS[@]}" -e ANYPLOT_DATA_JSON=/work/data.json -e ANYPLOT_PAGE_ONLY=1 \
+              -e HOME=/tmp -e PYTHONDONTWRITEBYTECODE=1 -e OPENBLAS_NUM_THREADS=1 -e OMP_NUM_THREADS=1 \
+              -e ANYPLOT_RLIMIT_CPU_S=60 -e ANYPLOT_RLIMIT_FSIZE_MB=50 \
+              anyplot-renderer:ci /app/.venv/bin/python -I -X disable-remote-debug /opt/anyplot/harness.py \
+              --exec -- "${ROW_ARGV[@]}" > "$dir/harness.out" 2> "$dir/harness.err" \
+              || { echo "::error::the $library page build failed"; cat "$dir/harness.out" "$dir/harness.err"; exit 1; }
+            echo "$library page build: $(python3 -c "import sys; print(round(float(sys.argv[2]) - float(sys.argv[1]), 1))" "$start" "$(date +%s.%N)") s"
+            test -s "$dir/plot-light.html" && test ! -e "$dir/plot-light.png" \
+              || { echo "::error::the $library page build wrote no page, or a PNG"; ls -la "$dir"; exit 1; }
+            python3 - "$dir" <<'EOF'
+          import importlib.util
+          import sys
+
+          spec = importlib.util.spec_from_file_location("page", "agents/anyplot/render/page.py")
+          page = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(page)
+          html = open(f"{sys.argv[1]}/plot-light.html", encoding="utf-8").read()
+          wrapped = page.wrap_page(html, theme="light", canvas=(3200, 1800), title="page probe")
+          open(f"{sys.argv[1]}/plot.html", "w", encoding="utf-8").write(wrapped)
+          print(f"OK: a page of {len(html.encode()):,} bytes, wrapped {len(wrapped.encode()):,}")
+          EOF
+            docker run --rm --network none --read-only --tmpfs /tmp \
+              --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+              "${probe[@]}" -v "$PWD/$dir:/page:ro" \
+              -e HOME=/tmp -e XDG_CACHE_HOME=/tmp -e XDG_CONFIG_HOME=/tmp \
+              -e PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers -e ANYPLOT_NODE_MODULES=/opt/anyplot/node_modules \
+              -e FONTCONFIG_FILE=/opt/anyplot/js-fonts.conf \
+              anyplot-renderer:ci /opt/node/bin/node /probe/page_probe.mjs check /page/plot.html --hover --attempts \
+              > "$dir/probe.json" || { echo "::error::the $library page probe failed"; cat "$dir/probe.json"; exit 1; }
+            python3 -c "import json, sys; report = json.load(open(sys.argv[1])); print('OK: the', sys.argv[2], 'page probe passed', sorted(report['checks']))" "$dir/probe.json" "$library"
+          done
+
+      # The chat's interactive preview (JS-4b-2, route A): the API's relay page
+      # (api/preview_relay.py, standard library only, run by its path for its page and its real
+      # headers) on an origin of its own, a parent page at an allowed origin that frames it scaled
+      # as the chat does and posts the wrapper of the step above into it on the relay's ready
+      # signal, as the chat does, and two siblings that post a page first. The probe asserts that
+      # the plot draws and answers a hover in a frame of origin null, that the snippet's ways out
+      # fail (the wrapper's and the relay's navigation among them), that a second page and the
+      # siblings' and the plot's own pages are ignored, that the plot's own ready signal starts no
+      # post and the relay sends nothing but its signal, that the relay keeps its URL, that
+      # another origin cannot frame it (frame-ancestors), that with that check lifted the relay's
+      # own origin check still ignores that origin's page, and that a listening 404 page at the
+      # relay's URL receives nothing.
+      - name: Probe the chat's preview relay with the page
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          python3 api/preview_relay.py https://anyplot.ai https://www.anyplot.ai > work-page/relay.json
+          docker run --rm --network none --read-only --tmpfs /tmp \
+            --cap-drop ALL --security-opt no-new-privileges --user "$(id -u):$(id -g)" \
+            -v "$PWD/agents/renderer/page_probe.mjs:/probe/page_probe.mjs:ro" -v "$PWD/work-page:/page:ro" \
+            -e HOME=/tmp -e XDG_CACHE_HOME=/tmp -e XDG_CONFIG_HOME=/tmp \
+            -e PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers -e ANYPLOT_NODE_MODULES=/opt/anyplot/node_modules \
+            -e FONTCONFIG_FILE=/opt/anyplot/js-fonts.conf \
+            anyplot-renderer:ci /opt/node/bin/node /probe/page_probe.mjs relay /page/relay.json /page/plot.html --hover \
+            > work-page/relay-probe.json || { echo "::error::the relay probe failed"; cat work-page/relay-probe.json; exit 1; }
+          python3 -c "import json; report = json.load(open('work-page/relay-probe.json')); print('OK: the relay probe passed', sorted(report['checks']))"
+
+      # The JavaScript code profile (JS-3) reads the MUI X import allowlist from a copy in the
+      # agents package, because the agents image has no node_modules
+      # (agents/anyplot/code/profiles/javascript/allowlist.py): the image's file, which the
+      # toolchain derives from the installed packages at build, must equal the copy, or a lock
+      # bump that changes MUI X's exports would leave the validator and the readiness hint on
+      # the old list. The fix is in the message. The profile's error grammar then reads the
+      # final error lines the step above left, as the runtime of JS-4 will read them; the module
+      # is loaded by its path, since it imports only the standard library and the package's
+      # __init__ imports ADK.
+      - name: The image's import allowlist equals the agents package's copy
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          docker run --rm --network none anyplot-renderer:ci cat /opt/anyplot/js-render/import-allowlist.json \
+            > work-js/import-allowlist.json
+          cmp work-js/import-allowlist.json agents/anyplot/code/profiles/javascript/import-allowlist.json || {
+            echo "::error::the image's MUI X import allowlist differs from the agents package's copy; regenerate the copy after npm ci: python3 agents/renderer/toolchain/import_allowlist.py node_modules > agents/anyplot/code/profiles/javascript/import-allowlist.json"
+            diff work-js/import-allowlist.json agents/anyplot/code/profiles/javascript/import-allowlist.json || true
+            exit 1
+          }
+          echo "OK: the image's import allowlist equals the agents package's copy"
+          python3 - <<'EOF'
+          import importlib.util
+
+          spec = importlib.util.spec_from_file_location("errors", "agents/anyplot/code/profiles/javascript/errors.py")
+          errors = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(errors)
+          cases = {
+              "work-js/refused/harness.err": "an import the image refuses (only the allowlisted React and MUI modules) at line 1",
+              "work-js/navigate/harness.err": "nothing drawn: the page has no canvas, svg or img in #container",
+          }
+          for path, expected in cases.items():
+              summary = errors.error_summary(open(path, encoding="utf-8").read())
+              assert summary == expected, (path, summary)
+              print(f"OK: {path}: {summary}")
+          EOF
 
       # Native code the audit hook cannot see finds no program to run. lets-plot's bridge links
       # ImageMagick with a compiled-in delegate map that runs programs by name through /bin/sh
@@ -1051,8 +1572,8 @@ jobs:
       # policy denying PNG under MAGICK_CONFIGURE_PATH still wrote its PNG, 2026-10-26).
       # matplotlib calls fc-list when it finds it. So the sandbox's PATH (SANDBOX_PATH of
       # agents/renderer/executor.py) must carry none of them, next to RLIMIT_NPROC and the
-      # sandbox itself. node stays on the list until the JavaScript runtime (step 3 of
-      # agentic/specs/261024-agent-all-libraries.md) installs it as its row's toolchain.
+      # sandbox itself. node stays on the list: the JavaScript row (step 3 of
+      # agentic/specs/261024-agent-all-libraries.md) runs /opt/node/bin/node by its path.
       - name: No delegate program on the sandbox PATH
         if: steps.check.outputs.should_build == 'true'
         run: |
@@ -1476,6 +1997,12 @@ jobs:
             agents/anyplot/render/fonts/JetBrainsMono-Bold.ttf \
             agents/anyplot/prompts/root.md \
             agents/anyplot/prompts/adapter.md \
+            agents/anyplot/prompts/adapter_python.md \
+            agents/anyplot/prompts/adapter_r.md \
+            agents/anyplot/prompts/adapter_julia.md \
+            agents/anyplot/prompts/adapter_javascript.md \
+            agents/anyplot/prompts/adapter_plotly.md \
+            agents/anyplot/prompts/adapter_bokeh.md \
             agents/anyplot/prompts/reviewer.md \
             agents/anyplot/prompts/scope_judge.md \
             agents/anyplot/prompts/data_judge.md \
@@ -1485,6 +2012,12 @@ jobs:
             prompts/quality-criteria.md \
             prompts/library/matplotlib.md \
             prompts/library/seaborn.md \
+            prompts/library/ggplot2.md \
+            prompts/library/makie.md \
+            prompts/library/chartjs.md \
+            prompts/library/muix.md \
+            prompts/library/plotly.md \
+            prompts/library/bokeh.md \
             prompts/workflow-prompts/impl-repair-claude.md \
             prompts/workflow-prompts/ai-quality-review.md; do
             docker exec agents test -f "/app/$path" || { echo "::error::/app/$path is missing from the image"; exit 1; }
@@ -1501,6 +2034,127 @@ jobs:
             exit 1
           fi
           echo "non-root OK: uid $uid"
+
+      # The R code profile in the built image (PR 3b of the R pilot, 2026-10-29): the builder
+      # stage keeps only the grammars of TREE_SITTER_GRAMMARS (R, Julia, JavaScript and TSX), and the service
+      # reads that code only through them; the loop loads every kept grammar. A catalogue
+      # ggplot2 file, piped in from the checkout because the image
+      # carries no plots/, is normalised and scanned by the R runtime as POST /v1/sessions does
+      # (opening.assess), with ggplot2 enabled: scatter-basic is coupled in the corpus tests, so
+      # anything but clean or coupled, a SECURITY finding or a missing palette fails the step.
+      # The scan runs in the smoke's development container: no caller check, no model call.
+      - name: The kept grammars load and an R readiness scan runs
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          script=$(cat <<'PY'
+          import sys
+          from agents.anyplot.code.treesitter import GRAMMARS, language
+          from agents.anyplot.render.runtimes import runtime_for
+
+          for grammar in GRAMMARS:
+              language(grammar)
+          runtime = runtime_for("ggplot2")
+          normalised = runtime.normalise(sys.stdin.read(), "ggplot2")
+          readiness = runtime.readiness(normalised, spec_id="scatter-basic", enabled_libraries=["ggplot2"])
+          assert readiness.status in ("clean", "coupled"), (readiness.status, readiness.reasons)
+          assert runtime.security(normalised) == [], runtime.security(normalised)
+          regions = runtime.regions(normalised)
+          assert regions.imprint is not None and regions.save is not None, "no palette or no protected ggsave"
+          print("OK: grammars", GRAMMARS, "load; scatter-basic (ggplot2) is", readiness.status, readiness.reasons)
+          PY
+          )
+          docker exec -i agents .venv/bin/python -c "$script" < plots/scatter-basic/implementations/r/ggplot2.R
+
+      # The Julia runtime in the built image (J2a of step 5 for the profile, J2b on 2026-10-30
+      # for the runtime): the same pruned grammars, read by the Julia runtime's normaliser,
+      # validator and readiness scan on a catalogue Makie file piped in from the checkout, as
+      # POST /v1/sessions does with Makie enabled; scatter-basic is coupled in the corpus tests,
+      # so anything but clean or coupled, a SECURITY finding, or a missing palette or save fails
+      # the step.
+      - name: A Julia readiness scan runs
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          script=$(cat <<'PY'
+          import sys
+          from agents.anyplot.render.runtimes import runtime_for
+
+          runtime = runtime_for("makie")
+          normalised = runtime.normalise(sys.stdin.read(), "makie")
+          result = runtime.readiness(normalised, spec_id="scatter-basic", enabled_libraries=["makie"])
+          assert result.status in ("clean", "coupled"), (result.status, result.reasons)
+          assert runtime.security(normalised) == [], runtime.security(normalised)
+          found = runtime.regions(normalised)
+          assert found.theme is not None and found.save is not None, "no THEME statement or no protected save"
+          print("OK: scatter-basic (makie) is", result.status, result.reasons)
+          PY
+          )
+          docker exec -i agents .venv/bin/python -c "$script" < plots/scatter-basic/implementations/julia/makie.jl
+
+      # The JavaScript runtime in the built image (JS-3 of step 3 for the profile, JS-4a on
+      # 2026-10-30 for the runtime, JS-4c on 2026-10-31 for MUI X): the pruned javascript and tsx
+      # grammars read a catalogue Chart.js file and a MUI X file written for 9.16, piped in from
+      # the checkout, through the JavaScript runtime's normaliser, validator and readiness scan,
+      # as POST /v1/sessions does with the library enabled; both are clean or coupled in the
+      # corpus tests, so anything else, a SECURITY finding, or a missing token line or directive
+      # fails the step. The MUI X scan also reads the package's copy of the import allowlist,
+      # which the image must carry.
+      - name: A JavaScript readiness scan runs
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          script=$(cat <<'PY'
+          import sys
+          from agents.anyplot.render.runtimes import JavaScriptRuntime
+
+          library = sys.argv[1]
+          runtime = JavaScriptRuntime(library=library)
+          normalised = runtime.normalise(sys.stdin.read(), library)
+          result = runtime.readiness(normalised, spec_id=sys.argv[2], enabled_libraries=[library])
+          assert result.status in ("clean", "coupled"), (result.status, result.reasons)
+          assert runtime.security(normalised) == [], runtime.security(normalised)
+          found = runtime.regions(normalised)
+          assert found.theme_tokens and found.save is not None, "no token line or no orientation directive"
+          print(f"OK: {sys.argv[2]} ({library}) is", result.status, result.reasons)
+          PY
+          )
+          docker exec -i agents .venv/bin/python -c "$script" chartjs scatter-basic \
+            < plots/scatter-basic/implementations/javascript/chartjs.js
+          docker exec -i agents .venv/bin/python -c "$script" muix bar-basic \
+            < plots/bar-basic/implementations/javascript/muix.tsx
+
+      # plotly and bokeh in the built image (PB-2a, 2026-10-31): a catalogue file of each, piped
+      # in from the checkout, through the Python runtime's normaliser (the save block becomes the
+      # pinned figure save), validator and readiness scan, as POST /v1/sessions does with the
+      # library enabled, and the export swaps the figure save back for the library's normal
+      # save. Both are coupled in the corpus tests, so anything else, a SECURITY finding, a
+      # missing protected save or an export without the normal save fails the step.
+      - name: A plotly and a bokeh readiness scan run
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          script=$(cat <<'PY'
+          import sys
+          from agents.anyplot.render.runtimes import runtime_for
+
+          library, spec, normal = sys.argv[1], sys.argv[2], sys.argv[3]
+          runtime = runtime_for(library)
+          normalised = runtime.normalise(sys.stdin.read(), library)
+          result = runtime.readiness(normalised, spec_id=spec, enabled_libraries=[library])
+          assert result.status in ("clean", "coupled"), (result.status, result.reasons)
+          assert runtime.security(normalised) == [], runtime.security(normalised)
+          found = runtime.regions(normalised)
+          assert found.theme is not None and found.savefig is not None, "no THEME statement or no figure save"
+          exported = runtime.export(normalised, spec_id=spec, library_version=None)
+          assert normal in exported and 'plot-{THEME}.json' not in exported, exported[-400:]
+          print(f"OK: {spec} ({library}) is", result.status, result.reasons)
+          PY
+          )
+          docker exec -i agents .venv/bin/python -c "$script" plotly scatter-basic "write_image(" \
+            < plots/scatter-basic/implementations/python/plotly.py
+          docker exec -i agents .venv/bin/python -c "$script" bokeh scatter-basic "export_png(" \
+            < plots/scatter-basic/implementations/python/bokeh.py
 
       - name: Container logs on failure
         if: failure() && steps.check.outputs.should_build == 'true'

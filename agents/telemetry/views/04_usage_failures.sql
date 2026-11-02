@@ -65,7 +65,8 @@ FROM `anyplot.agent_telemetry.data_inputs`
 GROUP BY day, source, spec_id, library, format, entry;
 
 -- One row per failure: a refused or failed data input, a refused or failed turn, a failed pipeline run, and
--- every sandbox failure class and failed gate of a run. `kind` says which, `code` the closed code.
+-- every sandbox failure class, failed gate, edit-failure kind and rejecting validator rule of a run (the last two
+-- since 2026-10-30). `kind` says which, `code` the closed code.
 CREATE OR REPLACE VIEW `anyplot.agent_telemetry.failures` AS
 SELECT ts, source, session, spec_id, library, 'data_input' AS kind, outcome AS code, cause AS detail
 FROM `anyplot.agent_telemetry.data_inputs`
@@ -87,4 +88,21 @@ SELECT ts, source, session, spec_id, library, 'sandbox', failure, NULL
 FROM `anyplot.agent_telemetry.pipeline_runs`, UNNEST(sandbox_failures) AS failure
 UNION ALL
 SELECT ts, source, session, spec_id, library, 'gate', gate, NULL
-FROM `anyplot.agent_telemetry.pipeline_runs`, UNNEST(gates_failed) AS gate;
+FROM `anyplot.agent_telemetry.pipeline_runs`, UNNEST(gates_failed) AS gate
+UNION ALL
+SELECT ts, source, session, spec_id, library, 'edit', failure, NULL
+FROM `anyplot.agent_telemetry.pipeline_runs`, UNNEST(edit_failures) AS failure
+UNION ALL
+SELECT ts, source, session, spec_id, library, 'validator', rule, NULL
+FROM `anyplot.agent_telemetry.pipeline_runs`, UNNEST(validator_rules) AS rule;
+
+-- One row per adapter attempt of a pipeline run (since 2026-10-30): its number (1 is the first), the stage that ended
+-- it, and the run's library and status, so retries, truncations and repairs can be counted per spec and library
+-- (`COUNTIF(stage = 'adapter_truncated')`). A `not_ready` run had no attempt, and a line before that day lists none.
+CREATE OR REPLACE VIEW `anyplot.agent_telemetry.attempts` AS
+SELECT
+  runs.ts, runs.source, runs.session, runs.spec_id, runs.library, runs.idempotency_key, runs.status,
+  position + 1 AS attempt,
+  stage,
+  position + 1 = ARRAY_LENGTH(runs.stages) AS last_attempt
+FROM `anyplot.agent_telemetry.pipeline_runs` AS runs, UNNEST(runs.stages) AS stage WITH OFFSET AS position;

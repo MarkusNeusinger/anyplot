@@ -13,6 +13,7 @@ from typing import get_args
 
 import pytest
 
+from agents.anyplot.code import validate
 from agents.anyplot.code.validate import (
     BANNED_ATTRIBUTES,
     BANNED_IO,
@@ -93,8 +94,9 @@ class TestInterface:
         assert validate_security(plot("import seaborn as sns\n"), library="seaborn") == []
         assert validate_adaptation(ADAPTED, original_palette=ORIGINAL) == []
 
-    @pytest.mark.parametrize("library", ["plotly", "bokeh", "ggplot2", "d3"])
+    @pytest.mark.parametrize("library", ["ggplot2", "makie", "d3", "muix"])
     def test_library_without_profile_raises(self, library: str) -> None:
+        """Every Python library has a profile here since PB-2a (plotly, bokeh); the others have their language's."""
         with pytest.raises(ValueError, match="no validator profile"):
             validate_security(plot(), library=library)
 
@@ -851,6 +853,18 @@ class TestStrings:
             "'see HTTPS://x.y'",
             "f'https://{THEME}/x'",
             "b'http://x'",
+            "'//cdn.example.org/x.png'",
+            "'wss://example.org/feed'",
+            "'blob:abc'",
+            "'javascript:alert(1)'",
+            # A protocol-relative URL to any host (Copilot's review of #12490).
+            "'//host/x'",
+            "'//localhost/x'",
+            "'//127.0.0.1:8080/x'",
+            "'//[::1]/x'",
+            "'///example.org/x'",
+            "'//%65xample.org/x'",
+            "'see //intranet'",
         ],
     )
     def test_url_literal(self, literal: str) -> None:
@@ -865,10 +879,24 @@ class TestStrings:
             "'www.example.com'",
             "'data:'",
             "'Data: n = 3'",
+            "'///'",  # a matplotlib hatch
+            "'//'",
+            "'a // b'",
+            "'Q1//Q2'",
         ],
     )
     def test_prose_with_a_colon_passes(self, literal: str) -> None:
         assert security_rules(f"s = {literal}\n") == set()
+
+    def test_every_profile_reads_urls_with_one_rule(self) -> None:
+        """R, Julia and JavaScript read their string literals with the Python profile's URL rule, so a host form one
+        profile refuses no other admits (Copilot's review of #12490)."""
+        from agents.anyplot.code.profiles.javascript import validate as javascript
+        from agents.anyplot.code.profiles.julia import validate as julia
+        from agents.anyplot.code.profiles.r import validate as r
+
+        for profile in (r, julia, javascript):
+            assert profile._URL_IN_TEXT.pattern == validate._URL_IN_TEXT.pattern, profile.__name__
 
     def test_string_length(self) -> None:
         assert security_rules(f"s = '{'x' * MAX_STRING_CHARS}'\n") == set()
@@ -1560,6 +1588,29 @@ REVIEWED_SUBMODULES: dict[str, frozenset[str]] = {
         "scale_colormap_mpl scale_convenience scale_identity_ scale_position series_meta stat subplots "
         "subplots_util theme_ theme_set tooltip util".split()
     ),
+    # PB-2a (2026-10-31, plotly 7.1.0, bokeh 3.10.1). plotly's trace modules hold the trace classes and their
+    # validators; express's `data` (bundled CSVs) is banned on its module, its `colors` re-exports plotly.colors,
+    # `trendline_functions` fits with statsmodels; figure_factory's `utils` computes. `plotly.graph_objects`,
+    # `plotly.colors` and `plotly.subplots` have no public submodule. bokeh's `callbacks`, `css`, `dom`, `map_plots`
+    # and `tiles` and plotting's `gmap` are banned on their modules, and `renderers` is banned on every receiver
+    # (altair's plugin registry, `UNSAFE_HELPERS`); the other model modules hold models whose JavaScript, markup and
+    # URL members are banned by name (`LIBRARY_BANS["bokeh"]`).
+    "plotly.graph_objs": frozenset(
+        "bar barpolar box candlestick carpet choropleth choroplethmap cone contour contourcarpet densitymap funnel "
+        "funnelarea graph_objs heatmap histogram histogram2d histogram2dcontour icicle image indicator isosurface "
+        "layout mesh3d ohlc parcats parcoords pie quiver sankey scatter scatter3d scattercarpet scattergeo scattergl "
+        "scattermap scatterpolar scatterpolargl scattersmith scatterternary splom streamtube sunburst surface table "
+        "treemap violin volume waterfall".split()
+    ),
+    "plotly.express": frozenset("colors imshow_utils trendline_functions".split()),
+    "plotly.figure_factory": frozenset({"utils"}),
+    "bokeh.plotting": frozenset("contour glyph_api graph".split()),
+    "bokeh.models": frozenset(
+        "annotations axes canvas comparisons coordinates expressions filters formatters glyph glyphs graphics "
+        "graphs grids labeling layouts mappers misc nodes plots ranges scales selections selectors sources "
+        "text textures tickers tools transforms ui util widgets".split()
+    ),
+    "bokeh.colors": frozenset("color groups named util".split()),
 }
 
 
@@ -1573,6 +1624,146 @@ def test_every_submodule_is_reviewed(root: str) -> None:
     unreviewed = sorted(found - REVIEWED_SUBMODULES[root] - banned)
     assert not unreviewed, f"review these {root} submodules and add them to REVIEWED_SUBMODULES or ban them"
     assert not REVIEWED_SUBMODULES[root] & banned
+
+
+# --- import machinery reachable from the admitted modules (F6 and F7 of PB-1's review, 2026-10-31) -----------------
+
+IMPORT_MACHINERY_MODULES = frozenset(
+    {
+        "importlib",
+        "importlib.util",
+        "importlib.machinery",
+        "importlib.abc",
+        "importlib.resources",
+        "importlib.metadata",
+        "_frozen_importlib",
+        "_frozen_importlib_external",
+        "zipimport",
+        "pkgutil",
+        "runpy",
+        "sys",
+        "marshal",
+    }
+)
+"""Modules whose mere reach is a route. The `types` module is not one: typing, dataclasses, matplotlib.cbook and pandas
+re-export it, and its dangerous members (`new_class`, `ModuleType`, `FunctionType`, `CodeType`) are banned by name."""
+IMPORT_MACHINERY_FUNCTIONS = frozenset(
+    {"importlib", "importlib.util", "_frozen_importlib", "_frozen_importlib_external", "zipimport", "pkgutil", "runpy"}
+)
+
+
+def _import_machinery(value: object) -> bool:
+    """A module of the import machinery, a loader class or `ModuleType`, a function of the machinery's modules, or one
+    of the `types` members that build classes and functions."""
+    import importlib.abc
+    import types
+
+    if isinstance(value, types.ModuleType):
+        return value.__name__ in IMPORT_MACHINERY_MODULES
+    if isinstance(value, type):
+        try:
+            return issubclass(value, importlib.abc.Loader) or value in (
+                types.ModuleType,
+                types.FunctionType,
+                types.CodeType,
+            )
+        except TypeError:
+            return False
+    if value is types.new_class or value is types.prepare_class:
+        return True
+    return callable(value) and getattr(value, "__module__", None) in IMPORT_MACHINERY_FUNCTIONS
+
+
+def _reachable_import_machinery(depth: int = 4) -> list[tuple[str, str]]:
+    """`(root, path)` of every import-machinery value a public attribute chain reaches from the admitted modules: the
+    modules below a root up to `depth` attributes, and one level of attributes of the classes found there."""
+    import importlib
+    import types
+    import warnings
+
+    roots = sorted(
+        frozenset(validate.COMMON_IMPORTS)
+        | validate.SHARED_SCIENCE_IMPORTS
+        | frozenset().union(*validate.LIBRARY_IMPORTS.values())
+    )
+    found: list[tuple[str, str]] = []
+    seen: set[int] = set()
+    queue: list[tuple[types.ModuleType, str, str, int]] = []
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        for root in roots:
+            try:
+                queue.append((importlib.import_module(root), root, root, 0))
+            except Exception:
+                continue  # a library this test environment does not install
+        while queue:
+            module, root, path, level = queue.pop(0)
+            if id(module) in seen:
+                continue
+            seen.add(id(module))
+            for name in [name for name in dir(module) if not name.startswith("_")]:
+                try:
+                    value = getattr(module, name)
+                except Exception:
+                    continue
+                here = f"{path}.{name}"
+                if _import_machinery(value):
+                    found.append((root, here))
+                if isinstance(value, types.ModuleType) and level < depth:
+                    queue.append((value, root, here, level + 1))
+                elif isinstance(value, type) and level < depth:
+                    for attribute in [a for a in dir(value) if not a.startswith("_")][:400]:
+                        try:
+                            if _import_machinery(getattr(value, attribute)):
+                                found.append((root, f"{here}.{attribute}"))
+                        except Exception:
+                            continue
+    return found
+
+
+def test_no_admitted_module_hands_out_import_machinery(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Every public attribute path from an admitted module to the import machinery (loaders, spec builders, `pkgutil`,
+    `types`, `sys`) is refused, so plot code cannot drive an import of its own (F6) or read package files by name
+    (F7: matplotlib's `dateutil.zoneinfo.get_data` and `dateutil.tz.six.spec_from_loader`, found by this walk). A
+    library upgrade that adds such a path fails here until it is banned."""
+    monkeypatch.setenv("MPLBACKEND", "Agg")
+    profiles = validate.LIBRARY_IMPORTS
+    admitted = []
+    paths = _reachable_import_machinery()
+    assert paths, "the walk reached nothing: the admitted modules did not import"
+    for root, path in paths:
+        library = next((name for name, modules in profiles.items() if root in modules), "matplotlib")
+        findings = [
+            f for f in validate_security(f"import {root}\nx = {path}\n", library=library) if f.rule != "savefig-target"
+        ]
+        if not findings:
+            admitted.append(path)
+    assert not admitted, f"the validator admits import machinery: {admitted[:10]}"
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        "import matplotlib\nraw = matplotlib.category.dateutil.zoneinfo.get_data('matplotlib', '../../etc/os-release')\n",
+        "import matplotlib\nreader = matplotlib.dates.dateutil\n",
+        "import matplotlib\nspec = matplotlib.category.dateutil.tz.six.spec_from_loader('x', None)\n",
+        "import numpy as np\nraw = np.get_data('numpy', 'x')\n",
+        "import numpy as np\nm = np.module_from_spec(None)\n",
+        "import typing\nText = typing.types.new_class('Text', (str,), {}, lambda ns: ns.update(split=lambda s: []))\n",
+        "import dataclasses\nm = dataclasses.types.ModuleType('x')\n",
+    ],
+    ids=[
+        "dateutil's get_data",
+        "the dateutil re-export",
+        "six's spec_from_loader",
+        "get_data",
+        "module_from_spec",
+        "a class built by types.new_class",
+        "types.ModuleType",
+    ],
+)
+def test_the_package_data_and_spec_routes_are_refused(code: str) -> None:
+    assert [f for f in validate_security(code, library="matplotlib") if f.rule != "savefig-target"]
 
 
 # --- plotnine and altair (step 1b of agentic/specs/261024-agent-all-libraries.md) ------------------------------
@@ -1639,6 +1830,10 @@ def library_plot(library: str, body: str = "") -> str:
         return pygal_plot(body)
     if library == "letsplot":
         return letsplot_plot(body)
+    if library == "plotly":
+        return plotly_plot(body)
+    if library == "bokeh":
+        return bokeh_plot(body)
     return plot(("import seaborn as sns\n" if library == "seaborn" else "") + body)
 
 
@@ -2110,6 +2305,51 @@ def letsplot_plot(body: str = "") -> str:
     return LETSPLOT_HEADER + body + LETSPLOT_FOOTER
 
 
+PLOTLY_HEADER = """import os
+
+import pandas as pd
+import plotly.graph_objects as go
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+df = pd.DataFrame({"a": [1, 2, 3]})
+"""
+PLOTLY_FOOTER = """fig = go.Figure(go.Scatter(x=df["a"], y=df["a"]))
+fig.update_layout(paper_bgcolor=PAGE_BG, xaxis={"range": [0, 4]})
+fig.update_layout(width=800, height=450).write_json(f"plot-{THEME}.json")
+"""
+BOKEH_HEADER = """import json
+import os
+
+import pandas as pd
+from bokeh.embed import json_item
+from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.plotting import figure
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+df = pd.DataFrame({"a": [1, 2, 3]})
+"""
+BOKEH_FOOTER = """p = figure(width=4800, height=2700, toolbar_location=None)
+p.scatter(x="a", y="a", source=ColumnDataSource(df))
+p.add_tools(HoverTool(tooltips=[("a", "@a{0.0}")]))
+p.background_fill_color = PAGE_BG
+
+with open(f"plot-{THEME}.json", "w", encoding="utf-8") as figure_file:
+    json.dump(json_item(p), figure_file)
+"""
+
+
+def plotly_plot(body: str = "") -> str:
+    """A minimal valid plotly file in the normalised shape (the pinned figure save, PB-2a), with `body` before it."""
+    return PLOTLY_HEADER + body + PLOTLY_FOOTER
+
+
+def bokeh_plot(body: str = "") -> str:
+    """A minimal valid bokeh file in the normalised shape (the pinned figure save, PB-2a), with `body` before it."""
+    return BOKEH_HEADER + body + BOKEH_FOOTER
+
+
 PYGAL_ROUTES = [
     pytest.param("t = chart.render_tree()\n", {"banned-attribute"}, id="render_tree hands out the live tree"),
     pytest.param("chart.render_in_browser()\n", {"banned-attribute"}, id="render_in_browser"),
@@ -2174,7 +2414,9 @@ PYGAL_NEAR_ROUTES = [
     pytest.param("import cairosvg\nv = cairosvg.VERSION\n", id="cairosvg's version string"),
 ]
 PYGAL_CONFIG_ROUTES = [
-    pytest.param('c2 = pygal.Bar(js=["//cdn.example/x.js"])\n', {"banned-keyword"}, id="a script fetched"),
+    pytest.param(
+        'c2 = pygal.Bar(js=["//cdn.example/x.js"])\n', {"banned-keyword", "url-literal"}, id="a script fetched"
+    ),
     pytest.param('c2 = pygal.Bar(js=["file:///etc/passwd"])\n', {"banned-keyword", "url-literal"}, id="a script read"),
     pytest.param('c2 = pygal.Bar(css=["file:///etc/passwd"])\n', {"banned-keyword", "url-literal"}, id="a file read"),
     pytest.param('c2 = pygal.Bar(css=["fi" + "le:///etc/passwd"])\n', {"banned-keyword"}, id="a built entry"),
@@ -2660,7 +2902,14 @@ def test_a_save_name_in_a_plotnine_expression_is_refused() -> None:
     ]
 
 
-LIBRARY_ROOTS = {"altair": "altair", "pygal": "pygal", "letsplot": "lets_plot"}
+LIBRARY_ROOTS = {
+    "altair": "altair",
+    "pygal": "pygal",
+    "letsplot": "lets_plot",
+    # plotly's and bokeh's package roots are no admitted import (PB-2a): a module of their surface stands in.
+    "plotly": "plotly.graph_objects",
+    "bokeh": "bokeh.models",
+}
 
 
 @pytest.mark.parametrize(
@@ -2847,22 +3096,36 @@ def test_data_code_may_bind_theme() -> None:
 @pytest.mark.skipif(not CATALOGUE_FILES, reason="plots/ is absent")
 @pytest.mark.parametrize("path", CATALOGUE_FILES, ids=lambda p: f"{p.parts[-4]}/{p.stem}")
 def test_catalogue_file_never_raises(path: Path) -> None:
-    """The catalogue is not clean by design; the validator must still finish, fast, with sound findings."""
-    started = time.perf_counter()
+    """The catalogue is not clean by design; the validator must still finish, fast, with sound findings.
+
+    "Fast" is the process's CPU time, not the wall clock: a file takes under 10 ms, and a busy CI runner once
+    stalled a worker for 1.2 s of wall time on one of them (#12456), while a pathological validator burns CPU.
+    """
+    started = time.process_time()
     findings = validate_security(path.read_text(encoding="utf-8"), library=path.stem)
-    assert time.perf_counter() - started < 1.0
+    assert time.process_time() - started < 1.0
     for finding in findings:
         assert finding.rule and "\n" not in finding.message and len(finding.message) <= 300
         assert finding.line is None or finding.line >= 1
 
 
+CATALOGUE_CPU_PER_FILE_S = 20.0 / 1946
+"""The SECURITY profile's CPU budget per catalogue file: main's corpus bound of 20 s over its 1,946 files of six
+libraries (2026-10-31), held per file since plotly and bokeh joined the corpus (PB-2a), because the agent validates one
+file per request and a corpus total failed for every new library. CI runs about 4 times slower than a local machine:
+the six libraries took 4.45 s locally and about 18.4 s in CI on main."""
+
+
 @pytest.mark.skipif(not CATALOGUE_FILES, reason="plots/ is absent")
 def test_catalogue_summary() -> None:
-    """Per-rule finding counts over the corpus, one block per library with a profile; visible with `pytest -s`."""
-    started = time.perf_counter()
+    """Per-rule finding counts over the corpus, one block per library with a profile; visible with `pytest -s`.
+    The bound is CPU time per file (`CATALOGUE_CPU_PER_FILE_S`), as in `test_catalogue_file_never_raises`."""
+    started = time.process_time()
     lines = []
+    total = 0
     for library in CODE_LIBRARIES:
         files = [path for path in CATALOGUE_FILES if path.stem == library]
+        total += len(files)
         findings_per_rule: Counter[str] = Counter()
         files_per_rule: Counter[str] = Counter()
         clean = 0
@@ -2874,6 +3137,10 @@ def test_catalogue_summary() -> None:
         lines.append(f"{library}: {len(files)} files, {clean} clean under SECURITY")
         for rule, count in findings_per_rule.most_common():
             lines.append(f"  {rule:<18} {count:>5} findings in {files_per_rule[rule]:>4} files")
-    elapsed = time.perf_counter() - started
-    print("\n" + "\n".join(lines) + f"\n({elapsed:.2f}s)")
-    assert elapsed < 20.0
+    elapsed = time.process_time() - started
+    per_file = elapsed / total
+    print("\n" + "\n".join(lines) + f"\n({elapsed:.2f}s CPU, {1000 * per_file:.2f} ms per file)")
+    assert per_file < CATALOGUE_CPU_PER_FILE_S, (
+        f"{1000 * per_file:.2f} ms CPU per file over {total} files ({elapsed:.1f} s); "
+        f"the budget is {1000 * CATALOGUE_CPU_PER_FILE_S:.2f} ms"
+    )

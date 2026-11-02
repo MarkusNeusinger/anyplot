@@ -1,4 +1,4 @@
-"""The Python runtime: matplotlib, seaborn, plotnine, altair, pygal and lets-plot (`runtimes.PYTHON_LIBRARIES`).
+"""The Python runtime: matplotlib, seaborn, plotnine, altair, pygal, lets-plot, plotly and bokeh (`PYTHON_LIBRARIES`).
 
 The command is the catalogue's CI render command (`MPLBACKEND=Agg
 ANYPLOT_THEME=<theme> python plot.py`) with the isolated interpreter (no remote
@@ -10,34 +10,53 @@ has one (lets-plot), as the renderer's `sandbox_env` passes them. The library pi
 (`regions.SAVE_RULES`: the save call, altair's second `plot-<theme>.html` file and its
 PIL padding) and the validator profile; plotnine draws through matplotlib and so gets a
 probe, altair renders in vl-convert's V8, pygal through cairosvg and lets-plot in its native
-bridge, and none of those three writes one (the host gates still run).
+bridge, and those three get a probe of their drawn texts alone (`harness.install_text_probes`,
+since 2026-11-01), for the closing reply; the advisory gates have nothing to read there.
+
+plotly and bokeh (PB-2a of step 4, 2026-10-31) run in the row's two steps (`FIGURE_FLAG`,
+`RuntimeCommand.figure`): the harness forks the plot, which writes its figure as JSON through
+the pinned save (`code/figure.py`), then draws it with the JavaScript row's harness in
+Chromium, so the command carries that row's argv after `--` and the environment its `JS_ENV`
+after the Python settings, as the renderer's `sandbox_env` builds them. The screenshot step
+writes the text probe of what the page draws (`render.mjs`, `writeTextProbe`), nothing more;
+a failure ends with the figure mode's final error line (`gates.figure_error_summary`); the
+export swaps the JSON save for the library's normal save (the plan's question 10).
 
 `normalise`, `loader_block`, `validate` and the rest (`regions`, `readiness`, `security`,
 `adaptation`, `apply_plan`, `restore_protected`, `new_literals`, `error_summary`, `export`)
 are the deterministic code modules in `agents/anyplot/code/` and the error grammar of
 `render/gates.py`; this class only binds them to the runtime interface, for one library.
+pandas reads every cell of `data.csv` exactly (`code/loader.py`), so `loader_notes` has
+nothing to say; the column kinds `loader_block` takes are R's (`runtimes/r.py`).
+
+The ADAPTATION rules that reject the code (`contract.BLOCKING_RULES`) and the targets of
+the soft ones (`ADAPTATION_TARGETS`) were the pipeline's until 2026-10-29, when R brought
+its own; the Python values are unchanged.
 """
 
-import json
+from collections.abc import Mapping
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
-from agents.renderer.commands import EXEC_DENY_ENV, command_for
+from agents.renderer.commands import EXEC_DENY_ENV, FIGURE_FLAG, command_for
 from agents.renderer.executor import SANDBOX_PATH
 from agents.renderer.wire import run_cpu_seconds
 
 from ...code.edits import AppliedPlan, apply_plan, new_literals, restore_protected
 from ...code.export import export_code
+from ...code.figure import export_form
 from ...code.loader import to_run_form
 from ...code.normalise import normalise
 from ...code.readiness import Readiness, scan
-from ...code.regions import PLACEHOLDER, Regions, find_regions
+from ...code.regions import PLACEHOLDER, Regions, find_regions, save_rule
 from ...code.validate import Finding, validate_adaptation, validate_security
+from ...data.kinds import ColumnKinds
 from ...schemas import AdaptPlan, CodeArtifact
-from ..contract import Theme
-from ..gates import error_summary
+from ..contract import BLOCKING_RULES, Theme
+from ..gates import error_summary, figure_error_summary
 from ..harness import CONVERT_FLAG, DATA_FLAG, INTERPRETER_FLAGS
-from ..png import MAX_PNG_BYTES, MAX_PROBE_BYTES, read_output
+from ..png import MAX_PNG_BYTES, read_output, read_probe
 
 
 IMAGE_PYTHON = "/app/.venv/bin/python"
@@ -56,11 +75,35 @@ DATA_RLIMIT_NPROC = 64
 backend's data runs apply as well, and its renders the address-space limit."""
 RENDER_RLIMIT_FSIZE_MB = 50
 """The renderer's deployed `RENDERER_RLIMIT_FSIZE_MB` (pinned by a test), which the local backend's renders apply."""
+ADAPTATION_TARGETS: Mapping[str, str] = MappingProxyType(
+    {
+        "rng": "take the values from df; a seeded np.random.default_rng(<int>) is only for jitter or subsampling",
+        "literal-data": "take the values from df instead of writing them out",
+        "palette-prefix": (
+            "keep the Imprint palette one literal list of colour strings, assigned once: the original entries in "
+            "order, then only the next Imprint positions written out; pick colours from it under a new name "
+            "(colors = IMPRINT[: len(groups)]); with more than eight groups draw all but the seven largest in "
+            'INK_MUTED as "Other"'
+        ),
+    }
+)
+"""The target of each soft ADAPTATION finding's defect line, matching the rule the validator checks.
+
+The palette rule wants a literal list (`code/validate.py`, "Palette"), so its target
+never says "derive it": in spike X, 9 of Claude's 14 palette-prefix lines reported a
+computed palette list, the fix the old shared target ("derive it from df and the
+Imprint palette") suggested."""
+
+
+REVIEWED_TEXT_LIBRARIES = frozenset({"altair", "pygal", "letsplot", "plotly", "bokeh"})
+"""The Python libraries that render without matplotlib: their probe reports the drawn texts alone, read from the
+library's own roles for the closing reply, so the reviewer checks the user's requested texts in the image
+(`PythonRuntime.review_texts`)."""
 
 
 class PythonRuntime:
-    """Python plot code (matplotlib, seaborn, plotnine, altair, pygal, lets-plot), run as `plot.py` under the probe
-    harness."""
+    """Python plot code (matplotlib, seaborn, plotnine, altair, pygal, lets-plot, plotly, bokeh), run as `plot.py`
+    under the probe harness, plotly and bokeh in its figure mode."""
 
     language = "python"
     file_name = "plot.py"
@@ -68,6 +111,18 @@ class PythonRuntime:
     """The name the exported code downloads under (`schemas.CodeArtifact`)."""
     placeholder = PLACEHOLDER
     """The working form's data placeholder, which the loader replaces."""
+    blocking_rules: frozenset[str] = BLOCKING_RULES
+    adaptation_targets: Mapping[str, str] = ADAPTATION_TARGETS
+    text_probe = True
+    """matplotlib's probe, or the text probe of a library without matplotlib (`harness.install_text_probes`)."""
+
+    @property
+    def review_texts(self) -> bool:
+        """matplotlib, seaborn and plotnine draw through matplotlib's probe, which reports the drawn texts the
+        requested ones are checked against, as before 2026-10-29. altair, pygal, lets-plot, plotly and bokeh report
+        their drawn texts for the reply only (`REVIEWED_TEXT_LIBRARIES`), so their reviewer finds the requested texts
+        in the image, as R's does."""
+        return self.library in REVIEWED_TEXT_LIBRARIES
 
     def __init__(
         self,
@@ -87,7 +142,26 @@ class PythonRuntime:
         self.render_p95_s = render_p95_s
         """Seconds a repair attempt's render is budgeted at against the soft deadline (`commands.py`)."""
 
+    @property
+    def figure(self) -> str:
+        """The package of a two-step row (plotly, bokeh: `RuntimeCommand.figure`), empty for every other library."""
+        return command_for(self.language, self.library).figure
+
     def command(self, theme: Theme) -> list[str]:
+        """The renderer's argv for the library's row (`executor.build_argv`): the harness in plot mode, or for plotly
+        and bokeh in figure mode, with the row's screenshot command after `--`."""
+        row = command_for(self.language, self.library)
+        if row.figure:
+            return [
+                self.python,
+                *INTERPRETER_FLAGS,
+                self.harness,
+                FIGURE_FLAG,
+                row.figure,
+                self.file_name,
+                "--",
+                *row.argv,
+            ]
         return [self.python, *INTERPRETER_FLAGS, self.harness, self.file_name]
 
     def env(self, theme: Theme) -> dict[str, str]:
@@ -155,22 +229,25 @@ class PythonRuntime:
     def normalise(self, code: str, library: str) -> str:
         return normalise(code, library=library)
 
-    def loader_block(self, working: str, *, columns: list[str], dtypes: dict[str, str], parse_dates: list[str]) -> str:
+    def loader_block(
+        self, working: str, *, columns: list[str], dtypes: dict[str, str], parse_dates: list[str], kinds: dict[str, str]
+    ) -> str:
+        """pandas' `read_csv` from the parser's dtypes; the kinds are for typed readers of other languages."""
         return to_run_form(working, columns=columns, dtypes=dtypes, parse_dates=parse_dates)
+
+    def loader_notes(self, kinds: ColumnKinds) -> list[str]:
+        """None: `Int64`, `float64` with `float_precision="round_trip"` and the parsed datetimes keep every cell."""
+        return []
+
+    def data_json(self, csv_text: str, kinds: ColumnKinds | None) -> str | None:
+        """None: the plot code reads `data.csv` itself."""
+        return None
 
     def validate(self, code: str, library: str) -> list[str]:
         return [f"{finding.rule}: {finding.message}" for finding in validate_security(code, library=library)]
 
     def collect(self, run_dir: Path, theme: Theme) -> tuple[bytes | None, dict[str, Any] | None]:
-        png = read_output(run_dir / f"plot-{theme}.png", MAX_PNG_BYTES)
-        probe: dict[str, Any] | None = None
-        try:
-            raw = read_output(run_dir / f"probe-{theme}.json", MAX_PROBE_BYTES)
-            loaded = json.loads(raw) if raw else None
-            probe = loaded if isinstance(loaded, dict) else None
-        except ValueError, OSError:
-            probe = None  # the probe is advisory; a broken one is simply absent
-        return png, probe
+        return read_output(run_dir / f"plot-{theme}.png", MAX_PNG_BYTES), read_probe(run_dir / f"probe-{theme}.json")
 
     # The code conventions of the language, for the pipeline (`agents/anyplot/code/`).
 
@@ -195,11 +272,17 @@ class PythonRuntime:
     def new_literals(self, base: str, code: str) -> list[str]:
         return new_literals(base, code)
 
-    def error_summary(self, stderr_tail: str) -> str:
-        """The exception class and the `plot.py` line of a failed render, never the message (`gates.error_summary`)."""
+    def error_summary(self, stderr_tail: str, *, run_form: str | None = None) -> str:
+        """The exception class and the `plot.py` line of a failed render, never the message (`gates.error_summary`);
+        for plotly and bokeh the figure mode's final error line (`gates.figure_error_summary`). The line counts the run
+        form, as it always has; the run form goes unread."""
+        if self.figure:
+            return figure_error_summary(stderr_tail, code_file=self.file_name)
         return error_summary(stderr_tail, code_file=self.file_name)
 
     def export(self, run_form: str, *, spec_id: str, library_version: str | None, theme: str = "light") -> str:
-        return export_code(
-            run_form, spec_id=spec_id, library=self.library, library_version=library_version, theme=theme
-        )
+        """The run form under the attribution header (`code/export.py`); for plotly and bokeh with the figure's JSON
+        save swapped for the library's normal save (`code/figure.py`, the plan's question 10)."""
+        rule = save_rule(self.library)
+        code = export_form(run_form, rule.figure) if rule.figure is not None else run_form
+        return export_code(code, spec_id=spec_id, library=self.library, library_version=library_version, theme=theme)

@@ -70,12 +70,13 @@ level per kind; no temperature, top_p or thinking budget, which Gemini 3 does no
 want.
 
 Per kind: the root chats (4,096 output tokens, low effort), the adapter edits code
-(medium effort; 8,192 tokens for edits, `MAX_OUTPUT_TOKENS` on Claude and
-`GEMINI_ADAPTER_MAX_OUTPUT_TOKENS` on Gemini, whose thinking tokens count toward the
-cap; `allow_full_file`, called by
-the adapter's callback when a full file is allowed, raises the cap to
-`ADAPTER_FULL_MAX_OUTPUT_TOKENS` on Claude and `GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS`
-on Gemini, and on Gemini lowers thinking to `GEMINI_ADAPTER_FULL_THINKING`), the
+(medium effort; on Claude 40,960 tokens since 2026-10-30, `MAX_OUTPUT_TOKENS`, with the
+thinking room on top; on Gemini 8,192 for edits, `GEMINI_ADAPTER_MAX_OUTPUT_TOKENS`,
+whose thinking tokens count toward the cap; `allow_full_file`, called by
+the adapter's callback when a full file is allowed, sets the cap to
+`ADAPTER_FULL_MAX_OUTPUT_TOKENS` on Claude (the same 40,960) and raises it to
+`GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS` on Gemini, where thinking drops to
+`GEMINI_ADAPTER_FULL_THINKING`), the
 reviewer judges the render (8,192 tokens on both providers since 2026-10-13, 4,096 before;
 on Claude at effort high with its thinking room on top, on Gemini at LOW thinking and medium
 media resolution). Every cap leaves ample headroom above the measured answers (`MAX_OUTPUT_TOKENS`):
@@ -109,7 +110,7 @@ from .settings import CLI_JUDGE_TIMEOUT_S, AgentSettings, get_settings
 ModelKind = Literal["root", "adapter", "reviewer"]
 MODEL_KINDS: tuple[ModelKind, ...] = ("root", "adapter", "reviewer")
 
-MAX_OUTPUT_TOKENS: dict[ModelKind, int] = {"root": 4096, "adapter": 8192, "reviewer": 8192}
+MAX_OUTPUT_TOKENS: dict[ModelKind, int] = {"root": 4096, "adapter": 40_960, "reviewer": 8192}
 """Output caps per kind: every kind on Claude, the root and the reviewer on Gemini.
 
 The owner's rule (2026-10-10): a cap leaves ample headroom above the measured answers,
@@ -119,8 +120,13 @@ rerun of spike X on main (244 runs, Claude Haiku 5.5, 2026-10-10):
 * adapter, edits only (attempt 1): at the old cap of 2,048, 23 of 244 first calls
   ended with `MAX_TOKENS` (22 of them box-basic and heatmap-basic matplotlib), and the
   finished ones reached 2,030, so the cap cut the distribution. Plans on attempt 2
-  finished at a median of 1,562 and at most 2,606 tokens. 8,192 is 3.1 times the
-  largest measured plan.
+  finished at a median of 1,562 and at most 2,606 tokens. The cap was 8,192 until
+  2026-10-30, when the Makie matrix (60 runs) cut 9 of 139 adapter calls at 16,384 with
+  its thinking room: every one had spent all of it thinking and written no answer, while
+  the finished calls thought up to 14,315 tokens (95th percentile 12,552) and answered
+  up to 2,935. Since then 40,960, with the room on top 49,152 (owner, 2026-10-30: about
+  50,000; Haiku 5.5 takes up to 128,000), which no longer fits the SDK's non-streaming
+  limit, so the Vertex client carries its own timeout (`CLAUDE_REQUEST_TIMEOUT_S`).
 * reviewer: the checklist answered at most 600 tokens (95th percentile 515) in 218
   answers, all `STOP`. The catalogue reviewer (since 2026-10-13) scores 16 criteria and
   writes defect lines, about 1,400 to 2,500 tokens, so its cap is 8,192 (4,096 before),
@@ -129,10 +135,11 @@ rerun of spike X on main (244 runs, Claude Haiku 5.5, 2026-10-10):
   a longer reply in German or a code explanation.
 
 The caps also fit the soft deadline. Fitted on the rerun's run times, Claude Haiku 5.5
-takes about 0.8 s per call plus 0.0029 s per output token (R² 0.95), so a call that
-uses the whole 16,384 of an edit call with its thinking room takes about 48 s, the whole
-20,480 of `ADAPTER_FULL_MAX_OUTPUT_TOKENS` with it about 60 s (the 60 s of
-`pipeline.ADAPTER_P95_S`), and the whole 12,288 of the reviewer with its room about 36 s,
+takes about 0.8 s per call plus 0.0029 s per output token (R² 0.95), so an adapter call
+that uses the whole 49,152 with its thinking room takes about 143 s, more than the 60 s
+that `pipeline.ADAPTER_P95_S` reserves for a typical attempt; only a call that thinks that
+long spends it, and the 480 s soft deadline still holds one such call next to a render
+and a review. The whole 12,288 of the reviewer with its room takes about 36 s,
 which the 480 s soft deadline absorbs although `pipeline.REVIEWER_P95_S` reserves 30 s
 for a typical review (the Vertex check of 2026-10-14 finished its reviews at a 95th
 percentile of 4,684 tokens, about 14 s). On Gemini,
@@ -141,17 +148,24 @@ whose thinking counts toward the cap, a reviewer call that uses all 8,192 takes 
 deadline absorbs as well. The Gemini
 adapter keeps its own caps (`GEMINI_ADAPTER_MAX_OUTPUT_TOKENS`,
 `GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS`)."""
-ADAPTER_FULL_MAX_OUTPUT_TOKENS = 12_288
+ADAPTER_FULL_MAX_OUTPUT_TOKENS = 40_960
 """The Claude adapter's cap when a full file is allowed (the repair attempt), before thinking.
 
 Measured full-file plans finished at most at 2,606 tokens. A full file may hold
 `schemas.MAX_FULL_CODE_CHARS` (24 KB), about 9,800 tokens at the 2.5 characters per
-token measured for Haiku 5.5 before JSON escaping, so 12,288 holds a plan at the
-schema's own limit with its change notes; the largest phase-1 catalogue file
-(star-chart-constellation, matplotlib, 20,677 characters) is about 8,300. With the
-adapter's thinking room on top (8,192 since 2026-10-14) the cap is 20,480, which the
-Anthropic SDK accepts without streaming (its limit is about 21,300 tokens); it was
-16,384 while the room was 2,048."""
+token measured for Haiku 5.5 before JSON escaping; the largest phase-1 catalogue file
+(star-chart-constellation, matplotlib, 20,677 characters) is about 8,300. It was 12,288
+(20,480 with the thinking room) until 2026-10-30; since then it equals the edit cap
+(`MAX_OUTPUT_TOKENS`), because a full file needs no less room to think than an edit and
+a full-file attempt must never have less room than the attempt before it."""
+CLAUDE_REQUEST_TIMEOUT_S = 300.0
+"""The Vertex Claude client's own per-request timeout (`VertexClaude._anthropic_client`).
+
+The structured answer never streams, and the Anthropic SDK refuses a non-streaming
+request whose `max_tokens` could take longer than ten minutes at its assumed rate
+(about 21,333 tokens) unless the client sets a timeout of its own. The adapter's
+49,152 take about 143 s at the measured rate; 300 s leaves twice that, and the
+pipeline's deadlines bound a run long before the SDK's retries could add up."""
 GEMINI_ADAPTER_FULL_MAX_OUTPUT_TOKENS = 12_288
 """The Gemini adapter's cap when a full file is allowed, thinking included.
 
@@ -325,9 +339,13 @@ class VertexClaude(Claude):
             return self.transport_client
         if self.client is not None:
             return self.client
-        from anthropic import AsyncAnthropicVertex
+        from anthropic import AsyncAnthropicVertex, Timeout
 
-        return AsyncAnthropicVertex(project_id=self.vertex_project, region=self.vertex_region)
+        return AsyncAnthropicVertex(
+            project_id=self.vertex_project,
+            region=self.vertex_region,
+            timeout=Timeout(CLAUDE_REQUEST_TIMEOUT_S, connect=10.0),
+        )
 
     def _build_anthropic_kwargs(
         self, llm_request: LlmRequest, messages: Any, tools: Any, tool_choice: Any, thinking: Any

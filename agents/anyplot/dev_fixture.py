@@ -9,7 +9,9 @@ is seeded from `agents/evals/fixtures/cases/<case-id>/`:
   is built from the repository's `plots/<spec>/` files (title and sections of
   `specification.md`, the implementation file with `# noqa` comments stripped, and the
   library version from its metadata), the way `sync_to_postgres.py` and the BFF build
-  it from the database.
+  it from the database. The files lie under the library's language
+  (`implementations/<language>/<library><extension>`, `metadata/<language>/<library>.yaml`,
+  from `core.constants`): `python/matplotlib.py`, `r/ggplot2.R`.
 
 `AgentSettings` refuses `AGENT_DEV_FIXTURE` outside development, and `DevFixturePlugin`
 checks the environment again before it seeds. The plugin seeds in
@@ -30,6 +32,7 @@ from google.adk.events.event_actions import EventActions
 from google.adk.plugins.base_plugin import BasePlugin
 from google.genai import types
 
+from core.constants import LIBRARY_LANGUAGES, library_file_extension
 from core.utils import strip_noqa_comments
 
 from .opening import assess, ingest_dataset, opening_state
@@ -68,13 +71,21 @@ def _bullets(text: str) -> list[str]:
     return [line.strip()[2:].strip() for line in text.splitlines() if line.strip().startswith(("- ", "* "))]
 
 
+def implementation_path(spec_dir: Path, library: str) -> Path:
+    """The implementation file of `library` in a spec directory: under its language, with its extension."""
+    language = LIBRARY_LANGUAGES.get(library)
+    if language is None:
+        raise FixtureError(f"not a catalogue library: {library!r}")
+    return spec_dir / "implementations" / language / f"{library}{library_file_extension(library)}"
+
+
 def snapshot_from_repo(spec_id: str, library: str, repo_root: Path = REPO_ROOT) -> CatalogueSnapshot:
     """The catalogue snapshot of one pair, built from the repository like the BFF builds it from the DB."""
     spec_dir = repo_root / "plots" / spec_id
     markdown = (spec_dir / "specification.md").read_text(encoding="utf-8")
     title_match = re.search(r"^#\s+[\w-]+:\s*(.+)$", markdown, re.MULTILINE)
-    code = strip_noqa_comments((spec_dir / "implementations" / "python" / f"{library}.py").read_text(encoding="utf-8"))
-    metadata = spec_dir / "metadata" / "python" / f"{library}.yaml"
+    code = strip_noqa_comments(implementation_path(spec_dir, library).read_text(encoding="utf-8"))
+    metadata = spec_dir / "metadata" / LIBRARY_LANGUAGES[library] / f"{library}.yaml"
     version_match = re.search(r"^library_version:\s*['\"]?([^'\"\n]+)", metadata.read_text(encoding="utf-8"), re.M)
     return CatalogueSnapshot(
         spec_id=spec_id,

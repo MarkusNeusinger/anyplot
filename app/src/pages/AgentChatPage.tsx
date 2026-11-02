@@ -1,5 +1,7 @@
 /**
- * "Use with my data": the admin-only agent chat at `/debug/agent?spec=&library=&language=`.
+ * "Use with my data": the admin-only agent chat at `/debug/agent?spec=&library=&language=`,
+ * plus `&all=1` while the header's `all` pill is pressed. The query follows the
+ * session: a library switch writes `library` and its `language`.
  *
  * One column, chat first, two steps, data first. The data card is the first
  * turn of the thread: paste data (or ask in the chat for a curve, whose table
@@ -38,11 +40,27 @@
  * it shows only what the line does not (a `create_plot` run, a queue position,
  * pipeline steps), and the data card says why its controls wait.
  *
- * `.plot_all()`, under the composer in step 2, is the admin's test run: the
- * table as it was pasted or opened, with the confirmed bindings, plotted in
- * every library of the header at once (`FanOut`), a session per library, at
- * most `AGENT_USER_MAX_RUNS` plots running, each through the normal run queue.
- * Data the assistant changed or computed is not offered (no upload to replay).
+ * The header's `all` pill, after the library pills, is the admin's test run.
+ * While it is pressed, the composer's create action is `.plot_all()`: the
+ * confirmed data, with the confirmed bindings, plotted in every library of the
+ * header at once (`FanOut`), a session per library into which the server copies
+ * this session's confirmed version, whatever its origin (pasted, opened,
+ * computed or changed by the assistant), at most `AGENT_USER_MAX_RUNS` plots
+ * running, each through the normal run queue. This session stays the data
+ * session; in step 2 the message box waits (typed text would not go along) and
+ * a line above it says so, while in step 1 the chat about the data goes on as
+ * without `all`. Any library pill turns `all` off again; while the panel is
+ * open, neither the pills, `all` nor the data card change, so every library
+ * copies the same confirmed data. The pill is in the URL as `&all=1`,
+ * so a reload presses it again once the libraries are known.
+ *
+ * The session itself is not in the URL and nothing restores it: while it holds
+ * data, a plot or work in flight, a reload, a closed tab or a link off the page
+ * asks first (`useLeaveWarning`: the browser's `beforeunload` dialog, and for a
+ * link inside the site or the back button the router's blocker with a
+ * `confirm`). The page's own query edits pass, and so do the reload links
+ * after an expired session or no answer (`ReloadHint`), which the user clicked
+ * on purpose.
  *
  * Gates, outermost first:
  * 1. `CONFIG.features.agentChat` (build-time `VITE_ENABLE_AGENT_CHAT`): off, the
@@ -68,10 +86,12 @@ import {
   type BindingMap,
   type DatasetUpload,
   sessionBusy,
+  sessionHoldsWork,
   useAgentSession,
 } from 'src/hooks/useAgentSession';
 import { useAnalytics } from 'src/hooks/useAnalytics';
 import { useTheme } from 'src/hooks/useLayoutContext';
+import { useLeaveWarning } from 'src/hooks/useLeaveWarning';
 import { agentApi, browserLocale, DEFAULT_AGENT_LIBRARIES, MAX_MESSAGE_CHARS } from 'src/lib/agent';
 import { apiGet, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
@@ -82,7 +102,7 @@ import { DATA_SUMMARY_ID, DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { FanOut } from 'src/sections/agent-chat/FanOut';
 import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
-import { ERROR_TEXT } from 'src/sections/agent-chat/messages';
+import { ERROR_TEXT, LEAVE_TEXT } from 'src/sections/agent-chat/messages';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { SaveButton } from 'src/sections/agent-chat/SaveButton';
@@ -109,6 +129,21 @@ const COLUMN_MAX_WIDTH = 960;
 /** What `.start_over()` does, unlike `.send()` beside it (the owner could not tell the two apart). */
 const START_OVER_HELP = 'new from the catalogue plot, without your changes';
 const START_OVER_HELP_ID = 'agent-start-over-help';
+
+/** A pill of the header's library group: a library, or `all` after them. */
+const pillSx = (pressed: boolean) => ({
+  ...actionButtonSx,
+  border: '1px solid',
+  borderColor: pressed ? 'var(--ink-muted)' : 'var(--rule)',
+  color: pressed ? 'var(--ink)' : 'var(--ink-soft)',
+  bgcolor: pressed ? 'var(--bg-elevated)' : 'transparent',
+  '&:disabled': { cursor: 'default', opacity: pressed ? 1 : 0.45 },
+});
+
+/** The first of these controls that can take the focus now, in order of preference. */
+function firstEnabled(...controls: (HTMLButtonElement | HTMLTextAreaElement | null)[]) {
+  return controls.find(control => control && !control.disabled) ?? null;
+}
 
 /** What a click on `.create_plot()` before the confirmation asks for first. */
 type CreateGate = 'confirm' | 'transcription';
@@ -158,6 +193,35 @@ export function AgentChatPage() {
   // highlighter and a back link to a page that does not exist.
   const language = LIB_TO_LANG[library] ?? 'python';
   const valid = SPEC_PATTERN.test(spec) && (LIBRARIES as readonly string[]).includes(library);
+  const allInUrl = params.get('all') === '1';
+
+  // Every edit of the query starts from the latest one, also an edit made after an await (a
+  // library switch), so one edit never brings back what another removed (`all`).
+  const paramsRef = useRef(params);
+  paramsRef.current = params;
+  const editParams = useCallback(
+    (edit: (next: URLSearchParams) => void) => {
+      const next = new URLSearchParams(paramsRef.current);
+      edit(next);
+      if (next.toString() === paramsRef.current.toString()) return;
+      paramsRef.current = next;
+      setParams(next, { replace: true });
+    },
+    [setParams]
+  );
+  const onLibraryChange = useCallback(
+    (next: string) =>
+      editParams(query => {
+        query.set('library', next);
+        query.set('language', LIB_TO_LANG[next] ?? 'python');
+      }),
+    [editParams]
+  );
+  const onAllChange = useCallback(
+    (pressed: boolean) =>
+      editParams(query => (pressed ? query.set('all', '1') : query.delete('all'))),
+    [editParams]
+  );
 
   // `source` only says where the visitor came from; it is read once for
   // `agent_open` and dropped, so a reload counts as a direct open.
@@ -205,11 +269,9 @@ export function AgentChatPage() {
       library={library}
       language={language}
       token={token}
-      onLibraryChange={next => {
-        const nextParams = new URLSearchParams(params);
-        nextParams.set('library', next);
-        setParams(nextParams, { replace: true });
-      }}
+      allInUrl={allInUrl}
+      onLibraryChange={onLibraryChange}
+      onAllChange={onAllChange}
     />
   );
 }
@@ -219,10 +281,22 @@ interface AgentChatProps {
   library: string;
   language: string;
   token: string;
+  /** `&all=1` at the mount: the `all` pill starts pressed, once the libraries are known. */
+  allInUrl: boolean;
   onLibraryChange: (library: string) => void;
+  /** The `all` pill as it is now, for the URL. */
+  onAllChange: (pressed: boolean) => void;
 }
 
-function AgentChat({ specId, library, language, token, onLibraryChange }: AgentChatProps) {
+function AgentChat({
+  specId,
+  library,
+  language,
+  token,
+  allInUrl,
+  onLibraryChange,
+  onAllChange,
+}: AgentChatProps) {
   const { trackEvent } = useAnalytics();
   const { isDark } = useTheme();
   const locale = useMemo(() => browserLocale(), []);
@@ -231,15 +305,27 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   const [draft, setDraft] = useState('');
   const [title, setTitle] = useState<string | null>(null);
   const [libraries, setLibraries] = useState<string[]>([...DEFAULT_AGENT_LIBRARIES]);
-  // `.plot_all()`: the server's run limit, and what the open fan-out replays in every library.
+  // `.plot_all()`: the server's run limit, and the session whose confirmed data the open fan-out copies.
   const [maxRuns, setMaxRuns] = useState(DEFAULT_USER_MAX_RUNS);
   // Both answers below are in (or failed): before that, the libraries and the limit are fallbacks.
   const [listsSettled, setListsSettled] = useState(false);
   const [fanOut, setFanOut] = useState<{
-    upload: DatasetUpload;
+    sourceSession: string;
+    upload?: DatasetUpload;
     bindings: BindingMap;
     libraries: string[];
   } | null>(null);
+  // The header's `all` pill, in the URL as `&all=1` (`onAllChange`). Pressed from the URL, it
+  // takes effect only once `offerAll` holds (`plotAll`), when the libraries are the server's.
+  const [allPressed, setAllPressed] = useState(allInUrl);
+  const allRef = useRef<HTMLButtonElement>(null);
+  const fanOutRef = useRef<HTMLElement>(null);
+  // Set by a key press on `.plot_all()`: the panel it opens takes the focus, once.
+  const fanOutFocus = useRef(false);
+  // Set by the panel's `.close()`, which takes its focused button away: the focus returns, once.
+  const fanOutReturn = useRef(false);
+  // Set by the own library's pill, which turned `all` off and is disabled now: the focus moves, once.
+  const pillFocus = useRef(false);
   const tailRef = useRef<HTMLDivElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const createRef = useRef<HTMLButtonElement>(null);
@@ -316,6 +402,11 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
     if (gateShown) gateRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
   }, [gateShown]);
 
+  // Data, a plot or work in flight: a reload, a closed tab or a link off the page asks first,
+  // since nothing restores the session. The fan-out's panel opens only on this session's
+  // confirmed data, so its sessions are covered too.
+  useLeaveWarning(sessionHoldsWork(state), LEAVE_TEXT);
+
   // A turn, a theme render, a parse, an undo or a binding change in flight: the
   // server runs one at a time and would refuse or race a second.
   const busy = sessionBusy(state);
@@ -329,12 +420,19 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   // text in the box goes with it; the pipeline counts versions per library too.
   const hasPlot = Object.values(state.versions).some(version => version.library === state.library);
   const firstPlot = step2 && !hasPlot;
-  // `.plot_all()`: the stored upload, as it was posted, plotted in every library at once. Data
-  // the assistant changed or computed has no upload, so the fan-out never plots other data.
-  const upload = state.dataset?.upload;
-  // Only once the libraries and the limit are the server's: a snapshot of the fallbacks would
-  // leave libraries out or start more runs than the server takes (`run_limit`).
-  const offerFanOut = listsSettled && step2 && !!upload && libraries.length > 1 && !fanOut;
+  // The `all` pill only once the libraries and the limit are the server's: a snapshot of the
+  // fallbacks would leave libraries out or start more runs than the server takes (`run_limit`).
+  const offerAll = listsSettled && libraries.length > 1 && !reopen;
+  const plotAll = allPressed && offerAll;
+  // The chat waits only where `.plot_all()` is the action, in step 2: the fan-out takes no
+  // text. Before it, with or without data, the box talks about the data as without `all`.
+  const chatLocked = plotAll && step2;
+
+  // `&all=1` follows the pill, so a reload presses it again. Only from the lists' answers on:
+  // before them `all` is not offered yet, and a pill pressed from the URL waits for them.
+  useEffect(() => {
+    if (listsSettled) onAllChange(plotAll);
+  }, [listsSettled, plotAll, onAllChange]);
   // The notice before the confirmation is done once the data is confirmed or a turn starts.
   // Adjusted while rendering, React's pattern for state that follows other state.
   if (gateShown && (step2 || running)) setGateShown(false);
@@ -350,21 +448,47 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
     : null;
 
   // The user's own `.confirm()` collapsed the card and took its focused button
-  // away. Before the first plot the keyboard continues at `.create_plot()`, the
-  // step's next action (a button, so a phone opens no keyboard); after it at the
-  // pinned header's toggle, since a fresh run must not be one key press away by
-  // accident; it is in view where it sticks, so the focus scrolls nothing. Only
-  // for that confirmation, and only while nothing else holds the focus: a step 2
-  // that a turn's sync brings back never takes it from the composer. A layout
-  // effect, so the focus has moved by the time the button shows.
+  // away. Before the first plot the keyboard continues at `.create_plot()` (or
+  // `.plot_all()`), the step's next action (a button, so a phone opens no
+  // keyboard), unless it waits; otherwise at the pinned header's toggle, since
+  // a fresh run must not be one key press away by accident; it is in view where
+  // it sticks, so the focus scrolls nothing. Only for that confirmation, and
+  // only while nothing else holds the focus: a step 2 that a turn's sync brings
+  // back never takes it from the composer. A layout effect, so the focus has
+  // moved by the time the button shows.
   useLayoutEffect(() => {
     if (!confirmFocus.current || state.confirmBusy) return;
     confirmFocus.current = false;
     const active = document.activeElement;
     if (!step2 || (active && active !== document.body)) return;
-    if (firstPlot) createRef.current?.focus();
+    if (firstPlot && !createRef.current?.disabled) createRef.current?.focus();
     else toggleRef.current?.focus({ preventScroll: true });
   }, [state.confirmBusy, step2, firstPlot]);
+
+  // A key press on `.plot_all()` continues in the panel it opened: the button waits while
+  // the panel is open, and the panel is where the plots come in.
+  useEffect(() => {
+    if (!fanOut || !fanOutFocus.current) return;
+    fanOutFocus.current = false;
+    fanOutRef.current?.focus();
+  }, [fanOut]);
+
+  // The panel's `.close()` went with the panel: the focus returns to `.plot_all()`, which
+  // opened it, or, while that waits, to the `all` pill or the message box.
+  useEffect(() => {
+    if (fanOut || !fanOutReturn.current) return;
+    fanOutReturn.current = false;
+    firstEnabled(createRef.current, allRef.current, messageRef.current)?.focus();
+  }, [fanOut]);
+
+  // The own library's pill turned `all` off and is the pressed, disabled pill now: the
+  // keyboard continues at `all`, or, should that wait, in the message box. A layout effect
+  // after the render, so the disabled states it reads are the new ones.
+  useLayoutEffect(() => {
+    if (!pillFocus.current) return;
+    pillFocus.current = false;
+    firstEnabled(allRef.current, messageRef.current)?.focus();
+  }, [allPressed]);
 
   /**
    * A key press on a composer button that a run replaces with `.stop()` (Enter
@@ -380,12 +504,13 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
    * The composer's action. The first plot: an empty box starts it as it is
    * (`create_plot`), text goes as the user's turn, and the assistant makes the
    * plot with that change. Otherwise the text is a turn about the data or the plot.
+   * While `all` is pressed in step 2 nothing goes: the fan-out takes no text.
    */
   const handleSend = useCallback(
     (event?: React.FormEvent) => {
       event?.preventDefault();
       const text = draft.trim();
-      if (busy) return;
+      if (busy || chatLocked) return;
       if (firstPlot && !text) {
         if (canCreate) void session.createPlot();
         return;
@@ -394,7 +519,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
       void session.sendMessage(text);
       setDraft('');
     },
-    [draft, busy, firstPlot, canCreate, session]
+    [draft, busy, chatLocked, firstPlot, canCreate, session]
   );
 
   const handleLibrary = useCallback(
@@ -403,6 +528,46 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
     },
     [session, onLibraryChange]
   );
+
+  /**
+   * A library pill. While `all` is pressed, any pill turns it off: the session's
+   * own library only that, and the keyboard moves on (`pillFocus`), since the
+   * pill pressed now is disabled; another library switches as it would without it.
+   */
+  const handlePill = (next: string) => {
+    if (plotAll) {
+      setAllPressed(false);
+      if (next === state.library) {
+        pillFocus.current = true;
+        return;
+      }
+    }
+    void handleLibrary(next);
+  };
+
+  /**
+   * `.plot_all()`, the composer's action while `all` is pressed: the confirmed
+   * data with its bindings, in every library of the header at once; the server
+   * copies this session's confirmed version into each library's session. The
+   * upload and the bindings go along only for a server without the copy.
+   * Before the confirmation it calls nothing and shows the notice, as the quiet
+   * `.create_plot()` does.
+   */
+  const handlePlotAll = (event: React.MouseEvent) => {
+    if (!step2) {
+      setGateShown(true);
+      return;
+    }
+    if (!state.sessionId) return;
+    const upload = state.dataset?.upload;
+    fanOutFocus.current = event.detail === 0;
+    setFanOut({
+      sourceSession: state.sessionId,
+      ...(upload ? { upload } : {}),
+      bindings: state.bindings,
+      libraries: [...libraries],
+    });
+  };
 
   /**
    * The quiet `.create_plot()` before the confirmation: no call, the server
@@ -433,6 +598,31 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
   if (state.phase === 'unauthorized') return <AdminRequired />;
 
   const backHref = specPath(specId, language, state.library);
+  // The composer's create action while `all` is pressed, for every library at once: the CTA
+  // before the first plot, the quiet button otherwise, and before the confirmation a click
+  // shows the notice. It waits while the panel is open.
+  const plotAllButton = (
+    <Box
+      key="plot-all"
+      component="button"
+      type="button"
+      ref={createRef}
+      onClick={handlePlotAll}
+      disabled={!!fanOut || (step2 ? !canCreate : state.phase !== 'ready' || busy)}
+      aria-label="Plot in all libraries"
+      aria-describedby={
+        [
+          step2 ? DATA_SUMMARY_ID : gate ? 'agent-create-gate' : null,
+          chatLocked ? 'agent-create-line' : null,
+        ]
+          .filter(Boolean)
+          .join(' ') || undefined
+      }
+      sx={firstPlot ? ctaButtonSx : actionButtonSx}
+    >
+      .plot_all()
+    </Box>
+  );
   const header = (
     <>
       <SectionHeader
@@ -478,14 +668,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
           </Box>
           {libraries.map(lib => {
             const active = lib === state.library;
-            const pillSx = {
-              ...actionButtonSx,
-              border: '1px solid',
-              borderColor: active ? 'var(--ink-muted)' : 'var(--rule)',
-              color: active ? 'var(--ink)' : 'var(--ink-soft)',
-              bgcolor: active ? 'var(--bg-elevated)' : 'transparent',
-              '&:disabled': { cursor: 'default', opacity: active ? 1 : 0.45 },
-            };
+            // While `all` is pressed it shows as the pressed pill; the session stays this one's.
+            const pressed = active && !plotAll;
             // No session to switch: another library opens the page anew, with
             // its own session (a full navigation, like the `.adapt()` button).
             if (!active && reopen) {
@@ -493,8 +677,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 <Box
                   key={lib}
                   component="a"
-                  href={paths.agentChat(specId, lib, language)}
-                  sx={{ ...pillSx, textDecoration: 'none' }}
+                  href={paths.agentChat(specId, lib, LIB_TO_LANG[lib] ?? 'python')}
+                  sx={{ ...pillSx(false), textDecoration: 'none' }}
                 >
                   {lib}
                 </Box>
@@ -505,15 +689,30 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 key={lib}
                 component="button"
                 type="button"
-                aria-pressed={active}
-                disabled={active || busy || state.phase !== 'ready'}
-                onClick={() => void handleLibrary(lib)}
-                sx={pillSx}
+                aria-pressed={pressed}
+                // Not while the fan-out's panel is open: its sessions run on this one's data.
+                disabled={pressed || busy || !!fanOut || state.phase !== 'ready'}
+                onClick={() => handlePill(lib)}
+                sx={pillSx(pressed)}
               >
                 {lib}
               </Box>
             );
           })}
+          {offerAll && (
+            <Box
+              component="button"
+              type="button"
+              ref={allRef}
+              aria-pressed={plotAll}
+              aria-label="All libraries"
+              disabled={busy || !!fanOut || state.phase !== 'ready'}
+              onClick={() => setAllPressed(!plotAll)}
+              sx={pillSx(plotAll)}
+            >
+              all
+            </Box>
+          )}
         </Box>
         {/* The session language of the replies and the plot text; without a session there is none. */}
         {!reopen && (
@@ -604,6 +803,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             toggleRef={toggleRef}
             confirmRef={confirmRef}
             decisionRef={decisionRef}
+            // Not while the fan-out's panel is open: its sessions copy this session's confirmed data.
+            locked={!!fanOut}
           />
 
           {state.items.length === 0 && !state.run && (
@@ -662,9 +863,16 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
             {/* A turn without pipeline steps has its in-progress line in the thread instead. */}
             {state.run && showsTimeline(state) && <ProgressTimeline run={state.run} />}
 
-            {firstPlot && (
-              <Box id="agent-create-line" sx={{ ...labelSx, color: 'var(--ink-soft)', mb: -1 }}>
-                # step 2 — create the plot as it is, or say first what it should do differently
+            {/* While the chat waits for `all`, the line says so in the ink of the text, and the
+                message box names it as its description. */}
+            {(firstPlot || chatLocked) && (
+              <Box
+                id="agent-create-line"
+                sx={{ ...labelSx, color: chatLocked ? 'var(--ink)' : 'var(--ink-soft)', mb: -1 }}
+              >
+                {chatLocked
+                  ? `# ${firstPlot ? 'step 2 — ' : ''}plot the table as it is in all ${libraries.length} libraries at once · turn all off to chat`
+                  : '# step 2 — create the plot as it is, or say first what it should do differently'}
               </Box>
             )}
             <Box
@@ -678,19 +886,23 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 aria-label="Message"
                 placeholder={
                   // Step 1 talks about the data, step 2 about the plot. Without
-                  // data, the chat is the other way to get some: a formula.
-                  !state.dataset
-                    ? 'ask for a curve: "y = sin(x), x from -pi to pi"'
-                    : !step2
-                      ? 'ask about your data, or for a fix: "sum per month"'
-                      : firstPlot
-                        ? 'optional: what the first plot should do differently'
-                        : 'ask about this plot, or ask for a change'
+                  // data, the chat is the other way to get some: a formula. While
+                  // `all` is pressed in step 2 the box waits: the fan-out takes no text.
+                  chatLocked
+                    ? 'all libraries: the table goes as it is · turn all off to chat'
+                    : !state.dataset
+                      ? 'ask for a curve: "y = sin(x), x from -pi to pi"'
+                      : !step2
+                        ? 'ask about your data, or for a fix: "sum per month"'
+                        : firstPlot
+                          ? 'optional: what the first plot should do differently'
+                          : 'ask about this plot, or ask for a change'
                 }
                 value={draft}
                 maxLength={MAX_MESSAGE_CHARS}
                 rows={2}
-                disabled={state.phase !== 'ready'}
+                disabled={state.phase !== 'ready' || chatLocked}
+                aria-describedby={chatLocked ? 'agent-create-line' : undefined}
                 onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
                   setDraft(event.target.value)
                 }
@@ -724,6 +936,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 >
                   {state.run?.stopping ? '.stop() …' : '.stop()'}
                 </Box>
+              ) : firstPlot && plotAll ? (
+                plotAllButton
               ) : firstPlot ? (
                 <Box
                   key="create"
@@ -742,8 +956,9 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 <>
                   {/* Step 2 after a plot: start over from the catalogue plot with this data.
                       Step 1: the step is visible from the foot too, and a click says what
-                      comes first instead of calling the server. */}
-                  {state.dataset && (
+                      comes first instead of calling the server. With `all`, `.plot_all()`. */}
+                  {state.dataset && plotAll && plotAllButton}
+                  {state.dataset && !plotAll && (
                     <Box
                       component="button"
                       type="button"
@@ -767,7 +982,7 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                       {hasPlot ? '.start_over()' : '.create_plot()'}
                     </Box>
                   )}
-                  {state.dataset && hasPlot && (
+                  {state.dataset && hasPlot && !plotAll && (
                     <Box component="span" id={START_OVER_HELP_ID} sx={visuallyHiddenSx}>
                       {START_OVER_HELP}
                     </Box>
@@ -776,7 +991,8 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                     component="button"
                     type="submit"
                     onClick={keepKeyboardFocus}
-                    disabled={!draft.trim() || state.phase !== 'ready' || busy}
+                    disabled={chatLocked || !draft.trim() || state.phase !== 'ready' || busy}
+                    aria-describedby={chatLocked ? 'agent-create-line' : undefined}
                     sx={ghostButtonSx}
                   >
                     .send()
@@ -826,36 +1042,6 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
                 {draft.length} / {MAX_MESSAGE_CHARS}
               </Box>
             )}
-            {offerFanOut && upload && (
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  columnGap: 1,
-                  rowGap: 0.75,
-                }}
-              >
-                <Box id="agent-plot-all-line" sx={{ ...labelSx, flex: '1 1 220px' }}>
-                  # admin · this table in all {libraries.length} libraries at once, at most{' '}
-                  {maxRuns} running
-                </Box>
-                <Box
-                  component="button"
-                  type="button"
-                  onClick={() =>
-                    setFanOut({ upload, bindings: state.bindings, libraries: [...libraries] })
-                  }
-                  disabled={!canCreate}
-                  aria-label="Plot in all libraries"
-                  aria-describedby="agent-plot-all-line"
-                  sx={actionButtonSx}
-                >
-                  .plot_all()
-                </Box>
-              </Box>
-            )}
             {/* A chat without a plot has no result card to report on: its own control. Not while a
                 turn runs, which may still bring the plot; a sent record stays in view. */}
             {(state.chatFeedback ||
@@ -872,14 +1058,19 @@ function AgentChat({ specId, library, language, token, onLibraryChange }: AgentC
         </Box>
         {fanOut && (
           <FanOut
+            panelRef={fanOutRef}
             specId={specId}
             libraries={fanOut.libraries}
             locale={locale}
             token={token}
+            sourceSession={fanOut.sourceSession}
             upload={fanOut.upload}
             bindings={fanOut.bindings}
             maxRuns={maxRuns}
-            onClose={() => setFanOut(null)}
+            onClose={() => {
+              fanOutReturn.current = true;
+              setFanOut(null);
+            }}
           />
         )}
       </Box>

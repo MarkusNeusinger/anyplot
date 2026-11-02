@@ -331,6 +331,7 @@ ALL_ROUTES = [
     ("POST", "/debug/agent/sessions/s1/dataset/confirm", None),
     ("POST", "/debug/agent/sessions/s1/dataset/undo", None),
     ("POST", "/debug/agent/sessions/s1/dataset/to_long", None),
+    ("POST", "/debug/agent/sessions/s1/dataset/copy", {"from_session": "s0"}),
     ("POST", "/debug/agent/sessions/s1/messages", {"action": "create_plot"}),
     ("POST", "/debug/agent/sessions/s1/cancel", None),
     ("POST", "/debug/agent/sessions/s1/outcome", {"action": "copied_code", "version": 1}),
@@ -544,6 +545,18 @@ class TestSnapshot:
         assert sent["locale"] == "de-CH"
         assert sent["snapshot"]["code"] == "import numpy as np\nx = 1\n"
 
+    def test_create_session_forwards_the_fanout_source_only(self, client, upstream, db_with_spec) -> None:
+        """The admin fan-out's sessions are marked `fanout` for the usage telemetry; no other value passes."""
+        upstream.handler = lambda request: httpx.Response(200, json={"session_id": "s1", "eligibility": "clean"})
+        body = {"spec_id": "scatter-basic", "library": "matplotlib", "locale": "en"}
+        response = client.post("/debug/agent/sessions", json={**body, "source": "fanout"}, headers=CLIENT_HEADERS)
+        assert response.status_code == 200
+        assert upstream.last_json["source"] == "fanout"
+        for source in ("live", "harness", "Fanout"):
+            refused = client.post("/debug/agent/sessions", json={**body, "source": source}, headers=CLIENT_HEADERS)
+            assert refused.status_code == 422, source
+        assert len(upstream.requests) == 1
+
     def test_create_session_404_without_snapshot(self, client, upstream, db_with_spec) -> None:
         db_with_spec.get_by_id_with_code.return_value = None
         response = client.post(
@@ -702,6 +715,56 @@ class TestBodies:
         upstream.handler = lambda request: httpx.Response(422, json={"detail": "no_suggestion"})
         refused = client.post("/debug/agent/sessions/s1/dataset/to_long", headers=CLIENT_HEADERS)
         assert (refused.status_code, refused.json()["detail"]) == (422, "no_suggestion")
+
+    def test_dataset_copy_forwards_the_source_session_only(self, client, upstream) -> None:
+        """The fan-out's copy: one session id, under the admin's own user id; the agents service checks both."""
+        copied = {"preview": [], "profile": {}, "bindings": [], "version": 1, "confirmed": True, "copied_from": 3}
+        upstream.handler = lambda request: httpx.Response(200, json=copied)
+        response = client.post(
+            "/debug/agent/sessions/s1/dataset/copy", json={"from_session": "page-sid"}, headers=CLIENT_HEADERS
+        )
+        assert response.status_code == 200 and response.json() == copied
+        sent = upstream.requests[-1]
+        assert (sent.method, sent.url.path) == ("POST", "/v1/sessions/s1/dataset/copy")
+        assert upstream.last_json == {"from_session": "page-sid"}
+        assert sent.headers["X-Anyplot-User"] == derive_user_id(KEY.encode(), ADMIN)
+
+    @pytest.mark.parametrize(
+        "body", [{}, {"from_session": "a/b"}, {"from_session": ""}, {"from_session": "s0", "user": "adm_other"}]
+    )
+    def test_dataset_copy_takes_one_session_id_and_nothing_else(self, client, upstream, body) -> None:
+        """No user id, no dataset id, no bindings ride along: the caller cannot name whose data it copies."""
+        response = client.post("/debug/agent/sessions/s1/dataset/copy", json=body, headers=CLIENT_HEADERS)
+        assert response.status_code == 422
+        assert upstream.requests == []
+
+    @pytest.mark.parametrize(
+        ("status", "detail"),
+        [
+            (404, "session_expired"),
+            (409, "has_dataset"),
+            (422, "unconfirmed"),
+            (422, "no_dataset"),
+            (409, "run_active"),
+            (429, "daily_limit"),
+            (503, "capacity"),
+        ],
+    )
+    def test_dataset_copy_refusals_pass_through(self, client, upstream, status, detail) -> None:
+        upstream.handler = lambda request: httpx.Response(status, json={"detail": detail})
+        response = client.post(
+            "/debug/agent/sessions/s1/dataset/copy", json={"from_session": "s0"}, headers=CLIENT_HEADERS
+        )
+        assert (response.status_code, response.json()["detail"]) == (status, detail)
+
+    def test_an_agents_service_without_the_copy_route_reads_as_not_found(self, client, upstream) -> None:
+        """Deploy order: before the agents service has the route, FastAPI's own 404 reaches the page as `not_found`,
+        apart from a missing session's `session_expired`, so the page replays the paste instead."""
+        upstream.handler = lambda request: httpx.Response(404, json={"detail": "Not Found"})
+        response = client.post(
+            "/debug/agent/sessions/s1/dataset/copy", json={"from_session": "s0"}, headers=CLIENT_HEADERS
+        )
+        assert (response.status_code, response.json()["detail"]) == (404, "not_found")
 
     def test_the_summarize_data_action_is_forwarded(self, client, upstream) -> None:
         upstream.handler = lambda request: httpx.Response(
@@ -960,6 +1023,27 @@ class TestMessagesStream:
         upstream.handler = lambda request: httpx.Response(200, content=b"event: done\ndata: {}\n\n")
         client.post("/debug/agent/sessions/s1/messages", json={"text": "make it blue"}, headers=CLIENT_HEADERS)
         assert upstream.last_json == {"text": "make it blue"}
+
+    def test_the_site_theme_is_forwarded_as_a_query_parameter(self, client, upstream) -> None:
+        """The page's site theme rides in the query, never the strict body, so either side deploys first."""
+        upstream.handler = lambda request: httpx.Response(200, content=b"event: done\ndata: {}\n\n")
+        client.post(
+            "/debug/agent/sessions/s1/messages?theme=dark", json={"action": "create_plot"}, headers=CLIENT_HEADERS
+        )
+        assert str(upstream.requests[-1].url) == f"{SERVICE_URL}/v1/sessions/s1/messages?theme=dark"
+        assert upstream.last_json == {"action": "create_plot"}
+
+    def test_a_turn_without_a_site_theme_sends_none(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(200, content=b"event: done\ndata: {}\n\n")
+        client.post("/debug/agent/sessions/s1/messages", json={"action": "create_plot"}, headers=CLIENT_HEADERS)
+        assert str(upstream.requests[-1].url) == f"{SERVICE_URL}/v1/sessions/s1/messages"
+
+    def test_an_unknown_site_theme_is_422_before_any_upstream_call(self, client, upstream) -> None:
+        response = client.post(
+            "/debug/agent/sessions/s1/messages?theme=sepia", json={"action": "create_plot"}, headers=CLIENT_HEADERS
+        )
+        assert response.status_code == 422
+        assert upstream.requests == []
 
     def test_connection_failure_emits_error_then_done(self, client, upstream) -> None:
         def refuse(request):
@@ -1300,11 +1384,48 @@ class TestArtifacts:
         assert response.headers["X-Content-Type-Options"] == "nosniff"
         assert str(upstream.requests[0].url) == f"{SERVICE_URL}/v1/sessions/s1/artifacts/{name}?v=2"
 
-    @pytest.mark.parametrize("name", ["plot.html", "secret.txt", "plot-light.PNG", "..%2Fstatus"])
+    @pytest.mark.parametrize("name", ["index.html", "secret.txt", "plot-light.PNG", "plot.HTML", "..%2Fstatus"])
     def test_other_names_are_404_without_upstream_call(self, client, upstream, name) -> None:
         response = client.get(f"/debug/agent/sessions/s1/artifacts/{name}")
         assert response.status_code == 404
         assert upstream.requests == []
+
+    def test_the_page_downloads_in_the_theme_asked_for_with_headers_of_its_own(self, client, upstream) -> None:
+        """JS-4b: `plot.html` is an attachment the browser never renders as a page of this origin; the upstream's
+        headers are not forwarded, the theme is."""
+        upstream.handler = lambda request: httpx.Response(
+            200,
+            content=b"<!doctype html><p>page</p>",
+            headers={"Content-Type": "text/plain", "Content-Disposition": "inline", "Set-Cookie": "a=b"},
+        )
+        response = client.get("/debug/agent/sessions/s1/artifacts/plot.html?v=2&theme=dark")
+        assert response.status_code == 200
+        assert response.content == b"<!doctype html><p>page</p>"
+        assert response.headers["content-type"] == "text/html; charset=utf-8"
+        assert response.headers["Content-Disposition"] == 'attachment; filename="plot.html"'
+        assert response.headers["Content-Security-Policy"] == "sandbox"
+        assert response.headers["X-Content-Type-Options"] == "nosniff"
+        assert response.headers["Cache-Control"] == "private, no-store"
+        assert response.headers["Referrer-Policy"] == "no-referrer"
+        assert "set-cookie" not in response.headers
+        assert str(upstream.requests[0].url) == f"{SERVICE_URL}/v1/sessions/s1/artifacts/plot.html?v=2&theme=dark"
+
+    def test_the_theme_is_forwarded_for_the_page_alone(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(200, content=b"x")
+        assert client.get("/debug/agent/sessions/s1/artifacts/data.csv?v=2&theme=dark").status_code == 200
+        assert client.get("/debug/agent/sessions/s1/artifacts/plot.html").status_code == 200
+        assert [str(request.url) for request in upstream.requests] == [
+            f"{SERVICE_URL}/v1/sessions/s1/artifacts/data.csv?v=2",
+            f"{SERVICE_URL}/v1/sessions/s1/artifacts/plot.html",
+        ]
+        assert client.get("/debug/agent/sessions/s1/artifacts/plot.html?theme=sepia").status_code == 422
+
+    @pytest.mark.parametrize(("status", "code"), [(503, "page_unavailable"), (500, "page_failed"), (503, "capacity")])
+    def test_a_page_the_service_cannot_build_keeps_its_code(self, client, upstream, status, code) -> None:
+        upstream.handler = lambda request: httpx.Response(status, json={"detail": code})
+        response = client.get("/debug/agent/sessions/s1/artifacts/plot.html?v=1")
+        assert response.status_code == status
+        assert response.json() == {"detail": code, "ref": response.headers["X-Request-Id"]}
 
     def test_missing_artifact_maps_upstream_404(self, client, upstream) -> None:
         upstream.handler = lambda request: httpx.Response(404, json={"detail": "session_expired"})

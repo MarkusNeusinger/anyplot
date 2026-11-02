@@ -1,7 +1,8 @@
 """The render contract: what a render job is, what comes back, and the two protocols around it.
 
-A `RenderJob` carries the run form of one code version, the canonical `data.csv` and
-the themes to render (a pipeline run asks for one, the theme toggle for the other);
+A `RenderJob` carries the run form of one code version, the canonical `data.csv` (and,
+for JavaScript, the same table as typed JSON, `data_json`) and the themes to render (a
+pipeline run asks for one, the theme toggle for the other);
 a `RenderBackend` runs it once per theme in isolation and returns raw outputs (exit
 status, the PNG bytes as written, the savefig probe, a stderr tail). The host gates
 (`gates.py`) judge those outputs; the backend never does.
@@ -16,21 +17,34 @@ NumPy) the page dropped; `convert` reads it in the same isolation with the harne
 convert mode and returns the CSV text (or JSON records) for the paste box
 (`ConvertOutput`). A backend without conversions raises `DataRunUnsupported` too.
 
+A `PageJob` is a JavaScript version's self-contained page in one theme (JS-4b, the
+downloadable `plot.html`); `page` builds it in the same isolation with the browser
+harness in page-only mode, so no browser starts, and returns the page's text. A backend
+that cannot (a renderer deployed before `POST /page`) raises `PageUnsupported`; a build
+that ran and left no page raises `PageFailed`.
+
 A `RuntimeAdapter` describes one language runtime for one library: the file name the
 code is written to, the command (the CI command, with the probe harness in front for
 Python and in exec mode for every other language), the environment per theme, the code
 transforms the pipeline applies before a render (`normalise`, `loader_block`,
 `validate`), and the language's code conventions the pipeline checks against
 (`regions`, `readiness`, `security`, `adaptation`, `apply_plan`, `restore_protected`,
-`new_literals`), its error grammar (`error_summary`) and its export (`export`,
-`code_artifact`). `runtimes/__init__.py` maps a library to its runtime; phase 1 has
-one runtime (Python, for matplotlib and seaborn, `runtimes/python.py`), and later
-languages add runtimes, not backends.
+`new_literals`, the ADAPTATION rules that keep the code from running, `blocking_rules`,
+and the target of each other one, `adaptation_targets`), what its loader changes when
+it reads `data.csv` (`loader_notes`), the typed table a language without a reader of its
+own takes (`data_json`), its error grammar (`error_summary`) and its export (`export`,
+`code_artifact`). `runtimes/__init__.py` maps a library to the runtime of its language:
+Python (`runtimes/python.py`) for six libraries and plotly and bokeh since 2026-10-31, R
+(`runtimes/r.py`) for ggplot2 since 2026-10-29, Julia (`runtimes/julia.py`) for Makie
+since 2026-10-30 and JavaScript (`runtimes/javascript.py`) for Chart.js, D3, ECharts and
+Highcharts since 2026-10-30 and MUI X since 2026-10-31; later languages add runtimes, not
+backends.
 
 No ADK import: the render layer is plain code.
 """
 
 import re
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
@@ -43,8 +57,8 @@ from ..schemas import RENDER_ID_PATTERN, CodeArtifact, Theme
 if TYPE_CHECKING:
     from ..code.edits import AppliedPlan
     from ..code.readiness import Readiness
-    from ..code.regions import Regions
     from ..code.validate import Finding
+    from ..data.kinds import ColumnKinds
     from ..schemas import AdaptPlan
 
 
@@ -52,6 +66,29 @@ THEMES: tuple[Theme, Theme] = ("light", "dark")
 """Every theme, in the order artifacts and reviewer images are listed."""
 MAX_STDERR_CHARS = 2_000
 _RENDER_ID = re.compile(RENDER_ID_PATTERN)
+BLOCKING_RULES: frozenset[str] = frozenset({"placeholder-count", "placeholder-use", "syntax", "size", "encoding"})
+"""ADAPTATION findings that keep the code of every language from running: without one placeholder there is no
+loader. A runtime's `blocking_rules` holds these and may add its own (R and Julia: `dataset-package`)."""
+
+
+class PaletteRegion(Protocol):
+    """The Imprint palette a runtime's regions found: `regions.Palette` or a profile's (`profiles.r.regions.Palette`,
+    `profiles.julia.regions.Palette`)."""
+
+    @property
+    def entries(self) -> Sequence[str]: ...
+
+
+class CodeRegions(Protocol):
+    """What the pipeline reads from a runtime's regions: `regions.Regions` or a profile's (`profiles.r.regions.Regions`,
+    `profiles.julia.regions.Regions`).
+
+    Only the Imprint palette, whose original entries the ADAPTATION check keeps in order; the
+    edit applier and the validators read their own language's regions themselves.
+    """
+
+    @property
+    def imprint(self) -> PaletteRegion | None: ...
 
 
 class RendererUnavailable(RuntimeError):
@@ -69,10 +106,15 @@ class RenderJob:
     data_csv: str
     themes: tuple[Theme, ...] = THEMES
     timeout_s: float = 60.0
+    data_json: str | None = None
+    """The same table as typed JSON (`RuntimeAdapter.data_json`), for a JavaScript job only: the backend writes it as
+    `data.json` next to the code file, which the harness injects as `window.ANYPLOT_DATA`."""
 
     def __post_init__(self) -> None:
         if not _RENDER_ID.fullmatch(self.job_id):
             raise ValueError("job_id must match the render id pattern")
+        if self.data_json is not None and self.language != "javascript":
+            raise ValueError("data_json is for a javascript job only")
         if not self.themes or any(theme not in THEMES for theme in self.themes):
             raise ValueError("themes must be light and/or dark")
         if self.timeout_s <= 0:
@@ -200,9 +242,51 @@ class ConvertOutput:
     wall_s: float = 0.0
 
 
+class PageUnsupported(RendererUnavailable):
+    """The backend builds no pages: a renderer deployed before `POST /page` (404), or a backend without one."""
+
+
+class PageFailed(RuntimeError):
+    """A page build ran and left no page: the harness's exit code, the run reason (`output_rejected` for a page over
+    the cap, `timeout`, ...) and the stderr tail with its final error line. Callers log the error summary, never the
+    tail, which can quote the user's data."""
+
+    def __init__(
+        self, *, exit_code: int | None, reason: str | None = None, stderr_tail: str = "", wall_s: float = 0.0
+    ) -> None:
+        super().__init__(f"the page build left no page (exit {exit_code}, reason {reason})")
+        self.exit_code = exit_code
+        self.reason = reason
+        self.stderr_tail = stderr_tail[-MAX_STDERR_CHARS:]
+        self.wall_s = wall_s
+
+
+@dataclass(frozen=True)
+class PageJob:
+    """A JavaScript version's page in one theme: the run form, the library and the typed table it renders from."""
+
+    job_id: str
+    library: str
+    source: str
+    data_json: str
+    theme: Theme
+    timeout_s: float = 60.0
+    language: str = "javascript"
+
+    def __post_init__(self) -> None:
+        if not _RENDER_ID.fullmatch(self.job_id):
+            raise ValueError("job_id must match the render id pattern")
+        if self.language != "javascript":
+            raise ValueError("a page is built for a javascript job only")
+        if self.theme not in THEMES:
+            raise ValueError("theme must be light or dark")
+        if self.timeout_s <= 0:
+            raise ValueError("timeout_s must be positive")
+
+
 class RenderBackend(Protocol):
     """Runs a job's code once per theme in isolation and collects the raw outputs; runs data snippets and file
-    conversions the same way."""
+    conversions the same way, and builds a JavaScript version's page."""
 
     name: str
 
@@ -211,6 +295,8 @@ class RenderBackend(Protocol):
     async def run_data(self, job: DataJob) -> DataOutput: ...
 
     async def convert(self, job: ConvertJob) -> ConvertOutput: ...
+
+    async def page(self, job: PageJob) -> str: ...
 
 
 class RuntimeAdapter(Protocol):
@@ -225,6 +311,27 @@ class RuntimeAdapter(Protocol):
     """The working form's data placeholder statement, which `loader_block` replaces."""
     render_p95_s: float
     """Seconds a repair attempt's render is budgeted at against the pipeline's soft deadline."""
+    blocking_rules: frozenset[str]
+    """The ADAPTATION rule ids whose finding rejects the code, as a SECURITY finding does (`BLOCKING_RULES` and the
+    language's own); every other ADAPTATION finding becomes a defect line and the code still renders."""
+    adaptation_targets: Mapping[str, str]
+    """The target of each soft ADAPTATION finding's defect line, in the language's own code; a rule without one gets
+    the pipeline's default."""
+
+    text_probe: bool
+    """Whether the library's render reports its drawn texts (`labels` in its probe), which the closing reply quotes:
+    every library since 2026-11-01 (ggplot2 and Makie through their rows' text probes). The eval report counts a
+    shipped render without them only where this is True (`agents/evals/report.py`, `untexted`)."""
+
+    @property
+    def review_texts(self) -> bool:
+        """Whether the reviewer, not the probe, checks the user's requested texts (owner decision of 2026-10-29):
+        True hands the texts to the render's review (`grounding.reviewed_misses`), whatever the probe reports, since
+        this library's probe reads its texts for the closing reply only (the libraries without matplotlib's probe,
+        whose text probes came on 2026-11-01); False checks them against the probe's drawn texts
+        (`grounding.expected_misses`) and leaves a render whose probe reports none with the
+        `grounding.UNVERIFIED_LINE` note."""
+        ...
 
     def command(self, theme: Theme) -> list[str]:
         """The argv that renders the code file in the work directory (never a shell string)."""
@@ -255,8 +362,28 @@ class RuntimeAdapter(Protocol):
         """The canvas and catalogue-header normaliser of this runtime."""
         ...
 
-    def loader_block(self, working: str, *, columns: list[str], dtypes: dict[str, str], parse_dates: list[str]) -> str:
-        """The working form with its data placeholder replaced by the `data.csv` loader."""
+    def loader_block(
+        self, working: str, *, columns: list[str], dtypes: dict[str, str], parse_dates: list[str], kinds: dict[str, str]
+    ) -> str:
+        """The working form with its data placeholder replaced by the `data.csv` loader.
+
+        `dtypes` and `parse_dates` are the parser's typing, which pandas reads; `kinds` the finer
+        value kinds of every column (`data.kinds.read_kinds`), which a typed reader of another
+        language needs (R's `readr::cols`). Each runtime reads what its loader takes.
+        """
+        ...
+
+    def loader_notes(self, kinds: "ColumnKinds") -> list[str]:
+        """What the loader changes when it reads `data.csv`, one line per finding with its counts, each a change note
+        (at most `schemas.MAX_CHANGE_CHARS`) that the pipeline puts first in the shipped version's `changes`; empty when
+        it reads every cell exactly (owner rule of 2026-10-15: no silent loss; owner decision of 2026-10-29: "what
+        changed", never a residual note, so the status stays as the render earns it)."""
+        ...
+
+    def data_json(self, csv_text: str, kinds: "ColumnKinds | None") -> str | None:
+        """The canonical `csv_text` as typed JSON for a render job (`RenderJob.data_json`), for a runtime whose code
+        reads no `data.csv` itself (JavaScript: `data/typed_json.py`); None for every other runtime, and None when
+        the CSV does not fit its own typing (`kinds` None), where the runtime's loader then refuses the run form."""
         ...
 
     def validate(self, code: str, library: str) -> list[str]:
@@ -267,7 +394,7 @@ class RuntimeAdapter(Protocol):
         """The PNG and the probe one theme's run left in `run_dir`, read without following links."""
         ...
 
-    def regions(self, code: str) -> "Regions":
+    def regions(self, code: str) -> CodeRegions:
         """The catalogue conventions in `code`: the theme block, the tokens, the palette, the placeholder, the save."""
         ...
 
@@ -295,8 +422,14 @@ class RuntimeAdapter(Protocol):
         """The string literals `code` holds and `base` does not (the literal budget)."""
         ...
 
-    def error_summary(self, stderr_tail: str) -> str:
-        """The error class and code line of a failed render in this language, never the message."""
+    def error_summary(self, stderr_tail: str, *, run_form: str | None = None) -> str:
+        """The error class and code line of a failed render in this language, never the message.
+
+        `run_form` is the code that ran. A runtime whose loader shifts the lines by many (Julia's, 15 lines and
+        more for the one placeholder line) reads it to name the working form's line, which the adapter edits;
+        JavaScript's reads it to name a line on the loader as the data loader and to drop a line past the code's
+        end (the harness's wrapper); Python's and R's summaries leave it unread (Python's line counts the run
+        form, R's grammar names none)."""
         ...
 
     def export(self, run_form: str, *, spec_id: str, library_version: str | None, theme: str = "light") -> str:

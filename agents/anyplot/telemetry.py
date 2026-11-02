@@ -25,8 +25,9 @@ feedback-case submission (`api/agent_cases.py`).
 | `outcome` | the page's beacon: copied code or image, downloaded a file, saved the session, sent feedback | action and version |
 
 Envelope (every line): `log_type`, `schema`, `event`, `service` and `revision` (Cloud
-Run's `K_SERVICE` and `K_REVISION`), `source` (`live`, or `harness` for the eval
-harnesses, `harness()`), `session` (a salted hash), `spec_id`, `library`, `turn` (the
+Run's `K_SERVICE` and `K_REVISION`), `source` (`live`; `fanout` for every line of a session
+the admin's "plot in all libraries" fan-out opened, `RequestLedger.fanout`; or `harness` for the
+eval harnesses, `harness()`), `session` (a salted hash), `spec_id`, `library`, `turn` (the
 session's user turns so far, from the request ledger), and `idempotency_key`, a hash of
 session, turn, attempt and event: the BigQuery base view keeps one row per key, so a
 line Cloud Logging delivers twice or a pipeline node ADK re-runs counts once.
@@ -57,9 +58,10 @@ from typing import TYPE_CHECKING, Annotated, Any, Literal, cast, get_args
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
-from core.constants import SUPPORTED_LIBRARIES
+from core.constants import MAX_AGENT_VERSION, SUPPORTED_LIBRARIES
 
 from .data.warning_codes import BindingWarningCode, WarningCode, binding_warning_codes, warning_codes
+from .language import canonical
 from .plugins.ledger import RequestLedger, StepUsage, salted
 
 
@@ -81,11 +83,12 @@ LOG_TYPE: Literal["agent_telemetry"] = "agent_telemetry"
 SCHEMA: Literal[1] = 1
 """The line format's version: a field renamed or removed is a new schema; a field added is not."""
 
-Source = Literal["live", "harness"]
+Source = Literal["live", "fanout", "harness"]
 SOURCE: ContextVar[Source] = ContextVar("anyplot_telemetry_source", default="live")
 """The source of the lines written in this context. A context variable, not a module global: the eval harnesses
 run the app in process (`evals/matrix.py`, `evals/prep.py`), and only the requests they send, which run in the
-harness's own context, may be tagged `harness`; a live request served by the same process keeps `live`."""
+harness's own context, may be tagged `harness`; a live request served by the same process keeps `live`, or
+`fanout` when its session was opened by the admin's fan-out (`emit`)."""
 
 
 @contextmanager
@@ -282,17 +285,100 @@ PipelineStage = Literal[
     "reviewer_defects",
     "reviewer_ok",
     "self_review",
+    "other",
 ]
+"""`pipeline.Stage` (pinned equal by a test), `other` for a stage added there first: `stage` and `stages` go through
+`closed` and `closed_list`, so a new stage never drops the line."""
+RoundScore = ScoreBucket | Literal["unscored"]
+"""A round's review score bucket in `round_scores`; `unscored` for a round no review scored (a failed render, a
+checklist review, a review the deadline skipped), so the list's position stays the round's number."""
+PlotLanguage = Literal["en", "de", "fr", "es", "it", "pt", "nl", "pl", "zh", "vi", "ru", "ja", "other"]
+"""The session language as a code of `language.ENGLISH_NAMES` (the chip's ten, Polish and Japanese; pinned equal by a
+test), `other` for every other language: the session language is free text the pattern bounds (`Swedish`), and a rare
+language would single a user out, so the value itself never reaches a line (`plot_language`)."""
+Readiness = Literal["clean", "coupled"]
+"""The readiness of the catalogue file the session adapts (`code.readiness.ReadinessStatus`): `blocked` never opens."""
+LoaderNote = Literal["inexact", "submillisecond", "offset"]
+"""The kinds of cells a runtime's loader changes when it reads `data.csv` (`data.kinds.ColumnKinds`, pinned equal by a
+test): integers past ±2^53 read as the nearest double (R), timestamps cut to the millisecond (Julia), timestamps with a
+UTC offset read in UTC (R, Julia). Never the note's sentence, which names columns and counts."""
+EditFailure = Literal[
+    "zero_match",
+    "stale_match",
+    "multi_match",
+    "protected:theme",
+    "protected:theme_token",
+    "protected:placeholder",
+    "protected:savefig",
+    "drift:theme",
+    "drift:theme_token",
+    "drift:savefig",
+    "drift:rebind",
+    "working_unparseable",
+    "other",
+]
+"""`code.edits.FAILURE_KINDS` (pinned equal by a test), `other` for a kind added there first."""
+ValidatorRule = Literal[
+    "banned-attribute",
+    "banned-call",
+    "banned-import",
+    "banned-keyword",
+    "banned-name",
+    "banned-statement",
+    "data-frame",
+    "dataset-package",
+    "dunder",
+    "encoding",
+    "literal-budget",
+    "literal-data",
+    "markup-code",
+    "module-value",
+    "os-use",
+    "palette-prefix",
+    "placeholder-count",
+    "placeholder-use",
+    "rc-key",
+    "relative-import",
+    "rng",
+    "savefig-target",
+    "size",
+    "star-import",
+    "string-length",
+    "syntax",
+    "unavailable-import",
+    "url-literal",
+    "other",
+]
+"""The rule ids of the validators of every language (`code/validate.py`, `code/profiles/*/validate.py`) and the
+pipeline's `literal-budget`; a test collects the ids from the validators' sources, and a rule added there first is
+`other` until it is added here."""
+ReviewerMode = Literal["catalogue", "checklist"]
+"""`settings.ReviewerMode` (pinned equal by a test)."""
+PromptHash = Annotated[str, Field(pattern=r"^[0-9a-f]{16}$")]
+"""The first 16 hex characters of the SHA-256 of a static instruction (`policy.prompt_hash`)."""
 
 OutcomeAction = Literal[
-    "copied_code", "copied_image", "downloaded_png", "downloaded_code", "downloaded_data", "saved_session", "feedback"
+    "copied_code",
+    "copied_image",
+    "downloaded_png",
+    "downloaded_code",
+    "downloaded_page",
+    "opened_preview",
+    "downloaded_data",
+    "saved_session",
+    "feedback",
 ]
+"""What the user did with a result; `downloaded_page` is a JavaScript plot's interactive `plot.html` (JS-4b), and
+`opened_preview` that page shown in the card (JS-4b-2), a look and no keep. The BFF (`api/routers/agent.py`) and the
+page (`app/src/lib/agent.ts`) carry the same set."""
 OUTCOME_ACTIONS: tuple[str, ...] = get_args(OutcomeAction)
 Reaction = Literal["thumbs_up", "thumbs_down", "bug", "idea"]
 """The feedback reactions (`core/database/models.py` `FEEDBACK_REACTIONS`; pinned by a test)."""
 
 Count = Annotated[int, Field(ge=0, le=10_000_000)]
 Ms = Annotated[int, Field(ge=0, le=86_400_000)]
+Version = Annotated[int, Field(ge=0, le=MAX_AGENT_VERSION)]
+"""A plot version number as the routes take it (`core.constants.MAX_AGENT_VERSION`); 0 is the session itself."""
 
 
 def _list() -> Any:
@@ -312,8 +398,12 @@ class StepTokens(_Event):
     calls: Count = 0
     input: Count = 0
     output: Count = 0
+    """Candidates plus thoughts: every output token, as the price table bills them."""
     cached: Count = 0
     cache_write: Count = 0
+    thoughts: Count | None = None
+    """The thinking tokens among `output`, a part of it, never added to it; None where no split is known (the judges,
+    which book a plain total)."""
 
 
 class DataInput(_Event):
@@ -363,6 +453,9 @@ class ChatTurn(_Event):
     error: ErrorCode | None = None
     reply_reasked: bool = False
     language_source: LanguageSource | None = None
+    """How the session language was set, as the turn left it (detection or `set_language` may set it in the turn)."""
+    plot_language: PlotLanguage | None = None
+    """The session language as the turn left it, as a closed code (`plot_language`)."""
     llm_calls: Count = 0
     steps: list[StepTokens] = _list()
     latency_ms: Ms = 0
@@ -382,6 +475,13 @@ class PipelineRun(_Event):
     score_round2: ScoreBucket | None = None
     shipped_attempt: Count | None = None
     shipped_round: Count | None = None
+    version: Version | None = None
+    """The session's number of the version this run shipped (`PlotResult.version`, the number the page sends back as
+    `outcome.version`), so an outcome joins the run that made its plot; None when the run shipped nothing, or a
+    version past `MAX_AGENT_VERSION`, which no outcome can name (`version_number`)."""
+    shipped_score: ScoreBucket | None = None
+    """The bucket of the shipped render's own review score; None when it shipped unscored (a checklist review, no
+    review left) or shipped nothing."""
     forced_repair: list[DefectId] = _list()
     """Review ids that forced a repair whatever the score (`pipeline.VISIBLE_DEFECT_IDS`)."""
     gates_failed: list[GateId] = _list()
@@ -391,6 +491,35 @@ class PipelineRun(_Event):
     drift_restored: bool = False
     """A plan's drift of the protected theme statements was restored after the round's check retry
     (`edits.restore_protected`)."""
+    stages: list[PipelineStage] = _list()
+    """The stage that ended each attempt, in order (`pipeline.Run.stages`): retries, proofreads and repairs with their
+    causes; `stage` is what stopped the run, also a limit before the next attempt."""
+    round_scores: list[RoundScore] = _list()
+    """The bucket of each round's latest review score, in round order, `unscored` for a round without one;
+    `score_round1` and `score_round2` repeat the first two for the views."""
+    plot_language: PlotLanguage | None = None
+    """The run's plot language (`pipeline.Run.language`), as a closed code (`plot_language`)."""
+    readiness: Readiness | None = None
+    """The readiness of the catalogue file the session adapts, as the session opened it."""
+    loader_notes: list[LoaderNote] = _list()
+    """The kinds of cells the runtime's loader changed reading this run's data (`pipeline.loader_codes`)."""
+    edit_failures: list[EditFailure] = _list()
+    """The distinct kinds of the edit failures that ended an attempt (a plan restored after drift is
+    `drift_restored`, not here)."""
+    validator_rules: list[ValidatorRule] = _list()
+    """The distinct rule ids that rejected a plan's code in any check of the run (SECURITY, the blocking ADAPTATION
+    rules, `literal-budget`)."""
+    adaptation_rules: list[ValidatorRule] = _list()
+    """The distinct soft ADAPTATION rule ids of any check of the run: defect lines, the code still rendered."""
+    reviewer_mode: ReviewerMode | None = None
+    ship_best: bool | None = None
+    """`AGENT_SHIP_BEST` as set; it takes effect with `reviewer_mode` `catalogue` only (`pipeline.ship_best`)."""
+    self_review: bool | None = None
+    repair_self_review: bool | None = None
+    adapter_prompt: PromptHash | None = None
+    """The hash of the run's adapter instruction (`policy.adapter_instruction` of the library)."""
+    reviewer_prompt: PromptHash | None = None
+    """The hash of the run's reviewer instruction, in its mode (`sub_agents.reviewer.REVIEWER_MODES`)."""
     adapt_ms: Ms = 0
     check_ms: Ms = 0
     render_ms: Ms = 0
@@ -402,7 +531,7 @@ class PipelineRun(_Event):
 class Outcome(_Event):
     event: Literal["outcome"] = "outcome"
     action: OutcomeAction
-    version: Annotated[int, Field(ge=0, le=999)] = 0
+    version: Version = 0
     reaction: Reaction | None = None
 
 
@@ -438,14 +567,17 @@ def emit(event: AnyEvent, ledger: RequestLedger, *, attempt: str = "0") -> dict[
 
     Never raises: telemetry must not break a turn. `attempt` separates two lines of the same
     event in one turn (a second paste, the version of an outcome) in the idempotency key.
+    A live line of a session the admin's fan-out opened (`ledger.fanout`) is `fanout`, so every
+    `source = 'live'` filter leaves the fan-out's test sessions out; the harness's stays `harness`.
     """
     try:
         service, revision = _service()
         session = session_key(ledger.session_id)
+        source = SOURCE.get()
         envelope = _Envelope(
             service=service,
             revision=revision,
-            source=SOURCE.get(),
+            source="fanout" if source == "live" and ledger.fanout else source,
             session=session,
             spec_id=ledger.spec_id or None,
             library=ledger.library or None,
@@ -674,7 +806,8 @@ def step_tokens(
 
     One entry per (step, model), so two models in one step (an experiment's adapter model beside the default)
     are each priced at their own rate by the cost view. The judges book no model of their own (`book_judge`):
-    their entry carries `judge_model`, the settings' judge model, so the cost view can price it.
+    their entry carries `judge_model`, the settings' judge model, so the cost view can price it. They book no
+    split of their output either, so their `thoughts` is None; every other step's is its thinking tokens.
     """
     wanted = list(steps)
     folded: dict[tuple[Step, str | None], dict[str, Any]] = {}
@@ -685,13 +818,24 @@ def step_tokens(
         model = model_id(spent.model or (judge_model if step == "judge" else None))
         item = folded.setdefault(
             (step, model),
-            {"step": step, "model": model, "calls": 0, "input": 0, "output": 0, "cached": 0, "cache_write": 0},
+            {
+                "step": step,
+                "model": model,
+                "calls": 0,
+                "input": 0,
+                "output": 0,
+                "cached": 0,
+                "cache_write": 0,
+                "thoughts": None if step == "judge" else 0,
+            },
         )
         item["calls"] += spent.calls
         item["input"] += spent.input
         item["output"] += spent.output
         item["cached"] += spent.cached
         item["cache_write"] += spent.cache_write
+        if item["thoughts"] is not None:
+            item["thoughts"] += spent.thoughts
     return [folded[key] for key in sorted(folded, key=lambda key: (wanted.index(key[0]), key[1] or ""))]
 
 
@@ -749,6 +893,37 @@ def closed(value: str | None, allowed: Iterable[str], fallback: str = "other") -
     if value is None:
         return None
     return value if value in set(allowed) else fallback
+
+
+def closed_set(values: Iterable[str], allowed: Iterable[str]) -> list[str]:
+    """The distinct `values`, each `closed` (`other` outside `allowed`), sorted."""
+    known = set(allowed)
+    return sorted({value if value in known else "other" for value in values})
+
+
+def closed_list(values: Iterable[str], allowed: Iterable[str]) -> list[str]:
+    """Every one of `values` in its order, each `closed` (`other` outside `allowed`): a sequence such as `stages`."""
+    known = set(allowed)
+    return [value if value in known else "other" for value in values]
+
+
+def plot_language(language: str | None) -> PlotLanguage | None:
+    """The session language as a closed code: a code of `PlotLanguage` (`Deutsch` and `German` are `de`), `other` for
+    any other language (`Swedish`, `sv`, `Klingon`), None without a session."""
+    if language is None:
+        return None
+    return cast(PlotLanguage, closed(canonical(language), get_args(PlotLanguage)))
+
+
+def version_number(number: int | None) -> int | None:
+    """A shipped version's number for `pipeline_run.version`: None past `MAX_AGENT_VERSION` (and for none), so a
+    session that somehow shipped more versions than any route or outcome can name still writes its run lines."""
+    return number if number is not None and 1 <= number <= MAX_AGENT_VERSION else None
+
+
+def readiness(status: str | None) -> Readiness | None:
+    """A readiness status as the closed set, None for any other value (`blocked` never opens a session)."""
+    return cast(Readiness, status) if status in get_args(Readiness) else None
 
 
 # --- Per-session marks between turns ------------------------------------------------------

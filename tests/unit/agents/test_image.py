@@ -36,6 +36,8 @@ from agents.anyplot import policy
 from agents.anyplot.render import harness, watermark
 from agents.anyplot.render.runtimes import RUNTIME_LIBRARIES
 from agents.anyplot.settings import AgentSettings
+from agents.renderer import toolchain
+from agents.renderer.wire import RenderRequest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -44,6 +46,7 @@ RENDERER_DOCKERFILE = REPO_ROOT / "agents" / "renderer" / "Dockerfile"
 DOCKERIGNORE = REPO_ROOT / ".dockerignore"
 CLOUDBUILD = REPO_ROOT / "agents" / "cloudbuild.yaml"
 RENDERER_CLOUDBUILD = REPO_ROOT / "agents" / "renderer" / "cloudbuild.yaml"
+DEPLOY_SMOKE = REPO_ROOT / "agents" / "renderer" / "deploy_smoke.sh"
 
 CLOUD_BUILD_BUILTINS = frozenset({"PROJECT_ID", "PROJECT_NUMBER", "BUILD_ID", "LOCATION"})
 """The built-in substitutions these configs use; anything else unescaped must be a `_NAME`."""
@@ -263,7 +266,18 @@ class TestDockerignoreMatcher:
 
     @pytest.mark.parametrize(
         "relative",
-        ["agents/main.py", "core/palette.py", "prompts/library/seaborn.md", "prompts/quality-criteria.md", "uv.lock"],
+        [
+            "agents/main.py",
+            "core/palette.py",
+            "prompts/library/seaborn.md",
+            "prompts/quality-criteria.md",
+            "uv.lock",
+            "Project.toml",
+            "Manifest.toml",
+            "package.json",
+            "package-lock.json",
+            "automation/js-render/render.mjs",
+        ],
     )
     def test_admits(self, relative: str) -> None:
         assert dockerignore_admits(relative)
@@ -281,6 +295,9 @@ class TestDockerignoreMatcher:
             ".env",
             "agents/.env",
             "app/package.json",
+            "app/package-lock.json",
+            "automation/scripts/sync_to_postgres.py",
+            "node_modules/react/index.js",
         ],
     )
     def test_refuses(self, relative: str) -> None:
@@ -492,8 +509,14 @@ class TestCloudBuild:
             "_PROVIDER": defaults["provider"].default,
             "_MODEL": defaults["model"].default,
             "_JUDGE_MODEL": defaults["judge_model"].default,
-            # Every library with a runtime for the admin's live tests (owner, 2026-10-28), not the settings default.
-            "_LIBRARIES": "matplotlib,seaborn,plotnine,altair,pygal,letsplot",
+            # Every library with a runtime for the admin's live tests (owner, 2026-10-28), not the settings default:
+            # the six Python libraries, ggplot2 on the R runtime (2026-10-29), Makie on the Julia runtime and Chart.js,
+            # D3, ECharts and Highcharts on the JavaScript runtime (2026-10-30), MUI X on it too and plotly and bokeh on
+            # the Python runtime through the renderer's figure mode (2026-10-31): all 15.
+            "_LIBRARIES": (
+                "matplotlib,seaborn,plotnine,altair,pygal,letsplot,plotly,bokeh,ggplot2,makie,chartjs,d3,echarts,"
+                "highcharts,muix"
+            ),
             "_MIN_INSTANCES": "0",
             "_SMOKE_AUTH": "true",
         }
@@ -522,6 +545,9 @@ class TestCloudBuild:
             "--execution-environment=gen2",
             "--no-allow-unauthenticated",
             "--service-account=${_SERVICE_ACCOUNT}",
+            # 1 vCPU and 2 GiB since 2026-10-29 (owner decision; the sizing note in agents/cloudbuild.yaml)
+            "--cpu=1",
+            "--memory=2Gi",
             "--min-instances=${_MIN_INSTANCES}",
             "--max-instances=1",
             "--concurrency=20",
@@ -708,3 +734,178 @@ class TestRendererToolchainSteps:
     def test_the_hand_over_files_stay_out_of_every_build_context(self) -> None:
         for name in ("toolchain.image", "toolchain.missing", "toolchain.repository", "toolchain.pin", "describe.err"):
             assert not dockerignore_admits(name), name
+
+    def test_every_toolchain_input_reaches_the_build_context(self) -> None:
+        """The root `.dockerignore` is an allowlist: an input it keeps out fails the toolchain's COPY in the deploy
+        (Project.toml and Manifest.toml joined with Julia, step 5)."""
+        root = REPO_ROOT.resolve()
+        files = [path.relative_to(root).as_posix() for path in toolchain.input_files(root)]
+        assert {"Project.toml", "Manifest.toml", "agents/renderer/toolchain/smoke.jl"} <= set(files)
+        assert {"agents/renderer/toolchain/warmup.jl", "agents/renderer/toolchain/AnyplotWarmup/Project.toml"} <= set(
+            files
+        )  # the precompile workload (J1.1)
+        assert {"package.json", "package-lock.json", "automation/js-render/render.mjs"} <= set(files)  # Node (JS-1)
+        assert not [path for path in files if not dockerignore_admits(path)]
+
+    def test_a_missing_toolchain_is_built_with_the_registry_cache(self) -> None:
+        """Cloud Build keeps no layer cache, so every stage's layers go to one fixed ref in the toolchain's own
+        package (`mode=max`), and an R change does not rerun Julia's precompile; a cache that cannot be written is
+        only a warning, and the image still goes out as one plain manifest. Should BuildKit's builder or its push fail,
+        the daemon's own build and push (the path before the cache) still deliver the image."""
+        build = _step(_config(RENDERER_CLOUDBUILD), "toolchain-build")
+        assert 'CACHE="$${IMAGE%:*}:buildcache"' in build
+        assert "docker buildx create --name toolchain --driver docker-container --use" in build
+        assert "docker buildx build --provenance=false --push" in build
+        assert '--cache-from "type=registry,ref=$$CACHE"' in build
+        assert "type=registry,ref=$$CACHE,mode=max," in build and "ignore-error=true" in build
+        cached, fallback = build.split("else", 1)
+        assert "docker push" not in cached  # buildx pushes the image itself
+        assert "WARNING" in fallback and 'docker push "$$IMAGE"' in fallback
+
+    def test_the_deploy_runs_on_eight_vcpus_with_an_hour(self) -> None:
+        """Owner decision of 2026-10-29: the whole deploy gets the larger machine, not a nested toolchain build."""
+        config = _config(RENDERER_CLOUDBUILD)
+        assert config["options"] == {"logging": "CLOUD_LOGGING_ONLY", "machineType": "E2_HIGHCPU_8"}
+        assert int(config["timeout"].removesuffix("s")) >= 3600
+
+    def test_the_smoke_step_hands_its_render_probes_to_the_script(self) -> None:
+        """Cloud Build refuses a step argument over 10,000 characters (build dc1cf3ae, 2026-11-01), so the render
+        probes live in `deploy_smoke.sh`; the step keeps the candidate, IAM and /status checks and passes the token
+        through the environment, never on a command line."""
+        smoke = _step(_config(RENDERER_CLOUDBUILD), "smoke")
+        call = 'SMOKE_TOKEN="$$TOKEN" bash agents/renderer/deploy_smoke.sh "$$URL"'
+        assert smoke.count(call) == 1
+        rendered = smoke[smoke.index('if [ "${_SMOKE_RENDER}" = "true" ]') : smoke.index("render smoke skipped")]
+        assert rendered.index("-o status.json") < rendered.index(call)
+        assert smoke.index(call) < smoke.index("REV_AFTER")
+        assert "<<'EOF'" not in smoke
+        assert "$$" not in DEPLOY_SMOKE.read_text(encoding="utf-8")  # a plain script: no Cloud Build escapes
+
+    def test_the_smoke_renders_makie_through_the_julia_row(self, workspace: Path) -> None:
+        """The first deploy proves the depot's package images load under gVisor with `--compiled-modules=strict`."""
+        smoke = DEPLOY_SMOKE.read_text(encoding="utf-8")
+        assert '"language": "julia", "library": "makie"' in smoke
+        assert "--data @makie_job.json -o makie.json" in smoke
+        assert "OK: Makie smoke render" in smoke and "o['wall_s']" in smoke
+        # The job the heredoc writes is a valid request, with Julia's `$(THEME)` left to Julia.
+        heredocs = re.findall(r"<<'EOF'\n(.*?)\nEOF\n", smoke, re.DOTALL)
+        makie = next(heredoc for heredoc in heredocs if "smoke-makie" in heredoc)
+        subprocess.run([sys.executable, "-c", makie], cwd=workspace, check=True, timeout=30)
+        job = RenderRequest.model_validate_json((workspace / "makie_job.json").read_text(encoding="utf-8"))
+        assert (job.language, job.library, job.themes) == ("julia", "makie", ["light"])
+        assert 'save("plot-$(THEME).png", fig; px_per_unit = 2)' in job.source
+        assert "Größe" in job.source
+
+    def test_the_smoke_renders_chartjs_from_its_typed_table_as_a_gate(self, workspace: Path) -> None:
+        """JS-1 measured a cold Chromium under gVisor with a warning only; JS-4a serves JavaScript, so a failed
+        render refuses the promotion like the Makie render, and the page reads the job's typed table."""
+        smoke = DEPLOY_SMOKE.read_text(encoding="utf-8")
+        heredocs = re.findall(r"<<'EOF'\n(.*?)\nEOF\n", smoke, re.DOTALL)
+        chartjs = next(heredoc for heredoc in heredocs if "smoke-chartjs" in heredoc)
+        subprocess.run([sys.executable, "-c", chartjs], cwd=workspace, check=True, timeout=30)
+        job = RenderRequest.model_validate_json((workspace / "chartjs_job.json").read_text(encoding="utf-8"))
+        assert (job.language, job.library, job.themes) == ("javascript", "chartjs", ["light"])
+        assert "new Chart(canvas" in job.source and "window.ANYPLOT_TOKENS" in job.source
+        assert "const data = window.ANYPLOT_DATA;" in job.source and job.data_json is not None
+        assert json.loads(job.data_json)["columns"] == job.data_csv.splitlines()[0].split(",")
+        assert "--data @chartjs_job.json -o chartjs.json" in smoke
+        assert "OK: Chart.js smoke render" in smoke and "o['cpu_s']" in smoke and "o['max_rss_mb']" in smoke
+        javascript = smoke[smoke.index("--data @chartjs_job.json") : smoke.index("# 3. A real data run")]
+        assert "WARNING" not in javascript and 'the Chart.js smoke render failed twice"; exit 1' in javascript
+        # A render that fails answers 200, which curl's retries never see: the render itself gets a second try.
+        retried = smoke[smoke.index("chartjs_ok") : smoke.index("# 3. A real data run")]
+        assert "for try in 1 2; do" in retried and "sleep 30" in retried and "--data @chartjs_job.json" in retried
+        # Between the Makie render and the data run, which all gate the promotion.
+        assert smoke.index("smoke-makie") < smoke.index("smoke-chartjs") < smoke.index("smoke-data")
+
+    def test_the_smoke_renders_plotly_through_the_figure_mode_as_a_gate(self, workspace: Path) -> None:
+        """PB-2a serves plotly and bokeh: a plotly figure written as JSON is drawn by the browser harness, and a
+        failed render refuses the promotion after the same second try as Chart.js."""
+        smoke = DEPLOY_SMOKE.read_text(encoding="utf-8")
+        heredocs = re.findall(r"<<'EOF'\n(.*?)\nEOF\n", smoke, re.DOTALL)
+        plotly = next(heredoc for heredoc in heredocs if "smoke-plotly" in heredoc)
+        subprocess.run([sys.executable, "-c", plotly], cwd=workspace, check=True, timeout=30)
+        job = RenderRequest.model_validate_json((workspace / "plotly_job.json").read_text(encoding="utf-8"))
+        assert (job.language, job.library, job.themes) == ("python", "plotly", ["light"])
+        assert "write_json(f'plot-{THEME}.json')" in job.source and "pd.read_csv('data.csv')" in job.source
+        retried = smoke[smoke.index("plotly_ok") : smoke.index("# 3. A real data run")]
+        assert "for try in 1 2; do" in retried and "sleep 30" in retried and "--data @plotly_job.json" in retried
+        assert 'the plotly figure smoke render failed twice"; exit 1' in retried
+        assert smoke.index("smoke-chartjs") < smoke.index("smoke-plotly") < smoke.index("smoke-data")
+
+    def test_the_smoke_script_runs_every_probe_with_the_token(self, tmp_path: Path) -> None:
+        """The script end to end against a fake renderer: every probe sends the token, and all five pass."""
+        code, output, calls = _run_deploy_smoke(tmp_path)
+        assert code == 0, output
+        for line in ("OK: smoke render", "OK: Makie smoke render", "OK: Chart.js smoke render"):
+            assert line in output, output
+        assert "OK: plotly figure smoke render" in output and "OK: smoke data run" in output, output
+        assert [call.split()[-1] for call in calls] == [
+            "job.json",
+            "makie_job.json",
+            "chartjs_job.json",
+            "plotly_job.json",
+            "data_job.json",
+        ]
+        assert all(call.startswith("Authorization: Bearer tok-123 https://candidate.example/") for call in calls)
+
+    def test_a_plotly_render_that_fails_twice_refuses_the_promotion(self, tmp_path: Path) -> None:
+        code, output, calls = _run_deploy_smoke(tmp_path, fail="smoke-plotly")
+        assert code != 0 and "the plotly figure smoke render failed twice" in output, output
+        assert [call.split()[-1] for call in calls].count("plotly_job.json") == 2
+        assert not any(call.endswith("data_job.json") for call in calls)
+
+
+FAKE_RENDERER_CURL = """#!/bin/sh
+# curl as the smoke script calls it: `-o` names the response file, `--data @file` the job, the URL is the one
+# argument that is no flag and no flag's value; an unknown flag fails the probe.
+out=""; data=""; auth=""; url=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -o) out="$2"; shift 2 ;;
+    --data) data="${2#@}"; shift 2 ;;
+    -H) case "$2" in Authorization:*) auth="$2" ;; esac; shift 2 ;;
+    --retry|--retry-delay|--max-time) shift 2 ;;
+    -fsS|--retry-all-errors) shift ;;
+    -*) echo "unexpected curl flag $1" >&2; exit 2 ;;
+    *) [ -z "$url" ] || { echo "two URLs: $url $1" >&2; exit 2; }; url="$1"; shift ;;
+  esac
+done
+echo "$auth $url $data" >> "$FAKE_CURL_LOG"
+case "$url" in
+  */run-data)
+    printf '%s' '{"exit_code": 0, "csv_text": "x,y\\n1,3\\n2,4\\n", "reason": null, "attempts": 1, "wall_s": 0.1}' > "$out" ;;
+  */render)
+    code=0; png=iVBOR
+    if [ -n "$FAKE_FAIL" ] && grep -q "\\"$FAKE_FAIL\\"" "$data"; then code=1; png=""; fi
+    printf '{"outputs": {"light": {"exit_code": %s, "png_base64": "%s", "reason": null, "attempts": 1, "wall_s": 0.1, "cpu_s": 0.1, "max_rss_mb": 1, "stderr_tail": ""}}}' "$code" "$png" > "$out" ;;
+  *) echo "unexpected URL $url" >&2; exit 2 ;;
+esac
+"""
+
+
+def _run_deploy_smoke(workdir: Path, fail: str = "") -> tuple[int, str, list[str]]:
+    """Run `deploy_smoke.sh` in `workdir` against a fake curl (and a `sleep` that returns at once)."""
+    bin_dir = workdir / "bin"
+    bin_dir.mkdir()
+    for name, body in (("curl", FAKE_RENDERER_CURL), ("sleep", "#!/bin/sh\nexit 0\n")):
+        (bin_dir / name).write_text(body, encoding="utf-8")
+        (bin_dir / name).chmod(0o755)
+    log = workdir / "curl.log"
+    env = {
+        "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}",
+        "SMOKE_TOKEN": "tok-123",
+        "FAKE_CURL_LOG": str(log),
+        "FAKE_FAIL": fail,
+    }
+    result = subprocess.run(
+        ["bash", str(DEPLOY_SMOKE), "https://candidate.example"],
+        cwd=workdir,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    calls = log.read_text(encoding="utf-8").splitlines() if log.exists() else []
+    return result.returncode, result.stdout + result.stderr, calls

@@ -20,7 +20,7 @@ You are the **backend-auditor** on the audit team. Analyze `api/`, `core/`, and 
 5. Grep for symbol names to find usages and check if code is actually used
 6. Pause and consolidate findings after research sequences
 7. **Do NOT use Bash** for `find`, `ls`, `grep`, `cat` — use Glob/Grep/Read tools instead
-8. You MAY use Bash for: `uv run ruff check api/ core/ automation/` or `uv run pytest tests/unit -x -q`
+8. You MAY use Bash for: `uv run --extra dev ruff check api/ core/ automation/` or `uv run pytest tests/unit -x -q`
 
 **Report format:** Emit findings per the **Findings Schema** in the orchestrator (`audit.md`). Every finding carries `DIMENSION` (one of `security | speed | looks | modern | correctness | maintainability`) in addition to importance/effort/auto-fix. Backend findings are usually `correctness`, `speed`, or `maintainability` — tag the single best fit. Also surface any high-value **exemplary gap** (something a best-in-class backend would have that anyplot lacks), rated like any other finding. In team mode, send findings to `audit-lead` via `SendMessage`, starting with one `COVERAGE: full | partial` line, then one block per finding:
 ```

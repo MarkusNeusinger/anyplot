@@ -1,4 +1,4 @@
-"""The catalogue's eligibility sweep: which Python catalogue files the agent network can adapt at all.
+"""The catalogue's eligibility sweep: which catalogue files of the libraries with a runtime the agent network can adapt.
 
 Spike X reports, besides the adaptation matrix, post-normaliser eligibility under the
 SECURITY profile and the files blocked for a missing `THEME` block or a non-literal
@@ -8,12 +8,16 @@ from the repository root:
     uv run --extra agents python -m agents.evals.eligibility
     uv run --extra agents python -m agents.evals.eligibility --out agents/evals/reports/spike-x
 
-For every `plots/<spec>/implementations/python/<library>.py` of `LIBRARIES` it does what
-`POST /v1/sessions` does with a catalogue snapshot (`opening.assess`): strip the
-`# noqa` comments, normalise, and run the readiness scan, which applies the SECURITY
-validator, the `THEME` and savefig-target checks and the map-spec rule. It counts the
+For every implementation file of `LIBRARIES`, found under its language with its
+extension (`plots/<spec>/implementations/python/<library>.py`, `.../r/ggplot2.R`,
+`.../julia/makie.jl`, `.../javascript/chartjs.js`, `.../javascript/muix.tsx`), it does
+what `POST /v1/sessions` does with a catalogue snapshot (`opening.assess`): strip the
+`# noqa` comments, normalise, and run the readiness scan of the library's runtime
+(`render.runtimes.runtime_for`), which applies the SECURITY validator, the `THEME` and
+save-target checks and the map-spec rule. It counts the
 pairs by status (`clean`, `coupled`, `blocked`) per library, the blocked pairs by
-reason category (`security`, `no-theme`, `savefig-target`, `map-spec`, `syntax`), and
+reason category (`security`, `no-theme`, `savefig-target`, `map-spec`, `syntax`, and
+`webgl` for a plotly trace the renderer's browser cannot draw yet), and
 the SECURITY findings by rule id, and writes `<out>/<date>-eligibility.json` and its
 Markdown table (default `agents/evals/reports/`, git-ignored). A file whose
 normalisation raises counts as `error` with the exception class.
@@ -36,8 +40,27 @@ from typing import Any
 EVALS_DIR = Path(__file__).resolve().parent
 REPO_ROOT = EVALS_DIR.parents[1]
 DEFAULT_OUT = EVALS_DIR / "reports"
-LIBRARIES: tuple[str, ...] = ("matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot")
-"""The Python libraries with a code profile (`render.runtimes.PYTHON_LIBRARIES`, pinned by a test), in sweep order."""
+LIBRARIES: tuple[str, ...] = (
+    "matplotlib",
+    "seaborn",
+    "plotnine",
+    "altair",
+    "pygal",
+    "letsplot",
+    "plotly",
+    "bokeh",
+    "ggplot2",
+    "makie",
+    "chartjs",
+    "d3",
+    "echarts",
+    "highcharts",
+    "muix",
+)
+"""The libraries with a runtime (`render.runtimes.RUNTIME_LIBRARIES`, pinned by a test), in sweep order: the eight
+Python libraries (plotly and bokeh since 2026-10-31), then ggplot2 (R, since 2026-10-29), Makie (Julia, since
+2026-10-30), Chart.js, D3, ECharts and Highcharts (JavaScript, since 2026-10-30) and MUI X (JavaScript as TSX, since
+2026-10-31): all 15."""
 STATUSES: tuple[str, ...] = ("clean", "coupled", "blocked", "error")
 _SECURITY_RULE = re.compile(r"^security: ([a-z][a-z0-9-]*)(?: at line \d+)?:")
 
@@ -54,17 +77,25 @@ def security_rule(reason: str) -> str | None:
 
 
 def scan_pair(code: str, *, spec_id: str, library: str) -> tuple[str, list[str]]:
-    """The readiness status of one catalogue file and its reasons, as `POST /v1/sessions` sees it."""
-    from agents.anyplot.code.normalise import normalise
-    from agents.anyplot.code.readiness import scan
+    """The readiness status of one catalogue file and its reasons, as `POST /v1/sessions` sees it: the library's
+    runtime normalises and scans (`opening.assess`)."""
+    from agents.anyplot.render.runtimes import runtime_for
     from core.utils import strip_noqa_comments
 
+    runtime = runtime_for(library)
     try:
-        normalised = normalise(strip_noqa_comments(code) or "", library=library)
+        normalised = runtime.normalise(strip_noqa_comments(code) or "", library)
     except Exception as exc:  # a file the normaliser cannot take is ineligible; its class says why
         return "error", [f"normalise: {type(exc).__name__}"]
-    readiness = scan(normalised, spec_id=spec_id, library=library, enabled_libraries=LIBRARIES)
+    readiness = runtime.readiness(normalised, spec_id=spec_id, enabled_libraries=list(LIBRARIES))
     return readiness.status, list(readiness.reasons)
+
+
+def implementation_glob(library: str) -> str:
+    """The glob of a library's implementation files under `plots/`: its language's directory, its extension."""
+    from core.constants import LIBRARY_LANGUAGES, library_file_extension
+
+    return f"*/implementations/{LIBRARY_LANGUAGES[library]}/{library}{library_file_extension(library)}"
 
 
 def sweep(plots_dir: Path, libraries: tuple[str, ...] = LIBRARIES) -> dict[str, Any]:
@@ -75,7 +106,7 @@ def sweep(plots_dir: Path, libraries: tuple[str, ...] = LIBRARIES) -> dict[str, 
         statuses: Counter[str] = Counter()
         categories: Counter[str] = Counter()
         rules: Counter[str] = Counter()
-        for path in sorted(plots_dir.glob(f"*/implementations/python/{library}.py")):
+        for path in sorted(plots_dir.glob(implementation_glob(library))):
             spec_id = path.parents[2].name
             status, reasons = scan_pair(path.read_text(encoding="utf-8"), spec_id=spec_id, library=library)
             statuses[status] += 1
@@ -134,7 +165,7 @@ def markdown(result: dict[str, Any], date: str) -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="python -m agents.evals.eligibility",
-        description="Count the catalogue's Python files with a code profile that the agent network can adapt.",
+        description="Count the catalogue files of the libraries with a runtime that the agent network can adapt.",
     )
     parser.add_argument("--plots", type=Path, default=REPO_ROOT / "plots", help="the catalogue directory (plots/)")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="output directory (agents/evals/reports)")

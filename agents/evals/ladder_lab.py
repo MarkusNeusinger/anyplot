@@ -37,6 +37,7 @@ it stopped. The reports directory is git-ignored.
 
 import argparse
 import asyncio
+import functools
 import json
 import os
 import secrets
@@ -315,7 +316,7 @@ async def adapt_and_render(
 ) -> tuple[Rendered | None, list[str]]:
     """Adapt `base` with `feedback` until one render passes the host gates; the render and the misses."""
     from agents.anyplot.code.edits import apply_plan
-    from agents.anyplot.pipeline import _check, _data_texts, _line, render_adapt_request
+    from agents.anyplot.pipeline import _check, _data_texts, _line, column_kinds_of, render_adapt_request
     from agents.anyplot.policy import adapter_instruction
     from agents.anyplot.render.contract import RenderJob
     from agents.anyplot.render.gates import data_rows, evaluate
@@ -327,6 +328,12 @@ async def adapt_and_render(
     settings = get_settings()
     runtime = runtime_for(view.library, cpu_seconds=settings.render_timeout_s)
     columns = [column.name for column in dataset.profile.columns]
+    kinds = column_kinds_of(dataset)
+    try:
+        data_json = runtime.data_json(dataset.csv, kinds)
+    except ValueError:
+        # As the pipeline: a cell the typed table cannot hold drops the kinds, so the loader refuses with its reason.
+        data_json, kinds = None, None
     misses: list[str] = []
     lines = [_line(line) for line in feedback if line.strip()]
     previous_plan: AdaptPlan | None = None
@@ -378,6 +385,7 @@ async def adapt_and_render(
                 columns=columns,
                 dtypes=dict(dataset.column_dtypes),
                 parse_dates=list(dataset.parse_dates),
+                kinds=dict(kinds.kinds) if kinds is not None else {},
             )
         except ValueError as exc:
             misses.append(f"loader: {exc}")
@@ -391,10 +399,18 @@ async def adapt_and_render(
             data_csv=dataset.csv,
             themes=("light",),
             timeout_s=settings.render_timeout_s,
+            data_json=data_json,
         )
         async with render_lock:
             result = await backend.render(job)
-        report = evaluate(result, themes=job.themes, library=view.library, rows=data_rows(dataset.csv))
+        report = evaluate(
+            result,
+            themes=job.themes,
+            library=view.library,
+            rows=data_rows(dataset.csv),
+            # The runtime's error grammar, as the pipeline's: R's and Julia's stderr is not a Python traceback.
+            summarise=functools.partial(runtime.error_summary, run_form=run_form),
+        )
         if not report.passed_host_gates:
             misses.append("render: " + "; ".join(report.blocking)[:300])
             lines, previous_plan = [_line(line) for line in report.blocking], None

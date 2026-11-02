@@ -16,7 +16,8 @@ Sections follow the order in which `CLAUDE.md` states the rules.
 
 ## Pick the agent by the work, and spend Claude tokens last
 
-Owner directive, 2026-08-11, refined 2026-08-16, 2026-10-21, and 2026-10-28.
+Owner directive, 2026-08-11, refined 2026-08-16, 2026-10-21, 2026-10-28, and
+2026-10-29.
 
 **The lanes (2026-10-28).** The Anthropic weekly limit runs out long before
 the owner's Google AI Ultra quota, so the work is split by what it needs, and
@@ -29,36 +30,62 @@ work that Google's quota can do goes there first.
 | Subagent with bounded work inside its own worktree, verified by a command it runs | Sonnet | Cheaper for work whose result a command checks; never writes outside its worktree |
 | Reads or polls with credentials (CI, deploys, `gh`/`gcloud` state); creates Todoist tasks | Haiku | Cheap; never changes state |
 | High-risk reviews (security, prod data, sandbox, privacy); genuinely hard reasoning | Fable | About 2.5 times Opus per token at API prices, so only where it pays |
-| Credential-free implementation that fits a roughly 30-minute cloud run | Google Jules through its MCP server (`/jules-task`), model chosen in the Jules account (Flash since 2026-10-28) | 300 tasks a day on Ultra, each counted once whatever it consumes; Claude spends tokens only on the prompt and the review |
-| Larger steps and long refactors, and the main driver once Claude tokens run low late in the week | Gemini, in the owner's interactive agy session, through a `gemini`-labelled issue (`/gemini-task`) | The owner decides what runs without asking; Gemini pushes a `gemini/*` branch and opens a draft PR; Claude reviews it, marks it ready, and follows it through |
-| Check of every code PR Claude opens, before it opens; not for diffs only of docs, instruction files, changelog fragments, or `plots/`, under about 20 lines, or Dependabot (owner, 2026-10-29) | Gemini 3.8 Flash through Vertex AI in project `anyplot`, location `global`, on Flex PayGo (`/zweitmeinung`) | Copilot gets one round per PR, so its findings should already be fixed; half price on Flex, $0.07–0.28 per review |
-| Second opinion, only when the owner asks for one | Fable and Gemini 4 Argon side by side, Argon on the same Vertex route with thinking high | Stronger across files; $0.57–1.16 per Argon run. Both Gemini lanes are paid per token and covered by the $100 monthly Google Cloud credit that comes with Google AI Ultra; Gemini reads tracked repository files, prefetched data, and the public API through read-only tools, with no shell and no credentials |
+| Larger steps and long refactors, and the main driver once Claude tokens run low late in the week | Gemini, in the owner's interactive agy session, through a brief file in `~/projects/anyplot-briefs/`, one package of at most 20 to 25 files per fresh agy subagent, independent packages in parallel (`/gemini-task`) | The owner decides what runs without asking; Gemini pushes a `gemini/*` branch and opens a draft PR; Claude reviews it, marks it ready, and follows it through |
+| Check of every code PR Claude opens, before it opens; not for diffs only of docs, instruction files, changelog fragments, or `plots/`, under about 20 lines, or Dependabot (owner, 2026-10-29) | Gemini 3.8 Flash through Vertex AI in project `anyplot`, location `global`, on Flex PayGo (`/zweitmeinung`) | Copilot gets one round per PR, so its findings should already be fixed; half price on Flex, median $0.27 per review ($0.07–1.14 over 40 runs to 2026-10-31) |
+| Second opinion, only when the owner asks for one | Fable and Gemini 4 Argon side by side, Argon on the same Vertex route with thinking high | Stronger across files; median $1.21 per Argon run ($0.35–1.64 over 16 runs to 2026-10-31). Both Gemini lanes are paid per token and covered by the $100 monthly Google Cloud credit that comes with Google AI Ultra; Gemini reads tracked repository files, prefetched data, and the public API through read-only tools, with no shell and no credentials |
 
 The pipeline's model choices are separate. Sonnet's lane is narrow on purpose:
 it never runs `gh` writes, `git push`, or `gcloud`, and a task whose result no
-command can check goes to Opus. Sonnet and Jules both take bounded,
-command-verified work. Jules wins whenever the work can start from a pushed
-branch; Sonnet keeps the work that needs unpushed local state or a local
-service (browser, Docker renderer, throwaway Postgres), or that takes under
-about ten minutes, where a 15- to 30-minute cloud run would stall the session.
+command can check goes to Opus.
 
-**Why Jules is allowed when agy is not (2026-10-28).** Jules has an official
-REST API (`jules.googleapis.com`) authenticated by an API key from the Jules
-settings page, which Google documents for embedding Jules in other tools, and
-the MCP server comes from Google Labs (`@google/jules-mcp`). Nothing touches
-the owner's Google login. Claude never runs the `jules` command-line tool,
-which signs in with that login, for the same reason it never runs `agy`.
+**Briefs instead of issues for Gemini (owner, 2026-10-29).** Every Gemini task
+used to need its own `gemini`-labelled issue; the owner wanted to hand over
+larger packages with less ceremony. A second opinion (Fable and Gemini 4
+Argon) rejected a pasted work order: it exists nowhere durable until Gemini's
+first push, and Claude's review would read Acceptance from Gemini's own PR
+text. So Claude writes a read-only brief file into `~/projects/anyplot-briefs/`,
+outside both checkouts: Gemini cannot commit it by accident, and the Acceptance
+it is judged against is not in the tree it edits. The read-only bit only stops
+an accidental edit, since agy runs as the same Unix user (Copilot on #12458);
+the skill's rule that Gemini never edits a brief carries the rest. The draft PR
+carries a copy, and Claude deletes the file after the merge. An issue remains for a task the owner wants in the public
+backlog. Both reviewers also found that the skill fed every issue comment to
+Gemini, while it already filtered PR comments to the owner's; issue comments
+are filtered the same way now. Packages stay at 20 to 25 files per fresh
+session because of the 2026-10-24 drift (a convention dropped for 76 files
+after about 22).
 
-**Jules's merge rule (owner, 2026-10-28).** With up to 300 Jules PRs a day the
-owner cannot read each one. So Claude merges the sub-PRs Jules opens into a
-`feature/*` branch the session leads, after reading the diff, and the owner
-reviews once, when that branch goes to `main`. Since 2026-10-29 `ci-lint` and
-`ci-tests` also run on pull requests into `feature/**`, so each sub-PR is
-linted and tested before Claude merges it; image builds, migrations, CodeQL,
-and the changelog check stay on PRs into `main`. Jules never opens a PR into
-`main`, not even for a single task (owner, 2026-10-29), so the final PR into
-`main` is always one Claude opens. Copilot's ruleset covers only
-PRs into `main`, so the sub-PRs cost no Copilot round.
+**Gemini scales out with agy subagents (owner, 2026-10-30).** The owner wanted
+Gemini to scale when there is work for several agents. Research against the
+Antigravity docs on 2026-10-30 found two mechanisms. Subagents
+(`invoke_subagent`) run concurrently in the background, start without the
+parent's conversation, can each get an isolated Git worktree, and report back
+to the parent; agy deletes that worktree when the subagent ends. `/teamwork`
+runs a fixed team of roles (coordinator, orchestrator, workers, critics,
+auditors) on paid plans, but in its own folder `~/teamwork_projects/<project>`,
+with no branches or PRs in its docs, so it does not fit work on this
+repository. So independent packages go to one subagent each, at most eight at
+a time (the docs give no concurrency limit and no quota figures; the owner
+says when the quota runs short), each pushing its own `gemini/<slug>-<k>`
+branch before it ends. The coordinator merges them into one branch and opens
+one draft PR per task, not one per package: every PR costs a Copilot round, a
+changelog fragment, CI, a merge, and a deploy (owner, 2026-10-30).
+Running agents in parallel inside the owner's own agy session is a documented
+product feature; what Google's FAQ forbids is a third-party agent such as
+Claude Code driving agy under the consumer login.
+
+**Google Jules, 2026-10-28 to 2026-10-29 (retired).** For two days Google
+Jules took credential-free tasks of about 30 minutes through its official MCP
+server: 300 tasks a day on Ultra, each counted once whatever it consumed, PRs
+only into a `feature/*` branch, which Claude merged. The tasks paid off only
+when a command could verify them. Claude's share was the prompt, every watch
+event (each one a Claude turn), and the review, and on 2026-10-29 only three of
+nine page-split variants kept their page unchanged. Flash beat Gemini 3 Pro on
+the same prompts, Pro opening an empty commit and committing helper scripts.
+The same day Google announced that Jules takes no new sessions after
+2026-11-11 and shuts down on 2026-12-31, and the owner removed the lane. Two
+things outlast it: the CI split below, and the checks that prove a refactor
+left behaviour unchanged, now in `/gemini-task`.
 
 **Jules PRs run CI without secrets or an OIDC token (2026-10-29).** The Fable second opinion
 on the lane found that `ci-tests.yml` logged in to GCP, started the Cloud SQL
@@ -79,13 +106,15 @@ moves the permission, not just the steps:
   Jules. The Codecov token is withheld from both untrusted authors too.
 - `ci-image.yml`'s `renderer-image`, the only other job with `id-token`, never
   runs for a Jules PR, and its Artifact Registry login skips Dependabot PRs.
-- Jules opens PRs only into `feature/*`, which `ci-image.yml` does not cover.
-  The renderer guard protects against the one that lands on `main` by mistake.
+- Jules opened PRs only into `feature/*`, which `ci-image.yml` does not cover.
+  The renderer guard protected against one landing on `main` by mistake.
 
 Every condition uses the PR author, not `github.actor`: on Jules branches most
 runs showed the repository owner as the actor, and a re-run can change who
-triggered it. A Jules change gets its e2e run on the PR into `main`, after the
-diff was read.
+triggered it. A Jules change got its e2e run on the PR into `main`, after the
+diff was read. The Jules conditions stay in the workflows until Jules stops
+taking sessions on 2026-11-11, because closing a Jules PR wakes its session,
+which can push again.
 
 **No CI on pushes to `feature/**` (2026-10-29).** The PR-author conditions had
 a gap the first feature-branch run exposed within the hour. Jules names its
@@ -98,15 +127,6 @@ Claude cancelled it; only code Jules had not touched ran with it. Since then
 `feature/**` is gone from every push trigger, so a feature branch and Jules's
 branches under it get CI only through pull requests, and `Run E2E Tests` and
 `renderer-image` also refuse any ref under refs/heads/feature at job level.
-
-**Gemini 3 Pro against Flash in Jules (2026-10-28).** The same two prompts
-(#9636, a three-file dedup; #9629, a 29-file migration) ran on both. Flash
-opened correct PRs in 23 and 17 minutes. Pro opened an empty commit for the
-first, failed after 27 minutes on the second, and spent 74 minutes on a
-follow-up in which it committed four helper scripts and rewrote a meta
-description nobody had asked about. Two tasks are thin evidence, so the choice
-is provisional: Flash is the account setting until a newer Pro model beats it
-on the same prompts.
 
 **Why not headless Gemini implementation.** Measured on 2026-10-21:
 
@@ -130,11 +150,12 @@ So nothing extracts, copies, or proxies the agy login.
 read-only `agy -p` for second opinions. Google's Antigravity FAQ says that
 wrapping `agy` inside third-party coding agents is not supported under
 consumer plans, and that using third-party tools such as Claude Code to access
-Antigravity can get the account suspended. A Google staff reply on 2026-10-16
-(Google AI Developers Forum, topic 189905) answered a setup like ours with "No
-under consumer plans", even for the unmodified binary run as a local
-subprocess without touching the token. Only the owner's own scripts and CI are
-allowed. For third-party agents Google recommends calling Gemini models
+Antigravity can get the account suspended. A forum reply on 2026-10-16 (Google
+AI Developers Forum, topic 189905) answered a setup like ours with "No under
+consumer plans", even for the unmodified binary run as a local subprocess
+without touching the token; a check on 2026-10-30 found it is not marked as a
+Google staff reply, so the FAQ is the authority. Only the owner's own scripts
+and CI are allowed. For third-party agents Google recommends calling Gemini models
 through Gemini Enterprise (Google Cloud) or a Google AI Studio API key. So
 second opinions call Gemini through Vertex AI, which is plain Google Cloud
 usage, and only the owner starts agy, for `/gemini-task`.
@@ -190,6 +211,19 @@ the brief's own words:
 Neither is new policy. Both are precedence a brief has to make explicit,
 because an agent cannot infer precedence from the order messages arrived in.
 
+**One builder per scope, and one message per round** (2026-10-31 retro). The
+review-fix rounds of a change stay with the builder that wrote it: it already
+holds the context, and a fresh agent would spend its first hour rebuilding
+it. New scope gets a new delegate on a fresh worktree instead of being fed to
+a long-lived one instruction by instruction. In the session of 2026-10-28 to
+2026-10-31, four builders that were steered that way (`ci-auth`,
+`js-page-export`, `pb1-exec`, `pb2-serve`) grew to 11 to 19 MB of transcript
+with two compactions each. Every message to an idle delegate also costs the
+main loop a turn when the hand-back arrives: 67 messages drew 28 hand-backs
+and at least 14 main-loop turns that only acknowledged an idle notice. So
+collect what a delegate needs to hear, review findings and corrections
+together, and send it as one message.
+
 ## External-system writes need explicit, named authorization
 
 The rule is the asking. This section is about what to hand over once the
@@ -234,6 +268,29 @@ instead of trusting a "done" in chat. A runbook that shipped this way belongs
 in the owning README, so the next round starts from a reviewed text rather
 than a fresh improvisation.
 
+**A denial binds the whole session, delegates included** (2026-10-31). The
+classifier refused a delegate's download of `actionlint`. The main loop then
+asked the same delegate, in a batch of instructions, to try it through a
+Docker image instead, "and if that is blocked too, say so and I run it". The
+classifier refused that message itself as an auto-mode bypass, at 15:02 UTC.
+The harness's own guidance speaks of denials "in your session", which reads
+as if a peer were a fresh start; it is not, because the peer runs under the
+same owner's permission decision. So a denial anywhere in the session is
+final for every agent in it. The next step goes to the owner: the exact
+command for a named yes, or a `!` line to run. Here the owner said yes and the
+pinned image ran at 15:09.
+
+**Console wizards: a private artifact the owner's own browser agent follows**
+(2026-10-31). Some setups exist only as clicks in a vendor console, such as
+the Claude Console workload identity federation for CI. The WSL session has
+no Chrome tools, so when the owner asked it to set this up through Claude in
+Chrome, it could not. What worked: write the steps as a private artifact,
+each field name copied from the vendor's documentation rather than recalled,
+with the values to enter and the result to paste back. The owner handed the
+link to Claude in Chrome in the owner's own browser, which clicked through
+the wizard, and the result came back about 10 minutes after the request (14:37 to
+14:48 UTC).
+
 ## After every merge, check that the site renders
 
 Owner rule, 2026-10-22, after an outage nothing caught.
@@ -270,6 +327,38 @@ container.
 break the site through the API, a Cloudflare rule, or a data change, and the
 run costs seconds. A `FAIL` stops further merges until the site renders,
 because each extra merge widens the set of suspects and the revert.
+
+## Long-running work reports progress proactively
+
+**What happened (2026-10-30).** The `plot-all-pill` builder wrote "The gates
+are still running (test and build); waiting for them to finish" at 12:09 UTC
+and ended its turn on that line, without a commit and without a report; it
+never woke again. The context compaction at 16:27 UTC summarised it as "still
+working on the Flash fixes", and the main loop trusted the summary, which is
+the only thing that survives a compaction. The main loop itself made no entry
+between 17:48 and 19:46 UTC. At 19:46 the owner asked "läuft wirklich noch
+was?" ("is anything really still running?"), and the answer at 19:50 was that
+nothing had run since midday. The changes in the worktree were nearly
+complete; the main loop finished them into #12478. On 2026-10-31 at 16:08 the
+owner was again the first to say that work had gone idle ("es ist einiges
+idle weiter").
+
+**The check.** About 30 minutes with no new commit and no message from a
+delegate is a suspected stall. So is any "still working" that a compaction
+summary hands over. Before repeating one, read the delegate's real state:
+
+```bash
+# ListAgents first: is it listed, busy or idle?
+git -C <worktree> log -1 --format='%ci %h %s'   # its last commit, and when
+git -C <worktree> status --porcelain | head     # uncommitted work it may have left
+```
+
+Idle, with no commit since the brief and changes left in the worktree,
+means stopped, whatever the summary says. Report it to the owner at once,
+with that evidence, and then either send the delegate one message that
+resumes it or take the work over. A delegate that ended its turn "waiting
+for" its own background job is the pattern to look for: nothing guarantees
+it is woken when the job finishes.
 
 ## Modify repo files only with the Edit/Write tools
 

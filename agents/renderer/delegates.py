@@ -14,8 +14,8 @@ fails when one of the programs is on `SANDBOX_PATH`, the path every sandboxed ru
 Build deploy and the CI image job build the same file, and the CI job runs it once more in the
 built image (`.github/workflows/ci-image.yml`). The list is the brief of that review (the
 programs ImageMagick's delegates and fonts reach for) plus every other program the bridge's
-delegate map names. `node` is on it because the image ships none; a JavaScript runtime that adds
-one changes this list in the same change.
+delegate map names. `node` stays on it: the image ships Node at `/opt/node/bin/node`, which the
+JavaScript row runs by its path (`commands.NODE_BINARY`) and `SANDBOX_PATH` does not carry.
 
     .venv/bin/python -m agents.renderer.delegates
 

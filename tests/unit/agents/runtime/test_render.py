@@ -866,10 +866,15 @@ class TestBackends:
 
         task = asyncio.create_task(backend.render(job(job_id="cancelme")))
         # Cancel once both theme containers run: a fixed sleep lost the race on a loaded CI runner.
-        for _ in range(200):
+        for _ in range(500):
             if started.exists() and len(started.read_text().split()) == 2:
                 break
             await asyncio.sleep(0.05)
+        else:
+            # Do not leave the render task and its fake containers to event-loop teardown.
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+            raise RuntimeError("Timed out waiting for containers to start")
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task
@@ -904,6 +909,36 @@ class TestBackends:
             assert output.exit_code == 1
             assert output.stderr_tail.endswith("ValueError: TAIL-MARKER\n")
 
+    async def test_local_backend_cuts_the_stderr_as_the_renderer_does(self, tmp_path: Path) -> None:
+        """The Julia row keeps its first `ERROR:` line in front of the tail (`executor.stderr_tail`), locally too."""
+        from agents.anyplot.render.runtimes import runtime_for
+
+        docker = tmp_path / "docker"
+        docker.write_text(
+            "#!/bin/sh\n"
+            "printf 'ERROR: LoadError: MethodError: no method matching f(::Int64)\\n' >&2\n"
+            "head -c 9000 /dev/zero | tr '\\000' x >&2\n"
+            "printf '\\nin expression starting at /work/plot.jl:4\\n' >&2\n"
+            "exit 1\n"
+        )
+        docker.chmod(0o755)
+        backend = LocalDockerBackend(
+            image="anyplot-renderer:julia",
+            runtime=PythonRuntime(),
+            environment="development",
+            docker=str(docker),
+            runtime_for=runtime_for,
+        )
+
+        julia = await backend.render(job(job_id="jl1", language="julia", library="makie"))
+        python = await backend.render(job(job_id="py1"))
+
+        for theme in ("light", "dark"):
+            kept = julia.outputs[theme].stderr_tail
+            assert len(kept) == 2_000 and kept.startswith("ERROR: LoadError: MethodError")
+            assert kept.endswith("plot.jl:4\n")
+            assert python.outputs[theme].stderr_tail.startswith("x")
+
     async def test_read_tail_keeps_the_last_bytes(self) -> None:
         stream = asyncio.StreamReader()
         stream.feed_data(b"a" * 300_000)
@@ -933,6 +968,42 @@ class TestBackends:
             "plot.py",
         ]
         assert "ANYPLOT_THEME=light" in argv
+
+    async def test_local_backend_hands_a_javascript_job_its_typed_table(self, tmp_path: Path) -> None:
+        """JS-4a: `data.json` next to the code file and `ANYPLOT_DATA_JSON` naming it, as the renderer's executor does;
+        a job without the table gets neither."""
+        from agents.anyplot.render.runtimes import runtime_for
+
+        record = tmp_path / "record.txt"
+        docker = tmp_path / "docker"
+        docker.write_text(
+            "#!/bin/sh\n"
+            'if [ "$1" = kill ]; then exit 0; fi\n'
+            'prev=""; for arg in "$@"; do\n'
+            '  if [ "$prev" = "-v" ]; then case "$arg" in *:/work) work="${arg%:/work}";; esac; fi\n'
+            '  prev="$arg"\n'
+            "done\n"
+            f'cat "$work/data.json" > {record}; echo >> {record}; ls "$work" >> {record}\n'
+            "exit 1\n"
+        )
+        docker.chmod(0o755)
+        backend = LocalDockerBackend(
+            image="anyplot-renderer:js",
+            runtime=PythonRuntime(),
+            environment="development",
+            docker=str(docker),
+            runtime_for=runtime_for,
+        )
+        table = '{"columns":["a"],"data":[[1]]}'
+        js = job(language="javascript", library="d3", source="const x = 1;", data_json=table, themes=("light",))
+
+        argv = backend.argv(js, "light", Path("/tmp/run"))
+        await backend.render(js)
+
+        assert "ANYPLOT_DATA_JSON=/work/data.json" in argv and argv[-1] == "plot.js"
+        assert record.read_text().splitlines() == [table, "data.csv", "data.json", "plot.js"]
+        plain = backend.argv(job(language="javascript", library="d3", source="x"), "light", Path("/tmp/run"))
+        assert not any(part.startswith("ANYPLOT_DATA_JSON") for part in plain)
 
     def test_local_backend_data_command_keeps_the_network_off_and_has_no_theme(self) -> None:
         backend = LocalDockerBackend(
@@ -1093,8 +1164,8 @@ class TestBackends:
         runtime = local.runtime_for("seaborn")
         assert isinstance(runtime, PythonRuntime) and (runtime.library, runtime.cpu_seconds) == ("seaborn", 45)
         assert isinstance(local.runtime, PythonRuntime) and local.runtime.cpu_seconds == 45  # the data runs' runtime
-        with pytest.raises(ValueError, match="no runtime for 'plotly'"):
-            local.runtime_for("plotly")
+        with pytest.raises(ValueError, match="no runtime for 'excel'"):
+            local.runtime_for("excel")
 
     def test_job_validation(self) -> None:
         with pytest.raises(ValueError):

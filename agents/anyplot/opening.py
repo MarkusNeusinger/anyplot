@@ -43,6 +43,7 @@ from .render.runtimes import has_runtime, runtime_for
 from .schemas import MAX_FILE_NAME_CHARS, MAX_SAMPLE_ROWS, Binding, listed_values
 from .session_state import (
     BINDINGS,
+    DATASET_COPIED_FROM,
     DATASET_HISTORY,
     DATASET_ID,
     DATASET_VERSION,
@@ -118,13 +119,15 @@ class IngestedDataset:
 
         A request kept from a plot that stopped before the confirmation (`PENDING_REQUEST`) was
         written for the data it replaces, so it goes too: a title for the Swiss table must not
-        land on the German one pasted after it.
+        land on the German one pasted after it. Pasted data is the session's own: it was not copied
+        from another session (`DATASET_COPIED_FROM`).
         """
         return {
             DATASET_ID: self.dataset_id,
             BINDINGS: [binding.model_dump() for binding in self.bindings],
             DATASET_HISTORY: [],
             DATASET_VERSION: 1,
+            DATASET_COPIED_FROM: None,
             **PENDING_CLEARED,
         }
 

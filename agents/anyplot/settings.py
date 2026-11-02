@@ -18,7 +18,7 @@ another provider, model or location.
 | `AGENT_STATUS_BAR` | `0.95` | `catalogue` reviews: the ship bar; a shipped render at or above it, with no measured gate or validator finding left, shows without notes (`ok`) |
 | `AGENT_STATUS_SCORE` | `0` | `catalogue` reviews: the review score (0 to 100) a shipped render also needs for `ok`; 0 turns the condition off (owner decision pending) |
 | `AGENT_GATE_REPAIR` | `review` | When measured findings of a render (advisory gate lines, ADAPTATION findings) start a repair: `review` (they go to the self-review and, as gate notes, to the review, and a round whose render still has them after its review is repaired with them) or `first` (straight to the repair round, skipping the self-review and the review; live before 2026-10-14) |
-| `AGENT_EXPECT_CHECK` | `repair` | A text or number format the user asked for (the root's `expected_texts`) that the render's drawn texts do not show: `repair` (a measured finding: the repair round gets it, and an unfixed miss is a residual line), `note` (the residual line only) or `off` (owner decision pending) |
+| `AGENT_EXPECT_CHECK` | `repair` | A text or number format the user asked for (the root's `expected_texts`) that the render's drawn texts do not show, or, for a render without drawn texts on a runtime whose reviewer checks them (R, altair, pygal, lets-plot), that the review cannot find in the image: `repair` (a finding the repair round gets, and an unfixed miss is a residual line), `note` (the residual line only) or `off` (owner decision pending) |
 | `AGENT_SHIP_CLEAN_MARGIN` | `3` | `catalogue` reviews with `AGENT_SHIP_BEST`: a render without measured findings ships over a higher-scored one with them when it meets the ship bar or is at most this many points below it |
 | `AGENT_REPAIR_SELF_REVIEW` | `false` | With `AGENT_SELF_REVIEW` on, whether a repair round proofreads its render too, not only the first round |
 | `AGENT_SHIP_BEST` | `true` | `catalogue` reviews: review every render and ship the best-scored version, not the last |
@@ -29,7 +29,7 @@ another provider, model or location.
 | `AGENT_CLI_CALL_LOG` | unset | `claude-cli` only: a file each CLI call appends one JSON line to (model, effort, seconds, ok) |
 | `AGENT_LOCATION` | `eu` | Vertex AI location of every model call: `eu`, `us` or `global` |
 | `AGENT_PROJECT`, else `GOOGLE_CLOUD_PROJECT` | `anyplot` | Google Cloud project that serves (and bills) the model calls |
-| `AGENT_LIBRARIES` | `matplotlib,seaborn` | Enabled libraries; each needs a runtime in the registry (`RUNTIME_LIBRARIES`: `matplotlib`, `seaborn`, `plotnine`, `altair`, `pygal`, `letsplot`). The default stays `matplotlib,seaborn`; the deploy (`agents/cloudbuild.yaml` `_LIBRARIES`) names all six for the admin's live tests since 2026-10-28, and each library's eval matrix gates the public release |
+| `AGENT_LIBRARIES` | `matplotlib,seaborn` | Enabled libraries; each needs a runtime in the registry (`RUNTIME_LIBRARIES`: `matplotlib`, `seaborn`, `plotnine`, `altair`, `pygal` and `letsplot` on the Python runtime, `plotly` and `bokeh` on it since 2026-10-31, `ggplot2` on the R runtime since 2026-10-29, `makie` on the Julia runtime since 2026-10-30, `chartjs`, `d3`, `echarts` and `highcharts` on the JavaScript runtime since 2026-10-30, `muix` on it since 2026-10-31: all 15). The default stays `matplotlib,seaborn`; the deploy (`agents/cloudbuild.yaml` `_LIBRARIES`) names every library with a runtime for the admin's live tests (the six Python ones since 2026-10-28, ggplot2 since 2026-10-29, Makie, Chart.js, D3, ECharts and Highcharts since 2026-10-30, MUI X, plotly and bokeh since 2026-10-31), and each library's eval matrix gates the public release |
 | `AGENT_RENDERER` | `remote` | Render backend: `remote` (the anyplot-renderer service, phase 1), `sandbox` (in-process sandboxes, not used in phase 1), `local` (development only) or `fake` (development and test only) |
 | `AGENT_RENDER_URL` | unset | The anyplot-renderer service URL the `remote` backend calls; `https://` outside development and test |
 | `AGENT_RENDER_TOKEN` | unset | Development only: an ID token for the renderer (`gcloud auth print-identity-token`); without it the backend mints one from Application Default Credentials |
@@ -79,9 +79,9 @@ another provider, model or location.
 
 The output caps of the model calls are constants in `models.py`, not settings, each with
 ample headroom above the measured answers: root and reviewer 4,096 tokens, the adapter
-8,192 for an edit-only call and 16,384 when a full file is allowed (12,288 on Gemini,
-which the soft deadline bounds), and the judge 256. A thinking measurement on Claude adds
-its `AGENT_*_THINKING_BUDGET` to the cap of its kind.
+40,960 on Claude for edit-only and full-file calls since 2026-10-30 (8,192 and 12,288 on
+Gemini, which the soft deadline bounds), and the judge 256. A thinking measurement on
+Claude adds its `AGENT_*_THINKING_BUDGET` to the cap of its kind.
 
 No `.env` file is read here: the service runs on Cloud Run environment variables only,
 and the tests stay hermetic. `adk web` is different: it walks up from the agent
@@ -149,9 +149,10 @@ FIXTURE_PATTERN = r"^[a-z0-9][a-z0-9-]{0,79}$"
 MAX_THINKING_BUDGET = 8_192
 """The most output room thinking may add to a Claude cap (`AGENT_*_THINKING_BUDGET`).
 
-It keeps the adapter's full-file cap (12,288 plus 8,192) below the Anthropic SDK's limit
-for a request that does not stream (about 21,300 tokens), and a full-file call that uses
-all of it at about 60 s, the `pipeline.ADAPTER_P95_S` the deadline reserves."""
+Since 2026-10-30 the adapter's cap with this room (40,960 plus 8,192) is past the Anthropic
+SDK's limit for a request that does not stream (about 21,300 tokens), which the Vertex client's
+own timeout lifts (`models.CLAUDE_REQUEST_TIMEOUT_S`); a call that uses all of it takes about
+143 s, which the soft deadline holds."""
 
 
 def _split_list(value: Any) -> Any:
@@ -232,13 +233,16 @@ class AgentSettings(BaseSettings):
 
     expect_check: Literal["repair", "note", "off"] = "repair"
     """What a requested text or number format the render does not show does (`AGENT_EXPECT_CHECK`,
-    `grounding.expected_misses` over the root's `expected_texts`).
+    `grounding.expected_misses` over the root's `expected_texts`, or `grounding.reviewed_misses` when a
+    render without drawn texts hands them to its review, `RuntimeAdapter.review_texts`).
 
     `repair`: it is a measured finding like an advisory gate line: the self-review and the review see
     it, a round whose render still misses it is repaired with it, and a shipped render that still
-    misses it carries it as a residual line (`needs_attention`). `note`: only the residual line, no
-    repair round for it. `off`: no check. The choice between `repair` and `note` is a product
-    decision left to the owner: a repair round costs about 40 s, a false miss would spend it."""
+    misses it carries it as a residual line (`needs_attention`); a miss the review reports sends its
+    round to the repair whatever the points, as a visible defect does. `note`: only the residual line,
+    no repair round for it. `off`: no check, and no texts for the review. The choice between `repair`
+    and `note` is a product decision left to the owner: a repair round costs about 40 s, a false miss
+    would spend it."""
 
     repair_self_review: bool = False
     """`AGENT_REPAIR_SELF_REVIEW`: whether a repair round proofreads its render before the review, as the

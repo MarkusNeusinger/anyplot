@@ -42,6 +42,26 @@ def test_snapshot_from_repo_matches_the_catalogue_shape() -> None:
     assert "# noqa" not in snapshot.code
 
 
+def test_snapshot_from_repo_reads_a_library_under_its_language() -> None:
+    """ggplot2's file is `implementations/r/ggplot2.R` and its version in `metadata/r/ggplot2.yaml` (PR 3b)."""
+    snapshot = snapshot_from_repo("scatter-basic", "ggplot2")
+    expected = (AGENTS_DIR.parent / "plots/scatter-basic/implementations/r/ggplot2.R").read_text(encoding="utf-8")
+
+    assert snapshot.code == expected and 'Sys.getenv("ANYPLOT_THEME", "light")' in snapshot.code
+    assert snapshot.library_version is not None and snapshot.title == "Basic Scatter Plot"
+    with pytest.raises(FixtureError, match="not a catalogue library"):
+        snapshot_from_repo("scatter-basic", "excel")
+
+
+def test_snapshot_from_repo_reads_makie_under_julia() -> None:
+    """Makie's file is `implementations/julia/makie.jl` and its version in `metadata/julia/makie.yaml` (J2b)."""
+    snapshot = snapshot_from_repo("scatter-basic", "makie")
+    expected = (AGENTS_DIR.parent / "plots/scatter-basic/implementations/julia/makie.jl").read_text(encoding="utf-8")
+
+    assert snapshot.code == expected and 'get(ENV, "ANYPLOT_THEME", "light")' in snapshot.code
+    assert snapshot.library_version is not None and snapshot.title == "Basic Scatter Plot"
+
+
 @pytest.mark.parametrize("case_id", ["../../etc", "missing-case"])
 def test_unknown_or_unsafe_case_is_refused(case_id: str) -> None:
     with pytest.raises(FixtureError):

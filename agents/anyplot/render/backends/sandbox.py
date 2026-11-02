@@ -20,6 +20,8 @@ from ..contract import (
     DataJob,
     DataOutput,
     DataRunUnsupported,
+    PageJob,
+    PageUnsupported,
     RenderJob,
     RenderResult,
     RuntimeAdapter,
@@ -51,3 +53,7 @@ class SandboxBackend:
     async def convert(self, job: ConvertJob) -> ConvertOutput:
         """Conversions go through the renderer's `POST /convert`; this variant has none."""
         raise DataRunUnsupported("the in-process sandbox backend converts no files; use remote, local or fake")
+
+    async def page(self, job: PageJob) -> str:
+        """Page builds go through the renderer's `POST /page`; this variant has none."""
+        raise PageUnsupported("the in-process sandbox backend builds no pages; use remote, local or fake")

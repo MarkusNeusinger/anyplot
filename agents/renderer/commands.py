@@ -14,9 +14,10 @@ sandbox with the probe harness in front:
 | Language | Code file | Command |
 |---|---|---|
 | `python` | `plot.py` | `python -I -X disable-remote-debug harness.py plot.py`: the harness runs the plot in process, with the plot guard and the savefig probe |
-| `javascript` | `plot.js` (`plot.tsx` for MUI X) | `harness.py --exec -- node /opt/anyplot/js-render/render.mjs --library=<library> plot.js` |
+| `python` (plotly, bokeh) | `plot.py` | `harness.py --figure <library> plot.py -- /opt/node/bin/node /opt/anyplot/js-render/render.mjs --library=<library>`: the plot in a forked, armed child writes `plot-<theme>.json`, then the JavaScript harness draws it |
+| `javascript` | `plot.js` (`plot.tsx` for MUI X) | `harness.py --exec -- /opt/node/bin/node /opt/anyplot/js-render/render.mjs --library=<library> plot.js` |
 | `r` | `plot.R` | `harness.py --exec -- /opt/R/4.6.1/lib/R/bin/exec/R --no-echo --no-restore --no-save --file=plot.R` |
-| `julia` | `plot.jl` | `harness.py --exec -- julia --project=/opt/julia plot.jl` |
+| `julia` | `plot.jl` | `harness.py --exec -- /opt/julia-1.13.2/bin/julia --project=/opt/julia-project --startup-file=no --history-file=no --compiled-modules=strict --heap-size-hint=1536M -L /opt/anyplot/toolchain/warmup.jl -L /opt/anyplot/text_probe.jl plot.jl` |
 
 In exec mode (`EXEC_FLAG`) the harness prints its start line, sets the resource limits
 and runs the language's own command as a child, so the launcher retry, the host
@@ -24,11 +25,23 @@ watchdog and the kill path work for every language alike. R runs its binary dire
 with the environment R's `bin/R` script would set (`R_ENV`), not `Rscript`, which starts
 that shell script, which starts the binary: under the exec filter (`exec_deny`) every
 start after the first is killed (step 2b of agentic/specs/261024-agent-all-libraries.md).
+Julia runs its launcher by path too (`JULIA_BINARY`), with the precompiled depot loaded
+under `--compiled-modules=strict` (`JULIA_FLAGS`, step 5), so a package image that does
+not load fails the render at once instead of compiling under its timeout, and loads the
+image's precompile workload with `-L` before the plot (`JULIA_WARMUP`, J1.1). Both rows load
+a text probe of the agents' harness (`R_TEXT_PROBE` as R's user profile, `JULIA_TEXT_PROBE`
+with a second `-L`), which leaves the plot's drawn texts for the harness's probe.
 A row with `exec_deny` gets `ANYPLOT_DENY_EXEC=required` while `RENDERER_EXEC_DENY` is
 `required` (`executor.sandbox_env`): a Python row's harness installs the filter itself,
 an exec-mode row's harness preloads it into the child (`harness.EXEC_DENY_PRELOAD`). The
 JavaScript row has it off: Node starts Chromium and Chromium starts its own processes,
-while the plot code runs in the page, which has no process API. A row also says which limits
+while the plot code runs in the page, which has no process API. Node runs by its path as well
+(`NODE_BINARY`), with the harness's packages, the headless shell and the row's fonts named in
+its environment (`JS_ENV`, JS-1 of step 3), and the harness's sandbox mode switched on there
+(JS-2: the page rules, the closed imports, the bounded console, the final error line). plotly's and bokeh's rows
+run in two steps (`FIGURE_FLAG`, `RuntimeCommand.figure`, PB-1): the plot under the plot guard, the exec filter and the
+Python limits in a child the harness forks before it arms anything, then the JavaScript row's harness, with its
+environment and limits, on the figure the plot wrote. A row also says which limits
 differ from the Python defaults: V8, Chromium and Julia's LLVM reserve address space far
 beyond their resident memory, so `RLIMIT_AS` is off for the JavaScript and Julia rows
 and for altair's Python row (vl-convert embeds V8); one Chromium render runs seven
@@ -41,10 +54,13 @@ still stop (spike of 2026-10-26). An in-process row's environment and limit reac
 sandbox like an exec-mode row's (`executor.sandbox_env`) and the local Docker backend
 (`PythonRuntime.env`).
 `render_p95_s` is what the agents' pipeline reserves for a repair attempt's render
-when it checks its soft deadline.
+when it checks its soft deadline. `stderr_head` keeps the first line with a prefix in front
+of the stderr tail (`executor.stderr_tail`): the Julia row's `ERROR:` line, which Makie's
+long stacks push out of the last 2,000 characters; every other row returns the plain tail.
 
-A row's `toolchain` names the binaries the image must carry on `SANDBOX_PATH` for the
-row to run; the renderer checks them at startup, reports them in `GET /status` and
+A row's `toolchain` names the binaries the image must carry for the row to run, each a
+name on `SANDBOX_PATH` or an absolute path (R's, Julia's and Node's binaries, which `shutil.which`
+checks as they stand); the renderer checks them at startup, reports them in `GET /status` and
 refuses a job whose language lacks them (`503 runtime_unavailable`). The Python row
 needs none beyond the interpreter the settings name.
 
@@ -62,6 +78,11 @@ LANGUAGES: tuple[Language, ...] = get_args(Language)
 
 EXEC_FLAG = "--exec"
 """The harness's exec-mode flag (`harness.EXEC_FLAG`): what follows `--` is the language's command."""
+FIGURE_FLAG = "--figure"
+"""The harness's two-step flag (`harness.FIGURE_FLAG`): `--figure <package> plot.py -- <screenshot command>`."""
+FIGURE_LIBRARIES: tuple[str, ...] = ("plotly", "bokeh")
+"""The Python libraries whose rows run in two steps (`harness.FIGURE_PACKAGES`, pinned equal by a test): the plot
+writes its figure as JSON under the plot guard, and the JavaScript row's harness draws it in Chromium."""
 
 LIBRARY_LANGUAGES: Mapping[str, Language] = MappingProxyType(
     {
@@ -91,18 +112,118 @@ CODE_FILES: Mapping[Language, str] = MappingProxyType(
 CODE_FILE_OVERRIDES: Mapping[str, str] = MappingProxyType({"muix": "plot.tsx"})
 """MUI X is authored as TSX (`core.constants.LIBRARY_FILE_EXTENSION_OVERRIDES`)."""
 
+NODE_HOME = "/opt/node"
+"""Node's install in the toolchain image: the official 22.x build for Linux on x86-64 (agents/renderer/toolchain.Dockerfile),
+the major the catalogue pipeline renders with (`.github/actions/setup-node`)."""
+NODE_BINARY = f"{NODE_HOME}/bin/node"
+"""Node, which the row runs by its path: `SANDBOX_PATH` does not carry it, and `delegates.py` refuses a `node` there."""
 JS_HARNESS = "/opt/anyplot/js-render/render.mjs"
 """The catalogue's browser render harness (`automation/js-render/render.mjs`) inside the image."""
-JULIA_PROJECT = "/opt/julia"
-"""The image's Julia project (`Project.toml` and `Manifest.toml`), instantiated at build time."""
+JS_NODE_MODULES = "/opt/anyplot/node_modules"
+"""The harness's packages, the repository's `package-lock.json` installed with `npm ci`; the harness finds them through
+`ANYPLOT_NODE_MODULES`, since it does not sit two levels below them as in a checkout."""
+PLAYWRIGHT_BROWSERS = "/opt/pw-browsers"
+"""Where Playwright finds its Chromium headless shell (`PLAYWRIGHT_BROWSERS_PATH`)."""
+JS_FONTCONFIG_FILE = "/opt/anyplot/js-fonts.conf"
+"""The JavaScript row's fontconfig file (`agents/renderer/toolchain/js-fonts.conf`): the system configuration plus the
+Liberation fonts under `/opt/anyplot/js-fonts`, which the catalogue's page font stack (Helvetica, Arial) resolves to
+through fontconfig's metric aliases, as on the pipeline's runner. No other row reads that directory."""
+JS_IMPORT_ALLOWLIST = "/opt/anyplot/js-render/import-allowlist.json"
+"""The bare specifiers a MUI X snippet may import (`agents/renderer/toolchain/import_allowlist.py`, built from the
+installed packages' `exports` maps), which the harness's resolve plugin reads in sandbox mode."""
+JS_ENV: Mapping[str, str] = MappingProxyType(
+    {
+        "PLAYWRIGHT_BROWSERS_PATH": PLAYWRIGHT_BROWSERS,
+        "ANYPLOT_NODE_MODULES": JS_NODE_MODULES,
+        "FONTCONFIG_FILE": JS_FONTCONFIG_FILE,
+        # A page's `new Date("2026-03-01T00:00")` is local time: UTC, whatever the host's zone.
+        "TZ": "UTC",
+        "LANG": "C.UTF-8",
+        # Only /tmp is writable in a sandbox: Chromium's and fontconfig's caches and settings go there.
+        "XDG_CACHE_HOME": "/tmp",
+        "XDG_CONFIG_HOME": "/tmp",
+        # The harness's sandbox mode (JS-2): the page rules, the closed MUI X imports, the bounded console and the
+        # final error line; no interactive page, which nothing in the sandbox reads.
+        "ANYPLOT_SANDBOX": "1",
+        "ANYPLOT_NO_HTML": "1",
+        "ANYPLOT_IMPORT_ALLOWLIST": JS_IMPORT_ALLOWLIST,
+    }
+)
+"""The JavaScript row's environment: the browser, the packages, the fonts, the zone, the locale, the caches and the
+harness's sandbox mode. A job's `data.json` adds `ANYPLOT_DATA_JSON` (`executor.sandbox_env`)."""
+JULIA_HOME = "/opt/julia-1.13.2"
+"""Julia's install in the toolchain image: the official 1.13.2 build for generic Linux (agents/renderer/toolchain.Dockerfile),
+the version `Manifest.toml` was resolved with."""
+JULIA_BINARY = f"{JULIA_HOME}/bin/julia"
+"""Julia's launcher, which the row runs by its path: it is not on `SANDBOX_PATH`, like R's binary."""
+JULIA_PROJECT = "/opt/julia-project"
+"""The image's Julia project: the repository's `Project.toml` and `Manifest.toml`, instantiated at build time."""
 JULIA_DEPOT = "/opt/julia-depot"
 """The precompiled depot; a sandbox stacks a writable `/tmp/depot` in front of it."""
 JULIA_CPU_TARGET = "generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(1)"
-"""The CPU target the depot was precompiled for; the same value at run time, or Julia recompiles."""
+"""The CPU target the depot was precompiled for (the toolchain Dockerfile's `JULIA_CPU_TARGET`); the same value at
+run time."""
+JULIA_WARMUP = "/opt/anyplot/toolchain/warmup.jl"
+"""The file the row loads with `-L` before the plot (`agents/renderer/toolchain/warmup.jl`): `import AnyplotWarmup`,
+the toolchain's precompile workload, whose package image holds the native code of the calls a plot makes most and of
+the data loader's read, compiled with CSV, DataFrames and TimeZones loaded. That code is used only while the package
+is loaded; `-L` loads it without the plot naming it and keeps `plot.jl` the program, so `PROGRAM_FILE`, the error
+frames and the exit code stay the plot's. Measured on 2026-10-29 at 2 CPUs: an adapted render 15.9 to 5.0 s, the
+catalogue's `bar-grouped` 8.5 to 4.9 s (J1.1, step 5)."""
+JULIA_FLAGS = (
+    f"--project={JULIA_PROJECT}",
+    "--startup-file=no",
+    "--history-file=no",
+    "--compiled-modules=strict",
+    "--heap-size-hint=1536M",
+    "-L",
+    JULIA_WARMUP,
+)
+"""The launcher's flags. `--compiled-modules=strict` loads every package from the depot's precompiled images or fails
+within a second with "Precompiled image ... not available with flags CacheFlags(...)"; `existing` would load a missed
+package from its source in process, with exit 0 and no message, for minutes in CairoMakie's case, and the default `yes`
+would start a compile worker, which the exec filter kills (step 5 of agentic/specs/261024-agent-all-libraries.md,
+second opinion of 2026-10-29). `--heap-size-hint` makes the collector work before the 4 GiB instance runs short, since
+the row has no `RLIMIT_AS`. `-L` loads the precompile workload (`JULIA_WARMUP`) before the code file the harness
+appends. The toolchain image's build smoke runs these flags too (`toolchain.Dockerfile`)."""
+JULIA_TEXT_PROBE = "/opt/anyplot/text_probe.jl"
+"""The agents' text probe for Makie (`agents/anyplot/render/text_probe.jl`), which the renderer image copies (the
+toolchain image, whose smoke runs `JULIA_FLAGS`, does not carry it): the row loads it with a second `-L` after the
+workload, and it registers an `atexit` hook that leaves the figure's drawn texts as `texts-<theme>.json` for the harness
+(`harness.collect_text_probe`). After the workload, because its hook must run before the ones the workload's packages
+registered (hooks run last in, first out), while the figure is still current. Measured on 2026-11-01: about 0.55 s
+more for the catalogue's `bar-grouped` (4.80 to 5.34 s, median of seven interleaved pairs), the hook itself 0.2 to
+0.3 s, its code compiled at exit."""
+JULIA_ENV: Mapping[str, str] = MappingProxyType(
+    {
+        # The sandbox sets no locale; the catalogue's runner renders under C.UTF-8, as for R.
+        "LANG": "C.UTF-8",
+        "XDG_CACHE_HOME": "/tmp",
+        "JULIA_NUM_THREADS": "1",
+        # `sandbox_env` sets it for every run; the row names it because Julia's LinearAlgebra otherwise starts one
+        # BLAS thread per core, each counted by RLIMIT_NPROC.
+        "OPENBLAS_NUM_THREADS": "1",
+        # Only /tmp is writable in a sandbox: logs and any scratch space go to the first depot.
+        "JULIA_DEPOT_PATH": f"/tmp/depot:{JULIA_DEPOT}",
+        "JULIA_CPU_TARGET": JULIA_CPU_TARGET,
+        "JULIA_PKG_OFFLINE": "true",
+        "JULIA_PKG_PRECOMPILE_AUTO": "0",
+    }
+)
+"""The Julia row's environment: the locale, the caches, one thread, the stacked depot and the offline switches."""
+JULIA_ERROR_HEAD = "ERROR:"
+"""The start of the line Julia prints first for an uncaught error (`ERROR: LoadError: MethodError: ...`), which the
+Julia row's stderr tail keeps (`RuntimeCommand.stderr_head`) and the agents' Julia error grammar reads the exception
+type from (`agents/anyplot/code/profiles/julia/errors.py`)."""
 R_HOME = "/opt/R/4.6.1/lib/R"
 """R's home in the toolchain image (Posit's build for Debian 13, agents/renderer/toolchain.Dockerfile)."""
 R_BINARY = f"{R_HOME}/bin/exec/R"
 """R's own binary, which the row runs directly: `Rscript` and `bin/R` would each need another program start."""
+R_TEXT_PROBE = "/opt/anyplot/text_probe.R"
+"""The agents' text probe for ggplot2 (`agents/anyplot/render/text_probe.R`, the renderer image's copy), R's user
+profile: it wraps `ggsave` once ggplot2 loads, and each save that returned leaves the plot's drawn texts as
+`texts-<theme>.json` for the harness (`harness.collect_text_probe`). Measured on 2026-11-01: about 0.3 s more for the
+catalogue's `bar-grouped` (1.28 to 1.58 s, median of seven interleaved pairs), the plot's grob built a second time."""
 R_ENV: Mapping[str, str] = MappingProxyType(
     {
         "R_HOME": R_HOME,
@@ -116,9 +237,10 @@ R_ENV: Mapping[str, str] = MappingProxyType(
         "LANG": "C.UTF-8",
         "XDG_CACHE_HOME": "/tmp",
         "R_LIBS_USER": "/tmp/R",
+        "R_PROFILE_USER": R_TEXT_PROBE,
     }
 )
-"""What R's `bin/R` script would set before it starts the binary, plus the locale and the caches."""
+"""What R's `bin/R` script would set before it starts the binary, plus the locale, the caches and the text probe."""
 FONTCONFIG_FILE = "/opt/anyplot/fonts.conf"
 """The image's minimal fontconfig file (`agents/renderer/fonts.conf`: one font directory, no cache directory) for
 the fontconfig that lets-plot's native bridge links, which finds no configuration of its own in the image."""
@@ -143,7 +265,7 @@ class RuntimeCommand:
     """The row's own environment, after `ANYPLOT_THEME` and a Python row's matplotlib settings, whose values it may
     replace, and before `PATH`, `HOME` and the limit variables, which it never replaces (`executor.sandbox_env`)."""
     toolchain: tuple[str, ...] = ()
-    """Binaries the image must carry on `SANDBOX_PATH` for the row to run."""
+    """Binaries the image must carry for the row to run: names on `SANDBOX_PATH`, or absolute paths."""
     rlimit_as: bool = True
     """Whether the configured `RLIMIT_AS` applies; off where the runtime reserves address space it never uses."""
     rlimit_as_mb: int | None = None
@@ -158,14 +280,28 @@ class RuntimeCommand:
     """Whether the run needs the exec filter (`ANYPLOT_DENY_EXEC=required` while `RENDERER_EXEC_DENY` is
     `required`): in the harness's process for an in-process row, preloaded into the child for an exec-mode row.
     Off for the JavaScript row alone, whose Node and Chromium start their own processes."""
+    stderr_head: str = ""
+    """A line prefix whose first line the stderr tail keeps in front of the last characters, within the same bound
+    (`executor.stderr_tail`); empty for a row whose tail is the plain last `MAX_STDERR_CHARS` characters. Julia's
+    `ERROR:`: a deep Makie failure prints about 7,500 characters of stack, so the last 2,000 lose the line that
+    names the exception (J2a, 2026-10-29)."""
+    figure: str = ""
+    """The package of a two-step row (`FIGURE_FLAG`, plotly and bokeh): the harness runs the plot itself in a forked,
+    armed child, and `argv` is then the screenshot step's command, which draws the figure the plot wrote with that
+    package's JavaScript; empty for every other row. `exec_deny`, `rlimit_as` and `rlimit_nproc` are the plot step's;
+    the screenshot step runs as the JavaScript row does (`harness.FIGURE_PLOT_ONLY_ENV`), and `env` is its
+    environment, which the sandbox carries after the Python settings."""
 
     def __post_init__(self) -> None:
         if self.rlimit_as_mb is not None and (not self.rlimit_as or self.rlimit_as_mb <= 0):
             raise ValueError("a row's own RLIMIT_AS needs rlimit_as on and a positive size")
+        if self.figure and (self.language != "python" or not self.argv):
+            raise ValueError("a two-step row runs a Python plot and a screenshot command")
 
     @property
     def in_process(self) -> bool:
-        """Whether the harness runs the code itself (Python) instead of a child command."""
+        """Whether the harness runs the code itself (Python) and nothing else; a two-step row runs it itself and then
+        the screenshot command (`figure`)."""
         return not self.argv
 
 
@@ -194,6 +330,25 @@ def _row(language: Language, library: str) -> RuntimeCommand:
                 rlimit_as_mb=2048,
                 render_p95_s=15.0,
             )
+        if library in FIGURE_LIBRARIES:
+            # plotly and bokeh draw in a browser, which plot code must not start (the plot guard refuses kaleido's
+            # and Selenium's starts) and which an armed process cannot start either: the harness forks the plot step
+            # before it arms anything, the plot writes `plot-<theme>.json` under the guard and the exec filter with
+            # the Python limits, and the harness, never armed, then runs the JavaScript row's harness on that file
+            # with the JavaScript row's environment (`env`, JS_ENV) and limits: no exec filter, no RLIMIT_AS, no
+            # RLIMIT_NPROC (PB-1 of step 4 in agentic/specs/261024-agent-all-libraries.md). The page draws the figure
+            # with the package's own bundled JavaScript, read from the installed Python package. The repair reserve
+            # stays 15 s: both steps of 20 renders took 1.6 to 2.4 s of wall time in the renderer image at 2 CPUs,
+            # container start included, and 4.7 to 5.8 s under gVisor's ptrace platform (2026-10-31).
+            return RuntimeCommand(
+                language,
+                code_file,
+                (NODE_BINARY, JS_HARNESS, f"--library={library}"),
+                env=JS_ENV,
+                toolchain=(NODE_BINARY,),
+                render_p95_s=15.0,
+                figure=library,
+            )
         # altair renders in vl-convert's embedded V8, which reserves address space the way the JavaScript
         # row's Chromium does: under RLIMIT_AS up to 64 GiB it aborts at start ("Check failed: Start()",
         # SIGTRAP), measured on 2026-10-25 through the harness; its resident set is about 270 MiB and the
@@ -203,27 +358,36 @@ def _row(language: Language, library: str) -> RuntimeCommand:
         # the guard took a wall p95 of 3.75 s and a p99 of 13.95 s (spike of 2026-10-26).
         return RuntimeCommand(language, code_file, (), rlimit_as=library != "altair")
     if language == "javascript":
+        # Node by its path runs the catalogue's harness, which starts Playwright's Chromium headless shell; the
+        # library comes from the request's closed set, never from the file name. No exec filter: Node starts
+        # esbuild's service and Chromium, and Chromium its own processes. The plot code runs in the page, which has
+        # no process API; the boundary is gVisor (no network, a read-only root, the run's own /tmp) and the
+        # harness's sandbox mode (JS_ENV, JS-2): every request aborted, every WebSocket closed, no popup, no WebRTC,
+        # a content security policy, a V8 heap cap, a bounded console and a closed import list for MUI X (step 3 of
+        # agentic/specs/261024-agent-all-libraries.md). V8 and Chromium reserve
+        # address space far beyond their resident memory, and one render runs about 7 processes with 77 tasks
+        # (spike of 2026-10-24), so RLIMIT_AS and RLIMIT_NPROC are off; the MemAvailable watchdog, RLIMIT_CPU,
+        # RLIMIT_FSIZE and the byte budget remain. The repair reserve is Python's and R's 15 s: the 1,565 catalogue
+        # files that rendered in the toolchain image at 2 CPUs and 4 GiB took a wall p95 of 2.4 s (p99 3.9 s, max
+        # 10.1 s, four at a time, container start included; the whole container's memory peak p95 440 MiB, max
+        # 1,178 MiB; JS-1, 2026-10-30), but the deployed renderer ran Julia 2.5 times slower than local Docker and
+        # Chromium's cold start under gVisor is measured only by the first deploy's smoke.
         return RuntimeCommand(
             language,
             code_file,
-            ("node", JS_HARNESS, f"--library={library}"),
-            env=MappingProxyType(
-                {
-                    "PLAYWRIGHT_BROWSERS_PATH": "/opt/pw-browsers",
-                    "ANYPLOT_NODE_MODULES": "/opt/anyplot/node_modules",
-                    "ANYPLOT_NO_HTML": "1",
-                    "XDG_CACHE_HOME": "/tmp",
-                }
-            ),
-            toolchain=("node",),
+            (NODE_BINARY, JS_HARNESS, f"--library={library}"),
+            env=JS_ENV,
+            toolchain=(NODE_BINARY,),
             rlimit_as=False,
             rlimit_nproc=False,
-            render_p95_s=20.0,
+            render_p95_s=15.0,
             exec_deny=False,
         )
     if language == "r":
         # The spike's renders (scatter, bar, heatmap) peaked at 294 MiB and passed under the Python defaults,
-        # RLIMIT_AS 1 GiB and RLIMIT_NPROC 64, as root and as an unprivileged user (2026-10-24).
+        # RLIMIT_AS 1 GiB and RLIMIT_NPROC 64, as root and as an unprivileged user (2026-10-24). The repair reserve
+        # is Python's 15 s: the first deployed R render took 5.7 s of wall time on Cloud Run (2026-10-29), about the
+        # Python p95 of spike X (5.5 s), with R and ggplot2 loaded fresh each time; the eval matrix measures R's p95.
         return RuntimeCommand(
             language,
             code_file,
@@ -231,22 +395,28 @@ def _row(language: Language, library: str) -> RuntimeCommand:
             code_flag="--file=",
             env=R_ENV,
             toolchain=(R_BINARY,),
+            render_p95_s=15.0,
         )
+    # Julia's launcher directly, with the exec filter preloaded like R's (the launcher is dynamically linked, which the
+    # toolchain build checks). LLVM reserves address space far beyond the resident set (`LLVM ERROR: out of memory`
+    # under 1 GiB in the spike of 2026-10-24), so RLIMIT_AS is off and `--heap-size-hint` bounds the heap instead;
+    # RLIMIT_NPROC 64 holds with one thread. The repair reserve is 25 s: the 320 catalogue files that rendered in the
+    # toolchain image at 2 CPUs and 4 GiB took a wall p95 of 20.6 s (p50 10.2 s, four renders at a time, container
+    # start included; peak RSS p95 1,137 MiB), and the slowest load RDatasets, which an adaptation removes (J1,
+    # 2026-10-29). The deployed cold and warm times of the plan's measurement stage revise it. The precompile workload
+    # (J1.1) cut an adapted render from 15.9 to 5.0 s locally, but the deployed renderer ran 2.5 times slower than
+    # local Docker and no deployed sweep with the workload exists yet, so the reserve stays until one does.
+    # Julia prints an uncaught error as one `ERROR: LoadError: <Type>: ...` line and then the whole stack, which
+    # Makie makes long, so the stderr tail keeps that first line in front (`stderr_head`, J2b).
     return RuntimeCommand(
         language,
         code_file,
-        ("julia", f"--project={JULIA_PROJECT}"),
-        env=MappingProxyType(
-            {
-                "JULIA_DEPOT_PATH": f"/tmp/depot:{JULIA_DEPOT}",
-                "JULIA_CPU_TARGET": JULIA_CPU_TARGET,
-                "JULIA_PKG_OFFLINE": "true",
-                "JULIA_PKG_PRECOMPILE_AUTO": "0",
-            }
-        ),
-        toolchain=("julia",),
+        (JULIA_BINARY, *JULIA_FLAGS, "-L", JULIA_TEXT_PROBE),
+        env=JULIA_ENV,
+        toolchain=(JULIA_BINARY,),
         rlimit_as=False,
-        render_p95_s=45.0,
+        render_p95_s=25.0,
+        stderr_head=JULIA_ERROR_HEAD,
     )
 
 
@@ -266,7 +436,8 @@ def code_file(language: str, library: str) -> str:
 
 
 def toolchains() -> dict[Language, tuple[str, ...]]:
-    """The binaries each language needs on `SANDBOX_PATH`, for the renderer's startup check."""
+    """The binaries each language needs (on `SANDBOX_PATH`, or by an absolute path), for the renderer's startup
+    check."""
     return {language: _row(language, _first_library(language)).toolchain for language in LANGUAGES}
 
 

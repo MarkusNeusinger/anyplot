@@ -23,6 +23,12 @@ export const ERROR_TEXT: Record<string, string> = {
   not_eligible: 'this plot cannot be adapted in that library',
   not_found: 'that plot or library is not in the catalogue',
   session_expired: 'the session expired',
+  // The admin fan-out's copy of the page session's data (`.plot_all()`).
+  unconfirmed: 'the data is not confirmed any more; confirm it again, then .plot_all()',
+  has_dataset: 'this library already holds data; close the panel and .plot_all() again',
+  // A server without the copy, and data the assistant changed or computed, which has no paste to post again.
+  copy_unavailable:
+    'this server cannot copy changed or computed data yet; paste or open the table, or try again after the deploy',
   rate_limited: 'the daily limit is reached; try again tomorrow',
   unreachable:
     'no answer from the server: your sign-in may have expired, or the connection dropped',
@@ -80,14 +86,21 @@ export const CONFIRM_LOST_TEXT: Record<ConfirmLoss, string> = {
  * session language (`detected`); a choice from the chip or the chat says nothing.
  */
 export const LANGUAGE_DETECTED_TEXT = (language: string) =>
-  `language: ${language} · detected from your message · the lang chip in the header changes it`;
+  `reply language: ${language} · detected from your message · a plot you have keeps its language · the lang chip in the header changes both`;
 
 /**
  * The thread's one quiet line when a paste set the session language from the
  * language of its notes or column names (`pasted`), before any typed message.
  */
 export const LANGUAGE_PASTED_TEXT = (language: string) =>
-  `language: ${language} · detected from your pasted data · the lang chip in the header changes it`;
+  `reply language: ${language} · detected from your pasted data · a plot you have keeps its language · the lang chip in the header changes both`;
+
+/**
+ * The browser's confirm before a link inside the site leaves the chat with data
+ * or plots in it; a reload or a closed tab gets the browser's own wording.
+ */
+export const LEAVE_TEXT =
+  'leave the chat? the session ends here, and its data and plots cannot be restored';
 
 /** Failures only the language chip meets; any other code reads as the page's turn errors do. */
 export const LANGUAGE_FAILURE: Record<string, string> = {
@@ -277,6 +290,10 @@ export function describeConvertWarnings(
 /** A file dropped or chosen while the session works on something: the server runs one thing at a time. */
 export const FILE_BUSY_TEXT =
   'a step is still running; drop or open the file again when it is done';
+
+/** A file dropped while the admin fan-out's panel copies the data: the data waits until it closes. */
+export const FILE_LOCKED_TEXT =
+  'all libraries are plotting this data; close the panel, then drop or open the file again';
 
 /** A file dropped or chosen while the server still reads the one before. */
 export const FILE_CONVERTING_TEXT =

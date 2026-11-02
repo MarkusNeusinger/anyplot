@@ -12,15 +12,15 @@ opinions; it never implements a suggestion on its own. The owner decides.
 This skill is for Claude. Gemini in the owner's agy session sees it through
 `.agents/skills/` but never runs it: it would be asking itself.
 
-**Never run `agy` from Claude.** Google's Antigravity FAQ and a staff reply of 2026-10-16
-(discuss.ai.google.dev/t/189905) say that running the Antigravity CLI from a third-party
+**Never run `agy` from Claude.** Google's Antigravity FAQ, and a forum reply of 2026-10-16
+not marked as Google staff (discuss.ai.google.dev/t/189905), say that running the Antigravity CLI from a third-party
 coding agent such as Claude Code under a consumer login (the owner's Google AI Ultra)
 breaks the terms and can get the account suspended, even with the unmodified binary and
 no token access. The Gemini part therefore runs through `gemini_review.py` in this
 directory: Gemini on Vertex AI in project `anyplot`, location `global` (the owner's choice
 on 2026-10-21; the site's own agents stay on `eu`), billed to the anyplot billing account,
 where the Google AI Ultra Cloud credit ($100 a month) applies. Implementation work for
-Gemini goes through `gemini` issues the owner works in his own interactive agy session
+Gemini goes through briefs the owner works in his own interactive agy session
 (`/gemini-task`).
 
 ## 1. Check the setup
@@ -51,12 +51,9 @@ $GR check
   price), so that Copilot's one round finds nothing. Flash is on probation, see step 4.
   Fable joins only for high-risk changes (security, prod data, sandbox, privacy,
   credentials) or when Gemini reports something serious.
-- **A diff Gemini wrote** (`/gemini-task`, `/jules-task`): a Gemini review never counts
-  as the independent review of Gemini's work. For `/gemini-task`, a fresh Opus subagent
-  reviews the diff from the acceptance criteria alone; for `/jules-task`, Claude's own
-  reading of every sub-PR is that review, because Claude wrote only the prompt. The Flash
-  check before the PR into `main` still runs, as a check of the integrated diff. Fable for
-  high risk.
+- **A diff Gemini wrote** (`/gemini-task`): a Gemini review never counts as the
+  independent review of Gemini's work. A fresh Opus subagent reviews the diff from the
+  acceptance criteria alone. Fable for high risk.
 - Copilot reviews every PR last, whatever ran before.
 
 Only when the owner names other models, or explicitly asks to choose, propose 2–3 Gemini
@@ -97,6 +94,31 @@ certainly read. Strip personal data (feedback messages, emails, IP hashes) and n
 a secret there; the script refuses obvious secret file names in `--data`, but the content
 is your responsibility.
 
+**A diff over about 60 KB is attached, not inlined.** Check the size first
+(`git diff origin/main...<ref> | wc -c`). Above about 60 KB, `--diff-base` puts so much
+into every turn that the run can end on its input budget before it answers: on
+2026-10-31 a 90,000-character diff cost $0.30 and returned "no answer: input budget" at
+about 99k tokens per turn. Leave `--diff-base` out, write the diff without fixtures, docs
+and changelog fragments to `$D/data/<slug>.diff`, attach it, and tell Gemini in the
+briefing to review from it with at most six tool calls. Run it from the repository root,
+since the pathspecs are relative to the current directory:
+
+```bash
+git diff origin/main...<ref> -- . ':(exclude)docs' ':(exclude)changelog.d' ':(exclude,glob)**/fixtures/**' \
+  > "$D/data/<slug>.diff"
+```
+
+One attachment holds at most 300,000 bytes; split a larger diff by directory.
+
+**`--attach` paths resolve against your current directory, not against `--root`.** The
+script accepts a path only if it resolves to an existing file inside `--root` or
+`--data`, and shows it to Gemini as `path/in/repo` or `data/<name>`. Anything else ends
+the run with exit 2 before the first model call, and the round trip is lost: on
+2026-10-29 `data/pr3b.diff` ("attachment is not a file") and `agents/anyplot/data/kinds.py`
+("attachment lies outside --root and --data") were both resolved in the shared checkout.
+Pass absolute paths (`"$W/agents/…"`, `"$D/data/<slug>.diff"`), and write each file
+before the run starts.
+
 Gemini's safety filter refuses prompts that read like attacks (finding or using tokens,
 probing isolation); the script then exits 3 with a `block_reason`. Rephrase as a review
 question; for real security probing use Fable.
@@ -120,6 +142,18 @@ git worktree remove --force "$W"
 `--model` goes before `review`. For a plan without code changes, `--root` is a worktree
 of `origin/main`, or the current branch's worktree, which the tools only read.
 
+A container run against the review worktree, such as a renderer image a Fable reviewer
+starts to reproduce a finding, writes as root unless told otherwise, and the root-owned
+files it leaves (a `__pycache__` on 2026-10-31) make `git worktree remove --force` fail
+with "Permission denied". Mount the worktree read-only (`-v "$W":/w:ro`) or run the
+container with `--user "$(id -u):$(id -g)"`. If it already happened, hand the files back
+through the same image, then remove the worktree:
+
+```bash
+docker run --rm --network none --user 0 -v "$W":/w --entrypoint chown <image> -R "$(id -u):$(id -g)" /w
+git worktree remove --force "$W"
+```
+
 - **Exit 0:** read `$D/gemini.md`. `$D/gemini.json` holds turns, tool calls, token counts
   (also per turn, to see the cache hit rate), `traffic_type` (`ON_DEMAND_FLEX` confirms
   Flex) and `est_cost_usd` at Vertex list price for `global`, per 1M tokens: Argon $4 /
@@ -131,9 +165,12 @@ of `origin/main`, or the current branch's worktree, which the tools only read.
 - **Bounds:** 8 tool turns and 600k input tokens summed over all turns (`--max-turns`,
   `--max-input-tokens`). Then the tool responses tell Gemini to answer from what it has
   (`stopped_by`), and two more tool calls at most are refused before the run ends.
-- **Cost, measured on 2026-10-21 and 2026-10-22:** Flash $0.07–0.28 per review, mostly
-  thinking; Argon $0.57–1.16. The owner's account merges about 8 PRs a day, so routine
-  reviews must stay cheap.
+- **Cost, from the ledger's runs of 2026-10-21 to 2026-10-31:** Flash, 40 runs, $0.07 to
+  $1.14 per review, median $0.27, the middle half $0.13 to $0.32; Argon, 16 runs, $0.35 to
+  $1.64, median $1.21, the middle half $1.01 to $1.31. The six Flash runs above $0.70 all
+  summed 0.8 to 1.4 million tokens over their turns, so a large diff, not the model, sets
+  the price. The owner's account merges about 8 PRs a day, so routine reviews must stay
+  cheap.
 - **Flash is on probation.** The owner's decision on 2026-10-22: measure it on real PRs,
   with no extra test runs. On every PR Flash reviewed, once Copilot's review is in, add
   `copilot_findings` (the real ones) and `matched_copilot` (how many of those Flash also

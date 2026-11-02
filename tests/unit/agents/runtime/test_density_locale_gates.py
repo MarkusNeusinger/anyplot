@@ -519,12 +519,19 @@ class TestNumberFormatGate:
         # x: 0, 1, 2 (no marks); y: the two mathtext labels; the annotation `$5{,}30$` reads 5,30.
         assert line.startswith("VQ-06 (light): 2 of 6 numeric tick labels use a decimal point")
 
-    def test_without_tick_axes_only_annotations_count(self) -> None:
+    def test_with_tick_axes_but_none_for_the_axes_only_annotations_count(self) -> None:
         labels = [{"kind": "y tick label", "text": "5.30", "axes": 0}, {"kind": "annotation", "text": "4.85"}]
 
-        [line] = gate_lines({"labels": labels}, plot_language="de")
+        [line] = gate_lines({"labels": labels, "tick_axes": []}, plot_language="de")
 
         assert line.startswith("VQ-06 (light): 1 of 1 numeric annotations use a decimal point")
+
+    def test_a_text_probe_without_tick_axes_has_no_gate(self) -> None:
+        """The text probe of a library without matplotlib (pygal, a JavaScript library) reports `labels` alone: G12's
+        advice names matplotlib's formatters, so it reads matplotlib's probe only."""
+        labels = [{"kind": "y tick label", "text": "5.30"}, {"kind": "annotation", "text": "4.85"}]
+
+        assert gate_lines({"labels": labels}, plot_language="de") == []
 
     def test_a_language_without_a_number_format_and_no_language_have_no_gate(self) -> None:
         probe = {"labels": [{"kind": "annotation", "text": "5.30"}]}

@@ -1047,6 +1047,8 @@ class TestToolSafety:
         """The same pattern as the language route: the value reaches prompts, so free text stays bounded."""
         for language in ("de", "English", "Klingon", "Old Norse", "x" * 40):
             assert await self.check("set_language", {"language": language}) is None, language
+        for target in ("both", "plot", "replies"):
+            assert await self.check("set_language", {"language": "de", "applies_to": target}) is None, target
         for arguments in (
             {"language": "x" * 41},
             {"language": "a/b"},
@@ -1056,6 +1058,8 @@ class TestToolSafety:
             {"language": "Français"},
             {"language": 1},
             {"language": "de", "extra": 1},
+            {"language": "de", "applies_to": "title"},
+            {"language": "de", "applies_to": None},
             {},
         ):
             refused = await self.check("set_language", arguments)

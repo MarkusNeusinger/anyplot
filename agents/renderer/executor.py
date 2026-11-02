@@ -45,7 +45,9 @@ Each rule below comes from spike S or S2 (docs/concepts/agent-network.md, "Rende
   output. A render whose harness started failed in the plot code and is not retried;
   a second launcher failure is reported with reason `launcher`.
 * **Bounded output.** stderr keeps its last `STDERR_LIMIT` bytes and stdout its first
-  and last few KiB, however much the code writes. Output files are read without
+  and last few KiB, however much the code writes; a theme returns the last
+  `MAX_STDERR_CHARS` characters of stderr, with the first line of the row's
+  `stderr_head` in front of them for the Julia row (`stderr_tail`). Output files are read without
   following links (`O_NOFOLLOW`, then `fstat`) and under the wire caps, and the probe
   is cleaned (`wire.clean_probe`) before it reaches the response.
 * **Host errors are refusals.** An `OSError` on the host (the run directory cannot be
@@ -73,6 +75,12 @@ paste cap (`MAX_CONVERT_TEXT_BYTES`, strict UTF-8) and `meta.json` (`wire.Conver
 refusal's exit code becomes its name (`wire.convert_refusal`), with the measured value and
 the cap from `status.json`.
 
+**Page builds** (`run_page`, the service's `POST /page`, JS-4b) take the path of a theme of a
+JavaScript render: the code file and `data.json`, the JavaScript row's argv and environment
+with `ANYPLOT_PAGE_ONLY=1` added, so the harness writes `plot-<theme>.html` and starts no
+browser. After exit code 0 the host reads that page under `MAX_PAGE_BYTES` as strict UTF-8;
+anything else is `output_rejected`. A page build holds the render slot like a render.
+
 Strictly serial: the service holds one render slot (`main.py`), and the themes of a
 job run one after the other; a data run and a conversion take the same slot. No ADK import.
 """
@@ -94,7 +102,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
-from .commands import EXEC_DENY_ENV, EXEC_FLAG, LANGUAGES, RuntimeCommand, command_for, toolchains
+from .commands import EXEC_DENY_ENV, EXEC_FLAG, FIGURE_FLAG, LANGUAGES, RuntimeCommand, command_for, toolchains
 from .settings import RendererSettings
 from .wire import (
     CONVERT_INPUT_FILE,
@@ -105,15 +113,20 @@ from .wire import (
     MAX_CONVERT_TEXT_BYTES,
     MAX_CSV_BYTES,
     MAX_DATA_STATUS_BYTES,
+    MAX_PAGE_BYTES,
     MAX_PNG_BYTES,
     MAX_PROBE_BYTES,
     MAX_STDERR_CHARS,
+    PAGE_FILE,
+    PAGE_ONLY_ENV,
     ConvertDamage,
     ConvertMeta,
     ConvertRequest,
     ConvertRun,
     DataRun,
     DataRunRequest,
+    PageRequest,
+    PageRun,
     RenderRequest,
     RunReason,
     Theme,
@@ -132,6 +145,10 @@ FORBIDDEN_FLAGS = ("--allow-egress", "--write")
 WORKDIR = "/work"
 CODE_FILE = "plot.py"
 DATA_FILE = "data.csv"
+DATA_JSON_FILE = "data.json"
+"""A JavaScript job's typed table (`RenderRequest.data_json`), next to the code file when the job carries one."""
+DATA_JSON_ENV = "ANYPLOT_DATA_JSON"
+"""The harness's variable naming that file (`automation/js-render/render.mjs`, sandbox mode)."""
 SNIPPET_FILE = "snippet.py"
 """A data run's code file; the agents' error summary looks for its frames by this name."""
 OUT_FILE = "out.csv"
@@ -146,12 +163,17 @@ INTERPRETER_FLAGS = ("-I", "-X", "disable-remote-debug")
 """The sandbox interpreter's flags (`harness.INTERPRETER_FLAGS`): isolated, and no Python 3.14 remote debugging."""
 CONVERT_LABEL = "convert"
 """The sandbox name suffix and log label of a conversion."""
+PAGE_LABEL = "page"
+"""The sandbox name suffix and log label of a page build."""
 LAUNCHER_FAILURE = "failed to exec in container"
 HARNESS_START = 'HARNESS {"event": "start"}'
 HARNESS_END = 'HARNESS {"event": "end"'
 EXEC_DENY_STATES = frozenset({"on", "off", "unavailable", "unsupported"})
 """The values of the end line's `exec_deny` (`harness.install_exec_deny`; `off`: the guard was never armed)."""
 STDERR_LIMIT = 64 * 1024
+STDERR_HEAD_CHARS = 300
+"""The most of a kept head line (`stderr_tail`): a Julia error's exception type and the name an `UndefVarError` or a
+`MethodError` gives fit in its first 100 characters; a type signature beyond them is cut."""
 STDOUT_HEAD = 4 * 1024
 STDOUT_TAIL = 4 * 1024
 READ_CHUNK = 64 * 1024
@@ -238,6 +260,34 @@ async def read_tail(stream: asyncio.StreamReader | None, limit: int) -> bytes:
         if len(tail) > limit:
             del tail[:-limit]
     return bytes(tail)
+
+
+def stderr_tail(stderr: str, head: str = "", limit: int = MAX_STDERR_CHARS) -> str:
+    """What a theme returns of its stderr: the last `limit` characters, and with `head` (the row's
+    `RuntimeCommand.stderr_head`) the first line that starts with it in front when those characters lost its start.
+
+    The kept line is cut to `STDERR_HEAD_CHARS` and the tail gives up its length plus the line break, so the
+    result never exceeds `limit` (the wire's cap and the agents' `ThemeOutput` cut both stay as they are). An
+    empty `head`, a stderr within `limit`, a line that starts inside the tail and a stderr without such a line
+    all give the plain tail, byte for byte what every row returned before J2b. The line is the run's own output,
+    as the tail is: a plot that prints an `ERROR:` line of its own gets that one kept, which the agents' error
+    grammars read in a closed shape like the rest of the tail.
+    """
+    tail = stderr[-limit:]
+    if not head or len(stderr) <= limit:
+        return tail
+    if stderr.startswith(head):
+        start = 0
+    else:
+        found = stderr.find("\n" + head)
+        if found == -1:
+            return tail
+        start = found + 1
+    if start >= len(stderr) - limit:
+        return tail
+    end = stderr.find("\n", start)
+    line = stderr[start : end if end != -1 else len(stderr)][:STDERR_HEAD_CHARS]
+    return line + "\n" + stderr[-(limit - len(line) - 1) :]
 
 
 async def read_head_tail(stream: asyncio.StreamReader | None, head: int, tail: int) -> tuple[bytes, bytes]:
@@ -414,6 +464,8 @@ def sandbox_env(
     *,
     convert: bool = False,
     command: RuntimeCommand | None = None,
+    data_json: bool = False,
+    page: bool = False,
 ) -> dict[str, str]:
     """The complete environment inside the sandbox: nothing of the host's reaches it.
 
@@ -435,10 +487,22 @@ def sandbox_env(
     buffers come from the same `malloc` as everything else under the address-space limit; with the bundled
     jemalloc pool, a test run on a developer machine logged a failed background-thread start under the process
     limit.
+
+    `data_json` says the run directory holds the job's `data.json` (`RenderRequest.data_json`): a JavaScript row
+    then names it in `ANYPLOT_DATA_JSON`, which the harness injects as `window.ANYPLOT_DATA`; no other row reads it.
+    `page` (a page build, `POST /page`) adds `ANYPLOT_PAGE_ONLY=1` to the JavaScript row's environment.
+
+    A two-step row (`RuntimeCommand.figure`, plotly and bokeh) gets a Python row's settings and then its own
+    environment, the JavaScript row's, which the screenshot step reads; its limits and the filter variable are the
+    plot step's, and the harness keeps them from the screenshot step (`harness.FIGURE_PLOT_ONLY_ENV`).
     """
     plot: dict[str, str] = {}
-    if theme is not None and command is not None and not command.in_process:
+    if theme is not None and command is not None and not command.in_process and not command.figure:
         plot = {"ANYPLOT_THEME": theme, **command.env}
+        if data_json and command.language == "javascript":
+            plot[DATA_JSON_ENV] = f"{WORKDIR}/{DATA_JSON_FILE}"
+        if page and command.language == "javascript":
+            plot[PAGE_ONLY_ENV] = "1"
     elif theme is not None:
         plot = {
             "ANYPLOT_THEME": theme,
@@ -483,13 +547,16 @@ def build_argv(
     *,
     convert: bool = False,
     command: RuntimeCommand | None = None,
+    data_json: bool = False,
+    page: bool = False,
 ) -> list[str]:
     """The `sandbox do` command of one theme, of a data run (`theme` None, the harness in data mode) or of a
     conversion (`convert`, the harness in convert mode); asserted to carry neither `--write` nor `--allow-egress`.
 
-    A theme's `command` is its row of the command table: a Python row runs the harness in plot mode on `plot.py`;
-    any other row runs the harness in exec mode (`EXEC_FLAG`) with the row's own argv and code file. The argv
-    comes from the table alone; the request only selected the row."""
+    A theme's `command` is its row of the command table: a Python row runs the harness in plot mode on `plot.py`, a
+    two-step row (plotly, bokeh) in figure mode (`FIGURE_FLAG`) on `plot.py` with the row's argv as the screenshot
+    command; any other row runs the harness in exec mode (`EXEC_FLAG`) with the row's own argv and code file. The argv
+    comes from the table alone; the request only selected the row. `data_json` and `page`: see `sandbox_env`."""
     argv = [
         config.sandbox_binary,
         "do",
@@ -501,7 +568,8 @@ def build_argv(
     if config.bind_tmp:
         argv += ["--mount", f"type=bind,source={run_dir / 'tmp'},destination=/tmp"]
     argv += ["-w", WORKDIR]
-    for key, value in sandbox_env(config, theme, cpu_s, convert=convert, command=command).items():
+    environment = sandbox_env(config, theme, cpu_s, convert=convert, command=command, data_json=data_json, page=page)
+    for key, value in environment.items():
         argv += ["--env", f"{key}={value}"]
     flags = list(argv)
     argv += ["--", config.python, *INTERPRETER_FLAGS, config.harness]
@@ -509,6 +577,8 @@ def build_argv(
         argv += [CONVERT_FLAG, CONVERT_INPUT_FILE]
     elif theme is None:
         argv += [DATA_FLAG, SNIPPET_FILE]
+    elif command is not None and command.figure:
+        argv += [FIGURE_FLAG, command.figure, command.code_file, "--", *command.argv]
     elif command is not None and not command.in_process:
         argv += [EXEC_FLAG, "--", *command.argv, f"{command.code_flag}{command.code_file}"]
     else:
@@ -543,6 +613,8 @@ class Attempt:
     """A `corrupt` conversion's broken part, as `status.json` names it."""
     convert_meta: ConvertMeta | None = None
     """A conversion's `meta.json`, read with its `out.csv` after exit code 0."""
+    html: str | None = None
+    """A page build's `plot-<theme>.html`, read after exit code 0."""
 
     @property
     def data_exit(self) -> int | None:
@@ -602,7 +674,8 @@ class Attempt:
         state = self.end_report().get("exec_deny")
         return state if isinstance(state, str) and state in EXEC_DENY_STATES else None
 
-    def to_wire(self, theme: Theme, attempts: int) -> ThemeRun:
+    def to_wire(self, theme: Theme, attempts: int, *, stderr_head: str = "") -> ThemeRun:
+        """The theme's wire answer; `stderr_head` is the row's (`stderr_tail`)."""
         usage = self.usage()
         return ThemeRun(
             theme=theme,
@@ -610,7 +683,7 @@ class Attempt:
             timed_out=self.timed_out,
             png_base64=None if self.png is None else _b64(self.png),
             probe=self.probe,
-            stderr_tail=self.stderr[-MAX_STDERR_CHARS:],
+            stderr_tail=stderr_tail(self.stderr, stderr_head),
             wall_s=round(self.wall_s, 3),
             attempts=attempts,
             reason=self.reason,
@@ -629,6 +702,19 @@ class Attempt:
             measured=self.status_measured if from_status else self.measured,
             limit=self.status_limit if from_status else self.limit,
             csv_text=self.csv_text,
+            stderr_tail=self.stderr[-MAX_STDERR_CHARS:],
+            wall_s=round(self.wall_s, 3),
+            attempts=attempts,
+        )
+
+    def to_page_wire(self, attempts: int) -> PageRun:
+        return PageRun(
+            exit_code=self.exit_code,
+            timed_out=self.timed_out,
+            reason=self.reason,
+            measured=self.measured,
+            limit=self.limit,
+            html=self.html,
             stderr_tail=self.stderr[-MAX_STDERR_CHARS:],
             wall_s=round(self.wall_s, 3),
             attempts=attempts,
@@ -675,11 +761,15 @@ class Executor(Protocol):
 
     def languages(self) -> dict[str, bool]: ...
 
+    def serves(self, language: str, library: str) -> bool: ...
+
     async def run_theme(self, job: RenderRequest, theme: Theme) -> ThemeRun: ...
 
     async def run_data(self, job: DataRunRequest) -> DataRun: ...
 
     async def run_convert(self, job: ConvertRequest) -> ConvertRun: ...
+
+    async def run_page(self, job: PageRequest) -> PageRun: ...
 
 
 class SandboxExecutor:
@@ -708,7 +798,8 @@ class SandboxExecutor:
         return os.access(self.config.sandbox_binary, os.X_OK)
 
     def languages(self) -> dict[str, bool]:
-        """Per language of the command table, whether every binary of its toolchain is on the sandbox's `PATH`.
+        """Per language of the command table, whether every binary of its toolchain is on the sandbox's `PATH`, or,
+        for one named by an absolute path (R, Julia), executable there.
 
         The sandbox sees this image's files, so the lookup runs here, on the host side of the
         same filesystem. Python needs nothing beyond the configured interpreter.
@@ -719,12 +810,23 @@ class SandboxExecutor:
             for language in LANGUAGES
         }
 
+    def serves(self, language: str, library: str) -> bool:
+        """Whether a job's row can run here: its language's toolchain (`languages`) and the row's own binaries, Node
+        for plotly's and bokeh's screenshot step (`RuntimeCommand.figure`) among them, which the Python language's
+        toolchain does not name."""
+        if not self.languages().get(language, False):
+            return False
+        row = command_for(language, library)
+        return all(shutil.which(binary, path=SANDBOX_PATH) is not None for binary in row.toolchain)
+
     async def run_theme(self, job: RenderRequest, theme: Theme) -> ThemeRun:
         """Render one theme; a launcher failure before the harness started is retried once."""
         command = command_for(job.language, job.library)
         files: dict[str, str | bytes] = {command.code_file: job.source, DATA_FILE: job.data_csv}
+        if job.data_json is not None:
+            files[DATA_JSON_FILE] = job.data_json
         attempt, attempts = await self._launch(files, theme, job.timeout_s, command=command)
-        return attempt.to_wire(theme, attempts)
+        return attempt.to_wire(theme, attempts, stderr_head=command.stderr_head)
 
     async def run_data(self, job: DataRunRequest) -> DataRun:
         """Run one data snippet with the harness in data mode; the same retry, watchdog and kill path as a theme."""
@@ -742,6 +844,14 @@ class SandboxExecutor:
         attempt, attempts = await self._launch(files, None, job.timeout_s, convert=True)
         return attempt.to_convert_wire(attempts)
 
+    async def run_page(self, job: PageRequest) -> PageRun:
+        """Build a JavaScript version's page in one theme: the render's files and row with `ANYPLOT_PAGE_ONLY=1`, no
+        browser; the same retry, watchdog and kill path as a theme."""
+        command = command_for(job.language, job.library)
+        files: dict[str, str | bytes] = {command.code_file: job.source, DATA_JSON_FILE: job.data_json}
+        attempt, attempts = await self._launch(files, job.theme, job.timeout_s, command=command, page=True)
+        return attempt.to_page_wire(attempts)
+
     async def _launch(
         self,
         files: dict[str, str | bytes],
@@ -750,23 +860,26 @@ class SandboxExecutor:
         *,
         convert: bool = False,
         command: RuntimeCommand | None = None,
+        page: bool = False,
     ) -> tuple[Attempt, int]:
-        """One run (a theme, a data run when `theme` is None, a conversion with `convert`) and its launches; one
-        retry for a launcher failure."""
+        """One run (a theme, a data run when `theme` is None, a conversion with `convert`, a page build with `page`)
+        and its launches; one retry for a launcher failure."""
         if not self.available:
             raise Unavailable("sandbox_unavailable")
         if self.stuck:
             raise Unavailable("stuck")
-        label = theme if theme is not None else CONVERT_LABEL if convert else DATA_LABEL
+        label = _label(theme, convert=convert, page=page)
         cpu_s = run_cpu_seconds(self.config.rlimit_cpu_s, timeout_s)
         started = self.clock()
-        attempt = await self._attempt(files, theme, cpu_s, timeout_s, convert=convert, command=command)
+        attempt = await self._attempt(files, theme, cpu_s, timeout_s, convert=convert, command=command, page=page)
         attempts = 1
         if attempt.launcher_failed:
             remaining = timeout_s - (self.clock() - started)
             _log_attempt(attempt, label, retry=remaining >= MIN_RETRY_S)
             if remaining >= MIN_RETRY_S:
-                attempt = await self._attempt(files, theme, cpu_s, remaining, convert=convert, command=command)
+                attempt = await self._attempt(
+                    files, theme, cpu_s, remaining, convert=convert, command=command, page=page
+                )
                 attempts = 2
             if attempt.launcher_failed:
                 attempt.reason = "launcher"
@@ -782,13 +895,23 @@ class SandboxExecutor:
         *,
         convert: bool = False,
         command: RuntimeCommand | None = None,
+        page: bool = False,
     ) -> Attempt:
-        label = theme if theme is not None else CONVERT_LABEL if convert else DATA_LABEL
-        name = f"r-{secrets.token_hex(6)}-{label}"
+        name = f"r-{secrets.token_hex(6)}-{_label(theme, convert=convert, page=page)}"
         run_dir = self.config.runs_dir / name
         try:
             self._prepare(run_dir, files)
-            return await self._run(name, run_dir, theme, cpu_s, timeout_s, convert=convert, command=command)
+            return await self._run(
+                name,
+                run_dir,
+                theme,
+                cpu_s,
+                timeout_s,
+                convert=convert,
+                command=command,
+                data_json=DATA_JSON_FILE in files,
+                page=page,
+            )
         except OSError as exc:
             # A full volume, a failed fork: the host could not run the job, which is
             # not the code's fault. `_run` has stopped any sandbox it started.
@@ -826,8 +949,12 @@ class SandboxExecutor:
         *,
         convert: bool = False,
         command: RuntimeCommand | None = None,
+        data_json: bool = False,
+        page: bool = False,
     ) -> Attempt:
-        argv = build_argv(self.config, name, run_dir, theme, cpu_s, convert=convert, command=command)
+        argv = build_argv(
+            self.config, name, run_dir, theme, cpu_s, convert=convert, command=command, data_json=data_json, page=page
+        )
         started = self.clock()
         process = await asyncio.create_subprocess_exec(
             *argv,
@@ -887,9 +1014,28 @@ class SandboxExecutor:
                     self._collect_convert(attempt, run_dir / "work")
                 elif attempt.data_exit == 0:
                     self._collect_data(attempt, run_dir / "work")
+        elif page:
+            if stop is None and attempt.exit_code == 0:
+                self._collect_page(attempt, run_dir / "work", theme)
         elif stop is None or stop.reason == "timeout":
             self._collect(attempt, run_dir / "work", theme)
         return attempt
+
+    def _collect_page(self, attempt: Attempt, work: Path, theme: Theme) -> None:
+        """Read the page a build left, as strict UTF-8 under `MAX_PAGE_BYTES`; anything else is refused."""
+        try:
+            raw = read_regular(work / PAGE_FILE.format(theme=theme), MAX_PAGE_BYTES)
+        except OutputRejected as exc:
+            attempt.reason = "output_rejected"
+            attempt.measured = exc.size
+            attempt.limit = exc.limit
+            return
+        if raw is None:
+            return
+        try:
+            attempt.html = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            attempt.reason = "output_rejected"
 
     def _read_status(self, attempt: Attempt, work: Path) -> None:
         """Take the harness's exit code and a refusal's numbers from the `status.json` a data run left, if any."""
@@ -989,6 +1135,15 @@ class SandboxExecutor:
             with contextlib.suppress(ProcessLookupError):
                 deleter.kill()
             await deleter.wait()
+
+
+def _label(theme: Theme | None, *, convert: bool, page: bool) -> str:
+    """A run's sandbox name suffix and log label: its theme, or what kind of run it is."""
+    if page:
+        return PAGE_LABEL
+    if theme is not None:
+        return theme
+    return CONVERT_LABEL if convert else DATA_LABEL
 
 
 def _log_attempt(attempt: Attempt, theme: str, *, retry: bool) -> None:

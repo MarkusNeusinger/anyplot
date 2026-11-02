@@ -11,7 +11,8 @@
   (see `add_session_context` for why). Catalogue text such as the
   spec title started as a public issue, so it never enters that block: the root reads
   it fenced as `<spec_text>` through `get_spec_brief`. The session language may be a
-  user-chosen name, so it stands there inside a `<plot_language>` fence. Its tools are
+  user-chosen name, so it stands there inside a `<reply_language>` fence, and the plot
+  language, where it differs, inside a `<plot_language>` fence. Its tools are
   the ten session tools (`prepare_data` and `generate_data` among them, the step-1
   data operations and the formula source, `query_data`, which answers a question about
   the data from a copy, and `set_language`) and the `plot_pipeline` NodeTool.
@@ -39,7 +40,7 @@ from google.genai import types
 
 from .data.bindings import check_bindings
 from .dev_fixture import DevFixturePlugin
-from .language import english_name
+from .language import english_name, same_language
 from .models import make_content_config, make_model
 from .plugins.budget import BudgetPlugin
 from .plugins.reply_language import ReplyLanguagePlugin
@@ -47,7 +48,7 @@ from .plugins.scope_guard import ScopeGuardPlugin
 from .plugins.tool_safety import ToolSafetyPlugin
 from .policy import fence, root_instruction
 from .services import get_services
-from .session_state import read_session
+from .session_state import plot_language, read_session
 from .settings import get_settings
 from .sub_agents.adapter import ADAPTERS
 from .sub_agents.reviewer import reviewer
@@ -63,9 +64,13 @@ ROOT_NAME = "anyplot"
 ROOT_TOOLS: list[Any] = [*SESSION_TOOLS, plot_pipeline]
 CONTEXT_INVOCATIONS = 6
 CLAUDE_CACHE_TTL_S = 300
-SESSION_LANGUAGE_HEADING = (
-    "Session language: write your replies and the plot text in it (the block holds only its name or code):"
+SESSION_LANGUAGE_HEADING = "Session language: write your replies in it (the block holds only its name or code):"
+PLOT_LANGUAGE_HEADING = (
+    "Plot language: the plot's text is in it, also when you reply in another; it changes only through "
+    "set_language (the block holds only its name or code):"
 )
+"""The heading over the plot language, which the session block names only where it differs from the session language
+(owner decision of 2026-11-01: a follow-up message in another language no longer rewrites the plot's text)."""
 LANGUAGE_SOURCE_LINES: dict[str, str] = {
     "default": "- Language: the default, English",
     "pasted": "- Language: detected from the user's pasted data (the notes around the table or its column names)",
@@ -104,8 +109,11 @@ async def session_context(context: ReadonlyContext) -> str:
     no catalogue text. The spec title stays out because catalogue text started as a
     public issue and this block has instruction priority; `get_spec_brief` returns it
     inside a fence. The session language, a user-chosen value bounded by a pattern,
-    stands inside a `<plot_language>` fence at the end; a fixed line names how it was
+    stands inside a `<reply_language>` fence at the end; a fixed line names how it was
     set (`LANGUAGE_SOURCE_LINES`), and the heading above the fence says to write in it.
+    The plot language (`session_state.plot_language`) follows inside a `<plot_language>`
+    fence only where it differs, under a heading that says it changes only through
+    `set_language`.
     """
     view = read_session(context.state)
     if view is None:
@@ -161,7 +169,10 @@ async def session_context(context: ReadonlyContext) -> str:
     name = english_name(view.language)
     if name is not None and name != "English":
         lines.append(REPLY_LANGUAGE_LINE.format(name=name))
-    lines += [SESSION_LANGUAGE_HEADING, fence("plot_language", view.language)]
+    lines += [SESSION_LANGUAGE_HEADING, fence("reply_language", view.language)]
+    plot = plot_language(view, services.versions.latest_language(session_id))
+    if not same_language(plot, view.language):
+        lines += [PLOT_LANGUAGE_HEADING, fence("plot_language", plot)]
     return "\n".join(lines)
 
 

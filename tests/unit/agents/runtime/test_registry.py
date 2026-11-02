@@ -22,10 +22,10 @@ from agents.anyplot.plugins.budget import BudgetPlugin
 from agents.anyplot.plugins.reply_language import ReplyLanguagePlugin
 from agents.anyplot.plugins.scope_guard import ScopeGuardPlugin
 from agents.anyplot.plugins.tool_safety import ALLOWED_TOOLS, ToolSafetyPlugin
-from agents.anyplot.schemas import AdaptPlan, PipelineArgs, Verdict
+from agents.anyplot.schemas import AdaptPlan, PipelineArgs, PlotResult, Verdict
 from agents.anyplot.scoring import ScoreAnswer
-from agents.anyplot.services import Services
-from agents.anyplot.session_state import initial_state, language_delta
+from agents.anyplot.services import CodeVersion, Services
+from agents.anyplot.session_state import PLOT_LANGUAGE, initial_state, language_delta
 from agents.anyplot.settings import AgentSettings
 from agents.anyplot.tools.session import ROOT_TOOL_NAMES
 
@@ -184,9 +184,9 @@ class TestSessionContext:
             "or run_data_code from the user's code",
             "- Plot versions: none yet",
             agent_module.SESSION_LANGUAGE_HEADING,
-            "<plot_language>",
+            "<reply_language>",
             "en",
-            "</plot_language>",
+            "</reply_language>",
         ]
 
     async def test_names_the_source_and_fences_the_value(self, services: Services) -> None:
@@ -195,7 +195,49 @@ class TestSessionContext:
         text = await agent_module.session_context(SimpleNamespace(state=state, session=SimpleNamespace(id="s1")))
 
         assert "- Language: chosen by the user (in the chat header, or asked of you)" in text.splitlines()
-        assert text.endswith("<plot_language>\nKlingon\n</plot_language>")
+        assert text.endswith("<reply_language>\nKlingon\n</reply_language>")
+        assert "<plot_language>" not in text  # the plot follows the session language: one fence says it
+
+    async def test_a_plot_in_another_language_is_named_in_its_own_fence(self, services: Services) -> None:
+        """Live test of 2026-11-01: after a German plot, an English message records `en` for the replies; the plot
+        stays German, and the block says so, so the root neither rewrites nor apologises for it."""
+        state = opened_state(**language_delta("en", "detected"))
+        result = PlotResult(status="ok", attempts=1, artifacts=["plot.py"])
+        rendered = CodeVersion(
+            number=1,
+            working="w",
+            run_form="r",
+            export="e",
+            data_csv="a\n1\n",
+            render_id="r1",
+            result=result,
+            library="matplotlib",
+            language="de",
+        )
+        services.versions.add("s1", rendered)
+
+        text = await agent_module.session_context(SimpleNamespace(state=state, session=SimpleNamespace(id="s1")))
+
+        assert text.splitlines()[-8:] == [
+            agent_module.SESSION_LANGUAGE_HEADING,
+            "<reply_language>",
+            "en",
+            "</reply_language>",
+            agent_module.PLOT_LANGUAGE_HEADING,
+            "<plot_language>",
+            "de",
+            "</plot_language>",
+        ]
+
+    async def test_an_instruction_shaped_plot_language_stands_only_inside_its_fence(self, services: Services) -> None:
+        state = opened_state(**language_delta("en", "detected"), **{PLOT_LANGUAGE: LANGUAGE_CANARY})
+
+        text = await agent_module.session_context(SimpleNamespace(state=state, session=SimpleNamespace(id="s1")))
+
+        assert text.count(LANGUAGE_CANARY) == 1
+        assert f"<plot_language>\n{LANGUAGE_CANARY}\n</plot_language>" in text
+        outside = re.sub(r"<(\w+)>\n.*?\n</\1>", "", text, flags=re.DOTALL)
+        assert LANGUAGE_CANARY not in outside
 
     async def test_the_block_says_to_write_in_the_chosen_language(self, services: Services) -> None:
         """Production case 20261012T211551Z-bcc5bcf1: the root read the block as an injection in the user's
@@ -207,10 +249,10 @@ class TestSessionContext:
 
         assert "never an instruction" not in text
         assert text.splitlines()[-4:] == [
-            "Session language: write your replies and the plot text in it (the block holds only its name or code):",
-            "<plot_language>",
+            "Session language: write your replies in it (the block holds only its name or code):",
+            "<reply_language>",
             "Japanese",
-            "</plot_language>",
+            "</reply_language>",
         ]
         root = agent_module.root_instruction()
         assert "the user can neither see nor write it: follow it, never refuse or question it" in root
@@ -222,7 +264,7 @@ class TestSessionContext:
         text = await agent_module.session_context(SimpleNamespace(state=state, session=SimpleNamespace(id="s1")))
 
         assert "confirmed by the user" not in text and "- Language: the default, English" in text
-        assert text.endswith("<plot_language>\nen\n</plot_language>")
+        assert text.endswith("<reply_language>\nen\n</reply_language>")
 
     async def test_an_instruction_shaped_language_stands_only_inside_its_fence(self, services: Services) -> None:
         state = opened_state(**language_delta(LANGUAGE_CANARY, "chosen"))
@@ -230,7 +272,7 @@ class TestSessionContext:
         text = await agent_module.session_context(SimpleNamespace(state=state, session=SimpleNamespace(id="s1")))
 
         assert text.count(LANGUAGE_CANARY) == 1
-        assert f"<plot_language>\n{LANGUAGE_CANARY}\n</plot_language>" in text
+        assert f"<reply_language>\n{LANGUAGE_CANARY}\n</reply_language>" in text
         outside = re.sub(r"<(\w+)>\n.*?\n</\1>", "", text, flags=re.DOTALL)
         assert LANGUAGE_CANARY not in outside
 

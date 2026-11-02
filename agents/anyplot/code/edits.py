@@ -73,8 +73,22 @@ triple forms, each ending with its line unless a backslash continues it. R's
 the token stream with string values decoded (so `'a'` and `"a"` agree, a comment does
 not count), its placeholder is `df <- load_user_data()`, its save `ggsave`, and its
 literals are `'`, `"` and backtick names, which may span lines, and raw strings
-`r"(...)"`. The Python behaviour is byte for byte what it was (its tests are
-unchanged).
+`r"(...)"`. Julia's (`makie`, J2a of 2026-10-29) reads it with tree-sitter and
+`profiles/julia/regions.py`, compares meanings as R's does (the token stream with string
+values decoded, comments left out, so `const THEME = ...` and `THEME = ...` differ), its
+placeholder is `df = load_user_data()` as in Python, its save `save`, and its literals are
+`"`, its triple-quoted strings and backtick commands, which may span lines. JavaScript's
+(Chart.js, D3, ECharts, Highcharts, and MUI X as TSX; JS-3 of 2026-10-30) reads the code
+with tree-sitter and `profiles/javascript/regions.py`: its protected statements are the
+token lines that read `window.ANYPLOT_TOKENS`, `_THEME` and `_SIZE`, the placeholder
+`const data = loadUserData();` and the `//# anyplot-orientation` directive, which is a
+comment and stands as the orientation it picks in the meaning the drift check compares
+(the protected `savefig` region: it fixes what the render writes); it has no THEME
+statement, so no name but the tokens' counts as a rebind, and only top-level bindings
+count (a callback's parameter `t` shadows the token `t` and leaves it alone). Its literals
+are `'` and `"`, which end with their line, and templates, which may span lines; `//` and
+`/* */` are comments, and a `#` (a CSS colour in a string, a private field) is text. The
+Python, R and Julia behaviour is byte for byte what it was (their tests are unchanged).
 """
 
 import ast
@@ -87,9 +101,26 @@ from typing import Literal, Protocol
 
 from ..schemas import MAX_FEEDBACK, MAX_LINE_CHARS, AdaptPlan
 from . import regions as python_regions
+from .profiles.javascript import regions as javascript_regions
+from .profiles.julia import regions as julia_regions
 from .profiles.r import regions as r_regions
 from .regions import PLACEHOLDER, PLACEHOLDER_FUNC, THEME_NAME, SourceIndex, find_regions
-from .treesitter import Source, r_assignment, r_bindings, r_string, r_string_value, statements, syntax_problems, walk
+from .treesitter import (
+    COMMENTS,
+    Grammar,
+    Source,
+    jl_bindings,
+    jl_string,
+    js_bindings,
+    js_string,
+    r_assignment,
+    r_bindings,
+    r_string,
+    r_string_value,
+    statements,
+    syntax_problems,
+    walk,
+)
 
 
 MAX_QUOTE_CHARS = 80
@@ -198,12 +229,23 @@ class CodeView:
 
 @dataclass(frozen=True, slots=True)
 class LiteralSyntax:
-    """How the whitespace tier finds string literals in a line (`_line_words`)."""
+    """How the whitespace tier finds string literals and comments in a line (`_line_words`).
+
+    `comment` opens a comment to the end of the line, `block_comment` is the opener and
+    closer of one that may span lines (JavaScript's `/* */`), `spans_lines` names the
+    quotes whose literal may span lines when `multiline` is off (JavaScript's template), and
+    `regex` reads a JavaScript regular expression literal (`/a"b/g`) as one verbatim word,
+    so a quote inside it opens no string.
+    """
 
     quotes: str
     triple: bool
     multiline: bool
     raw: bool
+    comment: str = "#"
+    block_comment: tuple[str, str] | None = None
+    spans_lines: str = ""
+    regex: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -213,7 +255,10 @@ class Dialect:
     `read` parses the code and raises `SyntaxError` (with `lineno`) when it does not;
     `meaning` gives a protected statement's text a form that ignores spacing, quotes and
     comments; `single_statement` tells whether whole lines hold exactly one statement;
-    `string_literals` counts the string values of a parsed source.
+    `string_literals` counts the string values of a parsed source. The labels word the
+    failure lines for a language whose protected statements differ from Python's (empty:
+    Python's wording with `save_word`), and `theme_name` is the name whose second binding
+    is a drift (None for JavaScript, whose theme lives in the token lines).
     """
 
     placeholder: str
@@ -224,6 +269,16 @@ class Dialect:
     meaning: Callable[[str], str]
     single_statement: Callable[[str], bool]
     string_literals: Callable[[str], Counter[str]]
+    save_label: str = ""
+    """The protected save as a failure line names it; empty: `final <save_word> statement`."""
+    keep_label: str = ""
+    """What stays unchanged, as an overlap's failure line lists it; empty: Python's list."""
+    reminder_label: str = ""
+    """What the drift reminder asks to keep; empty: Python's list."""
+    theme_name: str | None = THEME_NAME
+
+    def saved(self) -> str:
+        return self.save_label or f"final {self.save_word} statement"
 
 
 def _python_read(library: str) -> Callable[[str], CodeView]:
@@ -272,9 +327,9 @@ def _python_string_literals(code: str) -> Counter[str]:
     return _string_literals(ast.parse(code))
 
 
-def _r_source(code: str) -> Source:
-    """The code parsed as R; `SyntaxError` with the first problem's line when tree-sitter cannot read it."""
-    source = Source(code, "r")
+def _tree_source(code: str, grammar: Grammar) -> Source:
+    """The code parsed as `grammar`; `SyntaxError` with the first problem's line when tree-sitter cannot read it."""
+    source = Source(code, grammar)
     problems = syntax_problems(source.tree, limit=1)
     if problems:
         error = SyntaxError(problems[0].message())
@@ -284,7 +339,7 @@ def _r_source(code: str) -> Source:
 
 
 def _r_read(code: str) -> CodeView:
-    source = _r_source(code)
+    source = _tree_source(code, "r")
     found = r_regions.find_regions(source)
     save = found.save.statement if found.save is not None else None
 
@@ -336,7 +391,7 @@ def _r_single_statement(text: str) -> bool:
 
 
 def _r_string_literals(code: str) -> Counter[str]:
-    source = _r_source(code)
+    source = _tree_source(code, "r")
     counts: Counter[str] = Counter()
     for node in walk(source.root):
         if node.type == "string":
@@ -346,14 +401,243 @@ def _r_string_literals(code: str) -> Counter[str]:
     return counts
 
 
+def _julia_read(code: str) -> CodeView:
+    source = _tree_source(code, "julia")
+    found = julia_regions.find_regions(source)
+    save = found.save.statement if found.save is not None else None
+
+    def bindings(names: set[str]) -> Counter[str]:
+        return Counter(name for name, _ in jl_bindings(source, source.root) if name in names)
+
+    def assignments() -> dict[str, list[SpanLike]]:
+        assigned: dict[str, list[SpanLike]] = {}
+        for node in statements(source.root):
+            top = julia_regions.top_assignment(source, node)
+            if top is not None:
+                assigned.setdefault(top[1], []).append(source.lines_span(node))
+        return assigned
+
+    return CodeView(
+        theme=found.theme.span if found.theme is not None else None,
+        tokens=tuple((region.name, region.span) for region in found.theme_tokens),
+        save=save,
+        regions=found.protected,
+        bindings=bindings,
+        assignments=assignments,
+    )
+
+
+def _julia_meaning(text: str) -> str:
+    """The token stream of a Julia statement: leaf tokens with plain string values decoded, comments left out."""
+    source = Source(text, "julia")
+    if syntax_problems(source.tree, limit=1):
+        return text.strip()
+    tokens: list[str] = []
+    stack = [source.root]
+    while stack:
+        node = stack.pop()
+        if node.type in COMMENTS:
+            continue
+        if node.type == "string_literal":
+            value = jl_string(source, node)
+            if value is not None:
+                tokens.append(f"string:{value!r}")
+                continue
+        if not node.children:
+            tokens.append(f"{node.type}:{source.text(node)}")
+            continue
+        stack.extend(reversed(node.children))
+    return "\x00".join(tokens)
+
+
+def _julia_single_statement(text: str) -> bool:
+    source = Source(text, "julia")
+    return not syntax_problems(source.tree, limit=1) and len(statements(source.root)) == 1
+
+
+def _julia_string_literals(code: str) -> Counter[str]:
+    """The text of every string literal: a plain string's value, else its literal parts (an interpolated string's
+    text between the interpolations, a string macro's text such as a `colorant` colour)."""
+    source = _tree_source(code, "julia")
+    counts: Counter[str] = Counter()
+    for node in walk(source.root):
+        if node.type == "string_literal":
+            value = jl_string(source, node)
+            if value is None:
+                value = "".join(source.text(child) for child in node.children if child.type == "content")
+            counts[value] += 1
+        elif node.type == "prefixed_string_literal":
+            counts["".join(source.text(child) for child in node.children if child.type == "content")] += 1
+    return counts
+
+
+def _javascript_read(grammar: Grammar) -> Callable[[str], CodeView]:
+    def read(code: str) -> CodeView:
+        source = _tree_source(code, grammar)
+        found = javascript_regions.find_regions(source)
+        save = found.save.span if found.save is not None else None
+        top = [binding for binding in js_bindings(source, source.root) if binding.scope.type == "program"]
+
+        def bindings(names: set[str]) -> Counter[str]:
+            # Top-level bindings only: a parameter `t` in a callback shadows the token `t` and leaves it as it is.
+            return Counter(binding.name for binding in top if binding.name in names)
+
+        def assignments() -> dict[str, list[SpanLike]]:
+            assigned: dict[str, list[SpanLike]] = {}
+            for node in statements(source.root):
+                found_declarator = javascript_regions.declarator(node)
+                name = found_declarator.child_by_field_name("name") if found_declarator is not None else None
+                names = javascript_regions.declared_names(source, name) if name is not None else None
+                if names is not None:
+                    assigned.setdefault(", ".join(names), []).append(source.lines_span(node))
+            return assigned
+
+        return CodeView(
+            theme=None,
+            tokens=tuple((region.name, region.span) for region in found.theme_tokens),
+            save=save,
+            regions=found.protected,
+            bindings=bindings,
+            assignments=assignments,
+        )
+
+    return read
+
+
+def _javascript_meaning(grammar: Grammar) -> Callable[[str], str]:
+    def meaning(text: str) -> str:
+        """The token stream of a JavaScript statement: leaf tokens with string values decoded, comments left out but
+        the orientation directive, which stands as the orientation it picks (`regions.find_directives`)."""
+        source = Source(text, grammar)
+        if syntax_problems(source.tree, limit=1):
+            return text.strip()
+        tokens = [
+            f"directive:{directive.orientation}"
+            for directive in javascript_regions.find_directives(source)
+            if directive.comment
+        ]
+        stack = [source.root]
+        while stack:
+            node = stack.pop()
+            if node.type in COMMENTS:
+                continue
+            if node.type in ("string", "template_string"):
+                value = js_string(source, node)
+                if value is not None:
+                    tokens.append(f"string:{value!r}")
+                    continue
+            if not node.children:
+                tokens.append(f"{node.type}:{source.text(node)}")
+                continue
+            stack.extend(reversed(node.children))
+        return "\x00".join(tokens)
+
+    return meaning
+
+
+def _javascript_single_statement(grammar: Grammar) -> Callable[[str], bool]:
+    def single_statement(text: str) -> bool:
+        """Exactly one statement on the lines, or the orientation directive alone (a comment the drift check keeps)."""
+        source = Source(text, grammar)
+        if syntax_problems(source.tree, limit=1):
+            return False
+        found = statements(source.root)
+        if found:
+            return len(found) == 1
+        directives = javascript_regions.find_directives(source)
+        comments = [node for node in source.root.children if node.type in COMMENTS]
+        return len(directives) == 1 and directives[0].comment and len(comments) == 1
+
+    return single_statement
+
+
+def _javascript_string_literals(grammar: Grammar) -> Callable[[str], Counter[str]]:
+    def string_literals(code: str) -> Counter[str]:
+        """The text of every string literal: a string's or template's value, a template's literal parts around its
+        substitutions, and JSX text (MUI X's titles and labels), trimmed."""
+        source = _tree_source(code, grammar)
+        counts: Counter[str] = Counter()
+        for node in walk(source.root):
+            if node.type in ("string", "template_string"):
+                value = js_string(source, node)
+                if value is None:
+                    value = "".join(source.text(child) for child in node.children if child.type == "string_fragment")
+                counts[value] += 1
+            elif node.type == "jsx_text" and source.text(node).strip():
+                counts[source.text(node).strip()] += 1
+        return counts
+
+    return string_literals
+
+
 _PYTHON_LITERALS = LiteralSyntax(quotes="'\"", triple=True, multiline=False, raw=False)
 _R_LITERALS = LiteralSyntax(quotes="'\"`", triple=False, multiline=True, raw=True)
+_JULIA_LITERALS = LiteralSyntax(quotes='"`', triple=True, multiline=True, raw=False)
+"""Julia's strings (`"..."` and the triple-quoted form) and commands may span lines; `'` is a character or the
+adjoint operator (`x'`), so it opens no literal."""
+_JAVASCRIPT_LITERALS = LiteralSyntax(
+    quotes="'\"`",
+    triple=False,
+    multiline=False,
+    raw=False,
+    comment="//",
+    block_comment=("/*", "*/"),
+    spans_lines="`",
+    regex=True,
+)
+"""JavaScript's strings end with their line (a backslash continues one), its templates may span lines, its comments are
+`//` and `/* */`, and a regular expression literal is one word; a `#` is text (a CSS colour inside a string, a private
+field `#x`)."""
+_REGEX_AFTER = frozenset("(,=:[!&|?{};+-*%<>~^")
+"""The characters after which a `/` starts a regular expression literal, not a division."""
+_REGEX_KEYWORDS = ("return", "typeof", "case", "of", "in", "void", "delete", "throw", "yield", "await")
+_JAVASCRIPT_PLACEHOLDER_LINE = re.compile(
+    rf"^[ \t]*const[ \t]+{javascript_regions.DATA_NAME}[ \t]*=[ \t]*{javascript_regions.PLACEHOLDER_FUNC}\(\)[ \t]*;?"
+    r"[ \t]*(?://[^\r\n]*)?(?:\r\n|\r|\n|$)",
+    re.M,
+)
 R_LIBRARIES = frozenset({"ggplot2"})
 """The libraries whose code is R (the R profile, `profiles/r/`)."""
+JULIA_LIBRARIES = frozenset({"makie"})
+"""The libraries whose code is Julia (the Julia profile, `profiles/julia/`)."""
+JAVASCRIPT_LIBRARIES = frozenset(javascript_regions.LIBRARIES)
+"""The libraries whose code is JavaScript or TSX (the JavaScript profile, `profiles/javascript/`)."""
 
 
 def dialect_for(library: str) -> Dialect:
-    """The dialect of `library`'s code: R for ggplot2, else Python with the library's save rule."""
+    """The dialect of `library`'s code: R for ggplot2, Julia for Makie, JavaScript for Chart.js, D3, ECharts,
+    Highcharts and MUI X (TSX), else Python with the library's save rule."""
+    if library in JAVASCRIPT_LIBRARIES:
+        grammar = javascript_regions.grammar_for(library)
+        directive = "//# anyplot-orientation directive"
+        return Dialect(
+            placeholder=javascript_regions.PLACEHOLDER,
+            placeholder_line=_JAVASCRIPT_PLACEHOLDER_LINE,
+            save_word="//# anyplot-orientation",
+            literals=_JAVASCRIPT_LITERALS,
+            read=_javascript_read(grammar),
+            meaning=_javascript_meaning(grammar),
+            single_statement=_javascript_single_statement(grammar),
+            string_literals=_javascript_string_literals(grammar),
+            save_label=directive,
+            keep_label=(
+                f"the token lines (window.ANYPLOT_TOKENS, _THEME, _SIZE), the {javascript_regions.PLACEHOLDER} line and "
+                f"the {directive}"
+            ),
+            reminder_label=f"the token lines and the {directive}",
+            theme_name=None,
+        )
+    if library in JULIA_LIBRARIES:
+        return Dialect(
+            placeholder=julia_regions.PLACEHOLDER,
+            placeholder_line=_PLACEHOLDER_LINE,
+            save_word="save",
+            literals=_JULIA_LITERALS,
+            read=_julia_read,
+            meaning=_julia_meaning,
+            single_statement=_julia_single_statement,
+            string_literals=_julia_string_literals,
+        )
     if library in R_LIBRARIES:
         return Dialect(
             placeholder=r_regions.PLACEHOLDER,
@@ -523,9 +807,8 @@ def protected_drift(base: str, code: str, *, library: str = "matplotlib") -> lis
 def _with_drift_reminder(lines: list[str], dialect: Dialect) -> list[str]:
     if not lines:
         return []
-    reminder = (
-        f"keep the THEME assignment, the theme tokens and the final {dialect.save_word} exactly as in the current code"
-    )
+    kept = dialect.reminder_label or f"the THEME assignment, the theme tokens and the final {dialect.save_word}"
+    reminder = f"keep {kept} exactly as in the current code"
     return [*lines, _line(reminder)]
 
 
@@ -554,10 +837,11 @@ def _drift(base: str, code: str, dialect: Dialect) -> list[tuple[str, str]]:
             )
     if before.save is not None:
         if after.save is None or _meaning(dialect, base, before.save) != _meaning(dialect, code, after.save):
-            line = f"the plan changes or removes the protected final {dialect.save_word} statement"
+            line = f"the plan changes or removes the protected {dialect.saved()}"
             failures.append(("drift:savefig", line))
 
-    names = {THEME_NAME, *(part for name, _ in before.tokens for part in name.split(", "))}
+    theme = {dialect.theme_name} if dialect.theme_name is not None else set()
+    names = {*theme, *(part for name, _ in before.tokens for part in name.split(", "))}
     counts_before, counts_after = before.bindings(names), after.bindings(names)
     for name in sorted(names):
         if counts_after.get(name, 0) > counts_before.get(name, 0):
@@ -798,13 +1082,18 @@ def _line_words(lines: list[str], literals: LiteralSyntax = _PYTHON_LITERALS) ->
     way. A literal's text, quotes included, stays verbatim, so two lines that differ in
     the blanks inside a string do not agree. The scan carries an open literal from one
     line to the next (a triple-quoted one, or a quoted one continued by a backslash; in
-    R any quoted one, which may span lines), which marks the lines that start inside it.
-    An R raw string (`r"(...)"`) ends only at its own closing delimiter and has no escapes.
+    R any quoted one, which may span lines; in JavaScript a template), which marks the
+    lines that start inside it. An R raw string (`r"(...)"`) ends only at its own closing
+    delimiter and has no escapes. A JavaScript block comment (`/* */`) may span lines too;
+    its words collapse like code, and a quote inside it opens no literal. A JavaScript
+    regular expression literal (`/a"b/g`, where a `/` cannot divide) is one verbatim word,
+    so its quote opens no string either (review of JS-3).
     """
     words: list[str] = []
     starts_inside: list[bool] = []
     quote: str | None = None  # the open literal's delimiter: ', ", ''' or """ (R: also ` and a raw closer)
     raw = False
+    block: str | None = None  # the closer of an open block comment (JavaScript's `*/`), which may span lines
     for line in lines:
         starts_inside.append(quote is not None)
         kept: list[str] = []
@@ -832,9 +1121,27 @@ def _line_words(lines: list[str], literals: LiteralSyntax = _PYTHON_LITERALS) ->
             if blank and kept:
                 kept.append(" ")
             blank = False
-            if char == "#":
+            if block is not None:  # inside a block comment: its words collapse like code, and a quote opens nothing
+                closed = line.startswith(block, position)
+                kept.append(block if closed else char)
+                position += len(block) if closed else 1
+                block = None if closed else block
+                continue
+            if literals.block_comment is not None and line.startswith(literals.block_comment[0], position):
+                block = literals.block_comment[1]
+                kept.append(literals.block_comment[0])
+                position += len(literals.block_comment[0])
+                continue
+            if line.startswith(literals.comment, position):
                 kept.append(" ".join(line[position:].split()))
                 break
+            regex_end = (
+                _regex_end(line, position) if literals.regex and char == "/" and _regex_may_start(kept) else None
+            )
+            if regex_end is not None:
+                kept.append(line[position:regex_end])
+                position = regex_end
+                continue
             opener = _R_RAW_OPENER.match(line, position) if literals.raw and char in "rR" else None
             if opener is not None:
                 quote = _RAW_CLOSERS[opener.group(3)] + opener.group(2) + opener.group(1)
@@ -849,10 +1156,51 @@ def _line_words(lines: list[str], literals: LiteralSyntax = _PYTHON_LITERALS) ->
                 continue
             kept.append(char)
             position += 1
-        if quote is not None and len(quote) == 1 and not literals.multiline and not line.endswith("\\"):
+        if (
+            quote is not None
+            and len(quote) == 1
+            and not literals.multiline
+            and quote not in literals.spans_lines
+            and not line.endswith("\\")
+        ):
             quote = None  # a one-quote literal ends with its line unless a backslash continues it
         words.append("".join(kept))
     return words, starts_inside
+
+
+def _regex_may_start(kept: list[str]) -> bool:
+    """Whether a `/` after the words kept so far starts a regular expression: at the line's start, after an operator or
+    an opening bracket, or after a keyword such as `return`; after a name, a number or `)` it divides."""
+    before = "".join(kept).rstrip()
+    if not before:
+        return True
+    if before[-1] in _REGEX_AFTER:
+        return True
+    word = before.rsplit(None, 1)[-1]
+    return word in _REGEX_KEYWORDS
+
+
+def _regex_end(line: str, start: int) -> int | None:
+    """The offset after a regular expression literal that opens at `start` (its flags included), or None when the line
+    does not close it, which a regular expression cannot span."""
+    position = start + 1
+    in_class = False
+    while position < len(line):
+        char = line[position]
+        if char == "\\":
+            position += 2
+            continue
+        if char == "[":
+            in_class = True
+        elif char == "]":
+            in_class = False
+        elif char == "/" and not in_class:
+            position += 1
+            while position < len(line) and line[position].isalpha():
+                position += 1
+            return position
+        position += 1
+    return None
 
 
 def _indent(line: str) -> str:
@@ -963,12 +1311,15 @@ def _protected_failure(label: str, text: str, start: int, end: int, region: _Pro
             f"{label}: find ({where}) overlaps {_placeholder_advice(index, region, dialect)} "
             f"find = {_quote(text[start:end])}"
         )
-    what = _KIND_NAMES[region.kind].format(save=dialect.save_word)
-    name = "" if region.kind == "theme" else f" {region.name}"
+    what = dialect.saved() if region.kind == "savefig" else _KIND_NAMES[region.kind].format(save=dialect.save_word)
+    name = "" if region.kind == "theme" or (region.kind == "savefig" and dialect.save_label) else f" {region.name}"
+    kept = (
+        dialect.keep_label
+        or f"the THEME assignment, the theme tokens, the {dialect.placeholder} line and the final {dialect.save_word}"
+    )
     return _line(
         f"{label}: find ({where}) overlaps the protected {what}{name} at line {region_line}; "
-        f"the THEME assignment, the theme tokens, the {dialect.placeholder} line and the final {dialect.save_word} "
-        f"stay unchanged, so anchor the edit on other lines. find = {_quote(text[start:end])}"
+        f"{kept} stay unchanged, so anchor the edit on other lines. find = {_quote(text[start:end])}"
     )
 
 

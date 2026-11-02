@@ -12,10 +12,18 @@ started with `asyncio.create_subprocess_exec` (never a shell) in its own process
 group. The image is `AGENT_RENDER_IMAGE`, the production renderer image built from
 `agents/renderer/Dockerfile` (it has the plotting venv at `/app/.venv`). The harness
 is mounted read-only from this checkout, so a render uses the harness of the code
-under development. On timeout the container is killed by name. The run directory is
-a fresh temporary directory that is removed afterwards. stdout is discarded and stderr
+under development, and so are the R and Julia text probes (`TEXT_PROBE_MOUNTS`); a
+JavaScript container also gets the checkout's browser harness
+(`automation/js-render/render.mjs`) over the image's, renders and page builds alike, so
+the PNG and the page of one version come from the same harness (JS-4b; a checkout without
+the file, an agents image, keeps the image's), and so does a plotly or bokeh container,
+whose screenshot step is that harness (PB-2a). On timeout the container is killed by name.
+The run directory is a fresh temporary directory that is removed afterwards. stdout is discarded and stderr
 is read while the container runs, keeping only its last `STDERR_LIMIT` bytes: the
-code under test writes it, so it can be arbitrarily large.
+code under test writes it, so it can be arbitrarily large. A theme's stderr tail is then
+cut as the renderer cuts it (`executor.stderr_tail` with the row's `stderr_head`). A
+JavaScript job's typed table (`RenderJob.data_json`) is written as `data.json` next to
+the code file and named in `ANYPLOT_DATA_JSON`, as the renderer's executor does.
 
 The backend holds no semaphore: `SerialRenderer` (`render/serial.py`), which
 `Services.backend` puts in front of every backend, hands it one theme at a time.
@@ -26,7 +34,9 @@ harness's `status.json` (its exit code and a refusal's measured value and cap, a
 renderer does) and the `out.csv` it wrote after exit code 0, under the computed-data cap.
 A conversion (`convert`) does the same with the harness in convert mode on `input.bin`
 (the converter mounted read-only next to the harness), and reads `out.csv` under the paste
-cap and `meta.json`.
+cap and `meta.json`. A page build (`page`) runs a JavaScript render's container with
+`ANYPLOT_PAGE_ONLY=1`, as the renderer's `POST /page` does, and reads `plot-<theme>.html`
+under `wire.MAX_PAGE_BYTES` after exit code 0.
 
 The backend refuses `ENVIRONMENT=production` and fails when Docker is missing:
 there is no bare-subprocess fallback, because that would run model-written code on
@@ -42,6 +52,8 @@ import time
 from collections.abc import Callable
 from pathlib import Path
 
+from agents.renderer.commands import JS_HARNESS, JULIA_TEXT_PROBE, R_TEXT_PROBE, command_for
+from agents.renderer.executor import DATA_JSON_ENV, DATA_JSON_FILE, WORKDIR, stderr_tail
 from agents.renderer.wire import (
     CONVERT_META_FILE,
     CONVERT_REQUEST_FILE,
@@ -49,6 +61,9 @@ from agents.renderer.wire import (
     MAX_CONVERT_META_BYTES,
     MAX_CONVERT_TEXT_BYTES,
     MAX_DATA_STATUS_BYTES,
+    MAX_PAGE_BYTES,
+    PAGE_FILE,
+    PAGE_ONLY_ENV,
     ConvertMeta,
     convert_refusal,
     parse_data_status,
@@ -60,6 +75,8 @@ from ..contract import (
     ConvertOutput,
     DataJob,
     DataOutput,
+    PageFailed,
+    PageJob,
     RendererUnavailable,
     RenderJob,
     RenderResult,
@@ -69,6 +86,7 @@ from ..contract import (
 )
 from ..harness import DATA_OUT_FILE
 from ..png import PngRejected, read_output
+from ..runtimes.javascript import JS_HARNESS_SOURCE
 from ..runtimes.python import (
     CONVERT_INPUT_NAME,
     CONVERTER_SOURCE,
@@ -79,6 +97,12 @@ from ..runtimes.python import (
 )
 
 
+TEXT_PROBE_MOUNTS = (
+    (HARNESS_SOURCE.with_name("text_probe.R"), R_TEXT_PROBE),
+    (HARNESS_SOURCE.with_name("text_probe.jl"), JULIA_TEXT_PROBE),
+)
+"""The checkout's R and Julia text probes over the image's, as the harness is, so a render uses the probes under
+development (`harness.collect_text_probe`)."""
 MEMORY_LIMIT = "2g"
 PIDS_LIMIT = "256"
 STDERR_LIMIT = 64 * 1024
@@ -168,16 +192,39 @@ class LocalDockerBackend:
     def argv(self, job: RenderJob, theme: Theme, run_dir: Path) -> list[str]:
         """The docker command of one theme; asserted to keep the network off."""
         runtime = self._runtime(job.library)
-        argv = self._isolation(f"r-{job.job_id}-{theme}", run_dir)
+        # plotly's and bokeh's screenshot step is the browser harness too (`RuntimeCommand.figure`).
+        browser = runtime.language == "javascript" or bool(command_for(runtime.language, runtime.library).figure)
+        argv = self._isolation(f"r-{job.job_id}-{theme}", run_dir, javascript=browser)
         for key, value in runtime.env(theme).items():
             argv += ["-e", f"{key}={value}"]
+        if job.data_json is not None:
+            # The page's table, which `render()` wrote next to the code file (`executor.sandbox_env`).
+            argv += ["-e", f"{DATA_JSON_ENV}={WORKDIR}/{DATA_JSON_FILE}"]
         argv += [self.image, *runtime.command(theme)]
         if argv[argv.index("--network") + 1] != "none" or any("--network=" in part for part in argv):
             raise AssertionError("a render container must never have network access")
         return argv
 
-    def _isolation(self, name: str, run_dir: Path) -> list[str]:
-        """`docker run` with the run directory as `/work` and everything else locked down, up to the environment."""
+    def page_argv(self, job: PageJob, run_dir: Path) -> list[str]:
+        """The docker command of a page build: a JavaScript render's container with `ANYPLOT_PAGE_ONLY=1`."""
+        runtime = self._runtime(job.library)
+        argv = self._isolation(f"r-{job.job_id}-page-{job.theme}", run_dir, javascript=True)
+        for key, value in runtime.env(job.theme).items():
+            argv += ["-e", f"{key}={value}"]
+        argv += ["-e", f"{DATA_JSON_ENV}={WORKDIR}/{DATA_JSON_FILE}", "-e", f"{PAGE_ONLY_ENV}=1"]
+        argv += [self.image, *runtime.command(job.theme)]
+        if argv[argv.index("--network") + 1] != "none" or any("--network=" in part for part in argv):
+            raise AssertionError("a page container must never have network access")
+        return argv
+
+    def _isolation(self, name: str, run_dir: Path, *, javascript: bool = False) -> list[str]:
+        """`docker run` with the run directory as `/work` and everything else locked down, up to the environment.
+
+        A JavaScript container also mounts the checkout's browser harness over the image's (module docstring)."""
+        harness = ["-v", f"{JS_HARNESS_SOURCE}:{JS_HARNESS}:ro"] if javascript and JS_HARNESS_SOURCE.is_file() else []
+        for source, target in TEXT_PROBE_MOUNTS:
+            if source.is_file():
+                harness += ["-v", f"{source}:{target}:ro"]
         return [
             self.docker,
             "run",
@@ -205,6 +252,7 @@ class LocalDockerBackend:
             f"{HARNESS_SOURCE}:{IMAGE_HARNESS}:ro",
             "-v",
             f"{CONVERTER_SOURCE}:{IMAGE_CONVERTER}:ro",
+            *harness,
             "-w",
             "/work",
         ]
@@ -231,11 +279,14 @@ class LocalDockerBackend:
             await asyncio.shield(self._kill(f"r-{job.job_id}-{theme}", process))
             raise
         wall = time.monotonic() - started
+        runtime = self._runtime(job.library)
         try:
-            png, probe = self._runtime(job.library).collect(run_dir, theme)
+            png, probe = runtime.collect(run_dir, theme)
         except PngRejected as exc:
             return ThemeOutput(theme, process.returncode, timed_out, None, None, str(exc), wall)
-        tail = stderr.decode("utf-8", errors="replace")
+        # The renderer's cut of the stderr, the row's head line included (Julia's `ERROR:` line).
+        head = command_for(runtime.language, runtime.library).stderr_head
+        tail = stderr_tail(stderr.decode("utf-8", errors="replace"), head)
         return ThemeOutput(theme, None if timed_out else process.returncode, timed_out, png, probe, tail, wall)
 
     async def _kill(self, name: str, process: asyncio.subprocess.Process) -> None:
@@ -356,7 +407,47 @@ class LocalDockerBackend:
             os.chmod(run_dir, 0o700)
             (run_dir / self._runtime(job.library).file_name).write_text(job.source, encoding="utf-8")
             (run_dir / "data.csv").write_text(job.data_csv, encoding="utf-8")
+            if job.data_json is not None:
+                (run_dir / DATA_JSON_FILE).write_text(job.data_json, encoding="utf-8")
             outputs = await asyncio.gather(*(self._run_theme(job, theme, run_dir) for theme in job.themes))
             return RenderResult(job.job_id, {output.theme: output for output in outputs})
+        finally:
+            shutil.rmtree(run_dir, ignore_errors=True)
+
+    async def page(self, job: PageJob) -> str:
+        """Build a JavaScript version's page in a throwaway container; read `plot-<theme>.html` after exit code 0."""
+        run_dir = Path(tempfile.mkdtemp(prefix=f"anyplot-page-{job.job_id}-"))
+        name = f"r-{job.job_id}-page-{job.theme}"
+        try:
+            os.chmod(run_dir, 0o700)
+            (run_dir / self._runtime(job.library).file_name).write_text(job.source, encoding="utf-8")
+            (run_dir / DATA_JSON_FILE).write_text(job.data_json, encoding="utf-8")
+            started = time.monotonic()
+            process = await asyncio.create_subprocess_exec(
+                *self.page_argv(job, run_dir),
+                stdin=asyncio.subprocess.DEVNULL,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.PIPE,
+                start_new_session=True,
+            )
+            try:
+                stderr = await asyncio.wait_for(_drain_and_wait(process), timeout=job.timeout_s)
+            except TimeoutError:
+                await self._kill(name, process)
+                raise PageFailed(exit_code=None, reason="timeout", wall_s=time.monotonic() - started) from None
+            except asyncio.CancelledError:
+                await asyncio.shield(self._kill(name, process))
+                raise
+            wall = time.monotonic() - started
+            tail = stderr_tail(stderr.decode("utf-8", errors="replace"))
+            if process.returncode != 0:
+                raise PageFailed(exit_code=process.returncode, stderr_tail=tail, wall_s=wall)
+            try:
+                raw = read_output(run_dir / PAGE_FILE.format(theme=job.theme), MAX_PAGE_BYTES)
+                if raw is None:
+                    raise PageFailed(exit_code=0, stderr_tail=tail, wall_s=wall)
+                return raw.decode("utf-8")
+            except (PngRejected, UnicodeDecodeError) as exc:
+                raise PageFailed(exit_code=0, reason="output_rejected", stderr_tail=tail, wall_s=wall) from exc
         finally:
             shutil.rmtree(run_dir, ignore_errors=True)

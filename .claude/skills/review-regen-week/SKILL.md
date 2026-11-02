@@ -5,7 +5,8 @@ description: Weekly review of what daily-regen produced — collect every regene
 
 # Weekly regen review
 
-`daily-regen.yml` regenerates one spec per night (02:17 UTC): 15 pairs,
+`daily-regen.yml` regenerates one spec per night (02:17 UTC): 15 pairs
+(in pair mode, `REGEN_PAIRS_PER_DAY` single pairs across the catalogue),
 each reviewed once on Opus, and the regen gate either merges the new
 version (`regen:improved`) or keeps the live one (`regen:kept`, with a
 write-back of the re-score). Once a week you look at what that did to
@@ -65,8 +66,10 @@ uv run python -m automation.scripts.review_retest first-reviews \
   no gate record; it is listed so you can check why it was forced. The
   collector also counts the window's pipeline runs by conclusion,
   prints the failed ones under the metric table, and with `--costs`
-  sums `total_cost_usd` from every generate, review and repair job log
-  (about one minute per 50 runs; leave it off for a quick look). Its
+  sums `total_cost_usd` from every daily-regen pre-flight, generate,
+  review and repair job log, and names the part that ran on API credits
+  (`CLAUDE_AUTH=oidc` or `api`, read from each step's `claude-cost` line;
+  about one minute per 50 runs; leave it off for a quick look). Its
   stdout is the metric table and the PR table the report starts from;
   `◆` marks the render sample.
 - `gate-report` adds the aggregate view and its soft alarms, among

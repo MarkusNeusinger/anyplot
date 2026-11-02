@@ -131,7 +131,7 @@ export function ImplTab({
         {specId}
         {libraryId && ` · ${libraryId}`}
         {(() => {
-          const date = generatedAt || updated || created;
+          const date = updated || generatedAt || created;
           return date ? ` · ${formatDate(date)}` : '';
         })()}
       </Typography>

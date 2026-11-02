@@ -91,20 +91,20 @@ uv run pytest tests/unit/api/test_routers.py::test_get_specs
 
 **Both linting and formatting must pass for CI.**
 
-**IMPORTANT: Always run `uv run ruff check <files> && uv run ruff format <files>` on changed files BEFORE every commit!**
+**IMPORTANT: Always run `uv run --extra dev ruff check <files> && uv run --extra dev ruff format <files>` on changed files BEFORE every commit!** Ruff lives in the `dev` extra, which a fresh worktree's `.venv` lacks.
 
 ```bash
 # Linting (required for CI)
-uv run ruff check .
+uv run --extra dev ruff check .
 
 # Auto-fix linting issues
-uv run ruff check . --fix
+uv run --extra dev ruff check . --fix
 
 # Formatting (required for CI)
-uv run ruff format .
+uv run --extra dev ruff format .
 
 # Before committing - always run both on changed files:
-uv run ruff check <files> && uv run ruff format <files>
+uv run --extra dev ruff check <files> && uv run --extra dev ruff format <files>
 ```
 
 ### Frontend Development
@@ -206,7 +206,7 @@ Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
 - **`agentic/`**: AI workflow layer (composable phases, prompt templates, runtime state)
   - **`agentic/workflows/`**: Click CLI scripts (plan, build, test, review + orchestrators)
   - **`agentic/commands/`**: Markdown prompt templates
-- **Agent instruction files**: `CLAUDE.md` holds the rules and `.claude/skills/` the skills. Three symlinks make them visible to other tools without a copy to keep in sync: `.claude/commands/` points to `agentic/commands/`, `AGENTS.md` points to `CLAUDE.md` (read by the Antigravity CLI `agy`, Codex, Google Jules, and the GitHub Copilot coding agent), and `.agents/skills/` points to `.claude/skills/` (the skills directory `agy` reads). `.github/copilot-instructions.md` is the separate, hand-synced guide for Copilot. `tests/unit/test_agent_instructions.py` fails if a link is replaced by a real file or points elsewhere. `.mcp.json` registers the Google Jules MCP server for Claude Code (`/jules-task`); it reads only the `JULES_API_KEY` line of the main checkout's `.env`.
+- **Agent instruction files**: `CLAUDE.md` holds the rules and `.claude/skills/` the skills. Three symlinks make them visible to other tools without a copy to keep in sync: `.claude/commands/` points to `agentic/commands/`, `AGENTS.md` points to `CLAUDE.md` (read by the Antigravity CLI `agy`, Codex, and the GitHub Copilot coding agent), and `.agents/skills/` points to `.claude/skills/` (the skills directory `agy` reads). `.github/copilot-instructions.md` is the separate, hand-synced guide for Copilot. `tests/unit/test_agent_instructions.py` fails if a link is replaced by a real file or points elsewhere.
 - **`automation/`**: CI/CD helper scripts (workflow_cli, label_manager, sync_to_postgres)
 - **`infra/`**: Infrastructure that would otherwise live only in a dashboard
   - **`infra/cloudflare/`**: Source of the apex `anyplot.ai/api/*` Worker, plus the origin gate's rollout and measuring procedure
@@ -733,6 +733,13 @@ impl-review.yml
             +-- Re-triggers impl-review.yml
 ```
 
+The implementation PR comes from `GITHUB_TOKEN`, so its CI runs would wait at
+`action_required` like the spec PR's did; it changes only
+`plots/*/implementations/**` and `plots/*/metadata/**`, which the five CI
+workflows ignore on `pull_request` (#12499), so it starts no CI run. The AI review
+is its gate, and impl-merge merges it with `--admin` past the ruleset's required
+checks.
+
 **Flow C: Report Issue**
 
 ```
@@ -768,7 +775,7 @@ Issue ready for maintainer review
 | **sync-labels.yml** | Auto-syncs labels after manual PR merges (spec-ready, impl:*:done) |
 | **notify-deployment.yml** | Deployment notifications |
 | **util-claude.yml** | Claude utility workflow |
-| **daily-regen.yml** | Scheduled: picks the oldest specs, runs spec polish + cross-library similarity audit, then dispatches bulk-generate |
+| **daily-regen.yml** | Scheduled: picks the oldest specs, runs spec polish + cross-library similarity audit, then dispatches bulk-generate. With the repository variable `REGEN_PAIRS_PER_DAY` (or the manual `pairs` input) it picks the N oldest (spec, library) pairs instead (`automation/scripts/regen_pick_pairs.py`), skipping pairs merged or really attempted within the attempt window (30 days by default), skips the polish and dispatches each pair straight to impl-generate; see `docs/workflows/overview.md#daily-regeneration-modes` |
 | **watchdog-stuck-jobs.yml** | Periodic safety net: detects and unsticks stalled impl-pipeline PRs |
 | **bot-serving-check.yml** | Daily synthetic monitor for the nginx bot -> seo-proxy path; routes and titles derived from `api/routers/seo.py` and the spec files, and a failure opens/comments the fixed-title issue "Bot serving check is red" (closed again by the next green run) |
 
@@ -799,6 +806,7 @@ The new architecture separates specification and implementation processes:
 - **Adopt mode.** The `source_ref` input (default empty) on `impl-generate.yml` and `bulk-generate.yml` takes each implementation file from that branch, tag or SHA instead of running Claude, for code written outside the pipeline (a `gemini/*` branch). The run renders the file with the generator's commands, checks the canvas with `core.canvas`, and is always a forced regeneration (`regen:forced`); the routed model only runs repair, and the PR body adds a `**Generation:** adopted from …` line above `**Model:**`. The optional `source_model` input (a model name such as `gemini-4-argon`, only with `source_ref`) names the model that wrote the code and goes on that line. The metadata records `generated_by: {source_model}`, or `generated_by: adopted:{source_ref}` without one, followed by `adopted_from: {source_ref} ({sha})` for every adopted file. Both workflows reject a malformed `source_ref` or `source_model` without echoing it. Retries keep both inputs; the watchdog forwards neither. Python and JavaScript only. A missing file or a failed render is never retried and never counts toward the 3-attempt cap. See `docs/workflows/overview.md#adopt-implementations-from-a-branch`.
 - **Review model.** Every quality review runs on Opus, whatever model generated the implementation: first implementations, reviews after a repair, and the regen gate's session (the predecessor's re-score and the new render's review). Only `impl-review.yml` chooses it; its `review_model` input (default `opus`) pins another model for one manual review and that run's own auto-retry, and no other workflow forwards one. The retest harness's `models=production` runs every cell on Opus to match (`review_retest.PRODUCTION_MODELS`, kept equal by `tests/unit/workflows/test_model_routing.py`).
 - Fixed models: `spec-create.yml` runs on Opus; the spec polish and cross-library similarity audit in `daily-regen.yml` run on Sonnet. See `docs/workflows/overview.md#pipeline-models`.
+- **Credentials.** The repository variable `CLAUDE_AUTH` chooses what every Claude step runs on: unset or `subscription` = the `CLAUDE_CODE_OAUTH_TOKEN` secret (the owner's subscription), `oidc` = workload identity federation with the `CLAUDE_WIF_*` variables (API credits of the `ci-regen` workspace; accepts only runs on `main`, so pull-request events, other refs and jobs without `id-token`, such as review-retest, run on the subscription with a logged notice), `api` = the `ANTHROPIC_API_KEY` secret (API credits, the fallback). The step "Resolve Claude credentials" (id `claude_auth`) at the start of every Claude job stops on any other value or a missing credential, never falling back to the subscription silently, and every Claude step reads its outputs, so each passes exactly one credential. After each Claude step, "Claude session summary" (id `<step id>_cost`) records `total_cost_usd`, the model and the mode, and flags when Claude stopped the session (outputs `stopped`, `stop_reason`): a spend or usage limit in any mode, or refused credentials with `api`/`oidc`. The retry is skipped; impl-generate parks the pair, impl-review and impl-repair pause the PR (`ai-review-paused`, `ai-repair-paused`, skipped by the watchdog, resumed first by daily-regen's pair mode), all without a retry, a counted attempt or `impl:<lib>:failed`. A new Claude step copies all three patterns, which `tests/unit/workflows/test_claude_auth.py` enforces. See `docs/workflows/overview.md#claude-credentials`.
 
 ## GitHub Issue Labels
 
@@ -1053,6 +1061,46 @@ curl -s https://anyplot.ai/robots.txt | head -5
 This matters most for `app/nginx.conf`: nginx behaviour has no local
 verification loop in this repo, so production is the first place a change is
 observable at all.
+
+#### Change a trigger's included files
+
+The triggers are second-generation triggers on the `anyplot-github` repository
+connection. `gcloud builds triggers update github <name> --included-files=…`
+fails on them with `INVALID_ARGUMENT: Request contains an invalid argument`,
+with or without `--repository` and `--branch-pattern` (2026-10-29,
+`deploy-renderer`). Export the trigger, edit the file, and import it instead.
+A trigger edit is a Cloud Build config change, so name the trigger and the
+paths to the owner and get a yes before step 4 (`CLAUDE.md`, external-system
+writes).
+
+1. Export the trigger into a scratch directory, not the repository:
+
+   ```bash
+   gcloud builds triggers describe <name> --region=europe-west4 --project=anyplot --format=yaml > before.yaml
+   ```
+
+2. Copy `before.yaml` to `after.yaml` and add or remove paths under
+   `includedFiles`. Leave every other key as exported.
+3. Check that `diff before.yaml after.yaml` shows only the `includedFiles`
+   lines you meant.
+4. Import the edited config. It keeps the trigger's `id`, so it updates the
+   trigger in place:
+
+   ```bash
+   gcloud builds triggers import --source=after.yaml --region=europe-west4 --project=anyplot
+   ```
+
+5. Read the trigger back and compare:
+
+   ```bash
+   gcloud builds triggers describe <name> --region=europe-west4 --project=anyplot --format=yaml > verify.yaml
+   diff after.yaml verify.yaml && echo "trigger matches the edited config"
+   ```
+
+This route updated `deploy-renderer` at the first attempt on 2026-10-29
+(`Project.toml`, `Manifest.toml`) and on 2026-10-30
+(`agents/anyplot/render/convert.py`, `package.json`, `package-lock.json`,
+`automation/js-render/**`).
 
 ### Manual Deployment
 

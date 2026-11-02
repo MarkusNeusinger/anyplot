@@ -3,10 +3,12 @@
 `run_pipeline` is the single node of the `plot_pipeline` workflow (`tools/session.py`).
 It reads spec, library, dataset and bindings from server-set session state, never from
 its input: `PipelineArgs` carries only `change_request`, `base` and `theme` (the one
-theme to render; omitted, a change keeps the previous version's theme and a new plot
-is light). The session language is read once per run, so the adapter, which writes the
-plot's own text in it, and the reviewer, which judges that text against it, share one
-value; each prompt gets it fenced as `<plot_language>`. It runs at most
+theme to render; omitted, the theme `run_theme` picks, the site's unless the user
+asked for one). The plot language (`session_state.plot_language`: the user's request for
+the plot's text, else the language of the session's latest plot, else the session
+language) is read once per run, so the adapter, which writes the plot's own text in it,
+and the reviewer, which judges that text against it, share one value; each prompt gets it
+fenced as `<plot_language>`. It runs at most
 `AGENT_MAX_ATTEMPTS` attempts, two by default (the first and one repair round; the
 eval harness may set one or three):
 
@@ -20,21 +22,30 @@ eval harness may set one or three):
    literal budget (more than `MAX_NEW_LITERAL_CHARS` of new string literals, or
    `MAX_CHANGE_LITERAL_CHARS` on a change of a previous version, or more than
    `MAX_NEW_LITERAL_CHARS` against the catalogue code over all versions, rejects the
-   code; dataset headers and cells are free) and the ADAPTATION validator (a
-   placeholder finding rejects the code; the other findings become defect lines but
-   the code still renders); a change whose base version was written in another
-   language than the session language (`language_changed`) rewrites every title,
+   code; dataset headers and cells are free) and the ADAPTATION validator (a finding
+   of the runtime's `blocking_rules` rejects the code: a placeholder rule in every
+   language, and in R and Julia a dataset package too; the other findings become defect lines
+   with the runtime's targets but the code still renders); a change whose base version was written in another
+   language than the plot language (`language_changed`, after the user asked for another one) rewrites every title,
    label and annotation, so its budget grows by `REWRITE_LITERAL_FACTOR` times the
    literal text the plan replaces, up to `MAX_NEW_LITERAL_CHARS`;
-3. **render**: `normalise`, the loader substitution (`to_run_form`), then the one
-   theme the call asks for (`PipelineArgs.theme`, light by default) through the
-   render backend, and the host gates (`render/gates.py`) on exactly that theme;
+3. **render**: `normalise`, the loader substitution (the runtime's `loader_block`, typed
+   from the parser's dtypes and the column kinds), then the one
+   theme of the run (`run_theme`: the one the user asked for, else the site's) through the
+   render backend, and the host gates (`render/gates.py`) on exactly that theme; a failed
+   render's summary is the runtime's error grammar over the code that ran
+   (`RuntimeAdapter.error_summary` with the run form, so Julia's names the working form's
+   line past its 15-line loader);
 4. **review**: on the first render that passes the host gates on the exact canvas
    (with `AGENT_GATE_REPAIR=first`: and either left no feedback or came from the last
    allowed attempt), and once more on the repaired render after a rejection
    (`MAX_REVIEWS` reviewer calls in all, every round with `AGENT_SHIP_BEST`); the
    reviewer agent sees the rendered theme's PNG, so each of its image defects is
-   filed under that theme, whatever theme the reviewer named;
+   filed under that theme, whatever theme the reviewer named. A render on a runtime
+   whose reviewer checks the requested texts (`RuntimeAdapter.review_texts`: every library
+   but matplotlib, seaborn and plotnine, whose probes read their texts for the reply only)
+   hands the review the requested texts, and each one it cannot find in the image is a miss
+   like the probe's (`grounding.reviewed_misses`), in the same call;
 5. **repair**: when an attempt left feedback (an answer that missed the schema or was
    cut off at the output limit, each with its own line, failed edits, validator
    findings, a failed render, a missed canvas, reviewer defects, and measured
@@ -53,7 +64,7 @@ the soft deadline) and for every render timeout;
 the request deadline is `abort_signal` on the run. A render waits in the `run` lane of the render slot
 (`render/serial.py`), ahead of every waiting theme toggle, so it waits for at most
 the render in progress; its clamped timeout starts when it runs. The exported
-`plot.py` names the rendered theme in its run line.
+code (`plot.py`, `plot.R`, `plot.jl`) names the rendered theme in its run line.
 
 Every path that is not cancelled yields exactly one `Event(output=PlotResult)` as a
 JSON dict. `ok` means the shipped render passed the host gates on the exact canvas,
@@ -71,7 +82,12 @@ starts after that wait. An `ok` or
 `needs_attention` result is stored as the session's next version before it is
 yielded, and carries that number as `version`. Its `changes` are the notes of every
 adapter call up to the shipped render whose plan changed the code (`note_changes`), so
-a proofread that changed nothing never replaces them. Each version keeps the change
+a proofread that changed nothing never replaces them. The runtime's `loader_notes` come
+first among them: R reads integers beyond ±2^53 as the nearest double and Julia keeps a
+timestamp to the millisecond, and the note names each column with its count (owner rule
+of 2026-10-15, no silent loss). Owner
+decision of 2026-10-29: the note goes into "what changed", not into the residual notes,
+so it leaves the status as it is (`ok` stays `ok`). Each version keeps the change
 requests it carries out (`CodeVersion.requests`); a change of it hands them to every
 adapter call (adaptation, retry, proofread, repair) and to the reviewer as
 `user_requests`, the user's standing decisions, which the prompts say to keep and never
@@ -86,17 +102,19 @@ Every step also writes one content-free attribution line (`plugins/ledger.attrib
 the restored drift kinds, how many edits a tolerant matching tier applied, blocking
 validator rule ids, the labels of banned imports (`validate.module_label`: a word of a closed vocabulary, or `?`), ADAPTATION rule
 ids), `pipeline_render` (render and wall time, the gate ids that
-failed or reported), `pipeline_review` (the verdict, its defect ids and the call's
+failed or reported, and the class a failed probe names, `grounding.probe_error`),
+`pipeline_review` (the verdict, its defect ids and the call's
 finish reason) and `pipeline_result` (status, reason, attempts, the `Stage` that ended
 each attempt and the run, the shipped and the last reviewed attempt, the number of
 reviewer calls, whether the shipped
-render was padded or carries ADAPTATION or probe findings, and the exception class
-behind reason `error`). The eval harness (`agents/evals/matrix.py`) reads them per
+render was padded or carries ADAPTATION or probe findings, the roles of its drawn texts
+and whether its library reports them, and the exception class behind reason `error`). The eval harness (`agents/evals/matrix.py`) reads them per
 case; they never carry code, data, column names or model text. `PlotResult.reason`
 keeps its public vocabulary; the stage is only in the attribution line.
 """
 
 import csv
+import functools
 import io
 import json
 import logging
@@ -105,8 +123,8 @@ import secrets
 import time
 from collections import Counter
 from collections.abc import AsyncGenerator, Callable, Sequence
-from dataclasses import dataclass, field
-from typing import Any, Literal
+from dataclasses import dataclass, field, replace
+from typing import Any, Literal, get_args
 
 from google.adk import Context, Event
 from google.adk.agents.llm.task._finish_task_tool import FINISH_TASK_SUCCESS_RESULT, FINISH_TASK_TOOL_NAME
@@ -121,12 +139,21 @@ from . import telemetry
 from .briefs import adapter_profile, profile_summary, spec_brief
 from .code.edits import MAX_CHANGE_LITERAL_CHARS, MAX_NEW_LITERAL_CHARS, REWRITE_LITERAL_FACTOR
 from .data.bindings import check_bindings
+from .data.kinds import ColumnKinds, read_kinds
 from .data.store import StoredDataset
 from .dataset_context import dataset_context, file_name_for_models
-from .grounding import UNVERIFIED_LINE, drawn_texts, expected_misses, plot_texts
+from .grounding import (
+    EXPECT_LINE_ID,
+    UNVERIFIED_LINE,
+    drawn_texts,
+    expected_misses,
+    plot_texts,
+    probe_error,
+    reviewed_misses,
+)
 from .language import DEFAULT_LANGUAGE, same_language
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
-from .policy import DATA_PREAMBLE, fence
+from .policy import DATA_PREAMBLE, adapter_instruction, fence, prompt_hash
 from .render.contract import RendererUnavailable, RenderJob, RuntimeAdapter, Theme
 from .render.gates import data_rows, evaluate
 from .render.runtimes import runtime_for
@@ -170,11 +197,12 @@ from .session_state import (
     PENDING_EXPECTED_TEXTS,
     PENDING_REQUEST,
     SessionView,
+    plot_language,
     read_session,
 )
 from .settings import AgentSettings, get_settings
 from .sub_agents.adapter import ADAPTERS, adapter_name
-from .sub_agents.reviewer import REVIEWER_NAME, use_reviewer_mode
+from .sub_agents.reviewer import REVIEWER_MODES, REVIEWER_NAME, use_reviewer_mode
 
 
 logger = logging.getLogger(__name__)
@@ -185,7 +213,9 @@ SELF_REVIEW_LINE = (
     "to the reviewer, check it against each technical criterion of the rubric in your instructions (VQ, SC, DQ) "
     "and against the spec: fix what falls short. When the notes also name the previous round's findings, check "
     "that your changes fixed them in the image. What the change request and the earlier requests set stays as "
-    "the user asked, whatever the rubric says. If nothing needs fixing, answer with an empty edit list."
+    "the user asked, whatever the rubric says. If nothing needs fixing, answer with an empty edit list. Your "
+    "`changes` list only what this answer fixes, never again what the code already did: the user already has "
+    "the notes of the first answer."
 )
 """The feedback of the self-review attempt (`AGENT_SELF_REVIEW`); the render itself is attached by the adapter's callback."""
 MEASURED_LINE = (
@@ -211,7 +241,7 @@ runs about 25 s)."""
 RENDER_P95_S = 15.0
 """Seconds a Python repair attempt's render is budgeted at when checking the soft deadline: the Python row's
 `render_p95_s` of the renderer's command table (`agents/renderer/commands.py`), which the runtime carries
-(`RuntimeAdapter.render_p95_s`); a browser or Julia runtime reserves more.
+(`RuntimeAdapter.render_p95_s`); the Julia runtime reserves more.
 
 Spike X measured renders at 5.5 s at the 95th percentile and 10.2 s at most. With
 `ADAPTER_P95_S` a repair attempt needs 75 s, which leaves the first attempt 65 s
@@ -256,26 +286,15 @@ a heatmap after the first try with its axis label at the right edge and a cramme
 them. Such a render is not clean for `AGENT_SHIP_BEST` (`_clean`), so a clean repair a few points lower ships
 over it, and a render that ships with such lines carries them as notes (`needs_attention`) at any score, like a
 measured finding (review of #12204: the forced repair had been dropped silently for a 96 that clipped a label)."""
-BLOCKING_RULES = frozenset({"placeholder-count", "placeholder-use", "syntax", "size", "encoding"})
-"""ADAPTATION findings that keep the code from running: without one placeholder there is no loader."""
 ADAPTATION_IDS = {"rng": "DQ-03", "literal-data": "DQ-03", "palette-prefix": "VQ-07"}
-"""The rubric id an ADAPTATION finding is reported under as a defect line."""
-ADAPTATION_TARGETS = {
-    "rng": "take the values from df; a seeded np.random.default_rng(<int>) is only for jitter or subsampling",
-    "literal-data": "take the values from df instead of writing them out",
-    "palette-prefix": (
-        "keep the Imprint palette one literal list of colour strings, assigned once: the original entries in "
-        "order, then only the next Imprint positions written out; pick colours from it under a new name "
-        "(colors = IMPRINT[: len(groups)]); with more than eight groups draw all but the seven largest in "
-        'INK_MUTED as "Other"'
-    ),
-}
-"""The target of each soft ADAPTATION finding's defect line, matching the rule the validator checks.
+"""The rubric id an ADAPTATION finding is reported under as a defect line.
 
-The palette rule wants a literal list (`code/validate.py`, "Palette"), so its target
-never says "derive it": in spike X, 9 of Claude's 14 palette-prefix lines reported a
-computed palette list, the fix the old shared target ("derive it from df and the
-Imprint palette") suggested."""
+Which findings reject the code (`RuntimeAdapter.blocking_rules`) and the target of each soft
+one (`RuntimeAdapter.adaptation_targets`) are the runtime's since 2026-10-29: the Python
+values moved unchanged to `runtimes/python.py`, and R adds `dataset-package` to the blocking
+set and writes its targets in R."""
+DEFAULT_ADAPTATION_TARGET = "derive it from df"
+"""The target of a soft ADAPTATION finding the runtime gives none."""
 # Feedback only ever reaches a repair attempt (attempt 2 or later), and each allows a full file, so the lines say so.
 SCHEMA_MISS_LINE = (
     "the previous answer did not match the plan schema → answer with one JSON object: edits or full_code "
@@ -390,13 +409,19 @@ class Candidate:
     """What this render's code changed, for `PlotResult.changes`: the notes of every adapter call of the run
     up to this render that changed the code (`Run.changes`), so a best-scored earlier render reports its own."""
     texts: dict[ShownGroup, list[str]] | None = None
-    """This render's drawn texts by role (`grounding.plot_texts`), for `PlotShows`; None without probe labels."""
+    """This render's drawn texts by role (`grounding.plot_texts`), for `PlotShows`; None without probe labels, which
+    the root never sees (`tool_safety.fence_pipeline_notes`)."""
     expect_lines: list[str] = field(default_factory=list)
     """The requested texts and number formats this render does not show (`grounding.expected_misses`), as lines."""
     expect_misses: list[str] = field(default_factory=list)
     """The same misses as the requested texts themselves, for `PlotShows.requested_not_found`."""
     expect_note: str | None = None
-    """`grounding.UNVERIFIED_LINE` when the run had requested texts but the probe reported no drawn texts."""
+    """`grounding.UNVERIFIED_LINE` when the run had requested texts but no drawn texts checked them, and no readable
+    review of this render answered for them (`expect_review`)."""
+    expect_review: bool = False
+    """The requested texts go to this render's review, since its runtime's reviewer checks them
+    (`RuntimeAdapter.review_texts`): a readable review replaces `expect_note` with the misses it reports
+    (`grounding.reviewed_misses`), as `expect_lines` and `expect_misses`."""
 
 
 @dataclass
@@ -406,8 +431,11 @@ class Run:
     view: SessionView
     dataset: StoredDataset
     theme: Theme = "light"
+    theme_asked: bool = False
+    """The user asked for `theme` (`run_theme`); the shipped version keeps it as `CodeVersion.theme_asked`."""
     language: str = DEFAULT_LANGUAGE
-    """The session language, read once per run: the adapter writes the plot text in it, the reviewer judges it."""
+    """The plot language (`session_state.plot_language`), read once per run: the adapter writes the plot text in it,
+    the reviewer judges it."""
     attempts: int = 0
     best: Candidate | None = None
     padded: Candidate | None = None
@@ -471,6 +499,22 @@ class Run:
     (`edits.restore_protected`) after the round's check retry was spent."""
     stage_s: dict[str, float] = field(default_factory=dict)
     """Seconds spent in `adapt`, `check`, `render` and `review`, summed over the attempts."""
+    loader_notes: list[str] = field(default_factory=list)
+    """What the runtime's loader changes when it reads the run's `data.csv` (`RuntimeAdapter.loader_notes`): the first
+    `changes` of every shipped render, so a value the plot shows rounded is never unannounced; never a residual note,
+    so the status stays as the render earns it (owner decision of 2026-10-29)."""
+    loader_codes: list[str] = field(default_factory=list)
+    """The kinds of cells behind `loader_notes` (`loader_codes`), for the usage telemetry: never the notes, which name
+    columns and counts."""
+    data_json: str | None = None
+    """The run's table as typed JSON for a runtime whose code reads no `data.csv` (`RuntimeAdapter.data_json`:
+    JavaScript), built once per run; every render job of the run and the shipped version carry it."""
+    edit_failures: set[str] = field(default_factory=set)
+    """The `edits.FAILURE_KINDS` of every plan whose edits failed and ended its attempt."""
+    validator_rules: set[str] = field(default_factory=set)
+    """The rule ids that rejected a plan's code in any check of the run (`CheckResult.blocking_rules`)."""
+    adaptation_rules: set[str] = field(default_factory=set)
+    """The soft ADAPTATION rule ids of any check of the run (`CheckResult.adaptation_rules`)."""
 
     def timed(self, stage: str, seconds: float) -> None:
         self.stage_s[stage] = self.stage_s.get(stage, 0.0) + seconds
@@ -739,7 +783,8 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
 
     Outside a fence stand only fixed headings, the validated library id and
     `allow_full`; the plot language, a user-chosen value bounded by a pattern, stands
-    inside its own `<plot_language>` fence. The notes on the attempt go into one
+    inside its own `<plot_language>` fence, and the reply language, when it differs, inside
+    `<reply_language>` (the `changes` notes are written in it). The notes on the attempt go into one
     `<tool_notes>` block as JSON, the way the `plot_pipeline` result reaches the root:
     the readiness hints quote catalogue lines, the feedback quotes model-written code
     (failed edits, validator findings) or is model-written (reviewer lines), and the
@@ -764,6 +809,8 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
         "Plot language:",
         fence("plot_language", request.plot_language),
     ]
+    if request.reply_language is not None:
+        lines += [REPLY_LANGUAGE_HEADING, fence("reply_language", request.reply_language)]
     lines += _context_lines(request.dataset_context, request.file_name)
     lines += _requests_lines(request.user_requests, request.change_request)
     if request.expected_texts:
@@ -804,13 +851,39 @@ def render_review_request(request: ReviewRequest) -> str:
     ]
     lines += _context_lines(request.dataset_context, request.file_name)
     lines += _requests_lines(request.user_requests, request.change_request)
+    lines += _review_expected_lines(request.expected_texts, catalogue=False)
     if request.gate_notes:
         lines += ["Gate notes:", fence("tool_notes", json.dumps(request.gate_notes, ensure_ascii=False))]
     return "\n".join(lines)
 
 
+REPLY_LANGUAGE_HEADING = "Reply language (the user chats in it; write the `changes` notes in it):"
 EARLIER_REQUESTS_HEADING = "Earlier requests (the user's standing decisions, oldest first):"
 EXPECTED_HEADING = "Texts and number formats the user asked to see in the plot, verbatim (one per line):"
+REVIEW_EXPECTED_HEADING = (
+    "Texts and number formats the user asked to see in the plot, verbatim (one per line). The server cannot read "
+    "the texts this render draws, so look for each one in the attached render yourself: a text must stand there as "
+    "written (case, spacing and quotes aside); a number format (a number with one unit, such as 6,5 Mio. or 12 %) "
+    "must draw its unit, and the numbers it applies to must use its decimal mark. Report each one you cannot find "
+    "as one {ids} finding whose observed part quotes it as listed here: the plot does not show the requested "
+    'text "<text>", then what it shows instead. One you find needs no finding:'
+)
+"""The reviewer's heading over the requested texts (`ReviewRequest.expected_texts`): only a render without drawn
+texts gets it, so a review request of a render with the probe is the same as before 2026-10-29."""
+
+
+def _review_expected_lines(texts: Sequence[str], *, catalogue: bool) -> list[str]:
+    """The requested texts for the reviewer to find in the image, fenced as user text under their heading.
+
+    The catalogue reviewer reports a missing number format under SC-02 as the probe's check does
+    (`grounding.EXPECT_LINE_ID`); the checklist has no SC-02, so it reports every miss under SC-04.
+    """
+    if not texts:
+        return []
+    ids = EXPECT_LINE_ID["text"] + (f" ({EXPECT_LINE_ID['format']} for a number format)" if catalogue else "")
+    return [REVIEW_EXPECTED_HEADING.format(ids=ids), fence("user_message", "\n".join(texts))]
+
+
 CONTEXT_HEADING = (
     "Dataset context (what the session knows about the data: the notes the user pasted with it and where a "
     "computed table comes from; use it for the title and the labels):"
@@ -878,17 +951,20 @@ def note_changes(run: Run, plan: AdaptPlan, *, changed: bool, proofread: bool) -
     run.changes = list(dict.fromkeys([*run.changes, *(" ".join(note.split()) for note in plan.changes)]))
 
 
-def summarise_changes(notes: Sequence[str]) -> list[str]:
-    """At most `MAX_CHANGES` notes: the first ones (the adaptation that carried out the request) and the latest.
+def summarise_changes(notes: Sequence[str], limit: int = MAX_CHANGES) -> list[str]:
+    """At most `limit` notes: the first ones (the adaptation that carried out the request) and the latest.
 
     A run's calls may write more notes than `PlotResult` holds; keeping only the earliest would hide what a
     later repair or proofread changed in the shipped code (#12170 review), keeping only the latest would hide
-    the request itself. The notes in between are left out.
+    the request itself. The notes in between are left out. `limit` is below `MAX_CHANGES` when the runtime's
+    loader notes take places first (`finish`).
     """
-    if len(notes) <= MAX_CHANGES:
+    if limit <= 0:
+        return []
+    if len(notes) <= limit:
         return list(notes)
-    head = MAX_CHANGES // 2 + 1
-    return [*notes[:head], *notes[len(notes) - (MAX_CHANGES - head) :]]
+    head = limit // 2 + 1
+    return [*notes[:head], *notes[len(notes) - (limit - head) :]]
 
 
 def _columns_json(bindings: list[Binding], loader_columns: list[str] | None = None) -> str:
@@ -932,6 +1008,40 @@ def _data_texts(data_csv: str) -> frozenset[str]:
     return frozenset(cell for row in csv.reader(io.StringIO(data_csv)) for cell in row if cell)
 
 
+def column_kinds_of(dataset: StoredDataset) -> ColumnKinds | None:
+    """The value kinds of a dataset's canonical `data.csv` (`data.kinds.read_kinds`), read once per run.
+
+    None when the CSV does not fit its own typing, which the parser never writes: the Python
+    loader reads the dtypes alone and runs as before, and R's loader, which needs the kinds,
+    refuses the run form, so the attempt ends as `loader`.
+    """
+    try:
+        return read_kinds(dataset.csv, dataset.column_dtypes, dataset.parse_dates)
+    except ValueError:
+        return None
+
+
+LOADER_CODES: tuple[str, ...] = ("inexact", "submillisecond", "offset")
+"""The `ColumnKinds` fields of the cells a loader may change (`telemetry.LoaderNote`), in the order the line lists them."""
+
+
+def loader_codes(runtime: RuntimeAdapter, kinds: ColumnKinds | None) -> list[str]:
+    """The kinds of cells the runtime's loader changes when it reads this data, for the usage telemetry.
+
+    The runtime is asked, not a table: each kind the data holds goes alone to `RuntimeAdapter.loader_notes`, and the
+    kind counts when the runtime announces a note for it (R: `inexact`, `offset`; Julia: `submillisecond`, `offset`;
+    Python: none). Only the code leaves this function, never the note, which names columns and counts.
+    """
+    if kinds is None:
+        return []
+    empty: dict[str, dict[str, int]] = {code: {} for code in LOADER_CODES}
+    return [
+        code
+        for code in LOADER_CODES
+        if getattr(kinds, code) and runtime.loader_notes(replace(kinds, **{**empty, code: getattr(kinds, code)}))
+    ]
+
+
 def _check(
     working: str,
     *,
@@ -946,8 +1056,9 @@ def _check(
 ) -> CheckResult:
     """Validate a working form against its base: may it render, the blocking lines, the adaptation defect lines.
 
-    The two validator profiles and the literal diff are the runtime's (`RuntimeAdapter.security`,
-    `adaptation`, `new_literals`); `runtime` defaults to the registry's for `library`.
+    The two validator profiles, the literal diff, the ADAPTATION rules that reject the code and the
+    targets of the others are the runtime's (`RuntimeAdapter.security`, `adaptation`, `new_literals`,
+    `blocking_rules`, `adaptation_targets`); `runtime` defaults to the registry's for `library`.
 
     Besides the two validator profiles, the plan's new string literals (`edits.new_literals`)
     must fit `literal_budget`; on a `rewrite` (a change that writes the base's text in another
@@ -962,8 +1073,9 @@ def _check(
     runtime = runtime if runtime is not None else runtime_for(library)
     security = runtime.security(working)
     adaptation = runtime.adaptation(working, original_palette=palette)
+    rejecting = runtime.blocking_rules
     # Both profiles parse the code, so an unparseable file is one `syntax` finding, not two.
-    blocking_findings = list(dict.fromkeys([*security, *(f for f in adaptation if f.rule in BLOCKING_RULES)]))
+    blocking_findings = list(dict.fromkeys([*security, *(f for f in adaptation if f.rule in rejecting)]))
     blocking = [
         f"validator {f.rule}" + (f" (line {f.line})" if f.line else "") + f": {f.message}" for f in blocking_findings
     ]
@@ -992,11 +1104,12 @@ def _check(
                 "all versions together → shorten or drop text added earlier instead of adding more. "
                 "Likely cause: text added turn by turn."
             )
-    soft = [f for f in adaptation if f.rule not in BLOCKING_RULES]
+    soft = [f for f in adaptation if f.rule not in rejecting]
+    targets = runtime.adaptation_targets
     defects = [
         f"{ADAPTATION_IDS.get(f.rule, 'SC-03')} (code): {f.message}"
         + (f" at line {f.line}" if f.line else "")
-        + f" → {ADAPTATION_TARGETS.get(f.rule, 'derive it from df')}. Likely cause: the adaptation ({f.rule})."
+        + f" → {targets.get(f.rule, DEFAULT_ADAPTATION_TARGET)}. Likely cause: the adaptation ({f.rule})."
         for f in soft
     ]
     modules = list(dict.fromkeys(f.module for f in blocking_findings if f.rule == "banned-import" and f.module))
@@ -1094,8 +1207,11 @@ def finish(run: Run) -> PlotResult:
             # measured findings after a passing review, whose own review was unreadable or skipped.
             residual.append(NOT_REVIEWED_LINE.format(why=run.unreviewed_why or "the repair round left defects"))
     residual = list(dict.fromkeys(_line(line) for line in residual))[:MAX_RESIDUAL_DEFECTS]
-    # The shipped render's own notes: every call up to it that changed the code, never a no-op proofread's.
-    changes = [change[:MAX_CHANGE_CHARS] for change in summarise_changes(shipped.changes)]
+    # The shipped render's own notes: every call up to it that changed the code, never a no-op proofread's. The
+    # loader's notes come first, so the cap never drops them (owner decision of 2026-10-29: "what changed").
+    loader = run.loader_notes[:MAX_CHANGES]
+    adapted = summarise_changes(shipped.changes, limit=MAX_CHANGES - len(loader))
+    changes = [change[:MAX_CHANGE_CHARS] for change in [*loader, *adapted]]
     return PlotResult(
         status="needs_attention" if residual else "ok",
         attempts=max(round_number(run, run.attempts), 1),
@@ -1149,12 +1265,14 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
             ),
             code_artifact=runtime.code_artifact,
             data_csv=run.dataset.csv,
+            data_json=run.data_json,
             render_id=render_id,
             result=result,
             plan=shipped.plan,
             title=shipped.plan.title,
             library=run.view.library,
             theme=run.theme,
+            theme_asked=run.theme_asked,
             language=run.language,
             requests=standing_requests([*run.user_requests, run.change_request]),
             themes={run.theme: ThemeRender("needs_attention", PADDED_REASON) if shipped.padded else ThemeRender("ok")},
@@ -1199,6 +1317,9 @@ class ReviewOutcome:
     """Good enough to show without notes (`AGENT_STATUS_BAR`, the owner's ship bar); None means `ok`."""
     visible: list[str] = field(default_factory=list)
     """The defect lines under `VISIBLE_DEFECT_IDS`: the render is not clean (`Candidate.visible_lines`)."""
+    requested: list[tuple[str, str]] = field(default_factory=list)
+    """The requested texts the review could not find in the image, each with the line that says so
+    (`grounding.reviewed_misses`); empty when the request carried none (`ReviewRequest.expected_texts`)."""
 
 
 async def _review(ctx: Context, scope: str, request: ReviewRequest, theme: Theme) -> ReviewOutcome | None:
@@ -1210,10 +1331,13 @@ async def _review(ctx: Context, scope: str, request: ReviewRequest, theme: Theme
         raw = await ctx.run_node(agent, node_input=text, override_isolation_scope=scope)
         if not catalogue:
             verdict = Verdict.model_validate(raw)
+            lines = [_on_theme(defect, theme).as_line() for defect in verdict.defects]
+            requested = reviewed_misses(request.expected_texts, lines)
             return ReviewOutcome(
-                verdict.ok,
-                [_on_theme(defect, theme).as_line() for defect in verdict.defects],
+                verdict.ok and not _repairs_miss(requested),
+                lines,
                 [defect.id for defect in verdict.defects],
+                requested=requested,
             )
         result = parse_answer(mend_answer(ScoreAnswer.model_validate(raw).model_dump()))
     except (ValidationError, DynamicNodeFailError) as exc:
@@ -1237,7 +1361,10 @@ async def _review(ctx: Context, scope: str, request: ReviewRequest, theme: Theme
         for line in result.defects
         if (m := DEFECT_RE.match(line)) and VISIBLE_DEFECT_IDS & set(m["ids"].split(", "))
     ]
-    if visible:
+    # A requested text the review could not find in the image (a render without drawn texts), read from every
+    # line whatever the points: a repair finding as the probe's miss is under `AGENT_EXPECT_CHECK=repair`.
+    requested = reviewed_misses(request.expected_texts, result.defects)
+    if visible or _repairs_miss(requested):
         # A visible defect gets the repair round whatever the points (`VISIBLE_DEFECT_IDS`); the ship bar stays.
         ok = False
     return ReviewOutcome(
@@ -1248,7 +1375,13 @@ async def _review(ctx: Context, scope: str, request: ReviewRequest, theme: Theme
         round(result.technical_share, 3),
         status_ok=status_ok,
         visible=visible,
+        requested=requested,
     )
+
+
+def _repairs_miss(requested: Sequence[tuple[str, str]]) -> bool:
+    """A requested text the review reports missing sends the round to the repair (`AGENT_EXPECT_CHECK=repair`)."""
+    return bool(requested) and get_settings().expect_check == "repair"
 
 
 def render_score_request(request: ReviewRequest) -> str:
@@ -1265,6 +1398,7 @@ def render_score_request(request: ReviewRequest) -> str:
     if request.dataset_context or request.file_name:
         lines.append("\n".join(_context_lines(request.dataset_context, request.file_name)))
     lines += _requests_lines(request.user_requests, request.change_request)
+    lines += _review_expected_lines(request.expected_texts, catalogue=True)
     if request.gate_notes:
         lines += ["Gate notes:", fence("tool_notes", json.dumps(request.gate_notes, ensure_ascii=False))]
     return "\n\n".join(lines)
@@ -1277,17 +1411,23 @@ def _reraise_unless_schema(exc: Exception) -> None:
     logger.warning("sub-agent answer failed its schema: %s", type(exc).__name__)
 
 
-def _default_theme(services: Services, session_id: str, library: str, base: str) -> Theme:
-    """An omitted theme keeps the previous version's theme on a change; a new plot is light.
+def run_theme(asked: Theme | None, site: Theme | None, previous: CodeVersion | None) -> tuple[Theme, bool]:
+    """The one theme a run renders, and whether the user asked for it (`CodeVersion.theme_asked`).
 
-    The root may leave `theme` out of a refinement call, so a dark plot must not
-    silently come back light.
+    In order: the theme the root passed (`PipelineArgs.theme`), which the user asked for in the chat; on a
+    change, the theme of the version it changes (`previous`) when the user asked for that one, because the root
+    leaves `theme` out of a refinement and a dark plot asked for must not silently come back light; the site
+    theme the page sent with the turn (`RequestLedger.site_theme`; owner decision of 2026-11-01: a user on the
+    dark site gets a dark plot, the other theme one click away on the toggle), so a change after a switch of the
+    site theme follows the switch; without a page (`adk web`, the evals) the version it changes, else light.
     """
-    if base == "previous":
-        previous = services.versions.latest_rendered(session_id, library=library)
-        if previous is not None:
-            return previous.theme
-    return "light"
+    if asked is not None:
+        return asked, True
+    if previous is not None and previous.theme_asked:
+        return previous.theme, True
+    if site is not None:
+        return site, False
+    return (previous.theme if previous is not None else "light"), False
 
 
 @node(name="run_pipeline", rerun_on_resume=True)
@@ -1297,6 +1437,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     settings = get_settings()
     ledger = ledger_for(ctx.invocation_id)
     view, dataset, not_ready = load_inputs(ctx, services)
+    language = plot_language(view, services.versions.latest_language(ctx.session.id)) if view is not None else None
     if not_ready is not None or view is None or dataset is None:
         kept = keep_pending_request(ctx.state, node_input, not_ready)
         # An attempted plot the data was not ready for is a run of its own in the telemetry: the funnel sees it.
@@ -1309,6 +1450,8 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
             base=node_input.base,
             status="not_ready",
             reason=not_ready or "no_dataset",
+            plot_language=telemetry.plot_language(language),
+            readiness=telemetry.readiness(view.readiness) if view is not None else None,
         )
         yield _result_event(PlotResult.not_ready(not_ready or "no_dataset", request_kept=kept))
         return
@@ -1322,12 +1465,18 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         return
     # Taken only once the run has its slot: a run that never starts leaves the user's note for the next one.
     node_input = take_pending_request(ctx.state, node_input)
-    theme = node_input.theme or _default_theme(services, ctx.session.id, view.library, node_input.base)
+    previous = (
+        services.versions.latest_rendered(ctx.session.id, library=view.library)
+        if node_input.base == "previous"
+        else None
+    )
+    theme, theme_asked = run_theme(node_input.theme, ledger.site_theme, previous)
     run = Run(
         view=view,
         dataset=dataset,
         theme=theme,
-        language=view.language,
+        theme_asked=theme_asked,
+        language=language or view.language,
         change_request=node_input.change_request,
         expected_texts=list(node_input.expected_texts),
         base=node_input.base,
@@ -1372,7 +1521,12 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
     """The content-free outcome line of one pipeline run: what the eval harness's pass and gate counts read.
 
     `padded`, `adaptation` (ADAPTATION rule ids) and `advisory` (probe gate ids) describe
-    the shipped render; a failed run has none. `error` is the exception class behind
+    the shipped render; a failed run has none. `texts` names the roles of the drawn texts
+    `PlotShows.texts` reports for the shipped render (`title`, `x tick labels`, ...; role
+    names only, never a text), or is None when its probe reported none, and `texts_expected`
+    says whether the library's render reports them (`RuntimeAdapter.text_probe`): the eval
+    harness counts a shipped run without texts where they are expected (`agents/evals/report.py`,
+    `untexted`). `error` is the exception class behind
     reason `error` (for example `RendererUnavailable`, which the harness treats as an
     outage rather than a model failure), never its message. `stage` names what stopped
     the run and `stages` what ended each attempt (`Stage`); `shipped_attempt` and
@@ -1397,6 +1551,8 @@ def _attribute_result(ledger: RequestLedger, run: Run, result: PlotResult) -> No
         padded=bool(shipped and shipped.padded),
         adaptation=list(shipped.adaptation_rules) if shipped else [],
         advisory=list(shipped.advisory_gates) if shipped else [],
+        texts=sorted(shipped.texts) if shipped and shipped.texts is not None else None,
+        texts_expected=runtime_for(run.view.library).text_probe,
         residual=len(result.residual_defects),
         error=run.error_type if result.reason == "error" else None,
     )
@@ -1413,10 +1569,15 @@ def _telemetry_run(
     """The usage telemetry's `pipeline_run` line (`telemetry.py`): ids, buckets, counts and times, never text.
 
     One line per run: `run_index` is the session's run number for this invocation, so a node ADK re-runs
-    writes the same idempotency key and the BigQuery base view keeps one row.
+    writes the same idempotency key and the BigQuery base view keeps one row. The stages, rule ids and failure kinds
+    are closed by `telemetry.closed`, `closed_list` and `closed_set` (`other` for an id the closed set does not know
+    yet), so a new stage or rule never drops the line.
     """
     shipped = shipped_candidate(run) if result.status in ("ok", "needs_attention") else None
     index = telemetry.run_index(session_id, invocation_id)
+    settings = get_settings()
+    rule_ids = get_args(telemetry.ValidatorRule)
+    stage_ids = get_args(telemetry.PipelineStage)
     telemetry.write(
         telemetry.PipelineRun,
         ledger,
@@ -1425,7 +1586,7 @@ def _telemetry_run(
         base=run.base,
         status=result.status,
         reason=result.reason,
-        stage=run.stage,
+        stage=telemetry.closed(run.stage, stage_ids),
         attempts=run.attempts,  # every adapter call, retries and proofreads included; `rounds` is what the page shows
         rounds=len(run.rounds),
         reviews=run.reviews,
@@ -1433,12 +1594,27 @@ def _telemetry_run(
         score_round2=telemetry.score_bucket(run.round_scores.get(2)),
         shipped_attempt=shipped.attempt if shipped else None,
         shipped_round=round_number(run, shipped.attempt) if shipped else None,
+        version=telemetry.version_number(result.version),
+        shipped_score=telemetry.score_bucket(shipped.review_score) if shipped else None,
         forced_repair=sorted(run.forced_ids),
         gates_failed=sorted(run.gate_ids),
         reviewer_defects=sorted(run.review_ids),
         residual_defects=_defect_ids(result.residual_defects),
         sandbox_failures=sorted(run.sandbox_failures),
         drift_restored=run.drift_restored,
+        stages=telemetry.closed_list(run.stages, stage_ids),
+        round_scores=_round_scores(run),
+        plot_language=telemetry.plot_language(run.language),
+        readiness=telemetry.readiness(run.view.readiness),
+        loader_notes=list(run.loader_codes),
+        edit_failures=telemetry.closed_set(run.edit_failures, get_args(telemetry.EditFailure)),
+        validator_rules=telemetry.closed_set(run.validator_rules, rule_ids),
+        adaptation_rules=telemetry.closed_set(run.adaptation_rules, rule_ids),
+        reviewer_mode=settings.reviewer_mode,
+        ship_best=settings.ship_best,
+        self_review=settings.self_review,
+        repair_self_review=settings.repair_self_review,
+        **_prompt_hashes(run.view.library, settings.reviewer_mode),
         adapt_ms=telemetry.ms(run.stage_s.get("adapt", 0.0)),
         check_ms=telemetry.ms(run.stage_s.get("check", 0.0)),
         render_ms=telemetry.ms(run.stage_s.get("render", 0.0)),
@@ -1446,6 +1622,27 @@ def _telemetry_run(
         total_ms=telemetry.ms(seconds),
         steps=telemetry.step_tokens(ledger.steps, steps=("adapter", "reviewer")),
     )
+
+
+def _round_scores(run: Run) -> list[str]:
+    """The bucket of every round's latest review score, round 1 first, `unscored` for a round without one; up to the
+    last round that ended or was scored, so position `n - 1` is round `n`."""
+    last = max(len(run.rounds), max(run.round_scores, default=0))
+    return [telemetry.score_bucket(run.round_scores.get(number)) or "unscored" for number in range(1, last + 1)]
+
+
+def _prompt_hashes(library: str, reviewer_mode: str) -> dict[str, str]:
+    """The hashes of the run's adapter and reviewer instructions (`policy.prompt_hash`), as the telemetry line's
+    `adapter_prompt` and `reviewer_prompt`; none when an instruction cannot be built, since telemetry never breaks
+    a run."""
+    try:
+        return {
+            "adapter_prompt": prompt_hash(adapter_instruction(library)),
+            "reviewer_prompt": prompt_hash(REVIEWER_MODES[reviewer_mode]["instruction"]()),
+        }
+    except Exception as exc:
+        logger.warning("telemetry prompt hashes skipped: %s", type(exc).__name__)
+        return {}
 
 
 def close_scope(scope: str) -> Event:
@@ -1478,7 +1675,8 @@ async def _attempts(
     working = previous.working if previous is not None else view.normalised
     # What the user asked of the base version's lineage stands: every adapter call and the reviewer see it.
     run.user_requests = standing_requests(previous.requests) if previous is not None else []
-    # The base version's text is in another language than the session's: the adapter rewrites it.
+    # The base version's text is in another language than the plot language (the user asked for another one since,
+    # maybe in another library): the adapter rewrites it.
     language_changed = previous is not None and not same_language(previous.language, run.language)
     # A change on a previous version adds a little text; adapting the catalogue code renames much. A change
     # that rewrites the text in another language keeps the change's budget plus the text it replaces (`_check`).
@@ -1488,6 +1686,14 @@ async def _attempts(
     palette = list(regions.imprint.entries) if regions.imprint else []
     hints = view.hints[:MAX_NOTES] if previous is None else []
     columns = [column.name for column in dataset.profile.columns]
+    kinds = column_kinds_of(dataset)
+    run.loader_notes = runtime.loader_notes(kinds) if kinds is not None else []
+    run.loader_codes = loader_codes(runtime, kinds)
+    try:
+        run.data_json = runtime.data_json(dataset.csv, kinds)
+    except ValueError:
+        # A cell the typed table cannot hold: without the kinds the loader refuses the run form and says why.
+        kinds = None
     feedback: list[str] = []
     previous_plan: AdaptPlan | None = None
     rows = data_rows(dataset.csv)
@@ -1546,6 +1752,8 @@ async def _attempts(
             allow_full=attempt >= 2,
             plot_language=run.language,
             language_changed=language_changed,
+            # The notes explain the plot to the user, so they follow the language the user chats in.
+            reply_language=None if same_language(view.language, run.language) else view.language,
             expected_texts=run.expected_texts,
             dataset_context=context,
             file_name=file_name,
@@ -1591,6 +1799,7 @@ async def _attempts(
         code = applied.code if applied.code is not None else restored
         if code is None:
             run.timed("check", time.monotonic() - started)
+            run.edit_failures.update(applied.kinds)
             attribution(
                 "pipeline_check",
                 ledger,
@@ -1615,6 +1824,8 @@ async def _attempts(
             runtime=runtime,
         )
         run.timed("check", time.monotonic() - started)
+        run.validator_rules.update(check.blocking_rules)
+        run.adaptation_rules.update(check.adaptation_rules)
         adaptation_lines = check.defects
         # A restored plan is logged once, by the drift kinds it had: `drift_restored`, or `rejected` when the
         # restored code then failed the validator.
@@ -1643,6 +1854,7 @@ async def _attempts(
                 columns=columns,
                 dtypes=dict(dataset.column_dtypes),
                 parse_dates=list(dataset.parse_dates),
+                kinds=dict(kinds.kinds) if kinds is not None else {},
             )
         except ValueError as exc:
             attribution("pipeline_check", ledger, attempt=attempt, outcome="loader_failed", edit_failures=0)
@@ -1659,6 +1871,7 @@ async def _attempts(
             data_csv=dataset.csv,
             themes=(run.theme,),
             timeout_s=deadline.clamp(settings.render_timeout_s),
+            data_json=run.data_json,
         )
         started = time.monotonic()
         rendered = await services.backend.render(job)
@@ -1670,7 +1883,8 @@ async def _attempts(
             library=view.library,
             rows=rows,
             plot_language=run.language,
-            summarise=runtime.error_summary,
+            # The adapter edits the working form: a runtime whose loader shifts the lines maps them back.
+            summarise=functools.partial(runtime.error_summary, run_form=run_form),
         )
         run.gate_ids.update(report.failed_gates)
         for theme_output in rendered.outputs.values():
@@ -1689,6 +1903,8 @@ async def _attempts(
             passed=report.passed_host_gates,
             canvas_ok=report.canvas_ok,
             gates=report.failed_gates,
+            # A probe that failed names its class (a text probe drops its labels then): the log of a best-effort step.
+            probe_error=probe_error(probed.probe) if (probed := rendered.outputs.get(run.theme)) is not None else None,
         )
         run.rendered = True
         if not report.passed_host_gates:
@@ -1696,14 +1912,19 @@ async def _attempts(
             _end_attempt(run, "render", feedback)
             continue
         output = rendered.outputs.get(run.theme)
-        # The check reads every drawn text; `shows` gets the clipped summary of them.
+        # `shows` gets the clipped summary of every drawn text the probe reports.
         drawn = drawn_texts(output.probe if output is not None else None)
         texts = plot_texts(drawn)
         checking = settings.expect_check != "off" and bool(run.expected_texts)
-        misses = expected_misses(run.expected_texts, drawn) if checking else []
+        # The requested texts are checked against matplotlib's drawn texts; where the runtime's reviewer checks them
+        # (`review_texts`: every library without matplotlib), its probe's texts ground the reply alone.
+        measured_texts = None if runtime.review_texts else drawn
+        misses = expected_misses(run.expected_texts, measured_texts) if checking else []
         expect_lines = [miss.line(run.theme) for miss in misses]
-        # No drawn texts to check against (a renderer without `labels`): a note, never a pass and never a repair.
-        expect_note = UNVERIFIED_LINE.format(theme=run.theme) if checking and drawn is None else None
+        # No drawn texts to check against: a note, never a pass. Where the runtime says so, the review finds the texts
+        # in the image instead, and only its answer lifts the note.
+        unverified = checking and measured_texts is None
+        expect_note = UNVERIFIED_LINE.format(theme=run.theme) if unverified else None
         candidate = Candidate(
             working=working,
             run_form=run_form,
@@ -1721,6 +1942,7 @@ async def _attempts(
             expect_lines=expect_lines,
             expect_misses=[miss.expected for miss in misses],
             expect_note=expect_note,
+            expect_review=unverified and runtime.review_texts,
         )
         if report.canvas_ok:
             run.best = candidate
@@ -1793,6 +2015,7 @@ async def _attempts(
             plot_language=run.language,
             dataset_context=context,
             file_name=file_name,
+            expected_texts=run.expected_texts if candidate.expect_review else [],
         )
         started = time.monotonic()
         verdict = await _review(ctx, scope, review_request, run.theme)
@@ -1835,6 +2058,12 @@ async def _attempts(
         candidate.review_score = verdict.score
         candidate.review_lines = [] if verdict.ok and candidate.status_ok else list(verdict.lines)
         candidate.visible_lines = list(verdict.visible)
+        if candidate.expect_review:
+            # The review answered for the requested texts: the ones it could not find stay, with its own lines, as a
+            # measured miss does (residual, not clean), and no unverified note is left.
+            candidate.expect_lines = list(dict.fromkeys(line for _, line in verdict.requested))
+            candidate.expect_misses = [text for text, _ in verdict.requested]
+            candidate.expect_note = None
         if verdict.score is not None and (run.best_scored is None or ship_compare(candidate, run.best_scored) >= 0):
             run.best_scored = candidate
         # The latest review's lines only: a passing review clears an earlier round's, so a later

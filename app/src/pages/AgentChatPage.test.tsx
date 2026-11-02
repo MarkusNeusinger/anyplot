@@ -1,10 +1,11 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { createMemoryRouter, RouterProvider, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ThemeProvider } from '@mui/material/styles';
 
 import { AgentChatPage } from 'src/pages/AgentChatPage';
+import { LEAVE_TEXT } from 'src/sections/agent-chat/messages';
 import { theme } from 'src/theme';
 import { ADMIN_HINT_KEY } from 'src/utils/adminAuth';
 
@@ -302,22 +303,26 @@ function LocationProbe() {
   return <output data-testid="location">{`${current.pathname}${current.search}`}</output>;
 }
 
+/** A data router, as in the app: the page's leave warning uses the router's blocker. */
 function renderAt(url: string) {
+  const router = createMemoryRouter(
+    [
+      {
+        path: '/debug/agent',
+        element: (
+          <>
+            <AgentChatPage />
+            <LocationProbe />
+          </>
+        ),
+      },
+      { path: '*', element: <LocationProbe /> },
+    ],
+    { initialEntries: [url] }
+  );
   return render(
     <ThemeProvider theme={theme}>
-      <MemoryRouter initialEntries={[url]}>
-        <Routes>
-          <Route
-            path="/debug/agent"
-            element={
-              <>
-                <AgentChatPage />
-                <LocationProbe />
-              </>
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+      <RouterProvider router={router} />
     </ThemeProvider>
   );
 }
@@ -325,10 +330,12 @@ function renderAt(url: string) {
 const PAGE = '/debug/agent?spec=scatter-basic&library=matplotlib&language=python';
 const agentCalls = () =>
   fetchMock.mock.calls.filter(([input]) => String(input).includes('/debug/agent'));
+/** The path of a call, without the query (a turn carries the site theme there). */
+const pathOf = (input: unknown) => new URL(String(input)).pathname;
 /** The bodies of the chat turns the page posted, in order. */
 const turnBodies = () =>
   agentCalls()
-    .filter(([input]) => String(input).endsWith('/messages'))
+    .filter(([input]) => pathOf(input).endsWith('/messages'))
     .map(([, init]) => JSON.parse(String((init as RequestInit).body)) as Record<string, string>);
 const lastTurn = () => turnBodies().slice(-1)[0];
 
@@ -999,6 +1006,64 @@ describe('AgentChatPage gating', () => {
   });
 });
 
+describe('AgentChatPage leave warning', () => {
+  /** A reload or a closed tab, as the browser starts it: whether the page asked to stay. */
+  function unload(): boolean {
+    const event = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(event);
+    return event.defaultPrevented;
+  }
+  const deletes = () =>
+    agentCalls().filter(([, init]) => (init as RequestInit | undefined)?.method === 'DELETE');
+  const backLink = () => screen.getByRole('link', { name: /Basic Scatter Plot/ });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('asks nothing while the session is empty: the back link just leaves', async () => {
+    const confirm = vi.spyOn(window, 'confirm');
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await screen.findByLabelText(/# your data/);
+    expect(unload()).toBe(false);
+
+    fireEvent.click(await screen.findByRole('link', { name: /Basic Scatter Plot/ }));
+    await waitFor(() => expect(screen.queryByLabelText(/# your data/)).not.toBeInTheDocument());
+    expect(screen.getByTestId('location')).toHaveTextContent('/scatter-basic');
+    expect(confirm).not.toHaveBeenCalled();
+  });
+
+  it('asks before a reload or a link drops the data, and lets its own query edits pass', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    expect(unload()).toBe(true);
+
+    // The `all` pill writes the query on the same path: nothing to ask.
+    const all = await screen.findByRole('button', { name: 'All libraries' });
+    await waitFor(() => expect(all).toBeEnabled());
+    fireEvent.click(all);
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('all=1'));
+    expect(confirm).not.toHaveBeenCalled();
+
+    // The back link to the plot, declined: the chat and its session stay.
+    fireEvent.click(backLink());
+    await waitFor(() => expect(confirm).toHaveBeenCalledWith(LEAVE_TEXT));
+    expect(screen.getByTestId('data-pinned')).toBeInTheDocument();
+    expect(deletes()).toHaveLength(0);
+
+    // Agreed: the page goes, and the session with it.
+    confirm.mockReturnValue(true);
+    fireEvent.click(backLink());
+    await waitFor(() => expect(screen.queryByTestId('data-pinned')).not.toBeInTheDocument());
+    expect(screen.getByTestId('location')).toHaveTextContent('/scatter-basic');
+    await waitFor(() => expect(deletes()).toHaveLength(1));
+    expect(unload()).toBe(false);
+  });
+});
+
 describe('AgentChatPage working states', () => {
   it('says that the data is being parsed, under .parse() and to a screen reader', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
@@ -1223,11 +1288,15 @@ describe('AgentChatPage working states', () => {
 });
 
 describe('AgentChatPage .plot_all()', () => {
-  it('offers the confirmed table in every library at the server limit, and closes again', async () => {
-    const base = fetchMock.getMockImplementation() as (
-      input: string,
-      init?: RequestInit
-    ) => Promise<Response>;
+  /** The fetch stub as `stubFetch` set it, for a test that answers one route differently. */
+  const baseFetch = () =>
+    fetchMock.getMockImplementation() as (input: string, init?: RequestInit) => Promise<Response>;
+  const libraryGroup = () => screen.getByRole('group', { name: 'Library' });
+  const libraryPill = (name: string) => within(libraryGroup()).getByRole('button', { name });
+  const plotAllButton = () => screen.getByRole('button', { name: 'Plot in all libraries' });
+
+  it('offers all once the lists are in, and plots the confirmed table in every library', async () => {
+    const base = baseFetch();
     // The status answer waits: until it is in, the libraries and the limit are fallbacks.
     let releaseStatus!: () => void;
     const status = new Promise<void>(resolve => (releaseStatus = resolve));
@@ -1240,16 +1309,40 @@ describe('AgentChatPage .plot_all()', () => {
     );
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
     await parseAndConfirm();
-    expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
     releaseStatus();
 
-    const plotAll = await screen.findByRole('button', { name: 'Plot in all libraries' });
-    expect(
-      screen.getByText(/this table in all 2 libraries at once, at most 4 running/)
-    ).toBeInTheDocument();
-    fireEvent.click(plotAll);
+    const all = await screen.findByRole('button', { name: 'All libraries' });
+    expect(all).toHaveTextContent('all');
+    expect(all.parentElement).toBe(libraryGroup());
+    expect(all).toHaveAttribute('aria-pressed', 'false');
+    expect(libraryPill('matplotlib')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
+
+    // Pressed, `all` is the pressed pill, and the composer's create action plots everywhere.
+    fireEvent.click(all);
+    expect(all).toHaveAttribute('aria-pressed', 'true');
+    expect(libraryPill('matplotlib')).toHaveAttribute('aria-pressed', 'false');
+    expect(libraryPill('matplotlib')).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
+    const plotAll = plotAllButton();
+    expect(plotAll).toHaveTextContent('.plot_all()');
+    expect(plotAll).toBeEnabled();
+    const line =
+      '# step 2 — plot the table as it is in all 2 libraries at once · turn all off to chat';
+    expect(plotAll).toHaveAccessibleDescription(expect.stringContaining(line));
+    expect(screen.queryByTestId('plot-all-hint')).not.toBeInTheDocument();
+    // The fan-out takes no text: in step 2 the message box waits, and the line says why.
+    const box = screen.getByLabelText('Message');
+    expect(box).toBeDisabled();
+    expect(box).toHaveAccessibleDescription(line);
+    expect(box).toHaveAttribute(
+      'placeholder',
+      'all libraries: the table goes as it is · turn all off to chat'
+    );
+
+    fireEvent.click(plotAll, { detail: 1 });
     const panel = await screen.findByRole('region', { name: 'All libraries' });
     expect(
       within(panel)
@@ -1257,10 +1350,418 @@ describe('AgentChatPage .plot_all()', () => {
         .map(card => card.getAttribute('aria-label'))
     ).toEqual(['matplotlib', 'seaborn']);
     expect(within(panel).getByText(/at most 4 at a time/)).toBeInTheDocument();
+    // A pointer click moves no focus.
+    expect(panel).not.toHaveFocus();
+    // While the panel is open, nothing starts another fan-out or changes the library, whose
+    // session the panel's sessions copy their data from; `all` stays pressed.
+    expect(plotAllButton()).toBeDisabled();
+    expect(all).toBeDisabled();
+    expect(all).toHaveAttribute('aria-pressed', 'true');
+    expect(libraryPill('matplotlib')).toBeDisabled();
+    expect(libraryPill('seaborn')).toBeDisabled();
+
+    // `.close()` goes with the panel: the focus returns to `.plot_all()`, which opened it.
+    const close = within(panel).getByRole('button', { name: 'Close all libraries' });
+    close.focus();
+    fireEvent.click(close);
+    expect(screen.queryByRole('region', { name: 'All libraries' })).not.toBeInTheDocument();
+    expect(plotAllButton()).toBeEnabled();
+    expect(plotAllButton()).toHaveFocus();
+    expect(all).toBeEnabled();
+    expect(libraryPill('matplotlib')).toBeEnabled();
+    expect(libraryPill('seaborn')).toBeEnabled();
+
+    // A key press (a click with `detail` 0) continues in the panel it opened.
+    fireEvent.click(plotAllButton(), { detail: 0 });
+    expect(await screen.findByRole('region', { name: 'All libraries' })).toHaveFocus();
+  });
+
+  it('shows no all pill when the page has one library', async () => {
+    const base = baseFetch();
+    fetchMock.mockImplementation((input: string, init?: RequestInit) =>
+      input.endsWith('/debug/agent/status')
+        ? Promise.resolve(json(200, { libraries: ['matplotlib'], enabled: true }))
+        : base(input, init)
+    );
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    await waitFor(() =>
+      expect(within(libraryGroup()).queryByRole('button', { name: 'seaborn' })).toBeNull()
+    );
+    expect(screen.queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
+  });
+
+  it('turns all off from any library pill: the own one only that, another switches', async () => {
+    const base = baseFetch();
+    fetchMock.mockImplementation((input: string, init?: RequestInit) =>
+      input.endsWith('/sessions/S1/library')
+        ? Promise.resolve(
+            json(200, {
+              session_id: 'S1',
+              eligibility: { eligible: true, status: 'clean', reasons: [] },
+            })
+          )
+        : base(input, init)
+    );
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    const all = await screen.findByRole('button', { name: 'All libraries' });
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'log scale on y' } });
+
+    // `all` itself is a toggle: a second click turns it off again.
+    fireEvent.click(all);
+    expect(screen.getByLabelText('Message')).toBeDisabled();
+    fireEvent.click(all);
+    expect(all).toHaveAttribute('aria-pressed', 'false');
+    expect(libraryPill('matplotlib')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Create plot' })).toHaveTextContent('.create_plot()');
+    expect(screen.getByLabelText('Message')).toBeEnabled();
+    expect(screen.getByLabelText('Message')).not.toHaveAccessibleDescription();
+
+    fireEvent.click(all);
+    fireEvent.click(libraryPill('matplotlib'));
+    expect(all).toHaveAttribute('aria-pressed', 'false');
+    // The pill pressed now is disabled: the keyboard continues at `all`.
+    expect(all).toHaveFocus();
+    expect(libraryPill('matplotlib')).toHaveAttribute('aria-pressed', 'true');
+    expect(libraryPill('matplotlib')).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Create plot' })).toHaveTextContent('.create_plot()');
+    // The draft waited in the box, and nothing switched.
+    expect(screen.getByLabelText('Message')).toBeEnabled();
+    expect(screen.getByLabelText('Message')).toHaveValue('log scale on y');
+    expect(agentCalls().filter(([input]) => String(input).endsWith('/library'))).toEqual([]);
+
+    fireEvent.click(all);
+    fireEvent.click(libraryPill('seaborn'));
+    expect(all).toHaveAttribute('aria-pressed', 'false');
+    await waitFor(() =>
+      expect(screen.getByTestId('location')).toHaveTextContent('library=seaborn')
+    );
+    expect(libraryPill('seaborn')).toHaveAttribute('aria-pressed', 'true');
+    expect(libraryPill('matplotlib')).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('leaves the chat about the data usable with all pressed, before data and in step 1', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    const all = await screen.findByRole('button', { name: 'All libraries' });
+    await waitFor(() => expect(all).toBeEnabled());
+
+    // Without data: nothing to plot yet, and the box asks for a curve as without `all`.
+    fireEvent.click(all);
+    expect(all).toHaveAttribute('aria-pressed', 'true');
     expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
+    const box = screen.getByLabelText('Message');
+    expect(box).toBeEnabled();
+    expect(box).toHaveAttribute('placeholder', 'ask for a curve: "y = sin(x), x from -pi to pi"');
+    expect(box).not.toHaveAccessibleDescription();
+
+    // Step 1: `.plot_all()` waits for the confirmation, and a question about the data goes.
+    fireEvent.change(screen.getByLabelText(/# your data/), {
+      target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
+    await turnEnded();
+    expect(currentStep()).toEqual(['1 data']);
+    expect(plotAllButton()).toBeEnabled();
+    expect(screen.getByLabelText('Message')).toBeEnabled();
+    expect(screen.getByLabelText('Message')).toHaveAttribute(
+      'placeholder',
+      'ask about your data, or for a fix: "sum per month"'
+    );
+    sendFromComposer('what is the mean score?');
+    expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
+    await turnEnded();
+    expect(lastTurn()).toEqual({ text: 'what is the mean score?' });
+    expect(all).toHaveAttribute('aria-pressed', 'true');
+
+    // Confirmed, step 2 is where `.plot_all()` is the action: the box waits from here.
+    const confirm = screen.getByRole('button', { name: '.confirm()' });
+    await waitFor(() => expect(confirm).toBeEnabled());
+    fireEvent.click(confirm);
+    await waitFor(() => expect(currentStep()).toEqual(['·2 plot']));
+    expect(screen.getByLabelText('Message')).toBeDisabled();
+    expect(plotAllButton()).toBeEnabled();
+  });
+
+  it('leads to .confirm() first, like .create_plot()', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    fireEvent.change(await screen.findByLabelText(/# your data/), {
+      target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
+    await turnEnded();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'All libraries' }));
+    const plotAll = plotAllButton();
+    expect(plotAll).toHaveAttribute('type', 'button');
+    expect(plotAll).toBeEnabled();
+    fireEvent.click(plotAll);
+    const text = 'confirm the data first · .confirm() sits at the foot of the data card';
+    expect(screen.getByTestId('create-gate')).toHaveTextContent(`# ${text}`);
+    expect(plotAll).toHaveAccessibleDescription(`# ${text}`);
+    expect(screen.queryByRole('region', { name: 'All libraries' })).not.toBeInTheDocument();
+    expect(turnBodies()).toEqual([{ action: 'summarize_data' }]);
+  });
+
+  /**
+   * The fan-out's sessions under ids of their own (`F-<library>`): `copy` answers their copy route,
+   * and each one's `create_plot` ships a plot.
+   */
+  function fanOutSessions(copy: () => Response) {
+    const base = baseFetch();
+    fetchMock.mockImplementation(async (input: string, init: RequestInit = {}) => {
+      const path = new URL(input).pathname;
+      const method = init.method ?? 'GET';
+      const body = typeof init.body === 'string' ? JSON.parse(init.body) : {};
+      if (path.endsWith('/debug/agent/sessions') && method === 'POST' && body.source === 'fanout') {
+        return json(200, {
+          session_id: `F-${body.library}`,
+          eligibility: { eligible: true, status: 'clean', reasons: [] },
+        });
+      }
+      const fanned = path.match(/\/sessions\/(F-[a-z0-9]+)(\/.*)?$/);
+      if (!fanned) return base(input, init);
+      const rest = fanned[2] ?? '';
+      if (method === 'DELETE') return new Response(null, { status: 204 });
+      if (rest === '/dataset/copy') return copy();
+      if (rest === '/dataset') return json(200, DATASET);
+      if (rest === '/bindings')
+        return json(200, { bindings: body, complete: true, missing_roles: [] });
+      if (rest === '/dataset/confirm') return json(200, { confirmed: true, rows: 2, columns: 2 });
+      if (rest === '/messages') return sse(turnEvents(body));
+      return json(404, { detail: 'not_found' });
+    });
+  }
+  const fanOutCalls = (rest: string) =>
+    agentCalls()
+      .filter(([input]) => /\/sessions\/F-[a-z0-9]+/.test(String(input)))
+      .filter(([input]) => pathOf(input).endsWith(rest))
+      .map(([input, init]) => ({
+        session: String(input).match(/F-[a-z0-9]+/)?.[0],
+        body: (init as RequestInit).body ? JSON.parse(String((init as RequestInit).body)) : null,
+      }));
+
+  it('plots data the assistant computed: the fan-out has the server copy it', async () => {
+    fanOutSessions(() =>
+      json(200, {
+        ...GENERATED,
+        confirmed: true,
+        complete: true,
+        missing_roles: [],
+        copied_from: 1,
+      })
+    );
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await screen.findByLabelText(/# your data/);
+    sendFromComposer('y = sin(x), x from -pi to pi');
+    expect(await screen.findByText('I generated 200 rows from y = sin(x).')).toBeInTheDocument();
+    await turnEnded();
+    const confirm = screen.getByRole('button', { name: '.confirm()' });
+    await waitFor(() => expect(confirm).toBeEnabled());
+    fireEvent.click(confirm);
+    await waitFor(() => expect(currentStep()).toEqual(['·2 plot']));
+
+    fireEvent.click(await screen.findByRole('button', { name: 'All libraries' }));
+    // Computed data has no paste, and `.plot_all()` needs none: it is the action, with no hint.
+    const plotAll = plotAllButton();
+    expect(plotAll).toBeEnabled();
+    expect(screen.queryByTestId('plot-all-hint')).not.toBeInTheDocument();
+    fireEvent.click(plotAll, { detail: 1 });
+
+    const panel = await screen.findByRole('region', { name: 'All libraries' });
+    await waitFor(() => expect(fanOutCalls('/messages')).toHaveLength(2));
+    expect(fanOutCalls('/dataset/copy')).toEqual([
+      { session: 'F-matplotlib', body: { from_session: 'S1' } },
+      { session: 'F-seaborn', body: { from_session: 'S1' } },
+    ]);
+    expect(fanOutCalls('/dataset')).toEqual([]);
+    await waitFor(() =>
+      expect(
+        within(panel)
+          .getAllByTestId('fanout-status')
+          .map(line => line.textContent)
+      ).toEqual(['matplotlib: v1 · ok', 'seaborn: v1 · ok'])
+    );
+  });
+
+  it('locks the data card while the panel copies the data, and frees it on .close()', async () => {
+    fanOutSessions(() =>
+      json(200, { ...DATASET, confirmed: true, complete: true, missing_roles: [], copied_from: 1 })
+    );
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    fireEvent.click(await screen.findByRole('button', { name: 'All libraries' }));
+    fireEvent.click(plotAllButton(), { detail: 1 });
+    const panel = await screen.findByRole('region', { name: 'All libraries' });
+
+    // Opening the card is only a look: it opens, but nothing in it changes the data.
+    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    const card = screen.getByRole('region', { name: 'Your data' });
+    const line = '# the data waits while all libraries plot it · .close() the panel to change it';
+    expect(within(card).getByTestId('data-lock')).toHaveTextContent(line);
+    expect(card).toHaveAccessibleDescription(line);
+    expect(within(card).getByRole('button', { name: 'Open a data file' })).toBeDisabled();
+    expect(within(card).getByLabelText(/^x/)).toBeDisabled();
+    fireEvent.change(within(card).getByLabelText(/# your data/), {
+      target: { value: 'hours,score\n9,99\n8,88\n' },
+    });
+    expect(within(card).getByRole('button', { name: '.parse()' })).toBeDisabled();
 
     fireEvent.click(within(panel).getByRole('button', { name: 'Close all libraries' }));
-    expect(screen.queryByRole('region', { name: 'All libraries' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Plot in all libraries' })).toBeInTheDocument();
+    expect(screen.queryByTestId('data-lock')).not.toBeInTheDocument();
+    const reopened = screen.getByRole('region', { name: 'Your data' });
+    expect(reopened).not.toHaveAccessibleDescription();
+    expect(within(reopened).getByRole('button', { name: '.parse()' })).toBeEnabled();
+    expect(within(reopened).getByLabelText(/^x/)).toBeEnabled();
+  });
+
+  it('posts the paste again in every library while the server has no copy', async () => {
+    fanOutSessions(() => json(404, { detail: 'not_found', ref: 'r-404' }));
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndConfirm();
+    fireEvent.click(await screen.findByRole('button', { name: 'All libraries' }));
+    fireEvent.click(plotAllButton(), { detail: 1 });
+
+    await waitFor(() => expect(fanOutCalls('/messages')).toHaveLength(2));
+    expect(fanOutCalls('/dataset').map(call => call.body)).toEqual([
+      { text: 'hours,score\n1.5,52\n2.0,58\n' },
+      { text: 'hours,score\n1.5,52\n2.0,58\n' },
+    ]);
+    expect(fanOutCalls('/bindings').map(call => call.body)).toEqual([
+      DATASET.bindings,
+      DATASET.bindings,
+    ]);
+  });
+});
+
+describe('AgentChatPage URL', () => {
+  const libraryGroup = () => screen.getByRole('group', { name: 'Library' });
+  const location = () => screen.getByTestId('location').textContent ?? '';
+  const query = () => new URLSearchParams(location().split('?')[1]);
+
+  /** The page's libraries with one of another language, and a library switch the server takes. */
+  function threeLibraries(statusGate?: Promise<void>) {
+    const base = fetchMock.getMockImplementation() as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    fetchMock.mockImplementation(async (input: string, init?: RequestInit) => {
+      const path = new URL(input).pathname;
+      if (path.endsWith('/debug/agent/status')) {
+        await statusGate;
+        return json(200, { libraries: ['matplotlib', 'seaborn', 'ggplot2'], enabled: true });
+      }
+      if (path.endsWith('/specs/scatter-basic')) {
+        return json(200, {
+          title: 'Basic Scatter Plot',
+          implementations: ['matplotlib', 'seaborn', 'ggplot2'].map(library_id => ({ library_id })),
+        });
+      }
+      if (path.endsWith('/sessions/S1/library')) {
+        return json(200, {
+          session_id: 'S1',
+          eligibility: { eligible: true, status: 'clean', reasons: [] },
+        });
+      }
+      return base(input, init);
+    });
+  }
+
+  it('writes the language of the library it switches to', async () => {
+    threeLibraries();
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt('/debug/agent?spec=scatter-basic&library=matplotlib&language=javascript');
+    // The header moves into the chat column once the session is open: look for the pills there.
+    await screen.findByLabelText(/# your data/);
+    const ggplot2 = await within(libraryGroup()).findByRole('button', { name: 'ggplot2' });
+    await waitFor(() => expect(ggplot2).toBeEnabled());
+
+    fireEvent.click(ggplot2);
+    await waitFor(() => expect(query().get('library')).toBe('ggplot2'));
+    expect(query().get('language')).toBe('r');
+    expect(within(libraryGroup()).getByText('r ·')).toBeInTheDocument();
+
+    const seaborn = within(libraryGroup()).getByRole('button', { name: 'seaborn' });
+    await waitFor(() => expect(seaborn).toBeEnabled());
+    fireEvent.click(seaborn);
+    await waitFor(() => expect(query().get('library')).toBe('seaborn'));
+    expect(query().get('language')).toBe('python');
+    expect(query().get('spec')).toBe('scatter-basic');
+  });
+
+  it('keeps the all pill in the URL, and presses it again from there once the lists are in', async () => {
+    let releaseStatus!: () => void;
+    threeLibraries(new Promise<void>(resolve => (releaseStatus = resolve)));
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    const first = renderAt(PAGE);
+    releaseStatus();
+    const all = await screen.findByRole('button', { name: 'All libraries' });
+    await waitFor(() => expect(all).toBeEnabled());
+    expect(query().has('all')).toBe(false);
+
+    fireEvent.click(all);
+    await waitFor(() => expect(query().get('all')).toBe('1'));
+    fireEvent.click(all);
+    await waitFor(() => expect(query().has('all')).toBe(false));
+    fireEvent.click(all);
+    await waitFor(() => expect(query().get('all')).toBe('1'));
+    const reloaded = location();
+    first.unmount();
+
+    // The reload: until the lists are in, `all` is not offered, and the URL keeps it.
+    threeLibraries(new Promise<void>(resolve => (releaseStatus = resolve)));
+    renderAt(reloaded);
+    await screen.findByLabelText(/# your data/);
+    expect(screen.queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
+    expect(query().get('all')).toBe('1');
+    releaseStatus();
+    const again = await screen.findByRole('button', { name: 'All libraries' });
+    expect(again).toHaveAttribute('aria-pressed', 'true');
+    expect(within(libraryGroup()).getByRole('button', { name: 'matplotlib' })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
+    expect(query().get('all')).toBe('1');
+  });
+
+  it('drops all from the URL with the pill: a library pill, and a page that offers none', async () => {
+    threeLibraries();
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    const first = renderAt(`${PAGE}&all=1`);
+    const all = await screen.findByRole('button', { name: 'All libraries' });
+    await waitFor(() => expect(all).toBeEnabled());
+    expect(all).toHaveAttribute('aria-pressed', 'true');
+
+    // Another library switches and turns `all` off: the URL names the new library, without `all`.
+    fireEvent.click(within(libraryGroup()).getByRole('button', { name: 'seaborn' }));
+    await waitFor(() => expect(query().get('library')).toBe('seaborn'));
+    expect(query().has('all')).toBe(false);
+    expect(all).toHaveAttribute('aria-pressed', 'false');
+    first.unmount();
+
+    // One library: no `all` to press, so the URL does not keep it.
+    const base = fetchMock.getMockImplementation() as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    fetchMock.mockImplementation((input: string, init?: RequestInit) =>
+      input.endsWith('/debug/agent/status')
+        ? Promise.resolve(json(200, { libraries: ['matplotlib'], enabled: true }))
+        : base(input, init)
+    );
+    renderAt(`${PAGE}&all=1`);
+    await waitFor(() => expect(query().has('all')).toBe(false));
+    expect(screen.queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
+    expect(query().get('library')).toBe('matplotlib');
   });
 });

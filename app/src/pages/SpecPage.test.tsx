@@ -40,9 +40,13 @@ vi.mock('src/hooks', () => ({
   }),
 }));
 
-// Mock lazy-loaded components as simple divs
+// Mock lazy-loaded components as simple divs; SpecTabs exposes the date it is handed
 vi.mock('src/sections/spec-detail/SpecTabs', () => ({
-  SpecTabs: () => <div data-testid="spec-tabs">SpecTabs</div>,
+  SpecTabs: ({ updated }: { updated?: string }) => (
+    <div data-testid="spec-tabs" data-updated={updated ?? ''}>
+      SpecTabs
+    </div>
+  ),
 }));
 
 vi.mock('src/sections/spec-detail/SpecOverview', () => ({
@@ -194,6 +198,25 @@ describe('SpecPage', () => {
       expect(screen.getByTestId('spec-detail-view')).toBeInTheDocument();
     });
     expect(screen.queryByTestId('spec-overview')).not.toBeInTheDocument();
+  });
+
+  it("hands the implementation's own update date to the tabs in detail mode, not the spec's", async () => {
+    mockParams = { specId: 'scatter-basic', language: 'python', library: 'matplotlib' };
+    mockFetchSuccess({
+      ...mockSpecData,
+      updated: '2025-12-23T00:22:47',
+      implementations: mockSpecData.implementations.map(impl =>
+        impl.library_id === 'matplotlib'
+          ? { ...impl, generated_at: '2025-12-23T00:22:47', updated: '2026-11-01T02:33:45' }
+          : impl
+      ),
+    } as typeof mockSpecData);
+    render(<SpecPage />);
+
+    expect(await screen.findByTestId('spec-tabs')).toHaveAttribute(
+      'data-updated',
+      '2026-11-01T02:33:45'
+    );
   });
 
   it('reports impl_missing when the URL names an implementation that is gone', async () => {

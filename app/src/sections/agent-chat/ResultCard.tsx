@@ -17,7 +17,18 @@
  * - The code is the export, byte-identical to what rendered, under its
  *   language's name (`plot.py`, `plot.R`, `plot.js`, ...: the code artifact
  *   among the version's artifacts); it runs unchanged next to `data.csv`, so
- *   both download under those names.
+ *   both download under those names. A JavaScript plot's code runs only in
+ *   its page: such a version also offers `plot.html`, the self-contained
+ *   interactive page, which the server builds in the theme on screen when it
+ *   is asked for (so the button waits while the session is busy, like a theme
+ *   that still has to render).
+ * - `.interactive()` shows that page in place of the image (`InteractivePreview`,
+ *   through the API's sandboxed relay), only when the user asks for it; a theme
+ *   switch shows the other theme's page, `.preview()` the image again. The pages
+ *   of an open preview are kept, so switching back or downloading the page
+ *   builds nothing twice; closing the preview or collapsing the card (also
+ *   when a newer version arrives) drops them, and a build still under way is
+ *   ignored when it ends. The frame takes the wrapper's size from the page.
  * - A copy or a download that succeeded calls `onOutcome` with the action and
  *   the version, the content-free usage beacon; nothing else travels.
  * - Below the code, the quick-feedback control (`ResultFeedback`) stores the
@@ -33,11 +44,13 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DownloadIcon from '@mui/icons-material/Download';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Skeleton from '@mui/material/Skeleton';
 import Tooltip from '@mui/material/Tooltip';
 
+import { LIB_TO_LANG } from 'src/constants';
 import type { FeedbackInput, PlotVersion } from 'src/hooks/useAgentSession';
 import { useCopyCode } from 'src/hooks/useCopyCode';
 import { useTheme } from 'src/hooks/useLayoutContext';
@@ -46,10 +59,14 @@ import {
   CODE_MEDIA_TYPES,
   type CodeArtifact,
   codeArtifact,
+  hasPage,
   type OutcomeAction,
+  PAGE_ARTIFACT,
+  pageFrameSize,
   type Theme,
 } from 'src/lib/agent';
 import { copyImage, downloadBlob } from 'src/sections/agent-chat/files';
+import { InteractivePreview } from 'src/sections/agent-chat/InteractivePreview';
 import { IMAGE_FAILURE } from 'src/sections/agent-chat/messages';
 import { ResultFeedback } from 'src/sections/agent-chat/ResultFeedback';
 import { RoundGrid } from 'src/sections/agent-chat/RoundGrid';
@@ -86,6 +103,7 @@ const STATUS_LABEL: Record<string, string> = {
 export interface ResultCardProps {
   version: PlotVersion;
   specId: string;
+  /** The page's language; the code is highlighted in its version's library's language when the app knows it. */
   language: string;
   /** Whether this is the newest version: only it starts expanded. */
   latest: boolean;
@@ -96,7 +114,8 @@ export interface ResultCardProps {
    */
   busy: boolean;
   onRequestTheme: (version: number, theme: Theme) => void;
-  onFetchArtifact: (version: number, name: ArtifactName) => Promise<Blob>;
+  /** One file of the version; `theme` picks the theme of `plot.html`, which the server builds on demand. */
+  onFetchArtifact: (version: number, name: ArtifactName, theme?: Theme) => Promise<Blob>;
   onTrack: (event: string, props?: Record<string, string | undefined>) => void;
   /**
    * The usage beacon, called once a copy or a download succeeded, with the
@@ -127,19 +146,25 @@ export function ResultCard({
   const [shownTheme, setShownTheme] = useState<Theme>(version.theme);
   const [toast, setToast] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [buildingPage, setBuildingPage] = useState(false);
   const [aspect, setAspect] = useState(PLACEHOLDER_ASPECT);
+  // The interactive preview: shown in place of the image on request, with the pages fetched while it is open.
+  const [interactive, setInteractive] = useState(false);
+  const [pages, setPages] = useState<Partial<Record<Theme, string>>>({});
+  // Per theme, so a failed build of one theme never covers the page of the other that is on screen meanwhile.
+  const [previewErrors, setPreviewErrors] = useState<Partial<Record<Theme, string>>>({});
+  // Bumped when the preview closes or the card unmounts, so a page that arrives afterwards is dropped; the beacon goes
+  // once per opening.
+  const previewRun = useRef(0);
+  const previewReported = useRef(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(null);
-
-  // A newer version collapses this one; it stays one click away in the thread.
   const [wasLatest, setWasLatest] = useState(latest);
-  if (wasLatest !== latest) {
-    setWasLatest(latest);
-    setExpanded(latest);
-  }
 
   useEffect(
     () => () => {
       if (toastTimer.current) clearTimeout(toastTimer.current);
+      // A build still under way when the card goes keeps neither its page nor reports the opening.
+      previewRun.current += 1;
     },
     []
   );
@@ -168,7 +193,50 @@ export function ResultCard({
     return !current || current.state === 'failed';
   };
 
+  /** Whether showing `theme` in the open preview needs its page built first. */
+  const needsPage = (theme: Theme) => pages[theme] === undefined;
+
+  /** Set or clear (`undefined`) the preview's error for `theme`. */
+  const setPreviewError = (theme: Theme, code: string | undefined) =>
+    setPreviewErrors(current => ({ ...current, [theme]: code }));
+
+  /**
+   * Drop the preview: its pages (two wrappers of up to tens of MiB), its error,
+   * and a build still under way, whose page is ignored when it comes.
+   */
+  const dropPreview = () => {
+    previewRun.current += 1;
+    setInteractive(false);
+    setPages({});
+    setPreviewErrors({});
+  };
+
+  /** Collapse the card; an open preview goes, and a theme it showed without a PNG gives way to the run's own. */
+  const collapse = () => {
+    if (interactive) {
+      dropPreview();
+      if (needsRender(shownTheme)) setShownTheme(version.theme);
+    }
+    setExpanded(false);
+  };
+
+  // A newer version collapses this one; it stays one click away in the thread.
+  if (wasLatest !== latest) {
+    setWasLatest(latest);
+    if (latest) setExpanded(true);
+    else collapse();
+  }
+
   const handleTheme = (theme: Theme) => {
+    if (interactive) {
+      // The preview shows the other theme's page; the PNG renders when the image is back on screen.
+      if (needsPage(theme) && busy) return;
+      setShownTheme(theme);
+      // A fresh relay for the theme, also after the last one did not answer.
+      setPreviewError(theme, undefined);
+      void showPage(theme);
+      return;
+    }
     if (needsRender(theme)) {
       if (busy) return;
       onRequestTheme(number, theme);
@@ -204,6 +272,11 @@ export function ResultCard({
   // The exported code downloads under its language's name (`plot.py`, `plot.R`, `plot.js`, ...).
   const codeName = codeArtifact(version.result.artifacts);
   const downloadCodeLabel = DOWNLOAD_CODE_LABELS[codeName];
+  // A JavaScript plot's code runs only in its page, which the version offers as `plot.html`.
+  const page = hasPage(version.result.artifacts);
+  // Highlighted in the version's own language: after a library switch the thread holds versions of several
+  // languages (a matplotlib plot above a ggplot2 one), while `language` follows the page's library.
+  const codeLanguage = LIB_TO_LANG[library] ?? language;
 
   const handleDownloadFile = async (name: ArtifactName) => {
     setFileError(null);
@@ -221,6 +294,77 @@ export function ResultCard({
     }
   };
 
+  /**
+   * The interactive page in the theme on screen, built by the server now; the
+   * session hook holds the whole session back while it builds (`pageBusy`),
+   * and the beacon reports it as `downloaded_page`.
+   */
+  const handleDownloadPage = async () => {
+    const shown = pages[shownTheme];
+    if (shown === undefined && (busy || buildingPage)) return;
+    setFileError(null);
+    setBuildingPage(shown === undefined);
+    try {
+      // The open preview's page is the very file: no second build.
+      const blob =
+        shown !== undefined
+          ? new Blob([shown], { type: 'text/html' })
+          : await onFetchArtifact(number, PAGE_ARTIFACT, shownTheme);
+      downloadBlob(blob, PAGE_ARTIFACT);
+      onOutcome?.('downloaded_page', number);
+    } catch {
+      setFileError(`could not download ${PAGE_ARTIFACT}`);
+    } finally {
+      setBuildingPage(false);
+    }
+  };
+
+  /** Fetch `theme`'s page for the open preview, unless it is there; the session waits while the server builds it. */
+  const showPage = async (theme: Theme) => {
+    if (!needsPage(theme) || busy || buildingPage) return;
+    const run = previewRun.current;
+    setPreviewError(theme, undefined);
+    setBuildingPage(true);
+    try {
+      const text = await (await onFetchArtifact(number, PAGE_ARTIFACT, theme)).text();
+      if (run !== previewRun.current) return; // closed meanwhile
+      setPages(current => ({ ...current, [theme]: text }));
+      if (!previewReported.current) {
+        previewReported.current = true;
+        onOutcome?.('opened_preview', number);
+      }
+    } catch (err) {
+      if (run === previewRun.current) {
+        const code = (err as { code?: unknown } | null)?.code;
+        setPreviewError(theme, typeof code === 'string' ? code : 'internal');
+      }
+    } finally {
+      setBuildingPage(false);
+    }
+  };
+
+  const handleOpenPreview = () => {
+    if (needsPage(shownTheme) && busy) return;
+    previewReported.current = false;
+    setInteractive(true);
+    void showPage(shownTheme);
+  };
+
+  const handleClosePreview = () => {
+    dropPreview();
+    if (needsRender(shownTheme)) {
+      // A theme the preview showed without its PNG: render it now, or go back to the run's own while busy.
+      if (busy) setShownTheme(version.theme);
+      else onRequestTheme(number, shownTheme);
+    }
+  };
+
+  // The preview keeps the wrapper's own aspect, read from its page; the image box, and the preview while it
+  // builds, take the PNG's.
+  const shownPage = interactive ? pages[shownTheme] : undefined;
+  const previewError = interactive ? previewErrors[shownTheme] : undefined;
+  const pageFrame = shownPage !== undefined ? pageFrameSize(shownPage) : null;
+
   const overlayBtnSx = overlayButtonSx(isDark);
   // Named the way the progress grid names its rounds, and which round shipped when an earlier one won.
   const attempts = triesText(result);
@@ -229,7 +373,7 @@ export function ResultCard({
     <Box
       component="button"
       type="button"
-      onClick={() => setExpanded(open => !open)}
+      onClick={() => (expanded ? collapse() : setExpanded(true))}
       aria-expanded={expanded}
       aria-label={`Version ${number}, ${STATUS_LABEL[result.status] ?? result.status}`}
       sx={{
@@ -303,11 +447,56 @@ export function ResultCard({
               overflow: 'hidden',
               bgcolor: 'var(--bg-surface)',
               boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-              aspectRatio: aspect,
+              aspectRatio: pageFrame ? `${pageFrame.width}/${pageFrame.height}` : aspect,
             }}
             data-testid="result-image-box"
           >
-            {readyImage ? (
+            {interactive ? (
+              previewError ? (
+                <Box
+                  role="alert"
+                  sx={{
+                    position: 'absolute',
+                    inset: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    p: 2,
+                    textAlign: 'center',
+                    ...bodyTextSx,
+                    color: 'var(--ink-soft)',
+                  }}
+                >
+                  could not show the interactive plot ({previewError})
+                </Box>
+              ) : shownPage !== undefined ? (
+                <InteractivePreview
+                  key={shownTheme}
+                  page={shownPage}
+                  title={`Interactive plot, version ${number}, ${shownTheme} theme`}
+                  onUnavailable={code => setPreviewError(shownTheme, code)}
+                />
+              ) : (
+                <>
+                  <Skeleton
+                    variant="rectangular"
+                    sx={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+                  />
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      ...labelSx,
+                    }}
+                  >
+                    {`building the interactive ${shownTheme} plot…`}
+                  </Box>
+                </>
+              )
+            ) : readyImage ? (
               <Box
                 component="img"
                 src={readyImage.url}
@@ -378,47 +567,77 @@ export function ResultCard({
               </Box>
             )}
 
-            <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
-              <Tooltip title=".copy_png()" disableFocusListener>
-                <span style={{ display: 'inline-flex' }}>
+            {interactive ? (
+              <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
+                <Tooltip title=".preview()" disableFocusListener>
                   <IconButton
-                    onClick={handleCopyImage}
-                    aria-label="Copy image"
-                    disabled={!readyImage}
+                    onClick={handleClosePreview}
+                    aria-label="Show image"
                     sx={overlayBtnSx}
                     size="medium"
                   >
                     <ImageOutlinedIcon fontSize="small" />
                   </IconButton>
-                </span>
-              </Tooltip>
-              <Tooltip title=".download()" disableFocusListener>
-                <span style={{ display: 'inline-flex' }}>
-                  <IconButton
-                    onClick={handleDownloadPng}
-                    aria-label="Download PNG"
-                    disabled={!readyImage}
-                    sx={overlayBtnSx}
-                    size="medium"
-                  >
-                    <DownloadIcon fontSize="small" />
-                  </IconButton>
-                </span>
-              </Tooltip>
-              <Tooltip title=".open()" disableFocusListener>
-                <span style={{ display: 'inline-flex' }}>
-                  <IconButton
-                    onClick={handleOpen}
-                    aria-label="Open full size"
-                    disabled={!readyImage}
-                    sx={overlayBtnSx}
-                    size="medium"
-                  >
-                    <OpenInNewIcon fontSize="small" />
-                  </IconButton>
-                </span>
-              </Tooltip>
-            </Box>
+                </Tooltip>
+              </Box>
+            ) : (
+              <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
+                {page && (
+                  <Tooltip title=".interactive()" disableFocusListener>
+                    <span style={{ display: 'inline-flex' }}>
+                      <IconButton
+                        onClick={handleOpenPreview}
+                        aria-label="Show interactive"
+                        disabled={busy || buildingPage}
+                        sx={overlayBtnSx}
+                        size="medium"
+                      >
+                        <PlayArrowIcon fontSize="small" />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                )}
+                <Tooltip title=".copy_png()" disableFocusListener>
+                  <span style={{ display: 'inline-flex' }}>
+                    <IconButton
+                      onClick={handleCopyImage}
+                      aria-label="Copy image"
+                      disabled={!readyImage}
+                      sx={overlayBtnSx}
+                      size="medium"
+                    >
+                      <ImageOutlinedIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title=".download()" disableFocusListener>
+                  <span style={{ display: 'inline-flex' }}>
+                    <IconButton
+                      onClick={handleDownloadPng}
+                      aria-label="Download PNG"
+                      disabled={!readyImage}
+                      sx={overlayBtnSx}
+                      size="medium"
+                    >
+                      <DownloadIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title=".open()" disableFocusListener>
+                  <span style={{ display: 'inline-flex' }}>
+                    <IconButton
+                      onClick={handleOpen}
+                      aria-label="Open full size"
+                      disabled={!readyImage}
+                      sx={overlayBtnSx}
+                      size="medium"
+                    >
+                      <OpenInNewIcon fontSize="small" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              </Box>
+            )}
           </Box>
 
           {/* Theme switch: the run rendered one theme; the other renders on demand. */}
@@ -439,7 +658,11 @@ export function ResultCard({
                   component="button"
                   type="button"
                   aria-pressed={active}
-                  disabled={!active && busy && needsRender(theme)}
+                  disabled={
+                    !active &&
+                    (busy || buildingPage) &&
+                    (interactive ? needsPage(theme) : needsRender(theme))
+                  }
                   onClick={() => handleTheme(theme)}
                   sx={{
                     ...actionButtonSx,
@@ -454,11 +677,13 @@ export function ResultCard({
                 </Box>
               );
             })}
-            {readyImage?.status === 'needs_attention' && shownTheme !== version.theme && (
-              <Box component="span" sx={{ ...labelSx, ml: 1 }}>
-                padded onto the canvas
-              </Box>
-            )}
+            {!interactive &&
+              readyImage?.status === 'needs_attention' &&
+              shownTheme !== version.theme && (
+                <Box component="span" sx={{ ...labelSx, ml: 1 }}>
+                  padded onto the canvas
+                </Box>
+              )}
           </Box>
 
           {/* How each round of the run ended, as the progress grid showed it while it ran. */}
@@ -509,7 +734,9 @@ export function ResultCard({
               }}
             >
               <Box component="span" sx={{ ...labelSx, mr: 'auto' }}>
-                # {codeName} runs next to data.csv
+                {page
+                  ? `# ${codeName} runs in ${PAGE_ARTIFACT}`
+                  : `# ${codeName} runs next to data.csv`}
               </Box>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, ml: -1.25 }}>
                 <Box
@@ -521,6 +748,19 @@ export function ResultCard({
                 >
                   {downloadCodeLabel}
                 </Box>
+                {page && (
+                  <Box
+                    component="button"
+                    type="button"
+                    onClick={handleDownloadPage}
+                    disabled={busy || buildingPage}
+                    aria-label={`Download ${PAGE_ARTIFACT}, ${shownTheme} theme`}
+                    aria-busy={buildingPage}
+                    sx={actionButtonSx}
+                  >
+                    .download(&apos;plot.html&apos;){buildingPage ? ' …' : ''}
+                  </Box>
+                )}
                 <Box
                   component="button"
                   type="button"
@@ -574,7 +814,7 @@ export function ResultCard({
                     >
                       <CodeHighlighter
                         code={version.code.text}
-                        language={language}
+                        language={codeLanguage}
                         library={library}
                       />
                     </Suspense>

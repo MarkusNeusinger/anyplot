@@ -1,8 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlotVersion } from 'src/hooks/useAgentSession';
+import { RELAY_READY_TIMEOUT_MS } from 'src/sections/agent-chat/InteractivePreview';
 import { ResultCard, type ResultCardProps } from 'src/sections/agent-chat/ResultCard';
-import { fireEvent, render, screen, userEvent, waitFor } from 'src/test-utils';
+import { act, fireEvent, render, screen, userEvent, waitFor } from 'src/test-utils';
+
+// The lazy-loaded highlighter, reduced to the code and the grammar it was asked for.
+vi.mock('src/components/CodeHighlighter', () => ({
+  default: ({ code, language }: { code: string; language?: string }) => (
+    <pre data-testid="code-highlighter" data-language={language}>
+      {code}
+    </pre>
+  ),
+}));
 
 const pngBlob = new Blob(['png'], { type: 'image/png' });
 
@@ -165,6 +175,24 @@ describe('ResultCard', () => {
     expect(onOutcome).not.toHaveBeenCalled();
   });
 
+  it('highlights the code in its version library language, not the page language', async () => {
+    const version = makeVersion({
+      library: 'ggplot2',
+      code: { state: 'ready', text: 'df <- readr::read_csv("data.csv")\n' },
+    });
+    version.result = { ...version.result, artifacts: ['plot-light.png', 'plot.R', 'data.csv'] };
+    renderCard({ version, language: 'python' });
+    expect(await screen.findByTestId('code-highlighter')).toHaveAttribute('data-language', 'r');
+  });
+
+  it('keeps the page language for a library the app does not know', async () => {
+    renderCard({ version: makeVersion({ library: 'unknown-lib' }), language: 'python' });
+    expect(await screen.findByTestId('code-highlighter')).toHaveAttribute(
+      'data-language',
+      'python'
+    );
+  });
+
   it('downloads the code under its language name when the version names another artifact', async () => {
     const version = makeVersion();
     version.result = { ...version.result, artifacts: ['plot-light.png', 'plot.R', 'data.csv'] };
@@ -190,6 +218,332 @@ describe('ResultCard', () => {
       ['downloaded_code', 2],
       ['downloaded_data', 2],
     ]);
+  });
+
+  describe("a JavaScript plot's page", () => {
+    const jsVersion = (overrides: Partial<PlotVersion> = {}) => {
+      const version = makeVersion({
+        library: 'chartjs',
+        code: { state: 'ready', text: 'const data = window.ANYPLOT_DATA;\n' },
+        ...overrides,
+      });
+      version.result = {
+        ...version.result,
+        artifacts: ['plot-light.png', 'plot.js', 'plot.html', 'data.csv'],
+      };
+      return version;
+    };
+    const pageBlob = new Blob(['<!doctype html>'], { type: 'text/html' });
+
+    it('downloads plot.html in the theme on screen and reports downloaded_page', async () => {
+      const onFetchArtifact = vi.fn(async () => pageBlob);
+      const { onOutcome } = renderCard({ version: jsVersion(), onFetchArtifact });
+      expect(screen.getByText('# plot.js runs in plot.html')).toBeInTheDocument();
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Download plot.html, light theme' })
+      );
+      await waitFor(() => expect(clicked.map(entry => entry.download)).toEqual(['plot.html']));
+      expect(onFetchArtifact).toHaveBeenCalledWith(2, 'plot.html', 'light');
+      expect(onOutcome.mock.calls).toEqual([['downloaded_page', 2]]);
+    });
+
+    it('builds the page of the other theme once the card shows it', async () => {
+      const onFetchArtifact = vi.fn(async () => pageBlob);
+      renderCard({
+        onFetchArtifact,
+        version: jsVersion({
+          images: {
+            light: { state: 'ready', url: 'blob:light', blob: pngBlob, status: 'ok' },
+            dark: { state: 'ready', url: 'blob:dark', blob: pngBlob, status: 'ok' },
+          },
+        }),
+      });
+      await userEvent.click(screen.getByRole('button', { name: 'dark' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Download plot.html, dark theme' }));
+      await waitFor(() => expect(onFetchArtifact).toHaveBeenCalledWith(2, 'plot.html', 'dark'));
+    });
+
+    it('waits while the session is busy, since the server builds the page', async () => {
+      const onFetchArtifact = vi.fn(async () => pageBlob);
+      renderCard({ version: jsVersion(), onFetchArtifact, busy: true });
+      const button = screen.getByRole('button', { name: 'Download plot.html, light theme' });
+      expect(button).toBeDisabled();
+      await userEvent.click(button);
+      expect(onFetchArtifact).not.toHaveBeenCalled();
+      // The code itself stays one click away.
+      expect(screen.getByRole('button', { name: 'Download plot.js' })).toBeEnabled();
+    });
+
+    it('says so when the page could not be built', async () => {
+      const { onOutcome } = renderCard({
+        version: jsVersion(),
+        onFetchArtifact: vi.fn(async () => Promise.reject(new Error('page_unavailable'))),
+      });
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Download plot.html, light theme' })
+      );
+      expect(await screen.findByRole('alert')).toHaveTextContent('could not download plot.html');
+      expect(onOutcome).not.toHaveBeenCalled();
+    });
+
+    it('is not offered for a plot of another language', () => {
+      renderCard();
+      expect(screen.queryByText(".download('plot.html')")).not.toBeInTheDocument();
+      expect(screen.getByText('# plot.py runs next to data.csv')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Show interactive' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe("a JavaScript plot's interactive preview", () => {
+    const jsVersion = (overrides: Partial<PlotVersion> = {}) => {
+      const version = makeVersion({ library: 'chartjs', ...overrides });
+      version.result = {
+        ...version.result,
+        artifacts: ['plot-light.png', 'plot.js', 'plot.html', 'data.csv'],
+      };
+      return version;
+    };
+    const page = (theme: string) => new Blob([`<p>${theme} page</p>`], { type: 'text/html' });
+    const fetchPages = () =>
+      vi.fn(async (_version: number, _name: string, theme?: string) => page(theme ?? 'none'));
+
+    it('shows the page through the relay only when asked, and the image again on .preview()', async () => {
+      const onFetchArtifact = fetchPages();
+      const { onOutcome } = renderCard({ version: jsVersion(), onFetchArtifact });
+      expect(onFetchArtifact).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+
+      const frame = await screen.findByTitle('Interactive plot, version 2, light theme');
+      expect(frame).toHaveAttribute('src', expect.stringMatching(/\/preview\/relay$/));
+      expect(frame).toHaveAttribute('sandbox', 'allow-scripts');
+      expect(onFetchArtifact).toHaveBeenCalledWith(2, 'plot.html', 'light');
+      expect(onOutcome.mock.calls).toEqual([['opened_preview', 2]]);
+      expect(screen.queryByRole('button', { name: 'Download PNG' })).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Show image' }));
+      expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
+      expect(screen.getByAltText('Adapted plot, version 2, light theme')).toBeInTheDocument();
+    });
+
+    it('shows the other theme page on a theme switch and fetches each page once', async () => {
+      const onFetchArtifact = fetchPages();
+      const { onRequestTheme, onOutcome } = renderCard({ version: jsVersion(), onFetchArtifact });
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+      await screen.findByTitle('Interactive plot, version 2, light theme');
+
+      await userEvent.click(screen.getByRole('button', { name: 'dark' }));
+      await screen.findByTitle('Interactive plot, version 2, dark theme');
+      await userEvent.click(screen.getByRole('button', { name: 'light' }));
+      await screen.findByTitle('Interactive plot, version 2, light theme');
+
+      expect(onFetchArtifact.mock.calls.map(call => call[2])).toEqual(['light', 'dark']);
+      // The preview needs no PNG of the dark theme, and one opening is one beacon.
+      expect(onRequestTheme).not.toHaveBeenCalled();
+      expect(onOutcome.mock.calls).toEqual([['opened_preview', 2]]);
+    });
+
+    it('downloads the page the open preview shows without a second build', async () => {
+      const onFetchArtifact = fetchPages();
+      const { onOutcome } = renderCard({ version: jsVersion(), onFetchArtifact });
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+      await screen.findByTitle('Interactive plot, version 2, light theme');
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Download plot.html, light theme' })
+      );
+
+      await waitFor(() => expect(clicked.map(entry => entry.download)).toEqual(['plot.html']));
+      expect(onFetchArtifact).toHaveBeenCalledTimes(1);
+      expect(onOutcome.mock.calls).toEqual([
+        ['opened_preview', 2],
+        ['downloaded_page', 2],
+      ]);
+    });
+
+    it('waits while the session is busy, since the server builds the page', async () => {
+      const onFetchArtifact = fetchPages();
+      renderCard({ version: jsVersion(), onFetchArtifact, busy: true });
+      const open = screen.getByRole('button', { name: 'Show interactive' });
+      expect(open).toBeDisabled();
+      fireEvent.click(open);
+      expect(onFetchArtifact).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
+    });
+
+    it('says so when the page could not be built', async () => {
+      const onFetchArtifact = vi.fn(async () =>
+        Promise.reject(Object.assign(new Error('nope'), { code: 'page_unavailable' }))
+      );
+      const { onOutcome } = renderCard({ version: jsVersion(), onFetchArtifact });
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'could not show the interactive plot (page_unavailable)'
+      );
+      expect(onOutcome).not.toHaveBeenCalled();
+    });
+
+    it('renders the PNG of a theme the preview showed once the image is back', async () => {
+      const onFetchArtifact = fetchPages();
+      const { onRequestTheme } = renderCard({ version: jsVersion(), onFetchArtifact });
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+      await screen.findByTitle('Interactive plot, version 2, light theme');
+      await userEvent.click(screen.getByRole('button', { name: 'dark' }));
+      await screen.findByTitle('Interactive plot, version 2, dark theme');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Show image' }));
+
+      expect(onRequestTheme).toHaveBeenCalledWith(2, 'dark');
+      expect(screen.getByText('rendering dark theme…')).toBeInTheDocument();
+    });
+
+    it('frames a square plot square from its page, before its PNG has loaded', async () => {
+      const onFetchArtifact = vi.fn(
+        async () =>
+          new Blob(['<style>.frame { width: 1200px; height: 1200px; }</style>'], {
+            type: 'text/html',
+          })
+      );
+      renderCard({ version: jsVersion(), onFetchArtifact });
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+
+      const frame = await screen.findByTitle('Interactive plot, version 2, light theme');
+      expect(frame.style.width).toBe('1232px');
+      expect(getComputedStyle(screen.getByTestId('result-image-box')).aspectRatio).toBe(
+        '1232/1232'
+      );
+    });
+
+    it('says so when the relay does not answer, and mounts a fresh one on a theme click', async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      try {
+        renderCard({ version: jsVersion(), onFetchArtifact: fetchPages() });
+        fireEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+        await screen.findByTitle('Interactive plot, version 2, light theme');
+
+        act(() => {
+          vi.advanceTimersByTime(RELAY_READY_TIMEOUT_MS);
+        });
+
+        expect(screen.getByRole('alert')).toHaveTextContent(
+          'could not show the interactive plot (relay_unavailable)'
+        );
+        fireEvent.click(screen.getByRole('button', { name: 'light' }));
+        expect(screen.getByTitle('Interactive plot, version 2, light theme')).toBeInTheDocument();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('drops the preview and ignores a build still under way when the card collapses', async () => {
+      let finish: (blob: Blob) => void = () => undefined;
+      const onFetchArtifact = fetchPages();
+      onFetchArtifact.mockImplementationOnce(
+        () =>
+          new Promise<Blob>(resolve => {
+            finish = resolve;
+          })
+      );
+      const { onOutcome } = renderCard({ version: jsVersion(), onFetchArtifact });
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+      expect(screen.getByText('building the interactive light plot…')).toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: /^Version 2,/ }));
+      finish(page('light'));
+      await userEvent.click(screen.getByRole('button', { name: /^Version 2,/ }));
+      await waitFor(() =>
+        expect(screen.getByRole('button', { name: 'Show interactive' })).toBeEnabled()
+      );
+
+      // The late page went nowhere: the image is back, and no opening was reported.
+      expect(screen.getByAltText('Adapted plot, version 2, light theme')).toBeInTheDocument();
+      expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
+      expect(onOutcome).not.toHaveBeenCalled();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+      await screen.findByTitle('Interactive plot, version 2, light theme');
+      expect(onFetchArtifact).toHaveBeenCalledTimes(2);
+      expect(onOutcome.mock.calls).toEqual([['opened_preview', 2]]);
+    });
+
+    it('closes the preview when a newer version arrives', async () => {
+      const onFetchArtifact = fetchPages();
+      const props: ResultCardProps = {
+        version: jsVersion(),
+        specId: 'scatter-basic',
+        language: 'javascript',
+        latest: true,
+        busy: false,
+        onRequestTheme: vi.fn(),
+        onFetchArtifact,
+        onTrack: vi.fn(),
+      };
+      const { rerender } = render(<ResultCard {...props} />);
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+      await screen.findByTitle('Interactive plot, version 2, light theme');
+
+      rerender(<ResultCard {...props} latest={false} />);
+      expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: /^Version 2,/ }));
+      expect(screen.getByAltText('Adapted plot, version 2, light theme')).toBeInTheDocument();
+      expect(screen.queryByTestId('interactive-preview')).not.toBeInTheDocument();
+    });
+
+    it("keeps a theme's page on screen when the other theme's build fails meanwhile", async () => {
+      let fail: (reason: unknown) => void = () => undefined;
+      const onFetchArtifact = fetchPages();
+      const { onOutcome } = renderCard({ version: jsVersion(), onFetchArtifact });
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+      await screen.findByTitle('Interactive plot, version 2, light theme');
+      onFetchArtifact.mockImplementationOnce(
+        () =>
+          new Promise<Blob>((_resolve, reject) => {
+            fail = reject;
+          })
+      );
+
+      await userEvent.click(screen.getByRole('button', { name: 'dark' }));
+      expect(screen.getByText('building the interactive dark plot…')).toBeInTheDocument();
+      // The light page is there already, so its theme stays clickable while the dark one builds.
+      await userEvent.click(screen.getByRole('button', { name: 'light' }));
+      await screen.findByTitle('Interactive plot, version 2, light theme');
+      await act(async () => fail(Object.assign(new Error('nope'), { code: 'page_unavailable' })));
+
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(screen.getByTitle('Interactive plot, version 2, light theme')).toBeInTheDocument();
+      expect(onOutcome.mock.calls).toEqual([['opened_preview', 2]]);
+    });
+
+    it('reports no opening when the card unmounts while the page builds', async () => {
+      let finish: (blob: Blob) => void = () => undefined;
+      const onOutcome = vi.fn();
+      const { unmount } = render(
+        <ResultCard
+          version={jsVersion()}
+          specId="scatter-basic"
+          language="javascript"
+          latest
+          busy={false}
+          onRequestTheme={vi.fn()}
+          onFetchArtifact={vi.fn(
+            () =>
+              new Promise<Blob>(resolve => {
+                finish = resolve;
+              })
+          )}
+          onTrack={vi.fn()}
+          onOutcome={onOutcome}
+        />
+      );
+      await userEvent.click(screen.getByRole('button', { name: 'Show interactive' }));
+
+      unmount();
+      await act(async () => finish(page('light')));
+
+      expect(onOutcome).not.toHaveBeenCalled();
+    });
   });
 
   it('reports no download when the file could not be fetched', async () => {

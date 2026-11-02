@@ -57,6 +57,13 @@ before the route; it raises `DataRunUnsupported`, which the tool answers as
 in JSON) the same way; a `404` raises `DataRunUnsupported`, which the dataset route answers
 `503 convert_unavailable`.
 
+**Pages.** `page` posts a JavaScript version's run form and typed table to
+`AGENT_RENDER_URL/page` the same way and takes the `text/html` answer, at most
+`wire.MAX_PAGE_BYTES`, as the page. A `404` (a renderer deployed before the route: the
+agents service deploys first) raises `PageUnsupported`, which the artifact route answers
+`503 page_unavailable`; `422 page_failed` raises `PageFailed` with the build's exit code,
+reason and stderr tail; a busy renderer raises `RenderBusy`.
+
 No semaphore here: `SerialRenderer` (`render/serial.py`) already hands this backend
 one theme at a time, and the renderer keeps its own single render slot for the
 callers it serves together.
@@ -82,11 +89,14 @@ from google.oauth2 import id_token as google_id_token
 from pydantic import ValidationError
 
 from agents.renderer.wire import (
+    MAX_PAGE_BYTES,
     MAX_PNG_BYTES,
     ConvertRequest,
     ConvertResponse,
     DataRunRequest,
     DataRunResponse,
+    PageFailure,
+    PageRequest,
     RenderRequest,
     RenderResponse,
 )
@@ -97,6 +107,9 @@ from ..contract import (
     DataJob,
     DataOutput,
     DataRunUnsupported,
+    PageFailed,
+    PageJob,
+    PageUnsupported,
     RendererUnavailable,
     RenderJob,
     RenderResult,
@@ -272,10 +285,13 @@ class RemoteBackend:
                     "library": job.library,
                     "source": job.source,
                     "data_csv": job.data_csv,
+                    "data_json": job.data_json,
                     "themes": list(job.themes),
                     "timeout_s": job.timeout_s,
                 }
-            ).model_dump(mode="json")
+            ).model_dump(mode="json", exclude_none=True)
+            # An optional field left empty stays out of the body: the agents service deploys before the renderer, whose
+            # request model forbids fields it does not know yet, so a `"data_json": null` would fail every render there.
         except ValidationError as exc:
             fields = ",".join(sorted({str(error["loc"][0]) for error in exc.errors() if error["loc"]}))
             raise _unavailable(f"the job does not fit the renderer contract ({fields})") from None
@@ -409,6 +425,77 @@ class RemoteBackend:
             reason=answer.reason,
             wall_s=answer.wall_s,
         )
+
+    async def page(self, job: PageJob) -> str:
+        """POST the run form and the typed table to `/page`; the answer's `text/html` body is the page."""
+        try:
+            body = PageRequest.model_validate(
+                {
+                    "job_id": job.job_id,
+                    "language": job.language,
+                    "library": job.library,
+                    "source": job.source,
+                    "data_json": job.data_json,
+                    "theme": job.theme,
+                    "timeout_s": job.timeout_s,
+                }
+            ).model_dump(mode="json")
+        except ValidationError as exc:
+            fields = ",".join(sorted({str(error["loc"][0]) for error in exc.errors() if error["loc"]}))
+            raise _unavailable(f"the page job does not fit the renderer contract ({fields})") from None
+        timeout = httpx.Timeout(job.timeout_s + RESPONSE_MARGIN_S, connect=CONNECT_TIMEOUT_S)
+        try:
+            response = await self._post(body, timeout, path="/page")
+        except asyncio.CancelledError:
+            await self._cancel_remote(job.job_id)
+            raise
+        except httpx.TimeoutException as exc:
+            await self._cancel_remote(job.job_id)
+            raise _unavailable(f"the renderer did not answer the page build in time ({type(exc).__name__})") from None
+        return self._page_result(job, response)
+
+    def _page_result(self, job: PageJob, response: httpx.Response) -> str:
+        status = response.status_code
+        if status == 404:
+            logger.warning("remote renderer: no /page route (HTTP 404); deploy the renderer first")
+            raise PageUnsupported("the renderer has no /page route yet (HTTP 404)")
+        detail = _detail(response) if status != 200 else None
+        if status == 422 and detail == "page_failed":
+            try:
+                failure = PageFailure.model_validate_json(response.content)
+            except ValidationError:
+                raise _unavailable("the renderer's page failure does not match the contract") from None
+            logger.info(
+                "remote page %s: exit %s, reason %s, attempts %s, %.2f s",
+                job.job_id,
+                failure.exit_code,
+                failure.reason,
+                failure.attempts,
+                failure.wall_s,
+            )
+            if failure.reason == "launcher":
+                raise _unavailable("the renderer's sandbox launcher failed for the page build")
+            raise PageFailed(
+                exit_code=failure.exit_code,
+                reason=failure.reason,
+                stderr_tail=failure.stderr_tail,
+                wall_s=failure.wall_s,
+            )
+        if status == 503 and detail in BUSY_DETAILS:
+            raise RenderBusy(f"the renderer is busy ({detail})")
+        if status != 200:
+            suffix = f", {detail}" if detail else ""
+            raise _unavailable(f"the renderer answered the page build with HTTP {status}{suffix}")
+        if not response.headers.get("content-type", "").startswith("text/html"):
+            raise _unavailable("the renderer's page is not text/html")
+        if len(response.content) > MAX_PAGE_BYTES:
+            raise _unavailable(f"the renderer's page is over the {MAX_PAGE_BYTES}-byte cap")
+        try:
+            page = response.content.decode("utf-8")
+        except UnicodeDecodeError:
+            raise _unavailable("the renderer's page is not UTF-8") from None
+        logger.info("remote page %s: %d bytes", job.job_id, len(response.content))
+        return page
 
     async def _post(self, body: dict[str, object], timeout: httpx.Timeout, *, path: str = "/render") -> httpx.Response:
         """POST the job, retrying connection errors and front-end 429/5xx with backoff inside the budget."""

@@ -1,3 +1,5 @@
+import { createElement, type ReactNode } from 'react';
+
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -10,14 +12,28 @@ import {
   initialAgentState,
   missingRolesOf,
   sessionBusy,
+  sessionHoldsWork,
   type TranscriptionState,
   useAgentSession,
   type UseAgentSessionOptions,
 } from 'src/hooks/useAgentSession';
+import { type EffectiveTheme, ThemeContext } from 'src/hooks/useLayoutContext';
 import type { DatasetChanged, DatasetParsed, RoleSpec } from 'src/lib/agent';
 import { pendingReply } from 'src/sections/agent-chat/steps';
 
 const lastItem = (items: ChatItem[]) => items[items.length - 1];
+/** The notice after the first typed message set the reply language; a plot keeps its own (owner, 2026-11-01). */
+const LANGUAGE_DETECTED_TEXT = (language: string) =>
+  `reply language: ${language} · detected from your message · a plot you have keeps its language · the lang chip in the header changes both`;
+
+/** The layout's theme context with `effective` as the theme the site shows. */
+const siteTheme = (effective: EffectiveTheme) => ({
+  mode: effective,
+  effective,
+  isDark: effective === 'dark',
+  setMode: () => {},
+  cycle: () => {},
+});
 
 const trackEvent = vi.fn();
 vi.mock('src/hooks/useAnalytics', () => ({
@@ -735,7 +751,85 @@ describe('useAgentSession: confirming the data (step 1)', () => {
   });
 });
 
-describe('useAgentSession: replaying an upload (the admin fan-out)', () => {
+describe('useAgentSession: copying the confirmed data (the admin fan-out)', () => {
+  /** The page session's version 3, computed by the assistant, as the server copied it. */
+  const COPIED = {
+    ...PREPARED,
+    roles: [role('x'), role('y')],
+    version: 1,
+    language: { language: 'de', source: 'chosen' },
+    confirmed: true,
+    complete: true,
+    missing_roles: [],
+    copied_from: 3,
+  };
+
+  it('takes the copy bound and confirmed, without a paste, a binding call or a summary turn', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset/copy'] = () => json(200, COPIED);
+    const { result } = await openSession(routes);
+    let failure: unknown = 'pending';
+    await act(async () => {
+      failure = await result.current.copyData('PAGE');
+    });
+
+    expect(failure).toBeNull();
+    expect(calls.map(call => `${call.method} ${call.path}`)).toEqual([
+      'POST /sessions',
+      'POST /sessions/S1/dataset/copy',
+    ]);
+    expect(calls[1].body).toEqual({ from_session: 'PAGE' });
+    const { state } = result.current;
+    expect(state.dataConfirmed).toBe(true);
+    expect(state.bindings).toEqual({ x: 'Minutes', y: 'Exam Score' });
+    expect(state.bindingsComplete).toBe(true);
+    expect(state.dataset?.parsed.version).toBe(1);
+    expect(state.dataset?.parsed.preview).toEqual(PREPARED.preview);
+    // Computed data has no upload: the copy needs none.
+    expect(state.dataset?.upload).toBeUndefined();
+    expect(state.plotLanguage).toEqual({ language: 'de', source: 'chosen' });
+    expect(state.items).toEqual([]);
+    expect(state.parsing).toBe(false);
+  });
+
+  it('says why a copy stopped: a server without the route, a refusal, incomplete bindings', async () => {
+    const missing = baseRoutes();
+    missing['POST /sessions/S1/dataset/copy'] = () =>
+      json(404, { detail: 'not_found', ref: 'r-404' });
+    const first = await openSession(missing);
+    let failure: unknown;
+    await act(async () => {
+      failure = await first.result.current.copyData('PAGE');
+    });
+    expect(failure).toEqual({ code: 'not_found', ref: 'r-404' });
+    expect(first.result.current.state.dataset).toBeNull();
+    expect(first.result.current.state.parsing).toBe(false);
+    first.unmount();
+
+    const refused = baseRoutes();
+    refused['POST /sessions/S1/dataset/copy'] = () =>
+      json(422, { detail: 'unconfirmed', ref: 'r-u' });
+    const second = await openSession(refused);
+    await act(async () => {
+      failure = await second.result.current.copyData('PAGE');
+    });
+    expect(failure).toEqual({ code: 'unconfirmed', ref: 'r-u' });
+    expect(second.result.current.state.dataConfirmed).toBe(false);
+    second.unmount();
+
+    const incomplete = baseRoutes();
+    incomplete['POST /sessions/S1/dataset/copy'] = () =>
+      json(200, { ...COPIED, complete: false, missing_roles: ['y'] });
+    const third = await openSession(incomplete);
+    await act(async () => {
+      failure = await third.result.current.copyData('PAGE');
+    });
+    expect(failure).toEqual({ code: 'bindings_incomplete', ref: null });
+    expect(third.result.current.state.missingRoles).toEqual(['y']);
+  });
+});
+
+describe('useAgentSession: replaying an upload (a server without the copy)', () => {
   const TEXT = 'Student,Study Hours,Exam Score\nS01,1.5,52\n';
   const BOUND = { x: 'Study Hours', y: 'Exam Score' };
 
@@ -1452,6 +1546,8 @@ describe('useAgentSession: turns', () => {
 
     const turn = calls.find(call => call.path.endsWith('/messages'));
     expect(turn?.body).toEqual({ action: 'create_plot' });
+    // Outside a layout the site theme is the context's default: light.
+    expect(turn?.search).toBe('?theme=light');
     expect(result.current.state.run).toBeNull();
     expect(result.current.state.items.map(item => item.kind)).toEqual([
       'action',
@@ -1471,6 +1567,41 @@ describe('useAgentSession: turns', () => {
       repaired: 'no',
       spec: 'scatter-basic',
     });
+  });
+
+  it('sends the site theme each turn starts with, so a plot follows the page', async () => {
+    // User test E2 of 2026-11-01: on the dark site the first plot came back light.
+    const routes = baseRoutes();
+    let number = 0;
+    routes['POST /sessions/S1/messages'] = () => {
+      number += 1;
+      return sse([
+        ['plot', { ...PLOT_OK, version: number, artifacts: ['plot-dark.png', 'plot.py'] }],
+        ['done', {}],
+      ]);
+    };
+    mockFetch(routes);
+    let site: EffectiveTheme = 'dark';
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(ThemeContext.Provider, { value: siteTheme(site) }, children);
+    const { result, rerender } = renderHook(() => useAgentSession(options), { wrapper });
+    await waitFor(() => expect(result.current.state.phase).toBe('ready'));
+
+    await act(() => result.current.createPlot());
+    const turnSearches = () =>
+      calls.filter(call => call.path.endsWith('/messages')).map(call => call.search);
+    expect(turnSearches()).toEqual(['?theme=dark']);
+    // The run rendered the dark theme only: the card shows it, and nothing renders twice.
+    await waitFor(() => expect(result.current.state.versions[1].images.dark?.state).toBe('ready'));
+    expect(result.current.state.versions[1].theme).toBe('dark');
+    expect(calls.some(call => call.path.endsWith('/render'))).toBe(false);
+
+    // The user switched the site to light: the next turn sends the switch, the shown version stays.
+    site = 'light';
+    rerender();
+    await act(() => result.current.sendMessage('bigger markers'));
+    expect(turnSearches()).toEqual(['?theme=dark', '?theme=light']);
+    expect(result.current.state.versions[1].theme).toBe('dark');
   });
 
   it("addresses the artifacts by the server's version number, not a count", async () => {
@@ -1732,8 +1863,8 @@ describe('useAgentSession: turns', () => {
 });
 
 describe('useAgentSession: versions and library', () => {
-  async function withVersion(render?: Handler) {
-    const routes = baseRoutes();
+  async function withVersion(render?: Handler, extra: Record<string, Handler> = {}) {
+    const routes = { ...baseRoutes(), ...extra };
     routes['POST /sessions/S1/messages'] = () =>
       sse([
         ['plot', PLOT_OK],
@@ -1791,6 +1922,52 @@ describe('useAgentSession: versions and library', () => {
     expect(result.current.state.themeBusy).toBe(false);
   });
 
+  it('holds the session back while plot.html builds, as the server does', async () => {
+    const gate = deferred<Response>();
+    const { result } = await withVersion(undefined, {
+      'GET /sessions/S1/artifacts/plot.html': () => gate.promise,
+    });
+    let building: Promise<Blob> = Promise.resolve(new Blob());
+    act(() => {
+      building = result.current.fetchArtifact(1, 'plot.html', 'dark');
+    });
+    await waitFor(() => expect(result.current.state.pageBusy).toBe(true));
+    expect(sessionBusy(result.current.state)).toBe(true);
+    const turns = calls.filter(call => call.path.endsWith('/messages')).length;
+    await act(() => result.current.createPlot());
+    await act(() => result.current.requestTheme(1, 'dark'));
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    // A second build waits too: the server would answer it `409 run_active`.
+    await expect(result.current.fetchArtifact(1, 'plot.html', 'light')).rejects.toMatchObject({
+      code: 'run_active',
+    });
+    expect(calls.filter(call => call.path.endsWith('/messages'))).toHaveLength(turns);
+    expect(
+      calls.some(call => call.path.endsWith('/render') || call.path.endsWith('/dataset'))
+    ).toBe(false);
+    expect(calls.filter(call => call.path.endsWith('/plot.html'))).toHaveLength(1);
+    expect(calls.find(call => call.path.endsWith('/plot.html'))?.search).toBe('?v=1&theme=dark');
+
+    gate.resolve(new Response('<!doctype html>', { status: 200 }));
+    await act(async () => {
+      await building;
+    });
+    expect(result.current.state.pageBusy).toBe(false);
+    expect(sessionBusy(result.current.state)).toBe(false);
+  });
+
+  it('frees the session when the page build fails', async () => {
+    const { result } = await withVersion(undefined, {
+      'GET /sessions/S1/artifacts/plot.html': () => json(503, { detail: 'page_unavailable' }),
+    });
+    await act(async () => {
+      await expect(result.current.fetchArtifact(1, 'plot.html', 'light')).rejects.toMatchObject({
+        code: 'page_unavailable',
+      });
+    });
+    expect(result.current.state.pageBusy).toBe(false);
+  });
+
   it('switches the library and keeps the dataset', async () => {
     const { result } = await withVersion();
     let switched = false;
@@ -1808,7 +1985,7 @@ describe('useAgentSession: versions and library', () => {
 
 describe('useAgentSession: session language', () => {
   const languageNotices = (items: ChatItem[]) =>
-    items.filter(item => item.kind === 'notice' && item.text.startsWith('language:'));
+    items.filter(item => item.kind === 'notice' && /^(reply )?language:/.test(item.text));
 
   it('starts in English whatever the locale, with no call', async () => {
     mockFetch(baseRoutes());
@@ -1898,7 +2075,7 @@ describe('useAgentSession: session language', () => {
     // The notice comes under the reply of the turn that set it.
     expect(lastItem(result.current.state.items)).toMatchObject({
       kind: 'notice',
-      text: 'language: de · detected from your message · the lang chip in the header changes it',
+      text: LANGUAGE_DETECTED_TEXT('de'),
     });
     expect(lastItem(result.current.state.items)).not.toHaveProperty('tone');
 
@@ -1942,7 +2119,7 @@ describe('agentReducer', () => {
       {
         id: 1,
         kind: 'notice',
-        text: 'language: de · detected from your message · the lang chip in the header changes it',
+        text: LANGUAGE_DETECTED_TEXT('de'),
       },
     ]);
     // default → default and detected → detected: nothing new in the thread.
@@ -1974,7 +2151,7 @@ describe('agentReducer', () => {
       source: 'default' | 'pasted' | 'detected' | 'chosen'
     ) => agentReducer(state, { type: 'language_sync', plotLanguage: { language, source } });
     const pastedNotice =
-      'language: de · detected from your pasted data · the lang chip in the header changes it';
+      'reply language: de · detected from your pasted data · a plot you have keeps its language · the lang chip in the header changes both';
 
     const pasted = sync(ready, 'de', 'pasted');
     expect(pasted.plotLanguage).toEqual({ language: 'de', source: 'pasted' });
@@ -1984,13 +2161,13 @@ describe('agentReducer', () => {
     expect(sync(pasted, 'en', 'default')).toBe(pasted);
     // A later paste in another language moves it, with a notice.
     expect(lastItem(sync(pasted, 'fr', 'pasted').items)).toMatchObject({
-      text: 'language: fr · detected from your pasted data · the lang chip in the header changes it',
+      text: 'reply language: fr · detected from your pasted data · a plot you have keeps its language · the lang chip in the header changes both',
     });
     // The first typed message replaces it, with the message's notice.
     const detected = sync(pasted, 'en', 'detected');
     expect(detected.plotLanguage).toEqual({ language: 'en', source: 'detected' });
     expect(lastItem(detected.items)).toMatchObject({
-      text: 'language: en · detected from your message · the lang chip in the header changes it',
+      text: LANGUAGE_DETECTED_TEXT('en'),
     });
     // Never over a typed or a chosen language.
     expect(sync(detected, 'de', 'pasted')).toBe(detected);
@@ -2367,6 +2544,85 @@ describe('agentReducer', () => {
       { name: 'y', kinds: [], required: false, variadic: false, description: '' },
     ]);
     expect(state.bindingsComplete).toBe(true);
+  });
+});
+
+describe('sessionHoldsWork', () => {
+  const ready: AgentSessionState = {
+    ...initialAgentState('matplotlib'),
+    phase: 'ready',
+    sessionId: 'S1',
+  };
+
+  it('holds nothing for an empty session, open or not', () => {
+    expect(sessionHoldsWork(initialAgentState('matplotlib'))).toBe(false);
+    expect(sessionHoldsWork(ready)).toBe(false);
+    // A thread without data or a plot (a question, a refused paste) is nothing to lose either.
+    const asked = agentReducer(ready, { type: 'item', item: { kind: 'user', text: 'hi' } });
+    expect(sessionHoldsWork(asked)).toBe(false);
+  });
+
+  it('holds stored data, confirmed or not, a table read from text, a plot and work in flight', () => {
+    const parsed = agentReducer(ready, {
+      type: 'parse_done',
+      parsed: DATASET as DatasetParsed,
+      bytes: 30,
+    });
+    expect(sessionHoldsWork(parsed)).toBe(true);
+    expect(sessionHoldsWork(agentReducer(parsed, { type: 'confirm_done' }))).toBe(true);
+
+    const transcription: TranscriptionState = {
+      text: TRANSCRIBED.text,
+      preview: TRANSCRIBED.preview,
+      profile: { ...TRANSCRIBED.profile, columns: [] },
+      warnings: [],
+      note: '',
+      bytes: 26,
+    };
+    expect(sessionHoldsWork(agentReducer(ready, { type: 'transcribed', transcription }))).toBe(
+      true
+    );
+
+    const plotted: AgentSessionState = {
+      ...ready,
+      versions: {
+        1: {
+          number: 1,
+          library: 'matplotlib',
+          result: {
+            status: 'ok',
+            attempts: 1,
+            artifacts: [],
+            changes: [],
+            residual_defects: [],
+            version: 1,
+          },
+          theme: 'light',
+          images: {},
+          code: { state: 'loading' },
+        },
+      },
+    };
+    expect(sessionHoldsWork(plotted)).toBe(true);
+
+    // A paste or a formula turn still in flight, before anything is stored.
+    expect(sessionHoldsWork(agentReducer(ready, { type: 'parse_start' }))).toBe(true);
+    expect(sessionHoldsWork(agentReducer(ready, { type: 'run_start', kind: 'message' }))).toBe(
+      true
+    );
+  });
+
+  it('holds nothing once the page no longer shows the session', () => {
+    const parsed = agentReducer(ready, {
+      type: 'parse_done',
+      parsed: DATASET as DatasetParsed,
+      bytes: 30,
+    });
+    const failure = { code: 'session_expired', ref: null };
+    expect(
+      sessionHoldsWork(agentReducer(parsed, { type: 'open_failed', phase: 'error', failure }))
+    ).toBe(false);
+    expect(sessionHoldsWork(agentReducer(parsed, { type: 'unauthorized' }))).toBe(false);
   });
 });
 

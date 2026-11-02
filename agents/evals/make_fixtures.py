@@ -1,9 +1,9 @@
-"""Generate the synthetic spike-X fixture cases: 10 specs x 6 Python libraries x 6 perturbations.
+"""Generate the synthetic spike-X fixture cases: 10 specs x 15 libraries x 6 perturbations.
 
 Every dataset is invented and drawn from a seeded NumPy generator, so a rerun writes
 byte-identical files. Run it from the repository root:
 
-    uv run --extra agents python -m agents.evals.make_fixtures          # (re)write the 360 cases
+    uv run --extra agents python -m agents.evals.make_fixtures          # (re)write the 900 cases
     uv run --extra agents python -m agents.evals.make_fixtures --check  # exit 1 when a file is stale
 
 It writes `agents/evals/fixtures/cases/<spec>-<library>-<perturbation>/` with
@@ -13,36 +13,58 @@ the stress cases of `make_stress.py` stay as they are). A NumPy upgrade that
 changes a random stream makes `--check` and the unit test fail; rerun the generator
 and commit the result. The libraries are matplotlib and seaborn (since the first
 fixtures), plotnine and altair (since 2026-10-25, step 1b of
-`agentic/specs/261024-agent-all-libraries.md`), and pygal and lets-plot (`letsplot`,
-since 2026-10-26, step 1c); every library of a spec gets the same datasets and
-bindings, so only `library` and the case id differ between them. A new library adds
-case directories and changes none that exist.
+`agentic/specs/261024-agent-all-libraries.md`), pygal and lets-plot (`letsplot`,
+since 2026-10-26, step 1c), ggplot2 (since 2026-10-29, step 2c, PR 3b: the first
+library of another language, R, whose files the R runtime scans), Makie (`makie`,
+since 2026-10-30, J2b of step 5: Julia, whose files the Julia runtime scans) and Chart.js,
+D3, ECharts and Highcharts (`chartjs`, `d3`, `echarts`, `highcharts`, since 2026-10-30,
+JS-4a of step 3: JavaScript, whose files the JavaScript runtime scans), MUI X (`muix`,
+since 2026-10-31, JS-4c: TSX, which the same runtime scans) and plotly and bokeh (since
+2026-10-31, PB-2a of step 4: Python, drawn by the renderer's figure mode); every
+library of a spec gets the same datasets and bindings, so only `library` and the case id
+differ between them. A new library adds case directories and changes none that exist.
 
 **The ten specs.** Each covers another plot family, and the readiness scan
-(`agents/anyplot/code/readiness.py`, through `opening.assess` with the six libraries
-enabled) marks each of its six files `clean` or `coupled`, except one pygal file
-that it blocks (`tests/unit/agents/evals/test_make_fixtures.py` asserts it and names
+(`RuntimeAdapter.readiness` of the library's runtime, through `opening.assess` with the
+fifteen libraries enabled) marks each of its fifteen files `clean` or `coupled`, except one
+pygal file that it blocks (`tests/unit/agents/evals/test_make_fixtures.py` asserts it and names
 it). The cells below were computed on 2026-10-26, pygal's `histogram-basic` on
-2026-10-28; the first four columns are unchanged since 2026-10-25. The heatmap's matplotlib file, `clean` in the table's first
+2026-10-28, the ggplot2 column on 2026-10-29 and the makie column on 2026-10-30; the first four columns are unchanged since 2026-10-25. The heatmap's matplotlib file, `clean` in the table's first
 version, is `coupled` now (`color-scale`: its `TwoSlopeNorm(vmin=-1, vmax=1)`). The
 heatmap's pygal file writes a hand-built HTML page from a `with open(...)` body that
 also assigns a name nothing else reads; the normaliser's HTML rule drops such a body,
 so the file is `coupled`, not `blocked`. plotnine and altair size their canvas on the save, so their reasons also carry a
 `canvas:` note, which does not change the status; the normaliser rewrites the canvas of
-pygal and lets-plot, so theirs carry none:
+pygal, lets-plot and ggplot2, so theirs carry none. Four ggplot2 files are `clean`
+(both markers and role-commented column constants: line-basic, box-basic, area-basic,
+line-timeseries); the other six carry no `# Data` marker in the convention's form and
+are `coupled` with a `data-block` hint, which the owner decision of 2026-10-29 makes
+eligible in every language. All ten Makie files are `coupled` (no catalogue Makie file
+carries column constants, so every one has the `data-block` hint), and so are all forty
+Chart.js, D3, ECharts and Highcharts files (2026-10-30; no file of the four is `clean` in
+the whole catalogue, so the table leaves their columns out). The MUI X column (2026-10-31)
+splits by the version each file was written for: the five files regenerated for MUI X 9.16
+(box, heatmap, area, violin, pie) are `clean`, and the five written for MUI X 7.29 are
+`coupled` with the `data-block` hint; `scatter-basic`'s file imports MUI X 7's
+`ChartContainer` and carries the `deprecated-api` hint too, which the adapter rewrites (the
+plan's question 13: such a file is served, never blocked for its version). Every plotly
+file is `coupled` and every bokeh file but `bar-grouped`'s too (2026-10-31): the readiness
+scan's plotly and bokeh rules flag their literal axis ranges, annotations and synthetic
+data, and bokeh's `histogram-basic` is eligible through the normaliser's `.format` rewrite
+of its hex colours:
 
-| Spec | Family | matplotlib | seaborn | plotnine | altair | pygal | letsplot |
-|---|---|---|---|---|---|---|---|
-| `scatter-basic` | scatter | coupled | coupled | coupled | coupled | coupled | coupled |
-| `line-basic` | line (numeric x) | coupled | coupled | coupled | coupled | clean | coupled |
-| `bar-grouped` | bar (grouped) | coupled | coupled | coupled | coupled | clean | coupled |
-| `histogram-basic` | histogram | coupled | coupled | coupled | coupled | coupled | coupled |
-| `box-basic` | box | coupled | coupled | coupled | coupled | coupled | coupled |
-| `heatmap-basic` | heatmap | coupled | coupled | coupled | coupled | coupled | coupled |
-| `area-basic` | area | coupled | coupled | coupled | coupled | clean | coupled |
-| `violin-basic` | violin | coupled | coupled | coupled | coupled | coupled | coupled |
-| `pie-basic` | pie | coupled | clean | clean | clean | clean | clean |
-| `line-timeseries` | time series | coupled | coupled | coupled | coupled | blocked | coupled |
+| Spec | Family | matplotlib | seaborn | plotnine | altair | pygal | letsplot | plotly | bokeh | ggplot2 | makie | muix |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `scatter-basic` | scatter | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled (7.29, `deprecated-api`) |
+| `line-basic` | line (numeric x) | coupled | coupled | coupled | coupled | clean | coupled | coupled | coupled | clean | coupled | coupled (7.29) |
+| `bar-grouped` | bar (grouped) | coupled | coupled | coupled | coupled | clean | coupled | coupled | clean | coupled | coupled | coupled (7.29) |
+| `histogram-basic` | histogram | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled (7.29) |
+| `box-basic` | box | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | clean | coupled | clean |
+| `heatmap-basic` | heatmap | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | clean |
+| `area-basic` | area | coupled | coupled | coupled | coupled | clean | coupled | coupled | coupled | clean | coupled | clean |
+| `violin-basic` | violin | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | coupled | clean |
+| `pie-basic` | pie | coupled | clean | clean | clean | clean | clean | coupled | coupled | coupled | coupled | clean |
+| `line-timeseries` | time series | coupled | coupled | coupled | coupled | blocked | coupled | coupled | coupled | clean | coupled | coupled (7.29) |
 
 The blocked pygal file has a shape that step 1c does not adapt, so the readiness scan
 blocks the session of each of its 6 cases until the catalogue file changes:
@@ -74,17 +96,34 @@ customers and stations are invented.
 **The smoke cases.** The tag `smoke` marks one case per spec, cycling through the
 perturbations and alternating matplotlib and seaborn (`SMOKE_CYCLE`, as since the first
 fixtures), and one case for each library outside that cycle (`LIBRARY_SMOKE`):
-`scatter-basic-<library>-renamed` for plotnine and altair (since step 1b) and for pygal
-and letsplot (since step 1c). `scatter-basic` is the spec whose files of each of these
-libraries were rendered under the harness guard when the library's step landed, and it
-is eligible for all four. `renamed` puts headers with spaces and a dot
+`scatter-basic-<library>-renamed` for plotnine and altair (since step 1b), for pygal
+and letsplot (since step 1c), for ggplot2 (since PR 3b), for makie (since J2b), for
+chartjs, d3, echarts and highcharts (since JS-4a) and for plotly and bokeh (since PB-2a,
+whose `renamed` headers reach a plotly trace and a bokeh `ColumnDataSource` through column
+constants in `df[...]`). `scatter-basic` is the spec whose files
+of each of these libraries were rendered when the library's step landed, and it is
+eligible for all ten. MUI X's smoke case (since JS-4c) is `pie-basic-muix-renamed`
+instead: its `scatter-basic` file is written for MUI X 7 and does not bundle as it stands,
+so the eval harness's preflight, which renders a catalogue file to check the renderer,
+could not prove it with that file, and takes the smoke case's file when no selected MUI X
+file bundles (`matrix.preflight`); `pie-basic`'s file is written for MUI X 9.16
+and `clean`, and its renamed headers (`Ausgabenposten`, `Betrag CHF`) carry an umlaut and
+a space. `renamed` puts headers with spaces and a dot
 (`Werbebudget in Tsd. CHF`) into the library's own column syntax: plotnine's `aes`
 strings; altair's field strings, where Vega-Lite reads an unescaped `.` as nested access
 (`prompts/library/altair.md`); and lets-plot's `aes` strings and tooltip lines, where a
 variable name with spaces needs braces (`@{...}`). pygal has no column syntax: it takes
 plain lists and never titles an axis from a column name (`prompts/library/pygal.md`), so
 its case asks the adaptation to build the `(x, y)` points from the renamed columns and to
-pass the headers to `x_title` and `y_title` itself.
+pass the headers to `x_title` and `y_title` itself. ggplot2 reads such a header only
+through a column constant in `.data[[...]]` (`prompts/library/ggplot2.md`, "Data block"):
+a bare name in `aes()` breaks on the spaces and the dot. Makie reads it only as
+`df[!, COL]` through a column constant (`prompts/library/makie.md`, "Data block"), where a
+field (`df.Werbebudget`) breaks on the same characters, and its catalogue file builds plain
+vectors, so the case also checks that the adaptation introduces the DataFrame access. The
+JavaScript libraries read it only as `d[COL]` through a column constant (the "Data block"
+of `prompts/library/<library>.md`), where a property (`d.Werbebudget`) breaks on the same
+characters, and their catalogue files keep the example values in variables of their own.
 """
 
 import argparse
@@ -107,7 +146,23 @@ from agents.anyplot.schemas import MAX_COLUMN_NAME_CHARS, MAX_ROWS
 
 
 CASES_DIR = Path(__file__).resolve().parent / "fixtures" / "cases"
-LIBRARIES: tuple[str, ...] = ("matplotlib", "seaborn", "plotnine", "altair", "pygal", "letsplot")
+LIBRARIES: tuple[str, ...] = (
+    "matplotlib",
+    "seaborn",
+    "plotnine",
+    "altair",
+    "pygal",
+    "letsplot",
+    "plotly",
+    "bokeh",
+    "ggplot2",
+    "makie",
+    "chartjs",
+    "d3",
+    "echarts",
+    "highcharts",
+    "muix",
+)
 PERTURBATIONS: tuple[str, ...] = ("renamed", "x10", "n12", "n5000", "date", "decimal-comma")
 SMOKE_TAG = "smoke"
 SMOKE_CYCLE: tuple[str, ...] = ("matplotlib", "seaborn")
@@ -117,6 +172,15 @@ LIBRARY_SMOKE: dict[str, tuple[str, str]] = {
     "altair": ("scatter-basic", "renamed"),
     "pygal": ("scatter-basic", "renamed"),
     "letsplot": ("scatter-basic", "renamed"),
+    "plotly": ("scatter-basic", "renamed"),
+    "bokeh": ("scatter-basic", "renamed"),
+    "ggplot2": ("scatter-basic", "renamed"),
+    "makie": ("scatter-basic", "renamed"),
+    "chartjs": ("scatter-basic", "renamed"),
+    "d3": ("scatter-basic", "renamed"),
+    "echarts": ("scatter-basic", "renamed"),
+    "highcharts": ("scatter-basic", "renamed"),
+    "muix": ("pie-basic", "renamed"),
 }
 """The one smoke case `(spec, perturbation)` of each library outside `SMOKE_CYCLE` (module docstring)."""
 SOURCE = "synthetic: agents/evals/make_fixtures.py"

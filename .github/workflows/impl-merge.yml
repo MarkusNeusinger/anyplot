@@ -351,10 +351,12 @@ jobs:
             sleep 2
 
             # --admin bypasses the branch ruleset's required-status-check
-            # gate. Required because impl-generate.yml pushes via GITHUB_TOKEN,
-            # which by GitHub's anti-recursion design does not trigger
-            # downstream CI workflows (Run Linting / Run Tests / Run Frontend
-            # Tests), so impl PRs never get those checks. The pipeline already
+            # gate. Required because impl PRs never get those checks (Run
+            # Linting / Run Tests / Run Frontend Tests): impl-generate.yml opens
+            # and pushes them via GITHUB_TOKEN, whose PR runs wait at
+            # `action_required` for a human since GitHub's 2026-06-11 change,
+            # and since #12499 a PR that changes only implementation and
+            # metadata files starts no CI run at all. The pipeline already
             # gates merge behind the AI quality review threshold.
             #
             # Bypass only works if the token has admin role. GITHUB_TOKEN is
@@ -592,7 +594,7 @@ jobs:
       # on Python 3.14 only; the runner image's own python3 is not pinned.
       - name: Set up Python
         if: steps.branch.outputs.run == 'true'
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version-file: '.python-version'
 

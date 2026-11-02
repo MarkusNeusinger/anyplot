@@ -2,15 +2,21 @@
  * The admin fan-out, `.plot_all()`: the confirmed table plotted in every library
  * of the page at once, for testing.
  *
- * The page hands over the upload its session stored (`DatasetState.upload`) and
- * the bindings the admin confirmed. `FanOut` opens a session per library (a
- * `FanOutRun` with its own `useAgentSession`), stores the same upload there with
- * the same bindings and confirms it (`replayData`, without the summary turn of
- * a paste), and starts `create_plot` in at most `maxRuns` sessions at a time
- * (`grantSlots`): the server's `AGENT_USER_MAX_RUNS`, which refuses one run
- * more with `run_limit`. Each run goes through the agents service's run queue
- * like any other, and each session is deleted when the panel closes or the page
- * goes, like the page's own.
+ * The page hands over its own session's id, whose data the admin confirmed.
+ * `FanOut` opens a session per library (a `FanOutRun` with its own
+ * `useAgentSession`), has the server copy that session's confirmed current
+ * version into it with its bindings and their confirmation (`copyData`, without
+ * the summary turn of a paste), whatever the data's origin: pasted, opened,
+ * computed or changed by the assistant. It then starts `create_plot` in at most
+ * `maxRuns` sessions at a time (`grantSlots`): the server's
+ * `AGENT_USER_MAX_RUNS`, which refuses one run more with `run_limit`. Each run
+ * goes through the agents service's run queue like any other, and each session
+ * is deleted when the panel closes or the page goes, like the page's own.
+ *
+ * A server without the copy (the page deployed before the API or the agents
+ * service) answers `404 not_found`: a library then posts the page's upload again
+ * (`replayData`) with the bindings the page held at the click, where the data
+ * came from a paste or a file, and otherwise stops with `copy_unavailable`.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -51,7 +57,8 @@ interface FanOutRunProps {
   library: string;
   locale: string;
   token: string;
-  upload: DatasetUpload;
+  sourceSession: string;
+  upload?: DatasetUpload;
   bindings: BindingMap;
   slot: FanOutSlot;
   onReady: (library: string) => void;
@@ -63,40 +70,60 @@ function FanOutRun({
   library,
   locale,
   token,
+  sourceSession,
   upload,
   bindings,
   slot,
   onReady,
   onDone,
 }: FanOutRunProps) {
-  const { state, replayData, createPlot, stop } = useAgentSession({
+  const { state, copyData, replayData, createPlot, stop } = useAgentSession({
     specId,
     library,
     locale,
     token,
+    fanout: true,
   });
   const [dataFailure, setDataFailure] = useState<Failure | null>(null);
-  const replayed = useRef(false);
+  const stored = useRef(false);
   const started = useRef(false);
 
-  // The session opened: store the table, bind it and confirm it. A session that
-  // could not open (not eligible, an error) gives its place up at once.
+  // The session opened: the server copies the page session's confirmed data into it. A session
+  // that could not open (not eligible, an error) gives its place up at once.
   useEffect(() => {
-    if (state.phase === 'opening' || replayed.current) return;
-    replayed.current = true;
+    if (state.phase === 'opening' || stored.current) return;
+    stored.current = true;
     if (state.phase !== 'ready') {
       onDone(library);
       return;
     }
-    void replayData(upload, bindings).then(failure => {
-      if (failure) {
-        setDataFailure(failure);
-        onDone(library);
-      } else {
-        onReady(library);
-      }
-    });
-  }, [state.phase, replayData, upload, bindings, library, onReady, onDone]);
+    void copyData(sourceSession)
+      .then(failure => {
+        // A server without the copy: the paste as it was posted, where the data came from one.
+        if (failure?.code !== 'not_found') return failure;
+        return upload
+          ? replayData(upload, bindings)
+          : { code: 'copy_unavailable', ref: failure.ref };
+      })
+      .then(failure => {
+        if (failure) {
+          setDataFailure(failure);
+          onDone(library);
+        } else {
+          onReady(library);
+        }
+      });
+  }, [
+    state.phase,
+    copyData,
+    replayData,
+    sourceSession,
+    upload,
+    bindings,
+    library,
+    onReady,
+    onDone,
+  ]);
 
   // Given a place: one `create_plot`, whose end frees the place, whatever it brought.
   useEffect(() => {
@@ -182,18 +209,28 @@ export interface FanOutProps {
   libraries: string[];
   locale: string;
   token: string;
-  upload: DatasetUpload;
+  /** The page's own session, whose confirmed data every library's session copies. */
+  sourceSession: string;
+  /**
+   * The page's upload and the bindings at the click, for a server without the copy only: the upload
+   * is absent for data the assistant changed or computed.
+   */
+  upload?: DatasetUpload;
   bindings: BindingMap;
   /** How many plots run at once (`AGENT_USER_MAX_RUNS`). */
   maxRuns: number;
   onClose: () => void;
+  /** The panel, which takes the focus when a key press on `.plot_all()` opened it. */
+  panelRef?: React.Ref<HTMLElement>;
 }
 
 export function FanOut({
+  panelRef,
   specId,
   libraries,
   locale,
   token,
+  sourceSession,
   upload,
   bindings,
   maxRuns,
@@ -218,8 +255,17 @@ export function FanOut({
   return (
     <Box
       component="section"
+      ref={panelRef}
+      tabIndex={-1}
       aria-label="All libraries"
-      sx={{ ...panelSx, mt: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}
+      sx={{
+        ...panelSx,
+        mt: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1.5,
+        '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 2 },
+      }}
     >
       <Box
         sx={{
@@ -258,6 +304,7 @@ export function FanOut({
             library={library}
             locale={locale}
             token={token}
+            sourceSession={sourceSession}
             upload={upload}
             bindings={bindings}
             slot={slots[library]}

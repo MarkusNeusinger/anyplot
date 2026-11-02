@@ -46,7 +46,7 @@ PR/review/CI steps swap. The mapping:
 | List review threads | `gh api graphql … reviewThreads` (§3c) | `mcp__github__pull_request_read` (review-threads method) |
 | Reply on a thread | `gh pr comment` | `mcp__github__add_reply_to_pull_request_comment` (thread) / `mcp__github__add_issue_comment` (PR-level) |
 | Resolve a thread | `gh api graphql … resolveReviewThread` (§3d) | `mcp__github__resolve_review_thread` |
-| Request Copilot review | `gh api -X POST … requested_reviewers` (§3b) | `mcp__github__request_copilot_review` |
+| Request Copilot review | `gh api -X POST … requested_reviewers`; a further round through GraphQL `requestReviews` (§3b) | `mcp__github__request_copilot_review` |
 | Merge (only if authorized) | `gh pr merge` | `mcp__github__merge_pull_request` |
 
 In the cloud, prefer `mcp__github__subscribe_pr_activity` over any
@@ -68,6 +68,7 @@ git diff --name-only origin/main...
 | `api/` | `/verify-api` (read sweep + the changed endpoint's payload) |
 | `core/`, `tests/` | `/verify-core` (pytest + direct smoke) |
 | `alembic/` | `/verify-migrations` (throwaway Postgres; the shared prod DB never sees an untested revision). CI verifies every migration on a throwaway PostgreSQL 18 (`Verify Migrations`, `.github/workflows/ci-migrations.yml`) for every PR touching `alembic/` or `core/database/`. |
+| a Dockerfile: `api/`, `app/`, `agents/`, `agents/renderer/` (`Dockerfile`, `toolchain.Dockerfile`) | `docker run --rm -i hadolint/hadolint:v2.15.1 hadolint --failure-threshold warning - < <file>`, CI's hadolint version and threshold (`ci-image.yml`, hadolint-action v3.5.0). It must exit 0 and print no `warning` or `error` line; `info` lines such as DL3059 sit below the threshold. DL4006 showed locally on 2026-10-28 and still failed the renderer image's CI on 2026-10-31 |
 | review rubric: `prompts/quality-criteria.md`, `prompts/workflow-prompts/ai-quality-review.md`, `prompts/default-style-guide.md`, review rules in `prompts/library/*.md`, review model routing | dispatch a candidate arm (`gh workflow run review-retest.yml -f rules_ref=<sha> -f label=<name> -f compare_to=<baseline run>`) and paste its snippet in the PR (`docs/workflows/review-retest.md`) |
 | `.github/workflows/`, other `prompts/`, `automation/` | no live loop exists — reason through carefully, dry-run what's dry-runnable, and say so in the PR |
 | `docs/`, `CLAUDE.md`, instruction files | `/write-docs` (layer choice, `docs/index.md` + cross-file sync duties) |
@@ -95,12 +96,23 @@ Skip it for a diff made only of docs, instruction files (`CLAUDE.md`,
 `.github/copilot-instructions.md`, skills, commands), changelog fragments, or
 `plots/`, for a diff under about 20 lines, and for Dependabot bumps.
 
+**Tests for new code, before the PR opens.** Every new code path gets its unit
+test in the branch before the PR opens: `codecov/patch/backend` and
+`codecov/patch/frontend` are checks like any other, and on #12484 and #12487
+(2026-10-31) the patch check, not the review, was what kept the PR from being
+ready. Judge like a reviewer, not by the percentage: uncovered NEW pure logic
+that a unit test reaches cheaply gets a test — extracting a pure core from an
+async/DB wrapper is the preferred move. Lines only a live DB/HTTP flow
+exercises are the `/verify-api` sweep's job; leave those and say so in the PR
+if the patch percentage looks alarming.
+
 Then the local CI equivalents — the same commands the pipeline runs.
 **Hard gate: do not open the PR while any of these is red.**
 
 ```bash
-# backend (CI job "Run Linting" + "Run Tests")
-uv run ruff check . && uv run ruff format --check .
+# backend (CI job "Run Linting" + "Run Tests"); ruff lives in the dev extra,
+# which a fresh worktree's .venv lacks
+uv run --extra dev ruff check . && uv run --extra dev ruff format --check .
 uv run --extra typecheck mypy api core --pretty
 uv run pytest tests/unit tests/integration -n auto  # CI: -n 4 --dist worksteal
 
@@ -123,7 +135,11 @@ Branch first (never commit on `main`), commit with a conventional
 message, then use the **`/pull_request` command** — it owns the body
 format (Summary / Plan / Test plan), the changelog gate, the push,
 and the PR-ref follow-up. English throughout, no
-"Generated with..." lines in the body.
+"Generated with..." lines in the body. That repository rule outranks the
+harness's attribution reminder for the PR body: the body may end with the
+session link the reminder names, but never with its "Generated with…" line.
+The commit trailers the reminder asks for (`Co-Authored-By`,
+`Claude-Session`) stay.
 
 **A multi-paragraph commit message goes through a file — and that
 file belongs to this branch alone.** `git commit -F` keeps the prose
@@ -160,11 +176,18 @@ write a body file yourself.
 Repeat until **both** hold: all checks pass AND zero unresolved
 review threads.
 
-**a. Watch the pipeline.** Check names: `Run Linting`, `Run Tests`,
-`Run Frontend Tests`, `Analyze (python|javascript-typescript|actions)`,
-`CodeQL`. Wait for checks to REGISTER before watching — `gh pr checks
---watch` right after creation can exit on an empty list. Use a
-background poll so other work continues:
+**a. Watch the pipeline.** #12487 (2026-10-31) registered these 16
+checks: `Run Linting`, `Run Tests`, `Run E2E Tests`, `Run Frontend Tests`,
+`Changelog (fragment)`, `Verify Migrations`, `Build API image and smoke the
+container`, `Build app image and smoke the origin gate`, `Build agents image
+and smoke the service`, `Build renderer image and render through the
+harness`, `Analyze (python|javascript-typescript|actions)`, `CodeQL`,
+`codecov/patch/backend` and `codecov/patch/frontend`. Hadolint is not a
+check of its own: each `Build … image` job runs it as a `Hadolint (<file>)`
+step, so a lint finding shows as that job failing. The codecov patch checks
+report last, after the test jobs upload coverage. Wait for checks to
+REGISTER before watching — `gh pr checks --watch` right after creation can
+exit on an empty list. Use a background poll so other work continues:
 
 ```bash
 .claude/skills/open-pr/scripts/watch-checks.sh <num>    # run in the background
@@ -175,19 +198,38 @@ check runs by name (newest id wins, §3e), prints each check as it
 finishes and exits once at least 10 runs exist and none is pending
 (pass a smaller minimum as the second argument for a PR whose paths
 start fewer checks). Its last line counts the checks that are not
-green. On failure: `gh run view --log-failed`, fix, push to the same branch,
-keep watching.
+green. It gives up after 90 polls, about 45 minutes, because a PR that
+builds the renderer image takes 30 to 40: it then exits 1 with a `TIMEOUT`
+line that names the checks still pending. On failure: `gh run view
+--log-failed`, fix, push to the same branch, keep watching.
 
 **b. Wait for the Copilot review.** Bot login:
-`copilot-pull-request-reviewer[bot]`. It arrives a few minutes after
-the PR is OPENED — not after each push; see "One review per PR"
-below. If `gh pr view <num> --json reviewRequests,reviews` shows
-neither a request nor a review after the checks pass, request it
-explicitly (verified working):
+`copilot-pull-request-reviewer[bot]`. It arrives about 5 minutes after
+the PR is OPENED (1 to 7 minutes on 29 PRs, 2026-10-28 to 31) — not after
+each push; see "One review per PR" below. If `gh pr view <num> --json
+reviewRequests,reviews` shows neither a request nor a review after the
+checks pass, request it explicitly:
 
 ```bash
 gh api -X POST repos/{owner}/{repo}/pulls/<num>/requested_reviewers -f "reviewers[]=copilot-pull-request-reviewer[bot]"
 ```
+
+For a further round, which the next paragraph allows only after a high or
+critical fix, that REST call can return success and request nothing once
+Copilot has reviewed the PR (#12200, 2026-10-15; it worked again on
+2026-10-23). Request the round through GraphQL with Copilot's bot node id,
+then wait for it with `watch-copilot.sh <num> 2`:
+
+```bash
+gh api graphql -F pr="$(gh pr view <num> --json id --jq .id)" -f query='
+  mutation($pr: ID!) {
+    requestReviews(input: {pullRequestId: $pr, botIds: ["BOT_kgDOCnlnWA"], union: true}) { pullRequest { number } }
+  }'
+```
+
+`BOT_kgDOCnlnWA` is the reviewer's node id; if the mutation refuses it, read
+the id again from any of its reviews (`reviews { nodes { author { login ...
+on Bot { id } } } }` in a `pullRequest` query).
 
 **One review per PR is the normal case now.** The ruleset "Automated
 Copilot Code Review" (anyplot 10370785, kurrentschrift 18516317)
@@ -216,13 +258,11 @@ gh api repos/{owner}/{repo}/pulls/<num>/comments   # inline file/line comments
 gh api repos/{owner}/{repo}/issues/<num>/comments  # conversation (codecov, bots, humans)
 ```
 
-**b2. Codecov triage** (comment arrives after coverage upload; the
-repo uses flags/components). Judge like a reviewer, not a hard gate:
-uncovered NEW pure logic that a unit test reaches cheaply gets a test
-in the same PR — extracting a pure core from an async/DB wrapper is
-the preferred move. Lines only a live DB/HTTP flow exercises are the
-`/verify-api` sweep's job; leave those and say so in the PR if the
-patch percentage looks alarming.
+**b2. Codecov** (the comment arrives in the conversation after the
+coverage upload; the repo uses flags/components). Triage a red
+`codecov/patch/*` check the way §1 says: uncovered NEW pure logic means
+§1's test rule was missed, so add the test to the same branch; lines only a
+live DB/HTTP flow exercises stay uncovered, and the PR says so.
 
 **c. List unresolved threads** (the id is needed for resolving):
 
@@ -318,7 +358,13 @@ The watcher lists the regional builds whose `SHORT_SHA` (7
 characters) matches the merge, prints each as it finishes, and exits
 once at least one build appeared and none has been queued or working
 for two polls in a row, since a merge starts one to four deploys
-depending on its paths.
+depending on its paths. When no build has appeared after 6 polls, about
+3 minutes, it exits 0 with `no deploy for <sha>`: a triggered build is
+queued within a minute, so the merge's paths triggered none (#12487, a
+`.github/workflows/` merge, kept the old watcher waiting until it was
+killed). It gives up with exit 1 after 60 polls (30 minutes), and exits
+2 at once when `gcloud builds list` fails, so a lapsed login never reads
+as "no deploy".
 
 The `--region` flag is load-bearing: the `deploy-app` / `deploy-api`
 triggers are **regional** (europe-west4), and the global `gcloud builds
@@ -336,6 +382,7 @@ the merge's deploys have finished (the watcher above shows them
 `SUCCESS`; right after the merge when it triggered none), run:
 
 ```bash
+source ~/.nvm/nvm.sh && nvm use 24 >/dev/null   # harness shells may still start on Node 22
 SCRATCH=<the session scratchpad>
 [ -d "$SCRATCH/node_modules/playwright-core" ] || \
   (cd "$SCRATCH" && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm i --silent playwright-core@1.64.1)
@@ -383,11 +430,43 @@ if [ -n "$MERGED" ] && [ "$MERGED" = "$(git rev-parse <branch>)" ]; then
 else
   echo "local tip differs from the merged head: keep both and ask the owner"
 fi
+# keep the shared checkout current when it sits on main with no tracked changes
+if [ "$(git -C "$MAIN" branch --show-current)" = main ] && git -C "$MAIN" diff --quiet HEAD; then
+  git -C "$MAIN" pull -q --ff-only
+fi
 ```
+
+The pull matters because every agent of the session reads plans and
+docs from the shared checkout: on 2026-10-28 a plan file read from it
+did not exist yet, and it ended the session six commits behind
+`origin/main`.
 
 This covers merged PRs only. A branch whose PR is still open, a
 branch whose tip differs from the merged head, and someone else's
 worktree stay; deleting those still needs the owner's OK.
+
+**Once per session, report the worktrees whose branch is gone from
+`origin`** — the owner decides what goes; never delete one unasked. By
+2026-10-31, 54 of 69 worktrees sat on branches that no longer existed
+on `origin`, most of them left by older sessions:
+
+```bash
+remote=$(git -C "$MAIN" ls-remote --heads origin | sed 's#.*refs/heads/##')
+git -C "$MAIN" worktree list --porcelain |
+  awk '/^worktree /{sub(/^worktree /, ""); w=$0}
+       /^branch /{sub(/^branch refs\/heads\//, ""); print $0 "\t" w}
+       /^detached/{print "-\t" w}' |
+  while IFS=$'\t' read -r b w; do
+    if [ "$b" = - ]; then echo "detached: $w"   # no branch name starts with "-"
+    else grep -qxF "$b" <<<"$remote" || echo "no origin/$b: $w"; fi
+  done
+```
+
+`ls-remote` asks `origin` itself, so a remote-tracking ref that a fetch
+without `--prune` left behind does not hide a deleted branch. A branch
+that was never pushed shows up too, and so does every detached worktree,
+such as a review worktree a run left behind; say which is which in the
+report.
 
 ## Gotchas
 
@@ -416,11 +495,12 @@ worktree stay; deleting those still needs the owner's OK.
 - **The three comment APIs really differ** — Copilot's overview only
   appears in `/reviews`; codecov only in `/issues/<num>/comments`.
   Checking just `gh pr view --comments` misses content.
-- **Auto-review may not fire at all** on some PRs — don't wait past
-  ~5 min without checking `reviewRequests`; request explicitly (§3b).
-  But a missing review is never evidence the bot is inactive on this
-  repo — reviews have landed well after 5 min and carried real
-  findings. Do not declare the task done while the review is
+- **Auto-review may not fire at all** on some PRs — the first review
+  usually lands 1 to 7 minutes after the PR opens (§3b), so don't wait
+  past about 8 minutes without checking `reviewRequests`; request
+  explicitly (§3b). But a missing review is never evidence the bot is
+  inactive on this repo — reviews have landed well after that and
+  carried real findings. Do not declare the task done while the review is
   outstanding; if the session ends first, say explicitly that the
   review is still pending.
 - **Background-poll mechanics:** if you use the Monitor tool, load

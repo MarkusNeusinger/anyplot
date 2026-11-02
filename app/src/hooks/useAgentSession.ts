@@ -16,6 +16,13 @@
  * events instead (the server numbers them in the same order), which drifts
  * only when a stored version's event never arrives.
  *
+ * Theme: every turn sends the theme the site shows when it starts
+ * (`useTheme().effective`, so `system` resolves first), and a plot of that turn
+ * renders in it unless the user asked for a theme in the chat (owner decision
+ * of 2026-11-01); the light and dark switch renders the other one. A switch of
+ * the site theme mid-session changes no shown version, only the next one. The
+ * fan-out's sessions are this hook too, so they send the same theme.
+ *
  * Bindings: the dataset answer lists the spec's roles. A single role binds
  * under its own name, a variadic family `y` under its members `y1`, `y2`, ...;
  * the hook keeps the members contiguous (`compactFamilies`), so clearing `y2`
@@ -78,7 +85,8 @@
  * (`formulaKind`), and the assistant's `run_data_code` runs it in the chat;
  * the version it stores carries the Python that ran (`code`).
  *
- * One thing at a time: the agents service runs one turn, theme render or paste
+ * One thing at a time: the agents service runs one turn, theme render, page
+ * build (a JavaScript version's `plot.html`) or paste
  * per session (each window opens its own, and the user's other windows never
  * block it) and answers anything else with `409 run_active`, a parse, an undo or a
  * binding change rewrites the data a turn reads, and a confirmation must cover
@@ -89,7 +97,9 @@
  *
  * Session lifetime: the session, with the pasted data and its renders, is
  * deleted when the page unmounts and on `pagehide` (a reload or a closed tab,
- * sent with `keepalive`); the server's idle sweep is the backstop.
+ * sent with `keepalive`); the server's idle sweep is the backstop. Nothing
+ * restores it, so while it holds data, a plot or work in flight
+ * (`sessionHoldsWork`) the page asks before it lets the user leave.
  *
  * Saving: `saveSession` (`.save()`) downloads the session's feedback case,
  * the conversation, code, images and config the agents service assembles,
@@ -140,6 +150,7 @@
 import { useCallback, useEffect, useReducer, useRef } from 'react';
 
 import { useAnalytics } from 'src/hooks/useAnalytics';
+import { useTheme } from 'src/hooks/useLayoutContext';
 import {
   agentApi,
   AgentApiError,
@@ -151,6 +162,7 @@ import {
   type ConvertAnswer,
   countBucket,
   type DatasetChanged,
+  type DatasetCopied,
   type DatasetParsed,
   type DatasetProfile,
   type Eligibility,
@@ -162,6 +174,7 @@ import {
   MAX_FEEDBACK_CHARS,
   MAX_MESSAGE_CHARS,
   type OutcomeAction,
+  PAGE_ARTIFACT,
   parseAgentEvent,
   type PipelineStep,
   type PlotLanguage,
@@ -282,10 +295,11 @@ export interface DatasetState {
    */
   paste?: { text: string; source?: string };
   /**
-   * The upload this version was stored from, exactly as it was posted, for the
-   * admin fan-out (`replayData`), which stores the same table in a session per
-   * library. Only the parse's own version carries it: data the assistant changed
-   * or computed, and an undo, have no upload to replay.
+   * The upload this version was stored from, exactly as it was posted. The admin
+   * fan-out has the server copy the confirmed version into each library's
+   * session (`copyData`); only against a server without that copy does it
+   * post this upload again (`replayData`). Only the parse's own version carries
+   * it: data the assistant changed or computed, and an undo, have none.
    */
   upload?: DatasetUpload;
 }
@@ -393,6 +407,11 @@ export interface AgentSessionState {
   libraryBusy: boolean;
   /** A theme toggle render is in flight. */
   themeBusy: boolean;
+  /**
+   * A JavaScript version's `plot.html` is being built: the server holds the
+   * session's run entry for it, as for a theme render.
+   */
+  pageBusy: boolean;
   /** The session language and how it was set; the header's chip shows it. */
   plotLanguage: PlotLanguage;
   /** The chip's language call is in flight. */
@@ -436,6 +455,8 @@ type Action =
   | { type: 'server_sync'; bindings: BindingMap | null; dataConfirmed: boolean | null }
   /** A turn's `done` carried the data version the assistant's `prepare_data` made. */
   | { type: 'data_prepared'; dataset: DatasetChanged }
+  /** The admin fan-out's copy stored another session's confirmed data here, bound and confirmed. */
+  | { type: 'data_copied'; dataset: DatasetCopied }
   | { type: 'to_long_start' }
   | { type: 'to_long_failed'; failure: Failure }
   | { type: 'undo_start' }
@@ -445,6 +466,7 @@ type Action =
   | { type: 'library_done'; library: string; eligibility: Eligibility }
   | { type: 'library_failed'; failure: Failure }
   | { type: 'theme_busy'; busy: boolean }
+  | { type: 'page_busy'; busy: boolean }
   | { type: 'language_start' }
   /** The language route's answer: the stored form, source `chosen`. */
   | { type: 'language_done'; plotLanguage: PlotLanguage }
@@ -503,6 +525,7 @@ export function initialAgentState(library: string): AgentSessionState {
     toLongError: null,
     libraryBusy: false,
     themeBusy: false,
+    pageBusy: false,
     // The server's default too, whatever the browser's locale: no answer needed to start.
     plotLanguage: { language: 'en', source: 'default' },
     languageBusy: false,
@@ -879,6 +902,25 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         { kind: 'changed', changes, version: versionOf(version) }
       );
     }
+    case 'data_copied': {
+      const { dataset } = action;
+      return {
+        ...state,
+        parsing: false,
+        // The copy is this session's version 1; no paste was made here, so there is no size to bucket.
+        dataset: { parsed: { ...dataset, version: versionOf(dataset.version) }, bytes: 0 },
+        dataChange: null,
+        undoError: null,
+        roles: dataset.roles ?? dataset.bindings.map(binding => bareRole(binding.role, false)),
+        bindings: toMap(dataset.bindings),
+        bindingsComplete: dataset.complete,
+        missingRoles: dataset.missing_roles,
+        bindingsError: null,
+        // The server confirmed the copy with the bindings the page session confirmed.
+        dataConfirmed: true,
+        confirmError: null,
+      };
+    }
     case 'to_long_start':
       return { ...state, toLongBusy: true, toLongError: null };
     case 'to_long_failed':
@@ -907,6 +949,8 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
       return { ...state, libraryBusy: false };
     case 'theme_busy':
       return { ...state, themeBusy: action.busy };
+    case 'page_busy':
+      return { ...state, pageBusy: action.busy };
     case 'language_start':
       return { ...state, languageBusy: true };
     case 'language_done':
@@ -1017,6 +1061,8 @@ export interface UseAgentSessionOptions {
   library: string;
   locale: string;
   token: string;
+  /** The session is one of the admin fan-out's (`FanOut`): its telemetry is filed as `fanout`, not `live`. */
+  fanout?: boolean;
 }
 
 const GUARDRAIL_REASONS = new Set([
@@ -1057,19 +1103,29 @@ function failureOf(err: unknown): Failure {
 
 const isAbort = (err: unknown) => err instanceof DOMException && err.name === 'AbortError';
 
-export function useAgentSession({ specId, library, locale, token }: UseAgentSessionOptions) {
+export function useAgentSession({
+  specId,
+  library,
+  locale,
+  token,
+  fanout = false,
+}: UseAgentSessionOptions) {
   const [state, dispatch] = useReducer(agentReducer, library, initialAgentState);
   const { trackEvent } = useAnalytics();
+  const { effective: siteTheme } = useTheme();
 
   // Values async callbacks read after an await; refs, so a stale closure never
   // acts on a previous session.
   const stateRef = useRef(state);
   stateRef.current = state;
+  const siteThemeRef = useRef<Theme>(siteTheme);
+  siteThemeRef.current = siteTheme;
   const abortRef = useRef<AbortController | null>(null);
   const stoppedRef = useRef(false);
   const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Set synchronously, before the state catches up, so a double click starts nothing twice.
   const themeRef = useRef(false);
+  const pageRef = useRef(false);
   const parseRef = useRef(false);
   const confirmRef = useRef(false);
   const undoRef = useRef(false);
@@ -1103,13 +1159,14 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   );
 
   /**
-   * Whether a turn, a theme render, a parse, a binding change, a confirmation,
-   * an undo, a library switch or a language choice is in flight.
+   * Whether a turn, a theme render, a page build, a parse, a binding change, a
+   * confirmation, an undo, a library switch or a language choice is in flight.
    */
   const busy = useCallback(
     () =>
       !!abortRef.current ||
       themeRef.current ||
+      pageRef.current ||
       parseRef.current ||
       confirmRef.current ||
       undoRef.current ||
@@ -1123,6 +1180,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   // time, later switches go through `switchLibrary`. The page remounts this
   // hook (a `key`) for another spec or token, so the state starts fresh.
   const initialLibrary = useRef(library);
+  const openedForFanOut = useRef(fanout);
   useEffect(() => {
     mounted.current = true;
     let cancelled = false;
@@ -1152,7 +1210,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     window.addEventListener('pageshow', onPageShow);
 
     agentApi
-      .openSession(token, specId, initialLibrary.current, locale)
+      .openSession(token, specId, initialLibrary.current, locale, openedForFanOut.current)
       .then(result => {
         if (cancelled) {
           void agentApi.deleteSession(token, result.session_id).catch(() => undefined);
@@ -1319,11 +1377,45 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   }, [token, safeDispatch, handleFailure, trackEvent, busy]);
 
   /**
-   * The admin fan-out (`FanOut`): store another session's upload in this one,
-   * bind the columns as that session had them and confirm, all without the
-   * summary turn a paste asks for (`parseData`), so a library costs one chat
-   * turn, its `create_plot`, against the user's message limits. Resolves to the
-   * failure that stopped it, or `null` once the data is confirmed.
+   * The admin fan-out (`FanOut`): the server copies the confirmed current data
+   * of `fromSession`, the page's own session, into this one, whatever its origin
+   * (a paste, a file, a table the assistant changed or computed), byte for byte
+   * with its bindings, their confirmation and the session language
+   * (`POST .../dataset/copy`). No summary turn, so a library costs one chat
+   * turn, its `create_plot`, against the user's message limits, and no paste.
+   * Resolves to the failure that stopped it, or `null` once the data is
+   * confirmed; `not_found` is a server without the copy, on which `FanOut`
+   * posts the paste again where there is one (`replayData`).
+   */
+  const copyData = useCallback(
+    async (fromSession: string): Promise<Failure | null> => {
+      const sid = stateRef.current.sessionId;
+      if (!sid || busy()) return { code: 'run_active', ref: null };
+      parseRef.current = true;
+      safeDispatch({ type: 'parse_start' });
+      try {
+        const dataset = await agentApi.copyDataset(token, sid, fromSession);
+        safeDispatch({ type: 'data_copied', dataset });
+        const copiedLanguage = readPlotLanguage(dataset.language);
+        if (copiedLanguage) safeDispatch({ type: 'language_sync', plotLanguage: copiedLanguage });
+        return dataset.complete ? null : { code: 'bindings_incomplete', ref: null };
+      } catch (err) {
+        const failure = handleFailure(err);
+        safeDispatch({ type: 'parse_failed', failure });
+        return failure;
+      } finally {
+        parseRef.current = false;
+      }
+    },
+    [token, safeDispatch, handleFailure, busy]
+  );
+
+  /**
+   * The admin fan-out against a server without the copy (`copyData` answered
+   * `not_found`): store another session's upload in this one, bind the columns
+   * as that session had them and confirm, all without the summary turn a paste
+   * asks for (`parseData`). Resolves to the failure that stopped it, or `null`
+   * once the data is confirmed.
    */
   const replayData = useCallback(
     async (upload: DatasetUpload, bindings: BindingMap): Promise<Failure | null> => {
@@ -1396,12 +1488,24 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
   // ---------------------------------------------------------------- versions
 
   const fetchArtifact = useCallback(
-    async (number: number, name: ArtifactName): Promise<Blob> => {
+    async (number: number, name: ArtifactName, theme?: Theme): Promise<Blob> => {
       const sid = stateRef.current.sessionId;
       if (!sid) throw new AgentApiError(0, 'no_session');
-      return agentApi.artifact(token, sid, name, number);
+      if (name !== PAGE_ARTIFACT) return agentApi.artifact(token, sid, name, number);
+      // The server builds `plot.html` now and holds the session's run entry while it does, as
+      // for a theme render: the page holds back turns, toggles and data edits meanwhile, which
+      // the server would refuse with `409 run_active`, and starts no build while one of them runs.
+      if (busy()) throw new AgentApiError(409, 'run_active');
+      pageRef.current = true;
+      safeDispatch({ type: 'page_busy', busy: true });
+      try {
+        return await agentApi.artifact(token, sid, name, number, theme);
+      } finally {
+        pageRef.current = false;
+        safeDispatch({ type: 'page_busy', busy: false });
+      }
     },
-    [token]
+    [token, safeDispatch, busy]
   );
 
   /**
@@ -1642,7 +1746,13 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
       );
       let finished = false;
       try {
-        const response = await agentApi.postMessage(token, sid, body, controller.signal);
+        const response = await agentApi.postMessage(
+          token,
+          sid,
+          body,
+          controller.signal,
+          siteThemeRef.current
+        );
         if (!response.body) throw new AgentApiError(502, 'upstream');
         for await (const raw of readSseEvents(response.body, controller.signal)) {
           const event = parseAgentEvent(raw);
@@ -2008,6 +2118,7 @@ export function useAgentSession({ specId, library, locale, token }: UseAgentSess
     state,
     toLongData,
     parseData,
+    copyData,
     replayData,
     confirmTranscription,
     discardTranscription,
@@ -2041,6 +2152,25 @@ export function sessionBusy(state: AgentSessionState): boolean {
     state.undoBusy ||
     state.libraryBusy ||
     state.themeBusy ||
+    state.pageBusy ||
     state.languageBusy
+  );
+}
+
+/**
+ * Whether leaving the page would lose something: stored data, a table read
+ * from text that waits for its decision, a plot, or work in flight. The
+ * session lives only in this page's memory and the server's (see the module
+ * notes), so the page asks before a reload, a closed tab or a navigation ends
+ * it. Only while the page shows the session (`ready`): an expired or refused
+ * one shows nothing that leaving would take away.
+ */
+export function sessionHoldsWork(state: AgentSessionState): boolean {
+  return (
+    state.phase === 'ready' &&
+    (!!state.dataset ||
+      !!state.transcription ||
+      Object.keys(state.versions).length > 0 ||
+      sessionBusy(state))
   );
 }

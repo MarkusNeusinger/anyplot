@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>anyplot</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #FAF8F1; overflow: hidden; }
+  *, *::before, *::after { box-sizing: border-box; }
+  #container {
+    width: 1600px;
+    height: 900px;
+    background: #FAF8F1;
+    color: #1A1A17;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    position: relative;
+  }
+  #container canvas, #container svg { display: block; }
+</style>
+</head>
+<body>
+<div id="container"></div>
+<script>
+  // anyplot render context — the snippet reads these globals (the browser has no
+  // process.env, so this is the JS analogue of ANYPLOT_THEME for Python/R/Julia).
+  window.ANYPLOT_THEME = "light";
+  window.ANYPLOT_TOKENS = {"theme":"light","pageBg":"#FAF8F1","elevatedBg":"#FFFDF6","ink":"#1A1A17","inkSoft":"#4A4A44","grid":"rgba(26,26,23,0.15)","palette":["#009E73","#C475FD","#4467A3","#BD8233","#AE3030","#2ABCCD","#954477","#99B314"],"amber":"#DDCC77","seq":["#009E73","#4467A3"],"div":["#AE3030","#FAF8F1","#4467A3"]};
+  // Exact-pixel mount size, in case a snippet wants to size a canvas explicitly.
+  window.ANYPLOT_SIZE = { width: 1600, height: 900 };
+  window.__anyplotError = null;
+  window.addEventListener("error", (e) => { window.__anyplotError = String(e.error || e.message); });
+  window.addEventListener("unhandledrejection", (e) => { window.__anyplotError = String(e.reason); });
+</script>
+<script>
+{{BUNDLE}}
+</script>
+<script>
+try {
+{{SNIPPET}}
+} catch (err) {
+  window.__anyplotError = String(err && err.stack ? err.stack : err);
+  throw err;
+}
+</script>
+</body>
+</html>

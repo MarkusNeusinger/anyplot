@@ -44,6 +44,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any, Literal
 
+from ..schemas import Theme
 from ..settings import AgentSettings
 
 
@@ -68,6 +69,8 @@ class StepUsage:
     cached: int = 0
     cache_write: int = 0
     model: str | None = None
+    thoughts: int = 0
+    """The thinking tokens among `output`, a part of it (the usage telemetry's `StepTokens.thoughts`)."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,6 +148,9 @@ class RequestLedger:
     turn: int = 0
     """The session's spec, library and user turn, set once by the `/v1` route from session state, for the
     usage telemetry's envelope (`telemetry.py`); never set per call site."""
+    fanout: bool = False
+    """The session was opened by the admin's "plot in all libraries" fan-out (`session_state.TELEMETRY_SOURCE`), set
+    with the envelope: its telemetry lines carry the source `fanout` instead of `live`."""
     steps: dict[str, StepUsage] = field(default_factory=dict)
     """Calls and tokens by agent name (`book_step`), and the judges' under `judge` (`book_judge`)."""
     tools: list[str] = field(default_factory=list)
@@ -153,6 +159,9 @@ class RequestLedger:
     """The operation names of every `prepare_data` call that changed the data (closed: `telemetry.PREP_OPS`)."""
     reply_question: bool = False
     """The root's last reply sent to the page ends with a question mark (`stream.Translator`); the text is never kept."""
+    site_theme: Theme | None = None
+    """The theme the page showed the site in when the user sent the turn (`/messages?theme=`), which a plot run takes
+    when neither the user nor the version it changes asked for one (`pipeline.run_theme`); None without a page."""
 
     def book_step(self, agent: str, *, model: str | None, usage: dict[str, int], cached: int) -> None:
         """Add one model call to the agent's step usage (`usage` as `usage_breakdown` counts it)."""
@@ -160,6 +169,7 @@ class RequestLedger:
         step.calls += 1
         step.input += usage.get("prompt", 0) + usage.get("tool_use_prompt", 0)
         step.output += usage.get("candidates", 0) + usage.get("thoughts", 0)
+        step.thoughts += usage.get("thoughts", 0)
         step.cached += cached
         step.cache_write += usage.get("cache_write", 0)
         if model:
@@ -224,18 +234,27 @@ class _Day:
     user_pastes: dict[str, int] = field(default_factory=dict)
     user_conversions: dict[str, int] = field(default_factory=dict)
     user_outcomes: dict[str, int] = field(default_factory=dict)
+    user_copies: dict[str, int] = field(default_factory=dict)
 
 
 MESSAGE_WINDOW_S = 60.0
 """The sliding window of `AGENT_USER_MESSAGES_PER_MINUTE` and `AGENT_USER_PASTES_PER_MINUTE`."""
 MessageLimit = Literal["rate_limited", "daily_limit"]
 """Why `message_limit` or `paste_limit` refuses: the minute's count, or the day's."""
-WindowKind = Literal["message", "paste", "convert", "outcome"]
+WindowKind = Literal["message", "paste", "convert", "outcome", "copy"]
 OUTCOMES_PER_MINUTE = 30
 OUTCOMES_PER_DAY = 2000
 """The page's outcome beacons per user (`POST /v1/sessions/{sid}/outcome`): a copy or a download is one click, so
 30 in a minute is far beyond use; more get `429 rate_limited`, which the page ignores. Constants, not settings: the
 beacon spends no model call and no sandbox time, the cap only bounds the telemetry lines one user can write."""
+COPIES_PER_MINUTE = 30
+COPIES_PER_DAY = 150
+"""The admin fan-out's data copies per user (`POST /v1/sessions/{sid}/dataset/copy`): one per library of a
+`.plot_all()`, at most 15, so 30 in a minute is two fan-outs and 150 a day about ten (1.5 times the day's 100 pastes,
+review of 2026-11-01: 600 let one user put about 3 GiB a day into the 256 MiB store). A copy parses nothing and calls
+no model, so it is no paste, but each one takes the dataset's size in the store again: the cap bounds what one user
+can put there. A per-user byte budget in the store is the follow-up before the chat goes public. Constants, not
+settings, like the outcome beacons'."""
 
 
 class UsageBook:
@@ -381,6 +400,18 @@ class UsageBook:
         day = self._current()
         day.user_outcomes[user_id] = day.user_outcomes.get(user_id, 0) + 1
         self._stamp("outcome", user_id)
+
+    def copy_limit(self, user_id: str) -> MessageLimit | None:
+        """Why the user may not copy another dataset into a fan-out session now, or None (`COPIES_PER_MINUTE`,
+        `_PER_DAY`)."""
+        count = self._current().user_copies.get(user_id, 0)
+        return self._limit("copy", user_id, count, COPIES_PER_MINUTE, COPIES_PER_DAY)
+
+    def add_copy(self, user_id: str) -> None:
+        """Count one dataset copy against the user's minute and day."""
+        day = self._current()
+        day.user_copies[user_id] = day.user_copies.get(user_id, 0) + 1
+        self._stamp("copy", user_id)
 
     def _limit(
         self, kind: WindowKind, user_id: str, today_count: int, per_minute: int, per_day: int

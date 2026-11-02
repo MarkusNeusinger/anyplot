@@ -5,7 +5,7 @@ Cloud Logging sink routes them into a log bucket that BigQuery reads through a l
 (`docs/reference/agent-telemetry.md`). This module runs one query and answers aggregates only:
 counts, two rates and the five most frequent specs, input formats and refusal codes, every key
 an id or a code from a closed set. Live sessions only (`source = 'live'`): the eval harnesses
-tag theirs `harness`.
+tag theirs `harness`, and the sessions the admin's "plot in all libraries" opens tag theirs `fanout`.
 
 Cost. The query reads the linked log dataset `<dataset>_logs` (`agent_telemetry_logs` for
 `AGENT_TELEMETRY_DATASET=anyplot.agent_telemetry`) directly, not the `events` view: the view
@@ -51,8 +51,16 @@ The dataset leaves room for the `_logs` suffix of the linked log dataset (1,024 
 LOGS_SUFFIX = "_logs"
 """The linked log dataset is the views dataset's name plus this suffix (`docs/reference/agent-telemetry.md`)."""
 
-KEEP_ACTIONS = ("copied_code", "copied_image", "downloaded_png", "downloaded_code", "downloaded_data")
-"""The outcomes that keep a result; never `saved_session`, which users also send to report a plot they did not like."""
+KEEP_ACTIONS = (
+    "copied_code",
+    "copied_image",
+    "downloaded_png",
+    "downloaded_code",
+    "downloaded_page",
+    "downloaded_data",
+)
+"""The outcomes that keep a result; never `saved_session`, which users also send to report a plot they did not like.
+`downloaded_page` (a JavaScript plot's `plot.html`, since JS-4b) keeps one like the code download."""
 REJECT_REACTIONS = ("thumbs_down", "bug")
 """Feedback reactions that make a session not kept, whatever else the user did."""
 REJECT_LOOKBACK_DAYS = 2

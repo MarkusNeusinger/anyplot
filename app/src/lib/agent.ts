@@ -9,7 +9,7 @@
  * `{"detail": "<code>", "ref": "<request id>"}` and become `AgentApiError`.
  */
 
-import { DEBUG_API_URL } from 'src/constants';
+import { API_URL, DEBUG_API_URL } from 'src/constants';
 import { fetchWithAuth } from 'src/lib/api';
 import type { SseEvent } from 'src/lib/sse';
 import { clearAccessReloadGuard } from 'src/utils/adminAuth';
@@ -32,7 +32,53 @@ export const DEFAULT_AGENT_LIBRARIES = ['matplotlib', 'seaborn'] as const;
 export type Theme = 'light' | 'dark';
 /** The exported code's download name: its language's (`plot.py` for Python, `plot.R`, `plot.jl`, `plot.js`, `plot.tsx`). */
 export type CodeArtifact = 'plot.py' | 'plot.R' | 'plot.jl' | 'plot.js' | 'plot.tsx';
-export type ArtifactName = 'plot-light.png' | 'plot-dark.png' | CodeArtifact | 'data.csv';
+/**
+ * A JavaScript plot's self-contained interactive page: built by the server on
+ * demand in the theme asked for, downloaded as it is, and shown in the card
+ * through the preview relay (`PREVIEW_RELAY_URL`).
+ */
+export const PAGE_ARTIFACT = 'plot.html';
+/**
+ * The API's static relay page of the interactive preview (`api/preview_relay.py`,
+ * JS-4b-2): the card frames it sandboxed and posts the version's `plot.html`
+ * into it, which it shows in a sandboxed frame of its own. It sits outside
+ * `/debug/*`, takes no token and reads no cookie. It follows `API_URL`, while
+ * the chat's own requests follow `DEBUG_API_URL`.
+ */
+export const PREVIEW_RELAY_URL = `${API_URL}/preview/relay`;
+/**
+ * The relay's only message, a signal without content once it listens
+ * (`READY_MESSAGE` in `api/preview_relay.py`, pinned by a test): the card posts
+ * the page only on this signal from the relay frame's own window, so a page
+ * that stands in at the relay's URL (an error page of the edge) never gets it.
+ */
+export const PREVIEW_RELAY_READY = 'anyplot-relay-ready';
+/**
+ * The wrapper's frame at scale 1, the first rule of this form in its style
+ * (`sizing_css` in `agents/anyplot/render/page.py`, pinned by a test): the
+ * canvas in CSS pixels, 1600x900 or 1200x1200.
+ */
+export const PAGE_FRAME_PATTERN = /\.frame \{ width: (\d+)px; height: (\d+)px; \}/;
+/** The wrapper's margin around its frame (`MARGIN_PX` in `render/page.py`). */
+export const PAGE_MARGIN_PX = 16;
+/** The frame of a page without the rule: the landscape canvas, which the wrapper then scales to fit. */
+export const PAGE_FRAME_FALLBACK = { width: 1600, height: 900 };
+
+/**
+ * The wrapper's own size at scale 1, read from the page itself so the card's
+ * frame and the wrapper never disagree (a square plot whose PNG has not loaded
+ * is still framed square): the frame and the margin around it, just past the
+ * wrapper's first media query, so it shows the plot at scale 1 and the card
+ * scales the whole relay frame to its width.
+ */
+export function pageFrameSize(page: string): { width: number; height: number } {
+  const match = PAGE_FRAME_PATTERN.exec(page);
+  const width = match ? Number(match[1]) : PAGE_FRAME_FALLBACK.width;
+  const height = match ? Number(match[2]) : PAGE_FRAME_FALLBACK.height;
+  return { width: width + 2 * PAGE_MARGIN_PX, height: height + 2 * PAGE_MARGIN_PX };
+}
+export type ArtifactName =
+  'plot-light.png' | 'plot-dark.png' | CodeArtifact | typeof PAGE_ARTIFACT | 'data.csv';
 export const PNG_ARTIFACT: Record<Theme, ArtifactName> = {
   light: 'plot-light.png',
   dark: 'plot-dark.png',
@@ -291,6 +337,20 @@ export interface DatasetTranscribed {
 
 export type DatasetAnswer = DatasetParsed | DatasetTranscribed;
 
+/**
+ * The answer of `POST .../dataset/copy`, the admin fan-out's copy of the page
+ * session's confirmed data into a fan-out session: the dataset route's shape
+ * (version 1), already bound and confirmed on the server.
+ */
+export interface DatasetCopied extends DatasetParsed {
+  confirmed: true;
+  /** Whether every required role has a column (the server's binding check). */
+  complete: boolean;
+  missing_roles: string[];
+  /** The page session's data version the copy was taken from. */
+  copied_from: number;
+}
+
 /** The tables of one paste the page may choose from (the service's `MAX_TABLES`). */
 export const MAX_DATASET_TABLES = 10;
 
@@ -410,6 +470,10 @@ export const OUTCOME_ACTIONS = [
   'copied_image',
   'downloaded_png',
   'downloaded_code',
+  // A JavaScript plot's interactive `plot.html` (since JS-4b).
+  'downloaded_page',
+  // The same page shown in the card (since JS-4b-2); a look, not a keep.
+  'opened_preview',
   'downloaded_data',
   'saved_session',
   'feedback',
@@ -864,8 +928,17 @@ export const agentApi = {
       token,
       { signal }
     ),
-  openSession: (token: string, specId: string, library: string, locale: string) =>
-    agentJson<SessionOpened>('/sessions', token, post({ spec_id: specId, library, locale })),
+  /**
+   * `fanout` marks a session the admin's `.plot_all()` opens: the server files
+   * its usage telemetry under the source `fanout` instead of `live`. Sent only
+   * when set.
+   */
+  openSession: (token: string, specId: string, library: string, locale: string, fanout = false) =>
+    agentJson<SessionOpened>(
+      '/sessions',
+      token,
+      post({ spec_id: specId, library, locale, ...(fanout ? { source: 'fanout' } : {}) })
+    ),
   switchLibrary: (token: string, sid: string, specId: string, library: string) =>
     agentJson<SessionOpened>(
       `${sessionPath(sid)}/library`,
@@ -963,6 +1036,20 @@ export const agentApi = {
    */
   undoDataset: (token: string, sid: string) =>
     agentJson<DatasetParsed>(`${sessionPath(sid)}/dataset/undo`, token, post()),
+  /**
+   * The admin fan-out: the server copies the confirmed current data of
+   * `fromSession` (the page's own session), byte for byte with its bindings and
+   * their confirmation, into the fan-out session `sid`. Both must be this
+   * admin's. `422 unconfirmed` / `no_dataset` for a source without confirmed
+   * data, `409 has_dataset` for a target with data; a server without the route
+   * answers `404 not_found`.
+   */
+  copyDataset: (token: string, sid: string, fromSession: string) =>
+    agentJson<DatasetCopied>(
+      `${sessionPath(sid)}/dataset/copy`,
+      token,
+      post({ from_session: fromSession })
+    ),
 
   /**
    * `.to_long()`: the service applies its own wide-table suggestion, without a
@@ -976,9 +1063,20 @@ export const agentApi = {
     if (!dataset) throw new AgentApiError(502, 'upstream');
     return dataset;
   },
-  /** Opens the chat turn's SSE stream; the caller reads it with `readSseEvents`. */
-  postMessage: (token: string, sid: string, body: TurnBody, signal: AbortSignal) =>
-    agentFetch(`${sessionPath(sid)}/messages`, token, {
+  /**
+   * Opens the chat turn's SSE stream; the caller reads it with `readSseEvents`.
+   * `siteTheme`, the theme the site shows, is the theme a plot of the turn
+   * renders in unless the user asks for one in the chat. It travels in the
+   * query, not the strict body, so a page deployed before the API is no `422`.
+   */
+  postMessage: (
+    token: string,
+    sid: string,
+    body: TurnBody,
+    signal: AbortSignal,
+    siteTheme?: Theme
+  ) =>
+    agentFetch(`${sessionPath(sid)}/messages${siteTheme ? `?theme=${siteTheme}` : ''}`, token, {
       ...post(body),
       headers: { Accept: 'text/event-stream' },
       signal,
@@ -992,8 +1090,16 @@ export const agentApi = {
       token,
       post({ theme })
     ),
-  artifact: async (token: string, sid: string, name: ArtifactName, version: number) => {
-    const response = await agentFetch(`${sessionPath(sid)}/artifacts/${name}?v=${version}`, token);
+  /** One file of a version; `theme` picks the theme of `plot.html`, which the server builds on demand. */
+  artifact: async (
+    token: string,
+    sid: string,
+    name: ArtifactName,
+    version: number,
+    theme?: Theme
+  ) => {
+    const query = theme ? `?v=${version}&theme=${theme}` : `?v=${version}`;
+    const response = await agentFetch(`${sessionPath(sid)}/artifacts/${name}${query}`, token);
     return response.blob();
   },
   /**
@@ -1326,6 +1432,7 @@ const ARTIFACT_NAMES = new Set<string>([
   'plot-light.png',
   'plot-dark.png',
   ...CODE_ARTIFACTS,
+  PAGE_ARTIFACT,
   'data.csv',
 ]);
 const PLOT_STATUSES = new Set<string>(['ok', 'needs_attention', 'failed', 'not_ready']);
@@ -1428,6 +1535,11 @@ export function renderedThemes(artifacts: readonly string[]): Theme[] {
 /** The name a version's exported code downloads under: the code artifact among its artifacts, `plot.py` without one. */
 export function codeArtifact(artifacts: readonly string[]): CodeArtifact {
   return CODE_ARTIFACTS.find(name => artifacts.includes(name)) ?? 'plot.py';
+}
+
+/** Whether a version offers the interactive page: a JavaScript plot, whose code runs only in it. */
+export function hasPage(artifacts: readonly string[]): boolean {
+  return artifacts.includes(PAGE_ARTIFACT);
 }
 
 /** A BCP 47 tag the BFF accepts (`^[A-Za-z]{2,3}([_-][A-Za-z0-9]{1,8}){0,3}$`, at most 16 chars). */

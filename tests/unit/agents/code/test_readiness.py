@@ -156,12 +156,12 @@ class TestOtherPythonLibraries:
         assert blocked.reasons == ['security: savefig-target: no save of f"plot-{THEME}.png" found']
 
     def test_an_unsupported_library_is_blocked_before_its_save_rule(self) -> None:
-        result = scan(PLOTNINE_HEAD + PLOTNINE_SAVE, spec_id="s", library="plotly", enabled_libraries=ALL_ENABLED)
+        result = scan(PLOTNINE_HEAD + PLOTNINE_SAVE, spec_id="s", library="ggplot2", enabled_libraries=ALL_ENABLED)
 
         assert result.status == "blocked"
         assert result.reasons[:2] == [
-            "library-disabled: plotly is not enabled",
-            "unsupported-library: no normaliser for plotly",
+            "library-disabled: ggplot2 is not enabled",
+            "unsupported-library: no normaliser for ggplot2",
         ]
 
 
@@ -500,8 +500,9 @@ def test_library_not_enabled_or_unsupported(validator_calls: list[str]) -> None:
     disabled = scan(code, spec_id="scatter-basic", library="seaborn", enabled_libraries=["matplotlib"])
     assert disabled.status == "blocked" and categories(disabled) == ["library-disabled"]
     assert validator_calls == ["seaborn"]
-    # No normaliser means no validator profile either: the validator is not asked.
-    unsupported = scan(code, spec_id="scatter-basic", library="plotly", enabled_libraries=["plotly"])
+    # No normaliser means no validator profile either: the validator is not asked. Every Python library has both since
+    # PB-2a, so the Python scan's unsupported library is another language's.
+    unsupported = scan(code, spec_id="scatter-basic", library="ggplot2", enabled_libraries=["ggplot2"])
     assert categories(unsupported) == ["unsupported-library"]
     assert validator_calls == ["seaborn"]
 

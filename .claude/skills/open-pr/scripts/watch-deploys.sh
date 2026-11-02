@@ -2,7 +2,10 @@
 # Watch the Cloud Build deploys of one merge commit (§4): every regional build whose
 # SHORT_SHA matches. Prints each build once it finishes; exits 0 when at least one build
 # was seen and none has been queued or working for two polls in a row (a merge triggers
-# one to four deploys, depending on the paths it touched), 1 after ~30 minutes.
+# one to four deploys, depending on the paths it touched), 0 with "no deploy for <sha>"
+# when no build has appeared after 6 polls (about 3 minutes; a triggered build is queued
+# within a minute, so the merge's paths triggered none), 1 after ~30 minutes, and 2 at
+# once when `gcloud builds list` fails, so a broken login never reads as "no deploy".
 #
 # Usage: watch-deploys.sh <merge-sha>   (the full SHA or its first 7 characters, Cloud Build's SHORT_SHA)
 set -uo pipefail
@@ -10,10 +13,19 @@ SHA=${1:?usage: watch-deploys.sh <merge-sha>}
 SHA=${SHA:0:7}
 seen=""
 quiet=0
-for _ in $(seq 1 60); do
-  rows=$(gcloud builds list --region=europe-west4 --limit 20 \
-    --format='value(id,status,substitutions.TRIGGER_NAME,substitutions.SHORT_SHA)' 2>/dev/null |
-    awk -v sha="$SHA" '$4 == sha {print $3": "$2" ("$1")"}' | sort)
+any=0
+for poll in $(seq 1 60); do
+  if ! list=$(gcloud builds list --region=europe-west4 --project=anyplot --limit 20 \
+    --format='value(id,status,substitutions.TRIGGER_NAME,substitutions.SHORT_SHA)' 2>&1); then
+    echo "gcloud builds list failed: $(tail -1 <<<"$list")"
+    exit 2
+  fi
+  rows=$(awk -v sha="$SHA" '$4 == sha {print $3": "$2" ("$1")"}' <<<"$list" | sort)
+  [ -n "$rows" ] && any=1
+  if [ "$any" -eq 0 ] && [ "$poll" -ge 6 ]; then
+    echo "no deploy for $SHA"
+    exit 0
+  fi
   finished=$(grep -E "SUCCESS|FAILURE|CANCELLED|TIMEOUT|INTERNAL_ERROR|EXPIRED" <<<"$rows")
   fresh=$(comm -13 <(echo "$seen") <(echo "$finished"))
   [ -n "$fresh" ] && echo "$fresh"
