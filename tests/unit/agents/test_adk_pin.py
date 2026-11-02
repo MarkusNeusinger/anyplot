@@ -14,7 +14,7 @@ import pytest
 import agents
 
 
-ADK_VERSION = "2.11.0"
+ADK_VERSION = "2.13.0"
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 

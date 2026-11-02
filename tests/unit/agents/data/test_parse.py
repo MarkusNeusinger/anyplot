@@ -70,7 +70,6 @@ def read_back(parsed: ParsedDataset) -> pd.DataFrame:
         parse_dates=parsed.parse_dates,
         keep_default_na=False,
         na_values=[""],
-        float_precision="round_trip",
     )
 
 

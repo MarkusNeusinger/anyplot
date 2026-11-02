@@ -236,7 +236,7 @@ class PythonRuntime:
         return to_run_form(working, columns=columns, dtypes=dtypes, parse_dates=parse_dates)
 
     def loader_notes(self, kinds: ColumnKinds) -> list[str]:
-        """None: `Int64`, `float64` with `float_precision="round_trip"` and the parsed datetimes keep every cell."""
+        """None: `Int64`, `float64` and the parsed datetimes keep every cell."""
         return []
 
     def data_json(self, csv_text: str, kinds: ColumnKinds | None) -> str | None:

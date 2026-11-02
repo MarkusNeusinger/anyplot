@@ -28,7 +28,7 @@ dependencies = [
     "alembic>=1.19.1",
     "cloud-sql-python-connector[asyncpg,pg8000]>=1.20.4",  # Cloud SQL Connector
     # Data & Plotting
-    "pandas>=3.0.5",
+    "pandas>=3.1.0",
     "numpy>=2.5.2",
     "matplotlib>=3.11.1",
     # Data Science & ML (for plot implementations)
@@ -112,15 +112,15 @@ plotting = [
     "squarify>=0.4.0",
 ]
 # Per-library dependencies for CI (minimal installs)
-lib-matplotlib = ["matplotlib>=3.11.1", "numpy>=2.5.2", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6"]
-lib-seaborn = ["seaborn>=0.13.0", "matplotlib>=3.11.1", "numpy>=2.5.2", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6"]
-lib-plotly = ["plotly>=6.9.0", "kaleido>=1.3.0", "numpy>=2.5.2", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6"]
-lib-bokeh = ["bokeh>=3.9.2", "numpy>=2.5.2", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6", "selenium>=4.47.0", "webdriver-manager>=4.1.2"]
-lib-altair = ["altair>=6.2.2", "vl-convert-python>=1.7.0", "numpy>=2.5.2", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6"]
-lib-plotnine = ["plotnine>=0.15.7", "numpy>=2.5.2", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6"]
-lib-pygal = ["pygal>=3.1.3", "cairosvg>=2.7.0", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6"]
-lib-highcharts = ["highcharts-core>=1.11.0", "numpy>=2.5.2", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6", "selenium>=4.47.0", "webdriver-manager>=4.1.2"]
-lib-letsplot = ["lets-plot>=4.11.0", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6"]
+lib-matplotlib = ["matplotlib>=3.11.1", "numpy>=2.5.2", "pandas>=3.1.0", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6"]
+lib-seaborn = ["seaborn>=0.13.0", "matplotlib>=3.11.1", "numpy>=2.5.2", "pandas>=3.1.0", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6"]
+lib-plotly = ["plotly>=6.9.0", "kaleido>=1.3.0", "numpy>=2.5.2", "pandas>=3.1.0", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6"]
+lib-bokeh = ["bokeh>=3.9.2", "numpy>=2.5.2", "pandas>=3.1.0", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6", "selenium>=4.47.0", "webdriver-manager>=4.1.2"]
+lib-altair = ["altair>=6.2.2", "vl-convert-python>=1.7.0", "numpy>=2.5.2", "pandas>=3.1.0", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6"]
+lib-plotnine = ["plotnine>=0.15.7", "numpy>=2.5.2", "pandas>=3.1.0", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6"]
+lib-pygal = ["pygal>=3.1.3", "cairosvg>=2.7.0", "pandas>=3.1.0", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6"]
+lib-highcharts = ["highcharts-core>=1.11.0", "numpy>=2.5.2", "pandas>=3.1.0", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6", "selenium>=4.47.0", "webdriver-manager>=4.1.2"]
+lib-letsplot = ["lets-plot>=4.11.0", "pandas>=3.1.0", "scipy>=1.18.0", "scikit-learn>=1.9.0", "statsmodels>=0.14.6"]
 # Agent network (agents/, docs/concepts/agent-network.md). ADK is pinned EXACTLY:
 # it ships weekly and its feature flags drift between releases, so an upgrade is
 # a deliberate PR that re-checks them (tests/unit/agents/test_adk_pin.py fails
@@ -139,7 +139,7 @@ lib-letsplot = ["lets-plot>=4.11.0", "pandas>=3.0.5", "scipy>=1.18.0", "scikit-l
 # service must never do. tests/unit/agents/code/test_treesitter.py pins both, and
 # agents/Dockerfile keeps only the grammars the code profiles load.
 agents = [
-    "google-adk==2.11.0",
+    "google-adk==2.13.0",
     "anthropic[vertex]>=1.8.0",
     "tree-sitter==0.26.0",
     "tree-sitter-language-pack==0.13.0",

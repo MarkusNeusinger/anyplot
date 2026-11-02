@@ -7,10 +7,10 @@ or a notebook. `data.csv` is the parser's canonical file (comma separated, dot d
 ISO dates), so no `sep`, `decimal` or date format is needed. The column dtypes from
 the dataset profile map to pandas dtypes that keep missing values (`integer` to
 `Int64`, `number` to `float64`, `boolean` to `boolean`, `text` to `string`); datetime
-columns go to `parse_dates`. A dataset with a number column is read with
-`float_precision="round_trip"`, so every float is the one `data.csv` writes in its
-shortest round-trip form (`ROUND_TRIP`). `import pandas as pd` is added after the last
-module-level import when the file does not have it.
+columns go to `parse_dates`. A number column needs no float option: since pandas 3.1
+`read_csv` has one converter, and every float is the one `data.csv` writes in its
+shortest round-trip form. `import pandas as pd` is added after the last module-level
+import when the file does not have it.
 
 `data.csv` writes a missing cell as an empty cell and nothing else, so a text cell such as
 `NA` (Namibia, North America), `None` or `null` is a value there. pandas reads those tokens
@@ -115,19 +115,9 @@ def na_values(dtype_map: dict[str, str], dates: list[str]) -> dict[str, list[str
     return values
 
 
-ROUND_TRIP: Literal["round_trip"] = "round_trip"
-"""pandas' exact float reader: its default C reader misreads about one in four 17-digit numbers by one unit in
-the last place (measured on pandas 3.0, 2026-10-15), so the plot would not draw the values `data.csv` holds."""
-
-
 ISO_DATES: Literal["ISO8601"] = "ISO8601"
 """The `date_format` of every date column: `data.csv` writes ISO dates only, and without it pandas guesses a
 format per column and warns "Could not infer format" for years such as 0001 (review of #12196)."""
-
-
-def round_trip(dtype_map: dict[str, str]) -> bool:
-    """Whether the read needs `float_precision="round_trip"`: some column is read as float64."""
-    return PANDAS_DTYPES["number"] in dtype_map.values()
 
 
 def _literal(text: str) -> str:
@@ -149,15 +139,12 @@ def _statement(indent: str, dtype_map: dict[str, str], dates: list[str]) -> str:
         f"{_literal(name)}: " + ('[""]' if dtype_map.get(name) == TEXT_DTYPE else NA_NAME)
         for name in [*dtype_map, *(name for name in dates if name not in dtype_map)]
     ]
-    exact = round_trip(dtype_map)
     arguments = [_literal(DATA_FILE)]
     if dtype_items:
         arguments.append("dtype={" + ", ".join(dtype_items) + "}")
     if date_items:
         arguments.append("parse_dates=[" + ", ".join(date_items) + "]")
         arguments.append(f'date_format="{ISO_DATES}"')
-    if exact:
-        arguments.append(f'float_precision="{ROUND_TRIP}"')
     if per_column:
         arguments += ["keep_default_na=False", "na_values={" + ", ".join(na_items) + "}"]
     prefix = _tokens_statement(indent) + "\n" + indent if per_column else ""
@@ -172,8 +159,6 @@ def _statement(indent: str, dtype_map: dict[str, str], dates: list[str]) -> str:
     if date_items:
         lines += [f"{inner}parse_dates=[", *(f"{entry}{item}," for item in date_items), f"{inner}],"]
         lines.append(f'{inner}date_format="{ISO_DATES}",')
-    if exact:
-        lines.append(f'{inner}float_precision="{ROUND_TRIP}",')
     if per_column:
         lines += [f"{inner}keep_default_na=False,", f"{inner}na_values={{", *(f"{entry}{item}," for item in na_items)]
         lines.append(f"{inner}}},")
