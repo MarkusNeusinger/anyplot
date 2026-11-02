@@ -23,6 +23,7 @@ import pytest
 
 from agents.anyplot.render import harness as python_harness
 from agents.anyplot.render.runtimes.python import HARNESS_SOURCE
+from tests.libraries import skip_or_fail
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -129,7 +130,7 @@ def harness(tmp_path_factory: pytest.TempPathFactory) -> Harness:
     if node is None or modules is None:
         pytest.skip("needs node on PATH and the lock's node_modules (npm ci, or ANYPLOT_NODE_MODULES)")
     if package_dir("plotly") is None:
-        pytest.skip("needs plotly, whose bundled plotly.js draws the figures (the lib-plotly extra)")
+        skip_or_fail("needs plotly, whose bundled plotly.js draws the figures (the lib-plotly extra)")
     root = tmp_path_factory.mktemp("checkout")
     (root / "automation" / "js-render").mkdir(parents=True)
     shutil.copy(HARNESS, root / "automation" / "js-render" / "render.mjs")
@@ -142,7 +143,7 @@ def harness(tmp_path_factory: pytest.TempPathFactory) -> Harness:
 
 def bokeh_or_skip():
     if package_dir("bokeh") is None:
-        pytest.skip("needs bokeh, whose bundled BokehJS draws the figures (the lib-bokeh extra)")
+        skip_or_fail("needs bokeh, whose bundled BokehJS draws the figures (the lib-bokeh extra)")
     import bokeh.embed
     import bokeh.layouts
     import bokeh.models
@@ -707,7 +708,7 @@ class TestBothSteps:
         """The whole two-step render: the plot under the guard (and the exec filter where the kernel has it), the
         figure, the package's own JavaScript in the page, a canonical PNG."""
         if package_dir(library) is None:
-            pytest.skip(f"needs {library}")
+            skip_or_fail(f"needs {library}")
         (tmp_path / "plot.py").write_text(plot, encoding="utf-8")
         environment = harness.environment(
             {

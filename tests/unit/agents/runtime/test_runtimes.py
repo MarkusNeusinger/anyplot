@@ -722,7 +722,7 @@ class TestJavaScriptRuntimeBindings:
 
     def test_collect_reads_the_png_and_the_text_probe(self, tmp_path: Path) -> None:
         """The browser harness writes the drawn texts (`render.mjs`, `writeTextProbe`); a probe that is no JSON
-        object is simply absent, as Python's is."""
+        object is a failed probe, as Python's is, and a missing one is absent."""
         (tmp_path / "plot-dark.png").write_bytes(b"\x89PNG data")
         (tmp_path / "probe-dark.json").write_text('{"labels": [{"kind": "title", "text": "Umsatz"}]}')
         (tmp_path / "probe-light.json").write_text("[1, 2]")
@@ -730,14 +730,20 @@ class TestJavaScriptRuntimeBindings:
             b"\x89PNG data",
             {"labels": [{"kind": "title", "text": "Umsatz"}]},
         )
+        assert runtime_for("d3").collect(tmp_path, "light") == (None, {"error": "InvalidProbe"})
+        (tmp_path / "probe-light.json").unlink()
         assert runtime_for("d3").collect(tmp_path, "light") == (None, None)
 
-    def test_a_broken_or_linked_probe_is_simply_absent(self, tmp_path: Path) -> None:
+    def test_a_broken_probe_is_invalid_and_a_linked_one_absent(self, tmp_path: Path) -> None:
+        """An empty or unparseable probe is a failed one the pipeline logs (`probe_error`); a link is never followed:
+        the code under test made it."""
         (tmp_path / "probe-light.json").write_text("{not json")
+        (tmp_path / "probe-empty.json").write_text("")
         (tmp_path / "elsewhere.json").write_text('{"labels": []}')
         (tmp_path / "probe-dark.json").symlink_to(tmp_path / "elsewhere.json")
-        assert read_probe(tmp_path / "probe-light.json") is None
-        assert read_probe(tmp_path / "probe-dark.json") is None  # never followed: the code under test made it
+        assert read_probe(tmp_path / "probe-light.json") == {"error": "InvalidProbe"}
+        assert read_probe(tmp_path / "probe-empty.json") == {"error": "InvalidProbe"}
+        assert read_probe(tmp_path / "probe-dark.json") is None
         assert read_probe(tmp_path / "elsewhere.json") == {"labels": []}
 
 

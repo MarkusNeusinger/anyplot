@@ -9,7 +9,10 @@
  * every cell is the text the file holds, never formatted again, an empty cell
  * stays empty, and a cell's line breaks and space runs are drawn as the preview
  * draws them (`CellText`). Each header names the column's dtype as the profile
- * does; the `#` column is the row's place in the data, not a column of it.
+ * does; the `#` column is the row's place in the data, not a column of it. A
+ * column of the data that numbers its rows (`rowNumberColumn`, such as the
+ * `index` the `row_number` operation makes) leads in its place, with its own
+ * values, also after a sort reordered them.
  *
  * Search over every column (the quick filter), sorting, the column filter and
  * hiding or resizing columns change what the view shows, never the data. A

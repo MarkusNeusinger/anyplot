@@ -7,7 +7,7 @@ found (`np.testing.measure` compiles and execs its string), generalised: the har
 behind the validator, so these plots and snippets are written as if the validator had missed them.
 """
 
-import importlib.util
+import importlib
 import json
 import struct
 import subprocess
@@ -18,6 +18,7 @@ import pytest
 
 from agents.anyplot.render import harness
 from agents.anyplot.render.runtimes.python import HARNESS_SOURCE
+from tests.libraries import REQUIRE_LIBRARIES_ENV, import_library, skip_or_fail
 
 
 THEME = "light"
@@ -53,13 +54,11 @@ def render_file(tmp_path: Path, code: str) -> tuple[int, str]:
     return done.returncode, done.stderr
 
 
-def import_or_skip(module: str) -> None:
-    """Skip the test unless `module` imports here: `pytest.importorskip` skips only an ImportError, but cairosvg's
-    import raises OSError when cairocffi finds no libcairo on the machine."""
-    try:
-        importlib.import_module(module)
-    except (ImportError, OSError) as exc:
-        pytest.skip(f"{module} does not import here: {type(exc).__name__}: {exc}")
+def probe_labels(tmp_path: Path) -> list[tuple[str, str]]:
+    """The `(kind, text)` pairs of the run's probe, which must parse: a library drawn without matplotlib gets a probe
+    of its drawn texts alone (`harness.install_text_probes`, since #12503)."""
+    probe = json.loads((tmp_path / f"probe-{THEME}.json").read_text(encoding="utf-8"))
+    return [(label["kind"], label["text"]) for label in probe["labels"]]
 
 
 def run_data(tmp_path: Path, code: str) -> tuple[int, str | None, str]:
@@ -80,9 +79,6 @@ def run_data(tmp_path: Path, code: str) -> tuple[int, str | None, str]:
 # Each writes the marker file (or tries to) through a route the guard must refuse; the payload is text the
 # route compiles or runs, so a refusal leaves no marker behind.
 WRITE_MARKER = f"open('{MARKER}', 'w').write('x')"
-NO_CSSSELECT2 = pytest.mark.skipif(
-    importlib.util.find_spec("cssselect2") is None, reason="needs cssselect2 (lib-pygal)"
-)
 
 
 TEXT_PATH = (
@@ -336,14 +332,11 @@ PLOT_ROUTES = [
         id="exec from an __init__ that is not cssselect2's",
     ),
     pytest.param(
-        forged_selector(f"1) and {WRITE_MARKER} or (1"),
-        id="a forged cssselect2 token writes from the built lambda",
-        marks=NO_CSSSELECT2,
+        forged_selector(f"1) and {WRITE_MARKER} or (1"), id="a forged cssselect2 token writes from the built lambda"
     ),
     pytest.param(
         forged_selector(f'1) and exec("{WRITE_MARKER}") or (1'),
         id="a forged cssselect2 token execs from the built lambda",
-        marks=NO_CSSSELECT2,
     ),
 ]
 # Fable review of #12181: a trace, profile or signal callback gets the real frame and walks `f_back` (no audit event)
@@ -384,6 +377,8 @@ CALLBACK_ROUTES = [
 class TestPlotGuard:
     @pytest.mark.parametrize("body", PLOT_ROUTES)
     def test_route_fails_the_render_and_leaves_no_trace(self, tmp_path: Path, body: str) -> None:
+        if "cssselect2" in body:
+            import_library("cssselect2")  # the forged-token routes (lib-pygal)
         exit_code, stderr = render(tmp_path, body)
         assert exit_code != 0
         assert "blocked by the" in stderr and "sandbox" in stderr, stderr[-2000:]
@@ -469,7 +464,7 @@ class TestPlotGuard:
         assert (tmp_path / "plot-light.png").exists() and (tmp_path / "probe-light.json").exists()
 
     def test_seaborn_still_renders(self, tmp_path: Path) -> None:
-        pytest.importorskip("seaborn")
+        import_library("seaborn")
         body = "import pandas as pd\nimport seaborn as sns\nsns.set_theme(style='white')\n"
         body += "sns.histplot(pd.DataFrame({'v': [1, 2, 2, 3]}), x='v')\n"
         exit_code, stderr = render(tmp_path, body)
@@ -515,7 +510,7 @@ class TestPlotGuard:
     def test_plotnine_renders_and_probes(self, tmp_path: Path) -> None:
         """plotnine's `Environment.capture` reads the plot's frame (`FRAME_READERS`) to look `aes("x", "y")` up, and
         the probe measures the figure plotnine builds without a canvas (`_renderer` attaches Agg's)."""
-        pytest.importorskip("plotnine")
+        import_library("plotnine")
         code = (
             "import os\n\nimport pandas as pd\nfrom plotnine import aes, geom_point, ggplot\n\n"
             "THEME = os.environ['ANYPLOT_THEME']\n"
@@ -532,9 +527,10 @@ class TestPlotGuard:
         assert probe.get("canvas") == [400, 300] and probe.get("points") == 3, probe
 
     def test_altair_renders_its_png_and_html(self, tmp_path: Path) -> None:
-        """altair draws through vl-convert, not a matplotlib figure, so the run writes no probe and needs none."""
-        pytest.importorskip("altair")
-        pytest.importorskip("vl_convert")
+        """altair draws through vl-convert, not a matplotlib figure: the probe holds the texts of the scenegraph
+        vl-convert lays the spec out as (`install_text_probes`)."""
+        import_library("altair")
+        import_library("vl_convert")
         code = (
             "import os\n\nimport altair as alt\nimport pandas as pd\n\n"
             "THEME = os.environ['ANYPLOT_THEME']\n"
@@ -548,6 +544,7 @@ class TestPlotGuard:
         assert "blocked by the" not in stderr
         assert (tmp_path / "plot-light.png").read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
         assert "<html" in (tmp_path / "plot-light.html").read_text(encoding="utf-8")
+        assert {("x axis label", "x"), ("x tick label", "b")} <= set(probe_labels(tmp_path))
 
     @pytest.mark.parametrize(
         ("imports", "size", "save"),
@@ -566,9 +563,10 @@ class TestPlotGuard:
         self, tmp_path: Path, imports: str, size: tuple[int, int], save: str
     ) -> None:
         """pygal's PNG goes through cairosvg: `warm_cairo` loads libcairo before the guard, and cssselect2 compiles the
-        chart's stylesheet into lambdas through `eval` (`CODE_BUILDERS`). No matplotlib figure, so no probe."""
-        pytest.importorskip("pygal")
-        import_or_skip("cairosvg")
+        chart's stylesheet into lambdas through `eval` (`CODE_BUILDERS`). No matplotlib figure: the probe holds the
+        texts of the SVG `svg2png` receives, written while the guard is armed (`write_text_probe`)."""
+        import_library("pygal")
+        import_library("cairosvg")
         code = (
             f"import os\n\n{imports}import pygal\n\nTHEME = os.environ['ANYPLOT_THEME']\n"
             f"chart = pygal.Bar(width={size[0]}, height={size[1]}, title='t')\nchart.add('y', [1, 3, 2])\n"
@@ -580,7 +578,7 @@ class TestPlotGuard:
         png = (tmp_path / "plot-light.png").read_bytes()
         assert png[:8] == b"\x89PNG\r\n\x1a\n" and struct.unpack(">II", png[16:24]) == (400, 300)
         assert "<svg" in (tmp_path / "plot-light.html").read_text(encoding="utf-8")
-        assert not (tmp_path / "probe-light.json").exists()
+        assert {("title", "t"), ("legend text", "y")} <= set(probe_labels(tmp_path))
 
     LETS_PLOT = (
         "import os\n\nimport pandas as pd\nfrom lets_plot import LetsPlot, aes, geom_point, ggplot, ggsize\n"
@@ -591,8 +589,9 @@ class TestPlotGuard:
 
     def test_lets_plot_renders_its_png_and_html(self, tmp_path: Path) -> None:
         """lets-plot rasterises in its native bridge, loaded at import: the guard needs no entry for it, and the two
-        files `path="."` names are the only writes. No matplotlib figure, so no probe."""
-        pytest.importorskip("lets_plot")
+        files `path="."` names are the only writes besides the probe, which holds the texts of the SVG the bridge
+        exports from the same spec."""
+        import_library("lets_plot")
         code = self.LETS_PLOT + (
             "ggsave(plot, f'plot-{THEME}.png', path='.', scale=2)\nggsave(plot, f'plot-{THEME}.html', path='.')\n"
         )
@@ -602,12 +601,12 @@ class TestPlotGuard:
         png = (tmp_path / "plot-light.png").read_bytes()
         assert png[:8] == b"\x89PNG\r\n\x1a\n" and struct.unpack(">II", png[16:24]) == (400, 300)
         assert "data-lets-plot-script" in (tmp_path / "plot-light.html").read_text(encoding="utf-8")
-        assert not (tmp_path / "probe-light.json").exists()
+        assert {("x axis label", "x"), ("x tick label", "b")} <= set(probe_labels(tmp_path))
 
     def test_a_lets_plot_save_without_path_is_refused(self, tmp_path: Path) -> None:
         """Without `path=`, `ggsave` creates `./lets-plot-images` (`os.mkdir`), which the guard refuses; the
         normaliser adds `path="."` to every save."""
-        pytest.importorskip("lets_plot")
+        import_library("lets_plot")
         exit_code, stderr = render_file(tmp_path, self.LETS_PLOT + "ggsave(plot, f'plot-{THEME}.png', scale=2)\n")
         assert exit_code != 0 and "blocked by the render sandbox: os.mkdir" in stderr, stderr[-2000:]
         assert not (tmp_path / "lets-plot-images").exists() and not (tmp_path / "plot-light.png").exists()
@@ -615,7 +614,7 @@ class TestPlotGuard:
     def test_a_cssselect2_selector_compiles_and_runs_under_the_guard(self, tmp_path: Path) -> None:
         """`CompiledSelector.__init__` builds each selector's test with `eval` (`CODE_BUILDERS`), and the lambda it
         built runs under the guard like any plot code."""
-        pytest.importorskip("cssselect2")
+        import_library("cssselect2")
         body = (
             "import xml.etree.ElementTree as ET\n\nimport cssselect2\n\n"
             "[selector] = cssselect2.compile_selector_list('rect.a')\n"
@@ -646,14 +645,19 @@ class TestPlotGuard:
 
 @pytest.mark.parametrize("error", [ModuleNotFoundError("No module named 'cairosvg'"), OSError("no library called")])
 def test_a_library_that_does_not_import_skips_its_case(monkeypatch: pytest.MonkeyPatch, error: Exception) -> None:
-    """A missing module and a missing libcairo under an installed cairosvg (cairocffi's OSError) both skip."""
+    """A missing module and a missing libcairo under an installed cairosvg (cairocffi's OSError) both skip, and both
+    fail where CI requires the libraries (`tests/libraries.py`)."""
 
     def fail(name: str) -> None:
         raise error
 
     monkeypatch.setattr(importlib, "import_module", fail)
+    monkeypatch.delenv(REQUIRE_LIBRARIES_ENV, raising=False)
     with pytest.raises(pytest.skip.Exception, match=type(error).__name__):
-        import_or_skip("cairosvg")
+        import_library("cairosvg")
+    monkeypatch.setenv(REQUIRE_LIBRARIES_ENV, "1")
+    with pytest.raises(pytest.fail.Exception, match=f"{type(error).__name__}.*{REQUIRE_LIBRARIES_ENV}=1"):
+        import_library("cairosvg")
 
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -675,9 +679,9 @@ LIBRARY_MODULES = {
     "pygal": ("pygal", "cairosvg"),
     "letsplot": ("lets_plot",),
 }
-"""The modules a library's catalogue case needs beyond matplotlib's stack; CI's test environment installs none."""
-WITHOUT_PROBE = frozenset({"altair", "pygal", "letsplot"})
-"""The libraries that draw no matplotlib figure, so their runs write no probe but an HTML twin."""
+"""The modules a library's catalogue case needs beyond matplotlib's stack (`import_library`)."""
+WITH_HTML_TWIN = frozenset({"altair", "pygal", "letsplot"})
+"""The libraries that draw no matplotlib figure: their runs write an HTML twin, and a probe of the drawn texts alone."""
 ON_CANVAS = frozenset({"pygal", "letsplot"})
 """The libraries whose cases the normaliser's canvas rewrite holds to 3200x1800 (the 1c decisions)."""
 
@@ -687,17 +691,17 @@ def test_catalogue_files_render_under_the_guard(tmp_path: Path, spec_id: str, li
     """Real catalogue files, normalised as a session opening does, render under the plot guard: a guard change that
     breaks scikit-learn, statsmodels, mathtext, plotnine's frame read, altair's vl-convert, pygal's cairosvg or
     lets-plot's bridge fails here. The seaborn, plotnine, altair, pygal and lets-plot cases need their libraries, which
-    CI's test environment does not install; the renderer-image job of `ci-image.yml` renders all five through the
-    harness in the image. altair, pygal and lets-plot draw no matplotlib figure, so their runs write no probe: the PNG
-    and its HTML twin are what the case checks."""
+    CI's test job installs and requires (`tests/libraries.py`); the renderer-image job of `ci-image.yml` renders all
+    five through the harness in the image as well. altair, pygal and lets-plot draw no matplotlib figure: their runs
+    write an HTML twin, and their probe holds the drawn texts alone, which every case checks."""
     from agents.anyplot.code.normalise import normalise
     from core.utils import strip_noqa_comments
 
     for module in LIBRARY_MODULES.get(library, ()):
-        import_or_skip(module)
+        import_library(module)
     source = REPO_ROOT / "plots" / spec_id / "implementations" / "python" / f"{library}.py"
     if not source.exists():
-        pytest.skip(f"{spec_id}/{library} is absent")
+        skip_or_fail(f"the catalogue file {spec_id}/{library} is absent: pick another case")
     code = normalise(strip_noqa_comments(source.read_text(encoding="utf-8")) or "", library=library)
     (tmp_path / "plot.py").write_text(code, encoding="utf-8")
     done = subprocess.run(
@@ -718,10 +722,9 @@ def test_catalogue_files_render_under_the_guard(tmp_path: Path, spec_id: str, li
     assert done.returncode == 0, done.stderr[-3000:]
     assert "blocked by the" not in done.stderr
     assert (tmp_path / "plot-light.png").exists()
-    if library in WITHOUT_PROBE:
+    if library in WITH_HTML_TWIN:
         assert (tmp_path / "plot-light.html").exists()
-    else:
-        assert (tmp_path / "probe-light.json").exists()
+    assert probe_labels(tmp_path), "the probe holds no drawn text"
     if library in ON_CANVAS:
         assert struct.unpack(">II", (tmp_path / "plot-light.png").read_bytes()[16:24]) == (3200, 1800)
 

@@ -170,6 +170,11 @@ HARNESS_START = 'HARNESS {"event": "start"}'
 HARNESS_END = 'HARNESS {"event": "end"'
 EXEC_DENY_STATES = frozenset({"on", "off", "unavailable", "unsupported"})
 """The values of the end line's `exec_deny` (`harness.install_exec_deny`; `off`: the guard was never armed)."""
+PROBE_WRITE_FAILURES = frozenset(
+    {"PermissionError", "OSError", "FileExistsError", "IsADirectoryError", "BlockingIOError", "NotRegularFile"}
+)
+"""The values of the end line's `probe_failed` the log keeps by name (`harness.write_text_probe`); any other reads
+`other`, since the code under test shares stdout and can print an end line."""
 STDERR_LIMIT = 64 * 1024
 STDERR_HEAD_CHARS = 300
 """The most of a kept head line (`stderr_tail`): a Julia error's exception type and the name an `UndefVarError` or a
@@ -674,6 +679,15 @@ class Attempt:
         state = self.end_report().get("exec_deny")
         return state if isinstance(state, str) and state in EXEC_DENY_STATES else None
 
+    def probe_failed(self) -> str | None:
+        """The exception class of a text-probe write that failed, from the harness's last end line (advisory): one of
+        `PROBE_WRITE_FAILURES`, `other` for any other value, None when the line names none. Logged per launch, so a
+        probe the sandbox refused is loud (the empty probes of pygal, altair and lets-plot after #12503)."""
+        failure = self.end_report().get("probe_failed")
+        if failure is None:
+            return None
+        return failure if isinstance(failure, str) and failure in PROBE_WRITE_FAILURES else "other"
+
     def to_wire(self, theme: Theme, attempts: int, *, stderr_head: str = "") -> ThemeRun:
         """The theme's wire answer; `stderr_head` is the row's (`stderr_tail`)."""
         usage = self.usage()
@@ -1166,6 +1180,7 @@ def _log_attempt(attempt: Attempt, theme: str, *, retry: bool) -> None:
                 "limit": attempt.limit,
                 "harness_started": attempt.harness_started,
                 "exec_deny": attempt.exec_deny(),
+                "probe_failed": attempt.probe_failed(),
                 "launcher_message": LAUNCHER_FAILURE in attempt.stderr,
                 "retry": retry,
                 "wall_s": round(attempt.wall_s, 3),

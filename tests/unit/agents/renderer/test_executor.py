@@ -408,12 +408,14 @@ class TestBounds:
 
         assert run.exit_code == 0 and run.png_base64 is None and run.reason == "output_rejected"
 
-    async def test_a_broken_probe_is_absent(self, executor: SandboxExecutor) -> None:
+    async def test_a_broken_probe_is_an_invalid_probe(self, executor: SandboxExecutor) -> None:
+        """A probe that exists but does not parse is a failed one the pipeline logs (`probe_error`), not an absent
+        one; the render stands."""
         source = PLOT + "open('probe-light.json', 'w').write('[1, 2')\n"
 
         run = await executor.run_theme(job(source), "light")
 
-        assert run.png_base64 is not None and run.probe is None
+        assert run.png_base64 is not None and run.probe == {"error": "InvalidProbe"}
 
     async def test_an_oversized_png_reports_its_size_and_the_cap(
         self, executor: SandboxExecutor, monkeypatch: pytest.MonkeyPatch
@@ -429,12 +431,12 @@ class TestBounds:
     async def test_a_deeply_nested_probe_is_dropped_and_the_answer_still_serialises(
         self, executor: SandboxExecutor, depth: int
     ) -> None:
-        """256 levels broke `model_dump`, about 200 the agents' parse; the renderer drops the probe instead."""
+        """256 levels broke `model_dump`, about 200 the agents' parse; the renderer answers an invalid probe instead."""
         source = PLOT + f"open('probe-light.json', 'w').write('{{\"a\": ' + '[' * {depth} + ']' * {depth} + '}}')\n"
 
         run = await executor.run_theme(job(source), "light")
 
-        assert run.png_base64 is not None and run.probe is None
+        assert run.png_base64 is not None and run.probe == {"error": "InvalidProbe"}
         ThemeRun.model_validate_json(run.model_dump_json())
 
     @pytest.mark.parametrize(
@@ -481,6 +483,30 @@ class TestBounds:
         assert attempt.exec_deny() == state
         (line,) = [record.getMessage() for record in caplog.records if '"event": "sandbox"' in record.getMessage()]
         assert json.loads(line)["exec_deny"] == state
+
+    @pytest.mark.parametrize(
+        ("report", "failure"),
+        [
+            ('{"event": "end", "exec_deny": "on", "probe_failed": "PermissionError"}', "PermissionError"),
+            ('{"event": "end", "probe_failed": "NotRegularFile"}', "NotRegularFile"),
+            ('{"event": "end", "probe_failed": "anything the plot printed"}', "other"),
+            ('{"event": "end", "probe_failed": ["OSError"]}', "other"),
+            ('{"event": "end", "exec_deny": "on"}', None),
+        ],
+    )
+    def test_a_failed_text_probe_write_is_logged(
+        self, caplog: pytest.LogCaptureFixture, report: str, failure: str | None
+    ) -> None:
+        """`harness.write_text_probe` puts a failed write's class on the end line, and the launch log carries it in a
+        closed vocabulary: a probe the guard refused is loud, not an absent one (#12503's empty probes)."""
+        caplog.set_level("INFO", logger=executor_module.__name__)
+        attempt = Attempt("r", exit_code=0, stdout_tail=f"HARNESS {report}\n")
+
+        executor_module._log_attempt(attempt, "light", retry=False)
+
+        assert attempt.probe_failed() == failure
+        (line,) = [record.getMessage() for record in caplog.records if '"event": "sandbox"' in record.getMessage()]
+        assert json.loads(line)["probe_failed"] == failure
 
 
 class TestDataRun:

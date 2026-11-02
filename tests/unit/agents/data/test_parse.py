@@ -47,6 +47,7 @@ from agents.anyplot.schemas import (
     MAX_WARNINGS,
 )
 from core.spec_roles import DataRole
+from tests.libraries import import_library
 
 
 # Named escapes keep invisible and combining characters visible in the source.
@@ -1116,7 +1117,7 @@ class TestTyping:
         assert column(parsed, "a").dtype == "integer"
 
     def test_missing_values_cover_every_pandas_default(self) -> None:
-        parsers = pytest.importorskip("pandas._libs.parsers")
+        parsers = import_library("pandas._libs.parsers")
 
         assert set(parsers.STR_NA_VALUES) <= MISSING_VALUES
 

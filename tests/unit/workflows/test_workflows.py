@@ -436,6 +436,24 @@ class TestCiTestsSpecSectionCheck:
         assert names.index("Check spec characteristic sections") < names.index("Install dependencies")
 
 
+def test_run_tests_installs_and_requires_the_renderers_libraries() -> None:
+    """The job "Run Tests" installs every `lib-*` extra the renderer image installs and sets
+    `ANYPLOT_REQUIRE_LIBRARIES=1`, so the validator's walk of the admitted modules and the harness's library cases run
+    there, and a library that does not import fails them (`tests/libraries.py`). Before 2026-11-02 the job installed
+    none, and the walk, which skips a module that does not import, checked matplotlib's stack alone."""
+    job = load_workflow("ci-tests.yml")["jobs"]["test"]
+    assert job["env"]["ANYPLOT_REQUIRE_LIBRARIES"] == "1"
+    [install] = [step["run"] for step in job["steps"] if step.get("name") == "Install dependencies"]
+    renderer = (WORKFLOWS_DIR.parent.parent / "agents" / "renderer" / "Dockerfile").read_text(encoding="utf-8")
+    extras = set(re.findall(r"--extra (lib-[\w-]+)", renderer))
+    assert extras and extras <= set(re.findall(r"--extra (lib-[\w-]+)", install))
+    # The image's export stacks stay out of the test job too, so a library behaves there as in the sandbox.
+    left_out = set(re.findall(r"--no-install-package ([\w-]+)", renderer))
+    assert left_out and left_out == set(re.findall(r"--no-install-package ([\w-]+)", install))
+    [cairo] = [step["run"] for step in job["steps"] if step.get("name") == "Install libcairo"]
+    assert "libcairo2" in cairo and "libcairo2" in renderer
+
+
 class TestCiMigrationsWorkflow:
     """ci-migrations.yml runs every revision against a throwaway PostgreSQL, never against a shared one."""
 
