@@ -1031,9 +1031,14 @@ def _usd(value: float | None) -> float | None:
 
 @app.get("/v1/eligibility", dependencies=v1_dependencies)
 async def eligibility(
-    runtime: RuntimeDep, _: User, spec: Annotated[str, Query(pattern=SPEC_PATTERN)], library: Annotated[str, Query()]
+    runtime: RuntimeDep,
+    _: NamedUser,
+    spec: Annotated[str, Query(pattern=SPEC_PATTERN)],
+    library: Annotated[str, Query()],
 ) -> dict[str, Any]:
-    """Without a snapshot the service knows the static rules and the pairs it has already scanned."""
+    """Without a snapshot the service knows the static rules and the pairs it has already scanned. The caller is
+    checked as named (`NamedUser`), never bound to a network: the plot page asks on every visit, and nothing here is
+    booked."""
     settings = get_settings()
     _library(library, settings)
     cached = runtime.eligibility_cache.get((spec, library))

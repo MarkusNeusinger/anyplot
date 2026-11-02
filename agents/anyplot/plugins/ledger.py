@@ -34,8 +34,10 @@ refuses a copy it has no room for.
 An anonymous public caller (the public BFF's `X-Anyplot-Anon`) is also bound to the network it
 came from (`bind_network`, a salted key of its IPv4 address or IPv6 /64), and its tokens and
 pipeline runs count against that network's day too: `AGENT_IP_DAILY_TOKEN_BUDGET` and
-`AGENT_IP_DAILY_PIPELINE_RUNS`, twice the per-user caps for shared networks. A tab id costs
-nothing to mint, so the per-user caps alone would not bound one machine; the network's caps do.
+`AGENT_IP_DAILY_PIPELINE_RUNS`, twice the per-user caps for shared networks, and so do its
+pastes, conversions, chat turns and beacons, in the network's own minute and day at twice the
+per-user caps (`IP_WINDOW_FACTOR`). A tab id costs nothing to mint, so the per-user caps alone
+would not bound one machine; the network's caps do.
 
 The global day budget binds the whole service: once it is spent (`UsageBook.paused`),
 every user gets the `service_paused` refusal (`day_refusal`) until 00:00 UTC, told apart
@@ -309,10 +311,16 @@ class _Day:
     network_tokens: dict[str, int] = field(default_factory=dict)
     network_runs: dict[str, int] = field(default_factory=dict)
     """The per-IP day counts: what every anonymous user bound to a network booked while bound to it."""
+    network_windows: dict[tuple["WindowKind", str], int] = field(default_factory=dict)
+    """The per-IP day counts of the windowed kinds (pastes, conversions, chat turns, beacons), by kind and network."""
 
 
 MESSAGE_WINDOW_S = 60.0
 """The sliding window of `AGENT_USER_MESSAGES_PER_MINUTE` and `AGENT_USER_PASTES_PER_MINUTE`."""
+IP_WINDOW_FACTOR = 2
+"""How many users' worth of pastes, conversions, chat turns and beacons the anonymous users of one network share, per
+minute and per day: twice the per-user caps, as for the network's runs and tokens (`AGENT_IP_*`), for shared networks.
+A constant, like the beacon caps: it scales the per-user settings rather than adding one per kind."""
 MessageLimit = Literal["rate_limited", "daily_limit"]
 """Why `message_limit` or `paste_limit` refuses: the minute's count, or the day's."""
 WindowKind = Literal["message", "paste", "convert", "outcome", "copy"]
@@ -622,18 +630,37 @@ class UsageBook:
     def _limit(
         self, kind: WindowKind, user_id: str, today_count: int, per_minute: int, per_day: int
     ) -> MessageLimit | None:
+        """The user's minute and day for `kind`, and for an anonymous user their network's, at `IP_WINDOW_FACTOR`
+        times the user's caps: a tab id costs nothing to mint, so the network's windows are what bound one machine's
+        pastes, conversions, chat turns and beacons."""
         if today_count >= per_day:
             return "daily_limit"
         recent = self._trimmed(kind, user_id)
         if recent is not None and len(recent) >= per_minute:
             return "rate_limited"
+        network = self._network(user_id)
+        if network is None:
+            return None
+        if self._current().network_windows.get((kind, network), 0) >= IP_WINDOW_FACTOR * per_day:
+            return "daily_limit"
+        shared = self._trimmed(kind, network)
+        if shared is not None and len(shared) >= IP_WINDOW_FACTOR * per_minute:
+            return "rate_limited"
         return None
 
     def _stamp(self, kind: WindowKind, user_id: str) -> None:
-        recent = self._trimmed(kind, user_id)
-        if recent is None:
-            recent = self._recent[(kind, user_id)] = deque()
-        recent.append(self._clock())
+        """Count one `kind` against the user's minute, and against their network's minute and day."""
+        keys = [user_id]
+        network = self._network(user_id)
+        if network is not None:
+            day = self._current()
+            day.network_windows[(kind, network)] = day.network_windows.get((kind, network), 0) + 1
+            keys.append(network)
+        for key in keys:
+            recent = self._trimmed(kind, key)
+            if recent is None:
+                recent = self._recent[(kind, key)] = deque()
+            recent.append(self._clock())
 
     def _trimmed(self, kind: WindowKind, user_id: str) -> deque[float] | None:
         """The user's times of `kind` within the window, oldest first; a user with none left is forgotten."""
