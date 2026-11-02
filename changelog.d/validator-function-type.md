@@ -10,7 +10,7 @@
   by matplotlib and statsmodels; multiprocessing's `Pool`; altair's
   `importlib_version`; and the `tokenize` module. The review also bans
   `timeit` on every receiver and the `eval_str=` keyword, with which
-  `inspect.signature` evaluates a function's annotations.
+  `inspect.signature` evaluates a function's annotations (#12519).
 
 ### Fixed
 
@@ -18,8 +18,9 @@
   `lib-*` extras of the renderer image and sets `ANYPLOT_REQUIRE_LIBRARIES=1`,
   so a library that does not import fails its tests instead of skipping them.
   Before, the validator's walk saw matplotlib alone, and 32 harness, validator
-  and normaliser cases never ran in CI.
+  and normaliser cases never ran in CI (#12519).
 - **The text probe of pygal, altair and lets-plot holds the drawn texts.** The
   harness wrote it through `os.fdopen`, whose `open` event names no path, so
   the plot guard refused the write and left an empty file. The reply had no
-  texts for those three libraries. The probe now goes out through `os.write`.
+  texts for those three libraries since #12503. The probe now goes out
+  through `os.write` (#12519).
