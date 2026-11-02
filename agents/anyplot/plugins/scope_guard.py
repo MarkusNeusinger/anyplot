@@ -289,8 +289,9 @@ class ScopeGuardPlugin(BasePlugin):
         services = get_services()
         settings = get_settings()
         user = ledger.user_id or invocation_context.session.user_id
-        if not services.usage.daily_ok(user, settings):
-            reason = day_refusal(services.usage, user, settings)  # `locked_out`, `service_paused` or `budget`
+        if not services.usage.daily_ok(user, settings, tier=ledger.tier):
+            # `locked_out`, `service_paused` or `budget`
+            reason = day_refusal(services.usage, user, settings, tier=ledger.tier)
             ledger.refuse(reason, refusal(reason, ledger.lang))
             attribution("scope_guard", ledger, verdict=reason)
             return _withheld()

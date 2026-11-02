@@ -371,6 +371,7 @@ class TestGateAndKillSwitch:
         assert response.status_code == 200
         token_user = derive_user_id(KEY.encode(), AdminIdentity(email=None, via="token"))
         assert upstream.requests[0].headers["X-Anyplot-User"] == token_user
+        assert upstream.requests[0].headers["X-Anyplot-Tier"] == "admin"  # the token path is an admin too
 
     @pytest.mark.parametrize(("method", "path", "body"), ALL_ROUTES)
     def test_every_route_404_when_disabled(
@@ -469,6 +470,8 @@ class TestIdentity:
         sent = upstream.requests[0]
         assert str(sent.url) == f"{SERVICE_URL}/v1/status"
         assert sent.headers["X-Anyplot-User"] == derive_user_id(KEY.encode(), ADMIN)
+        # The tier comes from the admin gate's identity: the agents service's admin lane (2026-11-01).
+        assert sent.headers["X-Anyplot-Tier"] == "admin"
         assert sent.headers["X-Request-Id"] == response.headers["X-Request-Id"]
         assert "Authorization" not in sent.headers  # localhost: no ID token
         assert response.headers["Cache-Control"] == "private, no-store"
@@ -558,6 +561,16 @@ class TestSnapshot:
             refused = client.post("/debug/agent/sessions", json={**body, "source": source}, headers=CLIENT_HEADERS)
             assert refused.status_code == 422, source
         assert len(upstream.requests) == 1
+
+    def test_the_tier_comes_from_the_gate_never_from_the_client(self, client, upstream, db_with_spec) -> None:
+        """The upstream headers are built from the verified identity: a browser's own tier header never travels."""
+        upstream.handler = lambda request: httpx.Response(200, json={"session_id": "s1", "eligibility": "clean"})
+        body = {"spec_id": "scatter-basic", "library": "matplotlib", "locale": "en"}
+        response = client.post(
+            "/debug/agent/sessions", json=body, headers={**CLIENT_HEADERS, "X-Anyplot-Tier": "public"}
+        )
+        assert response.status_code == 200
+        assert upstream.requests[0].headers.get_list("X-Anyplot-Tier") == ["admin"]
 
     def test_create_session_404_without_snapshot(self, client, upstream, db_with_spec) -> None:
         db_with_spec.get_by_id_with_code.return_value = None
@@ -2136,6 +2149,8 @@ class TestUpstreamMapping:
             (422, {"detail": "nothing_to_undo"}, 422, "nothing_to_undo"),
             (422, {"detail": "formula"}, 422, "formula"),
             (422, {"detail": "code"}, 422, "code"),
+            # "Beispieldaten" in the data field since 2026-11-01: the page sends it to the chat.
+            (422, {"detail": "data_request"}, 422, "data_request"),
             (429, {"detail": "rate_limited"}, 429, "rate_limited"),
             # The paste route's limits and guards since 2026-10-14; a 403 with a documented code is no IAM error.
             (429, {"detail": "daily_limit"}, 429, "daily_limit"),

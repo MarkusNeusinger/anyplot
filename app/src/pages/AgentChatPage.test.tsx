@@ -629,15 +629,15 @@ describe('AgentChatPage gating', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     const textbox = await screen.findByLabelText(/# your data/);
-    // Without data, both boxes name the other source: a curve the assistant computes.
+    // Without data, both boxes name the other sources: example data, and a curve the assistant computes.
     expect(textbox).toHaveAccessibleDescription(
-      'or ask for a curve in the chat: y = sin(x), x from -pi to pi'
+      'or type "example data" here, or ask for a curve in the chat: y = sin(x), x from -pi to pi'
     );
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
-      'ask for a curve: "y = sin(x), x from -pi to pi"'
+      'ask for example data or a curve: "y = sin(x), x from -pi to pi"'
     );
-    expect(screen.getByText(/or ask here for a curve/)).toBeInTheDocument();
+    expect(screen.getByText(/or ask here for example data or a curve/)).toBeInTheDocument();
 
     fireEvent.change(textbox, { target: { value: FORMULA } });
     fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
@@ -1456,7 +1456,10 @@ describe('AgentChatPage .plot_all()', () => {
     expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
     const box = screen.getByLabelText('Message');
     expect(box).toBeEnabled();
-    expect(box).toHaveAttribute('placeholder', 'ask for a curve: "y = sin(x), x from -pi to pi"');
+    expect(box).toHaveAttribute(
+      'placeholder',
+      'ask for example data or a curve: "y = sin(x), x from -pi to pi"'
+    );
     expect(box).not.toHaveAccessibleDescription();
 
     // Step 1: `.plot_all()` waits for the confirmation, and a question about the data goes.

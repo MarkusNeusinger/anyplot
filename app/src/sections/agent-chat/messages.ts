@@ -8,10 +8,14 @@ import type { ConfirmLoss } from 'src/hooks/useAgentSession';
 
 /** Errors of a turn (stream `error` events and failed requests). */
 export const ERROR_TEXT: Record<string, string> = {
-  capacity: 'the run queue is full or the wait ran out; try again in a few minutes',
-  // The server's `AGENT_USER_MAX_RUNS` (3): plots and data runs queued or running across the user's windows.
+  // The agents service's `capacity`: a full run queue, a wait that ran out, or a model call the model service still
+  // refused for its quota or an overload after the retries (`model_busy`, the root's call before any plot run).
+  capacity:
+    'the server is busy: the run queue is full, the wait ran out, or the model service is overloaded; try again in a few minutes',
+  // The user's own cap (`user_max_runs` of `/status`: 3, or 5 for an admin): plots and data runs queued or
+  // running across the user's windows.
   run_limit:
-    'you already have 3 plots or data runs in progress in other windows; wait until one finishes, then try again',
+    'your plots and data runs in other windows already fill your share; wait until one finishes, then try again',
   deadline: 'the run took too long and was stopped',
   guard_unavailable: 'the scope check is unavailable right now; try again',
   upstream: 'the agents service did not answer or cut the stream',
@@ -41,6 +45,8 @@ export const PLOT_FAILED_TEXT: Record<string, string> = {
   render: 'the plot did not render',
   deadline: 'the run ran out of time before a render passed',
   budget: 'the usage limit is reached',
+  // The model service refused a call for its quota or an overload, also after the retries.
+  busy: 'the model service is busy; try again in a minute',
   error: 'something went wrong while adapting',
   no_dataset: 'paste and parse your data first',
   incomplete_bindings: 'pick a column for every required role first',

@@ -806,3 +806,14 @@ def _data_values(text: str) -> int:
 def _shape_only(text: str) -> bool:
     """A short request that names a curve and holds no number (`Gaußkurve`, `eine Parabel`)."""
     return len(text.split()) <= MAX_SHAPE_WORDS and not _DIGIT.search(text) and _SHAPES.search(text) is not None
+
+
+def stated_values(text: str) -> int:
+    """How many numbers of `text` stand as values, outside its range phrases (`between 10 and 100`, `von 1 bis 5`).
+
+    The data-request guard (`classify.looks_like_data_request`) counts them as the formula
+    guard counts its values: a request that names its sizes ("3 Kategorien und 20 Zeilen")
+    holds fewer than `MIN_DATA_VALUES`, a sentence with its own data ("Hund 7, Katze 3 und
+    Vogel 4") holds that many.
+    """
+    return _data_values(_blank(text, [match.span() for match in _RANGE.finditer(text)]))

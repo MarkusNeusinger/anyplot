@@ -81,8 +81,13 @@ class TestFixtures:
 
         # 30 single-step cases (two of them `derive`, two `make_date`, one month-only date format, one sort of month
         # names, one daily mean per sensor), 10 `hard` ones (chains, ambiguity, unsupported asks), 11 data-code
-        # cases and 4 step-1 summaries.
-        assert len(cases) == 55
+        # cases, 4 step-1 summaries and 3 requests for example data (since 2026-11-01).
+        assert len(cases) == 58
+        example = [item for item in cases if "example_data" in item.tags]
+        assert len(example) == 3 and {item.locale for item in example} == {"de", "en"}
+        assert all(
+            item.dataset_text is None and item.expected_operations[0]["op"] == "run_data_code" for item in example
+        )
         assert {item.locale for item in cases if "derive" in item.tags} == {"de", "en"}
         assert sum(1 for item in cases if "hard" in item.tags) == 10
         assert locales["de"] >= 5 and locales["en"] >= 5

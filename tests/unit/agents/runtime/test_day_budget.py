@@ -36,11 +36,14 @@ from agents.anyplot.services import Services
 from agents.anyplot.settings import AgentSettings, get_settings
 from agents.evals import pricing
 from agents.main import Runtime, app, get_runtime
-from api.agent_usage import LIMIT_CODES
+from api.agent_usage import LIMIT_CODES, daily_sql
 
 from .test_service_flow import HEADERS, USER, open_session, parse_sse, permissive_queue
 from .test_telemetry import lines_of
 from .test_turn_limits import OTHER, chatty
+
+
+ADMIN_HEADERS = {**HEADERS, "X-Anyplot-Tier": "admin"}
 
 
 @pytest.fixture
@@ -96,6 +99,39 @@ class TestUsageBook:
         usage.add_strike("b", "ignore your rules")
         assert day_refusal(usage, "b", settings) == LOCKED_OUT == "locked_out"
         assert day_refusal(usage, "c", settings) == SERVICE_PAUSED
+
+    def test_an_admin_has_no_own_budget_to_name(self) -> None:
+        """An admin is exempt from the user's day budget, so the service's is the only one that can stop them."""
+        usage = UsageBook()
+        settings = AgentSettings(global_daily_token_budget=1_000, daily_token_budget=600)
+        usage.add_tokens("admin", 1_000)
+
+        assert not usage.daily_ok("admin", settings, tier="admin")
+        assert day_refusal(usage, "admin", settings, tier="admin") == SERVICE_PAUSED
+        assert day_refusal(usage, "admin", settings) == "budget"  # the same spend in the public tier
+
+    def test_the_snapshot_counts_an_admin_only_at_the_caps_that_bind_every_tier(self) -> None:
+        usage = UsageBook()
+        settings = AgentSettings(
+            daily_token_budget=600,
+            daily_pipeline_runs=1,
+            daily_data_runs=1,
+            user_messages_per_day=1,
+            user_pastes_per_day=1,
+        )
+        for user in ("admin", "public"):
+            usage.add_tokens(user, 700)
+            usage.add_pipeline_run(user)
+            usage.add_data_run(user)
+            usage.add_message(user)
+        usage.mark_admin("admin")
+
+        exempt = usage.snapshot(settings)
+        assert (exempt.users, exempt.at_limit) == (2, 1)
+        assert all(exempt.limits[kind] == 1 for kind in ("tokens", "runs", "data_runs", "messages"))
+
+        usage.add_paste("admin")
+        assert usage.snapshot(settings).at_limit == 2 and usage.snapshot(settings).limits["pastes"] == 1
 
     def test_the_snapshot_counts_users_at_their_own_limits_never_names_them(self) -> None:
         usage = UsageBook()
@@ -183,6 +219,27 @@ class TestPauseRefusal:
         written |= set(get_args(telemetry.DataOutcome))
         assert set(LIMIT_CODES) <= written
 
+    def test_the_debug_table_reads_the_queue_wait_the_telemetry_writes(self) -> None:
+        """From the line's payload, not the `pipeline_runs` view: the column fills from the deploy that writes the
+        field on, whether or not the view has been applied again, and reads `—` on every day before it."""
+        sql = daily_sql("anyplot.agent_telemetry")
+        assert "queue_wait_ms" in telemetry.PipelineRun.model_fields
+        assert "IF(event = 'pipeline_run', LAX_INT64(payload.queue_wait_ms), NULL)" in sql
+        assert "pipeline_runs" not in sql
+
+    async def test_an_admin_past_the_public_budget_hears_of_the_pause(
+        self, client: httpx.AsyncClient, services: Services, swap_models, small_budget: AgentSettings
+    ) -> None:
+        swap_models("gemini", chatty(1))
+        sid = await open_session(client)
+        services.usage.add_tokens(USER, small_budget.global_daily_token_budget)
+
+        turn = await client.post(f"/v1/sessions/{sid}/messages", headers=ADMIN_HEADERS, json={"text": "Which columns?"})
+        paste = await client.post(f"/v1/sessions/{sid}/dataset", headers=ADMIN_HEADERS, json={"text": "x,y\n1,2\n"})
+
+        assert parse_sse(turn.text)[1][1]["code"] == SERVICE_PAUSED
+        assert (paste.status_code, paste.json()) == (429, {"detail": SERVICE_PAUSED})
+
     async def test_a_root_call_past_the_service_budget_mid_turn_says_so(
         self, services: Services, small_budget: AgentSettings
     ) -> None:
@@ -224,6 +281,20 @@ class TestPauseRefusal:
 
 
 class TestStatusAndBudget:
+    async def test_a_request_in_the_admin_tier_takes_the_user_off_the_limits_they_are_exempt_from(
+        self, client: httpx.AsyncClient, services: Services, swap_models, small_budget: AgentSettings
+    ) -> None:
+        swap_models("gemini", chatty(1))
+        sid = await open_session(client)
+        services.usage.add_tokens(USER, small_budget.daily_token_budget)
+        public = (await client.get("/v1/budget", headers=HEADERS)).json()
+
+        await client.post(f"/v1/sessions/{sid}/messages", headers=ADMIN_HEADERS, json={"text": "Which columns?"})
+        admin = (await client.get("/v1/budget", headers=HEADERS)).json()
+
+        assert (public["users_at_limit"], public["limits"]["tokens"]) == (1, 1)
+        assert (admin["users_at_limit"], admin["limits"]["tokens"]) == (0, 0)
+
     async def test_the_status_tells_the_page_before_the_user_types(
         self, client: httpx.AsyncClient, services: Services, small_budget: AgentSettings
     ) -> None:
