@@ -12,7 +12,7 @@ interface GlobalConfig {
   };
   isDev: boolean;
   features: {
-    /** The admin-only "Use with my data" agent chat (`/debug/agent`). */
+    /** The "Use with my data" agent chat (`/agent`, and `/debug/agent` for admins). */
     agentChat: boolean;
   };
 }
