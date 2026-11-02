@@ -1235,7 +1235,7 @@ async def _ingest_paste(
     delta = ingested.state_delta()
     # Read again: the chip's choice may have landed while the judges ran, and a choice is never overwritten.
     # From this read to the append below nothing suspends: `InMemorySessionService.get_session` and
-    # `append_event` (ADK 2.11) contain no `await` that yields, and the code between them is synchronous,
+    # `append_event` (ADK 2.13) contain no `await` that yields, and the code between them is synchronous,
     # so on the one event loop no `PUT /language` can land in between; the read and the conditional
     # write are atomic. A persistent session service with I/O in either call would need a
     # compare-and-set instead. Keep any new `await` out of this block.
