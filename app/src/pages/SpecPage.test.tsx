@@ -248,15 +248,11 @@ describe('SpecPage', () => {
     const { rerender } = render(<SpecPage />);
 
     await screen.findByRole('button', { name: 'Back to library comparison' });
-    expect(
-      screen.queryByRole('button', { name: 'Use with my data (experimental)' })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Use with my data' })).not.toBeInTheDocument();
 
     agentEligibility.lane = 'public';
     rerender(<SpecPage />);
-    await userEvent.click(
-      await screen.findByRole('button', { name: 'Use with my data (experimental)' })
-    );
+    await userEvent.click(await screen.findByRole('button', { name: 'Use with my data' }));
     expect(mockNavigate).toHaveBeenCalledWith(
       '/agent?spec=scatter-basic&library=matplotlib&language=python&source=plot_page'
     );

@@ -1,7 +1,7 @@
 /**
  * Whether the public lane of the agent chat is open (`GET /agent/lane`), for
- * the entry points: the plot page's button, the landing page's line and the
- * public chat page itself.
+ * the entry points: the plot page's `.use_my_data()`, the landing page's line
+ * and the public chat page itself.
  *
  * The API answers `{"open": true}` while the owner has the lane open and 404
  * while it is closed, so one switch on the server opens and closes every entry

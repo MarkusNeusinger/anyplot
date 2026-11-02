@@ -40,8 +40,11 @@ interface LibraryPillsProps {
   onUseWithMyData?: () => void;
 }
 
-/** Accessible name of the agent chat entry; the visible label is `.use_my_data() →`. */
-export const USE_MY_DATA_LABEL = 'Use with my data (experimental)';
+/**
+ * Accessible name of the agent chat entry; the visible label is `.use_my_data() →`. It
+ * says nothing the label does not: "experimental" is the chat's notice to make, once open.
+ */
+export const USE_MY_DATA_LABEL = 'Use with my data';
 
 /**
  * One of the two text actions that flank the carousel: mono, `--ink-soft`, green on
@@ -181,9 +184,8 @@ export const LibraryPills = memo(function LibraryPills({
   // the eligibility probe without moving anything. Below md the carousel's own width
   // leaves no room beside it, so the two text actions share a line above it, `.compare()`
   // at the left edge and `.use_my_data()` at the right, and the carousel takes the line
-  // below. That first line is there for `.compare()` anyway, and the gap under it always
-  // holds the room for the `experimental` tag, so the late action does not move the page
-  // either.
+  // below. That first line is there for `.compare()` anyway, so the late action does not
+  // move the page either.
   return (
     <Box
       sx={{
@@ -199,7 +201,7 @@ export const LibraryPills = memo(function LibraryPills({
         alignItems: 'center',
         // From md up the rules' own margins space the row, so the grid adds none.
         columnGap: { xs: 1, md: 0 },
-        rowGap: onAll || onUseWithMyData ? 3 : 0,
+        rowGap: onAll || onUseWithMyData ? 1 : 0,
         py: 2,
       }}
     >
@@ -327,36 +329,9 @@ export const LibraryPills = memo(function LibraryPills({
             }}
           >
             <ActionRule side="right" />
-            {/* The tag hangs under the label, out of the flow: the label line stays an exact
-                mirror of `← .compare()`, arrow on the outer edge, and the tag takes neither
-                width beside the carousel nor height from the row (on desktop it sits in
-                the row's bottom padding, on a phone in the reserved gap above the
-                carousel). Outside the button and hidden from assistive tech, which hears
-                "experimental" in the accessible name. */}
-            <Box sx={{ position: 'relative', display: 'flex' }}>
-              <TextAction arrow="right" ariaLabel={USE_MY_DATA_LABEL} onActivate={onUseWithMyData}>
-                <Box component="span">.use_my_data()</Box>
-              </TextAction>
-              <Box
-                component="span"
-                aria-hidden="true"
-                sx={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  // Clear of the button's focus ring (2 px outline at a 2 px offset).
-                  mt: '5px',
-                  fontFamily: typography.mono,
-                  fontSize: fontSize.xs,
-                  lineHeight: 1,
-                  color: semanticColors.mutedText,
-                  whiteSpace: 'nowrap',
-                  pointerEvents: 'none',
-                }}
-              >
-                experimental
-              </Box>
-            </Box>
+            <TextAction arrow="right" ariaLabel={USE_MY_DATA_LABEL} onActivate={onUseWithMyData}>
+              <Box component="span">.use_my_data()</Box>
+            </TextAction>
           </Box>
         )}
       </Box>

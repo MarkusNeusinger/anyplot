@@ -101,12 +101,13 @@ describe('LibraryPills', () => {
     };
     const { rerender } = render(<LibraryPills {...props} />);
     expect(screen.queryByRole('button', { name: USE_MY_DATA_LABEL })).not.toBeInTheDocument();
-    expect(screen.queryByText('experimental')).not.toBeInTheDocument();
 
     rerender(<LibraryPills {...props} onUseWithMyData={onUseWithMyData} />);
-    const action = screen.getByRole('button', { name: 'Use with my data (experimental)' });
-    expect(action).toHaveTextContent('.use_my_data()');
-    expect(screen.getByText('experimental')).toBeInTheDocument();
+    const action = screen.getByRole('button', { name: 'Use with my data' });
+    // Label and arrow are two spans set apart by the flex gap, not by a space.
+    expect(action).toHaveTextContent('.use_my_data()→');
+    // "experimental" is the chat's notice to make, not the entry's.
+    expect(screen.queryByText(/experimental/i)).not.toBeInTheDocument();
     await user.click(action);
     expect(onUseWithMyData).toHaveBeenCalledTimes(1);
     expect(props.onAll).not.toHaveBeenCalled();
