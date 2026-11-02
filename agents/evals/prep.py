@@ -62,6 +62,13 @@ without a column (`roles_open`). A reply over `MAX_REPLY_WORDS` words is a
 reply miss too. The reply gate is `--max-reply-misses` (10 percent) of the answered cases with a reply;
 the reply text itself never enters the report.
 
+A summary case is also checked for the conversions it owes (`score_conversions`). Before the turn, the run
+computes in code what the session block will list for the open roles (`conversions.candidates`); after it, each
+`certain` line must be among the root's operations. A root that skips one is the original failure of the live
+test of 2026-11-01, where it asked the user for a date column a conversion would have made, so the case is a miss
+whatever its fixture expected, and any skip fails the run. The summary counts `conversions_owed` and
+`conversions_made`, which is how often the root applies a `certain` conversion.
+
 A case is `unavailable` when its dataset could not be stored (`503 guard_unavailable`)
 or its turn ended with an `error` event (the judge down, `capacity`); it counts in no
 rate, and more than `--max-unavailable` (10 percent) of them exit 4. A dataset the
@@ -429,6 +436,8 @@ def describe(line: str) -> str:
             f"{part} {data[part]}" for part in ("year", "month", "day", "quarter", "week") if part in data
         )
         return f"make_date {data['name']} from {parts}"
+    if op == "row_number":
+        return f"row_number {data['name']}"
     if op == "set_type":
         extra = [data[key] for key in ("date_format", "decimal") if key in data]
         return f"set_type {data['column']} {data['type']}" + (f" ({', '.join(extra)})" if extra else "")
@@ -474,6 +483,12 @@ class CaseResult:
     roles_open: bool = False
     """The turn left a required role of the spec without a column, so the plot cannot be drawn until the user binds
     one or brings other data: the reply may close with a question about it."""
+    conversions_owed: int = 0
+    """The `certain` conversions the session block listed when a summary turn started (`conversions.candidates`)."""
+    conversions_made: int = 0
+    """Those of them whose operations the root made in the turn."""
+    conversion_skipped: bool = False
+    """The root skipped a `certain` conversion of a summary turn: the case is a miss (`score_conversions`)."""
     llm_calls: int = 0
     cost_usd: float = 0.0
     latency_s: float = 0.0
@@ -551,6 +566,7 @@ class CaseRunner:
                     else:
                         result.cause = f"dataset: {_detail(stored)}"
                     return result
+            owed = await self._owed_conversions(user, sid) if case.action == "summarize_data" else []
             message = {"action": case.action} if case.action is not None else {"text": case.message}
             turn = await self.client.post(f"/v1/sessions/{sid}/messages", headers=headers("m"), json=message)
             _book(result, self.collector.take(f"{tag}-m"), self.settings)
@@ -565,6 +581,7 @@ class CaseRunner:
                 if name == "refusal":
                     result.refusal = str(data.get("code"))
             texts = await self._read_calls(result, user, sid, decimal, refuse=case.refuse)
+            score_conversions(result, owed, decimal)
             measure_reply(result, texts, blocked=bool(BLOCKED_TAGS.intersection(case.tags)))
         finally:
             result.latency_s = round(time.monotonic() - started, 3)
@@ -578,6 +595,28 @@ class CaseRunner:
             for step in ("s", "d", "m", "x"):
                 self.collector.take(f"{tag}-{step}")
         return result
+
+    async def _owed_conversions(self, user: str, sid: str) -> list[list[dict[str, Any]]]:
+        """The operations of each `certain` conversion the session block lists for the turn about to start."""
+        from agents.anyplot.data.conversions import candidates
+        from agents.anyplot.services import get_services
+        from agents.anyplot.session_state import read_session
+
+        session = await self.runtime.session(user, sid)
+        view = read_session(session.state)
+        stored = get_services().datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
+        if view is None or stored is None:
+            return []
+        found = candidates(
+            view.bindings,
+            view.snapshot.roles(),
+            stored.profile,
+            stored.as_parsed(),
+            language=view.language,
+            keep_text=stored.text_columns,
+            cache=stored.dry_runs,
+        )
+        return [candidate.operations() for candidate in found if candidate.certain]
 
     async def _read_calls(
         self, result: CaseResult, user: str, sid: str, decimal: str, *, refuse: bool = False
@@ -636,6 +675,15 @@ class CaseRunner:
             result.match = same_operations(result.found, result.expected) and not result.failed_calls
         result.match = result.match and not result.instruction_talk
         return texts
+
+
+def score_conversions(result: CaseResult, owed: Sequence[Sequence[dict[str, Any]]], decimal: str) -> None:
+    """How many of the `certain` conversions `owed` the turn made; a skipped one makes the case a miss."""
+    made = sum(all(line in result.found for line in canonical_operations(item, decimal)) for item in owed)
+    result.conversions_owed, result.conversions_made = len(owed), made
+    result.conversion_skipped = made < len(owed)
+    if result.conversion_skipped:
+        result.match = False
 
 
 def measure_reply(result: CaseResult, texts: Sequence[str], *, blocked: bool) -> None:
@@ -754,6 +802,8 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
         "unavailable_rate": _rate(sum(1 for _, result in pairs if result.operations is None), len(pairs)),
         "instruction_talk": sum(1 for _, result in pairs if result.instruction_talk),
         **_replies([result for _, result in pairs if result.operations is not None]),
+        "conversions_owed": sum(result.conversions_owed for _, result in pairs),
+        "conversions_made": sum(result.conversions_made for _, result in pairs),
         "llm_calls": sum(result.llm_calls for _, result in pairs),
         "cost_usd": round(sum(result.cost_usd for _, result in pairs), 8),
     }
@@ -768,6 +818,7 @@ def score(cases: Sequence[PrepCase], results: Sequence[CaseResult]) -> dict[str,
             "found": result.found,
             "refusal": result.refusal,
             "instruction_talk": result.instruction_talk,
+            "conversion_skipped": result.conversion_skipped,
         }
         for case, result in pairs
         if result.operations is not None and not result.match
@@ -807,6 +858,9 @@ def verdict_of(summary: dict[str, Any], gates: Gates) -> tuple[int, list[str]]:
             f"{summary['reply_misses']} of {summary['replies']} replies close with a question the turn was not "
             f"blocked for or run over {MAX_REPLY_WORDS} words (more than {gates.max_reply_misses:.0%})"
         )
+    skipped = summary.get("conversions_owed", 0) - summary.get("conversions_made", 0)
+    if skipped:
+        reasons.append(f"the root skipped {skipped} certain conversions of {summary['conversions_owed']}")
     return (EXIT_FAILED, reasons) if reasons else (EXIT_OK, [])
 
 
@@ -860,6 +914,8 @@ def summary_text(scored: dict[str, Any], reasons: list[str]) -> str:
             f"{summary['reply_words_max']}), {summary['questions_per_reply']} questions per reply, "
             f"{summary['closing_questions']} close with a question, {summary['reply_misses']} reply misses"
         )
+    if summary["conversions_owed"]:
+        lines.append(f"certain conversions made: {summary['conversions_made']} of {summary['conversions_owed']}")
     if scored["unavailable_causes"]:
         lines.append(
             "unavailable: " + ", ".join(f"{count} x {cause}" for cause, count in scored["unavailable_causes"].items())

@@ -1,0 +1,8 @@
+{
+  "dataset_text": "value\n1\n3\n5\n4\n6\n2\n",
+  "action": "summarize_data",
+  "expected_operations": [{"op": "row_number", "name": "index"}],
+  "locale": "en",
+  "spec_id": "line-basic",
+  "tags": ["summary", "row_number"]
+}

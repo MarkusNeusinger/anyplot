@@ -1,0 +1,10 @@
+{
+  "dataset_text": "Year,Emissions\n2018,4.1\n2019,4.3\n2020,3.9\n2021,4.2\n2022,4.4\n",
+  "action": "summarize_data",
+  "expected_operations": [
+    {"op": "set_type", "column": "Year", "type": "datetime", "date_format": "YYYY", "name": "Year (date)"}
+  ],
+  "locale": "en",
+  "spec_id": "line-timeseries-rolling",
+  "tags": ["summary", "conversion"]
+}

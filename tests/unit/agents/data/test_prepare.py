@@ -9,7 +9,7 @@ import csv
 import io
 import random
 from decimal import Decimal
-from typing import Any
+from typing import Any, Literal
 
 import pandas as pd
 import pytest
@@ -589,11 +589,315 @@ class TestSetTypeDatetime:
 
         assert cells(prepared, 0) == ["2024-01-01", "2024-02-01", "2024-04-03", "2024-03-15"]
         assert prepared.changes == [
-            "t: 4 cells read as dates (format inferred, year first where a cell starts with one, else day before month)"
+            "t: 4 cells read as dates (format inferred, year first where a cell starts with one, else day before month; "
+            "1 cell with a month name and a year as the first day of the month)"
         ]
 
     def test_a_number_column_is_a_type_mismatch(self) -> None:
         assert failure(SALES, {"op": "set_type", "column": "Umsatz", "type": "datetime"})[0] == "type_mismatch"
+
+    @pytest.mark.parametrize(
+        ("months", "dates"),
+        [
+            (["Okt. 2026", "Nov. 2026", "Dez. 2026"], ["2026-10-01", "2026-11-01", "2026-12-01"]),
+            (["2026 März", "2026 Mai"], ["2026-03-01", "2026-05-01"]),
+            (["listopad 2026", "grudzień 2026"], ["2026-11-01", "2026-12-01"]),
+        ],
+    )
+    def test_month_names_with_a_year_in_any_of_the_eleven_languages(self, months: list[str], dates: list[str]) -> None:
+        """pandas reads English names only; the conversion reads what the parser reads (live test of 2026-11-01)."""
+        text = "t;v\n" + "".join(f"{month};{index}\n" for index, month in enumerate(months))
+        prepared = apply_operations(
+            parse_dataset(text, text_columns=["t"]),
+            OPERATIONS.validate_python([{"op": "set_type", "column": "t", "type": "datetime"}]),
+        )
+
+        assert cells(prepared, 0) == dates
+        assert prepared.changes == [
+            f"t: {len(months)} cells read as months (a month name and a year, each as the first day of the month)"
+        ]
+
+    def test_a_month_that_repeats_counts_every_cell(self) -> None:
+        """Review of #12512: distinct month texts were compared with the cells, so a repeat fell to the inferred wording."""
+        text = "t;v\nOkt. 2026;1\nOkt. 2026;2\nNov. 2026;3\n"
+        to_dates = OPERATIONS.validate_python([{"op": "set_type", "column": "t", "type": "datetime"}])
+
+        assert apply_operations(parse_dataset(text, text_columns=["t"]), to_dates).changes == [
+            "t: 3 cells read as months (a month name and a year, each as the first day of the month)"
+        ]
+
+        mixed = "t;v\nOkt. 2026;1\nOkt. 2026;2\n15.03.2026;3\n"
+        assert apply_operations(parse_dataset(mixed, text_columns=["t"]), to_dates).changes == [
+            "t: 3 cells read as dates (format inferred, day before month; 2 cells with a month name and a year as the "
+            "first day of the month)"
+        ]
+
+    def test_month_names_leave_no_day_and_month_order_open(self) -> None:
+        """`1 Nov 2026` names its month: no `AMBIGUOUS_DATE_ORDER` note travels with it, unlike `01/11/2026`."""
+        to_dates = OPERATIONS.validate_python([{"op": "set_type", "column": "t", "type": "datetime"}])
+        named = apply_operations(parse_dataset("t,v\n1 Nov 2026,1\n1 Oct 2026,2\n"), to_dates)
+        digits = apply_operations(parse_dataset("t,v\n01/11/2026,1\n01/10/2026,2\n", text_columns=["t"]), to_dates)
+
+        assert cells(named, 0) == ["2026-11-01", "2026-10-01"]
+        assert named.date_notes == []
+        assert digits.date_notes == [f"column 't': {AMBIGUOUS_DATE_ORDER}"]
+
+    @pytest.mark.parametrize(
+        "cells",
+        [
+            ["May", "June", "April"],  # pandas: the year 1
+            ["Nov 26", "Oct 26", "Sep 26"],  # pandas: 26 November of the year 1
+            ["13:00", "14:00", "15:30"],  # pandas: today at that time
+            ["now", "today", "now"],
+        ],
+    )
+    def test_a_date_pandas_would_only_fill_in_is_refused(self, cells: list[str]) -> None:
+        text = "t,v\n" + "".join(f"{cell},{index}\n" for index, cell in enumerate(cells))
+
+        code, message = failure(text, {"op": "set_type", "column": "t", "type": "datetime"})
+
+        assert code == "type_mismatch"
+        assert message == f"column 't': {len(cells)} of {len(cells)} cells cannot be read as dates"
+
+    def test_the_year_1_written_out_is_a_date(self) -> None:
+        """Only a year 1 that pandas filled in fails: `0001-03-01` says it."""
+        prepared = apply_operations(
+            parse_dataset("t,v\n0001-03-01,1\n2024-03-01,2\n", text_columns=["t"]),
+            OPERATIONS.validate_python([{"op": "set_type", "column": "t", "type": "datetime"}]),
+        )
+
+        assert cells(prepared, 0) == ["0001-03-01", "2024-03-01"]
+
+
+class TestSetTypeIntoNewColumn:
+    """`set_type` with `name`: the conversion an open role asks for, beside the column it reads (2026-11-01)."""
+
+    TEXT = "Datum;Preis\n26 Nov 2026;$5\n25 Nov 2026;7\n24 Nov 2026;$12\n"
+
+    def test_dates_go_into_a_new_column_and_the_source_stays(self) -> None:
+        prepared = prepare(
+            self.TEXT, {"op": "set_type", "column": "Datum", "type": "datetime", "name": "Datum (Datum)"}
+        )
+
+        assert rows(prepared)[0] == "Datum,Preis,Datum (Datum)"
+        assert cells(prepared, 0) == ["26 Nov 2026", "25 Nov 2026", "24 Nov 2026"]
+        assert cells(prepared, 2) == ["2026-11-26", "2026-11-25", "2026-11-24"]
+        assert prepared.changes == [
+            "new column Datum (Datum): 3 cells of Datum read as dates (format inferred, day before month); "
+            "Datum stays as it is"
+        ]
+        assert prepared.converted == {"Datum (Datum)": "Datum"}
+        assert dtypes(prepared) == {"Datum": "text", "Preis": "text", "Datum (Datum)": "datetime"}
+
+    def test_numbers_go_into_a_new_column_with_the_unit_named(self) -> None:
+        prepared = prepare(self.TEXT, {"op": "set_type", "column": "Preis", "type": "number", "name": "Preis (Zahl)"})
+
+        assert cells(prepared, 2) == ["5", "7", "12"]
+        assert prepared.changes == [
+            "new column Preis (Zahl): 3 cells of Preis read as numbers, unit '$' removed; Preis stays as it is"
+        ]
+        assert dtypes(prepared)["Preis (Zahl)"] == "integer"
+
+    def test_a_rename_or_drop_in_the_same_call_follows_the_new_column(self) -> None:
+        convert = {"op": "set_type", "column": "Datum", "type": "datetime", "name": "neu"}
+
+        renamed = prepare(self.TEXT, convert, {"op": "rename", "column": "neu", "name": "Tag"})
+        dropped = prepare(self.TEXT, convert, {"op": "drop_columns", "columns": ["neu"]})
+
+        assert renamed.converted == {"Tag": "Datum"}
+        assert dropped.converted == {}
+
+    def test_a_sort_on_the_new_column_puts_the_dates_oldest_first(self) -> None:
+        prepared = prepare(
+            self.TEXT,
+            {"op": "set_type", "column": "Datum", "type": "datetime", "name": "Datum (Datum)"},
+            {"op": "sort", "column": "Datum (Datum)"},
+        )
+
+        assert cells(prepared, 2) == ["2026-11-24", "2026-11-25", "2026-11-26"]
+        assert reparse(prepared).profile.columns[2].order == "ascending"
+
+    @pytest.mark.parametrize(
+        ("operation", "message"),
+        [
+            (
+                {"type": "text", "column": "Datum", "name": "x"},
+                "set_type to text changes the column itself: leave name out",
+            ),
+            ({"type": "datetime", "column": "Datum", "name": "Preis"}, "a column named 'Preis' already exists"),
+            ({"type": "number", "column": "n", "name": "x"}, "column 'n' already holds numbers: bind it as it is"),
+            ({"type": "datetime", "column": "d", "name": "x"}, "column 'd' already holds dates: bind it as it is"),
+        ],
+    )
+    def test_a_new_column_needs_a_free_name_and_a_conversion(self, operation: dict[str, str], message: str) -> None:
+        text = "Datum;Preis;n;d\n26 Nov 2026;$5;1;2024-01-01\n25 Nov 2026;7;2;2024-01-02\n"
+
+        assert failure(text, {"op": "set_type", **operation}) == ("invalid_operation", message)
+
+
+class TestSetTypeMinus:
+    def test_the_minus_sign_reads_as_a_sign_with_its_count(self) -> None:
+        """`set_type number` reads `−100` as the parser does, and says how many cells were written so."""
+        text = "v;w\n−100;a\n+75;b\n12 %;c\n"
+        prepared = prepare(text, {"op": "set_type", "column": "v", "type": "number"})
+
+        assert cells(prepared, 0) == ["-100", "75", "12"]
+        assert prepared.changes == [
+            "v: 3 cells read as numbers, unit '%' removed, 1 cell with the minus sign '−' read as negative numbers"
+        ]
+
+    def test_a_range_is_no_number(self) -> None:
+        assert failure("v\n10–20\n5\n", {"op": "set_type", "column": "v", "type": "number"})[0] == "type_mismatch"
+
+    def test_an_en_dash_is_no_minus(self) -> None:
+        assert failure("v;w\n–5;a\n–7;b\n", {"op": "set_type", "column": "v", "type": "number"})[0] == "type_mismatch"
+
+
+class TestDryRun:
+    """`dry_run`: what a `set_type` of a text column would do, counted and nothing stored (`conversions.py`)."""
+
+    @staticmethod
+    def run(text: str, column: str, target: Literal["number", "datetime"]) -> prepare_module.DryRun | None:
+        parsed = parse_dataset(text, text_columns=[column])  # a text column, as the dry run only reads those
+        return prepare_module.dry_run(prepare_module.read_frame(parsed), column, target, parsed.profile.decimal)
+
+    def test_a_certain_date_conversion(self) -> None:
+        dry = self.run("Datum,v\n26 Nov 2026,1\n25 Nov 2026,2\n24 Nov 2026,3\n", "Datum", "datetime")
+
+        assert dry is not None and dry.certain
+        assert (dry.present, dry.read, dry.order) == (3, 3, "descending")
+        assert dry.reading == "read as dates (format inferred, day before month)"
+
+    @pytest.mark.parametrize(
+        ("cells", "guess"),
+        [
+            (["1 Nov 2026", "1 Oct 2026"], None),
+            (["Nov 2026", "Okt. 2026"], None),
+            (["26.11.26", "25.11.26"], "the century of two-digit years"),
+            (["01/11/2026", "01/10/2026"], "the day and month order"),
+            (["13/11/2026", "01/10/2026"], None),  # a day over 12 settles the order
+        ],
+    )
+    def test_what_a_date_reading_guesses(self, cells: list[str], guess: str | None) -> None:
+        dry = self.run("d,v\n" + "".join(f"{cell},1\n" for cell in cells), "d", "datetime")
+
+        assert dry is not None and dry.read == dry.present
+        assert dry.guess == guess
+
+    def test_a_column_that_is_no_text_is_no_candidate(self) -> None:
+        parsed = parse_dataset("d,v\n2026-01-01,1\n")
+
+        assert prepare_module.dry_run(prepare_module.read_frame(parsed), "d", "datetime") is None
+
+    def test_mixed_cells_within_the_tenth_are_uncertain(self) -> None:
+        cells = [f"{day} Nov 2026" for day in range(1, 11)] + ["no date"]
+        dry = self.run("d,v\n" + "".join(f"{cell},1\n" for cell in cells), "d", "datetime")
+
+        assert dry is not None and not dry.certain
+        assert (dry.present, dry.read) == (11, 10)
+
+    def test_more_than_a_tenth_unreadable_is_no_candidate(self) -> None:
+        assert self.run("d,v\nNov 2026 x,1\nOct 2026,2\nwhenever,3\n", "d", "datetime") is None
+
+    def test_a_name_column_is_no_candidate(self) -> None:
+        assert self.run("Person,v\nMay,1\nJune,2\nApril,3\n", "Person", "datetime") is None
+
+    def test_numbers_with_a_unit_on_some_cells(self) -> None:
+        dry = self.run("p,v\n$5,1\n7,2\n$12,3\n", "p", "number")
+
+        assert dry is not None and dry.certain and dry.reading == "read as numbers, unit '$' removed"
+
+    def test_space_groups_are_a_guess(self) -> None:
+        dry = self.run("p;v\n$1 200;1\n7;2\n", "p", "number")
+
+        assert dry is not None and dry.guess == "that spaces or apostrophes separate thousands"
+
+    def test_leading_zeros_are_a_guess(self) -> None:
+        """A postal code column the parser kept text must never convert to numbers without a question."""
+        dry = self.run("zip;v\n007;1\n$012;2\n105;3\n", "zip", "number")
+
+        assert dry is not None and dry.guess == "that leading zeros are no part of the value"
+        assert self.run("p;v\n1.05;1\n0.5;2\n", "p", "number").guess is None  # type: ignore[union-attr]
+
+    def test_rounded_digits_are_a_guess(self) -> None:
+        dry = self.run("account;v\n12345678901234567890;1\n5;2\n", "account", "number")
+
+        assert dry is not None and not dry.certain
+        assert dry.guess == "that values with more digits than a number holds may be rounded"
+
+    def test_a_date_with_a_month_name_is_no_number(self) -> None:
+        """`Nov 26, 2026` read as a number behind a unit `Nov` would be 26.2026."""
+        assert self.run("d;v\nNov 26, 2026;1\nNov 25, 2026;2\n", "d", "number") is None
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "Season,Wins\n2009-10,5\n2010-11,6\n2011-12,7\n",  # pandas reads each as a month
+            "Bin,Share\n2000-05,1\n2005-10,2\n",
+            "Saison,Wins\n2024-01,5\n2024-02,6\n",  # shaped like months, its name says spans
+            "Version,n\n2024-01,5\n2024-02,6\n",
+        ],
+    )
+    def test_a_column_of_year_spans_is_no_date_candidate(self, text: str) -> None:
+        """The parser keeps these text (`_as_periods`), and a `certain` conversion must not rewrite them."""
+        parsed = parse_dataset(text)
+        column = parsed.profile.columns[0].name
+
+        assert parsed.column_dtypes[column] == "text"
+        assert prepare_module.dry_run(prepare_module.read_frame(parsed), column, "datetime") is None
+
+    def test_a_year_run_reads_a_year_column(self) -> None:
+        parsed = parse_dataset("Jahr,v\n2022,1\n2021,2\n2020,3\n")
+
+        dry = prepare_module.year_run(prepare_module.read_frame(parsed), "Jahr")
+
+        assert dry.certain and (dry.read, dry.order, dry.date_format) == (3, "descending", "YYYY")
+        assert dry.reading == "read as years (YYYY, each as 1 January)"
+
+
+class TestRowNumber:
+    def test_a_new_column_numbers_the_rows(self) -> None:
+        prepared = prepare("value\n1\n3\n5\n4\n", {"op": "row_number"})
+
+        assert prepared.csv.splitlines() == ["value,index", "1,1", "3,2", "5,3", "4,4"]
+        assert prepared.changes == ["new column index: the rows numbered 1 to 4"]
+        assert prepared.row_numbers == ["index"]
+
+    def test_it_stays_a_whole_number_column_through_the_reparse(self) -> None:
+        prepared = prepare("value\n1\n3\n5\n", {"op": "row_number", "name": "Nr"})
+        parsed = parse_dataset(prepared.csv, find_table=False, canonical=True)
+
+        assert parsed.column_dtypes["Nr"] == "integer"
+
+    @pytest.mark.parametrize(
+        "text", ["value,index\n1,1\n3,2\n5,3\n", "value,index\n1,0\n3,1\n5,2\n", "value,index\n1,3\n3,1\n5,2\n"]
+    )
+    def test_a_pasted_row_number_is_reused(self, text: str) -> None:
+        prepared = prepare(text, {"op": "row_number", "name": "index"})
+
+        assert prepared.csv == parse_dataset(text).csv
+        assert prepared.changes == ["index already numbers the rows"]
+        assert prepared.row_numbers == ["index"]
+
+    def test_a_column_of_that_name_with_other_values_is_refused(self) -> None:
+        assert failure("value,index\n1,5\n3,5\n", {"op": "row_number"}) == (
+            "invalid_operation",
+            "a column named 'index' already exists",
+        )
+
+    def test_it_follows_a_rename_in_the_same_call(self) -> None:
+        prepared = apply_operations(
+            parse_dataset("value\n1\n3\n"),
+            OPERATIONS.validate_python([{"op": "row_number"}, {"op": "rename", "column": "index", "name": "Nr"}]),
+        )
+
+        assert prepared.row_numbers == ["Nr"]
+
+    def test_a_full_table_takes_no_more_columns(self) -> None:
+        header = ",".join(f"c{index}" for index in range(MAX_COLUMNS))
+        row = ",".join("1" for _ in range(MAX_COLUMNS))
+
+        assert failure(f"{header}\n{row}\n{row}\n", {"op": "row_number"})[0] == "too_wide"
 
 
 class TestSetTypeText:

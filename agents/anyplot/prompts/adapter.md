@@ -32,6 +32,7 @@ Each request has these parts:
 
 {{data_columns}}
 - Derive everything else from `df`: sorting, grouping, pivots, statistics, fits, positions, widths, axis limits and tick positions. Drop rows with missing values only for the columns a mark needs.
+- A `datetime` column bound to a role that labels marks (a bar's category, a group) is written as labels, never as an ISO date: a column with `monthly` as the month and the year in the plot language (`Nov 2026`, `Nov. 2026`), in date order, one mark per month, and a label axis that shows only some of them when many would collide; any other date in the short form the plot language writes.
 {{data_order}}
 - A role without a binding is not in the data. Leave out what depends on it, and say so in `changes`. The one exception is a role the spec brief marks `not bound: compute it in the plot code from the bound data` (a rolling average, a Bollinger band, fitness or fatigue): compute it from the bound columns with the method and window the spec describes (the role's `the spec:` words) and draw it, and say so in `changes`; when the brief says `build it on the bound ...`, compute it from those bound columns so the parts agree (the bands around the bound middle band, a balance from the bound loads), never independently. A role it marks `bound: use its column as it is` is drawn from that column unchanged, never recomputed.
 
