@@ -753,7 +753,7 @@ home          # HomePage grid view (client) or og:image home endpoint (server)
 plots         # PlotsPage (server og:image only)
 spec_overview # SpecPage showing all libraries
 spec_detail   # SpecPage showing single library
-agent_chat    # Admin-only agent chat result card (copy_code only)
+agent_chat    # Agent chat result card (copy_code only)
 ```
 
 ### `platform` values (server-side og:image tracking only)
