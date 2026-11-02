@@ -10,4 +10,7 @@
   choice for the session, and a new version starts folded. The quick feedback
   shows only the reactions until one is picked. `.save()` and its data box
   moved from the header row into a "⋯" menu, not into the feedback area,
-  because a save downloads the session and stores nothing. (#12540)
+  because a save downloads the session and stores nothing. The data card's
+  header is `# your data ⓘ`, its how-to behind the button, and the long hint
+  and the how-to paragraph under the card gave way to short placeholders.
+  (#12540)
