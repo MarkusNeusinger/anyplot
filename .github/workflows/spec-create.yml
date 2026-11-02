@@ -152,7 +152,7 @@ jobs:
         id: process
         continue-on-error: true
         timeout-minutes: 30
-        uses: anthropics/claude-code-action@db77d4d3c98f3f6380e7cd45ffba2342a3dbde3c  # v1
+        uses: anthropics/claude-code-action@d70510b174a1244958df0b03166a54912811f3e6  # v1
         env:
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
@@ -377,7 +377,7 @@ jobs:
         if: steps.check.outputs.should_run == 'true' && steps.process.outcome == 'failure' && steps.process_cost.outputs.stopped != 'true'
         id: process_retry
         timeout-minutes: 30
-        uses: anthropics/claude-code-action@db77d4d3c98f3f6380e7cd45ffba2342a3dbde3c  # v1
+        uses: anthropics/claude-code-action@d70510b174a1244958df0b03166a54912811f3e6  # v1
         env:
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
