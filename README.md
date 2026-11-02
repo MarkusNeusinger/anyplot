@@ -2,113 +2,133 @@
 
 **→ [anyplot.ai](https://anyplot.ai)**
 
+[![Release](https://img.shields.io/github/v/release/MarkusNeusinger/anyplot)](https://github.com/MarkusNeusinger/anyplot/releases)
 [![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tests](https://github.com/MarkusNeusinger/anyplot/actions/workflows/ci-tests.yml/badge.svg?branch=main)](https://github.com/MarkusNeusinger/anyplot/actions/workflows/ci-tests.yml)
 [![Ruff](https://github.com/MarkusNeusinger/anyplot/actions/workflows/ci-lint.yml/badge.svg?branch=main)](https://github.com/MarkusNeusinger/anyplot/actions/workflows/ci-lint.yml)
 [![codecov](https://codecov.io/github/MarkusNeusinger/anyplot/graph/badge.svg?token=4EGPSHH0H0)](https://codecov.io/github/MarkusNeusinger/anyplot)
 
-> library-agnostic, ai-powered plotting examples.
+anyplot is an open catalogue of plotting examples. Each plot type starts as one library-agnostic specification, and an
+AI pipeline writes, renders, reviews, and maintains its implementations in 15 plotting libraries across Python, R,
+Julia, and JavaScript. On [anyplot.ai](https://anyplot.ai), you compare the libraries side by side and copy working
+code.
+
+Built by [Markus Neusinger](https://linkedin.com/in/markus-neusinger/).
+
+[![The ridgeline-basic spec drawn by six libraries](https://api.anyplot.ai/og/ridgeline-basic.png)](https://anyplot.ai/ridgeline-basic)
+
+*One spec, six of its implementations: the site's live preview card for
+[ridgeline-basic](https://anyplot.ai/ridgeline-basic), which shows its six best-scored implementations.*
 
 ---
 
-## What is anyplot?
+## The catalogue in numbers
 
-**anyplot** is an AI-powered platform for data visualization that automatically discovers, generates, tests, and
-maintains plotting examples. Browse hundreds of plots across 15 major visualization libraries in Python, R, Julia, and
-JavaScript — matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, lets-plot, ggplot2, Makie.jl, Chart.js, D3.js,
-ECharts, Highcharts, and MUI X Charts (React) — with an architecture ready to welcome additional ecosystems over time.
+| Specifications | Implementations | Libraries | Languages |
+|---------------:|----------------:|----------:|----------:|
+| 325 | 4,863 | 15 | 4 |
 
-**Community-driven, AI-maintained** - Propose plot ideas via GitHub Issues, AI generates the code, automated quality
-checks ensure excellence. Zero manual coding required.
+Counted on 2026-11-02 from the public API (`https://api.anyplot.ai/stats`); the [stats page](https://anyplot.ai/stats)
+shows the current numbers.
 
----
+| Language | Libraries |
+|----------|-----------|
+| Python | matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, lets-plot |
+| R | ggplot2 |
+| Julia | Makie.jl |
+| JavaScript | Chart.js, D3.js, ECharts, Highcharts, MUI X Charts (React) |
 
-## Features
+## What you can do on the site
 
-- **AI-generated code** - All implementations automatically generated and maintained by AI
-- **Compare libraries** - View matplotlib, seaborn, plotly side-by-side for the same plot
-- **Always current** - AI agents continuously update examples with latest library versions
-- **Natural language search** - Find plots by asking "show correlation between variables"
-- **AI quality review** - Claude evaluates every plot against quality standards (score ≥ 50 required)
-- **Open source** - Community proposes ideas via Issues, AI generates the code
+- **Compare libraries.** Each spec page shows every library's implementation of the same plot, in a light and a dark
+  theme, with its code and its review score.
+- **Search and filter.** A typo-tolerant search matches spec titles and tag values, and the matches become filters:
+  language, library, plot type, data structure, domain, and features, plus implementation tags such as techniques,
+  dependencies, and styling.
+- **Explore by similarity.** The [map](https://anyplot.ai/map) draws the catalogue as a graph of specs linked by tag
+  similarity, and every spec page lists related specs.
+- **Use it from an AI assistant.** The [MCP server](#mcp-server) serves the same catalogue to coding agents.
 
----
+## How the pipeline works
 
-## Architecture
+AI writes every implementation, most of them Claude running in GitHub Actions. GitHub issues hold the state of each
+plot.
 
-**Specification-first design**: Every plot starts as a Markdown spec (library-agnostic), then AI generates
-implementations for all 15 supported libraries across Python, R, Julia, and JavaScript.
+1. **Request.** Someone opens an issue, from GitHub or from a link on anyplot.ai.
+2. **Specification.** `spec-create.yml` checks for duplicates, assigns a spec ID and tags, and opens a pull request with
+   the spec. The maintainer approves it on the issue.
+3. **Generation.** `impl-generate.yml` writes one implementation per library and renders it in both themes.
+4. **Review.** `impl-review.yml` first runs automated checks: the code parses and runs, the image exists and isn't
+   blank, and the canvas has its target size. An AI reviewer then scores the render, blind to any earlier score, on a
+   100-point rubric of 24 criteria ([`prompts/quality-criteria.md`](prompts/quality-criteria.md)): visual quality 30,
+   design 20, spec compliance 15, data quality 15, code quality 10, and library mastery 10.
+5. **Repair.** Below the bar, `impl-repair.yml` fixes the defects the review named, and the plot is reviewed again.
+6. **Merge.** `impl-merge.yml` merges the pull request, promotes the images from staging to production in Cloud
+   Storage, and syncs PostgreSQL.
 
-```
-plots/scatter-basic/
-├── specification.md     # Library-agnostic specification
-├── specification.yaml   # Tags, created, issue, suggested
-├── metadata/            # Per-library metadata (quality scores, preview URLs)
-│   ├── python/
-│   │   ├── matplotlib.yaml
-│   │   └── ...
-│   └── javascript/
-│       └── muix.yaml
-└── implementations/     # Grouped by language; one file per library
-    ├── python/
-    │   ├── matplotlib.py
-    │   ├── seaborn.py
-    │   └── ... (6 more)
-    ├── r/ggplot2.R
-    ├── julia/makie.jl
-    └── javascript/
-        ├── chartjs.js   # framework-agnostic JS libs → .js
-        ├── d3.js
-        ├── echarts.js
-        ├── highcharts.js
-        └── muix.tsx     # MUI X — React, authored as .tsx
-```
+### The quality bar
 
-**Issue-based workflow**: GitHub Issues as state machine for plot lifecycle. Status tracked via live-updating table (no sub-issues). Each library generates in parallel, creating PRs to a feature branch.
+- A first review needs **90 of 100**. Each repair lowers the bar by 10 points: 80, 70, 60, and 50 after the fourth and
+  last repair. An implementation still below 50 is closed and marked failed.
+- The rubric reserves 90 and more for a plot that "should genuinely impress a data visualization professional". The
+  reviewer never sees the thresholds.
+- Technical criteria start at full points and lose them only through a written defect line that names the criterion,
+  the observed value, and the fix. Design and library criteria start at a default and rise only with named evidence.
+- Code that fails to run, a blank image, clipped labels, or a static library faking interactivity scores 0.
+- One exception to the bar: a review of 80 or more that names no defect and gives every technical criterion its full
+  points is approved, because a repair would have nothing to fix.
 
-**AI quality review**: Claude evaluates generated plots using cascading thresholds (90/80/70/60/50) over 4 repair attempts. Final score ≥ 50 required for merge.
+### Nightly regeneration
 
-See [docs/reference/](docs/reference/) for details.
+`daily-regen.yml` regenerates the catalogue's oldest implementations every night. A regeneration replaces the live
+implementation only when its review, which scores both versions, finds a fixed defect and no regression (the regen
+gate).
 
----
+For the labels, retries, and every workflow, see [Workflows](docs/workflows/overview.md).
 
-## Tech stack
+## Use with my data (agent chat)
 
-**Backend**: FastAPI • PostgreSQL • SQLAlchemy • Python 3.14+
+> **Status:** experimental, rolling out.
 
-**Frontend**: React 19 • Vite • TypeScript • MUI
+On a plot page, you paste your own data. An agent adapts that plot's catalogue code to your data, renders it in a
+sandbox, reviews the render against the catalogue's rubric, repairs it once if needed, and returns the image and the
+code.
 
-**Plotting (Python)**: matplotlib • seaborn • plotly • bokeh • altair • plotnine • pygal • lets-plot
-**Plotting (R)**: ggplot2
-**Plotting (Julia)**: Makie.jl
-**Plotting (JavaScript)**: Chart.js • D3.js • ECharts • Highcharts • MUI X Charts (React)
+- **Agents.** A [Google ADK](https://adk.dev) service on Cloud Run. The model is Claude Haiku 5.5 through Vertex AI in
+  the EU; Gemini 3.8 Flash is a configurable second arm. Runtimes exist for all 15 libraries.
+- **Sandboxed rendering.** No model-written code runs in the agent service. A separate renderer runs it in Cloud Run
+  sandboxes (gVisor): no network egress, no metadata server, and a read-only root filesystem. The renderer's service
+  account holds no IAM role.
+- **Static validation.** Before anything runs, a validator reads the code (Python's `ast`, tree-sitter for R, Julia,
+  and JavaScript) and refuses disallowed imports and calls.
+- **Guard judges.** A scope judge reads every typed message before any agent sees it and fails closed; a dataset judge
+  checks pasted data and notes. Spend limits apply per user and per day, and a budget guard switches Vertex AI off when
+  its monthly budget is reached.
+- **Evals.** A model-regression harness runs synthetic, stress, and promoted real cases; separate evals score the scope
+  judge and the data preparation.
+- **Content-free telemetry.** Usage events hold only enums, buckets, counts, and IDs from closed sets. No message, data
+  value, or column name reaches a line, and a test enforces it.
 
-**Infrastructure**: Google Cloud Run • Cloud SQL • Cloud Storage
-
-**Automation**: GitHub Actions
-
-**AI**: Claude (code generation + quality review)
-
----
+Read the [agent network design](docs/concepts/agent-network.md), the [agents README](agents/README.md), and the
+[telemetry reference](docs/reference/agent-telemetry.md).
 
 ## MCP server
 
-anyplot provides an [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server for AI assistants to search plot specifications and fetch implementation code.
+anyplot runs an [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server, so AI assistants can search
+the catalogue and fetch implementation code.
 
-**Available Tools:**
-- `list_specs` - List all plot specifications
-- `search_specs_by_tags` - Search by plot type, domain, features, library
-- `get_spec_detail` - Get full specification with all implementations
-- `get_implementation` - Get code for a specific library
-- `list_libraries` - List supported plotting libraries
-- `get_tag_values` - Get available tag values by category
+| Tool | What it does |
+|------|--------------|
+| `list_specs` | Lists all plot specifications |
+| `search_specs_by_tags` | Finds specs by tags: plot type, data type, domain, features, library, and implementation tags |
+| `get_spec_detail` | Returns a full specification with its implementations |
+| `get_implementation` | Returns the code for one library |
+| `list_libraries` | Lists the supported libraries |
+| `get_tag_values` | Lists the values of a tag category |
 
-### Configuration
+Add it to your MCP client configuration, for example Claude Code's `.mcp.json`:
 
-Add to your MCP client configuration (e.g., Claude Code `.mcp.json`):
-
-**Streamable HTTP Transport** (the only supported transport):
 ```json
 {
   "mcpServers": {
@@ -120,98 +140,103 @@ Add to your MCP client configuration (e.g., Claude Code `.mcp.json`):
 }
 ```
 
-Clients with native Streamable HTTP support can connect to
-`https://api.anyplot.ai/mcp/` directly, without the `mcp-remote` bridge.
+The server speaks Streamable HTTP only. Clients with native support connect to `https://api.anyplot.ai/mcp/` without
+the `mcp-remote` bridge. The legacy SSE endpoint (`https://api.anyplot.ai/sse/`) has been removed. For details, see
+[MCP server](docs/reference/mcp.md).
 
-> The legacy SSE endpoint (`https://api.anyplot.ai/sse/`) has been removed —
-> update any configuration still pointing at it.
+## Tech stack
 
----
+| Area | Stack |
+|------|-------|
+| Backend | Python 3.14, FastAPI, SQLAlchemy (async), PostgreSQL, Alembic |
+| Frontend | React 19, TypeScript, Vite, MUI |
+| Agents | Google ADK, Claude Haiku 5.5 on Vertex AI, Cloud Run sandboxes |
+| Pipeline | GitHub Actions with Claude Code |
+| Infrastructure | Cloud Run, Cloud SQL, Cloud Storage, Cloud Build, BigQuery, Cloudflare |
 
-## License notes
-
-Most plotting libraries are fully open source. Note these exceptions:
-
-- **Highcharts**: Free for non-commercial use. Commercial use requires a license from [highcharts.com](https://www.highcharts.com/license)
-
----
+Each render runtime is pinned: Python by `pyproject.toml` and `uv.lock`, the JavaScript libraries by `package.json` and
+`package-lock.json`, Julia by `Project.toml` and `Manifest.toml`, and R by a dated Posit Package Manager snapshot.
 
 ## Project structure
 
 ```
 anyplot/
-├── plots/              # Plot specs + metadata + implementations
-├── prompts/            # AI agent prompts
-├── api/                # FastAPI backend
+├── plots/              # One directory per plot type: spec, metadata, implementations
+├── prompts/            # Generation and review prompts, the quality rubric
+├── .github/workflows/  # The pipeline (spec-create, impl-*, daily-regen) and CI
+├── api/                # FastAPI backend and the MCP server
 ├── app/                # React frontend
-├── core/               # Shared business logic
-├── automation/         # Workflow scripts (sync, labels)
-├── tests/              # Test suite (unit, integration, e2e)
+├── agents/             # "Use with my data": ADK agent service, sandbox renderer, evals
+├── core/               # Shared Python logic: database, palette, checks
+├── automation/         # Workflow scripts: sync, labels, the regen gate, the JS render harness
 ├── alembic/            # Database migrations
-├── docs/               # Documentation
-└── .github/workflows/  # GitHub Actions
+├── tests/              # Unit, integration, and end-to-end tests
+├── infra/              # Cloudflare configuration
+├── scripts/            # Maintenance scripts
+├── tools/, changelog.d/  # Changelog tooling and one changelog fragment per pull request
+├── agentic/            # Commands and docs for the coding agents that work on this repository
+└── docs/               # Documentation
 ```
 
-**For details**, see [Repository Structure](docs/reference/repository.md)
+The root `package.json` and `package-lock.json` pin the JavaScript render runtime, and `Project.toml` and
+`Manifest.toml` pin the Julia one. A plot directory looks like this:
 
----
+```
+plots/scatter-basic/
+├── specification.md     # Library-agnostic specification
+├── specification.yaml   # Tags, creation date, issue
+├── metadata/            # Per-library quality score, review, preview URLs
+└── implementations/
+    ├── python/          # matplotlib.py, seaborn.py, … (8 files)
+    ├── r/ggplot2.R
+    ├── julia/makie.jl
+    └── javascript/      # chartjs.js, d3.js, echarts.js, highcharts.js, muix.tsx
+```
 
-## Documentation
-
-- **[Vision](docs/concepts/vision.md)** - Product vision and mission
-- **[Contributing](docs/contributing.md)** - How to add/improve specs and implementations
-- **[Workflows](docs/workflows/overview.md)** - Automation flows and label system
-- **[Reference](docs/reference/)** - API, database, repository structure
-
----
+For every directory, see [Repository structure](docs/reference/repository.md).
 
 ## Contributing
 
-Contributions are welcome — **all code is AI-generated**: you propose ideas, AI implements them.
+You contribute ideas, not code: the pipeline writes every implementation.
 
-**Three ways to contribute** (from [anyplot.ai](https://anyplot.ai) or GitHub):
+| Action | When to use | On anyplot.ai |
+|--------|-------------|---------------|
+| Suggest a spec | Propose a new plot type | `spec.suggest()` on the home page and the specs list |
+| Report a spec issue | A specification has a problem | "report issue" on the spec page |
+| Report an implementation issue | One library's implementation has a problem | "report issue" on the spec page |
 
-| Action | When to use | From anyplot.ai |
-|--------|-------------|-----------------|
-| **Suggest Spec** | Propose a new plot type | "suggest spec" link in catalog |
-| **Report Spec Issue** | Problem with a specification | "report issue" link on spec page |
-| **Report Impl Issue** | Problem with a library implementation | "report issue" link on impl page |
+1. Open an issue, on GitHub or through a link on anyplot.ai.
+2. The AI validates and processes it.
+3. The maintainer reviews and approves it.
+4. The pipeline generates or fixes the code, and the review gates it.
 
-**How it works**:
+Don't open pull requests with plot code. A plot with quality problems usually needs a better spec, not hand-edited code.
+For details, see [Contributing](docs/contributing.md). To run the project locally, see the
+[development guide](docs/development.md).
 
-1. You create Issue (or click link on anyplot.ai)
-2. AI validates and processes your input
-3. Maintainer reviews and approves
-4. AI generates/fixes the code
-5. Automated quality review ensures excellence
+## Documentation
 
-**Important**: Don't submit code directly. If a plot has quality issues, it means the spec needs improvement, not the code.
+- [Vision](docs/concepts/vision.md): the product vision
+- [Workflows](docs/workflows/overview.md): the automation and its labels
+- [Agent network](docs/concepts/agent-network.md): the design of "Use with my data"
+- [Reference](docs/reference/): API, MCP, database, repository structure, and style guide
+- [Documentation index](docs/index.md): everything else
 
-See [contributing.md](docs/contributing.md) for details.
+## License notes
 
----
+Most plotting libraries are fully open source. **Highcharts** is free for non-commercial use; commercial use requires a
+license from [highcharts.com](https://www.highcharts.com/license).
 
-## Development
-
-See **[Development Guide](docs/development.md)** for local setup instructions.
-
----
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
-The JetBrains Mono fonts bundled in `agents/anyplot/render/fonts/` for the footer strip of user plots are third-party files under the SIL Open Font License 1.1; see [their notice](agents/anyplot/render/fonts/README.md).
-
----
+The project is under the MIT License; see [LICENSE](LICENSE). The JetBrains Mono fonts bundled in
+`agents/anyplot/render/fonts/` for the footer strip of user plots are third-party files under the SIL Open Font License
+1.1; see [their notice](agents/anyplot/render/fonts/README.md).
 
 ## Links
 
 - **Website**: [anyplot.ai](https://anyplot.ai)
-- **Documentation**: [docs/](docs/)
 - **Issues**: [GitHub Issues](https://github.com/MarkusNeusinger/anyplot/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/MarkusNeusinger/anyplot/discussions)
-- **Stats**: [Public Analytics](https://plausible.io/anyplot.ai)
+- **Analytics**: [public Plausible dashboard](https://plausible.io/anyplot.ai)
 
 ---
 
@@ -219,6 +244,6 @@ The JetBrains Mono fonts bundled in `agents/anyplot/render/fonts/` for the foote
 
 **Built by [Markus Neusinger](https://linkedin.com/in/markus-neusinger/)**
 
-[⭐ Star us on GitHub](https://github.com/MarkusNeusinger/anyplot) • [💡 Request New Plot](https://github.com/MarkusNeusinger/anyplot/issues/new?template=request-new-plot.yml)
+[Star on GitHub](https://github.com/MarkusNeusinger/anyplot) • [Request a new plot](https://github.com/MarkusNeusinger/anyplot/issues/new?template=request-new-plot.yml)
 
 </div>
