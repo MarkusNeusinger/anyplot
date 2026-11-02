@@ -37,17 +37,16 @@ anyplot is different: **AI curates and maintains, humans discover and choose.**
 1. **Spec Collection**: Comprehensive markdown specifications for every plot type
 2. **AI Code Generation**: Automatically creates implementations for all major libraries
 3. **Continuous Quality**: AI validates, tests, and improves examples constantly
-4. **Smart Discovery**: Natural language search + dynamic tagging + similarity clustering
-5. **Your Data, Instantly**: Upload your data, see dozens of plot variations immediately
+4. **Smart Discovery**: Typo-tolerant search over tags and titles + dynamic tagging + a similarity map of the catalogue
+5. **Your Data**: Paste your data on a plot page, and an agent adapts that plot's code to it (experimental, rolling out)
 
 ### What makes it different
 
-- **Library Agnostic**: Compare libraries side-by-side. Eleven ecosystems across three languages today — Python (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot), R (ggplot2), and Julia (Makie.jl); the architecture is designed to welcome more
+- **Library Agnostic**: Compare libraries side-by-side. 15 libraries across four languages as of 2026-11-02 — Python (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, lets-plot), R (ggplot2), Julia (Makie.jl), and JavaScript (Chart.js, D3.js, ECharts, Highcharts, MUI X Charts); the architecture is designed to welcome more
 - **Always Current**: AI agents keep examples updated and optimized
 - **Multi-Dimensional Discovery**: Find plots by domain (finance, research), type (scatter, bar), or specific use case (
   ROC curve, Sankey diagram)
 - **Multiple Styles**: Same plot, different visual styles—pick what you like
-- **Natural Language**: Ask "show correlation between variables" instead of searching categories
 - **Community + AI**: Users submit specs, AI generates and maintains code
 - **Global**: AI-native means any language, anywhere
 
@@ -58,14 +57,14 @@ anyplot is different: **AI curates and maintains, humans discover and choose.**
 - Browse all plot types with live examples
 - Compare libraries side-by-side
 - Copy production-ready code
-- Natural language search
+- Search and filter by tags and titles
 - AI-generated explanations
+- **MCP Server**: Integrate anyplot into your AI workflow ([Docs](../reference/mcp.md), [Issue #4129](https://github.com/MarkusNeusinger/anyplot/issues/4129))
 
 ### Premium (future)
 
 - **Try with *your* data**: Upload CSV/Excel/JSON, see all plots with your actual data
 - **Custom styles**: Generate plots matching your brand colors
-- **MCP Server**: Integrate anyplot into your AI workflow ([Docs](../reference/mcp.md), [Issue #4129](https://github.com/MarkusNeusinger/anyplot/issues/4129))
 - **API access**: Programmatic access to plot generation
 
 ## Why we'll win
