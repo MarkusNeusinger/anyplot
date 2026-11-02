@@ -23,10 +23,12 @@ const API = 'https://api.anyplot.ai';
 // The public content routes are the top-level string values of paths, minus
 // the ones that are deliberately absent from the machine guide: '/' is the
 // document's own subject, /debug is an app internal (robots.txt disallows it),
-// and the search deep link is a view of /plots, not a page.
+// /agent is the experimental chat (an interactive tool on a catalogue pair,
+// noindex, open only while its lane is), and the search deep link is a view of
+// /plots, not a page.
 const publicPaths = Object.values(paths)
   .flatMap(v => (typeof v === 'string' ? [v] : []))
-  .filter(p => p !== paths.home && p !== paths.debug && !p.includes('?'));
+  .filter(p => p !== paths.home && p !== paths.debug && p !== paths.agent && !p.includes('?'));
 
 // One complete, callable example per surface. Assistants' fetch tools often
 // allow only URLs that already appeared verbatim in fetched content, so the

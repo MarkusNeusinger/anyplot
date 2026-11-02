@@ -3,9 +3,9 @@
  * feedback case the agents service assembles (the conversation, every version's
  * code, plan, result and images, the data profile, the bindings and the config
  * stamp), to keep or to hand on when something went wrong. `# include data.csv`
- * adds each version's data file; it is on by default, because in phase 1 only
- * admins save their own data (docs/concepts/agent-network.md, "Feedback
- * capture").
+ * adds each version's data file; it is on by default for an admin, who saves
+ * their own test data, and off on the public lane (`lane.ts`,
+ * docs/concepts/agent-network.md, "Feedback capture").
  *
  * The button holds its own saving flag and failure line: a save only reads the
  * session, so the session state does not track it. The page disables the
@@ -22,6 +22,7 @@ import { useEffect, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
 
 import { AgentApiError } from 'src/lib/agent';
+import { useAgentLane } from 'src/sections/agent-chat/lane';
 import { ERROR_TEXT } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { ghostButtonSx, labelSx, smallText } from 'src/sections/agent-chat/styles';
@@ -49,7 +50,10 @@ export interface SaveButtonProps {
 }
 
 export function SaveButton({ disabled, onSave }: SaveButtonProps) {
-  const [includeData, setIncludeData] = useState(true);
+  // The file goes to the user's own computer; on the public lane it still holds the data only
+  // when they tick the box, as the feedback form does.
+  const lane = useAgentLane();
+  const [includeData, setIncludeData] = useState(lane === 'admin');
   const [saving, setSaving] = useState(false);
   const [failure, setFailure] = useState<{ code: string; ref: string | null } | null>(null);
   // Something else started (a turn, a parse, a render): the failure line is stale.

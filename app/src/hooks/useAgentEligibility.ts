@@ -21,7 +21,7 @@ import { useEffect, useState } from 'react';
 
 import { AGENT_CHAT_ENABLED, CONFIG } from 'src/global-config';
 import { useAgentLaneOpen } from 'src/hooks/useAgentLaneOpen';
-import { type AgentLane, agentApi, AgentApiError } from 'src/lib/agent';
+import { agentApi, AgentApiError, type AgentLane, PUBLIC_LANE } from 'src/lib/agent';
 import { readAdminHint, readAdminToken, setAdminHint } from 'src/utils/adminAuth';
 
 /** Gates 1 and 2: may this browser use the admin chat? */
@@ -48,15 +48,17 @@ export function useAgentEligibility(
     if (!AGENT_CHAT_ENABLED) return;
     if (!key || !specId || !library || lane === null) return;
     const controller = new AbortController();
-    const token = lane === 'admin' ? readAdminToken() : '';
+    const token = lane === 'admin' ? readAdminToken() : PUBLIC_LANE;
     agentApi
-      .eligibility(token, specId, library, controller.signal, lane)
+      .eligibility(token, specId, library, controller.signal)
       .then(result => {
-        if (!controller.signal.aborted) setAnswer({ key, lane: result.eligible === true ? lane : null });
+        if (!controller.signal.aborted)
+          setAnswer({ key, lane: result.eligible === true ? lane : null });
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
-        if (lane === 'admin' && err instanceof AgentApiError && err.unauthorized) setAdminHint(false);
+        if (lane === 'admin' && err instanceof AgentApiError && err.unauthorized)
+          setAdminHint(false);
         setAnswer({ key, lane: null });
       });
     return () => controller.abort();

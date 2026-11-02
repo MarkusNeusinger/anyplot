@@ -236,9 +236,12 @@ export function LegalPage() {
             <Typography sx={textStyle}>
               <strong>feedback.</strong> the feedback widget keeps what you send it: the message,
               the reaction, anything you put in the optional contact field, the page you were on,
-              your window size, your user-agent, a random id that ties your own submissions
-              together, and a one-way hash of your IP address that limits spam. only the operator
-              can read those entries, and nothing deletes them on a timer — ask and yours is gone.
+              your window size, your user-agent, and a random id that ties your own submissions
+              together. to limit spam it also keeps a hash of your IP address, salted with a value
+              that lives only in the server&apos;s memory, and clears it after ten minutes; entries
+              sent before November 2026 still carry an older, unsalted hash until it is cleared.
+              only the operator can read those entries, and nothing deletes them on a timer — ask
+              and yours is gone.
             </Typography>
             <Typography sx={textStyle}>
               <strong>the edge.</strong> Cloudflare stands in front of the site and processes your
@@ -246,15 +249,15 @@ export function LegalPage() {
               front of a request — and to absorb DDoS attacks.
             </Typography>
 
-            <Typography sx={subheadingStyle}>
-              only if you use the data assistant (preview)
+            <Typography id="assistant" sx={subheadingStyle}>
+              only if you use the data assistant (experimental)
             </Typography>
             <Typography sx={textStyle}>
               everything in this part applies only to people who use the data assistant. if you only
-              browse the catalogue, none of it touches you. anyplot is building an assistant that
-              adapts a catalogue plot to data you bring (&quot;use with my data&quot;). today it is
-              a preview that only the operator and the site&apos;s admins can open; nobody else can
-              reach it yet. this is what it does with what you give it.
+              browse the catalogue, none of it touches you. the assistant adapts a catalogue plot to
+              data you bring (&quot;use with my data&quot;). it is open to everyone as an
+              experimental feature, and the operator may pause it at any time. this is what it does
+              with what you give it.
             </Typography>
             <Typography sx={textStyle}>
               <strong>what the model sees.</strong> what you paste or drop and the messages you
@@ -284,21 +287,44 @@ export function LegalPage() {
             </Typography>
             <Typography sx={textStyle}>
               <strong>attribution and rate limits.</strong> the assistant&apos;s own log lines,
-              which debug it and enforce the per-user limits, carry a keyed hash (HMAC) of your
-              identity in place of it, and no content. they sit in the server logs above, for 30
-              days.
+              which debug it and enforce its limits, carry no content. in place of who you are they
+              carry a random id your browser tab makes up, salted with a value that lives only as
+              long as the server instance, so nothing ties it to you once that instance stops (for
+              the site&apos;s admins, a keyed hash (HMAC) of their identity). the limits per network
+              count your IP address the same way: salted, in memory only, never written down. the
+              log lines sit in the server logs above, for 30 days.
             </Typography>
             <Typography sx={textStyle}>
               <strong>feedback cases.</strong> only when you send feedback on a result or on the
               chat does the assistant store a case: the conversation, the profile of your data
               (column types and the first 5 rows as a sample), the plot&apos;s code and images if
-              one was made and, while the &quot;# include data.csv&quot; box is ticked — it is by
-              default — the whole data file. unticking leaves out that file only: what the
-              conversation, the sample, the code and the images show of your data stays in the case.
-              the files go to a private bucket in the Netherlands (europe-west4) and are deleted
-              after 180 days. a row with your reaction, your short message, a keyed hash of your
-              identity and the technical details of the run (plot type, library, model) stays for
-              the triage, and nothing deletes it on a timer — ask and yours is gone.
+              one was made and, only if you tick the &quot;# include data.csv&quot; box — it starts
+              unticked — the whole data file. leaving it unticked leaves out that file only: what
+              the conversation, the sample, the code and the images show of your data stays in the
+              case. the form says so where you send it. the files go to a private bucket in the
+              Netherlands (europe-west4) and are deleted after 180 days. a row with your reaction,
+              your short message, a hash of your tab&apos;s random id and the technical details of
+              the run (plot type, library, model) stays for the triage, and nothing deletes it on a
+              timer — ask and yours is gone.
+            </Typography>
+            <Typography sx={textStyle}>
+              <strong>use and warranty.</strong> the assistant is experimental and comes with no
+              warranty: plots, code and answers can be wrong, and nobody checks them by hand, so
+              check them before you rely on them. use it only with data you may share; don&apos;t
+              use it to make unlawful content or to send it automated requests. daily limits apply
+              per browser tab and per network, a misuse can pause you for the day, and the operator
+              may pause or end the assistant at any time.
+            </Typography>
+            <Typography sx={textStyle}>
+              <strong>the code you get.</strong> the code the assistant writes for you is yours to
+              use, as is, like the catalogue&apos;s code under the MIT License. the plotting
+              libraries keep their own licences: Highcharts is free for non-commercial use, and a
+              commercial use needs a licence from Highsoft.
+            </Typography>
+            <Typography sx={textStyle}>
+              <strong>transfers.</strong> Google Cloud and Cloudflare process what you send under
+              their data processing terms, including the safeguards those terms set for transfers
+              outside Switzerland and the EU.
             </Typography>
             <Typography sx={textStyle}>
               <strong>legal basis.</strong> making the plot you asked for is the performance of your
@@ -668,7 +694,7 @@ export function LegalPage() {
             mt: 2,
           }}
         >
-          last updated: October 2026
+          last updated: November 2026
         </Typography>
       </Box>
     </>

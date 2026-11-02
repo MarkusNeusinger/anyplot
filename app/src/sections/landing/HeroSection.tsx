@@ -3,6 +3,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import Box from '@mui/material/Box';
 
 import { useAnalytics } from 'src/hooks';
+import { useAgentLaneOpen } from 'src/hooks/useAgentLaneOpen';
 import type { PlotOfTheDayData } from 'src/hooks/usePlotOfTheDay';
 import { paths } from 'src/routes/paths';
 import { PlotOfTheDayTerminal } from 'src/sections/landing/PlotOfTheDayTerminal';
@@ -208,6 +209,7 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
             />
           </Box>
         </Box>
+        <AgentLaneLine />
       </Box>
 
       {/* Right: terminal plot */}
@@ -215,6 +217,41 @@ export function HeroSection({ potd = null }: HeroSectionProps) {
         potd={potd}
         sizes="(max-width: 899px) 92vw, (max-width: 1600px) 60vw, 1400px"
       />
+    </Box>
+  );
+}
+
+/**
+ * The one line that points to the public agent chat, shown only while its lane is open
+ * (`useAgentLaneOpen`), so closing the lane on the server removes it too. It opens the chat
+ * on a plot everyone knows; `source=landing` feeds `agent_open`.
+ */
+export const AGENT_LANE_LINE = 'experimental: adapt any plot to your own data';
+
+function AgentLaneLine() {
+  const open = useAgentLaneOpen();
+  if (open !== true) return null;
+  return (
+    <Box
+      component={RouterLink}
+      to={paths.publicAgentChat('scatter-basic', 'matplotlib', 'python', 'landing')}
+      sx={{
+        display: 'inline-block',
+        mt: 3,
+        fontFamily: typography.mono,
+        fontSize: '13px',
+        color: 'var(--ink-soft)',
+        textDecoration: 'none',
+        transition: 'color 0.2s',
+        '&:hover': { color: colors.primary },
+        '&:focus-visible': {
+          outline: `2px solid ${colors.primary}`,
+          outlineOffset: 2,
+          borderRadius: '2px',
+        },
+      }}
+    >
+      # {AGENT_LANE_LINE} →
     </Box>
   );
 }

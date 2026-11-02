@@ -100,6 +100,7 @@ counts as a boundary because OR-filtered gallery views record
 | `/map` | Network map of specs clustered by visual similarity |
 | `/debug` | Pipeline status dashboard (spec coverage, feedback, agent cases, ping); the agent cases section sends no event of its own |
 | `/debug/agent` | Admin-only "Use with my data" agent chat; recorded without its query string, and only in builds with `VITE_ENABLE_AGENT_CHAT=true` |
+| `/agent` | The public "Use with my data" agent chat (experimental, since 2026-11-02), the same page on the public lane; recorded without its query string, only in builds with `VITE_ENABLE_AGENT_CHAT=true` and only while the public lane is open |
 | `/{spec_id}` | Cross-language spec hub (all implementations across all languages) |
 | `/{spec_id}/{language}` | Language overview (all libraries for that language) |
 | `/{spec_id}/{language}/{library}` | Implementation detail (preview ↔ interactive toggle) |
@@ -125,7 +126,7 @@ counts as a boundary because OR-filtered gallery views record
 - `home`: HomePage grid view
 - `spec_overview`: SpecPage showing all library implementations
 - `spec_detail`: SpecPage showing single library implementation
-- `agent_chat`: the admin-only agent chat (`/debug/agent`)
+- `agent_chat`: the agent chat, the admin's (`/debug/agent`) and the public one (`/agent`)
 
 ### Agent chat (admin only)
 
@@ -134,11 +135,14 @@ The "Use with my data" chat (`app/src/pages/AgentChatPage.tsx`, design in
 only. No event carries message text, pasted data, column names, code or a
 dataset size: the size travels as a bucket. The events exist only in builds
 with `VITE_ENABLE_AGENT_CHAT=true`, and like every event they fire only on
-`anyplot.ai`.
+`anyplot.ai`. Since 2026-11-02 the public chat at `/agent` fires the same
+events with the same properties; the pageview tells the two lanes apart. On
+the public lane the `# include data.csv` boxes start unticked, so
+`include_data` reads `no` unless the user ticked the box.
 
 | Event Name | Properties | Where | Description |
 |------------|-----------|-------|-------------|
-| `agent_open` | `library`, `source`, `spec` | AgentChatPage.tsx | The chat page opened for an admin. `source` is `plot_page` when the plot page's `.adapt()` button led there, `direct` otherwise (a typed URL, a bookmark, a reload) |
+| `agent_open` | `library`, `source`, `spec` | AgentChatPage.tsx | The chat page opened, for an admin or on the public lane. `source` is `plot_page` when the plot page's `.adapt()` button led there, `landing` when the landing page's line did (public lane, since 2026-11-02), `direct` otherwise (a typed URL, a bookmark, a reload) |
 | `agent_data_parsed` | `status`, `size_bucket` | useAgentSession.ts | The pasted data came back from the parse. `status` ∈ `ok`, `too_long`, `unparseable`, `data_refused`, `error` (any other refusal, including a formula the server answered with `422 formula`, which the page offers to send to the chat), `data_request` (since 2026-11-01: the text asked for data instead of holding it, such as "Beispieldaten"; the server answered `422 data_request` and the page sent the text to the chat as the user's message, where the assistant generates example data), `transcribed` (the text was not a table, a model read it into one and the page asks the user to confirm it; nothing is stored yet), `discarded` (the user dropped such a table; `.use()` instead parses it again and reports `ok`); `size_bucket` ∈ `lt_1kb`, `1_10kb`, `10_50kb`, `50_200kb`, `over_200kb` (the last one is refused in the browser before anything is sent) |
 | `agent_data_confirmed` | `size_bucket` | useAgentSession.ts | The user ended step 1 with `.confirm()`: the stored data and its bindings fit, and the page now offers `.create_plot()`. Fires again after each new parse, binding change, data change or undo that the user confirms. `size_bucket` as for `agent_data_parsed`; data the assistant generated from a formula without a paste counts as `lt_1kb` |
 | `agent_data_prepared` | `changes` | useAgentSession.ts | The assistant changed the data in a turn (its `prepare_data`, for example "read Anteil as numbers" or "sum per month") or computed it from a formula (its `generate_data`, for example "sin(x) from -pi to pi"): the turn's `done` carried a new data version, which the data panel shows with its change lines and, when an earlier version exists, `.undo()`. A generated table in a session without data is version 1 and fires this event too, and so does the data panel's `.to_long()` (a wide table made long, no model call). `changes` ∈ `1`, `2`, `3+`, the number of change lines (one per operation; a generated table has one, plus one per series with undefined values) |
@@ -146,8 +150,8 @@ with `VITE_ENABLE_AGENT_CHAT=true`, and like every event they fire only on
 | `agent_data_file` | `kind`, `encoding`, `outcome` | DataPanel.tsx | A file reached the data box: dropped on it, chosen with `.open()` or pasted as a file (since 2026-10-15). A text file is read in the browser; a spreadsheet, Parquet, Feather, Arrow or NumPy file goes to the server, which converts it in the renderer's sandbox (since the binary-file step of 2026-10-15). `.parse()` afterwards reports `agent_data_parsed` as for a paste. `kind` ∈ `text`, `spreadsheet`, `parquet`, `arrow`, `numpy`, `hdf5`, `pickle`, `pdf`, `archive`, `binary` (by the file's first bytes in the browser; `binary` for anything else that is not text), `unknown` (refused before it was read), and for a file the server converted the format it found: `xlsx`, `xlsm`, `xlsb`, `xls`, `ods`, `parquet`, `feather`, `arrow`, `npy`, `npz`; `encoding` ∈ `utf-8`, `utf-8-bom`, `utf-16le`, `utf-16be`, `windows-1252`, `none` (a binary file); `outcome` ∈ `filled` (into an empty box), `replaced` (the box had text and the user chose `.replace()`), `kept` (the user chose `.keep()`), `sheet` (another sheet or `.npz` array chosen in the sheet picker and read again), `refused` (a format never read, an empty file, or a file the server refused: encrypted, damaged, over a cap), `failed` (the server could not convert it now: rate limit, no render slot, renderer unavailable, network), `too_large` (over 4 MB as a text file or 5 MB as a binary one, or over 1 MB as text), `busy` (a step was running, or another file was still being read), `unreadable` (the browser could not read it). The file's name and its sheet names are never sent |
 | `agent_plot_rendered` | `library`, `status`, `repaired`, `spec` | useAgentSession.ts | A turn's `plot` event arrived. `status` ∈ `ok`, `needs_attention`, `failed`, `not_ready`; `repaired` is `yes` when the run needed its repair round (two attempts), else `no` |
 | `agent_guardrail_block` | `reason` | useAgentSession.ts | A guardrail stopped a request. `reason` ∈ `out_of_scope`, `needs_data` (the request needs data the service would have to fetch), `budget` (the user's own daily token budget), `service_paused` (since 2026-11-02: the whole service spent its day budget, from a turn's refusal or the dataset route's `429`), `unsupported_content`, `rate_limited` and `daily_limit` (the user's message limits per minute and per day, and since 2026-10-14 the paste limits, which the data panel reports from the dataset route's `429`), `session_closed` (the session closed after three scope refusals), `other_library` (a request for this plot in another library or language, answered with a pointer to the catalogue), `locked_out` (the user is paused for the day after three attack verdicts; these are the stream's fixed refusals), `data_refused` (the pre-filter or the dataset judge refused the pasted data: text addressed to an AI, or the judge's verdict; personal data is never a reason), `guard_unavailable` (the scope check could not answer and failed closed), `other` (a refusal code the page does not know yet) |
-| `agent_session_saved` | `include_data` | useAgentSession.ts | The user saved the session as a JSON file with `.save()` in the chat header, and the download started. `include_data` is `yes` when the `# include data.csv` box was ticked (the default), so the file holds each version's data file, else `no`. A failed save fires nothing |
-| `agent_result_feedback` | `reaction`, `include_data`, `subject` | useAgentSession.ts | The user sent quick feedback with `.send()`, on a result version from its result card or on the chat itself from the control below the composer, and the BFF stored it as a feedback case. `reaction` ∈ `thumbs_up`, `thumbs_down`, `bug`, `idea`, the site feedback's set; `include_data` is `yes` when the `# include data.csv` box was ticked (the default), so the case holds the data file, else `no`; `subject` is `result` for a version and `chat` for the chat (since 2026-10-12, for a session that made no plot). An edit that replaces a sent case fires again. A failed send fires nothing; the text never travels |
+| `agent_session_saved` | `include_data` | useAgentSession.ts | The user saved the session as a JSON file with `.save()` in the chat header, and the download started. `include_data` is `yes` when the `# include data.csv` box was ticked (the admin's default; unticked on the public lane), so the file holds each version's data file, else `no`. A failed save fires nothing |
+| `agent_result_feedback` | `reaction`, `include_data`, `subject` | useAgentSession.ts | The user sent quick feedback with `.send()`, on a result version from its result card or on the chat itself from the control below the composer, and the BFF stored it as a feedback case. `reaction` ∈ `thumbs_up`, `thumbs_down`, `bug`, `idea`, the site feedback's set; `include_data` is `yes` when the `# include data.csv` box was ticked (the admin's default; unticked on the public lane), so the case holds the data file, else `no`; `subject` is `result` for a version and `chat` for the chat (since 2026-10-12, for a session that made no plot). An edit that replaces a sent case fires again. A failed send fires nothing; the text never travels |
 
 `copy_code` on a result card carries `method: agent` and `page: agent_chat`
 plus the `spec` and `library` of the version.
@@ -528,7 +532,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `action` | Toggle action (open, close) | `tab_toggle` |
 | `size` | Grid size (normal, compact) | `grid_resize` |
 | `param` | URL parameter name for tag | `tag_click` |
-| `source` | Source UI element / page context | `tag_click`, `nav_click`, `agent_open` (`plot_page` / `direct`) |
+| `source` | Source UI element / page context | `tag_click`, `nav_click`, `agent_open` (`plot_page` / `landing` / `direct`) |
 | `framework` | Library id clicked in the libraries-page filter (needs dashboard registration to appear in breakdowns) | `library_filter` |
 | `target` | Click destination (route or external label) | `nav_click` |
 | `subject` | What an agent chat quick feedback is about (`result`: a result version, `chat`: the chat itself) | `agent_result_feedback` |
@@ -581,7 +585,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `map_node_pin` | Custom Event | Track touch users opening the preview panel on `/map` (first tap) |
 | `map_search_select` | Custom Event | Track use of the `/map` search-and-fly-to feature |
 | `og_image_view` | Custom Event | Track og:image requests from social media bots |
-| `agent_open` | Custom Event | Track admin opens of the agent chat and where they came from |
+| `agent_open` | Custom Event | Track opens of the agent chat (admin and public) and where they came from |
 | `agent_data_parsed` | Custom Event | Track parse outcomes of pasted data in the agent chat |
 | `agent_data_confirmed` | Custom Event | Track how often users confirm their data before the agent chat plots it |
 | `agent_data_prepared` | Custom Event | Track how often the agent chat's assistant changes the data in step 1 or computes it from a formula |

@@ -8,7 +8,7 @@
  * through `fetchWithAuth` (Cloudflare Access cookie or the admin token)
  * against the debug API base; on the public lane it goes to the API base
  * without a cookie, with the tab's anonymous id and the session id as headers
- * (`setAgentLane`, `publicRoute`). Every state-changing call carries the CSRF
+ * (`PUBLIC_LANE`, `publicRoute`). Every state-changing call carries the CSRF
  * header `X-Anyplot-Client: agent-chat/1`. Errors arrive as
  * `{"detail": "<code>", "ref": "<request id>"}` and become `AgentApiError`.
  */
@@ -973,19 +973,18 @@ const MAX_BINDING_ERRORS = 20;
  */
 export type AgentLane = 'admin' | 'public';
 
-let currentLane: AgentLane = 'admin';
-
 /**
- * Point the following agent calls at `lane`. The chat page sets it from its
- * route before its first request (`AgentChatPage`); the default is the admin
- * lane, so the `/debug` pages and the admin chat are unchanged.
+ * The credential of the public lane, passed where an admin passes the admin
+ * token (`agentApi.*(token, ...)`): a call with it goes to `/agent/*` without a
+ * cookie, with the tab's anonymous id. It holds a NUL character, which no
+ * header can carry, so no admin token is ever mistaken for it and it is never
+ * sent anywhere itself.
  */
-export function setAgentLane(lane: AgentLane): void {
-  currentLane = lane;
-}
+export const PUBLIC_LANE = '\u0000public';
 
-export function agentLane(): AgentLane {
-  return currentLane;
+/** The lane a credential calls: the public one for `PUBLIC_LANE`, else the admin one. */
+export function laneOf(token: string): AgentLane {
+  return token === PUBLIC_LANE ? 'public' : 'admin';
 }
 
 /** sessionStorage key of the public lane's tab id. */
@@ -1032,7 +1031,7 @@ export function publicRoute(path: string): { path: string; session: string | nul
   return { path: `/session${match[2]}`, session: decodeURIComponent(match[1]) };
 }
 
-export function agentUrl(path: string, lane: AgentLane = currentLane): string {
+export function agentUrl(path: string, lane: AgentLane = 'admin'): string {
   if (lane === 'public') return `${API_URL}/agent${publicRoute(path).path}`;
   return `${DEBUG_API_URL}/debug/agent${path}`;
 }
@@ -1047,12 +1046,12 @@ function publicFetch(path: string, init: RequestInit): Promise<Response> {
     ...((init.headers as Record<string, string>) || {}),
   };
   if (init.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
-  return fetch(`${API_URL}/agent${route.path}`, { ...init, credentials: 'omit', headers });
+  return fetch(agentUrl(path, 'public'), { ...init, credentials: 'omit', headers });
 }
 
 /**
  * A raw BFF call with the CSRF header; throws `AgentApiError` on a non-2xx status.
- * `lane` defaults to the one the page set (`setAgentLane`).
+ * `token` is the admin token, or `PUBLIC_LANE` for the public lane (`laneOf`).
  *
  * A request that gets no readable answer becomes code `unreachable`. On the
  * admin lane in production that is usually an expired Cloudflare Access
@@ -1062,12 +1061,8 @@ function publicFetch(path: string, init: RequestInit): Promise<Response> {
  * admin in again (`reloadOnceForAccess`). Any answer clears that reload's
  * one-shot guard.
  */
-export async function agentFetch(
-  path: string,
-  token: string,
-  init: RequestInit = {},
-  lane: AgentLane = currentLane
-) {
+export async function agentFetch(path: string, token: string, init: RequestInit = {}) {
+  const lane = laneOf(token);
   let response: Response;
   try {
     response =
@@ -1075,7 +1070,10 @@ export async function agentFetch(
         ? await publicFetch(path, init)
         : await fetchWithAuth(agentUrl(path, 'admin'), token, {
             ...init,
-            headers: { ...AGENT_CLIENT_HEADERS, ...((init.headers as Record<string, string>) || {}) },
+            headers: {
+              ...AGENT_CLIENT_HEADERS,
+              ...((init.headers as Record<string, string>) || {}),
+            },
           });
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') throw err;
@@ -1102,13 +1100,8 @@ export async function publicLaneOpen(signal?: AbortSignal): Promise<boolean> {
   }
 }
 
-async function agentJson<T>(
-  path: string,
-  token: string,
-  init: RequestInit = {},
-  lane: AgentLane = currentLane
-): Promise<T> {
-  const response = await agentFetch(path, token, init, lane);
+async function agentJson<T>(path: string, token: string, init: RequestInit = {}): Promise<T> {
+  const response = await agentFetch(path, token, init);
   return (await response.json()) as T;
 }
 
@@ -1136,23 +1129,11 @@ export function attachmentFilename(header: string | null): string | null {
 
 export const agentApi = {
   status: (token: string) => agentJson<AgentStatus>('/status', token),
-  /**
-   * Whether the chat may open for the pair. `lane` names the BFF outright,
-   * because the plot page asks it outside the chat page: the admin lane for a
-   * browser with the admin hint, the public one for everyone else.
-   */
-  eligibility: (
-    token: string,
-    spec: string,
-    library: string,
-    signal?: AbortSignal,
-    lane: AgentLane = currentLane
-  ) =>
+  eligibility: (token: string, spec: string, library: string, signal?: AbortSignal) =>
     agentJson<Eligibility>(
       `/eligibility?spec=${encodeURIComponent(spec)}&library=${encodeURIComponent(library)}`,
       token,
-      { signal },
-      lane
+      { signal }
     ),
   /**
    * `fanout` marks a session the admin's `.plot_all()` opens: the server files

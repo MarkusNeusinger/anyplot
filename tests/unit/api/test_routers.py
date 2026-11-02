@@ -1182,6 +1182,24 @@ class TestSeoProxyRouter:
         assert "kept 30 days" in response.text
         assert "until it is deleted by hand" in response.text
 
+    def test_seo_legal_mirrors_the_data_assistant_section(self, client: TestClient) -> None:
+        """The crawler body carries the assistant's facts the human page states (LegalPage.tsx `#assistant`)."""
+        response = client.get("/seo-proxy/legal")
+        assert response.status_code == 200
+        for fact in (
+            'id="assistant"',
+            "experimental feature, and the operator may pause it",
+            "Google Cloud Vertex AI in the EU",
+            "nobody checks them by hand",
+            "salted with a value that lives as long as the server instance",
+            "it starts unticked",
+            "180 days",
+            "a licence from Highsoft",
+            "transfers outside Switzerland and the EU",
+            "cleared after ten minutes",
+        ):
+            assert fact in response.text, fact
+
     def test_seo_mcp_tells_agents_how_to_connect(self, client: TestClient) -> None:
         """The /mcp page's audience is AI agents — the bot body must carry the
         endpoint, a setup snippet and the tool list, not just og:tags."""

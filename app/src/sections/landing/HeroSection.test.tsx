@@ -20,11 +20,28 @@ vi.mock('src/sections/landing/TypewriterText', () => ({
   TypewriterText: () => <div data-testid="typewriter" />,
 }));
 
-import { HeroSection } from 'src/sections/landing/HeroSection';
+const lane = vi.hoisted(() => ({ open: false as boolean | null }));
+vi.mock('src/hooks/useAgentLaneOpen', () => ({ useAgentLaneOpen: () => lane.open }));
+
+import { AGENT_LANE_LINE, HeroSection } from 'src/sections/landing/HeroSection';
 
 describe('HeroSection', () => {
   beforeEach(() => {
     trackEvent.mockClear();
+    lane.open = false;
+  });
+
+  it('points to the public agent chat only while its lane is open', () => {
+    const { rerender } = render(<HeroSection potd={null} />);
+    expect(screen.queryByText(new RegExp(AGENT_LANE_LINE))).not.toBeInTheDocument();
+
+    lane.open = true;
+    rerender(<HeroSection potd={null} />);
+    const link = screen.getByRole('link', { name: new RegExp(AGENT_LANE_LINE) });
+    expect(link).toHaveAttribute(
+      'href',
+      '/agent?spec=scatter-basic&library=matplotlib&language=python&source=landing'
+    );
   });
 
   it('tracks the primary browse CTA, mcp link and github link', async () => {

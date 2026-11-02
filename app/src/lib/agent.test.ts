@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   agentApi,
   agentFetch,
+  ANONYMOUS_ID_KEY,
+  anonymousId,
   browserLocale,
   caseListQuery,
   codeArtifact,
@@ -10,10 +12,14 @@ import {
   countBucket,
   hasPage,
   isPlotAction,
+  laneOf,
   longSuggestion,
   parseAgentEvent,
   plotMemory,
   plotTarget,
+  PUBLIC_LANE,
+  publicLaneOpen,
+  publicRoute,
   renderedThemes,
   sizeBucket,
   switchCarry,
@@ -724,6 +730,88 @@ describe('agentApi cases', () => {
     expect((fetchMock.mock.calls[0] as unknown as [string])[0]).toMatch(
       /\/debug\/agent\/cases\/A1\/files\/plot-dark\.png$/
     );
+  });
+});
+
+describe('the public lane', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    sessionStorage.clear();
+  });
+
+  it('moves the session id out of the path', () => {
+    expect(publicRoute('/sessions/S%2F1/dataset/undo')).toEqual({
+      path: '/session/dataset/undo',
+      session: 'S/1',
+    });
+    expect(publicRoute('/sessions/S1')).toEqual({ path: '/session', session: 'S1' });
+    expect(publicRoute('/sessions/S1/artifacts/plot.py?v=2')).toEqual({
+      path: '/session/artifacts/plot.py?v=2',
+      session: 'S1',
+    });
+    expect(publicRoute('/sessions')).toEqual({ path: '/sessions', session: null });
+    expect(publicRoute('/eligibility?spec=a&library=b')).toEqual({
+      path: '/eligibility?spec=a&library=b',
+      session: null,
+    });
+  });
+
+  it('tells the lanes apart by the credential, and no header can carry the public one', () => {
+    expect(laneOf(PUBLIC_LANE)).toBe('public');
+    expect(laneOf('')).toBe('admin');
+    expect(laneOf('an-admin-token')).toBe('admin');
+    expect(PUBLIC_LANE).toContain('\u0000');
+  });
+
+  it('keeps one random tab id per tab', () => {
+    const first = anonymousId();
+    expect(first).toMatch(/^[A-Za-z0-9_-]{22,64}$/);
+    expect(anonymousId()).toBe(first);
+    expect(sessionStorage.getItem(ANONYMOUS_ID_KEY)).toBe(first);
+    sessionStorage.clear();
+    expect(anonymousId()).not.toBe(first);
+  });
+
+  it('calls /agent with the tab id and the session as headers, without a cookie or token', async () => {
+    const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    await agentApi.undoDataset(PUBLIC_LANE, 'S/1');
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toMatch(/\/agent\/session\/dataset\/undo$/);
+    expect(url).not.toContain('/debug/');
+    expect(url).not.toMatch(/S%2F1|S\/1/);
+    expect(init.credentials).toBe('omit');
+    const headers = init.headers as Record<string, string>;
+    expect(headers['X-Anyplot-Session']).toBe('S/1');
+    expect(headers['X-Anyplot-Anon']).toBe(anonymousId());
+    expect(headers['X-Anyplot-Client']).toBe('agent-chat/1');
+    expect(headers['X-Admin-Token']).toBeUndefined();
+  });
+
+  it('never touches the Access reload guard', async () => {
+    sessionStorage.setItem(ACCESS_RELOAD_KEY, '1');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('{}', { status: 200 }))
+    );
+    await agentFetch('/status', PUBLIC_LANE);
+    expect(sessionStorage.getItem(ACCESS_RELOAD_KEY)).toBe('1');
+  });
+
+  it('reads the door from GET /agent/lane, and anything else as closed', async () => {
+    const answers = [
+      new Response(JSON.stringify({ open: true }), { status: 200 }),
+      new Response(JSON.stringify({ detail: 'agent chat is not enabled' }), { status: 404 }),
+      new Response('not json', { status: 200 }),
+    ];
+    const fetchMock = vi.fn(async () => answers.shift()!);
+    vi.stubGlobal('fetch', fetchMock);
+    expect(await publicLaneOpen()).toBe(true);
+    expect(await publicLaneOpen()).toBe(false);
+    expect(await publicLaneOpen()).toBe(false);
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toMatch(/\/agent\/lane$/);
+    expect(init.credentials).toBe('omit');
   });
 });
 

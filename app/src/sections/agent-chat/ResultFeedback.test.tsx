@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { FeedbackInput, FeedbackRecord } from 'src/hooks/useAgentSession';
 import { AgentApiError } from 'src/lib/agent';
+import { AgentLaneContext, FEEDBACK_CONSENT } from 'src/sections/agent-chat/lane';
 import { ResultFeedback } from 'src/sections/agent-chat/ResultFeedback';
 import { render, screen, userEvent, waitFor } from 'src/test-utils';
 
@@ -235,5 +236,47 @@ describe('ResultFeedback', () => {
 
     await user.click(sendButton());
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+  });
+
+  describe('on the public lane', () => {
+    const renderPublic = (onSend: Send) =>
+      render(
+        <AgentLaneContext.Provider value="public">
+          <ResultFeedback version={2} sent={null} onSend={onSend} />
+        </AgentLaneContext.Provider>
+      );
+
+    it('starts unticked and says what sending stores, before anything is sent', async () => {
+      const user = userEvent.setup();
+      const onSend = vi.fn<Send>(async () => undefined);
+      renderPublic(onSend);
+
+      expect(dataBox(2)).not.toBeChecked();
+      expect(screen.getByText(new RegExp(FEEDBACK_CONSENT.slice(0, 40)))).toBeInTheDocument();
+      const legal = screen.getByRole('link', { name: 'legal' });
+      expect(legal).toHaveAttribute('href', '/legal#assistant');
+      expect(legal).toHaveAttribute('target', '_blank');
+
+      await user.click(screen.getByRole('button', { name: 'Thumbs up' }));
+      await user.click(sendButton());
+      expect(onSend).toHaveBeenCalledWith(2, expect.objectContaining({ includeData: false }));
+    });
+
+    it('sends the data file only when the user ticks the box', async () => {
+      const user = userEvent.setup();
+      const onSend = vi.fn<Send>(async () => undefined);
+      renderPublic(onSend);
+
+      await user.click(dataBox(2));
+      await user.click(screen.getByRole('button', { name: 'Bug' }));
+      await user.click(sendButton());
+      expect(onSend).toHaveBeenCalledWith(2, expect.objectContaining({ includeData: true }));
+    });
+
+    it('keeps the admin default and shows no consent line without the public lane', () => {
+      render(<ResultFeedback version={2} sent={null} onSend={vi.fn<Send>()} />);
+      expect(dataBox(2)).toBeChecked();
+      expect(screen.queryByRole('link', { name: 'legal' })).not.toBeInTheDocument();
+    });
   });
 });
