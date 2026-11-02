@@ -10,4 +10,4 @@
   choice for the session, and a new version starts folded. The quick feedback
   shows only the reactions until one is picked. `.save()` and its data box
   moved from the header row into a "⋯" menu, not into the feedback area,
-  because a save downloads the session and stores nothing.
+  because a save downloads the session and stores nothing. (#12540)
