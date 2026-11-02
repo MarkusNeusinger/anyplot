@@ -7,7 +7,7 @@ import {
 } from 'src/hooks/useAgentSession';
 import { AgentApiError, type ConvertAnswer, type RoleSpec } from 'src/lib/agent';
 import { bindingRows } from 'src/sections/agent-chat/bindings';
-import { DataPanel } from 'src/sections/agent-chat/DataPanel';
+import { DataPanel, DataViewUnavailable } from 'src/sections/agent-chat/DataPanel';
 import { fireEvent, render, screen, userEvent, waitFor, within } from 'src/test-utils';
 
 /** `scrollIntoView` as a spy: jsdom has none. */
@@ -778,6 +778,15 @@ describe('DataPanel full view', () => {
       />
     );
   }
+
+  it('says in the card when the view did not load, and .close() leaves the page as it was', async () => {
+    const onClose = vi.fn();
+    render(<DataViewUnavailable onClose={onClose} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('the table view did not load');
+
+    await userEvent.click(screen.getByRole('button', { name: '.close()' }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
 
   it('offers .view_all() only where the page can load the data', () => {
     renderPanel(stateWith({ x: 'month', y1: 'shoes' }));

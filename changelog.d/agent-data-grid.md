@@ -3,8 +3,8 @@
 - **Every row of your data in the agent chat, to search, sort and filter.**
   `.view_all()` next to the data card's preview opens the current data version
   in a read-only MUI X Data Grid (the MIT edition, loaded only when you open
-  it): a search over every column, sorting (numeric columns by number), a
-  column filter with `>` and `<` on numbers, column resizing and hiding, the
+  it): a search over every column, sorting (numeric columns by number, empty
+  cells last), a column filter with `>` and `<` on numbers, column resizing and hiding, the
   dtype under each column name, both themes and phone width. Values appear
   exactly as the canonical `data.csv` holds them, which the new read-only
   route `GET /debug/agent/sessions/{sid}/dataset/data.csv` serves and a strict

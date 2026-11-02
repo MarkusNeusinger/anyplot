@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import type { GridColDef, GridFilterItem } from '@mui/x-data-grid';
 
-import { viewTable } from 'src/sections/agent-chat/dataView';
 import {
   fieldOf,
   gridColumns,
@@ -11,6 +10,7 @@ import {
   ROW_FIELD,
   type ViewRow,
 } from 'src/sections/agent-chat/dataViewGrid';
+import { viewTable } from 'src/sections/agent-chat/viewTable';
 
 const TABLE = viewTable('city,value\nBonn,1.50\nKöln,\n', [
   { name: 'city', dtype: 'text', missing: 0, unique: 2 },
@@ -25,6 +25,13 @@ function passes(operator: string, value: unknown, cell: string): boolean {
   const apply = definition?.getApplyFilterFn(item, column);
   if (!apply) throw new Error(`no filter for ${operator}`);
   return apply(cell, { id: 0 }, column, { current: null } as never);
+}
+
+/** `cells` in the order the grid puts them when it sorts `column` in `direction`. */
+function sorted(column: GridColDef<ViewRow>, direction: 'asc' | 'desc', cells: string[]) {
+  const compare = column.getSortComparator?.(direction);
+  if (!compare) throw new Error(`no comparator for ${column.field}`);
+  return [...cells].sort((a, b) => compare(a, b, {} as never, {} as never));
 }
 
 describe('gridRows', () => {
@@ -48,17 +55,15 @@ describe('gridColumns', () => {
 
   it('gives a text column the grid’s text filters and order', () => {
     expect(city).toMatchObject({ field: 'c0', headerName: 'city', description: 'city · text' });
-    expect(city.sortComparator).toBeUndefined();
     expect(city.filterOperators).toBeUndefined();
+    expect(sorted(city, 'asc', ['Ulm', '', 'bonn'])).toEqual(['bonn', 'Ulm', '']);
+    expect(sorted(city, 'desc', ['Ulm', '', 'bonn'])).toEqual(['Ulm', 'bonn', '']);
   });
 
   it('sorts a numeric column by number and adds the comparisons to the text filters', () => {
     expect(value).toMatchObject({ field: 'c1', align: 'right', description: 'value · number' });
-    expect(['10', '9', ''].sort(value.sortComparator as (a: string, b: string) => number)).toEqual([
-      '9',
-      '10',
-      '',
-    ]);
+    expect(sorted(value, 'asc', ['10', '9', ''])).toEqual(['9', '10', '']);
+    expect(sorted(value, 'desc', ['10', '9', ''])).toEqual(['10', '9', '']);
     const operators = value.filterOperators?.map(operator => operator.value);
     expect(operators?.slice(0, 4)).toEqual(['>', '>=', '<', '<=']);
     expect(operators).toContain('contains');

@@ -108,7 +108,7 @@
  * when it closes.
  */
 
-import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import Box from '@mui/material/Box';
 import GlobalStyles from '@mui/material/GlobalStyles';
@@ -141,6 +141,8 @@ import {
   signHint,
 } from 'src/sections/agent-chat/bindings';
 import { BoxWorking } from 'src/sections/agent-chat/BoxWorking';
+import { CellText } from 'src/sections/agent-chat/CellText';
+import type { DataViewProps } from 'src/sections/agent-chat/DataView';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import {
   countLines,
@@ -150,6 +152,7 @@ import {
   type FileReading,
   readFile,
 } from 'src/sections/agent-chat/fileText';
+import { lazyOrFallback } from 'src/sections/agent-chat/lazyOrFallback';
 import {
   CONFIRM_LOST_TEXT,
   describeConvertFailure,
@@ -160,7 +163,6 @@ import {
   FILE_CONVERTING_TEXT,
   FILE_LOCKED_TEXT,
 } from 'src/sections/agent-chat/messages';
-import { PreviewCell } from 'src/sections/agent-chat/PreviewCell';
 import { inStep2 } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
@@ -176,9 +178,28 @@ import {
 } from 'src/sections/agent-chat/styles';
 import { colors, fontSize, typography } from 'src/theme';
 
+/** In place of the full view when its chunk does not load (`lazyOrFallback`): a line in the card. */
+export function DataViewUnavailable({ onClose }: Pick<DataViewProps, 'onClose'>) {
+  return (
+    <Box
+      role="alert"
+      sx={{ ...bodyTextSx, fontSize: smallText, color: colors.error, mt: 0.5, display: 'flex' }}
+    >
+      <Box sx={{ flex: '1 1 auto' }}>
+        the table view did not load; reload the page to open it (your session ends with the page)
+      </Box>
+      <Box component="button" type="button" onClick={onClose} sx={actionButtonSx}>
+        .close()
+      </Box>
+    </Box>
+  );
+}
+
 // The full view's chunk holds the Data Grid: it loads when the user first opens the view (or points at the button).
 const loadDataView = () => import('src/sections/agent-chat/DataView');
-const DataView = lazy(loadDataView);
+const DataView = lazyOrFallback(loadDataView, DataViewUnavailable);
+// A preload that fails stays quiet: opening the view shows the line above.
+const preloadDataView = () => void loadDataView().catch(() => undefined);
 
 function formatKb(bytes: number): string {
   return `${(bytes / 1024).toFixed(bytes < 10 * 1024 ? 1 : 0)} KB`;
@@ -243,7 +264,7 @@ function PreviewTable({ columns, rows }: { columns: ColumnProfile[]; rows: strin
             <tr key={rowIndex}>
               {row.map((cell, cellIndex) => (
                 <td key={cellIndex}>
-                  <PreviewCell cell={cell} />
+                  <CellText cell={cell} />
                 </td>
               ))}
             </tr>
@@ -1658,8 +1679,8 @@ export function DataPanel({
                   ref={viewButtonRef}
                   onClick={() => setViewOpen(true)}
                   // The grid's chunk starts loading as the pointer or the focus reaches the button.
-                  onPointerEnter={() => void loadDataView()}
-                  onFocus={() => void loadDataView()}
+                  onPointerEnter={preloadDataView}
+                  onFocus={preloadDataView}
                   aria-haspopup="dialog"
                   aria-label={`View all ${countOf(dataset.parsed.profile.rows, 'row')}`}
                   // Flush right, also on its own line at phone width.

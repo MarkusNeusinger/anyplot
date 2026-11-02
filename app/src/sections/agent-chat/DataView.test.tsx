@@ -96,6 +96,14 @@ describe('DataView', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
+  it('opens the grid’s panels inside the dialog, where a modal keeps them readable', async () => {
+    renderView(() => Promise.resolve(CSV));
+    const dialog = await screen.findByRole('dialog', { name: /every row/ });
+    await within(dialog).findByRole('grid');
+    await userEvent.click(within(dialog).getByRole('button', { name: /filter/ }));
+    await waitFor(() => expect(dialog.querySelector('.MuiDataGrid-panel')).toBeInTheDocument());
+  });
+
   it('searches every column without touching the cells', async () => {
     renderView(() => Promise.resolve(CSV));
     const grid = await screen.findByRole('grid');

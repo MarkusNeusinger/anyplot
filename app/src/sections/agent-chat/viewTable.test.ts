@@ -4,12 +4,13 @@ import type { ColumnProfile } from 'src/lib/agent';
 import {
   columnWidth,
   compareNumericText,
+  compareTextCells,
   MAX_COLUMN_PX,
   MIN_COLUMN_PX,
   numberOf,
   rowNumberWidth,
   viewTable,
-} from 'src/sections/agent-chat/dataView';
+} from 'src/sections/agent-chat/viewTable';
 
 const column = (name: string, dtype: ColumnProfile['dtype']): ColumnProfile => ({
   name,
@@ -95,5 +96,28 @@ describe('compareNumericText', () => {
       '',
       'n/a',
     ]);
+  });
+
+  it('keeps empty cells and text after every number when it sorts down too', () => {
+    const cells = ['10', '', '9', 'n/a', '-1', '1.0', '1'];
+    expect([...cells].sort((a, b) => compareNumericText(a, b, 'desc'))).toEqual([
+      '10',
+      '9',
+      '1.0',
+      '1',
+      '-1',
+      '',
+      'n/a',
+    ]);
+  });
+});
+
+describe('compareTextCells', () => {
+  it.each([
+    ['asc', ['Bonn', 'Köln', 'Ulm', '', '']],
+    ['desc', ['Ulm', 'Köln', 'Bonn', '', '']],
+  ] as const)('keeps the empty cells last when it sorts %s', (direction, sorted) => {
+    const cells = ['Köln', '', 'Ulm', '', 'Bonn'];
+    expect([...cells].sort((a, b) => compareTextCells(a, b, direction))).toEqual(sorted);
   });
 });

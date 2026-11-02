@@ -7,7 +7,7 @@ import { visuallyHiddenSx } from 'src/sections/agent-chat/styles';
  * One cell of the data as text, its line breaks and space runs drawn as muted marks a screen reader
  * names (`previewCell.ts`): the data card's preview and the full view (`DataView.tsx`) draw cells alike.
  */
-export function PreviewCell({ cell }: { cell: string }) {
+export function CellText({ cell }: { cell: string }) {
   return (
     <>
       {previewSegments(cell).map((segment, index) => {

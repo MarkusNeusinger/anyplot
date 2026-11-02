@@ -1,10 +1,10 @@
 /**
  * The Data Grid's columns and rows of the full data view (`DataView.tsx`),
- * built from the table `dataView.ts` read. Every data cell is the file's text;
+ * built from the table `viewTable.ts` read. Every data cell is the file's text;
  * the `#` column is the row's place in the data, which the search never reads.
  * A numeric column sorts by number and adds `>`, `>=`, `<` and `<=` to the text
- * filters, all read from the cell's text. Only the view's lazy chunk imports
- * this module.
+ * filters, all read from the cell's text; the empty cells sort last either way
+ * up. Only the view's lazy chunk imports this module.
  */
 
 import Box from '@mui/material/Box';
@@ -16,13 +16,14 @@ import {
   type GridRenderCellParams,
 } from '@mui/x-data-grid';
 
+import { CellText } from 'src/sections/agent-chat/CellText';
 import {
   compareNumericText,
+  compareTextCells,
   numberOf,
   rowNumberWidth,
   type ViewTable,
-} from 'src/sections/agent-chat/dataView';
-import { PreviewCell } from 'src/sections/agent-chat/PreviewCell';
+} from 'src/sections/agent-chat/viewTable';
 
 export type ViewRow = { id: number } & Record<string, string | number>;
 
@@ -72,7 +73,7 @@ function columnLabel(name: string, kind: string | null) {
 }
 
 const renderText = (params: GridRenderCellParams<ViewRow, string>) => (
-  <PreviewCell cell={params.value ?? ''} />
+  <CellText cell={params.value ?? ''} />
 );
 
 export function gridColumns(table: ViewTable): GridColDef<ViewRow>[] {
@@ -100,10 +101,12 @@ export function gridColumns(table: ViewTable): GridColDef<ViewRow>[] {
       width: column.width,
       renderHeader: () => columnLabel(column.name, column.dtype),
       renderCell: renderText,
+      // A comparator per direction: the grid's default negates one, which would bring the gaps first.
+      getSortComparator: direction => (a, b) => compareTextCells(a, b, direction),
       ...(column.numeric && {
         align: 'right' as const,
         headerAlign: 'right' as const,
-        sortComparator: compareNumericText,
+        getSortComparator: direction => (a, b) => compareNumericText(a, b, direction),
         filterOperators: [...NUMBER_OPERATORS, ...textOperators],
       }),
     })),

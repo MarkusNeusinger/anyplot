@@ -3,19 +3,19 @@
  * version in a read-only MUI X Data Grid, the MIT edition, in a dialog that
  * fills a phone's screen.
  *
- * Loaded on demand (`React.lazy` in `DataPanel.tsx`), so the grid's code never
- * reaches the main bundle. It reads the version's canonical `data.csv` (`GET
- * .../dataset/data.csv`) with the minimal RFC 4180 reader of `csv.ts`: every
- * cell is the text the file holds, never formatted again, an empty cell stays
- * empty, and a cell's line breaks and space runs are drawn as the preview
- * draws them (`PreviewCell`). Each header names the column's dtype as the
- * profile does; the `#` column is the row's place in the data, not a column of
- * it.
+ * Loaded on demand (`lazyOrFallback` in `DataPanel.tsx`), so the grid's code
+ * never reaches the main bundle. It reads the version's canonical `data.csv`
+ * (`GET .../dataset/data.csv`) with the minimal RFC 4180 reader of `csv.ts`:
+ * every cell is the text the file holds, never formatted again, an empty cell
+ * stays empty, and a cell's line breaks and space runs are drawn as the preview
+ * draws them (`CellText`). Each header names the column's dtype as the profile
+ * does; the `#` column is the row's place in the data, not a column of it.
  *
  * Search over every column (the quick filter), sorting, the column filter and
  * hiding or resizing columns change what the view shows, never the data. A
  * numeric column sorts by number and offers `>`, `>=`, `<` and `<=` beside the
- * text filters, read from the cell's text (`dataView.ts`). The MIT grid pages
+ * text filters, read from the cell's text (`viewTable.ts`); a sort either way
+ * up keeps the empty cells last. The MIT grid pages
  * at most 100 rows and filters one column at a time (its forced props); the
  * search, the sort and the filter run over every row.
  *
@@ -47,7 +47,6 @@ import {
 import { useTheme } from 'src/hooks/useLayoutContext';
 import { AgentApiError, type DatasetProfile } from 'src/lib/agent';
 import { CsvError } from 'src/sections/agent-chat/csv';
-import { type ViewTable, viewTable } from 'src/sections/agent-chat/dataView';
 import { gridColumns, gridRows } from 'src/sections/agent-chat/dataViewGrid';
 import { dataViewTheme } from 'src/sections/agent-chat/dataViewTheme';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
@@ -59,6 +58,7 @@ import {
   labelSx,
   smallText,
 } from 'src/sections/agent-chat/styles';
+import { type ViewTable, viewTable } from 'src/sections/agent-chat/viewTable';
 import { colors, fontSize } from 'src/theme';
 
 export interface DataViewProps {
@@ -217,6 +217,19 @@ export default function DataView({ profile, version, load, onClose, onShown }: D
   const rowCount = table?.rows.length ?? profile.rows;
   const columnCount = table?.columns.length ?? profile.columns.length;
 
+  // The grid's panels and menus mount inside the dialog. In the body they sit beside the modal, whose
+  // manager hides them from screen readers for good once a select inside closes (MUI `syncAriaHidden`).
+  const gridHome = useRef<HTMLDivElement>(null);
+  const slotProps = useMemo(
+    () => ({
+      basePopper: { material: { container: () => gridHome.current } },
+      // At phone width the filter's column, operator and value wrap instead of
+      // scrolling the column choice out of the panel.
+      ...(phone && { filterPanel: { sx: { '& .MuiDataGrid-filterForm': { flexWrap: 'wrap' } } } }),
+    }),
+    [phone]
+  );
+
   return (
     <ThemeProvider theme={theme}>
       <Dialog
@@ -282,6 +295,7 @@ export default function DataView({ profile, version, load, onClose, onShown }: D
         </Box>
 
         <Box
+          ref={gridHome}
           sx={{
             flex: '1 1 auto',
             minHeight: 0,
@@ -289,6 +303,8 @@ export default function DataView({ profile, version, load, onClose, onShown }: D
             flexDirection: 'column',
             px: { xs: 0, sm: 2 },
             pb: { xs: 0, sm: 2 },
+            // The dialog clips what it holds: on a short screen a panel scrolls within the room below the toolbar.
+            '& .MuiDataGrid-panel .MuiDataGrid-paper': { maxHeight: 'calc(100dvh - 12rem)' },
           }}
         >
           {table ? (
@@ -300,15 +316,8 @@ export default function DataView({ profile, version, load, onClose, onShown }: D
               columnHeaderHeight={52}
               showToolbar
               slots={{ toolbar: DataViewToolbar }}
-              // At phone width the filter's column, operator and value wrap instead of
-              // scrolling the column choice out of the panel.
-              slotProps={
-                phone
-                  ? { filterPanel: { sx: { '& .MuiDataGrid-filterForm': { flexWrap: 'wrap' } } } }
-                  : undefined
-              }
+              slotProps={slotProps}
               rowSelection={false}
-              disableRowSelectionOnClick
               pageSizeOptions={PAGE_SIZES}
               initialState={{ pagination: { paginationModel: { pageSize: 100 } } }}
               localeText={LOCALE_TEXT}
@@ -320,6 +329,15 @@ export default function DataView({ profile, version, load, onClose, onShown }: D
                 borderRightWidth: phone ? 0 : 1,
                 '& .data-view-row': { color: 'var(--ink-muted)' },
                 '& .MuiDataGrid-columnHeaderTitleContainerContent': { minWidth: 0 },
+                // The grid drops the page size below `sm`; the footer has room for it without its label.
+                ...(phone && {
+                  '& .MuiTablePagination-root .MuiTablePagination-input': {
+                    display: 'inline-flex',
+                    ml: 0,
+                    mr: 1,
+                  },
+                  '& .MuiTablePagination-actions': { ml: 1 },
+                }),
               }}
             />
           ) : current?.error ? (
