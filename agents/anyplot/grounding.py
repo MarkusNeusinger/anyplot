@@ -227,6 +227,7 @@ PROBE_ERRORS = frozenset(
         "BoundsError",
         "UndefVarError",
         "ArgumentError",
+        "InvalidProbe",  # the probe file exists but is empty or unreadable (`wire.clean_probe`, `png.read_probe`)
     }
 )
 """The exception classes a failed probe names (`{"error": <class>}`: matplotlib's probe, a text probe, Julia's types

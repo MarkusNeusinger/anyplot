@@ -91,6 +91,18 @@ uv run pytest tests/unit tests/integration -n 4 --dist worksteal --durations=25 
   --cov=core --cov=api --cov=automation --cov=agentic/workflows/modules --cov=agents
 ```
 
+That job installs the eight `lib-*` extras the renderer image installs and
+sets `ANYPLOT_REQUIRE_LIBRARIES=1`. A test that needs a plotting library
+imports it through `tests/libraries.py`: on your machine it skips when the
+library is missing, and in CI it fails. To run those tests locally, install
+the same extras:
+
+```bash
+uv sync --extra test --extra agents --extra lib-matplotlib --extra lib-seaborn \
+  --extra lib-plotnine --extra lib-altair --extra lib-pygal --extra lib-letsplot \
+  --extra lib-plotly --extra lib-bokeh
+```
+
 The e2e tests run in a separate job, "Run E2E Tests", after it: that job is
 the only one that logs in to GCP and reaches the Cloud SQL `test` database,
 and it skips PRs by Dependabot and Google Jules, whose code nobody has read

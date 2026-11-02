@@ -166,10 +166,10 @@ Claude runs with adaptive thinking on the root (`AGENT_ROOT_THINKING_BUDGET`, 1,
 
 ### Before you begin
 
-1. Install the dependencies, including the six plotting libraries the renderer uses. The harness tests render seaborn, plotnine, altair, pygal and lets-plot in process and skip each one without its extra. pygal's PNG export also needs the system's cairo library (`libcairo2` on Debian and Ubuntu, `cairo` in Homebrew).
+1. Install the dependencies, including the eight Python plotting libraries the renderer uses. The harness tests render seaborn, plotnine, altair, pygal and lets-plot in process, and the validator tests walk every module the validator admits, plotly's and bokeh's included. Each such test skips without its extra on your machine and fails without it in CI (`tests/libraries.py`). pygal's PNG export also needs the system's cairo library (`libcairo2` on Debian and Ubuntu, `cairo` in Homebrew).
 
    ```bash
-   uv sync --extra agents --extra test --extra lib-matplotlib --extra lib-seaborn --extra lib-plotnine --extra lib-altair --extra lib-pygal --extra lib-letsplot
+   uv sync --extra agents --extra test --extra lib-matplotlib --extra lib-seaborn --extra lib-plotnine --extra lib-altair --extra lib-pygal --extra lib-letsplot --extra lib-plotly --extra lib-bokeh
    ```
 
    Never install `openai-agents` into this environment: it ships a top-level `agents` module that shadows this package.

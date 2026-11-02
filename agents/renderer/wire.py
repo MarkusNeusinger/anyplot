@@ -48,6 +48,9 @@ MAX_PNG_BYTES = 10 * 1024 * 1024
 MAX_PROBE_BYTES = 256 * 1024
 MAX_PROBE_DEPTH = 16
 """Deepest nesting a probe may have; the harness writes three levels."""
+INVALID_PROBE: dict[str, Any] = {"error": "InvalidProbe"}
+"""The probe of a run whose probe file exists but is empty or unreadable (`clean_probe`, the local backend's
+`png.read_probe`): a failed probe the `pipeline_render` line logs (`grounding.PROBE_ERRORS`), not an absent one."""
 MAX_PROBE_INT = 2**53
 """Largest integer magnitude a probe may hold: what a JSON number keeps exactly as a float."""
 MAX_STDERR_CHARS = 2_000
@@ -131,16 +134,21 @@ def clean_probe(raw: bytes | None) -> dict[str, Any] | None:
     `MAX_PROBE_DEPTH`, or holds a number that a float cannot carry exactly is
     dropped whole, because serialising it would fail the response (a nesting of
     256 levels) or the agents side's parse (about 200 levels, or an integer too
-    large for a float).
+    large for a float). A probe that exists but is empty, does not parse or is
+    dropped whole answers `INVALID_PROBE`, so the pipeline logs it as
+    `probe_error` (the empty probes of pygal, altair and lets-plot after #12503
+    went unseen as an absent probe); only a missing file (`raw` None) is None.
     """
-    if not raw:
+    if raw is None:
         return None
+    if not raw:
+        return dict(INVALID_PROBE)
     try:
         loaded = json.loads(raw, parse_constant=lambda _: None)
     except ValueError, RecursionError:
-        return None
+        return dict(INVALID_PROBE)
     if not isinstance(loaded, dict) or not _probe_value_ok(loaded, 1):
-        return None
+        return dict(INVALID_PROBE)
     return loaded
 
 

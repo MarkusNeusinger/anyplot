@@ -109,10 +109,12 @@ class TestCleanProbe:
             "tick_overlaps": 0,
         }
 
+    def test_a_missing_probe_is_none(self) -> None:
+        assert wire.clean_probe(None) is None
+
     @pytest.mark.parametrize(
         "raw",
         [
-            None,
             b"",
             b"[1, 2]",
             b"not json",
@@ -123,8 +125,10 @@ class TestCleanProbe:
             b'{"big": 1e999}',
         ],
     )
-    def test_anything_the_wire_cannot_carry_is_dropped(self, raw: bytes | None) -> None:
-        assert wire.clean_probe(raw) is None
+    def test_anything_the_wire_cannot_carry_is_an_invalid_probe(self, raw: bytes) -> None:
+        """An existing probe that is empty, does not parse or cannot cross the wire is a failed probe the pipeline
+        logs (`probe_error`), not an absent one: the empty text probes after #12503 went unseen."""
+        assert wire.clean_probe(raw) == {"error": "InvalidProbe"} == wire.INVALID_PROBE
 
     def test_a_missing_glyphs_object_passes_clean_probe(self) -> None:
         """The harness's G10 field crosses the wire unchanged."""
