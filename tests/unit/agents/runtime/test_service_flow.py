@@ -2797,7 +2797,8 @@ async def test_a_list_of_values_gets_its_row_numbers_and_undo_takes_them_back(
 
     name, done = parse_sse(turn.text)[-1]
     assert name == "done" and done["dataset"]["version"] == 2
-    assert done["dataset"]["changes"] == ["new column index: the rows numbered 1 to 6"]
+    assert done["dataset"]["changes"] == ["new first column index: the rows numbered 1 to 6"]
+    assert [column["name"] for column in done["dataset"]["profile"]["columns"]] == ["index", "value"]
     assert done["bindings"] == [{"role": "x", "column": "index"}, {"role": "y", "column": "value"}]
     answered = json.dumps(fake.calls[-1]["messages"])
     assert "x: index" in answered and "y: value" in answered  # the reply names the bindings now in force

@@ -1,7 +1,8 @@
 /**
  * The Data Grid's columns and rows of the full data view (`DataView.tsx`),
  * built from the table `viewTable.ts` read. Every data cell is the file's text;
- * the `#` column is the row's place in the data, which the search never reads.
+ * the `#` column is the row's place in the data, which the search never reads,
+ * unless the data has a column that numbers its rows, which then leads instead.
  * A numeric column sorts by number and adds `>`, `>=`, `<` and `<=` to the text
  * filters, all read from the cell's text; the empty cells sort last either way
  * up. Only the view's lazy chunk imports this module.
@@ -78,6 +79,30 @@ const renderText = (params: GridRenderCellParams<ViewRow, string>) => (
 
 export function gridColumns(table: ViewTable): GridColDef<ViewRow>[] {
   const textOperators = getGridStringOperators();
+  const columns = table.columns.map((column, index): GridColDef<ViewRow> => ({
+    field: fieldOf(index),
+    headerName: column.name,
+    description: column.dtype ? `${column.name} · ${column.dtype}` : column.name,
+    width: column.width,
+    renderHeader: () => columnLabel(column.name, column.dtype),
+    renderCell: renderText,
+    // A comparator per direction: the grid's default negates one, which would bring the gaps first.
+    getSortComparator: direction => (a, b) => compareTextCells(a, b, direction),
+    ...(column.numeric && {
+      align: 'right' as const,
+      headerAlign: 'right' as const,
+      getSortComparator: direction => (a, b) => compareNumericText(a, b, direction),
+      filterOperators: [...NUMBER_OPERATORS, ...textOperators],
+    }),
+    // The data's own row numbers label the rows in place of the counter (owner, 2026-11-02): leftmost,
+    // drawn like the counter, and data like any column, so the search, the sort and the filter read them.
+    ...(index === table.rowLabel && {
+      description: `${column.name} · ${column.dtype} · numbers the rows`,
+      cellClassName: 'data-view-row',
+    }),
+  }));
+  const label = table.rowLabel;
+  if (label !== null) return [columns[label], ...columns.filter((_, index) => index !== label)];
   return [
     {
       field: ROW_FIELD,
@@ -94,22 +119,7 @@ export function gridColumns(table: ViewTable): GridColDef<ViewRow>[] {
       cellClassName: 'data-view-row',
       renderHeader: () => columnLabel('#', 'row'),
     },
-    ...table.columns.map((column, index): GridColDef<ViewRow> => ({
-      field: fieldOf(index),
-      headerName: column.name,
-      description: column.dtype ? `${column.name} · ${column.dtype}` : column.name,
-      width: column.width,
-      renderHeader: () => columnLabel(column.name, column.dtype),
-      renderCell: renderText,
-      // A comparator per direction: the grid's default negates one, which would bring the gaps first.
-      getSortComparator: direction => (a, b) => compareTextCells(a, b, direction),
-      ...(column.numeric && {
-        align: 'right' as const,
-        headerAlign: 'right' as const,
-        getSortComparator: direction => (a, b) => compareNumericText(a, b, direction),
-        filterOperators: [...NUMBER_OPERATORS, ...textOperators],
-      }),
-    })),
+    ...columns,
   ];
 }
 
