@@ -34,6 +34,9 @@ export const ERROR_TEXT: Record<string, string> = {
   copy_unavailable:
     'this server cannot copy changed or computed data yet; paste or open the table, or try again after the deploy',
   rate_limited: 'the daily limit is reached; try again tomorrow',
+  // The public lane's cap on live sessions per network (`AGENT_IP_MAX_SESSIONS`).
+  session_limit:
+    'too many chats are open from your network; close another window, or try again within the hour',
   unreachable: 'no answer from the server: the connection dropped, or an admin sign-in expired',
   network: 'the server did not answer; check your connection',
 };

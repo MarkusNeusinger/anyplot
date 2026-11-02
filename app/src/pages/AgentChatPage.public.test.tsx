@@ -150,5 +150,28 @@ describe('PublicAgentChatPage', () => {
     expect(await screen.findByText(/the assistant is closed right now/)).toBeInTheDocument();
     expect(calls.every(call => call.url.pathname.endsWith('/agent/lane'))).toBe(true);
     expect(screen.queryByTestId('experimental-notice')).not.toBeInTheDocument();
+    // A tool on a catalogue pair, never a page to index: also while the lane is closed.
+    expect(document.querySelector('meta[name="robots"]')).toHaveAttribute(
+      'content',
+      'noindex, nofollow'
+    );
+  });
+
+  it('says why a network cannot open one more session', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string, init: RequestInit = {}) => {
+        const url = new URL(input);
+        if (url.pathname.endsWith('/agent/lane')) return json(200, { open: true });
+        if (url.pathname.endsWith('/agent/sessions') && init.method === 'POST') {
+          return json(429, { detail: 'session_limit', ref: 'r-s' });
+        }
+        return json(200, { libraries: ['matplotlib'], enabled: true });
+      })
+    );
+    renderPage();
+    expect(
+      await screen.findByText(/too many chats are open from your network/)
+    ).toBeInTheDocument();
   });
 });
