@@ -140,6 +140,69 @@ class TestReadMemory:
         assert next_seq({}, []) == 1
 
 
+class TestForgetTool:
+    """`forget` refuses before it writes: no session, a run in flight, a malformed or unknown id."""
+
+    @staticmethod
+    def context(state: dict[str, Any], invocation_id: str) -> Any:
+        from types import SimpleNamespace
+
+        return SimpleNamespace(state=state, invocation_id=invocation_id, session=SimpleNamespace(id="s1"))
+
+    @staticmethod
+    def opened(**extra: Any) -> dict[str, Any]:
+        from agents.anyplot.dev_fixture import snapshot_from_repo
+        from agents.anyplot.session_state import initial_state
+
+        state = initial_state(
+            spec_id="scatter-basic",
+            library="matplotlib",
+            locale="en",
+            snapshot=snapshot_from_repo("scatter-basic", "matplotlib"),
+            normalised="x = 1",
+            readiness={},
+        )
+        return {**state, **extra}
+
+    async def test_each_refusal_leaves_the_memory_as_it_was(self) -> None:
+        from agents.anyplot.plugins.ledger import ledger_for
+        from agents.anyplot.tools.session import forget as forget_tool
+
+        held = memory_delta(entries(LINE, STARS), 3)
+        assert await forget_tool("m1", self.context({}, "inv-forget-1")) == {
+            "status": "error",
+            "code": "session_not_open",
+        }
+        state = self.opened(**held)
+        for entry_id, code in (("title", "invalid_arguments"), ("m9", "unknown_entry")):
+            assert await forget_tool(entry_id, self.context(state, "inv-forget-2")) == {"status": "error", "code": code}
+        ledger_for("inv-forget-3").pipeline_active = True
+        try:
+            refused = await forget_tool("m1", self.context(state, "inv-forget-3"))
+        finally:
+            ledger_for("inv-forget-3").pipeline_active = False
+        assert refused == {"status": "error", "code": "run_active"}
+        assert state[MEMORY] == held[MEMORY]
+
+        assert await forget_tool("m1", self.context(state, "inv-forget-4")) == {"status": "ok", "entries": 1}
+        assert [entry.id for entry in read_memory(state)] == ["m2"]
+
+
+def test_stored_values_that_fail_their_checks_are_dropped() -> None:
+    from agents.anyplot.pipeline import merged_remember, take_carried_texts
+
+    assert merged_remember([{"kind": "title"}, LINE.model_dump(), "x"], [STARS]) == [LINE, STARS]
+    assert merged_remember("not a list", []) == []
+    carry = Carry(source=MATPLOTLIB, target=SEABORN)
+    assert take_carried_texts(PipelineArgs(change_request="c"), carry) == PipelineArgs(change_request="c")
+    assert read_carry({CARRY: "text"}, SEABORN.pair()) is None
+    assert read_carry({CARRY: {"source": {"spec_id": "x"}}}, SEABORN.pair()) is None
+    with pytest.raises(ValueError):
+        Target(spec_id="scatter-basic", library="excel")
+    with pytest.raises(ValueError):
+        RememberItem(kind="title", text=" \n ")  # nothing left once the whitespace is collapsed
+
+
 def test_the_owner_examples_become_decisions_and_texts() -> None:
     held = entries(*OWNER_EXAMPLES)
 
