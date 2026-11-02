@@ -12,134 +12,123 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 69
 review:
   strengths:
-  - 'Perfect spec compliance: correct trapezoidal funnel shape with width proportional
-    to value, stage labels, value and percentage annotations, and distinct per-stage
-    colors'
-  - 'Excellent data quality: realistic sales funnel (Awareness → Purchase) with realistic
-    ratios (1000/600/400/200/100) and neutral, professional context'
-  - 'Okabe-Ito palette correctly applied in canonical order (green, orange, blue,
-    pink, golden) with first stage as #009E73'
-  - 'Appropriate canvas use: funnel fills central area cleanly, axes/grid hidden as
-    expected for a funnel chart, white segment borders provide clear visual separation'
-  - 'Explicit font sizing throughout: title 36pt, stage labels 28pt, value labels
-    22pt, legend 24pt — all clearly readable at 4800×2700'
+  - Correct single funnel with stage name and value+percentage on every segment, widths
+    proportional to the first stage
+  - 'First stage in brand green #009E73 and correct theme backgrounds in both renders'
+  - Neutral, realistic sales funnel with uneven drops
   weaknesses:
-  - 'Dark mode chrome: legend label_text_color may not be theme-adapted — verify p.legend.label_text_color
-    is set to INK_SOFT (#B8B7B0) in dark mode, not left as default black; VQ-07 partial
-    compliance'
-  - 'No HoverTool: Bokeh''s most distinctive feature (interactive hover tooltips)
-    is absent; adding a HoverTool showing stage name, count, and drop-off % from previous
-    stage would elevate LM-02 significantly'
-  - 'Design storytelling gap: the biggest conversion drop-offs (Interest→Consideration
-    40%, Intent→Purchase 50%) are not visually emphasized; consider slight color desaturation
-    on later stages or annotation callouts at key drop-off boundaries'
-  - 'ColumnDataSource not used: Bokeh''s idiomatic pattern (ColumnDataSource + renderers)
-    is bypassed in favor of direct patch() calls in a loop; while functional, using
-    a CDS would improve LM-01 and enable HoverTool binding'
+  - 'VQ-01 (both): value labels at 22pt and legend text at 24pt on the 4800 px canvas
+    render at about 10 px in a 2000 px view and vanish in the thumbnail → bokeh-prompt
+    sizes on a 3200 px canvas (about 34pt values, 50pt title). Likely cause: text_font_size=''22pt''
+    / label_text_font_size=''24pt''.'
+  - 'VQ-04 (both): white stage and value labels on the golden and pink segments have
+    low contrast (about 2:1) → ink-colored text or labels beside the segment. Likely
+    cause: text_color=''white'' for every non-yellow fill.'
+  - 'VQ-05 (both): canvas is 4800x2700, not the canonical 3200x1800 → width=3200,
+    height=1800 (-1600 x -900). Likely cause: figure(width=4800, height=2700).'
+  - 'VQ-07 (both): stages 2-5 use Okabe-Ito hexes (#D55E00, #0072B2, #CC79A7, #E69F00)
+    instead of Imprint positions 2-5 → IMPRINT_PALETTE[i]. Likely cause: a hard-coded
+    colors list.'
+  - 'SC-04 (both): title ''funnel-basic · bokeh · anyplot.ai'' omits the language
+    → ''funnel-basic · python · bokeh · anyplot.ai''. Likely cause: the title string.'
+  - 'CQ-01 (code): no column-0 # Data / # Plot block and no column constants for the
+    stage and value roles → one Data block binding df and STAGE/VALUE constants with
+    # role comments. Likely cause: lists typed inline.'
+  - 'CQ-05 (code): uses bokeh.io.export_png and saves bare plot.png / plot.html →
+    output_file(f''plot-{THEME}.html'') plus the Selenium screenshot to plot-{THEME}.png.
+    Likely cause: export_png(p, filename=''plot.png'').'
+  - 'Suggestion: a HoverTool on the segments would add bokeh-native value to the HTML
+    view.'
+  - 'Suggestion: the legend repeats the in-segment labels and could be dropped.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1 range) — correct theme surface
-      Chrome: Title "funnel-basic · bokeh · anyplot.ai" in dark ink at top, clearly readable. No axes or grid (appropriate for funnel). Legend on right side with colored swatches and stage labels; legend text dark on light elevated background — readable.
-      Data: Five trapezoidal funnel segments from top to bottom: Awareness (teal #009E73, widest), Interest (orange #D55E00), Consideration (blue #0072B2), Intent (pink #CC79A7), Purchase (golden #E69F00, narrowest). Widths are proportional to values. Each segment has a bold white stage name and a smaller value+percentage label centered within it. White borders between segments provide clean separation.
-      Legibility verdict: PASS — all text clearly readable, explicit font sizes visible
+      Background: Warm off-white #FAF8F1, correct.
+      Chrome: Small bold title "funnel-basic · bokeh · anyplot.ai" at the very top edge; no axes or grid. A boxed legend at the far right edge lists "Awareness: 1,000" … "Purchase: 100" in small text.
+      Data: Five centered trapezoids narrowing top to bottom in Okabe-Ito colors: green #009E73, orange, blue, pink, golden. Each carries a bold white stage name and a small white value label "1,000 (100%)" … "100 (10%)"; white text on the pink and golden fills has weak contrast.
+      Legibility verdict: PASS with weak spots (value labels tiny, white on golden/pink low contrast)
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17 range) — correct dark surface
-      Chrome: Title "funnel-basic · bokeh · anyplot.ai" appears in a light/cream color at the top — readable against dark background. Legend on right side with elevated slightly lighter background; legend text appears small and the color adaptation is uncertain (may be dark-on-dark for legend items). No axes/grid, which remain correctly absent.
-      Data: Identical Okabe-Ito colors as light render (teal, orange, blue, pink, golden) — data colors correctly unchanged between themes. White in-segment labels remain readable on colored segment backgrounds.
-      Legibility verdict: PASS for title and in-segment labels; UNCERTAIN for legend text color — possible partial dark-on-dark issue if legend.label_text_color was not set to INK_SOFT
+      Background: Warm near-black #1A1A17, correct.
+      Chrome: Title in light ink, legend on a slightly elevated dark box with light-grey text, readable; a faint grey frame surrounds the plot area.
+      Data: Same segment colors as the light render, same white in-segment labels.
+      Legibility verdict: PASS with the same weak spots
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 21
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 5
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (title 36pt, stage labels 28pt, value
-          labels 22pt, legend 24pt). Readable in both renders. -1 for potential legend
-          text color uncertainty in dark mode.
+        passed: false
+        comment: Value labels at 22pt and legend at 24pt on a 4800 px canvas are tiny
+          and blur at thumbnail size (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text in either render. Labels centered in segments,
-          well-spaced.
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All five funnel segments clearly visible and well-proportioned. White
-          borders improve segment definition.
+        comment: All segments and legend swatches visible
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Okabe-Ito palette is colorblind-safe. Good luminance contrast on
-          all segments.
+        passed: false
+        comment: White labels on the golden and pink fills fall well below comfortable
+          contrast (defect line)
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 0
         max: 4
-        passed: true
-        comment: Funnel fills central area well. Some whitespace in corners outside
-          the trapezoid shape. Legend offset slightly unbalances the composition.
+        passed: false
+        comment: 4800x2700 canvas, not a canonical size (defect line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive and correct format. No axis labels appropriate
-          for funnel chart (axes are hidden).
+        comment: N/A for axes; title present
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Okabe-Ito colors correct (first stage = #009E73, order follows canonical
-          sequence). Backgrounds correct (#FAF8F1 light, #1A1A17 dark). Partial compliance:
-          legend text color adaptation in dark mode uncertain — may not have label_text_color
-          set to INK_SOFT.'
+        comment: 'First stage #009E73 and backgrounds correct, but stages 2-5 use
+          Okabe-Ito hexes outside Imprint (defect line)'
     design_excellence:
-      score: 13
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Professional appearance with intentional per-stage Okabe-Ito colors,
-          bold stage labels, clean funnel shape. Clearly above generic defaults. Not
-          quite publication-ready — missing additional polish like drop-off annotation
-          or visual emphasis.
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Axes and grid correctly hidden, white segment borders provide clean
-          visual separation, good whitespace. Minor: outline_line_color=None removes
-          border cleanly. Some refinement visible.'
+        passed: false
+        comment: Axes and grid hidden as required, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Funnel shape inherently communicates progressive drop-off. Percentage
-          labels (100%, 60%, 40%, 20%, 10%) provide immediate context. Visual hierarchy
-          from large-to-small guides the eye. Missing: explicit emphasis on largest
-          conversion gaps (Interest-to-Consideration, Intent-to-Purchase drops).'
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -147,30 +136,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct funnel chart with trapezoidal segments narrowing from top
-          (largest) to bottom (smallest).
+        comment: Single trapezoid funnel
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: sequential stages, distinct colors per
-          stage, value labels, percentage labels, widths proportional to value relative
-          to first stage.'
+        comment: Distinct colors, proportional widths, stage name and value+percentage
+          on every segment
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Stages ordered largest to smallest (top to bottom). Widths correctly
-          proportional to value/max_value.
+        comment: Ordered largest to smallest, widths value / first value
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format 'funnel-basic · bokeh · anyplot.ai' correct. Legend
-          shows all 5 stages with values.
+        passed: false
+        comment: Title omits the language segment (defect line)
     data_quality:
       score: 15
       max: 15
@@ -180,83 +165,73 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all funnel aspects: 5 stages with progressive decrease, proportional
-          widths, full coverage of the conversion funnel concept.'
+        comment: Five stages with uneven drops
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sales funnel with realistic marketing stages (Awareness, Interest,
-          Consideration, Intent, Purchase). Professional, neutral, real-world scenario.
+        comment: Neutral sales funnel
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 1000/600/400/200/100 represent realistic funnel ratios (10%
-          conversion). Plausible for a marketing/sales context.
+        comment: Checked 1,000/600/400/200/100 and 100/60/40/20/10 % computed from
+          value / first value
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: 'Linear script: imports → data → calculations → figure → render →
-          save. No functions or classes.'
+        passed: false
+        comment: 'No # Data / # Plot block and no column constants (defect line)'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data — no randomness needed.
+        comment: Deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only bokeh modules that are actually used: export_png, output_file,
-          save, Label, Legend, LegendItem, figure.'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual patch geometry is necessary for custom funnel shape in Bokeh.
-          Appropriate complexity. Clean iteration over stages.
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Both plot-light.png and plot-dark.png generated successfully. HTML
-          outputs also produced.
+        passed: false
+        comment: export_png to bare plot.png / plot.html (defect line)
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses Bokeh's patch() for polygon rendering, Label model for text
-          overlays, LegendItem for manual legend construction — idiomatic Bokeh patterns.
-          However, ColumnDataSource is not used, which is Bokeh's recommended data
-          binding pattern.
+        comment: patch + Label + LegendItem, no ColumnDataSource
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Uses Label and LegendItem models (Bokeh-specific), but does not leverage
-          HoverTool — Bokeh's most distinctive interactive feature. A HoverTool showing
-          stage name, count, and drop-off percentage would make this implementation
-          distinctly Bokeh vs. a static library.
-  verdict: REJECTED
+        comment: Nothing beyond what the library prompt mandates
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-3b9198ae16
 impl_tags:
   dependencies: []
   techniques:

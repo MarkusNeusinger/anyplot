@@ -2,51 +2,55 @@ library: plotly
 language: python
 specification_id: funnel-basic
 created: '2025-12-23T13:02:30Z'
-updated: '2026-04-26T05:34:02Z'
-generated_by: claude-opus
-workflow_run: 24949051351
+updated: '2026-11-02T02:35:01Z'
+generated_by: claude-sonnet
+workflow_run: 41377962814
 issue: 789
-python_version: 3.14.4
-library_version: 6.7.0
+language_version: 3.14.9
+library_version: 7.1.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 82
 review:
   strengths:
-  - 'Perfect spec compliance: all required funnel features present (distinct colors,
-    value+percent labels, 5 ordered stages)'
-  - Both themes render flawlessly — theme tokens correctly propagate to all chrome
-    elements; no dark-on-dark or light-on-light failures
-  - Clean, idiomatic Plotly code using go.Funnel with proper connector and textinfo
-    configuration
-  - Dual label approach (value + percent initial) immediately communicates both scale
-    and conversion rate
+  - 'Native go.Funnel with textinfo ''value+percent initial'': the trace computes
+    conversion rates itself and centers segments with widths proportional to the first
+    stage'
+  - Theme tokens threaded through title, axis titles, ticks, grid and connector lines;
+    both renders read cleanly with identical Imprint data colors
+  - 'Adaptable structure: column constants with role comments and a Data block that
+    ends in one tidy df, which the plot reads'
+  - Canonical 3200x1800 canvas via write_image(width=800, height=450, scale=4) with
+    autosize=False and pinned margins
   weaknesses:
-  - Design lacks a focal point or visual emphasis — the biggest conversion drop (Awareness
-    1000 → Interest 600, a 40% loss) is not highlighted; consider using opacity, annotation,
-    or color intensity to guide the viewer's eye
-  - No visual refinement beyond connector styling — consider adding a subtle subtitle
-    with overall conversion rate, or using textfont size variation to reinforce the
-    hierarchy
-  - LM-02 could push further into Plotly-native capabilities (custom hover template,
-    domain sizing, or use of funnelmode)
+  - 'VQ-04 (both): the light #FAF8F1 value/percent text reaches only ~2.7:1 contrast
+    on the #C475FD Interest fill and ~3.1:1 on the #BD8233 Intent fill → at least
+    4.5:1, e.g. INK-dark text on the two light fills (+1.8 to +1.4 contrast). Likely
+    cause: textfont color fixed to "#FAF8F1" for every segment.'
+  - 'VQ-07 (both): the connector trapezoids keep Plotly''s computed fill, a mid-gray
+    #7D7C78 in the light render and #0D0D0B in the dark one, neither a theme token;
+    in light the slabs read heavier than the grid and compete with the stage colors
+    → a fill from the theme tokens (e.g. GRID or a muted page tint). Likely cause:
+    connector dict sets only line, no fillcolor.'
+  - 'Suggestion: the mandated title at 16 px fills only ~35 % of the width; about
+    20 px would give it more presence.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — confirmed, not pure white
-      Chrome: Title "funnel-basic · plotly · anyplot.ai" in dark ink (#1A1A17), centered. Y-axis label "Stage" and stage tick labels (Awareness, Interest, Consideration, Intent, Purchase) all in dark ink — clearly readable.
-      Data: 5 funnel segments in Okabe-Ito order: #009E73 (Awareness/1000/100%), #D55E00 (Interest/600/60%), #0072B2 (Consideration/400/40%), #CC79A7 (Intent/200/20%), #E69F00 (Purchase/100/10%). Inside text (#FAF8F1) on colored segments is clearly legible. Dotted gray connectors between stages.
-      Legibility verdict: PASS
+      Background: warm off-white #FAF8F1 (sampled 250,248,241), not pure white.
+      Chrome: title 'funnel-basic · python · plotly · anyplot.ai' centered in dark INK; y-axis title 'Stage' and stage tick labels (Awareness, Interest, Consideration, Intent, Purchase) in dark ink; subtle horizontal grid; value axis hidden by go.Funnel. All readable.
+      Data: five centered segments 1000/600/400/200/100 in Imprint #009E73, #C475FD, #4467A3, #BD8233, #AE3030, each with light value + percent text (100/60/40/20/10%); mid-gray connector trapezoids with dotted edges between stages.
+      Legibility verdict: PASS (segment text on the lavender and amber fills at reduced contrast, still readable)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — confirmed, not pure black
-      Chrome: Title, Y-axis label, and stage tick labels all rendered in light ink (#F0EFE8/#B8B7B0) — clearly readable on dark surface. No dark-on-dark failures detected.
-      Data: All 5 segment colors are identical to the light render (Okabe-Ito positions 1–5 unchanged). Inside text remains #FAF8F1 (light) on colored segments — readable. Connectors appear as lighter dashed lines on dark background.
+      Background: warm near-black #1A1A17 (sampled 26,26,23), not pure black.
+      Chrome: title, 'Stage' and tick labels in light ink, grid subtle; no dark-on-dark text.
+      Data: segment colors identical to the light render; connectors now near-black fills with light dotted edges.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,49 +58,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28, axis=22, ticks=18, segment
-          text=22. All readable in both themes.'
+        comment: All sizes set (title 16, axis title 12, ticks 10, segment text 12
+          at 800x450 x4); every label readable in both themes and proportionate.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render.
+        comment: No text collides with text or marks in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 5 segments clearly visible with distinct Okabe-Ito colors; connectors
-          visible.
+        comment: Five segments and dotted connector edges clearly visible in both
+          themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Okabe-Ito is CVD-safe; white text on colored segments has strong
-          contrast.
+        passed: false
+        comment: 'Light #FAF8F1 segment text sits at ~2.7:1 on the #C475FD Interest
+          fill and ~3.1:1 on the #BD8233 Intent fill (defect line).'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Funnel fills the canvas well; margins appropriate for chart type.
+        comment: 3200x1800 canvas; funnel fills the plot area with balanced margins;
+          title fits.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format; Y-axis 'Stage', X-axis 'Count'.
+        comment: Y-axis 'Stage' is descriptive; the value axis is hidden by go.Funnel
+          and every value is printed on its segment, so no unit is missing.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First segment #009E73; Okabe-Ito order followed; backgrounds #FAF8F1/#1A1A17;
-          chrome fully theme-adaptive.'
+        passed: false
+        comment: 'Imprint positions 1-5 in canonical order, first #009E73, identical
+          across themes, backgrounds #FAF8F1/#1A1A17; connector fill is Plotly''s
+          computed gray, not a theme token (defect line).'
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -104,22 +111,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: 'Well-configured library default: correct colors and connector styling,
-          but no editorial emphasis or intentional hierarchy.'
+        comment: The style-guide baseline with library default typography; nothing
+          decided beyond it.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Connector dashed styling and explicit font setup show care, but no
-          deeper polish or emphasis on key transitions.
+        comment: Spine and grid rules met; thin page-colored segment outlines are
+          the only refinement, not enough to raise the default.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Dual labels communicate conversion clearly; narrowing shape tells
-          the story; but no visual emphasis on the biggest drop-off.
+        comment: Data displayed in process order; no hierarchy chosen beyond what
+          the spec asks.
     spec_compliance:
       score: 15
       max: 15
@@ -129,27 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses go.Funnel, the correct native Plotly funnel trace.
+        comment: Native go.Funnel, one funnel, no added layers or encodings.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct per-stage colors, value+percent labels inside segments,
-          stages ordered largest-to-smallest, 5 stages.
+        comment: 'C1 ordered and centered with widths proportional (Purchase bar ~10%
+          of Awareness), C2 one Imprint color per stage with names beside, C3 value
+          + percent on every segment, C4 single funnel: all met.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=values, y=stages; full data visible.
+        comment: y = stage, x = value; all five stages shown at their values.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'funnel-basic · plotly · anyplot.ai' exact format; no legend
-          (Y-axis labels serve as legend).
+        comment: Title 'funnel-basic · python · plotly · anyplot.ai' in the required
+          format; no legend needed (stage names on the axis), N/A.
     data_quality:
       score: 15
       max: 15
@@ -159,22 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all funnel aspects: progressive narrowing, absolute counts
-          and conversion percentages.'
+        comment: Shows the progressive narrowing with uneven drops (40%, 33%, 50%,
+          50%) and both counts and conversion rates.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic sales funnel (Awareness→Purchase) is a realistic, neutral
+        comment: Classic marketing/sales funnel Awareness -> Purchase; real, neutral
           business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1000→600→400→200→100 produces 10% final conversion — realistic and
-          plausible.
+        comment: 'Checked: values 1000/600/400/200/100 match the spec example; percentages
+          60/40/20/10% fall out of textinfo ''percent initial'' and are correct.'
     code_quality:
       score: 10
       max: 10
@@ -184,56 +192,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear Imports → Data → Plot → Save; no functions or classes.
+        comment: Imports -> tokens -> column constants -> Data block binding df ->
+          Plot -> Save; no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data.
+        comment: Deterministic hard-coded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and plotly.graph_objects; both used.
+        comment: os, pandas, plotly.graph_objects all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity.
+        comment: Appropriate complexity; percentages computed by the trace, not by
+          hand.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Plotly API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with write_image(width=800,
+          height=450, scale=4); current API.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: go.Funnel with all relevant trace parameters (textinfo, textposition,
-          marker, connector) used correctly and idiomatically.
+        passed: false
+        comment: High-level go.Funnel trace configured through textinfo/textposition/marker/connector;
+          columns read from df via constants.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: 'Uses Plotly-specific features: native go.Funnel, connector line
-          styling, textinfo=''value+percent initial''. Solid but stops short of advanced
-          capabilities like custom hover templates or funnelareamode.'
-  verdict: REJECTED
+        comment: Uses Plotly's funnel-specific textinfo 'value+percent initial' so
+          the trace computes conversion rates itself, plus native connector styling
+          and HTML hover output.
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-dd574aaf58
+  rendered_at: '2026-11-02T02:31:25Z'
 impl_tags:
   dependencies: []
   techniques:
   - html-export
   patterns:
-  - data-generation
+  - explicit-figure
   dataprep: []
-  styling: []
+  styling:
+  - edge-highlighting
+  - grid-styling
