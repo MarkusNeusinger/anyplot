@@ -954,7 +954,9 @@ export const agentApi = {
    * Text that asks for a formula (`sin(x) von -pi bis pi`) answers `422 formula` and
    * stores nothing: the chat's `generate_data` computes such a table. Code that
    * generates data (Python, JavaScript, R) answers `422 code` the same way: the
-   * chat's `run_data_code` runs it.
+   * chat's `run_data_code` runs it. Text that asks for data instead of holding
+   * it ("Beispieldaten") answers `422 data_request`: the hook sends it to the
+   * chat as the user's turn, where the assistant generates example data.
    * `source` is the name of the file the text was read from (a drop, `.open()`,
    * a pasted file): it travels beside the text, which stays as in the file; the
    * server screens it and answers it as `file_name`, never as a note.
