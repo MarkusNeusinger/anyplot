@@ -293,6 +293,15 @@ class TestRoutes:
 
         assert public - {("GET", "/agent/lane")} == mapped
 
+    def test_eligibility_is_the_same_for_everyone_so_browsers_keep_it(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(200, json={"eligible": True, "status": "clean"})
+
+        response = client.get("/agent/eligibility?spec=scatter-basic&library=matplotlib", headers=HEADERS)
+
+        assert response.status_code == 200 and response.json()["eligible"] is True
+        assert response.headers["Cache-Control"] == "public, max-age=300"
+        assert upstream.requests[0].url.path == "/v1/eligibility"
+
     def test_status_passes_only_the_named_fields(self, client, upstream) -> None:
         upstream.handler = lambda request: httpx.Response(
             200, json={"libraries": ["matplotlib"], "paused": False, "waiting": 1, "users_today": 7}
