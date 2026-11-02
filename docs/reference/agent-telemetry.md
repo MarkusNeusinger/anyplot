@@ -194,8 +194,9 @@ Example data on request adds values to two closed sets:
 
 ### Fields added on 2026-11-02
 
-The library switch with the plot memory adds one event and five fields. Like every other field, they hold counts,
-booleans and closed sets, never a decision's text.
+The library switch with the plot memory adds the `plot_switch` event and new fields and values on `pipeline_run`
+and `chat_turn`, listed below. Like every other field, they hold counts, booleans and closed sets, never a decision's
+text.
 
 | Event | Field | Meaning |
 |---|---|---|
