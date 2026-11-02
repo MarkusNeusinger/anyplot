@@ -186,7 +186,7 @@ export default function DataView({ profile, version, load, onClose, onShown }: D
   const phone = useMediaQuery('(max-width: 599.95px)');
   const [attempt, setAttempt] = useState(0);
   // One request per data version and `.retry()`; its answer counts only while it is the current one.
-  const request = useMemo(() => ({ profile, attempt }), [profile, attempt]);
+  const request = useMemo(() => ({ profile, version, attempt }), [profile, version, attempt]);
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const current = loaded?.request === request ? loaded : null;
   const table = current?.table ?? null;

@@ -83,7 +83,7 @@ describe('numberOf', () => {
 });
 
 describe('compareNumericText', () => {
-  it('orders by number, ties by text, and empty cells and text after every number', () => {
+  it('orders by number, ties by text, then text, then empty cells', () => {
     const cells = ['10', '', '9', 'n/a', '-1', '1.0', '1', 'inf', '1e2'];
     expect([...cells].sort(compareNumericText)).toEqual([
       '-1',
@@ -93,21 +93,22 @@ describe('compareNumericText', () => {
       '10',
       '1e2',
       'inf',
-      '',
       'n/a',
+      '',
     ]);
   });
 
-  it('keeps empty cells and text after every number when it sorts down too', () => {
-    const cells = ['10', '', '9', 'n/a', '-1', '1.0', '1'];
+  it('reverses numbers and text when it sorts down, and keeps both ahead of empty cells', () => {
+    const cells = ['10', '', '9', 'n/a', 'none', '-1', '1.0', '1'];
     expect([...cells].sort((a, b) => compareNumericText(a, b, 'desc'))).toEqual([
       '10',
       '9',
       '1.0',
       '1',
       '-1',
-      '',
+      'none',
       'n/a',
+      '',
     ]);
   });
 });

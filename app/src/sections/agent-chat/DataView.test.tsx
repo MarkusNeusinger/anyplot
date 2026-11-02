@@ -122,4 +122,13 @@ describe('DataView', () => {
     expect(await screen.findByText('Berlin')).toBeInTheDocument();
     expect(load).toHaveBeenCalledTimes(2);
   });
+
+  it('reads the data again for a new version number alone', async () => {
+    const load = vi.fn<(signal: AbortSignal) => Promise<string>>().mockResolvedValue(CSV);
+    const props = { profile: PROFILE, load, onClose: vi.fn() };
+    const { rerender } = render(<DataView {...props} version={2} />);
+    await screen.findByRole('grid');
+    rerender(<DataView {...props} version={3} />);
+    await waitFor(() => expect(load).toHaveBeenCalledTimes(2));
+  });
 });

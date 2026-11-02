@@ -91,11 +91,21 @@ function compareText(a: string, b: string): number {
 /** A sort's way up, as the grid names it; anything but `desc` reads ascending. */
 export type SortDirection = 'asc' | 'desc' | null | undefined;
 
+/** The order of a text column's values: the grid's own default. */
+const collator = new Intl.Collator();
+
+/** A text column's order; the empty cells stay after every value either way up. */
+export function compareTextCells(a: string, b: string, direction?: SortDirection): number {
+  if (a === '' || b === '') return Number(a === '') - Number(b === '');
+  const order = collator.compare(a, b);
+  return direction === 'desc' ? -order : order;
+}
+
 /**
  * A numeric column's order: by number, then by text for equal numbers (`1.0`
- * and `1`). The empty cells and any text that is no number stay after every
- * number either way up: negated as a whole, a descending sort would open on a
- * page of gaps.
+ * and `1`). Any text that is no number stays after every number, and the empty
+ * cells after that, either way up: negated as a whole, a descending sort would
+ * open on a page of gaps.
  */
 export function compareNumericText(a: string, b: string, direction?: SortDirection): number {
   const x = numberOf(a);
@@ -106,15 +116,5 @@ export function compareNumericText(a: string, b: string, direction?: SortDirecti
   }
   if (x !== null) return -1;
   if (y !== null) return 1;
-  return compareText(a, b);
-}
-
-/** The order of a text column's values: the grid's own default. */
-const collator = new Intl.Collator();
-
-/** A text column's order; the empty cells stay after every value either way up. */
-export function compareTextCells(a: string, b: string, direction?: SortDirection): number {
-  if (a === '' || b === '') return Number(a === '') - Number(b === '');
-  const order = collator.compare(a, b);
-  return direction === 'desc' ? -order : order;
+  return compareTextCells(a, b, direction);
 }
