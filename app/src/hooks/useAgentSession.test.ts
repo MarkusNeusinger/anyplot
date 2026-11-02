@@ -2144,6 +2144,19 @@ describe('useAgentSession: library switch carry and plot memory', () => {
     expect(result.current.state.carryOffer).toBeNull();
   });
 
+  it('counts the decisions from a list that arrives after the switch', async () => {
+    // The switch lands before any list: the offer counts the answer's decisions until one arrives.
+    const { result } = await withMemory([LINE, LABEL]);
+    await act(async () => {
+      await result.current.switchLibrary('seaborn');
+    });
+    await waitFor(() => expect(result.current.state.memory?.entries).toHaveLength(2));
+    expect(result.current.state.carryOffer?.memoryBacked).toBe(true);
+
+    await act(() => result.current.forgetMemory('m1'));
+    expect(carryDecisions(result.current.state.carryOffer!, result.current.state.memory)).toBe(1);
+  });
+
   it('keeps the offer through a turn that ships nothing, and ends it with a switch that offers none', async () => {
     let carry: unknown = OFFER;
     const { result } = await withMemory([LINE], {
