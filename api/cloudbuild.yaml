@@ -293,7 +293,7 @@ steps:
         code=$$(curl -s $$RETRY "$${HDR[@]}" -o body.out -w '%{http_code}' "$$URL/agent/lane")
         if [ "${_AGENT_ENABLED}" = "true" ] && [ "${_AGENT_PUBLIC_ENABLED}" = "true" ]; then
           test "$$code" = "200" && grep -qF '"open":true' body.out \
-            || { echo "public agent lane expected open (200), got $$code"; exit 1; }
+            || { echo "public agent lane expected open (200), got $$code (in production it opens only while ORIGIN_SECRET arms the origin gate)"; exit 1; }
           code=$$(curl -s $$RETRY "$${HDR[@]}" -H "X-Anyplot-Anon: deploy-smoke-0000000000000000" -o body.out -w '%{http_code}' "$$URL/agent/status")
           test "$$code" = "200" || { echo "public agent status expected 200, got $$code"; exit 1; }
           grep -qF '"libraries"' body.out || { echo "public agent status did not relay the agents service's status"; exit 1; }

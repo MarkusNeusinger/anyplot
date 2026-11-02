@@ -34,7 +34,7 @@ sessions, the same as the render store's cap, inside the service's 2 GiB (4 GiB 
 
 
 class StoreFull(Exception):
-    """A put would push the store past its byte cap; nothing was stored."""
+    """A put would push the store, or its session's owner, past the byte cap; nothing was stored."""
 
 
 @dataclass
@@ -92,10 +92,24 @@ def dataset_size(parsed: ParsedDataset) -> int:
 
 
 class DatasetStore:
-    """Datasets keyed by a random url-safe `dataset_id`, readable only by their own session."""
+    """Datasets keyed by a random url-safe `dataset_id`, readable only by their own session.
 
-    def __init__(self, max_bytes: int = DEFAULT_MAX_BYTES, clock: Callable[[], float] = time.monotonic) -> None:
+    `owner_of` maps a session to the key that shares a byte budget with other sessions (`owner_max_bytes`): the
+    services wire it to the anonymous caller's network (`Services.session_networks`, `AGENT_IP_DATASET_BYTES`), so
+    one machine that mints tab ids cannot fill the store every user's data shares. A session without an owner has
+    only the store's own cap.
+    """
+
+    def __init__(
+        self,
+        max_bytes: int = DEFAULT_MAX_BYTES,
+        clock: Callable[[], float] = time.monotonic,
+        owner_of: Callable[[str], str | None] | None = None,
+        owner_max_bytes: int | None = None,
+    ) -> None:
         self.max_bytes = max_bytes
+        self.owner_of = owner_of
+        self.owner_max_bytes = owner_max_bytes
         self._clock = clock
         self._datasets: dict[str, StoredDataset] = {}
         self._used_bytes = 0
@@ -121,7 +135,7 @@ class DatasetStore:
         size = dataset_size(parsed) + sum(
             len(text.encode("utf-8", errors="surrogatepass")) for text in (code, source, file_name) if text
         )
-        self._room_for(size)
+        self._room_for(size, session_id)
         dataset_id = self._new_id()
         now = self._clock()
         self._datasets[dataset_id] = StoredDataset(
@@ -155,7 +169,7 @@ class DatasetStore:
         stored = self.get(dataset_id, session_id)
         if stored is None:
             return None
-        self._room_for(stored.size_bytes)
+        self._room_for(stored.size_bytes, to_session_id)
         copy_id = self._new_id()
         now = self._clock()
         self._datasets[copy_id] = replace(
@@ -217,9 +231,20 @@ class DatasetStore:
             self._remove(dataset_id)
         return removed
 
-    def _room_for(self, size: int) -> None:
+    def owner_bytes(self, owner: str) -> int:
+        """The bytes the sessions of `owner` hold (`owner_of`)."""
+        if self.owner_of is None:
+            return 0
+        return sum(stored.size_bytes for stored in self._datasets.values() if self.owner_of(stored.session_id) == owner)
+
+    def _room_for(self, size: int, session_id: str) -> None:
         if self._used_bytes + size > self.max_bytes:
             raise StoreFull(f"the dataset store is full ({self._used_bytes} of {self.max_bytes} bytes used)")
+        owner = self.owner_of(session_id) if self.owner_of is not None else None
+        if owner is not None and self.owner_max_bytes is not None:
+            used = self.owner_bytes(owner)
+            if used + size > self.owner_max_bytes:
+                raise StoreFull(f"the session's network holds {used} of its {self.owner_max_bytes} bytes")
 
     def _new_id(self) -> str:
         dataset_id = secrets.token_urlsafe(16)

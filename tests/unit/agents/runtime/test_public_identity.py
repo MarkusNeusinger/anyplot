@@ -12,6 +12,8 @@ from collections.abc import AsyncIterator, Iterator
 import httpx
 import pytest
 
+from agents.anyplot.data.parse import ParsedDataset, parse_dataset
+from agents.anyplot.data.store import DatasetStore, StoreFull, dataset_size
 from agents.anyplot.plugins import ledger
 from agents.anyplot.plugins.ledger import UsageBook, anonymous_user, day_refusal, network_key
 from agents.anyplot.run_queue import QueueFull, QueueUserLimit, RunQueue
@@ -89,6 +91,33 @@ class TestIdentity:
         assert other.status_code == 404 and other.json() == {"detail": "session_expired"}
         assert raw.status_code == 404  # the tab id as a plain user id is somebody else
         assert services.usage.network_of(anonymous_user(TAB)) == network_key(NETWORK)
+
+    async def test_one_network_holds_a_bounded_number_of_live_sessions(
+        self, client: httpx.AsyncClient, services: Services, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("AGENT_IP_MAX_SESSIONS", "2")
+        get_settings.cache_clear()
+        tabs = [f"{index:02d}{TAB[2:]}" for index in range(3)]
+        first = await open_anonymous_session(client, anon_headers(tabs[0]), tabs[0])
+        await open_anonymous_session(client, anon_headers(tabs[1]), tabs[1])
+
+        third = await client.post(
+            "/v1/sessions",
+            headers=anon_headers(tabs[2]),
+            json={
+                "user": tabs[2],
+                "spec_id": "scatter-basic",
+                "library": "matplotlib",
+                "locale": "en",
+                "snapshot": snapshot_body(),
+            },
+        )
+        assert third.status_code == 429 and third.json() == {"detail": "session_limit"}
+        # Another network is not this one's business, and a closed session frees its place.
+        await open_anonymous_session(client, anon_headers(tabs[2], network="198.51.100.1"), tabs[2])
+        assert (await client.delete(f"/v1/sessions/{first}", headers=anon_headers(tabs[0]))).status_code == 204
+        await open_anonymous_session(client, anon_headers(tabs[0]), tabs[0])
+        assert services.network_sessions(network_key(NETWORK)) == 2
 
     async def test_eligibility_binds_no_network(self, client: httpx.AsyncClient, services: Services) -> None:
         response = await client.get(
@@ -220,6 +249,36 @@ class TestNetworkDay:
 
         assert book.network_of("adm_0123456789abcdef") is None
         assert book.network_tokens("adm_0123456789abcdef") == 0 and book.network_runs("adm_0123456789abcdef") == 0
+
+
+class TestDatasetBudget:
+    def parsed(self, rows: int) -> ParsedDataset:
+        return parse_dataset("a,b\n" + "".join(f"{index},{index * 2}\n" for index in range(rows)))
+
+    def test_one_network_holds_at_most_its_share_of_the_store(self) -> None:
+        owners = {"s-1": "net_a", "s-2": "net_a", "s-3": "net_b"}
+        small = self.parsed(10)
+        store = DatasetStore(owner_of=owners.get)
+        size = store.owner_bytes("net_a")
+        assert size == 0
+        store.owner_max_bytes = 2 * dataset_size(small) + 1
+
+        store.put("s-1", small)
+        store.put("s-2", small)
+        with pytest.raises(StoreFull, match="network"):
+            store.put("s-1", small)  # a third version on the same network
+        store.put("s-3", small)  # another network has its own share
+        store.put("s-9", small)  # a session without a network has only the store's cap
+        assert store.owner_bytes("net_a") == 2 * dataset_size(small)
+
+    def test_the_services_tie_the_store_to_the_sessions_networks(self) -> None:
+        services = Services()
+        services.bind_session("s-1", "net_a")
+
+        assert services.datasets.owner_of is not None and services.datasets.owner_of("s-1") == "net_a"
+        assert services.datasets.owner_max_bytes == get_settings().ip_dataset_bytes
+        services.purge_session("s-1")
+        assert services.network_sessions("net_a") == 0
 
 
 class TestQueue:

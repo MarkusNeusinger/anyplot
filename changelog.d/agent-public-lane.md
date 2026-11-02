@@ -16,7 +16,9 @@
   address or an IPv6 /64) share 4 sandbox runs at once, 100 pipeline runs and
   20,000,000 weighted tokens a day, and twice the per-user minute and day of
   pastes, conversions, chat turns and beacons: twice the per-user caps,
-  because a tab id costs nothing to mint. The public lane holds at most 10
+  because a tab id costs nothing to mint. A network also holds at most 8 live
+  sessions and 64 MiB of the 256 MiB dataset store, so one machine cannot
+  fill what every user shares. The public lane holds at most 10
   waiting runs in the agents queue, one API instance relays at most 20 public
   chat turns at once so the catalogue keeps half its request slots, and a
   network stores at most 20 feedback cases an hour (#12527).

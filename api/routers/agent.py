@@ -263,6 +263,7 @@ _UPSTREAM_CODES = frozenset(
         "unconfirmed",
         "rate_limited",
         "daily_limit",
+        "session_limit",
         "service_paused",
         "locked_out",
         "session_closed",

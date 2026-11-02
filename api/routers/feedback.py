@@ -111,6 +111,9 @@ async def submit_feedback(
     # `feedback.created_at` is TIMESTAMP WITHOUT TIME ZONE (UTC) in Postgres,
     # so any cutoff used in WHERE clauses must be tz-naive UTC too.
     now_utc_naive = datetime.now(timezone.utc).replace(tzinfo=None)
+    # The hash outlives no window: every submission that reaches the database, refused or
+    # stored, first clears the salted hashes past the longest window.
+    await _clear_expired_ip_hashes(repo, now_utc_naive)
 
     if ip_hash:
         since = now_utc_naive - RATE_LIMIT_WINDOW
@@ -164,11 +167,18 @@ async def submit_feedback(
             "ip_hash": ip_hash or None,
         }
     )
-    # The hash outlives no window: clear the salted hashes past the longest one. A failure here
-    # costs the visitor nothing (their entry is stored); the next submission clears them instead.
+
+    return FeedbackResponse(status="ok")
+
+
+async def _clear_expired_ip_hashes(repo: FeedbackRepository, now_utc_naive: datetime) -> None:
+    """Null the salted hashes older than `DUPLICATE_LOOKBACK`, the longest window that reads them.
+
+    A failure costs the visitor nothing: it is rolled back and logged, and the next submission
+    clears them instead. A hash that a stopped process wrote cannot be recomputed by anyone, since
+    its salt died with that process."""
     try:
         await repo.clear_ip_hashes(IP_HASH_PREFIX, now_utc_naive - DUPLICATE_LOOKBACK)
     except Exception as exc:  # the driver, the pool: never the visitor's problem
+        await repo.session.rollback()
         logger.warning("feedback ip_hash cleanup failed: %s", type(exc).__name__)
-
-    return FeedbackResponse(status="ok")

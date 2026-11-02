@@ -42,6 +42,8 @@ another provider, model or location.
 | `AGENT_USER_MAX_RUNS` | `2` | Sandbox runs one public user may have queued or running at the same time, across all their sessions (browser windows; 3 before 2026-11-01); one more ends its turn with `error{code:"run_limit"}`. Everything else in a session (chat turns, pastes, data steps, the theme toggle, file conversions) runs at once, whatever the user's other sessions do |
 | `AGENT_ADMIN_USER_MAX_RUNS` | `5` | The same for an admin (`X-Anyplot-Tier: admin` from an allowed caller), whose runs share the concurrency and the rate with everyone's; `GET /v1/status` reports it to an admin as `user_max_runs`, which the fan-out keeps to |
 | `AGENT_IP_MAX_RUNS` | `4` | The same for the anonymous users of one network (an IPv4 address or an IPv6 /64, `X-Anyplot-Network` from the public BFF), together; one more ends its turn with `error{code:"run_limit"}` |
+| `AGENT_IP_MAX_SESSIONS` | `8` | Live sessions the anonymous users of one network may hold at once; one more is `429 session_limit` |
+| `AGENT_IP_DATASET_BYTES` | `67108864` | Bytes of the dataset store (64 MiB of its 256 MiB) the sessions of one network may hold; past it a paste is refused like a full store |
 | `AGENT_PUBLIC_QUEUE_MAX_WAITING` | `10` | Waiting entries the public lane may hold in the run queue; one more ends its turn with `error{code:"capacity"}`, so open public streams keep to a share of anyplot-api's request slots |
 | `AGENT_USER_MESSAGES_PER_MINUTE` | `10` | Chat turns (typed messages and actions) per user within any 60 seconds; more get the `rate_limited` refusal before the scope judge runs. An admin is exempt |
 | `AGENT_USER_MESSAGES_PER_DAY` | `200` | Chat turns per user and UTC day; more get the `daily_limit` refusal before the scope judge runs. An admin is exempt |
@@ -361,6 +363,18 @@ class AgentSettings(BaseSettings):
     the same time, waiting and running together (`AGENT_IP_MAX_RUNS`); one more ends its turn with
     `error{code:"run_limit"}`. Twice `AGENT_USER_MAX_RUNS` for shared networks: a tab id costs nothing to mint, so this
     is what bounds one machine (launch package of 2026-11-02)."""
+
+    ip_max_sessions: PositiveInt = 8
+    """Live sessions the anonymous users of one network may hold at once (`AGENT_IP_MAX_SESSIONS`); one more is
+    `429 session_limit` at `POST /v1/sessions`. A session lives until its page deletes it or the idle sweep
+    (`AGENT_SESSION_IDLE_S`) drops it, so without this one machine minting tab ids could fill the instance's memory
+    (Copilot and Fable reviews of the launch package, 2026-11-02)."""
+
+    ip_dataset_bytes: PositiveInt = 64 * 1024 * 1024
+    """The bytes of the dataset store (`DatasetStore`, 256 MiB in all) the sessions of one network may hold
+    (`AGENT_IP_DATASET_BYTES`, 64 MiB): past it a paste or a data change is refused like a full store, so one machine
+    cannot fill the store every user's data shares. A quarter of the store, about eight sessions with a 1 MB paste and
+    its five undo versions each."""
 
     public_queue_max_waiting: PositiveInt = 10
     """Waiting entries the public lane (`normal`) may hold in the run queue (`AGENT_PUBLIC_QUEUE_MAX_WAITING`); one

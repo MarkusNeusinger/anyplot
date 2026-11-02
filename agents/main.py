@@ -11,7 +11,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/status` | | `{libraries, model, location, version, provider, waiting, in_flight, user_max_runs, tier, paused, resets_at}` (`waiting` and `in_flight`: every lane of the run queue; `user_max_runs`: the caller's own cap, `AGENT_USER_MAX_RUNS` or, for an admin, `AGENT_ADMIN_USER_MAX_RUNS`; `tier`: `admin` or `public`, as the request was served; `paused`: the service's day budget is spent, so every turn gets `service_paused` until `resets_at`, the next 00:00 UTC) | |
 | `GET /v1/budget` | | `{date, since, started_at, resets_at, paused, model, tokens, budget_tokens, usd, budget_usd, users, users_at_limit, limits}`: the admin's live view of the day from the usage book (`UsageBook.snapshot`), counts only, never a user id: the service's weighted tokens against `AGENT_GLOBAL_DAILY_TOKEN_BUDGET`, both in USD at the main model's list price (`ledger.weighted_usd`, null for a model without one), the users seen today, how many are at one or more of their own day caps, and how many at each (`limits`: `tokens`, `runs`, `data_runs`, `messages`, `pastes`, `conversions`, `locked_out`; an admin counts only at `pastes`, `conversions` and `locked_out`, the caps that bind every tier). In memory: `since` is when today's counts began, the instance's start or 00:00 UTC | |
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
-| `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot, source?}` (`source`: `fanout` for a session the admin's "plot in all libraries" opens; its telemetry lines carry that source) | `{session_id, eligibility}` | `422 not_eligible` |
+| `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot, source?}` (`source`: `fanout` for a session the admin's "plot in all libraries" opens; its telemetry lines carry that source) | `{session_id, eligibility}` | `422 not_eligible`, `429 session_limit` (an anonymous caller's network already holds `AGENT_IP_MAX_SESSIONS` live sessions) |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot, source?}` (`source`: `menu`, the default, or `chat`, for the telemetry) | `{session_id, eligibility, target, carry}`: `target` the new `{spec_id, library}`; `carry` `{decisions, newer, target_has_plot, from_plot, offer}` (`switch.SwitchSummary`), with `offer` true when the page should offer the carry run (`carry_plot`): the data, bindings, confirmation, language, kept note, versions and plot memory stay, and the switch's carry (`switch.Carry`) waits for the first run in the new target | `422 not_eligible`, `422 invalid` (another spec), `409 run_active` |
 | `GET /v1/sessions/{sid}/memory` | | `{entries, max_entries, written}`: the plot memory, oldest first, each `{id, kind, target, text, expect, turn}` (`memory.py`); `written` once it ever held an entry, from then on its entries alone travel | |
 | `DELETE /v1/sessions/{sid}/memory` | | the GET's shape with no entries: forget all, a blank start | `409 run_active` |
@@ -1070,6 +1070,11 @@ async def create_session(body: CreateSessionBody, user: User, named: NamedUser, 
     result, normalised = _assess(runtime, body.snapshot, library)
     if not result.eligible:
         raise AgentsError(422, "not_eligible")
+    services = get_services()
+    # An anonymous caller's network holds at most `AGENT_IP_MAX_SESSIONS` live sessions: tab ids cost nothing.
+    network = services.usage.network_of(user)
+    if network is not None and services.network_sessions(network) >= settings.ip_max_sessions:
+        raise AgentsError(429, "session_limit")
     session_id = secrets.token_urlsafe(24)
     state = opening_state(
         spec_id=body.spec_id,
@@ -1083,6 +1088,8 @@ async def create_session(body: CreateSessionBody, user: User, named: NamedUser, 
     if body.source is not None:
         state[TELEMETRY_SOURCE] = body.source
     await runtime.session_service.create_session(app_name=APP_NAME, user_id=user, state=state, session_id=session_id)
+    if network is not None:
+        services.bind_session(session_id, network)
     return JSONResponse({"session_id": session_id, "eligibility": result.public()}, headers=_NO_STORE)
 
 
