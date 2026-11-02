@@ -11,4 +11,4 @@
   a strict RFC 4180 reader parses in the browser, so nothing is rounded or
   reformatted and an empty cell stays empty. The free grid shows 25, 50 or 100
   rows a page; the search, the sort and the filter cover every row. Opening it
-  reports the content-free outcome `opened_data_view`.
+  reports the content-free outcome `opened_data_view`. (#12513)
