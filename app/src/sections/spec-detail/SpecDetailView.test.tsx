@@ -122,17 +122,9 @@ describe('SpecDetailView', () => {
     expect(screen.getByRole('button', { name: /show interactive/i })).toBeInTheDocument();
   });
 
-  it('shows the .adapt() button only when SpecPage passes onUseWithMyData', async () => {
-    const onUseWithMyData = vi.fn();
-    const user = userEvent.setup();
-    const { rerender } = render(<SpecDetailView {...defaultProps} />);
-    expect(
-      screen.queryByRole('button', { name: 'Use with my data (experimental)' })
-    ).not.toBeInTheDocument();
-
-    rerender(<SpecDetailView {...defaultProps} onUseWithMyData={onUseWithMyData} />);
-    await user.click(screen.getByRole('button', { name: 'Use with my data (experimental)' }));
-    expect(onUseWithMyData).toHaveBeenCalledTimes(1);
+  it('keeps the "use with my data" entry off the image (it sits beside the carousel)', () => {
+    render(<SpecDetailView {...defaultProps} />);
+    expect(screen.queryByRole('button', { name: /use with my data/i })).not.toBeInTheDocument();
   });
 
   it('shows implementation counter with current/total', () => {

@@ -32,6 +32,93 @@ interface LibraryPillsProps {
   selectedLibrary: string;
   onSelect: (libraryId: string) => void;
   onAll?: () => void;
+  /**
+   * "Use with my data": present only when SpecPage's `useAgentEligibility` names a lane
+   * for this pair. Renders `.use_my_data() →` to the right of the carousel, the mirror of
+   * `← .compare()` on its left.
+   */
+  onUseWithMyData?: () => void;
+}
+
+/** Accessible name of the agent chat entry; the visible label is `.use_my_data() →`. */
+export const USE_MY_DATA_LABEL = 'Use with my data (experimental)';
+
+/**
+ * One of the two text actions that flank the carousel: mono, `--ink-soft`, green on
+ * hover, the arrow nudging outwards. `arrow` says on which side the arrow sits.
+ */
+function TextAction({
+  arrow,
+  ariaLabel,
+  onActivate,
+  children,
+}: {
+  arrow: 'left' | 'right';
+  ariaLabel: string;
+  onActivate: () => void;
+  children: React.ReactNode;
+}) {
+  const arrowGlyph = (
+    <Box component="span" className="action-arrow">
+      {arrow === 'left' ? '←' : '→'}
+    </Box>
+  );
+  return (
+    <Box
+      onClick={onActivate}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onActivate();
+        }
+      }}
+      aria-label={ariaLabel}
+      sx={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 0.75,
+        fontFamily: typography.mono,
+        fontSize: fontSize.sm,
+        color: 'var(--ink-soft)',
+        cursor: 'pointer',
+        whiteSpace: 'nowrap',
+        transition: 'color 0.2s',
+        '& .action-arrow': { transition: 'transform 0.2s' },
+        '&:hover': { color: colors.primary },
+        '&:hover .action-arrow': { transform: `translateX(${arrow === 'left' ? -3 : 3}px)` },
+        '&:focus-visible': {
+          outline: `2px solid ${colors.primary}`,
+          outlineOffset: 2,
+          borderRadius: '2px',
+        },
+      }}
+    >
+      {arrow === 'left' && arrowGlyph}
+      {children}
+      {arrow === 'right' && arrowGlyph}
+    </Box>
+  );
+}
+
+/**
+ * Vertical rule between a text action and the carousel, desktop only. The margin next to
+ * the carousel is the smaller one: it compensates for the arrow IconButton's ~5 px internal
+ * padding so the visible whitespace on either side of the rule is equal.
+ */
+function ActionRule({ side }: { side: 'left' | 'right' }) {
+  return (
+    <Box
+      sx={{
+        height: 20,
+        width: '1px',
+        bgcolor: 'var(--rule)',
+        ...(side === 'left' ? { ml: 1.5, mr: '7px' } : { ml: '7px', mr: 1.5 }),
+        display: { xs: 'none', md: 'block' },
+      }}
+    />
+  );
 }
 
 export const LibraryPills = memo(function LibraryPills({
@@ -39,6 +126,7 @@ export const LibraryPills = memo(function LibraryPills({
   selectedLibrary,
   onSelect,
   onAll,
+  onUseWithMyData,
 }: LibraryPillsProps) {
   // Sort implementations alphabetically
   const sortedImpls = useMemo(() => {
@@ -87,73 +175,63 @@ export const LibraryPills = memo(function LibraryPills({
 
   if (sortedImpls.length === 0) return null;
 
+  // Layout. From md up, one row on a three-column grid whose side columns are equal
+  // (`minmax(0, 1fr)`): the carousel is the centre column, so it stays centred over the
+  // image whether or not the right-hand action is there, and the action can fade in after
+  // the eligibility probe without moving anything. Below md the carousel's own width
+  // leaves no room beside it, so the two text actions share a line above it, `.compare()`
+  // at the left edge and `.use_my_data()` at the right, and the carousel takes the line
+  // below. That first line is there for `.compare()` anyway, and the gap under it always
+  // holds the room for the `experimental` tag, so the late action does not move the page
+  // either.
   return (
     <Box
       sx={{
-        display: 'flex',
-        flexDirection: { xs: 'column', sm: 'row' },
+        display: 'grid',
+        gridTemplateColumns: {
+          xs: 'minmax(0, 1fr) minmax(0, 1fr)',
+          md: 'minmax(0, 1fr) auto minmax(0, 1fr)',
+        },
+        gridTemplateAreas: {
+          xs: '"compare action" "carousel carousel"',
+          md: '"compare carousel action"',
+        },
         alignItems: 'center',
-        justifyContent: 'center',
-        gap: { xs: 1, sm: 0.5 },
+        // From md up the rules' own margins space the row, so the grid adds none.
+        columnGap: { xs: 1, md: 0 },
+        rowGap: onAll || onUseWithMyData ? 3 : 0,
         py: 2,
       }}
     >
-      {onAll && (
-        <>
-          <Box
-            onClick={onAll}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e: React.KeyboardEvent) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                onAll();
-              }
-            }}
-            aria-label="Back to library comparison"
-            sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 0.75,
-              fontFamily: typography.mono,
-              fontSize: fontSize.sm,
-              color: 'var(--ink-soft)',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              transition: 'color 0.2s',
-              '& .all-arrow': { transition: 'transform 0.2s' },
-              '&:hover': { color: colors.primary },
-              '&:hover .all-arrow': { transform: 'translateX(-3px)' },
-              '&:focus-visible': {
-                outline: `2px solid ${colors.primary}`,
-                outlineOffset: 2,
-                borderRadius: '2px',
-              },
-            }}
-          >
-            <Box component="span" className="all-arrow">
-              ←
-            </Box>
-            <Box component="span">.compare()</Box>
-          </Box>
-          {/* Vertical divider. Asymmetric mx compensates for the prev IconButton's
-              ~5 px internal left padding so the visible whitespace on either side
-              of the rule is equal. */}
-          <Box
-            sx={{
-              height: 20,
-              width: '1px',
-              bgcolor: 'var(--rule)',
-              ml: 1.5,
-              mr: '7px',
-              display: { xs: 'none', sm: 'block' },
-            }}
-          />
-        </>
-      )}
+      <Box
+        sx={{
+          gridArea: 'compare',
+          justifySelf: { xs: 'start', md: 'end' },
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        {onAll && (
+          <>
+            <TextAction arrow="left" ariaLabel="Back to library comparison" onActivate={onAll}>
+              <Box component="span">.compare()</Box>
+            </TextAction>
+            <ActionRule side="left" />
+          </>
+        )}
+      </Box>
 
-      {/* Carousel row — stays horizontal even when the wrapper stacks on xs */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+      {/* Carousel row; in the DOM between the two actions, so the tab order follows the
+          desktop row from left to right */}
+      <Box
+        sx={{
+          gridArea: 'carousel',
+          justifySelf: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.5,
+        }}
+      >
         {/* Left Arrow */}
         <IconButton
           onClick={handlePrev}
@@ -228,6 +306,59 @@ export const LibraryPills = memo(function LibraryPills({
         >
           <ChevronRightIcon />
         </IconButton>
+      </Box>
+
+      <Box
+        sx={{
+          gridArea: 'action',
+          justifySelf: { xs: 'end', md: 'start' },
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        {onUseWithMyData && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              animation: 'useMyDataFadeIn 0.3s ease-out',
+              '@keyframes useMyDataFadeIn': { from: { opacity: 0 }, to: { opacity: 1 } },
+              '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+            }}
+          >
+            <ActionRule side="right" />
+            {/* The tag hangs under the label, out of the flow: the label line stays an exact
+                mirror of `← .compare()`, arrow on the outer edge, and the tag takes neither
+                width beside the carousel nor height from the row (on desktop it sits in
+                the row's bottom padding, on a phone in the reserved gap above the
+                carousel). Outside the button and hidden from assistive tech, which hears
+                "experimental" in the accessible name. */}
+            <Box sx={{ position: 'relative', display: 'flex' }}>
+              <TextAction arrow="right" ariaLabel={USE_MY_DATA_LABEL} onActivate={onUseWithMyData}>
+                <Box component="span">.use_my_data()</Box>
+              </TextAction>
+              <Box
+                component="span"
+                aria-hidden="true"
+                sx={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  // Clear of the button's focus ring (2 px outline at a 2 px offset).
+                  mt: '5px',
+                  fontFamily: typography.mono,
+                  fontSize: fontSize.xs,
+                  lineHeight: 1,
+                  color: semanticColors.mutedText,
+                  whiteSpace: 'nowrap',
+                  pointerEvents: 'none',
+                }}
+              >
+                experimental
+              </Box>
+            </Box>
+          </Box>
+        )}
       </Box>
     </Box>
   );

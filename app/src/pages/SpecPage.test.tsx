@@ -57,6 +57,12 @@ vi.mock('src/sections/spec-detail/SpecDetailView', () => ({
   SpecDetailView: () => <div data-testid="spec-detail-view">SpecDetailView</div>,
 }));
 
+// The lane `useAgentEligibility` names for the pair; null is no entry (also while it probes).
+const agentEligibility: { lane: 'admin' | 'public' | null } = { lane: null };
+vi.mock('src/hooks/useAgentEligibility', () => ({
+  useAgentEligibility: () => agentEligibility.lane,
+}));
+
 const mockSpecData = {
   id: 'scatter-basic',
   title: 'Basic Scatter Plot',
@@ -85,6 +91,7 @@ beforeEach(() => {
   vi.restoreAllMocks();
   mockParams = { specId: 'scatter-basic' };
   mockNavigate.mockReset();
+  agentEligibility.lane = null;
 });
 
 function mockFetchSuccess(data = mockSpecData) {
@@ -233,6 +240,26 @@ describe('SpecPage', () => {
         source: 'impl_missing',
       });
     });
+  });
+
+  it('puts .use_my_data() beside the carousel only for an eligible pair', async () => {
+    mockParams = { specId: 'scatter-basic', language: 'python', library: 'matplotlib' };
+    mockFetchSuccess();
+    const { rerender } = render(<SpecPage />);
+
+    await screen.findByRole('button', { name: 'Back to library comparison' });
+    expect(
+      screen.queryByRole('button', { name: 'Use with my data (experimental)' })
+    ).not.toBeInTheDocument();
+
+    agentEligibility.lane = 'public';
+    rerender(<SpecPage />);
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Use with my data (experimental)' })
+    );
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/agent?spec=scatter-basic&library=matplotlib&language=python&source=plot_page'
+    );
   });
 
   it('does not report a miss when the implementation exists', async () => {

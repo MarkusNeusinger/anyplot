@@ -101,7 +101,7 @@ describe('DebugPage', () => {
       expect(screen.getAllByText('scatter-basic').length).toBeGreaterThan(0);
     });
     // A 200 from /debug/status marks this browser as an admin's, which lets
-    // the plot page show the agent chat's `.adapt()` button.
+    // the plot page show the agent chat's `.use_my_data()` entry.
     expect(localStorage.getItem('anyplot.adminHint')).toBe('1');
   });
 
