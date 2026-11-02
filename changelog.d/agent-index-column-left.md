@@ -8,3 +8,4 @@
   leftmost in place of its own `#` counter, with the data's own values, also
   after a sort reordered them; without such a column the counter stays. A sorted
   column's header keeps room for its dtype beside the sort arrow and the menu.
+  (#12521)
