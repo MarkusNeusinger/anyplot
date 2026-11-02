@@ -174,9 +174,17 @@ class SwitchSummary:
         }
 
 
-def summary(carry: Carry | None, memory: Sequence[MemoryEntry], target_turn: int | None) -> SwitchSummary:
-    """The switch answer's carry summary; `target_turn` is the turn of the target's latest version, None without one."""
-    decisions = len(decision_lines(memory)) if memory else (len(carry.requests) if carry else 0)
+def summary(
+    carry: Carry | None, memory: Sequence[MemoryEntry], target_turn: int | None, *, written: bool = False
+) -> SwitchSummary:
+    """The switch answer's carry summary; `target_turn` is the turn of the target's latest version, None without one.
+
+    `written` (`memory.memory_written`): once the session's memory ever held an entry, its entries are the decisions
+    that travel, also none; the carry's raw requests count only for a session that never remembered anything, as the
+    run reads them (`pipeline.Run.raw_requests`).
+    """
+    raw = len(carry.requests) if carry and not written else 0
+    decisions = len(decision_lines(memory)) if memory or written else raw
     newer = newer_than(memory, target_turn)
     has_plot = target_turn is not None
     carries = carry is not None and (decisions > 0 or carry.from_plot)

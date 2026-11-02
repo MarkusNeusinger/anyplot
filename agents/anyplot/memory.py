@@ -113,6 +113,17 @@ def read_memory(state: Any) -> list[MemoryEntry]:
     return entries[:MAX_ENTRIES]
 
 
+def memory_written(state: Any) -> bool:
+    """Whether the session's memory ever held an entry: the id counter moved past 1 (ids are never reused).
+
+    From then on the visible memory is what stands and travels: the raw lineage requests, the fallback of a
+    session that never remembered anything, never come back, also after the user removed every entry (owner
+    decision of 2026-11-02: what the user removed must not come back through the back door).
+    """
+    stored = state.get(MEMORY_SEQ)
+    return isinstance(stored, int) and not isinstance(stored, bool) and stored > 1
+
+
 def next_seq(state: Any, entries: Sequence[MemoryEntry]) -> int:
     """The number of the next id: the stored counter, never below one past the highest id in use."""
     stored = state.get(MEMORY_SEQ)
