@@ -857,7 +857,7 @@ class TestTextProbes:
 
         assert harness.PROBE_WRITE_FAILURES == [failure]
         assert harness._probe_failure() == {"probe_failed": failure}
-        monkeypatch.setattr(harness, "PROBE_WRITE_FAILURES", [])
+        # A later write that succeeds (the exporter called again) leaves the probe on disk: the failure no longer stands.
         (tmp_path / "other").mkdir()
         monkeypatch.chdir(tmp_path / "other")
         harness.write_text_probe("light", {"labels": []})

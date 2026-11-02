@@ -1197,9 +1197,13 @@ that leads to an entry (`_ESCAPE_PREFIXES`: `[matplotlib.cbook][0].Path`, `[cboo
 `from matplotlib import cbook`)."""
 _ESCAPE_PREFIXES: frozenset[str] = frozenset(
     entry.rsplit(".", cut)[0] for entry in MODULE_ESCAPES for cut in range(1, entry.count(".") + 1)
-)
+) - {"plotnine.ggplot"}
 """Every proper prefix of a `MODULE_ESCAPES` entry (`matplotlib.cbook` and `matplotlib` for `matplotlib.cbook.Path`):
-a path that resolves to one is only a receiver, a callee or the value of a plain alias (`_check_module_values`)."""
+a path that resolves to one is only a receiver, a callee or the value of a plain alias (`_check_module_values`).
+`plotnine.ggplot` is left out: the package's `__init__` binds the class `ggplot` over the submodule, so that path and
+`from plotnine import ggplot` are the class (`isinstance(p, ggplot)` stays allowed), and the module behind
+`plotnine.ggplot.Path` is reached only by `import plotnine.ggplot as m`, which the import's own module-value rule
+covers."""
 _DATA_FROM_DF = "the data comes only from df = load_user_data(), and the plot reads and writes no files"
 IMPORT_ALTERNATIVES: dict[str, str] = {
     **dict.fromkeys(

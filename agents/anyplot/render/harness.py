@@ -2447,6 +2447,7 @@ def write_text_probe(theme, report):
             return
         while data:
             data = data[os.write(descriptor, data) :]
+        PROBE_WRITE_FAILURES.clear()  # the probe on disk is this write's: an earlier failure no longer stands
     except OSError as exc:
         PROBE_WRITE_FAILURES.append(type(exc).__name__)
     finally:
@@ -2454,7 +2455,8 @@ def write_text_probe(theme, report):
 
 
 PROBE_WRITE_FAILURES: list[str] = []
-"""The exception class of every text-probe write that failed in this process (`write_text_probe`), for the end line."""
+"""The exception classes of the text-probe writes that failed in this process since the last one that succeeded
+(`write_text_probe`), for the end line."""
 
 
 def _probe_failure():

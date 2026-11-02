@@ -2104,6 +2104,11 @@ def test_the_routes_of_the_second_opinion_are_refused(code: str, rule: str) -> N
             "plotnine", "from plotnine import aes, ggplot\nplot = ggplot(df, aes('x', 'y'))\n", id="ggplot called"
         ),
         pytest.param(
+            "plotnine",
+            "from plotnine import aes, ggplot\nplot = ggplot(df, aes('x', 'y'))\nok = isinstance(plot, ggplot)\n",
+            id="the ggplot class as a value",
+        ),
+        pytest.param(
             "matplotlib",
             "import matplotlib.pyplot as plt\nstyle = {'color': 'red', 'lw': 2}\nfig, ax = plt.subplots()\n"
             "ax.plot([1], **style)\n",
