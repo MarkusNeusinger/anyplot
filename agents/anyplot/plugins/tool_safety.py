@@ -71,6 +71,9 @@ PREPARE_TOOL = "prepare_data"
 QUERY_TOOL = "query_data"
 GENERATE_TOOL = "generate_data"
 DATA_CODE_TOOL = "run_data_code"
+SWITCH_TOOL = "switch_plot"
+"""A turn has either a plot run or a switch the page carries out, never both (`switch_requested`,
+`plot_already_run`)."""
 MAX_DATA_CODE_CALLS = 2
 """`run_data_code` calls per invocation: the first, and one retry after the validator's findings."""
 MAX_DATA_CODE_CHARS = 6_000
@@ -332,8 +335,14 @@ class ToolSafetyPlugin(BasePlugin):
             if verdict is None and tool.name == PIPELINE_TOOL:
                 if ledger.pipeline_calls >= 1:
                     verdict = "one_pipeline_per_turn"
+                elif ledger.switch_request is not None:
+                    # The page switches after this turn and plots there: a run here would be thrown away.
+                    verdict = "switch_requested"
                 else:
                     ledger.pipeline_calls += 1
+            if verdict is None and tool.name == SWITCH_TOOL and ledger.pipeline_calls >= 1:
+                # The turn already ran a plot in this library; the user asks again (Flash review, 2026-11-02).
+                verdict = "plot_already_run"
             if verdict is None and tool.name == DATA_CODE_TOOL:
                 if ledger.data_code_calls >= MAX_DATA_CODE_CALLS:
                     verdict = "too_many_data_runs"

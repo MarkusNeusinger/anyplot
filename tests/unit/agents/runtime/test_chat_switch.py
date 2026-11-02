@@ -94,6 +94,40 @@ async def test_a_switch_the_page_could_not_make_is_refused_and_never_sent(
     assert await switch_plot(tool_context=context, **args) == {"status": "error", "code": code}
 
 
+@pytest.mark.parametrize(
+    ("first", "second", "code"),
+    [
+        ({"call": "switch_plot", "args": {"library": "seaborn"}}, {"call": "plot_pipeline", "args": {}}, None),
+        ({"call": "plot_pipeline", "args": {}}, {"call": "switch_plot", "args": {"library": "seaborn"}}, None),
+    ],
+)
+async def test_a_turn_has_a_plot_run_or_a_switch_never_both(
+    client: httpx.AsyncClient, swap_models, first: dict[str, Any], second: dict[str, Any], code: None
+) -> None:
+    """ToolSafety refuses the second of the two (Flash review, 2026-11-02): a run before the switch would be thrown
+    away, and a switch after a run would plot the same change again in the other library."""
+    from .fakes import SCATTER_PLAN, VERDICT_OK
+
+    swap_models(
+        "gemini",
+        {
+            "root": [first, second, {"text": "Okay."}],
+            "adapter": [{"json": SCATTER_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}],
+        },
+    )
+    sid = await open_confirmed(client)
+
+    events = await say(client, sid, "make it in seaborn")
+
+    plots = [data for name, data in events if name == "plot"]
+    switch = events[-1][1].get("switch")
+    if first["call"] == "switch_plot":
+        assert plots == [] and switch == {"library": "seaborn", "plot": True}  # the run was refused
+    else:
+        assert len(plots) == 1 and switch is None  # the switch was refused
+
+
 async def test_a_switch_without_a_session_is_refused() -> None:
     from types import SimpleNamespace
 
