@@ -74,18 +74,117 @@ afterEach(() => {
 });
 
 describe('ResultCard', () => {
-  it('shows the rendered image, the changes and the residual notes', () => {
+  it('shows the rendered image, the residual notes and the run in one status line', async () => {
     renderCard();
     expect(screen.getByAltText('Adapted plot, version 2, light theme')).toHaveAttribute(
       'src',
       'blob:light'
     );
-    expect(screen.getByText('Marker size raised')).toBeInTheDocument();
     expect(screen.getByText('VQ-03 light: markers overlap the label')).toBeInTheDocument();
     expect(screen.getByTestId('result-status')).toHaveTextContent('needs attention');
     // Two attempts are the first try and one repair round, named as the progress timeline names them.
-    expect(screen.getByText('second try')).toBeInTheDocument();
+    const summary = screen.getByRole('button', { name: 'Run details: second try · 1 change' });
+    expect(summary).toHaveAttribute('aria-expanded', 'false');
+    // Folded: what changed is one click away.
+    expect(screen.queryByText('Marker size raised')).not.toBeInTheDocument();
     expect(screen.getByTestId('result-feedback-slot')).toBeInTheDocument();
+
+    await userEvent.click(summary);
+    expect(summary).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('# what changed')).toBeInTheDocument();
+    expect(screen.getByText('Marker size raised')).toBeInTheDocument();
+    await userEvent.click(summary);
+    expect(screen.queryByText('Marker size raised')).not.toBeInTheDocument();
+  });
+
+  it('opens the rounds of the run from the status line', async () => {
+    const version = makeVersion();
+    version.result = {
+      ...version.result,
+      status: 'ok',
+      changes: [],
+      residual_defects: [],
+      rounds: [
+        { attempt: 1, outcome: 'review', findings: 2, shipped: false },
+        { attempt: 2, outcome: 'ok', findings: 0, shipped: true },
+      ],
+    } as PlotVersion['result'];
+    renderCard({ version });
+    expect(screen.queryByRole('table', { name: 'Rounds of version 2' })).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: /^Run details: second try$/ }));
+    expect(screen.getByText('# rounds')).toBeInTheDocument();
+    expect(screen.getByRole('table', { name: 'Rounds of version 2' })).toBeInTheDocument();
+    expect(screen.queryByText('# what changed')).not.toBeInTheDocument();
+  });
+
+  it('shows a plain status line when the run has neither rounds nor changes', () => {
+    const version = makeVersion();
+    version.result = { ...version.result, attempts: 1, changes: [] };
+    renderCard({ version });
+    expect(screen.getByTestId('result-summary')).toHaveTextContent('first try');
+    expect(screen.queryByRole('button', { name: /^Run details/ })).not.toBeInTheDocument();
+  });
+
+  it('folds the code behind .show_code(), with .copy() and the downloads in view', async () => {
+    renderCard();
+    expect(screen.queryByTestId('code-highlighter')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Copy code' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Download plot.py' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Download data.csv' })).toBeInTheDocument();
+
+    const show = screen.getByRole('button', { name: 'Show code' });
+    expect(show).toHaveTextContent('.show_code()');
+    expect(show).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(show);
+    expect(await screen.findByTestId('code-highlighter')).toHaveTextContent('import pandas as pd');
+    const hide = screen.getByRole('button', { name: 'Hide code' });
+    expect(hide).toHaveTextContent('.hide_code()');
+    expect(hide).toHaveAttribute('aria-expanded', 'true');
+    await userEvent.click(hide);
+    expect(screen.queryByTestId('code-highlighter')).not.toBeInTheDocument();
+  });
+
+  it('says why .copy() waits when the code could not be loaded, also while folded', () => {
+    renderCard({ version: makeVersion({ code: { state: 'failed' } }) });
+    expect(screen.getByRole('alert')).toHaveTextContent('could not load plot.py');
+    expect(screen.getByRole('button', { name: 'Copy code' })).toBeDisabled();
+  });
+
+  it("keeps the card's own choices across a collapse of the whole card", async () => {
+    renderCard();
+    await userEvent.click(screen.getByRole('button', { name: 'Show code' }));
+    await userEvent.click(screen.getByRole('button', { name: /^Run details/ }));
+
+    await userEvent.click(screen.getByRole('button', { name: /^Version 2,/ }));
+    expect(screen.queryByTestId('code-highlighter')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /^Version 2,/ }));
+
+    expect(await screen.findByTestId('code-highlighter')).toBeInTheDocument();
+    expect(screen.getByText('Marker size raised')).toBeInTheDocument();
+  });
+
+  it("starts a newer version's card folded, whatever the card before it showed", async () => {
+    const props: ResultCardProps = {
+      version: makeVersion(),
+      specId: 'scatter-basic',
+      language: 'python',
+      latest: true,
+      busy: false,
+      onRequestTheme: vi.fn(),
+      onFetchArtifact: vi.fn(),
+      onTrack: vi.fn(),
+    };
+    const { rerender } = render(<ResultCard key={2} {...props} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Show code' }));
+    expect(await screen.findByTestId('code-highlighter')).toBeInTheDocument();
+
+    rerender(<ResultCard key={3} {...props} version={makeVersion({ number: 3 })} />);
+    expect(screen.getByAltText('Adapted plot, version 3, light theme')).toBeInTheDocument();
+    expect(screen.queryByTestId('code-highlighter')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Run details/ })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
   });
 
   it('sizes the image box to the loaded PNG, footer strip included', () => {
@@ -182,11 +281,13 @@ describe('ResultCard', () => {
     });
     version.result = { ...version.result, artifacts: ['plot-light.png', 'plot.R', 'data.csv'] };
     renderCard({ version, language: 'python' });
+    await userEvent.click(screen.getByRole('button', { name: 'Show code' }));
     expect(await screen.findByTestId('code-highlighter')).toHaveAttribute('data-language', 'r');
   });
 
   it('keeps the page language for a library the app does not know', async () => {
     renderCard({ version: makeVersion({ library: 'unknown-lib' }), language: 'python' });
+    await userEvent.click(screen.getByRole('button', { name: 'Show code' }));
     expect(await screen.findByTestId('code-highlighter')).toHaveAttribute(
       'data-language',
       'python'

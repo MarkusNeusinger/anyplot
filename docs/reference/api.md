@@ -579,7 +579,7 @@ All paths start with `/agent`. A session route takes the session id as
 | `POST /session/messages?theme=` | The chat turn, behind the per-instance stream cap |
 | `POST /session/cancel`, `POST /session/outcome` | Stop, and the outcome beacon |
 | `POST /session/versions/{version}/render`, `GET /session/artifacts/{name}?v=&theme=` | The theme toggle and the result files |
-| `GET /session/bundle?include_data=&version=` | `.save()`: your session as a file; anyplot keeps no copy |
+| `GET /session/bundle?include_data=&version=` | Your session as a file; anyplot keeps no copy. The public page offers no `.save()` since 2026-11-02, so no page calls it; the admin page's `.save()` uses the admin route |
 | `POST /session/feedback` | The feedback case, behind the per-network hourly cap. The case's `user_hash` is a salted hash of your tab id, never the id itself |
 
 The admin lane's fan-out copy (`POST /sessions/{sid}/dataset/copy`), the day

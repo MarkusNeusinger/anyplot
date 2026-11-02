@@ -180,11 +180,11 @@ describe('AgentChatPage quick feedback', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Give feedback on this chat' }));
     const form = screen.getByRole('form', { name: 'Feedback on this chat' });
+    await user.click(within(form).getByRole('button', { name: 'Idea' }));
     // No data pasted: the box cannot be ticked.
     expect(
       within(form).getByRole('checkbox', { name: 'Include data.csv in the feedback on this chat' })
     ).toBeDisabled();
-    await user.click(within(form).getByRole('button', { name: 'Idea' }));
     await user.click(within(form).getByRole('button', { name: 'Send feedback' }));
 
     await screen.findByText(/sent · this chat/);

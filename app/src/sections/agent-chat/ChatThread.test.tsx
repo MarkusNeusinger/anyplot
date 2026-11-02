@@ -9,6 +9,7 @@ import {
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
 import { localClock } from 'src/sections/agent-chat/messages';
 import { pendingReply } from 'src/sections/agent-chat/steps';
+import { CHAT_TEXT_MAX } from 'src/sections/agent-chat/styles';
 import { render, screen } from 'src/test-utils';
 
 const notReady = (reason: string): AgentSessionState => ({
@@ -47,6 +48,32 @@ function renderThread(state: AgentSessionState) {
 }
 
 describe('ChatThread', () => {
+  it("keeps the thread's text to a readable line in the wide column", () => {
+    renderThread({
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      items: [
+        { id: 1, kind: 'user', text: 'make the markers bigger' },
+        { id: 2, kind: 'assistant', text: 'Done: the markers are larger now.' },
+        { id: 3, kind: 'notice', text: 'bindings changed', tone: 'warning' },
+      ],
+    });
+    // A reply and a notice are no wider than about 80 characters (2026-11-02: the column grows
+    // up to 1360 px); the user's turn keeps its right alignment. jsdom resolves `ch` to pixels
+    // of each element's own font, so the check is that a cap is there, in `ch` or in pixels.
+    expect(CHAT_TEXT_MAX).toBe('80ch');
+    for (const element of [
+      screen.getByText('Done: the markers are larger now.'),
+      screen.getByTestId('confirm-lost'),
+    ]) {
+      expect(getComputedStyle(element).maxWidth).toMatch(/^\d+(\.\d+)?(px|ch)$/);
+    }
+    expect(getComputedStyle(screen.getByText('make the markers bigger')).alignSelf).toBe(
+      'flex-end'
+    );
+  });
+
   it('reads a plot refused for unconfirmed data as a step to take', () => {
     renderThread(notReady('data_unconfirmed'));
     expect(screen.getByText('plot · not ready · data_unconfirmed')).toBeInTheDocument();

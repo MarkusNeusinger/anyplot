@@ -40,6 +40,7 @@ describe('ChatFeedback', () => {
     const onSend = vi.fn<Send>(async () => undefined);
     render(<ChatFeedback sent={null} dataAvailable={false} onSend={onSend} />);
     await user.click(screen.getByRole('button', { name: 'Give feedback on this chat' }));
+    await user.click(screen.getByRole('button', { name: 'Bug' }));
 
     const box = screen.getByRole('checkbox', {
       name: 'Include data.csv in the feedback on this chat',
@@ -47,7 +48,6 @@ describe('ChatFeedback', () => {
     expect(box).not.toBeChecked();
     expect(box).toBeDisabled();
     expect(screen.getByText('# no data yet')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Bug' }));
     await user.click(screen.getByRole('button', { name: 'Send feedback' }));
 
     expect(onSend).toHaveBeenCalledWith(0, { reaction: 'bug', message: '', includeData: false });

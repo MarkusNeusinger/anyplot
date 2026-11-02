@@ -43,6 +43,23 @@ describe('SaveButton', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
+  it('says when the download started, so the menu can close, and never after a failure', async () => {
+    const user = userEvent.setup();
+    const onSaved = vi.fn();
+    const onSave = vi
+      .fn<(includeData: boolean) => Promise<void>>()
+      .mockRejectedValueOnce(new AgentApiError(413, 'too_large', 'r-big'))
+      .mockResolvedValueOnce(undefined);
+    render(<SaveButton disabled={false} onSave={onSave} onSaved={onSaved} />);
+
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('too large for one file');
+    expect(onSaved).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+  });
+
   it('shows the save in progress, keeps the focus and starts no second one', async () => {
     const user = userEvent.setup();
     const gate = deferred();

@@ -5,6 +5,15 @@
  * request or a question goes through the thread's one composer below it,
  * which the assistant reads either way (since 2026-10-12).
  *
+ * - Folded by default since 2026-11-02 (owner: less text, the details behind
+ *   a toggle rather than removed): the image, its toolbar and the theme switch
+ *   show; the run's rounds and its "what changed" list sit behind one status
+ *   line (`second try · 5 changes ⓘ`), and the code behind `.show_code()`,
+ *   while `.copy()` and the downloads stay in view. Each card keeps its own
+ *   choice while the session lives, also across a collapse of the whole card;
+ *   a new version's card starts folded. The residual notes stay in view: they
+ *   are what still needs the user's eye.
+ *
  * - The image is the blob URL of the theme the run rendered. The light and
  *   dark switch shows the other theme, rendering it first through the theme
  *   toggle route when the version does not have it yet (no model call).
@@ -37,12 +46,12 @@
  * The card is self-contained, so the public phase can reuse it unchanged.
  */
 
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState } from 'react';
 
-import CheckIcon from '@mui/icons-material/Check';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DownloadIcon from '@mui/icons-material/Download';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
+import InfoIcon from '@mui/icons-material/Info';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import Box from '@mui/material/Box';
@@ -70,7 +79,13 @@ import { InteractivePreview } from 'src/sections/agent-chat/InteractivePreview';
 import { IMAGE_FAILURE } from 'src/sections/agent-chat/messages';
 import { ResultFeedback } from 'src/sections/agent-chat/ResultFeedback';
 import { RoundGrid } from 'src/sections/agent-chat/RoundGrid';
-import { actionButtonSx, bodyTextSx, labelSx, smallText } from 'src/sections/agent-chat/styles';
+import {
+  actionButtonSx,
+  bodyTextSx,
+  labelSx,
+  readableSx,
+  smallText,
+} from 'src/sections/agent-chat/styles';
 import { gridRows, triesText } from 'src/sections/agent-chat/timeline';
 import { colors, fontSize, overlayButtonSx, typography } from 'src/theme';
 
@@ -99,6 +114,8 @@ const STATUS_LABEL: Record<string, string> = {
   ok: 'ok',
   needs_attention: 'needs attention',
 };
+
+const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
 
 export interface ResultCardProps {
   version: PlotVersion;
@@ -159,6 +176,12 @@ export function ResultCard({
   const previewReported = useRef(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(null);
   const [wasLatest, setWasLatest] = useState(latest);
+  // The run's details (its rounds and what changed) and the code, folded until asked for. The
+  // card's own state, outside the part a collapse unmounts, so the choice outlives a collapse.
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [codeOpen, setCodeOpen] = useState(false);
+  const detailsId = useId();
+  const codeId = useId();
 
   useEffect(
     () => () => {
@@ -369,6 +392,11 @@ export function ResultCard({
   // Named the way the progress grid names its rounds, and which round shipped when an earlier one won.
   const attempts = triesText(result);
   const rounds = gridRows(result.rounds ?? [], [], result.status);
+  // The status line: the tries and how many changes the run made, and the toggle of both lists.
+  const summary = result.changes.length
+    ? `${attempts} · ${plural(result.changes.length, 'change')}`
+    : attempts;
+  const hasDetails = rounds.length > 0 || result.changes.length > 0;
   const header = (
     <Box
       component="button"
@@ -414,9 +442,6 @@ export function ResultCard({
         data-testid="result-status"
       >
         {STATUS_LABEL[result.status] ?? result.status}
-      </Box>
-      <Box component="span" sx={{ color: 'var(--ink-muted)' }}>
-        {attempts}
       </Box>
       <Box component="span" sx={{ ml: 'auto', color: 'var(--ink-muted)' }}>
         {expanded ? '.collapse()' : '.expand()'}
@@ -640,68 +665,124 @@ export function ResultCard({
             )}
           </Box>
 
-          {/* Theme switch: the run rendered one theme; the other renders on demand. */}
+          {/* The theme switch and, at the row's end, the run's status line. */}
           <Box
-            role="group"
-            aria-label="Plot theme"
-            sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5 }}
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              columnGap: 2,
+              rowGap: 0.5,
+              minWidth: 0,
+            }}
           >
-            <Box component="span" sx={{ ...labelSx, mr: 0.5 }}>
-              theme
+            {/* Theme switch: the run rendered one theme; the other renders on demand. */}
+            <Box
+              role="group"
+              aria-label="Plot theme"
+              sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5 }}
+            >
+              <Box component="span" sx={{ ...labelSx, mr: 0.5 }}>
+                theme
+              </Box>
+              {(['light', 'dark'] as const).map(theme => {
+                const active = theme === shownTheme;
+                const state = version.images[theme]?.state;
+                return (
+                  <Box
+                    key={theme}
+                    component="button"
+                    type="button"
+                    aria-pressed={active}
+                    disabled={
+                      !active &&
+                      (busy || buildingPage) &&
+                      (interactive ? needsPage(theme) : needsRender(theme))
+                    }
+                    onClick={() => handleTheme(theme)}
+                    sx={{
+                      ...actionButtonSx,
+                      color: active ? 'var(--ink)' : 'var(--ink-soft)',
+                      bgcolor: active ? 'var(--bg-elevated)' : 'transparent',
+                      border: '1px solid',
+                      borderColor: active ? 'var(--ink-muted)' : 'var(--rule)',
+                    }}
+                  >
+                    {theme}
+                    {state === 'loading' && theme !== shownTheme ? ' …' : ''}
+                  </Box>
+                );
+              })}
+              {!interactive &&
+                readyImage?.status === 'needs_attention' &&
+                shownTheme !== version.theme && (
+                  <Box component="span" sx={{ ...labelSx, ml: 1 }}>
+                    padded onto the canvas
+                  </Box>
+                )}
             </Box>
-            {(['light', 'dark'] as const).map(theme => {
-              const active = theme === shownTheme;
-              const state = version.images[theme]?.state;
-              return (
-                <Box
-                  key={theme}
-                  component="button"
-                  type="button"
-                  aria-pressed={active}
-                  disabled={
-                    !active &&
-                    (busy || buildingPage) &&
-                    (interactive ? needsPage(theme) : needsRender(theme))
-                  }
-                  onClick={() => handleTheme(theme)}
-                  sx={{
-                    ...actionButtonSx,
-                    color: active ? 'var(--ink)' : 'var(--ink-soft)',
-                    bgcolor: active ? 'var(--bg-elevated)' : 'transparent',
-                    border: '1px solid',
-                    borderColor: active ? 'var(--ink-muted)' : 'var(--rule)',
-                  }}
-                >
-                  {theme}
-                  {state === 'loading' && theme !== shownTheme ? ' …' : ''}
-                </Box>
-              );
-            })}
-            {!interactive &&
-              readyImage?.status === 'needs_attention' &&
-              shownTheme !== version.theme && (
-                <Box component="span" sx={{ ...labelSx, ml: 1 }}>
-                  padded onto the canvas
-                </Box>
-              )}
+            {/* The run in one line: its tries and the count of its changes. The ⓘ toggle opens
+              the rounds and the "what changed" list; a run with neither has a plain line. */}
+            {hasDetails ? (
+              <Box
+                component="button"
+                type="button"
+                data-testid="result-summary"
+                onClick={() => setDetailsOpen(open => !open)}
+                aria-expanded={detailsOpen}
+                aria-controls={detailsOpen ? detailsId : undefined}
+                // The visible line, with what it opens in front for a screen reader.
+                aria-label={`Run details: ${summary}`}
+                sx={{
+                  ...actionButtonSx,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  ml: 'auto',
+                  mr: -0.75,
+                  px: 0.75,
+                  whiteSpace: 'normal',
+                  textAlign: 'left',
+                }}
+              >
+                {summary}
+                {detailsOpen ? (
+                  <InfoIcon aria-hidden sx={{ fontSize: 16 }} />
+                ) : (
+                  <InfoOutlinedIcon aria-hidden sx={{ fontSize: 16 }} />
+                )}
+              </Box>
+            ) : (
+              <Box component="span" data-testid="result-summary" sx={{ ...labelSx, ml: 'auto' }}>
+                {summary}
+              </Box>
+            )}
           </Box>
 
-          {/* How each round of the run ended, as the progress grid showed it while it ran. */}
-          {rounds.length > 0 && (
-            <Box sx={{ minWidth: 0, overflowX: 'auto' }}>
-              <Box sx={{ ...labelSx, mb: 0.5 }}># rounds</Box>
-              <RoundGrid rows={rounds} label={`Rounds of version ${number}`} />
-            </Box>
-          )}
+          {detailsOpen && hasDetails && (
+            <Box
+              id={detailsId}
+              data-testid="result-details"
+              sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, minWidth: 0 }}
+            >
+              {/* How each round of the run ended, as the progress grid showed it while it ran. */}
+              {rounds.length > 0 && (
+                <Box sx={{ minWidth: 0, overflowX: 'auto' }}>
+                  <Box sx={{ ...labelSx, mb: 0.5 }}># rounds</Box>
+                  <RoundGrid rows={rounds} label={`Rounds of version ${number}`} />
+                </Box>
+              )}
 
-          {result.changes.length > 0 && (
-            <Box>
-              <Box sx={labelSx}># what changed</Box>
-              <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5, ...bodyTextSx }}>
-                {result.changes.map((change, index) => (
-                  <li key={index}>{change}</li>
-                ))}
-              </Box>
+              {result.changes.length > 0 && (
+                <Box>
+                  <Box sx={labelSx}># what changed</Box>
+                  <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5, ...bodyTextSx, ...readableSx }}>
+                    {result.changes.map((change, index) => (
+                      <li key={index}>{change}</li>
+                    ))}
+                  </Box>
+                </Box>
+              )}
             </Box>
           )}
 
@@ -714,7 +795,7 @@ export function ResultCard({
               }}
             >
               <Box sx={labelSx}># notes — still worth a look</Box>
-              <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5, ...bodyTextSx }}>
+              <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5, ...bodyTextSx, ...readableSx }}>
                 {result.residual_defects.map((note, index) => (
                   <li key={index}>{note}</li>
                 ))}
@@ -722,15 +803,14 @@ export function ResultCard({
             </Box>
           )}
 
-          {/* The adapted code: copy it, or download it with its data. */}
-          <Box sx={{ minWidth: 0 }}>
+          {/* The adapted code: copy it, or download it with its data; the code itself on request. */}
+          <Box sx={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Box
               sx={{
                 display: 'flex',
                 flexWrap: 'wrap',
                 alignItems: 'center',
                 gap: 0.5,
-                mb: 1,
               }}
             >
               <Box component="span" sx={{ ...labelSx, mr: 'auto' }}>
@@ -739,6 +819,29 @@ export function ResultCard({
                   : `# ${codeName} runs next to data.csv`}
               </Box>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, ml: -1.25 }}>
+                <Box
+                  component="button"
+                  type="button"
+                  onClick={() => setCodeOpen(open => !open)}
+                  aria-expanded={codeOpen}
+                  aria-controls={codeOpen ? codeId : undefined}
+                  aria-label={codeOpen ? 'Hide code' : 'Show code'}
+                  sx={actionButtonSx}
+                >
+                  {codeOpen ? '.hide_code()' : '.show_code()'}
+                </Box>
+                <Box
+                  component="button"
+                  type="button"
+                  onClick={() =>
+                    version.code.state === 'ready' && copyToClipboard(version.code.text)
+                  }
+                  disabled={version.code.state !== 'ready'}
+                  aria-label="Copy code"
+                  sx={actionButtonSx}
+                >
+                  {copied ? '.copied' : '.copy()'}
+                </Box>
                 <Box
                   component="button"
                   type="button"
@@ -773,37 +876,20 @@ export function ResultCard({
               </Box>
             </Box>
             {fileError && (
-              <Box role="alert" sx={{ ...labelSx, color: colors.error, mb: 1 }}>
+              <Box role="alert" sx={{ ...labelSx, color: colors.error }}>
                 {fileError}
               </Box>
             )}
-            <Box sx={{ position: 'relative', minWidth: 0 }}>
-              {version.code.state === 'ready' ? (
-                <>
-                  <Tooltip title={copied ? '.copied' : '.copy()'}>
-                    <IconButton
-                      onClick={() =>
-                        version.code.state === 'ready' && copyToClipboard(version.code.text)
-                      }
-                      aria-label="Copy code"
-                      size="small"
-                      sx={{
-                        position: 'absolute',
-                        top: 10,
-                        right: 10,
-                        zIndex: 1,
-                        bgcolor: 'var(--bg-elevated)',
-                        border: '1px solid var(--code-border)',
-                        '&:hover': { bgcolor: 'var(--bg-surface)' },
-                      }}
-                    >
-                      {copied ? (
-                        <CheckIcon color="success" fontSize="small" />
-                      ) : (
-                        <ContentCopyIcon fontSize="small" />
-                      )}
-                    </IconButton>
-                  </Tooltip>
+            {/* In view also while the code is folded: it says why `.copy()` waits. */}
+            {version.code.state === 'failed' && (
+              <Box role="alert" sx={{ ...labelSx, color: colors.error }}>
+                could not load {codeName}
+              </Box>
+            )}
+            {/* The highlighter's chunk loads only once the code is asked for. */}
+            {codeOpen && version.code.state !== 'failed' && (
+              <Box id={codeId} data-testid="result-code" sx={{ minWidth: 0 }}>
+                {version.code.state === 'ready' ? (
                   <Box sx={{ maxHeight: 420, overflow: 'auto', borderRadius: '8px', minWidth: 0 }}>
                     <Suspense
                       fallback={
@@ -819,15 +905,11 @@ export function ResultCard({
                       />
                     </Suspense>
                   </Box>
-                </>
-              ) : version.code.state === 'failed' ? (
-                <Box role="alert" sx={{ ...labelSx, color: colors.error }}>
-                  could not load {codeName}
-                </Box>
-              ) : (
-                <Skeleton variant="rounded" height={120} />
-              )}
-            </Box>
+                ) : (
+                  <Skeleton variant="rounded" height={120} />
+                )}
+              </Box>
+            )}
           </Box>
 
           {/* Quick feedback: this version as a case for tuning the assistant. */}

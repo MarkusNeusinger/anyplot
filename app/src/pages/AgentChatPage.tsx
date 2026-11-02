@@ -27,7 +27,9 @@
  * per library: the libraries grouped by language, `all` for the admin) and,
  * next to it, the session language chip (`LanguageChip`): the language of the
  * replies and of the text in the plot, English until the first typed message
- * or a choice sets another. The page talks only to the BFF under
+ * or a choice sets another. On the admin lane, the "⋯" menu (`SessionMenu`) at the
+ * header's end holds `.save()` with its `# include data.csv` box (out of the header row
+ * since 2026-11-02, owner: less text); the public lane has neither. The page talks only to the BFF under
  * `/debug/agent/*` (`src/lib/agent.ts`, `src/hooks/useAgentSession.ts`).
  *
  * A library switch keeps the data, the bindings, their confirmation, the
@@ -90,9 +92,11 @@
  *    and shows the same notice.
  *    The public lane: the API's `GET /agent/lane` (`useAgentLaneOpen`); closed,
  *    the page says so. It talks to `/agent/*` with `PUBLIC_LANE` in place of the
- *    admin token, shows the experimental notice above the first input, offers
- *    no `all`, and leaves the data boxes of feedback and `.save()` unticked
- *    (`sections/agent-chat/lane.ts`).
+ *    admin token, shows the experimental notice above the first input (one line, the
+ *    details behind its ⓘ button: `ExperimentalNotice`), offers no `all` and no
+ *    `.save()` (owner decision of 2026-11-02: a visitor cannot resume a saved session,
+ *    and the feedback form covers "something went wrong"), and leaves the feedback
+ *    form's data box unticked (`sections/agent-chat/lane.ts`).
  *
  * Design: docs/concepts/agent-network.md ("Frontend", "Request flow").
  */
@@ -132,6 +136,7 @@ import { paths, specPath } from 'src/routes/paths';
 import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
 import { DATA_SUMMARY_ID, DataPanel } from 'src/sections/agent-chat/DataPanel';
+import { ExperimentalNotice } from 'src/sections/agent-chat/ExperimentalNotice';
 import { FanOut } from 'src/sections/agent-chat/FanOut';
 import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
 import { AgentLaneContext } from 'src/sections/agent-chat/lane';
@@ -146,7 +151,7 @@ import {
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { Remembered } from 'src/sections/agent-chat/Remembered';
-import { SaveButton } from 'src/sections/agent-chat/SaveButton';
+import { SessionMenu } from 'src/sections/agent-chat/SessionMenu';
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
 import { inStep2, showsTimeline } from 'src/sections/agent-chat/steps';
 import {
@@ -165,8 +170,13 @@ import { readAdminHint, readAdminToken, setAdminHint } from 'src/utils/adminAuth
 
 const SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
 const OPEN_SOURCES = new Set(['plot_page', 'landing']);
-/** The chat column's width: a thread to read, and a plot that fits the screen with its composer. */
-const COLUMN_MAX_WIDTH = 960;
+/**
+ * The chat column's width: it grows with the window up to this (960 until 2026-11-02; owner:
+ * use the room of a wide screen), so the data card with its grid, the plot cards and the code
+ * take the full width, while the thread's text keeps a readable line (`CHAT_TEXT_MAX` in
+ * `styles.ts`). Below about 1100 px the window, not this cap, sets the width, as before.
+ */
+const COLUMN_MAX_WIDTH = 1360;
 /**
  * What `.start_over()` does, unlike `.send()` beside it (the owner could not tell the two apart),
  * and the quiet `.create_plot()` beside the offer after a switch: the catalogue code again, with the
@@ -225,47 +235,9 @@ function AdminRequired() {
   );
 }
 
-/**
- * The public lane's notice above the first input: that this is an AI and which one, that it
- * can be wrong, what not to paste, what is stored, and the limits (also the EU AI Act's
- * Art. 50 duty to say that a person talks to an AI). The owner reads every user-facing text:
- * keep it in the PR's "Texts to read".
- */
-export const EXPERIMENTAL_NOTICE =
-  'an AI does the work here: Claude by Anthropic, through Google Cloud Vertex AI in the EU, reads what you paste and writes the plot and its code. results can be wrong, and nobody checks them by hand. do not paste data you may not share. nothing is stored unless you send feedback. daily limits apply.';
-
 /** The chat's Highcharts note, shown while the session plots in Highcharts (the legal page says the same). */
 export const HIGHCHARTS_NOTE =
   'highcharts is free for non-commercial use; a commercial use needs a licence from Highsoft.';
-
-function ExperimentalNotice() {
-  return (
-    <Box
-      role="note"
-      data-testid="experimental-notice"
-      sx={{
-        ...labelSx,
-        color: 'var(--ink)',
-        borderLeft: `3px solid ${colors.primary}`,
-        pl: 1.5,
-        mb: 2,
-        lineHeight: 1.6,
-      }}
-    >
-      # experimental · {EXPERIMENTAL_NOTICE}{' '}
-      {/* A new tab: leaving the page would end the session. */}
-      <Box
-        component="a"
-        href={`${paths.legal}#assistant`}
-        target="_blank"
-        rel="noopener"
-        sx={proseLinkStyle}
-      >
-        how the assistant works
-      </Box>
-    </Box>
-  );
-}
 
 /** The public lane's page while the lane is closed (`GET /agent/lane` answered no). */
 function LaneClosed() {
@@ -283,7 +255,8 @@ function LaneClosed() {
 /**
  * The public chat at `/agent`: the same page on the public lane (`PUBLIC_LANE`), open to
  * everyone while the API's public lane is (`useAgentLaneOpen`), labelled experimental, with
- * the admin-only parts left out (the fan-out's `all`) and the data boxes unticked.
+ * the admin-only parts left out (the fan-out's `all`, `.save()` and its "⋯" menu) and the
+ * feedback form's data box unticked.
  */
 export function PublicAgentChatPage() {
   return <AgentChatPage lane="public" />;
@@ -361,8 +334,7 @@ export function AgentChatPage({ lane = 'admin' }: { lane?: AgentLane } = {}) {
   if (!valid) {
     return (
       <Notice title="use with my data">
-        open this page from a plot&apos;s <code>.adapt()</code> button: it needs a spec and a
-        library, such as{' '}
+        open it from a plot&apos;s <code>.use_my_data()</code>, or start with{' '}
         <Box
           component={RouterLink}
           to={chatPath('scatter-basic', 'matplotlib', 'python')}
@@ -840,7 +812,7 @@ function AgentChat({
           offerAll={offerAll}
           allPressed={plotAll}
           // No session to switch: another library opens the page anew, with its own
-          // session (a full navigation, like the `.adapt()` button).
+          // session (a full navigation, like the plot page's `.use_my_data()`).
           hrefFor={reopen ? lib => chatPath(specId, lib, LIB_TO_LANG[lib] ?? 'python') : undefined}
           // Not during a run (the server refuses a switch then) or while the fan-out's panel
           // is open: its sessions run on this one's data.
@@ -857,9 +829,11 @@ function AgentChat({
             onSet={session.setLanguage}
           />
         )}
-        {/* `.save()` downloads the session; without one (ineligible, error) there is nothing to save. */}
-        {!reopen && (
-          <SaveButton
+        {/* The "⋯" menu holds `.save()`, the admin's debugging bundle, which downloads the
+            session; without one (ineligible, error) there is nothing to save. The public lane
+            has no `.save()`, so no menu either (owner decision of 2026-11-02). */}
+        {lane === 'admin' && !reopen && (
+          <SessionMenu
             disabled={state.phase !== 'ready' || !state.sessionId || busy}
             onSave={session.saveSession}
           />
@@ -954,22 +928,6 @@ function AgentChat({
             onDataViewShown={() => session.reportOutcome('opened_data_view', 0)}
           />
 
-          {state.items.length === 0 && !state.run && (
-            <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
-              paste your data above, or ask here for example data or a curve: &quot;y = sin(x), x
-              from{' '}
-              <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
-                -pi
-              </Box>{' '}
-              to pi&quot;, and the assistant makes the table. it sums your data up here, and you can
-              ask it to fix the data in plain words, such as &quot;read Anteil as numbers&quot; or
-              &quot;sum per month&quot;. check the preview and the bindings, confirm, then{' '}
-              <code>.create_plot()</code>, with a note first if the plot should do something
-              differently. afterwards, ask for changes to the plot: &quot;log scale on y&quot;,
-              &quot;dark version&quot;, &quot;label the outliers&quot;.
-            </Box>
-          )}
-
           <ChatThread
             state={state}
             specId={specId}
@@ -1061,19 +1019,18 @@ function AgentChat({
                 ref={messageRef}
                 aria-label="Message"
                 placeholder={
-                  // Step 1 talks about the data, step 2 about the plot. Without
-                  // data, the chat is the other way to get some: example data or a
-                  // formula. While `all` is pressed in step 2 the box waits: the
-                  // fan-out takes no text.
+                  // Step 1 talks about the data, step 2 about the plot; short since
+                  // 2026-11-02, the how-to is behind the data card's ⓘ. Without data,
+                  // the chat is the other way to get some: example data or a formula.
+                  // While `all` is pressed in step 2 the box waits: the fan-out takes
+                  // no text.
                   chatLocked
                     ? 'all libraries: the table goes as it is · turn all off to chat'
-                    : !state.dataset
-                      ? 'ask for example data or a curve: "y = sin(x), x from -pi to pi"'
-                      : !step2
-                        ? 'ask about your data, or for a fix: "sum per month"'
-                        : firstPlot
-                          ? 'optional: what the first plot should do differently'
-                          : 'ask about this plot, or ask for a change'
+                    : !step2
+                      ? 'ask for example data, a curve, or a fix to your data'
+                      : firstPlot
+                        ? 'optional: what the first plot should do differently'
+                        : 'ask for a change, e.g. log scale on y'
                 }
                 value={draft}
                 maxLength={MAX_MESSAGE_CHARS}

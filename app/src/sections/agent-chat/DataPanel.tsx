@@ -152,9 +152,12 @@ import {
   type FileReading,
   readFile,
 } from 'src/sections/agent-chat/fileText';
+import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { lazyOrFallback } from 'src/sections/agent-chat/lazyOrFallback';
 import {
   CONFIRM_LOST_TEXT,
+  DATA_HOWTO,
+  DATA_PLACEHOLDER,
   describeConvertFailure,
   describeConvertWarnings,
   describeDataFailure,
@@ -1254,24 +1257,20 @@ export function DataPanel({
   // bindings, and in step 1 the confirmation at its foot.
   const cardContent = (
     <>
-      <Box
-        component="label"
-        htmlFor="agent-data"
-        sx={{ ...labelSx, display: 'block', mb: dataset ? 0.75 : 0.25 }}
-      >
-        # your data — paste or drop CSV, TSV, JSON, plain text, Excel, ODS, Parquet, Feather or
-        NumPy
-      </Box>
-      {/* Until there is data, the other sources: example data the assistant makes up, a curve it computes. */}
-      {!dataset && (
-        <Box id="agent-data-hint" sx={{ ...labelSx, mb: 0.75 }}>
-          or type &quot;example data&quot; here, or ask for a curve in the chat: y = sin(x), x from{' '}
-          <Box component="span" sx={{ whiteSpace: 'nowrap' }}>
-            -pi
-          </Box>{' '}
-          to pi
+      {/* One short label (since 2026-11-02, owner: less text); the how-to behind its ⓘ, the
+          other sources (example data, a curve) in the box's placeholder. The button sits beside
+          the label, not in it, so it never joins the box's accessible name. */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.75 }}>
+        <Box component="label" htmlFor="agent-data" sx={labelSx}>
+          # your data
         </Box>
-      )}
+        <InfoPopover
+          label="How the data card works"
+          heading="# how it works"
+          lines={DATA_HOWTO}
+          testId="data-howto"
+        />
+      </Box>
       {/* The drop zone: the box itself. A file dragged over it tints it with the brand
           colour, or with the warning colour while a step runs and the drop would be refused. */}
       <Box
@@ -1289,8 +1288,7 @@ export function DataPanel({
           value={text}
           rows={8}
           spellCheck={false}
-          aria-describedby={dataset ? undefined : 'agent-data-hint'}
-          placeholder={'month,revenue\n2026-01,120\n2026-02,135'}
+          placeholder={DATA_PLACEHOLDER}
           aria-busy={converting || state.parsing || undefined}
           ref={boxRef}
           onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -1314,6 +1312,8 @@ export function DataPanel({
             lineHeight: 1.5,
             whiteSpace: 'pre',
             overflowX: 'auto',
+            // A table keeps its lines; the placeholder's lines wrap at phone width.
+            '&::placeholder': { whiteSpace: 'pre-wrap' },
             ...(dragOver && {
               borderColor: dropReady ? colors.primary : colors.warning,
               borderStyle: 'dashed',
