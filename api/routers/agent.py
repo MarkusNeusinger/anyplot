@@ -1241,9 +1241,17 @@ async def switch_library(
 
 @router.get("/sessions/{sid}/memory")
 async def get_memory(sid: SessionId, ctx: Ctx, client: Client) -> Any:
-    """The plot memory the page lists ("Gemerkt"): `{entries, max_entries}`, oldest first, each `{id, kind, target,
-    text, expect, turn}`; the user's own decisions in the session, in memory only, gone with the session."""
+    """The plot memory the page lists ("Gemerkt"): `{entries, max_entries, written}`, oldest first, each `{id, kind,
+    target, text, expect, turn}`; the user's own decisions in the session, in memory only, gone with the session.
+    `written`: the memory ever held an entry, so its entries alone (also none) travel with a switch."""
     return await _call_upstream(client, ctx, "GET", f"/sessions/{sid}/memory")
+
+
+@router.delete("/sessions/{sid}/memory")
+async def forget_all_memory(sid: SessionId, ctx: Ctx, client: Client) -> Any:
+    """Forget every entry of the plot memory (the page's forget-all, a blank start): the memory after it, as the GET
+    answers it. Only the user clears the memory; `409 run_active` while a turn runs."""
+    return await _call_upstream(client, ctx, "DELETE", f"/sessions/{sid}/memory")
 
 
 @router.delete("/sessions/{sid}/memory/{entry_id}")

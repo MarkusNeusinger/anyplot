@@ -404,9 +404,14 @@ export interface CarryOffer {
   memoryBacked: boolean;
 }
 
-/** How many decisions the carry run takes over now: the remembered list's, or the switch answer's count. */
+/**
+ * How many decisions the carry run takes over now: the remembered list's once
+ * the memory ever held one (`written`, as the server counts: what the user
+ * removed never comes back through the source plot's requests), else the
+ * switch answer's count.
+ */
 export function carryDecisions(offer: CarryOffer, memory: PlotMemory | null): number {
-  return offer.memoryBacked && memory ? memory.entries.length : offer.decisions;
+  return memory && (memory.written || offer.memoryBacked) ? memory.entries.length : offer.decisions;
 }
 
 export interface AgentSessionState {
@@ -1828,6 +1833,31 @@ export function useAgentSession({
     [token, safeDispatch, handleFailure, busy, refreshMemory]
   );
 
+  /**
+   * `.forget_all()` on the remembered list (`DELETE .../memory`): every
+   * decision goes, for a blank start. Nothing else clears the memory,
+   * `.start_over()` included. A failure rejects with an `AgentApiError` for
+   * the list's failure line.
+   */
+  const forgetAllMemory = useCallback(async (): Promise<void> => {
+    const current = stateRef.current;
+    const sid = current.sessionId;
+    if (!sid || current.run || busy()) return;
+    memoryRef.current = true;
+    safeDispatch({ type: 'memory_busy', busy: true });
+    try {
+      const memory = await agentApi.forgetAllMemory(token, sid);
+      memorySeq.current += 1;
+      safeDispatch({ type: 'memory_sync', memory });
+    } catch (err) {
+      const failure = handleFailure(err);
+      throw err instanceof AgentApiError ? err : new AgentApiError(0, failure.code);
+    } finally {
+      memoryRef.current = false;
+      safeDispatch({ type: 'memory_busy', busy: false });
+    }
+  }, [token, safeDispatch, handleFailure, busy]);
+
   // ---------------------------------------------------------------- turns
 
   const onPlot = useCallback(
@@ -2437,6 +2467,7 @@ export function useAgentSession({
     stop,
     switchLibrary,
     forgetMemory,
+    forgetAllMemory,
     requestTheme,
     fetchArtifact,
     reportOutcome,

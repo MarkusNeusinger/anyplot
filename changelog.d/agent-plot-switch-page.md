@@ -3,11 +3,13 @@
 - **The agent chat offers the plot in the new library with your decisions.** After a library switch
   whose answer offers it, the composer's create action reads "plot in seaborn with your 3 decisions"
   and sends `carry_plot`; picking a library runs nothing until that click, so browsing costs nothing.
-  `.create_plot()`, or `.start_over()` once the library has a plot, stays beside it as the fresh plot
-  without the decisions, and the offer ends once a plot ships in that library. (#12522)
+  `.create_plot()`, or `.start_over()` once the library has a plot, stays beside it as the plot from
+  the catalogue code, which keeps your decisions too, and the offer ends once a plot ships in that
+  library. (#12522)
 - **The remembered decisions stand above the composer.** The plot memory's entries, the decisions every
-  next plot takes over, are listed with `.forget()` each, read again after every turn, after a switch
-  and after a removal; the list hides while the memory is empty and waits while anything runs. (#12522)
+  next plot takes over, are listed with `.forget()` each and `.forget_all()` for a blank start, the only
+  ways the memory is cleared; the list is read again after every turn, after a switch and after a
+  removal, hides while the memory is empty and waits while anything runs. (#12522)
 
 ### Changed
 

@@ -854,7 +854,7 @@ describe('AgentChatPage gating', () => {
     expect(startOver).toBeEnabled();
     expect(startOver).toHaveTextContent('.start_over()');
     expect(startOver).toHaveAccessibleDescription(
-      expect.stringContaining('new from the catalogue plot, without your changes')
+      expect.stringContaining('new from the catalogue plot; keeps your remembered decisions')
     );
     expect(screen.getByTestId('data-pinned')).toBeInTheDocument();
   });
@@ -1982,7 +1982,7 @@ describe('AgentChatPage library switch and plot memory', () => {
     const fresh = screen.getByRole('button', { name: 'Create plot' });
     expect(fresh).toHaveTextContent('.create_plot()');
     expect(fresh).toHaveAccessibleDescription(
-      expect.stringContaining('without your changes or remembered decisions')
+      expect.stringContaining('keeps your remembered decisions')
     );
     expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
 

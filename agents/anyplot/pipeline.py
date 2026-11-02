@@ -158,7 +158,8 @@ from .grounding import (
     reviewed_misses,
 )
 from .language import DEFAULT_LANGUAGE, same_language
-from .memory import MEMORY, Planned, decision_lines, memory_delta, next_seq, plan, read_memory
+from .memory import Planned, decision_lines, memory_delta, memory_written, next_seq, plan, read_memory
+from .memory import expected_texts as memory_expected_texts
 from .models import error_chain, model_busy
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, adapter_instruction, fence, prompt_hash
@@ -497,13 +498,17 @@ class Run:
     """The base version's change requests (`standing_requests`), or a carry's (`switch.Carry.requests`): the user's
     standing decisions while the plot memory is empty, and the lineage the shipped version stores."""
     decisions: list[str] = field(default_factory=list)
-    """The plot memory's entries (`memory.decision_lines`): when there are any, the adapter and the reviewer get them as
-    the standing decisions in place of `user_requests`. Empty for a fresh run (`fresh`)."""
+    """The plot memory's entries (`memory.decision_lines`), with the run's own `remember` items applied: when there are
+    any, the adapter and the reviewer get them as the standing decisions in place of `user_requests`."""
+    memory_written: bool = False
+    """The session's memory was ever written (`memory.memory_written`): from then on the visible memory alone is what
+    stands and travels, and the raw requests never come back, also after the user removed every entry (owner
+    decision of 2026-11-02)."""
     carry: Carry | None = None
     """The switch's carry this run takes (`switch.read_carry`): a run in a new target without a version to change."""
     fresh: bool = False
-    """The page's `create_plot` action (`.create_plot()`, `.start_over()`) on the catalogue plot: no carry, no memory;
-    once it ships, the memory starts over, since the plot it describes is gone (`settle_memory`)."""
+    """The page's `create_plot` action (`.create_plot()`, `.start_over()`): the catalogue code again, the way out of
+    broken code, without the switch's carry but with the visible memory (owner decision of 2026-11-02)."""
     memory_plan: Planned | None = None
     """The plot memory as the run leaves it once it ships (`plan_memory`): its `decisions` are these entries."""
     memory_seq: int = 1
@@ -547,6 +552,12 @@ class Run:
 
     def timed(self, stage: str, seconds: float) -> None:
         self.stage_s[stage] = self.stage_s.get(stage, 0.0) + seconds
+
+    @property
+    def raw_requests(self) -> list[str]:
+        """The raw lineage requests the adapter and the reviewer get as the fallback standing decisions: only while
+        the session's memory was never written; after that, what the user removed must not come back through them."""
+        return [] if self.memory_written else self.user_requests
 
 
 ROUND_OUTCOMES: dict[Stage, RoundOutcome] = {
@@ -846,27 +857,37 @@ def settle_pending_request(state: Any, args: PipelineArgs, shipped: bool) -> Non
         state[PENDING_REMEMBER] = [item.model_dump(mode="json") for item in args.remember] or None
 
 
-def take_carried_texts(args: PipelineArgs, carry: Carry | None) -> PipelineArgs:
-    """The run's arguments with a switch's carried texts (`switch.Carry.expected_texts`) when it brings none of its own.
+def carried_texts(state: Any, carry: Carry | None) -> list[str]:
+    """The texts a carry run checks, read at run time: the memory's verbatim texts once the session's memory was ever
+    written, so a label the user removed after the switch is no longer expected; else the carry's own (the source
+    version's `expected_texts`)."""
+    if carry is None:
+        return []
+    return memory_expected_texts(read_memory(state)) if memory_written(state) else list(carry.expected_texts)
+
+
+def take_carried_texts(args: PipelineArgs, texts: Sequence[str]) -> PipelineArgs:
+    """The run's arguments with a switch's carried texts (`carried_texts`) when it brings none of its own.
 
     A run with texts of its own checks only those, as a bare run fills in the kept note's texts only
     without its own (`chosen_texts`): a title the user rewrote in the switch's turn must not be checked
     against the one it replaces. A change request without texts ("and make the line thicker") keeps the
     carried ones, so the label the user set three turns ago in the other library is checked in this one.
     """
-    if carry is None or args.expected_texts or not carry.expected_texts:
+    if args.expected_texts or not texts:
         return args
     try:
-        return PipelineArgs.model_validate({**args.model_dump(), "expected_texts": list(carry.expected_texts)})
+        return PipelineArgs.model_validate({**args.model_dump(), "expected_texts": list(texts)})
     except ValidationError:
         return args
 
 
-def plan_memory(state: Any, args: PipelineArgs, *, fresh: bool, turn: int) -> Planned:
-    """The plot memory as the run would leave it once it ships: the stored entries (none for a fresh run) with the
-    run's own `remember` items applied (`memory.plan`), numbered on from the session's id counter."""
+def plan_memory(state: Any, args: PipelineArgs, *, turn: int) -> Planned:
+    """The plot memory as the run would leave it once it ships: the stored entries with the run's own `remember`
+    items applied (`memory.plan`), numbered on from the session's id counter. Every run applies it, a fresh one
+    too: nothing but the user clears the memory (owner decision of 2026-11-02)."""
     stored = read_memory(state)
-    return plan([] if fresh else stored, args.remember, seq=next_seq(state, stored), turn=turn)
+    return plan(stored, args.remember, seq=next_seq(state, stored), turn=turn)
 
 
 def settle_memory(state: Any, run: Run, shipped: bool) -> None:
@@ -874,19 +895,17 @@ def settle_memory(state: Any, run: Run, shipped: bool) -> None:
     both as they were, so a change that never reached the plot is never remembered.
 
     A shipped run in the carry's target has taken the carry, or made a version the next change starts
-    from, so the carry goes. The memory takes the run's planned entries (`plan_memory`): its `remember`
-    items, stored only now. A fresh run that shipped (`Run.fresh`: `.create_plot()` or `.start_over()`)
-    starts the memory over with its own items alone, since the earlier decisions described the plot
-    the user just replaced (owner option A of 2026-11-02); the id counter goes on.
+    from, so the carry goes; so does a shipped fresh run (`Run.fresh`), whose plot is the target's now.
+    The memory takes the run's planned entries (`plan_memory`): its `remember` items, stored only now.
+    Nothing here ever empties the memory: `.start_over()` keeps it (owner decision of 2026-11-02), and
+    only the user removes entries (`forget`, the page's remove and forget-all).
     """
     if not shipped:
         return
     if state.get(CARRY) is not None and (run.fresh or read_carry(state, run.view.target) is not None):
         state[CARRY] = None
     planned = run.memory_plan
-    if planned is None:
-        return
-    if planned.seq != run.memory_seq or (run.fresh and state.get(MEMORY)):
+    if planned is not None and planned.seq != run.memory_seq:
         for key, value in memory_delta(planned.entries, planned.seq).items():
             state[key] = value
 
@@ -1602,17 +1621,18 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     previous = (
         services.versions.latest_rendered(ctx.session.id, target=view.target) if node_input.base == "previous" else None
     )
-    # The page's `.create_plot()` or `.start_over()` asks for the catalogue plot as it is: no carry, no memory.
+    # The page's `.create_plot()` or `.start_over()` asks for the catalogue code again, the way out of broken code:
+    # no carry, but the visible memory still applies (owner decision of 2026-11-02).
     fresh = ledger.fresh_start and previous is None
     # A first run in a new target takes the switch's carry; a change of a version in the target needs none.
     carry = None if previous is not None or fresh else read_carry(ctx.state, view.target)
     # The arguments the user's note is settled from: the carried texts feed this run's checks only, never the kept
     # first-plot note, which a carry run that ships nothing would otherwise take them into (Copilot on #12520).
     own_input = node_input
-    node_input = take_carried_texts(node_input, carry)
+    node_input = take_carried_texts(node_input, carried_texts(ctx.state, carry))
     theme, theme_asked = run_theme(node_input.theme, ledger.site_theme, previous, carry)
     # The memory with this change's own decisions applied: the adapter sees what will stand once it ships.
-    memory_plan = plan_memory(ctx.state, node_input, fresh=fresh, turn=ledger.turn)
+    memory_plan = plan_memory(ctx.state, node_input, turn=ledger.turn)
     run = Run(
         view=view,
         dataset=dataset,
@@ -1622,7 +1642,8 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         change_request=node_input.change_request,
         expected_texts=list(node_input.expected_texts),
         base=node_input.base,
-        decisions=[] if fresh else decision_lines(memory_plan.entries),
+        decisions=decision_lines(memory_plan.entries),
+        memory_written=memory_written(ctx.state),
         carry=carry,
         fresh=fresh,
         memory_plan=memory_plan,
@@ -1842,8 +1863,8 @@ async def _attempts(
     )
     working = previous.working if previous is not None else view.normalised
     # What the user asked of the base version's lineage stands: every adapter call and the reviewer see it. A run
-    # that takes a switch's carry starts from this library's catalogue code with the source lineage's requests; the
-    # plot memory, when it holds any entries, stands in for both (`_requests_lines`).
+    # that takes a switch's carry starts from this library's catalogue code with the source lineage's requests. Once
+    # the session's memory was ever written, the memory alone stands in for both (`Run.raw_requests`).
     if previous is not None:
         run.user_requests = standing_requests(previous.requests)
     elif run.carry is not None:
@@ -1923,7 +1944,7 @@ async def _attempts(
             loader_columns=columns,
             hints=_repair_hints(hints, run) if round_number(run, attempt) > 1 else hints,
             change_request=args.change_request,
-            user_requests=run.user_requests,
+            user_requests=run.raw_requests,
             decisions=run.decisions,
             feedback=_clip_feedback(feedback),
             previous_plan=previous_plan,
@@ -2191,7 +2212,7 @@ async def _attempts(
             profile_summary=profile_summary(dataset.profile),
             spec_brief=spec_brief(view),
             change_request=args.change_request,
-            user_requests=run.user_requests,
+            user_requests=run.raw_requests,
             decisions=run.decisions,
             # Every measured finding, the ADAPTATION ones too, so the review sees what the repair will get.
             gate_notes=[_note(line) for line in measured][:MAX_NOTES],

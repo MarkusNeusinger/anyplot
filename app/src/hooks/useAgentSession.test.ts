@@ -2123,6 +2123,10 @@ describe('useAgentSession: library switch carry and plot memory', () => {
       'GET /sessions/S1/memory': () => json(200, { entries: memory, max_entries: 30 }),
       'DELETE /sessions/S1/memory/m1': forget('m1'),
       'DELETE /sessions/S1/memory/m2': forget('m2'),
+      'DELETE /sessions/S1/memory': () => {
+        memory = [];
+        return json(200, { entries: memory, max_entries: 30, written: true });
+      },
       ...extra,
     });
     const hook = renderHook(() => useAgentSession({ ...options, fanout }));
@@ -2233,17 +2237,35 @@ describe('useAgentSession: library switch carry and plot memory', () => {
     expect(carryDecisions(result.current.state.carryOffer!, result.current.state.memory)).toBe(1);
   });
 
-  it("keeps the switch answer's count when the memory was empty, as the server counted requests", () => {
+  it("keeps the switch answer's count only while the memory was never written, as the server counts", () => {
     const offer = {
       target: { spec_id: 'scatter-basic', library: 'seaborn' },
       decisions: 3,
       memoryBacked: false,
     };
-    expect(carryDecisions(offer, { entries: [], max_entries: 30 })).toBe(3);
-    expect(carryDecisions({ ...offer, memoryBacked: true }, { entries: [], max_entries: 30 })).toBe(
-      0
-    );
+    const never = { entries: [], max_entries: 30, written: false };
+    expect(carryDecisions(offer, never)).toBe(3); // the server counted the source plot's requests
+    // Once the memory held a decision, what the user removed never comes back through them.
+    expect(carryDecisions(offer, { ...never, written: true })).toBe(0);
+    expect(carryDecisions({ ...offer, memoryBacked: true }, never)).toBe(0);
     expect(carryDecisions({ ...offer, memoryBacked: true }, null)).toBe(3);
+  });
+
+  it('forgets every decision with forget_all and counts the offer down to none', async () => {
+    const { result } = await withMemory([LINE, LABEL]);
+    await act(async () => {
+      await result.current.switchLibrary('seaborn');
+    });
+    await waitFor(() => expect(result.current.state.memory?.entries).toHaveLength(2));
+
+    await act(() => result.current.forgetAllMemory());
+
+    const removal = calls.find(
+      call => call.method === 'DELETE' && call.path === '/sessions/S1/memory'
+    );
+    expect(removal).toBeDefined();
+    expect(result.current.state.memory).toMatchObject({ entries: [], written: true });
+    expect(carryDecisions(result.current.state.carryOffer!, result.current.state.memory)).toBe(0);
   });
 
   it('drops a memory read that a removal overtook', async () => {

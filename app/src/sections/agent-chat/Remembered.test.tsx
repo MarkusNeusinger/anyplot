@@ -28,7 +28,11 @@ const entry = (id: string, text: string, turn = 2): MemoryEntry => ({
 const LINE = entry('m1', 'horizontal reference line at y = 7');
 const LABEL = entry('m2', "x-axis label: 'Zeit (h)'");
 const STARS = entry('m3', 'outliers as red stars');
-const memoryOf = (...entries: MemoryEntry[]): PlotMemory => ({ entries, max_entries: 30 });
+const memoryOf = (...entries: MemoryEntry[]): PlotMemory => ({
+  entries,
+  max_entries: 30,
+  written: true,
+});
 
 const section = () => screen.getByRole('region', { name: /remembered/ });
 const forgetButton = (text: string) => screen.getByRole('button', { name: `Forget: ${text}` });
@@ -43,6 +47,26 @@ function props(overrides: Partial<RememberedProps> = {}): RememberedProps {
 }
 
 describe('Remembered', () => {
+  it('forgets every decision with .forget_all(), and waits while anything else runs', async () => {
+    const onForgetAll = vi.fn(async () => undefined);
+    const { rerender } = render(<Remembered {...props({ onForgetAll, disabled: true })} />);
+    const all = () => screen.getByRole('button', { name: 'Forget all remembered decisions' });
+    expect(all()).toBeDisabled();
+
+    rerender(<Remembered {...props({ onForgetAll })} />);
+    await userEvent.click(all());
+
+    await waitFor(() => expect(onForgetAll).toHaveBeenCalledTimes(1));
+    expect(await screen.findByText('forgot every decision')).toBeInTheDocument();
+  });
+
+  it('offers no .forget_all() without its handler', () => {
+    render(<Remembered {...props()} />);
+    expect(
+      screen.queryByRole('button', { name: 'Forget all remembered decisions' })
+    ).not.toBeInTheDocument();
+  });
+
   it('shows nothing but a hidden status while the memory is empty or unknown', () => {
     const { rerender } = render(<Remembered {...props({ memory: null })} />);
     expect(screen.queryByRole('region')).not.toBeInTheDocument();
@@ -70,7 +94,11 @@ describe('Remembered', () => {
   it('counts one decision in the singular, and says when the memory is full', () => {
     const { rerender } = render(<Remembered {...props({ memory: memoryOf(LINE) })} />);
     expect(section()).toHaveAccessibleName(/^# remembered · 1 decision · /);
-    rerender(<Remembered {...props({ memory: { entries: [LINE, LABEL], max_entries: 2 } })} />);
+    rerender(
+      <Remembered
+        {...props({ memory: { entries: [LINE, LABEL], max_entries: 2, written: true } })}
+      />
+    );
     expect(section()).toHaveAccessibleName(
       '# remembered · 2 decisions · full: forget one before a new decision fits'
     );

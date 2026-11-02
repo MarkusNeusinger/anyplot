@@ -1008,22 +1008,32 @@ describe('agentApi library switch and plot memory', () => {
     await expect(agentApi.memory('', 'S/1')).resolves.toEqual({
       entries: [ENTRY],
       max_entries: 30,
+      written: false, // an older server names none
     });
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toMatch(/\/debug\/agent\/sessions\/S%2F1\/memory$/);
     expect(init.method ?? 'GET').toBe('GET');
 
     fetchMock.mockImplementation(
-      async () => new Response(JSON.stringify({ entries: [], max_entries: 30 }), { status: 200 })
+      async () =>
+        new Response(JSON.stringify({ entries: [], max_entries: 30, written: true }), {
+          status: 200,
+        })
     );
     await expect(agentApi.forgetMemory('', 'S/1', 'm3')).resolves.toEqual({
       entries: [],
       max_entries: 30,
+      written: true,
     });
     const [deleteUrl, deleteInit] = fetchMock.mock.calls[1] as unknown as [string, RequestInit];
     expect(deleteUrl).toMatch(/\/debug\/agent\/sessions\/S%2F1\/memory\/m3$/);
     expect(deleteInit).toMatchObject({ method: 'DELETE' });
     expect((deleteInit.headers as Record<string, string>)['X-Anyplot-Client']).toBe('agent-chat/1');
+
+    await expect(agentApi.forgetAllMemory('', 'S/1')).resolves.toMatchObject({ entries: [] });
+    const [allUrl, allInit] = fetchMock.mock.calls[2] as unknown as [string, RequestInit];
+    expect(allUrl).toMatch(/\/debug\/agent\/sessions\/S%2F1\/memory$/);
+    expect(allInit).toMatchObject({ method: 'DELETE' });
   });
 
   it('refuses an entry id outside the pattern before any request, and reads the route codes', async () => {
@@ -1101,8 +1111,11 @@ describe('library switch and plot memory readers', () => {
         { id: 'm2', kind: 'other', target: null, text: 't'.repeat(200), expect: null, turn: 0 },
       ],
       max_entries: 30,
+      written: false,
     });
-    expect(plotMemory({ entries: [] })).toEqual({ entries: [], max_entries: 30 });
+    expect(plotMemory({ entries: [] })).toEqual({ entries: [], max_entries: 30, written: false });
+    expect(plotMemory({ entries: [], written: 'yes' })).toMatchObject({ written: false });
+    expect(plotMemory({ entries: [], written: true })).toMatchObject({ written: true });
     expect(plotMemory({ entries: 'm1' })).toBeNull();
     expect(plotMemory([])).toBeNull();
   });
