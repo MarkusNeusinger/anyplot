@@ -1573,7 +1573,7 @@ def _row_number(frame: pd.DataFrame, op: RowNumber, carried: _Carried) -> tuple[
     if frame.shape[1] >= MAX_COLUMNS:
         raise PrepareError("too_wide", f"the data already has {frame.shape[1]} columns; at most {MAX_COLUMNS} fit")
     result = frame.copy()
-    result.insert(0, op.name, pd.array(range(1, len(frame) + 1), dtype="Int64"))
+    result.insert(0, op.name, pd.Series(range(1, len(frame) + 1), index=frame.index, dtype="Int64"))
     carried.row_numbers.add(op.name)
     return result, f"new first column {op.name}: the rows numbered 1 to {len(frame):,}"
 
