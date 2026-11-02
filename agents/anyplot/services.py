@@ -206,6 +206,25 @@ class Services:
     _backend: SerialRenderer | None = None
     _judge: JudgeClient | None = None
     extras: dict[str, Any] = field(default_factory=dict)
+    session_networks: dict[str, str] = field(default_factory=dict)
+    """The salted network key of each anonymous caller's live session (`bind_session`), for the per-network caps on
+    live sessions (`AGENT_IP_MAX_SESSIONS`) and on the dataset store's bytes (`AGENT_IP_DATASET_BYTES`); gone with the
+    session (`purge_session`)."""
+
+    def __post_init__(self) -> None:
+        # The dataset store counts a session's bytes toward its network's budget; a session without one has only the
+        # store's own cap.
+        self.datasets.owner_of = self.session_networks.get
+        if self.datasets.owner_max_bytes is None:
+            self.datasets.owner_max_bytes = get_settings().ip_dataset_bytes
+
+    def bind_session(self, session_id: str, network: str) -> None:
+        """Count the new session toward `network` (a `ledger.network_key`) until it is purged."""
+        self.session_networks[session_id] = network
+
+    def network_sessions(self, network: str) -> int:
+        """The live sessions of the network's anonymous callers."""
+        return sum(1 for owner in self.session_networks.values() if owner == network)
 
     @property
     def backend(self) -> SerialRenderer:
@@ -226,6 +245,7 @@ class Services:
         self.renders.delete_session(session_id)
         self.versions.delete_session(session_id)
         self.refusals.delete_session(session_id)
+        self.session_networks.pop(session_id, None)
 
 
 _SERVICES: Services | None = None

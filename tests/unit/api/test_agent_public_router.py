@@ -168,6 +168,16 @@ class TestDoor:
 
         assert TestClient(app).get("/agent/lane").status_code == 404
 
+    def test_in_production_the_door_needs_the_origin_gate(self, lane_open, upstream, monkeypatch) -> None:
+        """The per-IP limits trust CF-Connecting-IP, which only the origin gate keeps honest."""
+        monkeypatch.setattr(settings, "environment", "production")
+        monkeypatch.setattr(settings, "origin_secret", None)
+        assert TestClient(app).get("/agent/lane").status_code == 404
+
+        monkeypatch.setattr(settings, "origin_secret", "edge-secret")
+        armed = TestClient(app).get("/agent/lane", headers={"X-Origin-Secret": "edge-secret"})
+        assert armed.status_code == 200 and armed.json() == {"open": True}
+
     def test_lane_says_open_without_an_identity_or_an_upstream_call(self, client, upstream) -> None:
         response = client.get("/agent/lane")
 

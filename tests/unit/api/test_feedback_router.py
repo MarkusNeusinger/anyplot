@@ -243,6 +243,8 @@ class TestFeedbackRouter:
         instance.create.assert_not_awaited()
         # Free-text entries are throttled on message-bearing rows only.
         assert instance.count_recent_by_ip.await_args.kwargs == {"messages_only": True}
+        # A refused submission still clears the expired hashes: no stored hash waits for an accepted one.
+        instance.clear_ip_hashes.assert_awaited_once()
 
     def test_reaction_only_uses_the_looser_limit(self, client):
         """Five recent rows block a message, but a plot vote still goes through."""

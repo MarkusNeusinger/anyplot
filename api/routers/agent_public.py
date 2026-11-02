@@ -47,6 +47,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.dependencies import require_db
+from api.origin_gate import gate_is_armed
 from api.request_context import client_ip
 from api.routers import agent
 from api.routers.agent import (
@@ -131,8 +132,16 @@ def _salted(domain: str, value: str) -> str:
 
 
 def require_public_enabled(config: AgentConfig = Depends(require_agent_enabled)) -> AgentConfig:
-    """The public door: 404 unless `AGENT_PUBLIC_ENABLED` is on, on top of the master switch and its configuration."""
+    """The public door: 404 unless `AGENT_PUBLIC_ENABLED` is on, on top of the master switch and its configuration.
+
+    In production it also stays shut while the origin gate is unarmed (`ORIGIN_SECRET`, `api/origin_gate.py`): the
+    per-IP limits key on `CF-Connecting-IP`, which only a request that came through Cloudflare carries honestly, and
+    without the gate a caller on the direct `run.app` URL could forge a fresh address per request. The deploy smoke
+    then fails on `/agent/lane`, which says so before the switch seems to work.
+    """
     if not settings.agent_public_enabled:
+        raise AgentHTTPError(404, NOT_ENABLED)
+    if settings.is_production and not gate_is_armed():
         raise AgentHTTPError(404, NOT_ENABLED)
     return config
 
@@ -141,8 +150,9 @@ def client_network(request: Request) -> str:
     """The client's network for the per-IP limits: its IPv4 address, or the /64 of its IPv6 address.
 
     The address is `client_ip`'s: Cloudflare's `CF-Connecting-IP`, which a browser on anyplot.ai cannot set. A caller
-    who bypasses Cloudflare for the direct `run.app` URL can set it, and so pick a fresh bucket per request, until the
-    origin gate is armed (`api/origin_gate.py`), which refuses every request that skipped the edge. An IPv4-mapped
+    who bypasses Cloudflare for the direct `run.app` URL could set it, and so pick a fresh bucket per request, which is
+    why the door opens in production only while the origin gate is armed (`require_public_enabled`): the gate refuses
+    every request that skipped the edge. An IPv4-mapped
     IPv6 address counts as its IPv4 address; anything that does not parse is `unknown`, one shared bucket.
     """
     try:

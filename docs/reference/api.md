@@ -548,7 +548,11 @@ functions as the admin lane, so each route behaves as its admin twin in
   refusal), and twice the per-user limits on pastes, file conversions, chat
   turns and outcome beacons, per minute and per UTC day (the same
   `rate_limited` and `daily_limit` answers). These are twice the per-user
-  limits, for shared networks. The run
+  limits, for shared networks. A network also holds at most 8 live sessions
+  (`AGENT_IP_MAX_SESSIONS`; one more `POST /agent/sessions` is
+  `429 session_limit`) and 64 MiB of the dataset store
+  (`AGENT_IP_DATASET_BYTES`; past it a paste is `503 capacity`, as for a full
+  store). The run
   queue holds at most 10 waiting public runs (`AGENT_PUBLIC_QUEUE_MAX_WAITING`),
   and one anyplot-api instance relays at most 20 public chat turns at once
   (`AGENT_PUBLIC_MAX_STREAMS`; one more is `503 capacity` before it reaches
