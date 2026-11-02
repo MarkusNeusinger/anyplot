@@ -12,6 +12,7 @@ from collections.abc import AsyncIterator, Iterator
 import httpx
 import pytest
 
+from agents.anyplot.plugins import ledger
 from agents.anyplot.plugins.ledger import UsageBook, anonymous_user, day_refusal, network_key
 from agents.anyplot.run_queue import QueueFull, QueueUserLimit, RunQueue
 from agents.anyplot.services import Services
@@ -166,6 +167,17 @@ class TestNetworkDay:
 
         assert book.network_tokens(user) == 10  # the old network keeps the 100 it booked
         assert book.user_tokens(user) == 110
+
+    def test_a_turn_across_midnight_still_books_to_its_network(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        book = UsageBook()
+        (user,) = self.bound(book, TAB)
+        monkeypatch.setattr(ledger, "today", lambda: "2099-01-01")  # the UTC day turns while the turn runs
+
+        book.add_tokens(user, 70)
+        book.add_pipeline_run(user)
+
+        assert book.network_of(user) == network_key(NETWORK)
+        assert (book.network_tokens(user), book.network_runs(user)) == (70, 1)
 
     def test_a_caller_without_a_network_counts_only_as_itself(self) -> None:
         book = UsageBook()
