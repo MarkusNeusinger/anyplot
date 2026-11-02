@@ -29,7 +29,7 @@ const dataBox = (version: number) =>
 const sentLine = () => screen.getByTestId('result-feedback-sent');
 
 describe('ResultFeedback', () => {
-  it('offers the four reactions and sends only once one is picked', async () => {
+  it('shows only the four reactions at first, and the form once one is picked', async () => {
     const user = userEvent.setup();
     const onSend = vi.fn<Send>(async () => undefined);
     render(<ResultFeedback version={3} sent={null} onSend={onSend} />);
@@ -39,9 +39,17 @@ describe('ResultFeedback', () => {
       expect(screen.getByRole('button', { name })).toHaveAttribute('aria-pressed', 'false');
     }
     expect(group.querySelectorAll('button')).toHaveLength(4);
-    expect(sendButton()).toBeDisabled();
+    // Folded: no message box, no data box, nothing to send yet.
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Send feedback' })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Bug' }));
+    // The picked reaction keeps the focus; the form unfolds after it.
+    expect(screen.getByRole('button', { name: 'Bug' })).toHaveFocus();
+    expect(screen.getByRole('textbox', { name: 'Feedback message' })).toBeInTheDocument();
+    expect(dataBox(3)).toBeChecked();
+    expect(sendButton()).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Bug' })).toHaveAttribute('aria-pressed', 'true');
     await user.click(screen.getByRole('button', { name: 'Thumbs down' }));
     expect(screen.getByRole('button', { name: 'Bug' })).toHaveAttribute('aria-pressed', 'false');
@@ -55,9 +63,25 @@ describe('ResultFeedback', () => {
     });
   });
 
+  it('folds a fresh form back with .cancel(), with no reaction picked', async () => {
+    const user = userEvent.setup();
+    const onSend = vi.fn<Send>();
+    render(<ResultFeedback version={3} sent={null} onSend={onSend} />);
+
+    await user.click(screen.getByRole('button', { name: 'Idea' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel the feedback on version 3' }));
+
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Idea' })).toHaveAttribute('aria-pressed', 'false');
+    // `.cancel()` went with the form: the focus is on the first reaction, not on the page.
+    expect(screen.getByRole('button', { name: 'Thumbs up' })).toHaveFocus();
+    expect(onSend).not.toHaveBeenCalled();
+  });
+
   it('keeps the text to 500 characters and counts them', async () => {
     const user = userEvent.setup();
     render(<ResultFeedback version={1} sent={null} onSend={vi.fn<Send>()} />);
+    await user.click(screen.getByRole('button', { name: 'Thumbs up' }));
     const box = screen.getByRole('textbox', { name: 'Feedback message' });
     expect(box).toHaveAttribute('maxLength', '500');
 
@@ -71,11 +95,11 @@ describe('ResultFeedback', () => {
     const user = userEvent.setup();
     const onSend = vi.fn<Send>(async () => undefined);
     render(<ResultFeedback version={2} sent={null} onSend={onSend} />);
+    await user.click(screen.getByRole('button', { name: 'Thumbs up' }));
     const box = dataBox(2);
     expect(box).toBeChecked();
 
     await user.click(box);
-    await user.click(screen.getByRole('button', { name: 'Thumbs up' }));
     await user.click(sendButton());
     expect(onSend).toHaveBeenLastCalledWith(2, {
       reaction: 'thumbs_up',
@@ -251,13 +275,15 @@ describe('ResultFeedback', () => {
       const onSend = vi.fn<Send>(async () => undefined);
       renderPublic(onSend);
 
+      // The consent line unfolds with the form, so it is in view before `.send()` is.
+      expect(screen.queryByText(new RegExp(FEEDBACK_CONSENT.slice(0, 40)))).toBeNull();
+      await user.click(screen.getByRole('button', { name: 'Thumbs up' }));
       expect(dataBox(2)).not.toBeChecked();
       expect(screen.getByText(new RegExp(FEEDBACK_CONSENT.slice(0, 40)))).toBeInTheDocument();
       const legal = screen.getByRole('link', { name: 'legal' });
       expect(legal).toHaveAttribute('href', '/legal#assistant');
       expect(legal).toHaveAttribute('target', '_blank');
 
-      await user.click(screen.getByRole('button', { name: 'Thumbs up' }));
       await user.click(sendButton());
       expect(onSend).toHaveBeenCalledWith(2, expect.objectContaining({ includeData: false }));
     });
@@ -267,14 +293,16 @@ describe('ResultFeedback', () => {
       const onSend = vi.fn<Send>(async () => undefined);
       renderPublic(onSend);
 
-      await user.click(dataBox(2));
       await user.click(screen.getByRole('button', { name: 'Bug' }));
+      await user.click(dataBox(2));
       await user.click(sendButton());
       expect(onSend).toHaveBeenCalledWith(2, expect.objectContaining({ includeData: true }));
     });
 
-    it('keeps the admin default and shows no consent line without the public lane', () => {
+    it('keeps the admin default and shows no consent line without the public lane', async () => {
+      const user = userEvent.setup();
       render(<ResultFeedback version={2} sent={null} onSend={vi.fn<Send>()} />);
+      await user.click(screen.getByRole('button', { name: 'Idea' }));
       expect(dataBox(2)).toBeChecked();
       expect(screen.queryByRole('link', { name: 'legal' })).not.toBeInTheDocument();
     });

@@ -15,6 +15,10 @@ import { ThemeProvider } from '@mui/material/styles';
 
 import { resetAgentLaneProbe } from 'src/hooks/useAgentLaneOpen';
 import { HIGHCHARTS_NOTE, PublicAgentChatPage } from 'src/pages/AgentChatPage';
+import {
+  EXPERIMENTAL_DETAILS,
+  EXPERIMENTAL_LINE,
+} from 'src/sections/agent-chat/ExperimentalNotice';
 import { theme } from 'src/theme';
 import { ADMIN_HINT_KEY } from 'src/utils/adminAuth';
 
@@ -96,7 +100,7 @@ describe('PublicAgentChatPage', () => {
     // Even a browser with the admin hint stays on the public lane at /agent.
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderPage();
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'More actions' })).toBeEnabled());
 
     const open = calls.find(
       call => call.url.pathname.endsWith('/agent/sessions') && call.init.method === 'POST'
@@ -110,29 +114,44 @@ describe('PublicAgentChatPage', () => {
     expect(analytics.trackPageview).toHaveBeenCalledWith('/agent');
   });
 
-  it('says it is experimental above the first input, with the link to the legal page', async () => {
+  it('says it is an experimental AI in one line, with the details behind its button', async () => {
+    const user = userEvent.setup();
     renderPage();
     const notice = await screen.findByTestId('experimental-notice');
-    expect(notice).toHaveTextContent(/# experimental/);
-    expect(notice).toHaveTextContent(
-      /Claude by Anthropic, through Google Cloud Vertex AI in the EU/
-    );
-    expect(notice).toHaveTextContent(/nobody checks them by hand/);
-    expect(notice).toHaveTextContent(/nothing is stored unless you send feedback/);
-    expect(notice).toHaveTextContent(/daily limits apply/);
-    const link = within(notice).getByRole('link', { name: 'how the assistant works' });
-    expect(link).toHaveAttribute('href', '/legal#assistant');
-    expect(link).toHaveAttribute('target', '_blank');
+    // In view without a click: an experimental AI (AI Act Art. 50), can be wrong, what is stored.
+    expect(notice).toHaveTextContent(`# ${EXPERIMENTAL_LINE}`);
+    expect(notice).toHaveTextContent(/experimental AI/);
+    expect(screen.queryByTestId('experimental-details')).not.toBeInTheDocument();
     // Above the data card's paste box: the notice comes first in the document.
     const box = await screen.findByRole('textbox', { name: /data/i });
     expect(notice.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    const about = within(notice).getByRole('button', { name: 'About the assistant' });
+    expect(about).toHaveAttribute('aria-expanded', 'false');
+    await user.click(about);
+    const dialog = await screen.findByRole('dialog', { name: 'About the assistant' });
+    expect(about).toHaveAttribute('aria-expanded', 'true');
+    for (const line of EXPERIMENTAL_DETAILS) expect(dialog).toHaveTextContent(line);
+    expect(dialog).toHaveTextContent(
+      /Claude by Anthropic, through Google Cloud Vertex AI in the EU/
+    );
+    const link = within(dialog).getByRole('link', { name: 'how the assistant works' });
+    expect(link).toHaveAttribute('href', '/legal#assistant');
+    expect(link).toHaveAttribute('target', '_blank');
+
+    // Escape closes it and gives the focus back to the button.
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(about).toHaveFocus();
   });
 
   it('offers no "all" and starts the .save() box unticked', async () => {
     const user = userEvent.setup();
     renderPage();
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'More actions' })).toBeEnabled());
+    await user.click(screen.getByRole('button', { name: 'More actions' }));
     expect(screen.getByRole('checkbox', { name: '# include data.csv' })).not.toBeChecked();
+    await user.keyboard('{Escape}');
 
     await user.click(screen.getByRole('button', { name: /^Library: matplotlib/ }));
     const dialog = await screen.findByRole('dialog');

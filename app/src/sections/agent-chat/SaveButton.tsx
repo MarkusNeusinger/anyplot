@@ -1,5 +1,6 @@
 /**
- * `.save()` in the chat header: downloads the session as one JSON file, the
+ * `.save()` in the chat header's "⋯" menu (`SessionMenu`, since 2026-11-02; in the header
+ * row before): downloads the session as one JSON file, the
  * feedback case the agents service assembles (the conversation, every version's
  * code, plan, result and images, the data profile, the bindings and the config
  * stamp), to keep or to hand on when something went wrong. `# include data.csv`
@@ -47,9 +48,11 @@ export interface SaveButtonProps {
   disabled: boolean;
   /** Fetch and download the bundle; rejects with an `AgentApiError` on failure. */
   onSave: (includeData: boolean) => Promise<void>;
+  /** The download started: the menu that holds the button closes. */
+  onSaved?: () => void;
 }
 
-export function SaveButton({ disabled, onSave }: SaveButtonProps) {
+export function SaveButton({ disabled, onSave, onSaved }: SaveButtonProps) {
   // The file goes to the user's own computer; on the public lane it still holds the data only
   // when they tick the box, as the feedback form does.
   const lane = useAgentLane();
@@ -77,6 +80,7 @@ export function SaveButton({ disabled, onSave }: SaveButtonProps) {
     setFailure(null);
     try {
       await onSave(includeData);
+      if (mounted.current) onSaved?.();
     } catch (err) {
       if (mounted.current) {
         setFailure(
@@ -91,11 +95,16 @@ export function SaveButton({ disabled, onSave }: SaveButtonProps) {
   };
 
   return (
-    <Box
-      data-testid="session-save"
-      sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', ml: 'auto' }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', columnGap: 1.5 }}>
+    <Box data-testid="session-save" sx={{ display: 'flex', flexDirection: 'column' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          columnGap: 1.5,
+        }}
+      >
         <Box
           component="label"
           sx={{
@@ -134,7 +143,7 @@ export function SaveButton({ disabled, onSave }: SaveButtonProps) {
             '&[aria-disabled="true"]:hover': { color: 'var(--ink)', borderColor: 'var(--rule)' },
           }}
         >
-          {/* As wide as the longest label, so the header does not jump while saving. */}
+          {/* As wide as the longest label, so the menu does not jump while saving. */}
           <Box
             component="span"
             sx={{ display: 'inline-block', minWidth: '9ch', textAlign: 'center' }}
@@ -150,8 +159,6 @@ export function SaveButton({ disabled, onSave }: SaveButtonProps) {
             fontFamily: typography.mono,
             fontSize: smallText,
             color: colors.error,
-            maxWidth: 360,
-            textAlign: 'right',
             overflowWrap: 'anywhere',
             mt: 0.5,
           }}

@@ -8,6 +8,11 @@
  * form says what sending stores (`lane.ts`). `.send()` has the BFF store the
  * version's case in the private case bucket.
  *
+ * - Compact since 2026-11-02 (owner: less text): at first only the label and
+ *   the reactions show; a click on one unfolds the message box, the data box,
+ *   the consent line and `.send()`, so the consent is in view before anything
+ *   can be sent. `.cancel()` folds a fresh form back to the reactions, with
+ *   none picked, and the focus goes to the first of them.
  * - One case per version: once stored, the control shows `sent · v<n>` with
  *   the reaction, and `.edit()` opens the form again with what was sent; the
  *   next `.send()` stores a new case that replaces it. The record lives on the
@@ -157,6 +162,13 @@ export function ResultFeedback({
 
   const handleCancel = () => {
     setFailure(null);
+    if (!sent) {
+      // A fresh form folds back to the reactions, which stay mounted: the focus moves to the
+      // first of them before `.cancel()` goes.
+      rootRef.current?.querySelector<HTMLElement>('[role="group"] button')?.focus();
+      setReaction(null);
+      return;
+    }
     pendingFocus.current = 'edit';
     setEditing(false);
   };
@@ -297,109 +309,121 @@ export function ResultFeedback({
           })}
         </Box>
       </Box>
-      <Box
-        component="textarea"
-        ref={messageRef}
-        aria-label="Feedback message"
-        placeholder="optional: what worked, what did not"
-        value={message}
-        maxLength={MAX_FEEDBACK_CHARS}
-        rows={2}
-        disabled={sending}
-        onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setMessage(event.target.value)}
-        sx={{ ...nativeControlSx, width: '100%', boxSizing: 'border-box', resize: 'vertical' }}
-      />
-      <Box
-        sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          columnGap: 1.5,
-          rowGap: 0.5,
-        }}
-      >
-        <Box
-          component="label"
-          sx={{
-            ...labelSx,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 0.75,
-            minHeight: 32,
-            cursor: sending ? 'default' : 'pointer',
-            whiteSpace: 'nowrap',
-          }}
-        >
+      {/* Folded until a reaction is picked: the rest of the form, the consent line with it. */}
+      {reaction && (
+        <>
           <Box
-            component="input"
-            type="checkbox"
-            aria-label={`Include data.csv in the feedback on ${subject}`}
-            checked={withData}
-            disabled={sending || !dataAvailable}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
-              setIncludeData(event.target.checked)
+            component="textarea"
+            ref={messageRef}
+            aria-label="Feedback message"
+            placeholder="optional: what worked, what did not"
+            value={message}
+            maxLength={MAX_FEEDBACK_CHARS}
+            rows={2}
+            disabled={sending}
+            onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
+              setMessage(event.target.value)
             }
-            sx={{ m: 0, width: 14, height: 14, accentColor: colors.primary, cursor: 'inherit' }}
+            sx={{ ...nativeControlSx, width: '100%', boxSizing: 'border-box', resize: 'vertical' }}
           />
-          {dataAvailable ? '# include data.csv' : '# no data yet'}
-        </Box>
-        {/* Right-aligned, also on a line of its own at phone width. */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
-          <Box component="span" aria-hidden sx={labelSx}>
-            {message.length}/{MAX_FEEDBACK_CHARS}
-          </Box>
-          {sent && (
-            <Box
-              component="button"
-              type="button"
-              onClick={handleCancel}
-              disabled={sending}
-              aria-label={`Cancel the edit of the feedback on ${subject}`}
-              sx={actionButtonSx}
-            >
-              .cancel()
-            </Box>
-          )}
           <Box
-            component="button"
-            type="submit"
-            disabled={!reaction}
-            aria-disabled={sending || undefined}
-            aria-label="Send feedback"
-            title={
-              reaction
-                ? `store ${version === 0 ? 'this chat' : 'this version'} as a feedback case`
-                : 'pick a reaction first'
-            }
             sx={{
-              ...ghostButtonSx,
-              '&[aria-disabled="true"]': { opacity: 0.45, cursor: 'default' },
-              '&[aria-disabled="true"]:hover': { color: 'var(--ink)', borderColor: 'var(--rule)' },
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              columnGap: 1.5,
+              rowGap: 0.5,
             }}
           >
-            {/* As wide as the longest label, so the row does not jump while sending. */}
             <Box
-              component="span"
-              sx={{ display: 'inline-block', minWidth: '9ch', textAlign: 'center' }}
+              component="label"
+              sx={{
+                ...labelSx,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.75,
+                minHeight: 32,
+                cursor: sending ? 'default' : 'pointer',
+                whiteSpace: 'nowrap',
+              }}
             >
-              {sending ? '.send() …' : '.send()'}
+              <Box
+                component="input"
+                type="checkbox"
+                aria-label={`Include data.csv in the feedback on ${subject}`}
+                checked={withData}
+                disabled={sending || !dataAvailable}
+                onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                  setIncludeData(event.target.checked)
+                }
+                sx={{ m: 0, width: 14, height: 14, accentColor: colors.primary, cursor: 'inherit' }}
+              />
+              {dataAvailable ? '# include data.csv' : '# no data yet'}
+            </Box>
+            {/* Right-aligned, also on a line of its own at phone width. */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
+              <Box component="span" aria-hidden sx={labelSx}>
+                {message.length}/{MAX_FEEDBACK_CHARS}
+              </Box>
+              <Box
+                component="button"
+                type="button"
+                onClick={handleCancel}
+                disabled={sending}
+                aria-label={
+                  sent
+                    ? `Cancel the edit of the feedback on ${subject}`
+                    : `Cancel the feedback on ${subject}`
+                }
+                sx={actionButtonSx}
+              >
+                .cancel()
+              </Box>
+              <Box
+                component="button"
+                type="submit"
+                disabled={!reaction}
+                aria-disabled={sending || undefined}
+                aria-label="Send feedback"
+                title={
+                  reaction
+                    ? `store ${version === 0 ? 'this chat' : 'this version'} as a feedback case`
+                    : 'pick a reaction first'
+                }
+                sx={{
+                  ...ghostButtonSx,
+                  '&[aria-disabled="true"]': { opacity: 0.45, cursor: 'default' },
+                  '&[aria-disabled="true"]:hover': {
+                    color: 'var(--ink)',
+                    borderColor: 'var(--rule)',
+                  },
+                }}
+              >
+                {/* As wide as the longest label, so the row does not jump while sending. */}
+                <Box
+                  component="span"
+                  sx={{ display: 'inline-block', minWidth: '9ch', textAlign: 'center' }}
+                >
+                  {sending ? '.send() …' : '.send()'}
+                </Box>
+              </Box>
             </Box>
           </Box>
-        </Box>
-      </Box>
-      {lane === 'public' && (
-        <Box sx={{ ...labelSx, fontSize: smallText, lineHeight: 1.5 }}>
-          # {FEEDBACK_CONSENT} {/* A new tab: leaving the page would end the session. */}
-          <Box
-            component="a"
-            href={`${paths.legal}#assistant`}
-            target="_blank"
-            rel="noopener"
-            sx={{ color: 'inherit' }}
-          >
-            legal
-          </Box>
-        </Box>
+          {lane === 'public' && (
+            <Box sx={{ ...labelSx, fontSize: smallText, lineHeight: 1.5 }}>
+              # {FEEDBACK_CONSENT} {/* A new tab: leaving the page would end the session. */}
+              <Box
+                component="a"
+                href={`${paths.legal}#assistant`}
+                target="_blank"
+                rel="noopener"
+                sx={{ color: 'inherit' }}
+              >
+                legal
+              </Box>
+            </Box>
+          )}
+        </>
       )}
       {failureLine}
     </Box>

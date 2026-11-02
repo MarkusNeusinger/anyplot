@@ -27,7 +27,9 @@
  * per library: the libraries grouped by language, `all` for the admin) and,
  * next to it, the session language chip (`LanguageChip`): the language of the
  * replies and of the text in the plot, English until the first typed message
- * or a choice sets another. The page talks only to the BFF under
+ * or a choice sets another. At the header's end, the "⋯" menu (`SessionMenu`) holds
+ * `.save()` with its `# include data.csv` box (out of the header row since 2026-11-02,
+ * owner: less text). The page talks only to the BFF under
  * `/debug/agent/*` (`src/lib/agent.ts`, `src/hooks/useAgentSession.ts`).
  *
  * A library switch keeps the data, the bindings, their confirmation, the
@@ -90,7 +92,8 @@
  *    and shows the same notice.
  *    The public lane: the API's `GET /agent/lane` (`useAgentLaneOpen`); closed,
  *    the page says so. It talks to `/agent/*` with `PUBLIC_LANE` in place of the
- *    admin token, shows the experimental notice above the first input, offers
+ *    admin token, shows the experimental notice above the first input (one line, the
+ *    details behind its ⓘ button: `ExperimentalNotice`), offers
  *    no `all`, and leaves the data boxes of feedback and `.save()` unticked
  *    (`sections/agent-chat/lane.ts`).
  *
@@ -133,6 +136,7 @@ import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
 import { DATA_SUMMARY_ID, DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { FanOut } from 'src/sections/agent-chat/FanOut';
+import { ExperimentalNotice } from 'src/sections/agent-chat/ExperimentalNotice';
 import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
 import { AgentLaneContext } from 'src/sections/agent-chat/lane';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
@@ -146,7 +150,7 @@ import {
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { Remembered } from 'src/sections/agent-chat/Remembered';
-import { SaveButton } from 'src/sections/agent-chat/SaveButton';
+import { SessionMenu } from 'src/sections/agent-chat/SessionMenu';
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
 import { inStep2, showsTimeline } from 'src/sections/agent-chat/steps';
 import {
@@ -225,47 +229,9 @@ function AdminRequired() {
   );
 }
 
-/**
- * The public lane's notice above the first input: that this is an AI and which one, that it
- * can be wrong, what not to paste, what is stored, and the limits (also the EU AI Act's
- * Art. 50 duty to say that a person talks to an AI). The owner reads every user-facing text:
- * keep it in the PR's "Texts to read".
- */
-export const EXPERIMENTAL_NOTICE =
-  'an AI does the work here: Claude by Anthropic, through Google Cloud Vertex AI in the EU, reads what you paste and writes the plot and its code. results can be wrong, and nobody checks them by hand. do not paste data you may not share. nothing is stored unless you send feedback. daily limits apply.';
-
 /** The chat's Highcharts note, shown while the session plots in Highcharts (the legal page says the same). */
 export const HIGHCHARTS_NOTE =
   'highcharts is free for non-commercial use; a commercial use needs a licence from Highsoft.';
-
-function ExperimentalNotice() {
-  return (
-    <Box
-      role="note"
-      data-testid="experimental-notice"
-      sx={{
-        ...labelSx,
-        color: 'var(--ink)',
-        borderLeft: `3px solid ${colors.primary}`,
-        pl: 1.5,
-        mb: 2,
-        lineHeight: 1.6,
-      }}
-    >
-      # experimental · {EXPERIMENTAL_NOTICE}{' '}
-      {/* A new tab: leaving the page would end the session. */}
-      <Box
-        component="a"
-        href={`${paths.legal}#assistant`}
-        target="_blank"
-        rel="noopener"
-        sx={proseLinkStyle}
-      >
-        how the assistant works
-      </Box>
-    </Box>
-  );
-}
 
 /** The public lane's page while the lane is closed (`GET /agent/lane` answered no). */
 function LaneClosed() {
@@ -857,9 +823,10 @@ function AgentChat({
             onSet={session.setLanguage}
           />
         )}
-        {/* `.save()` downloads the session; without one (ineligible, error) there is nothing to save. */}
+        {/* The "⋯" menu holds `.save()`, which downloads the session; without one (ineligible,
+            error) there is nothing to save. */}
         {!reopen && (
-          <SaveButton
+          <SessionMenu
             disabled={state.phase !== 'ready' || !state.sessionId || busy}
             onSave={session.saveSession}
           />
