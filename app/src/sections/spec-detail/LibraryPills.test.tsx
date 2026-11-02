@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { LibraryPills } from 'src/sections/spec-detail/LibraryPills';
+import { LibraryPills, USE_MY_DATA_LABEL } from 'src/sections/spec-detail/LibraryPills';
 import { render, screen, userEvent } from 'src/test-utils';
 
 const mockImplementations = [
@@ -88,5 +88,53 @@ describe('LibraryPills', () => {
     );
 
     expect(screen.getAllByText('matplotlib').length).toBeGreaterThan(0);
+  });
+
+  it('shows .use_my_data() only when SpecPage passes onUseWithMyData', async () => {
+    const onUseWithMyData = vi.fn();
+    const user = userEvent.setup();
+    const props = {
+      implementations: mockImplementations,
+      selectedLibrary: 'matplotlib',
+      onSelect: vi.fn(),
+      onAll: vi.fn(),
+    };
+    const { rerender } = render(<LibraryPills {...props} />);
+    expect(screen.queryByRole('button', { name: USE_MY_DATA_LABEL })).not.toBeInTheDocument();
+
+    rerender(<LibraryPills {...props} onUseWithMyData={onUseWithMyData} />);
+    const action = screen.getByRole('button', { name: 'Use with my data' });
+    // Label and arrow are two spans set apart by the flex gap, not by a space.
+    expect(action).toHaveTextContent('.use_my_data()→');
+    // "experimental" is the chat's notice to make, not the entry's.
+    expect(screen.queryByText(/experimental/i)).not.toBeInTheDocument();
+    await user.click(action);
+    expect(onUseWithMyData).toHaveBeenCalledTimes(1);
+    expect(props.onAll).not.toHaveBeenCalled();
+  });
+
+  it('opens .use_my_data() from the keyboard, after the carousel in the tab order', async () => {
+    const onUseWithMyData = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <LibraryPills
+        implementations={mockImplementations}
+        selectedLibrary="matplotlib"
+        onSelect={vi.fn()}
+        onAll={vi.fn()}
+        onUseWithMyData={onUseWithMyData}
+      />
+    );
+
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Back to library comparison' })).toHaveFocus();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    const action = screen.getByRole('button', { name: USE_MY_DATA_LABEL });
+    expect(action).toHaveFocus();
+    await user.keyboard('{Enter}');
+    await user.keyboard(' ');
+    expect(onUseWithMyData).toHaveBeenCalledTimes(2);
   });
 });

@@ -309,11 +309,11 @@ export function SpecPage() {
     [specId, trackEvent, mode, fetchCode]
   );
 
-  // "Use with my data": for an eligible pair, while the agent chat is built.
-  // An admin gets the admin chat, through a full navigation so Cloudflare
-  // Access can intercept the /debug path; everyone else gets the public chat
-  // while its lane is open, through the router. The chat page records
-  // `agent_open{source: plot_page}`.
+  // "Use with my data" (`.use_my_data()` beside the library carousel): for an
+  // eligible pair, while the agent chat is built. An admin gets the admin chat,
+  // through a full navigation so Cloudflare Access can intercept the /debug
+  // path; everyone else gets the public chat while its lane is open, through
+  // the router. The chat page records `agent_open{source: plot_page}`.
   const agentLane = useAgentEligibility(mode === 'detail' ? specId : null, currentImpl?.library_id);
   const handleUseWithMyData = useCallback(() => {
     if (!specId || !currentImpl) return;
@@ -624,6 +624,7 @@ export function SpecPage() {
                 selectedLibrary={selectedLibrary || ''}
                 onSelect={handleLibrarySelect}
                 onAll={() => navigate(specPath(specId!))}
+                onUseWithMyData={agentLane ? handleUseWithMyData : undefined}
               />
 
               <SpecDetailView
@@ -641,7 +642,6 @@ export function SpecPage() {
                 onCopyCode={handleCopyCode}
                 onDownload={handleDownload}
                 onTrackEvent={trackEvent}
-                onUseWithMyData={agentLane ? handleUseWithMyData : undefined}
               />
 
               <SpecTabs
