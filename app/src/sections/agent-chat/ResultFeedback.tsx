@@ -63,6 +63,8 @@ const FEEDBACK_FAILURE: Record<string, string> = {
   row_missing: 'the case is stored but not yet listed for triage; edit or resend names it',
   // Any body-less 503: an API without a database, or the admin gate not configured.
   unavailable: 'the server is not ready; the case was not stored',
+  // The public lane's cap on feedback cases per network and hour (`AGENT_PUBLIC_FEEDBACK_PER_HOUR`).
+  rate_limited: 'too much feedback from your network in the last hour; try again later',
 };
 
 function describeFailure(code: string, ref: string | null): string {

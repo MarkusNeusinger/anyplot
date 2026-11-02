@@ -12,10 +12,10 @@ export const ERROR_TEXT: Record<string, string> = {
   // refused for its quota or an overload after the retries (`model_busy`, the root's call before any plot run).
   capacity:
     'the server is busy: the run queue is full, the wait ran out, or the model service is overloaded; try again in a few minutes',
-  // The user's own cap (`user_max_runs` of `/status`: 3, or 5 for an admin): plots and data runs queued or
-  // running across the user's windows.
+  // The user's own cap (`user_max_runs` of `/status`: 2, or 5 for an admin): plots and data runs queued or
+  // running across the user's windows; on the public lane also the network's cap (`AGENT_IP_MAX_RUNS`, 4).
   run_limit:
-    'your plots and data runs in other windows already fill your share; wait until one finishes, then try again',
+    'your plots and data runs in other windows, or others on your network, already fill the share; wait until one finishes, then try again',
   deadline: 'the run took too long and was stopped',
   guard_unavailable: 'the scope check is unavailable right now; try again',
   upstream: 'the agents service did not answer or cut the stream',
@@ -34,8 +34,7 @@ export const ERROR_TEXT: Record<string, string> = {
   copy_unavailable:
     'this server cannot copy changed or computed data yet; paste or open the table, or try again after the deploy',
   rate_limited: 'the daily limit is reached; try again tomorrow',
-  unreachable:
-    'no answer from the server: your sign-in may have expired, or the connection dropped',
+  unreachable: 'no answer from the server: the connection dropped, or an admin sign-in expired',
   network: 'the server did not answer; check your connection',
 };
 
