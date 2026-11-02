@@ -106,6 +106,23 @@
  * restores it, so while it holds data, a plot or work in flight
  * (`sessionHoldsWork`) the page asks before it lets the user leave.
  *
+ * Library switch and plot memory (since 2026-11-02): `switchLibrary` keeps
+ * the data, the bindings, their confirmation, the language and the versions,
+ * as the server does, and takes the answer's `carry`. When it says `offer`,
+ * `carryOffer` holds the offer of the plot in the new library with the plot
+ * memory's decisions (`carryPlot`, the action `carry_plot`); from the menu the
+ * run waits for the user's click. The offer ends once a plot in that library
+ * ships, whatever turn shipped it, or with the next switch, whose answer
+ * brings its own offer or none. `createPlot` stays the fresh plot without the
+ * decisions (`.create_plot()`, `.start_over()`). The plot memory is the
+ * server's list of the decisions a plot takes over (`memory`): the hook reads
+ * it after every turn's `done` (a shipped run adds entries, the assistant's
+ * `forget` removes them, a shipped fresh plot empties it), after a switch, and
+ * takes the list a removal answers (`forgetMemory`, `.forget()`). A read that
+ * fails, or a server without the route, leaves the list as it was; a read
+ * overtaken by a newer one or by a removal's answer is dropped. The admin
+ * fan-out's sessions read none.
+ *
  * Saving: `saveSession` (`.save()`) downloads the session's feedback case,
  * the conversation, code, images and config the agents service assembles,
  * as one JSON file. It only reads the session and starts no run, so no state
@@ -183,13 +200,16 @@ import {
   parseAgentEvent,
   type PipelineStep,
   type PlotLanguage,
+  type PlotMemory,
   type PlotResult,
+  type PlotTarget,
   PNG_ARTIFACT,
   plotLanguage as readPlotLanguage,
   renderedThemes,
   type RoleSpec,
   type Round,
   sizeBucket,
+  type SwitchCarry,
   type Theme,
   type TurnAction,
   type TurnBody,
@@ -361,6 +381,32 @@ export type ConfirmLoss = 'bindings' | 'data' | 'server';
 /** What the dataset route refused pasted text as, so the chat takes it instead: `422 formula` or `422 code`. */
 export type FormulaKind = 'formula' | 'code';
 
+/**
+ * The offer of the plot in the library the user switched to, with the plot
+ * memory's decisions (the switch answer's `carry.offer`, the action `carry_plot`).
+ */
+export interface CarryOffer {
+  /**
+   * The (spec, library) pair the offer is for. Only the library switches today,
+   * so the page compares the library alone; the later plot-type switch makes
+   * the spec part of the comparison.
+   */
+  target: PlotTarget;
+  /** The decisions the switch answer counted. */
+  decisions: number;
+  /**
+   * The memory held entries at the switch, so the count is the memory's: it
+   * follows the remembered list when the user removes an entry. Without entries
+   * the server counted the source plot's requests, which the page cannot list.
+   */
+  memoryBacked: boolean;
+}
+
+/** How many decisions the carry run takes over now: the remembered list's, or the switch answer's count. */
+export function carryDecisions(offer: CarryOffer, memory: PlotMemory | null): number {
+  return offer.memoryBacked && memory ? memory.entries.length : offer.decisions;
+}
+
 export interface AgentSessionState {
   phase: SessionPhase;
   failure: Failure | null;
@@ -419,6 +465,16 @@ export interface AgentSessionState {
   toLongBusy: boolean;
   toLongError: Failure | null;
   libraryBusy: boolean;
+  /**
+   * After a switch whose answer offered it: the plot in this library with the
+   * plot memory's decisions. A shipped plot in that library or the next switch
+   * ends it.
+   */
+  carryOffer: CarryOffer | null;
+  /** The plot memory as the server last listed it; `null` until a list arrived, or from a server without one. */
+  memory: PlotMemory | null;
+  /** A removal from the plot memory is in flight. */
+  memoryBusy: boolean;
   /** A theme toggle render is in flight. */
   themeBusy: boolean;
   /**
@@ -479,8 +535,18 @@ type Action =
   | { type: 'undo_done'; parsed: DatasetParsed }
   | { type: 'undo_failed'; failure: Failure }
   | { type: 'library_start' }
-  | { type: 'library_done'; library: string; eligibility: Eligibility }
+  | {
+      type: 'library_done';
+      library: string;
+      eligibility: Eligibility;
+      target: PlotTarget;
+      /** `null` from a server without the plot memory: no offer. */
+      carry: SwitchCarry | null;
+    }
   | { type: 'library_failed'; failure: Failure }
+  /** The plot memory as the server listed it, or as a removal left it. */
+  | { type: 'memory_sync'; memory: PlotMemory }
+  | { type: 'memory_busy'; busy: boolean }
   | { type: 'theme_busy'; busy: boolean }
   | { type: 'page_busy'; busy: boolean }
   | { type: 'language_start' }
@@ -541,6 +607,9 @@ export function initialAgentState(library: string): AgentSessionState {
     toLongBusy: false,
     toLongError: null,
     libraryBusy: false,
+    carryOffer: null,
+    memory: null,
+    memoryBusy: false,
     themeBusy: false,
     pageBusy: false,
     // The server's default too, whatever the browser's locale: no answer needed to start.
@@ -963,16 +1032,28 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
     case 'library_start':
       return { ...state, libraryBusy: true };
     case 'library_done':
-      // The dataset, its bindings and their confirmation stay, as on the server.
+      // The dataset, its bindings and their confirmation stay, as on the server. The answer's
+      // offer replaces any earlier one: a switch without an offer ends it.
       return {
         ...state,
         libraryBusy: false,
         library: action.library,
         eligibility: action.eligibility,
         transcription: null,
+        carryOffer: action.carry?.offer
+          ? {
+              target: action.target,
+              decisions: action.carry.decisions,
+              memoryBacked: (state.memory?.entries.length ?? 0) > 0,
+            }
+          : null,
       };
     case 'library_failed':
       return { ...state, libraryBusy: false };
+    case 'memory_sync':
+      return { ...state, memory: action.memory };
+    case 'memory_busy':
+      return { ...state, memoryBusy: action.busy };
     case 'theme_busy':
       return { ...state, themeBusy: action.busy };
     case 'page_busy':
@@ -1055,9 +1136,14 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
     case 'run_end':
       return { ...state, run: null };
     case 'version_add':
+      // A shipped plot in the offer's library ends the offer, whichever turn shipped it (the carry
+      // run, a fresh `.create_plot()`, a typed change): the server's carry is spent then too.
+      // Versions carry their library, not their spec; the spec cannot change yet.
       return {
         ...state,
         versions: { ...state.versions, [action.version.number]: action.version },
+        carryOffer:
+          state.carryOffer?.target.library === action.version.library ? null : state.carryOffer,
       };
     case 'version_image':
       return patchVersion(state, action.number, version => ({
@@ -1164,6 +1250,9 @@ export function useAgentSession({
   const bindingsRef = useRef(false);
   const saveRef = useRef(false);
   const languageRef = useRef(false);
+  const memoryRef = useRef(false);
+  // Counts the memory lists asked for and answered: a read overtaken by a newer one is dropped.
+  const memorySeq = useRef(0);
   // The feedback send in flight per version: a second `.send()` for it joins the first.
   const feedbackRef = useRef<Map<number, Promise<void>>>(new Map());
   const versionCounter = useRef(0);
@@ -1190,7 +1279,8 @@ export function useAgentSession({
 
   /**
    * Whether a turn, a theme render, a page build, a parse, a binding change, a
-   * confirmation, an undo, a library switch or a language choice is in flight.
+   * confirmation, an undo, a library switch, a language choice or a removal
+   * from the plot memory is in flight.
    */
   const busy = useCallback(
     () =>
@@ -1202,6 +1292,7 @@ export function useAgentSession({
       undoRef.current ||
       bindingsRef.current ||
       languageRef.current ||
+      memoryRef.current ||
       stateRef.current.libraryBusy,
     []
   );
@@ -1656,6 +1747,59 @@ export function useAgentSession({
     [token, safeDispatch, handleFailure, loadImage, busy]
   );
 
+  // ---------------------------------------------------------------- plot memory
+
+  /**
+   * Read the plot memory again (`GET .../memory`). Best effort: a failure, or a
+   * server without the route, leaves the list as it was, and an answer that a
+   * newer read or a removal overtook is dropped. The fan-out's sessions show no
+   * list, so they read none.
+   */
+  const refreshMemory = useCallback(async () => {
+    const sid = stateRef.current.sessionId;
+    if (!sid || openedForFanOut.current) return;
+    memorySeq.current += 1;
+    const seq = memorySeq.current;
+    try {
+      const memory = await agentApi.memory(token, sid);
+      if (seq === memorySeq.current) safeDispatch({ type: 'memory_sync', memory });
+    } catch {
+      /* best effort: the list stays as it was */
+    }
+  }, [token, safeDispatch]);
+
+  /**
+   * `.forget()` on a remembered decision (`DELETE .../memory/{id}`): the list
+   * becomes the server's answer. The plot does not change; the next plot no
+   * longer takes the decision over. Nothing starts without a session or while
+   * anything else is in flight, which the server would refuse with `409
+   * run_active`. A failure rejects with an `AgentApiError` for the list's
+   * failure line; `not_found` (the entry is gone already, by the assistant's
+   * `forget` or another window) reads the list again first.
+   */
+  const forgetMemory = useCallback(
+    async (entryId: string): Promise<void> => {
+      const current = stateRef.current;
+      const sid = current.sessionId;
+      if (!sid || current.run || busy()) return;
+      memoryRef.current = true;
+      safeDispatch({ type: 'memory_busy', busy: true });
+      try {
+        const memory = await agentApi.forgetMemory(token, sid, entryId);
+        memorySeq.current += 1;
+        safeDispatch({ type: 'memory_sync', memory });
+      } catch (err) {
+        const failure = handleFailure(err);
+        if (failure.code === 'not_found') void refreshMemory();
+        throw err instanceof AgentApiError ? err : new AgentApiError(0, failure.code);
+      } finally {
+        memoryRef.current = false;
+        safeDispatch({ type: 'memory_busy', busy: false });
+      }
+    },
+    [token, safeDispatch, handleFailure, busy, refreshMemory]
+  );
+
   // ---------------------------------------------------------------- turns
 
   const onPlot = useCallback(
@@ -1832,11 +1976,22 @@ export function useAgentSession({
         turnErrorRef.current = errorCode;
         safeDispatch({ type: 'run_end' });
       }
+      // A shipped run adds decisions, the assistant's `forget` removes some, a shipped fresh plot
+      // empties the list: after every `done` the list follows the server.
+      if (finished) void refreshMemory();
     },
-    [token, safeDispatch, addItem, onEvent, handleFailure, busy]
+    [token, safeDispatch, addItem, onEvent, handleFailure, busy, refreshMemory]
   );
 
+  /** `.create_plot()`, `.start_over()`: the fresh plot from the catalogue code, without the plot memory's decisions. */
   const createPlot = useCallback(() => runTurn({ action: 'create_plot' }), [runTurn]);
+
+  /**
+   * The offer after a switch ("plot in seaborn with your 3 decisions"): the plot
+   * in the new library from its catalogue code, with the plot memory's
+   * decisions and the theme the user asked for (`carry_plot`).
+   */
+  const carryPlot = useCallback(() => runTurn({ action: 'carry_plot' }), [runTurn]);
 
   /** `createPlot`, resolving to the code of the error that ended the turn, or null. The fan-out tells a turn the
    * user's cap refused (`run_limit`) from a turn that ran (`FanOut`). */
@@ -2012,6 +2167,15 @@ export function useAgentSession({
 
   // ---------------------------------------------------------------- library
 
+  /**
+   * The header's library menu: switch the session to `next`. Resolves to true
+   * once the server switched, false when nothing started (no session, the
+   * library already, something in flight, which the server would refuse with
+   * `409 run_active`). The answer's offer, if any, becomes `carryOffer`; the
+   * run waits for the user's click. A failure keeps the library and rejects
+   * with an `AgentApiError` for the menu's failure line; a 401 or 403 also
+   * shows the sign-in notice.
+   */
   const switchLibrary = useCallback(
     async (next: string): Promise<boolean> => {
       const current = stateRef.current;
@@ -2020,16 +2184,23 @@ export function useAgentSession({
       safeDispatch({ type: 'library_start' });
       try {
         const result = await agentApi.switchLibrary(token, sid, specId, next);
-        safeDispatch({ type: 'library_done', library: next, eligibility: result.eligibility });
-        return true;
+        safeDispatch({
+          type: 'library_done',
+          library: next,
+          eligibility: result.eligibility,
+          // An older server names no target: the pair the page asked for.
+          target: result.target ?? { spec_id: specId, library: next },
+          carry: result.carry,
+        });
       } catch (err) {
         const failure = handleFailure(err);
         safeDispatch({ type: 'library_failed', failure });
-        addItem({ kind: 'error', code: failure.code, ref: failure.ref });
-        return false;
+        throw err instanceof AgentApiError ? err : new AgentApiError(0, failure.code);
       }
+      void refreshMemory();
+      return true;
     },
-    [token, specId, safeDispatch, addItem, handleFailure, busy]
+    [token, specId, safeDispatch, handleFailure, busy, refreshMemory]
   );
 
   // ---------------------------------------------------------------- save
@@ -2200,10 +2371,12 @@ export function useAgentSession({
     confirmData,
     undoData,
     createPlot,
+    carryPlot,
     plotTurn,
     sendMessage,
     stop,
     switchLibrary,
+    forgetMemory,
     requestTheme,
     fetchArtifact,
     reportOutcome,
@@ -2228,7 +2401,8 @@ export function sessionBusy(state: AgentSessionState): boolean {
     state.libraryBusy ||
     state.themeBusy ||
     state.pageBusy ||
-    state.languageBusy
+    state.languageBusy ||
+    state.memoryBusy
   );
 }
 
