@@ -292,7 +292,9 @@ export function LegalPage() {
               long as the server instance, so nothing ties it to you once that instance stops (for
               the site&apos;s admins, a keyed hash (HMAC) of their identity). the limits per network
               count your IP address the same way: salted, in memory only, never written down. the
-              log lines sit in the server logs above, for 30 days.
+              log lines sit in the server logs above, for 30 days. the API&apos;s request log (your
+              IP address, 30 days) and these lines (salted ids, 30 days) could only be lined up by
+              their timestamps, and the salted ids map to nothing else.
             </Typography>
             <Typography sx={textStyle}>
               <strong>feedback cases.</strong> only when you send feedback on a result or on the
@@ -329,7 +331,8 @@ export function LegalPage() {
             <Typography sx={textStyle}>
               <strong>legal basis.</strong> making the plot you asked for is the performance of your
               request (Art. 6(1)(b) GDPR); the telemetry and the rate limits rest on legitimate
-              interest (Art. 6(1)(f) GDPR); a feedback case rests on your explicit submission.
+              interest (Art. 6(1)(f) GDPR); a feedback case rests on your consent (Art. 6(1)(a)
+              GDPR), given when you send it, which you can withdraw at any time by asking.
             </Typography>
 
             <Typography sx={subheadingStyle}>what we do not collect</Typography>
@@ -339,8 +342,10 @@ export function LegalPage() {
               • no name or email unless you type one — the optional contact field in the feedback
               widget is the only place that asks
               <br />
-              • no cookies at all (localStorage holds UI preferences — theme, image size — a cached
-              release number, and, once you use the feedback widget, the random id above)
+              • no cookies for visitors (localStorage holds UI preferences — theme, image size — a
+              cached release number, and, once you use the feedback widget, the random id above;
+              sessionStorage holds the data assistant&apos;s random tab id). the site&apos;s admins
+              sign in through Cloudflare Access, which sets its own login cookie
               <br />• <strong>no ai training</strong>: nothing you send is used to train ai models.
               when you browse the catalogue, the ai in this project has already done its part: it
               writes the catalogue at build time and never sees a visitor&apos;s request. only the

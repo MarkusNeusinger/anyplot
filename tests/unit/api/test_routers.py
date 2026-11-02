@@ -1197,6 +1197,7 @@ class TestSeoProxyRouter:
             "a licence from Highsoft",
             "transfers outside Switzerland and the EU",
             "cleared after ten minutes",
+            "consent (Art. 6(1)(a) GDPR)",
         ):
             assert fact in response.text, fact
 

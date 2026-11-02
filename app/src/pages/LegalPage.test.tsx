@@ -138,6 +138,18 @@ describe('LegalPage', () => {
     expect(screen.getByText(/nothing deletes it on a timer/)).toBeInTheDocument();
     expect(screen.getByText(/Art\. 6\(1\)\(b\) GDPR/)).toBeInTheDocument();
     expect(screen.getByText(/Art\. 6\(1\)\(f\) GDPR/)).toBeInTheDocument();
+    // A feedback case rests on consent, given at the send and withdrawable.
+    expect(
+      screen.getByText(/a feedback case rests on your consent \(Art\. 6\(1\)\(a\)\s+GDPR\)/)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/which you can withdraw at any time by asking/)).toBeInTheDocument();
+    // The two 30-day logs could only be joined by timestamp; the salted ids map to nothing else.
+    expect(screen.getByText(/could only be lined up by their\s+timestamps/)).toBeInTheDocument();
+    // "No cookies" holds for visitors; admins get Cloudflare Access's login cookie.
+    expect(screen.getByText(/no cookies for visitors/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Cloudflare Access, which sets its own login cookie/)
+    ).toBeInTheDocument();
     // Scope: the assistant's processing touches only the people who use it; the chat links here.
     const heading = screen.getByText('only if you use the data assistant (experimental)');
     expect(heading).toHaveAttribute('id', 'assistant');
