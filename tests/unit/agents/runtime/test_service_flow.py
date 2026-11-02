@@ -2781,7 +2781,7 @@ async def test_a_list_of_values_gets_its_row_numbers_and_undo_takes_them_back(
         prepare_call({"op": "row_number", "name": "index"}),
         {"text": "x: row number 1 to 6, because the table has no x column."},
     ]
-    swap_models("anthropic-vertex", script)
+    fake = swap_models("anthropic-vertex", script)
     sid = await open_session(client, with_data=False)
     pasted = await client.post(
         f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "value\n1\n3\n5\n4\n6\n2\n"}
@@ -2790,7 +2790,7 @@ async def test_a_list_of_values_gets_its_row_numbers_and_undo_takes_them_back(
 
     context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
     block = await session_context(context)  # type: ignore[arg-type]
-    assert "y then takes 'value', which x holds now" in block
+    assert "y takes 'value', which x holds now" in block
 
     turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "summarize_data"})
 
@@ -2798,6 +2798,8 @@ async def test_a_list_of_values_gets_its_row_numbers_and_undo_takes_them_back(
     assert name == "done" and done["dataset"]["version"] == 2
     assert done["dataset"]["changes"] == ["new column index: the rows numbered 1 to 6"]
     assert done["bindings"] == [{"role": "x", "column": "index"}, {"role": "y", "column": "value"}]
+    answered = json.dumps(fake.calls[-1]["messages"])
+    assert "x: index" in answered and "y: value" in answered  # the reply names the bindings now in force
 
     undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
     assert undone.status_code == 200 and [column["name"] for column in undone.json()["profile"]["columns"]] == ["value"]

@@ -195,7 +195,7 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
     "set_language": frozenset({"status", "code", "source", "changed", "plot_outdated"}),
     # No value either: whether the server keeps the request, and why not.
     "keep_plot_request": frozenset({"status", "code", "request_kept", "reason"}),
-    PREPARE_TOOL: _DATA_VERSION_KEYS,
+    PREPARE_TOOL: _DATA_VERSION_KEYS | {"bindings"},  # when a conversion moved them, fenced as in `get_dataset_profile`
     QUERY_TOOL: frozenset({"status", "reason", "code", "message", "errors", "rows", "table", "truncated", "changes"}),
     GENERATE_TOOL: _DATA_VERSION_KEYS,
     DATA_CODE_TOOL: _DATA_VERSION_KEYS,

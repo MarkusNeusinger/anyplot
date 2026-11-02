@@ -15,8 +15,10 @@ none at all, and neither is one where more than a tenth of the cells would fail,
 (`stays_text`) is none either: such cells may read as numbers or dates, and it would change
 what they mean (owner's second opinion of 2026-11-02). For a role that takes dates, a column
 of whole numbers is a candidate too, as years, only with a year header (`temporal.year_score`
-2): prices of 1149 to 3000 look like years. The session block shows the root one line per
-candidate (`Candidate.line`, at most `MAX_CANDIDATES`), with the operations that make it:
+2), because prices of 1149 to 3000 look like years, and only with one row per year: in
+`Year, Month, Temperature` every month would fall on 1 January, and `make_date` builds those
+dates. The session block shows the root one line per candidate (`Candidate.line`, at most
+`MAX_CANDIDATES`), with the operations that make it:
 
 * `certain`: every cell converts and the reading guesses nothing. The root makes the
   conversion in the summary turn without asking, as a new column beside the original
@@ -159,14 +161,18 @@ class RowNumbers:
         return [{"op": "row_number", "name": self.name}]
 
     def line(self) -> str:
-        """The session block's line: the role, what would fill it, certain or why not, and the operations."""
-        line = f"{self.role}: no column or conversion fills it; column '{self.name}' holds the row numbers 1 to {self.rows}"
+        """The session block's line: the open role, what fills it, certain or why not, and the operations."""
+        moved = self.slot.moved
+        line = (
+            f"{moved.role if moved else self.role}: no column or conversion fills it; a new column '{self.name}' with "
+            f"the row numbers 1 to {self.rows} takes {self.role}"
+        )
+        if moved is not None:
+            line += f", and {moved.role} takes '{moved.column}', which {self.role} holds now"
         if self.certain:
-            line += "; certain: a list of values is drawn by position"
+            line += "; certain: a list of values is drawn by position, and this is wanted, never a mistake"
         else:
             line += f"; uncertain: the table has no labels for {self.role}, and a row number says nothing as a label"
-        if self.slot.moved is not None:
-            line += f"; {self.slot.moved.role} then takes '{self.slot.moved.column}', which {self.role} holds now"
         return f"{line}; operations: {json.dumps(self.operations(), ensure_ascii=False)}"
 
 
@@ -203,7 +209,9 @@ def candidates(
         for column in columns
         if column.dtype == "text" and column.name not in keep_text and not stays_text(column)
     ]
-    years = [column.name for column in columns if year_score(column) == 2]
+    years = [
+        column.name for column in columns if year_score(column) == 2 and column.unique == profile.rows - column.missing
+    ]
     runs = cache if cache is not None else {}
     frame = None
 

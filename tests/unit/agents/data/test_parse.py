@@ -3726,13 +3726,14 @@ class TestLinesThatAreNoRows:
         assert rows[1] == "2026-11-01,2000,1" and rows[-1] == "2022-12-01,2329,"
         assert not any("Show" in row for row in rows)
 
-    def test_the_counts_are_said_and_the_line_stays_a_note(self) -> None:
+    def test_the_counts_are_said_and_the_line_is_no_note(self) -> None:
+        """The words of a page are not the user's: the root took this button for a wish to plot 36 months."""
         parsed = parse_dataset(web_table())
 
         assert warned(parsed, "left out 1 line inside the table that is no row of it (line 17)")
         assert warned(parsed, "1 row had fewer fields than the header; the missing cells are empty (line 53)")
         assert not warned(parsed, "below the table")
-        assert "Show 36 earlier months (Dec 2022 – Nov 2025)" in parsed.context_lines
+        assert parsed.context_lines == ["Widget price history", "Typical price per month, newest first."]
 
     def test_two_lines_are_counted(self) -> None:
         text = "d\tv\tw\n2024-01-01\t1\t2\n2024-01-02\t3\t4\nmore\n2024-01-03\t5\t6\nmore\n2024-01-04\t7\t8\n"

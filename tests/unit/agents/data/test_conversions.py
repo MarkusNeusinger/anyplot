@@ -106,6 +106,8 @@ class TestCandidates:
             "Person,Preis\nMay,1\nJune,2\nApril,3\n",  # names that look like months
             "Monat,Preis\nNov 26,1\nOct 26,2\nSep 26,3\n",  # two-digit years: no date pandas may fill in
             "Monat,Preis\nQ1 2026,1\nQ2 2026,2\n",
+            "Band;Preis\n10–20;1\n20–30;2\n30–40;3\n",  # a range
+            "Band;Preis\n10-20;1\n20-30;2\n30-40;3\n",
         ],
     )
     def test_text_that_reads_as_no_date_is_no_candidate(self, text: str) -> None:
@@ -202,9 +204,10 @@ class TestYears:
         [
             "Price,Stock\n1149,1.5\n1450,1.4\n3000,1.6\n",  # no year header: prices of 1149 to 3000 look like years
             "Id,Stock\n2019,1.5\n2020,1.4\n2021,1.6\n",  # a run of years without a year header
+            "Year,Month,Temp\n2020,1,1.5\n2020,2,1.4\n2021,1,1.6\n",  # every month on 1 January: `make_date` builds those
         ],
     )
-    def test_whole_numbers_without_a_year_header_are_no_years(self, text: str) -> None:
+    def test_whole_numbers_that_are_no_series_of_years(self, text: str) -> None:
         assert found(text) == []
 
 
@@ -219,9 +222,9 @@ class TestRowNumbers:
         assert isinstance(candidate, RowNumbers) and candidate.role == "x" and candidate.certain
         assert candidate.operations() == [{"op": "row_number", "name": "index"}]
         assert candidate.line() == (
-            "x: no column or conversion fills it; column 'index' holds the row numbers 1 to 6; certain: a list of "
-            "values is drawn by position; y then takes 'value', which x holds now; operations: "
-            '[{"op": "row_number", "name": "index"}]'
+            "y: no column or conversion fills it; a new column 'index' with the row numbers 1 to 6 takes x, and y "
+            "takes 'value', which x holds now; certain: a list of values is drawn by position, and this is wanted, "
+            'never a mistake; operations: [{"op": "row_number", "name": "index"}]'
         )
 
     def test_a_table_with_labels_only_besides_gets_them_too(self) -> None:

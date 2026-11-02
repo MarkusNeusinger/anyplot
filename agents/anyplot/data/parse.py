@@ -912,16 +912,14 @@ def _read_delimited(
         warnings.append(
             f"left out {_count(block.summary, 'summary row')} at the end of the table (a total, sum, mean or similar)"
         )
-    skipped = [records[index] for index in block.skipped]
-    if skipped:
+    if block.skipped:
+        skipped = [(records[index][0], len(records[index][1])) for index in block.skipped]
         warnings.append(
             f"left out {_count(len(skipped), 'line')} inside the table that {'is' if len(skipped) == 1 else 'are'} "
-            f"no row of it ({_some_lines([(line_num, len(record)) for line_num, record in skipped])})"
+            f"no row of it ({_some_lines(skipped)})"
         )
-    if context is not None and (block.above or block.below or lead or skipped):
-        left_out = [
-            record for _, record in (*lead, *records[: block.start], *skipped, *records[block.end + block.summary :])
-        ]
+    if context is not None and (block.above or block.below or lead):
+        left_out = [record for _, record in (*lead, *records[: block.start], *records[block.end + block.summary :])]
         lines, cut = _context_lines(left_out, delimiter)
         context.extend(lines)
         if cut:
@@ -1316,7 +1314,9 @@ def table_block(records: Sequence[Sequence[str]], *, extra_missing: frozenset[st
     * A line between the data rows that has fewer fields than the table and holds text, and no
       value, in the value columns is no row: a button copied with a web table (`Show 36 earlier
       months`), a note. It is left out (`skipped`, owner's live test of 2026-11-02: it stayed a
-      row of empty cells, which also kept the month column text). A short line whose value
+      row of empty cells, which also kept the month column text), with a warning that names its
+      line, and it is no note either: the words of a page are not the user's, and the root took
+      that button for a wish to plot 36 months (live run of 2026-11-02). A short line whose value
       columns are empty stays a row (`Ben` under `Name,Score`): a text column may hold it, and
       a sparse row is the user's data. So does a row of the table's width, which may be a text
       cell in a column of mostly numbers (`Dora,pending`).

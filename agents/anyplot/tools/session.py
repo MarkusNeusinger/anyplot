@@ -414,6 +414,10 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
         "version": version.version,
         "changes": DATA_PREAMBLE + "\n" + fence("tool_notes", json.dumps(prepared.changes, ensure_ascii=False)),
     }
+    if version.bindings != view.bindings:
+        # The server moved them (`carry_bindings`): the reply names these, not the ones the turn started from (live
+        # run of 2026-11-02: the root saw x on `value` and called the row numbers a mistake).
+        base["bindings"] = DATA_PREAMBLE + "\n" + fence("user_data", bindings_text(version.bindings))
     return _with_profile(base, parsed.profile, "prepare_data")
 
 
