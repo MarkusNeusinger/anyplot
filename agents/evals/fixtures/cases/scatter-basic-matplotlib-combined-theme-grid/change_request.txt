@@ -1,0 +1,1 @@
+Make it dark and add vertical grid lines.
