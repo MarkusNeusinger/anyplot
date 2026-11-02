@@ -143,6 +143,8 @@ MemoryTarget = Literal["x", "y", "color", "series", "plot"]
 """The part of the plot a memory entry is about, where it is about one."""
 MAX_REMEMBER = 5
 """Plot memory entries one `plot_pipeline` or `keep_plot_request` call may hand over."""
+MEMORY_ENTRY_ID_PATTERN = r"^m[0-9]{1,6}$"
+"""A plot memory entry's id (`memory.ENTRY_ID_PATTERN`)."""
 
 
 def _one_line(text: str) -> str:
@@ -170,6 +172,9 @@ class RememberItem(BaseModel):
     target: MemoryTarget | None = None
     expected_text: ExpectedText | None = None
     """The text the decision puts in the plot, verbatim as the user wrote it; None for one without (a formula)."""
+    replaces: str | None = Field(default=None, pattern=MEMORY_ENTRY_ID_PATTERN)
+    """The id of the entry this one corrects ("move the reference line to 8"): a reference line, an annotation, a marker
+    or another multi-valued entry is otherwise added beside the one it corrects (Copilot on #12520)."""
 
 
 MAX_DATASET_CONTEXT_CHARS = 1_600

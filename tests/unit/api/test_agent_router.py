@@ -596,7 +596,8 @@ class TestSnapshot:
         assert str(upstream.requests[0].url) == f"{SERVICE_URL}/v1/sessions/s1/library"
         assert upstream.last_json["library"] == "seaborn"
         assert upstream.last_json["snapshot"]["code"] == "sns = 1"
-        assert upstream.last_json["source"] == "menu"  # the page's library menu, unless it says otherwise
+        # The menu, the default, is never sent: an agents service from before `source` would refuse the field.
+        assert "source" not in upstream.last_json
 
     def test_switch_library_forwards_a_chat_source_and_refuses_any_other(self, client, upstream, db_with_spec) -> None:
         db_with_spec.get_by_id_with_code.return_value = _make_spec([_make_impl("seaborn", "sns = 1")])

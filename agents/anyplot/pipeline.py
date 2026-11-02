@@ -1606,6 +1606,9 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     fresh = ledger.fresh_start and previous is None
     # A first run in a new target takes the switch's carry; a change of a version in the target needs none.
     carry = None if previous is not None or fresh else read_carry(ctx.state, view.target)
+    # The arguments the user's note is settled from: the carried texts feed this run's checks only, never the kept
+    # first-plot note, which a carry run that ships nothing would otherwise take them into (Copilot on #12520).
+    own_input = node_input
     node_input = take_carried_texts(node_input, carry)
     theme, theme_asked = run_theme(node_input.theme, ledger.site_theme, previous, carry)
     # The memory with this change's own decisions applied: the adapter sees what will stand once it ships.
@@ -1660,7 +1663,7 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     ledger.plot_shipped = result.status in ("ok", "needs_attention")
     if ledger.plot_shipped and run.memory_plan is not None and run.memory_plan.refused:
         result = result.model_copy(update={"memory_full": True})  # the plot carries the change, the memory cannot
-    settle_pending_request(ctx.state, node_input, ledger.plot_shipped)
+    settle_pending_request(ctx.state, own_input, ledger.plot_shipped)
     settle_memory(ctx.state, run, ledger.plot_shipped)
     _attribute_result(ledger, run, result)
     _telemetry_run(ledger, ctx.session.id, ctx.invocation_id, run, result, time.monotonic() - started)
