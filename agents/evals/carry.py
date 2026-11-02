@@ -146,8 +146,31 @@ CHECKS: dict[str, list[Check]] = {
             ),
         ),
     ],
+    # seaborn draws on matplotlib's axes: a mathtext string is matplotlib's LaTeX, `*` its star marker.
+    "seaborn": [
+        Check("reference_line", (rf"axhline\(\s*(?:y\s*=\s*)?{_SEVEN}", rf"hlines\(\s*(?:y\s*=\s*)?{_SEVEN}")),
+        Check("latex_annotation", (rf"(?:text|annotate)\(.*\$[^$\n]*{_FORMULA}[^$\n]*\$",)),
+        Check("star_markers", (r"marker\s*=\s*['\"]\*['\"]", r"['\"]marker['\"]\s*:\s*['\"]\*['\"]")),
+        Check("label_text", (re.escape(LABEL),)),
+        Check(
+            "x_limits",
+            (
+                r"set_xlim\(\s*(?:left\s*=\s*)?0(?:\.0+)?\s*,\s*(?:right\s*=\s*)?100",
+                r"xlim\(\s*0(?:\.0+)?\s*,\s*100",
+                rf"xlim\s*=\s*{_ZERO_TO_HUNDRED}",
+            ),
+        ),
+    ],
 }
 """Per target library, every intent of `OWNER_EXAMPLES` in that library's own API."""
+
+TUNE_MESSAGE = (
+    "Bitte eine horizontale Referenzlinie bei y = 7, oben links eine Annotation mit der Formel $y = ax^2 + b$ in "
+    "LaTeX, die Ausreißer als rote Sterne, die x-Achse mit 'Zeit (h)' beschriften und die x-Achse von 0 bis 100."
+)
+"""The owner's five examples as one chat message in the source library (`--via chat`)."""
+SWITCH_MESSAGE = "Erstelle den Plot bitte in {library}."
+"""The switch asked for in the chat (`--via chat`), as the owner wrote it on 2026-11-02."""
 
 
 def check_code(library: str, code: str) -> dict[str, bool]:
@@ -167,15 +190,32 @@ class Outcome:
     residual: list[str] = field(default_factory=list)
     cost_usd: float = 0.0
     note: str = ""
+    via: str = "memory"
+    remembered: int = 0
+    """`--via chat`: the memory entries the tuning turn left (the root's `remember` items, stored once it shipped)."""
+    switch: dict[str, Any] | None = None
+    """`--via chat`: the switch the switch turn's `done` carried (the root's `switch_plot`)."""
 
     @property
     def passed(self) -> bool:
+        asked = self.via != "chat" or (self.switch is not None and self.switch.get("library") == self.library)
         return (
-            self.status in ("ok", "needs_attention")
+            asked
+            and self.status in ("ok", "needs_attention")
             and bool(self.checks)
             and all(self.checks.values())
             and LABEL not in self.requested_not_found
         )
+
+
+def done_of(stream: str) -> dict[str, Any]:
+    """The `done` event's data of an SSE turn, or {} without one."""
+    for block in stream.strip().split("\n\n"):
+        fields = dict(line.split(": ", 1) for line in block.splitlines() if ": " in line)
+        if fields.get("event") == "done":
+            data = json.loads(fields.get("data", "{}"))
+            return data if isinstance(data, dict) else {}
+    return {}
 
 
 class _Lines(logging.Handler):
@@ -208,12 +248,18 @@ def setup_env(source: str, targets: list[str], model: str | None, location: str 
     renderer_url()
 
 
-async def run_target(library: str, source: str, out: Path, lines: _Lines) -> Outcome:
-    """One session: paste, confirm, seed the memory in `source`, switch to `library`, `carry_plot`, check."""
+async def run_target(library: str, source: str, out: Path, lines: _Lines, via: str = "memory") -> Outcome:
+    """One session: paste, confirm, seed the memory in `source`, switch to `library`, `carry_plot`, check.
+
+    With `via="chat"` the memory is not seeded: the first plot in `source`, then the owner's
+    examples as one chat message (`TUNE_MESSAGE`), whose run the root hands its decisions to, then
+    the switch asked for in the chat (`SWITCH_MESSAGE`), carried out as the page does: the switch
+    route with `source: chat`, then `carry_plot`.
+    """
     import httpx
 
     from agents.anyplot.dev_fixture import snapshot_from_repo
-    from agents.anyplot.memory import memory_delta, plan
+    from agents.anyplot.memory import memory_delta, plan, read_memory
     from agents.anyplot.schemas import RememberItem
     from agents.anyplot.services import get_services
     from agents.anyplot.settings import get_settings
@@ -221,7 +267,7 @@ async def run_target(library: str, source: str, out: Path, lines: _Lines) -> Out
     from agents.main import app, get_runtime
 
     settings = get_settings()
-    outcome = Outcome(library)
+    outcome = Outcome(library, via=via)
     headers = {"X-Anyplot-User": USER, "X-Anyplot-Tier": "admin", "X-Request-Id": f"carry-{library}"}
     start = len(lines.lines)
     async with httpx.AsyncClient(
@@ -241,14 +287,29 @@ async def run_target(library: str, source: str, out: Path, lines: _Lines) -> Out
         pasted.raise_for_status()
         (await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=headers)).raise_for_status()
         runtime = get_runtime()
-        items = [RememberItem.model_validate(item) for item in OWNER_EXAMPLES]
-        planned = plan([], items, seq=1, turn=1)
-        await runtime.write_state(await runtime.session(USER, sid), memory_delta(planned.entries, planned.seq))
-        switched = await client.post(
-            f"/v1/sessions/{sid}/library",
-            headers=headers,
-            json={"library": library, "snapshot": snapshot_from_repo(SPEC_ID, library).model_dump()},
-        )
+        switch_body: dict[str, Any] = {
+            "library": library,
+            "snapshot": snapshot_from_repo(SPEC_ID, library).model_dump(),
+        }
+        if via == "chat":
+            for body in ({"action": "create_plot"}, {"text": TUNE_MESSAGE}):
+                (await client.post(f"/v1/sessions/{sid}/messages", headers=headers, json=body)).raise_for_status()
+            outcome.remembered = len(read_memory((await runtime.session(USER, sid)).state))
+            asked = await client.post(
+                f"/v1/sessions/{sid}/messages", headers=headers, json={"text": SWITCH_MESSAGE.format(library=library)}
+            )
+            asked.raise_for_status()
+            switch = done_of(asked.text).get("switch")
+            outcome.switch = switch if isinstance(switch, dict) else None
+            if outcome.switch is None or outcome.switch.get("library") != library:
+                outcome.note = "the switch turn asked for no switch to this library"
+                return outcome
+            switch_body["source"] = "chat"
+        else:
+            items = [RememberItem.model_validate(item) for item in OWNER_EXAMPLES]
+            planned = plan([], items, seq=1, turn=1)
+            await runtime.write_state(await runtime.session(USER, sid), memory_delta(planned.entries, planned.seq))
+        switched = await client.post(f"/v1/sessions/{sid}/library", headers=headers, json=switch_body)
         switched.raise_for_status()
         if not switched.json()["carry"]["offer"]:
             outcome.note = "the switch offered no carry run"
@@ -301,7 +362,7 @@ async def main_async(args: argparse.Namespace) -> int:
             if spent >= args.cap:
                 outcomes.append(Outcome(library, note=f"skipped: the cap of ${args.cap:.2f} was reached"))
                 continue
-            outcome = await run_target(library, args.source, out, lines)
+            outcome = await run_target(library, args.source, out, lines, args.via)
             spent += outcome.cost_usd
             outcomes.append(outcome)
             print(json.dumps({**outcome.__dict__, "passed": outcome.passed}, ensure_ascii=False), flush=True)
@@ -312,7 +373,13 @@ async def main_async(args: argparse.Namespace) -> int:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--source", default="matplotlib")
-    parser.add_argument("--targets", nargs="+", default=list(CHECKS), choices=sorted(CHECKS))
+    parser.add_argument("--targets", nargs="+", default=["plotly", "ggplot2"], choices=sorted(CHECKS))
+    parser.add_argument(
+        "--via",
+        default="memory",
+        choices=["memory", "chat"],
+        help="memory: seed the owner's examples; chat: tune and switch through chat turns, as a user does",
+    )
     parser.add_argument("--model", default=None, help="AGENT_MODEL (default: the settings', claude-haiku-5-5)")
     parser.add_argument("--location", default=None, help="AGENT_LOCATION (default: the settings', eu)")
     parser.add_argument("--cap", type=float, default=1.5, help="USD; a target after the cap is skipped")

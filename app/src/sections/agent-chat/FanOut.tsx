@@ -7,7 +7,10 @@
  * `useAgentSession`), has the server copy that session's confirmed current
  * version into it with its bindings and their confirmation (`copyData`, without
  * the summary turn of a paste), whatever the data's origin: pasted, opened,
- * computed or changed by the assistant. It then starts `create_plot` in at most
+ * computed or changed by the assistant. It then starts the plot (`carry_plot`
+ * when the copy took the page's plot memory and tuned plot over, since
+ * 2026-11-02, so every library starts with the user's decisions; `create_plot`
+ * otherwise) in at most
  * `maxRuns` sessions at a time (`grantSlots`): the caller's own cap, which
  * `/status` reports as `user_max_runs` (`AGENT_ADMIN_USER_MAX_RUNS`, 5, for the
  * admin since 2026-11-01) and which refuses one run more with `run_limit`. That
