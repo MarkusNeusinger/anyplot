@@ -128,6 +128,8 @@ def carry_for(
             requests=[r for r in plot.requests if 0 < len(r) <= MAX_CHANGE_REQUEST_CHARS][-MAX_USER_REQUESTS:],
         )
     if pending is not None:
+        # Also back to its own source (A to B to A, no run in B): A's plot then counts the memory's newer entries,
+        # and a carry run there, offered only for those, keeps the theme the user asked for in A.
         texts = expected_texts(memory) if memory else list(pending.expected_texts)
         return pending.model_copy(update={"target": target, "expected_texts": texts})
     if memory:

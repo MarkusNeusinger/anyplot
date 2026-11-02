@@ -419,6 +419,51 @@ async def test_start_over_is_fresh_and_starts_the_memory_over(client: httpx.Asyn
     assert state[MEMORY] == [] and state[MEMORY_SEQ] == 3  # emptied; the ids go on
 
 
+async def test_start_over_stays_fresh_when_the_root_asks_for_the_previous_version(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """`create_plot` is the catalogue plot whatever `base` the root passes (Flash review, 2026-11-02)."""
+    fake = swap_models(
+        "gemini",
+        {
+            "root": [
+                {"call": "plot_pipeline", "args": {}},
+                {"text": "Here."},
+                {"call": "plot_pipeline", "args": {"base": "previous"}},
+                {"text": "Here again."},
+            ],
+            "adapter": [{"json": SCATTER_PLAN}, {"json": SCATTER_PLAN}],
+            "reviewer": [{"json": VERDICT_OK}, {"json": VERDICT_OK}],
+        },
+    )
+    sid = await open_session(client)
+    await create_plot(client, sid)
+    await seed_memory(sid, entries(LINE))
+
+    events = await create_plot(client, sid)
+
+    assert plot_of(events)["status"] == "ok"  # SCATTER_PLAN applies to the catalogue code only
+    assert DECISIONS_HEADING not in adapter_inputs(fake)[1]
+    assert (await _session_state(client, sid))[MEMORY] == []
+
+
+async def test_a_note_of_decisions_alone_is_kept_for_the_first_plot() -> None:
+    from agents.anyplot.pipeline import hold_request, settle_pending_request, take_pending_request
+    from agents.anyplot.schemas import KeepRequestArgs
+
+    state: dict[str, Any] = {}
+    kept = KeepRequestArgs(remember=[LINE])  # no request text: still something to keep
+    hold_request(state, PipelineArgs(**kept.model_dump()))
+    assert state[PENDING_REMEMBER] == [LINE.model_dump(mode="json")]
+
+    taken = take_pending_request(state, PipelineArgs())
+    assert taken.remember == [LINE]
+    settle_pending_request(state, taken, shipped=False)  # a failed first plot keeps it
+    assert state[PENDING_REMEMBER] == [LINE.model_dump(mode="json")]
+    settle_pending_request(state, taken, shipped=True)
+    assert state[PENDING_REMEMBER] is None
+
+
 async def test_a_carry_run_that_ships_nothing_keeps_the_carry(client: httpx.AsyncClient, swap_models) -> None:
     broken = {"edits": [{"find": "no such line", "replace": "x"}], "changes": ["Tried"]}
     swap_models(

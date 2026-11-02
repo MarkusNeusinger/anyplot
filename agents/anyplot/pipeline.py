@@ -683,7 +683,7 @@ def keep_pending_request(state: Any, args: PipelineArgs, reason: NotReadyReason 
     Live round 9 of 2026-10-16: a title asked for before `.confirm()` is the same case, and the root
     keeps it only through this path (`root.md`); the result's `request_kept` says that it did.
     """
-    if reason not in PENDING_REASONS or args.base == "previous" or not (args.change_request or args.expected_texts):
+    if reason not in PENDING_REASONS or args.base == "previous" or not has_request(args):
         return False
     hold_request(state, args)
     return True
@@ -695,7 +695,7 @@ def hold_request(state: Any, args: PipelineArgs) -> None:
     Also the path of a run that passed the check but got no slot in the run queue (`capacity`,
     or a cancelled wait): its note waits for the next `.create_plot()` like a blocked one's.
     """
-    if (args.change_request or args.expected_texts) and args.base != "previous":
+    if has_request(args) and args.base != "previous":
         state[PENDING_REQUEST] = merged_request(state.get(PENDING_REQUEST), args.change_request) or None
         state[PENDING_EXPECTED_TEXTS] = chosen_texts(state.get(PENDING_EXPECTED_TEXTS), args) or None
         remembered = merged_remember(state.get(PENDING_REMEMBER), args.remember)
@@ -703,6 +703,11 @@ def hold_request(state: Any, args: PipelineArgs) -> None:
         # The bindings the note was written for: a later binding change that only fills roles open then keeps it.
         bindings = state.get(BINDINGS)
         state[PENDING_BINDINGS] = list(bindings) if isinstance(bindings, list) else []
+
+
+def has_request(args: PipelineArgs) -> bool:
+    """Whether a first plot's arguments carry anything a kept note holds: a request, texts or memory decisions."""
+    return bool(args.change_request or args.expected_texts or args.remember)
 
 
 def merged_remember(pending: object, own: Sequence[RememberItem]) -> list[RememberItem]:
@@ -782,7 +787,7 @@ def take_pending_request(state: Any, args: PipelineArgs) -> PipelineArgs:
     """
     pending = state.get(PENDING_REQUEST)
     texts = state.get(PENDING_EXPECTED_TEXTS)
-    if (pending is None and texts is None) or args.base == "previous":
+    if (pending is None and texts is None and state.get(PENDING_REMEMBER) is None) or args.base == "previous":
         return args
     # Validated like the root's own arguments: a stored value never reaches the run unchecked.
     joined = {
@@ -835,7 +840,7 @@ def settle_pending_request(state: Any, args: PipelineArgs, shipped: bool) -> Non
         for key in PENDING_KEYS:
             if state.get(key) is not None:
                 state[key] = None
-    elif args.change_request or args.expected_texts:
+    elif has_request(args):
         state[PENDING_REQUEST] = args.change_request or None
         state[PENDING_EXPECTED_TEXTS] = list(args.expected_texts) or None
         state[PENDING_REMEMBER] = [item.model_dump(mode="json") for item in args.remember] or None
@@ -1560,6 +1565,10 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     services = get_services()
     settings = get_settings()
     ledger = ledger_for(ctx.invocation_id)
+    if ledger.fresh_start and node_input.base == "previous":
+        # `.create_plot()` and `.start_over()` ask for the catalogue plot whatever the root passes: a change of the
+        # previous version here would keep every decision the fresh start drops (Flash review, 2026-11-02).
+        node_input = node_input.model_copy(update={"base": "catalogue"})
     view, dataset, not_ready = load_inputs(ctx, services)
     language = plot_language(view, services.versions.latest_language(ctx.session.id)) if view is not None else None
     if not_ready is not None or view is None or dataset is None:

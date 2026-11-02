@@ -408,8 +408,8 @@ class KeepRequestArgs(_ServerContract):
 
     @model_validator(mode="after")
     def _something_to_keep(self) -> Self:
-        if not self.change_request.strip() and not self.expected_texts:
-            raise ValueError("a kept request needs a change_request or expected_texts")
+        if not self.change_request.strip() and not self.expected_texts and not self.remember:
+            raise ValueError("a kept request needs a change_request, expected_texts or remember")
         return self
 
 
