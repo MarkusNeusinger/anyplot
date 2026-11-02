@@ -1,5 +1,5 @@
 /**
- * The session language chip in the chat header, next to the library pills:
+ * The session language chip in the chat header, next to the library menu:
  * `lang: en` until something sets it, `lang: de · from data` after a paste
  * whose notes or column names are German, `lang: de · detected` after the
  * session's first typed message, `lang: de · chosen` after a choice here or a

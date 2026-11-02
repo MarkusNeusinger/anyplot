@@ -1,6 +1,6 @@
 /**
  * "Use with my data": the admin-only agent chat at `/debug/agent?spec=&library=&language=`,
- * plus `&all=1` while the header's `all` pill is pressed. The query follows the
+ * plus `&all=1` while the library menu's `all` is pressed. The query follows the
  * session: a library switch writes `library` and its `language`.
  *
  * One column, chat first, two steps, data first. The data card is the first
@@ -17,14 +17,30 @@
  * with text the text goes as a turn and the assistant makes the first plot
  * with that change. Once the library has a plot, the composer refines in plain
  * words (`.send()`, on the latest version), and the same button becomes
- * `.start_over()`: a new plot from the catalogue plot with this data, without
- * the earlier changes; every shipped version gets a result card with the image,
+ * `.start_over()`: a new plot from the catalogue plot with this data, the way
+ * out of code that went wrong, which keeps the remembered decisions (owner
+ * decision of 2026-11-02); every shipped version gets a result card with the image,
  * the code and the downloads. A line above the column names the current step. The header
- * carries, next to the library pills, the session language chip
- * (`LanguageChip`): the language of the replies and of the text in the plot,
- * English until the first typed message or a choice sets another. The page
- * talks only to the BFF under `/debug/agent/*` (`src/lib/agent.ts`,
- * `src/hooks/useAgentSession.ts`).
+ * carries the library menu (`LibraryChip`, since 2026-11-02 in place of a pill
+ * per library: the libraries grouped by language, `all` for the admin) and,
+ * next to it, the session language chip (`LanguageChip`): the language of the
+ * replies and of the text in the plot, English until the first typed message
+ * or a choice sets another. The page talks only to the BFF under
+ * `/debug/agent/*` (`src/lib/agent.ts`, `src/hooks/useAgentSession.ts`).
+ *
+ * A library switch keeps the data, the bindings, their confirmation, the
+ * language and the plot memory. When its answer offers it, the composer's
+ * create action becomes "plot in seaborn with your 3 decisions" (`carry_plot`):
+ * the plot in the new library from its catalogue code, with the decisions the
+ * user made so far; picking a library from the menu runs nothing, so browsing
+ * costs nothing. `.create_plot()` (or `.start_over()` once the library has a
+ * plot) stays beside it as the quiet plot from the catalogue code, which keeps
+ * the decisions too but not the switch's carry (the theme asked for before),
+ * and text typed into the box goes as a normal turn, which the server also
+ * gives the decisions. The offer ends once a plot in that library ships, or
+ * with a switch whose answer has none. The decisions themselves stand above the
+ * composer as the remembered list (`Remembered`), each with `.forget()`, and
+ * `.forget_all()` for a blank start: nothing else clears them.
  *
  * `.create_plot()` is in the composer as soon as there is data. Before the
  * confirmation it is the quiet button, and a click calls nothing: a notice
@@ -40,7 +56,7 @@
  * it shows only what the line does not (a `create_plot` run, a queue position,
  * pipeline steps), and the data card says why its controls wait.
  *
- * The header's `all` pill, after the library pills, is the admin's test run.
+ * The library menu's `all`, after the libraries, is the admin's test run.
  * While it is pressed, the composer's create action is `.plot_all()`: the
  * confirmed data, with the confirmed bindings, plotted in every library of the
  * header at once (`FanOut`), a session per library into which the server copies
@@ -49,10 +65,11 @@
  * running, each through the normal run queue. This session stays the data
  * session; in step 2 the message box waits (typed text would not go along) and
  * a line above it says so, while in step 1 the chat about the data goes on as
- * without `all`. Any library pill turns `all` off again; while the panel is
- * open, neither the pills, `all` nor the data card change, so every library
- * copies the same confirmed data. The pill is in the URL as `&all=1`,
- * so a reload presses it again once the libraries are known.
+ * without `all`. Any library picked in the menu turns `all` off again (the
+ * library in use only that); while the panel is open, neither the menu nor the
+ * data card change anything, so every library copies the same confirmed data.
+ * `all` is in the URL as `&all=1`, so a reload presses it again once the
+ * libraries are known.
  *
  * The session itself is not in the URL and nothing restores it: while it holds
  * data, a plot or work in flight, a reload, a closed tab or a link off the page
@@ -84,6 +101,7 @@ import { LIB_TO_LANG, LIBRARIES } from 'src/constants';
 import { CONFIG } from 'src/global-config';
 import {
   type BindingMap,
+  carryDecisions,
   type DatasetUpload,
   sessionBusy,
   sessionHoldsWork,
@@ -102,9 +120,16 @@ import { DATA_SUMMARY_ID, DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { FanOut } from 'src/sections/agent-chat/FanOut';
 import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
-import { ERROR_TEXT, LEAVE_TEXT, servicePausedText } from 'src/sections/agent-chat/messages';
+import { LibraryChip } from 'src/sections/agent-chat/LibraryChip';
+import {
+  carryActionText,
+  ERROR_TEXT,
+  LEAVE_TEXT,
+  servicePausedText,
+} from 'src/sections/agent-chat/messages';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
+import { Remembered } from 'src/sections/agent-chat/Remembered';
 import { SaveButton } from 'src/sections/agent-chat/SaveButton';
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
 import { inStep2, showsTimeline } from 'src/sections/agent-chat/steps';
@@ -126,19 +151,13 @@ const SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
 const OPEN_SOURCES = new Set(['plot_page']);
 /** The chat column's width: a thread to read, and a plot that fits the screen with its composer. */
 const COLUMN_MAX_WIDTH = 960;
-/** What `.start_over()` does, unlike `.send()` beside it (the owner could not tell the two apart). */
-const START_OVER_HELP = 'new from the catalogue plot, without your changes';
+/**
+ * What `.start_over()` does, unlike `.send()` beside it (the owner could not tell the two apart),
+ * and the quiet `.create_plot()` beside the offer after a switch: the catalogue code again, with the
+ * remembered decisions, which only the user clears (owner decision of 2026-11-02).
+ */
+const START_OVER_HELP = 'new from the catalogue plot; keeps your remembered decisions';
 const START_OVER_HELP_ID = 'agent-start-over-help';
-
-/** A pill of the header's library group: a library, or `all` after them. */
-const pillSx = (pressed: boolean) => ({
-  ...actionButtonSx,
-  border: '1px solid',
-  borderColor: pressed ? 'var(--ink-muted)' : 'var(--rule)',
-  color: pressed ? 'var(--ink)' : 'var(--ink-soft)',
-  bgcolor: pressed ? 'var(--bg-elevated)' : 'transparent',
-  '&:disabled': { cursor: 'default', opacity: pressed ? 1 : 0.45 },
-});
 
 /** The first of these controls that can take the focus now, in order of preference. */
 function firstEnabled(...controls: (HTMLButtonElement | HTMLTextAreaElement | null)[]) {
@@ -281,10 +300,10 @@ interface AgentChatProps {
   library: string;
   language: string;
   token: string;
-  /** `&all=1` at the mount: the `all` pill starts pressed, once the libraries are known. */
+  /** `&all=1` at the mount: the menu's `all` starts pressed, once the libraries are known. */
   allInUrl: boolean;
   onLibraryChange: (library: string) => void;
-  /** The `all` pill as it is now, for the URL. */
+  /** The menu's `all` as it is now, for the URL. */
   onAllChange: (pressed: boolean) => void;
 }
 
@@ -318,17 +337,16 @@ function AgentChat({
     bindings: BindingMap;
     libraries: string[];
   } | null>(null);
-  // The header's `all` pill, in the URL as `&all=1` (`onAllChange`). Pressed from the URL, it
+  // The library menu's `all`, in the URL as `&all=1` (`onAllChange`). Pressed from the URL, it
   // takes effect only once `offerAll` holds (`plotAll`), when the libraries are the server's.
   const [allPressed, setAllPressed] = useState(allInUrl);
-  const allRef = useRef<HTMLButtonElement>(null);
+  // The library menu's chip, which holds `all` since 2026-11-02.
+  const libraryRef = useRef<HTMLButtonElement>(null);
   const fanOutRef = useRef<HTMLElement>(null);
   // Set by a key press on `.plot_all()`: the panel it opens takes the focus, once.
   const fanOutFocus = useRef(false);
   // Set by the panel's `.close()`, which takes its focused button away: the focus returns, once.
   const fanOutReturn = useRef(false);
-  // Set by the own library's pill, which turned `all` off and is disabled now: the focus moves, once.
-  const pillFocus = useRef(false);
   const tailRef = useRef<HTMLDivElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const createRef = useRef<HTMLButtonElement>(null);
@@ -438,18 +456,30 @@ function AgentChat({
     state.phase === 'ready' && step2 && state.bindingsComplete && !state.transcription && !busy;
   // Until this library has a plot, `.create_plot()` is the composer's action and
   // text in the box goes with it; the pipeline counts versions per library too.
+  // The server files a version under its (spec, library) pair; the spec cannot
+  // change in a session yet, so the library alone tells the pair.
   const hasPlot = Object.values(state.versions).some(version => version.library === state.library);
   const firstPlot = step2 && !hasPlot;
-  // The `all` pill only once the libraries and the limit are the server's: a snapshot of the
+  // `all` in the menu only once the libraries and the limit are the server's: a snapshot of the
   // fallbacks would leave libraries out or start more runs than the server takes (`run_limit`).
   const offerAll = listsSettled && libraries.length > 1 && !reopen;
   const plotAll = allPressed && offerAll;
   // The chat waits only where `.plot_all()` is the action, in step 2: the fan-out takes no
   // text. Before it, with or without data, the box talks about the data as without `all`.
   const chatLocked = plotAll && step2;
+  // After a switch whose answer offered it: the plot in this library with the remembered
+  // decisions (`carry_plot`), the composer's create action. Not while `all` is pressed, whose
+  // fan-out makes fresh plots everywhere.
+  const carry =
+    state.carryOffer?.target.library === state.library && state.dataset && !plotAll
+      ? state.carryOffer
+      : null;
+  const carryText = carry
+    ? carryActionText(carry.target.library, carryDecisions(carry, state.memory))
+    : '';
 
-  // `&all=1` follows the pill, so a reload presses it again. Only from the lists' answers on:
-  // before them `all` is not offered yet, and a pill pressed from the URL waits for them.
+  // `&all=1` follows `all`, so a reload presses it again. Only from the lists' answers on:
+  // before them `all` is not offered yet, and one pressed from the URL waits for them.
   useEffect(() => {
     if (listsSettled) onAllChange(plotAll);
   }, [listsSettled, plotAll, onAllChange]);
@@ -494,21 +524,12 @@ function AgentChat({
   }, [fanOut]);
 
   // The panel's `.close()` went with the panel: the focus returns to `.plot_all()`, which
-  // opened it, or, while that waits, to the `all` pill or the message box.
+  // opened it, or, while that waits, to the library menu or the message box.
   useEffect(() => {
     if (fanOut || !fanOutReturn.current) return;
     fanOutReturn.current = false;
-    firstEnabled(createRef.current, allRef.current, messageRef.current)?.focus();
+    firstEnabled(createRef.current, libraryRef.current, messageRef.current)?.focus();
   }, [fanOut]);
-
-  // The own library's pill turned `all` off and is the pressed, disabled pill now: the
-  // keyboard continues at `all`, or, should that wait, in the message box. A layout effect
-  // after the render, so the disabled states it reads are the new ones.
-  useLayoutEffect(() => {
-    if (!pillFocus.current) return;
-    pillFocus.current = false;
-    firstEnabled(allRef.current, messageRef.current)?.focus();
-  }, [allPressed]);
 
   /**
    * A key press on a composer button that a run replaces with `.stop()` (Enter
@@ -522,9 +543,11 @@ function AgentChat({
 
   /**
    * The composer's action. The first plot: an empty box starts it as it is
-   * (`create_plot`), text goes as the user's turn, and the assistant makes the
-   * plot with that change. Otherwise the text is a turn about the data or the plot.
-   * While `all` is pressed in step 2 nothing goes: the fan-out takes no text.
+   * (`create_plot`), or, after a switch that offered it, with the remembered
+   * decisions (`carry_plot`); text goes as the user's turn, and the assistant
+   * makes the plot with that change (the server gives it the decisions too).
+   * Otherwise the text is a turn about the data or the plot. While `all` is
+   * pressed in step 2 nothing goes: the fan-out takes no text.
    */
   const handleSend = useCallback(
     (event?: React.FormEvent) => {
@@ -532,38 +555,32 @@ function AgentChat({
       const text = draft.trim();
       if (busy || chatLocked) return;
       if (firstPlot && !text) {
-        if (canCreate) void session.createPlot();
+        if (canCreate) void (carry ? session.carryPlot() : session.createPlot());
         return;
       }
       if (!text || (firstPlot && !canCreate)) return;
       void session.sendMessage(text);
       setDraft('');
     },
-    [draft, busy, chatLocked, firstPlot, canCreate, session]
-  );
-
-  const handleLibrary = useCallback(
-    async (next: string) => {
-      if (await session.switchLibrary(next)) onLibraryChange(next);
-    },
-    [session, onLibraryChange]
+    [draft, busy, chatLocked, firstPlot, canCreate, carry, session]
   );
 
   /**
-   * A library pill. While `all` is pressed, any pill turns it off: the session's
-   * own library only that, and the keyboard moves on (`pillFocus`), since the
-   * pill pressed now is disabled; another library switches as it would without it.
+   * A library picked in the menu. While `all` is pressed, any pick turns it
+   * off: the library in use only that; another library switches as it would
+   * without it. The URL follows a switch the server took; a refused one
+   * rejects, and the menu shows why under its chip.
    */
-  const handlePill = (next: string) => {
-    if (plotAll) {
-      setAllPressed(false);
-      if (next === state.library) {
-        pillFocus.current = true;
-        return;
+  const handlePick = useCallback(
+    async (next: string) => {
+      if (plotAll) {
+        setAllPressed(false);
+        if (next === state.library) return;
       }
-    }
-    void handleLibrary(next);
-  };
+      if (await session.switchLibrary(next)) onLibraryChange(next);
+    },
+    [plotAll, state.library, session, onLibraryChange]
+  );
 
   /**
    * `.plot_all()`, the composer's action while `all` is pressed: the confirmed
@@ -601,6 +618,20 @@ function AgentChat({
     }
     keepKeyboardFocus(event);
     void session.createPlot();
+  };
+
+  /**
+   * The offer after a switch, beside `.send()` once the library has a plot (the
+   * first plot's offer submits the form instead, `handleSend`). Before the
+   * confirmation it calls nothing and shows the notice, as `.create_plot()` does.
+   */
+  const handleCarry = (event: React.MouseEvent) => {
+    if (!step2) {
+      setGateShown(true);
+      return;
+    }
+    keepKeyboardFocus(event);
+    void session.carryPlot();
   };
 
   /**
@@ -678,62 +709,23 @@ function AgentChat({
         >
           ← {title ?? specId}
         </Box>
-        <Box
-          role="group"
-          aria-label="Library"
-          sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, alignItems: 'center' }}
-        >
-          <Box component="span" sx={{ ...labelSx, mr: 0.5 }}>
-            {language} ·
-          </Box>
-          {libraries.map(lib => {
-            const active = lib === state.library;
-            // While `all` is pressed it shows as the pressed pill; the session stays this one's.
-            const pressed = active && !plotAll;
-            // No session to switch: another library opens the page anew, with
-            // its own session (a full navigation, like the `.adapt()` button).
-            if (!active && reopen) {
-              return (
-                <Box
-                  key={lib}
-                  component="a"
-                  href={paths.agentChat(specId, lib, LIB_TO_LANG[lib] ?? 'python')}
-                  sx={{ ...pillSx(false), textDecoration: 'none' }}
-                >
-                  {lib}
-                </Box>
-              );
-            }
-            return (
-              <Box
-                key={lib}
-                component="button"
-                type="button"
-                aria-pressed={pressed}
-                // Not while the fan-out's panel is open: its sessions run on this one's data.
-                disabled={pressed || busy || !!fanOut || state.phase !== 'ready'}
-                onClick={() => handlePill(lib)}
-                sx={pillSx(pressed)}
-              >
-                {lib}
-              </Box>
-            );
-          })}
-          {offerAll && (
-            <Box
-              component="button"
-              type="button"
-              ref={allRef}
-              aria-pressed={plotAll}
-              aria-label="All libraries"
-              disabled={busy || !!fanOut || state.phase !== 'ready'}
-              onClick={() => setAllPressed(!plotAll)}
-              sx={pillSx(plotAll)}
-            >
-              all
-            </Box>
-          )}
-        </Box>
+        <LibraryChip
+          library={state.library}
+          libraries={libraries}
+          offerAll={offerAll}
+          allPressed={plotAll}
+          // No session to switch: another library opens the page anew, with its own
+          // session (a full navigation, like the `.adapt()` button).
+          hrefFor={
+            reopen ? lib => paths.agentChat(specId, lib, LIB_TO_LANG[lib] ?? 'python') : undefined
+          }
+          // Not during a run (the server refuses a switch then) or while the fan-out's panel
+          // is open: its sessions run on this one's data.
+          disabled={!reopen && (busy || !!fanOut || state.phase !== 'ready')}
+          onPick={handlePick}
+          onAllChange={setAllPressed}
+          buttonRef={libraryRef}
+        />
         {/* The session language of the replies and the plot text; without a session there is none. */}
         {!reopen && (
           <LanguageChip
@@ -887,6 +879,16 @@ function AgentChat({
             {/* A turn without pipeline steps has its in-progress line in the thread instead. */}
             {state.run && showsTimeline(state) && <ProgressTimeline run={state.run} />}
 
+            {/* The decisions every next plot takes over, right above the composer that asks for
+                it and whose offer after a switch counts them; nothing while there are none. */}
+            <Remembered
+              memory={state.memory}
+              disabled={busy || state.phase !== 'ready'}
+              onForget={session.forgetMemory}
+              onForgetAll={session.forgetAllMemory}
+              fallbackFocusRef={messageRef}
+            />
+
             {/* While the chat waits for `all`, the line says so in the ink of the text, and the
                 message box names it as its description. */}
             {(firstPlot || chatLocked) && (
@@ -896,7 +898,9 @@ function AgentChat({
               >
                 {chatLocked
                   ? `# ${firstPlot ? 'step 2 — ' : ''}plot the table as it is in all ${libraries.length} libraries at once · turn all off to chat`
-                  : '# step 2 — create the plot as it is, or say first what it should do differently'}
+                  : carry
+                    ? `# step 2 — ${carryText}, or say first what it should do differently`
+                    : '# step 2 — create the plot as it is, or say first what it should do differently'}
               </Box>
             )}
             {/* Told before the user types: every turn would get `service_paused` until then. */}
@@ -979,7 +983,7 @@ function AgentChat({
                 </Box>
               ) : firstPlot && plotAll ? (
                 plotAllButton
-              ) : firstPlot ? (
+              ) : firstPlot && !carry ? (
                 <Box
                   key="create"
                   component="button"
@@ -995,24 +999,55 @@ function AgentChat({
                 </Box>
               ) : (
                 <>
+                  {/* After a switch that offered it: the plot in this library with the remembered
+                      decisions, the step's action. Before the library's first plot it submits
+                      the form, so typed text goes as the turn, as `.create_plot()` does. */}
+                  {carry && (
+                    <Box
+                      key="carry"
+                      component="button"
+                      type={firstPlot ? 'submit' : 'button'}
+                      ref={createRef}
+                      data-testid="carry-plot"
+                      onClick={firstPlot ? keepKeyboardFocus : handleCarry}
+                      disabled={step2 ? !canCreate : state.phase !== 'ready' || busy}
+                      aria-describedby={
+                        step2
+                          ? `${DATA_SUMMARY_ID}${firstPlot ? ' agent-create-line' : ''}`
+                          : gate
+                            ? 'agent-create-gate'
+                            : undefined
+                      }
+                      // The library's name and the count make it long: it wraps at phone width.
+                      sx={{
+                        ...(step2 ? ctaButtonSx : actionButtonSx),
+                        whiteSpace: 'normal',
+                        textAlign: 'left',
+                        maxWidth: '100%',
+                      }}
+                    >
+                      {carryText}
+                    </Box>
+                  )}
                   {/* Step 2 after a plot: start over from the catalogue plot with this data.
-                      Step 1: the step is visible from the foot too, and a click says what
-                      comes first instead of calling the server. With `all`, `.plot_all()`. */}
+                      Beside the offer: the plot from the catalogue code, without the carry. Step 1: the step is
+                      visible from the foot too, and a click says what comes first instead of
+                      calling the server. With `all`, `.plot_all()`. */}
                   {state.dataset && plotAll && plotAllButton}
                   {state.dataset && !plotAll && (
                     <Box
                       component="button"
                       type="button"
-                      ref={createRef}
+                      ref={carry ? undefined : createRef}
                       onClick={handleCreate}
                       disabled={step2 ? !canCreate : state.phase !== 'ready' || busy}
                       // Once this library has a plot, the button starts over from the
                       // catalogue plot; `.send()` beside it changes the latest version.
                       aria-label={hasPlot ? 'Start over' : 'Create plot'}
-                      title={hasPlot ? START_OVER_HELP : undefined}
+                      title={hasPlot || carry ? START_OVER_HELP : undefined}
                       aria-describedby={
                         [
-                          hasPlot ? START_OVER_HELP_ID : null,
+                          hasPlot || carry ? START_OVER_HELP_ID : null,
                           step2 ? DATA_SUMMARY_ID : gate ? 'agent-create-gate' : null,
                         ]
                           .filter(Boolean)
@@ -1023,21 +1058,24 @@ function AgentChat({
                       {hasPlot ? '.start_over()' : '.create_plot()'}
                     </Box>
                   )}
-                  {state.dataset && hasPlot && !plotAll && (
+                  {state.dataset && (hasPlot || carry) && !plotAll && (
                     <Box component="span" id={START_OVER_HELP_ID} sx={visuallyHiddenSx}>
                       {START_OVER_HELP}
                     </Box>
                   )}
-                  <Box
-                    component="button"
-                    type="submit"
-                    onClick={keepKeyboardFocus}
-                    disabled={chatLocked || !draft.trim() || state.phase !== 'ready' || busy}
-                    aria-describedby={chatLocked ? 'agent-create-line' : undefined}
-                    sx={ghostButtonSx}
-                  >
-                    .send()
-                  </Box>
+                  {/* Before the library's first plot the offer submits text; no `.send()` then. */}
+                  {!firstPlot && (
+                    <Box
+                      component="button"
+                      type="submit"
+                      onClick={keepKeyboardFocus}
+                      disabled={chatLocked || !draft.trim() || state.phase !== 'ready' || busy}
+                      aria-describedby={chatLocked ? 'agent-create-line' : undefined}
+                      sx={ghostButtonSx}
+                    >
+                      .send()
+                    </Box>
+                  )}
                 </>
               )}
             </Box>

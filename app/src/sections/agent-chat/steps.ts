@@ -5,6 +5,7 @@
  */
 
 import type { AgentSessionState } from 'src/hooks/useAgentSession';
+import { isPlotAction } from 'src/lib/agent';
 
 /**
  * Step 2: the stored data and its bindings are confirmed, and no table read
@@ -25,14 +26,14 @@ export type PendingReply = 'summarize_data' | 'message' | 'stopping';
  * without pipeline steps waits for its reply: the summary of the data, a
  * question, a data request. It shows exactly while the turn's own prompt is the
  * last item, so the first reply (a message, a refusal, an error, a plot) takes
- * its place. A `create_plot` run gets none, and neither does a turn that
- * reached a pipeline step: the progress timeline below the thread shows those,
- * and two indicators would say the same thing. A wait in the run queue keeps
- * the line, since the queue counter says where, not what.
+ * its place. A plot run (`create_plot`, `carry_plot`) gets none, and neither
+ * does a turn that reached a pipeline step: the progress timeline below the
+ * thread shows those, and two indicators would say the same thing. A wait in
+ * the run queue keeps the line, since the queue counter says where, not what.
  */
 export function pendingReply(state: AgentSessionState): PendingReply | null {
   const run = state.run;
-  if (!run || run.kind === 'create_plot') return null;
+  if (!run || run.kind === 'create_plot' || run.kind === 'carry_plot') return null;
   if (run.steps.some(entry => entry.step !== 'queued')) return null;
   const last = state.items[state.items.length - 1];
   if (!last || (last.kind !== 'user' && last.kind !== 'action')) return null;
@@ -41,10 +42,10 @@ export function pendingReply(state: AgentSessionState): PendingReply | null {
 
 /**
  * Whether the progress timeline below the thread has something to say that
- * the in-progress line does not: a `create_plot` run, whose path shows up front,
- * or any turn that waits in the queue or reached a pipeline step.
+ * the in-progress line does not: a plot run, whose path shows up front, or any
+ * turn that waits in the queue or reached a pipeline step.
  */
 export function showsTimeline(state: AgentSessionState): boolean {
   const run = state.run;
-  return !!run && (run.kind === 'create_plot' || run.steps.length > 0);
+  return !!run && (isPlotAction(run.kind) || run.steps.length > 0);
 }
