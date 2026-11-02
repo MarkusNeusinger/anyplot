@@ -9,10 +9,14 @@ import {
   convertAnswer,
   countBucket,
   hasPage,
+  isPlotAction,
   longSuggestion,
   parseAgentEvent,
+  plotMemory,
+  plotTarget,
   renderedThemes,
   sizeBucket,
+  switchCarry,
   toAgentApiError,
   toBase64,
 } from 'src/lib/agent';
@@ -180,7 +184,23 @@ describe('parseAgentEvent', () => {
       dataConfirmed: null,
       dataset: null,
       language: null,
+      switch: null,
     });
+  });
+
+  it("reads done's switch the user asked for in the chat, and drops one the page cannot make", () => {
+    const done = (value: unknown) => parseAgentEvent(raw('done', { switch: value }));
+    expect(done({ library: 'seaborn', plot: true })).toMatchObject({
+      switch: { library: 'seaborn', plot: true },
+    });
+    expect(done({ library: 'ggplot2', plot: false })).toMatchObject({
+      switch: { library: 'ggplot2', plot: false },
+    });
+    expect(done({ library: 'ggplot2' })).toMatchObject({
+      switch: { library: 'ggplot2', plot: true },
+    });
+    expect(done({ library: 'excel', plot: true })).toMatchObject({ switch: null });
+    expect(done('seaborn')).toMatchObject({ switch: null });
   });
 
   it("reads done's sync of the bindings and the step state", () => {
@@ -207,6 +227,7 @@ describe('parseAgentEvent', () => {
       dataConfirmed: false,
       dataset: null,
       language: null,
+      switch: null,
     });
     expect(parseAgentEvent(raw('done', { bindings: [], data_confirmed: true }))).toMatchObject({
       bindings: [],
@@ -891,6 +912,219 @@ describe('agentApi.datasetCsv', () => {
       code: 'no_dataset',
       ref: 'r1',
     });
+  });
+});
+
+describe('agentApi library switch and plot memory', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const CARRY = { decisions: 3, newer: 3, target_has_plot: false, from_plot: true, offer: true };
+  const ENTRY = {
+    id: 'm3',
+    kind: 'reference_line',
+    target: 'y',
+    text: 'horizontal reference line at y = 7',
+    expect: null,
+    turn: 2,
+  };
+
+  it('posts the switch without a source and reads the target and the carry', async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            session_id: 'S1',
+            eligibility: { eligible: true, status: 'clean', reasons: [] },
+            target: { spec_id: 'scatter-basic', library: 'plotly' },
+            carry: CARRY,
+          }),
+          { status: 200 }
+        )
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(agentApi.switchLibrary('', 'S/1', 'scatter-basic', 'plotly')).resolves.toEqual({
+      session_id: 'S1',
+      eligibility: { eligible: true, status: 'clean', reasons: [] },
+      target: { spec_id: 'scatter-basic', library: 'plotly' },
+      carry: CARRY,
+    });
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toMatch(/\/debug\/agent\/sessions\/S%2F1\/library$/);
+    // `source` stays out: the BFF reads it as `menu`, and a page ahead of the API is no 422.
+    expect(JSON.parse(init.body as string)).toEqual({
+      spec_id: 'scatter-basic',
+      library: 'plotly',
+    });
+  });
+
+  it('names the chat as the source of a switch the user asked for there', async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            session_id: 'S1',
+            eligibility: { eligible: true, status: 'clean', reasons: [] },
+          }),
+          { status: 200 }
+        )
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    await agentApi.switchLibrary('', 'S1', 'scatter-basic', 'seaborn', 'chat');
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toEqual({
+      spec_id: 'scatter-basic',
+      library: 'seaborn',
+      source: 'chat',
+    });
+  });
+
+  it('reads the answer of a server without the plot memory as no target and no carry', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              session_id: 'S1',
+              eligibility: { eligible: true, status: 'clean', reasons: [] },
+            }),
+            { status: 200 }
+          )
+      )
+    );
+    await expect(
+      agentApi.switchLibrary('', 'S1', 'scatter-basic', 'seaborn')
+    ).resolves.toMatchObject({ target: null, carry: null });
+  });
+
+  it('reads the memory with a GET and removes an entry with a DELETE', async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ entries: [ENTRY], max_entries: 30 }), { status: 200 })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(agentApi.memory('', 'S/1')).resolves.toEqual({
+      entries: [ENTRY],
+      max_entries: 30,
+      written: false, // an older server names none
+    });
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toMatch(/\/debug\/agent\/sessions\/S%2F1\/memory$/);
+    expect(init.method ?? 'GET').toBe('GET');
+
+    fetchMock.mockImplementation(
+      async () =>
+        new Response(JSON.stringify({ entries: [], max_entries: 30, written: true }), {
+          status: 200,
+        })
+    );
+    await expect(agentApi.forgetMemory('', 'S/1', 'm3')).resolves.toEqual({
+      entries: [],
+      max_entries: 30,
+      written: true,
+    });
+    const [deleteUrl, deleteInit] = fetchMock.mock.calls[1] as unknown as [string, RequestInit];
+    expect(deleteUrl).toMatch(/\/debug\/agent\/sessions\/S%2F1\/memory\/m3$/);
+    expect(deleteInit).toMatchObject({ method: 'DELETE' });
+    expect((deleteInit.headers as Record<string, string>)['X-Anyplot-Client']).toBe('agent-chat/1');
+
+    await expect(agentApi.forgetAllMemory('', 'S/1')).resolves.toMatchObject({ entries: [] });
+    const [allUrl, allInit] = fetchMock.mock.calls[2] as unknown as [string, RequestInit];
+    expect(allUrl).toMatch(/\/debug\/agent\/sessions\/S%2F1\/memory$/);
+    expect(allInit).toMatchObject({ method: 'DELETE' });
+  });
+
+  it('refuses an entry id outside the pattern before any request, and reads the route codes', async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ detail: 'run_active', ref: 'r-m' }), { status: 409 })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    await expect(agentApi.forgetMemory('', 'S1', '../dataset')).rejects.toMatchObject({
+      code: 'invalid',
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+    await expect(agentApi.forgetMemory('', 'S1', 'm1')).rejects.toMatchObject({
+      status: 409,
+      code: 'run_active',
+      ref: 'r-m',
+    });
+    // An answer that is no memory is the upstream's fault, never an empty list.
+    fetchMock.mockImplementation(async () => new Response('{"ok":true}', { status: 200 }));
+    await expect(agentApi.memory('', 'S1')).rejects.toMatchObject({ code: 'upstream' });
+  });
+});
+
+describe('library switch and plot memory readers', () => {
+  it('reads a carry with its five fields, and nothing half', () => {
+    const carry = { decisions: 1, newer: 0, target_has_plot: true, from_plot: false, offer: false };
+    expect(switchCarry(carry)).toEqual(carry);
+    expect(switchCarry({ ...carry, extra: 'x' })).toEqual(carry);
+    expect(switchCarry({ ...carry, decisions: -1 })).toBeNull();
+    expect(switchCarry({ ...carry, newer: 1.5 })).toBeNull();
+    expect(switchCarry({ ...carry, offer: 'yes' })).toBeNull();
+    expect(switchCarry({ decisions: 1 })).toBeNull();
+    expect(switchCarry(null)).toBeNull();
+  });
+
+  it('reads a target of two names', () => {
+    expect(plotTarget({ spec_id: 'box-basic', library: 'd3' })).toEqual({
+      spec_id: 'box-basic',
+      library: 'd3',
+    });
+    expect(plotTarget({ spec_id: '', library: 'd3' })).toBeNull();
+    expect(plotTarget({ library: 'd3' })).toBeNull();
+    expect(plotTarget('d3')).toBeNull();
+  });
+
+  it('keeps the entries it can read, their documented fields only', () => {
+    const memory = plotMemory({
+      entries: [
+        {
+          id: 'm1',
+          kind: 'axis_label',
+          target: 'x',
+          text: "x-axis label: 'Zeit (h)'",
+          expect: 'Zeit (h)',
+          turn: 3,
+          secret: 'dropped',
+        },
+        { id: 'm2', kind: 'other', target: 'z', text: 't'.repeat(250), expect: '', turn: 'x' },
+        { id: '../m3', kind: 'other', text: 'bad id' },
+        { id: 'm4', kind: 'other', text: '   ' },
+        'm5',
+      ],
+      max_entries: 30,
+    });
+    expect(memory).toEqual({
+      entries: [
+        {
+          id: 'm1',
+          kind: 'axis_label',
+          target: 'x',
+          text: "x-axis label: 'Zeit (h)'",
+          expect: 'Zeit (h)',
+          turn: 3,
+        },
+        { id: 'm2', kind: 'other', target: null, text: 't'.repeat(200), expect: null, turn: 0 },
+      ],
+      max_entries: 30,
+      written: false,
+    });
+    expect(plotMemory({ entries: [] })).toEqual({ entries: [], max_entries: 30, written: false });
+    expect(plotMemory({ entries: [], written: 'yes' })).toMatchObject({ written: false });
+    expect(plotMemory({ entries: [], written: true })).toMatchObject({ written: true });
+    expect(plotMemory({ entries: 'm1' })).toBeNull();
+    expect(plotMemory([])).toBeNull();
+  });
+
+  it('counts both plot actions as plot runs', () => {
+    expect(isPlotAction('create_plot')).toBe(true);
+    expect(isPlotAction('carry_plot')).toBe(true);
+    expect(isPlotAction('summarize_data')).toBe(false);
+    expect(isPlotAction('message')).toBe(false);
   });
 });
 

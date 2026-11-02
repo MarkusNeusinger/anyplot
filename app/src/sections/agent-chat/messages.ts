@@ -172,6 +172,41 @@ export function describeLanguageFailure(code: string, ref: string | null): strin
   return ref ? `${text} · ref ${ref}` : text;
 }
 
+/** Failures only the library menu meets; any other code reads as the page's turn errors do. */
+export const LIBRARY_FAILURE: Record<string, string> = {
+  // Another spec than the session's, until the plot-type switch.
+  invalid: 'the server refused this switch',
+  not_found: 'this plot is not in the catalogue for that library',
+};
+
+/** The library menu's failure line: the library stays the one it was. */
+export function describeLibraryFailure(code: string, ref: string | null): string {
+  const text = LIBRARY_FAILURE[code] ?? ERROR_TEXT[code] ?? `request failed (${code})`;
+  return `could not switch: ${text}${ref ? ` · ref ${ref}` : ''}`;
+}
+
+/**
+ * The composer's offer after a library switch: the plot in the new library with
+ * the remembered decisions, the owner's wording of 2026-11-02.
+ */
+export function carryActionText(library: string, decisions: number): string {
+  if (decisions <= 0) return `plot in ${library}`;
+  return `plot in ${library} with your ${decisions} decision${decisions === 1 ? '' : 's'}`;
+}
+
+/** Failures of a removal from the remembered list; any other code reads as the page's turn errors do. */
+export const MEMORY_FAILURE: Record<string, string> = {
+  // The assistant's `forget` or another window removed it first; the list is read again.
+  not_found: 'that decision was already forgotten',
+  run_active: 'a run is in progress in this window; try again when it is done',
+};
+
+/** The remembered list's failure line: the decision stays in the list. */
+export function describeMemoryFailure(code: string, ref: string | null): string {
+  const text = MEMORY_FAILURE[code] ?? ERROR_TEXT[code] ?? `request failed (${code})`;
+  return `could not forget: ${text}${ref ? ` · ref ${ref}` : ''}`;
+}
+
 /** Failures of a theme render or an image fetch on the result card. */
 export const IMAGE_FAILURE: Record<string, string> = {
   render: 'this theme failed the render checks',

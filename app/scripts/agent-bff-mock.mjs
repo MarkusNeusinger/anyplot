@@ -160,6 +160,18 @@
  * MOCK_NO_COPY=1 answers it `404 not_found`, as an agents service deployed before the route does, so the page's
  * fallback (the paste posted again, or `copy_unavailable`) can be driven.
  *
+ * The library switch and the plot memory (since 2026-11-02): `POST .../library` answers `target` and `carry`
+ * (`{decisions, newer, target_has_plot, from_plot, offer}`) like the service's `switch.summary`: a switch away
+ * from a library with a plot (or on from one whose carry has not run, or with remembered decisions alone)
+ * writes a carry for the new library, and `offer` holds while something carries and the new library has no
+ * plot or a plot older than some decisions. A shipped typed change remembers one decision in the user's words
+ * (its kind read from keywords such as "title", "label", "line", "red", "log"; a title, a label, a scale or a
+ * colour replaces the one of its kind and axis, a line or a marker is added beside the others, at most 30); a
+ * shipped `create_plot` keeps the memory, which only the user clears; `{action: "carry_plot"}` plots from the
+ * catalogue code like `create_plot`, in the theme the user asked for in the library before, and spends the
+ * carry. `GET .../memory` lists the entries with `written` (the memory ever held one), `DELETE .../memory/{id}`
+ * removes one (`404 not_found`, `409 run_active`) and `DELETE .../memory` forgets all.
+ *
  * The data panel's full view (`.view_all()`): `GET .../dataset/data.csv` answers the current version's CSV
  * (`422 no_dataset` without data). A chat message naming a size such as "10000 rows x 30 columns" (also `×` or
  * `by`, at most 20,000 rows and 50 columns) is a table the assistant computed, like `generate_data`: a fixed
@@ -283,8 +295,13 @@ const MAX_DATASET_BYTES = 1024 * 1024;
 /** What the agents service stores as the user's message of an action turn (`ACTION_MESSAGES`). */
 const ACTION_MESSAGES = {
   create_plot: '[action] Create the plot from my dataset and bindings.',
+  carry_plot:
+    '[action] Create the plot from my dataset and bindings, with the decisions I made so far.',
   summarize_data: '[action] Summarize the dataset for the user.',
 };
+/** The plot memory's caps (`agents/anyplot/memory.py`): a new entry past them is refused, never an old one dropped. */
+const MAX_MEMORY_ENTRIES = 30;
+const MAX_MEMORY_TEXT_CHARS = 200;
 
 // ---------------------------------------------------------------- PNG drawing
 
@@ -1014,6 +1031,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
     role: 'user',
     text: body.action ? (ACTION_MESSAGES[body.action] ?? `[action] ${body.action}`) : text,
   });
+  // The user turn's number, which a version and a remembered decision carry (`newer` of a switch).
+  session.turns += 1;
   const ping = () => {
     if (!closed) res.write(': ping\n\n');
   };
@@ -1145,7 +1164,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         });
         return;
       }
-      const refine = body.action !== 'create_plot';
+      // `create_plot` and `carry_plot` start from the catalogue code; a typed change refines the latest version.
+      const refine = body.action !== 'create_plot' && body.action !== 'carry_plot';
       const steps = refine
         ? [
             ['adapting', 1],
@@ -1206,13 +1226,21 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       const previous = refine
         ? session.versions.findLast(item => item.library === session.library)
         : undefined;
-      let askedTheme = previous?.themeAsked ? previous.theme : null;
+      // A switch's carry for this library (`switch.Carry`): the first run here takes it, a fresh
+      // `create_plot` never does; it brings the theme the user asked for in the library before.
+      const carried =
+        session.carry?.target === session.library && body.action !== 'create_plot'
+          ? session.carry
+          : null;
+      let askedTheme = previous?.themeAsked ? previous.theme : (carried?.theme ?? null);
       if (/\blight\b/.test(lower)) askedTheme = 'light';
       else if (/\bdark\b/.test(lower)) askedTheme = 'dark';
       const theme = askedTheme ?? siteTheme ?? previous?.theme ?? 'light';
       const version = {
         number: session.versions.length + 1,
         library: session.library,
+        // The user turn it shipped in: a switch counts the decisions remembered after it (`newer`).
+        turn: session.turns,
         theme,
         themeAsked: askedTheme !== null,
         dataset: session.dataset,
@@ -1242,11 +1270,19 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         rounds,
       };
       send('plot', version.result);
+      // The plot memory once the run shipped (`pipeline.settle_memory`): a typed change keeps its
+      // decision, a start over keeps the memory as it is (only the user clears it), and the
+      // switch's carry is spent.
+      if (refine) rememberChange(session, text);
+      if (carried) session.carry = null;
       await sleep(STEP_MS / 2);
+      const decisions = session.memory.length;
       send('message', {
         text: refine
           ? 'Done. One note remains: two markers sit close to the y axis label.'
-          : `Here is ${SPECS[session.specId].title.toLowerCase()} with your data: ${x} on x and ${y} on y.`,
+          : body.action === 'carry_plot'
+            ? `Here is the plot in ${session.library}, from its catalogue code${decisions ? ` with your ${decisions} decision${decisions === 1 ? '' : 's'}` : ''}.`
+            : `Here is ${SPECS[session.specId].title.toLowerCase()} with your data: ${x} on x and ${y} on y.`,
       });
     } finally {
       runsInFlight -= 1;
@@ -1267,6 +1303,62 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
     res.end();
   }
 }
+
+// ---------------------------------------------------------------- plot memory
+
+/** The kinds a single entry holds (`memory.py`): a new one of the same kind and target replaces it. */
+const ADDITIVE_KINDS = new Set(['reference_line', 'annotation', 'marker', 'other']);
+
+/**
+ * The root's `remember` in miniature: a shipped change keeps one decision in the user's words, its
+ * kind read from a few keywords. A full memory refuses the new entry, as the service does.
+ */
+function rememberChange(session, text) {
+  const words = text.trim().replace(/\s+/g, ' ');
+  if (!words) return;
+  const lower = words.toLowerCase();
+  const kind = /\btitle\b|titel/.test(lower)
+    ? 'title'
+    : /label|beschrift/.test(lower)
+      ? 'axis_label'
+      : /\blog\b|scale|skala/.test(lower)
+        ? 'scale'
+        : /\bline\b|linie/.test(lower)
+          ? 'reference_line'
+          : /colou?r|farbe|\bred\b|\bblue\b|\brot\b|\bblau\b/.test(lower)
+            ? 'color'
+            : /marker|star|stern/.test(lower)
+              ? 'marker'
+              : /annot|formula|formel/.test(lower)
+                ? 'annotation'
+                : /\bdark\b|\blight\b/.test(lower)
+                  ? 'theme'
+                  : 'other';
+  const target = /\by\b|y-ax/.test(lower) ? 'y' : /\bx\b|x-ax/.test(lower) ? 'x' : null;
+  const kept = ADDITIVE_KINDS.has(kind)
+    ? session.memory
+    : session.memory.filter(entry => !(entry.kind === kind && entry.target === target));
+  if (kept.length >= MAX_MEMORY_ENTRIES) return;
+  session.memorySeq += 1;
+  session.memory = [
+    ...kept,
+    {
+      id: `m${session.memorySeq}`,
+      kind,
+      target,
+      text: words.slice(0, MAX_MEMORY_TEXT_CHARS),
+      expect: null,
+      turn: session.turns,
+    },
+  ];
+}
+
+/** `GET` and `DELETE .../memory`'s answer. */
+const memoryPayload = session => ({
+  entries: session.memory,
+  max_entries: MAX_MEMORY_ENTRIES,
+  written: session.memorySeq > 0,
+});
 
 // ---------------------------------------------------------------- session language
 
@@ -1954,6 +2046,12 @@ async function route(req, res) {
       languageSource: 'default',
       // Opened by the admin's `.plot_all()` (`source: fanout`): the only kind of session a copy may go into.
       fanout: body.source === 'fanout',
+      // The plot memory (`{id, kind, target, text, expect, turn}`, oldest first), its next id, the
+      // user turns so far, and a library switch's carry (`{target, fromPlot, theme}`) until it is spent.
+      memory: [],
+      memorySeq: 0,
+      turns: 0,
+      carry: null,
       active: false,
       cancelled: false,
     });
@@ -1979,14 +2077,66 @@ async function route(req, res) {
   }
   if (method === 'POST' && rest === '/library') {
     if (session.active) return fail(res, 409, 'run_active', ref);
+    if (body?.source !== undefined && !['menu', 'chat'].includes(body.source))
+      return fail(res, 422, 'invalid', ref);
     if (!AGENT_LIBRARIES.includes(body?.library)) return fail(res, 422, 'not_eligible', ref);
-    session.library = body.library;
+    // Another spec waits for the plot-type switch.
+    if (body.spec_id && body.spec_id !== session.specId) return fail(res, 422, 'invalid', ref);
+    // The service's `switch.carry_for` and `switch.summary` in miniature: the source's latest plot
+    // carries (its asked theme), else a carry not yet run moves on, else the memory alone.
+    const target = body.library;
+    const latestIn = library => session.versions.findLast(item => item.library === library);
+    if (target !== session.library) {
+      const plot = latestIn(session.library);
+      const pending = session.carry;
+      session.carry =
+        plot || pending || session.memory.length
+          ? {
+              target,
+              fromPlot: !!plot || !!pending?.fromPlot,
+              theme: plot ? (plot.themeAsked ? plot.theme : null) : (pending?.theme ?? null),
+            }
+          : null;
+    }
+    const targetPlot = latestIn(target);
+    const carry = session.carry?.target === target ? session.carry : null;
+    const decisions = session.memory.length;
+    const newer = targetPlot
+      ? session.memory.filter(entry => entry.turn > targetPlot.turn).length
+      : decisions;
+    const offer = !!carry && (decisions > 0 || carry.fromPlot) && (!targetPlot || newer > 0);
+    session.library = target;
     return json(
       res,
       200,
-      { session_id: sid, eligibility: { eligible: true, status: 'coupled', reasons: [] } },
+      {
+        session_id: sid,
+        eligibility: { eligible: true, status: 'coupled', reasons: [] },
+        target: { spec_id: session.specId, library: target },
+        carry: {
+          decisions,
+          newer,
+          target_has_plot: !!targetPlot,
+          from_plot: !!carry?.fromPlot,
+          offer,
+        },
+      },
       ref
     );
+  }
+  if (method === 'GET' && rest === '/memory') return json(res, 200, memoryPayload(session), ref);
+  if (method === 'DELETE' && rest === '/memory') {
+    if (session.active) return fail(res, 409, 'run_active', ref);
+    session.memory = [];
+    return json(res, 200, memoryPayload(session), ref);
+  }
+  const memoryMatch = rest.match(/^\/memory\/(m[0-9]{1,6})$/);
+  if (method === 'DELETE' && memoryMatch) {
+    if (session.active) return fail(res, 409, 'run_active', ref);
+    if (!session.memory.some(entry => entry.id === memoryMatch[1]))
+      return fail(res, 404, 'not_found', ref);
+    session.memory = session.memory.filter(entry => entry.id !== memoryMatch[1]);
+    return json(res, 200, memoryPayload(session), ref);
   }
   if (method === 'POST' && rest === '/dataset') {
     if (session.active) return fail(res, 409, 'run_active', ref);

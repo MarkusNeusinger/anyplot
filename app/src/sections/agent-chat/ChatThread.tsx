@@ -1,6 +1,6 @@
 /**
  * The chat thread: the user's turns and the page's own (`.summarize_data()`
- * after a parse, `.create_plot()`), the assistant's replies, the fixed
+ * after a parse, `.create_plot()`, `.carry_plot()`), the assistant's replies, the fixed
  * refusal, errors with their code and request id, and a result card per plot
  * version. Earlier versions stay in the thread, collapsed, each with its own
  * image and code. A lost confirmation shows as a warning notice where it was
@@ -18,7 +18,7 @@ import {
   type FeedbackInput,
   sessionBusy,
 } from 'src/hooks/useAgentSession';
-import type { ArtifactName, Theme } from 'src/lib/agent';
+import { type ArtifactName, isPlotAction, type Theme } from 'src/lib/agent';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import { ERROR_TEXT, localClock, PLOT_FAILED_TEXT } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
@@ -78,14 +78,15 @@ function Item({
         </Box>
       );
     case 'action':
-      // The page's own turns: `.summarize_data()` after a parse, `.create_plot()` in step 2.
+      // The page's own turns: `.summarize_data()` after a parse, `.create_plot()` in step 2,
+      // `.carry_plot()` after a library switch; a plot names the library it is made in.
       return (
         <Box sx={{ ...promptSx, fontFamily: typography.mono }}>
           <Box component="span" aria-hidden sx={{ color: 'var(--ink-muted)', mr: 1 }}>
             ❯
           </Box>
           .{item.action}()
-          {item.action === 'create_plot' && (
+          {isPlotAction(item.action) && (
             <Box component="span" sx={{ color: 'var(--ink-muted)', ml: 1 }}>
               # {item.library}
             </Box>

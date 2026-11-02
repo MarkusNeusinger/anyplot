@@ -59,7 +59,7 @@ from ..data.query import QueryArgs
 from ..language import LANGUAGE_PATTERN, MAX_LANGUAGE_CHARS, LanguageTarget
 from ..memory import ForgetArgs
 from ..policy import DATA_PREAMBLE, fence
-from ..schemas import MAX_COLUMNS, Binding, KeepRequestArgs, PipelineArgs, PlotResult
+from ..schemas import MAX_COLUMNS, Binding, KeepRequestArgs, PipelineArgs, PlotResult, SwitchArgs
 from .ledger import argument_hash, attribution, ledger_for
 
 
@@ -71,6 +71,9 @@ PREPARE_TOOL = "prepare_data"
 QUERY_TOOL = "query_data"
 GENERATE_TOOL = "generate_data"
 DATA_CODE_TOOL = "run_data_code"
+SWITCH_TOOL = "switch_plot"
+"""A turn has either a plot run or a switch the page carries out, never both (`switch_requested`,
+`plot_already_run`)."""
 MAX_DATA_CODE_CALLS = 2
 """`run_data_code` calls per invocation: the first, and one retry after the validator's findings."""
 MAX_DATA_CODE_CHARS = 6_000
@@ -176,6 +179,7 @@ ARGUMENTS: dict[str, type[BaseModel]] = {
     "set_language": _LanguageArgs,
     "keep_plot_request": KeepRequestArgs,
     "forget": ForgetArgs,
+    "switch_plot": SwitchArgs,
     PREPARE_TOOL: _PrepareArgs,
     QUERY_TOOL: QueryArgs,
     GENERATE_TOOL: Generate,
@@ -204,6 +208,8 @@ RESULT_KEYS: dict[str, frozenset[str]] = {
     "keep_plot_request": frozenset({"status", "code", "request_kept", "reason"}),
     # No text either: the count; the session block lists the entries fenced.
     "forget": frozenset({"status", "code", "entries"}),
+    # Whether the page will switch after the turn; the library is the root's own argument, nothing to echo.
+    "switch_plot": frozenset({"status", "code", "switch_requested"}),
     PREPARE_TOOL: _DATA_VERSION_KEYS | {"bindings"},  # when a conversion moved them, fenced as in `get_dataset_profile`
     QUERY_TOOL: frozenset({"status", "reason", "code", "message", "errors", "rows", "table", "truncated", "changes"}),
     GENERATE_TOOL: _DATA_VERSION_KEYS,
@@ -329,8 +335,14 @@ class ToolSafetyPlugin(BasePlugin):
             if verdict is None and tool.name == PIPELINE_TOOL:
                 if ledger.pipeline_calls >= 1:
                     verdict = "one_pipeline_per_turn"
+                elif ledger.switch_request is not None:
+                    # The page switches after this turn and plots there: a run here would be thrown away.
+                    verdict = "switch_requested"
                 else:
                     ledger.pipeline_calls += 1
+            if verdict is None and tool.name == SWITCH_TOOL and ledger.pipeline_calls >= 1:
+                # The turn already ran a plot in this library; the user asks again (Flash review, 2026-11-02).
+                verdict = "plot_already_run"
             if verdict is None and tool.name == DATA_CODE_TOOL:
                 if ledger.data_code_calls >= MAX_DATA_CODE_CALLS:
                     verdict = "too_many_data_runs"
