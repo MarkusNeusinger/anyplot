@@ -2803,6 +2803,10 @@ async def test_a_list_of_values_gets_its_row_numbers_and_undo_takes_them_back(
 
     undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
     assert undone.status_code == 200 and [column["name"] for column in undone.json()["profile"]["columns"]] == ["value"]
+    # The column stays on y, so x is the open role now, and the offer still stands.
+    assert undone.json()["bindings"] == [{"role": "y", "column": "value"}]
+    context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
+    assert "a new column 'index' with the row numbers 1 to 6 takes x" in await session_context(context)  # type: ignore[arg-type]
 
 
 async def test_a_column_set_to_text_stays_text_in_later_versions_until_undone(
