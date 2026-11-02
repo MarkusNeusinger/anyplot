@@ -159,6 +159,12 @@
  * refusals (`404 session_expired`, `409 has_dataset`, `422 no_dataset`, `422 unconfirmed`, `422 invalid`).
  * MOCK_NO_COPY=1 answers it `404 not_found`, as an agents service deployed before the route does, so the page's
  * fallback (the paste posted again, or `copy_unavailable`) can be driven.
+ *
+ * The data panel's full view (`.view_all()`): `GET .../dataset/data.csv` answers the current version's CSV
+ * (`422 no_dataset` without data). A chat message naming a size such as "10000 rows x 30 columns" (also `×` or
+ * `by`, at most 20,000 rows and 50 columns) is a table the assistant computed, like `generate_data`: a fixed
+ * pseudo-random mix of an id, a date, a text column with a comma, a quote and a space run, and number columns with
+ * a gap every few rows, past the paste's 1 MB, so the view can be driven at size.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -1065,6 +1071,12 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         send('message', { text: summarizeData(session) });
         return;
       }
+      const size = wideTableSize(lower);
+      if (size) {
+        await sleep(STEP_MS * 2);
+        send('message', { text: generateWideTable(session, size) });
+        return;
+      }
       if (asksForFormula(lower)) {
         await sleep(STEP_MS * 2);
         send('message', { text: generateData(session, lower) });
@@ -1687,6 +1699,61 @@ function generateData(session, lower) {
   return `I generated ${points} rows from y = ${formula} for ${span}${undo}. Check the preview and confirm the data.`;
 }
 
+/** `{rows, columns}` of a message such as "10000 rows x 30 columns", or null; capped like the service's tables. */
+function wideTableSize(lower) {
+  const match = lower.match(/(\d[\d,]*)\s*rows?\s*(?:x|×|by)\s*(\d+)\s*col/);
+  if (!match) return null;
+  const rows = Number(match[1].replace(/,/g, ''));
+  const columns = Number(match[2]);
+  if (!rows || columns < 3) return null;
+  return { rows: Math.min(rows, 20000), columns: Math.min(columns, 50) };
+}
+
+/**
+ * A computed table of the asked size for the full view, stored like `generate_data`'s: an id, a date, a text column
+ * whose values hold a comma, a quote and a run of spaces, then integer and number columns with a gap every 97th
+ * cell. A fixed linear congruential sequence makes every run the same table.
+ */
+function generateWideTable(session, size) {
+  let seed = 20261101;
+  const next = () => {
+    seed = (Math.imul(seed, 1103515245) + 12345) >>> 0;
+    return seed / 4294967296;
+  };
+  const stations = ['Nord', 'Süd, alt', 'Ost "neu"', 'West  2', 'Mitte', 'Hafen'];
+  const header = ['id', 'date', 'station'];
+  for (let c = 3; c < size.columns; c += 1)
+    header.push(c % 2 ? `reading_${c - 2}` : `count_${c - 2}`);
+  const start = Date.UTC(2020, 0, 1);
+  const rows = Array.from({ length: size.rows }, (_, r) => {
+    const row = [
+      String(r + 1),
+      new Date(start + r * 86400000).toISOString().slice(0, 10),
+      stations[Math.floor(next() * stations.length)],
+    ];
+    for (let c = 3; c < size.columns; c += 1) {
+      if ((r * size.columns + c) % 97 === 0) row.push('');
+      else if (c % 2) row.push((next() * 2000 - 500).toFixed(2));
+      else row.push(String(Math.floor(next() * 1000)));
+    }
+    return row;
+  });
+  const parsed = parseDataset(toCsv(header, rows));
+  const changes = [`generated ${size.rows} rows × ${size.columns} columns of test data`];
+  if (!session.dataset) {
+    session.dataset = parsed;
+    session.bindings = defaultBindings(session, parsed.profile);
+    session.complete = checkBindings(session, session.bindings).complete;
+    session.confirmed = false;
+    session.history = [];
+    session.version = 1;
+    session.changed = { ...datasetPayload(session), roles: SPECS[session.specId].roles, changes };
+  } else {
+    storeVersion(session, parsed, changes);
+  }
+  return `I generated ${size.rows.toLocaleString('en-US')} rows and ${size.columns} columns. Check the preview, or .view_all() to see every row.`;
+}
+
 /** The step-1 summary the root writes after `summarize_data`, from the profile alone. */
 function summarizeData(session) {
   if (!session.dataset) return 'Paste your data first; then I can summarize it.';
@@ -2046,6 +2113,18 @@ async function route(req, res) {
       ref
     );
   }
+  if (method === 'GET' && rest === '/dataset/data.csv') {
+    // Read-only, so a turn in flight does not block it, as in the service.
+    if (!session.dataset) return fail(res, 422, 'no_dataset', ref);
+    res.writeHead(200, {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Cache-Control': 'private, no-store',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Request-Id': ref,
+    });
+    res.end(csvText(session));
+    return;
+  }
   if (method === 'POST' && rest === '/dataset/undo') {
     if (session.active) return fail(res, 409, 'run_active', ref);
     const previous = session.history.pop();
@@ -2172,6 +2251,7 @@ async function route(req, res) {
       'downloaded_code',
       'downloaded_page',
       'opened_preview',
+      'opened_data_view',
       'downloaded_data',
     ];
     const valid =

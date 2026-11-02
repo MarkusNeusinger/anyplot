@@ -1,6 +1,33 @@
 import { describe, expect, it } from 'vitest';
 
-import { describeConvertFailure, describeDataFailure } from './messages';
+import { describeConvertFailure, describeDataFailure, describeViewFailure } from './messages';
+
+describe('describeViewFailure', () => {
+  it.each([
+    ['no_dataset', null, undefined, 'could not show every row: parse the data first'],
+    [
+      'not_found',
+      'r-2',
+      undefined,
+      'could not show every row: this server cannot show every row yet · ref r-2',
+    ],
+    [
+      'too_large',
+      null,
+      undefined,
+      'could not show every row: the data is larger than the view reads (4 MB)',
+    ],
+    [
+      'csv',
+      null,
+      'row 3: a quote inside an unquoted cell',
+      'could not show every row: the file is not the CSV it should be (row 3: a quote inside an unquoted cell)',
+    ],
+    ['boom', null, undefined, 'could not show every row: request failed (boom)'],
+  ])('names %s', (code, ref, detail, text) => {
+    expect(describeViewFailure(code, ref, detail)).toBe(text);
+  });
+});
 
 describe('describeDataFailure', () => {
   it('leads with what a refused paste fails on, before the ref', () => {

@@ -141,6 +141,11 @@ _BUNDLE_SID_CHARS = 8
 _BUNDLE_GZIP_LEVEL = 6
 """zlib's default level: base64 of PNGs shrinks by about a quarter at level 6 and no further at
 the API's middleware level 9, which costs about a fifth more time."""
+MAX_DATASET_CSV_BYTES = 4 * 1024 * 1024
+"""The cap of the current data version's `data.csv` the BFF relays: the canonical CSV a parse may produce
+(`agents/anyplot/data/parse.py` `MAX_CANONICAL_BYTES`, copied because the API image does not ship the agents
+package; pinned equal by a test). The agents service never stores a larger one; above it the BFF answers
+`502 too_large`."""
 
 # Local dev servers on any port. api/main.py passes this same constant to
 # CORSMiddleware as `allow_origin_regex`, so the CSRF Origin check and CORS
@@ -603,6 +608,7 @@ OutcomeAction = Literal[
     "downloaded_code",
     "downloaded_page",
     "opened_preview",
+    "opened_data_view",
     "downloaded_data",
     "saved_session",
     "feedback",
@@ -933,7 +939,13 @@ def _prepare_bundle(content: bytes, compress: bool) -> bytes | None:
             return None
     except ValueError, RecursionError:
         return None
-    return gzip.compress(content, compresslevel=_BUNDLE_GZIP_LEVEL, mtime=0) if compress else content
+    return _gzipped(content) if compress else content
+
+
+def _gzipped(content: bytes) -> bytes:
+    """`content` gzip-compressed. The callers run it in a worker thread: the API's `GZipMiddleware` would compress
+    a buffered answer of megabytes on the event loop, and it leaves one that has a `Content-Encoding` as it is."""
+    return gzip.compress(content, compresslevel=_BUNDLE_GZIP_LEVEL, mtime=0)
 
 
 def _bundle_filename(sid: str) -> str:
@@ -1283,6 +1295,37 @@ async def copy_dataset(sid: SessionId, body: CopyDatasetBody, ctx: Ctx, client: 
     """
     payload = {"from_session": body.from_session}
     return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/dataset/copy", json_body=payload)
+
+
+@router.get("/sessions/{sid}/dataset/data.csv")
+async def get_dataset_csv(sid: SessionId, request: Request, ctx: Ctx, client: Client) -> Response:
+    """The current data version's canonical `data.csv`: the data panel's full view of every row (`.view_all()`).
+
+    Read-only, the bytes as the agents service stores them. The BFF reads them whole up to `MAX_DATASET_CSV_BYTES`
+    (`502 too_large` above), compresses them in a worker thread when the browser takes gzip, as for the bundle, and
+    answers them with its own media type. `422 no_dataset` before any data, `404 session_expired`, and `502
+    upstream` when the service cannot be reached; an agents service without the route answers `404 not_found`.
+    """
+    path = f"/sessions/{sid}/dataset/data.csv"
+    try:
+        response = await _open_stream(client, ctx, "GET", path)
+        try:
+            body = await _read_capped(response, MAX_DATASET_CSV_BYTES)
+        finally:
+            await response.aclose()
+    except _UNREACHABLE as exc:
+        _log_unreachable(ctx, "GET", path, exc)
+        raise AgentHTTPError(502, "upstream", ctx.request_id) from exc
+    if body is None:
+        logger.warning("agent data.csv over %d bytes refused (ref %s)", MAX_DATASET_CSV_BYTES, ctx.request_id)
+        raise AgentHTTPError(502, "too_large", ctx.request_id)
+    headers = {"Cache-Control": _NO_STORE, "X-Content-Type-Options": "nosniff", "X-Request-Id": ctx.request_id}
+    # The middleware's own test for whether the client takes gzip.
+    if "gzip" in request.headers.get("Accept-Encoding", ""):
+        body = await run_in_threadpool(_gzipped, body)
+        headers["Content-Encoding"] = "gzip"
+        headers["Vary"] = "Accept-Encoding"
+    return Response(body, media_type=ARTIFACT_MEDIA_TYPES["data.csv"], headers=headers)
 
 
 @router.post("/sessions/{sid}/messages", response_class=EventSourceResponse)

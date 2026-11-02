@@ -1434,6 +1434,74 @@ class TestArtifacts:
         assert response.json() == {"detail": "session_expired", "ref": response.headers["X-Request-Id"]}
 
 
+class TestDatasetCsv:
+    """`.view_all()`: the current data version's canonical CSV, read whole, never formatted again."""
+
+    PATH = "/debug/agent/sessions/s1/dataset/data.csv"
+    CSV = b'name,value\n"a, b",1.50\n"line\nbreak",\n'
+
+    def test_relays_the_bytes_with_its_own_headers(self, client, upstream) -> None:
+        upstream.handler = lambda request: httpx.Response(
+            200, content=self.CSV, headers={"Content-Type": "text/html", "Set-Cookie": "a=b"}
+        )
+        with client.stream("GET", self.PATH, headers={"Accept-Encoding": "identity"}) as response:
+            wire = b"".join(response.iter_raw())
+
+        assert response.status_code == 200
+        assert wire == self.CSV
+        assert response.headers["content-type"] == "text/csv; charset=utf-8"
+        assert response.headers["Cache-Control"] == "private, no-store"
+        assert response.headers["X-Content-Type-Options"] == "nosniff"
+        assert response.headers["X-Request-Id"] == upstream.requests[0].headers["X-Request-Id"]
+        assert "set-cookie" not in response.headers
+        sent = upstream.requests[0]
+        assert (sent.method, str(sent.url)) == ("GET", f"{SERVICE_URL}/v1/sessions/s1/dataset/data.csv")
+        assert sent.headers["X-Anyplot-User"] == derive_user_id(KEY.encode(), ADMIN)
+
+    def test_compresses_in_a_worker_thread(self, client, upstream, monkeypatch) -> None:
+        """Up to 4 MiB of CSV: the API's GZipMiddleware would compress it in one call on the event loop."""
+        raw = b"x,y\n" + b"1.25,2.5\n" * 50_000
+        upstream.handler = lambda request: httpx.Response(200, content=raw)
+        in_thread: list[str] = []
+
+        async def recording(func, *args, **kwargs):
+            in_thread.append(func.__name__)
+            return await run_in_threadpool(func, *args, **kwargs)
+
+        monkeypatch.setattr("api.routers.agent.run_in_threadpool", recording)
+        with client.stream("GET", self.PATH, headers={"Accept-Encoding": "gzip, deflate"}) as response:
+            wire = b"".join(response.iter_raw())
+
+        assert response.status_code == 200
+        assert response.headers["Content-Encoding"] == "gzip"
+        assert response.headers["Vary"] == "Accept-Encoding"
+        assert gzip.decompress(wire) == raw
+        assert in_thread == ["_gzipped"]
+
+    def test_a_csv_over_the_cap_is_too_large(self, client, upstream, monkeypatch) -> None:
+        monkeypatch.setattr("api.routers.agent.MAX_DATASET_CSV_BYTES", 1000)
+        upstream.handler = lambda request: httpx.Response(200, content=b"a\n" * 600)
+        response = client.get(self.PATH)
+        assert response.status_code == 502
+        assert response.json() == {"detail": "too_large", "ref": response.headers["X-Request-Id"]}
+
+    @pytest.mark.parametrize(("status", "code"), [(422, "no_dataset"), (404, "session_expired")])
+    def test_keeps_the_upstream_code(self, client, upstream, status, code) -> None:
+        upstream.handler = lambda request: httpx.Response(status, json={"detail": code})
+        response = client.get(self.PATH)
+        assert response.status_code == status
+        assert response.json() == {"detail": code, "ref": response.headers["X-Request-Id"]}
+
+    def test_an_unreachable_service_is_502_upstream(self, client, upstream) -> None:
+        def handler(request: httpx.Request) -> httpx.Response:
+            raise httpx.ConnectError("down")
+
+        upstream.handler = handler
+        response = client.get(self.PATH)
+        assert response.status_code == 502
+        assert response.json() == {"detail": "upstream", "ref": response.headers["X-Request-Id"]}
+
+
 def _bundle(versions: int = 1, png_bytes: int = 64) -> dict:
     """A bundle shaped like the agents service's, with `versions` versions of two base64 PNGs each."""
     image = base64.b64encode(b"\x89PNG" + b"\x00" * (png_bytes - 4)).decode()
