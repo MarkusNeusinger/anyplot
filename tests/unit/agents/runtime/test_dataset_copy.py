@@ -147,12 +147,9 @@ def rendered_version(*, language: str) -> CodeVersion:
 
 
 def frame(stored: StoredDataset) -> pd.DataFrame:
-    """The table as the plot code's loader reads `data.csv` (`code/loader.py`: dtypes, dates, round-trip floats)."""
+    """The table as the plot code's loader reads `data.csv` (`code/loader.py`: dtypes, dates)."""
     return pd.read_csv(
-        io.StringIO(stored.csv),
-        dtype=pandas_dtypes(stored.column_dtypes),
-        parse_dates=stored.parse_dates,
-        float_precision="round_trip",
+        io.StringIO(stored.csv), dtype=pandas_dtypes(stored.column_dtypes), parse_dates=stored.parse_dates
     )
 
 
