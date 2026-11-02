@@ -1,0 +1,6 @@
+{
+  "message": "example data with 50 points",
+  "expected_operations": [{"op": "run_data_code", "rows": 50, "columns": 2}],
+  "locale": "en",
+  "tags": ["run_data_code", "example_data", "no_dataset"]
+}

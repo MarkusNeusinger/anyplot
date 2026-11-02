@@ -520,8 +520,12 @@ def _store_generated(
 
 DATA_CODE_CHANGE = "computed from your code"
 """The change line of a `run_data_code` version; the rows and columns follow it."""
-SOURCE_LANGUAGES = frozenset({"python", "javascript", "r", "math", "other"})
-"""`run_data_code`'s `source_language`: what the user wrote before the root's translation, for attribution only."""
+EXAMPLE_DATA_CHANGE = "generated example data"
+"""The change line of a `run_data_code` version the root wrote for a request for example data (`source_language`
+`example`): the data panel says plainly that the table is made up, not the user's."""
+SOURCE_LANGUAGES = frozenset({"python", "javascript", "r", "math", "other", "example"})
+"""`run_data_code`'s `source_language`: what the user wrote before the root's translation, for attribution, or
+`example` for example data the user asked for, which also sets the change line and the source line."""
 RUN_FAILURES: dict[str, str] = {
     "no_frame": "the code defined no table: assign a pandas DataFrame to df at the top level",
     "frame_shape": "df has nested column headers (a MultiIndex) or an index that cannot become columns: flatten it",
@@ -553,7 +557,7 @@ def _error_lines(code: str, lines: list[str]) -> dict[str, Any]:
 
 
 async def run_data_code(code: str, source_language: str, tool_context: ToolContext) -> dict[str, Any]:
-    """Run Python that generates the data for the plot (a snippet the user pasted or typed, translated by you to Python if it was JavaScript, R, a formula or anything else); the server validates it, runs it in a sandbox without network or files, and stores the table it computed in df as the next version of the data, which the user then checks and confirms.
+    """Run Python that generates the data for the plot (a snippet the user pasted or typed, translated by you to Python if it was JavaScript, R, a formula or anything else, or code you write for example data the user asked for); the server validates it, runs it in a sandbox without network or files, and stores the table it computed in df as the next version of the data, which the user then checks and confirms.
 
     code: Python of at most 6,000 characters using only numpy, pandas, math, random, statistics or scipy.stats (and
     the other scipy computing modules); it must assign the final table to df at the top level as a pandas DataFrame
@@ -563,8 +567,8 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
     draw nothing (no matplotlib, no plot(),
     no hist()). Never write data values from memory: more than 20 numbers or 20 text values written out in one list,
     tuple or dict (a list repeated with * counts every copy), or 40 in the code, are refused. source_language:
-    what the user wrote, one of python, javascript, r, math or other. Returns the change lines and the new profile,
-    or an error with a code and a message.
+    what the user wrote, one of python, javascript, r, math or other, or example when the user asked for example data
+    and wrote no code. Returns the change lines and the new profile, or an error with a code and a message.
     """
     view = _view(tool_context)
     if view is None:
@@ -641,7 +645,10 @@ async def run_data_code(code: str, source_language: str, tool_context: ToolConte
         return _error("capacity")
     for key, value in delta.items():
         tool_context.state[key] = value
-    changes = [f"{DATA_CODE_CHANGE}: {parsed.profile.rows} rows, {len(parsed.profile.columns)} columns"]
+    example = language == "example"
+    change = EXAMPLE_DATA_CHANGE if example else DATA_CODE_CHANGE
+    changes = [f"{change}: {parsed.profile.rows} rows, {len(parsed.profile.columns)} columns"]
+    ledger.example_data = ledger.example_data or example
     ledger.dataset_changes.extend(changes)
     base = {
         "status": "ok",

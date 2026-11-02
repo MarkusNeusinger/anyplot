@@ -34,7 +34,7 @@ The agents service writes one wide JSON line per event to stdout on its own logg
 | Event | When | Main fields |
 |---|---|---|
 | `data_input` | A paste or a dropped file reaches the dataset route, or the file conversion refuses a file | `format`, `entry` (`paste` or `file`), `outcome`, `cause`, `size_bucket`, `rows_bucket`, `cols_bucket`, column counts by type, `max_categories_bucket`, `missing_bucket`, `warnings` (codes), `tables`, `sheets`, `notes` and `file_name` (booleans), `spec_fit`, judge tokens, `latency_ms` |
-| `chat_turn` | A `/messages` turn ends, refused ones included; `manual_binding_changed` counts only a `PUT /bindings` whose bindings differ from the ones the session held, because the page echoes the parse's defaults after every paste | `kind` (`plot`, `prep`, `formula`, `code`, `talk`, `refused`, `error`), `action`, `asked_question`, `tools`, `prep_ops`, `undo`, `to_long`, `manual_binding_changed`, `binding_warnings`, `refusal`, `error`, `reply_reasked`, `language_source` and `plot_language` (both as the turn left them), `steps` (calls, tokens, thinking tokens and model per agent), `latency_ms` |
+| `chat_turn` | A `/messages` turn ends, refused ones included; `manual_binding_changed` counts only a `PUT /bindings` whose bindings differ from the ones the session held, because the page echoes the parse's defaults after every paste | `kind` (`plot`, `prep`, `formula`, `code`, `example`, `talk`, `refused`, `error`), `action`, `asked_question`, `tools`, `prep_ops`, `undo`, `to_long`, `manual_binding_changed`, `binding_warnings`, `refusal`, `error`, `reply_reasked`, `language_source` and `plot_language` (both as the turn left them), `steps` (calls, tokens, thinking tokens and model per agent), `latency_ms` |
 | `pipeline_run` | A `plot_pipeline` run ends, or the root asked for one before the data was ready (`status: not_ready` with its reason) | `run_index` (1 is the session's first plot), `base`, `status`, `reason`, `stage`, `stages`, `attempts`, `rounds`, `round_scores`, `score_round1`, `score_round2` (buckets), `shipped_attempt`, `version` (the shipped version's number, which `outcome.version` names), `shipped_score`, `forced_repair`, `gates_failed`, `reviewer_defects`, `residual_defects`, `sandbox_failures` (`syntax`, `name`, `key`, `value`, `type`, `timeout`, `memory`, `other`), `drift_restored` (true when a plan that only changed the protected theme statements had them restored after the round's check retry), `plot_language`, `readiness`, `loader_notes`, `edit_failures`, `validator_rules`, `adaptation_rules`, the pipeline configuration and prompt hashes, time per stage, `steps`, and since 2026-11-01 `lane`, `queue_wait_ms`, `queue_position`, `user_runs_today`, `user_tokens_today` (see [Fields added on 2026-11-01](#fields-added-on-2026-11-01)) |
 | `outcome` | The page's beacon after a copy, a download, a session save, or a feedback send | `action` (`copied_code`, `copied_image`, `downloaded_png`, `downloaded_code`, `downloaded_page`, `opened_preview`, `downloaded_data`, `saved_session`, `feedback`; `downloaded_page` is a JavaScript plot's interactive `plot.html`, and `opened_preview` that page shown in the card, a look that keeps nothing, both since 2026-10-31), `version`, `reaction` |
 
@@ -176,6 +176,18 @@ their windows). An admin's turns land there the same way. The `failures` view li
 The typed columns are in `agents/telemetry/views/02_event_views.sql` (`pipeline_runs`). Applying the changed view
 in BigQuery is a write to the shared dataset: it waits for the owner's approval after the merge, and until then the
 fields sit in `payload` of the `events` view. See [Set up the BigQuery side](#set-up-the-bigquery-side).
+
+#### Shifts a report notices on 2026-11-01
+
+Example data on request adds values to two closed sets:
+
+- **`data_input.format` and `data_input.outcome` `data_request`.** A paste that asks for data instead of holding it
+  ("Beispieldaten") goes to the chat. Its `cause` is `transcribed_data_request` when the free-text reader said so,
+  and null when the fixed phrases of `data/classify.py` found it before any model. Like `formula` and `code`, the
+  `sessions` and `input_formats` views count it among the refused inputs; the session's next `chat_turn` shows
+  what the chat made of it.
+- **`chat_turn.kind` `example`.** A turn whose `run_data_code` stored example data the user asked for
+  (`source_language` `example`); such a turn was `code` before.
 
 ## Where the lines go
 
