@@ -1,7 +1,7 @@
 """anyplot.ai
 funnel-basic: Basic Funnel Chart
 Library: plotly 6.7.0 | Python 3.14.4
-Quality: 87/100 | Updated: 2026-04-26
+Quality: pending | Updated: 2026-04-26
 """
 
 import os
