@@ -1670,6 +1670,13 @@ REVIEWED_MEMBERS: dict[str, str] = {
     "inspect.Signature": "a callable's parameters",
     "inspect.Parameter": "one parameter of a signature",
     "inspect._empty": "the marker of a parameter without a default or an annotation",
+    "inspect._ParameterKind": "the kind of a parameter, an enum",
+    "logging.Logger": (
+        "a module's logger (bokeh binds one as `log` in every module): it hands records to the handlers the process "
+        "set up, standard error in the sandbox, and builds no handler and opens no file of its own"
+    ),
+    "logging.RootLogger": "the root of every logger, the same as `logging.Logger`",
+    "logging.Manager": "a logger's registry of the other loggers (`log.manager`)",
     "sys.getsizeof": "an object's size in bytes",
     "shutil.get_terminal_size": "the terminal's size, from the environment or standard output",
     "threading.RLock": "a reentrant lock",
@@ -1734,8 +1741,9 @@ def _in_banned_module(module: str) -> bool:
 
 def _banned_object(value: object, by_name: dict[int, object]) -> bool:
     """A frame, traceback, code object, generator or coroutine (`FRAME_KINDS`); a module of `BANNED_MODULES`; an object
-    the validator bans by name (`_objects_banned_by_name`); a loader class; or a function or class of a banned module
-    that is not in `REVIEWED_MEMBERS`. Decided by what the object is, never by the name it is reached under."""
+    the validator bans by name (`_objects_banned_by_name`); a loader class; or a function or class of a banned module,
+    or an instance of such a class, that is not in `REVIEWED_MEMBERS`. Decided by what the object is, never by the name
+    it is reached under."""
     import importlib.abc
 
     if isinstance(value, FRAME_KINDS):
@@ -1750,11 +1758,12 @@ def _banned_object(value: object, by_name: dict[int, object]) -> bool:
                 return True
         except TypeError:
             return False
-    if not callable(value):
-        return False
     try:
-        module = value.__module__
-        name = getattr(value, "__qualname__", type(value).__qualname__)
+        if callable(value):
+            module = value.__module__
+            name = getattr(value, "__qualname__", type(value).__qualname__)
+        else:  # an instance of a banned module's class: `os.environ`, an open file, a logger
+            module, name = type(value).__module__, type(value).__qualname__
     except Exception:
         return False
     # The builtins' own types and functions (`int`, `len`, `property`) are everywhere; the ones the validator bans
@@ -1778,7 +1787,7 @@ def _banned_members(value: object, path: str, by_name: dict[int, object]) -> lis
         members = [(f"{path}[{key!r}]", item) for key, item in list(value.items())[:WALK_ITEMS]]
     elif isinstance(value, list | tuple):
         members = [(f"{path}[{index}]", item) for index, item in enumerate(value[:WALK_ITEMS])]
-    elif not callable(value):
+    else:  # any other object, a callable one (`scipy.stats.norm`) included
         try:
             attributes = dict(vars(value))
         except TypeError:
@@ -1885,10 +1894,13 @@ def test_the_walk_decides_by_identity() -> None:
     renamed = types.SimpleNamespace(callable=types.FunctionType, reader=types.LambdaType)
     assert _banned_members(renamed, "renamed", by_name) == ["renamed.callable", "renamed.reader"]
     import io
+    import logging
+    import os
     import pathlib
 
     assert _banned_object(pathlib.Path, by_name) and _banned_object(io.FileIO, by_name)
-    assert not _banned_object(io.StringIO, by_name)
+    assert _banned_object(os.environ, by_name) and _banned_object(pathlib.Path("."), by_name)
+    assert not _banned_object(io.StringIO, by_name) and not _banned_object(logging.getLogger("walk"), by_name)
     assert not _banned_object(types.FrameType, by_name) and not _banned_object(types.GeneratorType, by_name)
     assert _banned_object((i for i in ()), by_name)
 
