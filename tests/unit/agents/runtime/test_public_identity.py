@@ -6,8 +6,9 @@ binds it to the salted network for the day, and counts the network's tokens, pip
 sandbox runs against the per-IP caps; the run queue also caps the public lane's waiting entries.
 """
 
+import asyncio
 import re
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Awaitable, Iterator
 
 import httpx
 import pytest
@@ -118,6 +119,28 @@ class TestIdentity:
         assert (await client.delete(f"/v1/sessions/{first}", headers=anon_headers(tabs[0]))).status_code == 204
         await open_anonymous_session(client, anon_headers(tabs[0]), tabs[0])
         assert services.network_sessions(network_key(NETWORK)) == 2
+
+    async def test_parallel_creates_never_pass_the_session_cap(
+        self, client: httpx.AsyncClient, services: Services, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("AGENT_IP_MAX_SESSIONS", "1")
+        get_settings.cache_clear()
+        tabs = [f"{index:02d}{TAB[2:]}" for index in range(4)]
+
+        def create(tab: str) -> Awaitable[httpx.Response]:
+            body = {
+                "user": tab,
+                "spec_id": "scatter-basic",
+                "library": "matplotlib",
+                "locale": "en",
+                "snapshot": snapshot_body(),
+            }
+            return client.post("/v1/sessions", headers=anon_headers(tab), json=body)
+
+        answers = await asyncio.gather(*(create(tab) for tab in tabs))
+
+        assert sorted(answer.status_code for answer in answers) == [200, 429, 429, 429]
+        assert services.network_sessions(network_key(NETWORK)) == 1
 
     async def test_eligibility_binds_no_network(self, client: httpx.AsyncClient, services: Services) -> None:
         response = await client.get(
@@ -241,6 +264,16 @@ class TestNetworkDay:
 
         assert book.network_of(user) == network_key(NETWORK)
         assert (book.network_tokens(user), book.network_runs(user)) == (70, 1)
+
+    def test_the_bindings_stay_bounded_however_many_tab_ids_arrive(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(ledger, "MAX_BOUND_USERS", 3)
+        book = UsageBook()
+        users = [anonymous_user(f"{index:02d}{TAB[2:]}") for index in range(5)]
+        for user in users:
+            book.bind_network(user, network_key(NETWORK))
+        book.bind_network(users[2], network_key(NETWORK))  # an active user binds again and stays
+
+        assert [book.network_of(user) is not None for user in users] == [False, False, True, True, True]
 
     def test_a_caller_without_a_network_counts_only_as_itself(self) -> None:
         book = UsageBook()

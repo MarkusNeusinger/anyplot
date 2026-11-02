@@ -261,7 +261,9 @@ class Feedback(Base):
     user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
     viewport: Mapped[str | None] = mapped_column(String(20), nullable=True)
     session_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
-    # SHA-256 of the client IP — used for rate limiting, not user identification.
+    # "hmac:" + a per-process salted HMAC of the client IP (api/routers/feedback.py `_hash_ip`), only for the
+    # rate limit and the duplicate check, cleared once their 10-minute window has passed; rows from before
+    # 2026-11-02 still hold an unsalted SHA-256 until a migration clears them.
     ip_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
     # Triage state — see FEEDBACK_STATUSES above. Updated from /debug.
