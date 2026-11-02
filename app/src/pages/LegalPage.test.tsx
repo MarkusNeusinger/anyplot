@@ -64,16 +64,29 @@ describe('LegalPage', () => {
   it('gives each store its own retention, and no store a borrowed one', () => {
     render(<LegalPage />);
 
-    // Cloud Logging has the 30 days, in the EU since 2026-11-02; the feedback table has no timer at all.
-    expect(screen.getByText(/kept for 30 days in/)).toBeInTheDocument();
+    // One table row per store, each with its own figure: the 30 days belong to
+    // the server logs only, and the feedback rows have no timer at all.
+    const retention: [string, string][] = [
+      ['server logs', '30 days'],
+      ['feedback IP hash', 'ten minutes'],
+      ['assistant telemetry', 'up to 180 days'],
+      ['feedback case files', '180 days'],
+      ['feedback entries, case rows', 'until you ask to delete them'],
+    ];
+    for (const [store, kept] of retention) {
+      expect(
+        screen.getByRole('row', { name: new RegExp(`^${store}\\s*${kept}$`) })
+      ).toBeInTheDocument();
+    }
+    // Google Cloud, its logs included, runs in the EU region.
     expect(
-      screen.getByText(/in the Netherlands \(europe-west4\), for security and debugging purposes/)
+      screen.getByText(
+        /Google Cloud \(Run, SQL, Storage, Logging\) in the Netherlands \(europe-west4\)/
+      )
     ).toBeInTheDocument();
-    // The move happened mid-day, so the cut is the move itself, not the date.
-    expect(
-      screen.getByText(/written before the move on 2 November 2026 stay in Google.s global/)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/nothing deletes them on a timer/)).toBeInTheDocument();
+    // The page states the current state only: no notes on what older entries still carry.
+    expect(screen.queryByText(/before the move/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/unsalted/)).not.toBeInTheDocument();
   });
 
   it('does not claim more privacy than the code delivers', () => {
@@ -88,70 +101,78 @@ describe('LegalPage', () => {
     // quietly drop the two identifiers a reader would care about most.
     expect(screen.getByText(/your window size/)).toBeInTheDocument();
     expect(
-      screen.getByText(/a random id that ties your own submissions\s+together/)
+      screen.getByText(/a random id that ties your own submissions together/)
     ).toBeInTheDocument();
-    // The feedback's IP hash is salted and short-lived, and the older rows are named, not hidden.
-    expect(screen.getByText(/clears it after ten minutes/)).toBeInTheDocument();
-    expect(screen.getByText(/older, unsalted hash until it is cleared/)).toBeInTheDocument();
+    // The feedback's IP hash is salted; its ten minutes sit in the retention table.
+    expect(screen.getByText(/a salted hash of your IP address limits spam/)).toBeInTheDocument();
     // Plausible's real property is cookieless and identifier-free, not that
     // the script is ours — it is Plausible's, only served from our domain.
-    expect(screen.getByText(/the script is theirs/)).toBeInTheDocument();
-    expect(screen.getByText(/Cloudflare stands in front of the site/)).toBeInTheDocument();
+    expect(screen.getByText(/its script is served through this domain/)).toBeInTheDocument();
+    expect(screen.getByText(/Cloudflare uses your IP address/)).toBeInTheDocument();
+    // The browser's storage is named, not hidden behind "no cookies".
+    expect(screen.getByText(/your plot\s+votes, a release number/)).toBeInTheDocument();
   });
 
   // The data assistant's section, each claim pinned with the qualifier that
   // makes it true: experimental and open to everyone but pausable, training
-  // excluded only under Vertex AI's terms, telemetry pseudonymous (not
-  // anonymous), the data file unticked by default, and a case row that has no
-  // timer while its files do.
+  // excluded under Google Cloud's terms, the ids pseudonymous (not anonymous),
+  // the data file unticked by default, and each legal basis with its purpose.
   it('describes the experimental data assistant without overclaiming', () => {
     render(<LegalPage />);
 
     expect(
-      screen.getByText(
-        /open to everyone as an\s+experimental feature, and the operator may pause it/
-      )
+      screen.getByText(/open to everyone, experimental and without warranty/)
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/served through Google Cloud Vertex AI in the\s+EU/)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/processed under Google Cloud.s data\s+processing terms/)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/don.t paste personal data you are not allowed to\s+share/)
-    ).toBeInTheDocument();
-    expect(screen.getByText(/there is no session database/)).toBeInTheDocument();
-    expect(screen.getByText(/pseudonymous, not\s+anonymous/)).toBeInTheDocument();
-    // The language is about the user: named, and only as a code with rare ones folded into "other".
+    expect(screen.getByText(/nobody checks them by hand/)).toBeInTheDocument();
+    expect(screen.getByText(/the operator may pause it at any time/)).toBeInTheDocument();
     expect(
       screen.getByText(
-        /language as a code \(one of a dozen common languages, any\s+other only as "other"\)/
+        /served through Google Cloud Vertex AI in the EU under Google Cloud.s data processing terms/
       )
     ).toBeInTheDocument();
-    expect(screen.getByText(/up to 180 days/)).toBeInTheDocument();
+    expect(screen.getByText(/your prompts are not used for training/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/don.t paste personal data you are not allowed to share/)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/with no database, and is cleared after an hour idle/)
+    ).toBeInTheDocument();
+    // The renderer's answer cache has no idle timer of its own.
+    expect(screen.getByText(/keeps its last 16 results in memory/)).toBeInTheDocument();
+    expect(screen.getByText(/never your text, data, column or file names/)).toBeInTheDocument();
+    // The language is about the user: only as a code, with rare ones folded into "other".
+    expect(screen.getByText(/language code \(rare ones as "other"\)/)).toBeInTheDocument();
     // A public user's id is a salted random tab id that dies with the instance; only admins get the HMAC.
     expect(
-      screen.getByText(/salted with a value that lives only as\s+long as the server instance/)
+      screen.getByText(
+        /salted with a value that lives only as long as the server instance, in memory, never written down/
+      )
     ).toBeInTheDocument();
     expect(screen.getByText(/keyed hash \(HMAC\)/)).toBeInTheDocument();
-    expect(screen.getByText(/salted, in memory only, never written down/)).toBeInTheDocument();
-    // The box starts unticked, and leaving it so drops data.csv only; the profile sample stays.
-    expect(screen.getByText(/it starts\s+unticked/)).toBeInTheDocument();
-    expect(screen.getByText(/leaving it unticked leaves out that file only/)).toBeInTheDocument();
-    expect(screen.getByText(/first 5 rows as a sample/)).toBeInTheDocument();
-    // The renderer's answer cache has no idle timer of its own.
-    expect(screen.getByText(/keeps its last 16 results/)).toBeInTheDocument();
-    expect(screen.getByText(/nothing deletes it on a timer/)).toBeInTheDocument();
-    expect(screen.getByText(/Art\. 6\(1\)\(b\) GDPR/)).toBeInTheDocument();
-    expect(screen.getByText(/Art\. 6\(1\)\(f\) GDPR/)).toBeInTheDocument();
-    // A feedback case rests on consent, given at the send and withdrawable.
+    // The 30-day server logs could only be joined by timestamp: pseudonymous, not anonymous.
     expect(
-      screen.getByText(/a feedback case rests on your consent \(Art\. 6\(1\)\(a\)\s+GDPR\)/)
+      screen.getByText(/only timestamps could match them to the 30-day server logs/)
     ).toBeInTheDocument();
-    expect(screen.getByText(/which you can withdraw at any time by asking/)).toBeInTheDocument();
-    // The two 30-day logs could only be joined by timestamp; the salted ids map to nothing else.
-    expect(screen.getByText(/could only be lined up by their\s+timestamps/)).toBeInTheDocument();
+    expect(screen.getByText(/so they are pseudonymous/)).toBeInTheDocument();
+    // Nothing is kept without feedback; the box starts unticked, and leaving it so drops
+    // data.csv only, while the profile sample stays.
+    expect(screen.getByText(/kept only when you send feedback/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/it starts unticked, which leaves out that file only/)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/first 5 rows/)).toBeInTheDocument();
+    // Each legal basis with what it covers; consent given at the send and withdrawable.
+    expect(
+      screen.getByRole('row', { name: /^Art\. 6\(1\)\(f\)\s*legitimate interest/ })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('row', { name: /^Art\. 6\(1\)\(b\)\s*your request: making the plot/ })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('row', {
+        name: /^Art\. 6\(1\)\(a\)\s*your consent to a feedback case, given when you send it and withdrawable at any time by asking$/,
+      })
+    ).toBeInTheDocument();
     // "No cookies" holds for visitors; admins get Cloudflare Access's login cookie.
     expect(screen.getByText(/no cookies for visitors/)).toBeInTheDocument();
     expect(
@@ -160,22 +181,24 @@ describe('LegalPage', () => {
     // Scope: the assistant's processing touches only the people who use it; the chat links here.
     const heading = screen.getByText('only if you use the data assistant (experimental)');
     expect(heading).toHaveAttribute('id', 'assistant');
-    // Use, warranty, the code's licence with the Highcharts exception, and the transfers.
-    expect(screen.getByText(/comes with no\s+warranty/)).toBeInTheDocument();
-    expect(screen.getByText(/nobody checks them by hand/)).toBeInTheDocument();
-    expect(screen.getByText(/yours to\s+use, as is/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/if you only browse the catalogue, none of it touches you/)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('row', {
+        name: /^data assistant\s*Claude by Anthropic via Google Cloud Vertex AI \(EU\), if you use it$/,
+      })
+    ).toBeInTheDocument();
+    // The code's licence with the Highcharts exception, and the transfers.
+    expect(screen.getByText(/yours to use, as is/)).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Highcharts is free for non-commercial use, and a\s+commercial use needs a licence from Highsoft/
+        /Highcharts is free for non-commercial use, and a commercial use needs a licence from Highsoft/
       )
     ).toBeInTheDocument();
-    expect(screen.getByText(/transfers\s+outside Switzerland and the EU/)).toBeInTheDocument();
-    expect(screen.getByText(/if you\s+only browse the catalogue, none of it/)).toBeInTheDocument();
-    expect(
-      screen.getByText(/Claude models by Anthropic \(EU\) — only when you use the\s+data assistant/)
-    ).toBeInTheDocument();
-    // Browsing the catalogue still involves no model; only the assistant does.
-    expect(screen.getByText(/never sees a visitor.s request/)).toBeInTheDocument();
+    expect(screen.getByText(/transfers outside Switzerland and the EU/)).toBeInTheDocument();
+    // Browsing the catalogue involves no model, and nothing sent trains one.
+    expect(screen.getByText(/browsing never reaches a model/)).toBeInTheDocument();
   });
 
   it('renders the technology stack', () => {

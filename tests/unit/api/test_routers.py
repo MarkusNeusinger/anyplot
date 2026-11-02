@@ -1180,10 +1180,12 @@ class TestSeoProxyRouter:
         # BOTH retentions, not only the logs' — pinning just the 30 days is how
         # that figure silently spreads over the store it is not true for.
         assert "kept 30 days" in response.text
-        assert "until it is deleted by hand" in response.text
-        # The server logs sit in the EU since 2026-11-02 (the `_Default` sink's new bucket).
+        assert "kept until you ask to delete it" in response.text
+        # The server logs sit in the EU (the `_Default` sink's europe-west4 bucket).
         assert "kept 30 days in Google Cloud Logging in the Netherlands (europe-west4)" in response.text
-        assert "written before the move on 2 November 2026" in response.text
+        # The page states the current state only: no notes on what older entries still carry.
+        assert "before the move" not in response.text
+        assert "unsalted" not in response.text
 
     def test_seo_legal_mirrors_the_data_assistant_section(self, client: TestClient) -> None:
         """The crawler body carries the assistant's facts the human page states (LegalPage.tsx `#assistant`)."""
@@ -1201,6 +1203,13 @@ class TestSeoProxyRouter:
             "transfers outside Switzerland and the EU",
             "cleared after ten minutes",
             "consent (Art. 6(1)(a) GDPR)",
+            "your request (Art. 6(1)(b) GDPR)",
+            "legitimate interest (Art. 6(1)(f) GDPR)",
+            "Telemetry: up to 180 days",
+            "cleared after an hour idle",
+            "never used for training",
+            "the Cloudflare Access login cookie",
+            "a complaint to a supervisory authority",
         ):
             assert fact in response.text, fact
 
