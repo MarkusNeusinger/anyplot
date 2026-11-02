@@ -832,6 +832,39 @@ class TestTextProbes:
             failing_owner.export(PYGAL_SVG)
         assert not probe.exists()  # a failed save leaves no probe
 
+    @pytest.mark.parametrize(
+        ("left", "failure"),
+        [
+            pytest.param("fifo", "OSError", id="a FIFO the child left: no reader, no block"),
+            pytest.param("directory", "IsADirectoryError", id="a directory at the probe's name"),
+        ],
+    )
+    def test_a_probe_that_cannot_be_written_is_on_the_end_line(
+        self, tmp_path: Any, monkeypatch: pytest.MonkeyPatch, left: str, failure: str
+    ) -> None:
+        """In exec mode the child runs before the harness writes the probe, so what it left at the probe's name must
+        neither block the write nor be written through, and the failure goes on the end line (`probe_failed`)."""
+        import os
+
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(harness, "PROBE_WRITE_FAILURES", [])
+        if left == "fifo":
+            os.mkfifo(tmp_path / "probe-light.json")
+        else:
+            (tmp_path / "probe-light.json").mkdir()
+
+        harness.write_text_probe("light", {"labels": []})
+
+        assert harness.PROBE_WRITE_FAILURES == [failure]
+        assert harness._probe_failure() == {"probe_failed": failure}
+        monkeypatch.setattr(harness, "PROBE_WRITE_FAILURES", [])
+        (tmp_path / "other").mkdir()
+        monkeypatch.chdir(tmp_path / "other")
+        harness.write_text_probe("light", {"labels": []})
+        assert harness._probe_failure() == {} and json.loads((tmp_path / "other" / "probe-light.json").read_text()) == {
+            "labels": []
+        }
+
 
 class TestDatasetContext:
     def test_the_lorenz_source_names_the_system_and_drops_comments(self) -> None:

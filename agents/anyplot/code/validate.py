@@ -126,7 +126,10 @@ Decisions this module takes where the design leaves room:
   rule. No catalogue file uses a module as a value. A module reached through an
   attribute chain (`[np.lib][0]`) or a `from` import cannot be told from a plain value
   without importing it, so the dangerous private names the walk found are in
-  `ESCAPE_ATTRIBUTES` as well.
+  `ESCAPE_ATTRIBUTES` as well. A path that leads to a `MODULE_ESCAPES` entry
+  (`matplotlib.cbook`, `cbook` after `from matplotlib import cbook`, an alias of either,
+  annotated ones included) is never a value either: only a receiver, a callee or the value
+  of a plain alias the resolver follows (the second opinion of 2026-11-02).
 * **Attribute names are banned outright, on any object.** `.format`, `.eval`, `.query`,
   `.show`, `.use`, `.load`, `.read_*`, `.to_csv` and the rest are findings wherever they
   appear, called or not, because the receiver's type is not knowable without executing
@@ -854,7 +857,8 @@ ESCAPE_ATTRIBUTES: frozenset[str] = frozenset(
         "callable",
         # statsmodels' `regression.mixed_linear_model` re-exports the standard `tokenize`, whose `open` reads any file
         # (the same walk), and fontTools under matplotlib's banned `dviread` the standard `timeit`, whose `Timer`
-        # compiles and runs its statement text (the Fable review of the walk).
+        # compiles and runs its statement text (the Fable review of the walk). A column of that name is refused as
+        # `df.timeit`, like every name here, and passes as `df["timeit"]`.
         "tokenize",
         "timeit",
         "attrgetter",
@@ -1188,7 +1192,14 @@ MODULE_ESCAPES: frozenset[str] = frozenset(
 """Escapes banned only on their own module, because the bare name is plausible data: `calendar.main`
 sets the process locale through its `-L` option, while `df.main` is a column. Checked against the
 resolved attribute path, `from` imports and import paths; the `module-value` rule keeps the module
-from reaching it through an expression the resolver cannot follow."""
+from reaching it through an expression the resolver cannot follow, and so it does for every path
+that leads to an entry (`_ESCAPE_PREFIXES`: `[matplotlib.cbook][0].Path`, `[cbook][0].Path` after
+`from matplotlib import cbook`)."""
+_ESCAPE_PREFIXES: frozenset[str] = frozenset(
+    entry.rsplit(".", cut)[0] for entry in MODULE_ESCAPES for cut in range(1, entry.count(".") + 1)
+)
+"""Every proper prefix of a `MODULE_ESCAPES` entry (`matplotlib.cbook` and `matplotlib` for `matplotlib.cbook.Path`):
+a path that resolves to one is only a receiver, a callee or the value of a plain alias (`_check_module_values`)."""
 _DATA_FROM_DF = "the data comes only from df = load_user_data(), and the plot reads and writes no files"
 IMPORT_ALTERNATIVES: dict[str, str] = {
     **dict.fromkeys(
@@ -2167,6 +2178,23 @@ def _is_theme_target(node: ast.AST) -> bool:
     )
 
 
+def _literal_head(node: ast.AST) -> str:
+    """The literal text a string built at run time starts with: an f-string's text before its first placeholder, and
+    the left string of a `+` (`"xaxis" + str(n)`); empty when it starts with anything else."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.JoinedStr):
+        head = ""
+        for part in node.values:
+            if not (isinstance(part, ast.Constant) and isinstance(part.value, str)):
+                break
+            head += part.value
+        return head
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+        return _literal_head(node.left)
+    return ""
+
+
 def _single_name_target(node: ast.AST) -> ast.Name | None:
     """The `name` of a plain `name = ...` or `name: T = ...` statement, else None."""
     if isinstance(node, ast.Assign):
@@ -2265,9 +2293,10 @@ class _Scan:
             for alias in from_node.names:
                 if alias.name != "*":
                     self.aliases[alias.asname or alias.name] = f"{from_node.module}.{alias.name}"
-        for assign in sorted(self.of(ast.Assign), key=lambda n: n.lineno):
+        assignments: list[ast.Assign | ast.AnnAssign] = [*self.of(ast.Assign), *self.of(ast.AnnAssign)]
+        for assign in sorted(assignments, key=lambda n: n.lineno):
             target = _single_name_target(assign)
-            path = self.resolve(assign.value) if target is not None else None
+            path = self.resolve(assign.value) if target is not None and assign.value is not None else None
             if target is not None and path is not None:
                 self.aliases[target.id] = path
 
@@ -2532,6 +2561,31 @@ class _Scan:
                     f"the module '{name.id}' may only be used as {name.id}.<name>, never as a value",
                     name,
                 )
+        # `MODULE_ESCAPES` matches the resolved path, so whatever leads to one of its entries (`matplotlib.cbook`, a
+        # `from matplotlib import cbook`, an alias of either) is only ever a receiver, a callee or the value of a plain
+        # alias the resolver follows: `[matplotlib.cbook][0].Path` would reach pathlib's `Path` through an expression
+        # it cannot follow (the second opinion of 2026-11-02).
+        nodes: list[ast.Name | ast.Attribute] = [*self.of(ast.Name), *self.of(ast.Attribute)]
+        for node in nodes:
+            if not isinstance(node.ctx, ast.Load) or (isinstance(node, ast.Name) and node.id in modules):
+                continue
+            path = self.resolve(node)
+            if path is None or path not in _ESCAPE_PREFIXES or self._is_followed(node):
+                continue
+            message = f"'{_snippet(node)}' may only be used as {_snippet(node)}.<name>, never as a value"
+            self.add("module-value", message, node)
+
+    def _is_followed(self, node: ast.expr) -> bool:
+        """`node` is a receiver, a callee (`ggplot(...)`, whose class shares its module's name) or the value of a plain
+        `name = ...` alias, which `resolve` follows."""
+        parent = self.parents.get(node)
+        if isinstance(parent, ast.Attribute):
+            return parent.value is node
+        if isinstance(parent, ast.Call):
+            return parent.func is node
+        if isinstance(parent, ast.Assign | ast.AnnAssign):
+            return parent.value is node and _single_name_target(parent) is not None
+        return False
 
     def _is_theme_lookup(self, name: ast.Name) -> bool:
         """`os.getenv("ANYPLOT_THEME", ...)` or `os.environ.get("ANYPLOT_THEME", ...)` around `name`."""
@@ -2637,10 +2691,15 @@ class _Scan:
             self.add("banned-attribute", message, attribute)
 
     def _check_keywords(self) -> None:
-        """`BANNED_KEYWORDS` as a keyword, or as a string key of a dict literal unpacked into a call (`**{"memory":
-        "dir"}`). A dict built elsewhere and unpacked (`**options`) is not followed; the render guard refuses the
-        write such a keyword would make in the sandbox."""
+        """`BANNED_KEYWORDS` as a keyword, or as a key that a `**` argument passes as one (`_unpacked_keys`):
+        `**{"memory": "dir"}`, and `kw = {"eval_str": True}; f(**kw)` (the second opinion of 2026-11-02). A key built
+        at run time (`**{k: True}`, `kw[name] = ...`, a dict comprehension) is refused, because no rule can read the
+        keyword it passes, unless it starts with literal text no banned or private keyword starts with: plotly's
+        subplot axes are `**{f"xaxis{n}": ...}` (`_literal_head`). A dict the walk cannot see (`**options()`,
+        `dict(zip(...))`) is not followed; the render guard refuses what such a keyword would start or write in the
+        sandbox."""
         own = LIBRARY_KEYWORD_BANS.get(self.library, frozenset())
+        banned = BANNED_KEYWORDS | own
         for keyword in self.of(ast.keyword):
             if keyword.arg in BANNED_KEYWORDS or keyword.arg in own:
                 self.add("banned-keyword", f"the keyword '{keyword.arg}=' is not allowed", keyword)
@@ -2652,22 +2711,66 @@ class _Scan:
             ):
                 # plotly's `_validate=False` skips every validator of a figure or a trace.
                 self.add("banned-keyword", f"the private keyword '{keyword.arg}=' is not allowed", keyword)
-            elif keyword.arg is None and isinstance(keyword.value, ast.Dict):
-                pending = [keyword.value]
-                while pending:  # `**{**{"memory": ...}}`: an unpacked entry has the key None and a dict value
-                    literal = pending.pop()
-                    for key, value in zip(literal.keys, literal.values, strict=True):
-                        if key is None and isinstance(value, ast.Dict):
-                            pending.append(value)
-                        elif isinstance(key, ast.Constant) and (key.value in BANNED_KEYWORDS or key.value in own):
-                            self.add("banned-keyword", f"the keyword '{key.value}=' is not allowed", key)
-                        elif (
-                            isinstance(key, ast.Constant)
-                            and isinstance(key.value, str)
-                            and key.value.startswith("_")
-                            and self.library in PRIVATE_NAME_LIBRARIES
-                        ):
-                            self.add("banned-keyword", "a private keyword is not allowed", key)
+            elif keyword.arg is None:
+                for key in self._unpacked_keys(keyword.value):
+                    if not (isinstance(key, ast.Constant) and isinstance(key.value, str)):
+                        head = _literal_head(key)
+                        if head and not head.startswith("_") and not any(word.startswith(head) for word in banned):
+                            continue  # `f"xaxis{n}"`: whatever follows, no banned keyword starts with "xaxis"
+                        message = "a keyword name built at run time is not allowed: give ** string-literal keys"
+                        self.add("banned-keyword", message, key)
+                    elif key.value in BANNED_KEYWORDS or key.value in own:
+                        self.add("banned-keyword", f"the keyword '{key.value}=' is not allowed", key)
+                    elif key.value.startswith("_") and self.library in PRIVATE_NAME_LIBRARIES:
+                        self.add("banned-keyword", "a private keyword is not allowed", key)
+
+    def _unpacked_keys(self, value: ast.expr, depth: int = 0) -> list[ast.expr]:
+        """The expressions a `**value` argument may pass as keyword names: the keys of a dict literal and of the dicts
+        it unpacks, the key of a dict comprehension, and for a name the same of every dict bound to it (`name = {...}`,
+        `name: T = {...}`, `name |= {...}`), every key a store subscripts it with (`name[key] = ...`), the first argument
+        of its `.setdefault(...)` and the dicts its `.update(...)` takes. A `**` entry the walk cannot read (`{**f()}`)
+        and an `.update` argument other than a dict or a name are returned themselves, so the caller refuses them. Any
+        other value gives nothing: a parameter's keywords are checked where its caller passes them."""
+        if depth > MAX_TEMPLATE_DEPTH:
+            return []
+        if isinstance(value, ast.DictComp):
+            return [value.key]
+        if isinstance(value, ast.Dict):
+            keys: list[ast.expr] = []
+            for key, item in zip(value.keys, value.values, strict=True):
+                if key is not None:
+                    keys.append(key)
+                elif isinstance(item, ast.Dict | ast.DictComp | ast.Name):
+                    keys.extend(self._unpacked_keys(item, depth + 1))
+                else:
+                    keys.append(item)
+            return keys
+        if not isinstance(value, ast.Name):
+            return []
+        keys = []
+        for node in self._binding_nodes(value.id):
+            parent = self.parents.get(node)
+            if isinstance(parent, ast.Assign | ast.AnnAssign) and _single_name_target(parent) is node:
+                if isinstance(parent.value, ast.Dict | ast.DictComp):
+                    keys.extend(self._unpacked_keys(parent.value, depth + 1))
+            elif isinstance(parent, ast.AugAssign) and parent.target is node:
+                keys.extend(self._unpacked_keys(parent.value, depth + 1) or [parent.value])
+        for name in self.of(ast.Name):
+            parent = self.parents.get(name)
+            if name.id != value.id or not isinstance(name.ctx, ast.Load) or getattr(parent, "value", None) is not name:
+                continue
+            if isinstance(parent, ast.Subscript) and isinstance(parent.ctx, ast.Store):
+                keys.append(parent.slice)
+            elif isinstance(parent, ast.Attribute) and parent.attr in ("update", "setdefault"):
+                call = self.parents.get(parent)
+                if not isinstance(call, ast.Call) or call.func is not parent:
+                    continue
+                if parent.attr == "setdefault":
+                    keys.extend(call.args[:1])
+                for argument in call.args if parent.attr == "update" else []:
+                    readable = isinstance(argument, ast.Dict | ast.DictComp | ast.Name)
+                    keys.extend(self._unpacked_keys(argument, depth + 1) if readable else [argument])
+        return keys
 
     def _check_settings(self) -> None:
         """matplotlib settings are written only with keys the string rule can read (`rc-key`).

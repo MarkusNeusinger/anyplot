@@ -447,6 +447,11 @@ def test_run_tests_installs_and_requires_the_renderers_libraries() -> None:
     renderer = (WORKFLOWS_DIR.parent.parent / "agents" / "renderer" / "Dockerfile").read_text(encoding="utf-8")
     extras = set(re.findall(r"--extra (lib-[\w-]+)", renderer))
     assert extras and extras <= set(re.findall(r"--extra (lib-[\w-]+)", install))
+    # The image's export stacks stay out of the test job too, so a library behaves there as in the sandbox.
+    left_out = set(re.findall(r"--no-install-package ([\w-]+)", renderer))
+    assert left_out and left_out == set(re.findall(r"--no-install-package ([\w-]+)", install))
+    [cairo] = [step["run"] for step in job["steps"] if step.get("name") == "Install libcairo"]
+    assert "libcairo2" in cairo and "libcairo2" in renderer
 
 
 class TestCiMigrationsWorkflow:

@@ -165,14 +165,27 @@ jobs:
       if: steps.check.outputs.should_test == 'true'
       run: uv lock --check
 
-    # The eight `lib-*` extras the renderer image installs: the validator tests
-    # walk every module it admits, and the harness tests render each library.
+    # pygal's PNG export loads libcairo through cairocffi, as in the renderer
+    # image's runtime stage (agents/renderer/Dockerfile).
+    - name: Install libcairo
+      if: steps.check.outputs.should_test == 'true'
+      run: sudo apt-get install -y --no-install-recommends libcairo2
+
+    # The eight `lib-*` extras the renderer image installs, without the image
+    # export stacks it leaves out (the same `--no-install-package` list as
+    # agents/renderer/Dockerfile): the validator tests walk every module it
+    # admits, and the harness tests render each library as the image does.
     - name: Install dependencies
       if: steps.check.outputs.should_test == 'true'
       run: >-
         uv sync --extra test --extra agents
         --extra lib-matplotlib --extra lib-seaborn --extra lib-plotnine --extra lib-altair
         --extra lib-pygal --extra lib-letsplot --extra lib-plotly --extra lib-bokeh
+        --no-install-package kaleido --no-install-package choreographer --no-install-package logistro
+        --no-install-package simplejson --no-install-package selenium --no-install-package webdriver-manager
+        --no-install-package trio --no-install-package trio-websocket --no-install-package outcome
+        --no-install-package sortedcontainers --no-install-package wsproto --no-install-package websocket-client
+        --no-install-package pysocks
 
     # Unit tests (mocked dependencies) and integration tests (SQLite in memory)
     # for every author; the e2e tests against real PostgreSQL are in test-e2e.

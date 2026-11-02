@@ -18,7 +18,7 @@ import pytest
 
 from agents.anyplot.render import harness
 from agents.anyplot.render.runtimes.python import HARNESS_SOURCE
-from tests.libraries import REQUIRE_LIBRARIES_ENV, import_library
+from tests.libraries import REQUIRE_LIBRARIES_ENV, import_library, skip_or_fail
 
 
 THEME = "light"
@@ -701,7 +701,7 @@ def test_catalogue_files_render_under_the_guard(tmp_path: Path, spec_id: str, li
         import_library(module)
     source = REPO_ROOT / "plots" / spec_id / "implementations" / "python" / f"{library}.py"
     if not source.exists():
-        pytest.skip(f"{spec_id}/{library} is absent")
+        skip_or_fail(f"the catalogue file {spec_id}/{library} is absent: pick another case")
     code = normalise(strip_noqa_comments(source.read_text(encoding="utf-8")) or "", library=library)
     (tmp_path / "plot.py").write_text(code, encoding="utf-8")
     done = subprocess.run(

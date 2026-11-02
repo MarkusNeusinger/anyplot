@@ -90,7 +90,8 @@ copies it to `/opt/anyplot/harness.py`. In order it:
    on;
 6. prints `HARNESS {"event": "end", "max_rss_mb": ..., "cpu_s": ..., "exec_deny": ...}`
    when the plot file returns or raises (`exec_deny`: `on`, `unavailable`, `unsupported`,
-   or `off` when the guard was never armed); an exception still propagates, so its
+   or `off` when the guard was never armed; `probe_failed`, the exception class of a text
+   probe whose write failed, only then: `write_text_probe`); an exception still propagates, so its
    traceback reaches stderr and the exit code stays non-zero.
 
 **Data mode** (`python -I -X disable-remote-debug /opt/anyplot/harness.py --data snippet.py`, the renderer's
@@ -2428,20 +2429,37 @@ def write_text_probe(theme, report):
     whose probe goes to this one fixed name. It can call that exporter again after its real save, with a spec of its
     own, and the last call's probe wins, so the probe is advisory like matplotlib's (module docstring): it can differ
     from the PNG the reviewer scores, and it never leaves the run directory.
+
+    A FIFO at the probe's name (exec mode: the child ran first) never blocks the write: `O_NONBLOCK` makes the open
+    fail without a reader, and anything but a regular file is left alone (`fstat`). A write that fails is loud: its
+    exception class goes on the end line as `probe_failed` (`PROBE_WRITE_FAILURES`), which the renderer logs per launch.
     """
-    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NOFOLLOW", 0)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
     data = json.dumps(report).encode("utf-8")
     try:
         descriptor = os.open(os.path.abspath(f"probe-{theme}.json"), flags, 0o644)
-    except OSError:
+    except OSError as exc:
+        PROBE_WRITE_FAILURES.append(type(exc).__name__)
         return
     try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            PROBE_WRITE_FAILURES.append("NotRegularFile")
+            return
         while data:
             data = data[os.write(descriptor, data) :]
-    except OSError:
-        pass
+    except OSError as exc:
+        PROBE_WRITE_FAILURES.append(type(exc).__name__)
     finally:
         os.close(descriptor)
+
+
+PROBE_WRITE_FAILURES: list[str] = []
+"""The exception class of every text-probe write that failed in this process (`write_text_probe`), for the end line."""
+
+
+def _probe_failure():
+    """The end line's `probe_failed` field: the last failed text-probe write's class, or nothing."""
+    return {"probe_failed": PROBE_WRITE_FAILURES[-1]} if PROBE_WRITE_FAILURES else {}
 
 
 def wrap_text_probe(owner, name, theme, read):
@@ -3043,7 +3061,7 @@ def main_exec(command):
         code = 127
     finally:
         try:
-            _report("end", **_child_usage(), exec_deny=state)
+            _report("end", **_child_usage(), exec_deny=state, **_probe_failure())
         except Exception:
             pass  # a closed stdout must not hide the command's own exit code
     # A command that never started ran nothing unfiltered: it keeps its 127.
@@ -3493,7 +3511,7 @@ def main(argv):
         return EXEC_DENY_EXIT
     finally:
         try:
-            _report("end", **_usage(), exec_deny=guard.exec_deny)
+            _report("end", **_usage(), exec_deny=guard.exec_deny, **_probe_failure())
         except Exception:
             pass  # a closed stdout must not hide the plot's own exception
     return 0
