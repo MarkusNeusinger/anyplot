@@ -236,6 +236,7 @@ function AgentLaneLine() {
       component={RouterLink}
       to={paths.publicAgentChat('scatter-basic', 'matplotlib', 'python', 'landing')}
       sx={{
+        animation: 'rise 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s backwards',
         display: 'inline-block',
         mt: 3,
         fontFamily: typography.mono,

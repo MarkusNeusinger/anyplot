@@ -10,6 +10,8 @@
  *   open http://localhost:3000/scatter-basic/python/matplotlib   (the .adapt() button)
  *   open http://localhost:3000/debug/agent?spec=scatter-basic&library=matplotlib&language=python
  *   open http://localhost:3000/debug/agent?spec=line-multi&library=matplotlib&language=python
+ *   open http://localhost:3000/agent?spec=scatter-basic&library=matplotlib&language=python
+ *     (the public lane, `/agent/*`; MOCK_PUBLIC_LANE=closed keeps its door shut)
  *
  * It follows the documented contract (docs/reference/api.md, "Agent chat"):
  * the CSRF header on every POST, PUT and DELETE, `{detail, ref}` errors with
@@ -192,6 +194,8 @@ const QUEUE_START = Number(process.env.MOCK_QUEUE ?? 2);
 const STOP_MS = Number(process.env.MOCK_STOP_MS ?? 2000);
 const PARSE_MS = Number(process.env.MOCK_PARSE_MS ?? 400);
 const NO_COPY = process.env.MOCK_NO_COPY === '1';
+/** The public lane's door (`GET /agent/lane`): open unless `MOCK_PUBLIC_LANE=closed`. */
+const PUBLIC_LANE_OPEN = process.env.MOCK_PUBLIC_LANE !== 'closed';
 const BASE = `http://localhost:${PORT}`;
 
 /**
@@ -982,7 +986,7 @@ function cors(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, Accept, X-Anyplot-Client, X-Admin-Token'
+    'Content-Type, Accept, X-Anyplot-Client, X-Admin-Token, X-Anyplot-Anon, X-Anyplot-Session'
   );
   res.setHeader('Access-Control-Expose-Headers', 'X-Request-Id');
 }
@@ -1971,7 +1975,29 @@ async function route(req, res) {
       Object.fromEntries([...sessions].map(([sid, session]) => [sid, session.feedback]))
     );
 
-  if (!path.startsWith('/debug/agent')) return fail(res, 404, 'not_found');
+  // The public lane (`/agent/*`, api/routers/agent_public.py): the door, then the admin lane's
+  // routes with the session id in `X-Anyplot-Session` instead of the path and the tab id in
+  // `X-Anyplot-Anon`; the admin-only routes do not exist there.
+  let sub = null;
+  if (path === '/agent/lane' || path.startsWith('/agent/')) {
+    if (!PUBLIC_LANE_OPEN) return fail(res, 404, 'agent chat is not enabled');
+    if (path === '/agent/lane' && method === 'GET') {
+      res.setHeader('Cache-Control', 'public, max-age=60');
+      return json(res, 200, { open: true });
+    }
+    if (!/^[A-Za-z0-9_-]{22,64}$/.test(String(req.headers['x-anyplot-anon'] || '')))
+      return fail(res, 400, 'anon_required');
+    const rest = path.slice('/agent'.length);
+    if (rest === '/session' || rest.startsWith('/session/')) {
+      const sid = String(req.headers['x-anyplot-session'] || '');
+      if (!/^[A-Za-z0-9_-]{1,128}$/.test(sid)) return fail(res, 422, 'invalid');
+      sub = `/sessions/${sid}${rest.slice('/session'.length)}`;
+    } else {
+      sub = rest;
+    }
+    if (sub === '/budget' || sub.startsWith('/cases') || sub.endsWith('/dataset/copy'))
+      return fail(res, 404, 'not_found');
+  } else if (!path.startsWith('/debug/agent')) return fail(res, 404, 'not_found');
 
   // The BFF's CSRF guard.
   if (method !== 'GET' && req.headers['x-anyplot-client'] !== 'agent-chat/1')
@@ -1981,7 +2007,7 @@ async function route(req, res) {
     return fail(res, 403, 'json_required');
 
   const ref = randomUUID();
-  const sub = path.slice('/debug/agent'.length);
+  sub ??= path.slice('/debug/agent'.length);
   let body = null;
   try {
     body = method === 'GET' ? null : await readBody(req);
