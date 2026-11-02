@@ -15,4 +15,6 @@
   the feedback form covers what went wrong. The data card's
   header is `# your data ⓘ`, its how-to behind the button, and the long hint
   and the how-to paragraph under the card gave way to short placeholders.
-  (#12540)
+  The chat column grows with the window up to 1360 px, so the data card,
+  the plot images and the code use a wide screen, while the chat text keeps
+  a readable line of about 80 characters. (#12540)
