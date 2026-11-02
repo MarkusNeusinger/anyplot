@@ -9,7 +9,7 @@
  * `{"detail": "<code>", "ref": "<request id>"}` and become `AgentApiError`.
  */
 
-import { API_URL, DEBUG_API_URL } from 'src/constants';
+import { API_URL, DEBUG_API_URL, LIBRARIES } from 'src/constants';
 import { fetchWithAuth } from 'src/lib/api';
 import type { SseEvent } from 'src/lib/sse';
 import { clearAccessReloadGuard } from 'src/utils/adminAuth';
@@ -432,6 +432,12 @@ export interface DatasetCopied extends DatasetParsed {
   missing_roles: string[];
   /** The page session's data version the copy was taken from. */
   copied_from: number;
+  /**
+   * What the copy took over of the page session's tuned plot (its plot memory and a carry for this library,
+   * since 2026-11-02): with `offer`, the fan-out plots with `carry_plot` instead of `create_plot`. Absent from an
+   * older server.
+   */
+  carry?: SwitchCarry | null;
 }
 
 /** The tables of one paste the page may choose from (the service's `MAX_TABLES`). */
@@ -1040,12 +1046,16 @@ export const agentApi = {
     token: string,
     sid: string,
     specId: string,
-    library: string
+    library: string,
+    source: SwitchSource = 'menu'
   ): Promise<LibrarySwitched> => {
+    // The menu, the default, is left out: a BFF from before the field refuses unknown body keys.
+    const body =
+      source === 'menu' ? { spec_id: specId, library } : { spec_id: specId, library, source };
     const answer = await agentJson<SessionOpened & Record<string, unknown>>(
       `${sessionPath(sid)}/library`,
       token,
-      post({ spec_id: specId, library })
+      post(body)
     );
     return {
       session_id: answer.session_id,
@@ -1416,7 +1426,30 @@ export type AgentEvent =
        * server), which leaves the page's card as it is.
        */
       suggestion?: LongSuggestion | null;
+      /**
+       * The library switch the user asked for in the chat (the assistant's
+       * `switch_plot`, since 2026-11-02), which the page carries out with the
+       * switch route and, with `plot`, the carry run; `null` without one.
+       */
+      switch: ChatSwitch | null;
     };
+
+/** Where a switch came from, for the server's telemetry only: the library menu, or the chat (`done.switch`). */
+export type SwitchSource = 'menu' | 'chat';
+
+/** A library switch asked for in the chat (`done.switch`): the library, and whether to plot there at once. */
+export interface ChatSwitch {
+  library: string;
+  plot: boolean;
+}
+
+/** `done.switch` as the page can carry it out: a supported library id, else `null`. */
+export function chatSwitch(value: unknown): ChatSwitch | null {
+  if (!value || typeof value !== 'object') return null;
+  const { library, plot } = value as Record<string, unknown>;
+  if (typeof library !== 'string' || !LIBRARIES.includes(library)) return null;
+  return { library, plot: plot !== false };
+}
 
 const isInt = (value: unknown): value is number =>
   typeof value === 'number' && Number.isInteger(value) && value >= 0;
@@ -1743,6 +1776,7 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
         dataset: datasetChanged(d.dataset),
         language: plotLanguage(d.language),
         ...('suggestion' in d ? { suggestion: longSuggestion(d.suggestion) } : {}),
+        switch: chatSwitch(d.switch),
       };
     default:
       return null;

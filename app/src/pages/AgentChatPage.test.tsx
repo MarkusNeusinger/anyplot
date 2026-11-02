@@ -1888,7 +1888,13 @@ describe('AgentChatPage library switch and plot memory', () => {
    * answers each switch; `memory` lists the entries, which a DELETE removes; `holdNextTurn` keeps
    * the next turn's stream until `releaseTurn`.
    */
-  function switchRoutes(state: { carry: unknown; memory: MemoryEntry[]; libraryStatus?: number }) {
+  function switchRoutes(state: {
+    carry: unknown;
+    memory: MemoryEntry[];
+    libraryStatus?: number;
+    /** `done.switch` of a typed turn: the switch the assistant's `switch_plot` asked for. */
+    chatSwitch?: { library: string; plot: boolean };
+  }) {
     const base = fetchMock.getMockImplementation() as (
       input: string,
       init?: RequestInit
@@ -1920,6 +1926,13 @@ describe('AgentChatPage library switch and plot memory', () => {
       if (path.endsWith('/sessions/S1/messages') && method === 'POST') {
         const body = JSON.parse(String(init.body)) as { action?: string; text?: string };
         if (body.action === 'summarize_data') return base(input, init);
+        if (body.text && state.chatSwitch) {
+          // The assistant asked for the switch and ran no plot: the page carries it out.
+          return sse([
+            ['message', { text: 'The plot comes in seaborn with your decisions.' }],
+            ['done', { llm_calls: 2, data_confirmed: true, switch: state.chatSwitch }],
+          ]);
+        }
         version += 1;
         const response = sse([
           ['plot', { ...PLOT, version }],
@@ -1984,6 +1997,55 @@ describe('AgentChatPage library switch and plot memory', () => {
     expect(screen.queryByTestId('carry-plot')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();
     expect(screen.getByRole('button', { name: '.send()' })).toBeInTheDocument();
+  });
+
+  it('carries out a switch asked for in the chat and plots there without a second click', async () => {
+    switchRoutes({
+      carry: OFFER,
+      memory: [LINE, LABEL],
+      chatSwitch: { library: 'seaborn', plot: true },
+    });
+    await plotInMatplotlib();
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Message' }), {
+      target: { value: 'mach den Plot bitte in seaborn' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '.send()' }));
+
+    expect(await screen.findByText('Plot 2.')).toBeInTheDocument();
+    await turnEnded();
+    const switches = fetchMock.mock.calls.filter(([input]) =>
+      String(input).endsWith('/sessions/S1/library')
+    );
+    expect(switches).toHaveLength(1);
+    expect(JSON.parse(String((switches[0][1] as RequestInit).body))).toEqual({
+      spec_id: 'scatter-basic',
+      library: 'seaborn',
+      source: 'chat',
+    });
+    expect(lastTurn()).toEqual({ action: 'carry_plot' });
+    expect(screen.getByRole('button', { name: /^Library: seaborn/ })).toBeInTheDocument();
+  });
+
+  it('shows a switch the server refused in the thread, and plots nothing', async () => {
+    switchRoutes({
+      carry: OFFER,
+      memory: [],
+      libraryStatus: 422,
+      chatSwitch: { library: 'seaborn', plot: true },
+    });
+    await plotInMatplotlib();
+    const turns = turnBodies().length;
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Message' }), {
+      target: { value: 'make it in seaborn' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '.send()' }));
+
+    const thread = screen.getByRole('log', { name: 'Conversation' });
+    expect(await within(thread).findByText(/r-sw/)).toBeInTheDocument();
+    await turnEnded();
+    expect(turnBodies()).toHaveLength(turns + 1); // the typed turn alone: no carry run
   });
 
   it('sends .create_plot() beside the offer as the fresh plot, which ends the offer too', async () => {

@@ -830,6 +830,35 @@ describe('useAgentSession: copying the confirmed data (the admin fan-out)', () =
     expect(failure).toEqual({ code: 'bindings_incomplete', ref: null });
     expect(third.result.current.state.missingRoles).toEqual(['y']);
   });
+
+  it.each([
+    [
+      { decisions: 2, newer: 2, target_has_plot: false, from_plot: true, offer: true },
+      'carry_plot',
+    ],
+    [
+      { decisions: 0, newer: 0, target_has_plot: false, from_plot: false, offer: false },
+      'create_plot',
+    ],
+    [undefined, 'create_plot'],
+  ])(
+    "plots with the page session's tuning when the copy carried it (%o)",
+    async (carry, action) => {
+      const routes = baseRoutes();
+      routes['POST /sessions/S1/dataset/copy'] = () => json(200, { ...COPIED, carry });
+      routes['POST /sessions/S1/messages'] = () =>
+        sse([['done', { llm_calls: 1, data_confirmed: true }]]);
+      const { result } = await openSession(routes);
+      await act(async () => {
+        await result.current.copyData('PAGE');
+      });
+
+      await act(() => result.current.plotTurn());
+
+      const turn = calls.find(call => call.path === '/sessions/S1/messages');
+      expect(turn?.body).toEqual({ action });
+    }
+  );
 });
 
 describe('useAgentSession: replaying an upload (a server without the copy)', () => {

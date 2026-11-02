@@ -180,8 +180,11 @@ _EVENT_FIELDS: dict[str, frozenset[str]] = {
     # `dataset` carries the new data version after a turn in which the root's `prepare_data` or
     # `generate_data` changed the data (version 1 when `generate_data` made the session's first data);
     # `language` carries the session language `{language, source}` after every run, so the page syncs its chip;
-    # `suggestion` the `.to_long()` offer in that language (or null) on a session with data, so its card follows.
-    "done": frozenset({"llm_calls", "tokens", "bindings", "data_confirmed", "dataset", "language", "suggestion"}),
+    # `suggestion` the `.to_long()` offer in that language (or null) on a session with data, so its card follows;
+    # `switch` (`{library, plot}`) the library switch the user asked for in the chat, which the page carries out.
+    "done": frozenset(
+        {"llm_calls", "tokens", "bindings", "data_confirmed", "dataset", "language", "suggestion", "switch"}
+    ),
 }
 _ERROR_CODES = frozenset({"capacity", "run_limit", "deadline", "guard_unavailable", "upstream", "internal"})
 _MAX_BINDING_ERRORS = 20

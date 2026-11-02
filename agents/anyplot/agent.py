@@ -154,6 +154,10 @@ async def session_context(context: ReadonlyContext) -> str:
         f"- Plot: spec {view.spec_id}, library {view.library}",
         LANGUAGE_SOURCE_LINES[view.language_source],
     ]
+    others = [library for library in get_settings().libraries if library != view.library]
+    if others:
+        # The server's own library ids: what `switch_plot` takes when the user asks for the plot in another one.
+        lines.append(f"- Libraries to switch to (switch_plot): {', '.join(others)}")
     dataset = services.datasets.get(view.dataset_id, session_id) if view.dataset_id else None
     if dataset is None:
         lines.append(

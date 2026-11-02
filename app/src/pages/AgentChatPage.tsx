@@ -582,6 +582,28 @@ function AgentChat({
     [plotAll, state.library, session, onLibraryChange]
   );
 
+  // A switch the user asked for in the chat ("make it in seaborn", `done.switch`): once the turn
+  // is over the page switches as the menu does, and with `plot` makes the plot there at once
+  // with the user's decisions (`carry_plot`), without a second click (owner decision of
+  // 2026-11-02). The intent is noted before the switch, so the render that brings the new
+  // library finds it; the carry runs only on confirmed data, else the composer offers it.
+  const carryNext = useRef<string | null>(null);
+  useEffect(() => {
+    const request = state.chatSwitch;
+    if (!request || running || busy) return;
+    if (request.plot) carryNext.current = request.library;
+    void session.followChatSwitch().then(switched => {
+      if (switched) onLibraryChange(switched.library);
+      else if (carryNext.current === request.library) carryNext.current = null;
+    });
+  }, [state.chatSwitch, running, busy, session, onLibraryChange]);
+  useEffect(() => {
+    if (carryNext.current === null || state.library !== carryNext.current || running || busy)
+      return;
+    carryNext.current = null;
+    if (canCreate) void session.carryPlot();
+  }, [state.library, running, busy, canCreate, session]);
+
   /**
    * `.plot_all()`, the composer's action while `all` is pressed: the confirmed
    * data with its bindings, in every library of the header at once; the server

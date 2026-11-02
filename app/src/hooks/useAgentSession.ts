@@ -179,6 +179,7 @@ import {
   type AgentEvent,
   type ArtifactName,
   type Binding,
+  type ChatSwitch,
   codeArtifact,
   type CodeArtifact,
   type ConvertAnswer,
@@ -210,6 +211,7 @@ import {
   type Round,
   sizeBucket,
   type SwitchCarry,
+  type SwitchSource,
   type Theme,
   type TurnAction,
   type TurnBody,
@@ -480,6 +482,13 @@ export interface AgentSessionState {
   memory: PlotMemory | null;
   /** A removal from the plot memory is in flight. */
   memoryBusy: boolean;
+  /**
+   * A library switch the user asked for in the chat (`done.switch`, the
+   * assistant's `switch_plot`), which the page carries out once the turn is
+   * over: the switch route, then with `plot` the carry run, without a second
+   * click (`takeChatSwitch`).
+   */
+  chatSwitch: ChatSwitch | null;
   /** A theme toggle render is in flight. */
   themeBusy: boolean;
   /**
@@ -552,6 +561,8 @@ type Action =
   /** The plot memory as the server listed it, or as a removal left it. */
   | { type: 'memory_sync'; memory: PlotMemory }
   | { type: 'memory_busy'; busy: boolean }
+  /** A turn's `done` asked for a switch (`chatSwitch`), or the page took it (`null`). */
+  | { type: 'chat_switch'; request: ChatSwitch | null }
   | { type: 'theme_busy'; busy: boolean }
   | { type: 'page_busy'; busy: boolean }
   | { type: 'language_start' }
@@ -615,6 +626,7 @@ export function initialAgentState(library: string): AgentSessionState {
     carryOffer: null,
     memory: null,
     memoryBusy: false,
+    chatSwitch: null,
     themeBusy: false,
     pageBusy: false,
     // The server's default too, whatever the browser's locale: no answer needed to start.
@@ -1068,6 +1080,8 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
       };
     case 'memory_busy':
       return { ...state, memoryBusy: action.busy };
+    case 'chat_switch':
+      return { ...state, chatSwitch: action.request };
     case 'theme_busy':
       return { ...state, themeBusy: action.busy };
     case 'page_busy':
@@ -1257,6 +1271,8 @@ export function useAgentSession({
   const themeRef = useRef(false);
   const pageRef = useRef(false);
   const parseRef = useRef(false);
+  // The fan-out's copy took the page session's tuning over: its plot is the carry run (`plotTurn`).
+  const copyCarryRef = useRef(false);
   const confirmRef = useRef(false);
   const undoRef = useRef(false);
   // The parse's own binding call ends right before its summary turn starts,
@@ -1530,6 +1546,9 @@ export function useAgentSession({
       safeDispatch({ type: 'parse_start' });
       try {
         const dataset = await agentApi.copyDataset(token, sid, fromSession);
+        // The page session's tuning came along (its plot memory, a carry for this library): the
+        // fan-out's plot takes it over (`plotTurn`), as the carry run after a switch does.
+        copyCarryRef.current = dataset.carry?.offer === true;
         safeDispatch({ type: 'data_copied', dataset });
         const copiedLanguage = readPlotLanguage(dataset.language);
         if (copiedLanguage) safeDispatch({ type: 'language_sync', plotLanguage: copiedLanguage });
@@ -1950,6 +1969,8 @@ export function useAgentSession({
               suggestion: event.suggestion,
             });
           }
+          // The user asked for the plot in another library: the page switches once the turn is over.
+          if (event.switch) safeDispatch({ type: 'chat_switch', request: event.switch });
           break;
         default:
           break;
@@ -2032,10 +2053,14 @@ export function useAgentSession({
    */
   const carryPlot = useCallback(() => runTurn({ action: 'carry_plot' }), [runTurn]);
 
-  /** `createPlot`, resolving to the code of the error that ended the turn, or null. The fan-out tells a turn the
-   * user's cap refused (`run_limit`) from a turn that ran (`FanOut`). */
+  // The request `followChatSwitch` took last: an effect run twice before the state drops it switches once.
+  const chatSwitchTaken = useRef<ChatSwitch | null>(null);
+
+  /** `createPlot`, or `carryPlot` when the copy took the page session's tuning over (`copyData`), resolving to the
+   * code of the error that ended the turn, or null. The fan-out tells a turn the user's cap refused (`run_limit`)
+   * from a turn that ran (`FanOut`). */
   const plotTurn = useCallback(async (): Promise<string | null> => {
-    await runTurn({ action: 'create_plot' });
+    await runTurn({ action: copyCarryRef.current ? 'carry_plot' : 'create_plot' });
     return turnErrorRef.current;
   }, [runTurn]);
 
@@ -2216,13 +2241,13 @@ export function useAgentSession({
    * shows the sign-in notice.
    */
   const switchLibrary = useCallback(
-    async (next: string): Promise<boolean> => {
+    async (next: string, source: SwitchSource = 'menu'): Promise<boolean> => {
       const current = stateRef.current;
       const sid = current.sessionId;
       if (!sid || current.run || busy() || next === current.library) return false;
       safeDispatch({ type: 'library_start' });
       try {
-        const result = await agentApi.switchLibrary(token, sid, specId, next);
+        const result = await agentApi.switchLibrary(token, sid, specId, next, source);
         safeDispatch({
           type: 'library_done',
           library: next,
@@ -2241,6 +2266,31 @@ export function useAgentSession({
     },
     [token, specId, safeDispatch, handleFailure, busy, refreshMemory]
   );
+
+  /**
+   * Carry out the switch a turn asked for (`chatSwitch`, the assistant's
+   * `switch_plot`), once: the switch route with the source `chat`. Resolves to
+   * the request when the server switched, so the page follows the URL and, with
+   * `plot`, starts the carry run; to `null` when there was none or the server
+   * refused it, whose reason (`not_eligible`, `run_active`) the thread shows,
+   * since no menu was clicked to show it under.
+   */
+  const followChatSwitch = useCallback(async (): Promise<ChatSwitch | null> => {
+    const request = stateRef.current.chatSwitch;
+    if (!request || chatSwitchTaken.current === request) return null;
+    chatSwitchTaken.current = request;
+    safeDispatch({ type: 'chat_switch', request: null });
+    try {
+      return (await switchLibrary(request.library, 'chat')) ? request : null;
+    } catch (err) {
+      const failure =
+        err instanceof AgentApiError
+          ? { code: err.code, ref: err.ref }
+          : { code: 'network', ref: null };
+      addItem({ kind: 'error', code: failure.code, ref: failure.ref });
+      return null;
+    }
+  }, [safeDispatch, switchLibrary, addItem]);
 
   // ---------------------------------------------------------------- save
 
@@ -2411,6 +2461,7 @@ export function useAgentSession({
     undoData,
     createPlot,
     carryPlot,
+    followChatSwitch,
     plotTurn,
     sendMessage,
     stop,
