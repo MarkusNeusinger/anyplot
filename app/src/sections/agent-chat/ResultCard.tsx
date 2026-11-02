@@ -79,7 +79,13 @@ import { InteractivePreview } from 'src/sections/agent-chat/InteractivePreview';
 import { IMAGE_FAILURE } from 'src/sections/agent-chat/messages';
 import { ResultFeedback } from 'src/sections/agent-chat/ResultFeedback';
 import { RoundGrid } from 'src/sections/agent-chat/RoundGrid';
-import { actionButtonSx, bodyTextSx, labelSx, smallText } from 'src/sections/agent-chat/styles';
+import {
+  actionButtonSx,
+  bodyTextSx,
+  labelSx,
+  readableSx,
+  smallText,
+} from 'src/sections/agent-chat/styles';
 import { gridRows, triesText } from 'src/sections/agent-chat/timeline';
 import { colors, fontSize, overlayButtonSx, typography } from 'src/theme';
 
@@ -770,7 +776,7 @@ export function ResultCard({
               {result.changes.length > 0 && (
                 <Box>
                   <Box sx={labelSx}># what changed</Box>
-                  <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5, ...bodyTextSx }}>
+                  <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5, ...bodyTextSx, ...readableSx }}>
                     {result.changes.map((change, index) => (
                       <li key={index}>{change}</li>
                     ))}
@@ -789,7 +795,7 @@ export function ResultCard({
               }}
             >
               <Box sx={labelSx}># notes — still worth a look</Box>
-              <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5, ...bodyTextSx }}>
+              <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5, ...bodyTextSx, ...readableSx }}>
                 {result.residual_defects.map((note, index) => (
                   <li key={index}>{note}</li>
                 ))}

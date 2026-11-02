@@ -126,6 +126,14 @@ export const visuallyHiddenSx = {
   border: 0,
 } as const;
 
+/**
+ * A readable line, at most about 80 characters: the thread's text and a result card's text
+ * lists keep it since the chat column grows up to 1360 px (2026-11-02), while the data card,
+ * the plot cards and the code take the full width.
+ */
+export const CHAT_TEXT_MAX = '80ch';
+export const readableSx = { maxWidth: CHAT_TEXT_MAX } as const;
+
 /** Small mono label above a control or a list. */
 export const labelSx = {
   fontFamily: typography.mono,

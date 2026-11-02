@@ -170,8 +170,13 @@ import { readAdminHint, readAdminToken, setAdminHint } from 'src/utils/adminAuth
 
 const SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
 const OPEN_SOURCES = new Set(['plot_page', 'landing']);
-/** The chat column's width: a thread to read, and a plot that fits the screen with its composer. */
-const COLUMN_MAX_WIDTH = 960;
+/**
+ * The chat column's width: it grows with the window up to this (960 until 2026-11-02; owner:
+ * use the room of a wide screen), so the data card with its grid, the plot cards and the code
+ * take the full width, while the thread's text keeps a readable line (`CHAT_TEXT_MAX` in
+ * `styles.ts`). Below about 1100 px the window, not this cap, sets the width, as before.
+ */
+const COLUMN_MAX_WIDTH = 1360;
 /**
  * What `.start_over()` does, unlike `.send()` beside it (the owner could not tell the two apart),
  * and the quiet `.create_plot()` beside the offer after a switch: the catalogue code again, with the

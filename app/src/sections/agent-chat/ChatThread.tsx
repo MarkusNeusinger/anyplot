@@ -24,7 +24,12 @@ import { ERROR_TEXT, localClock, PLOT_FAILED_TEXT } from 'src/sections/agent-cha
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { type CardOutcome, ResultCard } from 'src/sections/agent-chat/ResultCard';
 import { type PendingReply, pendingReply } from 'src/sections/agent-chat/steps';
-import { bodyTextSx, labelSx } from 'src/sections/agent-chat/styles';
+import {
+  bodyTextSx,
+  CHAT_TEXT_MAX,
+  labelSx,
+  readableSx as textSx,
+} from 'src/sections/agent-chat/styles';
 import { colors, typography } from 'src/theme';
 
 /** The in-progress line's words; the pulsing `…` follows them. */
@@ -47,10 +52,15 @@ interface ChatThreadProps {
   onSendFeedback?: (version: number, input: FeedbackInput) => Promise<void>;
 }
 
+/**
+ * The user's turns, on the right; like every text item of the thread (`textSx`), no wider than
+ * a readable line since the column grows up to 1360 px (2026-11-02). The result cards take the
+ * full width.
+ */
 const promptSx = {
   ...bodyTextSx,
   alignSelf: 'flex-end',
-  maxWidth: { xs: '100%', sm: '85%' },
+  maxWidth: { xs: '100%', sm: `min(85%, ${CHAT_TEXT_MAX})` },
   bgcolor: 'var(--bg-elevated)',
   border: '1px solid var(--rule)',
   borderRadius: 2,
@@ -95,11 +105,16 @@ function Item({
       );
     case 'assistant':
       return (
-        <Box sx={{ ...bodyTextSx, borderLeft: '2px solid var(--rule)', pl: 1.5 }}>{item.text}</Box>
+        <Box sx={{ ...bodyTextSx, ...textSx, borderLeft: '2px solid var(--rule)', pl: 1.5 }}>
+          {item.text}
+        </Box>
       );
     case 'refusal':
       return (
-        <Box sx={{ borderLeft: `2px solid ${colors.warning}`, pl: 1.5 }} data-testid="refusal">
+        <Box
+          sx={{ ...textSx, borderLeft: `2px solid ${colors.warning}`, pl: 1.5 }}
+          data-testid="refusal"
+        >
           <Box sx={labelSx}>
             refusal · {item.code}
             {/* The service's own text says 00:00 UTC: the page adds the user's own time. */}
@@ -110,7 +125,7 @@ function Item({
       );
     case 'error':
       return (
-        <Box role="alert" sx={{ borderLeft: `2px solid ${colors.error}`, pl: 1.5 }}>
+        <Box role="alert" sx={{ ...textSx, borderLeft: `2px solid ${colors.error}`, pl: 1.5 }}>
           <Box sx={{ ...labelSx, color: colors.error }}>
             error · {item.code}
             {item.ref ? ` · ref ${item.ref}` : ''}
@@ -128,6 +143,7 @@ function Item({
           data-testid="confirm-lost"
           sx={{
             ...labelSx,
+            ...textSx,
             color: 'var(--ink)',
             borderLeft: `3px solid ${colors.warning}`,
             pl: 1.5,
@@ -136,11 +152,11 @@ function Item({
           # {item.text}
         </Box>
       ) : (
-        <Box sx={labelSx}># {item.text}</Box>
+        <Box sx={{ ...labelSx, ...textSx }}># {item.text}</Box>
       );
     case 'plot_failed':
       return (
-        <Box sx={{ borderLeft: `2px solid ${colors.error}`, pl: 1.5 }}>
+        <Box sx={{ ...textSx, borderLeft: `2px solid ${colors.error}`, pl: 1.5 }}>
           <Box sx={{ ...labelSx, color: colors.error }}>
             plot · {item.result.status === 'not_ready' ? 'not ready' : 'failed'}
             {item.result.reason ? ` · ${item.result.reason}` : ''}
@@ -193,6 +209,7 @@ export function ChatThread(props: ChatThreadProps) {
           data-testid="pending-reply"
           sx={{
             ...bodyTextSx,
+            ...textSx,
             color: 'var(--ink-soft)',
             borderLeft: '2px solid var(--rule)',
             pl: 1.5,
