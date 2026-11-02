@@ -78,10 +78,11 @@ PENDING_REQUEST = PREFIX + "pending_request"
 """The `change_request` of a first plot that stopped `not_ready` (`data_unconfirmed` or `incomplete_bindings`) or
 got no queue slot: the user's note for the plot (a title, a label), joined to the next first-plot run's own request
 (`pipeline.run_pipeline`), so a binding change the root made that asked for `.confirm()` again never loses it (live
-test of 2026-10-15). It stays until a run ships a plot. Any later binding write, new data version (a paste,
-`prepare_data`, `generate_data`, `run_data_code`, `.to_long()`, undo) or library switch drops it: it was written
-for the data and bindings before (owner decision of 2026-10-15). The pipeline reads it defensively: a value that is
-no text is ignored, and text is cut to `MAX_CHANGE_REQUEST_CHARS` (`pipeline.merged_request`)."""
+test of 2026-10-15). It stays until a run ships a plot. Any later binding write or new data version (a paste,
+`prepare_data`, `generate_data`, `run_data_code`, `.to_long()`, undo) drops it: it was written for the data and
+bindings before (owner decision of 2026-10-15). A library switch keeps it, since the data and bindings stay (owner
+decision of 2026-11-02). The pipeline reads it defensively: a value that is no text is ignored, and text is cut to
+`MAX_CHANGE_REQUEST_CHARS` (`pipeline.merged_request`)."""
 PENDING_EXPECTED_TEXTS = PREFIX + "pending_expected_texts"
 """The `expected_texts` that came with `PENDING_REQUEST` (the title or number format the user asked to see), kept
 and dropped with it, so a bare `.create_plot()` checks the render for the same texts; a run that brings a request or
@@ -91,9 +92,17 @@ PENDING_BINDINGS = PREFIX + "pending_bindings"
 """The bindings as they were when the note was kept (`pipeline.hold_request`): a binding write that keeps every one
 of them and only fills roles open then (the step `incomplete_bindings` waits for) keeps the note (`apply_bindings`,
 review of 2026-10-15)."""
-PENDING_CLEARED: dict[str, Any] = {PENDING_REQUEST: None, PENDING_EXPECTED_TEXTS: None, PENDING_BINDINGS: None}
-"""The state delta that drops a kept first-plot note and its texts: every binding write, new data version and
-library switch carries it."""
+PENDING_REMEMBER = PREFIX + "pending_remember"
+"""The plot memory decisions that came with `PENDING_REQUEST` (`KeepRequestArgs.remember`), kept and dropped with it;
+the first-plot run that takes the note stores them in the memory once it ships (`pipeline.take_pending_request`)."""
+PENDING_CLEARED: dict[str, Any] = {
+    PENDING_REQUEST: None,
+    PENDING_EXPECTED_TEXTS: None,
+    PENDING_BINDINGS: None,
+    PENDING_REMEMBER: None,
+}
+"""The state delta that drops a kept first-plot note and its texts: every binding write and new data version
+carries it (a library switch no longer does, 2026-11-02)."""
 LAST_STATUS = PREFIX + "last_status"
 VERSIONS = PREFIX + "versions"
 
@@ -160,6 +169,12 @@ class SessionView:
     def data_confirmed(self) -> bool:
         """Whether the user confirmed the current dataset with its current bindings (step 1 of two)."""
         return bool(self.dataset_id) and self.confirmed == confirmation_fingerprint(self.dataset_id, self.bindings)
+
+    @property
+    def target(self) -> tuple[str, str]:
+        """The (spec, library) pair the session adapts now: what a switch changes, and what a version is filed under
+        (`CodeVersion.target`)."""
+        return (self.spec_id, self.library)
 
 
 def confirmation_fingerprint(dataset_id: str | None, bindings: list[Binding]) -> str:
@@ -245,7 +260,10 @@ def initial_state(
 
     The session language is not part of it: ADK applies a delta key by key, so a library
     switch keeps `LANGUAGE`, `LANGUAGE_SOURCE` and `PLOT_LANGUAGE`, and a new session reads
-    them as `en`, `default` and no choice for the plot (`read_session`).
+    them as `en`, `default` and no choice for the plot (`read_session`). Nor is a kept
+    first-plot note (`PENDING_REQUEST`, its texts and bindings): a switch keeps the data and
+    the bindings it was written for, so the note waits for the first plot in the new library
+    (owner decision of 2026-11-02). The plot memory (`memory.MEMORY`) stays the same way.
     """
     return {
         SPEC_ID: spec_id,
@@ -255,7 +273,6 @@ def initial_state(
         NORMALISED: normalised,
         HINTS: list(readiness.get("hints", [])),
         READINESS: readiness,
-        **PENDING_CLEARED,  # a note kept for another library's first plot does not carry over
     }
 
 

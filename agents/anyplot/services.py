@@ -70,6 +70,9 @@ class CodeVersion:
     feedback: list[str] = field(default_factory=list)
     library: str = ""
     """The library the version was adapted for; a session can switch library."""
+    spec_id: str = ""
+    """The spec the version was adapted for: with `library` the version's target (`target`), which a switch changes
+    (owner decision of 2026-11-02: the switch names a spec and a library, the spec a later plot-type switch changes)."""
     theme: Theme = "light"
     """The theme the run rendered and the reviewer saw."""
     theme_asked: bool = False
@@ -88,6 +91,17 @@ class CodeVersion:
     data_json: str | None = None
     """The version's table as typed JSON for a JavaScript plot (`RenderJob.data_json`), so the theme toggle renders the
     other theme from the same job; None for every other language, whose code reads `data_csv`."""
+    expected_texts: list[str] = field(default_factory=list)
+    """The texts and number formats the version's run checked the render for (`PipelineArgs.expected_texts`, or the
+    ones a switch carried, `switch.Carry`): a switch whose memory is empty carries them to the next target."""
+    turn: int = 0
+    """The session's user turn the version shipped in: a memory entry written in a later turn is not in it yet
+    (`memory.newer_than`)."""
+
+    @property
+    def target(self) -> tuple[str, str]:
+        """The (spec, library) pair the version was adapted for."""
+        return (self.spec_id, self.library)
 
     def artifacts(self) -> list[ArtifactName]:
         """The version's artifacts: the PNG of every rendered theme, the code under its language's name, `data.csv`."""
@@ -146,10 +160,13 @@ class VersionStore:
     def all(self, session_id: str) -> list[CodeVersion]:
         return list(self._versions.get(session_id, []))
 
-    def get(self, session_id: str, number: int | None = None, *, library: str | None = None) -> CodeVersion | None:
-        """Version `number`, or the latest one when `number` is None or 0; `library` limits both to that library."""
+    def get(
+        self, session_id: str, number: int | None = None, *, target: tuple[str, str] | None = None
+    ) -> CodeVersion | None:
+        """Version `number`, or the latest one when `number` is None or 0; `target`, a (spec, library) pair, limits
+        both to the versions of that pair."""
         versions = [
-            version for version in self._versions.get(session_id, []) if library is None or version.library == library
+            version for version in self._versions.get(session_id, []) if target is None or version.target == target
         ]
         if not versions:
             return None
@@ -157,10 +174,11 @@ class VersionStore:
             return versions[-1]
         return next((version for version in versions if version.number == number), None)
 
-    def latest_rendered(self, session_id: str, *, library: str | None = None) -> CodeVersion | None:
-        """The newest version that shipped a render (`ok` or `needs_attention`), of `library` when given."""
+    def latest_rendered(self, session_id: str, *, target: tuple[str, str] | None = None) -> CodeVersion | None:
+        """The newest version that shipped a render (`ok` or `needs_attention`), of the (spec, library) pair `target`
+        when given."""
         for version in reversed(self._versions.get(session_id, [])):
-            if version.render_id is not None and (library is None or version.library == library):
+            if version.render_id is not None and (target is None or version.target == target):
                 return version
         return None
 

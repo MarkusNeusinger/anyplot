@@ -850,7 +850,7 @@ async def test_a_repair_that_drifts_the_theme_twice_renders_with_the_theme_resto
     rendered = backend.jobs[1].source
     assert "s=90," in rendered and THEME_LINE in rendered and PAGE_BG_LINE in rendered
     assert 'PAGE_BG = "#FFFFFF"' not in rendered
-    assert services.versions.latest_rendered(sid, library="matplotlib").working == repaired
+    assert services.versions.latest_rendered(sid, target=("scatter-basic", "matplotlib")).working == repaired
     checks = attribution_lines(caplog, "pipeline_check")
     assert [(line["attempt"], line["outcome"]) for line in checks] == [
         (1, "ok"),
@@ -1795,7 +1795,7 @@ async def test_a_javascript_plot_renders_and_toggles_from_its_typed_table(
     assert first.data_json is not None and toggle.data_json == first.data_json
     assert json.loads(first.data_json)["columns"] == first.data_csv.splitlines()[0].split(",")
     assert "const data = window.ANYPLOT_DATA;" in first.source and "loadUserData" not in first.source
-    assert services.versions.latest_rendered(sid, library="d3").data_json == first.data_json
+    assert services.versions.latest_rendered(sid, target=("scatter-basic", "d3")).data_json == first.data_json
 
     # JS-4b: the page is built on demand from the same run form and table, in the theme asked for (the version's
     # by default), wrapped, and answered as an attachment; nothing of it is stored.

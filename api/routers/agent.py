@@ -104,6 +104,7 @@ MAX_FEEDBACK_CHARS = 500
 """The cap of a feedback message after the strip, the site feedback's own (`api/routers/feedback.py`)."""
 SPEC_ID_PATTERN = r"^[a-z0-9-]{1,100}$"
 SESSION_ID_PATTERN = r"^[A-Za-z0-9_-]{1,128}$"
+MEMORY_ENTRY_ID_PATTERN = r"^m[0-9]{1,6}$"  # agents/anyplot/memory.py ENTRY_ID_PATTERN; copied, the API image lacks it
 
 ARTIFACT_MEDIA_TYPES: dict[str, str] = {
     "plot-light.png": "image/png",
@@ -562,6 +563,9 @@ class SwitchLibraryBody(_StrictBody):
     # state; the agents service checks it against the session's spec.
     spec_id: SpecId
     library: LibraryId
+    # Where the switch came from (the page's library menu, or a switch the user asked for in the chat), for the
+    # agents service's content-free `plot_switch` telemetry line only; a closed set.
+    source: Literal["menu", "chat"] = "menu"
 
 
 class LanguageBody(_StrictBody):
@@ -605,8 +609,9 @@ class Binding(_StrictBody):
 
 class MessageBody(_StrictBody):
     text: Text | None = None
-    # `create_plot` starts step 2; `summarize_data` asks the assistant for the step-1 summary of the data.
-    action: Literal["create_plot", "summarize_data"] | None = None
+    # `create_plot` starts step 2 (the fresh plot, also `.start_over()`); `carry_plot` plots in the library the user
+    # switched to with the decisions made so far; `summarize_data` asks the assistant for the step-1 summary.
+    action: Literal["create_plot", "carry_plot", "summarize_data"] | None = None
 
     @model_validator(mode="after")
     def _exactly_one(self) -> MessageBody:
@@ -1216,10 +1221,43 @@ async def create_session(
 async def switch_library(
     sid: SessionId, body: SwitchLibraryBody, ctx: Ctx, client: Client, db: AsyncSession = Depends(require_db)
 ) -> Any:
-    """Switch the session to another library with a fresh snapshot; dataset and bindings stay."""
+    """Switch the session to another library with a fresh snapshot; the data, the bindings and the plot memory stay.
+
+    The agents service answers `{session_id, eligibility, target, carry}`: `target` the new `{spec_id, library}`,
+    `carry` `{decisions, newer, target_has_plot, from_plot, offer}`, where `offer` says the page should offer the
+    plot in the new library with the user's decisions (the `carry_plot` action). `422 invalid` for another spec than
+    the session's, `422 not_eligible`, `409 run_active` while a turn runs.
+    """
     snapshot = await _snapshot_or_404(db, body.spec_id, body.library, ctx)
-    payload = {"library": body.library, "snapshot": snapshot.model_dump()}
+    payload: dict[str, Any] = {"library": body.library, "snapshot": snapshot.model_dump()}
+    if body.source != "menu":
+        # The default stays out: an agents service deployed before `source` forbids unknown fields (Copilot on #12520).
+        payload["source"] = body.source
     return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/library", json_body=payload)
+
+
+@router.get("/sessions/{sid}/memory")
+async def get_memory(sid: SessionId, ctx: Ctx, client: Client) -> Any:
+    """The plot memory the page lists ("Gemerkt"): `{entries, max_entries, written}`, oldest first, each `{id, kind,
+    target, text, expect, turn}`; the user's own decisions in the session, in memory only, gone with the session.
+    `written`: the memory ever held an entry, so its entries alone (also none) travel with a switch."""
+    return await _call_upstream(client, ctx, "GET", f"/sessions/{sid}/memory")
+
+
+@router.delete("/sessions/{sid}/memory")
+async def forget_all_memory(sid: SessionId, ctx: Ctx, client: Client) -> Any:
+    """Forget every entry of the plot memory (the page's forget-all, a blank start): the memory after it, as the GET
+    answers it. Only the user clears the memory; `409 run_active` while a turn runs."""
+    return await _call_upstream(client, ctx, "DELETE", f"/sessions/{sid}/memory")
+
+
+@router.delete("/sessions/{sid}/memory/{entry_id}")
+async def delete_memory_entry(
+    sid: SessionId, entry_id: Annotated[str, Path(pattern=MEMORY_ENTRY_ID_PATTERN)], ctx: Ctx, client: Client
+) -> Any:
+    """Remove one entry of the plot memory: the memory after it, as the GET answers it. `404 not_found` for an id
+    the memory does not hold, `409 run_active` while a turn runs."""
+    return await _call_upstream(client, ctx, "DELETE", f"/sessions/{sid}/memory/{entry_id}")
 
 
 @router.post("/sessions/{sid}/dataset")

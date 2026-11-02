@@ -7,7 +7,8 @@
   conversions that would fill a required role left open (`data/conversions.py`, their
   lines fenced, since they name the user's columns), whether
   the user pasted notes with the data (a fixed line, never the notes), plot
-  versions and the latest version's theme, so a change keeps it). The root's
+  versions and the latest version's theme, so a change keeps it, and the plot memory's
+  entries with their ids, inside a `<tool_notes>` fence). The root's
   `before_model_callback` (`add_session_context`) appends it to the system
   instruction as a second part after the static policy, never to the user's turn
   (see `add_session_context` for why). Catalogue text such as the
@@ -15,9 +16,10 @@
   it fenced as `<spec_text>` through `get_spec_brief`. The session language may be a
   user-chosen name, so it stands there inside a `<reply_language>` fence, and the plot
   language, where it differs, inside a `<plot_language>` fence. Its tools are
-  the ten session tools (`prepare_data` and `generate_data` among them, the step-1
+  the eleven session tools (`prepare_data` and `generate_data` among them, the step-1
   data operations and the formula source, `query_data`, which answers a question about
-  the data from a copy, and `set_language`) and the `plot_pipeline` NodeTool.
+  the data from a copy, `set_language`, and `forget` for the plot memory)
+  and the `plot_pipeline` NodeTool.
 * The adapters (one per enabled library) and the reviewer run only inside the
   pipeline through `ctx.run_node`, so a walk from the root would miss them;
   `ALL_AGENTS` lists every agent for the registry test.
@@ -45,6 +47,7 @@ from .data.bindings import check_bindings
 from .data.conversions import candidates
 from .dev_fixture import DevFixturePlugin
 from .language import english_name, same_language
+from .memory import MemoryEntry, read_memory
 from .models import make_content_config, make_model
 from .plugins.budget import BudgetPlugin
 from .plugins.reply_language import ReplyLanguagePlugin
@@ -110,6 +113,19 @@ describing other bindings than the real ones twice ("Staatsangehörigkeit for se
 had only "complete" and guessed the rest from the profile. The list itself stands in the tool result,
 not here: a measurement of 2026-10-15 with the list in this block saw the root take it for text the
 user had written (1 of 6 summaries)."""
+
+
+MEMORY_HEADING = (
+    "Plot memory: {count} entries, the user's standing decisions that the page shows and every plot keeps, also "
+    "after a switch (id, kind and target, text; plot_pipeline's remember adds, forget removes by id)"
+)
+"""The session block's line over the plot memory (`memory.py`, 2026-11-02); the entries follow in a data fence."""
+
+
+def memory_line(entry: MemoryEntry) -> str:
+    """One memory entry as the session block lists it: `m3 axis_label/x: x-axis label: 'Zeit (h)'`."""
+    where = f"{entry.kind}/{entry.target}" if entry.target else entry.kind
+    return f"{entry.id} {where}: {entry.text}"
 
 
 async def session_context(context: ReadonlyContext) -> str:
@@ -188,12 +204,17 @@ async def session_context(context: ReadonlyContext) -> str:
             lines.append("- Data: confirmed by the user; the plot can be made")
         else:
             lines.append("- Data: not confirmed yet; the user confirms it in the data panel before any plot")
-    versions = [version for version in services.versions.all(session_id) if version.library == view.library]
+    versions = [version for version in services.versions.all(session_id) if version.target == view.target]
     if versions:
         latest = versions[-1]
         lines.append(f"- Plot versions: {len(versions)}; latest result: {latest.result.status}, theme {latest.theme}")
     else:
         lines.append("- Plot versions: none yet")
+    memory = read_memory(context.state)
+    if memory:
+        # The entries are the root's own words for the user's requests: listed with their ids, inside a data fence.
+        lines.append(f"- {MEMORY_HEADING.format(count=len(memory))}")
+        lines.append(fence("tool_notes", "\n".join(memory_line(entry) for entry in memory)))
     name = english_name(view.language)
     if name is not None and name != "English":
         lines.append(REPLY_LANGUAGE_LINE.format(name=name))

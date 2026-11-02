@@ -65,6 +65,10 @@ MAX_USER_REQUESTS = 8
 """Earlier change requests of a plot's lineage that a change run carries as the user's standing decisions."""
 MAX_USER_REQUESTS_CHARS = 2_400
 """Their characters together: the most recent ones are kept within it (four requests at the 600-character cap)."""
+MAX_DECISIONS = 30
+"""The plot memory's entries (`memory.MAX_ENTRIES`): the standing decisions a run hands the adapter and the reviewer."""
+MAX_DECISION_CHARS = 200
+"""One plot memory entry's text (`memory.MAX_TEXT_CHARS`)."""
 MAX_EDITS = 20
 MAX_FULL_CODE_CHARS = 24 * 1024
 MAX_TITLE_CHARS = 120
@@ -94,6 +98,7 @@ Note = Annotated[str, Field(min_length=1, max_length=MAX_NOTE_CHARS)]
 Line = Annotated[str, Field(min_length=1, max_length=MAX_LINE_CHARS)]
 ChangeNote = Annotated[str, Field(min_length=1, max_length=MAX_CHANGE_CHARS)]
 UserRequest = Annotated[str, Field(min_length=1, max_length=MAX_CHANGE_REQUEST_CHARS)]
+Decision = Annotated[str, Field(min_length=1, max_length=MAX_DECISION_CHARS)]
 DefectText = Annotated[str, Field(min_length=1, max_length=MAX_DEFECT_TEXT_CHARS)]
 MAX_EXPECTED_TEXTS = 5
 MAX_EXPECTED_TEXT_CHARS = 120
@@ -112,6 +117,66 @@ ExpectedText = Annotated[str, Field(min_length=1, max_length=MAX_EXPECTED_TEXT_C
 EXPECTED_TEXTS: TypeAdapter[list[ExpectedText]] = TypeAdapter(list[ExpectedText])
 """Validates `expected_texts` read back from session state the way `PipelineArgs` validates them from the root."""
 EXPECTED_TEXT: TypeAdapter[ExpectedText] = TypeAdapter(ExpectedText)
+
+MemoryKind = Literal[
+    "title",
+    "subtitle",
+    "axis_label",
+    "scale",
+    "limits",
+    "ticks",
+    "color",
+    "marker",
+    "line_style",
+    "reference_line",
+    "annotation",
+    "legend",
+    "theme",
+    "language",
+    "sort",
+    "layout",
+    "other",
+]
+"""What a plot memory entry sets (`memory.py`): a closed set, so the server can tell one that replaces from one that
+adds (`memory.SINGLE_KINDS`), and the telemetry can count them by kind."""
+MemoryTarget = Literal["x", "y", "color", "series", "plot"]
+"""The part of the plot a memory entry is about, where it is about one."""
+MAX_REMEMBER = 5
+"""Plot memory entries one `plot_pipeline` or `keep_plot_request` call may hand over."""
+MEMORY_ENTRY_ID_PATTERN = r"^m[0-9]{1,6}$"
+"""A plot memory entry's id (`memory.ENTRY_ID_PATTERN`)."""
+
+
+def _one_line(text: str) -> str:
+    """A memory text on one line, without control characters, not empty."""
+    if any(unicodedata.category(char) == "Cc" and char not in "\t\n\r" for char in text):
+        raise ValueError("a memory text has no control character")
+    line = _WHITESPACE.sub(" ", text).strip()
+    if not line:
+        raise ValueError("a memory text is not empty")
+    return line
+
+
+MemoryText = Annotated[str, Field(min_length=1, max_length=MAX_DECISION_CHARS), AfterValidator(_one_line)]
+
+
+class RememberItem(BaseModel):
+    """One lasting decision the root hands the plot memory with a run (`PipelineArgs.remember`): stored once the run
+    ships (`pipeline.settle_memory`), never before, so a change that never reached the plot is never remembered."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    kind: MemoryKind
+    text: MemoryText
+    """A short, library-neutral instruction ("horizontal reference line at y = 7", "x-axis label: 'Zeit (h)'")."""
+    target: MemoryTarget | None = None
+    expected_text: ExpectedText | None = None
+    """The text the decision puts in the plot, verbatim as the user wrote it; None for one without (a formula)."""
+    replaces: str | None = Field(default=None, pattern=MEMORY_ENTRY_ID_PATTERN)
+    """The id of the entry this one corrects ("move the reference line to 8"): a reference line, an annotation, a marker
+    or another multi-valued entry is otherwise added beside the one it corrects (Copilot on #12520)."""
+
+
 MAX_DATASET_CONTEXT_CHARS = 1_600
 """The dataset context block (`dataset_context.MAX_CONTEXT_CHARS`, 1,500) with room to spare."""
 MAX_FILE_NAME_CHARS = 80
@@ -327,6 +392,10 @@ class PipelineArgs(_ServerContract):
     expected_texts: list[ExpectedText] = Field(default_factory=list, max_length=MAX_EXPECTED_TEXTS)
     """The texts and number formats the user asked to see in the plot, verbatim (a title they wrote out, a unit,
     a format example such as `6,5 Mio.`): the pipeline checks the render's drawn texts for each (`grounding.py`)."""
+    remember: list[RememberItem] = Field(default_factory=list, max_length=MAX_REMEMBER)
+    """The lasting decisions of this change for the plot memory (`memory.py`, 2026-11-02): the run hands them to the
+    adapter with the memory's entries, and stores them once it ships. The root cannot call a tool after a shipped
+    plot (the Budget plugin strips the tools of that closing call), so they travel with the run."""
 
 
 class KeepRequestArgs(_ServerContract):
@@ -339,11 +408,13 @@ class KeepRequestArgs(_ServerContract):
 
     change_request: str = Field(default="", max_length=MAX_CHANGE_REQUEST_CHARS)
     expected_texts: list[ExpectedText] = Field(default_factory=list, max_length=MAX_EXPECTED_TEXTS)
+    remember: list[RememberItem] = Field(default_factory=list, max_length=MAX_REMEMBER)
+    """The request's lasting decisions, kept with it and stored in the plot memory once the first plot ships."""
 
     @model_validator(mode="after")
     def _something_to_keep(self) -> Self:
-        if not self.change_request.strip() and not self.expected_texts:
-            raise ValueError("a kept request needs a change_request or expected_texts")
+        if not self.change_request.strip() and not self.expected_texts and not self.remember:
+            raise ValueError("a kept request needs a change_request, expected_texts or remember")
         return self
 
 
@@ -380,6 +451,10 @@ class AdaptRequest(_ServerContract):
     change_request: str = Field(default="", max_length=MAX_CHANGE_REQUEST_CHARS)
     user_requests: list[UserRequest] = Field(default_factory=list, max_length=MAX_USER_REQUESTS)
     """The earlier change requests the base version carries out, oldest first: the user's standing decisions."""
+    decisions: list[Decision] = Field(default_factory=list, max_length=MAX_DECISIONS)
+    """The plot memory's entries, oldest first (`memory.py`): the user's standing decisions in library-neutral words,
+    which replace `user_requests` when the memory holds any. The code may not show them yet (a switch to another
+    library or back to an older version), so the adapter carries out each one the code does not show."""
     feedback: list[Line] = Field(default_factory=list, max_length=MAX_FEEDBACK)
     previous_plan: AdaptPlan | None = None
     allow_full: bool = False
@@ -414,6 +489,8 @@ class ReviewRequest(_ServerContract):
     change_request: str = Field(default="", max_length=MAX_CHANGE_REQUEST_CHARS)
     user_requests: list[UserRequest] = Field(default_factory=list, max_length=MAX_USER_REQUESTS)
     """The earlier change requests the plot carries out, oldest first: choices the review never turns into defects."""
+    decisions: list[Decision] = Field(default_factory=list, max_length=MAX_DECISIONS)
+    """The plot memory's entries (`AdaptRequest.decisions`), in place of `user_requests` when the memory holds any."""
     gate_notes: list[Note] = Field(default_factory=list, max_length=MAX_NOTES)
     plot_language: str = Field(default=DEFAULT_LANGUAGE, pattern=LANGUAGE_PATTERN)
     """The session language, against which VQ-06 judges the plot's own text."""
@@ -697,6 +774,10 @@ class PlotResult(_ServerContract):
     `request_kept` is `true` on a `not_ready` result whose own `change_request` or `expected_texts` the
     server keeps for the first plot (`pipeline.keep_pending_request`), so the root says the request is kept
     only when it is (live round 9 of 2026-10-16: the root said so without calling the tool). Root-only too.
+
+    `memory_full` is `true` on a shipped result whose `remember` entries the plot memory had no room for
+    (`memory.MAX_ENTRIES`, `memory.MAX_TOTAL_CHARS`): the plot carries the change, the memory does not keep it,
+    and the root says so. Root-only too.
     """
 
     status: PlotStatus
@@ -709,6 +790,7 @@ class PlotResult(_ServerContract):
     rounds: list[Round] = Field(default_factory=list, max_length=MAX_ATTEMPTS)
     shows: PlotShows | None = None
     request_kept: bool | None = None
+    memory_full: bool | None = None
 
     @model_validator(mode="after")
     def _status_rules(self) -> Self:

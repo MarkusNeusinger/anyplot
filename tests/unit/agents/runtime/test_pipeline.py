@@ -293,31 +293,36 @@ def test_adapt_request_is_fenced() -> None:
     assert text.endswith("allow_full: false")
 
 
-def test_versions_of_another_library_are_not_the_base() -> None:
+def test_versions_of_another_target_are_not_the_base() -> None:
+    """A version is filed under its (spec, library) pair: another library, or another spec of the same library, is
+    not the base of a change (the later plot-type switch keys on the pair too)."""
     store = VersionStore()
     result = PlotResult(status="ok", attempts=1, artifacts=["plot.py"])
-    for library in ("matplotlib", "seaborn"):
+    for spec_id, library in (("scatter-basic", "matplotlib"), ("scatter-basic", "seaborn"), ("bar-basic", "seaborn")):
         store.add(
             "s",
             CodeVersion(
                 number=store.next_number("s"),
-                working=library,
+                working=f"{spec_id}/{library}",
                 run_form="r",
                 export="e",
                 data_csv="a\n1\n",
                 render_id="r1",
                 result=result,
                 library=library,
+                spec_id=spec_id,
             ),
         )
 
-    base = store.latest_rendered("s", library="matplotlib")
-    latest_here = store.get("s", library="matplotlib")
+    base = store.latest_rendered("s", target=("scatter-basic", "matplotlib"))
+    latest_here = store.get("s", target=("scatter-basic", "matplotlib"))
     latest_any = store.get("s")
-    assert base is not None and base.working == "matplotlib"
+    assert base is not None and base.working == "scatter-basic/matplotlib"
     assert latest_here is not None and latest_here.number == 1
-    assert store.get("s", 2, library="matplotlib") is None
-    assert latest_any is not None and latest_any.number == 2
+    assert store.get("s", 2, target=("scatter-basic", "matplotlib")) is None
+    assert latest_any is not None and latest_any.number == 3
+    seaborn = store.latest_rendered("s", target=("scatter-basic", "seaborn"))
+    assert seaborn is not None and seaborn.number == 2  # the bar chart in seaborn is another target
 
 
 def base_version(theme: Theme, *, asked: bool) -> CodeVersion:

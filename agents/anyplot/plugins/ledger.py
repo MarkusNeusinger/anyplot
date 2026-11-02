@@ -198,6 +198,10 @@ class RequestLedger:
     site_theme: Theme | None = None
     """The theme the page showed the site in when the user sent the turn (`/messages?theme=`), which a plot run takes
     when neither the user nor the version it changes asked for one (`pipeline.run_theme`); None without a page."""
+    fresh_start: bool = False
+    """The turn is the page's `create_plot` action (`.create_plot()`, `.start_over()`): its run starts from the
+    catalogue code whatever base the root passes, without a switch's carry, and applies the plot memory, which only the
+    user clears (`pipeline.Run.fresh`, owner decision of 2026-11-02)."""
 
     def book_step(self, agent: str, *, model: str | None, usage: dict[str, int], cached: int) -> None:
         """Add one model call to the agent's step usage (`usage` as `usage_breakdown` counts it)."""

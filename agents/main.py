@@ -12,7 +12,10 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/budget` | | `{date, since, started_at, resets_at, paused, model, tokens, budget_tokens, usd, budget_usd, users, users_at_limit, limits}`: the admin's live view of the day from the usage book (`UsageBook.snapshot`), counts only, never a user id: the service's weighted tokens against `AGENT_GLOBAL_DAILY_TOKEN_BUDGET`, both in USD at the main model's list price (`ledger.weighted_usd`, null for a model without one), the users seen today, how many are at one or more of their own day caps, and how many at each (`limits`: `tokens`, `runs`, `data_runs`, `messages`, `pastes`, `conversions`, `locked_out`; an admin counts only at `pastes`, `conversions` and `locked_out`, the caps that bind every tier). In memory: `since` is when today's counts began, the instance's start or 00:00 UTC | |
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
 | `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot, source?}` (`source`: `fanout` for a session the admin's "plot in all libraries" opens; its telemetry lines carry that source) | `{session_id, eligibility}` | `422 not_eligible` |
-| `POST /v1/sessions/{sid}/library` | `{library, snapshot}` | `{session_id, eligibility}` | `422 not_eligible`, `409 run_active` |
+| `POST /v1/sessions/{sid}/library` | `{library, snapshot, source?}` (`source`: `menu`, the default, or `chat`, for the telemetry) | `{session_id, eligibility, target, carry}`: `target` the new `{spec_id, library}`; `carry` `{decisions, newer, target_has_plot, from_plot, offer}` (`switch.SwitchSummary`), with `offer` true when the page should offer the carry run (`carry_plot`): the data, bindings, confirmation, language, kept note, versions and plot memory stay, and the switch's carry (`switch.Carry`) waits for the first run in the new target | `422 not_eligible`, `422 invalid` (another spec), `409 run_active` |
+| `GET /v1/sessions/{sid}/memory` | | `{entries, max_entries, written}`: the plot memory, oldest first, each `{id, kind, target, text, expect, turn}` (`memory.py`); `written` once it ever held an entry, from then on its entries alone travel | |
+| `DELETE /v1/sessions/{sid}/memory` | | the GET's shape with no entries: forget all, a blank start | `409 run_active` |
+| `DELETE /v1/sessions/{sid}/memory/{entry_id}` | | the GET's shape after the removal | `404 not_found`, `409 run_active` |
 | `POST /v1/sessions/{sid}/dataset` | `{text, confirmed?, source?, table?}` (`source`: the name of the file the page read the text from, at most 1,024 characters; screened on its own, never a note; `table`: 1 to 10, which of several tables in the text to read, from the previous answer's `tables`) | `{preview, profile, bindings, warnings, context_lines, roles, suggestion, version, language, file_name?, tables?, table?}` (`file_name`: the dropped file's name as the session keeps it, `(name withheld)` when the screen refused it; `tables`: one label per table, its header names and its row count, when the text held two or more tables each under its own header after a blank line, and `table` the one read, see `data/parse.py` `_one_table`;`suggestion`: the wide-table offer of `data/shape.py` with `siblings`, the columns a role that takes labels should not take (`bindings.label_siblings`), or null; `context_lines`: the notes pasted above or below the table that passed the pre-filter and the scope judge, which the root gets with the next `summarize_data` turn; `language`: the session language as `{language, source}`, which a paste before any typed message or choice sets from the notes' or the column names' language, source `pasted`), stored as version 1 (the undo history of an earlier paste is dropped); or, for free text, `{transcribed, text, preview, profile, warnings, note}`, not stored (`confirmed: true` skips that fallback and keeps every row) | `413 too_long`, `422 unparseable` (both with `cause`, the parser's sentence naming what the data fails on, at most 300 characters), `422 formula` (text of at most 2,000 characters that asks for a formula, which the chat's `generate_data` computes; never transcribed), `422 code` (a program that generates data, which the chat's `run_data_code` runs), `422 data_request` (text of at most 2,000 characters that asks for data instead of holding it, such as "Beispieldaten": found by `data/classify.py` before any model, or by the transcriber's `asks_for_data`; the page sends it to the chat, where the root generates example data), `403 data_refused`, `403 session_closed` (the scope judge closed the session), `409 run_active` (a turn, a theme toggle or another paste in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_PASTES_PER_MINUTE` / `_PER_DAY`, or the user's daily token budget for `daily_limit`), `429 service_paused` (the service's day budget), `429 locked_out` (the day's `attack` strikes), `503 guard_unavailable` |
 | `POST /v1/sessions/{sid}/dataset/convert` | `{data_base64, sheet?}` (a dropped Excel, OpenDocument, Parquet, Feather, Arrow or NumPy file, at most 5 MiB; `sheet` a sheet or `.npz` array the previous answer named) | `{text, format, kind, rows, columns, sheet, sheets, sheet_count, warnings, dropped}`: the file read in the renderer's sandbox (`harness.py --convert`) into the text the paste box takes (CSV, or JSON records for a table with list columns, `format`), every value with the precision it came with, the sheet read and at most 10 visible ones with cells (`sheet_count` all of them), `warnings` counts (`formulas_without_value`, `hidden_sheets`, `dropped_columns`, `list_columns`, `utc_timestamps`, `renamed_columns`), `dropped` the names of the columns left out; nothing stored, no model call | `413 too_long`, `422 invalid`, `422 file_<refusal>` (`wire.CONVERT_REASONS`, with `measured` and `limit` for a broken cap) and `file_timeout`, `file_too_complex` (also a reader that died without its `status.json`), `file_too_large`, `file_unreadable`, `403 session_closed`, `409 run_active` (another conversion in flight in this session), `429 rate_limited` / `429 daily_limit` (`AGENT_USER_CONVERSIONS_PER_MINUTE` / `_PER_DAY`, or the user's daily token budget), `429 service_paused`, `429 locked_out`, `503 capacity` (no render slot within `AGENT_CONVERT_SLOT_WAIT_S`), `503 convert_unavailable` (no renderer, one without `/convert`, or a sandbox without the harness's required exec filter) |
 | `PUT /v1/sessions/{sid}/bindings` | `[{role, column}]` | `{bindings, complete, missing_roles, warnings}`: `warnings` names a role that needs values of 0 or more bound to a column with a negative value, or left open for that reason (`data/signs.py`); never a refusal | `409 run_active`, `422 invalid` (with `errors`, at most 20 lines) |
@@ -22,7 +25,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
 | `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (version 1) plus `confirmed: true`, `complete`, `missing_roles` and `copied_from` (the source's version number): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`; never for an admin), `503 capacity` |
 | `GET /v1/sessions/{sid}/dataset/data.csv` | | the current dataset version's canonical CSV as stored (at most 4 MiB, `parse.MAX_CANONICAL_BYTES`), for the data panel's full view; no model call, no state write | `422 no_dataset` |
-| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, `summarize_data`); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
+| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, the fresh plot; `carry_plot`, the plot with the switch's carry and the plot memory; `summarize_data`); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
@@ -190,6 +193,17 @@ from agents.anyplot.language import (
     pasted_language,
     refusal_lang,
 )
+from agents.anyplot.memory import (
+    ENTRY_ID_PATTERN,
+    MemoryRefused,
+    kind_counts,
+    memory_delta,
+    memory_written,
+    public_entries,
+    read_memory,
+)
+from agents.anyplot.memory import MAX_ENTRIES as MAX_MEMORY_ENTRIES
+from agents.anyplot.memory import forget as forget_entry
 from agents.anyplot.models import JudgeFailure, JudgeUnavailable, model_busy
 from agents.anyplot.opening import (
     INSTRUCTION_LIKE,
@@ -269,6 +283,9 @@ from agents.anyplot.session_state import (
     read_session,
 )
 from agents.anyplot.settings import AgentSettings, get_settings
+from agents.anyplot.switch import CARRY, SourcePlot, Target, carry_for, read_carry
+from agents.anyplot.switch import summary as switch_summary
+from agents.anyplot.telemetry import SwitchSource
 from agents.anyplot.theme_render import RenderGone, render_theme
 from agents.renderer.wire import (
     CONVERT_DAMAGES,
@@ -290,14 +307,20 @@ USER_PATTERN = r"^[A-Za-z0-9_-]{1,64}$"
 SESSION_PATTERN = r"^[A-Za-z0-9_-]{1,128}$"
 SPEC_PATTERN = r"^[a-z0-9-]{1,100}$"
 LOCALE_PATTERN = r"^[A-Za-z]{2,3}([_-][A-Za-z0-9]{1,8}){0,3}$"
-Action = Literal["create_plot", "summarize_data"]
+Action = Literal["create_plot", "carry_plot", "summarize_data"]
 ACTION_MESSAGES: dict[str, str] = {
     "create_plot": "[action] Create the plot from my dataset and bindings.",
+    "carry_plot": "[action] Create the plot from my dataset and bindings, with the decisions I made so far.",
     "summarize_data": "[action] Summarize the dataset for the user.",
 }
 """The fixed user message of each structured action; the scope judge is skipped for them (`ledger.kind`).
 `summarize_data` also carries the notes the user pasted with the data, when the stored dataset kept any
-(`user_notes_block`): the dataset route ran the pre-filter and the scope judge on them at the paste."""
+(`user_notes_block`): the dataset route ran the pre-filter and the scope judge on them at the paste.
+`create_plot` (`.create_plot()`, `.start_over()`) starts from the catalogue code (`RequestLedger.fresh_start`): its
+run takes no switch's carry but applies the plot memory, which only the user clears. `carry_plot` (2026-11-02) is
+the page's "plot in <library> with your
+decisions" after a switch: its run takes the carry and the memory (`switch.py`); the root calls the same bare
+`plot_pipeline` for both."""
 ACTION_LANGUAGE_LINE = "Reply in {name}, the session language."
 """Appended to an action message when the session language is a known one other than English (`english_name`)."""
 ACTION_MESSAGE = ACTION_MESSAGES["create_plot"]
@@ -810,6 +833,9 @@ class CreateSessionBody(_Body):
 class SwitchLibraryBody(_Body):
     library: str
     snapshot: CatalogueSnapshot
+    source: SwitchSource = "menu"
+    """Where the switch came from, for the `plot_switch` telemetry line only: the page's library menu, or the chat
+    (the root's `switch_plot`, which the page carries out with this route)."""
 
 
 class LanguageBody(_Body):
@@ -1039,8 +1065,19 @@ def _active(runtime: Runtime, sid: str, *, paste: bool = True) -> None:
 
 
 @app.post("/v1/sessions/{sid}/library", dependencies=v1_dependencies)
-async def switch_library(sid: SessionId, body: SwitchLibraryBody, user: User, runtime: RuntimeDep) -> JSONResponse:
+async def switch_library(
+    sid: SessionId, body: SwitchLibraryBody, user: User, tier: CallerTier, runtime: RuntimeDep, rid: RequestId
+) -> JSONResponse:
+    """Switch the session's target, the (spec, library) pair, keeping the data, the bindings, their confirmation, the
+    language, the kept first-plot note, the versions and the plot memory (owner decision of 2026-11-02).
+
+    Another spec is `422 invalid` until the plot-type switch; the target is a pair already, so that switch only lifts
+    the refusal. The switch writes the carry (`switch.carry_for`) that the first run in the new target takes, and
+    answers what would carry: `carry` (`switch.SwitchSummary`) with `offer` true when the page should offer the carry
+    run (`carry_plot`). Nothing runs here: from the menu the run waits for the user's click.
+    """
     settings = get_settings()
+    services = get_services()
     session = await runtime.session(user, sid)
     _active(runtime, sid)
     view = read_session(session.state)
@@ -1050,6 +1087,29 @@ async def switch_library(sid: SessionId, body: SwitchLibraryBody, user: User, ru
     result, normalised = _assess(runtime, body.snapshot, library)
     if not result.eligible:
         raise AgentsError(422, "not_eligible")
+    source = Target(spec_id=view.spec_id, library=view.library)
+    target = Target(spec_id=body.snapshot.spec_id, library=library)
+    memory = read_memory(session.state)
+    if target.pair() == source.pair():
+        carry = read_carry(session.state, target.pair())  # the same target again: a carry made for it stays
+    else:
+        latest = services.versions.latest_rendered(sid, target=source.pair())
+        plot = (
+            SourcePlot(
+                theme=latest.theme,
+                theme_asked=latest.theme_asked,
+                expected_texts=list(latest.expected_texts),
+                requests=list(latest.requests),
+            )
+            if latest is not None
+            else None
+        )
+        pending = read_carry(session.state, source.pair())
+        carry = carry_for(source=source, target=target, plot=plot, pending=pending, memory=memory)
+    target_latest = services.versions.latest_rendered(sid, target=target.pair())
+    carried = switch_summary(
+        carry, memory, target_latest.turn if target_latest is not None else None, written=memory_written(session.state)
+    )
     delta = opening_state(
         spec_id=view.spec_id,
         library=library,
@@ -1058,8 +1118,75 @@ async def switch_library(sid: SessionId, body: SwitchLibraryBody, user: User, ru
         normalised=normalised,
         eligibility=result,
     )
+    delta[CARRY] = carry.model_dump(mode="json") if carry is not None else None
     await runtime.write_state(session, delta)
-    return JSONResponse({"session_id": sid, "eligibility": result.public()}, headers=_NO_STORE)
+    ledger = _stamp(
+        RequestLedger(request_id=rid, user_id=user, session_id=sid, kind="action", tier=tier), view, session
+    )
+    ledger.library = library  # the envelope names the target; `from_library` the library before
+    telemetry.write(
+        telemetry.PlotSwitch,
+        ledger,
+        attempt=f"switch:{rid}",
+        switch_source=body.source,
+        from_library=view.library,
+        spec_changed=target.spec_id != source.spec_id,
+        library_changed=target.library != source.library,
+        carried_count=carried.decisions,
+        newer_count=carried.newer,
+        target_has_plot=carried.target_has_plot,
+        offered=carried.offer,
+        memory_kinds=kind_counts(memory),
+    )
+    return JSONResponse(
+        {"session_id": sid, "eligibility": result.public(), "target": target.model_dump(), "carry": carried.body()},
+        headers=_NO_STORE,
+    )
+
+
+def _memory_answer(state: Any, entries: list[Any]) -> JSONResponse:
+    """The memory routes' answer: the entries, the cap, and `written`, whether the session's memory ever held an
+    entry (`memory.memory_written`): then its entries alone travel with a switch, also none, which the page's count
+    follows."""
+    body = {"entries": public_entries(entries), "max_entries": MAX_MEMORY_ENTRIES, "written": memory_written(state)}
+    return JSONResponse(body, headers=_NO_STORE)
+
+
+@app.get("/v1/sessions/{sid}/memory", dependencies=v1_dependencies)
+async def get_memory(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONResponse:
+    """The plot memory as the page lists it ("Gemerkt"): `{entries, max_entries, written}`, oldest first, each
+    `{id, kind, target, text, expect, turn}`. No model call, no state write."""
+    session = await runtime.session(user, sid)
+    return _memory_answer(session.state, read_memory(session.state))
+
+
+@app.delete("/v1/sessions/{sid}/memory", dependencies=v1_dependencies)
+async def forget_all_memory(sid: SessionId, user: User, runtime: RuntimeDep) -> JSONResponse:
+    """Forget every entry of the plot memory (the page's forget-all, a blank start): the answer is the memory after
+    it, as the GET answers it. Only the user clears the memory; no run ever does (owner decision of 2026-11-02). The
+    id counter goes on, so `written` stays true and the raw requests never come back. `409 run_active` while a turn
+    runs."""
+    session = await runtime.session(user, sid)
+    _active(runtime, sid, paste=False)
+    await runtime.write_state(session, memory_delta([]))
+    return _memory_answer(session.state, [])
+
+
+@app.delete("/v1/sessions/{sid}/memory/{entry_id}", dependencies=v1_dependencies)
+async def delete_memory_entry(
+    sid: SessionId, entry_id: Annotated[str, Path(pattern=ENTRY_ID_PATTERN)], user: User, runtime: RuntimeDep
+) -> JSONResponse:
+    """Remove one entry of the plot memory (the page's remove button): the answer is the memory after it, as the GET
+    answers it. The plot is not changed: the next run no longer hands the entry on. `404 not_found` for an id the
+    memory does not hold, `409 run_active` while a turn runs, whose root may be writing the memory."""
+    session = await runtime.session(user, sid)
+    _active(runtime, sid, paste=False)
+    try:
+        entries = forget_entry(read_memory(session.state), entry_id)
+    except MemoryRefused:
+        raise AgentsError(404, "not_found") from None
+    await runtime.write_state(session, memory_delta(entries))
+    return _memory_answer(session.state, entries)
 
 
 @app.post("/v1/sessions/{sid}/dataset", dependencies=v1_dependencies)
@@ -2171,6 +2298,7 @@ async def post_message(
         # session language, never the browser's locale; after the judge, the message's.
         lang=refusal_lang(view.language) if view else DEFAULT_LANGUAGE,
         site_theme=theme,
+        fresh_start=body.action == "create_plot",
     )
     _stamp(ledger, view, session)
     ledger.turn += 1  # this turn's number: the user turns before it, plus one
@@ -2517,6 +2645,9 @@ async def bundle(
                 "run_form": item.run_form,
                 "plot_py": item.export,
                 "code_artifact": item.code_artifact,
+                # A session can switch its target, so each version names the spec and library it was made in.
+                "spec_id": item.spec_id,
+                "library": item.library,
                 "plan": item.plan.model_dump(mode="json") if item.plan else None,
                 "result": item.result.model_dump(mode="json"),
                 "theme": item.theme,

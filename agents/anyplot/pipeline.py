@@ -158,6 +158,8 @@ from .grounding import (
     reviewed_misses,
 )
 from .language import DEFAULT_LANGUAGE, same_language
+from .memory import Planned, decision_lines, memory_delta, memory_written, next_seq, plan, read_memory
+from .memory import expected_texts as memory_expected_texts
 from .models import error_chain, model_busy
 from .plugins.ledger import RequestLedger, attribution, budget_allows, ledger_for
 from .policy import DATA_PREAMBLE, adapter_instruction, fence, prompt_hash
@@ -174,6 +176,7 @@ from .schemas import (
     MAX_LINE_CHARS,
     MAX_NOTE_CHARS,
     MAX_NOTES,
+    MAX_REMEMBER,
     MAX_RESIDUAL_DEFECTS,
     MAX_ROUND_DEFECTS,
     MAX_USER_REQUESTS,
@@ -187,6 +190,7 @@ from .schemas import (
     PipelineArgs,
     PlotResult,
     PlotShows,
+    RememberItem,
     ReviewRequest,
     ReviewState,
     Round,
@@ -202,6 +206,7 @@ from .session_state import (
     BINDINGS,
     PENDING_BINDINGS,
     PENDING_EXPECTED_TEXTS,
+    PENDING_REMEMBER,
     PENDING_REQUEST,
     SessionView,
     plot_language,
@@ -210,6 +215,7 @@ from .session_state import (
 from .settings import AgentSettings, get_settings
 from .sub_agents.adapter import ADAPTERS, adapter_name
 from .sub_agents.reviewer import REVIEWER_MODES, REVIEWER_NAME, use_reviewer_mode
+from .switch import CARRY, Carry, read_carry
 
 
 logger = logging.getLogger(__name__)
@@ -489,7 +495,24 @@ class Run:
     change_request: str = ""
     """The run's own change request, stored with the version among its `requests`."""
     user_requests: list[str] = field(default_factory=list)
-    """The base version's change requests (`standing_requests`): the user's standing decisions."""
+    """The base version's change requests (`standing_requests`), or a carry's (`switch.Carry.requests`): the user's
+    standing decisions while the plot memory is empty, and the lineage the shipped version stores."""
+    decisions: list[str] = field(default_factory=list)
+    """The plot memory's entries (`memory.decision_lines`), with the run's own `remember` items applied: when there are
+    any, the adapter and the reviewer get them as the standing decisions in place of `user_requests`."""
+    memory_written: bool = False
+    """The session's memory was ever written (`memory.memory_written`): from then on the visible memory alone is what
+    stands and travels, and the raw requests never come back, also after the user removed every entry (owner
+    decision of 2026-11-02)."""
+    carry: Carry | None = None
+    """The switch's carry this run takes (`switch.read_carry`): a run in a new target without a version to change."""
+    fresh: bool = False
+    """The page's `create_plot` action (`.create_plot()`, `.start_over()`): the catalogue code again, the way out of
+    broken code, without the switch's carry but with the visible memory (owner decision of 2026-11-02)."""
+    memory_plan: Planned | None = None
+    """The plot memory as the run leaves it once it ships (`plan_memory`): its `decisions` are these entries."""
+    memory_seq: int = 1
+    """The session's id counter before the run: a plan whose counter moved on stores new entries."""
     changes: list[str] = field(default_factory=list)
     """The `changes` notes of every adapter call so far whose plan changed the code, in order (`note_changes`)."""
     expected_texts: list[str] = field(default_factory=list)
@@ -529,6 +552,12 @@ class Run:
 
     def timed(self, stage: str, seconds: float) -> None:
         self.stage_s[stage] = self.stage_s.get(stage, 0.0) + seconds
+
+    @property
+    def raw_requests(self) -> list[str]:
+        """The raw lineage requests the adapter and the reviewer get as the fallback standing decisions: only while
+        the session's memory was never written; after that, what the user removed must not come back through them."""
+        return [] if self.memory_written else self.user_requests
 
 
 ROUND_OUTCOMES: dict[Stage, RoundOutcome] = {
@@ -665,7 +694,7 @@ def keep_pending_request(state: Any, args: PipelineArgs, reason: NotReadyReason 
     Live round 9 of 2026-10-16: a title asked for before `.confirm()` is the same case, and the root
     keeps it only through this path (`root.md`); the result's `request_kept` says that it did.
     """
-    if reason not in PENDING_REASONS or args.base == "previous" or not (args.change_request or args.expected_texts):
+    if reason not in PENDING_REASONS or args.base == "previous" or not has_request(args):
         return False
     hold_request(state, args)
     return True
@@ -677,12 +706,32 @@ def hold_request(state: Any, args: PipelineArgs) -> None:
     Also the path of a run that passed the check but got no slot in the run queue (`capacity`,
     or a cancelled wait): its note waits for the next `.create_plot()` like a blocked one's.
     """
-    if (args.change_request or args.expected_texts) and args.base != "previous":
+    if has_request(args) and args.base != "previous":
         state[PENDING_REQUEST] = merged_request(state.get(PENDING_REQUEST), args.change_request) or None
         state[PENDING_EXPECTED_TEXTS] = chosen_texts(state.get(PENDING_EXPECTED_TEXTS), args) or None
+        remembered = merged_remember(state.get(PENDING_REMEMBER), args.remember)
+        state[PENDING_REMEMBER] = [item.model_dump(mode="json") for item in remembered] or None
         # The bindings the note was written for: a later binding change that only fills roles open then keeps it.
         bindings = state.get(BINDINGS)
         state[PENDING_BINDINGS] = list(bindings) if isinstance(bindings, list) else []
+
+
+def has_request(args: PipelineArgs) -> bool:
+    """Whether a first plot's arguments carry anything a kept note holds: a request, texts or memory decisions."""
+    return bool(args.change_request or args.expected_texts or args.remember)
+
+
+def merged_remember(pending: object, own: Sequence[RememberItem]) -> list[RememberItem]:
+    """A kept note's memory decisions (`PENDING_REMEMBER`, validated item by item) and a run's own, each once, the own
+    ones last and kept first when they do not all fit `MAX_REMEMBER`."""
+    kept: list[RememberItem] = []
+    for item in pending if isinstance(pending, list) else []:
+        try:
+            kept.append(RememberItem.model_validate(item))
+        except ValidationError:
+            continue
+    merged = [item for item in kept if item not in own] + list(own)
+    return list(dict.fromkeys(merged))[-MAX_REMEMBER:]
 
 
 def kept_texts(value: object) -> list[str]:
@@ -749,13 +798,14 @@ def take_pending_request(state: Any, args: PipelineArgs) -> PipelineArgs:
     """
     pending = state.get(PENDING_REQUEST)
     texts = state.get(PENDING_EXPECTED_TEXTS)
-    if (pending is None and texts is None) or args.base == "previous":
+    if (pending is None and texts is None and state.get(PENDING_REMEMBER) is None) or args.base == "previous":
         return args
     # Validated like the root's own arguments: a stored value never reaches the run unchecked.
     joined = {
         **args.model_dump(),
         "change_request": merged_request(pending, args.change_request),
         "expected_texts": chosen_texts(texts, args),
+        "remember": [item.model_dump() for item in merged_remember(state.get(PENDING_REMEMBER), args.remember)],
     }
     try:
         return PipelineArgs.model_validate(joined)
@@ -780,7 +830,7 @@ def rewrite_request(args: PipelineArgs, language_changed: bool) -> PipelineArgs:
     return args.model_copy(update={"change_request": LANGUAGE_REWRITE_REQUEST})
 
 
-PENDING_KEYS = (PENDING_REQUEST, PENDING_EXPECTED_TEXTS, PENDING_BINDINGS)
+PENDING_KEYS = (PENDING_REQUEST, PENDING_EXPECTED_TEXTS, PENDING_BINDINGS, PENDING_REMEMBER)
 
 
 def settle_pending_request(state: Any, args: PipelineArgs, shipped: bool) -> None:
@@ -801,9 +851,63 @@ def settle_pending_request(state: Any, args: PipelineArgs, shipped: bool) -> Non
         for key in PENDING_KEYS:
             if state.get(key) is not None:
                 state[key] = None
-    elif args.change_request or args.expected_texts:
+    elif has_request(args):
         state[PENDING_REQUEST] = args.change_request or None
         state[PENDING_EXPECTED_TEXTS] = list(args.expected_texts) or None
+        state[PENDING_REMEMBER] = [item.model_dump(mode="json") for item in args.remember] or None
+
+
+def carried_texts(state: Any, carry: Carry | None) -> list[str]:
+    """The texts a carry run checks, read at run time: the memory's verbatim texts once the session's memory was ever
+    written, so a label the user removed after the switch is no longer expected; else the carry's own (the source
+    version's `expected_texts`)."""
+    if carry is None:
+        return []
+    return memory_expected_texts(read_memory(state)) if memory_written(state) else list(carry.expected_texts)
+
+
+def take_carried_texts(args: PipelineArgs, texts: Sequence[str]) -> PipelineArgs:
+    """The run's arguments with a switch's carried texts (`carried_texts`) when it brings none of its own.
+
+    A run with texts of its own checks only those, as a bare run fills in the kept note's texts only
+    without its own (`chosen_texts`): a title the user rewrote in the switch's turn must not be checked
+    against the one it replaces. A change request without texts ("and make the line thicker") keeps the
+    carried ones, so the label the user set three turns ago in the other library is checked in this one.
+    """
+    if args.expected_texts or not texts:
+        return args
+    try:
+        return PipelineArgs.model_validate({**args.model_dump(), "expected_texts": list(texts)})
+    except ValidationError:
+        return args
+
+
+def plan_memory(state: Any, args: PipelineArgs, *, turn: int) -> Planned:
+    """The plot memory as the run would leave it once it ships: the stored entries with the run's own `remember`
+    items applied (`memory.plan`), numbered on from the session's id counter. Every run applies it, a fresh one
+    too: nothing but the user clears the memory (owner decision of 2026-11-02)."""
+    stored = read_memory(state)
+    return plan(stored, args.remember, seq=next_seq(state, stored), turn=turn)
+
+
+def settle_memory(state: Any, run: Run, shipped: bool) -> None:
+    """After a run, the switch's carry and the plot memory as the run leaves them; a run that shipped nothing leaves
+    both as they were, so a change that never reached the plot is never remembered.
+
+    A shipped run in the carry's target has taken the carry, or made a version the next change starts
+    from, so the carry goes; so does a shipped fresh run (`Run.fresh`), whose plot is the target's now.
+    The memory takes the run's planned entries (`plan_memory`): its `remember` items, stored only now.
+    Nothing here ever empties the memory: `.start_over()` keeps it (owner decision of 2026-11-02), and
+    only the user removes entries (`forget`, the page's remove and forget-all).
+    """
+    if not shipped:
+        return
+    if state.get(CARRY) is not None and (run.fresh or read_carry(state, run.view.target) is not None):
+        state[CARRY] = None
+    planned = run.memory_plan
+    if planned is not None and planned.seq != run.memory_seq:
+        for key, value in memory_delta(planned.entries, planned.seq).items():
+            state[key] = value
 
 
 def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
@@ -840,7 +944,7 @@ def render_adapt_request(request: AdaptRequest, view: SessionView) -> str:
     if request.reply_language is not None:
         lines += [REPLY_LANGUAGE_HEADING, fence("reply_language", request.reply_language)]
     lines += _context_lines(request.dataset_context, request.file_name)
-    lines += _requests_lines(request.user_requests, request.change_request)
+    lines += _requests_lines(request.user_requests, request.change_request, request.decisions)
     if request.expected_texts:
         lines += [EXPECTED_HEADING, fence("user_message", "\n".join(request.expected_texts))]
     notes: dict[str, Any] = {}
@@ -878,7 +982,7 @@ def render_review_request(request: ReviewRequest) -> str:
         fence("plot_language", request.plot_language),
     ]
     lines += _context_lines(request.dataset_context, request.file_name)
-    lines += _requests_lines(request.user_requests, request.change_request)
+    lines += _requests_lines(request.user_requests, request.change_request, request.decisions)
     lines += _review_expected_lines(request.expected_texts, catalogue=False)
     if request.gate_notes:
         lines += ["Gate notes:", fence("tool_notes", json.dumps(request.gate_notes, ensure_ascii=False))]
@@ -887,6 +991,12 @@ def render_review_request(request: ReviewRequest) -> str:
 
 REPLY_LANGUAGE_HEADING = "Reply language (the user chats in it; write the `changes` notes in it):"
 EARLIER_REQUESTS_HEADING = "Earlier requests (the user's standing decisions, oldest first):"
+DECISIONS_HEADING = (
+    "Standing decisions (the user's plot memory, oldest first; each names an intent, which may be written for another "
+    "library or plot type):"
+)
+"""The heading over the plot memory's entries (`memory.decision_lines`), which replace the earlier requests when the
+memory holds any (owner decision of 2026-11-02)."""
 EXPECTED_HEADING = "Texts and number formats the user asked to see in the plot, verbatim (one per line):"
 REVIEW_EXPECTED_HEADING = (
     "Texts and number formats the user asked to see in the plot, verbatim (one per line). The server cannot read "
@@ -934,12 +1044,14 @@ def _context_lines(context: str, file_name: str = "") -> list[str]:
     return lines
 
 
-def _requests_lines(user_requests: Sequence[str], change_request: str) -> list[str]:
-    """The earlier requests and the change request, each block fenced as user text under a fixed heading."""
+def _requests_lines(user_requests: Sequence[str], change_request: str, decisions: Sequence[str] = ()) -> list[str]:
+    """The standing decisions (the plot memory's, else the earlier requests) and the change request, each block fenced
+    as user text under a fixed heading."""
     lines: list[str] = []
-    if user_requests:
-        numbered = "\n".join(f"{number}. {text}" for number, text in enumerate(user_requests, 1))
-        lines += [EARLIER_REQUESTS_HEADING, fence("user_message", numbered)]
+    standing = decisions or user_requests
+    if standing:
+        numbered = "\n".join(f"{number}. {text}" for number, text in enumerate(standing, 1))
+        lines += [DECISIONS_HEADING if decisions else EARLIER_REQUESTS_HEADING, fence("user_message", numbered)]
     if change_request:
         lines += ["Change request:", fence("user_message", change_request)]
     return lines
@@ -1299,10 +1411,13 @@ def _store_version(ctx: Context, services: Services, run: Run, result: PlotResul
             plan=shipped.plan,
             title=shipped.plan.title,
             library=run.view.library,
+            spec_id=run.view.spec_id,
             theme=run.theme,
             theme_asked=run.theme_asked,
             language=run.language,
             requests=standing_requests([*run.user_requests, run.change_request]),
+            expected_texts=list(run.expected_texts),
+            turn=ledger_for(ctx.invocation_id).turn,
             themes={run.theme: ThemeRender("needs_attention", PADDED_REASON) if shipped.padded else ThemeRender("ok")},
         ),
     )
@@ -1425,7 +1540,7 @@ def render_score_request(request: ReviewRequest) -> str:
     ]
     if request.dataset_context or request.file_name:
         lines.append("\n".join(_context_lines(request.dataset_context, request.file_name)))
-    lines += _requests_lines(request.user_requests, request.change_request)
+    lines += _requests_lines(request.user_requests, request.change_request, request.decisions)
     lines += _review_expected_lines(request.expected_texts, catalogue=True)
     if request.gate_notes:
         lines += ["Gate notes:", fence("tool_notes", json.dumps(request.gate_notes, ensure_ascii=False))]
@@ -1439,20 +1554,25 @@ def _reraise_unless_schema(exc: Exception) -> None:
     logger.warning("sub-agent answer failed its schema: %s", type(exc).__name__)
 
 
-def run_theme(asked: Theme | None, site: Theme | None, previous: CodeVersion | None) -> tuple[Theme, bool]:
+def run_theme(
+    asked: Theme | None, site: Theme | None, previous: CodeVersion | None, carry: Carry | None = None
+) -> tuple[Theme, bool]:
     """The one theme a run renders, and whether the user asked for it (`CodeVersion.theme_asked`).
 
     In order: the theme the root passed (`PipelineArgs.theme`), which the user asked for in the chat; on a
     change, the theme of the version it changes (`previous`) when the user asked for that one, because the root
-    leaves `theme` out of a refinement and a dark plot asked for must not silently come back light; the site
-    theme the page sent with the turn (`RequestLedger.site_theme`; owner decision of 2026-11-01: a user on the
-    dark site gets a dark plot, the other theme one click away on the toggle), so a change after a switch of the
-    site theme follows the switch; without a page (`adk web`, the evals) the version it changes, else light.
+    leaves `theme` out of a refinement and a dark plot asked for must not silently come back light; on a run that
+    takes a switch's carry, the theme the user asked for in the source plot (`Carry.theme`), for the same reason;
+    the site theme the page sent with the turn (`RequestLedger.site_theme`; owner decision of 2026-11-01: a user on
+    the dark site gets a dark plot, the other theme one click away on the toggle), so a change after a switch of
+    the site theme follows the switch; without a page (`adk web`, the evals) the version it changes, else light.
     """
     if asked is not None:
         return asked, True
     if previous is not None and previous.theme_asked:
         return previous.theme, True
+    if previous is None and carry is not None and carry.theme is not None:
+        return carry.theme, True
     if site is not None:
         return site, False
     return (previous.theme if previous is not None else "light"), False
@@ -1464,6 +1584,10 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     services = get_services()
     settings = get_settings()
     ledger = ledger_for(ctx.invocation_id)
+    if ledger.fresh_start and node_input.base == "previous":
+        # `.create_plot()` and `.start_over()` ask for the catalogue plot whatever the root passes: a change of the
+        # previous version here would keep every decision the fresh start drops (Flash review, 2026-11-02).
+        node_input = node_input.model_copy(update={"base": "catalogue"})
     view, dataset, not_ready = load_inputs(ctx, services)
     language = plot_language(view, services.versions.latest_language(ctx.session.id)) if view is not None else None
     if not_ready is not None or view is None or dataset is None:
@@ -1495,11 +1619,20 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
     # Taken only once the run has its slot: a run that never starts leaves the user's note for the next one.
     node_input = take_pending_request(ctx.state, node_input)
     previous = (
-        services.versions.latest_rendered(ctx.session.id, library=view.library)
-        if node_input.base == "previous"
-        else None
+        services.versions.latest_rendered(ctx.session.id, target=view.target) if node_input.base == "previous" else None
     )
-    theme, theme_asked = run_theme(node_input.theme, ledger.site_theme, previous)
+    # The page's `.create_plot()` or `.start_over()` asks for the catalogue code again, the way out of broken code:
+    # no carry, but the visible memory still applies (owner decision of 2026-11-02).
+    fresh = ledger.fresh_start and previous is None
+    # A first run in a new target takes the switch's carry; a change of a version in the target needs none.
+    carry = None if previous is not None or fresh else read_carry(ctx.state, view.target)
+    # The arguments the user's note is settled from: the carried texts feed this run's checks only, never the kept
+    # first-plot note, which a carry run that ships nothing would otherwise take them into (Copilot on #12520).
+    own_input = node_input
+    node_input = take_carried_texts(node_input, carried_texts(ctx.state, carry))
+    theme, theme_asked = run_theme(node_input.theme, ledger.site_theme, previous, carry)
+    # The memory with this change's own decisions applied: the adapter sees what will stand once it ships.
+    memory_plan = plan_memory(ctx.state, node_input, turn=ledger.turn)
     run = Run(
         view=view,
         dataset=dataset,
@@ -1509,6 +1642,12 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         change_request=node_input.change_request,
         expected_texts=list(node_input.expected_texts),
         base=node_input.base,
+        decisions=decision_lines(memory_plan.entries),
+        memory_written=memory_written(ctx.state),
+        carry=carry,
+        fresh=fresh,
+        memory_plan=memory_plan,
+        memory_seq=next_seq(ctx.state, read_memory(ctx.state)),
     )
     started = time.monotonic()
     scope = f"pipeline-{secrets.token_hex(6)}"
@@ -1543,7 +1682,10 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         run.stage = "error"
     # From here on the root's closing reply is never the budget refusal (plugins/budget.py).
     ledger.plot_shipped = result.status in ("ok", "needs_attention")
-    settle_pending_request(ctx.state, node_input, ledger.plot_shipped)
+    if ledger.plot_shipped and run.memory_plan is not None and run.memory_plan.refused:
+        result = result.model_copy(update={"memory_full": True})  # the plot carries the change, the memory cannot
+    settle_pending_request(ctx.state, own_input, ledger.plot_shipped)
+    settle_memory(ctx.state, run, ledger.plot_shipped)
     _attribute_result(ledger, run, result)
     _telemetry_run(ledger, ctx.session.id, ctx.invocation_id, run, result, time.monotonic() - started)
     yield close_scope(scope)
@@ -1607,7 +1749,8 @@ def _telemetry_run(
     are closed by `telemetry.closed`, `closed_list` and `closed_set` (`other` for an id the closed set does not know
     yet), so a new stage or rule never drops the line.
     """
-    shipped = shipped_candidate(run) if result.status in ("ok", "needs_attention") else None
+    shipped_render = shipped_candidate(run) if result.status in ("ok", "needs_attention") else None
+    shipped = shipped_render is not None
     index = telemetry.run_index(session_id, invocation_id)
     settings = get_settings()
     rule_ids = get_args(telemetry.ValidatorRule)
@@ -1626,10 +1769,10 @@ def _telemetry_run(
         reviews=run.reviews,
         score_round1=telemetry.score_bucket(run.round_scores.get(1)),
         score_round2=telemetry.score_bucket(run.round_scores.get(2)),
-        shipped_attempt=shipped.attempt if shipped else None,
-        shipped_round=round_number(run, shipped.attempt) if shipped else None,
+        shipped_attempt=shipped_render.attempt if shipped_render else None,
+        shipped_round=round_number(run, shipped_render.attempt) if shipped_render else None,
         version=telemetry.version_number(result.version),
-        shipped_score=telemetry.score_bucket(shipped.review_score) if shipped else None,
+        shipped_score=telemetry.score_bucket(shipped_render.review_score) if shipped_render else None,
         forced_repair=sorted(run.forced_ids),
         gates_failed=sorted(run.gate_ids),
         reviewer_defects=sorted(run.review_ids),
@@ -1662,6 +1805,11 @@ def _telemetry_run(
         queue_position=ledger.queue_position,
         user_runs_today=telemetry.runs_today_bucket(ledger.user_runs_today),
         user_tokens_today=telemetry.tokens_today_bucket(ledger.user_tokens_share),
+        carried=run.carry is not None,
+        fresh=run.fresh,
+        memory_entries=len(run.decisions),
+        remembered=(run.memory_plan.seq - run.memory_seq) if shipped and run.memory_plan is not None else 0,
+        memory_full=bool(shipped and run.memory_plan is not None and run.memory_plan.refused),
     )
 
 
@@ -1711,11 +1859,18 @@ async def _attempts(
     runtime = runtime_for(view.library, cpu_seconds=settings.render_timeout_s)
     deadline = SoftDeadline(settings.soft_deadline_s)
     previous = (
-        services.versions.latest_rendered(ctx.session.id, library=view.library) if args.base == "previous" else None
+        services.versions.latest_rendered(ctx.session.id, target=view.target) if args.base == "previous" else None
     )
     working = previous.working if previous is not None else view.normalised
-    # What the user asked of the base version's lineage stands: every adapter call and the reviewer see it.
-    run.user_requests = standing_requests(previous.requests) if previous is not None else []
+    # What the user asked of the base version's lineage stands: every adapter call and the reviewer see it. A run
+    # that takes a switch's carry starts from this library's catalogue code with the source lineage's requests. Once
+    # the session's memory was ever written, the memory alone stands in for both (`Run.raw_requests`).
+    if previous is not None:
+        run.user_requests = standing_requests(previous.requests)
+    elif run.carry is not None:
+        run.user_requests = standing_requests(run.carry.requests)
+    else:
+        run.user_requests = []
     # The base version's text is in another language than the plot language (the user asked for another one since,
     # maybe in another library): the adapter rewrites it.
     language_changed = previous is not None and not same_language(previous.language, run.language)
@@ -1789,7 +1944,8 @@ async def _attempts(
             loader_columns=columns,
             hints=_repair_hints(hints, run) if round_number(run, attempt) > 1 else hints,
             change_request=args.change_request,
-            user_requests=run.user_requests,
+            user_requests=run.raw_requests,
+            decisions=run.decisions,
             feedback=_clip_feedback(feedback),
             previous_plan=previous_plan,
             allow_full=attempt >= 2,
@@ -2056,7 +2212,8 @@ async def _attempts(
             profile_summary=profile_summary(dataset.profile),
             spec_brief=spec_brief(view),
             change_request=args.change_request,
-            user_requests=run.user_requests,
+            user_requests=run.raw_requests,
+            decisions=run.decisions,
             # Every measured finding, the ADAPTATION ones too, so the review sees what the repair will get.
             gate_notes=[_note(line) for line in measured][:MAX_NOTES],
             plot_language=run.language,
