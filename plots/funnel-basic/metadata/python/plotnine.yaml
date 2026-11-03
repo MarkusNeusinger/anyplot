@@ -2,123 +2,123 @@ library: plotnine
 language: python
 specification_id: funnel-basic
 created: '2025-12-23T13:01:58Z'
-updated: '2026-04-26T05:49:44Z'
-generated_by: claude-opus
-workflow_run: 24949287748
+updated: '2026-11-03T02:38:00Z'
+generated_by: claude-sonnet
+workflow_run: 41566665961
 issue: 789
-python_version: 3.14.4
-library_version: 0.15.3
+language_version: 3.14.9
+library_version: 0.15.8
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: all spec features (trapezoidal segments, proportional
-    widths, dual value+% labels, distinct Okabe-Ito colors) implemented correctly'
-  - Creative use of geom_polygon within plotnine grammar of graphics to build a non-native
-    chart type without falling back to matplotlib
-  - 'Smart per-segment text contrast: dark INK on light amber fill in light mode shows
-    accessibility awareness'
-  - Both themes render correctly with right backgrounds and chrome tokens
+  - 'Single, correctly proportioned funnel: widths are value / first value, stacked
+    top-down with scale_y_reverse, every segment centred on one axis'
+  - 'Per-row text color via scale_color_identity: dark ink on the light lavender,
+    white on the darker fills, so every label reads in both themes'
+  - Page-colored polygon outlines plus a vertical gap separate the segments cleanly
+    on both backgrounds
+  - Each segment carries stage name, value and share of the top stage, covering the
+    spec's labeling requirement in one compact two-line label
+  - Canonical 3200x1800 canvas and the full mandated title
   weaknesses:
-  - 'Dark mode Purchase label (#F0EFE8 on #E69F00) has ~2.2:1 contrast — below WCAG
-    AA; should always use dark ink (#1A1A17) for the amber segment regardless of theme'
-  - No visual emphasis or focal point — the most dramatic drop-offs are not highlighted;
-    add typographic hierarchy or annotation to guide the viewer
-  - Data labels at size=14pt are below the 16pt recommendation for secondary text
-    at 4800x2700px; bump to at least 16pt
+  - 'Suggestion: stage labels could step down the second line (value · %) to a lighter
+    weight so the stage name leads the hierarchy.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "funnel-basic · plotnine · anyplot.ai" in dark ink (#1A1A17), centered, 24pt — clearly readable. No axis labels, ticks, or grid (theme_void). Segment separator lines use PAGE_BG color.
-      Data: Five Okabe-Ito trapezoids — Awareness (#009E73), Interest (#D55E00), Consideration (#0072B2), Intent (#CC79A7), Purchase (#E69F00). Each with bold two-line label (stage name + value + %). White text on first four; dark INK on amber Purchase.
+      Background: Warm off-white #FAF8F1, correct.
+      Chrome: Title "funnel-basic · python · plotnine · anyplot.ai" in dark ink, centred, ~45% width; no axes, ticks or grid (theme_void). All readable.
+      Data: Five centred trapezoids narrowing top to bottom: Awareness #009E73 (green), Interest #C475FD (lavender), Consideration #4467A3 (blue), Intent #BD8233 (ochre), Purchase #AE3030 (red, a rectangle). Each carries a bold two-line label "Stage / value · %": white text, dark text on lavender. Segments separated by page-colored gaps.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct
-      Chrome: Title in light cream #F0EFE8 — clearly readable. Separator gaps switch to near-black, working correctly.
-      Data: Identical Okabe-Ito colors to light render — brand green #009E73 first. Segment labels for Awareness–Intent are white on colored fills — readable. Purchase segment uses INK token (#F0EFE8 in dark mode) on amber #E69F00 — contrast ~2.2:1, below WCAG AA but readable due to bold weight.
-      Legibility verdict: PASS overall; minor contrast issue on Purchase dark-mode text (not a critical failure)
+      Background: Warm near-black #1A1A17, correct.
+      Chrome: Title in light ink #F0EFE8, clearly readable; no dark-on-dark text anywhere.
+      Data: Fill colors identical to the light render; label colors unchanged (white, dark ink on lavender) and readable on their fills; gaps now in the dark page color.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title explicitly at 24pt; data labels at 14pt below recommended 16pt
-          for secondary text
+        comment: Title 12 pt and bold labels explicitly sized; all text readable in
+          both themes, dark text on the light lavender and white on the others
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels perfectly centered within segments, no collisions
+        comment: All labels sit centred inside their segments; nothing collides
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All five segments clearly visible including small Purchase rectangle
+        comment: All five segments clearly visible, including the narrow Purchase
+          block
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Okabe-Ito is CVD-safe; dark mode Purchase text (#F0EFE8 on #E69F00)
-          is ~2.2:1 contrast, below WCAG AA'
+        passed: true
+        comment: Imprint hues are CVD-distinguishable; stage names carry identity,
+          so color is not the sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Funnel fills ~60% height and ~80% width at top; minor dead space
-          below Purchase
+        comment: 3200x1800 canvas; funnel fills the frame with balanced margins; title
+          ~45% width
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in required format; no axis labels needed for funnel type
+        comment: Funnel has no axes; theme_void with the stage names on the segments
+          is the right call (N/A for axis titles)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First stage #009E73; Okabe-Ito canonical order; backgrounds #FAF8F1/#1A1A17;
-          chrome flips correctly'
+        comment: 'Awareness #009E73 first, Imprint positions 1-5 in canonical order;
+          backgrounds #FAF8F1 / #1A1A17; chrome flips, data colors identical across
+          themes'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: 'Above defaults: Okabe-Ito correctly applied, smart text-contrast
-          logic, bold labels, void theme. Typography hierarchy flat, no visual emphasis
-          on insight'
+        comment: 'Style-guide baseline: void theme, medium-weight title, bold two-line
+          labels; no typographic hierarchy beyond that'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: theme_void removes all axes/spines/grid; polygon gaps provide clean
-          separation; generous whitespace
+        comment: 'Raised by one: page-colored outline plus a deliberate vertical gap
+          separates every segment cleanly in both themes, and label text color is
+          chosen per fill'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: Dual labels (absolute + %) help quantify drop-offs; funnel encodes
-          magnitude visually. Biggest story not emphasized — no focal point on sharpest
-          transitions
+        passed: false
+        comment: Data displayed with value and percentage; no focal point chosen beyond
+          what the Notes require
     spec_compliance:
       score: 15
       max: 15
@@ -128,27 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct trapezoidal funnel narrowing proportionally top-to-bottom
+        comment: Correct single trapezoidal funnel, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors per stage; value+% labels; widths proportional to
-          value/max_value; correct stage order
+        comment: 'All Notes and C1-C3 met: ordered stages, distinct color per stage,
+          stage name + value + % on each segment, widths proportional, labels readable
+          on their fills in both themes'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Stages correctly ordered largest-to-smallest; all data visible
+        comment: Widths = value / first value (1.0, 0.6, 0.4, 0.2, 0.1); order largest
+          at top; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title funnel-basic · plotnine · anyplot.ai; legend suppressed, replaced
-          by in-chart labels
+        comment: Title funnel-basic · python · plotnine · anyplot.ai; no legend needed
+          (stage names on segments)
     data_quality:
       score: 15
       max: 15
@@ -158,22 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Five stages with varied drop-off rates fully cover the funnel chart
-          concept
+        comment: Five stages with uneven drops show the full funnel concept
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic sales/marketing funnel (Awareness→Purchase) with plausible
-          neutral values
+        comment: Classic, neutral marketing funnel Awareness -> Purchase with plausible
+          counts
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 1000→100 with realistic intermediate steps; percentages accurately
-          computed
+        comment: 'Checked: percentages 100/60/40/20/10 computed from the values; widths
+          read off the render match 60/40/20/10% of the top'
     code_quality:
       score: 10
       max: 10
@@ -183,33 +184,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean linear flow
+        comment: Linear flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — no random operations
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys/os are standard library
+        comment: All imports used; sys path fix is required by the plotnine.py filename
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean polygon construction loop; no over-engineering or fake UI
+        comment: Compact polygon-building loop; no fake UI, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly
+        comment: Saves plot-{THEME}.png at 3200x1800 via plot.save with dpi=400, current
+          API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -217,22 +219,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar of graphics correctly composed throughout; scale_color_identity()
-          for per-row text colors is idiomatic
+        comment: 'Raised by one: grammar composed from geom_polygon with group, scale_y_reverse
+          to stack top-down, data-driven per-row colors'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: true
-        comment: scale_color_identity() with per-row aesthetic mapping; geom_polygon
-          for non-native chart type; scale_y_reverse() integration
-  verdict: REJECTED
+        comment: 'Raised by one: identity scales map precomputed per-row colors (fill
+          and label text) directly'
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-63bb674708
+  rendered_at: '2026-11-03T02:34:49Z'
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
   patterns:
+  - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - minimal-chrome
