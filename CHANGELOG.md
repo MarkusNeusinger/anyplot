@@ -34,6 +34,386 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+## [4.0.0] — 2026-11-03 — Your data
+
+### Added
+
+- **The public "use with my data" page at `/agent`, experimental.** The chat
+  page runs on the public lane while the API says it is open
+  (`GET /agent/lane`), so one switch on the server opens and closes the page
+  and its entry points. It talks to `/agent/*` without a cookie, with a random
+  id per browser tab and the session id as headers, and says above the first
+  input that an AI does the work, which one and where, that results can be
+  wrong and are not checked by hand, what not to paste, that nothing is stored
+  without feedback, and that daily limits apply. The plot page's `.adapt()`
+  button shows for everyone while the lane is open, and the landing page
+  points to the chat with one line. Admins keep `/debug/agent` with
+  everything (#12528).
+- **A public lane for the agent chat under `/agent`, shipped dark.** The new
+  router calls the admin lane's route functions with an anonymous identity
+  and the `public` tier, and answers `404` until the owner sets
+  `_AGENT_PUBLIC_ENABLED=true` on the deploy-api trigger, on top of
+  `AGENT_ENABLED`, which stays the master switch. The page's random tab id
+  (`X-Anyplot-Anon`) and the client's network go to the agents service, which
+  salts both with a per-process salt, so no durable key links usage to an
+  address; the session id travels in `X-Anyplot-Session`, never in a URL.
+  The fan-out copy, the day budget and the case triage stay admin-only, and
+  `GET /agent/lane` tells the site whether the door is open without an
+  upstream call. The deploy smoke checks the door answers as the trigger set
+  it (#12527).
+- **Per-IP limits for anonymous callers.** The users of one network (an IPv4
+  address or an IPv6 /64) share 4 sandbox runs at once, 100 pipeline runs and
+  20,000,000 weighted tokens a day, and twice the per-user minute and day of
+  pastes, conversions, chat turns and beacons: twice the per-user caps,
+  because a tab id costs nothing to mint. A network also holds at most 8 live
+  sessions and 64 MiB of the 256 MiB dataset store, so one machine cannot
+  fill what every user shares. The public lane holds at most 10
+  waiting runs in the agents queue, one API instance relays at most 20 public
+  chat turns at once so the catalogue keeps half its request slots, and a
+  network stores at most 20 feedback cases an hour (#12527).
+- **Switch the plot's library from the chat.** "Make it in seaborn" now moves the plot: the assistant's
+  new `switch_plot` asks for the switch, the turn's `done` carries it, and the page switches and makes the
+  plot there at once with your decisions, as the library menu's carry run does. A switch the server
+  refuses shows in the thread. (#12523)
+- **`.plot_all()` plots your tuned plot in every library.** The fan-out's dataset copy now brings the plot
+  memory and a carry of the page's latest plot along, so each library's plot starts from its catalogue
+  plot with your decisions instead of from scratch. (#12523)
+- **The agent chat offers the plot in the new library with your decisions.** After a library switch
+  whose answer offers it, the composer's create action reads "plot in seaborn with your 3 decisions"
+  and sends `carry_plot`; picking a library runs nothing until that click, so browsing costs nothing.
+  `.create_plot()`, or `.start_over()` once the library has a plot, stays beside it as the plot from
+  the catalogue code, which keeps your decisions too, and the offer ends once a plot ships in that
+  library. (#12522)
+- **The remembered decisions stand above the composer.** The plot memory's entries, the decisions every
+  next plot takes over, are listed with `.forget()` each and `.forget_all()` for a blank start, the only
+  ways the memory is cleared; the list is read again after every turn, after a switch and after a
+  removal, hides while the memory is empty and waits while anything runs. (#12522)
+- **The plot memory: your decisions about the plot, kept across a library switch.** The agents service
+  keeps the decisions of each shipped change (a reference line, a formula as an annotation, outliers as
+  red stars, an axis label, the x limits) as entries of a closed kind with library-neutral text, and every
+  later plot hands them to the adapter and the reviewer, in any library. The root passes them with the
+  run, since it cannot call a tool after a shipped plot, and the memory keeps them only once that plot
+  ships. Only you clear it: `GET` and `DELETE /debug/agent/sessions/{sid}/memory[/{id}]` list the
+  entries and remove one or all, and once the memory has held a decision, a removed one never comes
+  back from the requests behind an earlier plot. (#12520)
+- **A library switch carries the tuned plot over.** The switch now writes a carry (the theme you asked
+  for, the texts the plot must show) and answers what would carry and whether to offer the plot in the
+  new library; the `carry_plot` action makes that plot from the new library's catalogue code with your
+  decisions, and checks the label in code. Versions are filed under their (spec, library) pair, so the
+  later plot-type switch reuses the same path. `agents/evals/carry.py` checks the owner's five examples
+  live from matplotlib to plotly and ggplot2. (#12520)
+- **Every row of your data in the agent chat, to search, sort and filter.**
+  `.view_all()` next to the data card's preview opens the current data version
+  in a read-only MUI X Data Grid (the MIT edition, loaded only when you open
+  it): a search over every column, sorting (numeric columns by number, empty
+  cells last), a column filter with `>` and `<` on numbers, column resizing
+  and hiding, the dtype under each column name, both themes and phone width.
+  Values appear exactly as the canonical `data.csv` holds them, which the new
+  read-only route `GET /debug/agent/sessions/{sid}/dataset/data.csv` serves and
+  a strict RFC 4180 reader parses in the browser, so nothing is rounded or
+  reformatted and an empty cell stays empty. The free grid shows 25, 50 or 100
+  rows a page; the search, the sort and the filter cover every row. Opening it
+  reports the content-free outcome `opened_data_view`. (#12513)
+- **An open required role makes the server check which columns a conversion
+  would fill it with.** When the bindings leave a required role open, the
+  service dry-runs `set_type` on every free text column in code
+  (`agents/anyplot/data/conversions.py`), and on a whole-number column with a
+  year header, and lists each candidate in the session block with its counts,
+  `certain` or `uncertain` with the reason, and the operations. The root makes a
+  certain conversion in the summary turn as a new column beside the original
+  (`set_type` gained `name`), which the service binds to the role, and proposes
+  an uncertain one as its one question; the user confirms as usual and `.undo()`
+  takes it back. Ids, codes and spans of years stay out of it. The source column
+  leaves the optional roles, so `Month` on `series` never splits the plot into
+  one series per row. (#12512)
+- **A plot without an x column draws by row number.** The new `row_number`
+  operation adds a column `index` of 1 to n. When a required axis has no column
+  and no conversion, the root makes it without a question, the axis takes it, and
+  a number column that sat on the axis moves to the open measure: a pasted
+  `1,3,5,4,6,2` ships as a line plot. A bar chart without labels gets the row
+  numbers as a question, never by itself. (#12512)
+- **The prep eval fails a skipped conversion, and `chat_turn` reports the
+  outcome.** A summary turn that skips a `certain` conversion is a miss and fails
+  the run. `chat_turn.conversion` is one closed value: `none`, `date`, `number`,
+  `index` or `asked`. (#12512)
+- **Per-day agent numbers on `/debug`.** The usage card gains a table of the last
+  14 UTC days, newest first: new chats, plots shipped, cost in dollars (the `cost`
+  view's logic, the admin fan-out's beside it), limit hits by code and the 95th
+  percentile of the run queue's wait, `—` on a day before the field. A new
+  `GET /debug/agent-usage/daily` reads it from the telemetry under the card's own
+  discipline: filtered on `timestamp` before it deduplicates, kept for ten minutes,
+  aggregates only. (#12518)
+- **A live line for today on `/debug`.** `GET /debug/agent/budget` shows the service's
+  spend against its day budget and how many users are at their own limits, counts
+  only, from the agents service's memory. The line says since when it counts, because
+  a redeploy or a scale-to-zero starts the counts again. (#12518)
+- **An admin lane in the agents service's run queue.** The admin's runs,
+  `.plot_all()` above all, may hold five places per admin (public users two),
+  with no per-user day caps or message minute (owner decisions of
+  2026-11-01). The BFF asserts the tier with `X-Anyplot-Tier: admin` from the
+  identity its admin gate verified; a missing or other value is the public
+  tier, so the two services deploy in either order. `GET /status` reports the
+  caller's own cap, and the fan-out panel follows it (#12507).
+- **Anonymous limit telemetry on `pipeline_run`.** `lane`, `queue_wait_ms`,
+  `queue_position`, `user_runs_today` and `user_tokens_today` show whether
+  anyone waits long or comes close to a limit, as closed sets and bounded
+  numbers with no user id and no hash; the views SQL reads them, and applying
+  it in BigQuery waits for the owner after the merge (#12507).
+- **Example data on request in "Use with my data".** "Beispieldaten",
+  "generiere Zufallszahlen mit Kategorien" or "monthly sales for 4 regions" in
+  the data field no longer ends in "no table found": the dataset route answers
+  `422 data_request` (fixed phrases in eight languages before any model, the
+  free-text reader's new `asks_for_data` for the rest) and the page sends the
+  text to the chat as the user's message. The assistant reads the plot's data
+  roles and writes seeded Python that `run_data_code` runs in the sandbox, so
+  no model writes a row; the data panel's change line says
+  `generated example data`, and the same works when asked in the chat.
+  (#12509)
+- **Eval cases for follow-ups that ask for two changes at once.** Four
+  hand-written matrix cases send a follow-up such as "Make the title German
+  and use a log scale on the y axis" after an English first plot: a language
+  with a log scale, a theme with a grid, a language with a colour, and a log
+  scale alone as the control. A new `checks` field in `case.json` measures
+  each part in code on the version the follow-up shipped: its plot language
+  and theme, patterns its code must add or keep, drawn texts that must
+  change, and an empty `requested_not_found`. A run passes only when every
+  check holds, and the report lists each failed one under `check_failures`.
+  (#12510)
+
+### Changed
+
+- **The agent chat shows less text, with the details behind buttons.** The
+  public experimental notice is one line, `# experimental AI · results can be
+  wrong · stored only if you send feedback`, and its ⓘ button opens the rest
+  (which AI and where, what not to paste, the daily limits, the legal page). A
+  result card shows its image, toolbar and theme switch, while the rounds and
+  the change list sit behind one status line and the code behind
+  `.show_code()`, with `.copy()` and the downloads in view; each card keeps its
+  choice for the session, and a new version starts folded. The quick feedback
+  shows only the reactions until one is picked. On the admin lane `.save()`
+  and its data box moved from the header row into a "⋯" menu, not into the
+  feedback area, because a save downloads the session and stores nothing; the
+  public lane has neither, since a visitor cannot resume a saved session and
+  the feedback form covers what went wrong. The data card's
+  header is `# your data ⓘ`, its how-to behind the button, and the long hint
+  and the how-to paragraph under the card gave way to short placeholders.
+  The chat column grows with the window up to 1360 px, so the data card,
+  the plot images and the code use a wide screen, while the chat text keeps
+  a readable line of about 80 characters. (#12540)
+- **The legal page is shorter and states only the current state.** Its visible text drops from 1,805 to 1,072
+  words (the privacy policy from 1,546 to 775): what is processed, where it runs, how long each store keeps it, the
+  three legal bases and the data assistant's terms now sit in short fact tables with row headers, each fact said
+  once. The notes on log entries written before the move to europe-west4 and on older unsalted feedback hashes are
+  gone; both conditions ended on 2026-11-02. The feedback IP hash no longer reads as a flat ten minutes: it is
+  cleared by the next feedback after its window, and its salt dies with the server instance. The crawler version
+  (`/seo-proxy/legal`, 450 words, 370 before) drops the same history and now carries every fact the page states:
+  the stored feedback fields, Cloudflare's use of the IP address, all three legal bases, your rights, the telemetry
+  retention, the no-training line and the running costs (#12538).
+- **The transparency section lists the whole stack and what running the site costs.** Eight grouped rows (site,
+  api, catalogue pipeline, data assistant, Google Cloud, edge and analytics, reviews, editor and typography) replace
+  the old list, which named neither the data assistant nor most of the Google Cloud services. The cost table shows
+  October 2026 as paid after commitments and credits, about $60 a month with the assistant's model, in place of a
+  $34 estimate of hosting alone (#12538).
+- **The plot page's way into "use with my data" is a text action beside the
+  library carousel.** `.use_my_data() →` sits to the right of the carousel as
+  the mirror of `← .compare()` on its left and replaces the data-table icon on
+  the image, which said little and crowded the overlay buttons. It keeps the
+  icon's gating (open lane or an admin, eligible pair), its chat link and
+  `agent_open`'s `source=plot_page`; "experimental" is left to the chat's
+  notice. The carousel now sits centred over the image, so the action fades
+  in after the eligibility check without moving anything; on a phone or
+  tablet the two actions share the line above the carousel (#12539).
+- **The landing page's line points to the catalogue.** While the public lane
+  is open it reads `# new: pick any plot, then .use_my_data() →` and leads to
+  `/plots` instead of opening the chat on one fixed plot, tracked as
+  `nav_click{source: hero_use_my_data}` (#12539).
+- **The README and the docs say the agent chat is open**: since 2 November 2026 every visitor can use "Use with my data", labelled experimental. The README's status line no longer says it is rolling out, and the vision, repository, database, style-guide, Plausible and telemetry docs no longer call it admin-only. (#12537)
+- **Feedback and `.save()` leave the data file out unless you tick the box.**
+  On the public page both `# include data.csv` boxes start unticked, and the
+  feedback form says what sending stores; admins keep their default (#12528).
+- **The legal page covers the public assistant.** Its section (now
+  `#assistant`) says the assistant is experimental, open to everyone and
+  pausable, how ids and IP addresses are salted and never written down, adds
+  use and warranty, the generated code's licence with the Highcharts note, and
+  the transfers under Google Cloud's and Cloudflare's terms; the feedback IP
+  hash wording follows the salted hash, and the bot-facing legal page mirrors
+  the facts (#12528).
+- **anyplot-api runs as its own least-privilege service account**: the API deploys as `anyplot-api@` instead of the Compute Engine default service account, which holds `roles/editor`. The new account gets only Cloud SQL, its six secrets, the agent-cases and static buckets, read access to the telemetry datasets, and the invoker role on `anyplot-agents`, which now admits it as the BFF caller. A unit test keeps the API's deploy account and the agents service's allowed caller equal. (#12525)
+- **The README leads with what anyplot is, its numbers, and how it works.** It opens with the project, its author and a
+  live preview card, then the catalogue's numbers from the public API (325 specs, 4,863 implementations, 15 libraries,
+  four languages on 2026-11-02), the pipeline with its real quality bar (90 on the first review, 10 points lower per
+  repair down to 50, in place of the old "score ≥ 50 required"), the experimental "Use with my data" agent, the MCP
+  server, the tech stack and a project structure that now includes `agents/`. The "natural language search" it claimed
+  never existed: it now describes the typo-tolerant tag and title search the site has. `docs/concepts/vision.md` counts
+  15 libraries across four languages instead of eleven across three, and lists the MCP server as live. (#12524)
+- **The agent chat picks its library in a menu.** A chip like the language chip,
+  `lib: matplotlib · python`, opens the libraries grouped by language and, for the admin,
+  `all libraries`, in place of a pill per library (up to 16 with `all`). The pills' rules stay, and a
+  refused switch shows its reason under the chip instead of in the thread. (#12522)
+- **A library switch keeps a request kept for the first plot.** The data and bindings it was written for
+  stay, so it now waits for the first plot in the new library instead of being dropped. (#12520)
+- **`.start_over()` keeps your remembered decisions.** It starts again from the catalogue code, the way
+  out of code that went wrong, always on the catalogue base, and applies the plot memory to the new
+  plot. (#12520)
+- **The row numbers lead the data and the data view.** The `row_number`
+  operation inserts its column (`index` by default) as the first column instead
+  of the last, and moves a reused row-number column there; the change line says
+  so, and no value or row moves. The data view shows a column that numbers the
+  rows (the operation's `index`, or a pasted `X`, `Unnamed: 0` or `column_<n>`)
+  leftmost in place of its own `#` counter, with the data's own values, also
+  after a sort reordered them; without such a column the counter stays. A sorted
+  column's header keeps room for its dtype beside the sort arrow and the menu.
+  (#12521)
+- **A spent service budget has its own refusal.** When the service's day budget is
+  spent, not the user's own, the chat now answers `service_paused` in every language,
+  a paste or a file conversion `429 service_paused`, instead of the text for a user's
+  own limit. It names the reset at 00:00 UTC, the page adds that time in the user's
+  own time zone, and `GET /v1/status` answers `paused` and `resets_at`, so the chat
+  shows the note before the user types. (#12518)
+- **Google ADK 2.13 and pandas 3.1.** ADK now delivers a response schema to Claude
+  as a `structured_output` tool, forced with thinking off and only offered with it
+  on, which on the adapter and reviewer would sit next to the constrained
+  `output_config.format`, so `VertexClaude` drops the tool and keeps the format.
+  Since pandas 3.1 reads every float exactly, the loader of an exported `plot.py`
+  no longer sets `float_precision`, which pandas deprecated and will remove, and
+  pandas is at least 3.1.0. (#12426)
+- **The run queue runs five plots at once and starts one every 10 seconds.**
+  `AGENT_RUN_CONCURRENCY` 5 for the whole instance and `AGENT_RUNS_PER_MINUTE`
+  6 with the starts spaced 10 s apart (1 and 1 before), so the queue holds 60
+  and a 15-library fan-out no longer takes about 20 minutes. A public user's
+  day is 50 runs and 10,000,000 weighted tokens (about $1), and the global
+  day budget is 100,000,000 (about $10), admins included. Claude calls retry
+  four times instead of two; a 429 or 529 that outlasts them ends the run as
+  `busy`. The render gates run in a worker thread (#12507).
+- **The fan-out panel waits out `run_limit` instead of failing.** With
+  `.plot_all()` open in several windows the admin's cap counts them all: a
+  library the cap refused goes back to waiting, and the panel tries again
+  when one of its runs ends or after 15 s, giving up only after 30 minutes.
+  The fan-out's data copies no longer count against an admin's copy limits
+  (30 a minute, 150 a day), so three windows can copy their 45 datasets at
+  once (#12507).
+- **The agents service keeps one instance warm.** `anyplot-agents` deploys with one minimum instance, so the first chat message after a quiet period no longer waits for a cold start, and sessions and day counters no longer vanish when Cloud Run scales the service to zero; a session still ends after an hour without activity (`AGENT_SESSION_IDLE_S`), and a deploy still resets both. Its idle cost of about 0.44 CHF a day falls inside the account's unused Compute Flexible commitment until 2027-01-15 (#12511).
+- **Dependencies:** 13 Dependabot PRs. The python-minor group (#12426) takes
+  `google-adk` 2.11.0 → 2.13.0 and `pandas` 3.0.6 → 3.1.0, with the code fixes
+  in the same PR (see its own entry), plus `fastmcp` 4.1.4, `alembic` 1.20.1,
+  `plotnine` 0.15.8, `ruff` 0.17.2, `pydantic-settings`, `cachetools` and
+  `pytest-asyncio`. `filelock` 3.32.7 → 4.2.1, a major version (#12301),
+  `tornado` 6.5.9 → 6.6 (#12425), `authlib` 1.6.12 → 1.9.1 (#12412),
+  `dnspython` 2.8.0 → 2.9.0 (#12411), and patch releases of `virtualenv`,
+  `pyasn1`, `joserfc` and `fastmcp` (#12302, #12485, #12486, #12300). In
+  `app/` the npm-minor group (#12517: the typescript-eslint packages,
+  `eslint-plugin-perfectionist`, `vite-plugin-compression2`); for the
+  JavaScript renderers `chart.js` 4.4.7 → 4.6.1 (#12252) and `esbuild` 0.28.1
+  → 0.28.2 (#12262); and the actions group (#12406: `setup-python` 7.1.0,
+  `setup-uv` 10.3.3, CodeQL 4.39.1, `claude-code-action` 1.0.264,
+  `setup-julia`).
+
+### Fixed
+
+- **A link to a section of the legal page lands on its heading.** The route loads lazily, so a fresh load of
+  `/legal#assistant`, which the chat's notice opens in a new tab, stayed at the top of the page; it now scrolls to
+  the section once the page renders, below the sticky masthead. The code and docs that still promised a migration
+  for the old unsalted feedback IP hashes now say they were cleared once by hand on 2026-11-02 after a snapshot
+  (#12538).
+- **Library counts and layouts that still described the catalogue before JavaScript.** The language filter's tooltip
+  named only Python and R and now names all four languages; the `GET /stats` example in `docs/reference/api.md`
+  showed three fields and 9 libraries and now shows the live payload with `languages` and `lines_of_code`, each field
+  explained; and `docs/reference/repository.md` drew `metadata/` and `implementations/` as flat Python lists with
+  Highcharts among them and no `javascript/` directory, and now shows the four language directories in every tree:
+  8 Python files, ggplot2, Makie, and the five JavaScript ones. (#12526)
+- **A formula in a plotly plot is typeset.** The renderer's browser loads no MathJax, so a LaTeX string was
+  drawn with its dollar signs; the plotly adapter now writes formulas with plotly's HTML tags
+  (`ax<sup>2</sup>`), as the switch eval's first live run showed. (#12520)
+- **CI runs the plotting-library tests.** "Run Tests" installs libcairo and
+  the eight `lib-*` extras of the renderer image, without its image-export
+  stacks, and sets `ANYPLOT_REQUIRE_LIBRARIES=1`, so a library that does not
+  import fails its tests instead of skipping them. Before, the validator's
+  walk saw matplotlib alone, and 32 harness, validator and normaliser cases
+  never ran in CI (#12519).
+- **The text probe of pygal, altair and lets-plot holds the drawn texts.** The
+  harness wrote it through `os.fdopen`, whose `open` event names no path, so
+  the plot guard refused the write and left an empty file. The reply had no
+  texts for those three libraries since #12503. The probe now goes out
+  through `os.write`, a FIFO at its name no longer blocks the write, a failed
+  write is logged as `probe_failed` per launch, and an empty or unreadable
+  probe reaches the `pipeline_render` line as `InvalidProbe` (#12519).
+- **Month names with a year are dates.** The parser and `set_type` read
+  `Nov 2026`, `Okt. 2026`, `2026 Nov` or `März 2026`, in the eleven languages of
+  `months.py`, as the first day of each month, with a warning that counts the
+  cells; a two-digit year (`Nov 26`) stays text. In the live test of 2026-11-01
+  a price table of `Nov 2026` to `Dec 2025` left a time series' date role open,
+  and the root asked the user for a date column. A plot writes such a column as
+  months, also as a bar chart's labels and past 60 of them. (#12512)
+- **A copied web table keeps its last row and loses its button.** A short line
+  between the rows that holds text in the value columns (`Show 36 earlier
+  months`) is left out with a count, and a last row that lost its empty cells
+  stays a row. Before, the button stayed a row of empty cells, the month column
+  stayed text and the last month was lost as a footer. (#12512)
+- **The minus sign is a minus.** A minus written `−` (U+2212) before a number
+  reads as a sign, in the parser and in `set_type number`, with the cells
+  counted. An en dash stays text, as a range such as `10–20` does, and
+  `set_type` no longer takes a dash for a unit, which dropped the sign of `–5`.
+  Before, a change column of `+75` and `−100` stayed text. (#12512)
+- **A newest-first time series is sorted, not asked about.** A date column's
+  profile says which way its dates run (`order`), and the root sorts a
+  newest-first date column of the plot ascending in the summary turn instead of
+  asking whether to reverse the rows. (#12512)
+- **`set_type` to dates no longer fills in what a cell lacks.** pandas read a
+  cell without a year as the year 1 (`May`, `Nov 26`) and a time alone as
+  today; such cells now fail and are counted, and a month name no longer leaves
+  the day and month order open. (#12512)
+- **Float totals add up the cells as they are written.** A group `sum`, a group
+  `mean` and a `share` now add a float column in decimals. pandas 3.1 dropped its
+  compensated group sum for sorted keys, so 1,840 cells of the eval fixtures and
+  test sets changed, and a monthly total of `4024.2` came back as
+  `4024.2000000000003`; adding in decimals gives the sum a reader gets by hand, on
+  every pandas version. (#12426)
+- **A message that asks for a language and another change gets both.** In
+  the user test of 2026-11-01, "make the title German and use a log scale"
+  reached the plot with the German title only: `root.md` had the root follow
+  `set_language` with a fixed rewrite request that ended "change nothing
+  else". The rewrite is now the server's job. The adapter already rewrites
+  the plot's text when the base version is in another language, so the
+  root's change request carries only the user's other changes, and a run with
+  none gets the server's own rewrite request. The root also sends a theme only
+  as `theme`: written into the change request, "a dark background" made the
+  adapter replace the theme tokens with fixed dark colours. (#12510)
+- **A cancelled local render waits for both theme containers.** It used to return, and remove the run directory, while the second container was still being killed, which also made a backend test flaky (#12511).
+
+### Security
+
+- **The site feedback's IP hash is salted and short-lived.** `POST /feedback`
+  stored an unsalted SHA-256 of the client address without a time limit,
+  which trying every IPv4 address undoes. It now stores an HMAC under a
+  random per-process salt and clears it once its 10-minute window has
+  passed; rows from before keep their old hash until a reviewed migration
+  clears them. A log line of an unreachable agents service no longer names
+  the session id (#12527).
+- **The plot validator refuses banned objects under any name.** pygal binds
+  `types.FunctionType` as `pygal.config.callable`, which the validator admitted
+  because it bans `FunctionType` and `LambdaType` by name only. The walk of the
+  admitted modules now decides by what an object is: a builtin or `types`
+  member the validator bans, a module it bans together with that module's
+  functions and classes, a loader, a frame, or a wrapper of any of these,
+  wherever a public path reaches it. The walk found five more routes, now
+  refused: `pathlib.Path`, re-exported by matplotlib and statsmodels;
+  multiprocessing's `Pool`; altair's `importlib_version`; and the `tokenize`
+  module. The reviews also ban `timeit` on every receiver and the `eval_str=`
+  keyword, with which `inspect.signature` evaluates a function's annotations
+  (#12519).
+- **No route to a module-scoped ban through an expression or `**`.** A path
+  that leads to a `MODULE_ESCAPES` entry is only a receiver, a callee or a
+  plain alias, so `[matplotlib.cbook][0].Path` and an annotated alias are
+  refused. A banned keyword is refused when `**` passes it from a dict held in
+  a name or filled by subscript or `.update`, and so is a keyword name built
+  at run time, unless its literal head rules out every banned keyword
+  (plotly's `f"xaxis{n}"` passes) (#12519).
+
+*Catalog: no new specs and no new implementations; three nightly regenerations, all of
+funnel-basic, each kept as an improvement: plotly (#12514, quality 82), altair (#12541, 86)
+and plotnine (#12542, 85). For bokeh the regen gate kept the live implementation (#12515),
+and the review's re-score of it, 86 → 69, was stored (#12516).*
+
 ## [3.6.0] — 2026-11-01 — All fifteen
 
 ### Added
@@ -6069,7 +6449,8 @@ interactive HTML previews.
   Actions workflows (spec creation, impl generation, AI review, auto-merge); Cloud Run +
   Cloud SQL + GCS; 1,081 unit tests.
 
-[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v3.6.0...HEAD
+[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v4.0.0...HEAD
+[4.0.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.6.0...v4.0.0
 [3.6.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.5.0...v3.6.0
 [3.5.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.4.0...v3.5.0
 [3.4.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.3.0...v3.4.0
