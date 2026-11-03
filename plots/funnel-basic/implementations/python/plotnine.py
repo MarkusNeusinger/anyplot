@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 funnel-basic: Basic Funnel Chart
 Library: plotnine 0.15.3 | Python 3.14.4
 Quality: 87/100 | Updated: 2026-04-26
@@ -23,7 +23,7 @@ from plotnine import (  # noqa: E402
     ggplot,
     labs,
     scale_color_identity,
-    scale_fill_manual,
+    scale_fill_identity,
     scale_y_reverse,
     theme,
     theme_void,
@@ -35,72 +35,66 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
-# imprint palette — first stage is brand green (#009E73)
-IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
-# Slot 1 (lavender) is the lightest hue and needs dark text; the others are
-# saturated/dark enough for white.
-TEXT_ON_FILL = ["white", INK, "white", "white", "white"]
+# Imprint palette: all eight positions, one per stage in order
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
-# Data — sales funnel example from specification
-stages = ["Awareness", "Interest", "Consideration", "Intent", "Purchase"]
-values = [1000, 600, 400, 200, 100]
-n_stages = len(stages)
-max_value = values[0]
+# Constants
+LIGHT_FILLS = {"#C475FD", "#2ABCCD", "#99B314"}  # light Imprint hues that need dark text
+GAP = 0.06  # vertical gap between segments
 
-# Build trapezoid polygon vertices for each stage
-gap = 0.06
+# Columns: set these to your table's column names
+STAGE = "Stage"  # role: stage
+VALUE = "Customers"  # role: value
+
+# Data: replace this block with your own table, for example df = pd.read_csv("funnel.csv")
+df = pd.DataFrame(
+    {STAGE: ["Awareness", "Interest", "Consideration", "Intent", "Purchase"], VALUE: [1000, 600, 400, 200, 100]}
+)
+
+# Plot: reads only df and the constants above
+X, Y, ORDER, FILL, LABEL, TEXT = "x", "y", "order", "fill", "label", "text_color"
+funnel = df.dropna(subset=[STAGE, VALUE]).reset_index(drop=True)
+stages = funnel[STAGE].tolist()
+widths = funnel[VALUE] / funnel[VALUE].iloc[0]
 polygons = []
 labels = []
-for i, (stage, value) in enumerate(zip(stages, values, strict=True)):
-    w_top = value / max_value
-    # Flat bottom on the last segment — match its own width.
-    w_bot = (values[i + 1] / max_value) if i + 1 < n_stages else w_top
-    y_top = i + gap / 2
-    y_bot = (i + 1) - gap / 2
-    polygons.extend(
-        [
-            {"stage": stage, "x": -w_top / 2, "y": y_top, "order": 0},
-            {"stage": stage, "x": w_top / 2, "y": y_top, "order": 1},
-            {"stage": stage, "x": w_bot / 2, "y": y_bot, "order": 2},
-            {"stage": stage, "x": -w_bot / 2, "y": y_bot, "order": 3},
-        ]
-    )
-    pct = value / max_value * 100
+for i, stage in enumerate(stages):
+    w_top = widths.iloc[i]
+    # Flat bottom on the last segment: match its own width.
+    w_bot = widths.iloc[i + 1] if i + 1 < len(funnel) else w_top
+    y_top = i + GAP / 2
+    y_bot = (i + 1) - GAP / 2
+    fill = IMPRINT_PALETTE[i % len(IMPRINT_PALETTE)]
+    for order, (x, y) in enumerate([(-w_top / 2, y_top), (w_top / 2, y_top), (w_bot / 2, y_bot), (-w_bot / 2, y_bot)]):
+        polygons.append({STAGE: stage, X: x, Y: y, ORDER: order, FILL: fill})
     labels.append(
         {
-            "stage": stage,
-            "x": 0,
-            "y": (y_top + y_bot) / 2,
-            "label": f"{stage}\n{value:,}  ·  {pct:.0f}%",
-            "text_color": TEXT_ON_FILL[i],
+            STAGE: stage,
+            X: 0,
+            Y: (y_top + y_bot) / 2,
+            LABEL: f"{stage}\n{funnel[VALUE].iloc[i]:,.0f}  ·  {widths.iloc[i] * 100:.0f}%",
+            TEXT: "#1A1A17" if fill in LIGHT_FILLS else "white",
         }
     )
 
 df_poly = pd.DataFrame(polygons)
-df_poly["stage"] = pd.Categorical(df_poly["stage"], categories=stages, ordered=True)
+df_poly[STAGE] = pd.Categorical(df_poly[STAGE], categories=stages, ordered=True)
 df_labels = pd.DataFrame(labels)
 
-# Plot
 plot = (
-    ggplot(df_poly, aes(x="x", y="y", fill="stage", group="stage"))
-    + geom_polygon(color=PAGE_BG, size=2)
-    + geom_text(
-        aes(x="x", y="y", label="label", color="text_color"),
-        data=df_labels,
-        size=14,
-        fontweight="bold",
-        inherit_aes=False,
-    )
-    + scale_fill_manual(values=IMPRINT[:n_stages], guide=None)
+    ggplot(df_poly, aes(x=X, y=Y, fill=FILL, group=STAGE))
+    + geom_polygon(color=PAGE_BG, size=1)
+    + geom_text(aes(x=X, y=Y, label=LABEL, color=TEXT), data=df_labels, size=7, fontweight="bold", inherit_aes=False)
+    + scale_fill_identity()
     + scale_color_identity()
     + scale_y_reverse()
-    + labs(title="funnel-basic · plotnine · anyplot.ai", x="", y="")
+    + labs(title="funnel-basic · python · plotnine · anyplot.ai", x="", y="")
     + theme_void()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        plot_title=element_text(size=24, color=INK, weight="medium", ha="center"),
+        plot_title=element_text(size=12, color=INK, weight="medium", ha="center"),
         plot_margin=0.02,
         axis_text=element_blank(),
         axis_ticks=element_blank(),
@@ -110,4 +104,4 @@ plot = (
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
