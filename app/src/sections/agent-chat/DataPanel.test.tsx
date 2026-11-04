@@ -937,14 +937,15 @@ describe('DataPanel formulas', () => {
     ...overrides,
   });
 
-  it('names example data and a curve in the placeholder, under a one-line label', () => {
+  it('names code and a formula in the placeholder, under a one-line label', () => {
     renderPanel(empty());
     const box = screen.getByRole('textbox', { name: '# your data' });
     expect(box).toHaveAttribute('placeholder', DATA_PLACEHOLDER);
+    // Example data is `.example_data()` above the composer; code in any language works ("…").
     expect(DATA_PLACEHOLDER.split('\n')).toEqual([
       'paste a table or drop a file (csv, excel, json …)',
-      'or type: example data',
-      'or ask for a curve: y = sin(x), x from -pi to pi',
+      'or code that makes data (python, javascript, …)',
+      'or a formula: y = sin(x), x from -pi to pi',
     ]);
     // The how-to is behind the ⓘ, never a line of its own.
     expect(box).not.toHaveAccessibleDescription();

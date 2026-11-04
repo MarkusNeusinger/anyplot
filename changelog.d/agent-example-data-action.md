@@ -13,6 +13,9 @@
   (`POST /sessions` gains `roles`), and the ⓘ after the title names them as the data card's dropdowns do, with
   their kinds and whether a role is optional, takes one column per series or is computed by the plot; the spec's
   `data` bullets remain the fallback.
+- **The data box names code instead of example data.** Its placeholder now reads "or code that makes data (python,
+  javascript, …)" and "or a formula", since `.example_data()` took over example data, and the card's ⓘ says that
+  code or a formula that makes data works too, up to 2,000 characters.
 - **The public chat's notice says less in its line and more behind its ⓘ.** The line is now
   `experimental AI · answers can be wrong`; the ⓘ adds that the chat and the data live only in server memory and are
   deleted after an hour idle, that nothing is saved unless you send feedback, and that Claude runs via Google Cloud

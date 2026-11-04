@@ -709,11 +709,11 @@ describe('AgentChatPage gating', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     const textbox = await screen.findByLabelText(/# your data/);
-    // Without data, both boxes name the other sources in their placeholders: example data, and a
-    // curve the assistant computes; the how-to paragraph under the card is gone (2026-11-02).
+    // Without data, both boxes name the other sources in their placeholders: code or a formula
+    // the assistant computes, and example data; the how-to paragraph under the card is gone (2026-11-02).
     expect(textbox).toHaveAttribute(
       'placeholder',
-      expect.stringContaining('or ask for a curve: y = sin(x), x from -pi to pi')
+      expect.stringContaining('or a formula: y = sin(x), x from -pi to pi')
     );
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
