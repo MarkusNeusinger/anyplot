@@ -305,22 +305,31 @@ describe('SpecPage', () => {
     expect(screen.getAllByRole('button', { name: 'Use with my data' })).toHaveLength(1);
   });
 
-  it('asks about the first implementation on a hub without matplotlib', async () => {
+  it('asks about the first card on a hub without matplotlib, in the order of the cards', async () => {
     mockParams = { specId: 'scatter-basic' };
     agentEligibility.lane = 'public';
     mockFetchSuccess({
       ...mockSpecData,
-      implementations: mockSpecData.implementations.filter(
-        impl => impl.library_id !== 'matplotlib'
-      ),
+      // The API's order is seaborn, bokeh; the cards are sorted by library id, bokeh first.
+      implementations: [
+        ...mockSpecData.implementations.filter(impl => impl.library_id !== 'matplotlib'),
+        {
+          library_id: 'bokeh',
+          library_name: 'Bokeh',
+          language: 'python',
+          preview_url: 'https://example.com/scatter-basic/bokeh/plot.png',
+          quality_score: 8,
+          code: null,
+        },
+      ],
     });
     render(<SpecPage />);
 
     await userEvent.click(await screen.findByRole('button', { name: 'Use with my data' }));
     expect(mockNavigate).toHaveBeenCalledWith(
-      '/agent?spec=scatter-basic&library=seaborn&language=python&source=spec_hub'
+      '/agent?spec=scatter-basic&library=bokeh&language=python&source=spec_hub'
     );
-    expect(askedLibraries()).toEqual(['seaborn']);
+    expect(askedLibraries()).toEqual(['bokeh']);
   });
 
   it('asks about a library of the shown language on a hub under ?language=', async () => {

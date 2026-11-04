@@ -323,9 +323,10 @@ export function SpecPage() {
     // The previous spec's data while the next one loads: no probe for its library.
     if (!specData || specData.id !== specId) return null;
     if (mode === 'detail') return currentImpl;
-    const shown = languageFilter
-      ? specData.implementations.filter(impl => impl.language === languageFilter)
-      : specData.implementations;
+    // In the cards' own order (`SpecOverview`: by library id), so "the first" is the first card.
+    const shown = specData.implementations
+      .filter(impl => !languageFilter || impl.language === languageFilter)
+      .sort((a, b) => a.library_id.localeCompare(b.library_id));
     return shown.find(impl => impl.library_id === 'matplotlib') ?? shown[0] ?? null;
   }, [mode, currentImpl, specData, specId, languageFilter]);
   const agentLane = useAgentEligibility(specId, agentImpl?.library_id);
