@@ -43,29 +43,32 @@ export function ProgressTimeline({ run }: { run: RunState }) {
     : null;
 
   return (
-    // The site's loader stands beside the run for as long as it lasts, at the height of its
-    // first line; on a phone above it, so the grid keeps the full width.
+    // The site's loader stands beside the run for as long as it lasts, centred on its first line
+    // (the queue line or the grid's first row); on a phone above it, so the grid keeps the full
+    // width. Both columns take the run's font from here, so the loader's box is one line of it.
     <Box
       sx={{
         display: 'flex',
         flexDirection: { xs: 'column', sm: 'row' },
         alignItems: 'flex-start',
         gap: { xs: 1, sm: 1.5 },
+        fontFamily: typography.mono,
+        fontSize: fontSize.md,
       }}
     >
-      <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', minHeight: 24 }}>
-        <LoaderSpinner size="inline" />
-      </Box>
       <Box
-        aria-live="polite"
+        component="span"
         sx={{
-          display: 'grid',
-          gap: 0.75,
-          minWidth: 0,
-          fontFamily: typography.mono,
-          fontSize: fontSize.md,
+          display: 'flex',
+          alignItems: 'center',
+          // A zero-width character makes the box one text line of the run's font, as tall as the
+          // line beside it, and the loader centres on it the way the step dots centre in theirs.
+          '&::before': { content: '"\\200b"' },
         }}
       >
+        <LoaderSpinner size="inline" />
+      </Box>
+      <Box aria-live="polite" sx={{ display: 'grid', gap: 0.75, minWidth: 0 }}>
         {before && !(stopping && !waiting) && <Box sx={{ color: 'var(--ink)' }}>{before}</Box>}
         {rows.length > 0 && <RoundGrid rows={rows} label="Progress" />}
         {stopping && <Box sx={{ color: 'var(--ink-muted)' }}>{stopping}</Box>}
