@@ -342,8 +342,8 @@ export function LegalPage() {
             <Typography sx={subheadingStyle}>what we do not do</Typography>
             <Typography sx={textStyle}>
               • no cookies for visitors; the browser&apos;s storage keeps UI settings, your plot
-              votes, a release number, the random ids named here and the bot check&apos;s item.
-              admins sign in through Cloudflare Access, which sets its own login cookie
+              votes, a release number, the random ids named here and Cloudflare Turnstile&apos;s own
+              item. admins sign in through Cloudflare Access, which sets its own login cookie
               <br />
               • no accounts, and no name or email unless you type one
               <br />• <strong>no ai training</strong> on what you send. the catalogue is written at

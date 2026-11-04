@@ -36,7 +36,10 @@ substitutions:
   # a chat session or a feedback entry without a token once TURNSTILE_SECRET_KEY
   # is bound (api/turnstile.py), so a build without the key would ship a site
   # whose checked calls all fail: `check-config` below refuses to build it.
-  _VITE_TURNSTILE_SITE_KEY: ''
+  # The production widget: Managed, hostname anyplot.ai, pre-clearance off (on,
+  # it would set a cf_clearance cookie, which /legal says there is none of).
+  # Tests and local checks use Cloudflare's test keys instead.
+  _VITE_TURNSTILE_SITE_KEY: '0x4AAAAAAFzWhQ0F4XjBVJV4'
 
 steps:
   # Refuse a build that would ship without the bot check's site key, before any

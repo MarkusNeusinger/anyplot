@@ -130,7 +130,7 @@ describe('LegalPage', () => {
     expect(screen.getByText(/user-agent and TLS fingerprint/)).toBeInTheDocument();
     expect(screen.getByText(/with no cookie/)).toBeInTheDocument();
     expect(screen.getByText(/as its own controller, to improve the check/)).toBeInTheDocument();
-    expect(screen.getByText(/the bot check.s item/)).toBeInTheDocument();
+    expect(screen.getByText(/and Cloudflare Turnstile.s own\s+item/)).toBeInTheDocument();
   });
 
   // The data assistant's section, each claim pinned with the qualifier that
