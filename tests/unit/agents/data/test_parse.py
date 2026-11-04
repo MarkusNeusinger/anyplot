@@ -168,6 +168,36 @@ class TestDecimalCommaAndDateGuard:
         assert column(parsed, "v").dtype == "text"
         assert parsed.profile.decimal == "."
 
+    def test_ambiguous_dots_are_decimal_points_with_a_warning_and_the_cells_as_pasted(self) -> None:
+        """`1.234` and `7.000` read as decimals; the canonical text keeps `7`, so the paste's cells stay with the
+        data, for a decimal comma read again later (`set_type`)."""
+        parsed = parse_dataset("Stadt;Einwohner\nBern;1.234\nBasel;7.000\nChur;12\n")
+
+        assert (column(parsed, "Einwohner").min, column(parsed, "Einwohner").median) == (1.234, 7)
+        assert warned(parsed, "column 'Einwohner': dots read as decimal points; say so in the chat if they separate")
+        assert parsed.pasted_cells == {"Einwohner": ["1.234", "7.000", "12"]}
+        assert "7.000" not in parsed.csv
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "v\n1.5\n2.75\n",  # a dot with other than three digits after it: a decimal, nothing to ask
+            "Version\n1.234\n2.000\n",  # a column named as a version or an id is never a quantity
+            "a;b\n1.234;2,5\n7.000;3,5\n",  # a decimal comma elsewhere reads the dots as thousands already
+        ],
+    )
+    def test_dots_that_read_one_way_keep_no_cells(self, text: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert parsed.pasted_cells == {}
+        assert not warned(parsed, "dots read as decimal points")
+
+    def test_a_csv_the_service_wrote_keeps_no_cells(self) -> None:
+        """The canonical text of an earlier version has lost the pasted spelling: it is never read again."""
+        parsed = parse_dataset("Einwohner\n1.234\n7\n", find_table=False, canonical=True)
+
+        assert parsed.pasted_cells == {}
+
 
 class TestHeaders:
     def test_bidi_and_zero_width_characters_are_stripped_from_names(self) -> None:

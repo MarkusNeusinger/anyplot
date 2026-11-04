@@ -32,6 +32,17 @@ def store(clock: Clock) -> DatasetStore:
     return DatasetStore(clock=clock)
 
 
+class TestPastedCells:
+    def test_the_cells_as_pasted_stay_with_the_version_and_count_toward_its_size(self, store: DatasetStore) -> None:
+        pasted = parse_dataset("Stadt;Einwohner\nBern;1.234\nBasel;7.000\nChur;12\n")
+        dataset_id = store.put("s1", pasted)
+        stored = store.get(dataset_id, "s1")
+
+        assert stored is not None and stored.pasted_cells == {"Einwohner": ["1.234", "7.000", "12"]}
+        assert stored.as_parsed().pasted_cells == stored.pasted_cells
+        assert dataset_size(pasted) == dataset_size(replace(pasted, pasted_cells={})) + len("1.2347.00012")
+
+
 class TestOwnership:
     def test_put_and_get(self, store: DatasetStore, parsed: ParsedDataset) -> None:
         dataset_id = store.put("s1", parsed)

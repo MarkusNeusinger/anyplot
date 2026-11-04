@@ -61,6 +61,11 @@ class StoredDataset:
     source: str | None = None
     """Where a computed table comes from, written by the server (`dataset_context.generated_source` for
     `generate_data`, `code_source` for `run_data_code`); the versions made from it carry it on, a paste has none."""
+    pasted_cells: dict[str, list[str]] = field(default_factory=dict)
+    """The cells as pasted of each number column whose dots could be decimals or thousands (`parse.AMBIGUOUS_DOTS`),
+    one per row, by column: only a paste's version holds them, so `set_type` to number with a decimal comma reads that
+    column again while the rows are still the paste's. The user's data, deleted with the session like `csv`; never sent
+    to the page."""
     file_name: str | None = None
     """The name of the file the user dropped for this data, sanitised and screened at the dataset route
     (`main._screen_file_name`; `dataset_context.FILE_NAME_WITHHELD` when the screen refused it); None for text pasted or
@@ -81,14 +86,18 @@ class StoredDataset:
             warnings=list(self.profile.warnings),
             text_columns=list(self.text_columns),
             context_lines=list(self.context_lines),
+            pasted_cells={name: list(cells) for name, cells in self.pasted_cells.items()},
         )
 
 
 def dataset_size(parsed: ParsedDataset) -> int:
-    """The bytes a dataset is accounted at: `data.csv`, the profile as JSON, the preview cells and the notes, as UTF-8."""
+    """The bytes a dataset is accounted at: `data.csv`, the profile as JSON, the preview cells, the notes and the cells
+    kept as pasted, as UTF-8."""
     preview = sum(len(cell.encode("utf-8")) for row in parsed.preview for cell in row)
     notes = sum(len(line.encode("utf-8")) for line in parsed.context_lines)
-    return len(parsed.csv.encode("utf-8")) + len(parsed.profile.model_dump_json().encode("utf-8")) + preview + notes
+    kept = sum(len(cell.encode("utf-8")) for cells in parsed.pasted_cells.values() for cell in cells)
+    profile = len(parsed.profile.model_dump_json().encode("utf-8"))
+    return len(parsed.csv.encode("utf-8")) + profile + preview + notes + kept
 
 
 class DatasetStore:
@@ -151,6 +160,7 @@ class DatasetStore:
             last_used_at=now,
             size_bytes=size,
             context_lines=list(parsed.context_lines),
+            pasted_cells={name: list(cells) for name, cells in parsed.pasted_cells.items()},
             code=code,
             source=source,
             file_name=file_name,

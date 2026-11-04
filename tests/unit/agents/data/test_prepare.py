@@ -8,6 +8,7 @@ The parser types a column whose every cell carries the same unit at the paste (`
 import csv
 import io
 import random
+from dataclasses import replace
 from decimal import Decimal
 from typing import Any, Literal
 
@@ -426,6 +427,48 @@ class TestSetTypeNumber:
 
         assert prepared.csv == SALES_CSV
         assert prepared.changes == ["Umsatz: already numbers, nothing changed"]
+
+    AMBIGUOUS_DOTS = "Stadt;Einwohner\nBern;1.234\nBasel;7.000\nChur;12\n"
+
+    def test_a_decimal_comma_reads_ambiguous_dots_again_from_the_cells_as_pasted(self) -> None:
+        """The canonical text says `7`, the paste said `7.000`: read again with a decimal comma, it is 7000."""
+        operation = {"op": "set_type", "column": "Einwohner", "type": "number", "decimal": ","}
+        prepared = prepare(self.AMBIGUOUS_DOTS, operation)
+
+        assert cells(prepared, 1) == ["1234", "7000", "12"]
+        assert prepared.changes == ["Einwohner: 3 cells read as numbers"]
+
+    def test_the_reading_follows_a_rename_and_waits_for_rows_as_pasted(self) -> None:
+        renamed = prepare(
+            self.AMBIGUOUS_DOTS,
+            {"op": "rename", "column": "Einwohner", "name": "Population"},
+            {"op": "set_type", "column": "Population", "type": "number", "decimal": ","},
+        )
+        assert cells(renamed, 1) == ["1234", "7000", "12"]
+
+        # After a sort a row of the frame is no pasted row: the pasted cells cannot be laid over it.
+        with pytest.raises(PrepareError) as raised:
+            prepare(
+                self.AMBIGUOUS_DOTS,
+                {"op": "sort", "column": "Stadt"},
+                {"op": "set_type", "column": "Einwohner", "type": "number", "decimal": ","},
+            )
+        assert raised.value.code == "type_mismatch"
+        assert "undo to the pasted data first" in str(raised.value)
+
+    def test_a_number_column_without_cells_as_pasted_stays_and_says_why(self) -> None:
+        """A column that reads one way, or a later version's: the decimal comma has nothing to read."""
+        plain = prepare(SALES, {"op": "set_type", "column": "Umsatz", "type": "number", "decimal": "."})
+        assert plain.changes == ["Umsatz: already numbers, nothing changed"]
+
+        later = replace(parse_dataset(self.AMBIGUOUS_DOTS), pasted_cells={})
+        operation = {"op": "set_type", "column": "Einwohner", "type": "number", "decimal": ","}
+        kept = apply_operations(later, OPERATIONS.validate_python([operation]))
+        assert kept.csv == later.csv
+        assert kept.changes == [
+            "Einwohner: already numbers, nothing changed; its dots can be read as thousands separators only from "
+            "the pasted data: undo to the pasted data first"
+        ]
 
     def test_a_uniform_unit_column_is_typed_at_parse_and_a_mixed_one_by_set_type(self) -> None:
         """The division of labour: when every cell carries the same unit, the parser reads numbers at the paste and

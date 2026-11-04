@@ -422,6 +422,8 @@ class _Carried:
     converted: dict[str, str] = field(default_factory=dict)  # the new columns of a `set_type` with `name`, and sources
     row_numbers: set[str] = field(default_factory=set)  # the columns of a `row_number`
     splits: list[list[str]] = field(default_factory=list)  # the new columns of each `split`, in the parts' order
+    pasted_cells: dict[str, list[str]] = field(default_factory=dict)  # `ParsedDataset.pasted_cells`, renamed along
+    rows_changed: bool = False  # an operation of this call dropped, grouped, sorted or reshaped the rows
 
     @classmethod
     def of(cls, parsed: ParsedDataset) -> "_Carried":
@@ -436,9 +438,13 @@ class _Carried:
             for column in parsed.profile.columns
             if column.dtype == "datetime"
         }
-        return cls(parsed.profile.decimal, order, set(parsed.text_columns), with_time)
+        carried = cls(parsed.profile.decimal, order, set(parsed.text_columns), with_time)
+        carried.pasted_cells = {name: list(cells) for name, cells in parsed.pasted_cells.items()}
+        return carried
 
     def rename(self, old: str, new: str) -> None:
+        if old in self.pasted_cells:
+            self.pasted_cells[new] = self.pasted_cells.pop(old)
         if old in self.text_columns:
             self.text_columns.remove(old)
             self.text_columns.add(new)
@@ -728,6 +734,9 @@ Operation = Annotated[
     Field(discriminator="op"),
 ]
 
+_ROW_CHANGING = (DropRows, Aggregate, Sort, PivotLonger, PivotWider)
+"""The operations after which a row of the frame is no longer the pasted row of the same place."""
+
 
 # --- Applying ---------------------------------------------------------------------------------
 
@@ -751,6 +760,9 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation]) -> Prep
             raise PrepareError("empty_result", "no column would remain")
         if not len(frame):
             raise PrepareError("empty_result", "no row would remain")
+        if isinstance(operation, _ROW_CHANGING):
+            # The pasted cells sit one per pasted row: after this, a row of the frame is no longer theirs.
+            carried.rows_changed = True
         changes.append(_clip(change, MAX_NOTE_CHARS))
     csv_text = _write(frame, carried)
     if len(csv_text.encode("utf-8")) > MAX_COMPUTED_BYTES:
@@ -898,8 +910,25 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
         return result, f"{op.column}: {_count(present, 'cell')} now text"
     if op.type == "number":
         if kind == "number":
-            # The canonical text of a number is a dot decimal; re-reading it under a decimal comma would be wrong.
-            return frame, f"{op.column}: already numbers, nothing changed"
+            pasted = carried.pasted_cells.get(op.column)
+            if op.decimal != "," or pasted is None:
+                # The canonical text of a number is a dot decimal (`7.000` is stored as `7`); re-reading it under a
+                # decimal comma would be wrong. Only the cells as pasted can be read again.
+                if op.decimal == ",":
+                    return frame, (
+                        f"{op.column}: already numbers, nothing changed; its dots can be read as thousands "
+                        "separators only from the pasted data: undo to the pasted data first"
+                    )
+                return frame, f"{op.column}: already numbers, nothing changed"
+            if carried.rows_changed or len(pasted) != len(frame):
+                raise PrepareError(
+                    "type_mismatch",
+                    f"column '{op.column}' can be read with a decimal comma only from the rows as pasted: "
+                    "change the reading first, in its own call, or undo to the pasted data first",
+                )
+            # The pasted cells, read again: `1.234` is 1234 and `7.000` is 7000 now.
+            series = pd.Series(pasted, index=frame.index, name=op.column, dtype="object")
+            present = int(series.replace("", None).notna().sum())
         conversion = _number_conversion(series, op.decimal or carried.decimal)
     else:
         if kind == "datetime":
