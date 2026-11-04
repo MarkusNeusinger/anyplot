@@ -10,7 +10,7 @@ import { ChatThread } from 'src/sections/agent-chat/ChatThread';
 import { localClock } from 'src/sections/agent-chat/messages';
 import { pendingReply } from 'src/sections/agent-chat/steps';
 import { CHAT_TEXT_MAX } from 'src/sections/agent-chat/styles';
-import { render, screen } from 'src/test-utils';
+import { render, screen, within } from 'src/test-utils';
 
 const notReady = (reason: string): AgentSessionState => ({
   ...initialAgentState('matplotlib'),
@@ -231,7 +231,9 @@ describe('ChatThread in-progress line', () => {
     expect(pendingReply(state)).toBe('summarize_data');
     renderThread(state);
     const pending = screen.getByTestId('pending-reply');
-    expect(pending).toHaveTextContent('summarizing your data …');
+    expect(pending).toHaveTextContent(/^summarizing your data$/);
+    // The site's loader beside the words, hidden from screen readers, which read the words.
+    expect(within(pending).getByTestId('loader-spinner')).toHaveAttribute('aria-hidden', 'true');
     expect(screen.getByRole('log').lastElementChild).toBe(pending);
   });
 
@@ -248,10 +250,10 @@ describe('ChatThread in-progress line', () => {
   it('names a message turn, and a stop before any step', () => {
     const asked: ChatItem[] = [{ id: 1, kind: 'user', text: 'what is on x?' }];
     const { unmount } = renderThread(inFlight(asked, run({ kind: 'message' })));
-    expect(screen.getByTestId('pending-reply')).toHaveTextContent('working on your message …');
+    expect(screen.getByTestId('pending-reply')).toHaveTextContent(/^working on your message$/);
     unmount();
     renderThread(inFlight(asked, run({ kind: 'message', stopping: true })));
-    expect(screen.getByTestId('pending-reply')).toHaveTextContent('stopping …');
+    expect(screen.getByTestId('pending-reply')).toHaveTextContent(/^stopping$/);
   });
 
   it('leaves a plot run and a pipeline step to the progress timeline, and keeps a queue wait', () => {

@@ -1205,14 +1205,16 @@ describe('AgentChatPage .example_data()', () => {
     // A key press (a click without a pointer) goes on in the message box: the button gives way.
     fireEvent.click(within(line).getByRole('button', { name: 'Make example data' }));
 
-    expect(await screen.findByTestId('example-data-working')).toHaveTextContent(
-      '# making example data …'
-    );
+    // The line steps aside while the turn runs: the thread says it once, beside the loader.
+    const pending = await screen.findByTestId('pending-reply');
+    expect(pending).toHaveTextContent(/^making example data$/);
+    expect(within(pending).getByTestId('loader-spinner')).toBeInTheDocument();
+    expect(screen.getAllByText(/making example data/)).toHaveLength(1);
+    expect(screen.queryByTestId('example-data')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Message')).toHaveFocus();
     expect(turnBodies()).toEqual([{ action: 'example_data' }]);
     // The thread names the page's own turn and holds the assistant's slot.
     expect(screen.getByRole('log', { name: 'Conversation' })).toHaveTextContent('.example_data()');
-    expect(screen.getByTestId('pending-reply')).toHaveTextContent('making example data …');
 
     releaseTurn?.();
     expect(await screen.findByText(EXAMPLE_REPLY)).toBeInTheDocument();
@@ -1232,7 +1234,6 @@ describe('AgentChatPage .example_data()', () => {
     sendFromComposer('what is the mean score?');
     const button = await screen.findByRole('button', { name: 'Make example data' });
     expect(button).toBeDisabled();
-    expect(screen.queryByTestId('example-data-working')).not.toBeInTheDocument();
     releaseTurn?.();
     await turnEnded();
     expect(screen.getByRole('button', { name: 'Make example data' })).toBeEnabled();
@@ -1342,7 +1343,8 @@ describe('AgentChatPage working states', () => {
     fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
 
     const pending = await screen.findByTestId('pending-reply');
-    expect(pending).toHaveTextContent('summarizing your data …');
+    expect(pending).toHaveTextContent(/^summarizing your data$/);
+    expect(within(pending).getByTestId('loader-spinner')).toBeInTheDocument();
     expect(lastInThread()).toBe(pending);
     expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
       '# bindings and .confirm() wait while the assistant works …'
@@ -1372,20 +1374,49 @@ describe('AgentChatPage working states', () => {
     holdNextTurn = true;
     sendFromComposer('what is the mean score?');
     const pending = await screen.findByTestId('pending-reply');
-    expect(pending).toHaveTextContent('working on your message …');
+    expect(pending).toHaveTextContent(/^working on your message$/);
     expect(screen.queryByRole('table', { name: 'Progress' })).not.toBeInTheDocument();
     releaseTurn?.();
     expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
     expect(screen.queryByTestId('pending-reply')).not.toBeInTheDocument();
     await turnEnded();
 
-    // `.create_plot()` shows its path in the timeline from the start; the thread adds nothing.
+    // `.create_plot()` shows its path in the timeline from the start, with the loader beside
+    // it; the thread adds nothing.
     holdNextTurn = true;
     fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
     expect(await screen.findByRole('table', { name: 'Progress' })).toBeInTheDocument();
     expect(screen.queryByTestId('pending-reply')).not.toBeInTheDocument();
+    expect(screen.getAllByTestId('loader-spinner')).toHaveLength(1);
     releaseTurn?.();
     expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+    await turnEnded();
+    expect(screen.queryByTestId('loader-spinner')).not.toBeInTheDocument();
+  });
+
+  it('shows the loader while the session opens, then the chat', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    const base = fetchMock.getMockImplementation() as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    let open: () => void = () => {};
+    fetchMock.mockImplementation((input: string, init: RequestInit = {}) => {
+      if (new URL(input).pathname.endsWith('/debug/agent/sessions') && init.method === 'POST') {
+        return new Promise<Response>(resolve => {
+          open = () => void base(input, init).then(resolve);
+        });
+      }
+      return base(input, init);
+    });
+    renderAt(PAGE);
+    const opening = await screen.findByTestId('session-opening');
+    expect(opening).toHaveTextContent(/^opening a session$/);
+    expect(within(opening).getByTestId('loader-spinner')).toHaveAttribute('aria-hidden', 'true');
+
+    open();
+    expect(await screen.findByLabelText(/# your data/)).toBeInTheDocument();
+    expect(screen.queryByTestId('session-opening')).not.toBeInTheDocument();
   });
 });
 

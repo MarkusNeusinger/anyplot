@@ -564,7 +564,7 @@ describe('DataPanel working states', () => {
     rerender(stateWith({ x: 'month', y1: 'shoes' }, { parsing: true }));
 
     expect(screen.getByTestId('parse-hint')).toHaveTextContent('# parsing your data …');
-    expect(screen.getByTestId('box-working')).toHaveTextContent('# parsing your data …');
+    expect(screen.getByTestId('box-working')).toHaveTextContent(/^# parsing your data$/);
     expect(screen.getByLabelText(/# your data/)).toHaveAttribute('aria-busy', 'true');
     const parse = screen.getByRole('button', { name: '.parse() …' });
     expect(parse).toBeDisabled();
@@ -1678,10 +1678,10 @@ describe('DataPanel file drop', () => {
         '# reading "Bericht.xlsx" on the server …'
       )
     );
-    // The box itself says what it waits for, not only the line under it.
-    expect(screen.getByTestId('box-working')).toHaveTextContent(
-      '# reading "Bericht.xlsx" on the server …'
-    );
+    // The box itself says what it waits for, not only the line under it, beside the loader.
+    const working = screen.getByTestId('box-working');
+    expect(working).toHaveTextContent(/^# reading "Bericht\.xlsx" on the server$/);
+    expect(within(working).getByTestId('loader-spinner')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Open a data file' })).toBeDisabled();
 
     drop(csvFile());

@@ -115,6 +115,7 @@ import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 
+import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { LIB_TO_LANG, LIBRARIES } from 'src/constants';
 import { CONFIG } from 'src/global-config';
@@ -808,7 +809,15 @@ function AgentChat({
         <NoIndex />
         {header}
         {state.phase === 'opening' ? (
-          <Box sx={labelSx}>opening a session…</Box>
+          // The open can take seconds: on the public lane the bot check runs inside it first
+          // (`withHumanCheck`), and a check that asks for a click shows at the window's foot.
+          <Box
+            data-testid="session-opening"
+            sx={{ ...labelSx, display: 'flex', alignItems: 'center', gap: 1.5 }}
+          >
+            opening a session
+            <LoaderSpinner size="inline" />
+          </Box>
         ) : (
           <Box role="alert" sx={{ borderLeft: `2px solid ${colors.error}`, pl: 1.5 }}>
             <Box sx={{ ...labelSx, color: colors.error }}>
