@@ -87,8 +87,10 @@ class TestFixtures:
         # 34 single-step cases (two of them `derive`, two `make_date`, one month-only date format, one sort of month
         # names, one daily mean per sensor, four text operations), 11 `hard` ones (chains, ambiguity, unsupported
         # asks), 11 data-code cases, 12 step-1 summaries, 3 requests for example data, 4 for another plot type and 4
-        # notes sent with the paste (`first_turn`), one of them a decimal comma read again from the pasted cells.
-        assert len(cases) == 79
+        # notes sent with the paste (`first_turn`), one of them a decimal comma read again from the pasted cells, and
+        # a short table the page kept as a message (`misrouted`), which the root asks for again.
+        assert len(cases) == 80
+        assert [item.id for item in cases if "misrouted" in item.tags] == ["en-table-as-message"]
         notes = [item for item in cases if item.first_turn]
         assert len(notes) == 4 and {item.locale for item in notes} == {"de", "en"}
         assert all(item.message and item.dataset_text and "note" in item.tags for item in notes)

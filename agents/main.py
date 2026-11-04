@@ -1697,8 +1697,8 @@ async def _screen_notes(
 
 
 def _refuse_for_chat(ledger: RequestLedger, text: str) -> None:
-    """`422 code`, `422 data_request` or `422 formula` for pasted text that is a program, asks for data or asks for a
-    formula, before any parser or model reads it (`data/classify.py`).
+    """`422 code`, `422 data_request` or `422 formula` for attached text (a paste the page routed as data, or a file)
+    that is a program, asks for data or asks for a formula, before any parser or model reads it (`data/classify.py`).
 
     A snippet such as `np.linspace(0, 10, 100)` would parse as a one-row table, and the
     transcriber would compute a formula's rows, which is the one thing no model may do:
