@@ -14,22 +14,29 @@ import type {
   AgentSessionState,
   DataChange,
   Failure,
-  FormulaKind,
   TranscriptionState,
 } from 'src/hooks/useAgentSession';
-import { type ColumnProfile, type LongSuggestion, MAX_MESSAGE_CHARS } from 'src/lib/agent';
+import type { ColumnProfile, LongSuggestion } from 'src/lib/agent';
+import {
+  type BindingRow,
+  emptyChoice,
+  kindsHint,
+  siblingHint,
+  signHint,
+} from 'src/sections/agent-chat/bindings';
 import { CellText } from 'src/sections/agent-chat/CellText';
 import type { DataViewProps } from 'src/sections/agent-chat/DataView';
-import { lazyOrFallback } from 'src/sections/agent-chat/lazyOrFallback';
+import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import { describeDataFailure } from 'src/sections/agent-chat/messages';
 import {
   actionButtonSx,
   bodyTextSx,
   ghostButtonSx,
   labelSx,
+  nativeControlSx,
   smallText,
 } from 'src/sections/agent-chat/styles';
-import { colors, typography } from 'src/theme';
+import { colors, fontSize, typography } from 'src/theme';
 
 /** In place of the full view when its chunk does not load (`lazyOrFallback`): a line in the card. */
 export function DataViewUnavailable({ onClose }: Pick<DataViewProps, 'onClose'>) {
@@ -46,16 +53,6 @@ export function DataViewUnavailable({ onClose }: Pick<DataViewProps, 'onClose'>)
       </Box>
     </Box>
   );
-}
-
-// The full view's chunk holds the Data Grid: it loads when the user first opens the view (or points at the button).
-const loadDataView = () => import('src/sections/agent-chat/DataView');
-export const DataView = lazyOrFallback(loadDataView, DataViewUnavailable);
-// A preload that fails stays quiet: opening the view shows the line above.
-export const preloadDataView = () => void loadDataView().catch(() => undefined);
-
-export function formatKb(bytes: number): string {
-  return `${(bytes / 1024).toFixed(bytes < 10 * 1024 ? 1 : 0)} KB`;
 }
 
 export function countOf(count: number, noun: string): string {
@@ -197,17 +194,6 @@ export function NotesBlock({ lines }: { lines: string[] }) {
       )}
     </Box>
   );
-}
-
-/** The line under the box for text the server refused as a formula or as code, which the chat takes instead. */
-export function offerLine(kind: FormulaKind, tooLong: boolean): string {
-  if (kind === 'formula') {
-    return 'looks like a formula: send it to the chat? the assistant computes the table from it.';
-  }
-  if (tooLong) {
-    return `looks like code that makes data: shorten it to ${MAX_MESSAGE_CHARS.toLocaleString('en-US')} characters, keeping only the part that computes the data, and the chat runs it.`;
-  }
-  return 'looks like code that makes data: send it to the chat? the assistant runs it in a sandbox and shows you the table.';
 }
 
 /**
@@ -427,15 +413,6 @@ export function ChangeBlock({ change, canUndo, undoBusy, error, onUndo }: Change
   );
 }
 
-/** Step 1's one action under the bindings: `.confirm()`. */
-export const stepButtonSx = {
-  ...actionButtonSx,
-  border: '1px solid var(--rule)',
-  px: 2,
-  py: 1,
-  width: { xs: '100%', sm: 'auto' },
-} as const;
-
 /** The data's shape in one line: `2 rows · 2 columns · version 1`. */
 export function dataShape(dataset: NonNullable<AgentSessionState['dataset']>): string {
   const { profile, version } = dataset.parsed;
@@ -509,6 +486,154 @@ export function LongHint({ suggestion, canApply, busy, error, onApply }: LongHin
       >
         {busy ? '.to_long() …' : '.to_long()'}
       </Box>
+    </Box>
+  );
+}
+
+interface BindingsBlockProps {
+  rows: BindingRow[];
+  columns: ColumnProfile[];
+  bindings: Record<string, string>;
+  missingRoles: string[];
+  bindingsBusy: boolean;
+  bindingsError: Failure | null;
+  parsing: boolean;
+  ready: boolean;
+  working: boolean;
+  busy: boolean;
+  confirmed: boolean;
+  suggestion: LongSuggestion | null;
+  onBind: (role: string, column: string | null) => void;
+}
+
+/** Every spec role's column dropdown, its accepted kinds, and its sign/wide-table hints. */
+export function BindingsBlock({
+  rows,
+  columns,
+  bindings,
+  missingRoles,
+  bindingsBusy,
+  bindingsError,
+  parsing,
+  ready,
+  working,
+  busy,
+  confirmed,
+  suggestion,
+  onBind,
+}: BindingsBlockProps) {
+  return (
+    <Box>
+      <Box sx={{ ...labelSx, mb: 0.75 }}># bindings — which column plays which role</Box>
+      {/* Why the dropdowns and `.confirm()` do not answer: the server runs one thing
+          per session. Not a live region: the thread and the step status announce the work. */}
+      {working && (
+        <Box
+          data-testid="bindings-lock"
+          sx={{ ...labelSx, color: 'var(--ink-soft)', mt: -0.25, mb: 1 }}
+        >
+          # {confirmed ? 'bindings wait' : 'bindings and .confirm() wait'} while{' '}
+          {parsing ? 'the data is parsed' : 'the assistant works'} <Ellipsis />
+        </Box>
+      )}
+      {rows.length === 0 && (
+        <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
+          {bindingsBusy ? 'checking roles…' : 'this plot names no data roles'}
+        </Box>
+      )}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, max-content) minmax(0, 1fr)',
+          alignItems: 'center',
+          columnGap: 1.5,
+          rowGap: 1,
+        }}
+      >
+        {rows.map(row => {
+          const missing = row.first && missingRoles.includes(row.role.name);
+          const id = `agent-role-${row.name}`;
+          const bound = bindings[row.name];
+          // A wide table's number column in a role that wants labels comes first: the plot would be meaningless.
+          const sign =
+            siblingHint(row.role, bound, suggestion) ??
+            signHint(
+              row.role,
+              columns.find(column => column.name === bound)
+            );
+          return (
+            <Box key={row.name} sx={{ display: 'contents' }}>
+              <Box
+                component="label"
+                htmlFor={id}
+                title={row.role.description || undefined}
+                sx={{
+                  fontFamily: typography.mono,
+                  fontSize: fontSize.md,
+                  color: missing ? colors.error : row.next ? 'var(--ink-muted)' : 'var(--ink)',
+                  overflowWrap: 'anywhere',
+                  // The kinds line wraps instead of squeezing the dropdowns.
+                  maxWidth: { xs: '13ch', sm: '16ch' },
+                }}
+              >
+                {row.name}
+                {row.first && row.role.required ? ' *' : ''}
+                {row.first && (
+                  <Box component="span" sx={{ display: 'block', ...labelSx, fontSize: smallText }}>
+                    {kindsHint(row.role)}
+                  </Box>
+                )}
+              </Box>
+              <Box sx={{ minWidth: 0 }}>
+                <Box
+                  component="select"
+                  id={id}
+                  value={bound ?? ''}
+                  disabled={!ready || busy}
+                  aria-describedby={sign ? `${id}-sign` : undefined}
+                  onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
+                    onBind(row.name, event.target.value || null)
+                  }
+                  sx={{ ...nativeControlSx, width: '100%' }}
+                >
+                  <option value="">{emptyChoice(row)}</option>
+                  {columns.map(column => (
+                    <option key={column.name} value={column.name}>
+                      {column.name} ({column.dtype})
+                    </option>
+                  ))}
+                </Box>
+                {sign && (
+                  <Box
+                    id={`${id}-sign`}
+                    data-testid="sign-hint"
+                    sx={{ ...labelSx, fontSize: smallText, color: colors.warning, mt: 0.25 }}
+                  >
+                    {sign}
+                  </Box>
+                )}
+              </Box>
+            </Box>
+          );
+        })}
+      </Box>
+      {missingRoles.length > 0 && (
+        <Box sx={{ ...labelSx, mt: 1 }}>
+          * required: pick a column for {missingRoles.join(', ')}
+        </Box>
+      )}
+      {bindingsError && (
+        <Box role="alert" sx={{ ...bodyTextSx, color: colors.error, mt: 1 }}>
+          {describeDataFailure(bindingsError.code, bindingsError.ref)}
+          {bindingsError.errors && bindingsError.errors.length > 0 && (
+            <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5, fontSize: smallText }}>
+              {bindingsError.errors.map((line, index) => (
+                <li key={index}>{line}</li>
+              ))}
+            </Box>
+          )}
+        </Box>
+      )}
     </Box>
   );
 }
