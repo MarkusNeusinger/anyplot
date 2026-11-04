@@ -14,7 +14,15 @@ AI pipeline writes, renders, reviews, and maintains its implementations in 15 pl
 Julia, and JavaScript. On [anyplot.ai](https://anyplot.ai), you compare the libraries side by side and copy working
 code.
 
-Built by [Markus Neusinger](https://linkedin.com/in/markus-neusinger/).
+## How I build anyplot
+
+I'm [Markus Neusinger](https://linkedin.com/in/markus-neusinger/), a physicist working in data and AI: since 2013 I've built data pipelines, analyses and machine learning, and the apps people use them through. Models write anyplot's code; I lead them, with that experience across data, backends, frontends and hosting.
+
+- **I set the course.** The vision, the decisions, and the structure that keeps a codebase written by agents from turning into a mess. Seven of those decisions are [below](#engineering-highlights).
+- **I know when to push back.** The models know a lot. The job is knowing which question to ask, when to make a model research a point properly, and when a confident answer is wrong. Security is a good example: I know what has to hold, private data and no way to abuse the service, and asking the right question is often enough for a model to find what still needs hardening.
+- **I split, assign, test, and send back.** Work goes to Claude Code, Claude in GitHub Actions, Gemini or Copilot by what it needs and what it costs. I test what comes back and return it until it's right.
+
+This isn't one prompt and a wait. anyplot took almost a year and 869 merged pull requests from my account since 18 November 2025, and what I correct becomes a rule the agents follow. [How anyplot is built with AI agents](docs/concepts/ai-workflow.md) tells the whole story.
 
 [![The ridgeline-basic spec, six of its 15 library implementations](https://api.anyplot.ai/og/ridgeline-basic.png)](https://anyplot.ai/ridgeline-basic)
 
@@ -22,6 +30,78 @@ Built by [Markus Neusinger](https://linkedin.com/in/markus-neusinger/).
 shows six of them; the spec page shows all 15.*
 
 ---
+
+## Engineering highlights
+
+Seven decisions I made and hold the agents to, each with its reason and the code that carries it out:
+
+- **A review loop instead of hand-edits.** No generated plot is patched by hand. An AI reviewer scores every
+  render on a 24-criterion rubric, blind to any earlier score, and a repair loop fixes the defects it names,
+  against a bar that starts at 90 of 100 and drops 10 points per repair. A fix to a prompt or a spec fixes
+  every plot it governs. ([rubric](prompts/quality-criteria.md), [review workflow](.github/workflows/impl-review.yml))
+- **A gate against silent regressions.** Every night the oldest implementations are regenerated, and a new
+  version replaces the live one only when a pairwise review of both finds a visible fix and the new score
+  drops by no more than a point. A newer model can't quietly make the catalogue worse.
+  ([`regen_gate.py`](automation/scripts/regen_gate.py), [`daily-regen.yml`](.github/workflows/daily-regen.yml))
+- **One agent talks, code decides.** In "Use with my data", one Google ADK agent talks to the user. The
+  per-library adapters and the reviewer run inside a pipeline whose loop is plain code: at most one repair
+  round, at most two reviews, and the spec, library, and data come from server state, so neither the model
+  nor an injected prompt can redirect a run. ([`pipeline.py`](agents/anyplot/pipeline.py),
+  [design](docs/concepts/agent-network.md))
+- **Model-written code runs where it can't do harm.** No generated code runs in the agent service. A
+  validator (Python's `ast`, tree-sitter for R, Julia, and JavaScript) refuses disallowed imports and calls
+  first; a separate renderer then runs the code in Cloud Run sandboxes (gVisor) with no network egress, no
+  metadata server, and a read-only root filesystem, under a service account that holds no IAM role.
+  ([renderer](agents/renderer/main.py), [validator](agents/anyplot/code/validate.py))
+- **Models choose, the server acts.** The assistant never writes data rows: it picks from a closed set of
+  typed operations, which the server applies with pandas and reports with counts. Guardrail plugins check
+  every turn: a scope judge that fails closed, token and run budgets per request, user, network, and day,
+  and a tool allowlist per agent. ([operations](agents/anyplot/data/prepare.py),
+  [plugins](agents/anyplot/plugins/))
+- **Private by construction.** Chats and data live only in server memory and are dropped after an hour
+  idle, and the session id never appears in a URL. Usage telemetry holds only enums, buckets, and counts,
+  keyed by hashes under a per-process random salt, and a canary test fails if any message or data value
+  reaches a log line. ([telemetry](agents/anyplot/telemetry.py),
+  [canary test](tests/unit/agents/runtime/test_canary.py))
+- **Rules that turn a repeated mistake into a check.** A mistake that comes back becomes a test or a written
+  rule, with the incident beside it. One test keeps the assistant's prompt in step with the buttons the chat
+  page renders; another asserts that no agent has a code executor or a search tool. After a green deploy
+  left anyplot.ai blank for 45 minutes, every merge ends with a smoke test of the live site, and CI runs the
+  same check on the built image. Around them: a changelog fragment per pull request checked in CI, every
+  migration run against a throwaway PostgreSQL, CodeQL, and Dependabot.
+  ([prompt-control test](tests/unit/agents/test_prompt_controls.py),
+  [site smoke test](scripts/site-smoke.mjs), [guardrails](.claude/guardrails.md))
+
+## Architecture
+
+```mermaid
+flowchart TB
+  browser(["Browser"]) --> cf["Cloudflare"]
+  cf --> app["anyplot-app<br>React SPA"]
+  cf --> api["anyplot-api<br>FastAPI: catalogue API, MCP server,<br>agent BFF with Turnstile and per-network caps"]
+  browser -. "plot images" .-> gcs
+
+  subgraph chat ["Use with my data"]
+    direction TB
+    agents["anyplot-agents<br>Google ADK, Claude Haiku 5.5 on Vertex AI in the EU"]
+    agents -- "IAM ID token" --> renderer["anyplot-renderer<br>gVisor sandboxes, no egress, zero-role service account"]
+  end
+  api -- "IAM ID token, catalogue snapshot" --> agents
+
+  subgraph pipeline ["GitHub Actions pipeline"]
+    direction LR
+    spec["spec-create"] --> gen["impl-generate"] --> review["impl-review<br>24-criterion rubric"]
+    review -- "below the bar" --> repair["impl-repair"] --> review
+    review -- "approved" --> merge["impl-merge"]
+    regen["daily-regen"] --> gen
+  end
+
+  api --> sql[("Cloud SQL<br>PostgreSQL")]
+  merge -- "promote images" --> gcs[("Cloud Storage<br>plot images")]
+  merge -- "sync" --> sql
+```
+
+All of it runs live at [anyplot.ai](https://anyplot.ai).
 
 ## The catalogue in numbers
 
@@ -221,6 +301,8 @@ For details, see [Contributing](docs/contributing.md). To run the project locall
 - [Vision](docs/concepts/vision.md): the product vision
 - [Workflows](docs/workflows/overview.md): the automation and its labels
 - [Agent network](docs/concepts/agent-network.md): the design of "Use with my data"
+- [How anyplot is built with AI agents](docs/concepts/ai-workflow.md): who does what, the path of a change,
+  and how corrections become rules
 - [Reference](docs/reference/): API, MCP, database, repository structure, and style guide
 - [Documentation index](docs/index.md): everything else
 
