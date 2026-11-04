@@ -728,7 +728,8 @@ function checkBindings(session, bindings) {
   const roles = SPECS[session.specId].roles;
   const columns = new Map(session.dataset.profile.columns.map(c => [c.name, c]));
   const errors = [];
-  const seen = new Set();
+  // A column may serve several roles, but once per variadic family (the same series twice).
+  const members = new Map();
   const bound = new Set();
   for (const { role: name, column } of bindings) {
     const spec = resolveRole(roles, name);
@@ -741,14 +742,16 @@ function checkBindings(session, bindings) {
       );
       continue;
     }
+    const held = members.get(spec.name) ?? new Set();
     if (!columns.has(column)) errors.push(`column '${column}' is not in the dataset`);
-    else if (seen.has(column)) errors.push(`column '${column}' is bound more than once`);
-    else if (!accepts(spec, columns.get(column).dtype)) {
+    else if (spec.variadic && held.has(column)) {
+      errors.push(`column '${column}' is bound to more than one member of '${spec.name}'`);
+    } else if (!accepts(spec, columns.get(column).dtype)) {
       errors.push(
         `role '${name}' needs ${spec.kinds.join(' or ')} data, but column '${column}' is ${columns.get(column).dtype}`
       );
     } else bound.add(spec.name);
-    seen.add(column);
+    if (spec.variadic) members.set(spec.name, held.add(column));
   }
   const missing = roles.filter(r => r.required && !bound.has(r.name)).map(r => r.name);
   return { errors, bindings, complete: !errors.length && !missing.length, missing_roles: missing };

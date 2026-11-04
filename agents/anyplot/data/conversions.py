@@ -254,7 +254,9 @@ def candidates(
 
     First an open lower and upper bound pair takes the first free column of ranges (`RangeSplit`);
     then the roles in spec order, each taking the first free column (in column order) whose dry
-    run reads it as the role's type; a column serves one role. `keep_text` names the
+    run reads it as the role's type. A conversion is a suggestion, like the default bindings, so
+    it takes only a column no binding holds and gives each column to one role: a column on
+    several roles is the user's choice only (`bindings.check_bindings`). `keep_text` names the
     columns kept text on request, `cache` holds the dry runs by column and type
     (`StoredDataset.dry_runs`; `range` for the ranges); `parsed` is read into a frame only when a
     dry run is due. With no conversion at all, the row numbers (`RowNumbers`).

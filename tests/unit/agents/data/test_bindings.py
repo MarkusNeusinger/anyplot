@@ -1183,10 +1183,11 @@ class TestCheckBindings:
         assert errors == ["column 'nope' is not in the dataset"]
         assert "x" in missing
 
-    def test_column_bound_twice(self) -> None:
+    def test_a_column_on_two_members_of_one_family(self) -> None:
+        """The same series twice is never meant: inside a family a column stays once, as the page moves it."""
         _, errors, _ = self.check(("y1", "a"), ("y2", "a"))
 
-        assert errors == ["column 'a' is bound more than once"]
+        assert errors == ["column 'a' is bound to more than one member of 'y'"]
 
     def test_incompatible_dtype(self) -> None:
         complete, errors, missing = self.check(("x", "team"), ("y1", "a"), ("note", "comment"))
@@ -1213,6 +1214,73 @@ class TestCheckBindings:
         assert missing == []
         assert errors
         assert not complete
+
+
+class TestOneColumnOnSeveralRoles:
+    """Owner decision of 2026-11-04: a column bound by hand may serve several roles; the code binds each once."""
+
+    BUBBLE = [role("x", "numeric"), role("y", "numeric"), role("size", "numeric", required=False)]
+    BARS = [role("category", "categorical"), role("value", "numeric"), role("label", "text", required=False)]
+    LINES = [role("x", "datetime", "numeric"), role("y", "numeric", variadic=True)]
+    DATA = "region,day,sales,cost\nnorth,2024-01-01,12,3\nsouth,2024-01-02,15,4\neast,2024-01-03,9,5\n"
+
+    @pytest.mark.parametrize(
+        ("roles", "pairs"),
+        [
+            (BUBBLE, (("x", "cost"), ("y", "sales"), ("size", "sales"))),  # the y and the size of a bubble
+            (BUBBLE, (("x", "sales"), ("y", "sales"))),
+            (BARS, (("category", "region"), ("value", "sales"), ("label", "sales"))),  # a value and its label
+            (LINES, (("x", "sales"), ("y1", "sales"), ("y2", "cost"))),  # a family member beside a single role
+        ],
+    )
+    def test_is_complete_without_an_error_or_a_warning(
+        self, roles: list[DataRole], pairs: tuple[tuple[str, str], ...]
+    ) -> None:
+        check = check_bindings(bind(*pairs), roles, profile(self.DATA))
+
+        assert (check.complete, check.errors, check.missing_roles, check.warnings) == (True, [], [], [])
+
+    def test_a_role_bound_twice_stays_an_error(self) -> None:
+        check = check_bindings(bind(("x", "cost"), ("y", "sales"), ("y", "sales")), self.BUBBLE, profile(self.DATA))
+
+        assert check.errors == ["role 'y' is bound more than once"]
+        assert not check.complete
+
+    def test_a_bound_pair_on_one_column_is_never_inverted(self) -> None:
+        roles = [role("category", "categorical"), role("min_value", "numeric"), role("max_value", "numeric")]
+
+        check = check_bindings(
+            bind(("category", "region"), ("min_value", "sales"), ("max_value", "sales")), roles, profile(self.DATA)
+        )
+
+        assert (check.complete, check.errors, check.warnings) == (True, [], [])
+
+    @pytest.mark.parametrize(
+        ("roles", "data"),
+        [
+            # One number column for three number roles: x takes it, y and size stay open.
+            (BUBBLE, "sales\n12\n15\n9\n"),
+            (BUBBLE, "label,sales\na,12\nb,15\nc,9\n"),
+            (BARS, "region,sales\nnorth,12\nsouth,15\n"),  # the label could take the integers as text
+            (LINES, "sales\n12\n15\n9\n"),
+            ([role("x", "numeric"), role("y", "numeric"), role("y_err", "numeric")], "a,b\n1,2\n3,4\n"),
+            ([role("min_value", "numeric"), role("max_value", "numeric")], "v\n1\n5\n"),
+        ],
+    )
+    def test_the_defaults_bind_each_column_once(self, roles: list[DataRole], data: str) -> None:
+        columns = [binding.column for binding in default_bindings(roles, profile(data))]
+
+        assert columns
+        assert len(columns) == len(set(columns))
+
+    def test_every_change_of_the_data_keeps_it(self) -> None:
+        """A version change that drops another binding's column keeps both roles on the shared column."""
+        before = bind(("x", "cost"), ("y", "sales"), ("size", "sales"))
+        after = profile("region,day,sales\nnorth,2024-01-01,12\nsouth,2024-01-02,15\neast,2024-01-03,9\n")
+
+        assert as_pairs(carry_bindings(before, self.BUBBLE, profile(self.DATA))) == as_pairs(before)
+        assert ("y", "sales") in as_pairs(carry_bindings(before, self.BUBBLE, after))
+        assert ("size", "sales") in as_pairs(carry_bindings(before, self.BUBBLE, after))
 
 
 @pytest.mark.parametrize(
