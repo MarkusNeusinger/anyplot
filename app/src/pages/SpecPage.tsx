@@ -486,7 +486,7 @@ export function SpecPage() {
   // SoftwareSourceCode schema for impl detail pages — eligibility for Google's
   // code-sample rich result and SGE/AIO surfaces. anyplot's unique content IS
   // the LLM-generated source code samples (2696 impl pages), so this is the
-  // single biggest unrealized SEO lever per the 2026-04-26 audit.
+  // single biggest SEO lever on these pages.
   const softwareSourceJsonLd =
     mode === 'detail' && urlLanguage && selectedLibrary
       ? {

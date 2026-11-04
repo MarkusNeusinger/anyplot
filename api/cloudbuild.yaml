@@ -21,8 +21,8 @@ substitutions:
   # (deploys, Google's roughly daily instance replacement) are exactly what a
   # warm instance is for.
   _MAX_INSTANCES: "1"
-  # The runtime identity, a dedicated least-privilege account since 2026-11-02 (before:
-  # the Compute Engine default service account, which holds roles/editor). Its grants:
+  # The runtime identity, a dedicated least-privilege account (not the Compute
+  # Engine default service account, which holds roles/editor). Its grants:
   # roles/cloudsql.client and roles/bigquery.jobUser on the project, secretAccessor on
   # the seven secrets the service reads (DATABASE_URL, CACHE_INVALIDATE_TOKEN, ADMIN_TOKEN,
   # PLAUSIBLE_API_KEY, AGENT_USER_ID_KEY, TURNSTILE_SECRET_KEY and the hand-attached
@@ -51,9 +51,9 @@ substitutions:
   # AGENT_USER_ID_KEY secret are both set. Flip it HERE (the trigger's
   # substitutions), not with `gcloud run services update`: this pipeline writes
   # both variables on every deploy, so an out-of-band change lasts only until
-  # the next build. The AGENT_USER_ID_KEY secret exists since 2026-10-11 and is
-  # bound in `--update-secrets` below (Cloud Run refuses a deploy that names a
-  # secret which does not exist, so the binding followed the secret).
+  # the next build. The AGENT_USER_ID_KEY secret exists and is bound in
+  # `--update-secrets` below (Cloud Run refuses a deploy that names a secret
+  # which does not exist, so the binding had to follow the secret).
   _AGENT_ENABLED: "false"
   # The public door of the agent chat (/agent/*, api/routers/agent_public.py),
   # on top of _AGENT_ENABLED, which stays the master switch: while this is
@@ -147,7 +147,7 @@ steps:
       # belt and braces on top of it: a secret-backed variable lives in the same
       # revision environment as a literal one, so a destructive `--set-env-vars`
       # is a second way this pipeline could drop the hand-attached
-      # ORIGIN_SECRET and silently disarm the gate (Copilot review). Additive on
+      # ORIGIN_SECRET and silently disarm the gate. Additive on
       # both flags means one deploy cannot undo an out-of-band change; the cost
       # is that a variable dropped from this line is no longer removed by the
       # next deploy, which is the trade already accepted for the secrets.

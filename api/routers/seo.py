@@ -31,17 +31,18 @@ _SPEC_ID_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 
 
 # The date the bot-facing page template last changed materially. `lastmod`
-# describes the PAGE, not the row behind it, and those drift apart: on
-# 2026-08-18 every implementation page gained the real render, both themes, the
-# interactive version and a rewritten meta description, while no `updated`
-# column moved. The sitemap consequently told Google nothing had changed, and
-# Google — which had last fetched some of these pages three weeks earlier — had
-# no reason to come back and see any of it.
+# describes the PAGE, not the row behind it, and those drift apart: when every
+# implementation page gained the real render, both themes, the interactive
+# version and a rewritten meta description, no `updated` column moved. The
+# sitemap consequently told Google nothing had changed, and Google — which had
+# last fetched some of these pages three weeks earlier — had no reason to come
+# back and see any of it.
 #
-# 2026-09-26: every hub and implementation page gained a title, H1 and lead
-# paragraph naming its languages and sibling libraries, plus a page node with
-# primaryImageOfPage. The library-first meta descriptions of 2026-09-02 had
-# shipped without a bump, and Google was still showing the older snippet.
+# The current value is the day every hub and implementation page gained a
+# title, H1 and lead paragraph naming its languages and sibling libraries, plus
+# a page node with primaryImageOfPage. The library-first meta descriptions
+# before it had shipped without a bump, and Google was still showing the older
+# snippet.
 #
 # Bump this ONLY when the rendered page genuinely changes for every URL. It is
 # a claim to search engines that ~5,200 pages changed at once; making it
@@ -177,7 +178,7 @@ _LIBRARY_LIST = ", ".join(LIBRARY_NAMES.values())
 
 # Homepage copy sized for SERP display: title ~50-60 chars, description
 # ~150 chars. The previous 10-char title / 39-char description read as a
-# thin page to search engines (audit 2026-07-16).
+# thin page to search engines.
 HOME_TITLE = f"anyplot.ai — AI-generated plot catalog for {_LIBRARY_COUNT} libraries"
 HOME_DESCRIPTION = (
     "The open plot catalogue: every chart starts as a library-agnostic spec; "
@@ -243,8 +244,7 @@ _HOME_JSONLD = {
 # The two machine files close the nav, as full URLs. Assistants' fetch tools
 # often allow only URLs that already appeared verbatim in fetched content, so
 # a guide that is linked from nothing an assistant lands on is findable only by
-# guessing the llms.txt convention (kurrentschrift finding 2026-08-28,
-# docs/reference/seo.md "Discoverability").
+# guessing the llms.txt convention (docs/reference/seo.md "Discoverability").
 _BOT_NAV_HTML = (
     "<nav>"
     '<a href="https://anyplot.ai/">anyplot.ai</a> · '
@@ -402,8 +402,8 @@ def _hub_heading(spec) -> str:
 
     "Manhattan Plot for GWAS in Python, R, Julia and JavaScript". The bare
     title never said Python, so for "manhattan plot python" Google ranked a
-    single implementation page above the hub that lists all of them (user
-    report 2026-09-26). Raw text; callers escape it.
+    single implementation page above the hub that lists all of them. Raw text;
+    callers escape it.
     """
     languages = list(dict.fromkeys(i.library.language for i in _sorted_impls(spec)))
     if not languages:
@@ -458,7 +458,7 @@ def _spec_links_html(spec_index: list[tuple[str, str]]) -> str:
     /plots and /specs are the catalog surfaces crawlers reach from the site
     nav; without server-rendered links every hub page is an orphan in the
     internal link graph (reachable only via sitemap.xml), which hurts
-    discovery and PageRank flow (audit 2026-07-16).
+    discovery and PageRank flow.
     """
     if not spec_index:
         return ""
@@ -528,9 +528,9 @@ def _build_spec_hub_html(spec, image: str) -> str:
         impl_list_items.append(item)
 
     # The body shows the best actual render, not the 1200x630 og collage card:
-    # the hub is the sitemap'd, most-shared URL, and until now it was the one
+    # the hub is the sitemap'd, most-shared URL, and it used to be the one
     # page type where a machine could enumerate 15 implementation links yet
-    # not reach a single plot image (AI-access audit 2026-08-19). The collage
+    # not reach a single plot image. The collage
     # card stays the og:image — link previews are what it was made for.
     best_impl = max(
         (i for i in spec.impls if i.preview_url_light), key=lambda i: (i.quality_score or 0, i.library_id), default=None
@@ -672,7 +672,7 @@ def _build_source_code_node(spec, impl, lib_name: str, lang_name: str, page_url:
     `image` is the actual render as an ImageObject, not the 1200x630 og card
     the meta tags carry: in that card the plot is a thumbnail inside branding
     chrome, and structured-data consumers were being handed the chrome while
-    the body served the real plot (AI-access audit 2026-08-19). The card
+    the body served the real plot. The card
     remains the og:image — link previews are the surface it was made for.
 
     `mainEntityOfPage` marks this node as what the page is about, which is
@@ -745,8 +745,8 @@ def _spec_keywords(spec) -> list[str]:
 def _build_impl_retrieval(spec, impl, page_url: str, hub_url: str) -> str:
     """The machine-readable retrieval record of an implementation page.
 
-    Two properties matter, both learned from assistants that fetched the
-    sister project's pages (kurrentschrift, 2026-08-28):
+    Two properties matter, both learned from assistants that fetched a sister
+    project's pages:
 
     - Every URL is COMPLETE and callable. Assistants' fetch tools often allow
       only URLs that already appeared verbatim in fetched content, so the
@@ -815,13 +815,13 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
     # The meta/OG description names the library first. Reusing the spec
     # description verbatim gave every implementation page of a spec (up to 15)
     # and its hub the same snippet — Bing Webmaster Tools flagged the catalogue
-    # for "too many pages with identical meta descriptions" (2026-09-02), and a
+    # for "too many pages with identical meta descriptions", and a
     # searcher who typed "matplotlib funnel chart" saw nothing about matplotlib
     # in the result. The visible body and the JSON-LD keep the plain text.
     #
     # It also says the plot exists in other libraries: a searcher who found the
     # plotnine page for "manhattan plot python" could not tell from the result
-    # that seven other Python libraries had it too (user report 2026-09-26).
+    # that seven other Python libraries had it too.
     # A count, not the names, so the spec's own description still fits.
     also = f", also in {_libraries_phrase(len(siblings), other=True)}" if siblings else ""
     meta_desc_esc = html.escape(_meta_description(f"{heading}{also}: {spec.description or DEFAULT_DESCRIPTION}"))
@@ -925,7 +925,7 @@ async def get_robots():
     (with only `/og/` excepted) told every robots-compliant agent that the
     REST endpoints, `/openapi.json` and the MCP transport were off-limits —
     on the very host `app/public/robots.txt` and llms.txt advertise as the
-    machine interface to the catalogue (AI-access audit 2026-08-19). The API
+    machine interface to the catalogue. The API
     is public, read-only and cached; there is nothing to protect by
     forbidding it, and compliant AI assistants were the only clients the
     Disallow actually stopped.
@@ -942,8 +942,8 @@ async def get_robots():
     The comment head names the machine guide and the OpenAPI spec: this host
     is the one llms.txt advertises, so an agent that reaches it first — via
     the README, a search result, a citation — must be able to get to the
-    guide without guessing the convention (kurrentschrift finding
-    2026-08-28). The Content-Signal line is the site's: one open policy,
+    guide without guessing the convention. The Content-Signal line is the
+    site's: one open policy,
     stated on every host it covers (contentsignals.org vocabulary only).
     """
     return Response(content=_API_ROBOTS_TXT, media_type="text/plain")
@@ -969,7 +969,7 @@ async def get_llms_txt() -> RedirectResponse:
     The guide lives on the site host (app/public/llms.txt, one source of
     truth), but agents that land on this host — the README, both robots.txt
     files and llms-full.txt name it — guess /llms.txt here too. A redirect
-    beats the 404 this answered until 2026-08-28, and beats a served copy that
+    beats the 404 this used to answer, and beats a served copy that
     would drift.
     """
     return RedirectResponse("https://anyplot.ai/llms.txt", status_code=302)
@@ -1003,7 +1003,7 @@ def _build_llms_full(specs: list) -> str:
     makes the catalogue enumerable without walking the 400 KB sitemap or
     fetching every hub page. The header documents the retrieval recipes that
     work for EVERY client — the prerendered pages are user-agent-gated, these
-    URLs are not (AI-access audit 2026-08-19).
+    URLs are not.
     """
     lines = [
         "# anyplot — full catalogue index",
@@ -1023,7 +1023,7 @@ def _build_llms_full(specs: list) -> str:
     # {language}/{library} rather than the bare library id: the render URL
     # template needs both segments, and without the language every consumer
     # had to make a second /specs/{id} call just to build an image URL
-    # (live verification 2026-08-19).
+    # (verified live).
     for spec in sorted((s for s in specs if s.impls), key=lambda s: s.id):
         libraries = ",".join(sorted(f"{i.language_id}/{i.library_id}" for i in spec.impls))
         title = " ".join((spec.title or spec.id).split())
@@ -1153,7 +1153,7 @@ def _build_libraries_body() -> str:
     """Real bot body for /libraries, derived from the canonical registry.
 
     The page was a 29-word stub even though its entire content already sits in
-    core/constants.py (AI-access audit 2026-08-19) — a crawler following
+    core/constants.py — a crawler following
     llms.txt's "the fifteen supported plotting libraries" link found no such
     list. Registry-derived, so it can never drift from the actual catalog. It
     names no version: versions live in the database (core/library_versions.py
@@ -1271,9 +1271,9 @@ async def seo_legal():
 
 # The /mcp page's entire audience is AI agents, yet its bot rendering carried
 # only a title and one-line description — no endpoint URL, no tool list, no
-# setup snippet; everything useful sat behind JS in app/src/pages/McpPage.tsx
-# (AI-access audit 2026-08-19). Keep this body in sync with the MCP tools in
-# api/mcp/server.py and the human page in McpPage.tsx.
+# setup snippet; everything useful sat behind JS in app/src/pages/McpPage.tsx.
+# Keep this body in sync with the MCP tools in api/mcp/server.py and the human
+# page in McpPage.tsx.
 _MCP_BOT_BODY = (
     "<h1>anyplot MCP server</h1>"
     "<p>Query the plot catalogue from an AI assistant via the Model Context "

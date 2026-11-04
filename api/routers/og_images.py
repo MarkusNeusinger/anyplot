@@ -77,8 +77,8 @@ _R = TypeVar("_R")
 
 # PIL compositing is CPU-bound and takes 1–3 s per card. Called inline from an
 # `async def`, it held the event loop for that long and stalled every other
-# request on the instance — and since 2026-09-10 the service runs as ONE
-# instance (api/cloudbuild.yaml), so that stall would be the whole service.
+# request on the instance — and the service runs as ONE instance
+# (api/cloudbuild.yaml), so that stall would be the whole service.
 # The renders therefore go to a worker thread. The semaphore caps how many run
 # at once: a collage holds six decoded PNGs, and a few concurrent collages are
 # what produced the 647 MiB peak of 2026-08-26 against the 1 GiB limit. Two
