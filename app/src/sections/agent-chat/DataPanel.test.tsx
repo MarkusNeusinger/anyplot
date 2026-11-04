@@ -1920,6 +1920,37 @@ describe('DataPanel file drop', () => {
     expect(box()).toHaveValue(CSV);
   });
 
+  it('keeps the card open in step 2 when a file fills the box over a pending transcription', async () => {
+    // Confirmed data with a table read from text waiting: step 1, the card open without a `.show()`.
+    const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
+    const onDiscardTranscription = vi.fn();
+    const panel = (state: AgentSessionState) => (
+      <DataPanel
+        state={state}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={onDiscardTranscription}
+        onSendFormula={vi.fn()}
+        onBind={vi.fn()}
+        onConfirmData={vi.fn()}
+        onUndo={vi.fn()}
+      />
+    );
+    const { rerender } = render(panel({ ...confirmed, transcription: TRANSCRIPTION }));
+    expect(screen.getByTestId('transcription-card')).toBeInTheDocument();
+
+    drop(csvFile());
+    await waitFor(() => expect(box()).toHaveValue(CSV));
+    expect(onDiscardTranscription).toHaveBeenCalledTimes(1);
+
+    // The session dropped the table, so the page is back at step 2: the card stays open on the
+    // file's text, ready for `.parse()`, instead of collapsing into the header.
+    rerender(panel(confirmed));
+    expect(screen.getByTestId('data-card')).toBeInTheDocument();
+    expect(box()).toHaveValue(CSV);
+    expect(screen.getByRole('button', { name: 'Hide the data' })).toBeInTheDocument();
+  });
+
   it('drops the result of a slow read that a later file superseded', async () => {
     renderPanel();
     let release: (buffer: ArrayBuffer) => void = () => {};
