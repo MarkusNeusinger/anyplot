@@ -95,7 +95,7 @@ env:
   # Keep in sync with the claude-code-action pin in the review job (a test
   # checks it). Cells record it, and plan reuses a resumed cell only when it
   # matches.
-  ACTION_SHA: d70510b174a1244958df0b03166a54912811f3e6
+  ACTION_SHA: 6d5ae526d25ce88daa2200be073e1a373167f064
 
 concurrency:
   group: review-retest
@@ -364,7 +364,7 @@ jobs:
         if: steps.cell.outcome == 'success'
         continue-on-error: true
         timeout-minutes: 25
-        uses: anthropics/claude-code-action@d70510b174a1244958df0b03166a54912811f3e6  # v1
+        uses: anthropics/claude-code-action@6d5ae526d25ce88daa2200be073e1a373167f064  # v1
         env:
           LIBRARY: ${{ matrix.cell.library }}
           SPEC_ID: ${{ matrix.cell.spec_id }}

@@ -31,7 +31,7 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
       "features": ["basic", "2d"],
       "data_type": ["numeric"]
     },
-    "library_count": 9
+    "library_count": 15
   }
 ]
 ```
@@ -65,23 +65,37 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
     {
       "library_id": "matplotlib",
       "library_name": "Matplotlib",
-      "preview_url": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/matplotlib/plot.png",
+      "language": "python",
+      "preview_url_light": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-light.png",
+      "preview_url_dark": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-dark.png",
+      "preview_html_light": null,
+      "preview_html_dark": null,
+      "preview_url": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-light.png",
       "preview_html": null,
-      "quality_score": 92.0,
-      "code": "import matplotlib.pyplot as plt...",
-      "generated_at": "2025-01-15T10:30:00Z",
-      "generated_by": "claude-opus-4-7",
-      "python_version": "3.13",
-      "library_version": "3.10.0",
+      "quality_score": 91.0,
+      "code": null,
+      "generated_at": "2025-12-10T20:55:10",
+      "updated": "2026-06-25T01:34:04",
+      "generated_by": "claude-sonnet",
+      "python_version": null,
+      "language_version": "3.13.14",
+      "library_version": "3.11.0",
       "review_strengths": ["Clean code structure"],
       "review_weaknesses": ["Grid could be more subtle"],
       "review_image_description": "The plot shows...",
       "review_criteria_checklist": {...},
-      "review_verdict": "APPROVED"
+      "review_verdict": "APPROVED",
+      "impl_tags": {"styling": ["alpha-blending"], "patterns": ["data-generation"]}
     }
   ]
 }
 ```
+
+- `code` is always `null` here; the page loads it on demand from
+  [`GET /specs/{spec_id}/{library}/code`](#get-specsspec_idlibrarycode).
+- `preview_url` and `preview_html` are legacy single-theme fields that resolve to the light variant.
+- `language_version` is the runtime version of the implementation's language (Python, R, Julia, or Node.js).
+  `python_version` is the older field it replaces, and `language_version` falls back to it for rows without one.
 
 ---
 
@@ -119,7 +133,9 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
     {
       "id": "matplotlib",
       "name": "Matplotlib",
-      "version": "3.10.0",
+      "language": "python",
+      "framework": "none",
+      "version": "3.11.2",
       "documentation_url": "https://matplotlib.org",
       "description": "The classic standard..."
     }
@@ -435,10 +451,11 @@ The result card frames it with `sandbox="allow-scripts"`. Once its listener is i
 
 ## Agent chat
 
-> **Status (2026-11-02):** the admin routes under `/debug/agent` are live, and
-> the public lane under `/agent` ships dark: it answers `404` until the owner
-> sets `_AGENT_PUBLIC_ENABLED=true` on the deploy-api trigger (see
-> [Public lane](#public-lane)).
+> **Status (2026-11-04):** the admin routes under `/debug/agent` are live, and
+> the public lane under `/agent` has been open since 2026-11-02, as an
+> experimental page: the deploy-api trigger sets `_AGENT_PUBLIC_ENABLED=true`.
+> Set back to `false`, the lane answers `404` again while the admin routes stay
+> open (see [Public lane](#public-lane)).
 >
 > **Status (2026-10-12):** the routes are switched on in production since
 > 2026-10-11: the deploy-api trigger sets `AGENT_ENABLED=true` and
@@ -1029,6 +1046,12 @@ statistics after that. The table's columns are in
   On the dev machine, `agents/evals/sync_cases.py` pulls the promoted, active
   cases into `agents/evals/.cases/` and removes the retired ones (see
   [Sync promoted cases from the bucket](../../agents/README.md#sync-promoted-cases-from-the-bucket)).
+- **Triage rounds.** To go through the open cases in one round, use the
+  `triage-agent-cases` project skill (`.claude/skills/triage-agent-cases/`):
+  it lists and copies the cases read-only, proposes a status and tags per case
+  in a private report, and, after your OK for the round, writes them in one
+  transaction after a snapshot of the rows. Its `apply_triage.py` applies the
+  same rules as `PATCH /cases/{id}` (`core.agent_cases.triage_updates`).
 - **Supersession.** A superseded case keeps its status and tags and can still
   be changed; a new case starts as `new` without tags. When the backfill
   indexes a case after the edit that names it in `replaces`, the case goes in

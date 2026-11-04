@@ -80,8 +80,17 @@
 #          --service-account=projects/anyplot/serviceAccounts/239660669828-compute@developer.gserviceaccount.com \
 #          --branch-pattern='^main$' --build-config=agents/cloudbuild.yaml \
 #          --included-files='agents/**,core/**,prompts/library/**,prompts/default-style-guide.md,prompts/quality-criteria.md,prompts/workflow-prompts/impl-repair-claude.md,prompts/workflow-prompts/ai-quality-review.md,pyproject.toml,uv.lock,README.md,.dockerignore' \
-#          --ignored-files='agents/evals/**' \
+#          --ignored-files='agents/evals/**,agents/README.md,agents/**/README.md' \
 #          "--substitutions=_RENDER_URL=<renderer status.url>"
+#
+#      The ignore list names the READMEs, not `agents/**/*.md` as it did until
+#      2026-11-02: that pattern also skipped the agent prompts in
+#      agents/anyplot/prompts/, so a prompt-only change never deployed. To change
+#      the filters of the existing trigger, export it with `gcloud beta builds
+#      triggers export deploy-agents --region=europe-west4 --destination=<file>`,
+#      edit the file, and load it back with `gcloud beta builds triggers import
+#      --region=europe-west4 --source=<file>`: `gcloud builds triggers update
+#      github` fails on these second-generation repository triggers.
 #
 #   Then point the API at the service: its trigger's `_AGENT_SERVICE_URL` is this
 #   service's `status.url` (the audience the BFF mints its token for), and
@@ -110,13 +119,13 @@ substitutions:
   _PROVIDER: anthropic-vertex
   _MODEL: claude-haiku-5-5
   _JUDGE_MODEL: claude-haiku-5-5
-  # Every library with a runtime (owner decision of 2026-10-28): only the admin reaches the
-  # chat yet, so this admin-only deploy serves each of them for live testing, the six Python
-  # libraries, ggplot2 on the R runtime (since 2026-10-29), Makie on the Julia runtime,
-  # Chart.js, D3, ECharts and Highcharts on the JavaScript runtime (since 2026-10-30), MUI X
-  # on it too and plotly and bokeh on the Python runtime through the renderer's figure mode
-  # (since 2026-10-31): all 15 catalogue libraries. Each one's 80 % eval matrix gates the
-  # public release instead. AGENT_LIBRARIES' default stays matplotlib,seaborn.
+  # Every library with a runtime (owner decision of 2026-10-28), first for the admin's live
+  # tests: the six Python libraries, ggplot2 on the R runtime (since 2026-10-29), Makie on the
+  # Julia runtime, Chart.js, D3, ECharts and Highcharts on the JavaScript runtime (since
+  # 2026-10-30), MUI X on it too and plotly and bokeh on the Python runtime through the
+  # renderer's figure mode (since 2026-10-31): all 15 catalogue libraries. Since 2026-11-02
+  # the public chat serves all 15 too (owner decision of that day for the experimental
+  # launch). AGENT_LIBRARIES' default stays matplotlib,seaborn.
   _LIBRARIES: matplotlib,seaborn,plotnine,altair,pygal,letsplot,plotly,bokeh,ggplot2,makie,chartjs,d3,echarts,highcharts,muix
   # "1" keeps an instance warm; "0" scales to zero between sessions (and so
   # forgets every in-memory session, which the client shows as "session expired",

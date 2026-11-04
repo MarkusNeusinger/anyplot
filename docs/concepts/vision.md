@@ -60,10 +60,11 @@ anyplot is different: **AI curates and maintains, humans discover and choose.**
 - Search and filter by tags and titles
 - AI-generated explanations
 - **MCP Server**: Integrate anyplot into your AI workflow ([Docs](../reference/mcp.md), [Issue #4129](https://github.com/MarkusNeusinger/anyplot/issues/4129))
+- **Use with my data** (experimental since 2026-11-02): Paste your data on a plot page, and the chat at `/agent` adapts that plot's code to it ([Design](agent-network.md))
 
 ### Premium (future)
 
-- **Try with *your* data**: Upload CSV/Excel/JSON, see all plots with your actual data
+- **Try with *your* data**: Upload CSV/Excel/JSON, see all plots with your actual data (beyond the free chat, which takes pasted text for one plot at a time)
 - **Custom styles**: Generate plots matching your brand colors
 - **API access**: Programmatic access to plot generation
 

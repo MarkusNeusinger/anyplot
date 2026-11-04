@@ -3,34 +3,9 @@
 All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning is product communication
 rather than library SemVer: major for milestone releases, minor for feature batches, patch for
-fix-only (see `agentic/commands/release.md`).
-
-**Do not add to this file in a feature PR.** Every non-exempt PR adds one fragment,
-`changelog.d/<slug>.md`, in this file's own format, each bullet with its PR reference. The shared
-`[Unreleased]` spot is where sibling PRs used to conflict each other, so the CI job
-"Changelog (fragment)" refuses both a missing fragment and a bullet added in here directly
-(format and exemptions: `changelog.d/README.md`). Correcting an entry `[Unreleased]` already
-carries is allowed — a bullet is identified by its bold title, so a re-worded body is a change,
-and only a NEW title (or one more copy of a title already there) is an added bullet. A release runs
-`uv run python -m tools.changelog release X.Y.Z --title "<codename>"`, which folds every fragment
-under a new version heading (`## [X.Y.Z] — YYYY-MM-DD — <codename>`), bumps `pyproject.toml`
-(`project.version`), `uv.lock` and `app/package.json`, repoints the compare links at the bottom of
-this file and deletes the fragments — one commit, via a PR (procedure:
-`agentic/commands/release.md`). After the merge the tag goes on the
-merge commit and the GitHub release is created from the section — condensed, never copied (rule
-of 2026-08-28): an intro line with the merge count, the PR range and a link to this file; the
-section's own headings in the section's order (an empty one is omitted); one bullet per NOTABLE
-entry — chores, dependency bumps and small fixes are left out, and there is no fixed count — at
-most two lines each: its bold title, one clause with the essence or the headline number, its PR
-reference; a compare link as the last line. Numbers are copied exactly and only PR numbers from
-the section are cited; the full text lives only here — the release page is the index into it.
-Product, pipeline-infrastructure, and
-docs changes are covered here. **Exempt:** the automated plot pipeline's routine output
-(spec-create, impl-generate/review/repair/merge, spec auto-polish, and daily-regen PRs) and
-individual Dependabot bumps — listing those per entry would drown the file (900+ automated
-commits per release window). Where the release window had such activity, they are summarized in
-aggregate instead: an italic *Catalog* line at the end of the version section and a single
-**Dependencies:** bullet under `### Changed`, both created or updated at release time.
+fix-only (see `agentic/commands/release.md`). A PR adds its entries as a fragment, never here;
+only a release folds them in. How entries and releases get here is in
+[`changelog.d/README.md`](changelog.d/README.md).
 
 ## [Unreleased]
 
