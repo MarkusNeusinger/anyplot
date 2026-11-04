@@ -234,8 +234,19 @@ async def test_apply_without_a_change_takes_no_snapshot(at, test_session, tmp_pa
 # ---- main and the helpers, without a database -----------------------------------
 
 
+@pytest.fixture(autouse=True)
+def no_database(modules, monkeypatch) -> None:
+    """`main` never reaches a connection here: `core.database` read CI's production URL at import."""
+    apply_triage, list_cases, _ = modules
+
+    def refuse(*args, **kwargs):
+        pytest.fail("main reached the database")
+
+    monkeypatch.setattr(apply_triage, "_main", refuse)
+    monkeypatch.setattr(list_cases, "read_rows", refuse)
+
+
 def test_apply_main_refuses_a_bad_plan_before_the_database(at, tmp_path, monkeypatch, capsys) -> None:
-    # A URL that nothing listens on: the plan fails before any connection.
     monkeypatch.setenv("DATABASE_URL", "postgresql://u:p@127.0.0.1:1/none")
     monkeypatch.setenv("ENVIRONMENT", "test")
     plan = tmp_path / "plan.json"

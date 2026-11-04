@@ -62,8 +62,8 @@ inputs carry over (data shape, bindings, request, expected outcome).
 ```bash
 S=.claude/skills/triage-agent-cases
 ENV="$(git rev-parse --path-format=absolute --git-common-dir)/../.env"   # the main checkout's .env
-uv run python $S/list_cases.py --env $ENV --json "$ROUND/cases.json"   # open queue
-uv run python $S/list_cases.py --env $ENV --all                       # every row, with the tags in use
+uv run python $S/list_cases.py --env "$ENV" --json "$ROUND/cases.json"        # open queue
+uv run python $S/list_cases.py --env "$ENV" --all --json "$ROUND/all.json"   # every row: tags in use, superseded cases
 bash $S/fetch_case.sh --dest "$ROUND/files" <case id> <case id> ...
 ```
 
@@ -124,7 +124,8 @@ Every open case gets one proposed status, its tags, and a promotion verdict.
   already in the table (`list_cases.py --all`) before you coin one. A
   positive case with nothing to fix gets `confirmed`.
 - **Superseded cases** follow their successor: triage the newest case of the
-  chain (`superseded_by`) and give the older ones the same status.
+  chain (`superseded_by`) and give the older ones the same status. Their
+  `seen` state comes from `all.json`, since the open list hides them.
 - **Promotion** to the eval harness (`promoted: true`) needs a plot
   (`result_version` ≥ 1) and `data.csv`, and a reason: a class no fixture
   covers, the reaction contradicting the pipeline outcome, or a bug or idea
@@ -155,7 +156,7 @@ Write `$ROUND/plan.json` in the format below and check it with a dry run,
 which only reads:
 
 ```bash
-uv run python $S/apply_triage.py --env $ENV --plan "$ROUND/plan.json"
+uv run python $S/apply_triage.py --env "$ENV" --plan "$ROUND/plan.json"
 ```
 
 Then give the owner the report path, the headline and the plan's dry-run
@@ -191,8 +192,8 @@ project (the action and the report path; never a case's content).
 Only after the owner has approved this round's plan in the session:
 
 ```bash
-uv run python $S/apply_triage.py --env $ENV --plan "$ROUND/plan.json" --apply
-uv run python $S/list_cases.py --env $ENV --all
+uv run python $S/apply_triage.py --env "$ENV" --plan "$ROUND/plan.json" --apply
+uv run python $S/list_cases.py --env "$ENV" --all
 ```
 
 In one transaction the script locks the rows, checks them against `seen`
@@ -202,9 +203,16 @@ writes into an existing directory, and it reads the file back and counts the
 rows), sets the changes and commits. A refusal or an error before the commit
 changes nothing. The list afterwards shows the new statuses.
 
+The `seen` check guards the script's write only. An edit on `/debug` while
+the script holds its locks waits and then overwrites the round's values, so
+ask the owner not to triage on `/debug` while a round applies.
+
 To undo a round, write a plan whose fields are the snapshot's values and
-whose `seen` is the state now, and apply it the same way. `promoted_at` comes
-back as the time of that write, not the original.
+whose `seen` is the state now, and apply it the same way. Two values do not
+come back that way: `promoted_at` returns as the time of that write, and an
+`expected` the round set cannot be cleared, because a plan, like the PATCH
+route and `/debug`, only sets an outcome. It matters only while the case is
+promoted, so unpromote the case instead.
 
 ## 7 · Clean up
 
