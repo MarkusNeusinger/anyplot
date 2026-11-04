@@ -2686,6 +2686,11 @@ describe('AgentChatPage attachment', () => {
     });
     expect(message()).toHaveValue('hours,score\n1.5,52');
     expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+    // An input method's composition and a typed character keep a table-shaped box a message too.
+    fireEvent.input(message(), { target: { value: TABLE }, inputType: 'insertCompositionText' });
+    fireEvent.input(message(), { target: { value: `${TABLE}x` }, inputType: 'insertText' });
+    expect(message()).toHaveValue(`${TABLE}x`);
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
     fireEvent.input(message(), { target: { value: '' }, inputType: 'deleteContentBackward' });
 
     // A paste whose event hid the text (iOS Safari): the inserted table becomes the chip.
