@@ -1,8 +1,8 @@
 /**
  * Content of the agent chat's data card (`DataPanel.tsx`): the text box and
  * file drop zone, the formula/code chat offer, the free-text transcription
- * decision card, the stored dataset's preview and full-view dialog, the role
- * bindings, and the step 1 confirmation foot.
+ * decision card, the stored dataset's preview and full-view dialog, and the
+ * role bindings. Step 1's `.confirm()` sits at the composer's end (`Composer.tsx`).
  */
 
 import { Suspense } from 'react';
@@ -36,7 +36,6 @@ import { FILE_ACCEPT } from 'src/sections/agent-chat/fileText';
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { lazyOrFallback } from 'src/sections/agent-chat/lazyOrFallback';
 import {
-  CONFIRM_LOST_TEXT,
   DATA_HOWTO,
   DATA_PLACEHOLDER,
   describeDataFailure,
@@ -76,15 +75,6 @@ function offerLine(kind: FormulaKind, tooLong: boolean): string {
   return 'looks like code that makes data: send it to the chat? the assistant runs it in a sandbox and shows you the table.';
 }
 
-/** Step 1's one action under the bindings: `.confirm()`. */
-const stepButtonSx = {
-  ...actionButtonSx,
-  border: '1px solid var(--rule)',
-  px: 2,
-  py: 1,
-  width: { xs: '100%', sm: 'auto' },
-} as const;
-
 export interface DataCardProps {
   state: AgentSessionState;
   intake: FileIntake;
@@ -99,15 +89,12 @@ export interface DataCardProps {
   setViewOpen: (open: boolean) => void;
   viewButtonRef: React.RefObject<HTMLButtonElement | null>;
   parseStart: React.RefObject<number>;
-  confirmRef?: React.Ref<HTMLButtonElement>;
-  decisionRef?: React.Ref<HTMLButtonElement>;
   onParse: () => void;
   onTable: (table: number) => void;
   onUse: () => void;
   onDiscardTranscription: () => void;
   onSendFormula: () => void;
   onBind: (role: string, column: string | null) => void;
-  onConfirm: () => void;
   onUndo: () => void;
   onToLong?: () => void;
   onLoadData?: (signal: AbortSignal) => Promise<string>;
@@ -116,9 +103,9 @@ export interface DataCardProps {
 
 export function DataCard(props: DataCardProps) {
   const { state, intake, text, ready, working, busy, locked, confirmed, choice } = props;
-  const { viewOpen, setViewOpen, viewButtonRef, parseStart, confirmRef, decisionRef } = props;
+  const { viewOpen, setViewOpen, viewButtonRef, parseStart } = props;
   const { onParse, onTable, onUse, onDiscardTranscription, onSendFormula } = props;
-  const { onBind, onConfirm, onUndo, onToLong, onLoadData, onDataViewShown } = props;
+  const { onBind, onUndo, onToLong, onLoadData, onDataViewShown } = props;
   const { convertLine, converting, converted, dragOver, dropReady, fileNotice } = intake;
   const { pendingFile, convertStart, boxRef, parseButtonRef, fileInputRef } = intake;
   const { replaceButtonRef, handleTextChange, fillFromFile, handleSheet, handleKeep } = intake;
@@ -130,8 +117,6 @@ export function DataCard(props: DataCardProps) {
   const transcription = state.transcription;
   const dataset = state.dataset;
   const columns = dataset?.parsed.profile.columns ?? [];
-  // A pending transcription blocks the confirmation: the user decides on the data first.
-  const canConfirm = ready && !!dataset && state.bindingsComplete && !busy && !transcription;
   // An earlier version exists above the paste's 1, until the server says the
   // history ended (it keeps the last five versions).
   const canUndo =
@@ -478,7 +463,6 @@ export function DataCard(props: DataCardProps) {
           canUse={ready && !busy}
           onUse={onUse}
           onDiscard={onDiscardTranscription}
-          decisionRef={decisionRef}
         />
       )}
 
@@ -623,39 +607,8 @@ export function DataCard(props: DataCardProps) {
             onBind={onBind}
           />
 
-          {/* Step 2 has no foot: the pinned header says the data fits, and the
-              composer below the thread holds `.create_plot()`. */}
-          {!confirmed && (
-            <Box>
-              <Box
-                id="agent-step-line"
-                data-testid="data-step"
-                // A notch above the `#` labels: this line says what to do next, and after a
-                // lost confirmation what lost it, as the thread's notice does.
-                sx={{ ...labelSx, mb: 0.75, color: 'var(--ink-soft)' }}
-              >
-                {state.confirmLoss
-                  ? `# step 1 again — ${CONFIRM_LOST_TEXT[state.confirmLoss]}`
-                  : '# step 1 — check the preview and the bindings, then confirm'}
-              </Box>
-              <Box
-                component="button"
-                type="button"
-                ref={confirmRef}
-                onClick={onConfirm}
-                disabled={!canConfirm}
-                aria-describedby="agent-step-line"
-                sx={stepButtonSx}
-              >
-                {state.confirmBusy ? '.confirm() …' : '.confirm()'}
-              </Box>
-              {state.confirmError && (
-                <Box role="alert" sx={{ ...bodyTextSx, color: colors.error, mt: 1 }}>
-                  {describeDataFailure(state.confirmError.code, state.confirmError.ref)}
-                </Box>
-              )}
-            </Box>
-          )}
+          {/* No foot: `.confirm()` and the line that says what it waits for sit at the
+              composer's end in step 1, and `.create_plot()` there in step 2. */}
         </Box>
       )}
     </>

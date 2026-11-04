@@ -126,7 +126,6 @@ describe('DataPanel bindings', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={onBind}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
@@ -162,7 +161,6 @@ describe('DataPanel bindings', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
@@ -193,7 +191,6 @@ describe('DataPanel bindings', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
@@ -213,7 +210,6 @@ describe('DataPanel bindings', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={onBind}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
@@ -244,7 +240,6 @@ describe('DataPanel bindings', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
@@ -254,7 +249,7 @@ describe('DataPanel bindings', () => {
     ).toBeInTheDocument();
   });
 
-  it('holds back confirm, the bindings and parse while a theme renders, in both steps', async () => {
+  it('holds back the bindings and parse while a theme renders, in both steps', async () => {
     const panel = (state: AgentSessionState) => (
       <DataPanel
         state={state}
@@ -263,12 +258,10 @@ describe('DataPanel bindings', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
     const { rerender } = render(panel(stateWith({ x: 'month', y1: 'shoes' }, { themeBusy: true })));
-    expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
 
     // Step 2: opening the card is only a look, so it works, but nothing in it starts.
@@ -292,7 +285,6 @@ describe('DataPanel bindings', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={onUndo}
         locked={locked}
       />
@@ -315,7 +307,6 @@ describe('DataPanel bindings', () => {
     expect(card).toHaveAccessibleDescription(line);
     // Nothing that changes the data or its confirmation starts; the session itself is idle.
     expect(screen.queryByTestId('bindings-lock')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '.undo()' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Open a data file' })).toBeDisabled();
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
@@ -336,14 +327,13 @@ describe('DataPanel bindings', () => {
     expect(screen.queryByTestId('data-lock')).not.toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Your data' })).not.toHaveAccessibleDescription();
     expect(screen.getByRole('button', { name: '.parse()' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: '.confirm()' })).toBeEnabled();
     expect(screen.getByLabelText(/^x/)).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: '.undo()' }));
     expect(onUndo).toHaveBeenCalledTimes(1);
     expect(onParse).not.toHaveBeenCalled();
   });
 
-  it('holds back the confirmation while a table read from text awaits its decision', () => {
+  it('holds back .parse() while a table read from text awaits its decision', () => {
     // The stored dataset and its bindings stay, but the user decides on the data first.
     render(
       <DataPanel
@@ -353,12 +343,9 @@ describe('DataPanel bindings', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
-    expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
-    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '.parse()' })).toBeDisabled();
     expect(screen.getByRole('button', { name: '.use()' })).toBeEnabled();
   });
@@ -366,7 +353,6 @@ describe('DataPanel bindings', () => {
 
 describe('DataPanel steps', () => {
   function renderPanel(state: AgentSessionState) {
-    const onConfirmData = vi.fn();
     const panel = (next: AgentSessionState) => (
       <DataPanel
         state={next}
@@ -375,36 +361,24 @@ describe('DataPanel steps', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={onConfirmData}
         onUndo={vi.fn()}
       />
     );
     const view = render(panel(state));
-    return {
-      onConfirmData,
-      rerender: (next: AgentSessionState) => view.rerender(panel(next)),
-    };
+    return { rerender: (next: AgentSessionState) => view.rerender(panel(next)) };
   }
 
-  it('offers .confirm() once every required role has a column, and no .create_plot()', async () => {
-    const { onConfirmData, rerender } = renderPanel(
+  it("has no button of either step: .confirm() and .create_plot() are the composer's", () => {
+    const { rerender } = renderPanel(
       stateWith({ x: 'month' }, { bindingsComplete: false, missingRoles: ['y'] })
     );
-    const confirm = screen.getByRole('button', { name: '.confirm()' });
-    expect(confirm).toBeDisabled();
-    expect(confirm).toHaveAccessibleDescription(
-      '# step 1 — check the preview and the bindings, then confirm'
-    );
+    expect(screen.getByTestId('data-card')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /\.confirm\(\)/ })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('data-step')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
 
-    rerender(stateWith({ x: 'month', y1: 'shoes' }));
-    await userEvent.click(screen.getByRole('button', { name: '.confirm()' }));
-    expect(onConfirmData).toHaveBeenCalledTimes(1);
-    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
-
-    // The confirmation in flight: the button says so and holds still.
+    // The confirmation in flight: the dropdowns hold still.
     rerender(stateWith({ x: 'month', y1: 'shoes' }, { confirmBusy: true }));
-    expect(screen.getByRole('button', { name: '.confirm() …' })).toBeDisabled();
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
   });
 
@@ -435,7 +409,7 @@ describe('DataPanel steps', () => {
     const scroll = stubScrollIntoView();
     try {
       const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
-      const { onConfirmData, rerender } = renderPanel(confirmed);
+      const { rerender } = renderPanel(confirmed);
       await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
 
       // A binding change, a data change or an undo: the server dropped the confirmation.
@@ -447,10 +421,6 @@ describe('DataPanel steps', () => {
       const phrase = within(summary).getByText('confirm again');
       expect(phrase).toHaveAttribute('data-tone', 'warning');
       expect(phrase).toHaveStyle({ fontWeight: '600' });
-      // The row next to `.confirm()` names what dropped it, as the thread's notice does.
-      expect(screen.getByRole('button', { name: '.confirm()' })).toHaveAccessibleDescription(
-        '# step 1 again — bindings changed · confirm the data again'
-      );
       expect(
         screen.getByText('# step 1 again: check the data, then confirm it below')
       ).toBeVisible();
@@ -469,9 +439,9 @@ describe('DataPanel steps', () => {
       ]);
       expect(screen.getByTestId('data-card')).toBeInTheDocument();
 
-      await userEvent.click(screen.getByRole('button', { name: '.confirm()' }));
-      expect(onConfirmData).toHaveBeenCalledTimes(1);
-
+      // The user's `.confirm()` at the composer's end starts: the card collapses with it,
+      // although the user had opened it before the confirmation dropped.
+      rerender({ ...confirmed, dataConfirmed: false, confirmLoss: 'bindings', confirmBusy: true });
       rerender(confirmed);
       expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Show the data' })).toHaveAttribute(
@@ -479,12 +449,6 @@ describe('DataPanel steps', () => {
         'false'
       );
       expect(within(screen.getByTestId('data-summary')).queryByText('confirm again')).toBeNull();
-
-      // Confirmed again, the reason is gone: a later step 1 without one reads as before.
-      rerender({ ...confirmed, dataConfirmed: false, confirmLoss: null });
-      expect(screen.getByTestId('data-step')).toHaveTextContent(
-        '# step 1 — check the preview and the bindings, then confirm'
-      );
     } finally {
       restoreScrollIntoView();
     }
@@ -503,7 +467,6 @@ describe('DataPanel steps', () => {
           onDiscardTranscription={vi.fn()}
           onSendFormula={vi.fn()}
           onBind={vi.fn()}
-          onConfirmData={vi.fn()}
           onUndo={vi.fn()}
         />
       );
@@ -537,18 +500,20 @@ describe('DataPanel steps', () => {
       'decide on the table first: .use() or .discard()'
     );
     expect(screen.getByTestId('transcription-card')).toBeVisible();
-    expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
     expect(screen.getByTestId('data-step-status')).toHaveTextContent(
       'step 1: check the data, then confirm it'
     );
   });
 
-  it('names the reason of a refused confirmation', () => {
-    renderPanel(
-      stateWith({ x: 'month', y1: 'shoes' }, { confirmError: { code: 'no_dataset', ref: 'r-c' } })
-    );
-    expect(screen.getByRole('alert')).toHaveTextContent('parse the data first · ref r-c');
-    expect(screen.getByRole('button', { name: '.confirm()' })).toBeEnabled();
+  it('keeps a card the user opened when step 2 returns without a .confirm()', async () => {
+    const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
+    const { rerender } = renderPanel(confirmed);
+    await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    // A table read from text, then discarded: step 1 and back, with no confirmation call.
+    rerender({ ...confirmed, transcription: TRANSCRIPTION });
+    rerender(confirmed);
+    expect(screen.getByTestId('data-card')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Hide the data' })).toBeInTheDocument();
   });
 });
 
@@ -562,7 +527,6 @@ describe('DataPanel working states', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
@@ -584,7 +548,6 @@ describe('DataPanel working states', () => {
     );
     // The lock stays (the server would refuse the change); the controls keep their look.
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
-    expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
 
     // A binding change, a confirmation or a theme render reads the same: the assistant works.
     rerender({ ...idle, bindingsBusy: true });
@@ -664,7 +627,6 @@ describe('DataPanel data changes', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={onUndo}
       />
     );
@@ -685,9 +647,10 @@ describe('DataPanel data changes', () => {
     expect(undo).toHaveAccessibleDescription('# changed · version 2');
     await userEvent.click(undo);
     expect(onUndo).toHaveBeenCalledTimes(1);
-    // The changed data is unconfirmed: the panel is at step 1 again.
-    expect(screen.getByRole('button', { name: '.confirm()' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
+    // The changed data is unconfirmed: the panel is at step 1 again, the card open.
+    expect(screen.getByTestId('data-step-status')).toHaveTextContent(
+      'step 1: check the data, then confirm it'
+    );
   });
 
   it('names the version an undo brought back and holds .undo() at the paste', () => {
@@ -750,8 +713,10 @@ describe('DataPanel data changes', () => {
       undefinedValues,
     ]);
     expect(screen.queryByRole('button', { name: /\.undo\(\)/ })).not.toBeInTheDocument();
-    // Generated data is unconfirmed like a paste: step 1 ends with .confirm().
-    expect(screen.getByRole('button', { name: '.confirm()' })).toBeEnabled();
+    // Generated data is unconfirmed like a paste: step 1, which ends with the composer's .confirm().
+    expect(screen.getByTestId('data-step-status')).toHaveTextContent(
+      'step 1: check the data, then confirm it'
+    );
   });
 });
 
@@ -773,7 +738,6 @@ describe('DataPanel full view', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
         {...extra}
       />
@@ -844,7 +808,6 @@ describe('DataPanel tables', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
@@ -918,7 +881,6 @@ describe('DataPanel formulas', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={onSendFormula}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
@@ -1098,7 +1060,6 @@ describe('DataPanel code that made the data', () => {
       onDiscardTranscription={vi.fn()}
       onSendFormula={vi.fn()}
       onBind={vi.fn()}
-      onConfirmData={vi.fn()}
       onUndo={vi.fn()}
     />
   );
@@ -1172,7 +1133,6 @@ describe('DataPanel transcription', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
@@ -1207,7 +1167,6 @@ describe('DataPanel transcription', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
@@ -1227,7 +1186,6 @@ describe('DataPanel transcription', () => {
         onDiscardTranscription={onDiscard}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
@@ -1252,7 +1210,6 @@ describe('DataPanel transcription', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
@@ -1307,7 +1264,6 @@ describe('DataPanel wide-table offer', () => {
       onDiscardTranscription={vi.fn()}
       onSendFormula={vi.fn()}
       onBind={vi.fn()}
-      onConfirmData={vi.fn()}
       onUndo={vi.fn()}
       onToLong={onToLong}
     />
@@ -1387,7 +1343,6 @@ describe('DataPanel notes', () => {
       onDiscardTranscription={vi.fn()}
       onSendFormula={vi.fn()}
       onBind={vi.fn()}
-      onConfirmData={vi.fn()}
       onUndo={vi.fn()}
     />
   );
@@ -1453,7 +1408,6 @@ describe('DataPanel file drop', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
         onTrack={onTrack}
         onConvert={onConvert}
@@ -1589,7 +1543,6 @@ describe('DataPanel file drop', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
@@ -1614,7 +1567,6 @@ describe('DataPanel file drop', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
@@ -1892,7 +1844,6 @@ describe('DataPanel file drop', () => {
         onDiscardTranscription={vi.fn()}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
@@ -1910,7 +1861,6 @@ describe('DataPanel file drop', () => {
         onDiscardTranscription={onDiscardTranscription}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );
@@ -1932,7 +1882,6 @@ describe('DataPanel file drop', () => {
         onDiscardTranscription={onDiscardTranscription}
         onSendFormula={vi.fn()}
         onBind={vi.fn()}
-        onConfirmData={vi.fn()}
         onUndo={vi.fn()}
       />
     );

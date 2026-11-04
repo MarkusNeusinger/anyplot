@@ -4,9 +4,9 @@
  * preview and the parser's warnings, and bind each spec role to a column (the
  * server's defaults come preselected).
  *
- * Two steps, data first. Step 1 ends with `.confirm()` at the foot of the card,
- * once every required role has a column: the user says the preview and the
- * bindings are right. The card then collapses into a pinned header at the top
+ * Two steps, data first. Step 1 ends with `.confirm()` at the composer's end
+ * (`Composer.tsx`), once every required role has a column: the user says the
+ * preview and the bindings are right. The card then collapses into a pinned header at the top
  * of the thread, which stays in view on scroll: `✓ data fits · N rows · M
  * columns · version V` with `.show()`, which opens the full card again below it
  * without leaving step 2 and brings its top into view, and `.hide()`, which
@@ -18,8 +18,8 @@
  * header stays then and reads as a warning (`! confirm again · ...`, the
  * phrase in bold on a surface tinted with the warning token), and its
  * `.show()` leads back to the card from anywhere in the thread, for example
- * after a data request sent from below the plot. The step line next to
- * `.confirm()` names what dropped the confirmation, as the thread's notice
+ * after a data request sent from below the plot. The step line above the
+ * composer names what dropped the confirmation, as the thread's notice
  * does. A table read from text that waits for its decision holds the page in
  * step 1 as well, whatever a turn's sync says, and the header names that
  * decision.
@@ -136,18 +136,11 @@ interface DataPanelProps {
   /** `.send()` next to a refused formula: the refused text goes to the chat as a turn. */
   onSendFormula: () => void;
   onBind: (role: string, column: string | null) => void;
-  onConfirmData: () => void;
   onUndo: () => void;
   /** `.to_long()`: apply the wide-table offer as the next data version. */
   onToLong?: () => void;
   /** The pinned header's `.show()` / `.hide()`, for the page to move the keyboard focus to. */
   toggleRef?: React.Ref<HTMLButtonElement>;
-  /**
-   * Step 1's `.confirm()` and a pending table's `.use()`: the composer's notice
-   * before the confirmation brings them into view and focuses them.
-   */
-  confirmRef?: React.Ref<HTMLButtonElement>;
-  decisionRef?: React.Ref<HTMLButtonElement>;
   /** Analytics: `agent_data_file{kind, encoding, outcome}`; never the file's name. */
   onTrack?: (event: string, props?: Record<string, string | undefined>) => void;
   /**
@@ -177,12 +170,9 @@ export function DataPanel({
   onDiscardTranscription,
   onSendFormula,
   onBind,
-  onConfirmData,
   onUndo,
   onToLong,
   toggleRef,
-  confirmRef,
-  decisionRef,
   onTrack,
   onConvert,
   locked = false,
@@ -220,6 +210,15 @@ export function DataPanel({
   const everConfirmed = useRef(false);
   if (confirmed) everConfirmed.current = true;
   const pinned = !!dataset && everConfirmed.current;
+  // The user's `.confirm()` (at the composer's end) collapses the card as it starts; a later
+  // step 1 opens it in full anyway. A step 2 that returns without it (a discarded table) keeps
+  // the card as the user left it. Adjusted while rendering, React's pattern for state that
+  // follows a prop.
+  const [confirmSeen, setConfirmSeen] = useState(state.confirmBusy);
+  if (state.confirmBusy !== confirmSeen) {
+    setConfirmSeen(state.confirmBusy);
+    if (state.confirmBusy) setExpanded(false);
+  }
 
   const intake = useFileIntake({
     text,
@@ -279,12 +278,6 @@ export function DataPanel({
       scrollTarget.current = 'card';
     }
     setExpanded(!expanded);
-  };
-
-  // `.confirm()` collapses the card; a later step 1 opens it in full anyway.
-  const handleConfirm = () => {
-    setExpanded(false);
-    onConfirmData();
   };
 
   // `.use()`: the text box shows the CSV that gets stored, so the user can
@@ -357,15 +350,12 @@ export function DataPanel({
           setViewOpen={setViewOpen}
           viewButtonRef={viewButtonRef}
           parseStart={parseStart}
-          confirmRef={confirmRef}
-          decisionRef={decisionRef}
           onParse={handleParse}
           onTable={handleTable}
           onUse={handleUse}
           onDiscardTranscription={onDiscardTranscription}
           onSendFormula={handleSendFormula}
           onBind={onBind}
-          onConfirm={handleConfirm}
           onUndo={onUndo}
           onToLong={onToLong}
           onLoadData={onLoadData}

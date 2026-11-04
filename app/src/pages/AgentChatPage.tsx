@@ -15,7 +15,7 @@
  * read the assistant's summary of it in the next
  * turn, fix it in plain words if needed (each change updates the card in
  * place, with `.undo()`), check the preview and the role bindings and
- * `.confirm()` them at the card's foot (step 1). The card then collapses into
+ * `.confirm()` them at the composer's end (step 1). The card then collapses into
  * a pinned header at the top of the thread, `.show()` opens it again, and any
  * change to the data takes the page back to step 1 with the card open; the
  * header then stays as `! confirm again` and leads back to the card, and the
@@ -55,14 +55,13 @@
  * composer as the remembered list (`Remembered`), each with `.forget()`, and
  * `.forget_all()` for a blank start: nothing else clears them.
  *
- * `.create_plot()` is in the composer as soon as there is data. Before the
- * confirmation it is the quiet button, and a click calls nothing: a notice
- * under the composer says to confirm the data first (or to decide on a table
- * read from text, whichever the data card asks for at the moment), with
- * `.show()`, which brings `.confirm()` (or `.use()`) into view and focuses it;
- * a hidden status region announces it. The notice clears once the data is
- * confirmed or a turn starts. The server's `data_unconfirmed` stays the
- * backstop.
+ * The composer holds the step's one filled call to action at its right end
+ * (`Composer.tsx`): in step 1, once there is data, `.confirm()`, with the line
+ * above the box that names what it waits for (a table read from text to decide
+ * on, a required role without a column) as its description; in step 2
+ * `.create_plot()` and the other plot buttons. No plot button exists before the
+ * confirmation, so nothing has to say "confirm first"; the server's
+ * `data_unconfirmed` stays the backstop.
  *
  * Work in flight is never silent: a turn without pipeline steps holds an
  * in-progress line in the thread (`ChatThread`), the progress timeline below
@@ -160,7 +159,7 @@ import { Remembered } from 'src/sections/agent-chat/Remembered';
 import { SessionMenu } from 'src/sections/agent-chat/SessionMenu';
 import { columnLines, previewsByLibrary } from 'src/sections/agent-chat/specReference';
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
-import { inStep2, showsTimeline } from 'src/sections/agent-chat/steps';
+import { confirmStepLine, inStep2, showsTimeline } from 'src/sections/agent-chat/steps';
 import { bodyTextSx, labelSx, panelSx, smallText } from 'src/sections/agent-chat/styles';
 import { parseInlineCode } from 'src/sections/spec-detail/SpecTabs/utils';
 import { colors, fontSize, proseLinkStyle, typography } from 'src/theme';
@@ -182,21 +181,6 @@ const COLUMN_MAX_WIDTH = 1360;
 function firstEnabled(...controls: (HTMLButtonElement | HTMLTextAreaElement | null)[]) {
   return controls.find(control => control && !control.disabled) ?? null;
 }
-
-/** What a click on `.create_plot()` before the confirmation asks for first. */
-type CreateGate = 'confirm' | 'transcription';
-
-/** The composer's notice after such a click, and where its `.show()` leads. */
-const CREATE_GATE: Record<CreateGate, { text: string; action: string }> = {
-  confirm: {
-    text: 'confirm the data first · .confirm() sits at the foot of the data card',
-    action: 'Go to the confirmation',
-  },
-  transcription: {
-    text: 'decide on the table first · .use() or .discard() sit in the data card',
-    action: 'Go to the table',
-  },
-};
 
 /**
  * The page is a tool on one catalogue pair, never a page to index: every branch (a notice, the door
@@ -423,14 +407,8 @@ function AgentChat({
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const createRef = useRef<HTMLButtonElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
-  // The data card's `.confirm()` and a pending table's `.use()`, where the notice leads.
-  const confirmRef = useRef<HTMLButtonElement>(null);
-  const decisionRef = useRef<HTMLButtonElement>(null);
   // Set by the user's own `.confirm()`: the step change it brings moves the focus, once.
   const confirmFocus = useRef(false);
-  // Whether the notice a click on `.create_plot()` before the confirmation opens
-  // shows; what it asks for is read from the data card at render (`gate`).
-  const [gateShown, setGateShown] = useState(false);
 
   // The spec's title, implemented libraries, previews and data bullets come from the public
   // catalogue API; the enabled libraries from the agents service. Both are best effort.
@@ -510,15 +488,6 @@ function AgentChat({
     if (running) tailRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
   }, [running]);
 
-  // The notice before the confirmation opens under the composer, which a turn's
-  // start leaves at the window's lower edge: bring it in, without moving the focus.
-  // Only when it opens: a change of its wording follows a decision in the data
-  // card, where the user is, and must not pull the window to the foot.
-  const gateRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (gateShown) gateRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
-  }, [gateShown]);
-
   // Data, a plot or work in flight: a reload, a closed tab or a link off the page asks first,
   // since nothing restores the session. The fan-out's panel opens only on this session's
   // confirmed data, so its sessions are covered too.
@@ -564,28 +533,27 @@ function AgentChat({
   // A table read from text that waits for its decision is data at hand, so the line waits too.
   const exampleOffer = state.phase === 'ready' && !state.dataset && !state.transcription;
   const exampleWorking = exampleOffer && state.run?.kind === 'example_data';
+  // Step 1's action at the composer's end, once there is data: a pending table read from text
+  // and a required role without a column hold it, and the line above the box says which. Not
+  // while the fan-out's panel copies the data, which only opens in step 2 anyway.
+  const stepLine = confirmStepLine(state);
+  const canConfirm =
+    state.phase === 'ready' &&
+    !!state.sessionId &&
+    !!state.dataset &&
+    state.bindingsComplete &&
+    !state.transcription &&
+    !busy &&
+    !fanOut;
 
   // `&all=1` follows `all`, so a reload presses it again. Only from the lists' answers on:
   // before them `all` is not offered yet, and one pressed from the URL waits for them.
   useEffect(() => {
     if (listsSettled) onAllChange(plotAll);
   }, [listsSettled, plotAll, onAllChange]);
-  // The notice before the confirmation is done once the data is confirmed or a turn starts.
-  // Adjusted while rendering, React's pattern for state that follows other state.
-  if (gateShown && (step2 || running)) setGateShown(false);
-  // What the notice asks for first, from the data card as it is now: a table read
-  // from text waits for `.use()` or `.discard()`, anything else for `.confirm()`. A
-  // table that arrives or is discarded after the click changes the text, the
-  // announcement and the target of `.show()` with it, so none names a button
-  // that is gone or waits.
-  const gate: CreateGate | null = gateShown
-    ? state.transcription
-      ? 'transcription'
-      : 'confirm'
-    : null;
 
-  // The user's own `.confirm()` collapsed the card and took its focused button
-  // away. Before the first plot the keyboard continues at `.create_plot()` (or
+  // The user's own `.confirm()` took its focused button away with step 1. Before the first
+  // plot the keyboard continues at `.create_plot()` (or
   // `.plot_all()`), the step's next action (a button, so a phone opens no
   // keyboard), unless it waits; otherwise at the pinned header's toggle, since
   // a fresh run must not be one key press away by accident; it is in view where
@@ -692,19 +660,23 @@ function AgentChat({
   }, [state.library, running, busy, canCreate, session]);
 
   /**
-   * `.plot_all()`, the composer's action while `all` is pressed: the confirmed
+   * `.confirm()` at the composer's end, step 1's action: the data card collapses into the
+   * pinned header once it is done, and the keyboard continues at the step's next action
+   * (the layout effect above).
+   */
+  const handleConfirm = () => {
+    confirmFocus.current = true;
+    void session.confirmData();
+  };
+
+  /**
+   * `.plot_all()`, step 2's action while `all` is pressed: the confirmed
    * data with its bindings, in every library of the header at once; the server
    * copies this session's confirmed version into each library's session. The
    * upload and the bindings go along only for a server without the copy.
-   * Before the confirmation it calls nothing and shows the notice, as the quiet
-   * `.create_plot()` does.
    */
   const handlePlotAll = (event: React.MouseEvent) => {
-    if (!step2) {
-      setGateShown(true);
-      return;
-    }
-    if (!state.sessionId) return;
+    if (!step2 || !state.sessionId) return;
     const upload = state.dataset?.upload;
     fanOutFocus.current = event.detail === 0;
     setFanOut({
@@ -716,43 +688,24 @@ function AgentChat({
   };
 
   /**
-   * The quiet `.create_plot()` before the confirmation: no call, the server
-   * would answer `data_unconfirmed`; the notice under the composer says what
-   * comes first. The click moves no focus.
+   * The quiet `.create_plot()` beside the offer after a switch, or `.start_over()` once the
+   * library has a plot: the fresh plot from the catalogue code. Step 2 only, like every plot
+   * button of the composer.
    */
   const handleCreate = (event: React.MouseEvent) => {
-    if (!step2) {
-      setGateShown(true);
-      return;
-    }
+    if (!step2) return;
     keepKeyboardFocus(event);
     void session.createPlot();
   };
 
   /**
    * The offer after a switch, beside `.send()` once the library has a plot (the
-   * first plot's offer submits the form instead, `handleSend`). Before the
-   * confirmation it calls nothing and shows the notice, as `.create_plot()` does.
+   * first plot's offer submits the form instead, `handleSend`). Step 2 only.
    */
   const handleCarry = (event: React.MouseEvent) => {
-    if (!step2) {
-      setGateShown(true);
-      return;
-    }
+    if (!step2) return;
     keepKeyboardFocus(event);
     void session.carryPlot();
-  };
-
-  /**
-   * The notice's `.show()`: bring the button the notice names into view, below
-   * the pinned header (the page's scroll padding), and move the keyboard focus
-   * to it. A disabled button (bindings incomplete, something in flight) cannot
-   * take the focus, so it is only scrolled to.
-   */
-  const goToGate = () => {
-    const target = (gate === 'transcription' ? decisionRef : confirmRef).current;
-    target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
-    if (target && !target.disabled) target.focus({ preventScroll: true });
   };
 
   if (state.phase === 'unauthorized') return lane === 'public' ? <LaneClosed /> : <AdminRequired />;
@@ -919,15 +872,9 @@ function AgentChat({
             onDiscardTranscription={session.discardTranscription}
             onSendFormula={() => void session.sendFormula()}
             onBind={session.setBinding}
-            onConfirmData={() => {
-              confirmFocus.current = true;
-              void session.confirmData();
-            }}
             onUndo={() => void session.undoData()}
             onToLong={() => void session.toLongData()}
             toggleRef={toggleRef}
-            confirmRef={confirmRef}
-            decisionRef={decisionRef}
             // Not while the fan-out's panel is open: its sessions copy this session's confirmed data.
             locked={!!fanOut}
             onLoadData={session.fetchDataCsv}
@@ -996,7 +943,6 @@ function AgentChat({
               busy={busy}
               running={running}
               stopping={!!state.run?.stopping}
-              hasData={!!state.dataset}
               step2={step2}
               firstPlot={firstPlot}
               hasPlot={hasPlot}
@@ -1006,6 +952,17 @@ function AgentChat({
               libraryCount={libraries.length}
               fanOutOpen={!!fanOut}
               carryText={carry ? carryText : null}
+              confirm={
+                stepLine === null
+                  ? null
+                  : {
+                      line: stepLine,
+                      enabled: canConfirm,
+                      busy: state.confirmBusy,
+                      error: state.confirmError,
+                      onConfirm: handleConfirm,
+                    }
+              }
               pausedUntil={pausedUntil}
               exampleOffer={exampleOffer}
               exampleWorking={exampleWorking}
@@ -1013,9 +970,6 @@ function AgentChat({
                 keepKeyboardFocus(event);
                 void session.exampleData();
               }}
-              gate={gate ? CREATE_GATE[gate] : null}
-              gateRef={gateRef}
-              onGoToGate={goToGate}
               onStop={event => {
                 keepKeyboardFocus(event);
                 void session.stop();

@@ -108,5 +108,5 @@ def test_every_button_of_the_data_card_is_in_the_data_panel_bullet() -> None:
     """
     buttons = data_card_buttons()
 
-    assert {".open()", ".parse()", ".confirm()", ".view_all()"} <= buttons  # the reading still finds them
+    assert {".open()", ".parse()", ".view_all()"} <= buttons  # the reading still finds them
     assert sorted(buttons - controls_of("The data panel")) == []

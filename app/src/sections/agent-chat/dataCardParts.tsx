@@ -252,8 +252,6 @@ interface TranscriptionCardProps {
   canUse: boolean;
   onUse: () => void;
   onDiscard: () => void;
-  /** The `.use()` button, for the page to bring into view and focus. */
-  decisionRef?: React.Ref<HTMLButtonElement>;
 }
 
 /** A table a model read from free text, for the user to check before it is stored. */
@@ -262,7 +260,6 @@ export function TranscriptionCard({
   canUse,
   onUse,
   onDiscard,
-  decisionRef,
 }: TranscriptionCardProps) {
   const { columns, rows } = transcription.profile;
   return (
@@ -304,14 +301,7 @@ export function TranscriptionCard({
       <PreviewTable columns={columns} rows={transcription.preview} />
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-        <Box
-          component="button"
-          type="button"
-          ref={decisionRef}
-          onClick={onUse}
-          disabled={!canUse}
-          sx={ghostButtonSx}
-        >
+        <Box component="button" type="button" onClick={onUse} disabled={!canUse} sx={ghostButtonSx}>
           .use()
         </Box>
         <Box component="button" type="button" onClick={onDiscard} sx={actionButtonSx}>
