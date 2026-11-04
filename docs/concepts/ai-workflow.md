@@ -18,12 +18,17 @@ falls short. The rules themselves are in [`CLAUDE.md`](../../CLAUDE.md), the inc
 
 ## What I bring
 
-I'm a physicist, with a Diplom from Heidelberg University and computer science as a minor subject. Since
-2013 I've worked in data and AI: data pipelines, analyses, machine learning, and the apps people use them
-through. Next to that I've built full-stack side projects of my own, such as a blockchain data platform on
-FastAPI, React, PostgreSQL, and Cloud Run. That experience is what leading the models takes: knowing which
-question to ask, when an answer only sounds right, and when the structure starts to turn into a mess. It
-shows in five ways:
+I trained as an energy electronics technician, then studied physics at Heidelberg University (Diplom,
+2012), with a thesis in physics and computer science on finding stellar streams in large public astronomy
+data sets with modern clustering methods. Since 2013 I've worked as a data analyst, then senior data
+analyst, in steering system development: data pipelines, the central analytics database, statistics and
+SPC, machine learning, and web apps with FastAPI and React, lately MCP servers and AI agents. I know that
+stack from doing it myself: from 2022 to 2024 I built and ran defichain-data, a platform for blockchain
+market data (Python ETL, PostgreSQL, FastAPI, React, and TradingView charts on Google Cloud), largely
+without AI, until the blockchain lost its relevance.
+
+That's what leading the models takes: knowing which question to ask, when an answer only sounds right, and
+when the structure starts to turn into a mess. It shows in four ways:
 
 - **Decisions on record.** The [agent chat's design](agent-network.md) names an owner decision, rule, or
   request 86 times, each with its date and reason. Three examples: a safety check that can't answer
@@ -43,9 +48,6 @@ shows in five ways:
   needs hardening. Before the chat went public, the question of what the request logs keep moved the
   session id out of every URL, because Cloud Run keeps a request's URL together with the client's address
   for 30 days ([`agent_public.py`](../../api/routers/agent_public.py)).
-- **Keeping the structure clean.** Two standing rules come from that: a structural fix over a symptomatic
-  one, and a plan as simple as the task. New work gets a new agent on a fresh worktree instead of piling
-  onto a long-lived one.
 
 ## The path of a change
 
