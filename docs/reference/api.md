@@ -774,8 +774,8 @@ the formula does not define (they stay empty). The generated table starts
 from the default bindings for its columns. A formula pasted into the data
 field answers `422 formula` instead, because the free-text reader is a model
 and would write the rows itself; only text within the chat's 2,000-character
-cap is refused this way, because the page's offer sends it to the chat as a
-turn. Text that holds its own values is data, not
+cap is refused this way, because the page then sends it to the chat as your
+message by itself. Text that holds its own values is data, not
 a formula: with three numbers or more besides a range, such as `Umsatz von
 2020 bis 2024: 10 12 15 18`, the free-text reader reads it as a table.
 
@@ -790,7 +790,9 @@ version 1 when the session has no data. The turn's `done` event carries it
 with the change line `computed from your code: <rows> rows, <columns>
 columns` and the Python that ran as `dataset.code`; the data panel shows it
 under `# code that made this data`. Code pasted into the data field answers
-`422 code` instead.
+`422 code` instead, at any length; within the chat's 2,000 characters the
+page sends it to the chat as your message, and longer code stays in the field
+with a line that asks you to shorten it.
 
 To try a plot without data of your own, ask for example data, in the data
 field or in the chat: "Beispieldaten", "random numbers with 3 categories",

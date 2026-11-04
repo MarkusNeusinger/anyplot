@@ -4,22 +4,23 @@
  * preview and the parser's warnings, and bind each spec role to a column (the
  * server's defaults come preselected).
  *
- * Two steps, data first. Step 1 ends with `.confirm()` at the foot of the card,
- * once every required role has a column: the user says the preview and the
- * bindings are right. The card then collapses into a pinned header at the top
+ * Two steps, data first. Step 1 ends with `.create_plot()` at the composer's end
+ * (`Composer.tsx`), once every required role has a column: its click takes the
+ * preview and the bindings as shown, confirms them on the server and starts the
+ * plot. The card collapses with that click into a pinned header at the top
  * of the thread, which stays in view on scroll: `✓ data fits · N rows · M
  * columns · version V` with `.show()`, which opens the full card again below it
  * without leaving step 2 and brings its top into view, and `.hide()`, which
- * closes it and goes back to where the user was. Step 2's `.create_plot()` is
- * the page's composer, not the card's. A new parse, a binding change, a change
+ * closes it and goes back to where the user was. The plot buttons are the
+ * page's composer's, not the card's. A new parse, a binding change, a change
  * the assistant made to the data and an undo take the page back to step 1 with
  * the card open, because a plot of the wrong data is wrong however good it
  * looks; the server drops its confirmation for each of them already. The
- * header stays then and reads as a warning (`! confirm again · ...`, the
+ * header stays then and reads as a warning (`! check again · ...`, the
  * phrase in bold on a surface tinted with the warning token), and its
  * `.show()` leads back to the card from anywhere in the thread, for example
- * after a data request sent from below the plot. The step line next to
- * `.confirm()` names what dropped the confirmation, as the thread's notice
+ * after a data request sent from below the plot. The step line above the
+ * composer names what dropped the confirmation, as the thread's notice
  * does. A table read from text that waits for its decision holds the page in
  * step 1 as well, whatever a turn's sync says, and the header names that
  * decision.
@@ -27,7 +28,7 @@
  * Work in flight shows on the card: a line under `.parse()` while the data is
  * parsed, and, while anything runs (the parse, a turn, a theme render, a
  * binding change, a confirmation, an undo), a line under the bindings label
- * that says the dropdowns and `.confirm()` wait, because the server runs one
+ * that says the dropdowns wait, because the server runs one
  * thing per session and would refuse a second. The controls keep their
  * disabled look; a hidden live region announces the parse and the step. While
  * the admin fan-out's panel is open (`locked`), every action waits in the same
@@ -56,13 +57,13 @@
  * the chat, its table arrives like a change: the next version of the data, or
  * version 1 when there was none, whose `# changed` block names the generated
  * rows and offers no `.undo()`. Pasted into the text box, the server refuses it
- * (`422 formula`), and a line under the box offers `.send()`, which sends the
- * text to the chat as a turn and empties the box.
+ * (`422 formula`), and the page sends the text to the chat as the user's turn at
+ * once and empties the box, as for a request for data (`422 data_request`).
  *
- * Code that generates data (Python, JavaScript, R) is refused the same way
- * (`422 code`) and offered to the chat, where the assistant runs it in a
- * sandbox; code longer than a chat message cannot move there, so the line asks
- * to shorten it instead. A version the assistant computed from code shows the
+ * Code that generates data (Python, JavaScript, R) goes the same way (`422
+ * code`), and the assistant runs it in a sandbox; code longer than a chat message
+ * cannot move there, so the line under the box asks to shorten it instead. A
+ * version the assistant computed from code shows the
  * Python that ran in a `# code that made this data` block, collapsed behind
  * `.show()`.
  *
@@ -128,26 +129,22 @@ interface DataPanelProps {
   /**
    * `.parse()`; `source` is the name of the file the text was read from, if it was;
    * `table` reads another of the tables the stored paste named (the table picker).
+   * `onForward` hears that the server sent the text to the chat as the user's message
+   * (a formula, code, a request for data), with the text as it went.
    */
-  onParse: (text: string, source?: string, table?: number) => void;
+  onParse: (
+    text: string,
+    source?: string,
+    table?: number,
+    onForward?: (sent: string) => void
+  ) => void;
   /** `.use()` on a transcription; the session keeps the file's name with the table it was read from. */
   onConfirmTranscription: () => void;
   onDiscardTranscription: () => void;
-  /** `.send()` next to a refused formula: the refused text goes to the chat as a turn. */
-  onSendFormula: () => void;
   onBind: (role: string, column: string | null) => void;
-  onConfirmData: () => void;
   onUndo: () => void;
   /** `.to_long()`: apply the wide-table offer as the next data version. */
   onToLong?: () => void;
-  /** The pinned header's `.show()` / `.hide()`, for the page to move the keyboard focus to. */
-  toggleRef?: React.Ref<HTMLButtonElement>;
-  /**
-   * Step 1's `.confirm()` and a pending table's `.use()`: the composer's notice
-   * before the confirmation brings them into view and focuses them.
-   */
-  confirmRef?: React.Ref<HTMLButtonElement>;
-  decisionRef?: React.Ref<HTMLButtonElement>;
   /** Analytics: `agent_data_file{kind, encoding, outcome}`; never the file's name. */
   onTrack?: (event: string, props?: Record<string, string | undefined>) => void;
   /**
@@ -175,14 +172,9 @@ export function DataPanel({
   onParse,
   onConfirmTranscription,
   onDiscardTranscription,
-  onSendFormula,
   onBind,
-  onConfirmData,
   onUndo,
   onToLong,
-  toggleRef,
-  confirmRef,
-  decisionRef,
   onTrack,
   onConvert,
   locked = false,
@@ -190,6 +182,9 @@ export function DataPanel({
   onDataViewShown,
 }: DataPanelProps) {
   const [text, setText] = useState('');
+  // The box as it is now, for a forward that answers after the user typed on.
+  const textRef = useRef(text);
+  textRef.current = text;
   // `.view_all()`: the full view of every row is open. Read-only, so it opens while a step runs too.
   const [viewOpen, setViewOpen] = useState(false);
   const viewButtonRef = useRef<HTMLButtonElement>(null);
@@ -220,6 +215,15 @@ export function DataPanel({
   const everConfirmed = useRef(false);
   if (confirmed) everConfirmed.current = true;
   const pinned = !!dataset && everConfirmed.current;
+  // The confirmation a plot button starts with (`.create_plot()` at the composer's end) collapses
+  // the card as it starts; a later step 1 opens it in full anyway. A step 2 that returns without it (a discarded table) keeps
+  // the card as the user left it. Adjusted while rendering, React's pattern for state that
+  // follows a prop.
+  const [confirmSeen, setConfirmSeen] = useState(state.confirmBusy);
+  if (state.confirmBusy !== confirmSeen) {
+    setConfirmSeen(state.confirmBusy);
+    if (state.confirmBusy) setExpanded(false);
+  }
 
   const intake = useFileIntake({
     text,
@@ -234,18 +238,6 @@ export function DataPanel({
     onConvert,
     onTrack,
   });
-
-  // A request for data moved to the chat as the user's message (`dataRequest`), as `.send()` moves a formula: the
-  // box is free for a table. Only while it still holds that text: an edit made while the parse ran stays. Adjusted
-  // during render, as React adjusts state when a prop changes.
-  const [requestSeen, setRequestSeen] = useState(state.dataRequest?.seq ?? 0);
-  if (state.dataRequest && state.dataRequest.seq !== requestSeen) {
-    setRequestSeen(state.dataRequest.seq);
-    if (text.trim() === state.dataRequest.text) {
-      setText('');
-      intake.clearFile();
-    }
-  }
 
   // A paste of several tables: the picker reads another one (live test round 5 of 2026-10-15). The text
   // is the stored paste's own (`DatasetState.paste`): an edit of the box or a failed parse since does not count.
@@ -281,12 +273,6 @@ export function DataPanel({
     setExpanded(!expanded);
   };
 
-  // `.confirm()` collapses the card; a later step 1 opens it in full anyway.
-  const handleConfirm = () => {
-    setExpanded(false);
-    onConfirmData();
-  };
-
   // `.use()`: the text box shows the CSV that gets stored, so the user can
   // read it and edit it for a later `.parse()`.
   const handleUse = () => {
@@ -296,11 +282,18 @@ export function DataPanel({
     onConfirmTranscription();
   };
 
+  // A formula, code or a request for data went to the chat as the user's message: the box is
+  // free for a table. Only while it still holds that text: an edit made while the parse ran stays.
+  const handleForward = (sent: string) => {
+    if (textRef.current.trim() !== sent) return;
+    setText('');
+    intake.clearFile();
+  };
+
   // `.parse()`: the file's name rides along only when the text came from a file.
   const handleParse = () => {
     parseStart.current = Date.now();
-    if (intake.source) onParse(text, intake.source);
-    else onParse(text);
+    onParse(text, intake.source ?? undefined, undefined, handleForward);
   };
 
   // The table picker: the stored paste's text again, another of its tables.
@@ -308,13 +301,6 @@ export function DataPanel({
     if (!paste || !ready || busy || intake.converting || table === choice?.table) return;
     parseStart.current = Date.now();
     onParse(paste.text, paste.source, table);
-  };
-
-  // `.send()`: the formula or code moves to the chat as a turn, so the box is free for a table.
-  const handleSendFormula = () => {
-    setText('');
-    intake.clearFile();
-    onSendFormula();
   };
 
   return (
@@ -327,7 +313,7 @@ export function DataPanel({
           : confirmed
             ? 'step 2: the data is confirmed; create the plot below'
             : dataset
-              ? 'step 1: check the data, then confirm it'
+              ? 'step 1: check the data, then create the plot'
               : ''}
       </Box>
 
@@ -339,7 +325,6 @@ export function DataPanel({
         locked={locked}
         dataset={dataset}
         hasTranscription={!!transcription}
-        toggleRef={toggleRef}
         cardRef={cardRef}
         onToggle={handleToggle}
       >
@@ -351,21 +336,16 @@ export function DataPanel({
           working={working}
           busy={busy}
           locked={locked}
-          confirmed={confirmed}
           choice={choice}
           viewOpen={viewOpen}
           setViewOpen={setViewOpen}
           viewButtonRef={viewButtonRef}
           parseStart={parseStart}
-          confirmRef={confirmRef}
-          decisionRef={decisionRef}
           onParse={handleParse}
           onTable={handleTable}
           onUse={handleUse}
           onDiscardTranscription={onDiscardTranscription}
-          onSendFormula={handleSendFormula}
           onBind={onBind}
-          onConfirm={handleConfirm}
           onUndo={onUndo}
           onToLong={onToLong}
           onLoadData={onLoadData}

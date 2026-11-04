@@ -12,6 +12,7 @@ import {
   familyOf,
   initialAgentState,
   missingRolesOf,
+  type ParseResult,
   sessionBusy,
   sessionHoldsWork,
   type TranscriptionState,
@@ -814,7 +815,7 @@ describe('useAgentSession: confirming the data (step 1)', () => {
     expect(calls.filter(call => call.method === 'PUT')).toHaveLength(1);
   });
 
-  it('offers .confirm() again when the server answers data_unconfirmed', async () => {
+  it('goes back to step 1 when the server answers data_unconfirmed', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/messages'] = () =>
       sse([
@@ -1103,7 +1104,7 @@ describe('useAgentSession: the step-1 summary and data changes', () => {
     const stream = liveSse([['ready', { v: 'anyplot/1', run_id: 'sum' }]]);
     routes['POST /sessions/S1/messages'] = () => stream.response;
     const { result } = await openSession(routes);
-    let parse: Promise<void> = Promise.resolve();
+    let parse: Promise<unknown> = Promise.resolve();
     act(() => {
       parse = result.current.parseData('Student,Study Hours,Exam Score\nS01,1.5,52\n');
     });
@@ -1435,39 +1436,40 @@ describe('useAgentSession: formulas', () => {
     expect(turnBodies()).toHaveLength(1);
   });
 
-  it('keeps a pasted formula as an offer, not an error, and .send() turns it into a turn', async () => {
+  it('sends a pasted formula to the chat at once, as the user message, with no error', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'formula', ref: 'r-f' });
     routes['POST /sessions/S1/messages'] = generatedStream;
     const { result } = await openSession(routes);
-
-    await act(() => result.current.parseData(FORMULA));
-    expect(result.current.state).toMatchObject({
-      formula: FORMULA,
-      datasetError: null,
-      dataset: null,
-      parsing: false,
-    });
-    // Nothing was stored, so there is no summary to ask for.
-    expect(turnBodies()).toEqual([]);
-    // The parse's analytics stay as they were: a refused parse that is no known status.
-    expect(trackEvent).toHaveBeenCalledWith('agent_data_parsed', {
-      status: 'error',
-      size_bucket: 'lt_1kb',
+    // How many turns the page had posted when it heard of the forward: none, the box lets go first.
+    const postedAtForward: number[] = [];
+    const onForward = vi.fn(() => {
+      postedAtForward.push(turnBodies().length);
     });
 
-    await act(() => result.current.sendFormula());
+    let parsed: ParseResult | undefined;
+    await act(async () => {
+      parsed = await result.current.parseData(` ${FORMULA}\n`, false, undefined, undefined, {
+        onForward,
+      });
+    });
+    // The parse ends with the turn it started, whose generated table is version 1.
+    expect(parsed).toEqual({ outcome: 'forwarded', turnEnd: 'done' });
+    expect(onForward).toHaveBeenCalledWith(FORMULA);
+    expect(postedAtForward).toEqual([0]);
     expect(turnBodies()).toEqual([{ text: FORMULA }]);
     expect(result.current.state.items[0]).toMatchObject({ kind: 'user', text: FORMULA });
-    expect(result.current.state.formula).toBeNull();
+    expect(result.current.state).toMatchObject({ datasetError: null, parsing: false });
     expect(result.current.state.dataset?.parsed.version).toBe(1);
-
-    // Sent once: a second click has nothing left to send.
-    await act(() => result.current.sendFormula());
+    expect(trackEvent).toHaveBeenCalledWith('agent_data_parsed', {
+      status: 'formula',
+      size_bucket: 'lt_1kb',
+    });
+    // No summary follows: the turn's own reply describes the generated table.
     expect(turnBodies()).toHaveLength(1);
   });
 
-  it('keeps pasted code as an offer of its kind, and the version it made carries its python', async () => {
+  it('sends pasted code to the chat, and the version it made carries its python', async () => {
     const CODE = 'np.linspace(0, 10, 100)';
     const PYTHON =
       'import numpy as np\nimport pandas as pd\ndf = pd.DataFrame({"x": np.linspace(0, 10, 100)})\n';
@@ -1492,22 +1494,39 @@ describe('useAgentSession: formulas', () => {
       ]);
     const { result } = await openSession(routes);
 
-    await act(() => result.current.parseData(CODE));
-    expect(result.current.state).toMatchObject({
-      formula: CODE,
-      formulaKind: 'code',
-      datasetError: null,
+    let parsed: ParseResult | undefined;
+    await act(async () => {
+      parsed = await result.current.parseData(CODE);
     });
-
-    await act(() => result.current.sendFormula());
+    expect(parsed).toEqual({ outcome: 'forwarded', turnEnd: 'done' });
     expect(turnBodies()).toEqual([{ text: CODE }]);
-    expect(result.current.state.formula).toBeNull();
+    expect(result.current.state.datasetError).toBeNull();
     expect(result.current.state.dataset?.parsed.code).toBe(PYTHON);
+    expect(trackEvent).toHaveBeenCalledWith('agent_data_parsed', {
+      status: 'code',
+      size_bucket: 'lt_1kb',
+    });
+  });
 
-    // A formula refused after it is a formula again.
-    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'formula', ref: 'r-f' });
-    await act(() => result.current.parseData(FORMULA));
-    expect(result.current.state).toMatchObject({ formula: FORMULA, formulaKind: 'formula' });
+  it('asks to shorten code the chat cannot take: a failure, no turn', async () => {
+    const LONG = 'x = np.arange(10)\n'.repeat(200);
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'code', ref: 'r-c' });
+    const { result } = await openSession(routes);
+    const onForward = vi.fn();
+
+    let parsed: ParseResult | undefined;
+    await act(async () => {
+      parsed = await result.current.parseData(LONG, false, undefined, undefined, { onForward });
+    });
+    expect(parsed).toEqual({ outcome: 'failed', turnEnd: null });
+    expect(onForward).not.toHaveBeenCalled();
+    expect(turnBodies()).toEqual([]);
+    expect(result.current.state.datasetError).toMatchObject({ code: 'code', ref: 'r-c' });
+    expect(trackEvent).toHaveBeenCalledWith('agent_data_parsed', {
+      status: 'code',
+      size_bucket: '1_10kb',
+    });
   });
 
   it('sends a request for data to the chat at once, as the user message, with no error', async () => {
@@ -1520,12 +1539,7 @@ describe('useAgentSession: formulas', () => {
     await act(() => result.current.parseData('  Beispieldaten\n'));
     expect(turnBodies()).toEqual([{ text: 'Beispieldaten' }]);
     expect(result.current.state.items[0]).toMatchObject({ kind: 'user', text: 'Beispieldaten' });
-    expect(result.current.state).toMatchObject({
-      datasetError: null,
-      formula: null,
-      dataRequest: { text: 'Beispieldaten', seq: 1 },
-      parsing: false,
-    });
+    expect(result.current.state).toMatchObject({ datasetError: null, parsing: false });
     expect(result.current.state.dataset?.parsed.version).toBe(1);
     expect(trackEvent).toHaveBeenCalledWith('agent_data_parsed', {
       status: 'data_request',
@@ -1535,47 +1549,153 @@ describe('useAgentSession: formulas', () => {
     expect(turnBodies()).toHaveLength(1);
   });
 
-  it('clears the offer on the next parse and on data the chat computed', async () => {
+  it('clears an earlier failure when the next paste goes to the chat', async () => {
     const routes = baseRoutes();
-    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'formula', ref: 'r-f' });
-    routes['POST /sessions/S1/messages'] = generatedStream;
-    const { result } = await openSession(routes);
-    await act(() => result.current.parseData(FORMULA));
-    expect(result.current.state.formula).toBe(FORMULA);
-
-    // The user typed the formula into the chat instead of using .send().
-    await act(() => result.current.sendMessage('sin(x) from -pi to pi'));
-    expect(result.current.state.formula).toBeNull();
-
-    await act(() => result.current.parseData(FORMULA));
-    expect(result.current.state.formula).toBe(FORMULA);
     routes['POST /sessions/S1/dataset'] = () =>
       json(422, { detail: 'unparseable', ref: 'r-u', cause: 'line 3 has 4 fields' });
+    routes['POST /sessions/S1/messages'] = generatedStream;
+    const { result } = await openSession(routes);
     await act(() => result.current.parseData('just words'));
-    expect(result.current.state).toMatchObject({
-      formula: null,
-      datasetError: { code: 'unparseable', ref: 'r-u', cause: 'line 3 has 4 fields' },
-    });
+    expect(result.current.state.datasetError).toMatchObject({ code: 'unparseable' });
+
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'formula', ref: 'r-f' });
+    await act(() => result.current.parseData(FORMULA));
+    expect(result.current.state.datasetError).toBeNull();
   });
 
-  it('starts no .send() while a turn runs, and keeps the offer', async () => {
+  /** `parseData` in `act`, resolved to what it reports. */
+  const parse = async (
+    result: { current: ReturnType<typeof useAgentSession> },
+    text: string
+  ): Promise<ParseResult | undefined> => {
+    let parsed: ParseResult | undefined;
+    await act(async () => {
+      parsed = await result.current.parseData(text);
+    });
+    return parsed;
+  };
+
+  it('reports a stored paste with its summary, and a table to decide on without a turn', async () => {
     const routes = baseRoutes();
-    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'formula', ref: 'r-f' });
     const { result } = await openSession(routes);
-    await act(() => result.current.parseData(FORMULA));
-    const stream = liveSse([['ready', {}]]);
+    expect(await parse(result, 'a,b\n1,2\n')).toEqual({ outcome: 'stored', turnEnd: 'done' });
+
+    routes['POST /sessions/S1/dataset'] = () => json(200, TRANSCRIBED);
+    expect(await parse(result, FREE_TEXT)).toEqual({ outcome: 'transcribed', turnEnd: null });
+  });
+
+  it('skips a parse while another one runs, a second Enter before the state caught up', async () => {
+    const routes = baseRoutes();
+    let release: () => void = () => {};
+    routes['POST /sessions/S1/dataset'] = () =>
+      new Promise<Response>(resolve => {
+        release = () => resolve(json(200, DATASET));
+      });
+    const { result } = await openSession(routes);
+
+    let first: Promise<ParseResult> = Promise.resolve({ outcome: 'skipped', turnEnd: null });
+    let second: ParseResult | undefined;
+    await act(async () => {
+      first = result.current.parseData('a,b\n1,2\n');
+      second = await result.current.parseData('a,b\n1,2\n');
+    });
+    expect(second).toEqual({ outcome: 'skipped', turnEnd: null });
+    expect(calls.filter(call => call.path.endsWith('/dataset'))).toHaveLength(1);
+    await act(async () => {
+      release();
+      await first;
+    });
+    expect(await first).toEqual({ outcome: 'stored', turnEnd: 'done' });
+    // Nothing to parse: skipped as well, and nothing is sent.
+    expect(await parse(result, '   ')).toEqual({ outcome: 'skipped', turnEnd: null });
+  });
+
+  it('tells a refused turn and a failed one apart from a done one', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'data_request', ref: 'r-d' });
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['refusal', { code: 'out_of_scope', text: 'I can only help with this plot.' }],
+        ['done', { llm_calls: 0 }],
+      ]);
+    const { result } = await openSession(routes);
+    expect(await parse(result, 'Beispieldaten')).toEqual({
+      outcome: 'forwarded',
+      turnEnd: 'refused',
+    });
+
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['error', { code: 'capacity', ref: 'r-e' }],
+        ['done', { llm_calls: 0 }],
+      ]);
+    expect(await parse(result, 'Beispieldaten')).toEqual({
+      outcome: 'forwarded',
+      turnEnd: 'error',
+    });
+    expect(turnBodies()).toHaveLength(2);
+  });
+
+  it('reports a turn the user stopped', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'data_request', ref: 'r-d' });
+    const stream = liveSse([['ready', { v: 'anyplot/1', run_id: 'r1' }]]);
     routes['POST /sessions/S1/messages'] = () => stream.response;
-    let turn: Promise<void> = Promise.resolve();
+    routes['POST /sessions/S1/cancel'] = () => json(200, { cancelled: true });
+    const { result } = await openSession(routes);
+
+    let parsed: Promise<ParseResult> = Promise.resolve({ outcome: 'skipped', turnEnd: null });
     act(() => {
-      turn = result.current.sendMessage('was kann ich hier tun?');
+      parsed = result.current.parseData('Beispieldaten');
     });
     await waitFor(() => expect(result.current.state.run).not.toBeNull());
-    await act(() => result.current.sendFormula());
-    expect(turnBodies()).toEqual([{ text: 'was kann ich hier tun?' }]);
-    expect(result.current.state.formula).toBe(FORMULA);
-    stream.push('done', {});
-    stream.close();
-    await act(() => turn);
+    await act(() => result.current.stop());
+    act(() => {
+      stream.push('done', {});
+      stream.close();
+    });
+    await act(async () => {
+      await parsed;
+    });
+    expect(await parsed).toEqual({ outcome: 'forwarded', turnEnd: 'stopped' });
+  });
+
+  it('reports no end for a turn the page unmounted under', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'data_request', ref: 'r-d' });
+    const stream = liveSse([['ready', { v: 'anyplot/1', run_id: 'r1' }]]);
+    routes['POST /sessions/S1/messages'] = () => stream.response;
+    const { result, unmount } = await openSession(routes);
+
+    let parsed: Promise<ParseResult> = Promise.resolve({ outcome: 'skipped', turnEnd: null });
+    act(() => {
+      parsed = result.current.parseData('Beispieldaten');
+    });
+    await waitFor(() => expect(result.current.state.run).not.toBeNull());
+    unmount();
+    // The stream was aborted, never ended with `done`: no turn end to report.
+    expect(await parsed).toEqual({ outcome: 'forwarded', turnEnd: null });
+  });
+
+  it("never reports an earlier turn's end for a turn that did not start", async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['refusal', { code: 'out_of_scope', text: 'I can only help with this plot.' }],
+        ['done', { llm_calls: 0 }],
+      ]);
+    const { result } = await openSession(routes);
+    await act(() => result.current.sendMessage('tell me a joke'));
+
+    // The forward's own turn meets a turn the callback started first: it never starts.
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'data_request', ref: 'r-d' });
+    let parsed: ParseResult | undefined;
+    await act(async () => {
+      parsed = await result.current.parseData('Beispieldaten', false, undefined, undefined, {
+        onForward: () => void result.current.sendMessage('what is on x?'),
+      });
+    });
+    expect(parsed).toEqual({ outcome: 'forwarded', turnEnd: null });
   });
 
   it('takes a generated version over pasted data as the next one, with .undo()', async () => {
@@ -2846,7 +2966,7 @@ describe('agentReducer', () => {
         id: 1,
         kind: 'notice',
         tone: 'warning',
-        text: 'bindings changed · confirm the data again',
+        text: 'bindings changed · check them, then .create_plot()',
       },
     ]);
     // Back and forth: the confirmation is gone already, so no second notice.
@@ -2863,7 +2983,7 @@ describe('agentReducer', () => {
       notice: lastItem(next.items),
     });
     const notice = (text: string) => ({ kind: 'notice', tone: 'warning', text });
-    const changed = notice('the data changed · confirm it again');
+    const changed = notice('the data changed · check it, then .create_plot()');
     for (const next of [
       agentReducer(confirmed, { type: 'parse_done', parsed, bytes: 10 }),
       agentReducer(confirmed, { type: 'data_prepared', dataset: PREPARED as DatasetChanged }),
@@ -2871,7 +2991,7 @@ describe('agentReducer', () => {
     ]) {
       expect(reasonOf(next)).toMatchObject({ reason: 'data', notice: changed });
     }
-    const server = notice('not confirmed on the server · confirm the data again');
+    const server = notice('not confirmed on the server · check the data, then .create_plot()');
     expect(reasonOf(agentReducer(confirmed, { type: 'confirm_lost' }))).toMatchObject({
       reason: 'server',
       notice: server,
@@ -2896,7 +3016,7 @@ describe('agentReducer', () => {
       )
     ).toMatchObject({
       reason: 'bindings',
-      notice: notice('bindings changed · confirm the data again'),
+      notice: notice('bindings changed · check them, then .create_plot()'),
     });
 
     // A table read from text keeps the confirmation until the user decides: no notice.
@@ -3011,7 +3131,6 @@ describe('agentReducer', () => {
       ...initialAgentState('matplotlib'),
       phase: 'ready',
       sessionId: 'S1',
-      formula: 'y = sin(x)',
     };
     const generated = {
       ...(PREPARED as DatasetChanged),
@@ -3029,7 +3148,6 @@ describe('agentReducer', () => {
     expect(state.dataset).toMatchObject({ bytes: 0, parsed: { version: 1 } });
     expect(state.roles.map(r => r.name)).toEqual(['x', 'y', 'series']);
     expect(state).toMatchObject({
-      formula: null,
       bindingsComplete: true,
       dataChange: { kind: 'changed', version: 1 },
     });

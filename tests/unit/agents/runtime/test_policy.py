@@ -450,8 +450,9 @@ class TestOtherInstructions:
         # 18 the same day: data code that reads a URL (needs_data), the live Chart.js request (other_library) and
         # its neighbour, another chart in another library (out_of_scope); 19 since 2026-10-29: a question about R
         # code (in scope), since the session's code can be any served library's; 20 since 2026-11-01: a request for
-        # example data in one word (in scope), which the data panel sends to the chat.
-        assert 6 <= len(examples) <= 20
+        # example data in one word (in scope), which the data panel sends to the chat; 21: whether another plot type
+        # would suit the data (in scope), which the root answers as planned but not possible yet.
+        assert 6 <= len(examples) <= 21
         assert {verdict for _, verdict in examples} == {
             "in_scope",
             "out_of_scope",

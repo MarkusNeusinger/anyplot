@@ -26,6 +26,14 @@ text the plot lacks) is never reworded or lost, which a re-ask, a new generation
 whole reply, cannot promise. The limit: a separate sentence that says the data is not
 confirmed without naming the button stays, because no code check reads that claim in
 every language. The plugin never raises; a failure keeps the reply as it was.
+
+The page has no `.confirm()` any more: `.create_plot()` confirms the data in its own click,
+and neither `root.md` nor the session block names the old button. The check stays as the
+backstop for a reply that still names it, which after a shipped plot is wrong twice over.
+It does not move to `.create_plot()`: a turn that shipped a plot and then changed the
+bindings or the data (`set_bindings`, `prepare_data`) leaves the data unconfirmed, and then
+`.create_plot()` is the right next step. Only the claim around the name ("to confirm the
+data") tells the two apart, and no code check reads that claim in every language.
 """
 
 import logging
@@ -44,7 +52,7 @@ from .reply_language import reply_text
 logger = logging.getLogger(__name__)
 
 CONFIRM = re.compile(r"\bconfirm\(\)", re.IGNORECASE)
-"""The data panel's button as a reply names it (`.confirm()`, also without the dot); `reconfirm()` is no match."""
+"""Step 1's button as a reply names it (`.confirm()`, also without the dot); `reconfirm()` is no match."""
 _CLOSERS = "\"'”’)\\]*_`"
 _BREAK = re.compile(
     rf"((?<=[.!?…])[ \t]+|(?<=[.!?…][{_CLOSERS}])[ \t]+|(?<=[.!?…][{_CLOSERS}]{{2}})[ \t]+|(?<=[。！？])[ \t]*)"

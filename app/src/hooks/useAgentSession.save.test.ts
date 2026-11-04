@@ -216,7 +216,7 @@ describe('useAgentSession: .save()', () => {
       });
     const { result } = await openSession();
 
-    let parse: Promise<void> = Promise.resolve();
+    let parse: Promise<unknown> = Promise.resolve();
     act(() => {
       parse = result.current.parseData('hours,score\n1.5,52\n');
     });
