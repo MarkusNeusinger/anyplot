@@ -193,6 +193,18 @@ describe('MapPage', () => {
     });
   });
 
+  it('names the page like the other pages and declares its canonical URL', async () => {
+    mockFetchSuccess();
+    render(<MapPage />);
+    await waitFor(() => {
+      expect(document.title).toBe('map | anyplot.ai');
+    });
+    expect(document.head.querySelector('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      'https://anyplot.ai/map'
+    );
+  });
+
   it('renders an a11y fallback list of every spec as anchor links', async () => {
     mockFetchSuccess();
     render(<MapPage />);

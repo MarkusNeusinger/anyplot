@@ -2,6 +2,7 @@ import Box from '@mui/material/Box';
 
 import { SectionHeader } from 'src/components/SectionHeader';
 import { LIBRARIES } from 'src/constants';
+import { paths } from 'src/routes/paths';
 import { LibraryCard } from 'src/sections/libraries/LibraryCard';
 import type { LibraryInfo } from 'src/types';
 
@@ -32,7 +33,7 @@ export function LibrariesSection({
         prompt="❯"
         title={<em>libraries</em>}
         linkText="libraries.all()"
-        linkTo="/plots"
+        linkTo={paths.libraries}
       />
 
       <Box

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { LIB_ABBREV, LIBRARIES } from 'src/constants';
 import { ImageCard } from 'src/sections/plots-gallery/ImageCard';
 import { render, screen } from 'src/test-utils';
 import type { PlotImage } from 'src/types';
@@ -147,7 +148,29 @@ describe('ImageCard', () => {
 
     it('embeds the language as a file-extension suffix on the library in compact mode (r)', () => {
       render(<ImageCard {...defaultProps} image={rImage} imageSize="compact" />);
-      expect(screen.getByText('ggplot2.r')).toBeInTheDocument();
+      expect(screen.getByText('gg.r')).toBeInTheDocument();
     });
+
+    it.each([
+      ['makie', 'julia', 'mk.jl'],
+      ['muix', 'javascript', 'mui.tsx'],
+      ['d3', 'javascript', 'd3.js'],
+    ])('abbreviates %s in compact mode as %s', (library, language, label) => {
+      render(
+        <ImageCard
+          {...defaultProps}
+          image={{ ...baseImage, library, language }}
+          imageSize="compact"
+        />
+      );
+      expect(screen.getByText(label)).toBeInTheDocument();
+    });
+  });
+
+  it('has a short compact name for every supported library', () => {
+    // A library missing from LIB_ABBREV falls back to its full id ("muix.tsx").
+    for (const library of LIBRARIES) {
+      expect(LIB_ABBREV[library], library).toBeTruthy();
+    }
   });
 });

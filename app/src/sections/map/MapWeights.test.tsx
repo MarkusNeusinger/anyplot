@@ -24,13 +24,19 @@ describe('MapWeights', () => {
       />
     );
 
-    expect(screen.getByRole('button', { name: 'weights ▸' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'weights ▸' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
     expect(screen.queryAllByRole('slider')).toHaveLength(0);
     expect(screen.queryByRole('button', { name: 'reset' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'weights ▸' }));
 
-    expect(screen.getByRole('button', { name: 'weights ▾' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'weights ▾' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
     expect(screen.getAllByRole('slider')).toHaveLength(TAG_CATEGORIES.length + 1);
     for (const cat of TAG_CATEGORIES) {
       expect(screen.getByText(cat)).toBeInTheDocument();

@@ -376,4 +376,68 @@ describe('SpecPage', () => {
       mockSearchParams.delete('language');
     });
   });
+
+  describe('structured data', () => {
+    const juliaSpec = {
+      ...mockSpecData,
+      implementations: [
+        {
+          library_id: 'makie',
+          library_name: 'Makie.jl',
+          language: 'julia',
+          preview_url: 'https://example.com/scatter-basic/makie/plot.png',
+          quality_score: 88,
+          code: null,
+        },
+      ],
+    };
+
+    /** The JSON-LD blocks the page renders, by their @type. */
+    function jsonLd(): Record<string, Record<string, unknown>> {
+      const blocks = Array.from(
+        document.querySelectorAll('script[type="application/ld+json"]'),
+        s => JSON.parse(s.textContent ?? '{}') as Record<string, unknown>
+      );
+      return Object.fromEntries(blocks.map(b => [String(b['@type']), b]));
+    }
+
+    it('names the language of a Julia implementation with its display name', async () => {
+      mockParams = { specId: 'scatter-basic', language: 'julia', library: 'makie' };
+      mockSearchParams.delete('language');
+      mockFetchSuccess(juliaSpec);
+      render(<SpecPage />);
+
+      await waitFor(() => expect(jsonLd().SoftwareSourceCode).toBeDefined());
+      expect(jsonLd().SoftwareSourceCode.programmingLanguage).toBe('Julia');
+    });
+
+    it('builds the breadcrumb the bot HTML carries: home, spec, library', async () => {
+      mockParams = { specId: 'scatter-basic', language: 'julia', library: 'makie' };
+      mockSearchParams.delete('language');
+      mockFetchSuccess(juliaSpec);
+      render(<SpecPage />);
+
+      await waitFor(() => expect(jsonLd().BreadcrumbList).toBeDefined());
+      const items = jsonLd().BreadcrumbList.itemListElement as { name: string; item: string }[];
+      expect(items.map(i => [i.name, i.item])).toEqual([
+        ['anyplot.ai', 'https://anyplot.ai/'],
+        ['Basic Scatter Plot', 'https://anyplot.ai/scatter-basic'],
+        ['Makie.jl', 'https://anyplot.ai/scatter-basic/julia/makie'],
+      ]);
+    });
+
+    it('shares the spec card as og:image on the hub', async () => {
+      mockParams = { specId: 'scatter-basic' };
+      mockSearchParams.delete('language');
+      mockFetchSuccess();
+      render(<SpecPage />);
+
+      await waitFor(() =>
+        expect(document.head.querySelector('meta[property="og:image"]')).toHaveAttribute(
+          'content',
+          'https://api.anyplot.ai/og/scatter-basic.png'
+        )
+      );
+    });
+  });
 });

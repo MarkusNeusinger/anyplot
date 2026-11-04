@@ -58,3 +58,4 @@ and the spec itself at `.../plots/{spec_id}/specification.md`.
 
 - [GitHub repository](https://github.com/MarkusNeusinger/anyplot): full source — specs, pipeline, api and frontend
 - [Stats](https://anyplot.ai/stats): catalog and usage statistics
+- [Use with my data](https://anyplot.ai/agent): experimental browser chat that redraws one catalogue plot with your own data. it starts from a plot page: the `.use_my_data()` link there opens it for that plot and library, e.g. https://anyplot.ai/agent?spec=scatter-basic&library=matplotlib&language=python

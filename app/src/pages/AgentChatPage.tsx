@@ -874,7 +874,7 @@ function AgentChat({
   return (
     <>
       <>
-        <title>{`agent · ${specId} | anyplot.ai`}</title>
+        <title>{`agent · ${title ?? specId} | anyplot.ai`}</title>
         <NoIndex />
       </>
       {/* `colorScheme` gives the native controls (scrollbars, select menus) the site theme. */}

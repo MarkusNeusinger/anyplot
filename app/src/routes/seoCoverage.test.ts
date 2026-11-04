@@ -21,11 +21,11 @@ const ORIGIN = 'https://anyplot.ai';
 const API = 'https://api.anyplot.ai';
 
 // The public content routes are the top-level string values of paths, minus
-// the ones that are deliberately absent from the machine guide: '/' is the
-// document's own subject, /debug is an app internal (robots.txt disallows it),
-// /agent is the experimental chat (an interactive tool on a catalogue pair,
-// noindex, open only while its lane is), and the search deep link is a view of
-// /plots, not a page.
+// the ones the machine guide need not link: '/' is the document's own subject,
+// /debug is an app internal (robots.txt disallows it), /agent is the
+// experimental chat (an interactive tool on a catalogue pair, noindex, open
+// only while its lane is; llms.txt mentions it under "Optional", but nothing
+// requires it), and the search deep link is a view of /plots, not a page.
 const publicPaths = Object.values(paths)
   .flatMap(v => (typeof v === 'string' ? [v] : []))
   .filter(p => p !== paths.home && p !== paths.debug && p !== paths.agent && !p.includes('?'));

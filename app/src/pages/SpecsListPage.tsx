@@ -11,11 +11,18 @@ import { SectionHeader } from 'src/components/SectionHeader';
 import { GITHUB_URL } from 'src/constants';
 import { useAnalytics } from 'src/hooks';
 import { useAppData, useHomeState } from 'src/hooks';
+import { useTheme } from 'src/hooks/useLayoutContext';
 import { ApiError, apiGet, endpoints } from 'src/lib/api';
 import { paths, specPath } from 'src/routes/paths';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 import type { PlotImage } from 'src/types';
 import { buildSrcSet, getFallbackSrc, SPECS_SIZES } from 'src/utils/responsiveImage';
+import { selectPreviewUrl } from 'src/utils/themedPreview';
+
+// The copy the bot page for /specs carries (api/routers/seo.py `seo_specs`).
+const SPECS_DESCRIPTION =
+  'Browse all plot specifications alphabetically — every chart type in the anyplot.ai catalog, ' +
+  'implemented across 15 libraries in Python, R, Julia, and JavaScript.';
 
 interface SpecListItem {
   id: string;
@@ -36,6 +43,7 @@ export function SpecsListPage() {
   const { specsData } = useAppData();
   const { saveScrollPosition } = useHomeState();
   const { trackPageview, trackEvent } = useAnalytics();
+  const { isDark } = useTheme();
 
   // Track specs page view
   useEffect(() => {
@@ -149,15 +157,9 @@ export function SpecsListPage() {
     <>
       <>
         <title>specs | anyplot.ai</title>
-        <meta
-          name="description"
-          content="Browse all Python plotting specifications alphabetically"
-        />
+        <meta name="description" content={SPECS_DESCRIPTION} />
         <meta property="og:title" content="specs | anyplot.ai" />
-        <meta
-          property="og:description"
-          content="Browse all Python plotting specifications alphabetically"
-        />
+        <meta property="og:description" content={SPECS_DESCRIPTION} />
         <link rel="canonical" href="https://anyplot.ai/specs" />
       </>
 
@@ -203,6 +205,8 @@ export function SpecsListPage() {
           {specList.map(spec => {
             const currentIndex = rotationIndex[spec.id] || 0;
             const currentImage = spec.images[currentIndex];
+            // The render that matches the site theme, as the gallery cards pick it.
+            const imageUrl = selectPreviewUrl(currentImage, isDark);
 
             return (
               <Box
@@ -243,21 +247,21 @@ export function SpecsListPage() {
                     },
                   }}
                 >
-                  {currentImage && (
+                  {imageUrl && (
                     <Box component="picture" sx={{ display: 'contents' }}>
                       <source
                         type="image/webp"
-                        srcSet={buildSrcSet(currentImage.url, 'webp')}
+                        srcSet={buildSrcSet(imageUrl, 'webp')}
                         sizes={SPECS_SIZES}
                       />
                       <source
                         type="image/png"
-                        srcSet={buildSrcSet(currentImage.url, 'png')}
+                        srcSet={buildSrcSet(imageUrl, 'png')}
                         sizes={SPECS_SIZES}
                       />
                       <Box
                         component="img"
-                        src={getFallbackSrc(currentImage.url)}
+                        src={getFallbackSrc(imageUrl)}
                         alt={spec.title}
                         loading="lazy"
                         sx={{
@@ -275,7 +279,7 @@ export function SpecsListPage() {
                               ?.querySelectorAll('source')
                               .forEach(s => s.remove());
                             target.removeAttribute('srcset');
-                            target.src = currentImage.url;
+                            target.src = imageUrl;
                           }
                         }}
                       />

@@ -11,8 +11,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta data-shell-default name="description" content="the open plot catalogue. every plot begins as a library-agnostic spec; ai drafts implementations across 15 libraries in python, r, julia &amp; javascript. browse, copy, adapt — colorblind-safe by default." />
     <meta name="keywords" content="python, r, julia, javascript, plotting, matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, letsplot, ggplot2, makie, chart.js, d3, echarts, highcharts, mui x charts, data visualization, charts, graphs, ai-generated, code examples, colorblind-safe, imprint palette" />
-    <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0E0E10" media="(prefers-color-scheme: dark)" />
+    <!-- --bg-page of each theme in src/styles/tokens.css. -->
+    <meta name="theme-color" content="#f5f3ec" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#121210" media="(prefers-color-scheme: dark)" />
     <title data-shell-default>any.plot() — any library.</title>
 
     <!-- Resolve theme before paint to avoid a flash-of-wrong-theme. Mirrors
@@ -64,7 +65,9 @@
     <meta property="og:url" content="https://anyplot.ai/" />
     <meta data-shell-default property="og:title" content="any.plot() — any library." />
     <meta data-shell-default property="og:description" content="the open plot catalogue. every plot begins as a library-agnostic spec; ai drafts implementations across 15 libraries in python, r, julia &amp; javascript." />
-    <meta property="og:image" content="https://anyplot.ai/og-image.png" />
+    <!-- The card the bot HTML in api/routers/seo.py shares for "/". A page that
+         renders its own og:image (a spec page) replaces this one. -->
+    <meta data-shell-default property="og:image" content="https://api.anyplot.ai/og/home.png" />
     <meta property="og:site_name" content="anyplot.ai" />
     <meta property="og:locale" content="en_US" />
 
@@ -72,7 +75,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta data-shell-default name="twitter:title" content="any.plot() — any library." />
     <meta data-shell-default name="twitter:description" content="the open plot catalogue. every plot begins as a library-agnostic spec; ai drafts implementations across 15 libraries in python, r, julia &amp; javascript." />
-    <meta name="twitter:image" content="https://anyplot.ai/og-image.png" />
+    <meta name="twitter:image" content="https://api.anyplot.ai/og/home.png" />
     <!-- Preconnect to GCS for font loading -->
     <link rel="preconnect" href="https://storage.googleapis.com" crossorigin>
     <!-- Preconnect to API for faster first request -->
