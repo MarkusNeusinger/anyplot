@@ -14,13 +14,32 @@
 
 import { selectPreviewUrl } from 'src/utils/themedPreview';
 
+/** A d3 force as ForceGraph2D hands it back from `d3Force(name)`: the setters the map calls. */
+export interface MapD3Force {
+  strength: (value: number | ((link: MapLink) => number)) => unknown;
+  distance: (value: number | ((link: MapLink) => number)) => unknown;
+}
+
 /**
- * ForceGraph2D's imperative instance (zoom, centerAt, d3Force, refresh, ...).
- * react-force-graph-2d types it only loosely, so the map's ref stays untyped
- * in this one place and every consumer shares the alias.
+ * The part of ForceGraph2D's imperative instance the map uses. The library's own
+ * `ForceGraphMethods` has no `refresh`, and its `ref` prop expects a ref that starts
+ * `undefined` where React 19's `useRef(null)` starts `null`, so the map names what
+ * it calls instead. `__forcesWired` is the map's own flag on the instance: the
+ * custom forces are registered.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ForceGraphHandle = any;
+export interface ForceGraphHandle {
+  d3Force(name: string): MapD3Force | undefined;
+  d3Force(name: string, force: unknown): unknown;
+  d3ReheatSimulation?: () => unknown;
+  centerAt?: (x: number, y: number, durationMs?: number) => unknown;
+  zoom?: { (): number; (scale: number, durationMs?: number): unknown };
+  graph2ScreenCoords?: (x: number, y: number) => { x: number; y: number };
+  refresh?: () => unknown;
+  __forcesWired?: boolean;
+}
+
+/** The camera part of the instance, all the search and selection hooks move or read. */
+export type ForceGraphCamera = Pick<ForceGraphHandle, 'centerAt' | 'zoom' | 'graph2ScreenCoords'>;
 
 /** Backend response shape from GET /api/specs/map. Mirrors api/schemas.py::SpecMapItem. */
 export interface SpecMapItem {
