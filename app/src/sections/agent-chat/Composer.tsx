@@ -36,6 +36,8 @@ import {
   ATTACHMENT_LINE,
   ATTACHMENT_PLACEHOLDER,
   describeDataFailure,
+  ERROR_TEXT,
+  NO_DATA_PLACEHOLDER,
   servicePausedText,
 } from 'src/sections/agent-chat/messages';
 import { DATA_SUMMARY_ID } from 'src/sections/agent-chat/steps';
@@ -148,6 +150,8 @@ export function Composer(props: ComposerProps) {
   const working = (label: string) => (confirming ? `${label} …` : label);
   // An attachment goes once it is read and the dataset route can take it; a refused one again.
   const sendable = !attachment || attachment.status === 'ready' || attachment.status === 'failed';
+  // A message over the cap is never cut: the counter turns red and nothing sends until it fits.
+  const tooLong = draft.length > MAX_MESSAGE_CHARS;
 
   // What the filled CTA names as its description: step 1's line, else the pinned header's summary
   // and step 2's line; on changed data with a plot, also what a new version is made from.
@@ -169,7 +173,7 @@ export function Composer(props: ComposerProps) {
         component="button"
         type="submit"
         onClick={keepKeyboardFocus}
-        disabled={!ready || busy || !sendable || (chatLocked && !attachment)}
+        disabled={!ready || busy || !sendable || tooLong || (chatLocked && !attachment)}
         aria-describedby={attachment ? STEP_LINE_ID : chatLocked ? CREATE_LINE_ID : undefined}
         sx={ghostButtonSx}
       >
@@ -371,7 +375,7 @@ export function Composer(props: ComposerProps) {
               : attachment
                 ? ATTACHMENT_PLACEHOLDER
                 : !hasData
-                  ? 'ask for example data, a curve, or a fix to your data'
+                  ? NO_DATA_PLACEHOLDER
                   : !step2
                     ? `ask about your data, or say what the ${hasPlot ? 'next' : 'first'} plot should do`
                     : firstPlot
@@ -379,19 +383,19 @@ export function Composer(props: ComposerProps) {
                       : 'ask for a change, e.g. log scale on y'
           }
           value={draft}
-          maxLength={MAX_MESSAGE_CHARS}
           rows={2}
           disabled={!ready || chatLocked}
+          aria-invalid={tooLong || undefined}
           aria-describedby={chatLocked ? CREATE_LINE_ID : undefined}
           onChange={onDraftChange}
           onPaste={onPaste}
           onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-            // Enter sends text as a turn, or the attachment with the text as its note; an empty
-            // box creates nothing by accident.
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault();
-              if (draft.trim() || attachment) onSubmit();
-            }
+            // Enter (also with Ctrl or ⌘) sends text as a turn, or the attachment with the text
+            // as its note; Shift+Enter is a new line, and an empty box creates nothing by
+            // accident. An input method's composition takes Enter for itself.
+            if (event.key !== 'Enter' || event.shiftKey || event.nativeEvent.isComposing) return;
+            event.preventDefault();
+            if ((draft.trim() || attachment) && !tooLong) onSubmit();
           }}
           sx={{ ...nativeControlSx, flex: '1 1 240px', resize: 'vertical' }}
         />
@@ -467,13 +471,19 @@ export function Composer(props: ComposerProps) {
           {attachmentNotice}
         </Box>
       )}
-      {/* Stays mounted, so a screen reader hears what came into the box and what reads it. */}
+      {/* Stays mounted, so a screen reader hears what came into the box, and once that the text
+          ran over the cap: the line changes only when one of them does. */}
       <Box data-testid="composer-status" aria-live="polite" sx={visuallyHiddenSx}>
-        {attachment ? attachmentLabel(attachment) : ''}
+        {[attachment ? attachmentLabel(attachment) : null, tooLong ? ERROR_TEXT.too_long : null]
+          .filter(Boolean)
+          .join('. ')}
       </Box>
       {draft.length > MAX_MESSAGE_CHARS * 0.9 && (
-        <Box sx={{ ...labelSx, mt: -1 }}>
-          {draft.length} / {MAX_MESSAGE_CHARS}
+        <Box
+          data-testid="message-counter"
+          sx={{ ...labelSx, mt: -1, color: tooLong ? colors.error : 'var(--ink-muted)' }}
+        >
+          {draft.length.toLocaleString('en-US')} / {MAX_MESSAGE_CHARS.toLocaleString('en-US')}
         </Box>
       )}
     </>

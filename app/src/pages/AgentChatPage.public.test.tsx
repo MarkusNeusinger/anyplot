@@ -120,8 +120,8 @@ describe('PublicAgentChatPage', () => {
     expect(notice).toHaveTextContent(`# ${EXPERIMENTAL_LINE}`);
     expect(notice).toHaveTextContent('# experimental AI · answers can be wrong');
     expect(screen.queryByTestId('experimental-details')).not.toBeInTheDocument();
-    // Above the data card's paste box: the notice comes first in the document.
-    const box = await screen.findByRole('textbox', { name: /data/i });
+    // Above the message box, where the data comes in: the notice comes first in the document.
+    const box = await screen.findByRole('textbox', { name: 'Message' });
     expect(notice.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     const about = within(notice).getByRole('button', { name: 'About the assistant' });

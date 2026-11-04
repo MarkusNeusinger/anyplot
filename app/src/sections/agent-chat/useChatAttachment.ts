@@ -452,7 +452,7 @@ export function useChatAttachment({
   };
 
   const handleDrop = (event: React.DragEvent) => {
-    // A drop target inside the chat that took the file already (the data card's box) wins.
+    // A drop target inside the chat that took the file already wins.
     if (event.defaultPrevented || !dragHasFiles(event.dataTransfer)) return;
     event.preventDefault();
     dragDepth.current = 0;

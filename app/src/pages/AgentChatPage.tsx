@@ -159,6 +159,7 @@ import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
 import { LibraryChip } from 'src/sections/agent-chat/LibraryChip';
 import {
   carryActionText,
+  DATA_HOWTO,
   describeDataFailure,
   DROP_HINT_TEXT,
   ERROR_TEXT,
@@ -562,7 +563,9 @@ function AgentChat({
   const expectedLines = columnLines(state.specRoles, reference?.data);
   // Without data, `.example_data()` above the composer: the other way to data besides a paste.
   // A table read from text that waits for its decision is data at hand, so the line waits too.
-  const exampleOffer = state.phase === 'ready' && !state.dataset && !state.transcription;
+  // A table or a file waiting in the box is data at hand as well.
+  const exampleOffer =
+    state.phase === 'ready' && !state.dataset && !state.transcription && !attachment;
   const exampleWorking = exampleOffer && state.run?.kind === 'example_data';
   // Step 1's line above the composer, the plot button's description: what it waits for (a
   // pending table read from text, a required role without a column), else what to check.
@@ -614,9 +617,26 @@ function AgentChat({
       return;
     }
     const text = draft.trim();
-    if (!text || busy || chatLocked) return;
+    // Text over the cap is never cut: the counter is red and nothing goes until it fits.
+    if (!text || text.length > MAX_MESSAGE_CHARS || busy || chatLocked) return;
     void session.sendMessage(text);
     setDraft('');
+  };
+
+  /** Text back into the box, before anything typed since, with a blank line between them. */
+  const restoreText = (text: string) =>
+    setDraft(current => (current.trim() ? `${text}\n\n${current}` : text));
+
+  // The text of the attachment a table was read from, while that table waits for `.use()` or
+  // `.discard()`: a discard puts it back into the box for another try.
+  const transcribedFrom = useRef<string | null>(null);
+
+  /** `.discard()`: the table read from text goes, and the text it came from back into the box. */
+  const handleDiscard = () => {
+    session.discardTranscription();
+    const text = transcribedFrom.current;
+    transcribedFrom.current = null;
+    if (text) restoreText(text);
   };
 
   /**
@@ -636,6 +656,13 @@ function AgentChat({
     const result = await session.parseData(sent.text, false, sent.source, undefined, {
       note,
       file: sent.converted,
+      // Stored, or sent to the chat as the user's turn: the attachment goes before that turn
+      // runs, and a note the forward did not take goes back into the box.
+      onStored: () => attach.settle(sent.id, 'cleared'),
+      onForward: () => {
+        attach.settle(sent.id, 'cleared');
+        if (note) restoreText(note);
+      },
     });
     if (result.outcome === 'failed') {
       const failure = result.failure;
@@ -644,12 +671,13 @@ function AgentChat({
           ? describeDataFailure(failure.code, failure.ref, failure.cause ?? null)
           : describeDataFailure('internal', null),
       });
-    } else {
+    } else if (result.outcome === 'skipped' || result.outcome === 'transcribed') {
       attach.settle(sent.id, result.outcome === 'skipped' ? 'ready' : 'cleared');
     }
-    if (note && result.outcome !== 'stored') {
-      setDraft(current => (current.trim() ? `${note}\n\n${current}` : note));
-    }
+    transcribedFrom.current = result.outcome === 'transcribed' ? sent.text : null;
+    // Nothing was stored and nothing went to the chat: the note waits in the box again.
+    const kept = result.outcome === 'stored' || result.outcome === 'forwarded';
+    if (note && !kept) restoreText(note);
   };
 
   /**
@@ -925,19 +953,32 @@ function AgentChat({
           onDrop={attach.handleDrop}
           sx={{ ...panelSx, display: 'flex', flexDirection: 'column', gap: 2 }}
         >
-          <Box sx={{ ...labelSx, mb: -0.5 }}># chat</Box>
+          {/* The how-to of the data that comes in through the message box sits beside the label,
+              not in it, so it never joins the section's name. */}
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: -0.5 }}>
+            <Box sx={labelSx}># chat</Box>
+            <InfoPopover
+              label="How the chat takes data"
+              heading="# how it works"
+              lines={DATA_HOWTO}
+              testId="data-howto"
+            />
+          </Box>
 
           {/* The first turn: the data card, once confirmed the pinned header. A sibling of
               the thread, so the header sticks over all of it. */}
           <DataPanel
             state={state}
-            onParse={(text, source, table, onForward) =>
-              void session.parseData(text, false, source, table, { onForward })
+            onParse={(text, source, table, file) =>
+              void session.parseData(text, false, source, table, { file })
             }
-            onConfirmTranscription={() => void session.confirmTranscription()}
+            onConfirmTranscription={() => {
+              transcribedFrom.current = null;
+              void session.confirmTranscription();
+            }}
             onTrack={trackEvent}
             onConvert={session.convertFile}
-            onDiscardTranscription={session.discardTranscription}
+            onDiscardTranscription={handleDiscard}
             onBind={session.setBinding}
             onUndo={() => void session.undoData()}
             onToLong={() => void session.toLongData()}

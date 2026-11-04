@@ -1,19 +1,19 @@
 /**
- * Content of the agent chat's data card (`DataPanel.tsx`): the text box and
- * file drop zone, the free-text transcription
- * decision card, the stored dataset's preview and full-view dialog, and the
- * role bindings. `.create_plot()`, which takes the data as shown, sits at the composer's end
- * (`Composer.tsx`).
+ * Content of the agent chat's data card (`DataPanel.tsx`): the free-text transcription decision
+ * card, the stored dataset's preview and full-view dialog, the table and sheet pickers, and the
+ * role bindings. The data comes in through the composer's message box (`Composer.tsx`): a
+ * pasted table or a file waits there as an attachment until Enter. `.create_plot()`, which takes
+ * the data as shown, sits at the composer's end too.
  */
 
 import { Suspense } from 'react';
 
 import Box from '@mui/material/Box';
 
+import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import type { AgentSessionState } from 'src/hooks/useAgentSession';
-import { longSuggestion, MAX_DATASET_BYTES, type tableChoice, utf8Bytes } from 'src/lib/agent';
+import { longSuggestion, type tableChoice } from 'src/lib/agent';
 import { bindingRows } from 'src/sections/agent-chat/bindings';
-import { BoxWorking } from 'src/sections/agent-chat/BoxWorking';
 import { countOf } from 'src/sections/agent-chat/countOf';
 import {
   BindingsBlock,
@@ -27,24 +27,14 @@ import {
   WarningList,
 } from 'src/sections/agent-chat/dataCardParts';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
-import { FILE_ACCEPT } from 'src/sections/agent-chat/fileText';
-import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { lazyOrFallback } from 'src/sections/agent-chat/lazyOrFallback';
-import {
-  DATA_HOWTO,
-  DATA_PLACEHOLDER,
-  describeDataFailure,
-} from 'src/sections/agent-chat/messages';
 import {
   actionButtonSx,
   bodyTextSx,
-  ghostButtonSx,
   labelSx,
   nativeControlSx,
-  smallText,
 } from 'src/sections/agent-chat/styles';
-import type { FileIntake } from 'src/sections/agent-chat/useFileIntake';
-import { colors, fontSize } from 'src/theme';
+import { colors } from 'src/theme';
 
 /** What the server keeps for a file's name its content check refused (`dataset_context.FILE_NAME_WITHHELD`). */
 const FILE_NAME_WITHHELD = '(name withheld)';
@@ -55,25 +45,22 @@ const DataView = lazyOrFallback(loadDataView, DataViewUnavailable);
 // A preload that fails stays quiet: opening the view shows the line above.
 const preloadDataView = () => void loadDataView().catch(() => undefined);
 
-function formatKb(bytes: number): string {
-  return `${(bytes / 1024).toFixed(bytes < 10 * 1024 ? 1 : 0)} KB`;
-}
-
 export interface DataCardProps {
   state: AgentSessionState;
-  intake: FileIntake;
-  text: string;
   ready: boolean;
   working: boolean;
   busy: boolean;
-  locked: boolean;
   choice: ReturnType<typeof tableChoice>;
   viewOpen: boolean;
   setViewOpen: (open: boolean) => void;
   viewButtonRef: React.RefObject<HTMLButtonElement | null>;
-  parseStart: React.RefObject<number>;
-  onParse: () => void;
   onTable: (table: number) => void;
+  /** The sheet picker of a workbook the data came from: that sheet, read again on the server. */
+  onSheet: (sheet: string) => void;
+  /** While the server reads another sheet, what the picker's line says; null otherwise. */
+  sheetLine: string | null;
+  /** Why the server could not read the sheet. */
+  sheetError: string | null;
   onUse: () => void;
   onDiscardTranscription: () => void;
   onBind: (role: string, column: string | null) => void;
@@ -84,20 +71,13 @@ export interface DataCardProps {
 }
 
 export function DataCard(props: DataCardProps) {
-  const { state, intake, text, ready, working, busy, locked, choice } = props;
-  const { viewOpen, setViewOpen, viewButtonRef, parseStart } = props;
-  const { onParse, onTable, onUse, onDiscardTranscription } = props;
+  const { state, ready, working, busy, choice, viewOpen, setViewOpen, viewButtonRef } = props;
+  const { onTable, onSheet, sheetLine, sheetError, onUse, onDiscardTranscription } = props;
   const { onBind, onUndo, onToLong, onLoadData, onDataViewShown } = props;
-  const { convertLine, converting, converted, dragOver, dropReady, fileNotice } = intake;
-  const { pendingFile, convertStart, boxRef, parseButtonRef, fileInputRef } = intake;
-  const { replaceButtonRef, handleTextChange, fillFromFile, handleSheet, handleKeep } = intake;
-  const { handleDragEnter, handleDragOver, handleDragLeave, handleDrop } = intake;
-  const { handlePaste, handleChosen } = intake;
 
-  const bytes = utf8Bytes(text);
-  const over = bytes > MAX_DATASET_BYTES;
   const transcription = state.transcription;
   const dataset = state.dataset;
+  const file = dataset?.file;
   const columns = dataset?.parsed.profile.columns ?? [];
   // An earlier version exists above the paste's 1, until the server says the
   // history ended (it keeps the last five versions).
@@ -112,287 +92,7 @@ export function DataCard(props: DataCardProps) {
 
   return (
     <>
-      {/* One short label (since 2026-11-02, owner: less text); the how-to behind its ⓘ, the
-          other sources (example data, a curve) in the box's placeholder. The button sits beside
-          the label, not in it, so it never joins the box's accessible name. */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.75 }}>
-        <Box component="label" htmlFor="agent-data" sx={labelSx}>
-          # your data
-        </Box>
-        <InfoPopover
-          label="How the data card works"
-          heading="# how it works"
-          lines={DATA_HOWTO}
-          testId="data-howto"
-        />
-      </Box>
-      {/* The drop zone: the box itself. A file dragged over it tints it with the brand
-          colour, or with the warning colour while a step runs and the drop would be refused. */}
-      <Box
-        data-testid="data-drop-zone"
-        data-drag={dragOver ? (dropReady ? 'ready' : 'busy') : undefined}
-        onDragEnter={handleDragEnter}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        sx={{ position: 'relative' }}
-      >
-        <Box
-          component="textarea"
-          id="agent-data"
-          value={text}
-          rows={8}
-          spellCheck={false}
-          placeholder={DATA_PLACEHOLDER}
-          aria-busy={converting || state.parsing || undefined}
-          ref={boxRef}
-          onChange={handleTextChange}
-          onPaste={handlePaste}
-          sx={{
-            ...nativeControlSx,
-            display: 'block',
-            width: '100%',
-            boxSizing: 'border-box',
-            resize: 'vertical',
-            fontSize: smallText,
-            lineHeight: 1.5,
-            whiteSpace: 'pre',
-            overflowX: 'auto',
-            // A table keeps its lines; the placeholder's lines wrap at phone width.
-            '&::placeholder': { whiteSpace: 'pre-wrap' },
-            ...(dragOver && {
-              borderColor: dropReady ? colors.primary : colors.warning,
-              borderStyle: 'dashed',
-              outline: `1px dashed ${dropReady ? colors.primary : colors.warning}`,
-              bgcolor: `color-mix(in srgb, ${dropReady ? colors.primary : colors.warning} 10%, var(--bg-elevated))`,
-            }),
-          }}
-        />
-        {dragOver && (
-          <Box
-            aria-hidden
-            sx={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              p: 2,
-              textAlign: 'center',
-              pointerEvents: 'none',
-            }}
-          >
-            {/* On its own surface: over a filled box the line would sit on the text. */}
-            <Box
-              component="span"
-              sx={{
-                ...labelSx,
-                fontSize: fontSize.md,
-                color: 'var(--ink)',
-                bgcolor: 'var(--bg-elevated)',
-                border: `1px dashed ${dropReady ? colors.primary : colors.warning}`,
-                borderRadius: '4px',
-                px: 1.5,
-                py: 0.75,
-              }}
-            >
-              {dropReady
-                ? 'drop the file to read it into the box'
-                : converting
-                  ? 'a file is still being read: drop the next one when it is done'
-                  : locked && !working
-                    ? 'all libraries are plotting this data: close the panel first'
-                    : 'a step is still running: drop the file when it is done'}
-            </Box>
-          </Box>
-        )}
-        {/* A file read on the server or a parse takes seconds: the box says so while it waits. */}
-        {(converting || state.parsing) && (
-          <BoxWorking
-            line={convertLine ?? 'parsing your data'}
-            since={converting ? convertStart.current : parseStart.current}
-            hidden={dragOver}
-          />
-        )}
-      </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 1,
-          mt: 1,
-        }}
-      >
-        <Box
-          component="span"
-          data-testid="data-counter"
-          aria-live="polite"
-          sx={{ ...labelSx, color: over ? colors.error : 'var(--ink-muted)' }}
-        >
-          {formatKb(bytes)} / 1 MB
-        </Box>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, ml: 'auto' }}>
-          {/* The keyboard's and the phone's way in: iOS has no drag and drop into a page. */}
-          <Box
-            component="button"
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={!ready || busy || converting}
-            aria-label="Open a data file"
-            sx={actionButtonSx}
-          >
-            .open()
-          </Box>
-          <Box
-            component="input"
-            type="file"
-            ref={fileInputRef}
-            accept={FILE_ACCEPT}
-            onChange={handleChosen}
-            tabIndex={-1}
-            aria-hidden
-            data-testid="data-file-input"
-            sx={{ display: 'none' }}
-          />
-          <Box
-            component="button"
-            type="button"
-            ref={parseButtonRef}
-            onClick={onParse}
-            disabled={!ready || !text.trim() || over || busy || converting || !!transcription}
-            aria-describedby={transcription || state.parsing ? 'agent-parse-hint' : undefined}
-            sx={ghostButtonSx}
-          >
-            {state.parsing ? '.parse() …' : '.parse()'}
-          </Box>
-        </Box>
-      </Box>
-      {/* Stays mounted, so a screen reader hears what a file brought in. */}
-      <Box
-        data-testid="file-status"
-        aria-live="polite"
-        sx={{
-          ...labelSx,
-          color: 'var(--ink-soft)',
-          overflowWrap: 'anywhere',
-          mt: fileNotice?.tone === 'ok' ? 0.75 : 0,
-        }}
-      >
-        {fileNotice?.tone === 'ok' ? `# ${fileNotice.text}` : ''}
-      </Box>
-      {fileNotice?.tone === 'error' && (
-        <Box
-          role="alert"
-          data-testid="file-error"
-          sx={{ ...bodyTextSx, color: colors.error, mt: 0.75, overflowWrap: 'anywhere' }}
-        >
-          {fileNotice.text}
-        </Box>
-      )}
-      {/* The other sheets of the workbook in the box (or arrays of an .npz): a choice reads the
-          same file again on the server. Only the visible sheets are named, at most ten. */}
-      {converted && converted.sheets.length > 1 && (
-        <Box
-          data-testid="file-sheets"
-          sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1 }}
-        >
-          <Box component="label" htmlFor="agent-file-sheet" sx={labelSx}>
-            # {converted.kind === 'npz' ? 'array' : 'sheet'}
-            {converted.sheetCount > converted.sheets.length
-              ? ` (first ${converted.sheets.length} of ${converted.sheetCount})`
-              : ` (${converted.sheets.length})`}
-          </Box>
-          <Box
-            component="select"
-            id="agent-file-sheet"
-            value={converted.sheet ?? ''}
-            disabled={!dropReady}
-            onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
-              handleSheet(event.target.value)
-            }
-            sx={{ ...nativeControlSx, maxWidth: '100%', minWidth: 0 }}
-          >
-            {converted.sheets.map(name => (
-              <option key={name} value={name}>
-                {name}
-              </option>
-            ))}
-          </Box>
-        </Box>
-      )}
-      {pendingFile && (
-        <Box
-          role="group"
-          aria-labelledby="agent-file-replace-line"
-          data-testid="file-replace"
-          sx={{
-            mt: 1,
-            borderLeft: `3px solid ${colors.warning}`,
-            pl: 1.5,
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            columnGap: 1,
-            rowGap: 0.5,
-          }}
-        >
-          <Box
-            id="agent-file-replace-line"
-            sx={{ ...labelSx, color: 'var(--ink)', flex: '1 1 220px', overflowWrap: 'anywhere' }}
-          >
-            replace the text in the box with &quot;{pendingFile.source}&quot; (
-            {countOf(pendingFile.lines, 'line')})?
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Box
-              component="button"
-              type="button"
-              ref={replaceButtonRef}
-              onClick={() => fillFromFile(pendingFile, 'replaced')}
-              // Not while a parse of the box's text runs: its answer (a table to decide on)
-              // would arrive after the swap and be stored under this file's name.
-              disabled={!ready || busy}
-              sx={ghostButtonSx}
-            >
-              .replace()
-            </Box>
-            <Box component="button" type="button" onClick={handleKeep} sx={actionButtonSx}>
-              .keep()
-            </Box>
-          </Box>
-        </Box>
-      )}
-      {/* A parse clears a pending table, so the two lines never show together. The
-          parse's motion is the loader over the box; this line only says it. */}
-      {(transcription || state.parsing) && (
-        <Box
-          id="agent-parse-hint"
-          data-testid="parse-hint"
-          sx={{
-            ...labelSx,
-            mt: 0.75,
-            textAlign: 'right',
-            color: state.parsing ? 'var(--ink-soft)' : 'var(--ink-muted)',
-          }}
-        >
-          {state.parsing
-            ? '# parsing your data'
-            : 'decide on the table below first: .use() or .discard()'}
-        </Box>
-      )}
-
-      {state.datasetError && (
-        <Box role="alert" sx={{ ...bodyTextSx, color: colors.error, mt: 1.5 }}>
-          {describeDataFailure(
-            state.datasetError.code,
-            state.datasetError.ref,
-            state.datasetError.cause
-          )}
-        </Box>
-      )}
+      <Box sx={{ ...labelSx, mb: 0.75 }}># your data</Box>
 
       {transcription && (
         <TranscriptionCard
@@ -404,7 +104,7 @@ export function DataCard(props: DataCardProps) {
       )}
 
       {dataset && (
-        <Box sx={{ mt: 2.5, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+        <Box sx={{ mt: 1.5, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
           {state.dataChange && (
             <ChangeBlock
               change={state.dataChange}
@@ -454,7 +154,7 @@ export function DataCard(props: DataCardProps) {
                 component="select"
                 id="agent-data-table"
                 value={choice.table}
-                disabled={!ready || busy || converting}
+                disabled={!ready || busy || !!sheetLine}
                 onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
                   onTable(Number(event.target.value))
                 }
@@ -466,6 +166,58 @@ export function DataCard(props: DataCardProps) {
                   </option>
                 ))}
               </Box>
+            </Box>
+          )}
+
+          {/* The other sheets of the workbook the data came from (or arrays of an .npz): a choice
+              reads the same file again on the server and parses that sheet. Only the visible
+              sheets are named, at most ten. */}
+          {file && file.sheets.length > 1 && (
+            <Box
+              data-testid="file-sheets"
+              sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 1, minWidth: 0 }}
+            >
+              <Box component="label" htmlFor="agent-file-sheet" sx={labelSx}>
+                # {file.kind === 'npz' ? 'array' : 'sheet'}
+                {file.sheetCount > file.sheets.length
+                  ? ` (first ${file.sheets.length} of ${file.sheetCount})`
+                  : ` (${file.sheets.length})`}
+              </Box>
+              <Box
+                component="select"
+                id="agent-file-sheet"
+                value={file.sheet ?? ''}
+                disabled={!ready || busy || !!sheetLine}
+                onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
+                  onSheet(event.target.value)
+                }
+                sx={{ ...nativeControlSx, maxWidth: '100%', minWidth: 0 }}
+              >
+                {file.sheets.map(name => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </Box>
+              {sheetLine && (
+                <Box
+                  role="status"
+                  data-testid="sheet-reading"
+                  sx={{ ...labelSx, display: 'inline-flex', alignItems: 'center', gap: 1 }}
+                >
+                  # {sheetLine}
+                  <LoaderSpinner size="inline" />
+                </Box>
+              )}
+            </Box>
+          )}
+          {sheetError && (
+            <Box
+              role="alert"
+              data-testid="sheet-error"
+              sx={{ ...bodyTextSx, color: colors.error, overflowWrap: 'anywhere' }}
+            >
+              {sheetError}
             </Box>
           )}
 

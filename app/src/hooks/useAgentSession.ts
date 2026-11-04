@@ -78,7 +78,7 @@
  * carries the table like any data change: the next version when data exists,
  * or version 1 when the session had none, which then becomes the hook's first
  * dataset with the roles and default bindings `done` names (nothing to undo).
- * The dataset route answers such text pasted into the data box with `422
+ * The dataset route answers such text sent as an attachment with `422
  * formula`, because its free-text reader is a model that would write the rows
  * itself; code that generates data (Python, JavaScript, R) with `422 code`;
  * text that asks for data instead of holding it ("Beispieldaten", "random
@@ -431,9 +431,11 @@ export interface ParseResult {
 export interface ParseOptions {
   /**
    * The text went to the chat as the user's message (`forwarded`), trimmed as it was sent:
-   * called before that turn runs, so the data box can let go of it at once.
+   * called before that turn runs, so the attachment can go at once.
    */
   onForward?: (text: string) => void;
+  /** The data is stored: called before the first turn on it runs, so the attachment can go at once. */
+  onStored?: () => void;
   /**
    * The text typed together with the attachment: once the data is stored it is the first turn,
    * as the user's message, in place of the summary action. The server gives that turn the
@@ -2167,7 +2169,7 @@ export function useAgentSession({
   // ---------------------------------------------------------------- parse and summary
 
   /**
-   * `.parse()`: send the pasted text. A table is stored (version 1, unconfirmed),
+   * Enter with an attachment: send its text. A table is stored (version 1, unconfirmed),
    * its default bindings are applied, and the assistant's summary of it follows
    * as the turn `summarize_data`. Text that is no table comes back as a
    * transcription to decide on, which stores nothing and asks for no summary. A
@@ -2274,6 +2276,7 @@ export function useAgentSession({
       // before confirming it. A note typed with the attachment is that first turn: the assistant
       // summarizes the data and acts on the note in one reply.
       if (outcome === 'stored') {
+        options.onStored?.();
         const note = options.note?.trim() ?? '';
         if (!note || note.length > MAX_MESSAGE_CHARS) {
           await runTurn({ action: 'summarize_data' });
