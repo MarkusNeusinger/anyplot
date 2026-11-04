@@ -273,6 +273,8 @@ The page (since 2026-11-02, the owner's decisions of that day) picks the library
 
 ### Request flow for "Find the right plot type" (phase 2)
 
+Until phase 2 the root knows only the page's spec and no catalogue. Since 2026-11-04 `root.md` ("What you help with") answers a request for another plot type ("mach daraus einen Violin-Plot") or a question which plots would suit the data in one or two statements: switching the plot type in the chat is planned but not possible yet, this page adapts this plot, a kind of plot that fits the data may be named in one clause, and the catalogue at anyplot.ai/plots has the others, where each plot's page leads to its own chat and the data is pasted again. It never says the catalogue has a particular type. The scope judge reads such requests as `in_scope` (an example line in `scope_judge.md`, the `plot_type` cases in `scope.evalset.json` and in `fixtures/prep`).
+
 The compact `id|title|cat:tags` index (about 13.7k tokens, cache-eligible) is appended to the root's `static_instruction` in phase 2 only; step 1 is page-scoped and the index would cost those tokens on every root call. The root calls `find_specs` (AND across categories, OR within one, values checked against the tag vocabulary) and `get_spec_knowledge` (including the synced "What a good version looks like" bullets) for at most three candidates, derives filters from the pasted profile, and replies with `[[spec:id]]` tokens that the UI turns into cards. `select_spec` validates the choice and swaps the snapshot. Embeddings (pgvector 0.8.5 on Cloud SQL PostgreSQL 18 plus gemini-embedding on `eu`) are added only if evals show that the index is insufficient.
 
 ### anyplot-agents internal API (`/v1`)

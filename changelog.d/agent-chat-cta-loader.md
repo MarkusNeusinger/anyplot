@@ -1,3 +1,12 @@
+### Added
+
+- **The assistant answers a request for another plot type.** Asked for a violin plot or for the plots that would
+  suit the data, it says in one or two sentences that switching the plot type in the chat is planned but not
+  possible yet, may name a kind of plot that fits the data, and points to the catalogue at anyplot.ai/plots, where
+  each plot's page leads to its own chat and the data is pasted again. It never says the catalogue has a
+  particular type, since it does not know the catalogue. The scope judge reads such requests as in scope, with four
+  new cases in the scope eval and four in the prep eval, in English and German.
+
 ### Changed
 
 - **One click from checked data to the plot.** `.confirm()` is gone: from the moment data is stored,
