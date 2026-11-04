@@ -544,7 +544,7 @@ function AgentChat({
   const exampleWorking = exampleOffer && state.run?.kind === 'example_data';
   // Step 1's line above the composer, the plot button's description: what it waits for (a
   // pending table read from text, a required role without a column), else what to check.
-  const stepLine = stepOneLine(state);
+  const stepLine = stepOneLine(state, plotAll ? '.plot_all()' : undefined);
 
   // `&all=1` follows `all`, so a reload presses it again. Only from the lists' answers on:
   // before them `all` is not offered yet, and one pressed from the URL waits for them.

@@ -153,13 +153,14 @@ export const CONFIRM_LOST_TEXT: Record<ConfirmLoss, string> = {
 };
 
 /**
- * The same as the step line above the composer says it, `.create_plot()`'s description, which
- * points up at the card it stands below.
+ * The same as the step line above the composer says it, the description of the composer's
+ * action (`.create_plot()`, or `.plot_all()` with `all` pressed), which points up at the card
+ * it stands below.
  */
-export const CONFIRM_LOST_STEP_TEXT: Record<ConfirmLoss, string> = {
-  bindings: 'bindings changed · check them above, then .create_plot()',
-  data: 'the data changed · check it above, then .create_plot()',
-  server: 'not confirmed on the server · check the data, then .create_plot()',
+export const CONFIRM_LOST_STEP_TEXT: Record<ConfirmLoss, (action: string) => string> = {
+  bindings: action => `bindings changed · check them above, then ${action}`,
+  data: action => `the data changed · check it above, then ${action}`,
+  server: action => `not confirmed on the server · check the data, then ${action}`,
 };
 
 /** The details behind a thread notice's ⓘ: the button's name, the popover's heading and its lines. */

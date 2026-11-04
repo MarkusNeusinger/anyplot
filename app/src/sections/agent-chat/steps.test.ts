@@ -91,4 +91,16 @@ describe('stepOneLine', () => {
       '# step 1 again — not confirmed on the server · check the data, then .create_plot()'
     );
   });
+
+  it('leads to .plot_all() while all is pressed, where no .create_plot() shows', () => {
+    expect(stepOneLine(step1(), '.plot_all()')).toBe(
+      '# step 1 — check the preview and the bindings above, then .plot_all()'
+    );
+    expect(stepOneLine(step1({ missingRoles: ['y'] }), '.plot_all()')).toBe(
+      '# step 1 — pick a column for y, then .plot_all()'
+    );
+    expect(stepOneLine(step1({ confirmLoss: 'data' }), '.plot_all()')).toBe(
+      '# step 1 again — the data changed · check it above, then .plot_all()'
+    );
+  });
 });

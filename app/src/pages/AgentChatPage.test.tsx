@@ -1662,8 +1662,9 @@ describe('AgentChatPage .plot_all()', () => {
     expect(plotAll).toHaveTextContent('.plot_all()');
     expect(plotAll).toBeEnabled();
     expect(composerButtons()).toEqual(['.plot_all()']);
+    // The line leads to the button that shows: `.plot_all()`, not the `.create_plot()` it replaces.
     expect(plotAll).toHaveAccessibleDescription(
-      '# step 1 — check the preview and the bindings above, then .create_plot()'
+      '# step 1 — check the preview and the bindings above, then .plot_all()'
     );
     expect(screen.getByLabelText('Message')).toBeEnabled();
     expect(screen.queryByTestId('plot-all-hint')).not.toBeInTheDocument();
