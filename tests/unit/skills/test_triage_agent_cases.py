@@ -147,8 +147,10 @@ def test_check_refuses_a_missing_row_a_changed_row_and_a_rule(at) -> None:
 def test_the_snapshot_is_private_complete_and_never_overwritten(at, tmp_path) -> None:
     rows = [_row(PLOT_CASE), _row(CHAT_CASE)]
     plan = {"cases": [_entry()]}
+    (tmp_path / "backups").mkdir(mode=0o755)
     directory = at.write_snapshot(tmp_path / "backups", rows, plan, NOW)
 
+    assert stat.S_IMODE((tmp_path / "backups").stat().st_mode) == 0o700
     assert directory.name == "20261104T120000Z-agent-feedback-triage"
     saved = json.loads((directory / "rows.json").read_text())
     assert saved["count"] == 2

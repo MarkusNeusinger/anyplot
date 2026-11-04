@@ -181,9 +181,11 @@ def write_snapshot(root: Path, rows: list[AgentFeedback], plan: Any, now: dateti
     """Write `rows` and the plan to a new `<root>/<now>-agent-feedback-triage/`, read the rows back, return the directory.
 
     The directory must not exist (FileExistsError otherwise: a snapshot is never overwritten);
-    it and its files are private (0700 and 0600), because the rows hold users' messages.
+    it, its files and the root are private (0700 and 0600), because the rows hold users' messages;
+    a root that exists already is tightened too.
     """
     root.mkdir(mode=0o700, parents=True, exist_ok=True)
+    root.chmod(0o700)
     directory = root / f"{now:%Y%m%dT%H%M%SZ}-{SNAPSHOT_SUFFIX}"
     directory.mkdir(mode=0o700)
     payload = {"table": "agent_feedback", "taken_at": _shown(now), "count": len(rows)}
