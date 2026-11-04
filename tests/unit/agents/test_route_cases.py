@@ -30,11 +30,11 @@ def test_the_server_classifies_each_shared_case_as_it_names(case: dict) -> None:
     assert classify_paste(_text(case)) == case["server"]
 
 
-@pytest.mark.parametrize("case", SHARED["cases"], ids=lambda case: f"case-{case['id']}")
+@pytest.mark.parametrize(
+    "case", [case for case in SHARED["cases"] if case["route"] == "data"], ids=lambda case: f"case-{case['id']}"
+)
 def test_text_routed_as_data_is_text_the_parser_reads(case: dict) -> None:
     """A table sent as an attachment never meets a classifier refusal, except code the chat cannot take."""
-    if case["route"] != "data":
-        pytest.skip("not routed as data")
     if case["server"] == "code":
         assert len(_text(case)) > 2000  # the dataset route refuses it with the line that asks to shorten it
     else:

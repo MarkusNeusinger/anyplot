@@ -1660,8 +1660,9 @@ function keepYear(session, year) {
   const index = header.findIndex((_, column) => rows.some(row => row[column] === year));
   if (index < 0) return `There is no ${year} in the data, so nothing changed.`;
   const kept = rows.filter(row => row[index] === year);
+  const dropped = rows.length - kept.length;
   storeVersion(session, parseDataset(toCsv(header, kept)), [
-    `dropped ${rows.length - kept.length} rows where ${header[index]} is not ${year}`,
+    `dropped ${dropped} ${dropped === 1 ? 'row' : 'rows'} where ${header[index]} is not ${year}`,
   ]);
   return `I kept the rows of ${year}: ${kept.length} of ${rows.length}.`;
 }
