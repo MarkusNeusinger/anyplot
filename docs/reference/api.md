@@ -1038,6 +1038,12 @@ statistics after that. The table's columns are in
   On the dev machine, `agents/evals/sync_cases.py` pulls the promoted, active
   cases into `agents/evals/.cases/` and removes the retired ones (see
   [Sync promoted cases from the bucket](../../agents/README.md#sync-promoted-cases-from-the-bucket)).
+- **Triage rounds.** To go through the open cases in one round, use the
+  `triage-agent-cases` project skill (`.claude/skills/triage-agent-cases/`):
+  it lists and copies the cases read-only, proposes a status and tags per case
+  in a private report, and, after your OK for the round, writes them in one
+  transaction after a snapshot of the rows. Its `apply_triage.py` applies the
+  same rules as `PATCH /cases/{id}` (`core.agent_cases.triage_updates`).
 - **Supersession.** A superseded case keeps its status and tags and can still
   be changed; a new case starts as `new` without tags. When the backfill
   indexes a case after the edit that names it in `replaces`, the case goes in
