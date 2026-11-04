@@ -1,6 +1,6 @@
 ### Changed
 
-- **The agent chat's data panel is split into five files.** `DataPanel.tsx` keeps the panel's state and layout;
+- **The agent chat's data panel is split into six files.** `DataPanel.tsx` keeps the panel's state and layout;
   the file intake moves to the `useFileIntake.ts` hook, the card's content to `DataCard.tsx` and its building
   blocks to `dataCardParts.tsx`, the sticky summary header to `PinnedData.tsx`, and the count formatter they share
   to `countOf.ts`. Behavior and rendered output
