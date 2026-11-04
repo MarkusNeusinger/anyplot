@@ -9,6 +9,7 @@ allowlist of its status, and its two capacity guards. The agents service is neve
 """
 
 import base64
+import inspect
 import json
 import logging
 import re
@@ -433,20 +434,45 @@ class TestBotCheck:
         assert refused.status_code == 403 and refused.json()["detail"] == "bot_check_failed"
         assert sent.status_code == 201 and stored.await_count == 1
 
-    def test_a_network_past_its_feedback_cap_costs_no_siteverify_call(
+    def test_a_call_without_a_token_never_spends_the_networks_hourly_cases(
         self, client, upstream, siteverify, monkeypatch
     ) -> None:
-        monkeypatch.setattr(settings, "agent_public_feedback_per_hour", 0)
+        """A script on a shared network cannot use up its real visitors' feedback without solving a check."""
+        monkeypatch.setattr(settings, "agent_public_feedback_per_hour", 1)
+        stored = AsyncMock(return_value={"case_id": "c1", "stored": []})
+        with patch("api.routers.agent.submit_feedback", stored):
+            unchecked = [client.post("/agent/session/feedback", json=self.FEEDBACK, headers=SESSION) for _ in range(3)]
+            first = client.post("/agent/session/feedback", json=self.FEEDBACK, headers={**SESSION, **HUMAN})
+            second = client.post("/agent/session/feedback", json=self.FEEDBACK, headers={**SESSION, **HUMAN})
 
-        response = client.post("/agent/session/feedback", json=self.FEEDBACK, headers={**SESSION, **HUMAN})
-
-        assert response.status_code == 429 and siteverify.calls == 0
+        assert [response.status_code for response in unchecked] == [403, 403, 403]
+        assert first.status_code == 201 and second.status_code == 429
+        assert stored.await_count == 1
 
     def test_the_session_routes_need_no_token(self, client, upstream, siteverify) -> None:
         """A token is single-use, so the calls on an open session never carry one."""
         assert client.post("/agent/session/dataset", json={"text": "a,b\n1,2"}, headers=SESSION).status_code == 200
         assert client.get("/agent/status", headers=HEADERS).status_code == 200
         assert siteverify.calls == 0
+
+    def test_every_state_change_is_decided_for_the_bot_check(self) -> None:
+        """A new public route that changes state fails here until it takes a token or acts on an open session.
+
+        Opening a session and storing a case take a token (`human`); every other route that changes state names the
+        session in `X-Anyplot-Session` (`sid`), which only a checked call can have opened.
+        """
+        checked = set()
+        for route in agent_public.router.routes:
+            if not isinstance(route, APIRoute) or route.methods <= {"GET", "HEAD"}:
+                continue
+            params = set(inspect.signature(route.endpoint).parameters)
+            if route.path == "/agent/session/messages":
+                params |= set(inspect.signature(agent_public.open_public_message_stream).parameters)
+            assert "human" in params or "sid" in params, f"{sorted(route.methods)} {route.path} is undecided"
+            if "human" in params:
+                checked.add(route.path)
+
+        assert checked == {"/agent/sessions", "/agent/session/feedback"}
 
     def test_without_the_secret_outside_production_nothing_is_checked(self, client, upstream, monkeypatch) -> None:
         upstream.handler = lambda request: httpx.Response(200, json={"session_id": SID, "eligibility": {}})

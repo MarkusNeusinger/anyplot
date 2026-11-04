@@ -523,11 +523,12 @@ async def submit_feedback(
 ) -> dict[str, Any]:
     """Store the feedback case the user sent, as the admin lane does: `201 {case_id, stored}`.
 
-    `include_data` carries the user's consent to store the data with the case; the page leaves it unticked. A
-    network past `AGENT_PUBLIC_FEEDBACK_PER_HOUR` cases gets `429 rate_limited` before its token is redeemed, and a
-    call without a token that passes (`require_human`) is refused before the bundle is fetched.
+    `include_data` carries the user's consent to store the data with the case; the page leaves it unticked. The
+    token comes first (`require_human`), so a script without one cannot spend the hourly cases of a network it
+    shares with real visitors; then a network past `AGENT_PUBLIC_FEEDBACK_PER_HOUR` cases gets `429 rate_limited`
+    before the bundle is fetched.
     """
+    await require_human(human, siteverify, ctx)
     if ctx.network is None or not limiter.allow(ctx.network):
         raise AgentHTTPError(429, "rate_limited", ctx.request_id)
-    await require_human(human, siteverify, ctx)
     return await agent.submit_feedback(sid, body, ctx, client, cases, db)

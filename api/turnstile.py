@@ -16,15 +16,20 @@ says so on the deploy smoke instead of serving unchecked. A siteverify answer fr
 secrets counts as no secret in production for the same reason: one test secret passes every token, and the
 others refuse every visitor.
 
-**Fail closed.** A missing, malformed, expired, reused or refused token is `403 bot_check_failed`; siteverify
-unreachable, or answering `internal-error` after the one retry, or refusing the secret itself, is
-`503 bot_check_unavailable`. Nothing passes on an error.
+**Fail closed.** A missing, malformed, expired, reused or refused token is `403 bot_check_failed`, and so is a
+passing token that production finds was solved on a host other than anyplot.ai or one of its subdomains;
+siteverify unreachable, or answering `internal-error` after the one retry, refusing the secret, or calling the
+request itself malformed, is `503 bot_check_unavailable`. Only an HTTP 200 with `success: true` passes.
 
-**No `remoteip`.** Cloudflare's widget already sees the visitor's address when it runs in their browser; sending
-it again from the server would add a second, server-side copy of the address to Cloudflare's request for a
-parameter Cloudflare marks optional. The request carries the secret, the token and an idempotency key, so the
-one retry after a lost answer cannot fail as a duplicate of the first attempt. Nothing about the token or the
-answer is logged except Cloudflare's error codes on the server-side failures.
+**Not checked: `action`.** The page names the call in the widget's `action` for Cloudflare's per-action counts.
+Anyone who renders the widget picks the action, so comparing it would refuse nothing a script could not mint.
+
+**No `remoteip`.** Cloudflare documents the parameter as optional and documents no check it would enable;
+Cloudflare already sees the address in the widget and at the edge, so leaving it out keeps the visitor's
+address off one more request without weakening anything the check relies on. If tokens solved in one place and
+redeemed from another ever show up, sending it is a one-line change. The request carries the secret, the token
+and an idempotency key, so the one retry after a lost answer cannot fail as a duplicate of the first attempt.
+Nothing about the token or the answer is logged except Cloudflare's error codes and a foreign hostname.
 """
 
 from __future__ import annotations
@@ -65,6 +70,15 @@ _REFUSALS: dict[str, tuple[int, str]] = {
     "unconfigured": (503, UNAVAILABLE),
 }
 _SECRET_ERRORS = frozenset({"missing-input-secret", "invalid-input-secret"})
+_SERVER_ERRORS = _SECRET_ERRORS | {"bad-request"}
+"""Codes that blame this server's request, not the visitor's token: a `503`, never a `403`."""
+SITE_HOSTNAME = "anyplot.ai"
+"""Where a production token must have been solved: this host or a subdomain. The widget's hostname list in
+Cloudflare's dashboard is the first fence; this one holds if a development host is ever added there."""
+
+
+def _site_hostname(hostname: object) -> bool:
+    return isinstance(hostname, str) and (hostname == SITE_HOSTNAME or hostname.endswith(f".{SITE_HOSTNAME}"))
 
 
 def enforced() -> bool:
@@ -120,12 +134,18 @@ async def verify(token: str | None, client: httpx.AsyncClient) -> Verdict:
             logger.warning("turnstile secret is one of Cloudflare's test secrets; refusing in production")
             return "unconfigured"
         if answer.get("success") is True:
+            if response.status_code != 200:
+                logger.warning("turnstile siteverify answered success with status %d", response.status_code)
+                return "unavailable"
+            if settings.is_production and not _site_hostname(answer.get("hostname")):
+                logger.warning("turnstile token solved on a foreign host: %.100s", answer.get("hostname"))
+                return "rejected"
             return "passed"
         if "internal-error" in codes:
             logger.warning("turnstile siteverify answered internal-error")
             continue
-        if _SECRET_ERRORS.intersection(codes):
-            logger.warning("turnstile siteverify refused the secret: %s", ",".join(sorted(codes)))
+        if _SERVER_ERRORS.intersection(codes):
+            logger.warning("turnstile siteverify refused this server's request: %s", ",".join(sorted(codes)))
             return "unconfigured"
         return "rejected"
     return "unavailable"

@@ -54,8 +54,10 @@ declare global {
 
 /** How long the script may take to arrive. */
 const LOAD_TIMEOUT_MS = 15_000;
-/** How long a check may run without asking the visitor anything; a click it asks for has Cloudflare's own timeout. */
+/** How long a check may run without asking the visitor anything. */
 const CHECK_TIMEOUT_MS = 30_000;
+/** How long a check that asks for a click may wait for it: Cloudflare's own timeout comes first. */
+const INTERACTION_TIMEOUT_MS = 300_000;
 const ONLOAD_CALLBACK = '__anyplotTurnstileLoaded';
 
 /** The build's site key, read per call so tests can set it. */
@@ -162,9 +164,9 @@ export async function turnstileToken(
       // Handled here: without a truthy answer Turnstile reports the error as an exception too.
       return true;
     };
-    const arm = () => {
+    const arm = (ms: number = CHECK_TIMEOUT_MS) => {
       window.clearTimeout(timer);
-      timer = window.setTimeout(failed, CHECK_TIMEOUT_MS);
+      timer = window.setTimeout(failed, ms);
     };
     arm();
     try {
@@ -182,13 +184,16 @@ export async function turnstileToken(
         'error-callback': failed,
         'timeout-callback': failed,
         'unsupported-callback': failed,
-        // While Cloudflare waits for the visitor's click, only its own timeout runs.
-        'before-interactive-callback': () => window.clearTimeout(timer),
-        'after-interactive-callback': arm,
+        // While Cloudflare waits for the visitor's click its own timeout runs, under a ceiling of a
+        // token's lifetime in case it never reports back: a call never hangs for good.
+        'before-interactive-callback': () => arm(INTERACTION_TIMEOUT_MS),
+        'after-interactive-callback': () => arm(),
       });
     } catch {
       failed();
     }
+    // Cloudflare answers a render it could not do with no widget id rather than an error.
+    if (widgetId === undefined) failed();
   });
 }
 

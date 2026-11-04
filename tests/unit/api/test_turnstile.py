@@ -117,9 +117,7 @@ class TestVerify:
         assert turnstile.refusal("missing") == (403, "bot_check_failed")
         assert cloudflare.forms == []
 
-    @pytest.mark.parametrize(
-        "codes", [["invalid-input-response"], ["timeout-or-duplicate"], ["bad-request"], [], ["something-new"]]
-    )
+    @pytest.mark.parametrize("codes", [["invalid-input-response"], ["timeout-or-duplicate"], [], ["something-new"]])
     async def test_a_refused_token_is_refused(self, secret, codes) -> None:
         cloudflare = Siteverify(json_reply(answer(codes)))
 
@@ -132,7 +130,31 @@ class TestVerify:
 
         assert await run(cloudflare, "tok") == "rejected"
 
-    @pytest.mark.parametrize("codes", [["invalid-input-secret"], ["missing-input-secret"]])
+    @pytest.mark.parametrize("status", [201, 302, 400])
+    async def test_success_passes_only_on_http_200(self, secret, status) -> None:
+        cloudflare = Siteverify(json_reply(PASSED, status))
+
+        assert await run(cloudflare, "tok") == "unavailable"
+
+    @pytest.mark.parametrize("hostname", ["anyplot.ai", "www.anyplot.ai", "python.anyplot.ai"])
+    async def test_production_passes_a_token_solved_on_the_site(self, secret, production, hostname) -> None:
+        cloudflare = Siteverify(json_reply({**PASSED, "hostname": hostname}))
+
+        assert await run(cloudflare, "tok") == "passed"
+
+    @pytest.mark.parametrize("hostname", ["localhost", "evil-anyplot.ai", "anyplot.ai.example", None, 7])
+    async def test_production_refuses_a_token_solved_elsewhere(self, secret, production, hostname) -> None:
+        """The widget's hostname list is the first fence; this holds if a development host is ever added there."""
+        cloudflare = Siteverify(json_reply({**PASSED, "hostname": hostname}))
+
+        assert await run(cloudflare, "tok") == "rejected"
+
+    async def test_outside_production_any_hostname_passes(self, secret) -> None:
+        cloudflare = Siteverify(json_reply({**PASSED, "hostname": "localhost"}))
+
+        assert await run(cloudflare, "tok") == "passed"
+
+    @pytest.mark.parametrize("codes", [["invalid-input-secret"], ["missing-input-secret"], ["bad-request"]])
     async def test_a_refused_secret_is_the_servers_fault(self, secret, codes, caplog) -> None:
         cloudflare = Siteverify(json_reply(answer(codes)))
 
@@ -154,6 +176,7 @@ class TestVerify:
         assert await run(cloudflare, "XXXX.DUMMY.TOKEN.XXXX") == "unconfigured"
 
     async def test_a_test_secret_passes_outside_production(self, secret) -> None:
+        """Its answer names `example.com`: outside production the hostname is not checked."""
         cloudflare = Siteverify(json_reply(TESTING_KEY_PASSED))
 
         assert await run(cloudflare, "XXXX.DUMMY.TOKEN.XXXX") == "passed"

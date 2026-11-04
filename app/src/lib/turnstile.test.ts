@@ -138,11 +138,24 @@ describe('with a site key', () => {
 
     let settled = false;
     fakeTurnstile(o => o['before-interactive-callback']());
-    void turnstileToken('agent_session')
-      .catch(() => undefined)
+    const waiting = turnstileToken('agent_session')
+      .catch((err: unknown) => err)
       .finally(() => (settled = true));
     await vi.advanceTimersByTimeAsync(120_000);
     expect(settled).toBe(false);
+    // A click Cloudflare never reports on still ends within a token's lifetime.
+    await vi.advanceTimersByTimeAsync(180_000);
+    expect(await waiting).toBeInstanceOf(TurnstileError);
+    expect(document.body.querySelector('[data-turnstile]')).toBeNull();
+  });
+
+  it('fails at once when Cloudflare renders no widget', async () => {
+    window.turnstile = { render: vi.fn(() => undefined), remove: vi.fn() };
+
+    await expect(turnstileToken('agent_session')).rejects.toMatchObject({
+      code: 'bot_check_failed',
+    });
+    expect(document.body.querySelector('[data-turnstile]')).toBeNull();
   });
 
   it("loads Cloudflare's script from its own URL, once, and tries again after a failed load", async () => {

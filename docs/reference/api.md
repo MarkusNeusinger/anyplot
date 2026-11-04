@@ -586,7 +586,7 @@ All paths start with `/agent`. A session route takes the session id as
 | `POST /session/messages?theme=` | The chat turn, behind the per-instance stream cap |
 | `POST /session/cancel`, `POST /session/outcome` | Stop, and the outcome beacon |
 | `POST /session/versions/{version}/render`, `GET /session/artifacts/{name}?v=&theme=` | The theme toggle and the result files |
-| `POST /session/feedback` | The feedback case, behind the per-network hourly cap and then `X-Turnstile-Token`. The case's `user_hash` is a salted hash of your tab id, never the id itself |
+| `POST /session/feedback` | The feedback case, behind `X-Turnstile-Token` and then the per-network hourly cap, so a call without a token never spends the cap. The case's `user_hash` is a salted hash of your tab id, never the id itself |
 
 The admin lane's fan-out copy (`POST /sessions/{sid}/dataset/copy`), the
 session file of `.save()` (`GET /sessions/{sid}/bundle`; the public page has
@@ -1382,7 +1382,7 @@ Three calls that open or store something for an anonymous visitor need a
 | Call | Refused with |
 |---|---|
 | `POST /agent/sessions` (opening a public chat session) | `{"detail": "bot_check_failed", "ref": "<request id>"}` |
-| `POST /agent/session/feedback` (a public chat feedback case) | The same, after the per-network hourly cap |
+| `POST /agent/session/feedback` (a public chat feedback case) | The same, before the per-network hourly cap |
 | `POST /feedback` (the site's feedback widget and the plot pages' 👍/👎) | `{"status": 403, "message": "bot_check_failed", "path": "/feedback"}`, after the honeypot and the link filter and before any database query |
 
 The page sends the token in the `X-Turnstile-Token` header. A token is valid
@@ -1393,20 +1393,26 @@ other routes act on a session such a call opened and take no token, and the
 admin lane under `/debug/agent` has no bot check.
 
 The API redeems the token at Cloudflare's siteverify endpoint with the secret,
-the token and an idempotency key. It does not send `remoteip`: Cloudflare's
-widget already sees the visitor's address in the browser, and the parameter
-is optional. Each attempt has a 5-second timeout, and a timeout, a transport
-error, a `5xx` or Cloudflare's `internal-error` gets one retry with the same
-idempotency key. The answers:
+the token and an idempotency key. It does not send `remoteip`: Cloudflare
+documents the parameter as optional and no check it would enable, so leaving it
+out keeps the visitor's address off one more request without weakening the
+check. Nor does it compare the widget's `action`, which whoever renders the
+widget chooses; the page sets it only for Cloudflare's per-action counts. Each
+attempt has a 5-second timeout, and a timeout, a transport error, a `5xx` or
+Cloudflare's `internal-error` gets one retry with the same idempotency key.
+Only an HTTP 200 with `success: true` passes, and in production only for a
+token solved on `anyplot.ai` or one of its subdomains. The answers:
 
-- `403 bot_check_failed`: no token, a token over 2,048 characters, or one
-  siteverify refuses (invalid, expired or already used). The page says the
-  check did not go through and offers to try again, which runs a fresh check.
+- `403 bot_check_failed`: no token, a token over 2,048 characters, one
+  siteverify refuses (invalid, expired or already used), or, in production,
+  one solved on another host. The page says the check did not go through and
+  offers to try again, which runs a fresh check.
 - `503 bot_check_unavailable`: siteverify unreachable or still answering
-  `internal-error` after the retry, a secret Cloudflare refuses, one of
-  Cloudflare's test secrets in production (one passes every token, the others
-  refuse every visitor), or no secret in production. Nothing passes on an
-  error.
+  `internal-error` after the retry, a secret Cloudflare refuses or a request it
+  calls malformed, one of Cloudflare's test secrets in production (one passes
+  every token, the others refuse every visitor), or no secret in production.
+  Nothing passes on an error, and there is no switch that lets calls through
+  while siteverify is down: the way back is a revert.
 
 The check is on while `TURNSTILE_SECRET_KEY` is set (Secret Manager, bound by
 `--update-secrets` in `api/cloudbuild.yaml` on every deploy). Unset, local
@@ -1419,8 +1425,9 @@ Cloudflare's
 [test keys](https://developers.cloudflare.com/turnstile/troubleshooting/testing/)
 work: the site key `1x00000000000000000000AA` with the secret
 `1x0000000000000000000000000000000AA` always passes, and the secret
-`2x0000000000000000000000000000000AA` always fails, which is what
-`api/deploy_smoke_public.sh` expects of a production secret.
+`2x0000000000000000000000000000000AA` always fails, the answer
+`api/deploy_smoke_public.sh` expects from a production secret for Cloudflare's
+dummy token.
 
 ---
 
