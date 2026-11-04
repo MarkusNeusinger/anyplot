@@ -205,9 +205,9 @@ export function AboutPage() {
               version, anchored in a colorblind-safe palette that travels across every library.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
-              built in Visp, a small town in the Swiss Alps, by a data scientist looking for one
-              place to find the right plot for the data in front of him — and a way to explore what
-              each library does best.
+              built in Visp, a small town in the Swiss Alps, by a physicist and data analyst looking
+              for one place to find the right plot for the data in front of him — and a way to
+              explore what each library does best.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
               curious about the stack, costs, or analytics? see{' '}
