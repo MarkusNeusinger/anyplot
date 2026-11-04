@@ -145,6 +145,25 @@ The operations:
   `bindings.carry_bindings`). It came from the owner's live test of 2026-11-02: a pasted
   list `1,3,5,4,6,2` on a line plot had no x, and the root stopped to ask. It is an
   operation of its own so that the data panel's role dropdowns can offer it later.
+* `date_number`: a new number column, appended last, computed from a datetime column, which
+  stays as it is: its calendar `year`; its `decimal_year`, the year plus the part of it gone
+  by at that moment (1 April 2021 is about 2021.25; a leap year has 366 days); its whole
+  `days` since the column's earliest date, which is 0 (calendar dates count, never the time
+  of day); or its Unix `timestamp`, the seconds since 1970-01-01 in UTC: a moment with a UTC
+  offset is converted, a date without a time counts from its midnight UTC and a time without
+  an offset is read as UTC, which the change line says, and a fraction of a second is kept
+  as decimals (whole seconds stay whole numbers). The year, the decimal year and the days
+  follow the column's clock as stored, as the `aggregate` buckets do. A missing date stays
+  missing; the change line counts the dates converted and the cells left empty. Without
+  `name` the column is named after its source and the unit in the session language
+  (`DATE_UNIT_WORDS`: `Subscription Date (days)`, `Abodatum (Tage)`), as `conversions.py`
+  names a converted column. Any other column is a `type_mismatch` with a hint to `set_type`
+  it to datetime first. The new column fills an open required role that takes numbers
+  (`Prepared.converted`), as a `set_type` with `name` does. Nothing converts by itself: the
+  unit is the user's choice. It came from the owner's live test of 2026-11-04: a customers
+  table on `scatter-basic` had no number for `y` but its subscription dates, and "convert
+  subscription date to integer" had no operation (`set_type` to number reads text cells,
+  `derive` takes number columns, `make_date` goes the other way).
 * The text operations, a closed set with literal texts only (never a pattern), each reading
   the source column's canonical cell texts and writing new columns, appended last, while the
   source stays as it is: `split` cuts each cell at a literal `separator` into the 2 to 10
@@ -195,14 +214,15 @@ Pydantic error of the operation models for the model (`tools/session.py` and
 `plugins/tool_safety.py` share it), one line per error with its location.
 """
 
+import calendar
 import io
 import math
 import re
 import unicodedata
 import warnings
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Collection, Iterable, Sequence
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timedelta, tzinfo
+from datetime import UTC, datetime, timedelta, tzinfo
 from decimal import ROUND_FLOOR, InvalidOperation
 from decimal import Decimal as ExactDecimal
 from typing import Annotated, Any, Literal
@@ -212,7 +232,16 @@ import pandas as pd
 from pandas.api.types import is_bool_dtype, is_datetime64_any_dtype, is_integer_dtype, is_numeric_dtype
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, ValidationError
 
-from ..schemas import MAX_CELL_CHARS, MAX_COLUMNS, MAX_NOTE_CHARS, MAX_ROWS, MAX_WARNINGS, ColumnName
+from ..language import DEFAULT_LANGUAGE, canonical
+from ..schemas import (
+    MAX_CELL_CHARS,
+    MAX_COLUMN_NAME_CHARS,
+    MAX_COLUMNS,
+    MAX_NOTE_CHARS,
+    MAX_ROWS,
+    MAX_WARNINGS,
+    ColumnName,
+)
 from .months import month_number, month_year, named_months
 from .parse import (
     AMBIGUOUS_DATE_ORDER,
@@ -311,6 +340,26 @@ DATE_PART_RANGES: dict[str, tuple[int, int]] = {
 """The values a `make_date` part column may hold, inclusive."""
 ROW_NUMBER_NAME = "index"
 """The name of the column a `row_number` makes, unless the operation names another."""
+DateUnit = Literal["year", "decimal_year", "days", "timestamp"]
+"""What a `date_number` makes of each date: its calendar year, its year with the part gone by as decimals, its whole
+days since the column's earliest date (which is 0), or its Unix time in seconds (UTC)."""
+DATE_UNIT_WORDS: dict[str, dict[str, str]] = {
+    "en": {"year": "year", "decimal_year": "decimal year", "days": "days", "timestamp": "Unix time"},
+    "de": {"year": "Jahr", "decimal_year": "Dezimaljahr", "days": "Tage", "timestamp": "Unix-Zeit"},
+    "fr": {"year": "année", "decimal_year": "année décimale", "days": "jours", "timestamp": "temps Unix"},
+    "es": {"year": "año", "decimal_year": "año decimal", "days": "días", "timestamp": "tiempo Unix"},
+    "it": {"year": "anno", "decimal_year": "anno decimale", "days": "giorni", "timestamp": "tempo Unix"},
+    "pt": {"year": "ano", "decimal_year": "ano decimal", "days": "dias", "timestamp": "tempo Unix"},
+    "nl": {"year": "jaar", "decimal_year": "decimaal jaar", "days": "dagen", "timestamp": "Unix-tijd"},
+    "pl": {"year": "rok", "decimal_year": "rok dziesiętny", "days": "dni", "timestamp": "czas uniksowy"},
+}
+"""The unit's word in the name a `date_number` gives its column when the operation names none (`<column> (<word>)`),
+by session language, as `conversions.TYPE_WORDS` names a converted column; English for any other language."""
+_EPOCH = datetime(1970, 1, 1)
+_MICROSECONDS = 1_000_000
+_DAY_MICROSECONDS = 86_400 * _MICROSECONDS
+_MICROSECOND_SECONDS = 2**33
+"""The Unix seconds below which a float64 keeps every microsecond (its spacing there is at most 2**-20 of a second)."""
 Keep = Literal["number", "digits", "letters"]
 """What an `extract` keeps of each cell."""
 RANGE_SEPARATORS = ("–", "—", "-")
@@ -377,8 +426,9 @@ class Prepared:
     """`column '<name>': <order note>` per date column whose day and month order is still a guess: the caller adds
     them to the re-parsed version's warnings (`with_date_notes`), so a later call can still switch the order."""
     converted: dict[str, str] = field(default_factory=dict)
-    """The new columns a `set_type` with `name` made, each with its source column: the caller binds each to the open
-    required role that takes it (`bindings.carry_bindings`), as the conversion for that role was made."""
+    """The new columns a `set_type` with `name`, a text operation or a `date_number` made, each with its source column:
+    the caller binds each to the open required role that takes it (`bindings.carry_bindings`), as the conversion for
+    that role was made."""
     row_numbers: list[str] = field(default_factory=list)
     """The columns a `row_number` made or reused: the caller binds one to the axis or label role that stayed open
     (`bindings.carry_bindings`), as the fallback for that role was made."""
@@ -412,7 +462,8 @@ class _Carried:
     columns kept text through the re-parse, and `with_time` whether a datetime column
     is written with its time (the parser's choice, read from the profile's `min`; a
     column no operation touched is therefore written back exactly as stored,
-    `T00:00:00` included).
+    `T00:00:00` included). `language` is the session language, in which a `date_number`
+    without `name` names its column (`DATE_UNIT_WORDS`).
     """
 
     decimal: str
@@ -422,9 +473,10 @@ class _Carried:
     converted: dict[str, str] = field(default_factory=dict)  # the new columns of a `set_type` with `name`, and sources
     row_numbers: set[str] = field(default_factory=set)  # the columns of a `row_number`
     splits: list[list[str]] = field(default_factory=list)  # the new columns of each `split`, in the parts' order
+    language: str = DEFAULT_LANGUAGE
 
     @classmethod
-    def of(cls, parsed: ParsedDataset) -> "_Carried":
+    def of(cls, parsed: ParsedDataset, language: str = DEFAULT_LANGUAGE) -> "_Carried":
         matches = (_AMBIGUOUS_WARNING.fullmatch(warning) for warning in parsed.warnings)
         order = {
             match.group("name"): "day" if match.group("note") == AMBIGUOUS_DATE_ORDER else "month"
@@ -436,7 +488,7 @@ class _Carried:
             for column in parsed.profile.columns
             if column.dtype == "datetime"
         }
-        return cls(parsed.profile.decimal, order, set(parsed.text_columns), with_time)
+        return cls(parsed.profile.decimal, order, set(parsed.text_columns), with_time, language=language)
 
     def rename(self, old: str, new: str) -> None:
         if old in self.text_columns:
@@ -666,6 +718,20 @@ class RowNumber(_Strict):
     name: NewName = ROW_NUMBER_NAME
 
 
+class DateNumber(_Strict):
+    """A new number column `name`, appended last, from the datetime column `column`, which stays as it is.
+
+    `unit`: the calendar `year`, the `decimal_year` (the year plus the part of it gone by), the whole `days` since the
+    column's earliest date (0), or the Unix `timestamp` in seconds (UTC). `name` left out is the column's name with the
+    unit in the session language (`DATE_UNIT_WORDS`). Nothing converts by itself: the unit is the user's choice.
+    """
+
+    op: Literal["date_number"]
+    column: ColumnName
+    unit: DateUnit
+    name: NewName | None = None
+
+
 class Split(_Strict):
     """Each cell of `column` cut at the literal `separator` into the new columns `names`, appended last, in order.
 
@@ -721,6 +787,7 @@ Operation = Annotated[
     | Derive
     | MakeDate
     | RowNumber
+    | DateNumber
     | Split
     | Extract
     | Strip
@@ -732,13 +799,16 @@ Operation = Annotated[
 # --- Applying ---------------------------------------------------------------------------------
 
 
-def apply_operations(parsed: ParsedDataset, operations: list[Operation]) -> Prepared:
-    """Apply `operations` in order to the canonical CSV of `parsed`; raises `PrepareError`."""
+def apply_operations(parsed: ParsedDataset, operations: list[Operation], language: str = DEFAULT_LANGUAGE) -> Prepared:
+    """Apply `operations` in order to the canonical CSV of `parsed`; raises `PrepareError`.
+
+    `language` is the session language, which names the column of a `date_number` that names none.
+    """
     if not operations:
         raise PrepareError("invalid_operation", "there is no operation to apply")
     if len(operations) > MAX_OPERATIONS:
         raise PrepareError("invalid_operation", f"at most {MAX_OPERATIONS} operations can be applied at once")
-    carried = _Carried.of(parsed)
+    carried = _Carried.of(parsed, language)
     frame = _read(parsed)
     changes: list[str] = []
     for operation in operations:
@@ -812,6 +882,8 @@ def _apply(frame: pd.DataFrame, operation: Operation, carried: _Carried) -> tupl
             return _make_date(frame, operation, carried)
         case RowNumber():
             return _row_number(frame, operation, carried)
+        case DateNumber():
+            return _date_number(frame, operation, carried)
         case Split():
             return _split(frame, operation, carried)
         case Extract():
@@ -1902,6 +1974,126 @@ def _month_names(series: pd.Series, column: str) -> list[int | None]:
             f"column '{column}' holds {_count(unknown, 'value')} that {_be(unknown)} no month name or number from 1 to 12",
         )
     return values
+
+
+def _date_number(frame: pd.DataFrame, op: DateNumber, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    """A number column from a datetime column: its year, its decimal year, its days since the earliest date, or its
+    Unix time in seconds; a missing date stays missing, and the source column stays as it is."""
+    _require(frame, op.column)
+    series = frame[op.column]
+    kind = _kind(series)
+    if kind != "datetime":
+        raise PrepareError(
+            "type_mismatch",
+            f"column '{op.column}' is {kind}; date_number needs a datetime column: set_type it to datetime first",
+        )
+    taken = {str(name) for name in frame.columns}
+    name = op.name or suffixed_name(op.column, date_unit_word(op.unit, carried.language), taken)
+    _check_new_columns(frame, [name])
+    moments: list[pd.Timestamp | None] = [None if pd.isna(value) else value for value in series]
+    present = [moment for moment in moments if moment is not None]
+    if not present:
+        raise PrepareError(
+            "invalid_operation", f"column '{op.column}' holds no date, so column '{name}' would be empty"
+        )
+    notice = ""
+    match op.unit:
+        case "year":
+            values = pd.Series(pd.array([None if m is None else m.year for m in moments], dtype="Int64"))
+            reading = "read as calendar years"
+        case "decimal_year":
+            values = pd.Series([np.nan if m is None else _decimal_year(m) for m in moments], dtype="float64")
+            reading = "read as decimal years (the year plus the part of it gone by)"
+        case "days":
+            earliest = min(_wall(moment).date() for moment in present)
+            days = [None if m is None else (_wall(m).date() - earliest).days for m in moments]
+            values = pd.Series(pd.array(days, dtype="Int64"))
+            reading = f"read as whole days since {earliest.isoformat()}, the earliest date, which is 0"
+        case "timestamp":
+            values, notice = _unix_seconds(moments, series, carried)
+            reading = "read as Unix time in seconds (UTC)"
+    zone = series.dt.tz
+    if zone is not None and op.unit != "timestamp":
+        reading += f", by the clock of {zone}"  # the column's own offset decides where a year or a day ends
+    result = frame.copy()
+    result[name] = values.set_axis(frame.index)
+    carried.forget([name])
+    carried.converted[name] = op.column  # an open required role that takes numbers takes it (`carry_bindings`)
+    change = f"new column {name}: {_count(len(present), 'date')} of {op.column} {reading}"
+    empty = len(moments) - len(present)
+    if empty:
+        change += f", {_count(empty, 'cell')} without a date {_be(empty)} empty"
+    return result, _with_notice(f"{change}; {op.column} stays as it is", notice)
+
+
+def date_unit_word(unit: str, language: str) -> str:
+    """The word for `unit` in the session language (`DATE_UNIT_WORDS`), English for a language without its words."""
+    return DATE_UNIT_WORDS.get(canonical(language), DATE_UNIT_WORDS[DEFAULT_LANGUAGE])[unit]
+
+
+def suffixed_name(column: str, word: str, taken: Collection[str]) -> str:
+    """`<column> (<word>)` within the column-name cap, `_2`, `_3`, ... before the bracket when it is taken."""
+    suffix = f" ({word})"
+    stem = column[: MAX_COLUMN_NAME_CHARS - len(suffix)].rstrip()
+    name, number = stem + suffix, 2
+    while name in taken:
+        tail = f"_{number}"
+        name = column[: MAX_COLUMN_NAME_CHARS - len(suffix) - len(tail)].rstrip() + tail + suffix
+        number += 1
+    return name
+
+
+def _wall(moment: pd.Timestamp) -> datetime:
+    """The moment on the column's own clock, as its cell writes it, without the offset."""
+    clock = moment.tz_localize(None) if moment.tzinfo is not None else moment
+    return clock.to_pydatetime(warn=False)
+
+
+def _decimal_year(moment: pd.Timestamp) -> float:
+    """The year plus the part of it gone by at `moment`, on the column's clock: 1 April 2021 is about 2021.2466.
+
+    Counted in whole microseconds against the length of that year (366 days in a leap year), so the only rounding is
+    the float's own; a date without a time is the start of its day.
+    """
+    wall = _wall(moment)
+    gone = (wall - datetime(wall.year, 1, 1)) // timedelta(microseconds=1)
+    length = (366 if calendar.isleap(wall.year) else 365) * _DAY_MICROSECONDS
+    return wall.year + gone / length
+
+
+def _unix_seconds(moments: list[pd.Timestamp | None], series: pd.Series, carried: _Carried) -> tuple[pd.Series, str]:
+    """The Unix time of each moment in seconds, UTC, and the notice of how the column's clock was read.
+
+    A moment with a UTC offset is converted; one without is read as UTC, a date as its midnight UTC. Whole seconds stay
+    whole numbers (`Int64`, exact for every year from 1 to 9999); a column with a fraction of a second is float64 with
+    the fraction kept as decimals, which the notice says. A float64 keeps every microsecond only below 2**33 seconds,
+    about 272 years from 1970 (its spacing there is 2**-20 of a second): a moment further away is stored rounded, and
+    the notice counts those.
+    """
+    micros: list[int | None] = []
+    for moment in moments:
+        if moment is None:
+            micros.append(None)
+            continue
+        value = moment.to_pydatetime(warn=False)
+        epoch = _EPOCH.replace(tzinfo=UTC) if value.tzinfo is not None else _EPOCH
+        micros.append((value - epoch) // timedelta(microseconds=1))
+    zone = series.dt.tz
+    if zone is not None:
+        notice = "the moments as stored, in UTC" if str(zone) == "UTC" else f"the moments converted to UTC from {zone}"
+    elif _with_time(series, carried):
+        notice = "times without a UTC offset read as UTC"
+    else:
+        notice = "each date counted from its midnight UTC"
+    if all(value is None or value % _MICROSECONDS == 0 for value in micros):
+        whole = [None if value is None else value // _MICROSECONDS for value in micros]
+        return pd.Series(pd.array(whole, dtype="Int64")), notice
+    seconds = [np.nan if value is None else value / _MICROSECONDS for value in micros]
+    notice += "; fractions of a second kept as decimals"
+    rounded = sum(1 for value in micros if value is not None and abs(value) >= _MICROSECOND_SECONDS * _MICROSECONDS)
+    if rounded:
+        notice += f", {_count(rounded, 'value')} more than 272 years from 1970 rounded to the float's digits"
+    return pd.Series(seconds, dtype="float64"), notice
 
 
 # --- Text operations -------------------------------------------------------------------------

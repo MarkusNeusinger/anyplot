@@ -438,6 +438,8 @@ def describe(line: str) -> str:
         return f"make_date {data['name']} from {parts}"
     if op == "row_number":
         return f"row_number {data['name']}"
+    if op == "date_number":
+        return f"date_number {data['column']} as {data['unit']}" + (f" into {data['name']}" if "name" in data else "")
     if op == "split":
         return f"split {data['column']} at {data['separator']!r} into {', '.join(data['names'])}"
     if op == "extract":

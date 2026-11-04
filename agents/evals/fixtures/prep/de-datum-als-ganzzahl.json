@@ -1,0 +1,8 @@
+{
+  "dataset_text": "Index;Kundennummer;Vorname;Nachname;Ort;Abodatum\n1;KD-7F3A2;Lena;Brandauer;Graz;24.08.2020\n2;KD-1E9B4;Jonas;Okafor;Linz;23.04.2021\n3;KD-6C27D;Ilse;Varga;Salzburg;25.03.2020\n4;KD-5A81F;Ravi;Moser;Innsbruck;02.06.2020\n5;KD-0D58E;Noor;Haddad;Wien;17.04.2021\n6;KD-2B17C;Elio;Steiner;Bregenz;24.02.2021\n7;KD-EA4D3;Wren;Kowalski;Villach;08.11.2020\n8;KD-0E04A;Saoirse;Huber;Wels;03.03.2021\n",
+  "message": "Wandle das Abodatum in eine ganze Zahl um.",
+  "expected_operations": [{"op": "date_number", "column": "Abodatum", "unit": "days"}],
+  "locale": "de",
+  "spec_id": "scatter-basic",
+  "tags": ["date_number", "datetime"]
+}

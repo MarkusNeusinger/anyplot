@@ -55,6 +55,7 @@ OPERATIONS = (
     "derive",
     "make_date",
     "row_number",
+    "date_number",
     "split",
     "extract",
     "strip",
@@ -84,10 +85,10 @@ class TestFixtures:
         locales = Counter(item.locale for item in cases)
         ops = {operation["op"] for item in cases for operation in item.expected_operations}
 
-        # 34 single-step cases (two of them `derive`, two `make_date`, one month-only date format, one sort of month
-        # names, one daily mean per sensor, four text operations), 11 `hard` ones (chains, ambiguity, unsupported
-        # asks), 11 data-code cases, 12 step-1 summaries and 3 requests for example data.
-        assert len(cases) == 71
+        # 36 single-step cases (two of them `derive`, two `make_date`, one month-only date format, one sort of month
+        # names, one daily mean per sensor, four text operations, two `date_number`), 11 `hard` ones (chains,
+        # ambiguity, unsupported asks), 11 data-code cases, 13 step-1 summaries and 3 requests for example data.
+        assert len(cases) == 74
         example = [item for item in cases if "example_data" in item.tags]
         assert len(example) == 3 and {item.locale for item in example} == {"de", "en"}
         assert all(
@@ -96,6 +97,10 @@ class TestFixtures:
         assert {item.locale for item in cases if "derive" in item.tags} == {"de", "en"}
         assert sum(1 for item in cases if "hard" in item.tags) == 11
         assert {item.locale for item in cases if "text" in item.tags} == {"de", "en"}
+        # The owner's case of 2026-11-04 in both languages, and its summary, which only offers the conversion.
+        dates = [item for item in cases if "date_number" in item.tags]
+        assert {item.locale for item in dates if item.message} == {"de", "en"}
+        assert [item.id for item in dates if item.action] == ["en-summary-date-offer"]
         assert locales["de"] >= 5 and locales["en"] >= 5
         assert ops == {*OPERATIONS, "generate_data", "run_data_code"}
         assert sum(1 for item in cases if not item.expected_operations) >= 2  # out of scope, and a plain question
@@ -128,7 +133,7 @@ class TestFixtures:
         """The step-1 summary, where 10 of 11 replies of the user test of 2026-11-01 closed with a question."""
         cases = [item for item in load_cases(DEFAULT_CASES) if item.action is not None]
 
-        assert len(cases) == 12 and {item.locale for item in cases} == {"de", "en"}
+        assert len(cases) == 13 and {item.locale for item in cases} == {"de", "en"}
         assert all(item.message is None and item.dataset_text for item in cases)
         assert all("summary" in item.tags for item in cases)
         # A summary changes the data only for what the server found in code (live tests of 2026-11-01 and 11-02): a
@@ -274,6 +279,8 @@ class TestCanonical:
                     "otherwise": "Klasse 2",
                 },
                 {"op": "row_number"},
+                {"op": "date_number", "column": "Abo", "unit": "days"},
+                {"op": "date_number", "column": "Abo", "unit": "year", "name": "Jahr"},
             ],
             ".",
         )
@@ -281,6 +288,8 @@ class TestCanonical:
         assert sorted(describe(line) for line in lines) == [
             "aggregate Betrag sum by Datum/month",
             "classify Klasse: 'Klasse 1' if y gt '0'; else 'Klasse 2'",
+            "date_number Abo as days",
+            "date_number Abo as year into Jahr",
             "drop_rows Tier eq 'Gesamt'",
             "pivot_wider p with v by m",
             "row_number index",
