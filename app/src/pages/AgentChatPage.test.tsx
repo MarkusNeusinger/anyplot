@@ -920,10 +920,9 @@ describe('AgentChatPage gating', () => {
       input: string,
       init?: RequestInit
     ) => Promise<Response>;
+    let refusal = json(422, { detail: 'no_dataset', ref: 'r-c' });
     fetchMock.mockImplementation(async (input: string, init: RequestInit = {}) => {
-      if (new URL(input).pathname.endsWith('/dataset/confirm')) {
-        return json(422, { detail: 'no_dataset', ref: 'r-c' });
-      }
+      if (new URL(input).pathname.endsWith('/dataset/confirm')) return refusal.clone();
       return base(input, init);
     });
     renderAt(PAGE);
@@ -937,6 +936,39 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
     expect(currentStep()).toEqual(['1 data']);
     expect(screen.getByTestId('data-card')).toBeInTheDocument();
+
+    // A server error with an empty box: no plot from the catalogue code either.
+    refusal = json(500, { detail: 'internal', ref: 'r-c2' });
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('ref r-c2'));
+    expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm', 'confirm']);
+    expect(screen.queryByRole('article', { name: /^Plot version/ })).not.toBeInTheDocument();
+    expect(currentStep()).toEqual(['1 data']);
+  });
+
+  it('keeps a note in the thread when its turn is refused right after the confirmation', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    const base = fetchMock.getMockImplementation() as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    let summarized = false;
+    fetchMock.mockImplementation(async (input: string, init: RequestInit = {}) => {
+      const turn = new URL(input).pathname.endsWith('/messages') && init.method === 'POST';
+      if (turn && summarized) return json(429, { detail: 'rate_limited', ref: 'r-t' });
+      if (turn) summarized = true;
+      return base(input, init);
+    });
+    renderAt(PAGE);
+    await parseAndSummarize();
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'log scale on y' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
+    const thread = screen.getByRole('log', { name: 'Conversation' });
+    expect(await within(thread).findByText(/the daily limit is reached/)).toBeInTheDocument();
+    // The box is empty, and the note the user typed stands in the thread above the refusal.
+    expect(within(thread).getByText('log scale on y')).toBeInTheDocument();
+    expect(screen.getByLabelText('Message')).toHaveValue('');
   });
 
   it('sends a note typed before the first plot as the turn that makes it, after the confirmation', async () => {
@@ -1677,6 +1709,30 @@ describe('AgentChatPage .plot_all()', () => {
     // A key press (a click with `detail` 0) continues in the panel it opened.
     fireEvent.click(plotAllButton(), { detail: 0 });
     expect(await screen.findByRole('region', { name: 'All libraries' })).toHaveFocus();
+  });
+
+  it('opens no panel when the confirmation .plot_all() starts with is refused', async () => {
+    const base = baseFetch();
+    fetchMock.mockImplementation(async (input: string, init: RequestInit = {}) =>
+      new URL(input).pathname.endsWith('/dataset/confirm')
+        ? json(503, { detail: 'capacity', ref: 'r-a' })
+        : base(input, init)
+    );
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndSummarize();
+    await pickInMenu('All libraries');
+    const plotAll = plotAllButton();
+    await waitFor(() => expect(plotAll).toBeEnabled());
+
+    fireEvent.click(plotAll, { detail: 1 });
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('ref r-a'));
+    // No panel, no copied session, and step 1 holds with `.plot_all()` ready for a retry.
+    expect(screen.queryByRole('region', { name: 'All libraries' })).not.toBeInTheDocument();
+    expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm']);
+    expect(agentCalls().some(([input]) => String(input).endsWith('/dataset/copy'))).toBe(false);
+    expect(currentStep()).toEqual(['1 data']);
+    expect(plotAllButton()).toBeEnabled();
   });
 
   it('shows no all pill when the page has one library', async () => {

@@ -615,7 +615,9 @@ function AgentChat({
     const text = withText ? draft.trim() : '';
     if (!state.dataConfirmed && !(await session.confirmData())) return;
     if (text) {
-      // Only the text that went: an edit made while the confirmation ran stays in the box.
+      // Only the text that went: an edit made while the confirmation ran stays in the box. The
+      // turn puts the text in the thread before its request goes, so a turn refused at once
+      // (a limit, the capacity, the network) shows it there with the error: nothing is lost.
       setDraft(current => (current.trim() === text ? '' : current));
       void session.sendMessage(text);
     } else {
