@@ -414,7 +414,8 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     the whole-number column name, default index, the rows numbered 1 to n); and four text operations on the cells of
     column, each adding new columns typed by their cells (numbers, dates or text) and keeping column as it is: split
     (column, separator: a literal text such as - or –, names: 2 to 10 new columns; 10–25 gives 10 and 25), extract
-    (column, keep number|digits|letters, name; #12345 gives 12345), strip (column, prefix, suffix, name; takes a literal
+    (column, keep number|digits|letters, name; number for an amount, CHF 1'200 gives 1200; digits for an id or a
+    code), strip (column, prefix, suffix, name; takes a literal
     text off the start or the end of each cell) and replace (column, old, new, name; new empty removes old). Steps
     chain in one call: a later operation may name a column an earlier one made. Returns the change lines and the new
     profile, or an error with a code and a message.

@@ -74,6 +74,28 @@ def inverted(lower: ColumnProfile, upper: ColumnProfile) -> bool:
     return isinstance(low, int | float) and isinstance(high, int | float) and low > high
 
 
+def ordered(lower: ColumnProfile, upper: ColumnProfile) -> bool:
+    """Whether two number columns can be a range's ends in this order: `lower` neither starts nor ends above `upper`.
+
+    Where every row's lower end lies at or below its upper end, both the smallest and the largest value of
+    `lower` lie at or below those of `upper`. The test is stricter than `inverted` and is for the two parts of
+    one `split`, whose rows belong together: `22-18` and `17-12` (a high before a low) fail it, although the
+    parts overlap.
+    """
+    numbers = ("number", "integer")
+    if lower.dtype not in numbers or upper.dtype not in numbers:
+        return False
+    low_min, high_min, low_max, high_max = lower.min, upper.min, lower.max, upper.max
+    if not (
+        isinstance(low_min, int | float)
+        and isinstance(high_min, int | float)
+        and isinstance(low_max, int | float)
+        and isinstance(high_max, int | float)
+    ):
+        return False
+    return low_min <= high_min and low_max <= high_max
+
+
 def inverted_line(pair: BoundPair, lower: ColumnProfile, upper: ColumnProfile) -> str:
     """The binding warning of an inverted pair (`inverted`)."""
     return (

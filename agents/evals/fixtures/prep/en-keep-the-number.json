@@ -1,8 +1,8 @@
 {
-  "dataset_text": "Ticket,Hours\n#4711,3\n#4712,5\n#4713,2\n#4714,4\n",
-  "message": "Keep only the number of each Ticket, as a new column Ticket number.",
+  "dataset_text": "Product,Units,Price\nLamp,12,about 49 EUR\nChair,30,EUR 120 (sale)\nDesk,7,310 EUR net\nShelf,18,ca. 85 EUR\n",
+  "message": "Keep only the number of each Price, as a new column Amount.",
   "expected_operations": [
-    {"op": "extract", "column": "Ticket", "keep": "number", "name": "Ticket number"}
+    {"op": "extract", "column": "Price", "keep": "number", "name": "Amount"}
   ],
   "locale": "en",
   "spec_id": "bar-basic",

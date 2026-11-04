@@ -2399,10 +2399,10 @@ class TestSplit:
         assert (cells(prepared, 2), cells(prepared, 3)) == (["1", "7", "3"], ["2", "", "4-5"])
 
     def test_a_minus_sign_is_never_a_cut(self) -> None:
-        prepared = prepare("k,r\na,-5-10\nb,-10--5\nc,5 - -3\n", split("r", "-", "lo", "hi"))
+        prepared = prepare("k,r\na,-5-10\nb,-10--5\nc,5 - -3\nd,-.5-1\n", split("r", "-", "lo", "hi"))
 
-        assert (cells(prepared, 2), cells(prepared, 3)) == (["-5", "-10", "5"], ["10", "-5", "-3"])
-        assert "3 of 3 cells split;" in prepared.changes[0]
+        assert (cells(prepared, 2), cells(prepared, 3)) == (["-5", "-10", "5", "-0.5"], ["10", "-5", "-3", "1"])
+        assert "4 of 4 cells split;" in prepared.changes[0]
 
     def test_a_separator_of_spaces_cuts_at_every_run_of_spaces(self) -> None:
         prepared = prepare("name,v\nAda  Lovelace,1\nAlan Turing,2\nPlato,3\n", split("name", " ", "first", "last"))
@@ -2514,6 +2514,12 @@ class TestExtract:
             ("t;v\nca. -3,5 °C;1\n12 °C;2\n", ["-3.5", "12"], "read as numbers (decimal comma)"),
             ("t,v\nNr.5,1\n.5 l,2\n", ["5", "0.5"], "read as numbers"),
             ("t,v\nA-12,1\nB-7,2\n", ["12", "7"], "read as numbers"),  # a dash after a letter is no minus sign
+            # A minus before or after a currency is the sign, never dropped.
+            (
+                "t,v\n$-100,1\n-$250,2\n€-50,3\nUSD-20,4\nca.-15,5\n",
+                ["-100", "-250", "-50", "-20", "-15"],
+                "read as numbers",
+            ),
         ],
     )
     def test_the_one_number_of_each_cell(self, text: str, numbers: list[str], reading: str) -> None:

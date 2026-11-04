@@ -53,7 +53,7 @@ from difflib import SequenceMatcher
 from core.spec_roles import DataRole, RoleKind
 
 from ..schemas import Binding, ColumnDtype, ColumnProfile, DatasetProfile
-from .bounds import bound_pairs, inverted, inverted_line
+from .bounds import bound_pairs, inverted, inverted_line, ordered
 from .computed import match_score, window_line, window_rank
 from .parse import value_like
 from .shape import long_suggestion, takes_labels
@@ -708,7 +708,9 @@ def _new_numbers(
 
     An open lower and upper bound pair takes two of them made from one source, next to each other in column
     order (the parts of a `split`), the first as the lower bound, whatever order the spec lists the two roles
-    in (`high` before `low`). A required family without a member takes the column as its first member (`y1`).
+    in (`high` before `low`), and only when the first neither starts nor ends above the second
+    (`bounds.ordered`); otherwise the pair stays open. A required family without a member takes the column as
+    its first member (`y1`).
     """
     used = {binding.column for binding in kept}
     fresh = [
@@ -728,13 +730,16 @@ def _new_numbers(
             (
                 (first, second)
                 for first, second in itertools.pairwise(fresh)
-                if converted[first.name] == converted[second.name] and not inverted(first, second)
+                if converted[first.name] == converted[second.name]
             ),
             None,
         )
         if parts is None:
             continue
-        added += [Binding(role=pair.lower, column=parts[0].name), Binding(role=pair.upper, column=parts[1].name)]
+        # The parts of one cell belong together: the first must neither start nor end above the second
+        # (`bounds.ordered`), or the cells were written high to low (`22-18`) and the pair stays open, never swapped.
+        if ordered(*parts):
+            added += [Binding(role=pair.lower, column=parts[0].name), Binding(role=pair.upper, column=parts[1].name)]
         bound |= {pair.lower, pair.upper}
         fresh = [column for column in fresh if column not in parts]
     for role in roles:

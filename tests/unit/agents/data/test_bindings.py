@@ -1328,9 +1328,16 @@ class TestBoundPairs:
 
         assert as_pairs(carried) == [("category", "k"), ("min_value", "a"), ("max_value", "b")]
 
-    def test_an_inverted_split_is_left_open(self) -> None:
-        """A column of `max–min` makes parts whose first lies above the second: no default binds them so."""
-        parsed = parse_dataset("k,r\na,75–30\nb,68–35\n")
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "k,r\na,75–30\nb,68–35\n",  # every first part above every second
+            "k,r\na,22–18\nb,17–12\n",  # high before low, the parts overlapping across the rows
+        ],
+    )
+    def test_a_split_written_high_to_low_is_left_open(self, text: str) -> None:
+        """Parts of `max–min` cells: the pair stays open, never filled the wrong way round nor swapped by guess."""
+        parsed = parse_dataset(text)
         operations = [{"op": "split", "column": "r", "separator": "–", "names": ["first", "second"]}]
         prepared = apply_operations(parsed, OPERATIONS.validate_python(operations))
         after = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)

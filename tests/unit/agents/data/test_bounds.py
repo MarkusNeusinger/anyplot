@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from agents.anyplot.data.bounds import BoundPair, bound_pairs, inverted, inverted_line
+from agents.anyplot.data.bounds import BoundPair, bound_pairs, inverted, inverted_line, ordered
 from agents.anyplot.schemas import ColumnDtype, ColumnProfile
 from core.spec_roles import DataRole, data_bullets, parse_roles
 
@@ -75,6 +75,12 @@ class TestInverted:
     )
     def test_ranges_that_can_hold_are_not(self, lower: ColumnProfile, upper: ColumnProfile) -> None:
         assert not inverted(lower, upper)
+
+    def test_the_parts_of_one_split_must_be_ordered_at_both_ends(self) -> None:
+        assert ordered(number("lo", 12, 17), number("hi", 18, 22))
+        assert ordered(number("lo", 5, 5), number("hi", 5, 5))
+        assert not ordered(number("hi", 17, 22), number("lo", 12, 18))  # overlapping, yet high before low
+        assert not inverted(number("hi", 17, 22), number("lo", 12, 18))  # which the default rule lets pass
 
     def test_only_number_columns_are_compared(self) -> None:
         text = ColumnProfile(name="t", dtype="text", missing=0, unique=3, top=["b", "c"])

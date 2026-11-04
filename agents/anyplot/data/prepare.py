@@ -2007,9 +2007,9 @@ def _shown_literal(text: str) -> str:
 def _cuts(text: str, separator: str) -> list[tuple[int, int]]:
     """Where `separator` cuts the trimmed cell `text`, as (start, end) pairs.
 
-    A separator of spaces cuts at every run of whitespace, so `62  100` is two parts, not three. A `-` or `−`
-    that starts a part, with at most spaces before it, right before a digit is that part's minus sign, never a
-    cut: `-5-10` is -5 and 10, `-10--5` is -10 and -5.
+    A separator of spaces cuts at every run of whitespace, so `10  25` is two parts, not three. A `-` or `−`
+    that starts a part, with at most spaces before it, right before a number is that part's minus sign, never a
+    cut: `-5-10` is -5 and 10, `-10--5` is -10 and -5, `-.5-1` is -.5 and 1.
     """
     if not separator.strip():
         return [(match.start(), match.end()) for match in _SPACES.finditer(text)]
@@ -2017,7 +2017,7 @@ def _cuts(text: str, separator: str) -> list[tuple[int, int]]:
     start = at = 0
     while (found := text.find(separator, at)) != -1:
         end = found + len(separator)
-        if separator in _SIGNS and not text[start:found].strip() and text[end : end + 1] in _ASCII_DIGITS:
+        if separator in _SIGNS and not text[start:found].strip() and _starts_number(text[end : end + 2]):
             at = end
             continue
         cuts.append((found, end))
@@ -2026,6 +2026,11 @@ def _cuts(text: str, separator: str) -> list[tuple[int, int]]:
 
 
 _ASCII_DIGITS = frozenset("0123456789")
+
+
+def _starts_number(text: str) -> bool:
+    """Whether `text` opens with a digit, or with a decimal mark before a digit (`.5`, `,5`)."""
+    return text[:1] in _ASCII_DIGITS or (text[:1] in ".," and text[1:2] in _ASCII_DIGITS)
 
 
 def _pieces(text: str, separator: str, parts: int) -> list[str]:
@@ -2079,19 +2084,26 @@ def _split(frame: pd.DataFrame, op: Split, carried: _Carried) -> tuple[pd.DataFr
     return result, _with_notice(change, _notices(typed))
 
 
-# One number inside text: an optional sign at the start or after a space, a bracket or a comparison mark (never
-# after a letter or a digit: `A-12` is 12, `5-10` holds two numbers), digits with decimal marks or thousands
-# groups of three after a space or an apostrophe, or a fraction that starts with its mark (`.5`, not after a letter).
+# One number inside text: an optional sign at the start, after a space, a bracket, a comparison mark, a currency
+# sign or code or an abbreviation's dot (`$-100`, `USD-20`, `ca.-15`; never after a digit or another letter: `A-12`
+# is 12, `5-10` holds two
+# numbers), with a currency sign or code between the sign and the digits (`-$100`, `−€ 5`); then digits with
+# decimal marks or thousands groups of three after a space or an apostrophe, or a fraction that starts with its
+# mark (`.5`, not after a letter).
 _NUMBER_IN_TEXT = re.compile(
-    r"(?:(?:^|(?<=[\s(\[{:=~≈<>]))[+\-−])?"
-    r"(?:[0-9]+(?:[.,][0-9]+|[\s'’][0-9]{3}(?![0-9]))*|(?<![^\W\d_])[.,][0-9]+)"
+    r"(?:(?:^|(?<=[\s(\[{:=~≈<>$€£¥])|(?<=CHF|EUR|USD|GBP)|(?<=[^\W\d_]\.))"
+    r"(?P<sign>[+\-−])(?:(?:[$€£¥]|CHF|EUR|USD|GBP)\s?)?)?"
+    r"(?P<body>[0-9]+(?:[.,][0-9]+|[\s'’][0-9]{3}(?![0-9]))*|(?<![^\W\d_])[.,][0-9]+)"
 )
 
 
 def _one_number(text: str) -> str | None:
-    """The one number inside `text` (`#12345`, `CHF 1'200`, `ca. -3,5 °C`), as written; None for none or several."""
-    found = _NUMBER_IN_TEXT.findall(text)
-    return found[0].replace("’", "'") if len(found) == 1 else None
+    """The one number inside `text` (`#12345`, `CHF 1'200`, `ca. -3,5 °C`, `-$100`), its sign and digits as written;
+    None for none or several."""
+    found = list(_NUMBER_IN_TEXT.finditer(text))
+    if len(found) != 1:
+        return None
+    return (found[0]["sign"] or "") + found[0]["body"].replace("’", "'")
 
 
 def _kept(text: str, keep: Keep) -> str:
@@ -2115,7 +2127,7 @@ def _extract(frame: pd.DataFrame, op: Extract, carried: _Carried) -> tuple[pd.Da
             raise PrepareError(
                 "type_mismatch", f"column '{op.column}': {failed} of {present} cells hold no number, or more than one"
             )
-        typed = _Typed(conversion.values, "number", conversion.reading, conversion.failed, conversion.notice)
+        typed = _Typed(conversion.values, "number", conversion.reading, failed, conversion.notice)
         _place(result, carried, op.column, op.name, typed)
         change = f"new column {op.name}: the number in {present - failed} of {_count(present, 'cell')} of {op.column}"
         change += f", {conversion.reading}"
