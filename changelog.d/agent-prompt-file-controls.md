@@ -7,4 +7,4 @@
   to 1 MB; Excel, ODS, Parquet, Feather, Arrow or NumPy up to 5 MB), plus `.replace()`, `.keep()` and `.view_all()`
   with its full view's buttons, and the disclaimer under the list covers only the settings the page does not have.
   `tests/unit/agents/test_prompt_controls.py` now checks the other direction too: every button the data card
-  renders is named in that bullet.
+  renders is named in that bullet. (#12548)
