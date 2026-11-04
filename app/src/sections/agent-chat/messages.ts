@@ -110,6 +110,11 @@ export const DATA_FAILURE: Record<string, string> = {
   unreachable:
     'no answer: your sign-in may have expired (reload the page), or the connection dropped',
   network: 'the server did not answer; check your connection',
+  // Text the chat takes goes there by itself (`parseData`); only longer text meets these lines.
+  code: 'looks like code that makes data: shorten it to 2,000 characters, keeping only the part that computes the data, and the chat runs it',
+  formula:
+    'looks like a formula: shorten it to 2,000 characters, and the chat computes the table from it',
+  data_request: 'asks for data: shorten it to 2,000 characters, and the chat makes the data',
 };
 
 /**

@@ -9,7 +9,18 @@ import { AgentApiError, type ConvertAnswer, type RoleSpec } from 'src/lib/agent'
 import { bindingRows } from 'src/sections/agent-chat/bindings';
 import { DataPanel, DataViewUnavailable } from 'src/sections/agent-chat/DataPanel';
 import { DATA_HOWTO, DATA_PLACEHOLDER } from 'src/sections/agent-chat/messages';
-import { fireEvent, render, screen, userEvent, waitFor, within } from 'src/test-utils';
+import { act, fireEvent, render, screen, userEvent, waitFor, within } from 'src/test-utils';
+
+/**
+ * The arguments of `.parse()`'s call: the text, the file's name when it came from one, no table,
+ * and the callback that hears of a forward to the chat.
+ */
+const parsedWith = (text: string, source?: string) => [
+  text,
+  source,
+  undefined,
+  expect.any(Function),
+];
 
 /** `scrollIntoView` as a spy: jsdom has none. */
 function stubScrollIntoView() {
@@ -124,7 +135,6 @@ describe('DataPanel bindings', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={onBind}
         onUndo={vi.fn()}
       />
@@ -159,7 +169,6 @@ describe('DataPanel bindings', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
@@ -189,7 +198,6 @@ describe('DataPanel bindings', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
@@ -208,7 +216,6 @@ describe('DataPanel bindings', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={onBind}
         onUndo={vi.fn()}
       />
@@ -238,7 +245,6 @@ describe('DataPanel bindings', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
@@ -256,7 +262,6 @@ describe('DataPanel bindings', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
@@ -283,7 +288,6 @@ describe('DataPanel bindings', () => {
         onParse={onParse}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={onUndo}
         locked={locked}
@@ -341,7 +345,6 @@ describe('DataPanel bindings', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
@@ -359,7 +362,6 @@ describe('DataPanel steps', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
@@ -465,7 +467,6 @@ describe('DataPanel steps', () => {
           onParse={vi.fn()}
           onConfirmTranscription={vi.fn()}
           onDiscardTranscription={vi.fn()}
-          onSendFormula={vi.fn()}
           onBind={vi.fn()}
           onUndo={vi.fn()}
         />
@@ -525,7 +526,6 @@ describe('DataPanel working states', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
@@ -625,7 +625,6 @@ describe('DataPanel data changes', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={onUndo}
       />
@@ -736,7 +735,6 @@ describe('DataPanel full view', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
         {...extra}
@@ -806,7 +804,6 @@ describe('DataPanel tables', () => {
         onParse={onParse}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
@@ -871,7 +868,6 @@ describe('DataPanel formulas', () => {
   const FORMULA = 'y = sin(x), x von -pi bis pi';
 
   function renderPanel(state: AgentSessionState) {
-    const onSendFormula = vi.fn();
     const onParse = vi.fn();
     const panel = (next: AgentSessionState) => (
       <DataPanel
@@ -879,15 +875,19 @@ describe('DataPanel formulas', () => {
         onParse={onParse}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={onSendFormula}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
     );
     const view = render(panel(state));
+    /** The session sent the parsed text to the chat: what `parseData` tells the panel. */
+    const forward = (sent: string) => {
+      const onForward = onParse.mock.lastCall?.[3] as ((text: string) => void) | undefined;
+      act(() => onForward?.(sent));
+    };
     return {
-      onSendFormula,
       onParse,
+      forward,
       rerender: (next: AgentSessionState) => view.rerender(panel(next)),
     };
   }
@@ -930,50 +930,29 @@ describe('DataPanel formulas', () => {
     expect(info).toHaveFocus();
   });
 
-  it('offers .send() for a refused formula, which empties the box', async () => {
-    const { onSendFormula, onParse, rerender } = renderPanel(empty());
+  it('empties the box once its text went to the chat, and only then', async () => {
+    const { onParse, forward } = renderPanel(empty());
     const textbox = screen.getByLabelText(/# your data/);
     await userEvent.type(textbox, FORMULA);
     await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenCalledWith(FORMULA);
-    expect(screen.queryByTestId('formula-offer')).not.toBeInTheDocument();
+    expect(onParse).toHaveBeenCalledWith(...parsedWith(FORMULA));
+    // A formula offers nothing to click: the session sends it to the chat by itself.
+    expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
+    expect(textbox).toHaveValue(FORMULA);
 
-    rerender(empty({ formula: FORMULA }));
-    const send = screen.getByRole('button', { name: '.send()' });
-    expect(send).toHaveAccessibleDescription(
-      'looks like a formula: send it to the chat? the assistant computes the table from it.'
-    );
-    // A formula is no error: nothing is shown as one.
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    await userEvent.click(send);
-    expect(onSendFormula).toHaveBeenCalledTimes(1);
+    forward(FORMULA);
     expect(textbox).toHaveValue('');
-  });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 
-  it('empties the box once a request for data went to the chat, and only then', async () => {
-    const { onParse, rerender } = renderPanel(empty());
-    const textbox = screen.getByLabelText(/# your data/);
-    await userEvent.type(textbox, 'Beispieldaten');
+    // A request for data goes the same way, trimmed as the chat takes it.
+    await userEvent.type(textbox, '  Beispieldaten ');
     await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenCalledWith('Beispieldaten');
-
-    // A refusal leaves the box as it is; the hand-off to the chat (`dataRequest`) empties it.
-    rerender(empty());
-    expect(textbox).toHaveValue('Beispieldaten');
-    rerender(empty({ dataRequest: { text: 'Beispieldaten', seq: 1 } }));
-    expect(textbox).toHaveValue('');
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-
-    // A new text stays until the next hand-off of that text.
-    await userEvent.type(textbox, 'example data');
-    rerender(empty({ dataRequest: { text: 'Beispieldaten', seq: 1 } }));
-    expect(textbox).toHaveValue('example data');
-    rerender(empty({ dataRequest: { text: 'example data', seq: 2 } }));
+    forward('Beispieldaten');
     expect(textbox).toHaveValue('');
   });
 
-  it('keeps an edit made while the request was on its way', async () => {
-    const { rerender } = renderPanel(empty());
+  it('keeps an edit made while the text was on its way', async () => {
+    const { forward } = renderPanel(empty());
     const textbox = screen.getByLabelText(/# your data/);
     await userEvent.type(textbox, 'Beispieldaten');
     await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
@@ -981,61 +960,20 @@ describe('DataPanel formulas', () => {
     // The user started on a table before the answer came: the hand-off takes the request, never the table.
     await userEvent.clear(textbox);
     await userEvent.type(textbox, 'x,y');
-    rerender(empty({ dataRequest: { text: 'Beispieldaten', seq: 1 } }));
+    forward('Beispieldaten');
     expect(textbox).toHaveValue('x,y');
   });
 
-  it('holds .send() back while anything runs', async () => {
-    const { rerender } = renderPanel(empty());
-    await userEvent.type(screen.getByLabelText(/# your data/), FORMULA);
-    rerender(
-      empty({ formula: FORMULA, run: { kind: 'message', steps: [], queue: null, stopping: false } })
-    );
-    expect(screen.getByRole('button', { name: '.send()' })).toBeDisabled();
-  });
-
-  it('takes the offer away once the box is edited', async () => {
-    const { onSendFormula, rerender } = renderPanel(empty());
-    const textbox = screen.getByLabelText(/# your data/);
-    await userEvent.type(textbox, FORMULA);
-    rerender(empty({ formula: FORMULA }));
-    expect(screen.getByTestId('formula-offer')).toBeInTheDocument();
-
-    // The offer was made for the refused text: newer text in the box is not sent in its place.
-    await userEvent.type(textbox, ' und cos(x)');
-    expect(screen.queryByTestId('formula-offer')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
-    expect(onSendFormula).not.toHaveBeenCalled();
-    expect(textbox).toHaveValue(`${FORMULA} und cos(x)`);
-  });
-
-  it('offers .send() for refused code, which the assistant runs', async () => {
-    const CODE = 'np.linspace(0, 10, 100)';
-    const { onSendFormula, rerender } = renderPanel(empty());
-    const textbox = screen.getByLabelText(/# your data/);
-    await userEvent.type(textbox, CODE);
-
-    rerender(empty({ formula: CODE, formulaKind: 'code' }));
-    const send = screen.getByRole('button', { name: '.send()' });
-    expect(send).toHaveAccessibleDescription(
-      'looks like code that makes data: send it to the chat? the assistant runs it in a sandbox and shows you the table.'
-    );
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    await userEvent.click(send);
-    expect(onSendFormula).toHaveBeenCalledTimes(1);
-    expect(textbox).toHaveValue('');
-  });
-
-  it('asks to shorten code the chat cannot take, without .send()', () => {
+  it('asks to shorten code the chat cannot take, and keeps the box', () => {
     const long = 'x = np.arange(10)\n'.repeat(200);
     const { rerender } = renderPanel(empty());
-    // The offer belongs to the text in the box; set it through a paste-sized change.
     fireEvent.change(screen.getByLabelText(/# your data/), { target: { value: long } });
-    rerender(empty({ formula: long, formulaKind: 'code' }));
+    rerender(empty({ datasetError: { code: 'code', ref: 'r-c' } }));
 
-    expect(screen.getByTestId('formula-offer')).toHaveTextContent(
-      'looks like code that makes data: shorten it to 2,000 characters'
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'looks like code that makes data: shorten it to 2,000 characters, keeping only the part that computes the data, and the chat runs it · ref r-c'
     );
+    expect(screen.getByLabelText(/# your data/)).toHaveValue(long);
     expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
   });
 });
@@ -1058,7 +996,6 @@ describe('DataPanel code that made the data', () => {
       onParse={vi.fn()}
       onConfirmTranscription={vi.fn()}
       onDiscardTranscription={vi.fn()}
-      onSendFormula={vi.fn()}
       onBind={vi.fn()}
       onUndo={vi.fn()}
     />
@@ -1131,7 +1068,6 @@ describe('DataPanel transcription', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
@@ -1165,7 +1101,6 @@ describe('DataPanel transcription', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
@@ -1184,7 +1119,6 @@ describe('DataPanel transcription', () => {
         onParse={vi.fn()}
         onConfirmTranscription={onConfirm}
         onDiscardTranscription={onDiscard}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
@@ -1208,7 +1142,6 @@ describe('DataPanel transcription', () => {
         onParse={onParse}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
@@ -1231,7 +1164,7 @@ describe('DataPanel transcription', () => {
     expect(screen.queryByTestId('transcription-card')).not.toBeInTheDocument();
     expect(screen.queryByText(/decide on the table/)).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenCalledWith('animal,count');
+    expect(onParse).toHaveBeenCalledWith(...parsedWith('animal,count'));
   });
 });
 
@@ -1262,7 +1195,6 @@ describe('DataPanel wide-table offer', () => {
       onParse={vi.fn()}
       onConfirmTranscription={vi.fn()}
       onDiscardTranscription={vi.fn()}
-      onSendFormula={vi.fn()}
       onBind={vi.fn()}
       onUndo={vi.fn()}
       onToLong={onToLong}
@@ -1341,7 +1273,6 @@ describe('DataPanel notes', () => {
       onParse={vi.fn()}
       onConfirmTranscription={vi.fn()}
       onDiscardTranscription={vi.fn()}
-      onSendFormula={vi.fn()}
       onBind={vi.fn()}
       onUndo={vi.fn()}
     />
@@ -1406,7 +1337,6 @@ describe('DataPanel file drop', () => {
         onParse={onParse}
         onConfirmTranscription={onConfirmTranscription}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
         onTrack={onTrack}
@@ -1443,7 +1373,7 @@ describe('DataPanel file drop', () => {
     expect(onParse).not.toHaveBeenCalled();
 
     await userEvent.click(parse);
-    expect(onParse).toHaveBeenCalledWith(CSV, 'sales.csv');
+    expect(onParse).toHaveBeenCalledWith(...parsedWith(CSV, 'sales.csv'));
   });
 
   it('asks before it replaces text in the box: .keep() keeps it, .replace() takes the file', async () => {
@@ -1519,7 +1449,7 @@ describe('DataPanel file drop', () => {
     await waitFor(() => expect(box()).toHaveValue('a,b\n1,2\n3,4\n'));
     expect(screen.getByTestId('file-status')).toHaveTextContent('3 lines');
     await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenCalledWith('a,b\n1,2\n3,4\n', 'windows.csv');
+    expect(onParse).toHaveBeenCalledWith(...parsedWith('a,b\n1,2\n3,4\n', 'windows.csv'));
   });
 
   it('shows the file name the server kept, and a withheld one as withheld', () => {
@@ -1541,7 +1471,6 @@ describe('DataPanel file drop', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
@@ -1557,7 +1486,7 @@ describe('DataPanel file drop', () => {
     drop(csvFile());
     await screen.findByTestId('file-replace');
     await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenCalledWith('a,b');
+    expect(onParse).toHaveBeenCalledWith(...parsedWith('a,b'));
 
     const panel = (state: AgentSessionState) => (
       <DataPanel
@@ -1565,7 +1494,6 @@ describe('DataPanel file drop', () => {
         onParse={onParse}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
@@ -1628,8 +1556,7 @@ describe('DataPanel file drop', () => {
     });
     await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
     expect(onParse).toHaveBeenCalledWith(
-      'Report 2024\n\nmonth,revenue\nJan,120\n',
-      'Bericht.xlsx · sheet ‹2024›'
+      ...parsedWith('Report 2024\n\nmonth,revenue\nJan,120\n', 'Bericht.xlsx · sheet ‹2024›')
     );
   });
 
@@ -1678,7 +1605,9 @@ describe('DataPanel file drop', () => {
       outcome: 'sheet',
     });
     await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenCalledWith('a,b\n1,2\n', 'Bericht.xlsx · sheet ‹2025›');
+    expect(onParse).toHaveBeenCalledWith(
+      ...parsedWith('a,b\n1,2\n', 'Bericht.xlsx · sheet ‹2025›')
+    );
   });
 
   it('asks before a new sheet replaces text the user edited', async () => {
@@ -1788,7 +1717,7 @@ describe('DataPanel file drop', () => {
     // Typing keeps the name: the text is still the file's, edited.
     await userEvent.type(box(), '2026-03,150\n');
     await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenLastCalledWith(`${CSV}2026-03,150\n`, 'chosen.csv');
+    expect(onParse).toHaveBeenLastCalledWith(...parsedWith(`${CSV}2026-03,150\n`, 'chosen.csv'));
 
     await userEvent.clear(box());
     fireEvent.paste(box(), {
@@ -1796,7 +1725,7 @@ describe('DataPanel file drop', () => {
     });
     await waitFor(() => expect(box()).toHaveValue(CSV));
     await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenLastCalledWith(CSV, 'pasted.tsv');
+    expect(onParse).toHaveBeenLastCalledWith(...parsedWith(CSV, 'pasted.tsv'));
   });
 
   it('lets pasted text through and forgets the file name', async () => {
@@ -1811,7 +1740,7 @@ describe('DataPanel file drop', () => {
     });
     expect(pasted).toBe(true); // not prevented: the browser pastes the text
     await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenLastCalledWith(CSV);
+    expect(onParse).toHaveBeenLastCalledWith(...parsedWith(CSV));
   });
 
   it('leaves the name of a table read from the file to the session, and a new file discards that table', async () => {
@@ -1842,7 +1771,6 @@ describe('DataPanel file drop', () => {
         onParse={vi.fn()}
         onConfirmTranscription={onConfirmTranscription}
         onDiscardTranscription={vi.fn()}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
@@ -1859,7 +1787,6 @@ describe('DataPanel file drop', () => {
         onParse={vi.fn()}
         onConfirmTranscription={onConfirmTranscription}
         onDiscardTranscription={onDiscardTranscription}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />
@@ -1880,7 +1807,6 @@ describe('DataPanel file drop', () => {
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={onDiscardTranscription}
-        onSendFormula={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
       />

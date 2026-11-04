@@ -1,6 +1,6 @@
 /**
  * Content of the agent chat's data card (`DataPanel.tsx`): the text box and
- * file drop zone, the formula/code chat offer, the free-text transcription
+ * file drop zone, the free-text transcription
  * decision card, the stored dataset's preview and full-view dialog, and the
  * role bindings. Step 1's `.confirm()` sits at the composer's end (`Composer.tsx`).
  */
@@ -9,14 +9,8 @@ import { Suspense } from 'react';
 
 import Box from '@mui/material/Box';
 
-import type { AgentSessionState, FormulaKind } from 'src/hooks/useAgentSession';
-import {
-  longSuggestion,
-  MAX_DATASET_BYTES,
-  MAX_MESSAGE_CHARS,
-  type tableChoice,
-  utf8Bytes,
-} from 'src/lib/agent';
+import type { AgentSessionState } from 'src/hooks/useAgentSession';
+import { longSuggestion, MAX_DATASET_BYTES, type tableChoice, utf8Bytes } from 'src/lib/agent';
 import { bindingRows } from 'src/sections/agent-chat/bindings';
 import { BoxWorking } from 'src/sections/agent-chat/BoxWorking';
 import { countOf } from 'src/sections/agent-chat/countOf';
@@ -64,17 +58,6 @@ function formatKb(bytes: number): string {
   return `${(bytes / 1024).toFixed(bytes < 10 * 1024 ? 1 : 0)} KB`;
 }
 
-/** The line under the box for text the server refused as a formula or as code, which the chat takes instead. */
-function offerLine(kind: FormulaKind, tooLong: boolean): string {
-  if (kind === 'formula') {
-    return 'looks like a formula: send it to the chat? the assistant computes the table from it.';
-  }
-  if (tooLong) {
-    return `looks like code that makes data: shorten it to ${MAX_MESSAGE_CHARS.toLocaleString('en-US')} characters, keeping only the part that computes the data, and the chat runs it.`;
-  }
-  return 'looks like code that makes data: send it to the chat? the assistant runs it in a sandbox and shows you the table.';
-}
-
 export interface DataCardProps {
   state: AgentSessionState;
   intake: FileIntake;
@@ -93,7 +76,6 @@ export interface DataCardProps {
   onTable: (table: number) => void;
   onUse: () => void;
   onDiscardTranscription: () => void;
-  onSendFormula: () => void;
   onBind: (role: string, column: string | null) => void;
   onUndo: () => void;
   onToLong?: () => void;
@@ -104,7 +86,7 @@ export interface DataCardProps {
 export function DataCard(props: DataCardProps) {
   const { state, intake, text, ready, working, busy, locked, confirmed, choice } = props;
   const { viewOpen, setViewOpen, viewButtonRef, parseStart } = props;
-  const { onParse, onTable, onUse, onDiscardTranscription, onSendFormula } = props;
+  const { onParse, onTable, onUse, onDiscardTranscription } = props;
   const { onBind, onUndo, onToLong, onLoadData, onDataViewShown } = props;
   const { convertLine, converting, converted, dragOver, dropReady, fileNotice } = intake;
   const { pendingFile, convertStart, boxRef, parseButtonRef, fileInputRef } = intake;
@@ -127,9 +109,6 @@ export function DataCard(props: DataCardProps) {
   const rows = bindingRows(state.roles, state.bindings, columns.length);
   // The service's wide-table offer, checked again here: the dataset route's answer is not typed.
   const suggestion = longSuggestion(dataset?.parsed.suggestion);
-  // Code over the chat's cap is refused all the same, but cannot move there: the line asks to shorten it.
-  const codeTooLong =
-    state.formulaKind === 'code' && (state.formula ?? '').trim().length > MAX_MESSAGE_CHARS;
 
   return (
     <>
@@ -404,45 +383,6 @@ export function DataCard(props: DataCardProps) {
             </>
           ) : (
             'decide on the table below first: .use() or .discard()'
-          )}
-        </Box>
-      )}
-
-      {/* The offer belongs to the text it was made for: an edit of the box takes it away, so
-          `.send()` never sends an older text than the one shown. */}
-      {state.formula !== null && text === state.formula && (
-        <Box
-          data-testid="formula-offer"
-          sx={{
-            mt: 1.5,
-            borderLeft: `3px solid ${colors.primary}`,
-            pl: 1.5,
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            columnGap: 1,
-            rowGap: 0.75,
-          }}
-        >
-          <Box
-            id="agent-formula-line"
-            role="status"
-            sx={{ ...labelSx, color: 'var(--ink)', flex: '1 1 220px', lineHeight: 1.6 }}
-          >
-            {offerLine(state.formulaKind, codeTooLong)}
-          </Box>
-          {!codeTooLong && (
-            <Box
-              component="button"
-              type="button"
-              onClick={onSendFormula}
-              disabled={!ready || busy}
-              aria-describedby="agent-formula-line"
-              sx={ghostButtonSx}
-            >
-              .send()
-            </Box>
           )}
         </Box>
       )}

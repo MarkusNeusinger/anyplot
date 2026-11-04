@@ -77,18 +77,18 @@
  * carries the table like any data change: the next version when data exists,
  * or version 1 when the session had none, which then becomes the hook's first
  * dataset with the roles and default bindings `done` names (nothing to undo).
- * The dataset route refuses such text pasted into the data box with `422
+ * The dataset route answers such text pasted into the data box with `422
  * formula`, because its free-text reader is a model that would write the rows
- * itself; the hook keeps the refused text (`formula`), and `sendFormula`
- * (`.send()`) sends it to the chat as the user's turn. Code that generates
- * data (Python, JavaScript, R) is refused the same way with `422 code`
- * (`formulaKind`), and the assistant's `run_data_code` runs it in the chat;
- * the version it stores carries the Python that ran (`code`). Text that asks
- * for data instead of holding it ("Beispieldaten", "random numbers with three
- * categories") answers `422 data_request`: `parseData` sends it to the chat as
- * the user's turn at once, with no offer to click, and the assistant generates
- * example data with code it writes (`run_data_code`), which the turn's `done`
- * carries like a formula's table (`dataRequest` names the last hand-off).
+ * itself; code that generates data (Python, JavaScript, R) with `422 code`;
+ * text that asks for data instead of holding it ("Beispieldaten", "random
+ * numbers with three categories") with `422 data_request`. `parseData` sends
+ * each of them to the chat as the user's turn at once (the outcome
+ * `forwarded`), where the assistant computes the formula (`generate_data`),
+ * runs the code or writes code for example data (`run_data_code`); the turn's
+ * `done` carries the table like any data change, and a version computed from
+ * code carries the Python that ran (`code`). Only text the chat takes
+ * (`MAX_MESSAGE_CHARS`) can move there: longer code fails with a line that
+ * asks to shorten it.
  * `exampleData` (`.example_data()`, the page's line above the composer while
  * the session has no data) asks for the same in one click as the action
  * `example_data`, never as typed words: the session's first typed message sets
@@ -392,8 +392,40 @@ export type BindingMap = Record<string, string>;
  */
 export type ConfirmLoss = 'bindings' | 'data' | 'server';
 
-/** What the dataset route refused pasted text as, so the chat takes it instead: `422 formula` or `422 code`. */
-export type FormulaKind = 'formula' | 'code';
+/**
+ * How a parse (`parseData`) ended. `stored`: a table, then the summary turn. `transcribed`: free
+ * text read into a table to decide on, nothing stored. `forwarded`: the server answered `422
+ * formula`, `422 code` or `422 data_request` and the text went to the chat as the user's turn.
+ * `failed`: refused, or no answer (`datasetError` says why). `skipped`: nothing started, because
+ * there is no session or no text, or something else is in flight (a second Enter before the
+ * state caught up).
+ */
+export type ParseOutcome = 'stored' | 'transcribed' | 'forwarded' | 'failed' | 'skipped';
+
+/**
+ * How a turn ended: its `done` (`done`), a refusal of the scope judge or a guardrail
+ * (`refused`), an error event, a cut stream or a failed request (`error`), or the user's
+ * `.stop()` (`stopped`).
+ */
+export type TurnEnd = 'done' | 'error' | 'refused' | 'stopped';
+
+/** What `parseData` resolves to: its outcome, and how the turn it started ended (null without one). */
+export interface ParseResult {
+  outcome: ParseOutcome;
+  turnEnd: TurnEnd | null;
+}
+
+/** What the caller of `parseData` hears before the turn a parse starts. */
+export interface ParseOptions {
+  /**
+   * The text went to the chat as the user's message (`forwarded`), trimmed as it was sent:
+   * called before that turn runs, so the data box can let go of it at once.
+   */
+  onForward?: (text: string) => void;
+}
+
+/** The dataset route's answers that send pasted text to the chat instead of a parser. */
+const FORWARDED = new Set(['formula', 'code', 'data_request']);
 
 /**
  * The offer of the plot in the library the user switched to, with the plot
@@ -435,22 +467,6 @@ export interface AgentSessionState {
   dataset: DatasetState | null;
   parsing: boolean;
   datasetError: Failure | null;
-  /**
-   * Text the dataset route refused as a formula (`422 formula`) or as code
-   * (`422 code`): nothing was stored, and the panel offers to send it to the
-   * chat, where the assistant computes the table (`generate_data`) or runs the
-   * code (`run_data_code`). The next parse, the send or a new data version clears it.
-   */
-  formula: string | null;
-  /** What `formula` was refused as: a formula, or code that generates data. */
-  formulaKind: FormulaKind;
-  /**
-   * The last paste the dataset route answered `422 data_request` and the hook
-   * sent to the chat as the user's turn, with `seq` counting these hand-offs:
-   * the data panel empties its box on each while it still holds that text,
-   * because the text is now the user's message there.
-   */
-  dataRequest: { text: string; seq: number } | null;
   /** A table read from free text that awaits `.use()` or `.discard()`. */
   transcription: TranscriptionState | null;
   /** The spec's roles, in spec order; the data panel shows a column choice for each. */
@@ -538,12 +554,12 @@ type Action =
       paste?: { text: string; source?: string };
       upload?: DatasetUpload;
     }
-  /** `formula` is the refused text of a `422 formula` or `422 code`, which is no error to show. */
-  | { type: 'parse_failed'; failure: Failure; formula?: string; formulaKind?: FormulaKind }
-  /** The refused formula went to the chat as a turn. */
-  | { type: 'formula_sent' }
-  /** The paste asked for data (`422 data_request`): no error, `text` goes to the chat as the user's turn. */
-  | { type: 'data_requested'; text: string }
+  | { type: 'parse_failed'; failure: Failure }
+  /**
+   * The server answered a formula, code or a request for data (`422 formula`, `code`,
+   * `data_request`): no error, the text goes to the chat as the user's turn.
+   */
+  | { type: 'parse_forwarded' }
   | { type: 'transcribed'; transcription: TranscriptionState }
   | { type: 'transcription_clear' }
   | { type: 'bindings_start'; bindings: BindingMap }
@@ -620,9 +636,6 @@ export function initialAgentState(library: string): AgentSessionState {
     dataset: null,
     parsing: false,
     datasetError: null,
-    formula: null,
-    formulaKind: 'formula',
-    dataRequest: null,
     transcription: null,
     roles: [],
     specRoles: null,
@@ -767,7 +780,7 @@ function versionOf(value: unknown): number {
  * bindings stand in for them, as for a paste.
  *
  * A confirmation lost earlier (a binding change, say) is now lost to the data:
- * the card's step line names the change it shows. Data that was never
+ * the composer's step line names the change the card shows. Data that was never
  * confirmed has no loss to name.
  */
 function withDataVersion(
@@ -911,7 +924,6 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         ...state,
         parsing: true,
         datasetError: null,
-        formula: null,
         transcription: null,
         toLongError: null,
       };
@@ -944,26 +956,10 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         confirmLoss: null,
       };
     case 'parse_failed':
-      // A formula or code is no failure of the data: the panel offers the chat instead.
-      return {
-        ...state,
-        parsing: false,
-        datasetError: action.formula === undefined ? action.failure : null,
-        formula: action.formula ?? null,
-        formulaKind: action.formulaKind ?? 'formula',
-        transcription: null,
-      };
-    case 'formula_sent':
-      return { ...state, formula: null };
-    case 'data_requested':
-      return {
-        ...state,
-        parsing: false,
-        datasetError: null,
-        formula: null,
-        transcription: null,
-        dataRequest: { text: action.text, seq: (state.dataRequest?.seq ?? 0) + 1 },
-      };
+      return { ...state, parsing: false, datasetError: action.failure, transcription: null };
+    case 'parse_forwarded':
+      // No failure of the data: the chat takes the text instead.
+      return { ...state, parsing: false, datasetError: null, transcription: null };
     case 'transcribed':
       // Nothing is stored yet: the dataset, its bindings and their confirmation stay until
       // the user decides (the server kept them too); the page holds step 1 while the
@@ -1026,9 +1022,8 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
     }
     case 'data_prepared': {
       const { changes, version, ...parsed } = action.dataset;
-      // A formula refused in the data box is answered once the chat computed data.
       return withDataVersion(
-        { ...state, formula: null },
+        state,
         { ...parsed, version },
         { kind: 'changed', changes, version: versionOf(version) }
       );
@@ -1286,6 +1281,9 @@ export function useAgentSession({
   const abortRef = useRef<AbortController | null>(null);
   const stoppedRef = useRef(false);
   const turnErrorRef = useRef<string | null>(null);
+  // How the last turn ended (`runTurn`), null when it never started: a parse reports it for
+  // the turn it started (`ParseResult.turnEnd`).
+  const turnEndRef = useRef<TurnEnd | null>(null);
   const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Set synchronously, before the state catches up, so a double click starts nothing twice.
   const themeRef = useRef(false);
@@ -2006,14 +2004,18 @@ export function useAgentSession({
   );
 
   /** One turn; the code of the error that ended it (`run_limit`, `capacity`, a failed request) lands in
-   * `turnErrorRef`, null when it ended without one or never started (`plotTurn`). */
+   * `turnErrorRef`, null when it ended without one or never started (`plotTurn`), and how it ended in
+   * `turnEndRef` (`TurnEnd`), null when it never started. */
   const runTurn = useCallback(
     async (body: TurnBody) => {
       const current = stateRef.current;
       const sid = current.sessionId;
       turnErrorRef.current = null;
+      turnEndRef.current = null;
       if (!sid || current.run || busy()) return;
       let errorCode: string | null = null;
+      // A refusal arrives as an event of its own; the stream then ends with `done` as usual.
+      let refused = false;
       const controller = new AbortController();
       abortRef.current = controller;
       stoppedRef.current = false;
@@ -2038,6 +2040,7 @@ export function useAgentSession({
           if (!event) continue;
           onEvent(event);
           if (event.type === 'error') errorCode = event.code;
+          if (event.type === 'refusal') refused = true;
           if (event.type === 'done') {
             finished = true;
             break;
@@ -2060,6 +2063,13 @@ export function useAgentSession({
         if (stoppedRef.current) addItem({ kind: 'notice', text: 'stopped' });
         if (abortRef.current === controller) abortRef.current = null;
         turnErrorRef.current = errorCode;
+        turnEndRef.current = stoppedRef.current
+          ? 'stopped'
+          : errorCode
+            ? 'error'
+            : refused
+              ? 'refused'
+              : 'done';
         safeDispatch({ type: 'run_end' });
       }
       // A shipped run adds decisions, the assistant's `forget` removes some, a shipped fresh plot
@@ -2112,27 +2122,35 @@ export function useAgentSession({
   /**
    * `.parse()`: send the pasted text. A table is stored (version 1, unconfirmed),
    * its default bindings are applied, and the assistant's summary of it follows
-   * as the turn `summarize_data`; the returned promise ends with that turn.
-   * Text that is no table comes back as a transcription to decide on, which
-   * stores nothing and asks for no summary. Text that asks for data instead
-   * (`422 data_request`, "Beispieldaten") goes to the chat as the user's turn,
-   * where the assistant generates example data; the promise ends with that
-   * turn. `table` reads another of the tables the previous answer named (the
-   * data panel's table picker).
+   * as the turn `summarize_data`. Text that is no table comes back as a
+   * transcription to decide on, which stores nothing and asks for no summary. A
+   * formula, code or text that asks for data instead ("Beispieldaten"; `422
+   * formula`, `code`, `data_request`) goes to the chat as the user's turn, where
+   * the assistant computes, runs or generates the data; `onForward` hears of it
+   * before that turn. The promise resolves to the outcome once the turn the parse
+   * started (the summary, or the forwarded text) is over, with how it ended.
+   * `table` reads another of the tables the previous answer named (the data
+   * panel's table picker).
    */
   const parseData = useCallback(
-    async (text: string, confirmed = false, source?: string, table?: number) => {
+    async (
+      text: string,
+      confirmed = false,
+      source?: string,
+      table?: number,
+      options: ParseOptions = {}
+    ): Promise<ParseResult> => {
       const sid = stateRef.current.sessionId;
-      if (!sid || !text.trim() || busy()) return;
+      if (!sid || !text.trim() || busy()) return { outcome: 'skipped', turnEnd: null };
       const bytes = utf8Bytes(text);
       const bucket = sizeBucket(bytes);
       if (bytes > MAX_DATASET_BYTES) {
         safeDispatch({ type: 'parse_failed', failure: { code: 'too_long', ref: null } });
         trackEvent('agent_data_parsed', { status: 'too_long', size_bucket: bucket });
-        return;
+        return { outcome: 'failed', turnEnd: null };
       }
-      let stored = false;
-      let request: string | null = null;
+      let outcome: ParseOutcome = 'failed';
+      let forward: string | null = null;
       parseRef.current = true;
       safeDispatch({ type: 'parse_start' });
       try {
@@ -2152,7 +2170,7 @@ export function useAgentSession({
             },
           });
           trackEvent('agent_data_parsed', { status: 'transcribed', size_bucket: bucket });
-          return;
+          return { outcome: 'transcribed', turnEnd: null };
         }
         safeDispatch({
           type: 'parse_done',
@@ -2166,30 +2184,26 @@ export function useAgentSession({
         const pastedLanguage = readPlotLanguage(parsed.language);
         if (pastedLanguage) safeDispatch({ type: 'language_sync', plotLanguage: pastedLanguage });
         trackEvent('agent_data_parsed', { status: 'ok', size_bucket: bucket });
-        stored = true;
+        outcome = 'stored';
         const defaults = toMap(parsed.bindings);
         // Learn whether the defaults are complete and which required roles
         // they leave open (the parse stored them already: the PUT is idempotent).
         await applyBindings(defaults, defaults);
       } catch (err) {
         const failure = handleFailure(err);
-        if (failure.code === 'data_request' && text.trim().length <= MAX_MESSAGE_CHARS) {
-          // A request for data holds no table: the chat answers it, with no offer to click first.
-          request = text.trim();
-          safeDispatch({ type: 'data_requested', text: request });
-          trackEvent('agent_data_parsed', { status: 'data_request', size_bucket: bucket });
+        const trimmed = text.trim();
+        // A formula, code or a request for data holds no table: the chat computes, runs or
+        // generates it, with no offer to click first. Only text the chat takes can move there.
+        if (FORWARDED.has(failure.code) && trimmed.length <= MAX_MESSAGE_CHARS) {
+          forward = trimmed;
+          outcome = 'forwarded';
+          safeDispatch({ type: 'parse_forwarded' });
+          trackEvent('agent_data_parsed', { status: failure.code, size_bucket: bucket });
         } else {
-          // A formula or code is refused so that the chat computes or runs it (`sendFormula`).
-          safeDispatch({
-            type: 'parse_failed',
-            failure,
-            ...(failure.code === 'formula' || failure.code === 'code'
-              ? { formula: text, formulaKind: failure.code }
-              : {}),
-          });
-          const status = ['too_long', 'unparseable', 'data_refused'].includes(failure.code)
-            ? failure.code
-            : 'error';
+          // Longer code reads as a failure whose line asks to shorten it (`DATA_FAILURE.code`).
+          safeDispatch({ type: 'parse_failed', failure });
+          const known = ['too_long', 'unparseable', 'data_refused', ...FORWARDED];
+          const status = known.includes(failure.code) ? failure.code : 'error';
           trackEvent('agent_data_parsed', { status, size_bucket: bucket });
           if (PASTE_GUARDRAIL_REASONS.has(failure.code)) {
             trackEvent('agent_guardrail_block', { reason: failure.code });
@@ -2198,11 +2212,20 @@ export function useAgentSession({
       } finally {
         parseRef.current = false;
       }
-      // The request becomes the user's message, as if typed into the chat.
-      if (request !== null && mounted.current) await runTurn({ text: request });
+      if (!mounted.current) return { outcome, turnEnd: null };
+      // The forwarded text becomes the user's message, as if typed into the chat.
+      if (forward !== null) {
+        options.onForward?.(forward);
+        await runTurn({ text: forward });
+        return { outcome, turnEnd: turnEndRef.current };
+      }
       // The assistant describes the stored data first thing, so the user can
       // correct it in words before confirming it.
-      if (stored && mounted.current) await runTurn({ action: 'summarize_data' });
+      if (outcome === 'stored') {
+        await runTurn({ action: 'summarize_data' });
+        return { outcome, turnEnd: turnEndRef.current };
+      }
+      return { outcome, turnEnd: null };
     },
     [token, safeDispatch, handleFailure, trackEvent, applyBindings, busy, runTurn]
   );
@@ -2215,31 +2238,12 @@ export function useAgentSession({
    * clears the transcription. While something else is in flight nothing starts
    * and the table stays.
    */
-  const confirmTranscription = useCallback(() => {
+  const confirmTranscription = useCallback((): Promise<ParseResult> => {
     const transcription = stateRef.current.transcription;
-    if (!transcription) return Promise.resolve();
+    if (!transcription) return Promise.resolve({ outcome: 'skipped', turnEnd: null });
     // The file's name travels with the table it was read from, whatever the box holds now.
     return parseData(transcription.text, true, transcription.source);
   }, [parseData]);
-
-  /**
-   * `.send()` next to a refused formula or code: the text goes to the chat as
-   * the user's turn, where the assistant's `generate_data` computes the table or
-   * its `run_data_code` runs the code. The returned promise ends with that turn.
-   * While anything else is in flight nothing starts and the offer stays. A
-   * formula always fits a turn (the dataset route refuses only text within the
-   * chat's cap as one); code longer than `MAX_MESSAGE_CHARS` is refused too, and
-   * the panel asks the user to shorten it instead of offering `.send()`.
-   */
-  const sendFormula = useCallback(() => {
-    const current = stateRef.current;
-    const text = current.formula?.trim();
-    if (!text || text.length > MAX_MESSAGE_CHARS || current.run || busy()) {
-      return Promise.resolve();
-    }
-    safeDispatch({ type: 'formula_sent' });
-    return runTurn({ text });
-  }, [safeDispatch, busy, runTurn]);
 
   /**
    * Stop: the cancel route takes a waiting run out of the queue at once and
@@ -2489,7 +2493,6 @@ export function useAgentSession({
     replayData,
     confirmTranscription,
     discardTranscription,
-    sendFormula,
     setBinding,
     confirmData,
     undoData,

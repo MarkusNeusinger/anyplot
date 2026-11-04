@@ -865,12 +865,13 @@ function AgentChat({
               the thread, so the header sticks over all of it. */}
           <DataPanel
             state={state}
-            onParse={(text, source, table) => void session.parseData(text, false, source, table)}
+            onParse={(text, source, table, onForward) =>
+              void session.parseData(text, false, source, table, { onForward })
+            }
             onConfirmTranscription={() => void session.confirmTranscription()}
             onTrack={trackEvent}
             onConvert={session.convertFile}
             onDiscardTranscription={session.discardTranscription}
-            onSendFormula={() => void session.sendFormula()}
             onBind={session.setBinding}
             onUndo={() => void session.undoData()}
             onToLong={() => void session.toLongData()}

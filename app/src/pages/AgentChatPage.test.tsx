@@ -708,18 +708,14 @@ describe('AgentChatPage gating', () => {
 
     fireEvent.change(textbox, { target: { value: FORMULA } });
     fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    // The data panel's own .send(), next to the line; the composer has one too.
-    const offer = await screen.findByTestId('formula-offer');
-    const send = within(offer).getByRole('button', { name: '.send()' });
-    expect(send).toHaveAccessibleDescription(/looks like a formula/);
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-
-    fireEvent.click(send);
+    // The page sends it to the chat by itself, as the user's turn: nothing to click, no error,
+    // and the box is free for a table.
     expect(await screen.findByText('I generated 200 rows from y = sin(x).')).toBeInTheDocument();
     const thread = screen.getByRole('log', { name: 'Conversation' });
     expect(within(thread).getByText(FORMULA)).toBeInTheDocument();
     expect(textbox).toHaveValue('');
-    expect(screen.queryByTestId('formula-offer')).not.toBeInTheDocument();
+    expect(turnBodies()).toEqual([{ text: FORMULA }]);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 
     const change = await screen.findByTestId('data-change');
     expect(within(change).getByText('# changed · version 1')).toBeInTheDocument();

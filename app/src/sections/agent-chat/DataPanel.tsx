@@ -56,13 +56,13 @@
  * the chat, its table arrives like a change: the next version of the data, or
  * version 1 when there was none, whose `# changed` block names the generated
  * rows and offers no `.undo()`. Pasted into the text box, the server refuses it
- * (`422 formula`), and a line under the box offers `.send()`, which sends the
- * text to the chat as a turn and empties the box.
+ * (`422 formula`), and the page sends the text to the chat as the user's turn at
+ * once and empties the box, as for a request for data (`422 data_request`).
  *
- * Code that generates data (Python, JavaScript, R) is refused the same way
- * (`422 code`) and offered to the chat, where the assistant runs it in a
- * sandbox; code longer than a chat message cannot move there, so the line asks
- * to shorten it instead. A version the assistant computed from code shows the
+ * Code that generates data (Python, JavaScript, R) goes the same way (`422
+ * code`), and the assistant runs it in a sandbox; code longer than a chat message
+ * cannot move there, so the line under the box asks to shorten it instead. A
+ * version the assistant computed from code shows the
  * Python that ran in a `# code that made this data` block, collapsed behind
  * `.show()`.
  *
@@ -128,13 +128,18 @@ interface DataPanelProps {
   /**
    * `.parse()`; `source` is the name of the file the text was read from, if it was;
    * `table` reads another of the tables the stored paste named (the table picker).
+   * `onForward` hears that the server sent the text to the chat as the user's message
+   * (a formula, code, a request for data), with the text as it went.
    */
-  onParse: (text: string, source?: string, table?: number) => void;
+  onParse: (
+    text: string,
+    source?: string,
+    table?: number,
+    onForward?: (sent: string) => void
+  ) => void;
   /** `.use()` on a transcription; the session keeps the file's name with the table it was read from. */
   onConfirmTranscription: () => void;
   onDiscardTranscription: () => void;
-  /** `.send()` next to a refused formula: the refused text goes to the chat as a turn. */
-  onSendFormula: () => void;
   onBind: (role: string, column: string | null) => void;
   onUndo: () => void;
   /** `.to_long()`: apply the wide-table offer as the next data version. */
@@ -168,7 +173,6 @@ export function DataPanel({
   onParse,
   onConfirmTranscription,
   onDiscardTranscription,
-  onSendFormula,
   onBind,
   onUndo,
   onToLong,
@@ -180,6 +184,9 @@ export function DataPanel({
   onDataViewShown,
 }: DataPanelProps) {
   const [text, setText] = useState('');
+  // The box as it is now, for a forward that answers after the user typed on.
+  const textRef = useRef(text);
+  textRef.current = text;
   // `.view_all()`: the full view of every row is open. Read-only, so it opens while a step runs too.
   const [viewOpen, setViewOpen] = useState(false);
   const viewButtonRef = useRef<HTMLButtonElement>(null);
@@ -234,18 +241,6 @@ export function DataPanel({
     onTrack,
   });
 
-  // A request for data moved to the chat as the user's message (`dataRequest`), as `.send()` moves a formula: the
-  // box is free for a table. Only while it still holds that text: an edit made while the parse ran stays. Adjusted
-  // during render, as React adjusts state when a prop changes.
-  const [requestSeen, setRequestSeen] = useState(state.dataRequest?.seq ?? 0);
-  if (state.dataRequest && state.dataRequest.seq !== requestSeen) {
-    setRequestSeen(state.dataRequest.seq);
-    if (text.trim() === state.dataRequest.text) {
-      setText('');
-      intake.clearFile();
-    }
-  }
-
   // A paste of several tables: the picker reads another one (live test round 5 of 2026-10-15). The text
   // is the stored paste's own (`DatasetState.paste`): an edit of the box or a failed parse since does not count.
   const paste = dataset?.paste;
@@ -289,11 +284,18 @@ export function DataPanel({
     onConfirmTranscription();
   };
 
+  // A formula, code or a request for data went to the chat as the user's message: the box is
+  // free for a table. Only while it still holds that text: an edit made while the parse ran stays.
+  const handleForward = (sent: string) => {
+    if (textRef.current.trim() !== sent) return;
+    setText('');
+    intake.clearFile();
+  };
+
   // `.parse()`: the file's name rides along only when the text came from a file.
   const handleParse = () => {
     parseStart.current = Date.now();
-    if (intake.source) onParse(text, intake.source);
-    else onParse(text);
+    onParse(text, intake.source ?? undefined, undefined, handleForward);
   };
 
   // The table picker: the stored paste's text again, another of its tables.
@@ -301,13 +303,6 @@ export function DataPanel({
     if (!paste || !ready || busy || intake.converting || table === choice?.table) return;
     parseStart.current = Date.now();
     onParse(paste.text, paste.source, table);
-  };
-
-  // `.send()`: the formula or code moves to the chat as a turn, so the box is free for a table.
-  const handleSendFormula = () => {
-    setText('');
-    intake.clearFile();
-    onSendFormula();
   };
 
   return (
@@ -354,7 +349,6 @@ export function DataPanel({
           onTable={handleTable}
           onUse={handleUse}
           onDiscardTranscription={onDiscardTranscription}
-          onSendFormula={handleSendFormula}
           onBind={onBind}
           onUndo={onUndo}
           onToLong={onToLong}
