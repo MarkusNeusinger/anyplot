@@ -8,8 +8,8 @@
 - **`.use_my_data() →` on the spec hub and in the code tab.** The hub page
   `/{spec-id}`, where links from the landing page, `/specs`, `/map` and the
   README arrive, offers the chat in its header, with one eligibility request
-  per view (matplotlib where the spec has it, else its first implementation),
-  and the plot page's code tab offers it beside `.copy()`. The chat records
+  per view (matplotlib where it is among the cards shown, else the first of
+  them), and the plot page's code tab offers it beside `.copy()`. The chat records
   these opens as `agent_open{source: spec_hub}` and `plot_page`.
 
 ### Changed

@@ -75,16 +75,20 @@ export function CodeTab({
   return (
     <Box sx={{ position: 'relative', minWidth: 0 }}>
       {/* The header's actions sit over the code's first line, the short `anyplot.ai` header
-          comment, each on the elevated surface so the code never shows through. */}
+          comment, each on the elevated surface so the code never shows through. Below 600 px
+          the chat's entry and the copy button together would cover that line: they stand in a
+          row above the code instead. */}
       <Box
         sx={{
-          position: 'absolute',
+          position: onUseWithMyData ? { xs: 'static', sm: 'absolute' } : 'absolute',
           top: 12,
           right: 12,
           zIndex: 1,
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'flex-end',
           gap: 1,
+          mb: onUseWithMyData ? { xs: 1, sm: 0 } : 0,
         }}
       >
         {onUseWithMyData && (

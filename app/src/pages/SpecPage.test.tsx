@@ -323,6 +323,35 @@ describe('SpecPage', () => {
     expect(askedLibraries()).toEqual(['seaborn']);
   });
 
+  it('asks about a library of the shown language on a hub under ?language=', async () => {
+    mockParams = { specId: 'scatter-basic' };
+    mockSearchParams.set('language', 'r');
+    agentEligibility.lane = 'public';
+    mockFetchSuccess({
+      ...mockSpecData,
+      implementations: [
+        ...mockSpecData.implementations,
+        {
+          library_id: 'ggplot2',
+          library_name: 'ggplot2',
+          language: 'r',
+          preview_url: 'https://example.com/scatter-basic/ggplot2/plot.png',
+          quality_score: 9,
+          code: null,
+        },
+      ],
+    });
+    render(<SpecPage />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Use with my data' }));
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/agent?spec=scatter-basic&library=ggplot2&language=r&source=spec_hub'
+    );
+    // The R cards' library only: matplotlib, not among them, is never asked about.
+    expect(askedLibraries()).toEqual(['ggplot2']);
+    mockSearchParams.delete('language');
+  });
+
   it('shows no entry on the hub while the eligibility names no lane', async () => {
     mockParams = { specId: 'scatter-basic' };
     mockFetchSuccess();

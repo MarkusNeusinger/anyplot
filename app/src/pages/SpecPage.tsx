@@ -311,23 +311,23 @@ export function SpecPage() {
 
   // "Use with my data" (`.use_my_data()`): for an eligible pair. On the plot page
   // beside the library carousel and the code tab's copy button, for the library
-  // shown; on the spec hub in its header, for one library, matplotlib where the
-  // spec has it, else its first implementation, because the eligibility route takes
-  // one library and the chat's library menu switches anyway: one request per view,
-  // never one per card. An admin gets the admin chat, through a full navigation so
-  // Cloudflare Access can intercept the /debug path; everyone else gets the public
-  // chat while its lane is open, through the router. The chat page records
+  // shown; on the spec hub in its header, for one library of the cards it shows
+  // (all of them, or one language's under `?language=`): matplotlib where it is
+  // among them, else the first, because the eligibility route takes one library and
+  // the chat's library menu switches anyway: one request per view, never one per
+  // card. An admin gets the admin chat, through a full navigation so Cloudflare
+  // Access can intercept the /debug path; everyone else gets the public chat while
+  // its lane is open, through the router. The chat page records
   // `agent_open{source: plot_page}` or `{source: spec_hub}`.
   const agentImpl = useMemo(() => {
     // The previous spec's data while the next one loads: no probe for its library.
     if (!specData || specData.id !== specId) return null;
     if (mode === 'detail') return currentImpl;
-    return (
-      specData.implementations.find(impl => impl.library_id === 'matplotlib') ??
-      specData.implementations[0] ??
-      null
-    );
-  }, [mode, currentImpl, specData, specId]);
+    const shown = languageFilter
+      ? specData.implementations.filter(impl => impl.language === languageFilter)
+      : specData.implementations;
+    return shown.find(impl => impl.library_id === 'matplotlib') ?? shown[0] ?? null;
+  }, [mode, currentImpl, specData, specId, languageFilter]);
   const agentLane = useAgentEligibility(specId, agentImpl?.library_id);
   const handleUseWithMyData = useCallback(() => {
     if (!specId || !agentImpl) return;
