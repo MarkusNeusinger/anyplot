@@ -23,7 +23,7 @@ import type { Failure } from 'src/hooks/useAgentSession';
 import { MAX_MESSAGE_CHARS } from 'src/lib/agent';
 import { ExampleDataLine } from 'src/sections/agent-chat/ExampleData';
 import { describeDataFailure, servicePausedText } from 'src/sections/agent-chat/messages';
-import { DATA_SUMMARY_ID } from 'src/sections/agent-chat/PinnedData';
+import { DATA_SUMMARY_ID } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
   bodyTextSx,

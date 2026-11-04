@@ -13,6 +13,7 @@ import GlobalStyles from '@mui/material/GlobalStyles';
 
 import type { AgentSessionState } from 'src/hooks/useAgentSession';
 import { countOf } from 'src/sections/agent-chat/countOf';
+import { DATA_SUMMARY_ID } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
   cardSx,
@@ -22,8 +23,7 @@ import {
 } from 'src/sections/agent-chat/styles';
 import { colors } from 'src/theme';
 
-/** The line the pinned header shows, and `.create_plot()` names as its description. */
-export const DATA_SUMMARY_ID = 'agent-data-summary';
+export { DATA_SUMMARY_ID };
 
 /** The card's line while the fan-out's panel is open, which the card names as its description. */
 export const DATA_LOCK_TEXT =

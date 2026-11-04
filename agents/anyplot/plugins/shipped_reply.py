@@ -44,7 +44,7 @@ from .reply_language import reply_text
 logger = logging.getLogger(__name__)
 
 CONFIRM = re.compile(r"\bconfirm\(\)", re.IGNORECASE)
-"""The data panel's button as a reply names it (`.confirm()`, also without the dot); `reconfirm()` is no match."""
+"""Step 1's button as a reply names it (`.confirm()`, also without the dot); `reconfirm()` is no match."""
 _CLOSERS = "\"'”’)\\]*_`"
 _BREAK = re.compile(
     rf"((?<=[.!?…])[ \t]+|(?<=[.!?…][{_CLOSERS}])[ \t]+|(?<=[.!?…][{_CLOSERS}]{{2}})[ \t]+|(?<=[。！？])[ \t]*)"

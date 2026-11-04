@@ -9,6 +9,12 @@ import { isPlotAction } from 'src/lib/agent';
 import { CONFIRM_LOST_TEXT } from 'src/sections/agent-chat/messages';
 
 /**
+ * The pinned header's line (`✓ data fits · ...`, `PinnedData.tsx`), which step 2's plot buttons
+ * in the composer name as their description.
+ */
+export const DATA_SUMMARY_ID = 'agent-data-summary';
+
+/**
  * Step 2: the stored data and its bindings are confirmed, and no table read
  * from text waits for its decision. A transcription stores nothing, so the
  * server keeps the confirmation and the hook keeps its flag; the page holds

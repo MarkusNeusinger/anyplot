@@ -69,7 +69,7 @@ copy of the page session's confirmed version), absent for data of the session's 
 version 1, with no history; this records where it came from, for the feedback bundle. A paste replaces it."""
 BINDINGS = PREFIX + "bindings"
 CONFIRMED = PREFIX + "confirmed"
-"""The fingerprint of what the user confirmed (`.confirm()` in the data panel): the dataset
+"""The fingerprint of what the user confirmed (`.confirm()` beside the message box): the dataset
 id and the bindings as they were (`confirmation_fingerprint`). The plot pipeline runs only
 while the fingerprint of the current state equals it, so a new dataset (a paste, a
 transcription's `.use()`) or any binding change, also one that lands between the

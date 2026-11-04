@@ -56,14 +56,14 @@ def page_code() -> str:
     )
 
 
-def data_card_components() -> list[Path]:
-    """`DataPanel.tsx` and every component of `agent-chat/` it renders, also through another one, such as
-    the full view `DataView.tsx`, which it imports on demand.
+def components_from(root: str) -> list[Path]:
+    """`root` and every component of `agent-chat/` it renders, also through another one, such as the data
+    panel's full view `DataView.tsx`, which it imports on demand.
 
     The `.ts` modules are left out: their texts serve the whole page (`messages.ts` also names the admin
-    fan-out's `.plot_all()`), and a button of the card has its label in a component.
+    fan-out's `.plot_all()`), and a button has its label in a component.
     """
-    found = [AGENT_CHAT / "DataPanel.tsx"]
+    found = [AGENT_CHAT / root]
     for path in found:
         for name in _COMPONENT_IMPORT.findall(path.read_text(encoding="utf-8")):
             component = AGENT_CHAT / f"{name}.tsx"
@@ -72,13 +72,28 @@ def data_card_components() -> list[Path]:
     return found
 
 
-def data_card_buttons() -> set[str]:
-    """The labels of the data card's buttons, read from the code without its comments."""
+def data_card_components() -> list[Path]:
+    """`DataPanel.tsx` and the components it renders."""
+    return components_from("DataPanel.tsx")
+
+
+def composer_components() -> list[Path]:
+    """`Composer.tsx` and the components it renders, such as the `.example_data()` line."""
+    return components_from("Composer.tsx")
+
+
+def buttons_of(components: list[Path]) -> set[str]:
+    """The labels of the buttons of these components, read from the code without its comments."""
     labels: set[str] = set()
-    for path in data_card_components():
+    for path in components:
         code = _COMMENT.sub("", path.read_text(encoding="utf-8").replace("&apos;", "'"))
         labels.update(alone or quoted for alone, quoted in _BUTTON_TEXT.findall(code))
     return labels
+
+
+def data_card_buttons() -> set[str]:
+    """The labels of the data card's buttons."""
+    return buttons_of(data_card_components())
 
 
 def test_the_prompt_lists_controls() -> None:
@@ -110,3 +125,21 @@ def test_every_button_of_the_data_card_is_in_the_data_panel_bullet() -> None:
 
     assert {".open()", ".parse()", ".view_all()"} <= buttons  # the reading still finds them
     assert sorted(buttons - controls_of("The data panel")) == []
+
+
+def test_every_button_of_the_composer_is_in_the_composer_bullet() -> None:
+    """The same for the composer: since `.confirm()` moved from the card's foot to the composer's end, the
+    root must say where it is, and a button added to the composer fails here until the bullet names it."""
+    buttons = buttons_of(composer_components())
+
+    assert {".send()", ".confirm()", ".create_plot()", ".stop()", ".example_data()"} <= buttons
+    assert sorted(buttons - controls_of("The composer")) == []
+
+
+def test_the_prompt_places_confirm_beside_the_message_box() -> None:
+    """No sentence of root.md sends the user to the data panel for `.confirm()` any more."""
+    text = PROMPT.read_text(encoding="utf-8")
+    stale = re.findall(r"`\.confirm\(\)`[^.;]{0,40}(?:in the data panel|at its foot|there\b)", text)
+
+    assert stale == []
+    assert "`.confirm()` beside the message box" in text
