@@ -30,6 +30,10 @@ every language. The plugin never raises; a failure keeps the reply as it was.
 The page has no `.confirm()` any more: `.create_plot()` confirms the data in its own click,
 and neither `root.md` nor the session block names the old button. The check stays as the
 backstop for a reply that still names it, which after a shipped plot is wrong twice over.
+It does not move to `.create_plot()`: a turn that shipped a plot and then changed the
+bindings or the data (`set_bindings`, `prepare_data`) leaves the data unconfirmed, and then
+`.create_plot()` is the right next step. Only the claim around the name ("to confirm the
+data") tells the two apart, and no code check reads that claim in every language.
 """
 
 import logging
