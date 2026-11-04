@@ -116,6 +116,8 @@ DATA_ARGUMENT_KEYS: dict[str, frozenset[str]] = {
 and `run_data_code`'s code, which the DATA validator checks instead."""
 NOTES_KEY = "notes"
 PIPELINE_NOTE_FIELDS = ("changes", "residual_defects")
+ROUND_CASE_FIELDS = ("gates_failed", "sandbox_failures")
+"""The fields of a `Round` that explain a feedback case and that the root's copy of the result leaves out."""
 SHOWS_KEY = "shows"
 SHOWS_PREAMBLE = (
     "What the shipped plot shows, measured by the server on the render: its drawn texts by role and the "
@@ -243,9 +245,18 @@ def fence_pipeline_notes(result: dict[str, Any]) -> dict[str, Any]:
     gets a `<tool_notes>` block of its own under `SHOWS_PREAMBLE`, so the root tells what
     the adapter meant to do from what the plot shows. A shipped result adds two server facts:
     `data_confirmed: true` and `data_changed: false` (the pipeline draws the confirmed data
-    and changes none of it).
+    and changes none of it). Each round loses `ROUND_CASE_FIELDS`, which explain a feedback
+    case and would only give the reply gate ids to repeat.
     """
     fenced = {key: value for key, value in result.items() if key not in (*PIPELINE_NOTE_FIELDS, SHOWS_KEY)}
+    if isinstance(fenced.get("rounds"), list):
+        # The gate ids and sandbox failure classes of a round are for a feedback case, not for the reply.
+        fenced["rounds"] = [
+            {key: value for key, value in item.items() if key not in ROUND_CASE_FIELDS}
+            if isinstance(item, dict)
+            else item
+            for item in fenced["rounds"]
+        ]
     if fenced.get("request_kept") is None:
         fenced.pop("request_kept", None)  # only a `not_ready` result that kept the run's request says so
     if result.get("status") in ("ok", "needs_attention"):

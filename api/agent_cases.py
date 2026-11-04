@@ -407,6 +407,31 @@ def read_manifest(bucket: CaseBucket, case_id: str) -> dict[str, Any] | None:
 
 
 @dataclass(frozen=True)
+class CaseRound:
+    """One pipeline round as a case keeps it: closed codes and counts only (the agents' `schemas.Round`)."""
+
+    attempt: int
+    outcome: str
+    findings: int
+    step: str | None
+    shipped: bool
+    defects: tuple[str, ...]
+    gates_failed: tuple[str, ...]
+    sandbox_failures: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class CaseLastRun:
+    """How the session's latest plot run ended (the agents' `schemas.LastRun`): the bundle's `session.last_run`."""
+
+    status: str
+    reason: str | None
+    version: int | None
+    turn: int | None
+    rounds: tuple[CaseRound, ...]
+
+
+@dataclass(frozen=True)
 class ManifestDetail:
     """What the triage's case detail shows from a manifest's `bundle`: everything but the row's own columns."""
 
@@ -419,6 +444,12 @@ class ManifestDetail:
     config: dict[str, Any] | None
     bindings: tuple[tuple[str, str], ...]
     """The session's bound roles as `(role, column)`; unbound roles are left out."""
+    rounds: tuple[CaseRound, ...] = ()
+    """The rounds of the case's version; empty for the chat's case and for a manifest from before they were kept."""
+    session_versions: int | None = None
+    """How many versions the session held when the case was sent; None for a manifest from before it was kept."""
+    last_run: CaseLastRun | None = None
+    """How the session's latest plot run ended; None before any run, or for a manifest from before it was kept."""
 
 
 def _list(value: Any) -> list[Any]:
@@ -429,16 +460,95 @@ def _strings(value: Any) -> tuple[str, ...]:
     return tuple(item for item in _list(value) if isinstance(item, str))
 
 
+# The agents service's closed vocabularies (`agents/anyplot/schemas.py`), pinned equal by a test: the API does not
+# import the agents package, and a case bundle is read defensively, so a value outside them never reaches the view.
+ROUND_OUTCOMES = frozenset(
+    {"ok", "review", "measured", "render_failed", "check_failed", "answer_unusable", "unreviewed", "error"}
+)
+ROUND_STEPS = frozenset({"adapting", "repairing", "checking", "rendering", "reviewing"})
+SANDBOX_FAILURES = frozenset({"syntax", "name", "key", "value", "type", "timeout", "memory", "other"})
+RUN_STATUSES = frozenset({"ok", "needs_attention", "failed", "not_ready"})
+RUN_REASONS = frozenset(
+    {
+        "validation",
+        "render",
+        "deadline",
+        "budget",
+        "busy",
+        "error",
+        "no_dataset",
+        "incomplete_bindings",
+        "data_unconfirmed",
+    }
+)
+_GATE_ID = re.compile(r"^(?:R[0-9](?:-[a-z_]{1,24})?|G[0-9]{1,2})$")
+_RUBRIC_ID = re.compile(r"^[A-Z]{2}-[0-9]{2}$")
+_MAX_ROUNDS = 10
+_MAX_IDS = 16
+
+
+def _codes(value: Any, allowed: re.Pattern[str] | frozenset[str]) -> tuple[str, ...]:
+    """The strings of `value` that match `allowed`, at most `_MAX_IDS`: only closed codes reach the triage view."""
+    if isinstance(allowed, frozenset):
+        return tuple(item for item in _strings(value) if item in allowed)[:_MAX_IDS]
+    return tuple(item for item in _strings(value) if allowed.fullmatch(item))[:_MAX_IDS]
+
+
+def _code(value: Any, allowed: frozenset[str]) -> str | None:
+    return value if isinstance(value, str) and value in allowed else None
+
+
+def _rounds(value: Any) -> tuple[CaseRound, ...]:
+    """The rounds of a result as a case shows them; an entry without an attempt or a known shape is left out."""
+    rounds = []
+    for item in _list(value)[:_MAX_ROUNDS]:
+        if not isinstance(item, dict):
+            continue
+        attempt, outcome = _count(item.get("attempt")), _code(item.get("outcome"), ROUND_OUTCOMES)
+        if not attempt or outcome is None:
+            continue
+        rounds.append(
+            CaseRound(
+                attempt=attempt,
+                outcome=outcome,
+                findings=_count(item.get("findings")) or 0,
+                step=_code(item.get("step"), ROUND_STEPS),
+                shipped=item.get("shipped") is True,
+                defects=_codes(item.get("defects"), _RUBRIC_ID),
+                gates_failed=_codes(item.get("gates_failed"), _GATE_ID),
+                sandbox_failures=_codes(item.get("sandbox_failures"), SANDBOX_FAILURES),
+            )
+        )
+    return tuple(rounds)
+
+
+def _last_run(value: Any) -> CaseLastRun | None:
+    record = _dict(value)
+    status = _code(record.get("status"), RUN_STATUSES)
+    if status is None:
+        return None
+    return CaseLastRun(
+        status=status,
+        reason=_code(record.get("reason"), RUN_REASONS),
+        version=_count(record.get("version")) or None,
+        turn=_count(record.get("turn")),
+        rounds=_rounds(record.get("rounds")),
+    )
+
+
 def manifest_detail(manifest: dict[str, Any], result_version: int) -> ManifestDetail:
     """Read the bundle a manifest keeps, defensively: it is the agents service's shape, not this module's.
 
     The version is the one numbered `result_version` (the manifest keeps only that one), else
     the first; the transcript keeps only `{role, text}` turns of the user and the assistant.
+    The rounds, the session's version count and its latest run are closed codes and counts only:
+    a value of another shape is left out, never shown.
     """
     bundle = _dict(manifest.get("bundle"))
     versions = [item for item in _list(bundle.get("versions")) if isinstance(item, dict)]
     version = next((item for item in versions if item.get("number") == result_version), versions[0] if versions else {})
     result = _dict(version.get("result"))
+    session = _dict(bundle.get("session"))
     config = bundle.get("config")
     code = version.get("plot_py")
     return ManifestDetail(
@@ -460,6 +570,9 @@ def manifest_detail(manifest: dict[str, Any], result_version: int) -> ManifestDe
             for binding in _list(bundle.get("bindings"))
             if isinstance(binding, dict) and _text(binding.get("role")) and _text(binding.get("column"))
         ),
+        rounds=_rounds(result.get("rounds")),
+        session_versions=_count(session.get("versions")),
+        last_run=_last_run(session.get("last_run")),
     )
 
 

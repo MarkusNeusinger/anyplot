@@ -408,6 +408,7 @@ async def adapt_and_render(
             themes=job.themes,
             library=view.library,
             rows=data_rows(dataset.csv),
+            spec_id=view.spec_id,
             # The runtime's error grammar, as the pipeline's: R's and Julia's stderr is not a Python traceback.
             summarise=functools.partial(runtime.error_summary, run_form=run_form),
         )

@@ -26,7 +26,7 @@ from .data.bindings import BindingCheck, check_bindings, resolve_role
 from .data.computed import mark_computed
 from .data.signs import mark_non_negative
 from .language import DEFAULT_LANGUAGE, SOURCES, LanguageSource, is_valid
-from .schemas import MAX_CODE_CHARS, Binding, DatasetProfile
+from .schemas import MAX_CODE_CHARS, Binding, DatasetProfile, LastRun
 
 
 PREFIX = "anyplot."
@@ -103,8 +103,9 @@ PENDING_CLEARED: dict[str, Any] = {
 }
 """The state delta that drops a kept first-plot note and its texts: every binding write and new data version
 carries it (a library switch no longer does, 2026-11-02)."""
-LAST_STATUS = PREFIX + "last_status"
-VERSIONS = PREFIX + "versions"
+LAST_RUN = PREFIX + "last_run"
+"""How the latest plot run ended (`schemas.LastRun`, content-free), written by every run that yields a result
+(`pipeline.record_last_run`): the feedback bundle's `session.last_run`."""
 
 MAX_SNAPSHOT_CHARS = 64 * 1024
 
@@ -146,8 +147,8 @@ class SessionView:
     hints: list[str]
     dataset_id: str | None
     bindings: list[Binding] = field(default_factory=list)
-    versions: int = 0
-    last_status: str | None = None
+    last_run: LastRun | None = None
+    """How the latest plot run ended (`LAST_RUN`); None before the first run, or for a record that no longer reads."""
     confirmed: str | None = None
     """The confirmation fingerprint the state holds, if any (`CONFIRMED`)."""
     dataset_history: list[str] = field(default_factory=list)
@@ -276,6 +277,16 @@ def initial_state(
     }
 
 
+def _last_run(raw: Any) -> LastRun | None:
+    """The stored `LAST_RUN` record, or None; one that no longer validates (a schema change) reads as none."""
+    if not isinstance(raw, dict):
+        return None
+    try:
+        return LastRun.model_validate(raw)
+    except ValueError:
+        return None
+
+
 def read_session(state: Any) -> SessionView | None:
     """The session view from an ADK state mapping, or None when the session was never opened."""
     snapshot = state.get(SNAPSHOT)
@@ -306,8 +317,7 @@ def read_session(state: Any) -> SessionView | None:
         hints=[str(hint) for hint in state.get(HINTS) or []],
         dataset_id=state.get(DATASET_ID),
         bindings=[Binding.model_validate(item) for item in raw_bindings],
-        versions=int(state.get(VERSIONS) or 0),
-        last_status=state.get(LAST_STATUS),
+        last_run=_last_run(state.get(LAST_RUN)),
         confirmed=state.get(CONFIRMED),
         dataset_history=[str(item) for item in state.get(DATASET_HISTORY) or []],
         dataset_version=max(1, int(state.get(DATASET_VERSION) or 1)),

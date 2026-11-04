@@ -8,7 +8,7 @@
 | G3 | probe: boxes of drawn text beyond the canvas edge (tick labels outside the view or on a hidden axis are never drawn, so never count) | advisory: an AR-09 line |
 | G5 | probe: annotations outside their axes | advisory: a DQ-03 line |
 | G7 | probe: overlapping drawn tick labels, and any other drawn text (axis label, title, legend text, annotation) overlapping a text by more than 3 px | advisory: a VQ-02 line each |
-| G8 | probe: more point marks than data rows (fabricated data) | advisory: a DQ-03 line |
+| G8 | probe: more point marks than data rows (fabricated data); never for a spec that draws one mark per unit (`data.signs.draws_unit_marks`: pictogram, waffle, dot matrix, parliament) | advisory: a DQ-03 line |
 | G9 | probe: scatter marks plus line vertices over `MAX_PLOTTED_POINTS` (computed mass data) | advisory: a DQ-03 line |
 | G10 | probe: characters without a glyph in any font of their text, plain text and mathtext (the harness records matplotlib's own reports) | advisory: a VQ-01 line |
 | G11 | probe (`density`): value labels at a data coordinate on a bar's end or point, dots on bar ends and shadowed bars, per axes: more than `MAX_VALUE_LABELS` labels, bar labels wider than `LABEL_SLOT_FILL` of the space per bar, or more than `MAX_DECORATIONS` decorations | advisory: a VQ-03 line |
@@ -42,6 +42,7 @@ from typing import Any
 
 from core.canvas import check_canvas
 
+from ..data.signs import draws_unit_marks
 from ..language import NumberFormat, english_name, number_format
 from ..schemas import MAX_LINE_CHARS
 from .contract import THEMES, RenderResult, Theme
@@ -333,11 +334,14 @@ def evaluate(
     themes: Sequence[Theme],
     library: str,
     rows: int,
+    spec_id: str | None = None,
     plot_language: str | None = None,
     summarise: Callable[[str], str] = error_summary,
 ) -> GateReport:
     """Run R1-R3 and the advisory gates over every theme of the job; a theme without an output fails R1.
 
+    `spec_id` is the spec the code was adapted for: G8 leaves out a spec that draws one mark
+    per unit (`draws_unit_marks`), whose mark count follows the values, not the rows.
     `plot_language` is the session language the plot text is written in; G12 checks the
     decimal mark of its numbers when the language has a number format (`language.NUMBER_FORMATS`).
     `summarise` turns a failed render's stderr tail into the R1 line's error summary: the
@@ -347,6 +351,7 @@ def evaluate(
     if not wanted:
         raise ValueError("a render job names at least one theme")
     numbers = number_format(plot_language) if plot_language else None
+    unit_marks = draws_unit_marks(spec_id)
     report = GateReport(passed_host_gates=True, canvas_ok=True)
     advisory: dict[str, list[Theme]] = {}
     missed: list[Theme] = []
@@ -393,7 +398,7 @@ def evaluate(
             if verdict.defect_line and verdict.defect_line not in report.canvas_defects:
                 report.canvas_defects.append(_line(verdict.defect_line))
             report.padded_pngs[theme] = pad_to(hardened.data, verdict.target)
-        for gate, line in _probe_lines(output.probe, rows, numbers, plot_language):
+        for gate, line in _probe_lines(output.probe, rows, numbers, plot_language, unit_marks=unit_marks):
             report.failed_gates.append(gate)
             advisory.setdefault(line, []).append(theme)
         # Both themes draw the same geometry, so the hint comes from the first theme that has one.
@@ -511,7 +516,12 @@ def _text_kind(value: Any) -> str:
 
 
 def _probe_lines(
-    probe: dict[str, Any] | None, rows: int, numbers: NumberFormat | None = None, plot_language: str | None = None
+    probe: dict[str, Any] | None,
+    rows: int,
+    numbers: NumberFormat | None = None,
+    plot_language: str | None = None,
+    *,
+    unit_marks: bool = False,
 ) -> list[tuple[str, str]]:
     """Advisory `(gate, line)` pairs from one theme's probe; a malformed probe yields none, never an exception.
 
@@ -519,7 +529,7 @@ def _probe_lines(
     """
     lines: list[tuple[str, str]] = []
     checks = (
-        lambda: _probe_lines_unchecked(probe, rows),
+        lambda: _probe_lines_unchecked(probe, rows, unit_marks=unit_marks),
         lambda: _density_lines(probe),
         lambda: _number_format_lines(probe, numbers, plot_language),
     )
@@ -736,8 +746,14 @@ def _number_format_lines(
     ]
 
 
-def _probe_lines_unchecked(probe: dict[str, Any] | None, rows: int) -> list[tuple[str, str]]:
-    """Advisory `(gate, line)` pairs from one theme's probe; `(THEME)` is filled in by the caller."""
+def _probe_lines_unchecked(
+    probe: dict[str, Any] | None, rows: int, *, unit_marks: bool = False
+) -> list[tuple[str, str]]:
+    """Advisory `(gate, line)` pairs from one theme's probe; `(THEME)` is filled in by the caller.
+
+    `unit_marks` leaves G8 out: a pictogram or a waffle draws one mark per unit of a count, so many more
+    marks than rows are the plot type, not made-up data. G9's ceiling on the plotted points still holds.
+    """
     if not isinstance(probe, dict):
         return []
     lines: list[tuple[str, str]] = []
@@ -782,7 +798,7 @@ def _probe_lines_unchecked(probe: dict[str, Any] | None, rows: int) -> list[tupl
             )
         )
     points = probe.get("points")
-    if isinstance(points, int) and rows > 0 and points > rows * G8_FACTOR + G8_SLACK:
+    if not unit_marks and isinstance(points, int) and rows > 0 and points > rows * G8_FACTOR + G8_SLACK:
         lines.append(
             (
                 "G8",

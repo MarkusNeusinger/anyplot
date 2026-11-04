@@ -146,6 +146,9 @@ class RequestLedger:
     pipeline_active: bool = False
     plot_shipped: bool = False
     """A plot shipped in this invocation: the Budget plugin exempts the root's next call once, without tools."""
+    shipped_in_turn: bool = False
+    """A plot shipped in this invocation, and it stays so: the Budget plugin spends `plot_shipped` on the closing
+    reply's call, so the checks of that reply read this one (`plugins/shipped_reply.py`)."""
     adapter_allow_full: bool = False
     review_render_id: str | None = None
     adapter_renders: list[tuple[str, str]] = field(default_factory=list)

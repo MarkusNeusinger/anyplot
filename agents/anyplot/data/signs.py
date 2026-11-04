@@ -20,6 +20,15 @@ Two tables decide, both by exact name:
   area or a flow (pie, donut, treemap, sunburst, icicle, waffle, marimekko, sankey,
   rose, the funnel's stages, packed and map bubbles), by spec id or spec-id prefix.
   Every other spec keeps a signed `value` (waterfall, diverging bars, change, SHAP).
+
+A third table, `UNIT_MARK_SPECS`, names the plot types that draw one mark per unit of a
+count: a pictogram's icons, a waffle's squares, a dot matrix's dots, a parliament's seats.
+Their mark count follows the values, not the rows (11 rows of about 29 at 5 per icon draw
+77 icons), so the render gate that reads more point marks than rows as made-up data (G8,
+`render.gates`) skips them (`draws_unit_marks`). The list comes from the specs' own
+wording ("one dot per unit", "one mark per seat", "each icon stands for a fixed number of
+units", "each square = 1%"), by spec id or spec-id prefix; their counts are never negative
+either, and the waffle's `value` is in the table above.
 """
 
 from collections.abc import Iterable
@@ -72,6 +81,18 @@ NON_NEGATIVE_VALUE_PREFIXES: tuple[str, ...] = (
     "sankey-",
     "rose-",
 )
+UNIT_MARK_SPECS: frozenset[str] = frozenset(
+    {"pictogram-basic", "waffle-basic", "dot-matrix-proportional", "parliament-basic"}
+)
+UNIT_MARK_PREFIXES: tuple[str, ...] = ("pictogram-", "waffle-", "dot-matrix-", "parliament-")
+"""Every variant of these plot types draws one mark per unit as well."""
+
+
+def draws_unit_marks(spec_id: str | None) -> bool:
+    """Whether spec `spec_id` draws one mark per unit of a count, so its mark count is no measure of its rows."""
+    if not spec_id:
+        return False
+    return spec_id in UNIT_MARK_SPECS or spec_id.startswith(UNIT_MARK_PREFIXES)
 
 
 def is_non_negative(role_name: str, spec_id: str) -> bool:
