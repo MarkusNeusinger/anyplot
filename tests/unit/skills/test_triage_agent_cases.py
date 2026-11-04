@@ -64,8 +64,12 @@ def _row(case_id: str, **overrides) -> AgentFeedback:
     return AgentFeedback(**{**row_from_manifest(manifest), "tags": [], "updated_at": NOW, **overrides})
 
 
+def _seen(status: str = "new", tags: list[str] | None = None, expected: str | None = None, promoted: bool = False):
+    return {"status": status, "tags": tags or [], "expected": expected, "promoted": promoted}
+
+
 def _entry(case_id: str = PLOT_CASE, **edit) -> dict:
-    return {"id": case_id, "seen": {"status": "new", "tags": []}, **(edit or {"status": "in_progress"})}
+    return {"id": case_id, "seen": _seen(), **(edit or {"status": "in_progress"})}
 
 
 # ---- load_plan --------------------------------------------------------------
@@ -77,7 +81,7 @@ def test_load_plan_reads_the_documented_format(at) -> None:
     assert [change.id for change in changes] == [PLOT_CASE, CHAT_CASE]
     assert changes[0].edit == {"tags": ["legend-overlap"]}
     assert changes[1].edit == {"status": "in_progress"}
-    assert changes[0].seen_status == "new"
+    assert changes[0].seen == at.State("new", (), None, False)
 
 
 def test_a_null_field_is_left_out_of_the_edit(at) -> None:
@@ -96,7 +100,10 @@ def test_a_null_field_is_left_out_of_the_edit(at) -> None:
         ({"cases": [{**_entry(), "superseded_by": "x"}]}, "unknown keys"),
         ({"cases": [{"id": PLOT_CASE, "status": "done"}]}, '"seen"'),
         ({"cases": [{**_entry(), "seen": {"status": "new"}}]}, '"seen"'),
-        ({"cases": [{"id": PLOT_CASE, "seen": {"status": "new", "tags": []}}]}, "names none"),
+        # Status and tags alone are not enough: an outcome or a promotion set on /debug must be seen too.
+        ({"cases": [{**_entry(), "seen": {"status": "new", "tags": []}}]}, '"seen"'),
+        ({"cases": [{**_entry(), "seen": _seen(promoted=None)}]}, '"seen"'),
+        ({"cases": [{"id": PLOT_CASE, "seen": _seen()}]}, "names none"),
         ({"cases": [_entry(tags="legend")]}, "not a list"),
         ({"cases": [_entry(promoted="yes")]}, "true or false"),
         ({"cases": [_entry(), _entry(status="done")]}, "twice"),
@@ -113,7 +120,7 @@ def test_load_plan_refuses_anything_else(at, plan, message) -> None:
 def test_check_plans_each_row_and_prints_only_what_changes(at) -> None:
     rows = {PLOT_CASE: _row(PLOT_CASE, tags=["b"])}
     changes = at.load_plan(
-        {"cases": [{"id": PLOT_CASE, "seen": {"status": "new", "tags": ["b"]}, "tags": ["c", "b"], "promoted": True}]}
+        {"cases": [{"id": PLOT_CASE, "seen": _seen(tags=["b"]), "tags": ["c", "b"], "promoted": True}]}
     )
     planned, refusals = at.check(rows, changes, NOW)
     assert refusals == []
@@ -124,7 +131,7 @@ def test_check_plans_each_row_and_prints_only_what_changes(at) -> None:
 
 def test_an_edit_that_matches_the_row_is_no_change(at) -> None:
     rows = {PLOT_CASE: _row(PLOT_CASE, status="in_progress")}
-    changes = at.load_plan({"cases": [{**_entry(status="in_progress"), "seen": {"status": "in_progress", "tags": []}}]})
+    changes = at.load_plan({"cases": [{**_entry(status="in_progress"), "seen": _seen("in_progress")}]})
     planned, _ = at.check(rows, changes, NOW)
     assert at.diff(planned[0]) == []
     assert at.describe(planned[0]) == f"{PLOT_CASE}  no change"
@@ -137,8 +144,22 @@ def test_check_refuses_a_missing_row_a_changed_row_and_a_rule(at) -> None:
     planned, refusals = at.check(rows, changes, NOW)
     assert planned == []
     assert refusals[0] == f"{missing}  refused: no row with this id"
-    assert "changed since the plan (now done [], the plan saw new [])" in refusals[1]
+    assert (
+        "changed since the plan (now done [] expected - not promoted, the plan saw new [] expected - not promoted)"
+        in refusals[1]
+    )
     assert refusals[2].startswith(f"{CHAT_CASE}  refused: no_plot: ")
+
+
+@pytest.mark.parametrize(
+    "changed", [{"expected": "accepted"}, {"promoted_at": datetime(2026, 11, 3, 9, 0, 0), "expected": "rejected"}]
+)
+def test_check_refuses_a_row_whose_outcome_or_promotion_changed(at, changed) -> None:
+    """Status and tags as seen, but /debug set an outcome or promoted the case since: the plan is stale."""
+    rows = {PLOT_CASE: _row(PLOT_CASE, **changed)}
+    planned, refusals = at.check(rows, at.load_plan({"cases": [_entry(status="done")]}), NOW)
+    assert planned == []
+    assert "changed since the plan" in refusals[0]
 
 
 # ---- the snapshot -------------------------------------------------------------

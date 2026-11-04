@@ -8,11 +8,13 @@ Run it from the repository root (in a worktree, name the main checkout's `.env` 
 The plan is JSON (see SKILL.md, "The plan file"):
 
     {"round": "2026-11-04", "cases": [
-      {"id": "20261012T143005Z-1a2b3c4d", "seen": {"status": "new", "tags": []},
+      {"id": "20261012T143005Z-1a2b3c4d",
+       "seen": {"status": "new", "tags": [], "expected": null, "promoted": false},
        "status": "in_progress", "tags": ["legend-overlap"], "why": "one line; never written"}]}
 
-`seen` is the row's status and tags as the round read them. A row that differs now (someone
-triaged it on /debug since) is refused, so a write never overwrites a newer decision.
+`seen` is every triage field of the row as the round read it: status, tags, expected outcome,
+and whether it is promoted. A row that differs now in any of them (someone triaged it on /debug
+since) is refused, so a write never overwrites a newer decision.
 `status`, `tags`, `promoted` and `expected` mean what they mean in `PATCH /debug/agent/cases/{id}`
 and go through the same rules (`core.agent_cases.triage_updates`); an absent or null field
 stays as it is.
@@ -38,7 +40,7 @@ import sys
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import casedb
 
@@ -57,6 +59,8 @@ FIELDS = ("status", "tags", "promoted", "expected")
 """The edit's fields, as the PATCH body names them."""
 SHOWN = ("status", "tags", "expected", "promoted_at")
 """The columns an edit can change, in the order the diff prints them."""
+SEEN_KEYS = frozenset({"status", "tags", "expected", "promoted"})
+"""The triage state a plan records per row: every field an edit can change, `promoted_at` as a boolean."""
 
 
 class PlanError(ValueError):
@@ -67,13 +71,29 @@ class SnapshotError(RuntimeError):
     """The snapshot file did not read back with the rows it was written with."""
 
 
+class State(NamedTuple):
+    """A row's triage state, comparable: the tags sorted, the promotion as a boolean."""
+
+    status: str
+    tags: tuple[str, ...]
+    expected: str | None
+    promoted: bool
+
+    def __str__(self) -> str:
+        promoted = "promoted" if self.promoted else "not promoted"
+        return f"{self.status} [{', '.join(self.tags)}] expected {self.expected or '-'} {promoted}"
+
+
+def state_of(row: AgentFeedback) -> State:
+    return State(row.status, tuple(sorted(row.tags)), row.expected, row.promoted_at is not None)
+
+
 @dataclass(frozen=True)
 class Change:
     """One plan entry: the row's state the round saw, and the edit."""
 
     id: str
-    seen_status: str
-    seen_tags: tuple[str, ...]
+    seen: State
     edit: dict[str, Any]
 
 
@@ -107,12 +127,17 @@ def load_plan(data: Any) -> list[Change]:
         seen = entry.get("seen")
         if (
             not isinstance(seen, dict)
-            or set(seen) != {"status", "tags"}
+            or set(seen) != SEEN_KEYS
             or not isinstance(seen["status"], str)
             or not isinstance(seen["tags"], list)
             or not all(isinstance(tag, str) for tag in seen["tags"])
+            or not (seen["expected"] is None or isinstance(seen["expected"], str))
+            or not isinstance(seen["promoted"], bool)
         ):
-            raise PlanError(f'{where}: "seen" is not {{"status": str, "tags": [str, ...]}}')
+            raise PlanError(
+                f'{where}: "seen" is not {{"status": str, "tags": [str, ...], "expected": str or null, '
+                '"promoted": bool}'
+            )
         edit = {field: entry[field] for field in FIELDS if entry.get(field) is not None}
         if not edit:
             raise PlanError(f"{where}: names none of {', '.join(FIELDS)}")
@@ -122,7 +147,8 @@ def load_plan(data: Any) -> list[Change]:
             raise PlanError(f"{where}: promoted is not true or false")
         if any(change.id == case_id for change in changes):
             raise PlanError(f"{where} appears twice")
-        changes.append(Change(case_id, seen["status"], tuple(seen["tags"]), edit))
+        state = State(seen["status"], tuple(sorted(seen["tags"])), seen["expected"], seen["promoted"])
+        changes.append(Change(case_id, state, edit))
     return changes
 
 
@@ -137,10 +163,10 @@ def check(rows: dict[str, AgentFeedback], changes: list[Change], now: datetime) 
         if row is None:
             refusals.append(f"{change.id}  refused: no row with this id")
             continue
-        if row.status != change.seen_status or sorted(row.tags) != sorted(change.seen_tags):
+        if (now_state := state_of(row)) != change.seen:
             refusals.append(
-                f"{change.id}  refused: changed since the plan (now {row.status} {sorted(row.tags)}, "
-                f"the plan saw {change.seen_status} {sorted(change.seen_tags)}); list the cases again"
+                f"{change.id}  refused: changed since the plan (now {now_state}, "
+                f"the plan saw {change.seen}); list the cases again"
             )
             continue
         try:

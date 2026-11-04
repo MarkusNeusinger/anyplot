@@ -18,7 +18,11 @@ case_id_re='^[0-9]{8}T[0-9]{6}Z-[0-9a-f]{8}$'
 dest=""
 
 if [[ ${1:-} == "--dest" ]]; then
-  dest="${2:?--dest needs a directory}"
+  if [[ -z ${2:-} ]]; then
+    echo "fetch_case: --dest needs a directory" >&2
+    exit 2
+  fi
+  dest="$2"
   shift 2
 fi
 if [[ $# -eq 0 ]]; then
@@ -32,16 +36,18 @@ for id in "$@"; do
   fi
 done
 
+# The directory, given or `mktemp`'s (which follows TMPDIR), must lie outside every
+# checkout; the nearest existing ancestor is checked before anything is created.
+target="${dest:-${TMPDIR:-/tmp}}"
+probe="$(realpath -m "$target")"
+while [[ ! -d $probe ]]; do probe="$(dirname "$probe")"; done
+if git -C "$probe" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "fetch_case: $target is inside a git checkout; a case holds a user's data" >&2
+  exit 2
+fi
 if [[ -z $dest ]]; then
   dest="$(mktemp -d -t anyplot-cases-XXXXXX)"
 else
-  # Check the nearest existing ancestor before creating anything.
-  probe="$(realpath -m "$dest")"
-  while [[ ! -d $probe ]]; do probe="$(dirname "$probe")"; done
-  if git -C "$probe" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    echo "fetch_case: $dest is inside a git checkout; a case holds a user's data" >&2
-    exit 2
-  fi
   mkdir -p -m 700 "$dest"
 fi
 chmod 700 "$dest"

@@ -52,7 +52,9 @@ inputs carry over (data shape, bindings, request, expected outcome).
 1. Run `git fetch origin main`. Read the code as it is on `origin/main`, from
    a worktree on it or the main checkout.
 2. Make the round directory outside the repository, private:
-   `ROUND=~/anyplot-triage/$(date -u +%F)` and `mkdir -p -m 700 "$ROUND"`.
+   `ROUND=~/anyplot-triage/$(date -u +%F)` and
+   `mkdir -p "$ROUND" && chmod 700 ~/anyplot-triage "$ROUND"` (`mkdir -m`
+   leaves an existing directory's mode as it was).
 3. Name the `.env` that holds `DATABASE_URL`. A worktree has none; pass the
    main checkout's with `--env` (the scripts read only that key and never
    print it).
@@ -171,7 +173,7 @@ project (the action and the report path; never a case's content).
   "cases": [
     {
       "id": "20261012T143005Z-1a2b3c4d",
-      "seen": {"status": "new", "tags": []},
+      "seen": {"status": "new", "tags": [], "expected": null, "promoted": false},
       "status": "in_progress",
       "tags": ["legend-overlap"],
       "why": "The legend covers the last bars; gate G7 does not measure legend boxes."
@@ -180,9 +182,10 @@ project (the action and the report path; never a case's content).
 }
 ```
 
-- `seen` is the row's status and tags as the round read them (from
-  `cases.json`). A row that differs at write time, because someone triaged it
-  on `/debug` in between, is refused.
+- `seen` is every triage field of the row as the round read it (from
+  `cases.json`): `status`, `tags`, `expected`, and `promoted` (whether
+  `promoted_at` is set). A row that differs in any of them at write time,
+  because someone triaged it on `/debug` in between, is refused.
 - `status`, `tags`, `promoted` and `expected` mean what they mean in the PATCH
   route; `tags` replaces the whole list; a field left out stays as it is.
 - `why` is for the reader and is never written. Keep users' data out of it.
