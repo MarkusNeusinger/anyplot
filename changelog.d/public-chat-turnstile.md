@@ -12,16 +12,16 @@
   door shut without `TURNSTILE_SECRET_KEY` and refuses Cloudflare's test secrets,
   and the deploy smoke proves the secret against siteverify with Cloudflare's dummy
   token. The site's CSP allows `challenges.cloudflare.com` for scripts and frames
-  only, and `/legal` names what the check reads and stores (closes #7249).
+  only, and `/legal` names what the check reads and stores (closes #7249) (#12555).
 
 ### Changed
 
 - **A network's share of the agent dataset store is 32 MiB.** `AGENT_IP_DATASET_BYTES`
   falls from 64 to 32 MiB of the store's 256 MiB, so eight networks, not four, are
-  needed to fill it for everyone else.
+  needed to fill it for everyone else (#12555).
 
 ### Removed
 
 - **The public `GET /agent/session/bundle`.** No page has called it since the public
   chat dropped `.save()`; the admin lane's `GET /debug/agent/sessions/{sid}/bundle`
-  stays.
+  stays (#12555).
