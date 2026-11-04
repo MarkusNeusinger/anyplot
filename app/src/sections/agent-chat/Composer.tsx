@@ -3,16 +3,18 @@
  * the step's action, the service's pause note, `.example_data()` while the session has no data,
  * the message box and its buttons, and the counter near the message cap.
  *
- * The step's one filled call to action sits at the composer's right end: `.confirm()` in step 1
- * once there is data, which confirms the data and its bindings, with the line above the box
- * that names what it waits for as its description; `.create_plot()` in step 2 before this
- * library's first plot. Once the library has a plot, `.start_over()` beside `.send()` is a quiet
- * button, as is the plot after a switch (its carry) beside it, and with `all` pressed
- * `.plot_all()` takes the create button's place. The plot buttons exist only in step 2, so no
- * click asks for something the data card has not settled yet; the server's `data_unconfirmed`
- * stays the backstop. `.stop()` replaces them while a run is in progress, as a button of its own
- * key, so the one a run replaces never turns into `.stop()` in place, with a focus that a second
- * key press would spend on stopping.
+ * The step's one filled call to action sits at the composer's right end from the moment data is
+ * stored: `.create_plot()` (with `all` pressed `.plot_all()`, after a switch's offer the carry),
+ * while the data is unconfirmed, also when this library already has a plot (the click makes a
+ * new version from the data as the card shows it), and while the data is confirmed and the
+ * library has no plot yet. Its click takes the data and the bindings as shown, confirms them
+ * first when they are not (the page chains it), and starts the plot, with the box's text as its
+ * request; the line above the box, its description, says what it waits for. Once the confirmed
+ * data has a plot in this library, `.start_over()` is a quiet button beside the offer, if any.
+ * `.send()` shows only while the box holds text: Enter sends a turn too, and a disabled outline
+ * beside the CTA read as "blocked until something". `.stop()` stands beside the CTA while a run
+ * is in progress, a button of its own key, so no button turns into `.stop()` in place with a
+ * focus that a second key press would spend on stopping.
  *
  * The page decides what each button does and when it waits; this component only lays them out.
  */
@@ -37,44 +39,37 @@ import { colors } from 'src/theme';
 
 /**
  * What `.start_over()` does, unlike `.send()` beside it (the owner could not tell the two apart),
- * and the quiet `.create_plot()` beside the offer after a switch: the catalogue code again, with the
- * remembered decisions, which only the user clears (owner decision of 2026-11-02).
+ * the quiet `.create_plot()` beside the offer after a switch, and `.create_plot()` on changed data
+ * when the library has a plot: the catalogue code again, with the remembered decisions, which
+ * only the user clears (owner decision of 2026-11-02).
  */
 const START_OVER_HELP = 'new from the catalogue plot; keeps your remembered decisions';
 const START_OVER_HELP_ID = 'agent-start-over-help';
 
-/** Step 1's line above the box, `.confirm()`'s description. */
+/** Step 1's line above the box, the plot button's description. */
 const STEP_LINE_ID = 'agent-step-line';
-
-/** Step 1 with data: what `.confirm()` at the composer's end needs. */
-export interface ComposerConfirm {
-  /** The line above the box: what the confirmation waits for, or what to check (`confirmStepLine`). */
-  line: string;
-  enabled: boolean;
-  /** The confirmation call is in flight. */
-  busy: boolean;
-  error: Failure | null;
-  onConfirm: () => void;
-}
+/** Step 2's line above the box before the library's first plot, or while `all` holds the box. */
+const CREATE_LINE_ID = 'agent-create-line';
 
 export interface ComposerProps {
   draft: string;
   onDraftChange: (text: string) => void;
-  /** The form's submit, also Enter in the box: the page's `handleSend`. */
+  /** The form's submit, Enter in the box and `.send()`: the page's `handleSend`, a turn. */
   onSubmit: (event?: React.FormEvent) => void;
   messageRef: React.RefObject<HTMLTextAreaElement | null>;
-  /** Step 2's action button, where the keyboard continues after `.confirm()`. */
+  /** The step's action button, where the keyboard returns after the fan-out's panel. */
   createRef: React.RefObject<HTMLButtonElement | null>;
-  /** Step 1's `.confirm()`, which a refused confirmation gives the keyboard back. */
-  confirmRef: React.RefObject<HTMLButtonElement | null>;
   /** The session is open and answers. */
   ready: boolean;
   busy: boolean;
   running: boolean;
   stopping: boolean;
+  /** The session holds data. */
+  hasData: boolean;
   step2: boolean;
-  firstPlot: boolean;
   hasPlot: boolean;
+  /** The filled CTA is a plot button: data stored, unconfirmed or without a plot in this library. */
+  ctaPlot: boolean;
   canCreate: boolean;
   plotAll: boolean;
   chatLocked: boolean;
@@ -84,14 +79,21 @@ export interface ComposerProps {
   fanOutOpen: boolean;
   /** The carry after a switch, as the button names it; null without an offer. */
   carryText: string | null;
-  /** Step 1 with data: `.confirm()` and its line; null without data and in step 2. */
-  confirm: ComposerConfirm | null;
+  /** Step 1's line above the box (`stepOneLine`); null without data and in step 2. */
+  stepLine: string | null;
+  /** The confirmation a plot button starts with is in flight. */
+  confirming: boolean;
+  /** Why that confirmation was refused; it shows under the composer. */
+  confirmError: Failure | null;
   /** Until when (ISO) the service paused, for the note above the box. */
   pausedUntil: string | null;
   exampleOffer: boolean;
   exampleWorking: boolean;
   onExampleData: (event: React.MouseEvent) => void;
   onStop: (event: React.MouseEvent) => void;
+  /** The filled `.create_plot()`: the plot, with the box's text as its request. */
+  onPlot: (event: React.MouseEvent) => void;
+  /** The quiet `.create_plot()` or `.start_over()`: the catalogue plot again, text left in the box. */
   onCreate: (event: React.MouseEvent) => void;
   onCarry: (event: React.MouseEvent) => void;
   onPlotAll: (event: React.MouseEvent) => void;
@@ -100,49 +102,46 @@ export interface ComposerProps {
 }
 
 export function Composer(props: ComposerProps) {
-  const { draft, onDraftChange, onSubmit, messageRef, createRef, confirmRef } = props;
-  const { ready, busy, running, stopping, step2, firstPlot, hasPlot } = props;
-  const { canCreate, plotAll, chatLocked, libraryCount, fanOutOpen, carryText, confirm } = props;
-  const { pausedUntil, exampleOffer, exampleWorking, onExampleData } = props;
-  const { onStop, onCreate, onCarry, onPlotAll, keepKeyboardFocus } = props;
+  const { draft, onDraftChange, onSubmit, messageRef, createRef } = props;
+  const { ready, busy, running, stopping, hasData, step2, hasPlot, ctaPlot, canCreate } = props;
+  const { plotAll, chatLocked, libraryCount, fanOutOpen, carryText, stepLine } = props;
+  const { confirming, confirmError, pausedUntil, exampleOffer, exampleWorking } = props;
+  const { onExampleData, onStop, onPlot, onCreate, onCarry, onPlotAll, keepKeyboardFocus } = props;
   const carry = carryText !== null;
+  // Step 2 before this library's first plot: the line above the box says what the CTA does.
+  const firstPlot = step2 && !hasPlot;
+  const createLine = firstPlot || chatLocked;
+  // The confirmation the click starts with: the button says it works on it.
+  const working = (label: string) => (confirming ? `${label} …` : label);
 
-  // `.send()`: a turn about the data or the plot; before the library's first plot in step 2 the
-  // CTA submits the text instead.
-  const sendButton = (
+  // What the filled CTA names as its description: step 1's line, else the pinned header's summary
+  // and step 2's line; on changed data with a plot, also what a new version is made from.
+  const ctaDescription = [
+    stepLine ? STEP_LINE_ID : DATA_SUMMARY_ID,
+    createLine ? CREATE_LINE_ID : null,
+    ctaPlot && hasPlot && !carry && !plotAll ? START_OVER_HELP_ID : null,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  // `.send()`: a turn about the data or the plot, only while the box holds text to send.
+  const sendButton = draft.trim() ? (
     <Box
       key="send"
       component="button"
       type="submit"
       onClick={keepKeyboardFocus}
-      disabled={chatLocked || !draft.trim() || !ready || busy}
-      aria-describedby={chatLocked ? 'agent-create-line' : undefined}
+      disabled={chatLocked || !ready || busy}
+      aria-describedby={chatLocked ? CREATE_LINE_ID : undefined}
       sx={ghostButtonSx}
     >
       .send()
     </Box>
-  );
+  ) : null;
 
-  // Step 1's action: a plain button, so Enter in the box still sends the text. It stays in its
-  // place while a turn runs (the summary after a parse), waiting beside `.stop()`, so the next
-  // step is in view the whole time.
-  const confirmButton = confirm && (
-    <Box
-      key="confirm"
-      component="button"
-      type="button"
-      ref={confirmRef}
-      onClick={confirm.onConfirm}
-      disabled={!confirm.enabled}
-      aria-describedby={STEP_LINE_ID}
-      sx={ctaButtonSx}
-    >
-      {confirm.busy ? '.confirm() …' : '.confirm()'}
-    </Box>
-  );
-
-  // Step 2's create action while `all` is pressed, for every library at once: the CTA before
-  // the first plot, the quiet button otherwise. It waits while the panel is open.
+  // The admin's plot in every library at once while `all` is pressed: the filled CTA while the
+  // step's action is a plot, the quiet button once the confirmed data has a plot here. It waits
+  // while the panel is open.
   const plotAllButton = (
     <Box
       key="plot-all"
@@ -152,33 +151,92 @@ export function Composer(props: ComposerProps) {
       onClick={onPlotAll}
       disabled={fanOutOpen || !canCreate}
       aria-label="Plot in all libraries"
-      aria-describedby={[DATA_SUMMARY_ID, chatLocked ? 'agent-create-line' : null]
-        .filter(Boolean)
-        .join(' ')}
-      sx={firstPlot ? ctaButtonSx : actionButtonSx}
+      aria-describedby={ctaPlot ? ctaDescription : DATA_SUMMARY_ID}
+      sx={ctaPlot ? ctaButtonSx : actionButtonSx}
     >
-      .plot_all()
+      {working('.plot_all()')}
+    </Box>
+  );
+
+  // After a switch that offered it: the plot in this library with the remembered decisions, the
+  // step's filled action whatever else the row holds.
+  const carryButton = carry && (
+    <Box
+      key="carry"
+      component="button"
+      type="button"
+      ref={createRef}
+      data-testid="carry-plot"
+      onClick={onCarry}
+      disabled={!canCreate}
+      aria-describedby={ctaPlot ? ctaDescription : DATA_SUMMARY_ID}
+      // The library's name and the count make it long: it wraps at phone width.
+      sx={{ ...ctaButtonSx, whiteSpace: 'normal', textAlign: 'left', maxWidth: '100%' }}
+    >
+      {working(carryText)}
+    </Box>
+  );
+
+  // The quiet plot from the catalogue code: `.start_over()` once the library has a plot, the
+  // plain `.create_plot()` beside a switch's offer before it.
+  const quietCreate = (
+    <Box
+      key="create-quiet"
+      component="button"
+      type="button"
+      ref={carry ? undefined : createRef}
+      onClick={onCreate}
+      disabled={!canCreate}
+      aria-label={hasPlot ? 'Start over' : 'Create plot'}
+      title={START_OVER_HELP}
+      aria-describedby={[START_OVER_HELP_ID, stepLine ? STEP_LINE_ID : DATA_SUMMARY_ID].join(' ')}
+      sx={actionButtonSx}
+    >
+      {hasPlot ? '.start_over()' : '.create_plot()'}
+    </Box>
+  );
+
+  // The step's one filled action while it is a plot button: a plain button, so Enter in the box
+  // sends a turn and never confirms. It stays in its place while a turn runs, waiting beside
+  // `.stop()`, so the next step is in view the whole time.
+  const filledCta = plotAll ? (
+    plotAllButton
+  ) : carry ? (
+    carryButton
+  ) : (
+    <Box
+      key="create"
+      component="button"
+      type="button"
+      ref={createRef}
+      onClick={onPlot}
+      disabled={!canCreate}
+      aria-label="Create plot"
+      aria-describedby={ctaDescription}
+      sx={ctaButtonSx}
+    >
+      {working('.create_plot()')}
     </Box>
   );
 
   return (
     <>
-      {/* Step 1: what `.confirm()` waits for, or what to check; the button names it as its
+      {/* Step 1: what the plot button waits for, or what to check; the button names it as its
           description. */}
-      {confirm && (
+      {stepLine && (
         <Box
           id={STEP_LINE_ID}
           data-testid="data-step"
           sx={{ ...labelSx, color: 'var(--ink-soft)', mb: -1 }}
         >
-          {confirm.line}
+          {stepLine}
         </Box>
       )}
       {/* While the chat waits for `all`, the line says so in the ink of the text, and the
           message box names it as its description. */}
-      {(firstPlot || chatLocked) && (
+      {createLine && (
         <Box
-          id="agent-create-line"
+          id={CREATE_LINE_ID}
           sx={{ ...labelSx, color: chatLocked ? 'var(--ink)' : 'var(--ink-soft)', mb: -1 }}
         >
           {chatLocked
@@ -227,29 +285,30 @@ export function Composer(props: ComposerProps) {
           ref={messageRef}
           aria-label="Message"
           placeholder={
-            // Step 1 talks about the data, step 2 about the plot; short since
-            // 2026-11-02, the how-to is behind the data card's ⓘ. Without data,
-            // the chat is the other way to get some: example data or a formula.
-            // While `all` is pressed in step 2 the box waits: the fan-out takes
-            // no text.
+            // Without data, the chat is the other way to get some: example data or a formula.
+            // With data, step 1 talks about the data and what the plot should do, step 2 about
+            // the plot; short since 2026-11-02, the how-to is behind the data card's ⓘ. While
+            // `all` is pressed in step 2 the box waits: the fan-out takes no text.
             chatLocked
               ? 'all libraries: the table goes as it is · turn all off to chat'
-              : !step2
+              : !hasData
                 ? 'ask for example data, a curve, or a fix to your data'
-                : firstPlot
-                  ? 'optional: what the first plot should do differently'
-                  : 'ask for a change, e.g. log scale on y'
+                : !step2
+                  ? `ask about your data, or say what the ${hasPlot ? 'next' : 'first'} plot should do`
+                  : firstPlot
+                    ? 'optional: what the first plot should do differently'
+                    : 'ask for a change, e.g. log scale on y'
           }
           value={draft}
           maxLength={MAX_MESSAGE_CHARS}
           rows={2}
           disabled={!ready || chatLocked}
-          aria-describedby={chatLocked ? 'agent-create-line' : undefined}
+          aria-describedby={chatLocked ? CREATE_LINE_ID : undefined}
           onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
             onDraftChange(event.target.value)
           }
           onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-            // Enter sends text; an empty box creates nothing by accident.
+            // Enter sends text as a turn; an empty box creates nothing by accident.
             if (event.key === 'Enter' && !event.shiftKey) {
               event.preventDefault();
               if (draft.trim()) onSubmit();
@@ -257,8 +316,8 @@ export function Composer(props: ComposerProps) {
           }}
           sx={{ ...nativeControlSx, flex: '1 1 240px', resize: 'vertical' }}
         />
-        {/* Own keys: the button a run replaces never turns into `.stop()` in place,
-            with a focus that a second key press would spend on stopping the run. */}
+        {/* One fragment in every state, with keyed children: the filled CTA keeps its element
+            from idle to running and back. */}
         {running ? (
           <>
             <Box
@@ -276,87 +335,36 @@ export function Composer(props: ComposerProps) {
             >
               {stopping ? '.stop() …' : '.stop()'}
             </Box>
-            {confirmButton}
+            {ctaPlot && filledCta}
           </>
-        ) : !step2 ? (
+        ) : ctaPlot ? (
           <>
             {sendButton}
-            {confirmButton}
+            {/* Beside a switch's offer: the plot from the catalogue code, without the carry. */}
+            {carry && !plotAll && quietCreate}
+            {filledCta}
           </>
-        ) : firstPlot && plotAll ? (
-          plotAllButton
-        ) : firstPlot && !carry ? (
-          <Box
-            key="create"
-            component="button"
-            type="submit"
-            ref={createRef}
-            onClick={keepKeyboardFocus}
-            disabled={!canCreate}
-            aria-label="Create plot"
-            aria-describedby={`${DATA_SUMMARY_ID} agent-create-line`}
-            sx={ctaButtonSx}
-          >
-            .create_plot()
-          </Box>
-        ) : (
+        ) : hasData ? (
           <>
-            {/* After a switch that offered it: the plot in this library with the remembered
-                decisions, the step's action. Before the library's first plot it submits
-                the form, so typed text goes as the turn, as `.create_plot()` does. */}
-            {carry && (
-              <Box
-                key="carry"
-                component="button"
-                type={firstPlot ? 'submit' : 'button'}
-                ref={createRef}
-                data-testid="carry-plot"
-                onClick={firstPlot ? keepKeyboardFocus : onCarry}
-                disabled={!canCreate}
-                aria-describedby={`${DATA_SUMMARY_ID}${firstPlot ? ' agent-create-line' : ''}`}
-                // The library's name and the count make it long: it wraps at phone width.
-                sx={{ ...ctaButtonSx, whiteSpace: 'normal', textAlign: 'left', maxWidth: '100%' }}
-              >
-                {carryText}
-              </Box>
-            )}
-            {/* After a plot: start over from the catalogue plot with this data. Beside the
-                offer: the plot from the catalogue code, without the carry. With `all`,
-                `.plot_all()`. */}
-            {plotAll && plotAllButton}
-            {!plotAll && (
-              <Box
-                key="create-quiet"
-                component="button"
-                type="button"
-                ref={carry ? undefined : createRef}
-                onClick={onCreate}
-                disabled={!canCreate}
-                // Once this library has a plot, the button starts over from the
-                // catalogue plot; `.send()` beside it changes the latest version.
-                aria-label={hasPlot ? 'Start over' : 'Create plot'}
-                title={hasPlot || carry ? START_OVER_HELP : undefined}
-                aria-describedby={[hasPlot || carry ? START_OVER_HELP_ID : null, DATA_SUMMARY_ID]
-                  .filter(Boolean)
-                  .join(' ')}
-                sx={actionButtonSx}
-              >
-                {hasPlot ? '.start_over()' : '.create_plot()'}
-              </Box>
-            )}
-            {(hasPlot || carry) && !plotAll && (
-              <Box component="span" id={START_OVER_HELP_ID} sx={visuallyHiddenSx}>
-                {START_OVER_HELP}
-              </Box>
-            )}
-            {/* Before the library's first plot the offer submits text; no `.send()` then. */}
-            {!firstPlot && sendButton}
+            {/* The confirmed data has a plot here: the offer after a switch, if any, then
+                starting over from the catalogue plot; `.send()` changes the latest version. */}
+            {carryButton}
+            {plotAll ? plotAllButton : quietCreate}
+            {sendButton}
           </>
+        ) : (
+          // No data yet: nothing to plot, only a request for example data or a curve to send.
+          sendButton
         )}
       </Box>
-      {confirm?.error && (
+      {hasData && !plotAll && (hasPlot || carry) && (
+        <Box component="span" id={START_OVER_HELP_ID} sx={visuallyHiddenSx}>
+          {START_OVER_HELP}
+        </Box>
+      )}
+      {confirmError && !step2 && (
         <Box role="alert" sx={{ ...bodyTextSx, color: colors.error, mt: -1 }}>
-          {describeDataFailure(confirm.error.code, confirm.error.ref)}
+          {describeDataFailure(confirmError.code, confirmError.ref)}
         </Box>
       )}
       {draft.length > MAX_MESSAGE_CHARS * 0.9 && (

@@ -371,20 +371,39 @@ const turnBodies = () =>
     .map(([, init]) => JSON.parse(String((init as RequestInit).body)) as Record<string, string>);
 const lastTurn = () => turnBodies().slice(-1)[0];
 
-/** Paste a table, wait for its summary and confirm it: the page is at step 2. */
-async function parseAndConfirm(value = 'hours,score\n1.5,52\n2.0,58\n') {
-  fireEvent.change(await screen.findByLabelText(/# your data/), { target: { value } });
-  fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
-  expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
-  const confirm = screen.getByRole('button', { name: '.confirm()' });
-  await waitFor(() => expect(confirm).toBeEnabled());
-  fireEvent.click(confirm);
-  await screen.findByTestId('data-pinned');
-}
-
 /** The turn in flight is over: its `done` was applied and `.stop()` gave way. */
 const turnEnded = () =>
   waitFor(() => expect(screen.queryByRole('button', { name: 'Stop' })).not.toBeInTheDocument());
+
+/** Paste a table and wait for its summary: step 1 with data, nothing in flight. */
+async function parseAndSummarize(value = 'hours,score\n1.5,52\n2.0,58\n') {
+  fireEvent.change(await screen.findByLabelText(/# your data/), { target: { value } });
+  fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+  expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
+  await turnEnded();
+}
+
+/** Paste a table, then one `.create_plot()`: the data is confirmed and the first plot ships. */
+async function parseAndPlot(value?: string) {
+  await parseAndSummarize(value);
+  const create = screen.getByRole('button', { name: 'Create plot' });
+  await waitFor(() => expect(create).toBeEnabled());
+  fireEvent.click(create);
+  expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+  await turnEnded();
+}
+
+/** The paths of the session's calls to the confirm route and the turns, in order. */
+const confirmAndTurns = () =>
+  agentCalls()
+    .map(([input, init]) => {
+      const path = pathOf(input);
+      if (path.endsWith('/dataset/confirm')) return 'confirm';
+      if (!path.endsWith('/messages')) return null;
+      const body = JSON.parse(String((init as RequestInit).body)) as Record<string, string>;
+      return body.action ?? `text: ${body.text}`;
+    })
+    .filter(Boolean);
 
 /** Send `text` from the composer with Enter. */
 function sendFromComposer(text: string) {
@@ -404,7 +423,7 @@ async function transcribeInStep2() {
 /** The labels of the composer's buttons, in order: the step's one CTA is the last. */
 const composerButtons = () =>
   within(screen.getByLabelText('Message').closest('form') as HTMLElement)
-    .getAllByRole('button')
+    .queryAllByRole('button')
     .map(button => button.textContent);
 
 /** The thread's last entry. */
@@ -552,7 +571,7 @@ describe('AgentChatPage gating', () => {
     expect(within(menu).queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
   });
 
-  it('walks the two steps: confirm the data, then create the plot', async () => {
+  it('walks the two steps with one click: .create_plot() confirms the data, then plots', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     expect(await screen.findByLabelText(/# your data/)).toBeInTheDocument();
@@ -561,16 +580,13 @@ describe('AgentChatPage gating', () => {
     expect(screen.queryByText(/check the preview and the bindings/)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'How the data card works' })).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(/# your data/), {
-      target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    const confirm = await screen.findByRole('button', { name: '.confirm()' });
-    await waitFor(() => expect(confirm).toBeEnabled());
-    // Step 1's one action sits at the composer's end, after `.send()`, and no plot button
-    // shows before the confirmation.
-    expect(composerButtons()).toEqual(['.send()', '.confirm()']);
-    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
+    await parseAndSummarize();
+    const create = screen.getByRole('button', { name: 'Create plot' });
+    await waitFor(() => expect(create).toBeEnabled());
+    // From the moment data is stored, the one action is `.create_plot()`, filled at the
+    // composer's end; with an empty box there is nothing to `.send()`.
+    expect(composerButtons()).toEqual(['.create_plot()']);
+    expect(create).toHaveAttribute('type', 'button');
     // The data card is the thread's first turn; the summary follows it.
     const card = screen.getByTestId('data-card');
     const thread = screen.getByRole('log', { name: 'Conversation' });
@@ -578,61 +594,84 @@ describe('AgentChatPage gating', () => {
     // The first binding setup after a paste dropped no confirmation: nothing to name.
     expect(screen.queryByTestId('confirm-lost')).not.toBeInTheDocument();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      '# step 1 — check the preview and the bindings, then confirm'
+      '# step 1 — check the preview and the bindings above, then .create_plot()'
     );
-    expect(confirm).toHaveAccessibleDescription(
-      '# step 1 — check the preview and the bindings, then confirm'
+    expect(create).toHaveAccessibleDescription(
+      '# step 1 — check the preview and the bindings above, then .create_plot()'
+    );
+    expect(screen.getByLabelText('Message')).toHaveAttribute(
+      'placeholder',
+      'ask about your data, or say what the first plot should do'
     );
 
-    fireEvent.click(confirm);
+    holdNextTurn = true;
+    fireEvent.click(create);
+    // The card folds with the click and the run starts: the confirmation came first.
     await screen.findByTestId('data-pinned');
-    const create = screen.getByRole('button', { name: 'Create plot' });
-    expect(create).toHaveAttribute('type', 'submit');
-    expect(create).toBeEnabled();
+    await waitFor(() =>
+      expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm', 'create_plot'])
+    );
+    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
     expect(currentStep()).toEqual(['·2 plot']);
     expect(screen.getByTestId('data-summary')).toHaveTextContent(
       'data fits · 2 rows · 2 columns · version 1'
     );
-    expect(create).toHaveAccessibleDescription(
-      'data fits · 2 rows · 2 columns · version 1 # step 2 — create the plot as it is, or say first what it should do differently'
-    );
-    // The confirmation's button is gone with step 1: the keyboard continues here.
-    await waitFor(() => expect(create).toHaveFocus());
+    // The button waits in its place beside `.stop()` while its run lasts.
+    expect(composerButtons()).toEqual(['.stop()', '.create_plot()']);
+    expect(screen.getByRole('button', { name: 'Create plot' })).toBeDisabled();
     expect(screen.getByTestId('data-step-status')).toHaveTextContent(
       'step 2: the data is confirmed; create the plot below'
     );
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_confirmed', {
       size_bucket: 'lt_1kb',
     });
-    // The chat composer was usable the whole time; it is not part of the steps.
+
+    releaseTurn?.();
+    expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+    await turnEnded();
+    // The confirmed data has a plot here: the composer refines, `.start_over()` quiet beside.
+    expect(composerButtons()).toEqual(['.start_over()']);
     expect(screen.getByLabelText('Message')).toBeEnabled();
   });
 
-  it("goes back to step 1 with the dropdowns the turn's done reports", async () => {
+  it("goes back to step 1 with the dropdowns the turn's done reports, .create_plot() filled again", async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndPlot();
     fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
     expect(screen.getByLabelText(/^x/)).toHaveValue('hours');
 
-    // Text in step 2's box goes as a turn, whatever it asks for.
-    fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'swap x and y' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
+    // Text after the plot goes as a turn, whatever it asks for.
+    sendFromComposer('swap x and y');
     expect(await screen.findByText('Swapped.')).toBeInTheDocument();
-    expect(await screen.findByRole('button', { name: '.confirm()' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
+    await turnEnded();
+    // The binding change dropped the confirmation: the plot button is the filled CTA again,
+    // although the library has a plot, and it makes the next version from the data as shown.
+    const create = screen.getByRole('button', { name: 'Create plot' });
+    expect(create).toBeEnabled();
+    expect(composerButtons()).toEqual(['.create_plot()']);
+    expect(screen.queryByRole('button', { name: 'Start over' })).not.toBeInTheDocument();
+    expect(create).toHaveAccessibleDescription(
+      '# step 1 again — bindings changed · check them above, then .create_plot() new from the catalogue plot; keeps your remembered decisions'
+    );
     expect(screen.getByTestId('data-summary')).toHaveTextContent(
-      'confirm again · 2 rows · 2 columns · version 1'
+      'check again · 2 rows · 2 columns · version 1'
     );
     // The root's binding change dropped the confirmation: the thread says so after the reply.
-    expect(lastInThread()).toHaveTextContent('# bindings changed · confirm the data again');
+    expect(lastInThread()).toHaveTextContent(
+      '# bindings changed · check them, then .create_plot()'
+    );
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      '# step 1 again — bindings changed · confirm the data again'
+      '# step 1 again — bindings changed · check them above, then .create_plot()'
     );
     expect(screen.getByLabelText(/^x/)).toHaveValue('score');
     expect(screen.getByLabelText(/^y/)).toHaveValue('hours');
     expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
     expect(lastTurn()).toEqual({ text: 'swap x and y' });
+    expect(screen.getByLabelText('Message')).toHaveAttribute(
+      'placeholder',
+      'ask about your data, or say what the next plot should do'
+    );
   });
 
   it('summarizes the data first, then shows a change to it with .undo()', async () => {
@@ -645,14 +684,18 @@ describe('AgentChatPage gating', () => {
     expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
     const thread = screen.getByRole('log', { name: 'Conversation' });
     expect(thread.firstElementChild).toHaveTextContent('.summarize_data()');
+    await turnEnded();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
-      'ask for example data, a curve, or a fix to your data'
+      'ask about your data, or say what the first plot should do'
     );
 
-    // A correction in words, before the confirmation: the card shows it in place.
-    const send = screen.getByRole('button', { name: '.send()' });
+    // A correction in words, before the plot: the card shows it in place. `.send()` comes with
+    // the text, and sends a turn without confirming anything.
+    expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'das ist prozent' } });
+    const send = screen.getByRole('button', { name: '.send()' });
+    expect(composerButtons()).toEqual(['.send()', '.create_plot()']);
     await waitFor(() => expect(send).toBeEnabled());
     fireEvent.click(send);
     const change = await screen.findByTestId('data-change');
@@ -661,15 +704,17 @@ describe('AgentChatPage gating', () => {
     expect(within(change).getByText(PREPARED.changes[0])).toBeInTheDocument();
     expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
     expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
-    expect(composerButtons()).toEqual(['.send()', '.confirm()']);
+    expect(composerButtons()).toEqual(['.create_plot()']);
     // Nothing was confirmed yet, so nothing was lost.
     expect(screen.queryByTestId('confirm-lost')).not.toBeInTheDocument();
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_prepared', { changes: '1' });
 
-    const confirm = screen.getByRole('button', { name: '.confirm()' });
-    await waitFor(() => expect(confirm).toBeEnabled());
-    fireEvent.click(confirm);
-    expect(await screen.findByTestId('data-summary')).toHaveTextContent('version 2');
+    const create = screen.getByRole('button', { name: 'Create plot' });
+    await waitFor(() => expect(create).toBeEnabled());
+    fireEvent.click(create);
+    expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
+    await turnEnded();
+    expect(screen.getByTestId('data-summary')).toHaveTextContent('version 2');
     expect(screen.queryByTestId('data-change')).not.toBeInTheDocument();
 
     // The change and its `.undo()` are one `.show()` away; an undo is step 1 again.
@@ -678,16 +723,22 @@ describe('AgentChatPage gating', () => {
     expect(undo).toBeEnabled();
     fireEvent.click(undo);
     expect(await screen.findByText('# undone · back to version 1')).toBeInTheDocument();
-    expect(screen.getByTestId('data-summary')).toHaveTextContent('confirm again');
-    expect(lastInThread()).toHaveTextContent('# the data changed · confirm it again');
+    expect(screen.getByTestId('data-summary')).toHaveTextContent('check again');
+    expect(lastInThread()).toHaveTextContent('# the data changed · check it, then .create_plot()');
     expect(screen.getByTestId('data-card')).toBeInTheDocument();
     expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
-    expect(screen.getByRole('button', { name: '.confirm()' })).toBeInTheDocument();
+    // The undone data with a plot here: `.create_plot()` is the filled CTA again.
+    expect(composerButtons()).toEqual(['.create_plot()']);
     expect(screen.getByRole('button', { name: '.undo()' })).toBeDisabled();
     expect(screen.getByRole('cell', { name: '52' })).toBeInTheDocument();
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_undo', { version: '1' });
     // An undo asks for no new summary.
-    expect(turnBodies()).toHaveLength(2);
+    expect(confirmAndTurns()).toEqual([
+      'summarize_data',
+      'text: das ist prozent',
+      'confirm',
+      'create_plot',
+    ]);
   });
 
   it('sends a pasted formula to the chat, whose table becomes version 1', async () => {
@@ -725,17 +776,18 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByRole('cell', { name: '-1.2246468e-16' })).toBeInTheDocument();
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_prepared', { changes: '1' });
 
-    const confirm = screen.getByRole('button', { name: '.confirm()' });
-    await waitFor(() => expect(confirm).toBeEnabled());
-    fireEvent.click(confirm);
+    await turnEnded();
+    const create = screen.getByRole('button', { name: 'Create plot' });
+    await waitFor(() => expect(create).toBeEnabled());
+    fireEvent.click(create);
     await screen.findByTestId('data-pinned');
-    expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
+    expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
   });
 
   it('collapses the confirmed data into a pinned header that .show() opens and .hide() closes', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndPlot();
     expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/# your data/)).not.toBeInTheDocument();
     const show = screen.getByRole('button', { name: 'Show the data' });
@@ -752,9 +804,8 @@ describe('AgentChatPage gating', () => {
     expect(card.getByRole('cell', { name: '52' })).toBeInTheDocument();
     expect(card.getByLabelText(/^x/)).toHaveValue('hours');
     // Looking is no change: the data stays confirmed, and step 2 stays.
-    expect(card.queryByRole('button', { name: '.confirm()' })).not.toBeInTheDocument();
     expect(currentStep()).toEqual(['·2 plot']);
-    expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();
 
     fireEvent.click(hide);
     expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
@@ -764,28 +815,26 @@ describe('AgentChatPage gating', () => {
   it('goes back to step 1 with the card open when a binding changes in step 2', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndPlot();
     fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
     fireEvent.change(screen.getByLabelText(/^y/), { target: { value: 'hours' } });
 
-    const confirm = await screen.findByRole('button', { name: '.confirm()' });
+    const create = await screen.findByRole('button', { name: 'Create plot' });
     // The header stays, now in step 1's words, and leads back to the open card.
     expect(screen.getByTestId('data-summary')).toHaveTextContent(
-      'confirm again · 2 rows · 2 columns · version 1'
+      'check again · 2 rows · 2 columns · version 1'
     );
     expect(screen.getByRole('button', { name: 'Go to the data' })).toBeInTheDocument();
     expect(screen.getByTestId('data-card')).toBeInTheDocument();
     expect(currentStep()).toEqual(['1 data']);
-    expect(composerButtons()).toEqual(['.send()', '.confirm()']);
-    expect(screen.getByLabelText('Message')).toHaveAttribute(
-      'placeholder',
-      'ask for example data, a curve, or a fix to your data'
+    expect(composerButtons()).toEqual(['.create_plot()']);
+    // The loss is named where it happened, right after the change, and above the plot button.
+    expect(lastInThread()).toHaveTextContent(
+      '# bindings changed · check them, then .create_plot()'
     );
-    // The loss is named where it happened, right after the change, and next to `.confirm()`.
-    expect(lastInThread()).toHaveTextContent('# bindings changed · confirm the data again');
     expect(screen.getByTestId('confirm-lost')).toBe(lastInThread());
-    expect(confirm).toHaveAccessibleDescription(
-      '# step 1 again — bindings changed · confirm the data again'
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      '# step 1 again — bindings changed · check them above, then .create_plot()'
     );
 
     // Back and forth: the confirmation is gone already, so one notice says it.
@@ -793,12 +842,14 @@ describe('AgentChatPage gating', () => {
     await waitFor(() => expect(screen.getByLabelText(/^y/)).toBeEnabled());
     expect(screen.getAllByTestId('confirm-lost')).toHaveLength(1);
 
-    // Confirmed again, the card collapses again, and the row's reason goes with the step.
-    await waitFor(() => expect(confirm).toBeEnabled());
-    fireEvent.click(confirm);
+    // One click takes the data again: the card collapses with it, and the row's reason goes
+    // with the step.
+    await waitFor(() => expect(create).toBeEnabled());
+    fireEvent.click(create);
     expect(await screen.findByTestId('data-pinned')).toBeInTheDocument();
-    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByTestId('data-card')).not.toBeInTheDocument());
     expect(screen.getByTestId('data-summary')).toHaveTextContent('data fits');
+    await turnEnded();
     fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
     expect(screen.queryByTestId('data-step')).not.toBeInTheDocument();
   });
@@ -806,12 +857,12 @@ describe('AgentChatPage gating', () => {
   it('names the loss for the data the card shows after it, never for a new paste', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndPlot();
     fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
     fireEvent.change(screen.getByLabelText(/^y/), { target: { value: 'hours' } });
     await waitFor(() => expect(screen.getByLabelText(/^y/)).toBeEnabled());
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      '# step 1 again — bindings changed · confirm the data again'
+      '# step 1 again — bindings changed · check them above, then .create_plot()'
     );
 
     // A data request after the loss: the step line names the change the preview shows.
@@ -819,7 +870,7 @@ describe('AgentChatPage gating', () => {
     expect(await screen.findByText('I read score as numbers.')).toBeInTheDocument();
     await turnEnded();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      '# step 1 again — the data changed · confirm it again'
+      '# step 1 again — the data changed · check it above, then .create_plot()'
     );
 
     // A new paste is data nobody confirmed: plain step 1, and the thread keeps one notice.
@@ -830,40 +881,72 @@ describe('AgentChatPage gating', () => {
     await waitFor(() => expect(screen.getAllByText(SUMMARY)).toHaveLength(2));
     await turnEnded();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      '# step 1 — check the preview and the bindings, then confirm'
+      '# step 1 — check the preview and the bindings above, then .create_plot()'
     );
     expect(screen.getAllByTestId('confirm-lost')).toHaveLength(1);
   });
 
-  it('starts the first plot from an empty box with .create_plot(), never on Enter', async () => {
+  it('confirms and then plots in one click, and Enter never confirms', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndSummarize();
     const box = screen.getByLabelText('Message');
-    expect(box).toHaveAttribute(
-      'placeholder',
-      'optional: what the first plot should do differently'
-    );
+    // Enter in an empty box sends nothing; Enter with text sends a turn, no confirmation.
     fireEvent.keyDown(box, { key: 'Enter' });
-    expect(turnBodies()).toEqual([{ action: 'summarize_data' }]);
+    expect(confirmAndTurns()).toEqual(['summarize_data']);
+    sendFromComposer('what is the mean score?');
+    expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
+    await turnEnded();
+    expect(confirmAndTurns()).toEqual(['summarize_data', 'text: what is the mean score?']);
+    expect(currentStep()).toEqual(['1 data']);
 
     // A pointer click moves no focus into the box, so a phone opens no keyboard.
     fireEvent.click(screen.getByRole('button', { name: 'Create plot' }), { detail: 1 });
     expect(box).not.toHaveFocus();
     expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
-    expect(lastTurn()).toEqual({ action: 'create_plot' });
+    expect(confirmAndTurns()).toEqual([
+      'summarize_data',
+      'text: what is the mean score?',
+      'confirm',
+      'create_plot',
+    ]);
     const thread = screen.getByRole('log', { name: 'Conversation' });
     expect(within(thread).getByText('.create_plot()')).toBeInTheDocument();
   });
 
-  it('sends a note typed before the first plot as the turn that makes it, then refines', async () => {
+  it('starts no plot when the confirmation is refused, and shows why under the composer', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    const base = fetchMock.getMockImplementation() as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    fetchMock.mockImplementation(async (input: string, init: RequestInit = {}) => {
+      if (new URL(input).pathname.endsWith('/dataset/confirm')) {
+        return json(422, { detail: 'no_dataset', ref: 'r-c' });
+      }
+      return base(input, init);
+    });
+    renderAt(PAGE);
+    await parseAndSummarize();
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'log scale on y' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('parse the data first · ref r-c');
+    // Nothing plotted, the note still in the box, the button ready for a retry.
+    expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm']);
+    expect(screen.getByLabelText('Message')).toHaveValue('log scale on y');
+    expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
+    expect(currentStep()).toEqual(['1 data']);
+    expect(screen.getByTestId('data-card')).toBeInTheDocument();
+  });
+
+  it('sends a note typed before the first plot as the turn that makes it, after the confirmation', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndSummarize();
     fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'log scale on y' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
     expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
-    expect(lastTurn()).toEqual({ text: 'log scale on y' });
+    expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm', 'text: log scale on y']);
     const thread = screen.getByRole('log', { name: 'Conversation' });
     expect(within(thread).getByText('log scale on y')).toBeInTheDocument();
     expect(within(thread).queryByText('.create_plot()')).not.toBeInTheDocument();
@@ -876,7 +959,8 @@ describe('AgentChatPage gating', () => {
       'placeholder',
       'ask for a change, e.g. log scale on y'
     );
-    expect(screen.getByRole('button', { name: '.send()' })).toBeDisabled();
+    // `.send()` only with text in the box.
+    expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
     const startOver = screen.getByRole('button', { name: 'Start over' });
     expect(startOver).toBeEnabled();
@@ -897,10 +981,7 @@ describe('AgentChatPage gating', () => {
     try {
       localStorage.setItem(ADMIN_HINT_KEY, '1');
       renderAt(PAGE);
-      await parseAndConfirm();
-      fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
-      expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
-      await turnEnded();
+      await parseAndPlot();
       expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
 
       // A change to the data asked for below the plot, with the card collapsed.
@@ -911,27 +992,29 @@ describe('AgentChatPage gating', () => {
       expect(within(change).getByRole('button', { name: '.undo()' })).toBeEnabled();
       expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
       expect(currentStep()).toEqual(['1 data']);
-      // Step 1 again: `.start_over()` waits for step 2 like every plot button.
-      expect(composerButtons()).toEqual(['.send()', '.confirm()']);
-      expect(lastInThread()).toHaveTextContent('# the data changed · confirm it again');
+      // Step 1 again with a plot here: `.create_plot()` is the filled CTA again, in the place of
+      // the quiet `.start_over()`, and makes the next version from the changed data.
+      expect(composerButtons()).toEqual(['.create_plot()']);
+      expect(lastInThread()).toHaveTextContent(
+        '# the data changed · check it, then .create_plot()'
+      );
       // The header stays pinned in view and leads to the card's top, far above.
       expect(screen.getByTestId('data-summary')).toHaveTextContent(
-        'confirm again · 2 rows · 2 columns · version 2'
+        'check again · 2 rows · 2 columns · version 2'
       );
       scroll.mockClear();
       fireEvent.click(screen.getByRole('button', { name: 'Go to the data' }));
       expect(scroll.mock.contexts).toEqual([screen.getByTestId('data-card')]);
       expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
 
-      // Confirmed again with a plot already there: the keyboard lands on the header's
-      // toggle, not on a fresh run.
-      const confirm = screen.getByRole('button', { name: '.confirm()' });
-      await waitFor(() => expect(confirm).toBeEnabled());
-      confirm.focus();
-      fireEvent.click(confirm);
-      const show = await screen.findByRole('button', { name: 'Show the data' });
-      await waitFor(() => expect(show).toHaveFocus());
-      expect(screen.getByRole('button', { name: 'Start over' })).not.toHaveFocus();
+      // One click: the changed data confirmed, then a new version from the catalogue plot.
+      const create = screen.getByRole('button', { name: 'Create plot' });
+      await waitFor(() => expect(create).toBeEnabled());
+      fireEvent.click(create);
+      await waitFor(() => expect(screen.getAllByText('Here is your plot.')).toHaveLength(2));
+      await turnEnded();
+      expect(confirmAndTurns().slice(-2)).toEqual(['confirm', 'create_plot']);
+      expect(composerButtons()).toEqual(['.start_over()']);
     } finally {
       delete (Element.prototype as Partial<Element>).scrollIntoView;
     }
@@ -940,7 +1023,7 @@ describe('AgentChatPage gating', () => {
   it('holds step 1 while a table read from text waits, whatever a turn reports', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndPlot();
     await transcribeInStep2();
     expect(currentStep()).toEqual(['1 data']);
 
@@ -955,28 +1038,27 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByTestId('data-summary')).toHaveTextContent(
       'decide on the table first: .use() or .discard()'
     );
-    // `.confirm()` waits for the decision, and the line above the composer says so.
-    const confirm = screen.getByRole('button', { name: '.confirm()' });
-    expect(confirm).toBeDisabled();
-    expect(confirm).toHaveAccessibleDescription(
-      '# step 1 — decide on the table first: .use() or .discard()'
+    // The plot button waits for the decision, and the line above the composer says so.
+    const create = screen.getByRole('button', { name: 'Create plot' });
+    expect(create).toBeDisabled();
+    expect(create).toHaveAccessibleDescription(
+      expect.stringContaining('# step 1 — decide on the table first: .use() or .discard()')
     );
-    expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
-      'ask for example data, a curve, or a fix to your data'
+      'ask about your data, or say what the next plot should do'
     );
 
-    // Discarded, the stored data is the confirmed data again.
+    // Discarded, the stored data is the confirmed data again, with its plot.
     fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
     expect(currentStep()).toEqual(['·2 plot']);
-    expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();
   });
 
   it('returns to step 2 when a table read from text is discarded at once', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndPlot();
     await transcribeInStep2();
     expect(currentStep()).toEqual(['1 data']);
 
@@ -985,14 +1067,14 @@ describe('AgentChatPage gating', () => {
     fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
     expect(currentStep()).toEqual(['·2 plot']);
     expect(screen.getByTestId('data-summary')).toHaveTextContent('data fits');
-    expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();
     expect(screen.queryByTestId('transcription-card')).not.toBeInTheDocument();
   });
 
-  it("leaves the composer's focus alone when step 2 returns without the user's .confirm()", async () => {
+  it('leaves the composer focus alone when step 2 returns by itself', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndPlot();
     await transcribeInStep2();
     expect(currentStep()).toEqual(['1 data']);
 
@@ -1005,44 +1087,48 @@ describe('AgentChatPage gating', () => {
     expect(currentStep()).toEqual(['1 data']);
     expect(box).toHaveFocus();
 
-    // Discarding the table brings step 2 back with no `.confirm()` of the user's: the next
-    // key press still types into the box.
+    // Discarding the table brings step 2 back with no click of the user's: the next key press
+    // still types into the box.
     fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
     expect(currentStep()).toEqual(['·2 plot']);
     expect(box).toHaveFocus();
-    expect(screen.getByRole('button', { name: 'Create plot' })).not.toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Start over' })).not.toHaveFocus();
   });
 
   it('never spends a second key press on stopping the run it started', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndSummarize();
     const create = screen.getByRole('button', { name: 'Create plot' });
-    await waitFor(() => expect(create).toHaveFocus());
+    await waitFor(() => expect(create).toBeEnabled());
+    create.focus();
+    holdNextTurn = true;
 
     // Enter on the focused button: a click with `detail` 0. The focus continues in the
     // box, and `.stop()` is a button of its own, not the one that had the focus.
     fireEvent.click(create, { detail: 0 });
     const box = screen.getByLabelText('Message');
     expect(box).toHaveFocus();
-    const stop = screen.getByRole('button', { name: 'Stop' });
+    const stop = await screen.findByRole('button', { name: 'Stop' });
     expect(stop).not.toBe(create);
     expect(stop).not.toHaveFocus();
     fireEvent.keyDown(box, { key: 'Enter' });
 
+    await waitFor(() => expect(releaseTurn).not.toBeNull());
+    releaseTurn?.();
     expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
     await turnEnded();
-    expect(turnBodies()).toEqual([{ action: 'summarize_data' }, { action: 'create_plot' }]);
+    expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm', 'create_plot']);
     expect(agentCalls().some(([input]) => String(input).endsWith('/cancel'))).toBe(false);
     expect(box).toHaveFocus();
   });
 
-  it("holds back the composer's .create_plot() while a parse runs", async () => {
+  it("holds back the composer's plot button while a parse runs", async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
-    const create = screen.getByRole('button', { name: 'Create plot' });
-    expect(create).toBeEnabled();
+    await parseAndPlot();
+    const startOver = screen.getByRole('button', { name: 'Start over' });
+    expect(startOver).toBeEnabled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
     fireEvent.change(screen.getByLabelText(/# your data/), {
@@ -1050,11 +1136,11 @@ describe('AgentChatPage gating', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
     await waitFor(() => expect(releaseParse).not.toBeNull());
-    expect(create).toBeDisabled();
+    expect(startOver).toBeDisabled();
 
-    // A new parse is new data: step 1 again.
+    // A new parse is new data: step 1 again, with `.create_plot()` filled for it.
     releaseParse?.();
-    expect(await screen.findByRole('button', { name: '.confirm()' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Create plot' })).toBeInTheDocument();
     expect(currentStep()).toEqual(['1 data']);
   });
 
@@ -1286,7 +1372,7 @@ describe('AgentChatPage leave warning', () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndPlot();
     expect(unload()).toBe(true);
 
     // The library menu's `all` writes the query on the same path: nothing to ask.
@@ -1329,7 +1415,7 @@ describe('AgentChatPage working states', () => {
     releaseParse?.();
     await waitFor(() =>
       expect(screen.getByTestId('data-step-status')).toHaveTextContent(
-        'step 1: check the data, then confirm it'
+        'step 1: check the data, then create the plot'
       )
     );
     expect(screen.queryByTestId('parse-hint')).not.toBeInTheDocument();
@@ -1349,14 +1435,14 @@ describe('AgentChatPage working states', () => {
     expect(within(pending).getByTestId('loader-spinner')).toBeInTheDocument();
     expect(lastInThread()).toBe(pending);
     expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
-      /^# bindings and \.confirm\(\) wait while the assistant works$/
+      /^# bindings wait while the assistant works$/
     );
     // One loader, in the thread: the bindings line says why without motion of its own.
     expect(screen.getAllByTestId('loader-spinner')).toHaveLength(1);
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
-    // `.confirm()` waits in its place at the composer's end, beside `.stop()`.
-    expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
-    expect(composerButtons()).toEqual(['.stop()', '.confirm()']);
+    // The plot button waits in its place at the composer's end, beside `.stop()`.
+    expect(screen.getByRole('button', { name: 'Create plot' })).toBeDisabled();
+    expect(composerButtons()).toEqual(['.stop()', '.create_plot()']);
     // One indicator: a turn without pipeline steps mounts no progress timeline.
     expect(screen.queryByRole('table', { name: 'Progress' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
@@ -1367,13 +1453,13 @@ describe('AgentChatPage working states', () => {
     expect(screen.queryByTestId('pending-reply')).not.toBeInTheDocument();
     expect(screen.queryByTestId('bindings-lock')).not.toBeInTheDocument();
     expect(screen.getByLabelText(/^x/)).toBeEnabled();
-    expect(screen.getByRole('button', { name: '.confirm()' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
   });
 
   it('puts an in-progress line in the thread for a question, and leaves a plot run to the timeline', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndSummarize();
 
     holdNextTurn = true;
     sendFromComposer('what is the mean score?');
@@ -1427,47 +1513,38 @@ describe('AgentChatPage working states', () => {
 });
 
 describe('AgentChatPage step CTA', () => {
-  /** Paste the default table and wait for its summary: step 1 with data, nothing running. */
-  async function parseAndSummarize() {
-    fireEvent.change(await screen.findByLabelText(/# your data/), {
-      target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
-    await turnEnded();
-  }
-
-  it('offers only .send() before there is data: no step to confirm yet', async () => {
+  it('shows .send() only while the box holds text', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await screen.findByLabelText(/# your data/);
-    expect(composerButtons()).toEqual(['.send()']);
+    // No data, an empty box: nothing to send and no step to take yet.
+    expect(composerButtons()).toEqual([]);
     expect(screen.queryByTestId('data-step')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'sin(x) please' } });
+    expect(composerButtons()).toEqual(['.send()']);
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: '   ' } });
+    expect(composerButtons()).toEqual([]);
+
+    // With data the plot button stands alone until there is text, then `.send()` before it.
+    await parseAndSummarize();
+    expect(composerButtons()).toEqual(['.create_plot()']);
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'log scale' } });
+    expect(composerButtons()).toEqual(['.send()', '.create_plot()']);
   });
 
-  it('fills .confirm() in step 1 and .create_plot() in step 2, each the one CTA at the end', async () => {
+  it('confirms and plots once for a double click', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
     await parseAndSummarize();
-    const confirm = screen.getByRole('button', { name: '.confirm()' });
-    // A plain button: Enter in the box sends the text, never the confirmation.
-    expect(confirm).toHaveAttribute('type', 'button');
-    expect(composerButtons().slice(-1)).toEqual(['.confirm()']);
-    sendFromComposer('what is the mean score?');
-    expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
+    const create = screen.getByRole('button', { name: 'Create plot' });
+    fireEvent.click(create);
+    fireEvent.click(create);
+    expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
     await turnEnded();
-    expect(lastTurn()).toEqual({ text: 'what is the mean score?' });
-    expect(currentStep()).toEqual(['1 data']);
-
-    fireEvent.click(screen.getByRole('button', { name: '.confirm()' }));
-    await screen.findByTestId('data-pinned');
-    expect(screen.queryByRole('button', { name: /\.confirm\(\)/ })).not.toBeInTheDocument();
-    expect(screen.queryByTestId('data-step')).not.toBeInTheDocument();
-    expect(composerButtons()).toEqual(['.create_plot()']);
-    expect(screen.getByRole('button', { name: 'Create plot' })).toHaveAttribute('type', 'submit');
+    expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm', 'create_plot']);
   });
 
-  it('names a required role without a column as what .confirm() waits for', async () => {
+  it('names a required role without a column as what .create_plot() waits for', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     const base = fetchMock.getMockImplementation() as (
       input: string,
@@ -1485,35 +1562,14 @@ describe('AgentChatPage step CTA', () => {
     });
     renderAt(PAGE);
     await parseAndSummarize();
-    const confirm = screen.getByRole('button', { name: '.confirm()' });
-    expect(confirm).toBeDisabled();
+    const create = screen.getByRole('button', { name: 'Create plot' });
+    expect(create).toBeDisabled();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      '# step 1 — pick a column for y, then confirm'
+      '# step 1 — pick a column for y, then .create_plot()'
     );
-    expect(confirm).toHaveAccessibleDescription('# step 1 — pick a column for y, then confirm');
-  });
-
-  it('shows a refused confirmation under the composer and keeps .confirm() for a retry', async () => {
-    localStorage.setItem(ADMIN_HINT_KEY, '1');
-    const base = fetchMock.getMockImplementation() as (
-      input: string,
-      init?: RequestInit
-    ) => Promise<Response>;
-    fetchMock.mockImplementation(async (input: string, init: RequestInit = {}) => {
-      if (new URL(input).pathname.endsWith('/dataset/confirm')) {
-        return json(422, { detail: 'no_dataset', ref: 'r-c' });
-      }
-      return base(input, init);
-    });
-    renderAt(PAGE);
-    await parseAndSummarize();
-    fireEvent.click(screen.getByRole('button', { name: '.confirm()' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('parse the data first · ref r-c');
-    const confirm = screen.getByRole('button', { name: '.confirm()' });
-    expect(confirm).toBeEnabled();
-    // The button lost the focus while it waited: the keyboard is back on it for a retry.
-    await waitFor(() => expect(confirm).toHaveFocus());
-    expect(currentStep()).toEqual(['1 data']);
+    expect(create).toHaveAccessibleDescription(
+      '# step 1 — pick a column for y, then .create_plot()'
+    );
   });
 });
 
@@ -1523,7 +1579,7 @@ describe('AgentChatPage .plot_all()', () => {
     fetchMock.getMockImplementation() as (input: string, init?: RequestInit) => Promise<Response>;
   const plotAllButton = () => screen.getByRole('button', { name: 'Plot in all libraries' });
 
-  it('offers all once the lists are in, and plots the confirmed table in every library', async () => {
+  it('offers all once the lists are in, and .plot_all() confirms the table, then plots it everywhere', async () => {
     const base = baseFetch();
     // The status answer waits: until it is in, the libraries and the limit are fallbacks.
     let releaseStatus!: () => void;
@@ -1537,7 +1593,7 @@ describe('AgentChatPage .plot_all()', () => {
     );
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndSummarize();
     let menu = await openLibraryMenu();
     expect(within(menu).queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
     await closeLibraryMenu();
@@ -1569,14 +1625,24 @@ describe('AgentChatPage .plot_all()', () => {
     expect(own).toBeEnabled();
     await closeLibraryMenu();
     expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
+    // In step 1 `.plot_all()` is the filled CTA, the chat about the data goes on.
     const plotAll = plotAllButton();
     expect(plotAll).toHaveTextContent('.plot_all()');
     expect(plotAll).toBeEnabled();
+    expect(composerButtons()).toEqual(['.plot_all()']);
+    expect(plotAll).toHaveAccessibleDescription(
+      '# step 1 — check the preview and the bindings above, then .create_plot()'
+    );
+    expect(screen.getByLabelText('Message')).toBeEnabled();
+    expect(screen.queryByTestId('plot-all-hint')).not.toBeInTheDocument();
+
+    // The click confirms the data first: the copy route needs confirmed data.
+    fireEvent.click(plotAll, { detail: 1 });
+    const panel = await screen.findByRole('region', { name: 'All libraries' });
+    expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm']);
+    // The fan-out takes no text: in step 2 the message box waits, and the line says why.
     const line =
       '# step 2 — plot the table as it is in all 2 libraries at once · turn all off to chat';
-    expect(plotAll).toHaveAccessibleDescription(expect.stringContaining(line));
-    expect(screen.queryByTestId('plot-all-hint')).not.toBeInTheDocument();
-    // The fan-out takes no text: in step 2 the message box waits, and the line says why.
     const box = screen.getByLabelText('Message');
     expect(box).toBeDisabled();
     expect(box).toHaveAccessibleDescription(line);
@@ -1584,9 +1650,7 @@ describe('AgentChatPage .plot_all()', () => {
       'placeholder',
       'all libraries: the table goes as it is · turn all off to chat'
     );
-
-    fireEvent.click(plotAll, { detail: 1 });
-    const panel = await screen.findByRole('region', { name: 'All libraries' });
+    expect(plotAllButton()).toHaveAccessibleDescription(expect.stringContaining(line));
     expect(
       within(panel)
         .getAllByRole('article')
@@ -1624,7 +1688,7 @@ describe('AgentChatPage .plot_all()', () => {
     );
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndSummarize();
     const menu = await openLibraryMenu();
     await waitFor(() =>
       expect(within(menu).queryByRole('button', { name: 'seaborn' })).not.toBeInTheDocument()
@@ -1648,7 +1712,7 @@ describe('AgentChatPage .plot_all()', () => {
     );
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndPlot();
     fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'log scale on y' } });
 
     // `all` itself is a toggle: a second pick turns it off again.
@@ -1656,7 +1720,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(screen.getByLabelText('Message')).toBeDisabled();
     await pickInMenu('All libraries');
     expect(libraryChip()).toHaveTextContent('lib: matplotlib · python');
-    expect(screen.getByRole('button', { name: 'Create plot' })).toHaveTextContent('.create_plot()');
+    expect(screen.getByRole('button', { name: 'Start over' })).toHaveTextContent('.start_over()');
     expect(screen.getByLabelText('Message')).toBeEnabled();
     expect(screen.getByLabelText('Message')).not.toHaveAccessibleDescription();
 
@@ -1670,7 +1734,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(own).toHaveAttribute('aria-pressed', 'true');
     expect(own).toBeDisabled();
     await closeLibraryMenu();
-    expect(screen.getByRole('button', { name: 'Create plot' })).toHaveTextContent('.create_plot()');
+    expect(screen.getByRole('button', { name: 'Start over' })).toHaveTextContent('.start_over()');
     // The draft waited in the box, and nothing switched.
     expect(screen.getByLabelText('Message')).toBeEnabled();
     expect(screen.getByLabelText('Message')).toHaveValue('log scale on y');
@@ -1702,36 +1766,22 @@ describe('AgentChatPage .plot_all()', () => {
     );
     expect(box).not.toHaveAccessibleDescription();
 
-    // Step 1: `.confirm()` is the action as without `all`, `.plot_all()` comes with step 2, and
-    // a question about the data goes.
-    fireEvent.change(screen.getByLabelText(/# your data/), {
-      target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
-    await turnEnded();
+    // Step 1: `.plot_all()` is the action, and a question about the data goes: the box waits
+    // only once the data is confirmed.
+    await parseAndSummarize();
     expect(currentStep()).toEqual(['1 data']);
-    expect(composerButtons()).toEqual(['.send()', '.confirm()']);
-    expect(screen.queryByRole('button', { name: 'Plot in all libraries' })).not.toBeInTheDocument();
+    expect(composerButtons()).toEqual(['.plot_all()']);
     expect(screen.getByLabelText('Message')).toBeEnabled();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
-      'ask for example data, a curve, or a fix to your data'
+      'ask about your data, or say what the first plot should do'
     );
     sendFromComposer('what is the mean score?');
     expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
     await turnEnded();
     expect(lastTurn()).toEqual({ text: 'what is the mean score?' });
     expect(libraryChip()).toHaveTextContent('lib: all');
-
-    // Confirmed, step 2 is where `.plot_all()` is the action: the box waits from here.
-    const confirm = screen.getByRole('button', { name: '.confirm()' });
-    await waitFor(() => expect(confirm).toBeEnabled());
-    fireEvent.click(confirm);
-    await waitFor(() => expect(currentStep()).toEqual(['·2 plot']));
-    expect(screen.getByLabelText('Message')).toBeDisabled();
-    expect(plotAllButton()).toBeEnabled();
-    expect(composerButtons()).toEqual(['.plot_all()']);
+    expect(confirmAndTurns()).toEqual(['summarize_data', 'text: what is the mean score?']);
   });
 
   /**
@@ -1788,10 +1838,6 @@ describe('AgentChatPage .plot_all()', () => {
     sendFromComposer('y = sin(x), x from -pi to pi');
     expect(await screen.findByText('I generated 200 rows from y = sin(x).')).toBeInTheDocument();
     await turnEnded();
-    const confirm = screen.getByRole('button', { name: '.confirm()' });
-    await waitFor(() => expect(confirm).toBeEnabled());
-    fireEvent.click(confirm);
-    await waitFor(() => expect(currentStep()).toEqual(['·2 plot']));
 
     await pickInMenu('All libraries');
     // Computed data has no paste, and `.plot_all()` needs none: it is the action, with no hint.
@@ -1801,6 +1847,8 @@ describe('AgentChatPage .plot_all()', () => {
     fireEvent.click(plotAll, { detail: 1 });
 
     const panel = await screen.findByRole('region', { name: 'All libraries' });
+    // The computed data was confirmed by the same click.
+    expect(currentStep()).toEqual(['·2 plot']);
     await waitFor(() => expect(fanOutCalls('/messages')).toHaveLength(2));
     expect(fanOutCalls('/dataset/copy')).toEqual([
       { session: 'F-matplotlib', body: { from_session: 'S1' } },
@@ -1822,7 +1870,7 @@ describe('AgentChatPage .plot_all()', () => {
     );
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndSummarize();
     await pickInMenu('All libraries');
     fireEvent.click(plotAllButton(), { detail: 1 });
     const panel = await screen.findByRole('region', { name: 'All libraries' });
@@ -1852,7 +1900,7 @@ describe('AgentChatPage .plot_all()', () => {
     fanOutSessions(() => json(404, { detail: 'not_found', ref: 'r-404' }));
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndSummarize();
     await pickInMenu('All libraries');
     fireEvent.click(plotAllButton(), { detail: 1 });
 
@@ -2129,11 +2177,11 @@ describe('AgentChatPage library switch and plot memory', () => {
 
   const memoryList = () => screen.getByRole('region', { name: /remembered/ });
 
-  /** Paste, confirm and plot in matplotlib: version 1, whose run left `memory` behind. */
+  /** Paste and plot in matplotlib with one click: version 1, whose run left `memory` behind. */
   async function plotInMatplotlib() {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndSummarize();
     fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
     expect(await screen.findByText('Plot 1.')).toBeInTheDocument();
     await turnEnded();
@@ -2152,8 +2200,10 @@ describe('AgentChatPage library switch and plot memory', () => {
     expect(turnBodies()).toHaveLength(turns);
     expect(carry).toHaveTextContent('plot in seaborn with your 2 decisions');
     expect(carry).toHaveAccessibleName('plot in seaborn with your 2 decisions');
-    // Seaborn has no plot yet: the offer is the step's action and takes typed text with it.
-    expect(carry).toHaveAttribute('type', 'submit');
+    // Seaborn has no plot yet: the offer is the step's filled action at the composer's end, and
+    // the quiet plot from the catalogue code stands before it.
+    expect(carry).toHaveAttribute('type', 'button');
+    expect(composerButtons()).toEqual(['.create_plot()', 'plot in seaborn with your 2 decisions']);
     expect(
       screen.getByText(/^# step 2 — plot in seaborn with your 2 decisions, or say/)
     ).toBeVisible();
@@ -2174,7 +2224,27 @@ describe('AgentChatPage library switch and plot memory', () => {
     // Shipped in seaborn: the offer is spent, the composer refines this plot.
     expect(screen.queryByTestId('carry-plot')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: '.send()' })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'a title' } });
+    expect(composerButtons()).toEqual(['.start_over()', '.send()']);
+  });
+
+  it('confirms changed data before the carry, in the same click', async () => {
+    switchRoutes({ carry: OFFER, memory: [LINE, LABEL] });
+    await plotInMatplotlib();
+    await pickInMenu('seaborn');
+    await screen.findByTestId('carry-plot');
+    // A binding changed in the new library drops the confirmation the switch kept.
+    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+    fireEvent.change(screen.getByLabelText(/^y/), { target: { value: 'hours' } });
+    await waitFor(() => expect(currentStep()).toEqual(['1 data']));
+    const carry = screen.getByTestId('carry-plot');
+    await waitFor(() => expect(carry).toBeEnabled());
+    const before = confirmAndTurns().length;
+
+    fireEvent.click(carry);
+    expect(await screen.findByText('Plot 2.')).toBeInTheDocument();
+    await turnEnded();
+    expect(confirmAndTurns().slice(before)).toEqual(['confirm', 'carry_plot']);
   });
 
   it('carries out a switch asked for in the chat and plots there without a second click', async () => {
@@ -2254,9 +2324,10 @@ describe('AgentChatPage library switch and plot memory', () => {
     expect(carry).toHaveTextContent('plot in matplotlib with your 1 decision');
     expect(carry).toHaveAttribute('type', 'button');
     expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();
-    const send = screen.getByRole('button', { name: '.send()' });
+    expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'dashed line' } });
+    const send = screen.getByRole('button', { name: '.send()' });
     expect(send).toBeEnabled();
     fireEvent.click(send);
     expect(await screen.findByText('Plot 3.')).toBeInTheDocument();
@@ -2273,7 +2344,7 @@ describe('AgentChatPage library switch and plot memory', () => {
     });
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndSummarize();
     await pickInMenu('seaborn');
     await waitFor(() => expect(libraryChip()).toHaveTextContent('lib: seaborn'));
     expect(screen.queryByTestId('carry-plot')).not.toBeInTheDocument();
@@ -2311,7 +2382,7 @@ describe('AgentChatPage library switch and plot memory', () => {
     switchRoutes({ carry: OFFER, memory: [], libraryStatus: 422 });
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await parseAndConfirm();
+    await parseAndSummarize();
     await pickInMenu('seaborn');
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'could not switch: this plot cannot be adapted in that library · ref r-sw'

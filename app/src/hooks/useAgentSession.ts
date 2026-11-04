@@ -34,9 +34,10 @@
  * table's CSV through the normal parse (`confirmTranscription`), or discards
  * it. A new parse, a library switch and a failed session clear it as well.
  *
- * Two steps, data first: step 1 ends when the user confirms that the stored
- * dataset and its bindings fit (`confirmData`, `POST .../dataset/confirm`);
- * only then does the page offer `.create_plot()` (step 2). The server drops
+ * Two steps, data first: step 1 ends when the stored dataset and its bindings
+ * are confirmed (`confirmData`, `POST .../dataset/confirm`), which the page's
+ * `.create_plot()` does as the first link of its click, before the plot run
+ * (step 2) that needs it. The server drops
  * its confirmation whenever the dataset or a binding changes, and so does the
  * hook: a stored parse and any applied binding change clear `dataConfirmed`,
  * a library switch keeps it. A transcription clears it too, although the
@@ -46,7 +47,7 @@
  * bindings and step state, which replace the hook's (`server_sync`), so the
  * dropdowns show what the server holds and the panel goes back to step 1.
  * A `plot{not_ready, data_unconfirmed}` without that sync still drops the
- * flag, so the panel offers `.confirm()` again.
+ * flag, so the next `.create_plot()` confirms again.
  *
  * A confirmation the user had given and then lost is named where it is lost:
  * the reducer watches the flag go from set to cleared, whatever action did it,
@@ -1483,24 +1484,28 @@ export function useAgentSession({
   );
 
   /**
-   * `.confirm()`: the end of step 1. The server marks the stored dataset and its
-   * current bindings as checked, which `.create_plot()` needs. Nothing starts
-   * without a stored dataset, while a table read from text waits for its
-   * decision, or while anything else is in flight.
+   * The end of step 1, the first link of the page's `.create_plot()` (and of the carry and
+   * `.plot_all()`) on unconfirmed data: the server marks the stored dataset and its current
+   * bindings as checked, which a plot run needs. Resolves to whether the data is confirmed now,
+   * so the caller starts the plot only then; a refusal lands in `confirmError`. Nothing starts
+   * without a stored dataset, while a table read from text waits for its decision, or while
+   * anything else is in flight (a second click before the state caught up).
    */
-  const confirmData = useCallback(async () => {
+  const confirmData = useCallback(async (): Promise<boolean> => {
     const current = stateRef.current;
     const sid = current.sessionId;
     const dataset = current.dataset;
-    if (!sid || !dataset || current.transcription || current.run || busy()) return;
+    if (!sid || !dataset || current.transcription || current.run || busy()) return false;
     confirmRef.current = true;
     safeDispatch({ type: 'confirm_start' });
     try {
       await agentApi.confirmDataset(token, sid);
       safeDispatch({ type: 'confirm_done' });
       trackEvent('agent_data_confirmed', { size_bucket: sizeBucket(dataset.bytes) });
+      return true;
     } catch (err) {
       safeDispatch({ type: 'confirm_failed', failure: handleFailure(err) });
+      return false;
     } finally {
       confirmRef.current = false;
     }
@@ -1897,9 +1902,9 @@ export function useAgentSession({
         spec: specId,
       });
       if (result.status !== 'ok' && result.status !== 'needs_attention') {
-        // The server holds no confirmation: offer `.confirm()` again instead of a
-        // dead `.create_plot()`. The turn's `done` sync normally says so as well;
-        // this covers a stream that ends without it.
+        // The server holds no confirmation: the next `.create_plot()` confirms again
+        // instead of starting a run the server refuses. The turn's `done` sync normally
+        // says so as well; this covers a stream that ends without it.
         if (result.status === 'not_ready' && result.reason === 'data_unconfirmed') {
           safeDispatch({ type: 'confirm_lost' });
         }

@@ -370,7 +370,7 @@ describe('DataPanel steps', () => {
     return { rerender: (next: AgentSessionState) => view.rerender(panel(next)) };
   }
 
-  it("has no button of either step: .confirm() and .create_plot() are the composer's", () => {
+  it("has no button of either step: .create_plot() is the composer's", () => {
     const { rerender } = renderPanel(
       stateWith({ x: 'month' }, { bindingsComplete: false, missingRoles: ['y'] })
     );
@@ -379,7 +379,7 @@ describe('DataPanel steps', () => {
     expect(screen.queryByTestId('data-step')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Create plot' })).not.toBeInTheDocument();
 
-    // The confirmation in flight: the dropdowns hold still.
+    // The confirmation `.create_plot()` starts with, in flight: the dropdowns hold still.
     rerender(stateWith({ x: 'month', y1: 'shoes' }, { confirmBusy: true }));
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
   });
@@ -407,7 +407,7 @@ describe('DataPanel steps', () => {
     expect(screen.queryByRole('region', { name: 'Your data' })).not.toBeInTheDocument();
   });
 
-  it('opens in full when the confirmation drops, and collapses at the next .confirm()', async () => {
+  it('opens in full when the confirmation drops, and collapses at the next .create_plot()', async () => {
     const scroll = stubScrollIntoView();
     try {
       const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
@@ -418,17 +418,17 @@ describe('DataPanel steps', () => {
       // The header stays and says so, and the line above the card stays in its place.
       rerender({ ...confirmed, dataConfirmed: false, confirmLoss: 'bindings' });
       const summary = screen.getByTestId('data-summary');
-      expect(summary).toHaveTextContent('confirm again · 1 row · 5 columns · version 1');
+      expect(summary).toHaveTextContent('check again · 1 row · 5 columns · version 1');
       // It reads as a warning: the phrase in bold, not only the colour of the `!`.
-      const phrase = within(summary).getByText('confirm again');
+      const phrase = within(summary).getByText('check again');
       expect(phrase).toHaveAttribute('data-tone', 'warning');
       expect(phrase).toHaveStyle({ fontWeight: '600' });
       expect(
-        screen.getByText('# step 1 again: check the data, then confirm it below')
+        screen.getByText('# step 1 again: check the data, then .create_plot() below')
       ).toBeVisible();
       expect(screen.queryByText(/a change here takes the data back/)).not.toBeInTheDocument();
       expect(screen.getByTestId('data-step-status')).toHaveTextContent(
-        'step 1: check the data, then confirm it'
+        'step 1: check the data, then create the plot'
       );
       // The card is open in step 1 anyway: the header's button leads to its top.
       const go = screen.getByRole('button', { name: 'Go to the data' });
@@ -441,8 +441,8 @@ describe('DataPanel steps', () => {
       ]);
       expect(screen.getByTestId('data-card')).toBeInTheDocument();
 
-      // The user's `.confirm()` at the composer's end starts: the card collapses with it,
-      // although the user had opened it before the confirmation dropped.
+      // The user's `.create_plot()` at the composer's end starts with the confirmation: the
+      // card collapses with it, although the user had opened it before the confirmation dropped.
       rerender({ ...confirmed, dataConfirmed: false, confirmLoss: 'bindings', confirmBusy: true });
       rerender(confirmed);
       expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
@@ -450,7 +450,7 @@ describe('DataPanel steps', () => {
         'aria-expanded',
         'false'
       );
-      expect(within(screen.getByTestId('data-summary')).queryByText('confirm again')).toBeNull();
+      expect(within(screen.getByTestId('data-summary')).queryByText('check again')).toBeNull();
     } finally {
       restoreScrollIntoView();
     }
@@ -502,11 +502,11 @@ describe('DataPanel steps', () => {
     );
     expect(screen.getByTestId('transcription-card')).toBeVisible();
     expect(screen.getByTestId('data-step-status')).toHaveTextContent(
-      'step 1: check the data, then confirm it'
+      'step 1: check the data, then create the plot'
     );
   });
 
-  it('keeps a card the user opened when step 2 returns without a .confirm()', async () => {
+  it('keeps a card the user opened when step 2 returns without a confirmation', async () => {
     const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
     const { rerender } = renderPanel(confirmed);
     await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
@@ -536,7 +536,7 @@ describe('DataPanel working states', () => {
 
   const summaryTurn = { kind: 'summarize_data' as const, steps: [], queue: null, stopping: false };
 
-  it('says why the bindings and .confirm() wait, exactly while something runs', () => {
+  it('says why the bindings wait, exactly while something runs', () => {
     const idle = stateWith({ x: 'month', y1: 'shoes' });
     const { rerender } = renderPanel(idle);
     expect(screen.queryByTestId('bindings-lock')).not.toBeInTheDocument();
@@ -544,7 +544,7 @@ describe('DataPanel working states', () => {
 
     rerender({ ...idle, run: summaryTurn });
     expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
-      /^# bindings and \.confirm\(\) wait while the assistant works$/
+      /^# bindings wait while the assistant works$/
     );
     // The lock stays (the server would refuse the change); the controls keep their look.
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
@@ -572,7 +572,7 @@ describe('DataPanel working states', () => {
     expect(parse).toBeDisabled();
     expect(parse).toHaveAccessibleDescription('# parsing your data');
     expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
-      /^# bindings and \.confirm\(\) wait while the data is parsed$/
+      /^# bindings wait while the data is parsed$/
     );
     expect(screen.getByTestId('data-step-status')).toHaveTextContent('parsing your data');
 
@@ -588,7 +588,7 @@ describe('DataPanel working states', () => {
     expect(screen.queryByTestId('bindings-lock')).not.toBeInTheDocument();
   });
 
-  it('names only the bindings in step 2, where the card has no .confirm()', async () => {
+  it('names the same bindings lock in step 2', async () => {
     renderPanel(stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true, themeBusy: true }));
     await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
     expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
@@ -650,7 +650,7 @@ describe('DataPanel data changes', () => {
     expect(onUndo).toHaveBeenCalledTimes(1);
     // The changed data is unconfirmed: the panel is at step 1 again, the card open.
     expect(screen.getByTestId('data-step-status')).toHaveTextContent(
-      'step 1: check the data, then confirm it'
+      'step 1: check the data, then create the plot'
     );
   });
 
@@ -714,9 +714,9 @@ describe('DataPanel data changes', () => {
       undefinedValues,
     ]);
     expect(screen.queryByRole('button', { name: /\.undo\(\)/ })).not.toBeInTheDocument();
-    // Generated data is unconfirmed like a paste: step 1, which ends with the composer's .confirm().
+    // Generated data is unconfirmed like a paste: step 1, which the composer's .create_plot() ends.
     expect(screen.getByTestId('data-step-status')).toHaveTextContent(
-      'step 1: check the data, then confirm it'
+      'step 1: check the data, then create the plot'
     );
   });
 });

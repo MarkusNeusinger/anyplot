@@ -6,7 +6,7 @@
 
 import type { AgentSessionState } from 'src/hooks/useAgentSession';
 import { isPlotAction } from 'src/lib/agent';
-import { CONFIRM_LOST_TEXT } from 'src/sections/agent-chat/messages';
+import { CONFIRM_LOST_STEP_TEXT } from 'src/sections/agent-chat/messages';
 
 /**
  * The pinned header's line (`✓ data fits · ...`, `PinnedData.tsx`), which step 2's plot buttons
@@ -26,21 +26,22 @@ export function inStep2(state: AgentSessionState): boolean {
 }
 
 /**
- * The line above the composer in step 1, which `.confirm()` at the composer's end names as its
- * description: what the confirmation waits for first (a table read from text to decide on, a
- * required role without a column), else what to check, and after a lost confirmation what lost
- * it, as the thread's notice says. `null` without data or in step 2, where `.confirm()` is gone.
+ * The line above the composer in step 1, which `.create_plot()` at the composer's end names as
+ * its description: the click takes the data and the bindings as the card shows them. It says
+ * what the button waits for first (a table read from text to decide on, a required role without
+ * a column), else what to check, and after a lost confirmation what lost it, as the thread's
+ * notice says. `null` without data or in step 2.
  */
-export function confirmStepLine(state: AgentSessionState): string | null {
+export function stepOneLine(state: AgentSessionState): string | null {
   if (!state.dataset || inStep2(state)) return null;
   const head = state.confirmLoss ? '# step 1 again — ' : '# step 1 — ';
   if (state.transcription) return `${head}decide on the table first: .use() or .discard()`;
   if (state.missingRoles.length > 0) {
-    return `${head}pick a column for ${state.missingRoles.join(', ')}, then confirm`;
+    return `${head}pick a column for ${state.missingRoles.join(', ')}, then .create_plot()`;
   }
   return state.confirmLoss
-    ? `${head}${CONFIRM_LOST_TEXT[state.confirmLoss]}`
-    : `${head}check the preview and the bindings, then confirm`;
+    ? `${head}${CONFIRM_LOST_STEP_TEXT[state.confirmLoss]}`
+    : `${head}check the preview and the bindings above, then .create_plot()`;
 }
 
 /** What the thread's in-progress line says: the turn's kind, or that it stops. */

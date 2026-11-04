@@ -5,7 +5,7 @@ import {
   initialAgentState,
   type RunState,
 } from 'src/hooks/useAgentSession';
-import { confirmStepLine, pendingReply, showsTimeline } from 'src/sections/agent-chat/steps';
+import { pendingReply, showsTimeline, stepOneLine } from 'src/sections/agent-chat/steps';
 
 const queued = (kind: RunState['kind']): RunState => ({
   kind,
@@ -47,7 +47,7 @@ describe('the waits of a turn', () => {
   });
 });
 
-describe('confirmStepLine', () => {
+describe('stepOneLine', () => {
   const dataset = {
     bytes: 10,
     parsed: {
@@ -67,22 +67,28 @@ describe('confirmStepLine', () => {
   });
 
   it('names nothing without data or in step 2', () => {
-    expect(confirmStepLine(step1({ dataset: null }))).toBeNull();
-    expect(confirmStepLine(step1({ dataConfirmed: true }))).toBeNull();
+    expect(stepOneLine(step1({ dataset: null }))).toBeNull();
+    expect(stepOneLine(step1({ dataConfirmed: true }))).toBeNull();
   });
 
-  it('names what the confirmation waits for, and after a loss says step 1 again', () => {
-    expect(confirmStepLine(step1())).toBe(
-      '# step 1 — check the preview and the bindings, then confirm'
+  it('names what .create_plot() waits for, and after a loss says step 1 again', () => {
+    expect(stepOneLine(step1())).toBe(
+      '# step 1 — check the preview and the bindings above, then .create_plot()'
     );
-    expect(confirmStepLine(step1({ missingRoles: ['y'] }))).toBe(
-      '# step 1 — pick a column for y, then confirm'
+    expect(stepOneLine(step1({ missingRoles: ['y'] }))).toBe(
+      '# step 1 — pick a column for y, then .create_plot()'
     );
-    expect(confirmStepLine(step1({ missingRoles: ['y'], confirmLoss: 'bindings' }))).toBe(
-      '# step 1 again — pick a column for y, then confirm'
+    expect(stepOneLine(step1({ missingRoles: ['y'], confirmLoss: 'bindings' }))).toBe(
+      '# step 1 again — pick a column for y, then .create_plot()'
     );
-    expect(confirmStepLine(step1({ confirmLoss: 'data' }))).toBe(
-      '# step 1 again — the data changed · confirm it again'
+    expect(stepOneLine(step1({ confirmLoss: 'data' }))).toBe(
+      '# step 1 again — the data changed · check it above, then .create_plot()'
+    );
+    expect(stepOneLine(step1({ confirmLoss: 'bindings' }))).toBe(
+      '# step 1 again — bindings changed · check them above, then .create_plot()'
+    );
+    expect(stepOneLine(step1({ confirmLoss: 'server' }))).toBe(
+      '# step 1 again — not confirmed on the server · check the data, then .create_plot()'
     );
   });
 });

@@ -22,7 +22,7 @@ A pair is inverted (`inverted`) when the smallest value of the lower column lies
 largest value of the upper column, so every row's lower bound would lie above its upper bound;
 the profile's minimum and maximum say so without reading the rows. The default bindings never
 bind such a pair, which leaves both roles open. A pair bound so by hand is the user's choice: it
-stays valid, nothing blocks `.confirm()`, every change of the data keeps it, and it carries one
+stays valid, nothing blocks the confirmation, every change of the data keeps it, and it carries one
 neutral warning line (`inverted_line`, `bindings.check_bindings`).
 """
 

@@ -1218,7 +1218,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         send('message', {
           text:
             reason === 'data_unconfirmed'
-              ? 'Check the preview and the bindings, then confirm your data first.'
+              ? 'Check the preview and the bindings, then press .create_plot().'
               : 'Paste your data and bind the required roles first.',
         });
         return;
@@ -1519,7 +1519,7 @@ function swapBindings(session) {
   session.bindings = swapped;
   session.complete = complete;
   session.confirmed = false;
-  return `Swapped: x now reads ${y.column} and ${y.role} reads ${x.column}. Check the bindings and confirm your data again.`;
+  return `Swapped: x now reads ${y.column} and ${y.role} reads ${x.column}. Check the bindings, then press .create_plot().`;
 }
 
 // ---------------------------------------------------------------- data versions (prepare_data in miniature)
@@ -1667,7 +1667,7 @@ function setTypeNumber(session) {
   if (failed)
     change += `, ${failed} cell${failed > 1 ? 's' : ''} could not be read and ${failed > 1 ? 'are' : 'is'} now missing`;
   storeVersion(session, parsed, [change]);
-  return `I read ${column} as numbers${units.size ? ` and removed the unit '${[...units][0]}'` : ''}. Check the preview and confirm the data.`;
+  return `I read ${column} as numbers${units.size ? ` and removed the unit '${[...units][0]}'` : ''}. Check the preview, then press .create_plot().`;
 }
 
 /**
@@ -1701,7 +1701,7 @@ function aggregateSum(session, lower) {
   let change = `summed ${header[value]} by ${header[key]}: ${grouped.length} row${grouped.length > 1 ? 's' : ''}`;
   if (other) change += `, ${other} other column${other > 1 ? 's' : ''} dropped`;
   storeVersion(session, parsed, [change]);
-  return `I summed ${header[value]} per ${header[key]}: ${grouped.length} rows. Check the preview and confirm the data.`;
+  return `I summed ${header[value]} per ${header[key]}: ${grouped.length} rows. Check the preview, then press .create_plot().`;
 }
 
 /** `rename`: the second column gets a new name. */
@@ -1713,7 +1713,7 @@ function renameSecond(session, german) {
   const renamed = header.map((h, i) => (i === 1 ? name : h));
   const parsed = parseDataset(toCsv(renamed, rows));
   storeVersion(session, parsed, [`renamed '${header[1]}' to '${name}'`]);
-  return `I renamed ${header[1]} to ${name}. Check the preview and confirm the data.`;
+  return `I renamed ${header[1]} to ${name}. Check the preview, then press .create_plot().`;
 }
 
 // ---------------------------------------------------------------- formulas (generate_data in miniature)
@@ -1903,7 +1903,7 @@ function generateData(session, lower) {
   const undo = first
     ? ''
     : ' as a new version of your data; .undo() in the data panel takes it back';
-  return `I generated ${points} rows from y = ${formula} for ${span}${undo}. Check the preview and confirm the data.`;
+  return `I generated ${points} rows from y = ${formula} for ${span}${undo}. Check the preview, then press .create_plot().`;
 }
 
 /** `{rows, columns}` of a message such as "10000 rows x 30 columns", or null; capped like the service's tables. */
@@ -2015,9 +2015,9 @@ function exampleData(session, fromCode = false) {
   }
   const named = header.join(', ').replace(/, ([^,]*)$/, ' and $1');
   if (fromCode) {
-    return `I ran your code in a sandbox: ${rows.length} rows of ${named}. Check the preview and confirm the data with .confirm().`;
+    return `I ran your code in a sandbox: ${rows.length} rows of ${named}. Check the preview, then press .create_plot().`;
   }
-  return `I generated example data to try the plot: ${rows.length} rows of ${named}, all made up. Check them in the data panel and confirm them with .confirm().`;
+  return `I generated example data to try the plot: ${rows.length} rows of ${named}, all made up. Check them in the data panel, then press .create_plot().`;
 }
 
 /** The step-1 summary the root writes after `summarize_data`, from the profile alone. */

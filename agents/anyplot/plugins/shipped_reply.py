@@ -26,6 +26,10 @@ text the plot lacks) is never reworded or lost, which a re-ask, a new generation
 whole reply, cannot promise. The limit: a separate sentence that says the data is not
 confirmed without naming the button stays, because no code check reads that claim in
 every language. The plugin never raises; a failure keeps the reply as it was.
+
+The page has no `.confirm()` any more: `.create_plot()` confirms the data in its own click,
+and neither `root.md` nor the session block names the old button. The check stays as the
+backstop for a reply that still names it, which after a shipped plot is wrong twice over.
 """
 
 import logging

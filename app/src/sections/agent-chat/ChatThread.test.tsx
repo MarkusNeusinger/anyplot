@@ -79,7 +79,7 @@ describe('ChatThread', () => {
     expect(screen.getByText('plot · not ready · data_unconfirmed')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'confirm your data first: check the preview and the bindings, then .confirm()'
+        'the data is not confirmed: check the preview and the bindings, then .create_plot()'
       )
     ).toBeInTheDocument();
   });
@@ -137,13 +137,13 @@ describe('ChatThread', () => {
           id: 1,
           kind: 'notice',
           tone: 'warning',
-          text: 'bindings changed · confirm the data again',
+          text: 'bindings changed · check them, then .create_plot()',
         },
         { id: 2, kind: 'notice', text: 'stopped' },
       ],
     });
     expect(screen.getByTestId('confirm-lost')).toHaveTextContent(
-      '# bindings changed · confirm the data again'
+      '# bindings changed · check them, then .create_plot()'
     );
     expect(screen.getAllByTestId('confirm-lost')).toHaveLength(1);
     expect(screen.getByText('# stopped')).toBeInTheDocument();

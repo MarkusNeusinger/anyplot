@@ -777,7 +777,7 @@ describe('useAgentSession: confirming the data (step 1)', () => {
     expect(calls.filter(call => call.method === 'PUT')).toHaveLength(1);
   });
 
-  it('offers .confirm() again when the server answers data_unconfirmed', async () => {
+  it('goes back to step 1 when the server answers data_unconfirmed', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/messages'] = () =>
       sse([
@@ -2928,7 +2928,7 @@ describe('agentReducer', () => {
         id: 1,
         kind: 'notice',
         tone: 'warning',
-        text: 'bindings changed · confirm the data again',
+        text: 'bindings changed · check them, then .create_plot()',
       },
     ]);
     // Back and forth: the confirmation is gone already, so no second notice.
@@ -2945,7 +2945,7 @@ describe('agentReducer', () => {
       notice: lastItem(next.items),
     });
     const notice = (text: string) => ({ kind: 'notice', tone: 'warning', text });
-    const changed = notice('the data changed · confirm it again');
+    const changed = notice('the data changed · check it, then .create_plot()');
     for (const next of [
       agentReducer(confirmed, { type: 'parse_done', parsed, bytes: 10 }),
       agentReducer(confirmed, { type: 'data_prepared', dataset: PREPARED as DatasetChanged }),
@@ -2953,7 +2953,7 @@ describe('agentReducer', () => {
     ]) {
       expect(reasonOf(next)).toMatchObject({ reason: 'data', notice: changed });
     }
-    const server = notice('not confirmed on the server · confirm the data again');
+    const server = notice('not confirmed on the server · check the data, then .create_plot()');
     expect(reasonOf(agentReducer(confirmed, { type: 'confirm_lost' }))).toMatchObject({
       reason: 'server',
       notice: server,
@@ -2978,7 +2978,7 @@ describe('agentReducer', () => {
       )
     ).toMatchObject({
       reason: 'bindings',
-      notice: notice('bindings changed · confirm the data again'),
+      notice: notice('bindings changed · check them, then .create_plot()'),
     });
 
     // A table read from text keeps the confirmation until the user decides: no notice.

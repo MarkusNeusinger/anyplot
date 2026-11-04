@@ -14,6 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 PROMPT = ROOT / "agents" / "anyplot" / "prompts" / "root.md"
+AGENT = ROOT / "agents" / "anyplot" / "agent.py"  # writes the session block, which names the step's button
 AGENT_CHAT = ROOT / "app" / "src" / "sections" / "agent-chat"
 PAGE_SOURCES = [
     *sorted(AGENT_CHAT.glob("*.ts*")),  # the reactions live in a .ts
@@ -131,22 +132,24 @@ def test_the_data_panel_bullet_names_exactly_the_buttons_of_the_data_card() -> N
 
 
 def test_the_composer_bullet_names_exactly_the_buttons_of_the_composer() -> None:
-    """The same for the composer: since `.confirm()` moved from the card's foot to the composer's end, the
-    root must say where it is, a button added to the composer fails here until the bullet names it, and a
-    button it lost fails until the bullet drops it. `.feedback()` stands below the composer, not in it
-    (`ChatFeedback.tsx`), and is the bullet's one control from elsewhere."""
+    """The same for the composer: a button added to the composer fails here until the bullet names it, and
+    a button it lost (`.confirm()`, which `.create_plot()` took into its own click) fails until the bullet
+    drops it. `.feedback()` stands below the composer, not in it (`ChatFeedback.tsx`), and is the bullet's
+    one control from elsewhere."""
     buttons = buttons_of(composer_components())
     bullet = controls_of("The composer")
 
-    assert {".send()", ".confirm()", ".create_plot()", ".stop()", ".example_data()"} <= buttons
+    assert {".send()", ".create_plot()", ".stop()", ".example_data()"} <= buttons
+    assert ".confirm()" not in buttons
     assert sorted(buttons - bullet) == []
     assert sorted(bullet - buttons) == [".feedback()"]
 
 
-def test_the_prompt_places_confirm_beside_the_message_box() -> None:
-    """No sentence of root.md sends the user to the data panel for `.confirm()` any more."""
+def test_the_prompt_names_no_confirm_button() -> None:
+    """`.create_plot()` confirms the data in its own click, so no sentence of root.md, nor the session
+    block, sends the user to a `.confirm()` that is gone, and the prompt says where the click is."""
     text = PROMPT.read_text(encoding="utf-8")
-    stale = re.findall(r"`\.confirm\(\)`[^.;]{0,40}(?:in the data panel|at its foot|there\b)", text)
 
-    assert stale == []
-    assert "`.confirm()` beside the message box" in text
+    assert re.findall(r"\bconfirm\(\)", text) == []
+    assert re.findall(r"\bconfirm\(\)", AGENT.read_text(encoding="utf-8")) == []
+    assert "`.create_plot()` beside the message box" in text

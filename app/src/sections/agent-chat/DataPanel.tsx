@@ -4,18 +4,19 @@
  * preview and the parser's warnings, and bind each spec role to a column (the
  * server's defaults come preselected).
  *
- * Two steps, data first. Step 1 ends with `.confirm()` at the composer's end
- * (`Composer.tsx`), once every required role has a column: the user says the
- * preview and the bindings are right. The card then collapses into a pinned header at the top
+ * Two steps, data first. Step 1 ends with `.create_plot()` at the composer's end
+ * (`Composer.tsx`), once every required role has a column: its click takes the
+ * preview and the bindings as shown, confirms them on the server and starts the
+ * plot. The card collapses with that click into a pinned header at the top
  * of the thread, which stays in view on scroll: `✓ data fits · N rows · M
  * columns · version V` with `.show()`, which opens the full card again below it
  * without leaving step 2 and brings its top into view, and `.hide()`, which
- * closes it and goes back to where the user was. Step 2's `.create_plot()` is
- * the page's composer, not the card's. A new parse, a binding change, a change
+ * closes it and goes back to where the user was. The plot buttons are the
+ * page's composer's, not the card's. A new parse, a binding change, a change
  * the assistant made to the data and an undo take the page back to step 1 with
  * the card open, because a plot of the wrong data is wrong however good it
  * looks; the server drops its confirmation for each of them already. The
- * header stays then and reads as a warning (`! confirm again · ...`, the
+ * header stays then and reads as a warning (`! check again · ...`, the
  * phrase in bold on a surface tinted with the warning token), and its
  * `.show()` leads back to the card from anywhere in the thread, for example
  * after a data request sent from below the plot. The step line above the
@@ -27,7 +28,7 @@
  * Work in flight shows on the card: a line under `.parse()` while the data is
  * parsed, and, while anything runs (the parse, a turn, a theme render, a
  * binding change, a confirmation, an undo), a line under the bindings label
- * that says the dropdowns and `.confirm()` wait, because the server runs one
+ * that says the dropdowns wait, because the server runs one
  * thing per session and would refuse a second. The controls keep their
  * disabled look; a hidden live region announces the parse and the step. While
  * the admin fan-out's panel is open (`locked`), every action waits in the same
@@ -144,8 +145,6 @@ interface DataPanelProps {
   onUndo: () => void;
   /** `.to_long()`: apply the wide-table offer as the next data version. */
   onToLong?: () => void;
-  /** The pinned header's `.show()` / `.hide()`, for the page to move the keyboard focus to. */
-  toggleRef?: React.Ref<HTMLButtonElement>;
   /** Analytics: `agent_data_file{kind, encoding, outcome}`; never the file's name. */
   onTrack?: (event: string, props?: Record<string, string | undefined>) => void;
   /**
@@ -176,7 +175,6 @@ export function DataPanel({
   onBind,
   onUndo,
   onToLong,
-  toggleRef,
   onTrack,
   onConvert,
   locked = false,
@@ -217,8 +215,8 @@ export function DataPanel({
   const everConfirmed = useRef(false);
   if (confirmed) everConfirmed.current = true;
   const pinned = !!dataset && everConfirmed.current;
-  // The user's `.confirm()` (at the composer's end) collapses the card as it starts; a later
-  // step 1 opens it in full anyway. A step 2 that returns without it (a discarded table) keeps
+  // The confirmation a plot button starts with (`.create_plot()` at the composer's end) collapses
+  // the card as it starts; a later step 1 opens it in full anyway. A step 2 that returns without it (a discarded table) keeps
   // the card as the user left it. Adjusted while rendering, React's pattern for state that
   // follows a prop.
   const [confirmSeen, setConfirmSeen] = useState(state.confirmBusy);
@@ -315,7 +313,7 @@ export function DataPanel({
           : confirmed
             ? 'step 2: the data is confirmed; create the plot below'
             : dataset
-              ? 'step 1: check the data, then confirm it'
+              ? 'step 1: check the data, then create the plot'
               : ''}
       </Box>
 
@@ -327,7 +325,6 @@ export function DataPanel({
         locked={locked}
         dataset={dataset}
         hasTranscription={!!transcription}
-        toggleRef={toggleRef}
         cardRef={cardRef}
         onToggle={handleToggle}
       >
@@ -339,7 +336,6 @@ export function DataPanel({
           working={working}
           busy={busy}
           locked={locked}
-          confirmed={confirmed}
           choice={choice}
           viewOpen={viewOpen}
           setViewOpen={setViewOpen}

@@ -1,8 +1,8 @@
 /**
  * Shared styles of the agent chat surfaces, after docs/reference/style-guide.md:
- * method-call buttons (§7.4), the filled CTA reserved for each step's one primary
- * action (`.confirm()` in step 1, `.create_plot()` in step 2, the one place outside
- * the landing hero that §7.4 allows it), native form controls on the theme tokens,
+ * method-call buttons (§7.4), the filled CTA reserved for the one primary action
+ * (`.create_plot()`, which also ends step 1, the one place outside the landing hero
+ * that §7.4 allows it), native form controls on the theme tokens,
  * the panel and card surfaces, and the pinned data header's offset and clearance.
  * Colours come from the CSS variables, so both themes work.
  */
@@ -41,9 +41,9 @@ export const ghostButtonSx = {
 } as const;
 
 /**
- * The filled CTA (§7.4): ink on the page colour, green on hover. The chat has one
- * per step, at the composer's right end: `.confirm()` in step 1, and `.create_plot()`
- * in step 2, the action the whole page leads to.
+ * The filled CTA (§7.4): ink on the page colour, green on hover. The chat has one, at
+ * the composer's right end from the moment data is stored: `.create_plot()` (or
+ * `.plot_all()`, or a switch's carry), the action the whole page leads to.
  */
 export const ctaButtonSx = {
   ...actionButtonSx,

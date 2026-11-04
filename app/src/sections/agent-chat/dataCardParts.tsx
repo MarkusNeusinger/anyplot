@@ -477,7 +477,6 @@ interface BindingsBlockProps {
   ready: boolean;
   working: boolean;
   busy: boolean;
-  confirmed: boolean;
   suggestion: LongSuggestion | null;
   onBind: (role: string, column: string | null) => void;
 }
@@ -494,23 +493,21 @@ export function BindingsBlock({
   ready,
   working,
   busy,
-  confirmed,
   suggestion,
   onBind,
 }: BindingsBlockProps) {
   return (
     <Box>
       <Box sx={{ ...labelSx, mb: 0.75 }}># bindings — which column plays which role</Box>
-      {/* Why the dropdowns and `.confirm()` do not answer: the server runs one thing
-          per session. Not a live region: the thread and the step status announce the work.
-          No motion of its own: the loader over the box or in the thread shows the work. */}
+      {/* Why the dropdowns do not answer: the server runs one thing per session. Not a
+          live region: the thread and the step status announce the work. No motion of its
+          own: the loader over the box or in the thread shows the work. */}
       {working && (
         <Box
           data-testid="bindings-lock"
           sx={{ ...labelSx, color: 'var(--ink-soft)', mt: -0.25, mb: 1 }}
         >
-          # {confirmed ? 'bindings wait' : 'bindings and .confirm() wait'} while{' '}
-          {parsing ? 'the data is parsed' : 'the assistant works'}
+          # bindings wait while {parsing ? 'the data is parsed' : 'the assistant works'}
         </Box>
       )}
       {rows.length === 0 && (

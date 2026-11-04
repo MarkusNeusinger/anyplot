@@ -2,7 +2,8 @@
  * Content of the agent chat's data card (`DataPanel.tsx`): the text box and
  * file drop zone, the free-text transcription
  * decision card, the stored dataset's preview and full-view dialog, and the
- * role bindings. Step 1's `.confirm()` sits at the composer's end (`Composer.tsx`).
+ * role bindings. `.create_plot()`, which takes the data as shown, sits at the composer's end
+ * (`Composer.tsx`).
  */
 
 import { Suspense } from 'react';
@@ -66,7 +67,6 @@ export interface DataCardProps {
   working: boolean;
   busy: boolean;
   locked: boolean;
-  confirmed: boolean;
   choice: ReturnType<typeof tableChoice>;
   viewOpen: boolean;
   setViewOpen: (open: boolean) => void;
@@ -84,7 +84,7 @@ export interface DataCardProps {
 }
 
 export function DataCard(props: DataCardProps) {
-  const { state, intake, text, ready, working, busy, locked, confirmed, choice } = props;
+  const { state, intake, text, ready, working, busy, locked, choice } = props;
   const { viewOpen, setViewOpen, viewButtonRef, parseStart } = props;
   const { onParse, onTable, onUse, onDiscardTranscription } = props;
   const { onBind, onUndo, onToLong, onLoadData, onDataViewShown } = props;
@@ -539,13 +539,12 @@ export function DataCard(props: DataCardProps) {
             ready={ready}
             working={working}
             busy={busy}
-            confirmed={confirmed}
             suggestion={suggestion}
             onBind={onBind}
           />
 
-          {/* No foot: `.confirm()` and the line that says what it waits for sit at the
-              composer's end in step 1, and `.create_plot()` there in step 2. */}
+          {/* No foot: `.create_plot()`, which takes the data as shown, and the line that says
+              what it waits for sit at the composer's end. */}
         </Box>
       )}
     </>

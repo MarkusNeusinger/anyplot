@@ -1,12 +1,14 @@
 ### Changed
 
-- **The agent chat's composer holds each step's one call to action.** In step 1, `.confirm()` now sits at the
-  composer's right end as the filled button, after `.send()`, instead of at the data card's foot, and the line above
-  the message box says what it still waits for: a table read from text to decide on, or a column for a required
-  role. `.create_plot()`, `.start_over()`, the plot after a library switch and the admin's `.plot_all()` appear only
-  in step 2, so the notice that said "confirm the data first" after a click on an early `.create_plot()` is gone.
-  At phone width the buttons wrap below the box and stay at its right end, and a refused confirmation gives the
-  keyboard back to `.confirm()`. The assistant's prompt places `.confirm()` beside the message box.
+- **One click from checked data to the plot.** `.confirm()` is gone: from the moment data is stored,
+  `.create_plot()` stands at the composer's right end as the filled button, confirms the data and its bindings as
+  the card shows them and starts the plot in the same click, with the typed text as the plot's request when the
+  box holds any. A refused confirmation starts nothing and shows under the composer. The line above the message
+  box says what the click still waits for: a table read from text to decide on, or a column for a required role.
+  After a change to confirmed data `.create_plot()` is filled again, also when the library already has a plot.
+  `.send()` shows only while the box holds text, and Enter never confirms. The admin's `.plot_all()` and the plot
+  after a library switch confirm the same way. At phone width the buttons wrap below the box and stay at its right
+  end. The assistant's prompt and the session block send the user to `.create_plot()` instead of `.confirm()`.
 - **A pasted formula or code goes to the chat by itself.** The data box no longer offers `.send()` when the server
   answers `422 formula` or `422 code`: the page sends the text to the chat as your message at once, as it already
   did for a request for data, and empties the box. Code over the chat's 2,000 characters stays in the box with a
