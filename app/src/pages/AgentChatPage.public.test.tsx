@@ -158,8 +158,8 @@ describe('PublicAgentChatPage', () => {
     renderPage();
     await waitFor(() => expect(screen.getByTestId('language-chip')).toBeEnabled());
     expect(screen.getByTestId('experimental-notice')).toBeInTheDocument();
-    // Owner decision of 2026-11-02: a visitor cannot resume a saved session, and the feedback
-    // form covers "something went wrong"; the menu would hold nothing else.
+    // A visitor cannot resume a saved session, and the feedback form covers "something went
+    // wrong"; the menu would hold nothing else.
     expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: '# include data.csv' })).not.toBeInTheDocument();

@@ -361,7 +361,7 @@ const KIND_NAME: Record<string, string> = {
 
 /**
  * The broken part of a damaged file (`422 file_corrupt` with `damage`, a closed set the
- * server names; owner decision of 2026-10-16), in the page's words.
+ * server names), in the page's words.
  */
 export const DAMAGE_TEXT: Record<string, string> = {
   zip: 'its zip container is broken or cut off (an incomplete download or copy); save or download it again',
@@ -437,7 +437,7 @@ export function describeConvertWarnings(
     parts.push(`${count(warnings.hidden_sheets, 'hidden sheet')} skipped`);
   }
   if (warnings.dropped_columns) {
-    // The names, because a step that changes the data says what it changed (owner rule, 2026-10-15).
+    // The names, because a step that changes the data says what it changed.
     const more = warnings.dropped_columns - dropped.length;
     const named = dropped.length
       ? `: ${dropped.map(name => `"${name}"`).join(', ')}${more > 0 ? ` and ${more} more` : ''}`
@@ -495,7 +495,7 @@ export function describeFileRefusal(name: string, code: string): string {
 
 /**
  * A failed data call in one line: what the data fails on when the server named
- * it (owner rule, 2026-10-16: never only "could not read"), else the code's
+ * it (never only "could not read", which leaves the user nothing to fix), else the code's
  * text, then the request id. The cause stands alone: it is a whole sentence,
  * and some say the format WAS read ("the data reads as JSON Lines, but line 2
  * …"), which a "could not read this as …" lead would contradict.

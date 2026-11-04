@@ -105,8 +105,8 @@
  *    the page says so. It talks to `/agent/*` with `PUBLIC_LANE` in place of the
  *    admin token, shows the experimental notice above the first input (one line, the
  *    details behind its ⓘ button: `ExperimentalNotice`), offers no `all` and no
- *    `.save()` (owner decision of 2026-11-02: a visitor cannot resume a saved session,
- *    and the feedback form covers "something went wrong"), and leaves the feedback
+ *    `.save()` (a visitor cannot resume a saved session, and the feedback form
+ *    covers "something went wrong"), and leaves the feedback
  *    form's data box unticked (`sections/agent-chat/lane.ts`).
  *
  * Design: docs/concepts/agent-network.md ("Frontend", "Request flow").
@@ -728,10 +728,10 @@ function AgentChat({
 
   // A switch the user asked for in the chat ("make it in seaborn", `done.switch`): once the turn
   // is over the page switches as the menu does, and with `plot` makes the plot there at once
-  // with the user's decisions (`carry_plot`), without a second click (owner decision of
-  // 2026-11-02). The intent is noted before the switch, so the render that brings the new
-  // library finds it; the carry runs only on confirmed data, never confirming by itself: on
-  // data the user has not taken yet, the composer offers it and the click confirms.
+  // with the user's decisions (`carry_plot`), without a second click. The intent is noted
+  // before the switch, so the render that brings the new library finds it; the carry runs
+  // only on confirmed data, never confirming by itself: on data the user has not taken yet,
+  // the composer offers it and the click confirms.
   const carryNext = useRef<string | null>(null);
   useEffect(() => {
     const request = state.chatSwitch;
@@ -871,7 +871,7 @@ function AgentChat({
         )}
         {/* The "⋯" menu holds `.save()`, the admin's debugging bundle, which downloads the
             session; without one (ineligible, error) there is nothing to save. The public lane
-            has no `.save()`, so no menu either (owner decision of 2026-11-02). */}
+            has no `.save()` (a visitor cannot resume a saved session), so no menu either. */}
         {lane === 'admin' && !reopen && (
           <SessionMenu
             disabled={state.phase !== 'ready' || !state.sessionId || busy}

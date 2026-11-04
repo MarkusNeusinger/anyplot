@@ -18,8 +18,8 @@
  *
  * Theme: every turn sends the theme the site shows when it starts
  * (`useTheme().effective`, so `system` resolves first), and a plot of that turn
- * renders in it unless the user asked for a theme in the chat (owner decision
- * of 2026-11-01); the light and dark switch renders the other one. A switch of
+ * renders in it unless the user asked for a theme in the chat; the light and
+ * dark switch renders the other one. A switch of
  * the site theme mid-session changes no shown version, only the next one. The
  * fan-out's sessions are this hook too, so they send the same theme.
  *
@@ -833,8 +833,9 @@ function withDataVersion(
     dataset: {
       parsed: { ...parsed, roles, version: versionOf(parsed.version) },
       bytes: state.dataset?.bytes ?? 0,
-      // The paste stays with every version made from it (Fable review of #12200); the picker itself shows only
-      // beside an answer that names `tables`, which only the paste route gives.
+      // The paste stays with every version made from it, so the table picker can still read another of
+      // its tables; the picker itself shows only beside an answer that names `tables`, which only the
+      // paste route gives.
       ...(state.dataset?.paste ? { paste: state.dataset.paste } : {}),
     },
     roles,
@@ -1120,7 +1121,7 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         ...state,
         memory: action.memory,
         // A list that arrives after the switch (its read was still in flight) backs the offer's count
-        // too, so a removal counts the composer's decisions down (Flash review, 2026-11-02).
+        // too, so a removal counts the composer's decisions down.
         carryOffer:
           state.carryOffer && action.memory.entries.length > 0
             ? { ...state.carryOffer, memoryBacked: true }

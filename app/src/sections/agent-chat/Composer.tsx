@@ -54,10 +54,10 @@ import type { Attachment } from 'src/sections/agent-chat/useChatAttachment';
 import { colors, fontSize } from 'src/theme';
 
 /**
- * What `.start_over()` does, unlike `.send()` beside it (the owner could not tell the two apart),
+ * What `.start_over()` does, unlike `.send()` beside it (the two are easy to mistake for each other),
  * the quiet `.create_plot()` beside the offer after a switch, and `.create_plot()` on changed data
  * when the library has a plot: the catalogue code again, with the remembered decisions, which
- * only the user clears (owner decision of 2026-11-02).
+ * only the user clears.
  */
 const START_OVER_HELP = 'new from the catalogue plot; keeps your remembered decisions';
 const START_OVER_HELP_ID = 'agent-start-over-help';
