@@ -136,7 +136,6 @@ import {
   type AgentLane,
   browserLocale,
   DEFAULT_AGENT_LIBRARIES,
-  MAX_MESSAGE_CHARS,
   PUBLIC_LANE,
 } from 'src/lib/agent';
 import { apiGet, endpoints } from 'src/lib/api';
@@ -145,8 +144,8 @@ import { paths, specPath } from 'src/routes/paths';
 import { CataloguePreview } from 'src/sections/agent-chat/CataloguePreview';
 import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
-import { DATA_SUMMARY_ID, DataPanel } from 'src/sections/agent-chat/DataPanel';
-import { ExampleDataLine } from 'src/sections/agent-chat/ExampleData';
+import { Composer } from 'src/sections/agent-chat/Composer';
+import { DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { ExperimentalNotice } from 'src/sections/agent-chat/ExperimentalNotice';
 import { FanOut } from 'src/sections/agent-chat/FanOut';
 import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
@@ -154,12 +153,7 @@ import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { AgentLaneContext } from 'src/sections/agent-chat/lane';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
 import { LibraryChip } from 'src/sections/agent-chat/LibraryChip';
-import {
-  carryActionText,
-  ERROR_TEXT,
-  LEAVE_TEXT,
-  servicePausedText,
-} from 'src/sections/agent-chat/messages';
+import { carryActionText, ERROR_TEXT, LEAVE_TEXT } from 'src/sections/agent-chat/messages';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { Remembered } from 'src/sections/agent-chat/Remembered';
@@ -167,17 +161,7 @@ import { SessionMenu } from 'src/sections/agent-chat/SessionMenu';
 import { columnLines, previewsByLibrary } from 'src/sections/agent-chat/specReference';
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
 import { inStep2, showsTimeline } from 'src/sections/agent-chat/steps';
-import {
-  actionButtonSx,
-  bodyTextSx,
-  ctaButtonSx,
-  ghostButtonSx,
-  labelSx,
-  nativeControlSx,
-  panelSx,
-  smallText,
-  visuallyHiddenSx,
-} from 'src/sections/agent-chat/styles';
+import { bodyTextSx, labelSx, panelSx, smallText } from 'src/sections/agent-chat/styles';
 import { parseInlineCode } from 'src/sections/spec-detail/SpecTabs/utils';
 import { colors, fontSize, proseLinkStyle, typography } from 'src/theme';
 import { readAdminHint, readAdminToken, setAdminHint } from 'src/utils/adminAuth';
@@ -193,13 +177,6 @@ const OPEN_SOURCES = new Set(['plot_page', 'landing', 'spec_hub']);
  * `styles.ts`). Below about 1100 px the window, not this cap, sets the width, as before.
  */
 const COLUMN_MAX_WIDTH = 1360;
-/**
- * What `.start_over()` does, unlike `.send()` beside it (the owner could not tell the two apart),
- * and the quiet `.create_plot()` beside the offer after a switch: the catalogue code again, with the
- * remembered decisions, which only the user clears (owner decision of 2026-11-02).
- */
-const START_OVER_HELP = 'new from the catalogue plot; keeps your remembered decisions';
-const START_OVER_HELP_ID = 'agent-start-over-help';
 
 /** The first of these controls that can take the focus now, in order of preference. */
 function firstEnabled(...controls: (HTMLButtonElement | HTMLTextAreaElement | null)[]) {
@@ -782,31 +759,6 @@ function AgentChat({
   const chatPath = lane === 'public' ? paths.publicAgentChat : paths.agentChat;
 
   const backHref = specPath(specId, language, state.library);
-  // The composer's create action while `all` is pressed, for every library at once: the CTA
-  // before the first plot, the quiet button otherwise, and before the confirmation a click
-  // shows the notice. It waits while the panel is open.
-  const plotAllButton = (
-    <Box
-      key="plot-all"
-      component="button"
-      type="button"
-      ref={createRef}
-      onClick={handlePlotAll}
-      disabled={!!fanOut || (step2 ? !canCreate : state.phase !== 'ready' || busy)}
-      aria-label="Plot in all libraries"
-      aria-describedby={
-        [
-          step2 ? DATA_SUMMARY_ID : gate ? 'agent-create-gate' : null,
-          chatLocked ? 'agent-create-line' : null,
-        ]
-          .filter(Boolean)
-          .join(' ') || undefined
-      }
-      sx={firstPlot ? ctaButtonSx : actionButtonSx}
-    >
-      .plot_all()
-    </Box>
-  );
   const header = (
     <>
       <SectionHeader
@@ -1034,249 +986,45 @@ function AgentChat({
               fallbackFocusRef={messageRef}
             />
 
-            {/* While the chat waits for `all`, the line says so in the ink of the text, and the
-                message box names it as its description. */}
-            {(firstPlot || chatLocked) && (
-              <Box
-                id="agent-create-line"
-                sx={{ ...labelSx, color: chatLocked ? 'var(--ink)' : 'var(--ink-soft)', mb: -1 }}
-              >
-                {chatLocked
-                  ? `# ${firstPlot ? 'step 2 — ' : ''}plot the table as it is in all ${libraries.length} libraries at once · turn all off to chat`
-                  : carry
-                    ? `# step 2 — ${carryText}, or say first what it should do differently`
-                    : '# step 2 — create the plot as it is, or say first what it should do differently'}
-              </Box>
-            )}
-            {/* Told before the user types: every turn would get `service_paused` until then. */}
-            {pausedUntil && (
-              <Box
-                role="note"
-                data-testid="service-paused"
-                sx={{
-                  ...labelSx,
-                  color: 'var(--ink)',
-                  borderLeft: `3px solid ${colors.warning}`,
-                  pl: 1.5,
-                  lineHeight: 1.6,
-                }}
-              >
-                # {servicePausedText(pausedUntil)}
-              </Box>
-            )}
-            {/* A key press continues in the message box: the button gives way to the working
-                line while the turn runs. */}
-            {exampleOffer && (
-              <ExampleDataLine
-                working={exampleWorking}
-                disabled={busy}
-                onClick={event => {
-                  keepKeyboardFocus(event);
-                  void session.exampleData();
-                }}
-              />
-            )}
-            <Box
-              component="form"
+            <Composer
+              draft={draft}
+              onDraftChange={setDraft}
               onSubmit={handleSend}
-              sx={{ display: 'flex', gap: 1, alignItems: 'flex-end', flexWrap: 'wrap' }}
-            >
-              <Box
-                component="textarea"
-                ref={messageRef}
-                aria-label="Message"
-                placeholder={
-                  // Step 1 talks about the data, step 2 about the plot; short since
-                  // 2026-11-02, the how-to is behind the data card's ⓘ. Without data,
-                  // the chat is the other way to get some: example data or a formula.
-                  // While `all` is pressed in step 2 the box waits: the fan-out takes
-                  // no text.
-                  chatLocked
-                    ? 'all libraries: the table goes as it is · turn all off to chat'
-                    : !step2
-                      ? 'ask for example data, a curve, or a fix to your data'
-                      : firstPlot
-                        ? 'optional: what the first plot should do differently'
-                        : 'ask for a change, e.g. log scale on y'
-                }
-                value={draft}
-                maxLength={MAX_MESSAGE_CHARS}
-                rows={2}
-                disabled={state.phase !== 'ready' || chatLocked}
-                aria-describedby={chatLocked ? 'agent-create-line' : undefined}
-                onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
-                  setDraft(event.target.value)
-                }
-                onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-                  // Enter sends text; an empty box creates nothing by accident.
-                  if (event.key === 'Enter' && !event.shiftKey) {
-                    event.preventDefault();
-                    if (draft.trim()) handleSend();
-                  }
-                }}
-                sx={{ ...nativeControlSx, flex: '1 1 240px', resize: 'vertical' }}
-              />
-              {/* Own keys: the button a run replaces never turns into `.stop()` in place,
-                  with a focus that a second key press would spend on stopping the run. */}
-              {running ? (
-                <Box
-                  key="stop"
-                  component="button"
-                  type="button"
-                  onClick={(event: React.MouseEvent) => {
-                    keepKeyboardFocus(event);
-                    void session.stop();
-                  }}
-                  disabled={state.run?.stopping}
-                  aria-label="Stop"
-                  sx={{
-                    ...ghostButtonSx,
-                    color: colors.error,
-                    '&:hover:not(:disabled)': { color: colors.error, borderColor: colors.error },
-                  }}
-                >
-                  {state.run?.stopping ? '.stop() …' : '.stop()'}
-                </Box>
-              ) : firstPlot && plotAll ? (
-                plotAllButton
-              ) : firstPlot && !carry ? (
-                <Box
-                  key="create"
-                  component="button"
-                  type="submit"
-                  ref={createRef}
-                  onClick={keepKeyboardFocus}
-                  disabled={!canCreate}
-                  aria-label="Create plot"
-                  aria-describedby={`${DATA_SUMMARY_ID} agent-create-line`}
-                  sx={ctaButtonSx}
-                >
-                  .create_plot()
-                </Box>
-              ) : (
-                <>
-                  {/* After a switch that offered it: the plot in this library with the remembered
-                      decisions, the step's action. Before the library's first plot it submits
-                      the form, so typed text goes as the turn, as `.create_plot()` does. */}
-                  {carry && (
-                    <Box
-                      key="carry"
-                      component="button"
-                      type={firstPlot ? 'submit' : 'button'}
-                      ref={createRef}
-                      data-testid="carry-plot"
-                      onClick={firstPlot ? keepKeyboardFocus : handleCarry}
-                      disabled={step2 ? !canCreate : state.phase !== 'ready' || busy}
-                      aria-describedby={
-                        step2
-                          ? `${DATA_SUMMARY_ID}${firstPlot ? ' agent-create-line' : ''}`
-                          : gate
-                            ? 'agent-create-gate'
-                            : undefined
-                      }
-                      // The library's name and the count make it long: it wraps at phone width.
-                      sx={{
-                        ...(step2 ? ctaButtonSx : actionButtonSx),
-                        whiteSpace: 'normal',
-                        textAlign: 'left',
-                        maxWidth: '100%',
-                      }}
-                    >
-                      {carryText}
-                    </Box>
-                  )}
-                  {/* Step 2 after a plot: start over from the catalogue plot with this data.
-                      Beside the offer: the plot from the catalogue code, without the carry. Step 1: the step is
-                      visible from the foot too, and a click says what comes first instead of
-                      calling the server. With `all`, `.plot_all()`. */}
-                  {state.dataset && plotAll && plotAllButton}
-                  {state.dataset && !plotAll && (
-                    <Box
-                      component="button"
-                      type="button"
-                      ref={carry ? undefined : createRef}
-                      onClick={handleCreate}
-                      disabled={step2 ? !canCreate : state.phase !== 'ready' || busy}
-                      // Once this library has a plot, the button starts over from the
-                      // catalogue plot; `.send()` beside it changes the latest version.
-                      aria-label={hasPlot ? 'Start over' : 'Create plot'}
-                      title={hasPlot || carry ? START_OVER_HELP : undefined}
-                      aria-describedby={
-                        [
-                          hasPlot || carry ? START_OVER_HELP_ID : null,
-                          step2 ? DATA_SUMMARY_ID : gate ? 'agent-create-gate' : null,
-                        ]
-                          .filter(Boolean)
-                          .join(' ') || undefined
-                      }
-                      sx={actionButtonSx}
-                    >
-                      {hasPlot ? '.start_over()' : '.create_plot()'}
-                    </Box>
-                  )}
-                  {state.dataset && (hasPlot || carry) && !plotAll && (
-                    <Box component="span" id={START_OVER_HELP_ID} sx={visuallyHiddenSx}>
-                      {START_OVER_HELP}
-                    </Box>
-                  )}
-                  {/* Before the library's first plot the offer submits text; no `.send()` then. */}
-                  {!firstPlot && (
-                    <Box
-                      component="button"
-                      type="submit"
-                      onClick={keepKeyboardFocus}
-                      disabled={chatLocked || !draft.trim() || state.phase !== 'ready' || busy}
-                      aria-describedby={chatLocked ? 'agent-create-line' : undefined}
-                      sx={ghostButtonSx}
-                    >
-                      .send()
-                    </Box>
-                  )}
-                </>
-              )}
-            </Box>
-            {/* No role on the visible notice: the status box below speaks it, once. */}
-            {gate && (
-              <Box
-                ref={gateRef}
-                data-testid="create-gate"
-                sx={{
-                  mt: -1,
-                  borderLeft: `3px solid ${colors.warning}`,
-                  pl: 1.5,
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  columnGap: 1,
-                  rowGap: 0.75,
-                }}
-              >
-                <Box
-                  id="agent-create-gate"
-                  sx={{ ...labelSx, color: 'var(--ink)', flex: '1 1 220px', lineHeight: 1.6 }}
-                >
-                  # {CREATE_GATE[gate].text}
-                </Box>
-                <Box
-                  component="button"
-                  type="button"
-                  onClick={goToGate}
-                  aria-label={CREATE_GATE[gate].action}
-                  sx={actionButtonSx}
-                >
-                  .show()
-                </Box>
-              </Box>
-            )}
-            <Box role="status" data-testid="composer-status" sx={visuallyHiddenSx}>
-              {gate ? CREATE_GATE[gate].text : ''}
-            </Box>
-            {draft.length > MAX_MESSAGE_CHARS * 0.9 && (
-              <Box sx={{ ...labelSx, mt: -1 }}>
-                {draft.length} / {MAX_MESSAGE_CHARS}
-              </Box>
-            )}
+              messageRef={messageRef}
+              createRef={createRef}
+              ready={state.phase === 'ready'}
+              busy={busy}
+              running={running}
+              stopping={!!state.run?.stopping}
+              hasData={!!state.dataset}
+              step2={step2}
+              firstPlot={firstPlot}
+              hasPlot={hasPlot}
+              canCreate={canCreate}
+              plotAll={plotAll}
+              chatLocked={chatLocked}
+              libraryCount={libraries.length}
+              fanOutOpen={!!fanOut}
+              carryText={carry ? carryText : null}
+              pausedUntil={pausedUntil}
+              exampleOffer={exampleOffer}
+              exampleWorking={exampleWorking}
+              onExampleData={event => {
+                keepKeyboardFocus(event);
+                void session.exampleData();
+              }}
+              gate={gate ? CREATE_GATE[gate] : null}
+              gateRef={gateRef}
+              onGoToGate={goToGate}
+              onStop={event => {
+                keepKeyboardFocus(event);
+                void session.stop();
+              }}
+              onCreate={handleCreate}
+              onCarry={handleCarry}
+              onPlotAll={handlePlotAll}
+              keepKeyboardFocus={keepKeyboardFocus}
+            />
             {/* A chat without a plot has no result card to report on: its own control. Not while a
                 turn runs, which may still bring the plot; a sent record stays in view. */}
             {(state.chatFeedback ||
