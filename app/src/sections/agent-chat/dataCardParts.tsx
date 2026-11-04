@@ -23,7 +23,6 @@ import {
 import { CellText } from 'src/sections/agent-chat/CellText';
 import { countOf } from 'src/sections/agent-chat/countOf';
 import type { DataViewProps } from 'src/sections/agent-chat/DataView';
-import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import { describeDataFailure } from 'src/sections/agent-chat/messages';
 import {
   actionButtonSx,
@@ -503,14 +502,15 @@ export function BindingsBlock({
     <Box>
       <Box sx={{ ...labelSx, mb: 0.75 }}># bindings — which column plays which role</Box>
       {/* Why the dropdowns and `.confirm()` do not answer: the server runs one thing
-          per session. Not a live region: the thread and the step status announce the work. */}
+          per session. Not a live region: the thread and the step status announce the work.
+          No motion of its own: the loader over the box or in the thread shows the work. */}
       {working && (
         <Box
           data-testid="bindings-lock"
           sx={{ ...labelSx, color: 'var(--ink-soft)', mt: -0.25, mb: 1 }}
         >
           # {confirmed ? 'bindings wait' : 'bindings and .confirm() wait'} while{' '}
-          {parsing ? 'the data is parsed' : 'the assistant works'} <Ellipsis />
+          {parsing ? 'the data is parsed' : 'the assistant works'}
         </Box>
       )}
       {rows.length === 0 && (

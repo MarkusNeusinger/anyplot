@@ -409,7 +409,10 @@ export type ParseOutcome = 'stored' | 'transcribed' | 'forwarded' | 'failed' | '
  */
 export type TurnEnd = 'done' | 'error' | 'refused' | 'stopped';
 
-/** What `parseData` resolves to: its outcome, and how the turn it started ended (null without one). */
+/**
+ * What `parseData` resolves to: its outcome, and how the turn it started ended (null without one,
+ * or for a turn that never ended because the page unmounted).
+ */
 export interface ParseResult {
   outcome: ParseOutcome;
   turnEnd: TurnEnd | null;
@@ -2063,13 +2066,16 @@ export function useAgentSession({
         if (stoppedRef.current) addItem({ kind: 'notice', text: 'stopped' });
         if (abortRef.current === controller) abortRef.current = null;
         turnErrorRef.current = errorCode;
+        // A stream aborted for another reason (the page unmounted) did not end: no `done`.
         turnEndRef.current = stoppedRef.current
           ? 'stopped'
           : errorCode
             ? 'error'
             : refused
               ? 'refused'
-              : 'done';
+              : finished
+                ? 'done'
+                : null;
         safeDispatch({ type: 'run_end' });
       }
       // A shipped run adds decisions, the assistant's `forget` removes some, a shipped fresh plot

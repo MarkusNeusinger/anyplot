@@ -544,7 +544,7 @@ describe('DataPanel working states', () => {
 
     rerender({ ...idle, run: summaryTurn });
     expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
-      '# bindings and .confirm() wait while the assistant works …'
+      /^# bindings and \.confirm\(\) wait while the assistant works$/
     );
     // The lock stays (the server would refuse the change); the controls keep their look.
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
@@ -563,14 +563,16 @@ describe('DataPanel working states', () => {
     await userEvent.type(screen.getByLabelText(/# your data/), 'a,b');
     rerender(stateWith({ x: 'month', y1: 'shoes' }, { parsing: true }));
 
-    expect(screen.getByTestId('parse-hint')).toHaveTextContent('# parsing your data …');
+    // The overlay's loader is the parse's one moving indicator; the lines only say it.
+    expect(screen.getByTestId('parse-hint')).toHaveTextContent(/^# parsing your data$/);
     expect(screen.getByTestId('box-working')).toHaveTextContent(/^# parsing your data$/);
+    expect(screen.getAllByTestId('loader-spinner')).toHaveLength(1);
     expect(screen.getByLabelText(/# your data/)).toHaveAttribute('aria-busy', 'true');
     const parse = screen.getByRole('button', { name: '.parse() …' });
     expect(parse).toBeDisabled();
     expect(parse).toHaveAccessibleDescription('# parsing your data');
     expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
-      '# bindings and .confirm() wait while the data is parsed …'
+      /^# bindings and \.confirm\(\) wait while the data is parsed$/
     );
     expect(screen.getByTestId('data-step-status')).toHaveTextContent('parsing your data');
 
@@ -581,7 +583,7 @@ describe('DataPanel working states', () => {
       sessionId: 'S1',
       parsing: true,
     });
-    expect(screen.getByTestId('parse-hint')).toHaveTextContent('# parsing your data …');
+    expect(screen.getByTestId('parse-hint')).toHaveTextContent('# parsing your data');
     expect(screen.getByTestId('box-working')).toBeInTheDocument();
     expect(screen.queryByTestId('bindings-lock')).not.toBeInTheDocument();
   });
@@ -590,7 +592,7 @@ describe('DataPanel working states', () => {
     renderPanel(stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true, themeBusy: true }));
     await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
     expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
-      '# bindings wait while the assistant works …'
+      /^# bindings wait while the assistant works$/
     );
   });
 });

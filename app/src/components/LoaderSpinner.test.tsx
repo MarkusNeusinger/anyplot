@@ -50,19 +50,18 @@ describe('LoaderSpinner', () => {
     render(
       <>
         <LoaderSpinner size="large" />
+        <LoaderSpinner size="small" />
         <LoaderSpinner size="inline" />
       </>
     );
     const css = styles();
-    for (const name of [
-      'trfLoader-large',
-      'ballMoveX-large',
-      'trfLoader-inline',
-      'ballMoveX-inline',
-    ]) {
-      expect(css).toContain(`@keyframes ${name}`);
+    for (const size of ['large', 'small', 'inline']) {
+      expect(css).toContain(`@keyframes trfLoader-${size}`);
+      expect(css).toContain(`@keyframes ballMoveX-${size}`);
     }
-    // The inline loop moves by its own offsets, not the large one's.
+    // Each loop moves by its own size's offsets: 32, 24 and 16 px.
+    expect(css).toMatch(/@keyframes ballMoveX-large\{[^}]*\}[^}]*translateX\(32px\)/);
+    expect(css).toMatch(/@keyframes ballMoveX-small\{[^}]*\}[^}]*translateX\(24px\)/);
     expect(css).toMatch(/@keyframes ballMoveX-inline\{[^}]*\}[^}]*translateX\(16px\)/);
     expect(css).not.toMatch(/@keyframes trfLoader\{/);
   });

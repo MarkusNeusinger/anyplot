@@ -596,7 +596,7 @@ describe('AgentChatPage gating', () => {
     expect(create).toHaveAccessibleDescription(
       'data fits · 2 rows · 2 columns · version 1 # step 2 — create the plot as it is, or say first what it should do differently'
     );
-    // The confirmation's button is gone with the card: the keyboard continues here.
+    // The confirmation's button is gone with step 1: the keyboard continues here.
     await waitFor(() => expect(create).toHaveFocus());
     expect(screen.getByTestId('data-step-status')).toHaveTextContent(
       'step 2: the data is confirmed; create the plot below'
@@ -1211,6 +1211,8 @@ describe('AgentChatPage .example_data()', () => {
     expect(within(pending).getByTestId('loader-spinner')).toBeInTheDocument();
     expect(screen.getAllByText(/making example data/)).toHaveLength(1);
     expect(screen.queryByTestId('example-data')).not.toBeInTheDocument();
+    // Its room stays, empty, so the composer below it does not jump.
+    expect(screen.getByTestId('example-data-room')).toBeEmptyDOMElement();
     expect(screen.getByLabelText('Message')).toHaveFocus();
     expect(turnBodies()).toEqual([{ action: 'example_data' }]);
     // The thread names the page's own turn and holds the assistant's slot.
@@ -1318,7 +1320,7 @@ describe('AgentChatPage working states', () => {
     fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
     await waitFor(() => expect(releaseParse).not.toBeNull());
 
-    expect(screen.getByTestId('parse-hint')).toHaveTextContent('# parsing your data …');
+    expect(screen.getByTestId('parse-hint')).toHaveTextContent(/^# parsing your data$/);
     const parse = screen.getByRole('button', { name: '.parse() …' });
     expect(parse).toBeDisabled();
     expect(parse).toHaveAccessibleDescription('# parsing your data');
@@ -1347,8 +1349,10 @@ describe('AgentChatPage working states', () => {
     expect(within(pending).getByTestId('loader-spinner')).toBeInTheDocument();
     expect(lastInThread()).toBe(pending);
     expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
-      '# bindings and .confirm() wait while the assistant works …'
+      /^# bindings and \.confirm\(\) wait while the assistant works$/
     );
+    // One loader, in the thread: the bindings line says why without motion of its own.
+    expect(screen.getAllByTestId('loader-spinner')).toHaveLength(1);
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
     // `.confirm()` waits in its place at the composer's end, beside `.stop()`.
     expect(screen.getByRole('button', { name: '.confirm()' })).toBeDisabled();
@@ -1412,6 +1416,8 @@ describe('AgentChatPage working states', () => {
     renderAt(PAGE);
     const opening = await screen.findByTestId('session-opening');
     expect(opening).toHaveTextContent(/^opening a session$/);
+    // A polite status, so a screen reader hears the wait the dots show.
+    expect(opening).toHaveAttribute('role', 'status');
     expect(within(opening).getByTestId('loader-spinner')).toHaveAttribute('aria-hidden', 'true');
 
     open();
@@ -1503,7 +1509,10 @@ describe('AgentChatPage step CTA', () => {
     await parseAndSummarize();
     fireEvent.click(screen.getByRole('button', { name: '.confirm()' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('parse the data first · ref r-c');
-    expect(screen.getByRole('button', { name: '.confirm()' })).toBeEnabled();
+    const confirm = screen.getByRole('button', { name: '.confirm()' });
+    expect(confirm).toBeEnabled();
+    // The button lost the focus while it waited: the keyboard is back on it for a retry.
+    await waitFor(() => expect(confirm).toHaveFocus());
     expect(currentStep()).toEqual(['1 data']);
   });
 });

@@ -1403,7 +1403,11 @@ describe('useAgentSession: formulas', () => {
     routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'formula', ref: 'r-f' });
     routes['POST /sessions/S1/messages'] = generatedStream;
     const { result } = await openSession(routes);
-    const onForward = vi.fn();
+    // How many turns the page had posted when it heard of the forward: none, the box lets go first.
+    const postedAtForward: number[] = [];
+    const onForward = vi.fn(() => {
+      postedAtForward.push(turnBodies().length);
+    });
 
     let parsed: ParseResult | undefined;
     await act(async () => {
@@ -1414,6 +1418,7 @@ describe('useAgentSession: formulas', () => {
     // The parse ends with the turn it started, whose generated table is version 1.
     expect(parsed).toEqual({ outcome: 'forwarded', turnEnd: 'done' });
     expect(onForward).toHaveBeenCalledWith(FORMULA);
+    expect(postedAtForward).toEqual([0]);
     expect(turnBodies()).toEqual([{ text: FORMULA }]);
     expect(result.current.state.items[0]).toMatchObject({ kind: 'user', text: FORMULA });
     expect(result.current.state).toMatchObject({ datasetError: null, parsing: false });
@@ -1615,6 +1620,44 @@ describe('useAgentSession: formulas', () => {
       await parsed;
     });
     expect(await parsed).toEqual({ outcome: 'forwarded', turnEnd: 'stopped' });
+  });
+
+  it('reports no end for a turn the page unmounted under', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'data_request', ref: 'r-d' });
+    const stream = liveSse([['ready', { v: 'anyplot/1', run_id: 'r1' }]]);
+    routes['POST /sessions/S1/messages'] = () => stream.response;
+    const { result, unmount } = await openSession(routes);
+
+    let parsed: Promise<ParseResult> = Promise.resolve({ outcome: 'skipped', turnEnd: null });
+    act(() => {
+      parsed = result.current.parseData('Beispieldaten');
+    });
+    await waitFor(() => expect(result.current.state.run).not.toBeNull());
+    unmount();
+    // The stream was aborted, never ended with `done`: no turn end to report.
+    expect(await parsed).toEqual({ outcome: 'forwarded', turnEnd: null });
+  });
+
+  it("never reports an earlier turn's end for a turn that did not start", async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['refusal', { code: 'out_of_scope', text: 'I can only help with this plot.' }],
+        ['done', { llm_calls: 0 }],
+      ]);
+    const { result } = await openSession(routes);
+    await act(() => result.current.sendMessage('tell me a joke'));
+
+    // The forward's own turn meets a turn the callback started first: it never starts.
+    routes['POST /sessions/S1/dataset'] = () => json(422, { detail: 'data_request', ref: 'r-d' });
+    let parsed: ParseResult | undefined;
+    await act(async () => {
+      parsed = await result.current.parseData('Beispieldaten', false, undefined, undefined, {
+        onForward: () => void result.current.sendMessage('what is on x?'),
+      });
+    });
+    expect(parsed).toEqual({ outcome: 'forwarded', turnEnd: null });
   });
 
   it('takes a generated version over pasted data as the next one, with .undo()', async () => {

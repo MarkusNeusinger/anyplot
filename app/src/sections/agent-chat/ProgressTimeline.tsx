@@ -6,10 +6,11 @@
  * finished round's outcome on the right (from the repair step's `outcome`).
  * The site's loader stands beside it while the run lasts, also while it stops.
  *
- * The page mounts it for a `create_plot` run and for any turn that waits in
- * the queue or reached a pipeline step (`showsTimeline` in `steps.ts`). A turn
- * without steps, the summary or a question, has the thread's in-progress line
- * instead, so `starting…` and a step-less `stopping…` belong to plot runs.
+ * The page mounts it for a plot run, from the queue on, and for any turn that
+ * reached a pipeline step (`showsTimeline` in `steps.ts`). A turn without steps,
+ * the summary or a question, has the thread's in-progress line instead, also
+ * while it waits in the queue, so `queued`, `starting…` and a step-less
+ * `stopping…` belong to plot runs.
  */
 
 import Box from '@mui/material/Box';

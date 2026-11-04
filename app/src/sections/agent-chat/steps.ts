@@ -67,10 +67,12 @@ export function pendingReply(state: AgentSessionState): PendingReply | null {
 
 /**
  * Whether the progress timeline below the thread has something to say that
- * the in-progress line does not: a plot run, whose path shows up front, or any
- * turn that waits in the queue or reached a pipeline step.
+ * the in-progress line does not: a plot run, whose path shows up front from
+ * the queue on, or any turn that reached a pipeline step. A turn without steps
+ * that waits in the queue keeps the in-progress line and the queue counter
+ * alone, so its wait has one loader and one queue position, not two.
  */
 export function showsTimeline(state: AgentSessionState): boolean {
   const run = state.run;
-  return !!run && (isPlotAction(run.kind) || run.steps.length > 0);
+  return !!run && (isPlotAction(run.kind) || run.steps.some(entry => entry.step !== 'queued'));
 }

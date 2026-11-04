@@ -410,6 +410,8 @@ function AgentChat({
   const toggleRef = useRef<HTMLButtonElement>(null);
   // Set by the user's own `.confirm()`: the step change it brings moves the focus, once.
   const confirmFocus = useRef(false);
+  // Step 1's `.confirm()` at the composer's end, which a refused confirmation gives the focus back.
+  const confirmRef = useRef<HTMLButtonElement>(null);
 
   // The spec's title, implemented libraries, previews and data bullets come from the public
   // catalogue API; the enabled libraries from the agents service. Both are best effort.
@@ -558,16 +560,18 @@ function AgentChat({
   // `.plot_all()`), the step's next action (a button, so a phone opens no
   // keyboard), unless it waits; otherwise at the pinned header's toggle, since
   // a fresh run must not be one key press away by accident; it is in view where
-  // it sticks, so the focus scrolls nothing. Only for that confirmation, and
-  // only while nothing else holds the focus: a step 2 that a turn's sync brings
-  // back never takes it from the composer. A layout effect, so the focus has
-  // moved by the time the button shows.
+  // it sticks, so the focus scrolls nothing. A refused confirmation keeps step 1:
+  // the button lost the focus while it waited, and gets it back for a retry. Only
+  // for that confirmation, and only while nothing else holds the focus: a step 2
+  // that a turn's sync brings back never takes it from the composer. A layout
+  // effect, so the focus has moved by the time the button shows.
   useLayoutEffect(() => {
     if (!confirmFocus.current || state.confirmBusy) return;
     confirmFocus.current = false;
     const active = document.activeElement;
-    if (!step2 || (active && active !== document.body)) return;
-    if (firstPlot && !createRef.current?.disabled) createRef.current?.focus();
+    if (active && active !== document.body) return;
+    if (!step2) confirmRef.current?.focus();
+    else if (firstPlot && !createRef.current?.disabled) createRef.current?.focus();
     else toggleRef.current?.focus({ preventScroll: true });
   }, [state.confirmBusy, step2, firstPlot]);
 
@@ -812,6 +816,7 @@ function AgentChat({
           // The open can take seconds: on the public lane the bot check runs inside it first
           // (`withHumanCheck`), and a check that asks for a click shows at the window's foot.
           <Box
+            role="status"
             data-testid="session-opening"
             sx={{ ...labelSx, display: 'flex', alignItems: 'center', gap: 1.5 }}
           >
@@ -949,6 +954,7 @@ function AgentChat({
               onSubmit={handleSend}
               messageRef={messageRef}
               createRef={createRef}
+              confirmRef={confirmRef}
               ready={state.phase === 'ready'}
               busy={busy}
               running={running}

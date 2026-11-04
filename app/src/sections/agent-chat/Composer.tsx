@@ -65,6 +65,8 @@ export interface ComposerProps {
   messageRef: React.RefObject<HTMLTextAreaElement | null>;
   /** Step 2's action button, where the keyboard continues after `.confirm()`. */
   createRef: React.RefObject<HTMLButtonElement | null>;
+  /** Step 1's `.confirm()`, which a refused confirmation gives the keyboard back. */
+  confirmRef: React.RefObject<HTMLButtonElement | null>;
   /** The session is open and answers. */
   ready: boolean;
   busy: boolean;
@@ -98,7 +100,7 @@ export interface ComposerProps {
 }
 
 export function Composer(props: ComposerProps) {
-  const { draft, onDraftChange, onSubmit, messageRef, createRef } = props;
+  const { draft, onDraftChange, onSubmit, messageRef, createRef, confirmRef } = props;
   const { ready, busy, running, stopping, step2, firstPlot, hasPlot } = props;
   const { canCreate, plotAll, chatLocked, libraryCount, fanOutOpen, carryText, confirm } = props;
   const { pausedUntil, exampleOffer, exampleWorking, onExampleData } = props;
@@ -129,6 +131,7 @@ export function Composer(props: ComposerProps) {
       key="confirm"
       component="button"
       type="button"
+      ref={confirmRef}
       onClick={confirm.onConfirm}
       disabled={!confirm.enabled}
       aria-describedby={STEP_LINE_ID}
@@ -206,10 +209,18 @@ export function Composer(props: ComposerProps) {
       {exampleOffer && (
         <ExampleDataLine working={exampleWorking} disabled={busy} onClick={onExampleData} />
       )}
+      {/* At phone width the buttons wrap below the box and stay at its right end, as the
+          step's one CTA does beside it on a wide screen. */}
       <Box
         component="form"
         onSubmit={onSubmit}
-        sx={{ display: 'flex', gap: 1, alignItems: 'flex-end', flexWrap: 'wrap' }}
+        sx={{
+          display: 'flex',
+          gap: 1,
+          alignItems: 'flex-end',
+          justifyContent: 'flex-end',
+          flexWrap: 'wrap',
+        }}
       >
         <Box
           component="textarea"

@@ -115,25 +115,32 @@ def test_the_whole_prompt_names_only_controls_of_the_page() -> None:
     assert sorted(label for label in named if label not in code) == []
 
 
-def test_every_button_of_the_data_card_is_in_the_data_panel_bullet() -> None:
-    """The other direction: the data panel's bullet names each button of the card, so the root knows them all.
+def test_the_data_panel_bullet_names_exactly_the_buttons_of_the_data_card() -> None:
+    """The other direction: the data panel's bullet names each button of the card, so the root knows them all,
+    and names no button the card lost (`.confirm()` and the formula's `.send()` left it for the composer).
 
     The bullet, not the whole section: `.open()` of the result cards is in the section already, and was the
     one way into the data panel the root did not know.
     """
     buttons = data_card_buttons()
+    bullet = controls_of("The data panel")
 
     assert {".open()", ".parse()", ".view_all()"} <= buttons  # the reading still finds them
-    assert sorted(buttons - controls_of("The data panel")) == []
+    assert sorted(buttons - bullet) == []
+    assert sorted(bullet - buttons) == []
 
 
-def test_every_button_of_the_composer_is_in_the_composer_bullet() -> None:
+def test_the_composer_bullet_names_exactly_the_buttons_of_the_composer() -> None:
     """The same for the composer: since `.confirm()` moved from the card's foot to the composer's end, the
-    root must say where it is, and a button added to the composer fails here until the bullet names it."""
+    root must say where it is, a button added to the composer fails here until the bullet names it, and a
+    button it lost fails until the bullet drops it. `.feedback()` stands below the composer, not in it
+    (`ChatFeedback.tsx`), and is the bullet's one control from elsewhere."""
     buttons = buttons_of(composer_components())
+    bullet = controls_of("The composer")
 
     assert {".send()", ".confirm()", ".create_plot()", ".stop()", ".example_data()"} <= buttons
-    assert sorted(buttons - controls_of("The composer")) == []
+    assert sorted(buttons - bullet) == []
+    assert sorted(bullet - buttons) == [".feedback()"]
 
 
 def test_the_prompt_places_confirm_beside_the_message_box() -> None:

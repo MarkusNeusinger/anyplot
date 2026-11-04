@@ -365,7 +365,8 @@ export function DataCard(props: DataCardProps) {
           </Box>
         </Box>
       )}
-      {/* A parse clears a pending table, so the two lines never show together. */}
+      {/* A parse clears a pending table, so the two lines never show together. The
+          parse's motion is the loader over the box; this line only says it. */}
       {(transcription || state.parsing) && (
         <Box
           id="agent-parse-hint"
@@ -377,13 +378,9 @@ export function DataCard(props: DataCardProps) {
             color: state.parsing ? 'var(--ink-soft)' : 'var(--ink-muted)',
           }}
         >
-          {state.parsing ? (
-            <>
-              # parsing your data <Ellipsis />
-            </>
-          ) : (
-            'decide on the table below first: .use() or .discard()'
-          )}
+          {state.parsing
+            ? '# parsing your data'
+            : 'decide on the table below first: .use() or .discard()'}
         </Box>
       )}
 
