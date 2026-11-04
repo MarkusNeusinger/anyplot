@@ -43,7 +43,7 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 | `evals/score.py`, `anyplot/scoring.py`, `anyplot/prompts/scorer.md` | Scores a harness run's renders with the catalogue rubric on Claude Opus: the measurement behind the quality ladder ([Score the renders with the catalogue rubric](#score-the-renders-with-the-catalogue-rubric)) |
 | `anyplot/cli_transport.py`, `scripts/agents-experiment.sh` | The `claude-cli` transport and the experiment runner: the live code with its Claude calls on your subscription ([Run an experiment on your Claude subscription](#run-an-experiment-on-your-claude-subscription)) |
 | `evals/ladder_lab.py` | Compares reviewers, feedback forms and repairers on the same seed renders through the local Claude Code CLI ([Compare reviewers, feedback forms and repairers](#compare-reviewers-feedback-forms-and-repairers-ladder-lab)) |
-| `evals/make_fixtures.py` | The seeded generator of the 360 synthetic cases: 10 specs times matplotlib, seaborn, plotnine, altair, pygal and lets-plot times 6 datasets |
+| `evals/make_fixtures.py` | The seeded generator of the 900 synthetic cases: 10 specs times the 15 catalogue libraries times 6 datasets |
 | `evals/make_stress.py`, `evals/stress.py` | The seeded generator of the 23 stress cases, and the model-free static stage that `--static` runs over them ([Run the stress cases](#run-the-stress-cases)) |
 | `evals/cases.py`, `evals/pricing.py`, `evals/report.py` | Case loading and selection, list prices, and the summary, diff and gallery code; `report.py` also merges two runs into one blind gallery and scores its export |
 | `evals/import_case.py` | Turns one feedback case, a saved session bundle or a case directory copied from the bucket, into an eval case in the git-ignored `evals/.cases/` ([Import a feedback case](#import-a-feedback-case)) |
@@ -51,7 +51,7 @@ The model is **Claude Haiku 5.5 on Vertex AI** (`claude-haiku-5-5`) by default. 
 | `evals/eligibility.py` | The model-free sweep of the catalogue's files of every Python library with a code profile (matplotlib, seaborn, plotnine, altair, pygal, lets-plot): eligible, coupled and blocked pairs, and why |
 | `evals/scope.py`, `evals/scope.evalset.json` | The judge-only scope eval and its 219 synthetic cases: in-scope, off-topic and adversarial messages and notes pasted with a table, scored for adversarial recall and false refusals |
 | `evals/prep.py`, `evals/fixtures/prep/` | The live prep eval and its 65 German and English cases (54 data requests, 10 of them `hard`, 11 data-code cases and 3 requests for example data, and 11 step-1 summaries): each through `/v1` in process with the real model, scored on the `prepare_data` operations and `generate_data` calls the root chose, on the size of the table each `run_data_code` call stored (a `refuse` case passes when nothing was stored), and on the shape of the root's reply ([Run the prep eval](#run-the-prep-eval)) |
-| `evals/fixtures/cases/` | The eval cases: 360 generated (`<spec>-<library>-<perturbation>`), eleven hand-written, among them `scatter-basic-matplotlib`, `bar-grouped-seaborn`, `scatter-basic-matplotlib-german-message` (a German follow-up that sets the session language) and four `*-combined-*` cases whose follow-up asks for two changes at once, each measured by the case's `checks`, and 23 stress cases (`stress-<name>`) ([fixtures README](evals/fixtures/README.md)) |
+| `evals/fixtures/cases/` | The eval cases: 900 generated (`<spec>-<library>-<perturbation>`), eleven hand-written, among them `scatter-basic-matplotlib`, `bar-grouped-seaborn`, `scatter-basic-matplotlib-german-message` (a German follow-up that sets the session language) and four `*-combined-*` cases whose follow-up asks for two changes at once, each measured by the case's `checks`, and 23 stress cases (`stress-<name>`) ([fixtures README](evals/fixtures/README.md)) |
 | `evals/baselines/` | Committed baseline reports, one per model ([baselines README](evals/baselines/README.md)) |
 
 The unit tests are in `tests/unit/agents/`; `tests/unit/agents/runtime/` drives a full "Create plot" through `/v1` with a fake renderer and scripted models for both providers, and `tests/unit/agents/evals/` runs the harness the same way.
@@ -264,7 +264,7 @@ The chat page is the app's `/debug/agent?spec=&library=&language=` for admins; t
        VITE_DEBUG_API_URL=http://localhost:8010 yarn dev
      ```
 
-  3. Open `http://localhost:3000/scatter-basic/python/matplotlib` and select the `.adapt()` button, or open `http://localhost:3000/debug/agent?spec=scatter-basic&library=matplotlib&language=python` directly. Paste `agents/evals/fixtures/cases/scatter-basic-matplotlib/data.csv` as your data.
+  3. Open `http://localhost:3000/scatter-basic/python/matplotlib` and select the `.use_my_data()` action beside the library carousel, or open `http://localhost:3000/debug/agent?spec=scatter-basic&library=matplotlib&language=python` directly. Paste `agents/evals/fixtures/cases/scatter-basic-matplotlib/data.csv` as your data.
 
   The header of `app/scripts/agent-bff-mock.mjs` lists the scripted replies (a refusal, a capacity error, a question, a refinement with a repair round) and the timing variables.
 
@@ -648,7 +648,7 @@ After you change `evals/make_stress.py`, regenerate the cases with `uv run --ext
 
 ### Run spike X
 
-Spike X is the go or no-go for phase 1: 10 specs times matplotlib and seaborn times 6 datasets (renamed, x10, n=12, n=5000, date, decimal comma) on both arms, under $25 in total. The full matrix was those 120 generated cases plus the hand-written ones (two at spike X, three since 2026-10-12). The generator writes the same 10 specs and 6 datasets for plotnine and altair too (since 2026-10-25) and for pygal and lets-plot (since 2026-10-26), so the full matrix is 360 generated cases (10 specs times six libraries times 6 datasets) plus the hand-written ones, and `--cases full` needs `AGENT_LIBRARIES` with all six (see [Run the smoke set or the full matrix](#run-the-smoke-set-or-the-full-matrix)). To repeat spike X on its 127 cases, pass `--cases "*-matplotlib*,*-seaborn*"` instead of `--cases full` in the steps below. At list price a spike-X run is estimated at about $1 on the Claude arm and $10 to $15 on the Gemini arm; the whole matrix holds about three times as many cases. The budgets below leave $3 of the $25 for headroom, because a budget is checked between cases.
+Spike X is the go or no-go for phase 1: 10 specs times matplotlib and seaborn times 6 datasets (renamed, x10, n=12, n=5000, date, decimal comma) on both arms, under $25 in total. The full matrix was those 120 generated cases plus the hand-written ones (two at spike X, three since 2026-10-12). The generator writes the same 10 specs and 6 datasets for plotnine and altair too (since 2026-10-25) and for pygal and lets-plot (since 2026-10-26), and for every further library up to all 15 (since 2026-10-31), so the full matrix is 900 generated cases (10 specs times 15 libraries times 6 datasets) plus the hand-written ones, and `--cases full` needs `AGENT_LIBRARIES` with all 15 (see [Run the smoke set or the full matrix](#run-the-smoke-set-or-the-full-matrix)). To repeat spike X on its 127 cases, pass `--cases "*-matplotlib*,*-seaborn*"` instead of `--cases full` in the steps below. At list price a spike-X run is estimated at about $1 on the Claude arm and $10 to $15 on the Gemini arm; the whole matrix holds about seven times as many cases. The budgets below leave $3 of the $25 for headroom, because a budget is checked between cases.
 
 1. Count the catalogue files the network can adapt at all (no model call, about 10 seconds). The report lists the eligible, coupled and blocked pairs per library, the blocked ones by reason (SECURITY findings by rule id, a missing `THEME` block, a save target other than `f"plot-{THEME}.png"`, the map specs):
 
@@ -766,7 +766,7 @@ The exit code is 0 when every action was done, 1 when a case was skipped, failed
 
 ### Regenerate the fixtures
 
-The 360 generated cases come from `evals/make_fixtures.py`. After you change it, or when a NumPy upgrade changes a random stream, rerun it and commit the result:
+The 900 generated cases (10 specs times 15 libraries times 6 datasets) come from `evals/make_fixtures.py`. After you change it, or when a NumPy upgrade changes a random stream, rerun it and commit the result:
 
 ```bash
 uv run --extra agents python -m agents.evals.make_fixtures

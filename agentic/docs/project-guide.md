@@ -244,6 +244,7 @@ tags:
 
 ```yaml
 library: matplotlib
+language: python
 specification_id: scatter-basic
 
 # Timestamps
@@ -258,13 +259,15 @@ generated_by: claude-opus-4-7
 workflow_run: 12345678
 issue: 42
 
-# Versions
-python_version: "3.14"
-library_version: "3.10.0"
+# Versions: the runtime of the implementation's language, and the library
+language_version: 3.13.14
+library_version: 3.11.0
 
-# Previews
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-light.png
-preview_html: null
+# Previews, one per theme (the HTML variants only for interactive libraries)
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 
 # Quality
 quality_score: 92
@@ -522,7 +525,7 @@ uv run python -c "from core.database import is_db_configured; print(is_db_config
   - `specification.md` - specification description
   - `specification.yaml` - spec-level metadata (tags, created, issue, etc.)
   - `metadata/{language}/{library}.yaml` - per-library metadata (quality score, review feedback)
-  - `implementations/*.py` - library implementations
+  - `implementations/{language}/{library}{ext}` - library implementations
 
 **What's NOT Stored in DB**:
 - Preview images (in GCS)

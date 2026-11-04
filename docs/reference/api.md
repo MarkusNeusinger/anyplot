@@ -451,10 +451,11 @@ The result card frames it with `sandbox="allow-scripts"`. Once its listener is i
 
 ## Agent chat
 
-> **Status (2026-11-02):** the admin routes under `/debug/agent` are live, and
-> the public lane under `/agent` ships dark: it answers `404` until the owner
-> sets `_AGENT_PUBLIC_ENABLED=true` on the deploy-api trigger (see
-> [Public lane](#public-lane)).
+> **Status (2026-11-04):** the admin routes under `/debug/agent` are live, and
+> the public lane under `/agent` has been open since 2026-11-02, as an
+> experimental page: the deploy-api trigger sets `_AGENT_PUBLIC_ENABLED=true`.
+> Set back to `false`, the lane answers `404` again while the admin routes stay
+> open (see [Public lane](#public-lane)).
 >
 > **Status (2026-10-12):** the routes are switched on in production since
 > 2026-10-11: the deploy-api trigger sets `AGENT_ENABLED=true` and

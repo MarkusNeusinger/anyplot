@@ -3,8 +3,9 @@
 All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning is product communication
 rather than library SemVer: major for milestone releases, minor for feature batches, patch for
-fix-only (see `agentic/commands/release.md`). Feature PRs never edit this file directly; how
-entries and releases get here is in [`changelog.d/README.md`](changelog.d/README.md).
+fix-only (see `agentic/commands/release.md`). A PR adds its entries as a fragment, never here;
+only a release folds them in. How entries and releases get here is in
+[`changelog.d/README.md`](changelog.d/README.md).
 
 ## [Unreleased]
 
