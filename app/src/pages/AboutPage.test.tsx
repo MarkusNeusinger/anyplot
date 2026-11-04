@@ -17,6 +17,20 @@ describe('AboutPage', () => {
     expect(fireEvent.click(link)).toBe(false);
   });
 
+  it('links the stats, plots and mcp pages from the review, chat and mcp sections', () => {
+    render(<AboutPage />);
+
+    for (const [name, href] of [
+      ['stats page', '/stats'],
+      ['pick any plot', '/plots'],
+      ['mcp page', '/mcp'],
+    ]) {
+      const link = screen.getByRole('link', { name });
+      expect(link).toHaveAttribute('href', href);
+      expect(fireEvent.click(link)).toBe(false);
+    }
+  });
+
   it('sends a plot request to the issue form, with no label or title prefilled', () => {
     render(<AboutPage />);
 

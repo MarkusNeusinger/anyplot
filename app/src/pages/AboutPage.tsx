@@ -39,6 +39,14 @@ const ctaSx = {
 
 const sectionSx = { py: { xs: 2, md: 3 } };
 const proseColumnSx = { maxWidth: 760, mx: 'auto' };
+const inlineCodeSx = {
+  fontFamily: typography.mono,
+  fontSize: '0.9em',
+  backgroundColor: 'var(--bg-elevated)',
+  padding: '2px 6px',
+  borderRadius: '3px',
+  color: 'var(--ink)',
+} as const;
 
 export function AboutPage() {
   const { trackPageview, trackEvent } = useAnalytics();
@@ -46,6 +54,18 @@ export function AboutPage() {
   useEffect(() => {
     trackPageview(paths.about);
   }, [trackPageview]);
+
+  // An in-prose link to another page of the site, through the router.
+  const proseLink = (to: string, destination: string, label: string) => (
+    <Link
+      component={RouterLink}
+      to={to}
+      onClick={() => trackEvent('internal_link', { destination, source: 'about' })}
+      sx={proseLinkStyle}
+    >
+      {label}
+    </Link>
+  );
 
   return (
     <>
@@ -93,6 +113,55 @@ export function AboutPage() {
           </Box>
         </Box>
 
+        {/* Review */}
+        <Box component="section" sx={sectionSx}>
+          <SectionHeader prompt="❯" title={<em>review</em>} />
+          <Box sx={proseColumnSx}>
+            <Box sx={textStyle}>
+              every implementation is scored before it ships. automated checks come first: the code
+              runs, the image isn&apos;t blank, the canvas has its size. then an ai reviewer scores
+              the render on a 100-point rubric of 24 criteria — visual quality, design, spec
+              compliance, data quality, code quality, and library mastery — blind to any earlier
+              score. a first review needs 90; below that, ai repairs the defects the review named
+              and the plot is reviewed again, up to four times. the{' '}
+              {proseLink(paths.stats, 'stats', 'stats page')} shows the score distribution per
+              library.
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Use with my data */}
+        <Box component="section" sx={sectionSx}>
+          <SectionHeader prompt="❯" title={<em>use with my data</em>} />
+          <Box sx={proseColumnSx}>
+            <Box sx={textStyle}>
+              experimental, open to everyone since 2 november 2026.{' '}
+              {proseLink(paths.plots, 'plots', 'pick any plot')}, choose{' '}
+              <Box component="code" sx={inlineCodeSx}>
+                .use_my_data()
+              </Box>
+              , and paste your data. an agent adapts that plot&apos;s code to your columns, renders
+              it in a sandbox with no network access, reviews the render against the
+              catalogue&apos;s rubric, repairs it once if needed, and hands back the image and the
+              code. your chat and data live only in server memory and are deleted after an hour
+              idle, unless you send feedback.
+            </Box>
+          </Box>
+        </Box>
+
+        {/* MCP */}
+        <Box component="section" sx={sectionSx}>
+          <SectionHeader prompt="❯" title={<em>mcp</em>} />
+          <Box sx={proseColumnSx}>
+            <Box sx={textStyle}>
+              the same catalogue, served to ai coding assistants over the model context protocol.
+              six tools search specs by tag, return a spec with its implementations, and fetch one
+              library&apos;s code, so your assistant starts from code that already rendered and
+              passed review. setup on the {proseLink(paths.mcp, 'mcp', 'mcp page')}.
+            </Box>
+          </Box>
+        </Box>
+
         {/* Palette */}
         <Box component="section" sx={sectionSx}>
           <SectionHeader prompt="❯" title={<em>palette</em>} />
@@ -106,18 +175,8 @@ export function AboutPage() {
               the default.
             </Box>
             <Box sx={{ ...textStyle, mt: 1 }}>
-              see the{' '}
-              <Link
-                component={RouterLink}
-                to={paths.palette}
-                onClick={() =>
-                  trackEvent('internal_link', { destination: 'palette', source: 'about' })
-                }
-                sx={proseLinkStyle}
-              >
-                palette page
-              </Link>{' '}
-              for the full reference and usage rules.
+              see the {proseLink(paths.palette, 'palette', 'palette page')} for the full reference
+              and usage rules.
             </Box>
           </Box>
         </Box>

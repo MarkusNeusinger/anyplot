@@ -1153,6 +1153,12 @@ class TestSeoProxyRouter:
         assert "15 libraries" in response.text
         assert "AI-drafted, human-approved" in response.text
         assert "never patched by hand" in response.text
+        # bot parity with the page's review, chat and MCP sections (AboutPage.tsx)
+        for heading in ("<h2>Review</h2>", "<h2>Use with my data</h2>", "<h2>MCP server</h2>"):
+            assert heading in response.text
+        assert "rubric of 24 criteria" in response.text
+        for link in ("https://anyplot.ai/stats", "https://anyplot.ai/plots", "https://anyplot.ai/mcp"):
+            assert f'href="{link}"' in response.text
 
     def test_seo_libraries_lists_the_registry(self, client: TestClient) -> None:
         """The /libraries bot page was a 29-word stub although its whole

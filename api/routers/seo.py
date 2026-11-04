@@ -1329,6 +1329,26 @@ _ABOUT_BOT_BODY = (
     "review (AI-evaluated). When a library ships a new release the pipeline re-runs; when a "
     "better example pattern emerges the spec is updated and every library regenerates. "
     "Generated code is never patched by hand.</p>"
+    "<h2>Review</h2>"
+    "<p>Every implementation is scored before it ships. Automated checks come first: the code "
+    "runs, the image isn't blank, the canvas has its size. Then an AI reviewer scores the render "
+    "on a 100-point rubric of 24 criteria (visual quality, design, spec compliance, data quality, "
+    "code quality, and library mastery), blind to any earlier score. A first review needs 90; "
+    "below that, AI repairs the defects the review named and the plot is reviewed again, up to "
+    'four times. The <a href="https://anyplot.ai/stats">stats page</a> shows the score '
+    "distribution per library.</p>"
+    "<h2>Use with my data</h2>"
+    "<p>Experimental, open to everyone since 2 November 2026. "
+    '<a href="https://anyplot.ai/plots">Pick any plot</a>, choose .use_my_data(), and paste your '
+    "data. An agent adapts that plot's code to your columns, renders it in a sandbox with no "
+    "network access, reviews the render against the catalogue's rubric, repairs it once if "
+    "needed, and hands back the image and the code. Your chat and data live only in server "
+    "memory and are deleted after an hour idle, unless you send feedback.</p>"
+    "<h2>MCP server</h2>"
+    "<p>The same catalogue, served to AI coding assistants over the Model Context Protocol. Six "
+    "tools search specs by tag, return a spec with its implementations, and fetch one library's "
+    "code, so your assistant starts from code that already rendered and passed review. Setup is "
+    'on the <a href="https://anyplot.ai/mcp">MCP page</a>.</p>'
     "<h2>Open</h2>"
     "<p>Source, specs and pipeline live at "
     '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a> '
