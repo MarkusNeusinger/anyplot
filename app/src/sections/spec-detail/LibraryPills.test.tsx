@@ -78,6 +78,28 @@ describe('LibraryPills', () => {
     expect(screen.getAllByText('matplotlib').length).toBeGreaterThan(0);
   });
 
+  it('shows the shared short names for the neighbours of the selected library', () => {
+    render(
+      <LibraryPills
+        implementations={[
+          { library_id: 'makie', library_name: 'Makie.jl', language: 'julia', quality_score: 88 },
+          { library_id: 'ggplot2', library_name: 'ggplot2', language: 'r', quality_score: 90 },
+          {
+            library_id: 'muix',
+            library_name: 'MUI X Charts',
+            language: 'javascript',
+            quality_score: 86,
+          },
+        ]}
+        selectedLibrary="ggplot2"
+        onSelect={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('mk')).toBeInTheDocument();
+    expect(screen.getByText('mui')).toBeInTheDocument();
+  });
+
   it('handles two implementations', () => {
     render(
       <LibraryPills

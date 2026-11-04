@@ -105,7 +105,7 @@ export const LANG_DISPLAY: Record<string, string> = {
 };
 
 // File-extension token for a language id (e.g. used as the suffix in compact
-// plot cards: "mpl.py", "ggplot2.r", "makie.jl"). The .R extension is uppercase
+// plot cards: "mpl.py", "gg.r", "mk.jl"). The .R extension is uppercase
 // on disk for R scripts, but the suffix here mirrors the language id for
 // symmetry with "py" — display only, not a filesystem reference.
 export const LANG_EXT: Record<string, string> = {

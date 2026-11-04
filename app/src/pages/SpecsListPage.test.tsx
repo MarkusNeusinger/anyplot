@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ThemeContext } from 'src/hooks/useLayoutContext';
 import { SpecsListPage } from 'src/pages/SpecsListPage';
 import { render, screen, waitFor } from 'src/test-utils';
 
@@ -124,6 +125,43 @@ describe('SpecsListPage', () => {
     });
     const fetchUrl = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
     expect(fetchUrl).toContain('/plots/filter');
+  });
+
+  it.each([
+    [false, 'plot-light.png'],
+    [true, 'plot-dark.png'],
+  ])('shows the thumbnail of the site theme (dark: %s)', async (isDark, file) => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          images: [
+            {
+              library: 'matplotlib',
+              url: 'https://example.com/bar-basic/matplotlib/plot.png',
+              url_light: 'https://example.com/bar-basic/matplotlib/plot-light.png',
+              url_dark: 'https://example.com/bar-basic/matplotlib/plot-dark.png',
+              spec_id: 'bar-basic',
+            },
+          ],
+        }),
+    });
+    render(
+      <ThemeContext.Provider
+        value={{
+          mode: isDark ? 'dark' : 'light',
+          effective: isDark ? 'dark' : 'light',
+          isDark,
+          setMode: vi.fn(),
+          cycle: vi.fn(),
+        }}
+      >
+        <SpecsListPage />
+      </ThemeContext.Provider>
+    );
+
+    const img = await screen.findByRole('img', { name: 'Basic Bar Chart' });
+    expect(img).toHaveAttribute('src', `https://example.com/bar-basic/matplotlib/${file}`);
   });
 
   it('renders the shared scroll-to-top button', async () => {

@@ -5,20 +5,8 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 
+import { LIB_ABBREV } from 'src/constants';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
-
-// Library abbreviations (same as filter display)
-const LIBRARY_ABBREV: Record<string, string> = {
-  matplotlib: 'mpl',
-  seaborn: 'sns',
-  plotly: 'ply',
-  bokeh: 'bok',
-  altair: 'alt',
-  plotnine: 'p9',
-  pygal: 'pyg',
-  highcharts: 'hc',
-  letsplot: 'lp',
-};
 
 interface Implementation {
   library_id: string;
@@ -289,7 +277,7 @@ export const LibraryPills = memo(function LibraryPills({
                   {impl.library_id}
                 </Box>
                 <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-                  {isCenter ? impl.library_id : LIBRARY_ABBREV[impl.library_id] || impl.library_id}
+                  {isCenter ? impl.library_id : LIB_ABBREV[impl.library_id] || impl.library_id}
                 </Box>
               </Box>
             );

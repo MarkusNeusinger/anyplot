@@ -42,6 +42,7 @@ export function MapWeights({
     >
       <Box
         component="button"
+        aria-expanded={weightsOpen}
         onClick={() => setWeightsOpen(o => !o)}
         sx={{
           all: 'unset',
