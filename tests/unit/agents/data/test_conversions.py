@@ -310,9 +310,10 @@ class TestDateNumbers:
         assert offer.operations() == [{"op": "date_number", "column": "Subscription Date", "unit": "days"}]
         assert offer.line() == (
             "y: column 'Subscription Date' (dates): date_number would turn its 3 dates into numbers in a new column; "
-            "offer: the unit is the user's choice (the year, the days since the earliest date, the Unix time in seconds "
-            "or a decimal year), so name it in one statement and make it only when the user asks; operations with "
-            'days: [{"op": "date_number", "column": "Subscription Date", "unit": "days"}]'
+            "offer: the unit is the user's choice (the days since the earliest date, the year, the Unix time in seconds "
+            "or a decimal year), so state it in one sentence, never as a question or a request to choose, and make it "
+            'only when the user asks; operations with days: [{"op": "date_number", "column": "Subscription Date", '
+            '"unit": "days"}]'
         )
 
     def test_its_operations_fill_the_role(self) -> None:
@@ -361,6 +362,27 @@ class TestDateNumbers:
 
         offers = candidates([Binding(role="y", column="value")], roles, parsed.profile, parsed)
 
+        assert not any(isinstance(offer, DateNumbers) for offer in offers)
+
+    def test_a_date_column_without_a_date_is_no_offer(self) -> None:
+        """A column that is all missing would make an empty column: nothing to offer. The parser drops such a column
+        at the paste, so the profile here is the guard's own case."""
+        parsed = parse_dataset(CUSTOMERS)
+        roles = parse_roles(SCATTER)
+        profile = parsed.profile.model_copy(
+            update={
+                "columns": [
+                    column.model_copy(update={"missing": parsed.profile.rows})
+                    if column.name == "Subscription Date"
+                    else column
+                    for column in parsed.profile.columns
+                ]
+            }
+        )
+
+        offers = candidates(default_bindings(roles, profile), roles, profile, parsed)
+
+        assert found(CUSTOMERS, roles=roles) != []  # with its dates the column is offered
         assert not any(isinstance(offer, DateNumbers) for offer in offers)
 
 

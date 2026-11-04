@@ -1017,6 +1017,19 @@ class TestDateNumber:
         assert cells(years, 2) == ["2025", "2025"]
         assert "read as calendar years, by the clock of UTC+02:00;" in years.changes[0]
 
+    def test_the_days_and_the_decimal_year_keep_the_columns_clock(self) -> None:
+        """Both moments fall on 1 January 2025 at UTC+02:00; in UTC the first is still 31 December 2024."""
+        text = "t,v\n2025-01-01T00:30:00+02:00,1\n2025-01-01T12:00:00+02:00,2\n"
+
+        days = prepare(text, date_number("days", column="t"))
+        years = prepare(text, date_number("decimal_year", column="t"))
+
+        assert cells(days, 2) == ["0", "0"]  # one calendar date on the column's clock, not two in UTC
+        clock = "read as whole days since 2025-01-01, the earliest date, which is 0, by the clock of UTC+02:00"
+        assert clock in days.changes[0]
+        assert cells(years, 2)[0] == repr(2025 + 1800 / (365 * 86400))  # half an hour of 2025 gone by
+        assert all(cell.startswith("2025.") for cell in cells(years, 2))
+
     def test_a_column_the_parser_wrote_in_utc_says_so(self) -> None:
         text = "t,v\n2024-03-30T12:00:00+01:00,1\n2024-04-01T12:00:00+02:00,2\n"  # summer time: two offsets
 

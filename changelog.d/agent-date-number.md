@@ -15,3 +15,12 @@
   block lists `date_number` as an offer, never made unasked: the unit is the
   user's choice, so the assistant names it in one statement, and a request
   without a unit takes the days since the first date.
+
+### Changed
+
+- **The prep eval counts a closing invitation as a reply miss.** A reply whose
+  last sentence or clause asks the user to choose ("Choose …", "Pick one …",
+  "tell me which …", "Wähle …") misses on the same terms as a closing
+  question, and an open role the session block offered a date column for no
+  longer excuses either. On the earlier wording 2 of 5 summary replies of the
+  owner's case closed so; on the final one, 0 of 6.

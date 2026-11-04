@@ -474,12 +474,12 @@ class TestScore:
         ]
         code, reasons = verdict_of(summary, Gates())
         assert code == EXIT_FAILED and reasons == [
-            "1 of 2 replies close with a question the turn was not blocked for or run over "
+            "1 of 2 replies close with a question or an invitation the turn was not blocked for or run over "
             f"{prep.MAX_REPLY_WORDS} words (more than 10%)"
         ]
         assert verdict_of(summary, Gates(max_reply_misses=0.5)) == (EXIT_OK, [])
         assert "match, reply: closing question" in prep.table(self.CASES, results)
-        assert "1 close with a question, 1 reply misses" in prep.summary_text(scored, reasons)
+        assert "1 close with a question, 0 with an invitation, 1 reply misses" in prep.summary_text(scored, reasons)
 
 
 class TestReplyShape:
@@ -536,6 +536,55 @@ class TestReplyShape:
         prep.measure_reply(result, [], blocked=False)
 
         assert result.reply_words is None and result.reply_miss is None
+
+    @pytest.mark.parametrize(
+        ("text", "invitation"),
+        [
+            # The three closers of the live summary-offer runs of 2026-11-04.
+            ("Dates can become numbers. Choose the y column in the data panel, or name the unit you want.", True),
+            ("Dates can become numbers for y as the year or the days; tell me which one you want.", True),
+            ("Dates can become numbers. Pick one of these and the data panel's `.confirm()` follows.", True),
+            ("Die Daten haben 8 Zeilen. Wähle im Datenbereich eine Spalte für y.", True),
+            ("Die Spalte passt. Wenn du willst, kann ich das Jahr nehmen.", True),
+            ("Check the preview in the data panel and confirm it with `.confirm()`.", False),
+            ("Prüfe die Vorschau und drücke dann `.create_plot()`.", False),
+            ("Name is bound to the category and Score to the value.", False),  # a column named Name
+            ("Subscription Date can become numbers for y: the days since the first date or the year.", False),
+        ],
+    )
+    def test_a_closing_invitation_is_found(self, text: str, invitation: bool) -> None:
+        assert prep.closes_with_invitation(text) is invitation
+
+    def test_a_closing_invitation_is_a_miss_where_a_question_would_be(self) -> None:
+        text = "Subscription Date can become numbers for y. Choose the unit you want."
+        free, blocked = CaseResult("s-001", [], []), CaseResult("s-002", [], [])
+
+        prep.measure_reply(free, [text], blocked=False)
+        prep.measure_reply(blocked, [text], blocked=True)
+
+        assert free.closing_invitation and free.reply_miss == "closing_invitation"
+        assert blocked.closing_invitation and blocked.reply_miss is None
+
+    def test_an_open_role_with_an_offer_is_no_reason_to_ask(self) -> None:
+        """The offer bullet: the root states what the date column can become, so neither a question nor an
+        invitation waits on the open role then; without an offer, the open role still may close with a question."""
+        asked = "Index is on x and y is open. Which unit should Subscription Date take?"
+        invited = "Index is on x and y is open. Choose the unit for Subscription Date."
+        results = {
+            (text, offered): CaseResult("s-001", [], [], roles_open=True, offered=offered)
+            for text in (asked, invited)
+            for offered in (False, True)
+        }
+
+        for (text, _), result in results.items():
+            prep.measure_reply(result, [text], blocked=False)
+
+        assert [result.reply_miss for result in results.values()] == [
+            None,
+            "closing_question",
+            None,
+            "closing_invitation",
+        ]
 
 
 def script_for(*answers: list[dict[str, Any]]) -> dict[str, list[Any]]:

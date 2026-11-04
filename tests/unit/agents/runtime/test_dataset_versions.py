@@ -318,6 +318,25 @@ def test_dates_as_numbers_fill_the_open_measure_and_undo_takes_them_back() -> No
     assert restored.delta[BINDINGS] == [{"role": "x", "column": "Index"}]
 
 
+def test_dates_as_numbers_leave_complete_bindings_as_they_are() -> None:
+    """x and y are bound already: the new number column joins the data, and no role changes its column."""
+    store = DatasetStore()
+    text = "Hours,Score,Signup\n2,55,2020-08-24\n5,70,2021-04-23\n8,85,2020-03-25\n"
+    state = opened(store, text)
+    bound = [{"role": "x", "column": "Hours"}, {"role": "y", "column": "Score"}]
+    assert state[BINDINGS] == bound
+    stored = store.get(state[DATASET_ID], SID)
+    assert stored is not None
+
+    operations = [{"op": "date_number", "column": "Signup", "unit": "year"}]
+    prepared = apply_operations(stored.as_parsed(), TypeAdapter(list[Operation]).validate_python(operations))
+    parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)
+    version = push_version(store, SID, view_of(state), parsed, SNAPSHOT, converted=prepared.converted)
+
+    assert prepared.converted == {"Signup (year)": "Signup"}
+    assert version.delta[BINDINGS] == bound
+
+
 def test_a_pair_the_user_bound_high_to_low_survives_prepare_data_and_undo() -> None:
     """A person may bind a range the wrong way round on purpose: no version change takes the binding away."""
     ranges = snapshot_from_repo("range-interval", "matplotlib")

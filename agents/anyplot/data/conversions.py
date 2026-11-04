@@ -281,8 +281,9 @@ class DateNumbers:
         """The session block's line: the role, the column, the count, why it is an offer, and the operations."""
         line = (
             f"{self.role}: column '{self.column}' (dates): date_number would turn its {self.dates} dates into numbers "
-            "in a new column; offer: the unit is the user's choice (the year, the days since the earliest date, the "
-            "Unix time in seconds or a decimal year), so name it in one statement and make it only when the user asks"
+            "in a new column; offer: the unit is the user's choice (the days since the earliest date, the year, the "
+            "Unix time in seconds or a decimal year), so state it in one sentence, never as a question or a request "
+            "to choose, and make it only when the user asks"
         )
         return f"{line}; operations with days: {json.dumps(self.operations(), ensure_ascii=False)}"
 
