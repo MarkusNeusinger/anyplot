@@ -70,11 +70,12 @@ from api.dependencies import require_db
 from api.routers.debug import AdminIdentity, require_admin, require_admin_identity
 from core.agent_cases import (
     CASE_FILE_NAMES,
-    EXPECTED_BY_REACTION,
     MAX_TAGS,
     TAG_PATTERN,
+    TriageRefused,
     case_object,
     row_from_manifest,
+    triage_updates,
 )
 from core.config import settings
 from core.constants import MAX_AGENT_VERSION, SUPPORTED_LIBRARIES
@@ -1976,28 +1977,19 @@ async def update_agent_case(case_id: CaseId, body: CasePatch, ctx: Ctx, db: Db) 
     """
     repo = AgentFeedbackRepository(db)
     row = await _case_or_404(repo, case_id, ctx)
-    updates: dict[str, Any] = {}
-    if body.status is not None:
-        updates["status"] = body.status
-    if body.tags is not None:
-        updates["tags"] = sorted(body.tags)
-    if body.expected is not None:
-        updates["expected"] = body.expected
-    if body.promoted is True:
-        if row.result_version == 0:
-            # A chat case has no plot to replay: the regression harness needs a version.
-            raise AgentHTTPError(422, "no_plot", ctx.request_id)
-        if not row.include_data:
-            raise AgentHTTPError(422, "no_data", ctx.request_id)
-        if body.expected is None and row.expected is None:
-            rule = EXPECTED_BY_REACTION.get(row.reaction)
-            if rule is None:
-                raise AgentHTTPError(422, "expected_required", ctx.request_id)
-            updates["expected"] = rule
-        if row.promoted_at is None:
-            updates["promoted_at"] = datetime.now(UTC).replace(tzinfo=None)
-    elif body.promoted is False:
-        updates["promoted_at"] = None
+    # The rules live in core, shared with the triage skill's apply_triage.py; the body model
+    # has already refused what `invalid` covers.
+    try:
+        updates = triage_updates(
+            row,
+            now=datetime.now(UTC).replace(tzinfo=None),
+            status=body.status,
+            tags=body.tags,
+            promoted=body.promoted,
+            expected=body.expected,
+        )
+    except TriageRefused as exc:
+        raise AgentHTTPError(422, exc.code, ctx.request_id) from exc
     updated = await repo.update(case_id, updates)
     if updated is None:
         raise AgentHTTPError(404, "not_found", ctx.request_id)

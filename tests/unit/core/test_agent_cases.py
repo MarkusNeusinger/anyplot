@@ -17,8 +17,10 @@ from core.agent_cases import (
     MAX_TAGS,
     TAG_PATTERN,
     ManifestError,
+    TriageRefused,
     case_object,
     row_from_manifest,
+    triage_updates,
 )
 from core.database import AGENT_CASE_EXPECTED, CASE_ID_LENGTH, FEEDBACK_REACTIONS, AgentFeedback
 
@@ -243,3 +245,69 @@ def test_the_reaction_rule_maps_thumbs_onto_an_expected_outcome() -> None:
     assert EXPECTED_BY_REACTION == {"thumbs_up": "accepted", "thumbs_down": "rejected"}
     assert set(EXPECTED_BY_REACTION) <= set(FEEDBACK_REACTIONS)
     assert set(EXPECTED_BY_REACTION.values()) == set(AGENT_CASE_EXPECTED)
+
+
+# ---- triage_updates: the PATCH route's rules, shared with the triage skill ----
+
+NOW = datetime(2026, 11, 4, 12, 0, 0)
+
+
+def _row(**overrides) -> AgentFeedback:
+    return AgentFeedback(**{**row_from_manifest(_manifest()), "expected": None, "promoted_at": None, **overrides})
+
+
+def test_triage_sets_status_and_sorted_tags_and_nothing_else() -> None:
+    updates = triage_updates(_row(), now=NOW, status="in_progress", tags=["range-text", "binding-swap"])
+    assert updates == {"status": "in_progress", "tags": ["binding-swap", "range-text"]}
+    assert triage_updates(_row(), now=NOW, tags=[]) == {"tags": []}
+    assert triage_updates(_row(), now=NOW) == {}
+
+
+@pytest.mark.parametrize(
+    "edit",
+    [
+        {"status": "retired"},
+        {"tags": ["Legend"]},
+        {"tags": ["legend", "legend"]},
+        {"tags": [f"tag-{number}" for number in range(MAX_TAGS + 1)]},
+        {"expected": "unknown"},
+    ],
+)
+def test_triage_refuses_what_the_patch_body_refuses(edit) -> None:
+    with pytest.raises(TriageRefused) as caught:
+        triage_updates(_row(), now=NOW, **edit)
+    assert caught.value.code == "invalid"
+
+
+@pytest.mark.parametrize(("reaction", "expected"), [("thumbs_up", "accepted"), ("thumbs_down", "rejected")])
+def test_promoting_takes_the_reaction_rule_and_now(reaction, expected) -> None:
+    assert triage_updates(_row(reaction=reaction), now=NOW, promoted=True) == {"expected": expected, "promoted_at": NOW}
+
+
+def test_promoting_keeps_an_outcome_and_a_time_already_set() -> None:
+    row = _row(expected="accepted", promoted_at=datetime(2026, 10, 12, 15, 0, 0))
+    assert triage_updates(row, now=NOW, promoted=True) == {}
+    assert triage_updates(_row(reaction="bug"), now=NOW, promoted=True, expected="rejected") == {
+        "expected": "rejected",
+        "promoted_at": NOW,
+    }
+
+
+@pytest.mark.parametrize(
+    ("overrides", "code"),
+    [
+        ({"result_version": 0}, "no_plot"),
+        ({"include_data": False}, "no_data"),
+        ({"reaction": "bug"}, "expected_required"),
+        ({"reaction": "idea"}, "expected_required"),
+    ],
+)
+def test_promoting_refuses_a_case_the_harness_cannot_run(overrides, code) -> None:
+    with pytest.raises(TriageRefused) as caught:
+        triage_updates(_row(**overrides), now=NOW, promoted=True, status="in_progress")
+    assert caught.value.code == code
+
+
+def test_unpromoting_clears_the_time_and_keeps_the_outcome() -> None:
+    row = _row(expected="rejected", promoted_at=datetime(2026, 10, 12, 15, 0, 0))
+    assert triage_updates(row, now=NOW, promoted=False) == {"promoted_at": None}

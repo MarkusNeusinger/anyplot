@@ -7,7 +7,9 @@ and object names, the triage rules for tags and the expected outcome, and
 `row_from_manifest`, which turns a manifest into the row. The route inserts that row right
 after the upload, and the dev machine's sync CLI (`agents/evals/sync_cases.py`) indexes a
 case that reached the bucket without one; both read the mapping from here, so it has one
-home. Design: docs/concepts/agent-network.md ("Feedback capture").
+home. `triage_updates` is the same for a triage edit: the PATCH route and the triage
+skill's `apply_triage.py` (`.claude/skills/triage-agent-cases/`) both write what it
+returns. Design: docs/concepts/agent-network.md ("Feedback capture").
 """
 
 from __future__ import annotations
@@ -19,7 +21,7 @@ from typing import Any, TypeIs
 
 from sqlalchemy import String
 
-from core.database.models import FEEDBACK_REACTIONS, FEEDBACK_STATUSES, AgentFeedback
+from core.database.models import AGENT_CASE_EXPECTED, FEEDBACK_REACTIONS, FEEDBACK_STATUSES, AgentFeedback
 
 
 CASE_PREFIX = "cases"
@@ -42,6 +44,7 @@ The importer (`agents/evals/import_case.py`) applies the same rule to a case wit
 """
 
 _CASE_ID = re.compile(CASE_ID_PATTERN)
+_TAG = re.compile(TAG_PATTERN)
 _CREATED_AT_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 _MAX_INTEGER = 2**31 - 1
 """The largest value of a PostgreSQL `INTEGER` column."""
@@ -55,6 +58,14 @@ _MAX_LENGTH: dict[str, int] = {
 
 class ManifestError(ValueError):
     """A manifest that is not schema 1 or lacks a required field; the message names the field."""
+
+
+class TriageRefused(ValueError):
+    """A triage edit the rules refuse; `code` is what the PATCH route answers with its 422."""
+
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code = code
 
 
 def case_object(case_id: str, name: str) -> str:
@@ -176,3 +187,61 @@ def row_from_manifest(manifest: Any) -> dict[str, Any]:
         "cost_estimate": _optional_number(manifest.get("cost_estimate")),
         "files": list(files),
     }
+
+
+def triage_updates(
+    row: AgentFeedback,
+    *,
+    now: datetime,
+    status: str | None = None,
+    tags: list[str] | None = None,
+    promoted: bool | None = None,
+    expected: str | None = None,
+) -> dict[str, Any]:
+    """The column changes of one triage edit of `row`; a field left as None stays as it is.
+
+    `tags` replaces the whole list, stored sorted. `promoted=True` sets `promoted_at` to `now`
+    (naive UTC) unless the row has a time already, and, when neither the edit nor the row
+    names an outcome, takes the reaction's (`EXPECTED_BY_REACTION`); `promoted=False` clears
+    `promoted_at` and keeps the outcome. Raises `TriageRefused`:
+
+    * `invalid`: a status, tag list or outcome the PATCH body model refuses as well;
+    * `no_plot`: promoting a chat case (`result_version` 0), which the harness cannot replay;
+    * `no_data`: promoting a case stored without `data.csv`;
+    * `expected_required`: promoting a `bug` or `idea` without an outcome.
+    """
+    if status is not None and status not in FEEDBACK_STATUSES:
+        raise TriageRefused("invalid", f"status {status!r} is not one of {', '.join(FEEDBACK_STATUSES)}")
+    if tags is not None:
+        bad = [tag for tag in tags if not isinstance(tag, str) or not _TAG.fullmatch(tag)]
+        if bad:
+            raise TriageRefused("invalid", f"tags {bad} do not match {TAG_PATTERN}")
+        if len(tags) > MAX_TAGS:
+            raise TriageRefused("invalid", f"{len(tags)} tags, at most {MAX_TAGS}")
+        if len(set(tags)) != len(tags):
+            raise TriageRefused("invalid", "tags must be unique")
+    if expected is not None and expected not in AGENT_CASE_EXPECTED:
+        raise TriageRefused("invalid", f"expected {expected!r} is not one of {', '.join(AGENT_CASE_EXPECTED)}")
+
+    updates: dict[str, Any] = {}
+    if status is not None:
+        updates["status"] = status
+    if tags is not None:
+        updates["tags"] = sorted(tags)
+    if expected is not None:
+        updates["expected"] = expected
+    if promoted is True:
+        if row.result_version == 0:
+            raise TriageRefused("no_plot", "a chat case (result_version 0) has no plot to replay")
+        if not row.include_data:
+            raise TriageRefused("no_data", "the case was stored without data.csv")
+        if expected is None and row.expected is None:
+            rule = EXPECTED_BY_REACTION.get(row.reaction)
+            if rule is None:
+                raise TriageRefused("expected_required", f"a {row.reaction} case needs an expected outcome")
+            updates["expected"] = rule
+        if row.promoted_at is None:
+            updates["promoted_at"] = now
+    elif promoted is False:
+        updates["promoted_at"] = None
+    return updates
