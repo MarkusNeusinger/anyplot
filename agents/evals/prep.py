@@ -438,6 +438,15 @@ def describe(line: str) -> str:
         return f"make_date {data['name']} from {parts}"
     if op == "row_number":
         return f"row_number {data['name']}"
+    if op == "split":
+        return f"split {data['column']} at {data['separator']!r} into {', '.join(data['names'])}"
+    if op == "extract":
+        return f"extract {data['keep']} of {data['column']} as {data['name']}"
+    if op == "strip":
+        ends = " and ".join(f"{end} {data[end]!r}" for end in ("prefix", "suffix") if end in data)
+        return f"strip {ends} of {data['column']} as {data['name']}"
+    if op == "replace":
+        return f"replace {data['old']!r} with {data.get('new', '')!r} in {data['column']} as {data['name']}"
     if op == "set_type":
         extra = [data[key] for key in ("date_format", "decimal") if key in data]
         return f"set_type {data['column']} {data['type']}" + (f" ({', '.join(extra)})" if extra else "")

@@ -1,0 +1,10 @@
+{
+  "dataset_text": "Region;Umsatz\nNord-Ost;120\nSüd-West;95\nNord-West;130\nSüd-Ost;88\n",
+  "message": "Ersetze in Region den Bindestrich durch ein Leerzeichen, als neue Spalte Gebiet.",
+  "expected_operations": [
+    {"op": "replace", "column": "Region", "old": "-", "new": " ", "name": "Gebiet"}
+  ],
+  "locale": "de",
+  "spec_id": "bar-basic",
+  "tags": ["replace", "text"]
+}

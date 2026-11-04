@@ -225,7 +225,9 @@ def warning_codes(sentences: list[str]) -> list[WarningCode]:
     return sorted({warning_code(sentence) for sentence in sentences})
 
 
-BindingWarningCode = Literal["negative_values", "negative_unbound", "label_sibling", "window_mismatch", "other"]
+BindingWarningCode = Literal[
+    "negative_values", "negative_unbound", "label_sibling", "window_mismatch", "bound_pair_inverted", "other"
+]
 """The binding check's warnings (`bindings.check_bindings`) as closed codes."""
 
 _BINDING_RULES: tuple[tuple[re.Pattern[str], BindingWarningCode], ...] = tuple(
@@ -244,6 +246,11 @@ _BINDING_RULES: tuple[tuple[re.Pattern[str], BindingWarningCode], ...] = tuple(
             "label_sibling",
         ),
         (r"^.*: column '.*' holds a .*-period value; the spec's convention is .*$", "window_mismatch"),
+        (
+            r"^.* and .*: every value of '.*' \(from .*\) lies above every value of '.*' \(up to .*\), so each row's "
+            r"lower bound is above its upper bound$",
+            "bound_pair_inverted",
+        ),
     )
 )
 

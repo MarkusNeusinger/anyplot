@@ -21,14 +21,15 @@
   Personal data in a `change_request` (a name, an address, an e-mail address, a phone
   number, a web address without a scheme or `www.` such as `jana-novak.de`) passes:
   whether plot text is an advertisement or a message to other people is the scope
-  judge's call, by intent. Four `prepare_data` (and `query_data`) arguments are exempt from the link rule
+  judge's call, by intent. These `prepare_data` (and `query_data`) arguments are exempt from the link rule
   by key (`DATA_ARGUMENT_KEYS`): a condition's `value`, a rename's or a new column's
-  `name`, and a `classify` rule's `label` and its `otherwise`. They are data, not an
-  instruction to follow: a value is compared with the cells of a column, a name
-  becomes a column header and a label becomes a cell, none is resolved, fetched or
-  run, and each may legitimately hold what the user's own table holds, such as a web
-  address in a payee column to drop, a column renamed to one, or a domain as a
-  category label. A column reference (`column`,
+  `name` and a `split`'s `names`, a `classify` rule's `label` and its `otherwise`, and the
+  literals of the text operations (`separator`, `prefix`, `suffix`, `old`, `new`). They are
+  data, not an instruction to follow: a value or a literal is compared with the cells of a
+  column, a name becomes a column header and a label or a replacement becomes a cell, none
+  is resolved, fetched or run, and each may legitimately hold what the user's own table
+  holds, such as a web address in a payee column to drop, a column renamed to one, a domain
+  as a category label, or the `https://` to strip off a column of links. A column reference (`column`,
   `columns`, `by`, `index`, ...) and the new names of a pivot stay under the rule, and
   so does every string of `generate_data`: its names and expressions never need a link.
 * `after_tool_callback`: a key allowlist per tool and a size cap of 8 KB (24 KB for
@@ -105,9 +106,11 @@ RESULT_LIMITS: dict[str, int] = {
     # umlauts throughout). Above the cap `shows` gives way (`shrunk_shows`) before the result is refused.
     PIPELINE_TOOL: 40 * 1024,
 }
+TEXT_LITERAL_KEYS = ("separator", "prefix", "suffix", "old", "new")
+"""The literals of the text operations (`split`, `strip`, `replace`): compared with the cells or written into them."""
 DATA_ARGUMENT_KEYS: dict[str, frozenset[str]] = {
-    PREPARE_TOOL: frozenset({"value", "name", "label", "otherwise"}),
-    QUERY_TOOL: frozenset({"value", "name", "label", "otherwise"}),
+    PREPARE_TOOL: frozenset({"value", "name", "names", "label", "otherwise", *TEXT_LITERAL_KEYS}),
+    QUERY_TOOL: frozenset({"value", "name", "names", "label", "otherwise", *TEXT_LITERAL_KEYS}),
     # Code holds `x / 2` and `a // b`, which the path rule reads as paths; the DATA validator bans URL literals,
     # file names reach no reader (`open`, `read_*` and the I/O modules are banned) and the sandbox has no egress.
     DATA_CODE_TOOL: frozenset({"code"}),

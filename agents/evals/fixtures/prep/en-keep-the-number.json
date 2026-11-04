@@ -1,0 +1,10 @@
+{
+  "dataset_text": "Product,Units,Price\nLamp,12,about 49 EUR\nChair,30,EUR 120 (sale)\nDesk,7,310 EUR net\nShelf,18,ca. 85 EUR\n",
+  "message": "Keep only the number of each Price, as a new column Amount.",
+  "expected_operations": [
+    {"op": "extract", "column": "Price", "keep": "number", "name": "Amount"}
+  ],
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["extract", "text"]
+}

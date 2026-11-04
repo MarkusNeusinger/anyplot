@@ -2364,3 +2364,315 @@ class TestWholeNumberForms:
                 if Decimal(cell) == Decimal(cell).to_integral_value():
                     assert "." not in cell and "e" not in cell, (ops, cell)  # a whole number without `.0`
             assert not any("rounded" in change or "decimal numbers" in change for change in prepared.changes), ops
+
+
+def split(column: str, separator: str, *names: str) -> dict[str, Any]:
+    return {"op": "split", "column": column, "separator": separator, "names": list(names)}
+
+
+# A range table as the agent case triage met it, invented: a count, an average and the ranges as text.
+RANGES = "team;games;mean;min–max\nalpha;140;61.5;48–80\nbeta;146;67.2;52–77\ngamma;143;64.0;45–79\n"
+
+
+class TestSplit:
+    def test_a_range_becomes_two_number_columns_beside_its_source(self) -> None:
+        prepared = prepare(RANGES, split("min–max", "–", "min", "max"))
+
+        assert prepared.changes == [
+            "split min–max at '–' into min and max: 3 of 3 cells split; min and max read as numbers; "
+            "min–max stays as it is"
+        ]
+        assert rows(prepared)[0] == "team,games,mean,min–max,min,max"
+        assert cells(prepared, 3) == ["48–80", "52–77", "45–79"]  # the source stays as it was
+        assert (cells(prepared, 4), cells(prepared, 5)) == (["48", "52", "45"], ["80", "77", "79"])
+        assert dtypes(prepared)["min"] == dtypes(prepared)["max"] == "integer"
+        assert prepared.converted == {"min": "min–max", "max": "min–max"}  # an open role takes them
+        assert prepared.text_columns == []
+
+    def test_a_cell_without_the_separator_and_one_with_more_are_counted(self) -> None:
+        prepared = prepare("k,r\na,1-2\nb,7\nc,3-4-5\n", split("r", "-", "lo", "hi"))
+
+        assert prepared.changes == [
+            "split r at '-' into lo and hi: 2 of 3 cells split, 1 cell without it kept whole in lo, 1 with more "
+            "keep the rest in hi; lo read as numbers; hi kept as text; r stays as it is"
+        ]
+        assert (cells(prepared, 2), cells(prepared, 3)) == (["1", "7", "3"], ["2", "", "4-5"])
+
+    def test_a_minus_sign_is_never_a_cut(self) -> None:
+        prepared = prepare("k,r\na,-5-10\nb,-10--5\nc,5 - -3\nd,-.5-1\n", split("r", "-", "lo", "hi"))
+
+        assert (cells(prepared, 2), cells(prepared, 3)) == (["-5", "-10", "5", "-0.5"], ["10", "-5", "-3", "1"])
+        assert "4 of 4 cells split;" in prepared.changes[0]
+
+    def test_a_separator_of_spaces_cuts_at_every_run_of_spaces(self) -> None:
+        prepared = prepare("name,v\nAda  Lovelace,1\nAlan Turing,2\nPlato,3\n", split("name", " ", "first", "last"))
+
+        assert prepared.changes[0].startswith("split name at spaces into first and last: 2 of 3 cells split")
+        assert (cells(prepared, 2), cells(prepared, 3)) == (["Ada", "Alan", "Plato"], ["Lovelace", "Turing", ""])
+        assert {"first", "last"} <= set(prepared.text_columns)
+
+    def test_a_longer_separator_is_taken_literally(self) -> None:
+        prepared = prepare("k,r\na,10 to 20\nb,5 to 8\n", split("r", " to ", "from", "to"))
+
+        assert (cells(prepared, 2), cells(prepared, 3)) == (["10", "5"], ["20", "8"])
+
+    @pytest.mark.parametrize(
+        ("text", "low", "high"),
+        [
+            # Decimal commas keep their reading in a semicolon file with decimal commas.
+            ("Ort;Spanne;Wert\nA;1,5–2,5;3,5\nB;0,5–1,25;4,0\n", ["1.5", "0.5"], ["2.5", "1.25"]),
+            # Thousands dots keep theirs there too: `1.200` is 1200.
+            ("Ort;Spanne;Wert\nA;1.200–2.500;3,5\nB;900–1.100;4,0\n", ["1200", "900"], ["2500", "1100"]),
+            # And thousands commas in a file with decimal points.
+            ('Ort,Spanne,Wert\nA,"1,200–2,500",3.5\nB,900–1100,4.0\n', ["1200", "900"], ["2500", "1100"]),
+        ],
+    )
+    def test_the_parts_read_with_the_datasets_decimal_mark(self, text: str, low: list[str], high: list[str]) -> None:
+        prepared = prepare(text, split("Spanne", "–", "lo", "hi"))
+
+        assert (cells(prepared, 3), cells(prepared, 4)) == (low, high)
+
+    def test_a_part_that_mostly_fails_as_numbers_stays_text(self) -> None:
+        """More than a tenth of the cells failing keeps the part text, as `set_type` would refuse it."""
+        ranges = "".join(f"r{n},{n}–{n + 5}\n" for n in range(8))
+        prepared = prepare("k,t\n" + ranges + "s,x–y\n", split("t", "–", "lo", "hi"))
+
+        assert "lo and hi kept as text" in prepared.changes[0]
+        assert {"lo", "hi"} <= set(prepared.text_columns) and prepared.converted == {}
+
+    def test_a_tenth_of_failing_cells_is_counted_and_left_missing(self) -> None:
+        ranges = "".join(f"r{n},{n}–{n + 5}\n" for n in range(10))
+        prepared = prepare("k,t\n" + ranges + "s,x–9\n", split("t", "–", "lo", "hi"))
+
+        assert "lo and hi read as numbers; 1 cell of lo could not be read and is now missing" in prepared.changes[0]
+        assert cells(prepared, 2)[-1] == "" and cells(prepared, 3)[-1] == "9"
+
+    def test_an_iso_date_column_stays_dates_when_the_user_splits_it(self) -> None:
+        prepared = prepare("d,v\n2024-11-03,1\n2024-01-15,2\n", split("d", "-", "year", "month", "day"))
+
+        assert dtypes(prepared)["d"] == "datetime" and dtypes(prepared)["year"] == "integer"
+        assert cells(prepared, 3) == ["11", "01"]  # leading zeros keep a part text, as the parser keeps them
+
+    def test_a_part_reads_as_numbers_only_as_the_parser_reads_one(self) -> None:
+        """`10 kg` is a number with its unit, as the parser reads it; `Q1` is a label, never 1 behind a unit `Q`."""
+        prepared = prepare("k,t\na,10 kg–20 kg\nb,5 kg–8 kg\n", split("t", "–", "lo", "hi"))
+        quarters = prepare("k,t\na,2024-Q1\nb,2024-Q2\n", split("t", "-", "year", "quarter"))
+
+        assert "lo and hi read as numbers, unit 'kg' removed" in prepared.changes[0]
+        assert cells(quarters, 3) == ["Q1", "Q2"] and "quarter kept as text" in quarters.changes[0]
+
+    def test_an_id_splits_only_when_asked_and_keeps_its_letters(self) -> None:
+        prepared = prepare("code,v\nA-12,1\nB-7,2\n", split("code", "-", "letter", "number"))
+
+        assert (cells(prepared, 2), cells(prepared, 3)) == (["A", "B"], ["12", "7"])
+        assert "letter kept as text; number read as numbers" in prepared.changes[0]
+
+    @pytest.mark.parametrize(
+        ("operation", "code", "message"),
+        [
+            (split("min–max", "/", "a", "b"), "invalid_operation", "no cell of column 'min–max' holds '/'"),
+            (
+                split("min–max", "–", "a", "b", "c"),
+                "invalid_operation",
+                "no cell has a part for column 'c'; split into fewer columns",
+            ),
+            (split("min–max", "–", "mean", "b"), "invalid_operation", "a column named 'mean' already exists"),
+            (split("min–max", "–", "a", "a"), "invalid_operation", "the new columns need different names"),
+            (split("ghost", "–", "a", "b"), "unknown_column", "there is no column 'ghost'"),
+        ],
+    )
+    def test_refusals(self, operation: dict[str, Any], code: str, message: str) -> None:
+        assert failure(RANGES, operation) == (code, message)
+
+    def test_a_split_wider_than_the_column_cap_is_too_wide(self) -> None:
+        header = ",".join(f"c{n}" for n in range(MAX_COLUMNS - 1))
+        text = f"{header},r\n" + ",".join("1" for _ in range(MAX_COLUMNS - 1)) + ",1-2\n"
+
+        assert failure(text, split("r", "-", "a", "b"))[0] == "too_wide"
+
+    @pytest.mark.parametrize(
+        "operation",
+        [
+            split("r", "", "a", "b"),
+            split("r", "-", "a"),
+            split("r", "-", *(f"p{n}" for n in range(11))),
+            split("r", "\t", "a", "b"),
+            split("r", "-" * (MAX_CELL_CHARS + 1), "a", "b"),
+        ],
+    )
+    def test_the_model_refuses_a_malformed_split(self, operation: dict[str, Any]) -> None:
+        with pytest.raises(ValidationError):
+            OPERATIONS.validate_python([operation])
+
+
+class TestExtract:
+    @pytest.mark.parametrize(
+        ("text", "numbers", "reading"),
+        [
+            ("t,v\n#12345,1\n#7,2\n", ["12345", "7"], "read as numbers"),
+            ("t,v\nCHF 1'200,1\nCHF 950,2\nca. 15,3\n", ["1200", "950", "15"], "read as numbers"),
+            ("t;v\nca. -3,5 °C;1\n12 °C;2\n", ["-3.5", "12"], "read as numbers (decimal comma)"),
+            ("t,v\nNr.5,1\n.5 l,2\n", ["5", "0.5"], "read as numbers"),
+            ("t,v\nA-12,1\nB-7,2\n", ["12", "7"], "read as numbers"),  # a dash after a letter is no minus sign
+            # A minus before or after a currency is the sign, never dropped.
+            (
+                "t,v\n$-100,1\n-$250,2\n€-50,3\nUSD-20,4\nca.-15,5\n",
+                ["-100", "-250", "-50", "-20", "-15"],
+                "read as numbers",
+            ),
+        ],
+    )
+    def test_the_one_number_of_each_cell(self, text: str, numbers: list[str], reading: str) -> None:
+        prepared = prepare(text, {"op": "extract", "column": "t", "keep": "number", "name": "n"})
+
+        assert cells(prepared, 2) == numbers
+        assert prepared.changes[0].endswith(f"of t, {reading}; t stays as it is")
+        assert prepared.converted == {"n": "t"}
+
+    def test_a_cell_with_two_numbers_or_none_has_no_number(self) -> None:
+        values = "".join(f"r{n},ca. {n}\n" for n in range(10))
+        prepared = prepare(
+            "k,t\n" + values + "s,10–20\n", {"op": "extract", "column": "t", "keep": "number", "name": "n"}
+        )
+
+        assert prepared.changes == [
+            "new column n: the number in 10 of 11 cells of t, read as numbers, 1 cell without exactly one number is "
+            "missing; t stays as it is"
+        ]
+        assert cells(prepared, 2)[-1] == ""
+
+    def test_more_than_a_tenth_without_a_number_is_refused(self) -> None:
+        assert failure(
+            "t,v\n10–20,1\n12,2\nx,3\n", {"op": "extract", "column": "t", "keep": "number", "name": "n"}
+        ) == ("type_mismatch", "column 't': 2 of 3 cells hold no number, or more than one")
+
+    def test_digits_keep_leading_zeros_as_text(self) -> None:
+        prepared = prepare("t,v\n#00123,1\n#00456,2\n", {"op": "extract", "column": "t", "keep": "digits", "name": "d"})
+
+        assert cells(prepared, 2) == ["00123", "00456"] and "d" in prepared.text_columns
+        assert dtypes(prepared)["d"] == "text"
+
+    def test_digits_without_a_leading_zero_read_as_numbers(self) -> None:
+        prepared = prepare(
+            "p,v\n+41 79 123,1\n+41 44 555,2\n", {"op": "extract", "column": "p", "keep": "digits", "name": "d"}
+        )
+
+        assert cells(prepared, 2) == ["4179123", "4144555"]
+        assert prepared.changes == [
+            "new column d: the digits of 2 of 2 cells of p; d read as numbers; p stays as it is"
+        ]
+
+    def test_letters_keep_the_spaces_between_words(self) -> None:
+        prepared = prepare(
+            "t,v\nNew York 10001,1\n12 kg,2\n7,3\n", {"op": "extract", "column": "t", "keep": "letters", "name": "l"}
+        )
+
+        assert cells(prepared, 2) == ["New York", "kg", ""]
+        assert prepared.changes == [
+            "new column l: the letters of 2 of 3 cells of t, 1 cell without a letter is empty; l kept as text; "
+            "t stays as it is"
+        ]
+
+    def test_a_column_without_any_digit_is_refused(self) -> None:
+        assert failure("t,v\nab,1\ncd,2\n", {"op": "extract", "column": "t", "keep": "digits", "name": "d"}) == (
+            "invalid_operation",
+            "no cell of column 't' holds a digit",
+        )
+
+
+class TestStripAndReplace:
+    def test_a_prefix_comes_off(self) -> None:
+        prepared = prepare("t,v\n#12,1\n#7,2\n3,3\n", {"op": "strip", "column": "t", "prefix": "#", "name": "n"})
+
+        assert cells(prepared, 2) == ["12", "7", "3"]
+        assert prepared.changes == [
+            "new column n: '#' off the start of 2 of 3 cells of t; n read as numbers; t stays as it is"
+        ]
+
+    def test_a_prefix_and_a_suffix_with_spaces_around_them(self) -> None:
+        prepared = prepare(
+            "t,v\nCHF 100 net,1\nCHF 200 net,2\n",
+            {"op": "strip", "column": "t", "prefix": "CHF ", "suffix": " net", "name": "n"},
+        )
+
+        assert cells(prepared, 2) == ["100", "200"]
+        assert prepared.changes[0].startswith("new column n: 'CHF' off the start and 'net' off the end of 2 of 2 cells")
+
+    def test_strip_refusals(self) -> None:
+        assert failure("t,v\na,1\nb,2\n", {"op": "strip", "column": "t", "name": "n"}) == (
+            "invalid_operation",
+            "strip needs a prefix, a suffix or both",
+        )
+        assert failure(
+            "t,v\na,1\nb,2\n", {"op": "strip", "column": "t", "prefix": "#", "suffix": "x", "name": "n"}
+        ) == ("invalid_operation", "no cell of column 't' starts with '#' or ends with 'x'")
+        with pytest.raises(ValidationError):
+            OPERATIONS.validate_python([{"op": "strip", "column": "t", "prefix": "  ", "name": "n"}])
+
+    def test_replace_writes_a_new_text_and_types_the_result(self) -> None:
+        prepared = prepare(
+            "t,v\n1.5 / 2,1\n2.5 / 3,2\n", {"op": "replace", "column": "t", "old": " / ", "new": "–", "name": "r"}
+        )
+
+        assert cells(prepared, 2) == ["1.5–2", "2.5–3"]
+        assert prepared.changes == [
+            "new column r: ' / ' replaced with '–' in 2 of 2 cells of t; r kept as text; t stays as it is"
+        ]
+
+    def test_replace_with_nothing_removes(self) -> None:
+        prepared = prepare("t,v\n1 200 Fr.,1\n950 Fr.,2\n", {"op": "replace", "column": "t", "old": "Fr.", "name": "r"})
+
+        assert prepared.changes[0].startswith("new column r: 'Fr.' removed in 2 of 2 cells of t; r read as numbers")
+        assert cells(prepared, 2) == ["1200", "950"]
+
+    def test_replace_refusals(self) -> None:
+        assert failure("t,v\nx,1\ny,2\n", {"op": "replace", "column": "t", "old": "z", "name": "r"}) == (
+            "invalid_operation",
+            "no cell of column 't' holds 'z'",
+        )
+        long = "x" * 101
+        text = f"t,v\n{long},1\ny,2\n"
+        assert failure(text, {"op": "replace", "column": "t", "old": "x", "new": "yy", "name": "r"}) == (
+            "invalid_operation",
+            "a cell would be longer than the 200 characters a cell may hold",
+        )
+        with pytest.raises(ValidationError):
+            OPERATIONS.validate_python([{"op": "replace", "column": "t", "old": "x", "new": "a\nb", "name": "r"}])
+
+    def test_a_number_column_is_read_as_its_canonical_text(self) -> None:
+        """`1,5` in a decimal-comma file is the number 1.5, written `1.5`: a comma to replace is not there any more."""
+        assert failure(
+            "p;v\n1,5;1\n2,5;2\n", {"op": "replace", "column": "p", "old": ",", "new": ".", "name": "n"}
+        ) == ("invalid_operation", "no cell of column 'p' holds ','")
+
+
+class TestTextChains:
+    def test_strip_then_split_then_keep_the_digits_in_one_call(self) -> None:
+        prepared = prepare(
+            "t,v\n#A-12-x3,1\n#B-7-x4,2\n",
+            {"op": "strip", "column": "t", "prefix": "#", "name": "t2"},
+            split("t2", "-", "kind", "number", "rest"),
+            {"op": "extract", "column": "rest", "keep": "digits", "name": "digit"},
+        )
+
+        assert len(prepared.changes) == 3
+        assert rows(prepared)[0] == "t,v,t2,kind,number,rest,digit"
+        assert rows(prepared)[1:] == ["#A-12-x3,1,A-12-x3,A,12,x3,3", "#B-7-x4,2,B-7-x4,B,7,x4,4"]
+        assert dtypes(prepared)["number"] == dtypes(prepared)["digit"] == "integer"
+        assert prepared.converted == {"number": "t2", "digit": "rest"}
+
+    def test_a_split_of_a_renamed_column_is_carried_under_the_new_name(self) -> None:
+        prepared = prepare(
+            RANGES, split("min–max", "–", "lo", "hi"), {"op": "rename", "column": "lo", "name": "Minimum"}
+        )
+
+        assert prepared.converted == {"Minimum": "min–max", "hi": "min–max"}
+
+    def test_the_source_data_is_untouched(self) -> None:
+        """The operations work on a copy: the version before stays as it was for `.undo()`."""
+        parsed = parse_dataset(RANGES)
+        before = parsed.csv
+
+        apply_operations(parsed, OPERATIONS.validate_python([split("min–max", "–", "min", "max")]))
+
+        assert parsed.csv == before

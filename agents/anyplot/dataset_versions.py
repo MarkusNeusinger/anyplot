@@ -97,13 +97,15 @@ def push_version(
     source: str | None = None,
     converted: Mapping[str, str] | None = None,
     row_numbers: Sequence[str] = (),
+    splits: Sequence[Sequence[str]] = (),
 ) -> DatasetVersion:
     """Store `parsed` as the session's next dataset version; raises `StoreFull` (nothing changes then).
 
     The current dataset joins the history; the oldest entries past `MAX_DATASET_HISTORY`
     leave the store. The bindings are carried over (`carry_bindings`) for a change of the
     data (`prepare_data`), a column `converted` by a `set_type` with a new name (each with its
-    source) filling the open required role that takes it, and a column of `row_numbers` the
+    source) filling the open required role that takes it, two neighbouring parts of one of
+    `splits` filling an open lower and upper bound pair, and a column of `row_numbers` the
     role left for them; `rebind` gives the defaults for the new profile instead
     (`default_bindings`), for a table that replaces the data (`generate_data`), where a
     choice made for the old columns says nothing about the new ones even when a name
@@ -151,7 +153,7 @@ def push_version(
     elif rebind:
         bindings = default_bindings(roles, stored.profile)
     else:
-        bindings = carry_bindings(view.bindings, roles, stored.profile, previous, converted, row_numbers)
+        bindings = carry_bindings(view.bindings, roles, stored.profile, previous, converted, row_numbers, splits)
     version = view.dataset_version + 1
     return DatasetVersion(dataset_id, stored, bindings, version, _delta(dataset_id, bindings, history, version))
 

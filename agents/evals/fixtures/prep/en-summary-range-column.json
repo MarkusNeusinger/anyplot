@@ -1,0 +1,10 @@
+{
+  "dataset_text": "Station,Readings,Mean,Range\nHarbor,212,14.2,3–25\nMeadow,208,15.8,5–27\nRidge,215,12.9,1–22\nValley,210,16.4,6–29\nMoor,199,10.7,-2–19\n",
+  "action": "summarize_data",
+  "expected_operations": [
+    {"op": "split", "column": "Range", "separator": "–", "names": ["Range (min)", "Range (max)"]}
+  ],
+  "locale": "en",
+  "spec_id": "range-interval",
+  "tags": ["summary", "conversion", "split", "bound_pair"]
+}
