@@ -2,8 +2,9 @@
  * The public lane's notice above the first input, one line since 2026-11-02 (owner: less
  * text, the details behind a button rather than removed). The line keeps in view, without a
  * click, that this is an experimental AI (the EU AI Act's Art. 50 duty to say that a person
- * talks to an AI), that its results can be wrong, and that nothing is stored without feedback.
- * The ⓘ button at its end (`InfoPopover`) opens the rest: which AI and where it runs, what not
+ * talks to an AI) and that its answers can be wrong. The ⓘ button at its end (`InfoPopover`)
+ * opens the rest: where the chat and the data live and for how long, that nothing is saved
+ * without feedback, which AI it is, where it runs and that it does not train on them, what not
  * to paste, the daily limits, and the legal page's section on the assistant. The link opens a
  * new tab: leaving the page would end the session. The texts live in `lane.ts`, with the
  * public lane's consent line.

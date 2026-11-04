@@ -356,7 +356,8 @@ async def eligibility(
 async def create_session(
     body: PublicCreateSessionBody, ctx: Ctx, client: Client, db: Db, siteverify: Siteverify, human: HumanToken = None
 ) -> Any:
-    """Open a chat session: `{session_id, eligibility}`. The page keeps the id and sends it as `X-Anyplot-Session`.
+    """Open a chat session: `{session_id, eligibility, roles}`. The page keeps the id and sends it as
+    `X-Anyplot-Session`.
 
     Needs a Turnstile token (`require_human`), checked before the agents service is asked.
     """

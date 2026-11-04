@@ -223,8 +223,9 @@ MissingBucket = Literal["none", "lt5", "5_30", "gt30"]
 SpecFit = Literal["direct", "needs_reshape", "missing_role", "incompatible"]
 
 TurnKind = Literal["plot", "prep", "formula", "code", "example", "talk", "refused", "error"]
-TurnAction = Literal["text", "create_plot", "carry_plot", "summarize_data"]
-"""`carry_plot` (2026-11-02): the page's "plot in <library> with your decisions" after a switch (`switch.py`)."""
+TurnAction = Literal["text", "create_plot", "carry_plot", "summarize_data", "example_data"]
+"""`carry_plot` (2026-11-02): the page's "plot in <library> with your decisions" after a switch (`switch.py`).
+`example_data`: the page's `.example_data()`, the example data a session without data asks for in one click."""
 ToolName = Literal[
     "get_dataset_profile",
     "get_spec_brief",

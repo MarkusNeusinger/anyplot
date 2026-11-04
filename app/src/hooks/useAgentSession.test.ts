@@ -306,6 +306,42 @@ describe('useAgentSession: opening and closing', () => {
     );
   });
 
+  it("keeps the spec's roles from the open answer, for the header; null from an older server", async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions'] = () =>
+      json(200, {
+        session_id: 'S1',
+        eligibility: { eligible: true, status: 'clean', reasons: [] },
+        roles: [role('x'), role('series', { kinds: ['categorical'], required: false })],
+      });
+    const withRoles = await openSession(routes);
+    expect(withRoles.result.current.state.specRoles).toEqual([
+      { ...role('x'), non_negative: false, computed: false },
+      {
+        ...role('series', { kinds: ['categorical'], required: false }),
+        non_negative: false,
+        computed: false,
+      },
+    ]);
+    // The data card's dropdowns still wait for a dataset's own roles.
+    expect(withRoles.result.current.state.roles).toEqual([]);
+    withRoles.unmount();
+
+    const older = await openSession(baseRoutes());
+    expect(older.result.current.state.specRoles).toBeNull();
+    older.unmount();
+
+    const malformed = baseRoutes();
+    malformed['POST /sessions'] = () =>
+      json(200, {
+        session_id: 'S1',
+        eligibility: { eligible: true, status: 'clean', reasons: [] },
+        roles: [{ kinds: ['numeric'] }],
+      });
+    const broken = await openSession(malformed);
+    expect(broken.result.current.state.specRoles).toBeNull();
+  });
+
   it('deletes the session with keepalive on pagehide, once', async () => {
     const hook = await openSession(baseRoutes());
     act(() => {
@@ -1323,6 +1359,42 @@ describe('useAgentSession: formulas', () => {
     // It is confirmed like a paste, which opens step 2.
     await act(() => result.current.confirmData());
     expect(result.current.state.dataConfirmed).toBe(true);
+  });
+
+  it('asks for example data as the action, never as words, and takes it as the first dataset', async () => {
+    const routes = baseRoutes();
+    const stream = liveSse([['ready', { v: 'anyplot/1', run_id: 'ex' }]]);
+    routes['POST /sessions/S1/messages'] = () => stream.response;
+    const { result } = await openSession(routes);
+
+    let turn: Promise<void> = Promise.resolve();
+    act(() => {
+      turn = result.current.exampleData();
+    });
+    await waitFor(() => expect(result.current.state.run?.kind).toBe('example_data'));
+    expect(pendingReply(result.current.state)).toBe('example_data');
+    act(() => {
+      stream.push('message', {
+        text: 'I generated example data to try the plot: 200 rows, all made up.',
+      });
+      // The server's `done` keeps the session language as it was: the action passes no judge.
+      stream.push('done', {
+        llm_calls: 3,
+        bindings: GENERATED.bindings,
+        data_confirmed: false,
+        dataset: GENERATED,
+        language: { language: 'en', source: 'default' },
+      });
+      stream.close();
+    });
+    await act(() => turn);
+
+    expect(turnBodies()).toEqual([{ action: 'example_data' }]);
+    expect(result.current.state.items[0]).toMatchObject({ kind: 'action', action: 'example_data' });
+    expect(result.current.state.dataset?.parsed).toMatchObject({ version: 1 });
+    expect(result.current.state.plotLanguage).toEqual({ language: 'en', source: 'default' });
+    // No summary follows: the reply named the table, and `done` carried it whole.
+    expect(turnBodies()).toHaveLength(1);
   });
 
   it('keeps a pasted formula as an offer, not an error, and .send() turns it into a turn', async () => {

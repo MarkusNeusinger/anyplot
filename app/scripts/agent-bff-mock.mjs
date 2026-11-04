@@ -64,6 +64,13 @@
  * stored}` with the file names the BFF would store. A message containing "502"
  * answers `502 storage` instead, so the failure line can be driven.
  *
+ * `POST /sessions` answers the spec's `roles` with the session, as the service
+ * does for the page header's columns ⓘ. The action `{action: "example_data"}`
+ * (`.example_data()`) answers after a few seconds with a made-up table that
+ * fits the spec (version 1 without data, the next version otherwise) and a
+ * reply naming it, as the root's `run_data_code` with `source_language`
+ * `example` does.
+ *
  * The step-1 data changes (the service's `prepare_data` tool) in miniature:
  * the action `{action: "summarize_data"}` answers a scripted summary of the
  * profile; a message containing "prozent" or "percent" plays a `set_type`
@@ -324,6 +331,7 @@ const ACTION_MESSAGES = {
   carry_plot:
     '[action] Create the plot from my dataset and bindings, with the decisions I made so far.',
   summarize_data: '[action] Summarize the dataset for the user.',
+  example_data: '[action] Make example data to try this plot.',
 };
 /** The plot memory's caps (`agents/anyplot/memory.py`): a new entry past them is refused, never an old one dropped. */
 const MAX_MEMORY_ENTRIES = 30;
@@ -1116,6 +1124,12 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         send('message', { text: summarizeData(session) });
         return;
       }
+      if (body.action === 'example_data') {
+        // The root's `get_spec_brief` and a sandbox run take a few seconds: the page's working line counts them.
+        await sleep(STEP_MS * 6);
+        send('message', { text: exampleData(session) });
+        return;
+      }
       const size = wideTableSize(lower);
       if (size) {
         await sleep(STEP_MS * 2);
@@ -1872,6 +1886,58 @@ function generateWideTable(session, size) {
   return `I generated ${size.rows.toLocaleString('en-US')} rows and ${size.columns} columns. Check the preview, or .view_all() to see every row.`;
 }
 
+/**
+ * The root's answer to `{action: "example_data"}` (`.example_data()`, root.md "Example data")
+ * in miniature: a made-up table that fits the spec, which `run_data_code` with `source_language`
+ * `example` would compute, as version 1 of a session without data (the next version otherwise).
+ */
+function exampleData(session) {
+  let seed = 42;
+  const next = () => {
+    seed = (Math.imul(seed, 1103515245) + 12345) >>> 0;
+    return seed / 4294967296;
+  };
+  const tables = {
+    'scatter-basic': () => ({
+      header: ['Ad Spend', 'Sales'],
+      rows: Array.from({ length: 40 }, () => {
+        const spend = 5 + next() * 45;
+        return [spend.toFixed(1), (20 + 2.4 * spend + (next() - 0.5) * 30).toFixed(1)];
+      }),
+    }),
+    'line-multi': () => ({
+      header: ['Month', 'Alpha', 'Beta', 'Gamma'],
+      rows: Array.from({ length: 12 }, (_, m) => [
+        `2025-${String(m + 1).padStart(2, '0')}-01`,
+        ...[100, 80, 60].map(base => (base + m * 4 + next() * 12).toFixed(1)),
+      ]),
+    }),
+    'box-basic': () => ({
+      header: ['Region', 'Delivery Days'],
+      rows: Array.from({ length: 60 }, (_, i) => [
+        ['North', 'South', 'East', 'West'][i % 4],
+        (3 + (i % 4) + next() * 4).toFixed(1),
+      ]),
+    }),
+  };
+  const { header, rows } = tables[session.specId]();
+  const parsed = parseDataset(toCsv(header, rows));
+  const changes = [`generated example data: ${rows.length} rows, ${header.length} columns`];
+  if (!session.dataset) {
+    session.dataset = parsed;
+    session.bindings = defaultBindings(session, parsed.profile);
+    session.complete = checkBindings(session, session.bindings).complete;
+    session.confirmed = false;
+    session.history = [];
+    session.version = 1;
+    session.changed = { ...datasetPayload(session), roles: SPECS[session.specId].roles, changes };
+  } else {
+    storeVersion(session, parsed, changes);
+  }
+  const named = header.join(', ').replace(/, ([^,]*)$/, ' and $1');
+  return `I generated example data to try the plot: ${rows.length} rows of ${named}, all made up. Check them in the data panel and confirm them with .confirm().`;
+}
+
 /** The step-1 summary the root writes after `summarize_data`, from the profile alone. */
 function summarizeData(session) {
   if (!session.dataset) return 'Paste your data first; then I can summarize it.';
@@ -2127,10 +2193,15 @@ async function route(req, res) {
       active: false,
       cancelled: false,
     });
+    // The spec's roles, as the service answers them since the header's columns ⓘ reads them.
     return json(
       res,
       200,
-      { session_id: sid, eligibility: { eligible: true, status: 'coupled', reasons: [] } },
+      {
+        session_id: sid,
+        eligibility: { eligible: true, status: 'coupled', reasons: [] },
+        roles: SPECS[body.spec_id].roles,
+      },
       ref
     );
   }

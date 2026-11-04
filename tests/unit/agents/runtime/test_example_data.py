@@ -205,6 +205,32 @@ class TestTheTurn:
         data_code = attribution_lines(caplog, "data_code")
         assert data_code and data_code[0]["language"] == "example"
 
+    async def test_the_pages_action_makes_example_data_without_a_judge_or_a_language(
+        self, client: httpx.AsyncClient, swap_models, judge: FakeJudge, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """`.example_data()`: the same table as the typed request, in one click, and the line names the action."""
+        caplog.set_level(logging.INFO)
+        turn = default_script()
+        turn["root"] = [
+            {"call": "get_spec_brief", "args": {}},
+            {"call": "run_data_code", "args": {"code": SNIPPET, "source_language": "example"}},
+            {"text": "I generated example data to try the plot: 4 rows, 2 columns, all made up."},
+        ]
+        swap_models("anthropic-vertex", turn)
+        sid = await open_session(client, with_data=False)
+
+        response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "example_data"})
+        name, done = parse_sse(response.text)[-1]
+
+        assert name == "done"
+        # The data judge screens the computed table; no scope judge reads a message, so no language is detected.
+        assert judge.calls and all(text.startswith("<dataset>") for text, _ in judge.calls)
+        assert done["dataset"]["version"] == 1 and done["dataset"]["code"] == SNIPPET
+        assert done["language"] == {"language": "en", "source": "default"}
+        (chat_turn,) = _telemetry(caplog, "chat_turn")
+        assert (chat_turn["action"], chat_turn["kind"]) == ("example_data", "example")
+        assert chat_turn["language_source"] == "default"
+
 
 def test_turn_kind_example_outranks_code_but_not_a_plot() -> None:
     ledger = RequestLedger(tools=["get_spec_brief", "run_data_code"], example_data=True)

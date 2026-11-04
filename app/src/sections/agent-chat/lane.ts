@@ -23,13 +23,16 @@ export function useAgentLane(): AgentLane {
 
 /**
  * The public lane's notice above the first input (`ExperimentalNotice`): one line, always in
- * view, and the lines its ⓘ button opens, above the link to the legal page. The owner reads
+ * view, and the lines its ⓘ button opens, above the link to the legal page. Each detail states
+ * what the legal page's assistant section says ("memory", "feedback", "the model", "limits"):
+ * the hour is the agents service's idle sweep (`AGENT_SESSION_IDLE_S`, 3600 s). The owner reads
  * every user-facing text: keep them in the PR's "Texts to read".
  */
-export const EXPERIMENTAL_LINE =
-  'experimental AI · results can be wrong · stored only if you send feedback';
+export const EXPERIMENTAL_LINE = 'experimental AI · answers can be wrong';
 export const EXPERIMENTAL_DETAILS = [
-  'Claude by Anthropic, through Google Cloud Vertex AI in the EU',
+  'your chat and data live only in server memory, deleted after an hour idle',
+  'nothing is saved unless you send feedback',
+  'Claude by Anthropic, via Google Cloud Vertex AI in the EU · not used for training',
   "don't paste data you may not share",
   'daily limits apply',
 ] as const;

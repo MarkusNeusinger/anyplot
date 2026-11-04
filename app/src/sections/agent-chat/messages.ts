@@ -187,21 +187,27 @@ export const LEAVE_TEXT =
 
 /**
  * The how-to behind the data card's `# your data ⓘ` (since 2026-11-02, a label and a paragraph
- * under the card before; owner: far too long, and interesting only once): the formats, the
- * steps, a fix in plain words and changes afterwards. Example data and a curve are named by the
- * two boxes' placeholders. The owner reads every user-facing text: keep them in the PR's "Texts
- * to read".
+ * under the card before; owner: far too long, and interesting only once): the formats, code or
+ * a formula instead of a table, the steps, a fix in plain words and changes afterwards. Code and
+ * a formula go to the chat (`422 code`, `422 formula`), which takes 2,000 characters
+ * (`MAX_MESSAGE_CHARS`); the assistant translates code in any language into Python, so no line
+ * lists the languages as if they were all. Example data is `.example_data()` above the composer.
+ * The owner reads every user-facing text: keep them in the PR's "Texts to read".
  */
 export const DATA_HOWTO = [
   'formats: CSV, TSV, JSON, plain text, Excel, ODS, Parquet, Feather or NumPy',
+  'paste code or a formula that makes data too, up to 2,000 characters',
   'paste or drop → check the preview and the bindings → .confirm() → .create_plot()',
   'the assistant fixes your data in plain words: "sum per month"',
   'afterwards, ask for changes: "log scale on y", "label the outliers"',
 ] as const;
 
-/** The data box's placeholder: a table or a file, example data, or a curve. */
+/**
+ * The data box's placeholder: a table or a file, code that makes data (any language: "…"), or a
+ * formula. Example data left it for `.example_data()` above the composer.
+ */
 export const DATA_PLACEHOLDER =
-  'paste a table or drop a file (csv, excel, json …)\nor type: example data\nor ask for a curve: y = sin(x), x from -pi to pi';
+  'paste a table or drop a file (csv, excel, json …)\nor code that makes data (python, javascript, …)\nor a formula: y = sin(x), x from -pi to pi';
 
 /** Failures only the language chip meets; any other code reads as the page's turn errors do. */
 export const LANGUAGE_FAILURE: Record<string, string> = {
