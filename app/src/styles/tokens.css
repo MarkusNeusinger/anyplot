@@ -4,7 +4,7 @@
  * CSS custom properties for the editorial/paper aesthetic.
  * Based on the anyplot imprint palette — a colorblind-safe 8-hue
  * categorical palette plus 3 semantic anchors. See
- * docs/reference/palette-variants-v3/decision-rationale.md for the full design.
+ * docs/reference/palette-variants/v3/decision-rationale.md for the full design.
  * Dark mode via [data-theme="dark"] on <html>.
  */
 

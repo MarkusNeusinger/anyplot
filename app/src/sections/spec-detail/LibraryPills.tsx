@@ -5,20 +5,8 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 
+import { LIB_ABBREV } from 'src/constants';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
-
-// Library abbreviations (same as filter display)
-const LIBRARY_ABBREV: Record<string, string> = {
-  matplotlib: 'mpl',
-  seaborn: 'sns',
-  plotly: 'ply',
-  bokeh: 'bok',
-  altair: 'alt',
-  plotnine: 'p9',
-  pygal: 'pyg',
-  highcharts: 'hc',
-  letsplot: 'lp',
-};
 
 interface Implementation {
   library_id: string;
@@ -121,6 +109,36 @@ function ActionRule({ side }: { side: 'left' | 'right' }) {
         display: { xs: 'none', md: 'block' },
       }}
     />
+  );
+}
+
+/**
+ * `.use_my_data() →`, the agent chat's entry, fading in once the eligibility answer
+ * names a lane: right of the carousel (after a rule, `rule`), in the spec hub's header
+ * and beside the code tab's copy button.
+ */
+export function UseMyDataAction({
+  onActivate,
+  rule = false,
+}: {
+  onActivate: () => void;
+  rule?: boolean;
+}) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        animation: 'useMyDataFadeIn 0.3s ease-out',
+        '@keyframes useMyDataFadeIn': { from: { opacity: 0 }, to: { opacity: 1 } },
+        '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+      }}
+    >
+      {rule && <ActionRule side="right" />}
+      <TextAction arrow="right" ariaLabel={USE_MY_DATA_LABEL} onActivate={onActivate}>
+        <Box component="span">.use_my_data()</Box>
+      </TextAction>
+    </Box>
   );
 }
 
@@ -289,7 +307,7 @@ export const LibraryPills = memo(function LibraryPills({
                   {impl.library_id}
                 </Box>
                 <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-                  {isCenter ? impl.library_id : LIBRARY_ABBREV[impl.library_id] || impl.library_id}
+                  {isCenter ? impl.library_id : LIB_ABBREV[impl.library_id] || impl.library_id}
                 </Box>
               </Box>
             );
@@ -318,22 +336,7 @@ export const LibraryPills = memo(function LibraryPills({
           alignItems: 'center',
         }}
       >
-        {onUseWithMyData && (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              animation: 'useMyDataFadeIn 0.3s ease-out',
-              '@keyframes useMyDataFadeIn': { from: { opacity: 0 }, to: { opacity: 1 } },
-              '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-            }}
-          >
-            <ActionRule side="right" />
-            <TextAction arrow="right" ariaLabel={USE_MY_DATA_LABEL} onActivate={onUseWithMyData}>
-              <Box component="span">.use_my_data()</Box>
-            </TextAction>
-          </Box>
-        )}
+        {onUseWithMyData && <UseMyDataAction onActivate={onUseWithMyData} rule />}
       </Box>
     </Box>
   );

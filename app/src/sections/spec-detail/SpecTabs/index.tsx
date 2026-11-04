@@ -56,6 +56,8 @@ interface SpecTabsProps {
   libraryId: string;
   language?: string;
   onTrackEvent?: TrackEventFn;
+  // The agent chat's entry beside the code tab's copy button, for an eligible pair only
+  onUseWithMyData?: () => void;
   // Overview mode - only show Spec tab
   overviewMode?: boolean;
   // Tags to highlight (from similar specs hover)
@@ -83,6 +85,7 @@ export function SpecTabs({
   libraryId,
   language,
   onTrackEvent,
+  onUseWithMyData,
   overviewMode = false,
   highlightedTags = [],
 }: SpecTabsProps) {
@@ -304,6 +307,7 @@ export function SpecTabs({
             libraryId={libraryId}
             language={language}
             onTrackEvent={onTrackEvent}
+            onUseWithMyData={onUseWithMyData}
           />
         </TabPanel>
       )}

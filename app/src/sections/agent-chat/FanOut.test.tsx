@@ -32,8 +32,8 @@ function liveTurn() {
   });
   return {
     response: new Response(body, { status: 200, headers: { 'Content-Type': 'text/event-stream' } }),
-    finish: () => {
-      controller.enqueue(encoder.encode(wire('plot', PLOT_OK)));
+    finish: (plot: typeof PLOT_OK = PLOT_OK) => {
+      controller.enqueue(encoder.encode(wire('plot', plot)));
       controller.enqueue(encoder.encode(wire('done', { llm_calls: 3 })));
       controller.close();
     },
@@ -261,12 +261,28 @@ describe('FanOut', () => {
     await waitFor(() => expect(status('seaborn')).toHaveTextContent('v1 · ok'));
   });
 
-  it("plots every library in the page's site theme", async () => {
+  it("plots every library in the page's site theme, and shows that theme's image", async () => {
     mockBff();
     renderFanOut(['matplotlib', 'seaborn'], 2, { site: 'dark' });
 
     await waitFor(() => expect(plotTurns()).toHaveLength(2));
     expect(plotTurns().map(call => call.search)).toEqual(['?theme=dark', '?theme=dark']);
+
+    // The server renders the theme it was sent (one PNG per run): the card fetches and shows it.
+    turns
+      .get('S-seaborn')!
+      .finish({ ...PLOT_OK, artifacts: ['plot-dark.png', 'plot.py', 'data.csv'] });
+    expect(
+      await within(card('seaborn')).findByRole('img', {
+        name: 'seaborn plot, version 1, dark theme',
+      })
+    ).toBeInTheDocument();
+    expect(
+      calls.some(
+        call =>
+          call.path === '/sessions/S-seaborn/artifacts/plot-dark.png' && call.search === '?v=1'
+      )
+    ).toBe(true);
   });
 
   it('posts the paste again on a server without the copy, with the bindings of the click', async () => {

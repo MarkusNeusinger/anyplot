@@ -53,6 +53,23 @@ describe('CodeTab', () => {
     expect(screen.getByTestId('CheckIcon')).toBeInTheDocument();
   });
 
+  it('puts .use_my_data() beside the copy button only when the page hands its entry over', async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<CodeTab {...baseProps} />);
+    expect(screen.queryByRole('button', { name: 'Use with my data' })).not.toBeInTheDocument();
+
+    const onUseWithMyData = vi.fn();
+    rerender(<CodeTab {...baseProps} onUseWithMyData={onUseWithMyData} />);
+    const entry = screen.getByRole('button', { name: 'Use with my data' });
+    expect(entry).toHaveTextContent('.use_my_data()→');
+    // Beside `.copy()`, before it in the reading order.
+    expect(entry.compareDocumentPosition(screen.getByRole('button', { name: /copy code/i }))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+    await user.click(entry);
+    expect(onUseWithMyData).toHaveBeenCalledTimes(1);
+  });
+
   it('does not copy or track when code is null', async () => {
     const user = userEvent.setup();
     const writeText = vi.fn().mockResolvedValue(undefined);

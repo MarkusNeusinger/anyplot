@@ -25,6 +25,7 @@ export function MapLegend({ graphData, activeCategory, hoverType, setHoverType }
           line (top: 50) so the top row stays clear for the search pill. */}
       <Box
         component="button"
+        aria-expanded={legendOpen}
         onClick={() => setLegendOpen(o => !o)}
         sx={{
           all: 'unset',

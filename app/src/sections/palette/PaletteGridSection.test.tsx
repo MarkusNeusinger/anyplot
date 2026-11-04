@@ -24,6 +24,15 @@ describe('PaletteGridSection', () => {
     expect(buttons).toHaveLength(8);
     expect(buttons[0]).toHaveAccessibleName('Copy #009E73 (brand green) to clipboard');
 
+    // The active sort is exposed as a pressed toggle, not by colour alone.
+    expect(screen.getByRole('button', { name: 'imprint (default)' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(
+      screen.getByRole('button', { name: 'CVD-optimal (max ΔE under colorblindness)' })
+    ).toHaveAttribute('aria-pressed', 'false');
+
     fireEvent.click(
       screen.getByRole('button', { name: 'CVD-optimal (max ΔE under colorblindness)' })
     );
@@ -43,6 +52,13 @@ describe('PaletteGridSection', () => {
     );
 
     expect(screen.getByText(/why use CVD-optimal sort\?/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'CVD-optimal (max ΔE under colorblindness)' })
+    ).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'imprint (default)' })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
     const table = screen.getByRole('table');
     expect(within(table).getByText('21.45 (+5.11)')).toBeInTheDocument();
     expect(within(table).getByText('36.19 (=)')).toBeInTheDocument();

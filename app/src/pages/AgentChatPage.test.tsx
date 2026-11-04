@@ -41,6 +41,20 @@ const json = (status: number, body: unknown) =>
   });
 
 let fetchMock: ReturnType<typeof vi.fn>;
+
+/** The spec's `## Data` bullets as the catalogue API serves them: two columns and two meta lines. */
+const SPEC_DATA = [
+  '`x` (numeric) - Independent variable values plotted on the horizontal axis',
+  '`y` (numeric) - Dependent variable values plotted on the vertical axis',
+  'Size: 50-500 points recommended for clear visualization',
+  'Example: Random correlated data with moderate positive correlation',
+];
+/** A catalogue implementation with its themed previews. */
+const catalogueImpl = (library_id: string) => ({
+  library_id,
+  preview_url_light: `https://img.test/scatter-basic/${library_id}/plot-light.png`,
+  preview_url_dark: `https://img.test/scatter-basic/${library_id}/plot-dark.png`,
+});
 /** Answers a parse held back with `slow` in its text; set while it is pending. */
 let releaseParse: (() => void) | null = null;
 /** Set to hold the next turn's stream back until `releaseTurn` answers it. */
@@ -290,7 +304,8 @@ function stubFetch(
     if (url.pathname.endsWith('/specs/scatter-basic')) {
       return json(200, {
         title: 'Basic Scatter Plot',
-        implementations: [{ library_id: 'matplotlib' }, { library_id: 'seaborn' }],
+        data: SPEC_DATA,
+        implementations: ['matplotlib', 'seaborn'].map(catalogueImpl),
       });
     }
     if (method === 'DELETE') return new Response(null, { status: 204 });
@@ -483,6 +498,13 @@ describe('AgentChatPage gating', () => {
     });
     await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent(PAGE));
     expect(await screen.findByText('← Basic Scatter Plot')).toBeInTheDocument();
+  });
+
+  it('names the tab after the spec title, not its id', async () => {
+    flags.isDev = true;
+    renderAt(PAGE);
+    expect(await screen.findByLabelText(/# your data/)).toBeInTheDocument();
+    await waitFor(() => expect(document.title).toBe('agent · Basic Scatter Plot | anyplot.ai'));
   });
 
   it('lets local development in without the hint', async () => {
@@ -1047,6 +1069,85 @@ describe('AgentChatPage gating', () => {
     expect(await screen.findByText('error · unreachable')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'reload to sign in again' })).toBeInTheDocument();
     sessionStorage.clear();
+  });
+});
+
+describe('AgentChatPage catalogue plot', () => {
+  it('shows the catalogue plot beside the title in the library in use, and opens it large', async () => {
+    const base = fetchMock.getMockImplementation() as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    fetchMock.mockImplementation(async (input: string, init?: RequestInit) =>
+      new URL(input).pathname.endsWith('/sessions/S1/library')
+        ? json(200, {
+            session_id: 'S1',
+            eligibility: { eligible: true, status: 'clean', reasons: [] },
+          })
+        : base(input, init)
+    );
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await screen.findByLabelText(/# your data/);
+    const thumbnail = await screen.findByRole('button', {
+      name: 'Show the matplotlib catalogue plot large',
+    });
+    // The site theme's preview, from the catalogue's responsive files.
+    expect(thumbnail.querySelector('source')).toHaveAttribute(
+      'srcset',
+      expect.stringContaining('/scatter-basic/matplotlib/plot-light_400.webp 400w')
+    );
+    expect(thumbnail.querySelector('img')).toHaveAttribute(
+      'src',
+      'https://img.test/scatter-basic/matplotlib/plot-light_800.png'
+    );
+
+    thumbnail.focus();
+    fireEvent.click(thumbnail);
+    const dialog = await screen.findByRole('dialog', { name: '# Basic Scatter Plot · matplotlib' });
+    expect(
+      within(dialog).getByRole('img', {
+        name: 'Basic Scatter Plot in matplotlib, the plot from the catalogue',
+      })
+    ).toBeInTheDocument();
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() => expect(thumbnail).toHaveFocus());
+
+    // It follows a library switch.
+    await pickInMenu('seaborn');
+    expect(
+      await screen.findByRole('button', { name: 'Show the seaborn catalogue plot large' })
+    ).toBeInTheDocument();
+  });
+
+  it('lists the columns the plot expects behind the ⓘ after the title, without the meta lines', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    const info = await screen.findByRole('button', { name: 'Columns the plot expects' });
+    expect(info).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(info);
+    const details = await screen.findByRole('dialog', { name: 'Columns the plot expects' });
+    expect(
+      within(within(details).getByTestId('expected-columns'))
+        .getAllByRole('listitem')
+        .map(item => item.textContent)
+    ).toEqual([
+      'x (numeric) - Independent variable values plotted on the horizontal axis',
+      'y (numeric) - Dependent variable values plotted on the vertical axis',
+    ]);
+  });
+
+  it('records an open from the spec hub', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(`${PAGE}&source=spec_hub`);
+    await screen.findByLabelText(/# your data/);
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_open', {
+      library: 'matplotlib',
+      source: 'spec_hub',
+      spec: 'scatter-basic',
+    });
   });
 });
 
@@ -2128,7 +2229,7 @@ describe('AgentChatPage library switch and plot memory', () => {
 
     await waitFor(() => expect(forgetLine).toBeEnabled());
     fireEvent.click(forgetLine);
-    await waitFor(() => expect(memoryList()).toHaveAccessibleName(/^# remembered · 1 decision · /));
+    await waitFor(() => expect(memoryList()).toHaveAccessibleName('# remembered · 1 decision'));
     expect(
       agentCalls()
         .filter(([, init]) => (init as RequestInit | undefined)?.method === 'DELETE')

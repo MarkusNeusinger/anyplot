@@ -40,10 +40,15 @@ vi.mock('src/hooks', () => ({
   }),
 }));
 
-// Mock lazy-loaded components as simple divs; SpecTabs exposes the date it is handed
+// Mock lazy-loaded components as simple divs; SpecTabs exposes the date it is handed and
+// whether it got the chat's entry for the code tab
 vi.mock('src/sections/spec-detail/SpecTabs', () => ({
-  SpecTabs: ({ updated }: { updated?: string }) => (
-    <div data-testid="spec-tabs" data-updated={updated ?? ''}>
+  SpecTabs: ({ updated, onUseWithMyData }: { updated?: string; onUseWithMyData?: () => void }) => (
+    <div
+      data-testid="spec-tabs"
+      data-updated={updated ?? ''}
+      data-use-my-data={onUseWithMyData ? 'yes' : 'no'}
+    >
       SpecTabs
     </div>
   ),
@@ -58,10 +63,21 @@ vi.mock('src/sections/spec-detail/SpecDetailView', () => ({
 }));
 
 // The lane `useAgentEligibility` names for the pair; null is no entry (also while it probes).
-const agentEligibility: { lane: 'admin' | 'public' | null } = { lane: null };
+// `asked` records the pairs the page asks about, one per render.
+const agentEligibility: {
+  lane: 'admin' | 'public' | null;
+  asked: [string | null | undefined, string | null | undefined][];
+} = { lane: null, asked: [] };
 vi.mock('src/hooks/useAgentEligibility', () => ({
-  useAgentEligibility: () => agentEligibility.lane,
+  useAgentEligibility: (spec: string | null | undefined, library: string | null | undefined) => {
+    agentEligibility.asked.push([spec, library]);
+    return agentEligibility.lane;
+  },
 }));
+/** The libraries the page asked the eligibility about, each once. */
+const askedLibraries = () => [
+  ...new Set(agentEligibility.asked.map(([, library]) => library).filter(Boolean)),
+];
 
 const mockSpecData = {
   id: 'scatter-basic',
@@ -92,6 +108,7 @@ beforeEach(() => {
   mockParams = { specId: 'scatter-basic' };
   mockNavigate.mockReset();
   agentEligibility.lane = null;
+  agentEligibility.asked = [];
 });
 
 function mockFetchSuccess(data = mockSpecData) {
@@ -256,6 +273,101 @@ describe('SpecPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith(
       '/agent?spec=scatter-basic&library=matplotlib&language=python&source=plot_page'
     );
+    // The code tab gets the same entry beside its copy button, from the same answer.
+    expect(screen.getByTestId('spec-tabs')).toHaveAttribute('data-use-my-data', 'yes');
+    expect(askedLibraries()).toEqual(['matplotlib']);
+  });
+
+  it('gives the code tab no entry for a pair that is not eligible', async () => {
+    mockParams = { specId: 'scatter-basic', language: 'python', library: 'seaborn' };
+    mockFetchSuccess();
+    render(<SpecPage />);
+
+    expect(await screen.findByTestId('spec-tabs')).toHaveAttribute('data-use-my-data', 'no');
+  });
+
+  it("puts .use_my_data() in the hub's header, asking about matplotlib only", async () => {
+    mockParams = { specId: 'scatter-basic' };
+    agentEligibility.lane = 'public';
+    mockFetchSuccess({
+      ...mockSpecData,
+      // matplotlib second: the hub still asks about it, not about the first card.
+      implementations: [...mockSpecData.implementations].reverse(),
+    });
+    render(<SpecPage />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Use with my data' }));
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/agent?spec=scatter-basic&library=matplotlib&language=python&source=spec_hub'
+    );
+    // One library for the whole hub, never one per card.
+    expect(askedLibraries()).toEqual(['matplotlib']);
+    expect(screen.getAllByRole('button', { name: 'Use with my data' })).toHaveLength(1);
+  });
+
+  it('asks about the first card on a hub without matplotlib, in the order of the cards', async () => {
+    mockParams = { specId: 'scatter-basic' };
+    agentEligibility.lane = 'public';
+    mockFetchSuccess({
+      ...mockSpecData,
+      // The API's order is seaborn, bokeh; the cards are sorted by library id, bokeh first.
+      implementations: [
+        ...mockSpecData.implementations.filter(impl => impl.library_id !== 'matplotlib'),
+        {
+          library_id: 'bokeh',
+          library_name: 'Bokeh',
+          language: 'python',
+          preview_url: 'https://example.com/scatter-basic/bokeh/plot.png',
+          quality_score: 8,
+          code: null,
+        },
+      ],
+    });
+    render(<SpecPage />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Use with my data' }));
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/agent?spec=scatter-basic&library=bokeh&language=python&source=spec_hub'
+    );
+    expect(askedLibraries()).toEqual(['bokeh']);
+  });
+
+  it('asks about a library of the shown language on a hub under ?language=', async () => {
+    mockParams = { specId: 'scatter-basic' };
+    mockSearchParams.set('language', 'r');
+    agentEligibility.lane = 'public';
+    mockFetchSuccess({
+      ...mockSpecData,
+      implementations: [
+        ...mockSpecData.implementations,
+        {
+          library_id: 'ggplot2',
+          library_name: 'ggplot2',
+          language: 'r',
+          preview_url: 'https://example.com/scatter-basic/ggplot2/plot.png',
+          quality_score: 9,
+          code: null,
+        },
+      ],
+    });
+    render(<SpecPage />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Use with my data' }));
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/agent?spec=scatter-basic&library=ggplot2&language=r&source=spec_hub'
+    );
+    // The R cards' library only: matplotlib, not among them, is never asked about.
+    expect(askedLibraries()).toEqual(['ggplot2']);
+    mockSearchParams.delete('language');
+  });
+
+  it('shows no entry on the hub while the eligibility names no lane', async () => {
+    mockParams = { specId: 'scatter-basic' };
+    mockFetchSuccess();
+    render(<SpecPage />);
+
+    await screen.findByTestId('spec-overview');
+    expect(screen.queryByRole('button', { name: 'Use with my data' })).not.toBeInTheDocument();
   });
 
   it('does not report a miss when the implementation exists', async () => {
@@ -374,6 +486,87 @@ describe('SpecPage', () => {
       // No drop call — the languages agree.
       expect(mockSetSearchParams).not.toHaveBeenCalled();
       mockSearchParams.delete('language');
+    });
+  });
+
+  describe('structured data', () => {
+    const juliaSpec = {
+      ...mockSpecData,
+      implementations: [
+        {
+          library_id: 'makie',
+          library_name: 'Makie.jl',
+          language: 'julia',
+          preview_url: 'https://example.com/scatter-basic/makie/plot.png',
+          quality_score: 88,
+          code: null,
+        },
+      ],
+    };
+
+    /** The JSON-LD blocks the page renders, by their @type. */
+    function jsonLd(): Record<string, Record<string, unknown>> {
+      const blocks = Array.from(
+        document.querySelectorAll('script[type="application/ld+json"]'),
+        s => JSON.parse(s.textContent ?? '{}') as Record<string, unknown>
+      );
+      return Object.fromEntries(blocks.map(b => [String(b['@type']), b]));
+    }
+
+    it('names the language of a Julia implementation with its display name', async () => {
+      mockParams = { specId: 'scatter-basic', language: 'julia', library: 'makie' };
+      mockSearchParams.delete('language');
+      mockFetchSuccess(juliaSpec);
+      render(<SpecPage />);
+
+      await waitFor(() => expect(jsonLd().SoftwareSourceCode).toBeDefined());
+      expect(jsonLd().SoftwareSourceCode.programmingLanguage).toBe('Julia');
+    });
+
+    it('builds the breadcrumb the bot HTML carries: home, spec, library', async () => {
+      mockParams = { specId: 'scatter-basic', language: 'julia', library: 'makie' };
+      mockSearchParams.delete('language');
+      mockFetchSuccess(juliaSpec);
+      render(<SpecPage />);
+
+      await waitFor(() => expect(jsonLd().BreadcrumbList).toBeDefined());
+      const items = jsonLd().BreadcrumbList.itemListElement as { name: string; item: string }[];
+      expect(items.map(i => [i.name, i.item])).toEqual([
+        ['anyplot.ai', 'https://anyplot.ai/'],
+        ['Basic Scatter Plot', 'https://anyplot.ai/scatter-basic'],
+        ['Makie.jl', 'https://anyplot.ai/scatter-basic/julia/makie'],
+      ]);
+    });
+
+    it('shares the spec card as og:image on the hub', async () => {
+      mockParams = { specId: 'scatter-basic' };
+      mockSearchParams.delete('language');
+      mockFetchSuccess();
+      render(<SpecPage />);
+
+      await waitFor(() =>
+        expect(document.head.querySelector('meta[property="og:image"]')).toHaveAttribute(
+          'content',
+          'https://api.anyplot.ai/og/scatter-basic.png'
+        )
+      );
+    });
+
+    it('shares the home card on the hub of a spec with no render, like the bot HTML', async () => {
+      mockParams = { specId: 'scatter-basic' };
+      mockSearchParams.delete('language');
+      mockFetchSuccess({
+        ...mockSpecData,
+        implementations: mockSpecData.implementations.map(impl => ({ ...impl, preview_url: '' })),
+      });
+      render(<SpecPage />);
+
+      await waitFor(() =>
+        expect(document.head.querySelector('meta[property="og:image"]')).toHaveAttribute(
+          'content',
+          'https://api.anyplot.ai/og/home.png'
+        )
+      );
     });
   });
 });

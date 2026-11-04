@@ -16,7 +16,7 @@ import { useAgentEligibility } from 'src/hooks/useAgentEligibility';
 import { ApiError, apiGet, apiUrl, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
 import { agentChatPath, paths, publicAgentChatPath, specPath } from 'src/routes/paths';
-import { LibraryPills } from 'src/sections/spec-detail/LibraryPills';
+import { LibraryPills, UseMyDataAction } from 'src/sections/spec-detail/LibraryPills';
 import { RelatedSpecs } from 'src/sections/spec-detail/RelatedSpecs';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 
@@ -309,24 +309,37 @@ export function SpecPage() {
     [specId, trackEvent, mode, fetchCode]
   );
 
-  // "Use with my data" (`.use_my_data()` beside the library carousel): for an
-  // eligible pair, while the agent chat is built. An admin gets the admin chat,
-  // through a full navigation so Cloudflare Access can intercept the /debug
-  // path; everyone else gets the public chat while its lane is open, through
-  // the router. The chat page records `agent_open{source: plot_page}`.
-  const agentLane = useAgentEligibility(mode === 'detail' ? specId : null, currentImpl?.library_id);
+  // "Use with my data" (`.use_my_data()`): for an eligible pair. On the plot page
+  // beside the library carousel and the code tab's copy button, for the library
+  // shown; on the spec hub in its header, for one library of the cards it shows
+  // (all of them, or one language's under `?language=`): matplotlib where it is
+  // among them, else the first, because the eligibility route takes one library and
+  // the chat's library menu switches anyway: one request per view, never one per
+  // card. While the public lane is open everyone gets the public chat, an admin
+  // too, through the router (`useAgentEligibility`); only while it is closed does an
+  // admin get the admin chat, through a full navigation so Cloudflare Access can
+  // intercept the /debug path. The chat page records `agent_open{source: plot_page}`
+  // or `{source: spec_hub}`.
+  const agentImpl = useMemo(() => {
+    // The previous spec's data while the next one loads: no probe for its library.
+    if (!specData || specData.id !== specId) return null;
+    if (mode === 'detail') return currentImpl;
+    // In the cards' own order (`SpecOverview`: by library id), so "the first" is the first card.
+    const shown = specData.implementations
+      .filter(impl => !languageFilter || impl.language === languageFilter)
+      .sort((a, b) => a.library_id.localeCompare(b.library_id));
+    return shown.find(impl => impl.library_id === 'matplotlib') ?? shown[0] ?? null;
+  }, [mode, currentImpl, specData, specId, languageFilter]);
+  const agentLane = useAgentEligibility(specId, agentImpl?.library_id);
   const handleUseWithMyData = useCallback(() => {
-    if (!specId || !currentImpl) return;
+    if (!specId || !agentImpl) return;
+    const source = mode === 'detail' ? 'plot_page' : 'spec_hub';
     if (agentLane === 'public') {
-      navigate(
-        publicAgentChatPath(specId, currentImpl.library_id, currentImpl.language, 'plot_page')
-      );
+      navigate(publicAgentChatPath(specId, agentImpl.library_id, agentImpl.language, source));
       return;
     }
-    window.location.assign(
-      agentChatPath(specId, currentImpl.library_id, currentImpl.language, 'plot_page')
-    );
-  }, [specId, currentImpl, agentLane, navigate]);
+    window.location.assign(agentChatPath(specId, agentImpl.library_id, agentImpl.language, source));
+  }, [specId, agentImpl, agentLane, mode, navigate]);
 
   const buildReportUrl = useCallback(() => {
     const params = new URLSearchParams({
@@ -450,17 +463,14 @@ export function SpecPage() {
     ? specData.implementations.filter(i => i.language === languageFilter)
     : specData.implementations;
 
+  // The same trail as the bot HTML in api/routers/seo.py: home → spec → library.
+  // `/{specId}/{language}` is left out, as there: it is a client redirect, not a page.
   const breadcrumbItems: { name: string; item: string }[] = [
-    { name: 'anyplot', item: 'https://anyplot.ai/' },
-    { name: 'specs', item: 'https://anyplot.ai/specs' },
+    { name: 'anyplot.ai', item: 'https://anyplot.ai/' },
     { name: specData.title, item: `https://anyplot.ai/${specId}` },
   ];
   if (mode === 'detail' && urlLanguage && selectedLibrary) {
-    breadcrumbItems.push({
-      name: LANG_DISPLAY[urlLanguage] || urlLanguage,
-      item: `https://anyplot.ai/${specId}/${urlLanguage}`,
-    });
-    breadcrumbItems.push({ name: selectedLibrary, item: canonical });
+    breadcrumbItems.push({ name: currentImpl?.library_name || selectedLibrary, item: canonical });
   }
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
@@ -484,7 +494,7 @@ export function SpecPage() {
           '@type': 'SoftwareSourceCode',
           name: `${specData.title} (${selectedLibrary})`,
           description: specData.description,
-          programmingLanguage: { python: 'Python', r: 'R' }[urlLanguage ?? ''] ?? urlLanguage,
+          programmingLanguage: LANG_DISPLAY[urlLanguage] ?? urlLanguage,
           codeSampleType: 'code snippet',
           codeRepository: 'https://github.com/MarkusNeusinger/anyplot',
           url: canonical,
@@ -495,6 +505,15 @@ export function SpecPage() {
         }
       : null;
 
+  // The implementation's render on a detail page; elsewhere what the bot HTML in
+  // api/routers/seo.py shares for the hub: the spec card, or the home card for a
+  // spec with no render yet (its spec card does not exist).
+  const ogImage =
+    currentImpl?.preview_url ||
+    (specData.implementations.some(impl => impl.preview_url)
+      ? `https://api.anyplot.ai/og/${specId}.png`
+      : 'https://api.anyplot.ai/og/home.png');
+
   return (
     <>
       <>
@@ -502,7 +521,7 @@ export function SpecPage() {
         <meta name="description" content={specData.description} />
         <meta property="og:title" content={`${specData.title}${titleSuffix} | anyplot.ai`} />
         <meta property="og:description" content={specData.description} />
-        {currentImpl?.preview_url && <meta property="og:image" content={currentImpl.preview_url} />}
+        <meta property="og:image" content={ogImage} />
         <meta property="og:url" content={canonical} />
         <link rel="canonical" href={canonical} />
         <script type="application/ld+json">
@@ -517,7 +536,17 @@ export function SpecPage() {
 
       <Box sx={{ pt: 1.5, pb: 4 }}>
         {mode === 'hub' && (
-          <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 0.5 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              columnGap: 2,
+              rowGap: 0.5,
+              mb: 0.5,
+            }}
+          >
             <Box
               component="a"
               href={buildReportUrl()}
@@ -536,6 +565,8 @@ export function SpecPage() {
             >
               report issue ↗
             </Box>
+            {/* The chat's entry on the hub: in the header once, never per library card. */}
+            {agentLane && <UseMyDataAction onActivate={handleUseWithMyData} />}
           </Box>
         )}
 
@@ -665,6 +696,7 @@ export function SpecPage() {
                 libraryId={selectedLibrary || ''}
                 language={currentImpl?.language || urlLanguage || 'python'}
                 onTrackEvent={trackEvent}
+                onUseWithMyData={agentLane ? handleUseWithMyData : undefined}
                 highlightedTags={highlightedTags}
               />
             </>

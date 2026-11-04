@@ -37,6 +37,9 @@ const visuallyHiddenSx = {
   border: 0,
 };
 
+const MAP_DESCRIPTION =
+  'Interactive map of all anyplot specifications, clustered by tag similarity.';
+
 export function MapPage() {
   const { trackPageview, trackEvent } = useAnalytics();
   const navigate = useNavigate();
@@ -121,11 +124,11 @@ export function MapPage() {
   return (
     <>
       <>
-        <title>map() — anyplot</title>
-        <meta
-          name="description"
-          content="Interactive map of all anyplot specifications, clustered by tag similarity."
-        />
+        <title>map | anyplot.ai</title>
+        <meta name="description" content={MAP_DESCRIPTION} />
+        <meta property="og:title" content="map | anyplot.ai" />
+        <meta property="og:description" content={MAP_DESCRIPTION} />
+        <link rel="canonical" href="https://anyplot.ai/map" />
       </>
       <Box
         ref={containerRef}

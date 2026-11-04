@@ -58,6 +58,7 @@ export function PaletteGridSection({
                 key={s}
                 component="button"
                 type="button"
+                aria-pressed={sort === s}
                 onClick={() => setSort(s)}
                 sx={{
                   background: 'none',

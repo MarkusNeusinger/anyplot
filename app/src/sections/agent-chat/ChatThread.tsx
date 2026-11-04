@@ -20,6 +20,7 @@ import {
 } from 'src/hooks/useAgentSession';
 import { type ArtifactName, isPlotAction, type Theme } from 'src/lib/agent';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
+import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { ERROR_TEXT, localClock, PLOT_FAILED_TEXT } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { type CardOutcome, ResultCard } from 'src/sections/agent-chat/ResultCard';
@@ -152,7 +153,17 @@ function Item({
           # {item.text}
         </Box>
       ) : (
-        <Box sx={{ ...labelSx, ...textSx }}># {item.text}</Box>
+        // A quiet line; its details, where it has any, behind the ⓘ at its end.
+        <Box sx={{ ...labelSx, ...textSx, lineHeight: 1.6 }}>
+          # {item.text}
+          {item.info && (
+            <InfoPopover
+              label={item.info.label}
+              heading={item.info.heading}
+              lines={item.info.lines}
+            />
+          )}
+        </Box>
       );
     case 'plot_failed':
       return (

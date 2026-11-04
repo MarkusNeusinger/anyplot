@@ -142,19 +142,37 @@ export const CONFIRM_LOST_TEXT: Record<ConfirmLoss, string> = {
   server: 'not confirmed on the server · confirm the data again',
 };
 
-/**
- * The thread's one quiet line when the session's first typed message set the
- * session language (`detected`); a choice from the chip or the chat says nothing.
- */
-export const LANGUAGE_DETECTED_TEXT = (language: string) =>
-  `reply language: ${language} · detected from your message · a plot you have keeps its language · the lang chip in the header changes both`;
+/** The details behind a thread notice's ⓘ: the button's name, the popover's heading and its lines. */
+export interface NoticeInfo {
+  label: string;
+  heading: string;
+  lines: readonly string[];
+}
 
 /**
- * The thread's one quiet line when a paste set the session language from the
- * language of its notes or column names (`pasted`), before any typed message.
+ * The thread's one quiet line when the session's first typed message (`detected`) or a paste
+ * before any typed message (`pasted`, the language of its notes or column names) set the
+ * session language; a choice from the chip or the chat says nothing. The line names only the
+ * language: where it came from, that a plot keeps its own and the chip that changes both are
+ * behind its ⓘ, as the experimental notice does it.
  */
-export const LANGUAGE_PASTED_TEXT = (language: string) =>
-  `reply language: ${language} · detected from your pasted data · a plot you have keeps its language · the lang chip in the header changes both`;
+export function languageNotice(
+  language: string,
+  source: 'detected' | 'pasted'
+): { text: string; info: NoticeInfo } {
+  return {
+    text: `reply language: ${language}`,
+    info: {
+      label: 'About the reply language',
+      heading: '# reply language',
+      lines: [
+        source === 'pasted' ? 'detected from your pasted data' : 'detected from your message',
+        'a plot you have keeps its language',
+        'the lang chip in the header changes both',
+      ],
+    },
+  };
+}
 
 /**
  * The browser's confirm before a link inside the site leaves the chat with data
@@ -213,6 +231,15 @@ export function carryActionText(library: string, decisions: number): string {
   if (decisions <= 0) return `plot in ${library}`;
   return `plot in ${library} with your ${decisions} decision${decisions === 1 ? '' : 's'}`;
 }
+
+/** What the remembered list does, behind the ⓘ of its one-line heading (`Remembered`). */
+export const REMEMBERED_DETAILS = [
+  'every next plot keeps these decisions, also in another library',
+  '.start_over() keeps them too; only .forget() and .forget_all() remove them',
+] as const;
+
+/** The first line behind that ⓘ once the memory has no room; the heading itself says `full`. */
+export const REMEMBERED_FULL = 'full: forget one before a new decision fits';
 
 /** Failures of a removal from the remembered list; any other code reads as the page's turn errors do. */
 export const MEMORY_FAILURE: Record<string, string> = {

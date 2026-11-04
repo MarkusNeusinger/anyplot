@@ -1,5 +1,5 @@
 /**
- * Whether the plot page may show the "use with my data" entry for one
+ * Whether the spec pages may show the "use with my data" entry for one
  * implementation, and which chat it leads to.
  *
  * The conditions, checked in this order so a public visitor never sends a
@@ -7,10 +7,15 @@
  *
  * 1. the build has the agent chat (`VITE_ENABLE_AGENT_CHAT`, a literal at
  *    build time: off, everything below is dead code);
- * 2. local development, or the admin hint `DebugPage` sets after a successful
- *    `/debug/status`: the admin lane (`/debug/agent`), as before;
- * 3. otherwise the public lane, while it is open (`GET /agent/lane`,
- *    `useAgentLaneOpen`);
+ * 2. the public lane's door (`GET /agent/lane`, `useAgentLaneOpen`): while it is
+ *    open, everyone opens the public chat (`/agent`), an admin too, so the owner
+ *    tests the chat exactly as a visitor sees and uses it (owner decision of
+ *    2026-11-04); nothing is asked before the door answers, so no view probes
+ *    one lane and then the other;
+ * 3. only while the door is closed (the kill switch): local development, or the
+ *    admin hint `DebugPage` sets after a successful `/debug/status`, opens the
+ *    admin lane (`/debug/agent`), which stays reachable directly for the admin's
+ *    tools either way (`all`, `.save()`);
  * 4. that lane's eligibility answer for the pair (`GET .../eligibility`).
  *
  * A 401 or 403 on the admin lane clears the hint, so a lapsed admin session
@@ -24,7 +29,10 @@ import { useAgentLaneOpen } from 'src/hooks/useAgentLaneOpen';
 import { agentApi, AgentApiError, type AgentLane, PUBLIC_LANE } from 'src/lib/agent';
 import { readAdminHint, readAdminToken, setAdminHint } from 'src/utils/adminAuth';
 
-/** Gates 1 and 2: may this browser use the admin chat? */
+/**
+ * May this browser use the admin chat (the build has the chat, and local development or the
+ * admin hint)? The entry points lead there only while the public lane is closed (gate 3).
+ */
 export function agentChatAvailable(): boolean {
   return AGENT_CHAT_ENABLED && CONFIG.features.agentChat && (CONFIG.isDev || readAdminHint());
 }
@@ -35,12 +43,14 @@ export function useAgentEligibility(
 ): AgentLane | null {
   const [answer, setAnswer] = useState<{ key: string; lane: AgentLane | null } | null>(null);
   const laneOpen = useAgentLaneOpen();
-  const admin = agentChatAvailable();
-  const lane: AgentLane | null = admin
-    ? 'admin'
-    : AGENT_CHAT_ENABLED && CONFIG.features.agentChat && laneOpen === true
+  const built = AGENT_CHAT_ENABLED && CONFIG.features.agentChat;
+  const lane: AgentLane | null = !built
+    ? null
+    : laneOpen === true
       ? 'public'
-      : null;
+      : laneOpen === false && agentChatAvailable()
+        ? 'admin'
+        : null;
   // The lane is part of the key: an answer of one lane never stands for the other.
   const key = lane && specId && library ? `${lane}:${specId}/${library}` : null;
 
