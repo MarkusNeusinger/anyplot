@@ -1,8 +1,10 @@
 /**
  * The ⓘ button at the end of a one-line header of the chat, and the popover it opens with the
  * details that would otherwise crowd the line (owner, 2026-11-02: less text, the details behind
- * buttons rather than removed). The experimental notice (`ExperimentalNotice`) and the data
- * card's `# your data` header (`DataPanel`) use it.
+ * buttons rather than removed). The experimental notice (`ExperimentalNotice`), the data card's
+ * `# your data` header (`DataPanel`), the thread's reply-language line (`ChatThread`), the
+ * remembered list's heading (`Remembered`) and the columns the plot expects, after the spec's
+ * title in the page header, use it.
  *
  * A popover rather than a tooltip: it opens on a tap as on a click, it can hold a link, and it
  * keeps the keyboard focus inside until Escape or a click outside closes it, which returns the

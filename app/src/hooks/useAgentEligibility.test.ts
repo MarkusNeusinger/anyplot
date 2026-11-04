@@ -93,15 +93,40 @@ describe('useAgentEligibility', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('asks the admin eligibility route for an admin and leads to the admin chat', async () => {
+  it('leads an admin to the admin chat only while the public lane is closed', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     const { result } = renderHook(() => useAgentEligibility('scatter-basic', 'matplotlib'));
     await waitFor(() => expect(result.current).toBe('admin'));
+    // The door first: nothing is asked of either lane before it answers.
+    expect(urls()[0]).toMatch(/\/agent\/lane$/);
     expect(
       urls().some(url =>
         url.includes('/debug/agent/eligibility?spec=scatter-basic&library=matplotlib')
       )
     ).toBe(true);
+  });
+
+  it('leads an admin to the public chat while the public lane is open, as a visitor', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    server.laneOpen = true;
+    const { result } = renderHook(() => useAgentEligibility('scatter-basic', 'matplotlib'));
+    await waitFor(() => expect(result.current).toBe('public'));
+    const eligibility = fetchMock.mock.calls.filter(([url]) =>
+      String(url).includes('/eligibility')
+    ) as [string, RequestInit][];
+    // One probe, on the public route, without the admin token: the debug API is never asked.
+    expect(eligibility).toHaveLength(1);
+    expect(eligibility[0][0]).not.toContain('/debug/');
+    expect((eligibility[0][1].headers as Record<string, string>)['X-Admin-Token']).toBeUndefined();
+    expect(urls().some(url => url.includes('/debug/'))).toBe(false);
+  });
+
+  it('opens local development on the public lane too while it is open', async () => {
+    flags.isDev = true;
+    server.laneOpen = true;
+    const { result } = renderHook(() => useAgentEligibility('scatter-basic', 'matplotlib'));
+    await waitFor(() => expect(result.current).toBe('public'));
+    expect(urls().some(url => url.includes('/debug/'))).toBe(false);
   });
 
   it('asks the public lane for everyone else while it is open', async () => {

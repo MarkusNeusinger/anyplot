@@ -2,8 +2,11 @@
  * "Use with my data": the agent chat, for admins at `/debug/agent?spec=&library=&language=`
  * (plus `&all=1` while the library menu's `all` is pressed) and for everyone at
  * `/agent?spec=&library=&language=` while the public lane is open (`PublicAgentChatPage`,
- * experimental). The query follows the session: a library switch writes `library` and its
- * `language`.
+ * experimental). The site's `.use_my_data()` entries open `/agent` for an admin too while the
+ * public lane is open, so the owner tests what a visitor gets; `/debug/agent` is the admin's
+ * page for its tools, typed or bookmarked, and the entries' target only while the public lane
+ * is closed (`useAgentEligibility`). The query follows the session: a library switch writes
+ * `library` and its `language`.
  *
  * One column, chat first, two steps, data first. The data card is the first
  * turn of the thread: paste data (or ask in the chat for a curve, whose table
@@ -23,7 +26,10 @@
  * out of code that went wrong, which keeps the remembered decisions (owner
  * decision of 2026-11-02); every shipped version gets a result card with the image,
  * the code and the downloads. A line above the column names the current step. The header
- * carries the library menu (`LibraryChip`, since 2026-11-02 in place of a pill
+ * shows the catalogue plot being adapted as a thumbnail beside the spec's title, in the
+ * library in use and the site theme (`CataloguePreview`; a click opens it large), with the
+ * columns it expects behind the ⓘ after the title, and carries the library menu
+ * (`LibraryChip`, since 2026-11-02 in place of a pill
  * per library: the libraries grouped by language, `all` for the admin) and,
  * next to it, the session language chip (`LanguageChip`): the language of the
  * replies and of the text in the plot, English until the first typed message
@@ -133,12 +139,14 @@ import {
 import { apiGet, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
 import { paths, specPath } from 'src/routes/paths';
+import { CataloguePreview } from 'src/sections/agent-chat/CataloguePreview';
 import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
 import { DATA_SUMMARY_ID, DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { ExperimentalNotice } from 'src/sections/agent-chat/ExperimentalNotice';
 import { FanOut } from 'src/sections/agent-chat/FanOut';
 import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
+import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { AgentLaneContext } from 'src/sections/agent-chat/lane';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
 import { LibraryChip } from 'src/sections/agent-chat/LibraryChip';
@@ -152,6 +160,7 @@ import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { Remembered } from 'src/sections/agent-chat/Remembered';
 import { SessionMenu } from 'src/sections/agent-chat/SessionMenu';
+import { expectedColumns, previewsByLibrary } from 'src/sections/agent-chat/specReference';
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
 import { inStep2, showsTimeline } from 'src/sections/agent-chat/steps';
 import {
@@ -165,11 +174,14 @@ import {
   smallText,
   visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
+import { parseInlineCode } from 'src/sections/spec-detail/SpecTabs/utils';
 import { colors, fontSize, proseLinkStyle, typography } from 'src/theme';
 import { readAdminHint, readAdminToken, setAdminHint } from 'src/utils/adminAuth';
+import type { ThemedPreviewSource } from 'src/utils/themedPreview';
 
 const SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
-const OPEN_SOURCES = new Set(['plot_page', 'landing']);
+/** Where `agent_open` says the visitor came from: the plot page, the landing page, the spec hub. */
+const OPEN_SOURCES = new Set(['plot_page', 'landing', 'spec_hub']);
 /**
  * The chat column's width: it grows with the window up to this (960 until 2026-11-02; owner:
  * use the room of a wide screen), so the data card with its grid, the plot cards and the code
@@ -396,6 +408,11 @@ function AgentChat({
   const { state } = session;
   const [draft, setDraft] = useState('');
   const [title, setTitle] = useState<string | null>(null);
+  // The catalogue plot beside the title: its preview per library and the columns it expects.
+  const [reference, setReference] = useState<{
+    previews: Record<string, ThemedPreviewSource>;
+    columns: string[];
+  } | null>(null);
   const [libraries, setLibraries] = useState<string[]>([...DEFAULT_AGENT_LIBRARIES]);
   // `.plot_all()`: the caller's own run cap (`user_max_runs`, 5 for an admin), and the session whose
   // confirmed data the open fan-out copies.
@@ -433,8 +450,8 @@ function AgentChat({
   // shows; what it asks for is read from the data card at render (`gate`).
   const [gateShown, setGateShown] = useState(false);
 
-  // The spec's title and implemented libraries come from the public catalogue
-  // API; the enabled libraries from the agents service. Both are best effort.
+  // The spec's title, implemented libraries, previews and data bullets come from the public
+  // catalogue API; the enabled libraries from the agents service. Both are best effort.
   useEffect(() => {
     const controller = new AbortController();
     let implemented: string[] | null = null;
@@ -449,12 +466,20 @@ function AgentChat({
       pending -= 1;
       if (pending === 0 && !controller.signal.aborted) setListsSettled(true);
     };
-    apiGet<{ title: string; implementations: { library_id: string }[] }>(endpoints.spec(specId), {
+    apiGet<{
+      title: string;
+      data?: string[];
+      implementations: (ThemedPreviewSource & { library_id: string })[];
+    }>(endpoints.spec(specId), {
       signal: controller.signal,
     })
       .then(spec => {
         if (controller.signal.aborted) return;
         setTitle(spec.title);
+        setReference({
+          previews: previewsByLibrary(spec.implementations),
+          columns: expectedColumns(spec.data),
+        });
         implemented = spec.implementations.map(impl => impl.library_id);
         publish();
       })
@@ -493,9 +518,11 @@ function AgentChat({
     return () => window.clearTimeout(timer);
   }, [pausedUntil]);
 
+  // A refused admin token ends the admin hint; a refusal on the public lane says nothing about
+  // it, and an admin uses the public lane too while it is open.
   useEffect(() => {
-    if (state.phase === 'unauthorized') setAdminHint(false);
-  }, [state.phase]);
+    if (lane === 'admin' && state.phase === 'unauthorized') setAdminHint(false);
+  }, [lane, state.phase]);
 
   // The progress and the replies arrive at the foot of the thread, below the
   // data card: bring the foot into view when a turn starts.
@@ -792,19 +819,38 @@ function AgentChat({
           mb: 3,
         }}
       >
-        <Box
-          component={RouterLink}
-          to={backHref}
-          sx={{
-            fontFamily: typography.mono,
-            fontSize: fontSize.md,
-            color: 'var(--ink-soft)',
-            textDecoration: 'none',
-            '&:hover': { color: colors.primary },
-            overflowWrap: 'anywhere',
-          }}
-        >
-          ← {title ?? specId}
+        {/* The catalogue plot and its title stay together when the row wraps at phone width; the
+            columns it expects are behind the ⓘ, closed by default. */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+          <CataloguePreview
+            title={title ?? specId}
+            library={state.library}
+            preview={reference?.previews[state.library] ?? null}
+          />
+          <Box sx={{ minWidth: 0 }}>
+            <Box
+              component={RouterLink}
+              to={backHref}
+              sx={{
+                fontFamily: typography.mono,
+                fontSize: fontSize.md,
+                color: 'var(--ink-soft)',
+                textDecoration: 'none',
+                '&:hover': { color: colors.primary },
+                overflowWrap: 'anywhere',
+              }}
+            >
+              ← {title ?? specId}
+            </Box>
+            {reference && reference.columns.length > 0 && (
+              <InfoPopover
+                label="Columns the plot expects"
+                heading="# the plot expects"
+                testId="expected-columns"
+                lines={reference.columns.map(line => parseInlineCode(line))}
+              />
+            )}
+          </Box>
         </Box>
         <LibraryChip
           library={state.library}

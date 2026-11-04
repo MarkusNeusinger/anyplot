@@ -78,9 +78,7 @@ describe('Remembered', () => {
 
   it('lists the decisions oldest first, each with .forget()', () => {
     render(<Remembered {...props()} />);
-    expect(section()).toHaveAccessibleName(
-      '# remembered · 3 decisions · every next plot keeps them'
-    );
+    expect(section()).toHaveAccessibleName('# remembered · 3 decisions');
     expect(
       within(section())
         .getAllByTestId('memory-entry')
@@ -91,17 +89,39 @@ describe('Remembered', () => {
     expect(forget).toBeEnabled();
   });
 
-  it('counts one decision in the singular, and says when the memory is full', () => {
+  it('counts one decision in the singular, and says when the memory is full', async () => {
+    const user = userEvent.setup();
     const { rerender } = render(<Remembered {...props({ memory: memoryOf(LINE) })} />);
-    expect(section()).toHaveAccessibleName(/^# remembered · 1 decision · /);
+    expect(section()).toHaveAccessibleName('# remembered · 1 decision');
     rerender(
       <Remembered
         {...props({ memory: { entries: [LINE, LABEL], max_entries: 2, written: true } })}
       />
     );
-    expect(section()).toHaveAccessibleName(
-      '# remembered · 2 decisions · full: forget one before a new decision fits'
+    expect(section()).toHaveAccessibleName('# remembered · 2 decisions · full');
+    // What to do about it heads the details behind the ⓘ.
+    await user.click(screen.getByRole('button', { name: 'About the remembered decisions' }));
+    const details = within(screen.getByRole('dialog', { name: 'About the remembered decisions' }));
+    expect(details.getAllByRole('listitem')[0]).toHaveTextContent(
+      'full: forget one before a new decision fits'
     );
+  });
+
+  it('keeps its heading to one short line, what the list does behind the ⓘ, closed by default', async () => {
+    const user = userEvent.setup();
+    render(<Remembered {...props()} />);
+    expect(screen.queryByText(/every next plot/)).not.toBeInTheDocument();
+    const info = screen.getByRole('button', { name: 'About the remembered decisions' });
+    expect(info).toHaveAttribute('aria-expanded', 'false');
+
+    await user.click(info);
+    const details = within(screen.getByRole('dialog', { name: 'About the remembered decisions' }));
+    expect(details.getAllByRole('listitem').map(item => item.textContent)).toEqual([
+      'every next plot keeps these decisions, also in another library',
+      '.start_over() keeps them too; only .forget() and .forget_all() remove them',
+    ]);
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(info).toHaveFocus());
   });
 
   it('folds the list under its heading and opens it again', async () => {
