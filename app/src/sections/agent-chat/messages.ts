@@ -192,7 +192,7 @@ export const LEAVE_TEXT =
  */
 export const DATA_HOWTO = [
   'formats: CSV, TSV, JSON, plain text, Excel, ODS, Parquet, Feather or NumPy',
-  'code or a formula that makes data works too, up to 2,000 characters',
+  'paste code or a formula that makes data too, up to 2,000 characters',
   'paste or drop → check the preview and the bindings → .confirm() → .create_plot()',
   'the assistant fixes your data in plain words: "sum per month"',
   'afterwards, ask for changes: "log scale on y", "label the outliers"',

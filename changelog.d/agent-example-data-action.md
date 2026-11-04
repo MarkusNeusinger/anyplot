@@ -15,7 +15,7 @@
   `data` bullets remain the fallback. (#12553)
 - **The data box names code instead of example data.** Its placeholder now reads "or code that makes data (python,
   javascript, …)" and "or a formula", since `.example_data()` took over example data, and the card's ⓘ says that
-  code or a formula that makes data works too, up to 2,000 characters. (#12553)
+  you can paste code or a formula that makes data too, up to 2,000 characters. (#12553)
 - **The public chat's notice says less in its line and more behind its ⓘ.** The line is now
   `experimental AI · answers can be wrong`; the ⓘ adds that the chat and the data live only in server memory and are
   deleted after an hour idle, that nothing is saved unless you send feedback, and that Claude runs via Google Cloud
