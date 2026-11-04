@@ -93,7 +93,12 @@
  * since the page has none yet), the next version otherwise, unconfirmed either
  * way. Pasted text that looks like a formula ("zeichne sin(x) von -pi bis pi",
  * "y = x**2") answers `422 formula` instead of the transcription, as the
- * service does, because a model must never compute rows.
+ * service does, because a model must never compute rows. Before any parse, as the
+ * service's `classify_paste` does, pasted code (an import, a definition, a call of
+ * `np.`, `pd.` or `Math.`, an R assignment; at least half of its lines shaped like
+ * code) answers `422 code` at any length, and a one-line request for data
+ * ("Beispieldaten", "random numbers with 3 categories") answers `422 data_request`:
+ * the page sends either to the chat, or asks to shorten code over 2,000 characters.
  *
  * The session language in miniature: every session starts at `en`/`default`.
  * A paste whose notes or column names read German sets `de` (`pasted`) while
@@ -116,6 +121,8 @@
  * - contains "swap": the root's `set_bindings` in miniature, swapping the
  *   columns of `x` and the first `y` (which drops the confirmation), and a reply;
  * - a formula (see above): `generate_data`, and a reply naming the rows;
+ * - code or a request for data (the dataset route's `422 code` and `422 data_request`
+ *   guards): `run_data_code`, the spec's made-up table as `.example_data()` makes it;
  * - contains "prozent"/"percent", "gruppier"/"group" or "umbenenn"/"rename":
  *   a data change, see above, and a reply naming it;
  * - ends with "?": a reply only, no pipeline run;
@@ -161,9 +168,11 @@
  * like the real run, which notices the abort only between steps; a turn that
  * still waits in the queue leaves it at once), MOCK_PARSE_MS (400, how long a
  * parse takes, the dataset judge's call in production; a transcription takes
- * 900 ms more). Slowed down, the page's working states stay visible:
+ * 900 ms more), MOCK_OPEN_MS (0, how long `POST /sessions` takes, so the page's
+ * opening state, where the bot check runs on the public lane, stays visible).
+ * Slowed down, the page's working states stay visible:
  *
- *   MOCK_PARSE_MS=4000 MOCK_QUEUE=0 MOCK_STEP_MS=3000 node app/scripts/agent-bff-mock.mjs
+ *   MOCK_OPEN_MS=2500 MOCK_PARSE_MS=4000 MOCK_QUEUE=0 MOCK_STEP_MS=3000 node app/scripts/agent-bff-mock.mjs
  *
  * The admin fan-out (`.plot_all()`): `POST .../dataset/copy` with `{from_session}` copies the source session's
  * confirmed data, bindings and session language into a session opened with `source: fanout`, with the service's
@@ -202,6 +211,7 @@ const QUEUE_MS = Number(process.env.MOCK_QUEUE_MS || 2500);
 const QUEUE_START = Number(process.env.MOCK_QUEUE ?? 2);
 const STOP_MS = Number(process.env.MOCK_STOP_MS ?? 2000);
 const PARSE_MS = Number(process.env.MOCK_PARSE_MS ?? 400);
+const OPEN_MS = Number(process.env.MOCK_OPEN_MS ?? 0);
 const NO_COPY = process.env.MOCK_NO_COPY === '1';
 /** The public lane's door (`GET /agent/lane`): open unless `MOCK_PUBLIC_LANE=closed`. */
 const PUBLIC_LANE_OPEN = process.env.MOCK_PUBLIC_LANE !== 'closed';
@@ -325,6 +335,8 @@ const isJs = library => Object.hasOwn(JS_LIBRARIES, library);
 /** How long a page build takes: the renderer's `POST /page`, about 0.6 s with the container's start. */
 const PAGE_MS = Number(process.env.MOCK_PAGE_MS || 600);
 const MAX_DATASET_BYTES = 1024 * 1024;
+/** The chat's message cap (`schemas.MAX_MESSAGE_CHARS`): only a data request within it moves to the chat. */
+const MAX_MESSAGE_CHARS = 2000;
 /** What the agents service stores as the user's message of an action turn (`ACTION_MESSAGES`). */
 const ACTION_MESSAGES = {
   create_plot: '[action] Create the plot from my dataset and bindings.',
@@ -1130,6 +1142,13 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         send('message', { text: exampleData(session) });
         return;
       }
+      // Code or a request for data that the dataset route sent to the chat (`422 code`,
+      // `422 data_request`): the root's `run_data_code` in miniature, the same made-up table.
+      if (typeof body.text === 'string' && (looksLikeCode(text) || asksForData(text))) {
+        await sleep(STEP_MS * 4);
+        send('message', { text: exampleData(session, looksLikeCode(text)) });
+        return;
+      }
       const size = wideTableSize(lower);
       if (size) {
         await sleep(STEP_MS * 2);
@@ -1199,7 +1218,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         send('message', {
           text:
             reason === 'data_unconfirmed'
-              ? 'Check the preview and the bindings, then confirm your data first.'
+              ? 'Check the preview and the bindings, then press .create_plot().'
               : 'Paste your data and bind the required roles first.',
         });
         return;
@@ -1500,7 +1519,7 @@ function swapBindings(session) {
   session.bindings = swapped;
   session.complete = complete;
   session.confirmed = false;
-  return `Swapped: x now reads ${y.column} and ${y.role} reads ${x.column}. Check the bindings and confirm your data again.`;
+  return `Swapped: x now reads ${y.column} and ${y.role} reads ${x.column}. Check the bindings, then press .create_plot().`;
 }
 
 // ---------------------------------------------------------------- data versions (prepare_data in miniature)
@@ -1648,7 +1667,7 @@ function setTypeNumber(session) {
   if (failed)
     change += `, ${failed} cell${failed > 1 ? 's' : ''} could not be read and ${failed > 1 ? 'are' : 'is'} now missing`;
   storeVersion(session, parsed, [change]);
-  return `I read ${column} as numbers${units.size ? ` and removed the unit '${[...units][0]}'` : ''}. Check the preview and confirm the data.`;
+  return `I read ${column} as numbers${units.size ? ` and removed the unit '${[...units][0]}'` : ''}. Check the preview, then press .create_plot().`;
 }
 
 /**
@@ -1682,7 +1701,7 @@ function aggregateSum(session, lower) {
   let change = `summed ${header[value]} by ${header[key]}: ${grouped.length} row${grouped.length > 1 ? 's' : ''}`;
   if (other) change += `, ${other} other column${other > 1 ? 's' : ''} dropped`;
   storeVersion(session, parsed, [change]);
-  return `I summed ${header[value]} per ${header[key]}: ${grouped.length} rows. Check the preview and confirm the data.`;
+  return `I summed ${header[value]} per ${header[key]}: ${grouped.length} rows. Check the preview, then press .create_plot().`;
 }
 
 /** `rename`: the second column gets a new name. */
@@ -1694,7 +1713,7 @@ function renameSecond(session, german) {
   const renamed = header.map((h, i) => (i === 1 ? name : h));
   const parsed = parseDataset(toCsv(renamed, rows));
   storeVersion(session, parsed, [`renamed '${header[1]}' to '${name}'`]);
-  return `I renamed ${header[1]} to ${name}. Check the preview and confirm the data.`;
+  return `I renamed ${header[1]} to ${name}. Check the preview, then press .create_plot().`;
 }
 
 // ---------------------------------------------------------------- formulas (generate_data in miniature)
@@ -1767,6 +1786,62 @@ function looksLikeFormula(text) {
   return formula && (rest.match(value) ?? []).length < 3;
 }
 
+// ---------------------------------------------------------------- code and data requests (classify_paste in miniature)
+
+const CODE_MODULES = String.raw`(?:np|numpy|pd|pandas|math|Math|random|scipy|stats|rng|R)`;
+/** A line no table has, a short form of the service's `_STRONG`: an import, a definition, a loop, a data call. */
+const CODE_STRONG = new RegExp(
+  [
+    String.raw`^(?:import\s+[A-Za-z_][\w.]*(?:\s+as\s+\w+)?;?$`,
+    String.raw`from\s+[A-Za-z_][\w.]*\s+import\s+\S`,
+    String.raw`(?:library|require)\s*\(\s*['"]?\w+['"]?\s*\)`,
+    String.raw`def\s+[A-Za-z_]\w*\s*\(`,
+    String.raw`(?:async\s+)?function\s*\*?\s*[A-Za-z_$]?[\w$]*\s*\(`,
+    String.raw`(?:const|let|var)\s+[A-Za-z_$][\w$]*\s*=`,
+    String.raw`[A-Za-z_.][\w.]*\s*<-\s*\S`,
+    String.raw`for\s*\(|while\s*\(|for\s+[A-Za-z_]\w*\s+in\s+\S.*:$`,
+    String.raw`(?:print|console\.log|set\.seed|cat|plot|hist|lines)\s*\(`,
+    String.raw`${CODE_MODULES}\.[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*\s*\(`,
+    String.raw`[A-Za-z_]\w*(?:\s*,\s*[A-Za-z_]\w*)*\s*=\s*${CODE_MODULES}\.[A-Za-z_][\w.]*\s*\(`,
+    String.raw`[A-Za-z_]\w*\s*=\s*(?:rnorm|runif|seq|rep|c|data\.frame)\s*\()`,
+  ].join('|')
+);
+const CODE_ARROW = /\)[ \t]*=>|\b[A-Za-z_$][\w$]*[ \t]*=>/;
+/** A line code has as well, which alone proves nothing: a comment, a brace, `return`, a line ending in `;`, `{`, `:`. */
+const CODE_SHAPED =
+  /^(?:#|\/\/|\/\*|\*|[{}\])]+;?$|return\b|else\b|elif\b|if\s*\(|if[ \t]+\S.*:$|end$)|[;{:]$/;
+
+/**
+ * The dataset route's code guard, a short form of the service's `looks_like_code`: at least one
+ * line no table has, and code-shaped lines at least half of the first 200 non-empty ones, so a
+ * table with a stray `print(...)` cell stays a table.
+ */
+function looksLikeCode(text) {
+  const lines = text
+    .split(/\r\n|\r|\n/)
+    .map(line => line.trim().slice(0, 400))
+    .filter(Boolean)
+    .slice(0, 200);
+  const strong = line => CODE_STRONG.test(line) || CODE_ARROW.test(line);
+  if (!lines.some(strong)) return false;
+  return lines.filter(line => strong(line) || CODE_SHAPED.test(line)).length / lines.length >= 0.5;
+}
+
+/** A phrase that asks for made-up data, a short form of the service's `_REQUEST` (German and English only). */
+const DATA_REQUEST =
+  /\b(?:(?:beispiel|test|dummy|demo|zufalls|fake)[- ]?(?:daten|werte|zahlen|tabelle)|(?:example|sample|test|dummy|fake|random|made[- ]up|synthetic)\s+(?:\w+\s+)?(?:data(?:set)?|values|numbers|table)|(?:generate|create|make|give)\s+(?:(?:me|some|a|an|random|example|sample)\s+){0,3}(?:data(?:set)?|values|numbers|table))\b/i;
+
+/**
+ * The service's `looks_like_data_request` in short: one line of at most 30 words that the chat
+ * takes, no JSON, with such a phrase and fewer than three values of its own.
+ */
+function asksForData(text) {
+  const trimmed = text.trim();
+  if (!trimmed || trimmed.length > MAX_MESSAGE_CHARS || /[\r\n]/.test(trimmed)) return false;
+  if (/^[[{]/.test(trimmed) || trimmed.split(/\s+/).length > 30) return false;
+  return DATA_REQUEST.test(trimmed) && (trimmed.match(/\d+(?:[.,]\d+)?/g) ?? []).length < 3;
+}
+
 /** A range end the message names: a number, `pi`, `-pi`, `2 pi` or `2*pi`; null for anything else. */
 function rangeEnd(text) {
   const match = text.trim().match(/^([+-])?\s*(\d+(?:[.,]\d+)?)?\s*\*?\s*(pi|π)?$/);
@@ -1828,7 +1903,7 @@ function generateData(session, lower) {
   const undo = first
     ? ''
     : ' as a new version of your data; .undo() in the data panel takes it back';
-  return `I generated ${points} rows from y = ${formula} for ${span}${undo}. Check the preview and confirm the data.`;
+  return `I generated ${points} rows from y = ${formula} for ${span}${undo}. Check the preview, then press .create_plot().`;
 }
 
 /** `{rows, columns}` of a message such as "10000 rows x 30 columns", or null; capped like the service's tables. */
@@ -1890,8 +1965,10 @@ function generateWideTable(session, size) {
  * The root's answer to `{action: "example_data"}` (`.example_data()`, root.md "Example data")
  * in miniature: a made-up table that fits the spec, which `run_data_code` with `source_language`
  * `example` would compute, as version 1 of a session without data (the next version otherwise).
+ * `fromCode`: the user's own code, forwarded from the data box as a chat turn, which the root's
+ * `run_data_code` runs; the mock answers it with the same table and says it ran the code.
  */
-function exampleData(session) {
+function exampleData(session, fromCode = false) {
   let seed = 42;
   const next = () => {
     seed = (Math.imul(seed, 1103515245) + 12345) >>> 0;
@@ -1922,7 +1999,9 @@ function exampleData(session) {
   };
   const { header, rows } = tables[session.specId]();
   const parsed = parseDataset(toCsv(header, rows));
-  const changes = [`generated example data: ${rows.length} rows, ${header.length} columns`];
+  const changes = [
+    `${fromCode ? 'computed from your code' : 'generated example data'}: ${rows.length} rows, ${header.length} columns`,
+  ];
   if (!session.dataset) {
     session.dataset = parsed;
     session.bindings = defaultBindings(session, parsed.profile);
@@ -1935,7 +2014,10 @@ function exampleData(session) {
     storeVersion(session, parsed, changes);
   }
   const named = header.join(', ').replace(/, ([^,]*)$/, ' and $1');
-  return `I generated example data to try the plot: ${rows.length} rows of ${named}, all made up. Check them in the data panel and confirm them with .confirm().`;
+  if (fromCode) {
+    return `I ran your code in a sandbox: ${rows.length} rows of ${named}. Check the preview, then press .create_plot().`;
+  }
+  return `I generated example data to try the plot: ${rows.length} rows of ${named}, all made up. Check them in the data panel, then press .create_plot().`;
 }
 
 /** The step-1 summary the root writes after `summarize_data`, from the profile alone. */
@@ -2159,6 +2241,7 @@ async function route(req, res) {
     );
   }
   if (method === 'POST' && sub === '/sessions') {
+    if (OPEN_MS > 0) await sleep(OPEN_MS);
     if (!SPECS[body?.spec_id]) return fail(res, 404, 'not_found', ref);
     if (!AGENT_LIBRARIES.includes(body.library)) return fail(res, 422, 'not_eligible', ref);
     const sid = randomBytes(18).toString('base64url');
@@ -2287,6 +2370,10 @@ async function route(req, res) {
     if (Buffer.byteLength(text, 'utf8') > MAX_DATASET_BYTES) return fail(res, 413, 'too_long', ref);
     if (/ignore previous/i.test(text)) return fail(res, 403, 'data_refused', ref);
     await sleep(PARSE_MS);
+    // Before any parser, as the service's `classify_paste`: code at any length (it is never a
+    // table), a request for data only when the chat takes it.
+    if (looksLikeCode(text)) return fail(res, 422, 'code', ref);
+    if (asksForData(text)) return fail(res, 422, 'data_request', ref);
     // Several tables, each under its own header after a blank line (the service's `_one_table`): the mock reads
     // blocks of three or more comma lines (a caption line above them left out), the first one or the chosen `table`.
     const blocks = text

@@ -69,7 +69,7 @@ copy of the page session's confirmed version), absent for data of the session's 
 version 1, with no history; this records where it came from, for the feedback bundle. A paste replaces it."""
 BINDINGS = PREFIX + "bindings"
 CONFIRMED = PREFIX + "confirmed"
-"""The fingerprint of what the user confirmed (`.confirm()` in the data panel): the dataset
+"""The fingerprint of what the user confirmed (the confirm route `.create_plot()` calls first): the dataset
 id and the bindings as they were (`confirmation_fingerprint`). The plot pipeline runs only
 while the fingerprint of the current state equals it, so a new dataset (a paste, a
 transcription's `.use()`) or any binding change, also one that lands between the
@@ -77,7 +77,7 @@ confirmation's read and its write, leaves the data unconfirmed without an explic
 PENDING_REQUEST = PREFIX + "pending_request"
 """The `change_request` of a first plot that stopped `not_ready` (`data_unconfirmed` or `incomplete_bindings`) or
 got no queue slot: the user's note for the plot (a title, a label), joined to the next first-plot run's own request
-(`pipeline.run_pipeline`), so a binding change the root made that asked for `.confirm()` again never loses it (live
+(`pipeline.run_pipeline`), so a binding change the root made that asked for a confirmation again never loses it (live
 test of 2026-10-15). It stays until a run ships a plot. Any later binding write or new data version (a paste,
 `prepare_data`, `generate_data`, `run_data_code`, `.to_long()`, undo) drops it: it was written for the data and
 bindings before (owner decision of 2026-10-15). A library switch keeps it, since the data and bindings stay (owner
@@ -191,7 +191,7 @@ def confirmation_fingerprint(dataset_id: str | None, bindings: list[Binding]) ->
 
 
 def confirm_delta(view: SessionView) -> dict[str, Any]:
-    """The state delta of `.confirm()`: the current dataset with its current bindings counts as confirmed."""
+    """The state delta of the confirm route: the current dataset with its current bindings counts as confirmed."""
     return {CONFIRMED: confirmation_fingerprint(view.dataset_id, view.bindings)}
 
 

@@ -829,7 +829,7 @@ Pluralisation: prefer the natural plural for collections (`plots.browse()`, `lib
 
 **Accessibility**: the pseudo-function style is a *visual* convention — it belongs on visible labels, tooltip titles, and placeholder text. `aria-label` and any hidden `<label>` fallback for assistive tech must stay in readable human language (`"Copy code"`, `"Browse plots"`, `"Zoom in"`), because screen readers announce punctuation literally (`.copy()` → "dot copy open close paren"). Icon-only controls should always carry a descriptive `aria-label` even when their tooltip uses the method-call style.
 
-**Hero CTA (filled — only on landing hero, plus the agent chat's step-2 `.create_plot()`)**
+**Hero CTA (filled — only on landing hero, plus the agent chat's `.create_plot()`)**
 
 ```css
 .btn-cta {
@@ -851,7 +851,7 @@ Pluralisation: prefer the natural plural for collections (`plots.browse()`, `lib
 .btn-cta:hover::before { opacity: 1; }
 ```
 
-Used for `[.start()]` and `[.browse()]` in the hero box. The one other use is `.create_plot()` in the agent chat (`/agent`, and `/debug/agent` for admins), the action that page leads to once the data is confirmed (`app/src/sections/agent-chat/styles.ts`, `ctaButtonSx`); that variant hovers with the light theme's ink (`#1A1A17`) as the foreground in both themes, because 14 px white text on the green reads 3.4:1 and the dark theme's ink 3.0:1, under the 4.5:1 of WCAG AA, while the dark ink on it reads 5.1:1. Pill shape replaced with a more terminal-native rectangle (4px radius). Dark-to-green hover transition stays as the signature moment.
+Used for `[.start()]` and `[.browse()]` in the hero box. The one other use is the agent chat (`/agent`, and `/debug/agent` for admins), which has one filled CTA at the composer's right end from the moment data is stored: `.create_plot()`, the action the page leads to, which takes the data as shown and plots it in one click (`.plot_all()` for an admin who pressed `all`, the carry offer after a library switch; `app/src/sections/agent-chat/styles.ts`, `ctaButtonSx`). Once the confirmed data has a plot, the composer holds no filled button; that variant hovers with the light theme's ink (`#1A1A17`) as the foreground in both themes, because 14 px white text on the green reads 3.4:1 and the dark theme's ink 3.0:1, under the 4.5:1 of WCAG AA, while the dark ink on it reads 5.1:1. Pill shape replaced with a more terminal-native rectangle (4px radius). Dark-to-green hover transition stays as the signature moment.
 
 **Ghost (rare — only when a primary already occupies visual space)**
 
@@ -1178,7 +1178,7 @@ For CSS:
 - **Parallax effects or hero videos**: too heavy for a content-first site. Layout should feel instantly complete.
 - **Badge-heavy UI**: "NEW!" badges, notification dots, progress indicators competing for attention. Reserve attention for plots.
 - **Pure white or pure black backgrounds**: harsh, removes the warmth, makes plots look awkward against them.
-- **Branded loading spinners**: a plain loading indicator is fine. A branded animated logo is overkill.
+- **Branded loading spinners**: a plain loading indicator is fine. A branded animated logo is overkill. The site's own loader, `LoaderSpinner` (three dots: a resting pair in the warm gray of muted text, `--ink-muted`, which follows the theme, and a runner that turns imprint green while it travels across them and grows; green and ochre until 2026-11-04), is that plain indicator: the plots gallery shows it while it loads, and since 2026-11-04 the agent chat shows its inline size beside the words of a wait that takes seconds (the session's opening, the thread's in-progress line, a plot run's progress, a parse or a file read); its dots stand still under `prefers-reduced-motion`, the runner green beside the gray pair.
 - **Generic stock imagery**: no isometric illustrations, no people high-fiving, no laptop-on-desk hero shots. Plots are our imagery.
 - **A second typeface**: no Space Grotesk, no Poppins, no Fraunces, no Inter. MonoLisa is the only face; italic + `ss01` is the only "second voice." Reaching for a serif for warmth or a sans for legal text undoes the single-face discipline.
 

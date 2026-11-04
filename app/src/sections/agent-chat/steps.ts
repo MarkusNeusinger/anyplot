@@ -6,6 +6,13 @@
 
 import type { AgentSessionState } from 'src/hooks/useAgentSession';
 import { isPlotAction } from 'src/lib/agent';
+import { CONFIRM_LOST_STEP_TEXT } from 'src/sections/agent-chat/messages';
+
+/**
+ * The pinned header's line (`✓ data fits · ...`, `PinnedData.tsx`), which step 2's plot buttons
+ * in the composer name as their description.
+ */
+export const DATA_SUMMARY_ID = 'agent-data-summary';
 
 /**
  * Step 2: the stored data and its bindings are confirmed, and no table read
@@ -16,6 +23,26 @@ import { isPlotAction } from 'src/lib/agent';
  */
 export function inStep2(state: AgentSessionState): boolean {
   return state.dataConfirmed && !!state.dataset && !state.transcription;
+}
+
+/**
+ * The line above the composer in step 1, which `.create_plot()` at the composer's end names as
+ * its description: the click takes the data and the bindings as the card shows them. It says
+ * what the button waits for first (a table read from text to decide on, a required role without
+ * a column), else what to check, and after a lost confirmation what lost it, as the thread's
+ * notice says. `action` is the button the line leads to: `.plot_all()` while `all` is pressed,
+ * where no `.create_plot()` shows. `null` without data or in step 2.
+ */
+export function stepOneLine(state: AgentSessionState, action = '.create_plot()'): string | null {
+  if (!state.dataset || inStep2(state)) return null;
+  const head = state.confirmLoss ? '# step 1 again — ' : '# step 1 — ';
+  if (state.transcription) return `${head}decide on the table first: .use() or .discard()`;
+  if (state.missingRoles.length > 0) {
+    return `${head}pick a column for ${state.missingRoles.join(', ')}, then ${action}`;
+  }
+  return state.confirmLoss
+    ? `${head}${CONFIRM_LOST_STEP_TEXT[state.confirmLoss](action)}`
+    : `${head}check the preview and the bindings above, then ${action}`;
 }
 
 /** What the thread's in-progress line says: the turn's kind, or that it stops. */
@@ -42,10 +69,12 @@ export function pendingReply(state: AgentSessionState): PendingReply | null {
 
 /**
  * Whether the progress timeline below the thread has something to say that
- * the in-progress line does not: a plot run, whose path shows up front, or any
- * turn that waits in the queue or reached a pipeline step.
+ * the in-progress line does not: a plot run, whose path shows up front from
+ * the queue on, or any turn that reached a pipeline step. A turn without steps
+ * that waits in the queue keeps the in-progress line and the queue counter
+ * alone, so its wait has one loader and one queue position, not two.
  */
 export function showsTimeline(state: AgentSessionState): boolean {
   const run = state.run;
-  return !!run && (isPlotAction(run.kind) || run.steps.length > 0);
+  return !!run && (isPlotAction(run.kind) || run.steps.some(entry => entry.step !== 'queued'));
 }

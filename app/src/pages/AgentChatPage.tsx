@@ -14,15 +14,16 @@
  * the line above the composer asks it for a made-up table to try the plot),
  * read the assistant's summary of it in the next
  * turn, fix it in plain words if needed (each change updates the card in
- * place, with `.undo()`), check the preview and the role bindings and
- * `.confirm()` them at the card's foot (step 1). The card then collapses into
- * a pinned header at the top of the thread, `.show()` opens it again, and any
- * change to the data takes the page back to step 1 with the card open; the
- * header then stays as `! confirm again` and leads back to the card, and the
- * thread names what dropped the confirmation. In step 2 the composer's action
- * is `.create_plot()`: with an empty box it starts the first plot as it is,
- * with text the text goes as a turn and the assistant makes the first plot
- * with that change. Once the library has a plot, the composer refines in plain
+ * place, with `.undo()`), check the preview and the role bindings, and press
+ * `.create_plot()` at the composer's end, which takes the data and the bindings
+ * as shown (it confirms them on the server first, the end of step 1) and starts
+ * the plot (step 2): with an empty box the plot as it is, with text the text
+ * goes as a turn and the assistant makes the first plot with that change. The
+ * card collapses into a pinned header at the top of the thread with that click,
+ * `.show()` opens it again, and any change to the data takes the page back to
+ * step 1 with the card open; the header then stays as `! check again` and leads
+ * back to the card, and the thread names what dropped the confirmation. Once the
+ * library has a plot, the composer refines in plain
  * words (`.send()`, on the latest version), and the same button becomes
  * `.start_over()`: a new plot from the catalogue plot with this data, the way
  * out of code that went wrong, which keeps the remembered decisions (owner
@@ -55,14 +56,15 @@
  * composer as the remembered list (`Remembered`), each with `.forget()`, and
  * `.forget_all()` for a blank start: nothing else clears them.
  *
- * `.create_plot()` is in the composer as soon as there is data. Before the
- * confirmation it is the quiet button, and a click calls nothing: a notice
- * under the composer says to confirm the data first (or to decide on a table
- * read from text, whichever the data card asks for at the moment), with
- * `.show()`, which brings `.confirm()` (or `.use()`) into view and focuses it;
- * a hidden status region announces it. The notice clears once the data is
- * confirmed or a turn starts. The server's `data_unconfirmed` stays the
- * backstop.
+ * The composer holds one filled call to action at its right end (`Composer.tsx`)
+ * from the moment data is stored: `.create_plot()`, while the data is not
+ * confirmed (also when the library has a plot: the click makes a new version
+ * from the changed data, with the remembered decisions) and while it is
+ * confirmed and the library has no plot yet. In step 1 the line above the box,
+ * its description, names what it waits for (a table read from text to decide
+ * on, a required role without a column) or what to check. Enter and `.send()`
+ * send a turn and never confirm; `.send()` shows only while the box holds text.
+ * The server's `data_unconfirmed` stays the backstop.
  *
  * Work in flight is never silent: a turn without pipeline steps holds an
  * in-progress line in the thread (`ChatThread`), the progress timeline below
@@ -71,8 +73,8 @@
  *
  * The library menu's `all`, after the libraries, is the admin's test run.
  * While it is pressed, the composer's create action is `.plot_all()`: the
- * confirmed data, with the confirmed bindings, plotted in every library of the
- * header at once (`FanOut`), a session per library into which the server copies
+ * data with its bindings, confirmed first as `.create_plot()` does, plotted in
+ * every library of the header at once (`FanOut`), a session per library into which the server copies
  * this session's confirmed version, whatever its origin (pasted, opened,
  * computed or changed by the assistant), at most `AGENT_USER_MAX_RUNS` plots
  * running, each through the normal run queue. This session stays the data
@@ -110,12 +112,13 @@
  * Design: docs/concepts/agent-network.md ("Frontend", "Request flow").
  */
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 
+import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import { SectionHeader } from 'src/components/SectionHeader';
 import { LIB_TO_LANG, LIBRARIES } from 'src/constants';
 import { CONFIG } from 'src/global-config';
@@ -136,7 +139,6 @@ import {
   type AgentLane,
   browserLocale,
   DEFAULT_AGENT_LIBRARIES,
-  MAX_MESSAGE_CHARS,
   PUBLIC_LANE,
 } from 'src/lib/agent';
 import { apiGet, endpoints } from 'src/lib/api';
@@ -145,8 +147,8 @@ import { paths, specPath } from 'src/routes/paths';
 import { CataloguePreview } from 'src/sections/agent-chat/CataloguePreview';
 import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
-import { DATA_SUMMARY_ID, DataPanel } from 'src/sections/agent-chat/DataPanel';
-import { ExampleDataLine } from 'src/sections/agent-chat/ExampleData';
+import { Composer } from 'src/sections/agent-chat/Composer';
+import { DataPanel } from 'src/sections/agent-chat/DataPanel';
 import { ExperimentalNotice } from 'src/sections/agent-chat/ExperimentalNotice';
 import { FanOut } from 'src/sections/agent-chat/FanOut';
 import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
@@ -154,30 +156,15 @@ import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { AgentLaneContext } from 'src/sections/agent-chat/lane';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
 import { LibraryChip } from 'src/sections/agent-chat/LibraryChip';
-import {
-  carryActionText,
-  ERROR_TEXT,
-  LEAVE_TEXT,
-  servicePausedText,
-} from 'src/sections/agent-chat/messages';
+import { carryActionText, ERROR_TEXT, LEAVE_TEXT } from 'src/sections/agent-chat/messages';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { Remembered } from 'src/sections/agent-chat/Remembered';
 import { SessionMenu } from 'src/sections/agent-chat/SessionMenu';
 import { columnLines, previewsByLibrary } from 'src/sections/agent-chat/specReference';
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
-import { inStep2, showsTimeline } from 'src/sections/agent-chat/steps';
-import {
-  actionButtonSx,
-  bodyTextSx,
-  ctaButtonSx,
-  ghostButtonSx,
-  labelSx,
-  nativeControlSx,
-  panelSx,
-  smallText,
-  visuallyHiddenSx,
-} from 'src/sections/agent-chat/styles';
+import { inStep2, showsTimeline, stepOneLine } from 'src/sections/agent-chat/steps';
+import { bodyTextSx, labelSx, panelSx, smallText } from 'src/sections/agent-chat/styles';
 import { parseInlineCode } from 'src/sections/spec-detail/SpecTabs/utils';
 import { colors, fontSize, proseLinkStyle, typography } from 'src/theme';
 import { readAdminHint, readAdminToken, setAdminHint } from 'src/utils/adminAuth';
@@ -193,33 +180,11 @@ const OPEN_SOURCES = new Set(['plot_page', 'landing', 'spec_hub']);
  * `styles.ts`). Below about 1100 px the window, not this cap, sets the width, as before.
  */
 const COLUMN_MAX_WIDTH = 1360;
-/**
- * What `.start_over()` does, unlike `.send()` beside it (the owner could not tell the two apart),
- * and the quiet `.create_plot()` beside the offer after a switch: the catalogue code again, with the
- * remembered decisions, which only the user clears (owner decision of 2026-11-02).
- */
-const START_OVER_HELP = 'new from the catalogue plot; keeps your remembered decisions';
-const START_OVER_HELP_ID = 'agent-start-over-help';
 
 /** The first of these controls that can take the focus now, in order of preference. */
 function firstEnabled(...controls: (HTMLButtonElement | HTMLTextAreaElement | null)[]) {
   return controls.find(control => control && !control.disabled) ?? null;
 }
-
-/** What a click on `.create_plot()` before the confirmation asks for first. */
-type CreateGate = 'confirm' | 'transcription';
-
-/** The composer's notice after such a click, and where its `.show()` leads. */
-const CREATE_GATE: Record<CreateGate, { text: string; action: string }> = {
-  confirm: {
-    text: 'confirm the data first · .confirm() sits at the foot of the data card',
-    action: 'Go to the confirmation',
-  },
-  transcription: {
-    text: 'decide on the table first · .use() or .discard() sit in the data card',
-    action: 'Go to the table',
-  },
-};
 
 /**
  * The page is a tool on one catalogue pair, never a page to index: every branch (a notice, the door
@@ -445,15 +410,6 @@ function AgentChat({
   const tailRef = useRef<HTMLDivElement>(null);
   const messageRef = useRef<HTMLTextAreaElement>(null);
   const createRef = useRef<HTMLButtonElement>(null);
-  const toggleRef = useRef<HTMLButtonElement>(null);
-  // The data card's `.confirm()` and a pending table's `.use()`, where the notice leads.
-  const confirmRef = useRef<HTMLButtonElement>(null);
-  const decisionRef = useRef<HTMLButtonElement>(null);
-  // Set by the user's own `.confirm()`: the step change it brings moves the focus, once.
-  const confirmFocus = useRef(false);
-  // Whether the notice a click on `.create_plot()` before the confirmation opens
-  // shows; what it asks for is read from the data card at render (`gate`).
-  const [gateShown, setGateShown] = useState(false);
 
   // The spec's title, implemented libraries, previews and data bullets come from the public
   // catalogue API; the enabled libraries from the agents service. Both are best effort.
@@ -533,15 +489,6 @@ function AgentChat({
     if (running) tailRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
   }, [running]);
 
-  // The notice before the confirmation opens under the composer, which a turn's
-  // start leaves at the window's lower edge: bring it in, without moving the focus.
-  // Only when it opens: a change of its wording follows a decision in the data
-  // card, where the user is, and must not pull the window to the foot.
-  const gateRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (gateShown) gateRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
-  }, [gateShown]);
-
   // Data, a plot or work in flight: a reload, a closed tab or a link off the page asks first,
   // since nothing restores the session. The fan-out's panel opens only on this session's
   // confirmed data, so its sessions are covered too.
@@ -554,14 +501,22 @@ function AgentChat({
   const reopen = state.phase === 'ineligible' || state.phase === 'error';
   // Step 2: the data and its bindings are confirmed, and no table read from text waits.
   const step2 = inStep2(state);
+  // A plot button may start once there is data with every required role bound and nothing in
+  // flight: on unconfirmed data its click confirms the data as shown first (`startPlot`).
   const canCreate =
-    state.phase === 'ready' && step2 && state.bindingsComplete && !state.transcription && !busy;
-  // Until this library has a plot, `.create_plot()` is the composer's action and
-  // text in the box goes with it; the pipeline counts versions per library too.
-  // The server files a version under its (spec, library) pair; the spec cannot
-  // change in a session yet, so the library alone tells the pair.
+    state.phase === 'ready' &&
+    !!state.dataset &&
+    state.bindingsComplete &&
+    !state.transcription &&
+    !busy;
+  // The server files a version under its (spec, library) pair; the spec cannot change in a
+  // session yet, so the library alone tells the pair.
   const hasPlot = Object.values(state.versions).some(version => version.library === state.library);
-  const firstPlot = step2 && !hasPlot;
+  // The composer's one filled CTA is a plot button from the moment data is stored: while the
+  // data is unconfirmed (also with a plot here, whose next version takes the changed data), and
+  // while it is confirmed and this library has no plot yet. Confirmed with a plot, the composer
+  // refines with `.send()` and keeps a quiet `.start_over()`.
+  const ctaPlot = !!state.dataset && !(step2 && hasPlot);
   // `all` in the menu only once the libraries and the limit are the server's: a snapshot of the
   // fallbacks would leave libraries out or start more runs than the server takes (`run_limit`).
   // `.plot_all()` is the admin's test run: never on the public lane, whose BFF has no copy route.
@@ -587,43 +542,15 @@ function AgentChat({
   // A table read from text that waits for its decision is data at hand, so the line waits too.
   const exampleOffer = state.phase === 'ready' && !state.dataset && !state.transcription;
   const exampleWorking = exampleOffer && state.run?.kind === 'example_data';
+  // Step 1's line above the composer, the plot button's description: what it waits for (a
+  // pending table read from text, a required role without a column), else what to check.
+  const stepLine = stepOneLine(state, plotAll ? '.plot_all()' : undefined);
 
   // `&all=1` follows `all`, so a reload presses it again. Only from the lists' answers on:
   // before them `all` is not offered yet, and one pressed from the URL waits for them.
   useEffect(() => {
     if (listsSettled) onAllChange(plotAll);
   }, [listsSettled, plotAll, onAllChange]);
-  // The notice before the confirmation is done once the data is confirmed or a turn starts.
-  // Adjusted while rendering, React's pattern for state that follows other state.
-  if (gateShown && (step2 || running)) setGateShown(false);
-  // What the notice asks for first, from the data card as it is now: a table read
-  // from text waits for `.use()` or `.discard()`, anything else for `.confirm()`. A
-  // table that arrives or is discarded after the click changes the text, the
-  // announcement and the target of `.show()` with it, so none names a button
-  // that is gone or waits.
-  const gate: CreateGate | null = gateShown
-    ? state.transcription
-      ? 'transcription'
-      : 'confirm'
-    : null;
-
-  // The user's own `.confirm()` collapsed the card and took its focused button
-  // away. Before the first plot the keyboard continues at `.create_plot()` (or
-  // `.plot_all()`), the step's next action (a button, so a phone opens no
-  // keyboard), unless it waits; otherwise at the pinned header's toggle, since
-  // a fresh run must not be one key press away by accident; it is in view where
-  // it sticks, so the focus scrolls nothing. Only for that confirmation, and
-  // only while nothing else holds the focus: a step 2 that a turn's sync brings
-  // back never takes it from the composer. A layout effect, so the focus has
-  // moved by the time the button shows.
-  useLayoutEffect(() => {
-    if (!confirmFocus.current || state.confirmBusy) return;
-    confirmFocus.current = false;
-    const active = document.activeElement;
-    if (!step2 || (active && active !== document.body)) return;
-    if (firstPlot && !createRef.current?.disabled) createRef.current?.focus();
-    else toggleRef.current?.focus({ preventScroll: true });
-  }, [state.confirmBusy, step2, firstPlot]);
 
   // A key press on `.plot_all()` continues in the panel it opened: the button waits while
   // the panel is open, and the panel is where the plots come in.
@@ -652,28 +579,51 @@ function AgentChat({
   };
 
   /**
-   * The composer's action. The first plot: an empty box starts it as it is
-   * (`create_plot`), or, after a switch that offered it, with the remembered
-   * decisions (`carry_plot`); text goes as the user's turn, and the assistant
-   * makes the plot with that change (the server gives it the decisions too).
-   * Otherwise the text is a turn about the data or the plot. While `all` is
-   * pressed in step 2 nothing goes: the fan-out takes no text.
+   * The form's submit, Enter in the box and `.send()`: the text goes as a turn about the data
+   * or the plot, never as a confirmation. In step 1 a plot wish in it is kept for the next
+   * `.create_plot()` (the assistant's `keep_plot_request`); in step 2 before the first plot the
+   * assistant makes that plot with it. While `all` is pressed in step 2 nothing goes: the
+   * fan-out takes no text.
    */
   const handleSend = useCallback(
     (event?: React.FormEvent) => {
       event?.preventDefault();
       const text = draft.trim();
-      if (busy || chatLocked) return;
-      if (firstPlot && !text) {
-        if (canCreate) void (carry ? session.carryPlot() : session.createPlot());
-        return;
-      }
-      if (!text || (firstPlot && !canCreate)) return;
+      if (!text || busy || chatLocked) return;
       void session.sendMessage(text);
       setDraft('');
     },
-    [draft, busy, chatLocked, firstPlot, canCreate, carry, session]
+    [draft, busy, chatLocked, session]
   );
+
+  /**
+   * A plot button's click (`.create_plot()`, `.start_over()`, the carry): the data and the
+   * bindings as the card shows them are what the plot takes, so data that is not confirmed yet
+   * is confirmed first; a refusal stops here and shows under the composer, and nothing is
+   * plotted. Then the plot starts: the box's text, when the button takes it (`withText`, the
+   * filled CTA), goes as the turn that makes the plot with that request, else the catalogue
+   * plot (`create_plot`) or the switch's offer (`carry_plot`). The confirmation's busy state and
+   * the session's own guards hold back a second click, also one before the state caught up.
+   */
+  const startPlot = async (
+    event: React.MouseEvent,
+    kind: 'create' | 'carry',
+    withText: boolean
+  ) => {
+    keepKeyboardFocus(event);
+    if (!canCreate) return;
+    const text = withText ? draft.trim() : '';
+    if (!state.dataConfirmed && !(await session.confirmData())) return;
+    if (text) {
+      // Only the text that went: an edit made while the confirmation ran stays in the box. The
+      // turn puts the text in the thread before its request goes, so a turn refused at once
+      // (a limit, the capacity, the network) shows it there with the error: nothing is lost.
+      setDraft(current => (current.trim() === text ? '' : current));
+      void session.sendMessage(text);
+    } else {
+      void (kind === 'carry' ? session.carryPlot() : session.createPlot());
+    }
+  };
 
   /**
    * A library picked in the menu. While `all` is pressed, any pick turns it
@@ -696,7 +646,8 @@ function AgentChat({
   // is over the page switches as the menu does, and with `plot` makes the plot there at once
   // with the user's decisions (`carry_plot`), without a second click (owner decision of
   // 2026-11-02). The intent is noted before the switch, so the render that brings the new
-  // library finds it; the carry runs only on confirmed data, else the composer offers it.
+  // library finds it; the carry runs only on confirmed data, never confirming by itself: on
+  // data the user has not taken yet, the composer offers it and the click confirms.
   const carryNext = useRef<string | null>(null);
   useEffect(() => {
     const request = state.chatSwitch;
@@ -711,27 +662,25 @@ function AgentChat({
     if (carryNext.current === null || state.library !== carryNext.current || running || busy)
       return;
     carryNext.current = null;
-    if (canCreate) void session.carryPlot();
-  }, [state.library, running, busy, canCreate, session]);
+    if (canCreate && step2) void session.carryPlot();
+  }, [state.library, running, busy, canCreate, step2, session]);
 
   /**
-   * `.plot_all()`, the composer's action while `all` is pressed: the confirmed
-   * data with its bindings, in every library of the header at once; the server
-   * copies this session's confirmed version into each library's session. The
-   * upload and the bindings go along only for a server without the copy.
-   * Before the confirmation it calls nothing and shows the notice, as the quiet
-   * `.create_plot()` does.
+   * `.plot_all()`, the action while `all` is pressed: the data with its bindings, in every
+   * library of the header at once; the server copies this session's confirmed version into each
+   * library's session, so data that is not confirmed yet is confirmed first, as for
+   * `.create_plot()`, and a refusal opens no panel. The upload and the bindings go along only
+   * for a server without the copy.
    */
-  const handlePlotAll = (event: React.MouseEvent) => {
-    if (!step2) {
-      setGateShown(true);
-      return;
-    }
-    if (!state.sessionId) return;
+  const handlePlotAll = async (event: React.MouseEvent) => {
+    const sourceSession = state.sessionId;
+    if (!canCreate || !sourceSession) return;
+    const keyboard = event.detail === 0;
+    if (!state.dataConfirmed && !(await session.confirmData())) return;
     const upload = state.dataset?.upload;
-    fanOutFocus.current = event.detail === 0;
+    fanOutFocus.current = keyboard;
     setFanOut({
-      sourceSession: state.sessionId,
+      sourceSession,
       ...(upload ? { upload } : {}),
       bindings: state.bindings,
       libraries: [...libraries],
@@ -739,74 +688,26 @@ function AgentChat({
   };
 
   /**
-   * The quiet `.create_plot()` before the confirmation: no call, the server
-   * would answer `data_unconfirmed`; the notice under the composer says what
-   * comes first. The click moves no focus.
+   * The quiet `.create_plot()` beside the offer after a switch, or `.start_over()` once the
+   * library has a plot: the fresh plot from the catalogue code, with the remembered decisions;
+   * text in the box stays there for `.send()`.
    */
-  const handleCreate = (event: React.MouseEvent) => {
-    if (!step2) {
-      setGateShown(true);
-      return;
-    }
-    keepKeyboardFocus(event);
-    void session.createPlot();
-  };
+  const handleCreate = (event: React.MouseEvent) => void startPlot(event, 'create', false);
 
   /**
-   * The offer after a switch, beside `.send()` once the library has a plot (the
-   * first plot's offer submits the form instead, `handleSend`). Before the
-   * confirmation it calls nothing and shows the notice, as `.create_plot()` does.
+   * The offer after a switch: the plot in this library with the remembered decisions. While it
+   * is the filled CTA (data unconfirmed, or no plot here yet) the box's text goes along as the
+   * turn that makes it; beside `.send()` once the confirmed data has a plot, it takes none.
    */
-  const handleCarry = (event: React.MouseEvent) => {
-    if (!step2) {
-      setGateShown(true);
-      return;
-    }
-    keepKeyboardFocus(event);
-    void session.carryPlot();
-  };
+  const handleCarry = (event: React.MouseEvent) => void startPlot(event, 'carry', ctaPlot);
 
-  /**
-   * The notice's `.show()`: bring the button the notice names into view, below
-   * the pinned header (the page's scroll padding), and move the keyboard focus
-   * to it. A disabled button (bindings incomplete, something in flight) cannot
-   * take the focus, so it is only scrolled to.
-   */
-  const goToGate = () => {
-    const target = (gate === 'transcription' ? decisionRef : confirmRef).current;
-    target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
-    if (target && !target.disabled) target.focus({ preventScroll: true });
-  };
+  /** The filled `.create_plot()`: the plot, with the box's text as its request. */
+  const handlePlot = (event: React.MouseEvent) => void startPlot(event, 'create', true);
 
   if (state.phase === 'unauthorized') return lane === 'public' ? <LaneClosed /> : <AdminRequired />;
   const chatPath = lane === 'public' ? paths.publicAgentChat : paths.agentChat;
 
   const backHref = specPath(specId, language, state.library);
-  // The composer's create action while `all` is pressed, for every library at once: the CTA
-  // before the first plot, the quiet button otherwise, and before the confirmation a click
-  // shows the notice. It waits while the panel is open.
-  const plotAllButton = (
-    <Box
-      key="plot-all"
-      component="button"
-      type="button"
-      ref={createRef}
-      onClick={handlePlotAll}
-      disabled={!!fanOut || (step2 ? !canCreate : state.phase !== 'ready' || busy)}
-      aria-label="Plot in all libraries"
-      aria-describedby={
-        [
-          step2 ? DATA_SUMMARY_ID : gate ? 'agent-create-gate' : null,
-          chatLocked ? 'agent-create-line' : null,
-        ]
-          .filter(Boolean)
-          .join(' ') || undefined
-      }
-      sx={firstPlot ? ctaButtonSx : actionButtonSx}
-    >
-      .plot_all()
-    </Box>
-  );
   const header = (
     <>
       <SectionHeader
@@ -903,7 +804,16 @@ function AgentChat({
         <NoIndex />
         {header}
         {state.phase === 'opening' ? (
-          <Box sx={labelSx}>opening a session…</Box>
+          // The open can take seconds: on the public lane the bot check runs inside it first
+          // (`withHumanCheck`), and a check that asks for a click shows at the window's foot.
+          <Box
+            role="status"
+            data-testid="session-opening"
+            sx={{ ...labelSx, display: 'flex', alignItems: 'center', gap: 1.5 }}
+          >
+            opening a session
+            <LoaderSpinner size="inline" />
+          </Box>
         ) : (
           <Box role="alert" sx={{ borderLeft: `2px solid ${colors.error}`, pl: 1.5 }}>
             <Box sx={{ ...labelSx, color: colors.error }}>
@@ -960,22 +870,16 @@ function AgentChat({
               the thread, so the header sticks over all of it. */}
           <DataPanel
             state={state}
-            onParse={(text, source, table) => void session.parseData(text, false, source, table)}
+            onParse={(text, source, table, onForward) =>
+              void session.parseData(text, false, source, table, { onForward })
+            }
             onConfirmTranscription={() => void session.confirmTranscription()}
             onTrack={trackEvent}
             onConvert={session.convertFile}
             onDiscardTranscription={session.discardTranscription}
-            onSendFormula={() => void session.sendFormula()}
             onBind={session.setBinding}
-            onConfirmData={() => {
-              confirmFocus.current = true;
-              void session.confirmData();
-            }}
             onUndo={() => void session.undoData()}
             onToLong={() => void session.toLongData()}
-            toggleRef={toggleRef}
-            confirmRef={confirmRef}
-            decisionRef={decisionRef}
             // Not while the fan-out's panel is open: its sessions copy this session's confirmed data.
             locked={!!fanOut}
             onLoadData={session.fetchDataCsv}
@@ -1034,249 +938,46 @@ function AgentChat({
               fallbackFocusRef={messageRef}
             />
 
-            {/* While the chat waits for `all`, the line says so in the ink of the text, and the
-                message box names it as its description. */}
-            {(firstPlot || chatLocked) && (
-              <Box
-                id="agent-create-line"
-                sx={{ ...labelSx, color: chatLocked ? 'var(--ink)' : 'var(--ink-soft)', mb: -1 }}
-              >
-                {chatLocked
-                  ? `# ${firstPlot ? 'step 2 — ' : ''}plot the table as it is in all ${libraries.length} libraries at once · turn all off to chat`
-                  : carry
-                    ? `# step 2 — ${carryText}, or say first what it should do differently`
-                    : '# step 2 — create the plot as it is, or say first what it should do differently'}
-              </Box>
-            )}
-            {/* Told before the user types: every turn would get `service_paused` until then. */}
-            {pausedUntil && (
-              <Box
-                role="note"
-                data-testid="service-paused"
-                sx={{
-                  ...labelSx,
-                  color: 'var(--ink)',
-                  borderLeft: `3px solid ${colors.warning}`,
-                  pl: 1.5,
-                  lineHeight: 1.6,
-                }}
-              >
-                # {servicePausedText(pausedUntil)}
-              </Box>
-            )}
-            {/* A key press continues in the message box: the button gives way to the working
-                line while the turn runs. */}
-            {exampleOffer && (
-              <ExampleDataLine
-                working={exampleWorking}
-                disabled={busy}
-                onClick={event => {
-                  keepKeyboardFocus(event);
-                  void session.exampleData();
-                }}
-              />
-            )}
-            <Box
-              component="form"
+            <Composer
+              draft={draft}
+              onDraftChange={setDraft}
               onSubmit={handleSend}
-              sx={{ display: 'flex', gap: 1, alignItems: 'flex-end', flexWrap: 'wrap' }}
-            >
-              <Box
-                component="textarea"
-                ref={messageRef}
-                aria-label="Message"
-                placeholder={
-                  // Step 1 talks about the data, step 2 about the plot; short since
-                  // 2026-11-02, the how-to is behind the data card's ⓘ. Without data,
-                  // the chat is the other way to get some: example data or a formula.
-                  // While `all` is pressed in step 2 the box waits: the fan-out takes
-                  // no text.
-                  chatLocked
-                    ? 'all libraries: the table goes as it is · turn all off to chat'
-                    : !step2
-                      ? 'ask for example data, a curve, or a fix to your data'
-                      : firstPlot
-                        ? 'optional: what the first plot should do differently'
-                        : 'ask for a change, e.g. log scale on y'
-                }
-                value={draft}
-                maxLength={MAX_MESSAGE_CHARS}
-                rows={2}
-                disabled={state.phase !== 'ready' || chatLocked}
-                aria-describedby={chatLocked ? 'agent-create-line' : undefined}
-                onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
-                  setDraft(event.target.value)
-                }
-                onKeyDown={(event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-                  // Enter sends text; an empty box creates nothing by accident.
-                  if (event.key === 'Enter' && !event.shiftKey) {
-                    event.preventDefault();
-                    if (draft.trim()) handleSend();
-                  }
-                }}
-                sx={{ ...nativeControlSx, flex: '1 1 240px', resize: 'vertical' }}
-              />
-              {/* Own keys: the button a run replaces never turns into `.stop()` in place,
-                  with a focus that a second key press would spend on stopping the run. */}
-              {running ? (
-                <Box
-                  key="stop"
-                  component="button"
-                  type="button"
-                  onClick={(event: React.MouseEvent) => {
-                    keepKeyboardFocus(event);
-                    void session.stop();
-                  }}
-                  disabled={state.run?.stopping}
-                  aria-label="Stop"
-                  sx={{
-                    ...ghostButtonSx,
-                    color: colors.error,
-                    '&:hover:not(:disabled)': { color: colors.error, borderColor: colors.error },
-                  }}
-                >
-                  {state.run?.stopping ? '.stop() …' : '.stop()'}
-                </Box>
-              ) : firstPlot && plotAll ? (
-                plotAllButton
-              ) : firstPlot && !carry ? (
-                <Box
-                  key="create"
-                  component="button"
-                  type="submit"
-                  ref={createRef}
-                  onClick={keepKeyboardFocus}
-                  disabled={!canCreate}
-                  aria-label="Create plot"
-                  aria-describedby={`${DATA_SUMMARY_ID} agent-create-line`}
-                  sx={ctaButtonSx}
-                >
-                  .create_plot()
-                </Box>
-              ) : (
-                <>
-                  {/* After a switch that offered it: the plot in this library with the remembered
-                      decisions, the step's action. Before the library's first plot it submits
-                      the form, so typed text goes as the turn, as `.create_plot()` does. */}
-                  {carry && (
-                    <Box
-                      key="carry"
-                      component="button"
-                      type={firstPlot ? 'submit' : 'button'}
-                      ref={createRef}
-                      data-testid="carry-plot"
-                      onClick={firstPlot ? keepKeyboardFocus : handleCarry}
-                      disabled={step2 ? !canCreate : state.phase !== 'ready' || busy}
-                      aria-describedby={
-                        step2
-                          ? `${DATA_SUMMARY_ID}${firstPlot ? ' agent-create-line' : ''}`
-                          : gate
-                            ? 'agent-create-gate'
-                            : undefined
-                      }
-                      // The library's name and the count make it long: it wraps at phone width.
-                      sx={{
-                        ...(step2 ? ctaButtonSx : actionButtonSx),
-                        whiteSpace: 'normal',
-                        textAlign: 'left',
-                        maxWidth: '100%',
-                      }}
-                    >
-                      {carryText}
-                    </Box>
-                  )}
-                  {/* Step 2 after a plot: start over from the catalogue plot with this data.
-                      Beside the offer: the plot from the catalogue code, without the carry. Step 1: the step is
-                      visible from the foot too, and a click says what comes first instead of
-                      calling the server. With `all`, `.plot_all()`. */}
-                  {state.dataset && plotAll && plotAllButton}
-                  {state.dataset && !plotAll && (
-                    <Box
-                      component="button"
-                      type="button"
-                      ref={carry ? undefined : createRef}
-                      onClick={handleCreate}
-                      disabled={step2 ? !canCreate : state.phase !== 'ready' || busy}
-                      // Once this library has a plot, the button starts over from the
-                      // catalogue plot; `.send()` beside it changes the latest version.
-                      aria-label={hasPlot ? 'Start over' : 'Create plot'}
-                      title={hasPlot || carry ? START_OVER_HELP : undefined}
-                      aria-describedby={
-                        [
-                          hasPlot || carry ? START_OVER_HELP_ID : null,
-                          step2 ? DATA_SUMMARY_ID : gate ? 'agent-create-gate' : null,
-                        ]
-                          .filter(Boolean)
-                          .join(' ') || undefined
-                      }
-                      sx={actionButtonSx}
-                    >
-                      {hasPlot ? '.start_over()' : '.create_plot()'}
-                    </Box>
-                  )}
-                  {state.dataset && (hasPlot || carry) && !plotAll && (
-                    <Box component="span" id={START_OVER_HELP_ID} sx={visuallyHiddenSx}>
-                      {START_OVER_HELP}
-                    </Box>
-                  )}
-                  {/* Before the library's first plot the offer submits text; no `.send()` then. */}
-                  {!firstPlot && (
-                    <Box
-                      component="button"
-                      type="submit"
-                      onClick={keepKeyboardFocus}
-                      disabled={chatLocked || !draft.trim() || state.phase !== 'ready' || busy}
-                      aria-describedby={chatLocked ? 'agent-create-line' : undefined}
-                      sx={ghostButtonSx}
-                    >
-                      .send()
-                    </Box>
-                  )}
-                </>
-              )}
-            </Box>
-            {/* No role on the visible notice: the status box below speaks it, once. */}
-            {gate && (
-              <Box
-                ref={gateRef}
-                data-testid="create-gate"
-                sx={{
-                  mt: -1,
-                  borderLeft: `3px solid ${colors.warning}`,
-                  pl: 1.5,
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  columnGap: 1,
-                  rowGap: 0.75,
-                }}
-              >
-                <Box
-                  id="agent-create-gate"
-                  sx={{ ...labelSx, color: 'var(--ink)', flex: '1 1 220px', lineHeight: 1.6 }}
-                >
-                  # {CREATE_GATE[gate].text}
-                </Box>
-                <Box
-                  component="button"
-                  type="button"
-                  onClick={goToGate}
-                  aria-label={CREATE_GATE[gate].action}
-                  sx={actionButtonSx}
-                >
-                  .show()
-                </Box>
-              </Box>
-            )}
-            <Box role="status" data-testid="composer-status" sx={visuallyHiddenSx}>
-              {gate ? CREATE_GATE[gate].text : ''}
-            </Box>
-            {draft.length > MAX_MESSAGE_CHARS * 0.9 && (
-              <Box sx={{ ...labelSx, mt: -1 }}>
-                {draft.length} / {MAX_MESSAGE_CHARS}
-              </Box>
-            )}
+              messageRef={messageRef}
+              createRef={createRef}
+              ready={state.phase === 'ready'}
+              busy={busy}
+              running={running}
+              stopping={!!state.run?.stopping}
+              hasData={!!state.dataset}
+              step2={step2}
+              hasPlot={hasPlot}
+              ctaPlot={ctaPlot}
+              canCreate={canCreate}
+              plotAll={plotAll}
+              chatLocked={chatLocked}
+              libraryCount={libraries.length}
+              fanOutOpen={!!fanOut}
+              carryText={carry ? carryText : null}
+              stepLine={stepLine}
+              confirming={state.confirmBusy}
+              confirmError={state.confirmError}
+              pausedUntil={pausedUntil}
+              exampleOffer={exampleOffer}
+              exampleWorking={exampleWorking}
+              onExampleData={event => {
+                keepKeyboardFocus(event);
+                void session.exampleData();
+              }}
+              onStop={event => {
+                keepKeyboardFocus(event);
+                void session.stop();
+              }}
+              onPlot={handlePlot}
+              onCreate={handleCreate}
+              onCarry={handleCarry}
+              onPlotAll={event => void handlePlotAll(event)}
+              keepKeyboardFocus={keepKeyboardFocus}
+            />
             {/* A chat without a plot has no result card to report on: its own control. Not while a
                 turn runs, which may still bring the plot; a sent record stays in view. */}
             {(state.chatFeedback ||

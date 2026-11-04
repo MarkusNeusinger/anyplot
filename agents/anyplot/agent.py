@@ -208,7 +208,10 @@ async def session_context(context: ReadonlyContext) -> str:
         if view.data_confirmed:
             lines.append("- Data: confirmed by the user; the plot can be made")
         else:
-            lines.append("- Data: not confirmed yet; the user confirms it in the data panel before any plot")
+            lines.append(
+                "- Data: not confirmed yet; the user's .create_plot() beside the message box confirms it as shown"
+                " and starts the plot"
+            )
     versions = [version for version in services.versions.all(session_id) if version.target == view.target]
     if versions:
         latest = versions[-1]
