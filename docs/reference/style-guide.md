@@ -22,7 +22,7 @@ anyplot.ai is a considered reference work styled like a code editor over a paper
 |-------|------|--------|
 | **Brand** | Identity, voice, logo, tone of communication | Lowercase default; `any.plot()` wordmark with green dot |
 | **Frontend** | Website visual language: typography, layout, components | Editorial-scientific paper × terminal/code-editor overlay |
-| **Plots** | Color palette for every visualization across all 11 libraries (9 Python + R/ggplot2 + Julia/Makie) | imprint 8-color categorical, brand `#009E73` first |
+| **Plots** | Color palette for every visualization across every catalogue library, in Python, R (ggplot2), Julia (Makie), and JavaScript | imprint 8-color categorical, brand `#009E73` first |
 
 **Aesthetic direction:** `arXiv paper` × `tmux/lazygit` rather than `SaaS dashboard` or `AI startup`. The reader should feel they're browsing a curated journal that happens to live inside a terminal — section headers carry shell prompts (`❯`, `$`, `~/plots/`), hero text types itself with a blinking cursor, action buttons read as method calls (`.copy()`, `.open()`, `.download()`).
 
@@ -38,7 +38,7 @@ anyplot.ai is a considered reference work styled like a code editor over a paper
 
 **1. Reserve color for moments that earn it.** The imprint palette has eight categorical colours. If the website itself uses them liberally — brightly colored buttons, banners, hero backgrounds — the actual plots lose their visual punch. We treat the palette as **precious**: the brand green appears in maybe five to ten places on a given page (logo, one italic headline accent, terminal cursor, primary CTA hover, active nav indicator, a handful of link underlines). Everything else is one of the eight gray tones.
 
-**2. Warmth over clinical.** Pure `#FFFFFF` backgrounds make palette colors look harsh and the layout feel like a banking app. We use a warm off-white (`#FAF8F1`) as the base, with slightly lighter surfaces (`#FAF8F1`) for cards. This gives the page a paper-like quality and makes the saturated plot colors look **intentional** rather than loud. Dark mode mirrors this: `#121210` rather than pure black, with a subtle warm undertone.
+**2. Warmth over clinical.** Pure `#FFFFFF` backgrounds make palette colors look harsh and the layout feel like a banking app. We use a warm off-white (`#F5F3EC`) as the base, with slightly lighter surfaces (`#FAF8F1`) for cards. This gives the page a paper-like quality and makes the saturated plot colors look **intentional** rather than loud. Dark mode mirrors this: `#121210` rather than pure black, with a subtle warm undertone.
 
 **3. Code is the native register.** Section headers carry shell prompts (`❯ libraries`, `$ plots`, `~/anyplot/`), action buttons read as method calls (`.copy()`, `.open()`, `.download()`), the hero headline types itself with a blinking cursor. The site speaks the dialect of its visitors. This is not skinning — it's the framing device. Removing the editorial paper underneath would over-tip into "developer toy"; removing the terminal layer would feel sterile and product-marketing-y. The two layers depend on each other.
 
@@ -222,8 +222,9 @@ The lowercase default matches the code-forward aesthetic and keeps the site feel
 > ```
 > $ ap.load("ggplot")
 > ✗ unknown library: "ggplot"
->   supported: matplotlib, seaborn, plotly, bokeh,
->              altair, plotnine, pygal, highcharts, lets-plot
+>   supported: matplotlib, seaborn, plotly, bokeh, altair,
+>              plotnine, pygal, lets-plot, ggplot2, makie,
+>              chartjs, d3, echarts, highcharts, muix
 > ```
 >
 > Don't: `Oops! Looks like we don't support "ggplot" yet. But don't worry — we're always adding new libraries! 🙂`
@@ -270,7 +271,7 @@ The lowercase default matches the code-forward aesthetic and keeps the site feel
 
 > Instead of: `🚀 Supercharge your data viz workflow with AI-powered plot generation! Unlock 1000+ beautifully crafted charts across multiple libraries. Ship faster, iterate smarter, and empower your team to create stunning visualizations!`
 >
-> Write: `A catalogue of 1,000+ plotting examples across eleven libraries in three languages (Python + R + Julia). Plot ideas come from humans; AI drafts the spec, generates code for every library, and reviews each implementation. Humans approve specs and tune the rules when something repeatedly fails. Every example uses the same colorblind-safe palette, so switching libraries never breaks your color grammar.`
+> Write: `A catalogue of thousands of plotting examples across fifteen libraries in four languages (Python, R, Julia, JavaScript). Plot ideas come from humans; AI drafts the spec, generates code for every library, and reviews each implementation. Humans approve specs and tune the rules when something repeatedly fails. Every example uses the same colorblind-safe palette, so switching libraries never breaks your color grammar.`
 
 The second version is shorter, says what's actually happening (humans submit ideas + approve + tune; AI does the drafting/generating/reviewing), and reads as if written by someone who cares about what they're building.
 
@@ -288,7 +289,7 @@ The second version is shorter, says what's actually happening (humans submit ide
 **What anyplot is not:**
 
 - **A plotting library**. We don't compete with matplotlib or plotly. We help you use them better.
-- **An AI plot generator the user prompts.** Users browse a curated catalogue. They don't type prompts; the AI runs offline against specs.
+- **An AI plot generator the user prompts.** Users browse a curated catalogue: its plots come from specs humans approve, and the AI generates them offline. The experimental chat at `/agent` adapts a plot the user picked from that catalogue to their own data; it doesn't invent a plot from a prompt.
 - **A dashboard tool**. We show static examples. Interactive dashboards are a different product category.
 - **A tutorial platform**. We assume you know how to run Python code. We don't teach from zero.
 - **A community forum**. We accept contributions through GitHub but we're not building a social layer.
@@ -297,13 +298,13 @@ The second version is shorter, says what's actually happening (humans submit ide
 
 Narrative hooks for talking about anyplot — adapt to context, don't recite verbatim:
 
-**The pipeline story:** Humans submit plot ideas as GitHub issues. AI drafts the spec from each idea; humans approve it before any code is generated. AI then generates implementations across every supported library from the same spec — Python for most, R for ggplot2 — and reviews each one for visual quality and spec compliance. When something doesn't pass review, AI retries — and when it keeps failing, we refine the spec or tune the AI rules. We never patch the code by hand. That makes anyplot a catalogue that maintains itself: when matplotlib ships a new release, we re-run the pipeline; when a better example pattern emerges, we update the spec and every library regenerates. Humans curate; AI executes.
+**The pipeline story:** Humans submit plot ideas as GitHub issues. AI drafts the spec from each idea; humans approve it before any code is generated. AI then generates implementations across every supported library from the same spec — Python for most, plus R, Julia, and JavaScript — and reviews each one for visual quality and spec compliance. When something doesn't pass review, AI retries — and when it keeps failing, we refine the spec or tune the AI rules. We never patch the code by hand. That makes anyplot a catalogue that maintains itself: when matplotlib ships a new release, we re-run the pipeline; when a better example pattern emerges, we update the spec and every library regenerates. Humans curate; AI executes.
 
 **The palette story:** Every plot uses the imprint palette, colourblind-safe and tuned for warm-paper rendering. About 8% of men have some form of color vision deficiency — most plotting libraries ignore this entirely. We make it the default.
 
 **The library-agnostic story:** A "Gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or bokeh. The palette travels with you across libraries. Switching tools doesn't mean re-learning your color grammar.
 
-**The catalogue story:** A thousand examples across eleven libraries in three languages, each reproducible and copy-pasteable. No ads. No affiliate links. No "suggested tutorials you might like." Just the plots and the code that made them.
+**The catalogue story:** Thousands of examples across fifteen libraries in four languages, each reproducible and copy-pasteable. No ads. No affiliate links. No "suggested tutorials you might like." Just the plots and the code that made them.
 
 **The origin story:** It started as pyplots.ai, a small Python-only catalogue I built in a weekend. It grew when I realized people wanted the same examples across different libraries, and the same safe palette everywhere. anyplot is the grown-up version.
 
@@ -326,7 +327,7 @@ Narrative hooks for talking about anyplot — adapt to context, don't recite ver
 **Examples and identifiers:**
 - A **slug** (URL-safe): `matplotlib-scatter-penguins-species`
 - A **title** (human-readable): `Scatter plot of penguin species`
-- A **library**: one of the ten supported (Python or R)
+- A **library**: one of the supported libraries (Python, R, Julia, or JavaScript)
 - **Tags**: chart type, data domain, complexity level
 
 Slugs are the canonical identifier. They're used in URLs, filenames, and `ap.load()` calls.
@@ -401,11 +402,11 @@ Plots and content sit inside **surface containers** with consistent styling:
 
 | Surface     | Light          | Dark           | Use                         |
 |-------------|----------------|----------------|-----------------------------|
-| `bg-page`   | `#FAF8F1`      | `#121210`      | Outer page background       |
+| `bg-page`   | `#F5F3EC`      | `#121210`      | Outer page background       |
 | `bg-surface`| `#FAF8F1`      | `#1A1A17`      | Cards, plot containers      |
 | `bg-elevated`| `#FFFDF6`     | `#242420`      | Modals, tooltips            |
 
-The warm off-white (`#FAF8F1`) is the foundation — pure white would make the saturated palette colors look harsh.
+The warm off-whites (`#F5F3EC` for the page, `#FAF8F1` for its surfaces) are the foundation — pure white would make the saturated palette colors look harsh.
 
 ### 4.3 Warm-tinted Grayscale
 
@@ -416,17 +417,17 @@ A warm-tinted grayscale (reddish-brown undertone instead of blue-gray) matches t
 | `--ink`       | `#1A1A17`                   | `#F0EFE8`                     | Primary text               |
 | `--ink-soft`  | `#4A4A44`                   | `#B8B7B0`                     | Secondary text             |
 | `--ink-muted` | `#6B6A63`                   | `#A8A79F`                     | Tertiary, meta, labels     |
-| `--rule`      | `rgba(26,26,23,0.10)`       | `rgba(240,239,232,0.10)`      | Borders, dividers          |
+| `--rule`      | `rgba(26,26,23,0.15)`       | `rgba(240,239,232,0.15)`      | Borders, dividers          |
 
 All three text tokens pass **WCAG 2.1 AA contrast** (≥ 4.5:1 for normal text) against both `--bg-page` surfaces:
 
-| Token         | on `--bg-page` light (`#FAF8F1`) | on `--bg-page` dark (`#121210`) |
+| Token         | on `--bg-page` light (`#F5F3EC`) | on `--bg-page` dark (`#121210`) |
 |---------------|-----------------------------------|----------------------------------|
-| `--ink`       | 16.7 : 1 (AAA)                    | 16.5 : 1 (AAA)                   |
-| `--ink-soft`  | 7.79 : 1 (AAA)                    | 9.42 : 1 (AAA)                   |
-| `--ink-muted` | 5.07 : 1 (AA)                     | 7.95 : 1 (AAA)                   |
+| `--ink`       | 15.7 : 1 (AAA)                    | 16.3 : 1 (AAA)                   |
+| `--ink-soft`  | 8.03 : 1 (AAA)                    | 9.32 : 1 (AAA)                   |
+| `--ink-muted` | 4.89 : 1 (AA)                     | 7.76 : 1 (AAA)                   |
 
-Verified with [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/). Never use imprint palette colours as body-text colors — they are reserved for plot data marks (and a few documented chrome accents like `#009E73` in §4.4).
+Computed on 2026-11-04 with the WCAG 2.1 contrast formula, the one the [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/) uses, from the values in `app/src/styles/tokens.css`. Never use imprint palette colours as body-text colors — they are reserved for plot data marks (and a few documented chrome accents like `#009E73` in §4.4).
 
 ### 4.4 UI Color Application
 
@@ -444,7 +445,7 @@ Verified with [WebAIM Contrast Checker](https://webaim.org/resources/contrastche
 It does **not** appear in:
 
 - Background colors (never)
-- Borders of regular cards (use `--rule` = `rgba(26,26,23,0.10)`)
+- Borders of regular cards (use `--rule` = `rgba(26,26,23,0.15)`)
 - Body text emphasis (use serif italic instead)
 - Icon colors outside of logos (use gray tones)
 - Static (non-cursor, non-status) decorative dots or glyphs
@@ -943,12 +944,12 @@ The `cubic-bezier(0.4, 0, 0.2, 1)` is the standard material-motion "ease-in-out"
 ┌───────────────────────────────────┐
 │ any.plot()          plots.search()│  row 1: logo + search link
 ├───────────────────────────────────┤
-│ specs  plots  libs  stats  pal mcp│  row 2: six items · space-between
+│ specs plots map libs stats pal mcp│  row 2: seven items · space-between
 └───────────────────────────────────┘
 ```
 
 - Row 1: `any.plot()` wordmark (17px), `plots.search()` method-call link (11px) right-aligned.
-- Row 2: all six nav items evenly distributed. Short labels kick in on `xs` where the full word doesn't fit: `libraries` → `libs`, `palette` → `pal`. Keep `specs`, `plots`, `stats`, `mcp` as-is.
+- Row 2: all seven nav items (`NAV_LINKS` in `app/src/layouts/NavBar.tsx`) evenly distributed. Short labels kick in on `xs` where the full word doesn't fit: `libraries` → `libs`, `palette` → `pal`. Keep `specs`, `plots`, `map`, `stats`, `mcp` as-is.
 - Font size ramps 12px xs → 12px sm → 13px md. Gap ramps 2 → 2.25 → 3.5.
 - The NavBar is static (flows with the page). On `/plots` the masthead *also* flows so the FilterBar is the only sticky surface; on every other page the masthead stays sticky while the NavBar scrolls away naturally.
 
@@ -1234,7 +1235,7 @@ The design system is implemented across:
       --imprint-amber:    #DDCC77; /* warning anchor (fixed) */
 
       /* Surfaces — warm off-white, not pure #fff */
-      --bg-page:     #FAF8F1;
+      --bg-page:     #F5F3EC;
       --bg-surface:  #FAF8F1;
       --bg-elevated: #FFFDF6;
 
@@ -1242,7 +1243,7 @@ The design system is implemented across:
       --ink:         #1A1A17;
       --ink-soft:    #4A4A44;
       --ink-muted:   #6B6A63;
-      --rule:        rgba(26, 26, 23, 0.10);
+      --rule:        rgba(26, 26, 23, 0.15);
 
       /* Typography — MonoLisa Code only. serif/sans aliased for compatibility. */
       --serif: 'MonoLisa Code', 'MonoLisa Fallback', Consolas, Menlo, Monaco, monospace;
@@ -1262,7 +1263,7 @@ The design system is implemented across:
       --ink:         #F0EFE8;
       --ink-soft:    #B8B7B0;
       --ink-muted:   #A8A79F;
-      --rule:        rgba(240, 239, 232, 0.10);
+      --rule:        rgba(240, 239, 232, 0.15);
     }
 
     /* Global: enable ss01 so any italic text renders as the script variant. */

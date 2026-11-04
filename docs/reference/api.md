@@ -31,7 +31,7 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
       "features": ["basic", "2d"],
       "data_type": ["numeric"]
     },
-    "library_count": 9
+    "library_count": 15
   }
 ]
 ```
@@ -65,23 +65,37 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
     {
       "library_id": "matplotlib",
       "library_name": "Matplotlib",
-      "preview_url": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/matplotlib/plot.png",
+      "language": "python",
+      "preview_url_light": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-light.png",
+      "preview_url_dark": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-dark.png",
+      "preview_html_light": null,
+      "preview_html_dark": null,
+      "preview_url": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-light.png",
       "preview_html": null,
-      "quality_score": 92.0,
-      "code": "import matplotlib.pyplot as plt...",
-      "generated_at": "2025-01-15T10:30:00Z",
-      "generated_by": "claude-opus-4-7",
-      "python_version": "3.13",
-      "library_version": "3.10.0",
+      "quality_score": 91.0,
+      "code": null,
+      "generated_at": "2025-12-10T20:55:10",
+      "updated": "2026-06-25T01:34:04",
+      "generated_by": "claude-sonnet",
+      "python_version": null,
+      "language_version": "3.13.14",
+      "library_version": "3.11.0",
       "review_strengths": ["Clean code structure"],
       "review_weaknesses": ["Grid could be more subtle"],
       "review_image_description": "The plot shows...",
       "review_criteria_checklist": {...},
-      "review_verdict": "APPROVED"
+      "review_verdict": "APPROVED",
+      "impl_tags": {"styling": ["alpha-blending"], "patterns": ["data-generation"]}
     }
   ]
 }
 ```
+
+- `code` is always `null` here; the page loads it on demand from
+  [`GET /specs/{spec_id}/{library}/code`](#get-specsspec_idlibrarycode).
+- `preview_url` and `preview_html` are legacy single-theme fields that resolve to the light variant.
+- `language_version` is the runtime version of the implementation's language (Python, R, Julia, or Node.js).
+  `python_version` is the older field it replaces, and `language_version` falls back to it for rows without one.
 
 ---
 
@@ -119,7 +133,9 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
     {
       "id": "matplotlib",
       "name": "Matplotlib",
-      "version": "3.10.0",
+      "language": "python",
+      "framework": "none",
+      "version": "3.11.2",
       "documentation_url": "https://matplotlib.org",
       "description": "The classic standard..."
     }
