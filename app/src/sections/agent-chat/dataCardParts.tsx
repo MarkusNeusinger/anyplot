@@ -1,9 +1,10 @@
 /**
- * Presentational building blocks for the agent chat's data card (`DataCard.tsx`)
- * and pinned summary (`PinnedData.tsx`): the 20-row preview table, the lazy
- * full-table view fallback, the parser warnings, notes and code blocks, the
- * free-text transcription card, the assistant change/undo block, the wide-table
- * offer, and the shared text formatters.
+ * Presentational building blocks of the agent chat's data card, imported by
+ * `DataCard.tsx`: the 20-row preview table, the lazy full-table view fallback,
+ * the parser warnings, notes and code blocks, the free-text transcription card,
+ * the assistant change/undo block, the wide-table offer, and the role bindings.
+ * `DataPanel.tsx` imports only the full-view fallback, which it re-exports for
+ * its tests.
  */
 
 import { useState } from 'react';
