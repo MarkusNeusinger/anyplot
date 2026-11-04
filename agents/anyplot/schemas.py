@@ -703,6 +703,14 @@ RoundStep = Literal["adapting", "repairing", "checking", "rendering", "reviewing
 RubricId = Annotated[str, Field(pattern=r"^[A-Z]{2}-[0-9]{2}$")]
 """A rubric or auto-reject id (`VQ-05`, `AR-09`): a closed code, never text."""
 MAX_ROUND_DEFECTS = 6
+GateId = Annotated[str, Field(pattern=r"^(?:R[0-9](?:-[a-z_]{1,24})?|G[0-9]{1,2})$")]
+"""A host gate's id as `render.gates.GateReport.failed_gates` names it (`R1`, `R1-timeout`, `R1-memory`, `G8`): a
+closed code, never text. The usage telemetry's `gates_failed` takes the same ids."""
+SandboxFailure = Literal["syntax", "name", "key", "value", "type", "timeout", "memory", "other"]
+"""The closed class of a render that failed in the sandbox (`telemetry.sandbox_failure`): the exception class of the
+traceback, the timeout or the memory limit, never the message, which code under test can fill with a data cell."""
+MAX_ROUND_GATES = 16
+"""More distinct gate ids than the gates have (R1 to R3 with R1's limit reasons, G3 to G12) is a malformed list."""
 
 
 class Round(_ServerContract):
@@ -715,6 +723,11 @@ class Round(_ServerContract):
     `findings` counts the lines the round passed on as the next attempt reads them, and `defects`
     the rubric ids among them (`VQ-01`, `VQ-05`), which the page names in words for the repair
     round that follows (live round 9 of 2026-10-16: the repair was invisible on the page).
+    `gates_failed` names the host gates any render of the round failed or reported on (`R1`,
+    `R3`, `G8`), sorted, and `sandbox_failures` the closed class of each render that failed in
+    the sandbox (`key` for a `KeyError`, `timeout`): what a feedback case needs to say why a
+    round ended `render_failed` or `measured`, content-free like the usage telemetry's fields
+    of the same names. The root never sees the two (`tool_safety.fence_pipeline_notes`).
     """
 
     attempt: int = Field(ge=1, le=MAX_ATTEMPTS)
@@ -723,6 +736,8 @@ class Round(_ServerContract):
     step: RoundStep | None = None
     shipped: bool = False
     defects: list[RubricId] = Field(default_factory=list, max_length=MAX_ROUND_DEFECTS)
+    gates_failed: list[GateId] = Field(default_factory=list, max_length=MAX_ROUND_GATES)
+    sandbox_failures: list[SandboxFailure] = Field(default_factory=list, max_length=len(get_args(SandboxFailure)))
 
 
 ShownGroup = Literal[
@@ -834,3 +849,25 @@ class PlotResult(_ServerContract):
     def not_ready(cls, reason: NotReadyReason, *, request_kept: bool = False) -> Self:
         """The result before any LLM call when the session lacks a dataset, bindings or the user's confirmation."""
         return cls(status="not_ready", reason=reason, request_kept=request_kept or None)
+
+
+class LastRun(_ServerContract):
+    """How the session's latest plot run ended, kept in the session state (`session_state.LAST_RUN`).
+
+    Content-free: the result's status and reason, the version it stored (None for `failed`
+    and `not_ready`), the user turn it ran in, and its rounds. The feedback bundle carries it
+    as `session.last_run`, so a case on the chat, which holds no version, still says whether
+    the latest run shipped a plot the page did not show or failed while the reply called it
+    ready.
+    """
+
+    status: PlotStatus
+    reason: FailureReason | NotReadyReason | None = None
+    version: int | None = Field(default=None, ge=1)
+    turn: int = Field(default=0, ge=0)
+    rounds: list[Round] = Field(default_factory=list, max_length=MAX_ATTEMPTS)
+
+    @classmethod
+    def of(cls, result: PlotResult, *, turn: int) -> Self:
+        """The record of `result`, a run of the session's user turn `turn`."""
+        return cls(status=result.status, reason=result.reason, version=result.version, turn=turn, rounds=result.rounds)

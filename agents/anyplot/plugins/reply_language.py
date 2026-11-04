@@ -21,7 +21,8 @@ saw an English summary in a German session (#12176). This plugin checks it in co
   `reask_failed`; also for a reply the output cap cut, finish reason `MAX_TOKENS`). A
   re-ask that raises or answers nothing keeps the first reply too (verdict `error`).
   The extra call is booked like any other (`budget.book_response`).
-  At most one re-ask per turn (`ledger.reply_reasked`).
+  At most one re-ask per turn (`ledger.reply_reasked`). No plugin sees the re-ask's reply,
+  so a replacing one gets ShippedReply's check here (`shipped_reply.scrub_shipped_reply`).
 
 `REASK` switches the re-ask off, leaving only the attribution line (re-ask once is the
 owner's decision of 2026-10-14). The plugin never raises; a failure keeps
@@ -173,4 +174,9 @@ class ReplyLanguagePlugin(BasePlugin):
             attribution("reply_language", ledger, verdict="reask_failed", expected=expected, found=found)
             return None
         attribution("reply_language", ledger, verdict="reasked", expected=expected, found=found)
+        # The re-ask is a direct model call that no plugin sees, so ShippedReply's check runs on it here. Imported
+        # late: `shipped_reply` reads `reply_text` from this module.
+        from .shipped_reply import scrub_shipped_reply
+
+        scrub_shipped_reply(ledger, final)
         return final

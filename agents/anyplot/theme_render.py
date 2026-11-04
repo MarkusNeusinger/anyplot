@@ -114,6 +114,7 @@ async def render_theme(
         themes=job.themes,
         library=version.library,
         rows=data_rows(version.data_csv),
+        spec_id=version.spec_id or None,
         summarise=runtime.error_summary,
     )
     if not report.passed_host_gates:
