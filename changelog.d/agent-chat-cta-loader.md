@@ -5,7 +5,7 @@
   possible yet, may name a kind of plot that fits the data, and points to the catalogue at anyplot.ai/plots, where
   each plot's page leads to its own chat and the data is pasted again. It never says the catalogue has a
   particular type, since it does not know the catalogue. The scope judge reads such requests as in scope, with four
-  new cases in the scope eval and four in the prep eval, in English and German.
+  new cases in the scope eval and four in the prep eval, in English and German. (#12557)
 
 ### Changed
 
@@ -18,10 +18,12 @@
   `.send()` shows only while the box holds text, and Enter never confirms. The admin's `.plot_all()` and the plot
   after a library switch confirm the same way. At phone width the buttons wrap below the box and stay at its right
   end. The assistant's prompt and the session block send the user to `.create_plot()` instead of `.confirm()`.
+  (#12557)
 - **A pasted formula or code goes to the chat by itself.** The data box no longer offers `.send()` when the server
   answers `422 formula` or `422 code`: the page sends the text to the chat as your message at once, as it already
   did for a request for data, and empties the box. Code over the chat's 2,000 characters stays in the box with a
   line that asks to shorten it. `agent_data_parsed` reports such pastes as `formula` or `code` instead of `error`.
+  (#12557)
 - **The site's loader marks the chat's waits.** The three-dot `LoaderSpinner` of the plots gallery, in a new inline
   size, replaces the pulsing ellipsis while a session opens, in the thread's in-progress line, beside a plot run's
   progress and over the data box while a file is read or the data is parsed, one moving indicator per wait: the
@@ -30,4 +32,4 @@
   runs, keeping its room, so "making example data" shows once, in the thread. The loader, in the gallery too, drops
   the ochre: a resting pair in the theme's warm gray of muted text and a runner that turns green while it crosses
   them. Its dots stand still under reduced motion, the runner green, and each size has keyframes of its own, so two
-  sizes on one page no longer share one animation.
+  sizes on one page no longer share one animation. (#12557)
