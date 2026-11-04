@@ -143,11 +143,15 @@ class TestVerify:
         assert await run(cloudflare, "tok") == "passed"
 
     @pytest.mark.parametrize("hostname", ["localhost", "evil-anyplot.ai", "anyplot.ai.example", None, 7])
-    async def test_production_refuses_a_token_solved_elsewhere(self, secret, production, hostname) -> None:
-        """The widget's hostname list is the first fence; this holds if a development host is ever added there."""
+    async def test_production_refuses_a_token_solved_elsewhere(self, secret, production, hostname, caplog) -> None:
+        """The widget's hostname list is the first fence; this holds if a development host is ever added there.
+
+        Nothing of the visitor's answer reaches the log: `/legal` says anyplot learns only whether the check passed.
+        """
         cloudflare = Siteverify(json_reply({**PASSED, "hostname": hostname}))
 
         assert await run(cloudflare, "tok") == "rejected"
+        assert caplog.records == []
 
     async def test_outside_production_any_hostname_passes(self, secret) -> None:
         cloudflare = Siteverify(json_reply({**PASSED, "hostname": "localhost"}))
@@ -223,3 +227,21 @@ def test_enforced_follows_the_setting(monkeypatch: pytest.MonkeyPatch) -> None:
     assert turnstile.enforced() is False
     monkeypatch.setattr(settings, "turnstile_secret_key", SECRET)
     assert turnstile.enforced() is True
+
+
+@pytest.mark.parametrize("test_secret", sorted(turnstile.TEST_SECRETS))
+class TestTestSecrets:
+    """Cloudflare's documented test secrets, recognised by value: a production revision with one runs no check."""
+
+    async def test_production_refuses_without_asking_siteverify(self, monkeypatch, production, test_secret) -> None:
+        monkeypatch.setattr(settings, "turnstile_secret_key", test_secret)
+        cloudflare = Siteverify()
+
+        assert turnstile.enforced() is False  # the public door stays shut
+        assert await run(cloudflare, "XXXX.DUMMY.TOKEN.XXXX") == "unconfigured"
+        assert cloudflare.forms == []
+
+    async def test_outside_production_they_are_secrets_like_any_other(self, monkeypatch, test_secret) -> None:
+        monkeypatch.setattr(settings, "turnstile_secret_key", test_secret)
+
+        assert turnstile.enforced() is True

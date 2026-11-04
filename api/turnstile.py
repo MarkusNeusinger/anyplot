@@ -12,9 +12,9 @@ it, and asks for a fresh token per protected call: a token is valid for 300 seco
 **On while `TURNSTILE_SECRET_KEY` is set**, in every environment. Unset, local development and the test suite
 skip the check, and production refuses the protected calls (`503 bot_check_unavailable`) and keeps the public
 chat's door shut (`api/routers/agent_public.py` `require_public_enabled`), so a revision that lost the secret
-says so on the deploy smoke instead of serving unchecked. A siteverify answer from one of Cloudflare's test
-secrets counts as no secret in production for the same reason: one test secret passes every token, and the
-others refuse every visitor.
+says so on the deploy smoke instead of serving unchecked. One of Cloudflare's test secrets counts as no secret
+in production for the same reason, whether it is recognised by its value (`TEST_SECRETS`, so the door stays
+shut too) or by siteverify's answer: one test secret passes every token, and the others refuse every visitor.
 
 **Fail closed.** A missing, malformed, expired, reused or refused token is `403 bot_check_failed`, and so is a
 passing token that production finds was solved on a host other than anyplot.ai or one of its subdomains;
@@ -29,7 +29,9 @@ Cloudflare already sees the address in the widget and at the edge, so leaving it
 address off one more request without weakening anything the check relies on. If tokens solved in one place and
 redeemed from another ever show up, sending it is a one-line change. The request carries the secret, the token
 and an idempotency key, so the one retry after a lost answer cannot fail as a duplicate of the first attempt.
-Nothing about the token or the answer is logged except Cloudflare's error codes and a foreign hostname.
+Nothing about the token or the visitor's answer is logged: only the verdicts that point at this server (siteverify
+unreachable, Cloudflare's codes for a refused secret or request, a test secret), so `/legal`'s "anyplot learns
+only whether the check passed" holds for the logs too.
 """
 
 from __future__ import annotations
@@ -81,9 +83,31 @@ def _site_hostname(hostname: object) -> bool:
     return isinstance(hostname, str) and (hostname == SITE_HOSTNAME or hostname.endswith(f".{SITE_HOSTNAME}"))
 
 
+TEST_SECRETS = frozenset(
+    {
+        "1x0000000000000000000000000000000AA",
+        "2x0000000000000000000000000000000AA",
+        "3x0000000000000000000000000000000AA",
+    }
+)
+"""Cloudflare's documented test secrets (always passes, always fails, always a duplicate); never a production
+secret."""
+
+
+def _production_test_secret(secret: str) -> bool:
+    return settings.is_production and secret in TEST_SECRETS
+
+
 def enforced() -> bool:
-    """Whether a secret is configured. Read per call: the tests flip the setting between requests."""
-    return bool(settings.turnstile_secret_key)
+    """Whether this instance runs the check: a secret is set, and in production it is no test secret.
+
+    Read per call: the tests flip the setting between requests. The public door (`require_public_enabled`) stays
+    shut in production while this is false.
+    """
+    secret = settings.turnstile_secret_key
+    if not secret:
+        return False
+    return not _production_test_secret(secret)
 
 
 async def get_turnstile_client() -> AsyncIterator[httpx.AsyncClient]:
@@ -107,6 +131,9 @@ async def verify(token: str | None, client: httpx.AsyncClient) -> Verdict:
     secret = settings.turnstile_secret_key
     if not secret:
         return "unconfigured" if settings.is_production else "skipped"
+    if _production_test_secret(secret):
+        logger.warning("turnstile secret is one of Cloudflare's test secrets; refusing in production")
+        return "unconfigured"
     if not token or len(token) > MAX_TOKEN_CHARS:
         return "missing"
     payload = {"secret": secret, "response": token, "idempotency_key": str(uuid.uuid4())}
@@ -138,7 +165,6 @@ async def verify(token: str | None, client: httpx.AsyncClient) -> Verdict:
                 logger.warning("turnstile siteverify answered success with status %d", response.status_code)
                 return "unavailable"
             if settings.is_production and not _site_hostname(answer.get("hostname")):
-                logger.warning("turnstile token solved on a foreign host: %.100s", answer.get("hostname"))
                 return "rejected"
             return "passed"
         if "internal-error" in codes:

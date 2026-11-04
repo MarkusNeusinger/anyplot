@@ -529,7 +529,7 @@ functions as the admin lane, so each route behaves as its admin twin in
   `POST /agent/sessions` with Cloudflare's dummy token that the bot check
   refuses with `403 bot_check_failed`. In production the door also stays shut
   until both the origin gate (`ORIGIN_SECRET`) and the bot check
-  (`TURNSTILE_SECRET_KEY`) are armed.
+  (`TURNSTILE_SECRET_KEY`, and none of Cloudflare's test secrets) are armed.
 - **Identity.** No login. Your page keeps a random id per browser tab in
   sessionStorage and sends it as `X-Anyplot-Anon` (22 to 64 characters of
   `[A-Za-z0-9_-]`; without it, `400 anon_required`). The BFF forwards it with
@@ -1428,7 +1428,11 @@ The check is on while `TURNSTILE_SECRET_KEY` is set (Secret Manager, bound by
 `--update-secrets` in `api/cloudbuild.yaml` on every deploy). Unset, local
 development and the tests skip it, and production refuses the three calls and
 keeps the public chat's door shut (`404` on `GET /agent/lane`), so a revision
-without the secret fails its deploy smoke. The site's build takes the public
+without the secret fails its deploy smoke. A production revision given one of
+Cloudflare's test secrets gets the same closed door. Nothing about a token or
+a visitor's answer is logged: only the verdicts that point at the server, so
+`/legal`'s "anyplot learns only whether the check passed" holds for the logs
+too. The site's build takes the public
 site key as `_VITE_TURNSTILE_SITE_KEY` (`app/cloudbuild.yaml`), and the build
 refuses to start without one. For local checks outside production,
 Cloudflare's

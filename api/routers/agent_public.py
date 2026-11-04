@@ -140,8 +140,8 @@ def require_public_enabled(config: AgentConfig = Depends(require_agent_enabled))
     In production it also stays shut while the origin gate is unarmed (`ORIGIN_SECRET`, `api/origin_gate.py`): the
     per-IP limits key on `CF-Connecting-IP`, which only a request that came through Cloudflare carries honestly, and
     without the gate a caller on the direct `run.app` URL could forge a fresh address per request. And it stays
-    shut without the Turnstile secret (`TURNSTILE_SECRET_KEY`, `api/turnstile.py`), which would otherwise refuse
-    every new session. The deploy smoke then fails on `/agent/lane`, which says so before the switch seems to work.
+    shut without the Turnstile secret (`TURNSTILE_SECRET_KEY`, `api/turnstile.py` `enforced`) or with one of
+    Cloudflare's test secrets, either of which would refuse every new session. The deploy smoke then fails on `/agent/lane`, which says so before the switch seems to work.
     """
     if not settings.agent_public_enabled:
         raise AgentHTTPError(404, NOT_ENABLED)

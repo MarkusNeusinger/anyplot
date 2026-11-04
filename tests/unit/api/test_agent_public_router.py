@@ -221,6 +221,9 @@ class TestDoor:
         monkeypatch.setattr(settings, "turnstile_secret_key", None)
         assert TestClient(app).get("/agent/lane", headers=edge).status_code == 404
 
+        monkeypatch.setattr(settings, "turnstile_secret_key", "1x0000000000000000000000000000000AA")
+        assert TestClient(app).get("/agent/lane", headers=edge).status_code == 404  # a test secret is none
+
         monkeypatch.setattr(settings, "turnstile_secret_key", TURNSTILE_SECRET)
         assert TestClient(app).get("/agent/lane", headers=edge).status_code == 200
 
