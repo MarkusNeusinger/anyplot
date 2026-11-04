@@ -420,11 +420,12 @@ async function transcribeInStep2() {
   await screen.findByTestId('transcription-card');
 }
 
-/** The labels of the composer's buttons, in order: the step's one CTA is the last. */
+/** The composer's step buttons, in order: `.open()`, which stands in every state, is left out. */
 const composerButtons = () =>
   within(screen.getByLabelText('Message').closest('form') as HTMLElement)
     .queryAllByRole('button')
-    .map(button => button.textContent);
+    .map(button => button.textContent)
+    .filter(label => label !== '.open()');
 
 /** The thread's last entry. */
 const lastInThread = () => screen.getByRole('log', { name: 'Conversation' }).lastElementChild;
@@ -2450,5 +2451,285 @@ describe('AgentChatPage library switch and plot memory', () => {
     expect(
       within(screen.getByRole('log', { name: 'Conversation' })).queryByText(/error ·/)
     ).not.toBeInTheDocument();
+  });
+});
+
+describe('AgentChatPage attachment', () => {
+  const TABLE = 'hours,score\n1.5,52\n2.0,58\n3.0,61\n';
+  const message = () => screen.getByLabelText('Message');
+  const chip = () => screen.getByRole('group', { name: /^Attached/ });
+  const datasetPosts = () =>
+    agentCalls().filter(
+      ([input, init]) =>
+        pathOf(input).endsWith('/dataset') && (init as RequestInit | undefined)?.method === 'POST'
+    );
+  /** A paste into the message box; the event says whether the browser would paste it. */
+  const pasteText = (text: string) =>
+    fireEvent.paste(message(), { clipboardData: { files: [], getData: () => text } });
+  /** Answers the dataset route's calls with `answer` before the rest of the stub. */
+  function routeDataset(answer: (path: string, init: RequestInit) => Response | undefined) {
+    const base = fetchMock.getMockImplementation() as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    fetchMock.mockImplementation(async (input: string, init: RequestInit = {}) => {
+      const path = new URL(input).pathname;
+      return (path.includes('/dataset') && answer(path, init)) || base(input, init);
+    });
+  }
+  async function openChat() {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await screen.findByLabelText(/# your data/);
+    await waitFor(() => expect(message()).toBeEnabled());
+  }
+
+  it('attaches a pasted table as a chip, keeps prose a paste, and names the chip to a screen reader', async () => {
+    await openChat();
+    // Prose: the browser's own paste goes ahead (the event is not cancelled).
+    expect(pasteText('Make the bars blue\nand add a grid')).toBe(true);
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+
+    // A table: no text in the box, a chip with its size, `.send()` to read it.
+    expect(pasteText(TABLE)).toBe(false);
+    expect(message()).toHaveValue('');
+    expect(chip()).toHaveAccessibleName('Attached table, 4 lines, 0.0 KB');
+    expect(chip()).toHaveTextContent('▤ table · 4 lines · 0.0 KB');
+    expect(screen.getByTestId('composer-status')).toHaveTextContent('Attached table, 4 lines');
+    expect(composerButtons()).toEqual(['×', '.send()']);
+    expect(message()).toHaveAttribute('placeholder', 'add a note for this table, or press Enter');
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      '# the attached table is read when you send it: Enter or .send(), with a note if you like'
+    );
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_input_routed', {
+      as: 'data',
+      via: 'paste',
+    });
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_input_routed', {
+      as: 'message',
+      via: 'paste',
+    });
+  });
+
+  it('reads the chip on Enter with the summary first when no note came with it', async () => {
+    await openChat();
+    pasteText(TABLE);
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
+    await turnEnded();
+    expect(String((datasetPosts()[0][1] as RequestInit).body)).toContain('hours,score');
+    expect(turnBodies()).toEqual([{ action: 'summarize_data' }]);
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+  });
+
+  it('sends the typed text as the first turn after the data, in place of the summary', async () => {
+    await openChat();
+    pasteText(TABLE);
+    fireEvent.change(message(), { target: { value: 'what is the mean score?' } });
+    fireEvent.click(screen.getByRole('button', { name: '.send()' }));
+    // The note left the box at once, and it is the user's line in the thread.
+    expect(message()).toHaveValue('');
+    expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
+    await turnEnded();
+    expect(turnBodies()).toEqual([{ text: 'what is the mean score?' }]);
+    expect(
+      within(screen.getByRole('log', { name: 'Conversation' })).getByText('what is the mean score?')
+    ).toBeInTheDocument();
+  });
+
+  it('keeps a refused table red with the reason, and puts the note back before newer text', async () => {
+    routeDataset(path =>
+      path.endsWith('/dataset')
+        ? json(422, { detail: 'unparseable', cause: 'the rows have different lengths', ref: 'r-u' })
+        : undefined
+    );
+    await openChat();
+    pasteText(TABLE);
+    fireEvent.change(message(), { target: { value: 'only 2024' } });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    expect(await screen.findByTestId('attachment-error')).toHaveTextContent(
+      'the rows have different lengths · ref r-u'
+    );
+    expect(chip()).toHaveAttribute('data-status', 'failed');
+    await waitFor(() => expect(message()).toHaveValue('only 2024'));
+    expect(turnBodies()).toEqual([]);
+    // Enter tries the same table again.
+    expect(screen.getByRole('button', { name: '.send()' })).toBeEnabled();
+  });
+
+  it('lets a table read from text go from the chip and the note back into the box', async () => {
+    await openChat();
+    // Long text over the chat limit always attaches; the stub reads `Hund` as free text.
+    pasteText(`${FREE_TEXT}\n${'Pferd 1 Esel 5\n'.repeat(140)}`);
+    fireEvent.change(message(), { target: { value: 'the animals of 2024' } });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    expect(await screen.findByTestId('transcription-card')).toBeInTheDocument();
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+    await waitFor(() => expect(message()).toHaveValue('the animals of 2024'));
+    expect(turnBodies()).toEqual([]);
+  });
+
+  it('takes a file from .open() as a chip with its name, and × drops it', async () => {
+    await openChat();
+    const input = screen.getByTestId('chat-file-input');
+    fireEvent.change(input, {
+      target: { files: [new File([TABLE], 'scores.csv', { type: 'text/csv' })] },
+    });
+    expect(
+      await screen.findByRole('group', { name: /^Attached file scores\.csv/ })
+    ).toHaveTextContent('▤ scores.csv · 4 lines');
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_file', {
+      kind: 'text',
+      encoding: 'utf-8',
+      outcome: 'attached',
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_file', {
+      kind: 'text',
+      encoding: 'utf-8',
+      outcome: 'removed',
+    });
+  });
+
+  it('reads a workbook on the server with the loader, and drops an answer that came after ×', async () => {
+    let release!: () => void;
+    routeDataset(path =>
+      path.endsWith('/dataset/convert')
+        ? (new Promise<Response>(resolve => {
+            release = () =>
+              resolve(
+                json(200, {
+                  text: 'month,revenue\nJan,120\nFeb,130\n',
+                  format: 'csv',
+                  kind: 'xlsx',
+                  rows: 2,
+                  columns: 2,
+                  sheet: '2024',
+                  sheets: ['2024', '2025'],
+                  sheet_count: 2,
+                  warnings: {},
+                  dropped: [],
+                })
+              );
+          }) as unknown as Response)
+        : undefined
+    );
+    await openChat();
+    const workbook = new File(
+      [new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0, 0, 0])],
+      'Bericht.xlsx'
+    );
+    fireEvent.drop(screen.getByRole('region', { name: 'Chat' }), {
+      dataTransfer: { files: [workbook], types: ['Files'] },
+    });
+    expect(await screen.findByTestId('attachment')).toHaveTextContent(
+      'reading "Bericht.xlsx" on the server'
+    );
+    expect(within(chip()).getByTestId('loader-spinner')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '.send()' })).toBeDisabled();
+    release();
+    expect(
+      await screen.findByRole('group', { name: /^Attached file Bericht\.xlsx · sheet ‹2024›/ })
+    ).toHaveTextContent('▤ Bericht.xlsx · sheet ‹2024› · 3 lines');
+
+    // A second workbook, removed while the server reads it: its late answer brings nothing back.
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
+    fireEvent.drop(screen.getByRole('region', { name: 'Chat' }), {
+      dataTransfer: { files: [workbook], types: ['Files'] },
+    });
+    await screen.findByText('reading "Bericht.xlsx" on the server');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+    release();
+    // Long enough for the answer to be read and dropped: it never brings the chip back.
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+  });
+
+  it('refuses a file while a step runs, and says so under the composer', async () => {
+    await openChat();
+    holdNextTurn = true;
+    fireEvent.click(screen.getByRole('button', { name: 'Make example data' }));
+    await waitFor(() => expect(releaseTurn).not.toBeNull());
+    expect(screen.getByRole('button', { name: 'Attach a data file' })).toBeDisabled();
+    fireEvent.drop(screen.getByRole('region', { name: 'Chat' }), {
+      dataTransfer: { files: [new File([TABLE], 'b.csv', { type: 'text/csv' })], types: ['Files'] },
+    });
+    expect(await screen.findByTestId('attachment-notice')).toHaveTextContent(
+      'a step is still running'
+    );
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+    releaseTurn?.();
+    await turnEnded();
+  });
+
+  it('marks a table over the caps red and holds .send() back', async () => {
+    await openChat();
+    pasteText(`x,y\n${'1,2\n'.repeat(20_100)}`);
+    expect(chip()).toHaveAttribute('data-status', 'over_cap');
+    expect(screen.getByTestId('attachment-error')).toHaveTextContent(
+      'at most 20,000 rows and 1 MB: filter first, or .open() an Excel or Parquet file (5 MB)'
+    );
+    expect(screen.getByRole('button', { name: '.send()' })).toBeDisabled();
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    expect(datasetPosts()).toHaveLength(0);
+    // Pretty-printed JSON is exempt from the line cap.
+    pasteText(`[\n${'  {\n    "x": 1\n  },\n'.repeat(6000)}  {"x": 2}\n]`);
+    expect(chip()).toHaveAttribute('data-status', 'ready');
+  });
+
+  it('routes a paste the browser inserted itself, and never typed lines', async () => {
+    await openChat();
+    // Typed on two lines (Shift+Enter): the box keeps it, a message.
+    fireEvent.input(message(), {
+      target: { value: 'hours,score\n1.5,52' },
+      inputType: 'insertLineBreak',
+    });
+    expect(message()).toHaveValue('hours,score\n1.5,52');
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+    fireEvent.input(message(), { target: { value: '' }, inputType: 'deleteContentBackward' });
+
+    // A paste whose event hid the text (iOS Safari): the inserted table becomes the chip.
+    fireEvent.input(message(), { target: { value: TABLE }, inputType: 'insertFromPaste' });
+    expect(chip()).toHaveAccessibleName(/^Attached table, 4 lines/);
+    expect(message()).toHaveValue('');
+  });
+
+  it('holds the plot button back while a chip waits, and asks before a reload drops it', async () => {
+    await openChat();
+    const unload = () => {
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    expect(unload()).toBe(false);
+    fireEvent.change(message(), { target: { value: 'a draft' } });
+    expect(unload()).toBe(true);
+    fireEvent.change(message(), { target: { value: '' } });
+    expect(unload()).toBe(false);
+
+    await parseAndSummarize();
+    pasteText(TABLE);
+    expect(unload()).toBe(true);
+    const create = screen.getByRole('button', { name: 'Create plot' });
+    expect(create).toBeDisabled();
+    expect(create).toHaveAccessibleDescription(
+      '# the attached table is read when you send it: Enter or .send(), with a note if you like'
+    );
+  });
+
+  it('keeps the attached table out of the browser storage', async () => {
+    const writes = vi.spyOn(Storage.prototype, 'setItem');
+    await openChat();
+    pasteText(TABLE);
+    fireEvent.change(message(), { target: { value: 'secret note' } });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    await screen.findByText('Swapped.');
+    await turnEnded();
+    const written = writes.mock.calls.map(([, value]) => String(value)).join('\n');
+    expect(written).not.toContain('hours,score');
+    expect(written).not.toContain('secret note');
+    writes.mockRestore();
   });
 });

@@ -27,26 +27,14 @@ import {
   FILE_CONVERTING_TEXT,
   FILE_LOCKED_TEXT,
 } from 'src/sections/agent-chat/messages';
+import type { ConvertedFile, FileOutcome } from 'src/sections/agent-chat/useChatAttachment';
 
 /** Whether a drag carries files (not text dragged from the page or another app). */
 function dragHasFiles(transfer: DataTransfer | null): boolean {
   return !!transfer && Array.from(transfer.types ?? []).includes('Files');
 }
 
-/** A binary file the server converted: kept in the browser for the sheet picker, which converts it again. */
-export interface ConvertedFile {
-  name: string;
-  base64: string;
-  /** The browser's reading of the format, for the analytics of a failed re-conversion. */
-  browserKind: FileKind;
-  /** The server's reading of the format (`xlsx`, `ods`, `parquet`, ...). */
-  kind: string;
-  sheet: string | null;
-  sheets: string[];
-  sheetCount: number;
-  /** The text the conversion put into the box, to tell whether the user edited it since. */
-  text: string;
-}
+export type { ConvertedFile };
 
 /** A file read and waiting for the user's `.replace()` because the box holds text. */
 export interface PendingFile {
@@ -66,17 +54,7 @@ export interface PendingFile {
   converted: ConvertedFile | null;
 }
 
-/** What happened to a dropped, chosen or pasted file, for `agent_data_file`. */
-export type FileOutcome =
-  | 'filled'
-  | 'replaced'
-  | 'kept'
-  | 'refused'
-  | 'too_large'
-  | 'busy'
-  | 'unreadable'
-  | 'failed'
-  | 'sheet';
+export type { FileOutcome };
 
 /**
  * A sheet or array name as the page writes it: in single angle quotes, `‹Übersicht›`, so it

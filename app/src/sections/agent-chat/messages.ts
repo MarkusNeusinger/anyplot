@@ -455,6 +455,28 @@ export function describeConvertWarnings(
   return parts;
 }
 
+/**
+ * The line above the composer while an attachment waits, in place of the step's line: the plot
+ * buttons wait for it, since they would plot the data before it, or none.
+ */
+export const ATTACHMENT_LINE =
+  '# the attached table is read when you send it: Enter or .send(), with a note if you like';
+
+/** The message box's placeholder while an attachment waits: the typed text goes with it as its note. */
+export const ATTACHMENT_PLACEHOLDER = 'add a note for this table, or press Enter';
+
+/** Under a pasted table or a file too large for the dataset route (`overCap`). */
+export const ATTACHMENT_OVER_CAP_TEXT =
+  'at most 20,000 rows and 1 MB: filter first, or .open() an Excel or Parquet file (5 MB)';
+
+/** The drop hint over the composer while a file is dragged over the chat, and why a drop would wait. */
+export const DROP_HINT_TEXT = {
+  ready: 'drop the file to attach it',
+  reading: 'a file is still being read: drop the next one when it is done',
+  locked: 'all libraries are plotting this data: close the panel first',
+  working: 'a step is still running: drop the file when it is done',
+} as const;
+
 /** A file dropped or chosen while the session works on something: the server runs one thing at a time. */
 export const FILE_BUSY_TEXT =
   'a step is still running; drop or open the file again when it is done';

@@ -139,6 +139,7 @@ import {
   type AgentLane,
   browserLocale,
   DEFAULT_AGENT_LIBRARIES,
+  MAX_MESSAGE_CHARS,
   PUBLIC_LANE,
 } from 'src/lib/agent';
 import { apiGet, endpoints } from 'src/lib/api';
@@ -156,7 +157,13 @@ import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { AgentLaneContext } from 'src/sections/agent-chat/lane';
 import { LanguageChip } from 'src/sections/agent-chat/LanguageChip';
 import { LibraryChip } from 'src/sections/agent-chat/LibraryChip';
-import { carryActionText, ERROR_TEXT, LEAVE_TEXT } from 'src/sections/agent-chat/messages';
+import {
+  carryActionText,
+  describeDataFailure,
+  DROP_HINT_TEXT,
+  ERROR_TEXT,
+  LEAVE_TEXT,
+} from 'src/sections/agent-chat/messages';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { Remembered } from 'src/sections/agent-chat/Remembered';
@@ -165,6 +172,7 @@ import { columnLines, previewsByLibrary } from 'src/sections/agent-chat/specRefe
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
 import { inStep2, showsTimeline, stepOneLine } from 'src/sections/agent-chat/steps';
 import { bodyTextSx, labelSx, panelSx, smallText } from 'src/sections/agent-chat/styles';
+import { type Attachment, useChatAttachment } from 'src/sections/agent-chat/useChatAttachment';
 import { parseInlineCode } from 'src/sections/spec-detail/SpecTabs/utils';
 import { colors, fontSize, proseLinkStyle, typography } from 'src/theme';
 import { readAdminHint, readAdminToken, setAdminHint } from 'src/utils/adminAuth';
@@ -489,25 +497,39 @@ function AgentChat({
     if (running) tailRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
   }, [running]);
 
-  // Data, a plot or work in flight: a reload, a closed tab or a link off the page asks first,
-  // since nothing restores the session. The fan-out's panel opens only on this session's
-  // confirmed data, so its sessions are covered too.
-  useLeaveWarning(sessionHoldsWork(state), LEAVE_TEXT);
-
   // A turn, a theme render, a parse, an undo or a binding change in flight: the
   // server runs one at a time and would refuse or race a second.
   const busy = sessionBusy(state);
+  // The table or file waiting in the message box for Enter (`useChatAttachment`).
+  const attach = useChatAttachment({
+    ready: state.phase === 'ready' && !!state.sessionId,
+    working: busy,
+    locked: !!fanOut,
+    onConvert: session.convertFile,
+    onTrack: trackEvent,
+  });
+  const attachment = attach.attachment;
+
+  // Data, a plot or work in flight, and typed text or an attachment not sent yet: a reload, a
+  // closed tab or a link off the page asks first, since nothing restores the session or the box.
+  // The fan-out's panel opens only on this session's confirmed data, so its sessions are covered.
+  useLeaveWarning(
+    sessionHoldsWork(state) || draft.trim() !== '' || attachment !== null,
+    LEAVE_TEXT
+  );
   // The session could not open for this pair: other libraries are links instead.
   const reopen = state.phase === 'ineligible' || state.phase === 'error';
   // Step 2: the data and its bindings are confirmed, and no table read from text waits.
   const step2 = inStep2(state);
   // A plot button may start once there is data with every required role bound and nothing in
-  // flight: on unconfirmed data its click confirms the data as shown first (`startPlot`).
+  // flight: on unconfirmed data its click confirms the data as shown first (`startPlot`). While
+  // an attachment waits it would plot the data before it, or none: Enter reads it first.
   const canCreate =
     state.phase === 'ready' &&
     !!state.dataset &&
     state.bindingsComplete &&
     !state.transcription &&
+    !attachment &&
     !busy;
   // The server files a version under its (spec, library) pair; the spec cannot change in a
   // session yet, so the library alone tells the pair.
@@ -585,16 +607,50 @@ function AgentChat({
    * assistant makes that plot with it. While `all` is pressed in step 2 nothing goes: the
    * fan-out takes no text.
    */
-  const handleSend = useCallback(
-    (event?: React.FormEvent) => {
-      event?.preventDefault();
-      const text = draft.trim();
-      if (!text || busy || chatLocked) return;
-      void session.sendMessage(text);
-      setDraft('');
-    },
-    [draft, busy, chatLocked, session]
-  );
+  const handleSend = (event?: React.FormEvent) => {
+    event?.preventDefault();
+    if (attachment) {
+      void sendAttachment(attachment);
+      return;
+    }
+    const text = draft.trim();
+    if (!text || busy || chatLocked) return;
+    void session.sendMessage(text);
+    setDraft('');
+  };
+
+  /**
+   * Enter or `.send()` with an attachment: the dataset route reads it, and the typed text goes
+   * along as its note, the first turn once the data is stored. The field lets go of the note at
+   * once; when nothing was stored (a table read from text to decide on, text that went to the
+   * chat, a refusal, nothing started), the note goes back into it, before anything typed since.
+   * A refused attachment stays red with the reason, for Enter to try again or × to drop it.
+   */
+  const sendAttachment = async (sent: Attachment) => {
+    if (busy || (sent.status !== 'ready' && sent.status !== 'failed')) return;
+    // While `all` holds the box in step 2 it takes no text: the attachment goes alone.
+    const note = chatLocked ? '' : draft.trim();
+    if (note.length > MAX_MESSAGE_CHARS) return;
+    if (note) setDraft(current => (current.trim() === note ? '' : current));
+    attach.settle(sent.id, 'sending');
+    const result = await session.parseData(sent.text, false, sent.source, undefined, {
+      note,
+      file: sent.converted,
+    });
+    if (result.outcome === 'failed') {
+      const failure = result.failure;
+      attach.settle(sent.id, {
+        error: failure
+          ? describeDataFailure(failure.code, failure.ref, failure.cause ?? null)
+          : describeDataFailure('internal', null),
+      });
+    } else {
+      attach.settle(sent.id, result.outcome === 'skipped' ? 'ready' : 'cleared');
+    }
+    if (note && result.outcome !== 'stored') {
+      setDraft(current => (current.trim() ? `${note}\n\n${current}` : note));
+    }
+  };
 
   /**
    * A plot button's click (`.create_plot()`, `.start_over()`, the carry): the data and the
@@ -859,9 +915,14 @@ function AgentChat({
           </Box>
         )}
         <StepHeader current={step2 ? 2 : 1} />
+        {/* The whole chat takes a dropped file: it becomes the message box's attachment. */}
         <Box
           component="section"
           aria-label="Chat"
+          onDragEnter={attach.handleDragEnter}
+          onDragOver={attach.handleDragOver}
+          onDragLeave={attach.handleDragLeave}
+          onDrop={attach.handleDrop}
           sx={{ ...panelSx, display: 'flex', flexDirection: 'column', gap: 2 }}
         >
           <Box sx={{ ...labelSx, mb: -0.5 }}># chat</Box>
@@ -940,7 +1001,31 @@ function AgentChat({
 
             <Composer
               draft={draft}
-              onDraftChange={setDraft}
+              onDraftChange={event => {
+                // A paste the browser inserted itself, when its event hid the text: routed now.
+                if (!attach.handleInput(event, draft)) setDraft(event.target.value);
+              }}
+              onPaste={event => void attach.handlePaste(event)}
+              attachment={attachment}
+              attachmentNotice={attach.notice}
+              onRemoveAttachment={attach.remove}
+              dropHint={
+                attach.dragOver
+                  ? {
+                      ready: attach.dropReady,
+                      text: attach.dropReady
+                        ? DROP_HINT_TEXT.ready
+                        : attachment?.status === 'reading'
+                          ? DROP_HINT_TEXT.reading
+                          : fanOut && !busy
+                            ? DROP_HINT_TEXT.locked
+                            : DROP_HINT_TEXT.working,
+                    }
+                  : null
+              }
+              canOpen={attach.dropReady}
+              fileInputRef={attach.fileInputRef}
+              onFileChosen={attach.handleChosen}
               onSubmit={handleSend}
               messageRef={messageRef}
               createRef={createRef}

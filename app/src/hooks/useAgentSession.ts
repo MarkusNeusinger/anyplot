@@ -235,6 +235,7 @@ import {
   nextUtcMidnight,
   type NoticeInfo,
 } from 'src/sections/agent-chat/messages';
+import type { ConvertedFile } from 'src/sections/agent-chat/useChatAttachment';
 import { reloadOnceForAccess } from 'src/utils/adminAuth';
 
 /** How long Stop waits for the server's `done` before it lets go of the stream. */
@@ -344,6 +345,11 @@ export interface DatasetState {
    * it: data the assistant changed or computed, and an undo, have none.
    */
   upload?: DatasetUpload;
+  /**
+   * The binary file (Excel, ODS, Parquet, ...) this version's text was converted from, kept in
+   * the page for the sheet picker, which converts it again for another sheet. Never stored.
+   */
+  file?: ConvertedFile;
 }
 
 /** A `POST .../dataset` body as the page sent it: the text, and how the server should read it. */
@@ -417,19 +423,39 @@ export type TurnEnd = 'done' | 'error' | 'refused' | 'stopped';
 export interface ParseResult {
   outcome: ParseOutcome;
   turnEnd: TurnEnd | null;
+  /** Why a `failed` parse was refused, as `datasetError` holds it: the attachment shows it. */
+  failure?: Failure;
 }
 
-/** What the caller of `parseData` hears before the turn a parse starts. */
+/** What the caller of `parseData` hears before the turn a parse starts, and what goes with the text. */
 export interface ParseOptions {
   /**
    * The text went to the chat as the user's message (`forwarded`), trimmed as it was sent:
    * called before that turn runs, so the data box can let go of it at once.
    */
   onForward?: (text: string) => void;
+  /**
+   * The text typed together with the attachment: once the data is stored it is the first turn,
+   * as the user's message, in place of the summary action. The server gives that turn the
+   * notes pasted with the table and the file's name, and the assistant summarizes the data and
+   * acts on the note in one reply.
+   */
+  note?: string;
+  /** The binary file the text was converted from, kept with the data for the sheet picker. */
+  file?: ConvertedFile | null;
 }
 
 /** The dataset route's answers that send pasted text to the chat instead of a parser. */
 const FORWARDED = new Set(['formula', 'code', 'data_request']);
+
+/**
+ * The scope judge's refusals (`scope_guard.REFUSAL_CODES`; `attack` reads as `out_of_scope`)
+ * and its outage, which leave a note's turn without the summary of the data it came with. The
+ * summary action skips the judge, so it still runs. The route's own refusals (a closed session,
+ * a limit, the day's budget) would refuse the action as well.
+ */
+const NOTE_REFUSALS = new Set(['out_of_scope', 'needs_data', 'other_library']);
+const NOTE_JUDGE_OUTAGE = 'guard_unavailable';
 
 /**
  * The offer of the plot in the library the user switched to, with the plot
@@ -557,6 +583,7 @@ type Action =
       bytes: number;
       paste?: { text: string; source?: string };
       upload?: DatasetUpload;
+      file?: ConvertedFile;
     }
   | { type: 'parse_failed'; failure: Failure }
   /**
@@ -941,6 +968,7 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
           bytes: action.bytes,
           ...(action.paste ? { paste: action.paste } : {}),
           ...(action.upload ? { upload: action.upload } : {}),
+          ...(action.file ? { file: action.file } : {}),
         },
         dataChange: null,
         undoError: null,
@@ -1288,6 +1316,8 @@ export function useAgentSession({
   // How the last turn ended (`runTurn`), null when it never started: a parse reports it for
   // the turn it started (`ParseResult.turnEnd`).
   const turnEndRef = useRef<TurnEnd | null>(null);
+  // The code of the refusal that ended the last turn, if one did (`out_of_scope`, `needs_data`, ...).
+  const turnRefusalRef = useRef<string | null>(null);
   const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Set synchronously, before the state catches up, so a double click starts nothing twice.
   const themeRef = useRef(false);
@@ -2020,10 +2050,12 @@ export function useAgentSession({
       const sid = current.sessionId;
       turnErrorRef.current = null;
       turnEndRef.current = null;
+      turnRefusalRef.current = null;
       if (!sid || current.run || busy()) return;
       let errorCode: string | null = null;
       // A refusal arrives as an event of its own; the stream then ends with `done` as usual.
       let refused = false;
+      let refusalCode: string | null = null;
       const controller = new AbortController();
       abortRef.current = controller;
       stoppedRef.current = false;
@@ -2048,7 +2080,10 @@ export function useAgentSession({
           if (!event) continue;
           onEvent(event);
           if (event.type === 'error') errorCode = event.code;
-          if (event.type === 'refusal') refused = true;
+          if (event.type === 'refusal') {
+            refused = true;
+            refusalCode = event.code;
+          }
           if (event.type === 'done') {
             finished = true;
             break;
@@ -2071,6 +2106,7 @@ export function useAgentSession({
         if (stoppedRef.current) addItem({ kind: 'notice', text: 'stopped' });
         if (abortRef.current === controller) abortRef.current = null;
         turnErrorRef.current = errorCode;
+        turnRefusalRef.current = refusalCode;
         // A stream aborted for another reason (the page unmounted) did not end: no `done`.
         turnEndRef.current = stoppedRef.current
           ? 'stopped'
@@ -2156,11 +2192,13 @@ export function useAgentSession({
       const bytes = utf8Bytes(text);
       const bucket = sizeBucket(bytes);
       if (bytes > MAX_DATASET_BYTES) {
-        safeDispatch({ type: 'parse_failed', failure: { code: 'too_long', ref: null } });
+        const failure: Failure = { code: 'too_long', ref: null };
+        safeDispatch({ type: 'parse_failed', failure });
         trackEvent('agent_data_parsed', { status: 'too_long', size_bucket: bucket });
-        return { outcome: 'failed', turnEnd: null };
+        return { outcome: 'failed', turnEnd: null, failure };
       }
       let outcome: ParseOutcome = 'failed';
+      let refusal: Failure | undefined;
       let forward: string | null = null;
       parseRef.current = true;
       safeDispatch({ type: 'parse_start' });
@@ -2190,6 +2228,7 @@ export function useAgentSession({
           // The text of a paste the table picker may read again (a confirmed transcription is never split).
           ...(confirmed ? {} : { paste: { text, ...(source ? { source } : {}) } }),
           upload: { text, confirmed, ...(source ? { source } : {}), ...(table ? { table } : {}) },
+          ...(options.file ? { file: options.file } : {}),
         });
         // A paste before any typed message may set the session language from its notes or headers.
         const pastedLanguage = readPlotLanguage(parsed.language);
@@ -2212,6 +2251,7 @@ export function useAgentSession({
           trackEvent('agent_data_parsed', { status: failure.code, size_bucket: bucket });
         } else {
           // Longer code reads as a failure whose line asks to shorten it (`DATA_FAILURE.code`).
+          refusal = failure;
           safeDispatch({ type: 'parse_failed', failure });
           const known = ['too_long', 'unparseable', 'data_refused', ...FORWARDED];
           const status = known.includes(failure.code) ? failure.code : 'error';
@@ -2230,13 +2270,26 @@ export function useAgentSession({
         await runTurn({ text: forward });
         return { outcome, turnEnd: turnEndRef.current };
       }
-      // The assistant describes the stored data first thing, so the user can
-      // correct it in words before confirming it.
+      // The assistant describes the stored data first thing, so the user can correct it in words
+      // before confirming it. A note typed with the attachment is that first turn: the assistant
+      // summarizes the data and acts on the note in one reply.
       if (outcome === 'stored') {
-        await runTurn({ action: 'summarize_data' });
-        return { outcome, turnEnd: turnEndRef.current };
+        const note = options.note?.trim() ?? '';
+        if (!note || note.length > MAX_MESSAGE_CHARS) {
+          await runTurn({ action: 'summarize_data' });
+          return { outcome, turnEnd: turnEndRef.current };
+        }
+        await runTurn({ text: note });
+        const end = turnEndRef.current;
+        // The note's turn was refused before the assistant read the data, or the scope judge
+        // was out: the data still gets its summary. The note stays in the thread above it.
+        const unsummarized =
+          (end === 'refused' && NOTE_REFUSALS.has(turnRefusalRef.current ?? '')) ||
+          (end === 'error' && turnErrorRef.current === NOTE_JUDGE_OUTAGE);
+        if (unsummarized && mounted.current) await runTurn({ action: 'summarize_data' });
+        return { outcome, turnEnd: end };
       }
-      return { outcome, turnEnd: null };
+      return { outcome, turnEnd: null, ...(refusal ? { failure: refusal } : {}) };
     },
     [token, safeDispatch, handleFailure, trackEvent, applyBindings, busy, runTurn]
   );

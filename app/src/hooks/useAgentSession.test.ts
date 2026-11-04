@@ -1018,6 +1018,102 @@ describe('useAgentSession: replaying an upload (a server without the copy)', () 
   });
 });
 
+describe('useAgentSession: a note with the attachment', () => {
+  const turnBodies = () => calls.filter(call => call.path.endsWith('/messages')).map(c => c.body);
+  const TABLE = 'Student,Study Hours,Exam Score\nS01,1.5,52\n';
+  /** The note's turn answers `first`; every later turn is the summary. */
+  function noteRoutes(first: () => Response) {
+    const routes = baseRoutes();
+    let turns = 0;
+    routes['POST /sessions/S1/messages'] = () => {
+      turns += 1;
+      return turns === 1 ? first() : summaryStream();
+    };
+    return routes;
+  }
+
+  it('sends the note as the first turn once the data is stored, with no summary action', async () => {
+    const { result } = await openSession(baseRoutes());
+    let parsed: ParseResult | undefined;
+    await act(async () => {
+      parsed = await result.current.parseData(TABLE, false, undefined, undefined, {
+        note: '  only 2024  ',
+      });
+    });
+    expect(turnBodies()).toEqual([{ text: 'only 2024' }]);
+    expect(parsed).toMatchObject({ outcome: 'stored', turnEnd: 'done' });
+    expect(result.current.state.items[0]).toMatchObject({ kind: 'user', text: 'only 2024' });
+  });
+
+  it.each([['out_of_scope'], ['needs_data'], ['other_library']])(
+    'follows a note the scope judge refused (%s) with the summary, which skips the judge',
+    async code => {
+      const routes = noteRoutes(() =>
+        sse([
+          ['refusal', { code, text: 'I can only help with this plot.' }],
+          ['done', {}],
+        ])
+      );
+      const { result } = await openSession(routes);
+      await act(() =>
+        result.current.parseData(TABLE, false, undefined, undefined, { note: 'write me an email' })
+      );
+      expect(turnBodies()).toEqual([{ text: 'write me an email' }, { action: 'summarize_data' }]);
+    }
+  );
+
+  it('follows a note the scope judge could not read with the summary too', async () => {
+    const routes = noteRoutes(() =>
+      sse([
+        ['error', { code: 'guard_unavailable', ref: 'r-g' }],
+        ['done', {}],
+      ])
+    );
+    const { result } = await openSession(routes);
+    await act(() =>
+      result.current.parseData(TABLE, false, undefined, undefined, { note: 'only 2024' })
+    );
+    expect(turnBodies()).toEqual([{ text: 'only 2024' }, { action: 'summarize_data' }]);
+    // The note stays the user's line in the thread, with the error under it.
+    expect(result.current.state.items[0]).toMatchObject({ kind: 'user', text: 'only 2024' });
+  });
+
+  it.each([['session_closed'], ['budget']])(
+    'sends no summary after a refusal of the route itself (%s), which would refuse it as well',
+    async code => {
+      const routes = noteRoutes(() =>
+        sse([
+          ['refusal', { code, text: 'The session is closed.' }],
+          ['done', {}],
+        ])
+      );
+      const { result } = await openSession(routes);
+      await act(() =>
+        result.current.parseData(TABLE, false, undefined, undefined, { note: 'only 2024' })
+      );
+      expect(turnBodies()).toEqual([{ text: 'only 2024' }]);
+    }
+  );
+
+  it('keeps a converted file with the stored data, for the sheet picker', async () => {
+    const { result } = await openSession(baseRoutes());
+    const file = {
+      name: 'Bericht.xlsx',
+      base64: 'UEsDBA==',
+      browserKind: 'spreadsheet' as const,
+      kind: 'xlsx',
+      sheet: '2024',
+      sheets: ['2024', '2025'],
+      sheetCount: 2,
+      text: TABLE,
+    };
+    await act(() =>
+      result.current.parseData(TABLE, false, 'Bericht.xlsx · sheet ‹2024›', undefined, { file })
+    );
+    expect(result.current.state.dataset?.file).toEqual(file);
+  });
+});
+
 describe('useAgentSession: the step-1 summary and data changes', () => {
   const turnBodies = () => calls.filter(call => call.path.endsWith('/messages')).map(c => c.body);
   const undoCalls = () => calls.filter(call => call.path.endsWith('/dataset/undo'));
@@ -1481,7 +1577,12 @@ describe('useAgentSession: formulas', () => {
     await act(async () => {
       parsed = await result.current.parseData(LONG, false, undefined, undefined, { onForward });
     });
-    expect(parsed).toEqual({ outcome: 'failed', turnEnd: null });
+    // The refusal comes back with the result, for the attachment that posted the text to show.
+    expect(parsed).toEqual({
+      outcome: 'failed',
+      turnEnd: null,
+      failure: expect.objectContaining({ code: 'code', ref: 'r-c' }),
+    });
     expect(onForward).not.toHaveBeenCalled();
     expect(turnBodies()).toEqual([]);
     expect(result.current.state.datasetError).toMatchObject({ code: 'code', ref: 'r-c' });
