@@ -335,7 +335,8 @@ async def eligibility(
 
 @router.post("/sessions")
 async def create_session(body: PublicCreateSessionBody, ctx: Ctx, client: Client, db: Db) -> Any:
-    """Open a chat session: `{session_id, eligibility}`. The page keeps the id and sends it as `X-Anyplot-Session`."""
+    """Open a chat session: `{session_id, eligibility, roles}`. The page keeps the id and sends it as
+    `X-Anyplot-Session`."""
     admin_body = CreateSessionBody(spec_id=body.spec_id, library=body.library, locale=body.locale)
     return await agent.create_session(admin_body, ctx, client, db)
 

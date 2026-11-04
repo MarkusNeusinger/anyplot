@@ -256,12 +256,16 @@ class TestRoutes:
         assert upstream.requests == []
 
     def test_a_session_opens_for_the_tab_id_and_never_as_a_fanout(self, client, upstream) -> None:
-        upstream.handler = lambda request: httpx.Response(200, json={"session_id": SID, "eligibility": {}})
+        roles = [{"name": "x", "kinds": ["numeric"], "required": True, "variadic": False, "description": "x"}]
+        upstream.handler = lambda request: httpx.Response(
+            200, json={"session_id": SID, "eligibility": {}, "roles": roles}
+        )
         with patch("api.routers.agent.load_catalogue_snapshot", AsyncMock(return_value=_snapshot())):
             opened = client.post("/agent/sessions", json=CREATE, headers=HEADERS)
             fanout = client.post("/agent/sessions", json={**CREATE, "source": "fanout"}, headers=HEADERS)
 
         assert opened.status_code == 200 and opened.json()["session_id"] == SID
+        assert opened.json()["roles"] == roles  # the spec's roles, for the header's columns ⓘ
         sent = json.loads(upstream.requests[0].content)
         assert sent["user"] == TAB and "source" not in sent
         assert fanout.status_code == 422 and len(upstream.requests) == 1

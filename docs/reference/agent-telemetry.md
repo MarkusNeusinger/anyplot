@@ -219,6 +219,13 @@ The typed columns are in `agents/telemetry/views/02_event_views.sql` (`pipeline_
 Applying the changed views waits for the owner's approval, as on 2026-11-01; until then the fields sit in `payload`
 of the `events` view.
 
+### Fields added on 2026-11-04
+
+- **`chat_turn.action` `example_data`.** The page's `.example_data()`, the line above the composer while the session
+  has no data: the example data a typed request asks for, in one click and as an action, so it sets no session
+  language. Its `kind` is `example` when `run_data_code` stored the table, as for the typed request. The column is
+  a string in the views, so they need no change.
+
 ## Where the lines go
 
 | Resource | Name | Notes |

@@ -139,6 +139,15 @@ export interface SessionOpened {
 }
 
 /**
+ * `POST /sessions`'s answer: the session and the spec's roles, which the page header lists as the
+ * columns the plot expects before any data. `roles` is `null` from a server without the field or
+ * with a malformed one; the header then falls back to the spec's own `data` bullets.
+ */
+export interface SessionStarted extends SessionOpened {
+  roles: RoleSpec[] | null;
+}
+
+/**
  * What a session adapts: a (spec, library) pair. Today only the library
  * switches (`POST .../library` refuses another spec with `422 invalid`); the
  * later plot-type switch changes the spec through the same pair.
@@ -761,12 +770,15 @@ export function caseListQuery(query: CaseListQuery): string {
 
 /**
  * The page's own chat turns: `summarize_data` asks the assistant for the step-1
- * summary of the stored data, `create_plot` starts step 2 (the fresh plot from
- * the catalogue code, also `.start_over()`), and `carry_plot` makes the plot in
- * the library the user switched to, with the plot memory's decisions. None of
- * them passes the scope judge.
+ * summary of the stored data, `example_data` for example data to try the plot
+ * (`.example_data()`, before any data), `create_plot` starts step 2 (the fresh
+ * plot from the catalogue code, also `.start_over()`), and `carry_plot` makes
+ * the plot in the library the user switched to, with the plot memory's
+ * decisions. None of them passes the scope judge, so none sets the session
+ * language, which the first typed message does: `.example_data()` as typed
+ * words would keep a German visitor in English.
  */
-export type TurnAction = 'create_plot' | 'carry_plot' | 'summarize_data';
+export type TurnAction = 'create_plot' | 'carry_plot' | 'summarize_data' | 'example_data';
 
 /** Whether a turn of this kind is a plot run from the start: its path shows up front, it has no in-progress line. */
 export const isPlotAction = (kind: string): boolean =>
@@ -1173,12 +1185,24 @@ export const agentApi = {
    * its usage telemetry under the source `fanout` instead of `live`. Sent only
    * when set.
    */
-  openSession: (token: string, specId: string, library: string, locale: string, fanout = false) =>
-    agentJson<SessionOpened>(
+  openSession: async (
+    token: string,
+    specId: string,
+    library: string,
+    locale: string,
+    fanout = false
+  ): Promise<SessionStarted> => {
+    const answer = await agentJson<SessionOpened & Record<string, unknown>>(
       '/sessions',
       token,
       post({ spec_id: specId, library, locale, ...(fanout ? { source: 'fanout' } : {}) })
-    ),
+    );
+    return {
+      session_id: answer.session_id,
+      eligibility: answer.eligibility,
+      roles: roleList(answer.roles) ?? null,
+    };
+  },
   /**
    * The library switch (the header's library menu). The body leaves `source`
    * out, which the BFF reads as `menu`, so a page deployed before the API is no

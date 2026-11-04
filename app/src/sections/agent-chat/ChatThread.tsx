@@ -1,6 +1,6 @@
 /**
  * The chat thread: the user's turns and the page's own (`.summarize_data()`
- * after a parse, `.create_plot()`, `.carry_plot()`), the assistant's replies, the fixed
+ * after a parse, `.example_data()`, `.create_plot()`, `.carry_plot()`), the assistant's replies, the fixed
  * refusal, errors with their code and request id, and a result card per plot
  * version. Earlier versions stay in the thread, collapsed, each with its own
  * image and code. A lost confirmation shows as a warning notice where it was
@@ -36,6 +36,7 @@ import { colors, typography } from 'src/theme';
 /** The in-progress line's words; the pulsing `…` follows them. */
 const PENDING_TEXT: Record<PendingReply, string> = {
   summarize_data: 'summarizing your data',
+  example_data: 'making example data',
   message: 'working on your message',
   stopping: 'stopping',
 };
@@ -89,8 +90,9 @@ function Item({
         </Box>
       );
     case 'action':
-      // The page's own turns: `.summarize_data()` after a parse, `.create_plot()` in step 2,
-      // `.carry_plot()` after a library switch; a plot names the library it is made in.
+      // The page's own turns: `.summarize_data()` after a parse, `.example_data()` without data,
+      // `.create_plot()` in step 2, `.carry_plot()` after a library switch; a plot names the
+      // library it is made in.
       return (
         <Box sx={{ ...promptSx, fontFamily: typography.mono }}>
           <Box component="span" aria-hidden sx={{ color: 'var(--ink-muted)', mr: 1 }}>
