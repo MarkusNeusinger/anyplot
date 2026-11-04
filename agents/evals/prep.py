@@ -207,6 +207,10 @@ class PrepCase(BaseModel):
     refuse: bool = False
     """The case passes when no data tool call of the turn stored a version (a scope refusal, a validator refusal or
     no call at all): a snippet that reads a file or a script with another purpose than the plot's data."""
+    first_turn: bool = False
+    """The message is the note the user typed with the paste: the first turn on the data, which summarizes it and
+    acts on the note in one reply (`SUMMARY_PENDING`). Without it, the harness marks the data summarized before the
+    message, as after the page's summary turn, so a message case means what it meant before the note path."""
 
     @model_validator(mode="after")
     def _one_turn(self) -> PrepCase:
@@ -214,6 +218,8 @@ class PrepCase(BaseModel):
             raise ValueError("a case has either a message or an action")
         if self.action is not None and self.dataset_text is None:
             raise ValueError("a summary action needs a dataset")
+        if self.first_turn and (self.message is None or self.dataset_text is None):
+            raise ValueError("a first turn is a message sent with a dataset")
         return self
 
 
@@ -575,7 +581,10 @@ class CaseRunner:
                     else:
                         result.cause = f"dataset: {_detail(stored)}"
                     return result
-            owed = await self._owed_conversions(user, sid) if case.action == "summarize_data" else []
+                if case.message is not None and not case.first_turn:
+                    await self._mark_summarized(user, sid)
+            summary_turn = case.action == "summarize_data" or case.first_turn
+            owed = await self._owed_conversions(user, sid) if summary_turn else []
             message = {"action": case.action} if case.action is not None else {"text": case.message}
             turn = await self.client.post(f"/v1/sessions/{sid}/messages", headers=headers("m"), json=message)
             _book(result, self.collector.take(f"{tag}-m"), self.settings)
@@ -604,6 +613,13 @@ class CaseRunner:
             for step in ("s", "d", "m", "x"):
                 self.collector.take(f"{tag}-{step}")
         return result
+
+    async def _mark_summarized(self, user: str, sid: str) -> None:
+        """The data as the page leaves it after the summary turn: no longer pasted just now (`SUMMARY_PENDING`)."""
+        from agents.anyplot.session_state import SUMMARY_PENDING
+
+        session = await self.runtime.session(user, sid)
+        await self.runtime.write_state(session, {SUMMARY_PENDING: None})
 
     async def _owed_conversions(self, user: str, sid: str) -> list[list[dict[str, Any]]]:
         """The operations of each `certain` conversion the session block lists for the turn about to start."""

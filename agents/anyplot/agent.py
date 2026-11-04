@@ -162,7 +162,7 @@ async def session_context(context: ReadonlyContext) -> str:
     dataset = services.datasets.get(view.dataset_id, session_id) if view.dataset_id else None
     if dataset is None:
         lines.append(
-            "- Dataset: none yet; the user pastes it in the data panel, or generate_data computes it from a formula, "
+            "- Dataset: none yet; the user pastes it into the message box, or generate_data computes it from a formula, "
             "or run_data_code from the user's code"
         )
     else:
@@ -205,6 +205,9 @@ async def session_context(context: ReadonlyContext) -> str:
             lines.append(f"- {CONVERSIONS_HEADING.format(count=len(found))}")
             lines.append(fence("user_data", "\n".join(candidate.line() for candidate in found)))
             telemetry.note_conversion(session_id, "asked")  # until `prepare_data` makes a column in this turn
+        if view.summary_pending:
+            # The first turn on a paste: a typed message is the user's note with it (root.md, the summary rule).
+            lines.append("- Data: pasted just now, not summarized yet")
         if view.data_confirmed:
             lines.append("- Data: confirmed by the user; the plot can be made")
         else:

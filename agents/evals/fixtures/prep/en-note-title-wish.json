@@ -1,0 +1,8 @@
+{
+  "dataset_text": "Study Hours,Exam Score\n2,55\n5,70\n8,85\n3,60\n",
+  "message": "title it \"Hours vs. score\"",
+  "first_turn": true,
+  "expected_operations": [],
+  "locale": "en",
+  "tags": ["note", "plot_wish", "no_tool"]
+}

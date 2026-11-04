@@ -1,4 +1,6 @@
-"""What text pasted into the data panel is, before any parser reads it: code, a data request, a formula, or neither.
+"""What text sent as the message box's attachment is, before any parser reads it: code, a data request, a formula, or
+neither. The page routes a paste first (`app/src/sections/agent-chat/routeInput.ts`): only text it attaches, and every
+file, reaches the dataset route; the shared cases hold the two together (`tests/unit/agents/test_route_cases.py`).
 
 The dataset route (`agents/main.py`, `upload_dataset`) asks `classify_paste` first,
 because these kinds would otherwise take a wrong path: a snippet such as

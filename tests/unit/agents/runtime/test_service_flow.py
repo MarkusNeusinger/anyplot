@@ -64,7 +64,14 @@ from agents.anyplot.render.watermark import add_footer
 from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.schemas import AdaptPlan, Verdict
 from agents.anyplot.services import Services, get_services
-from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE, PENDING_REQUEST, PLOT_LANGUAGE, read_session
+from agents.anyplot.session_state import (
+    LANGUAGE,
+    LANGUAGE_SOURCE,
+    PENDING_REQUEST,
+    PLOT_LANGUAGE,
+    SUMMARY_PENDING,
+    read_session,
+)
 from agents.anyplot.settings import get_settings
 from agents.anyplot.sub_agents.adapter import ADAPTERS
 from agents.main import (
@@ -153,6 +160,9 @@ async def open_session(
         data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
         response = await client.post(f"/v1/sessions/{sid}/dataset", headers=headers, json={"text": data})
         assert response.status_code == 200, response.text
+        # As after the page's summary turn: a message on this data is no note sent with the paste.
+        runtime = app.dependency_overrides[get_runtime]()
+        await runtime.write_state(await runtime.session(user, sid), {SUMMARY_PENDING: None})
         bindings = {item["role"]: item["column"] for item in response.json()["bindings"]}
         assert bindings == {"x": "Study Hours", "y": "Exam Score"}
         roles = response.json()["roles"]  # every spec role, so the UI offers a choice for each
@@ -4102,6 +4112,66 @@ async def test_notes_that_pass_the_scope_judge_are_stored_returned_and_reach_the
     assert "<user_data>" in profile["profile"]
     block = await session_context(context)  # type: ignore[arg-type]
     assert f"- Notes pasted with the data: {NOTES_LINE}" in block and "markers" not in block  # a fixed line
+
+
+async def test_the_note_typed_with_a_paste_is_its_first_turn_with_the_notes_and_the_summary_clause(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """The note the page sends after a stored paste is the first turn: it carries the pasted notes and says the data
+    was pasted just now; once the root answered, a later message is an ordinary one."""
+    script = default_script()
+    script["root"] = [{"text": "4 rows; hours on x. Only 2024 kept."}, {"text": "x is hours."}]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await open_session(client, with_data=False)
+    judge.script = [
+        JudgeVerdict(verdict="in_scope", lang="en"),  # the dataset judge
+        JudgeVerdict(verdict="in_scope", lang="en"),  # the pasted notes
+        JudgeVerdict(verdict="in_scope", lang="en"),  # the note, typed text
+        JudgeVerdict(verdict="in_scope", lang="en"),  # the later message
+    ]
+    pasted = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": NOTED_PASTE})
+    assert pasted.status_code == 200, pasted.text
+    assert read_session(await _session_state(client, sid)).summary_pending is True
+
+    note = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "only 2024"})
+    later = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "which is x?"})
+
+    assert parse_sse(note.text)[-1][0] == parse_sse(later.text)[-1][0] == "done"
+    first, second = (json.dumps(call) for call in fake.calls)
+    # The note's turn: the user's text with the paste's notes, and the session block's line.
+    note_text = json.dumps(fake.calls[0]["messages"][-1]["content"])
+    assert "only 2024" in note_text and "<user_notes>" in note_text
+    assert "- Data: pasted just now, not summarized yet" in first
+    # After the root answered on the paste, a message is no note: no notes block, no line.
+    assert "<user_notes>" not in json.dumps(fake.calls[1]["messages"][-1]["content"])
+    assert "- Data: pasted just now, not summarized yet" not in second
+    assert read_session(await _session_state(client, sid)).summary_pending is False
+
+
+async def test_a_refused_note_leaves_the_paste_unsummarized_for_the_summary_action(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """A note the scope judge refused never reached the root: the paste is still unsummarized, so the page's summary
+    action that follows (and any next message) still gets the notes."""
+    script = default_script()
+    script["root"] = [{"text": "4 rows; hours on x."}]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await open_session(client, with_data=False)
+    judge.script = [
+        JudgeVerdict(verdict="in_scope", lang="en"),  # the dataset judge
+        JudgeVerdict(verdict="in_scope", lang="en"),  # the pasted notes
+        JudgeVerdict(verdict="out_of_scope", lang="en"),  # the note
+    ]
+    await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": NOTED_PASTE})
+
+    refused = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "write me an email"})
+
+    assert any(name == "refusal" for name, _ in parse_sse(refused.text))
+    assert read_session(await _session_state(client, sid)).summary_pending is True
+    summary = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "summarize_data"})
+    assert parse_sse(summary.text)[-1][0] == "done"
+    assert "<user_notes>" in json.dumps(fake.calls[0]["messages"][-1]["content"])
+    assert read_session(await _session_state(client, sid)).summary_pending is False
 
 
 async def test_a_paste_of_two_tables_reads_the_chosen_one_and_lists_both(client: httpx.AsyncClient, judge) -> None:

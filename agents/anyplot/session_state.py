@@ -67,6 +67,13 @@ DATASET_COPIED_FROM = PREFIX + "dataset_copied_from"
 """The number of the data version this session's data was copied from (`POST .../dataset/copy`, the admin fan-out's
 copy of the page session's confirmed version), absent for data of the session's own. The copy is the session's
 version 1, with no history; this records where it came from, for the feedback bundle. A paste replaces it."""
+SUMMARY_PENDING = PREFIX + "summary_pending"
+"""The id of a pasted dataset the root has not summarized yet: the dataset route writes it with the paste (also a
+transcription's `.use()`), and the messages route clears it once a root turn on that dataset ended without a
+failure or a refusal. While it names the current dataset, a typed message is the note the user sent with
+the paste: the route gives it the pasted notes and the file's name, and the session block says the data was pasted
+just now. Data the root made, a copy of another session's data and a session from before the key read as
+summarized."""
 BINDINGS = PREFIX + "bindings"
 CONFIRMED = PREFIX + "confirmed"
 """The fingerprint of what the user confirmed (the confirm route `.create_plot()` calls first): the dataset
@@ -165,6 +172,8 @@ class SessionView:
     readiness: str | None = None
     """The readiness status of the catalogue file the session's library opened with (`READINESS`), for the usage
     telemetry; None when the state holds none."""
+    summary_pending: bool = False
+    """Whether the current dataset is a paste the root has not summarized yet (`SUMMARY_PENDING`)."""
 
     @property
     def data_confirmed(self) -> bool:
@@ -325,6 +334,7 @@ def read_session(state: Any) -> SessionView | None:
         language_source=language_source,
         plot_language_choice=plot_language_choice,
         readiness=status if isinstance(status, str) else None,
+        summary_pending=bool(state.get(DATASET_ID)) and state.get(SUMMARY_PENDING) == state.get(DATASET_ID),
     )
 
 

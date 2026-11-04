@@ -185,7 +185,7 @@ class TestSessionContext:
             "- Plot: spec scatter-basic, library matplotlib",
             "- Language: the default, English",
             "- Libraries to switch to (switch_plot): seaborn",  # the server's own ids (`AGENT_LIBRARIES`)
-            "- Dataset: none yet; the user pastes it in the data panel, or generate_data computes it from a formula, "
+            "- Dataset: none yet; the user pastes it into the message box, or generate_data computes it from a formula, "
             "or run_data_code from the user's code",
             "- Plot versions: none yet",
             agent_module.SESSION_LANGUAGE_HEADING,
