@@ -4137,15 +4137,73 @@ async def test_the_note_typed_with_a_paste_is_its_first_turn_with_the_notes_and_
     later = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "which is x?"})
 
     assert parse_sse(note.text)[-1][0] == parse_sse(later.text)[-1][0] == "done"
-    first, second = (json.dumps(call) for call in fake.calls)
-    # The note's turn: the user's text with the paste's notes, and the session block's line.
+    first, second = (call["system"][-1]["text"] for call in fake.calls)  # the session block, after the policy
+    # The note's turn: the user's text alone, and the session block's line with the paste's notes.
     note_text = json.dumps(fake.calls[0]["messages"][-1]["content"])
-    assert "only 2024" in note_text and "<user_notes>" in note_text
-    assert "- Data: pasted just now, not summarized yet" in first
+    assert "only 2024" in note_text and "<user_notes>" not in note_text
+    assert "- Data: pasted just now, not summarized yet" in first and "<user_notes>" in first
     # After the root answered on the paste, a message is no note: no notes block, no line.
     assert "<user_notes>" not in json.dumps(fake.calls[1]["messages"][-1]["content"])
-    assert "- Data: pasted just now, not summarized yet" not in second
+    assert "- Data: pasted just now, not summarized yet" not in second and "<user_notes>" not in second
     assert read_session(await _session_state(client, sid)).summary_pending is False
+
+
+GERMAN_NOTED_PASTE = (
+    "Umsatz der Filialen, Zahlen in Tausend Franken\n"
+    "Jahr,Monat,Umsatz\n2023,11,3\n2023,12,4\n2024,1,5\n2024,2,7\n"
+    "Hinweis: bitte die Balken blau einfärben\n"
+)
+
+
+async def test_a_short_note_is_judged_and_stored_alone_while_the_root_gets_the_notes_and_the_file_name(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """The scope judge, the language detection and the stored user turn take only what the user typed: the paste's
+    notes and file name, judged at the paste, reach the root in the session block of the note's turn. Wrapped around
+    "nur 2024", the preambles' English words would let a judge's `en` overwrite the pasted German."""
+    script = default_script()
+    script["root"] = [{"text": "4 Zeilen, 3 Spalten. Nur 2024 behalten."}]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await open_session(client, with_data=False)
+    judge.script = [
+        JudgeVerdict(verdict="in_scope", lang="de"),  # the dataset judge
+        JudgeVerdict(verdict="in_scope", lang="de"),  # the pasted notes
+        JudgeVerdict(verdict="in_scope", lang="de"),  # the file name
+        JudgeVerdict(verdict="in_scope", lang="en"),  # the note: a judge's "English or unclear"
+    ]
+    pasted = await client.post(
+        f"/v1/sessions/{sid}/dataset",
+        headers=HEADERS,
+        json={"text": GERMAN_NOTED_PASTE, "source": "umsatz_filialen.csv"},
+    )
+    assert pasted.status_code == 200, pasted.text
+    assert (pasted.json()["language"], pasted.json()["file_name"]) == (
+        {"language": "de", "source": "pasted"},
+        "umsatz_filialen.csv",
+    )
+
+    note = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "nur 2024"})
+
+    assert parse_sse(note.text)[-1][0] == "done"
+    (prompt, _rubric) = judge.calls[-1]
+    assert "<user_message>\nnur 2024\n</user_message>" in prompt
+    assert "<user_notes>" not in prompt and "umsatz_filialen" not in prompt and "Tausend Franken" not in prompt
+    state = await _session_state(client, sid)
+    assert (read_session(state).language, read_session(state).language_source) == ("de", "pasted")
+    runtime = app.dependency_overrides[get_runtime]()
+    session = await runtime.session(USER, sid)
+    typed = [
+        "".join(part.text or "" for part in event.content.parts)
+        for event in session.events
+        if event.author == "user" and event.content and event.content.parts
+    ]
+    assert typed == ["nur 2024"]
+    # The root read the notes and the name all the same, fenced in its session block, and the user turn alone.
+    block = fake.calls[0]["system"][-1]["text"]  # the session block, after the policy
+    assert "<user_notes>\nUmsatz der Filialen, Zahlen in Tausend Franken\n" in block
+    assert "<user_data>\numsatz_filialen.csv\n</user_data>" in block
+    assert json.dumps(fake.calls[0]["messages"][-1]["content"], ensure_ascii=False).count("nur 2024") == 1
+    assert "Tausend Franken" not in json.dumps(fake.calls[0]["messages"], ensure_ascii=False)
 
 
 async def test_a_refused_note_leaves_the_paste_unsummarized_for_the_summary_action(

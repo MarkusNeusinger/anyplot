@@ -2469,13 +2469,21 @@ async def post_message(
     first_turn = body.action == "summarize_data" or (summary_pending and body.text is not None)
     if first_turn and view is not None and view.dataset_id:
         stored = services.datasets.get(view.dataset_id, sid)
+        blocks: list[str] = []
         if stored is not None and stored.context_lines:
             # The notes pasted with the table, judged at the paste (`_screen_notes`): the root sees them with the
             # first turn on every paste, so it can act on a request in them at once.
-            text = f"{text}\n\n{user_notes_block(stored.context_lines)}"
+            blocks.append(user_notes_block(stored.context_lines))
         if stored is not None and stored.file_name:
             # A dropped file's name, screened at the paste (`_screen_file_name`): fenced as data, never a note.
-            text = f"{text}\n\n{file_name_block(stored.file_name)}"
+            blocks.append(file_name_block(stored.file_name))
+        if blocks and body.action:
+            # The scope judge skips an action, so the blocks follow its fixed line.
+            text = "\n\n".join([text, *blocks])
+        elif blocks:
+            # A typed note is judged: the judge, the language detection, a strike and the stored user turn take the
+            # note alone, never the notes judged at the paste again or the preambles' English words.
+            ledger.paste_context = "\n\n".join(blocks)
     message = types.Content(role="user", parts=[types.Part(text=text)])
 
     async def stream() -> AsyncIterator[str]:
