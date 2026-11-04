@@ -461,17 +461,14 @@ export function SpecPage() {
     ? specData.implementations.filter(i => i.language === languageFilter)
     : specData.implementations;
 
+  // The same trail as the bot HTML in api/routers/seo.py: home → spec → library.
+  // `/{specId}/{language}` is left out, as there: it is a client redirect, not a page.
   const breadcrumbItems: { name: string; item: string }[] = [
-    { name: 'anyplot', item: 'https://anyplot.ai/' },
-    { name: 'specs', item: 'https://anyplot.ai/specs' },
+    { name: 'anyplot.ai', item: 'https://anyplot.ai/' },
     { name: specData.title, item: `https://anyplot.ai/${specId}` },
   ];
   if (mode === 'detail' && urlLanguage && selectedLibrary) {
-    breadcrumbItems.push({
-      name: LANG_DISPLAY[urlLanguage] || urlLanguage,
-      item: `https://anyplot.ai/${specId}/${urlLanguage}`,
-    });
-    breadcrumbItems.push({ name: selectedLibrary, item: canonical });
+    breadcrumbItems.push({ name: currentImpl?.library_name || selectedLibrary, item: canonical });
   }
   const breadcrumbJsonLd = {
     '@context': 'https://schema.org',
@@ -495,7 +492,7 @@ export function SpecPage() {
           '@type': 'SoftwareSourceCode',
           name: `${specData.title} (${selectedLibrary})`,
           description: specData.description,
-          programmingLanguage: { python: 'Python', r: 'R' }[urlLanguage ?? ''] ?? urlLanguage,
+          programmingLanguage: LANG_DISPLAY[urlLanguage] ?? urlLanguage,
           codeSampleType: 'code snippet',
           codeRepository: 'https://github.com/MarkusNeusinger/anyplot',
           url: canonical,
@@ -506,6 +503,15 @@ export function SpecPage() {
         }
       : null;
 
+  // The implementation's render on a detail page; elsewhere what the bot HTML in
+  // api/routers/seo.py shares for the hub: the spec card, or the home card for a
+  // spec with no render yet (its spec card does not exist).
+  const ogImage =
+    currentImpl?.preview_url ||
+    (specData.implementations.some(impl => impl.preview_url)
+      ? `https://api.anyplot.ai/og/${specId}.png`
+      : 'https://api.anyplot.ai/og/home.png');
+
   return (
     <>
       <>
@@ -513,7 +519,7 @@ export function SpecPage() {
         <meta name="description" content={specData.description} />
         <meta property="og:title" content={`${specData.title}${titleSuffix} | anyplot.ai`} />
         <meta property="og:description" content={specData.description} />
-        {currentImpl?.preview_url && <meta property="og:image" content={currentImpl.preview_url} />}
+        <meta property="og:image" content={ogImage} />
         <meta property="og:url" content={canonical} />
         <link rel="canonical" href={canonical} />
         <script type="application/ld+json">

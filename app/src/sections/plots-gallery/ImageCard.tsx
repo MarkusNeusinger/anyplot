@@ -13,26 +13,13 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
-import { BATCH_SIZE, type ImageSize, LANG_DISPLAY, libExt } from 'src/constants';
+import { BATCH_SIZE, type ImageSize, LANG_DISPLAY, LIB_ABBREV, libExt } from 'src/constants';
 import { useCodeFetch } from 'src/hooks';
 import { useTheme as useAppTheme } from 'src/hooks/useLayoutContext';
 import { colors, fontSize, overlayButtonSx, semanticColors, typography } from 'src/theme';
 import type { PlotImage } from 'src/types';
 import { buildSrcSet, getFallbackSrc, getResponsiveSizes } from 'src/utils/responsiveImage';
 import { useThemedPreviewUrl } from 'src/utils/themedPreview';
-
-// Library abbreviations for compact mode
-const LIBRARY_ABBR: Record<string, string> = {
-  matplotlib: 'mpl',
-  seaborn: 'sns',
-  plotly: 'ply',
-  bokeh: 'bok',
-  altair: 'alt',
-  plotnine: 'p9',
-  pygal: 'pyg',
-  highcharts: 'hc',
-  letsplot: 'lp',
-};
 
 interface ImageCardProps {
   image: PlotImage;
@@ -79,7 +66,7 @@ export const ImageCard = memo(function ImageCard({
 
   // Library display: in compact mode - hidden on xs, abbreviated otherwise
   // In normal mode - always show full name. Compact mode embeds the language
-  // as a file-extension suffix on the abbreviation (e.g. "mpl.py", "ggplot2.r")
+  // as a file-extension suffix on the abbreviation (e.g. "mpl.py", "gg.r")
   // so the row stays as two tokens — normal mode shows language as a separate
   // middot-token between spec-id and library.
   const showLibrary = imageSize === 'normal' || !isXs;
@@ -88,7 +75,7 @@ export const ImageCard = memo(function ImageCard({
   const langExt = libExt(image.library, image.language);
   const libraryDisplay =
     imageSize === 'compact'
-      ? `${LIBRARY_ABBR[image.library] || image.library}${langExt ? '.' + langExt : ''}`
+      ? `${LIB_ABBREV[image.library] || image.library}${langExt ? '.' + langExt : ''}`
       : image.library;
   const languageDisplay = LANG_DISPLAY[image.language] || image.language;
   const showLanguageToken = imageSize === 'normal' && !!image.language && showLibrary;

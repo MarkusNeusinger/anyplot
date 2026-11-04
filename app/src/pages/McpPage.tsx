@@ -186,8 +186,9 @@ export function McpPage() {
                     </Box>
                   </TableCell>
                   <TableCell>
-                    search specifications using tag filters (plot_type, data_type, domain, features,
-                    library)
+                    search specifications using tag filters: spec tags (plot_type, data_type,
+                    domain, features), library, and implementation tags (dependencies, techniques,
+                    patterns, dataprep, styling)
                   </TableCell>
                 </TableRow>
                 <TableRow>

@@ -108,7 +108,8 @@ export function AboutPage() {
             <Box sx={{ ...textStyle, mt: 1 }}>
               see the{' '}
               <Link
-                href={paths.palette}
+                component={RouterLink}
+                to={paths.palette}
                 onClick={() =>
                   trackEvent('internal_link', { destination: 'palette', source: 'about' })
                 }
@@ -187,7 +188,7 @@ export function AboutPage() {
               }}
             >
               <Link
-                href={`${GITHUB_URL}/issues/new?labels=spec-request&title=%5Bplot+request%5D+`}
+                href={`${GITHUB_URL}/issues/new?template=request-new-plot.yml`}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() =>

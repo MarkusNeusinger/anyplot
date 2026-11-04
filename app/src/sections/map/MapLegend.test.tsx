@@ -77,11 +77,18 @@ describe('MapLegend', () => {
     );
 
     const toggle = screen.getByRole('button', { name: 'legend ▸' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
     fireEvent.click(toggle);
-    expect(screen.getByRole('button', { name: 'legend ▾' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'legend ▾' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'legend ▾' }));
-    expect(screen.getByRole('button', { name: 'legend ▸' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'legend ▸' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
   });
 
   it('calls setHoverType on mouse enter and clears it on mouse leave', () => {

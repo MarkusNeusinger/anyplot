@@ -500,6 +500,13 @@ describe('AgentChatPage gating', () => {
     expect(await screen.findByText('← Basic Scatter Plot')).toBeInTheDocument();
   });
 
+  it('names the tab after the spec title, not its id', async () => {
+    flags.isDev = true;
+    renderAt(PAGE);
+    expect(await screen.findByLabelText(/# your data/)).toBeInTheDocument();
+    await waitFor(() => expect(document.title).toBe('agent · Basic Scatter Plot | anyplot.ai'));
+  });
+
   it('lets local development in without the hint', async () => {
     flags.isDev = true;
     renderAt(PAGE);
