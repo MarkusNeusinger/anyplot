@@ -492,9 +492,14 @@ export function SpecPage() {
         }
       : null;
 
-  // The implementation's render on a detail page; elsewhere the spec card the bot
-  // HTML in api/routers/seo.py shares for the hub.
-  const ogImage = currentImpl?.preview_url || `https://api.anyplot.ai/og/${specId}.png`;
+  // The implementation's render on a detail page; elsewhere what the bot HTML in
+  // api/routers/seo.py shares for the hub: the spec card, or the home card for a
+  // spec with no render yet (its spec card does not exist).
+  const ogImage =
+    currentImpl?.preview_url ||
+    (specData.implementations.some(impl => impl.preview_url)
+      ? `https://api.anyplot.ai/og/${specId}.png`
+      : 'https://api.anyplot.ai/og/home.png');
 
   return (
     <>

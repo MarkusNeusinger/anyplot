@@ -439,5 +439,22 @@ describe('SpecPage', () => {
         )
       );
     });
+
+    it('shares the home card on the hub of a spec with no render, like the bot HTML', async () => {
+      mockParams = { specId: 'scatter-basic' };
+      mockSearchParams.delete('language');
+      mockFetchSuccess({
+        ...mockSpecData,
+        implementations: mockSpecData.implementations.map(impl => ({ ...impl, preview_url: '' })),
+      });
+      render(<SpecPage />);
+
+      await waitFor(() =>
+        expect(document.head.querySelector('meta[property="og:image"]')).toHaveAttribute(
+          'content',
+          'https://api.anyplot.ai/og/home.png'
+        )
+      );
+    });
   });
 });

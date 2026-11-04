@@ -168,7 +168,7 @@ describe('ImageCard', () => {
   });
 
   it('has a short compact name for every supported library', () => {
-    // A library missing from LIB_ABBREV falls back to its full id ("muix.tsx").
+    // A library missing from LIB_ABBREV would fall back to its full id, as muix once read "muix.tsx".
     for (const library of LIBRARIES) {
       expect(LIB_ABBREV[library], library).toBeTruthy();
     }
