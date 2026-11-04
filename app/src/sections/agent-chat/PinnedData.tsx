@@ -12,6 +12,7 @@ import Box from '@mui/material/Box';
 import GlobalStyles from '@mui/material/GlobalStyles';
 
 import type { AgentSessionState } from 'src/hooks/useAgentSession';
+import { countOf } from 'src/sections/agent-chat/countOf';
 import {
   actionButtonSx,
   cardSx,
@@ -19,7 +20,6 @@ import {
   PINNED_CLEARANCE,
   PINNED_TOP,
 } from 'src/sections/agent-chat/styles';
-import { countOf } from 'src/sections/agent-chat/useFileIntake';
 import { colors } from 'src/theme';
 
 /** The line the pinned header shows, and `.create_plot()` names as its description. */

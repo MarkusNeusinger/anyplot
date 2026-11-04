@@ -19,6 +19,7 @@ import {
 } from 'src/lib/agent';
 import { bindingRows } from 'src/sections/agent-chat/bindings';
 import { BoxWorking } from 'src/sections/agent-chat/BoxWorking';
+import { countOf } from 'src/sections/agent-chat/countOf';
 import {
   BindingsBlock,
   ChangeBlock,
@@ -48,12 +49,11 @@ import {
   nativeControlSx,
   smallText,
 } from 'src/sections/agent-chat/styles';
-import {
-  countOf,
-  FILE_NAME_WITHHELD,
-  type FileIntake,
-} from 'src/sections/agent-chat/useFileIntake';
+import type { FileIntake } from 'src/sections/agent-chat/useFileIntake';
 import { colors, fontSize } from 'src/theme';
+
+/** What the server keeps for a file's name its content check refused (`dataset_context.FILE_NAME_WITHHELD`). */
+const FILE_NAME_WITHHELD = '(name withheld)';
 
 // The full view's chunk holds the Data Grid: it loads when the user first opens the view (or points at the button).
 const loadDataView = () => import('src/sections/agent-chat/DataView');

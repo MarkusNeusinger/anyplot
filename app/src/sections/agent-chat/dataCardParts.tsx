@@ -21,6 +21,7 @@ import {
   signHint,
 } from 'src/sections/agent-chat/bindings';
 import { CellText } from 'src/sections/agent-chat/CellText';
+import { countOf } from 'src/sections/agent-chat/countOf';
 import type { DataViewProps } from 'src/sections/agent-chat/DataView';
 import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import { describeDataFailure } from 'src/sections/agent-chat/messages';
@@ -32,7 +33,6 @@ import {
   nativeControlSx,
   smallText,
 } from 'src/sections/agent-chat/styles';
-import { countOf } from 'src/sections/agent-chat/useFileIntake';
 import { colors, fontSize, typography } from 'src/theme';
 
 /** In place of the full view when its chunk does not load (`lazyOrFallback`): a line in the card. */

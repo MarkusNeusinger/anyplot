@@ -11,6 +11,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { AgentApiError, type ConvertAnswer, toBase64 } from 'src/lib/agent';
+import { countOf } from 'src/sections/agent-chat/countOf';
 import {
   countLines,
   type FileEncoding,
@@ -27,17 +28,10 @@ import {
   FILE_LOCKED_TEXT,
 } from 'src/sections/agent-chat/messages';
 
-export function countOf(count: number, noun: string): string {
-  return `${count.toLocaleString('en-US')} ${noun}${count === 1 ? '' : 's'}`;
-}
-
 /** Whether a drag carries files (not text dragged from the page or another app). */
 function dragHasFiles(transfer: DataTransfer | null): boolean {
   return !!transfer && Array.from(transfer.types ?? []).includes('Files');
 }
-
-/** What the server keeps for a file's name its content check refused (`dataset_context.FILE_NAME_WITHHELD`). */
-export const FILE_NAME_WITHHELD = '(name withheld)';
 
 /** A binary file the server converted: kept in the browser for the sheet picker, which converts it again. */
 export interface ConvertedFile {
