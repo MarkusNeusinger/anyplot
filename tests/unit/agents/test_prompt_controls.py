@@ -21,12 +21,15 @@ PAGE_SOURCES = [
 ]
 _CONTROL = re.compile(r"`(\.[a-z_]+\((?:'[^']*')?\))`")
 _LABEL = r"\.[a-z_]+\((?:'[^']*')?\)"
-_COMMENT = re.compile(r"/\*.*?\*/|//[^\n]*", re.DOTALL)
-# A button's text is its label, alone on a JSX line or at the start of a string (`'.parse() …'`,
-# `` `.filter() · ${count}` ``); a label inside a sentence ("decide on the table below first: .use() or
-# .discard()") points to a button and is no button itself. A quote after a word or a bracket closes a string.
-_BUTTON_TEXT = re.compile(rf"^[ \t]*({_LABEL})[ \t]*$|(?<![\w)\]])['\"`]({_LABEL})", re.MULTILINE)
-_COMPONENT_IMPORT = re.compile(r"src/sections/agent-chat/([A-Za-z]+)'")
+# The comments go before the labels are read: a `//` after a colon belongs to a URL (`https://`), a `/*` after a
+# word, a quote or a `*` to a glob (`'image/*'`).
+_COMMENT = re.compile(r"(?<![\w'\"*])/\*.*?\*/|(?<!:)//[^\n]*", re.DOTALL)
+# A button's text is its label: the whole JSX text between a tag's `>` and the next `<` (`>.open()<`, also over
+# lines), or the start of a string (`'.parse() …'`, `` `.filter() · ${count}` ``). A label inside a sentence
+# ("decide on the table below first: .use() or .discard()") points to a button and is no button itself, and a
+# chained call alone on its line (`.trim()`) follows no `>`. A quote after a word or a bracket closes a string.
+_BUTTON_TEXT = re.compile(rf">\s*({_LABEL})\s*<|(?<![\w)\]])['\"`]({_LABEL})")
+_COMPONENT_IMPORT = re.compile(r"""(?:src/sections/agent-chat/|\./)([A-Za-z]+)['"]""")
 
 
 def controls_section() -> str:
@@ -37,9 +40,13 @@ def controls_section() -> str:
 
 
 def controls_of(part: str) -> set[str]:
-    """The controls one bullet of "The page's controls" names, such as "The data panel"."""
-    bullet = next(line for line in controls_section().splitlines() if line.startswith(f"- {part}:"))
-    return set(_CONTROL.findall(bullet))
+    """The controls one bullet of "The page's controls" names, such as "The data panel", also over wrapped lines."""
+    section = controls_section()
+    start = section.index(f"\n- {part}:")
+    end = min(
+        (at for at in (section.find("\n- ", start + 1), section.find("\n\n", start + 1)) if at != -1), default=None
+    )
+    return set(_CONTROL.findall(section[start:end]))
 
 
 def page_code() -> str:
@@ -51,7 +58,11 @@ def page_code() -> str:
 
 def data_card_components() -> list[Path]:
     """`DataPanel.tsx` and every component of `agent-chat/` it renders, also through another one, such as
-    the full view `DataView.tsx`, which it imports on demand."""
+    the full view `DataView.tsx`, which it imports on demand.
+
+    The `.ts` modules are left out: their texts serve the whole page (`messages.ts` also names the admin
+    fan-out's `.plot_all()`), and a button of the card has its label in a component.
+    """
     found = [AGENT_CHAT / "DataPanel.tsx"]
     for path in found:
         for name in _COMPONENT_IMPORT.findall(path.read_text(encoding="utf-8")):
