@@ -74,31 +74,34 @@ Seven decisions I made and hold the agents to, each with its reason and the code
 
 ## Architecture
 
+The site and "Use with my data":
+
 ```mermaid
 flowchart TB
   browser(["Browser"]) --> cf["Cloudflare"]
   cf --> app["anyplot-app<br>React SPA"]
-  cf --> api["anyplot-api<br>FastAPI: catalogue API, MCP server,<br>agent BFF with Turnstile and per-network caps"]
-  browser -. "plot images" .-> gcs
+  cf --> api["anyplot-api<br>FastAPI, MCP server<br>agent BFF, Turnstile<br>per-network caps"]
+  browser -. "plot images" .-> gcs[("Cloud Storage")]
+  api --> sql[("Cloud SQL<br>PostgreSQL")]
+  api -- "ID token,<br>catalogue snapshot" --> chat
 
   subgraph chat ["Use with my data"]
-    direction TB
-    agents["anyplot-agents<br>Google ADK, Claude Haiku 5.5 on Vertex AI in the EU"]
-    agents -- "IAM ID token" --> renderer["anyplot-renderer<br>gVisor sandboxes, no egress, zero-role service account"]
-  end
-  api -- "IAM ID token, catalogue snapshot" --> agents
-
-  subgraph pipeline ["GitHub Actions pipeline"]
     direction LR
-    spec["spec-create"] --> gen["impl-generate"] --> review["impl-review<br>24-criterion rubric"]
-    review -- "below the bar" --> repair["impl-repair"] --> review
-    review -- "approved" --> merge["impl-merge"]
-    regen["daily-regen"] --> gen
+    agents["anyplot-agents<br>Google ADK<br>Claude Haiku 5.5<br>Vertex AI, EU"] -- "ID token" --> renderer["anyplot-renderer<br>gVisor sandboxes<br>no egress<br>zero-role account"]
   end
+```
 
-  api --> sql[("Cloud SQL<br>PostgreSQL")]
-  merge -- "promote images" --> gcs[("Cloud Storage<br>plot images")]
-  merge -- "sync" --> sql
+The catalogue pipeline, in GitHub Actions, writing to the same storage:
+
+```mermaid
+flowchart LR
+  spec["spec-create"] --> gen["impl-generate"]
+  regen["daily-regen"] --> gen
+  gen --> review["impl-review<br>24-criterion rubric"]
+  review -- "below the bar" --> repair["impl-repair"] --> review
+  review -- "approved" --> merge["impl-merge"]
+  merge -- "promote images" --> gcs[("Cloud Storage")]
+  merge -- "sync" --> sql[("Cloud SQL")]
 ```
 
 All of it runs live at [anyplot.ai](https://anyplot.ai).

@@ -3,8 +3,8 @@
 - **The README says who builds anyplot and how.** A "How I build anyplot" section on its first screen
   says who leads the models and how. "Engineering highlights" names seven decisions, each with its
   reason and a link to the code that carries it out. An "Architecture" section draws the services and
-  the pipeline as a Mermaid diagram. Before this, the README described the system in passive voice and
-  never said what the human behind it does.
+  the pipeline as two Mermaid diagrams. Before this, the README described the system in passive voice
+  and never said what the human behind it does.
 - **A docs page on how anyplot is built with AI agents.** `docs/concepts/ai-workflow.md` covers who does
   what, the path of a change from idea to production, how a repeated mistake becomes a rule or a test,
   a worked example (#12557), and the limits of the approach. The README links it for the full story.
