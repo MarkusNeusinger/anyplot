@@ -14,7 +14,7 @@
 - **One chat field for everything.** The agent chat's message box takes the data now: a table pasted into it, or a
   file opened with `.open()` beside it, dropped anywhere on the chat or pasted as a file, waits above the text as an
   attachment with its name, its lines and its size, and Enter sends it. One line, code, prose, a formula or a
-  request for data stays typed text, by rules the page and the server share as 33 test cases. The data card loses
+  request for data stays typed text, by rules the page and the server share as 41 test cases. The data card loses
   its text box, its counter, `.parse()`, `.open()`, `.replace()`, `.keep()` and its drop zone, and shows once there
   is data; a workbook's sheet picker reads the stored file again. A table over 1 MB or 20,050 lines turns the
   attachment red, and so does one the server refused, with the reason under it. While an attachment waits, the plot

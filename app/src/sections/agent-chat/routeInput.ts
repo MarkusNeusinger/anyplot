@@ -10,9 +10,10 @@
  * (`classify_paste` in `agents/anyplot/data/classify.py`), and a test on each side holds them
  * together (`routeInput.test.ts`, `tests/unit/agents/test_route_cases.py`).
  *
- * A table the rules miss (two rows of words, `name,city` over `Anna,Wien`) goes as a message,
- * and the assistant asks for it again with more rows or as a file: a miss costs one turn,
- * never data.
+ * A table the rules miss (two rows of words, `name,city` over `Anna,Wien`, or a comma table of
+ * words alone with a sentence in an unquoted cell) goes as a message, and the assistant asks
+ * for it again with more rows or as a file: a miss costs one turn, never data. Prose stored as
+ * a table would cost the user's message and a summary of nonsense.
  */
 
 import { MAX_MESSAGE_CHARS } from 'src/lib/agent';
@@ -28,6 +29,10 @@ const CODE_LINE_CHARS = 400;
 const MIN_CODE_SHARE = 0.5;
 /** The longest field of a table read from words alone (rule 7b). */
 const MAX_WORD_FIELD = 40;
+/** The words of a comma-split field that make it a clause of a sentence, not a cell (rule 7b at `,`). */
+const CLAUSE_WORDS = 4;
+/** A list item's marker: `- `, `* `, `• `, `1. `, `2) `. */
+const LIST_MARKER = /^(?:[-*•]|\d+[.)])\s/;
 
 // The code veto, copied from `classify.py` (`_STRONG`, `_ARROW`, `_SHAPED`): a line no table has.
 // The shared `lines` cases keep the two copies in step.
@@ -86,7 +91,10 @@ function looksLikeCode(text: string): boolean {
   return lines.filter(isCodeShapedLine).length / lines.length >= MIN_CODE_SHARE;
 }
 
-/** The text's rows: a newline inside an open double quote does not end one (Excel's multi-line cells). */
+/**
+ * The text's rows: a newline inside an open double quote does not end one (Excel's multi-line
+ * cells). A quote still open at the end was no cell's (`5" pipe` in a title): the lines are the rows.
+ */
 function logicalRows(text: string): string[] {
   const rows: string[] = [];
   let row = '';
@@ -111,7 +119,8 @@ function logicalRows(text: string): string[] {
     row += char;
   }
   rows.push(row);
-  return rows.filter(item => item.trim() !== '');
+  const lines = quoted ? text.split(/\r\n|\r|\n/) : rows;
+  return lines.filter(item => item.trim() !== '');
 }
 
 /** A row's fields at `delimiter`, outside double quotes, each trimmed and unquoted. */
@@ -138,17 +147,31 @@ function isValue(cell: string): boolean {
   return text !== '' && /\d/.test(text) && (NUMBER.test(text) || DATE.test(text));
 }
 
-/**
- * Rule 7's and 8's evidence for rows split into fields: (a) at least half the fields after
- * the first row read as values, or (b) three rows or more and no field long enough for prose.
- */
-function tableEvidence(rows: string[][]): boolean {
+/** Rule 7a's and 8a's evidence: at least half the fields after the first row read as values. */
+function valueEvidence(rows: string[][]): boolean {
   const body = rows
     .slice(1)
     .flat()
     .filter(cell => cell !== '');
-  if (body.length > 0 && body.filter(isValue).length / body.length >= 0.5) return true;
+  return body.length > 0 && body.filter(isValue).length / body.length >= 0.5;
+}
+
+/** Rule 7b's and 8b's evidence: three rows or more and no field long enough for prose. */
+function wordEvidence(rows: string[][]): boolean {
   return rows.length >= 3 && rows.every(row => row.every(cell => cell.length <= MAX_WORD_FIELD));
+}
+
+/**
+ * Commas that split sentences, not cells: a first row that ends on its comma (`Hello,`), a
+ * clause of four words or more, or every row a list item (`- one, two`). A quoted field is a
+ * CSV cell's mark, so a run with one is no prose for its long cells. Only the word evidence
+ * yields to it; a run whose fields read as values stays a table.
+ */
+function readsAsProse(rows: string[][], raw: string[]): boolean {
+  if (rows[0].some(cell => cell === '')) return true;
+  if (raw.some(row => row.includes('"'))) return false;
+  if (rows.some(row => row.some(cell => cell.split(/\s+/).length >= CLAUSE_WORDS))) return true;
+  return rows.every(row => LIST_MARKER.test(row[0]));
 }
 
 /** The longest run of consecutive rows whose `count` is the same and at least `min`. */
@@ -193,10 +216,10 @@ function isDelimited(sample: string[]): boolean {
     const counts = sample.map(row => fieldsOf(row, delimiter).length - 1);
     const run = longestRun(counts, 1);
     if (run.length < 2 || run.length < sample.length * 0.5) return false;
-    const rows = sample
-      .slice(run.start, run.start + run.length)
-      .map(row => fieldsOf(row, delimiter));
-    return tableEvidence(rows);
+    const raw = sample.slice(run.start, run.start + run.length);
+    const rows = raw.map(row => fieldsOf(row, delimiter));
+    if (valueEvidence(rows)) return true;
+    return wordEvidence(rows) && !(delimiter === ',' && readsAsProse(rows, raw));
   });
 }
 
@@ -209,7 +232,10 @@ function isAligned(sample: string[]): boolean {
   }
   return [...tally.entries()].some(
     ([count, rows]) =>
-      rows >= sample.length * 0.8 && tableEvidence(split.filter(fields => fields.length === count))
+      rows >= sample.length * 0.8 &&
+      [valueEvidence, wordEvidence].some(evidence =>
+        evidence(split.filter(fields => fields.length === count))
+      )
   );
 }
 

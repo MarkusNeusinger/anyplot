@@ -184,6 +184,62 @@
       "route": "data",
       "rule": "8",
       "server": null
+    },
+    {
+      "id": 34,
+      "text": "Hello,\nplease use a log scale, thanks\nand a title, please",
+      "route": "message",
+      "rule": "11",
+      "server": null
+    },
+    {
+      "id": 35,
+      "text": "Hallo,\nbitte nur 2024, danke\nund blau, bitte",
+      "route": "message",
+      "rule": "11",
+      "server": null
+    },
+    {
+      "id": 36,
+      "text": "- one, two\n- three, four",
+      "route": "message",
+      "rule": "11",
+      "server": null
+    },
+    {
+      "id": 37,
+      "text": "- one, two\n- three, four\n- five, six",
+      "route": "message",
+      "rule": "11",
+      "server": null
+    },
+    {
+      "id": 38,
+      "text": "name,comment\nAnna,arrived late because of the train\nBen,ok\nCem,fine",
+      "route": "message",
+      "rule": "11",
+      "server": null
+    },
+    {
+      "id": 39,
+      "text": "Bestand Rohre 5\" pipe\nname,count\nA,1\nB,2\nC,3",
+      "route": "data",
+      "rule": "7a",
+      "server": null
+    },
+    {
+      "id": 40,
+      "text": "Name;Kommentar\nAnna;kam spaet wegen dem Zug\nBen;ok\nCem;gut",
+      "route": "data",
+      "rule": "7b",
+      "server": null
+    },
+    {
+      "id": 41,
+      "text": "Hi there, team\nplease add a grid, thanks\nand blue bars, ok",
+      "route": "message",
+      "rule": "11",
+      "server": null
     }
   ],
   "lines": [
