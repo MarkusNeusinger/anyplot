@@ -386,6 +386,8 @@ export interface TranscriptionState {
    * with the table, also after the box was cleared or edited meanwhile.
    */
   source?: string;
+  /** The converted workbook the text came from: `.use()` keeps it for the sheet picker. */
+  file?: ConvertedFile;
 }
 
 /** Binding name (`x`, `y1`) to column; only bound names are present. */
@@ -2219,6 +2221,7 @@ export function useAgentSession({
               note: typeof parsed.note === 'string' ? parsed.note : '',
               bytes,
               ...(source ? { source } : {}),
+              ...(options.file ? { file: options.file } : {}),
             },
           });
           trackEvent('agent_data_parsed', { status: 'transcribed', size_bucket: bucket });
@@ -2309,8 +2312,15 @@ export function useAgentSession({
   const confirmTranscription = useCallback((): Promise<ParseResult> => {
     const transcription = stateRef.current.transcription;
     if (!transcription) return Promise.resolve({ outcome: 'skipped', turnEnd: null });
-    // The file's name travels with the table it was read from, whatever the box holds now.
-    return parseData(transcription.text, true, transcription.source);
+    // The file's name travels with the table it was read from, whatever the box holds now, and a
+    // workbook stays with it for the sheet picker.
+    return parseData(
+      transcription.text,
+      true,
+      transcription.source,
+      undefined,
+      transcription.file ? { file: transcription.file } : undefined
+    );
   }, [parseData]);
 
   /**

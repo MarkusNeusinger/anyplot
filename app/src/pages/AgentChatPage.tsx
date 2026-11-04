@@ -627,16 +627,22 @@ function AgentChat({
   const restoreText = (text: string) =>
     setDraft(current => (current.trim() ? `${text}\n\n${current}` : text));
 
-  // The text of the attachment a table was read from, while that table waits for `.use()` or
-  // `.discard()`: a discard puts it back into the box for another try.
-  const transcribedFrom = useRef<string | null>(null);
+  // The attachment a table was read from, while that table waits for `.use()` or `.discard()`:
+  // a discard gives it back for another try.
+  const transcribedFrom = useRef<Attachment | null>(null);
 
-  /** `.discard()`: the table read from text goes, and the text it came from back into the box. */
+  /**
+   * `.discard()`: the table read from text goes, and what it came from comes back. Short pasted
+   * text goes into the box, to edit and send as a message; a file's text, or text the box could
+   * not send, waits as the attachment again, unless the user attached something since.
+   */
   const handleDiscard = () => {
     session.discardTranscription();
-    const text = transcribedFrom.current;
+    const sent = transcribedFrom.current;
     transcribedFrom.current = null;
-    if (text) restoreText(text);
+    if (!sent) return;
+    if (sent.via === 'paste' && sent.text.length <= MAX_MESSAGE_CHARS) restoreText(sent.text);
+    else if (!attachment) attach.reattach(sent);
   };
 
   /**
@@ -674,7 +680,7 @@ function AgentChat({
     } else if (result.outcome === 'skipped' || result.outcome === 'transcribed') {
       attach.settle(sent.id, result.outcome === 'skipped' ? 'ready' : 'cleared');
     }
-    transcribedFrom.current = result.outcome === 'transcribed' ? sent.text : null;
+    transcribedFrom.current = result.outcome === 'transcribed' ? sent : null;
     // Nothing was stored and nothing went to the chat: the note waits in the box again.
     const kept = result.outcome === 'stored' || result.outcome === 'forwarded';
     if (note && !kept) restoreText(note);

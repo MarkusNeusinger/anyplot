@@ -180,8 +180,13 @@ export interface ChatAttachment {
   /** Whether a dropped or opened file would be taken now. */
   dropReady: boolean;
   fileInputRef: React.RefObject<HTMLInputElement | null>;
-  /** The routed text of a paste, or text that must wait as an attachment (a discarded table). */
+  /** The routed text of a paste. */
   attachText: (text: string) => void;
+  /**
+   * An attachment back as it was sent, under a new id: the file or the long text a discarded
+   * table was read from, which the box could not send as typed text.
+   */
+  reattach: (previous: Attachment) => void;
   /** ×: the attachment goes, and a read still in flight with it. */
   remove: () => void;
   /** The send's outcome for the attachment it posted (`id`): it goes, or it stays with a status. */
@@ -242,6 +247,18 @@ export function useChatAttachment({
       kind: 'text',
       encoding: null,
       status: overCap(text) ? 'over_cap' : 'ready',
+      error: null,
+      readingLine: null,
+    });
+  };
+
+  const reattach = (previous: Attachment) => {
+    const id = next();
+    setNotice(null);
+    setAttachment({
+      ...previous,
+      id,
+      status: overCap(previous.text) ? 'over_cap' : 'ready',
       error: null,
       readingLine: null,
     });
@@ -511,6 +528,7 @@ export function useChatAttachment({
     dropReady,
     fileInputRef,
     attachText,
+    reattach,
     remove,
     settle,
     handlePaste,

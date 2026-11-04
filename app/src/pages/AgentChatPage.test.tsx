@@ -2953,6 +2953,39 @@ describe('AgentChatPage attachment', () => {
     expect(message()).toHaveValue(`${FREE_TEXT}\n\ntyped meanwhile`);
   });
 
+  it('gives a file, or text the box could not send, back as the attachment on .discard()', async () => {
+    await openChat();
+    fireEvent.change(screen.getByTestId('chat-file-input'), {
+      target: { files: [csvFile(FREE_TEXT, 'tiere.txt')] },
+    });
+    await screen.findByRole('group', { name: /^Attached file tiere\.txt/ });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    await screen.findByTestId('transcription-card');
+    fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
+    // The file's text waits as the file again, its name with it, and the box stays empty.
+    expect(chip()).toHaveAccessibleName(/^Attached file tiere\.txt, 3 lines/);
+    expect(message()).toHaveValue('');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
+
+    // Over 2,000 characters a paste is no message: it comes back as the attachment too.
+    const long = `${FREE_TEXT}\n${'Pferd 1, Esel 5\n'.repeat(140)}`;
+    pasteText(long);
+    await screen.findByRole('group', { name: /^Attached table/ });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    await screen.findByTestId('transcription-card');
+    fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
+    expect(chip()).toHaveAccessibleName(/^Attached table, 143 lines/);
+    expect(message()).toHaveValue('');
+
+    // An attachment made while the table waited stays: the discarded one does not replace it.
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    await screen.findByTestId('transcription-card');
+    pasteText(TABLE);
+    await screen.findByRole('group', { name: /^Attached table, 4 lines/ });
+    fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
+    expect(chip()).toHaveAccessibleName(/^Attached table, 4 lines/);
+  });
+
   it('sends on Enter and Ctrl+Enter, never inside a composition or on Shift+Enter, and never cuts a long text', async () => {
     await openChat();
     fireEvent.change(message(), { target: { value: 'what is the mean score?' } });

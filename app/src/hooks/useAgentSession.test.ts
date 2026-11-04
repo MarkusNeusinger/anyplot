@@ -1112,6 +1112,36 @@ describe('useAgentSession: a note with the attachment', () => {
     );
     expect(result.current.state.dataset?.file).toEqual(file);
   });
+
+  it('keeps a workbook through a table read from its text, for the sheet picker after .use()', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = call =>
+      json(200, (call.body as { confirmed?: boolean }).confirmed ? DATASET : TRANSCRIBED);
+    const { result } = await openSession(routes);
+    const file = {
+      name: 'Notizen.xlsx',
+      base64: 'UEsDBA==',
+      browserKind: 'spreadsheet' as const,
+      kind: 'xlsx',
+      sheet: 'Tiere',
+      sheets: ['Tiere', 'Pflanzen'],
+      sheetCount: 2,
+      text: FREE_TEXT,
+    };
+    await act(() =>
+      result.current.parseData(FREE_TEXT, false, 'Notizen.xlsx · sheet ‹Tiere›', undefined, {
+        file,
+      })
+    );
+    expect(result.current.state.transcription?.file).toEqual(file);
+    await act(() => result.current.confirmTranscription());
+    expect(calls.filter(call => call.path.endsWith('/dataset')).slice(-1)[0]?.body).toEqual({
+      text: TRANSCRIBED.text,
+      confirmed: true,
+      source: 'Notizen.xlsx · sheet ‹Tiere›',
+    });
+    expect(result.current.state.dataset?.file).toEqual(file);
+  });
 });
 
 describe('useAgentSession: the step-1 summary and data changes', () => {
