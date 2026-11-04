@@ -460,21 +460,42 @@ def _strings(value: Any) -> tuple[str, ...]:
     return tuple(item for item in _list(value) if isinstance(item, str))
 
 
-_CODE = re.compile(r"^[a-z][a-z_]{0,23}$")
-"""A closed lowercase code of the agents service (`render_failed`, `rendering`, `key`, `data_unconfirmed`)."""
+# The agents service's closed vocabularies (`agents/anyplot/schemas.py`), pinned equal by a test: the API does not
+# import the agents package, and a case bundle is read defensively, so a value outside them never reaches the view.
+ROUND_OUTCOMES = frozenset(
+    {"ok", "review", "measured", "render_failed", "check_failed", "answer_unusable", "unreviewed", "error"}
+)
+ROUND_STEPS = frozenset({"adapting", "repairing", "checking", "rendering", "reviewing"})
+SANDBOX_FAILURES = frozenset({"syntax", "name", "key", "value", "type", "timeout", "memory", "other"})
+RUN_STATUSES = frozenset({"ok", "needs_attention", "failed", "not_ready"})
+RUN_REASONS = frozenset(
+    {
+        "validation",
+        "render",
+        "deadline",
+        "budget",
+        "busy",
+        "error",
+        "no_dataset",
+        "incomplete_bindings",
+        "data_unconfirmed",
+    }
+)
 _GATE_ID = re.compile(r"^(?:R[0-9](?:-[a-z_]{1,24})?|G[0-9]{1,2})$")
 _RUBRIC_ID = re.compile(r"^[A-Z]{2}-[0-9]{2}$")
 _MAX_ROUNDS = 10
 _MAX_IDS = 16
 
 
-def _codes(value: Any, pattern: re.Pattern[str]) -> tuple[str, ...]:
-    """The strings of `value` that match `pattern`, at most `_MAX_IDS`: only closed codes reach the triage view."""
-    return tuple(item for item in _strings(value) if pattern.fullmatch(item))[:_MAX_IDS]
+def _codes(value: Any, allowed: re.Pattern[str] | frozenset[str]) -> tuple[str, ...]:
+    """The strings of `value` that match `allowed`, at most `_MAX_IDS`: only closed codes reach the triage view."""
+    if isinstance(allowed, frozenset):
+        return tuple(item for item in _strings(value) if item in allowed)[:_MAX_IDS]
+    return tuple(item for item in _strings(value) if allowed.fullmatch(item))[:_MAX_IDS]
 
 
-def _code(value: Any) -> str | None:
-    return value if isinstance(value, str) and _CODE.fullmatch(value) else None
+def _code(value: Any, allowed: frozenset[str]) -> str | None:
+    return value if isinstance(value, str) and value in allowed else None
 
 
 def _rounds(value: Any) -> tuple[CaseRound, ...]:
@@ -483,7 +504,7 @@ def _rounds(value: Any) -> tuple[CaseRound, ...]:
     for item in _list(value)[:_MAX_ROUNDS]:
         if not isinstance(item, dict):
             continue
-        attempt, outcome = _count(item.get("attempt")), _code(item.get("outcome"))
+        attempt, outcome = _count(item.get("attempt")), _code(item.get("outcome"), ROUND_OUTCOMES)
         if not attempt or outcome is None:
             continue
         rounds.append(
@@ -491,11 +512,11 @@ def _rounds(value: Any) -> tuple[CaseRound, ...]:
                 attempt=attempt,
                 outcome=outcome,
                 findings=_count(item.get("findings")) or 0,
-                step=_code(item.get("step")),
+                step=_code(item.get("step"), ROUND_STEPS),
                 shipped=item.get("shipped") is True,
                 defects=_codes(item.get("defects"), _RUBRIC_ID),
                 gates_failed=_codes(item.get("gates_failed"), _GATE_ID),
-                sandbox_failures=_codes(item.get("sandbox_failures"), _CODE),
+                sandbox_failures=_codes(item.get("sandbox_failures"), SANDBOX_FAILURES),
             )
         )
     return tuple(rounds)
@@ -503,12 +524,12 @@ def _rounds(value: Any) -> tuple[CaseRound, ...]:
 
 def _last_run(value: Any) -> CaseLastRun | None:
     record = _dict(value)
-    status = _code(record.get("status"))
+    status = _code(record.get("status"), RUN_STATUSES)
     if status is None:
         return None
     return CaseLastRun(
         status=status,
-        reason=_code(record.get("reason")),
+        reason=_code(record.get("reason"), RUN_REASONS),
         version=_count(record.get("version")) or None,
         turn=_count(record.get("turn")),
         rounds=_rounds(record.get("rounds")),

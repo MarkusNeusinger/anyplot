@@ -43,9 +43,15 @@ logger = logging.getLogger(__name__)
 
 CONFIRM = re.compile(r"\bconfirm\(\)", re.IGNORECASE)
 """The data panel's button as a reply names it (`.confirm()`, also without the dot); `reconfirm()` is no match."""
-_BREAK = re.compile(r"((?<=[.!?…])[ \t]+|(?<=[。！？])[ \t]*)")
-"""Between two sentences of one line: after a full stop, a question or exclamation mark and a space, or after
-a CJK one. A dot inside `.confirm()` or `3.5` is followed by no space, so it never ends a sentence."""
+_CLOSERS = "\"'”’)\\]*_`"
+_BREAK = re.compile(
+    rf"((?<=[.!?…])[ \t]+|(?<=[.!?…][{_CLOSERS}])[ \t]+|(?<=[.!?…][{_CLOSERS}]{{2}})[ \t]+|(?<=[。！？])[ \t]*)"
+)
+"""Between two sentences of one line: after a full stop, a question or exclamation mark and a space, also when up
+to two closing quotes, brackets or Markdown marks follow it (`."`, `.)`, `.**`), or after a CJK one. A dot inside
+`.confirm()` or `3.5` is followed by no space, so it never ends a sentence."""
+_MARKER = re.compile(r"^\s*(?:[-*+•]|\d+[.)])\s+")
+"""A list item's marker at the start of a line, which a dropped first sentence must not take with it."""
 _BARE_MARKER = re.compile(r"^\s*(?:[-*+•]|\d+[.)])?\s*$")
 """A line with no sentence left: empty, or only a list marker."""
 
@@ -62,7 +68,9 @@ def drop_confirm(text: str) -> tuple[str, int]:
         if not CONFIRM.search(line):
             lines.append(line)
             continue
-        parts = _BREAK.split(line)
+        marker = _MARKER.match(line)
+        prefix = marker.group(0) if marker else ""
+        parts = _BREAK.split(line[len(prefix) :])
         sentences, breaks = parts[0::2], [*parts[1::2], ""]
         kept = ""
         for sentence, gap in zip(sentences, breaks, strict=True):
@@ -70,7 +78,7 @@ def drop_confirm(text: str) -> tuple[str, int]:
                 dropped += 1
                 continue
             kept += sentence + gap
-        kept = kept.rstrip()
+        kept = (prefix + kept).rstrip()
         if not _BARE_MARKER.match(kept):
             lines.append(kept)
     joined = re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()

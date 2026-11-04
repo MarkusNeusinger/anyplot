@@ -24,11 +24,16 @@ from agents.anyplot.schemas import (
     DefectId,
     DefectTheme,
     Edit,
+    FailureReason,
     LastRun,
+    NotReadyReason,
     PipelineArgs,
     PlotResult,
+    PlotStatus,
     ReviewRequest,
     Round,
+    RoundOutcome,
+    RoundStep,
     SandboxFailure,
     Verdict,
     listed_values,
@@ -601,6 +606,16 @@ class TestRoundCaseFields:
         every = list(get_args(SandboxFailure))
 
         assert Round(attempt=1, outcome="render_failed", sandbox_failures=every).sandbox_failures == every
+
+    def test_the_api_reads_cases_in_the_same_vocabularies(self) -> None:
+        """The API's case detail keeps only these codes and does not import the agents package: pinned equal here."""
+        from api import agent_cases
+
+        assert agent_cases.ROUND_OUTCOMES == set(get_args(RoundOutcome))
+        assert agent_cases.ROUND_STEPS == set(get_args(RoundStep))
+        assert agent_cases.SANDBOX_FAILURES == set(get_args(SandboxFailure))
+        assert agent_cases.RUN_STATUSES == set(get_args(PlotStatus))
+        assert agent_cases.RUN_REASONS == set(get_args(FailureReason)) | set(get_args(NotReadyReason))
 
 
 class TestLastRun:

@@ -102,6 +102,13 @@ class TestDropConfirm:
             ),
             ("1. Press `.confirm()`.\n2. " + READY, "2. " + READY, 1),
             ("Press confirm() now. Then `.confirm()` again.", "", 2),
+            # A sentence that ends in a quote, a bracket or Markdown still ends there.
+            (f'Click ".confirm()." {READY}', READY, 1),
+            (f"**Press `.confirm()` first.** {READY}", READY, 1),
+            (f"(Confirm with `.confirm()`.) {READY}", READY, 1),
+            # A list item keeps its marker when its first sentence goes.
+            ("- Press `.confirm()`. Then explore the plot.", "- Then explore the plot.", 1),
+            ("2. Press `.confirm()`. Then explore the plot.", "2. Then explore the plot.", 1),
         ],
     )
     def test_drops_every_sentence_that_names_the_button(self, text: str, kept: str, dropped: int) -> None:

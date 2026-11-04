@@ -426,14 +426,15 @@ def test_manifest_detail_shows_only_closed_codes() -> None:
     noisy = {
         **FAILED_ROUND,
         "gates_failed": ["R1", "KeyError: 'Zürich'", 7],
-        "sandbox_failures": ["key", "Zürich has 3 rows"],
+        # A lowercase word is no code either: only the closed vocabulary passes.
+        "sandbox_failures": ["key", "Zürich has 3 rows", "zurich"],
         "defects": ["VQ-05", "the title says Zürich"],
-        "step": "Rendering now",
+        "step": "zurich",
     }
     manifest = {
         "bundle": {
             "versions": [{"number": 1, "result": {"rounds": [noisy, {"attempt": 0, "outcome": "ok"}, "round"]}}],
-            "session": {"versions": "two", "last_run": {"status": "the run failed", "rounds": [noisy]}},
+            "session": {"versions": "two", "last_run": {"status": "zurich", "rounds": [noisy]}},
         }
     }
 
