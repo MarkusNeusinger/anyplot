@@ -2,132 +2,126 @@ library: letsplot
 language: python
 specification_id: funnel-basic
 created: '2025-12-23T13:06:42Z'
-updated: '2026-04-26T06:05:08Z'
-generated_by: claude-opus
-workflow_run: 24949525450
+updated: '2026-11-04T02:37:03Z'
+generated_by: claude-sonnet
+workflow_run: 41761229727
 issue: 789
-python_version: 3.14.4
-library_version: 4.9.0
+language_version: 3.14.9
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/funnel-basic/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 82
 review:
   strengths:
-  - Custom trapezoid geometry via geom_polygon is correct and creative — produces
-    proper funnel shape with proportional widths and visual gaps between stages
-  - 'Adaptive text-color logic (TEXT_ON_FILL list, dark ink on yellow #E69F00, white
-    on other stages) shows deliberate design thought for the light theme'
-  - Perfect spec compliance — all required features present, correct example data,
-    correct title format
-  - theme_void() + segment gap borders = genuinely clean minimal output with no unnecessary
-    chrome
-  - Code is flat, deterministic, and Pythonic (strict=True zip, categorical ordering)
+  - 'Custom trapezoid funnel via geom_polygon with group/fill and scale_y_reverse:
+    widths proportional to the first stage, centered on one vertical axis'
+  - Page-colored gaps between segments (gap plus PAGE_BG outline) separate the stages
+    without any chrome
+  - Every segment carries stage name, value and percentage of the first stage, white
+    bold on its fill, readable in both themes
+  - 'Imprint palette in canonical order with #009E73 first; correct theme surfaces
+    and identical data colors in both renders'
+  - 'Clean adaptable structure: column constants, a single df block, deterministic
+    data, canonical 3200x1800 canvas'
   weaknesses:
-  - 'Dark-mode Purchase text: TEXT_ON_FILL[4] resolves to INK = #F0EFE8 (near-white)
-    in dark theme — white on yellow #E69F00 has ~2:1 contrast ratio. Fix: hardcode
-    #1A1A17 for Purchase text in both themes'
-  - Design excellence limited — no visual emphasis on steepest conversion drop-off;
-    all stages receive equal weight despite very different drop rates
-  - Label size=12 declared (36pt effective); could increase to 14-16pt declared for
-    better compliance with >=20pt label recommendation
-  - Library mastery could leverage lets_plot interactive HTML features (tooltips with
-    conversion rates) since HTML is already being exported
+  - 'VQ-01 (light): the Purchase value line ''100 · 10%'' is wider than the 10%-wide
+    bottom segment, so the ''1'' and ''%'' run past its edges and fade white-on-#FAF8F1
+    → keep the label inside the segment (about -10 % text width, or a shorter line).
+    Likely cause: geom_text size=6 for every stage, including the narrowest.'
+  - 'Suggestion: lets-plot tooltips on geom_polygon (layer_tooltips) could show value
+    and conversion in the HTML export.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "funnel-basic · letsplot · anyplot.ai" bold dark (#1A1A17) centered — clearly readable; no axes or tick labels (theme_void appropriate for funnel)
-      Data: Five trapezoidal segments top-to-bottom: Awareness (#009E73 brand green, full width), Interest (#D55E00 vermillion), Consideration (#0072B2 blue), Intent (#CC79A7 reddish purple), Purchase (#E69F00 orange-yellow). Bold white text on each segment except Purchase which uses dark (#1A1A17) text. Labels show "Stage\nCount · Percentage". PAGE_BG-colored borders separate segments.
-      Legibility verdict: PASS — all text readable against warm off-white background
+      Background: warm off-white #FAF8F1
+      Chrome: bold dark title 'funnel-basic · python · letsplot · anyplot.ai' centered at top, fully visible; no axes (theme_void)
+      Data: five stacked trapezoids centered on one vertical axis — Awareness #009E73 (full width), Interest #C475FD, Consideration #4467A3, Intent #BD8233, Purchase #AE3030 (narrow rectangle); page-colored gaps between segments; bold white two-line labels 'Stage / value · percent' on every fill
+      Legibility verdict: PASS — all text readable; minor: the Purchase value line slightly overruns its narrow segment and the overrun glyph edges fade into the light page
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black
-      Chrome: Title in light (#F0EFE8) on dark background — clearly readable; no axes (theme_void)
-      Data: Identical Okabe-Ito colors to light render (data colors unchanged ✓). Awareness through Intent: white text on colored segments — all readable. Purchase (yellow #E69F00): INK = #F0EFE8 (near-white) on yellow — contrast ratio ~2:1, marginally readable at render size but below WCAG AA
-      Legibility verdict: PASS with minor concern — Purchase segment dark-mode text has poor contrast (~2:1); all other stages pass
+      Background: warm near-black #1A1A17
+      Chrome: title in light #F0EFE8, clearly readable; no dark-on-dark text
+      Data: data colors identical to the light render; white labels readable on every fill, the Purchase overrun stays visible on the dark page
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
-        passed: true
-        comment: Title size=24pt explicitly set; label size=12pt declared (36pt effective
-          with 3x scale, below 20pt recommendation); dark-mode Purchase segment has
-          near-white (#F0EFE8) on yellow (#E69F00) with ~2:1 contrast ratio
+        passed: false
+        comment: Title 14 pt, labels geom_text size=6 bold; all text readable in both
+          themes, but the Purchase value line '100 · 10%' runs past the 10%-wide bottom
+          segment and its edge glyphs fade into the light page (defect line)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; each label fits cleanly within its segment
+        comment: No text collisions; each label sits centered in its own segment
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All five segments clearly visible, distinct Okabe-Ito colors, appropriate
-          sizing
+        comment: Five segments clearly visible, separated by page-colored gaps in
+          both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; stages distinguishable by color +
-          text labels, no red-green sole signal
+        comment: Distinct Imprint hues plus on-segment stage names; no hue-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Funnel fills ~70% of vertical canvas, centered with balanced whitespace;
-          top segment spans full width
+        comment: 3200x1800 canvas; funnel fills ~85% of height, centered, balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format; no axis labels appropriate for funnel chart
-          with embedded labels
+        comment: N/A for axes (theme_void funnel with self-labeled segments); title
+          correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First stage = #009E73 correct; Okabe-Ito order maintained; light
-          bg = #FAF8F1; dark bg = #1A1A17; data colors identical across themes'
+        comment: 'First stage #009E73, Imprint order for the rest; backgrounds #FAF8F1/#1A1A17;
+          data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above default: adaptive text-on-fill color logic shows design thought;
-          segment gap borders add polish; theme_void creates clean canvas. Not publication-ready
-          — no typography hierarchy within labels, no emphasis on key conversion drops'
+        passed: false
+        comment: 'Style-guide baseline: bold two-line labels on fills, theme tokens;
+          nothing beyond'
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: theme_void removes all unnecessary chrome; PAGE_BG segment borders
-          add breathing room; generous whitespace. Could add refined title font weight
-          or subtle depth effects
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Self-contained labels communicate data clearly; funnel shape provides
-          natural size-based hierarchy. No visual emphasis on steepest conversion
-          drops — all stages receive equal visual weight
+        comment: Page-colored gap between stacked segments (gap=0.06 plus PAGE_BG
+          outline) separates stages cleanly without chrome
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed; the narrowing itself is the only hierarchy, as for
+          any funnel
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct trapezoidal funnel chart with proportional widths
+        comment: Correct single trapezoidal funnel, no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stages ordered large to small; distinct Okabe-Ito colors per stage;
-          value + percentage labels; widths proportional to value/max_value
+        comment: Ordered largest to smallest (C1), distinct color per stage with names
+          on segments (C2), value and percent labels (C3), widths proportional to
+          first stage, single funnel (C4)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 5-stage funnel Awareness to Purchase; values 1000 to 100; widths
-          correctly normalized by first stage
+        comment: Top edge of each segment = value/first value; centered on one axis
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title funnel-basic · letsplot · anyplot.ai exact format; legend suppressed
-          with guide=none (appropriate — segments are self-labeled)
+        comment: Title 'funnel-basic · python · letsplot · anyplot.ai'; legend N/A
+          (guide='none', segments self-labeled)
     data_quality:
       score: 15
       max: 15
@@ -168,22 +162,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all funnel aspects: progressive narrowing, proportional widths,
-          5-stage depth, percentage drop visualization'
+        comment: Progressive narrowing over 5 stages with uneven drops
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sales/marketing funnel is standard neutral real-world use case; Awareness
-          to Purchase stage names are industry-standard
+        comment: Marketing sales funnel Awareness→Purchase, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1000 to 100 represents realistic ~10% overall conversion; progressive
-          drops are plausible
+        comment: 1000→100 visitors, 10% overall conversion; percentages computed from
+          values (100/60/40/20/10%)
     code_quality:
       score: 10
       max: 10
@@ -193,59 +185,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports -> tokens -> data -> polygon construction ->
-          plot -> save; no unnecessary functions'
+        comment: Flat script, one loop building polygon vertices
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data; no random state needed
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols used; os for theme env var; all lets_plot imports
-          active
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic loop with strict=True zip; TEXT_ON_FILL list cleanly
-          maps fill to text colors; no over-engineering
+        comment: Compact vertex loop; column constants and df block; no dead code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=3) and plot-{THEME}.html; no bare plot.png
+        comment: plot-{THEME}.png at scale=4 and plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good ggplot grammar usage: geom_polygon for custom shape, scale_color_identity
-          to pass literal hex colors through aes, scale_y_reverse for orientation,
-          theme_void for clean canvas, correct ggsave with scale parameter'
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: geom_polygon for funnel construction is creative; HTML export is
-          lets_plot-distinctive. Could further leverage lets_plot-specific tooltip
-          interactivity in the HTML output or geom_label for padded text boxes
-  verdict: REJECTED
+        comment: geom_polygon with group/fill, ordered Categorical for fill order,
+          scale_y_reverse, theme_void — standard grammar
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Nothing beyond the mandated HTML export
+  verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-c82e6bcb31
+  rendered_at: '2026-11-04T02:33:36Z'
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - custom-polygons
+  - annotations
   patterns:
   - iteration-over-groups
   dataprep:
