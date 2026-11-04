@@ -12,7 +12,9 @@ gets a code check:
   for the button's name, `.confirm()`, which is the same in every language. Each sentence
   that names it is dropped, so the user sees the rest of the reply word for word. The
   reply is edited in place and the callback returns None, so ReplyLanguage, which follows,
-  still checks the edited reply's language.
+  still checks the edited reply's language. A reply ReplyLanguage asks for again comes from
+  a direct model call that no plugin sees, so ReplyLanguage runs the same check
+  (`scrub_shipped_reply`) on it before it replaces the first one.
 * It writes a content-free attribution line (`shipped_reply`, verdict `dropped` with the
   number of sentences, or `kept` when every sentence names the button and nothing would be
   left, so the reply stays as it was).
@@ -35,7 +37,7 @@ from google.adk.plugins.base_plugin import BasePlugin
 
 from ..policy import fixed_replies
 from .budget import ROOT_AGENT
-from .ledger import attribution, ledger_for
+from .ledger import RequestLedger, attribution, ledger_for
 from .reply_language import reply_text
 
 
@@ -101,6 +103,27 @@ def replace_reply(response: LlmResponse, text: str) -> None:
     response.content.parts = parts
 
 
+def scrub_shipped_reply(ledger: RequestLedger, response: LlmResponse) -> None:
+    """Drop the `.confirm()` sentences of a root reply in a turn whose plot shipped, in place; never raises.
+
+    The plugin's check, and ReplyLanguage's on the reply it asked for again, which no plugin sees.
+    """
+    try:
+        if not ledger.shipped_in_turn or ledger.halted:
+            return
+        reply = reply_text(response)
+        if reply is None or reply in fixed_replies() or not CONFIRM.search(reply):
+            return
+        edited, dropped = drop_confirm(reply)
+        if not edited:
+            attribution("shipped_reply", ledger, verdict="kept", sentences=dropped)
+            return
+        replace_reply(response, edited)
+        attribution("shipped_reply", ledger, verdict="dropped", sentences=dropped)
+    except Exception as exc:
+        logger.warning("shipped reply check failed: %s", type(exc).__name__)
+
+
 class ShippedReplyPlugin(BasePlugin):
     """Drops the sentences of the root's reply after a shipped plot that ask for `.confirm()`."""
 
@@ -112,23 +135,6 @@ class ShippedReplyPlugin(BasePlugin):
     ) -> LlmResponse | None:
         if callback_context.agent_name != ROOT_AGENT or llm_response.partial:
             return None
-        try:
-            self._check(callback_context, llm_response)
-        except Exception as exc:
-            logger.warning("shipped reply check failed: %s", type(exc).__name__)
+        scrub_shipped_reply(ledger_for(callback_context.invocation_id), llm_response)
         # Edited in place, never returned: a returned response would end the plugin chain before ReplyLanguage.
         return None
-
-    def _check(self, callback_context: CallbackContext, llm_response: LlmResponse) -> None:
-        ledger = ledger_for(callback_context.invocation_id)
-        if not ledger.shipped_in_turn or ledger.halted:
-            return
-        reply = reply_text(llm_response)
-        if reply is None or reply in fixed_replies() or not CONFIRM.search(reply):
-            return
-        edited, dropped = drop_confirm(reply)
-        if not edited:
-            attribution("shipped_reply", ledger, verdict="kept", sentences=dropped)
-            return
-        replace_reply(llm_response, edited)
-        attribution("shipped_reply", ledger, verdict="dropped", sentences=dropped)

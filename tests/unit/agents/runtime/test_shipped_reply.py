@@ -2,22 +2,26 @@
 
 from collections.abc import AsyncIterator, Iterator
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 import httpx
 import pytest
+from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 
 from agents.anyplot import policy
+from agents.anyplot.plugins import reply_language
 from agents.anyplot.plugins import shipped_reply as plugin_module
 from agents.anyplot.plugins.ledger import CURRENT_LEDGER, RequestLedger
-from agents.anyplot.plugins.reply_language import reply_text
+from agents.anyplot.plugins.reply_language import ReplyLanguagePlugin, reply_text
 from agents.anyplot.plugins.shipped_reply import ShippedReplyPlugin, drop_confirm
 from agents.anyplot.services import Services
+from agents.anyplot.session_state import LANGUAGE, LANGUAGE_SOURCE
 from agents.main import Runtime, app, get_runtime
 
 from .fakes import SCATTER_PLAN, VERDICT_OK
+from .test_reply_language import REPLIES, FakeModel
 from .test_service_flow import create_plot, open_session, permissive_queue
 
 
@@ -74,8 +78,7 @@ def response(*parts: types.Part) -> LlmResponse:
 async def check(reply: LlmResponse, context: FakeContext | None = None) -> LlmResponse:
     """Run the plugin over `reply`; it edits in place and always returns None, so the next plugin still runs."""
     returned = await ShippedReplyPlugin().after_model_callback(
-        callback_context=context or FakeContext(),  # type: ignore[arg-type]
-        llm_response=reply,
+        callback_context=cast(Any, context or FakeContext()), llm_response=reply
     )
     assert returned is None
     return reply
@@ -183,6 +186,28 @@ class TestPlugin:
         text = f"{READY} Press `.confirm()`."
 
         assert reply_text(await check(response(types.Part(text=text)))) == text
+
+    async def test_a_language_reask_gets_the_same_check(
+        self, ledger: RequestLedger, services: Services, monkeypatch: pytest.MonkeyPatch, lines: list[dict[str, Any]]
+    ) -> None:
+        """ReplyLanguage's re-ask is a direct model call no plugin sees: its reply is checked before it replaces."""
+        german = "Bestätige die Daten bitte noch mit `.confirm()`."
+        model = FakeModel([f"{REPLIES['de']} {german}"])
+        monkeypatch.setattr(reply_language, "root_model", lambda: model)
+        context = FakeContext(session=FakeSession(state={LANGUAGE: "de", LANGUAGE_SOURCE: "pasted"}))
+        first = response(types.Part(text=f"{REPLIES['en']} Now confirm your data with `.confirm()`."))
+        language = ReplyLanguagePlugin()
+        request = LlmRequest(model="m", contents=[types.Content(role="user", parts=[types.Part(text="x")])])
+        await language.before_model_callback(callback_context=cast(Any, context), llm_request=request)
+
+        # In the App's order: ShippedReply edits the first reply in place, then ReplyLanguage asks again.
+        await check(first, context)
+        replaced = await language.after_model_callback(callback_context=cast(Any, context), llm_response=first)
+
+        assert reply_text(first) == REPLIES["en"]
+        assert model.requests[0].contents[-2].parts[0].text == REPLIES["en"]  # the re-ask sees the edited reply
+        assert replaced is not None and reply_text(replaced) == REPLIES["de"]
+        assert [line["verdict"] for line in lines] == ["dropped", "dropped"]
 
 
 async def test_the_streamed_reply_after_a_shipped_plot_drops_the_ask(client: httpx.AsyncClient, swap_models) -> None:
