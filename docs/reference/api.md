@@ -522,10 +522,14 @@ functions as the admin lane, so each route behaves as its admin twin in
   unless `AGENT_PUBLIC_ENABLED` is true on top of the admin lane's switch and
   configuration. `AGENT_ENABLED` stays the master switch, so closing the
   public door leaves the admin lane open. The deploy sets it from the
-  trigger's `_AGENT_PUBLIC_ENABLED`, and its smoke test checks that
-  `GET /agent/lane` answers `404` while the door is closed, and `200` plus a
-  public `GET /agent/status` that reaches the agents service while it is
-  open.
+  trigger's `_AGENT_PUBLIC_ENABLED`, and its smoke test
+  (`api/deploy_smoke_public.sh`) checks that `GET /agent/lane` answers `404`
+  while the door is closed, and while it is open `200`, a public
+  `GET /agent/status` that reaches the agents service, and a
+  `POST /agent/sessions` with Cloudflare's dummy token that the bot check
+  refuses with `403 bot_check_failed`. In production the door also stays shut
+  until both the origin gate (`ORIGIN_SECRET`) and the bot check
+  (`TURNSTILE_SECRET_KEY`) are armed.
 - **Identity.** No login. Your page keeps a random id per browser tab in
   sessionStorage and sends it as `X-Anyplot-Anon` (22 to 64 characters of
   `[A-Za-z0-9_-]`; without it, `400 anon_required`). The BFF forwards it with
@@ -534,7 +538,10 @@ functions as the admin lane, so each route behaves as its admin twin in
   per-process salt before it keys anything on them, keeps them in memory
   only, and logs neither, so no durable key links your usage to an address.
   Every request asserts `X-Anyplot-Tier: public`.
-  `require_public_identity` is the one place a bot check plugs in later.
+- **Bot check.** Opening a session (`POST /agent/sessions`) and storing a
+  feedback case (`POST /agent/session/feedback`) need a Cloudflare Turnstile
+  token in `X-Turnstile-Token` (see [Bot check](#bot-check)); the other
+  routes act on a session such a call opened and take none.
 - **Session id in a header.** Cloud Run's request log keeps every URL with the
   client address for 30 days, so the session id travels as
   `X-Anyplot-Session` instead of in the path, and the BFF's own log lines
@@ -550,7 +557,7 @@ functions as the admin lane, so each route behaves as its admin twin in
   `rate_limited` and `daily_limit` answers). These are twice the per-user
   limits, for shared networks. A network also holds at most 8 live sessions
   (`AGENT_IP_MAX_SESSIONS`; one more `POST /agent/sessions` is
-  `429 session_limit`) and 64 MiB of the dataset store
+  `429 session_limit`) and 32 MiB of the dataset store
   (`AGENT_IP_DATASET_BYTES`; past it a paste is `503 capacity`, as for a full
   store). The run
   queue holds at most 10 waiting public runs (`AGENT_PUBLIC_QUEUE_MAX_WAITING`),
@@ -569,7 +576,7 @@ All paths start with `/agent`. A session route takes the session id as
 | `GET /lane` | Public only: `{"open": true}` with `Cache-Control: public, max-age=60`, no identity needed and no upstream call, so the landing page and every spec page can ask whether to show the entry points. Closed, it is the router's `404` |
 | `GET /status` | `GET /status`, with only the fields `enabled`, `libraries`, `model`, `location`, `provider`, `version`, `waiting`, `in_flight`, `user_max_runs`, `tier`, `paused` and `resets_at`; a field the agents service adds later stays out until it is named in `PUBLIC_STATUS_FIELDS` |
 | `GET /eligibility?spec=&library=` | `GET /eligibility`, with `Cache-Control: public, max-age=300`: the answer is the same for every caller, and the plot page asks on every visit |
-| `POST /sessions` | `POST /sessions` with `{spec_id, library, locale}`: `source` is admin-only (the fan-out) and a `422` here |
+| `POST /sessions` | `POST /sessions` with `{spec_id, library, locale}` and `X-Turnstile-Token`: `source` is admin-only (the fan-out) and a `422` here; the token is checked after the body and before the agents service is asked |
 | `DELETE /session` | `DELETE /sessions/{sid}` |
 | `POST /session/library` | `POST /sessions/{sid}/library` |
 | `GET`, `DELETE /session/memory`; `DELETE /session/memory/{entry_id}` | The plot memory routes |
@@ -579,10 +586,11 @@ All paths start with `/agent`. A session route takes the session id as
 | `POST /session/messages?theme=` | The chat turn, behind the per-instance stream cap |
 | `POST /session/cancel`, `POST /session/outcome` | Stop, and the outcome beacon |
 | `POST /session/versions/{version}/render`, `GET /session/artifacts/{name}?v=&theme=` | The theme toggle and the result files |
-| `GET /session/bundle?include_data=&version=` | Your session as a file; anyplot keeps no copy. The public page offers no `.save()` since 2026-11-02, so no page calls it; the admin page's `.save()` uses the admin route |
-| `POST /session/feedback` | The feedback case, behind the per-network hourly cap. The case's `user_hash` is a salted hash of your tab id, never the id itself |
+| `POST /session/feedback` | The feedback case, behind the per-network hourly cap and then `X-Turnstile-Token`. The case's `user_hash` is a salted hash of your tab id, never the id itself |
 
-The admin lane's fan-out copy (`POST /sessions/{sid}/dataset/copy`), the day
+The admin lane's fan-out copy (`POST /sessions/{sid}/dataset/copy`), the
+session file of `.save()` (`GET /sessions/{sid}/bundle`; the public page has
+offered no `.save()` since 2026-11-02, and its public twin is gone), the day
 budget (`GET /budget`) and the feedback triage (`/cases*`) have no public
 twin. A test maps every admin route onto a public one or onto that list, so
 a new admin route fails the build until someone decides it for the public
@@ -1270,7 +1278,10 @@ case id, as
 `404 not_found` for a case id without a row and `502 storage` when the bucket
 could not be read; `PATCH /cases/{id}` answers `422 no_data` and
 `422 expected_required` for a promotion it refuses (see
-[Feedback triage](#feedback-triage)).
+[Feedback triage](#feedback-triage)). On the public lane, `POST /sessions` and
+`POST /session/feedback` answer `403 bot_check_failed` and
+`503 bot_check_unavailable` from the bot check, with `ref` (see
+[Bot check](#bot-check)).
 
 ### Configuration
 
@@ -1359,6 +1370,57 @@ Applied to:
 - `/specs` - 2 min
 - `/specs/{spec_id}` - 2 min
 - `/plots/filter` - 30 sec
+
+---
+
+## Bot check
+
+Three calls that open or store something for an anonymous visitor need a
+[Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/) token
+(`api/turnstile.py`, since 2026-11-04):
+
+| Call | Refused with |
+|---|---|
+| `POST /agent/sessions` (opening a public chat session) | `{"detail": "bot_check_failed", "ref": "<request id>"}` |
+| `POST /agent/session/feedback` (a public chat feedback case) | The same, after the per-network hourly cap |
+| `POST /feedback` (the site's feedback widget and the plot pages' 👍/👎) | `{"status": 403, "message": "bot_check_failed", "path": "/feedback"}`, after the honeypot and the link filter and before any database query |
+
+The page sends the token in the `X-Turnstile-Token` header. A token is valid
+for 300 seconds and only once, so the page renders the widget (Managed mode,
+`appearance: 'interaction-only'`, invisible unless Cloudflare asks the visitor
+to click) for each of these calls and never reuses a token. The public chat's
+other routes act on a session such a call opened and take no token, and the
+admin lane under `/debug/agent` has no bot check.
+
+The API redeems the token at Cloudflare's siteverify endpoint with the secret,
+the token and an idempotency key. It does not send `remoteip`: Cloudflare's
+widget already sees the visitor's address in the browser, and the parameter
+is optional. Each attempt has a 5-second timeout, and a timeout, a transport
+error, a `5xx` or Cloudflare's `internal-error` gets one retry with the same
+idempotency key. The answers:
+
+- `403 bot_check_failed`: no token, a token over 2,048 characters, or one
+  siteverify refuses (invalid, expired or already used). The page says the
+  check did not go through and offers to try again, which runs a fresh check.
+- `503 bot_check_unavailable`: siteverify unreachable or still answering
+  `internal-error` after the retry, a secret Cloudflare refuses, one of
+  Cloudflare's test secrets in production (one passes every token, the others
+  refuse every visitor), or no secret in production. Nothing passes on an
+  error.
+
+The check is on while `TURNSTILE_SECRET_KEY` is set (Secret Manager, bound by
+`--update-secrets` in `api/cloudbuild.yaml` on every deploy). Unset, local
+development and the tests skip it, and production refuses the three calls and
+keeps the public chat's door shut (`404` on `GET /agent/lane`), so a revision
+without the secret fails its deploy smoke. The site's build takes the public
+site key as `_VITE_TURNSTILE_SITE_KEY` (`app/cloudbuild.yaml`), and the build
+refuses to start without one. For local checks outside production,
+Cloudflare's
+[test keys](https://developers.cloudflare.com/turnstile/troubleshooting/testing/)
+work: the site key `1x00000000000000000000AA` with the secret
+`1x0000000000000000000000000000000AA` always passes, and the secret
+`2x0000000000000000000000000000000AA` always fails, which is what
+`api/deploy_smoke_public.sh` expects of a production secret.
 
 ---
 

@@ -30,8 +30,27 @@ substitutions:
   # Turn it on only together with AGENT_ENABLED on the API
   # (docs/concepts/agent-network.md).
   _VITE_ENABLE_AGENT_CHAT: 'false'
+  # The Cloudflare Turnstile widget's site key (src/lib/turnstile.ts). Public by
+  # design: Cloudflare renders it in every visitor's page and binds it to the
+  # widget's hostnames, so it lives here like the API URL above. The API refuses
+  # a chat session or a feedback entry without a token once TURNSTILE_SECRET_KEY
+  # is bound (api/turnstile.py), so a build without the key would ship a site
+  # whose checked calls all fail: `check-config` below refuses to build it.
+  _VITE_TURNSTILE_SITE_KEY: ''
 
 steps:
+  # Refuse a build that would ship without the bot check's site key, before any
+  # image is built; the running revision keeps serving.
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-ceu'
+      - |
+        test -n "${_VITE_TURNSTILE_SITE_KEY}" \
+          || { echo "_VITE_TURNSTILE_SITE_KEY is empty: the API refuses chat sessions and feedback without a Turnstile token"; exit 1; }
+        echo "OK: the Turnstile site key is set"
+    id: 'check-config'
+
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
     args:
@@ -47,11 +66,14 @@ steps:
         'VITE_DEBUG_API_URL=${_VITE_DEBUG_API_URL}',
         '--build-arg',
         'VITE_ENABLE_AGENT_CHAT=${_VITE_ENABLE_AGENT_CHAT}',
+        '--build-arg',
+        'VITE_TURNSTILE_SITE_KEY=${_VITE_TURNSTILE_SITE_KEY}',
         '-f',
         'app/Dockerfile',
         'app',
       ]
     id: 'build-image'
+    waitFor: ['check-config']
 
   # Only the build-specific tag goes up here — it is the one the deploy pulls.
   # `:latest` waits for the promote step (see push-latest at the bottom): a

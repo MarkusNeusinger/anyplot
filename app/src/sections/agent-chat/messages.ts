@@ -39,6 +39,10 @@ export const ERROR_TEXT: Record<string, string> = {
     'too many chats are open from your network; close another window, or try again within the hour',
   unreachable: 'no answer from the server: the connection dropped, or an admin sign-in expired',
   network: 'the server did not answer; check your connection',
+  // The public lane's Turnstile check on opening a session (`src/lib/turnstile.ts`), in the browser or on the
+  // server; `ReloadHint` adds the "try again" after it.
+  bot_check_failed: 'the browser check did not go through',
+  bot_check_unavailable: 'the browser check is not available right now',
 };
 
 /** Why a `plot` event shipped no render (`failed` or `not_ready`). */

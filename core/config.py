@@ -183,6 +183,15 @@ class Settings(BaseSettings):
     them through the edge and so carries the header. See `api/origin_gate.py`
     for why the one has to be, and why the other two are not."""
 
+    turnstile_secret_key: str | None = None
+    """Secret of the Cloudflare Turnstile widget (`api/turnstile.py`), from Secret
+    Manager. Set, the calls that open a public chat session or store feedback
+    need a token that Cloudflare's siteverify accepts. Unset, local dev and the
+    tests skip the check, while production refuses those calls with
+    `503 bot_check_unavailable` and keeps the public chat's door shut, so a
+    revision without the secret fails its deploy smoke instead of serving
+    unchecked."""
+
     @field_validator(
         "database_url",
         "cache_invalidate_token",
@@ -190,6 +199,7 @@ class Settings(BaseSettings):
         "cf_access_team_domain",
         "cf_access_aud",
         "origin_secret",
+        "turnstile_secret_key",
         "agent_service_url",
         "agent_user_id_key",
         mode="after",

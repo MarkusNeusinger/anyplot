@@ -8,12 +8,15 @@ SQLite) lives in tests/integration/api/test_api_endpoints.py.
 import hashlib
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 
+from api import turnstile
 from api.cache import clear_cache
 from api.main import app, fastapi_app
 from api.routers.feedback import _client_ip, _hash_ip
+from core.config import settings
 from core.database import get_db
 
 
@@ -362,6 +365,85 @@ class TestLoneSurrogate:
         kwargs = instance.create.await_args.args[0]
         assert kwargs["message"] == "Schön 中文 \U0001f600"
         assert kwargs["contact"] == "jörg"
+
+
+class TestBotCheck:
+    """With the Turnstile secret set, an entry needs a token siteverify accepts (#7249)."""
+
+    @pytest.fixture
+    def siteverify(self, monkeypatch):
+        calls: list[httpx.Request] = []
+        replies = {"answer": {"success": True, "error-codes": []}}
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            calls.append(request)
+            return httpx.Response(200, json=replies["answer"])
+
+        async def mock_client():
+            async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+                yield client
+
+        monkeypatch.setattr(settings, "turnstile_secret_key", "0x4AAAAAAAtest-secret-of-the-right-shape")
+        fastapi_app.dependency_overrides[turnstile.get_turnstile_client] = mock_client
+        return calls, replies
+
+    @staticmethod
+    def _repo() -> AsyncMock:
+        instance = AsyncMock()
+        instance.count_recent_by_ip = AsyncMock(return_value=0)
+        instance.has_recent_duplicate = AsyncMock(return_value=False)
+        instance.has_plot_vote = AsyncMock(return_value=False)
+        instance.create = AsyncMock(return_value=None)
+        return instance
+
+    def test_an_entry_without_a_token_is_refused_before_the_database(self, client, siteverify):
+        calls, _ = siteverify
+        instance = self._repo()
+        with patch("api.routers.feedback.FeedbackRepository", return_value=instance):
+            response = client.post("/feedback", json={"reaction": "thumbs_up"})
+
+        assert response.status_code == 403 and response.json()["message"] == "bot_check_failed"
+        assert calls == []
+        instance.create.assert_not_awaited()
+        instance.count_recent_by_ip.assert_not_awaited()
+
+    def test_a_refused_token_stores_nothing(self, client, siteverify):
+        calls, replies = siteverify
+        replies["answer"] = {"success": False, "error-codes": ["invalid-input-response"]}
+        instance = self._repo()
+        with patch("api.routers.feedback.FeedbackRepository", return_value=instance):
+            response = client.post("/feedback", json={"message": "hi"}, headers={"X-Turnstile-Token": "tok"})
+
+        assert response.status_code == 403 and len(calls) == 1
+        instance.create.assert_not_awaited()
+
+    def test_a_passing_token_stores_the_entry(self, client, siteverify):
+        calls, _ = siteverify
+        instance = self._repo()
+        with patch("api.routers.feedback.FeedbackRepository", return_value=instance):
+            response = client.post("/feedback", json={"message": "hi"}, headers={"X-Turnstile-Token": "tok"})
+
+        assert response.status_code == 200 and len(calls) == 1
+        instance.create.assert_awaited_once()
+
+    def test_the_honeypot_and_link_filters_cost_no_siteverify_call(self, client, siteverify):
+        calls, _ = siteverify
+        with patch("api.routers.feedback.FeedbackRepository") as repo_cls:
+            honeypot = client.post("/feedback", json={"message": "spam", "website": "x"})
+            links = client.post("/feedback", json={"message": "http://a.example http://b.example"})
+
+        assert honeypot.status_code == links.status_code == 200
+        assert calls == []
+        repo_cls.assert_not_called()
+
+    def test_production_without_the_secret_refuses(self, client, monkeypatch):
+        monkeypatch.setattr(settings, "environment", "production")
+        monkeypatch.setattr(settings, "turnstile_secret_key", None)
+        with patch("api.routers.feedback.FeedbackRepository") as repo_cls:
+            response = client.post("/feedback", json={"reaction": "thumbs_up"}, headers={"X-Turnstile-Token": "t"})
+
+        assert response.status_code == 503 and response.json()["message"] == "bot_check_unavailable"
+        repo_cls.assert_not_called()
 
 
 class TestClientIpResolution:

@@ -262,6 +262,28 @@ describe('ResultFeedback', () => {
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
   });
 
+  it('answers a failed bot check with send again, never a reload that would lose the session', async () => {
+    const user = userEvent.setup();
+    const onSend = vi
+      .fn<Send>()
+      .mockRejectedValueOnce(new AgentApiError(403, 'bot_check_failed', 'ref-b'))
+      .mockResolvedValueOnce(undefined);
+    render(<ResultFeedback version={1} sent={null} onSend={onSend} />);
+
+    await user.click(screen.getByRole('button', { name: 'Thumbs up' }));
+    await user.type(screen.getByRole('textbox'), 'the axis is wrong');
+    await user.click(sendButton());
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'the browser check did not go through; send again · ref ref-b'
+    );
+    expect(screen.queryByRole('button', { name: 'try again' })).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox')).toHaveValue('the axis is wrong');
+
+    await user.click(sendButton());
+    await waitFor(() => expect(onSend).toHaveBeenCalledTimes(2));
+  });
+
   describe('on the public lane', () => {
     const renderPublic = (onSend: Send) =>
       render(

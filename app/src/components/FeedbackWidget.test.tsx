@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { FeedbackWidget } from 'src/components/FeedbackWidget';
+import { BOT_CHECK_FAILED_TEXT, FeedbackWidget } from 'src/components/FeedbackWidget';
+import { resetTurnstile, TURNSTILE_HEADER } from 'src/lib/turnstile';
 import { render, screen, userEvent, waitFor } from 'src/test-utils';
 
 describe('FeedbackWidget', () => {
@@ -118,6 +119,83 @@ describe('FeedbackWidget', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/couldn't send/i);
     expect(textarea).toHaveValue('try me');
+  });
+
+  describe('the bot check', () => {
+    beforeEach(() => vi.stubEnv('VITE_TURNSTILE_SITE_KEY', '1x00000000000000000000AA'));
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+      resetTurnstile();
+      delete window.turnstile;
+    });
+
+    function stubTurnstile(pass: boolean) {
+      window.turnstile = {
+        render: vi.fn((container: HTMLElement, options: Record<string, unknown>) => {
+          renderedIn.push(container.parentElement);
+          queueMicrotask(() =>
+            pass
+              ? (options.callback as (token: string) => void)('tok-w')
+              : (options['error-callback'] as () => void)()
+          );
+          return 'w1';
+        }),
+        remove: vi.fn(),
+      };
+    }
+    let renderedIn: (HTMLElement | null)[] = [];
+
+    async function sendFullForm(text: string) {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });
+      render(<FeedbackWidget />);
+      await user.click(screen.getByRole('button', { name: /open feedback/i }));
+      await user.click(await screen.findByRole('button', { name: /open detailed feedback/i }));
+      const textarea = await screen.findByRole('textbox', { name: /feedback message/i });
+      const slot = screen.getByTestId('feedback-check-slot');
+      await user.type(textarea, text);
+      await user.click(screen.getByRole('button', { name: /^send$/i }));
+      return { textarea, slot };
+    }
+
+    it('sends a fresh token, rendered inside the popover', async () => {
+      renderedIn = [];
+      stubTurnstile(true);
+      const fetchSpy = vi
+        .spyOn(globalThis, 'fetch')
+        .mockResolvedValue(new Response(JSON.stringify({ status: 'ok' }), { status: 200 }));
+
+      const { slot } = await sendFullForm('Looks great');
+
+      await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
+      const headers = (fetchSpy.mock.calls[0][1] as RequestInit).headers as Record<string, string>;
+      expect(headers[TURNSTILE_HEADER]).toBe('tok-w');
+      expect(renderedIn[0]).toBe(slot);
+    });
+
+    it('says the check did not go through, keeps the text and sends nothing', async () => {
+      renderedIn = [];
+      stubTurnstile(false);
+      const fetchSpy = vi.spyOn(globalThis, 'fetch');
+
+      const { textarea } = await sendFullForm('try me');
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(BOT_CHECK_FAILED_TEXT);
+      expect(textarea).toHaveValue('try me');
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it("reads the API's 403 as the same message", async () => {
+      renderedIn = [];
+      stubTurnstile(true);
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+        new Response(JSON.stringify({ status: 403, message: 'bot_check_failed' }), { status: 403 })
+      );
+
+      await sendFullForm('try me');
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(BOT_CHECK_FAILED_TEXT);
+    });
   });
 
   it('reopening the mini-stack clears a lingering Thanks toast', async () => {

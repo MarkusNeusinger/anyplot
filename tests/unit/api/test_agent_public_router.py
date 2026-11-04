@@ -22,6 +22,7 @@ from fastapi.testclient import TestClient
 from starlette.requests import Request
 
 from agents.main import ANON_PATTERN, NETWORK_PATTERN
+from api import turnstile
 from api.main import app, fastapi_app
 from api.routers import agent, agent_public
 from api.routers.agent import NOT_ENABLED, AgentContext, get_agent_client, get_case_bucket
@@ -69,17 +70,20 @@ PUBLIC_ROUTES = [
     ("POST", "/agent/session/outcome", {"action": "copied_code"}),
     ("POST", "/agent/session/versions/1/render", {"theme": "dark"}),
     ("GET", "/agent/session/artifacts/plot-light.png?v=1", None),
-    ("GET", "/agent/session/bundle", None),
     ("POST", "/agent/session/feedback", {"reaction": "thumbs_up", "include_data": False, "result_version": 1}),
 ]
 ADMIN_ONLY = {
     "/debug/agent/budget",
     "/debug/agent/sessions/{sid}/dataset/copy",
+    "/debug/agent/sessions/{sid}/bundle",
     "/debug/agent/cases",
     "/debug/agent/cases/{case_id}",
     "/debug/agent/cases/{case_id}/files/{name}",
 }
-"""The admin lane's routes the public lane leaves out: the fan-out's copy, the day budget, the feedback triage."""
+"""The admin lane's routes the public lane leaves out: the fan-out's copy, `.save()`'s session file, the day budget,
+the feedback triage."""
+TURNSTILE_SECRET = "0x4AAAAAAAtest-secret-of-the-right-shape"
+HUMAN = {"X-Turnstile-Token": "a-token-from-the-widget"}
 
 
 class FakeUpstream:
@@ -150,6 +154,35 @@ def client(lane_open, upstream):
     return TestClient(app)
 
 
+class FakeSiteverify:
+    """Cloudflare's siteverify as a MockTransport handler: answers `reply` and counts the calls."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+        self.reply: httpx.Response | Exception = httpx.Response(200, json={"success": True, "error-codes": []})
+
+    def __call__(self, request: httpx.Request) -> httpx.Response:
+        self.calls += 1
+        if isinstance(self.reply, Exception):
+            raise self.reply
+        return self.reply
+
+
+@pytest.fixture
+def siteverify(monkeypatch):
+    """The Turnstile secret set, so the bot check is on, with siteverify faked."""
+    fake = FakeSiteverify()
+    monkeypatch.setattr(settings, "turnstile_secret_key", TURNSTILE_SECRET)
+    monkeypatch.setattr(turnstile, "RETRY_DELAY_S", 0)
+
+    async def mock_client() -> AsyncIterator[httpx.AsyncClient]:
+        async with httpx.AsyncClient(transport=httpx.MockTransport(fake)) as client:
+            yield client
+
+    fastapi_app.dependency_overrides[turnstile.get_turnstile_client] = mock_client
+    return fake
+
+
 def _call(client: TestClient, method: str, path: str, body, headers: dict[str, str]) -> httpx.Response:
     return client.request(method, path, json=body, headers=headers)
 
@@ -171,12 +204,24 @@ class TestDoor:
     def test_in_production_the_door_needs_the_origin_gate(self, lane_open, upstream, monkeypatch) -> None:
         """The per-IP limits trust CF-Connecting-IP, which only the origin gate keeps honest."""
         monkeypatch.setattr(settings, "environment", "production")
+        monkeypatch.setattr(settings, "turnstile_secret_key", TURNSTILE_SECRET)
         monkeypatch.setattr(settings, "origin_secret", None)
         assert TestClient(app).get("/agent/lane").status_code == 404
 
         monkeypatch.setattr(settings, "origin_secret", "edge-secret")
         armed = TestClient(app).get("/agent/lane", headers={"X-Origin-Secret": "edge-secret"})
         assert armed.status_code == 200 and armed.json() == {"open": True}
+
+    def test_in_production_the_door_needs_the_turnstile_secret(self, lane_open, upstream, monkeypatch) -> None:
+        """Without it every new session would be refused; a shut door says so on the deploy smoke instead."""
+        monkeypatch.setattr(settings, "environment", "production")
+        monkeypatch.setattr(settings, "origin_secret", "edge-secret")
+        edge = {"X-Origin-Secret": "edge-secret"}
+        monkeypatch.setattr(settings, "turnstile_secret_key", None)
+        assert TestClient(app).get("/agent/lane", headers=edge).status_code == 404
+
+        monkeypatch.setattr(settings, "turnstile_secret_key", TURNSTILE_SECRET)
+        assert TestClient(app).get("/agent/lane", headers=edge).status_code == 200
 
     def test_lane_says_open_without_an_identity_or_an_upstream_call(self, client, upstream) -> None:
         response = client.get("/agent/lane")
@@ -273,6 +318,9 @@ class TestRoutes:
             ("GET", "/agent/cases"),
             ("POST", "/agent/session/dataset/copy"),
             ("POST", "/agent/sessions/abc/dataset/copy"),
+            # `.save()` is admin-only since the public page dropped its menu.
+            ("GET", "/agent/session/bundle"),
+            ("GET", "/agent/session/bundle?include_data=true"),
         ],
     )
     def test_the_admin_only_routes_do_not_exist(self, client, upstream, method, path) -> None:
@@ -328,6 +376,83 @@ class TestRoutes:
 
         assert response.status_code == 403 and response.json() == {"detail": "client_header_required"}
         assert upstream.requests == []
+
+
+class TestBotCheck:
+    """Opening a session and storing a feedback case need a Turnstile token once the secret is set."""
+
+    FEEDBACK = {"reaction": "thumbs_up", "include_data": False, "result_version": 1}
+
+    def _open(self, client: TestClient, headers: dict[str, str]) -> httpx.Response:
+        with patch("api.routers.agent.load_catalogue_snapshot", AsyncMock(return_value=_snapshot())):
+            return client.post("/agent/sessions", json=CREATE, headers=headers)
+
+    def test_a_session_without_a_token_is_refused_before_upstream(self, client, upstream, siteverify) -> None:
+        response = self._open(client, HEADERS)
+
+        assert response.status_code == 403 and response.json()["detail"] == "bot_check_failed"
+        assert response.json()["ref"] == response.headers["X-Request-Id"]
+        assert siteverify.calls == 0 and upstream.requests == []
+
+    def test_a_refused_token_opens_nothing(self, client, upstream, siteverify) -> None:
+        siteverify.reply = httpx.Response(200, json={"success": False, "error-codes": ["timeout-or-duplicate"]})
+
+        response = self._open(client, {**HEADERS, **HUMAN})
+
+        assert response.status_code == 403 and response.json()["detail"] == "bot_check_failed"
+        assert siteverify.calls == 1 and upstream.requests == []
+
+    def test_an_unreachable_siteverify_fails_closed(self, client, upstream, siteverify) -> None:
+        siteverify.reply = httpx.ConnectError("down")
+
+        response = self._open(client, {**HEADERS, **HUMAN})
+
+        assert response.status_code == 503 and response.json()["detail"] == "bot_check_unavailable"
+        assert siteverify.calls == turnstile.ATTEMPTS and upstream.requests == []
+
+    def test_a_passing_token_opens_the_session(self, client, upstream, siteverify) -> None:
+        upstream.handler = lambda request: httpx.Response(200, json={"session_id": SID, "eligibility": {}})
+
+        response = self._open(client, {**HEADERS, **HUMAN})
+
+        assert response.status_code == 200 and response.json()["session_id"] == SID
+        assert siteverify.calls == 1
+        assert "X-Turnstile-Token" not in upstream.requests[0].headers  # the token stops at the BFF
+
+    def test_a_malformed_body_costs_no_siteverify_call(self, client, upstream, siteverify) -> None:
+        response = client.post("/agent/sessions", json={**CREATE, "source": "fanout"}, headers={**HEADERS, **HUMAN})
+
+        assert response.status_code == 422 and siteverify.calls == 0
+
+    def test_feedback_without_a_token_is_refused_before_the_bundle(self, client, upstream, siteverify) -> None:
+        stored = AsyncMock(return_value={"case_id": "c1", "stored": []})
+        with patch("api.routers.agent.submit_feedback", stored):
+            refused = client.post("/agent/session/feedback", json=self.FEEDBACK, headers=SESSION)
+            sent = client.post("/agent/session/feedback", json=self.FEEDBACK, headers={**SESSION, **HUMAN})
+
+        assert refused.status_code == 403 and refused.json()["detail"] == "bot_check_failed"
+        assert sent.status_code == 201 and stored.await_count == 1
+
+    def test_a_network_past_its_feedback_cap_costs_no_siteverify_call(
+        self, client, upstream, siteverify, monkeypatch
+    ) -> None:
+        monkeypatch.setattr(settings, "agent_public_feedback_per_hour", 0)
+
+        response = client.post("/agent/session/feedback", json=self.FEEDBACK, headers={**SESSION, **HUMAN})
+
+        assert response.status_code == 429 and siteverify.calls == 0
+
+    def test_the_session_routes_need_no_token(self, client, upstream, siteverify) -> None:
+        """A token is single-use, so the calls on an open session never carry one."""
+        assert client.post("/agent/session/dataset", json={"text": "a,b\n1,2"}, headers=SESSION).status_code == 200
+        assert client.get("/agent/status", headers=HEADERS).status_code == 200
+        assert siteverify.calls == 0
+
+    def test_without_the_secret_outside_production_nothing_is_checked(self, client, upstream, monkeypatch) -> None:
+        upstream.handler = lambda request: httpx.Response(200, json={"session_id": SID, "eligibility": {}})
+        monkeypatch.setattr(settings, "turnstile_secret_key", None)
+
+        assert self._open(client, HEADERS).status_code == 200
 
 
 class TestCapacity:

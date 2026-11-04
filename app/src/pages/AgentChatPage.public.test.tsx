@@ -216,4 +216,34 @@ describe('PublicAgentChatPage', () => {
       await screen.findByText(/too many chats are open from your network/)
     ).toBeInTheDocument();
   });
+
+  it.each([
+    [
+      'bot_check_failed',
+      403,
+      /^error · bot_check_failed · ref r-bthe browser check did not go through · try again$/,
+    ],
+    ['bot_check_unavailable', 503, /the browser check is not available right now · try again$/],
+  ])(
+    'answers a refused bot check (%s) with one calm line and a retry',
+    async (code, status, text) => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (input: string, init: RequestInit = {}) => {
+          const url = new URL(input);
+          if (url.pathname.endsWith('/agent/lane')) return json(200, { open: true });
+          if (url.pathname.endsWith('/agent/sessions') && init.method === 'POST') {
+            return json(status, { detail: code, ref: 'r-b' });
+          }
+          return json(200, { libraries: ['matplotlib'], enabled: true });
+        })
+      );
+      renderPage();
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent(text);
+      // The session never opened, so a reload loses nothing and runs a fresh check.
+      expect(within(alert).getByRole('button', { name: 'try again' })).toBeInTheDocument();
+    }
+  );
 });

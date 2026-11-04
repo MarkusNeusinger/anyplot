@@ -280,6 +280,10 @@ export function LegalPage() {
                   'message, reaction, optional contact, page, your window size, user-agent and a random id that ties your own submissions together, read only by the operator. a salted hash of your IP address limits spam.',
                 ],
                 [
+                  'bot check',
+                  "when you send feedback, rate a plot or open the data assistant, Cloudflare Turnstile checks that a browser, not a script, is asking: it reads your IP address, user-agent and TLS fingerprint and keeps an item of its own in your browser's storage, with no cookie. anyplot learns only whether the check passed. Cloudflare also uses these signals, as its own controller, to improve the check.",
+                ],
+                [
                   'github',
                   'suggest a plot type there and your public username may be credited in its spec.',
                 ],
@@ -293,7 +297,7 @@ export function LegalPage() {
                   'hosting',
                   'Google Cloud (Run, SQL, Storage, Logging) in the Netherlands (europe-west4)',
                 ],
-                ['cdn / ddos', 'Cloudflare (global, EU data centers for EU visitors)'],
+                ['cdn / ddos / bot check', 'Cloudflare (global, EU data centers for EU visitors)'],
                 ['analytics', 'Plausible Analytics (EU, proxied)'],
                 [
                   'data assistant',
@@ -338,8 +342,8 @@ export function LegalPage() {
             <Typography sx={subheadingStyle}>what we do not do</Typography>
             <Typography sx={textStyle}>
               • no cookies for visitors; the browser&apos;s storage keeps UI settings, your plot
-              votes, a release number and the random ids named here. admins sign in through
-              Cloudflare Access, which sets its own login cookie
+              votes, a release number, the random ids named here and the bot check&apos;s item.
+              admins sign in through Cloudflare Access, which sets its own login cookie
               <br />
               • no accounts, and no name or email unless you type one
               <br />• <strong>no ai training</strong> on what you send. the catalogue is written at

@@ -1200,6 +1200,11 @@ class TestSeoProxyRouter:
             "no name or email unless you type one",
             "may credit your public username",
             "browsing the catalogue never reaches a model",
+            # The bot check, as LegalPage.tsx's "bot check" row states it.
+            "Cloudflare Turnstile checks that a browser, not a script, is asking",
+            "user-agent and TLS fingerprint",
+            "with no cookie",
+            "as its own controller, to improve the check",
         ):
             assert fact in response.text, fact
 

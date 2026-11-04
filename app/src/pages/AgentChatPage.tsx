@@ -909,7 +909,7 @@ function AgentChat({
                     ? 'the assistant is closed right now. please try again later.'
                     : 'the agent chat is switched off on this server (AGENT_ENABLED).'
                   : (ERROR_TEXT[state.failure?.code ?? ''] ?? 'the session could not be opened.')}
-              {state.phase === 'error' && <ReloadHint code={state.failure?.code} />}
+              {state.phase === 'error' && <ReloadHint code={state.failure?.code} opening />}
             </Box>
           </Box>
         )}

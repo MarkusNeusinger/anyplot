@@ -14,6 +14,10 @@ ENV VITE_DEBUG_API_URL=${VITE_DEBUG_API_URL}
 # button; anything else leaves both out of the bundle.
 ARG VITE_ENABLE_AGENT_CHAT
 ENV VITE_ENABLE_AGENT_CHAT=${VITE_ENABLE_AGENT_CHAT}
+# The Cloudflare Turnstile site key, public by design (src/lib/turnstile.ts);
+# unset, the bundle runs no bot check.
+ARG VITE_TURNSTILE_SITE_KEY
+ENV VITE_TURNSTILE_SITE_KEY=${VITE_TURNSTILE_SITE_KEY}
 
 # Set working directory
 WORKDIR /app

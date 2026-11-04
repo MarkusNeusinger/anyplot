@@ -58,6 +58,44 @@ def test_api_runs_as_the_caller_the_agents_service_accepts() -> None:
     assert _load("agents/cloudbuild.yaml")["substitutions"]["_API_CALLER"] == runtime
 
 
+def test_every_api_revision_gets_the_turnstile_secret() -> None:
+    """Production refuses the bot-checked calls without it and keeps the public chat shut (api/turnstile.py).
+
+    Bound on every deploy rather than by hand, so no revision can lose it; additive, so the hand-attached
+    ORIGIN_SECRET survives the deploy.
+    """
+    deploy_args = [arg for step in _load("api/cloudbuild.yaml")["steps"] for arg in step.get("args", [])]
+    secrets = [arg for arg in deploy_args if arg.startswith("--update-secrets=")]
+
+    assert len(secrets) == 1 and not any(arg.startswith("--set-secrets") for arg in deploy_args)
+    bindings = dict(pair.split("=", 1) for pair in secrets[0].removeprefix("--update-secrets=").split(","))
+    assert bindings["TURNSTILE_SECRET_KEY"] == "TURNSTILE_SECRET_KEY:latest"
+
+
+def test_the_api_smoke_runs_the_public_lane_probes() -> None:
+    """The lane, the public status call and the bot check live in api/deploy_smoke_public.sh; the step must call it."""
+    smoke = next(step for step in _load("api/cloudbuild.yaml")["steps"] if step.get("id") == "smoke")
+    script = "\n".join(smoke["args"])
+
+    assert (
+        'ORIGIN_SECRET="$$ORIGIN_SECRET" bash api/deploy_smoke_public.sh "$$URL" "${_AGENT_ENABLED}" '
+        '"${_AGENT_PUBLIC_ENABLED}"' in script
+    )
+    probes = (REPO_ROOT / "api" / "deploy_smoke_public.sh").read_text(encoding="utf-8")
+    assert "X-Turnstile-Token: XXXX.DUMMY.TOKEN.XXXX" in probes and '"bot_check_failed"' in probes
+
+
+def test_the_site_is_never_built_without_the_turnstile_site_key() -> None:
+    """The API refuses chat sessions and feedback without a token, so a bundle without the key breaks them all."""
+    app = _load("app/cloudbuild.yaml")
+    steps = {step.get("id"): step for step in app["steps"]}
+
+    assert "_VITE_TURNSTILE_SITE_KEY" in app["substitutions"]
+    assert 'test -n "${_VITE_TURNSTILE_SITE_KEY}"' in "\n".join(steps["check-config"]["args"])
+    assert steps["build-image"]["waitFor"] == ["check-config"]
+    assert "VITE_TURNSTILE_SITE_KEY=${_VITE_TURNSTILE_SITE_KEY}" in steps["build-image"]["args"]
+
+
 @pytest.mark.parametrize("config", CONFIGS)
 def test_every_step_argument_fits_cloud_build(config: str) -> None:
     loaded = _load(config)

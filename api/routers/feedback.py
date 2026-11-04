@@ -3,7 +3,8 @@
 Accepts a single POST with an optional short free-text message and/or
 reaction, free-form contact handle, and page context. At least one of
 message or reaction must be present. Guards against spam with a honeypot
-field, hard length caps, reaction allow-list, and per-IP rate limit.
+field, hard length caps, reaction allow-list, a Cloudflare Turnstile token
+(`X-Turnstile-Token`, `api/turnstile.py`, #7249), and per-IP rate limit.
 """
 
 import hashlib
@@ -12,10 +13,13 @@ import logging
 import re
 import secrets
 from datetime import datetime, timedelta, timezone
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+import httpx
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api import turnstile
 from api.dependencies import require_db
 from api.exceptions import raise_validation_error
 from api.request_context import client_ip as _client_ip
@@ -77,9 +81,13 @@ def _is_link_stuffed(message: str | None) -> bool:
 
 @router.post("/feedback", response_model=FeedbackResponse)
 async def submit_feedback(
-    payload: FeedbackRequest, request: Request, db: AsyncSession = Depends(require_db)
+    payload: FeedbackRequest,
+    request: Request,
+    siteverify: Annotated[httpx.AsyncClient, Depends(turnstile.get_turnstile_client)],
+    human: Annotated[str | None, Header(alias=turnstile.TOKEN_HEADER)] = None,
+    db: AsyncSession = Depends(require_db),
 ) -> FeedbackResponse:
-    """Accept a feedback entry from the in-app widget."""
+    """Accept a feedback entry from the in-app widget or a plot page's 👍/👎."""
     # Honeypot: bots auto-fill every input. Real users never see this field.
     # Return 200 silently so bots can't probe for the guard.
     if payload.website:
@@ -104,6 +112,16 @@ async def submit_feedback(
     # payload was rejected (same idea as the honeypot above).
     if _is_link_stuffed(message):
         return FeedbackResponse(status="ok")
+
+    # The bot check answers with its own status rather than a silent 200 like the
+    # filters above: a visitor's token can expire or a check can fail, and the
+    # widget then says so and offers to send again. That tells a bot nothing the
+    # site's own script does not show it already. After the
+    # cheap filters, so a refused payload costs no siteverify call; before the
+    # database, so an unchecked one costs no query.
+    refused = turnstile.refusal(await turnstile.verify(human, siteverify))
+    if refused is not None:
+        raise HTTPException(status_code=refused[0], detail=refused[1])
 
     ip_hash = _hash_ip(_client_ip(request))
     repo = FeedbackRepository(db)
