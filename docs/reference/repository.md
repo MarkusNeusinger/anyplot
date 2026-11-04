@@ -109,7 +109,7 @@ anyplot/
 │   ├── cloudbuild.yaml                # Build, candidate deploy, IAM and /v1/status smoke, promote; owner steps in its header
 │   ├── evals/                         # Model-regression harness (see agents/README.md)
 │   │   ├── matrix.py                  # Runs eval cases through /v1 in process; report, diff, gallery
-│   │   ├── make_fixtures.py           # Generates the 120 synthetic spike-X cases (seeded, rerunnable)
+│   │   ├── make_fixtures.py           # Generates the synthetic spike-X cases, 10 specs x 6 datasets per library (seeded, rerunnable)
 │   │   ├── cases.py                   # Case loading and --cases selection
 │   │   ├── pricing.py                 # List prices and the cost of one model call
 │   │   ├── report.py                  # Summary, baseline diff, Markdown, galleries; blind two-run gallery
@@ -247,7 +247,7 @@ plots/{specification-id}/
 - ✅ One folder per plot type keeps navigation predictable
 - ✅ Synced to PostgreSQL via `sync-postgres.yml`
 - ✅ No merge conflicts (per-library metadata files)
-- ✅ Quality reports in `metadata/python/{library}.yaml` (review section)
+- ✅ Quality reports in `metadata/{language}/{library}.yaml` (review section)
 - ❌ NO preview images (stored in GCS)
 
 **Example**: `plots/scatter-basic/` contains everything for the basic scatter plot.
@@ -294,13 +294,15 @@ tags:
 
 ---
 
-### `plots/{specification-id}/metadata/python/{library}.yaml`
+### `plots/{specification-id}/metadata/{language}/{library}.yaml`
 
-**Purpose**: Per-library metadata (one file per library)
+**Purpose**: Per-library metadata (one file per library, in the folder of its language: `python`, `r`, `julia`,
+or `javascript`)
 
 **Contents**:
 ```yaml
 library: matplotlib
+language: python
 specification_id: scatter-basic
 
 # Timestamps
@@ -315,13 +317,15 @@ generated_by: claude-opus-4-7
 workflow_run: 12345678
 issue: 42
 
-# Versions
-python_version: "3.14"
-library_version: "3.10.0"
+# Versions: the runtime of the implementation's language, and the library
+language_version: 3.13.14
+library_version: 3.11.0
 
-# Previews
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/matplotlib/plot.png
-preview_html: null
+# Previews, one per theme (the HTML variants only for interactive libraries)
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 
 # Quality
 quality_score: 92
@@ -637,7 +641,7 @@ Always named by library, under the language's directory: `implementations/{langu
 - **Why**: Security
 - **Note**: `.env.example` shows required variables without values
 
-**Note**: Quality reports ARE stored in the repository in `metadata/python/{library}.yaml` (the `review:` section with strengths, weaknesses, criteria_checklist, verdict).
+**Note**: Quality reports ARE stored in the repository in `metadata/{language}/{library}.yaml` (the `review:` section with strengths, weaknesses, criteria_checklist, verdict).
 
 ---
 

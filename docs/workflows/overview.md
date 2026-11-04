@@ -126,7 +126,7 @@ impl-generate.yml
   |-- AI generates code (Python: adaptability self-check, Step 3c)
   |     or, with source_ref, takes the file from that ref and renders it (adopt mode)
   |-- Fails if the commit changes a dependency file
-  |-- Creates metadata/python/{library}.yaml (initial)
+  |-- Creates metadata/{language}/{library}.yaml (initial)
   |-- Python: adaptability smoke run, plus the predecessor's render on a regeneration (record-only)
   |-- Tests execution
   |-- Uploads preview to GCS staging (adaptability records under a private adapt/ prefix)
@@ -137,7 +137,7 @@ impl-review.yml
   |-- Python: adaptability check of the PR's file and its predecessor (record-only)
   |-- AI evaluates code + image
   |-- Posts review comment with score
-  |-- Updates metadata/python/{library}.yaml (quality_score, review feedback)
+  |-- Updates metadata/{language}/{library}.yaml (quality_score, review feedback)
   |-- Adds [quality:XX] label
        |
        |-- Meet Threshold --> [ai-approved] --> impl-merge.yml

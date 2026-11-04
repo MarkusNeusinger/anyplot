@@ -94,7 +94,7 @@ tags:
 
 Impl-Level Tags are assigned during implementation review and vary PER LIBRARY.
 
-Stored in: `plots/{spec-id}/metadata/python/{library}.yaml`
+Stored in: `plots/{spec-id}/metadata/{language}/{library}.yaml`
 
 ### The 5 impl tag dimensions
 

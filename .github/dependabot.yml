@@ -54,11 +54,16 @@ updates:
           - "minor"
           - "patch"
     ignore:
-      # vite 8.1.x (rolldown 1.1.x) emits a broken mui/emotion chunk with our
-      # manualChunks split — the app white-screens with "TypeError: t is not a
-      # function" at chunk init (took anyplot.ai down on 2026-07-23, see CHANGELOG).
-      # jsdom tests can't catch a broken bundle, so a bump would auto-merge
-      # green again. Pinned to 8.0.16; re-test in a browser before lifting.
+      # vite is pinned to 8.3.5 in app/package.json. A bump is a hand-made PR
+      # with a browser check of the built site (scripts/site-smoke.mjs, which
+      # the app-image job of ci-image.yml also runs), because a broken bundle
+      # passes every jsdom test and the deploy. Twice a minor bump blanked
+      # anyplot.ai with "TypeError: t is not a function" at chunk init: 8.1.x on
+      # 2026-07-23 (#9670 pinned 8.0.16 and added this ignore), and #12225
+      # (8.0.16 to 8.1.6, a Dependabot PR opened on 2026-10-21 although this
+      # ignore was in place) on 2026-10-22, when Rolldown 1.1.5 put its interop
+      # helper into the theme chunk and made a cycle with the mui chunk. #12235
+      # fixed it with 8.3.5, whose Rolldown emits that helper as its own chunk.
       - dependency-name: "vite"
         update-types:
           [
