@@ -35,6 +35,13 @@ A role that needs values of 0 or more (`DataRole.non_negative`, set per spec by
 `signs.py`) never takes a column with a negative value by default; it takes the next
 candidate or stays unbound. Bound by hand, it is valid but warned about
 (`BindingCheck.warnings`).
+
+A lower and upper bound pair (`bounds.py`: `min_value` and `max_value`, `ci_lower` and
+`ci_upper`, `low` and `high`) is never bound by default to two columns whose lower one starts
+above the largest value of the upper one (`bounds.inverted`): every row's minimum would lie
+above its maximum. Both roles stay open instead, so the conversion check for open roles runs
+(`conversions.py`) and finds a column of ranges such as `10–25` to split. Bound so by hand,
+the pair is valid but warned about.
 """
 
 import itertools
@@ -46,6 +53,7 @@ from difflib import SequenceMatcher
 from core.spec_roles import DataRole, RoleKind
 
 from ..schemas import Binding, ColumnDtype, ColumnProfile, DatasetProfile
+from .bounds import bound_pairs, inverted, inverted_line
 from .computed import match_score, window_line, window_rank
 from .parse import value_like
 from .shape import long_suggestion, takes_labels
@@ -127,7 +135,9 @@ class BindingCheck:
     fits it has one (`signs.py`); and one per computed role bound to a column whose name
     carries another window than the spec's (`computed.window_line`: `SMA 200` for a
     20-period band); and one per role that takes labels bound to a measurement column of a
-    table that is wide for the spec (`sibling_line`: a heatmap's `y` on the numbers of `Mo`).
+    table that is wide for the spec (`sibling_line`: a heatmap's `y` on the numbers of `Mo`);
+    and one per lower and upper bound pair whose lower column starts above the largest value
+    of the upper one (`bounds.inverted_line`).
     """
 
     complete: bool
@@ -252,9 +262,29 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
     it stands after the measure (`weight, X`, `_row_number_on_axis`).
 
     Each column is bound at most once. Members of a family are numbered `<name>1`,
-    `<name>2`, ... in column order. Roles without kinds stay unbound.
+    `<name>2`, ... in column order. Roles without kinds stay unbound, and so do both roles of
+    a lower and upper bound pair whose columns would be inverted (`without_inverted`).
     """
-    return _with_row_numbers(roles, profile, set(label_siblings(roles, profile)))
+    return without_inverted(_with_row_numbers(roles, profile, set(label_siblings(roles, profile))), roles, profile)
+
+
+def without_inverted(
+    bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile, fixed: Collection[str] = ()
+) -> list[Binding]:
+    """`bindings` without both roles of every lower and upper bound pair whose columns are inverted
+    (`bounds.inverted`: the lower column starts above the largest value of the upper one).
+
+    A role in `fixed` keeps its binding (one the user made, or a version change kept): only the defaults
+    beside it give way, so the pair's other role stays open.
+    """
+    columns = {column.name: column for column in profile.columns}
+    held = {binding.role: binding.column for binding in bindings}
+    dropped: set[str] = set()
+    for pair in bound_pairs(roles):
+        lower, upper = columns.get(held.get(pair.lower, "")), columns.get(held.get(pair.upper, ""))
+        if lower is not None and upper is not None and inverted(lower, upper):
+            dropped |= {pair.lower, pair.upper} - set(fixed)
+    return [binding for binding in bindings if binding.role not in dropped]
 
 
 def _with_row_numbers(roles: list[DataRole], profile: DatasetProfile, siblings: set[str]) -> list[Binding]:
@@ -501,6 +531,10 @@ def carry_bindings(
     A converted column that a role took leaves its source (`converted`, its values) out of the
     optional roles: `Month` on `series` beside `Month (date)` on x would split the plot into
     one series per row (owner's second opinion of 2026-11-02). A required role keeps it.
+
+    Two number columns converted from one source in a row (a `split` of `10–25`) fill an open
+    lower and upper bound pair, the first the lower role and the second the upper one; a new
+    binding that would invert a pair (`bounds.inverted`) is left out, as in `default_bindings`.
     """
     sources = converted or {}
     kept = [binding for binding in bindings if not check_bindings([binding], roles, profile).errors]
@@ -513,6 +547,7 @@ def carry_bindings(
     if dated:
         current = [*freed, *dated]
     current = [*current, *_new_numbers(current, roles, profile, sources)]
+    current = without_inverted(current, roles, profile, {binding.role for binding in kept})
     if current == kept:
         return list(bindings)
     return _without_sources(_in_spec_order(current, roles, profile), roles, sources)
@@ -622,6 +657,7 @@ def filled_bindings(kept: list[Binding], roles: list[DataRole], profile: Dataset
     kept = [binding for binding in kept if not check_bindings([binding], roles, profile).errors]
     used = {binding.column for binding in kept}
     taken = {binding.role for binding in kept}
+    fixed = set(taken)
     open_roles = [role for role in roles if role.variadic or role.name not in taken]
     free = profile.model_copy(update={"columns": [column for column in profile.columns if column.name not in used]})
     # The wide-table rule is judged on the whole table and spec, never on the reduced view.
@@ -632,7 +668,8 @@ def filled_bindings(kept: list[Binding], roles: list[DataRole], profile: Dataset
             binding = Binding(role=role.member(number), column=binding.column)
         taken.add(binding.role)
         kept.append(binding)
-    return _in_spec_order(kept, roles, profile)
+    # A bound pair is judged with the kept bindings: a default upper bound below a kept lower one gives way.
+    return _in_spec_order(without_inverted(kept, roles, profile, fixed), roles, profile)
 
 
 def _fresh_dates(kept: list[Binding], profile: DatasetProfile, previous: DatasetProfile | None) -> list[ColumnProfile]:
@@ -664,11 +701,14 @@ def _new_dates(kept: list[Binding], roles: list[DataRole], fresh: list[ColumnPro
 
 
 def _new_numbers(
-    kept: list[Binding], roles: list[DataRole], profile: DatasetProfile, converted: Collection[str]
+    kept: list[Binding], roles: list[DataRole], profile: DatasetProfile, converted: Mapping[str, str]
 ) -> list[Binding]:
-    """Bindings of the open required roles that take numbers to the number columns a conversion made (`converted`).
+    """Bindings of the open required roles that take numbers to the number columns a conversion made (`converted`,
+    each with its source).
 
-    A required family without a member takes the column as its first member (`y1`).
+    An open lower and upper bound pair takes two of them made from one source, next to each other in column
+    order (the parts of a `split`), the first as the lower bound, whatever order the spec lists the two roles
+    in (`high` before `low`). A required family without a member takes the column as its first member (`y1`).
     """
     used = {binding.column for binding in kept}
     fresh = [
@@ -680,12 +720,34 @@ def _new_numbers(
         return []
     bound = {role.name for binding in kept if (role := resolve_role(binding.role, roles)) is not None}
     added: list[Binding] = []
+    by_name = {role.name: role for role in roles}
+    for pair in bound_pairs(roles):
+        if not all(_open_measure(by_name[name], bound) for name in (pair.lower, pair.upper)):
+            continue
+        parts = next(
+            (
+                (first, second)
+                for first, second in itertools.pairwise(fresh)
+                if converted[first.name] == converted[second.name] and not inverted(first, second)
+            ),
+            None,
+        )
+        if parts is None:
+            continue
+        added += [Binding(role=pair.lower, column=parts[0].name), Binding(role=pair.upper, column=parts[1].name)]
+        bound |= {pair.lower, pair.upper}
+        fresh = [column for column in fresh if column not in parts]
     for role in roles:
         if not fresh or not role.required or role.computed or role.name in bound or "numeric" not in role.kinds:
             continue
         column = fresh.pop(0)
         added.append(Binding(role=role.member(1) if role.variadic else role.name, column=column.name))
     return added
+
+
+def _open_measure(role: DataRole, bound: Collection[str]) -> bool:
+    """A required role that takes numbers, that the plot cannot compute and that no binding holds."""
+    return role.required and not role.computed and role.name not in bound and "numeric" in role.kinds
 
 
 def _in_spec_order(bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile) -> list[Binding]:
@@ -713,7 +775,8 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
     a non-negative role to a column with a negative value (`signs.sign_line`), an
     unbound non-negative role whose every fitting column that no other role holds has one,
     and a role that takes labels bound to a measurement column of a wide table
-    (`label_siblings`, `sibling_line`).
+    (`label_siblings`, `sibling_line`), and a lower and upper bound pair whose lower column
+    starts above the largest value of the upper one (`bounds.inverted_line`).
     """
     columns = {column.name: column for column in profile.columns}
     siblings = label_siblings(roles, profile)
@@ -722,6 +785,7 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
     seen_roles: set[str] = set()
     seen_columns: set[str] = set()
     bound: set[str] = set()
+    held: dict[str, ColumnProfile] = {}  # the column of each valid binding, by its role's binding name
     for binding in bindings:
         role = resolve_role(binding.role, roles)
         if role is None:
@@ -746,12 +810,17 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
             errors.append(f"role '{binding.role}' needs {wanted} data, but column '{column.name}' is {column.dtype}")
             continue
         bound.add(role.name)
+        held[binding.role] = column
         if column.name in siblings and takes_labels(role):
             warnings.append(sibling_line(binding.role, column.name, siblings))
         if role.non_negative and has_negative(column):
             warnings.append(sign_line(binding.role, column))
         if role.computed and (line := window_line(role.name, column.name)):
             warnings.append(line)  # nothing changes silently: `SMA 200` is no 20-period band
+    for pair in bound_pairs(roles):
+        lower, upper = held.get(pair.lower), held.get(pair.upper)
+        if lower is not None and upper is not None and inverted(lower, upper):
+            warnings.append(inverted_line(pair, lower, upper))
     # An open non-negative role whose only fitting free columns are negative says why it stayed open;
     # a column another role holds is no candidate, as in `default_bindings`.
     for role in roles:

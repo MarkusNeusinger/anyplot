@@ -1,0 +1,10 @@
+{
+  "dataset_text": "Item,Boxes,Code\nApples,4,SKU-1001-EU\nPears,7,SKU-1002-EU\nPlums,3,SKU-1003-EU\n",
+  "message": "Take the prefix SKU- off the Code column, as a new column Article.",
+  "expected_operations": [
+    {"op": "strip", "column": "Code", "prefix": "SKU-", "name": "Article"}
+  ],
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["strip", "text"]
+}

@@ -254,6 +254,10 @@ PrepOp = Literal[
     "derive",
     "make_date",
     "row_number",
+    "split",
+    "extract",
+    "strip",
+    "replace",
 ]
 PREP_OPS: frozenset[str] = frozenset(get_args(PrepOp))
 ConversionOutcome = Literal["none", "date", "number", "index", "asked"]

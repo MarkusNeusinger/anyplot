@@ -1245,6 +1245,103 @@ def test_compatibility_matrix(kinds: tuple[RoleKind, ...], dtype: ColumnDtype, a
     assert accepts(role("r", *kinds), dtype) is accepted
 
 
+RANGE_ROLES = [role("category", "categorical"), role("min_value", "numeric"), role("max_value", "numeric")]
+"""The roles of `range-interval`, the spec of the agent case triage."""
+CANDLE_ROLES = [role("date", "datetime"), role("open", "numeric"), role("high", "numeric"), role("low", "numeric")]
+"""A spec that lists the upper bound before the lower one, as `candlestick-basic` does."""
+# Invented, the shape of the case: a count and an average where the defaults would put the range's ends.
+COUNTS = "team;games;mean;min–max\nalpha;140;61.5;48–80\nbeta;146;67.2;52–77\ngamma;143;64.0;45–79\n"
+
+
+class TestBoundPairs:
+    def test_an_inverted_pair_is_never_bound_by_default(self) -> None:
+        data = profile(COUNTS)
+        bindings = default_bindings(RANGE_ROLES, data)
+
+        assert as_pairs(bindings) == [("category", "team")]
+        check = check_bindings(bindings, RANGE_ROLES, data)
+        assert check.missing_roles == ["min_value", "max_value"] and check.warnings == []
+
+    def test_a_pair_of_real_ends_is_bound_as_before(self) -> None:
+        data = profile("month,low,high\nJan,-3,4\nFeb,-1,7\nMar,2,12\n")
+
+        assert as_pairs(default_bindings(RANGE_ROLES, data)) == [
+            ("category", "month"),
+            ("min_value", "low"),
+            ("max_value", "high"),
+        ]
+
+    def test_bound_by_hand_it_is_valid_with_a_warning(self) -> None:
+        data = profile(COUNTS)
+        chosen = bind(("category", "team"), ("min_value", "games"), ("max_value", "mean"))
+
+        check = check_bindings(chosen, RANGE_ROLES, data)
+
+        assert check.complete and check.errors == []
+        assert check.warnings == [
+            "min_value and max_value: the smallest value of 'games' (140) lies above the largest value of "
+            "'mean' (67.2), so every row's lower bound would lie above its upper bound; bind the two columns that "
+            "hold each range's ends"
+        ]
+
+    def test_a_kept_lower_bound_keeps_its_column_and_the_default_beside_it_gives_way(self) -> None:
+        """After a binding went, the roles left open are filled by default: never with an upper bound below the kept lower one."""
+        data = profile(COUNTS)
+        carried = carry_bindings(bind(("category", "gone"), ("min_value", "games")), RANGE_ROLES, data)
+
+        assert as_pairs(carried) == [("category", "team"), ("min_value", "games")]
+        assert check_bindings(carried, RANGE_ROLES, data).missing_roles == ["max_value"]
+
+    def test_the_two_parts_of_a_split_fill_the_open_pair(self) -> None:
+        parsed = parse_dataset(COUNTS)
+        before = default_bindings(RANGE_ROLES, parsed.profile)
+        operations = [{"op": "split", "column": "min–max", "separator": "–", "names": ["min", "max"]}]
+        prepared = apply_operations(parsed, OPERATIONS.validate_python(operations))
+        after = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)
+
+        carried = carry_bindings(before, RANGE_ROLES, after.profile, parsed.profile, prepared.converted)
+
+        assert as_pairs(carried) == [("category", "team"), ("min_value", "min"), ("max_value", "max")]
+        assert check_bindings(carried, RANGE_ROLES, after.profile).complete
+
+    def test_the_lower_part_takes_the_lower_role_whatever_the_spec_order(self) -> None:
+        """`high` comes before `low` in a candlestick's roles: the first part, the smaller, is still the low."""
+        parsed = parse_dataset("date,open,range\n2024-01-01,10,9-12\n2024-01-02,11,10-13\n")
+        before = default_bindings(CANDLE_ROLES, parsed.profile)
+        operations = [{"op": "split", "column": "range", "separator": "-", "names": ["range (min)", "range (max)"]}]
+        prepared = apply_operations(parsed, OPERATIONS.validate_python(operations))
+        after = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)
+
+        carried = carry_bindings(before, CANDLE_ROLES, after.profile, parsed.profile, prepared.converted)
+
+        assert as_pairs(carried) == [
+            ("date", "date"),
+            ("open", "open"),
+            ("high", "range (max)"),
+            ("low", "range (min)"),
+        ]
+
+    def test_parts_of_two_sources_are_no_pair(self) -> None:
+        """Two numbers converted from two columns are no range of one column: each fills a role as before."""
+        data = profile("k,a,b\nx,1,2\ny,3,4\n")
+        carried = carry_bindings(bind(("category", "k")), RANGE_ROLES, data, data, {"a": "s", "b": "t"})
+
+        assert as_pairs(carried) == [("category", "k"), ("min_value", "a"), ("max_value", "b")]
+
+    def test_an_inverted_split_is_left_open(self) -> None:
+        """A column of `max–min` makes parts whose first lies above the second: no default binds them so."""
+        parsed = parse_dataset("k,r\na,75–30\nb,68–35\n")
+        operations = [{"op": "split", "column": "r", "separator": "–", "names": ["first", "second"]}]
+        prepared = apply_operations(parsed, OPERATIONS.validate_python(operations))
+        after = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)
+
+        carried = carry_bindings(
+            bind(("category", "k")), RANGE_ROLES, after.profile, parsed.profile, prepared.converted
+        )
+
+        assert as_pairs(carried) == [("category", "k")]
+
+
 def test_resolve_role_prefers_the_longest_family() -> None:
     roles = [role("y", "numeric", variadic=True), role("y_", "numeric", variadic=True), role("y1", "numeric")]
 

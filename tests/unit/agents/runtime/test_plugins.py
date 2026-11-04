@@ -963,6 +963,13 @@ class TestToolSafety:
         rule = {"where": [{"column": "Payee", "test": "contains", "value": "novak"}], "label": link}
         labelled = {"op": "classify", "name": "Site", "rules": [rule], "otherwise": link}
         assert await self.check("prepare_data", {"operations": [labelled]}) is None
+        # The literals of the text operations are compared with the cells or written into them: data too.
+        texts = [
+            {"op": "strip", "column": "Site", "prefix": "https://", "name": "Domain"},
+            {"op": "split", "column": "Site", "separator": "https://", "names": [link, "Path"]},
+            {"op": "replace", "column": "Site", "old": "www.", "new": link, "name": "Clean"},
+        ]
+        assert await self.check("prepare_data", {"operations": texts}) is None
 
         for operation in (
             {"op": "classify", "name": "Site", "rules": [{**rule, "where": [{"column": link, "test": "is_missing"}]}]},
@@ -970,6 +977,7 @@ class TestToolSafety:
             {"op": "drop_columns", "columns": [link]},
             {"op": "pivot_longer", "columns": ["a", "b"], "names_to": link},
             {"op": "aggregate", "by": [link], "column": "v", "how": "sum"},
+            {"op": "split", "column": link, "separator": "-", "names": ["a", "b"]},  # a column reference stays checked
         ):
             refused = await self.check("prepare_data", {"operations": [operation]})
             assert refused == {"status": "error", "code": "url_or_path_not_allowed"}, operation

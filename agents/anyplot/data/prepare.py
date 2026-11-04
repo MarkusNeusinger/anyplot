@@ -145,6 +145,29 @@ The operations:
   `bindings.carry_bindings`). It came from the owner's live test of 2026-11-02: a pasted
   list `1,3,5,4,6,2` on a line plot had no x, and the root stopped to ask. It is an
   operation of its own so that the data panel's role dropdowns can offer it later.
+* The text operations, a closed set with literal texts only (never a pattern), each reading
+  the source column's canonical cell texts and writing new columns, appended last, while the
+  source stays as it is: `split` cuts each cell at a literal `separator` into the 2 to 10
+  columns `names` (a separator of spaces cuts at every run of whitespace; a `-` or `−` that
+  starts a part right before a digit is that part's minus sign, never a cut, so `-5-10` is -5
+  and 10; a cell without the separator stays whole in the first part, and the last part keeps
+  the rest of a cell with more separators than parts, both counted in the change line);
+  `extract` keeps only the number of each cell (`#12345` is 12345, `CHF 1'200` is 1200; a cell
+  with no number or with two, such as `10–20`, has none, and more than 10 % of such cells are a
+  `type_mismatch`, as for `set_type`), only its digits (`+41 79` is `4179`) or only its letters
+  and the spaces between them (`12 kg` is `kg`); `strip` takes a literal `prefix` off the start
+  of each cell and a `suffix` off its end where they stand; `replace` writes `new` (empty
+  removes) in place of every `old`. Each part and each new column gets its type as `set_type`
+  reads one (`_typed`): numbers with the dataset's decimal mark, its thousands rules, the unit
+  token and the 10 % share of cells that may fail (they become missing and are counted), else
+  dates, else text, which stays text through the re-parse. A number counts only in a cell the
+  parser reads as one (`10 kg`, `CHF 1'200`; `Q1` stays a label), leading zeros keep a column
+  text (`007`, as the parser keeps it), and a month name with a year (`Nov 2026`) is a date. The
+  operations chain: `strip` a `#`, `split` the new column at `-`, `extract` the digits of a
+  part, in one call. Without them a column of ranges such as `10–25` could only be fixed in a
+  spreadsheet, and the root sent the user there. A text column whose every cell
+  is two numbers around one dash, the first never above the second (`range_run`), is what a
+  lower and upper bound pair left open asks for (`conversions.py`).
 
 Values in conditions are never evaluated: a condition compares text with text for a
 text column, numbers for a numeric column (the value is a dot-decimal number, which
@@ -177,7 +200,7 @@ import math
 import re
 import unicodedata
 import warnings
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta, tzinfo
 from decimal import ROUND_FLOOR, InvalidOperation
@@ -194,6 +217,7 @@ from .months import month_number, month_year, named_months
 from .parse import (
     AMBIGUOUS_DATE_ORDER,
     MAX_COMPUTED_BYTES,
+    MAX_INPUT_CELL_CHARS,
     MISSING_VALUES,
     YEAR_MONTH,
     ParsedDataset,
@@ -203,6 +227,7 @@ from .parse import (
     minus_note,
     pandas_dtypes,
     rounded_note,
+    value_like,
 )
 
 
@@ -217,6 +242,10 @@ MAX_LONGER_COLUMNS = 20
 MAX_WIDER_COLUMNS = 50
 MAX_FAILED_SHARE = 0.10  # of the non-missing cells; more than this is `type_mismatch`
 MAX_VALIDATION_LINES = 10  # of a refused operation list, for the model
+MAX_SPLIT_PARTS = 10  # the new columns of one `split`
+MAX_LITERAL_CHARS = (
+    MAX_CELL_CHARS  # a separator, prefix, suffix or replaced text, at most what the profile shows of a cell
+)
 _INT64_MIN, _INT64_MAX = -(2**63), 2**63 - 1
 
 Test = Literal["eq", "ne", "contains", "is_missing", "gt", "lt"]
@@ -282,6 +311,16 @@ DATE_PART_RANGES: dict[str, tuple[int, int]] = {
 """The values a `make_date` part column may hold, inclusive."""
 ROW_NUMBER_NAME = "index"
 """The name of the column a `row_number` makes, unless the operation names another."""
+Keep = Literal["number", "digits", "letters"]
+"""What an `extract` keeps of each cell."""
+RANGE_SEPARATORS = ("–", "—", "-")
+"""The dashes a range such as `10–25` stands around (`range_run`): en dash, em dash, hyphen."""
+LEADING_ZEROS = "that leading zeros are no part of the value"
+"""The guess of a number reading whose cells have leading zeros (`_number_guess`): such a part stays text."""
+TEXT_READING = "kept as text"
+"""The change-line words of a new column of a text operation that reads as neither numbers nor dates."""
+_SIGNS = ("-", "\N{MINUS SIGN}")
+"""The separators that may also be a minus sign: one that starts a part right before a digit is its sign."""
 _TIME_SUFFIXES = ("", " %H:%M", " %H:%M:%S", "T%H:%M", "T%H:%M:%S")
 _VERBS: dict[str, str] = {
     "sum": "summed",
@@ -453,9 +492,27 @@ def _clean_label(label: str) -> str:
     return label
 
 
+def _clean_text(text: str) -> str:
+    """A literal a text operation compares with the cells or writes into them: nothing the parser drops or
+    turns into a space (tabs, line breaks, control, invisible or separator characters)."""
+    if _HEADER_BREAKS.search(text) or any(unicodedata.category(char) in ("Cc", "Cf", "Zl", "Zp") for char in text):
+        raise ValueError("the text has no tabs, line breaks, control or invisible characters")
+    return text
+
+
+def _clean_affix(text: str) -> str:
+    """A `strip` prefix or suffix, compared with the trimmed cell: its own surrounding spaces count for nothing."""
+    if not text.strip():
+        raise ValueError("a prefix or suffix holds more than spaces")
+    return _clean_text(text).strip()
+
+
 NewName = Annotated[ColumnName, AfterValidator(_clean_name)]
 Value = Annotated[str, Field(max_length=MAX_VALUE_CHARS)]
 Label = Annotated[str, Field(min_length=1, max_length=MAX_CELL_CHARS), AfterValidator(_clean_label)]
+Literal_ = Annotated[str, Field(min_length=1, max_length=MAX_LITERAL_CHARS), AfterValidator(_clean_text)]
+Affix = Annotated[str, Field(min_length=1, max_length=MAX_LITERAL_CHARS), AfterValidator(_clean_affix)]
+NewText = Annotated[str, Field(max_length=MAX_LITERAL_CHARS), AfterValidator(_clean_text)]
 
 
 class _Strict(BaseModel):
@@ -599,6 +656,48 @@ class RowNumber(_Strict):
     name: NewName = ROW_NUMBER_NAME
 
 
+class Split(_Strict):
+    """Each cell of `column` cut at the literal `separator` into the new columns `names`, appended last, in order.
+
+    A cell without the separator stays whole in the first new column; the last one keeps the rest of a cell
+    with more separators than `names` has room for.
+    """
+
+    op: Literal["split"]
+    column: ColumnName
+    separator: Literal_
+    names: list[NewName] = Field(min_length=2, max_length=MAX_SPLIT_PARTS)
+
+
+class Extract(_Strict):
+    """A new column `name` with only the number, the digits or the letters of each cell of `column`."""
+
+    op: Literal["extract"]
+    column: ColumnName
+    keep: Keep
+    name: NewName
+
+
+class Strip(_Strict):
+    """A new column `name` with the literal `prefix` taken off the start and `suffix` off the end of each cell."""
+
+    op: Literal["strip"]
+    column: ColumnName
+    prefix: Affix | None = None
+    suffix: Affix | None = None
+    name: NewName
+
+
+class Replace(_Strict):
+    """A new column `name` with every literal `old` of each cell of `column` replaced by `new` (empty removes it)."""
+
+    op: Literal["replace"]
+    column: ColumnName
+    old: Literal_
+    new: NewText = ""
+    name: NewName
+
+
 Operation = Annotated[
     Rename
     | DropColumns
@@ -611,7 +710,11 @@ Operation = Annotated[
     | Classify
     | Derive
     | MakeDate
-    | RowNumber,
+    | RowNumber
+    | Split
+    | Extract
+    | Strip
+    | Replace,
     Field(discriminator="op"),
 ]
 
@@ -696,6 +799,14 @@ def _apply(frame: pd.DataFrame, operation: Operation, carried: _Carried) -> tupl
             return _make_date(frame, operation, carried)
         case RowNumber():
             return _row_number(frame, operation, carried)
+        case Split():
+            return _split(frame, operation, carried)
+        case Extract():
+            return _extract(frame, operation, carried)
+        case Strip():
+            return _strip(frame, operation, carried)
+        case Replace():
+            return _replace(frame, operation, carried)
 
 
 def _read(parsed: ParsedDataset) -> pd.DataFrame:
@@ -867,7 +978,7 @@ def _number_guess(series: pd.Series, used: str) -> str | None:
     without the first, a postal code column read as certain numbers for an open role."""
     texts = [ascii_minus([text])[0][0] for text in _texts(series) if isinstance(text, str)]
     if any(_LEADING_ZERO.search(text.strip()) for text in texts):
-        return "that leading zeros are no part of the value"
+        return LEADING_ZEROS
     if any(_GROUP_INSIDE.search(text.strip()) for text in texts):
         return "that spaces or apostrophes separate thousands"
     other = "," if used == "." else "."
@@ -1008,6 +1119,63 @@ def year_run(frame: pd.DataFrame, column: str) -> DryRun:
     return DryRun(
         column, "datetime", present, read, conversion.reading, conversion.guess, _run_order(conversion.values), "YYYY"
     )
+
+
+@dataclass(frozen=True)
+class RangeRun:
+    """A text column whose every cell is two numbers around one dash, the first never above the second (`range_run`).
+
+    `reading` is the change line's words for both parts (`read as numbers`, `read as numbers (decimal comma)`).
+    """
+
+    column: str
+    separator: str
+    present: int
+    reading: str
+
+
+def range_run(frame: pd.DataFrame, column: str, decimal: str = ".") -> RangeRun | None:
+    """A `split` of the text column `column` of `frame` into a lower and an upper bound, checked, not applied.
+
+    Only a column of one shape throughout qualifies: every cell holds exactly one dash of
+    `RANGE_SEPARATORS` (a minus sign that starts a part is no dash, `_cuts`), both parts read as
+    plain numbers with the dataset's decimal mark or the other one alike, without a unit and
+    without a guess (`Conversion.guess`: leading zeros, spaces as thousands, a decimal mark that
+    reads both ways), and the first part is never above the second in any row. An ISO date
+    (`2024-11-03`, two dashes), an id (`A-12`), a span of years such as a season (`2019-20`,
+    whose second part is the smaller) and a column with one odd cell are none: the user can
+    still ask for the `split`. None also for a column that is no text column.
+    """
+    series = frame[column]
+    if _kind(series) != "text":
+        return None
+    cells = [cell.strip() for cell in series if isinstance(cell, str)]
+    if not cells:
+        return None
+    for separator in RANGE_SEPARATORS:
+        if any(len(_cuts(cell, separator)) != 1 for cell in cells):
+            continue
+        pairs = [_pieces(cell, separator, 2) for cell in cells]
+        if any(not low or not high for low, high in pairs):
+            continue
+        low = _numbers_of([low for low, _ in pairs], decimal)
+        high = _numbers_of([high for _, high in pairs], decimal)
+        if low is None or high is None or low.reading != high.reading:
+            continue
+        if any(item.failed or item.unit is not None or item.guess is not None for item in (low, high)):
+            continue
+        if any(bottom > top for bottom, top in zip(low.values, high.values, strict=True)):
+            continue
+        return RangeRun(column, separator, len(cells), low.reading)
+    return None
+
+
+def _numbers_of(cells: list[str], decimal: str) -> Conversion | None:
+    """The cells read as `set_type` reads numbers, or None when it would refuse them (two units)."""
+    try:
+        return _number_conversion(pd.Series(cells, dtype="str"), decimal)
+    except PrepareError:
+        return None
 
 
 def _run_order(dates: pd.Series) -> Literal["ascending", "descending"] | None:
@@ -1720,6 +1888,331 @@ def _month_names(series: pd.Series, column: str) -> list[int | None]:
             f"column '{column}' holds {_count(unknown, 'value')} that {_be(unknown)} no month name or number from 1 to 12",
         )
     return values
+
+
+# --- Text operations -------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class _Typed:
+    """The cells of a new column of a text operation as `set_type` reads them (`_typed`), with the change line's words."""
+
+    values: pd.Series
+    kind: Literal["number", "datetime", "text"]
+    reading: str
+    failed: int = 0
+    notice: str = ""
+    with_time: bool = False
+    order: str | None = None
+
+
+def _typed(texts: pd.Series, decimal: str) -> _Typed:
+    """Text cells typed as `set_type` would type them: numbers, else dates, else text.
+
+    Numbers are read with the dataset's decimal mark first and its thousands rules (`_number_conversion`),
+    dates with the inferred format (`_date_conversion`); either holds when at most `MAX_FAILED_SHARE` of the
+    cells fail, which become missing. A number counts only in a cell the parser reads as one (`value_like`:
+    `10 kg`, `CHF 1'200`), never behind a word `set_type` would take off as a unit when asked to (`Q1`, `x3`
+    are labels). Numbers with leading zeros stay text, as the parser keeps them (`007` is a code), a number
+    behind a month name (`Nov 2026`) is a date, and a column with a cell of digits alone is never one
+    (pandas reads `00123` as the year 123).
+    """
+    present = int(texts.notna().sum())
+    if not present:
+        return _Typed(texts, "text", TEXT_READING)
+    loose = pd.Series([isinstance(text, str) and not value_like(text) for text in texts], index=texts.index)
+    number = _attempt(lambda: _number_conversion(texts.mask(loose), decimal))
+    if number is not None:
+        failed = number.failed + int(loose.sum())
+        if failed <= MAX_FAILED_SHARE * present and not (number.unit and _names_month(number.unit)):
+            if number.guess == LEADING_ZEROS:
+                return _Typed(texts, "text", TEXT_READING)
+            return _Typed(number.values, "number", number.reading, failed, number.notice)
+    if any(isinstance(text, str) and _DIGITS_ONLY.fullmatch(text) for text in texts):
+        return _Typed(texts, "text", TEXT_READING)
+    dates = _attempt(lambda: _date_conversion(texts, None))
+    if dates is not None and dates.failed <= MAX_FAILED_SHARE * present:
+        return _Typed(dates.values, "datetime", dates.reading, dates.failed, dates.notice, dates.with_time, dates.order)
+    return _Typed(texts, "text", TEXT_READING)
+
+
+_DIGITS_ONLY = re.compile(r"[0-9]+")
+
+
+def _attempt(convert: Callable[[], Conversion]) -> Conversion | None:
+    """A conversion, or None when `set_type` would refuse it (two units, times with and without an offset)."""
+    try:
+        return convert()
+    except PrepareError:
+        return None
+
+
+def _source_texts(frame: pd.DataFrame, column: str, carried: _Carried) -> pd.Series:
+    """The canonical cell texts of `column`, which a text operation reads whatever the column's type."""
+    _require(frame, column)
+    series = frame[column]
+    return _texts(series, _with_time(series, carried))
+
+
+def _check_new_columns(frame: pd.DataFrame, names: list[str]) -> None:
+    if len(set(names)) != len(names):
+        raise PrepareError("invalid_operation", "the new columns need different names")
+    for name in names:
+        if name in frame.columns:
+            raise PrepareError("invalid_operation", f"a column named '{name}' already exists")
+    if frame.shape[1] + len(names) > MAX_COLUMNS:
+        raise PrepareError(
+            "too_wide",
+            f"the data has {frame.shape[1]} columns; {len(names)} more would exceed the {MAX_COLUMNS} that fit",
+        )
+
+
+def _place(frame: pd.DataFrame, carried: _Carried, source: str, name: str, typed: _Typed) -> None:
+    """`typed` as the new column `name` of `frame`, with what the CSV does not say about it carried."""
+    frame[name] = typed.values
+    carried.forget([name])
+    if typed.kind == "text":
+        carried.text_columns.add(name)  # kept text through the re-parse, as the change line says
+        return
+    carried.converted[name] = source  # an open required role takes it, as it takes a `set_type` with `name`
+    if typed.kind == "datetime":
+        carried.with_time[name] = typed.with_time
+        if typed.order is not None:
+            carried.date_order[name] = typed.order
+
+
+def _readings(names: list[str], typed: list[_Typed]) -> str:
+    """The change line's clause of how the new columns read: `min and max read as numbers; b kept as text`."""
+    groups: dict[str, list[str]] = {}
+    for name, item in zip(names, typed, strict=True):
+        groups.setdefault(item.reading, []).append(name)
+    clauses = [f"{_listed(group)} {reading}" for reading, group in groups.items()]
+    clauses += [
+        f"{_count(item.failed, 'cell')} of {name} could not be read and {_be(item.failed)} now missing"
+        for name, item in zip(names, typed, strict=True)
+        if item.failed
+    ]
+    return "; ".join(clauses)
+
+
+def _notices(typed: list[_Typed]) -> str:
+    return "; ".join(dict.fromkeys(item.notice for item in typed if item.notice))
+
+
+def _shown_literal(text: str) -> str:
+    """A literal of a text operation as the change line quotes it; spaces alone as words."""
+    return "spaces" if not text.strip() else f"'{_clip(text, MAX_CELL_CHARS)}'"
+
+
+def _cuts(text: str, separator: str) -> list[tuple[int, int]]:
+    """Where `separator` cuts the trimmed cell `text`, as (start, end) pairs.
+
+    A separator of spaces cuts at every run of whitespace, so `62  100` is two parts, not three. A `-` or `−`
+    that starts a part, with at most spaces before it, right before a digit is that part's minus sign, never a
+    cut: `-5-10` is -5 and 10, `-10--5` is -10 and -5.
+    """
+    if not separator.strip():
+        return [(match.start(), match.end()) for match in _SPACES.finditer(text)]
+    cuts: list[tuple[int, int]] = []
+    start = at = 0
+    while (found := text.find(separator, at)) != -1:
+        end = found + len(separator)
+        if separator in _SIGNS and not text[start:found].strip() and text[end : end + 1] in _ASCII_DIGITS:
+            at = end
+            continue
+        cuts.append((found, end))
+        start = at = end
+    return cuts
+
+
+_ASCII_DIGITS = frozenset("0123456789")
+
+
+def _pieces(text: str, separator: str, parts: int) -> list[str]:
+    """The trimmed cell `text` cut at its first `parts - 1` separators (`_cuts`), each piece trimmed."""
+    text = text.strip()
+    pieces: list[str] = []
+    start = 0
+    for begin, end in _cuts(text, separator)[: parts - 1]:
+        pieces.append(text[start:begin].strip())
+        start = end
+    pieces.append(text[start:].strip())
+    return pieces
+
+
+def _split(frame: pd.DataFrame, op: Split, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    texts = _source_texts(frame, op.column, carried)
+    names = list(op.names)
+    _check_new_columns(frame, names)
+    parts: list[list[str | None]] = [[] for _ in names]
+    present = split = more = 0
+    for text in texts:
+        if not isinstance(text, str):
+            for part in parts:
+                part.append(None)
+            continue
+        present += 1
+        cuts = len(_cuts(text.strip(), op.separator))
+        split += cuts > 0
+        more += cuts >= len(names)
+        pieces = _pieces(text, op.separator, len(names))
+        for position, part in enumerate(parts):
+            part.append((pieces[position] if position < len(pieces) else "") or None)
+    if not split:
+        raise PrepareError("invalid_operation", f"no cell of column '{op.column}' holds {_shown_literal(op.separator)}")
+    for name, part in zip(names, parts, strict=True):
+        if not any(part):
+            raise PrepareError("invalid_operation", f"no cell has a part for column '{name}'; split into fewer columns")
+    typed = [_typed(pd.Series(part, index=frame.index, dtype="str"), carried.decimal) for part in parts]
+    result = frame.copy()
+    for name, item in zip(names, typed, strict=True):
+        _place(result, carried, op.column, name, item)
+    change = (
+        f"split {op.column} at {_shown_literal(op.separator)} into {_listed(names)}: "
+        f"{split} of {_count(present, 'cell')} split"
+    )
+    if present - split:
+        change += f", {_count(present - split, 'cell')} without it kept whole in {names[0]}"
+    if more:
+        change += f", {more} with more keep the rest in {names[-1]}"
+    change += f"; {_readings(names, typed)}; {op.column} stays as it is"
+    return result, _with_notice(change, _notices(typed))
+
+
+# One number inside text: an optional sign at the start or after a space, a bracket or a comparison mark (never
+# after a letter or a digit: `A-12` is 12, `5-10` holds two numbers), digits with decimal marks or thousands
+# groups of three after a space or an apostrophe, or a fraction that starts with its mark (`.5`, not after a letter).
+_NUMBER_IN_TEXT = re.compile(
+    r"(?:(?:^|(?<=[\s(\[{:=~≈<>]))[+\-−])?"
+    r"(?:[0-9]+(?:[.,][0-9]+|[\s'’][0-9]{3}(?![0-9]))*|(?<![^\W\d_])[.,][0-9]+)"
+)
+
+
+def _one_number(text: str) -> str | None:
+    """The one number inside `text` (`#12345`, `CHF 1'200`, `ca. -3,5 °C`), as written; None for none or several."""
+    found = _NUMBER_IN_TEXT.findall(text)
+    return found[0].replace("’", "'") if len(found) == 1 else None
+
+
+def _kept(text: str, keep: Keep) -> str:
+    """Only the ASCII digits of `text`, or only its letters with single spaces where whitespace stood between them."""
+    if keep == "digits":
+        return "".join(char for char in text if char in _ASCII_DIGITS)
+    return " ".join("".join(char for char in text if char.isalpha() or char.isspace()).split())
+
+
+def _extract(frame: pd.DataFrame, op: Extract, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    texts = _source_texts(frame, op.column, carried)
+    _check_new_columns(frame, [op.name])
+    present = int(texts.notna().sum())
+    result = frame.copy()
+    if op.keep == "number":
+        found = [_one_number(text) if isinstance(text, str) else None for text in texts]
+        without = sum(isinstance(text, str) and number is None for text, number in zip(texts, found, strict=True))
+        conversion = _number_conversion(pd.Series(found, index=frame.index, dtype="str"), carried.decimal)
+        failed = without + conversion.failed
+        if not present or failed / present > MAX_FAILED_SHARE:
+            raise PrepareError(
+                "type_mismatch", f"column '{op.column}': {failed} of {present} cells hold no number, or more than one"
+            )
+        typed = _Typed(conversion.values, "number", conversion.reading, conversion.failed, conversion.notice)
+        _place(result, carried, op.column, op.name, typed)
+        change = f"new column {op.name}: the number in {present - failed} of {_count(present, 'cell')} of {op.column}"
+        change += f", {conversion.reading}"
+        if failed:
+            change += f", {_count(failed, 'cell')} without exactly one number {_be(failed)} missing"
+        return result, _with_notice(f"{change}; {op.column} stays as it is", conversion.notice)
+    kept = [_kept(text, op.keep) or None if isinstance(text, str) else None for text in texts]
+    empty = sum(isinstance(text, str) and value is None for text, value in zip(texts, kept, strict=True))
+    word = "digit" if op.keep == "digits" else "letter"
+    if empty == present:
+        raise PrepareError("invalid_operation", f"no cell of column '{op.column}' holds a {word}")
+    typed = _typed(pd.Series(kept, index=frame.index, dtype="str"), carried.decimal)
+    _place(result, carried, op.column, op.name, typed)
+    change = f"new column {op.name}: the {op.keep} of {present - empty} of {_count(present, 'cell')} of {op.column}"
+    if empty:
+        change += f", {_count(empty, 'cell')} without a {word} {_be(empty)} empty"
+    change += f"; {_readings([op.name], [typed])}; {op.column} stays as it is"
+    return result, _with_notice(change, typed.notice)
+
+
+def _strip(frame: pd.DataFrame, op: Strip, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    if op.prefix is None and op.suffix is None:
+        raise PrepareError("invalid_operation", "strip needs a prefix, a suffix or both")
+    texts = _source_texts(frame, op.column, carried)
+    _check_new_columns(frame, [op.name])
+    prefix, suffix = op.prefix or "", op.suffix or ""
+    cells: list[str | None] = []
+    present = changed = 0
+    for text in texts:
+        if not isinstance(text, str):
+            cells.append(None)
+            continue
+        present += 1
+        cell = text.strip()
+        before = cell
+        if prefix and cell.startswith(prefix):
+            cell = cell[len(prefix) :].strip()
+        if suffix and cell.endswith(suffix):
+            cell = cell[: len(cell) - len(suffix)].strip()
+        changed += cell != before
+        cells.append(cell or None)
+    if not changed:
+        ends = " or ".join(
+            part
+            for part in (
+                f"starts with {_shown_literal(prefix)}" if prefix else "",
+                f"ends with {_shown_literal(suffix)}" if suffix else "",
+            )
+            if part
+        )
+        raise PrepareError("invalid_operation", f"no cell of column '{op.column}' {ends}")
+    typed = _typed(pd.Series(cells, index=frame.index, dtype="str"), carried.decimal)
+    result = frame.copy()
+    _place(result, carried, op.column, op.name, typed)
+    taken = " and ".join(
+        part
+        for part in (
+            f"{_shown_literal(prefix)} off the start" if prefix else "",
+            f"{_shown_literal(suffix)} off the end" if suffix else "",
+        )
+        if part
+    )
+    change = f"new column {op.name}: {taken} of {changed} of {_count(present, 'cell')} of {op.column}"
+    change += f"; {_readings([op.name], [typed])}; {op.column} stays as it is"
+    return result, _with_notice(change, typed.notice)
+
+
+def _replace(frame: pd.DataFrame, op: Replace, carried: _Carried) -> tuple[pd.DataFrame, str]:
+    texts = _source_texts(frame, op.column, carried)
+    _check_new_columns(frame, [op.name])
+    cells: list[str | None] = []
+    present = changed = 0
+    for text in texts:
+        if not isinstance(text, str):
+            cells.append(None)
+            continue
+        present += 1
+        if op.old not in text:
+            cells.append(text)
+            continue
+        changed += 1
+        cell = text.replace(op.old, op.new).strip()
+        if len(cell) > MAX_INPUT_CELL_CHARS:
+            raise PrepareError(
+                "invalid_operation",
+                f"a cell would be longer than the {MAX_INPUT_CELL_CHARS} characters a cell may hold",
+            )
+        cells.append(cell or None)
+    if not changed:
+        raise PrepareError("invalid_operation", f"no cell of column '{op.column}' holds {_shown_literal(op.old)}")
+    typed = _typed(pd.Series(cells, index=frame.index, dtype="str"), carried.decimal)
+    result = frame.copy()
+    _place(result, carried, op.column, op.name, typed)
+    what = f"replaced with {_shown_literal(op.new)}" if op.new else "removed"
+    change = f"new column {op.name}: {_shown_literal(op.old)} {what} in {changed} of {_count(present, 'cell')} of {op.column}"
+    change += f"; {_readings([op.name], [typed])}; {op.column} stays as it is"
+    return result, _with_notice(change, typed.notice)
 
 
 # --- Conditions ------------------------------------------------------------------------------

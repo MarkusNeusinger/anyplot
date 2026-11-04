@@ -1,0 +1,10 @@
+{
+  "dataset_text": "Kurs;Teilnehmer;Alter\nYoga;12;25-40\nPilates;8;30-55\nSpinning;15;18-35\nRücken;9;40-65\n",
+  "message": "Teile die Spalte Alter am Bindestrich in zwei neue Spalten Alter von und Alter bis.",
+  "expected_operations": [
+    {"op": "split", "column": "Alter", "separator": "-", "names": ["Alter von", "Alter bis"]}
+  ],
+  "locale": "de",
+  "spec_id": "bar-basic",
+  "tags": ["split", "text"]
+}

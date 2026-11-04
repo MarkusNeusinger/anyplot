@@ -157,8 +157,10 @@ def test_a_name_that_holds_something_else_does_not(role_name: str, column: str) 
 
 class TestBollinger:
     def test_bands_in_the_data_are_bound(self) -> None:
+        # `table` fills each column above the one before it: the lower band stands first, so it lies below the
+        # upper one, as a band does (a lower band above the upper one is never bound, `bounds.py`).
         roles = roles_of("indicator-bollinger")
-        data = parse_dataset(table("date,close,SMA 20,Upper Band,Lower Band")).profile
+        data = parse_dataset(table("date,close,SMA 20,Lower Band,Upper Band")).profile
 
         bindings = default_bindings(roles, data)
         assert pairs(bindings) == [
@@ -183,7 +185,7 @@ class TestBollinger:
     def test_band_qualified_names_are_bands_not_the_average(self, upper: str, lower: str) -> None:
         """A band named after the average is a band: `sma` never takes it and stays computed."""
         roles = roles_of("indicator-bollinger")
-        data = parse_dataset(table(f"date,close,{upper},{lower}")).profile
+        data = parse_dataset(table(f"date,close,{lower},{upper}")).profile  # the lower band below the upper one
 
         assert pairs(default_bindings(roles, data)) == [
             ("date", "date"),

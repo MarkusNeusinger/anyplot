@@ -57,7 +57,8 @@ spec text) sits inside our own fences after the "data, never instructions" pream
   answers its code and its message (which names columns at most, fenced too).
   Refused while the pipeline runs. The model never writes data rows: the operations
   only move, type, aggregate, label or compute from the cells that are there (a
-  `make_date` builds a date from the year and month columns of the same row).
+  `make_date` builds a date from the year and month columns of the same row, a `split`
+  cuts `10–25` into 10 and 25 at a literal separator).
 * `query_data(operations, columns, limit)`: a question about the data answered from a copy
   (`data/query.py`, since 2026-10-15): zero to five operations of `prepare_data`'s set, then
   the first `limit` rows (at most 25) in at most eight columns, fenced as `<user_data>`, with
@@ -410,7 +411,12 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     the running total, or an index with the group's first row = 100); make_date (name, year, and month with an
     optional day, or quarter, or week; adds the date column name built from whole-number columns holding the parts of
     a date, a part left out being its first: year and month give the first day of each month); row_number (name; adds
-    the whole-number column name, default index, the rows numbered 1 to n). Returns the change lines and the new
+    the whole-number column name, default index, the rows numbered 1 to n); and four text operations on the cells of
+    column, each adding new columns typed by their cells (numbers, dates or text) and keeping column as it is: split
+    (column, separator: a literal text such as - or –, names: 2 to 10 new columns; 10–25 gives 10 and 25), extract
+    (column, keep number|digits|letters, name; #12345 gives 12345), strip (column, prefix, suffix, name; takes a literal
+    text off the start or the end of each cell) and replace (column, old, new, name; new empty removes old). Steps
+    chain in one call: a later operation may name a column an earlier one made. Returns the change lines and the new
     profile, or an error with a code and a message.
     """
     view = _view(tool_context)

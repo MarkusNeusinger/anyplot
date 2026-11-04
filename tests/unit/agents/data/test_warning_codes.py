@@ -5,6 +5,7 @@ from typing import get_args
 
 import pytest
 
+from agents.anyplot.data.bounds import BoundPair, inverted_line
 from agents.anyplot.data.parse import (
     AMBIGUOUS_DATE_ORDER,
     HEADERLESS_LIST_WARNING,
@@ -192,7 +193,13 @@ def test_binding_warnings_map_to_codes() -> None:
         "y: bound to 'Mo', one of 7 number columns ('Mo', 'Tu', 'We', 'Th', ...) that hold one measure side by side; "
         "y wants labels, so each number would become a category of its own: turn the columns into rows first (.to_long())"
     )
-    assert binding_warning_codes([negative, unbound, sibling, "CANARY"]) == [
+    pair = inverted_line(
+        BoundPair("min_value", "max_value"),
+        ColumnProfile(name="games", dtype="integer", missing=0, unique=3, min=140, max=146),
+        ColumnProfile(name="mean", dtype="number", missing=0, unique=3, min=61.5, max=67.2),
+    )
+    assert binding_warning_codes([negative, unbound, sibling, pair, "CANARY"]) == [
+        "bound_pair_inverted",
         "label_sibling",
         "negative_unbound",
         "negative_values",

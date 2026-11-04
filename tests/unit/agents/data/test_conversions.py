@@ -6,9 +6,17 @@ import pytest
 from pydantic import TypeAdapter
 
 from agents.anyplot.data.bindings import carry_bindings, check_bindings, default_bindings
-from agents.anyplot.data.conversions import MAX_CANDIDATES, Candidate, RowNumbers, candidates, new_name
+from agents.anyplot.data.conversions import (
+    MAX_CANDIDATES,
+    Candidate,
+    RangeSplit,
+    RowNumbers,
+    candidates,
+    new_name,
+    range_names,
+)
 from agents.anyplot.data.parse import ParsedDataset, parse_dataset
-from agents.anyplot.data.prepare import DryRun, Operation, apply_operations
+from agents.anyplot.data.prepare import DryRun, Operation, RangeRun, apply_operations, range_run, read_frame
 from agents.anyplot.schemas import MAX_COLUMN_NAME_CHARS, Binding
 from core.spec_roles import DataRole, parse_roles
 
@@ -24,7 +32,7 @@ OPERATIONS = TypeAdapter(list[Operation])
 
 def found(
     text: str, language: str = "en", roles: list[DataRole] | None = None, **kwargs: object
-) -> list[Candidate | RowNumbers]:
+) -> list[Candidate | RangeSplit | RowNumbers]:
     parsed = parse_dataset(text)
     spec_roles = roles or parse_roles(ROLLING)
     bindings = default_bindings(spec_roles, parsed.profile)
@@ -294,6 +302,168 @@ class TestNewName:
         assert new_name("Month", "datetime", "en", ["Month (date)"]) == "Month_2 (date)"
         long = new_name("x" * 80, "datetime", "en", ())
         assert len(long) == MAX_COLUMN_NAME_CHARS and long.endswith(" (date)")
+
+
+RANGE = [
+    "`category` (categorical) - Labels for each range group",
+    "`min_value` (numeric) - Lower bound of the range/interval",
+    "`max_value` (numeric) - Upper bound of the range/interval",
+]
+"""The roles of `range-interval`, the spec of the agent case triage."""
+# Invented, the shape of the case: the defaults would put the count and the average on the range's ends.
+RANGES = "team;games;mean;min–max\nalpha;140;61.5;48–80\nbeta;146;67.2;52–77\ngamma;143;64.0;45–79\n"
+
+
+def ranges(text: str, language: str = "en", **kwargs: object) -> list[Candidate | RangeSplit | RowNumbers]:
+    return found(text, language, roles=parse_roles(RANGE), **kwargs)
+
+
+class TestRanges:
+    def test_the_open_pair_takes_a_certain_split(self) -> None:
+        [candidate] = ranges(RANGES)
+
+        assert isinstance(candidate, RangeSplit) and candidate.certain and candidate.outcome == "number"
+        assert candidate.operations() == [
+            {"op": "split", "column": "min–max", "separator": "–", "names": ["min–max (min)", "min–max (max)"]}
+        ]
+        assert candidate.line() == (
+            "min_value and max_value: column 'min–max' (text): 3 of 3 cells would split at '–' into two numbers, "
+            "the first never above the second, and be read as numbers, as the new columns 'min–max (min)' "
+            "(min_value) and 'min–max (max)' (max_value); certain: every cell reads and nothing is guessed; "
+            'operations: [{"op": "split", "column": "min–max", "separator": "–", "names": ["min–max (min)", '
+            '"min–max (max)"]}]'
+        )
+
+    def test_its_operation_fills_both_roles(self) -> None:
+        """The case end to end: the pair the defaults left open is bound to the two parts, nothing guessed."""
+        parsed = parse_dataset(RANGES)
+        roles = parse_roles(RANGE)
+        before = default_bindings(roles, parsed.profile)
+        [candidate] = ranges(RANGES, language="de")
+        prepared = apply_operations(parsed, OPERATIONS.validate_python(candidate.operations()))
+        after = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)
+
+        carried = carry_bindings(before, roles, after.profile, parsed.profile, prepared.converted)
+
+        assert [(binding.role, binding.column) for binding in carried] == [
+            ("category", "team"),
+            ("min_value", "min–max (Min)"),
+            ("max_value", "min–max (Max)"),
+        ]
+        check = check_bindings(carried, roles, after.profile)
+        assert check.complete and check.warnings == []
+        assert candidates(carried, roles, after.profile, after) == []  # nothing left to convert
+
+    @pytest.mark.parametrize(
+        ("text", "reading"),
+        [
+            ("k;r\na;-5–10\nb;-3–4\n", "read as numbers"),  # a negative lower end
+            ("k;r\na;-10--5\nb;-8--1\n", "read as numbers"),  # a hyphen between two negative numbers
+            ("k;r\na;10 - 20\nb;30 - 40\n", "read as numbers"),
+            ("k;r\na;1,5–2,5\nb;0,5–1\n", "read as numbers (decimal comma)"),
+        ],
+    )
+    def test_ranges_of_one_shape(self, text: str, reading: str) -> None:
+        [candidate] = ranges(text)
+
+        assert isinstance(candidate, RangeSplit) and reading in candidate.line()
+
+    def test_thousands_that_read_both_ways_split_only_on_request(self) -> None:
+        """`1.200` is 1.2 with a decimal point: no automatic split, as for any number reading that guesses its mark.
+
+        Asked for, the split reads the file's own way: 1200 in a file with decimal commas.
+        """
+        text = "Ort;Wert;Spanne\nA;3,5;1.200–2.500\nB;4,0;900–1.100\n"
+        parsed = parse_dataset(text)
+        operation = {"op": "split", "column": "Spanne", "separator": "–", "names": ["lo", "hi"]}
+
+        assert parsed.profile.decimal == "," and range_run(read_frame(parsed), "Spanne", ",") is None
+        prepared = apply_operations(parsed, OPERATIONS.validate_python([operation]))
+        assert prepared.csv.splitlines()[1:] == ["A,3.5,1.200–2.500,1200,2500", "B,4,900–1.100,900,1100"]
+
+    @pytest.mark.parametrize(
+        ("text", "dtype"),
+        [
+            ("k;v\na;2024-11-03\nb;2024-12-01\n", "datetime"),  # ISO dates stay dates
+            ("k;v\na;-5\nb;-7\n", "integer"),  # negative numbers stay numbers
+            ("k;v;w\na;1,5;2\nb;2,5;3\n", "number"),  # a decimal comma keeps its reading
+            ("k;v;w\na;1.200;2,5\nb;3.400;3,5\n", "integer"),  # and so do thousands dots in such a file
+        ],
+    )
+    def test_a_column_the_parser_types_is_never_a_range(self, text: str, dtype: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert parsed.column_dtypes["v"] == dtype
+        assert range_run(read_frame(parsed), "v", parsed.profile.decimal) is None
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "k;r\na;A-12\nb;B-7\n",  # an id or a code stays text
+            "k;r\na;2019-20\nb;2020-21\n",  # a season: the second part is the smaller
+            "k;r\na;75–30\nb;68–35\n",  # the first end above the second
+            "k;r\na;30–75\nb;40\nc;35–68\n",  # one cell without the dash: only on request
+            "k;r\na;30–75\nb;35–50–68\n",  # one cell with two
+            "k;r\na;30 %–75 %\nb;35 %–68 %\n",  # a unit: only on request
+            "k;r\na;007–012\nb;003–009\n",  # leading zeros: codes
+            "k;r\na;2024–11–03\nb;2024–12–01\n",  # a date with en dashes
+        ],
+    )
+    def test_text_of_another_shape_is_no_range(self, text: str) -> None:
+        parsed = parse_dataset(text)
+
+        assert parsed.column_dtypes["r"] == "text"
+        assert range_run(read_frame(parsed), "r") is None
+        assert not any(isinstance(candidate, RangeSplit) for candidate in ranges(text))
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "k;id\na;1-2\nb;3-4\n",  # a column named as ids, whatever its cells
+            "k;Saison\na;2019-2020\nb;2020-2021\n",  # a span of years, by its name
+        ],
+    )
+    def test_ids_and_spans_stay_text_by_their_name(self, text: str) -> None:
+        parsed = parse_dataset(text)
+        column = parsed.profile.columns[1].name
+
+        assert range_run(read_frame(parsed), column) is not None  # the shape alone would do
+        assert ranges(text) == []
+
+    def test_an_iso_date_column_kept_text_is_no_range(self) -> None:
+        text = "k;d\na;2024-11-03\nb;2024-12-01\n"
+        parsed = parse_dataset(text, text_columns=["d"])
+        roles = parse_roles(RANGE)
+
+        assert candidates(default_bindings(roles, parsed.profile), roles, parsed.profile, parsed) == []
+
+    def test_a_pair_with_one_role_bound_takes_no_split(self) -> None:
+        parsed = parse_dataset(RANGES)
+        roles = parse_roles(RANGE)
+        bindings = [Binding(role="category", column="team"), Binding(role="min_value", column="mean")]
+
+        assert not any(
+            isinstance(candidate, RangeSplit) for candidate in candidates(bindings, roles, parsed.profile, parsed)
+        )
+
+    def test_a_spec_without_a_pair_takes_none(self) -> None:
+        assert not any(isinstance(candidate, RangeSplit) for candidate in found("Band;Preis\n10–20;1\n20–30;2\n"))
+
+    def test_the_names_are_in_the_session_language_and_never_taken(self) -> None:
+        assert range_names("Spanne", "de", ()) == ("Spanne (Min)", "Spanne (Max)")
+        assert range_names("r", "es", ()) == ("r (mín)", "r (máx)")
+        assert range_names("r", "en", ["r (min)"]) == ("r_2 (min)", "r (max)")
+
+    def test_the_range_run_is_made_once_per_version(self) -> None:
+        cache: dict[tuple[str, str], DryRun | RangeRun | None] = {}
+        parsed = parse_dataset(RANGES)
+        roles = parse_roles(RANGE)
+        bindings = default_bindings(roles, parsed.profile)
+
+        candidates(bindings, roles, parsed.profile, parsed, cache=cache)
+        cache[("min–max", "range")] = None  # a stored answer is used as it is: no second run
+
+        assert candidates(bindings, roles, parsed.profile, parsed, cache=cache) == []
 
 
 def test_bindings_are_untouched() -> None:

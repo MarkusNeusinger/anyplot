@@ -1,0 +1,11 @@
+{
+  "dataset_text": "Order,Amount,Code\nO1,120,#A-12\nO2,95,#B-7\nO3,130,#C-30\n",
+  "message": "Take the leading # off Code as a new column Clean code, then split Clean code at the dash into Letter and Number.",
+  "expected_operations": [
+    {"op": "strip", "column": "Code", "prefix": "#", "name": "Clean code"},
+    {"op": "split", "column": "Clean code", "separator": "-", "names": ["Letter", "Number"]}
+  ],
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["hard", "chain", "strip", "split", "text"]
+}

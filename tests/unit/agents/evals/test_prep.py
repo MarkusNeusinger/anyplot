@@ -55,6 +55,10 @@ OPERATIONS = (
     "derive",
     "make_date",
     "row_number",
+    "split",
+    "extract",
+    "strip",
+    "replace",
 )
 HOURS = "Study Hours,Exam Score\n2,55\n5,70\n8,85\n3,60\n"
 RENAME = {"op": "rename", "column": "Study Hours", "name": "Hours"}
@@ -80,17 +84,18 @@ class TestFixtures:
         locales = Counter(item.locale for item in cases)
         ops = {operation["op"] for item in cases for operation in item.expected_operations}
 
-        # 30 single-step cases (two of them `derive`, two `make_date`, one month-only date format, one sort of month
-        # names, one daily mean per sensor), 10 `hard` ones (chains, ambiguity, unsupported asks), 11 data-code
-        # cases, 11 step-1 summaries and 3 requests for example data (since 2026-11-01).
-        assert len(cases) == 65
+        # 34 single-step cases (two of them `derive`, two `make_date`, one month-only date format, one sort of month
+        # names, one daily mean per sensor, four text operations), 11 `hard` ones (chains, ambiguity, unsupported
+        # asks), 11 data-code cases, 12 step-1 summaries and 3 requests for example data.
+        assert len(cases) == 71
         example = [item for item in cases if "example_data" in item.tags]
         assert len(example) == 3 and {item.locale for item in example} == {"de", "en"}
         assert all(
             item.dataset_text is None and item.expected_operations[0]["op"] == "run_data_code" for item in example
         )
         assert {item.locale for item in cases if "derive" in item.tags} == {"de", "en"}
-        assert sum(1 for item in cases if "hard" in item.tags) == 10
+        assert sum(1 for item in cases if "hard" in item.tags) == 11
+        assert {item.locale for item in cases if "text" in item.tags} == {"de", "en"}
         assert locales["de"] >= 5 and locales["en"] >= 5
         assert ops == {*OPERATIONS, "generate_data", "run_data_code"}
         assert sum(1 for item in cases if not item.expected_operations) >= 2  # out of scope, and a plain question
@@ -123,15 +128,21 @@ class TestFixtures:
         """The step-1 summary, where 10 of 11 replies of the user test of 2026-11-01 closed with a question."""
         cases = [item for item in load_cases(DEFAULT_CASES) if item.action is not None]
 
-        assert len(cases) == 11 and {item.locale for item in cases} == {"de", "en"}
+        assert len(cases) == 12 and {item.locale for item in cases} == {"de", "en"}
         assert all(item.message is None and item.dataset_text for item in cases)
         assert all("summary" in item.tags for item in cases)
         # A summary changes the data only for what the server found in code (live tests of 2026-11-01 and 11-02): a
-        # newest-first date column gets its sort, a column that converts for certain fills an open role, and a list
-        # of values gets its row numbers.
+        # newest-first date column gets its sort, a column that converts for certain fills an open role, a list
+        # of values gets its row numbers, and a column of ranges fills a lower and upper bound pair left open.
         sorted_dates = {"en-summary-rtx-prices", "de-summary-preise-monatsnamen", "en-summary-convert-day-dates"}
         changing = {item.id for item in cases if item.expected_operations}
-        assert changing == {*sorted_dates, "en-summary-year-column", "en-summary-row-number", "de-summary-zeilennummer"}
+        assert changing == {
+            *sorted_dates,
+            "en-summary-year-column",
+            "en-summary-row-number",
+            "de-summary-zeilennummer",
+            "en-summary-range-column",
+        }
         assert all("date_order" in item.tags for item in cases if item.id in sorted_dates)
         # Dates whose day and month order reads both ways, and a conversion that would guess the century: the
         # summaries that may close with their question.
@@ -274,6 +285,24 @@ class TestCanonical:
             "pivot_wider p with v by m",
             "row_number index",
             "set_type share number (,)",
+        ]
+
+    def test_describe_the_text_operations(self) -> None:
+        lines = canonical_operations(
+            [
+                {"op": "split", "column": "Range", "separator": "–", "names": ["lo", "hi"]},
+                {"op": "extract", "column": "Ticket", "keep": "number", "name": "n"},
+                {"op": "strip", "column": "Code", "prefix": " # ", "name": "c"},
+                {"op": "replace", "column": "Region", "old": "-", "name": "r"},
+            ],
+            ".",
+        )
+
+        assert sorted(describe(line) for line in lines) == [
+            "extract number of Ticket as n",
+            "replace '-' with '' in Region as r",
+            "split Range at '–' into lo, hi",
+            "strip prefix '#' of Code as c",  # a prefix's own spaces count for nothing
         ]
 
     def test_classify_keeps_its_rule_order_and_ignores_the_order_of_a_rules_conditions(self) -> None:

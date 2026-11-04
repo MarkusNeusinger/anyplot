@@ -1,0 +1,10 @@
+{
+  "dataset_text": "Ticket,Hours\n#4711,3\n#4712,5\n#4713,2\n#4714,4\n",
+  "message": "Keep only the number of each Ticket, as a new column Ticket number.",
+  "expected_operations": [
+    {"op": "extract", "column": "Ticket", "keep": "number", "name": "Ticket number"}
+  ],
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["extract", "text"]
+}

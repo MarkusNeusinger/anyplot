@@ -37,6 +37,16 @@ A date column for the axis counts even when the axis is taken: the defaults fill
 spec order, so `8 Nov 2026,3000` on a line plot has its one number column on `x` and `y`
 open. The dates then take the axis, and the numbers move to `y` (`bindings.axis_slot`).
 
+A lower and upper bound pair left open (`bounds.py`: both roles required and unbound, also when
+the defaults left them open because two unrelated measures would have been inverted) takes a
+text column of ranges first (`RangeSplit`): every cell two numbers around one dash, the first
+never above the second (`prepare.range_run`: `10–25`, `-5–10`, `1,5–2,5` with decimal commas).
+That is `certain` only, the one shape throughout; a column with one odd cell, an id (`A-12`), an
+ISO date and a span of years are no candidate, and the user can still ask for the `split`. Its
+operation is the `split` into two new columns named after the column with `min` and `max` in
+the session language (`RANGE_WORDS`), which the service binds to the lower and the upper role
+(`bindings.carry_bindings`).
+
 Last comes the row number, when no column and no conversion can fill the open role
 (`RowNumbers`, `bindings.row_slot`, the owner's live test of 2026-11-02: `1,3,5,4,6,2` on a
 line plot). On a required axis it counts as `certain`: the column `index` holds 1 to n, the axis
@@ -61,8 +71,9 @@ from core.spec_roles import DataRole
 from ..language import DEFAULT_LANGUAGE, canonical
 from ..schemas import MAX_COLUMN_NAME_CHARS, Binding, ColumnProfile, DatasetProfile
 from .bindings import RowSlot, axis_slot, check_bindings, code_like, row_number_columns, row_slot
+from .bounds import BoundPair, bound_pairs
 from .parse import ParsedDataset, id_like, span_like
-from .prepare import ROW_NUMBER_NAME, DryRun, dry_run, read_frame, year_run
+from .prepare import ROW_NUMBER_NAME, DryRun, RangeRun, dry_run, range_run, read_frame, year_run
 from .temporal import year_score
 
 
@@ -84,6 +95,18 @@ TYPE_WORDS: dict[str, dict[Target, str]] = {
 }
 """The word for the converted type in the new column's name, by session language (as `shape.LONG_NAMES`, owner rule:
 generated text follows the session language, the user's own column names never change); English for any other."""
+
+RANGE_WORDS: dict[str, tuple[str, str]] = {
+    "en": ("min", "max"),
+    "de": ("Min", "Max"),
+    "fr": ("min", "max"),
+    "es": ("mín", "máx"),
+    "it": ("min", "max"),
+    "pt": ("mín", "máx"),
+    "nl": ("min", "max"),
+    "pl": ("min", "maks"),
+}
+"""The words for the lower and the upper end of a range in the names of a `split`'s two columns, as `TYPE_WORDS`."""
 
 
 @dataclass(frozen=True)
@@ -134,6 +157,42 @@ class Candidate:
             line += "; the dates run newest first, so the sort puts them oldest first"
         if self.moved is not None:
             line += f"; {self.moved.role} then takes '{self.moved.column}', which {self.role} holds now"
+        return f"{line}; operations: {json.dumps(self.operations(), ensure_ascii=False)}"
+
+
+@dataclass(frozen=True)
+class RangeSplit:
+    """A text column of ranges (`10–25`) that a `split` turns into the two columns a lower and upper bound pair takes."""
+
+    pair: BoundPair
+    run: RangeRun
+    names: tuple[str, str]
+    """The new columns' names (`range_names`): the lower end first."""
+
+    @property
+    def role(self) -> str:
+        return self.pair.lower
+
+    @property
+    def certain(self) -> bool:
+        return True  # only a column of one shape throughout is a candidate (`prepare.range_run`)
+
+    @property
+    def outcome(self) -> Outcome:
+        return "number"
+
+    def operations(self) -> list[dict[str, Any]]:
+        return [{"op": "split", "column": self.run.column, "separator": self.run.separator, "names": list(self.names)}]
+
+    def line(self) -> str:
+        """The session block's line: the two roles, the column, the counts, certain, and the operations."""
+        run, (low, high) = self.run, self.names
+        line = (
+            f"{self.pair.lower} and {self.pair.upper}: column '{run.column}' (text): {run.present} of {run.present} "
+            f"cells would split at '{run.separator}' into two numbers, the first never above the second, and be "
+            f"{run.reading}, as the new columns '{low}' ({self.pair.lower}) and '{high}' ({self.pair.upper}); "
+            "certain: every cell reads and nothing is guessed"
+        )
         return f"{line}; operations: {json.dumps(self.operations(), ensure_ascii=False)}"
 
 
@@ -189,15 +248,16 @@ def candidates(
     *,
     language: str = DEFAULT_LANGUAGE,
     keep_text: Collection[str] = (),
-    cache: MutableMapping[tuple[str, str], DryRun | None] | None = None,
-) -> list[Candidate | RowNumbers]:
+    cache: MutableMapping[tuple[str, str], DryRun | RangeRun | None] | None = None,
+) -> list[Candidate | RangeSplit | RowNumbers]:
     """The conversions that would fill the required roles `bindings` leave open, at most `MAX_CANDIDATES`.
 
-    The roles in spec order, each taking the first free column (in column order) whose dry
+    First an open lower and upper bound pair takes the first free column of ranges (`RangeSplit`);
+    then the roles in spec order, each taking the first free column (in column order) whose dry
     run reads it as the role's type; a column serves one role. `keep_text` names the
     columns kept text on request, `cache` holds the dry runs by column and type
-    (`StoredDataset.dry_runs`); `parsed` is read into a frame only when a dry run is due.
-    With no conversion at all, the row numbers (`RowNumbers`).
+    (`StoredDataset.dry_runs`; `range` for the ranges); `parsed` is read into a frame only when a
+    dry run is due. With no conversion at all, the row numbers (`RowNumbers`).
     """
     missing = set(check_bindings(bindings, roles, profile).missing_roles)
     if not missing:
@@ -222,7 +282,18 @@ def candidates(
             if frame is None:
                 frame = read_frame(parsed)
             runs[key] = year_run(frame, column) if column in years else dry_run(frame, column, target, profile.decimal)
-        return runs[key]
+        result = runs[key]
+        return result if isinstance(result, DryRun) else None
+
+    def ranges(column: str) -> RangeRun | None:
+        nonlocal frame
+        key = (column, "range")
+        if key not in runs:
+            if frame is None:
+                frame = read_frame(parsed)
+            runs[key] = range_run(frame, column, profile.decimal)
+        result = runs[key]
+        return result if isinstance(result, RangeRun) else None
 
     slot = axis_slot(bindings, roles, profile)
     moved = slot.moved if slot is not None else None
@@ -231,7 +302,19 @@ def candidates(
         wanted.add(slot.role.name)
     taken: set[str] = set()
     names = {column.name for column in profile.columns}
-    found: list[Candidate | RowNumbers] = []
+    found: list[Candidate | RangeSplit | RowNumbers] = []
+    for pair in bound_pairs(roles):
+        if pair.lower not in missing or pair.upper not in missing:
+            continue
+        column = next((column for column in free if column not in taken and ranges(column) is not None), None)
+        ranged = ranges(column) if column is not None else None
+        if column is None or ranged is None or len(found) == MAX_CANDIDATES:
+            continue
+        pair_names = range_names(column, language, names)
+        names.update(pair_names)
+        taken.add(column)
+        wanted -= {pair.lower, pair.upper}
+        found.append(RangeSplit(pair, ranged, pair_names))
     for role in roles:
         if role.name not in wanted or len(found) == MAX_CANDIDATES:
             continue
@@ -257,7 +340,7 @@ def candidates(
 
 def _row_numbers(
     bindings: list[Binding], roles: list[DataRole], profile: DatasetProfile, used: Collection[str]
-) -> list[Candidate | RowNumbers]:
+) -> list[Candidate | RangeSplit | RowNumbers]:
     """The row numbers as the one candidate, when `bindings.row_slot` finds them a role."""
     slot = row_slot(bindings, roles, profile)
     if slot is None:
@@ -273,7 +356,17 @@ def _row_numbers(
 
 def new_name(column: str, target: Target, language: str, taken: Collection[str]) -> str:
     """`<column> (<type word>)` within the column-name cap, `_2`, `_3`, ... before the bracket when it is taken."""
-    word = TYPE_WORDS.get(canonical(language), TYPE_WORDS[DEFAULT_LANGUAGE])[target]
+    return _with_word(column, TYPE_WORDS.get(canonical(language), TYPE_WORDS[DEFAULT_LANGUAGE])[target], taken)
+
+
+def range_names(column: str, language: str, taken: Collection[str]) -> tuple[str, str]:
+    """`<column> (min)` and `<column> (max)` in the session language (`RANGE_WORDS`), as `new_name` names them."""
+    low, high = RANGE_WORDS.get(canonical(language), RANGE_WORDS[DEFAULT_LANGUAGE])
+    first = _with_word(column, low, taken)
+    return first, _with_word(column, high, {*taken, first})
+
+
+def _with_word(column: str, word: str, taken: Collection[str]) -> str:
     suffix = f" ({word})"
     stem = column[: MAX_COLUMN_NAME_CHARS - len(suffix)].rstrip()
     name, number = stem + suffix, 2
