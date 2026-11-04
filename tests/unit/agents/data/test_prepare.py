@@ -1052,6 +1052,13 @@ class TestDateNumber:
 
         assert stamps.changes[0].endswith(", 1 value more than 272 years from 1970 rounded to the float's digits")
 
+    def test_a_whole_second_far_from_1970_is_exact_and_not_counted(self) -> None:
+        """Copilot on #12558: 2300-01-01 is 10413792000.0 exactly; only a value whose text loses a digit counts."""
+        stamps = prepare("t,v\n2300-01-01 00:00:00,1\n2024-01-01 00:00:00.5,2\n", date_number("timestamp", column="t"))
+
+        assert cells(stamps, 2) == ["10413792000", "1704067200.5"]
+        assert stamps.changes[0].endswith("fractions of a second kept as decimals")
+
     def test_whole_seconds_stay_exact_for_any_year(self) -> None:
         stamps = prepare("t,v\n0001-01-01,1\n9999-12-31 23:59:59,2\n", date_number("timestamp", column="t"))
 

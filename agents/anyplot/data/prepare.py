@@ -358,8 +358,6 @@ by session language, as `conversions.TYPE_WORDS` names a converted column; Engli
 _EPOCH = datetime(1970, 1, 1)
 _MICROSECONDS = 1_000_000
 _DAY_MICROSECONDS = 86_400 * _MICROSECONDS
-_MICROSECOND_SECONDS = 2**33
-"""The Unix seconds below which a float64 keeps every microsecond (its spacing there is at most 2**-20 of a second)."""
 Keep = Literal["number", "digits", "letters"]
 """What an `extract` keeps of each cell."""
 RANGE_SEPARATORS = ("–", "—", "-")
@@ -2067,8 +2065,9 @@ def _unix_seconds(moments: list[pd.Timestamp | None], series: pd.Series, carried
     A moment with a UTC offset is converted; one without is read as UTC, a date as its midnight UTC. Whole seconds stay
     whole numbers (`Int64`, exact for every year from 1 to 9999); a column with a fraction of a second is float64 with
     the fraction kept as decimals, which the notice says. A float64 keeps every microsecond only below 2**33 seconds,
-    about 272 years from 1970 (its spacing there is 2**-20 of a second): a moment further away is stored rounded, and
-    the notice counts those.
+    about 272 years from 1970 (its spacing there is 2**-20 of a second): a value whose written text (its shortest
+    `repr`, as `data.csv` writes it) is not its exact microseconds is counted in the notice. A whole second that far
+    away is held exactly and is not counted (Copilot on #12558).
     """
     micros: list[int | None] = []
     for moment in moments:
@@ -2090,7 +2089,11 @@ def _unix_seconds(moments: list[pd.Timestamp | None], series: pd.Series, carried
         return pd.Series(pd.array(whole, dtype="Int64")), notice
     seconds = [np.nan if value is None else value / _MICROSECONDS for value in micros]
     notice += "; fractions of a second kept as decimals"
-    rounded = sum(1 for value in micros if value is not None and abs(value) >= _MICROSECOND_SECONDS * _MICROSECONDS)
+    rounded = sum(
+        1
+        for value, second in zip(micros, seconds, strict=True)
+        if value is not None and ExactDecimal(repr(second)) * _MICROSECONDS != value
+    )
     if rounded:
         notice += f", {_count(rounded, 'value')} more than 272 years from 1970 rounded to the float's digits"
     return pd.Series(seconds, dtype="float64"), notice
