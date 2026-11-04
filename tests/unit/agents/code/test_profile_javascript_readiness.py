@@ -5,6 +5,7 @@ from collections import Counter
 
 import pytest
 
+from agents.anyplot.code.profiles.javascript.allowlist import mui_version
 from agents.anyplot.code.profiles.javascript.coupling import coupling, structure_reasons
 from agents.anyplot.code.profiles.javascript.normalise import normalise
 from agents.anyplot.code.profiles.javascript.readiness import scan
@@ -161,7 +162,7 @@ def test_muix_7_imports_are_a_coupled_hint_never_a_block() -> None:
     assert "deprecated-api: 2 lines" in readiness.reasons
     hint = next(hint for hint in readiness.hints if hint.startswith("MUI X 7 imports"))
     assert hint == (
-        'MUI X 7 imports the image\'s MUI X 9.16.0 lacks at line 4 `"@mui/x-charts/ChartContainer"`; '
+        f'MUI X 7 imports the image\'s MUI X {mui_version()} lacks at line 4 `"@mui/x-charts/ChartContainer"`; '
         'line 5 `ChartContainer from "@mui/x-charts"`: use MUI X 9\'s (ChartContainer is ChartsContainer from '
         "@mui/x-charts/ChartsContainer)."
     )
