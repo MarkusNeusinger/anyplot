@@ -73,7 +73,14 @@
  *
  * The step-1 data changes (the service's `prepare_data` tool) in miniature:
  * the action `{action: "summarize_data"}` answers a scripted summary of the
- * profile; a message containing "prozent" or "percent" plays a `set_type`
+ * profile. A paste is unsummarized until the first turn on it, as the service's
+ * `summary_pending`: a typed message then is the note sent with the attachment,
+ * which the mock answers with the summary and the note acted on in one reply
+ * ("nur 2024" or "only 2024" keeps that year's rows, "dezimalkomma",
+ * "decimal comma", "tausender" or "thousands" reads a column of `1.234` dots as
+ * thousands separators); a note with "weather" or "joke" is refused and leaves
+ * the paste unsummarized for the page's summary action. A message containing
+ * "prozent" or "percent" plays a `set_type`
  * (number) on the second column (a unit such as `%` removed, a decimal comma
  * read), "gruppier" or "group" an `aggregate` (a numeric column summed by the
  * column the message names, "gruppier nach x", else by the first text column),
@@ -1133,7 +1140,27 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       }
       if (body.action === 'summarize_data') {
         await sleep(STEP_MS * 2);
+        session.summaryPending = false;
         send('message', { text: summarizeData(session) });
+        return;
+      }
+      // The note typed with the attachment, the first turn on the paste: the summary, then the note acted on.
+      if (
+        typeof body.text === 'string' &&
+        session.summaryPending &&
+        session.dataset &&
+        !outOfScope
+      ) {
+        await sleep(STEP_MS * 2);
+        const summary = summarizeData(session);
+        const year = lower.match(/\b(?:nur|only)\s+(\d{4})\b/);
+        const acted = year
+          ? keepYear(session, year[1])
+          : /dezimal|decimal comma|tausender|thousands/.test(lower)
+            ? dotsAsThousands(session)
+            : `Noted: ${text.trim()}`;
+        session.summaryPending = false;
+        send('message', { text: `${summary} ${acted}` });
         return;
       }
       if (body.action === 'example_data') {
@@ -1627,6 +1654,36 @@ function unitOf(cell) {
 }
 
 /** `set_type number` on the second column: the unit removed, thousands separators dropped, a decimal comma read. */
+/** "nur 2024", "only 2024": the rows of that year, the root's `drop_rows` in miniature, as the next version. */
+function keepYear(session, year) {
+  const { header, rows } = session.dataset;
+  const index = header.findIndex((_, column) => rows.some(row => row[column] === year));
+  if (index < 0) return `There is no ${year} in the data, so nothing changed.`;
+  const kept = rows.filter(row => row[index] === year);
+  storeVersion(session, parseDataset(toCsv(header, kept)), [
+    `dropped ${rows.length - kept.length} rows where ${header[index]} is not ${year}`,
+  ]);
+  return `I kept the rows of ${year}: ${kept.length} of ${rows.length}.`;
+}
+
+/** "the dots are thousands separators": a column of `1.234` shapes read again from its cells as pasted. */
+function dotsAsThousands(session) {
+  const { header, rows } = session.dataset;
+  const index = header.findIndex(
+    (_, column) =>
+      rows.every(row => !row[column] || /^\d{1,3}(\.\d{3})+$|^\d+$/.test(row[column])) &&
+      rows.some(row => row[column].includes('.'))
+  );
+  if (index < 0) return 'No column reads its dots as decimal points, so nothing changed.';
+  const read = rows.map(row =>
+    row.map((cell, column) => (column === index ? cell.replace(/\./g, '') : cell))
+  );
+  storeVersion(session, parseDataset(toCsv(header, read)), [
+    `${header[index]}: ${rows.length} cells read as numbers`,
+  ]);
+  return `I read ${header[index]} with its dots as thousands separators.`;
+}
+
 function setTypeNumber(session) {
   const { header, rows } = session.dataset;
   if (header.length < 2) return 'There is no second column to read as numbers.';
@@ -2412,6 +2469,7 @@ async function route(req, res) {
     session.confirmed = false; // a new dataset is unchecked
     session.history = []; // a paste starts over at version 1
     session.version = 1;
+    session.summaryPending = true; // the first turn on it summarizes it: the action, or the note
     pastedLanguage(session, text);
     return json(
       res,
