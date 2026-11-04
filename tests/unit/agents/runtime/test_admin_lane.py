@@ -403,10 +403,12 @@ class TestGatesOffTheLoop:
     ) -> None:
         loop_thread = threading.get_ident()
         threads: list[tuple[str, int]] = []
+        specs: list[str | None] = []
 
         def recording(where: str, evaluate: Any) -> Any:
             def wrapped(*args: Any, **kwargs: Any) -> Any:
                 threads.append((where, threading.get_ident()))
+                specs.append(kwargs.get("spec_id"))
                 return evaluate(*args, **kwargs)
 
             return wrapped
@@ -421,3 +423,5 @@ class TestGatesOffTheLoop:
 
         assert [where for where, _ in threads] == ["pipeline", "toggle"]
         assert all(thread != loop_thread for _, thread in threads)
+        # Both pass the spec, so G8 can tell a unit-mark plot (a pictogram's icons) from made-up points.
+        assert specs == ["scatter-basic", "scatter-basic"]

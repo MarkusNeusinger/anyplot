@@ -450,7 +450,7 @@ async def _standin(
     started = time.monotonic()
     result = await context.backend.render(job)
     standin["render_s"] = round(time.monotonic() - started, 3)
-    report = evaluate(result, themes=job.themes, library=case.library, rows=data_rows(parsed.csv))
+    report = evaluate(result, themes=job.themes, library=case.library, rows=data_rows(parsed.csv), spec_id=case.spec_id)
     output = result.outputs.get("light")
     standin.update(
         passed=report.passed_host_gates,

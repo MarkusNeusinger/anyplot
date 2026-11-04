@@ -13,7 +13,15 @@ import pytest
 
 from agents.anyplot.data.bindings import check_bindings, default_bindings
 from agents.anyplot.data.parse import parse_dataset
-from agents.anyplot.data.signs import NON_NEGATIVE_ROLES, has_negative, is_non_negative, mark_non_negative
+from agents.anyplot.data.signs import (
+    NON_NEGATIVE_ROLES,
+    UNIT_MARK_PREFIXES,
+    UNIT_MARK_SPECS,
+    draws_unit_marks,
+    has_negative,
+    is_non_negative,
+    mark_non_negative,
+)
 from agents.anyplot.schemas import Binding, DatasetProfile
 from core.spec_roles import DataRole, parse_roles
 
@@ -171,3 +179,28 @@ class TestWarnings:
         snapshot = CatalogueSnapshot(spec_id="polar-scatter", title="t", data_roles=bullets, code="x = 1")
 
         assert [(role.name, role.non_negative) for role in snapshot.roles()] == [("theta", False), ("radius", True)]
+
+
+class TestUnitMarks:
+    @pytest.mark.parametrize("spec_id", sorted(UNIT_MARK_SPECS))
+    def test_every_listed_spec_exists_and_matches_a_prefix(self, spec_id: str) -> None:
+        assert (PLOTS / spec_id / "specification.md").is_file()
+        assert spec_id.startswith(UNIT_MARK_PREFIXES)
+
+    @pytest.mark.parametrize(
+        ("spec_id", "expected"),
+        [
+            ("pictogram-basic", True),
+            ("waffle-basic", True),
+            ("dot-matrix-proportional", True),
+            ("parliament-basic", True),
+            ("waffle-icon", True),  # a variant not in the catalogue yet: the prefix covers it
+            ("scatter-basic", False),
+            ("bar-basic", False),
+            ("dot-plot", False),  # one dot per row, not per unit
+            ("", False),
+            (None, False),
+        ],
+    )
+    def test_draws_unit_marks(self, spec_id: str | None, expected: bool) -> None:
+        assert draws_unit_marks(spec_id) is expected

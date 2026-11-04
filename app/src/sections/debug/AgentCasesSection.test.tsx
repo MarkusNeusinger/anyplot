@@ -293,8 +293,34 @@ describe('AgentCasesSection triage', () => {
       files: ['data.csv', 'manifest.json'],
     });
     listAnswer = () => json(200, { items: [chat], has_more: false });
+    const crashed = {
+      attempt: 1,
+      outcome: 'render_failed',
+      findings: 1,
+      step: 'rendering',
+      shipped: false,
+      defects: [],
+      gates_failed: ['R1'],
+      sandbox_failures: ['key'],
+    };
     detailAnswer = () =>
-      json(200, detailOf(chat, { code: null, diff: null, residual_defects: [] }));
+      json(
+        200,
+        detailOf(chat, {
+          code: null,
+          diff: null,
+          residual_defects: [],
+          rounds: [],
+          session_versions: 0,
+          last_run: {
+            status: 'failed',
+            reason: 'render',
+            version: null,
+            turn: 2,
+            rounds: [crashed],
+          },
+        })
+      );
     renderSection();
 
     expect(
@@ -304,6 +330,17 @@ describe('AgentCasesSection triage', () => {
     const article = await screen.findByRole('article', { name: `Case ${A}` });
     expect(
       within(article).getByText(/no plot: the feedback is on the chat itself/)
+    ).toBeInTheDocument();
+    // The chat holds no version: the session's line and its latest run say what happened.
+    expect(
+      within(article).getByText(
+        'session: 0 versions · latest run (turn 2): failed, render · stored no version'
+      )
+    ).toBeInTheDocument();
+    expect(
+      within(article).getByText(
+        'round 1: render_failed at rendering · 1 finding · gates R1 · crash key'
+      )
     ).toBeInTheDocument();
     expect(
       within(article).getByText(/a chat case belongs in the prep or scope eval/)
