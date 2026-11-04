@@ -550,6 +550,7 @@ class TestReplyShape:
             ("Prüfe die Vorschau und drücke dann `.create_plot()`.", False),
             ("Name is bound to the category and Score to the value.", False),  # a column named Name
             ("Subscription Date can become numbers for y: the days since the first date or the year.", False),
+            ("  \n ", False),  # a reply of whitespace only has no sentence to close with
         ],
     )
     def test_a_closing_invitation_is_found(self, text: str, invitation: bool) -> None:
