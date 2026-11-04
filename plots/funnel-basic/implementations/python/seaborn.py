@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 funnel-basic: Basic Funnel Chart
-Library: seaborn 0.13.2 | Python 3.14.4
-Quality: pending | Updated: 2026-04-26
+Library: seaborn 0.13.2 | Python 3.14.9
+Quality: 80/100 | Updated: 2026-11-04
 """
 
 import os
