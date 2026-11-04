@@ -10,6 +10,10 @@
  * the memory: `.start_over()` keeps it (owner decision of 2026-11-02). Editing
  * an entry comes later; until then a change in words goes through the chat.
  *
+ * The heading is one short line, `# remembered · 2 decisions` (`· full` once the
+ * memory has no room), and what the list does is behind the ⓘ at its end, as the
+ * experimental notice does it: the line above the composer stays quiet.
+ *
  * While the memory is empty (or the server has none) nothing shows but a hidden
  * status region, which announces the last removal. `.hide()` folds the list
  * under its heading, for a long one. Like the language chip, the list holds its
@@ -26,7 +30,12 @@ import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 're
 import Box from '@mui/material/Box';
 
 import { AgentApiError, type PlotMemory } from 'src/lib/agent';
-import { describeMemoryFailure } from 'src/sections/agent-chat/messages';
+import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
+import {
+  describeMemoryFailure,
+  REMEMBERED_DETAILS,
+  REMEMBERED_FULL,
+} from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import {
   actionButtonSx,
@@ -154,10 +163,16 @@ export function Remembered({
           columnGap: 1,
         }}
       >
-        <Box id={headingId} sx={{ ...labelSx, lineHeight: 1.6, flex: '1 1 200px', minWidth: 0 }}>
-          {`# remembered · ${count} · ${
-            full ? 'full: forget one before a new decision fits' : 'every next plot keeps them'
-          }`}
+        {/* The ⓘ stands outside the heading, so the list's name is the heading's text alone. */}
+        <Box sx={{ ...labelSx, lineHeight: 1.6, flex: '1 1 200px', minWidth: 0 }}>
+          <Box component="span" id={headingId}>
+            {`# remembered · ${count}${full ? ' · full' : ''}`}
+          </Box>
+          <InfoPopover
+            label="About the remembered decisions"
+            heading="# remembered"
+            lines={[...(full ? [REMEMBERED_FULL] : []), ...REMEMBERED_DETAILS]}
+          />
         </Box>
         <Box
           component="button"

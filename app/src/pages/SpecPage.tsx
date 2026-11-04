@@ -16,7 +16,7 @@ import { useAgentEligibility } from 'src/hooks/useAgentEligibility';
 import { ApiError, apiGet, apiUrl, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
 import { agentChatPath, paths, publicAgentChatPath, specPath } from 'src/routes/paths';
-import { LibraryPills } from 'src/sections/spec-detail/LibraryPills';
+import { LibraryPills, UseMyDataAction } from 'src/sections/spec-detail/LibraryPills';
 import { RelatedSpecs } from 'src/sections/spec-detail/RelatedSpecs';
 import { colors, fontSize, semanticColors, typography } from 'src/theme';
 
@@ -309,24 +309,35 @@ export function SpecPage() {
     [specId, trackEvent, mode, fetchCode]
   );
 
-  // "Use with my data" (`.use_my_data()` beside the library carousel): for an
-  // eligible pair, while the agent chat is built. An admin gets the admin chat,
-  // through a full navigation so Cloudflare Access can intercept the /debug
-  // path; everyone else gets the public chat while its lane is open, through
-  // the router. The chat page records `agent_open{source: plot_page}`.
-  const agentLane = useAgentEligibility(mode === 'detail' ? specId : null, currentImpl?.library_id);
+  // "Use with my data" (`.use_my_data()`): for an eligible pair. On the plot page
+  // beside the library carousel and the code tab's copy button, for the library
+  // shown; on the spec hub in its header, for one library, matplotlib where the
+  // spec has it, else its first implementation, because the eligibility route takes
+  // one library and the chat's library menu switches anyway: one request per view,
+  // never one per card. An admin gets the admin chat, through a full navigation so
+  // Cloudflare Access can intercept the /debug path; everyone else gets the public
+  // chat while its lane is open, through the router. The chat page records
+  // `agent_open{source: plot_page}` or `{source: spec_hub}`.
+  const agentImpl = useMemo(() => {
+    // The previous spec's data while the next one loads: no probe for its library.
+    if (!specData || specData.id !== specId) return null;
+    if (mode === 'detail') return currentImpl;
+    return (
+      specData.implementations.find(impl => impl.library_id === 'matplotlib') ??
+      specData.implementations[0] ??
+      null
+    );
+  }, [mode, currentImpl, specData, specId]);
+  const agentLane = useAgentEligibility(specId, agentImpl?.library_id);
   const handleUseWithMyData = useCallback(() => {
-    if (!specId || !currentImpl) return;
+    if (!specId || !agentImpl) return;
+    const source = mode === 'detail' ? 'plot_page' : 'spec_hub';
     if (agentLane === 'public') {
-      navigate(
-        publicAgentChatPath(specId, currentImpl.library_id, currentImpl.language, 'plot_page')
-      );
+      navigate(publicAgentChatPath(specId, agentImpl.library_id, agentImpl.language, source));
       return;
     }
-    window.location.assign(
-      agentChatPath(specId, currentImpl.library_id, currentImpl.language, 'plot_page')
-    );
-  }, [specId, currentImpl, agentLane, navigate]);
+    window.location.assign(agentChatPath(specId, agentImpl.library_id, agentImpl.language, source));
+  }, [specId, agentImpl, agentLane, mode, navigate]);
 
   const buildReportUrl = useCallback(() => {
     const params = new URLSearchParams({
@@ -517,7 +528,17 @@ export function SpecPage() {
 
       <Box sx={{ pt: 1.5, pb: 4 }}>
         {mode === 'hub' && (
-          <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 0.5 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              columnGap: 2,
+              rowGap: 0.5,
+              mb: 0.5,
+            }}
+          >
             <Box
               component="a"
               href={buildReportUrl()}
@@ -536,6 +557,8 @@ export function SpecPage() {
             >
               report issue ↗
             </Box>
+            {/* The chat's entry on the hub: in the header once, never per library card. */}
+            {agentLane && <UseMyDataAction onActivate={handleUseWithMyData} />}
           </Box>
         )}
 
@@ -665,6 +688,7 @@ export function SpecPage() {
                 libraryId={selectedLibrary || ''}
                 language={currentImpl?.language || urlLanguage || 'python'}
                 onTrackEvent={trackEvent}
+                onUseWithMyData={agentLane ? handleUseWithMyData : undefined}
                 highlightedTags={highlightedTags}
               />
             </>

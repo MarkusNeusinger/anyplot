@@ -222,9 +222,9 @@ import { readSseEvents } from 'src/lib/sse';
 import { downloadBlob } from 'src/sections/agent-chat/files';
 import {
   CONFIRM_LOST_TEXT,
-  LANGUAGE_DETECTED_TEXT,
-  LANGUAGE_PASTED_TEXT,
+  languageNotice,
   nextUtcMidnight,
+  type NoticeInfo,
 } from 'src/sections/agent-chat/messages';
 import { reloadOnceForAccess } from 'src/utils/adminAuth';
 
@@ -306,8 +306,11 @@ export type ChatItem =
   | { id: number; kind: 'error'; code: string; ref: string | null }
   | { id: number; kind: 'plot'; version: number }
   | { id: number; kind: 'plot_failed'; result: PlotResult }
-  /** A line from the page itself; `warning` marks a lost confirmation. */
-  | { id: number; kind: 'notice'; text: string; tone?: 'warning' };
+  /**
+   * A line from the page itself; `warning` marks a lost confirmation, and `info` holds the
+   * details behind the line's ⓘ, which keep the line short.
+   */
+  | { id: number; kind: 'notice'; text: string; tone?: 'warning'; info?: NoticeInfo };
 
 /** Distributes `Omit` over the union, so each member keeps its own fields. */
 type WithoutId<T> = T extends unknown ? Omit<T, 'id'> : never;
@@ -1108,15 +1111,16 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
       const next = { ...synced, plotLanguage: action.plotLanguage };
       const before = state.plotLanguage;
       const after = action.plotLanguage;
-      // The first typed message or a paste set it: one quiet line names the chip that changes it.
+      // The first typed message or a paste set it: one quiet line, with the chip that changes it
+      // behind its ⓘ.
       if (after.source === 'detected' && SOURCE_RANK[before.source] < SOURCE_RANK.detected) {
-        return appendItem(next, { kind: 'notice', text: LANGUAGE_DETECTED_TEXT(after.language) });
+        return appendItem(next, { kind: 'notice', ...languageNotice(after.language, 'detected') });
       }
       if (
         after.source === 'pasted' &&
         (before.source === 'default' || before.language !== after.language)
       ) {
-        return appendItem(next, { kind: 'notice', text: LANGUAGE_PASTED_TEXT(after.language) });
+        return appendItem(next, { kind: 'notice', ...languageNotice(after.language, 'pasted') });
       }
       return next;
     }

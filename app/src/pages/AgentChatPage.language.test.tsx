@@ -182,11 +182,17 @@ describe('AgentChatPage language chip', () => {
     expect(await screen.findByText('Die x-Achse zeigt die Lernstunden.')).toBeInTheDocument();
     await waitFor(() => expect(chip()).toHaveTextContent(/^lang: de · detected$/));
     expect(chip()).toBeEnabled();
-    expect(
-      screen.getByText(
-        '# reply language: de · detected from your message · a plot you have keeps its language · the lang chip in the header changes both'
-      )
-    ).toBeInTheDocument();
+    // One short line; where the language came from and the chip are behind its ⓘ.
+    const notice = screen.getByText(/^# reply language: de$/);
+    expect(notice).toBeInTheDocument();
+    expect(screen.queryByText(/detected from your message/)).not.toBeInTheDocument();
+    fireEvent.click(within(notice).getByRole('button', { name: 'About the reply language' }));
+    const details = within(await screen.findByRole('dialog', { name: 'About the reply language' }));
+    expect(details.getAllByRole('listitem').map(item => item.textContent)).toEqual([
+      'detected from your message',
+      'a plot you have keeps its language',
+      'the lang chip in the header changes both',
+    ]);
     expect(puts).toEqual([]);
   });
 });

@@ -124,6 +124,36 @@ function ActionRule({ side }: { side: 'left' | 'right' }) {
   );
 }
 
+/**
+ * `.use_my_data() →`, the agent chat's entry, fading in once the eligibility answer
+ * names a lane: right of the carousel (after a rule, `rule`), in the spec hub's header
+ * and beside the code tab's copy button.
+ */
+export function UseMyDataAction({
+  onActivate,
+  rule = false,
+}: {
+  onActivate: () => void;
+  rule?: boolean;
+}) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        animation: 'useMyDataFadeIn 0.3s ease-out',
+        '@keyframes useMyDataFadeIn': { from: { opacity: 0 }, to: { opacity: 1 } },
+        '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+      }}
+    >
+      {rule && <ActionRule side="right" />}
+      <TextAction arrow="right" ariaLabel={USE_MY_DATA_LABEL} onActivate={onActivate}>
+        <Box component="span">.use_my_data()</Box>
+      </TextAction>
+    </Box>
+  );
+}
+
 export const LibraryPills = memo(function LibraryPills({
   implementations,
   selectedLibrary,
@@ -318,22 +348,7 @@ export const LibraryPills = memo(function LibraryPills({
           alignItems: 'center',
         }}
       >
-        {onUseWithMyData && (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              animation: 'useMyDataFadeIn 0.3s ease-out',
-              '@keyframes useMyDataFadeIn': { from: { opacity: 0 }, to: { opacity: 1 } },
-              '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-            }}
-          >
-            <ActionRule side="right" />
-            <TextAction arrow="right" ariaLabel={USE_MY_DATA_LABEL} onActivate={onUseWithMyData}>
-              <Box component="span">.use_my_data()</Box>
-            </TextAction>
-          </Box>
-        )}
+        {onUseWithMyData && <UseMyDataAction onActivate={onUseWithMyData} rule />}
       </Box>
     </Box>
   );
