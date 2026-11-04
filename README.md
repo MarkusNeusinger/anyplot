@@ -94,7 +94,7 @@ flowchart TB
 The catalogue pipeline, in GitHub Actions, writing to the same storage:
 
 ```mermaid
-flowchart LR
+flowchart TB
   spec["spec-create"] --> gen["impl-generate"]
   regen["daily-regen"] --> gen
   gen --> review["impl-review<br>24-criterion rubric"]
