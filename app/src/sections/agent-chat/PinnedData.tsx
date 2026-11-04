@@ -3,7 +3,7 @@
  * (`DataPanel.tsx`).
  *
  * Once the data has been confirmed at least once, the sticky header stays at
- * the top of the thread (`✓ data fits · …` in step 2, `! confirm again · …`
+ * the top of the thread (`✓ data fits · …` in step 2, `! check again · …`
  * when a change takes the session back to step 1) and toggles or scrolls to the
  * full data card below it.
  */
@@ -13,6 +13,7 @@ import GlobalStyles from '@mui/material/GlobalStyles';
 
 import type { AgentSessionState } from 'src/hooks/useAgentSession';
 import { countOf } from 'src/sections/agent-chat/countOf';
+import { DATA_SUMMARY_ID } from 'src/sections/agent-chat/steps';
 import {
   actionButtonSx,
   cardSx,
@@ -22,8 +23,7 @@ import {
 } from 'src/sections/agent-chat/styles';
 import { colors } from 'src/theme';
 
-/** The line the pinned header shows, and `.create_plot()` names as its description. */
-export const DATA_SUMMARY_ID = 'agent-data-summary';
+export { DATA_SUMMARY_ID };
 
 /** The card's line while the fan-out's panel is open, which the card names as its description. */
 export const DATA_LOCK_TEXT =
@@ -44,7 +44,6 @@ export interface PinnedDataProps {
   locked: boolean;
   dataset: AgentSessionState['dataset'];
   hasTranscription: boolean;
-  toggleRef?: React.Ref<HTMLButtonElement>;
   cardRef: React.RefObject<HTMLElement | null>;
   onToggle: () => void;
   children: React.ReactNode;
@@ -58,7 +57,6 @@ export function PinnedData({
   locked,
   dataset,
   hasTranscription,
-  toggleRef,
   cardRef,
   onToggle,
   children,
@@ -117,7 +115,7 @@ export function PinnedData({
               <>
                 {/* What to do, in bold: the warning reads in the words, not only the colour. */}
                 <Box component="span" data-tone="warning" sx={{ fontWeight: 600 }}>
-                  {hasTranscription ? 'decide on the table first' : 'confirm again'}
+                  {hasTranscription ? 'decide on the table first' : 'check again'}
                 </Box>
                 {hasTranscription ? ': .use() or .discard()' : ` · ${dataShape(dataset)}`}
               </>
@@ -126,7 +124,6 @@ export function PinnedData({
           <Box
             component="button"
             type="button"
-            ref={toggleRef}
             onClick={onToggle}
             // Step 1 again: the card is open, and the button leads to it.
             aria-expanded={confirmed ? expanded : undefined}
@@ -166,8 +163,8 @@ export function PinnedData({
           {pinned && (
             <Box sx={{ ...labelSx, mb: 1.5 }}>
               {confirmed
-                ? '# a change here takes the data back to step 1, where you confirm it again'
-                : '# step 1 again: check the data, then confirm it below'}
+                ? '# a change here takes the data back to step 1, where you check it and .create_plot() again'
+                : '# step 1 again: check the data, then .create_plot() below'}
             </Box>
           )}
           {children}

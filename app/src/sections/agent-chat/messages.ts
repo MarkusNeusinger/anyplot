@@ -28,7 +28,7 @@ export const ERROR_TEXT: Record<string, string> = {
   not_found: 'that plot or library is not in the catalogue',
   session_expired: 'the session expired',
   // The admin fan-out's copy of the page session's data (`.plot_all()`).
-  unconfirmed: 'the data is not confirmed any more; confirm it again, then .plot_all()',
+  unconfirmed: 'the data is not confirmed any more; check it, then .plot_all() again',
   has_dataset: 'this library already holds data; close the panel and .plot_all() again',
   // A server without the copy, and data the assistant changed or computed, which has no paste to post again.
   copy_unavailable:
@@ -56,7 +56,8 @@ export const PLOT_FAILED_TEXT: Record<string, string> = {
   error: 'something went wrong while adapting',
   no_dataset: 'paste and parse your data first',
   incomplete_bindings: 'pick a column for every required role first',
-  data_unconfirmed: 'confirm your data first: check the preview and the bindings, then .confirm()',
+  data_unconfirmed:
+    'the data is not confirmed: check the preview and the bindings, then .create_plot()',
 };
 
 /**
@@ -110,6 +111,11 @@ export const DATA_FAILURE: Record<string, string> = {
   unreachable:
     'no answer: your sign-in may have expired (reload the page), or the connection dropped',
   network: 'the server did not answer; check your connection',
+  // Text the chat takes goes there by itself (`parseData`); only longer text meets these lines.
+  code: 'looks like code that makes data: shorten it to 2,000 characters, keeping only the part that computes the data, and the chat runs it',
+  formula:
+    'looks like a formula: shorten it to 2,000 characters, and the chat computes the table from it',
+  data_request: 'asks for data: shorten it to 2,000 characters, and the chat makes the data',
 };
 
 /**
@@ -137,13 +143,24 @@ export function describeViewFailure(code: string, ref: string | null, detail?: s
 }
 
 /**
- * What dropped a confirmation the user had given: the thread's warning notice
- * and the data card's step line next to `.confirm()` say it in these words.
+ * What dropped a confirmation the user had given, as the thread's warning notice says it where
+ * it happened: the next `.create_plot()` confirms the data as shown again.
  */
 export const CONFIRM_LOST_TEXT: Record<ConfirmLoss, string> = {
-  bindings: 'bindings changed · confirm the data again',
-  data: 'the data changed · confirm it again',
-  server: 'not confirmed on the server · confirm the data again',
+  bindings: 'bindings changed · check them, then .create_plot()',
+  data: 'the data changed · check it, then .create_plot()',
+  server: 'not confirmed on the server · check the data, then .create_plot()',
+};
+
+/**
+ * The same as the step line above the composer says it, the description of the composer's
+ * action (`.create_plot()`, or `.plot_all()` with `all` pressed), which points up at the card
+ * it stands below.
+ */
+export const CONFIRM_LOST_STEP_TEXT: Record<ConfirmLoss, (action: string) => string> = {
+  bindings: action => `bindings changed · check them above, then ${action}`,
+  data: action => `the data changed · check it above, then ${action}`,
+  server: action => `not confirmed on the server · check the data, then ${action}`,
 };
 
 /** The details behind a thread notice's ⓘ: the button's name, the popover's heading and its lines. */
@@ -197,7 +214,7 @@ export const LEAVE_TEXT =
 export const DATA_HOWTO = [
   'formats: CSV, TSV, JSON, plain text, Excel, ODS, Parquet, Feather or NumPy',
   'paste code or a formula that makes data too, up to 2,000 characters',
-  'paste or drop → check the preview and the bindings → .confirm() → .create_plot()',
+  'paste or drop → check the preview and the bindings → .create_plot()',
   'the assistant fixes your data in plain words: "sum per month"',
   'afterwards, ask for changes: "log scale on y", "label the outliers"',
 ] as const;

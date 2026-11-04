@@ -1,17 +1,17 @@
 /**
  * What the data box waits for, drawn over it: a file read on the server or a parse.
- * Both take seconds while the box itself does not change, so the line names the step,
- * pulses its `…` and counts the seconds from the second one on, and a thin bar runs
- * along the box's foot: a plain indicator, no spinner (docs/reference/style-guide.md
- * §10.1). Hidden from screen readers, which hear the live line under the box; without
- * motion under `prefers-reduced-motion`, where the counter still moves.
+ * Both take seconds while the box itself does not change, so the line names the step
+ * beside the site's loader (`LoaderSpinner`, the dots the plots gallery shows while it
+ * loads) and counts the seconds from the second one on. Hidden from screen readers, which
+ * hear the live line under the box; the loader's dots stand still under
+ * `prefers-reduced-motion`, where the counter still moves.
  */
 
 import { useEffect, useState } from 'react';
 
 import Box from '@mui/material/Box';
 
-import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
+import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import { labelSx } from 'src/sections/agent-chat/styles';
 import { fontSize } from 'src/theme';
 
@@ -69,38 +69,23 @@ export function BoxWorking({
           borderRadius: '4px',
           px: 1.5,
           py: 0.75,
+          display: 'inline-flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'center',
+          columnGap: 1.5,
+          rowGap: 0.5,
           // A long file or sheet name without spaces wraps instead of being clipped on a phone.
           minWidth: 0,
           maxWidth: '100%',
           overflowWrap: 'anywhere',
         }}
       >
-        # {line} <Ellipsis />
-        {seconds >= 1 ? ` · ${seconds} s` : ''}
-      </Box>
-      <Box
-        sx={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: '2px',
-          overflow: 'hidden',
-          '@media (prefers-reduced-motion: reduce)': { display: 'none' },
-        }}
-      >
-        <Box
-          sx={{
-            '@keyframes agentBoxWorking': {
-              '0%': { transform: 'translateX(-100%)' },
-              '100%': { transform: 'translateX(340%)' },
-            },
-            width: '30%',
-            height: '100%',
-            bgcolor: 'var(--ink-soft)',
-            animation: 'agentBoxWorking 1.6s ease-in-out infinite',
-          }}
-        />
+        <Box component="span" sx={{ minWidth: 0 }}>
+          # {line}
+          {seconds >= 1 ? ` · ${seconds} s` : ''}
+        </Box>
+        <LoaderSpinner size="inline" />
       </Box>
     </Box>
   );

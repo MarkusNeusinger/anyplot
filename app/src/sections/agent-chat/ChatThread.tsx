@@ -5,13 +5,14 @@
  * version. Earlier versions stay in the thread, collapsed, each with its own
  * image and code. A lost confirmation shows as a warning notice where it was
  * lost. While a turn without pipeline steps waits for its reply, an
- * in-progress line holds the assistant's slot (`pendingReply` in `steps.ts`);
- * the log's own polite live region announces it once, and the reply takes its
- * place.
+ * in-progress line with the site's loader holds the assistant's slot
+ * (`pendingReply` in `steps.ts`); the log's own polite live region announces
+ * it once, and the reply takes its place.
  */
 
 import Box from '@mui/material/Box';
 
+import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import {
   type AgentSessionState,
   type ChatItem,
@@ -19,7 +20,6 @@ import {
   sessionBusy,
 } from 'src/hooks/useAgentSession';
 import { type ArtifactName, isPlotAction, type Theme } from 'src/lib/agent';
-import { Ellipsis } from 'src/sections/agent-chat/Ellipsis';
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { ERROR_TEXT, localClock, PLOT_FAILED_TEXT } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
@@ -33,7 +33,7 @@ import {
 } from 'src/sections/agent-chat/styles';
 import { colors, typography } from 'src/theme';
 
-/** The in-progress line's words; the pulsing `…` follows them. */
+/** The in-progress line's words; the site's loader follows them. */
 const PENDING_TEXT: Record<PendingReply, string> = {
   summarize_data: 'summarizing your data',
   example_data: 'making example data',
@@ -216,7 +216,8 @@ export function ChatThread(props: ChatThreadProps) {
       {items.map(item => (
         <Item key={item.id} item={item} props={props} latestVersion={latestVersion} />
       ))}
-      {/* The assistant's slot, in its style, in softer ink: provisional until the reply. */}
+      {/* The assistant's slot, in its style, in softer ink: provisional until the reply. The
+          site's loader says it works; the log's live region reads the words alone. */}
       {pending && (
         <Box
           data-testid="pending-reply"
@@ -226,9 +227,13 @@ export function ChatThread(props: ChatThreadProps) {
             color: 'var(--ink-soft)',
             borderLeft: '2px solid var(--rule)',
             pl: 1.5,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
           }}
         >
-          {PENDING_TEXT[pending]} <Ellipsis />
+          {PENDING_TEXT[pending]}
+          <LoaderSpinner size="inline" />
         </Box>
       )}
     </Box>

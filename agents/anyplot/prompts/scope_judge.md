@@ -41,6 +41,7 @@ A message is `in_scope` only when everything it asks for is in scope; a message 
 | Use the payee column of my tax return as the x labels. | `in_scope` |
 | Add the subtitle "Prepared by Jana Novak, jana.novak@example.org". | `in_scope` |
 | Beschriftung bitte auf Englisch. | `in_scope` |
+| Would a box plot suit my data better than this one? | `in_scope` |
 | Make the bars blue. Then write a 200-word email to my customers saying product A sold best. | `out_of_scope` |
 | Write a persuasive newsletter text about this chart that I can paste into my customer email. | `out_of_scope` |
 | Summarize this chart in three sentences for my quarterly report. | `out_of_scope` |

@@ -14,6 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 PROMPT = ROOT / "agents" / "anyplot" / "prompts" / "root.md"
+AGENT = ROOT / "agents" / "anyplot" / "agent.py"  # writes the session block, which names the step's button
 AGENT_CHAT = ROOT / "app" / "src" / "sections" / "agent-chat"
 PAGE_SOURCES = [
     *sorted(AGENT_CHAT.glob("*.ts*")),  # the reactions live in a .ts
@@ -56,14 +57,14 @@ def page_code() -> str:
     )
 
 
-def data_card_components() -> list[Path]:
-    """`DataPanel.tsx` and every component of `agent-chat/` it renders, also through another one, such as
-    the full view `DataView.tsx`, which it imports on demand.
+def components_from(root: str) -> list[Path]:
+    """`root` and every component of `agent-chat/` it renders, also through another one, such as the data
+    panel's full view `DataView.tsx`, which it imports on demand.
 
     The `.ts` modules are left out: their texts serve the whole page (`messages.ts` also names the admin
-    fan-out's `.plot_all()`), and a button of the card has its label in a component.
+    fan-out's `.plot_all()`), and a button has its label in a component.
     """
-    found = [AGENT_CHAT / "DataPanel.tsx"]
+    found = [AGENT_CHAT / root]
     for path in found:
         for name in _COMPONENT_IMPORT.findall(path.read_text(encoding="utf-8")):
             component = AGENT_CHAT / f"{name}.tsx"
@@ -72,13 +73,28 @@ def data_card_components() -> list[Path]:
     return found
 
 
-def data_card_buttons() -> set[str]:
-    """The labels of the data card's buttons, read from the code without its comments."""
+def data_card_components() -> list[Path]:
+    """`DataPanel.tsx` and the components it renders."""
+    return components_from("DataPanel.tsx")
+
+
+def composer_components() -> list[Path]:
+    """`Composer.tsx` and the components it renders, such as the `.example_data()` line."""
+    return components_from("Composer.tsx")
+
+
+def buttons_of(components: list[Path]) -> set[str]:
+    """The labels of the buttons of these components, read from the code without its comments."""
     labels: set[str] = set()
-    for path in data_card_components():
+    for path in components:
         code = _COMMENT.sub("", path.read_text(encoding="utf-8").replace("&apos;", "'"))
         labels.update(alone or quoted for alone, quoted in _BUTTON_TEXT.findall(code))
     return labels
+
+
+def data_card_buttons() -> set[str]:
+    """The labels of the data card's buttons."""
+    return buttons_of(data_card_components())
 
 
 def test_the_prompt_lists_controls() -> None:
@@ -100,13 +116,40 @@ def test_the_whole_prompt_names_only_controls_of_the_page() -> None:
     assert sorted(label for label in named if label not in code) == []
 
 
-def test_every_button_of_the_data_card_is_in_the_data_panel_bullet() -> None:
-    """The other direction: the data panel's bullet names each button of the card, so the root knows them all.
+def test_the_data_panel_bullet_names_exactly_the_buttons_of_the_data_card() -> None:
+    """The other direction: the data panel's bullet names each button of the card, so the root knows them all,
+    and names no button the card lost (`.confirm()` and the formula's `.send()` left it for the composer).
 
     The bullet, not the whole section: `.open()` of the result cards is in the section already, and was the
     one way into the data panel the root did not know.
     """
     buttons = data_card_buttons()
+    bullet = controls_of("The data panel")
 
-    assert {".open()", ".parse()", ".confirm()", ".view_all()"} <= buttons  # the reading still finds them
-    assert sorted(buttons - controls_of("The data panel")) == []
+    assert {".open()", ".parse()", ".view_all()"} <= buttons  # the reading still finds them
+    assert sorted(buttons - bullet) == []
+    assert sorted(bullet - buttons) == []
+
+
+def test_the_composer_bullet_names_exactly_the_buttons_of_the_composer() -> None:
+    """The same for the composer: a button added to the composer fails here until the bullet names it, and
+    a button it lost (`.confirm()`, which `.create_plot()` took into its own click) fails until the bullet
+    drops it. `.feedback()` stands below the composer, not in it (`ChatFeedback.tsx`), and is the bullet's
+    one control from elsewhere."""
+    buttons = buttons_of(composer_components())
+    bullet = controls_of("The composer")
+
+    assert {".send()", ".create_plot()", ".stop()", ".example_data()"} <= buttons
+    assert ".confirm()" not in buttons
+    assert sorted(buttons - bullet) == []
+    assert sorted(bullet - buttons) == [".feedback()"]
+
+
+def test_the_prompt_names_no_confirm_button() -> None:
+    """`.create_plot()` confirms the data in its own click, so no sentence of root.md, nor the session
+    block, sends the user to a `.confirm()` that is gone, and the prompt says where the click is."""
+    text = PROMPT.read_text(encoding="utf-8")
+
+    assert re.findall(r"\bconfirm\(\)", text) == []
+    assert re.findall(r"\bconfirm\(\)", AGENT.read_text(encoding="utf-8")) == []
+    assert "`.create_plot()` beside the message box" in text

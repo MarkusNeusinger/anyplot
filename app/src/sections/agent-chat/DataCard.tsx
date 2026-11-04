@@ -1,22 +1,17 @@
 /**
  * Content of the agent chat's data card (`DataPanel.tsx`): the text box and
- * file drop zone, the formula/code chat offer, the free-text transcription
- * decision card, the stored dataset's preview and full-view dialog, the role
- * bindings, and the step 1 confirmation foot.
+ * file drop zone, the free-text transcription
+ * decision card, the stored dataset's preview and full-view dialog, and the
+ * role bindings. `.create_plot()`, which takes the data as shown, sits at the composer's end
+ * (`Composer.tsx`).
  */
 
 import { Suspense } from 'react';
 
 import Box from '@mui/material/Box';
 
-import type { AgentSessionState, FormulaKind } from 'src/hooks/useAgentSession';
-import {
-  longSuggestion,
-  MAX_DATASET_BYTES,
-  MAX_MESSAGE_CHARS,
-  type tableChoice,
-  utf8Bytes,
-} from 'src/lib/agent';
+import type { AgentSessionState } from 'src/hooks/useAgentSession';
+import { longSuggestion, MAX_DATASET_BYTES, type tableChoice, utf8Bytes } from 'src/lib/agent';
 import { bindingRows } from 'src/sections/agent-chat/bindings';
 import { BoxWorking } from 'src/sections/agent-chat/BoxWorking';
 import { countOf } from 'src/sections/agent-chat/countOf';
@@ -36,7 +31,6 @@ import { FILE_ACCEPT } from 'src/sections/agent-chat/fileText';
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { lazyOrFallback } from 'src/sections/agent-chat/lazyOrFallback';
 import {
-  CONFIRM_LOST_TEXT,
   DATA_HOWTO,
   DATA_PLACEHOLDER,
   describeDataFailure,
@@ -65,26 +59,6 @@ function formatKb(bytes: number): string {
   return `${(bytes / 1024).toFixed(bytes < 10 * 1024 ? 1 : 0)} KB`;
 }
 
-/** The line under the box for text the server refused as a formula or as code, which the chat takes instead. */
-function offerLine(kind: FormulaKind, tooLong: boolean): string {
-  if (kind === 'formula') {
-    return 'looks like a formula: send it to the chat? the assistant computes the table from it.';
-  }
-  if (tooLong) {
-    return `looks like code that makes data: shorten it to ${MAX_MESSAGE_CHARS.toLocaleString('en-US')} characters, keeping only the part that computes the data, and the chat runs it.`;
-  }
-  return 'looks like code that makes data: send it to the chat? the assistant runs it in a sandbox and shows you the table.';
-}
-
-/** Step 1's one action under the bindings: `.confirm()`. */
-const stepButtonSx = {
-  ...actionButtonSx,
-  border: '1px solid var(--rule)',
-  px: 2,
-  py: 1,
-  width: { xs: '100%', sm: 'auto' },
-} as const;
-
 export interface DataCardProps {
   state: AgentSessionState;
   intake: FileIntake;
@@ -93,21 +67,16 @@ export interface DataCardProps {
   working: boolean;
   busy: boolean;
   locked: boolean;
-  confirmed: boolean;
   choice: ReturnType<typeof tableChoice>;
   viewOpen: boolean;
   setViewOpen: (open: boolean) => void;
   viewButtonRef: React.RefObject<HTMLButtonElement | null>;
   parseStart: React.RefObject<number>;
-  confirmRef?: React.Ref<HTMLButtonElement>;
-  decisionRef?: React.Ref<HTMLButtonElement>;
   onParse: () => void;
   onTable: (table: number) => void;
   onUse: () => void;
   onDiscardTranscription: () => void;
-  onSendFormula: () => void;
   onBind: (role: string, column: string | null) => void;
-  onConfirm: () => void;
   onUndo: () => void;
   onToLong?: () => void;
   onLoadData?: (signal: AbortSignal) => Promise<string>;
@@ -115,10 +84,10 @@ export interface DataCardProps {
 }
 
 export function DataCard(props: DataCardProps) {
-  const { state, intake, text, ready, working, busy, locked, confirmed, choice } = props;
-  const { viewOpen, setViewOpen, viewButtonRef, parseStart, confirmRef, decisionRef } = props;
-  const { onParse, onTable, onUse, onDiscardTranscription, onSendFormula } = props;
-  const { onBind, onConfirm, onUndo, onToLong, onLoadData, onDataViewShown } = props;
+  const { state, intake, text, ready, working, busy, locked, choice } = props;
+  const { viewOpen, setViewOpen, viewButtonRef, parseStart } = props;
+  const { onParse, onTable, onUse, onDiscardTranscription } = props;
+  const { onBind, onUndo, onToLong, onLoadData, onDataViewShown } = props;
   const { convertLine, converting, converted, dragOver, dropReady, fileNotice } = intake;
   const { pendingFile, convertStart, boxRef, parseButtonRef, fileInputRef } = intake;
   const { replaceButtonRef, handleTextChange, fillFromFile, handleSheet, handleKeep } = intake;
@@ -130,8 +99,6 @@ export function DataCard(props: DataCardProps) {
   const transcription = state.transcription;
   const dataset = state.dataset;
   const columns = dataset?.parsed.profile.columns ?? [];
-  // A pending transcription blocks the confirmation: the user decides on the data first.
-  const canConfirm = ready && !!dataset && state.bindingsComplete && !busy && !transcription;
   // An earlier version exists above the paste's 1, until the server says the
   // history ended (it keeps the last five versions).
   const canUndo =
@@ -142,9 +109,6 @@ export function DataCard(props: DataCardProps) {
   const rows = bindingRows(state.roles, state.bindings, columns.length);
   // The service's wide-table offer, checked again here: the dataset route's answer is not typed.
   const suggestion = longSuggestion(dataset?.parsed.suggestion);
-  // Code over the chat's cap is refused all the same, but cannot move there: the line asks to shorten it.
-  const codeTooLong =
-    state.formulaKind === 'code' && (state.formula ?? '').trim().length > MAX_MESSAGE_CHARS;
 
   return (
     <>
@@ -401,7 +365,8 @@ export function DataCard(props: DataCardProps) {
           </Box>
         </Box>
       )}
-      {/* A parse clears a pending table, so the two lines never show together. */}
+      {/* A parse clears a pending table, so the two lines never show together. The
+          parse's motion is the loader over the box; this line only says it. */}
       {(transcription || state.parsing) && (
         <Box
           id="agent-parse-hint"
@@ -413,52 +378,9 @@ export function DataCard(props: DataCardProps) {
             color: state.parsing ? 'var(--ink-soft)' : 'var(--ink-muted)',
           }}
         >
-          {state.parsing ? (
-            <>
-              # parsing your data <Ellipsis />
-            </>
-          ) : (
-            'decide on the table below first: .use() or .discard()'
-          )}
-        </Box>
-      )}
-
-      {/* The offer belongs to the text it was made for: an edit of the box takes it away, so
-          `.send()` never sends an older text than the one shown. */}
-      {state.formula !== null && text === state.formula && (
-        <Box
-          data-testid="formula-offer"
-          sx={{
-            mt: 1.5,
-            borderLeft: `3px solid ${colors.primary}`,
-            pl: 1.5,
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            columnGap: 1,
-            rowGap: 0.75,
-          }}
-        >
-          <Box
-            id="agent-formula-line"
-            role="status"
-            sx={{ ...labelSx, color: 'var(--ink)', flex: '1 1 220px', lineHeight: 1.6 }}
-          >
-            {offerLine(state.formulaKind, codeTooLong)}
-          </Box>
-          {!codeTooLong && (
-            <Box
-              component="button"
-              type="button"
-              onClick={onSendFormula}
-              disabled={!ready || busy}
-              aria-describedby="agent-formula-line"
-              sx={ghostButtonSx}
-            >
-              .send()
-            </Box>
-          )}
+          {state.parsing
+            ? '# parsing your data'
+            : 'decide on the table below first: .use() or .discard()'}
         </Box>
       )}
 
@@ -478,7 +400,6 @@ export function DataCard(props: DataCardProps) {
           canUse={ready && !busy}
           onUse={onUse}
           onDiscard={onDiscardTranscription}
-          decisionRef={decisionRef}
         />
       )}
 
@@ -618,44 +539,12 @@ export function DataCard(props: DataCardProps) {
             ready={ready}
             working={working}
             busy={busy}
-            confirmed={confirmed}
             suggestion={suggestion}
             onBind={onBind}
           />
 
-          {/* Step 2 has no foot: the pinned header says the data fits, and the
-              composer below the thread holds `.create_plot()`. */}
-          {!confirmed && (
-            <Box>
-              <Box
-                id="agent-step-line"
-                data-testid="data-step"
-                // A notch above the `#` labels: this line says what to do next, and after a
-                // lost confirmation what lost it, as the thread's notice does.
-                sx={{ ...labelSx, mb: 0.75, color: 'var(--ink-soft)' }}
-              >
-                {state.confirmLoss
-                  ? `# step 1 again — ${CONFIRM_LOST_TEXT[state.confirmLoss]}`
-                  : '# step 1 — check the preview and the bindings, then confirm'}
-              </Box>
-              <Box
-                component="button"
-                type="button"
-                ref={confirmRef}
-                onClick={onConfirm}
-                disabled={!canConfirm}
-                aria-describedby="agent-step-line"
-                sx={stepButtonSx}
-              >
-                {state.confirmBusy ? '.confirm() …' : '.confirm()'}
-              </Box>
-              {state.confirmError && (
-                <Box role="alert" sx={{ ...bodyTextSx, color: colors.error, mt: 1 }}>
-                  {describeDataFailure(state.confirmError.code, state.confirmError.ref)}
-                </Box>
-              )}
-            </Box>
-          )}
+          {/* No foot: `.create_plot()`, which takes the data as shown, and the line that says
+              what it waits for sit at the composer's end. */}
         </Box>
       )}
     </>

@@ -222,4 +222,17 @@ describe('ProgressTimeline', () => {
     render(<ProgressTimeline run={run(FIRST.slice(0, 1), { stopping: true })} />);
     expect(screen.getByText('stopping after this step…')).toBeInTheDocument();
   });
+
+  it('shows the site loader beside the run, outside its live region, from the queue to the stop', () => {
+    const { unmount } = render(<ProgressTimeline run={run([['queued', null]])} />);
+    const loader = screen.getByTestId('loader-spinner');
+    expect(loader).toHaveAttribute('aria-hidden', 'true');
+    expect(loader).toHaveAttribute('data-size', 'inline');
+    // The live region announces the words and the grid; the dots never join it.
+    expect(loader.closest('[aria-live]')).toBeNull();
+    unmount();
+
+    render(<ProgressTimeline run={run(FIRST.slice(0, 1), { stopping: true })} />);
+    expect(screen.getByTestId('loader-spinner')).toBeInTheDocument();
+  });
 });

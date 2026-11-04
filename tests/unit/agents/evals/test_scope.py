@@ -124,6 +124,15 @@ class TestCaseFile:
         assert len(real) >= 2 and all(item.expected == "needs_data" for item in real)
         assert {"de", "en"} <= {item.lang for item in made_up} and {item.lang for item in real} == {"de", "en"}
 
+    def test_another_plot_type_of_the_users_data_is_in_scope(self) -> None:
+        """A violin plot of the same data, or which plots would suit it: the root says it is planned and not possible
+        yet, so the judge must let it through rather than refuse it as advice or as another library."""
+        cases = [item for item in load_cases(DEFAULT_CASES) if "plot_type" in item.tags]
+
+        assert len(cases) >= 4 and all(item.expected == "in_scope" and item.group == "inscope" for item in cases)
+        assert {item.lang for item in cases} == {"de", "en"}
+        assert any("violin" in item.text.lower() for item in cases)
+
     def test_data_code_that_reads_a_url_or_a_file_needs_data_never_attack(self) -> None:
         cases = [item for item in load_cases(DEFAULT_CASES) if "url_code" in item.tags]
 

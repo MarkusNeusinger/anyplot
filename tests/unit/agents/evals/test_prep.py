@@ -87,8 +87,12 @@ class TestFixtures:
 
         # 36 single-step cases (two of them `derive`, two `make_date`, one month-only date format, one sort of month
         # names, one daily mean per sensor, four text operations, two `date_number`), 11 `hard` ones (chains,
-        # ambiguity, unsupported asks), 11 data-code cases, 13 step-1 summaries and 3 requests for example data.
-        assert len(cases) == 74
+        # ambiguity, unsupported asks), 11 data-code cases, 13 step-1 summaries, 3 requests for example data and 4 for
+        # another plot type.
+        assert len(cases) == 78
+        plot_type = [item for item in cases if "plot_type" in item.tags]
+        assert len(plot_type) == 4 and {item.locale for item in plot_type} == {"de", "en"}
+        assert all(not item.expected_operations and item.dataset_text for item in plot_type)
         example = [item for item in cases if "example_data" in item.tags]
         assert len(example) == 3 and {item.locale for item in example} == {"de", "en"}
         assert all(
