@@ -400,6 +400,28 @@ def test_script_src_never_mixes_unsafe_inline_with_a_nonce_or_hash():
     )
 
 
+TURNSTILE_HOST = "https://challenges.cloudflare.com"
+
+
+def test_turnstile_gets_its_script_and_its_frame_and_nothing_more():
+    """The bot check (`src/lib/turnstile.ts`) inserts Cloudflare's api.js and renders an iframe from its host.
+
+    Cloudflare's CSP page lists exactly those two without pre-clearance. The host in any other directive, or a
+    wildcard over Cloudflare's domains, would widen the policy for nothing the check needs.
+    """
+    directives = csp_directives()
+    assert TURNSTILE_HOST in directives["script-src"]
+    assert TURNSTILE_HOST in directives["frame-src"]
+    elsewhere = [
+        name
+        for name, values in directives.items()
+        if name not in ("script-src", "frame-src") and TURNSTILE_HOST in values
+    ]
+    assert not elsewhere, f"the Turnstile host also appears in {elsewhere}"
+    wildcards = [value for values in directives.values() for value in values if "*" in value and "cloudflare" in value]
+    assert not wildcards, f"a Cloudflare wildcard widens the policy: {wildcards}"
+
+
 def test_object_src_and_base_uri_stay_closed():
     """The two directives `default-src` does not cover on its own."""
     directives = csp_directives()

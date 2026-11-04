@@ -70,6 +70,9 @@ const FEEDBACK_FAILURE: Record<string, string> = {
   unavailable: 'the server is not ready; the case was not stored',
   // The public lane's cap on feedback cases per network and hour (`AGENT_PUBLIC_FEEDBACK_PER_HOUR`).
   rate_limited: 'too much feedback from your network in the last hour; try again later',
+  // The public lane's Turnstile check: `.send()` again runs a fresh one, and the form keeps what was typed.
+  bot_check_failed: 'the browser check did not go through; send again',
+  bot_check_unavailable: 'the browser check is not available right now; send again in a minute',
 };
 
 function describeFailure(code: string, ref: string | null): string {

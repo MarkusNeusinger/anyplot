@@ -122,6 +122,15 @@ describe('LegalPage', () => {
     expect(screen.getByText(/Cloudflare uses your IP address/)).toBeInTheDocument();
     // The browser's storage is named, not hidden behind "no cookies".
     expect(screen.getByText(/your plot\s+votes, a release number/)).toBeInTheDocument();
+    // Turnstile, per Cloudflare's privacy addendum: what it reads, its storage item, no cookie,
+    // and Cloudflare's own controller role for improving the check.
+    expect(screen.getByRole('row', { name: /^bot check\s/ })).toHaveTextContent(
+      /Cloudflare Turnstile checks that a browser, not a script, is asking/
+    );
+    expect(screen.getByText(/user-agent and TLS fingerprint/)).toBeInTheDocument();
+    expect(screen.getByText(/with no cookie/)).toBeInTheDocument();
+    expect(screen.getByText(/as its own controller, to improve the check/)).toBeInTheDocument();
+    expect(screen.getByText(/and Cloudflare Turnstile.s own\s+item/)).toBeInTheDocument();
   });
 
   // The data assistant's section, each claim pinned with the qualifier that

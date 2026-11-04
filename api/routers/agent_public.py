@@ -7,14 +7,16 @@ calls), with four differences:
   `X-Anyplot-Anon`; `require_public_identity` turns a request into that id plus the client's network (its IPv4
   address, or the /64 of an IPv6 one). Both go to the agents service, which salts them with its own per-process
   salt and keys the per-user and per-IP limits on the result (`agents/main.py` `require_user`), so nothing
-  durable links usage to an address, and every anyplot-api instance reaches the same user. That dependency is
-  the one seam where a bot check (Turnstile) slots in later.
+  durable links usage to an address, and every anyplot-api instance reaches the same user.
+* **Bot check.** Opening a session and storing a feedback case need a Cloudflare Turnstile token in
+  `X-Turnstile-Token` (`api/turnstile.py`); every other route acts on a session such a call opened.
 * **Tier.** Every request asserts `X-Anyplot-Tier: public`: the run queue's `normal` lane with its per-user cap,
   and every day cap.
 * **No session id in a URL.** Cloud Run's request log keeps a URL together with the client address for 30 days, so
   the session id travels in `X-Anyplot-Session` instead of the path.
 * **No admin-only route.** The fan-out's data copy (`/dataset/copy`) and `source: fanout`, the day budget
-  (`/budget`) and the feedback triage (`/cases*`) exist only under `/debug/agent`.
+  (`/budget`), the feedback triage (`/cases*`) and `.save()`'s session file (`/bundle`) exist only under
+  `/debug/agent`.
 
 Every route answers 404 until `AGENT_PUBLIC_ENABLED` is on, on top of `AGENT_ENABLED` and its configuration, which
 stays the master switch: closing the public door leaves the admin lane open. `GET /agent/lane` answers
@@ -46,6 +48,7 @@ from fastapi.sse import EventSourceResponse, ServerSentEvent
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api import turnstile
 from api.dependencies import require_db
 from api.origin_gate import gate_is_armed
 from api.request_context import client_ip
@@ -136,12 +139,13 @@ def require_public_enabled(config: AgentConfig = Depends(require_agent_enabled))
 
     In production it also stays shut while the origin gate is unarmed (`ORIGIN_SECRET`, `api/origin_gate.py`): the
     per-IP limits key on `CF-Connecting-IP`, which only a request that came through Cloudflare carries honestly, and
-    without the gate a caller on the direct `run.app` URL could forge a fresh address per request. The deploy smoke
-    then fails on `/agent/lane`, which says so before the switch seems to work.
+    without the gate a caller on the direct `run.app` URL could forge a fresh address per request. And it stays
+    shut without the Turnstile secret (`TURNSTILE_SECRET_KEY`, `api/turnstile.py` `enforced`) or with one of
+    Cloudflare's test secrets, either of which would refuse every new session. The deploy smoke then fails on `/agent/lane`, which says so before the switch seems to work.
     """
     if not settings.agent_public_enabled:
         raise AgentHTTPError(404, NOT_ENABLED)
-    if settings.is_production and not gate_is_armed():
+    if settings.is_production and not (gate_is_armed() and turnstile.enforced()):
         raise AgentHTTPError(404, NOT_ENABLED)
     return config
 
@@ -175,10 +179,11 @@ class PublicIdentity:
 
 
 def require_public_identity(request: Request, x_anyplot_anon: Annotated[str | None, Header()] = None) -> PublicIdentity:
-    """Turn a request into the public identity: the one seam a bot check such as Turnstile goes into.
+    """Turn a request into the public identity.
 
     `400 anon_required` without a tab id of `ANON_ID_PATTERN`. Nothing is stored and nothing is logged: the agents
-    service salts both values with its per-process salt before it keys anything on them.
+    service salts both values with its per-process salt before it keys anything on them. The bot check is not part
+    of it: a token is single-use, so only the calls that open or store something take one (`require_human`).
     """
     if x_anyplot_anon is None or not _ANON_ID.fullmatch(x_anyplot_anon):
         raise AgentHTTPError(400, "anon_required")
@@ -282,6 +287,20 @@ Cases = Annotated[CaseBucket, Depends(get_case_bucket)]
 Db = Annotated[AsyncSession, Depends(require_db)]
 SessionId = Annotated[str, Header(alias="X-Anyplot-Session", pattern=SESSION_ID_PATTERN)]
 """The session id, in a header: Cloud Run logs every URL with the client's address."""
+HumanToken = Annotated[str | None, Header(alias=turnstile.TOKEN_HEADER)]
+"""The page's Turnstile token for this one call; checked by `require_human`."""
+Siteverify = Annotated[httpx.AsyncClient, Depends(turnstile.get_turnstile_client)]
+
+
+async def require_human(token: str | None, client: httpx.AsyncClient, ctx: AgentContext) -> None:
+    """Redeem the call's Turnstile token: `403 bot_check_failed` or `503 bot_check_unavailable` unless it passes.
+
+    Called inside the route, after its body and identity are validated, so a malformed request costs no
+    siteverify call.
+    """
+    refused = turnstile.refusal(await turnstile.verify(token, client))
+    if refused is not None:
+        raise AgentHTTPError(refused[0], refused[1], ctx.request_id)
 
 
 class PublicCreateSessionBody(BaseModel):
@@ -334,9 +353,15 @@ async def eligibility(
 
 
 @router.post("/sessions")
-async def create_session(body: PublicCreateSessionBody, ctx: Ctx, client: Client, db: Db) -> Any:
+async def create_session(
+    body: PublicCreateSessionBody, ctx: Ctx, client: Client, db: Db, siteverify: Siteverify, human: HumanToken = None
+) -> Any:
     """Open a chat session: `{session_id, eligibility, roles}`. The page keeps the id and sends it as
-    `X-Anyplot-Session`."""
+    `X-Anyplot-Session`.
+
+    Needs a Turnstile token (`require_human`), checked before the agents service is asked.
+    """
+    await require_human(human, siteverify, ctx)
     admin_body = CreateSessionBody(spec_id=body.spec_id, library=body.library, locale=body.locale)
     return await agent.create_session(admin_body, ctx, client, db)
 
@@ -485,19 +510,6 @@ async def get_artifact(
     return await agent.get_artifact(sid, name, ctx, client, v, theme)
 
 
-@router.get("/session/bundle")
-async def get_bundle(
-    sid: SessionId,
-    request: Request,
-    ctx: Ctx,
-    client: Client,
-    version: Annotated[int | None, Query(ge=0, le=MAX_AGENT_VERSION)] = None,
-    include_data: bool = False,
-) -> Response:
-    """`.save()`: the session as a JSON file to keep, as the admin lane's route; nothing is stored."""
-    return await agent.get_bundle(sid, request, ctx, client, version, include_data)
-
-
 @router.post("/session/feedback", status_code=201)
 async def submit_feedback(
     sid: SessionId,
@@ -507,12 +519,17 @@ async def submit_feedback(
     cases: Cases,
     db: Db,
     limiter: Annotated[FeedbackLimiter, Depends(get_feedback_limiter)],
+    siteverify: Siteverify,
+    human: HumanToken = None,
 ) -> dict[str, Any]:
     """Store the feedback case the user sent, as the admin lane does: `201 {case_id, stored}`.
 
-    `include_data` carries the user's consent to store the data with the case; the page leaves it unticked. A
-    network past `AGENT_PUBLIC_FEEDBACK_PER_HOUR` cases gets `429 rate_limited` before the bundle is fetched.
+    `include_data` carries the user's consent to store the data with the case; the page leaves it unticked. The
+    token comes first (`require_human`), so a script without one cannot spend the hourly cases of a network it
+    shares with real visitors; then a network past `AGENT_PUBLIC_FEEDBACK_PER_HOUR` cases gets `429 rate_limited`
+    before the bundle is fetched.
     """
+    await require_human(human, siteverify, ctx)
     if ctx.network is None or not limiter.allow(ctx.network):
         raise AgentHTTPError(429, "rate_limited", ctx.request_id)
     return await agent.submit_feedback(sid, body, ctx, client, cases, db)

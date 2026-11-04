@@ -26,6 +26,7 @@ import {
   toAgentApiError,
   toBase64,
 } from 'src/lib/agent';
+import { resetTurnstile, TURNSTILE_HEADER } from 'src/lib/turnstile';
 import { ACCESS_RELOAD_KEY } from 'src/utils/adminAuth';
 
 const raw = (event: string, data: unknown) => ({
@@ -796,6 +797,96 @@ describe('the public lane', () => {
     );
     await agentFetch('/status', PUBLIC_LANE);
     expect(sessionStorage.getItem(ACCESS_RELOAD_KEY)).toBe('1');
+  });
+
+  describe('the bot check', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+      resetTurnstile();
+      delete window.turnstile;
+    });
+
+    const sessionBody = JSON.stringify({ session_id: 'S1', eligibility: {} });
+
+    function stubTurnstile(pass: boolean) {
+      vi.stubEnv('VITE_TURNSTILE_SITE_KEY', '1x00000000000000000000AA');
+      window.turnstile = {
+        render: vi.fn((_container: HTMLElement, options: Record<string, unknown>) => {
+          queueMicrotask(() =>
+            pass
+              ? (options.callback as (token: string) => void)('tok-1')
+              : (options['error-callback'] as () => void)()
+          );
+          return 'w1';
+        }),
+        remove: vi.fn(),
+      };
+    }
+
+    it('sends a fresh token when it opens a session or sends feedback on the public lane', async () => {
+      stubTurnstile(true);
+      const fetchMock = vi.fn(async () => new Response(sessionBody, { status: 200 }));
+      vi.stubGlobal('fetch', fetchMock);
+
+      await agentApi.openSession(PUBLIC_LANE, 'scatter-basic', 'matplotlib', 'en');
+      await agentApi.sendFeedback(PUBLIC_LANE, 'S1', {
+        reaction: 'bug',
+        message: null,
+        include_data: false,
+        result_version: 1,
+      });
+
+      const sent = fetchMock.mock.calls.map(
+        call => (call as unknown as [string, RequestInit])[1].headers as Record<string, string>
+      );
+      expect(sent.map(headers => headers[TURNSTILE_HEADER])).toEqual(['tok-1', 'tok-1']);
+      expect(window.turnstile!.render).toHaveBeenCalledTimes(2);
+    });
+
+    it('never runs on the admin lane or on a call that acts on an open session', async () => {
+      stubTurnstile(true);
+      const fetchMock = vi.fn(async () => new Response(sessionBody, { status: 200 }));
+      vi.stubGlobal('fetch', fetchMock);
+
+      await agentApi.openSession('an-admin-token', 'scatter-basic', 'matplotlib', 'en');
+      await agentApi.undoDataset(PUBLIC_LANE, 'S1');
+
+      for (const call of fetchMock.mock.calls) {
+        const headers = (call as unknown as [string, RequestInit])[1].headers as Record<
+          string,
+          string
+        >;
+        expect(headers[TURNSTILE_HEADER]).toBeUndefined();
+      }
+      expect(window.turnstile!.render).not.toHaveBeenCalled();
+    });
+
+    it('turns a check that fails in the browser into bot_check_failed, before any request', async () => {
+      stubTurnstile(false);
+      const fetchMock = vi.fn(async () => new Response(sessionBody, { status: 200 }));
+      vi.stubGlobal('fetch', fetchMock);
+
+      await expect(
+        agentApi.openSession(PUBLIC_LANE, 'scatter-basic', 'matplotlib', 'en')
+      ).rejects.toMatchObject({ name: 'AgentApiError', code: 'bot_check_failed', status: 0 });
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it("reads the API's refusal as the same code", async () => {
+      stubTurnstile(true);
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(
+          async () =>
+            new Response(JSON.stringify({ detail: 'bot_check_failed', ref: 'r1' }), { status: 403 })
+        )
+      );
+
+      const refused = agentApi.openSession(PUBLIC_LANE, 'scatter-basic', 'matplotlib', 'en');
+
+      await expect(refused).rejects.toMatchObject({ code: 'bot_check_failed', ref: 'r1' });
+      await refused.catch((err: { unauthorized: boolean }) => expect(err.unauthorized).toBe(false));
+    });
   });
 
   it('reads the door from GET /agent/lane, and anything else as closed', async () => {

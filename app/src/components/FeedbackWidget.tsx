@@ -19,13 +19,23 @@ import Tooltip from '@mui/material/Tooltip';
 import { useAnalytics } from 'src/hooks';
 import { useFooterLift } from 'src/hooks/useFooterLift';
 import { useLocalStorage } from 'src/hooks/useLocalStorage';
-import { apiPost, endpoints } from 'src/lib/api';
+import { ApiError, apiPost, endpoints } from 'src/lib/api';
+import { preloadTurnstile, TurnstileError, turnstileHeaders } from 'src/lib/turnstile';
 import { specIdFromPath } from 'src/routes/paths';
 import { FAB_GAP, FAB_INSET, FAB_SIZE, FAB_SLOT_ABOVE, MINI_FAB_SIZE } from 'src/theme';
 import { FEEDBACK_SESSION_KEY, newFeedbackSessionId } from 'src/utils/feedback';
 
 const MAX_MESSAGE_LENGTH = 500;
 const THANKS_TIMEOUT_MS = 1200;
+
+/** The form's line when the send failed; the bot check's own line says that sending again runs a fresh one. */
+export const SEND_FAILED_TEXT = "Couldn't send — try again in a moment.";
+export const BOT_CHECK_FAILED_TEXT = "The browser check didn't go through. Please send again.";
+
+/** A refused or failed Turnstile check, in the browser or as the API's 403/503 on `/feedback`. */
+function isBotCheckFailure(err: unknown): boolean {
+  return err instanceof TurnstileError || (err instanceof ApiError && err.status === 403);
+}
 
 // Floating quick-action buttons sit on the page background so they read as
 // chips rather than coloured CTAs — the main FAB stays the only primary mark.
@@ -53,10 +63,16 @@ type Mode = 'closed' | 'quick' | 'full';
  * vertical stack of 👍 / 👎 / 💬: the thumbs submit a reaction-only entry
  * (URL liked/disliked) and close immediately; the chat bubble expands the
  * full popover form with free-text, all reactions, and an optional contact.
+ *
+ * Every submission carries a fresh Cloudflare Turnstile token
+ * (`src/lib/turnstile.ts`). Opening the widget starts loading the script; the
+ * full form renders the check in its own slot, inside the popover, so the
+ * popover's focus trap lets a visitor Cloudflare asks to click reach the box.
  */
 export function FeedbackWidget() {
   const { trackEvent } = useAnalytics();
   const anchorRef = useRef<HTMLButtonElement | null>(null);
+  const checkSlotRef = useRef<HTMLDivElement | null>(null);
   const [mode, setMode] = useState<Mode>('closed');
   const [thanksVisible, setThanksVisible] = useState(false);
   const [message, setMessage] = useState('');
@@ -113,6 +129,7 @@ export function FeedbackWidget() {
     if (mode === 'closed') {
       setMode('quick');
       setError(null);
+      preloadTurnstile();
       // The toast shares the slot above the FAB with the quick stack.
       setThanksVisible(false);
       trackEvent('feedback_opened', { path: getCurrentPath() || undefined });
@@ -159,7 +176,8 @@ export function FeedbackWidget() {
     try {
       await apiPost<unknown>(
         endpoints.feedback,
-        buildPayload({ message: null, reaction: r, contact: null })
+        buildPayload({ message: null, reaction: r, contact: null }),
+        { headers: await turnstileHeaders('site_feedback') }
       );
       setThanksVisible(true);
       trackEvent('feedback_submitted', {
@@ -193,7 +211,8 @@ export function FeedbackWidget() {
     try {
       await apiPost<unknown>(
         endpoints.feedback,
-        buildPayload({ message: trimmed || null, reaction, contact: contact.trim() || null })
+        buildPayload({ message: trimmed || null, reaction, contact: contact.trim() || null }),
+        { headers: await turnstileHeaders('site_feedback', checkSlotRef.current) }
       );
 
       trackEvent('feedback_submitted', {
@@ -204,8 +223,8 @@ export function FeedbackWidget() {
         mode: 'full',
       });
       setSubmitted(true);
-    } catch {
-      setError("Couldn't send — try again in a moment.");
+    } catch (err) {
+      setError(isBotCheckFailure(err) ? BOT_CHECK_FAILED_TEXT : SEND_FAILED_TEXT);
     } finally {
       setSubmitting(false);
     }
@@ -460,6 +479,9 @@ export function FeedbackWidget() {
                 onChange={e => setWebsite(e.target.value)}
               />
             </Box>
+
+            {/* The bot check's slot: no size unless Cloudflare asks this visitor to click. */}
+            <Box ref={checkSlotRef} data-testid="feedback-check-slot" />
 
             {error && (
               <Box sx={{ color: 'error.main', fontSize: 13, mb: 1 }} role="alert">

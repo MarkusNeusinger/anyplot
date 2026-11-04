@@ -16,6 +16,12 @@
 import { API_URL, DEBUG_API_URL, LIBRARIES } from 'src/constants';
 import { fetchWithAuth } from 'src/lib/api';
 import type { SseEvent } from 'src/lib/sse';
+import {
+  type TurnstileAction,
+  TurnstileError,
+  turnstileHeaders,
+  turnstileSiteKey,
+} from 'src/lib/turnstile';
 import { clearAccessReloadGuard } from 'src/utils/adminAuth';
 
 export const AGENT_CLIENT_HEADERS = { 'X-Anyplot-Client': 'agent-chat/1' } as const;
@@ -1150,6 +1156,24 @@ async function agentJson<T>(path: string, token: string, init: RequestInit = {})
   return (await response.json()) as T;
 }
 
+/**
+ * Run a call that opens or stores something with the bot check's header on the
+ * public lane (`src/lib/turnstile.ts`). The admin lane, and a build without a
+ * site key, have no check: the call starts at once, as before. A check that
+ * fails in the browser is the same `bot_check_failed` or `bot_check_unavailable`
+ * the API answers, so the page has one message for both.
+ */
+function withHumanCheck<T>(
+  token: string,
+  action: TurnstileAction,
+  call: (headers: Record<string, string>) => Promise<T>
+): Promise<T> {
+  if (laneOf(token) !== 'public' || !turnstileSiteKey()) return call({});
+  return turnstileHeaders(action).then(call, (err: unknown) => {
+    throw new AgentApiError(0, err instanceof TurnstileError ? err.code : 'bot_check_failed');
+  });
+}
+
 const post = (body?: unknown): RequestInit => ({
   method: 'POST',
   ...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -1183,26 +1207,26 @@ export const agentApi = {
   /**
    * `fanout` marks a session the admin's `.plot_all()` opens: the server files
    * its usage telemetry under the source `fanout` instead of `live`. Sent only
-   * when set.
+   * when set. On the public lane the call carries a fresh Turnstile token.
    */
-  openSession: async (
+  openSession: (
     token: string,
     specId: string,
     library: string,
     locale: string,
     fanout = false
-  ): Promise<SessionStarted> => {
-    const answer = await agentJson<SessionOpened & Record<string, unknown>>(
-      '/sessions',
-      token,
-      post({ spec_id: specId, library, locale, ...(fanout ? { source: 'fanout' } : {}) })
-    );
-    return {
-      session_id: answer.session_id,
-      eligibility: answer.eligibility,
-      roles: roleList(answer.roles) ?? null,
-    };
-  },
+  ): Promise<SessionStarted> =>
+    withHumanCheck(token, 'agent_session', async headers => {
+      const answer = await agentJson<SessionOpened & Record<string, unknown>>('/sessions', token, {
+        ...post({ spec_id: specId, library, locale, ...(fanout ? { source: 'fanout' } : {}) }),
+        headers,
+      });
+      return {
+        session_id: answer.session_id,
+        eligibility: answer.eligibility,
+        roles: roleList(answer.roles) ?? null,
+      };
+    }),
   /**
    * The library switch (the header's library menu). The body leaves `source`
    * out, which the BFF reads as `menu`, so a page deployed before the API is no
@@ -1465,10 +1489,13 @@ export const agentApi = {
    * stores a new case, which names the earlier one in `replaces`. `502 storage`
    * when the bucket refused the case; `502 row_missing` with the stored
    * `case_id` (`AgentApiError.caseId`) when the files are stored but the row is
-   * not; upstream errors as for `.save()`.
+   * not; upstream errors as for `.save()`. On the public lane the call carries
+   * a fresh Turnstile token.
    */
   sendFeedback: (token: string, sid: string, body: FeedbackBody) =>
-    agentJson<FeedbackStored>(`${sessionPath(sid)}/feedback`, token, post(body)),
+    withHumanCheck(token, 'agent_feedback', headers =>
+      agentJson<FeedbackStored>(`${sessionPath(sid)}/feedback`, token, { ...post(body), headers })
+    ),
   /**
    * The usage beacon (`POST .../outcome`, `204`): fire and forget. The body is
    * rebuilt from its three fields, so nothing else can ride along; `keepalive`

@@ -24,8 +24,9 @@ substitutions:
   # The runtime identity, a dedicated least-privilege account since 2026-11-02 (before:
   # the Compute Engine default service account, which holds roles/editor). Its grants:
   # roles/cloudsql.client and roles/bigquery.jobUser on the project, secretAccessor on
-  # the six secrets the service reads (DATABASE_URL, CACHE_INVALIDATE_TOKEN, ADMIN_TOKEN,
-  # PLAUSIBLE_API_KEY, AGENT_USER_ID_KEY and the hand-attached ORIGIN_SECRET),
+  # the seven secrets the service reads (DATABASE_URL, CACHE_INVALIDATE_TOKEN, ADMIN_TOKEN,
+  # PLAUSIBLE_API_KEY, AGENT_USER_ID_KEY, TURNSTILE_SECRET_KEY and the hand-attached
+  # ORIGIN_SECRET),
   # objectCreator and objectViewer on gs://anyplot-agent-cases, objectViewer on
   # gs://anyplot-static (fonts), READER on the BigQuery datasets agent_telemetry and
   # agent_telemetry_logs, and run.invoker on anyplot-agents. The build account (the
@@ -132,7 +133,13 @@ steps:
       # that creates it. The cost of `--update-secrets` is that a binding
       # dropped from this line is no longer removed automatically — worth it
       # against a gate that turns itself off.
-      - "--update-secrets=DATABASE_URL=DATABASE_URL:latest,CACHE_INVALIDATE_TOKEN=CACHE_INVALIDATE_TOKEN:latest,ADMIN_TOKEN=ADMIN_TOKEN:latest,PLAUSIBLE_API_KEY=PLAUSIBLE_API_KEY:latest,AGENT_USER_ID_KEY=AGENT_USER_ID_KEY:latest"
+      #
+      # TURNSTILE_SECRET_KEY (api/turnstile.py) is listed, unlike ORIGIN_SECRET:
+      # production refuses the bot-checked calls and keeps the public chat shut
+      # without it, so it has to arrive with every revision. Its Secret Manager
+      # entry and the runtime account's secretAccessor on it must exist before
+      # the first deploy that names it, or that deploy fails.
+      - "--update-secrets=DATABASE_URL=DATABASE_URL:latest,CACHE_INVALIDATE_TOKEN=CACHE_INVALIDATE_TOKEN:latest,ADMIN_TOKEN=ADMIN_TOKEN:latest,PLAUSIBLE_API_KEY=PLAUSIBLE_API_KEY:latest,AGENT_USER_ID_KEY=AGENT_USER_ID_KEY:latest,TURNSTILE_SECRET_KEY=TURNSTILE_SECRET_KEY:latest"
       - "--execution-environment=gen2"
       # ^|^ alt delimiter: values contain @ (emails) and may contain , (multi-email lists)
       #
@@ -285,23 +292,10 @@ steps:
           grep -qF '"libraries"' body.out || { echo "agent BFF status did not relay the agents service's status"; exit 1; }
           echo "OK: /debug/agent/status reaches anyplot-agents"
         fi
-        # The public door answers exactly as the trigger set it: 404 while
-        # closed, so a revision never opens it by accident, and while open
-        # `{"open": true}` plus a public status call that reaches the agents
-        # service as an anonymous caller (it books nothing, and no login is
-        # involved). The tab id is a fixed smoke value, never a real visitor's.
-        code=$$(curl -s $$RETRY "$${HDR[@]}" -o body.out -w '%{http_code}' "$$URL/agent/lane")
-        if [ "${_AGENT_ENABLED}" = "true" ] && [ "${_AGENT_PUBLIC_ENABLED}" = "true" ]; then
-          test "$$code" = "200" && grep -qF '"open":true' body.out \
-            || { echo "public agent lane expected open (200), got $$code (in production it opens only while ORIGIN_SECRET arms the origin gate)"; exit 1; }
-          code=$$(curl -s $$RETRY "$${HDR[@]}" -H "X-Anyplot-Anon: deploy-smoke-0000000000000000" -o body.out -w '%{http_code}' "$$URL/agent/status")
-          test "$$code" = "200" || { echo "public agent status expected 200, got $$code"; exit 1; }
-          grep -qF '"libraries"' body.out || { echo "public agent status did not relay the agents service's status"; exit 1; }
-          echo "OK: /agent/* is open and reaches anyplot-agents"
-        else
-          test "$$code" = "404" || { echo "public agent lane expected closed (404), got $$code"; exit 1; }
-          echo "OK: /agent/* is closed"
-        fi
+        # The public door's probes (the lane, a public status call and the bot
+        # check) live in their own script: Cloud Build refuses a step argument
+        # over 10,000 characters. The origin secret goes through the environment.
+        ORIGIN_SECRET="$$ORIGIN_SECRET" bash api/deploy_smoke_public.sh "$$URL" "${_AGENT_ENABLED}" "${_AGENT_PUBLIC_ENABLED}"
         # Re-assert the tag AFTER the probes. `candidate` is a shared tag, so a
         # concurrent build could move it between the check above and the last
         # probe, and this build would then have smoked someone else's revision

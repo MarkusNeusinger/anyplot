@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly VITE_DEBUG_API_URL?: string;
   /** `true` builds the agent chat page and the plot page's `.use_my_data()` entry. */
   readonly VITE_ENABLE_AGENT_CHAT?: string;
+  /** The Cloudflare Turnstile widget's public site key; unset, no bot check runs (`src/lib/turnstile.ts`). */
+  readonly VITE_TURNSTILE_SITE_KEY?: string;
 }
 
 interface ImportMeta {

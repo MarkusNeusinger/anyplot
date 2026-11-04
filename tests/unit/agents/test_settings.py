@@ -50,6 +50,8 @@ class TestDefaults:
         assert settings.daily_token_budget == 10_000_000
         assert settings.daily_pipeline_runs == 50
         assert settings.global_daily_token_budget == 100_000_000  # the runaway guard of every tier
+        # An eighth of the 256 MiB dataset store per network: at 64 MiB, four networks filled it.
+        assert settings.ip_dataset_bytes == 32 * 1024 * 1024
         assert settings.render_timeout_s == 60
         assert settings.request_deadline_s == 540  # a round with self-review takes about 60 s; never cut short
         assert settings.soft_deadline_s == 480

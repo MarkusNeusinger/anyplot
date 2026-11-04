@@ -76,10 +76,18 @@ class TestRoute:
         assert f"/^{LOCAL_ORIGIN_REGEX.replace('/', chr(92) + '/')}$/" in relay_html([])
 
     def test_the_sites_policy_already_frames_the_api(self) -> None:
-        """The preview needs no wider site policy: the site's `frame-src` names the API's origin since `/proxy/html`."""
+        """The preview needs no wider site policy: the site's `frame-src` names the API's origin since `/proxy/html`.
+
+        The one other origin is the Turnstile bot check's frame (`src/lib/turnstile.ts`), which the preview does not
+        use.
+        """
         conf = (ROOT / "app" / "security-headers.conf").read_text(encoding="utf-8")
         frame_src = re.search(r"frame-src ([^;]+);", conf)
-        assert frame_src is not None and frame_src.group(1).split() == ["'self'", "https://api.anyplot.ai"]
+        assert frame_src is not None and frame_src.group(1).split() == [
+            "'self'",
+            "https://api.anyplot.ai",
+            "https://challenges.cloudflare.com",
+        ]
 
 
 class TestPage:

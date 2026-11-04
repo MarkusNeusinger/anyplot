@@ -11,7 +11,9 @@
  *   open http://localhost:3000/debug/agent?spec=scatter-basic&library=matplotlib&language=python
  *   open http://localhost:3000/debug/agent?spec=line-multi&library=matplotlib&language=python
  *   open http://localhost:3000/agent?spec=scatter-basic&library=matplotlib&language=python
- *     (the public lane, `/agent/*`; MOCK_PUBLIC_LANE=closed keeps its door shut)
+ *     (the public lane, `/agent/*`; MOCK_PUBLIC_LANE=closed keeps its door shut;
+ *     MOCK_TURNSTILE=require|refuse|down plays the bot check, with the page built with
+ *     VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA, Cloudflare's always-passing test key)
  *
  * It follows the documented contract (docs/reference/api.md, "Agent chat"):
  * the CSRF header on every POST, PUT and DELETE, `{detail, ref}` errors with
@@ -203,6 +205,26 @@ const PARSE_MS = Number(process.env.MOCK_PARSE_MS ?? 400);
 const NO_COPY = process.env.MOCK_NO_COPY === '1';
 /** The public lane's door (`GET /agent/lane`): open unless `MOCK_PUBLIC_LANE=closed`. */
 const PUBLIC_LANE_OPEN = process.env.MOCK_PUBLIC_LANE !== 'closed';
+/**
+ * The bot check (api/turnstile.py) on the public `POST /sessions`, the public feedback and the
+ * site's `POST /feedback`: off by default; `MOCK_TURNSTILE=require` refuses a call without an
+ * `X-Turnstile-Token` (`403 bot_check_failed`), `MOCK_TURNSTILE=refuse` refuses every call,
+ * `MOCK_TURNSTILE=down` answers `503 bot_check_unavailable`. Cloudflare's test keys answer the
+ * same dummy token every time, so the mock cannot play siteverify's single use. `GET
+ * /mock/turnstile` lists the calls it let through, in order, with the path and the token.
+ */
+const TURNSTILE_MODE = process.env.MOCK_TURNSTILE || 'off';
+const turnstilePassed = [];
+
+/** The bot check's refusal for this request, or null when it may pass. */
+function botCheckRefusal(req, path) {
+  if (TURNSTILE_MODE === 'off') return null;
+  if (TURNSTILE_MODE === 'down') return [503, 'bot_check_unavailable'];
+  const token = String(req.headers['x-turnstile-token'] || '');
+  if (TURNSTILE_MODE === 'refuse' || !token) return [403, 'bot_check_failed'];
+  turnstilePassed.push({ path, token });
+  return null;
+}
 const BASE = `http://localhost:${PORT}`;
 
 /**
@@ -994,7 +1016,7 @@ function cors(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, Accept, X-Anyplot-Client, X-Admin-Token, X-Anyplot-Anon, X-Anyplot-Session'
+    'Content-Type, Accept, X-Anyplot-Client, X-Admin-Token, X-Anyplot-Anon, X-Anyplot-Session, X-Turnstile-Token'
   );
   res.setHeader('Access-Control-Expose-Headers', 'X-Request-Id');
 }
@@ -2033,6 +2055,15 @@ async function route(req, res) {
     return;
   }
 
+  // The site's feedback widget and plot votes (api/routers/feedback.py), behind the bot check.
+  if (method === 'POST' && path === '/feedback') {
+    const refused = botCheckRefusal(req, path);
+    if (refused) return json(res, refused[0], { status: refused[0], message: refused[1], path });
+    return json(res, 200, { status: 'ok' });
+  }
+  if (method === 'GET' && path === '/mock/turnstile')
+    return json(res, 200, { mode: TURNSTILE_MODE, passed: turnstilePassed });
+
   // The recorded quick feedback of every open session, per result version (a mock-only route).
   if (method === 'GET' && path === '/mock/feedback')
     return json(
@@ -2061,7 +2092,12 @@ async function route(req, res) {
     } else {
       sub = rest;
     }
-    if (sub === '/budget' || sub.startsWith('/cases') || sub.endsWith('/dataset/copy'))
+    if (
+      sub === '/budget' ||
+      sub.startsWith('/cases') ||
+      sub.endsWith('/dataset/copy') ||
+      sub.endsWith('/bundle')
+    )
       return fail(res, 404, 'not_found');
   } else if (!path.startsWith('/debug/agent')) return fail(res, 404, 'not_found');
 
@@ -2073,12 +2109,22 @@ async function route(req, res) {
     return fail(res, 403, 'json_required');
 
   const ref = randomUUID();
+  const publicLane = sub !== null;
   sub ??= path.slice('/debug/agent'.length);
   let body = null;
   try {
     body = method === 'GET' ? null : await readBody(req);
   } catch {
     return fail(res, 422, 'invalid', ref);
+  }
+  // The public lane's bot check: opening a session and storing a feedback case.
+  if (
+    publicLane &&
+    method === 'POST' &&
+    (sub === '/sessions' || /^\/sessions\/[^/]+\/feedback$/.test(sub))
+  ) {
+    const refused = botCheckRefusal(req, path);
+    if (refused) return fail(res, refused[0], refused[1], ref);
   }
 
   if (method === 'GET' && sub === '/status')
