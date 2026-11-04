@@ -11,7 +11,6 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { AgentApiError, type ConvertAnswer, toBase64 } from 'src/lib/agent';
-import { countOf } from 'src/sections/agent-chat/dataCardParts';
 import {
   countLines,
   type FileEncoding,
@@ -27,6 +26,10 @@ import {
   FILE_CONVERTING_TEXT,
   FILE_LOCKED_TEXT,
 } from 'src/sections/agent-chat/messages';
+
+export function countOf(count: number, noun: string): string {
+  return `${count.toLocaleString('en-US')} ${noun}${count === 1 ? '' : 's'}`;
+}
 
 /** Whether a drag carries files (not text dragged from the page or another app). */
 function dragHasFiles(transfer: DataTransfer | null): boolean {

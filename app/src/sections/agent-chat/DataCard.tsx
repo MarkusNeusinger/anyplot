@@ -14,7 +14,7 @@ import {
   longSuggestion,
   MAX_DATASET_BYTES,
   MAX_MESSAGE_CHARS,
-  tableChoice,
+  type tableChoice,
   utf8Bytes,
 } from 'src/lib/agent';
 import { bindingRows } from 'src/sections/agent-chat/bindings';
@@ -23,7 +23,6 @@ import {
   BindingsBlock,
   ChangeBlock,
   CodeBlock,
-  countOf,
   DataViewUnavailable,
   LongHint,
   NotesBlock,
@@ -49,7 +48,11 @@ import {
   nativeControlSx,
   smallText,
 } from 'src/sections/agent-chat/styles';
-import { FILE_NAME_WITHHELD, type FileIntake } from 'src/sections/agent-chat/useFileIntake';
+import {
+  countOf,
+  FILE_NAME_WITHHELD,
+  type FileIntake,
+} from 'src/sections/agent-chat/useFileIntake';
 import { colors, fontSize } from 'src/theme';
 
 // The full view's chunk holds the Data Grid: it loads when the user first opens the view (or points at the button).
@@ -91,6 +94,7 @@ export interface DataCardProps {
   busy: boolean;
   locked: boolean;
   confirmed: boolean;
+  choice: ReturnType<typeof tableChoice>;
   viewOpen: boolean;
   setViewOpen: (open: boolean) => void;
   viewButtonRef: React.RefObject<HTMLButtonElement | null>;
@@ -111,7 +115,7 @@ export interface DataCardProps {
 }
 
 export function DataCard(props: DataCardProps) {
-  const { state, intake, text, ready, working, busy, locked, confirmed } = props;
+  const { state, intake, text, ready, working, busy, locked, confirmed, choice } = props;
   const { viewOpen, setViewOpen, viewButtonRef, parseStart, confirmRef, decisionRef } = props;
   const { onParse, onTable, onUse, onDiscardTranscription, onSendFormula } = props;
   const { onBind, onConfirm, onUndo, onToLong, onLoadData, onDataViewShown } = props;
@@ -138,10 +142,6 @@ export function DataCard(props: DataCardProps) {
   const rows = bindingRows(state.roles, state.bindings, columns.length);
   // The service's wide-table offer, checked again here: the dataset route's answer is not typed.
   const suggestion = longSuggestion(dataset?.parsed.suggestion);
-  // A paste of several tables: the picker reads another one (live test round 5 of 2026-10-15). The text
-  // is the stored paste's own (`DatasetState.paste`): an edit of the box or a failed parse since does not count.
-  const paste = dataset?.paste;
-  const choice = dataset && paste ? tableChoice(dataset.parsed) : null;
   // Code over the chat's cap is refused all the same, but cannot move there: the line asks to shorten it.
   const codeTooLong =
     state.formulaKind === 'code' && (state.formula ?? '').trim().length > MAX_MESSAGE_CHARS;

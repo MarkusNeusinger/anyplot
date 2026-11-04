@@ -352,6 +352,7 @@ export function DataPanel({
           busy={busy}
           locked={locked}
           confirmed={confirmed}
+          choice={choice}
           viewOpen={viewOpen}
           setViewOpen={setViewOpen}
           viewButtonRef={viewButtonRef}

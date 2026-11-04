@@ -12,7 +12,6 @@ import Box from '@mui/material/Box';
 import GlobalStyles from '@mui/material/GlobalStyles';
 
 import type { AgentSessionState } from 'src/hooks/useAgentSession';
-import { dataShape } from 'src/sections/agent-chat/dataCardParts';
 import {
   actionButtonSx,
   cardSx,
@@ -20,6 +19,7 @@ import {
   PINNED_CLEARANCE,
   PINNED_TOP,
 } from 'src/sections/agent-chat/styles';
+import { countOf } from 'src/sections/agent-chat/useFileIntake';
 import { colors } from 'src/theme';
 
 /** The line the pinned header shows, and `.create_plot()` names as its description. */
@@ -29,6 +29,12 @@ export const DATA_SUMMARY_ID = 'agent-data-summary';
 export const DATA_LOCK_TEXT =
   '# the data waits while all libraries plot it · .close() the panel to change it';
 const DATA_LOCK_ID = 'agent-data-lock';
+
+/** The data's shape in one line: `2 rows · 2 columns · version 1`. */
+function dataShape(dataset: NonNullable<AgentSessionState['dataset']>): string {
+  const { profile, version } = dataset.parsed;
+  return `${countOf(profile.rows, 'row')} · ${countOf(profile.columns.length, 'column')} · version ${version ?? 1}`;
+}
 
 export interface PinnedDataProps {
   pinned: boolean;

@@ -10,12 +10,7 @@ import { useState } from 'react';
 
 import Box from '@mui/material/Box';
 
-import type {
-  AgentSessionState,
-  DataChange,
-  Failure,
-  TranscriptionState,
-} from 'src/hooks/useAgentSession';
+import type { DataChange, Failure, TranscriptionState } from 'src/hooks/useAgentSession';
 import type { ColumnProfile, LongSuggestion } from 'src/lib/agent';
 import {
   type BindingRow,
@@ -36,6 +31,7 @@ import {
   nativeControlSx,
   smallText,
 } from 'src/sections/agent-chat/styles';
+import { countOf } from 'src/sections/agent-chat/useFileIntake';
 import { colors, fontSize, typography } from 'src/theme';
 
 /** In place of the full view when its chunk does not load (`lazyOrFallback`): a line in the card. */
@@ -53,10 +49,6 @@ export function DataViewUnavailable({ onClose }: Pick<DataViewProps, 'onClose'>)
       </Box>
     </Box>
   );
-}
-
-export function countOf(count: number, noun: string): string {
-  return `${count.toLocaleString('en-US')} ${noun}${count === 1 ? '' : 's'}`;
 }
 
 /** The first rows of a table under its column names and types. */
@@ -411,12 +403,6 @@ export function ChangeBlock({ change, canUndo, undoBusy, error, onUndo }: Change
       )}
     </Box>
   );
-}
-
-/** The data's shape in one line: `2 rows · 2 columns · version 1`. */
-export function dataShape(dataset: NonNullable<AgentSessionState['dataset']>): string {
-  const { profile, version } = dataset.parsed;
-  return `${countOf(profile.rows, 'row')} · ${countOf(profile.columns.length, 'column')} · version ${version ?? 1}`;
 }
 
 interface LongHintProps {
