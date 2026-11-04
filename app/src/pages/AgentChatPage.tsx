@@ -2,8 +2,11 @@
  * "Use with my data": the agent chat, for admins at `/debug/agent?spec=&library=&language=`
  * (plus `&all=1` while the library menu's `all` is pressed) and for everyone at
  * `/agent?spec=&library=&language=` while the public lane is open (`PublicAgentChatPage`,
- * experimental). The query follows the session: a library switch writes `library` and its
- * `language`.
+ * experimental). The site's `.use_my_data()` entries open `/agent` for an admin too while the
+ * public lane is open, so the owner tests what a visitor gets; `/debug/agent` is the admin's
+ * page for its tools, typed or bookmarked, and the entries' target only while the public lane
+ * is closed (`useAgentEligibility`). The query follows the session: a library switch writes
+ * `library` and its `language`.
  *
  * One column, chat first, two steps, data first. The data card is the first
  * turn of the thread: paste data (or ask in the chat for a curve, whose table
@@ -515,9 +518,11 @@ function AgentChat({
     return () => window.clearTimeout(timer);
   }, [pausedUntil]);
 
+  // A refused admin token ends the admin hint; a refusal on the public lane says nothing about
+  // it, and an admin uses the public lane too while it is open.
   useEffect(() => {
-    if (state.phase === 'unauthorized') setAdminHint(false);
-  }, [state.phase]);
+    if (lane === 'admin' && state.phase === 'unauthorized') setAdminHint(false);
+  }, [lane, state.phase]);
 
   // The progress and the replies arrive at the foot of the thread, below the
   // data card: bring the foot into view when a turn starts.

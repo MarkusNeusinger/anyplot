@@ -315,10 +315,11 @@ export function SpecPage() {
   // (all of them, or one language's under `?language=`): matplotlib where it is
   // among them, else the first, because the eligibility route takes one library and
   // the chat's library menu switches anyway: one request per view, never one per
-  // card. An admin gets the admin chat, through a full navigation so Cloudflare
-  // Access can intercept the /debug path; everyone else gets the public chat while
-  // its lane is open, through the router. The chat page records
-  // `agent_open{source: plot_page}` or `{source: spec_hub}`.
+  // card. While the public lane is open everyone gets the public chat, an admin
+  // too, through the router (`useAgentEligibility`); only while it is closed does an
+  // admin get the admin chat, through a full navigation so Cloudflare Access can
+  // intercept the /debug path. The chat page records `agent_open{source: plot_page}`
+  // or `{source: spec_hub}`.
   const agentImpl = useMemo(() => {
     // The previous spec's data while the next one loads: no probe for its library.
     if (!specData || specData.id !== specId) return null;

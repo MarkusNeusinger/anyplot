@@ -20,3 +20,8 @@
   what they state; where the language came from, that a plot keeps its own,
   and what the remembered decisions do stand behind an ⓘ, as the experimental
   notice does it (#12549).
+- **The site's `.use_my_data()` entries open the public chat for admins too.**
+  While the public lane is open, an admin lands on `/agent` like every visitor,
+  so the chat is tested as visitors see and use it; `/debug/agent` stays the
+  admin's page for `all` and `.save()`, and the entries' target only while the
+  public lane is closed (#12549).

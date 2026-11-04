@@ -143,10 +143,13 @@ describe('PublicAgentChatPage', () => {
     expect(about).toHaveFocus();
   });
 
-  it('offers no "all", no .save() and no "⋯" menu', async () => {
+  it('offers no "all", no .save() and no "⋯" menu, also to an admin', async () => {
     const user = userEvent.setup();
+    // The site's entries lead an admin here while the lane is open: the page a visitor gets.
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderPage();
     await waitFor(() => expect(screen.getByTestId('language-chip')).toBeEnabled());
+    expect(screen.getByTestId('experimental-notice')).toBeInTheDocument();
     // Owner decision of 2026-11-02: a visitor cannot resume a saved session, and the feedback
     // form covers "something went wrong"; the menu would hold nothing else.
     expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
@@ -175,6 +178,25 @@ describe('PublicAgentChatPage', () => {
       'content',
       'noindex, nofollow'
     );
+  });
+
+  it("keeps an admin's hint when the public lane refuses a session", async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string, init: RequestInit = {}) => {
+        const url = new URL(input);
+        if (url.pathname.endsWith('/agent/lane')) return json(200, { open: true });
+        if (url.pathname.endsWith('/agent/sessions') && init.method === 'POST') {
+          return json(401, { detail: 'unauthorized', ref: 'r-u' });
+        }
+        return json(200, { libraries: ['matplotlib'], enabled: true });
+      })
+    );
+    renderPage();
+    expect(await screen.findByText(/the assistant is closed right now/)).toBeInTheDocument();
+    // The admin token was never asked: the admin lane's sign-in still stands.
+    expect(localStorage.getItem(ADMIN_HINT_KEY)).toBe('1');
   });
 
   it('says why a network cannot open one more session', async () => {
