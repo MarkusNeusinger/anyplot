@@ -1,0 +1,57 @@
+"""The composer's paste routing and the dataset route's classifier agree on the shared cases.
+
+The page routes pasted text before it reaches the message box (`app/src/sections/agent-chat/routeInput.ts`): a table
+becomes an attachment for the dataset route, anything else stays a message. Each case of the shared file names the
+page's route and what `classify_paste` answers for the same text, so the two sides are tested against one list in
+three directions: text the page sends as data must be what the parser reads (`None`), code the page keeps as a
+message must be code here, and the other messages are what the case says (prose `None`, a formula, a data request).
+The line cases hold the code veto's copied regexes to the server's.
+"""
+
+import json
+from pathlib import Path
+
+import pytest
+
+from agents.anyplot.data.classify import _ARROW, _SHAPED, _STRONG, classify_paste
+
+
+ROOT = Path(__file__).resolve().parents[3]
+CASES = ROOT / "app" / "src" / "sections" / "agent-chat" / "routeInput.cases.json"
+SHARED = json.loads(CASES.read_text(encoding="utf-8"))
+
+
+def _text(case: dict) -> str:
+    return case["text"] * case.get("repeat", 1)
+
+
+@pytest.mark.parametrize("case", SHARED["cases"], ids=lambda case: f"case-{case['id']}")
+def test_the_server_classifies_each_shared_case_as_it_names(case: dict) -> None:
+    assert classify_paste(_text(case)) == case["server"]
+
+
+@pytest.mark.parametrize("case", SHARED["cases"], ids=lambda case: f"case-{case['id']}")
+def test_text_routed_as_data_is_text_the_parser_reads(case: dict) -> None:
+    """A table sent as an attachment never meets a classifier refusal, except code the chat cannot take."""
+    if case["route"] != "data":
+        pytest.skip("not routed as data")
+    if case["server"] == "code":
+        assert len(_text(case)) > 2000  # the dataset route refuses it with the line that asks to shorten it
+    else:
+        assert case["server"] is None
+
+
+def test_the_code_veto_cases_are_code_on_both_sides() -> None:
+    vetoed = [case for case in SHARED["cases"] if case["rule"] == "5"]
+
+    assert len(vetoed) >= 3
+    assert all(case["route"] == "message" and classify_paste(_text(case)) == "code" for case in vetoed)
+
+
+@pytest.mark.parametrize("item", SHARED["lines"], ids=lambda item: item["line"])
+def test_the_code_veto_reads_each_line_as_the_page_does(item: dict) -> None:
+    line = item["line"]
+    strong = bool(_STRONG.search(line) or _ARROW.search(line))
+
+    assert strong == item["strong"]
+    assert (strong or bool(_SHAPED.search(line))) == item["shaped"]
