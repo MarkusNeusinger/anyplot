@@ -8,10 +8,11 @@
   `apply_triage.py` writes the statuses and tags in one transaction, after a
   snapshot of the rows, and refuses a row someone changed since the round read
   it. The cases hold users' data, so nothing of them reaches the repository.
+  (#12551)
 
 ### Changed
 
 - **The triage rules of a case live in `core`.** `core.agent_cases.triage_updates`
   holds what `PATCH /debug/agent/cases/{id}` checks (tags, the promotion's
   plot, data and expected outcome), and the route and the skill's script both
-  call it, so the two never drift apart. The route answers as before.
+  call it, so the two never drift apart. The route answers as before. (#12551)
