@@ -21,8 +21,9 @@ tornado chart, where the low scenario can give the larger outcome. A variadic fa
 A pair is inverted (`inverted`) when the smallest value of the lower column lies above the
 largest value of the upper column, so every row's lower bound would lie above its upper bound;
 the profile's minimum and maximum say so without reading the rows. The default bindings never
-bind such a pair, which leaves both roles open, and a pair bound so by hand carries a warning
-(`inverted_line`, `bindings.check_bindings`).
+bind such a pair, which leaves both roles open. A pair bound so by hand is the user's choice: it
+stays valid, nothing blocks `.confirm()`, every change of the data keeps it, and it carries one
+neutral warning line (`inverted_line`, `bindings.check_bindings`).
 """
 
 from dataclasses import dataclass
@@ -97,11 +98,14 @@ def ordered(lower: ColumnProfile, upper: ColumnProfile) -> bool:
 
 
 def inverted_line(pair: BoundPair, lower: ColumnProfile, upper: ColumnProfile) -> str:
-    """The binding warning of an inverted pair (`inverted`)."""
+    """The binding warning of an inverted pair (`inverted`): one neutral line that says what the plot will show.
+
+    It never asks for another binding: a person may bind a range high to low on purpose, and the binding stays
+    valid and is drawn as bound.
+    """
     return (
-        f"{pair.lower} and {pair.upper}: the smallest value of '{lower.name}' ({_shown(lower.min)}) lies above the "
-        f"largest value of '{upper.name}' ({_shown(upper.max)}), so every row's lower bound would lie above its "
-        "upper bound; bind the two columns that hold each range's ends"
+        f"{pair.lower} and {pair.upper}: every value of '{lower.name}' (from {_shown(lower.min)}) lies above every "
+        f"value of '{upper.name}' (up to {_shown(upper.max)}), so each row's lower bound is above its upper bound"
     )
 
 

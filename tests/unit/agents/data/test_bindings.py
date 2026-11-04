@@ -1277,12 +1277,42 @@ class TestBoundPairs:
 
         check = check_bindings(chosen, RANGE_ROLES, data)
 
-        assert check.complete and check.errors == []
+        assert check.complete and check.errors == [] and check.missing_roles == []  # nothing blocks `.confirm()`
         assert check.warnings == [
-            "min_value and max_value: the smallest value of 'games' (140) lies above the largest value of "
-            "'mean' (67.2), so every row's lower bound would lie above its upper bound; bind the two columns that "
-            "hold each range's ends"
+            "min_value and max_value: every value of 'games' (from 140) lies above every value of 'mean' (up to "
+            "67.2), so each row's lower bound is above its upper bound"
         ]
+
+    @pytest.mark.parametrize(
+        "operations",
+        [
+            [{"op": "rename", "column": "team", "name": "Team"}],  # a binding went: the defaults fill the rest
+            [{"op": "sort", "column": "mean"}],  # every binding stays
+            [{"op": "split", "column": "min–max", "separator": "–", "names": ["min", "max"]}],  # parts that would fit
+        ],
+    )
+    def test_a_pair_bound_high_to_low_by_hand_survives_a_change_of_the_data(
+        self, operations: list[dict[str, object]]
+    ) -> None:
+        """The user may bind a range the wrong way round on purpose: `prepare_data` never takes it away."""
+        parsed = parse_dataset(COUNTS)
+        chosen = bind(("category", "team"), ("min_value", "games"), ("max_value", "mean"))
+        prepared = apply_operations(parsed, OPERATIONS.validate_python(operations))
+        after = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)
+
+        carried = carry_bindings(
+            chosen,
+            RANGE_ROLES,
+            after.profile,
+            parsed.profile,
+            prepared.converted,
+            prepared.row_numbers,
+            prepared.splits,
+        )
+
+        assert ("min_value", "games") in as_pairs(carried) and ("max_value", "mean") in as_pairs(carried)
+        check = check_bindings(carried, RANGE_ROLES, after.profile)
+        assert check.complete and len(check.warnings) == 1
 
     def test_a_kept_lower_bound_keeps_its_column_and_the_default_beside_it_gives_way(self) -> None:
         """After a binding went, the roles left open are filled by default: never with an upper bound below the kept lower one."""
@@ -1299,8 +1329,11 @@ class TestBoundPairs:
         prepared = apply_operations(parsed, OPERATIONS.validate_python(operations))
         after = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)
 
-        carried = carry_bindings(before, RANGE_ROLES, after.profile, parsed.profile, prepared.converted)
+        carried = carry_bindings(
+            before, RANGE_ROLES, after.profile, parsed.profile, prepared.converted, splits=prepared.splits
+        )
 
+        assert prepared.splits == [["min", "max"]]
         assert as_pairs(carried) == [("category", "team"), ("min_value", "min"), ("max_value", "max")]
         assert check_bindings(carried, RANGE_ROLES, after.profile).complete
 
@@ -1312,7 +1345,9 @@ class TestBoundPairs:
         prepared = apply_operations(parsed, OPERATIONS.validate_python(operations))
         after = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)
 
-        carried = carry_bindings(before, CANDLE_ROLES, after.profile, parsed.profile, prepared.converted)
+        carried = carry_bindings(
+            before, CANDLE_ROLES, after.profile, parsed.profile, prepared.converted, splits=prepared.splits
+        )
 
         assert as_pairs(carried) == [
             ("date", "date"),
@@ -1327,6 +1362,35 @@ class TestBoundPairs:
         carried = carry_bindings(bind(("category", "k")), RANGE_ROLES, data, data, {"a": "s", "b": "t"})
 
         assert as_pairs(carried) == [("category", "k"), ("min_value", "a"), ("max_value", "b")]
+
+    def test_two_extracts_of_one_column_are_no_split(self) -> None:
+        """Only the parts of one `split` fill a pair together: two `extract`s of one source take the roles one by one,
+        in spec order, as any two conversions do, and never as a range of that column."""
+        parsed = parse_dataset("k,t\na,ca. 5 kg\nb,ca. 8 kg\n")
+        operations = [
+            {"op": "extract", "column": "t", "keep": "number", "name": "n"},
+            {"op": "extract", "column": "t", "keep": "digits", "name": "d"},
+        ]
+        prepared = apply_operations(parsed, OPERATIONS.validate_python(operations))
+        after = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)
+
+        assert prepared.splits == [] and prepared.converted == {"n": "t", "d": "t"}
+        candle = [role("date", "datetime", required=False), role("high", "numeric"), role("low", "numeric")]
+        carried = carry_bindings([], candle, after.profile, parsed.profile, prepared.converted, splits=prepared.splits)
+        # In spec order: `high` takes the first, never the pair rule's "the first part is the low".
+        assert as_pairs(carried) == [("high", "n"), ("low", "d")]
+
+    def test_a_dropped_part_breaks_the_split(self) -> None:
+        """A middle part dropped in the same call leaves a gap: the parts on either side are no neighbours."""
+        parsed = parse_dataset("k,r\na,1-2-3\nb,4-5-6\n")
+        operations = [
+            {"op": "split", "column": "r", "separator": "-", "names": ["p1", "p2", "p3"]},
+            {"op": "drop_columns", "columns": ["p2"]},
+        ]
+
+        prepared = apply_operations(parsed, OPERATIONS.validate_python(operations))
+
+        assert prepared.splits == [["p1", "", "p3"]]
 
     @pytest.mark.parametrize(
         "text",
@@ -1343,7 +1407,12 @@ class TestBoundPairs:
         after = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)
 
         carried = carry_bindings(
-            bind(("category", "k")), RANGE_ROLES, after.profile, parsed.profile, prepared.converted
+            bind(("category", "k")),
+            RANGE_ROLES,
+            after.profile,
+            parsed.profile,
+            prepared.converted,
+            splits=prepared.splits,
         )
 
         assert as_pairs(carried) == [("category", "k")]

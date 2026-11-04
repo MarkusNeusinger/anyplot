@@ -41,12 +41,13 @@ A lower and upper bound pair (`bounds.py`: `min_value` and `max_value`, `ci_lowe
 above the largest value of the upper one (`bounds.inverted`): every row's minimum would lie
 above its maximum. Both roles stay open instead, so the conversion check for open roles runs
 (`conversions.py`) and finds a column of ranges such as `10–25` to split. Bound so by hand,
-the pair is valid but warned about.
+the pair is the user's choice: valid, never blocked, kept through every change of the data
+(`carry_bindings`), with one neutral warning line.
 """
 
 import itertools
 import re
-from collections.abc import Collection, Mapping
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
 
@@ -507,6 +508,7 @@ def carry_bindings(
     previous: DatasetProfile | None = None,
     converted: Mapping[str, str] | None = None,
     row_numbers: Collection[str] = (),
+    splits: Sequence[Sequence[str]] = (),
 ) -> list[Binding]:
     """The bindings after the dataset changed under them (`prepare_data`, undo): the valid ones stay.
 
@@ -532,9 +534,11 @@ def carry_bindings(
     optional roles: `Month` on `series` beside `Month (date)` on x would split the plot into
     one series per row (owner's second opinion of 2026-11-02). A required role keeps it.
 
-    Two number columns converted from one source in a row (a `split` of `10–25`) fill an open
-    lower and upper bound pair, the first the lower role and the second the upper one; a new
-    binding that would invert a pair (`bounds.inverted`) is left out, as in `default_bindings`.
+    Two neighbouring number parts of one `split` (`splits`, `Prepared.splits`: `10–25`) fill an
+    open lower and upper bound pair, the first the lower role and the second the upper one. A
+    binding this function adds that would invert a pair (`bounds.inverted`) is left out, as in
+    `default_bindings`; a binding that stays is never touched, so a pair the user bound so on
+    purpose, high on the lower role, survives every change of the data.
     """
     sources = converted or {}
     kept = [binding for binding in bindings if not check_bindings([binding], roles, profile).errors]
@@ -546,7 +550,8 @@ def carry_bindings(
     dated = _new_dates(freed, roles, fresh)
     if dated:
         current = [*freed, *dated]
-    current = [*current, *_new_numbers(current, roles, profile, sources)]
+    current = [*current, *_new_numbers(current, roles, profile, sources, splits)]
+    # Only what this function added gives way: a kept binding is the user's choice or an earlier one, never dropped.
     current = without_inverted(current, roles, profile, {binding.role for binding in kept})
     if current == kept:
         return list(bindings)
@@ -701,16 +706,20 @@ def _new_dates(kept: list[Binding], roles: list[DataRole], fresh: list[ColumnPro
 
 
 def _new_numbers(
-    kept: list[Binding], roles: list[DataRole], profile: DatasetProfile, converted: Mapping[str, str]
+    kept: list[Binding],
+    roles: list[DataRole],
+    profile: DatasetProfile,
+    converted: Mapping[str, str],
+    splits: Sequence[Sequence[str]] = (),
 ) -> list[Binding]:
     """Bindings of the open required roles that take numbers to the number columns a conversion made (`converted`,
     each with its source).
 
-    An open lower and upper bound pair takes two of them made from one source, next to each other in column
-    order (the parts of a `split`), the first as the lower bound, whatever order the spec lists the two roles
-    in (`high` before `low`), and only when the first neither starts nor ends above the second
-    (`bounds.ordered`); otherwise the pair stays open. A required family without a member takes the column as
-    its first member (`y1`).
+    An open lower and upper bound pair takes two neighbouring parts of one `split` (`splits`), the first as the
+    lower bound, whatever order the spec lists the two roles in (`high` before `low`), and only when the first
+    neither starts nor ends above the second (`bounds.ordered`); otherwise the pair stays open. Two other columns
+    of one source (two `extract`s of it) never fill a pair together. A required family without a member takes
+    the column as its first member (`y1`).
     """
     used = {binding.column for binding in kept}
     fresh = [
@@ -726,11 +735,13 @@ def _new_numbers(
     for pair in bound_pairs(roles):
         if not all(_open_measure(by_name[name], bound) for name in (pair.lower, pair.upper)):
             continue
+        columns = {column.name: column for column in fresh}
         parts = next(
             (
-                (first, second)
-                for first, second in itertools.pairwise(fresh)
-                if converted[first.name] == converted[second.name]
+                (columns[first], columns[second])
+                for split in splits
+                for first, second in itertools.pairwise(split)
+                if first in columns and second in columns
             ),
             None,
         )

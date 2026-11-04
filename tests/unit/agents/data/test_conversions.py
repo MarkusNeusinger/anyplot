@@ -343,7 +343,9 @@ class TestRanges:
         prepared = apply_operations(parsed, OPERATIONS.validate_python(candidate.operations()))
         after = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)
 
-        carried = carry_bindings(before, roles, after.profile, parsed.profile, prepared.converted)
+        carried = carry_bindings(
+            before, roles, after.profile, parsed.profile, prepared.converted, splits=prepared.splits
+        )
 
         assert [(binding.role, binding.column) for binding in carried] == [
             ("category", "team"),

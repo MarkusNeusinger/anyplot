@@ -467,6 +467,7 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
             view.snapshot,
             converted=prepared.converted,
             row_numbers=prepared.row_numbers,
+            splits=prepared.splits,
         )
     except StoreFull:
         return _error("capacity")

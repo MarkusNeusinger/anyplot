@@ -86,13 +86,14 @@ class TestInverted:
         text = ColumnProfile(name="t", dtype="text", missing=0, unique=3, top=["b", "c"])
         assert not inverted(text, number("hi", 1, 2))
 
-    def test_the_warning_names_both_roles_columns_and_values(self) -> None:
+    def test_the_warning_is_one_neutral_line(self) -> None:
+        """It says what the plot will show and asks for nothing: a range bound high to low may be meant."""
         line = inverted_line(
             BoundPair("min_value", "max_value"), number("games", 140.0, 146.0), number("mean", 61.5, 67.2)
         )
 
         assert line == (
-            "min_value and max_value: the smallest value of 'games' (140) lies above the largest value of 'mean' "
-            "(67.2), so every row's lower bound would lie above its upper bound; bind the two columns that hold "
-            "each range's ends"
+            "min_value and max_value: every value of 'games' (from 140) lies above every value of 'mean' (up to "
+            "67.2), so each row's lower bound is above its upper bound"
         )
+        assert "bind" not in line and ";" not in line

@@ -23,4 +23,5 @@
   pair is never bound by default to two columns whose lower one starts above
   the largest value of the upper one, where every row's minimum would lie
   above its maximum; the pair stays open, so the conversion check runs. Bound
-  so by hand, the pair carries a binding warning. (#12556)
+  so by hand, the pair is the user's choice: it stays valid, survives every
+  change of the data and carries one neutral warning line. (#12556)

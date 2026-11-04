@@ -273,7 +273,9 @@ def test_a_split_of_ranges_fills_the_open_pair_and_undo_takes_it_back() -> None:
     operations = [{"op": "split", "column": "min–max", "separator": "–", "names": ["min", "max"]}]
     prepared = apply_operations(stored.as_parsed(), TypeAdapter(list[Operation]).validate_python(operations))
     parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)
-    version = push_version(store, SID, view_of(state), parsed, ranges, converted=prepared.converted)
+    version = push_version(
+        store, SID, view_of(state), parsed, ranges, converted=prepared.converted, splits=prepared.splits
+    )
     state.update(version.delta)
 
     assert version.delta[BINDINGS] == [
@@ -285,3 +287,40 @@ def test_a_split_of_ranges_fills_the_open_pair_and_undo_takes_it_back() -> None:
     assert restored is not None
     assert restored.stored.profile.columns[-1].name == "min–max"  # the version before, without the new columns
     assert restored.delta[BINDINGS] == [{"role": "category", "column": "team"}]
+
+
+def test_a_pair_the_user_bound_high_to_low_survives_prepare_data_and_undo() -> None:
+    """A person may bind a range the wrong way round on purpose: no version change takes the binding away."""
+    ranges = snapshot_from_repo("range-interval", "matplotlib")
+    store = DatasetStore()
+    state = initial_state(
+        spec_id="range-interval", library="matplotlib", locale="en", snapshot=ranges, normalised="x = 1", readiness={}
+    )
+    text = "team;games;mean;min–max\nalpha;140;61.5;48–80\nbeta;146;67.2;52–77\ngamma;143;64.0;45–79\n"
+    ingested = store_dataset(store, SID, parse_dataset(text), ranges, notes_screened=True)
+    state.update(ingested.state_delta())
+    by_hand = [
+        {"role": "category", "column": "team"},
+        {"role": "min_value", "column": "games"},
+        {"role": "max_value", "column": "mean"},
+    ]
+    state[BINDINGS] = by_hand  # as `PUT /bindings` stores the user's choice
+
+    stored = store.get(state[DATASET_ID], SID)
+    assert stored is not None
+    for operations in (
+        [{"op": "split", "column": "min–max", "separator": "–", "names": ["min", "max"]}],  # parts that would fit
+        [{"op": "rename", "column": "team", "name": "Team"}],  # a binding goes: the defaults fill only that role
+    ):
+        prepared = apply_operations(stored.as_parsed(), TypeAdapter(list[Operation]).validate_python(operations))
+        parsed = parse_dataset(prepared.csv, text_columns=prepared.text_columns, find_table=False, canonical=True)
+        version = push_version(
+            store, SID, view_of(state), parsed, ranges, converted=prepared.converted, splits=prepared.splits
+        )
+        state.update(version.delta)
+
+        assert by_hand[1] in version.delta[BINDINGS] and by_hand[2] in version.delta[BINDINGS], operations
+        stored = version.stored
+    restored = undo_version(store, SID, view_of(state), ranges)
+    assert restored is not None
+    assert by_hand[1] in restored.delta[BINDINGS] and by_hand[2] in restored.delta[BINDINGS]

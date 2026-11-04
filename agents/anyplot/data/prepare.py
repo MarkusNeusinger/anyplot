@@ -382,6 +382,9 @@ class Prepared:
     row_numbers: list[str] = field(default_factory=list)
     """The columns a `row_number` made or reused: the caller binds one to the axis or label role that stayed open
     (`bindings.carry_bindings`), as the fallback for that role was made."""
+    splits: list[list[str]] = field(default_factory=list)
+    """The new columns of each `split`, in the order of its parts: two neighbouring parts may fill a lower and upper
+    bound pair left open (`bindings.carry_bindings`), and no other two columns of one source may."""
 
 
 def with_date_notes(parsed: ParsedDataset, prepared: Prepared) -> ParsedDataset:
@@ -418,6 +421,7 @@ class _Carried:
     with_time: dict[str, bool] = field(default_factory=dict)
     converted: dict[str, str] = field(default_factory=dict)  # the new columns of a `set_type` with `name`, and sources
     row_numbers: set[str] = field(default_factory=set)  # the columns of a `row_number`
+    splits: list[list[str]] = field(default_factory=list)  # the new columns of each `split`, in the parts' order
 
     @classmethod
     def of(cls, parsed: ParsedDataset) -> "_Carried":
@@ -449,18 +453,24 @@ class _Carried:
         if old in self.row_numbers:
             self.row_numbers.remove(old)
             self.row_numbers.add(new)
+        self.splits = [[new if name == old else name for name in parts] for parts in self.splits]
 
     def forget(self, names: Iterable[str]) -> None:
-        for name in names:
+        gone = set(names)
+        for name in gone:
             self.date_order.pop(name, None)
             self.text_columns.discard(name)
             self.with_time.pop(name, None)
             self.converted.pop(name, None)
             self.row_numbers.discard(name)
+        # A dropped part leaves a gap: the parts on either side of it are no neighbours any more.
+        self.splits = [[name if name not in gone else "" for name in parts] for parts in self.splits]
 
     def keep_only(self, names: Iterable[str]) -> None:
         kept = set(names)
-        self.forget({*self.date_order, *self.text_columns, *self.with_time, *self.converted, *self.row_numbers} - kept)
+        split = {name for parts in self.splits for name in parts if name}
+        tracked = {*self.date_order, *self.text_columns, *self.with_time, *self.converted, *self.row_numbers, *split}
+        self.forget(tracked - kept)
 
 
 # --- Operation models -----------------------------------------------------------------------
@@ -763,6 +773,8 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation]) -> Prep
     renamed = dict(zip(names, canonical, strict=True))
     converted = {renamed[name]: renamed.get(source, source) for name, source in carried.converted.items()}
     row_numbers = [canon for name, canon in zip(names, canonical, strict=True) if name in carried.row_numbers]
+    # A part no longer in the data stays a gap (""), so the parts beside it are never taken for neighbours.
+    splits = [[renamed.get(name, "") for name in parts] for parts in carried.splits]
     return Prepared(
         csv=csv_text,
         changes=changes,
@@ -770,6 +782,7 @@ def apply_operations(parsed: ParsedDataset, operations: list[Operation]) -> Prep
         date_notes=date_notes,
         converted=converted,
         row_numbers=row_numbers,
+        splits=[parts for parts in splits if any(parts)],
     )
 
 
@@ -2072,6 +2085,7 @@ def _split(frame: pd.DataFrame, op: Split, carried: _Carried) -> tuple[pd.DataFr
     result = frame.copy()
     for name, item in zip(names, typed, strict=True):
         _place(result, carried, op.column, name, item)
+    carried.splits.append(names)
     change = (
         f"split {op.column} at {_shown_literal(op.separator)} into {_listed(names)}: "
         f"{split} of {_count(present, 'cell')} split"

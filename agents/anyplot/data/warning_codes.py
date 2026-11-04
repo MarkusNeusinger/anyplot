@@ -247,8 +247,8 @@ _BINDING_RULES: tuple[tuple[re.Pattern[str], BindingWarningCode], ...] = tuple(
         ),
         (r"^.*: column '.*' holds a .*-period value; the spec's convention is .*$", "window_mismatch"),
         (
-            r"^.* and .*: the smallest value of '.*' \(.*\) lies above the largest value of '.*' \(.*\), so every "
-            r"row's lower bound would lie above its upper bound; bind the two columns that hold each range's ends$",
+            r"^.* and .*: every value of '.*' \(from .*\) lies above every value of '.*' \(up to .*\), so each row's "
+            r"lower bound is above its upper bound$",
             "bound_pair_inverted",
         ),
     )
