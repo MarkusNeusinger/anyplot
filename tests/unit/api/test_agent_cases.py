@@ -21,6 +21,8 @@ from api.agent_cases import (
     BundleError,
     CaseConflict,
     CaseFile,
+    CaseLastRun,
+    CaseRound,
     FeedbackCase,
     GcsCaseBucket,
     NoChatData,
@@ -359,6 +361,94 @@ def test_manifest_detail_picks_the_rated_version() -> None:
     manifest = {"bundle": {"versions": [{"number": 2, "plot_py": "two"}, {"number": 3, "plot_py": "three"}]}}
     assert manifest_detail(manifest, 3).code == "three"
     assert manifest_detail(manifest, 9).code == "two"
+
+
+FAILED_ROUND = {
+    "attempt": 1,
+    "outcome": "render_failed",
+    "findings": 1,
+    "step": "rendering",
+    "shipped": False,
+    "defects": [],
+    "gates_failed": ["R1"],
+    "sandbox_failures": ["key"],
+}
+
+
+def test_manifest_detail_reads_the_rounds_and_the_latest_run() -> None:
+    """A chat case holds no version: the session's count and its latest run say what happened."""
+    manifest = {
+        "bundle": {
+            "versions": [],
+            "session": {
+                "versions": 0,
+                "last_run": {
+                    "status": "failed",
+                    "reason": "render",
+                    "version": None,
+                    "turn": 2,
+                    "rounds": [FAILED_ROUND],
+                },
+            },
+        }
+    }
+
+    detail = manifest_detail(manifest, 0)
+
+    failed = CaseRound(
+        attempt=1,
+        outcome="render_failed",
+        findings=1,
+        step="rendering",
+        shipped=False,
+        defects=(),
+        gates_failed=("R1",),
+        sandbox_failures=("key",),
+    )
+    assert detail.rounds == ()
+    assert detail.session_versions == 0
+    assert detail.last_run == CaseLastRun(status="failed", reason="render", version=None, turn=2, rounds=(failed,))
+    # A plot case reads its own version's rounds.
+    shipped = {
+        **FAILED_ROUND,
+        "attempt": 2,
+        "outcome": "ok",
+        "shipped": True,
+        "gates_failed": [],
+        "sandbox_failures": [],
+    }
+    plot = {"bundle": {"versions": [{"number": 1, "result": {"rounds": [FAILED_ROUND, shipped]}}]}}
+    assert [item.outcome for item in manifest_detail(plot, 1).rounds] == ["render_failed", "ok"]
+
+
+def test_manifest_detail_shows_only_closed_codes() -> None:
+    """Whatever the bundle holds, only codes of the closed vocabularies reach the triage view, never text."""
+    noisy = {
+        **FAILED_ROUND,
+        "gates_failed": ["R1", "KeyError: 'Zürich'", 7],
+        # A lowercase word is no code either: only the closed vocabulary passes.
+        "sandbox_failures": ["key", "Zürich has 3 rows", "zurich"],
+        "defects": ["VQ-05", "the title says Zürich"],
+        "step": "zurich",
+    }
+    manifest = {
+        "bundle": {
+            "versions": [{"number": 1, "result": {"rounds": [noisy, {"attempt": 0, "outcome": "ok"}, "round"]}}],
+            "session": {"versions": "two", "last_run": {"status": "zurich", "rounds": [noisy]}},
+        }
+    }
+
+    detail = manifest_detail(manifest, 1)
+
+    (only,) = detail.rounds
+    assert (only.gates_failed, only.sandbox_failures, only.defects, only.step) == (("R1",), ("key",), ("VQ-05",), None)
+    assert detail.session_versions is None and detail.last_run is None
+
+
+def test_manifest_detail_of_an_older_manifest_has_no_rounds_or_run() -> None:
+    detail = manifest_detail(_case().manifest, 3)
+
+    assert (detail.rounds, detail.session_versions, detail.last_run) == ((), None, None)
 
 
 def test_gcs_download_returns_the_objects_bytes(monkeypatch) -> None:

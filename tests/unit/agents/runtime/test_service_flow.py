@@ -1031,6 +1031,15 @@ async def test_artifacts_and_bundle_after_a_plot(client: httpx.AsyncClient, swap
     assert chat["data_csv"].startswith("Student,")
     assert chat["transcript"] and chat["profile"] is not None
     assert "data_csv" not in (await client.get(f"/v1/sessions/{sid}/bundle?version=0", headers=HEADERS)).json()
+    # Without a version the chat's case still says the session held one, and how the latest run ended.
+    assert chat["session"]["versions"] == 1
+    assert chat["session"]["last_run"] == {
+        "status": "ok",
+        "reason": None,
+        "version": 1,
+        "turn": bundle["session"]["last_run"]["turn"],
+        "rounds": bundle["versions"][0]["result"]["rounds"],
+    }
 
 
 async def test_the_chat_bundle_of_a_session_without_a_plot(client: httpx.AsyncClient) -> None:
@@ -1043,6 +1052,7 @@ async def test_the_chat_bundle_of_a_session_without_a_plot(client: httpx.AsyncCl
     assert chat["data_csv"].startswith("Student,")
     assert [binding["role"] for binding in chat["bindings"]] == ["x", "y"]
     assert chat["session"]["spec_id"] == "scatter-basic"
+    assert (chat["session"]["versions"], chat["session"]["last_run"]) == (0, None)  # no run yet
     # No data yet: the chat's case says so with null, which the BFF turns into `422 no_data`.
     empty = await open_session(client, with_data=False)
     bare = (await client.get(f"/v1/sessions/{empty}/bundle?version=0&include_data=true", headers=HEADERS)).json()
@@ -1136,9 +1146,10 @@ async def test_the_repaired_render_is_reviewed_again_and_can_end_ok(
     findings = len(VERDICT_REJECT["defects"])
     # `defects`: the rubric ids the round passed on, which the page names for the repair round (live round 9).
     first = {"attempt": 1, "outcome": "review", "findings": findings, "step": "reviewing", "shipped": False}
+    clean = {"gates_failed": [], "sandbox_failures": []}  # both renders passed every gate
     assert plot["rounds"] == [
-        {**first, "defects": ["VQ-03"]},
-        {"attempt": 2, "outcome": "ok", "findings": 0, "step": "reviewing", "shipped": True, "defects": []},
+        {**first, "defects": ["VQ-03"], **clean},
+        {"attempt": 2, "outcome": "ok", "findings": 0, "step": "reviewing", "shipped": True, "defects": [], **clean},
     ]
     repairing = [data for name, data in events if name == "status" and data.get("step") == "repairing"]
     assert repairing[0]["defects"] == ["VQ-03"]
@@ -1363,6 +1374,9 @@ async def test_failed_render_twice_is_a_failed_result(
                 "step": "rendering",
                 "shipped": False,
                 "defects": [],
+                # Content-free closed ids, so a feedback case says which gate failed and how the code crashed.
+                "gates_failed": ["R1"],
+                "sandbox_failures": ["key"],
             },
             {
                 "attempt": 2,
@@ -1371,6 +1385,8 @@ async def test_failed_render_twice_is_a_failed_result(
                 "step": "rendering",
                 "shipped": False,
                 "defects": [],
+                "gates_failed": ["R1"],
+                "sandbox_failures": ["key"],
             },
         ],
     }
@@ -1381,6 +1397,16 @@ async def test_failed_render_twice_is_a_failed_result(
     assert len(backend.jobs) == 2
     (result,) = attribution_lines(caplog, "pipeline_result")
     assert (result["stage"], result["stages"]) == ("render", ["render", "render"])
+    # A failed run stores no version, so the chat's case reads the run from the session's record.
+    chat = (await client.get(f"/v1/sessions/{sid}/bundle?version=0", headers=HEADERS)).json()
+    assert chat["session"]["versions"] == 0
+    assert chat["session"]["last_run"] == {
+        "status": "failed",
+        "reason": "render",
+        "version": None,
+        "turn": chat["session"]["last_run"]["turn"],
+        "rounds": plot["rounds"],
+    }
 
 
 async def test_a_failed_render_is_summarised_over_the_code_that_ran(

@@ -21,6 +21,7 @@ from agents.anyplot.models import VertexClaude
 from agents.anyplot.plugins.budget import BudgetPlugin
 from agents.anyplot.plugins.reply_language import ReplyLanguagePlugin
 from agents.anyplot.plugins.scope_guard import ScopeGuardPlugin
+from agents.anyplot.plugins.shipped_reply import ShippedReplyPlugin
 from agents.anyplot.plugins.tool_safety import ALLOWED_TOOLS, ToolSafetyPlugin
 from agents.anyplot.schemas import AdaptPlan, PipelineArgs, PlotResult, Verdict
 from agents.anyplot.scoring import ScoreAnswer
@@ -125,6 +126,7 @@ class TestRegistry:
             ScopeGuardPlugin,
             BudgetPlugin,
             ToolSafetyPlugin,
+            ShippedReplyPlugin,
             ReplyLanguagePlugin,
             ContextFilterPlugin,
         ]

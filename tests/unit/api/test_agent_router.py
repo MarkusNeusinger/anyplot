@@ -1794,11 +1794,42 @@ PLOT_PY = (
 PROMPT_HASHES = {"root": "a" * 16, "reviewer": "b" * 16, "adapter_matplotlib": "c" * 16}
 
 
+ROUNDS = [
+    {
+        "attempt": 1,
+        "outcome": "render_failed",
+        "findings": 1,
+        "step": "rendering",
+        "shipped": False,
+        "defects": [],
+        "gates_failed": ["R1"],
+        "sandbox_failures": ["key"],
+    },
+    {
+        "attempt": 2,
+        "outcome": "review",
+        "findings": 1,
+        "step": "reviewing",
+        "shipped": True,
+        "defects": ["VQ-03"],
+        "gates_failed": ["G7"],
+        "sandbox_failures": [],
+    },
+]
+"""The rounds of the bundle's version: a crash in the first, a shipped repair the review found an overlap in."""
+
+
 def _feedback_bundle(number: int = 3, *, themes: tuple[str, ...] = ("light", "dark"), data_csv: str | None = None):
     """The agents service's bundle of one version, as `?version=<number>` answers it."""
     pngs = {"light": PNG_LIGHT, "dark": PNG_DARK}
     return {
-        "session": {"spec_id": "scatter-basic", "library": "matplotlib", "locale": "de-CH"},
+        "session": {
+            "spec_id": "scatter-basic",
+            "library": "matplotlib",
+            "locale": "de-CH",
+            "versions": number,
+            "last_run": {"status": "needs_attention", "reason": None, "version": number, "turn": 2, "rounds": ROUNDS},
+        },
         "snapshot": {"spec_id": "scatter-basic", "library_version": "3.10.0"},
         "transcript": [
             {"role": "user", "text": "[action] Create the plot from my dataset and bindings."},
@@ -1821,6 +1852,7 @@ def _feedback_bundle(number: int = 3, *, themes: tuple[str, ...] = ("light", "da
                     "changes": ["log scale"],
                     "residual_defects": ["VQ-03 light: overlap"],
                     "version": number,
+                    "rounds": ROUNDS,
                 },
                 "theme": "light",
                 "themes": {theme: {"status": "ok", "reason": None} for theme in themes},
@@ -2625,6 +2657,15 @@ class TestCases:
         assert body["bindings"] == [{"role": "x", "column": "hours"}]
         assert body["snapshot_library_version"] == "3.10.0"
         assert (body["diff"], body["catalogue_library_version"], body["siblings"]) == (None, None, [])
+        assert body["rounds"] == ROUNDS
+        assert body["session_versions"] == 3
+        assert body["last_run"] == {
+            "status": "needs_attention",
+            "reason": None,
+            "version": 3,
+            "turn": 2,
+            "rounds": ROUNDS,
+        }
         assert cases.downloads == [case_object(CASE_ID, "manifest.json")]
 
     def test_detail_diffs_against_the_catalogue_without_the_export_header(self, client, cases, rows, catalogue) -> None:
@@ -2672,9 +2713,18 @@ class TestCases:
         body = response.json()
         assert body["expired"] is True
         assert (body["id"], body["reaction"]) == (CASE_ID, "thumbs_down")
-        for field in ("transcript", "code", "diff", "snapshot_library_version", "result_reason", "config"):
+        for field in (
+            "transcript",
+            "code",
+            "diff",
+            "snapshot_library_version",
+            "result_reason",
+            "config",
+            "session_versions",
+            "last_run",
+        ):
             assert body[field] is None, field
-        assert (body["residual_defects"], body["changes"], body["bindings"]) == ([], [], [])
+        assert (body["residual_defects"], body["changes"], body["bindings"], body["rounds"]) == ([], [], [], [])
         assert body["siblings"] == [self.OLDER]
         assert body["catalogue_library_version"] == "3.11.2"
 

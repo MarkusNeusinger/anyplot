@@ -30,7 +30,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
 | `GET /v1/sessions/{sid}/artifacts/{name}?v=&theme=` | | the file; `plot.html` (a JavaScript version only) is the self-contained interactive page in `theme` (default: the version's), built on demand and answered as an attachment | `404`; for `plot.html` also `409 run_active`, `503 capacity`, `503 page_unavailable` (a renderer without `POST /page`), `500 page_failed` |
-| `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle: every version, or the one numbered `version`, or with `version=0` the conversation alone (no version; `data_csv`, the current data, with `include_data`); with `AGENT_KEEP_REFUSALS` also `refusals`, the session's refused messages `[{verdict, lang, text, at}]` | `404` |
+| `GET /v1/sessions/{sid}/bundle?version=&include_data=` | | the feedback case bundle: every version, or the one numbered `version`, or with `version=0` the conversation alone (no version; `data_csv`, the current data, with `include_data`); `session.versions` (how many versions the session holds) and `session.last_run` (`schemas.LastRun`: how the latest plot run ended, content-free) in every form; with `AGENT_KEEP_REFUSALS` also `refusals`, the session's refused messages `[{verdict, lang, text, at}]` | `404` |
 | `DELETE /v1/sessions/{sid}` | | `204` | |
 
 Every `/v1` route needs `X-Anyplot-User` (the BFF's opaque user id); sessions are
@@ -2699,7 +2699,8 @@ async def bundle(
     when the session lacks it); with `version=0` the conversation alone, the feedback on a chat
     that made no plot: no version, and with `include_data` the session's current `data.csv` as
     the top-level `data_csv`. A fan-out session whose data is a copy names the source's data version
-    as `session.dataset_copied_from`.
+    as `session.dataset_copied_from`. `session.versions` counts the versions the session holds and
+    `session.last_run` says how its latest plot run ended, in every form, also `version=0`.
     """
     session = await runtime.session(user, sid)
     services = get_services()
@@ -2708,6 +2709,7 @@ async def bundle(
     if view is None:
         raise AgentsError(404, "session_expired")
     versions = services.versions.all(sid)
+    held = len(versions)
     if version == 0:
         versions = []
     elif version is not None:
@@ -2763,6 +2765,10 @@ async def bundle(
             "locale": view.locale,
             "plot_language": view.language,
             "plot_language_source": view.language_source,
+            # Content-free, so a case on one version or on the chat (no version) still says what the session held:
+            # how many versions, and how the latest plot run ended (a plot the page missed, or a run that failed).
+            "versions": held,
+            "last_run": view.last_run.model_dump(mode="json") if view.last_run is not None else None,
         },
         "snapshot": {"spec_id": view.snapshot.spec_id, "library_version": view.snapshot.library_version},
         "transcript": transcript,

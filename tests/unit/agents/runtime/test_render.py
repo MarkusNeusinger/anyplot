@@ -45,7 +45,7 @@ from agents.anyplot.render.contract import (
     Theme,
     ThemeOutput,
 )
-from agents.anyplot.render.gates import data_rows, error_summary, evaluate
+from agents.anyplot.render.gates import MAX_PLOTTED_POINTS, data_rows, error_summary, evaluate
 from agents.anyplot.render.png import PngRejected, harden, pad_to, read_output, size_of
 from agents.anyplot.render.runtimes.python import HARNESS_SOURCE, PythonRuntime
 from agents.anyplot.render.store import RenderStore, RenderStoreFull
@@ -384,6 +384,30 @@ class TestGates:
             "DQ-03 (code)",
         ]
         assert report.failed_gates == ["G3", "G7", "G5", "G8"] * 2  # per theme, in the probe's check order
+
+    def unit_probe_gates(self, spec_id: str | None, points: int, rows: int) -> list[str]:
+        """The failed gates of a clean one-theme render whose probe counts `points` point marks."""
+        report = evaluate(
+            self.result(light=self.ok("light", probe={"canvas": [3200, 1800], "points": points})),
+            themes=("light",),
+            library="seaborn",
+            rows=rows,
+            spec_id=spec_id,
+        )
+        assert report.passed_host_gates
+        return report.failed_gates
+
+    @pytest.mark.parametrize("spec_id", ["pictogram-basic", "waffle-basic", "dot-matrix-proportional"])
+    def test_a_unit_mark_plot_draws_more_marks_than_rows_by_design(self, spec_id: str) -> None:
+        """11 rows of about 29 at 5 per icon draw 77 icons: the plot type, not made-up data."""
+        assert self.unit_probe_gates(spec_id, points=77, rows=11) == []
+
+    @pytest.mark.parametrize("spec_id", ["scatter-basic", None])
+    def test_made_up_marks_still_fail_g8_elsewhere(self, spec_id: str | None) -> None:
+        assert self.unit_probe_gates(spec_id, points=77, rows=11) == ["G8"]
+
+    def test_a_unit_mark_plot_keeps_the_mass_data_ceiling(self) -> None:
+        assert self.unit_probe_gates("parliament-basic", points=MAX_PLOTTED_POINTS + 1, rows=11) == ["G9"]
 
     @pytest.mark.parametrize(
         "probe",

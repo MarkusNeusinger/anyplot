@@ -24,6 +24,7 @@ import { ghostButtonSx, smallText } from 'src/sections/agent-chat/styles';
 import { acceptMatch } from 'src/sections/debug/acceptMatch';
 import { CaseImages } from 'src/sections/debug/CaseImages';
 import { ReactionMark } from 'src/sections/debug/CaseList';
+import { roundLine, sessionLine } from 'src/sections/debug/caseRounds';
 import { formatUtc } from 'src/sections/debug/format';
 import { PromoteControl } from 'src/sections/debug/PromoteControl';
 import {
@@ -241,6 +242,10 @@ export function CaseDetail({
     detail.tokens !== null ? `${detail.tokens} tokens` : null,
     detail.cost_estimate !== null ? `cost ${detail.cost_estimate}` : null,
   ].filter((part): part is string => !!part);
+  const rounds = detail.rounds ?? [];
+  const session = sessionLine(detail.session_versions, detail.last_run);
+  // A chat case holds no version, so the latest run's rounds stand in for the version's own.
+  const runRounds = rounds.length === 0 ? (detail.last_run?.rounds ?? []) : [];
 
   return (
     <Box
@@ -433,6 +438,19 @@ export function CaseDetail({
                     reason:{' '}
                   </Box>
                   {detail.result_reason}
+                </Box>
+              )}
+              {rounds.length > 0 && (
+                <Box>
+                  <Box sx={detailMutedSx}>rounds</Box>
+                  <Lines items={rounds.map(roundLine)} />
+                </Box>
+              )}
+              {session && <Box sx={{ ...detailMutedSx, overflowWrap: 'anywhere' }}>{session}</Box>}
+              {runRounds.length > 0 && (
+                <Box>
+                  <Box sx={detailMutedSx}>latest run&apos;s rounds</Box>
+                  <Lines items={runRounds.map(roundLine)} />
                 </Box>
               )}
               {detail.residual_defects.length > 0 && (
