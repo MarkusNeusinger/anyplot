@@ -16,5 +16,7 @@
   progress and over the data box while a file is read or the data is parsed, one moving indicator per wait: the
   lines that only say what waits lost their ellipsis, and a question or a summary waiting in the queue shows the
   in-progress line and the queue counter without the progress grid. `.example_data()` steps aside while its turn
-  runs, keeping its room, so "making example data" shows once, in the thread. The loader's dots stand still under
-  reduced motion, and each size has keyframes of its own, so two sizes on one page no longer share one animation.
+  runs, keeping its room, so "making example data" shows once, in the thread. The loader, in the gallery too, drops
+  the ochre: a resting pair in the theme's warm gray of muted text and a runner that turns green while it crosses
+  them. Its dots stand still under reduced motion, the runner green, and each size has keyframes of its own, so two
+  sizes on one page no longer share one animation.

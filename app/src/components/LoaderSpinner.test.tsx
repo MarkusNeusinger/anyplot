@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import { render, screen } from 'src/test-utils';
+import { colors } from 'src/theme';
 
 /** Every style emotion wrote into the document so far. */
 const styles = () =>
@@ -66,10 +67,31 @@ describe('LoaderSpinner', () => {
     expect(css).not.toMatch(/@keyframes trfLoader\{/);
   });
 
-  it('stands still under reduced motion', () => {
+  it('stands still under reduced motion, its runner green beside the gray pair', () => {
     render(<LoaderSpinner size="inline" />);
-    expect(styles()).toMatch(
+    const css = styles();
+    expect(css).toMatch(
       /@media \(prefers-reduced-motion: reduce\)\{[^{]*::before,[^{]*::after\{[^}]*\banimation:none;\}/
     );
+    const still = css.slice(css.indexOf('@media (prefers-reduced-motion: reduce)'));
+    expect(still).toMatch(new RegExp(`::after\\{background:${colors.primary};\\}`, 'i'));
+  });
+
+  it('rests in the gray of muted text and runs in the brand green, without the ochre', () => {
+    render(<LoaderSpinner size="inline" />);
+    const css = styles();
+    // The pair and the runner's base follow the theme through the token, never a fixed hex.
+    expect(css).toMatch(/::before\{[^}]*background:var\(--ink-muted\);/);
+    expect(css).toMatch(/::before\{[^}]*box-shadow:16px 0 var\(--ink-muted\);/);
+    expect(css).toMatch(/::after\{[^}]*background:var\(--ink-muted\);/);
+    // The runner: gray at the loop's ends, green while it travels and grows.
+    const loop = css.slice(css.indexOf('@keyframes trfLoader-inline'));
+    const frame = (at: string) => loop.match(new RegExp(`${at}\\{([^}]*)\\}`))?.[1] ?? '';
+    expect(frame('0%,5%')).toContain('background:var(--ink-muted)');
+    for (const at of ['10%', '40%', '90%,95%']) {
+      expect(frame(at).toLowerCase()).toContain(`background:${colors.primary.toLowerCase()}`);
+    }
+    expect(frame('100%')).toContain('background:var(--ink-muted)');
+    expect(css.toLowerCase()).not.toContain(colors.accent.toLowerCase());
   });
 });
