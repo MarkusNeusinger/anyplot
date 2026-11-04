@@ -625,8 +625,9 @@ class Binding(_StrictBody):
 class MessageBody(_StrictBody):
     text: Text | None = None
     # `create_plot` starts step 2 (the fresh plot, also `.start_over()`); `carry_plot` plots in the library the user
-    # switched to with the decisions made so far; `summarize_data` asks the assistant for the step-1 summary.
-    action: Literal["create_plot", "carry_plot", "summarize_data"] | None = None
+    # switched to with the decisions made so far; `summarize_data` asks the assistant for the step-1 summary;
+    # `example_data` asks it for example data (`.example_data()`), which, unlike typed words, sets no session language.
+    action: Literal["create_plot", "carry_plot", "summarize_data", "example_data"] | None = None
 
     @model_validator(mode="after")
     def _exactly_one(self) -> MessageBody:
@@ -1229,7 +1230,8 @@ async def agent_eligibility(
 async def create_session(
     body: CreateSessionBody, ctx: Ctx, client: Client, db: AsyncSession = Depends(require_db)
 ) -> Any:
-    """Open a chat session for one spec and library: `{session_id, eligibility}`."""
+    """Open a chat session for one spec and library: `{session_id, eligibility, roles}`, passed through as the
+    agents service answers (`roles`: the spec's data roles, for the page header's columns ⓘ)."""
     snapshot = await _snapshot_or_404(db, body.spec_id, body.library, ctx)
     payload = {
         "user": ctx.user_id,

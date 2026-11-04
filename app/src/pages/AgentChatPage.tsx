@@ -10,7 +10,9 @@
  *
  * One column, chat first, two steps, data first. The data card is the first
  * turn of the thread: paste data (or ask in the chat for a curve, whose table
- * the assistant computes), read the assistant's summary of it in the next
+ * the assistant computes; while the session has no data, `.example_data()` on
+ * the line above the composer asks it for a made-up table to try the plot),
+ * read the assistant's summary of it in the next
  * turn, fix it in plain words if needed (each change updates the card in
  * place, with `.undo()`), check the preview and the role bindings and
  * `.confirm()` them at the card's foot (step 1). The card then collapses into
@@ -28,7 +30,8 @@
  * the code and the downloads. A line above the column names the current step. The header
  * shows the catalogue plot being adapted as a thumbnail beside the spec's title, in the
  * library in use and the site theme (`CataloguePreview`; a click opens it large), with the
- * columns it expects behind the ⓘ after the title, and carries the library menu
+ * columns it expects behind the ⓘ after the title (the spec's roles as the session's open
+ * names them, the spec's `data` bullets without them), and carries the library menu
  * (`LibraryChip`, since 2026-11-02 in place of a pill
  * per library: the libraries grouped by language, `all` for the admin) and,
  * next to it, the session language chip (`LanguageChip`): the language of the
@@ -143,6 +146,7 @@ import { CataloguePreview } from 'src/sections/agent-chat/CataloguePreview';
 import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
 import { DATA_SUMMARY_ID, DataPanel } from 'src/sections/agent-chat/DataPanel';
+import { ExampleDataLine } from 'src/sections/agent-chat/ExampleData';
 import { ExperimentalNotice } from 'src/sections/agent-chat/ExperimentalNotice';
 import { FanOut } from 'src/sections/agent-chat/FanOut';
 import { DEFAULT_USER_MAX_RUNS } from 'src/sections/agent-chat/fanoutRules';
@@ -160,7 +164,7 @@ import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { Remembered } from 'src/sections/agent-chat/Remembered';
 import { SessionMenu } from 'src/sections/agent-chat/SessionMenu';
-import { expectedColumns, previewsByLibrary } from 'src/sections/agent-chat/specReference';
+import { columnLines, previewsByLibrary } from 'src/sections/agent-chat/specReference';
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
 import { inStep2, showsTimeline } from 'src/sections/agent-chat/steps';
 import {
@@ -408,10 +412,11 @@ function AgentChat({
   const { state } = session;
   const [draft, setDraft] = useState('');
   const [title, setTitle] = useState<string | null>(null);
-  // The catalogue plot beside the title: its preview per library and the columns it expects.
+  // The catalogue plot beside the title: its preview per library, and the spec's `data` bullets,
+  // the columns ⓘ's fallback while the session's open names no roles.
   const [reference, setReference] = useState<{
     previews: Record<string, ThemedPreviewSource>;
-    columns: string[];
+    data: string[];
   } | null>(null);
   const [libraries, setLibraries] = useState<string[]>([...DEFAULT_AGENT_LIBRARIES]);
   // `.plot_all()`: the caller's own run cap (`user_max_runs`, 5 for an admin), and the session whose
@@ -476,10 +481,7 @@ function AgentChat({
       .then(spec => {
         if (controller.signal.aborted) return;
         setTitle(spec.title);
-        setReference({
-          previews: previewsByLibrary(spec.implementations),
-          columns: expectedColumns(spec.data),
-        });
+        setReference({ previews: previewsByLibrary(spec.implementations), data: spec.data ?? [] });
         implemented = spec.implementations.map(impl => impl.library_id);
         publish();
       })
@@ -578,6 +580,13 @@ function AgentChat({
   const carryText = carry
     ? carryActionText(carry.target.library, carryDecisions(carry, state.memory))
     : '';
+  // The columns ⓘ after the title: the spec's roles as the session's open named them, else the
+  // spec's `data` bullets (an older server, or no session: ineligible, an error).
+  const expectedLines = columnLines(state.specRoles, reference?.data);
+  // Without data, `.example_data()` above the composer: the other way to data besides a paste.
+  // A table read from text that waits for its decision is data at hand, so the line waits too.
+  const exampleOffer = state.phase === 'ready' && !state.dataset && !state.transcription;
+  const exampleWorking = exampleOffer && state.run?.kind === 'example_data';
 
   // `&all=1` follows `all`, so a reload presses it again. Only from the lists' answers on:
   // before them `all` is not offered yet, and one pressed from the URL waits for them.
@@ -842,12 +851,12 @@ function AgentChat({
             >
               ← {title ?? specId}
             </Box>
-            {reference && reference.columns.length > 0 && (
+            {expectedLines.length > 0 && (
               <InfoPopover
                 label="Columns the plot expects"
                 heading="# the plot expects"
                 testId="expected-columns"
-                lines={reference.columns.map(line => parseInlineCode(line))}
+                lines={expectedLines.map(line => parseInlineCode(line))}
               />
             )}
           </Box>
@@ -1054,6 +1063,18 @@ function AgentChat({
               >
                 # {servicePausedText(pausedUntil)}
               </Box>
+            )}
+            {/* A key press continues in the message box: the button gives way to the working
+                line while the turn runs. */}
+            {exampleOffer && (
+              <ExampleDataLine
+                working={exampleWorking}
+                disabled={busy}
+                onClick={event => {
+                  keepKeyboardFocus(event);
+                  void session.exampleData();
+                }}
+              />
             )}
             <Box
               component="form"

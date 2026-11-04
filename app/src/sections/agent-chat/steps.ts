@@ -19,12 +19,12 @@ export function inStep2(state: AgentSessionState): boolean {
 }
 
 /** What the thread's in-progress line says: the turn's kind, or that it stops. */
-export type PendingReply = 'summarize_data' | 'message' | 'stopping';
+export type PendingReply = 'summarize_data' | 'example_data' | 'message' | 'stopping';
 
 /**
  * The in-progress line in the assistant's slot of the thread, while a turn
- * without pipeline steps waits for its reply: the summary of the data, a
- * question, a data request. It shows exactly while the turn's own prompt is the
+ * without pipeline steps waits for its reply: the summary of the data, example
+ * data, a question, a data request. It shows exactly while the turn's own prompt is the
  * last item, so the first reply (a message, a refusal, an error, a plot) takes
  * its place. A plot run (`create_plot`, `carry_plot`) gets none, and neither
  * does a turn that reached a pipeline step: the progress timeline below the

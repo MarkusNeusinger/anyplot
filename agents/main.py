@@ -11,7 +11,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `GET /v1/status` | | `{libraries, model, location, version, provider, waiting, in_flight, user_max_runs, tier, paused, resets_at}` (`waiting` and `in_flight`: every lane of the run queue; `user_max_runs`: the caller's own cap, `AGENT_USER_MAX_RUNS` or, for an admin, `AGENT_ADMIN_USER_MAX_RUNS`; `tier`: `admin` or `public`, as the request was served; `paused`: the service's day budget is spent, so every turn gets `service_paused` until `resets_at`, the next 00:00 UTC) | |
 | `GET /v1/budget` | | `{date, since, started_at, resets_at, paused, model, tokens, budget_tokens, usd, budget_usd, users, users_at_limit, limits}`: the admin's live view of the day from the usage book (`UsageBook.snapshot`), counts only, never a user id: the service's weighted tokens against `AGENT_GLOBAL_DAILY_TOKEN_BUDGET`, both in USD at the main model's list price (`ledger.weighted_usd`, null for a model without one), the users seen today, how many are at one or more of their own day caps, and how many at each (`limits`: `tokens`, `runs`, `data_runs`, `messages`, `pastes`, `conversions`, `locked_out`; an admin counts only at `pastes`, `conversions` and `locked_out`, the caps that bind every tier). In memory: `since` is when today's counts began, the instance's start or 00:00 UTC | |
 | `GET /v1/eligibility?spec=&library=` | | `{eligible, status, reasons}` | |
-| `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot, source?}` (`source`: `fanout` for a session the admin's "plot in all libraries" opens; its telemetry lines carry that source) | `{session_id, eligibility}` | `422 not_eligible`, `429 session_limit` (an anonymous caller's network already holds `AGENT_IP_MAX_SESSIONS` live sessions) |
+| `POST /v1/sessions` | `{user, spec_id, library, locale, snapshot, source?}` (`source`: `fanout` for a session the admin's "plot in all libraries" opens; its telemetry lines carry that source) | `{session_id, eligibility, roles}` (`roles`: the spec's data roles as the dataset route names them, at most `MAX_DONE_ROLES`, so the page can say which columns the plot expects before any data) | `422 not_eligible`, `429 session_limit` (an anonymous caller's network already holds `AGENT_IP_MAX_SESSIONS` live sessions) |
 | `POST /v1/sessions/{sid}/library` | `{library, snapshot, source?}` (`source`: `menu`, the default, or `chat`, for the telemetry) | `{session_id, eligibility, target, carry}`: `target` the new `{spec_id, library}`; `carry` `{decisions, newer, target_has_plot, from_plot, offer}` (`switch.SwitchSummary`), with `offer` true when the page should offer the carry run (`carry_plot`): the data, bindings, confirmation, language, kept note, versions and plot memory stay, and the switch's carry (`switch.Carry`) waits for the first run in the new target | `422 not_eligible`, `422 invalid` (another spec), `409 run_active` |
 | `GET /v1/sessions/{sid}/memory` | | `{entries, max_entries, written}`: the plot memory, oldest first, each `{id, kind, target, text, expect, turn}` (`memory.py`); `written` once it ever held an entry, from then on its entries alone travel | |
 | `DELETE /v1/sessions/{sid}/memory` | | the GET's shape with no entries: forget all, a blank start | `409 run_active` |
@@ -25,7 +25,7 @@ lifetime (`max-instances=1`), so a restart answers `404 session_expired`.
 | `POST /v1/sessions/{sid}/dataset/to_long` | | The undo route's shape plus `changes`: the page's `.to_long()` applies the wide-table suggestion, recomputed on the server, as the next dataset version with the new columns bound to the roles they were made for; no model call | `409 run_active`, `422 no_suggestion` |
 | `POST /v1/sessions/{sid}/dataset/copy` | `{from_session}` | The paste route's dataset shape (version 1) plus `confirmed: true`, `complete`, `missing_roles`, `copied_from` (the source's version number) and `carry` (the switch answer's shape: the plot memory and a carry of the source's latest plot come along, so the fan-out sends `carry_plot` on `offer`): the admin fan-out's copy of the confirmed current data version of `from_session`, a session of the same user and spec, into this fan-out session, byte for byte, with its bindings, their confirmation and the session language; nothing parsed or judged, no model call, no paste counted | `404 session_expired` (either session, also another user's), `409 run_active` (either session), `409 has_dataset` (the target has data), `422 no_dataset`, `422 unconfirmed`, `422 invalid` (the same session, a target that is no fan-out session, another spec, refused bindings), `429 rate_limited` / `429 daily_limit` (`COPIES_PER_MINUTE` / `_PER_DAY`; never for an admin), `503 capacity` |
 | `GET /v1/sessions/{sid}/dataset/data.csv` | | the current dataset version's canonical CSV as stored (at most 4 MiB, `parse.MAX_CANONICAL_BYTES`), for the data panel's full view; no model call, no state write | `422 no_dataset` |
-| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, the fresh plot; `carry_plot`, the plot with the switch's carry and the plot memory; `summarize_data`); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data, and `switch` (`{library, plot}`) after a turn whose root asked for a library switch the user wanted in the chat (`switch_plot`), which the page carries out | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
+| `POST /v1/sessions/{sid}/messages?theme=` | `{text}` or `{action}` (`create_plot`, the fresh plot; `carry_plot`, the plot with the switch's carry and the plot memory; `summarize_data`; `example_data`, the page's `.example_data()`, which leaves the session language as it is); `theme` (`light`, `dark`, optional) is the site theme the page shows, which a plot run of the turn renders unless the user asked for a theme (`pipeline.run_theme`) | SSE `anyplot/1`; the `done` event carries `dataset` (with `roles` and `changes`) after a turn whose `prepare_data` or `generate_data` changed the data, version 1 when `generate_data` made the session's first data, and `language` (`{language, source}`) after every run, and `suggestion` (the `.to_long()` offer in the session language, or null) after every run on a session with data, and `switch` (`{library, plot}`) after a turn whose root asked for a library switch the user wanted in the chat (`switch_plot`), which the page carries out | `413 too_long`, `409 run_active`, `422` for a `theme` other than `light` or `dark` |
 | `POST /v1/sessions/{sid}/cancel` | | `204` | |
 | `POST /v1/sessions/{sid}/outcome` | `{action, version?, reaction?}` (closed sets: `telemetry.OutcomeAction`, `telemetry.Reaction`, the latter with `feedback` only) | `204`: the content-free `outcome` telemetry line (`anyplot/telemetry.py`) | `422`, `429 rate_limited` / `429 daily_limit` (`OUTCOMES_PER_MINUTE` / `_PER_DAY`) |
 | `POST /v1/sessions/{sid}/versions/{version}/render` | `{theme}` | `{status, reason?, artifacts}` | `404 not_found`, `409 run_active`, `503 capacity` (no render slot in time, or the render store is full) |
@@ -321,15 +321,20 @@ USER_PATTERN = r"^[A-Za-z0-9_-]{1,64}$"
 SESSION_PATTERN = r"^[A-Za-z0-9_-]{1,128}$"
 SPEC_PATTERN = r"^[a-z0-9-]{1,100}$"
 LOCALE_PATTERN = r"^[A-Za-z]{2,3}([_-][A-Za-z0-9]{1,8}){0,3}$"
-Action = Literal["create_plot", "carry_plot", "summarize_data"]
+Action = Literal["create_plot", "carry_plot", "summarize_data", "example_data"]
 ACTION_MESSAGES: dict[str, str] = {
     "create_plot": "[action] Create the plot from my dataset and bindings.",
     "carry_plot": "[action] Create the plot from my dataset and bindings, with the decisions I made so far.",
     "summarize_data": "[action] Summarize the dataset for the user.",
+    "example_data": "[action] Make example data to try this plot.",
 }
 """The fixed user message of each structured action; the scope judge is skipped for them (`ledger.kind`).
 `summarize_data` also carries the notes the user pasted with the data, when the stored dataset kept any
 (`user_notes_block`): the dataset route ran the pre-filter and the scope judge on them at the paste.
+`example_data` is the page's `.example_data()`: the root makes example data as for a typed request (root.md,
+"Example data"). An action, not the words "example data", because the session's first typed message sets the
+session language (`detected`, `language.py`): typed English words would keep a German visitor in English, while
+an action skips the judge and leaves the language as it was.
 `create_plot` (`.create_plot()`, `.start_over()`) starts from the catalogue code (`RequestLedger.fresh_start`): its
 run takes no switch's carry but applies the plot memory, which only the user clears. `carry_plot` (2026-11-02) is
 the page's "plot in <library> with your
@@ -1098,7 +1103,9 @@ async def create_session(body: CreateSessionBody, user: User, named: NamedUser, 
     except BaseException:
         services.session_networks.pop(session_id, None)
         raise
-    return JSONResponse({"session_id": session_id, "eligibility": result.public()}, headers=_NO_STORE)
+    # The roles, so the page's header names the columns the plot expects as the data card's dropdowns will.
+    roles = _page_roles(body.snapshot.roles())[:MAX_DONE_ROLES]
+    return JSONResponse({"session_id": session_id, "eligibility": result.public(), "roles": roles}, headers=_NO_STORE)
 
 
 def _fixture_seed(

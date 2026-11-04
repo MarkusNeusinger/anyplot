@@ -553,6 +553,23 @@ class TestSnapshot:
         assert sent["locale"] == "de-CH"
         assert sent["snapshot"]["code"] == "import numpy as np\nx = 1\n"
 
+    def test_create_session_passes_the_spec_roles_through(self, client, upstream, db_with_spec) -> None:
+        """The roles reach the page as the agents service names them: the header's columns ⓘ lists them."""
+        roles = [
+            {"name": "x", "kinds": ["numeric"], "required": True, "variadic": False, "description": "x values"},
+            {"name": "y", "kinds": ["numeric"], "required": True, "variadic": False, "description": "y values"},
+        ]
+        upstream.handler = lambda request: httpx.Response(
+            200, json={"session_id": "s1", "eligibility": "clean", "roles": roles}
+        )
+        response = client.post(
+            "/debug/agent/sessions",
+            json={"spec_id": "scatter-basic", "library": "matplotlib", "locale": "en"},
+            headers=CLIENT_HEADERS,
+        )
+        assert response.status_code == 200
+        assert response.json() == {"session_id": "s1", "eligibility": "clean", "roles": roles}
+
     def test_create_session_forwards_the_fanout_source_only(self, client, upstream, db_with_spec) -> None:
         """The admin fan-out's sessions are marked `fanout` for the usage telemetry; no other value passes."""
         upstream.handler = lambda request: httpx.Response(200, json={"session_id": "s1", "eligibility": "clean"})
@@ -841,6 +858,17 @@ class TestBodies:
         assert upstream.last_json == {"action": "summarize_data"}
         unknown = client.post("/debug/agent/sessions/s1/messages", json={"action": "explode"}, headers=CLIENT_HEADERS)
         assert unknown.status_code == 422
+
+    def test_the_example_data_action_is_forwarded(self, client, upstream) -> None:
+        """`.example_data()` travels as the action, never as the words, which would set the session language."""
+        upstream.handler = lambda request: httpx.Response(
+            200, content=b"event: done\ndata: {}\n\n", headers={"Content-Type": "text/event-stream"}
+        )
+        response = client.post(
+            "/debug/agent/sessions/s1/messages", json={"action": "example_data"}, headers=CLIENT_HEADERS
+        )
+        assert response.status_code == 200
+        assert upstream.last_json == {"action": "example_data"}
 
     def test_dataset_over_limit_is_413(self, client, upstream) -> None:
         response = client.post(

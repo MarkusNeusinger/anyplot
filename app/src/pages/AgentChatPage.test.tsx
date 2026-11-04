@@ -137,6 +137,7 @@ const GENERATED = {
 };
 
 const FORMULA = 'y = sin(x), x von -pi bis pi';
+const EXAMPLE_REPLY = 'I generated example data to try the plot: 200 rows of x and y, all made up.';
 
 /** Free text the server reads into a table with a model and does not store. */
 const FREE_TEXT = 'Hund 7 Katze 3 und Vogel 4';
@@ -211,6 +212,21 @@ function turnEvents(body: { text?: string; action?: string }): [string, unknown]
     return [
       ['message', { text: 'Two columns: hours and score.' }],
       ['done', { llm_calls: 1, data_confirmed: true }],
+    ];
+  }
+  // `.example_data()`: the assistant's `run_data_code` made example data, the first data.
+  if (body.action === 'example_data') {
+    return [
+      ['message', { text: EXAMPLE_REPLY }],
+      [
+        'done',
+        {
+          llm_calls: 3,
+          bindings: GENERATED.bindings,
+          data_confirmed: false,
+          dataset: { ...GENERATED, changes: ['generated example data: 200 rows, 2 columns'] },
+        },
+      ],
     ];
   }
   // The assistant's `generate_data` computed the first data from a formula.
@@ -1121,19 +1137,57 @@ describe('AgentChatPage catalogue plot', () => {
     ).toBeInTheDocument();
   });
 
-  it('lists the columns the plot expects behind the ⓘ after the title, without the meta lines', async () => {
-    localStorage.setItem(ADMIN_HINT_KEY, '1');
-    renderAt(PAGE);
+  /** The ⓘ's lines once it is open. */
+  async function expectedColumnsShown() {
     const info = await screen.findByRole('button', { name: 'Columns the plot expects' });
     expect(info).toHaveAttribute('aria-expanded', 'false');
-
     fireEvent.click(info);
     const details = await screen.findByRole('dialog', { name: 'Columns the plot expects' });
-    expect(
-      within(within(details).getByTestId('expected-columns'))
-        .getAllByRole('listitem')
-        .map(item => item.textContent)
-    ).toEqual([
+    return within(within(details).getByTestId('expected-columns'))
+      .getAllByRole('listitem')
+      .map(item => item.textContent);
+  }
+
+  it("lists the spec's roles behind the ⓘ after the title, as the session's open names them", async () => {
+    const base = fetchMock.getMockImplementation() as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    fetchMock.mockImplementation(async (input: string, init?: RequestInit) =>
+      new URL(input).pathname.endsWith('/debug/agent/sessions') && init?.method === 'POST'
+        ? json(200, {
+            session_id: 'S1',
+            eligibility: { eligible: true, status: 'clean', reasons: [] },
+            roles: [
+              ...DATASET.roles,
+              {
+                name: 'series',
+                kinds: ['categorical'],
+                required: false,
+                variadic: false,
+                description: 'one colour per group',
+              },
+            ],
+          })
+        : base(input, init)
+    );
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await screen.findByLabelText(/# your data/);
+
+    expect(await expectedColumnsShown()).toEqual([
+      'x (numeric) · x values',
+      'y (numeric) · y values',
+      'series (categorical, optional) · one colour per group',
+    ]);
+  });
+
+  it("falls back to the spec's data bullets, without the meta lines, when the open names no roles", async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await screen.findByLabelText(/# your data/);
+
+    expect(await expectedColumnsShown()).toEqual([
       'x (numeric) - Independent variable values plotted on the horizontal axis',
       'y (numeric) - Dependent variable values plotted on the vertical axis',
     ]);
@@ -1148,6 +1202,64 @@ describe('AgentChatPage catalogue plot', () => {
       source: 'spec_hub',
       spec: 'scatter-basic',
     });
+  });
+});
+
+describe('AgentChatPage .example_data()', () => {
+  it('offers example data above the composer without data, as an action, working until it arrives', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await screen.findByLabelText(/# your data/);
+    const line = screen.getByTestId('example-data');
+    expect(line).toHaveTextContent('# no data at hand?.example_data()');
+
+    holdNextTurn = true;
+    // A key press (a click without a pointer) goes on in the message box: the button gives way.
+    fireEvent.click(within(line).getByRole('button', { name: 'Make example data' }));
+
+    expect(await screen.findByTestId('example-data-working')).toHaveTextContent(
+      '# making example data …'
+    );
+    expect(screen.getByLabelText('Message')).toHaveFocus();
+    expect(turnBodies()).toEqual([{ action: 'example_data' }]);
+    // The thread names the page's own turn and holds the assistant's slot.
+    expect(screen.getByRole('log', { name: 'Conversation' })).toHaveTextContent('.example_data()');
+    expect(screen.getByTestId('pending-reply')).toHaveTextContent('making example data …');
+
+    releaseTurn?.();
+    expect(await screen.findByText(EXAMPLE_REPLY)).toBeInTheDocument();
+    await turnEnded();
+    // The data is there: the line goes, the card shows the table, and nothing set a language.
+    expect(screen.queryByTestId('example-data')).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^x/)).toHaveValue('x');
+    expect(screen.queryByText(/reply language/)).not.toBeInTheDocument();
+  });
+
+  it('comes back when the turn brought no data, and waits while another turn runs', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await screen.findByLabelText(/# your data/);
+
+    holdNextTurn = true;
+    sendFromComposer('what is the mean score?');
+    const button = await screen.findByRole('button', { name: 'Make example data' });
+    expect(button).toBeDisabled();
+    expect(screen.queryByTestId('example-data-working')).not.toBeInTheDocument();
+    releaseTurn?.();
+    await turnEnded();
+    expect(screen.getByRole('button', { name: 'Make example data' })).toBeEnabled();
+  });
+
+  it('is gone once a paste stored data', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    fireEvent.change(await screen.findByLabelText(/# your data/), {
+      target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
+
+    expect(screen.queryByTestId('example-data')).not.toBeInTheDocument();
   });
 });
 

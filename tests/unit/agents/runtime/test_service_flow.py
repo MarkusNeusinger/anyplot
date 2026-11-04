@@ -2888,6 +2888,55 @@ async def test_the_summarize_data_action_skips_the_judge_and_reaches_the_root(
     assert unknown.status_code == 422
 
 
+async def test_the_example_data_action_skips_the_judge_and_leaves_the_language_to_the_first_message(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """`.example_data()` is an action: the words "example data" typed as the session's first message would set the
+    session language (`detected`), so a German visitor would stay in English. The action is never judged, so the
+    language stays unset and the visitor's first typed message still sets it."""
+    script = default_script()
+    script["root"] = [{"text": "I made example data to try the plot."}, {"text": "Gern."}]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await open_session(client, with_data=False)
+
+    response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"action": "example_data"})
+    events = parse_sse(response.text)
+
+    assert judge.calls == []
+    assert ("message", {"text": "I made example data to try the plot."}) in events
+    assert "[action] Make example data to try this plot." in json.dumps(fake.calls[0]["messages"])
+    assert done_language(events) == {"language": "en", "source": "default"}
+    assert LANGUAGE_SOURCE not in await _session_state(client, sid)
+
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="de")]
+    typed = await say(client, sid, "Mach die Punkte größer")
+
+    assert done_language(typed) == {"language": "de", "source": "detected"}
+
+
+async def test_the_session_answer_names_the_spec_roles(client: httpx.AsyncClient) -> None:
+    """Before any data, so the page header can list the columns the plot expects as the dropdowns will name them."""
+    response = await client.post(
+        "/v1/sessions",
+        headers=HEADERS,
+        json={
+            "user": USER,
+            "spec_id": "scatter-basic",
+            "library": "matplotlib",
+            "locale": "en",
+            "snapshot": snapshot_body(),
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    roles = response.json()["roles"]
+    assert [(role["name"], role["kinds"], role["required"], role["variadic"]) for role in roles] == [
+        ("x", ["numeric"], True, False),
+        ("y", ["numeric"], True, False),
+    ]
+    assert all(role["description"] and role["computed"] is False for role in roles)
+
+
 async def test_the_done_sync_reads_the_state_while_the_run_is_still_active(
     client: httpx.AsyncClient, runtime: Runtime, swap_models, monkeypatch: pytest.MonkeyPatch
 ) -> None:

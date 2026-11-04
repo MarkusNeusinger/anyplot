@@ -116,9 +116,9 @@ describe('PublicAgentChatPage', () => {
     const user = userEvent.setup();
     renderPage();
     const notice = await screen.findByTestId('experimental-notice');
-    // In view without a click: an experimental AI (AI Act Art. 50), can be wrong, what is stored.
+    // In view without a click: an experimental AI (AI Act Art. 50) whose answers can be wrong.
     expect(notice).toHaveTextContent(`# ${EXPERIMENTAL_LINE}`);
-    expect(notice).toHaveTextContent(/experimental AI/);
+    expect(notice).toHaveTextContent('# experimental AI · answers can be wrong');
     expect(screen.queryByTestId('experimental-details')).not.toBeInTheDocument();
     // Above the data card's paste box: the notice comes first in the document.
     const box = await screen.findByRole('textbox', { name: /data/i });
@@ -129,9 +129,17 @@ describe('PublicAgentChatPage', () => {
     await user.click(about);
     const dialog = await screen.findByRole('dialog', { name: 'About the assistant' });
     expect(about).toHaveAttribute('aria-expanded', 'true');
-    for (const line of EXPERIMENTAL_DETAILS) expect(dialog).toHaveTextContent(line);
+    // Where the chat lives and for how long first, then what is saved, the model, the rest.
+    expect(
+      within(within(dialog).getByTestId('experimental-details'))
+        .getAllByRole('listitem')
+        .map(item => item.textContent)
+    ).toEqual([...EXPERIMENTAL_DETAILS, 'how the assistant works']);
+    expect(EXPERIMENTAL_DETAILS[0]).toBe(
+      'your chat and data live only in server memory, deleted after an hour idle'
+    );
     expect(dialog).toHaveTextContent(
-      /Claude by Anthropic, through Google Cloud Vertex AI in the EU/
+      /Claude by Anthropic, via Google Cloud Vertex AI in the EU · not used for training/
     );
     const link = within(dialog).getByRole('link', { name: 'how the assistant works' });
     expect(link).toHaveAttribute('href', '/legal#assistant');

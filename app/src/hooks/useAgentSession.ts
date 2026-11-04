@@ -89,6 +89,14 @@
  * the user's turn at once, with no offer to click, and the assistant generates
  * example data with code it writes (`run_data_code`), which the turn's `done`
  * carries like a formula's table (`dataRequest` names the last hand-off).
+ * `exampleData` (`.example_data()`, the page's line above the composer while
+ * the session has no data) asks for the same in one click as the action
+ * `example_data`, never as typed words: the session's first typed message sets
+ * the session language, and an action leaves it to the visitor's own words.
+ *
+ * The spec's roles also come with the session's open (`specRoles`), before any
+ * data, for the page header's list of the columns the plot expects; the data
+ * panel's dropdowns keep reading `roles`, which each dataset answer replaces.
  *
  * One thing at a time: the agents service runs one turn, theme render, page
  * build (a JavaScript version's `plot.html`) or paste
@@ -447,6 +455,11 @@ export interface AgentSessionState {
   transcription: TranscriptionState | null;
   /** The spec's roles, in spec order; the data panel shows a column choice for each. */
   roles: RoleSpec[];
+  /**
+   * The spec's roles as the session's open answered them, before any data: the page header
+   * lists them as the columns the plot expects. `null` from a server without them.
+   */
+  specRoles: RoleSpec[] | null;
   bindings: BindingMap;
   bindingsComplete: boolean;
   /** Required roles without a column; a variadic family by its name. */
@@ -514,7 +527,7 @@ export interface AgentSessionState {
 }
 
 type Action =
-  | { type: 'opened'; sessionId: string; eligibility: Eligibility }
+  | { type: 'opened'; sessionId: string; eligibility: Eligibility; roles: RoleSpec[] | null }
   | { type: 'open_failed'; phase: SessionPhase; failure: Failure | null }
   | { type: 'unauthorized' }
   | { type: 'parse_start' }
@@ -612,6 +625,7 @@ export function initialAgentState(library: string): AgentSessionState {
     dataRequest: null,
     transcription: null,
     roles: [],
+    specRoles: null,
     bindings: {},
     bindingsComplete: false,
     missingRoles: [],
@@ -878,6 +892,7 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         phase: 'ready',
         sessionId: action.sessionId,
         eligibility: action.eligibility,
+        specRoles: action.roles,
       };
     case 'open_failed':
       return {
@@ -1377,6 +1392,7 @@ export function useAgentSession({
           type: 'opened',
           sessionId: result.session_id,
           eligibility: result.eligibility,
+          roles: result.roles,
         });
       })
       .catch((err: unknown) => {
@@ -2057,6 +2073,14 @@ export function useAgentSession({
   const createPlot = useCallback(() => runTurn({ action: 'create_plot' }), [runTurn]);
 
   /**
+   * `.example_data()`: the assistant makes example data to try the plot, as for a typed request,
+   * and the turn's `done` carries it as version 1. An action, never the words: the session's
+   * first typed message sets the session language, so typed English would keep a German visitor
+   * in English, while an action leaves the language to the visitor's own first message.
+   */
+  const exampleData = useCallback(() => runTurn({ action: 'example_data' }), [runTurn]);
+
+  /**
    * The offer after a switch ("plot in seaborn with your 3 decisions"): the plot
    * in the new library from its catalogue code, with the plot memory's
    * decisions and the theme the user asked for (`carry_plot`).
@@ -2470,6 +2494,7 @@ export function useAgentSession({
     confirmData,
     undoData,
     createPlot,
+    exampleData,
     carryPlot,
     followChatSwitch,
     plotTurn,
