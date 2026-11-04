@@ -31,7 +31,7 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
       "features": ["basic", "2d"],
       "data_type": ["numeric"]
     },
-    "library_count": 9
+    "library_count": 15
   }
 ]
 ```
@@ -65,23 +65,37 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
     {
       "library_id": "matplotlib",
       "library_name": "Matplotlib",
-      "preview_url": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/matplotlib/plot.png",
+      "language": "python",
+      "preview_url_light": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-light.png",
+      "preview_url_dark": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-dark.png",
+      "preview_html_light": null,
+      "preview_html_dark": null,
+      "preview_url": "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-light.png",
       "preview_html": null,
-      "quality_score": 92.0,
-      "code": "import matplotlib.pyplot as plt...",
-      "generated_at": "2025-01-15T10:30:00Z",
-      "generated_by": "claude-opus-4-7",
-      "python_version": "3.13",
-      "library_version": "3.10.0",
+      "quality_score": 91.0,
+      "code": null,
+      "generated_at": "2025-12-10T20:55:10",
+      "updated": "2026-06-25T01:34:04",
+      "generated_by": "claude-sonnet",
+      "python_version": null,
+      "language_version": "3.13.14",
+      "library_version": "3.11.0",
       "review_strengths": ["Clean code structure"],
       "review_weaknesses": ["Grid could be more subtle"],
       "review_image_description": "The plot shows...",
       "review_criteria_checklist": {...},
-      "review_verdict": "APPROVED"
+      "review_verdict": "APPROVED",
+      "impl_tags": {"styling": ["alpha-blending"], "patterns": ["data-generation"]}
     }
   ]
 }
 ```
+
+- `code` is always `null` here; the page loads it on demand from
+  [`GET /specs/{spec_id}/{library}/code`](#get-specsspec_idlibrarycode).
+- `preview_url` and `preview_html` are legacy single-theme fields that resolve to the light variant.
+- `language_version` is the runtime version of the implementation's language (Python, R, Julia, or Node.js).
+  `python_version` is the older field it replaces, and `language_version` falls back to it for rows without one.
 
 ---
 
@@ -119,7 +133,9 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
     {
       "id": "matplotlib",
       "name": "Matplotlib",
-      "version": "3.10.0",
+      "language": "python",
+      "framework": "none",
+      "version": "3.11.2",
       "documentation_url": "https://matplotlib.org",
       "description": "The classic standard..."
     }
@@ -435,10 +451,11 @@ The result card frames it with `sandbox="allow-scripts"`. Once its listener is i
 
 ## Agent chat
 
-> **Status (2026-11-02):** the admin routes under `/debug/agent` are live, and
-> the public lane under `/agent` ships dark: it answers `404` until the owner
-> sets `_AGENT_PUBLIC_ENABLED=true` on the deploy-api trigger (see
-> [Public lane](#public-lane)).
+> **Status (2026-11-04):** the admin routes under `/debug/agent` are live, and
+> the public lane under `/agent` has been open since 2026-11-02, as an
+> experimental page: the deploy-api trigger sets `_AGENT_PUBLIC_ENABLED=true`.
+> Set back to `false`, the lane answers `404` again while the admin routes stay
+> open (see [Public lane](#public-lane)).
 >
 > **Status (2026-10-12):** the routes are switched on in production since
 > 2026-10-11: the deploy-api trigger sets `AGENT_ENABLED=true` and
@@ -620,7 +637,7 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 | `GET /sessions/{sid}/bundle?include_data=&version=` | `include_data` is `true` or `false` (the default); `version` is 0 to 999, where 0 or none means every version (the BFF then asks the agents service without one, since there `version=0` is the chat's feedback case) | The session as one JSON file to save (the chat page's `.save()`), with `Content-Disposition: attachment; filename="anyplot-session-<first 8 characters of the session id>.json"`, `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`. `404 not_found` for a version the session does not have; a bundle over 32 MiB can't be saved (see [Session bundle](#session-bundle)) |
 | `POST /sessions/{sid}/feedback` | `{reaction, message?, include_data, result_version, replaces?}`: `reaction` is `thumbs_up`, `thumbs_down`, `bug` or `idea`; `message` has at most 500 characters after the strip; `include_data` is a JSON boolean and `result_version` a JSON integer from 0 to 999, neither coerced from another type, where 0 is the chat itself (feedback on a session that made no plot, since 2026-10-12); `replaces` is the case id of the earlier submission for the same version, when this one is an edit of it | `201 {case_id, stored}`: the version is stored as a feedback case in the private case bucket and indexed as a row of the `agent_feedback` table, and `stored` lists its file names (see [Feedback case](#feedback-case)); a chat case has no image and no `plot.py`, only `data.csv` when asked for and `manifest.json`. `404 not_found` for a version the session does not have, `422 no_data` for a chat case that asks for `data.csv` before the session has data, `502 storage` when the bucket refused the case, `502 row_missing` with the stored `case_id` when the files are stored but the row insert failed, `503` before the bundle fetch when the API has no database configured, otherwise the errors of the bundle route |
 | `GET /cases?reaction=&status=&spec=&library=&model_version=&tag=&include_superseded=&before=&limit=` | Every filter is optional: `reaction` is one of the four reactions; `status` is `new`, `in_progress`, `done`, `wont_solve`, or `open` for the first two; `spec` is a spec id, `library` a library id, `model_version` an exact value and `tag` one tag; `include_superseded=true` lists superseded cases too; `before` is the last case id of the page before; `limit` is 1 to 200, 50 by default | `{items, has_more}`: the cases' `agent_feedback` rows, newest first, each with every column, timestamps in UTC ISO 8601 with `Z`; `has_more` says that a further page exists (see [Feedback triage](#feedback-triage)) |
-| `GET /cases/{id}` | A case id such as `20261012T143005Z-1a2b3c4d` | The row plus what the case's `manifest.json` adds: `transcript`, `code` (the case's code file, `plot.py` for a Python library), `diff` (a unified diff of the catalogue original against that code), `catalogue_library_version`, `snapshot_library_version`, `residual_defects`, `changes`, `result_reason`, `config` and `bindings`, and `siblings`, the ids of the other cases of the same session hash and version. `expired: true` when the lifecycle rule has deleted the manifest: then `transcript`, `code`, `diff`, `snapshot_library_version`, `result_reason` and `config` are `null`, the lists `residual_defects`, `changes` and `bindings` are empty, and the row and `siblings` remain. `404 not_found` for an id without a row, `502 storage` when the bucket could not be read |
+| `GET /cases/{id}` | A case id such as `20261012T143005Z-1a2b3c4d` | The row plus what the case's `manifest.json` adds: `transcript`, `code` (the case's code file, `plot.py` for a Python library), `diff` (a unified diff of the catalogue original against that code), `catalogue_library_version`, `snapshot_library_version`, `residual_defects`, `changes`, `result_reason`, `config` and `bindings`, `rounds` (the version's rounds, each `{attempt, outcome, findings, step, shipped, defects, gates_failed, sandbox_failures}`), `session_versions` (the versions the session held) and `last_run` (`{status, reason, version, turn, rounds}`, how the session's latest plot run ended), all three closed codes and counts, empty or `null` for a case sent before the agents service carried them, and `siblings`, the ids of the other cases of the same session hash and version. `expired: true` when the lifecycle rule has deleted the manifest: then `transcript`, `code`, `diff`, `snapshot_library_version`, `result_reason`, `config`, `session_versions` and `last_run` are `null`, the lists `residual_defects`, `changes`, `bindings` and `rounds` are empty, and the row and `siblings` remain. `404 not_found` for an id without a row, `502 storage` when the bucket could not be read |
 | `GET /cases/{id}/files/{name}` | `name` is one of `plot-light.png`, `plot-dark.png`, the case's code file (`plot.py`, `plot.R`, `plot.jl`, `plot.js` or `plot.tsx`), `data.csv`, `manifest.json` | The file as stored, with its content type, `Cache-Control: private, no-store`, `Content-Disposition: inline`, `X-Content-Type-Options: nosniff` and `X-Request-Id`. `404 not_found` for an id without a row, a file the case does not hold, or one the lifecycle rule deleted; `502 storage` for any other bucket error |
 | `PATCH /cases/{id}` | `{status?, tags?, promoted?, expected?}`, at least one: `status` is `new`, `in_progress`, `done` or `wont_solve`; `tags` replaces the whole list with at most 10 unique tags that match `^[a-z0-9-]{1,40}$`; `promoted` is a JSON boolean; `expected` is `accepted` or `rejected` | The whole row, as the list shows it, with the tags sorted. `promoted: true` sets `promoted_at` once, and when neither the body nor the row names an expected outcome it takes the reaction's (`thumbs_up` accepted, `thumbs_down` rejected); `promoted: false` clears `promoted_at`. `422 no_plot` when you promote a chat case (`result_version` 0, no plot to replay), `422 no_data` when you promote a case stored without `data.csv`, `422 expected_required` when you promote a `bug` or `idea` without an expected outcome, `404 not_found` for an id without a row |
 | `DELETE /sessions/{sid}` | None | `204` |
@@ -892,7 +909,14 @@ top-level keys are `session`, `snapshot`, `transcript`, `versions`, `profile`,
 `bindings` and `config`, plus `refusals` when the agents service runs with
 `AGENT_KEEP_REFUSALS`. `session` names the spec, the library, the browser's
 locale and the session language (`plot_language`, `plot_language_source`), and
-each version carries the `language` its text was written in.
+each version carries the `language` its text was written in. `session` also
+holds two content-free facts, in every form of the bundle: `versions`, the
+number of versions the session holds, and `last_run`, how its latest plot run
+ended (`status`, `reason`, the stored `version` or `null`, the user `turn` and
+its `rounds`), or `null` before any run. Each round of a plot result carries
+`gates_failed`, the ids of the host gates its renders failed or reported on
+(`R1`, `R3`, `G8`), and `sandbox_failures`, the closed class of each render
+that crashed (`key`, `timeout`, `memory`), never an error message.
 
 A bundle over 32 MiB can't be saved: that is Cloud Run's limit on an HTTP/1
 response that is not streamed, and the agents service answers the bundle in one
@@ -992,7 +1016,10 @@ statistics after that. The table's columns are in
   every case until the agents service stamps it.
 - **Detail.** A case shows the PNG of each theme it holds, the code with a
   unified diff against the catalogue original, the transcript, the defect
-  lines, the config stamp and your message. The diff runs against the
+  lines, the config stamp and your message. Under the pipeline it lists one
+  line per round with the gates it failed and the class of a crash, and a line
+  with the session's version count and how its latest run ended, so a chat case
+  tells a plot the page did not show from a run that failed. The diff runs against the
   catalogue at triage time, which a regeneration may have changed since the
   session: compare
   `snapshot_library_version`, the version the session adapted, with
@@ -1011,6 +1038,12 @@ statistics after that. The table's columns are in
   On the dev machine, `agents/evals/sync_cases.py` pulls the promoted, active
   cases into `agents/evals/.cases/` and removes the retired ones (see
   [Sync promoted cases from the bucket](../../agents/README.md#sync-promoted-cases-from-the-bucket)).
+- **Triage rounds.** To go through the open cases in one round, use the
+  `triage-agent-cases` project skill (`.claude/skills/triage-agent-cases/`):
+  it lists and copies the cases read-only, proposes a status and tags per case
+  in a private report, and, after your OK for the round, writes them in one
+  transaction after a snapshot of the rows. Its `apply_triage.py` applies the
+  same rules as `PATCH /cases/{id}` (`core.agent_cases.triage_updates`).
 - **Supersession.** A superseded case keeps its status and tags and can still
   be changed; a new case starts as `new` without tags. When the backfill
   indexes a case after the edit that names it in `replaces`, the case goes in
@@ -1148,7 +1181,7 @@ limits counts under both. An admin counts only at `pastes`, `conversions` and
 | `status` | `{step: "queued", position, waiting}` mid-turn, while the turn's plot run or data snippet waits in the run queue: `position` 1 runs next, and `waiting` counts every queued run, this one included |
 | `status` | `{step, attempt}` for a pipeline step: `adapting`, `checking`, `rendering`, `reviewing`, or `repairing`; `repairing` adds `outcome` and `findings`, how the round before it ended (see `rounds` below), and `defects`, the rubric ids the repair works on (`VQ-01`, `VQ-05`) |
 | `message` | `{text}`: the assistant's reply as plain text, at most 1,200 characters; a longer reply arrives cut to 1,200 characters when the turn ran the plot pipeline, and as the `out_of_scope` refusal otherwise |
-| `plot` | `{status, reason, attempts, artifacts, changes, residual_defects, version, rounds}`; `version` only on `ok` and `needs_attention`; `rounds` lists each attempt as `{attempt, outcome, findings, step, shipped, defects}` (`step` is the pipeline step the round ended in, `shipped` marks the round whose render the result shipped, `defects` are the rubric ids the round passed on to the repair), where `outcome` is `ok` (the review passed), `review` (the review named `findings`), `measured` (measured findings went to the repair), `render_failed`, `check_failed`, `answer_unusable`, `unreviewed` or `error` |
+| `plot` | `{status, reason, attempts, artifacts, changes, residual_defects, version, rounds}`; `version` only on `ok` and `needs_attention`; `rounds` lists each attempt as `{attempt, outcome, findings, step, shipped, defects, gates_failed, sandbox_failures}` (`step` is the pipeline step the round ended in, `shipped` marks the round whose render the result shipped, `defects` are the rubric ids the round passed on to the repair, `gates_failed` and `sandbox_failures` the closed ids of the gates its renders failed and of a crash, for a feedback case; the page ignores them), where `outcome` is `ok` (the review passed), `review` (the review named `findings`), `measured` (measured findings went to the repair), `render_failed`, `check_failed`, `answer_unusable`, `unreviewed` or `error` |
 | `refusal` | `{code, text}`; `code` is `out_of_scope`, `needs_data` (the request needs data the service would have to fetch, also code that reads its data from a URL or a file), `other_library` (this plot in another library or language: the fixed answer points to the plot's catalogue page and, by default, does not count toward closing the session; with `AGENT_OTHER_LIBRARY_COUNTS=true` it does), `unsupported_content`, `budget` (your own daily token budget is spent), `service_paused` (the service's day budget is spent, not yours: the whole chat pauses until 00:00 UTC), `locked_out` (paused until the next UTC day after three messages or pastes classed as attacks), `rate_limited` (more than 10 messages in a minute), `daily_limit` (more than 200 messages in a UTC day) or `session_closed` (the session's third `out_of_scope` or `attack` refusal, and every turn after it: reload the page to start a new session; the refusal before it ends with a fixed warning sentence), and `text` is the fixed reply for it in the language the scope judge detects in your message, or in the session language for a refusal sent before the judge runs (`budget`, `service_paused`, `locked_out`, `unsupported_content`, `rate_limited`, `daily_limit`, and `session_closed` after the closing turn), which is English until your pasted data, your first message or your choice sets another (see [Session language](#session-language)): English, German, French, Spanish, Italian, Portuguese, Dutch, Polish, Chinese, Vietnamese or Russian, and English for any other language |
 | `error` | `{code, ref}`; `code` is `capacity` (the run queue was full when the turn's plot run or data snippet asked for a place, the run waited the queue's maximum of 600 seconds, the BFF's turn cap ran out while it waited, or the model service still refused a call for its quota or an overload after the retries), `run_limit` (you already have as many plot runs or data snippets queued or running in other sessions as `user_max_runs` of `GET /status` allows: five for an admin, two for a public user), `deadline`, `guard_unavailable`, `upstream`, or `internal`; `ref` is the request id |
 | `done` | `{llm_calls, tokens, bindings?, data_confirmed?, dataset?, language?, suggestion?, switch?}` (`switch`, since 2026-11-02: `{library, plot}` after a turn in which you asked for the plot in another library and the assistant's `switch_plot` took it; the page then switches with `source: chat` and, with `plot`, sends `carry_plot`; never after a turn that ended in an error): after a run, the session's bindings and whether the data is confirmed, so the page syncs its dropdowns and its step after a turn in which the root's `set_bindings` changed them; `dataset` only after a turn in which the assistant changed the data or computed it from a formula (see [Data changes](#data-changes)): `{preview, profile, bindings, warnings, context_lines, roles, changes, version}`, the dataset route's shape (`roles` at most 50; `context_lines`, the pasted notes, carried over to every version made from the paste) plus the turn's change lines, for the page's preview table; `version` is 1 when a formula or the user's code made the session's first data; `code`, only on a version computed from the user's code, holds the Python that ran; `language` after every run: `{language, source}`, the session language and how it was set (`default`, `pasted`, `detected` or `chosen`), so the page syncs its chip; `suggestion` after every run on a session with data: the `.to_long()` offer, or null, with its new column names in the session language, so the data panel's card names what `.to_long()` applies |

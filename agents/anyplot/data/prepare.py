@@ -1676,6 +1676,7 @@ def _integer_cumsum(frame: pd.DataFrame, column: str, keys: list[str], ordered: 
     outside `ordered` (no order value) stays empty.
     """
     wholes = {row: None if pd.isna(value) else int(value) for row, value in frame[column].items()}
+    missing = {key: frame[key].isna() for key in keys}
     totals: dict[tuple[object, ...], int] = {}
     running: dict[object, int | None] = {}
     for row in ordered:
@@ -1684,7 +1685,7 @@ def _integer_cumsum(frame: pd.DataFrame, column: str, keys: list[str], ordered: 
             running[row] = None
             continue
         # Native key values group as pandas does (`-0.0` with `0.0`); every missing kind is one group (`dropna=False`).
-        group = tuple(None if pd.isna(value := frame.at[row, key]) else value for key in keys)
+        group = tuple(None if missing[key].at[row] else frame.at[row, key] for key in keys)
         totals[group] = totals.get(group, 0) + whole
         running[row] = totals[group]
     return _whole_numbers([running.get(row) for row in frame.index], frame.index)

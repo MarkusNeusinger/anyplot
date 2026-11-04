@@ -659,6 +659,33 @@ export interface TranscriptTurn {
   text: string;
 }
 
+/** One pipeline round as a case keeps it: closed codes and counts only. */
+export interface AgentCaseRound {
+  attempt: number;
+  /** The page's outcome name: `render_failed`, `measured`, `review`, `ok`, ... */
+  outcome: string;
+  findings: number;
+  step: string | null;
+  shipped: boolean;
+  /** The rubric ids the round passed on (`VQ-05`). */
+  defects: string[];
+  /** The host gates any render of the round failed or reported on (`R1`, `R3`, `G8`). */
+  gates_failed: string[];
+  /** The closed class of each render that failed in the sandbox (`key`, `timeout`). */
+  sandbox_failures: string[];
+}
+
+/** How the session's latest plot run ended when the case was sent. */
+export interface AgentCaseLastRun {
+  status: string;
+  reason: string | null;
+  /** The version the run stored; `null` for a run that stored none. */
+  version: number | null;
+  /** The session's user turn the run ran in. */
+  turn: number | null;
+  rounds: AgentCaseRound[];
+}
+
 /**
  * One case: the row plus what its `manifest.json` adds. With `expired` the
  * lifecycle rule has deleted the files: every field read from the manifest is
@@ -679,6 +706,12 @@ export interface AgentCaseDetail extends AgentCase {
   /** The config stamp: provider, model, judge_model, location, versions, prompt_hashes. */
   config: Record<string, unknown> | null;
   bindings: { role: string; column: string }[];
+  /** The rounds of the case's version; empty for the chat's case and older cases, absent from an older API. */
+  rounds?: AgentCaseRound[];
+  /** How many versions the session held; `null` for an older case, absent from an older API. */
+  session_versions?: number | null;
+  /** How the session's latest plot run ended; `null` before any run and for an older case. */
+  last_run?: AgentCaseLastRun | null;
   /** Other rows of the same session hash and result version, oldest first. */
   siblings: string[];
 }

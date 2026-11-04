@@ -13,6 +13,7 @@ from agents.anyplot.schemas import (
     MAX_DEFECT_TEXT_CHARS,
     MAX_FULL_CODE_CHARS,
     MAX_LINE_CHARS,
+    MAX_ROUND_GATES,
     MAX_TITLE_CHARS,
     AdaptPlan,
     AdaptRequest,
@@ -23,9 +24,17 @@ from agents.anyplot.schemas import (
     DefectId,
     DefectTheme,
     Edit,
+    FailureReason,
+    LastRun,
+    NotReadyReason,
     PipelineArgs,
     PlotResult,
+    PlotStatus,
     ReviewRequest,
+    Round,
+    RoundOutcome,
+    RoundStep,
+    SandboxFailure,
     Verdict,
     listed_values,
     repair_plan,
@@ -564,3 +573,73 @@ class TestPlotResult:
         assert PlotResult(status="failed", reason="render", attempts=MAX_ATTEMPTS).attempts == 3
         with pytest.raises(ValidationError):
             PlotResult(status="failed", reason="render", attempts=MAX_ATTEMPTS + 1)
+
+
+class TestRoundCaseFields:
+    """A feedback case stores each round: its gate ids and sandbox classes are closed codes, never text."""
+
+    def test_closed_ids_pass(self) -> None:
+        round_ = Round(
+            attempt=1,
+            outcome="render_failed",
+            gates_failed=["R1", "R1-memory", "R3", "G8", "G12"],
+            sandbox_failures=["key", "timeout"],
+        )
+
+        assert round_.gates_failed == ["R1", "R1-memory", "R3", "G8", "G12"]
+
+    @pytest.mark.parametrize(
+        "fields",
+        [
+            {"gates_failed": ["KeyError: 'Kanton Zürich'"]},  # a message, which can carry a data cell
+            {"gates_failed": ["r1"]},
+            {"gates_failed": ["G1"] * (MAX_ROUND_GATES + 1)},
+            {"sandbox_failures": ["KeyError"]},
+            {"sandbox_failures": ["Kanton Zürich"]},
+        ],
+    )
+    def test_free_text_is_refused(self, fields: dict[str, Any]) -> None:
+        with pytest.raises(ValidationError):
+            Round.model_validate({"attempt": 1, "outcome": "render_failed", **fields})
+
+    def test_every_sandbox_class_fits_one_round(self) -> None:
+        every = list(get_args(SandboxFailure))
+
+        assert Round(attempt=1, outcome="render_failed", sandbox_failures=every).sandbox_failures == every
+
+    def test_the_api_reads_cases_in_the_same_vocabularies(self) -> None:
+        """The API's case detail keeps only these codes and does not import the agents package: pinned equal here."""
+        from api import agent_cases
+
+        assert agent_cases.ROUND_OUTCOMES == set(get_args(RoundOutcome))
+        assert agent_cases.ROUND_STEPS == set(get_args(RoundStep))
+        assert agent_cases.SANDBOX_FAILURES == set(get_args(SandboxFailure))
+        assert agent_cases.RUN_STATUSES == set(get_args(PlotStatus))
+        assert agent_cases.RUN_REASONS == set(get_args(FailureReason)) | set(get_args(NotReadyReason))
+
+
+class TestLastRun:
+    def test_of_a_failed_result_keeps_its_rounds_and_no_version(self) -> None:
+        first = Round(attempt=1, outcome="render_failed", findings=1, gates_failed=["R1"], sandbox_failures=["key"])
+        result = PlotResult(status="failed", reason="render", attempts=1, rounds=[first])
+
+        last = LastRun.of(result, turn=3)
+
+        assert last.model_dump(mode="json") == {
+            "status": "failed",
+            "reason": "render",
+            "version": None,
+            "turn": 3,
+            "rounds": [first.model_dump(mode="json")],
+        }
+
+    def test_of_a_not_ready_result(self) -> None:
+        last = LastRun.of(PlotResult.not_ready("data_unconfirmed"), turn=1)
+
+        assert (last.status, last.reason, last.version, last.rounds) == ("not_ready", "data_unconfirmed", None, [])
+
+    def test_no_text_fits(self) -> None:
+        with pytest.raises(ValidationError):
+            LastRun.model_validate({"status": "failed", "reason": "the data had 'Zürich'", "turn": 1})
+        with pytest.raises(ValidationError):
+            LastRun.model_validate({"status": "ok", "turn": 1, "note": "free text"})

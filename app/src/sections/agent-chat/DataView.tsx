@@ -3,7 +3,7 @@
  * version in a read-only MUI X Data Grid, the MIT edition, in a dialog that
  * fills a phone's screen.
  *
- * Loaded on demand (`lazyOrFallback` in `DataPanel.tsx`), so the grid's code
+ * Loaded on demand (`lazyOrFallback` in `DataCard.tsx`), so the grid's code
  * never reaches the main bundle. It reads the version's canonical `data.csv`
  * (`GET .../dataset/data.csv`) with the minimal RFC 4180 reader of `csv.ts`:
  * every cell is the text the file holds, never formatted again, an empty cell

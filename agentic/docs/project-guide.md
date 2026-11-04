@@ -4,7 +4,7 @@ This document contains comprehensive project documentation for AI agents working
 
 ## Project Overview
 
-**anyplot** is an AI-powered platform for Python data visualization that automatically discovers, generates, tests, and maintains plotting examples. The platform is specification-driven: every plot starts as a library-agnostic Markdown spec, then AI generates implementations for all supported libraries.
+**anyplot** is an AI-powered platform for data visualization in Python, R, Julia, and JavaScript that automatically discovers, generates, tests, and maintains plotting examples. The platform is specification-driven: every plot starts as a library-agnostic Markdown spec, then AI generates implementations for all supported libraries.
 
 **Supported Libraries** (15 total):
 
@@ -217,7 +217,7 @@ Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
 
 1. **Repository Pattern**: Data access layer in `core/database/repositories.py`
 2. **Async Everything**: FastAPI + SQLAlchemy async + asyncpg
-3. **Clean Repo**: Only production code in git. Quality reports -> `metadata/python/{library}.yaml`. Preview images -> GCS.
+3. **Clean Repo**: Only production code in git. Quality reports -> `metadata/{language}/{library}.yaml`. Preview images -> GCS.
 4. **Issue-Based Workflow**: GitHub Issues as state machine for plot lifecycle
 
 ### Metadata System
@@ -240,10 +240,11 @@ tags:
   data_type: [numeric, continuous]
 ```
 
-**2. Per-library metadata:** `plots/{specification-id}/metadata/python/{library}.yaml`
+**2. Per-library metadata:** `plots/{specification-id}/metadata/{language}/{library}.yaml`
 
 ```yaml
 library: matplotlib
+language: python
 specification_id: scatter-basic
 
 # Timestamps
@@ -258,13 +259,15 @@ generated_by: claude-opus-4-7
 workflow_run: 12345678
 issue: 42
 
-# Versions
-python_version: "3.14"
-library_version: "3.10.0"
+# Versions: the runtime of the implementation's language, and the library
+language_version: 3.13.14
+library_version: 3.11.0
 
-# Previews
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-light.png
-preview_html: null
+# Previews, one per theme (the HTML variants only for interactive libraries)
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 
 # Quality
 quality_score: 92
@@ -521,8 +524,8 @@ uv run python -c "from core.database import is_db_configured; print(is_db_config
 - Everything in `plots/{specification-id}/`:
   - `specification.md` - specification description
   - `specification.yaml` - spec-level metadata (tags, created, issue, etc.)
-  - `metadata/python/{library}.yaml` - per-library metadata (quality score, review feedback)
-  - `implementations/*.py` - library implementations
+  - `metadata/{language}/{library}.yaml` - per-library metadata (quality score, review feedback)
+  - `implementations/{language}/{library}{ext}` - library implementations
 
 **What's NOT Stored in DB**:
 - Preview images (in GCS)
@@ -722,7 +725,7 @@ impl-review.yml
     |-- If APPROVED -> triggers impl-merge.yml
     |       |-- Validates PR completeness (blocks merge if implementation file missing or a dependency file changed)
     |       |-- Squash-merges PR to main
-    |       |-- Creates metadata/python/{library}.yaml
+    |       |-- Creates metadata/{language}/{library}.yaml
     |       |-- Promotes GCS: staging -> production
     |       |-- sync-postgres.yml triggers (updates database)
     |       +-- Updates issue: impl:{library}:done
@@ -865,7 +868,7 @@ uv run python -m automation.scripts.label_manager list
 
 Quality scores are added as labels in format `quality:XX` (e.g., `quality:92`, `quality:85`).
 
-These are set automatically by `impl-review.yml` after AI evaluation and used by `impl-merge.yml` to create metadata/python/{library}.yaml.
+These are set automatically by `impl-review.yml` after AI evaluation and used by `impl-merge.yml` to create metadata/{language}/{library}.yaml.
 
 ### Development Labels
 
@@ -1277,4 +1280,4 @@ mechanics (see `agentic/commands/release.md` for the executable flow).
 - **Your data first**: Examples work with real user data, not fake data
 - **Community-driven**: Anyone can propose plots via GitHub Issues
 - **AI quality review**: Claude evaluates quality (cascading thresholds: 90/80/70/60/50, max 4 repairs)
-- **Full transparency**: All quality feedback stored in repository (`metadata/python/{library}.yaml`)
+- **Full transparency**: All quality feedback stored in repository (`metadata/{language}/{library}.yaml`)

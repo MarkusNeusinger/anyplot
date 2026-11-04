@@ -56,6 +56,7 @@ from api.agent_cases import (
     CASE_MEDIA_TYPES,
     BundleError,
     CaseBucket,
+    CaseRound,
     GcsCaseBucket,
     NoChatData,
     Submission,
@@ -70,11 +71,12 @@ from api.dependencies import require_db
 from api.routers.debug import AdminIdentity, require_admin, require_admin_identity
 from core.agent_cases import (
     CASE_FILE_NAMES,
-    EXPECTED_BY_REACTION,
     MAX_TAGS,
     TAG_PATTERN,
+    TriageRefused,
     case_object,
     row_from_manifest,
+    triage_updates,
 )
 from core.config import settings
 from core.constants import MAX_AGENT_VERSION, SUPPORTED_LIBRARIES
@@ -1750,13 +1752,39 @@ class TranscriptTurn(BaseModel):
     text: str
 
 
+class CaseRoundOut(BaseModel):
+    """One pipeline round of the case's version or of the session's latest run: closed codes and counts only."""
+
+    attempt: int
+    outcome: str
+    findings: int
+    step: str | None
+    shipped: bool
+    defects: list[str]
+    gates_failed: list[str]
+    sandbox_failures: list[str]
+
+
+class CaseLastRunOut(BaseModel):
+    """How the session's latest plot run ended when the case was sent; `version` is null for a run that stored none."""
+
+    status: str
+    reason: str | None
+    version: int | None
+    turn: int | None
+    rounds: list[CaseRoundOut]
+
+
 class CaseDetail(CaseItem):
     """The row plus what the case's `manifest.json` in the bucket adds.
 
     `expired` when the lifecycle rule has deleted the manifest: then every field read from it
     is null or empty, and the row and `siblings` remain. `diff` and `catalogue_library_version`
     come from the catalogue at triage time, which may differ from the one the session adapted
-    (`snapshot_library_version`).
+    (`snapshot_library_version`). `rounds` are the case's version's rounds, `session_versions`
+    the versions the session held and `last_run` how its latest plot run ended, so a case on
+    the chat, which holds no version, still says whether a plot existed or the run failed; the
+    three are empty or null for a manifest from before the agents service sent them.
     """
 
     expired: bool
@@ -1770,6 +1798,9 @@ class CaseDetail(CaseItem):
     result_reason: str | None
     config: dict[str, Any] | None
     bindings: list[dict[str, str]]
+    rounds: list[CaseRoundOut]
+    session_versions: int | None
+    last_run: CaseLastRunOut | None
     siblings: list[str]
 
 
@@ -1914,6 +1945,9 @@ async def get_agent_case(case_id: CaseId, ctx: Ctx, cases: Cases, db: Db) -> Cas
             result_reason=None,
             config=None,
             bindings=[],
+            rounds=[],
+            session_versions=None,
+            last_run=None,
             siblings=siblings,
         )
     detail = manifest_detail(manifest, row.result_version)
@@ -1933,7 +1967,33 @@ async def get_agent_case(case_id: CaseId, ctx: Ctx, cases: Cases, db: Db) -> Cas
         result_reason=detail.result_reason,
         config=detail.config,
         bindings=[{"role": role, "column": column} for role, column in detail.bindings],
+        rounds=[_round_out(item) for item in detail.rounds],
+        session_versions=detail.session_versions,
+        last_run=(
+            CaseLastRunOut(
+                status=detail.last_run.status,
+                reason=detail.last_run.reason,
+                version=detail.last_run.version,
+                turn=detail.last_run.turn,
+                rounds=[_round_out(item) for item in detail.last_run.rounds],
+            )
+            if detail.last_run is not None
+            else None
+        ),
         siblings=siblings,
+    )
+
+
+def _round_out(item: CaseRound) -> CaseRoundOut:
+    return CaseRoundOut(
+        attempt=item.attempt,
+        outcome=item.outcome,
+        findings=item.findings,
+        step=item.step,
+        shipped=item.shipped,
+        defects=list(item.defects),
+        gates_failed=list(item.gates_failed),
+        sandbox_failures=list(item.sandbox_failures),
     )
 
 
@@ -1976,28 +2036,19 @@ async def update_agent_case(case_id: CaseId, body: CasePatch, ctx: Ctx, db: Db) 
     """
     repo = AgentFeedbackRepository(db)
     row = await _case_or_404(repo, case_id, ctx)
-    updates: dict[str, Any] = {}
-    if body.status is not None:
-        updates["status"] = body.status
-    if body.tags is not None:
-        updates["tags"] = sorted(body.tags)
-    if body.expected is not None:
-        updates["expected"] = body.expected
-    if body.promoted is True:
-        if row.result_version == 0:
-            # A chat case has no plot to replay: the regression harness needs a version.
-            raise AgentHTTPError(422, "no_plot", ctx.request_id)
-        if not row.include_data:
-            raise AgentHTTPError(422, "no_data", ctx.request_id)
-        if body.expected is None and row.expected is None:
-            rule = EXPECTED_BY_REACTION.get(row.reaction)
-            if rule is None:
-                raise AgentHTTPError(422, "expected_required", ctx.request_id)
-            updates["expected"] = rule
-        if row.promoted_at is None:
-            updates["promoted_at"] = datetime.now(UTC).replace(tzinfo=None)
-    elif body.promoted is False:
-        updates["promoted_at"] = None
+    # The rules live in core, shared with the triage skill's apply_triage.py; the body model
+    # has already refused what `invalid` covers.
+    try:
+        updates = triage_updates(
+            row,
+            now=datetime.now(UTC).replace(tzinfo=None),
+            status=body.status,
+            tags=body.tags,
+            promoted=body.promoted,
+            expected=body.expected,
+        )
+    except TriageRefused as exc:
+        raise AgentHTTPError(422, exc.code, ctx.request_id) from exc
     updated = await repo.update(case_id, updates)
     if updated is None:
         raise AgentHTTPError(404, "not_found", ctx.request_id)

@@ -179,6 +179,7 @@ from .schemas import (
     MAX_REMEMBER,
     MAX_RESIDUAL_DEFECTS,
     MAX_ROUND_DEFECTS,
+    MAX_ROUND_GATES,
     MAX_USER_REQUESTS,
     MAX_USER_REQUESTS_CHARS,
     AdaptPlan,
@@ -186,6 +187,7 @@ from .schemas import (
     Binding,
     Defect,
     FailureReason,
+    LastRun,
     NotReadyReason,
     PipelineArgs,
     PlotResult,
@@ -196,6 +198,7 @@ from .schemas import (
     Round,
     RoundOutcome,
     RoundStep,
+    SandboxFailure,
     ShownGroup,
     Verdict,
     artifact_names,
@@ -204,6 +207,7 @@ from .scoring import ScoreAnswer, ScoreError, mend_answer, parse_answer
 from .services import PADDED_REASON, CodeVersion, Services, ThemeRender, get_services
 from .session_state import (
     BINDINGS,
+    LAST_RUN,
     PENDING_BINDINGS,
     PENDING_EXPECTED_TEXTS,
     PENDING_REMEMBER,
@@ -528,6 +532,9 @@ class Run:
     """Every gate id any render of the run failed (`GateReport.failed_gates`)."""
     sandbox_failures: set[str] = field(default_factory=set)
     """The closed classes of the renders that failed in the sandbox (`telemetry.sandbox_failure`)."""
+    round_gates: set[str] = field(default_factory=set)
+    round_failures: set[SandboxFailure] = field(default_factory=set)
+    """`gate_ids` and `sandbox_failures` of the current round only: its `Round` carries them, then they start over."""
     drift_restored: bool = False
     """A plan whose only failure was drift of the protected theme statements had them restored
     (`edits.restore_protected`) after the round's check retry was spent."""
@@ -614,8 +621,12 @@ def _end_attempt(run: Run, stage: Stage, feedback: Sequence[str] = ()) -> None:
             findings=len(clipped),
             step=run.step,
             defects=[found for found in _defect_ids(clipped) if found in KNOWN_IDS][:MAX_ROUND_DEFECTS],
+            gates_failed=sorted(run.round_gates)[:MAX_ROUND_GATES],
+            sandbox_failures=sorted(run.round_failures),
         )
     )
+    run.round_gates.clear()
+    run.round_failures.clear()
 
 
 def _retry_left(run: Run) -> bool:
@@ -652,6 +663,15 @@ def _status(run: Run, step: RoundStep, attempt: int, previous: Round | None = No
 
 def _result_event(result: PlotResult) -> Event:
     return Event(output=result.model_dump(mode="json"))
+
+
+def record_last_run(state: Any, result: PlotResult, *, turn: int) -> None:
+    """Keep how this run ended in the session (`LAST_RUN`, content-free), for the feedback bundle's `session.last_run`.
+
+    Every run that yields a result writes it, `not_ready` too; a run cancelled before its
+    result leaves the one before, so the bundle's `turn` tells a stale record from this turn's.
+    """
+    state[LAST_RUN] = LastRun.of(result, turn=turn).model_dump(mode="json")
 
 
 def load_inputs(
@@ -1606,7 +1626,9 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
             readiness=telemetry.readiness(view.readiness) if view is not None else None,
             lane=ledger.tier,
         )
-        yield _result_event(PlotResult.not_ready(not_ready or "no_dataset", request_kept=kept))
+        result = PlotResult.not_ready(not_ready or "no_dataset", request_kept=kept)
+        record_last_run(ctx.state, result, turn=ledger.turn)
+        yield _result_event(result)
         return
     ledger.pipeline_active = True
     if ledger.run_slot is not None and not await ledger.run_slot():
@@ -1682,10 +1704,12 @@ async def run_pipeline(ctx: Context, node_input: PipelineArgs) -> AsyncGenerator
         run.stage = "error"
     # From here on the root's closing reply is never the budget refusal (plugins/budget.py).
     ledger.plot_shipped = result.status in ("ok", "needs_attention")
+    ledger.shipped_in_turn = ledger.shipped_in_turn or ledger.plot_shipped
     if ledger.plot_shipped and run.memory_plan is not None and run.memory_plan.refused:
         result = result.model_copy(update={"memory_full": True})  # the plot carries the change, the memory cannot
     settle_pending_request(ctx.state, own_input, ledger.plot_shipped)
     settle_memory(ctx.state, run, ledger.plot_shipped)
+    record_last_run(ctx.state, result, turn=ledger.turn)
     _attribute_result(ledger, run, result)
     _telemetry_run(ledger, ctx.session.id, ctx.invocation_id, run, result, time.monotonic() - started)
     yield close_scope(scope)
@@ -2084,15 +2108,18 @@ async def _attempts(
             themes=job.themes,
             library=view.library,
             rows=rows,
+            spec_id=view.spec_id,
             plot_language=run.language,
             # The adapter edits the working form: a runtime whose loader shifts the lines maps them back.
             summarise=functools.partial(runtime.error_summary, run_form=run_form),
         )
         run.gate_ids.update(report.failed_gates)
+        run.round_gates.update(report.failed_gates)
         for theme_output in rendered.outputs.values():
             failure = telemetry.sandbox_failure(theme_output)
             if failure is not None:
                 run.sandbox_failures.add(failure)
+                run.round_failures.add(failure)
         if report.passed_host_gates:
             run.repair_hints = list(report.repair_hints)
         attribution(

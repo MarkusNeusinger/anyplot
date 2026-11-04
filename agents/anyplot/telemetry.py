@@ -66,6 +66,9 @@ from .language import canonical
 from .memory import MemoryKind
 from .plugins.ledger import RequestLedger, StepUsage, salted
 
+# One closed vocabulary with each `schemas.Round`, which a feedback case carries.
+from .schemas import GateId, SandboxFailure
+
 
 if TYPE_CHECKING:
     from google.adk.events.event import Event
@@ -129,7 +132,6 @@ ModelId = Annotated[str, Field(pattern=r"^[a-z0-9][a-z0-9._-]{0,79}$")]
 """A model id as the price table keys it (`claude-haiku-5-5`, `gemini-3.8-flash`): `model_id` drops version
 suffixes before a line is written."""
 DefectId = Annotated[str, Field(pattern=r"^[A-Z]{2}-[0-9]{2}$")]
-GateId = Annotated[str, Field(pattern=r"^(?:R[0-9](?:-[a-z_]{1,24})?|G[0-9]{1,2})$")]
 
 InputFormat = Literal[
     "csv",
@@ -298,7 +300,6 @@ TokensTodayBucket = Literal["lt25", "25_50", "50_75", "75_90", "90_100", "over"]
 (`tokens_today_bucket`); `over` is past it, which only an admin, who is exempt, can reach."""
 QueuePositionValue = Annotated[int, Field(ge=0, le=1_000)]
 """Where a run's queue entry stood at submit: 0 started at once, 1 ran next. The queue holds at most 60."""
-SandboxFailure = Literal["syntax", "name", "key", "value", "type", "timeout", "memory", "other"]
 PipelineStage = Literal[
     "budget",
     "deadline",
