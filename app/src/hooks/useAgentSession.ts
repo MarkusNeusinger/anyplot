@@ -318,6 +318,17 @@ export type ChatItem =
   | { id: number; kind: 'error'; code: string; ref: string | null }
   | { id: number; kind: 'plot'; version: number }
   | { id: number; kind: 'plot_failed'; result: PlotResult }
+  /** The attachment the user sent, as its chip named it (`▤ table · 4 lines · 46 B`). */
+  | { id: number; kind: 'paste'; text: string }
+  /** Where the data card stands in the thread: right after the paste it came from. One at most. */
+  | { id: number; kind: 'data' }
+  /** A data card a later paste replaced: its shape as it was then, the new card below it. */
+  | { id: number; kind: 'data_stub'; rows: number; columns: number }
+  /**
+   * Where a table read from text waits for `.use()` or `.discard()`; `.use()` turns it into the
+   * data card, `.discard()` into a notice.
+   */
+  | { id: number; kind: 'transcription' }
   /**
    * A line from the page itself; `warning` marks a lost confirmation, and `info` holds the
    * details behind the line's ⓘ, which keep the line short.
@@ -449,6 +460,12 @@ export interface ParseOptions {
   note?: string;
   /** The binary file the text was converted from, kept with the data for the sheet picker. */
   file?: ConvertedFile | null;
+  /**
+   * The attachment's line, as its chip showed it: the thread names the paste with it, and the
+   * card follows. Without it (the table and sheet pickers) the parse reads the same data again,
+   * and the card stays where it is.
+   */
+  chip?: string;
 }
 
 /** The dataset route's answers that send pasted text to the chat instead of a parser. */
@@ -592,6 +609,10 @@ type Action =
       paste?: { text: string; source?: string };
       upload?: DatasetUpload;
       file?: ConvertedFile;
+      /** The attachment's line: a new paste, which gets its item and a card of its own. */
+      chip?: string;
+      /** `.use()` of a table read from text: its item becomes the card. */
+      fromTranscription?: boolean;
     }
   | { type: 'parse_failed'; failure: Failure }
   /**
@@ -599,7 +620,7 @@ type Action =
    * `data_request`): no error, the text goes to the chat as the user's turn.
    */
   | { type: 'parse_forwarded' }
-  | { type: 'transcribed'; transcription: TranscriptionState }
+  | { type: 'transcribed'; transcription: TranscriptionState; chip?: string }
   | { type: 'transcription_clear' }
   | { type: 'bindings_start'; bindings: BindingMap }
   | { type: 'bindings_done'; bindings: BindingMap; complete: boolean; missingRoles: string[] }
@@ -888,6 +909,57 @@ function appendItem(state: AgentSessionState, item: NewChatItem): AgentSessionSt
   };
 }
 
+/** The items with the live data card frozen into a stub of the data it showed (`before`). */
+function stubbedData(items: ChatItem[], before: DatasetState | null): ChatItem[] {
+  return items.map(item =>
+    item.kind === 'data'
+      ? {
+          id: item.id,
+          kind: 'data_stub',
+          rows: before?.parsed.profile.rows ?? 0,
+          columns: before?.parsed.profile.columns.length ?? 0,
+        }
+      : item
+  );
+}
+
+/** The index of the latest item of `kind`, or -1. */
+function lastIndexOf(items: ChatItem[], kind: ChatItem['kind']): number {
+  for (let index = items.length - 1; index >= 0; index -= 1) {
+    if (items[index].kind === kind) return index;
+  }
+  return -1;
+}
+
+/**
+ * Where data that arrives stands in the thread (`next` is the state with it, `state` the one
+ * before). A new paste (`paste`, the attachment's line) adds its item and a card of its own
+ * after it, and the card it replaces stays as a stub of the data it showed. `.use()` of a table
+ * read from text (`use`) turns that table's item into the card, at its place. Anything else (a
+ * table or a sheet read again, a change the assistant made, an undo, `.to_long()`) keeps the
+ * card where it is, and only data without one yet (example data, a formula, code, a fan-out's
+ * copy) adds it at the end.
+ */
+function placeData(
+  state: AgentSessionState,
+  next: AgentSessionState,
+  how: { paste?: string; use?: boolean } = {}
+): AgentSessionState {
+  if (how.paste !== undefined) {
+    const stubbed = { ...next, items: stubbedData(next.items, state.dataset) };
+    return appendItem(appendItem(stubbed, { kind: 'paste', text: how.paste }), { kind: 'data' });
+  }
+  if (how.use) {
+    const waiting = lastIndexOf(next.items, 'transcription');
+    if (waiting >= 0) {
+      const items = stubbedData(next.items, state.dataset);
+      items[waiting] = { id: items[waiting].id, kind: 'data' };
+      return { ...next, items };
+    }
+  }
+  return lastIndexOf(next.items, 'data') >= 0 ? next : appendItem(next, { kind: 'data' });
+}
+
 /** The ladder of the language sources: the server only ever climbs it within a session. */
 const SOURCE_RANK: Record<LanguageSource, number> = {
   default: 0,
@@ -973,50 +1045,60 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         toLongError: null,
       };
     case 'parse_done':
-      return {
-        ...state,
-        parsing: false,
-        // A paste starts over at version 1: the server dropped the undo history with it.
-        dataset: {
-          parsed: { ...action.parsed, version: versionOf(action.parsed.version) },
-          bytes: action.bytes,
-          ...(action.paste ? { paste: action.paste } : {}),
-          ...(action.upload ? { upload: action.upload } : {}),
-          ...(action.file ? { file: action.file } : {}),
+      return placeData(
+        state,
+        {
+          ...state,
+          parsing: false,
+          // A paste starts over at version 1: the server dropped the undo history with it.
+          dataset: {
+            parsed: { ...action.parsed, version: versionOf(action.parsed.version) },
+            bytes: action.bytes,
+            ...(action.paste ? { paste: action.paste } : {}),
+            ...(action.upload ? { upload: action.upload } : {}),
+            ...(action.file ? { file: action.file } : {}),
+          },
+          dataChange: null,
+          undoError: null,
+          // An older server names no roles: the default bindings stand in for them.
+          roles:
+            action.parsed.roles ??
+            action.parsed.bindings.map(binding => bareRole(binding.role, false)),
+          bindings: toMap(action.parsed.bindings),
+          bindingsComplete: false,
+          missingRoles: [],
+          bindingsError: null,
+          // A new dataset is unchecked: the server dropped its confirmation when it stored it.
+          dataConfirmed: false,
+          confirmError: null,
+          // And it starts over: a loss named for the data before it is not its own. A paste
+          // that drops a confirmation the user had given is named by `agentReducer`.
+          confirmLoss: null,
         },
-        dataChange: null,
-        undoError: null,
-        // An older server names no roles: the default bindings stand in for them.
-        roles:
-          action.parsed.roles ??
-          action.parsed.bindings.map(binding => bareRole(binding.role, false)),
-        bindings: toMap(action.parsed.bindings),
-        bindingsComplete: false,
-        missingRoles: [],
-        bindingsError: null,
-        // A new dataset is unchecked: the server dropped its confirmation when it stored it.
-        dataConfirmed: false,
-        confirmError: null,
-        // And it starts over: a loss named for the data before it is not its own. A paste
-        // that drops a confirmation the user had given is named by `agentReducer`.
-        confirmLoss: null,
-      };
+        { paste: action.chip, use: action.fromTranscription }
+      );
     case 'parse_failed':
       return { ...state, parsing: false, datasetError: action.failure, transcription: null };
     case 'parse_forwarded':
       // No failure of the data: the chat takes the text instead.
       return { ...state, parsing: false, datasetError: null, transcription: null };
-    case 'transcribed':
+    case 'transcribed': {
       // Nothing is stored yet: the dataset, its bindings and their confirmation stay until
       // the user decides (the server kept them too); the page holds step 1 while the
       // transcription waits (`inStep2`), and `.discard()` returns to where the user was.
-      return {
-        ...state,
-        parsing: false,
-        transcription: action.transcription,
-      };
-    case 'transcription_clear':
-      return { ...state, transcription: null };
+      // The paste and the table read from it follow in the thread; the card above stays live.
+      const next = { ...state, parsing: false, transcription: action.transcription };
+      const pasted = action.chip ? appendItem(next, { kind: 'paste', text: action.chip }) : next;
+      return appendItem(pasted, { kind: 'transcription' });
+    }
+    case 'transcription_clear': {
+      // `.discard()`: the table read from text leaves a line where it waited.
+      const items = [...state.items];
+      const waiting = lastIndexOf(items, 'transcription');
+      if (waiting >= 0)
+        items[waiting] = { id: items[waiting].id, kind: 'notice', text: 'table discarded' };
+      return { ...state, transcription: null, items };
+    }
     case 'bindings_start':
       return { ...state, bindingsBusy: true, bindingsError: null, bindings: action.bindings };
     case 'bindings_done': {
@@ -1068,15 +1150,18 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
     }
     case 'data_prepared': {
       const { changes, version, ...parsed } = action.dataset;
-      return withDataVersion(
+      return placeData(
         state,
-        { ...parsed, version },
-        { kind: 'changed', changes, version: versionOf(version) }
+        withDataVersion(
+          state,
+          { ...parsed, version },
+          { kind: 'changed', changes, version: versionOf(version) }
+        )
       );
     }
     case 'data_copied': {
       const { dataset } = action;
-      return {
+      return placeData(state, {
         ...state,
         parsing: false,
         // The copy is this session's version 1; no paste was made here, so there is no size to bucket.
@@ -1091,7 +1176,7 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         // The server confirmed the copy with the bindings the page session confirmed.
         dataConfirmed: true,
         confirmError: null,
-      };
+      });
     }
     case 'to_long_start':
       return { ...state, toLongBusy: true, toLongError: null };
@@ -2268,6 +2353,7 @@ export function useAgentSession({
               ...(source ? { source } : {}),
               ...(options.file ? { file: options.file } : {}),
             },
+            ...(options.chip ? { chip: options.chip } : {}),
           });
           trackEvent('agent_data_parsed', { status: 'transcribed', size_bucket: bucket });
           return { outcome: 'transcribed', turnEnd: null };
@@ -2280,6 +2366,8 @@ export function useAgentSession({
           ...(confirmed ? {} : { paste: { text, ...(source ? { source } : {}) } }),
           upload: { text, confirmed, ...(source ? { source } : {}), ...(table ? { table } : {}) },
           ...(options.file ? { file: options.file } : {}),
+          // A confirmed parse is a transcription's `.use()`: its item becomes the card.
+          ...(options.chip ? { chip: options.chip } : confirmed ? { fromTranscription: true } : {}),
         });
         // A paste before any typed message may set the session language from its notes or headers.
         const pastedLanguage = readPlotLanguage(parsed.language);

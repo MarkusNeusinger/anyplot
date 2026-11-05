@@ -1,6 +1,7 @@
 /**
- * The chat thread: the user's turns and the page's own (`.summarize_data()`
- * after a parse, `.example_data()`, `.create_plot()`, `.carry_plot()`), the assistant's replies, the fixed
+ * The chat thread: the user's turns and the page's own (`.example_data()`, `.create_plot()`,
+ * `.carry_plot()`), the attachments the user sent and the data card after each (a later
+ * paste leaves the card it replaced as a stub of its shape), the assistant's replies, the fixed
  * refusal, errors with their code and request id, and a result card per plot
  * version. Earlier versions stay in the thread, collapsed, each with its own
  * image and code. A lost confirmation shows as a warning notice where it was
@@ -8,7 +9,14 @@
  * in-progress line with the site's loader holds the assistant's slot
  * (`pendingReply` in `steps.ts`); the log's own polite live region announces
  * it once, and the reply takes its place.
+ *
+ * The page's `.summarize_data()` right after the card it summarizes shows no line of its own:
+ * the card says what was sent, and the summary follows it. The item stays in the state, which
+ * the in-progress line reads. The first reply after a card comes into view as it arrives, when
+ * the user's focus is in the composer (`followReply`): a tall card would leave it below the fold.
  */
+
+import { useEffect, useRef } from 'react';
 
 import Box from '@mui/material/Box';
 
@@ -20,6 +28,7 @@ import {
   sessionBusy,
 } from 'src/hooks/useAgentSession';
 import { type ArtifactName, isPlotAction, type Theme } from 'src/lib/agent';
+import { countOf } from 'src/sections/agent-chat/countOf';
 import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { ERROR_TEXT, localClock, PLOT_FAILED_TEXT } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
@@ -27,13 +36,15 @@ import { type CardOutcome, ResultCard } from 'src/sections/agent-chat/ResultCard
 import { type PendingReply, pendingReply } from 'src/sections/agent-chat/steps';
 import {
   bodyTextSx,
+  CHAT_SECTION_GAP,
   CHAT_TEXT_MAX,
   labelSx,
   readableSx as textSx,
+  THREAD_GAP,
 } from 'src/sections/agent-chat/styles';
-import { colors, typography } from 'src/theme';
+import { colors, fontSize, typography } from 'src/theme';
 
-/** The in-progress line's words; the site's loader follows them. */
+/** The in-progress line's words, beside the site's loader. */
 const PENDING_TEXT: Record<PendingReply, string> = {
   summarize_data: 'summarizing your data',
   example_data: 'making example data',
@@ -52,7 +63,14 @@ interface ChatThreadProps {
   onOutcome?: (action: CardOutcome, version: number) => void;
   /** The result cards' quick feedback; without it they show no control. */
   onSendFeedback?: (version: number, input: FeedbackInput) => Promise<void>;
+  /** The card at a `data` item, or at the `transcription` item that waits (`DataPanel`). */
+  renderData?: (part: 'data' | 'transcription') => React.ReactNode;
+  /** Whether the first reply after a card may come into view: the user's focus is in the composer. */
+  followReply?: () => boolean;
 }
+
+/** The kinds of item that answer a turn: the first of them after a card is its reply. */
+const REPLY_KINDS: ReadonlySet<ChatItem['kind']> = new Set(['assistant', 'refusal', 'error']);
 
 /**
  * The user's turns, on the right; like every text item of the thread (`textSx`), no wider than
@@ -74,12 +92,41 @@ function Item({
   item,
   props,
   latestVersion,
+  waiting,
 }: {
   item: ChatItem;
   props: ChatThreadProps;
   latestVersion: number;
+  /** This `transcription` item is the table read from text that waits for its decision. */
+  waiting: boolean;
 }) {
   switch (item.kind) {
+    case 'paste':
+      // The attachment as its chip named it: the user's turn, which the card answers.
+      return (
+        <Box data-testid="paste-item" sx={{ ...promptSx, fontFamily: typography.mono }}>
+          <Box component="span" aria-hidden sx={{ color: 'var(--ink-muted)', mr: 1 }}>
+            ❯
+          </Box>
+          {item.text}
+        </Box>
+      );
+    case 'data':
+      return <>{props.renderData?.('data')}</>;
+    case 'data_stub':
+      return (
+        <Box data-testid="data-stub" sx={{ ...labelSx, ...textSx }}>
+          # earlier data · {countOf(item.rows, 'row')} · {countOf(item.columns, 'column')} ·
+          replaced below
+        </Box>
+      );
+    case 'transcription':
+      // Only the table that waits shows its card; one a new paste or a switch dropped says so.
+      return waiting ? (
+        <>{props.renderData?.('transcription')}</>
+      ) : (
+        <Box sx={{ ...labelSx, ...textSx }}># table read from text · not used</Box>
+      );
     case 'user':
       return (
         <Box sx={promptSx}>
@@ -202,38 +249,112 @@ function Item({
   }
 }
 
+/** Whether the item at `index` comes right after a card or its stub, with only notices between. */
+function followsCard(items: ChatItem[], index: number): boolean {
+  for (let before = index - 1; before >= 0; before -= 1) {
+    const kind = items[before].kind;
+    if (kind === 'data' || kind === 'data_stub') return true;
+    if (kind !== 'notice') return false;
+  }
+  return false;
+}
+
+/** The id of the first reply after the latest card, or null while it has none yet. */
+function firstReplyId(items: ChatItem[]): number | null {
+  let card = -1;
+  for (let index = items.length - 1; index >= 0; index -= 1) {
+    if (items[index].kind === 'data') {
+      card = index;
+      break;
+    }
+  }
+  if (card < 0) return null;
+  return items.slice(card + 1).find(item => REPLY_KINDS.has(item.kind))?.id ?? null;
+}
+
 export function ChatThread(props: ChatThreadProps) {
   const { items, versions } = props.state;
   const numbers = Object.keys(versions).map(Number);
   const latestVersion = numbers.length ? Math.max(...numbers) : 0;
   const pending = pendingReply(props.state);
+  const waitingId = props.state.transcription
+    ? [...items].reverse().find(item => item.kind === 'transcription')?.id
+    : undefined;
+  // The first reply after a card comes into view once, as it arrives (C-08): below a tall card
+  // it would land under the fold, while the user's eyes are on the composer.
+  const replyId = firstReplyId(items);
+  const replyRef = useRef<HTMLDivElement>(null);
+  // A reply that was there when the thread mounted has arrived already: only a new one moves it.
+  const followed = useRef<number | null>(replyId);
+  const { followReply } = props;
+  useEffect(() => {
+    if (replyId === null || followed.current === replyId) return;
+    followed.current = replyId;
+    if (followReply?.())
+      replyRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
+  }, [replyId, followReply]);
   return (
     <Box
       role="log"
       aria-label="Conversation"
-      sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, minWidth: 0 }}
+      sx={{ display: 'flex', flexDirection: 'column', gap: THREAD_GAP, minWidth: 0 }}
     >
-      {items.map(item => (
-        <Item key={item.id} item={item} props={props} latestVersion={latestVersion} />
-      ))}
+      {items.map((item, index) => {
+        // The page's summary turn right after its card says nothing the card does not, also once
+        // a later paste made that card a stub, and past the notice of a confirmation it dropped.
+        if (
+          item.kind === 'action' &&
+          item.action === 'summarize_data' &&
+          followsCard(items, index)
+        ) {
+          return null;
+        }
+        const node = (
+          <Item
+            key={item.id}
+            item={item}
+            props={props}
+            latestVersion={latestVersion}
+            waiting={item.id === waitingId}
+          />
+        );
+        return item.id === replyId ? (
+          <Box key={item.id} ref={replyRef} data-testid="first-reply" sx={{ minWidth: 0 }}>
+            {node}
+          </Box>
+        ) : (
+          node
+        );
+      })}
       {/* The assistant's slot, in its style, in softer ink: provisional until the reply. The
           site's loader says it works; the log's live region reads the words alone. */}
+      {/* Laid out as the progress timeline is (`ProgressTimeline.tsx`): a turn that reaches a
+          pipeline step hands the line over to the timeline below the thread, and the loader must
+          stay where it is, only the text beside it changing. So the loader stands first, in a
+          box one line of the run's font tall, on a phone above the text; and the line keeps a
+          margin of the difference between the thread's gap and the gap above the timeline, so
+          the timeline's top lands where this line's top was. */}
       {pending && (
         <Box
           data-testid="pending-reply"
           sx={{
-            ...bodyTextSx,
-            ...textSx,
-            color: 'var(--ink-soft)',
-            borderLeft: '2px solid var(--rule)',
-            pl: 1.5,
             display: 'flex',
-            alignItems: 'center',
-            gap: 1.5,
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: 'flex-start',
+            gap: { xs: 1, sm: 1.5 },
+            fontFamily: typography.mono,
+            fontSize: fontSize.md,
+            color: 'var(--ink-soft)',
+            mt: CHAT_SECTION_GAP - THREAD_GAP,
           }}
         >
-          {PENDING_TEXT[pending]}
-          <LoaderSpinner size="inline" />
+          <Box
+            component="span"
+            sx={{ display: 'flex', alignItems: 'center', '&::before': { content: '"\\200b"' } }}
+          >
+            <LoaderSpinner size="inline" />
+          </Box>
+          <Box sx={{ minWidth: 0 }}>{PENDING_TEXT[pending]}</Box>
         </Box>
       )}
     </Box>
