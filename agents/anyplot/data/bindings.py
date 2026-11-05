@@ -43,6 +43,16 @@ above its maximum. Both roles stay open instead, so the conversion check for ope
 (`conversions.py`) and finds a column of ranges such as `10–25` to split. Bound so by hand,
 the pair is the user's choice: valid, never blocked, kept through every change of the data
 (`carry_bindings`), with one neutral warning line.
+
+One column may serve several roles when a person binds it so, or the root does on their request
+(owner decision of 2026-11-04: some plots need one variable twice, the y and the size of a bubble,
+the value and the colour of a bar, a value and its label, a treemap's size and colour). It is valid
+without a warning (`check_bindings`), and every change of the data keeps it (`carry_bindings`). The
+bindings the code makes are a suggestion and take each column once: the defaults, what
+`carry_bindings` adds, and the conversions (`conversions.py`). Inside one variadic family a column
+stays once (`y1` and `y2` on one column draw the same series twice, which is never meant): the page
+moves it from the member that held it, and `check_bindings` refuses it. A lower and upper bound pair
+on one column is never inverted, so it carries no warning.
 """
 
 import itertools
@@ -262,7 +272,8 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
     the last role (y), which would transpose the plot (Fable review of #12200), also when
     it stands after the measure (`weight, X`, `_row_number_on_axis`).
 
-    Each column is bound at most once. Members of a family are numbered `<name>1`,
+    Each column is bound at most once: the defaults are a suggestion, and a column on two roles is
+    the user's choice only (`check_bindings` accepts it). Members of a family are numbered `<name>1`,
     `<name>2`, ... in column order. Roles without kinds stay unbound, and so do both roles of
     a lower and upper bound pair whose columns would be inverted (`without_inverted`).
     """
@@ -513,7 +524,8 @@ def carry_bindings(
     """The bindings after the dataset changed under them (`prepare_data`, undo): the valid ones stay.
 
     A binding stays when its column is still in `profile` with a dtype its role accepts
-    (`check_bindings` on it alone finds no error). When every binding stayed, nothing
+    (`check_bindings` on it alone finds no error), so a column the user bound to several roles
+    stays on each of them. When every binding stayed, nothing
     changes, so a role the user left unbound stays unbound, with these exceptions: a date
     column the change made (`make_date`, or `set_type` to a date; a datetime column that
     `previous`, the version before, did not have) fills an open required role that takes
@@ -783,8 +795,10 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
 
     Errors: an unknown role (a variadic family is bound through its members
     `<name><n>`, never its bare name), a role bound twice, a column missing from the
-    profile, a column bound twice, a dtype the role's kinds do not accept (see
-    `ACCEPTS`). `missing_roles` lists the required roles without a binding, except a role
+    profile, a column bound to two members of one variadic family (the same series twice),
+    a dtype the role's kinds do not accept (see `ACCEPTS`). One column on several roles is
+    valid and carries no warning (owner decision of 2026-11-04: the y and the size of a
+    bubble). `missing_roles` lists the required roles without a binding, except a role
     the plot can compute (`DataRole.computed`: bound, the plot uses the column; open, it
     computes the value); a
     required variadic family needs at least one member. `warnings`: a valid binding of
@@ -800,6 +814,7 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
     warnings: list[str] = []
     seen_roles: set[str] = set()
     seen_columns: set[str] = set()
+    members: set[tuple[str, str]] = set()  # (family, column) of every family member: a column once per family
     bound: set[str] = set()
     held: dict[str, ColumnProfile] = {}  # the column of each valid binding, by its role's binding name
     for binding in bindings:
@@ -816,8 +831,10 @@ def check_bindings(bindings: list[Binding], roles: list[DataRole], profile: Data
         column = columns.get(binding.column)
         if column is None:
             errors.append(f"column '{binding.column}' is not in the dataset")
-        elif binding.column in seen_columns:
-            errors.append(f"column '{binding.column}' is bound more than once")
+        elif role is not None and role.variadic:
+            if (role.name, column.name) in members:
+                errors.append(f"column '{column.name}' is bound to more than one member of '{role.name}'")
+            members.add((role.name, column.name))
         seen_columns.add(binding.column)
         if role is None or column is None:
             continue
