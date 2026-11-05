@@ -938,12 +938,10 @@ describe('useAgentSession: confirming the data (step 1)', () => {
       ]);
     await act(() => result.current.sendMessage('daily mean instead of hourly'));
 
+    // The user's turn and the reply, nothing else: the step line above the composer names the
+    // change (`confirmLoss`), with no notice right above it that says the same.
     const added = result.current.state.items.slice(before);
-    expect(added.map(item => item.kind)).toEqual(['user', 'assistant', 'notice']);
-    expect(added[2]).toMatchObject({
-      tone: 'warning',
-      text: 'data changed · check it, then plot the new data',
-    });
+    expect(added.map(item => item.kind)).toEqual(['user', 'assistant']);
     expect(result.current.state).toMatchObject({ dataConfirmed: false, confirmLoss: 'data' });
   });
 });
@@ -3363,13 +3361,14 @@ describe('agentReducer', () => {
       notice: lastItem(next.items),
     });
     const notice = (text: string) => ({ kind: 'notice', tone: 'warning', text });
-    const changed = notice('data changed · check it, then plot the new data');
+    // New data keeps its reason for the step lines and adds no notice: the thread is as before.
     for (const next of [
       agentReducer(confirmed, { type: 'parse_done', parsed, bytes: 10 }),
       agentReducer(confirmed, { type: 'data_prepared', dataset: PREPARED as DatasetChanged }),
       agentReducer(confirmed, { type: 'undo_done', parsed }),
     ]) {
-      expect(reasonOf(next)).toMatchObject({ reason: 'data', notice: changed });
+      expect(next.confirmLoss).toBe('data');
+      expect(next.items).toEqual(confirmed.items);
     }
     const server = notice('check the data again, then .create_plot()');
     expect(reasonOf(agentReducer(confirmed, { type: 'confirm_lost' }))).toMatchObject({

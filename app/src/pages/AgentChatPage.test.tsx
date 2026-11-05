@@ -740,7 +740,11 @@ describe('AgentChatPage gating', () => {
     fireEvent.click(undo);
     expect(await screen.findByText('# undone · back to version 1')).toBeInTheDocument();
     expect(screen.getByTestId('data-summary')).toHaveTextContent('check again');
-    expect(lastInThread()).toHaveTextContent('# data changed · check it, then plot the new data');
+    // One line says what to do, the step line above the composer; no notice repeats it above.
+    expect(screen.queryByTestId('confirm-lost')).not.toBeInTheDocument();
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      '# step 1 again — data changed · check it above, then plot the new data'
+    );
     expect(screen.getByTestId('data-card')).toBeInTheDocument();
     expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
     // The undone data with a plot here: the filled CTA again, named for the data that changed.
@@ -1040,8 +1044,8 @@ describe('AgentChatPage gating', () => {
       // Step 1 again with a plot here: the filled CTA again, in the place of the quiet
       // `.start_over()`, named for what it does now: the next version from the changed data.
       expect(composerButtons()).toEqual(['plot the new data']);
-      expect(lastInThread()).toHaveTextContent('# data changed · check it, then plot the new data');
-      expect(screen.getAllByTestId('confirm-lost')).toHaveLength(1);
+      // The step line alone says it: no notice right above it in the thread.
+      expect(screen.queryByTestId('confirm-lost')).not.toBeInTheDocument();
       expect(screen.getByTestId('data-step')).toHaveTextContent(
         '# step 1 again — data changed · check it above, then plot the new data'
       );

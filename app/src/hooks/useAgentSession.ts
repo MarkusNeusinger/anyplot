@@ -52,18 +52,19 @@
  * flag, so the next `.create_plot()` confirms again. It adds no thread item:
  * it is the step line's news, not a failed plot, and it arrives before the
  * turn's `done`, so it drops the flag only once the turn is over. A data change
- * the same turn made then names the loss itself, in the one notice.
+ * the same turn made then names the loss itself, in the step line.
  *
  * A confirmation the user had given and then lost is named where it is lost:
  * the reducer watches the flag go from set to cleared, whatever action did it,
  * keeps the reason (`confirmLoss`: a binding change, new data, or the server's
- * word) for the data card's step line, and appends a warning notice to the
- * thread. The parse's own default bindings land while the flag is already
- * clear, so a first setup after a paste says nothing. The reason follows the
- * data the card shows: a later paste clears it, a later data change or undo
- * makes it a change of the data. The reducer numbers the thread items itself
- * (`nextItemId`), so it can append that notice in the one place every loss
- * passes through.
+ * word) for the step lines, and for a binding change or the server's word
+ * appends a warning notice to the thread; new data gets none, since the step
+ * line above the composer says it right there. The parse's own default
+ * bindings land while the flag is already clear, so a first setup after a
+ * paste says nothing. The reason follows the data the card shows: a later
+ * paste clears it, a later data change or undo makes it a change of the data.
+ * The reducer numbers the thread items itself (`nextItemId`), so it can append
+ * that notice in the one place every loss passes through.
  *
  * Step 1 talks about the data. Every parse that stores a dataset (a table, or
  * a transcription's `.use()`) is followed at once by the turn
@@ -1094,21 +1095,23 @@ function lossOf(state: AgentSessionState, action: Action): ConfirmLoss {
 
 /**
  * Every action, plus one rule on top: when a confirmation the user had given
- * drops, whatever action dropped it, the reducer keeps the reason and appends
- * a warning notice to the thread, where the loss happened. A confirmation
- * clears the reason. A first binding setup after a paste lands while the flag
- * is already clear, so it says nothing. While the flag stays clear the reason
- * follows the data (`reduce`): a new paste clears it, a data change or an undo
- * makes it `data`, with no second notice.
+ * drops, whatever action dropped it, the reducer keeps the reason and, for a
+ * binding change or the server's word, appends a warning notice to the
+ * thread, where the loss happened. A change of the data appends none: the
+ * step line above the composer says it, directly below where the notice
+ * would stand, and the card's own line says it again in the card. A
+ * confirmation clears the reason. A first binding setup after a paste lands
+ * while the flag is already clear, so it says nothing. While the flag stays
+ * clear the reason follows the data (`reduce`): a new paste clears it, a data
+ * change or an undo makes it `data`, with no second notice.
  */
 export function agentReducer(state: AgentSessionState, action: Action): AgentSessionState {
   const next = reduce(state, action);
   if (state.dataConfirmed && !next.dataConfirmed) {
     const reason = lossOf(state, action);
-    return appendItem(
-      { ...next, confirmLoss: reason },
-      { kind: 'notice', tone: 'warning', text: CONFIRM_LOST_TEXT[reason] }
-    );
+    const lost = { ...next, confirmLoss: reason };
+    if (reason === 'data') return lost;
+    return appendItem(lost, { kind: 'notice', tone: 'warning', text: CONFIRM_LOST_TEXT[reason] });
   }
   if (!state.dataConfirmed && next.dataConfirmed) return { ...next, confirmLoss: null };
   return next;
@@ -2192,7 +2195,7 @@ export function useAgentSession({
         // The server holds no confirmation: the next `.create_plot()` confirms again instead of
         // starting a run the server refuses. The turn's `done` sync normally says so as well, and
         // a data change of this turn comes only with it, so the flag drops at the turn's end, where
-        // that change names the loss. No thread item: the step line and its notice say what to do.
+        // that change names the loss. No thread item: the step line says what to do.
         unconfirmedRef.current = true;
         return;
       }

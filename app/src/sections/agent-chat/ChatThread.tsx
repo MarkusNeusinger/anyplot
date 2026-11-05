@@ -35,6 +35,7 @@ import {
   localClock,
   PLOT_FAILED_TEXT,
   RECONNECTING_TEXT,
+  refusalLabel,
 } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { type CardOutcome, ResultCard } from 'src/sections/agent-chat/ResultCard';
@@ -171,10 +172,17 @@ function Item({
           sx={{ ...textSx, borderLeft: `2px solid ${colors.warning}`, pl: 1.5 }}
           data-testid="refusal"
         >
+          {/* A plain label: the code is the service's word for the log, behind the ⓘ. */}
           <Box sx={labelSx}>
-            refusal · {item.code}
+            {refusalLabel(item.code)}
             {/* The service's own text says 00:00 UTC: the page adds the user's own time. */}
             {item.until && localClock(item.until) ? ` · until ${localClock(item.until)}` : ''}
+            <InfoPopover
+              label="About this answer"
+              heading="# a fixed answer of the service, not the assistant's"
+              lines={[`reason: ${item.code}`]}
+              testId="refusal-details"
+            />
           </Box>
           <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>{item.text}</Box>
         </Box>

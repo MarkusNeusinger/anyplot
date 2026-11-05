@@ -7,10 +7,10 @@ import {
   type RunState,
 } from 'src/hooks/useAgentSession';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
-import { localClock } from 'src/sections/agent-chat/messages';
+import { localClock, REFUSAL_LABEL } from 'src/sections/agent-chat/messages';
 import { pendingReply } from 'src/sections/agent-chat/steps';
 import { CHAT_TEXT_MAX } from 'src/sections/agent-chat/styles';
-import { render, screen, within } from 'src/test-utils';
+import { render, screen, userEvent, within } from 'src/test-utils';
 
 const notReady = (reason: string): AgentSessionState => ({
   ...initialAgentState('matplotlib'),
@@ -101,10 +101,47 @@ describe('ChatThread', () => {
       ],
     });
     const [paused, own] = screen.getAllByTestId('refusal');
-    expect(paused).toHaveTextContent(
-      `refusal · service_paused · until ${localClock(until)}${text}`
-    );
-    expect(own).toHaveTextContent(/^refusal · budgetThe usage limit/);
+    expect(paused).toHaveTextContent(`chat paused · until ${localClock(until)}${text}`);
+    expect(own).toHaveTextContent(/^usage limit reachedThe usage limit/);
+  });
+
+  it('labels a refusal in plain words and keeps its code behind the ⓘ', async () => {
+    renderThread({
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      items: [
+        { id: 1, kind: 'user', text: 'plot the unemployment rate of France' },
+        { id: 2, kind: 'refusal', code: 'needs_data', text: 'I cannot fetch data.' },
+        { id: 3, kind: 'refusal', code: 'something_new', text: 'No.' },
+      ],
+    });
+    const [data, unknown] = screen.getAllByTestId('refusal');
+    expect(data).toHaveTextContent(/^can't fetch dataI cannot fetch data\.$/);
+    expect(unknown).toHaveTextContent(/^not answeredNo\.$/);
+    // No code in the line itself: it reads behind the ⓘ.
+    expect(screen.queryByText(/needs_data/)).not.toBeInTheDocument();
+    await userEvent.click(within(data).getByRole('button', { name: 'About this answer' }));
+    expect(await screen.findByTestId('refusal-details')).toHaveTextContent('reason: needs_data');
+  });
+
+  it('labels every refusal code of the service in plain words', () => {
+    // Every refusal code of `refusals.yaml` (its `close_warning` is a suffix, never a code).
+    for (const code of [
+      'out_of_scope',
+      'needs_data',
+      'other_library',
+      'unsupported_content',
+      'budget',
+      'service_paused',
+      'rate_limited',
+      'daily_limit',
+      'session_closed',
+      'locked_out',
+    ]) {
+      expect(REFUSAL_LABEL[code], code).toBeTruthy();
+      expect(REFUSAL_LABEL[code]).not.toMatch(/_/);
+    }
   });
 
   it("shows the page's own turns: the summary without a library, create_plot with it", () => {
