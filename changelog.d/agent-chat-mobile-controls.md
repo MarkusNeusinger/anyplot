@@ -18,6 +18,10 @@
   controls jumped 15 px as the library or language menu opened. (#12575)
 - **A file chosen with `.open()` hands the focus to the message box.** Enter
   then sends the file instead of opening the chooser again. (#12575)
+- **A refused `.copy()` says so.** When the browser refuses the clipboard, the
+  button reads `.copy() failed · select the code` for 2 s, a screen reader hears
+  it, and the code opens so it can be selected by hand. Before, nothing
+  changed on the page. (#12575)
 - **The result card takes the progress grid's place.** A run's card used to
   land above the grid while the reply was still being written, pushing the grid
   and the composer down until the turn ended. Now the card replaces the grid,

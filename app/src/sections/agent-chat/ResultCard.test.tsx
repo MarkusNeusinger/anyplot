@@ -315,8 +315,14 @@ describe('ResultCard', () => {
       configurable: true,
     });
     const { onOutcome } = renderCard();
-    await userEvent.click(screen.getByRole('button', { name: 'Copy code' }));
+    const copy = screen.getByRole('button', { name: 'Copy code' });
+    await userEvent.click(copy);
     expect(onOutcome).not.toHaveBeenCalled();
+    // The refusal shows on the button and to a screen reader, and the code opens to select it.
+    expect(copy).toHaveTextContent('.copy() failed · select the code');
+    expect(screen.getByRole('status')).toHaveTextContent('.copy() failed · select the code');
+    expect(await screen.findByTestId('code-highlighter')).toBeInTheDocument();
+    await waitFor(() => expect(copy).toHaveTextContent(/^\.copy\(\)$/), { timeout: 3000 });
   });
 
   it('highlights the code in its version library language, not the page language', async () => {

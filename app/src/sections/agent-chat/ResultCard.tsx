@@ -86,6 +86,7 @@ import {
   labelSx,
   readableSx,
   smallText,
+  visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
 import { gridRows, triesText } from 'src/sections/agent-chat/timeline';
 import { colors, fontSize, overlayButtonSx, typography } from 'src/theme';
@@ -93,6 +94,8 @@ import { colors, fontSize, overlayButtonSx, typography } from 'src/theme';
 const CodeHighlighter = lazy(() => import('src/components/CodeHighlighter'));
 
 const TOAST_MS = 1500;
+/** `.copy()` for a while after the browser refused the clipboard; the code opens beside it. */
+const COPY_FAILED_TEXT = '.copy() failed · select the code';
 /** Phone width, MUI's `xs`: the image's actions move into the header row. */
 const PHONE_QUERY = '(max-width: 599.95px)';
 /** The image's actions in the header row: quiet icons on the card, like its text buttons. */
@@ -215,11 +218,17 @@ export function ResultCard({
   const readyImage = image?.state === 'ready' ? image : null;
   const pngName = `${specId}-${library}-v${number}-${shownTheme}.png`;
 
-  const { copied, copyToClipboard } = useCopyCode({
+  const {
+    copied,
+    failed: copyFailed,
+    copyToClipboard,
+  } = useCopyCode({
     onCopy: () => {
       onTrack('copy_code', { spec: specId, library, method: 'agent', page: 'agent_chat' });
       onOutcome?.('copied_code', number);
     },
+    // The browser refused the clipboard: the code opens, so the user can select it by hand.
+    onError: () => setCodeOpen(true),
   });
 
   /** Whether showing `theme` needs a render on the server first. */
@@ -870,9 +879,13 @@ export function ResultCard({
                   }
                   disabled={version.code.state !== 'ready'}
                   aria-label="Copy code"
-                  sx={actionButtonSx}
+                  sx={copyFailed ? { ...actionButtonSx, color: colors.error } : actionButtonSx}
                 >
-                  {copied ? '.copied' : '.copy()'}
+                  {copied ? '.copied' : copyFailed ? COPY_FAILED_TEXT : '.copy()'}
+                </Box>
+                {/* The button's name stays "Copy code"; a screen reader hears the refusal here. */}
+                <Box component="span" role="status" sx={visuallyHiddenSx}>
+                  {copyFailed ? COPY_FAILED_TEXT : ''}
                 </Box>
                 <Box
                   component="button"
