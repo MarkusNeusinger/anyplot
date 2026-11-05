@@ -114,6 +114,9 @@ describe('ResultCard', () => {
     renderCard();
     expect(actionsIn()).toEqual({ image: false, header: true });
     expect(screen.getAllByRole('button', { name: 'Download PNG' })).toHaveLength(1);
+    // A collapsed card has no image, so its actions go with it.
+    fireEvent.click(screen.getByRole('button', { name: /^Version 2/ }));
+    expect(screen.queryByTestId('result-header-actions')).not.toBeInTheDocument();
   });
 
   it('shows the rendered image, the residual notes and the run in one status line', async () => {

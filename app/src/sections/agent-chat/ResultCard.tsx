@@ -97,7 +97,8 @@ const TOAST_MS = 1500;
 const PHONE_QUERY = '(max-width: 599.95px)';
 /** The image's actions in the header row: quiet icons on the card, like its text buttons. */
 const headerActionSx = {
-  p: 0.5,
+  // A 32 px target with room between them, for a thumb.
+  p: 0.75,
   color: 'var(--ink-soft)',
   '&:hover': { color: colors.primary, bgcolor: 'transparent' },
 } as const;
@@ -550,8 +551,10 @@ export function ResultCard({
         {header}
         {narrow && expanded && (
           <Box
+            role="group"
+            aria-label="Image actions"
             data-testid="result-header-actions"
-            sx={{ display: 'flex', gap: 0.25, ml: 'auto', my: -0.5 }}
+            sx={{ display: 'flex', gap: 0.5, ml: 'auto', my: -0.5 }}
           >
             {imageActions}
           </Box>
