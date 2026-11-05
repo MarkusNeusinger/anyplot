@@ -48,7 +48,8 @@ export function spannedTable(html: string): string | null {
       c += across;
     }
   });
-  const width = Math.max(0, ...grid.map(line => line.length));
+  // A reduce, not a spread into `Math.max`: a copied table can hold more rows than a call takes arguments.
+  const width = grid.reduce((widest, line) => Math.max(widest, line.length), 0);
   const lines = grid
     .map(line => Array.from({ length: width }, (_, index) => line[index] ?? ''))
     .filter(line => line.some(cell => cell !== ''));
