@@ -23,6 +23,7 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..language import DEFAULT_LANGUAGE
 from ..schemas import ColumnName
 from .parse import ParsedDataset, display_copy
 from .prepare import MAX_OPERATIONS, Operation, PrepareError, apply_operations
@@ -63,17 +64,20 @@ def run_query(
     operations: list[Operation],
     columns: list[str] | None = None,
     limit: int = DEFAULT_QUERY_ROWS,
+    *,
+    language: str = DEFAULT_LANGUAGE,
 ) -> QueryResult:
     """The operations applied to a copy of `parsed`, cut to `limit` rows and the `columns` asked for; raises `PrepareError`.
 
     `parsed` is never changed and nothing is stored: `apply_operations` reads its canonical
-    CSV into a new frame. Without operations the result is the data as it is.
+    CSV into a new frame. Without operations the result is the data as it is. `language` is
+    the session language, which names the column of a `date_number` that names none.
     """
     limit = max(1, min(limit, MAX_QUERY_ROWS))
     changes: list[str] = []
     text = parsed.csv
     if operations:
-        prepared = apply_operations(parsed, operations)
+        prepared = apply_operations(parsed, operations, language=language)
         text, changes = prepared.csv, prepared.changes
     records = list(csv.reader(io.StringIO(text)))
     header, body = records[0], records[1:]

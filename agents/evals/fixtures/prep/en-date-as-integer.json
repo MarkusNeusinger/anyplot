@@ -1,0 +1,8 @@
+{
+  "dataset_text": "Index,Customer Id,First Name,Last Name,City,Country,Subscription Date\n1,DD37Cf93aecA6Dc,Mara,Lindqvist,East Leonard,Chile,2020-08-24\n2,1Ef7b82A4CAAD10,Tobin,Okafor,East Jimmychester,Djibouti,2021-04-23\n3,6F94879bDAfE5a6,Ilse,Varga,Isabelborough,Antigua and Barbuda,2020-03-25\n4,5Cef8BFA16c5e3c,Ravi,Moreau,Bensonview,Dominican Republic,2020-06-02\n5,053d585Ab6b3159,Noor,Haddad,West Marthaburgh,Bahrain,2021-04-17\n6,2d08FB17EE273F4,Elio,Brandt,Faithside,Costa Rica,2021-02-24\n7,EA4d384DfDbBf77,Wren,Kowalski,Gilbertborough,Sierra Leone,2020-11-08\n8,0e04AFde9f225dE,Saoirse,Tanaka,Woodsview,Portugal,2021-03-03\n",
+  "message": "convert subscription date to integer",
+  "expected_operations": [{"op": "date_number", "column": "Subscription Date", "unit": "days"}],
+  "locale": "en",
+  "spec_id": "scatter-basic",
+  "tags": ["date_number", "datetime"]
+}
