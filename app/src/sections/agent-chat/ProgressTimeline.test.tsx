@@ -238,9 +238,13 @@ describe('ProgressTimeline', () => {
     // it: the loader and the rows already shown jumped up by that row.
     const root = document.documentElement;
     root.style.overflowAnchor = 'auto';
-    const { unmount } = render(<ProgressTimeline run={run(FIRST.slice(0, 1))} />);
+    const first = render(<ProgressTimeline run={run(FIRST.slice(0, 1))} />);
     expect(root.style.overflowAnchor).toBe('none');
-    unmount();
+    // Two at once (none today) hold it off until the last one goes, then the page's value is back.
+    const second = render(<ProgressTimeline run={run(FIRST.slice(0, 2))} />);
+    first.unmount();
+    expect(root.style.overflowAnchor).toBe('none');
+    second.unmount();
     expect(root.style.overflowAnchor).toBe('auto');
     root.style.overflowAnchor = '';
   });

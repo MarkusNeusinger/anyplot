@@ -33,18 +33,27 @@ import { RoundGrid } from 'src/sections/agent-chat/RoundGrid';
 import { liveRows } from 'src/sections/agent-chat/timeline';
 import { fontSize, typography } from 'src/theme';
 
+/** How many mounted timelines hold the page's scroll anchoring off, and the value the first found. */
+let anchoringHolds = 0;
+let anchoringBefore = '';
+
 /**
  * Turns the page's scroll anchoring off while the run lasts. The run's grid grows only below
  * what it shows, so the anchoring has nothing to hold still there and would only scroll the
- * page by each new row; the page's value comes back when the run ends.
+ * page by each new row; the page's value comes back when the last timeline unmounts. Excluding
+ * the composer or the footer alone did not stop the jump: the browser found another anchor.
  */
 function useNoScrollAnchoring() {
   useEffect(() => {
     const root = document.documentElement;
-    const before = root.style.overflowAnchor;
-    root.style.overflowAnchor = 'none';
+    if (anchoringHolds === 0) {
+      anchoringBefore = root.style.overflowAnchor;
+      root.style.overflowAnchor = 'none';
+    }
+    anchoringHolds += 1;
     return () => {
-      root.style.overflowAnchor = before;
+      anchoringHolds -= 1;
+      if (anchoringHolds === 0) root.style.overflowAnchor = anchoringBefore;
     };
   }, []);
 }
