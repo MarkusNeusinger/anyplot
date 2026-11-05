@@ -247,6 +247,16 @@ function Item({
   }
 }
 
+/** Whether the item at `index` comes right after a card or its stub, with only notices between. */
+function followsCard(items: ChatItem[], index: number): boolean {
+  for (let before = index - 1; before >= 0; before -= 1) {
+    const kind = items[before].kind;
+    if (kind === 'data' || kind === 'data_stub') return true;
+    if (kind !== 'notice') return false;
+  }
+  return false;
+}
+
 /** The id of the first reply after the latest card, or null while it has none yet. */
 function firstReplyId(items: ChatItem[]): number | null {
   let card = -1;
@@ -287,12 +297,12 @@ export function ChatThread(props: ChatThreadProps) {
       sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, minWidth: 0 }}
     >
       {items.map((item, index) => {
-        // The page's summary turn right after its card: the card says what was sent.
-        const previous = items[index - 1];
+        // The page's summary turn right after its card says nothing the card does not, also once
+        // a later paste made that card a stub, and past the notice of a confirmation it dropped.
         if (
           item.kind === 'action' &&
           item.action === 'summarize_data' &&
-          previous?.kind === 'data'
+          followsCard(items, index)
         ) {
           return null;
         }

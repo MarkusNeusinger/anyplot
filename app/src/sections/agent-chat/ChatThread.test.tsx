@@ -317,18 +317,25 @@ describe('ChatThread data items', () => {
       ready([
         { id: 1, kind: 'paste', text: '▤ table · 3 lines · 46 B' },
         { id: 2, kind: 'data_stub', rows: 1203, columns: 4 },
-        { id: 3, kind: 'paste', text: '▤ sales.csv · 8 lines · 120 B' },
-        { id: 4, kind: 'data' },
-        { id: 5, kind: 'action', action: 'summarize_data', library: 'matplotlib' },
-        { id: 6, kind: 'assistant', text: '7 rows and 3 columns.' },
+        { id: 3, kind: 'action', action: 'summarize_data', library: 'matplotlib' },
+        { id: 4, kind: 'assistant', text: '1,203 rows and 4 columns.' },
+        { id: 5, kind: 'paste', text: '▤ sales.csv · 8 lines · 120 B' },
+        { id: 6, kind: 'data' },
+        // A paste in step 2 drops the confirmation: its notice stands between card and summary.
+        { id: 7, kind: 'notice', tone: 'warning', text: 'the data changed' },
+        { id: 8, kind: 'action', action: 'summarize_data', library: 'matplotlib' },
+        { id: 9, kind: 'assistant', text: '7 rows and 3 columns.' },
       ])
     );
     const log = screen.getByRole('log');
+    // Neither summary action shows: the stub is the card it followed, and a notice is no turn.
     expect([...log.children].map(child => child.textContent)).toEqual([
       '❯▤ table · 3 lines · 46 B',
       '# earlier data · 1,203 rows · 4 columns · replaced below',
+      '1,203 rows and 4 columns.',
       '❯▤ sales.csv · 8 lines · 120 B',
       'data card',
+      '# the data changed',
       '7 rows and 3 columns.',
     ]);
   });
