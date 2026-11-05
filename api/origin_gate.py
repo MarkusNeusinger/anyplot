@@ -51,7 +51,7 @@ so that path does pass the edge and does carry the header — while an exemption
 would leave the most expensive reads in the API open on the direct URL: a cache
 miss or an unknown id queries `SpecRepository`/`ImplRepository`, and a crawler
 user agent schedules an outbound Plausible event per request. That is precisely
-the cost this gate exists to refuse (Copilot review). The rollout measures the
+the cost this gate exists to refuse. The rollout measures the
 crawler path end to end before arming, and `bot-serving-check.yml` runs daily,
 so being wrong here is loud rather than silent.
 
@@ -68,7 +68,7 @@ service's own door. The APP service (`anyplot-app`) also stands with
 `https://api.anyplot.ai` — where the edge stamps the header legitimately. So a
 caller who sends a crawler user agent to the app's raw `*.run.app` URL still
 reaches the prerendered render, and its DB queries and Plausible event, without
-having passed the edge himself (Copilot review). Confirmed live: a Googlebot UA
+having passed the edge himself. Confirmed live: a Googlebot UA
 against `…run.app/scatter-basic` answers 200 with the correct
 `<link rel="canonical" href="https://anyplot.ai/scatter-basic">`. That is a
 second door on a second service, not a hole in this one — the request this

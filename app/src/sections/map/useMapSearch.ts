@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import type { useAnalytics } from 'src/hooks';
-import { type ForceGraphHandle, type MapNode, type SpecMapItem } from 'src/pages/MapPage.helpers';
+import { type ForceGraphCamera, type MapNode, type SpecMapItem } from 'src/pages/MapPage.helpers';
 
 export function useMapSearch({
   nodeById,
@@ -12,7 +12,7 @@ export function useMapSearch({
   trackEvent,
 }: {
   nodeById: Map<string, MapNode>;
-  fgRef: React.RefObject<ForceGraphHandle>;
+  fgRef: React.RefObject<ForceGraphCamera | null>;
   setHoverId: (id: string | null) => void;
   setPinnedId: (id: string | null) => void;
   setSearchQuery: (q: string) => void;

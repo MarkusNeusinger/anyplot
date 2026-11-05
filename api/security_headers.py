@@ -10,7 +10,7 @@ middleware. Starlette's `ServerErrorMiddleware` wraps every user middleware, so
 when a route raises, `await call_next(request)` raises with it and the response
 the registered `Exception` handler builds is produced OUTSIDE the stack — an
 unhandled 500 would leave without headers while the middleware's docstring
-claimed otherwise (Copilot review). Both paths call `stamp` instead.
+claimed otherwise. Both paths call `stamp` instead.
 
 Deliberately NOT `X-Frame-Options`: the SPA embeds `/proxy/html` in an iframe
 from a different origin (`frame-src https://api.anyplot.ai` in the site's CSP),

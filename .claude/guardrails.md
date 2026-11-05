@@ -14,10 +14,11 @@ Sections follow the order in which `CLAUDE.md` states the rules.
 
 ---
 
-## Pick the agent by the work, and spend Claude tokens last
+## Pick the agent by the work
 
 Owner directive, 2026-08-11, refined 2026-08-16, 2026-10-21, 2026-10-28, and
-2026-10-29.
+2026-10-29. The binding routing this section comments on is
+`agentic/docs/agent-operations.md`, which `CLAUDE.md` points to.
 
 **The lanes (2026-10-28).** The Anthropic weekly limit runs out long before
 the owner's Google AI Ultra quota, so the work is split by what it needs, and

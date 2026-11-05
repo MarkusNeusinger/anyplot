@@ -33,7 +33,7 @@ const publicPaths = Object.values(paths)
 // One complete, callable example per surface. Assistants' fetch tools often
 // allow only URLs that already appeared verbatim in fetched content, so the
 // same example pair must stand in the guide AND in the shell — a template with
-// placeholders satisfies neither (kurrentschrift finding 2026-08-28).
+// placeholders satisfies neither.
 const EXAMPLE_CODE_URL = `${API}/specs/bar-error/seaborn/code`;
 const EXAMPLE_RENDER_URL =
   'https://storage.googleapis.com/anyplot-images/plots/bar-error/python/seaborn/plot-light.png';

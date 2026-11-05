@@ -95,7 +95,7 @@ address that is no address gains nothing."""
 IPV6_PREFIX = 64
 """An IPv6 client counts by its /64, the network one subscriber gets at the least: per address, one line holds 2**64
 buckets. Many providers delegate a /56 or a /48, which still leaves one subscriber 256 to 65,536 buckets of the day
-caps; keying the day caps on a /56 is the next step if that is abused (Fable review of 2026-11-02)."""
+caps; keying the day caps on a /56 is the next step if that is abused."""
 PUBLIC_STATUS_FIELDS = frozenset(
     {
         "enabled",

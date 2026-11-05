@@ -1,5 +1,5 @@
 """The relay page of the agent chat's interactive preview (JS-4b-2, route A of step 3g in
-agentic/specs/261024-agent-all-libraries.md, owner decision of 2026-10-31).
+agentic/specs/261024-agent-all-libraries.md).
 
 A JavaScript plot's preview shows the same `plot.html` the download serves (the agents
 service's wrapper: no script of its own, the browser harness's policy plus `frame-src
