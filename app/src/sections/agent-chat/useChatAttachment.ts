@@ -35,6 +35,7 @@ import {
   type FileReading,
   readFile,
 } from 'src/sections/agent-chat/fileText';
+import { spannedTable } from 'src/sections/agent-chat/htmlTable';
 import {
   describeConvertFailure,
   describeConvertWarnings,
@@ -508,7 +509,12 @@ export function useChatAttachment({
       void handleFile(file);
       return true;
     }
-    const taken = routePaste(pastedText, () => event.preventDefault());
+    // A web table with grouped columns: its HTML keeps the spans that the plain text loses.
+    const spanned = pastedText
+      ? spannedTable(event.clipboardData?.getData('text/html') ?? '')
+      : null;
+    const text = spanned !== null && routeInput(spanned) === 'data' ? spanned : pastedText;
+    const taken = routePaste(text, () => event.preventDefault());
     // Text the box takes: the browser inserts it and reports `insertFromPaste` next.
     pasteRouted.current = !taken && pastedText !== '';
     return taken;

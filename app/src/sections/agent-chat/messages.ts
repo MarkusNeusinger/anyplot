@@ -5,6 +5,7 @@
  */
 
 import type { ConfirmLoss } from 'src/hooks/useAgentSession';
+import { countOf } from 'src/sections/agent-chat/countOf';
 
 /** Errors of a turn (stream `error` events and failed requests). */
 export const ERROR_TEXT: Record<string, string> = {
@@ -460,6 +461,16 @@ export function describeConvertWarnings(
  */
 export const ATTACHMENT_LINE =
   '# the attached table is read when you send it: Enter or .send(), with a note if you like';
+
+/**
+ * `ATTACHMENT_LINE`, or, while the session holds data of `rows` rows, the line that says the
+ * attachment replaces it. A paste starts the data's versions anew, so `.undo()` cannot bring
+ * the old data back: the line says so before the user sends, not after.
+ */
+export function attachmentWaitLine(rows: number | null): string {
+  if (rows === null) return ATTACHMENT_LINE;
+  return `# the attached table replaces your data (${countOf(rows, 'row')}, no .undo()) when you send it: Enter or .send(), with a note if you like`;
+}
 
 /** The message box's placeholder while an attachment waits: the typed text goes with it as its note. */
 export const ATTACHMENT_PLACEHOLDER = 'add a note for this table, or press Enter';
