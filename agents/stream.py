@@ -67,6 +67,10 @@ HALT_AUTHOR = "model"  # ADK's author of the event a before_run halt emits
 STEPS = frozenset({"adapting", "checking", "rendering", "reviewing", "repairing"})
 QUEUED_STEP = "queued"
 """The status step the route sends while the run waits in the run queue; no pipeline event carries it."""
+STARTED_STEP = "started"
+"""The status step the route sends once a run that waited leaves the run queue; no pipeline event carries it.
+A turn without pipeline steps (a summary that runs data code) has nothing else that tells the page the wait is
+over, so its queue position would stay on screen until the reply."""
 PLOT_FIELDS = ("status", "reason", "attempts", "artifacts", "changes", "residual_defects", "version", "rounds")
 ROUND_OUTCOMES = frozenset(get_args(RoundOutcome))
 RUBRIC_ID = re.compile(r"[A-Z]{2}-[0-9]{2}")
@@ -104,6 +108,11 @@ class Translator:
     def queued(position: int, waiting: int) -> str:
         """Where the run waits: `position` 1 runs next, `waiting` counts every queued entry, this one included."""
         return sse("status", {"step": QUEUED_STEP, "position": position, "waiting": waiting})
+
+    @staticmethod
+    def started() -> str:
+        """The run that waited in the queue holds its slot now; sent once, after its last `queued` status."""
+        return sse("status", {"step": STARTED_STEP})
 
     def translate(self, event: Event) -> list[str]:
         out: list[str] = []
