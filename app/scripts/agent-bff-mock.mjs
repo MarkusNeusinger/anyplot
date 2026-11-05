@@ -189,9 +189,10 @@
  * A cut stream: every turn event carries the SSE id `<run_id>.<n>`, and `GET .../turn` with
  * `Last-Event-ID` streams the session's latest turn after that event, live until it ends (`404
  * not_found` for another turn, `422 invalid` for an id of another form), as the agents service's
- * turn log does. MOCK_CUT_AFTER (0: never) drops the first plot turn's connection after that many
- * events, the way the edge loses one, while the turn runs on to its end; MOCK_RESUME_FAILS (0)
- * drops that many reads of the turn first, so the page's reconnecting line stays visible:
+ * turn log does. MOCK_CUT_AFTER (0: never) drops a session's first plot turn's connection after
+ * that many events, the way the edge loses one, while the turn runs on to its end;
+ * MOCK_RESUME_FAILS (0) drops a session's first that many reads of a turn, so the page's
+ * reconnecting line stays visible:
  *
  *   MOCK_QUEUE=0 MOCK_STEP_MS=3000 MOCK_CUT_AFTER=3 MOCK_RESUME_FAILS=2 node app/scripts/agent-bff-mock.mjs
  *
@@ -1117,8 +1118,13 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
     log.events.push(numbered);
     for (const reader of log.readers) reader();
     if (!closed && !detached) res.write(numbered);
-    if (CUT_AFTER && !cutDone && PLOT_ACTIONS.has(body.action) && log.events.length === CUT_AFTER) {
-      cutDone = true;
+    if (
+      CUT_AFTER &&
+      !session.cutDone &&
+      PLOT_ACTIONS.has(body.action) &&
+      log.events.length === CUT_AFTER
+    ) {
+      session.cutDone = true;
       detached = true;
       res.destroy();
     }
@@ -1439,11 +1445,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
   }
 }
 
-/** MOCK_CUT_AFTER cuts the first plot turn of the mock's lifetime only, so the next one runs through. */
-let cutDone = false;
+/** The turns MOCK_CUT_AFTER cuts: a session's first plot turn only, so its next one runs through. */
 const PLOT_ACTIONS = new Set(['create_plot', 'carry_plot']);
-/** How many reads of a cut turn MOCK_RESUME_FAILS has dropped so far. */
-let resumeFailed = 0;
 
 /**
  * `GET .../turn`: the session's latest turn after the event `Last-Event-ID` names, then live until
@@ -1456,8 +1459,9 @@ function readTurn(req, res, session, ref) {
   if (!log || log.runId !== named[1] || Number(named[2]) > log.events.length) {
     return fail(res, 404, 'not_found', ref);
   }
-  if (resumeFailed < RESUME_FAILS) {
-    resumeFailed += 1;
+  session.resumeFailed ??= 0;
+  if (session.resumeFailed < RESUME_FAILS) {
+    session.resumeFailed += 1;
     req.socket.destroy(); // no answer at all, as while the network is gone
     return;
   }
