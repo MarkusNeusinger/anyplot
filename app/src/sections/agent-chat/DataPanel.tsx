@@ -280,7 +280,7 @@ export function DataPanel({
   if (part === 'transcription') {
     return transcription ? (
       // Off for the thread's live log, as the data card's shell is.
-      <Box data-testid="transcription-item" aria-live="off" sx={cardSx}>
+      <Box data-testid="transcription-item" ref={view.transcriptionRef} aria-live="off" sx={cardSx}>
         {card}
       </Box>
     ) : null;

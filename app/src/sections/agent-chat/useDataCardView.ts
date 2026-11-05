@@ -28,13 +28,19 @@ export interface DataCardView {
   /** Whether the card renders at its place in the thread. */
   open: boolean;
   cardRef: React.RefObject<HTMLElement | null>;
-  /** The header's `.show()` and `.hide()`; in step 1 it brings the card into view. */
+  /** The card of a table read from text that waits for its decision, at its own item. */
+  transcriptionRef: React.RefObject<HTMLElement | null>;
+  /**
+   * The header's `.show()` and `.hide()`; in step 1 it brings the card into view, and while a
+   * table read from text waits, that table's card, where `.use()` and `.discard()` are.
+   */
   toggle: () => void;
 }
 
 export function useDataCardView(state: AgentSessionState): DataCardView {
   const [expanded, setExpanded] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
+  const transcriptionRef = useRef<HTMLElement>(null);
   // Where the commit after a toggle scrolls: the card's top after `.show()`, back to the
   // reading position from before it after `.hide()`.
   const scrollTarget = useRef<'card' | number | null>(null);
@@ -69,9 +75,11 @@ export function useDataCardView(state: AgentSessionState): DataCardView {
   }, [expanded]);
 
   const toggle = () => {
-    // Step 1 again: the card is open anyway, somewhere above; the header leads to it.
+    // Step 1 again: the card is open anyway, somewhere above; the header leads to it, or to the
+    // table read from text whose decision it names, which waits in a card of its own.
     if (!confirmed) {
-      cardRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+      const target = state.transcription ? transcriptionRef.current : cardRef.current;
+      target?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
       return;
     }
     if (expanded) {
@@ -84,5 +92,5 @@ export function useDataCardView(state: AgentSessionState): DataCardView {
     setExpanded(!expanded);
   };
 
-  return { confirmed, pinned, expanded, open, cardRef, toggle };
+  return { confirmed, pinned, expanded, open, cardRef, transcriptionRef, toggle };
 }

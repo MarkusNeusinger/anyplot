@@ -499,6 +499,23 @@ describe('DataPanel steps', () => {
     );
   });
 
+  it("leads the header's button to the table read from text, where .use() and .discard() wait", async () => {
+    const scroll = stubScrollIntoView();
+    try {
+      const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
+      const { rerender } = renderPanel(confirmed);
+      rerender({ ...confirmed, transcription: TRANSCRIPTION });
+      scroll.mockClear();
+      await userEvent.click(screen.getByRole('button', { name: 'Go to the data' }));
+      expect(scrolledTo(scroll, screen.getByTestId('transcription-item'))).toEqual([
+        { behavior: 'smooth', block: 'start' },
+      ]);
+      expect(scrolledTo(scroll, screen.getByTestId('data-card'))).toEqual([]);
+    } finally {
+      restoreScrollIntoView();
+    }
+  });
+
   it('keeps a card the user opened when step 2 returns without a confirmation', async () => {
     const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
     const { rerender } = renderPanel(confirmed);
