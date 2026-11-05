@@ -428,6 +428,33 @@ describe('DataPanel steps', () => {
     expect(screen.queryByRole('region', { name: 'Your data' })).not.toBeInTheDocument();
   });
 
+  it("names the composer's own action in step 1's line, .plot_all() while all is pressed", async () => {
+    stubScrollIntoView();
+    try {
+      const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
+      const panel = (state: AgentSessionState) => (
+        <Panel
+          state={state}
+          plotAction=".plot_all()"
+          onParse={vi.fn()}
+          onConfirmTranscription={vi.fn()}
+          onDiscardTranscription={vi.fn()}
+          onBind={vi.fn()}
+          onUndo={vi.fn()}
+        />
+      );
+      const { rerender } = render(panel(confirmed));
+      await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+      // A data change with `all` pressed: the composer shows `.plot_all()`, never the plot button.
+      rerender(panel({ ...confirmed, dataConfirmed: false, confirmLoss: 'data' }));
+      expect(
+        screen.getByText('# step 1 again: check the data, then .plot_all() below')
+      ).toBeVisible();
+    } finally {
+      restoreScrollIntoView();
+    }
+  });
+
   it('opens in full when the confirmation drops, and collapses at the next .create_plot()', async () => {
     const scroll = stubScrollIntoView();
     try {

@@ -177,6 +177,7 @@ import { StepHeader } from 'src/sections/agent-chat/StepHeader';
 import {
   dataChanged,
   inStep2,
+  plotButtonLabel,
   runView,
   showsTimeline,
   stepOneLine,
@@ -594,7 +595,9 @@ function AgentChat({
   const exampleWorking = exampleOffer && state.run?.kind === 'example_data';
   // Step 1's line above the composer, the plot button's description: what it waits for (a
   // pending table read from text, a required role without a column), else what to check.
-  const stepLine = stepOneLine(state, plotAll ? '.plot_all()' : undefined);
+  // The composer's plot action, which the step line and the card's own step-1 line both name.
+  const plotAction = plotAll ? '.plot_all()' : plotButtonLabel(state);
+  const stepLine = stepOneLine(state, plotAction);
   // After a change to data the user had confirmed, the filled plot button says so in its name.
   const newData = dataChanged(state);
   // While a run's timeline stands below the thread, what the run sends into the thread waits
@@ -1056,6 +1059,7 @@ function AgentChat({
                 onToLong={() => void session.toLongData()}
                 // Not while the fan-out's panel is open: its sessions copy this session's data.
                 locked={!!fanOut}
+                plotAction={plotAction}
                 onLoadData={session.fetchDataCsv}
                 // A look at the session's data, not at a result: version 0.
                 onDataViewShown={() => session.reportOutcome('opened_data_view', 0)}
