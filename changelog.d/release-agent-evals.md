@@ -5,4 +5,4 @@
   pipeline. The results go into the PR body as "Agent evals", and the next release compares against
   them. No CI job runs these suites, because they call the real models. A regression on main
   surfaced on 2026-11-05 only because a sibling PR happened to run its eval; a release is now the
-  fixed point where every prompt and model change of the window is measured together.
+  fixed point where every prompt and model change of the window is measured together. (#12579)
