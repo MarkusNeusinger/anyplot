@@ -2431,14 +2431,15 @@ describe('AgentChatPage library switch and plot memory', () => {
     expect(carry).toHaveTextContent('plot in seaborn with your 2 decisions');
     expect(carry).toHaveAccessibleName('plot in seaborn with your 2 decisions');
     // Seaborn has no plot yet: the offer is the step's filled action at the composer's end, and
-    // the quiet plot from the catalogue code stands before it.
+    // the quiet plot from the catalogue code, `.start_over()`, stands before it: a second
+    // `.create_plot()` there read as the same click.
     expect(carry).toHaveAttribute('type', 'button');
-    expect(composerButtons()).toEqual(['.create_plot()', 'plot in seaborn with your 2 decisions']);
+    expect(composerButtons()).toEqual(['.start_over()', 'plot in seaborn with your 2 decisions']);
     expect(
       screen.getByText(/^# step 2 — plot in seaborn with your 2 decisions, or say/)
     ).toBeVisible();
-    const fresh = screen.getByRole('button', { name: 'Create plot' });
-    expect(fresh).toHaveTextContent('.create_plot()');
+    const fresh = screen.getByRole('button', { name: 'Start over' });
+    expect(fresh).toHaveTextContent('.start_over()');
     expect(fresh).toHaveAccessibleDescription(
       expect.stringContaining('keeps your remembered decisions')
     );
@@ -2526,16 +2527,36 @@ describe('AgentChatPage library switch and plot memory', () => {
     expect(turnBodies()).toHaveLength(turns + 1); // the typed turn alone: no carry run
   });
 
-  it('sends .create_plot() beside the offer as the fresh plot, which ends the offer too', async () => {
+  it('sends .start_over() beside the offer as the fresh plot, which ends the offer too', async () => {
     switchRoutes({ carry: OFFER, memory: [LINE, LABEL] });
     await plotInMatplotlib();
     await pickInMenu('seaborn');
     await screen.findByTestId('carry-plot');
-    fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start over' }));
     expect(await screen.findByText('Plot 2.')).toBeInTheDocument();
     await turnEnded();
     expect(lastTurn()).toEqual({ action: 'create_plot' });
     expect(screen.queryByTestId('carry-plot')).not.toBeInTheDocument();
+  });
+
+  it('shows .create_plot() alone after a switch whose offer carries no decisions, and carries with it', async () => {
+    // Both buttons read as the same click when there is nothing to take along.
+    switchRoutes({
+      carry: { decisions: 0, newer: 0, target_has_plot: false, from_plot: true, offer: true },
+      memory: [],
+    });
+    await plotInMatplotlib();
+    await pickInMenu('seaborn');
+    await waitFor(() => expect(libraryChip()).toHaveTextContent('lib: seaborn'));
+    expect(screen.queryByTestId('carry-plot')).not.toBeInTheDocument();
+    expect(composerButtons()).toEqual(['.create_plot()']);
+    expect(screen.getByText(/^# step 2 — create the plot as it is, or say first/)).toBeVisible();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
+    expect(await screen.findByText('Plot 2.')).toBeInTheDocument();
+    await turnEnded();
+    // The carry still runs, with the theme asked for in the library before.
+    expect(lastTurn()).toEqual({ action: 'carry_plot' });
   });
 
   it('keeps .start_over() and .send() beside the offer in a library with an older plot; text goes as a turn', async () => {
@@ -2744,12 +2765,15 @@ describe('AgentChatPage attachment', () => {
   it('takes a file from .open() as a chip with its name, and × drops it', async () => {
     await openChat();
     const input = screen.getByTestId('chat-file-input');
+    screen.getByRole('button', { name: 'Attach a data file' }).focus();
     fireEvent.change(input, {
       target: { files: [new File([TABLE], 'scores.csv', { type: 'text/csv' })] },
     });
     expect(
       await screen.findByRole('group', { name: /^Attached file scores\.csv/ })
     ).toHaveTextContent('▤ scores.csv · 4 lines');
+    // The box has the focus, so Enter sends the file instead of opening the chooser again.
+    expect(message()).toHaveFocus();
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_file', {
       kind: 'text',
       encoding: 'utf-8',
