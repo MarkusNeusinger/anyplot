@@ -6,7 +6,7 @@
 
 import type { AgentSessionState } from 'src/hooks/useAgentSession';
 import { isPlotAction } from 'src/lib/agent';
-import { CONFIRM_LOST_STEP_TEXT } from 'src/sections/agent-chat/messages';
+import { CONFIRM_LOST_STEP_TEXT, NEW_DATA_PLOT } from 'src/sections/agent-chat/messages';
 
 /**
  * The pinned header's line (`✓ data fits · ...`, `PinnedData.tsx`), which step 2's plot buttons
@@ -26,14 +26,26 @@ export function inStep2(state: AgentSessionState): boolean {
 }
 
 /**
- * The line above the composer in step 1, which `.create_plot()` at the composer's end names as
+ * The name of the composer's filled plot button: `.create_plot()`, and `plot the new data` after
+ * a change to data the user had confirmed, which the click confirms and plots like any other.
+ */
+export function plotButtonLabel(state: AgentSessionState): string {
+  return state.confirmLoss === 'data' ? NEW_DATA_PLOT : '.create_plot()';
+}
+
+/**
+ * The line above the composer in step 1, which the plot button at the composer's end names as
  * its description: the click takes the data and the bindings as the card shows them. It says
  * what the button waits for first (a table read from text to decide on, a required role without
  * a column), else what to check, and after a lost confirmation what lost it, as the thread's
  * notice says. `action` is the button the line leads to: `.plot_all()` while `all` is pressed,
- * where no `.create_plot()` shows. `null` without data or in step 2.
+ * where no `.create_plot()` shows, else the button's own name (`plotButtonLabel`). `null` without
+ * data or in step 2.
  */
-export function stepOneLine(state: AgentSessionState, action = '.create_plot()'): string | null {
+export function stepOneLine(
+  state: AgentSessionState,
+  action = plotButtonLabel(state)
+): string | null {
   if (!state.dataset || inStep2(state)) return null;
   const head = state.confirmLoss ? '# step 1 again — ' : '# step 1 — ';
   if (state.transcription) return `${head}decide on the table first: .use() or .discard()`;

@@ -45,7 +45,10 @@ export const ERROR_TEXT: Record<string, string> = {
   bot_check_unavailable: 'the browser check is not available right now',
 };
 
-/** Why a `plot` event shipped no render (`failed` or `not_ready`). */
+/**
+ * Why a `plot` event shipped no render (`failed` or `not_ready`). `data_unconfirmed` has no line:
+ * the thread shows no failed plot for it, only the step line and its notice (`useAgentSession`).
+ */
 export const PLOT_FAILED_TEXT: Record<string, string> = {
   validation: 'the adapted code did not pass the safety checks',
   render: 'the plot did not render',
@@ -56,8 +59,6 @@ export const PLOT_FAILED_TEXT: Record<string, string> = {
   error: 'something went wrong while adapting',
   no_dataset: 'paste and parse your data first',
   incomplete_bindings: 'pick a column for every required role first',
-  data_unconfirmed:
-    'the data is not confirmed: check the preview and the bindings, then .create_plot()',
 };
 
 /**
@@ -143,24 +144,30 @@ export function describeViewFailure(code: string, ref: string | null, detail?: s
 }
 
 /**
+ * The composer's filled plot button after a change to data the user had confirmed: it still
+ * confirms and plots in one click, and its name says that the plot will show the new data.
+ */
+export const NEW_DATA_PLOT = 'plot the new data';
+
+/**
  * What dropped a confirmation the user had given, as the thread's warning notice says it where
- * it happened: the next `.create_plot()` confirms the data as shown again.
+ * it happened: the next click of the plot button confirms the data as shown again.
  */
 export const CONFIRM_LOST_TEXT: Record<ConfirmLoss, string> = {
   bindings: 'bindings changed · check them, then .create_plot()',
-  data: 'the data changed · check it, then .create_plot()',
-  server: 'not confirmed on the server · check the data, then .create_plot()',
+  data: `data changed · check it, then ${NEW_DATA_PLOT}`,
+  server: 'check the data again, then .create_plot()',
 };
 
 /**
  * The same as the step line above the composer says it, the description of the composer's
- * action (`.create_plot()`, or `.plot_all()` with `all` pressed), which points up at the card
- * it stands below.
+ * action (`.create_plot()`, after a data change `plot the new data`, or `.plot_all()` with `all`
+ * pressed), which points up at the card it stands below.
  */
 export const CONFIRM_LOST_STEP_TEXT: Record<ConfirmLoss, (action: string) => string> = {
   bindings: action => `bindings changed · check them above, then ${action}`,
-  data: action => `the data changed · check it above, then ${action}`,
-  server: action => `not confirmed on the server · check the data, then ${action}`,
+  data: action => `data changed · check it above, then ${action}`,
+  server: action => `check the data above, then ${action}`,
 };
 
 /** The details behind a thread notice's ⓘ: the button's name, the popover's heading and its lines. */

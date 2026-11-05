@@ -740,11 +740,12 @@ describe('AgentChatPage gating', () => {
     fireEvent.click(undo);
     expect(await screen.findByText('# undone · back to version 1')).toBeInTheDocument();
     expect(screen.getByTestId('data-summary')).toHaveTextContent('check again');
-    expect(lastInThread()).toHaveTextContent('# the data changed · check it, then .create_plot()');
+    expect(lastInThread()).toHaveTextContent('# data changed · check it, then plot the new data');
     expect(screen.getByTestId('data-card')).toBeInTheDocument();
     expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
-    // The undone data with a plot here: `.create_plot()` is the filled CTA again.
-    expect(composerButtons()).toEqual(['.create_plot()']);
+    // The undone data with a plot here: the filled CTA again, named for the data that changed.
+    expect(composerButtons()).toEqual(['plot the new data']);
+    expect(screen.getByRole('button', { name: 'Plot the new data' })).toBeEnabled();
     expect(screen.getByRole('button', { name: '.undo()' })).toBeDisabled();
     expect(screen.getByRole('cell', { name: '52' })).toBeInTheDocument();
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_undo', { version: '1' });
@@ -885,7 +886,7 @@ describe('AgentChatPage gating', () => {
     expect(await screen.findByText('I read score as numbers.')).toBeInTheDocument();
     await turnEnded();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
-      '# step 1 again — the data changed · check it above, then .create_plot()'
+      '# step 1 again — data changed · check it above, then plot the new data'
     );
 
     // A new paste is data nobody confirmed: plain step 1, and the thread keeps one notice.
@@ -1036,11 +1037,13 @@ describe('AgentChatPage gating', () => {
       expect(within(change).getByRole('button', { name: '.undo()' })).toBeEnabled();
       expect(screen.getByRole('cell', { name: '0.52' })).toBeInTheDocument();
       expect(currentStep()).toEqual(['1 data']);
-      // Step 1 again with a plot here: `.create_plot()` is the filled CTA again, in the place of
-      // the quiet `.start_over()`, and makes the next version from the changed data.
-      expect(composerButtons()).toEqual(['.create_plot()']);
-      expect(lastInThread()).toHaveTextContent(
-        '# the data changed · check it, then .create_plot()'
+      // Step 1 again with a plot here: the filled CTA again, in the place of the quiet
+      // `.start_over()`, named for what it does now: the next version from the changed data.
+      expect(composerButtons()).toEqual(['plot the new data']);
+      expect(lastInThread()).toHaveTextContent('# data changed · check it, then plot the new data');
+      expect(screen.getAllByTestId('confirm-lost')).toHaveLength(1);
+      expect(screen.getByTestId('data-step')).toHaveTextContent(
+        '# step 1 again — data changed · check it above, then plot the new data'
       );
       // The header stays pinned in view and leads to the card's top, far above.
       expect(screen.getByTestId('data-summary')).toHaveTextContent(
@@ -1052,7 +1055,7 @@ describe('AgentChatPage gating', () => {
       expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
 
       // One click: the changed data confirmed, then a new version from the catalogue plot.
-      const create = screen.getByRole('button', { name: 'Create plot' });
+      const create = screen.getByRole('button', { name: 'Plot the new data' });
       await waitFor(() => expect(create).toBeEnabled());
       fireEvent.click(create);
       await waitFor(() => expect(screen.getAllByText('Here is your plot.')).toHaveLength(2));
@@ -1178,9 +1181,9 @@ describe('AgentChatPage gating', () => {
     await waitFor(() => expect(releaseParse).not.toBeNull());
     expect(startOver).toBeDisabled();
 
-    // A new parse is new data: step 1 again, with `.create_plot()` filled for it.
+    // A new parse is new data: step 1 again, with the plot button filled for it and named so.
     releaseParse?.();
-    expect(await screen.findByRole('button', { name: 'Create plot' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Plot the new data' })).toBeInTheDocument();
     expect(currentStep()).toEqual(['1 data']);
   });
 
@@ -2727,6 +2730,50 @@ describe('AgentChatPage attachment', () => {
     expect(turnBodies()).toEqual([]);
     // Enter tries the same table again.
     expect(screen.getByRole('button', { name: '.send()' })).toBeEnabled();
+  });
+
+  it('reads a table typed into the box as data on Enter, and keeps typed prose a message', async () => {
+    await openChat();
+    // Prose over two lines, commas and all, is what the user meant to say.
+    sendFromComposer('make the bars blue, add a grid,\nand sort them by value');
+    await turnEnded();
+    expect(turnBodies()).toEqual([
+      { text: 'make the bars blue, add a grid,\nand sort them by value' },
+    ]);
+    expect(datasetPosts()).toHaveLength(0);
+
+    // A table typed by hand, as no paste event saw it: the dataset route reads it, with no note,
+    // and the summary is the turn on it, as after a paste.
+    sendFromComposer(TABLE);
+    expect(message()).toHaveValue('');
+    expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
+    await turnEnded();
+    const posted = datasetPosts().map(([, init]) => JSON.parse(String((init as RequestInit).body)));
+    expect(posted).toEqual([expect.objectContaining({ text: TABLE.trim() })]);
+    expect(turnBodies().slice(1)).toEqual([{ action: 'summarize_data' }]);
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_input_routed', {
+      as: 'data',
+      via: 'typed',
+    });
+  });
+
+  it('keeps a refused typed table red, and × puts it back into the box', async () => {
+    routeDataset(path =>
+      path.endsWith('/dataset')
+        ? json(422, { detail: 'unparseable', cause: 'the rows have different lengths', ref: 'r-u' })
+        : undefined
+    );
+    await openChat();
+    sendFromComposer(TABLE);
+    expect(await screen.findByTestId('attachment-error')).toHaveTextContent(
+      'the rows have different lengths · ref r-u'
+    );
+    expect(message()).toHaveValue('');
+    // Nothing else holds the typed text: × gives it back to edit.
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+    expect(message()).toHaveValue(TABLE.trim());
+    expect(turnBodies()).toEqual([]);
   });
 
   it('lets a table read from text go from the chip and the note back into the box', async () => {

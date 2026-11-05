@@ -125,6 +125,8 @@
  *
  * Scripted behaviour of a chat message:
  * - contains "weather" or "joke": the fixed out-of-scope refusal;
+ * - contains "stock price" or "unemployment rate": the fixed data refusal (`needs_data`), except
+ *   in the note sent with a paste, which the summary answers as any note;
  * - contains "busy": `error {code: capacity}`;
  * - contains "swap": the root's `set_bindings` in miniature, swapping the
  *   columns of `x` and the first `y` (which drops the confirmation), and a reply;
@@ -132,7 +134,9 @@
  * - code or a request for data (the dataset route's `422 code` and `422 data_request`
  *   guards): `run_data_code`, the spec's made-up table as `.example_data()` makes it;
  * - contains "prozent"/"percent", "gruppier"/"group" or "umbenenn"/"rename":
- *   a data change, see above, and a reply naming it;
+ *   a data change, see above, and a reply naming it; with "instead of" (or "statt") also a
+ *   plot the server refuses after it (`plot{not_ready, data_unconfirmed}`), as a root that read
+ *   the change as a plot change too called it;
  * - ends with "?": a reply only, no pipeline run;
  * - anything else: a refinement with a repair round, shipped as
  *   `needs_attention`; the word "dark" or "light" in the text renders that theme.
@@ -1137,10 +1141,14 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       // judge refuses is refused as a whole: it never reaches the root, so it
       // neither detects nor sets a language.
       const outOfScope = /weather|joke/.test(lower);
-      if (typeof body.text === 'string' && !outOfScope) {
+      // A request for figures to fetch is `needs_data`, except in the note sent with a paste,
+      // which is about the data that came with it.
+      const needsData =
+        /stock price|unemployment rate/.test(lower) && !(session.summaryPending && session.dataset);
+      if (typeof body.text === 'string' && !outOfScope && !needsData) {
         detectLanguage(session, text);
       }
-      const asked = outOfScope ? null : requestedLanguage(lower);
+      const asked = outOfScope || needsData ? null : requestedLanguage(lower);
       if (asked) {
         session.language = asked.code;
         session.languageSource = 'chosen';
@@ -1211,7 +1219,24 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
             : null;
       if (change) {
         await sleep(STEP_MS * 2);
-        send('message', { text: session.dataset ? change(session) : 'Paste your data first.' });
+        if (!session.dataset) {
+          send('message', { text: 'Paste your data first.' });
+          return;
+        }
+        const reply = change(session);
+        // "instead of" plays the root that read the change as a plot change too and called the
+        // plot after its own data change: the server refuses it, before the turn's `done`.
+        if (/instead of|statt/.test(lower)) {
+          send('plot', {
+            status: 'not_ready',
+            reason: 'data_unconfirmed',
+            attempts: 0,
+            artifacts: [],
+            changes: [],
+            residual_defects: [],
+          });
+        }
+        send('message', { text: reply });
         return;
       }
       if (outOfScope) {
@@ -1219,6 +1244,14 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         send('refusal', {
           code: 'out_of_scope',
           text: 'I can only help with this plot and your data for it: choosing columns, adapting, styling and exporting the plot, and questions about its code.',
+        });
+        return;
+      }
+      if (needsData) {
+        await sleep(STEP_MS);
+        send('refusal', {
+          code: 'needs_data',
+          text: 'I cannot fetch data from the internet or any other source. Please get the data you want to plot yourself first, then paste it into the message box as a table or open its file with .open().',
         });
         return;
       }

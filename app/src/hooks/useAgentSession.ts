@@ -49,7 +49,10 @@
  * bindings and step state, which replace the hook's (`server_sync`), so the
  * dropdowns show what the server holds and the panel goes back to step 1.
  * A `plot{not_ready, data_unconfirmed}` without that sync still drops the
- * flag, so the next `.create_plot()` confirms again.
+ * flag, so the next `.create_plot()` confirms again. It adds no thread item:
+ * it is the step line's news, not a failed plot, and it arrives before the
+ * turn's `done`, so it drops the flag only once the turn is over. A data change
+ * the same turn made then names the loss itself, in the one notice.
  *
  * A confirmation the user had given and then lost is named where it is lost:
  * the reducer watches the flag go from set to cleared, whatever action did it,
@@ -1419,6 +1422,8 @@ export function useAgentSession({
   const turnEndRef = useRef<TurnEnd | null>(null);
   // The code of the refusal that ended the last turn, if one did (`out_of_scope`, `needs_data`, ...).
   const turnRefusalRef = useRef<string | null>(null);
+  // The turn's plot answered `data_unconfirmed`: the confirmation drops once the turn is over (`runTurn`).
+  const unconfirmedRef = useRef(false);
   const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Set synchronously, before the state catches up, so a double click starts nothing twice.
   const themeRef = useRef(false);
@@ -2066,13 +2071,15 @@ export function useAgentSession({
         repaired: result.attempts > 1 ? 'yes' : 'no',
         spec: specId,
       });
+      if (result.status === 'not_ready' && result.reason === 'data_unconfirmed') {
+        // The server holds no confirmation: the next `.create_plot()` confirms again instead of
+        // starting a run the server refuses. The turn's `done` sync normally says so as well, and
+        // a data change of this turn comes only with it, so the flag drops at the turn's end, where
+        // that change names the loss. No thread item: the step line and its notice say what to do.
+        unconfirmedRef.current = true;
+        return;
+      }
       if (result.status !== 'ok' && result.status !== 'needs_attention') {
-        // The server holds no confirmation: the next `.create_plot()` confirms again
-        // instead of starting a run the server refuses. The turn's `done` sync normally
-        // says so as well; this covers a stream that ends without it.
-        if (result.status === 'not_ready' && result.reason === 'data_unconfirmed') {
-          safeDispatch({ type: 'confirm_lost' });
-        }
         addItem({ kind: 'plot_failed', result });
         return;
       }
@@ -2186,7 +2193,11 @@ export function useAgentSession({
       turnErrorRef.current = null;
       turnEndRef.current = null;
       turnRefusalRef.current = null;
-      if (!sid || current.run || busy()) return;
+      // `busy()` reads `abortRef`, which a turn sets and clears in step with `state.run`, but at once: `state.run`
+      // is a render behind, so a turn that follows another (a refused note's summary) read the ended one as
+      // running and never started.
+      if (!sid || busy()) return;
+      unconfirmedRef.current = false;
       let errorCode: string | null = null;
       // A refusal arrives as an event of its own; the stream then ends with `done` as usual.
       let refused = false;
@@ -2252,6 +2263,9 @@ export function useAgentSession({
               : finished
                 ? 'done'
                 : null;
+        // After `done`: a data change of the turn has named the loss already, and this changes nothing then.
+        if (unconfirmedRef.current) safeDispatch({ type: 'confirm_lost' });
+        unconfirmedRef.current = false;
         safeDispatch({ type: 'run_end' });
       }
       // A shipped run adds decisions, the assistant's `forget` removes some, a shipped fresh plot
