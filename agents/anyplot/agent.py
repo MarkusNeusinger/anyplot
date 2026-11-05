@@ -103,7 +103,8 @@ FILE_LINE = "yes; get_dataset_profile returns its name under file_name, data and
 """The session block's line when the data came from a dropped file: a fixed text, never the name itself."""
 CONVERSIONS_HEADING = (
     "Conversions for open roles: {count}, columns that a set_type turns into what the role takes, or the row "
-    "numbers when no column can, from a dry run on the data (see 'Step 1: the data')"
+    "numbers when no column can, from a dry run on the data, and offers of a date column that date_number could turn "
+    "into numbers (see 'Step 1: the data')"
 )
 """The session block's line over the conversion candidates of the roles left open (`data/conversions.py`), live test
 of 2026-11-01: the root asked the user for a date column that a conversion of the `Month` text would have made."""

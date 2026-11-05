@@ -411,7 +411,10 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     the running total, or an index with the group's first row = 100); make_date (name, year, and month with an
     optional day, or quarter, or week; adds the date column name built from whole-number columns holding the parts of
     a date, a part left out being its first: year and month give the first day of each month); row_number (name; adds
-    the whole-number column name, default index, the rows numbered 1 to n); and four text operations on the cells of
+    the whole-number column name, default index, the rows numbered 1 to n); date_number (column, unit
+    year|days|timestamp|decimal_year, name; adds a number column from a date column: the calendar year, the whole days
+    since the column's earliest date = 0, the Unix time in seconds in UTC, or the year plus the part of it gone by;
+    name left out, the server names it after the column and the unit); and four text operations on the cells of
     column, each adding new columns typed by their cells (numbers, dates or text) and keeping column as it is: split
     (column, separator: a literal text such as - or –, names: 2 to 10 new columns; 10–25 gives 10 and 25), extract
     (column, keep number|digits|letters, name; number for an amount, CHF 1'200 gives 1200; digits for an id or a
@@ -441,7 +444,7 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     except ValueError as exc:
         return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines([str(exc)])}
     try:
-        prepared = apply_operations(stored.as_parsed(), parsed_operations)
+        prepared = apply_operations(stored.as_parsed(), parsed_operations, language=view.language)
         # The columns `set_type text` made text stay text: the re-parse would type them by content again.
         # The CSV is the service's own: every row stays, also a `Total` category a sort moved to the end.
         parsed = parse_dataset(
@@ -518,7 +521,7 @@ async def query_data(
     except ValidationError as exc:
         return {"status": "error", "code": "invalid_operations", "errors": _fenced_lines(validation_lines(exc))}
     try:
-        answer = run_query(stored.as_parsed(), args.operations, args.columns, args.limit)
+        answer = run_query(stored.as_parsed(), args.operations, args.columns, args.limit, language=view.language)
     except PrepareError as exc:
         # The message names columns of the user's dataset at most, never a cell; fenced like every column name.
         return {"status": "error", "code": exc.code, "message": _fenced_lines([exc.message])}

@@ -908,6 +908,223 @@ class TestRowNumber:
         assert failure(f"{header}\n{row}\n{row}\n", {"op": "row_number"})[0] == "too_wide"
 
 
+# The owner's case of 2026-11-04, invented: a customers table with an index and subscription dates, no other number.
+CUSTOMERS = "Index,First Name,Subscription Date\n1,Mara,2021-04-01\n2,Tobin,2020-02-29\n3,Ilse,\n4,Ravi,2024-12-31\n"
+
+
+def date_number(unit: str, column: str = "Subscription Date", **extra: str) -> dict[str, Any]:
+    return {"op": "date_number", "column": column, "unit": unit, **extra}
+
+
+class TestDateNumber:
+    @pytest.mark.parametrize(
+        ("unit", "name", "values", "dtype"),
+        [
+            ("year", "Subscription Date (year)", ["2021", "2020", "", "2024"], "integer"),
+            ("days", "Subscription Date (days)", ["397", "0", "", "1767"], "integer"),
+            ("timestamp", "Subscription Date (Unix time)", ["1617235200", "1582934400", "", "1735603200"], "integer"),
+            # 90 of 365 days gone by; 59 of the leap year's 366; 365 of 366.
+            (
+                "decimal_year",
+                "Subscription Date (decimal year)",
+                [repr(2021 + 90 / 365), repr(2020 + 59 / 366), "", repr(2024 + 365 / 366)],
+                "number",
+            ),
+        ],
+    )
+    def test_each_unit_adds_a_number_column_and_keeps_the_dates(
+        self, unit: str, name: str, values: list[str], dtype: str
+    ) -> None:
+        prepared = prepare(CUSTOMERS, date_number(unit))
+
+        assert rows(prepared)[0] == f"Index,First Name,Subscription Date,{name}"  # appended last
+        assert cells(prepared, 3) == values
+        assert cells(prepared, 2) == ["2021-04-01", "2020-02-29", "", "2024-12-31"]  # the original stays as it is
+        assert [row[:-1] for row in csv.reader(io.StringIO(prepared.csv))] == list(
+            csv.reader(io.StringIO(parse_dataset(CUSTOMERS).csv))
+        )
+        assert dtypes(prepared) == {
+            "Index": "integer",
+            "First Name": "text",
+            "Subscription Date": "datetime",
+            name: dtype,
+        }
+        # The missing cell stays missing, and the change line counts both.
+        assert prepared.changes[0].startswith(f"new column {name}: 3 dates of Subscription Date read as ")
+        assert prepared.changes[0].count("1 cell without a date is empty; Subscription Date stays as it is") == 1
+        # An open required role that takes numbers takes it, as it takes a `set_type` with `name`.
+        assert prepared.converted == {name: "Subscription Date"}
+
+    def test_the_change_lines_say_what_each_number_is(self) -> None:
+        lines = [prepare(CUSTOMERS, date_number(unit)).changes[0] for unit in ("year", "days", "timestamp")]
+
+        assert lines[0] == (
+            "new column Subscription Date (year): 3 dates of Subscription Date read as calendar years, 1 cell without "
+            "a date is empty; Subscription Date stays as it is"
+        )
+        assert "read as whole days since 2020-02-29, the earliest date, which is 0," in lines[1]
+        assert lines[2].endswith("Subscription Date stays as it is, each date counted from its midnight UTC")
+
+    @pytest.mark.parametrize(
+        ("language", "name"),
+        [("de", "Subscription Date (Tage)"), ("fr", "Subscription Date (jours)"), ("sv", "Subscription Date (days)")],
+    )
+    def test_the_default_name_is_in_the_session_language(self, language: str, name: str) -> None:
+        prepared = apply_operations(
+            parse_dataset(CUSTOMERS), OPERATIONS.validate_python([date_number("days")]), language=language
+        )
+
+        assert rows(prepared)[0].endswith(f",{name}")
+
+    def test_a_name_the_user_gives_is_used_and_a_taken_one_is_refused(self) -> None:
+        named = prepare(CUSTOMERS, date_number("year", name="Jahr"))
+
+        assert rows(named)[0] == "Index,First Name,Subscription Date,Jahr"
+        assert failure(CUSTOMERS, date_number("year", name="Index")) == (
+            "invalid_operation",
+            "a column named 'Index' already exists",
+        )
+
+    def test_a_taken_default_name_gets_a_number(self) -> None:
+        prepared = prepare(CUSTOMERS, date_number("days"), date_number("days"))
+
+        assert rows(prepared)[0].endswith(",Subscription Date (days),Subscription Date_2 (days)")
+
+    def test_a_time_of_day_counts_for_the_timestamp_but_not_for_the_days(self) -> None:
+        """23:00 and 01:00 the next morning are two hours apart, but on two calendar dates: one day."""
+        text = "t,v\n2024-06-01 23:00,1\n2024-06-02 01:30:15,2\n"
+
+        days = prepare(text, date_number("days", column="t"))
+        stamps = prepare(text, date_number("timestamp", column="t"))
+        years = prepare(text, date_number("decimal_year", column="t"))
+
+        assert cells(days, 2) == ["0", "1"]
+        # Read as UTC, which the line says: 2024-06-01T00:00:00Z is 1717200000.
+        assert cells(stamps, 2) == [str(1717200000 + 23 * 3600), str(1717200000 + 86400 + 5415)]
+        assert stamps.changes[0].endswith("t stays as it is, times without a UTC offset read as UTC")
+        # 152 days of the leap year 2024 gone by on 1 June, and 23 hours of the 153rd.
+        assert cells(years, 2)[0] == repr(2024 + (152 * 86400 + 23 * 3600) / (366 * 86400))
+
+    def test_a_timestamp_converts_a_utc_offset_and_the_other_units_keep_the_columns_clock(self) -> None:
+        """At 00:30 on New Year's Day at UTC+02:00 it is still 2024 in UTC: the year is the cell's, the time UTC's."""
+        text = "t,v\n2025-01-01T00:30:00+02:00,1\n2025-01-02T12:00:00+02:00,2\n"
+
+        stamps = prepare(text, date_number("timestamp", column="t"))
+        years = prepare(text, date_number("year", column="t"))
+
+        assert cells(stamps, 2) == ["1735684200", str(1735684200 + 86400 + 11 * 3600 + 1800)]
+        assert stamps.changes[0].endswith("t stays as it is, the moments converted to UTC from UTC+02:00")
+        assert cells(years, 2) == ["2025", "2025"]
+        assert "read as calendar years, by the clock of UTC+02:00;" in years.changes[0]
+
+    def test_the_days_and_the_decimal_year_keep_the_columns_clock(self) -> None:
+        """Both moments fall on 1 January 2025 at UTC+02:00; in UTC the first is still 31 December 2024."""
+        text = "t,v\n2025-01-01T00:30:00+02:00,1\n2025-01-01T12:00:00+02:00,2\n"
+
+        days = prepare(text, date_number("days", column="t"))
+        years = prepare(text, date_number("decimal_year", column="t"))
+
+        assert cells(days, 2) == ["0", "0"]  # one calendar date on the column's clock, not two in UTC
+        clock = "read as whole days since 2025-01-01, the earliest date, which is 0, by the clock of UTC+02:00"
+        assert clock in days.changes[0]
+        assert cells(years, 2)[0] == repr(2025 + 1800 / (365 * 86400))  # half an hour of 2025 gone by
+        assert all(cell.startswith("2025.") for cell in cells(years, 2))
+
+    def test_a_column_the_parser_wrote_in_utc_says_so(self) -> None:
+        text = "t,v\n2024-03-30T12:00:00+01:00,1\n2024-04-01T12:00:00+02:00,2\n"  # summer time: two offsets
+
+        stamps = prepare(text, date_number("timestamp", column="t"))
+
+        assert cells(stamps, 2) == ["1711796400", "1711965600"]  # 11:00 and 10:00 UTC
+        assert stamps.changes[0].endswith("the moments as stored, in UTC")
+
+    def test_a_fraction_of_a_second_is_kept_as_decimals(self) -> None:
+        stamps = prepare("t,v\n2024-06-01 00:00:00.25,1\n2024-06-01 00:00:01,2\n", date_number("timestamp", column="t"))
+
+        assert cells(stamps, 2) == ["1717200000.25", "1717200001"]
+        assert dtypes(stamps)["t (Unix time)"] == "number"
+        assert stamps.changes[0].endswith("fractions of a second kept as decimals")
+
+    def test_a_fraction_far_from_1970_is_counted_as_rounded(self) -> None:
+        stamps = prepare(
+            "t,v\n2300-01-01 00:00:00.000001,1\n2024-01-01 00:00:00.5,2\n", date_number("timestamp", column="t")
+        )
+
+        assert stamps.changes[0].endswith(", 1 value more than 272 years from 1970 rounded to the float's digits")
+
+    def test_a_whole_second_far_from_1970_is_exact_and_not_counted(self) -> None:
+        """Copilot on #12558: 2300-01-01 is 10413792000.0 exactly; only a value whose text loses a digit counts."""
+        stamps = prepare("t,v\n2300-01-01 00:00:00,1\n2024-01-01 00:00:00.5,2\n", date_number("timestamp", column="t"))
+
+        assert cells(stamps, 2) == ["10413792000", "1704067200.5"]
+        assert stamps.changes[0].endswith("fractions of a second kept as decimals")
+
+    def test_whole_seconds_stay_exact_for_any_year(self) -> None:
+        stamps = prepare("t,v\n0001-01-01,1\n9999-12-31 23:59:59,2\n", date_number("timestamp", column="t"))
+
+        assert cells(stamps, 2) == ["-62135596800", "253402300799"]
+
+    @pytest.mark.parametrize(("column", "kind"), [("First Name", "text"), ("Index", "number")])
+    def test_a_column_that_is_no_date_is_a_type_mismatch(self, column: str, kind: str) -> None:
+        assert failure(CUSTOMERS, date_number("year", column=column)) == (
+            "type_mismatch",
+            f"column '{column}' is {kind}; date_number needs a datetime column: set_type it to datetime first",
+        )
+
+    def test_a_column_of_dates_in_a_compact_format_converts_after_its_set_type_in_the_same_call(self) -> None:
+        """The refusal's hint works: `202104` is a number to the parser, a date after `set_type` `YYYYMM`."""
+        text = "Kunde,Abo\nA,202104\nB,202002\n"
+        assert failure(text, date_number("days", column="Abo"))[0] == "type_mismatch"
+
+        prepared = prepare(
+            text,
+            {"op": "set_type", "column": "Abo", "type": "datetime", "date_format": "YYYYMM"},
+            date_number("days", column="Abo"),
+        )
+
+        assert rows(prepared) == ["Kunde,Abo,Abo (days)", "A,2021-04-01,425", "B,2020-02-01,0"]
+
+    def test_a_column_without_any_date_left_is_refused(self) -> None:
+        text = "a,d\n1,2024-01-01\n2,\n"
+
+        assert failure(text, drop("d", "eq", "2024-01-01"), date_number("year", column="d")) == (
+            "invalid_operation",
+            "column 'd' holds no date, so column 'd (year)' would be empty",
+        )
+
+    def test_an_unknown_column_is_named(self) -> None:
+        assert failure(CUSTOMERS, date_number("year", column="Signup"))[0] == "unknown_column"
+
+    def test_it_follows_a_rename_in_the_same_call(self) -> None:
+        prepared = prepare(
+            CUSTOMERS, date_number("days"), {"op": "rename", "column": "Subscription Date (days)", "name": "Tage"}
+        )
+
+        assert prepared.converted == {"Tage": "Subscription Date"}
+
+    @pytest.mark.parametrize(
+        "operation",
+        [
+            {"op": "date_number", "column": "d"},
+            {"op": "date_number", "column": "d", "unit": "months"},
+            {"op": "date_number", "column": "d", "unit": "year", "name": " Jahr"},
+            {"op": "date_number", "column": "d", "unit": "year", "name": "x" * (MAX_COLUMN_NAME_CHARS + 1)},
+            {"op": "date_number", "column": "d", "unit": "year", "format": "%Y"},
+        ],
+    )
+    def test_malformed_operations_fail_validation(self, operation: dict[str, Any]) -> None:
+        with pytest.raises(ValidationError):
+            OPERATIONS.validate_python([operation])
+
+    def test_a_full_table_takes_no_more_columns(self) -> None:
+        header = ",".join(f"c{index}" for index in range(MAX_COLUMNS - 1))
+        row = ",".join("1" for _ in range(MAX_COLUMNS - 1))
+
+        assert failure(f"{header},d\n{row},2024-01-01\n{row},2024-01-02\n", date_number("year", column="d"))[0] == (
+            "too_wide"
+        )
+
+
 class TestSetTypeText:
     def test_cells_become_their_canonical_text_and_stay_text_through_the_reparse(self) -> None:
         """The change line is true: the column is text in the next version, not re-typed by its cells (verifiers)."""

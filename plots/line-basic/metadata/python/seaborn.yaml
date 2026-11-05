@@ -2,45 +2,51 @@ library: seaborn
 language: python
 specification_id: line-basic
 created: '2025-12-23T00:23:04Z'
-updated: '2026-04-29T15:15:01Z'
+updated: '2026-11-05T02:34:01Z'
 generated_by: claude-sonnet
-workflow_run: 25116786157
+workflow_run: 41955375501
 issue: 653
-python_version: 3.13.13
+language_version: 3.14.8
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 83
 review:
   strengths:
-  - Complete theme adaptation with all INK/PAGE_BG/ELEVATED_BG tokens wired through
-    every element (tick params, spines, legend, scatter edge colors)
-  - Seaborn built-in statistical aggregation (errorbar=ci) used idiomatically — 60
-    raw multi-year data points collapsed to mean ± 95% CI with a single parameter
-  - 'Effective data storytelling: orange Okabe-Ito position 2 peak marker creates
-    a clear focal point at the seasonal maximum July temperature'
-  - Perfect font sizing hierarchy (24/20/16pt) explicitly set throughout, readable
-    at full 4800x2700 resolution in both light and dark themes
+  - 'Fully theme-adaptive chrome through sns.set_theme rc tokens: warm #FAF8F1 / #1A1A17
+    surfaces, INK titles and labels, INK_SOFT ticks and spines; both renders read
+    cleanly with no dark-on-dark text'
+  - Exact 3200x1800 canvas from figsize=(8, 4.5), dpi=400 without bbox_inches='tight',
+    as the library prompt requires
+  - Realistic 120-day website-visitor series (growth trend, weekly weekend dips, noise)
+    that wiggles like real data, with a y axis spanning 9-24k rather than forced to
+    zero
+  - Month-level date ticks via mdates.MonthLocator + DateFormatter('%b %Y') keep the
+    datetime axis uncluttered over 120 daily points
+  - 'Small markers (markersize=3.5) on a 2 px line: every observation is visible and
+    the line still reads as a line'
+  - Tidy data=df with column constants; seaborn reads the DataFrame directly and the
+    axis titles come from the column names
   weaknesses:
-  - 'DE-01 could be stronger: design is polished but stops short of publication-ready
-    sophistication — no typographic hierarchy split (title/subtitle) and title weight
-    could be bolder'
-  - 'LM-02 partial: peak accent uses raw ax.scatter() rather than a seaborn-native
-    approach (e.g., integrating as separate row in dataframe or using sns.scatterplot
-    with filtered data)'
+  - 'Suggestion: seaborn''s default white marker edges form bright rings on the dark
+    render; markeredgecolor=PAGE_BG would let the markers sit quieter on the line
+    in both themes.'
+  - 'Suggestion: ax.set_xlabel(DATE) / ax.set_ylabel(VISITORS) repeat what seaborn
+    already sets from the column names; the font size could be applied via rc instead,
+    dropping the two calls.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — confirmed, no pure white
-      Chrome: Title "Monthly Temperature Seasonality · line-basic · seaborn · anyplot.ai" in dark INK (#1A1A17) at 24pt — clearly readable. Axis labels "Temperature (°C)" and "Month" in INK at 20pt — readable. Tick labels (Jan–Dec, 0–30°C range) in INK_SOFT (#4A4A44) at 16pt — readable. Legend in ELEVATED_BG (#FFFDF6) frame with INK_SOFT text — readable.
-      Data: Primary line in #009E73 (brand green) with circular markers — first series correct. CI band in light green fill (alpha=0.20). Peak marker in #D55E00 (Okabe-Ito position 2 orange). All data elements clearly distinguishable from background.
+      Background: warm off-white #FAF8F1 across canvas and axes; 3200x1800.
+      Chrome: title "Daily Website Visitors · line-basic · python · seaborn · anyplot.ai" in dark ink, about 67% of the width; y-axis title "Daily visitors (thousands)", x-axis title "Date"; ticks 10-24 and Jan 2025 - May 2025 in INK_SOFT; left and bottom spines only, subtle horizontal grid. All text readable.
+      Data: one #009E73 line with small circular markers (white edges) over 120 daily points, rising from about 12k to 23k with weekly dips and noise. No legend (single series).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — confirmed, no pure black
-      Chrome: Title in light #F0EFE8 INK token — clearly readable against dark background. Axis labels in same light INK — readable. Tick labels in #B8B7B0 INK_SOFT — readable, no dark-on-dark. Legend in #242420 ELEVATED_BG with #B8B7B0 border and light text — readable.
-      Data: Main line identical #009E73 brand green — same as light render, confirming data colors are theme-invariant. CI band adapts to dark teal fill (still alpha-blended). Peak marker identical #D55E00 orange. No dark-on-dark failures observed.
+      Background: warm near-black #1A1A17.
+      Chrome: title and axis titles in light #F0EFE8 ink, ticks and spines in #B8B7B0; grid faint but visible. No dark-on-dark text.
+      Data: same #009E73 line and markers, identical to the light render; the white marker edges stand out a little more on the dark surface.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -52,73 +58,67 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt, legend 16pt — all explicitly
-          set, readable in both themes
+        comment: Title 12pt, labels 10pt, ticks 8pt explicitly set; readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render; month tick labels well-spaced
+        comment: No text collisions; date ticks well spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line (linewidth=3), markers (markersize=12), CI band, and peak scatter
-          (s=300) all well-sized
+        comment: 2 px line with 3.5 pt markers suits 120 points; line reads as a line
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1 and 2 provide strong luminance contrast and
-          are CVD-safe
+        comment: Single green series with strong contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas, balanced margins, plot fills ~60% of area, no cut-off
-          elements
+        comment: 3200x1800 canvas; title ~67% width; balanced margins, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C) with units, Month descriptive
+        comment: '''Daily visitors (thousands)'' with units, ''Date'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, peak #D55E00 (OI position 2), backgrounds
-          #FAF8F1/#1A1A17, all chrome tokens theme-correct'
+        comment: 'Single series #009E73; backgrounds #FAF8F1/#1A1A17; chrome theme-correct'
     design_excellence:
-      score: 13
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Thoughtful Okabe-Ito usage, CI band, contrasting peak marker, complete
-          theme adaptation — above defaults but not publication-ready
+        comment: Style-guide baseline typography and palette, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Y-axis-only grid at alpha=0.10, top/right spines removed, spine colors
-          adapted to INK_SOFT, generous whitespace
+        comment: 'Beyond baseline: month-level date locator and ''%b %Y'' formatter
+          chosen for a 120-day axis'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
         passed: true
-        comment: Seasonal arc tells clear climate story; orange peak marker creates
-          focal point; CI band communicates year-to-year variability
+        comment: Data displayed; no hierarchy chosen beyond the Notes
     spec_compliance:
       score: 15
       max: 15
@@ -128,27 +128,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct basic line plot
+        comment: Single basic line, no unasked layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Single-line minimal design, grid lines, clear axis labels, optional
-          markers present
+        comment: Single line, clear axis labels, y grid, optional small markers; C1,
+          C3, C5 met; C4 n/a (no missing values)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Month sequential, Y=Temperature (°C), all 12 months shown
+        comment: x=Date, y=visitors; straight segments, no smoothing; full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title includes spec-id line-basic and seaborn · anyplot.ai; legend
-          labels descriptive
+        comment: Title prefix + 'line-basic · python · seaborn · anyplot.ai'; legend
+          N/A for single series
     data_quality:
       score: 15
       max: 15
@@ -158,22 +158,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 5-year aggregated data shows full seasonal cycle with statistical
-          variability via CI band
+        comment: Trend, weekly dips and noise show what a line plot reveals
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly temperature readings — real, neutral, comprehensible natural
-          science scenario
+        comment: 'Daily website visitors: neutral, plausible'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range ~0-30°C with sinusoidal seasonal pattern is physically
-          plausible
+        comment: 'Checked: 12k -> ~23k over 120 days with ~2k weekend dips (lines
+          47-49) is plausible for a mid-size site; no check values in spec'
     code_quality:
       score: 10
       max: 10
@@ -183,62 +181,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → theme tokens → data → plot → save'
+        comment: Linear script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation
+        comment: default_rng(7)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All five imports (os, matplotlib, numpy, pandas, seaborn) actively
-          used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic Python, no over-engineering, no fake interactivity
+        comment: 68 lines, appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; uses current errorbar=ci (not deprecated
-          ci=) API
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox tight; current API
     library_mastery:
-      score: 8
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Expert seaborn: sns.lineplot() with built-in CI aggregation, sns.set_theme()
-          for global rc, axes-level API'
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: CI aggregation from 60 raw multi-year data points is seaborn-distinctive;
-          peak scatter falls back to plain matplotlib
+        comment: sns.lineplot with data=df and column constants, as the library prompt
+          mandates
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Nothing beyond what the library prompt mandates
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-b410a80c99
+  rendered_at: '2026-11-05T02:30:30Z'
 impl_tags:
   dependencies: []
-  techniques:
-  - manual-ticks
-  - custom-legend
+  techniques: []
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - time-series
   styling:
-  - alpha-blending
-  - edge-highlighting
   - grid-styling
