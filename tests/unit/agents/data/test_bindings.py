@@ -9,6 +9,7 @@ import pytest
 from pydantic import TypeAdapter
 
 from agents.anyplot.data.bindings import (
+    ACCEPTS,
     MAX_VARIADIC_DEFAULT,
     ROW_NUMBER_NAMES,
     RowSlot,
@@ -47,6 +48,19 @@ def test_the_data_view_knows_the_same_row_number_names() -> None:
 
     assert listed is not None
     assert set(re.findall(r"'([^']*)'", listed.group(1))) == ROW_NUMBER_NAMES
+
+
+def test_the_binding_dropdowns_know_the_same_column_types_per_kind() -> None:
+    """The page greys out the columns a role cannot take (`app/.../bindings.ts` `ACCEPTS`), as the check refuses them."""
+    page = (Path(__file__).resolve().parents[4] / "app/src/sections/agent-chat/bindings.ts").read_text(encoding="utf-8")
+    listed = re.search(r"export const ACCEPTS[^=]*= \{(.*?)\n\};", page, re.DOTALL)
+
+    assert listed is not None
+    mirrored = {
+        kind: set(re.findall(r"'([^']*)'", dtypes))
+        for kind, dtypes in re.findall(r"(\w+): \[([^\]]*)\]", listed.group(1))
+    }
+    assert mirrored == {kind: set(dtypes) for kind, dtypes in ACCEPTS.items()}
 
 
 def profile(csv: str) -> DatasetProfile:

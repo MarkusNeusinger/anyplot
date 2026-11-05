@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ColumnProfile, RoleSpec } from 'src/lib/agent';
-import { emptyChoice, siblingHint, signHint } from 'src/sections/agent-chat/bindings';
+import {
+  columnLabel,
+  emptyChoice,
+  fits,
+  siblingHint,
+  signHint,
+} from 'src/sections/agent-chat/bindings';
 
 const radius: RoleSpec = {
   name: 'radius',
@@ -72,5 +78,36 @@ describe('emptyChoice', () => {
     expect(emptyChoice(row(radius))).toBe('— none —');
     expect(emptyChoice(row({ ...radius, computed: undefined }))).toBe('— none —');
     expect(emptyChoice(row({ ...radius, variadic: true }, true))).toBe('— add a column —');
+  });
+});
+
+describe('fits and columnLabel', () => {
+  const values: RoleSpec = { ...radius, name: 'values', non_negative: false };
+  const industry = { ...column(null, 'text'), name: 'Industry' };
+  const price = { ...column(1, 'integer'), name: 'Price' };
+
+  it('marks a column the role cannot take with the reason', () => {
+    expect(fits(values, 'text')).toBe(false);
+    expect(columnLabel(values, industry)).toBe('Industry (text) · not numeric');
+    expect(columnLabel({ ...values, kinds: ['numeric', 'datetime'] }, industry)).toBe(
+      'Industry (text) · not numeric or datetime'
+    );
+  });
+
+  it('lists a fitting column as before', () => {
+    expect(fits(values, 'integer')).toBe(true);
+    expect(columnLabel(values, price)).toBe('Price (integer)');
+    // A category takes whole numbers and dates as labels, as the server does.
+    const category = { ...values, name: 'category', kinds: ['categorical'] };
+    expect(fits(category, 'integer')).toBe(true);
+    expect(fits(category, 'datetime')).toBe(true);
+    expect(columnLabel(category, { ...price, dtype: 'number' })).toBe(
+      'Price (number) · not categorical'
+    );
+  });
+
+  it('leaves a role without kinds, or with a kind it does not know, to the server', () => {
+    expect(fits({ ...values, kinds: [] }, 'text')).toBe(true);
+    expect(fits({ ...values, kinds: ['geometry'] }, 'text')).toBe(true);
   });
 });
