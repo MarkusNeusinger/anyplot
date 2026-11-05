@@ -571,7 +571,7 @@ describe('AgentChatPage gating', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     stubFetch(422, { detail: 'not_eligible', ref: 'r1' });
     renderAt(PAGE);
-    expect(await screen.findByText('not eligible · ref r1')).toBeInTheDocument();
+    expect(await screen.findByText('not eligible')).toBeInTheDocument();
     // No session exists to switch, so a pick opens the page anew with its own session.
     const menu = await openLibraryMenu();
     await waitFor(() =>
@@ -941,7 +941,7 @@ describe('AgentChatPage gating', () => {
     await parseAndSummarize();
     fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'log scale on y' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('parse the data first · ref r-c');
+    expect(await screen.findByRole('alert')).toHaveTextContent(/^parse the data first$/);
     // Nothing plotted, the note still in the box, the button ready for a retry.
     expect(confirmAndTurns()).toEqual(['summarize_data', 'confirm']);
     expect(screen.getByLabelText('Message')).toHaveValue('log scale on y');
@@ -2522,7 +2522,9 @@ describe('AgentChatPage library switch and plot memory', () => {
     fireEvent.click(screen.getByRole('button', { name: '.send()' }));
 
     const thread = screen.getByRole('log', { name: 'Conversation' });
-    expect(await within(thread).findByText(/r-sw/)).toBeInTheDocument();
+    expect(
+      await within(thread).findByText(/this plot cannot be adapted in that library/)
+    ).not.toHaveTextContent('r-sw');
     await turnEnded();
     expect(turnBodies()).toHaveLength(turns + 1); // the typed turn alone: no carry run
   });
@@ -2636,7 +2638,7 @@ describe('AgentChatPage library switch and plot memory', () => {
     await parseAndSummarize();
     await pickInMenu('seaborn');
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'could not switch: this plot cannot be adapted in that library · ref r-sw'
+      /^could not switch: this plot cannot be adapted in that library$/
     );
     expect(libraryChip()).toHaveTextContent('lib: matplotlib · python');
     expect(screen.getByTestId('location')).toHaveTextContent('library=matplotlib');
@@ -2741,7 +2743,7 @@ describe('AgentChatPage attachment', () => {
     fireEvent.change(message(), { target: { value: 'only 2024' } });
     fireEvent.keyDown(message(), { key: 'Enter' });
     expect(await screen.findByTestId('attachment-error')).toHaveTextContent(
-      'the rows have different lengths · ref r-u'
+      /^the rows have different lengths$/
     );
     expect(chip()).toHaveAttribute('data-status', 'failed');
     await waitFor(() => expect(message()).toHaveValue('only 2024'));
@@ -3088,7 +3090,7 @@ describe('AgentChatPage attachment', () => {
 
     dropOnChat(workbook('big.xlsx'));
     expect(await screen.findByTestId('attachment-notice')).toHaveTextContent(
-      '"big.xlsx" has more rows than a table may have; filter it, or copy a range and paste it (21,000 rows, the cap is 20,000) · ref ref-1'
+      '"big.xlsx" has more rows than a table may have; filter it, or copy a range and paste it (21,000 rows, the cap is 20,000)'
     );
     expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
 
@@ -3205,7 +3207,7 @@ describe('AgentChatPage attachment', () => {
     await screen.findByRole('group', { name: /^Attached file long\.py/ });
     fireEvent.keyDown(message(), { key: 'Enter' });
     expect(await screen.findByTestId('attachment-error')).toHaveTextContent(
-      'looks like code that makes data: shorten it to 2,000 characters, keeping only the part that computes the data, and the chat runs it · ref r-c'
+      'looks like code that makes data: shorten it to 2,000 characters, keeping only the part that computes the data, and the chat runs it'
     );
   });
 

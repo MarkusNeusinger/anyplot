@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   agentApi,
+  AgentApiError,
   agentFetch,
   ANONYMOUS_ID_KEY,
   anonymousId,
@@ -595,6 +596,24 @@ describe('toAgentApiError', () => {
       })
     );
     expect(odd).toMatchObject({ measured: null, limit: null });
+  });
+});
+
+describe('AgentApiError.shownRef', () => {
+  it('keeps the request id for a fault of the server or the connection', () => {
+    expect(new AgentApiError(503, 'capacity', 'r-503').shownRef).toBe('r-503');
+    expect(new AgentApiError(500, 'internal', 'r-500').shownRef).toBe('r-500');
+    expect(new AgentApiError(0, 'unreachable', 'r-0').shownRef).toBe('r-0');
+  });
+
+  it('drops it for a refusal, which names its cause in the text', () => {
+    for (const status of [409, 422, 429]) {
+      expect(new AgentApiError(status, 'refused', 'r-4xx').shownRef).toBeNull();
+    }
+  });
+
+  it('is null when there is no id to show', () => {
+    expect(new AgentApiError(503, 'capacity').shownRef).toBeNull();
   });
 });
 
