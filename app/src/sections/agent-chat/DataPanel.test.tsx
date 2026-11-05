@@ -112,27 +112,30 @@ function stateWith(bindings: Record<string, string>, overrides: Partial<AgentSes
 }
 
 describe('bindingRows', () => {
-  it('gives every role a row and each family its members plus the next one', () => {
+  it('gives every role one row, a family its members and the next one', () => {
     const rows = bindingRows(ROLES, { x: 'month', y1: 'shoes', y2: 'hats' }, COLUMNS.length);
-    expect(rows.map(row => [row.name, row.first, row.next])).toEqual([
-      ['x', true, false],
-      ['y1', true, false],
-      ['y2', false, false],
-      ['y3', false, true],
-      ['series', true, false],
+    expect(rows.map(row => [row.name, row.members, row.next])).toEqual([
+      ['x', [], null],
+      [
+        'y',
+        [
+          ['y1', 'shoes'],
+          ['y2', 'hats'],
+        ],
+        'y3',
+      ],
+      ['series', [], null],
     ]);
   });
 
-  it('shows a required family without a member as its first member', () => {
+  it('offers a required family without a member its first one', () => {
     const rows = bindingRows(ROLES, { x: 'month' }, COLUMNS.length);
-    expect(rows.filter(row => row.role.name === 'y').map(row => [row.name, row.next])).toEqual([
-      ['y1', false],
-    ]);
+    expect(rows.find(row => row.name === 'y')).toMatchObject({ members: [], next: 'y1' });
   });
 
   it('stops offering members when every column is taken', () => {
     const rows = bindingRows([ROLES[1]], { y1: 'a', y2: 'b' }, 2);
-    expect(rows.map(row => row.name)).toEqual(['y1', 'y2']);
+    expect(rows.map(row => [row.name, row.members.length, row.next])).toEqual([['y', 2, null]]);
   });
 });
 
@@ -153,12 +156,162 @@ describe('DataPanel bindings', () => {
     expect(screen.getByText('numeric · one column each')).toBeInTheDocument();
     expect(screen.getByLabelText(/^series/)).toHaveValue('');
     // The spec's own description is the role's tooltip; required roles carry a `*`.
-    expect(screen.getAllByTitle('Multiple continuous series to compare')[0]).toHaveTextContent(
-      /^y1 \*/
-    );
+    expect(screen.getByTitle('Multiple continuous series to compare')).toHaveTextContent(/^y \*/);
     expect(screen.getByTitle('series values')).not.toHaveTextContent('*');
-    await userEvent.selectOptions(screen.getByLabelText('y2'), 'hats');
+    // The family's columns are chips in a list the row names, and `+ y` adds the next member.
+    const chips = within(screen.getByRole('list', { name: /^y \*/ })).getAllByRole('listitem');
+    expect(chips.map(chip => chip.textContent)).toEqual(['shoes×', '+ y ▾']);
+    await userEvent.click(screen.getByRole('button', { name: '+ y: add a column' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'hats (number)' }));
     expect(onBind).toHaveBeenCalledWith('y2', 'hats');
+  });
+
+  it("removes a family's column with its ×, and offers the columns left in a menu", async () => {
+    // Two series or eight: one row of chips, never a dropdown per member.
+    const onBind = vi.fn();
+    render(
+      <Panel
+        state={stateWith({ x: 'month', y1: 'shoes', y2: 'hats' }, { missingRoles: [] })}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onBind={onBind}
+        onUndo={vi.fn()}
+      />
+    );
+    expect(screen.queryByLabelText('y1')).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Remove shoes from y' }));
+    expect(onBind).toHaveBeenCalledWith('y1', null);
+
+    // A menu button: its name starts with what it shows, and it says whether its menu is open.
+    const add = screen.getByRole('button', { name: '+ y: add a column' });
+    expect(add).toHaveAttribute('aria-haspopup', 'menu');
+    expect(add).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(add);
+    expect(add).toHaveAttribute('aria-expanded', 'true');
+    // The columns the family holds are no choice; one the role cannot take is greyed out with the reason.
+    const items = screen.getAllByRole('menuitem');
+    expect(items.map(item => item.textContent)).toEqual([
+      'month (number)',
+      'scarves (number)',
+      'region (text) · not numeric',
+    ]);
+    expect(items[2]).toHaveAttribute('aria-disabled', 'true');
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  it('keeps the keyboard in the row after a change, once the controls answer again', async () => {
+    const props = {
+      onParse: vi.fn(),
+      onConfirmTranscription: vi.fn(),
+      onDiscardTranscription: vi.fn(),
+      onBind: vi.fn(),
+      onUndo: vi.fn(),
+    };
+    const before = stateWith({ x: 'month', y1: 'shoes', y2: 'hats' }, { missingRoles: [] });
+    const { rerender } = render(<Panel state={before} {...props} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Remove shoes from y' }));
+    // The change is on its way: the controls wait, then the next chip takes the removed one's place.
+    rerender(<Panel state={{ ...before, bindingsBusy: true }} {...props} />);
+    rerender(
+      <Panel state={stateWith({ x: 'month', y1: 'hats' }, { missingRoles: [] })} {...props} />
+    );
+    expect(screen.getByRole('button', { name: 'Remove hats from y' })).toHaveFocus();
+  });
+
+  it("gives the last chip's place to `+`, which follows it", async () => {
+    const props = {
+      onParse: vi.fn(),
+      onConfirmTranscription: vi.fn(),
+      onDiscardTranscription: vi.fn(),
+      onBind: vi.fn(),
+      onUndo: vi.fn(),
+    };
+    const before = stateWith({ x: 'month', y1: 'shoes', y2: 'hats' }, { missingRoles: [] });
+    const { rerender } = render(<Panel state={before} {...props} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Remove hats from y' }));
+    rerender(<Panel state={{ ...before, bindingsBusy: true }} {...props} />);
+    rerender(
+      <Panel state={stateWith({ x: 'month', y1: 'shoes' }, { missingRoles: [] })} {...props} />
+    );
+    expect(screen.getByRole('button', { name: '+ y: add a column' })).toHaveFocus();
+  });
+
+  it('gives the focus to the chip that took the last column, where `+` goes', async () => {
+    const props = {
+      onParse: vi.fn(),
+      onConfirmTranscription: vi.fn(),
+      onDiscardTranscription: vi.fn(),
+      onBind: vi.fn(),
+      onUndo: vi.fn(),
+    };
+    // Every column but `scarves` in the family: adding it leaves nothing for `+`.
+    const four = { x: 'month', y1: 'shoes', y2: 'hats', y3: 'month', y4: 'region' };
+    const before = stateWith(four, { missingRoles: [] });
+    const { rerender } = render(<Panel state={before} {...props} />);
+    await userEvent.click(screen.getByRole('button', { name: '+ y: add a column' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'scarves (number)' }));
+    rerender(<Panel state={{ ...before, bindingsBusy: true }} {...props} />);
+    rerender(
+      <Panel state={stateWith({ ...four, y5: 'scarves' }, { missingRoles: [] })} {...props} />
+    );
+    expect(screen.queryByRole('button', { name: '+ y: add a column' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove scarves from y' })).toHaveFocus();
+  });
+
+  it('leaves the focus where the user put it meanwhile', async () => {
+    const props = {
+      onParse: vi.fn(),
+      onConfirmTranscription: vi.fn(),
+      onDiscardTranscription: vi.fn(),
+      onBind: vi.fn(),
+      onUndo: vi.fn(),
+    };
+    const before = stateWith({ x: 'month', y1: 'shoes', y2: 'hats' }, { missingRoles: [] });
+    const { rerender } = render(<Panel state={before} {...props} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Remove shoes from y' }));
+    rerender(<Panel state={{ ...before, bindingsBusy: true }} {...props} />);
+    const series = screen.getByLabelText(/^series/);
+    series.removeAttribute('disabled');
+    series.focus();
+    rerender(
+      <Panel state={stateWith({ x: 'month', y1: 'hats' }, { missingRoles: [] })} {...props} />
+    );
+    expect(screen.getByLabelText(/^series/)).toHaveFocus();
+  });
+
+  it("names a family's negative column in its warning", () => {
+    const area = role('y', { variadic: true, non_negative: true });
+    const columns = [
+      { name: 'month', dtype: 'number' as const, missing: 0, unique: 3, min: 1 },
+      { name: 'loss', dtype: 'number' as const, missing: 0, unique: 3, min: -4 },
+    ];
+    const base = stateWith({ y1: 'month', y2: 'loss' }, { roles: [area], missingRoles: [] });
+    const state = {
+      ...base,
+      dataset: base.dataset && {
+        ...base.dataset,
+        parsed: {
+          ...base.dataset.parsed,
+          profile: { ...base.dataset.parsed.profile, columns },
+          roles: [area],
+        },
+      },
+    };
+    render(
+      <Panel
+        state={state}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onBind={vi.fn()}
+        onUndo={vi.fn()}
+      />
+    );
+    expect(screen.getAllByTestId('sign-hint').map(line => line.textContent)).toEqual([
+      'loss: has negative values (down to -4); y needs values of 0 or more',
+    ]);
   });
 
   it('draws line breaks and space runs of a preview cell visibly instead of folding them', () => {
@@ -255,10 +408,6 @@ describe('DataPanel bindings', () => {
         item => item.value === column
       );
 
-    expect(option(/^y1/, 'region')).toHaveTextContent('region (text) · not numeric');
-    expect(option(/^y1/, 'region')).toBeDisabled();
-    expect(option(/^y1/, 'hats')).toHaveTextContent(/^hats \(number\)$/);
-    expect(option(/^y1/, 'hats')).toBeEnabled();
     expect(option(/^x/, 'region')).toHaveTextContent('region (text) · not numeric or datetime');
     expect(option(/^series/, 'shoes')).toHaveTextContent('shoes (number) · not categorical');
     expect(option(/^series/, 'region')).toBeEnabled();

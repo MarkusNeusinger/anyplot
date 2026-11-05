@@ -1229,6 +1229,28 @@ class TestMessagesStream:
         events = _sse_events(self._post(client).text)
         assert [data.get("step", event) for event, data in events] == ["queued", "queued", "queued", "adapting", "done"]
 
+    def test_the_queues_end_passes_with_its_step_alone_and_restarts_the_budget(
+        self, client, upstream, monkeypatch
+    ) -> None:
+        """`started` ends the wait for a turn without pipeline steps: the page drops its badge, the budget restarts."""
+        monkeypatch.setattr(settings, "agent_request_timeout_s", 0.5)
+        monkeypatch.setattr("api.routers.agent._QUEUED_HEARTBEAT_S", 0.0)
+
+        async def queued_then_started():
+            for position in (2, 1):
+                event = f'event: status\ndata: {{"step": "queued", "position": {position}, "waiting": 2}}\n\n'
+                yield event.encode()
+                await asyncio.sleep(0.3)  # 0.6 s of queueing in all: past the budget
+            yield b'event: status\ndata: {"step": "started", "user": "adm_x"}\n\n'
+            await asyncio.sleep(0.3)  # inside the budget the start restarted
+            yield b'event: message\ndata: {"text": "Five rows."}\n\n'
+            yield b"event: done\ndata: {}\n\n"
+
+        upstream.handler = lambda request: httpx.Response(200, content=queued_then_started())
+        events = _sse_events(self._post(client).text)
+        assert [data.get("step", event) for event, data in events] == ["queued", "queued", "started", "message", "done"]
+        assert events[2] == ("status", {"step": "started"})
+
     def test_the_budget_still_ends_a_silent_queue(self, client, upstream, monkeypatch) -> None:
         monkeypatch.setattr(settings, "agent_request_timeout_s", 0.2)
         monkeypatch.setattr("api.routers.agent._QUEUED_HEARTBEAT_S", 0.1)

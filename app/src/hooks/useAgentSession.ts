@@ -280,7 +280,10 @@ export interface RunState {
   kind: TurnAction | 'message';
   /** Steps in arrival order; the last one is in progress. */
   steps: { step: TimelineStep; attempt: number | null }[];
-  /** Set while the turn waits in the run queue: `position` 1 runs next. */
+  /**
+   * Set while the turn waits in the run queue: `position` 1 runs next. Cleared by the wait's end
+   * (`status{step:"started"}`), which also drops the `queued` step, and by a pipeline step.
+   */
   queue: { position: number; waiting: number } | null;
   stopping: boolean;
   /** The rounds that ended so far, from each repair step's `outcome` (absent: none yet). */
@@ -773,6 +776,7 @@ type Action =
   | { type: 'item'; item: NewChatItem }
   | { type: 'run_start'; kind: RunState['kind'] }
   | { type: 'run_queued'; position: number; waiting: number }
+  | { type: 'run_started' }
   | { type: 'run_step'; step: PipelineStep; attempt: number | null; previous?: Round | null }
   | { type: 'run_stopping' }
   | { type: 'run_reconnecting'; on: boolean }
@@ -1390,6 +1394,19 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         },
       };
     }
+    case 'run_started':
+      // The wait is over: a turn without pipeline steps (a summary that runs data code) had its
+      // queue position on screen until the reply. A plot run that has not reached its first step
+      // is starting again (`starting…`). A replayed start after a resume changes nothing more.
+      if (!state.run) return state;
+      return {
+        ...state,
+        run: {
+          ...state.run,
+          queue: null,
+          steps: state.run.steps.filter(entry => entry.step !== 'queued'),
+        },
+      };
     case 'run_step':
       if (!state.run) return state;
       return {
@@ -1710,7 +1727,7 @@ export function useAgentSession({
    * as the server's binding check has it: the same series twice is never meant. The member that
    * held it takes this member's column instead, so the two swap and both series stay (owner
    * decision of 2026-11-05: `y1` Sales and `y2` Cost, `y2` set to Sales, gives `y1` Cost); a
-   * member without a column (the next member's `— add a column —`) has nothing to give, so the
+   * member without a column (the next member, which `+ y` binds) has nothing to give, so the
    * column moves and the family closes up.
    */
   const setBinding = useCallback(
@@ -2210,6 +2227,9 @@ export function useAgentSession({
       switch (event.type) {
         case 'queued':
           safeDispatch({ type: 'run_queued', position: event.position, waiting: event.waiting });
+          break;
+        case 'started':
+          safeDispatch({ type: 'run_started' });
           break;
         case 'step':
           safeDispatch({

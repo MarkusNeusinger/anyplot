@@ -1635,6 +1635,7 @@ describe('AgentChatPage working states', () => {
       init?: RequestInit
     ) => Promise<Response>;
     let finish: (() => void) | null = null;
+    let push: ((list: [string, unknown][]) => void) | null = null;
     const queuedTurn = (events: [string, unknown][]) =>
       new Response(
         new ReadableStream({
@@ -1647,6 +1648,7 @@ describe('AgentChatPage working states', () => {
                     .join('')
                 )
               );
+            push = write;
             write([['status', { step: 'queued', position: 2, waiting: 3 }]]);
             finish = () => {
               write(events);
@@ -1681,6 +1683,10 @@ describe('AgentChatPage working states', () => {
     expect(badge).toHaveTextContent('queue 2/3');
     expect(badge).toHaveStyle({ position: 'absolute' });
     expect(screen.getByTestId('pending-reply')).toBeInTheDocument();
+    // The wait ends before the reply: the badge goes, the in-progress line stays.
+    act(() => push?.([['status', { step: 'started' }]]));
+    await waitFor(() => expect(screen.queryByTestId('queue-counter')).not.toBeInTheDocument());
+    expect(screen.getByTestId('pending-reply')).toBeInTheDocument();
     act(() => finish?.());
     expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
     await turnEnded();
@@ -1691,6 +1697,10 @@ describe('AgentChatPage working states', () => {
     expect(await within(grid).findByText('queued · 2 of 3')).toBeInTheDocument();
     expect(screen.queryByTestId('queue-counter')).not.toBeInTheDocument();
     expect(screen.getAllByText(/queue/)).toHaveLength(1);
+    // Out of the queue before its first step, the run is starting.
+    act(() => push?.([['status', { step: 'started' }]]));
+    expect(await within(grid).findByText('starting…')).toBeInTheDocument();
+    expect(screen.queryByText(/queue/)).not.toBeInTheDocument();
     act(() => finish?.());
     await turnEnded();
   });

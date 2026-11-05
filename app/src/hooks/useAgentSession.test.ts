@@ -3175,6 +3175,21 @@ describe('agentReducer', () => {
     expect(state.run).toBeNull();
   });
 
+  it('ends the wait on the queue\'s "started", also for a turn that never reaches a step', () => {
+    // A summary that runs data code has no pipeline step: its badge stayed until the reply.
+    let state: AgentSessionState = { ...initialAgentState('matplotlib'), sessionId: 'S1' };
+    state = agentReducer(state, { type: 'run_start', kind: 'summarize_data' });
+    state = agentReducer(state, { type: 'run_queued', position: 1, waiting: 2 });
+    state = agentReducer(state, { type: 'run_started' });
+    expect(state.run?.queue).toBeNull();
+    expect(state.run?.steps).toEqual([]);
+    // A replay after a resume sends it again: nothing changes.
+    expect(agentReducer(state, { type: 'run_started' })).toEqual(state);
+    // No turn, nothing to clear.
+    const idle = { ...initialAgentState('matplotlib'), sessionId: 'S1' };
+    expect(agentReducer(idle, { type: 'run_started' })).toBe(idle);
+  });
+
   it('stores a transcription beside the data and clears it on a decision, a parse or a switch', () => {
     const transcription: TranscriptionState = {
       text: TRANSCRIBED.text,
