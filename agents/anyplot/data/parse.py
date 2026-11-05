@@ -909,6 +909,20 @@ def _read_delimited(
         if find_table
         else TableBlock(0, len(records))
     )
+    joined = _joined_header(records, block) if find_table and not spaced else None
+    if joined is not None:
+        # The two header lines become one, in the place of the first: every index after the second moves up one.
+        names, example = joined
+        first = records[block.start - 1][0]
+        records = [*records[: block.start - 1], (first, names), *records[block.start + 1 :]]
+        block = replace(
+            block,
+            start=block.start - 1,
+            end=block.end - 1,
+            above=block.above - 1,
+            skipped=tuple(index - 1 for index in block.skipped),
+        )
+        warnings.append(f"the header stood in two lines; joined them into one name per column, such as '{example}'")
     extents: list[list[int]] = []
     if spaced:
         extents = _column_extents(spans, block.start, block.end, len(records[block.start][1]))
@@ -962,7 +976,8 @@ def _read_delimited(
             record = record[:width]
         rows.append(record)
     if long:
-        raise ParseError("unparseable", _ragged_rows(width, long, short, delimiter))
+        split = _split_header(records, block, long, short, len(rows)) if find_table else None
+        raise ParseError("unparseable", split or _ragged_rows(width, long, short, delimiter, len(rows)))
     if short and spaced:
         warnings.append(
             f"{_count(len(short), 'row')} had fewer fields than the header; their cells were placed under the "
@@ -990,7 +1005,7 @@ def _some_lines(lines: Sequence[tuple[int, int]]) -> str:
 
 
 def _ragged_rows(
-    width: int, long: Sequence[tuple[int, int]], short: Sequence[tuple[int, int]], delimiter: str | None
+    width: int, long: Sequence[tuple[int, int]], short: Sequence[tuple[int, int]], delimiter: str | None, rows: int = 0
 ) -> str:
     """The refusal of a table whose rows have more values than its header: every such line, and the short ones too.
 
@@ -1000,20 +1015,119 @@ def _ragged_rows(
     short lines beside the long ones, so one round of fixes mends them all. Nothing is
     repaired: a value past the last column has no column to go to, and moving it would be a
     guess. The likeliest cause, a separator inside an unquoted value, closes the message.
+
+    When every one of the `rows` data rows has the same longer count, the rows agree and the
+    header is likely what is short: the message says so. One field more in every row may still be
+    a separator inside one value of each (`Smith, John`), so that message names both causes; two or
+    more fields more in every row would need as many separators in every row, so it drops the
+    hint about quotes.
     """
+    counts = {fields for _, fields in long}
+    if rows >= 2 and not short and len(long) == rows and len(counts) == 1:
+        fields = counts.pop()
+        message = f"the header has {width} fields, but every row has {fields}: the header needs one name per column"
+        return message + (_quotes_hint(delimiter, "or ") if fields == width + 1 else "")
     groups: dict[int, list[tuple[int, int]]] = {}
     for line in sorted([*long, *short]):
         groups.setdefault(line[1], []).append(line)
     named = [
         f"{_some_lines(lines)} {'has' if len(lines) == 1 else 'have'} {fields}" for fields, lines in groups.items()
     ]
+    return f"the header has {width} fields, but " + "; ".join(named) + _quotes_hint(delimiter)
+
+
+def _quotes_hint(delimiter: str | None, lead: str = "") -> str:
+    """`; a value that holds a comma needs quotes around it`, for a delimiter that quotes can escape; else empty."""
+    if delimiter in (None, SPACE_RUN, SINGLE_SPACE):
+        return ""
     separator = {",": "comma", ";": "semicolon", "\t": "tab", "|": "pipe"}.get(delimiter or "", "separator")
-    hint = (
-        f"; a value that holds a {separator} needs quotes around it"
-        if delimiter not in (None, SPACE_RUN, SINGLE_SPACE)
-        else ""
+    return f"; {lead}a value that holds a {separator} needs quotes around it"
+
+
+def _header_cells(record: Sequence[str]) -> list[str] | None:
+    """The stripped cells of a line that can be part of a header: two or more filled, none a value; else None."""
+    cells = [cell.strip() for cell in record]
+    filled = [cell for cell in cells if cell]
+    if len(filled) < 2 or any(_value_like(cell) for cell in filled):
+        return None
+    return cells
+
+
+def _joined_header(records: Sequence[tuple[int, list[str]]], block: "TableBlock") -> tuple[list[str], str] | None:
+    """One header from a header that stands in two lines of the table's width, with the first of the joined names.
+
+    A table copied from a spreadsheet or a web page with grouped columns writes its header in two lines:
+    `Location,Density,,Population` over `,/km2,/mi2,` (a merged cell copies as its name and empty cells),
+    or the group name once per column when an HTML table's spans are expanded. `table_block` takes the
+    second line for the header and the first for a note, which leaves columns named `column_1` and `/km2`.
+    Both lines must have the table's width and hold no value. The first must show a group (an empty cell,
+    or a name over two columns), and the second its parts: an empty cell under a column of its own, a cell
+    that repeats the one above it, or a part repeated under each group (`Q1, Q2, Q1, Q2`). A line of notes
+    above a header (`Section,Finance,,` over `ID,Name,Qty,Price`) shows no parts, so it stays a note. Each
+    column's name is then its group and its own part, `Density /km2`: an empty cell of the first line
+    belongs to the group on its left when the second line names the column, and a part equal to its group is
+    said once. Only when the joined names are all different and at least one joins two parts; otherwise the
+    lines stay as `table_block` read them.
+    """
+    if block.start < 1 or not block.width:
+        return None
+    top, bottom = _header_cells(records[block.start - 1][1]), _header_cells(records[block.start][1])
+    if top is None or bottom is None or len(top) != block.width or len(bottom) != block.width:
+        return None
+    named = [cell for cell in top if cell]
+    if all(top) and len(set(named)) == len(named):
+        return None  # no empty cell and no repeated name: two headers, not one header in two lines
+    parts = [cell for cell in bottom if cell]
+    beneath = any(not lower or lower == upper for upper, lower in zip(top, bottom, strict=True))
+    if not beneath and len(set(parts)) == len(parts):
+        return None  # a full line of distinct names under the first: a header under a line of notes
+    names: list[str] = []
+    example = ""
+    group = ""
+    for upper, lower in zip(top, bottom, strict=True):
+        if upper:
+            group = upper
+        part = upper or (group if lower else "")
+        if part and lower and lower != part:
+            names.append(f"{part} {lower}")
+            example = example or names[-1]
+        else:
+            names.append(part or lower)
+    filled = [name for name in names if name]
+    if not example or len(set(filled)) < len(filled):
+        return None
+    return names, example
+
+
+def _split_header(
+    records: Sequence[tuple[int, list[str]]],
+    block: "TableBlock",
+    long: Sequence[tuple[int, int]],
+    short: Sequence[tuple[int, int]],
+    rows: int,
+) -> str | None:
+    """The refusal of a header that stands in two lines whose cells cannot be placed over the columns, else None.
+
+    A web page's table copied as text loses its spans: `Location, Density, Population, Land area, Ref.` over
+    `/km2, /mi2, km2, mi2`, with rows of 7 fields. Two of the five names cover two columns each, and which two
+    the text does not say (three placements fit even after the column types are read), so nothing is joined
+    by guess. That is the shape: every data row has the same field count, both lines hold no value and are
+    shorter than the rows, and together they hold more names than the rows have fields.
+    """
+    counts = {fields for _, fields in long}
+    if block.start < 1 or short or len(long) != rows or len(counts) != 1:
+        return None
+    fields = counts.pop()
+    top, bottom = _header_cells(records[block.start - 1][1]), _header_cells(records[block.start][1])
+    if top is None or bottom is None:
+        return None
+    upper, lower = sum(1 for cell in top if cell), sum(1 for cell in bottom if cell)
+    if len(top) >= fields or len(bottom) >= fields or upper + lower <= fields:
+        return None
+    return (
+        f"the header stands in two lines ({upper} names over {lower}), and the rows have {fields} fields: "
+        "write it as one line with one name per column, a name and its unit together"
     )
-    return f"the header has {width} fields, but " + "; ".join(named) + hint
 
 
 MIN_TABLE_ROWS = 2

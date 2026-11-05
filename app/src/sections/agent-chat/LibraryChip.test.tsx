@@ -244,13 +244,15 @@ describe('LibraryChip', () => {
     const onPick = vi
       .fn<(library: string) => Promise<void>>()
       .mockRejectedValueOnce(new AgentApiError(422, 'not_eligible', 'ref-ne'))
-      .mockRejectedValueOnce(new AgentApiError(404, 'session_expired', 'ref-gone'));
+      .mockRejectedValueOnce(new AgentApiError(404, 'session_expired', 'ref-gone'))
+      .mockRejectedValueOnce(new AgentApiError(500, 'internal', 'ref-500'));
     const { rerender } = render(<LibraryChip {...props({ onPick })} />);
 
+    // A refusal (4xx) names its cause and shows no ref; a fault of the server does.
     await user.click(chip());
     await user.click(within(dialog()).getByRole('button', { name: 'd3' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'could not switch: this plot cannot be adapted in that library · ref ref-ne'
+      /^could not switch: this plot cannot be adapted in that library$/
     );
     expect(chip()).toHaveTextContent(/^lib: matplotlib · python$/);
 
@@ -258,10 +260,18 @@ describe('LibraryChip', () => {
     await user.click(within(dialog()).getByRole('button', { name: 'makie' }));
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent(
-        'could not switch: the session expired · ref ref-gone'
+        /^could not switch: the session expired · reload$/
       )
     );
     expect(screen.getByRole('button', { name: 'reload' })).toBeInTheDocument();
+
+    await user.click(chip());
+    await user.click(within(dialog()).getByRole('button', { name: 'd3' }));
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'could not switch: something went wrong on the server · ref ref-500'
+      )
+    );
 
     rerender(<LibraryChip {...props({ onPick, disabled: true })} />);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();

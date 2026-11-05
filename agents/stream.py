@@ -14,6 +14,9 @@ re-validates (`api/routers/agent.py`, `_EVENT_FIELDS`):
 | `error` | `code`, `ref` | `guard_unavailable`, `capacity` (also when a sandbox run found the queue full or waited its maximum; the turn ends there, without a `plot`), `run_limit` (the user already has `AGENT_USER_MAX_RUNS` sandbox runs queued or running in other sessions; the turn ends the same way), `deadline` or `internal` |
 | `done` | `llm_calls`, `tokens`, and after a run `bindings`, `data_confirmed`, `language` (`{language, source}`, the session language and how it was set), `suggestion` (the `.to_long()` offer in the session language, or null, when the session has data) and, when the turn changed the data (`prepare_data`, `generate_data`), `dataset` | the end of every run, always last; the route adds the session's sync fields (`_session_sync` in `agents/main.py`) |
 
+The route numbers every event on its way out (`id: <run_id>.<n>`, `agents/turn_log.py`) and keeps the
+session's latest turn, which `GET /v1/sessions/{sid}/turn` reads to the end for a page that lost the stream.
+
 Function calls and responses, tool outputs, thoughts, partial chunks, adapter and
 reviewer answers, and `error_details` are dropped. A message goes through the
 output sanitiser (`anyplot/output_guard.sanitize`: no URL, link target, HTML, image

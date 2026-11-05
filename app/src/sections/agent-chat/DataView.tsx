@@ -172,7 +172,7 @@ function escapeForTheGrid(event: object): boolean {
 
 function failureText(err: unknown): string {
   if (err instanceof CsvError) return describeViewFailure('csv', null, err.message);
-  if (err instanceof AgentApiError) return describeViewFailure(err.code, err.ref);
+  if (err instanceof AgentApiError) return describeViewFailure(err.code, err.shownRef);
   return describeViewFailure('unreachable', null);
 }
 

@@ -229,7 +229,7 @@ describe('PublicAgentChatPage', () => {
     [
       'bot_check_failed',
       403,
-      /^error · bot_check_failed · ref r-bthe browser check did not go through · try again$/,
+      /^error · bot_check_failedthe browser check did not go through · try again$/,
     ],
     ['bot_check_unavailable', 503, /the browser check is not available right now · try again$/],
   ])(

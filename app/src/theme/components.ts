@@ -52,6 +52,11 @@ export const components: ThemeOptions['components'] = {
     },
   },
   MuiPopover: {
+    // No scroll lock for a popover (a menu too, which is one). The site clips the root's
+    // overflow-x, so the body's `overflow: hidden` never stops the page from scrolling; the lock
+    // only padded the body by the scrollbar's width, and the masthead and every right-aligned
+    // control jumped sideways as a popover opened (15 px with a classic scrollbar).
+    defaultProps: { disableScrollLock: true },
     styleOverrides: {
       paper: {
         backgroundColor: 'var(--bg-elevated)',

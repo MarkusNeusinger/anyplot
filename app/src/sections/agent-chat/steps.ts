@@ -4,7 +4,7 @@
  * line of a turn the assistant is still working on.
  */
 
-import type { AgentSessionState } from 'src/hooks/useAgentSession';
+import type { AgentSessionState, ChatItem } from 'src/hooks/useAgentSession';
 import { isPlotAction } from 'src/lib/agent';
 import { CONFIRM_LOST_STEP_TEXT } from 'src/sections/agent-chat/messages';
 
@@ -45,8 +45,9 @@ export function stepOneLine(state: AgentSessionState, action = '.create_plot()')
     : `${head}check the preview and the bindings above, then ${action}`;
 }
 
-/** What the thread's in-progress line says: the turn's kind, or that it stops. */
-export type PendingReply = 'summarize_data' | 'example_data' | 'message' | 'stopping';
+/** What the thread's in-progress line says: the turn's kind, that it stops, or that it reconnects. */
+export type PendingReply =
+  'summarize_data' | 'example_data' | 'message' | 'stopping' | 'reconnecting';
 
 /**
  * The in-progress line in the assistant's slot of the thread, while a turn
@@ -62,6 +63,8 @@ export function pendingReply(state: AgentSessionState): PendingReply | null {
   const run = state.run;
   if (!run || run.kind === 'create_plot' || run.kind === 'carry_plot') return null;
   if (run.steps.some(entry => entry.step !== 'queued')) return null;
+  // A cut stream the page reads again: the turn's only indicator, also after its reply arrived.
+  if (run.reconnecting && !run.stopping) return 'reconnecting';
   const last = state.items[state.items.length - 1];
   if (!last || (last.kind !== 'user' && last.kind !== 'action')) return null;
   return run.stopping ? 'stopping' : run.kind;
@@ -80,11 +83,33 @@ export function showsTimeline(state: AgentSessionState): boolean {
 }
 
 /**
- * The line above the composer while a plot runs (the progress timeline shows): it takes the
- * step's line, which would still invite the click that started the run, and names the one
- * action the run leaves, `.stop()`. `null` while no plot runs.
+ * The line above the composer while a plot runs (the progress timeline stands below the thread,
+ * `runView`): it takes the step's line, which would still invite the click that started the run,
+ * and names the one action the run leaves, `.stop()`. `null` while no plot runs, and once the
+ * run's card took the timeline's place.
  */
 export function runLine(state: AgentSessionState): string | null {
-  if (!showsTimeline(state)) return null;
+  if (!runView(state).timeline) return null;
   return state.run?.stopping ? '# stopping…' : '# plotting… .stop() to cancel';
+}
+
+/**
+ * The thread and the progress timeline of a run, as the page shows them. While the timeline
+ * stands below the thread, an item the run sends in (a reply, a refusal, a note) would land
+ * above it and push it and the composer down: it waits, and the user's own message or action
+ * stays in view. The run's result card (a plot, or the card of a run that failed) takes the
+ * timeline's place, and the waiting items come with it; a run that ends without one shows them
+ * as it ends.
+ */
+export function runView(state: AgentSessionState): { items: ChatItem[]; timeline: boolean } {
+  const items = state.items;
+  if (!showsTimeline(state)) return { items, timeline: false };
+  let ask = items.length - 1;
+  while (ask >= 0 && items[ask].kind !== 'user' && items[ask].kind !== 'action') ask -= 1;
+  if (ask < 0) return { items, timeline: true };
+  const since = items.slice(ask + 1);
+  if (since.some(item => item.kind === 'plot' || item.kind === 'plot_failed')) {
+    return { items, timeline: false };
+  }
+  return { items: since.length ? items.slice(0, ask + 1) : items, timeline: true };
 }

@@ -56,12 +56,12 @@ describe('DataView', () => {
   it('says so while it reads, and offers .retry() when the data cannot be read', async () => {
     const load = vi
       .fn<(signal: AbortSignal) => Promise<string>>()
-      .mockRejectedValueOnce(new AgentApiError(422, 'no_dataset', 'ref-1'))
+      .mockRejectedValueOnce(new AgentApiError(503, 'capacity', 'ref-1'))
       .mockResolvedValueOnce(CSV);
     const { onShown } = renderView(load);
     expect(screen.getByRole('status')).toHaveTextContent('reading 3 rows');
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'could not show every row: parse the data first · ref ref-1'
+      'could not show every row: the server is busy; try again in a minute · ref ref-1'
     );
     expect(onShown).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole('button', { name: '.retry()' }));

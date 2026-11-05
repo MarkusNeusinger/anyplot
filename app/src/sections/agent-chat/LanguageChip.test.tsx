@@ -205,30 +205,40 @@ describe('LanguageChip', () => {
       .fn<(language: string) => Promise<void>>()
       .mockRejectedValueOnce(new AgentApiError(422, 'invalid', 'ref-inv'))
       .mockRejectedValueOnce(new AgentApiError(409, 'run_active', 'ref-busy'))
-      .mockRejectedValueOnce(new AgentApiError(404, 'session_expired', 'ref-gone'));
+      .mockRejectedValueOnce(new AgentApiError(404, 'session_expired', 'ref-gone'))
+      .mockRejectedValueOnce(new AgentApiError(500, 'internal', 'ref-500'));
     const { rerender } = render(<LanguageChip value={EN} disabled={false} onSet={onSet} />);
 
+    // A refusal (4xx) names its cause and shows no ref; a fault of the server does.
     await user.click(chip());
     await user.type(
       within(dialog()).getByRole('textbox', { name: 'Other language' }),
       'Elvish{Enter}'
     );
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'the server refused this language name · ref ref-inv'
+      /^the server refused this language name$/
     );
 
     await user.click(chip());
     await user.click(within(dialog()).getByRole('button', { name: /Russian/ }));
     await waitFor(() =>
-      expect(screen.getByRole('alert')).toHaveTextContent(/still in progress.* · ref ref-busy$/)
+      expect(screen.getByRole('alert')).toHaveTextContent(/still in progress[^·]*$/)
     );
 
     await user.click(chip());
     await user.click(within(dialog()).getByRole('button', { name: /Dutch/ }));
     await waitFor(() =>
-      expect(screen.getByRole('alert')).toHaveTextContent('the session expired · ref ref-gone')
+      expect(screen.getByRole('alert')).toHaveTextContent(/^the session expired · reload$/)
     );
     expect(screen.getByRole('button', { name: 'reload' })).toBeInTheDocument();
+
+    await user.click(chip());
+    await user.click(within(dialog()).getByRole('button', { name: /French/ }));
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'something went wrong on the server · ref ref-500'
+      )
+    );
 
     rerender(<LanguageChip value={EN} disabled onSet={onSet} />);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
