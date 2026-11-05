@@ -314,15 +314,23 @@ describe('ResultCard', () => {
       value: { writeText: vi.fn(async () => Promise.reject(new Error('denied'))) },
       configurable: true,
     });
-    const { onOutcome } = renderCard();
-    const copy = screen.getByRole('button', { name: 'Copy code' });
-    await userEvent.click(copy);
-    expect(onOutcome).not.toHaveBeenCalled();
-    // The refusal shows on the button and to a screen reader, and the code opens to select it.
-    expect(copy).toHaveTextContent('.copy() failed · select the code');
-    expect(screen.getByRole('status')).toHaveTextContent('.copy() failed · select the code');
-    expect(await screen.findByTestId('code-highlighter')).toBeInTheDocument();
-    await waitFor(() => expect(copy).toHaveTextContent(/^\.copy\(\)$/), { timeout: 3000 });
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const { onOutcome } = renderCard();
+      const copy = screen.getByRole('button', { name: 'Copy code' });
+      await userEvent.click(copy);
+      expect(onOutcome).not.toHaveBeenCalled();
+      // The refusal shows on the button and to a screen reader, and the code opens to select it.
+      expect(copy).toHaveTextContent('.copy() failed · select the code');
+      expect(screen.getByRole('status')).toHaveTextContent('.copy() failed · select the code');
+      expect(await screen.findByTestId('code-highlighter')).toBeInTheDocument();
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+      expect(copy).toHaveTextContent(/^\.copy\(\)$/);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('highlights the code in its version library language, not the page language', async () => {

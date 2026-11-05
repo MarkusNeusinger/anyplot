@@ -89,7 +89,7 @@ describe('useCopyCode', () => {
 
   it('says for a while that the browser refused the copy, and calls onError', async () => {
     // A refused copy changed nothing on the page: it read as a dead button.
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     (navigator.clipboard.writeText as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
       new Error('denied')
     );
@@ -106,5 +106,27 @@ describe('useCopyCode', () => {
       vi.advanceTimersByTime(1000);
     });
     expect(result.current.failed).toBe(false);
+    consoleSpy.mockRestore();
+  });
+
+  it('gives a second click its full time, the earlier timer no longer counts', async () => {
+    const { result } = renderHook(() => useCopyCode({ timeout: 1000 }));
+    await act(async () => {
+      await result.current.copyToClipboard('hello');
+    });
+    act(() => {
+      vi.advanceTimersByTime(800);
+    });
+    await act(async () => {
+      await result.current.copyToClipboard('hello');
+    });
+    act(() => {
+      vi.advanceTimersByTime(800);
+    });
+    expect(result.current.copied).toBe(true);
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(result.current.copied).toBe(false);
   });
 });

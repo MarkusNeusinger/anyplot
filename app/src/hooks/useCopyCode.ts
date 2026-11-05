@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface UseCopyCodeOptions {
   /** Callback when copy succeeds */
@@ -42,30 +42,46 @@ export function useCopyCode({
 }: UseCopyCodeOptions = {}): UseCopyCodeReturn {
   const [copied, setCopied] = useState(false);
   const [failed, setFailed] = useState(false);
+  // One timer for both states: a second click restarts it, so the latest state keeps its full
+  // time, and none fires after `reset` or once the component is gone.
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearTimer = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+  }, []);
+  useEffect(() => clearTimer, [clearTimer]);
 
   const copyToClipboard = useCallback(
     async (text: string) => {
+      const settle = () => {
+        clearTimer();
+        timer.current = setTimeout(() => {
+          setCopied(false);
+          setFailed(false);
+        }, timeout);
+      };
       try {
         await navigator.clipboard.writeText(text);
         setFailed(false);
         setCopied(true);
         onCopy?.();
-        setTimeout(() => setCopied(false), timeout);
+        settle();
       } catch (err) {
         console.error('Failed to copy text:', err);
         setCopied(false);
         setFailed(true);
         onError?.();
-        setTimeout(() => setFailed(false), timeout);
+        settle();
       }
     },
-    [onCopy, onError, timeout]
+    [onCopy, onError, timeout, clearTimer]
   );
 
   const reset = useCallback(() => {
+    clearTimer();
     setCopied(false);
     setFailed(false);
-  }, []);
+  }, [clearTimer]);
 
   return { copied, failed, copyToClipboard, reset };
 }
