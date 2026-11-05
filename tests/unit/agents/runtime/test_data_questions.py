@@ -24,15 +24,18 @@ from agents.anyplot.data.query import MAX_QUERY_COLUMNS, MAX_QUERY_ROWS, run_que
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.pipeline import (
     EXPECTED_HEADING,
+    drop_pending_request,
+    in_users_words,
     keep_pending_request,
     kept_texts,
     merged_request,
+    pending_fate,
     settle_pending_request,
     take_pending_request,
 )
 from agents.anyplot.plugins.tool_safety import ToolSafetyPlugin, result_limit, result_size
 from agents.anyplot.render.backends.fake import FakeBackend, FakeOutcome
-from agents.anyplot.schemas import MAX_CHANGE_REQUEST_CHARS, Binding, PipelineArgs
+from agents.anyplot.schemas import MAX_CHANGE_REQUEST_CHARS, Binding, PipelineArgs, RememberItem
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import (
     BINDINGS,
@@ -50,16 +53,18 @@ from agents.anyplot.tools.session import query_data, query_result, set_bindings
 from agents.main import Runtime, app, get_runtime
 from core.spec_roles import DataRole
 
-from .fakes import SCATTER_PLAN, VERDICT_OK, ScriptedLlm
+from .fakes import SCATTER_PLAN, VERDICT_OK, ScriptedLlm, default_script
 from .test_service_flow import (
     HEADERS,
     USER,
     _session_state,
+    adapter_inputs,
     create_plot,
     open_session,
     parse_sse,
     permissive_queue,
     snapshot_body,
+    tool_responses,
 )
 
 
@@ -445,27 +450,35 @@ class TestPendingRequest:
         settle_pending_request(state, PipelineArgs(change_request="bigger", base="previous"), shipped=True)
         assert state == {PENDING_REQUEST: "Title: A", PENDING_EXPECTED_TEXTS: ["A"]}
 
-    @pytest.mark.parametrize(
-        "change",
-        [
-            ("put", "bindings", [{"role": "x", "column": "Exam Score"}, {"role": "y", "column": "Study Hours"}]),
-            ("post", "dataset", {"text": OWID}),
-        ],
-    )
-    async def test_a_binding_change_or_new_data_drops_the_note(
-        self, client: httpx.AsyncClient, change: tuple[str, str, Any]
-    ) -> None:
+    async def test_new_data_drops_the_note(self, client: httpx.AsyncClient) -> None:
         sid = await open_session(client)
         runtime = app.dependency_overrides[get_runtime]()
         kept = {PENDING_REQUEST: "Title: A", PENDING_EXPECTED_TEXTS: ["A"]}
         await runtime.write_state(await runtime.session(USER, sid), kept)
-        method, path, body = change
 
-        response = await client.request(method.upper(), f"/v1/sessions/{sid}/{path}", headers=HEADERS, json=body)
+        response = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": OWID})
 
         assert response.status_code == 200, response.text
         state = await _session_state(client, sid)
         assert state.get(PENDING_REQUEST) is None and state.get(PENDING_EXPECTED_TEXTS) is None
+
+    async def test_a_binding_change_leaves_the_note_to_the_run_which_drops_it(self, client: httpx.AsyncClient) -> None:
+        """The write decides nothing: the run that would take the note judges the bindings then (`pending_fate`)."""
+        sid = await open_session(client)
+        runtime = app.dependency_overrides[get_runtime]()
+        held = [{"role": "x", "column": "Study Hours"}, {"role": "y", "column": "Exam Score"}]
+        kept = {PENDING_REQUEST: "Title: A", PENDING_EXPECTED_TEXTS: ["A"], PENDING_BINDINGS: held}
+        await runtime.write_state(await runtime.session(USER, sid), kept)
+        swapped = [{"role": "x", "column": "Exam Score"}, {"role": "y", "column": "Study Hours"}]
+
+        response = await client.put(f"/v1/sessions/{sid}/bindings", headers=HEADERS, json=swapped)
+
+        assert response.status_code == 200, response.text
+        state = await _session_state(client, sid)
+        assert (state[PENDING_REQUEST], state[PENDING_EXPECTED_TEXTS]) == ("Title: A", ["A"])
+        assert pending_fate(state, PipelineArgs()) == "dropped"
+        await client.put(f"/v1/sessions/{sid}/bindings", headers=HEADERS, json=held)  # bound back: written for these
+        assert pending_fate(await _session_state(client, sid), PipelineArgs()) == "used"
 
     async def test_a_library_switch_keeps_the_note(self, client: httpx.AsyncClient) -> None:
         """Owner decision of 2026-11-02: the switch keeps the data and the bindings the note was written for, so the
@@ -485,13 +498,14 @@ class TestPendingRequest:
         state = await _session_state(client, sid)
         assert state.get(PENDING_REQUEST) == "Title: A" and state.get(PENDING_EXPECTED_TEXTS) == ["A"]
 
-    def test_every_state_write_of_new_bindings_or_data_drops_the_note(self) -> None:
+    def test_every_new_data_version_drops_the_note_and_a_binding_write_leaves_it(self) -> None:
         from agents.anyplot.dataset_versions import _delta
         from agents.anyplot.session_state import apply_bindings, initial_state
 
+        written = _delta("d", [], [], 2)
+        assert written[PENDING_REQUEST] is None and written[PENDING_EXPECTED_TEXTS] is None
         _, delta = apply_bindings([], roles(), parse_dataset(OWID).profile)
-        for written in (_delta("d", [], [], 2), delta):
-            assert written[PENDING_REQUEST] is None and written[PENDING_EXPECTED_TEXTS] is None
+        assert set(delta) == {BINDINGS}  # the run judges the bindings, the write decides nothing
         snapshot = snapshot_from_repo("line-multi", "matplotlib")
         state = initial_state(
             spec_id="line-multi", library="seaborn", locale="de", snapshot=snapshot, normalised="", readiness={}
@@ -563,17 +577,38 @@ class TestPendingRequest:
             with pytest.raises(ValueError):
                 PipelineArgs(expected_texts=[bad])
 
-    def test_filling_the_roles_open_when_the_note_was_kept_keeps_it(self) -> None:
-        from agents.anyplot.session_state import apply_bindings
-
+    def test_the_run_takes_the_note_while_its_bindings_stand(self) -> None:
         held = [{"role": "x", "column": "year"}]
-        profile = parse_dataset(OWID).profile
-        filled = bind(("x", "year"), ("y1", "co2_per_capita"))
-        changed = bind(("x", "co2_per_capita"), ("y1", "year"))
+        filled = [{"role": "x", "column": "year"}, {"role": "y1", "column": "co2_per_capita"}]
+        changed = [{"role": "x", "column": "co2_per_capita"}, {"role": "y1", "column": "year"}]
+        note = {PENDING_REQUEST: "Title: A", PENDING_BINDINGS: held}
 
-        assert PENDING_REQUEST not in apply_bindings(filled, roles(), profile, held)[1]
-        assert apply_bindings(changed, roles(), profile, held)[1][PENDING_REQUEST] is None
-        assert apply_bindings(filled, roles(), profile, None)[1][PENDING_REQUEST] is None
+        assert pending_fate({**note, BINDINGS: filled}, PipelineArgs()) == "used"  # an open role filled
+        assert pending_fate({**note, BINDINGS: changed}, PipelineArgs()) == "dropped"  # a column rebound
+        assert pending_fate({**note, PENDING_BINDINGS: None, BINDINGS: changed}, PipelineArgs()) == "used"
+        assert pending_fate({BINDINGS: filled}, PipelineArgs()) is None  # nothing kept
+        assert pending_fate({**note, BINDINGS: changed}, PipelineArgs(base="previous")) is None  # takes no note
+
+    def test_a_dropped_note_takes_nothing_into_the_run(self) -> None:
+        state: dict[str, Any] = {
+            PENDING_REQUEST: "Histogram of the price distribution",
+            PENDING_EXPECTED_TEXTS: ["Verteilung der Preise"],
+            PENDING_BINDINGS: [{"role": "values", "column": "Price"}],
+            BINDINGS: [{"role": "values", "column": "Stock"}],
+        }
+
+        assert pending_fate(state, PipelineArgs()) == "dropped"
+        drop_pending_request(state)
+        taken = take_pending_request(state, PipelineArgs())
+        assert (taken.change_request, taken.expected_texts) == ("", [])
+        assert all(state[key] is None for key in (PENDING_REQUEST, PENDING_EXPECTED_TEXTS, PENDING_BINDINGS))
+
+    def test_a_failed_run_holds_its_note_for_the_bindings_it_drew_with(self) -> None:
+        state: dict[str, Any] = {BINDINGS: [{"role": "values", "column": "Stock"}]}
+        settle_pending_request(state, PipelineArgs(change_request="log scale"), shipped=False)
+
+        assert state[PENDING_BINDINGS] == [{"role": "values", "column": "Stock"}]
+        assert pending_fate(state, PipelineArgs()) == "used"
 
     async def test_a_note_held_on_incomplete_bindings_survives_the_binding_that_completes_them(
         self, client: httpx.AsyncClient
@@ -595,9 +630,10 @@ class TestPendingRequest:
         assert response.status_code == 200, response.text
         after = await _session_state(client, sid)
         assert (after[PENDING_REQUEST], after[PENDING_EXPECTED_TEXTS]) == ("Title: A", ["A"])
+        assert pending_fate(after, PipelineArgs()) == "used"
         changed = [{"role": "x", "column": "co2_per_capita"}, {"role": "y1", "column": "year"}]
         await client.put(f"/v1/sessions/{sid}/bindings", headers=HEADERS, json=changed)
-        assert (await _session_state(client, sid))[PENDING_REQUEST] is None
+        assert pending_fate(await _session_state(client, sid), PipelineArgs()) == "dropped"
 
     async def test_a_replaced_text_is_not_checked(
         self, client: httpx.AsyncClient, swap_models, monkeypatch: pytest.MonkeyPatch, backend: FakeBackend
@@ -737,3 +773,179 @@ class TestPendingRequest:
         text = "".join(part.text or "" for part in adapter[0].contents[-1].parts or [])
         assert note in text
         assert (await _session_state(client, sid))[PENDING_REQUEST] is None
+
+
+STUDY = [{"role": "x", "column": "Study Hours"}, {"role": "y", "column": "Exam Score"}]
+SWAPPED = [{"role": "x", "column": "Exam Score"}, {"role": "y", "column": "Study Hours"}]
+
+
+def pairs(bindings: object) -> set[tuple[str, str]]:
+    return {(item["role"], item["column"]) for item in bindings} if isinstance(bindings, list) else set()
+
+
+class TestTextsInTheUsersWords:
+    """A text the plot is checked for must stand in what the user wrote (`pipeline.in_users_words`)."""
+
+    def test_a_german_title_written_out_is_kept_verbatim(self) -> None:
+        args = PipelineArgs(change_request="Title: Umsatz nach Region", expected_texts=["Umsatz nach Region"])
+
+        kept = in_users_words(args, "Setz den Titel auf „Umsatz nach Region“, bitte")
+
+        assert kept.expected_texts == ["Umsatz nach Region"]
+
+    def test_case_spacing_and_quotes_are_set_aside(self) -> None:
+        args = PipelineArgs(expected_texts=["6,5 Mio.", "Study  Time"])
+
+        assert in_users_words(args, "format like '6,5 MIO.' and call it \"study time\"").expected_texts == [
+            "6,5 Mio.",
+            "Study  Time",
+        ]
+
+    def test_a_text_the_user_never_wrote_is_left_out(self) -> None:
+        """The note "distribution of the prices" made the root write the title "Distribution of prices"."""
+        remembered = RememberItem(
+            kind="title", text="title: 'Distribution of prices'", expected_text="Distribution of prices"
+        )
+        args = PipelineArgs(
+            change_request="Histogram of prices", expected_texts=["Distribution of prices"], remember=[remembered]
+        )
+
+        kept = in_users_words(args, "distribution of the prices")
+
+        assert kept.expected_texts == []
+        assert [(item.text, item.expected_text) for item in kept.remember] == [(remembered.text, None)]
+        assert kept.change_request == "Histogram of prices"
+
+    def test_no_words_checks_nothing(self) -> None:
+        args = PipelineArgs(expected_texts=["Anything"])
+
+        assert in_users_words(args, None) is args
+
+
+class TestNotesAndTheirTurn:
+    """F01 and F23 of the UX walk of 2026-11-05: a kept note follows the turn that kept it and the user's later binding."""
+
+    async def test_a_note_kept_before_the_turns_own_rebinding_holds_for_the_new_bindings(
+        self, client: httpx.AsyncClient, swap_models
+    ) -> None:
+        script = {
+            "root": [
+                {
+                    "call": "keep_plot_request",
+                    "args": {"change_request": "Title: Lernzeit", "expected_texts": ["Lernzeit"]},
+                },
+                {"call": "set_bindings", "args": {"bindings": SWAPPED}},
+                {"text": "Swapped, and the title is kept."},
+            ]
+        }
+        swap_models("gemini", script)
+        sid = await open_session(client)
+
+        await client.post(
+            f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "swap the axes, title Lernzeit"}
+        )
+
+        state = await _session_state(client, sid)
+        assert (state[PENDING_REQUEST], state[PENDING_EXPECTED_TEXTS]) == ("Title: Lernzeit", ["Lernzeit"])
+        assert pairs(state[PENDING_BINDINGS]) == pairs(SWAPPED)
+        assert pending_fate(state, PipelineArgs()) == "used"
+
+    async def test_a_note_kept_before_the_turns_own_data_change_comes_back(
+        self, client: httpx.AsyncClient, swap_models
+    ) -> None:
+        rename = {"op": "rename", "column": "Study Hours", "name": "Hours"}
+        script = {
+            "root": [
+                {"call": "keep_plot_request", "args": {"change_request": "only the top 10"}},
+                {"call": "prepare_data", "args": {"operations": [rename]}},
+                {"text": "Renamed, and the wish is kept."},
+            ]
+        }
+        swap_models("gemini", script)
+        sid = await open_session(client)
+
+        await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "rename it, top 10 only"})
+
+        state = await _session_state(client, sid)
+        assert state[PENDING_REQUEST] == "only the top 10"
+        assert pairs(state[PENDING_BINDINGS]) == pairs(state[BINDINGS])
+        assert ("x", "Hours") in pairs(state[BINDINGS])
+
+    async def test_a_text_the_user_did_not_write_is_not_kept(self, client: httpx.AsyncClient, swap_models) -> None:
+        keep = {
+            "call": "keep_plot_request",
+            "args": {"change_request": "Histogram of prices", "expected_texts": ["Distribution of prices"]},
+        }
+        only_texts = {
+            "call": "keep_plot_request",
+            "args": {"change_request": "", "expected_texts": ["Distribution of prices"]},
+        }
+        fake = swap_models("gemini", {"root": [keep, {"text": "Kept."}, only_texts, {"text": "Not kept."}]})
+        sid = await open_session(client)
+
+        first = await client.post(
+            f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "distribution of the prices"}
+        )
+        assert first.status_code == 200
+        state = await _session_state(client, sid)
+        assert (state[PENDING_REQUEST], state.get(PENDING_EXPECTED_TEXTS)) == ("Histogram of prices", None)
+
+        await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "the prices, please"})
+        # Every root call reads the turn's tool answers again: the last answer is the second call's.
+        assert tool_responses(fake, "keep_plot_request")[-1] == {
+            "status": "ok",
+            "request_kept": False,
+            "reason": "nothing_to_keep",  # only a text nobody wrote
+        }
+
+    async def test_a_rebind_by_hand_drops_the_note_and_the_result_says_so(
+        self, client: httpx.AsyncClient, swap_models
+    ) -> None:
+        fake = swap_models("gemini", default_script())
+        sid = await open_session(client)
+        runtime = app.dependency_overrides[get_runtime]()
+        note = {PENDING_REQUEST: "Title: Kept for the hours", PENDING_BINDINGS: STUDY}
+        await runtime.write_state(await runtime.session(USER, sid), note)
+        assert (await client.put(f"/v1/sessions/{sid}/bindings", headers=HEADERS, json=SWAPPED)).status_code == 200
+        assert (await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)).status_code == 200
+
+        events = await create_plot(client, sid)
+
+        assert next(data for name, data in events if name == "plot")["status"] == "ok"
+        assert "Title: Kept for the hours" not in adapter_inputs(fake)[0]
+        result = tool_responses(fake, "plot_pipeline")[-1]
+        assert result["kept_request"] == "dropped"
+        assert "x: Exam Score\ny: Study Hours" in result["bindings"] and "<user_data>" in result["bindings"]
+        assert (await _session_state(client, sid))[PENDING_REQUEST] is None
+
+    async def test_a_note_whose_bindings_stand_is_used(self, client: httpx.AsyncClient, swap_models) -> None:
+        fake = swap_models("gemini", default_script())
+        sid = await open_session(client)
+        runtime = app.dependency_overrides[get_runtime]()
+        await runtime.write_state(
+            await runtime.session(USER, sid), {PENDING_REQUEST: "Title: Kept", PENDING_BINDINGS: STUDY}
+        )
+
+        await create_plot(client, sid)
+
+        assert "Title: Kept" in adapter_inputs(fake)[0]
+        assert tool_responses(fake, "plot_pipeline")[-1]["kept_request"] == "used"
+
+    async def test_the_page_button_brings_no_request_of_the_roots(self, client: httpx.AsyncClient, swap_models) -> None:
+        """On `.create_plot()` the root re-sent its earlier note from memory; the server takes only the kept one."""
+        script = default_script()
+        script["root"] = [
+            {
+                "call": "plot_pipeline",
+                "args": {"change_request": "Title: From the history", "expected_texts": ["From the history"]},
+            },
+            {"text": "Here is your plot."},
+        ]
+        fake = swap_models("gemini", script)
+        sid = await open_session(client)
+
+        events = await create_plot(client, sid)
+
+        assert next(data for name, data in events if name == "plot")["status"] == "ok"
+        assert "From the history" not in adapter_inputs(fake)[0]
+        assert "kept_request" not in tool_responses(fake, "plot_pipeline")[-1]  # no note was kept

@@ -234,6 +234,7 @@ from agents.anyplot.opening import (
     store_dataset,
 )
 from agents.anyplot.page_export import NoPage, page_download
+from agents.anyplot.pipeline import hold_request
 from agents.anyplot.plugins.ledger import (
     ATTRIBUTION_LOGGER,
     CURRENT_LEDGER,
@@ -286,6 +287,9 @@ from agents.anyplot.session_state import (
     DATASET_VERSION,
     PENDING_BINDINGS,
     PENDING_CLEARED,
+    PENDING_EXPECTED_TEXTS,
+    PENDING_REMEMBER,
+    PENDING_REQUEST,
     PLOT_LANGUAGE,
     SUMMARY_PENDING,
     TELEMETRY_SOURCE,
@@ -1892,7 +1896,7 @@ async def put_bindings(
         parsed = [Binding(role=item.role, column=item.column) for item in bindings if item.column]
     except ValueError:
         raise AgentsError(422, "invalid") from None
-    check, delta = apply_bindings(parsed, view.snapshot.roles(), stored.profile, session.state.get(PENDING_BINDINGS))
+    check, delta = apply_bindings(parsed, view.snapshot.roles(), stored.profile)
     if not delta:
         return JSONResponse(
             status_code=422, content={"detail": "invalid", "errors": check.errors[:20]}, headers=_NO_STORE
@@ -2293,6 +2297,30 @@ async def _summarized(runtime: Runtime, user: str, sid: str, dataset_ids: Collec
         logger.warning("summary flag not cleared: %s", type(exc).__name__)
 
 
+async def _settle_kept_note(runtime: Runtime, user: str, sid: str, ledger: RequestLedger) -> None:
+    """Hold the first-plot note this turn kept for the bindings and data the turn ends with; never raises.
+
+    The root acts on one note in one turn, and in any order: it may keep the plot wish first and then bind the
+    columns the note names or sum the data. The note was written for the turn's end, so its bindings are those
+    (`PENDING_BINDINGS`, which the run judges, `pipeline.pending_fate`), and a data version the turn made, which
+    drops a kept note, gets it back. A turn whose plot shipped took the note already.
+    """
+    note = ledger.kept_note
+    if note is None or ledger.shipped_in_turn:
+        return
+    try:
+        session = await runtime.session(user, sid)
+        state = dict(session.state)
+        if not any(state.get(key) is not None for key in (PENDING_REQUEST, PENDING_EXPECTED_TEXTS, PENDING_REMEMBER)):
+            hold_request(state, note)  # a data version of this turn dropped it
+        bindings = state.get(BINDINGS)
+        state[PENDING_BINDINGS] = list(bindings) if isinstance(bindings, list) else []
+        keys = (PENDING_REQUEST, PENDING_EXPECTED_TEXTS, PENDING_REMEMBER, PENDING_BINDINGS)
+        await runtime.write_state(session, {key: state.get(key) for key in keys})
+    except Exception as exc:  # the turn's answer stands; the note holds for the bindings it was kept with
+        logger.warning("kept note not settled: %s", type(exc).__name__)
+
+
 async def _after_turn(runtime: Runtime, user: str, sid: str, facts: TurnFacts) -> TurnFacts:
     """`facts` with the session language and its source as the turn left them.
 
@@ -2497,8 +2525,13 @@ async def post_message(
     # The summary of a paste not summarized yet: the root's before-agent callback makes its `certain` conversions
     # (`paste_conversions.py`). A summary action on data already summarized makes none, nor does any later turn.
     ledger.summary_turn = first_turn and summary_pending
+    # What the user wrote this turn, which a text the plot is checked for must stand in (`pipeline.in_users_words`):
+    # the typed message, and on the first turn on a paste the notes pasted with it.
+    words = [body.text] if body.text else []
     if first_turn and view is not None and view.dataset_id:
         stored = services.datasets.get(view.dataset_id, sid)
+        if stored is not None:
+            words += stored.context_lines
         blocks: list[str] = []
         if stored is not None and stored.context_lines:
             # The notes pasted with the table, judged at the paste (`_screen_notes`): the root sees them with the
@@ -2514,6 +2547,7 @@ async def post_message(
             # A typed note is judged: the judge, the language detection, a strike and the stored user turn take the
             # note alone, never the notes judged at the paste again or the preambles' English words.
             ledger.paste_context = "\n\n".join(blocks)
+    ledger.user_words = "\n".join(words)
     message = types.Content(role="user", parts=[types.Part(text=text)])
 
     async def stream() -> AsyncGenerator[str, None]:
@@ -2584,6 +2618,7 @@ async def post_message(
                 started_on = view.dataset_id if view is not None else None
                 summarized = {dataset_id for dataset_id in (started_on, ledger.conversions_made) if dataset_id}
                 await _summarized(runtime, user, sid, summarized)
+            await _settle_kept_note(runtime, user, sid, ledger)
             # Read while the run is still active: no undo or paste can slip in between the run's end
             # and the `done` that reports its dataset, so the version and the change lines agree.
             sync = await _session_sync(runtime, user, sid, dataset_before=dataset_before, ledger=ledger)

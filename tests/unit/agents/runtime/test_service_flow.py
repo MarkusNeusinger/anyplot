@@ -4731,8 +4731,11 @@ async def test_a_title_asked_for_before_the_confirmation_reaches_the_first_plot(
     pasted = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": data})
     assert pasted.status_code == 200, pasted.text
 
+    # The title stands verbatim in the user's own words, so the plot is checked for it (`pipeline.in_users_words`).
     asked = await client.post(
-        f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "Setz den Titel auf Umsatz QX7 nach Filiale"}
+        f"/v1/sessions/{sid}/messages",
+        headers=HEADERS,
+        json={"text": "Setz den Titel auf „Umsatz QX7 nach Filiale und Quartal“"},
     )
 
     blocked = next(data for name, data in parse_sse(asked.text) if name == "plot")

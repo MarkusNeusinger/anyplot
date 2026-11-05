@@ -54,6 +54,7 @@ from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.tool_context import ToolContext
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from ..briefs import bindings_text
 from ..data.generate import Generate
 from ..data.prepare import MAX_OPERATIONS, Operation, validation_lines
 from ..data.query import QueryArgs
@@ -103,8 +104,10 @@ RESULT_LIMITS: dict[str, int] = {
     DATA_CODE_TOOL: 16 * 1024,
     # A PlotResult at its schema maximum (16 lines of 640, 5 changes of 200) with its `shows` (62 drawn texts of
     # 80 characters, five requested texts of 120) is about 18 KB in one-byte and 35 KB in two-byte UTF-8 (German
-    # umlauts throughout). Above the cap `shows` gives way (`shrunk_shows`) before the result is refused.
-    PIPELINE_TOOL: 40 * 1024,
+    # umlauts throughout). Above the cap `shows` gives way (`shrunk_shows`) before the result is refused. The
+    # `bindings` the run drew with add at most 50 roles of 32 characters and columns of 64, about 12 KB fenced in
+    # three-byte UTF-8, so they never push a shipped plot over.
+    PIPELINE_TOOL: 52 * 1024,
 }
 TEXT_LITERAL_KEYS = ("separator", "prefix", "suffix", "old", "new")
 """The literals of the text operations (`split`, `strip`, `replace`): compared with the cells or written into them."""
@@ -262,6 +265,17 @@ def fence_pipeline_notes(result: dict[str, Any]) -> dict[str, Any]:
         ]
     if fenced.get("request_kept") is None:
         fenced.pop("request_kept", None)  # only a `not_ready` result that kept the run's request says so
+    if fenced.get("kept_request") is None:
+        fenced.pop("kept_request", None)  # only a run that had a kept note says what became of it
+    drawn = fenced.pop("bindings", None)
+    try:
+        bindings = [Binding.model_validate(item) for item in drawn] if isinstance(drawn, list) else []
+    except ValidationError:
+        bindings = []
+    if bindings:
+        # The column names are the user's: one `role: column` per line inside a data fence, as `get_dataset_profile`
+        # lists them, so the root names the bindings the plot drew with, not the ones an earlier turn named.
+        fenced["bindings"] = DATA_PREAMBLE + "\n" + fence("user_data", bindings_text(bindings))
     if result.get("status") in ("ok", "needs_attention"):
         # A shipped plot passed the gate on the user's confirmation: a server fact in the result itself,
         # so an earlier turn's "please confirm" never reads as still true (live round 6, R6-1).
