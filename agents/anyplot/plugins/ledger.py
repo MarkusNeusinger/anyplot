@@ -229,9 +229,9 @@ class RequestLedger:
     catalogue code whatever base the root passes, without a switch's carry, and applies the plot memory, which only the
     user clears (`pipeline.Run.fresh`, owner decision of 2026-11-02)."""
     user_words: str | None = None
-    """The user's own text of the turn, set by the `/messages` route: the typed message and, on the first turn on a
-    paste, the notes pasted with it; empty for an action without notes. A text the plot is checked for must stand in
-    it (`pipeline.in_users_words`); None (a caller without a page turn) checks nothing."""
+    """The user's own text for the turn, set by the `/messages` route: the typed message and the notes pasted with
+    the session's data; empty for an action on data without notes. A text the plot is checked for must stand in it
+    (`pipeline.in_users_words`); None (a caller without a page turn) checks nothing."""
     kept_note: Any = None
     """The `PipelineArgs` of the first-plot note this turn kept (`keep_plot_request`, or a run that stopped
     `not_ready`): after the turn the note is held for the bindings and data the turn ends with (`_settle_kept_note`

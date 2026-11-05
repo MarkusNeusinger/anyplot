@@ -53,6 +53,7 @@ from agents.anyplot.tools.session import query_data, query_result, set_bindings
 from agents.main import Runtime, app, get_runtime
 from core.spec_roles import DataRole
 
+from .conftest import CASES
 from .fakes import SCATTER_PLAN, VERDICT_OK, ScriptedLlm, default_script
 from .test_service_flow import (
     HEADERS,
@@ -821,6 +822,19 @@ class TestTextsInTheUsersWords:
 
         assert in_users_words(args, None) is args
 
+    def test_a_dash_a_slash_or_a_closing_mark_the_root_wrote_otherwise_is_the_same_text(self) -> None:
+        args = PipelineArgs(expected_texts=["Pre–Test vs. Post–Test", "Sales / Costs", "6,5 Mio."])
+
+        kept = in_users_words(args, "title Pre-Test vs. Post-Test, axis Sales/Costs, format 6,5 Mio")
+
+        assert kept.expected_texts == ["Pre–Test vs. Post–Test", "Sales / Costs", "6,5 Mio."]
+
+    def test_a_short_text_must_stand_as_a_whole(self) -> None:
+        """`in` inside `linear` is no text the user wrote."""
+        args = PipelineArgs(expected_texts=["in", "US", "km"])
+
+        assert in_users_words(args, "a linear scale, focus on km").expected_texts == ["km"]
+
 
 class TestNotesAndTheirTurn:
     """F01 and F23 of the UX walk of 2026-11-05: a kept note follows the turn that kept it and the user's later binding."""
@@ -870,6 +884,31 @@ class TestNotesAndTheirTurn:
         assert state[PENDING_REQUEST] == "only the top 10"
         assert pairs(state[PENDING_BINDINGS]) == pairs(state[BINDINGS])
         assert ("x", "Hours") in pairs(state[BINDINGS])
+
+    async def test_a_title_from_the_pasted_notes_counts_on_a_later_turn(
+        self, client: httpx.AsyncClient, swap_models
+    ) -> None:
+        keep = {
+            "call": "keep_plot_request",
+            "args": {"change_request": "Title from the notes", "expected_texts": ["Umsatz QX7 nach Region"]},
+        }
+        fake = swap_models("gemini", {"root": [{"text": "Your data."}, keep, {"text": "Kept."}]})
+        sid = await open_session(client, with_data=False)
+        data = (CASES / "scatter-basic-matplotlib" / "data.csv").read_text()
+        notes = "Wunschtitel: Umsatz QX7 nach Region\n\n"
+        assert (
+            await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": notes + data})
+        ).is_success
+        stored = get_services().datasets.get((await _session_state(client, sid))[DATASET_ID], sid)
+        assert stored is not None and stored.context_lines  # the note line was kept beside the table
+
+        await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "hallo"})
+        await client.post(
+            f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "nimm den Titel aus der Notiz"}
+        )
+
+        assert tool_responses(fake, "keep_plot_request")[-1] == {"status": "ok", "request_kept": True}
+        assert (await _session_state(client, sid))[PENDING_EXPECTED_TEXTS] == ["Umsatz QX7 nach Region"]
 
     async def test_a_text_the_user_did_not_write_is_not_kept(self, client: httpx.AsyncClient, swap_models) -> None:
         keep = {

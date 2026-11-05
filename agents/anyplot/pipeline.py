@@ -784,18 +784,25 @@ def chosen_texts(pending: object, args: PipelineArgs) -> list[str]:
 
 
 _QUOTE_MARKS = re.compile(r"[\"'`´‘’‚‛“”„‟«»‹›]")
+_DASHES = re.compile(r"[‐‑‒–—―−]")
+_SLASH = re.compile(r"\s*/\s*")
+_CLOSING_MARKS = ".,;:!?…"
 
 
 def spoken_form(text: str) -> str:
-    """`text` as it is compared with the user's words: quote marks gone, whitespace collapsed, case folded."""
-    return " ".join(_QUOTE_MARKS.sub(" ", text).split()).casefold()
+    """`text` as it is compared with the user's words: quote marks gone, every dash a hyphen, no space around a slash,
+    whitespace collapsed, case folded."""
+    plain = _SLASH.sub("/", _DASHES.sub("-", _QUOTE_MARKS.sub(" ", text)))
+    return " ".join(plain.split()).casefold()
 
 
 def in_users_words(args: PipelineArgs, words: str | None) -> PipelineArgs:
     """`args` without the expected texts the user never wrote: each must stand in `words`, the user's own text of
-    the turn (the typed message and the notes pasted with the data, `RequestLedger.user_words`), once case, spaces
-    and quote marks are set aside (`spoken_form`). A memory decision keeps its instruction and loses only such a
-    text. None (a caller without a page turn, such as the evals' own runs) checks nothing.
+    the turn (the typed message and the notes pasted with the data, `RequestLedger.user_words`), once case, spaces,
+    quote marks and the kind of dash are set aside (`spoken_form`), as a whole: no letter or digit right before or
+    after it, so `in` never stands in `linear`. A closing mark the root added (`6,5 Mio.` for the user's `6,5 Mio`)
+    is no other text. A memory decision keeps its instruction and loses only such a text. None (a caller without a
+    page turn, such as the evals' own runs) checks nothing.
 
     The texts are checked verbatim in the render (`grounding.py`), so a text the root made up is checked as if the
     user had asked for it: the note "distribution of the prices" became the title "Distribution of prices", which
@@ -806,7 +813,11 @@ def in_users_words(args: PipelineArgs, words: str | None) -> PipelineArgs:
     said = spoken_form(words)
 
     def written(text: str) -> bool:
-        return spoken_form(text) in said
+        wanted = spoken_form(text)
+        for form in dict.fromkeys((wanted, wanted.rstrip(_CLOSING_MARKS))):
+            if form and re.search(rf"(?<![^\W_]){re.escape(form)}(?![^\W_])", said):
+                return True
+        return False
 
     texts = [text for text in args.expected_texts if written(text)]
     remember = [

@@ -2525,13 +2525,14 @@ async def post_message(
     # The summary of a paste not summarized yet: the root's before-agent callback makes its `certain` conversions
     # (`paste_conversions.py`). A summary action on data already summarized makes none, nor does any later turn.
     ledger.summary_turn = first_turn and summary_pending
-    # What the user wrote this turn, which a text the plot is checked for must stand in (`pipeline.in_users_words`):
-    # the typed message, and on the first turn on a paste the notes pasted with it.
+    # What the user wrote, which a text the plot is checked for must stand in (`pipeline.in_users_words`): the typed
+    # message, and the notes pasted with the data, on any turn ("the title from my notes" may come later).
     words = [body.text] if body.text else []
+    notes_of = services.datasets.get(view.dataset_id, sid) if view is not None and view.dataset_id else None
+    if notes_of is not None:
+        words += notes_of.context_lines
     if first_turn and view is not None and view.dataset_id:
         stored = services.datasets.get(view.dataset_id, sid)
-        if stored is not None:
-            words += stored.context_lines
         blocks: list[str] = []
         if stored is not None and stored.context_lines:
             # The notes pasted with the table, judged at the paste (`_screen_notes`): the root sees them with the
