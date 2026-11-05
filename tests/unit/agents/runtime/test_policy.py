@@ -89,12 +89,12 @@ class TestAdapterInstruction:
 class TestAdapterPromptPerLanguage:
     """`adapter.md` holds the shared rules, each language's runtime prompt fills its slots (2026-10-29)."""
 
-    PYTHON_SHA256 = "8ae4901f5bf0c80e3ac8d582ba197e724377abab70864b535bed80b9ac66386f"
+    PYTHON_SHA256 = "57fde0a54807238b0a5772ba4451ec5b0f1cbf4db3f0baa5429a7db013c46c1e"
     """SHA-256 of `adapter.md` as `own_prompt` read it before the split (51ceaac6c, stripped, 18,703 characters),
     since 2026-11-01 with the `changes` notes in plain words and in the reply language (19,615 characters), since
     2026-11-02 with a date column on a label role written as labels (20,006 characters), with the plot memory's
     standing decisions, carried out in this library's own terms (20,899 characters), and since 2026-11-05 with one
-    column on two roles selected once (21,098 characters)."""
+    column on two roles selected once, and the pandas form of that rule (21,194 characters)."""
 
     def test_the_python_adapter_prompt_matches_its_pinned_hash(self) -> None:
         """Golden: the Python libraries' adapters read exactly the pinned prompt. It was the one they read before R
@@ -105,7 +105,7 @@ class TestAdapterPromptPerLanguage:
         assert hashlib.sha256(prompt.encode("utf-8")).hexdigest() == self.PYTHON_SHA256, (
             "the Python adapter prompt changed; if that is intended, pin its new SHA-256 here"
         )
-        assert len(prompt) == 21_098 and "{{" not in prompt
+        assert len(prompt) == 21_194 and "{{" not in prompt
 
     HIGHLIGHTS_SHA256 = "b810744bed4b986e2a76d4480f72ee986c69b12d12f964f0d988d815141d3567"
     """SHA-256 of `adapter_highlights.md` as `own_prompt` read it before its slot (51ceaac6c, 1,058 characters)."""
