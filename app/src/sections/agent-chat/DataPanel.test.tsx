@@ -220,6 +220,24 @@ describe('DataPanel bindings', () => {
     expect(screen.getByRole('button', { name: 'Remove hats from y' })).toHaveFocus();
   });
 
+  it("gives the last chip's place to `+`, which follows it", async () => {
+    const props = {
+      onParse: vi.fn(),
+      onConfirmTranscription: vi.fn(),
+      onDiscardTranscription: vi.fn(),
+      onBind: vi.fn(),
+      onUndo: vi.fn(),
+    };
+    const before = stateWith({ x: 'month', y1: 'shoes', y2: 'hats' }, { missingRoles: [] });
+    const { rerender } = render(<Panel state={before} {...props} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Remove hats from y' }));
+    rerender(<Panel state={{ ...before, bindingsBusy: true }} {...props} />);
+    rerender(
+      <Panel state={stateWith({ x: 'month', y1: 'shoes' }, { missingRoles: [] })} {...props} />
+    );
+    expect(screen.getByRole('button', { name: '+ y: add a column' })).toHaveFocus();
+  });
+
   it('gives the focus to the chip that took the last column, where `+` goes', async () => {
     const props = {
       onParse: vi.fn(),

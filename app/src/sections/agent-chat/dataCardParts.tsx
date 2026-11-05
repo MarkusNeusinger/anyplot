@@ -500,6 +500,8 @@ const chipSx = {
   fontSize: fontSize.md,
   color: 'var(--ink)',
   whiteSpace: 'nowrap',
+  maxWidth: '100%',
+  minWidth: 0,
 } as const;
 
 const removeSx = {
@@ -508,6 +510,7 @@ const removeSx = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
+  flexShrink: 0,
   width: CHIP_HEIGHT,
   height: CHIP_HEIGHT,
   borderRadius: '50%',
@@ -556,10 +559,11 @@ function FamilyChips({
     if (active && active !== document.body && !listRef.current?.contains(active)) return;
     const last = removeRefs.current[count - 1];
     // `+` is gone once the last column is taken: the chip that took it holds the focus then.
+    // A removed chip's place goes to the chip after it; the last one's to `+`, which follows it.
     const element =
       target === 'add'
         ? (addRef.current ?? last)
-        : (removeRefs.current[Math.min(target, count - 1)] ?? addRef.current);
+        : ((target < count ? removeRefs.current[target] : null) ?? addRef.current ?? last);
     element?.focus();
   }, [disabled, count]);
 
@@ -592,7 +596,14 @@ function FamilyChips({
       >
         {row.members.map(([member, column], index) => (
           <Box component="li" key={member} sx={chipSx}>
-            {column}
+            {/* A long column name is cut with an ellipsis inside the card; its × names it in full. */}
+            <Box
+              component="span"
+              title={column}
+              sx={{ overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}
+            >
+              {column}
+            </Box>
             <Box
               component="button"
               type="button"
