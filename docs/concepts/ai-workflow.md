@@ -5,8 +5,9 @@
 
 Models write anyplot's code; I lead them. This page describes how that works: who does what, what I bring
 to it, the path a change takes to production, how a correction becomes a rule, and where the approach
-falls short. The rules themselves are in [`CLAUDE.md`](../../CLAUDE.md), the incidents behind them in
-[`.claude/guardrails.md`](../../.claude/guardrails.md), and the procedures in
+falls short. The rules themselves are in [`CLAUDE.md`](../../CLAUDE.md), which model or agent takes
+which work in [`agentic/docs/agent-operations.md`](../../agentic/docs/agent-operations.md), the
+incidents behind them in [`.claude/guardrails.md`](../../.claude/guardrails.md), and the procedures in
 [`.claude/skills/`](../../.claude/skills/). This page explains them; it doesn't repeat them.
 
 ## Who does what
