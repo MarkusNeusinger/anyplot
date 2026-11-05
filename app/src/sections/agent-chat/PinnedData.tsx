@@ -155,6 +155,9 @@ export function DataCardShell({ view, locked, children }: DataCardShellProps) {
       component="section"
       aria-label="Your data"
       aria-describedby={locked ? DATA_LOCK_ID : undefined}
+      // The thread is a polite live log: a dropdown or a preview changing in the card is no news
+      // to read out. The card's own status lines keep their roles.
+      aria-live="off"
       id="agent-data-card"
       data-testid="data-card"
       ref={view.cardRef}

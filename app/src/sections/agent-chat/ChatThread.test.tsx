@@ -382,6 +382,14 @@ describe('ChatThread data items', () => {
         { id: 3, kind: 'action', action: 'summarize_data', library: 'matplotlib' },
       ];
       let atComposer = true;
+      // A thread that mounts with its reply already there leaves the page where it is.
+      const mounted = renderItems(
+        ready([...card, { id: 4, kind: 'assistant', text: '4 rows.' }]),
+        () => true
+      );
+      expect(scroll).not.toHaveBeenCalled();
+      mounted.unmount();
+
       const { rerender } = renderItems(ready(card), () => atComposer);
       expect(scroll).not.toHaveBeenCalled();
       const thread = (items: ChatItem[]) => (

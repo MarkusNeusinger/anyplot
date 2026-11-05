@@ -279,7 +279,8 @@ export function DataPanel({
   // above it stays as it is until `.use()`.
   if (part === 'transcription') {
     return transcription ? (
-      <Box data-testid="transcription-item" sx={cardSx}>
+      // Off for the thread's live log, as the data card's shell is.
+      <Box data-testid="transcription-item" aria-live="off" sx={cardSx}>
         {card}
       </Box>
     ) : null;

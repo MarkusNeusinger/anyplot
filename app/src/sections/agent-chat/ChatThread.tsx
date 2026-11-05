@@ -282,7 +282,8 @@ export function ChatThread(props: ChatThreadProps) {
   // it would land under the fold, while the user's eyes are on the composer.
   const replyId = firstReplyId(items);
   const replyRef = useRef<HTMLDivElement>(null);
-  const followed = useRef<number | null>(null);
+  // A reply that was there when the thread mounted has arrived already: only a new one moves it.
+  const followed = useRef<number | null>(replyId);
   const { followReply } = props;
   useEffect(() => {
     if (replyId === null || followed.current === replyId) return;

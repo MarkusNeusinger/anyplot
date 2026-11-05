@@ -1383,6 +1383,8 @@ describe('AgentChatPage card in the thread', () => {
       const card = await screen.findByTestId('data-card');
       expect(screen.getByRole('log', { name: 'Conversation' })).toContainElement(card);
       expect(follows(screen.getByTestId('paste-item'), card)).toBe(true);
+      // Inside the polite log, the card's own changes are no news to read out.
+      expect(card).toHaveAttribute('aria-live', 'off');
       const calls = scroll.mock.contexts.flatMap((context, index) =>
         context === card ? [scroll.mock.calls[index][0]] : []
       );

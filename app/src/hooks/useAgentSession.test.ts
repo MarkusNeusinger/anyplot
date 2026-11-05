@@ -3631,12 +3631,17 @@ describe('agentReducer: the card in the thread', () => {
     // The stored data's card stays live above until the user decides.
     expect(kinds(waiting)).toEqual(['paste', 'data', 'paste', 'transcription']);
 
-    const used = agentReducer(waiting, {
+    // `.use()` parses the table as `parseData` does: the start clears the waiting table, its
+    // item stays for the answer.
+    const starting = agentReducer(waiting, { type: 'parse_start' });
+    expect(starting.transcription).toBeNull();
+    const used = agentReducer(starting, {
       type: 'parse_done',
       parsed: { ...parsed, profile: { ...profile, rows: 2 } },
       bytes: 26,
       fromTranscription: true,
     });
+    expect(used.transcription).toBeNull();
     expect(used.items).toEqual([
       { id: 1, kind: 'paste', text: '▤ table' },
       { id: 2, kind: 'data_stub', rows: DATASET.profile.rows, columns: 0 },
