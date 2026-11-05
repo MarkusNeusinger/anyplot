@@ -235,8 +235,9 @@ MIN_KEPT_COLUMNS = 2
 a category or a time and a value, the least a plot needs."""
 CONSTANT_NOTE_SUFFIX = " (the same in every row)"
 """The end of a note the parser made from a column with one value (`_constants_to_notes`, a JSON-stat dimension
-of one category): it sets the line apart from the user's own notes, for the user in the data card and for the
-assistant, which would otherwise call the value something the user wrote."""
+of one category): it says what the line is, for the user in the data card and for the assistant, which would
+otherwise call the value something the user wrote. A reading aid, never a mark of trust: a pasted note can end
+the same way, and the assistant reads every note as data either way (`policy.NOTES_PREAMBLE`)."""
 
 # Candidate delimiters in tie-break order, with the source format each one reports.
 DELIMITERS: tuple[tuple[str, SourceFormat], ...] = ((",", "csv"), (";", "semicolon"), ("\t", "tsv"), ("|", "pipe"))
@@ -2422,7 +2423,7 @@ def _json_stat(
     `value` in any case is renamed `<label> (dimension)` so the measure keeps the name: a measure dimension (`metric`, or a
     component such as births and deaths) stays a column of the long table, which
     `prepare_data` can pivot later. A dimension of one category is the same in every row,
-    so it is no column: `<label>: <category>` joins the dataset's `label`, `source` and
+    so it is no column: `<label>: <category> (the same in every row)` joins the dataset's `label`, `source` and
     `note` lines in `context`, the notes the user pasted with the data, which the route
     screens before any model reads them; the warning gives only their count. `status`
     symbols are ignored, with one warning.
