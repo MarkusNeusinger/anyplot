@@ -3754,6 +3754,21 @@ describe('useAgentSession: a cut stream', () => {
     ]);
   });
 
+  it("reads nothing again when the page's own handling of an event failed", async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () => numberedSse([...TURN_START, ...TURN_REST]);
+    const { result } = await openWithFastReads(routes);
+    trackEvent.mockImplementationOnce(() => {
+      throw new TypeError('a bug in the page');
+    });
+
+    await act(() => result.current.createPlot());
+
+    expect(turnReads()).toHaveLength(0);
+    expect(lastItem(result.current.state.items)).toMatchObject({ kind: 'error' });
+    expect(trackEvent).not.toHaveBeenCalledWith('agent_turn_resumed', expect.anything());
+  });
+
   it('shows the cut as before when the server holds another turn', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/messages'] = () => numberedSse(TURN_START, { cut: true });

@@ -73,6 +73,7 @@ class TurnLog:
                 index += 1
             if self.ended:
                 return
+            # No await between the checks above and this read: a change after them sets the event taken here.
             changed = self._changed
             try:
                 # The timeout wraps the wait only, never a yield (PEP 789).

@@ -2275,31 +2275,51 @@ export function useAgentSession({
   );
 
   /** Read a turn's events from `response` into the thread and into `read`, until `done` or the stream's end. */
+  /**
+   * Read a turn's events from `response` into the thread and into `read`: `done` once the turn's
+   * `done` arrived, `ended` for a stream that ended without it, `cut` for one whose read failed (a
+   * browser reports a lost connection as a `TypeError` from the body). A failure of the page's own
+   * handling of an event is no cut: it throws, as any other failure does.
+   */
   const consume = useCallback(
-    async (response: Response, read: TurnRead, signal: AbortSignal) => {
+    async (
+      response: Response,
+      read: TurnRead,
+      signal: AbortSignal
+    ): Promise<'done' | 'ended' | 'cut'> => {
       if (!response.body) throw new AgentApiError(502, 'upstream');
-      for await (const raw of readSseEvents(response.body, signal)) {
-        if (raw.id) read.lastId = raw.id;
-        const event = parseAgentEvent(raw);
-        if (!event) continue;
-        onEvent(event);
-        if (event.type === 'error') read.errorCode = event.code;
-        // A refusal arrives as an event of its own; the stream then ends with `done` as usual.
-        if (event.type === 'refusal') {
-          read.refused = true;
-          read.refusalCode = event.code;
+      let handling = false;
+      try {
+        for await (const raw of readSseEvents(response.body, signal)) {
+          handling = true;
+          if (raw.id) read.lastId = raw.id;
+          const event = parseAgentEvent(raw);
+          if (event) {
+            onEvent(event);
+            if (event.type === 'error') read.errorCode = event.code;
+            // A refusal arrives as an event of its own; the stream then ends with `done` as usual.
+            if (event.type === 'refusal') {
+              read.refused = true;
+              read.refusalCode = event.code;
+            }
+            if (
+              event.type === 'plot' &&
+              (event.result.status === 'ok' || event.result.status === 'needs_attention')
+            ) {
+              read.shipped = true;
+            }
+            if (event.type === 'done') {
+              read.finished = true;
+              return 'done';
+            }
+          }
+          handling = false;
         }
-        if (
-          event.type === 'plot' &&
-          (event.result.status === 'ok' || event.result.status === 'needs_attention')
-        ) {
-          read.shipped = true;
-        }
-        if (event.type === 'done') {
-          read.finished = true;
-          break;
-        }
+      } catch (err) {
+        if (handling || !(err instanceof TypeError)) throw err;
+        return 'cut';
       }
+      return 'ended';
     },
     [onEvent]
   );
@@ -2450,15 +2470,9 @@ export function useAgentSession({
         );
         // The BFF always ends a turn with `done`: a stream without it, or one that failed (an HTTP/3
         // error between the browser and the edge, say), was cut, while the server may run the turn on.
-        let failure: Failure;
-        try {
-          await consume(response, read, controller.signal);
-          if (read.finished) return;
-          failure = { code: 'upstream', ref: null };
-        } catch (err) {
-          if (!(err instanceof TypeError)) throw err;
-          failure = handleFailure(err);
-        }
+        const end = await consume(response, read, controller.signal);
+        if (end === 'done') return;
+        const failure: Failure = { code: end === 'cut' ? 'network' : 'upstream', ref: null };
         const resumed = read.lastId ? await reattach(sid, read, controller, resumeDelaysMs) : null;
         if (resumed) trackEvent('agent_turn_resumed', { outcome: resumed.outcome });
         if (read.finished || stoppedRef.current || controller.signal.aborted) return;
@@ -2477,7 +2491,7 @@ export function useAgentSession({
         }
       });
     },
-    [token, addItem, consume, reattach, driveTurn, handleFailure, busy, trackEvent, resumeDelaysMs]
+    [token, addItem, consume, reattach, driveTurn, busy, trackEvent, resumeDelaysMs]
   );
 
   /** `.create_plot()`, `.start_over()`: the fresh plot from the catalogue code, without the plot memory's decisions. */
