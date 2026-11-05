@@ -9,4 +9,4 @@
   century, the decimal mark) still gets its one question first, and a date
   column's offer stays a `date_number`. In the prep eval,
   `de-percent-not-count` and `en-percent-unit-mixed` went from 1 of 10 runs on
-  `main` to 6 of 6, and the full set scored 82 of 85.
+  `main` to 6 of 6, and the full set scored 82 of 85. (#12582)
