@@ -6,4 +6,4 @@
   `status{step:"started"}` once, when a run that waited takes its slot. The API
   passes it on both lanes, and a turn read again after a cut replays it. The
   page clears the badge on it. A plot run that leaves the queue before its first
-  step shows `starting…` in its progress grid again.
+  step shows `starting…` in its progress grid again. (#12577)
