@@ -2,7 +2,7 @@
 
 - **`agent_turn_resumed`.** A Plausible event with `outcome` (`resumed`, `gone`, `failed`) counts every chat turn
   whose stream was cut after its first event, and whether the page read its result anyway. The origin's logs cannot
-  see a cut between the browser and the edge, so this event is how often it happens.
+  see a cut between the browser and the edge, so this event is how often it happens. (#12572)
 
 ### Fixed
 
@@ -15,4 +15,4 @@
   and reads the turn again after 1, 2, 4 and 8 s. It shows the error only when every read failed, and the next click
   of the same request reads that turn first instead of making the same plot twice. The agents stream now writes a
   `: ping` after every 15 s without an event, as the BFF route already did, and a test pins the BFF's ping. A client
-  that the agents service sees go still cancels the run.
+  that the agents service sees go still cancels the run. (#12572)
