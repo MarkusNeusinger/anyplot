@@ -33,6 +33,9 @@ export function RootLayout() {
   const navigationType = useNavigationType();
   const { effective } = useTheme();
   const mastheadSticks = pathname !== paths.plots;
+  // The agent chat has a feedback row of its own on every result, and the chat's for a session
+  // without one; on a phone the site's button covered the composer's `.send()` and the replies.
+  const siteFeedback = pathname !== paths.agent && pathname !== '/debug/agent';
 
   // Set synchronously during render so the first pageview from a child page's
   // useEffect (which runs before the parent's useEffect) carries the theme prop.
@@ -97,7 +100,7 @@ export function RootLayout() {
         <Footer onTrackEvent={trackEvent} />
       </Container>
 
-      <FeedbackWidget />
+      {siteFeedback && <FeedbackWidget />}
     </Box>
   );
 }

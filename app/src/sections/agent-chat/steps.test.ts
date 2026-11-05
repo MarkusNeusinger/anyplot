@@ -5,7 +5,7 @@ import {
   initialAgentState,
   type RunState,
 } from 'src/hooks/useAgentSession';
-import { pendingReply, showsTimeline, stepOneLine } from 'src/sections/agent-chat/steps';
+import { pendingReply, runView, showsTimeline, stepOneLine } from 'src/sections/agent-chat/steps';
 
 const queued = (kind: RunState['kind']): RunState => ({
   kind,
@@ -44,6 +44,38 @@ describe('the waits of a turn', () => {
     });
     expect(showsTimeline(stepped)).toBe(true);
     expect(pendingReply(stepped)).toBeNull();
+  });
+});
+
+describe('runView', () => {
+  const plotRun: RunState = {
+    kind: 'create_plot',
+    steps: [{ step: 'adapting', attempt: 1 }],
+    queue: null,
+    stopping: false,
+  };
+  const ask = { id: 1, kind: 'action', action: 'create_plot', library: 'matplotlib' } as const;
+  const note = { id: 2, kind: 'assistant', text: 'Adapting the catalogue plot.' } as const;
+
+  it('holds what a run sends into the thread while its timeline stands below it', () => {
+    // Above the timeline it pushed the timeline and the composer down mid-run.
+    const state = { ...running(plotRun), items: [ask, note] };
+    expect(runView(state)).toEqual({ items: [ask], timeline: true });
+  });
+
+  it("lets the run's result card take the timeline's place, with the held items", () => {
+    const card = { id: 3, kind: 'plot', version: 1 } as const;
+    const state = { ...running(plotRun), items: [ask, note, card] };
+    expect(runView(state)).toEqual({ items: [ask, note, card], timeline: false });
+  });
+
+  it('holds nothing for a turn without the timeline, nor once the run is over', () => {
+    const question = running(queued('message'));
+    expect(runView({ ...question, items: [ask, note] }).items).toEqual([ask, note]);
+    expect(runView({ ...running(plotRun), run: null, items: [ask, note] })).toEqual({
+      items: [ask, note],
+      timeline: false,
+    });
   });
 });
 

@@ -74,6 +74,48 @@ afterEach(() => {
 });
 
 describe('ResultCard', () => {
+  it("puts the image's actions over it, and on a phone into the header row instead", () => {
+    // On a phone the image's top right corner holds the plot's title.
+    const actionsIn = () => {
+      const open = screen.getByRole('button', { name: 'Open full size' });
+      return {
+        image: screen.getByTestId('result-image-box').contains(open),
+        header: !!screen.queryByTestId('result-header-actions')?.contains(open),
+      };
+    };
+    const { unmount } = render(
+      <ResultCard
+        version={makeVersion()}
+        specId="scatter-basic"
+        language="python"
+        latest
+        busy={false}
+        onRequestTheme={vi.fn()}
+        onFetchArtifact={vi.fn()}
+        onTrack={vi.fn()}
+      />
+    );
+    expect(actionsIn()).toEqual({ image: true, header: false });
+    unmount();
+
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({
+        matches: query === '(max-width: 599.95px)',
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        onchange: null,
+        dispatchEvent: vi.fn(),
+      }))
+    );
+    renderCard();
+    expect(actionsIn()).toEqual({ image: false, header: true });
+    expect(screen.getAllByRole('button', { name: 'Download PNG' })).toHaveLength(1);
+  });
+
   it('shows the rendered image, the residual notes and the run in one status line', async () => {
     renderCard();
     expect(screen.getByAltText('Adapted plot, version 2, light theme')).toHaveAttribute(

@@ -178,7 +178,8 @@
  * pipeline run takes from leaving the queue to its first step, so the page's
  * `starting…` stays visible), MOCK_REPAIR (`1`: a first plot, too, fails its
  * first review and runs a repair round, as a refinement always does),
- * MOCK_PARSE_MS (400, how long a
+ * MOCK_REPLY_MS (half a step, how long the reply takes after the plot, the
+ * root's call that writes it), MOCK_PARSE_MS (400, how long a
  * parse takes, the dataset judge's call in production; a transcription takes
  * 900 ms more), MOCK_OPEN_MS (0, how long `POST /sessions` takes, so the page's
  * opening state, where the bot check runs on the public lane, stays visible).
@@ -223,6 +224,7 @@ const QUEUE_MS = Number(process.env.MOCK_QUEUE_MS || 2500);
 const QUEUE_START = Number(process.env.MOCK_QUEUE ?? 2);
 const STOP_MS = Number(process.env.MOCK_STOP_MS ?? 2000);
 const START_MS = Number(process.env.MOCK_START_MS ?? 0);
+const REPLY_MS = process.env.MOCK_REPLY_MS ? Number(process.env.MOCK_REPLY_MS) : null;
 const REPAIR = process.env.MOCK_REPAIR === '1';
 const PARSE_MS = Number(process.env.MOCK_PARSE_MS ?? 400);
 const OPEN_MS = Number(process.env.MOCK_OPEN_MS ?? 0);
@@ -1380,7 +1382,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       // switch's carry is spent.
       if (refine) rememberChange(session, text);
       if (carried) session.carry = null;
-      await sleep(STEP_MS / 2);
+      // The root writes its reply after the plot: seconds in production (MOCK_REPLY_MS).
+      await sleep(REPLY_MS ?? STEP_MS / 2);
       const decisions = session.memory.length;
       send('message', {
         text: refine
