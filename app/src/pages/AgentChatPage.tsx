@@ -983,7 +983,8 @@ function AgentChat({
               void session.confirmTranscription();
             }}
             onTrack={trackEvent}
-            onConvert={session.convertFile}
+            // The sheet picker's read holds the composer back until its parse starts.
+            onConvert={session.readSheet}
             onDiscardTranscription={handleDiscard}
             onBind={session.setBinding}
             onUndo={() => void session.undoData()}

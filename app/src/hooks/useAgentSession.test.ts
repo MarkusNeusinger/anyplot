@@ -1113,6 +1113,50 @@ describe('useAgentSession: a note with the attachment', () => {
     expect(result.current.state.dataset?.file).toEqual(file);
   });
 
+  it('counts a sheet read as work in flight, and parses its answer once it is done', async () => {
+    const routes = baseRoutes();
+    let finish: () => void = () => {};
+    routes['POST /sessions/S1/dataset/convert'] = () =>
+      new Promise<Response>(resolve => {
+        finish = () =>
+          resolve(
+            json(200, {
+              text: TABLE,
+              format: 'csv',
+              kind: 'xlsx',
+              rows: 2,
+              columns: 2,
+              sheet: '2025',
+              sheets: ['2024', '2025'],
+              sheet_count: 2,
+              warnings: {},
+              dropped: [],
+            })
+          );
+      });
+    const { result } = await openSession(routes);
+    const turns = () => calls.filter(call => call.path.endsWith('/messages')).length;
+    let reading: Promise<unknown> = Promise.resolve();
+    await act(async () => {
+      reading = result.current.readSheet('UEsDBA==', '2025');
+    });
+    expect(result.current.state.sheetBusy).toBe(true);
+    expect(sessionBusy(result.current.state)).toBe(true);
+    const before = turns();
+    await act(() => result.current.sendMessage('which month sold most?'));
+    expect(turns()).toBe(before); // a turn would race the parse of the sheet
+
+    await act(async () => {
+      finish();
+      await reading;
+    });
+    expect(result.current.state.sheetBusy).toBe(false);
+    const parsed = await act(() =>
+      result.current.parseData(TABLE, false, 'Bericht.xlsx · sheet ‹2025›')
+    );
+    expect(parsed.outcome).toBe('stored');
+  });
+
   it('keeps a workbook through a table read from its text, for the sheet picker after .use()', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/dataset'] = call =>
@@ -1168,6 +1212,44 @@ describe('useAgentSession: the step-1 summary and data changes', () => {
       ]);
     return hook;
   }
+
+  it('keeps the workbook through the versions of its data, and drops it for data no sheet made', async () => {
+    const source = 'Bericht.xlsx · sheet ‹2024›';
+    const file = {
+      name: 'Bericht.xlsx',
+      base64: 'UEsDBA==',
+      browserKind: 'spreadsheet' as const,
+      kind: 'xlsx',
+      sheet: '2024',
+      sheets: ['2024', '2025'],
+      sheetCount: 2,
+      text: 'a,b\n1,2\n',
+    };
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(200, { ...DATASET, file_name: source });
+    routes['POST /sessions/S1/dataset/undo'] = () => json(200, { ...DATASET, file_name: source });
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n', false, source, undefined, { file }));
+    const answer = (dataset: Record<string, unknown>) => () =>
+      sse([
+        ['message', { text: 'Done.' }],
+        ['done', { llm_calls: 1, bindings: PREPARED.bindings, data_confirmed: false, dataset }],
+      ]);
+
+    // The assistant's version of the workbook's data, then `.undo()`: the sheet picker stays.
+    routes['POST /sessions/S1/messages'] = answer({ ...PREPARED, file_name: source });
+    await act(() => result.current.sendMessage('in Minuten'));
+    expect(result.current.state.dataset?.parsed.version).toBe(2);
+    expect(result.current.state.dataset?.file).toEqual(file);
+    await act(() => result.current.undoData());
+    expect(result.current.state.dataset?.file).toEqual(file);
+
+    // A version without the file's name (generated data) was read from no sheet: no picker.
+    routes['POST /sessions/S1/messages'] = answer({ ...PREPARED, version: 3 });
+    await act(() => result.current.sendMessage('zeichne sin(x)'));
+    expect(result.current.state.dataset?.parsed.version).toBe(3);
+    expect(result.current.state.dataset?.file).toBeUndefined();
+  });
 
   it('asks for the summary right after a stored parse, as the first turn', async () => {
     const { result } = await openSession(baseRoutes());

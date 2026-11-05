@@ -549,6 +549,8 @@ export interface AgentSessionState {
   memory: PlotMemory | null;
   /** A removal from the plot memory is in flight. */
   memoryBusy: boolean;
+  /** The sheet picker's read of another sheet is in flight on the server (`readSheet`). */
+  sheetBusy: boolean;
   /**
    * A library switch the user asked for in the chat (`done.switch`, the
    * assistant's `switch_plot`), which the page carries out once the turn is
@@ -629,6 +631,7 @@ type Action =
   /** The plot memory as the server listed it, or as a removal left it. */
   | { type: 'memory_sync'; memory: PlotMemory }
   | { type: 'memory_busy'; busy: boolean }
+  | { type: 'sheet_busy'; busy: boolean }
   /** A turn's `done` asked for a switch (`chatSwitch`), or the page took it (`null`). */
   | { type: 'chat_switch'; request: ChatSwitch | null }
   | { type: 'theme_busy'; busy: boolean }
@@ -692,6 +695,7 @@ export function initialAgentState(library: string): AgentSessionState {
     carryOffer: null,
     memory: null,
     memoryBusy: false,
+    sheetBusy: false,
     chatSwitch: null,
     themeBusy: false,
     pageBusy: false,
@@ -839,6 +843,9 @@ function withDataVersion(
       // its tables; the picker itself shows only beside an answer that names `tables`, which only the
       // paste route gives.
       ...(state.dataset?.paste ? { paste: state.dataset.paste } : {}),
+      // So does the workbook a version was read from, for the sheet picker: the server carries the file's
+      // name on every version of that file's data, and on generated data, which no sheet made, it has none.
+      ...(state.dataset?.file && parsed.file_name ? { file: state.dataset.file } : {}),
     },
     roles,
     bindings,
@@ -1131,6 +1138,8 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
       };
     case 'memory_busy':
       return { ...state, memoryBusy: action.busy };
+    case 'sheet_busy':
+      return { ...state, sheetBusy: action.busy };
     case 'chat_switch':
       return { ...state, chatSwitch: action.request };
     case 'theme_busy':
@@ -1338,6 +1347,7 @@ export function useAgentSession({
   const saveRef = useRef(false);
   const languageRef = useRef(false);
   const memoryRef = useRef(false);
+  const sheetRef = useRef(false);
   // Counts the memory lists asked for and answered: a read overtaken by a newer one is dropped.
   const memorySeq = useRef(0);
   // The feedback send in flight per version: a second `.send()` for it joins the first.
@@ -1380,6 +1390,7 @@ export function useAgentSession({
       bindingsRef.current ||
       languageRef.current ||
       memoryRef.current ||
+      sheetRef.current ||
       stateRef.current.libraryBusy,
     []
   );
@@ -1761,6 +1772,27 @@ export function useAgentSession({
       return agentApi.convertFile(token, sid, dataBase64, sheet);
     },
     [token]
+  );
+
+  /**
+   * The sheet picker's read: the workbook converted again on the server for another sheet. It is
+   * work in flight like a parse (`busy()`, `sheetBusy`), so nothing confirms, plots or sends while
+   * it runs, and it ends before the page parses its answer, which a busy session would skip. While
+   * something else runs it starts nothing (`run_active`).
+   */
+  const readSheet = useCallback(
+    async (dataBase64: string, sheet?: string): Promise<ConvertAnswer> => {
+      if (busy()) throw new AgentApiError(409, 'run_active');
+      sheetRef.current = true;
+      safeDispatch({ type: 'sheet_busy', busy: true });
+      try {
+        return await convertFile(dataBase64, sheet);
+      } finally {
+        sheetRef.current = false;
+        safeDispatch({ type: 'sheet_busy', busy: false });
+      }
+    },
+    [busy, convertFile, safeDispatch]
   );
 
   const loadImage = useCallback(
@@ -2588,6 +2620,7 @@ export function useAgentSession({
     fetchArtifact,
     reportOutcome,
     convertFile,
+    readSheet,
     fetchDataCsv,
     saveSession,
     setLanguage,
@@ -2609,7 +2642,8 @@ export function sessionBusy(state: AgentSessionState): boolean {
     state.themeBusy ||
     state.pageBusy ||
     state.languageBusy ||
-    state.memoryBusy
+    state.memoryBusy ||
+    state.sheetBusy
   );
 }
 

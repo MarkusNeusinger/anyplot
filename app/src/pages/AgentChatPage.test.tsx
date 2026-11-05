@@ -2829,6 +2829,45 @@ describe('AgentChatPage attachment', () => {
     expect(screen.getByLabelText(/# sheet/)).toHaveValue('2024');
   });
 
+  it('holds the composer back while another sheet is read, then parses that sheet', async () => {
+    let finish: (() => void) | null = null;
+    routeDataset(path => {
+      if (!path.endsWith('/dataset/convert')) return undefined;
+      // The first read attaches the workbook; the sheet picker's read waits for `finish`.
+      if (!finish) {
+        finish = () => {};
+        return converted();
+      }
+      return new Promise<Response>(resolve => {
+        finish = () =>
+          resolve(converted({ sheet: '2025', text: 'month,revenue\nJan,90\nFeb,95\n' }));
+      }) as unknown as Response;
+    });
+    await openChat();
+    dropOnChat(workbook());
+    await screen.findByRole('group', { name: /^Attached file Bericht\.xlsx/ });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    await screen.findByText(SUMMARY);
+    await turnEnded();
+    const posts = datasetPosts().length;
+    const turns = turnBodies().length;
+
+    fireEvent.change(screen.getByLabelText(/# sheet/), { target: { value: '2025' } });
+    await screen.findByTestId('sheet-reading');
+    // Nothing plots, confirms or sends while the read runs: the parse after it would be skipped.
+    expect(screen.getByRole('button', { name: 'Create plot' })).toBeDisabled();
+    fireEvent.change(message(), { target: { value: 'which month sold most?' } });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    expect(turnBodies()).toHaveLength(turns);
+
+    finish!();
+    await waitFor(() => expect(datasetPosts()).toHaveLength(posts + 1));
+    expect(JSON.parse(String((datasetPosts()[posts][1] as RequestInit).body))).toMatchObject({
+      text: 'month,revenue\nJan,90\nFeb,95\n',
+      source: 'Bericht.xlsx · sheet ‹2025›',
+    });
+  });
+
   it('says why a file was not taken: a refused conversion, a pickle, a second file while one is read', async () => {
     let finish!: () => void;
     let converts = 0;
