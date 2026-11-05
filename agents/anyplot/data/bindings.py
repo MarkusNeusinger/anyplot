@@ -4,7 +4,8 @@ No ADK import. `bindings.apply`, which writes validated bindings into session
 state and answers `409 run_active` during a run, belongs to the ADK session layer;
 it calls `check_bindings`. `carry_bindings` is what a dataset version change
 (`prepare_data`, undo) does to the bindings: the ones still valid stay, the roles
-left without one get the defaults.
+left without one get the defaults. `carry_by_name` is what new data that replaces the
+old does to them: each column goes to the new column of the same name or meaning.
 
 Compatibility of a role kind with a column dtype (`ACCEPTS`), with the tier that
 ranks candidate columns for the default:
@@ -71,7 +72,7 @@ from .shape import long_suggestion, takes_labels
 from .signs import has_negative, sign_line
 from .temporal import CAMEL as _CAMEL
 from .temporal import WORDS as _WORDS
-from .temporal import date_part, year_score
+from .temporal import date_part, event_year, year_score
 
 
 # A variadic family binds at most this many columns by default (charts with more series stop
@@ -79,6 +80,9 @@ from .temporal import date_part, year_score
 MAX_VARIADIC_DEFAULT = 12
 # Name similarity below this is noise and does not reorder candidates.
 MIN_NAME_SIMILARITY = 0.6
+CARRY_SIMILARITY = 0.8
+"""The name similarity from which a column of new data is a column of the data it replaces (`carry_by_name`): the
+same name, or one name inside the other (`Area km2` in `Land area km2`); word overlap alone is not enough."""
 
 ACCEPTS: dict[RoleKind, dict[ColumnDtype, int]] = {
     "numeric": {"number": 1, "integer": 1},
@@ -124,6 +128,11 @@ RECORD_KEY_WORDS: frozenset[str] = frozenset(
 """Column-name words that say a per-record number column numbers the records (`record_id`, `id`, `Kanal`) rather
 than measuring them: a required measure that must take a per-record value takes a parameter first (review of
 #12197: a bubble's size is the `weight`, not the `id`)."""
+RECORD_ID_WORDS: frozenset[str] = frozenset({"id", "ids", "uuid", "guid", "ean", "gtin", "isbn"})
+"""Column-name words that say a text column identifies each row for a machine (`Organization Id`, `UUID`, `EAN`).
+
+Narrower than `parse.ID_WORDS`, which also holds `code`, `nr`, `version` and `phone` for the thousands reading:
+a country code or a version is a label a reader understands, an id like `FAB0d41d5b5d22c` is not (`record_ids`)."""
 
 ROW_NUMBER_NAMES: frozenset[str] = frozenset(
     {"X", "Unnamed: 0", "...1", "index", "Index", "rownames", "row.names", "row_names"}
@@ -236,10 +245,11 @@ def default_bindings(roles: list[DataRole], profile: DatasetProfile) -> list[Bin
        (single-valued, weak measure, category rank, tier, name similarity, code rank,
        year rank, column position): for a categorical, text or boolean role a column with one distinct
        value ranks after every column with two or more (`_constant_group`), and a real
-       category before a year column before a text column of numbers
-       (`_category_rank`); a number role ranks year columns after the measures, a role
-       that also takes dates before them (`_year_rank`, both since 2026-10-15). A measure role
-       (`is_measure`) ranks a weak measure (`weak_measures`: a constant, years, a month) after
+       category before a year column before a text column of record ids (`record_ids`) before a
+       text column of numbers (`_category_rank`); a number role ranks year columns after the
+       measures, a role that also takes dates before them (`_year_rank`, both since 2026-10-15). A
+       measure role (`is_measure`) ranks a weak measure (`weak_measures`: a constant, years, a
+       month, a founding year) after
        every other column, and an optional one never takes it; an axis (`is_axis`, `x`) avoids
        only constants and ranks years first, so a scatter of `Month, Temperature` keeps the
        month on x; a grouping role ranks a column of codes after its name column
@@ -360,6 +370,7 @@ def _default_bindings(
     per_group = record_values(profile) if any(is_axis(role) for role in roles if role.kinds) else set()
     keys = {name for name in per_group if _record_key(name)}
     weak = weak_measures(profile) | per_group
+    ids = record_ids(profile)
     # A column of years named so is a time key, never a series of a number family: a single role may take it.
     # A weak measure the family leaves out stays reserved too: `Dauer (Minuten)` or a constant `target` is no
     # series label (review of 2026-10-15).
@@ -478,7 +489,7 @@ def _default_bindings(
                     column.name in avoid,
                     column.name in keys and is_measure(role),  # a record's parameter before its number
                     column.name in claims,  # a column a computed role's name matches comes last
-                    _category_rank(role, column),
+                    _category_rank(role, column, column.name in ids),
                     tier,
                     -_rounded_similarity(role.name, column.name),
                     _code_rank(role, column, columns),
@@ -568,6 +579,55 @@ def carry_bindings(
     if current == kept:
         return list(bindings)
     return _without_sources(_in_spec_order(current, roles, profile), roles, sources)
+
+
+def carry_by_name(bindings: Sequence[Binding], roles: list[DataRole], profile: DatasetProfile) -> list[Binding]:
+    """The bindings of new data that replaces the data `bindings` were made for: what the columns meant stays.
+
+    A replacing paste used to take the defaults, which bind in column order: the user's `x = Land area km2,
+    y = Population` became `x = Population, y = Area km2` on a table that lists the population first, and the
+    plot turned on its side. So each old binding's column is carried to the new column of the same meaning, by
+    name: the same name once normalised (`_norm`), else the one column whose `name_similarity` reaches
+    `CARRY_SIMILARITY` (`Land area km2` and `Area km2`, one inside the other), never a tie. The new column must
+    fit the role without an error or a warning (`check_bindings`), and it takes the place of one old column only,
+    the closest one: a column the user bound to several roles is carried to each of them, two old columns never
+    land on one new column (the same series twice). Every role left open gets the defaults on the columns left
+    free (`filled_bindings`); with nothing carried, the result is `default_bindings`.
+    """
+    old = list(dict.fromkeys(binding.column for binding in bindings))
+    scored: list[tuple[float, int, str, str]] = []
+    for position, name in enumerate(old):
+        ranked = sorted(
+            ((_carry_score(name, column.name), column.name) for column in profile.columns), key=lambda item: -item[0]
+        )
+        best = [item for item in ranked if item[0] >= CARRY_SIMILARITY]
+        if best and (len(best) == 1 or best[0][0] > best[1][0]):
+            scored.append((best[0][0], position, name, best[0][1]))
+    target: dict[str, str] = {}
+    taken: set[str] = set()
+    for _, _, name, match in sorted(scored, key=lambda item: (-item[0], item[1])):
+        if match not in taken:
+            target[name] = match
+            taken.add(match)
+    carried: list[Binding] = []
+    # The warnings of the unbound table (an open role whose every column is negative) are no fault of a carry.
+    unbound = set(check_bindings([], roles, profile).warnings)
+    for binding in bindings:
+        new = target.get(binding.column)
+        if new is None:
+            continue
+        moved = Binding(role=binding.role, column=new)
+        check = check_bindings([moved], roles, profile)
+        if not check.errors and set(check.warnings) <= unbound:
+            carried.append(moved)
+    if not carried:
+        return default_bindings(roles, profile)
+    return filled_bindings(carried, roles, profile)
+
+
+def _carry_score(old: str, new: str) -> float:
+    """How surely column `new` is column `old` again: 1 for the same name once normalised, else `name_similarity`."""
+    return 1.0 if _norm(old) == _norm(new) else name_similarity(old, new)
 
 
 def _without_sources(bindings: list[Binding], roles: list[DataRole], sources: Mapping[str, str]) -> list[Binding]:
@@ -934,7 +994,7 @@ def numeric_text(column: ColumnProfile) -> bool:
     return column.dtype == "text" and bool(column.top) and all(value_like(value) for value in column.top)
 
 
-def _category_rank(role: DataRole, column: ColumnProfile) -> int:
+def _category_rank(role: DataRole, column: ColumnProfile, record_id: bool = False) -> int:
     """The rank of `column` as a category, group or label for a role of grouping kinds only; 0 for every other role.
 
     A live test of 2026-10-15 bound `Bevölkerung`, a text column of 24 numbers the parse had
@@ -945,13 +1005,20 @@ def _category_rank(role: DataRole, column: ColumnProfile) -> int:
     1. an integer column of years named so, or a date column (at most `MAX_CATEGORIES` dates by default),
        then 2. one whose values look like years;
     3. a text column with more distinct values;
-    4. an ordinal integer column, every value of a short range (`Quartal` 1 to 4, `_ordinal`);
-    5. another integer column of at most `MAX_CATEGORIES` distinct values;
-    6. a text column of numbers (`numeric_text`), then 7. any other integer column (a measure).
+    4. a text column of record ids (`record_id`, see `record_ids`): it names each row for a machine, so every
+       other text column labels better, but it still labels better than a number;
+    5. an ordinal integer column, every value of a short range (`Quartal` 1 to 4, `_ordinal`);
+    6. another integer column of at most `MAX_CATEGORIES` distinct values;
+    7. a text column of numbers (`numeric_text`), then 8. any other integer column (a measure).
+
+    A year of an event of each row (`temporal.event_year`: `Founded`, `Year founded`) is no time key here, so it
+    ranks as an ordinary integer column: a bar per founding year would add up unrelated rows.
     """
     if not role.kinds or any(kind not in GROUPING_KINDS for kind in role.kinds):
         return 0
     if column.dtype in ("text", "boolean") and not numeric_text(column):
+        if record_id:
+            return 4
         return 0 if column.unique <= MAX_CATEGORIES else 3
     if column.dtype == "datetime":
         # Dates label too since `2025-01` reads as a date (live test round 7 of 2026-10-16), but after a real
@@ -959,13 +1026,31 @@ def _category_rank(role: DataRole, column: ColumnProfile) -> int:
         # dates are never a default (`_label_dates`).
         return 1
     if column.dtype == "integer":
-        score = year_score(column)
+        score = 0 if event_year(column) else year_score(column)
         if score:
             return 3 - score
         if _ordinal(column):
-            return 4
-        return 5 if column.unique <= MAX_CATEGORIES else 7
-    return 6
+            return 5
+        return 6 if column.unique <= MAX_CATEGORIES else 8
+    return 7
+
+
+def record_ids(profile: DatasetProfile) -> set[str]:
+    """The text columns that identify each row for a machine: every filled cell distinct, under an id name.
+
+    The name holds an id word (`RECORD_ID_WORDS`, split at spaces, punctuation and camel case: `Organization Id`,
+    `user_id`, `orgId`), and no two rows share a value. As a category such a column makes one bar per row labelled
+    `FAB0d41d5b5d22c`, so a role that groups or labels ranks it after every other text column (`_category_rank`);
+    a column of country codes or versions keeps its rank, since a reader understands those.
+    """
+    return {
+        column.name
+        for column in profile.columns
+        if column.dtype == "text"
+        and column.unique >= 2
+        and column.unique == profile.rows - column.missing
+        and _words(column.name) & RECORD_ID_WORDS
+    }
 
 
 def _label_dates(role: DataRole, column: ColumnProfile) -> bool:
@@ -1060,14 +1145,17 @@ def is_axis(role: DataRole) -> bool:
 
 
 def weak_measures(profile: DatasetProfile) -> set[str]:
-    """The columns that are no measure, although they hold numbers: a constant, years, or a part of a date.
+    """The columns that are no measure, although they hold numbers: a constant, years, a part of a date, or the
+    year of an event of each row.
 
     A measure role (`is_measure`) ranks them after every other fitting column, an optional
     one never takes them, and a number family takes them only when it would otherwise stay
     empty: a column with one distinct value draws a flat line (live test of 2026-10-15:
     `decimal`, all 0, bound as `y2` of a World Bank table), and a year or a month is where
-    a value sits, not the value. A column is constant only in a table of at least
-    `MIN_CONSTANT_ROWS` rows: two equal values in a two-row table say little.
+    a value sits, not the value. So is a founding or construction year (`temporal.event_year`:
+    `Founded` beside `Number of employees`), which names no year word and holds no run of years. A
+    column is constant only in a table of at least `MIN_CONSTANT_ROWS` rows: two equal values in a
+    two-row table say little.
     """
     columns = profile.columns
     has_year = any(year_score(column) for column in columns)
@@ -1076,7 +1164,12 @@ def weak_measures(profile: DatasetProfile) -> set[str]:
         column.name
         for column in columns
         if column.dtype in ("integer", "number")
-        and ((constant and column.unique <= 1) or year_score(column) or date_part(column, has_year=has_year))
+        and (
+            (constant and column.unique <= 1)
+            or year_score(column)
+            or event_year(column)
+            or date_part(column, has_year=has_year)
+        )
     }
 
 

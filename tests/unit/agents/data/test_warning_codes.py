@@ -37,6 +37,9 @@ SAMPLES: dict[str, str] = {
     "left out 1 line below the table (notes or a source line)": "lines_below_left_out",
     "left out 1 line inside the table that is no row of it (line 17)": "lines_inside_left_out",
     "left out 2 lines inside the table that are no row of it (lines 17, 30)": "lines_inside_left_out",
+    "the header stood in two lines; joined them into one name per column, such as 'Density /km2'": (
+        "header_lines_joined"
+    ),
     "left out 1 summary row at the end of the table (a total, sum, mean or similar)": "summary_rows_left_out",
     "2 rows had fewer fields than the header; their cells were placed under the header's columns by their "
     "position, and the cells left over are empty (lines 3, 4)": "short_rows_positional",
@@ -179,6 +182,7 @@ def test_parser_warnings_of_real_pastes_have_codes() -> None:
         "x y\n1 2\n3 4\n",
         '[{"a": 1, "b": [1, 2]}, {"a": 2, "b": [3]}]',
         "name,value\n Alice ,1\nBob,n/a\n",
+        "Place,Area,\n,km2,mi2\nOrt A,10,3.9\nOrt B,20,7.7\nOrt C,30,11.6\n",
     ]
     for text in pastes:
         try:

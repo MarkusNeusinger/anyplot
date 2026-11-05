@@ -1562,6 +1562,8 @@ async def _ingest_paste(
             history=view.dataset_history,
             notes_screened=True,  # `_screen_notes` above kept only the notes that passed
             file_name=file_name,
+            # Data that replaces data keeps what its columns meant: the plot keeps its axes (`carry_by_name`).
+            carried=view.bindings if view.dataset_id else (),
         )
     except StoreFull:
         raise AgentsError(503, "capacity") from None

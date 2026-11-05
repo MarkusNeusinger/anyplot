@@ -276,6 +276,60 @@ class TestHeaders:
         assert len(warnings) == 2
 
 
+class TestHeaderInTwoLines:
+    """A grouped header copied from a spreadsheet or an expanded web table stands in two lines of the table's width."""
+
+    ROWS = "Ort A\t21,826\t56,530\t720,262\t33\t13\t\nOrt B\t19,428\t50,320\t38,857\t2\t0.77\t[c]\nOrt C\t8,290\t21,500\t6,110,200\t737\t285\t\n"
+    NAMES = ["Location", "Density /km2", "Density /mi2", "Population", "Land area km2", "Land area mi2", "Ref."]
+
+    def test_merged_cells_copied_as_empty_cells_join_their_group(self) -> None:
+        parsed = parse_dataset(
+            "Location\tDensity\t\tPopulation\tLand area\t\tRef.\n\t/km2\t/mi2\t\tkm2\tmi2\t\n" + self.ROWS
+        )
+
+        assert [c.name for c in parsed.profile.columns] == self.NAMES
+        assert warned(
+            parsed, "the header stood in two lines; joined them into one name per column, such as 'Density /km2'"
+        )
+        assert not any("above the table" in warning for warning in parsed.warnings)
+        assert parsed.context_lines == []
+        assert column(parsed, "Population").dtype == "integer"  # the thousands groups still read
+        assert parsed.profile.rows == 3
+
+    def test_an_expanded_web_table_repeats_each_name_over_its_columns(self) -> None:
+        top = "Location\tDensity\tDensity\tPopulation\tLand area\tLand area\tRef.\n"
+        bottom = "Location\t/km2\t/mi2\tPopulation\tkm2\tmi2\tRef.\n"
+        parsed = parse_dataset(top + bottom + self.ROWS)
+
+        assert [c.name for c in parsed.profile.columns] == self.NAMES
+
+    def test_a_decimal_comma_table_keeps_its_decimals(self) -> None:
+        parsed = parse_dataset("Ort;Fläche;\n;km2;mi2\nA;10,5;4,1\nB;20,25;7,8\nC;3,5;1,4\n")
+
+        assert [c.name for c in parsed.profile.columns] == ["Ort", "Fläche km2", "Fläche mi2"]
+        assert column(parsed, "Fläche km2").dtype == "number"
+        assert parsed.csv.splitlines()[1] == "A,10.5,4.1"
+
+    def test_a_title_line_of_two_genuine_headers_stays_a_note(self) -> None:
+        """No empty cell and no name over two columns: the first line is no group, so nothing is joined."""
+        parsed = parse_dataset("Land,Region,Wert\nCountry,Area,Value\nCH,West,1\nAT,East,2\nDE,North,3\n")
+
+        assert [c.name for c in parsed.profile.columns] == ["Country", "Area", "Value"]
+        assert not any("two lines" in warning for warning in parsed.warnings)
+
+    def test_a_first_line_with_a_value_is_no_header(self) -> None:
+        parsed = parse_dataset("Station,Zürich,,556\nOrt,Höhe,Temp,Wind\nA,1,2,3\nB,4,5,6\nC,7,8,9\n")
+
+        assert [c.name for c in parsed.profile.columns] == ["Ort", "Höhe", "Temp", "Wind"]
+        assert not any("two lines" in warning for warning in parsed.warnings)
+
+    def test_joined_names_that_collide_stay_unjoined(self) -> None:
+        # Joined, the second and third columns would both be `y z`.
+        parsed = parse_dataset("y,,y z,\n,z,,w\n1,2,3,4\n5,6,7,8\n9,10,11,12\n")
+
+        assert not any("two lines" in warning for warning in parsed.warnings)
+
+
 class TestErrors:
     def test_the_canonical_csv_has_its_own_boundary(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """A paste within its cap whose canonical CSV grows past `MAX_CANONICAL_BYTES` is `too_long`."""
@@ -3607,11 +3661,48 @@ class TestRefusalsNameTheirCause:
         )
 
     def test_many_ragged_lines_are_grouped_and_counted(self) -> None:
-        text = "a,b\n" + "".join(f"{i},{i},{i}\n" for i in range(12))
+        # One row of the header's width among them: the rows do not all agree, so the lines are named.
+        rows = [f"{i},{i},{i}\n" for i in range(12)]
+        text = "a,b\n" + "".join(rows[:6]) + "x,1\n" + "".join(rows[6:])
         with pytest.raises(ParseError) as caught:
             parse_dataset(text)
 
         assert caught.value.message.startswith("the header has 2 fields, but lines 2, 3, 4, 5, 6 and 7 more have 3")
+
+    def test_a_header_short_of_rows_that_all_agree_is_named_without_the_quotes_hint(self) -> None:
+        text = "Location\tDensity\tPopulation\tLand area\n" + "".join(
+            f"Ort {i}\t{i}\t{i * 3}\t{i * 100}\t{i * 9}\t{i * 4}\t\n" for i in range(1, 6)
+        )
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(text)
+
+        assert (
+            caught.value.message == "the header has 4 fields, but every row has 7: the header needs one name per column"
+        )
+
+    def test_one_field_more_in_every_row_names_both_causes(self) -> None:
+        text = "Name,Amount\nSmith, John,5\nDoe, Jane,7\nRoe, Max,9\n"
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(text)
+
+        assert caught.value.message == (
+            "the header has 2 fields, but every row has 3: the header needs one name per column; "
+            "or a value that holds a comma needs quotes around it"
+        )
+
+    def test_a_header_in_two_lines_a_web_page_copy_cannot_place_is_named(self) -> None:
+        """A browser's text copy of a table with grouped columns keeps neither the spans nor where they were."""
+        text = "Location\tDensity\tPopulation\tLand area\tRef.\n/km2\t/mi2\tkm2\tmi2\n" + "".join(
+            f"Ort {i}\t{i},000\t{i * 3},000\t{i * 100}\t{i * 9}\t{i * 4}\t[{i}]\n" for i in range(1, 6)
+        )
+        with pytest.raises(ParseError) as caught:
+            parse_dataset(text)
+
+        assert caught.value.code == "unparseable"
+        assert caught.value.message == (
+            "the header stands in two lines (5 names over 4), and the rows have 7 fields: "
+            "write it as one line with one name per column, a name and its unit together"
+        )
 
     def test_trailing_empty_fields_are_left_out_with_a_count(self) -> None:
         parsed = parse_dataset("Monat,Besucher\nJan,1200,,\nFeb,1350\nMär,1100,\n")
