@@ -7,4 +7,4 @@
   menu of the columns left. Columns the role cannot take stay in the menu,
   greyed out with the reason. The row keeps its name and kinds, wraps at a
   phone's width under the role's name, and keeps the keyboard in the row after a
-  change. The server still gets `y1` to `yn`.
+  change. The server still gets `y1` to `yn`. (#12580)
