@@ -2491,8 +2491,8 @@ describe('AgentChatPage attachment', () => {
     // A table: no text in the box, a chip with its size, `.send()` to read it.
     expect(pasteText(TABLE)).toBe(false);
     expect(message()).toHaveValue('');
-    expect(chip()).toHaveAccessibleName('Attached table, 4 lines, 0.0 KB');
-    expect(chip()).toHaveTextContent('▤ table · 4 lines · 0.0 KB');
+    expect(chip()).toHaveAccessibleName('Attached table, 4 lines, 33 B');
+    expect(chip()).toHaveTextContent('▤ table · 4 lines · 33 B');
     expect(screen.getByTestId('composer-status')).toHaveTextContent('Attached table, 4 lines');
     expect(composerButtons()).toEqual(['×', '.send()']);
     expect(message()).toHaveAttribute('placeholder', 'add a note for this table, or press Enter');
@@ -2791,7 +2791,7 @@ describe('AgentChatPage attachment', () => {
     await openChat();
     dropOnChat(csvFile('a,b\r\n1,2\r\n3,4\r\n', 'windows.csv'), csvFile('c\n', 'c.csv'));
     expect(
-      await screen.findByRole('group', { name: 'Attached file windows.csv, 3 lines, 0.0 KB' })
+      await screen.findByRole('group', { name: 'Attached file windows.csv, 3 lines, 12 B' })
     ).toBeInTheDocument();
     expect(screen.getByText('# first of 2 files read — one file at a time')).toBeInTheDocument();
     fireEvent.keyDown(message(), { key: 'Enter' });
