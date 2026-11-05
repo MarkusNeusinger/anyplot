@@ -332,7 +332,8 @@ export interface PlotVersion {
 
 export type ChatItem =
   | { id: number; kind: 'user'; text: string }
-  | { id: number; kind: 'action'; action: TurnAction; library: string }
+  /** `label`: the button as it read when the user pressed it, which the thread shows for the action. */
+  | { id: number; kind: 'action'; action: TurnAction; library: string; label?: string }
   | { id: number; kind: 'assistant'; text: string }
   /** `until`: when a `service_paused` refusal ends (the next 00:00 UTC as it arrived). */
   | { id: number; kind: 'refusal'; code: string; text: string; until?: string }
@@ -2468,9 +2469,9 @@ export function useAgentSession({
    * `turnErrorRef`, null when it ended without one or never started (`plotTurn`), and how it ended in
    * `turnEndRef` (`TurnEnd`), null when it never started. A turn whose stream was cut is read again
    * (`reattach`) before any error shows; one that could not be read stays pending, and the next turn
-   * reads it first. */
+   * reads it first. `label` is the button an action came from, as it read, for the thread. */
   const runTurn = useCallback(
-    async (body: TurnBody) => {
+    async (body: TurnBody, label?: string) => {
       const current = stateRef.current;
       const sid = current.sessionId;
       turnErrorRef.current = null;
@@ -2508,7 +2509,12 @@ export function useAgentSession({
         addItem(
           'text' in body
             ? { kind: 'user', text: body.text }
-            : { kind: 'action', action: body.action, library: current.library }
+            : {
+                kind: 'action',
+                action: body.action,
+                library: current.library,
+                ...(label && { label }),
+              }
         );
         const response = await agentApi.postMessage(
           token,
@@ -2544,8 +2550,14 @@ export function useAgentSession({
     [token, addItem, consume, reattach, driveTurn, busy, trackEvent, resumeDelaysMs]
   );
 
-  /** `.create_plot()`, `.start_over()`: the fresh plot from the catalogue code, without the plot memory's decisions. */
-  const createPlot = useCallback(() => runTurn({ action: 'create_plot' }), [runTurn]);
+  /**
+   * `.create_plot()`, `.start_over()`: the fresh plot from the catalogue code, without the plot memory's decisions.
+   * `label` is the button pressed, which the thread shows.
+   */
+  const createPlot = useCallback(
+    (label?: string) => runTurn({ action: 'create_plot' }, label),
+    [runTurn]
+  );
 
   /**
    * `.example_data()`: the assistant makes example data to try the plot, as for a typed request,
@@ -2558,9 +2570,13 @@ export function useAgentSession({
   /**
    * The offer after a switch ("plot in seaborn with your 3 decisions"): the plot
    * in the new library from its catalogue code, with the plot memory's
-   * decisions and the theme the user asked for (`carry_plot`).
+   * decisions and the theme the user asked for (`carry_plot`). `label` is the button as it read,
+   * for the thread; a carry the chat started has none.
    */
-  const carryPlot = useCallback(() => runTurn({ action: 'carry_plot' }), [runTurn]);
+  const carryPlot = useCallback(
+    (label?: string) => runTurn({ action: 'carry_plot' }, label),
+    [runTurn]
+  );
 
   // The request `followChatSwitch` took last: an effect run twice before the state drops it switches once.
   const chatSwitchTaken = useRef<ChatSwitch | null>(null);

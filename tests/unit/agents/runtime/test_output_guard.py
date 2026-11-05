@@ -1,8 +1,9 @@
 """Tests for agents/anyplot/output_guard.py: the reply cap on the root's replies, the same in every language.
 
-The must-pass set is the replies root.md asks for ("two to five sentences, or a short
-list"): change lists and how-to-run steps in the languages the root answers in, a
-long five-sentence reply in German, and replies in scripts without spaces between
+The must-pass set is the replies root.md asks for ("one or two short sentences, or a
+short list", four at most with notices) and more: change lists and how-to-run steps in
+the languages the root answers in, a long five-sentence reply in German, and replies in
+scripts without spaces between
 sentences. The must-refuse set is text no reply of root.md's shape reaches: a long
 customer mail, a long Japanese essay and a list of sixty items.
 """

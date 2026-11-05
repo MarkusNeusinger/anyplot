@@ -442,6 +442,14 @@ const composerButtons = () =>
 /** The thread's last entry. */
 const lastInThread = () => screen.getByRole('log', { name: 'Conversation' }).lastElementChild;
 
+/** The thread's latest bubble of a page turn: the button the user pressed. */
+const lastAction = () => {
+  const bubbles = within(screen.getByRole('log', { name: 'Conversation' })).getAllByTestId(
+    'action-item'
+  );
+  return bubbles[bubbles.length - 1];
+};
+
 /** The step the step header marks as current. */
 const currentStep = () =>
   within(screen.getByRole('list', { name: 'Steps' }))
@@ -642,6 +650,10 @@ describe('AgentChatPage gating', () => {
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_confirmed', {
       size_bucket: 'lt_1kb',
     });
+    // While it plots, the line above the box names the one action left, in the step line's place.
+    expect(screen.getByTestId('data-step')).toHaveTextContent(/^# plotting… \.stop\(\) to cancel$/);
+    expect(screen.queryByText(/create the plot as it is/)).not.toBeInTheDocument();
+    expect(lastAction()).toHaveTextContent(/^❯\.create_plot\(\)# matplotlib$/);
 
     releaseTurn?.();
     expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
@@ -649,6 +661,17 @@ describe('AgentChatPage gating', () => {
     // The confirmed data has a plot here: the composer refines, `.start_over()` quiet beside.
     expect(composerButtons()).toEqual(['.start_over()']);
     expect(screen.getByLabelText('Message')).toBeEnabled();
+    expect(screen.queryByTestId('data-step')).not.toBeInTheDocument();
+
+    // The thread names the quiet button as it read, not the action it sends.
+    holdNextTurn = true;
+    fireEvent.click(screen.getByRole('button', { name: 'Start over' }), { detail: 1 });
+    await waitFor(() => expect(lastAction()).toHaveTextContent(/^❯\.start_over\(\)# matplotlib$/));
+    // No line stood above the box: the run adds none, so the box stays where it is.
+    expect(screen.getByRole('button', { name: 'Stop' })).toBeInTheDocument();
+    expect(screen.queryByTestId('data-step')).not.toBeInTheDocument();
+    releaseTurn?.();
+    await turnEnded();
   });
 
   it("goes back to step 1 with the dropdowns the turn's done reports, .create_plot() filled again", async () => {
@@ -756,6 +779,11 @@ describe('AgentChatPage gating', () => {
       'confirm',
       'create_plot',
     ]);
+
+    // The thread names the button as it read: the plot of the new data, not `.create_plot()`.
+    fireEvent.click(screen.getByRole('button', { name: 'Plot the new data' }), { detail: 1 });
+    await waitFor(() => expect(lastAction()).toHaveTextContent(/^❯plot the new data# matplotlib$/));
+    await turnEnded();
   });
 
   it('sends a pasted formula to the chat, whose table becomes version 1', async () => {
@@ -2463,8 +2491,9 @@ describe('AgentChatPage library switch and plot memory', () => {
     await turnEnded();
     expect(lastTurn()).toEqual({ action: 'carry_plot' });
     const thread = screen.getByRole('log', { name: 'Conversation' });
-    expect(within(thread).getByText('.carry_plot()')).toBeInTheDocument();
-    expect(within(thread).getByText('# seaborn')).toBeInTheDocument();
+    // The thread names the button as it read, never the action the page sent.
+    expect(lastAction()).toHaveTextContent(/^❯plot in seaborn with your 2 decisions$/);
+    expect(within(thread).queryByText(/carry_plot/)).not.toBeInTheDocument();
     // Shipped in seaborn: the offer is spent, the composer refines this plot.
     expect(screen.queryByTestId('carry-plot')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Start over' })).toBeEnabled();

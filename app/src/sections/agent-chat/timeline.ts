@@ -10,7 +10,10 @@
  *
  * A finished round's cells come from the steps the run reported for it when the
  * page saw them, else from its outcome alone (a result card's `rounds`): the
- * step it stopped at is failed, the steps after it were skipped.
+ * step it stopped at is failed, the steps after it were skipped. A round whose
+ * review or measurement found things to fix is the loop's normal course, which
+ * the next round repairs: its step did its work, and its outcome reads in plain
+ * words and a neutral ink, never as a failure.
  */
 
 import type { RunState } from 'src/hooks/useAgentSession';
@@ -57,7 +60,8 @@ export interface GridCell {
   state: CellState;
 }
 
-export type OutcomeTone = 'ok' | 'failed' | 'open';
+/** `repair`: the round found things to fix, which a repair round takes on; neutral, no failure. */
+export type OutcomeTone = 'ok' | 'failed' | 'open' | 'repair';
 
 export interface GridRow {
   attempt: number;
@@ -82,48 +86,49 @@ export function roundLabel(attempt: number): string {
 }
 
 /**
- * The rubric ids a repair works on, in words for the grid (`VQ-05` is
- * `layout`). Unknown ids are left out; the ids are closed codes, never text.
+ * The rubric ids a repair works on, in plain words for the grid (`VQ-05` is
+ * `layout`): what a visitor sees in the plot, never the rubric's own terms. Unknown
+ * ids are left out; the ids are closed codes, never text.
  */
 export const DEFECT_WORDS: Record<string, string> = {
   'VQ-01': 'text size',
-  'VQ-02': 'overlap',
-  'VQ-03': 'mark visibility',
-  'VQ-04': 'color contrast',
+  'VQ-02': 'overlapping text',
+  'VQ-03': 'hard-to-see marks',
+  'VQ-04': 'contrast',
   'VQ-05': 'layout',
   'VQ-06': 'axis labels',
-  'VQ-07': 'palette',
-  'AR-09': 'clipped text',
-  'SC-01': 'plot type',
-  'SC-02': 'spec features',
-  'SC-03': 'data mapping',
+  'VQ-07': 'colors',
+  'AR-09': 'cut-off text',
+  'SC-01': 'the kind of plot',
+  'SC-02': 'missing parts',
+  'SC-03': 'which column goes where',
   'SC-04': 'title and legend',
-  'DQ-01': 'feature coverage',
-  'DQ-02': 'data context',
-  'DQ-03': 'data accuracy',
+  'DQ-01': 'missing parts',
+  'DQ-02': 'context',
+  'DQ-03': 'the values shown',
   'DE-01': 'design',
-  'DE-02': 'visual refinement',
-  'DE-03': 'storytelling',
+  'DE-02': 'details',
+  'DE-03': 'emphasis',
 };
 
 /** What a repair round fixes when its ids name nothing known: by how the round before ended. */
 const REPAIR_OF: Partial<Record<RoundOutcome, string>> = {
-  review: 'review findings',
-  measured: 'measured findings',
+  review: 'what the review found',
+  measured: 'what the render check found',
   render_failed: 'the render',
-  check_failed: 'the code check',
+  check_failed: 'the code',
   answer_unusable: 'the answer',
 };
 
 /**
- * The line a repair round shows while it runs: `repairing layout, text size`,
+ * The line a repair round shows while it runs: `fixing layout, text size`,
  * from the round before it (`null` for the first try or without a round before).
  */
 export function repairText(previous: Round | undefined): string | null {
   if (!previous) return null;
   const words = [...new Set((previous.defects ?? []).map(id => DEFECT_WORDS[id]).filter(Boolean))];
   const what = words.length ? words.join(', ') : REPAIR_OF[previous.outcome];
-  return what ? `repairing ${what}` : 'repairing';
+  return what ? `fixing ${what}` : 'fixing';
 }
 
 /**
@@ -150,8 +155,10 @@ export function triesText(result: Pick<PlotResult, 'attempts' | 'rounds'>): stri
 const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
 
 /**
- * The text and tone of a round's end. The shipped round of a result that still
- * had findings (`needs_attention`) keeps them open rather than failed.
+ * The text and tone of a round's end. A review or a measurement that found things
+ * to fix hands them to the next round, the loop's normal course: neutral, in plain
+ * words. The shipped round of a result that still had them (`needs_attention`)
+ * keeps them open, as the card's notes below it list them.
  */
 export function outcomeText(round: Round, open = false): { text: string; tone: OutcomeTone } {
   const count = Math.max(round.findings, 1);
@@ -159,13 +166,10 @@ export function outcomeText(round: Round, open = false): { text: string; tone: O
     case 'ok':
       return { text: '✓ ok', tone: 'ok' };
     case 'review':
-      return open
-        ? { text: `~ ${plural(count, 'finding')} open`, tone: 'open' }
-        : { text: `✗ review: ${plural(count, 'finding')}`, tone: 'failed' };
     case 'measured':
       return open
-        ? { text: `~ ${count} measured open`, tone: 'open' }
-        : { text: `✗ ${count} measured`, tone: 'failed' };
+        ? { text: `~ ${plural(count, 'note')} left`, tone: 'open' }
+        : { text: `${plural(count, 'thing')} to fix`, tone: 'repair' };
     case 'render_failed':
       return { text: '✗ render failed', tone: 'failed' };
     case 'check_failed':
@@ -190,9 +194,13 @@ function finishedCells(names: PipelineStep[], round: Round, reached: PipelineSte
       ? columnOf(round.step)
       : STOP_COLUMN[round.outcome];
   // An unreviewed round passed the step it stopped at, unless that step was the review itself
-  // (an unreadable answer); a limit before the review stops after a good render.
+  // (an unreadable answer); a limit before the review stops after a good render. A review or a
+  // measurement that found things to fix did its work too: the next round fixes them.
   const passed =
-    round.outcome === 'ok' || (round.outcome === 'unreviewed' && stop < columnOf('reviewing'));
+    round.outcome === 'ok' ||
+    round.outcome === 'review' ||
+    round.outcome === 'measured' ||
+    (round.outcome === 'unreviewed' && stop < columnOf('reviewing'));
   return names.map((step, column) => ({
     step,
     state: column < stop ? 'done' : column > stop ? 'skipped' : passed ? 'done' : 'failed',

@@ -12,7 +12,9 @@
  *   while `.copy()` and the downloads stay in view. Each card keeps its own
  *   choice while the session lives, also across a collapse of the whole card;
  *   a new version's card starts folded. The residual notes stay in view: they
- *   are what still needs the user's eye.
+ *   are what still needs the user's eye. They read in plain words, one line
+ *   per issue (`residualNotes.ts`); the review's lines in full, with their
+ *   rubric ids and measurements, sit behind the notes' ⓘ.
  *
  * - The image is the blob URL of the theme the run rendered. The light and
  *   dark switch shows the other theme, rendering it first through the theme
@@ -76,8 +78,10 @@ import {
   type Theme,
 } from 'src/lib/agent';
 import { copyImage, downloadBlob } from 'src/sections/agent-chat/files';
+import { InfoPopover } from 'src/sections/agent-chat/InfoPopover';
 import { InteractivePreview } from 'src/sections/agent-chat/InteractivePreview';
 import { IMAGE_FAILURE } from 'src/sections/agent-chat/messages';
+import { plainNotes } from 'src/sections/agent-chat/residualNotes';
 import { ResultFeedback } from 'src/sections/agent-chat/ResultFeedback';
 import { RoundGrid } from 'src/sections/agent-chat/RoundGrid';
 import {
@@ -835,10 +839,22 @@ export function ResultCard({
                 py: 0.25,
               }}
             >
-              <Box sx={labelSx}># notes — still worth a look</Box>
-              <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5, ...bodyTextSx, ...readableSx }}>
-                {result.residual_defects.map((note, index) => (
-                  <li key={index}>{note}</li>
+              <Box sx={labelSx}>
+                # notes — still worth a look
+                <InfoPopover
+                  label="The notes in full"
+                  heading="# the review's notes, as the repair reads them"
+                  lines={result.residual_defects}
+                  testId="residual-details"
+                />
+              </Box>
+              <Box
+                component="ul"
+                data-testid="residual-notes"
+                sx={{ m: 0, mt: 0.5, pl: 2.5, ...bodyTextSx, ...readableSx }}
+              >
+                {plainNotes(result.residual_defects).map(note => (
+                  <li key={note}>{note}</li>
                 ))}
               </Box>
             </Box>
