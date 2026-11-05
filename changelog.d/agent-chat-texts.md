@@ -18,6 +18,9 @@
   `.start_over()` or `plot in plotly with your 3 decisions`, not as the action `.carry_plot()` the
   page sends, and the summary after a paste, which no button sends, shows no line. Inline code in a
   reply shows as code, without its backticks. (#12576)
+- **The thread says the reply is on its way.** A plot's card arrives seconds before the reply to it;
+  in that gap a line below the card reads `writing the reply` beside the loader, and the reply takes
+  its place, starting where the line started. (#12576)
 - **The line above the message box says how to stop a running plot.** While a plot runs it reads
   `# plotting… .stop() to cancel` in place of the step's line, which still invited the click that
   started the run. (#12576)
