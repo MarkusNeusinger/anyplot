@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   type AgentSessionState,
+  type ChatItem,
   initialAgentState,
   type RunState,
 } from 'src/hooks/useAgentSession';
@@ -67,6 +68,22 @@ describe('runView', () => {
     const card = { id: 3, kind: 'plot', version: 1 } as const;
     const state = { ...running(plotRun), items: [ask, note, card] };
     expect(runView(state)).toEqual({ items: [ask, note, card], timeline: false });
+    // A run that failed hands over to its card the same way.
+    const failed = {
+      id: 3,
+      kind: 'plot_failed',
+      result: {
+        status: 'failed',
+        reason: 'render_failed',
+        attempts: 2,
+        artifacts: [],
+        changes: [],
+      },
+    } as unknown as Extract<ChatItem, { kind: 'plot_failed' }>;
+    expect(runView({ ...running(plotRun), items: [ask, note, failed] })).toEqual({
+      items: [ask, note, failed],
+      timeline: false,
+    });
   });
 
   it('holds nothing for a turn without the timeline, nor once the run is over', () => {
