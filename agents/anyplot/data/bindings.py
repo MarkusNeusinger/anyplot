@@ -611,14 +611,16 @@ def carry_by_name(bindings: Sequence[Binding], roles: list[DataRole], profile: D
             taken.add(match)
     carried: list[Binding] = []
     # The warnings of the unbound table (an open role whose every column is negative) are no fault of a carry.
-    unbound = set(check_bindings([], roles, profile).warnings)
+    # Each binding is judged with the ones carried before it, so the second role of a lower and upper bound pair
+    # is left behind when the pair would come out inverted on the new data.
+    allowed = set(check_bindings([], roles, profile).warnings)
     for binding in bindings:
         new = target.get(binding.column)
         if new is None:
             continue
         moved = Binding(role=binding.role, column=new)
-        check = check_bindings([moved], roles, profile)
-        if not check.errors and set(check.warnings) <= unbound:
+        check = check_bindings([*carried, moved], roles, profile)
+        if not check.errors and set(check.warnings) <= allowed:
             carried.append(moved)
     if not carried:
         return default_bindings(roles, profile)

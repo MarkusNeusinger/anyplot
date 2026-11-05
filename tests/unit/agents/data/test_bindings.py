@@ -28,7 +28,8 @@ from agents.anyplot.data.bindings import (
 )
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.prepare import Operation, apply_operations
-from agents.anyplot.data.temporal import event_year
+from agents.anyplot.data.shape import long_suggestion
+from agents.anyplot.data.temporal import event_year, time_keys
 from agents.anyplot.schemas import Binding, ColumnDtype, DatasetProfile
 from core.spec_roles import DataRole, RoleKind, data_bullets, parse_roles
 from tests.unit.core.test_spec_roles import AREA_STACKED, LINE_MULTI
@@ -1586,6 +1587,15 @@ class TestRecordIdsAndFoundingYears:
             ("value", "Umsatz"),
         ]
 
+    def test_a_wide_table_keeps_a_founding_year_beside_the_melted_measures(self) -> None:
+        """A melt of the yearly measures must not turn the founding year into one more measure."""
+        data = profile("Founded,Staff 2020,Staff 2021\n1990,1,2\n2004,3,4\n1971,5,6\n")
+
+        assert time_keys(data) == {"Founded"}
+        suggestion = long_suggestion(roles_of("bar-basic"), data)
+        assert suggestion is not None
+        assert suggestion.keys == ["Founded"] and suggestion.columns == ["Staff 2020", "Staff 2021"]
+
 
 class TestCarryByName:
     """New data that replaces the old keeps what its columns meant (`carry_by_name`)."""
@@ -1640,6 +1650,17 @@ class TestCarryByName:
         carried = carry_by_name(old, roles, new)
 
         assert as_pairs(carried) == [("x", "Area km2"), ("y", "Value")]
+
+    def test_a_pair_that_would_come_out_inverted_keeps_only_its_first_role(self) -> None:
+        """Each column fits on its own; together the lower bound starts above the upper one on the new data."""
+        new = profile("month,low,high\nJan,50,4\nFeb,55,7\nMar,60,12\n")
+        old = bind(("category", "month"), ("min_value", "low"), ("max_value", "high"))
+
+        carried = carry_by_name(old, RANGE_ROLES, new)
+
+        assert ("min_value", "low") in as_pairs(carried)
+        assert ("max_value", "high") not in as_pairs(carried)
+        assert check_bindings(carried, RANGE_ROLES, new).warnings == []
 
 
 @pytest.mark.parametrize(

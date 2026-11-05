@@ -66,8 +66,9 @@ def event_year(column: ColumnProfile) -> bool:
     """An integer column of years named for an event of each row (`Founded`, `Year founded`, `Baujahr`).
 
     Such a year says when each organisation, building or person began, never how much of something there is,
-    so it is no measure (`bindings.weak_measures`). Neither is it the time a table runs along: as the category
-    of a bar chart it would add up the rows of one founding year, so it ranks as an ordinary integer for a
+    so it is no measure (`bindings.weak_measures`), and a wide table keeps it beside its labels instead of
+    melting it with the measures (`time_keys`). Neither is it the time a table runs along: as the category of
+    a bar chart it would add up the rows of one founding year, so it ranks as an ordinary integer for a
     grouping role (`bindings._category_rank`), whatever `year_score` says.
     """
     if column.dtype != "integer" or not isinstance(column.min, float | int) or not isinstance(column.max, float | int):
@@ -102,13 +103,15 @@ def time_keys(profile: DatasetProfile) -> set[str]:
 
     An unnamed 1-to-12 or 1-to-4 column counts as a month or quarter only right after a column of years that
     repeats (`Year, Month, Temperature`: each year once per month): anywhere beside one was too loose (review
-    of #12204: in `Jahr, CH, AT, DE`, one row per year, a country whose values ran 1 to 4 became a key).
+    of #12204: in `Jahr, CH, AT, DE`, one row per year, a country whose values ran 1 to 4 became a key). A year
+    of an event of each row (`event_year`: `Founded`) is a key too, an attribute of the row that a melt of the
+    measures beside it must keep, also when its values hold no run of years.
     """
     columns = profile.columns
     keys: set[str] = set()
     for index, column in enumerate(columns):
         before = columns[index - 1] if index > 0 else None
         after_year = before is not None and year_score(before) > 0 and before.unique < profile.rows
-        if year_score(column) or date_part(column, has_year=after_year):
+        if year_score(column) or event_year(column) or date_part(column, has_year=after_year):
             keys.add(column.name)
     return keys
