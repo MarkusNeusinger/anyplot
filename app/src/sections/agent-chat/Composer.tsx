@@ -146,8 +146,10 @@ export function Composer(props: ComposerProps) {
   const firstPlot = step2 && !hasPlot;
   const stepCreateLine = !attachment && (firstPlot || chatLocked);
   // While a plot runs, its line stands where the step's line stood, which would still invite the
-  // click that started it; only where a line stands, so the box below never moves.
-  const busyLine = runLine && !attachment && (stepLine || stepCreateLine) ? runLine : null;
+  // click that started it; only where a line stands, so the box below never moves. The line of
+  // `all`, which the box and `.send()` name as their description, stays.
+  const busyLine =
+    runLine && !attachment && !chatLocked && (stepLine || stepCreateLine) ? runLine : null;
   // A table or a file waits for Enter: its line takes the step's place, and the plot buttons
   // wait, since they would plot the data before it, or none.
   const waitLine = busyLine ?? (attachment ? ATTACHMENT_LINE : stepLine);

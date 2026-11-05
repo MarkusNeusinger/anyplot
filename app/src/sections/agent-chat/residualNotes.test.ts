@@ -31,11 +31,22 @@ describe('plainNotes', () => {
     ).toBe('a column may be drawn in the wrong place');
   });
 
-  it('keeps a line outside the grammar as it is, and names an unknown id generally', () => {
+  it('keeps a line without ids as it is, and names an unknown id generally', () => {
     const plain = 'the review scored the plot 72 of 100, below the ship score of 80';
     expect(plainNote(plain)).toBe(plain);
     expect(plainNote('DE-02 (both): the grid is heavy → lighter. Likely cause: x.')).toBe(
       'a detail of the plot could be better'
+    );
+  });
+
+  it('reads the ids of a line in another form too, so none shows raw', () => {
+    expect(plainNote('VQ-03 light: two markers overlap the label; likely cause: axis limits')).toBe(
+      'some marks are hard to see'
+    );
+    expect(plainNote('VQ-02: the ticks collide')).toBe('some labels overlap');
+    // An id inside the text is no id of the line.
+    expect(plainNote('see VQ-02 (light) for the overlap')).toBe(
+      'see VQ-02 (light) for the overlap'
     );
   });
 });

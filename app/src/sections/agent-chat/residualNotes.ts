@@ -5,8 +5,11 @@
  * issue instead, by the rubric id, and the lines in full stay behind the notes' ⓘ.
  */
 
-/** A residual line in the review's grammar: its ids, then the render it was seen in. */
-const DEFECT_LINE = /^((?:[A-Z]{2}-\d{2})(?:, [A-Z]{2}-\d{2})*) \((?:light|dark|both|code)\): /;
+/**
+ * A residual line that starts with rubric ids: the review's grammar (`<ids> (<render>): `), and
+ * also a line that names its ids in another form, which would otherwise show them raw.
+ */
+const DEFECT_LINE = /^((?:[A-Z]{2}-\d{2})(?:, [A-Z]{2}-\d{2})*)[\s:(]/;
 
 /**
  * Each id's issue in plain words, the most telling first: a line that names two ids (`VQ-05,
@@ -19,19 +22,19 @@ const PLAIN: [id: string, text: string][] = [
   ['VQ-03', 'some marks are hard to see'],
   ['VQ-04', 'some colors are hard to tell apart'],
   ['SC-03', 'a column may be drawn in the wrong place'],
-  ['SC-01', 'the plot may not be the kind the catalogue plot is'],
+  ['SC-01', 'the kind of plot may be off'],
   ['SC-02', 'something the plot should show may be missing'],
   ['SC-04', 'a title, label or legend may not read as asked'],
   ['DQ-03', 'some values may not be drawn as they are in the data'],
   ['VQ-06', 'an axis label or the title says too little'],
-  ['VQ-07', "some colors are not the site's palette"],
+  ['VQ-07', 'some colors do not match the color scheme'],
   ['VQ-05', 'the plot uses the space of the image poorly'],
 ];
 
 /** An issue under an id the list does not name. */
 const OTHER = 'a detail of the plot could be better';
 
-/** One residual line in plain words; a line outside the grammar is plain already and stays. */
+/** One residual line in plain words; a line that names no id is plain already and stays. */
 export function plainNote(line: string): string {
   const match = DEFECT_LINE.exec(line);
   if (!match) return line;
