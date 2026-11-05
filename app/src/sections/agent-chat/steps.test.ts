@@ -8,6 +8,7 @@ import {
 } from 'src/hooks/useAgentSession';
 import {
   pendingReply,
+  plotButtonLabel,
   runLine,
   runView,
   showsTimeline,
@@ -149,15 +150,26 @@ describe('stepOneLine', () => {
     expect(stepOneLine(step1({ missingRoles: ['y'], confirmLoss: 'bindings' }))).toBe(
       '# step 1 again — pick a column for y, then .create_plot()'
     );
+    // After a data change the plot button reads `plot the new data`, and the line ends with it.
     expect(stepOneLine(step1({ confirmLoss: 'data' }))).toBe(
-      '# step 1 again — the data changed · check it above, then .create_plot()'
+      '# step 1 again — data changed · check it above, then plot the new data'
+    );
+    expect(stepOneLine(step1({ missingRoles: ['y'], confirmLoss: 'data' }))).toBe(
+      '# step 1 again — pick a column for y, then plot the new data'
     );
     expect(stepOneLine(step1({ confirmLoss: 'bindings' }))).toBe(
       '# step 1 again — bindings changed · check them above, then .create_plot()'
     );
     expect(stepOneLine(step1({ confirmLoss: 'server' }))).toBe(
-      '# step 1 again — not confirmed on the server · check the data, then .create_plot()'
+      '# step 1 again — check the data above, then .create_plot()'
     );
+  });
+
+  it('names the plot button after the data the user had confirmed changed', () => {
+    expect(plotButtonLabel(step1())).toBe('.create_plot()');
+    expect(plotButtonLabel(step1({ confirmLoss: 'bindings' }))).toBe('.create_plot()');
+    expect(plotButtonLabel(step1({ confirmLoss: 'server' }))).toBe('.create_plot()');
+    expect(plotButtonLabel(step1({ confirmLoss: 'data' }))).toBe('plot the new data');
   });
 
   it('leads to .plot_all() while all is pressed, where no .create_plot() shows', () => {
@@ -168,7 +180,7 @@ describe('stepOneLine', () => {
       '# step 1 — pick a column for y, then .plot_all()'
     );
     expect(stepOneLine(step1({ confirmLoss: 'data' }), '.plot_all()')).toBe(
-      '# step 1 again — the data changed · check it above, then .plot_all()'
+      '# step 1 again — data changed · check it above, then .plot_all()'
     );
   });
 });

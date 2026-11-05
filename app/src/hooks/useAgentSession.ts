@@ -49,7 +49,10 @@
  * bindings and step state, which replace the hook's (`server_sync`), so the
  * dropdowns show what the server holds and the panel goes back to step 1.
  * A `plot{not_ready, data_unconfirmed}` without that sync still drops the
- * flag, so the next `.create_plot()` confirms again.
+ * flag, so the next `.create_plot()` confirms again. It adds no thread item:
+ * it is the step line's news, not a failed plot, and it arrives before the
+ * turn's `done`, so it drops the flag only once the turn is over. A data change
+ * the same turn made then names the loss itself, in the one notice.
  *
  * A confirmation the user had given and then lost is named where it is lost:
  * the reducer watches the flag go from set to cleared, whatever action did it,
@@ -277,7 +280,10 @@ export interface RunState {
   kind: TurnAction | 'message';
   /** Steps in arrival order; the last one is in progress. */
   steps: { step: TimelineStep; attempt: number | null }[];
-  /** Set while the turn waits in the run queue: `position` 1 runs next. */
+  /**
+   * Set while the turn waits in the run queue: `position` 1 runs next. Cleared by the wait's end
+   * (`status{step:"started"}`), which also drops the `queued` step, and by a pipeline step.
+   */
   queue: { position: number; waiting: number } | null;
   stopping: boolean;
   /** The rounds that ended so far, from each repair step's `outcome` (absent: none yet). */
@@ -771,6 +777,7 @@ type Action =
   | { type: 'item'; item: NewChatItem }
   | { type: 'run_start'; kind: RunState['kind'] }
   | { type: 'run_queued'; position: number; waiting: number }
+  | { type: 'run_started' }
   | { type: 'run_step'; step: PipelineStep; attempt: number | null; previous?: Round | null }
   | { type: 'run_stopping' }
   | { type: 'run_reconnecting'; on: boolean }
@@ -1388,6 +1395,19 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         },
       };
     }
+    case 'run_started':
+      // The wait is over: a turn without pipeline steps (a summary that runs data code) had its
+      // queue position on screen until the reply. A plot run that has not reached its first step
+      // is starting again (`starting…`). A replayed start after a resume changes nothing more.
+      if (!state.run) return state;
+      return {
+        ...state,
+        run: {
+          ...state.run,
+          queue: null,
+          steps: state.run.steps.filter(entry => entry.step !== 'queued'),
+        },
+      };
     case 'run_step':
       if (!state.run) return state;
       return {
@@ -1518,6 +1538,8 @@ export function useAgentSession({
   const turnEndRef = useRef<TurnEnd | null>(null);
   // The code of the refusal that ended the last turn, if one did (`out_of_scope`, `needs_data`, ...).
   const turnRefusalRef = useRef<string | null>(null);
+  // The turn's plot answered `data_unconfirmed`: the confirmation drops once the turn is over (`runTurn`).
+  const unconfirmedRef = useRef(false);
   // The last turn, when its stream was cut and every read of it again failed: the next turn reads it first.
   const cutTurnRef = useRef<CutTurn | null>(null);
   const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1706,7 +1728,7 @@ export function useAgentSession({
    * as the server's binding check has it: the same series twice is never meant. The member that
    * held it takes this member's column instead, so the two swap and both series stay (owner
    * decision of 2026-11-05: `y1` Sales and `y2` Cost, `y2` set to Sales, gives `y1` Cost); a
-   * member without a column (the next member's `— add a column —`) has nothing to give, so the
+   * member without a column (the next member, which `+ y` binds) has nothing to give, so the
    * column moves and the family closes up.
    */
   const setBinding = useCallback(
@@ -2167,13 +2189,15 @@ export function useAgentSession({
         repaired: result.attempts > 1 ? 'yes' : 'no',
         spec: specId,
       });
+      if (result.status === 'not_ready' && result.reason === 'data_unconfirmed') {
+        // The server holds no confirmation: the next `.create_plot()` confirms again instead of
+        // starting a run the server refuses. The turn's `done` sync normally says so as well, and
+        // a data change of this turn comes only with it, so the flag drops at the turn's end, where
+        // that change names the loss. No thread item: the step line and its notice say what to do.
+        unconfirmedRef.current = true;
+        return;
+      }
       if (result.status !== 'ok' && result.status !== 'needs_attention') {
-        // The server holds no confirmation: the next `.create_plot()` confirms again
-        // instead of starting a run the server refuses. The turn's `done` sync normally
-        // says so as well; this covers a stream that ends without it.
-        if (result.status === 'not_ready' && result.reason === 'data_unconfirmed') {
-          safeDispatch({ type: 'confirm_lost' });
-        }
         addItem({ kind: 'plot_failed', result });
         return;
       }
@@ -2204,6 +2228,9 @@ export function useAgentSession({
       switch (event.type) {
         case 'queued':
           safeDispatch({ type: 'run_queued', position: event.position, waiting: event.waiting });
+          break;
+        case 'started':
+          safeDispatch({ type: 'run_started' });
           break;
         case 'step':
           safeDispatch({
@@ -2398,6 +2425,7 @@ export function useAgentSession({
       const controller = new AbortController();
       abortRef.current = controller;
       stoppedRef.current = false;
+      unconfirmedRef.current = false;
       safeDispatch({ type: 'run_start', kind });
       try {
         await work(controller, read);
@@ -2424,6 +2452,9 @@ export function useAgentSession({
               : read.finished
                 ? 'done'
                 : null;
+        // After `done`: a data change of the turn has named the loss already, and this changes nothing then.
+        if (unconfirmedRef.current) safeDispatch({ type: 'confirm_lost' });
+        unconfirmedRef.current = false;
         safeDispatch({ type: 'run_end' });
       }
       // A shipped run adds decisions, the assistant's `forget` removes some, a shipped fresh plot
@@ -2446,7 +2477,10 @@ export function useAgentSession({
       turnErrorRef.current = null;
       turnEndRef.current = null;
       turnRefusalRef.current = null;
-      if (!sid || current.run || busy()) return;
+      // `busy()` reads `abortRef`, which a turn sets and clears in step with `state.run`, but at once: `state.run`
+      // is a render behind, so a turn that follows another (a refused note's summary) read the ended one as
+      // running and never started.
+      if (!sid || busy()) return;
       const cut = cutTurnRef.current;
       cutTurnRef.current = null;
       if (cut && cut.sid === sid && sameMark(cut.mark, sessionMark(current))) {

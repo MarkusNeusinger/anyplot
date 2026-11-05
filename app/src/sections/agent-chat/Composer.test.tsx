@@ -42,6 +42,7 @@ function renderComposer(overrides: Partial<ComposerProps> = {}) {
     carryText: null,
     stepLine: '# step 1 — check the preview and the bindings above, then .create_plot()',
     runLine: RUN_LINE,
+    newData: false,
     confirming: false,
     confirmError: null,
     pausedUntil: null,

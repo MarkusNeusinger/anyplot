@@ -74,14 +74,11 @@ describe('ChatThread', () => {
     );
   });
 
-  it('reads a plot refused for unconfirmed data as a step to take', () => {
-    renderThread(notReady('data_unconfirmed'));
-    expect(screen.getByText('plot · not ready · data_unconfirmed')).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        'the data is not confirmed: check the preview and the bindings, then .create_plot()'
-      )
-    ).toBeInTheDocument();
+  it('reads a plot refused for an open role as a step to take', () => {
+    // `data_unconfirmed` never comes here: the hook adds no item for it, the step line says it.
+    renderThread(notReady('incomplete_bindings'));
+    expect(screen.getByText('plot · not ready · incomplete_bindings')).toBeInTheDocument();
+    expect(screen.getByText('pick a column for every required role first')).toBeInTheDocument();
   });
 
   it('keeps a generic line for a reason it does not know', () => {

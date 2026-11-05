@@ -167,6 +167,40 @@ class TestScopeGuard:
         assert ledger.refusal == (code, policy.refusal(code, "de"))
         assert halt.parts[0].text == policy.refusal(code, "de")
 
+    async def test_the_note_sent_with_a_paste_is_never_needs_data(
+        self, ledger: RequestLedger, services: Services, judge, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """A live Eurostat file came with the note "unemployment rate per country": the judge, which sees the note
+        alone, read the statistic's name as a request for figures. The note is about the data that came with it."""
+        ledger.paste_note = True
+        judge.script = [JudgeVerdict(verdict="needs_data", lang="en")]
+        plugin = ScopeGuardPlugin()
+
+        with caplog.at_level("INFO", logger="anyplot.agents.attribution"):
+            replaced = await plugin.on_user_message_callback(
+                invocation_context=FakeContext(), user_message=text_message("unemployment rate per country")
+            )
+        halt = await plugin.before_run_callback(invocation_context=FakeContext())
+
+        assert replaced is None and halt is None
+        assert ledger.refusal is None and ledger.error is None
+        verdicts = [line["verdict"] for line in scope_lines(caplog)]
+        assert verdicts[:2] == ["needs_data", "paste_note_in_scope"]  # the judge's own verdict stays on record
+
+    @pytest.mark.parametrize(("verdict", "code"), [("out_of_scope", "out_of_scope"), ("attack", "out_of_scope")])
+    async def test_a_note_sent_with_a_paste_is_refused_for_any_other_verdict(
+        self, ledger: RequestLedger, services: Services, judge, verdict: str, code: str
+    ) -> None:
+        ledger.paste_note = True
+        judge.script = [JudgeVerdict(verdict=verdict, lang="en")]
+
+        replaced = await ScopeGuardPlugin().on_user_message_callback(
+            invocation_context=FakeContext(), user_message=text_message("write an email about it")
+        )
+
+        assert replaced.parts[0].text == withheld_text(code)
+        assert ledger.refusal == (code, policy.refusal(code, "en"))
+
     def test_refusal_codes_cover_every_refusing_verdict(self) -> None:
         refusing = set(get_args(Verdict)) - {"in_scope"}
 

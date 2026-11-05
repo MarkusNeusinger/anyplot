@@ -4210,6 +4210,39 @@ async def test_the_note_typed_with_a_paste_is_its_first_turn_with_the_notes_and_
     assert read_session(await _session_state(client, sid)).summary_pending is False
 
 
+async def test_a_note_judged_needs_data_still_reaches_the_root_with_its_paste(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """A note names the data it came with ("unemployment rate per country"), and the judge, which reads the note
+    alone, can take such a name for a request to fetch figures. The note's turn goes on to the summary; a later
+    message with the same verdict is refused as before."""
+    script = default_script()
+    script["root"] = [{"text": "4 rows of hours and scores; hours on x."}]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await open_session(client, with_data=False)
+    judge.script = [
+        JudgeVerdict(verdict="in_scope", lang="en"),  # the dataset judge
+        JudgeVerdict(verdict="in_scope", lang="en"),  # the pasted notes
+        JudgeVerdict(verdict="needs_data", lang="en"),  # the note, typed text
+        JudgeVerdict(verdict="needs_data", lang="en"),  # a later message
+    ]
+    pasted = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": NOTED_PASTE})
+    assert pasted.status_code == 200, pasted.text
+
+    note = await client.post(
+        f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "unemployment rate per country"}
+    )
+    later = await client.post(
+        f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "add the unemployment rate of France"}
+    )
+
+    assert [name for name, _ in parse_sse(note.text)] == ["ready", "message", "done"]
+    assert len(fake.calls) == 1 and "unemployment rate per country" in json.dumps(fake.calls[0]["messages"][-1])
+    assert read_session(await _session_state(client, sid)).summary_pending is False
+    refusals = [data for name, data in parse_sse(later.text) if name == "refusal"]
+    assert [item["code"] for item in refusals] == ["needs_data"] and len(fake.calls) == 1
+
+
 async def test_a_failed_note_turn_keeps_the_paste_unsummarized_and_a_confirmation_ends_it(
     client: httpx.AsyncClient, swap_models, judge
 ) -> None:

@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Region,Unemployment rate (%)\nNorthvale,4.2\nEastmere,6.8\nSouthfield,5.1\nWestbrook,9.3\n",
+  "message": "unemployment rate per region",
+  "first_turn": true,
+  "expected_operations": [],
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["note", "no_tool"]
+}
