@@ -79,7 +79,8 @@
  * ("nur 2024" or "only 2024" keeps that year's rows, "dezimalkomma",
  * "decimal comma", "tausender" or "thousands" reads a column of `1.234` dots as
  * thousands separators); a note with "weather" or "joke" is refused and leaves
- * the paste unsummarized for the page's summary action. A message containing
+ * the paste unsummarized for the page's summary action, and a confirmation ends
+ * it, as the service's confirm route does. A message containing
  * "prozent" or "percent" plays a `set_type`
  * (number) on the second column (a unit such as `%` removed, a decimal comma
  * read), "gruppier" or "group" an `aggregate` (a numeric column summed by the
@@ -2660,6 +2661,7 @@ async function route(req, res) {
     if (session.active) return fail(res, 409, 'run_active', ref);
     if (!session.dataset) return fail(res, 422, 'no_dataset', ref);
     session.confirmed = true;
+    session.summaryPending = false; // the user saw the data: the plot's request after it is no note
     return json(
       res,
       200,
