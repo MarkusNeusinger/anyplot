@@ -111,7 +111,7 @@ describe('SaveButton', () => {
 
     await user.click(screen.getByRole('button', { name: 'Save' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'this session is no longer on the server · ref ref-nf'
+      /^this session is no longer on the server$/
     );
 
     rerender(<SaveButton disabled onSave={onSave} />);
@@ -132,7 +132,7 @@ describe('SaveButton', () => {
     const save = screen.getByRole('button', { name: 'Save' });
 
     await user.click(save);
-    expect(await screen.findByRole('alert')).toHaveTextContent('the session expired · ref r1');
+    expect(await screen.findByRole('alert')).toHaveTextContent(/^the session expired · reload$/);
     expect(screen.getByRole('button', { name: 'reload' })).toBeInTheDocument();
 
     // On Cloud Run, a bundle over 32 MB fails as `upstream` before the BFF reads it.
@@ -146,7 +146,7 @@ describe('SaveButton', () => {
     await user.click(save);
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent(
-        'the daily limit is reached; try again tomorrow · ref r3'
+        /^the daily limit is reached; try again tomorrow$/
       )
     );
 

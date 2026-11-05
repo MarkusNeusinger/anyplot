@@ -196,7 +196,7 @@ export function ResultFeedback({
       if (mounted.current) {
         setFailure(
           err instanceof AgentApiError
-            ? { code: err.code, ref: err.ref }
+            ? { code: err.code, ref: err.shownRef }
             : { code: 'network', ref: null }
         );
       }

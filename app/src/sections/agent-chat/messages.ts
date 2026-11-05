@@ -1,6 +1,9 @@
 /**
- * What the agent chat's error codes mean, in the page's voice. The code and
- * the request id stay visible next to the text, so a report can quote them.
+ * What the agent chat's error codes mean, in the page's voice. The request id
+ * stands next to the text only for a fault of the server or the connection (a
+ * 5xx, no answer, a stream's error event), where a report needs it to find the
+ * request. A refusal (a 4xx) names its cause in the text, which the visitor acts
+ * on, so it shows no id (`AgentApiError.shownRef`).
  * Codes: docs/reference/api.md ("Agent error responses", "SSE protocol").
  */
 

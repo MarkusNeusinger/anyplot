@@ -854,6 +854,16 @@ export class AgentApiError extends Error {
   get unauthorized(): boolean {
     return this.status === 401 || (this.status === 403 && this.code === 'forbidden');
   }
+
+  /**
+   * The request id the page shows beside the error: only for a fault of the server or the
+   * connection (a 5xx, or no answer), where a report needs it to find the request. A 4xx is a
+   * refusal whose text names its cause (a column that does not fit, a paste the parser cannot
+   * read, a limit), which the visitor acts on without quoting an id.
+   */
+  get shownRef(): string | null {
+    return this.status === 0 || this.status >= 500 ? this.ref : null;
+  }
 }
 
 const FALLBACK_CODES: Record<number, string> = {

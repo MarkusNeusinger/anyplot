@@ -1384,7 +1384,7 @@ function failureOf(err: unknown): Failure {
   if (err instanceof AgentApiError) {
     return {
       code: err.code,
-      ref: err.ref,
+      ref: err.shownRef,
       ...(err.errors.length ? { errors: err.errors } : {}),
       ...(err.cause ? { cause: err.cause } : {}),
     };
@@ -2534,7 +2534,7 @@ export function useAgentSession({
     } catch (err) {
       const failure =
         err instanceof AgentApiError
-          ? { code: err.code, ref: err.ref }
+          ? { code: err.code, ref: err.shownRef }
           : { code: 'network', ref: null };
       addItem({ kind: 'error', code: failure.code, ref: failure.ref });
       return null;

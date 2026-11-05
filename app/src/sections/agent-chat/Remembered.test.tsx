@@ -200,12 +200,14 @@ describe('Remembered', () => {
     const onForget = vi
       .fn<(id: string) => Promise<void>>()
       .mockRejectedValueOnce(new AgentApiError(409, 'run_active', 'ref-busy'))
-      .mockRejectedValueOnce(new AgentApiError(404, 'session_expired', 'ref-gone'));
+      .mockRejectedValueOnce(new AgentApiError(404, 'session_expired', 'ref-gone'))
+      .mockRejectedValueOnce(new AgentApiError(500, 'internal', 'ref-500'));
     const { rerender } = render(<Remembered {...props({ onForget })} />);
 
+    // A refusal (4xx) names its cause and shows no ref; a fault of the server does.
     await user.click(forgetButton(LINE.text));
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'could not forget: a run is in progress in this window; try again when it is done · ref ref-busy'
+      /^could not forget: a run is in progress in this window; try again when it is done$/
     );
     // The decision stays, and so does the focus on its control.
     expect(forgetButton(LINE.text)).toHaveFocus();
@@ -214,10 +216,17 @@ describe('Remembered', () => {
     await user.click(forgetButton(STARS.text));
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent(
-        'could not forget: the session expired · ref ref-gone'
+        /^could not forget: the session expired · reload$/
       )
     );
     expect(screen.getByRole('button', { name: 'reload' })).toBeInTheDocument();
+
+    await user.click(forgetButton(LINE.text));
+    await waitFor(() =>
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'could not forget: something went wrong on the server · ref ref-500'
+      )
+    );
 
     rerender(<Remembered {...props({ onForget, disabled: true })} />);
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
