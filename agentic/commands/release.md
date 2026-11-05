@@ -78,15 +78,34 @@ version: $1 (optional — e.g. `3.1.0`; if omitted, propose one from the `[Unrel
    - **When the window changed the plot pipeline:** that is the adapter or reviewer prompts,
      `prompts/library/`, `prompts/quality-criteria.md`, `prompts/default-style-guide.md`, the
      model settings or the pipeline code (`git diff --name-only v<last>..origin/main` shows it).
-     Then also run `uv run --extra agents python -m agents.evals.matrix --cases smoke --renderer
-     remote --render-url <anyplot-renderer URL> --gcloud-token`, with the URL from
-     `gcloud run services describe anyplot-renderer --region=europe-west4
-     --format='value(status.url)'`. It renders 25 plots and compares them with the committed
-     baseline; exit code 1 means it fell below the baseline's tolerance.
+     Then also run the matrix smoke. The smoke set holds a case for every library, so the run
+     needs all of them enabled (`agents/README.md`, "Run the smoke set or the full matrix");
+     otherwise the readiness scan blocks those cases as `library-disabled`:
+
+     ```bash
+     URL=$(gcloud run services describe anyplot-renderer --region=europe-west4 --format='value(status.url)')
+     AGENT_LIBRARIES=matplotlib,seaborn,plotnine,altair,pygal,letsplot,plotly,bokeh,ggplot2,makie,chartjs,d3,echarts,highcharts,muix \
+       uv run --extra agents python -m agents.evals.matrix --cases smoke \
+       --renderer remote --render-url "$URL" --gcloud-token
+     ```
+
+     It renders 25 plots and compares them with the committed baseline; exit code 1 means it fell
+     below the baseline's tolerance.
    - **Compare with the previous release** (its PR body's "Agent evals" section). A model answers
      differently from run to run, so a single miss is noise. The release waits when a suite fails
      its own gate, or when prep lands more than three cases below the previous release. Then run
      each new miss five times on the previous tag and five times on `origin/main`:
+     - **Prep:** copy the missed cases' files from `agents/evals/fixtures/prep/` on main into a new
+       private directory (`D=$(mktemp -d)`), so that both sides read the same cases. Then run
+       `uv run --extra agents python -m agents.evals.prep --cases "$D" --out "$D/run-<n>"` five
+       times: in the release worktree, and in a detached worktree of the previous tag
+       (`git worktree add --detach <path> v<last>`, removed afterwards).
+     - **Matrix:** `--cases '<case-id>,<case-id>' --repeats 5`, with the same environment as above,
+       on both sides.
+     - **Scope:** the whole suite costs a few cents, so run it again on both sides instead of
+       selecting cases.
+
+     Read the result per case:
      - A miss that holds on main but not on the tag is a regression. It gets a fix PR before the
        release, unless the owner decides to release anyway. Say so in the PR body.
      - A miss on both sides is a known issue. Name it in the PR body.
