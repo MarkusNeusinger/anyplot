@@ -3712,7 +3712,7 @@ def _constants_to_notes(
     = `Geschlecht - Total`): one value, no information per row, and a trap for a series or
     color binding. Like a JSON-stat dimension of one category (`_json_stat`), such a column
     leaves the table and `<name>: <value> (the same in every row)` joins the notes
-    (`context`; the suffix tells the line from the user's own notes), which the route
+    (`context`; the suffix says what the line is, `CONSTANT_NOTE_SUFFIX`), which the route
     screens before any model reads them; one warning names the columns, never the values.
     Only text columns with no missing cell count, in a table of at least two rows; a column
     kept text by request stays. When fewer than `MIN_KEPT_COLUMNS` columns would remain,
