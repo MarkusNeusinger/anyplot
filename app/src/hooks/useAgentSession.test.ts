@@ -524,7 +524,7 @@ describe('useAgentSession: data and bindings', () => {
     ]);
   });
 
-  it('moves a column inside a family and shares it with the other roles', async () => {
+  it('swaps a column inside a family and shares it with the other roles', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/dataset'] = () =>
       json(200, {
@@ -539,12 +539,14 @@ describe('useAgentSession: data and bindings', () => {
     const { result } = await openSession(routes);
     await act(() => result.current.parseData('a,b\n1,2\n'));
 
-    // The same series twice is never meant: y2 takes y1's column, and y1 gives it up.
+    // The same series twice is never meant: y2 takes y1's column, and y1 takes y2's (owner decision of
+    // 2026-11-05), so both series stay in the plot.
     await act(async () => result.current.setBinding('y2', 'Study Hours'));
     await waitFor(() => expect(result.current.state.bindingsBusy).toBe(false));
     expect(calls.filter(call => call.method === 'PUT').pop()?.body).toEqual([
       { role: 'x', column: 'Student' },
-      { role: 'y1', column: 'Study Hours' },
+      { role: 'y1', column: 'Exam Score' },
+      { role: 'y2', column: 'Study Hours' },
     ]);
 
     // A single role keeps a family member's column, and a member keeps a single role's.
@@ -554,10 +556,35 @@ describe('useAgentSession: data and bindings', () => {
     await waitFor(() => expect(result.current.state.bindingsBusy).toBe(false));
     expect(result.current.state.bindings).toEqual({
       x: 'Student',
-      y1: 'Study Hours',
+      y1: 'Exam Score',
       y2: 'Student',
       series: 'Study Hours',
     });
+  });
+
+  it("moves a column to a family's empty member: there is nothing to swap", async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () =>
+      json(200, {
+        ...DATASET,
+        bindings: [
+          { role: 'x', column: 'Student' },
+          { role: 'y1', column: 'Study Hours' },
+          { role: 'y2', column: 'Exam Score' },
+        ],
+        roles: [role('x'), role('y', { variadic: true })],
+      });
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+
+    // y3 is the next member's empty dropdown: y1 gives the column up, and the members close up.
+    await act(async () => result.current.setBinding('y3', 'Study Hours'));
+    await waitFor(() => expect(result.current.state.bindingsBusy).toBe(false));
+    expect(calls.filter(call => call.method === 'PUT').pop()?.body).toEqual([
+      { role: 'x', column: 'Student' },
+      { role: 'y1', column: 'Exam Score' },
+      { role: 'y2', column: 'Study Hours' },
+    ]);
   });
 
   it("keeps the binding check's lines of a refused set and restores the bindings", async () => {

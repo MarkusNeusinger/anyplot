@@ -27,7 +27,8 @@
  * under its own name, a variadic family `y` under its members `y1`, `y2`, ...;
  * the hook keeps the members contiguous (`compactFamilies`), so clearing `y2`
  * of three moves `y3` up. One column may serve several roles; a family takes
- * it once (`setBinding`). Every change replaces the whole set on the server.
+ * it once, and two members trade columns rather than drop one (`setBinding`).
+ * Every change replaces the whole set on the server.
  *
  * Transcriptions: pasted text that is not a table comes back as a table the
  * server read with a model and did not store (`transcription`). The dataset
@@ -1516,8 +1517,11 @@ export function useAgentSession({
    * Bind `name` (a single role or a family member such as `y2`) to `column`, or clear it with `null`.
    * A column may serve several roles (owner decision of 2026-11-04: the y and the size of a
    * bubble), so another role that holds it keeps it. Inside one variadic family it stays once,
-   * as the server's binding check has it: the same series twice is never meant, so taking it
-   * frees the member that held it.
+   * as the server's binding check has it: the same series twice is never meant. The member that
+   * held it takes this member's column instead, so the two swap and both series stay (owner
+   * decision of 2026-11-05: `y1` Sales and `y2` Cost, `y2` set to Sales, gives `y1` Cost); a
+   * member without a column (the next member's `— add a column —`) has nothing to give, so the
+   * column moves and the family closes up.
    */
   const setBinding = useCallback(
     (name: string, column: string | null) => {
@@ -1528,7 +1532,7 @@ export function useAgentSession({
       if (column && family) {
         for (const [other, held] of Object.entries(next)) {
           if (other !== name && held === column && familyOf(other, roles)?.name === family.name) {
-            next[other] = null;
+            next[other] = current[name] ?? null;
           }
         }
       }
