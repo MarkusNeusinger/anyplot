@@ -70,8 +70,8 @@ plain answer, a refusal, `prepare_data` or `generate_data` never waits (owner de
 of 2026-10-14). Only sandbox work goes through the run queue (`anyplot/run_queue.py`):
 the turn's first `plot_pipeline` or `run_data_code` call takes the queue's slot and the
 turn's start in the rate window (`TurnSlot`, the ledger's `run_slot`), and the stream
-sends `status{step:"queued", position, waiting}` while it waits, mid-turn, then the
-run's own events. The request deadline is paused while the turn waits and resumes
+sends `status{step:"queued", position, waiting}` while it waits, mid-turn, then once
+`status{step:"started"}` as the wait ends, then the run's own events. The request deadline is paused while the turn waits and resumes
 with the time it had left when the slot comes, so queued time never counts. A full queue, or a
 wait of `AGENT_QUEUE_MAX_WAIT_S`, ends the turn with `error{code:"capacity"}`.
 
@@ -540,8 +540,14 @@ class RunDeadline:
         self.run.abort.set()
 
 
-StreamNote = tuple[Literal["queued"], QueuePosition] | tuple[Literal["event"], Event] | tuple[Literal["end"], None]
-"""What the stream's outbox carries: a queue position of a waiting sandbox run, an ADK event, or the run's end."""
+StreamNote = (
+    tuple[Literal["queued"], QueuePosition]
+    | tuple[Literal["started"], None]
+    | tuple[Literal["event"], Event]
+    | tuple[Literal["end"], None]
+)
+"""What the stream's outbox carries: a queue position of a waiting sandbox run, that run's start once it waited,
+an ADK event, or the run's end."""
 
 TIER_LANES: dict[Tier, Lane] = {"admin": "admin", "public": "normal"}
 """The run queue's lane of each tier (`run_queue.py`): an admin's runs share the concurrency and the rate with
@@ -556,7 +562,8 @@ class TurnSlot:
     inside the ADK run. The first call submits the turn's queue entry (a start in the rate
     window and the run slot), pauses the deadline while the entry waits, puts every
     position into the stream's outbox as it changes (the stream sends it as
-    `status{step:"queued"}`), and resumes the deadline with the time it had left when the entry starts.
+    `status{step:"queued"}`), and resumes the deadline with the time it had left when the entry starts; an
+    entry that waited then puts its start into the outbox (`status{step:"started"}`).
     A later call in the same turn answers at once: one start per turn. The entry goes into
     the lane of the turn's tier (`TIER_LANES`), and its position at submit and its wait go into
     the ledger for the run's usage telemetry (`RequestLedger.queue_position`, `queue_wait_s`). A full queue,
@@ -623,6 +630,8 @@ class TurnSlot:
             return False
         if waited:
             self.deadline.arm(self.runtime.now())
+            # The wait is over: a turn without pipeline steps has no other event that says so before its reply.
+            self.outbox.put_nowait(("started", None))
         return True
 
     def _fail(self, code: Literal["capacity", "run_limit"]) -> None:
@@ -2541,6 +2550,8 @@ async def post_message(
                     continue
                 if note[0] == "queued":
                     yield translator.queued(note[1].position, note[1].waiting)
+                elif note[0] == "started":
+                    yield translator.started()
                 elif note[0] == "event":
                     for chunk in translator.translate(note[1]):
                         yield chunk

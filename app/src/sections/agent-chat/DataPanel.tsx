@@ -40,9 +40,9 @@
  * which the card names as its description, says to close the panel first.
  *
  * Every role of the spec gets a column choice (`bindingRows` in `bindings.ts`):
- * a single role one dropdown, a variadic family one per member plus one for
- * the next member. Required roles carry a `*`; the kinds a role accepts sit
- * under its name and the spec's description is its tooltip.
+ * a single role one dropdown, a variadic family its columns as chips with `×`
+ * and `+ y` for the next one. Required roles carry a `*`; the kinds a role
+ * accepts sit under its name and the spec's description is its tooltip.
  *
  * Text that is not a table comes back as a table a model read from it, which
  * the server has not stored. A card above the preview shows it with the

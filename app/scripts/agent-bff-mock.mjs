@@ -19,7 +19,7 @@
  * the CSRF header on every POST, PUT and DELETE, `{detail, ref}` errors with
  * an `X-Request-Id`, the spec's `roles` in the dataset answer, the binding
  * check's `errors` lines on a refused binding set, and a scripted `anyplot/1`
- * stream with `ready`, two `queued` statuses, the pipeline steps, `plot` (with
+ * stream with `ready`, two `queued` statuses and the wait's end (`started`), the pipeline steps, `plot` (with
  * the stored `version`), `message` and `done`, with `: ping` comments in
  * between. Three specs exist: scatter-basic (`x`, `y`), line-multi (`x`, the
  * series family `y1, y2, ...`, an optional `series`) and box-basic (`category`,
@@ -1166,6 +1166,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
     } finally {
       waitingTurns -= queued;
     }
+    // The wait's end, as the service's `TurnSlot.take` sends it once a turn that waited holds its slot.
+    if (QUEUE_START > 0) send('status', { step: 'started' });
     runsInFlight += 1;
     try {
       // The scope judge's detection (a typed message it accepts) and the root's

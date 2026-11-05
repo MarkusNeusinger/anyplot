@@ -1,11 +1,12 @@
 /**
  * The rows of the data panel's binding controls.
  *
- * Every role of the spec gets a column choice: a single role one dropdown
- * under its name, a variadic family such as `y` one dropdown per bound member
- * (`y1`, `y2`, ...) plus an empty one for the next member, so another series
- * is one pick away. The members stay contiguous (`compactFamilies` in
- * `src/hooks/useAgentSession.ts`), so the next member is always the first free number.
+ * Every role of the spec gets one row: a single role a dropdown under its name, a
+ * variadic family such as `y` its bound members (`y1`, `y2`, ...) as chips, each with
+ * `×`, and `+ y` for another column. A plot may take two series or eight: a dropdown per
+ * member grew one row per series, chips wrap in one. The members stay contiguous
+ * (`compactFamilies` in `src/hooks/useAgentSession.ts`), so the next member is always the
+ * first free number.
  */
 
 import { type BindingMap, familyMembers, nthMember } from 'src/hooks/useAgentSession';
@@ -46,47 +47,41 @@ export function columnLabel(role: RoleSpec, column: ColumnProfile): string {
 }
 
 export interface BindingRow {
-  /** The binding name the dropdown sets: a single role, or a family member such as `y2`. */
+  /** A single role's binding name, which its dropdown sets; a family's own name (`y`). */
   name: string;
   role: RoleSpec;
-  /** The role's first row, which carries its required mark and kinds. */
-  first: boolean;
-  /** The empty dropdown for a family's next member. */
-  next: boolean;
+  /** A family's bound members in their order, as `[binding name, column]`; empty for a single role. */
+  members: [string, string][];
+  /**
+   * The binding name a family's `+` binds (`y3`, the first free number), or `null`: a single
+   * role, every column taken, or the binding set full.
+   */
+  next: string | null;
 }
 
-/** One row per single role, one per bound family member, and one for each family's next member. */
+/** One row per role: a single role's dropdown, or a family's chips and its next member. */
 export function bindingRows(
   roles: readonly RoleSpec[],
   bindings: BindingMap,
   columnCount: number
 ): BindingRow[] {
-  const rows: BindingRow[] = [];
   const room = Object.keys(bindings).length < MAX_BINDINGS;
-  for (const role of roles) {
-    if (!role.variadic) {
-      rows.push({ name: role.name, role, first: true, next: false });
-      continue;
-    }
+  return roles.map(role => {
+    if (!role.variadic) return { name: role.name, role, members: [], next: null };
     const members = familyMembers(bindings, role, roles);
-    members.forEach(([name], index) => rows.push({ name, role, first: index === 0, next: false }));
-    if (members.length === 0 || (room && members.length < columnCount)) {
-      const first = members.length === 0;
-      const name = nthMember(role, members.length + 1, roles);
-      rows.push({ name, role, first, next: !first });
-    }
-  }
-  return rows;
+    const next =
+      room && members.length < columnCount ? nthMember(role, members.length + 1, roles) : null;
+    return { name: role.name, role, members, next };
+  });
 }
 
 /**
  * The label of a dropdown's empty choice: a role the plot computes when no column
  * is bound (the server marks it `computed`, `agents/anyplot/data/computed.py`)
- * says so, a family's next member offers another column, any other role has none.
+ * says so, any other role has none.
  */
-export function emptyChoice(row: BindingRow): string {
-  if (row.role.computed) return '— computed by the plot —';
-  return row.next ? '— add a column —' : '— none —';
+export function emptyChoice(role: RoleSpec): string {
+  return role.computed ? '— computed by the plot —' : '— none —';
 }
 
 /**

@@ -195,11 +195,14 @@ class TestTranslator:
     def test_queued_status(self, translator: Translator) -> None:
         assert parse(translator.queued(2, 5)) == ("status", {"step": "queued", "position": 2, "waiting": 5})
 
-    def test_a_pipeline_event_cannot_claim_the_queued_step(self, translator: Translator) -> None:
-        """`queued` comes only from the route; a pipeline status with that step is dropped."""
-        forged = Event(author="plot_pipeline", custom_metadata={"anyplot_status": {"step": "queued", "attempt": 1}})
+    def test_started_status(self, translator: Translator) -> None:
+        assert parse(translator.started()) == ("status", {"step": "started"})
 
-        assert translator.translate(forged) == []
+    def test_a_pipeline_event_cannot_claim_the_queued_step(self, translator: Translator) -> None:
+        """`queued` and `started` come only from the route; a pipeline status with either step is dropped."""
+        for step in ("queued", "started"):
+            forged = Event(author="plot_pipeline", custom_metadata={"anyplot_status": {"step": step, "attempt": 1}})
+            assert translator.translate(forged) == []
 
     def test_status_from_custom_metadata_only(self, translator: Translator) -> None:
         status = Event(author="plot_pipeline", custom_metadata={"anyplot_status": {"step": "rendering", "attempt": 2}})
