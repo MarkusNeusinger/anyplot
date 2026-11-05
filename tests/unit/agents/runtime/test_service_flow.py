@@ -4148,6 +4148,54 @@ async def test_the_note_typed_with_a_paste_is_its_first_turn_with_the_notes_and_
     assert read_session(await _session_state(client, sid)).summary_pending is False
 
 
+async def test_a_failed_note_turn_keeps_the_paste_unsummarized_and_a_confirmation_ends_it(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """A root that fails never answered on the paste: the flag stays for the next turn. The user's confirmation, the
+    first half of `.create_plot()`, ends it, so the plot's request after it is no note to summarize."""
+    script = default_script()
+    script["root"] = [{"raise": RuntimeError("outage")}]
+    swap_models("anthropic-vertex", script)
+    sid = await open_session(client, with_data=False)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="en")] * 3
+    await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": NOTED_PASTE})
+
+    failed = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "only 2024"})
+
+    assert any(name == "error" for name, _ in parse_sse(failed.text))
+    assert read_session(await _session_state(client, sid)).summary_pending is True
+    confirmed = await client.post(f"/v1/sessions/{sid}/dataset/confirm", headers=HEADERS)
+    assert confirmed.status_code == 200
+    assert read_session(await _session_state(client, sid)).summary_pending is False
+
+
+async def test_a_note_turn_that_changed_the_data_leaves_the_paste_summarized_after_an_undo(
+    client: httpx.AsyncClient, swap_models, judge
+) -> None:
+    """The note's `prepare_data` makes version 2; the turn summarized the paste it started on, so `.undo()` back to
+    the paste does not make the next message a note again."""
+    script = default_script()
+    script["root"] = [
+        prepare_call({"op": "rename", "column": "hours", "name": "Hours"}),
+        {"text": "4 rows; hours renamed."},
+        {"text": "x is Hours."},
+    ]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await open_session(client, with_data=False)
+    judge.script = [JudgeVerdict(verdict="in_scope", lang="en")] * 4
+    await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": NOTED_PASTE})
+
+    note = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "call it Hours"})
+    assert parse_sse(note.text)[-1][0] == "done"
+    undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+    assert undone.status_code == 200, undone.text
+
+    assert read_session(await _session_state(client, sid)).summary_pending is False
+    later = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "which is x?"})
+    assert parse_sse(later.text)[-1][0] == "done"
+    assert "- Data: pasted just now, not summarized yet" not in fake.calls[-1]["system"][-1]["text"]
+
+
 GERMAN_NOTED_PASTE = (
     "Umsatz der Filialen, Zahlen in Tausend Franken\n"
     "Jahr,Monat,Umsatz\n2023,11,3\n2023,12,4\n2024,1,5\n2024,2,7\n"

@@ -70,10 +70,11 @@ version 1, with no history; this records where it came from, for the feedback bu
 SUMMARY_PENDING = PREFIX + "summary_pending"
 """The id of a pasted dataset the root has not summarized yet: the dataset route writes it with the paste (also a
 transcription's `.use()`), and the messages route clears it once a root turn on that dataset ended without a
-failure or a refusal. While it names the current dataset, a typed message is the note the user sent with
-the paste: the route gives it the pasted notes and the file's name, and the session block says the data was pasted
-just now. Data the root made, a copy of another session's data and a session from before the key read as
-summarized."""
+failure or a refusal; the confirm route clears it too, since the user who confirmed the data has seen it and the
+next text is the plot's request, never a note. While it names the current dataset, a typed message is the note the
+user sent with the paste: the route gives it the pasted notes and the file's name, and the session block says the
+data was pasted just now. Data the root made, a copy of another session's data and a session from before the key
+read as summarized."""
 BINDINGS = PREFIX + "bindings"
 CONFIRMED = PREFIX + "confirmed"
 """The fingerprint of what the user confirmed (the confirm route `.create_plot()` calls first): the dataset
@@ -200,8 +201,9 @@ def confirmation_fingerprint(dataset_id: str | None, bindings: list[Binding]) ->
 
 
 def confirm_delta(view: SessionView) -> dict[str, Any]:
-    """The state delta of the confirm route: the current dataset with its current bindings counts as confirmed."""
-    return {CONFIRMED: confirmation_fingerprint(view.dataset_id, view.bindings)}
+    """The state delta of the confirm route: the current dataset with its current bindings counts as confirmed, and
+    as summarized (`SUMMARY_PENDING`): a `.create_plot()` after a note turn that failed plots, it summarizes nothing."""
+    return {CONFIRMED: confirmation_fingerprint(view.dataset_id, view.bindings), SUMMARY_PENDING: None}
 
 
 def narrows(confirmed: list[Binding], bindings: list[Binding], roles: list[DataRole]) -> bool:
