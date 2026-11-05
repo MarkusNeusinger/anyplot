@@ -51,8 +51,9 @@ describe('timeline grid', () => {
     });
 
     expect(show(liveRows(state))).toEqual([
-      'first try: adapting:done checking:done rendering:done reviewing:failed | ✗ review: 3 findings',
-      'second try: repairing:done checking:done rendering:active reviewing:upcoming | repairing review findings',
+      // A review that found things to fix did its work: the repair below it is the normal course.
+      'first try: adapting:done checking:done rendering:done reviewing:done | 3 things to fix',
+      'second try: repairing:done checking:done rendering:active reviewing:upcoming | fixing what the review found',
     ]);
   });
 
@@ -65,7 +66,7 @@ describe('timeline grid', () => {
     });
 
     expect(show(liveRows(state))[1]).toBe(
-      'second try: repairing:active checking:upcoming rendering:upcoming reviewing:upcoming | repairing text size, layout'
+      'second try: repairing:active checking:upcoming rendering:upcoming reviewing:upcoming | fixing text size, layout'
     );
   });
 
@@ -91,8 +92,8 @@ describe('timeline grid', () => {
     ];
 
     expect(show(gridRows(rounds, [], 'needs_attention'))).toEqual([
-      'first try: adapting:done checking:done rendering:failed reviewing:skipped | ✗ 2 measured',
-      'second try: repairing:done checking:done rendering:done reviewing:failed | ~ 1 finding open',
+      'first try: adapting:done checking:done rendering:done reviewing:skipped | 2 things to fix',
+      'second try: repairing:done checking:done rendering:done reviewing:done | ~ 1 note left',
     ]);
     expect(show(gridRows([{ attempt: 1, outcome: 'ok', findings: 0 }], [], 'ok'))).toEqual([
       'first try: adapting:done checking:done rendering:done reviewing:done | ✓ ok',
@@ -123,7 +124,7 @@ describe('timeline grid', () => {
     ];
 
     expect(gridRows(rounds, [], 'needs_attention').map(row => row.outcome?.text)).toEqual([
-      '~ 1 finding open',
+      '~ 1 note left',
       '✗ code check failed',
     ]);
   });
@@ -143,8 +144,8 @@ describe('timeline grid', () => {
     ).map(outcome => outcomeText({ attempt: 1, outcome, findings: 2 }).text);
     expect(texts).toEqual([
       '✓ ok',
-      '✗ review: 2 findings',
-      '✗ 2 measured',
+      '2 things to fix',
+      '2 things to fix',
       '✗ render failed',
       '✗ code check failed',
       '✗ answer unusable',
@@ -191,10 +192,12 @@ describe('ProgressTimeline', () => {
         .map(cell => cell.getAttribute('aria-label'))
     );
     expect(columns).toEqual([
-      ['adapting, done', 'checking, done', 'rendering, done', 'reviewing, failed'],
+      ['adapting, done', 'checking, done', 'rendering, done', 'reviewing, done'],
       ['repairing, done', 'checking, in progress', 'rendering, next', 'reviewing, next'],
     ]);
-    expect(screen.getByText('✗ review: 3 findings')).toBeInTheDocument();
+    // A normal repair reads as the loop's course: neutral ink, no red ✗ anywhere in the grid.
+    expect(screen.getByText('3 things to fix')).toHaveStyle({ color: 'var(--ink-soft)' });
+    expect(screen.queryByText('✗')).not.toBeInTheDocument();
     expect(screen.queryByText(/attempt/)).not.toBeInTheDocument();
   });
 

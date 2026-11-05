@@ -2,14 +2,16 @@
  * The rounds of a plot run as a grid (`timeline.ts`): one row per round, its
  * label, the four steps in fixed columns so the same step of every round lines
  * up, and the round's outcome on the right (while a repair round runs, what it
- * repairs: `repairing layout, text size`; before a run's first step, where it
+ * fixes: `fixing layout, text size`; before a run's first step, where it
  * stands: `starting…`, `queued · 1 of 2`). A phone-width grid shows the short
  * step names without arrows and puts the round's label and outcome on a line
  * above its steps, so the four step columns stay aligned and fit a result card
  * on a 360 px screen (the card scrolls the grid sideways below that).
  *
  * Cells: a done step has a muted dot, the active one the primary dot, a failed
- * one a red ✗, a skipped one a hollow dot, a step still to come no dot. The
+ * one a red ✗, a skipped one a hollow dot, a step still to come no dot. A review
+ * that found things to fix is done, not failed, and its outcome stays in a
+ * neutral ink: the repair round below it is the loop's normal course. The
  * marker's slot has one width in every state, and the label column and the
  * first step column the width of their longest names, so a running grid stands
  * still while its steps advance and a repair round's row joins it; only its
@@ -22,7 +24,12 @@ import type { PipelineStep } from 'src/lib/agent';
 import { type CellState, type GridRow, SHORT_STEP } from 'src/sections/agent-chat/timeline';
 import { colors, fontSize, typography } from 'src/theme';
 
-const TONE_COLOR = { ok: colors.primary, failed: colors.error, open: colors.warning } as const;
+const TONE_COLOR = {
+  ok: colors.primary,
+  failed: colors.error,
+  open: colors.warning,
+  repair: 'var(--ink-soft)',
+} as const;
 
 function MarkerShape({ state }: { state: CellState }) {
   if (state === 'failed') {

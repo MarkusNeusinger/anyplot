@@ -109,6 +109,7 @@ import { DataCard } from 'src/sections/agent-chat/DataCard';
 import { DataViewUnavailable } from 'src/sections/agent-chat/dataCardParts';
 import { describeConvertFailure } from 'src/sections/agent-chat/messages';
 import { DATA_LOCK_TEXT, DATA_SUMMARY_ID, DataCardShell } from 'src/sections/agent-chat/PinnedData';
+import { plotButtonLabel } from 'src/sections/agent-chat/steps';
 import { cardSx } from 'src/sections/agent-chat/styles';
 import {
   type ConvertedFile,
@@ -151,6 +152,11 @@ interface DataPanelProps {
    */
   locked?: boolean;
   /**
+   * The composer's plot action as it stands, which step 1's line in the card names: `.plot_all()`
+   * while `all` is pressed, else the plot button's own name (`plotButtonLabel`).
+   */
+  plotAction?: string;
+  /**
    * `.view_all()`: the current data version's canonical `data.csv` (`GET .../dataset/data.csv`)
    * for the full view of every row. Without it the preview has no `.view_all()`.
    */
@@ -172,6 +178,7 @@ export function DataPanel({
   onTrack,
   onConvert,
   locked = false,
+  plotAction,
   onLoadData,
   onDataViewShown,
 }: DataPanelProps) {
@@ -288,7 +295,7 @@ export function DataPanel({
   // Step 2 without `.show()`: the card waits behind the pinned header.
   if (!view.open) return null;
   return (
-    <DataCardShell view={view} locked={locked}>
+    <DataCardShell view={view} locked={locked} plotLabel={plotAction ?? plotButtonLabel(state)}>
       {card}
     </DataCardShell>
   );

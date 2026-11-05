@@ -125,6 +125,8 @@
  *
  * Scripted behaviour of a chat message:
  * - contains "weather" or "joke": the fixed out-of-scope refusal;
+ * - contains "stock price" or "unemployment rate": the fixed data refusal (`needs_data`), except
+ *   in the note sent with a paste, which the summary answers as any note;
  * - contains "busy": `error {code: capacity}`;
  * - contains "swap": the root's `set_bindings` in miniature, swapping the
  *   columns of `x` and the first `y` (which drops the confirmation), and a reply;
@@ -132,7 +134,9 @@
  * - code or a request for data (the dataset route's `422 code` and `422 data_request`
  *   guards): `run_data_code`, the spec's made-up table as `.example_data()` makes it;
  * - contains "prozent"/"percent", "gruppier"/"group" or "umbenenn"/"rename":
- *   a data change, see above, and a reply naming it;
+ *   a data change, see above, and a reply naming it; with "instead of" (or "statt") also a
+ *   plot the server refuses after it (`plot{not_ready, data_unconfirmed}`), as a root that read
+ *   the change as a plot change too called it;
  * - ends with "?": a reply only, no pipeline run;
  * - anything else: a refinement with a repair round, shipped as
  *   `needs_attention`; the word "dark" or "light" in the text renders that theme.
@@ -1175,10 +1179,14 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       // judge refuses is refused as a whole: it never reaches the root, so it
       // neither detects nor sets a language.
       const outOfScope = /weather|joke/.test(lower);
-      if (typeof body.text === 'string' && !outOfScope) {
+      // A request for figures to fetch is `needs_data`, except in the note sent with a paste,
+      // which is about the data that came with it.
+      const needsData =
+        /stock price|unemployment rate/.test(lower) && !(session.summaryPending && session.dataset);
+      if (typeof body.text === 'string' && !outOfScope && !needsData) {
         detectLanguage(session, text);
       }
-      const asked = outOfScope ? null : requestedLanguage(lower);
+      const asked = outOfScope || needsData ? null : requestedLanguage(lower);
       if (asked) {
         session.language = asked.code;
         session.languageSource = 'chosen';
@@ -1216,6 +1224,15 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         send('message', { text: `${summary} ${acted}` });
         return;
       }
+      // The scope judge answers before any agent: a request for figures to fetch ends here.
+      if (needsData) {
+        await sleep(STEP_MS);
+        send('refusal', {
+          code: 'needs_data',
+          text: 'I cannot fetch data from the internet or any other source. Please get the data you want to plot yourself first, then paste it into the message box as a table or open its file with .open().',
+        });
+        return;
+      }
       if (body.action === 'example_data') {
         // The root's `get_spec_brief` and a sandbox run take a few seconds: the page's working line counts them.
         await sleep(STEP_MS * 6);
@@ -1249,7 +1266,24 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
             : null;
       if (change) {
         await sleep(STEP_MS * 2);
-        send('message', { text: session.dataset ? change(session) : 'Paste your data first.' });
+        if (!session.dataset) {
+          send('message', { text: 'Paste your data first.' });
+          return;
+        }
+        const reply = change(session);
+        // "instead of" plays the root that read the change as a plot change too and called the
+        // plot after its own data change: the server refuses it, before the turn's `done`.
+        if (/instead of|statt/.test(lower)) {
+          send('plot', {
+            status: 'not_ready',
+            reason: 'data_unconfirmed',
+            attempts: 0,
+            artifacts: [],
+            changes: [],
+            residual_defects: [],
+          });
+        }
+        send('message', { text: reply });
         return;
       }
       if (outOfScope) {
@@ -1405,8 +1439,12 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         changes: refine
           ? ['Applied your change request', 'Marker size raised from 110 to 160']
           : [`x now reads ${x}, y reads ${y}`, 'Axis labels name your columns'],
+        // In the review's grammar, as the service writes them: the card reads them in plain words.
         residual_defects: repaired
-          ? ['VQ-03 light: two markers overlap the y axis label; likely cause: axis limits']
+          ? [
+              'VQ-03 (light): two markers overlap the y axis label → every marker clear of the label (+6 px). Likely cause: the y axis limits in ax.set_ylim.',
+              'VQ-01 (light): the tick labels are set at 7 pt → 8 pt or larger (+1 pt). Likely cause: labelsize=7 in ax.tick_params.',
+            ]
           : [],
         // The stored version's number, which the artifact and theme routes take.
         version: version.number,
@@ -1830,7 +1868,8 @@ function setTypeNumber(session) {
   if (failed)
     change += `, ${failed} cell${failed > 1 ? 's' : ''} could not be read and ${failed > 1 ? 'are' : 'is'} now missing`;
   storeVersion(session, parsed, [change]);
-  return `I read ${column} as numbers${units.size ? ` and removed the unit '${[...units][0]}'` : ''}. Check the preview, then press .create_plot().`;
+  // As the root's reply after `prepare_data`: the change and its counts; the page says what to do next.
+  return `I read ${column} as numbers${units.size ? ` and removed the unit '${[...units][0]}'` : ''}.`;
 }
 
 /**
@@ -1864,7 +1903,7 @@ function aggregateSum(session, lower) {
   let change = `summed ${header[value]} by ${header[key]}: ${grouped.length} row${grouped.length > 1 ? 's' : ''}`;
   if (other) change += `, ${other} other column${other > 1 ? 's' : ''} dropped`;
   storeVersion(session, parsed, [change]);
-  return `I summed ${header[value]} per ${header[key]}: ${grouped.length} rows. Check the preview, then press .create_plot().`;
+  return `I summed ${header[value]} per ${header[key]}: ${grouped.length} rows.`;
 }
 
 /** `rename`: the second column gets a new name. */
@@ -1876,7 +1915,7 @@ function renameSecond(session, german) {
   const renamed = header.map((h, i) => (i === 1 ? name : h));
   const parsed = parseDataset(toCsv(renamed, rows));
   storeVersion(session, parsed, [`renamed '${header[1]}' to '${name}'`]);
-  return `I renamed ${header[1]} to ${name}. Check the preview, then press .create_plot().`;
+  return `I renamed ${header[1]} to ${name}.`;
 }
 
 // ---------------------------------------------------------------- formulas (generate_data in miniature)
@@ -2183,27 +2222,26 @@ function exampleData(session, fromCode = false) {
   return `I generated example data to try the plot: ${rows.length} rows of ${named}, all made up. Check them in the data panel, then press .create_plot().`;
 }
 
-/** The step-1 summary the root writes after `summarize_data`, from the profile alone. */
+/**
+ * The step-1 summary the root writes after `summarize_data`, from the profile alone, in root.md's
+ * shape: the counts and the bindings in a sentence or two, columns in backticks as the root
+ * writes them, what is missing only when something is, and a question only when it matters.
+ */
 function summarizeData(session) {
   if (!session.dataset) return 'Paste your data first; then I can summarize it.';
   const { profile } = session.dataset;
-  const columns = profile.columns
-    .map(
-      c =>
-        `${c.name} (${c.dtype}${c.dtype === 'number' || c.dtype === 'integer' ? `, mean ${c.mean}` : ''})`
-    )
-    .join(', ');
-  const missing = profile.columns.filter(c => c.missing).map(c => `${c.missing} in ${c.name}`);
+  const missing = profile.columns.filter(c => c.missing).map(c => `${c.missing} in \`${c.name}\``);
   const percent = profile.columns.find(c => c.top.some(v => /%$/.test(v)));
-  const bound = session.bindings.map(b => `${b.role} → ${b.column}`).join(', ');
+  const bound = session.bindings.map(b => `${b.role} is \`${b.column}\``).join(', ');
   return [
-    `${profile.rows} rows and ${profile.columns.length} columns: ${columns}.`,
-    missing.length ? `Missing values: ${missing.join(', ')}.` : 'No values are missing.',
-    `Proposed bindings: ${bound || 'none yet'}.`,
+    `${profile.rows} rows and ${profile.columns.length} columns${bound ? `; ${bound}` : ''}.`,
+    missing.length ? `Missing values: ${missing.join(', ')}.` : '',
     percent
-      ? `${percent.name} looks like percentages written as text; should I read it as numbers?`
-      : 'Is the first column the one to plot on x?',
-  ].join(' ');
+      ? `\`${percent.name}\` looks like percentages written as text; should I read it as numbers?`
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 }
 
 // ---------------------------------------------------------------- routes
