@@ -241,6 +241,9 @@ describe('ChatThread in-progress line', () => {
       within(pending).getByTestId('loader-spinner')
     );
     expect(pending.lastElementChild).toHaveTextContent(/^summarizing your data$/);
+    // The section's gap above the timeline less the thread's own (2 - 1.5 spacing units of 8 px):
+    // the timeline's top lands where this line's top was.
+    expect(pending).toHaveStyle({ marginTop: '4px' });
   });
 
   it('gives way to the reply', () => {
