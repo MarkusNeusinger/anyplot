@@ -7,4 +7,4 @@
   Cost, and both series stay in the plot. Until now the other member was
   cleared and the family closed up, so Cost left the plot. A member without
   a column, the next member's `— add a column —`, has nothing to trade, so
-  the column still moves there.
+  the column still moves there. (#12567)
