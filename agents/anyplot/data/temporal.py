@@ -1,4 +1,5 @@
-"""Integer columns that say when, not how much: years and the parts of a date (month, quarter, week).
+"""Integer columns that say when, not how much: years, the parts of a date (month, quarter, week), and the
+year of an event of each row (`Founded`).
 
 Shared by the default bindings (`bindings.weak_measures`, the ranks of a year) and the wide-table
 suggestion (`shape.long_suggestion`, which keeps such a column as a key instead of melting it with the
@@ -27,6 +28,17 @@ DATE_PART_WORDS: dict[str, int] = {
 """Column-name words that say an integer column numbers a month, a quarter or a week of the year, with the
 largest value it then holds. Singular only, and no unit words: `Months since start`, `Dauer (Minuten)`,
 `Days to ship` and a `kW` column are measures (review of 2026-10-15)."""
+EVENT_YEAR_WORDS: frozenset[str] = frozenset(
+    {
+        *("founded", "established", "built", "born", "opened", "incorporated", "launched"),
+        *("gegründet", "gründung", "gründungsjahr", "baujahr", "geburtsjahr", "eröffnet", "eröffnungsjahr"),
+        *("fondé", "fondée", "fondation", "fundado", "fundada", "fundación", "fondato", "fondata"),
+    }
+)
+"""Column-name words that say an integer column holds the year something happened to each row (`Founded`,
+`Baujahr`): an attribute of the row, not a time the table runs along. German compounds are listed whole, because
+`Geschäftsjahr` and `Kalenderjahr` end in `jahr` too and are time keys. No `since` or `est`: `Days since start`
+and `Est. revenue` are measures."""
 
 CAMEL = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
 WORDS = re.compile(r"[^\W_]+")
@@ -48,6 +60,23 @@ def year_score(column: ColumnProfile) -> int:
     if YEAR_WORDS & set(WORDS.findall(column.name.casefold())):
         return 2
     return 1 if column.unique >= 3 and column.unique == int(column.max - column.min) + 1 else 0
+
+
+def event_year(column: ColumnProfile) -> bool:
+    """An integer column of years named for an event of each row (`Founded`, `Year founded`, `Baujahr`).
+
+    Such a year says when each organisation, building or person began, never how much of something there is,
+    so it is no measure (`bindings.weak_measures`), and a wide table keeps it beside its labels instead of
+    melting it with the measures (`time_keys`). Neither is it the time a table runs along: as the category of
+    a bar chart it would add up the rows of one founding year, so it ranks as an ordinary integer for a
+    grouping role (`bindings._category_rank`), whatever `year_score` says.
+    """
+    if column.dtype != "integer" or not isinstance(column.min, float | int) or not isinstance(column.max, float | int):
+        return False
+    low, high = YEAR_RANGE
+    if not (low <= column.min and column.max <= high and column.max - column.min <= MAX_YEAR_SPAN):
+        return False
+    return bool(EVENT_YEAR_WORDS & set(WORDS.findall(CAMEL.sub(" ", column.name).casefold())))
 
 
 def date_part(column: ColumnProfile, *, has_year: bool) -> bool:
@@ -74,13 +103,15 @@ def time_keys(profile: DatasetProfile) -> set[str]:
 
     An unnamed 1-to-12 or 1-to-4 column counts as a month or quarter only right after a column of years that
     repeats (`Year, Month, Temperature`: each year once per month): anywhere beside one was too loose (review
-    of #12204: in `Jahr, CH, AT, DE`, one row per year, a country whose values ran 1 to 4 became a key).
+    of #12204: in `Jahr, CH, AT, DE`, one row per year, a country whose values ran 1 to 4 became a key). A year
+    of an event of each row (`event_year`: `Founded`) is a key too, an attribute of the row that a melt of the
+    measures beside it must keep, also when its values hold no run of years.
     """
     columns = profile.columns
     keys: set[str] = set()
     for index, column in enumerate(columns):
         before = columns[index - 1] if index > 0 else None
         after_year = before is not None and year_score(before) > 0 and before.unique < profile.rows
-        if year_score(column) or date_part(column, has_year=after_year):
+        if year_score(column) or event_year(column) or date_part(column, has_year=after_year):
             keys.add(column.name)
     return keys

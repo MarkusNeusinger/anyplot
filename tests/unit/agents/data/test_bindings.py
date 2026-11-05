@@ -15,18 +15,23 @@ from agents.anyplot.data.bindings import (
     accepts,
     axis_slot,
     carry_bindings,
+    carry_by_name,
     check_bindings,
     default_bindings,
     label_siblings,
     name_similarity,
+    record_ids,
     record_values,
     resolve_role,
     row_slot,
+    weak_measures,
 )
 from agents.anyplot.data.parse import parse_dataset
 from agents.anyplot.data.prepare import Operation, apply_operations
+from agents.anyplot.data.shape import long_suggestion
+from agents.anyplot.data.temporal import event_year, time_keys
 from agents.anyplot.schemas import Binding, ColumnDtype, DatasetProfile
-from core.spec_roles import DataRole, RoleKind, parse_roles
+from core.spec_roles import DataRole, RoleKind, data_bullets, parse_roles
 from tests.unit.core.test_spec_roles import AREA_STACKED, LINE_MULTI
 
 
@@ -1503,6 +1508,159 @@ def test_resolve_role_prefers_the_longest_family() -> None:
     assert resolve_role("y2", roles) == roles[0]
     assert resolve_role("y_3", roles) == roles[1]
     assert resolve_role("z", roles) is None
+
+
+PLOTS = Path(__file__).resolve().parents[4] / "plots"
+
+
+def roles_of(spec_id: str) -> list[DataRole]:
+    return parse_roles(data_bullets((PLOTS / spec_id / "specification.md").read_text(encoding="utf-8")))
+
+
+def organizations(rows: int = 70) -> str:
+    """A table shaped like a public sample of organizations: an id, names and texts of more than 60 values each,
+    a founding year that is no run of years, and the measure last."""
+    lines = ["Index,Organization Id,Name,Website,Country,Description,Founded,Industry,Number of employees"]
+    for i in range(1, rows + 1):
+        lines.append(
+            f"{i},{i * 7919:X}a{i:03d}e,Firm {i},https://firm{i}.example/,Land {i % 65},Text {i},"
+            f"{1970 + (i * 7) % 52},Industry {i % 62},{200 + i * 37}"
+        )
+    return "\n".join(lines) + "\n"
+
+
+class TestRecordIdsAndFoundingYears:
+    def test_an_id_and_a_founding_year_never_make_the_bars(self) -> None:
+        data = profile(organizations())
+
+        assert record_ids(data) == {"Organization Id"}
+        assert "Founded" in weak_measures(data)
+        assert as_pairs(default_bindings(roles_of("bar-basic"), data)) == [
+            ("category", "Name"),
+            ("value", "Number of employees"),
+        ]
+        assert as_pairs(default_bindings(roles_of("histogram-basic"), data)) == [("values", "Number of employees")]
+
+    def test_a_small_table_labels_by_its_names_too(self) -> None:
+        data = profile("user_id,name,score\nu17,Ann,3\nu42,Ben,5\nu88,Cleo,4\n")
+
+        assert as_pairs(default_bindings(roles_of("bar-basic"), data)) == [("category", "name"), ("value", "score")]
+
+    def test_an_id_column_alone_still_labels(self) -> None:
+        """A rank, not an exclusion: with no other text column the ids are the labels, never a number."""
+        data = profile("Order ID,Items,Amount\nA-1,3,120\nA-2,5,80\nA-3,4,95\n")
+
+        assert as_pairs(default_bindings(roles_of("bar-basic"), data))[0] == ("category", "Order ID")
+
+    def test_codes_versions_and_repeated_ids_are_no_record_ids(self) -> None:
+        data = profile("iso3,Version,customer_id,Region,GDP\nCHE,v1,c1,West,1\nAUT,v1,c1,East,2\nDEU,v2,c2,North,3\n")
+
+        assert record_ids(data) == set()
+        assert as_pairs(default_bindings(roles_of("bar-basic"), data))[0] == ("category", "iso3")
+
+    @pytest.mark.parametrize("name", ["Founded", "Year founded", "Baujahr", "Gründungsjahr", "year_built"])
+    def test_event_years_are_weak_measures(self, name: str) -> None:
+        data = profile(f"Name,{name},Staff\nA,1990,12\nB,2004,30\nC,1971,7\n")
+
+        assert event_year(next(c for c in data.columns if c.name == name))
+        assert name in weak_measures(data)
+        assert as_pairs(default_bindings(roles_of("histogram-basic"), data)) == [("values", "Staff")]
+
+    @pytest.mark.parametrize("name", ["Geschäftsjahr", "Year", "Days since start", "Est. revenue"])
+    def test_time_keys_and_measures_are_no_event_years(self, name: str) -> None:
+        data = profile(f"{name},Umsatz\n2019,1\n2020,2\n2021,3\n2022,4\n")
+
+        assert not event_year(data.columns[0])
+
+    def test_a_year_founded_is_no_category_beside_names(self) -> None:
+        """`Year founded` names a year, but as bars it would add up the firms of each founding year."""
+        names = "".join(f"Firm {i},{1950 + (i * 13) % 70},{i * 10}\n" for i in range(1, 71))
+        data = profile("Name,Year founded,Staff\n" + names)
+
+        assert as_pairs(default_bindings(roles_of("bar-basic"), data)) == [("category", "Name"), ("value", "Staff")]
+
+    def test_a_fiscal_year_stays_the_category(self) -> None:
+        data = profile("Geschäftsjahr,Umsatz\n2019,10\n2020,12\n2021,9\n2022,14\n")
+
+        assert as_pairs(default_bindings(roles_of("bar-basic"), data)) == [
+            ("category", "Geschäftsjahr"),
+            ("value", "Umsatz"),
+        ]
+
+    def test_a_wide_table_keeps_a_founding_year_beside_the_melted_measures(self) -> None:
+        """A melt of the yearly measures must not turn the founding year into one more measure."""
+        data = profile("Founded,Staff 2020,Staff 2021\n1990,1,2\n2004,3,4\n1971,5,6\n")
+
+        assert time_keys(data) == {"Founded"}
+        suggestion = long_suggestion(roles_of("bar-basic"), data)
+        assert suggestion is not None
+        assert suggestion.keys == ["Founded"] and suggestion.columns == ["Staff 2020", "Staff 2021"]
+
+
+class TestCarryByName:
+    """New data that replaces the old keeps what its columns meant (`carry_by_name`)."""
+
+    def test_the_axes_follow_their_columns_by_meaning(self) -> None:
+        new = profile("City,Population,Area km2\nZurich,436332,87.9\nGeneva,209061,15.9\nBasel,177595,23.9\n")
+        old = bind(("x", "Land area km2"), ("y", "Population"))
+
+        assert as_pairs(carry_by_name(old, roles_of("scatter-basic"), new)) == [("x", "Area km2"), ("y", "Population")]
+        # The defaults alone would turn the plot on its side.
+        assert as_pairs(default_bindings(roles_of("scatter-basic"), new)) == [("x", "Population"), ("y", "Area km2")]
+
+    def test_two_equally_close_columns_carry_nothing(self) -> None:
+        new = profile("Place,Area km2,Area mi2\nA,10,3.9\nB,20,7.7\nC,30,11.6\n")
+        old = bind(("x", "Area"), ("y", "Population"))
+
+        assert carry_by_name(old, roles_of("scatter-basic"), new) == default_bindings(roles_of("scatter-basic"), new)
+
+    def test_a_column_that_no_longer_fits_its_role_is_not_carried(self) -> None:
+        new = profile("Population,Area\nmany,10\nfew,20\nsome,30\n")
+        old = bind(("x", "Area"), ("y", "Population"))
+
+        assert as_pairs(carry_by_name(old, roles_of("scatter-basic"), new)) == [("x", "Area")]
+
+    def test_one_column_on_two_roles_stays_on_both(self) -> None:
+        roles = [role("x", "numeric"), role("y", "numeric"), role("size", "numeric", required=False)]
+        new = profile("GDP,Population,Area\n1,10,5\n2,20,6\n3,30,7\n")
+        old = bind(("x", "GDP"), ("y", "Population"), ("size", "Population"))
+
+        assert as_pairs(carry_by_name(old, roles, new)) == [("x", "GDP"), ("y", "Population"), ("size", "Population")]
+
+    def test_a_family_keeps_its_members_and_gains_the_new_series(self) -> None:
+        roles = [role("x", "numeric", "datetime"), role("y", "numeric", variadic=True)]
+        new = profile("month,Hats,Shoes,Bags\n2024-01-01,1,2,3\n2024-02-01,4,5,6\n")
+        old = bind(("x", "Month"), ("y1", "Shoes"), ("y2", "Hats"))
+
+        carried = carry_by_name(old, roles, new)
+
+        assert ("x", "month") in as_pairs(carried)
+        assert {pair for pair in as_pairs(carried) if pair[0] != "x"} == {
+            ("y1", "Shoes"),
+            ("y2", "Hats"),
+            ("y3", "Bags"),
+        }
+        assert check_bindings(carried, roles, new).errors == []
+
+    def test_two_old_columns_never_land_on_one_new_column(self) -> None:
+        roles = [role("x", "numeric"), role("y", "numeric")]
+        new = profile("Area km2,Value\n1,10\n2,20\n3,30\n")
+        old = bind(("x", "Area km2"), ("y", "Land area km2"))
+
+        carried = carry_by_name(old, roles, new)
+
+        assert as_pairs(carried) == [("x", "Area km2"), ("y", "Value")]
+
+    def test_a_pair_that_would_come_out_inverted_keeps_only_its_first_role(self) -> None:
+        """Each column fits on its own; together the lower bound starts above the upper one on the new data."""
+        new = profile("month,low,high\nJan,50,4\nFeb,55,7\nMar,60,12\n")
+        old = bind(("category", "month"), ("min_value", "low"), ("max_value", "high"))
+
+        carried = carry_by_name(old, RANGE_ROLES, new)
+
+        assert ("min_value", "low") in as_pairs(carried)
+        assert ("max_value", "high") not in as_pairs(carried)
+        assert check_bindings(carried, RANGE_ROLES, new).warnings == []
 
 
 @pytest.mark.parametrize(

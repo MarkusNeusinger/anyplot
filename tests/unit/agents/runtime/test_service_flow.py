@@ -65,6 +65,7 @@ from agents.anyplot.run_queue import RunQueue
 from agents.anyplot.schemas import AdaptPlan, Verdict
 from agents.anyplot.services import Services, get_services
 from agents.anyplot.session_state import (
+    BINDINGS,
     LANGUAGE,
     LANGUAGE_SOURCE,
     PENDING_REQUEST,
@@ -4813,3 +4814,21 @@ async def test_a_kept_request_without_a_run_reaches_the_first_plot(
         "reason": "plot_exists",
     }
     assert (await _session_state(client, sid)).get(PENDING_REQUEST) is None
+
+
+async def test_a_replacing_paste_keeps_what_the_columns_meant(client: httpx.AsyncClient, swap_models) -> None:
+    """The second paste lists the population first; its bindings follow the user's axes, not the column order."""
+    swap_models("gemini", default_script())
+    sid = await open_session(client, with_data=False)
+    first = "Location,Land area km2,Population\nA,10.5,1200\nB,20.25,3400\nC,3.5,560\n"
+    assert (await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": first})).is_success
+    chosen = [{"role": "x", "column": "Land area km2"}, {"role": "y", "column": "Population"}]
+    assert (await client.put(f"/v1/sessions/{sid}/bindings", headers=HEADERS, json=chosen)).is_success
+
+    second = "City,Population,Area km2\nZurich,436332,87.9\nGeneva,209061,15.9\nBasel,177595,23.9\n"
+    pasted = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": second})
+
+    assert pasted.status_code == 200, pasted.text
+    expected = [{"role": "x", "column": "Area km2"}, {"role": "y", "column": "Population"}]
+    assert pasted.json()["bindings"] == expected
+    assert (await _session_state(client, sid))[BINDINGS] == expected

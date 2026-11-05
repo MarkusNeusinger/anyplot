@@ -6,7 +6,9 @@
 * `opening_state(...)` is the state delta that opens a session or switches its library.
 * `ingest_dataset(...)` parses pasted text, stores it in the session's dataset store
   (replacing an older dataset of the session and the versions kept for undo), and
-  proposes default bindings; a paste is version 1 of the data (`dataset_versions.py`).
+  proposes bindings: the defaults, or for data that replaces data, the old bindings
+  carried by column name (`bindings.carry_by_name`); a paste is version 1 of the data
+  (`dataset_versions.py`).
 * `instruction_like(parsed)` and `dataset_judge_inputs(parsed)` are what the
   `/dataset` route checks before it stores a dataset: a deterministic pre-filter over
   every header and cell for text addressed to an AI, then the dataset judge on every
@@ -35,7 +37,7 @@ from dataclasses import dataclass, field, replace
 from typing import Any
 
 from .code.readiness import ReadinessStatus, scan
-from .data.bindings import default_bindings
+from .data.bindings import carry_by_name, default_bindings
 from .data.parse import ParsedDataset, display_copy, parse_dataset, with_constant_columns
 from .data.store import DatasetStore
 from .policy import fence
@@ -144,6 +146,7 @@ def store_dataset(
     code: str | None = None,
     source: str | None = None,
     file_name: str | None = None,
+    carried: Sequence[Binding] = (),
 ) -> IngestedDataset:
     """Store a parsed dataset for a session, replacing its previous one and its history; raises `StoreFull`.
 
@@ -154,6 +157,8 @@ def store_dataset(
     (`run_data_code`), kept with the version for the data panel; `source` says where a computed
     table comes from (`dataset_context`), for the adapter's and the reviewer's dataset context;
     `file_name` is the dropped file's name as the route screened it (`StoredDataset.file_name`).
+    `carried` are the bindings of the data this one replaces: their columns go to the new columns of the
+    same name or meaning (`bindings.carry_by_name`), so the plot keeps its axes; without them, the defaults.
     """
     if not notes_screened:
         # Constant columns whose values went into the notes come back as columns, so the values survive.
@@ -164,7 +169,9 @@ def store_dataset(
     for old in (previous_id, *history):
         if old and old != dataset_id:
             store.delete(old, session_id)
-    return IngestedDataset(dataset_id, parsed, default_bindings(snapshot.roles(), parsed.profile))
+    roles = snapshot.roles()
+    bindings = carry_by_name(carried, roles, parsed.profile) if carried else default_bindings(roles, parsed.profile)
+    return IngestedDataset(dataset_id, parsed, bindings)
 
 
 def ingest_dataset(
