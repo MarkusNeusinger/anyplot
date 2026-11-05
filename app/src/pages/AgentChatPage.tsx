@@ -181,7 +181,7 @@ import type { ThemedPreviewSource } from 'src/utils/themedPreview';
 
 const SPEC_PATTERN = /^[a-z0-9-]{1,100}$/;
 /** Where `agent_open` says the visitor came from: the plot page, the landing page, the spec hub. */
-const OPEN_SOURCES = new Set(['plot_page', 'landing', 'spec_hub']);
+const OPEN_SOURCES = new Set(['plot_page', 'landing', 'spec_hub', 'plot_of_the_day']);
 /**
  * The chat column's width: it grows with the window up to this (960 until 2026-11-02; owner:
  * use the room of a wide screen), so the data card with its grid, the plot cards and the code

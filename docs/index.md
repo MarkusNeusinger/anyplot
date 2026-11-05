@@ -11,6 +11,7 @@ Welcome to the anyplot documentation. Start here to find what you're looking for
 | Understand the project | [Vision](concepts/vision.md) |
 | Read the "Use with my data" agent design | [Agent network](concepts/agent-network.md) |
 | Read how catalogue code adapts to other data | [Adaptable code](concepts/adaptable-code.md) |
+| Read how anyplot is built with AI agents | [AI workflow](concepts/ai-workflow.md) |
 | Read or set up the agent chat's usage telemetry | [Agent usage telemetry](reference/agent-telemetry.md) |
 | Contribute plot ideas | [Contributing](contributing.md) |
 | Set up local development | [Development Guide](development.md) |
@@ -38,7 +39,8 @@ docs/
 │   ├── vision.md         # Product vision and mission
 │   ├── library-expansion.md  # Roadmap for multi-language gallery expansion
 │   ├── agent-network.md  # Design of the "Use with my data" agent network (ADK on Vertex AI)
-│   └── adaptable-code.md # Design for catalogue code that adapts to other data
+│   ├── adaptable-code.md # Design for catalogue code that adapts to other data
+│   └── ai-workflow.md    # How anyplot is built with AI agents: roles, the path of a change, rules
 ├── workflows/            # Process documentation
 │   ├── overview.md       # GitHub Actions automation
 │   ├── report-issue.md   # Reporting issues with specs or implementations
@@ -67,6 +69,7 @@ High-level understanding of why things work the way they do.
 - **[Library Expansion Roadmap](concepts/library-expansion.md)** - Multi-language gallery expansion plan and licensing policy
 - **[Agent Network](concepts/agent-network.md)** - Design of the "Use with my data" agent network on Google ADK and Vertex AI (Claude Haiku 5.5 by default, Gemini 3.8 Flash as the second arm): agents, pipeline, guardrails, serving, roadmap (as of 2026-11-04, the chat has been public as an experimental page at `/agent` since 2026-11-02, for all 15 catalogue libraries, with the admin tools at `/debug/agent`; the runtime core, the model-regression harness with its committed Claude Haiku 5.5 baseline and the judge-only scope eval are built, the `anyplot-renderer` sandbox service and the `anyplot-agents` service run in Cloud Run behind their deploy triggers, quick feedback stores each reported case and triages it on `/debug`, and the `agents-eval.yml` workflow is not built)
 - **[Adaptable Code](concepts/adaptable-code.md)** - Design for catalogue implementations that adapt to other data: one `# Data` block ending in a tidy `df`, column constants with role comments, a static checker and a perturbation smoke run, a regen gate route that merges conversions on render identity, and a rollout through a capped targeted pass over matplotlib and seaborn (revised 2026-10-23 after a second opinion; the checker PR is in progress)
+- **[How anyplot is built with AI agents](concepts/ai-workflow.md)** - Who does what (the owner leads; Claude Code, Claude in GitHub Actions, Gemini, and Copilot write and review), what the owner brings, the path of a change to production, how corrections become rules, a worked example (#12557), and the limits
 
 ---
 

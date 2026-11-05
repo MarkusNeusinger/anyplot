@@ -121,6 +121,12 @@ Judgment flags the greps can't raise:
   (largest tracked files, data-URIs by design) — all bucket 1. The
   `file` tool misclassifies ~26 `specification.yaml` as "SPEC" and
   flags the `.claude/commands` symlink — both allowed in the awk net.
+- Added 2026-11-05: `docs/assets/readme-showcase.png`, the README's
+  showcase, bucket 1. `scripts/readme_showcase.py` composes it from the
+  catalogue's own light previews and draws its text in MonoLisa, the
+  same rasterized use as the OG cards and the og-samples. No font file
+  enters the repository. It is redrawn at every release, so a changed
+  hash on that path is expected.
 - Former wart resolved: `plots/bar-basic/implementations/python/plot-{dark,light}.png`
   were tracked plot renders violating the previews-live-in-GCS rule —
   reported 2026-08-17, removed 2026-08-20 on the user's decision. They
