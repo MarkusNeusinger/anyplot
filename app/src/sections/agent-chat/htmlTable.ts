@@ -7,8 +7,9 @@
  * line is shorter than the rows and the parser cannot tell which name covers which columns. The
  * HTML beside that text keeps the spans: expanded, every cell stands in each row and column it
  * covers, both header lines get the table's width, and the parser joins them into one name per
- * column (`Density /km2`). Only the cells' text is kept; the document is parsed inert
- * (`DOMParser`), so nothing in it runs or loads.
+ * column (`Density /km2`). Only the cells' text is kept. The HTML is parsed into a
+ * `<template>`'s content, whose document has no browsing context: its scripts never run and
+ * its images, frames and styles are never fetched, so a paste tells the copied page nothing.
  */
 
 /** Clipboard HTML larger than this is left alone: the plain text goes as it is. */
@@ -27,7 +28,9 @@ const HIDDEN =
 export function spannedTable(html: string): string | null {
   if (!html || html.length > MAX_HTML_CHARS || !/\b(?:rowspan|colspan)\s*=/i.test(html))
     return null;
-  const tables = new DOMParser().parseFromString(html, 'text/html').querySelectorAll('table');
+  const inert = document.createElement('template');
+  inert.innerHTML = html;
+  const tables = inert.content.querySelectorAll('table');
   if (tables.length !== 1) return null;
   const table = tables[0];
   if (![...table.querySelectorAll('th, td')].some(cell => spans(cell as HTMLTableCellElement))) {
