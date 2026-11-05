@@ -12,35 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pyramid-basic/python/plotly/plot-dark.html
-quality_score: 91
+quality_score: 75
 review:
   strengths:
-  - 'Perfect visual quality: explicit font sizing (28/22/18/16px), no overlaps, correct
-    Okabe-Ito palette with full theme-adaptive chrome in both renders'
-  - Data storytelling annotation (working-age peak callout + highlighted band) elevates
-    the chart above a generic pyramid
-  - Realistic, factually plausible demographic data for Germany with correct female
-    longevity patterns visible in 70+ cohorts
+  - 'Idiomatic plotly pyramid: negated x for the left side, ticktext with positive
+    magnitudes and categoryarray keeping age groups ascending'
+  - customdata + hovertemplate report the positive population per side in the interactive
+    HTML view
+  - Theme tokens threaded through all chrome; both renders readable with identical
+    Imprint data colors
+  - 'Clean basic variant: two mirrored series only, no extra layers'
   weaknesses:
-  - Axis box spines still present on all sides — removing top/right spines to an L-frame
-    would improve visual refinement (DE-02)
-  - LM-02 ceiling not fully reached — chart could leverage more distinctive plotly
-    features such as shapes rectangle for highlight band or updatemenus for interactivity
+  - 'VQ-05 (both): the saved canvas is 4800x2700 → 3200x1800 landscape (−1600 × −900).
+    Likely cause: write_image(width=1600, height=900, scale=3) instead of width=800,
+    height=450, scale=4.'
+  - 'SC-04 (both): the title ''Population Distribution · pyramid-basic · plotly ·
+    anyplot.ai'' lacks the language segment → ''Population Distribution · pyramid-basic
+    · python · plotly · anyplot.ai''. Likely cause: title string written without ''·
+    python''.'
+  - 'CQ-01 (code): the Data block ends with three loose lists (age_groups, male_population,
+    female_population) instead of binding one tidy df, there are no column constants
+    for the category / value_left / value_right roles, and the plot code reads the
+    lists directly → column constants with # role comments above one Data block that
+    ends in df, and plot code that reads only df. Likely cause: data written as parallel
+    lists.'
+  - 'CQ-04 (code): comments on lines 34 and 46 label #009E73 and #C475FD as ''Okabe-Ito
+    position 1/2'', contradicting the Imprint colors used → name them as Imprint positions
+    1 and 2. Likely cause: comments left from an older palette.'
+  - 'DQ-03 (code): the data comment says ''~83M total'' while the lists sum to 88.9
+    M (43.7 M + 45.2 M) → a comment matching the data (about 89M), or values summing
+    to about 83 M (−5.9 M). Likely cause: comment on line 20 not updated.'
+  - 'Suggestion: the two near-identical go.Bar blocks could be one loop over (column,
+    sign) pairs.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Population Distribution · pyramid-basic · plotly · anyplot.ai" in dark ink at top (readable). Axis label "Age Group" (Y) and "Population (thousands)" (X) in dark ink (readable). Tick labels in secondary ink (#4A4A44-equivalent), clearly readable. Horizontal legend ("Male", "Female") below title, readable.
-      Data: Male bars in #009E73 (Okabe-Ito position 1) extending left; Female bars in #D55E00 (Okabe-Ito position 2) extending right. Highlighted band over 50–59/40–49 rows. Annotation "Working-age peak / 50–59 largest cohort" on right side, readable.
+      Background: warm off-white #FAF8F1; canvas 4800x2700.
+      Chrome: title 'Population Distribution · pyramid-basic · plotly · anyplot.ai' centered in dark ink; small boxed horizontal legend (Male, Female) below with a clear gap; 'Age Group' and 'Population (thousands)' axis titles; ticks 6,000 ... 0 ... 6,000 with positive labels, range about ±7,935 so the axis ends are unlabeled; left and bottom axis lines, subtle vertical grid.
+      Data: nine age groups ascending bottom to top; Male bars #009E73 left, Female bars #C475FD right.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title, axis labels, tick labels, legend text all appear in light colors (#F0EFE8-equivalent), clearly readable against the dark background. No dark-on-dark failures detected.
-      Data: Bar colors identical to light render — #009E73 (Male) and #D55E00 (Female). Highlight band appears as slightly lighter teal region, visible. Annotation text is in light tone and legible.
+      Background: warm near-black #1A1A17.
+      Chrome: all text in light ink tones, legend box on dark elevated surface; no dark-on-dark text.
+      Data: identical bar colors to the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -48,74 +66,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, ticks
-          18px, legend 16px. Readable in both themes.'
+        comment: Title 28 px, axis titles 22 px, ticks 18 px, legend 16 px at 1600x900;
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements in either render.
+        comment: No collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-proportioned for 9 age groups at 4800x2700px.
+        comment: Nine wide bars clearly visible; legend swatches match
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 and #D55E00 provide strong contrast and are CVD-safe.'
+        comment: Green against lavender, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 0
         max: 4
-        passed: true
-        comment: Pyramid fills ~65% of canvas, balanced margins, legend well-placed
-          at top.
+        passed: false
+        comment: Saved canvas is 4800x2700, not one of the two canonical sizes (defect
+          line)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Population (thousands) includes units; Age Group descriptive; title
-          correct format.
+        comment: '''Population (thousands)'' and ''Age Group'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00. Backgrounds #FAF8F1/#1A1A17.
-          Theme-adaptive chrome correct in both renders.'
+        comment: '#009E73 / #C475FD (Imprint 1 and 2), identical across themes; correct
+          backgrounds'
     design_excellence:
-      score: 14
+      score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: 'Strong design: correct Okabe-Ito palette, clean typography hierarchy,
-          annotation+highlight band add sophistication above defaults.'
+        passed: false
+        comment: Style-guide baseline, nothing beyond it
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Good: subtle grid, styled zeroline, highlighted band focal point,
-          generous margins. All four axis spines still present.'
+        passed: false
+        comment: Spine and grid rules met, nothing beyond
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 2
         max: 6
-        passed: true
-        comment: 'Good: annotation identifies working-age peak, highlighted band directs
-          viewer. Germany ageing workforce story is immediately readable.'
+        passed: false
+        comment: Data displayed, no hierarchy chosen beyond the Notes
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -123,31 +137,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct pyramid/butterfly chart with opposing horizontal bars and
-          central axis.
+        comment: Correct pyramid with no extra layers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Left bars extend left, right bars extend right, symmetric axis scale,
-          distinct colors, category labels on Y-axis, legend present.
+        comment: 'Notes and C1-C4 met: symmetric range ±7,935 with positive tick labels,
+          legend, ascending age groups'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Age groups on Y, population values on X with negative left side.
-          All 9 groups visible.
+        comment: All nine groups inside the range
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title contains spec-id, library, anyplot.ai. Legend labels Male/Female
-          match data.
+        passed: false
+        comment: Title 'Population Distribution · pyramid-basic · plotly · anyplot.ai'
+          lacks the language segment 'python' (defect line)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -155,79 +167,78 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows bilateral comparison, 9 age groups, visible gender asymmetry,
-          working-age bulge in 40-59, female longevity in 70+ groups.
+        comment: Bilateral comparison with visible asymmetry
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Germany-scale population data. Neutral demographic topic aligned
-          with spec's explicit example use case.
+        comment: Germany-scale age-sex population, neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Male ~43.7M, Female ~49.2M, total ~92.9M. Slightly above Germany's
-          ~84M but plausible for illustration. Female dominance in older cohorts factually
-          correct.
+        passed: false
+        comment: 'Checked: sums 43.7 M + 45.2 M = 88.9 M, but the data comment states
+          ~83M total (defect line)'
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: 'Clean linear: imports -> theme tokens -> data -> traces -> layout
-          -> save.'
+        passed: false
+        comment: Data block ends in three loose lists instead of a tidy df, no column
+          constants for the category / value_left / value_right roles, and the plot
+          reads the lists directly (defect lines)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hardcoded data.
+        comment: Deterministic literal data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os and plotly.graph_objects imported, both used.
+        comment: os and plotly.graph_objects, both used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean Pythonic code. Negative-value trick with absolute tick labels
-          is idiomatic plotly pyramid approach.
+        passed: false
+        comment: 'Comments call #009E73 and #C475FD ''Okabe-Ito position 1/2'', contradicting
+          the Imprint colors the code uses (defect line)'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current plotly API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with the current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Uses go.Bar with hovertemplate+customdata for rich tooltips, correct
-          barmode, write_image+write_html. Idiomatic and correct.
+        passed: false
+        comment: 'go.Bar with negated x, ticktext magnitudes, customdata and categoryarray:
+          the idiomatic plotly pyramid'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Leverages plotly-specific hovertemplate/customdata for showing positive
-          values while bars use negative positions. HTML export. Could use shapes
-          or updatemenus for more distinctiveness.
+        passed: false
+        comment: hovertemplate with customdata reports positive values in the HTML
+          view; otherwise generic
   verdict: APPROVED
+  model: claude-opus-5-5
+  criteria_version: qc-899b86ffde.aqr-869a70087c.sg-c73b4641dd.lib-dd574aaf58
 impl_tags:
   dependencies: []
   techniques:
