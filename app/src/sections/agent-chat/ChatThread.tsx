@@ -2,10 +2,10 @@
  * The chat thread: the user's turns and the page's own (`.example_data()`, `.create_plot()`,
  * `.carry_plot()`), the attachments the user sent and the data card after each (a later
  * paste leaves the card it replaced as a stub of its shape), the assistant's replies, the fixed
- * refusal, errors with their code and request id, and a result card per plot
- * version. Earlier versions stay in the thread, collapsed, each with its own
- * image and code. A lost confirmation shows as a warning notice where it was
- * lost. While a turn without pipeline steps waits for its reply, an
+ * refusal under a plain label (its code behind the label's ⓘ), errors with their code and
+ * request id, and a result card per plot version. Earlier versions stay in the thread,
+ * collapsed, each with its own image and code. A lost confirmation adds nothing here: the step
+ * line above the composer names it. While a turn without pipeline steps waits for its reply, an
  * in-progress line with the site's loader holds the assistant's slot
  * (`pendingReply` in `steps.ts`); the log's own polite live region announces
  * it once, and the reply takes its place.
@@ -172,8 +172,9 @@ function Item({
           sx={{ ...textSx, borderLeft: `2px solid ${colors.warning}`, pl: 1.5 }}
           data-testid="refusal"
         >
-          {/* A plain label: the code is the service's word for the log, behind the ⓘ. */}
-          <Box sx={labelSx}>
+          {/* A plain label: the code is the service's word for the log, behind the ⓘ. The
+              line height of the other ⓘ lines, so a label that wraps keeps its spacing. */}
+          <Box sx={{ ...labelSx, lineHeight: 1.6 }}>
             {refusalLabel(item.code)}
             {/* The service's own text says 00:00 UTC: the page adds the user's own time. */}
             {item.until && localClock(item.until) ? ` · until ${localClock(item.until)}` : ''}
@@ -201,22 +202,9 @@ function Item({
         </Box>
       );
     case 'notice':
-      // A lost confirmation reads as the result card's residual notes do: a warning border.
-      return item.tone === 'warning' ? (
-        <Box
-          data-testid="confirm-lost"
-          sx={{
-            ...labelSx,
-            ...textSx,
-            color: 'var(--ink)',
-            borderLeft: `3px solid ${colors.warning}`,
-            pl: 1.5,
-          }}
-        >
-          # {item.text}
-        </Box>
-      ) : (
-        // A quiet line; its details, where it has any, behind the ⓘ at its end.
+      // A quiet line; its details, where it has any, behind the ⓘ at its end. A lost
+      // confirmation has none: the step line above the composer names it.
+      return (
         <Box sx={{ ...labelSx, ...textSx, lineHeight: 1.6 }}>
           # {item.text}
           {item.info && (

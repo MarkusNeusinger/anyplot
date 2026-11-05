@@ -442,6 +442,16 @@ const composerButtons = () =>
 /** The thread's last entry. */
 const lastInThread = () => screen.getByRole('log', { name: 'Conversation' }).lastElementChild;
 
+/**
+ * A thread line that repeats a lost confirmation the step line above the composer names, in the
+ * words the notices had ("bindings changed · check them, then …", "check the data again, …"):
+ * there is none since 2026-11-06.
+ */
+const lossNotice = () =>
+  within(screen.getByRole('log', { name: 'Conversation' })).queryByText(
+    /changed · check (it|them), then|check the data again/
+  );
+
 /** The step the step header marks as current. */
 const currentStep = () =>
   within(screen.getByRole('list', { name: 'Steps' }))
@@ -609,7 +619,7 @@ describe('AgentChatPage gating', () => {
     expect(follows(screen.getByTestId('paste-item'), card)).toBe(true);
     expect(follows(card, screen.getByText(SUMMARY))).toBe(true);
     // The first binding setup after a paste dropped no confirmation: nothing to name.
-    expect(screen.queryByTestId('confirm-lost')).not.toBeInTheDocument();
+    expect(lossNotice()).not.toBeInTheDocument();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
       '# step 1 — check the preview and the bindings above, then .create_plot()'
     );
@@ -674,10 +684,8 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByTestId('data-summary')).toHaveTextContent(
       'check again · 2 rows · 2 columns · version 1'
     );
-    // The root's binding change dropped the confirmation: the thread says so after the reply.
-    expect(lastInThread()).toHaveTextContent(
-      '# bindings changed · check them, then .create_plot()'
-    );
+    // The root's binding change dropped the confirmation: the step line says so, and only it.
+    expect(lossNotice()).not.toBeInTheDocument();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
       '# step 1 again — bindings changed · check them above, then .create_plot()'
     );
@@ -722,7 +730,7 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByText('1 data')).toHaveAttribute('aria-current', 'step');
     expect(composerButtons()).toEqual(['.create_plot()']);
     // Nothing was confirmed yet, so nothing was lost.
-    expect(screen.queryByTestId('confirm-lost')).not.toBeInTheDocument();
+    expect(lossNotice()).not.toBeInTheDocument();
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_prepared', { changes: '1' });
 
     const create = screen.getByRole('button', { name: 'Create plot' });
@@ -741,7 +749,7 @@ describe('AgentChatPage gating', () => {
     expect(await screen.findByText('# undone · back to version 1')).toBeInTheDocument();
     expect(screen.getByTestId('data-summary')).toHaveTextContent('check again');
     // One line says what to do, the step line above the composer; no notice repeats it above.
-    expect(screen.queryByTestId('confirm-lost')).not.toBeInTheDocument();
+    expect(lossNotice()).not.toBeInTheDocument();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
       '# step 1 again — data changed · check it above, then plot the new data'
     );
@@ -848,19 +856,16 @@ describe('AgentChatPage gating', () => {
     expect(screen.getByTestId('data-card')).toBeInTheDocument();
     expect(currentStep()).toEqual(['1 data']);
     expect(composerButtons()).toEqual(['.create_plot()']);
-    // The loss is named where it happened, right after the change, and above the plot button.
-    expect(lastInThread()).toHaveTextContent(
-      '# bindings changed · check them, then .create_plot()'
-    );
-    expect(screen.getByTestId('confirm-lost')).toBe(lastInThread());
+    // The loss is named once, right above the plot button, and no notice in the thread repeats it.
     expect(screen.getByTestId('data-step')).toHaveTextContent(
       '# step 1 again — bindings changed · check them above, then .create_plot()'
     );
+    expect(lossNotice()).not.toBeInTheDocument();
 
-    // Back and forth: the confirmation is gone already, so one notice says it.
+    // Back and forth: the confirmation is gone already, and the step line still names it.
     fireEvent.change(screen.getByLabelText(/^y/), { target: { value: 'score' } });
     await waitFor(() => expect(screen.getByLabelText(/^y/)).toBeEnabled());
-    expect(screen.getAllByTestId('confirm-lost')).toHaveLength(1);
+    expect(screen.getByTestId('data-step')).toHaveTextContent('bindings changed');
 
     // One click takes the data again: the card collapses with it, and the row's reason goes
     // with the step.
@@ -893,14 +898,14 @@ describe('AgentChatPage gating', () => {
       '# step 1 again — data changed · check it above, then plot the new data'
     );
 
-    // A new paste is data nobody confirmed: plain step 1, and the thread keeps one notice.
+    // A new paste is data nobody confirmed: plain step 1.
     await attachAndSend('hours,score\n3,70\n4,80\n');
     await waitFor(() => expect(screen.getAllByText(SUMMARY)).toHaveLength(2));
     await turnEnded();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
       '# step 1 — check the preview and the bindings above, then .create_plot()'
     );
-    expect(screen.getAllByTestId('confirm-lost')).toHaveLength(1);
+    expect(lossNotice()).not.toBeInTheDocument();
   });
 
   it('confirms and then plots in one click, and Enter never confirms', async () => {
@@ -1045,7 +1050,7 @@ describe('AgentChatPage gating', () => {
       // `.start_over()`, named for what it does now: the next version from the changed data.
       expect(composerButtons()).toEqual(['plot the new data']);
       // The step line alone says it: no notice right above it in the thread.
-      expect(screen.queryByTestId('confirm-lost')).not.toBeInTheDocument();
+      expect(lossNotice()).not.toBeInTheDocument();
       expect(screen.getByTestId('data-step')).toHaveTextContent(
         '# step 1 again — data changed · check it above, then plot the new data'
       );

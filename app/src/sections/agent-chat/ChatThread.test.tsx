@@ -56,7 +56,7 @@ describe('ChatThread', () => {
       items: [
         { id: 1, kind: 'user', text: 'make the markers bigger' },
         { id: 2, kind: 'assistant', text: 'Done: the markers are larger now.' },
-        { id: 3, kind: 'notice', text: 'bindings changed', tone: 'warning' },
+        { id: 3, kind: 'notice', text: 'stopped' },
       ],
     });
     // A reply and a notice are no wider than about 80 characters (2026-11-02: the column grows
@@ -65,7 +65,7 @@ describe('ChatThread', () => {
     expect(CHAT_TEXT_MAX).toBe('80ch');
     for (const element of [
       screen.getByText('Done: the markers are larger now.'),
-      screen.getByTestId('confirm-lost'),
+      screen.getByText('# stopped'),
     ]) {
       expect(getComputedStyle(element).maxWidth).toMatch(/^\d+(\.\d+)?(px|ch)$/);
     }
@@ -161,25 +161,13 @@ describe('ChatThread', () => {
     expect(log.children[2]).toHaveTextContent(/^❯\.create_plot\(\)# seaborn$/);
   });
 
-  it('shows a lost confirmation as a warning notice, and a stop as a plain one', () => {
+  it('shows a stop as a quiet notice', () => {
     renderThread({
       ...initialAgentState('matplotlib'),
       phase: 'ready',
       sessionId: 'S1',
-      items: [
-        {
-          id: 1,
-          kind: 'notice',
-          tone: 'warning',
-          text: 'bindings changed · check them, then .create_plot()',
-        },
-        { id: 2, kind: 'notice', text: 'stopped' },
-      ],
+      items: [{ id: 1, kind: 'notice', text: 'stopped' }],
     });
-    expect(screen.getByTestId('confirm-lost')).toHaveTextContent(
-      '# bindings changed · check them, then .create_plot()'
-    );
-    expect(screen.getAllByTestId('confirm-lost')).toHaveLength(1);
     expect(screen.getByText('# stopped')).toBeInTheDocument();
   });
 
@@ -378,8 +366,8 @@ describe('ChatThread data items', () => {
         { id: 4, kind: 'assistant', text: '1,203 rows and 4 columns.' },
         { id: 5, kind: 'paste', text: '▤ sales.csv · 8 lines · 120 B' },
         { id: 6, kind: 'data' },
-        // A paste in step 2 drops the confirmation: its notice stands between card and summary.
-        { id: 7, kind: 'notice', tone: 'warning', text: 'the data changed' },
+        // A notice between card and summary (the reply language a paste set, say) is no turn.
+        { id: 7, kind: 'notice', text: 'reply language: en' },
         { id: 8, kind: 'action', action: 'summarize_data', library: 'matplotlib' },
         { id: 9, kind: 'assistant', text: '7 rows and 3 columns.' },
       ])
@@ -392,7 +380,7 @@ describe('ChatThread data items', () => {
       '1,203 rows and 4 columns.',
       '❯▤ sales.csv · 8 lines · 120 B',
       'data card',
-      '# the data changed',
+      '# reply language: en',
       '7 rows and 3 columns.',
     ]);
   });

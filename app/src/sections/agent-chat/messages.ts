@@ -183,19 +183,10 @@ export function describeViewFailure(code: string, ref: string | null, detail?: s
 export const NEW_DATA_PLOT = 'plot the new data';
 
 /**
- * What dropped a confirmation the user had given, as the thread's warning notice says it where
- * it happened: the next click of the plot button confirms the data as shown again. A change of
- * the data has no notice: the step line right below it said the same (`CONFIRM_LOST_STEP_TEXT`).
- */
-export const CONFIRM_LOST_TEXT: Record<Exclude<ConfirmLoss, 'data'>, string> = {
-  bindings: 'bindings changed · check them, then .create_plot()',
-  server: 'check the data again, then .create_plot()',
-};
-
-/**
- * The same as the step line above the composer says it, the description of the composer's
- * action (`.create_plot()`, after a data change `plot the new data`, or `.plot_all()` with `all`
- * pressed), which points up at the card it stands below.
+ * What dropped a confirmation the user had given, as the step line above the composer says it,
+ * the description of the composer's action (`.create_plot()`, after a data change `plot the new
+ * data`, or `.plot_all()` with `all` pressed), which points up at the card it stands below. The
+ * thread carries no notice of its own for it: the step line, right above the composer, says it.
  */
 export const CONFIRM_LOST_STEP_TEXT: Record<ConfirmLoss, (action: string) => string> = {
   bindings: action => `bindings changed · check them above, then ${action}`,
