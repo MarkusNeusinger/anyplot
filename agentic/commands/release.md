@@ -3,7 +3,7 @@
 Cut a new anyplot release: finalize the changelog, bump the version, tag, and publish the GitHub
 release. The release notes are the changelog section **condensed** — never copied verbatim, never
 written from scratch (owner rule, 2026-08-28; the shape is in `CLAUDE.md` § "Changelog +
-releases", the procedure is step 8 below).
+releases", the procedure is step 9 below).
 
 ## Variables
 
@@ -64,11 +64,41 @@ version: $1 (optional — e.g. `3.1.0`; if omitted, propose one from the `[Unrel
 5. **Read the diff.** It touches `CHANGELOG.md`, `pyproject.toml`, `uv.lock`, `app/package.json`,
    the deleted fragments and step 4's showcase image, pull-request snapshot and floor — nothing else. Run
    `uv lock` if the lock needs more than its own version line.
-6. **Open the release PR** (`release: vX.Y.Z` title) and follow the standard PR follow-through
+6. **Run the agent evals** on `origin/main`. The release branch changes no agent code, so main is
+   what the release ships. No CI job runs these suites: they call the real models and cost real
+   money. A release is the one fixed point where every prompt and model change of the window is
+   measured together. A regression that no single PR's eval caught otherwise ships unnoticed: on
+   2026-11-05 one surfaced on main only because a sibling PR ran its eval. The suites use the local
+   Vertex AI login (ADC), so they run on the owner's machine, not in a cloud session.
+   - **Always:**
+     - `uv run --extra agents python -m agents.evals.prep`: the root's step-1 data choices,
+       85 cases, about $0.25. Its gate is 80 percent exact.
+     - `uv run --extra agents python -m agents.evals.scope`: the scope judge, about $0.05. Its
+       gates are adversarial recall and the false-refusal rate; exit code 1 means a gate failed.
+   - **When the window changed the plot pipeline:** that is the adapter or reviewer prompts,
+     `prompts/library/`, `prompts/quality-criteria.md`, `prompts/default-style-guide.md`, the
+     model settings or the pipeline code (`git diff --name-only v<last>..origin/main` shows it).
+     Then also run `uv run --extra agents python -m agents.evals.matrix --cases smoke --renderer
+     remote --render-url <anyplot-renderer URL> --gcloud-token`, with the URL from
+     `gcloud run services describe anyplot-renderer --region=europe-west4
+     --format='value(status.url)'`. It renders 25 plots and compares them with the committed
+     baseline; exit code 1 means it fell below the baseline's tolerance.
+   - **Compare with the previous release** (its PR body's "Agent evals" section). A model answers
+     differently from run to run, so a single miss is noise. The release waits when a suite fails
+     its own gate, or when prep lands more than three cases below the previous release. Then run
+     each new miss five times on the previous tag and five times on `origin/main`:
+     - A miss that holds on main but not on the tag is a regression. It gets a fix PR before the
+       release, unless the owner decides to release anyway. Say so in the PR body.
+     - A miss on both sides is a known issue. Name it in the PR body.
+   - **Write an "Agent evals" section into the release PR body.** For each suite, give its result
+     (prep: exact cases of the answered ones, reply misses; scope: recall and false refusals;
+     matrix: the pass rate against the baseline), its cost, and each miss with its verdict. The
+     next release compares against this section.
+7. **Open the release PR** (`release: vX.Y.Z` title) and follow the standard PR follow-through
    from `CLAUDE.md`. Ask the user to merge unless explicitly authorized to merge autonomously.
-7. **Tag after merge** (on the updated `main`):
+8. **Tag after merge** (on the updated `main`):
    `git tag -a vX.Y.Z -m "<Codename> (YYYY-MM-DD)" && git push origin vX.Y.Z`
-8. **Publish the GitHub release** with the changelog section **condensed** as body — never the
+9. **Publish the GitHub release** with the changelog section **condensed** as body — never the
    section copied (the v3.1.0 page was 640 lines). Write the body to a temp file first (it is
    multiline and contains backticks — do not inline it into `--notes`), then
    `gh release create vX.Y.Z --title "vX.Y.Z — <Codename>" --notes-file <tmpfile>`. The body:
@@ -84,9 +114,9 @@ version: $1 (optional — e.g. `3.1.0`; if omitted, propose one from the `[Unrel
      section are cited.
    - **Last line:** `**Full Changelog:** https://github.com/MarkusNeusinger/anyplot/compare/v<last>...vX.Y.Z`.
    The full text lives only in the CHANGELOG; the release page is the index into it.
-9. **Verify:** `gh release view vX.Y.Z` renders correctly; the site masthead picks up the new tag
-   automatically (`app/src/hooks/useLatestRelease.ts` fetches `releases/latest` with a 1 h
-   localStorage cache — nothing to deploy).
+10. **Verify:** `gh release view vX.Y.Z` renders correctly; the site masthead picks up the new tag
+    automatically (`app/src/hooks/useLatestRelease.ts` fetches `releases/latest` with a 1 h
+    localStorage cache — nothing to deploy).
 
 ## Report
 
