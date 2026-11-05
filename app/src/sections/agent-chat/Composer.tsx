@@ -9,8 +9,9 @@
  * new version from the data as the card shows it), and while the data is confirmed and the
  * library has no plot yet. Its click takes the data and the bindings as shown, confirms them
  * first when they are not (the page chains it), and starts the plot, with the box's text as its
- * request; the line above the box, its description, says what it waits for. Once the confirmed
- * data has a plot in this library, `.start_over()` is a quiet button beside the offer, if any.
+ * request; the line above the box, its description, says what it waits for. `.start_over()` is
+ * the quiet button beside it once the confirmed data has a plot in this library, and beside a
+ * switch's offer.
  * `.send()` shows only while the box holds text: Enter sends a turn too, and a disabled outline
  * beside the CTA read as "blocked until something". `.stop()` stands beside the CTA while a run
  * is in progress, a button of its own key, so no button turns into `.stop()` in place with a
@@ -55,9 +56,8 @@ import { colors, fontSize } from 'src/theme';
 
 /**
  * What `.start_over()` does, unlike `.send()` beside it (the two are easy to mistake for each other),
- * the quiet `.create_plot()` beside the offer after a switch, and `.create_plot()` on changed data
- * when the library has a plot: the catalogue code again, with the remembered decisions, which
- * only the user clears.
+ * also beside the offer after a switch, and `.create_plot()` on changed data when the library has
+ * a plot: the catalogue code again, with the remembered decisions, which only the user clears.
  */
 const START_OVER_HELP = 'new from the catalogue plot; keeps your remembered decisions';
 const START_OVER_HELP_ID = 'agent-start-over-help';
@@ -238,8 +238,9 @@ export function Composer(props: ComposerProps) {
     </Box>
   );
 
-  // The quiet plot from the catalogue code: `.start_over()` once the library has a plot, the
-  // plain `.create_plot()` beside a switch's offer before it.
+  // The quiet plot from the catalogue code, `.start_over()`: once the library has a plot, and
+  // beside a switch's offer before it, where a second `.create_plot()` beside the filled
+  // "plot in …" read as the same click.
   const quietCreate = (
     <Box
       key="create-quiet"
@@ -248,12 +249,12 @@ export function Composer(props: ComposerProps) {
       ref={carry ? undefined : createRef}
       onClick={onCreate}
       disabled={!canCreate}
-      aria-label={hasPlot ? 'Start over' : 'Create plot'}
+      aria-label="Start over"
       title={START_OVER_HELP}
       aria-describedby={[START_OVER_HELP_ID, stepLine ? STEP_LINE_ID : DATA_SUMMARY_ID].join(' ')}
       sx={actionButtonSx}
     >
-      {hasPlot ? '.start_over()' : '.create_plot()'}
+      .start_over()
     </Box>
   );
 

@@ -1,6 +1,9 @@
 /**
- * What the agent chat's error codes mean, in the page's voice. The code and
- * the request id stay visible next to the text, so a report can quote them.
+ * What the agent chat's error codes mean, in the page's voice. The request id
+ * stands next to the text only for a fault of the server or the connection (a
+ * 5xx, no answer, a stream's error event), where a report needs it to find the
+ * request. A refusal (a 4xx) names its cause in the text, which the visitor acts
+ * on, so it shows no id (`AgentApiError.shownRef`).
  * Codes: docs/reference/api.md ("Agent error responses", "SSE protocol").
  */
 
@@ -45,6 +48,12 @@ export const ERROR_TEXT: Record<string, string> = {
   bot_check_failed: 'the browser check did not go through',
   bot_check_unavailable: 'the browser check is not available right now',
 };
+
+/**
+ * The run's quiet line while the page reads the rest of a turn whose stream was cut: the
+ * server runs the turn on, so its result is still to come and nothing reads as an error yet.
+ */
+export const RECONNECTING_TEXT = 'connection lost · reconnecting…';
 
 /** Why a `plot` event shipped no render (`failed` or `not_ready`). */
 export const PLOT_FAILED_TEXT: Record<string, string> = {

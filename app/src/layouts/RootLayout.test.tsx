@@ -43,6 +43,9 @@ vi.mock('src/layouts/MastheadRule', () => ({
 }));
 vi.mock('src/layouts/NavBar', () => ({ NavBar: () => <div data-testid="navbar" /> }));
 vi.mock('src/layouts/Footer', () => ({ Footer: () => <div data-testid="footer" /> }));
+vi.mock('src/components/FeedbackWidget', () => ({
+  FeedbackWidget: () => <div data-testid="feedback-widget" />,
+}));
 
 import { RootLayout } from 'src/layouts/RootLayout';
 
@@ -65,6 +68,8 @@ function renderAt(initialPath: string) {
             />
             <Route path="/legal" element={<div>legal-page</div>} />
             <Route path="/about" element={<div>about-page</div>} />
+            <Route path="/agent" element={<div>agent-page</div>} />
+            <Route path="/debug/agent" element={<div>admin-agent-page</div>} />
           </Route>
         </Routes>
       </MemoryRouter>
@@ -107,5 +112,21 @@ describe('RootLayout', () => {
     await user.click(document.querySelector('a[href="/about#section"]') as HTMLElement);
 
     expect(scrollSpy).not.toHaveBeenCalledWith(0, 0);
+  });
+
+  it("shows the site's feedback button everywhere but in the agent chat", () => {
+    // The chat has feedback rows of its own; on a phone the button covered `.send()`.
+    const { unmount } = renderAt('/');
+    expect(document.querySelector('[data-testid="feedback-widget"]')).not.toBeNull();
+    unmount();
+    for (const [path, text] of [
+      ['/agent', 'agent-page'],
+      ['/debug/agent', 'admin-agent-page'],
+    ]) {
+      const view = renderAt(path);
+      expect(view.getByText(text)).toBeInTheDocument();
+      expect(document.querySelector('[data-testid="feedback-widget"]')).toBeNull();
+      view.unmount();
+    }
   });
 });

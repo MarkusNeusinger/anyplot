@@ -10,7 +10,10 @@
  * - a line starting with `:` is a comment — the BFF's `: ping` keep-alives —
  *   and is ignored;
  * - `event:` sets the type, every `data:` line appends to the data (joined with
- *   LF), `id:` and `retry:` are ignored (the chat never reconnects);
+ *   LF), `id:` sets the last event id, which every later event of the stream
+ *   carries until another `id:` replaces it (one with a NUL is ignored), and
+ *   `retry:` is ignored: the chat reconnects on its own terms, reading the rest
+ *   of a turn after the last id it saw (`useAgentSession`);
  * - a blank line dispatches the event; an event without data is dropped, and
  *   so is an unfinished event when the stream ends.
  *
@@ -23,6 +26,8 @@ export interface SseEvent {
   event: string;
   /** The `data:` lines joined with LF. */
   data: string;
+  /** The stream's last event id when the event was dispatched; absent before any `id:`. */
+  id?: string;
 }
 
 /** A line longer than this without a terminator is a broken stream, not an event. */
@@ -41,6 +46,8 @@ export class SseParser {
   private eventType = '';
   private dataLines: string[] = [];
   private hasData = false;
+  /** Not reset between events: an event without `id:` carries the one before it. */
+  private lastEventId = '';
 
   /** Parse one chunk of decoded text; returns the events it completed. */
   feed(chunk: string): SseEvent[] {
@@ -89,7 +96,11 @@ export class SseParser {
   private line(line: string): SseEvent | null {
     if (line === '') {
       const event = this.hasData
-        ? { event: this.eventType || 'message', data: this.dataLines.join('\n') }
+        ? {
+            event: this.eventType || 'message',
+            data: this.dataLines.join('\n'),
+            ...(this.lastEventId ? { id: this.lastEventId } : {}),
+          }
         : null;
       this.reset();
       return event;
@@ -104,6 +115,8 @@ export class SseParser {
     } else if (field === 'data') {
       this.dataLines.push(value);
       this.hasData = true;
+    } else if (field === 'id' && !value.includes('\0')) {
+      this.lastEventId = value;
     }
     return null;
   }
