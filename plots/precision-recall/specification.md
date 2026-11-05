@@ -14,7 +14,7 @@ A Precision-Recall curve plots precision (positive predictive value) against rec
 ## Data
 
 - `y_true` (binary array) - Ground truth binary labels (0 or 1)
-- `y_scores` (numeric array) - Predicted probabilities or decision function scores from classifier
+- `y_scores1, y_scores2, ...` (numeric array) - Predicted probabilities or decision function scores from classifier, one column per classifier, all for the same samples as the shared ground truth
 - Size: 100-10000 samples typical for evaluation
 - Example: Binary classification predictions from sklearn classifier with `predict_proba()` output
 

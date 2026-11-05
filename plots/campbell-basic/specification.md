@@ -13,7 +13,7 @@ A Campbell Diagram (also called an interference diagram) plots natural frequenci
 ## Data
 
 - `speed` (numeric) - Rotational speed in RPM, evenly spaced across the operating range (e.g., 0-6000 RPM)
-- `frequency_mode_N` (numeric) - Natural frequency in Hz for each mode shape (4-5 modes), varying with rotational speed
+- `frequency_mode_1, frequency_mode_2, ...` (numeric) - Natural frequency in Hz for each mode shape (4-5 modes), one column per mode, varying with rotational speed
 - `engine_order` (numeric) - Integer multipliers (1x, 2x, 3x) defining diagonal excitation lines from the origin
 - `critical_speeds` (numeric) - RPM values where engine order lines intersect natural frequency curves
 - Size: 50-100 speed points per mode, 4-5 natural frequency curves, 3 engine order lines, 6-10 critical speed markers
