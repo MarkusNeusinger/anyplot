@@ -45,9 +45,27 @@ export function stepOneLine(state: AgentSessionState, action = '.create_plot()')
     : `${head}check the preview and the bindings above, then ${action}`;
 }
 
-/** What the thread's in-progress line says: the turn's kind, that it stops, or that it reconnects. */
+/**
+ * What the thread's in-progress line says: the turn's kind, that it stops, that it reconnects, or,
+ * once a run's card is in, that the reply is on its way.
+ */
 export type PendingReply =
-  'summarize_data' | 'example_data' | 'message' | 'stopping' | 'reconnecting';
+  'summarize_data' | 'example_data' | 'message' | 'stopping' | 'reconnecting' | 'writing';
+
+/**
+ * Whether a run's card is in (a plot, or the card of a run that failed) and the reply to it is on
+ * its way: the root writes the reply after the plot, seconds later, and until then nothing would
+ * say that the turn still works. Notices between the card and the reply do not end the wait.
+ */
+export function awaitsReply(state: AgentSessionState): boolean {
+  if (!state.run) return false;
+  for (let index = state.items.length - 1; index >= 0; index -= 1) {
+    const kind = state.items[index].kind;
+    if (kind === 'plot' || kind === 'plot_failed') return true;
+    if (kind !== 'notice') return false;
+  }
+  return false;
+}
 
 /**
  * The in-progress line in the assistant's slot of the thread, while a turn
@@ -58,9 +76,15 @@ export type PendingReply =
  * does a turn that reached a pipeline step: the progress timeline below the
  * thread shows those, and two indicators would say the same thing. A wait in
  * the run queue keeps the line, since the queue counter says where, not what.
+ * Once a run's card took the timeline's place, the line stands below the card
+ * until the reply takes its place (`awaitsReply`).
  */
 export function pendingReply(state: AgentSessionState): PendingReply | null {
   const run = state.run;
+  if (run && awaitsReply(state)) {
+    if (run.reconnecting && !run.stopping) return 'reconnecting';
+    return run.stopping ? 'stopping' : 'writing';
+  }
   if (!run || run.kind === 'create_plot' || run.kind === 'carry_plot') return null;
   if (run.steps.some(entry => entry.step !== 'queued')) return null;
   // A cut stream the page reads again: the turn's only indicator, also after its reply arrived.

@@ -8,7 +8,7 @@ import {
 } from 'src/hooks/useAgentSession';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
 import { localClock } from 'src/sections/agent-chat/messages';
-import { pendingReply } from 'src/sections/agent-chat/steps';
+import { awaitsReply, pendingReply } from 'src/sections/agent-chat/steps';
 import { CHAT_TEXT_MAX } from 'src/sections/agent-chat/styles';
 import { render, screen, within } from 'src/test-utils';
 
@@ -300,6 +300,50 @@ describe('ChatThread in-progress line', () => {
     expect(pendingReply(state)).toBeNull();
     renderThread(state);
     expect(screen.queryByTestId('pending-reply')).not.toBeInTheDocument();
+  });
+
+  it("holds the reply's slot below a run's card until the reply takes it, at the thread's gap", () => {
+    const plotPrompt: ChatItem = { id: 1, kind: 'action', action: 'create_plot', library: 'x' };
+    const card: ChatItem = { id: 2, kind: 'plot', version: 1 };
+    const plotRun = run({ kind: 'create_plot', steps: [{ step: 'reviewing', attempt: 1 }] });
+    // The card is in, the reply is still being written: one line says so, a notice between them
+    // or not.
+    for (const items of [
+      [plotPrompt, card],
+      [plotPrompt, card, { id: 3, kind: 'notice', text: 'memory full' } as ChatItem],
+    ]) {
+      const { unmount } = renderThread(inFlight(items, plotRun));
+      const pending = screen.getByTestId('pending-reply');
+      expect(pending).toHaveTextContent(/^writing the reply$/);
+      expect(screen.getByRole('log').lastElementChild).toBe(pending);
+      // No timeline follows a card: the line keeps the thread's gap alone, where the reply goes,
+      // one row of the reply's line height, so a one-line reply moves nothing below it.
+      expect(pending).toHaveStyle({ marginTop: '0px', flexDirection: 'row', lineHeight: '1.6' });
+      unmount();
+    }
+    // The card of a run that failed gets its reply too.
+    const failed: ChatItem = {
+      id: 2,
+      kind: 'plot_failed',
+      result: {
+        status: 'failed',
+        attempts: 2,
+        artifacts: [],
+        changes: [],
+        residual_defects: [],
+        version: null,
+      },
+    };
+    expect(pendingReply(inFlight([plotPrompt, failed], plotRun))).toBe('writing');
+    expect(pendingReply(inFlight([plotPrompt, card], { ...plotRun, stopping: true }))).toBe(
+      'stopping'
+    );
+    // The reply arrived, or the run is over: the line is gone.
+    const replied: ChatItem[] = [plotPrompt, card, { id: 3, kind: 'assistant', text: 'Done.' }];
+    expect(pendingReply(inFlight(replied, plotRun))).toBeNull();
+    expect(pendingReply(inFlight([plotPrompt, card], null))).toBeNull();
+    // A card of an earlier run waits for nothing.
+    expect(awaitsReply(inFlight([plotPrompt, card], null))).toBe(false);
   });
 
   it('names a message turn, and a stop before any step', () => {
