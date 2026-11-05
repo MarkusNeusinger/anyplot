@@ -2699,6 +2699,35 @@ describe('AgentChatPage attachment', () => {
     expect(message()).toHaveValue('');
   });
 
+  it('counts a message paste once, though the browser reports its insertion again', async () => {
+    await openChat();
+    const routed = () =>
+      analytics.trackEvent.mock.calls.filter(([name]) => name === 'agent_input_routed');
+    // The paste event routes the text as a message; the browser then inserts it and fires the
+    // input event jsdom leaves out, with `insertFromPaste` too.
+    expect(pasteText('a bar chart, please')).toBe(true);
+    fireEvent.input(message(), {
+      target: { value: 'a bar chart, please' },
+      inputType: 'insertFromPaste',
+    });
+    expect(message()).toHaveValue('a bar chart, please');
+    expect(routed()).toEqual([['agent_input_routed', { as: 'message', via: 'paste' }]]);
+
+    // The next paste the event hid (iOS) is routed on its input: the first one's mark is spent.
+    fireEvent.input(message(), { target: { value: '' }, inputType: 'deleteContentBackward' });
+    fireEvent.input(message(), { target: { value: TABLE }, inputType: 'insertFromPaste' });
+    expect(chip()).toHaveAccessibleName(/^Attached table, 4 lines/);
+    expect(routed()).toHaveLength(2);
+
+    // A table the paste event took inserts nothing, so it leaves no mark for the next paste.
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
+    expect(pasteText(TABLE)).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
+    fireEvent.input(message(), { target: { value: TABLE }, inputType: 'insertFromPaste' });
+    expect(chip()).toHaveAccessibleName(/^Attached table, 4 lines/);
+    expect(routed()).toHaveLength(4);
+  });
+
   it('holds the plot button back while a chip waits, and asks before a reload drops it', async () => {
     await openChat();
     const unload = () => {
@@ -2843,6 +2872,25 @@ describe('AgentChatPage attachment', () => {
     expect(
       await screen.findByRole('group', { name: /^Attached file Bericht\.xlsx/ })
     ).toBeInTheDocument();
+  });
+
+  it('keeps a table pasted after × of a file still read on the server, when the read lands', async () => {
+    let finish!: () => void;
+    routeDataset(path => {
+      if (!path.endsWith('/dataset/convert')) return undefined;
+      return new Promise<Response>(resolve => {
+        finish = () => resolve(converted());
+      }) as unknown as Response;
+    });
+    await openChat();
+    dropOnChat(workbook());
+    await screen.findByText('reading "Bericht.xlsx" on the server');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
+    pasteText(TABLE);
+    await screen.findByRole('group', { name: /^Attached table, 4 lines/ });
+    finish();
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(chip()).toHaveAccessibleName(/^Attached table, 4 lines/);
   });
 
   it('reads a file pasted from the file manager, and lets text beside a picture paste as text', async () => {

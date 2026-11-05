@@ -22,4 +22,11 @@ describe('overCap', () => {
     expect(overCap('a'.repeat(1024 * 1024 + 1))).toBe(true);
     expect(overCap(`[\n${'  {"x": 1},\n'.repeat(MAX_ATTACHMENT_LINES)}  {"x": 2}\n]`)).toBe(false);
   });
+
+  it('counts the lines of anything but one JSON document: a bracketed note, JSON Lines', () => {
+    const rows = 'a,1\n'.repeat(MAX_ATTACHMENT_LINES);
+    expect(overCap(`[Source: Statistik Austria]\nname,value\n${rows}`)).toBe(true);
+    expect(overCap(`{"x": 1}\n`.repeat(MAX_ATTACHMENT_LINES + 1))).toBe(true);
+    expect(overCap(`{"rows": [\n${'  1,\n'.repeat(MAX_ATTACHMENT_LINES)}  2\n]}`)).toBe(false);
+  });
 });

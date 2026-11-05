@@ -76,8 +76,9 @@ export interface ConvertedFile {
 
 /**
  * The most non-empty lines a pasted table may have: the server reads at most 20,000 rows
- * (`schemas.MAX_ROWS`), and a header and a few notes come with them. JSON is exempt: a
- * pretty-printed record spans many lines, and the byte cap and the server's row cap remain.
+ * (`schemas.MAX_ROWS`), and a header and a few notes come with them. One JSON document is
+ * exempt: a pretty-printed record spans many lines, and the byte cap and the server's row cap
+ * remain. JSON Lines is not: each of its lines is a row.
  */
 export const MAX_ATTACHMENT_LINES = 20_050;
 
@@ -131,10 +132,22 @@ export function convertedRead(answer: ConvertAnswer): string {
   return `on the server:${where} ${answer.kind} · ${shape}${answer.format === 'json' ? ' as JSON records' : ''}`;
 }
 
+/** Whether the text is one JSON array or object, as a whole: a `[Source: X]` above a CSV is no JSON. */
+function isJsonDocument(text: string): boolean {
+  const trimmed = text.trim();
+  if (!/^[[{]/.test(trimmed) || !/[\]}]$/.test(trimmed)) return false;
+  try {
+    JSON.parse(trimmed);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Whether a pasted text is too large for the dataset route: the byte cap, and the row cap outside JSON. */
 export function overCap(text: string): boolean {
   if (utf8Bytes(text) > MAX_DATASET_BYTES) return true;
-  return !/^\s*[[{]/.test(text) && countLines(text) > MAX_ATTACHMENT_LINES;
+  return countLines(text) > MAX_ATTACHMENT_LINES && !isJsonDocument(text);
 }
 
 /** Whether a drag carries files (not text dragged from the page or another app). */
@@ -219,6 +232,9 @@ export function useChatAttachment({
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Counts attachments and reads: an answer for a superseded one is dropped.
   const seq = useRef(0);
+  // The paste event routed this paste's text already; the browser's input event that inserts it
+  // must not route it a second time.
+  const pasteRouted = useRef(false);
   const reading = attachment?.status === 'reading';
   const dropReady = ready && !working && !locked && !reading;
 
@@ -492,7 +508,10 @@ export function useChatAttachment({
       void handleFile(file);
       return true;
     }
-    return routePaste(pastedText, () => event.preventDefault());
+    const taken = routePaste(pastedText, () => event.preventDefault());
+    // Text the box takes: the browser inserts it and reports `insertFromPaste` next.
+    pasteRouted.current = !taken && pastedText !== '';
+    return taken;
   };
 
   // How a paste was routed, for tuning the rules (`agent_input_routed`); a data paste attaches.
@@ -507,7 +526,10 @@ export function useChatAttachment({
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>, before: string) => {
     const native = event.nativeEvent as InputEvent | undefined;
-    if (native?.inputType !== 'insertFromPaste') return false;
+    // Any input ends the paste the paste event routed, so a later one is routed on its own.
+    const routed = pasteRouted.current;
+    pasteRouted.current = false;
+    if (native?.inputType !== 'insertFromPaste' || routed) return false;
     // Safari hands the pasted text over on the input event itself; elsewhere the box's change
     // tells it.
     const handed = native.dataTransfer?.getData('text/plain');
