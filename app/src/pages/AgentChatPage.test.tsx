@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider, useLocation } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -1481,10 +1481,10 @@ describe('AgentChatPage working states', () => {
     expect(pending).toHaveTextContent(/^summarizing your data$/);
     expect(within(pending).getByTestId('loader-spinner')).toBeInTheDocument();
     expect(lastInThread()).toBe(pending);
-    expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
-      /^# bindings wait while the assistant works$/
+    expect(screen.getByTestId('bindings-heading')).toHaveTextContent(
+      /^# bindings — wait while the assistant works$/
     );
-    // One loader, in the thread: the bindings line says why without motion of its own.
+    // One loader, in the thread: the bindings heading says why without motion of its own.
     expect(screen.getAllByTestId('loader-spinner')).toHaveLength(1);
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
     // The plot button waits in its place at the composer's end, beside `.stop()`.
@@ -1498,7 +1498,9 @@ describe('AgentChatPage working states', () => {
     expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
     await turnEnded();
     expect(screen.queryByTestId('pending-reply')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('bindings-lock')).not.toBeInTheDocument();
+    expect(screen.getByTestId('bindings-heading')).toHaveTextContent(
+      /^# bindings — which column plays which role$/
+    );
     expect(screen.getByLabelText(/^x/)).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Create plot' })).toBeEnabled();
   });
@@ -1529,6 +1531,77 @@ describe('AgentChatPage working states', () => {
     expect(await screen.findByText('Here is your plot.')).toBeInTheDocument();
     await turnEnded();
     expect(screen.queryByTestId('loader-spinner')).not.toBeInTheDocument();
+  });
+
+  it('shows one queue position, out of the flow for a text turn and in the timeline for a plot run', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndSummarize();
+
+    // The next turn's stream stays open after its `queued` status, as a run that waits does.
+    const base = fetchMock.getMockImplementation() as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    let finish: (() => void) | null = null;
+    const queuedTurn = (events: [string, unknown][]) =>
+      new Response(
+        new ReadableStream({
+          start(controller) {
+            const write = (list: [string, unknown][]) =>
+              controller.enqueue(
+                new TextEncoder().encode(
+                  list
+                    .map(([event, data]) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
+                    .join('')
+                )
+              );
+            write([['status', { step: 'queued', position: 2, waiting: 3 }]]);
+            finish = () => {
+              write(events);
+              controller.close();
+            };
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'text/event-stream' } }
+      );
+    fetchMock.mockImplementation((input: string, init: RequestInit = {}) =>
+      pathOf(input).endsWith('/sessions/S1/messages') && init.method === 'POST'
+        ? Promise.resolve(
+            queuedTurn(
+              String(init.body).includes('create_plot')
+                ? [
+                    ['plot', PLOT],
+                    ['done', { llm_calls: 2, data_confirmed: true }],
+                  ]
+                : [
+                    ['message', { text: 'The mean score is 55.' }],
+                    ['done', { llm_calls: 1 }],
+                  ]
+            )
+          )
+        : base(input, init)
+    );
+
+    // A question waits with the thread's in-progress line: the badge names the position, beside
+    // that line and out of the flow, so it moves nothing as it comes and goes.
+    sendFromComposer('what is the mean score?');
+    const badge = await screen.findByTestId('queue-counter');
+    expect(badge).toHaveTextContent('queue 2/3');
+    expect(badge).toHaveStyle({ position: 'absolute' });
+    expect(screen.getByTestId('pending-reply')).toBeInTheDocument();
+    act(() => finish?.());
+    expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
+    await turnEnded();
+
+    // A plot run names its position in the timeline's first row, and nowhere else.
+    fireEvent.click(screen.getByRole('button', { name: 'Create plot' }));
+    const grid = await screen.findByRole('table', { name: 'Progress' });
+    expect(await within(grid).findByText('queued · 2 of 3')).toBeInTheDocument();
+    expect(screen.queryByTestId('queue-counter')).not.toBeInTheDocument();
+    expect(screen.getAllByText(/queue/)).toHaveLength(1);
+    act(() => finish?.());
+    await turnEnded();
   });
 
   it('shows the loader while the session opens, then the chat', async () => {

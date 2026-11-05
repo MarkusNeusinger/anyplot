@@ -176,7 +176,9 @@
  * like the real run, which notices the abort only between steps; a turn that
  * still waits in the queue leaves it at once), MOCK_START_MS (0, how long a
  * pipeline run takes from leaving the queue to its first step, so the page's
- * `starting…` stays visible), MOCK_PARSE_MS (400, how long a
+ * `starting…` stays visible), MOCK_REPAIR (`1`: a first plot, too, fails its
+ * first review and runs a repair round, as a refinement always does),
+ * MOCK_PARSE_MS (400, how long a
  * parse takes, the dataset judge's call in production; a transcription takes
  * 900 ms more), MOCK_OPEN_MS (0, how long `POST /sessions` takes, so the page's
  * opening state, where the bot check runs on the public lane, stays visible).
@@ -221,6 +223,7 @@ const QUEUE_MS = Number(process.env.MOCK_QUEUE_MS || 2500);
 const QUEUE_START = Number(process.env.MOCK_QUEUE ?? 2);
 const STOP_MS = Number(process.env.MOCK_STOP_MS ?? 2000);
 const START_MS = Number(process.env.MOCK_START_MS ?? 0);
+const REPAIR = process.env.MOCK_REPAIR === '1';
 const PARSE_MS = Number(process.env.MOCK_PARSE_MS ?? 400);
 const OPEN_MS = Number(process.env.MOCK_OPEN_MS ?? 0);
 const NO_COPY = process.env.MOCK_NO_COPY === '1';
@@ -1264,7 +1267,9 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       }
       // `create_plot` and `carry_plot` start from the catalogue code; a typed change refines the latest version.
       const refine = body.action !== 'create_plot' && body.action !== 'carry_plot';
-      const steps = refine
+      // A refinement repairs once; with MOCK_REPAIR=1 a first plot does too, as a first try the review fails.
+      const repaired = refine || REPAIR;
+      const steps = repaired
         ? [
             ['adapting', 1],
             ['checking', 1],
@@ -1281,9 +1286,9 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
             ['rendering', 1],
             ['reviewing', 1],
           ];
-      // How each round ends, as the service's `PlotResult.rounds`: a refinement's first try has
+      // How each round ends, as the service's `PlotResult.rounds`: a repaired run's first try has
       // two review findings, its repair round one that stays open; a first plot passes at once.
-      const rounds = refine
+      const rounds = repaired
         ? [
             {
               attempt: 1,
@@ -1355,14 +1360,14 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       const y = yColumns(version).join(', ');
       // Kept on the version for the bundle, like the service's stored `PlotResult`.
       version.result = {
-        status: refine ? 'needs_attention' : 'ok',
+        status: repaired ? 'needs_attention' : 'ok',
         reason: null,
-        attempts: refine ? 2 : 1,
+        attempts: repaired ? 2 : 1,
         artifacts: artifactNames(version),
         changes: refine
           ? ['Applied your change request', 'Marker size raised from 110 to 160']
           : [`x now reads ${x}, y reads ${y}`, 'Axis labels name your columns'],
-        residual_defects: refine
+        residual_defects: repaired
           ? ['VQ-03 light: two markers overlap the y axis label; likely cause: axis limits']
           : [],
         // The stored version's number, which the artifact and theme routes take.
