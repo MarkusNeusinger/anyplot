@@ -577,6 +577,33 @@ describe('DataPanel steps', () => {
     expect(screen.queryByRole('region', { name: 'Your data' })).not.toBeInTheDocument();
   });
 
+  it("names the composer's own action in step 1's line, .plot_all() while all is pressed", async () => {
+    stubScrollIntoView();
+    try {
+      const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
+      const panel = (state: AgentSessionState) => (
+        <Panel
+          state={state}
+          plotAction=".plot_all()"
+          onParse={vi.fn()}
+          onConfirmTranscription={vi.fn()}
+          onDiscardTranscription={vi.fn()}
+          onBind={vi.fn()}
+          onUndo={vi.fn()}
+        />
+      );
+      const { rerender } = render(panel(confirmed));
+      await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+      // A data change with `all` pressed: the composer shows `.plot_all()`, never the plot button.
+      rerender(panel({ ...confirmed, dataConfirmed: false, confirmLoss: 'data' }));
+      expect(
+        screen.getByText('# step 1 again: check the data, then .plot_all() below')
+      ).toBeVisible();
+    } finally {
+      restoreScrollIntoView();
+    }
+  });
+
   it('opens in full when the confirmation drops, and collapses at the next .create_plot()', async () => {
     const scroll = stubScrollIntoView();
     try {
@@ -596,6 +623,12 @@ describe('DataPanel steps', () => {
       expect(
         screen.getByText('# step 1 again: check the data, then .create_plot() below')
       ).toBeVisible();
+      // After a change of the data the composer's button reads `plot the new data`: the line too.
+      rerender({ ...confirmed, dataConfirmed: false, confirmLoss: 'data' });
+      expect(
+        screen.getByText('# step 1 again: check the data, then plot the new data below')
+      ).toBeVisible();
+      rerender({ ...confirmed, dataConfirmed: false, confirmLoss: 'bindings' });
       expect(screen.queryByText(/a change here takes the data back/)).not.toBeInTheDocument();
       expect(screen.getByTestId('data-step-status')).toHaveTextContent(
         'step 1: check the data, then create the plot'

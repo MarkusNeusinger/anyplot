@@ -125,6 +125,8 @@
  *
  * Scripted behaviour of a chat message:
  * - contains "weather" or "joke": the fixed out-of-scope refusal;
+ * - contains "stock price" or "unemployment rate": the fixed data refusal (`needs_data`), except
+ *   in the note sent with a paste, which the summary answers as any note;
  * - contains "busy": `error {code: capacity}`;
  * - contains "swap": the root's `set_bindings` in miniature, swapping the
  *   columns of `x` and the first `y` (which drops the confirmation), and a reply;
@@ -132,7 +134,9 @@
  * - code or a request for data (the dataset route's `422 code` and `422 data_request`
  *   guards): `run_data_code`, the spec's made-up table as `.example_data()` makes it;
  * - contains "prozent"/"percent", "gruppier"/"group" or "umbenenn"/"rename":
- *   a data change, see above, and a reply naming it;
+ *   a data change, see above, and a reply naming it; with "instead of" (or "statt") also a
+ *   plot the server refuses after it (`plot{not_ready, data_unconfirmed}`), as a root that read
+ *   the change as a plot change too called it;
  * - ends with "?": a reply only, no pipeline run;
  * - anything else: a refinement with a repair round, shipped as
  *   `needs_attention`; the word "dark" or "light" in the text renders that theme.
@@ -1175,10 +1179,14 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       // judge refuses is refused as a whole: it never reaches the root, so it
       // neither detects nor sets a language.
       const outOfScope = /weather|joke/.test(lower);
-      if (typeof body.text === 'string' && !outOfScope) {
+      // A request for figures to fetch is `needs_data`, except in the note sent with a paste,
+      // which is about the data that came with it.
+      const needsData =
+        /stock price|unemployment rate/.test(lower) && !(session.summaryPending && session.dataset);
+      if (typeof body.text === 'string' && !outOfScope && !needsData) {
         detectLanguage(session, text);
       }
-      const asked = outOfScope ? null : requestedLanguage(lower);
+      const asked = outOfScope || needsData ? null : requestedLanguage(lower);
       if (asked) {
         session.language = asked.code;
         session.languageSource = 'chosen';
@@ -1216,6 +1224,15 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         send('message', { text: `${summary} ${acted}` });
         return;
       }
+      // The scope judge answers before any agent: a request for figures to fetch ends here.
+      if (needsData) {
+        await sleep(STEP_MS);
+        send('refusal', {
+          code: 'needs_data',
+          text: 'I cannot fetch data from the internet or any other source. Please get the data you want to plot yourself first, then paste it into the message box as a table or open its file with .open().',
+        });
+        return;
+      }
       if (body.action === 'example_data') {
         // The root's `get_spec_brief` and a sandbox run take a few seconds: the page's working line counts them.
         await sleep(STEP_MS * 6);
@@ -1249,7 +1266,24 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
             : null;
       if (change) {
         await sleep(STEP_MS * 2);
-        send('message', { text: session.dataset ? change(session) : 'Paste your data first.' });
+        if (!session.dataset) {
+          send('message', { text: 'Paste your data first.' });
+          return;
+        }
+        const reply = change(session);
+        // "instead of" plays the root that read the change as a plot change too and called the
+        // plot after its own data change: the server refuses it, before the turn's `done`.
+        if (/instead of|statt/.test(lower)) {
+          send('plot', {
+            status: 'not_ready',
+            reason: 'data_unconfirmed',
+            attempts: 0,
+            artifacts: [],
+            changes: [],
+            residual_defects: [],
+          });
+        }
+        send('message', { text: reply });
         return;
       }
       if (outOfScope) {
@@ -1830,7 +1864,8 @@ function setTypeNumber(session) {
   if (failed)
     change += `, ${failed} cell${failed > 1 ? 's' : ''} could not be read and ${failed > 1 ? 'are' : 'is'} now missing`;
   storeVersion(session, parsed, [change]);
-  return `I read ${column} as numbers${units.size ? ` and removed the unit '${[...units][0]}'` : ''}. Check the preview, then press .create_plot().`;
+  // As the root's reply after `prepare_data`: the change and its counts; the page says what to do next.
+  return `I read ${column} as numbers${units.size ? ` and removed the unit '${[...units][0]}'` : ''}.`;
 }
 
 /**
@@ -1864,7 +1899,7 @@ function aggregateSum(session, lower) {
   let change = `summed ${header[value]} by ${header[key]}: ${grouped.length} row${grouped.length > 1 ? 's' : ''}`;
   if (other) change += `, ${other} other column${other > 1 ? 's' : ''} dropped`;
   storeVersion(session, parsed, [change]);
-  return `I summed ${header[value]} per ${header[key]}: ${grouped.length} rows. Check the preview, then press .create_plot().`;
+  return `I summed ${header[value]} per ${header[key]}: ${grouped.length} rows.`;
 }
 
 /** `rename`: the second column gets a new name. */
@@ -1876,7 +1911,7 @@ function renameSecond(session, german) {
   const renamed = header.map((h, i) => (i === 1 ? name : h));
   const parsed = parseDataset(toCsv(renamed, rows));
   storeVersion(session, parsed, [`renamed '${header[1]}' to '${name}'`]);
-  return `I renamed ${header[1]} to ${name}. Check the preview, then press .create_plot().`;
+  return `I renamed ${header[1]} to ${name}.`;
 }
 
 // ---------------------------------------------------------------- formulas (generate_data in miniature)

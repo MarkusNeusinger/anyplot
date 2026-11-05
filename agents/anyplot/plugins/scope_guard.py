@@ -24,6 +24,11 @@
   the language the judge names (`policy.refusal`: English, German, French, Spanish,
   Italian, Portuguese, Dutch, Polish, Chinese, Vietnamese and Russian, English for every
   other language); the run ends there, at the first turn;
+* the note sent with a paste not summarized yet (`RequestLedger.paste_note`) is never
+  `needs_data`: it came with the data it is about, and a statistic's name in it
+  ("unemployment rate per country") read as a request to fetch figures. Such a verdict
+  goes on as `in_scope`, with a `paste_note_in_scope` attribution line after the judge's;
+  `attack`, `out_of_scope` and `other_library` refuse the note as any message;
 * an `attack` verdict is a strike against the user (`UsageBook.add_strike`), once
   per distinct message text: from `AGENT_ATTACK_STRIKES` strikes on, the daily check
   above refuses the user with the `locked_out` refusal for the rest of the day (a
@@ -322,6 +327,11 @@ class ScopeGuardPlugin(BasePlugin):
             judge_output=verdict.output_tokens,
             **({"strikes": strikes} if strikes is not None else {}),
         )
+        if verdict.verdict == "needs_data" and ledger.paste_note:
+            # The note came with the data it is about, so nothing is to be fetched: the root reads it beside the table.
+            # The judge sees the note alone, and a statistic's name in it reads as a request for figures.
+            attribution("scope_guard", ledger, verdict="paste_note_in_scope")
+            verdict = verdict.model_copy(update={"verdict": "in_scope"})
         if verdict.verdict != "in_scope":
             if settings.keep_refusals:
                 services.refusals.add(

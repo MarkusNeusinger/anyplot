@@ -863,8 +863,15 @@ class TestRefusals:
     def test_the_data_refusal_says_nothing_is_fetched_and_asks_for_pasted_data(self) -> None:
         english, german = policy.refusal("needs_data", "en"), policy.refusal("needs_data", "de")
 
-        assert "cannot fetch data from the internet" in english and "paste it into the data panel" in english
-        assert "keine Daten aus dem Internet" in german and "Datenbereich" in german
+        assert "cannot fetch data from the internet" in english and "paste it into the message box" in english
+        assert "keine Daten aus dem Internet" in german and "Nachrichtenfeld" in german
+
+    @pytest.mark.parametrize("reason", ["needs_data", "unsupported_content"])
+    def test_the_refusals_that_ask_for_data_name_the_message_box_and_open(self, reason: str) -> None:
+        """The data panel's own field is gone: data comes through the message box or `.open()`, in every language."""
+        for text in policy.refusals()[reason].values():
+            assert ".open()" in text
+        assert "data panel" not in policy.refusal(reason, "en")
 
     def test_the_pause_names_its_end_in_utc_and_spares_the_users_own_limit(self) -> None:
         """The service's day budget, not the user's own (owner request of 2026-11-02): every language names the reset

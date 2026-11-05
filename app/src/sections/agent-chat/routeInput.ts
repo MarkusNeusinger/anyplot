@@ -1,7 +1,8 @@
 /**
  * What pasted text is in the chat's one message box: a table or a file's text that waits as
- * an attachment (`data`), or text the user meant to type (`message`). Typed text is always a
- * message; only a paste is routed, before it reaches the box.
+ * an attachment (`data`), or text the user meant to type (`message`). A paste is routed before it
+ * reaches the box, and the box's own text once more on Enter, so a table typed by hand, or pasted
+ * where the browser reported no paste, goes to the dataset route too (`attachTyped`).
  *
  * The rules read the text the way the dataset route's parser and classifier will: a table
  * the parser reads must become an attachment, and code, a formula or a request for data must

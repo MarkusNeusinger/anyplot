@@ -2506,6 +2506,8 @@ async def post_message(
     # The summary of a paste not summarized yet: the root's before-agent callback makes its `certain` conversions
     # (`paste_conversions.py`). A summary action on data already summarized makes none, nor does any later turn.
     ledger.summary_turn = first_turn and summary_pending
+    # The note came with the data, so the scope judge's `needs_data` cannot apply to it (`ScopeGuardPlugin._judge`).
+    ledger.paste_note = summary_pending and body.text is not None
     if first_turn and view is not None and view.dataset_id:
         stored = services.datasets.get(view.dataset_id, sid)
         blocks: list[str] = []
