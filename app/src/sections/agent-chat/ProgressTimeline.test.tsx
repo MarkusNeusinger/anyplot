@@ -233,6 +233,18 @@ describe('ProgressTimeline', () => {
     }
   });
 
+  it("turns the page's scroll anchoring off while the run lasts, and back after it", () => {
+    // A repair round's row grew the grid, and the browser scrolled the page to hold a node below
+    // it: the loader and the rows already shown jumped up by that row.
+    const root = document.documentElement;
+    root.style.overflowAnchor = 'auto';
+    const { unmount } = render(<ProgressTimeline run={run(FIRST.slice(0, 1))} />);
+    expect(root.style.overflowAnchor).toBe('none');
+    unmount();
+    expect(root.style.overflowAnchor).toBe('auto');
+    root.style.overflowAnchor = '';
+  });
+
   it('adds a stop below the grid, keeping the queue position in its row', () => {
     const { rerender } = render(<ProgressTimeline run={run([], { stopping: true })} />);
     const grid = screen.getByRole('table', { name: 'Progress' });

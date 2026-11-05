@@ -11,6 +11,10 @@
  * goes, so the loader and the grid stand still while the steps advance (a
  * `starting…` line above the grid used to go away at the first step, and the
  * grid jumped up one line beside the loader). A stop adds its line below the grid.
+ * While it is mounted the page has no scroll anchoring: a repair round's row
+ * grows the grid downwards, and the browser, holding a node below it in place,
+ * scrolled the page by that row, so the loader and the rows already shown
+ * jumped up by it (25 px at desktop width, 65 px at phone width).
  *
  * The page mounts it for a plot run, from the queue on, and for any turn that
  * reached a pipeline step (`showsTimeline` in `steps.ts`). A turn without steps,
@@ -20,6 +24,7 @@
  */
 
 import Box from '@mui/material/Box';
+import { useEffect } from 'react';
 
 import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import type { RunState } from 'src/hooks/useAgentSession';
@@ -27,7 +32,24 @@ import { RoundGrid } from 'src/sections/agent-chat/RoundGrid';
 import { liveRows } from 'src/sections/agent-chat/timeline';
 import { fontSize, typography } from 'src/theme';
 
+/**
+ * Turns the page's scroll anchoring off while the run lasts. The run's grid grows only below
+ * what it shows, so the anchoring has nothing to hold still there and would only scroll the
+ * page by each new row; the page's value comes back when the run ends.
+ */
+function useNoScrollAnchoring() {
+  useEffect(() => {
+    const root = document.documentElement;
+    const before = root.style.overflowAnchor;
+    root.style.overflowAnchor = 'none';
+    return () => {
+      root.style.overflowAnchor = before;
+    };
+  }, []);
+}
+
 export function ProgressTimeline({ run }: { run: RunState }) {
+  useNoScrollAnchoring();
   const rows = liveRows(run);
   const waiting = run.steps[run.steps.length - 1]?.step === 'queued';
   const started = run.steps.some(entry => entry.step !== 'queued');
