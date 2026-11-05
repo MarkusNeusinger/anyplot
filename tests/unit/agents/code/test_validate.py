@@ -6,6 +6,7 @@ and prints a per-rule summary under `-s`; the catalogue is not clean by design).
 """
 
 import functools
+import gc
 import importlib
 import pkgutil
 import sys
@@ -3459,12 +3460,23 @@ def test_data_code_may_bind_theme() -> None:
 def test_catalogue_file_never_raises(path: Path) -> None:
     """The catalogue is not clean by design; the validator must still finish, fast, with sound findings.
 
-    "Fast" is the process's CPU time, not the wall clock: a file takes under 10 ms, and a busy CI runner once
-    stalled a worker for 1.2 s of wall time on one of them (#12456), while a pathological validator burns CPU.
+    "Fast" is the CPU time of this thread with the garbage collector paused, never the wall clock: a busy CI runner
+    once stalled a worker for 1.2 s of wall time (#12456), and the process's CPU time counts the worker's other
+    threads and a full collection of its heap, which pushed `network-weighted/matplotlib` to 1.05 s and
+    `heatmap-periodic-table/plotnine` past 1 s, files that take 3 ms. Measured so, the slowest file takes 7.3 ms
+    locally (2026-11-05), while a pathological validator burns its own thread's CPU whatever the collector does.
     """
-    started = time.process_time()
-    findings = validate_security(path.read_text(encoding="utf-8"), library=path.stem)
-    assert time.process_time() - started < 1.0
+    source = path.read_text(encoding="utf-8")
+    collecting = gc.isenabled()
+    gc.disable()
+    try:
+        started = time.thread_time()
+        findings = validate_security(source, library=path.stem)
+        spent = time.thread_time() - started
+    finally:
+        if collecting:
+            gc.enable()
+    assert spent < 1.0
     for finding in findings:
         assert finding.rule and "\n" not in finding.message and len(finding.message) <= 300
         assert finding.line is None or finding.line >= 1

@@ -39,7 +39,7 @@ The agent's readiness scan, run after its normalizer on the two phase-1 librarie
 
 Blocked means a map spec (13), no `THEME` block, a savefig target other than `f"plot-{THEME}.png"`, or a security-validator finding. A panel prototype of the stricter rules below found no clean matplotlib file and one clean seaborn file, so conversion is catalogue-wide.
 
-Two typical files:
+Two typical files, as the catalogue held them before their conversion (the nightly regeneration rewrites the catalogue, so the tests keep these versions in `tests/unit/core/fixtures/adaptability/design/`):
 
 - **`plots/bar-grouped/implementations/python/matplotlib.py` (score 94):** a dict of lists and no table; a 3-entry `IMPRINT` zipped with `strict=True`, which raises for a fourth group; a callout found through `categories.index("Q3")` that prints "Near-tie in Q3".
 - **`plots/line-basic/implementations/python/seaborn.py` (score 91):** a long `df`, but the column names repeat as literals, `peak_month = 7` selects the highlight, 12 month labels are typed by hand, and `savefig` uses `bbox_inches="tight"`.
