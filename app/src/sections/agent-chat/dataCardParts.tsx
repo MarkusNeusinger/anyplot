@@ -541,17 +541,26 @@ function FamilyChips({
 }) {
   const family = row.role.name;
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
   const addRef = useRef<HTMLButtonElement>(null);
   const removeRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  // The controls wait while the change is on its way; the focus follows once they answer again.
+  // The controls wait while the change is on its way; the focus follows once they answer again,
+  // unless the user has moved it elsewhere meanwhile.
   const refocus = useRef<number | 'add' | null>(null);
   const count = row.members.length;
   useEffect(() => {
     const target = refocus.current;
     if (target === null || disabled) return;
     refocus.current = null;
-    const chip = target === 'add' ? null : removeRefs.current[Math.min(target, count - 1)];
-    (chip ?? addRef.current)?.focus();
+    const active = document.activeElement;
+    if (active && active !== document.body && !listRef.current?.contains(active)) return;
+    const last = removeRefs.current[count - 1];
+    // `+` is gone once the last column is taken: the chip that took it holds the focus then.
+    const element =
+      target === 'add'
+        ? (addRef.current ?? last)
+        : (removeRefs.current[Math.min(target, count - 1)] ?? addRef.current);
+    element?.focus();
   }, [disabled, count]);
 
   const taken = new Set(row.members.map(([, column]) => column));
@@ -568,7 +577,9 @@ function FamilyChips({
     <Box sx={{ minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'auto' } }}>
       <Box
         component="ul"
+        ref={listRef}
         aria-labelledby={labelId}
+        aria-describedby={hints.length ? `${labelId}-hints` : undefined}
         sx={{
           listStyle: 'none',
           m: 0,
@@ -607,9 +618,10 @@ function FamilyChips({
               type="button"
               ref={addRef}
               id={buttonId}
-              aria-label={`Add a column to ${family}`}
+              // The visible "+ y" leads the name, so a voice command that says it finds the button.
+              aria-label={`+ ${family}: add a column`}
               aria-haspopup="menu"
-              aria-expanded={anchor ? true : undefined}
+              aria-expanded={!!anchor}
               aria-controls={anchor ? menuId : undefined}
               disabled={disabled}
               onClick={(event: React.MouseEvent<HTMLElement>) => setAnchor(event.currentTarget)}
@@ -644,15 +656,19 @@ function FamilyChips({
           </Box>
         )}
       </Box>
-      {hints.map(hint => (
-        <Box
-          key={hint.member}
-          data-testid="sign-hint"
-          sx={{ ...labelSx, fontSize: smallText, color: colors.warning, mt: 0.25 }}
-        >
-          {hint.text}
+      {hints.length > 0 && (
+        <Box id={`${labelId}-hints`}>
+          {hints.map(hint => (
+            <Box
+              key={hint.member}
+              data-testid="sign-hint"
+              sx={{ ...labelSx, fontSize: smallText, color: colors.warning, mt: 0.25 }}
+            >
+              {hint.text}
+            </Box>
+          ))}
         </Box>
-      ))}
+      )}
     </Box>
   );
 }

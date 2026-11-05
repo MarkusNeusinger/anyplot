@@ -161,7 +161,7 @@ describe('DataPanel bindings', () => {
     // The family's columns are chips in a list the row names, and `+ y` adds the next member.
     const chips = within(screen.getByRole('list', { name: /^y \*/ })).getAllByRole('listitem');
     expect(chips.map(chip => chip.textContent)).toEqual(['shoes×', '+ y ▾']);
-    await userEvent.click(screen.getByRole('button', { name: 'Add a column to y' }));
+    await userEvent.click(screen.getByRole('button', { name: '+ y: add a column' }));
     await userEvent.click(screen.getByRole('menuitem', { name: 'hats (number)' }));
     expect(onBind).toHaveBeenCalledWith('y2', 'hats');
   });
@@ -183,8 +183,10 @@ describe('DataPanel bindings', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Remove shoes from y' }));
     expect(onBind).toHaveBeenCalledWith('y1', null);
 
-    const add = screen.getByRole('button', { name: 'Add a column to y' });
+    // A menu button: its name starts with what it shows, and it says whether its menu is open.
+    const add = screen.getByRole('button', { name: '+ y: add a column' });
     expect(add).toHaveAttribute('aria-haspopup', 'menu');
+    expect(add).toHaveAttribute('aria-expanded', 'false');
     await userEvent.click(add);
     expect(add).toHaveAttribute('aria-expanded', 'true');
     // The columns the family holds are no choice; one the role cannot take is greyed out with the reason.
@@ -216,6 +218,49 @@ describe('DataPanel bindings', () => {
       <Panel state={stateWith({ x: 'month', y1: 'hats' }, { missingRoles: [] })} {...props} />
     );
     expect(screen.getByRole('button', { name: 'Remove hats from y' })).toHaveFocus();
+  });
+
+  it('gives the focus to the chip that took the last column, where `+` goes', async () => {
+    const props = {
+      onParse: vi.fn(),
+      onConfirmTranscription: vi.fn(),
+      onDiscardTranscription: vi.fn(),
+      onBind: vi.fn(),
+      onUndo: vi.fn(),
+    };
+    // Every column but `scarves` in the family: adding it leaves nothing for `+`.
+    const four = { x: 'month', y1: 'shoes', y2: 'hats', y3: 'month', y4: 'region' };
+    const before = stateWith(four, { missingRoles: [] });
+    const { rerender } = render(<Panel state={before} {...props} />);
+    await userEvent.click(screen.getByRole('button', { name: '+ y: add a column' }));
+    await userEvent.click(screen.getByRole('menuitem', { name: 'scarves (number)' }));
+    rerender(<Panel state={{ ...before, bindingsBusy: true }} {...props} />);
+    rerender(
+      <Panel state={stateWith({ ...four, y5: 'scarves' }, { missingRoles: [] })} {...props} />
+    );
+    expect(screen.queryByRole('button', { name: '+ y: add a column' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove scarves from y' })).toHaveFocus();
+  });
+
+  it('leaves the focus where the user put it meanwhile', async () => {
+    const props = {
+      onParse: vi.fn(),
+      onConfirmTranscription: vi.fn(),
+      onDiscardTranscription: vi.fn(),
+      onBind: vi.fn(),
+      onUndo: vi.fn(),
+    };
+    const before = stateWith({ x: 'month', y1: 'shoes', y2: 'hats' }, { missingRoles: [] });
+    const { rerender } = render(<Panel state={before} {...props} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Remove shoes from y' }));
+    rerender(<Panel state={{ ...before, bindingsBusy: true }} {...props} />);
+    const series = screen.getByLabelText(/^series/);
+    series.removeAttribute('disabled');
+    series.focus();
+    rerender(
+      <Panel state={stateWith({ x: 'month', y1: 'hats' }, { missingRoles: [] })} {...props} />
+    );
+    expect(screen.getByLabelText(/^series/)).toHaveFocus();
   });
 
   it("names a family's negative column in its warning", () => {
