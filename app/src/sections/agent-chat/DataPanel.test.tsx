@@ -239,6 +239,31 @@ describe('DataPanel bindings', () => {
     expect(onBind).toHaveBeenCalledWith('sma', 'hats');
   });
 
+  it('greys out the columns a role cannot take, with the reason, and never sends them', () => {
+    render(
+      <Panel
+        state={stateWith({ x: 'month', y1: 'shoes' })}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onBind={vi.fn()}
+        onUndo={vi.fn()}
+      />
+    );
+    const option = (select: RegExp, column: string) =>
+      [...(screen.getByLabelText(select) as HTMLSelectElement).options].find(
+        item => item.value === column
+      );
+
+    expect(option(/^y1/, 'region')).toHaveTextContent('region (text) · not numeric');
+    expect(option(/^y1/, 'region')).toBeDisabled();
+    expect(option(/^y1/, 'hats')).toHaveTextContent(/^hats \(number\)$/);
+    expect(option(/^y1/, 'hats')).toBeEnabled();
+    expect(option(/^x/, 'region')).toHaveTextContent('region (text) · not numeric or datetime');
+    expect(option(/^series/, 'shoes')).toHaveTextContent('shoes (number) · not categorical');
+    expect(option(/^series/, 'region')).toBeEnabled();
+  });
+
   it('lists the lines of a refused binding set', () => {
     render(
       <Panel

@@ -2709,6 +2709,21 @@ describe('AgentChatPage attachment', () => {
     });
   });
 
+  it('attaches a copied web table with grouped columns from its HTML, the spans expanded', async () => {
+    await openChat();
+    const plain = 'Place\tArea\nkm2\tmi2\nOrt A\t10\t3.9\nOrt B\t20\t7.7\n';
+    const html =
+      '<table><tr><th rowspan="2">Place</th><th colspan="2">Area</th></tr><tr><th>km2</th><th>mi2</th></tr>' +
+      '<tr><td>Ort A</td><td>10</td><td>3.9</td></tr><tr><td>Ort B</td><td>20</td><td>7.7</td></tr></table>';
+    const getData = (type: string) => (type === 'text/html' ? html : plain);
+    expect(fireEvent.paste(message(), { clipboardData: { files: [], getData } })).toBe(false);
+    fireEvent.keyDown(message(), { key: 'Enter' });
+
+    await waitFor(() => expect(datasetPosts()).toHaveLength(1));
+    const body = JSON.parse(String((datasetPosts()[0][1] as RequestInit).body)) as { text: string };
+    expect(body.text).toBe('Place\tArea\tArea\nPlace\tkm2\tmi2\nOrt A\t10\t3.9\nOrt B\t20\t7.7\n');
+  });
+
   it('reads the chip on Enter with the summary first when no note came with it', async () => {
     await openChat();
     pasteText(TABLE);
@@ -2993,8 +3008,9 @@ describe('AgentChatPage attachment', () => {
     expect(unload()).toBe(true);
     const create = screen.getByRole('button', { name: 'Create plot' });
     expect(create).toBeDisabled();
+    // The session holds data: the line says that the table replaces it, for good.
     expect(create).toHaveAccessibleDescription(
-      '# the attached table is read when you send it: Enter or .send(), with a note if you like'
+      '# the attached table replaces your data (2 rows, no .undo()) when you send it: Enter or .send(), with a note if you like'
     );
   });
 

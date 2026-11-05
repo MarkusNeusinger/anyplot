@@ -1152,6 +1152,7 @@ function AgentChat({
               running={running}
               stopping={!!state.run?.stopping}
               hasData={!!state.dataset}
+              dataRows={state.dataset ? state.dataset.parsed.profile.rows : null}
               step2={step2}
               hasPlot={hasPlot}
               ctaPlot={ctaPlot}

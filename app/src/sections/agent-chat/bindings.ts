@@ -9,10 +9,41 @@
  */
 
 import { type BindingMap, familyMembers, nthMember } from 'src/hooks/useAgentSession';
-import type { ColumnProfile, LongSuggestion, RoleSpec } from 'src/lib/agent';
+import type { ColumnDtype, ColumnProfile, LongSuggestion, RoleSpec } from 'src/lib/agent';
 
 /** The BFF's limit on one binding set. */
 const MAX_BINDINGS = 50;
+
+/**
+ * The column types each role kind takes, as the server's binding check accepts them
+ * (`ACCEPTS` in `agents/anyplot/data/bindings.py`; `test_bindings.py` keeps the two equal).
+ */
+export const ACCEPTS: Record<string, readonly ColumnDtype[]> = {
+  numeric: ['number', 'integer'],
+  categorical: ['text', 'boolean', 'datetime', 'integer'],
+  text: ['text', 'datetime', 'boolean', 'integer'],
+  boolean: ['boolean', 'integer'],
+  datetime: ['datetime'],
+};
+
+/**
+ * Whether the server takes a column of `dtype` for `role`: a role without kinds takes any
+ * column, and an unknown kind (a newer server) is left to the server to judge.
+ */
+export function fits(role: RoleSpec, dtype: ColumnDtype): boolean {
+  if (!role.kinds.length || role.kinds.some(kind => !(kind in ACCEPTS))) return true;
+  return role.kinds.some(kind => ACCEPTS[kind].includes(dtype));
+}
+
+/**
+ * A dropdown option's label: the column and its type, and for a column the role cannot take,
+ * why the option is greyed out (`Industry (text) · not numeric`). Picking it would only bring
+ * the server's refusal, so the page never sends it.
+ */
+export function columnLabel(role: RoleSpec, column: ColumnProfile): string {
+  const label = `${column.name} (${column.dtype})`;
+  return fits(role, column.dtype) ? label : `${label} · not ${role.kinds.join(' or ')}`;
+}
 
 export interface BindingRow {
   /** The binding name the dropdown sets: a single role, or a family member such as `y2`. */
