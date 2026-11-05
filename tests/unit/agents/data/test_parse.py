@@ -323,6 +323,18 @@ class TestHeaderInTwoLines:
         assert [c.name for c in parsed.profile.columns] == ["Ort", "Höhe", "Temp", "Wind"]
         assert not any("two lines" in warning for warning in parsed.warnings)
 
+    def test_groups_over_repeated_parts_join(self) -> None:
+        parsed = parse_dataset("Region,Sales,,Costs,\n,Q1,Q2,Q1,Q2\nNord,1,2,3,4\nSüd,5,6,7,8\nWest,9,10,11,12\n")
+
+        assert [c.name for c in parsed.profile.columns] == ["Region", "Sales Q1", "Sales Q2", "Costs Q1", "Costs Q2"]
+
+    def test_a_line_of_notes_above_a_full_header_stays_a_note(self) -> None:
+        """The first line looks grouped, but the second names every column once: a header under notes."""
+        parsed = parse_dataset("Section,Finance,,\nID,Name,Qty,Price\nA1,Pen,3,1.5\nA2,Ink,5,2.5\nA3,Pad,4,3.5\n")
+
+        assert [c.name for c in parsed.profile.columns] == ["ID", "Name", "Qty", "Price"]
+        assert not any("two lines" in warning for warning in parsed.warnings)
+
     def test_joined_names_that_collide_stay_unjoined(self) -> None:
         # Joined, the second and third columns would both be `y z`.
         parsed = parse_dataset("y,,y z,\n,z,,w\n1,2,3,4\n5,6,7,8\n9,10,11,12\n")

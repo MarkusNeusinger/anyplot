@@ -1053,11 +1053,14 @@ def _joined_header(records: Sequence[tuple[int, list[str]]], block: "TableBlock"
     `Location,Density,,Population` over `,/km2,/mi2,` (a merged cell copies as its name and empty cells),
     or the group name once per column when an HTML table's spans are expanded. `table_block` takes the
     second line for the header and the first for a note, which leaves columns named `column_1` and `/km2`.
-    Both lines must have the table's width and hold no value, and the first must show a group: an empty
-    cell, or a name over two columns. Each column's name is then its group and its own part, `Density /km2`:
-    an empty cell of the first line belongs to the group on its left when the second line names the column,
-    and a part equal to its group is said once. Only when the joined names are all different and at least
-    one joins two parts; otherwise the lines stay as `table_block` read them.
+    Both lines must have the table's width and hold no value. The first must show a group (an empty cell,
+    or a name over two columns), and the second its parts: an empty cell under a column of its own, a cell
+    that repeats the one above it, or a part repeated under each group (`Q1, Q2, Q1, Q2`). A line of notes
+    above a header (`Section,Finance,,` over `ID,Name,Qty,Price`) shows no parts, so it stays a note. Each
+    column's name is then its group and its own part, `Density /km2`: an empty cell of the first line
+    belongs to the group on its left when the second line names the column, and a part equal to its group is
+    said once. Only when the joined names are all different and at least one joins two parts; otherwise the
+    lines stay as `table_block` read them.
     """
     if block.start < 1 or not block.width:
         return None
@@ -1067,6 +1070,10 @@ def _joined_header(records: Sequence[tuple[int, list[str]]], block: "TableBlock"
     named = [cell for cell in top if cell]
     if all(top) and len(set(named)) == len(named):
         return None  # no empty cell and no repeated name: two headers, not one header in two lines
+    parts = [cell for cell in bottom if cell]
+    beneath = any(not lower or lower == upper for upper, lower in zip(top, bottom, strict=True))
+    if not beneath and len(set(parts)) == len(parts):
+        return None  # a full line of distinct names under the first: a header under a line of notes
     names: list[str] = []
     example = ""
     group = ""
