@@ -1033,15 +1033,22 @@ function AgentChat({
             ref={tailRef}
             sx={{ display: 'flex', flexDirection: 'column', gap: 2, scrollMarginBottom: 16 }}
           >
-            {/* At the foot with the progress, where a long thread keeps it in view. */}
-            {state.run?.queue && (
+            {/* At the foot, where a long thread keeps it in view: the queue position of a turn
+                without the progress timeline, whose first row says it for a plot run (one
+                position on screen). Out of the flow, at the right of the in-progress line above:
+                it comes with the queue and would otherwise push the composer down and back. */}
+            {state.run?.queue && !showsTimeline(state) && (
               <Box
                 role="status"
                 data-testid="queue-counter"
                 aria-label={`Queued: position ${state.run.queue.position}, ${state.run.queue.waiting} waiting`}
                 sx={{
+                  // Where it would stand as the foot's first item, at its right edge, then lifted
+                  // by its own height and the chat's gap above the foot, into the line's row.
+                  position: 'absolute',
                   alignSelf: 'flex-end',
-                  mb: -1,
+                  mt: -2,
+                  transform: 'translateY(-100%)',
                   fontFamily: typography.mono,
                   fontSize: smallText,
                   color: 'var(--ink)',

@@ -1,10 +1,20 @@
 /**
- * The progress of the running turn, from its `status` events: the wait in the
- * run queue (with the position) as one line, then the rounds of the pipeline as
- * a grid (`RoundGrid`, `timeline.ts`): one row per round with its steps in
- * fixed columns, the active step marked, the steps still to come muted, and a
- * finished round's outcome on the right (from the repair step's `outcome`).
- * The site's loader stands beside it while the run lasts, also while it stops.
+ * The progress of the running turn, from its `status` events: the rounds of the
+ * pipeline as a grid (`RoundGrid`, `timeline.ts`): one row per round with its
+ * steps in fixed columns, the active step marked, the steps still to come muted,
+ * and a finished round's outcome on the right (from the repair step's
+ * `outcome`). Before the first step, the first try's outcome cell says where the
+ * run stands: `starting…`, or the wait in the run queue with the position. The
+ * site's loader stands beside it while the run lasts, also while it stops.
+ *
+ * From the click to the result card nothing above the grid's first row comes or
+ * goes, so the loader and the grid stand still while the steps advance (a
+ * `starting…` line above the grid used to go away at the first step, and the
+ * grid jumped up one line beside the loader). A stop adds its line below the grid.
+ * While it is mounted the page has no scroll anchoring: a repair round's row
+ * grows the grid downwards, and the browser, holding a node below it in place,
+ * scrolled the page by that row, so the loader and the rows already shown
+ * jumped up by it (25 px at desktop width, 65 px at phone width).
  *
  * The page mounts it for a plot run, from the queue on, and for any turn that
  * reached a pipeline step (`showsTimeline` in `steps.ts`). A turn without steps,
@@ -12,6 +22,8 @@
  * while it waits in the queue, so `queued`, `starting…` and a step-less
  * `stopping…` belong to plot runs.
  */
+
+import { useEffect } from 'react';
 
 import Box from '@mui/material/Box';
 
@@ -21,7 +33,33 @@ import { RoundGrid } from 'src/sections/agent-chat/RoundGrid';
 import { liveRows } from 'src/sections/agent-chat/timeline';
 import { fontSize, typography } from 'src/theme';
 
+/** How many mounted timelines hold the page's scroll anchoring off, and the value the first found. */
+let anchoringHolds = 0;
+let anchoringBefore = '';
+
+/**
+ * Turns the page's scroll anchoring off while the run lasts. The run's grid grows only below
+ * what it shows, so the anchoring has nothing to hold still there and would only scroll the
+ * page by each new row; the page's value comes back when the last timeline unmounts. Excluding
+ * the composer or the footer alone did not stop the jump: the browser found another anchor.
+ */
+function useNoScrollAnchoring() {
+  useEffect(() => {
+    const root = document.documentElement;
+    if (anchoringHolds === 0) {
+      anchoringBefore = root.style.overflowAnchor;
+      root.style.overflowAnchor = 'none';
+    }
+    anchoringHolds += 1;
+    return () => {
+      anchoringHolds -= 1;
+      if (anchoringHolds === 0) root.style.overflowAnchor = anchoringBefore;
+    };
+  }, []);
+}
+
 export function ProgressTimeline({ run }: { run: RunState }) {
+  useNoScrollAnchoring();
   const rows = liveRows(run);
   const waiting = run.steps[run.steps.length - 1]?.step === 'queued';
   const started = run.steps.some(entry => entry.step !== 'queued');
@@ -41,11 +79,13 @@ export function ProgressTimeline({ run }: { run: RunState }) {
         ? 'stopping after this step…'
         : 'stopping…'
     : null;
+  // A stop before the run started replaces `starting…`; one in the queue keeps the position.
+  const status = before && !(stopping && !waiting) ? before : null;
 
   return (
     // The site's loader stands beside the run for as long as it lasts, centred on its first line
-    // (the queue line or the grid's first row); on a phone above it, so the grid keeps the full
-    // width. Both columns take the run's font from here, so the loader's box is one line of it.
+    // (the grid's first row); on a phone above it, so the grid keeps the full width. Both columns
+    // take the run's font from here, so the loader's box is one line of it.
     <Box
       sx={{
         display: 'flex',
@@ -69,8 +109,12 @@ export function ProgressTimeline({ run }: { run: RunState }) {
         <LoaderSpinner size="inline" />
       </Box>
       <Box aria-live="polite" sx={{ display: 'grid', gap: 0.75, minWidth: 0 }}>
-        {before && !(stopping && !waiting) && <Box sx={{ color: 'var(--ink)' }}>{before}</Box>}
-        {rows.length > 0 && <RoundGrid rows={rows} label="Progress" />}
+        {rows.length > 0 ? (
+          <RoundGrid rows={rows} label="Progress" status={status} />
+        ) : (
+          // A turn without a grid yet (the page shows its in-progress line instead): the line alone.
+          status && <Box sx={{ color: 'var(--ink)' }}>{status}</Box>
+        )}
         {stopping && <Box sx={{ color: 'var(--ink-muted)' }}>{stopping}</Box>}
       </Box>
     </Box>

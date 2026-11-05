@@ -198,7 +198,7 @@ describe('ProgressTimeline', () => {
     expect(screen.queryByText(/attempt/)).not.toBeInTheDocument();
   });
 
-  it('shows the queue position while a plot run waits, above the path of its first try', () => {
+  it('shows the queue position while a plot run waits, in the row of its first try', () => {
     render(
       <ProgressTimeline run={run([['queued', null]], { queue: { position: 2, waiting: 3 } })} />
     );
@@ -210,6 +210,75 @@ describe('ProgressTimeline', () => {
       'rendering, next',
       'reviewing, next',
     ]);
+  });
+
+  it('keeps the grid first from the start of a plot run to its steps, with the wait in its first row', () => {
+    // A `starting…` line above the grid went away at the first step: the grid jumped up a line.
+    const states: [RunState, string][] = [
+      [run([]), 'starting…'],
+      [run([['queued', null]], { queue: { position: 2, waiting: 3 } }), 'queued · 2 of 3'],
+      [run([['queued', null]], { queue: { position: 1, waiting: 2 } }), 'queued · 1 of 2'],
+      [run([['queued', null], ...FIRST.slice(0, 1)]), ''],
+      [run([['queued', null], ...FIRST.slice(0, 2)]), ''],
+    ];
+    const { rerender } = render(<ProgressTimeline run={states[0][0]} />);
+    const grid = screen.getByRole('table', { name: 'Progress' });
+    for (const [state, status] of states) {
+      rerender(<ProgressTimeline run={state} />);
+      // The same grid throughout, and nothing above it in the live region that could come or go.
+      expect(screen.getByRole('table', { name: 'Progress' })).toBe(grid);
+      expect(grid.parentElement?.firstElementChild).toBe(grid);
+      const cells = within(within(grid).getAllByRole('row')[0]).getAllByRole('cell');
+      expect(cells[cells.length - 1].textContent).toBe(status);
+    }
+  });
+
+  it("turns the page's scroll anchoring off while the run lasts, and back after it", () => {
+    // A repair round's row grew the grid, and the browser scrolled the page to hold a node below
+    // it: the loader and the rows already shown jumped up by that row.
+    const root = document.documentElement;
+    root.style.overflowAnchor = 'auto';
+    const first = render(<ProgressTimeline run={run(FIRST.slice(0, 1))} />);
+    expect(root.style.overflowAnchor).toBe('none');
+    // Two at once (none today) hold it off until the last one goes, then the page's value is back.
+    const second = render(<ProgressTimeline run={run(FIRST.slice(0, 2))} />);
+    first.unmount();
+    expect(root.style.overflowAnchor).toBe('none');
+    second.unmount();
+    expect(root.style.overflowAnchor).toBe('auto');
+    root.style.overflowAnchor = '';
+  });
+
+  it('adds a stop below the grid, keeping the queue position in its row', () => {
+    const { rerender } = render(<ProgressTimeline run={run([], { stopping: true })} />);
+    const grid = screen.getByRole('table', { name: 'Progress' });
+    expect(grid.parentElement?.firstElementChild).toBe(grid);
+    expect(grid.nextElementSibling).toHaveTextContent('stopping…');
+    expect(screen.queryByText('starting…')).not.toBeInTheDocument();
+
+    rerender(
+      <ProgressTimeline
+        run={run([['queued', null]], { queue: { position: 2, waiting: 3 }, stopping: true })}
+      />
+    );
+    expect(grid.parentElement?.firstElementChild).toBe(grid);
+    expect(within(grid).getByText('queued · 2 of 3')).toBeInTheDocument();
+    expect(grid.nextElementSibling).toHaveTextContent('leaving the queue…');
+  });
+
+  it('keeps the widths of the step cells, whatever their state and whichever round', () => {
+    // A step without a mark had a narrower cell: each step that turned active pushed the ones after it.
+    render(<ProgressTimeline run={run(FIRST.slice(0, 1))} />);
+    const cells = within(screen.getByRole('table', { name: 'Progress' }))
+      .getAllByRole('cell')
+      .slice(0, 4);
+    expect(cells.map(cell => within(cell).queryAllByTestId('step-marker').length)).toEqual([
+      1, 1, 1, 1,
+    ]);
+    // The first column holds a repair round's longer name unseen, so that row never widens it.
+    const ghost = within(cells[0]).getByText('repairing').closest('[aria-hidden="true"]');
+    expect(ghost).not.toBeNull();
+    expect(ghost).toContainElement(within(cells[0]).getByText('repair'));
   });
 
   it('shows no grid for a turn that has not reached a pipeline step', () => {

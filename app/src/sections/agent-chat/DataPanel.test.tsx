@@ -50,6 +50,9 @@ const scrolledTo = (scroll: ReturnType<typeof vi.fn>, element: Element) =>
     context === element ? [scroll.mock.calls[index][0]] : []
   );
 
+/** The bindings' heading while nothing runs. */
+const IDLE_HEADING = /^# bindings — which column plays which role$/;
+
 /** Whether the page's styles hold the pinned header's scroll padding (40 + 64 px). */
 const scrollPaddingRule = () =>
   [...document.querySelectorAll('style')].some(style =>
@@ -332,7 +335,7 @@ describe('DataPanel bindings', () => {
     expect(screen.getByTestId('data-lock')).toHaveTextContent(line);
     expect(card).toHaveAccessibleDescription(line);
     // Nothing that changes the data or its confirmation starts; the session itself is idle.
-    expect(screen.queryByTestId('bindings-lock')).not.toBeInTheDocument();
+    expect(screen.getByTestId('bindings-heading')).toHaveTextContent(IDLE_HEADING);
     expect(screen.getByRole('button', { name: '.undo()' })).toBeDisabled();
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
 
@@ -546,26 +549,43 @@ describe('DataPanel working states', () => {
 
   const summaryTurn = { kind: 'summarize_data' as const, steps: [], queue: null, stopping: false };
 
-  it('says why the bindings wait, exactly while something runs', () => {
+  it('says why the bindings wait in their heading, exactly while something runs', () => {
     const idle = stateWith({ x: 'month', y1: 'shoes' });
     const { rerender } = renderPanel(idle);
-    expect(screen.queryByTestId('bindings-lock')).not.toBeInTheDocument();
+    const heading = () => screen.getByTestId('bindings-heading');
+    expect(heading()).toHaveTextContent(IDLE_HEADING);
     expect(screen.queryByTestId('parse-hint')).not.toBeInTheDocument();
 
     rerender({ ...idle, run: summaryTurn });
-    expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
-      /^# bindings wait while the assistant works$/
-    );
+    // The heading swaps in its place: a second line under it read as the heading twice and moved
+    // the dropdowns as it came and went.
+    expect(heading()).toHaveTextContent(/^# bindings — wait while the assistant works$/);
+    expect(screen.queryByText(/^# bindings wait while/)).not.toBeInTheDocument();
     // The lock stays (the server would refuse the change); the controls keep their look.
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
 
     // A binding change, a confirmation or a theme render reads the same: the assistant works.
     rerender({ ...idle, bindingsBusy: true });
-    expect(screen.getByTestId('bindings-lock')).toHaveTextContent(/while the assistant works/);
+    expect(heading()).toHaveTextContent(/wait while the assistant works$/);
 
     rerender(idle);
-    expect(screen.queryByTestId('bindings-lock')).not.toBeInTheDocument();
+    expect(heading()).toHaveTextContent(IDLE_HEADING);
     expect(screen.getByLabelText(/^x/)).toBeEnabled();
+  });
+
+  it('keeps every heading of the bindings in one place, the unseen ones hidden from a screen reader', () => {
+    renderPanel(stateWith({ x: 'month', y1: 'shoes' }));
+    const heading = screen.getByTestId('bindings-heading');
+    // The three texts stack in one grid cell, so a swap never changes the heading's line count.
+    const stack = [...(heading.parentElement?.children ?? [])];
+    expect(stack.map(item => item.textContent)).toEqual([
+      '# bindings — which column plays which role',
+      '# bindings — wait while the assistant works',
+      '# bindings — wait while the data is parsed',
+    ]);
+    expect(
+      stack.filter(item => item !== heading).map(item => item.getAttribute('aria-hidden'))
+    ).toEqual(['true', 'true']);
   });
 
   it('says that the data is parsed on the bindings and to a screen reader, with no loader of its own', () => {
@@ -573,8 +593,8 @@ describe('DataPanel working states', () => {
 
     // The attachment's chip in the composer holds the parse's one loader; the card only says it.
     expect(screen.queryByTestId('loader-spinner')).not.toBeInTheDocument();
-    expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
-      /^# bindings wait while the data is parsed$/
+    expect(screen.getByTestId('bindings-heading')).toHaveTextContent(
+      /^# bindings — wait while the data is parsed$/
     );
     expect(screen.getByTestId('data-step-status')).toHaveTextContent('parsing your data');
   });
@@ -582,8 +602,8 @@ describe('DataPanel working states', () => {
   it('names the same bindings lock in step 2', async () => {
     renderPanel(stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true, themeBusy: true }));
     await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
-    expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
-      /^# bindings wait while the assistant works$/
+    expect(screen.getByTestId('bindings-heading')).toHaveTextContent(
+      /^# bindings — wait while the assistant works$/
     );
   });
 });

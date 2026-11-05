@@ -481,6 +481,13 @@ interface BindingsBlockProps {
   onBind: (role: string, column: string | null) => void;
 }
 
+/** The bindings' heading, and the two it swaps to while the server works. */
+const HEADING = {
+  idle: '# bindings — which column plays which role',
+  working: '# bindings — wait while the assistant works',
+  parsing: '# bindings — wait while the data is parsed',
+} as const;
+
 /** Every spec role's column dropdown, its accepted kinds, and its sign/wide-table hints. */
 export function BindingsBlock({
   rows,
@@ -496,20 +503,27 @@ export function BindingsBlock({
   suggestion,
   onBind,
 }: BindingsBlockProps) {
+  const heading = working ? (parsing ? HEADING.parsing : HEADING.working) : HEADING.idle;
   return (
     <Box>
-      <Box sx={{ ...labelSx, mb: 0.75 }}># bindings — which column plays which role</Box>
-      {/* Why the dropdowns do not answer: the server runs one thing per session. Not a
-          live region: the thread and the step status announce the work. No motion of its
-          own: the loader over the box or in the thread shows the work. */}
-      {working && (
-        <Box
-          data-testid="bindings-lock"
-          sx={{ ...labelSx, color: 'var(--ink-soft)', mt: -0.25, mb: 1 }}
-        >
-          # bindings wait while {parsing ? 'the data is parsed' : 'the assistant works'}
-        </Box>
-      )}
+      {/* While the server works, the heading itself says why the dropdowns do not answer: the
+          server runs one thing per session. A line of its own under the heading read as the
+          heading twice and moved the dropdowns as it came and went. The other headings stand
+          unseen in the same place, so a swap never changes the line count at any width. Not a
+          live region: the thread and the step status announce the work. */}
+      <Box sx={{ ...labelSx, mb: 0.75, display: 'grid', '& > *': { gridArea: '1 / 1' } }}>
+        {Object.values(HEADING).map(text => (
+          <Box
+            key={text}
+            component="span"
+            data-testid={text === heading ? 'bindings-heading' : undefined}
+            aria-hidden={text === heading ? undefined : true}
+            sx={{ visibility: text === heading ? undefined : 'hidden' }}
+          >
+            {text}
+          </Box>
+        ))}
+      </Box>
       {rows.length === 0 && (
         <Box sx={{ ...bodyTextSx, color: 'var(--ink-soft)' }}>
           {bindingsBusy ? 'checking roles…' : 'this plot names no data roles'}
