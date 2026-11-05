@@ -229,9 +229,11 @@ async def open_spec(client: httpx.AsyncClient, spec: str) -> str:
     return str(response.json()["session_id"])
 
 
-async def paste(client: httpx.AsyncClient, sid: str, text: str) -> None:
+async def paste(client: httpx.AsyncClient, sid: str, text: str) -> dict[str, Any]:
     response = await client.post(f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": text})
     assert response.status_code == 200, response.text
+    body: dict[str, Any] = response.json()
+    return body
 
 
 async def say(client: httpx.AsyncClient, sid: str, body: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]:
@@ -287,8 +289,59 @@ async def test_the_note_sent_with_the_paste_gets_the_conversion_first_and_its_ow
     assert MADE_HEADING not in after and "- Conversions for open roles: 1" in after
 
 
+async def test_a_note_that_keeps_the_year_a_number_still_gets_the_conversion_beside_it(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """A note against a `certain` line converts all the same: the source column stays a number beside the new one,
+    and the root, which sees the conversion as made, says so and names `.undo()`; it never drops the column."""
+    script = default_script()
+    script["root"] = [
+        {"text": "5 rows. Year stays a number; the date role takes the new Year (date), and .undo() takes it back."}
+    ]
+    fake = swap_models("anthropic-vertex", script)
+    sid = await open_spec(client, "line-timeseries-rolling")
+    await paste(client, sid, YEARS)
+
+    events = await say(client, sid, {"text": "keep the year as a number"})
+
+    name, done = events[-1]
+    assert name == "done" and done["dataset"]["version"] == 2
+    profile = {column["name"]: column["dtype"] for column in done["dataset"]["profile"]["columns"]}
+    assert profile["Year"] == "integer" and profile["Year (date)"] == "datetime"
+    assert done["bindings"] == [{"role": "date", "column": "Year (date)"}, {"role": "value", "column": "Emissions"}]
+    [call] = fake.calls
+    seen = call["system"][-1]["text"]
+    assert f"{MADE_HEADING} 1," in seen and "Conversions for open roles:" not in seen
+    assert "<user_data>\ndate: column 'Year' (whole numbers): 5 of 5 cells read as years" in seen
+    assert ", into the new column 'Year (date)', which date takes\n</user_data>" in seen
+
+
+async def test_an_undo_right_after_the_summary_restores_the_paste_exactly(
+    client: httpx.AsyncClient, swap_models
+) -> None:
+    """The conversions are one version on top of the paste: one undo gives back the pasted table as the paste route
+    answered it, its columns, cells and bindings included."""
+    script = default_script()
+    script["root"] = [{"text": "5 rows; Year read as dates in Year (date), 5 of 5 cells."}]
+    swap_models("anthropic-vertex", script)
+    sid = await open_spec(client, "line-timeseries-rolling")
+    pasted = await paste(client, sid, YEARS)
+    pasted_id = read_session(await _session_state(client, sid)).dataset_id
+    assert (await say(client, sid, {"action": "summarize_data"}))[-1][1]["dataset"]["version"] == 2
+
+    undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
+
+    assert undone.status_code == 200, undone.text
+    body = undone.json()
+    for key in ("preview", "profile", "bindings", "warnings", "context_lines", "version"):
+        assert body[key] == pasted[key], key
+    assert body["bindings"] == [{"role": "value", "column": "Emissions"}]
+    view = read_session(await _session_state(client, sid))
+    assert view.dataset_id == pasted_id and view.dataset_history == [] and view.dataset_version == 1
+
+
 async def test_a_refused_note_converts_nothing_and_the_summary_action_then_does(
-    client: httpx.AsyncClient, swap_models, judge
+    client: httpx.AsyncClient, swap_models, judge, services: Services
 ) -> None:
     """The conversions run behind the scope guard: a refused note never reaches them, so the data stays the paste."""
     script = default_script()
@@ -300,12 +353,16 @@ async def test_a_refused_note_converts_nothing_and_the_summary_action_then_does(
         JudgeVerdict(verdict="out_of_scope", lang="en"),  # the note
     ]
     await paste(client, sid, PRICES)
+    before = read_session(await _session_state(client, sid))
 
     refused = await say(client, sid, {"text": "write me an email"})
 
     assert any(name == "refusal" for name, _ in refused) and "dataset" not in refused[-1][1]
     state = await _session_state(client, sid)
-    assert read_session(state).dataset_version == 1 and CONVERSIONS_MADE not in state
+    after = read_session(state)
+    assert (after.dataset_id, after.dataset_version, after.bindings) == (before.dataset_id, 1, before.bindings)
+    assert after.dataset_history == [] and CONVERSIONS_MADE not in state and after.summary_pending is True
+    assert len(services.datasets) == 1  # the paste alone: nothing was stored behind the refusal
     summary = await say(client, sid, {"action": "summarize_data"})
     assert summary[-1][1]["dataset"]["version"] == 2
 

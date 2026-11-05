@@ -8,7 +8,9 @@
   bounds, or the row numbers on an open axis. They land in one data version of
   their own, so one `.undo()` takes back exactly these conversions, and the
   original columns stay. The assistant names each in the summary with its count
-  and the new column's name, and never repeats or drops one. The conversions
+  and the new column's name, and never repeats or drops one, also when the
+  note asks to keep the column as it is: the original stays beside the new
+  column, and the assistant says that `.undo()` takes it back. The conversions
   run behind the scope guard, so a refused note changes nothing. `uncertain`
   lines stay the assistant's one question, a `date_number` offer still waits
   for the user's request, and a later turn never makes a line by itself. The
