@@ -23,8 +23,9 @@
  * `stopping…` belong to plot runs.
  */
 
-import Box from '@mui/material/Box';
 import { useEffect } from 'react';
+
+import Box from '@mui/material/Box';
 
 import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import type { RunState } from 'src/hooks/useAgentSession';
