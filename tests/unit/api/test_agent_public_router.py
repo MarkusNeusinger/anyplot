@@ -519,6 +519,24 @@ class TestCapacity:
         assert seen == [1] and PUBLIC_STREAMS.open == 0
         assert upstream.requests[0].url.path == f"/v1/sessions/{SID}/messages"
 
+    def test_the_queue_and_its_end_reach_the_page_on_the_turn_and_on_its_read(self, client, upstream) -> None:
+        """A turn without pipeline steps clears its queue badge on `started`, the only event that says so."""
+        run = "0123456789abcdef"
+        body = (
+            f'id: {run}.2\nevent: status\ndata: {{"step": "queued", "position": 1, "waiting": 2}}\n\n'
+            f'id: {run}.3\nevent: status\ndata: {{"step": "started", "user": "pub_x"}}\n\n'
+            f"id: {run}.4\nevent: done\ndata: {{}}\n\n"
+        )
+        upstream.handler = lambda request: httpx.Response(200, text=body, headers={"Content-Type": "text/event-stream"})
+
+        for response in (
+            client.post("/agent/session/messages", json={"text": "summarize"}, headers=SESSION),
+            client.get("/agent/session/turn", headers={**SESSION, "Last-Event-ID": f"{run}.1"}),
+        ):
+            assert response.status_code == 200
+            # Its step alone, with its id, so the page can resume after it.
+            assert f'event: status\ndata: {{"step": "started"}}\nid: {run}.3\n' in response.text.replace("\r", "")
+
     def test_a_turn_read_holds_a_slot_and_names_the_session_and_the_run_in_headers_only(self, client, upstream) -> None:
         """Cloud Run logs every URL with the client's address: the run id travels in `Last-Event-ID`."""
         run = "0123456789abcdef"

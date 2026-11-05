@@ -144,7 +144,9 @@ async def test_the_second_user_waits_in_the_queue_then_runs(
     assert second_events[0][0] == "ready"
     assert second_events[1] == ("status", {"step": "queued", "position": 1, "waiting": 1})
     steps = [data["step"] for data in statuses(second_events)]
-    assert steps == ["queued", "adapting", "checking", "rendering", "reviewing"]
+    # The wait's end, once, before the run's own steps.
+    assert steps == ["queued", "started", "adapting", "checking", "rendering", "reviewing"]
+    assert second_events[2] == ("status", {"step": "started"})
     assert next(data for name, data in second_events if name == "plot")["status"] == "ok"
     assert second_events[-1][0] == "done"
     assert runtime.active == {} and (queue.waiting_count, queue.in_flight) == (0, 0)
@@ -621,10 +623,17 @@ async def test_a_data_snippet_waits_for_the_slot_mid_turn(
     queue.release(blocker)
     events = parse_sse((await asyncio.wait_for(turn, 10)).text)
 
-    assert [name for name, _ in events] == ["ready", "status", "message", "done"]
+    assert [name for name, _ in events] == ["ready", "status", "status", "message", "done"]
     assert events[1][1] == {"step": "queued", "position": 1, "waiting": 1}
+    # A turn without pipeline steps: only this status tells the page the wait is over before the reply.
+    assert events[2][1] == {"step": "started"}
     assert len(backend.data_jobs) == 1 and events[-1][1]["dataset"]["version"] == 1
     assert runtime.active == {} and (queue.waiting_count, queue.in_flight) == (0, 0)
+    # A page that lost the stream after `ready` reads the wait and its end again (`agents/turn_log.py`).
+    replay = await client.get(
+        f"/v1/sessions/{sid}/turn", headers={**HEADERS, "Last-Event-ID": f"{events[0][1]['run_id']}.1"}
+    )
+    assert statuses(parse_sse(replay.text)) == [{"step": "queued", "position": 1, "waiting": 1}, {"step": "started"}]
 
 
 async def test_a_turn_books_one_start_for_all_its_sandbox_runs(
@@ -638,7 +647,8 @@ async def test_a_turn_books_one_start_for_all_its_sandbox_runs(
     response = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "run it twice"})
 
     events = parse_sse(response.text)
-    assert not any(data["step"] == "queued" for data in statuses(events))
+    # No wait, so no start to announce either.
+    assert not any(data["step"] in ("queued", "started") for data in statuses(events))
     assert len(backend.data_jobs) == 2 and events[-1][0] == "done"
     assert queue.submit("adm_other", "s-other").waiting  # the turn's one start fills the minute
 

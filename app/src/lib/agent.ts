@@ -1601,6 +1601,8 @@ export type StreamErrorCode = (typeof STREAM_ERROR_CODES)[number];
 export type AgentEvent =
   | { type: 'ready'; runId: string | null }
   | { type: 'queued'; position: number; waiting: number }
+  /** A run that waited in the queue holds its slot now: the wait is over. */
+  | { type: 'started' }
   | {
       type: 'step';
       step: PipelineStep;
@@ -1932,6 +1934,7 @@ export function parseAgentEvent(raw: SseEvent): AgentEvent | null {
         if (!isInt(d.position) || !isInt(d.waiting)) return null;
         return { type: 'queued', position: d.position, waiting: d.waiting };
       }
+      if (d.step === 'started') return { type: 'started' };
       if (!PIPELINE_STEPS.includes(d.step as PipelineStep)) return null;
       return {
         type: 'step',

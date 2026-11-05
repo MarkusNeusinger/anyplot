@@ -176,7 +176,8 @@ _NO_STORE = "private, no-store"
 _EVENT_FIELDS: dict[str, frozenset[str]] = {
     "ready": frozenset({"v", "run_id"}),
     # `attempt` on a pipeline step, plus `outcome` and `findings` (how the round before ended) on
-    # `repairing`, with `defects`, the rubric ids it repairs (`VQ-05`); `position` and `waiting` on `step: "queued"`.
+    # `repairing`, with `defects`, the rubric ids it repairs (`VQ-05`); `position` and `waiting` on `step: "queued"`,
+    # and `step: "started"` alone once a run that waited leaves the queue.
     "status": frozenset({"step", "attempt", "outcome", "findings", "defects", "position", "waiting"}),
     "message": frozenset({"text"}),
     # `version` is the agents service's number of the stored version (ok and needs_attention only);
