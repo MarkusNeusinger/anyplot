@@ -8,4 +8,4 @@
   with the garbage collector paused: the process-wide CPU time also counted
   the test worker's other threads and heap collections, which pushed 3 ms files
   past the 1 s budget (`network-weighted/matplotlib`,
-  `heatmap-periodic-table/plotnine`).
+  `heatmap-periodic-table/plotnine`). (#12563)
