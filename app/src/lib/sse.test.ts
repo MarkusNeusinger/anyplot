@@ -35,12 +35,24 @@ describe('SseParser', () => {
     ]);
   });
 
-  it('ignores comments (pings), id and retry fields, and events without data', () => {
+  it('ignores comments (pings), retry fields and events without data', () => {
+    const parser = new SseParser();
+    const events = parser.feed(': ping\n\nretry: 1000\nevent: done\n\nevent: ready\ndata: {}\n\n');
+    expect(events).toEqual([{ event: 'ready', data: '{}' }]);
+  });
+
+  it('keeps the last event id for every later event until another replaces it', () => {
+    // An id set by an event without data still counts, as the event-stream rules say.
     const parser = new SseParser();
     const events = parser.feed(
-      ': ping\n\nid: 7\nretry: 1000\nevent: done\n\nevent: ready\ndata: {}\n\n'
+      'id: r.1\nevent: done\n\ndata: a\n\nid: r.2\ndata: b\n\nid: bad\u0000\ndata: c\n\n'
     );
-    expect(events).toEqual([{ event: 'ready', data: '{}' }]);
+    expect(events).toEqual([
+      { event: 'message', data: 'a', id: 'r.1' },
+      { event: 'message', data: 'b', id: 'r.2' },
+      // An id with a NUL is ignored: the one before it stays.
+      { event: 'message', data: 'c', id: 'r.2' },
+    ]);
   });
 
   it('accepts CRLF and lone CR line endings, including a CRLF split across chunks', () => {

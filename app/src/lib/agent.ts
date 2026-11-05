@@ -1443,6 +1443,19 @@ export const agentApi = {
       headers: { Accept: 'text/event-stream' },
       signal,
     }),
+  /**
+   * The rest of the session's latest turn after its stream was cut (`GET .../turn`): the
+   * events after `lastEventId`, the last SSE id the page read (`<run_id>.<n>`), then the
+   * turn live until it ends; read with `readSseEvents` like the turn's own stream. The
+   * server runs a turn whose stream the edge lost on to its end, so the page reads its
+   * result here instead of asking for it again. `404 not_found` when another turn is the
+   * latest; `502 upstream` or `503 capacity` when it cannot be read right now.
+   */
+  resumeTurn: (token: string, sid: string, lastEventId: string, signal: AbortSignal) =>
+    agentFetch(`${sessionPath(sid)}/turn`, token, {
+      headers: { Accept: 'text/event-stream', 'Last-Event-ID': lastEventId },
+      signal,
+    }),
   cancel: async (token: string, sid: string) => {
     await agentFetch(`${sessionPath(sid)}/cancel`, token, { method: 'POST' });
   },

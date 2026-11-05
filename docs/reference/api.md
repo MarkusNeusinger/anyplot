@@ -601,6 +601,7 @@ All paths start with `/agent`. A session route takes the session id as
 | `PUT /session/bindings`, `PUT /session/language` | The bindings and the session language |
 | `POST /session/dataset/confirm`, `/undo`, `/to_long`; `GET /session/dataset/data.csv` | The data steps and the data view |
 | `POST /session/messages?theme=` | The chat turn, behind the per-instance stream cap |
+| `GET /session/turn` | The rest of the latest turn after a cut stream, behind the same stream cap; the turn's run id travels in `Last-Event-ID`, a header like the session id, never in the URL |
 | `POST /session/cancel`, `POST /session/outcome` | Stop, and the outcome beacon |
 | `POST /session/versions/{version}/render`, `GET /session/artifacts/{name}?v=&theme=` | The theme toggle and the result files |
 | `POST /session/feedback` | The feedback case, behind `X-Turnstile-Token` and then the per-network hourly cap, so a call without a token never spends the cap. The case's `user_hash` is a salted hash of your tab id, never the id itself |
@@ -638,6 +639,7 @@ The routes mirror the agents service's `/v1` API. All paths below start with
 | `GET /sessions/{sid}/dataset/data.csv` | None | The current data version's canonical CSV, exactly as the agents service stores it (at most 4 MiB), for the data panel's view of every row (`.view_all()`, since 2026-11-02): `text/csv; charset=utf-8` with `Cache-Control: private, no-store` and `X-Content-Type-Options: nosniff`, gzip-compressed when your browser accepts it. Read-only: it needs no confirmation and is not blocked while a turn runs. `422 no_dataset` before any data, `502 too_large` above the cap. An agents service without the route answers `404 not_found` |
 | `POST /sessions/{sid}/dataset/to_long` | none | Make a wide table long for the plot's category and value roles (the page's `.to_long()`, see [Data changes](#data-changes)): the service recomputes its `suggestion` and applies that `pivot_longer` without a model call, as the next version with the default bindings for the new columns, answered like the undo route plus `changes`, unconfirmed. `422 no_suggestion` when the table is not wide for this plot, `409 run_active` while a turn or a render is in flight |
 | `POST /sessions/{sid}/messages?theme=` | `{text}` (at most 2,000 characters), `{"action": "create_plot"}` (the plot from the catalogue plot, also `.start_over()`: it keeps the plot memory's decisions, and no switch's carry), `{"action": "carry_plot"}` (after a library switch: the plot in the new library from its catalogue plot, with the plot memory's decisions and the theme you asked for), `{"action": "summarize_data"}` or `{"action": "example_data"}` (the page's `.example_data()`: the assistant makes example data to try the plot, which the turn's `done` carries as the next dataset version, version 1 in a session without data); the optional query parameter `theme` (`light` or `dark`) is the site theme your page shows, which a plot of the turn renders in unless you asked for a theme in the chat; any other value is `422` | An SSE stream in protocol `anyplot/1`; `413 too_long` above the limit, `409 run_active` while this session has a turn, a theme render or a paste in flight (your other sessions, such as a second browser window, never block it); a full run queue ends the turn's stream with `error {"code": "capacity"}`, and a plot run or data snippet while you already have three such runs queued or running in other sessions with `error {"code": "run_limit"}` (see [SSE protocol](#sse-protocol-anyplot1)). `summarize_data` asks the assistant for the step-1 summary of the data (rows, columns with types and units, missing values, percentages, the proposed bindings, and a question only when the data would be read wrong without the answer) without the scope judge, like `create_plot`; when the stored dataset kept notes pasted with the table (`context_lines`, judged when they were pasted), the turn carries them to the assistant fenced as `<user_notes>`, so it can act on a request in them, such as "make it a line chart" |
+| `GET /sessions/{sid}/turn` | Header `Last-Event-ID: <run_id>.<n>`, the id of the last turn event your page read | An SSE stream in protocol `anyplot/1`: the session's latest turn from its event `n + 1` on, then live until the turn ends (see [Reading a turn again](#reading-a-turn-again)); `404 not_found` when the session's latest turn is another one, `422` for an id of another form, `502 upstream` when the agents service cannot be reached |
 | `POST /sessions/{sid}/cancel` | None | `204`; a turn that still waits leaves the run queue |
 | `POST /sessions/{sid}/outcome` | `{action, version?, reaction?}`: `action` is `copied_code`, `copied_image`, `downloaded_png`, `downloaded_code`, `downloaded_page` (a JavaScript plot's `plot.html`, since 2026-10-31), `opened_preview` (that page shown in the card, since 2026-10-31), `opened_data_view` (the data panel's view of every row, with version 0, since 2026-11-02), `downloaded_data`, `saved_session` or `feedback`; `version` a JSON integer from 0 to 999 (0 for the session); `reaction` only with `feedback`, one of the four reactions; nothing else | `204`: the page's content-free outcome beacon, forwarded to the agents service, which writes the `outcome` telemetry line ([Agent usage telemetry](agent-telemetry.md)); `429 rate_limited` / `daily_limit` past 30 a minute or 2,000 a day per user. The page ignores every error |
 | `POST /sessions/{sid}/versions/{version}/render` | `{"theme": "light"}` or `{"theme": "dark"}`; `version` is 0 to 999, where 0 is the latest version | `{status, reason?, artifacts}` once the render is done (see [Theme toggle](#theme-toggle)) |
@@ -1278,6 +1280,35 @@ maximum plus the 540-second run fit inside the cap, so the BFF never cuts a
 wait short. Errors that happen before the stream starts, such as
 `413 too_long` or an upstream `409 run_active`, arrive as HTTP statuses
 instead.
+
+#### Reading a turn again
+
+Every event of a turn carries the SSE id `<run_id>.<n>`: the `run_id` of its
+`ready` event and the event's number in the turn, from 1 for `ready`. The
+BFF passes an id only in that form; the events it adds itself (`error` and
+`done` after a cut upstream stream) carry none. The agents service also writes
+a `: ping` comment after every 15 seconds without an event, so no hop between
+the agents service and the browser idles while a model call or a render runs.
+
+The connection between your browser and the edge proxy can fail mid-turn, for
+example with an HTTP/3 error, while the agents service runs the turn to its end
+and stores its plot. The session keeps the events of its latest turn, so your
+page can read the rest:
+
+1. Keep the id of the last event you read.
+2. When the stream fails, or ends without `done`, call `GET
+   /sessions/{sid}/turn` with that id in `Last-Event-ID`.
+3. Read the answer like the turn's own stream: the events after that id, then
+   each new one until the turn ends with `done`. A read that is cut again
+   continues from its own last id.
+
+The read never holds or stops the run. A turn whose stream the agents service
+saw end early, because the BFF's connection to it closed, is cancelled as
+before; its read ends without `done`, and the BFF adds `error {"code":
+"upstream"}` and `done {}`. A newer turn replaces the kept one, and the session's
+end drops it. The chat page reads a cut turn again after 1, 2, 4 and 8 seconds,
+with a quiet "connection lost · reconnecting…" line below its progress, and
+shows the error only when every read failed.
 
 ### Agent error responses
 

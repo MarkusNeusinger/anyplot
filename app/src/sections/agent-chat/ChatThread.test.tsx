@@ -265,6 +265,20 @@ describe('ChatThread in-progress line', () => {
     expect(screen.getByTestId('pending-reply')).toHaveTextContent(/^stopping$/);
   });
 
+  it('says a cut stream reconnects, also after the reply arrived, and gives way to a stop', () => {
+    const answered: ChatItem[] = [
+      { id: 1, kind: 'user', text: 'what is on x?' },
+      { id: 2, kind: 'assistant', text: 'Study Hours.' },
+    ];
+    const reconnecting = run({ kind: 'message', reconnecting: true });
+    const { unmount } = renderThread(inFlight(answered, reconnecting));
+    expect(screen.getByTestId('pending-reply')).toHaveTextContent(
+      /^connection lost · reconnecting…$/
+    );
+    unmount();
+    expect(pendingReply(inFlight(answered, { ...reconnecting, stopping: true }))).toBeNull();
+  });
+
   it('leaves a plot run and a pipeline step to the progress timeline, and keeps a queue wait', () => {
     const plotPrompt: ChatItem = {
       id: 1,

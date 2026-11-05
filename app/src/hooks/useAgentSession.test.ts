@@ -3655,6 +3655,293 @@ describe('agentReducer: the card in the thread', () => {
   });
 });
 
+// ---------------------------------------------------------------- a cut stream
+
+const RUN = '0123456789abcdef';
+
+/**
+ * A turn's stream as the BFF numbers it, from event `from` on: with `cut`, the connection then
+ * fails the way a browser reports it (a `TypeError` from the body's read), after the events arrived.
+ */
+function numberedSse(events: [string, unknown][], { from = 1, cut = false } = {}) {
+  const encoder = new TextEncoder();
+  const text = events
+    .map(([event, data], index) => `id: ${RUN}.${from + index}\n${wire(event, data)}`)
+    .join('');
+  let sent = false;
+  const body = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (!sent) {
+        sent = true;
+        controller.enqueue(encoder.encode(text));
+      } else if (cut) {
+        controller.error(new TypeError('network error'));
+      } else {
+        controller.close();
+      }
+    },
+  });
+  return new Response(body, { status: 200, headers: { 'Content-Type': 'text/event-stream' } });
+}
+
+/** The start of a plot turn, up to its repair: what the page saw before the cut. */
+const TURN_START: [string, unknown][] = [
+  ['ready', { v: 'anyplot/1', run_id: RUN }],
+  ['status', { step: 'adapting', attempt: 1 }],
+  ['status', { step: 'repairing', attempt: 2 }],
+];
+/** The rest of it, which the server ran on to and stored as version 1. */
+const TURN_REST: [string, unknown][] = [
+  ['plot', PLOT_OK],
+  ['message', { text: 'Here is your plot.' }],
+  ['done', { llm_calls: 4, tokens: 1000 }],
+];
+
+async function openWithFastReads(routes: Record<string, Handler>) {
+  mockFetch(routes);
+  const hook = renderHook(() => useAgentSession({ ...options, resumeDelaysMs: [0, 0, 0, 0] }));
+  await waitFor(() => expect(hook.result.current.state.phase).toBe('ready'));
+  return hook;
+}
+
+const turnReads = () => calls.filter(call => call.method === 'GET' && call.path.endsWith('/turn'));
+const turnPosts = () => calls.filter(call => call.path.endsWith('/messages'));
+
+describe('useAgentSession: a cut stream', () => {
+  it('reads the rest of a turn whose stream was cut and shows its plot without an error', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () => numberedSse(TURN_START, { cut: true });
+    routes['GET /sessions/S1/turn'] = () => numberedSse(TURN_REST, { from: 4 });
+    const { result } = await openWithFastReads(routes);
+
+    await act(() => result.current.createPlot());
+
+    expect(turnReads().map(call => call.headers['Last-Event-ID'])).toEqual([`${RUN}.3`]);
+    expect(turnReads()[0].headers.Accept).toBe('text/event-stream');
+    expect(result.current.state.items.map(item => item.kind)).toEqual([
+      'action',
+      'plot',
+      'assistant',
+    ]);
+    expect(result.current.state.versions[1]).toBeDefined();
+    expect(result.current.state.run).toBeNull();
+    expect(trackEvent).toHaveBeenCalledWith('agent_turn_resumed', { outcome: 'resumed' });
+  });
+
+  it('goes on reading from where a read that was cut again stopped', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () => numberedSse(TURN_START, { cut: true });
+    let reads = 0;
+    routes['GET /sessions/S1/turn'] = () => {
+      reads += 1;
+      if (reads === 1) throw new TypeError('Failed to fetch'); // the network is not back yet
+      if (reads === 2) return numberedSse(TURN_REST.slice(0, 1), { from: 4, cut: true });
+      return numberedSse(TURN_REST.slice(1), { from: 5 });
+    };
+    const { result } = await openWithFastReads(routes);
+
+    await act(() => result.current.createPlot());
+
+    expect(turnReads().map(call => call.headers['Last-Event-ID'])).toEqual([
+      `${RUN}.3`,
+      `${RUN}.3`,
+      `${RUN}.4`,
+    ]);
+    expect(result.current.state.items.map(item => item.kind)).toEqual([
+      'action',
+      'plot',
+      'assistant',
+    ]);
+  });
+
+  it("reads nothing again when the page's own handling of an event failed", async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () => numberedSse([...TURN_START, ...TURN_REST]);
+    const { result } = await openWithFastReads(routes);
+    trackEvent.mockImplementationOnce(() => {
+      throw new TypeError('a bug in the page');
+    });
+
+    await act(() => result.current.createPlot());
+
+    expect(turnReads()).toHaveLength(0);
+    expect(lastItem(result.current.state.items)).toMatchObject({ kind: 'error' });
+    expect(trackEvent).not.toHaveBeenCalledWith('agent_turn_resumed', expect.anything());
+  });
+
+  it('shows the cut as before when the server holds another turn', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () => numberedSse(TURN_START, { cut: true });
+    routes['GET /sessions/S1/turn'] = () => json(404, { detail: 'not_found', ref: 'r404' });
+    const { result } = await openWithFastReads(routes);
+
+    await act(() => result.current.createPlot());
+
+    expect(turnReads()).toHaveLength(1);
+    expect(lastItem(result.current.state.items)).toMatchObject({ kind: 'error', code: 'network' });
+    expect(trackEvent).toHaveBeenCalledWith('agent_turn_resumed', { outcome: 'gone' });
+  });
+
+  it('shows the error only after every read failed, then reads the cut turn before the same click again', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () => numberedSse(TURN_START, { cut: true });
+    routes['GET /sessions/S1/turn'] = () => {
+      throw new TypeError('Failed to fetch');
+    };
+    const { result } = await openWithFastReads(routes);
+
+    await act(() => result.current.createPlot());
+
+    expect(turnReads()).toHaveLength(4);
+    expect(lastItem(result.current.state.items)).toMatchObject({ kind: 'error', code: 'network' });
+    expect(trackEvent).toHaveBeenCalledWith('agent_turn_resumed', { outcome: 'failed' });
+
+    // The network is back and the user clicks again: the stored version 1 comes, not a version 2.
+    routes['GET /sessions/S1/turn'] = () => numberedSse(TURN_REST, { from: 4 });
+    await act(() => result.current.createPlot());
+
+    expect(turnPosts()).toHaveLength(1);
+    const reads = turnReads();
+    expect(reads).toHaveLength(5);
+    expect(reads[4].headers['Last-Event-ID']).toBe(`${RUN}.3`);
+    expect(result.current.state.items.map(item => item.kind)).toEqual([
+      'action',
+      'error',
+      'plot',
+      'assistant',
+    ]);
+    expect(result.current.state.run).toBeNull();
+  });
+
+  it('never asks again for a plot the cut turn showed before the cut, whatever the late read brings', async () => {
+    const routes = baseRoutes();
+    // The plot arrived, then the stream was cut before the reply and `done`.
+    routes['POST /sessions/S1/messages'] = () =>
+      numberedSse([...TURN_START, TURN_REST[0]], { cut: true });
+    routes['GET /sessions/S1/turn'] = () => {
+      throw new TypeError('Failed to fetch');
+    };
+    const { result } = await openWithFastReads(routes);
+    await act(() => result.current.createPlot());
+    expect(result.current.state.items.map(item => item.kind)).toEqual(['action', 'plot', 'error']);
+
+    // Still no network: the click starts nothing new and says why.
+    await act(() => result.current.createPlot());
+    expect(turnPosts()).toHaveLength(1);
+    expect(lastItem(result.current.state.items)).toMatchObject({ kind: 'error', code: 'network' });
+
+    // A later click is the user's own, and runs.
+    routes['POST /sessions/S1/messages'] = () => sse([...TURN_START, ...TURN_REST]);
+    await act(() => result.current.createPlot());
+    expect(turnPosts()).toHaveLength(2);
+  });
+
+  it('ends at the late read when it brings only the rest of a turn whose plot came before the cut', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () =>
+      numberedSse([...TURN_START, TURN_REST[0]], { cut: true });
+    routes['GET /sessions/S1/turn'] = () => {
+      throw new TypeError('Failed to fetch');
+    };
+    const { result } = await openWithFastReads(routes);
+    await act(() => result.current.createPlot());
+
+    routes['GET /sessions/S1/turn'] = () => numberedSse(TURN_REST.slice(1), { from: 5 });
+    await act(() => result.current.createPlot());
+
+    expect(turnPosts()).toHaveLength(1);
+    expect(result.current.state.items.map(item => item.kind)).toEqual([
+      'action',
+      'plot',
+      'error',
+      'assistant',
+    ]);
+  });
+
+  it('counts a read that finds the turn cancelled as failed, and keeps nothing pending', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () => numberedSse(TURN_START, { cut: true });
+    // The agents service saw the stream go and cancelled the turn: the BFF closes the read so.
+    routes['GET /sessions/S1/turn'] = () =>
+      sse([
+        ['error', { code: 'upstream', ref: 'r-read' }],
+        ['done', {}],
+      ]);
+    const { result } = await openWithFastReads(routes);
+
+    await act(() => result.current.createPlot());
+
+    expect(turnReads()).toHaveLength(1);
+    expect(lastItem(result.current.state.items)).toMatchObject({ kind: 'error', code: 'upstream' });
+    expect(trackEvent).toHaveBeenCalledWith('agent_turn_resumed', { outcome: 'failed' });
+    routes['POST /sessions/S1/messages'] = summaryStream;
+    await act(() => result.current.createPlot());
+    expect(turnReads()).toHaveLength(1); // nothing pending: the next click runs at once
+    expect(turnPosts()).toHaveLength(2);
+  });
+
+  it('sends a different request after the late read, and drops the cut turn once the session changed', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () => numberedSse(TURN_START, { cut: true });
+    routes['GET /sessions/S1/turn'] = () => {
+      throw new TypeError('Failed to fetch');
+    };
+    const { result } = await openWithFastReads(routes);
+    await act(() => result.current.createPlot());
+
+    routes['GET /sessions/S1/turn'] = () => numberedSse(TURN_REST, { from: 4 });
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        ['ready', { v: 'anyplot/1', run_id: 'r2' }],
+        ['message', { text: 'Done.' }],
+        ['done', {}],
+      ]);
+    await act(() => result.current.sendMessage('make the bars red'));
+
+    // The late read brought the plot, and the typed request still went out after it.
+    expect(turnPosts().map(call => call.body)).toEqual([
+      { action: 'create_plot' },
+      { text: 'make the bars red' },
+    ]);
+    expect(result.current.state.items.map(item => item.kind)).toEqual([
+      'action',
+      'error',
+      'plot',
+      'assistant',
+      'user',
+      'assistant',
+    ]);
+
+    // A cut turn the session moved on from is never read late: its `done` would undo the change.
+    routes['POST /sessions/S1/messages'] = () => numberedSse(TURN_START, { cut: true });
+    routes['GET /sessions/S1/turn'] = () => {
+      throw new TypeError('Failed to fetch');
+    };
+    await act(() => result.current.createPlot());
+    const readsBefore = turnReads().length;
+    act(() => result.current.setBinding('x', 'Exam Score'));
+    await waitFor(() => expect(result.current.state.bindings.x).toBe('Exam Score'));
+    routes['POST /sessions/S1/messages'] = summaryStream;
+    await act(() => result.current.createPlot());
+    expect(turnReads()).toHaveLength(readsBefore);
+  });
+
+  it('marks the run as reconnecting while it reads, and clears it when the read starts', () => {
+    const running = agentReducer(initialAgentState('matplotlib'), {
+      type: 'run_start',
+      kind: 'create_plot',
+    });
+    const reconnecting = agentReducer(running, { type: 'run_reconnecting', on: true });
+    expect(reconnecting.run?.reconnecting).toBe(true);
+    expect(
+      agentReducer(reconnecting, { type: 'run_reconnecting', on: false }).run?.reconnecting
+    ).toBe(false);
+    expect(
+      agentReducer(initialAgentState('matplotlib'), { type: 'run_reconnecting', on: true }).run
+    ).toBeNull();
+  });
+});
+
 /** `state` with a typed turn in the thread, as `runTurn` adds it. */
 function appendTurn(state: AgentSessionState): AgentSessionState {
   return agentReducer(state, { type: 'item', item: { kind: 'user', text: 'zeichne sin(x)' } });

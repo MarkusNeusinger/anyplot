@@ -186,6 +186,16 @@
  *
  *   MOCK_OPEN_MS=2500 MOCK_PARSE_MS=4000 MOCK_QUEUE=0 MOCK_STEP_MS=3000 node app/scripts/agent-bff-mock.mjs
  *
+ * A cut stream: every turn event carries the SSE id `<run_id>.<n>`, and `GET .../turn` with
+ * `Last-Event-ID` streams the session's latest turn after that event, live until it ends (`404
+ * not_found` for another turn, `422 invalid` for an id of another form), as the agents service's
+ * turn log does. MOCK_CUT_AFTER (0: never) drops a session's first plot turn's connection after
+ * that many events, the way the edge loses one, while the turn runs on to its end;
+ * MOCK_RESUME_FAILS (0) drops a session's first that many reads of a turn, so the page's
+ * reconnecting line stays visible:
+ *
+ *   MOCK_QUEUE=0 MOCK_STEP_MS=3000 MOCK_CUT_AFTER=3 MOCK_RESUME_FAILS=2 node app/scripts/agent-bff-mock.mjs
+ *
  * The admin fan-out (`.plot_all()`): `POST .../dataset/copy` with `{from_session}` copies the source session's
  * confirmed data, bindings and session language into a session opened with `source: fanout`, with the service's
  * refusals (`404 session_expired`, `409 has_dataset`, `422 no_dataset`, `422 unconfirmed`, `422 invalid`).
@@ -227,6 +237,8 @@ const REPAIR = process.env.MOCK_REPAIR === '1';
 const PARSE_MS = Number(process.env.MOCK_PARSE_MS ?? 400);
 const OPEN_MS = Number(process.env.MOCK_OPEN_MS ?? 0);
 const NO_COPY = process.env.MOCK_NO_COPY === '1';
+const CUT_AFTER = Number(process.env.MOCK_CUT_AFTER ?? 0);
+const RESUME_FAILS = Number(process.env.MOCK_RESUME_FAILS ?? 0);
 /** The public lane's door (`GET /agent/lane`): open unless `MOCK_PUBLIC_LANE=closed`. */
 const PUBLIC_LANE_OPEN = process.env.MOCK_PUBLIC_LANE !== 'closed';
 /**
@@ -1050,7 +1062,7 @@ function cors(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader(
     'Access-Control-Allow-Headers',
-    'Content-Type, Accept, X-Anyplot-Client, X-Admin-Token, X-Anyplot-Anon, X-Anyplot-Session, X-Turnstile-Token'
+    'Content-Type, Accept, Last-Event-ID, X-Anyplot-Client, X-Admin-Token, X-Anyplot-Anon, X-Anyplot-Session, X-Turnstile-Token'
   );
   res.setHeader('Access-Control-Expose-Headers', 'X-Request-Id');
 }
@@ -1081,8 +1093,10 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
   const text = typeof body.text === 'string' ? body.text : '';
   const lower = text.toLowerCase();
   let closed = false;
+  // The edge lost the connection (MOCK_CUT_AFTER): the turn runs on, its events go to the log alone.
+  let detached = false;
   req.on('close', () => {
-    closed = true;
+    if (!detached) closed = true;
   });
   res.writeHead(200, {
     'Content-Type': 'text/event-stream; charset=utf-8',
@@ -1090,10 +1104,30 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
     'X-Request-Id': ref,
     'X-Accel-Buffering': 'no',
   });
+  const log = {
+    runId: randomBytes(8).toString('hex'),
+    events: [],
+    ended: false,
+    readers: new Set(),
+  };
+  session.turnLog = log;
   const send = (event, data) => {
     // The bundle's transcript: the user's words or action and the assistant's replies.
     if (event === 'message') session.transcript.push({ role: 'assistant', text: data.text });
-    if (!closed) res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+    const numbered = `id: ${log.runId}.${log.events.length + 1}\nevent: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
+    log.events.push(numbered);
+    for (const reader of log.readers) reader();
+    if (!closed && !detached) res.write(numbered);
+    if (
+      CUT_AFTER &&
+      !session.cutDone &&
+      PLOT_ACTIONS.has(body.action) &&
+      log.events.length === CUT_AFTER
+    ) {
+      session.cutDone = true;
+      detached = true;
+      res.destroy();
+    }
   };
   session.transcript.push({
     role: 'user',
@@ -1102,7 +1136,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
   // The user turn's number, which a version and a remembered decision carry (`newer` of a switch).
   session.turns += 1;
   const ping = () => {
-    if (!closed) res.write(': ping\n\n');
+    if (!closed && !detached) res.write(': ping\n\n');
   };
   const stopped = () => closed || session.cancelled;
   // Like the real queue, a cancel or a disconnect ends the wait at once.
@@ -1113,7 +1147,7 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
   session.cancelled = false;
   session.changed = null; // set by a data change of this turn, carried in `done.dataset`
   try {
-    send('ready', { v: 'anyplot/1', run_id: randomBytes(8).toString('hex') });
+    send('ready', { v: 'anyplot/1', run_id: log.runId });
     // Pretend `QUEUE_START - 1` other turns wait ahead of this one.
     let queued = Math.max(0, QUEUE_START);
     waitingTurns += queued;
@@ -1405,8 +1439,55 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
       ...(session.dataset ? { suggestion: longSuggestion(session, session.dataset) } : {}),
       ...(session.changed ? { dataset: session.changed } : {}),
     });
+    log.ended = true;
+    for (const reader of log.readers) reader();
     res.end();
   }
+}
+
+/** The turns MOCK_CUT_AFTER cuts: a session's first plot turn only, so its next one runs through. */
+const PLOT_ACTIONS = new Set(['create_plot', 'carry_plot']);
+
+/**
+ * `GET .../turn`: the session's latest turn after the event `Last-Event-ID` names, then live until
+ * it ends, with a ping every 15 s, as the agents service's turn log answers it.
+ */
+function readTurn(req, res, session, ref) {
+  const named = /^([0-9a-f]{16})\.([0-9]{1,6})$/.exec(req.headers['last-event-id'] ?? '');
+  if (!named) return fail(res, 422, 'invalid', ref);
+  const log = session.turnLog;
+  if (!log || log.runId !== named[1] || Number(named[2]) > log.events.length) {
+    return fail(res, 404, 'not_found', ref);
+  }
+  session.resumeFailed ??= 0;
+  if (session.resumeFailed < RESUME_FAILS) {
+    session.resumeFailed += 1;
+    req.socket.destroy(); // no answer at all, as while the network is gone
+    return;
+  }
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'private, no-store',
+    'X-Request-Id': ref,
+    'X-Accel-Buffering': 'no',
+  });
+  let index = Number(named[2]);
+  const flush = () => {
+    while (index < log.events.length) res.write(log.events[index++]);
+    if (log.ended) finish();
+  };
+  const ping = setInterval(() => res.write(': ping\n\n'), 15_000);
+  const finish = () => {
+    clearInterval(ping);
+    log.readers.delete(flush);
+    res.end();
+  };
+  log.readers.add(flush);
+  req.on('close', () => {
+    clearInterval(ping);
+    log.readers.delete(flush);
+  });
+  flush();
 }
 
 // ---------------------------------------------------------------- plot memory
@@ -2727,6 +2808,7 @@ async function route(req, res) {
     res.end();
     return;
   }
+  if (method === 'GET' && rest === '/turn') return readTurn(req, res, session, ref);
   if (method === 'POST' && rest === '/cancel') {
     session.cancelled = true;
     res.writeHead(204, { 'X-Request-Id': ref });

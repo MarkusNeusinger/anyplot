@@ -10,7 +10,8 @@
  * From the click to the result card nothing above the grid's first row comes or
  * goes, so the loader and the grid stand still while the steps advance (a
  * `starting…` line above the grid used to go away at the first step, and the
- * grid jumped up one line beside the loader). A stop adds its line below the grid.
+ * grid jumped up one line beside the loader). A stop adds its line below the grid,
+ * and so does a cut stream while the page reads the rest of the turn again.
  * While it is mounted the page has no scroll anchoring: a repair round's row
  * grows the grid downwards, and the browser, holding a node below it in place,
  * scrolled the page by that row, so the loader and the rows already shown
@@ -29,6 +30,7 @@ import Box from '@mui/material/Box';
 
 import { LoaderSpinner } from 'src/components/LoaderSpinner';
 import type { RunState } from 'src/hooks/useAgentSession';
+import { RECONNECTING_TEXT } from 'src/sections/agent-chat/messages';
 import { RoundGrid } from 'src/sections/agent-chat/RoundGrid';
 import { liveRows } from 'src/sections/agent-chat/timeline';
 import { fontSize, typography } from 'src/theme';
@@ -79,6 +81,8 @@ export function ProgressTimeline({ run }: { run: RunState }) {
         ? 'stopping after this step…'
         : 'stopping…'
     : null;
+  // The stream was cut and the page reads the rest of the turn: quiet, since the run goes on.
+  const reconnecting = run.reconnecting && !stopping ? RECONNECTING_TEXT : null;
   // A stop before the run started replaces `starting…`; one in the queue keeps the position.
   const status = before && !(stopping && !waiting) ? before : null;
 
@@ -116,6 +120,7 @@ export function ProgressTimeline({ run }: { run: RunState }) {
           status && <Box sx={{ color: 'var(--ink)' }}>{status}</Box>
         )}
         {stopping && <Box sx={{ color: 'var(--ink-muted)' }}>{stopping}</Box>}
+        {reconnecting && <Box sx={{ color: 'var(--ink-muted)' }}>{reconnecting}</Box>}
       </Box>
     </Box>
   );

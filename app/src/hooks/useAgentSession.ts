@@ -111,6 +111,18 @@
  * `done` confirms the run ended (at most `STOP_GRACE_MS`), so the next action
  * does not race the stopped run.
  *
+ * A cut stream: the connection between the browser and the edge proxy can fail
+ * (an HTTP/3 error) while the origin runs the turn to its end and stores its
+ * plot. When a turn's stream fails or ends without `done` after its first event,
+ * the run keeps its loader with a quiet "connection lost · reconnecting…" line
+ * and reads the rest of the turn again (`agentApi.resumeTurn`, after the last SSE
+ * id it read) after each of `RESUME_DELAYS_MS`; only when every read failed does
+ * the error show. Such a turn stays pending: the next turn reads it first, while
+ * nothing in the session changed since, and when the cut turn shipped its plot,
+ * before the cut or with that read, the same request again (a retry click) ends
+ * there instead of making the same plot a second time. `agent_turn_resumed{outcome}` counts each
+ * cut: `resumed`, `gone` (the server holds another turn) or `failed`.
+ *
  * Session lifetime: the session, with the pasted data and its renders, is
  * deleted when the page unmounts and on `pagehide` (a reload or a closed tab,
  * sent with `keepalive`); the server's idle sweep is the backstop. Nothing
@@ -170,8 +182,9 @@
  * `agent_data_parsed{status, size_bucket}`, `agent_data_confirmed{size_bucket}`,
  * `agent_data_prepared{changes}`, `agent_data_undo{version}`,
  * `agent_plot_rendered{library, status, repaired, spec}`,
- * `agent_guardrail_block{reason}`, `agent_session_saved{include_data}` and
- * `agent_result_feedback{reaction, include_data, subject}`.
+ * `agent_guardrail_block{reason}`, `agent_session_saved{include_data}`,
+ * `agent_result_feedback{reaction, include_data, subject}` and
+ * `agent_turn_resumed{outcome}`.
  *
  * Usage telemetry: after a copy, a download, a save or a sent feedback, a
  * fire-and-forget beacon (`POST .../outcome`) tells the BFF which action it
@@ -269,6 +282,8 @@ export interface RunState {
   stopping: boolean;
   /** The rounds that ended so far, from each repair step's `outcome` (absent: none yet). */
   rounds?: Round[];
+  /** The turn's stream was cut, and the page waits to read the rest of the turn again (`RESUME_DELAYS_MS`). */
+  reconnecting?: boolean;
 }
 
 export type ThemeImage =
@@ -430,6 +445,83 @@ export type ParseOutcome = 'stored' | 'transcribed' | 'forwarded' | 'failed' | '
  * `.stop()` (`stopped`).
  */
 export type TurnEnd = 'done' | 'error' | 'refused' | 'stopped';
+
+/**
+ * The waits before each read of a turn whose stream was cut (`agentApi.resumeTurn`): four
+ * reads within about 15 s, the last after 8 s, before the page shows the error.
+ */
+export const RESUME_DELAYS_MS: readonly number[] = [1_000, 2_000, 4_000, 8_000];
+
+/** How a cut turn's reads ended, for `agent_turn_resumed{outcome}`. */
+type ResumeOutcome = 'resumed' | 'gone' | 'failed';
+
+/** What one turn's events said, gathered while the page reads them (`runTurn`). */
+interface TurnRead {
+  /** The turn's `done` arrived. */
+  finished: boolean;
+  errorCode: string | null;
+  refused: boolean;
+  refusalCode: string | null;
+  /** A plot result with a stored version arrived in this read. */
+  shipped: boolean;
+  /** The SSE id of the last event read, `<run_id>.<n>`: where a read of the turn again starts. */
+  lastId: string | null;
+}
+
+const freshRead = (): TurnRead => ({
+  finished: false,
+  errorCode: null,
+  refused: false,
+  refusalCode: null,
+  shipped: false,
+  lastId: null,
+});
+
+/**
+ * What a turn's `done` sets in the page: while none of it changed since a cut, the cut turn's
+ * late `done` is still the session's state, so the page may take it.
+ */
+const sessionMark = (state: AgentSessionState): readonly unknown[] => [
+  state.dataset,
+  state.bindings,
+  state.dataConfirmed,
+  state.library,
+  state.plotLanguage,
+  state.memory,
+];
+
+const sameMark = (a: readonly unknown[], b: readonly unknown[]) =>
+  a.length === b.length && a.every((value, index) => Object.is(value, b[index]));
+
+const sameRequest = (a: TurnBody, b: TurnBody) =>
+  'text' in a ? 'text' in b && a.text === b.text : 'action' in b && a.action === b.action;
+
+/** A turn whose stream was cut and could not be read again, which the next turn reads first. */
+interface CutTurn {
+  sid: string;
+  body: TurnBody;
+  lastId: string;
+  mark: readonly unknown[];
+  /** Its plot arrived before the cut: the same request again would make that plot a second time. */
+  shipped: boolean;
+}
+
+/** Resolves after `ms`, or at once when `signal` aborts. */
+function pause(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise(resolve => {
+    if (signal.aborted) {
+      resolve();
+      return;
+    }
+    const done = () => {
+      clearTimeout(timer);
+      signal.removeEventListener('abort', done);
+      resolve();
+    };
+    const timer = setTimeout(done, ms);
+    signal.addEventListener('abort', done, { once: true });
+  });
+}
 
 /**
  * What `parseData` resolves to: its outcome, and how the turn it started ended (null without one,
@@ -680,6 +772,7 @@ type Action =
   | { type: 'run_queued'; position: number; waiting: number }
   | { type: 'run_step'; step: PipelineStep; attempt: number | null; previous?: Round | null }
   | { type: 'run_stopping' }
+  | { type: 'run_reconnecting'; on: boolean }
   | { type: 'run_end' }
   | { type: 'version_add'; version: PlotVersion }
   | { type: 'version_image'; number: number; theme: Theme; image: ThemeImage }
@@ -1309,6 +1402,8 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
       };
     case 'run_stopping':
       return state.run ? { ...state, run: { ...state.run, stopping: true } } : state;
+    case 'run_reconnecting':
+      return state.run ? { ...state, run: { ...state.run, reconnecting: action.on } } : state;
     case 'run_end':
       return { ...state, run: null };
     case 'version_add':
@@ -1351,6 +1446,8 @@ export interface UseAgentSessionOptions {
   token: string;
   /** The session is one of the admin fan-out's (`FanOut`): its telemetry is filed as `fanout`, not `live`. */
   fanout?: boolean;
+  /** The waits before each read of a cut turn; `RESUME_DELAYS_MS` unless a test needs them short. */
+  resumeDelaysMs?: readonly number[];
 }
 
 const GUARDRAIL_REASONS = new Set([
@@ -1400,6 +1497,7 @@ export function useAgentSession({
   locale,
   token,
   fanout = false,
+  resumeDelaysMs = RESUME_DELAYS_MS,
 }: UseAgentSessionOptions) {
   const [state, dispatch] = useReducer(agentReducer, library, initialAgentState);
   const { trackEvent } = useAnalytics();
@@ -1419,6 +1517,8 @@ export function useAgentSession({
   const turnEndRef = useRef<TurnEnd | null>(null);
   // The code of the refusal that ended the last turn, if one did (`out_of_scope`, `needs_data`, ...).
   const turnRefusalRef = useRef<string | null>(null);
+  // The last turn, when its stream was cut and every read of it again failed: the next turn reads it first.
+  const cutTurnRef = useRef<CutTurn | null>(null);
   const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Set synchronously, before the state catches up, so a double click starts nothing twice.
   const themeRef = useRef(false);
@@ -2176,9 +2276,168 @@ export function useAgentSession({
     [safeDispatch, addItem, onPlot, trackEvent]
   );
 
+  /**
+   * Read a turn's events from `response` into the thread and into `read`: `done` once the turn's
+   * `done` arrived, `ended` for a stream that ended without it, `cut` for one whose read failed (a
+   * browser reports a lost connection as a `TypeError` from the body). A failure of the page's own
+   * handling of an event is no cut: it throws, as any other failure does.
+   */
+  const consume = useCallback(
+    async (
+      response: Response,
+      read: TurnRead,
+      signal: AbortSignal
+    ): Promise<'done' | 'ended' | 'cut'> => {
+      if (!response.body) throw new AgentApiError(502, 'upstream');
+      let handling = false;
+      try {
+        for await (const raw of readSseEvents(response.body, signal)) {
+          handling = true;
+          if (raw.id) read.lastId = raw.id;
+          const event = parseAgentEvent(raw);
+          if (event) {
+            onEvent(event);
+            if (event.type === 'error') read.errorCode = event.code;
+            // A refusal arrives as an event of its own; the stream then ends with `done` as usual.
+            if (event.type === 'refusal') {
+              read.refused = true;
+              read.refusalCode = event.code;
+            }
+            if (
+              event.type === 'plot' &&
+              (event.result.status === 'ok' || event.result.status === 'needs_attention')
+            ) {
+              read.shipped = true;
+            }
+            if (event.type === 'done') {
+              read.finished = true;
+              return 'done';
+            }
+          }
+          handling = false;
+        }
+      } catch (err) {
+        if (handling || !(err instanceof TypeError)) throw err;
+        return 'cut';
+      }
+      return 'ended';
+    },
+    [onEvent]
+  );
+
+  /**
+   * Read the rest of a turn whose stream was cut, after each of `delays`, from the last id `read`
+   * holds, until a read reaches `done`. A read that is cut again goes on from where it stopped.
+   * Null when the turn's controller aborted meanwhile (the page unmounted, or a stop the server
+   * did not hear); else how it ended, with what the server answered when it refused the read. A
+   * read that reaches `done` after the BFF's `upstream` error (the agents service saw the turn's
+   * stream end early and cancelled it, so the turn has no result) counts as `failed`: there was
+   * nothing left to read, and reading again would not bring it.
+   */
+  const reattach = useCallback(
+    async (
+      sid: string,
+      read: TurnRead,
+      controller: AbortController,
+      delays: readonly number[]
+    ): Promise<{ outcome: ResumeOutcome; failure: Failure | null } | null> => {
+      safeDispatch({ type: 'run_reconnecting', on: true });
+      try {
+        for (const delay of delays) {
+          await pause(delay, controller.signal);
+          if (controller.signal.aborted || !read.lastId) return null;
+          try {
+            const response = await agentApi.resumeTurn(token, sid, read.lastId, controller.signal);
+            safeDispatch({ type: 'run_reconnecting', on: false });
+            const before = read.errorCode;
+            await consume(response, read, controller.signal);
+            if (read.finished) {
+              const lost = read.errorCode === 'upstream' && before !== 'upstream';
+              return { outcome: lost ? 'failed' : 'resumed', failure: null };
+            }
+          } catch (err) {
+            if (isAbort(err)) return null;
+            // Another turn is the latest (or the session is gone): there is nothing left to read.
+            if (err instanceof AgentApiError && err.status === 404) {
+              return { outcome: 'gone', failure: failureOf(err) };
+            }
+            // A refusal that a later read would get again (a sign-in the page lost, say).
+            if (
+              err instanceof AgentApiError &&
+              err.status >= 400 &&
+              err.status < 500 &&
+              err.status !== 429
+            ) {
+              return { outcome: 'failed', failure: handleFailure(err) };
+            }
+            // No answer, a busy service or a stream cut again: the next read.
+          }
+          safeDispatch({ type: 'run_reconnecting', on: true });
+        }
+        return { outcome: 'failed', failure: null };
+      } finally {
+        safeDispatch({ type: 'run_reconnecting', on: false });
+      }
+    },
+    [token, consume, safeDispatch, handleFailure]
+  );
+
+  /**
+   * The frame of a turn on the page: the run from the start, Stop, and at the end how the turn
+   * ended (`turnErrorRef`, `turnRefusalRef`, `turnEndRef`) and, after a `done`, the plot memory as
+   * the server has it. `work` reads the turn into `read`; a failure it throws becomes the turn's
+   * error line, unless the user stopped the turn.
+   */
+  const driveTurn = useCallback(
+    async (
+      kind: RunState['kind'],
+      work: (controller: AbortController, read: TurnRead) => Promise<void>
+    ): Promise<TurnRead> => {
+      const read = freshRead();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      stoppedRef.current = false;
+      safeDispatch({ type: 'run_start', kind });
+      try {
+        await work(controller, read);
+      } catch (err) {
+        if (!stoppedRef.current && !isAbort(err)) {
+          const failure = handleFailure(err);
+          addItem({ kind: 'error', code: failure.code, ref: failure.ref });
+          read.errorCode = failure.code;
+        }
+      } finally {
+        if (stopTimer.current) clearTimeout(stopTimer.current);
+        stopTimer.current = null;
+        if (stoppedRef.current) addItem({ kind: 'notice', text: 'stopped' });
+        if (abortRef.current === controller) abortRef.current = null;
+        turnErrorRef.current = read.errorCode;
+        turnRefusalRef.current = read.refusalCode;
+        // A stream aborted for another reason (the page unmounted) did not end: no `done`.
+        turnEndRef.current = stoppedRef.current
+          ? 'stopped'
+          : read.errorCode
+            ? 'error'
+            : read.refused
+              ? 'refused'
+              : read.finished
+                ? 'done'
+                : null;
+        safeDispatch({ type: 'run_end' });
+      }
+      // A shipped run adds decisions, the assistant's `forget` removes some, a shipped fresh plot
+      // empties the list: after every `done` the list follows the server.
+      if (read.finished) void refreshMemory();
+      return read;
+    },
+    [safeDispatch, addItem, handleFailure, refreshMemory]
+  );
+
   /** One turn; the code of the error that ended it (`run_limit`, `capacity`, a failed request) lands in
    * `turnErrorRef`, null when it ended without one or never started (`plotTurn`), and how it ended in
-   * `turnEndRef` (`TurnEnd`), null when it never started. */
+   * `turnEndRef` (`TurnEnd`), null when it never started. A turn whose stream was cut is read again
+   * (`reattach`) before any error shows; one that could not be read stays pending, and the next turn
+   * reads it first. */
   const runTurn = useCallback(
     async (body: TurnBody) => {
       const current = stateRef.current;
@@ -2187,21 +2446,36 @@ export function useAgentSession({
       turnEndRef.current = null;
       turnRefusalRef.current = null;
       if (!sid || current.run || busy()) return;
-      let errorCode: string | null = null;
-      // A refusal arrives as an event of its own; the stream then ends with `done` as usual.
-      let refused = false;
-      let refusalCode: string | null = null;
-      const controller = new AbortController();
-      abortRef.current = controller;
-      stoppedRef.current = false;
-      safeDispatch({ type: 'run_start', kind: 'text' in body ? 'message' : body.action });
-      addItem(
-        'text' in body
-          ? { kind: 'user', text: body.text }
-          : { kind: 'action', action: body.action, library: current.library }
-      );
-      let finished = false;
-      try {
+      const cut = cutTurnRef.current;
+      cutTurnRef.current = null;
+      if (cut && cut.sid === sid && sameMark(cut.mark, sessionMark(current))) {
+        // One read, at once: the user asked again, so the network may be back. Its `done` still
+        // fits, since nothing it syncs changed since. The cut was counted when it happened
+        // (`agent_turn_resumed`), so this read is not.
+        const kind = 'text' in cut.body ? 'message' : cut.body.action;
+        // The cut turn's plot, shown before the cut or brought by this read, is what the same
+        // request asks for: asking again would make that plot a second time.
+        const repeats = (shipped: boolean) =>
+          sameRequest(cut.body, body) && (cut.shipped || shipped);
+        const late = await driveTurn(kind, async (controller, read) => {
+          read.lastId = cut.lastId;
+          const resumed = await reattach(sid, read, controller, [0]);
+          // Nothing new starts then, so a read that failed says why the click did nothing.
+          if (resumed?.outcome === 'failed' && !read.finished && repeats(read.shipped)) {
+            addItem({ kind: 'error', code: 'network', ref: null });
+            read.errorCode = 'network';
+          }
+        });
+        if (repeats(late.shipped)) return;
+        if (turnEndRef.current === 'stopped') return;
+        if (!mounted.current || stateRef.current.sessionId !== sid) return;
+      }
+      await driveTurn('text' in body ? 'message' : body.action, async (controller, read) => {
+        addItem(
+          'text' in body
+            ? { kind: 'user', text: body.text }
+            : { kind: 'action', action: body.action, library: current.library }
+        );
         const response = await agentApi.postMessage(
           token,
           sid,
@@ -2209,56 +2483,31 @@ export function useAgentSession({
           controller.signal,
           siteThemeRef.current
         );
-        if (!response.body) throw new AgentApiError(502, 'upstream');
-        for await (const raw of readSseEvents(response.body, controller.signal)) {
-          const event = parseAgentEvent(raw);
-          if (!event) continue;
-          onEvent(event);
-          if (event.type === 'error') errorCode = event.code;
-          if (event.type === 'refusal') {
-            refused = true;
-            refusalCode = event.code;
-          }
-          if (event.type === 'done') {
-            finished = true;
-            break;
-          }
+        // The BFF always ends a turn with `done`: a stream without it, or one that failed (an HTTP/3
+        // error between the browser and the edge, say), was cut, while the server may run the turn on.
+        const end = await consume(response, read, controller.signal);
+        if (end === 'done') return;
+        const failure: Failure = { code: end === 'cut' ? 'network' : 'upstream', ref: null };
+        const resumed = read.lastId ? await reattach(sid, read, controller, resumeDelaysMs) : null;
+        if (resumed) trackEvent('agent_turn_resumed', { outcome: resumed.outcome });
+        if (read.finished || stoppedRef.current || controller.signal.aborted) return;
+        // The server's own answer says more than the cut: a session that is gone, a sign-in.
+        const shown =
+          resumed?.failure && resumed.failure.code !== 'not_found' ? resumed.failure : failure;
+        addItem({ kind: 'error', code: shown.code, ref: shown.ref });
+        read.errorCode = shown.code;
+        if (resumed?.outcome === 'failed' && read.lastId) {
+          cutTurnRef.current = {
+            sid,
+            body,
+            lastId: read.lastId,
+            mark: sessionMark(stateRef.current),
+            shipped: read.shipped,
+          };
         }
-        if (!finished && !stoppedRef.current) {
-          // The BFF always ends a turn with `done`; a stream without it was cut.
-          addItem({ kind: 'error', code: 'upstream', ref: null });
-          errorCode = 'upstream';
-        }
-      } catch (err) {
-        if (!stoppedRef.current && !isAbort(err)) {
-          const failure = handleFailure(err);
-          addItem({ kind: 'error', code: failure.code, ref: failure.ref });
-          errorCode = failure.code;
-        }
-      } finally {
-        if (stopTimer.current) clearTimeout(stopTimer.current);
-        stopTimer.current = null;
-        if (stoppedRef.current) addItem({ kind: 'notice', text: 'stopped' });
-        if (abortRef.current === controller) abortRef.current = null;
-        turnErrorRef.current = errorCode;
-        turnRefusalRef.current = refusalCode;
-        // A stream aborted for another reason (the page unmounted) did not end: no `done`.
-        turnEndRef.current = stoppedRef.current
-          ? 'stopped'
-          : errorCode
-            ? 'error'
-            : refused
-              ? 'refused'
-              : finished
-                ? 'done'
-                : null;
-        safeDispatch({ type: 'run_end' });
-      }
-      // A shipped run adds decisions, the assistant's `forget` removes some, a shipped fresh plot
-      // empties the list: after every `done` the list follows the server.
-      if (finished) void refreshMemory();
+      });
     },
-    [token, safeDispatch, addItem, onEvent, handleFailure, busy, refreshMemory]
+    [token, addItem, consume, reattach, driveTurn, busy, trackEvent, resumeDelaysMs]
   );
 
   /** `.create_plot()`, `.start_over()`: the fresh plot from the catalogue code, without the plot memory's decisions. */

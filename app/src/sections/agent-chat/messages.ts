@@ -45,6 +45,12 @@ export const ERROR_TEXT: Record<string, string> = {
   bot_check_unavailable: 'the browser check is not available right now',
 };
 
+/**
+ * The run's quiet line while the page reads the rest of a turn whose stream was cut: the
+ * server runs the turn on, so its result is still to come and nothing reads as an error yet.
+ */
+export const RECONNECTING_TEXT = 'connection lost · reconnecting…';
+
 /** Why a `plot` event shipped no render (`failed` or `not_ready`). */
 export const PLOT_FAILED_TEXT: Record<string, string> = {
   validation: 'the adapted code did not pass the safety checks',

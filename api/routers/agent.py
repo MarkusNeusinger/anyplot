@@ -40,7 +40,7 @@ from typing import Annotated, Any, Literal
 from urllib.parse import urlsplit
 
 import httpx
-from fastapi import APIRouter, Body, Depends, Path, Query, Request, Response
+from fastapi import APIRouter, Body, Depends, Header, Path, Query, Request, Response
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.sse import EventSourceResponse, ServerSentEvent
@@ -111,6 +111,10 @@ MAX_FEEDBACK_CHARS = 500
 SPEC_ID_PATTERN = r"^[a-z0-9-]{1,100}$"
 SESSION_ID_PATTERN = r"^[A-Za-z0-9_-]{1,128}$"
 MEMORY_ENTRY_ID_PATTERN = r"^m[0-9]{1,6}$"  # agents/anyplot/memory.py ENTRY_ID_PATTERN; copied, the API image lacks it
+EVENT_ID_PATTERN = r"^[0-9a-f]{16}\.[0-9]{1,6}$"
+"""A chat turn event's SSE id, `<run_id>.<n>`, and the `Last-Event-ID` that reads the turn again after `n`
+(`agents/turn_log.py` `EVENT_ID_PATTERN`; copied, because the API image does not ship the agents package)."""
+_EVENT_ID = re.compile(EVENT_ID_PATTERN)
 
 ARTIFACT_MEDIA_TYPES: dict[str, str] = {
     "plot-light.png": "image/png",
@@ -915,11 +919,14 @@ async def _open_stream(
     json_body: Any = None,
     params: dict[str, str | int] | None = None,
     accept: str | None = None,
+    extra_headers: dict[str, str] | None = None,
 ) -> httpx.Response:
     """Open a streamed upstream response; the caller closes it. Raises on a non-2xx status."""
     headers = await _upstream_headers(ctx)
     if accept:
         headers["Accept"] = accept
+    if extra_headers:
+        headers.update(extra_headers)
     request = client.build_request(method, f"{ctx.base_url}/v1{path}", json=json_body, params=params, headers=headers)
     response = await client.send(request, stream=True)
     if not response.is_success:
@@ -1053,11 +1060,14 @@ class TurnDeadline:
 
 async def _read_events(
     lines: AsyncIterator[str], deadline: TurnDeadline
-) -> AsyncGenerator[tuple[str | None, str], None]:
-    """Assemble complete SSE events from upstream lines until the loop-time `deadline.at`.
+) -> AsyncGenerator[tuple[str | None, str, str | None], None]:
+    """Assemble complete SSE events from upstream lines until the loop-time `deadline.at`: type, data and id.
 
-    Comments (the upstream's own keep-alive pings) and the `id` and `retry`
-    fields are dropped; the browser gets FastAPI's pings from this route.
+    Comments (the upstream's own keep-alive pings) and the `retry` field are
+    dropped; the browser gets FastAPI's pings from this route, which writes one
+    after every 15 s without an event (`fastapi.sse._PING_INTERVAL`), so no hop
+    between the browser and here idles while a step runs. An event's `id`
+    passes only in the form the agents service writes (`EVENT_ID_PATTERN`).
     Raises TimeoutError when the deadline passes. The deadline is read before
     every line, so the caller may move it between events. An event over its
     cap (`_MAX_EVENT_CHARS`, or `_MAX_DONE_EVENT_CHARS` for `done`) is dropped
@@ -1065,6 +1075,7 @@ async def _read_events(
     only be known once the event is complete.
     """
     event_type: str | None = None
+    event_id: str | None = None
     data: list[str] = []
     size = 0
     while True:
@@ -1076,8 +1087,8 @@ async def _read_events(
                 return
         if not line:
             if (event_type is not None or data) and size <= _event_cap(event_type):
-                yield event_type, "\n".join(data)
-            event_type, data, size = None, [], 0
+                yield event_type, "\n".join(data), event_id
+            event_type, event_id, data, size = None, None, [], 0
             continue
         if line.startswith(":"):
             continue
@@ -1085,6 +1096,8 @@ async def _read_events(
         value = value.removeprefix(" ")
         if field == "event":
             event_type = value
+        elif field == "id":
+            event_id = value if _EVENT_ID.fullmatch(value) else None
         elif field == "data":
             size += len(value) + 1
             if size <= _MAX_DONE_EVENT_CHARS:
@@ -1096,8 +1109,8 @@ def _event_cap(event_type: str | None) -> int:
     return _MAX_DONE_EVENT_CHARS if event_type == "done" else _MAX_EVENT_CHARS
 
 
-def _translate(event_type: str | None, data: str, ref: str) -> ServerSentEvent | None:
-    """Re-validate one upstream event; None drops it."""
+def _translate(event_type: str | None, data: str, ref: str, event_id: str | None = None) -> ServerSentEvent | None:
+    """Re-validate one upstream event; None drops it. `event_id`, already checked, is the page's place to resume."""
     fields = _EVENT_FIELDS.get(event_type or "")
     if fields is None:
         return None
@@ -1112,8 +1125,11 @@ def _translate(event_type: str | None, data: str, ref: str) -> ServerSentEvent |
         return ServerSentEvent(
             event="error",
             data={"code": code if isinstance(code, str) and code in _ERROR_CODES else "internal", "ref": ref},
+            id=event_id,
         )
-    return ServerSentEvent(event=event_type, data={key: value for key, value in payload.items() if key in fields})
+    return ServerSentEvent(
+        event=event_type, data={key: value for key, value in payload.items() if key in fields}, id=event_id
+    )
 
 
 def _turn_failed(ref: str, code: str = "upstream") -> list[ServerSentEvent]:
@@ -1165,6 +1181,78 @@ async def open_message_stream(
     finally:
         if response is not None:
             await response.aclose()
+
+
+LastEventId = Annotated[str, Header(alias="Last-Event-ID", pattern=EVENT_ID_PATTERN)]
+
+
+async def open_turn_stream(
+    sid: SessionId, last_event_id: LastEventId, ctx: Ctx, client: Client
+) -> AsyncGenerator[UpstreamStream, None]:
+    """Open the upstream read of the session's latest turn after the event `Last-Event-ID` names, BEFORE the SSE
+    response starts, so `404 not_found` (another turn, or none) reaches the page as an HTTP status.
+
+    An upstream that cannot be reached is `502 upstream` here, not a stream that ends in `error`: the page tries
+    the read again a few times before it gives up, and only a stream it read to `done` ends its turn.
+    """
+    path = f"/sessions/{sid}/turn"
+    deadline = TurnDeadline.open()
+    try:
+        async with asyncio.timeout_at(deadline.at):
+            response = await _open_stream(
+                client, ctx, "GET", path, accept="text/event-stream", extra_headers={"Last-Event-ID": last_event_id}
+            )
+    except (*_UNREACHABLE, TimeoutError) as exc:
+        _log_unreachable(ctx, "GET", path, exc)
+        raise AgentHTTPError(502, "upstream", ctx.request_id) from exc
+    try:
+        yield UpstreamStream(request_id=ctx.request_id, response=response, deadline=deadline)
+    finally:
+        await response.aclose()
+
+
+async def relay_turn(upstream: UpstreamStream) -> AsyncGenerator[ServerSentEvent, None]:
+    """Relay one chat turn's upstream stream as SSE `anyplot/1`, every event with its id; always ends with `done`.
+
+    Queued time does not count toward the turn's budget, as it does not count
+    toward the agents service's own deadline: every `status{step:"queued"}`
+    restarts the budget with the queue's heartbeat on top, and so does the first
+    event after the wait, when the run has started. Nothing moves the turn past
+    `AGENT_TURN_MAX_S`: a queued turn whose run could no longer finish before it
+    ends with `error{code:"capacity"}` there, and closing the upstream stream takes
+    it out of the queue before it spends a token.
+    """
+    finished = False
+    queued = False
+    if upstream.response is not None:
+        lines = upstream.response.aiter_lines()
+        try:
+            async with aclosing(_read_events(lines, upstream.deadline)) as events:
+                async for event_type, data, event_id in events:
+                    relayed = _translate(event_type, data, upstream.request_id, event_id)
+                    if relayed is None:
+                        continue
+                    is_queued = relayed.event == "status" and relayed.data.get("step") == _QUEUED_STEP
+                    if is_queued and not upstream.deadline.restart(queued=True):
+                        logger.info("agent turn left the queue at AGENT_TURN_MAX_S (ref %s)", upstream.request_id)
+                        for failure in _turn_failed(upstream.request_id, "capacity"):
+                            yield failure
+                        finished = True
+                        break
+                    if queued and not is_queued:
+                        upstream.deadline.restart(queued=False)
+                    queued = is_queued
+                    yield relayed
+                    if relayed.event == "done":
+                        finished = True
+                        break
+        except (httpx.HTTPError, TimeoutError) as exc:
+            logger.warning("agent upstream stream failed (ref %s): %s", upstream.request_id, type(exc).__name__)
+    if not finished:
+        # Unreachable, cut off, out of time, or ended without `done`: the
+        # browser always learns that the turn is over.
+        for failure in _turn_failed(upstream.request_id):
+            yield failure
 
 
 # ============================================================================
@@ -1454,47 +1542,23 @@ async def get_dataset_csv(sid: SessionId, request: Request, ctx: Ctx, client: Cl
 async def post_message(
     upstream: UpstreamStream = Depends(open_message_stream),
 ) -> AsyncGenerator[ServerSentEvent, None]:
-    """Relay one chat turn as SSE `anyplot/1`; always ends with a `done` event.
+    """Relay one chat turn as SSE `anyplot/1` (`relay_turn`); always ends with a `done` event."""
+    async with aclosing(relay_turn(upstream)) as events:
+        async for event in events:
+            yield event
 
-    Queued time does not count toward the turn's budget, as it does not count
-    toward the agents service's own deadline: every `status{step:"queued"}`
-    restarts the budget with the queue's heartbeat on top, and so does the first
-    event after the wait, when the run has started. Nothing moves the turn past
-    `AGENT_TURN_MAX_S`: a queued turn whose run could no longer finish before it
-    ends with `error{code:"capacity"}` there, and closing the upstream stream takes
-    it out of the queue before it spends a token.
+
+@router.get("/sessions/{sid}/turn", response_class=EventSourceResponse)
+async def get_turn(upstream: UpstreamStream = Depends(open_turn_stream)) -> AsyncGenerator[ServerSentEvent, None]:
+    """The rest of the session's latest turn, for a page that lost the turn's stream: the events after the one
+    `Last-Event-ID` names, then the turn live until it ends; relayed like the turn itself (`relay_turn`).
+
+    A read only: the agents service never holds or stops the run for it. `404 not_found` when the session's
+    latest turn is another one, `422` for an id of another form, `502 upstream` when the service is unreachable.
     """
-    finished = False
-    queued = False
-    if upstream.response is not None:
-        lines = upstream.response.aiter_lines()
-        try:
-            async with aclosing(_read_events(lines, upstream.deadline)) as events:
-                async for event_type, data in events:
-                    relayed = _translate(event_type, data, upstream.request_id)
-                    if relayed is None:
-                        continue
-                    is_queued = relayed.event == "status" and relayed.data.get("step") == _QUEUED_STEP
-                    if is_queued and not upstream.deadline.restart(queued=True):
-                        logger.info("agent turn left the queue at AGENT_TURN_MAX_S (ref %s)", upstream.request_id)
-                        for failure in _turn_failed(upstream.request_id, "capacity"):
-                            yield failure
-                        finished = True
-                        break
-                    if queued and not is_queued:
-                        upstream.deadline.restart(queued=False)
-                    queued = is_queued
-                    yield relayed
-                    if relayed.event == "done":
-                        finished = True
-                        break
-        except (httpx.HTTPError, TimeoutError) as exc:
-            logger.warning("agent upstream stream failed (ref %s): %s", upstream.request_id, type(exc).__name__)
-    if not finished:
-        # Unreachable, cut off, out of time, or ended without `done`: the
-        # browser always learns that the turn is over.
-        for failure in _turn_failed(upstream.request_id):
-            yield failure
+    async with aclosing(relay_turn(upstream)) as events:
+        async for event in events:
+            yield event
 
 
 @router.post("/sessions/{sid}/cancel", status_code=204)
