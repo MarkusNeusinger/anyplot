@@ -53,6 +53,22 @@ Checklist for adding, renaming, or removing a doc:
   `docs/reference/api.md`; workflow behavior → `docs/workflows/`;
   user-facing changes → `docs/contributing.md` (the CLAUDE.md
   documentation rule).
+- **The README's "Engineering highlights", its showcase image and
+  `docs/concepts/ai-workflow.md` move with the mechanism they
+  describe.** Changing the rubric, the review bar, the agent
+  pipeline's bounds, the session idle time, the default model, the
+  library registry or the MCP tools means changing the sentence that
+  states it, in the same PR. `tests/unit/test_readme_claims.py` reads
+  each of those values from its source and fails until the text
+  follows; it also checks every relative link and anchor of both
+  docs and the About page's copy of the rubric. A count that only
+  grows (merged pull requests) is written as a floor, "more than N",
+  bounded by the test's `MERGED_PRS_SNAPSHOT`, which every release
+  updates.
+  The showcase image (`docs/assets/readme-showcase.png`) is redrawn
+  from live data by `scripts/readme_showcase.py`, at every release
+  (`agentic/commands/release.md` step 4) and whenever a pick or the
+  layout changes.
 - **When a concept, path, or term changes, sweep the whole doc
   surface for the old form** — don't rely on remembering which docs
   cite it:

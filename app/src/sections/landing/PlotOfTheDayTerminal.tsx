@@ -4,12 +4,28 @@ import Box from '@mui/material/Box';
 
 import { GITHUB_URL } from 'src/constants';
 import { useAnalytics } from 'src/hooks';
+import { useAgentEligibility } from 'src/hooks/useAgentEligibility';
 import { useTheme } from 'src/hooks/useLayoutContext';
 import type { PlotOfTheDayData } from 'src/hooks/usePlotOfTheDay';
-import { specPath } from 'src/routes/paths';
+import { agentChatPath, publicAgentChatPath, specPath } from 'src/routes/paths';
+import { USE_MY_DATA_LABEL } from 'src/sections/spec-detail/LibraryPills';
 import { colors, typography } from 'src/theme';
 import { buildSrcSet, getFallbackSrc } from 'src/utils/responsiveImage';
 import { selectPreviewUrl } from 'src/utils/themedPreview';
+
+/** `agent_open{source}` for the chat opened from this card (`docs/reference/plausible.md`). */
+const AGENT_SOURCE = 'plot_of_the_day';
+
+/** A text action in the prompt header, beside the filename: muted, green on hover. */
+const headerActionSx = {
+  flexShrink: 0,
+  whiteSpace: 'nowrap',
+  color: 'inherit',
+  textDecoration: 'none',
+  transition: 'color 0.2s',
+  '&:hover': { color: colors.primary },
+  '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: 2 },
+} as const;
 
 interface PlotOfTheDayTerminalProps {
   potd: PlotOfTheDayData | null;
@@ -40,6 +56,9 @@ export function PlotOfTheDayTerminal({
 }: PlotOfTheDayTerminalProps) {
   const { isDark } = useTheme();
   const { trackEvent } = useAnalytics();
+  // `.use_my_data()` for the plot of the day: one eligibility request per view, as on the
+  // spec pages; no entry while it probes, for a closed lane, or for an ineligible pair.
+  const agentLane = useAgentEligibility(potd?.spec_id, potd?.library_id);
   const previewUrl = selectPreviewUrl(potd, isDark);
   if (!potd || !previewUrl) return null;
 
@@ -70,6 +89,20 @@ export function PlotOfTheDayTerminal({
   const displayFilename = `plots/${potd.spec_id}/${potd.library_id}${ext}`;
   const implPath = specPath(potd.spec_id, potd.language, potd.library_id);
   const githubFileUrl = `${GITHUB_URL}/blob/main/plots/${potd.spec_id}/implementations/${potd.language}/${potd.library_id}${ext}`;
+  // The public chat is an ordinary route; the admin chat needs a full page load so
+  // Cloudflare Access can intercept the /debug path. The chat records `agent_open`.
+  const agentLink =
+    agentLane === 'public'
+      ? {
+          component: RouterLink,
+          to: publicAgentChatPath(potd.spec_id, potd.library_id, potd.language, AGENT_SOURCE),
+        }
+      : agentLane === 'admin'
+        ? {
+            component: 'a' as const,
+            href: agentChatPath(potd.spec_id, potd.library_id, potd.language, AGENT_SOURCE),
+          }
+        : null;
 
   return (
     <Box
@@ -100,6 +133,7 @@ export function PlotOfTheDayTerminal({
       <Box
         sx={{
           display: 'flex',
+          flexWrap: 'wrap',
           alignItems: 'center',
           gap: 0.75,
           px: { xs: 2, md: 3 },
@@ -147,33 +181,60 @@ export function PlotOfTheDayTerminal({
         >
           {displayFilename}
         </Box>
+        {/* The actions. With `.use_my_data()` beside it, the pair takes its own line on a
+            phone, right-aligned below the filename, so the filename keeps its width. */}
         <Box
-          component="a"
-          href={githubFileUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Open source on GitHub"
-          onClick={() =>
-            trackEvent('nav_click', {
-              source: 'potd_terminal_github',
-              target: 'github',
-              spec: potd.spec_id,
-              library: potd.library_id,
-            })
-          }
           sx={{
-            color: 'inherit',
-            textDecoration: 'none',
-            transition: 'color 0.2s',
-            '& .gh-subject': { opacity: 0.7, transition: 'opacity 0.2s' },
-            '&:hover': { color: colors.primary },
-            '&:hover .gh-subject': { opacity: 1 },
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: 1.75,
+            ml: 'auto',
+            flexBasis: agentLink ? { xs: '100%', sm: 'auto' } : 'auto',
           }}
         >
-          <Box component="span" className="gh-subject">
-            github
+          {agentLink && (
+            <Box
+              {...agentLink}
+              aria-label={USE_MY_DATA_LABEL}
+              sx={{
+                ...headerActionSx,
+                animation: 'useMyDataFadeIn 0.3s ease-out',
+                '@keyframes useMyDataFadeIn': { from: { opacity: 0 }, to: { opacity: 1 } },
+                '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
+              }}
+            >
+              .use_my_data()
+            </Box>
+          )}
+          <Box
+            component="a"
+            href={githubFileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open source on GitHub"
+            onClick={() =>
+              trackEvent('nav_click', {
+                source: 'potd_terminal_github',
+                target: 'github',
+                spec: potd.spec_id,
+                library: potd.library_id,
+              })
+            }
+            sx={{
+              color: 'inherit',
+              textDecoration: 'none',
+              transition: 'color 0.2s',
+              '& .gh-subject': { opacity: 0.7, transition: 'opacity 0.2s' },
+              '&:hover': { color: colors.primary },
+              '&:hover .gh-subject': { opacity: 1 },
+            }}
+          >
+            <Box component="span" className="gh-subject">
+              github
+            </Box>
+            .open()
           </Box>
-          .open()
         </Box>
       </Box>
 
