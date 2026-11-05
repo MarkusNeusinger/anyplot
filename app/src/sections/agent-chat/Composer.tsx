@@ -34,8 +34,8 @@ import { attachmentLabel } from 'src/sections/agent-chat/attachmentText';
 import { ExampleDataLine } from 'src/sections/agent-chat/ExampleData';
 import { FILE_ACCEPT } from 'src/sections/agent-chat/fileText';
 import {
-  ATTACHMENT_LINE,
   ATTACHMENT_PLACEHOLDER,
+  attachmentWaitLine,
   describeDataFailure,
   ERROR_TEXT,
   NO_DATA_PLACEHOLDER,
@@ -96,6 +96,8 @@ export interface ComposerProps {
   stopping: boolean;
   /** The session holds data. */
   hasData: boolean;
+  /** The rows of the session's data, which an attachment replaces when sent; null without data. */
+  dataRows: number | null;
   step2: boolean;
   hasPlot: boolean;
   /** The filled CTA is a plot button: data stored, unconfirmed or without a plot in this library. */
@@ -135,14 +137,15 @@ export function Composer(props: ComposerProps) {
   const { draft, onDraftChange, onPaste, onSubmit, messageRef, createRef } = props;
   const { attachment, attachmentNotice, onRemoveAttachment, dropHint } = props;
   const { canOpen, fileInputRef, onFileChosen } = props;
-  const { ready, busy, running, stopping, hasData, step2, hasPlot, ctaPlot, canCreate } = props;
+  const { ready, busy, running, stopping, hasData, dataRows, step2, hasPlot, ctaPlot, canCreate } =
+    props;
   const { plotAll, chatLocked, libraryCount, fanOutOpen, carryText, stepLine } = props;
   const { confirming, confirmError, pausedUntil, exampleOffer, exampleWorking } = props;
   const { onExampleData, onStop, onPlot, onCreate, onCarry, onPlotAll, keepKeyboardFocus } = props;
   const carry = carryText !== null;
   // A table or a file waits for Enter: its line takes the step's place, and the plot buttons
-  // wait, since they would plot the data before it, or none.
-  const waitLine = attachment ? ATTACHMENT_LINE : stepLine;
+  // wait, since they would plot the data before it, or none. With data, the line says it replaces it.
+  const waitLine = attachment ? attachmentWaitLine(dataRows) : stepLine;
   // Step 2 before this library's first plot: the line above the box says what the CTA does.
   const firstPlot = step2 && !hasPlot;
   const createLine = !attachment && (firstPlot || chatLocked);
