@@ -473,11 +473,12 @@ def test_companion_section_has_a_binding_rule(section: str) -> None:
 
 # The routing obligations CLAUDE.md delegates to `agentic/docs/agent-operations.md`
 # ("that routing is binding"). Each anchor carries an obligation, not a topic,
-# for the same reason as above: the model tier of each kind of subagent, the
-# Gemini lane's limits, the check before a code PR opens, and the condition on
-# a second opinion.
+# for the same reason as above: the model of the main and the planning session,
+# the model tier of each kind of subagent, the Gemini lane's limits, the check
+# before a code PR opens, and the condition on a second opinion.
 AGENT_OPERATIONS_ANCHORS = [
     "spend claude tokens last",
+    "the main session runs on opus; the owner starts a planning session on fable when the plan matters",
     "a subagent runs on opus (`model: opus`) when it changes state outside its own worktree",
     "on sonnet for bounded work inside its own worktree that a command verifies",
     "on haiku only to read or poll",
