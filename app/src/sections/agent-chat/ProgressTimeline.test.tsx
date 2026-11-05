@@ -250,7 +250,7 @@ describe('ProgressTimeline', () => {
     expect(grid.nextElementSibling).toHaveTextContent('leaving the queue…');
   });
 
-  it('keeps a marker slot in every step cell, also for the steps still to come', () => {
+  it('keeps the widths of the step cells, whatever their state and whichever round', () => {
     // A step without a mark had a narrower cell: each step that turned active pushed the ones after it.
     render(<ProgressTimeline run={run(FIRST.slice(0, 1))} />);
     const cells = within(screen.getByRole('table', { name: 'Progress' }))
@@ -259,6 +259,10 @@ describe('ProgressTimeline', () => {
     expect(cells.map(cell => within(cell).queryAllByTestId('step-marker').length)).toEqual([
       1, 1, 1, 1,
     ]);
+    // The first column holds a repair round's longer name unseen, so that row never widens it.
+    const ghost = within(cells[0]).getByText('repairing').closest('[aria-hidden="true"]');
+    expect(ghost).not.toBeNull();
+    expect(ghost).toContainElement(within(cells[0]).getByText('repair'));
   });
 
   it('shows no grid for a turn that has not reached a pipeline step', () => {

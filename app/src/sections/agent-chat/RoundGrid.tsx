@@ -18,6 +18,7 @@
 
 import Box from '@mui/material/Box';
 
+import type { PipelineStep } from 'src/lib/agent';
 import { type CellState, type GridRow, SHORT_STEP } from 'src/sections/agent-chat/timeline';
 import { colors, fontSize, typography } from 'src/theme';
 
@@ -78,14 +79,48 @@ const STATE_WORD: Record<CellState, string> = {
 /** The widest round name (`second try`, `fourth try`), so the label column keeps its width when a repair round joins. */
 const LABEL_WIDTH = '10ch';
 
-/**
- * The first step column holds `adapting` in the first try and `repairing` in a repair round: the
- * longer name sets its width from the start, so the steps after it stay put when that row joins.
- */
-const FIRST_STEP_WIDTH = {
-  full: `${'repairing'.length}ch`,
-  short: `${SHORT_STEP.repairing.length}ch`,
-};
+/** The space between a cell's mark, its name and its arrow. */
+const CELL_GAP = { xs: 0.4, sm: 0.5 } as const;
+
+/** A step's name (the short one on a phone) and, on wider screens, the arrow to the next step. */
+function StepName({
+  step,
+  arrow,
+  ghost = false,
+}: {
+  step: PipelineStep;
+  arrow: boolean;
+  ghost?: boolean;
+}) {
+  return (
+    <Box
+      component="span"
+      aria-hidden={ghost || undefined}
+      sx={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: CELL_GAP,
+        visibility: ghost ? 'hidden' : undefined,
+      }}
+    >
+      <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+        {step}
+      </Box>
+      <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+        {SHORT_STEP[step]}
+      </Box>
+      {arrow ? (
+        <Box
+          component="span"
+          aria-hidden
+          sx={{ color: 'var(--ink-muted)', ml: 0.25, display: { xs: 'none', sm: 'inline' } }}
+        >
+          →
+        </Box>
+      ) : null}
+    </Box>
+  );
+}
 
 export function RoundGrid({
   rows,
@@ -146,7 +181,7 @@ export function RoundGrid({
                   gridColumn: { xs: `${index + 1}`, sm: `${index + 2}` },
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: { xs: 0.4, sm: 0.5 },
+                  gap: CELL_GAP,
                   whiteSpace: 'nowrap',
                   color:
                     cell.state === 'active'
@@ -158,37 +193,20 @@ export function RoundGrid({
                 }}
               >
                 <Marker state={cell.state} />
-                <Box
-                  component="span"
-                  sx={{
-                    display: { xs: 'none', sm: 'inline' },
-                    minWidth: index === 0 ? FIRST_STEP_WIDTH.full : undefined,
-                  }}
-                >
-                  {cell.step}
-                </Box>
-                <Box
-                  component="span"
-                  sx={{
-                    display: { xs: 'inline', sm: 'none' },
-                    minWidth: index === 0 ? FIRST_STEP_WIDTH.short : undefined,
-                  }}
-                >
-                  {SHORT_STEP[cell.step]}
-                </Box>
-                {index < row.cells.length - 1 ? (
+                {index === 0 ? (
+                  // The first column holds `adapting` in the first try and `repairing` in a repair
+                  // round. The longer name, unseen beneath, sizes it from the start, so the steps
+                  // after it stay put when a repair round's row joins.
                   <Box
                     component="span"
-                    aria-hidden
-                    sx={{
-                      color: 'var(--ink-muted)',
-                      ml: 0.25,
-                      display: { xs: 'none', sm: 'inline' },
-                    }}
+                    sx={{ display: 'inline-grid', '& > *': { gridArea: '1 / 1' } }}
                   >
-                    →
+                    <StepName step={cell.step} arrow />
+                    <StepName step="repairing" arrow ghost />
                   </Box>
-                ) : null}
+                ) : (
+                  <StepName step={cell.step} arrow={index < row.cells.length - 1} />
+                )}
               </Box>
             ))}
             <Box
