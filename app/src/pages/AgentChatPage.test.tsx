@@ -2765,12 +2765,15 @@ describe('AgentChatPage attachment', () => {
   it('takes a file from .open() as a chip with its name, and × drops it', async () => {
     await openChat();
     const input = screen.getByTestId('chat-file-input');
+    screen.getByRole('button', { name: 'Attach a data file' }).focus();
     fireEvent.change(input, {
       target: { files: [new File([TABLE], 'scores.csv', { type: 'text/csv' })] },
     });
     expect(
       await screen.findByRole('group', { name: /^Attached file scores\.csv/ })
     ).toHaveTextContent('▤ scores.csv · 4 lines');
+    // The box has the focus, so Enter sends the file instead of opening the chooser again.
+    expect(message()).toHaveFocus();
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_file', {
       kind: 'text',
       encoding: 'utf-8',
