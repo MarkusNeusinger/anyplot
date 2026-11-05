@@ -108,8 +108,8 @@ def _public_path(request: Request) -> str:
 
     nginx serves crawlers by prepending /seo-proxy to the request URI, so an
     error on a proxied page echoed the internal prefix back to the crawler
-    (`{"path": "/seo-proxy/{slug}"}` on any dead spec URL — live verification
-    2026-08-19). Logs keep the full internal path; only the reflected JSON is
+    (`{"path": "/seo-proxy/{slug}"}` on any dead spec URL, verified live).
+    Logs keep the full internal path; only the reflected JSON is
     translated.
     """
     path = request.url.path

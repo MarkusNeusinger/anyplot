@@ -4,7 +4,7 @@ import { colorFor, type MapGraphData, NODE_SIZE } from 'src/hooks/useForceGraphS
 import {
   buildVariantUrl,
   fitToBox,
-  type ForceGraphHandle,
+  type ForceGraphCamera,
   type MapNode,
   nodeAspectRatio,
 } from 'src/pages/MapPage.helpers';
@@ -26,7 +26,7 @@ export function useMapSelection({
 }: {
   graphData: MapGraphData;
   nodeById: Map<string, MapNode>;
-  fgRef: React.RefObject<ForceGraphHandle>;
+  fgRef: React.RefObject<ForceGraphCamera | null>;
 }) {
   const [hoverId, setHoverId] = useState<string | null>(null);
   const lastPanelNodeIdRef = useRef<string | null>(null);

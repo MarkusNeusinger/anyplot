@@ -125,6 +125,18 @@ class TestCandidates:
     def test_a_column_kept_text_on_request_is_no_candidate(self) -> None:
         assert found("Datum,Preis\n26 Nov 2026,1\n25 Nov 2026,2\n", keep_text=["Datum"]) == []
 
+    def test_a_column_a_role_holds_is_no_candidate(self) -> None:
+        """A conversion is a suggestion, like the defaults: it takes a free column only, although a column bound by
+        hand may serve several roles (owner decision of 2026-11-04)."""
+        parsed = parse_dataset("Datum;Preis\n26 Nov 2026;1\n25 Nov 2026;2\n24 Nov 2026;3\n")
+        label = DataRole(name="label", kinds=("text",), required=False, variadic=False, description="")
+        roles = [*parse_roles(ROLLING)[:2], label]
+        free = [Binding(role="value", column="Preis")]
+        held = [*free, Binding(role="label", column="Datum")]
+
+        assert [candidate.role for candidate in candidates(free, roles, parsed.profile, parsed)] == ["date"]
+        assert candidates(held, roles, parsed.profile, parsed) == []
+
     def test_no_open_role_no_check(self) -> None:
         """The paste of the live test reads `Nov 2026` as dates now: every role is bound, nothing to convert."""
         text = "Month\tUsed\tΔ\nNov 2026\t$3000\t+75\nOct 2026\t$2925\t−100\n"

@@ -8,7 +8,7 @@ moves, a link rots, a rule gets tightened in one file and not the other, and
 the guide keeps reading as authoritative while it sends the next agent
 somewhere that no longer exists.
 
-Five cheap pins, none of which needs the database, the network or a checkout of
+Six cheap pins, none of which needs the database, the network or a checkout of
 anything but this repository:
 
 1. every backtick-quoted repo path in the agent-facing files resolves;
@@ -17,7 +17,9 @@ anything but this repository:
 3. every skill the routing table names exists as `.claude/skills/<name>/SKILL.md`;
 4. the rules that are supposed to be mirrored are present on BOTH sides;
 5. `.claude/guardrails.md` stays a companion — every section it carries maps to
-   a binding one-liner in CLAUDE.md, and the file says so about itself.
+   a binding one-liner in CLAUDE.md, and the file says so about itself;
+6. the model routing CLAUDE.md delegates to `agentic/docs/agent-operations.md`
+   is stated there, and CLAUDE.md still points at it.
 
 (4) is deliberately a keyword pin, not a text diff: the two files address
 different audiences and paraphrase each other, so requiring byte equality would
@@ -41,11 +43,13 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 CLAUDE_MD = REPO_ROOT / "CLAUDE.md"
 COPILOT_MD = REPO_ROOT / ".github" / "copilot-instructions.md"
 GUARDRAILS_MD = REPO_ROOT / ".claude" / "guardrails.md"
+AGENT_OPERATIONS_MD = REPO_ROOT / "agentic" / "docs" / "agent-operations.md"
 
 AGENT_FILES = [
     CLAUDE_MD,
     COPILOT_MD,
     GUARDRAILS_MD,
+    AGENT_OPERATIONS_MD,
     REPO_ROOT / "agentic" / "docs" / "project-guide.md",
     REPO_ROOT / "agentic" / "commands" / "prime.md",
 ]
@@ -83,7 +87,7 @@ _FILE_SUFFIXES = {
 
 # Files with no extension are real paths too, and the suffix rule above drops
 # them silently — `api/Dockerfile` and `app/Dockerfile` are named in the guides
-# and would have gone unchecked (Copilot review). Matched on the basename, so
+# and would have gone unchecked. Matched on the basename, so
 # `prism/r` and `app/app/src`, which are prose rather than locations, stay out.
 _EXTENSIONLESS_FILES = {"CODEOWNERS", "Dockerfile", "LICENSE", "Makefile", "Procfile"}
 
@@ -133,7 +137,7 @@ def _candidate_paths(text: str) -> set[str]:
     A span is split on whitespace before the shape test, because a span is not
     always one path: `` `.claude/commands/ → ../agentic/commands/` `` is a
     sentence about two of them, and treating it as a single token let the whole
-    claim through unchecked (Copilot review). Fragments that are not
+    claim through unchecked. Fragments that are not
     path-shaped — the arrow, a command word, a flag — fail the test and drop
     out, which is what makes the split safe.
     """
@@ -146,7 +150,7 @@ def _headings(text: str) -> set[str]:
     Fenced blocks are stripped first. These files are full of shell snippets,
     and a `# Install uv` comment inside one is not a heading — counting it
     would let a dead same-page link pass by matching a line GitHub renders as
-    code (Copilot review).
+    code.
     """
     return {_anchor(h) for h in _HEADING.findall(_FENCE.sub("", text))}
 
@@ -296,9 +300,8 @@ MIRRORED_RULES = {
     # The keywords carry the PROHIBITION as well as the duty: a fragment is
     # added AND no bullet is added to `CHANGELOG.md`. A pin on "changelog.d"
     # alone would stay green if a guide were rewritten to allow both. "new" is
-    # part of the pin since 2026-09-04, when the gate learned to tell a
-    # CORRECTED bullet from an added one — the prohibition is on adding, and
-    # the phrase has to say so.
+    # part of the pin because the gate tells a CORRECTED bullet from an added
+    # one — the prohibition is on adding, and the phrase has to say so.
     "every PR adds a changelog fragment, never a new CHANGELOG.md bullet": [
         "changelog.d/<slug>.md",
         "never a new bullet in `changelog.md`",
@@ -308,22 +311,26 @@ MIRRORED_RULES = {
     "never echo secret values": ["never echo secret"],
     "structural fix over symptomatic fix": ["structural fix over symptomatic fix"],
     # The obligation (fix it, even out of scope) AND its limit (the ~20-line bar,
-    # ask first above it). Copilot's guide used to say the opposite — test only
-    # your own changes, leave pre-existing failures alone — until 2026-10-15.
+    # ask first above it). Copilot's guide once said the opposite — test only
+    # your own changes, leave pre-existing failures alone.
     "fix small build/test blockers, ask first if larger": [
         "fix small build/test blockers directly, even when out of scope",
         "~20 lines",
         "ask first rather than deferring silently",
     ],
-    # Owner decision 2026-10-15: no `pip` fallback for either audience.
+    # No `pip` fallback for either audience.
     "python tooling is uv only": ["`uv` only", "never `pip`", "instead of falling back to `pip`"],
-    # Owner decision 2026-10-15. The pin carries the prohibition and its one
-    # exit (explicit approval), not just the topic "lint".
+    # The pin carries the prohibition and its one exit (explicit approval), not
+    # just the topic "lint".
     "proper lint fixes only, no disable comments": [
         "proper lint fixes only",
         "never use disable comments",
         "unless explicitly approved",
     ],
+    # The obligation is where provenance goes, not only that comments explain:
+    # a pin on "why" alone would stay green if the guides allowed names and
+    # dates in comments again.
+    "comments say why, not who": ["comments say why, not who", "goes into the commit message or the pr description"],
     # The repository's most consequential rule, and the one an agent that opens
     # and edits PRs is most able to break: specs and implementations go through
     # the workflows, and their PRs are merged by `impl-merge`, never by hand.
@@ -331,7 +338,7 @@ MIRRORED_RULES = {
     # The keywords carry the PROHIBITION, not just its subject. A bare
     # "manually merge" would stay green if both guides were rewritten to say
     # agents may do it — the pin would name the rule while protecting the
-    # opposite of it (Copilot review). Both guides were normalised on "never"
+    # opposite of it. Both guides were normalised on "never"
     # so the negative phrase itself is what is matched.
     "never merge a pipeline PR by hand": ["never manually merge", "never bypass"],
 }
@@ -364,7 +371,7 @@ def test_each_guide_names_the_other_as_its_companion() -> None:
     Matched on the companion SENTENCE, not on the other file's name: each guide
     mentions the other elsewhere too — CLAUDE.md in the changelog rule, the
     Copilot guide in several sections — so a name check would stay green with
-    both opening claims deleted (Copilot review).
+    both opening claims deleted.
     """
     claude = _flat(CLAUDE_MD.read_text(encoding="utf-8"))
     copilot = _flat(COPILOT_MD.read_text(encoding="utf-8"))
@@ -404,25 +411,22 @@ def test_guardrails_split_stays_subordinate() -> None:
 # OBLIGATION and not just its subject, so it cannot match some other mention.
 #
 # A section that carries several obligations registers all of them, not just
-# the one its title is about (Copilot review): the delegation section adds the
-# worktree line and the Edit/Write precedence to the model-tier rule, and a
-# single "opus by default" anchor would stay green while either of those was
-# deleted from CLAUDE.md and left living only in the companion file — exactly
-# the drift these tests exist to catch.
+# the one its title is about: the delegation section adds the worktree line and
+# the Edit/Write precedence to the routing rule, and a single anchor on the
+# title would stay green while either of those was deleted from CLAUDE.md and
+# left living only in the companion file — exactly the drift these tests exist
+# to catch. The routing table itself lives in `agentic/docs/agent-operations.md`
+# and is pinned there (AGENT_OPERATIONS_ANCHORS); CLAUDE.md keeps the pointer
+# that makes it binding and the two `agy` prohibitions, which no session may
+# miss.
 GUARDRAIL_SECTION_ANCHORS = {
-    "Pick the agent by the work, and spend Claude tokens last": [
-        "pick the agent by the work, and spend claude tokens last",
+    "Pick the agent by the work": [
+        "pick the agent by the work",
+        "agentic/docs/agent-operations.md",
+        "that routing is binding",
         "all `git` stays inside the agent's own worktree",
         "repo files are modified only with edit/write",
-        "a subagent runs on opus (`model: opus`) when it changes state outside its own worktree",
-        "on sonnet for bounded work inside its own worktree that a command verifies",
-        "on haiku only to read or poll",
-        "escalate to fable for high-risk reviews",
-        "`/gemini-task`",
         "claude never runs `agy` itself",
-        "checks every code pr claude opens before it opens (gemini 3.8 flash;",
-        "runs only when the owner asks for one",
-        "gemini pushes only its `gemini/*` branch and opens only draft prs",
         "never extract, copy, or proxy the agy login",
     ],
     "External-system writes need explicit, named authorization": [
@@ -465,3 +469,54 @@ def test_companion_section_has_a_binding_rule(section: str) -> None:
     claude = _flat(CLAUDE_MD.read_text(encoding="utf-8"))
     missing = [anchor for anchor in GUARDRAIL_SECTION_ANCHORS[section] if anchor.lower() not in claude]
     assert not missing, f"guardrails.md § {section!r} elaborates rules CLAUDE.md no longer states: {missing}"
+
+
+# The routing obligations CLAUDE.md delegates to `agentic/docs/agent-operations.md`
+# ("that routing is binding"). Each anchor carries an obligation, not a topic,
+# for the same reason as above: the model of the main and the planning session,
+# the model tier of each kind of subagent, the Gemini lane's limits, the check
+# before a code PR opens, and the condition on a second opinion.
+AGENT_OPERATIONS_ANCHORS = [
+    "spend claude tokens last",
+    "the main session runs on opus; the owner starts a planning session on fable when the plan matters",
+    "a subagent runs on opus (`model: opus`) when it changes state outside its own worktree",
+    "on sonnet for bounded work inside its own worktree that a command verifies",
+    "on haiku only to read or poll",
+    "escalate to fable for high-risk reviews",
+    "as brief files in `~/projects/anyplot-briefs/` (a `gemini`-labelled issue only when the owner asks for one)",
+    "that the owner works in his interactive agy session",
+    "one package of at most 20 to 25 files per fresh agy subagent",
+    "`/gemini-task`",
+    "gemini pushes only its `gemini/*` branch and opens only draft prs",
+    "which claude reviews before marking them ready",
+    "claude never runs `agy` itself",
+    "never extract, copy, or proxy the agy login",
+    "checks every code pr claude opens before it opens (gemini 3.8 flash;",
+    "diffs only of docs, instruction files, changelog fragments, or `plots/`, diffs under about 20 lines, and "
+    "dependabot bumps excepted",
+    "runs only when the owner asks for one",
+]
+
+
+def test_agent_operations_states_the_routing() -> None:
+    """The routing CLAUDE.md makes binding by reference is actually stated.
+
+    CLAUDE.md keeps only the pointer, so a routing rule deleted from the
+    operations doc would leave CLAUDE.md pointing at a table that no longer
+    says it.
+    """
+    operations = _flat(AGENT_OPERATIONS_MD.read_text(encoding="utf-8"))
+    missing = [anchor for anchor in AGENT_OPERATIONS_ANCHORS if anchor.lower() not in operations]
+    assert not missing, f"agentic/docs/agent-operations.md no longer states: {missing}"
+
+
+def test_agent_operations_defers_to_claude_md() -> None:
+    """The operations doc is binding only through CLAUDE.md, and says so.
+
+    Without that sentence it starts reading as a second authority beside
+    CLAUDE.md, and a disagreement between the two has no tie-breaker.
+    """
+    operations = _flat(AGENT_OPERATIONS_MD.read_text(encoding="utf-8"))
+    assert "`claude.md` is the rule" in operations, (
+        "`agentic/docs/agent-operations.md` must state that CLAUDE.md wins when the two disagree"
+    )

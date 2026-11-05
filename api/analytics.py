@@ -23,8 +23,8 @@ DOMAIN = "anyplot.ai"
 
 # AI fetches go to a SEPARATE Plausible site. Every Plausible event creates a
 # visitor, so routing these into the main site would re-introduce exactly the
-# bot inflation that audit 2026-07-08 (High #7) removed — visitor counts were
-# ~40% too high and the trend lines unusable. A second site keeps the human
+# bot inflation that once made visitor counts ~40% too high and the trend
+# lines unusable. A second site keeps the human
 # numbers clean while still answering "how often does an assistant read this".
 BOT_DOMAIN = "bots.anyplot.ai"
 
@@ -71,9 +71,9 @@ AI_AGENTS: tuple[tuple[str, str, str], ...] = (
     ("grokbot", "grok", "user_directed"),
     ("xai-grok", "grok", "user_directed"),
     # The bare tokens the nginx map already serves (`~*grok`, `~*xai`): xAI's
-    # fetcher was seen sending plain "Grok" (AI-access audit 2026-08-19) and
-    # "xAI-Bot" without the grok substring (kurrentschrift, 2026-08-28). Both
-    # were prerendered but never counted, because nothing above matched them.
+    # fetcher was seen sending plain "Grok" and "xAI-Bot" without the grok
+    # substring. Both were prerendered but never counted, because nothing above
+    # matched them.
     # Last among the xAI patterns so the specific ones keep winning.
     ("grok", "grok", "user_directed"),
     ("xai", "grok", "user_directed"),
@@ -380,8 +380,8 @@ def track_bot_fetch(request: Request, path: str, status: int) -> None:
     """Record an AI or search agent requesting a page (fire-and-forget).
 
     Recorded against BOT_DOMAIN, never the main site: every Plausible event
-    creates a visitor, and mixing these in is what made the human numbers
-    unusable before audit 2026-07-08.
+    creates a visitor, and mixing these in is what once made the human numbers
+    unusable.
 
     Non-agent traffic is ignored, so humans and unclassified bots cost nothing
     beyond a substring scan. The `kind` prop is the one that answers the

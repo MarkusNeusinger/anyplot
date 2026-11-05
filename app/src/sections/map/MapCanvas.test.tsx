@@ -1,6 +1,6 @@
 import { createRef, forwardRef, useImperativeHandle } from 'react';
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 import type { MapForceConfig, MapGraphData } from 'src/hooks/useForceGraphSimulation';
 import type { MapLink, MapNode } from 'src/pages/MapPage.helpers';
@@ -18,11 +18,11 @@ type FgProps = Record<string, unknown>;
 const lastFgProps: { current: FgProps | null } = { current: null };
 
 interface FgInstance {
-  centerAt: ReturnType<typeof vi.fn>;
-  zoom: ReturnType<typeof vi.fn>;
-  d3Force: ReturnType<typeof vi.fn>;
-  d3ReheatSimulation: ReturnType<typeof vi.fn>;
-  refresh: ReturnType<typeof vi.fn>;
+  centerAt: Mock;
+  zoom: Mock;
+  d3Force: Mock;
+  d3ReheatSimulation: Mock;
+  refresh: Mock;
   __forcesWired?: boolean;
 }
 

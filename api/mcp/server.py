@@ -74,11 +74,11 @@ async def get_mcp_db_session() -> AsyncSession:
 # fastmcp's Settings from the environment, so the late setdefault was read by
 # nobody — sessions stayed instance-pinned despite the comment claiming
 # otherwise (verified live: initialize returned an mcp-session-id and requests
-# without it got HTTP 400; AI-access audit 2026-08-19).
+# without it got HTTP 400).
 
 # Initialize FastMCP server. Without an explicit version, serverInfo reports
 # the fastmcp PACKAGE version — clients saw "3.4.5" while /health said the app
-# is 3.1.0 (live verification 2026-08-19).
+# is 3.1.0 (verified live).
 mcp_server = FastMCP("anyplot", version=APP_VERSION)
 
 
@@ -186,8 +186,8 @@ async def search_specs_by_tags(
         # Spec-level filters, passed per category: OR within one, AND across
         # them. The previous flatten-and-OR matched any value in any category,
         # so plot_type=["scatter"] + domain=["finance"] returned the union of
-        # both and plot_type=["finance"] matched finance *domains* (AI-access
-        # research, 2026-10-08). `code` stays deferred on both paths — the
+        # both and plot_type=["finance"] matched finance *domains*. `code`
+        # stays deferred on both paths — the
         # loops below only need code *presence*, probed via non-NULL ids.
         filters: dict[str, list[str]] = {}
         if plot_type:
@@ -339,7 +339,7 @@ async def get_spec_detail(spec_id: str, libraries: list[str] | None = None) -> d
         # The implementation dicts are attached AFTER model_dump: SpecDetailResponse
         # coerces its `implementations` into ImplementationResponse, which has
         # neither spec_id nor website_url, and that coercion silently dropped
-        # the per-implementation URLs once (AI-access audit 2026-08-19).
+        # the per-implementation URLs once.
         implementations = [
             _implementation_payload(spec_id, impl)
             for impl in spec.impls
@@ -414,7 +414,7 @@ async def get_implementation(spec_id: str, library: str) -> dict[str, Any]:
         # Get implementation. The language comes from the library's own DB row —
         # the repository's language_id defaults to "python", which made every
         # R/Julia/JavaScript implementation (28% of the catalogue) answer a
-        # false "not found" through this tool (AI-access audit 2026-08-19).
+        # false "not found" through this tool.
         impl = await impl_repo.get_by_spec_and_library(spec_id, library, lib.language)
         if impl is None or impl.code is None:
             raise ValueError(f"Implementation for '{spec_id}' in library '{library}' not found")

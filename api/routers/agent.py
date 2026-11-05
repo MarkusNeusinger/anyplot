@@ -92,7 +92,7 @@ CLIENT_HEADER_VALUE = "agent-chat/1"
 PATCH too). A custom header forces a CORS preflight, which a foreign origin cannot pass."""
 
 MAX_DATASET_BYTES = 1024 * 1024
-"""Pasted data, "1 MB" of UTF-8 (200 KB before 2026-10-14): the agents parser's `MAX_INPUT_BYTES`, copied
+"""Pasted data, "1 MB" of UTF-8: the agents parser's `MAX_INPUT_BYTES`, copied
 because the API image does not ship the agents package."""
 MAX_CONVERT_BYTES = 5 * 1024 * 1024
 """A dropped binary data file (Excel, OpenDocument, Parquet, Feather, Arrow, NumPy), raw: the agents service's and
@@ -418,7 +418,7 @@ def require_body_within_cap(request: Request) -> None:
     second line; the file conversion takes its body by hand (`convert_dataset_file`), so its
     5 MB file is refused here unread. The conversion also needs a declared length, whatever
     else the request carries: a chunked body, or an HTTP/2 or proxied one with neither header,
-    has none to check (Copilot review of #12194).
+    has none to check.
     """
     declared = request.headers.get("content-length")
     if declared is None:
@@ -850,7 +850,7 @@ def _upstream_error(response: httpx.Response, ref: str, *, binding_errors: bool 
 def _cause(body: Any) -> str | None:
     """The agents service's `cause` of a refused paste, one line of at most 300 characters.
 
-    Owner rule of 2026-10-16: a paste that is refused says what it fails on, such as
+    A paste that is refused says what it fails on, such as
     "the header has 3 fields, but line 3 has 4". The agents service writes that sentence
     from the user's own paste (line numbers, field counts, a column name, the JSON
     reader's error), never from an exception text, so it passes like the binding check
@@ -1261,7 +1261,7 @@ async def switch_library(
     snapshot = await _snapshot_or_404(db, body.spec_id, body.library, ctx)
     payload: dict[str, Any] = {"library": body.library, "snapshot": snapshot.model_dump()}
     if body.source != "menu":
-        # The default stays out: an agents service deployed before `source` forbids unknown fields (Copilot on #12520).
+        # The default stays out: an agents service deployed before `source` forbids unknown fields.
         payload["source"] = body.source
     return await _call_upstream(client, ctx, "POST", f"/sessions/{sid}/library", json_body=payload)
 

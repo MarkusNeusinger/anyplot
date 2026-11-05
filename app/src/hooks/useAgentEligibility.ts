@@ -8,10 +8,9 @@
  * 1. the build has the agent chat (`VITE_ENABLE_AGENT_CHAT`, a literal at
  *    build time: off, everything below is dead code);
  * 2. the public lane's door (`GET /agent/lane`, `useAgentLaneOpen`): while it is
- *    open, everyone opens the public chat (`/agent`), an admin too, so the owner
- *    tests the chat exactly as a visitor sees and uses it (owner decision of
- *    2026-11-04); nothing is asked before the door answers, so no view probes
- *    one lane and then the other;
+ *    open, everyone opens the public chat (`/agent`), an admin too, so the admin
+ *    tests the chat exactly as a visitor sees and uses it; nothing is asked
+ *    before the door answers, so no view probes one lane and then the other;
  * 3. only while the door is closed (the kill switch): local development, or the
  *    admin hint `DebugPage` sets after a successful `/debug/status`, opens the
  *    admin lane (`/debug/agent`), which stays reachable directly for the admin's
