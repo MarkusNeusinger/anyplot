@@ -1,11 +1,13 @@
-""" anyplot.ai
+"""anyplot.ai
 pyramid-basic: Basic Pyramid Chart
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-04-29
 """
 
+import math
 import os
 
+import pandas as pd
 import plotly.graph_objects as go
 
 
@@ -17,67 +19,71 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-# Data — Germany-scale population pyramid (~83M total), values in thousands
-age_groups = ["0–9", "10–19", "20–29", "30–39", "40–49", "50–59", "60–69", "70–79", "80+"]
-male_population = [3800, 4200, 4700, 6300, 6900, 6500, 5800, 3600, 1900]
-female_population = [3600, 3900, 4400, 6100, 6700, 6500, 6200, 4600, 3200]
+# Imprint palette
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+
+# Columns
+AGE_GROUP = "Age Group"  # role: category
+MALE = "Male"  # role: value_left
+FEMALE = "Female"  # role: value_right
+
+# Data: replace this block with your own table, for example df = pd.read_csv("population.csv")
+# Germany-scale population pyramid (~83M total), values in thousands
+df = pd.DataFrame(
+    {
+        AGE_GROUP: ["0–9", "10–19", "20–29", "30–39", "40–49", "50–59", "60–69", "70–79", "80+"],
+        MALE: [3800, 4200, 4700, 6300, 6900, 6500, 5800, 3600, 1900],
+        FEMALE: [3600, 3900, 4400, 6100, 6700, 6500, 6200, 4600, 3200],
+    }
+)
 
 # Plot
+sides = [(MALE, -1), (FEMALE, 1)]
+peak = df[[MALE, FEMALE]].to_numpy().max()
+step = 2 * 10 ** (len(str(int(peak))) - 1)  # tick spacing from the data's magnitude
+limit = math.ceil(peak * 1.1 / step) * step  # symmetric half-range, rounded up to a tick
+tick_vals = [int(k * step) for k in range(-int(limit / step), int(limit / step) + 1)]
+
 fig = go.Figure()
-
-fig.add_trace(
-    go.Bar(
-        y=age_groups,
-        x=[-v for v in male_population],
-        orientation="h",
-        name="Male",
-        marker_color="#009E73",  # Okabe-Ito position 1
-        hovertemplate="Male<br>Age: %{y}<br>Population: %{customdata:,}k<extra></extra>",
-        customdata=male_population,
+for i, (side, sign) in enumerate(sides):
+    fig.add_trace(
+        go.Bar(
+            y=df[AGE_GROUP],
+            x=sign * df[side],
+            orientation="h",
+            name=side,
+            marker_color=IMPRINT_PALETTE[i],
+            customdata=df[side],
+            hovertemplate=side + "<br>Age: %{y}<br>Population: %{customdata:,}k<extra></extra>",
+        )
     )
-)
 
-fig.add_trace(
-    go.Bar(
-        y=age_groups,
-        x=female_population,
-        orientation="h",
-        name="Female",
-        marker_color="#C475FD",  # Okabe-Ito position 2
-        hovertemplate="Female<br>Age: %{y}<br>Population: %{customdata:,}k<extra></extra>",
-        customdata=female_population,
-    )
-)
-
-max_val = max(max(male_population), max(female_population))
-tick_vals = list(range(-8000, 8001, 2000))
-tick_text = [f"{abs(v):,}" for v in tick_vals]
+title = "Population Distribution · pyramid-basic · python · plotly · anyplot.ai"
+title_size = round(16 * min(1.0, 67 / len(title)))
 
 fig.update_layout(
-    title={
-        "text": "Population Distribution · pyramid-basic · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
-        "x": 0.5,
-        "xanchor": "center",
-    },
+    autosize=False,
+    width=800,
+    height=450,
+    title={"text": title, "font": {"size": title_size, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "Population (thousands)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Population (thousands)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "tickvals": tick_vals,
-        "ticktext": tick_text,
-        "range": [-max_val * 1.15, max_val * 1.15],
+        "ticktext": [f"{abs(v):,}" for v in tick_vals],
+        "range": [-limit, limit],
         "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": True,
         "zerolinecolor": INK_SOFT,
-        "zerolinewidth": 2,
+        "zerolinewidth": 1.5,
         "linecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Age Group", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": AGE_GROUP, "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "categoryorder": "array",
-        "categoryarray": age_groups,
+        "categoryarray": list(df[AGE_GROUP]),
         "linecolor": INK_SOFT,
     },
     barmode="overlay",
@@ -86,7 +92,7 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     legend={
-        "font": {"size": 16, "color": INK_SOFT},
+        "font": {"size": 10, "color": INK_SOFT},
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
@@ -96,9 +102,9 @@ fig.update_layout(
         "xanchor": "center",
         "x": 0.5,
     },
-    margin={"l": 120, "r": 80, "t": 150, "b": 100},
+    margin={"l": 70, "r": 40, "t": 80, "b": 60},
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
