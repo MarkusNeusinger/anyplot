@@ -5,4 +5,4 @@
   connection (a 5xx, no answer, a stream's error). A refusal (a 4xx), such
   as a binding the server refused, a paste the parser cannot read, or a
   limit, names its cause in the text and shows no id, which only puzzled
-  visitors.
+  visitors. (#12573)
