@@ -21,4 +21,4 @@
   works or the data is parsed, the heading reads `# bindings — wait while the
   assistant works` (or `… the data is parsed`) and then swaps back. The
   separate line under it read as the heading twice and moved the dropdowns
-  25.5 px as it came and went. (#12569)
+  as it came and went (25.5 px at desktop width, 45 px on a phone). (#12569)
