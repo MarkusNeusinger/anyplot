@@ -7,11 +7,11 @@
   from text waits in a card at its paste: `.use()` makes it the data card, `.discard()` a
   `# table discarded` line. A change to the data, an undo, `.to_long()` and the table and sheet pickers
   update the card where it is. Once the data is confirmed, the header pinned above the thread leads to
-  the card: `.show()` opens it at its place and scrolls there, `.hide()` goes back.
+  the card: `.show()` opens it at its place and scrolls there, `.hide()` goes back. (#12570)
 - **The loader of a running turn keeps its place.** The thread's in-progress line (`working on your
   message`) is laid out as the progress timeline is, the loader first and the words beside it (on a phone
   below it), so when a typed change reaches its first pipeline step and the timeline takes over, the loader
-  stays where it is. It jumped 232 px to the left and 3 px down before.
+  stays where it is. It jumped 232 px to the left and 3 px down before. (#12570)
 - **The summary comes into view after a tall card.** The first reply after a data card scrolls into
   view as it arrives while the focus is in the message box, so on a phone it no longer lands below the
-  fold.
+  fold. (#12570)
