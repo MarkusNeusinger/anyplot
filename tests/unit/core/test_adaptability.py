@@ -40,6 +40,10 @@ from core.spec_roles import Shape, parse_roles
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PLOTS = REPO_ROOT / "plots"
 FIXTURES = Path(__file__).parent / "fixtures" / "adaptability"
+DESIGN = FIXTURES / "design"
+"""The two design examples (docs/concepts/adaptable-code.md, "Two typical files") as the catalogue held them before
+their conversion, as `<spec>/<library>.py` so `library_of` reads the library: the nightly regeneration rewrites the
+catalogue files, which turned line-basic's seaborn file adaptable in #12560 and the test red."""
 
 BAR_GROUPED = parse_roles(
     [
@@ -846,10 +850,10 @@ class TestMutations:
 class TestCatalogue:
     def test_the_two_design_examples(self) -> None:
         """docs/concepts/adaptable-code.md, "Two typical files"."""
-        bar = check_file(PLOTS / "bar-grouped/implementations/python/matplotlib.py")
+        bar = check_file(DESIGN / "bar-grouped/matplotlib.py", PLOTS / "bar-grouped/specification.md")
         assert {"layout", "columns", "interface", "sample-literal", "palette"} <= set(bar.classes())
         assert any("'Q3'" in f.observed for f in found(bar, "sample-literal"))
-        line = check_file(PLOTS / "line-basic/implementations/python/seaborn.py")
+        line = check_file(DESIGN / "line-basic/seaborn.py", PLOTS / "line-basic/specification.md")
         assert {"columns", "interface", "column-literal", "df-comparison"} <= set(line.classes())
         assert any("peak_month = 7" in f.observed for f in found(line, "df-comparison"))
 
