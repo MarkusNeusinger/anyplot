@@ -33,7 +33,7 @@ from agents.anyplot.agent import (
 )
 from agents.anyplot.code.edits import apply_plan
 from agents.anyplot.data.generate import looks_like_formula
-from agents.anyplot.data.parse import HEADERLESS_LIST_WARNING, MAX_INPUT_BYTES
+from agents.anyplot.data.parse import HEADERLESS_LIST_WARNING, MAX_INPUT_BYTES, parse_dataset
 from agents.anyplot.data.transcribe import (
     MAX_TRANSCRIBE_CHARS,
     MAX_TRANSCRIBE_LINES,
@@ -2819,6 +2819,48 @@ async def test_an_open_role_lists_its_conversion_and_the_conversion_fills_it(
 
     undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
     assert undone.status_code == 200 and undone.json()["bindings"] == [{"role": "x", "column": "Hours"}]
+
+
+async def test_a_request_to_read_the_listed_column_in_place_fills_the_open_role(
+    client: httpx.AsyncClient, swap_models, services: Services
+) -> None:
+    """The user asks for the column of a conversion line itself: read in place, it takes the open role, as the
+    line's named conversion would have."""
+    script = default_script()
+    script["root"] = [
+        prepare_call({"op": "set_type", "column": "Price", "type": "number"}),
+        {"text": "Price is read as numbers now, 3 cells, and y takes it."},
+    ]
+    swap_models("anthropic-vertex", script)
+    sid = await open_session(client, with_data=False)
+    pasted = await client.post(
+        f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "Hours,Price\n1,$5\n2,7\n3,$12\n"}
+    )
+    assert pasted.json()["bindings"] == [{"role": "x", "column": "Hours"}]
+    runtime = app.dependency_overrides[get_runtime]()
+    await runtime.write_state(await runtime.session(USER, sid), {SUMMARY_PENDING: None})  # a later turn
+
+    turn = await client.post(f"/v1/sessions/{sid}/messages", headers=HEADERS, json={"text": "read Price as numbers"})
+
+    name, done = parse_sse(turn.text)[-1]
+    assert name == "done" and done["dataset"]["changes"] == ["Price: 3 cells read as numbers, unit '$' removed"]
+    assert [column["name"] for column in done["dataset"]["profile"]["columns"]] == ["Hours", "Price"]
+    assert done["bindings"] == [{"role": "x", "column": "Hours"}, {"role": "y", "column": "Price"}]
+
+
+def test_a_column_read_in_place_counts_as_a_conversion_only_when_a_role_takes_it() -> None:
+    from agents.anyplot.data.prepare import Prepared
+    from agents.anyplot.schemas import Binding
+    from agents.anyplot.tools.session import _conversion_outcome
+
+    profile = parse_dataset("Hours,Price\n1,5\n2,7\n").profile
+    prepared = Prepared(csv="", changes=[], converted={"Price": "Price"})
+    bound = [Binding(role="x", column="Hours"), Binding(role="y", column="Price")]
+
+    assert _conversion_outcome(prepared, profile, bound) == "number"
+    assert _conversion_outcome(prepared, profile, bound[:1]) is None
+    named = Prepared(csv="", changes=[], converted={"Price (number)": "Price"})
+    assert _conversion_outcome(named, profile, bound[:1]) == "number"
 
 
 async def test_a_free_date_column_is_offered_for_an_open_measure_and_made_only_on_request(

@@ -378,14 +378,22 @@ async def switch_plot(
     return {"status": "ok", "switch_requested": True}
 
 
-def _conversion_outcome(prepared: Prepared, profile: DatasetProfile) -> telemetry.ConversionOutcome | None:
-    """What `prepare_data` made for an open role, as the `chat_turn` reports it (`telemetry.ConversionOutcome`)."""
+def _conversion_outcome(
+    prepared: Prepared, profile: DatasetProfile, bindings: list[Binding]
+) -> telemetry.ConversionOutcome | None:
+    """What `prepare_data` made for an open role, as the `chat_turn` reports it (`telemetry.ConversionOutcome`).
+
+    A column read in place (its own source in `converted`) counts only when a role took it: re-typing a column that
+    fills no role is no conversion for an open role.
+    """
     if prepared.row_numbers:
         return "index"
     dtypes = {column.name: column.dtype for column in profile.columns}
-    if not prepared.converted:
+    bound = {binding.column for binding in bindings}
+    made = [name for name, source in prepared.converted.items() if name != source or name in bound]
+    if not made:
         return None
-    return "date" if any(dtypes.get(name) == "datetime" for name in prepared.converted) else "number"
+    return "date" if any(dtypes.get(name) == "datetime" for name in made) else "number"
 
 
 async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolContext) -> dict[str, Any]:
@@ -458,7 +466,7 @@ async def prepare_data(operations: list[dict[str, Any]], tool_context: ToolConte
     # The new dataset id leaves the confirmation's fingerprint behind: the user confirms the new version.
     for key, value in version.delta.items():
         tool_context.state[key] = value
-    if outcome := _conversion_outcome(prepared, parsed.profile):
+    if outcome := _conversion_outcome(prepared, parsed.profile, version.bindings):
         telemetry.note_conversion(session_id, outcome)
     ledger.dataset_changes.extend(prepared.changes)
     ledger.prep_ops.extend(operation.op for operation in parsed_operations)  # the names only, for the telemetry
