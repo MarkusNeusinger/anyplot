@@ -742,6 +742,7 @@ function checkBindings(session, bindings) {
   const errors = [];
   // A column may serve several roles, but once per variadic family (the same series twice).
   const members = new Map();
+  const seenRoles = new Set();
   const bound = new Set();
   for (const { role: name, column } of bindings) {
     const spec = resolveRole(roles, name);
@@ -752,8 +753,11 @@ function checkBindings(session, bindings) {
           ? `role '${name}' takes numbered members such as '${name}1'`
           : `unknown role '${name}'`
       );
-      continue;
     }
+    // In the service's order: a role bound twice is an error after the unknown-role line, whatever the column.
+    if (seenRoles.has(name)) errors.push(`role '${name}' is bound more than once`);
+    seenRoles.add(name);
+    if (!spec) continue;
     const held = members.get(spec.name) ?? new Set();
     if (!columns.has(column)) errors.push(`column '${column}' is not in the dataset`);
     else if (spec.variadic && held.has(column)) {
@@ -763,7 +767,8 @@ function checkBindings(session, bindings) {
         `role '${name}' needs ${spec.kinds.join(' or ')} data, but column '${column}' is ${columns.get(column).dtype}`
       );
     } else bound.add(spec.name);
-    if (spec.variadic) members.set(spec.name, held.add(column));
+    // Only a column the dataset has counts as a family member's, as `check_bindings` keeps it.
+    if (spec.variadic && columns.has(column)) members.set(spec.name, held.add(column));
   }
   const missing = roles.filter(r => r.required && !bound.has(r.name)).map(r => r.name);
   return { errors, bindings, complete: !errors.length && !missing.length, missing_roles: missing };
