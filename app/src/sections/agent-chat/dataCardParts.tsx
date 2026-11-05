@@ -563,7 +563,9 @@ function FamilyChips({
     return hint ? [{ member, text: `${column}: ${hint}` }] : [];
   });
   return (
-    <Box sx={{ minWidth: 0 }}>
+    // On a phone the chips take the card's width under the role's name: beside it they had
+    // room for one chip a line, eight series made eight lines.
+    <Box sx={{ minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'auto' } }}>
       <Box
         component="ul"
         aria-labelledby={labelId}
