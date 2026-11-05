@@ -745,6 +745,20 @@ current one, so after more than five changes the history ends above version 1,
 and an undo with nothing left answers `422 nothing_to_undo`. A new paste
 starts over at version 1 and drops the history.
 
+When the bindings of a paste leave a required role open and a column reads
+as what the role takes without a guess (a column of years as dates, prices
+such as `$5` as numbers, a column of ranges such as `10–25` split into its
+two bounds, or the row numbers on an open axis), the service makes that
+conversion itself on the summary turn of the paste (the `summarize_data`
+action, or the note sent with the paste), before the assistant answers. It
+writes a new column beside the original, binds the role to it, and stores
+version 2 with every such conversion in it, so one undo takes them back. The
+turn's `done` event carries that version, or the assistant's next one on top
+of it, as above, with the conversions' change lines first in `changes`. A
+conversion that would guess, such as the day and month order, the century of
+a two-digit year or the decimal mark, stays the assistant's question, and no
+later turn makes one by itself.
+
 A table that holds the same quantity side by side, such as
 `Sensor_A,Sensor_B,Sensor_C`, on a plot that wants one category column and
 one value column (a box, violin or strip plot) carries `suggestion` in every

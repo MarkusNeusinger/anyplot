@@ -2767,13 +2767,14 @@ async def test_a_prepare_data_turn_carries_the_new_dataset_version_in_done(
 async def test_an_open_role_lists_its_conversion_and_the_conversion_fills_it(
     client: httpx.AsyncClient, swap_models, services: Services
 ) -> None:
-    """Live test of 2026-11-01: the server dry-runs the conversion an open role needs; made, it binds that role."""
+    """Live test of 2026-11-01: the server dry-runs the conversion an open role needs; on the summary turn it makes a
+    `certain` one itself, before the root's first call, and binds that role (`paste_conversions.py`)."""
     from types import SimpleNamespace
 
     convert = {"op": "set_type", "column": "Price", "type": "number", "name": "Price (number)"}
     script = default_script()
-    script["root"] = [prepare_call(convert), {"text": "I read Price as numbers in a new column, 3 cells."}]
-    swap_models("anthropic-vertex", script)
+    script["root"] = [{"text": "3 rows; I read Price as numbers in the new column Price (number), 3 of 3 cells."}]
+    fake = swap_models("anthropic-vertex", script)
     sid = await open_session(client, with_data=False)
     pasted = await client.post(
         f"/v1/sessions/{sid}/dataset", headers=HEADERS, json={"text": "Hours,Price\n1,$5\n2,7\n3,$12\n"}
@@ -2799,9 +2800,19 @@ async def test_an_open_role_lists_its_conversion_and_the_conversion_fills_it(
         "new column Price (number): 3 cells of Price read as numbers, unit '$' removed; Price stays as it is"
     ]
     assert done["bindings"] == [{"role": "x", "column": "Hours"}, {"role": "y", "column": "Price (number)"}]
+    # The root's only call saw the conversion as made, never as a line to make.
+    seen = fake.calls[0]["system"][-1]["text"]
+    assert "- Conversions the server made for open roles before this turn: 1, in a data version of their own" in seen
+    made = (
+        "y: column 'Price' (text): 3 of 3 cells read as numbers, unit '$' removed, into the new column 'Price (number)'"
+    )
+    assert f"<user_data>\n{made}, which y takes\n</user_data>" in seen
+    assert "Conversions for open roles:" not in seen and "- Bindings: complete" in seen
+    assert [name for name, _ in parse_sse(turn.text)].count("message") == 1
     context = SimpleNamespace(state=await _session_state(client, sid), session=SimpleNamespace(id=sid))
     after = await session_context(context)  # type: ignore[arg-type]
     assert "- Bindings: complete" in after and "Conversions for open roles" not in after
+    assert "Conversions the server made" not in after  # summarized: a later turn never hears of them again
 
     undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
     assert undone.status_code == 200 and undone.json()["bindings"] == [{"role": "x", "column": "Hours"}]
@@ -2857,14 +2868,12 @@ async def test_a_free_date_column_is_offered_for_an_open_measure_and_made_only_o
 async def test_a_list_of_values_gets_its_row_numbers_and_undo_takes_them_back(
     client: httpx.AsyncClient, swap_models, services: Services
 ) -> None:
-    """Live test of 2026-11-02: one number column sits on x and y stays open; the row numbers take x, it moves to y."""
+    """Live test of 2026-11-02: one number column sits on x and y stays open; the row numbers take x, it moves to y.
+    A `certain` line, so the server makes it on the summary turn and the root only names it."""
     from types import SimpleNamespace
 
     script = default_script()
-    script["root"] = [
-        prepare_call({"op": "row_number", "name": "index"}),
-        {"text": "x: row number 1 to 6, because the table has no x column."},
-    ]
+    script["root"] = [{"text": "6 rows. x: row number 1 to 6, because the table has no x column."}]
     fake = swap_models("anthropic-vertex", script)
     sid = await open_session(client, with_data=False)
     pasted = await client.post(
@@ -2883,8 +2892,11 @@ async def test_a_list_of_values_gets_its_row_numbers_and_undo_takes_them_back(
     assert done["dataset"]["changes"] == ["new first column index: the rows numbered 1 to 6"]
     assert [column["name"] for column in done["dataset"]["profile"]["columns"]] == ["index", "value"]
     assert done["bindings"] == [{"role": "x", "column": "index"}, {"role": "y", "column": "value"}]
-    answered = json.dumps(fake.calls[-1]["messages"])
-    assert "x: index" in answered and "y: value" in answered  # the reply names the bindings now in force
+    seen = fake.calls[0]["system"][-1]["text"]
+    assert (
+        "<user_data>\ny: no column or conversion filled it; the column 'index' numbers the rows 1 to 6, and x takes "
+        "it; y takes 'value', which x held\n</user_data>"
+    ) in seen
 
     undone = await client.post(f"/v1/sessions/{sid}/dataset/undo", headers=HEADERS)
     assert undone.status_code == 200 and [column["name"] for column in undone.json()["profile"]["columns"]] == ["value"]
