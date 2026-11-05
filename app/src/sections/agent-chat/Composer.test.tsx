@@ -30,6 +30,7 @@ function renderComposer(overrides: Partial<ComposerProps> = {}) {
     running: true,
     stopping: false,
     hasData: true,
+    dataRows: null,
     step2: false,
     hasPlot: false,
     ctaPlot: true,

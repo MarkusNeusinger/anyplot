@@ -15,7 +15,9 @@ import type { DataChange, Failure, TranscriptionState } from 'src/hooks/useAgent
 import type { ColumnProfile, LongSuggestion } from 'src/lib/agent';
 import {
   type BindingRow,
+  columnLabel,
   emptyChoice,
+  fits,
   kindsHint,
   siblingHint,
   signHint,
@@ -585,9 +587,15 @@ export function BindingsBlock({
                   sx={{ ...nativeControlSx, width: '100%' }}
                 >
                   <option value="">{emptyChoice(row)}</option>
+                  {/* A column the role cannot take stays listed, greyed out with the reason,
+                      so the user sees why it is no choice instead of meeting a refusal. */}
                   {columns.map(column => (
-                    <option key={column.name} value={column.name}>
-                      {column.name} ({column.dtype})
+                    <option
+                      key={column.name}
+                      value={column.name}
+                      disabled={column.name !== bound && !fits(row.role, column.dtype)}
+                    >
+                      {columnLabel(row.role, column)}
                     </option>
                   ))}
                 </Box>
