@@ -22,12 +22,12 @@ I'm [Markus Neusinger](https://linkedin.com/in/markus-neusinger/), a physicist w
 - **I know when to push back.** The models know a lot. The job is knowing which question to ask, when to make a model research a point properly, and when a confident answer is wrong. Security is a good example: I know what has to hold, private data and no way to abuse the service, and asking the right question is often enough for a model to find what still needs hardening.
 - **I split, assign, test, and send back.** Work goes to Claude Code, Claude in GitHub Actions, Gemini or Copilot by what it needs and what it costs. I test what comes back and return it until it's right.
 
-This isn't one prompt and a wait. anyplot took almost a year and 869 merged pull requests from my account since 18 November 2025, and what I correct becomes a rule the agents follow. [How anyplot is built with AI agents](docs/concepts/ai-workflow.md) tells the whole story.
+This isn't one prompt and a wait. Since November 2025, more than 850 pull requests from my account have merged, and what I correct becomes a rule the agents follow. [How anyplot is built with AI agents](docs/concepts/ai-workflow.md) tells the whole story.
 
-[![The ridgeline-basic spec, six of its 15 library implementations](https://api.anyplot.ai/og/ridgeline-basic.png)](https://anyplot.ai/ridgeline-basic)
+[![A grid of catalogue plots, one spec in each library, with the catalogue's spec, library, and language counts](docs/assets/readme-showcase.png)](https://anyplot.ai/plots)
 
-*One spec in 15 libraries: the site's live preview card for [ridgeline-basic](https://anyplot.ai/ridgeline-basic)
-shows six of them; the spec page shows all 15.*
+*One spec in each library, drawn from the live catalogue by
+[`scripts/readme_showcase.py`](scripts/readme_showcase.py). [Browse all plots](https://anyplot.ai/plots).*
 
 ---
 

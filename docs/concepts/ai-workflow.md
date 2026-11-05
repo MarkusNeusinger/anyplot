@@ -1,7 +1,7 @@
 # How anyplot is built with AI agents
 
-> **Status (2026-11-05):** the workflow as practiced on this date. The counts in "Where it falls short"
-> (merged pull requests, active days) were taken on 2026-11-04 from `gh` and `git log`.
+> **Status (2026-11-05):** the workflow as practiced on this date. The active-day count in "Where it falls
+> short" was taken on 2026-11-04 from `git log`.
 
 Models write anyplot's code; I lead them. This page describes how that works: who does what, what I bring
 to it, the path a change takes to production, how a correction becomes a rule, and where the approach
@@ -34,7 +34,7 @@ That's what leading the models takes: knowing which question to ask, when an ans
 when the structure starts to turn into a mess. It shows in four ways:
 
 - **Decisions on record.** The [agent chat's design](agent-network.md) names an owner decision, rule, or
-  request 86 times, each with its date and reason. Three examples: a safety check that can't answer
+  request more than 80 times, each with its date and reason. Three examples: a safety check that can't answer
   refuses instead of guessing (2026-10-11); data keeps the precision it came with (2026-10-15); and usage
   telemetry never holds a message, a data value, or a column name (2026-10-16).
 - **Pushing back after testing.** On 2026-10-14 a live test showed plain answers, and even refusals,
@@ -114,9 +114,9 @@ for every line; the stories live in the guardrails file. Three examples:
 
 ## Where it falls short
 
-- **One prompt and waiting doesn't work yet.** anyplot took almost a year of direction: since the first
-  commit on 2025-11-18, 208 of 351 days have a commit under my name, and 869 pull requests from my
-  account have merged.
+- **One prompt and waiting doesn't work yet.** Since the first commit on 2025-11-18, more than 850 pull
+  requests from my account have merged, and up to 2026-11-04, 208 of those 351 days had a commit under
+  my name.
 - **Models make confident mistakes.** A reply described an axis value the plot didn't draw, a summary
   said an agent was working hours after it had stopped, and a green deploy left the site blank. So
   nothing counts as done because a model says it is: tests, reviews by other models, and my own testing

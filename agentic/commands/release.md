@@ -3,7 +3,7 @@
 Cut a new anyplot release: finalize the changelog, bump the version, tag, and publish the GitHub
 release. The release notes are the changelog section **condensed** — never copied verbatim, never
 written from scratch (owner rule, 2026-08-28; the shape is in `CLAUDE.md` § "Changelog +
-releases", the procedure is step 7 below).
+releases", the procedure is step 8 below).
 
 ## Variables
 
@@ -47,14 +47,23 @@ version: $1 (optional — e.g. `3.1.0`; if omitted, propose one from the `[Unrel
      regenerations, coverage milestones — query merged impl PRs or `impl:*:done` labels).
    - The single `**Dependencies:**` bullet under `### Changed` grouping the Dependabot bumps of
      the window (never one bullet per bump).
-4. **Read the diff.** It touches `CHANGELOG.md`, `pyproject.toml`, `uv.lock`, `app/package.json`
-   and the deleted fragments — nothing else. Run `uv lock` if the lock needs more than its own
-   version line.
-5. **Open the release PR** (`release: vX.Y.Z` title) and follow the standard PR follow-through
+4. **Refresh the README showcase**, on the release branch. Run
+   `uv run python scripts/readme_showcase.py`: it redraws `docs/assets/readme-showcase.png` from the
+   live `/stats` and stops when MonoLisa or a pick's preview is missing; look at the image before
+   committing it. Then check the floor on merged pull requests in `README.md` and
+   `docs/concepts/ai-workflow.md` ("more than N pull requests from my account have merged") against
+   `gh pr list --state merged --author MarkusNeusinger --limit 5000 --json number --jq length`, and
+   raise it to the last round fifty below the count (869 merged gave "more than 850"). It stays a floor, never an exact number:
+   `tests/unit/test_readme_claims.py` refuses an exact count. Commit the image and the wording on
+   the release branch.
+5. **Read the diff.** It touches `CHANGELOG.md`, `pyproject.toml`, `uv.lock`, `app/package.json`,
+   the deleted fragments and step 4's showcase image and pull-request floor — nothing else. Run
+   `uv lock` if the lock needs more than its own version line.
+6. **Open the release PR** (`release: vX.Y.Z` title) and follow the standard PR follow-through
    from `CLAUDE.md`. Ask the user to merge unless explicitly authorized to merge autonomously.
-6. **Tag after merge** (on the updated `main`):
+7. **Tag after merge** (on the updated `main`):
    `git tag -a vX.Y.Z -m "<Codename> (YYYY-MM-DD)" && git push origin vX.Y.Z`
-7. **Publish the GitHub release** with the changelog section **condensed** as body — never the
+8. **Publish the GitHub release** with the changelog section **condensed** as body — never the
    section copied (the v3.1.0 page was 640 lines). Write the body to a temp file first (it is
    multiline and contains backticks — do not inline it into `--notes`), then
    `gh release create vX.Y.Z --title "vX.Y.Z — <Codename>" --notes-file <tmpfile>`. The body:
@@ -70,7 +79,7 @@ version: $1 (optional — e.g. `3.1.0`; if omitted, propose one from the `[Unrel
      section are cited.
    - **Last line:** `**Full Changelog:** https://github.com/MarkusNeusinger/anyplot/compare/v<last>...vX.Y.Z`.
    The full text lives only in the CHANGELOG; the release page is the index into it.
-8. **Verify:** `gh release view vX.Y.Z` renders correctly; the site masthead picks up the new tag
+9. **Verify:** `gh release view vX.Y.Z` renders correctly; the site masthead picks up the new tag
    automatically (`app/src/hooks/useLatestRelease.ts` fetches `releases/latest` with a 1 h
    localStorage cache — nothing to deploy).
 
