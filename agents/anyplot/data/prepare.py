@@ -469,13 +469,23 @@ class _Carried:
             self.with_time.pop(name, None)
             self.converted.pop(name, None)
             self.row_numbers.discard(name)
+            # A later column of the same name (a rename, a derived one) is no column as pasted.
+            self.pasted_cells.pop(name, None)
         # A dropped part leaves a gap: the parts on either side of it are no neighbours any more.
         self.splits = [[name if name not in gone else "" for name in parts] for parts in self.splits]
 
     def keep_only(self, names: Iterable[str]) -> None:
         kept = set(names)
         split = {name for parts in self.splits for name in parts if name}
-        tracked = {*self.date_order, *self.text_columns, *self.with_time, *self.converted, *self.row_numbers, *split}
+        tracked = {
+            *self.date_order,
+            *self.text_columns,
+            *self.with_time,
+            *self.converted,
+            *self.row_numbers,
+            *split,
+            *self.pasted_cells,
+        }
         self.forget(tracked - kept)
 
 
@@ -926,9 +936,13 @@ def _set_type(frame: pd.DataFrame, op: SetType, carried: _Carried) -> tuple[pd.D
                     f"column '{op.column}' can be read with a decimal comma only from the rows as pasted: "
                     "change the reading first, in its own call, or undo to the pasted data first",
                 )
-            # The pasted cells, read again: `1.234` is 1234 and `7.000` is 7000 now.
-            series = pd.Series(pasted, index=frame.index, name=op.column, dtype="object")
-            present = int(series.replace("", None).notna().sum())
+            # The pasted cells, read again: `1.234` is 1234 and `7.000` is 7000 now. An empty one (a missing cell, or
+            # a declared mark the parse blanked) stays missing, as it is in the column.
+            series = pd.Series([cell or None for cell in pasted], index=frame.index, name=op.column, dtype="object")
+            present = int(series.notna().sum())
+        # A text column read here holds the cells it holds: a number column that a `set_type` to text in the same
+        # call turned into its canonical dot decimals reads `1.234` as 1234 under a decimal comma but `7` (pasted
+        # `7.000`) as 7. Only the number path above reads the cells as pasted; root.md never asks for that pair.
         conversion = _number_conversion(series, op.decimal or carried.decimal)
     else:
         if kind == "datetime":

@@ -456,6 +456,32 @@ class TestSetTypeNumber:
         assert raised.value.code == "type_mismatch"
         assert "undo to the pasted data first" in str(raised.value)
 
+    def test_the_cells_as_pasted_go_with_their_column_never_to_a_later_one_of_its_name(self) -> None:
+        """Dropped, the column takes its pasted cells along: `Alt` renamed to `Einwohner` keeps 5, 6 and 7."""
+        text = "Stadt;Einwohner;Alt;Neu\nBern;1.234;5;1\nBasel;7.000;6;1\nChur;12;7;1\n"
+        reading = {"op": "set_type", "column": "Einwohner", "type": "number", "decimal": ","}
+        renamed = prepare(
+            text,
+            {"op": "drop_columns", "columns": ["Einwohner"]},
+            {"op": "rename", "column": "Alt", "name": "Einwohner"},
+            reading,
+        )
+        assert cells(renamed, 1) == ["5", "6", "7"]
+        assert renamed.changes[-1].startswith("Einwohner: already numbers, nothing changed")
+
+        derived = prepare(
+            text, {"op": "drop_columns", "columns": ["Einwohner"]}, derive("Einwohner", "sum", "Alt", "Neu"), reading
+        )
+        assert cells(derived, 3) == ["6", "7", "8"]
+
+    def test_a_declared_missing_mark_stays_missing_when_the_dots_are_read_again(self) -> None:
+        prepared = prepare(
+            "Fehlwerte: -999\nStadt;Einwohner\nBern;1.234\nBasel;7.000\nChur;-999\nThun;980\n",
+            {"op": "set_type", "column": "Einwohner", "type": "number", "decimal": ","},
+        )
+
+        assert cells(prepared, 1) == ["1234", "7000", "", "980"]
+
     def test_a_number_column_without_cells_as_pasted_stays_and_says_why(self) -> None:
         """A column that reads one way, or a later version's: the decimal comma has nothing to read."""
         plain = prepare(SALES, {"op": "set_type", "column": "Umsatz", "type": "number", "decimal": "."})

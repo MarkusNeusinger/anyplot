@@ -178,6 +178,13 @@ class TestDecimalCommaAndDateGuard:
         assert parsed.pasted_cells == {"Einwohner": ["1.234", "7.000", "12"]}
         assert "7.000" not in parsed.csv
 
+    def test_the_cells_as_pasted_keep_a_declared_missing_mark_empty(self) -> None:
+        """A later reading with a decimal comma must find the mark missing, as the column does, never `-999`."""
+        parsed = parse_dataset("Fehlwerte: -999\nStadt;Einwohner\nBern;1.234\nBasel;7.000\nChur;-999\nThun;980\n")
+
+        assert warned(parsed, "matched the missing-value mark the notes declare")
+        assert parsed.pasted_cells == {"Einwohner": ["1.234", "7.000", "", "980"]}
+
     @pytest.mark.parametrize(
         "text",
         [
