@@ -1,5 +1,8 @@
 # How anyplot is built with AI agents
 
+> **Status (2026-11-05):** the workflow as practiced on this date. The counts in "Where it falls short"
+> (merged pull requests, active days) were taken on 2026-11-04 from `gh` and `git log`.
+
 Models write anyplot's code; I lead them. This page describes how that works: who does what, what I bring
 to it, the path a change takes to production, how a correction becomes a rule, and where the approach
 falls short. The rules themselves are in [`CLAUDE.md`](../../CLAUDE.md), the incidents behind them in

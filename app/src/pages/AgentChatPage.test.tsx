@@ -1309,6 +1309,19 @@ describe('AgentChatPage catalogue plot', () => {
       spec: 'scatter-basic',
     });
   });
+
+  it('records an open from the plot of the day, then drops the source', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(`${PAGE}&source=plot_of_the_day`);
+    await screen.findByLabelText(/# your data/);
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_open', {
+      library: 'matplotlib',
+      source: 'plot_of_the_day',
+      spec: 'scatter-basic',
+    });
+    await waitFor(() => expect(screen.getByTestId('location')).not.toHaveTextContent('source='));
+    expect(screen.getByTestId('location')).toHaveTextContent(PAGE);
+  });
 });
 
 describe('AgentChatPage .example_data()', () => {
