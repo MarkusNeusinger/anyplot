@@ -175,5 +175,6 @@ async def test_a_read_names_the_sessions_latest_turn_or_is_refused(
     other = await read_turn(client, sid, f"{first_run}.1", user="adm_fedcba9876543210")
     assert (other.status_code, other.json()) == (404, {"detail": "session_expired"})
 
+    log = runtime.turns[sid]
     await client.delete(f"/v1/sessions/{sid}", headers=HEADERS)
-    assert sid not in runtime.turns
+    assert sid not in runtime.turns and log.ended  # a reader still following it ends with the session

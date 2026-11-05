@@ -699,7 +699,9 @@ class Runtime:
         run = self.active.pop(sid, None)
         if run is not None:
             self.stop(run)
-        self.turns.pop(sid, None)
+        log = self.turns.pop(sid, None)
+        if log is not None:
+            log.end()  # a reader still following the turn ends with the session, not at its own deadline
         await self.session_service.delete_session(app_name=APP_NAME, user_id=user, session_id=sid)
         services.purge_session(sid)
         telemetry.forget(sid)

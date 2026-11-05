@@ -118,9 +118,9 @@
  * and reads the rest of the turn again (`agentApi.resumeTurn`, after the last SSE
  * id it read) after each of `RESUME_DELAYS_MS`; only when every read failed does
  * the error show. Such a turn stays pending: the next turn reads it first, while
- * nothing in the session changed since, and when that read brings the plot the
- * turn asked for, the same request again (a retry click) ends there instead of
- * making the same plot a second time. `agent_turn_resumed{outcome}` counts each
+ * nothing in the session changed since, and when the cut turn shipped its plot,
+ * before the cut or with that read, the same request again (a retry click) ends
+ * there instead of making the same plot a second time. `agent_turn_resumed{outcome}` counts each
  * cut: `resumed`, `gone` (the server holds another turn) or `failed`.
  *
  * Session lifetime: the session, with the pasted data and its renders, is
@@ -502,6 +502,8 @@ interface CutTurn {
   body: TurnBody;
   lastId: string;
   mark: readonly unknown[];
+  /** Its plot arrived before the cut: the same request again would make that plot a second time. */
+  shipped: boolean;
 }
 
 /** Resolves after `ms`, or at once when `signal` aborts. */
@@ -2274,7 +2276,6 @@ export function useAgentSession({
     [safeDispatch, addItem, onPlot, trackEvent]
   );
 
-  /** Read a turn's events from `response` into the thread and into `read`, until `done` or the stream's end. */
   /**
    * Read a turn's events from `response` into the thread and into `read`: `done` once the turn's
    * `done` arrived, `ended` for a stream that ended without it, `cut` for one whose read failed (a
@@ -2328,7 +2329,10 @@ export function useAgentSession({
    * Read the rest of a turn whose stream was cut, after each of `delays`, from the last id `read`
    * holds, until a read reaches `done`. A read that is cut again goes on from where it stopped.
    * Null when the turn's controller aborted meanwhile (the page unmounted, or a stop the server
-   * did not hear); else how it ended, with what the server answered when it refused the read.
+   * did not hear); else how it ended, with what the server answered when it refused the read. A
+   * read that reaches `done` after the BFF's `upstream` error (the agents service saw the turn's
+   * stream end early and cancelled it, so the turn has no result) counts as `failed`: there was
+   * nothing left to read, and reading again would not bring it.
    */
   const reattach = useCallback(
     async (
@@ -2345,8 +2349,12 @@ export function useAgentSession({
           try {
             const response = await agentApi.resumeTurn(token, sid, read.lastId, controller.signal);
             safeDispatch({ type: 'run_reconnecting', on: false });
+            const before = read.errorCode;
             await consume(response, read, controller.signal);
-            if (read.finished) return { outcome: 'resumed', failure: null };
+            if (read.finished) {
+              const lost = read.errorCode === 'upstream' && before !== 'upstream';
+              return { outcome: lost ? 'failed' : 'resumed', failure: null };
+            }
           } catch (err) {
             if (isAbort(err)) return null;
             // Another turn is the latest (or the session is gone): there is nothing left to read.
@@ -2442,16 +2450,23 @@ export function useAgentSession({
       cutTurnRef.current = null;
       if (cut && cut.sid === sid && sameMark(cut.mark, sessionMark(current))) {
         // One read, at once: the user asked again, so the network may be back. Its `done` still
-        // fits, since nothing it syncs changed since. A read that fails leaves the new turn to run;
-        // the cut was counted when it happened (`agent_turn_resumed`), so this read is not.
+        // fits, since nothing it syncs changed since. The cut was counted when it happened
+        // (`agent_turn_resumed`), so this read is not.
         const kind = 'text' in cut.body ? 'message' : cut.body.action;
+        // The cut turn's plot, shown before the cut or brought by this read, is what the same
+        // request asks for: asking again would make that plot a second time.
+        const repeats = (shipped: boolean) =>
+          sameRequest(cut.body, body) && (cut.shipped || shipped);
         const late = await driveTurn(kind, async (controller, read) => {
           read.lastId = cut.lastId;
-          await reattach(sid, read, controller, [0]);
+          const resumed = await reattach(sid, read, controller, [0]);
+          // Nothing new starts then, so a read that failed says why the click did nothing.
+          if (resumed?.outcome === 'failed' && !read.finished && repeats(read.shipped)) {
+            addItem({ kind: 'error', code: 'network', ref: null });
+            read.errorCode = 'network';
+          }
         });
-        // The plot the click asks for came with the late read: it is there, so asking again would
-        // make the same plot a second time.
-        if (late.finished && late.shipped && sameRequest(cut.body, body)) return;
+        if (repeats(late.shipped)) return;
         if (turnEndRef.current === 'stopped') return;
         if (!mounted.current || stateRef.current.sessionId !== sid) return;
       }
@@ -2487,6 +2502,7 @@ export function useAgentSession({
             body,
             lastId: read.lastId,
             mark: sessionMark(stateRef.current),
+            shipped: read.shipped,
           };
         }
       });

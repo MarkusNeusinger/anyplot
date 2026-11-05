@@ -3813,6 +3813,73 @@ describe('useAgentSession: a cut stream', () => {
     expect(result.current.state.run).toBeNull();
   });
 
+  it('never asks again for a plot the cut turn showed before the cut, whatever the late read brings', async () => {
+    const routes = baseRoutes();
+    // The plot arrived, then the stream was cut before the reply and `done`.
+    routes['POST /sessions/S1/messages'] = () =>
+      numberedSse([...TURN_START, TURN_REST[0]], { cut: true });
+    routes['GET /sessions/S1/turn'] = () => {
+      throw new TypeError('Failed to fetch');
+    };
+    const { result } = await openWithFastReads(routes);
+    await act(() => result.current.createPlot());
+    expect(result.current.state.items.map(item => item.kind)).toEqual(['action', 'plot', 'error']);
+
+    // Still no network: the click starts nothing new and says why.
+    await act(() => result.current.createPlot());
+    expect(turnPosts()).toHaveLength(1);
+    expect(lastItem(result.current.state.items)).toMatchObject({ kind: 'error', code: 'network' });
+
+    // A later click is the user's own, and runs.
+    routes['POST /sessions/S1/messages'] = () => sse([...TURN_START, ...TURN_REST]);
+    await act(() => result.current.createPlot());
+    expect(turnPosts()).toHaveLength(2);
+  });
+
+  it('ends at the late read when it brings only the rest of a turn whose plot came before the cut', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () =>
+      numberedSse([...TURN_START, TURN_REST[0]], { cut: true });
+    routes['GET /sessions/S1/turn'] = () => {
+      throw new TypeError('Failed to fetch');
+    };
+    const { result } = await openWithFastReads(routes);
+    await act(() => result.current.createPlot());
+
+    routes['GET /sessions/S1/turn'] = () => numberedSse(TURN_REST.slice(1), { from: 5 });
+    await act(() => result.current.createPlot());
+
+    expect(turnPosts()).toHaveLength(1);
+    expect(result.current.state.items.map(item => item.kind)).toEqual([
+      'action',
+      'plot',
+      'error',
+      'assistant',
+    ]);
+  });
+
+  it('counts a read that finds the turn cancelled as failed, and keeps nothing pending', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/messages'] = () => numberedSse(TURN_START, { cut: true });
+    // The agents service saw the stream go and cancelled the turn: the BFF closes the read so.
+    routes['GET /sessions/S1/turn'] = () =>
+      sse([
+        ['error', { code: 'upstream', ref: 'r-read' }],
+        ['done', {}],
+      ]);
+    const { result } = await openWithFastReads(routes);
+
+    await act(() => result.current.createPlot());
+
+    expect(turnReads()).toHaveLength(1);
+    expect(lastItem(result.current.state.items)).toMatchObject({ kind: 'error', code: 'upstream' });
+    expect(trackEvent).toHaveBeenCalledWith('agent_turn_resumed', { outcome: 'failed' });
+    routes['POST /sessions/S1/messages'] = summaryStream;
+    await act(() => result.current.createPlot());
+    expect(turnReads()).toHaveLength(1); // nothing pending: the next click runs at once
+    expect(turnPosts()).toHaveLength(2);
+  });
+
   it('sends a different request after the late read, and drops the cut turn once the session changed', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/messages'] = () => numberedSse(TURN_START, { cut: true });
