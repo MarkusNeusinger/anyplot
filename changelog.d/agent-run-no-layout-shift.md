@@ -10,4 +10,4 @@
   columns are sized for `second try` and `repairing` from the start, so the
   grid also holds still when a repair round's row joins it. The agent BFF mock
   gains `MOCK_START_MS`, which holds a run before its first step so that
-  `starting…` stays visible.
+  `starting…` stays visible. (#12569)
