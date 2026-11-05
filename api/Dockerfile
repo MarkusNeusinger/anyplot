@@ -70,8 +70,8 @@ WORKDIR /app
 # text shaping on: the manylinux wheel does NOT vendor Raqm, it dlopen()s
 # libraqm at runtime, so in a bare python:3.14-slim `features.check('raqm')` is
 # False and HarfBuzz/FriBiDi report no version at all. That is the whole of
-# #10813's regression — and why the guard it added has failed every build of
-# this image since (the deploy-api trigger has been red since 2026-08-30).
+# #10813's regression — and why the guard it added failed every build of this
+# image until the package below was installed.
 # The Debian package is 32 KB plus its HarfBuzz/FriBiDi dependencies.
 #
 # DL3008 (pin the apt versions) is declined here, not repo-wide: pinning a

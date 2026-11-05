@@ -78,7 +78,7 @@ logger = logging.getLogger(__name__)
 # that line ran. Without stateless mode every MCP session is pinned to the
 # Cloud Run instance that created it — with max-instances=3 and no session
 # affinity, a session's second request could land elsewhere and fail with
-# "Missing session ID" (verified live; AI-access audit 2026-08-19).
+# "Missing session ID" (verified live).
 mcp_http_app = mcp_server.http_app(path="/", stateless_http=True)
 
 
@@ -315,8 +315,8 @@ async def add_cache_headers(request: Request, call_next):
     # The og cards are public images consumed cross-origin (link previews,
     # chat UIs embedding via fetch). The global CORSMiddleware answers only the
     # site's own origins, so foreign origins received no ACAO header at all —
-    # the same in-page-fetch blocker the GCS bucket CORS fix removed (live
-    # verification 2026-08-19). setdefault keeps CORSMiddleware's own header
+    # the same in-page-fetch blocker the GCS bucket CORS fix removed (verified
+    # live). setdefault keeps CORSMiddleware's own header
     # when the request came from an allowlisted origin. Placed BEFORE the
     # method/status guard: an error response without the header is opaque to a
     # cross-origin caller, which cannot even read that it was a 404.

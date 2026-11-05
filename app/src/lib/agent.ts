@@ -25,7 +25,7 @@ import {
 import { clearAccessReloadGuard } from 'src/utils/adminAuth';
 
 export const AGENT_CLIENT_HEADERS = { 'X-Anyplot-Client': 'agent-chat/1' } as const;
-/** The BFF's limit on pasted data: 1 MB of UTF-8 (200 KB before 2026-10-14). */
+/** The BFF's limit on pasted data: 1 MB of UTF-8. */
 export const MAX_DATASET_BYTES = 1024 * 1024;
 /** The BFF's limit on one chat message. */
 export const MAX_MESSAGE_CHARS = 2000;
@@ -181,7 +181,7 @@ export interface SwitchCarry {
 
 /**
  * `POST .../library`'s answer. `target` and `carry` come from a server with the
- * plot memory (since 2026-11-02); an older one answers neither, read as `null`:
+ * plot memory; an older one answers neither, read as `null`:
  * no offer, the page behaves as before.
  */
 export interface LibrarySwitched extends SessionOpened {
@@ -452,9 +452,8 @@ export interface DatasetCopied extends DatasetParsed {
   /** The page session's data version the copy was taken from. */
   copied_from: number;
   /**
-   * What the copy took over of the page session's tuned plot (its plot memory and a carry for this library,
-   * since 2026-11-02): with `offer`, the fan-out plots with `carry_plot` instead of `create_plot`. Absent from an
-   * older server.
+   * What the copy took over of the page session's tuned plot (its plot memory and a carry for this library):
+   * with `offer`, the fan-out plots with `carry_plot` instead of `create_plot`. Absent from an older server.
    */
   carry?: SwitchCarry | null;
 }
@@ -1622,7 +1621,7 @@ export type AgentEvent =
       suggestion?: LongSuggestion | null;
       /**
        * The library switch the user asked for in the chat (the assistant's
-       * `switch_plot`, since 2026-11-02), which the page carries out with the
+       * `switch_plot`), which the page carries out with the
        * switch route and, with `plot`, the carry run; `null` without one.
        */
       switch: ChatSwitch | null;

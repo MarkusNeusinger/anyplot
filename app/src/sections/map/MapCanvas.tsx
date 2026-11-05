@@ -1,4 +1,4 @@
-import ForceGraph2D from 'react-force-graph-2d';
+import ForceGraph2D, { type ForceGraphMethods } from 'react-force-graph-2d';
 
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -25,7 +25,7 @@ import { colors, fontSize, typography } from 'src/theme';
 
 interface MapCanvasProps {
   ready: boolean;
-  fgRef: React.RefObject<ForceGraphHandle>;
+  fgRef: React.RefObject<ForceGraphHandle | null>;
   graphData: MapGraphData;
   size: { w: number; h: number };
   forceConfig: MapForceConfig;
@@ -91,7 +91,9 @@ export function MapCanvas({
       {/* Canvas */}
       {ready && (
         <ForceGraph2D
-          ref={fgRef}
+          // The library types `ref` as a ref to its full ForceGraphMethods that
+          // starts undefined; the map's ref starts null and names only what it calls.
+          ref={fgRef as React.RefObject<ForceGraphMethods<MapNode, MapLink> | undefined>}
           graphData={graphData}
           width={size.w}
           height={size.h}
@@ -263,9 +265,7 @@ export function MapCanvas({
             const fg = fgRef.current;
             if (!fg || fg.__forcesWired) return;
             fg.d3Force('charge')?.strength(forceConfig.chargeStrength);
-            // The d3-force-3d ambient types are minimal; cast for the chained calls.
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const linkForce = fg.d3Force('link') as any;
+            const linkForce = fg.d3Force('link');
             if (linkForce) {
               linkForce.distance(forceConfig.linkDistance);
               linkForce.strength(forceConfig.linkStrength);

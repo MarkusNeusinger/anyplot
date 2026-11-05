@@ -103,7 +103,7 @@ class AgentUsage(BaseModel):
     """Kept sessions among the sessions with a shipped plot (`kept_sessions` of `shipped_sessions`)."""
     kept_sessions: int = 0
     """Sessions with a copy or a download after their last run and no thumbs_down or bug feedback; a saved session
-    alone is no keep (owner rule of 2026-10-16, the `sessions` view's `kept`)."""
+    alone is no keep, the same rule as the `sessions` view's `kept`."""
     shipped_sessions: int = 0
     repair_rate: float | None = None
     """Pipeline runs that needed more than one round among the runs that started (`repaired_runs` of `runs`)."""

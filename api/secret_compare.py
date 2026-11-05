@@ -6,7 +6,7 @@ header value reaches the application latin-1-decoded straight off the wire, so a
 caller can put one byte >= 0x80 into `X-Origin-Secret`, `X-Admin-Token` or
 `X-Cache-Token` and turn a cheap 401 or 403 into an unhandled 500 — a way to
 make a rejection expensive, available to anyone, and logged as an error every
-time (Copilot review).
+time.
 
 Encoding both sides first removes the restriction and the whole class of
 problem, including the mirror case of a secret that legitimately contains
