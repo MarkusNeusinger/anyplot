@@ -257,6 +257,7 @@ PrepOp = Literal[
     "derive",
     "make_date",
     "row_number",
+    "date_number",
     "split",
     "extract",
     "strip",

@@ -1,25 +1,26 @@
 """ anyplot.ai
 line-basic: Basic Line Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-04-29
+Library: seaborn 0.13.2 | Python 3.14.8
+Quality: 83/100 | Updated: 2026-11-05
 """
 
 import os
 
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 
 
-# Theme
+# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint palette: single series uses the first position
 BRAND = "#009E73"
-ACCENT = "#C475FD"  # Okabe-Ito position 2 — peak emphasis
 
 sns.set_theme(
     style="ticks",
@@ -33,69 +34,35 @@ sns.set_theme(
         "ytick.color": INK_SOFT,
         "grid.color": INK,
         "grid.alpha": 0.10,
-        "legend.facecolor": ELEVATED_BG,
-        "legend.edgecolor": INK_SOFT,
     },
 )
 
-# Data — monthly temperatures across 5 years; seaborn aggregates mean + 95% CI
-np.random.seed(42)
-months = np.arange(1, 13)
-month_labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-records = []
-for _year in range(2019, 2024):
-    base_temp = 15 + 12 * np.sin((months - 4) * np.pi / 6)
-    temps = base_temp + np.random.randn(12) * 2.5
-    for month, temp in zip(months, temps, strict=True):
-        records.append({"Month": month, "Temperature (°C)": temp})
+# Columns: set these to your table's column names
+DATE = "Date"  # role: x
+VISITORS = "Daily visitors (thousands)"  # role: y
 
-df = pd.DataFrame(records)
+# Data: replace this block with your own table, for example df = pd.read_csv("visitors.csv")
+rng = np.random.default_rng(7)
+days = pd.date_range("2025-01-01", periods=120, freq="D")
+trend = 12 + 0.09 * np.arange(len(days))
+weekend_dip = np.where(days.day_of_week >= 5, -2.2, 0.0)
+noise = rng.normal(0, 0.9, len(days))
+df = pd.DataFrame({DATE: days, VISITORS: trend + weekend_dip + noise})
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-sns.lineplot(
-    data=df,
-    x="Month",
-    y="Temperature (°C)",
-    ax=ax,
-    linewidth=3,
-    color=BRAND,
-    marker="o",
-    markersize=12,
-    errorbar="ci",
-    err_kws={"alpha": 0.20},
-    label="Mean ± 95% CI",
-)
-
-# Highlight the summer peak (July) to focus the viewer on the seasonal maximum
-peak_month = 7
-peak_mean = df[df["Month"] == peak_month]["Temperature (°C)"].mean()
-ax.scatter(
-    [peak_month], [peak_mean], color=ACCENT, s=300, zorder=5, edgecolors=PAGE_BG, linewidth=2.5, label="Peak — July"
-)
+sns.lineplot(data=df, x=DATE, y=VISITORS, ax=ax, color=BRAND, linewidth=2, marker="o", markersize=3.5)
 
 # Style
-ax.set_xlabel("Month", fontsize=20, color=INK)
-ax.set_ylabel("Temperature (°C)", fontsize=20, color=INK)
-ax.set_title(
-    "Monthly Temperature Seasonality · line-basic · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK
-)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-ax.set_xticks(months)
-ax.set_xticklabels(month_labels)
+ax.set_title("Daily Website Visitors · line-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium")
+ax.set_xlabel(DATE, fontsize=10)
+ax.set_ylabel(VISITORS, fontsize=10)
+ax.tick_params(axis="both", labelsize=8)
+ax.xaxis.set_major_locator(mdates.MonthLocator())
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
 ax.yaxis.grid(True, alpha=0.10, linewidth=0.8)
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color(INK_SOFT)
-ax.spines["bottom"].set_color(INK_SOFT)
+sns.despine(ax=ax)
 
-legend = ax.legend(fontsize=16, framealpha=1.0)
-legend.get_frame().set_facecolor(ELEVATED_BG)
-legend.get_frame().set_edgecolor(INK_SOFT)
-for text in legend.get_texts():
-    text.set_color(INK_SOFT)
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

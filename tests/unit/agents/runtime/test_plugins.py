@@ -942,6 +942,22 @@ class TestToolSafety:
         # Other tools keep the bare refusal: their arguments are not a list the model assembles field by field.
         assert await self.check("get_current_code", {"version": -1}) == {"status": "error", "code": "invalid_arguments"}
 
+    async def test_prepare_data_bounds_a_date_number(self, ledger: RequestLedger) -> None:
+        """The unit is one of four, the name a bounded new column name, and the column stays under the link rule."""
+        days = {"op": "date_number", "column": "Subscription Date", "unit": "days"}
+        assert await self.check("prepare_data", {"operations": [days]}) is None
+        assert await self.check("prepare_data", {"operations": [{**days, "name": "https://anyplot.ai"}]}) is None
+        for operation, location in (
+            ({**days, "unit": "months"}, "operations[0].date_number.unit: "),
+            ({**days, "name": "x" * 65}, "operations[0].date_number.name: "),
+            ({**days, "origin": "2020-01-01"}, "operations[0].date_number.origin: "),
+        ):
+            refused = await self.check("prepare_data", {"operations": [operation]})
+            assert refused is not None and refused["code"] == "invalid_arguments", operation
+            assert location in refused["errors"], operation
+        linked = await self.check("prepare_data", {"operations": [{**days, "column": "https://evil.example/x"}]})
+        assert linked == {"status": "error", "code": "url_or_path_not_allowed"}
+
     async def test_prepare_data_takes_a_number_as_a_condition_value(self, ledger: RequestLedger) -> None:
         """`{"test": "gt", "value": 100}` is how the model writes a numeric comparison (one live eval miss)."""
         for value in (100, 100.0, -3):

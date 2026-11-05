@@ -55,6 +55,7 @@ OPERATIONS = (
     "derive",
     "make_date",
     "row_number",
+    "date_number",
     "split",
     "extract",
     "strip",
@@ -84,10 +85,11 @@ class TestFixtures:
         locales = Counter(item.locale for item in cases)
         ops = {operation["op"] for item in cases for operation in item.expected_operations}
 
-        # 34 single-step cases (two of them `derive`, two `make_date`, one month-only date format, one sort of month
-        # names, one daily mean per sensor, four text operations), 11 `hard` ones (chains, ambiguity, unsupported
-        # asks), 11 data-code cases, 12 step-1 summaries, 3 requests for example data and 4 for another plot type.
-        assert len(cases) == 75
+        # 36 single-step cases (two of them `derive`, two `make_date`, one month-only date format, one sort of month
+        # names, one daily mean per sensor, four text operations, two `date_number`), 11 `hard` ones (chains,
+        # ambiguity, unsupported asks), 11 data-code cases, 13 step-1 summaries, 3 requests for example data and 4 for
+        # another plot type.
+        assert len(cases) == 78
         plot_type = [item for item in cases if "plot_type" in item.tags]
         assert len(plot_type) == 4 and {item.locale for item in plot_type} == {"de", "en"}
         assert all(not item.expected_operations and item.dataset_text for item in plot_type)
@@ -99,6 +101,10 @@ class TestFixtures:
         assert {item.locale for item in cases if "derive" in item.tags} == {"de", "en"}
         assert sum(1 for item in cases if "hard" in item.tags) == 11
         assert {item.locale for item in cases if "text" in item.tags} == {"de", "en"}
+        # The owner's case of 2026-11-04 in both languages, and its summary, which only offers the conversion.
+        dates = [item for item in cases if "date_number" in item.tags]
+        assert {item.locale for item in dates if item.message} == {"de", "en"}
+        assert [item.id for item in dates if item.action] == ["en-summary-date-offer"]
         assert locales["de"] >= 5 and locales["en"] >= 5
         assert ops == {*OPERATIONS, "generate_data", "run_data_code"}
         assert sum(1 for item in cases if not item.expected_operations) >= 2  # out of scope, and a plain question
@@ -131,7 +137,7 @@ class TestFixtures:
         """The step-1 summary, where 10 of 11 replies of the user test of 2026-11-01 closed with a question."""
         cases = [item for item in load_cases(DEFAULT_CASES) if item.action is not None]
 
-        assert len(cases) == 12 and {item.locale for item in cases} == {"de", "en"}
+        assert len(cases) == 13 and {item.locale for item in cases} == {"de", "en"}
         assert all(item.message is None and item.dataset_text for item in cases)
         assert all("summary" in item.tags for item in cases)
         # A summary changes the data only for what the server found in code (live tests of 2026-11-01 and 11-02): a
@@ -277,6 +283,8 @@ class TestCanonical:
                     "otherwise": "Klasse 2",
                 },
                 {"op": "row_number"},
+                {"op": "date_number", "column": "Abo", "unit": "days"},
+                {"op": "date_number", "column": "Abo", "unit": "year", "name": "Jahr"},
             ],
             ".",
         )
@@ -284,6 +292,8 @@ class TestCanonical:
         assert sorted(describe(line) for line in lines) == [
             "aggregate Betrag sum by Datum/month",
             "classify Klasse: 'Klasse 1' if y gt '0'; else 'Klasse 2'",
+            "date_number Abo as days",
+            "date_number Abo as year into Jahr",
             "drop_rows Tier eq 'Gesamt'",
             "pivot_wider p with v by m",
             "row_number index",
@@ -464,12 +474,12 @@ class TestScore:
         ]
         code, reasons = verdict_of(summary, Gates())
         assert code == EXIT_FAILED and reasons == [
-            "1 of 2 replies close with a question the turn was not blocked for or run over "
+            "1 of 2 replies close with a question or an invitation the turn was not blocked for or run over "
             f"{prep.MAX_REPLY_WORDS} words (more than 10%)"
         ]
         assert verdict_of(summary, Gates(max_reply_misses=0.5)) == (EXIT_OK, [])
         assert "match, reply: closing question" in prep.table(self.CASES, results)
-        assert "1 close with a question, 1 reply misses" in prep.summary_text(scored, reasons)
+        assert "1 close with a question, 0 with an invitation, 1 reply misses" in prep.summary_text(scored, reasons)
 
 
 class TestReplyShape:
@@ -526,6 +536,56 @@ class TestReplyShape:
         prep.measure_reply(result, [], blocked=False)
 
         assert result.reply_words is None and result.reply_miss is None
+
+    @pytest.mark.parametrize(
+        ("text", "invitation"),
+        [
+            # The three closers of the live summary-offer runs of 2026-11-04.
+            ("Dates can become numbers. Choose the y column in the data panel, or name the unit you want.", True),
+            ("Dates can become numbers for y as the year or the days; tell me which one you want.", True),
+            ("Dates can become numbers. Pick one of these and the data panel's `.confirm()` follows.", True),
+            ("Die Daten haben 8 Zeilen. Wähle im Datenbereich eine Spalte für y.", True),
+            ("Die Spalte passt. Wenn du willst, kann ich das Jahr nehmen.", True),
+            ("Check the preview in the data panel and confirm it with `.confirm()`.", False),
+            ("Prüfe die Vorschau und drücke dann `.create_plot()`.", False),
+            ("Name is bound to the category and Score to the value.", False),  # a column named Name
+            ("Subscription Date can become numbers for y: the days since the first date or the year.", False),
+            ("  \n ", False),  # a reply of whitespace only has no sentence to close with
+        ],
+    )
+    def test_a_closing_invitation_is_found(self, text: str, invitation: bool) -> None:
+        assert prep.closes_with_invitation(text) is invitation
+
+    def test_a_closing_invitation_is_a_miss_where_a_question_would_be(self) -> None:
+        text = "Subscription Date can become numbers for y. Choose the unit you want."
+        free, blocked = CaseResult("s-001", [], []), CaseResult("s-002", [], [])
+
+        prep.measure_reply(free, [text], blocked=False)
+        prep.measure_reply(blocked, [text], blocked=True)
+
+        assert free.closing_invitation and free.reply_miss == "closing_invitation"
+        assert blocked.closing_invitation and blocked.reply_miss is None
+
+    def test_an_open_role_with_an_offer_is_no_reason_to_ask(self) -> None:
+        """The offer bullet: the root states what the date column can become, so neither a question nor an
+        invitation waits on the open role then; without an offer, the open role still may close with a question."""
+        asked = "Index is on x and y is open. Which unit should Subscription Date take?"
+        invited = "Index is on x and y is open. Choose the unit for Subscription Date."
+        results = {
+            (text, offered): CaseResult("s-001", [], [], roles_open=True, offered=offered)
+            for text in (asked, invited)
+            for offered in (False, True)
+        }
+
+        for (text, _), result in results.items():
+            prep.measure_reply(result, [text], blocked=False)
+
+        assert [result.reply_miss for result in results.values()] == [
+            None,
+            "closing_question",
+            None,
+            "closing_invitation",
+        ]
 
 
 def script_for(*answers: list[dict[str, Any]]) -> dict[str, list[Any]]:

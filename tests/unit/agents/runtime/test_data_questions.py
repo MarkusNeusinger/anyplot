@@ -16,8 +16,10 @@ from typing import Any
 
 import httpx
 import pytest
+from pydantic import TypeAdapter
 
 from agents.anyplot.data.parse import parse_dataset
+from agents.anyplot.data.prepare import Operation
 from agents.anyplot.data.query import MAX_QUERY_COLUMNS, MAX_QUERY_ROWS, run_query
 from agents.anyplot.dev_fixture import snapshot_from_repo
 from agents.anyplot.pipeline import (
@@ -223,6 +225,17 @@ class TestQueryData:
         assert (empty["status"], empty["code"]) == ("error", "empty_result")
         assert (invalid["status"], invalid["code"]) == ("error", "invalid_operations")
         assert context.state == before
+
+    def test_a_question_names_a_date_number_column_in_the_session_language(self) -> None:
+        """`columns` names the new column as `prepare_data` would, so a question can ask for it by that name."""
+        parsed = parse_dataset("Kunde,Abo\nA,2021-04-01\nB,2020-02-29\n")
+        operations = TypeAdapter(list[Operation]).validate_python(
+            [{"op": "date_number", "column": "Abo", "unit": "year"}]
+        )
+
+        answer = run_query(parsed, operations, ["Kunde", "Abo (Jahr)"], language="de")
+
+        assert answer.columns == ["Kunde", "Abo (Jahr)"] and answer.rows == [["A", "2021"], ["B", "2020"]]
 
     @pytest.mark.parametrize("cell", ["a" * 40, "é" * 40, "\N{CJK UNIFIED IDEOGRAPH-4E00}" * 40])
     def test_the_result_stays_within_its_cap_at_its_largest(self, cell: str) -> None:
