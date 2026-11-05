@@ -203,28 +203,27 @@ export const LEAVE_TEXT =
   'leave the chat? the session ends here, and its data and plots cannot be restored';
 
 /**
- * The how-to behind the data card's `# your data ⓘ` (since 2026-11-02, a label and a paragraph
- * under the card before; owner: far too long, and interesting only once): the formats, code or
- * a formula instead of a table, the steps, a fix in plain words and changes afterwards. Code and
- * a formula go to the chat (`422 code`, `422 formula`), which takes 2,000 characters
- * (`MAX_MESSAGE_CHARS`); the assistant translates code in any language into Python, so no line
- * lists the languages as if they were all. Example data is `.example_data()` above the composer.
- * The owner reads every user-facing text: keep them in the PR's "Texts to read".
+ * The how-to behind the chat's `# chat ⓘ` (the data card's `# your data ⓘ` until the message box
+ * took the data; a label and a paragraph under the card before 2026-11-02, owner: far too long,
+ * and interesting only once): the formats, how a table or a file comes in with a note, code or a
+ * formula instead of a table, the steps, a fix in plain words and changes afterwards. Code and a
+ * formula go as a message, which takes 2,000 characters (`MAX_MESSAGE_CHARS`); the assistant
+ * translates code in any language into Python, so no line lists the languages as if they were
+ * all. Example data is `.example_data()` above the composer. The owner reads every user-facing
+ * text: keep them in the PR's "Texts to read".
  */
 export const DATA_HOWTO = [
   'formats: CSV, TSV, JSON, plain text, Excel, ODS, Parquet, Feather or NumPy',
-  'paste code or a formula that makes data too, up to 2,000 characters',
-  'paste or drop → check the preview and the bindings → .create_plot()',
+  'paste or drop a table or a file: it waits in the message box until Enter',
+  'type a note with it: "only 2024", "the decimal mark is a comma"',
+  'code or a formula that makes data goes as a message, up to 2,000 characters',
+  'check the preview and the bindings → .create_plot()',
   'the assistant fixes your data in plain words: "sum per month"',
   'afterwards, ask for changes: "log scale on y", "label the outliers"',
 ] as const;
 
-/**
- * The data box's placeholder: a table or a file, code that makes data (any language: "…"), or a
- * formula. Example data left it for `.example_data()` above the composer.
- */
-export const DATA_PLACEHOLDER =
-  'paste a table or drop a file (csv, excel, json …)\nor code that makes data (python, javascript, …)\nor a formula: y = sin(x), x from -pi to pi';
+/** The message box's placeholder before any data: the ways in, a table, a file, or the chat's own. */
+export const NO_DATA_PLACEHOLDER = 'paste a table, drop a file, or ask for example data or a curve';
 
 /** Failures only the language chip meets; any other code reads as the page's turn errors do. */
 export const LANGUAGE_FAILURE: Record<string, string> = {
@@ -293,7 +292,7 @@ export const IMAGE_FAILURE: Record<string, string> = {
 };
 
 /**
- * Why a dropped, chosen or pasted file did not go into the data box, by the
+ * Why a dropped, chosen or pasted file did not become the message box's attachment, by the
  * format its first bytes name (`fileText.ts`) or the refusal. Spreadsheets,
  * Parquet, Arrow and NumPy go to the server (`CONVERT_FAILURE` below); pickle
  * and HDF5 are never read.
@@ -362,7 +361,7 @@ const KIND_NAME: Record<string, string> = {
 
 /**
  * The broken part of a damaged file (`422 file_corrupt` with `damage`, a closed set the
- * server names; owner decision of 2026-10-16), in the page's words.
+ * server names), in the page's words.
  */
 export const DAMAGE_TEXT: Record<string, string> = {
   zip: 'its zip container is broken or cut off (an incomplete download or copy); save or download it again',
@@ -438,7 +437,7 @@ export function describeConvertWarnings(
     parts.push(`${count(warnings.hidden_sheets, 'hidden sheet')} skipped`);
   }
   if (warnings.dropped_columns) {
-    // The names, because a step that changes the data says what it changed (owner rule, 2026-10-15).
+    // The names, because a step that changes the data says what it changed.
     const more = warnings.dropped_columns - dropped.length;
     const named = dropped.length
       ? `: ${dropped.map(name => `"${name}"`).join(', ')}${more > 0 ? ` and ${more} more` : ''}`
@@ -449,11 +448,33 @@ export function describeConvertWarnings(
   }
   if (warnings.list_columns) {
     parts.push(
-      `${count(warnings.list_columns, 'list column')}: the table comes as JSON records, and .parse() gives one row per value`
+      `${count(warnings.list_columns, 'list column')}: the table comes as JSON records, and the parse gives one row per value`
     );
   }
   return parts;
 }
+
+/**
+ * The line above the composer while an attachment waits, in place of the step's line: the plot
+ * buttons wait for it, since they would plot the data before it, or none.
+ */
+export const ATTACHMENT_LINE =
+  '# the attached table is read when you send it: Enter or .send(), with a note if you like';
+
+/** The message box's placeholder while an attachment waits: the typed text goes with it as its note. */
+export const ATTACHMENT_PLACEHOLDER = 'add a note for this table, or press Enter';
+
+/** Under a pasted table or a file too large for the dataset route (`overCap`). */
+export const ATTACHMENT_OVER_CAP_TEXT =
+  'at most 20,000 rows and 1 MB: filter first, or .open() an Excel or Parquet file (5 MB)';
+
+/** The drop hint over the composer while a file is dragged over the chat, and why a drop would wait. */
+export const DROP_HINT_TEXT = {
+  ready: 'drop the file to attach it',
+  reading: 'a file is still being read: drop the next one when it is done',
+  locked: 'all libraries are plotting this data: close the panel first',
+  working: 'a step is still running: drop the file when it is done',
+} as const;
 
 /** A file dropped or chosen while the session works on something: the server runs one thing at a time. */
 export const FILE_BUSY_TEXT =
@@ -474,7 +495,7 @@ export function describeFileRefusal(name: string, code: string): string {
 
 /**
  * A failed data call in one line: what the data fails on when the server named
- * it (owner rule, 2026-10-16: never only "could not read"), else the code's
+ * it (never only "could not read", which leaves the user nothing to fix), else the code's
  * text, then the request id. The cause stands alone: it is a whole sentence,
  * and some say the format WAS read ("the data reads as JSON Lines, but line 2
  * …"), which a "could not read this as …" lead would contradict.

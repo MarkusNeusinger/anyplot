@@ -50,6 +50,7 @@ from .language import english_name, same_language
 from .memory import MemoryEntry, read_memory
 from .models import make_content_config, make_model
 from .plugins.budget import BudgetPlugin
+from .plugins.ledger import CURRENT_LEDGER
 from .plugins.reply_language import ReplyLanguagePlugin
 from .plugins.scope_guard import ScopeGuardPlugin
 from .plugins.shipped_reply import ShippedReplyPlugin
@@ -141,7 +142,10 @@ async def session_context(context: ReadonlyContext) -> str:
     set (`LANGUAGE_SOURCE_LINES`), and the heading above the fence says to write in it.
     The plot language (`session_state.plot_language`) follows inside a `<plot_language>`
     fence only where it differs, under a heading that says it changes only through
-    `set_language`.
+    `set_language`. On the turn of the note typed with a paste, the paste's notes and file
+    name follow inside `<user_notes>` and `<user_data>` with their preambles
+    (`RequestLedger.paste_context`): user text, but judged at the paste, fenced as data
+    as the binding warnings' column names are, and kept out of the judged user turn.
     """
     view = read_session(context.state)
     if view is None:
@@ -163,7 +167,7 @@ async def session_context(context: ReadonlyContext) -> str:
     dataset = services.datasets.get(view.dataset_id, session_id) if view.dataset_id else None
     if dataset is None:
         lines.append(
-            "- Dataset: none yet; the user pastes it in the data panel, or generate_data computes it from a formula, "
+            "- Dataset: none yet; the user pastes it into the message box, or generate_data computes it from a formula, "
             "or run_data_code from the user's code"
         )
     else:
@@ -206,6 +210,14 @@ async def session_context(context: ReadonlyContext) -> str:
             lines.append(f"- {CONVERSIONS_HEADING.format(count=len(found))}")
             lines.append(fence("user_data", "\n".join(candidate.line() for candidate in found)))
             telemetry.note_conversion(session_id, "asked")  # until `prepare_data` makes a column in this turn
+        if view.summary_pending:
+            # The first turn on a paste: a typed message is the user's note with it (root.md, the summary rule).
+            lines.append("- Data: pasted just now, not summarized yet")
+        ledger = CURRENT_LEDGER.get()
+        if ledger is not None and ledger.paste_context:
+            # The note's turn: the paste's notes and file name, fenced with their preambles, for every call of the
+            # turn (a `prepare_data` that made a new version ends the line above, never these).
+            lines.append(ledger.paste_context)
         if view.data_confirmed:
             lines.append("- Data: confirmed by the user; the plot can be made")
         else:

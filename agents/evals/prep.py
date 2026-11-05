@@ -54,16 +54,18 @@ is a miss whatever the data calls did, and the summary counts such cases under
 
 A case may send the step-1 summary action instead of a message (`action: "summarize_data"`, as the page
 does after a paste): it expects no data call, and only its reply is scored. Every root reply is also
-measured for its shape (owner decision of 2026-11-01: short, to the point, a question only when it
-matters): its words (`MAX_REPLY_WORDS`), its questions, and whether it closes with one. A closing
+measured for its shape (short, to the point, a question only when it matters): its words
+(`MAX_REPLY_WORDS`), its questions, and whether it closes with one. A closing
 question is a reply miss unless the turn is blocked: the case is tagged `ask_back` (a request that can
 mean two different changes), a data call of the turn failed, or the turn left a required role of the spec
 without a column (`roles_open`), unless the session block offered a date column for it, which the reply
 states instead (`offered`, since 2026-11-04). A closing invitation to choose is a reply miss on the same
 terms (`closes_with_invitation`: a last sentence or clause such as "Choose …", "Pick one …", "tell me which
 …", "Wähle …"; never the instruction to press `.confirm()`). A reply over `MAX_REPLY_WORDS` words is a
-reply miss too. The reply gate is `--max-reply-misses` (10 percent) of the answered cases with a reply;
-the reply text itself never enters the report.
+reply miss too, and so is the reply of a summary turn (the summary action, or the note sent with the paste)
+that names no row count in digits, neither the paste's nor that of the version the turn made (`names_count`):
+a summary says how many rows the data has. The reply gate is `--max-reply-misses` (10 percent) of the
+answered cases with a reply; the reply text itself never enters the report.
 
 A summary case is also checked for the conversions it owes (`score_conversions`). Before the turn, the run
 computes in code what the session block will list for the open roles (`conversions.candidates`); after it, each
@@ -83,7 +85,7 @@ two or three times (a profile read, the tool call, the reply). Under the Vertex 
 for Claude Haiku in `eu` (150 requests per minute since 2026-10-31, see `scope.py`),
 `--calls-per-minute` (25 by default) spaces the starts of the cases `CALLS_PER_CASE`
 times further apart than the scope eval spaces its judge calls: 12 seconds at the
-default, so the 41 cases take about 8 minutes; the cases run one at a time. The cost
+default, so the 81 cases take about 16 minutes; the cases run one at a time. The cost
 is the list price of every call the attribution log booked (`pricing.call_cost`,
 `pricing.judge_cost`).
 
@@ -109,7 +111,7 @@ import statistics
 import sys
 import time
 from collections import Counter, defaultdict
-from collections.abc import MutableMapping, Sequence
+from collections.abc import Collection, MutableMapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -223,6 +225,10 @@ class PrepCase(BaseModel):
     refuse: bool = False
     """The case passes when no data tool call of the turn stored a version (a scope refusal, a validator refusal or
     no call at all): a snippet that reads a file or a script with another purpose than the plot's data."""
+    first_turn: bool = False
+    """The message is the note the user typed with the paste: the first turn on the data, which summarizes it and
+    acts on the note in one reply (`SUMMARY_PENDING`). Without it, the harness marks the data summarized before the
+    message, as after the page's summary turn, so a message case means what it meant before the note path."""
 
     @model_validator(mode="after")
     def _one_turn(self) -> PrepCase:
@@ -230,6 +236,8 @@ class PrepCase(BaseModel):
             raise ValueError("a case has either a message or an action")
         if self.action is not None and self.dataset_text is None:
             raise ValueError("a summary action needs a dataset")
+        if self.first_turn and (self.message is None or self.dataset_text is None):
+            raise ValueError("a first turn is a message sent with a dataset")
         return self
 
 
@@ -508,8 +516,9 @@ class CaseResult:
     closing_invitation: bool = False
     """The last sentence of the last reply text, or its last clause, asks the user to choose (`INVITATION`)."""
     reply_miss: str | None = None
-    """`closing_question` or `closing_invitation` (one the turn was not blocked for, see `measure_reply`) or `long`
-    (over `MAX_REPLY_WORDS`)."""
+    """`closing_question` or `closing_invitation` (one the turn was not blocked for, see `measure_reply`), `long`
+    (over `MAX_REPLY_WORDS`), or `no_row_count` (a summary turn whose reply names no row count of the data,
+    `names_count`)."""
     roles_open: bool = False
     """The turn left a required role of the spec without a column, so the plot cannot be drawn until the user binds
     one or brings other data: the reply may close with a question about it."""
@@ -588,6 +597,7 @@ class CaseRunner:
                 result.cause = f"session: {_detail(opened)}"
                 return result
             sid = opened.json()["session_id"]
+            pasted_rows: int | None = None
             if case.dataset_text is not None:
                 stored = await self.client.post(
                     f"/v1/sessions/{sid}/dataset", headers=headers("d"), json={"text": case.dataset_text}
@@ -599,8 +609,12 @@ class CaseRunner:
                     else:
                         result.cause = f"dataset: {_detail(stored)}"
                     return result
+                pasted_rows = int(stored.json()["profile"]["rows"])
+                if case.message is not None and not case.first_turn:
+                    await self._mark_summarized(user, sid)
+            summary_turn = case.action == "summarize_data" or case.first_turn
             listed = await self._listed_conversions(user, sid)
-            owed = [line.operations() for line in listed if line.certain] if case.action == "summarize_data" else []
+            owed = [line.operations() for line in listed if line.certain] if summary_turn else []
             result.offered = any(type(line).__name__ == "DateNumbers" for line in listed)
             message = {"action": case.action} if case.action is not None else {"text": case.message}
             turn = await self.client.post(f"/v1/sessions/{sid}/messages", headers=headers("m"), json=message)
@@ -609,15 +623,22 @@ class CaseRunner:
                 result.cause = f"turn: {_detail(turn)}"
                 return result
             events = parse_events([(time.monotonic(), turn.content)], started)
+            rows: set[int] = set()
             for _, name, data in events:
                 if name == "error":
                     result.cause = f"error: {data.get('code')}"
                     return result
                 if name == "refusal":
                     result.refusal = str(data.get("code"))
+                if name == "done" and isinstance(data.get("dataset"), dict):
+                    rows.add(int(data["dataset"]["profile"]["rows"]))  # the version this turn made
             texts = await self._read_calls(result, user, sid, decimal, refuse=case.refuse)
             score_conversions(result, owed, decimal)
-            measure_reply(result, texts, blocked=bool(BLOCKED_TAGS.intersection(case.tags)))
+            if summary_turn and pasted_rows is not None:
+                rows.add(pasted_rows)
+            measure_reply(
+                result, texts, blocked=bool(BLOCKED_TAGS.intersection(case.tags)), rows=rows if summary_turn else None
+            )
         finally:
             result.latency_s = round(time.monotonic() - started, 3)
             if sid is not None:
@@ -630,6 +651,13 @@ class CaseRunner:
             for step in ("s", "d", "m", "x"):
                 self.collector.take(f"{tag}-{step}")
         return result
+
+    async def _mark_summarized(self, user: str, sid: str) -> None:
+        """The data as the page leaves it after the summary turn: no longer pasted just now (`SUMMARY_PENDING`)."""
+        from agents.anyplot.session_state import SUMMARY_PENDING
+
+        session = await self.runtime.session(user, sid)
+        await self.runtime.write_state(session, {SUMMARY_PENDING: None})
 
     async def _listed_conversions(self, user: str, sid: str) -> list[Any]:
         """The conversion lines the session block lists for the turn about to start (`conversions.candidates`)."""
@@ -721,7 +749,20 @@ def score_conversions(result: CaseResult, owed: Sequence[Sequence[dict[str, Any]
         result.match = False
 
 
-def measure_reply(result: CaseResult, texts: Sequence[str], *, blocked: bool) -> None:
+def names_count(reply: str, count: int) -> bool:
+    """Whether `reply` writes `count` as a number of its own, in digits: `4`, `1,204`, `1.204`, `1 204` or `1’204`,
+    never inside another number (`2024` holds no `4`) nor as the whole part of a decimal (`4.5`)."""
+    spellings = {str(count)}
+    if count >= 1000:
+        grouped = f"{count:,}"
+        spellings |= {grouped.replace(",", mark) for mark in (",", ".", " ", " ", " ", "’", "'")}
+    pattern = "|".join(re.escape(spelling) for spelling in sorted(spellings, key=len, reverse=True))
+    return re.search(rf"(?<![\d.,])(?:{pattern})(?!\d|[.,]\d)", reply) is not None
+
+
+def measure_reply(
+    result: CaseResult, texts: Sequence[str], *, blocked: bool, rows: Collection[int] | None = None
+) -> None:
     """The reply's shape: its words and questions, whether it closes with a question, and its reply miss.
 
     `blocked` says the turn cannot go on without the user's answer (`BLOCKED_TAGS`); a data call that failed
@@ -729,7 +770,9 @@ def measure_reply(result: CaseResult, texts: Sequence[str], *, blocked: bool) ->
     without a column (`roles_open`), the case `root.md` names for a question, unless the session block offered a
     date column for it (`offered`), which the reply states instead. A closing invitation to choose
     (`closes_with_invitation`) is a miss on the same terms. A turn without a reply text (a refusal) is measured as
-    none.
+    none. `rows`, on a summary turn (the summary action, or the note sent with the paste), are the row counts its
+    summary may name: the paste's, and the last version's when the turn made one; a reply that names neither has
+    no summary (`no_row_count`).
     """
     from agents.anyplot.telemetry import ends_with_question
 
@@ -747,6 +790,8 @@ def measure_reply(result: CaseResult, texts: Sequence[str], *, blocked: bool) ->
         result.reply_miss = "closing_invitation"
     elif result.reply_words > MAX_REPLY_WORDS:
         result.reply_miss = "long"
+    elif rows and not any(names_count(reply, count) for count in rows):
+        result.reply_miss = "no_row_count"
 
 
 def closes_with_invitation(text: str) -> bool:
@@ -912,7 +957,8 @@ def verdict_of(summary: dict[str, Any], gates: Gates) -> tuple[int, list[str]]:
     if (summary["reply_miss_rate"] or 0.0) > gates.max_reply_misses:
         reasons.append(
             f"{summary['reply_misses']} of {summary['replies']} replies close with a question or an invitation the "
-            f"turn was not blocked for or run over {MAX_REPLY_WORDS} words (more than {gates.max_reply_misses:.0%})"
+            f"turn was not blocked for, run over {MAX_REPLY_WORDS} words or summarize without a row count "
+            f"(more than {gates.max_reply_misses:.0%})"
         )
     skipped = summary.get("conversions_owed", 0) - summary.get("conversions_made", 0)
     if skipped:
@@ -1010,8 +1056,8 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         type=float,
         default=DEFAULT_MAX_REPLY_MISSES,
         help=(
-            "replies that close with a question or an invitation the turn was not blocked for, or run over "
-            f"{MAX_REPLY_WORDS} words"
+            "replies that close with a question or an invitation the turn was not blocked for, run over "
+            f"{MAX_REPLY_WORDS} words, or summarize without a row count"
         ),
     )
     args = parser.parse_args(argv)

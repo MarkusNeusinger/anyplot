@@ -448,6 +448,10 @@ class ParsedDataset:
     warnings: list[str]
     text_columns: list[str] = field(default_factory=list)
     """The columns kept text by request (`parse_dataset(text_columns=...)`), in column order."""
+    pasted_cells: dict[str, list[str]] = field(default_factory=dict)
+    """The cells as pasted, one per row, of each number column whose dots could be decimals or thousands
+    (`AMBIGUOUS_DOTS`), by its name: what `set_type` to number with a decimal comma reads again. The user's data, kept
+    with the paste's version only and deleted with the session; never sent to the page."""
     context_lines: list[str] = field(default_factory=list)
     """The lines `find_table` left out above and below the table (a title, an export's metadata, a source
     line, a note), each as one cleaned text line, at most `MAX_CONTEXT_CHARS` in all: the user's notes about
@@ -2784,6 +2788,12 @@ def _as_plain_numbers(column: _Column, cells: list[str], present: list[str]) -> 
 AMBIGUOUS_COMMAS = "commas read as decimal commas; remove them first if they separate thousands"
 """The note of a column whose commas could be decimals or thousands (`1,234`); `_commas_as_thousands` replaces it."""
 
+AMBIGUOUS_DOTS = "dots read as decimal points; say so in the chat if they separate thousands"
+"""The note of a pasted number column whose dots could be decimals or thousands: every cell a whole number or a
+`1.234` shape (`_dot_groups_only`), and nothing else in the file settled the reading (`_retype_thousands_dots`). The
+column keeps its cells as pasted (`ParsedDataset.pasted_cells`), so `set_type` to number with a decimal comma can read
+it again: its canonical text has lost the trailing zeros (`7.000` is stored as `7`)."""
+
 BIG_INTEGERS = "whole numbers beyond the 64-bit range kept as text, so no digit is lost"
 """The note of an integer column with a value past int64, which a number column could hold only rounded."""
 
@@ -3451,6 +3461,12 @@ def _build(
         for column in columns:
             if column.dtype == "number" and not column.decimal_comma:
                 _retype_thousands_dots(column, decimal_comma=decimal_comma)
+    if not canonical:
+        # Only a paste's own text says how its dots were meant: a CSV the service wrote holds canonical numbers.
+        for column in columns:
+            if column.dtype == "number" and not column.decimal_comma and not column.id_like:
+                if _dot_groups_only(column):
+                    column.notes.append(AMBIGUOUS_DOTS)
     for column in columns:
         _keep_na_codes(column)
         _fidelity_notes(column, layout_padding=source_format == "whitespace")
@@ -3534,6 +3550,11 @@ def _finish(
         parse_dates=[column.name for column in columns if column.dtype == "datetime"],
         warnings=capped,
         text_columns=[column.name for column in columns if column.name in text_columns],
+        pasted_cells={
+            column.name: list(column.source)
+            for column in columns
+            if AMBIGUOUS_DOTS in column.notes and len(column.source) == len(rows)
+        },
     )
 
 

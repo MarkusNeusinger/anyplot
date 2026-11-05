@@ -67,6 +67,7 @@ WarningCode = Literal[
     "leading_zeros_text",
     "big_integers_text",
     "decimal_commas_ambiguous",
+    "decimal_points_ambiguous",
     "thousands_separators",
     "utc_offsets_normalised",
     "sub_microsecond_text",
@@ -182,6 +183,10 @@ _RULES: tuple[tuple[re.Pattern[str], WarningCode], ...] = tuple(
         (
             _COLUMN + r"commas read as decimal commas; remove them first if they separate thousands$",
             "decimal_commas_ambiguous",
+        ),
+        (
+            _COLUMN + r"dots read as decimal points; say so in the chat if they separate thousands$",
+            "decimal_points_ambiguous",
         ),
         (
             _COLUMN

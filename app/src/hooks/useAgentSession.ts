@@ -18,8 +18,8 @@
  *
  * Theme: every turn sends the theme the site shows when it starts
  * (`useTheme().effective`, so `system` resolves first), and a plot of that turn
- * renders in it unless the user asked for a theme in the chat (owner decision
- * of 2026-11-01); the light and dark switch renders the other one. A switch of
+ * renders in it unless the user asked for a theme in the chat; the light and
+ * dark switch renders the other one. A switch of
  * the site theme mid-session changes no shown version, only the next one. The
  * fan-out's sessions are this hook too, so they send the same theme.
  *
@@ -80,7 +80,7 @@
  * carries the table like any data change: the next version when data exists,
  * or version 1 when the session had none, which then becomes the hook's first
  * dataset with the roles and default bindings `done` names (nothing to undo).
- * The dataset route answers such text pasted into the data box with `422
+ * The dataset route answers such text sent as an attachment with `422
  * formula`, because its free-text reader is a model that would write the rows
  * itself; code that generates data (Python, JavaScript, R) with `422 code`;
  * text that asks for data instead of holding it ("Beispieldaten", "random
@@ -237,6 +237,7 @@ import {
   nextUtcMidnight,
   type NoticeInfo,
 } from 'src/sections/agent-chat/messages';
+import type { ConvertedFile } from 'src/sections/agent-chat/useChatAttachment';
 import { reloadOnceForAccess } from 'src/utils/adminAuth';
 
 /** How long Stop waits for the server's `done` before it lets go of the stream. */
@@ -346,6 +347,11 @@ export interface DatasetState {
    * it: data the assistant changed or computed, and an undo, have none.
    */
   upload?: DatasetUpload;
+  /**
+   * The binary file (Excel, ODS, Parquet, ...) this version's text was converted from, kept in
+   * the page for the sheet picker, which converts it again for another sheet. Never stored.
+   */
+  file?: ConvertedFile;
 }
 
 /** A `POST .../dataset` body as the page sent it: the text, and how the server should read it. */
@@ -382,6 +388,8 @@ export interface TranscriptionState {
    * with the table, also after the box was cleared or edited meanwhile.
    */
   source?: string;
+  /** The converted workbook the text came from: `.use()` keeps it for the sheet picker. */
+  file?: ConvertedFile;
 }
 
 /** Binding name (`x`, `y1`) to column; only bound names are present. */
@@ -419,19 +427,41 @@ export type TurnEnd = 'done' | 'error' | 'refused' | 'stopped';
 export interface ParseResult {
   outcome: ParseOutcome;
   turnEnd: TurnEnd | null;
+  /** Why a `failed` parse was refused, as `datasetError` holds it: the attachment shows it. */
+  failure?: Failure;
 }
 
-/** What the caller of `parseData` hears before the turn a parse starts. */
+/** What the caller of `parseData` hears before the turn a parse starts, and what goes with the text. */
 export interface ParseOptions {
   /**
    * The text went to the chat as the user's message (`forwarded`), trimmed as it was sent:
-   * called before that turn runs, so the data box can let go of it at once.
+   * called before that turn runs, so the attachment can go at once.
    */
   onForward?: (text: string) => void;
+  /** The data is stored: called before the first turn on it runs, so the attachment can go at once. */
+  onStored?: () => void;
+  /**
+   * The text typed together with the attachment: once the data is stored it is the first turn,
+   * as the user's message, in place of the summary action. The server gives that turn the
+   * notes pasted with the table and the file's name, and the assistant summarizes the data and
+   * acts on the note in one reply.
+   */
+  note?: string;
+  /** The binary file the text was converted from, kept with the data for the sheet picker. */
+  file?: ConvertedFile | null;
 }
 
 /** The dataset route's answers that send pasted text to the chat instead of a parser. */
 const FORWARDED = new Set(['formula', 'code', 'data_request']);
+
+/**
+ * The scope judge's refusals (`scope_guard.REFUSAL_CODES`; `attack` reads as `out_of_scope`)
+ * and its outage, which leave a note's turn without the summary of the data it came with. The
+ * summary action skips the judge, so it still runs. The route's own refusals (a closed session,
+ * a limit, the day's budget) would refuse the action as well.
+ */
+const NOTE_REFUSALS = new Set(['out_of_scope', 'needs_data', 'other_library']);
+const NOTE_JUDGE_OUTAGE = 'guard_unavailable';
 
 /**
  * The offer of the plot in the library the user switched to, with the plot
@@ -521,6 +551,8 @@ export interface AgentSessionState {
   memory: PlotMemory | null;
   /** A removal from the plot memory is in flight. */
   memoryBusy: boolean;
+  /** The sheet picker's read of another sheet is in flight on the server (`readSheet`). */
+  sheetBusy: boolean;
   /**
    * A library switch the user asked for in the chat (`done.switch`, the
    * assistant's `switch_plot`), which the page carries out once the turn is
@@ -559,6 +591,7 @@ type Action =
       bytes: number;
       paste?: { text: string; source?: string };
       upload?: DatasetUpload;
+      file?: ConvertedFile;
     }
   | { type: 'parse_failed'; failure: Failure }
   /**
@@ -600,6 +633,7 @@ type Action =
   /** The plot memory as the server listed it, or as a removal left it. */
   | { type: 'memory_sync'; memory: PlotMemory }
   | { type: 'memory_busy'; busy: boolean }
+  | { type: 'sheet_busy'; busy: boolean }
   /** A turn's `done` asked for a switch (`chatSwitch`), or the page took it (`null`). */
   | { type: 'chat_switch'; request: ChatSwitch | null }
   | { type: 'theme_busy'; busy: boolean }
@@ -663,6 +697,7 @@ export function initialAgentState(library: string): AgentSessionState {
     carryOffer: null,
     memory: null,
     memoryBusy: false,
+    sheetBusy: false,
     chatSwitch: null,
     themeBusy: false,
     pageBusy: false,
@@ -806,9 +841,13 @@ function withDataVersion(
     dataset: {
       parsed: { ...parsed, roles, version: versionOf(parsed.version) },
       bytes: state.dataset?.bytes ?? 0,
-      // The paste stays with every version made from it (Fable review of #12200); the picker itself shows only
-      // beside an answer that names `tables`, which only the paste route gives.
+      // The paste stays with every version made from it, so the table picker can still read another of
+      // its tables; the picker itself shows only beside an answer that names `tables`, which only the
+      // paste route gives.
       ...(state.dataset?.paste ? { paste: state.dataset.paste } : {}),
+      // So does the workbook a version was read from, for the sheet picker: the server carries the file's
+      // name on every version of that file's data, and on generated data, which no sheet made, it has none.
+      ...(state.dataset?.file && parsed.file_name ? { file: state.dataset.file } : {}),
     },
     roles,
     bindings,
@@ -943,6 +982,7 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
           bytes: action.bytes,
           ...(action.paste ? { paste: action.paste } : {}),
           ...(action.upload ? { upload: action.upload } : {}),
+          ...(action.file ? { file: action.file } : {}),
         },
         dataChange: null,
         undoError: null,
@@ -1092,7 +1132,7 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
         ...state,
         memory: action.memory,
         // A list that arrives after the switch (its read was still in flight) backs the offer's count
-        // too, so a removal counts the composer's decisions down (Flash review, 2026-11-02).
+        // too, so a removal counts the composer's decisions down.
         carryOffer:
           state.carryOffer && action.memory.entries.length > 0
             ? { ...state.carryOffer, memoryBacked: true }
@@ -1100,6 +1140,8 @@ function reduce(state: AgentSessionState, action: Action): AgentSessionState {
       };
     case 'memory_busy':
       return { ...state, memoryBusy: action.busy };
+    case 'sheet_busy':
+      return { ...state, sheetBusy: action.busy };
     case 'chat_switch':
       return { ...state, chatSwitch: action.request };
     case 'theme_busy':
@@ -1290,6 +1332,8 @@ export function useAgentSession({
   // How the last turn ended (`runTurn`), null when it never started: a parse reports it for
   // the turn it started (`ParseResult.turnEnd`).
   const turnEndRef = useRef<TurnEnd | null>(null);
+  // The code of the refusal that ended the last turn, if one did (`out_of_scope`, `needs_data`, ...).
+  const turnRefusalRef = useRef<string | null>(null);
   const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Set synchronously, before the state catches up, so a double click starts nothing twice.
   const themeRef = useRef(false);
@@ -1305,6 +1349,7 @@ export function useAgentSession({
   const saveRef = useRef(false);
   const languageRef = useRef(false);
   const memoryRef = useRef(false);
+  const sheetRef = useRef(false);
   // Counts the memory lists asked for and answered: a read overtaken by a newer one is dropped.
   const memorySeq = useRef(0);
   // The feedback send in flight per version: a second `.send()` for it joins the first.
@@ -1347,6 +1392,7 @@ export function useAgentSession({
       bindingsRef.current ||
       languageRef.current ||
       memoryRef.current ||
+      sheetRef.current ||
       stateRef.current.libraryBusy,
     []
   );
@@ -1741,6 +1787,27 @@ export function useAgentSession({
     [token]
   );
 
+  /**
+   * The sheet picker's read: the workbook converted again on the server for another sheet. It is
+   * work in flight like a parse (`busy()`, `sheetBusy`), so nothing confirms, plots or sends while
+   * it runs, and it ends before the page parses its answer, which a busy session would skip. While
+   * something else runs it starts nothing (`run_active`).
+   */
+  const readSheet = useCallback(
+    async (dataBase64: string, sheet?: string): Promise<ConvertAnswer> => {
+      if (busy()) throw new AgentApiError(409, 'run_active');
+      sheetRef.current = true;
+      safeDispatch({ type: 'sheet_busy', busy: true });
+      try {
+        return await convertFile(dataBase64, sheet);
+      } finally {
+        sheetRef.current = false;
+        safeDispatch({ type: 'sheet_busy', busy: false });
+      }
+    },
+    [busy, convertFile, safeDispatch]
+  );
+
   const loadImage = useCallback(
     async (number: number, theme: Theme, status: 'ok' | 'needs_attention') => {
       safeDispatch({ type: 'version_image', number, theme, image: { state: 'loading' } });
@@ -2033,10 +2100,12 @@ export function useAgentSession({
       const sid = current.sessionId;
       turnErrorRef.current = null;
       turnEndRef.current = null;
+      turnRefusalRef.current = null;
       if (!sid || current.run || busy()) return;
       let errorCode: string | null = null;
       // A refusal arrives as an event of its own; the stream then ends with `done` as usual.
       let refused = false;
+      let refusalCode: string | null = null;
       const controller = new AbortController();
       abortRef.current = controller;
       stoppedRef.current = false;
@@ -2061,7 +2130,10 @@ export function useAgentSession({
           if (!event) continue;
           onEvent(event);
           if (event.type === 'error') errorCode = event.code;
-          if (event.type === 'refusal') refused = true;
+          if (event.type === 'refusal') {
+            refused = true;
+            refusalCode = event.code;
+          }
           if (event.type === 'done') {
             finished = true;
             break;
@@ -2084,6 +2156,7 @@ export function useAgentSession({
         if (stoppedRef.current) addItem({ kind: 'notice', text: 'stopped' });
         if (abortRef.current === controller) abortRef.current = null;
         turnErrorRef.current = errorCode;
+        turnRefusalRef.current = refusalCode;
         // A stream aborted for another reason (the page unmounted) did not end: no `done`.
         turnEndRef.current = stoppedRef.current
           ? 'stopped'
@@ -2144,7 +2217,7 @@ export function useAgentSession({
   // ---------------------------------------------------------------- parse and summary
 
   /**
-   * `.parse()`: send the pasted text. A table is stored (version 1, unconfirmed),
+   * Enter with an attachment: send its text. A table is stored (version 1, unconfirmed),
    * its default bindings are applied, and the assistant's summary of it follows
    * as the turn `summarize_data`. Text that is no table comes back as a
    * transcription to decide on, which stores nothing and asks for no summary. A
@@ -2169,11 +2242,13 @@ export function useAgentSession({
       const bytes = utf8Bytes(text);
       const bucket = sizeBucket(bytes);
       if (bytes > MAX_DATASET_BYTES) {
-        safeDispatch({ type: 'parse_failed', failure: { code: 'too_long', ref: null } });
+        const failure: Failure = { code: 'too_long', ref: null };
+        safeDispatch({ type: 'parse_failed', failure });
         trackEvent('agent_data_parsed', { status: 'too_long', size_bucket: bucket });
-        return { outcome: 'failed', turnEnd: null };
+        return { outcome: 'failed', turnEnd: null, failure };
       }
       let outcome: ParseOutcome = 'failed';
+      let refusal: Failure | undefined;
       let forward: string | null = null;
       parseRef.current = true;
       safeDispatch({ type: 'parse_start' });
@@ -2191,6 +2266,7 @@ export function useAgentSession({
               note: typeof parsed.note === 'string' ? parsed.note : '',
               bytes,
               ...(source ? { source } : {}),
+              ...(options.file ? { file: options.file } : {}),
             },
           });
           trackEvent('agent_data_parsed', { status: 'transcribed', size_bucket: bucket });
@@ -2203,6 +2279,7 @@ export function useAgentSession({
           // The text of a paste the table picker may read again (a confirmed transcription is never split).
           ...(confirmed ? {} : { paste: { text, ...(source ? { source } : {}) } }),
           upload: { text, confirmed, ...(source ? { source } : {}), ...(table ? { table } : {}) },
+          ...(options.file ? { file: options.file } : {}),
         });
         // A paste before any typed message may set the session language from its notes or headers.
         const pastedLanguage = readPlotLanguage(parsed.language);
@@ -2225,6 +2302,7 @@ export function useAgentSession({
           trackEvent('agent_data_parsed', { status: failure.code, size_bucket: bucket });
         } else {
           // Longer code reads as a failure whose line asks to shorten it (`DATA_FAILURE.code`).
+          refusal = failure;
           safeDispatch({ type: 'parse_failed', failure });
           const known = ['too_long', 'unparseable', 'data_refused', ...FORWARDED];
           const status = known.includes(failure.code) ? failure.code : 'error';
@@ -2243,13 +2321,27 @@ export function useAgentSession({
         await runTurn({ text: forward });
         return { outcome, turnEnd: turnEndRef.current };
       }
-      // The assistant describes the stored data first thing, so the user can
-      // correct it in words before confirming it.
+      // The assistant describes the stored data first thing, so the user can correct it in words
+      // before confirming it. A note typed with the attachment is that first turn: the assistant
+      // summarizes the data and acts on the note in one reply.
       if (outcome === 'stored') {
-        await runTurn({ action: 'summarize_data' });
-        return { outcome, turnEnd: turnEndRef.current };
+        options.onStored?.();
+        const note = options.note?.trim() ?? '';
+        if (!note || note.length > MAX_MESSAGE_CHARS) {
+          await runTurn({ action: 'summarize_data' });
+          return { outcome, turnEnd: turnEndRef.current };
+        }
+        await runTurn({ text: note });
+        const end = turnEndRef.current;
+        // The note's turn was refused before the assistant read the data, or the scope judge
+        // was out: the data still gets its summary. The note stays in the thread above it.
+        const unsummarized =
+          (end === 'refused' && NOTE_REFUSALS.has(turnRefusalRef.current ?? '')) ||
+          (end === 'error' && turnErrorRef.current === NOTE_JUDGE_OUTAGE);
+        if (unsummarized && mounted.current) await runTurn({ action: 'summarize_data' });
+        return { outcome, turnEnd: end };
       }
-      return { outcome, turnEnd: null };
+      return { outcome, turnEnd: null, ...(refusal ? { failure: refusal } : {}) };
     },
     [token, safeDispatch, handleFailure, trackEvent, applyBindings, busy, runTurn]
   );
@@ -2265,8 +2357,15 @@ export function useAgentSession({
   const confirmTranscription = useCallback((): Promise<ParseResult> => {
     const transcription = stateRef.current.transcription;
     if (!transcription) return Promise.resolve({ outcome: 'skipped', turnEnd: null });
-    // The file's name travels with the table it was read from, whatever the box holds now.
-    return parseData(transcription.text, true, transcription.source);
+    // The file's name travels with the table it was read from, whatever the box holds now, and a
+    // workbook stays with it for the sheet picker.
+    return parseData(
+      transcription.text,
+      true,
+      transcription.source,
+      undefined,
+      transcription.file ? { file: transcription.file } : undefined
+    );
   }, [parseData]);
 
   /**
@@ -2534,6 +2633,7 @@ export function useAgentSession({
     fetchArtifact,
     reportOutcome,
     convertFile,
+    readSheet,
     fetchDataCsv,
     saveSession,
     setLanguage,
@@ -2555,7 +2655,8 @@ export function sessionBusy(state: AgentSessionState): boolean {
     state.themeBusy ||
     state.pageBusy ||
     state.languageBusy ||
-    state.memoryBusy
+    state.memoryBusy ||
+    state.sheetBusy
   );
 }
 

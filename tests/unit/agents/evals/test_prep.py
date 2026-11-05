@@ -87,9 +87,17 @@ class TestFixtures:
 
         # 36 single-step cases (two of them `derive`, two `make_date`, one month-only date format, one sort of month
         # names, one daily mean per sensor, four text operations, two `date_number`), 11 `hard` ones (chains,
-        # ambiguity, unsupported asks), 11 data-code cases, 13 step-1 summaries, 3 requests for example data and 4 for
-        # another plot type.
-        assert len(cases) == 78
+        # ambiguity, unsupported asks), 11 data-code cases, 13 step-1 summaries, 3 requests for example data, 4 for
+        # another plot type and 5 notes sent with the paste (`first_turn`), one of them a decimal comma read again
+        # from the pasted cells and one whose change comes with a conversion the data owes, and a short table the page
+        # kept as a message (`misrouted`), which the root asks for again.
+        assert len(cases) == 84
+        assert [item.id for item in cases if "misrouted" in item.tags] == ["en-table-as-message"]
+        notes = [item for item in cases if item.first_turn]
+        assert len(notes) == 5 and {item.locale for item in notes} == {"de", "en"}
+        assert all(item.message and item.dataset_text and "note" in item.tags for item in notes)
+        assert any("data_question" in item.tags for item in notes)  # a summary and an answer in one reply
+        assert any("conversion" in item.tags for item in notes)  # the note's change and the owed conversion
         plot_type = [item for item in cases if "plot_type" in item.tags]
         assert len(plot_type) == 4 and {item.locale for item in plot_type} == {"de", "en"}
         assert all(not item.expected_operations and item.dataset_text for item in plot_type)
@@ -167,6 +175,9 @@ class TestFixtures:
             {},
             {"action": "summarize_data", "dataset_text": None},
             {"action": "create_plot"},
+            # A note is a message sent with a paste: neither without a message nor without data.
+            {"action": "summarize_data", "first_turn": True},
+            {"message": "only 2024", "dataset_text": None, "first_turn": True},
         ],
     )
     def test_a_case_has_a_message_or_a_summary_action(self, fields: dict[str, Any]) -> None:
@@ -474,8 +485,8 @@ class TestScore:
         ]
         code, reasons = verdict_of(summary, Gates())
         assert code == EXIT_FAILED and reasons == [
-            "1 of 2 replies close with a question or an invitation the turn was not blocked for or run over "
-            f"{prep.MAX_REPLY_WORDS} words (more than 10%)"
+            "1 of 2 replies close with a question or an invitation the turn was not blocked for, run over "
+            f"{prep.MAX_REPLY_WORDS} words or summarize without a row count (more than 10%)"
         ]
         assert verdict_of(summary, Gates(max_reply_misses=0.5)) == (EXIT_OK, [])
         assert "match, reply: closing question" in prep.table(self.CASES, results)
@@ -536,6 +547,36 @@ class TestReplyShape:
         prep.measure_reply(result, [], blocked=False)
 
         assert result.reply_words is None and result.reply_miss is None
+
+    @pytest.mark.parametrize(
+        ("reply", "count", "named"),
+        [
+            ("Die Daten haben 4 Zeilen und 2 Spalten.", 4, True),
+            ("3 rows remain.", 3, True),
+            ("1,204 rows and 3 columns", 1204, True),
+            ("1.204 Zeilen", 1204, True),
+            ("1’204 Zeilen", 1204, True),
+            ("only the rows of 2024 stay", 4, False),
+            ("a mean of 4.5", 4, False),
+            ("die drei Monate von 2024", 3, False),
+        ],
+    )
+    def test_a_count_is_named_in_digits_as_a_number_of_its_own(self, reply: str, count: int, named: bool) -> None:
+        assert prep.names_count(reply, count) is named
+
+    def test_a_summary_turn_names_a_row_count_of_the_paste_or_of_its_version(self) -> None:
+        """The note's turn summarizes and acts: "3 of 5 rows" or "3 rows" after `nur 2024` both summarize."""
+        acted = CaseResult("s-001", [], [])
+        prep.measure_reply(acted, ["I kept the rows of 2024: 3 rows, Jahr and Umsatz."], blocked=False, rows={5, 3})
+        assert acted.reply_miss is None
+
+        bare = CaseResult("s-002", [], [])
+        prep.measure_reply(bare, ["Ich habe die Zeilen aus 2023 entfernt."], blocked=False, rows={5, 3})
+        assert bare.reply_miss == "no_row_count"
+
+        talk = CaseResult("s-003", [], [])
+        prep.measure_reply(talk, ["Renamed it."], blocked=False)
+        assert talk.reply_miss is None  # no summary turn: no count to name
 
     @pytest.mark.parametrize(
         ("text", "invitation"),
@@ -750,6 +791,62 @@ class TestRun:
         code, reasons = verdict_of(scored["summary"], Gates(min_exact=0))
         assert code == EXIT_FAILED and reasons == ["the root skipped 1 certain conversions of 2"]
         assert "certain conversions made: 1 of 2" in prep.summary_text(scored, reasons)
+
+    def test_a_note_is_the_first_turn_and_a_message_case_comes_after_the_summary(
+        self, services: Services, swap_models
+    ) -> None:
+        """A `first_turn` case reaches the root with the paste unsummarized; any other message case as after the
+        page's summary turn, so the 65 message cases keep the meaning they had before the note path."""
+        cases = [
+            PrepCase(
+                id="n-001",
+                dataset_text=HOURS,
+                message="only the first three",
+                first_turn=True,
+                expected_operations=[],
+                locale="en",
+            ),
+            PrepCase(id="n-002", dataset_text=HOURS, message="which column is x?", expected_operations=[], locale="en"),
+        ]
+        root_turns: list[list[dict[str, Any]]] = [[{"text": "4 rows; x is Study Hours."}], [{"text": "x is hours."}]]
+        fake: FakeAnthropic = swap_models("anthropic-vertex", script_for(*root_turns))
+
+        asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        # The session block's line, not the root.md rule that names it.
+        line = "- Data: pasted just now, not summarized yet"
+        first, later = (json.dumps(call) for call in fake.calls)
+        assert line in first
+        assert line not in later
+
+    def test_a_note_turn_names_the_rows_of_the_paste_or_of_the_version_it_made(
+        self, services: Services, swap_models
+    ) -> None:
+        """The reply of a note that dropped rows may name the rows left; one that names no count misses."""
+        drop = [{"op": "drop_rows", "where": [{"column": "Study Hours", "test": "gt", "value": 3}]}]
+        cases = [
+            PrepCase(
+                id=f"n-00{index}",
+                dataset_text=HOURS,
+                message="only up to 3 hours",
+                first_turn=True,
+                expected_operations=drop,
+                locale="en",
+            )
+            for index in (1, 2, 3)
+        ]
+        call = {"call": "prepare_data", "args": {"operations": drop}}
+        root_turns: list[list[dict[str, Any]]] = [
+            [call, {"text": "2 rows remain, Study Hours up to three."}],  # the version's count
+            [call, {"text": "Of the 4 rows I kept those up to 3 hours."}],  # the paste's count
+            [call, {"text": "I kept the rows up to three hours."}],  # no count in digits
+        ]
+        swap_models("anthropic-vertex", script_for(*root_turns))
+
+        results = asyncio.run(run_cases(cases, runtime=runtime(), services=services))
+
+        assert [result.match for result in results] == [True, True, True]
+        assert [result.reply_miss for result in results] == [None, None, "no_row_count"]
 
     def test_a_message_turn_owes_no_conversion(self) -> None:
         """A certain conversion is automatic in the summary turn only: in a later turn the root asks."""

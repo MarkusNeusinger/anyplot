@@ -1335,8 +1335,8 @@ export const agentApi = {
   /**
    * A dropped binary data file (Excel, OpenDocument, Parquet, Feather, Arrow,
    * NumPy) read on the server, in the renderer's sandbox, into the text the
-   * paste box takes. Nothing is stored: the page puts `text` into the box and
-   * the user's `.parse()` sends it through `uploadDataset`. `sheet` asks for
+   * message box's attachment holds. Nothing is stored: the page attaches `text`, and
+   * Enter sends it through `uploadDataset`. `sheet` asks for
    * another sheet (or `.npz` array) of the same file, by a name of `sheets`.
    * An answer the page cannot read is `422 invalid`.
    */

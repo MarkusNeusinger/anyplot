@@ -140,7 +140,8 @@ const FORMULA = 'y = sin(x), x von -pi bis pi';
 const EXAMPLE_REPLY = 'I generated example data to try the plot: 200 rows of x and y, all made up.';
 
 /** Free text the server reads into a table with a model and does not store. */
-const FREE_TEXT = 'Hund 7 Katze 3 und Vogel 4';
+/** Free text the stub reads as a table to decide on: three rows, so the message box attaches it. */
+const FREE_TEXT = 'Hund 7, Katze 3\nVogel 4, Maus 2\nPferd 1, Esel 5';
 const TRANSCRIBED = {
   transcribed: true,
   text: 'animal,count\nHund,7\nKatze,3\nVogel,4\n',
@@ -375,10 +376,23 @@ const lastTurn = () => turnBodies().slice(-1)[0];
 const turnEnded = () =>
   waitFor(() => expect(screen.queryByRole('button', { name: 'Stop' })).not.toBeInTheDocument());
 
+/**
+ * Paste `value` into the message box, where a table becomes the attachment, and send it with
+ * Enter, with `note` typed beside it. Text that routes as a message would stay in the box: the
+ * tests paste tables.
+ */
+async function attachAndSend(value: string, note = '') {
+  const box = await screen.findByLabelText('Message');
+  await waitFor(() => expect(box).toBeEnabled());
+  fireEvent.paste(box, { clipboardData: { files: [], getData: () => value } });
+  await screen.findByRole('group', { name: /^Attached/ });
+  if (note) fireEvent.change(box, { target: { value: note } });
+  fireEvent.keyDown(box, { key: 'Enter' });
+}
+
 /** Paste a table and wait for its summary: step 1 with data, nothing in flight. */
 async function parseAndSummarize(value = 'hours,score\n1.5,52\n2.0,58\n') {
-  fireEvent.change(await screen.findByLabelText(/# your data/), { target: { value } });
-  fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+  await attachAndSend(value);
   expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
   await turnEnded();
 }
@@ -412,19 +426,18 @@ function sendFromComposer(text: string) {
   fireEvent.keyDown(box, { key: 'Enter' });
 }
 
-/** In step 2, open the card and paste free text, which comes back as a table to decide on. */
+/** In step 2, paste free text into the message box, which comes back as a table to decide on. */
 async function transcribeInStep2() {
-  fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
-  fireEvent.change(screen.getByLabelText(/# your data/), { target: { value: FREE_TEXT } });
-  fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+  await attachAndSend(FREE_TEXT);
   await screen.findByTestId('transcription-card');
 }
 
-/** The labels of the composer's buttons, in order: the step's one CTA is the last. */
+/** The composer's step buttons, in order: `.open()`, which stands in every state, is left out. */
 const composerButtons = () =>
   within(screen.getByLabelText('Message').closest('form') as HTMLElement)
     .queryAllByRole('button')
-    .map(button => button.textContent);
+    .map(button => button.textContent)
+    .filter(label => label !== '.open()');
 
 /** The thread's last entry. */
 const lastInThread = () => screen.getByRole('log', { name: 'Conversation' }).lastElementChild;
@@ -503,8 +516,8 @@ describe('AgentChatPage gating', () => {
   it('opens a session for an admin and records the open, then drops the source', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(`${PAGE}&source=plot_page`);
-    expect(await screen.findByLabelText(/# your data/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '.parse()' })).toBeInTheDocument();
+    expect(await screen.findByLabelText('Message')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Attach a data file' })).toBeInTheDocument();
     expect(analytics.trackPageview).toHaveBeenCalledWith('/debug/agent');
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_open', {
       library: 'matplotlib',
@@ -518,14 +531,14 @@ describe('AgentChatPage gating', () => {
   it('names the tab after the spec title, not its id', async () => {
     flags.isDev = true;
     renderAt(PAGE);
-    expect(await screen.findByLabelText(/# your data/)).toBeInTheDocument();
+    expect(await screen.findByLabelText('Message')).toBeInTheDocument();
     await waitFor(() => expect(document.title).toBe('agent · Basic Scatter Plot | anyplot.ai'));
   });
 
   it('lets local development in without the hint', async () => {
     flags.isDev = true;
     renderAt(PAGE);
-    expect(await screen.findByLabelText(/# your data/)).toBeInTheDocument();
+    expect(await screen.findByLabelText('Message')).toBeInTheDocument();
     expect(analytics.trackEvent).toHaveBeenCalledWith(
       'agent_open',
       expect.objectContaining({ source: 'direct' })
@@ -574,11 +587,11 @@ describe('AgentChatPage gating', () => {
   it('walks the two steps with one click: .create_plot() confirms the data, then plots', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    expect(await screen.findByLabelText(/# your data/)).toBeInTheDocument();
+    expect(await screen.findByLabelText('Message')).toBeInTheDocument();
     expect(currentStep()).toEqual(['1 data']);
-    // The steps are behind the data card's ⓘ, not in a paragraph on the page (2026-11-02).
+    // The steps are behind the ⓘ beside `# chat`, not in a paragraph on the page (2026-11-02).
     expect(screen.queryByText(/check the preview and the bindings/)).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'How the data card works' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'How the chat takes data' })).toBeInTheDocument();
 
     await parseAndSummarize();
     const create = screen.getByRole('button', { name: 'Create plot' });
@@ -677,10 +690,7 @@ describe('AgentChatPage gating', () => {
   it('summarizes the data first, then shows a change to it with .undo()', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    fireEvent.change(await screen.findByLabelText(/# your data/), {
-      target: { value: 'hours,score\n1.5,52 %\n2.0,58 %\n' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    await attachAndSend('hours,score\n1.5,52 %\n2.0,58 %\n');
     expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
     const thread = screen.getByRole('log', { name: 'Conversation' });
     expect(thread.firstElementChild).toHaveTextContent('.summarize_data()');
@@ -744,23 +754,23 @@ describe('AgentChatPage gating', () => {
   it('sends a pasted formula to the chat, whose table becomes version 1', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    const textbox = await screen.findByLabelText(/# your data/);
-    // Without data, both boxes name the other sources in their placeholders: code or a formula
-    // the assistant computes, and example data; the how-to paragraph under the card is gone (2026-11-02).
+    const textbox = await screen.findByLabelText('Message');
+    // Without data the one box names the ways in: a table, a file, example data or a curve; the
+    // how-to paragraph under the card is gone (2026-11-02).
     expect(textbox).toHaveAttribute(
       'placeholder',
-      expect.stringContaining('or a formula: y = sin(x), x from -pi to pi')
-    );
-    expect(screen.getByLabelText('Message')).toHaveAttribute(
-      'placeholder',
-      'ask for example data, a curve, or a fix to your data'
+      'paste a table, drop a file, or ask for example data or a curve'
     );
     expect(screen.queryByText(/paste your data above/)).not.toBeInTheDocument();
 
-    fireEvent.change(textbox, { target: { value: FORMULA } });
-    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    // The page sends it to the chat by itself, as the user's turn: nothing to click, no error,
-    // and the box is free for a table.
+    // One line is a message: the paste lands in the box as typed text, and Enter sends it.
+    await waitFor(() => expect(textbox).toBeEnabled());
+    expect(fireEvent.paste(textbox, { clipboardData: { files: [], getData: () => FORMULA } })).toBe(
+      true
+    );
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+    sendFromComposer(FORMULA);
+    // The assistant computes it: its table is the first data, and the box is free again.
     expect(await screen.findByText('I generated 200 rows from y = sin(x).')).toBeInTheDocument();
     const thread = screen.getByRole('log', { name: 'Conversation' });
     expect(within(thread).getByText(FORMULA)).toBeInTheDocument();
@@ -789,7 +799,6 @@ describe('AgentChatPage gating', () => {
     renderAt(PAGE);
     await parseAndPlot();
     expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/# your data/)).not.toBeInTheDocument();
     const show = screen.getByRole('button', { name: 'Show the data' });
     expect(show).toHaveTextContent('.show()');
     expect(show).toHaveAttribute('aria-expanded', 'false');
@@ -874,10 +883,7 @@ describe('AgentChatPage gating', () => {
     );
 
     // A new paste is data nobody confirmed: plain step 1, and the thread keeps one notice.
-    fireEvent.change(screen.getByLabelText(/# your data/), {
-      target: { value: 'hours,score\n3,70\n4,80\n' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    await attachAndSend('hours,score\n3,70\n4,80\n');
     await waitFor(() => expect(screen.getAllByText(SUMMARY)).toHaveLength(2));
     await turnEnded();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
@@ -1162,11 +1168,7 @@ describe('AgentChatPage gating', () => {
     const startOver = screen.getByRole('button', { name: 'Start over' });
     expect(startOver).toBeEnabled();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
-    fireEvent.change(screen.getByLabelText(/# your data/), {
-      target: { value: 'slow,data\n1,2\n' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    await attachAndSend('slow,data\n1,2\n');
     await waitFor(() => expect(releaseParse).not.toBeNull());
     expect(startOver).toBeDisabled();
 
@@ -1210,7 +1212,7 @@ describe('AgentChatPage catalogue plot', () => {
     );
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await screen.findByLabelText(/# your data/);
+    await screen.findByLabelText('Message');
     const thumbnail = await screen.findByRole('button', {
       name: 'Show the matplotlib catalogue plot large',
     });
@@ -1279,7 +1281,7 @@ describe('AgentChatPage catalogue plot', () => {
     );
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await screen.findByLabelText(/# your data/);
+    await screen.findByLabelText('Message');
 
     expect(await expectedColumnsShown()).toEqual([
       'x (numeric) · x values',
@@ -1291,7 +1293,7 @@ describe('AgentChatPage catalogue plot', () => {
   it("falls back to the spec's data bullets, without the meta lines, when the open names no roles", async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await screen.findByLabelText(/# your data/);
+    await screen.findByLabelText('Message');
 
     expect(await expectedColumnsShown()).toEqual([
       'x (numeric) - Independent variable values plotted on the horizontal axis',
@@ -1302,7 +1304,7 @@ describe('AgentChatPage catalogue plot', () => {
   it('records an open from the spec hub', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(`${PAGE}&source=spec_hub`);
-    await screen.findByLabelText(/# your data/);
+    await screen.findByLabelText('Message');
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_open', {
       library: 'matplotlib',
       source: 'spec_hub',
@@ -1313,7 +1315,7 @@ describe('AgentChatPage catalogue plot', () => {
   it('records an open from the plot of the day, then drops the source', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(`${PAGE}&source=plot_of_the_day`);
-    await screen.findByLabelText(/# your data/);
+    await screen.findByLabelText('Message');
     expect(analytics.trackEvent).toHaveBeenCalledWith('agent_open', {
       library: 'matplotlib',
       source: 'plot_of_the_day',
@@ -1328,7 +1330,7 @@ describe('AgentChatPage .example_data()', () => {
   it('offers example data above the composer without data, as an action, working until it arrives', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await screen.findByLabelText(/# your data/);
+    await screen.findByLabelText('Message');
     const line = screen.getByTestId('example-data');
     expect(line).toHaveTextContent('# no data at hand?.example_data()');
 
@@ -1361,7 +1363,7 @@ describe('AgentChatPage .example_data()', () => {
   it('comes back when the turn brought no data, and waits while another turn runs', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await screen.findByLabelText(/# your data/);
+    await screen.findByLabelText('Message');
 
     holdNextTurn = true;
     sendFromComposer('what is the mean score?');
@@ -1372,13 +1374,18 @@ describe('AgentChatPage .example_data()', () => {
     expect(screen.getByRole('button', { name: 'Make example data' })).toBeEnabled();
   });
 
-  it('is gone once a paste stored data', async () => {
+  it('steps aside while a table waits in the box, and is gone once a paste stored data', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    fireEvent.change(await screen.findByLabelText(/# your data/), {
-      target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
+    const box = await screen.findByLabelText('Message');
+    await waitFor(() => expect(box).toBeEnabled());
+    expect(screen.getByTestId('example-data')).toBeInTheDocument();
+    fireEvent.paste(box, {
+      clipboardData: { files: [], getData: () => 'hours,score\n1.5,52\n2.0,58\n' },
     });
-    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    // The attachment is data at hand: example data would only replace it.
+    expect(screen.queryByTestId('example-data')).not.toBeInTheDocument();
+    fireEvent.keyDown(box, { key: 'Enter' });
     expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
 
     expect(screen.queryByTestId('example-data')).not.toBeInTheDocument();
@@ -1404,11 +1411,11 @@ describe('AgentChatPage leave warning', () => {
     const confirm = vi.spyOn(window, 'confirm');
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await screen.findByLabelText(/# your data/);
+    await screen.findByLabelText('Message');
     expect(unload()).toBe(false);
 
     fireEvent.click(await screen.findByRole('link', { name: /Basic Scatter Plot/ }));
-    await waitFor(() => expect(screen.queryByLabelText(/# your data/)).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByLabelText('Message')).not.toBeInTheDocument());
     expect(screen.getByTestId('location')).toHaveTextContent('/scatter-basic');
     expect(confirm).not.toHaveBeenCalled();
   });
@@ -1442,19 +1449,17 @@ describe('AgentChatPage leave warning', () => {
 });
 
 describe('AgentChatPage working states', () => {
-  it('says that the data is being parsed, under .parse() and to a screen reader', async () => {
+  it('says that the data is being parsed, on the chip and to a screen reader', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    fireEvent.change(await screen.findByLabelText(/# your data/), {
-      target: { value: 'slow,data\n1,2\n' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    await attachAndSend('slow,data\n1,2\n');
     await waitFor(() => expect(releaseParse).not.toBeNull());
 
-    expect(screen.getByTestId('parse-hint')).toHaveTextContent(/^# parsing your data$/);
-    const parse = screen.getByRole('button', { name: '.parse() …' });
-    expect(parse).toBeDisabled();
-    expect(parse).toHaveAccessibleDescription('# parsing your data');
+    const chip = screen.getByTestId('attachment');
+    expect(chip).toHaveAttribute('data-status', 'sending');
+    expect(chip).toHaveTextContent(/^parsing your data/);
+    expect(within(chip).getByTestId('loader-spinner')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove the attachment' })).toBeDisabled();
     expect(screen.getByTestId('data-step-status')).toHaveTextContent('parsing your data');
 
     releaseParse?.();
@@ -1463,17 +1468,14 @@ describe('AgentChatPage working states', () => {
         'step 1: check the data, then create the plot'
       )
     );
-    expect(screen.queryByTestId('parse-hint')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
   });
 
   it('holds the summary turn in the thread and says why the bindings wait', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    fireEvent.change(await screen.findByLabelText(/# your data/), {
-      target: { value: 'hours,score\n1.5,52\n2.0,58\n' },
-    });
     holdNextTurn = true;
-    fireEvent.click(screen.getByRole('button', { name: '.parse()' }));
+    await attachAndSend('hours,score\n1.5,52\n2.0,58\n');
 
     const pending = await screen.findByTestId('pending-reply');
     expect(pending).toHaveTextContent(/^summarizing your data$/);
@@ -1552,7 +1554,7 @@ describe('AgentChatPage working states', () => {
     expect(within(opening).getByTestId('loader-spinner')).toHaveAttribute('aria-hidden', 'true');
 
     open();
-    expect(await screen.findByLabelText(/# your data/)).toBeInTheDocument();
+    expect(await screen.findByLabelText('Message')).toBeInTheDocument();
     expect(screen.queryByTestId('session-opening')).not.toBeInTheDocument();
   });
 });
@@ -1561,7 +1563,7 @@ describe('AgentChatPage step CTA', () => {
   it('shows .send() only while the box holds text', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await screen.findByLabelText(/# your data/);
+    await screen.findByLabelText('Message');
     // No data, an empty box: nothing to send and no step to take yet.
     expect(composerButtons()).toEqual([]);
     expect(screen.queryByTestId('data-step')).not.toBeInTheDocument();
@@ -1822,7 +1824,7 @@ describe('AgentChatPage .plot_all()', () => {
   it('leaves the chat about the data usable with all pressed, before data and in step 1', async () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await screen.findByLabelText(/# your data/);
+    await screen.findByLabelText('Message');
 
     // Without data: nothing to plot yet, and the box asks for a curve as without `all`.
     await pickInMenu('All libraries');
@@ -1832,7 +1834,7 @@ describe('AgentChatPage .plot_all()', () => {
     expect(box).toBeEnabled();
     expect(box).toHaveAttribute(
       'placeholder',
-      'ask for example data, a curve, or a fix to your data'
+      'paste a table, drop a file, or ask for example data or a curve'
     );
     expect(box).not.toHaveAccessibleDescription();
 
@@ -1904,7 +1906,7 @@ describe('AgentChatPage .plot_all()', () => {
     );
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt(PAGE);
-    await screen.findByLabelText(/# your data/);
+    await screen.findByLabelText('Message');
     sendFromComposer('y = sin(x), x from -pi to pi');
     expect(await screen.findByText('I generated 200 rows from y = sin(x).')).toBeInTheDocument();
     await turnEnded();
@@ -1951,18 +1953,15 @@ describe('AgentChatPage .plot_all()', () => {
     const line = '# the data waits while all libraries plot it · .close() the panel to change it';
     expect(within(card).getByTestId('data-lock')).toHaveTextContent(line);
     expect(card).toHaveAccessibleDescription(line);
-    expect(within(card).getByRole('button', { name: 'Open a data file' })).toBeDisabled();
     expect(within(card).getByLabelText(/^x/)).toBeDisabled();
-    fireEvent.change(within(card).getByLabelText(/# your data/), {
-      target: { value: 'hours,score\n9,99\n8,88\n' },
-    });
-    expect(within(card).getByRole('button', { name: '.parse()' })).toBeDisabled();
+    // A new file waits too: the panel's sessions copy this data.
+    expect(screen.getByRole('button', { name: 'Attach a data file' })).toBeDisabled();
 
     fireEvent.click(within(panel).getByRole('button', { name: 'Close all libraries' }));
     expect(screen.queryByTestId('data-lock')).not.toBeInTheDocument();
     const reopened = screen.getByRole('region', { name: 'Your data' });
     expect(reopened).not.toHaveAccessibleDescription();
-    expect(within(reopened).getByRole('button', { name: '.parse()' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Attach a data file' })).toBeEnabled();
     expect(within(reopened).getByLabelText(/^x/)).toBeEnabled();
   });
 
@@ -2023,7 +2022,7 @@ describe('AgentChatPage URL', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     renderAt('/debug/agent?spec=scatter-basic&library=matplotlib&language=javascript');
     // The header moves into the chat column once the session is open: look for the menu there.
-    await screen.findByLabelText(/# your data/);
+    await screen.findByLabelText('Message');
     expect(libraryChip()).toHaveTextContent('lib: matplotlib · python');
 
     await pickInMenu('ggplot2');
@@ -2044,7 +2043,7 @@ describe('AgentChatPage URL', () => {
     localStorage.setItem(ADMIN_HINT_KEY, '1');
     const first = renderAt(PAGE);
     releaseStatus();
-    await screen.findByLabelText(/# your data/);
+    await screen.findByLabelText('Message');
     expect(query().has('all')).toBe(false);
 
     await pickInMenu('All libraries');
@@ -2059,7 +2058,7 @@ describe('AgentChatPage URL', () => {
     // The reload: until the lists are in, `all` is not offered, and the URL keeps it.
     threeLibraries(new Promise<void>(resolve => (releaseStatus = resolve)));
     renderAt(reloaded);
-    await screen.findByLabelText(/# your data/);
+    await screen.findByLabelText('Message');
     let menu = await openLibraryMenu();
     expect(within(menu).queryByRole('button', { name: 'All libraries' })).not.toBeInTheDocument();
     await closeLibraryMenu();
@@ -2463,5 +2462,665 @@ describe('AgentChatPage library switch and plot memory', () => {
     expect(
       within(screen.getByRole('log', { name: 'Conversation' })).queryByText(/error ·/)
     ).not.toBeInTheDocument();
+  });
+});
+
+describe('AgentChatPage attachment', () => {
+  const TABLE = 'hours,score\n1.5,52\n2.0,58\n3.0,61\n';
+  const message = () => screen.getByLabelText('Message');
+  const chip = () => screen.getByRole('group', { name: /^Attached/ });
+  const datasetPosts = () =>
+    agentCalls().filter(
+      ([input, init]) =>
+        pathOf(input).endsWith('/dataset') && (init as RequestInit | undefined)?.method === 'POST'
+    );
+  /** A paste into the message box; the event says whether the browser would paste it. */
+  const pasteText = (text: string) =>
+    fireEvent.paste(message(), { clipboardData: { files: [], getData: () => text } });
+  /** Answers the dataset route's calls with `answer` before the rest of the stub. */
+  function routeDataset(answer: (path: string, init: RequestInit) => Response | undefined) {
+    const base = fetchMock.getMockImplementation() as (
+      input: string,
+      init?: RequestInit
+    ) => Promise<Response>;
+    fetchMock.mockImplementation(async (input: string, init: RequestInit = {}) => {
+      const path = new URL(input).pathname;
+      return (path.includes('/dataset') && answer(path, init)) || base(input, init);
+    });
+  }
+  async function openChat() {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await screen.findByLabelText('Message');
+    await waitFor(() => expect(message()).toBeEnabled());
+  }
+
+  it('attaches a pasted table as a chip, keeps prose a paste, and names the chip to a screen reader', async () => {
+    await openChat();
+    // Prose: the browser's own paste goes ahead (the event is not cancelled).
+    expect(pasteText('Make the bars blue\nand add a grid')).toBe(true);
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+
+    // A table: no text in the box, a chip with its size, `.send()` to read it.
+    expect(pasteText(TABLE)).toBe(false);
+    expect(message()).toHaveValue('');
+    expect(chip()).toHaveAccessibleName('Attached table, 4 lines, 33 B');
+    expect(chip()).toHaveTextContent('▤ table · 4 lines · 33 B');
+    expect(screen.getByTestId('composer-status')).toHaveTextContent('Attached table, 4 lines');
+    expect(composerButtons()).toEqual(['×', '.send()']);
+    expect(message()).toHaveAttribute('placeholder', 'add a note for this table, or press Enter');
+    expect(screen.getByTestId('data-step')).toHaveTextContent(
+      '# the attached table is read when you send it: Enter or .send(), with a note if you like'
+    );
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_input_routed', {
+      as: 'data',
+      via: 'paste',
+    });
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_input_routed', {
+      as: 'message',
+      via: 'paste',
+    });
+  });
+
+  it('reads the chip on Enter with the summary first when no note came with it', async () => {
+    await openChat();
+    pasteText(TABLE);
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
+    await turnEnded();
+    expect(String((datasetPosts()[0][1] as RequestInit).body)).toContain('hours,score');
+    expect(turnBodies()).toEqual([{ action: 'summarize_data' }]);
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+  });
+
+  it('sends the typed text as the first turn after the data, in place of the summary', async () => {
+    await openChat();
+    pasteText(TABLE);
+    fireEvent.change(message(), { target: { value: 'what is the mean score?' } });
+    fireEvent.click(screen.getByRole('button', { name: '.send()' }));
+    // The note left the box at once, and it is the user's line in the thread.
+    expect(message()).toHaveValue('');
+    expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
+    await turnEnded();
+    expect(turnBodies()).toEqual([{ text: 'what is the mean score?' }]);
+    expect(
+      within(screen.getByRole('log', { name: 'Conversation' })).getByText('what is the mean score?')
+    ).toBeInTheDocument();
+  });
+
+  it('keeps a refused table red with the reason, and puts the note back before newer text', async () => {
+    routeDataset(path =>
+      path.endsWith('/dataset')
+        ? json(422, { detail: 'unparseable', cause: 'the rows have different lengths', ref: 'r-u' })
+        : undefined
+    );
+    await openChat();
+    pasteText(TABLE);
+    fireEvent.change(message(), { target: { value: 'only 2024' } });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    expect(await screen.findByTestId('attachment-error')).toHaveTextContent(
+      'the rows have different lengths · ref r-u'
+    );
+    expect(chip()).toHaveAttribute('data-status', 'failed');
+    await waitFor(() => expect(message()).toHaveValue('only 2024'));
+    expect(turnBodies()).toEqual([]);
+    // Enter tries the same table again.
+    expect(screen.getByRole('button', { name: '.send()' })).toBeEnabled();
+  });
+
+  it('lets a table read from text go from the chip and the note back into the box', async () => {
+    await openChat();
+    // Long text over the chat limit always attaches; the stub reads `Hund` as free text.
+    pasteText(`${FREE_TEXT}\n${'Pferd 1 Esel 5\n'.repeat(140)}`);
+    fireEvent.change(message(), { target: { value: 'the animals of 2024' } });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    expect(await screen.findByTestId('transcription-card')).toBeInTheDocument();
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+    await waitFor(() => expect(message()).toHaveValue('the animals of 2024'));
+    expect(turnBodies()).toEqual([]);
+  });
+
+  it('takes a file from .open() as a chip with its name, and × drops it', async () => {
+    await openChat();
+    const input = screen.getByTestId('chat-file-input');
+    fireEvent.change(input, {
+      target: { files: [new File([TABLE], 'scores.csv', { type: 'text/csv' })] },
+    });
+    expect(
+      await screen.findByRole('group', { name: /^Attached file scores\.csv/ })
+    ).toHaveTextContent('▤ scores.csv · 4 lines');
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_file', {
+      kind: 'text',
+      encoding: 'utf-8',
+      outcome: 'attached',
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+    expect(analytics.trackEvent).toHaveBeenCalledWith('agent_data_file', {
+      kind: 'text',
+      encoding: 'utf-8',
+      outcome: 'removed',
+    });
+  });
+
+  it('reads a workbook on the server with the loader, and drops an answer that came after ×', async () => {
+    let release!: () => void;
+    routeDataset(path =>
+      path.endsWith('/dataset/convert')
+        ? (new Promise<Response>(resolve => {
+            release = () =>
+              resolve(
+                json(200, {
+                  text: 'month,revenue\nJan,120\nFeb,130\n',
+                  format: 'csv',
+                  kind: 'xlsx',
+                  rows: 2,
+                  columns: 2,
+                  sheet: '2024',
+                  sheets: ['2024', '2025'],
+                  sheet_count: 2,
+                  warnings: {},
+                  dropped: [],
+                })
+              );
+          }) as unknown as Response)
+        : undefined
+    );
+    await openChat();
+    const workbook = new File(
+      [new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0, 0, 0])],
+      'Bericht.xlsx'
+    );
+    fireEvent.drop(screen.getByRole('region', { name: 'Chat' }), {
+      dataTransfer: { files: [workbook], types: ['Files'] },
+    });
+    expect(await screen.findByTestId('attachment')).toHaveTextContent(
+      'reading "Bericht.xlsx" on the server'
+    );
+    expect(within(chip()).getByTestId('loader-spinner')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '.send()' })).toBeDisabled();
+    release();
+    expect(
+      await screen.findByRole('group', { name: /^Attached file Bericht\.xlsx · sheet ‹2024›/ })
+    ).toHaveTextContent('▤ Bericht.xlsx · sheet ‹2024› · 3 lines');
+
+    // A second workbook, removed while the server reads it: its late answer brings nothing back.
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
+    fireEvent.drop(screen.getByRole('region', { name: 'Chat' }), {
+      dataTransfer: { files: [workbook], types: ['Files'] },
+    });
+    await screen.findByText('reading "Bericht.xlsx" on the server');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+    release();
+    // Long enough for the answer to be read and dropped: it never brings the chip back.
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+  });
+
+  it('refuses a file while a step runs, and says so under the composer', async () => {
+    await openChat();
+    holdNextTurn = true;
+    fireEvent.click(screen.getByRole('button', { name: 'Make example data' }));
+    await waitFor(() => expect(releaseTurn).not.toBeNull());
+    expect(screen.getByRole('button', { name: 'Attach a data file' })).toBeDisabled();
+    fireEvent.drop(screen.getByRole('region', { name: 'Chat' }), {
+      dataTransfer: { files: [new File([TABLE], 'b.csv', { type: 'text/csv' })], types: ['Files'] },
+    });
+    expect(await screen.findByTestId('attachment-notice')).toHaveTextContent(
+      'a step is still running'
+    );
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+    releaseTurn?.();
+    await turnEnded();
+  });
+
+  it('marks a table over the caps red and holds .send() back', async () => {
+    await openChat();
+    pasteText(`x,y\n${'1,2\n'.repeat(20_100)}`);
+    expect(chip()).toHaveAttribute('data-status', 'over_cap');
+    expect(screen.getByTestId('attachment-error')).toHaveTextContent(
+      'at most 20,000 rows and 1 MB: filter first, or .open() an Excel or Parquet file (5 MB)'
+    );
+    expect(screen.getByRole('button', { name: '.send()' })).toBeDisabled();
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    expect(datasetPosts()).toHaveLength(0);
+    // Pretty-printed JSON is exempt from the line cap.
+    pasteText(`[\n${'  {\n    "x": 1\n  },\n'.repeat(6000)}  {"x": 2}\n]`);
+    expect(chip()).toHaveAttribute('data-status', 'ready');
+  });
+
+  it('routes a paste the browser inserted itself, and never typed lines', async () => {
+    await openChat();
+    // Typed on two lines (Shift+Enter): the box keeps it, a message.
+    fireEvent.input(message(), {
+      target: { value: 'hours,score\n1.5,52' },
+      inputType: 'insertLineBreak',
+    });
+    expect(message()).toHaveValue('hours,score\n1.5,52');
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+    // An input method's composition and a typed character keep a table-shaped box a message too.
+    fireEvent.input(message(), { target: { value: TABLE }, inputType: 'insertCompositionText' });
+    fireEvent.input(message(), { target: { value: `${TABLE}x` }, inputType: 'insertText' });
+    expect(message()).toHaveValue(`${TABLE}x`);
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+    fireEvent.input(message(), { target: { value: '' }, inputType: 'deleteContentBackward' });
+
+    // A paste whose event hid the text (iOS Safari): the inserted table becomes the chip.
+    fireEvent.input(message(), { target: { value: TABLE }, inputType: 'insertFromPaste' });
+    expect(chip()).toHaveAccessibleName(/^Attached table, 4 lines/);
+    expect(message()).toHaveValue('');
+  });
+
+  it('counts a message paste once, though the browser reports its insertion again', async () => {
+    await openChat();
+    const routed = () =>
+      analytics.trackEvent.mock.calls.filter(([name]) => name === 'agent_input_routed');
+    // The paste event routes the text as a message; the browser then inserts it and fires the
+    // input event jsdom leaves out, with `insertFromPaste` too.
+    expect(pasteText('a bar chart, please')).toBe(true);
+    fireEvent.input(message(), {
+      target: { value: 'a bar chart, please' },
+      inputType: 'insertFromPaste',
+    });
+    expect(message()).toHaveValue('a bar chart, please');
+    expect(routed()).toEqual([['agent_input_routed', { as: 'message', via: 'paste' }]]);
+
+    // The next paste the event hid (iOS) is routed on its input: the first one's mark is spent.
+    fireEvent.input(message(), { target: { value: '' }, inputType: 'deleteContentBackward' });
+    fireEvent.input(message(), { target: { value: TABLE }, inputType: 'insertFromPaste' });
+    expect(chip()).toHaveAccessibleName(/^Attached table, 4 lines/);
+    expect(routed()).toHaveLength(2);
+
+    // A table the paste event took inserts nothing, so it leaves no mark for the next paste.
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
+    expect(pasteText(TABLE)).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
+    fireEvent.input(message(), { target: { value: TABLE }, inputType: 'insertFromPaste' });
+    expect(chip()).toHaveAccessibleName(/^Attached table, 4 lines/);
+    expect(routed()).toHaveLength(4);
+  });
+
+  it('holds the plot button back while a chip waits, and asks before a reload drops it', async () => {
+    await openChat();
+    const unload = () => {
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    expect(unload()).toBe(false);
+    fireEvent.change(message(), { target: { value: 'a draft' } });
+    expect(unload()).toBe(true);
+    fireEvent.change(message(), { target: { value: '' } });
+    expect(unload()).toBe(false);
+
+    await parseAndSummarize();
+    pasteText(TABLE);
+    expect(unload()).toBe(true);
+    const create = screen.getByRole('button', { name: 'Create plot' });
+    expect(create).toBeDisabled();
+    expect(create).toHaveAccessibleDescription(
+      '# the attached table is read when you send it: Enter or .send(), with a note if you like'
+    );
+  });
+
+  it('keeps the attached table out of the browser storage', async () => {
+    const writes = vi.spyOn(Storage.prototype, 'setItem');
+    await openChat();
+    pasteText(TABLE);
+    fireEvent.change(message(), { target: { value: 'secret note' } });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    await screen.findByText('Swapped.');
+    await turnEnded();
+    const written = writes.mock.calls.map(([, value]) => String(value)).join('\n');
+    expect(written).not.toContain('hours,score');
+    expect(written).not.toContain('secret note');
+    writes.mockRestore();
+  });
+
+  const csvFile = (text: string, name: string) => new File([text], name, { type: 'text/csv' });
+  const workbook = (name = 'Bericht.xlsx') =>
+    new File([new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0, 0, 0])], name);
+  const dropOnChat = (...files: File[]) =>
+    fireEvent.drop(screen.getByRole('region', { name: 'Chat' }), {
+      dataTransfer: { files, types: ['Files'] },
+    });
+  const converted = (overrides: Record<string, unknown> = {}) =>
+    json(200, {
+      text: 'month,revenue\nJan,120\nFeb,130\n',
+      format: 'csv',
+      kind: 'xlsx',
+      rows: 2,
+      columns: 2,
+      sheet: '2024',
+      sheets: ['2024', '2025'],
+      sheet_count: 2,
+      warnings: {},
+      dropped: [],
+      ...overrides,
+    });
+
+  it('reads the first of several files, CRLF breaks as the box holds them, and names it on the chip', async () => {
+    await openChat();
+    dropOnChat(csvFile('a,b\r\n1,2\r\n3,4\r\n', 'windows.csv'), csvFile('c\n', 'c.csv'));
+    expect(
+      await screen.findByRole('group', { name: 'Attached file windows.csv, 3 lines, 12 B' })
+    ).toBeInTheDocument();
+    expect(screen.getByText('# first of 2 files read — one file at a time')).toBeInTheDocument();
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    await screen.findByText(SUMMARY);
+    await turnEnded();
+    // The text goes with its line breaks as the parser reads them, and the file's name as `source`.
+    expect(JSON.parse(String((datasetPosts()[0][1] as RequestInit).body))).toMatchObject({
+      text: 'a,b\n1,2\n3,4\n',
+      source: 'windows.csv',
+    });
+  });
+
+  it('names what the server counted in a workbook, and keeps the file for the sheet picker', async () => {
+    routeDataset(path =>
+      path.endsWith('/dataset/convert')
+        ? converted({
+            warnings: { formulas_without_value: 3, dropped_columns: 3 },
+            dropped: ['span', 'raw'],
+          })
+        : undefined
+    );
+    await openChat();
+    dropOnChat(workbook());
+    const attached = await screen.findByRole('group', { name: /^Attached file Bericht\.xlsx/ });
+    expect(attached.parentElement).toHaveTextContent(
+      'on the server: sheet ‹2024› of xlsx · 2 rows × 2 columns'
+    );
+    expect(attached.parentElement).toHaveTextContent('3 formula cells saved without a value');
+    expect(attached.parentElement).toHaveTextContent(
+      '3 columns of durations, intervals, binary, map or nested values left out: "span", "raw" and 1 more'
+    );
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    await screen.findByText(SUMMARY);
+    await turnEnded();
+    expect(screen.getByLabelText(/# sheet/)).toHaveValue('2024');
+  });
+
+  it('holds the composer back while another sheet is read, then parses that sheet', async () => {
+    let finish: (() => void) | null = null;
+    routeDataset(path => {
+      if (!path.endsWith('/dataset/convert')) return undefined;
+      // The first read attaches the workbook; the sheet picker's read waits for `finish`.
+      if (!finish) {
+        finish = () => {};
+        return converted();
+      }
+      return new Promise<Response>(resolve => {
+        finish = () =>
+          resolve(converted({ sheet: '2025', text: 'month,revenue\nJan,90\nFeb,95\n' }));
+      }) as unknown as Response;
+    });
+    await openChat();
+    dropOnChat(workbook());
+    await screen.findByRole('group', { name: /^Attached file Bericht\.xlsx/ });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    await screen.findByText(SUMMARY);
+    await turnEnded();
+    const posts = datasetPosts().length;
+    const turns = turnBodies().length;
+
+    fireEvent.change(screen.getByLabelText(/# sheet/), { target: { value: '2025' } });
+    await screen.findByTestId('sheet-reading');
+    // Nothing plots, confirms or sends while the read runs: the parse after it would be skipped.
+    expect(screen.getByRole('button', { name: 'Create plot' })).toBeDisabled();
+    fireEvent.change(message(), { target: { value: 'which month sold most?' } });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    expect(turnBodies()).toHaveLength(turns);
+
+    finish!();
+    await waitFor(() => expect(datasetPosts()).toHaveLength(posts + 1));
+    expect(JSON.parse(String((datasetPosts()[posts][1] as RequestInit).body))).toMatchObject({
+      text: 'month,revenue\nJan,90\nFeb,95\n',
+      source: 'Bericht.xlsx · sheet ‹2025›',
+    });
+  });
+
+  it('says why a file was not taken: a refused conversion, a pickle, a second file while one is read', async () => {
+    let finish!: () => void;
+    let converts = 0;
+    routeDataset(path => {
+      if (!path.endsWith('/dataset/convert')) return undefined;
+      converts += 1;
+      if (converts === 1) {
+        return json(422, {
+          detail: 'file_too_many_rows',
+          ref: 'ref-1',
+          measured: 21000,
+          limit: 20000,
+        });
+      }
+      return new Promise<Response>(resolve => {
+        finish = () => resolve(converted());
+      }) as unknown as Response;
+    });
+    await openChat();
+
+    dropOnChat(workbook('big.xlsx'));
+    expect(await screen.findByTestId('attachment-notice')).toHaveTextContent(
+      '"big.xlsx" has more rows than a table may have; filter it, or copy a range and paste it (21,000 rows, the cap is 20,000) · ref ref-1'
+    );
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+
+    dropOnChat(new File([new Uint8Array([0x80, 0x05, 0x95])], 'frame.pkl'));
+    expect(await screen.findByTestId('attachment-notice')).toHaveTextContent(
+      'never read because loading one can run code'
+    );
+    expect(converts).toBe(1);
+
+    dropOnChat(workbook());
+    await screen.findByText('reading "Bericht.xlsx" on the server');
+    expect(screen.getByRole('button', { name: 'Attach a data file' })).toBeDisabled();
+    dropOnChat(csvFile(TABLE, 'b.csv'));
+    expect(await screen.findByTestId('attachment-notice')).toHaveTextContent(
+      'a file is still being read on the server'
+    );
+    finish();
+    expect(
+      await screen.findByRole('group', { name: /^Attached file Bericht\.xlsx/ })
+    ).toBeInTheDocument();
+  });
+
+  it('keeps a table pasted after × of a file still read on the server, when the read lands', async () => {
+    let finish!: () => void;
+    routeDataset(path => {
+      if (!path.endsWith('/dataset/convert')) return undefined;
+      return new Promise<Response>(resolve => {
+        finish = () => resolve(converted());
+      }) as unknown as Response;
+    });
+    await openChat();
+    dropOnChat(workbook());
+    await screen.findByText('reading "Bericht.xlsx" on the server');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
+    pasteText(TABLE);
+    await screen.findByRole('group', { name: /^Attached table, 4 lines/ });
+    finish();
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(chip()).toHaveAccessibleName(/^Attached table, 4 lines/);
+  });
+
+  it('reads a file pasted from the file manager, and lets text beside a picture paste as text', async () => {
+    await openChat();
+    fireEvent.paste(message(), {
+      clipboardData: { files: [csvFile(TABLE, 'pasted.tsv')], getData: () => '' },
+    });
+    expect(
+      await screen.findByRole('group', { name: /^Attached file pasted\.tsv/ })
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
+
+    // Excel puts a picture of the cells next to their text: the text wins, and one line is typed text.
+    const picture = new File([new Uint8Array([0x89, 0x50])], 'cells.png', { type: 'image/png' });
+    expect(
+      fireEvent.paste(message(), {
+        clipboardData: { files: [picture], getData: () => '2026-03,150' },
+      })
+    ).toBe(true);
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+  });
+
+  it('drops the result of a slow read that a later file superseded, and keeps stray drops on the page', async () => {
+    await openChat();
+    let release: (buffer: ArrayBuffer) => void = () => {};
+    const slow = csvFile('slow,file\n1,2\n', 'slow.csv');
+    const slowBytes = await slow.arrayBuffer();
+    slow.arrayBuffer = () =>
+      new Promise<ArrayBuffer>(resolve => {
+        release = resolve;
+      });
+    dropOnChat(slow);
+    dropOnChat(csvFile(TABLE, 'fast.csv'));
+    await screen.findByRole('group', { name: /^Attached file fast\.csv/ });
+    release(slowBytes);
+    await new Promise(resolve => setTimeout(resolve, 20));
+    expect(screen.getByRole('group', { name: /^Attached file fast\.csv/ })).toBeInTheDocument();
+
+    // A file dropped beside the chat: prevented, so the page stays; a text drag keeps its default.
+    const transfer = { files: [], types: ['Files'], dropEffect: 'none' };
+    expect(fireEvent.drop(document.body, { dataTransfer: transfer })).toBe(false);
+    expect(fireEvent.drop(document.body, { dataTransfer: { types: ['text/plain'] } })).toBe(true);
+    // Over the chat, the composer says whether a drop attaches.
+    fireEvent.dragEnter(screen.getByRole('region', { name: 'Chat' }), { dataTransfer: transfer });
+    expect(screen.getByTestId('drop-hint')).toHaveTextContent('drop the file to attach it');
+    fireEvent.dragLeave(screen.getByRole('region', { name: 'Chat' }), { dataTransfer: transfer });
+    expect(screen.queryByTestId('drop-hint')).not.toBeInTheDocument();
+  });
+
+  it('sends a formula file to the chat as the user turn, and asks to shorten code it cannot take', async () => {
+    let refuseCode = false;
+    routeDataset((path, init) => {
+      if (!path.endsWith('/dataset') || init.method !== 'POST' || !refuseCode) return undefined;
+      return json(422, { detail: 'code', ref: 'r-c' });
+    });
+    await openChat();
+    fireEvent.change(screen.getByTestId('chat-file-input'), {
+      target: { files: [csvFile(FORMULA, 'curve.txt')] },
+    });
+    await screen.findByRole('group', { name: /^Attached file curve\.txt/ });
+    fireEvent.change(message(), { target: { value: 'a note' } });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    expect(await screen.findByText('I generated 200 rows from y = sin(x).')).toBeInTheDocument();
+    await turnEnded();
+    expect(turnBodies()).toEqual([{ text: FORMULA }]);
+    expect(screen.queryByTestId('attachment')).not.toBeInTheDocument();
+    // The note did not go with a forward: it is back in the box.
+    expect(message()).toHaveValue('a note');
+
+    refuseCode = true;
+    fireEvent.change(message(), { target: { value: '' } });
+    fireEvent.change(screen.getByTestId('chat-file-input'), {
+      target: { files: [csvFile('x = np.arange(10)\n'.repeat(200), 'long.py')] },
+    });
+    await screen.findByRole('group', { name: /^Attached file long\.py/ });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    expect(await screen.findByTestId('attachment-error')).toHaveTextContent(
+      'looks like code that makes data: shorten it to 2,000 characters, keeping only the part that computes the data, and the chat runs it · ref r-c'
+    );
+  });
+
+  it('opens the new data card after a file sent over a table read from text in step 2', async () => {
+    await openChat();
+    await parseAndPlot();
+    await attachAndSend(FREE_TEXT);
+    expect(await screen.findByTestId('transcription-card')).toBeInTheDocument();
+    dropOnChat(csvFile('hours,score\n3,70\n4,80\n', 'new.csv'));
+    await screen.findByRole('group', { name: /^Attached file new\.csv/ });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    await waitFor(() => expect(screen.getAllByText(SUMMARY)).toHaveLength(2));
+    await turnEnded();
+    // New data nobody confirmed: step 1, its card open, the table read from text gone.
+    expect(currentStep()).toEqual(['1 data']);
+    expect(screen.getByTestId('data-card')).toBeInTheDocument();
+    expect(screen.queryByTestId('transcription-card')).not.toBeInTheDocument();
+    expect(JSON.parse(String((datasetPosts().slice(-1)[0][1] as RequestInit).body))).toMatchObject({
+      source: 'new.csv',
+    });
+  });
+
+  it('puts the text back into the box on .discard() of the table read from it', async () => {
+    await openChat();
+    await attachAndSend(FREE_TEXT);
+    await screen.findByTestId('transcription-card');
+    fireEvent.change(message(), { target: { value: 'typed meanwhile' } });
+    fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
+    expect(screen.queryByTestId('transcription-card')).not.toBeInTheDocument();
+    expect(message()).toHaveValue(`${FREE_TEXT}\n\ntyped meanwhile`);
+  });
+
+  it('gives a file, or text the box could not send, back as the attachment on .discard()', async () => {
+    await openChat();
+    fireEvent.change(screen.getByTestId('chat-file-input'), {
+      target: { files: [csvFile(FREE_TEXT, 'tiere.txt')] },
+    });
+    await screen.findByRole('group', { name: /^Attached file tiere\.txt/ });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    await screen.findByTestId('transcription-card');
+    fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
+    // The file's text waits as the file again, its name with it, and the box stays empty.
+    expect(chip()).toHaveAccessibleName(/^Attached file tiere\.txt, 3 lines/);
+    expect(message()).toHaveValue('');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove the attachment' }));
+
+    // Over 2,000 characters a paste is no message: it comes back as the attachment too.
+    const long = `${FREE_TEXT}\n${'Pferd 1, Esel 5\n'.repeat(140)}`;
+    pasteText(long);
+    await screen.findByRole('group', { name: /^Attached table/ });
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    await screen.findByTestId('transcription-card');
+    fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
+    expect(chip()).toHaveAccessibleName(/^Attached table, 143 lines/);
+    expect(message()).toHaveValue('');
+
+    // An attachment made while the table waited stays: the discarded one does not replace it.
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    await screen.findByTestId('transcription-card');
+    pasteText(TABLE);
+    await screen.findByRole('group', { name: /^Attached table, 4 lines/ });
+    fireEvent.click(screen.getByRole('button', { name: '.discard()' }));
+    expect(chip()).toHaveAccessibleName(/^Attached table, 4 lines/);
+  });
+
+  it('sends on Enter and Ctrl+Enter, never inside a composition or on Shift+Enter, and never cuts a long text', async () => {
+    await openChat();
+    fireEvent.change(message(), { target: { value: 'what is the mean score?' } });
+    fireEvent.keyDown(message(), { key: 'Enter', shiftKey: true });
+    fireEvent.keyDown(message(), { key: 'Enter', isComposing: true });
+    expect(turnBodies()).toEqual([]);
+    fireEvent.keyDown(message(), { key: 'Enter', ctrlKey: true });
+    expect(await screen.findByText('The mean score is 55.')).toBeInTheDocument();
+    await turnEnded();
+
+    // Over the cap: the whole text stays, the counter turns red, `.send()` and Enter wait.
+    const long = 'a'.repeat(2001);
+    fireEvent.change(message(), { target: { value: long } });
+    expect(message()).toHaveValue(long);
+    expect(message()).not.toHaveAttribute('maxlength');
+    expect(message()).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByTestId('message-counter')).toHaveTextContent('2,001 / 2,000');
+    expect(screen.getByTestId('composer-status')).toHaveTextContent(
+      'the message is longer than 2,000 characters'
+    );
+    expect(screen.getByRole('button', { name: '.send()' })).toBeDisabled();
+    fireEvent.keyDown(message(), { key: 'Enter' });
+    expect(turnBodies()).toHaveLength(1);
+  });
+
+  it('keeps the how-to of the data behind the ⓘ beside # chat', async () => {
+    await openChat();
+    fireEvent.click(screen.getByRole('button', { name: 'How the chat takes data' }));
+    const dialog = await screen.findByRole('dialog', { name: 'How the chat takes data' });
+    expect(within(dialog).getByTestId('data-howto').children).toHaveLength(7);
+    expect(dialog).toHaveTextContent(
+      'paste or drop a table or a file: it waits in the message box until Enter'
+    );
+    expect(dialog).toHaveTextContent(
+      'type a note with it: "only 2024", "the decimal mark is a comma"'
+    );
   });
 });

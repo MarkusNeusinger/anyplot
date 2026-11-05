@@ -1,5 +1,5 @@
 /**
- * Reading a dropped, chosen or pasted file into the data card's text box.
+ * Reading a dropped, chosen or pasted file into the text of the message box's attachment.
  *
  * This is UX only: the browser says early what it cannot read, and the server
  * stays the trust boundary (the text goes through the ordinary paste route,
@@ -218,9 +218,9 @@ export function countLines(text: string): number {
 }
 
 /**
- * Read a file's bytes into text for the box, or say why not. Line breaks become
- * `\n` once here, as a textarea holds them: the box, its byte counter, the
- * line count and the text `.parse()` sends then agree.
+ * Read a file's bytes into text for the attachment, or say why not. Line breaks become
+ * `\n` once here, as a textarea holds them: the attachment's size, its line count and
+ * the text the dataset route reads then agree.
  */
 export function isConvertible(kind: FileKind | null): kind is ConvertibleKind {
   return kind !== null && CONVERTIBLE_KINDS.includes(kind);

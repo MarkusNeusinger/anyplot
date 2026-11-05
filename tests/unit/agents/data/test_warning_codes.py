@@ -91,6 +91,9 @@ SAMPLES: dict[str, str] = {
     "column 'x': commas read as decimal commas; remove them first if they separate thousands": (
         "decimal_commas_ambiguous"
     ),
+    "column 'x': dots read as decimal points; say so in the chat if they separate thousands": (
+        "decimal_points_ambiguous"
+    ),
     "column 'x': dots read as thousands separators, as in the file's other columns": "thousands_separators",
     "column 'x': commas read as thousands separators, as a currency amount has at most two decimals": (
         "thousands_separators"

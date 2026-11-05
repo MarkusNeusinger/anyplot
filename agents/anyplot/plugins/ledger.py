@@ -157,6 +157,10 @@ class RequestLedger:
     lang: str = "en"
     """The ISO 639-1 code of the fixed refusals: the session language's (`language.refusal_lang`) until the
     scope judge answers, then the language the judged message is written in."""
+    paste_context: str | None = None
+    """The fenced notes and file name of an unsummarized paste, set by the `/messages` route for the note typed with
+    it: the root's session block carries them for the whole turn (`agent.session_context`), so the scope judge, the
+    language detection and the stored user turn see only what the user typed. They were judged at the paste."""
     refusal: tuple[str, str] | None = None
     error: str | None = None
     model_versions: set[str] = field(default_factory=set)

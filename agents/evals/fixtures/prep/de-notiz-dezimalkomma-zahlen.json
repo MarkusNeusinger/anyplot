@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Stadt;Einwohner\nBern;1.234\nBasel;7.000\nChur;12.500\nThun;980\n",
+  "message": "die Punkte sind Tausendertrennzeichen",
+  "first_turn": true,
+  "expected_operations": [{"op": "set_type", "column": "Einwohner", "type": "number", "decimal": ","}],
+  "locale": "de",
+  "spec_id": "bar-basic",
+  "tags": ["note", "decimal_comma", "set_type"]
+}

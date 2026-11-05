@@ -8,19 +8,7 @@ import {
 import { AgentApiError, type ConvertAnswer, type RoleSpec } from 'src/lib/agent';
 import { bindingRows } from 'src/sections/agent-chat/bindings';
 import { DataPanel, DataViewUnavailable } from 'src/sections/agent-chat/DataPanel';
-import { DATA_HOWTO, DATA_PLACEHOLDER } from 'src/sections/agent-chat/messages';
 import { act, fireEvent, render, screen, userEvent, waitFor, within } from 'src/test-utils';
-
-/**
- * The arguments of `.parse()`'s call: the text, the file's name when it came from one, no table,
- * and the callback that hears of a forward to the chat.
- */
-const parsedWith = (text: string, source?: string) => [
-  text,
-  source,
-  undefined,
-  expect.any(Function),
-];
 
 /** `scrollIntoView` as a spy: jsdom has none. */
 function stubScrollIntoView() {
@@ -255,7 +243,7 @@ describe('DataPanel bindings', () => {
     ).toBeInTheDocument();
   });
 
-  it('holds back the bindings and parse while a theme renders, in both steps', async () => {
+  it('holds back the bindings while a theme renders, in both steps', async () => {
     const panel = (state: AgentSessionState) => (
       <DataPanel
         state={state}
@@ -275,8 +263,23 @@ describe('DataPanel bindings', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: 'Show the data' }));
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
-    await userEvent.type(screen.getByLabelText(/# your data/), 'a,b');
-    expect(screen.getByRole('button', { name: '.parse()' })).toBeDisabled();
+  });
+
+  it('shows no card before there is data or a table read from text', () => {
+    render(
+      <DataPanel
+        state={{ ...initialAgentState('matplotlib'), phase: 'ready', sessionId: 'S1' }}
+        onParse={vi.fn()}
+        onConfirmTranscription={vi.fn()}
+        onDiscardTranscription={vi.fn()}
+        onBind={vi.fn()}
+        onUndo={vi.fn()}
+      />
+    );
+    // The data comes in through the message box: the card has nothing to show yet.
+    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.getByTestId('data-step-status')).toBeEmptyDOMElement();
   });
 
   it('holds every action back while the fan-out panel copies the data, and says why', async () => {
@@ -312,45 +315,16 @@ describe('DataPanel bindings', () => {
     // Nothing that changes the data or its confirmation starts; the session itself is idle.
     expect(screen.queryByTestId('bindings-lock')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '.undo()' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Open a data file' })).toBeDisabled();
     expect(screen.getByLabelText(/^x/)).toBeDisabled();
-    await userEvent.type(screen.getByLabelText(/# your data/), 'a,b\n1,2\n');
-    expect(screen.getByRole('button', { name: '.parse()' })).toBeDisabled();
-    fireEvent.drop(screen.getByTestId('data-drop-zone'), {
-      dataTransfer: {
-        files: [new File(['a,b\n1,2\n'], 'b.csv', { type: 'text/csv' })],
-        types: ['Files'],
-      },
-    });
-    expect(await screen.findByTestId('file-error')).toHaveTextContent(
-      'all libraries are plotting this data; close the panel, then drop or open the file again'
-    );
 
     // The panel closed: the card is the user's again.
     rerender(panel(versioned, false));
     expect(screen.queryByTestId('data-lock')).not.toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Your data' })).not.toHaveAccessibleDescription();
-    expect(screen.getByRole('button', { name: '.parse()' })).toBeEnabled();
     expect(screen.getByLabelText(/^x/)).toBeEnabled();
     fireEvent.click(screen.getByRole('button', { name: '.undo()' }));
     expect(onUndo).toHaveBeenCalledTimes(1);
     expect(onParse).not.toHaveBeenCalled();
-  });
-
-  it('holds back .parse() while a table read from text awaits its decision', () => {
-    // The stored dataset and its bindings stay, but the user decides on the data first.
-    render(
-      <DataPanel
-        state={stateWith({ x: 'month', y1: 'shoes' }, { transcription: TRANSCRIPTION })}
-        onParse={vi.fn()}
-        onConfirmTranscription={vi.fn()}
-        onDiscardTranscription={vi.fn()}
-        onBind={vi.fn()}
-        onUndo={vi.fn()}
-      />
-    );
-    expect(screen.getByRole('button', { name: '.parse()' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: '.use()' })).toBeEnabled();
   });
 });
 
@@ -558,34 +532,15 @@ describe('DataPanel working states', () => {
     expect(screen.getByLabelText(/^x/)).toBeEnabled();
   });
 
-  it('says that the data is parsed, under .parse(), on the bindings and to a screen reader', async () => {
-    const { rerender } = renderPanel(stateWith({ x: 'month', y1: 'shoes' }));
-    await userEvent.type(screen.getByLabelText(/# your data/), 'a,b');
-    rerender(stateWith({ x: 'month', y1: 'shoes' }, { parsing: true }));
+  it('says that the data is parsed on the bindings and to a screen reader, with no loader of its own', () => {
+    renderPanel(stateWith({ x: 'month', y1: 'shoes' }, { parsing: true }));
 
-    // The overlay's loader is the parse's one moving indicator; the lines only say it.
-    expect(screen.getByTestId('parse-hint')).toHaveTextContent(/^# parsing your data$/);
-    expect(screen.getByTestId('box-working')).toHaveTextContent(/^# parsing your data$/);
-    expect(screen.getAllByTestId('loader-spinner')).toHaveLength(1);
-    expect(screen.getByLabelText(/# your data/)).toHaveAttribute('aria-busy', 'true');
-    const parse = screen.getByRole('button', { name: '.parse() …' });
-    expect(parse).toBeDisabled();
-    expect(parse).toHaveAccessibleDescription('# parsing your data');
+    // The attachment's chip in the composer holds the parse's one loader; the card only says it.
+    expect(screen.queryByTestId('loader-spinner')).not.toBeInTheDocument();
     expect(screen.getByTestId('bindings-lock')).toHaveTextContent(
       /^# bindings wait while the data is parsed$/
     );
     expect(screen.getByTestId('data-step-status')).toHaveTextContent('parsing your data');
-
-    // The first parse: no data yet, so no bindings, but the line under `.parse()` shows.
-    rerender({
-      ...initialAgentState('matplotlib'),
-      phase: 'ready',
-      sessionId: 'S1',
-      parsing: true,
-    });
-    expect(screen.getByTestId('parse-hint')).toHaveTextContent('# parsing your data');
-    expect(screen.getByTestId('box-working')).toBeInTheDocument();
-    expect(screen.queryByTestId('bindings-lock')).not.toBeInTheDocument();
   });
 
   it('names the same bindings lock in step 2', async () => {
@@ -845,10 +800,9 @@ describe('DataPanel tables', () => {
         .map(option => option.textContent)
     ).toEqual(['1 · Branch, Q1 · 1 row', '2 · Branch, Staff · 1 row']);
 
-    // An edit of the box does not count: the tables are the stored paste's.
-    await userEvent.type(screen.getByLabelText(/# your data/), 'other text');
+    // The tables are the stored paste's: its text again, with its file's name.
     await userEvent.selectOptions(picker, '2');
-    expect(onParse).toHaveBeenLastCalledWith(REPORT, 'report.xlsx', 2);
+    expect(onParse).toHaveBeenLastCalledWith(REPORT, 'report.xlsx', 2, undefined);
   });
 
   it('shows no picker for one table, a malformed answer or a version without its paste', () => {
@@ -863,120 +817,6 @@ describe('DataPanel tables', () => {
     expect(screen.queryByTestId('data-tables')).not.toBeInTheDocument();
     rerender(withTables(2));
     expect(screen.getByTestId('data-tables')).toBeInTheDocument();
-  });
-});
-
-describe('DataPanel formulas', () => {
-  const FORMULA = 'y = sin(x), x von -pi bis pi';
-
-  function renderPanel(state: AgentSessionState) {
-    const onParse = vi.fn();
-    const panel = (next: AgentSessionState) => (
-      <DataPanel
-        state={next}
-        onParse={onParse}
-        onConfirmTranscription={vi.fn()}
-        onDiscardTranscription={vi.fn()}
-        onBind={vi.fn()}
-        onUndo={vi.fn()}
-      />
-    );
-    const view = render(panel(state));
-    /** The session sent the parsed text to the chat: what `parseData` tells the panel. */
-    const forward = (sent: string) => {
-      const onForward = onParse.mock.lastCall?.[3] as ((text: string) => void) | undefined;
-      act(() => onForward?.(sent));
-    };
-    return {
-      onParse,
-      forward,
-      rerender: (next: AgentSessionState) => view.rerender(panel(next)),
-    };
-  }
-
-  const empty = (overrides: Partial<AgentSessionState> = {}): AgentSessionState => ({
-    ...initialAgentState('matplotlib'),
-    phase: 'ready',
-    sessionId: 'S1',
-    ...overrides,
-  });
-
-  it('names code and a formula in the placeholder, under a one-line label', () => {
-    renderPanel(empty());
-    const box = screen.getByRole('textbox', { name: '# your data' });
-    expect(box).toHaveAttribute('placeholder', DATA_PLACEHOLDER);
-    // Example data is `.example_data()` above the composer; code in any language works ("…").
-    expect(DATA_PLACEHOLDER.split('\n')).toEqual([
-      'paste a table or drop a file (csv, excel, json …)',
-      'or code that makes data (python, javascript, …)',
-      'or a formula: y = sin(x), x from -pi to pi',
-    ]);
-    // The how-to is behind the ⓘ, never a line of its own.
-    expect(box).not.toHaveAccessibleDescription();
-    expect(screen.queryByText(/Parquet/)).not.toBeInTheDocument();
-  });
-
-  it('opens the how-to from the ⓘ beside the label, and closes it with Escape', async () => {
-    const user = userEvent.setup();
-    renderPanel(empty());
-    const info = screen.getByRole('button', { name: 'How the data card works' });
-    expect(info).toHaveAttribute('aria-haspopup', 'dialog');
-
-    await user.click(info);
-    const dialog = screen.getByRole('dialog', { name: 'How the data card works' });
-    for (const line of DATA_HOWTO) expect(dialog).toHaveTextContent(line);
-    expect(within(dialog).getByTestId('data-howto').children).toHaveLength(DATA_HOWTO.length);
-
-    await user.keyboard('{Escape}');
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(info).toHaveFocus();
-  });
-
-  it('empties the box once its text went to the chat, and only then', async () => {
-    const { onParse, forward } = renderPanel(empty());
-    const textbox = screen.getByLabelText(/# your data/);
-    await userEvent.type(textbox, FORMULA);
-    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenCalledWith(...parsedWith(FORMULA));
-    // A formula offers nothing to click: the session sends it to the chat by itself.
-    expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
-    expect(textbox).toHaveValue(FORMULA);
-
-    forward(FORMULA);
-    expect(textbox).toHaveValue('');
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-
-    // A request for data goes the same way, trimmed as the chat takes it.
-    await userEvent.type(textbox, '  Beispieldaten ');
-    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    forward('Beispieldaten');
-    expect(textbox).toHaveValue('');
-  });
-
-  it('keeps an edit made while the text was on its way', async () => {
-    const { forward } = renderPanel(empty());
-    const textbox = screen.getByLabelText(/# your data/);
-    await userEvent.type(textbox, 'Beispieldaten');
-    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-
-    // The user started on a table before the answer came: the hand-off takes the request, never the table.
-    await userEvent.clear(textbox);
-    await userEvent.type(textbox, 'x,y');
-    forward('Beispieldaten');
-    expect(textbox).toHaveValue('x,y');
-  });
-
-  it('asks to shorten code the chat cannot take, and keeps the box', () => {
-    const long = 'x = np.arange(10)\n'.repeat(200);
-    const { rerender } = renderPanel(empty());
-    fireEvent.change(screen.getByLabelText(/# your data/), { target: { value: long } });
-    rerender(empty({ datasetError: { code: 'code', ref: 'r-c' } }));
-
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'looks like code that makes data: shorten it to 2,000 characters, keeping only the part that computes the data, and the chat runs it · ref r-c'
-    );
-    expect(screen.getByLabelText(/# your data/)).toHaveValue(long);
-    expect(screen.queryByRole('button', { name: '.send()' })).not.toBeInTheDocument();
   });
 });
 
@@ -1112,7 +952,7 @@ describe('DataPanel transcription', () => {
     expect(screen.queryByText('# warnings')).not.toBeInTheDocument();
   });
 
-  it('.use() confirms and puts the CSV into the text box; .discard() drops it', async () => {
+  it('.use() confirms the table and .discard() drops it', async () => {
     const onConfirm = vi.fn();
     const onDiscard = vi.fn();
     render(
@@ -1125,23 +965,17 @@ describe('DataPanel transcription', () => {
         onUndo={vi.fn()}
       />
     );
-    const textbox = screen.getByLabelText(/# your data/);
-    await userEvent.type(textbox, 'Hund 7 Katze 3 und Vogel 4');
     await userEvent.click(screen.getByRole('button', { name: '.discard()' }));
     expect(onDiscard).toHaveBeenCalledTimes(1);
-    expect(textbox).toHaveValue('Hund 7 Katze 3 und Vogel 4');
-
     await userEvent.click(screen.getByRole('button', { name: '.use()' }));
     expect(onConfirm).toHaveBeenCalledTimes(1);
-    expect(textbox).toHaveValue(TRANSCRIPTION.text);
   });
 
-  it('holds back .parse() until the user decides, and .use() while the session is busy', async () => {
-    const onParse = vi.fn();
+  it('holds back .use() while the session is busy, and goes once the table is decided on', () => {
     const panel = (state: AgentSessionState) => (
       <DataPanel
         state={state}
-        onParse={onParse}
+        onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
@@ -1149,12 +983,6 @@ describe('DataPanel transcription', () => {
       />
     );
     const { rerender } = render(panel(transcribedState()));
-    await userEvent.type(screen.getByLabelText(/# your data/), 'animal,count');
-    const parse = screen.getByRole('button', { name: '.parse()' });
-    expect(parse).toBeDisabled();
-    expect(parse).toHaveAccessibleDescription(
-      'decide on the table below first: .use() or .discard()'
-    );
     expect(screen.getByRole('button', { name: '.use()' })).toBeEnabled();
 
     // A theme render in flight: the confirmation's parse would race it.
@@ -1165,8 +993,6 @@ describe('DataPanel transcription', () => {
     rerender(panel(transcribedState({ transcription: null })));
     expect(screen.queryByTestId('transcription-card')).not.toBeInTheDocument();
     expect(screen.queryByText(/decide on the table/)).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenCalledWith(...parsedWith('animal,count'));
   });
 });
 
@@ -1317,27 +1143,18 @@ describe('DataPanel notes', () => {
   });
 });
 
-describe('DataPanel file drop', () => {
-  const CSV = 'month,revenue\n2026-01,120\n2026-02,135\n';
-  const emptyState = (overrides: Partial<AgentSessionState> = {}): AgentSessionState => ({
-    ...initialAgentState('matplotlib'),
-    phase: 'ready' as const,
-    sessionId: 'S1',
-    ...overrides,
-  });
-
+describe('DataPanel files and sheets', () => {
   function renderPanel(
-    state: AgentSessionState = emptyState(),
+    state: AgentSessionState,
     onConvert?: (dataBase64: string, sheet?: string) => Promise<ConvertAnswer>
   ) {
     const onParse = vi.fn();
-    const onConfirmTranscription = vi.fn();
     const onTrack = vi.fn();
-    const view = render(
+    const panel = (next: AgentSessionState) => (
       <DataPanel
-        state={state}
+        state={next}
         onParse={onParse}
-        onConfirmTranscription={onConfirmTranscription}
+        onConfirmTranscription={vi.fn()}
         onDiscardTranscription={vi.fn()}
         onBind={vi.fn()}
         onUndo={vi.fn()}
@@ -1345,113 +1162,129 @@ describe('DataPanel file drop', () => {
         onConvert={onConvert}
       />
     );
-    return { ...view, onParse, onConfirmTranscription, onTrack };
+    const view = render(panel(state));
+    return { onParse, onTrack, rerender: (next: AgentSessionState) => view.rerender(panel(next)) };
   }
 
-  const box = () => screen.getByLabelText(/# your data/) as HTMLTextAreaElement;
-  const zone = () => screen.getByTestId('data-drop-zone');
-  const drop = (file: File) =>
-    fireEvent.drop(zone(), { dataTransfer: { files: [file], types: ['Files'] } });
-  const csvFile = (text = CSV, name = 'sales.csv') => new File([text], name, { type: 'text/csv' });
-
-  it('fills an empty box, says what it read, focuses .parse() and parses with the name beside the text', async () => {
-    const { onParse, onTrack } = renderPanel();
-
-    drop(csvFile());
-
-    await waitFor(() => expect(box()).toHaveValue(CSV));
-    expect(screen.getByTestId('file-status')).toHaveTextContent(
-      '# read "sales.csv" as utf-8 · 3 lines · check it, then .parse()'
-    );
-    const parse = screen.getByRole('button', { name: '.parse()' });
-    // The focus follows the fill in an effect after its render, so wait for it.
-    await waitFor(() => expect(parse).toHaveFocus());
-    expect(onTrack).toHaveBeenCalledWith('agent_data_file', {
-      kind: 'text',
-      encoding: 'utf-8',
-      outcome: 'filled',
-    });
-    // No auto-parse: the user presses `.parse()`.
-    expect(onParse).not.toHaveBeenCalled();
-
-    await userEvent.click(parse);
-    expect(onParse).toHaveBeenCalledWith(...parsedWith(CSV, 'sales.csv'));
+  const answer = (overrides: Partial<ConvertAnswer> = {}): ConvertAnswer => ({
+    text: 'month,revenue\nJan,120\n',
+    format: 'csv',
+    kind: 'xlsx',
+    rows: 1,
+    columns: 2,
+    sheet: '2024',
+    sheets: ['2024', '2025'],
+    sheet_count: 2,
+    warnings: {},
+    dropped: [],
+    ...overrides,
   });
 
-  it('asks before it replaces text in the box: .keep() keeps it, .replace() takes the file', async () => {
-    const { onTrack } = renderPanel();
-    await userEvent.type(box(), 'a,b');
-
-    drop(csvFile());
-
-    const group = await screen.findByTestId('file-replace');
-    expect(group).toHaveTextContent('replace the text in the box with "sales.csv" (3 lines)?');
-    // As with the fill: the focus moves in an effect after the render that shows the group.
-    await waitFor(() =>
-      expect(within(group).getByRole('button', { name: '.replace()' })).toHaveFocus()
-    );
-    await userEvent.click(within(group).getByRole('button', { name: '.keep()' }));
-    expect(box()).toHaveValue('a,b');
-    expect(box()).toHaveFocus(); // not left on the page's body
-    expect(screen.queryByTestId('file-replace')).not.toBeInTheDocument();
-    expect(onTrack).toHaveBeenLastCalledWith('agent_data_file', {
-      kind: 'text',
-      encoding: 'utf-8',
-      outcome: 'kept',
-    });
-
-    drop(csvFile());
-    await userEvent.click(await screen.findByRole('button', { name: '.replace()' }));
-    expect(box()).toHaveValue(CSV);
-    expect(screen.getByRole('button', { name: '.parse()' })).toHaveFocus();
-    expect(onTrack).toHaveBeenLastCalledWith('agent_data_file', {
-      kind: 'text',
-      encoding: 'utf-8',
-      outcome: 'replaced',
-    });
-  });
-
-  it('drops the question when the user edits or pastes text after it', async () => {
-    renderPanel();
-    await userEvent.type(box(), 'a,b');
-    drop(csvFile());
-    await screen.findByTestId('file-replace');
-
-    await userEvent.type(box(), ',c');
-    expect(screen.queryByTestId('file-replace')).not.toBeInTheDocument();
-
-    drop(csvFile());
-    await screen.findByTestId('file-replace');
-    fireEvent.paste(box(), { clipboardData: { files: [], getData: () => 'x,y' } });
-    expect(screen.queryByTestId('file-replace')).not.toBeInTheDocument();
-    expect(box()).toHaveValue('a,b,c');
-  });
-
-  it('reads the first of several dropped files and says so', async () => {
-    renderPanel();
-
-    fireEvent.drop(zone(), {
-      dataTransfer: {
-        files: [csvFile(), csvFile('a\n', 'b.csv'), csvFile('c\n', 'c.csv')],
-        types: ['Files'],
+  /** Data parsed from a workbook's sheet: the page keeps the file for the sheet picker. */
+  function fromWorkbook(name = 'Bericht.xlsx', sheets = ['2024', '2025']): AgentSessionState {
+    const state: AgentSessionState = stateWith({ x: 'month', y1: 'shoes' });
+    const { dataset } = state;
+    if (!dataset) throw new Error('stateWith gives a dataset');
+    return {
+      ...state,
+      dataset: {
+        ...dataset,
+        file: {
+          name,
+          base64: 'UEsDBA==',
+          browserKind: 'spreadsheet',
+          kind: 'xlsx',
+          sheet: sheets[0],
+          sheets,
+          sheetCount: sheets.length,
+          text: 'month,revenue\nJan,120\n',
+        },
       },
-    });
+    };
+  }
 
-    await waitFor(() => expect(box()).toHaveValue(CSV));
-    expect(screen.getByTestId('file-status')).toHaveTextContent(
-      'first of 3 files read — one file at a time · read "sales.csv"'
+  it('offers the other sheets of the workbook and parses the chosen one, read again on the server', async () => {
+    const onConvert = vi.fn(async (_data: string, sheet?: string) =>
+      answer({ text: 'a,b\n1,2\n', sheet: sheet ?? '2024' })
     );
+    const { onParse, onTrack } = renderPanel(fromWorkbook(), onConvert);
+    const picker = screen.getByLabelText(/# sheet/) as HTMLSelectElement;
+    expect(screen.getByText('# sheet (2)')).toBeInTheDocument();
+    expect(picker).toHaveValue('2024');
+    expect(
+      within(picker)
+        .getAllByRole('option')
+        .map(option => option.textContent)
+    ).toEqual(['2024', '2025']);
+
+    await userEvent.selectOptions(picker, '2025');
+    expect(onConvert).toHaveBeenCalledWith('UEsDBA==', '2025');
+    await waitFor(() =>
+      expect(onParse).toHaveBeenCalledWith(
+        'a,b\n1,2\n',
+        'Bericht.xlsx · sheet ‹2025›',
+        undefined,
+        expect.objectContaining({ name: 'Bericht.xlsx', sheet: '2025', text: 'a,b\n1,2\n' })
+      )
+    );
+    expect(onTrack).toHaveBeenCalledWith('agent_data_file', {
+      kind: 'xlsx',
+      encoding: 'none',
+      outcome: 'sheet',
+    });
   });
 
-  it('reads CRLF line breaks as the box holds them, so the counter, the lines and the payload agree', async () => {
-    const { onParse } = renderPanel();
+  it('names the sheet in angle quotes, so the data line never nests quotes', async () => {
+    // Live test round 4 of 2026-10-15: the data line read `from "Museen_2025.xlsx · sheet "Übersicht""`.
+    const onConvert = vi.fn(async () =>
+      answer({ sheet: 'Übersicht', sheets: ['Jahr', 'Übersicht'] })
+    );
+    const { onParse } = renderPanel(
+      fromWorkbook('Museen_2025.xlsx', ['Jahr', 'Übersicht']),
+      onConvert
+    );
+    await userEvent.selectOptions(screen.getByLabelText(/# sheet/), 'Übersicht');
+    await waitFor(() => expect(onParse).toHaveBeenCalled());
+    const source = onParse.mock.calls[0][1] as string;
+    expect(source).toBe('Museen_2025.xlsx · sheet ‹Übersicht›');
+    expect(source).not.toContain('"');
+  });
 
-    drop(csvFile('a,b\r\n1,2\r\n3,4\r\n', 'windows.csv'));
+  it('says that the server reads the sheet beside the loader, and why it could not', async () => {
+    let fail!: (error: unknown) => void;
+    const onConvert = vi.fn(
+      () =>
+        new Promise<ConvertAnswer>((_resolve, reject) => {
+          fail = reject;
+        })
+    );
+    const { onParse } = renderPanel(fromWorkbook(), onConvert);
+    await userEvent.selectOptions(screen.getByLabelText(/# sheet/), '2025');
+    const reading = screen.getByTestId('sheet-reading');
+    expect(reading).toHaveTextContent('# reading the sheet ‹2025› of "Bericht.xlsx" on the server');
+    expect(within(reading).getByTestId('loader-spinner')).toBeInTheDocument();
+    expect(screen.getByLabelText(/# sheet/)).toBeDisabled();
 
-    await waitFor(() => expect(box()).toHaveValue('a,b\n1,2\n3,4\n'));
-    expect(screen.getByTestId('file-status')).toHaveTextContent('3 lines');
-    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenCalledWith(...parsedWith('a,b\n1,2\n3,4\n', 'windows.csv'));
+    await act(async () =>
+      fail(
+        new AgentApiError(422, 'file_too_many_rows', 'ref-1', [], null, {
+          measured: 21000,
+          limit: 20000,
+        })
+      )
+    );
+    expect(await screen.findByTestId('sheet-error')).toHaveTextContent(
+      '"Bericht.xlsx" has more rows than a table may have; filter it, or copy a range and paste it (21,000 rows, the cap is 20,000) · ref ref-1'
+    );
+    expect(screen.queryByTestId('sheet-reading')).not.toBeInTheDocument();
+    expect(onParse).not.toHaveBeenCalled();
+  });
+
+  it('shows no sheet picker for a file with one sheet or data from a paste', () => {
+    const { rerender } = renderPanel(fromWorkbook('one.xlsx', ['only']));
+    expect(screen.queryByTestId('file-sheets')).not.toBeInTheDocument();
+    rerender(stateWith({ x: 'month', y1: 'shoes' }));
+    expect(screen.queryByTestId('file-sheets')).not.toBeInTheDocument();
   });
 
   it('shows the file name the server kept, and a withheld one as withheld', () => {
@@ -1467,401 +1300,9 @@ describe('DataPanel file drop', () => {
     const { rerender } = renderPanel(withFile('sales.csv'));
     expect(screen.getByTestId('data-file-name')).toHaveTextContent('· from "sales.csv"');
 
-    rerender(
-      <DataPanel
-        state={withFile('(name withheld)')}
-        onParse={vi.fn()}
-        onConfirmTranscription={vi.fn()}
-        onDiscardTranscription={vi.fn()}
-        onBind={vi.fn()}
-        onUndo={vi.fn()}
-      />
-    );
+    rerender(withFile('(name withheld)'));
     expect(screen.getByTestId('data-file-name')).toHaveTextContent(
       'name withheld by the content check'
     );
-  });
-
-  it('holds .replace() while the parse of the text in the box runs', async () => {
-    const { rerender, onParse } = renderPanel();
-    await userEvent.type(box(), 'a,b');
-    drop(csvFile());
-    await screen.findByTestId('file-replace');
-    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenCalledWith(...parsedWith('a,b'));
-
-    const panel = (state: AgentSessionState) => (
-      <DataPanel
-        state={state}
-        onParse={onParse}
-        onConfirmTranscription={vi.fn()}
-        onDiscardTranscription={vi.fn()}
-        onBind={vi.fn()}
-        onUndo={vi.fn()}
-      />
-    );
-    rerender(panel(emptyState({ parsing: true })));
-    expect(screen.getByRole('button', { name: '.replace()' })).toBeDisabled();
-    expect(box()).toHaveValue('a,b');
-
-    rerender(panel(emptyState()));
-    await userEvent.click(screen.getByRole('button', { name: '.replace()' }));
-    expect(box()).toHaveValue(CSV);
-  });
-
-  it('refuses a file while a step runs and leaves the box alone', async () => {
-    const { onTrack } = renderPanel(emptyState({ parsing: true }));
-
-    drop(csvFile());
-
-    expect(await screen.findByTestId('file-error')).toHaveTextContent('a step is still running');
-    expect(box()).toHaveValue('');
-    expect(onTrack).toHaveBeenCalledWith('agent_data_file', {
-      kind: 'unknown',
-      encoding: 'none',
-      outcome: 'busy',
-    });
-    expect(screen.getByRole('button', { name: 'Open a data file' })).toBeDisabled();
-  });
-
-  const ZIP = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0, 0, 0]);
-  const workbook = (name = 'Bericht.xlsx') => new File([ZIP], name);
-  const answer = (overrides: Partial<ConvertAnswer> = {}): ConvertAnswer => ({
-    text: 'Report 2024\n\nmonth,revenue\nJan,120\n',
-    format: 'csv',
-    kind: 'xlsx',
-    rows: 4,
-    columns: 2,
-    sheet: '2024',
-    sheets: ['2024', '2025'],
-    sheet_count: 2,
-    warnings: {},
-    dropped: [],
-    ...overrides,
-  });
-
-  it('sends a workbook to the server as base64 and fills the box with its sheet, the sheet in the source', async () => {
-    const onConvert = vi.fn(async () => answer({ warnings: { formulas_without_value: 3 } }));
-    const { onParse, onTrack } = renderPanel(emptyState(), onConvert);
-
-    drop(workbook());
-
-    await waitFor(() => expect(box()).toHaveValue('Report 2024\n\nmonth,revenue\nJan,120\n'));
-    expect(onConvert).toHaveBeenCalledWith(btoa(String.fromCharCode(...ZIP)), undefined);
-    expect(screen.getByTestId('file-status')).toHaveTextContent(
-      '# read "Bericht.xlsx" on the server: sheet ‹2024› of xlsx · 4 rows × 2 columns · 3 lines · 3 formula cells saved without a value'
-    );
-    expect(onTrack).toHaveBeenCalledWith('agent_data_file', {
-      kind: 'xlsx',
-      encoding: 'none',
-      outcome: 'filled',
-    });
-    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenCalledWith(
-      ...parsedWith('Report 2024\n\nmonth,revenue\nJan,120\n', 'Bericht.xlsx · sheet ‹2024›')
-    );
-  });
-
-  it('names the columns the server left out', async () => {
-    const onConvert = vi.fn(async () =>
-      answer({
-        sheet: null,
-        sheets: [],
-        warnings: { dropped_columns: 3 },
-        dropped: ['span', 'raw'],
-      })
-    );
-    renderPanel(emptyState(), onConvert);
-
-    drop(workbook());
-
-    await waitFor(() =>
-      expect(screen.getByTestId('file-status')).toHaveTextContent(
-        '3 columns of durations, intervals, binary, map or nested values left out: "span", "raw" and 1 more'
-      )
-    );
-  });
-
-  it('offers the other sheets and reads the chosen one again on the server', async () => {
-    const onConvert = vi.fn(async (_data: string, sheet?: string) =>
-      sheet === '2025' ? answer({ text: 'a,b\n1,2\n', sheet: '2025' }) : answer()
-    );
-    const { onParse, onTrack } = renderPanel(emptyState(), onConvert);
-
-    drop(workbook());
-    const picker = (await screen.findByLabelText(/# sheet/)) as HTMLSelectElement;
-    expect(picker).toHaveValue('2024');
-    expect(
-      within(picker)
-        .getAllByRole('option')
-        .map(option => option.textContent)
-    ).toEqual(['2024', '2025']);
-
-    await userEvent.selectOptions(picker, '2025');
-    // The box still held this file's own text, so the new sheet replaces it without a question.
-    await waitFor(() => expect(box()).toHaveValue('a,b\n1,2\n'));
-    expect(onConvert).toHaveBeenLastCalledWith(expect.any(String), '2025');
-    expect(onTrack).toHaveBeenLastCalledWith('agent_data_file', {
-      kind: 'xlsx',
-      encoding: 'none',
-      outcome: 'sheet',
-    });
-    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenCalledWith(
-      ...parsedWith('a,b\n1,2\n', 'Bericht.xlsx · sheet ‹2025›')
-    );
-  });
-
-  it('asks before a new sheet replaces text the user edited', async () => {
-    const onConvert = vi.fn(async (_data: string, sheet?: string) =>
-      sheet ? answer({ text: 'a,b\n1,2\n', sheet }) : answer()
-    );
-    renderPanel(emptyState(), onConvert);
-    drop(workbook());
-    const picker = await screen.findByLabelText(/# sheet/);
-    await userEvent.type(box(), 'x');
-
-    await userEvent.selectOptions(picker, '2025');
-
-    expect(await screen.findByTestId('file-replace')).toHaveTextContent(
-      'replace the text in the box with "Bericht.xlsx · sheet ‹2025›" (2 lines)?'
-    );
-  });
-
-  it('names the sheet in angle quotes, so the data line never nests quotes', async () => {
-    // Live test round 4 of 2026-10-15: the data line read `from "Museen_2025.xlsx · sheet "Übersicht""`.
-    const onConvert = vi.fn(async () => answer({ sheet: 'Übersicht', sheets: ['Übersicht'] }));
-    const { onParse } = renderPanel(emptyState(), onConvert);
-
-    drop(workbook('Museen_2025.xlsx'));
-    await waitFor(() => expect(box()).toHaveValue('Report 2024\n\nmonth,revenue\nJan,120\n'));
-    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-
-    const source = onParse.mock.calls[0][1] as string;
-    expect(source).toBe('Museen_2025.xlsx · sheet ‹Übersicht›');
-    expect(source).not.toContain('"');
-  });
-
-  it('names the counts of a refused file and keeps the box', async () => {
-    const onConvert = vi.fn(async () => {
-      throw new AgentApiError(422, 'file_too_many_rows', 'ref-1', [], null, {
-        measured: 21000,
-        limit: 20000,
-      });
-    });
-    const { onTrack } = renderPanel(emptyState(), onConvert);
-
-    drop(workbook('big.xlsx'));
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      '"big.xlsx" has more rows than a table may have; filter it, or copy a range and paste it (21,000 rows, the cap is 20,000) · ref ref-1'
-    );
-    expect(box()).toHaveValue('');
-    expect(onTrack).toHaveBeenCalledWith('agent_data_file', {
-      kind: 'spreadsheet',
-      encoding: 'none',
-      outcome: 'refused',
-    });
-  });
-
-  it('waits for a conversion: .parse() and .open() hold, and a second file is refused', async () => {
-    let finish: (value: ConvertAnswer) => void = () => undefined;
-    const onConvert = vi.fn(
-      () =>
-        new Promise<ConvertAnswer>(resolve => {
-          finish = resolve;
-        })
-    );
-    renderPanel(emptyState(), onConvert);
-
-    drop(workbook());
-    await waitFor(() =>
-      expect(screen.getByTestId('file-status')).toHaveTextContent(
-        '# reading "Bericht.xlsx" on the server …'
-      )
-    );
-    // The box itself says what it waits for, not only the line under it, beside the loader.
-    const working = screen.getByTestId('box-working');
-    expect(working).toHaveTextContent(/^# reading "Bericht\.xlsx" on the server$/);
-    expect(within(working).getByTestId('loader-spinner')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Open a data file' })).toBeDisabled();
-
-    drop(csvFile());
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'a file is still being read on the server'
-    );
-    expect(onConvert).toHaveBeenCalledTimes(1);
-
-    finish(answer());
-    await waitFor(() => expect(box()).toHaveValue('Report 2024\n\nmonth,revenue\nJan,120\n'));
-    expect(screen.queryByTestId('box-working')).not.toBeInTheDocument();
-  });
-
-  it('answers a pickle by its format, without the server', async () => {
-    const onConvert = vi.fn();
-    renderPanel(emptyState(), onConvert);
-
-    drop(new File([new Uint8Array([0x80, 0x05, 0x95])], 'frame.pkl'));
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'never read because loading one can run code'
-    );
-    expect(onConvert).not.toHaveBeenCalled();
-    expect(box()).toHaveValue('');
-  });
-
-  it('reads a file chosen with .open() and a file pasted from the file manager', async () => {
-    const { onParse } = renderPanel();
-    const input = screen.getByTestId('data-file-input') as HTMLInputElement;
-    expect(input.accept).toContain('text/csv');
-
-    await userEvent.upload(input, csvFile(CSV, 'chosen.csv'));
-    await waitFor(() => expect(box()).toHaveValue(CSV));
-    // Typing keeps the name: the text is still the file's, edited.
-    await userEvent.type(box(), '2026-03,150\n');
-    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenLastCalledWith(...parsedWith(`${CSV}2026-03,150\n`, 'chosen.csv'));
-
-    await userEvent.clear(box());
-    fireEvent.paste(box(), {
-      clipboardData: { files: [csvFile(CSV, 'pasted.tsv')], getData: () => '' },
-    });
-    await waitFor(() => expect(box()).toHaveValue(CSV));
-    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenLastCalledWith(...parsedWith(CSV, 'pasted.tsv'));
-  });
-
-  it('lets pasted text through and forgets the file name', async () => {
-    const { onParse } = renderPanel();
-    drop(csvFile());
-    await waitFor(() => expect(box()).toHaveValue(CSV));
-
-    // Excel puts a picture of the cells next to their text: the text wins.
-    const picture = new File([new Uint8Array([0x89, 0x50])], 'cells.png', { type: 'image/png' });
-    const pasted = fireEvent.paste(box(), {
-      clipboardData: { files: [picture], getData: () => '2026-03,150' },
-    });
-    expect(pasted).toBe(true); // not prevented: the browser pastes the text
-    await userEvent.click(screen.getByRole('button', { name: '.parse()' }));
-    expect(onParse).toHaveBeenLastCalledWith(...parsedWith(CSV));
-  });
-
-  it('leaves the name of a table read from the file to the session, and a new file discards that table', async () => {
-    const transcription: TranscriptionState = {
-      text: 'name,count\nA,1\n',
-      preview: [['A', '1']],
-      profile: {
-        rows: 1,
-        columns: [
-          { name: 'name', dtype: 'text', missing: 0, unique: 1 },
-          { name: 'count', dtype: 'number', missing: 0, unique: 1 },
-        ],
-        source_format: 'csv',
-        decimal: '.',
-        warnings: [],
-      },
-      warnings: [],
-      note: '',
-      bytes: 20,
-    };
-    const { rerender, onConfirmTranscription } = renderPanel();
-    drop(csvFile('A had one\n', 'notes.txt'));
-    await waitFor(() => expect(box()).toHaveValue('A had one\n'));
-
-    rerender(
-      <DataPanel
-        state={emptyState({ transcription })}
-        onParse={vi.fn()}
-        onConfirmTranscription={onConfirmTranscription}
-        onDiscardTranscription={vi.fn()}
-        onBind={vi.fn()}
-        onUndo={vi.fn()}
-      />
-    );
-    await userEvent.click(screen.getByRole('button', { name: '.use()' }));
-    // The session keeps the name on the transcription (`useAgentSession`), whatever the box holds now.
-    expect(onConfirmTranscription).toHaveBeenCalledWith();
-
-    // A new file takes the earlier text's table away, so `.use()` never stores it under the new name.
-    const onDiscardTranscription = vi.fn();
-    rerender(
-      <DataPanel
-        state={emptyState({ transcription })}
-        onParse={vi.fn()}
-        onConfirmTranscription={onConfirmTranscription}
-        onDiscardTranscription={onDiscardTranscription}
-        onBind={vi.fn()}
-        onUndo={vi.fn()}
-      />
-    );
-    drop(csvFile(CSV, 'other.csv'));
-    await userEvent.click(await screen.findByRole('button', { name: '.replace()' }));
-    expect(onDiscardTranscription).toHaveBeenCalledTimes(1);
-    expect(box()).toHaveValue(CSV);
-  });
-
-  it('keeps the card open in step 2 when a file fills the box over a pending transcription', async () => {
-    // Confirmed data with a table read from text waiting: step 1, the card open without a `.show()`.
-    const confirmed = stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true });
-    const onDiscardTranscription = vi.fn();
-    const panel = (state: AgentSessionState) => (
-      <DataPanel
-        state={state}
-        onParse={vi.fn()}
-        onConfirmTranscription={vi.fn()}
-        onDiscardTranscription={onDiscardTranscription}
-        onBind={vi.fn()}
-        onUndo={vi.fn()}
-      />
-    );
-    const { rerender } = render(panel({ ...confirmed, transcription: TRANSCRIPTION }));
-    expect(screen.getByTestId('transcription-card')).toBeInTheDocument();
-
-    drop(csvFile());
-    await waitFor(() => expect(box()).toHaveValue(CSV));
-    expect(onDiscardTranscription).toHaveBeenCalledTimes(1);
-
-    // The session dropped the table, so the page is back at step 2: the card stays open on the
-    // file's text, ready for `.parse()`, instead of collapsing into the header.
-    rerender(panel(confirmed));
-    expect(screen.getByTestId('data-card')).toBeInTheDocument();
-    expect(box()).toHaveValue(CSV);
-    expect(screen.getByRole('button', { name: 'Hide the data' })).toBeInTheDocument();
-  });
-
-  it('drops the result of a slow read that a later file superseded', async () => {
-    renderPanel();
-    let release: (buffer: ArrayBuffer) => void = () => {};
-    const slow = csvFile('slow,file\n1,2\n', 'slow.csv');
-    const slowBytes = await slow.arrayBuffer();
-    slow.arrayBuffer = () =>
-      new Promise<ArrayBuffer>(resolve => {
-        release = resolve;
-      });
-
-    drop(slow);
-    drop(csvFile(CSV, 'fast.csv'));
-    await waitFor(() => expect(box()).toHaveValue(CSV));
-    release(slowBytes);
-    await new Promise(resolve => setTimeout(resolve, 0));
-
-    expect(box()).toHaveValue(CSV);
-    expect(screen.queryByTestId('file-replace')).not.toBeInTheDocument();
-    expect(screen.getByTestId('file-status')).toHaveTextContent('"fast.csv"');
-  });
-
-  it('marks the box while a file is dragged over it and keeps the browser from opening a stray drop', () => {
-    renderPanel();
-    const transfer = { files: [], types: ['Files'], dropEffect: 'none' };
-
-    fireEvent.dragEnter(zone(), { dataTransfer: transfer });
-    expect(zone()).toHaveAttribute('data-drag', 'ready');
-    expect(screen.getByText('drop the file to read it into the box')).toBeInTheDocument();
-    fireEvent.dragLeave(zone(), { dataTransfer: transfer });
-    expect(zone()).not.toHaveAttribute('data-drag');
-
-    // A file dropped beside the box: prevented, so the page stays.
-    expect(fireEvent.drop(document.body, { dataTransfer: transfer })).toBe(false);
-    // A text drag keeps its default.
-    expect(fireEvent.drop(document.body, { dataTransfer: { types: ['text/plain'] } })).toBe(true);
   });
 });

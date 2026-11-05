@@ -120,8 +120,8 @@ describe('PublicAgentChatPage', () => {
     expect(notice).toHaveTextContent(`# ${EXPERIMENTAL_LINE}`);
     expect(notice).toHaveTextContent('# experimental AI · answers can be wrong');
     expect(screen.queryByTestId('experimental-details')).not.toBeInTheDocument();
-    // Above the data card's paste box: the notice comes first in the document.
-    const box = await screen.findByRole('textbox', { name: /data/i });
+    // Above the message box, where the data comes in: the notice comes first in the document.
+    const box = await screen.findByRole('textbox', { name: 'Message' });
     expect(notice.compareDocumentPosition(box) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     const about = within(notice).getByRole('button', { name: 'About the assistant' });
@@ -158,8 +158,8 @@ describe('PublicAgentChatPage', () => {
     renderPage();
     await waitFor(() => expect(screen.getByTestId('language-chip')).toBeEnabled());
     expect(screen.getByTestId('experimental-notice')).toBeInTheDocument();
-    // Owner decision of 2026-11-02: a visitor cannot resume a saved session, and the feedback
-    // form covers "something went wrong"; the menu would hold nothing else.
+    // A visitor cannot resume a saved session, and the feedback form covers "something went
+    // wrong"; the menu would hold nothing else.
     expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: '# include data.csv' })).not.toBeInTheDocument();

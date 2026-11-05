@@ -1,0 +1,267 @@
+{
+  "about": "Shared cases of the composer's paste routing (routeInput.ts). route is what the page does with pasted text: data becomes an attachment that Enter sends to the dataset route, message stays typed text, null is nothing to route. server is what the dataset route's classify_paste answers for the same text (agents/anyplot/data/classify.py): null for text the parser reads, else code, formula or data_request. routeInput.test.ts asserts route; tests/unit/agents/test_route_cases.py asserts server. repeat, when present, repeats text that many times. lines are single lines with the code veto's verdict, which both sides must give: strong (an import, a definition, an R assignment, a known data call, an arrow function) and shaped (strong, or a comment, a brace, return, a line ending in ; { or :).",
+  "cases": [
+    { "id": 1, "text": "month,sales\nJan,5\nFeb,7", "route": "data", "rule": "7a", "server": null },
+    {
+      "id": 2,
+      "text": "Region\tStatus\nNorth\tActive",
+      "route": "data",
+      "rule": "6",
+      "server": null
+    },
+    {
+      "id": 3,
+      "text": "Monat;Umsatz\nJan;1,5\nFeb;2,3",
+      "route": "data",
+      "rule": "7a",
+      "server": null
+    },
+    { "id": 4, "text": "1,5;2,3\n4,1;5,0", "route": "data", "rule": "7a", "server": null },
+    {
+      "id": 5,
+      "text": "| a | b |\n|---|---|\n| x | y |",
+      "route": "data",
+      "rule": "6",
+      "server": null
+    },
+    {
+      "id": 6,
+      "text": "Sales 2024\nmonth;sales\nJan;5\nFeb;7\nSource: ERP",
+      "route": "data",
+      "rule": "7a",
+      "server": null
+    },
+    {
+      "id": 7,
+      "text": "Jahr  Temp  Regen\n2020  9.8   812\n2021  9.1   790",
+      "route": "data",
+      "rule": "8",
+      "server": null
+    },
+    { "id": 8, "text": "x y\n1 2\n3 4", "route": "data", "rule": "9", "server": null },
+    { "id": 9, "text": "sales\n5\n7\n9", "route": "data", "rule": "10", "server": null },
+    {
+      "id": 10,
+      "text": "name,comment\n\"Anna\",\"line one\nline two\"\nBen,ok\nCem,fine",
+      "route": "data",
+      "rule": "7b",
+      "server": null
+    },
+    {
+      "id": 11,
+      "text": "name,city\nAnna,Wien\nBen,Graz",
+      "route": "data",
+      "rule": "7b",
+      "server": null
+    },
+    {
+      "id": 12,
+      "text": "step,cost\nx <- 1,3\ny,4\nz,5",
+      "route": "data",
+      "rule": "7a",
+      "server": null
+    },
+    {
+      "id": 13,
+      "text": "[{\"x\":1,\"y\":2},{\"x\":2,\"y\":3}]",
+      "route": "data",
+      "rule": "3",
+      "server": null
+    },
+    { "id": 14, "text": "{\"x\":1}\n{\"x\":2}", "route": "data", "rule": "3", "server": null },
+    {
+      "id": 15,
+      "text": "v = np.arange(10)\n",
+      "repeat": 140,
+      "route": "data",
+      "rule": "2",
+      "server": "code"
+    },
+    {
+      "id": 16,
+      "text": "y = sin(x), x from -pi to pi",
+      "route": "message",
+      "rule": "4",
+      "server": "formula"
+    },
+    {
+      "id": 17,
+      "text": "Beispieldaten mit 3 Kategorien",
+      "route": "message",
+      "rule": "4",
+      "server": "data_request"
+    },
+    {
+      "id": 18,
+      "text": "import numpy as np\nx = np.linspace(0, 10, 100)\nprint(x)",
+      "route": "message",
+      "rule": "5",
+      "server": "code"
+    },
+    {
+      "id": 19,
+      "text": "x <- c(1, 2, 3)\ny <- x^2",
+      "route": "message",
+      "rule": "5",
+      "server": "code"
+    },
+    {
+      "id": 20,
+      "text": "y1 = x**2\ny2 = sin(x)",
+      "route": "message",
+      "rule": "11",
+      "server": "formula"
+    },
+    {
+      "id": 21,
+      "text": "Set y from 0 to 10, please\nand x from 1 to 5, thanks",
+      "route": "message",
+      "rule": "11",
+      "server": null
+    },
+    {
+      "id": 22,
+      "text": "In 2024, make the title bigger\nIn 2025, make the legend smaller",
+      "route": "message",
+      "rule": "11",
+      "server": null
+    },
+    { "id": 23, "text": "name,city\nAnna,Wien", "route": "message", "rule": "11", "server": null },
+    { "id": 24, "text": "Hi\nplease plot it", "route": "message", "rule": "11", "server": null },
+    { "id": 25, "text": "   \n  ", "route": null, "rule": "1", "server": null },
+    {
+      "id": 26,
+      "text": "Make the bars blue\nand add a grid",
+      "route": "message",
+      "rule": "11",
+      "server": null
+    },
+    {
+      "id": 27,
+      "text": "Hund 7, Katze 3\nVogel 4, Maus 2",
+      "route": "message",
+      "rule": "11",
+      "server": null
+    },
+    {
+      "id": 28,
+      "text": "const xs = [1, 2, 3];\nconst ys = xs.map(x => x * 2);",
+      "route": "message",
+      "rule": "5",
+      "server": "code"
+    },
+    {
+      "id": 29,
+      "text": "date,value\n2024-01-01,3.5\n2024-01-02,4.1",
+      "route": "data",
+      "rule": "7a",
+      "server": null
+    },
+    {
+      "id": 30,
+      "text": "Hund 7, Katze 3\nVogel 4, Maus 2\nPferd 1, Esel 5",
+      "route": "data",
+      "rule": "7b",
+      "server": null
+    },
+    {
+      "id": 31,
+      "text": "xs = np.array([1, 2])\nys = np.array([3, 4])\nzs = np.array([5, 6])",
+      "route": "message",
+      "rule": "5",
+      "server": "code"
+    },
+    {
+      "id": 32,
+      "text": "| name | comment |\n|---|---|\n| Anna | arrived late because the train from Graz was cancelled |",
+      "route": "data",
+      "rule": "6",
+      "server": null
+    },
+    {
+      "id": 33,
+      "text": "Name   City     Score\nAnna   Wien     5\nBen    Graz     7",
+      "route": "data",
+      "rule": "8",
+      "server": null
+    },
+    {
+      "id": 34,
+      "text": "Hello,\nplease use a log scale, thanks\nand a title, please",
+      "route": "message",
+      "rule": "11",
+      "server": null
+    },
+    {
+      "id": 35,
+      "text": "Hallo,\nbitte nur 2024, danke\nund blau, bitte",
+      "route": "message",
+      "rule": "11",
+      "server": null
+    },
+    {
+      "id": 36,
+      "text": "- one, two\n- three, four",
+      "route": "message",
+      "rule": "11",
+      "server": null
+    },
+    {
+      "id": 37,
+      "text": "- one, two\n- three, four\n- five, six",
+      "route": "message",
+      "rule": "11",
+      "server": null
+    },
+    {
+      "id": 38,
+      "text": "name,comment\nAnna,arrived late because of the train\nBen,ok\nCem,fine",
+      "route": "message",
+      "rule": "11",
+      "server": null
+    },
+    {
+      "id": 39,
+      "text": "Bestand Rohre 5\" pipe\nname,count\nA,1\nB,2\nC,3",
+      "route": "data",
+      "rule": "7a",
+      "server": null
+    },
+    {
+      "id": 40,
+      "text": "Name;Kommentar\nAnna;kam spaet wegen dem Zug\nBen;ok\nCem;gut",
+      "route": "data",
+      "rule": "7b",
+      "server": null
+    },
+    {
+      "id": 41,
+      "text": "Hi there, team\nplease add a grid, thanks\nand blue bars, ok",
+      "route": "message",
+      "rule": "11",
+      "server": null
+    }
+  ],
+  "lines": [
+    { "line": "import numpy as np", "strong": true, "shaped": true },
+    { "line": "from math import sin", "strong": true, "shaped": true },
+    { "line": "library(ggplot2)", "strong": true, "shaped": true },
+    { "line": "def f(x):", "strong": true, "shaped": true },
+    { "line": "function grow(n) {", "strong": true, "shaped": true },
+    { "line": "const ys = xs.map(x => x * 2);", "strong": true, "shaped": true },
+    { "line": "x <- c(1, 2, 3)", "strong": true, "shaped": true },
+    { "line": "for i in range(10):", "strong": true, "shaped": true },
+    { "line": "print(x)", "strong": true, "shaped": true },
+    { "line": "x = np.linspace(0, 10, 100)", "strong": true, "shaped": true },
+    { "line": "ys = [x * 2 for x in xs]", "strong": true, "shaped": true },
+    { "line": "y = rnorm(100)", "strong": true, "shaped": true },
+    { "line": "# a comment", "strong": false, "shaped": true },
+    { "line": "return y", "strong": false, "shaped": true },
+    { "line": "}", "strong": false, "shaped": true },
+    { "line": "total = a + b;", "strong": false, "shaped": true },
+    { "line": "y = sin(x)", "strong": false, "shaped": false },
+    { "line": "Jan,5", "strong": false, "shaped": false },
+    { "line": "Source: ERP", "strong": false, "shaped": false },
+    { "line": "Region: North", "strong": false, "shaped": false }
+  ]
+}

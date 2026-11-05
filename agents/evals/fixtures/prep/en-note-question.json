@@ -1,0 +1,9 @@
+{
+  "dataset_text": "Month,Sales\nJan,120\nFeb,95\nMar,140\nApr,110\n",
+  "message": "which month sold the most?",
+  "first_turn": true,
+  "expected_operations": [],
+  "locale": "en",
+  "spec_id": "bar-basic",
+  "tags": ["note", "data_question", "no_tool"]
+}

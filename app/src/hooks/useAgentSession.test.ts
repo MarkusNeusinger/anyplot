@@ -1119,6 +1119,176 @@ describe('useAgentSession: replaying an upload (a server without the copy)', () 
   });
 });
 
+describe('useAgentSession: a note with the attachment', () => {
+  const turnBodies = () => calls.filter(call => call.path.endsWith('/messages')).map(c => c.body);
+  const TABLE = 'Student,Study Hours,Exam Score\nS01,1.5,52\n';
+  /** The note's turn answers `first`; every later turn is the summary. */
+  function noteRoutes(first: () => Response) {
+    const routes = baseRoutes();
+    let turns = 0;
+    routes['POST /sessions/S1/messages'] = () => {
+      turns += 1;
+      return turns === 1 ? first() : summaryStream();
+    };
+    return routes;
+  }
+
+  it('sends the note as the first turn once the data is stored, with no summary action', async () => {
+    const { result } = await openSession(baseRoutes());
+    let parsed: ParseResult | undefined;
+    await act(async () => {
+      parsed = await result.current.parseData(TABLE, false, undefined, undefined, {
+        note: '  only 2024  ',
+      });
+    });
+    expect(turnBodies()).toEqual([{ text: 'only 2024' }]);
+    expect(parsed).toMatchObject({ outcome: 'stored', turnEnd: 'done' });
+    expect(result.current.state.items[0]).toMatchObject({ kind: 'user', text: 'only 2024' });
+  });
+
+  it.each([['out_of_scope'], ['needs_data'], ['other_library']])(
+    'follows a note the scope judge refused (%s) with the summary, which skips the judge',
+    async code => {
+      const routes = noteRoutes(() =>
+        sse([
+          ['refusal', { code, text: 'I can only help with this plot.' }],
+          ['done', {}],
+        ])
+      );
+      const { result } = await openSession(routes);
+      await act(() =>
+        result.current.parseData(TABLE, false, undefined, undefined, { note: 'write me an email' })
+      );
+      expect(turnBodies()).toEqual([{ text: 'write me an email' }, { action: 'summarize_data' }]);
+    }
+  );
+
+  it('follows a note the scope judge could not read with the summary too', async () => {
+    const routes = noteRoutes(() =>
+      sse([
+        ['error', { code: 'guard_unavailable', ref: 'r-g' }],
+        ['done', {}],
+      ])
+    );
+    const { result } = await openSession(routes);
+    await act(() =>
+      result.current.parseData(TABLE, false, undefined, undefined, { note: 'only 2024' })
+    );
+    expect(turnBodies()).toEqual([{ text: 'only 2024' }, { action: 'summarize_data' }]);
+    // The note stays the user's line in the thread, with the error under it.
+    expect(result.current.state.items[0]).toMatchObject({ kind: 'user', text: 'only 2024' });
+  });
+
+  it.each([['session_closed'], ['budget']])(
+    'sends no summary after a refusal of the route itself (%s), which would refuse it as well',
+    async code => {
+      const routes = noteRoutes(() =>
+        sse([
+          ['refusal', { code, text: 'The session is closed.' }],
+          ['done', {}],
+        ])
+      );
+      const { result } = await openSession(routes);
+      await act(() =>
+        result.current.parseData(TABLE, false, undefined, undefined, { note: 'only 2024' })
+      );
+      expect(turnBodies()).toEqual([{ text: 'only 2024' }]);
+    }
+  );
+
+  it('keeps a converted file with the stored data, for the sheet picker', async () => {
+    const { result } = await openSession(baseRoutes());
+    const file = {
+      name: 'Bericht.xlsx',
+      base64: 'UEsDBA==',
+      browserKind: 'spreadsheet' as const,
+      kind: 'xlsx',
+      sheet: '2024',
+      sheets: ['2024', '2025'],
+      sheetCount: 2,
+      text: TABLE,
+    };
+    await act(() =>
+      result.current.parseData(TABLE, false, 'Bericht.xlsx · sheet ‹2024›', undefined, { file })
+    );
+    expect(result.current.state.dataset?.file).toEqual(file);
+  });
+
+  it('counts a sheet read as work in flight, and parses its answer once it is done', async () => {
+    const routes = baseRoutes();
+    let finish: () => void = () => {};
+    routes['POST /sessions/S1/dataset/convert'] = () =>
+      new Promise<Response>(resolve => {
+        finish = () =>
+          resolve(
+            json(200, {
+              text: TABLE,
+              format: 'csv',
+              kind: 'xlsx',
+              rows: 2,
+              columns: 2,
+              sheet: '2025',
+              sheets: ['2024', '2025'],
+              sheet_count: 2,
+              warnings: {},
+              dropped: [],
+            })
+          );
+      });
+    const { result } = await openSession(routes);
+    const turns = () => calls.filter(call => call.path.endsWith('/messages')).length;
+    let reading: Promise<unknown> = Promise.resolve();
+    await act(async () => {
+      reading = result.current.readSheet('UEsDBA==', '2025');
+    });
+    expect(result.current.state.sheetBusy).toBe(true);
+    expect(sessionBusy(result.current.state)).toBe(true);
+    const before = turns();
+    await act(() => result.current.sendMessage('which month sold most?'));
+    expect(turns()).toBe(before); // a turn would race the parse of the sheet
+
+    await act(async () => {
+      finish();
+      await reading;
+    });
+    expect(result.current.state.sheetBusy).toBe(false);
+    const parsed = await act(() =>
+      result.current.parseData(TABLE, false, 'Bericht.xlsx · sheet ‹2025›')
+    );
+    expect(parsed.outcome).toBe('stored');
+  });
+
+  it('keeps a workbook through a table read from its text, for the sheet picker after .use()', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = call =>
+      json(200, (call.body as { confirmed?: boolean }).confirmed ? DATASET : TRANSCRIBED);
+    const { result } = await openSession(routes);
+    const file = {
+      name: 'Notizen.xlsx',
+      base64: 'UEsDBA==',
+      browserKind: 'spreadsheet' as const,
+      kind: 'xlsx',
+      sheet: 'Tiere',
+      sheets: ['Tiere', 'Pflanzen'],
+      sheetCount: 2,
+      text: FREE_TEXT,
+    };
+    await act(() =>
+      result.current.parseData(FREE_TEXT, false, 'Notizen.xlsx · sheet ‹Tiere›', undefined, {
+        file,
+      })
+    );
+    expect(result.current.state.transcription?.file).toEqual(file);
+    await act(() => result.current.confirmTranscription());
+    expect(calls.filter(call => call.path.endsWith('/dataset')).slice(-1)[0]?.body).toEqual({
+      text: TRANSCRIBED.text,
+      confirmed: true,
+      source: 'Notizen.xlsx · sheet ‹Tiere›',
+    });
+    expect(result.current.state.dataset?.file).toEqual(file);
+  });
+});
+
 describe('useAgentSession: the step-1 summary and data changes', () => {
   const turnBodies = () => calls.filter(call => call.path.endsWith('/messages')).map(c => c.body);
   const undoCalls = () => calls.filter(call => call.path.endsWith('/dataset/undo'));
@@ -1143,6 +1313,44 @@ describe('useAgentSession: the step-1 summary and data changes', () => {
       ]);
     return hook;
   }
+
+  it('keeps the workbook through the versions of its data, and drops it for data no sheet made', async () => {
+    const source = 'Bericht.xlsx · sheet ‹2024›';
+    const file = {
+      name: 'Bericht.xlsx',
+      base64: 'UEsDBA==',
+      browserKind: 'spreadsheet' as const,
+      kind: 'xlsx',
+      sheet: '2024',
+      sheets: ['2024', '2025'],
+      sheetCount: 2,
+      text: 'a,b\n1,2\n',
+    };
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () => json(200, { ...DATASET, file_name: source });
+    routes['POST /sessions/S1/dataset/undo'] = () => json(200, { ...DATASET, file_name: source });
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n', false, source, undefined, { file }));
+    const answer = (dataset: Record<string, unknown>) => () =>
+      sse([
+        ['message', { text: 'Done.' }],
+        ['done', { llm_calls: 1, bindings: PREPARED.bindings, data_confirmed: false, dataset }],
+      ]);
+
+    // The assistant's version of the workbook's data, then `.undo()`: the sheet picker stays.
+    routes['POST /sessions/S1/messages'] = answer({ ...PREPARED, file_name: source });
+    await act(() => result.current.sendMessage('in Minuten'));
+    expect(result.current.state.dataset?.parsed.version).toBe(2);
+    expect(result.current.state.dataset?.file).toEqual(file);
+    await act(() => result.current.undoData());
+    expect(result.current.state.dataset?.file).toEqual(file);
+
+    // A version without the file's name (generated data) was read from no sheet: no picker.
+    routes['POST /sessions/S1/messages'] = answer({ ...PREPARED, version: 3 });
+    await act(() => result.current.sendMessage('zeichne sin(x)'));
+    expect(result.current.state.dataset?.parsed.version).toBe(3);
+    expect(result.current.state.dataset?.file).toBeUndefined();
+  });
 
   it('asks for the summary right after a stored parse, as the first turn', async () => {
     const { result } = await openSession(baseRoutes());
@@ -1582,7 +1790,12 @@ describe('useAgentSession: formulas', () => {
     await act(async () => {
       parsed = await result.current.parseData(LONG, false, undefined, undefined, { onForward });
     });
-    expect(parsed).toEqual({ outcome: 'failed', turnEnd: null });
+    // The refusal comes back with the result, for the attachment that posted the text to show.
+    expect(parsed).toEqual({
+      outcome: 'failed',
+      turnEnd: null,
+      failure: expect.objectContaining({ code: 'code', ref: 'r-c' }),
+    });
     expect(onForward).not.toHaveBeenCalled();
     expect(turnBodies()).toEqual([]);
     expect(result.current.state.datasetError).toMatchObject({ code: 'code', ref: 'r-c' });

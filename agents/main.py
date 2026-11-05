@@ -286,6 +286,7 @@ from agents.anyplot.session_state import (
     PENDING_BINDINGS,
     PENDING_CLEARED,
     PLOT_LANGUAGE,
+    SUMMARY_PENDING,
     TELEMETRY_SOURCE,
     CatalogueSnapshot,
     SessionView,
@@ -1573,6 +1574,9 @@ async def _ingest_paste(
         file_name=file_name is not None,
     )
     delta = ingested.state_delta()
+    # The root has not read this paste yet: the first turn on it summarizes it, the summary action or the note the
+    # user typed with it (`SUMMARY_PENDING`).
+    delta[SUMMARY_PENDING] = ingested.dataset_id
     # Read again: the chip's choice may have landed while the judges ran, and a choice is never overwritten.
     # From this read to the append below nothing suspends: `InMemorySessionService.get_session` and
     # `append_event` (ADK 2.13) contain no `await` that yields, and the code between them is synchronous,
@@ -1693,8 +1697,8 @@ async def _screen_notes(
 
 
 def _refuse_for_chat(ledger: RequestLedger, text: str) -> None:
-    """`422 code`, `422 data_request` or `422 formula` for pasted text that is a program, asks for data or asks for a
-    formula, before any parser or model reads it (`data/classify.py`).
+    """`422 code`, `422 data_request` or `422 formula` for attached text (a paste the page routed as data, or a file)
+    that is a program, asks for data or asks for a formula, before any parser or model reads it (`data/classify.py`).
 
     A snippet such as `np.linspace(0, 10, 100)` would parse as a one-row table, and the
     transcriber would compute a formula's rows, which is the one thing no model may do:
@@ -2257,6 +2261,21 @@ class TurnFacts:
     clock: telemetry.Clock = field(default_factory=telemetry.Clock)
 
 
+async def _summarized(runtime: Runtime, user: str, sid: str, dataset_id: str | None) -> None:
+    """Clear `SUMMARY_PENDING` for the dataset the turn started on; never raises.
+
+    Only while the state still names that dataset: a turn's own `prepare_data` keeps the flag off already (a new
+    version is no paste), and nothing else can store data while the run is active. A session gone meanwhile has
+    nothing to clear.
+    """
+    try:
+        session = await runtime.session(user, sid)
+        if dataset_id is not None and session.state.get(SUMMARY_PENDING) == dataset_id:
+            await runtime.write_state(session, {SUMMARY_PENDING: None})
+    except Exception as exc:  # the turn's answer stands; the next turn is the note path once more
+        logger.warning("summary flag not cleared: %s", type(exc).__name__)
+
+
 async def _after_turn(runtime: Runtime, user: str, sid: str, facts: TurnFacts) -> TurnFacts:
     """`facts` with the session language and its source as the turn left them.
 
@@ -2443,15 +2462,28 @@ async def post_message(
         # The page's English action line is the turn's only user text: it names the reply language itself
         # (live case of 2026-10-14, a German CSV paste answered in English). The name is the server's own word.
         text = f"{text} {ACTION_LANGUAGE_LINE.format(name=reply_language)}"
-    if body.action == "summarize_data" and view is not None and view.dataset_id:
+    # The first turn on a paste summarizes it: the summary action, or the note the user typed with the paste, which
+    # the scope judge reads as typed text (and which may set the session language). A summary action afterwards
+    # still carries the notes, so a refused note's summary has them too.
+    summary_pending = view is not None and view.summary_pending
+    first_turn = body.action == "summarize_data" or (summary_pending and body.text is not None)
+    if first_turn and view is not None and view.dataset_id:
         stored = services.datasets.get(view.dataset_id, sid)
+        blocks: list[str] = []
         if stored is not None and stored.context_lines:
             # The notes pasted with the table, judged at the paste (`_screen_notes`): the root sees them with the
-            # summary turn that follows every paste, so it can act on a request in them at once.
-            text = f"{text}\n\n{user_notes_block(stored.context_lines)}"
+            # first turn on every paste, so it can act on a request in them at once.
+            blocks.append(user_notes_block(stored.context_lines))
         if stored is not None and stored.file_name:
             # A dropped file's name, screened at the paste (`_screen_file_name`): fenced as data, never a note.
-            text = f"{text}\n\n{file_name_block(stored.file_name)}"
+            blocks.append(file_name_block(stored.file_name))
+        if blocks and body.action:
+            # The scope judge skips an action, so the blocks follow its fixed line.
+            text = "\n\n".join([text, *blocks])
+        elif blocks:
+            # A typed note is judged: the judge, the language detection, a strike and the stored user turn take the
+            # note alone, never the notes judged at the paste again or the preambles' English words.
+            ledger.paste_context = "\n\n".join(blocks)
     message = types.Content(role="user", parts=[types.Part(text=text)])
 
     async def stream() -> AsyncIterator[str]:
@@ -2508,6 +2540,10 @@ async def post_message(
             if failure is not None:
                 for chunk in translator.error(failure):
                     yield chunk
+            if summary_pending and failure is None and ledger.refusal is None:
+                # The root answered on the paste: summarized. A refused or failed turn leaves it pending, so the
+                # page's summary action, or the next typed message, still gets the paste's notes.
+                await _summarized(runtime, user, sid, view.dataset_id if view is not None else None)
             # Read while the run is still active: no undo or paste can slip in between the run's end
             # and the `done` that reports its dataset, so the version and the change lines agree.
             sync = await _session_sync(runtime, user, sid, dataset_before=dataset_before, ledger=ledger)

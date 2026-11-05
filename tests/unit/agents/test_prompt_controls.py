@@ -118,15 +118,16 @@ def test_the_whole_prompt_names_only_controls_of_the_page() -> None:
 
 def test_the_data_panel_bullet_names_exactly_the_buttons_of_the_data_card() -> None:
     """The other direction: the data panel's bullet names each button of the card, so the root knows them all,
-    and names no button the card lost (`.confirm()` and the formula's `.send()` left it for the composer).
+    and names no button the card lost (`.confirm()` and the formula's `.send()` left it for the composer, and the
+    text box with `.parse()`, `.open()`, `.replace()` and `.keep()` left it for the message box's attachment).
 
-    The bullet, not the whole section: `.open()` of the result cards is in the section already, and was the
-    one way into the data panel the root did not know.
+    The bullet, not the whole section: `.open()` of the result cards and the composer is in the section already.
     """
     buttons = data_card_buttons()
     bullet = controls_of("The data panel")
 
-    assert {".open()", ".parse()", ".view_all()"} <= buttons  # the reading still finds them
+    assert {".view_all()", ".use()", ".discard()", ".undo()"} <= buttons  # the reading still finds them
+    assert not {".parse()", ".open()", ".replace()", ".keep()"} & buttons
     assert sorted(buttons - bullet) == []
     assert sorted(bullet - buttons) == []
 
@@ -139,7 +140,7 @@ def test_the_composer_bullet_names_exactly_the_buttons_of_the_composer() -> None
     buttons = buttons_of(composer_components())
     bullet = controls_of("The composer")
 
-    assert {".send()", ".create_plot()", ".stop()", ".example_data()"} <= buttons
+    assert {".send()", ".create_plot()", ".stop()", ".example_data()", ".open()"} <= buttons
     assert ".confirm()" not in buttons
     assert sorted(buttons - bullet) == []
     assert sorted(bullet - buttons) == [".feedback()"]
