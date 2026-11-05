@@ -78,3 +78,13 @@ export function showsTimeline(state: AgentSessionState): boolean {
   const run = state.run;
   return !!run && (isPlotAction(run.kind) || run.steps.some(entry => entry.step !== 'queued'));
 }
+
+/**
+ * The line above the composer while a plot runs (the progress timeline shows): it takes the
+ * step's line, which would still invite the click that started the run, and names the one
+ * action the run leaves, `.stop()`. `null` while no plot runs.
+ */
+export function runLine(state: AgentSessionState): string | null {
+  if (!showsTimeline(state)) return null;
+  return state.run?.stopping ? '# stopping…' : '# plotting… .stop() to cancel';
+}

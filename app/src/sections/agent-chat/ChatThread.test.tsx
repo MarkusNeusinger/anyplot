@@ -110,7 +110,7 @@ describe('ChatThread', () => {
     expect(own).toHaveTextContent(/^refusal · budgetThe usage limit/);
   });
 
-  it("shows the page's own turns: the summary without a library, create_plot with it", () => {
+  it("shows the page's own turns as the buttons pressed, and the summary, which has none, not at all", () => {
     renderThread({
       ...initialAgentState('matplotlib'),
       phase: 'ready',
@@ -119,12 +119,58 @@ describe('ChatThread', () => {
         { id: 1, kind: 'action', action: 'summarize_data', library: 'matplotlib' },
         { id: 2, kind: 'assistant', text: '12 rows and 3 columns.' },
         { id: 3, kind: 'action', action: 'create_plot', library: 'seaborn' },
+        {
+          id: 4,
+          kind: 'action',
+          action: 'create_plot',
+          library: 'seaborn',
+          label: '.start_over()',
+        },
+        {
+          id: 5,
+          kind: 'action',
+          action: 'carry_plot',
+          library: 'plotly',
+          label: 'plot in plotly with your 3 decisions',
+        },
+        // A carry the chat started ("make it in plotly") has no button of its own.
+        { id: 6, kind: 'action', action: 'carry_plot', library: 'plotly' },
+        { id: 7, kind: 'action', action: 'example_data', library: 'plotly' },
       ],
     });
     const log = screen.getByRole('log');
-    expect(log.children[0]).toHaveTextContent(/^❯\.summarize_data\(\)$/);
-    expect(log.children[1]).toHaveTextContent('12 rows and 3 columns.');
-    expect(log.children[2]).toHaveTextContent(/^❯\.create_plot\(\)# seaborn$/);
+    expect([...log.children].map(child => child.textContent)).toEqual([
+      '12 rows and 3 columns.',
+      '❯.create_plot()# seaborn',
+      '❯.start_over()# seaborn',
+      '❯plot in plotly with your 3 decisions',
+      '❯plot in plotly with your decisions',
+      '❯.example_data()',
+    ]);
+    expect(screen.queryByText(/summarize_data|carry_plot/)).not.toBeInTheDocument();
+  });
+
+  it('sets the passages of a reply in backticks off as code, without the backticks', () => {
+    renderThread({
+      ...initialAgentState('matplotlib'),
+      phase: 'ready',
+      sessionId: 'S1',
+      items: [
+        {
+          id: 1,
+          kind: 'assistant',
+          text: 'I read `Year` as dates; `.undo()` brings the text back. A lone ` stays.',
+        },
+      ],
+    });
+    const reply = screen.getByText(/brings the text back/);
+    expect(reply).toHaveTextContent(
+      'I read Year as dates; .undo() brings the text back. A lone ` stays.'
+    );
+    expect([...reply.querySelectorAll('code')].map(code => code.textContent)).toEqual([
+      'Year',
+      '.undo()',
+    ]);
   });
 
   it('shows a lost confirmation as a warning notice, and a stop as a plain one', () => {
@@ -349,7 +395,7 @@ describe('ChatThread data items', () => {
     ]);
   });
 
-  it('keeps a summary action that does not follow a card, and the card of a table that waits', () => {
+  it('shows no summary action that does not follow a card either, and the card of a table that waits', () => {
     const waiting = ready(
       [
         { id: 1, kind: 'transcription' },
@@ -372,7 +418,6 @@ describe('ChatThread data items', () => {
     expect([...log.children].map(child => child.textContent)).toEqual([
       // An older table read from text that a new paste dropped; only the latest one waits.
       '# table read from text · not used',
-      '❯.summarize_data()',
       'transcription card',
     ]);
   });

@@ -26,7 +26,9 @@ const makeVersion = (overrides: Partial<PlotVersion> = {}): PlotVersion => ({
     attempts: 2,
     artifacts: ['plot-light.png', 'plot.py', 'data.csv'],
     changes: ['Marker size raised'],
-    residual_defects: ['VQ-03 light: markers overlap the label'],
+    residual_defects: [
+      'VQ-03 (light): the markers are 2 px wide → 6 px or more (+4 px). Likely cause: s=2 in ax.scatter.',
+    ],
     version: 2,
   },
   images: { light: { state: 'ready', url: 'blob:light', blob: pngBlob, status: 'ok' } },
@@ -80,7 +82,14 @@ describe('ResultCard', () => {
       'src',
       'blob:light'
     );
-    expect(screen.getByText('VQ-03 light: markers overlap the label')).toBeInTheDocument();
+    // The notes in plain words; the review's line, with its id, pixels and code, behind the ⓘ.
+    expect(screen.getByTestId('residual-notes')).toHaveTextContent(/^some marks are hard to see$/);
+    expect(screen.queryByText(/VQ-03|Likely cause/)).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'The notes in full' }));
+    expect(screen.getByTestId('residual-details')).toHaveTextContent(
+      'VQ-03 (light): the markers are 2 px wide → 6 px or more (+4 px). Likely cause: s=2 in ax.scatter.'
+    );
+    await userEvent.keyboard('{Escape}');
     expect(screen.getByTestId('result-status')).toHaveTextContent('needs attention');
     // Two attempts are the first try and one repair round, named as the progress timeline names them.
     const summary = screen.getByRole('button', { name: 'Run details: second try · 1 change' });

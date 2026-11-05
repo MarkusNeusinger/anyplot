@@ -5,7 +5,7 @@ import {
   initialAgentState,
   type RunState,
 } from 'src/hooks/useAgentSession';
-import { pendingReply, showsTimeline, stepOneLine } from 'src/sections/agent-chat/steps';
+import { pendingReply, runLine, showsTimeline, stepOneLine } from 'src/sections/agent-chat/steps';
 
 const queued = (kind: RunState['kind']): RunState => ({
   kind,
@@ -44,6 +44,14 @@ describe('the waits of a turn', () => {
     });
     expect(showsTimeline(stepped)).toBe(true);
     expect(pendingReply(stepped)).toBeNull();
+  });
+
+  it('names .stop() above the composer while a plot runs, and that it stops once pressed', () => {
+    expect(runLine(running(queued('create_plot')))).toBe('# plotting… .stop() to cancel');
+    expect(runLine(running({ ...queued('carry_plot'), stopping: true }))).toBe('# stopping…');
+    // A turn without a pipeline step keeps the step's line: its in-progress line says what runs.
+    expect(runLine(running(queued('example_data')))).toBeNull();
+    expect(runLine({ ...initialAgentState('matplotlib'), phase: 'ready' })).toBeNull();
   });
 });
 

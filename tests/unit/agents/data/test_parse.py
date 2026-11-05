@@ -1709,9 +1709,9 @@ class TestJsonStat:
             "Demografische Bilanz nach Kanton nach Jahr, Kanton, Staatsangehörigkeit (Kategorie), Geschlecht und "
             "Demografische Komponente",
             "Source: BFS - ESPOP, STATPOP - © BFS",
-            "Jahr: 2024",
-            "Staatsangehörigkeit (Kategorie): Staatsangehörigkeit (Kategorie) - Total",
-            "Geschlecht: Geschlecht - Total",
+            "Jahr: 2024 (the same in every row)",
+            "Staatsangehörigkeit (Kategorie): Staatsangehörigkeit (Kategorie) - Total (the same in every row)",
+            "Geschlecht: Geschlecht - Total (the same in every row)",
         ]
         assert warned(parsed, "3 dimensions with a single category left out of the columns")
         assert not any("2024" in warning or "Total" in warning for warning in parsed.warnings)  # values only as notes
@@ -1731,7 +1731,7 @@ class TestJsonStat:
             "Zürich,Schweiz,14949",
             "Zürich,Ausland,11813",
         ]
-        assert "Demografische Komponente: Lebendgeburt" in parsed.context_lines
+        assert "Demografische Komponente: Lebendgeburt (the same in every row)" in parsed.context_lines
 
     def test_a_sparse_value_object_leaves_the_missing_positions_empty(self) -> None:
         text = json_stat(
@@ -1750,7 +1750,7 @@ class TestJsonStat:
         parsed = parse_dataset(json_stat(["geo", "unit"], [2, 1], dimensions, [None, 2.5]))
 
         assert parsed.csv == "Region,value\nAT,\nDE,2.5\n"
-        assert parsed.context_lines == ["unit: PC"]
+        assert parsed.context_lines == ["unit: PC (the same in every row)"]
 
     def test_a_dimension_without_a_label_is_named_by_its_id(self) -> None:
         parsed = parse_dataset(json_stat(["sex"], [2], {"sex": categories("F", "M", labels={"F": "Frauen"})}, [1, 2]))
@@ -1761,12 +1761,12 @@ class TestJsonStat:
         dimensions = {"t": {"category": {"label": {"2024": "2024"}}}, "g": categories("a", "b")}
         parsed = parse_dataset(json_stat(["t", "g"], [1, 2], dimensions, [1, 2]))
 
-        assert parsed.csv == "g,value\na,1\nb,2\n" and parsed.context_lines == ["t: 2024"]
+        assert parsed.csv == "g,value\na,1\nb,2\n" and parsed.context_lines == ["t: 2024 (the same in every row)"]
 
     def test_every_dimension_of_one_category_leaves_one_value_row(self) -> None:
         parsed = parse_dataset(json_stat(["t"], [1], {"t": categories("2024")}, [7]))
 
-        assert parsed.csv == "value\n7\n" and parsed.context_lines == ["t: 2024"]
+        assert parsed.csv == "value\n7\n" and parsed.context_lines == ["t: 2024 (the same in every row)"]
 
     def test_a_shared_label_gets_its_code_and_status_symbols_a_warning(self) -> None:
         dimensions = {"c": categories("1", "2", labels={"1": "Other", "2": "Other"})}
@@ -1874,7 +1874,11 @@ class TestConstantColumns:
 
         assert [column.name for column in parsed.profile.columns] == ["Year", "Origin", "Population"]
         assert parsed.csv.splitlines()[0] == "Year,Origin,Population"
-        assert parsed.context_lines == ["Region: Country", "Sex: Sex - Total"]
+        # The suffix tells the server's lines from the user's own notes.
+        assert parsed.context_lines == [
+            "Region: Country (the same in every row)",
+            "Sex: Sex - Total (the same in every row)",
+        ]
         assert "2 columns with the same text in every row moved to the notes: Region, Sex" in parsed.warnings
         assert "Country" not in " ".join(parsed.warnings)  # the warning names columns, never values
         assert list(read_back(parsed).columns) == ["Year", "Origin", "Population"]
@@ -1882,15 +1886,19 @@ class TestConstantColumns:
     def test_the_notes_follow_the_lines_around_the_table(self) -> None:
         parsed = parse_dataset("Population by origin\n" + OFFICE_EXPORT)
 
-        assert parsed.context_lines == ["Population by origin", "Region: Country", "Sex: Sex - Total"]
+        assert parsed.context_lines == [
+            "Population by origin",
+            "Region: Country (the same in every row)",
+            "Sex: Sex - Total (the same in every row)",
+        ]
 
     def test_a_constant_whose_note_the_cap_would_cut_stays_a_column(self) -> None:
         """The notes hold at most `MAX_CONTEXT_CHARS`: a value never disappears into a cut note."""
-        title = "x" * (MAX_CONTEXT_CHARS - 30)
+        title = "x" * (MAX_CONTEXT_CHARS - 41)
         parsed = parse_dataset(f"{title}\n" + OFFICE_EXPORT)
 
-        # `Region: Country` fits in the 29 characters left, `Sex: Sex - Total` no longer does.
-        assert parsed.context_lines == [title, "Region: Country"]
+        # The note of `Region` fits in the 40 characters left, the one of `Sex` no longer does.
+        assert parsed.context_lines == [title, "Region: Country (the same in every row)"]
         assert [column.name for column in parsed.profile.columns] == ["Year", "Origin", "Sex", "Population"]
         assert "1 column with the same text in every row moved to the notes: Region" in parsed.warnings
 
@@ -2286,7 +2294,7 @@ class TestEmptyColumns:
         assert warned(parsed, "3 columns without any value dropped: OBS_PRE_BREAK, OBS_COM, BREAKS")
         assert all(len(row) == 2 for row in parsed.preview)
         # The constants went to the notes; the empty columns are simply gone.
-        assert "KEY: EXR.D.CHF.EUR.SP00.A" in parsed.context_lines
+        assert "KEY: EXR.D.CHF.EUR.SP00.A (the same in every row)" in parsed.context_lines
         assert not any("OBS_COM" in line for line in parsed.context_lines)
 
     def test_missing_tokens_count_as_empty(self) -> None:
@@ -2688,8 +2696,8 @@ class TestApiJson:
             "per_page: 50",
             "total: 4",
             "lastupdated: 2026-10-01",
-            "indicator.id: XX.TEST.IND",
-            "indicator.value: Test indicator (units)",
+            "indicator.id: XX.TEST.IND (the same in every row)",
+            "indicator.value: Test indicator (units) (the same in every row)",
         ]
         assert warned(parsed, "5 fields beside the records")
         assert warned(parsed, "named with a dot")

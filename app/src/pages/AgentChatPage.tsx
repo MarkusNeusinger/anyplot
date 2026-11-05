@@ -173,7 +173,7 @@ import { Remembered } from 'src/sections/agent-chat/Remembered';
 import { SessionMenu } from 'src/sections/agent-chat/SessionMenu';
 import { columnLines, previewsByLibrary } from 'src/sections/agent-chat/specReference';
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
-import { inStep2, showsTimeline, stepOneLine } from 'src/sections/agent-chat/steps';
+import { inStep2, runLine, showsTimeline, stepOneLine } from 'src/sections/agent-chat/steps';
 import {
   bodyTextSx,
   CHAT_SECTION_GAP,
@@ -708,13 +708,15 @@ function AgentChat({
    * is confirmed first; a refusal stops here and shows under the composer, and nothing is
    * plotted. Then the plot starts: the box's text, when the button takes it (`withText`, the
    * filled CTA), goes as the turn that makes the plot with that request, else the catalogue
-   * plot (`create_plot`) or the switch's offer (`carry_plot`). The confirmation's busy state and
-   * the session's own guards hold back a second click, also one before the state caught up.
+   * plot (`create_plot`) or the switch's offer (`carry_plot`), under `label`, the button as it
+   * read, which the thread shows for the turn. The confirmation's busy state and the session's
+   * own guards hold back a second click, also one before the state caught up.
    */
   const startPlot = async (
     event: React.MouseEvent,
     kind: 'create' | 'carry',
-    withText: boolean
+    withText: boolean,
+    label: string
   ) => {
     keepKeyboardFocus(event);
     if (!canCreate) return;
@@ -727,7 +729,7 @@ function AgentChat({
       setDraft(current => (current.trim() === text ? '' : current));
       void session.sendMessage(text);
     } else {
-      void (kind === 'carry' ? session.carryPlot() : session.createPlot());
+      void (kind === 'carry' ? session.carryPlot(label) : session.createPlot(label));
     }
   };
 
@@ -798,17 +800,20 @@ function AgentChat({
    * library has a plot: the fresh plot from the catalogue code, with the remembered decisions;
    * text in the box stays there for `.send()`.
    */
-  const handleCreate = (event: React.MouseEvent) => void startPlot(event, 'create', false);
+  const handleCreate = (event: React.MouseEvent) =>
+    void startPlot(event, 'create', false, hasPlot ? '.start_over()' : '.create_plot()');
 
   /**
    * The offer after a switch: the plot in this library with the remembered decisions. While it
    * is the filled CTA (data unconfirmed, or no plot here yet) the box's text goes along as the
    * turn that makes it; beside `.send()` once the confirmed data has a plot, it takes none.
    */
-  const handleCarry = (event: React.MouseEvent) => void startPlot(event, 'carry', ctaPlot);
+  const handleCarry = (event: React.MouseEvent) =>
+    void startPlot(event, 'carry', ctaPlot, carryText);
 
   /** The filled `.create_plot()`: the plot, with the box's text as its request. */
-  const handlePlot = (event: React.MouseEvent) => void startPlot(event, 'create', true);
+  const handlePlot = (event: React.MouseEvent) =>
+    void startPlot(event, 'create', true, '.create_plot()');
 
   if (state.phase === 'unauthorized') return lane === 'public' ? <LaneClosed /> : <AdminRequired />;
   const chatPath = lane === 'public' ? paths.publicAgentChat : paths.agentChat;
@@ -1121,6 +1126,7 @@ function AgentChat({
               fanOutOpen={!!fanOut}
               carryText={carry ? carryText : null}
               stepLine={stepLine}
+              runLine={runLine(state)}
               confirming={state.confirmBusy}
               confirmError={state.confirmError}
               pausedUntil={pausedUntil}

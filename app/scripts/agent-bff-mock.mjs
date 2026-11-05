@@ -1367,8 +1367,12 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
         changes: refine
           ? ['Applied your change request', 'Marker size raised from 110 to 160']
           : [`x now reads ${x}, y reads ${y}`, 'Axis labels name your columns'],
+        // In the review's grammar, as the service writes them: the card reads them in plain words.
         residual_defects: repaired
-          ? ['VQ-03 light: two markers overlap the y axis label; likely cause: axis limits']
+          ? [
+              'VQ-03 (light): two markers overlap the y axis label → every marker clear of the label (+6 px). Likely cause: the y axis limits in ax.set_ylim.',
+              'VQ-01 (light): the tick labels are set at 7 pt → 8 pt or larger (+1 pt). Likely cause: labelsize=7 in ax.tick_params.',
+            ]
           : [],
         // The stored version's number, which the artifact and theme routes take.
         version: version.number,
@@ -2097,27 +2101,26 @@ function exampleData(session, fromCode = false) {
   return `I generated example data to try the plot: ${rows.length} rows of ${named}, all made up. Check them in the data panel, then press .create_plot().`;
 }
 
-/** The step-1 summary the root writes after `summarize_data`, from the profile alone. */
+/**
+ * The step-1 summary the root writes after `summarize_data`, from the profile alone, in root.md's
+ * shape: the counts and the bindings in a sentence or two, columns in backticks as the root
+ * writes them, what is missing only when something is, and a question only when it matters.
+ */
 function summarizeData(session) {
   if (!session.dataset) return 'Paste your data first; then I can summarize it.';
   const { profile } = session.dataset;
-  const columns = profile.columns
-    .map(
-      c =>
-        `${c.name} (${c.dtype}${c.dtype === 'number' || c.dtype === 'integer' ? `, mean ${c.mean}` : ''})`
-    )
-    .join(', ');
-  const missing = profile.columns.filter(c => c.missing).map(c => `${c.missing} in ${c.name}`);
+  const missing = profile.columns.filter(c => c.missing).map(c => `${c.missing} in \`${c.name}\``);
   const percent = profile.columns.find(c => c.top.some(v => /%$/.test(v)));
-  const bound = session.bindings.map(b => `${b.role} → ${b.column}`).join(', ');
+  const bound = session.bindings.map(b => `${b.role} is \`${b.column}\``).join(', ');
   return [
-    `${profile.rows} rows and ${profile.columns.length} columns: ${columns}.`,
-    missing.length ? `Missing values: ${missing.join(', ')}.` : 'No values are missing.',
-    `Proposed bindings: ${bound || 'none yet'}.`,
+    `${profile.rows} rows and ${profile.columns.length} columns${bound ? `; ${bound}` : ''}.`,
+    missing.length ? `Missing values: ${missing.join(', ')}.` : '',
     percent
-      ? `${percent.name} looks like percentages written as text; should I read it as numbers?`
-      : 'Is the first column the one to plot on x?',
-  ].join(' ');
+      ? `\`${percent.name}\` looks like percentages written as text; should I read it as numbers?`
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 }
 
 // ---------------------------------------------------------------- routes

@@ -108,8 +108,9 @@ would, for example, read `01.02.2024` as a number under `thousands='.'`).
    header that already names the unit (`Anteil (%)`, `Preis in €`) keeps its name.
 7. **Constant text columns move to the notes** (since 2026-10-14, `_constants_to_notes`):
    a pasted text column with the same value in every row (`Kanton` = `Schweiz`) leaves
-   the table and `<name>: <value>` joins `context_lines`, as a JSON-stat dimension of one
-   category does, unless fewer than `MIN_KEPT_COLUMNS` columns would remain.
+   the table and `<name>: <value> (the same in every row)` joins `context_lines`, as a
+   JSON-stat dimension of one category does, unless fewer than `MIN_KEPT_COLUMNS` columns
+   would remain.
 8. **Write the canonical `data.csv`** (comma, dot decimal, ISO dates, canonical
    headers, missing as an empty cell, `\\n` line ends) and profile it. The profile
    names the months of a text column of month names (`ColumnProfile.months`), the
@@ -232,6 +233,10 @@ MAX_NAMED_FIELDS = 5  # the left-out fields a warning names before it ends with 
 MIN_KEPT_COLUMNS = 2
 """The columns a paste keeps at least when constant text columns move to the notes (`_constants_to_notes`):
 a category or a time and a value, the least a plot needs."""
+CONSTANT_NOTE_SUFFIX = " (the same in every row)"
+"""The end of a note the parser made from a column with one value (`_constants_to_notes`, a JSON-stat dimension
+of one category): it sets the line apart from the user's own notes, for the user in the data card and for the
+assistant, which would otherwise call the value something the user wrote."""
 
 # Candidate delimiters in tie-break order, with the source format each one reports.
 DELIMITERS: tuple[tuple[str, SourceFormat], ...] = ((",", "csv"), (";", "semicolon"), ("\t", "tsv"), ("|", "pipe"))
@@ -457,7 +462,8 @@ class ParsedDataset:
     line, a note), each as one cleaned text line, at most `MAX_CONTEXT_CHARS` in all: the user's notes about
     the data. Summary rows are not among them. Empty for `find_table=False` and for a literal, except a
     JSON-stat dataset, whose label, source, notes and one-category dimensions are its lines (`_json_stat`).
-    A pasted text column with the same value in every row adds `<name>: <value>` (`_constants_to_notes`)."""
+    A pasted text column with the same value in every row adds `<name>: <value> (the same in every row)`
+    (`_constants_to_notes`, `CONSTANT_NOTE_SUFFIX`)."""
     tables: list[str] = field(default_factory=list)
     """One label per table (its header names and its row count) when the paste held two or more tables, each
     under its own header after a blank line (`_one_table`); empty for one table. `table` is the one read (1-based)."""
@@ -2448,7 +2454,7 @@ def _json_stat(
     for position, (name, size) in enumerate(zip(ids, sizes, strict=True), start=1):
         header, cells, relabelled = _json_stat_dimension(dimension.get(name), name, size, position)
         if size == 1:
-            constants.append(f"{header}: {cells[0]}")
+            constants.append(f"{header}: {cells[0]}{CONSTANT_NOTE_SUFFIX}")
             continue
         if (cleaned := _key_form(_clean_header(header)[0])).casefold() == PAIR_HEADERS[1]:
             # `value` is the measure's name: a dimension labelled so would take it, or sit
@@ -3704,7 +3710,8 @@ def _constants_to_notes(
     A statistics export repeats its filters as columns (`Kanton` = `Schweiz`, `Geschlecht`
     = `Geschlecht - Total`): one value, no information per row, and a trap for a series or
     color binding. Like a JSON-stat dimension of one category (`_json_stat`), such a column
-    leaves the table and `<name>: <value>` joins the notes (`context`), which the route
+    leaves the table and `<name>: <value> (the same in every row)` joins the notes
+    (`context`; the suffix tells the line from the user's own notes), which the route
     screens before any model reads them; one warning names the columns, never the values.
     Only text columns with no missing cell count, in a table of at least two rows; a column
     kept text by request stays. When fewer than `MIN_KEPT_COLUMNS` columns would remain,
@@ -3728,7 +3735,10 @@ def _constants_to_notes(
     if not constant or len(columns) - len(constant) < MIN_KEPT_COLUMNS:
         return columns
     # A column moves only with its whole note: one the notes' cap would cut or leave out stays a column.
-    notes = [_WHITESPACE_RUN.sub(" ", f"{column.name}: {column.cells[0]}").strip() for column in constant]
+    notes = [
+        _WHITESPACE_RUN.sub(" ", f"{column.name}: {column.cells[0]}").strip() + CONSTANT_NOTE_SUFFIX
+        for column in constant
+    ]
     lines, _ = _context_lines([*([line] for line in context), *([note] for note in notes)], None)
     fitted = lines[len(context) :]
     moving: list[_Column] = []
