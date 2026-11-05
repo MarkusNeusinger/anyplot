@@ -1654,7 +1654,6 @@ function unitOf(cell) {
   return match ? (match[1] ?? match[2] ?? null) : null;
 }
 
-/** `set_type number` on the second column: the unit removed, thousands separators dropped, a decimal comma read. */
 /** "nur 2024", "only 2024": the rows of that year, the root's `drop_rows` in miniature, as the next version. */
 function keepYear(session, year) {
   const { header, rows } = session.dataset;
@@ -1686,6 +1685,7 @@ function dotsAsThousands(session) {
   return `I read ${header[index]} with its dots as thousands separators.`;
 }
 
+/** `set_type number` on the second column: the unit removed, thousands separators dropped, a decimal comma read. */
 function setTypeNumber(session) {
   const { header, rows } = session.dataset;
   if (header.length < 2) return 'There is no second column to read as numbers.';
