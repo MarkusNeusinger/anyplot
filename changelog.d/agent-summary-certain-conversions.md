@@ -15,8 +15,8 @@
   assistant used to make these lines with its own `prepare_data` call, and the
   prep eval's `en-note-rename-year-column` failed 3 of 3 runs: the date column
   was skipped, or made and dropped again. Now it passes 3 of 3, with the
-  summary's row count and the conversion in every reply.
+  summary's row count and the conversion in every reply. (#12568)
 - **The summary turn stays the summary after the assistant changes the
   data.** The session block's "pasted just now" line now holds for every model
   call of that turn. Before, the reply after the assistant's own `prepare_data`
-  lost the line and answered the note without the summary.
+  lost the line and answered the note without the summary. (#12568)
