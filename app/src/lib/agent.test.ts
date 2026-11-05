@@ -37,6 +37,8 @@ const raw = (event: string, data: unknown) => ({
 
 describe('parseAgentEvent', () => {
   it('types the queued status and the pipeline steps', () => {
+    // The wait's end, the step alone: a turn without pipeline steps clears its queue on it.
+    expect(parseAgentEvent(raw('status', { step: 'started' }))).toEqual({ type: 'started' });
     expect(parseAgentEvent(raw('status', { step: 'queued', position: 2, waiting: 3 }))).toEqual({
       type: 'queued',
       position: 2,

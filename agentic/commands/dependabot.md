@@ -30,7 +30,7 @@ known GitHub quirks. Every gotcha below cost real session round-trips.
   auto-merge, and expect Dependabot to close and regroup a PR now and then ("updatable in another
   way"); list the PRs again when it does.
 - Per the changelog contract, individual Dependabot bumps get NO `CHANGELOG.md` entries —
-  they are aggregated into one **Dependencies:** bullet at release time (`/release` step 2).
+  they are aggregated into one **Dependencies:** bullet at release time (`/release` step 3).
 
 ## Run
 

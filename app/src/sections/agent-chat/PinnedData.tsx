@@ -145,11 +145,13 @@ export function PinnedHeader({ state, view }: PinnedHeaderProps) {
 export interface DataCardShellProps {
   view: DataCardView;
   locked: boolean;
+  /** The composer's plot button as it reads now (`plotButtonLabel`), which step 1's line names. */
+  plotLabel: string;
   children: React.ReactNode;
 }
 
 /** The card's frame at its place in the thread: the section the header's button controls. */
-export function DataCardShell({ view, locked, children }: DataCardShellProps) {
+export function DataCardShell({ view, locked, plotLabel, children }: DataCardShellProps) {
   return (
     <Box
       component="section"
@@ -179,7 +181,7 @@ export function DataCardShell({ view, locked, children }: DataCardShellProps) {
         <Box sx={{ ...labelSx, mb: 1.5 }}>
           {view.confirmed
             ? '# a change here takes the data back to step 1, where you check it and .create_plot() again'
-            : '# step 1 again: check the data, then .create_plot() below'}
+            : `# step 1 again: check the data, then ${plotLabel} below`}
         </Box>
       )}
       {children}

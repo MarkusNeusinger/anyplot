@@ -6,7 +6,7 @@
 
 import type { AgentSessionState, ChatItem } from 'src/hooks/useAgentSession';
 import { isPlotAction } from 'src/lib/agent';
-import { CONFIRM_LOST_STEP_TEXT } from 'src/sections/agent-chat/messages';
+import { CONFIRM_LOST_STEP_TEXT, NEW_DATA_PLOT } from 'src/sections/agent-chat/messages';
 
 /**
  * The pinned header's line (`✓ data fits · ...`, `PinnedData.tsx`), which step 2's plot buttons
@@ -25,15 +25,33 @@ export function inStep2(state: AgentSessionState): boolean {
   return state.dataConfirmed && !!state.dataset && !state.transcription;
 }
 
+/** Data the user had confirmed changed since (a data change, a new paste, an undo): step 1 again. */
+export function dataChanged(state: AgentSessionState): boolean {
+  return state.confirmLoss === 'data';
+}
+
 /**
- * The line above the composer in step 1, which `.create_plot()` at the composer's end names as
+ * The name of the composer's filled plot button, as the lines that lead to it say it:
+ * `.create_plot()`, and `plot the new data` after a change to data the user had confirmed, which
+ * the click confirms and plots like any other (`Composer.tsx` names the button the same).
+ */
+export function plotButtonLabel(state: AgentSessionState): string {
+  return dataChanged(state) ? NEW_DATA_PLOT : '.create_plot()';
+}
+
+/**
+ * The line above the composer in step 1, which the plot button at the composer's end names as
  * its description: the click takes the data and the bindings as the card shows them. It says
  * what the button waits for first (a table read from text to decide on, a required role without
  * a column), else what to check, and after a lost confirmation what lost it, as the thread's
  * notice says. `action` is the button the line leads to: `.plot_all()` while `all` is pressed,
- * where no `.create_plot()` shows. `null` without data or in step 2.
+ * where no `.create_plot()` shows, else the button's own name (`plotButtonLabel`). `null` without
+ * data or in step 2.
  */
-export function stepOneLine(state: AgentSessionState, action = '.create_plot()'): string | null {
+export function stepOneLine(
+  state: AgentSessionState,
+  action = plotButtonLabel(state)
+): string | null {
   if (!state.dataset || inStep2(state)) return null;
   const head = state.confirmLoss ? '# step 1 again — ' : '# step 1 — ';
   if (state.transcription) return `${head}decide on the table first: .use() or .discard()`;
@@ -45,9 +63,27 @@ export function stepOneLine(state: AgentSessionState, action = '.create_plot()')
     : `${head}check the preview and the bindings above, then ${action}`;
 }
 
-/** What the thread's in-progress line says: the turn's kind, that it stops, or that it reconnects. */
+/**
+ * What the thread's in-progress line says: the turn's kind, that it stops, that it reconnects, or,
+ * once a run's card is in, that the reply is on its way.
+ */
 export type PendingReply =
-  'summarize_data' | 'example_data' | 'message' | 'stopping' | 'reconnecting';
+  'summarize_data' | 'example_data' | 'message' | 'stopping' | 'reconnecting' | 'writing';
+
+/**
+ * Whether a run's card is in (a plot, or the card of a run that failed) and the reply to it is on
+ * its way: the root writes the reply after the plot, seconds later, and until then nothing would
+ * say that the turn still works. Notices between the card and the reply do not end the wait.
+ */
+export function awaitsReply(state: AgentSessionState): boolean {
+  if (!state.run) return false;
+  for (let index = state.items.length - 1; index >= 0; index -= 1) {
+    const kind = state.items[index].kind;
+    if (kind === 'plot' || kind === 'plot_failed') return true;
+    if (kind !== 'notice') return false;
+  }
+  return false;
+}
 
 /**
  * The in-progress line in the assistant's slot of the thread, while a turn
@@ -58,9 +94,15 @@ export type PendingReply =
  * does a turn that reached a pipeline step: the progress timeline below the
  * thread shows those, and two indicators would say the same thing. A wait in
  * the run queue keeps the line, since the queue counter says where, not what.
+ * Once a run's card took the timeline's place, the line stands below the card
+ * until the reply takes its place (`awaitsReply`).
  */
 export function pendingReply(state: AgentSessionState): PendingReply | null {
   const run = state.run;
+  if (run && awaitsReply(state)) {
+    if (run.reconnecting && !run.stopping) return 'reconnecting';
+    return run.stopping ? 'stopping' : 'writing';
+  }
   if (!run || run.kind === 'create_plot' || run.kind === 'carry_plot') return null;
   if (run.steps.some(entry => entry.step !== 'queued')) return null;
   // A cut stream the page reads again: the turn's only indicator, also after its reply arrived.
@@ -80,6 +122,17 @@ export function pendingReply(state: AgentSessionState): PendingReply | null {
 export function showsTimeline(state: AgentSessionState): boolean {
   const run = state.run;
   return !!run && (isPlotAction(run.kind) || run.steps.some(entry => entry.step !== 'queued'));
+}
+
+/**
+ * The line above the composer while a plot runs (the progress timeline stands below the thread,
+ * `runView`): it takes the step's line, which would still invite the click that started the run,
+ * and names the one action the run leaves, `.stop()`. `null` while no plot runs, and once the
+ * run's card took the timeline's place.
+ */
+export function runLine(state: AgentSessionState): string | null {
+  if (!runView(state).timeline) return null;
+  return state.run?.stopping ? '# stopping…' : '# plotting… .stop() to cancel';
 }
 
 /**

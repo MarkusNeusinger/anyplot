@@ -16,11 +16,12 @@ reply longer than `MAX_MESSAGE_CHARS` characters once sanitised becomes the fixe
 `out_of_scope` refusal instead of being cut off, unless the turn ran the plot
 pipeline: then the reply describes a plot the user already has, and it is stored as
 `sanitize` cuts it, so an on-topic description of a fresh result is never answered
-with a scope refusal. root.md asks for "two to five sentences, or a
-short list": about 300 to 700 characters in English, up to about 900 in languages with
-longer words, and a list of eight short steps fits in about 600. The cap leaves a third
-on top of that, so a reply root.md allows is never refused, while a long email, essay
-or advertisement that got past the judge is.
+with a scope refusal. The cap was sized when root.md asked for "two to five sentences,
+or a short list": about 300 to 700 characters in English, up to about 900 in languages
+with longer words, and a list of eight short steps fits in about 600. It leaves a third
+on top of that, and root.md's replies are shorter now (one or two short sentences, four
+at most with its notices), so a reply root.md allows is never refused, while a long
+email, essay or advertisement that got past the judge is.
 
 The cap counts characters, not sentences. A sentence count needs a segmenter for every
 script (Chinese and Japanese end a sentence without a space, Thai without a mark), and

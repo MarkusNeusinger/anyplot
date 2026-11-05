@@ -8,15 +8,18 @@
  * lost. While a turn without pipeline steps waits for its reply, an
  * in-progress line with the site's loader holds the assistant's slot
  * (`pendingReply` in `steps.ts`); the log's own polite live region announces
- * it once, and the reply takes its place.
+ * it once, and the reply takes its place. So does a plot run once its card is
+ * in, below the card, while the reply to it is written (`writing the reply`).
  *
- * The page's `.summarize_data()` right after the card it summarizes shows no line of its own:
- * the card says what was sent, and the summary follows it. The item stays in the state, which
- * the in-progress line reads. The first reply after a card comes into view as it arrives, when
- * the user's focus is in the composer (`followReply`): a tall card would leave it below the fold.
+ * The page's own turns show as the button the user pressed (`.start_over()`, "plot in plotly with
+ * your 3 decisions"), never as the action the page sends. The summary of the data after a paste
+ * has no button and shows no line of its own: the card says what was sent, and the summary
+ * follows it. Its item stays in the state, which the in-progress line reads. The first reply
+ * after a card comes into view as it arrives, when the user's focus is in the composer
+ * (`followReply`): a tall card would leave it below the fold.
  */
 
-import { useEffect, useRef } from 'react';
+import { type ReactNode, useEffect, useRef } from 'react';
 
 import Box from '@mui/material/Box';
 
@@ -38,16 +41,48 @@ import {
 } from 'src/sections/agent-chat/messages';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { type CardOutcome, ResultCard } from 'src/sections/agent-chat/ResultCard';
-import { type PendingReply, pendingReply } from 'src/sections/agent-chat/steps';
+import { awaitsReply, type PendingReply, pendingReply } from 'src/sections/agent-chat/steps';
 import {
   bodyTextSx,
   CHAT_SECTION_GAP,
   CHAT_TEXT_MAX,
+  inlineCodeSx,
   labelSx,
   readableSx as textSx,
   THREAD_GAP,
 } from 'src/sections/agent-chat/styles';
 import { colors, fontSize, typography } from 'src/theme';
+
+/** A passage of a reply in backticks, on one line: code, a column or a button the reply names. */
+const INLINE_CODE = /`([^`\n]+)`/g;
+
+/** A reply's text with its passages in backticks set off as code, never with the backticks. */
+function ReplyText({ text }: { text: string }) {
+  const parts: ReactNode[] = [];
+  let last = 0;
+  for (const match of text.matchAll(INLINE_CODE)) {
+    if (match.index > last) parts.push(text.slice(last, match.index));
+    parts.push(
+      <Box component="code" key={match.index} sx={inlineCodeSx}>
+        {match[1]}
+      </Box>
+    );
+    last = match.index + match[0].length;
+  }
+  parts.push(text.slice(last));
+  return <>{parts}</>;
+}
+
+/**
+ * What the user's bubble of a page turn says: the button as it read when pressed (the page passes
+ * it), else the button that sends the action; a carry the chat started has no button of its own.
+ */
+function actionText(item: Extract<ChatItem, { kind: 'action' }>): string {
+  if (item.label) return item.label;
+  return item.action === 'carry_plot'
+    ? `plot in ${item.library} with your decisions`
+    : `.${item.action}()`;
+}
 
 /** The in-progress line's words, beside the site's loader. */
 const PENDING_TEXT: Record<PendingReply, string> = {
@@ -56,6 +91,7 @@ const PENDING_TEXT: Record<PendingReply, string> = {
   message: 'working on your message',
   stopping: 'stopping',
   reconnecting: RECONNECTING_TEXT,
+  writing: 'writing the reply',
 };
 
 interface ChatThreadProps {
@@ -143,16 +179,16 @@ function Item({
         </Box>
       );
     case 'action':
-      // The page's own turns: `.summarize_data()` after a parse, `.example_data()` without data,
-      // `.create_plot()` in step 2, `.carry_plot()` after a library switch; a plot names the
-      // library it is made in.
+      // The page's own turns as their buttons: `.example_data()` without data, `.create_plot()`
+      // or `.start_over()`, the carry after a library switch. A plot names the library it is made
+      // in, which the carry's text names already.
       return (
-        <Box sx={{ ...promptSx, fontFamily: typography.mono }}>
+        <Box data-testid="action-item" sx={{ ...promptSx, fontFamily: typography.mono }}>
           <Box component="span" aria-hidden sx={{ color: 'var(--ink-muted)', mr: 1 }}>
             ❯
           </Box>
-          .{item.action}()
-          {isPlotAction(item.action) && (
+          {actionText(item)}
+          {isPlotAction(item.action) && item.action !== 'carry_plot' && (
             <Box component="span" sx={{ color: 'var(--ink-muted)', ml: 1 }}>
               # {item.library}
             </Box>
@@ -162,7 +198,7 @@ function Item({
     case 'assistant':
       return (
         <Box sx={{ ...bodyTextSx, ...textSx, borderLeft: '2px solid var(--rule)', pl: 1.5 }}>
-          {item.text}
+          <ReplyText text={item.text} />
         </Box>
       );
     case 'refusal':
@@ -255,16 +291,6 @@ function Item({
   }
 }
 
-/** Whether the item at `index` comes right after a card or its stub, with only notices between. */
-function followsCard(items: ChatItem[], index: number): boolean {
-  for (let before = index - 1; before >= 0; before -= 1) {
-    const kind = items[before].kind;
-    if (kind === 'data' || kind === 'data_stub') return true;
-    if (kind !== 'notice') return false;
-  }
-  return false;
-}
-
 /** The id of the first reply after the latest card, or null while it has none yet. */
 function firstReplyId(items: ChatItem[]): number | null {
   let card = -1;
@@ -283,6 +309,9 @@ export function ChatThread(props: ChatThreadProps) {
   const numbers = Object.keys(versions).map(Number);
   const latestVersion = numbers.length ? Math.max(...numbers) : 0;
   const pending = pendingReply(props.state);
+  // Below a run's card no timeline follows: the line stands where the reply will, which takes
+  // its place without a jump.
+  const afterCard = awaitsReply(props.state);
   const waitingId = props.state.transcription
     ? [...items].reverse().find(item => item.kind === 'transcription')?.id
     : undefined;
@@ -305,16 +334,10 @@ export function ChatThread(props: ChatThreadProps) {
       aria-label="Conversation"
       sx={{ display: 'flex', flexDirection: 'column', gap: THREAD_GAP, minWidth: 0 }}
     >
-      {items.map((item, index) => {
-        // The page's summary turn right after its card says nothing the card does not, also once
-        // a later paste made that card a stub, and past the notice of a confirmation it dropped.
-        if (
-          item.kind === 'action' &&
-          item.action === 'summarize_data' &&
-          followsCard(items, index)
-        ) {
-          return null;
-        }
+      {items.map(item => {
+        // The page's summary turn has no button: its card says what was sent, and the summary
+        // follows.
+        if (item.kind === 'action' && item.action === 'summarize_data') return null;
         const node = (
           <Item
             key={item.id}
@@ -339,19 +362,23 @@ export function ChatThread(props: ChatThreadProps) {
           stay where it is, only the text beside it changing. So the loader stands first, in a
           box one line of the run's font tall, on a phone above the text; and the line keeps a
           margin of the difference between the thread's gap and the gap above the timeline, so
-          the timeline's top lands where this line's top was. */}
+          the timeline's top lands where this line's top was. Below a run's card, while its reply
+          is written, no timeline follows: the line is the reply's first line instead, in the
+          thread's gap alone, one row at every width and of the reply's line height, so the reply
+          starts where it started and a one-line reply moves nothing below it. */}
       {pending && (
         <Box
           data-testid="pending-reply"
           sx={{
             display: 'flex',
-            flexDirection: { xs: 'column', sm: 'row' },
+            flexDirection: afterCard ? 'row' : { xs: 'column', sm: 'row' },
             alignItems: 'flex-start',
-            gap: { xs: 1, sm: 1.5 },
+            gap: afterCard ? 1.5 : { xs: 1, sm: 1.5 },
             fontFamily: typography.mono,
             fontSize: fontSize.md,
+            lineHeight: afterCard ? bodyTextSx.lineHeight : undefined,
             color: 'var(--ink-soft)',
-            mt: CHAT_SECTION_GAP - THREAD_GAP,
+            mt: afterCard ? 0 : CHAT_SECTION_GAP - THREAD_GAP,
           }}
         >
           <Box

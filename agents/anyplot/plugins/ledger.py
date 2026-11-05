@@ -165,6 +165,9 @@ class RequestLedger:
     """The `/messages` route's turn is the summary of a paste not summarized yet (the summary action, or the note sent
     with the paste): the root's before-agent callback makes the paste's `certain` conversions (`paste_conversions.py`).
     False without a route (`adk web`)."""
+    paste_note: bool = False
+    """The turn's typed text is the note sent with a paste not summarized yet: words about the data that came with it,
+    so the scope guard never refuses it as a request for data to fetch (`ScopeGuardPlugin._judge`)."""
     conversions_made: str | None = None
     """The id of the data version the server's conversions made in this turn: the session block lists them for every
     model call of the turn, and the route clears the summary flag on this version too."""

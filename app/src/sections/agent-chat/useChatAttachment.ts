@@ -8,7 +8,9 @@
  * browser pastes into the box as typed text. Browsers that hide the pasted text from the paste
  * event (iOS Safari may) insert it and report `insertFromPaste` on the input event: the same
  * routing runs on the inserted part then, and only for that input type, so typing and an input
- * method's composition never become an attachment.
+ * method's composition never become an attachment while the user types. Enter routes the box's
+ * text once more when no attachment waits (`attachTyped`): a table typed by hand, or pasted where
+ * no paste event said so, goes to the dataset route at once, as a paste of it would.
  *
  * Text files are read in the browser (`fileText.ts`); binary formats (Excel, OpenDocument,
  * Parquet, Feather, Arrow, NumPy) go to the server's sandbox (`onConvert`) and come back as
@@ -89,7 +91,8 @@ export type AttachmentStatus = 'reading' | 'ready' | 'over_cap' | 'sending' | 'f
 export interface Attachment {
   /** Counts attachments, so an answer for an earlier one never touches a later one. */
   id: number;
-  via: 'paste' | 'file';
+  /** `typed`: the box's own text, a table typed or inserted without a paste event, sent with Enter. */
+  via: 'paste' | 'file' | 'typed';
   /** The text the dataset route reads; empty while a file is read on the server. */
   text: string;
   /** The file's name, for the chip; null for a paste. */
@@ -197,6 +200,11 @@ export interface ChatAttachment {
   /** The routed text of a paste. */
   attachText: (text: string) => void;
   /**
+   * The box's text on Enter, routed like a paste: the attachment it became when it is a table, to
+   * send at once, or null for a message.
+   */
+  attachTyped: (text: string) => Attachment | null;
+  /**
    * An attachment back as it was sent, under a new id: the file or the long text a discarded
    * table was read from, which the box could not send as typed text.
    */
@@ -249,12 +257,10 @@ export function useChatAttachment({
     return seq.current;
   };
 
-  const attachText = (text: string) => {
-    const id = next();
-    setNotice(null);
-    setAttachment({
-      id,
-      via: 'paste',
+  const attachText = (text: string, via: 'paste' | 'typed' = 'paste'): Attachment => {
+    const created: Attachment = {
+      id: next(),
+      via,
       text,
       name: null,
       lines: countLines(text),
@@ -266,7 +272,19 @@ export function useChatAttachment({
       status: overCap(text) ? 'over_cap' : 'ready',
       error: null,
       readingLine: null,
-    });
+    };
+    setNotice(null);
+    setAttachment(created);
+    return created;
+  };
+
+  // Only a paste was routed before Enter: a table typed by hand, or pasted where the browser
+  // reported no paste, went out as a message the assistant cannot read data from. Only `data` is
+  // counted: every typed message is a `message`, which would only drown the tuning signal.
+  const attachTyped = (text: string) => {
+    if (routeInput(text) !== 'data') return null;
+    onTrack?.('agent_input_routed', { as: 'data', via: 'typed' });
+    return attachText(text, 'typed');
   };
 
   const reattach = (previous: Attachment) => {
@@ -556,6 +574,7 @@ export function useChatAttachment({
     dropReady,
     fileInputRef,
     attachText,
+    attachTyped,
     reattach,
     remove,
     settle,

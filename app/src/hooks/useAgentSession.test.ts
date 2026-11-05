@@ -899,11 +899,52 @@ describe('useAgentSession: confirming the data (step 1)', () => {
     await act(() => result.current.parseData('a,b\n1,2\n'));
     await act(() => result.current.confirmData());
     await act(() => result.current.createPlot());
+    // No failed plot in the thread: the one notice says what to do, and the step line too.
+    expect(result.current.state.items.some(item => item.kind === 'plot_failed')).toBe(false);
     expect(lastItem(result.current.state.items)).toMatchObject({
-      kind: 'plot_failed',
-      result: { status: 'not_ready', reason: 'data_unconfirmed' },
+      kind: 'notice',
+      tone: 'warning',
+      text: 'check the data again, then .create_plot()',
     });
-    expect(result.current.state.dataConfirmed).toBe(false);
+    expect(result.current.state).toMatchObject({ dataConfirmed: false, confirmLoss: 'server' });
+  });
+
+  it("names a data change once when the turn's own plot then answers data_unconfirmed", async () => {
+    // The root changed the data, then called the plot, which the server refused: the plot event
+    // comes before the `done` that carries the new data, and the thread said it three times.
+    const routes = baseRoutes();
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    await act(() => result.current.confirmData());
+    const before = result.current.state.items.length;
+    routes['POST /sessions/S1/messages'] = () =>
+      sse([
+        [
+          'plot',
+          {
+            status: 'not_ready',
+            reason: 'data_unconfirmed',
+            attempts: 0,
+            artifacts: [],
+            changes: [],
+            residual_defects: [],
+          },
+        ],
+        ['message', { text: 'The data is now the daily mean: 7 rows.' }],
+        [
+          'done',
+          { llm_calls: 2, bindings: PREPARED.bindings, data_confirmed: false, dataset: PREPARED },
+        ],
+      ]);
+    await act(() => result.current.sendMessage('daily mean instead of hourly'));
+
+    const added = result.current.state.items.slice(before);
+    expect(added.map(item => item.kind)).toEqual(['user', 'assistant', 'notice']);
+    expect(added[2]).toMatchObject({
+      tone: 'warning',
+      text: 'data changed · check it, then plot the new data',
+    });
+    expect(result.current.state).toMatchObject({ dataConfirmed: false, confirmLoss: 'data' });
   });
 });
 
@@ -1181,6 +1222,39 @@ describe('useAgentSession: a note with the attachment', () => {
     expect(turnBodies()).toEqual([{ text: 'only 2024' }, { action: 'summarize_data' }]);
     // The note stays the user's line in the thread, after the card, with the error under it.
     expect(result.current.state.items[1]).toMatchObject({ kind: 'user', text: 'only 2024' });
+  });
+
+  it('sends the summary after a refused note also when the page rendered between the two turns', async () => {
+    // One `act` around both turns renders nothing in between, which hid it: in a browser the page
+    // renders the note's turn as running, and the summary read that render's `run` as still on.
+    const first = deferred<Response>();
+    const routes = noteRoutes(() => sse([]));
+    let turns = 0;
+    routes['POST /sessions/S1/messages'] = () => {
+      turns += 1;
+      return turns === 1 ? first.promise : summaryStream();
+    };
+    const { result } = await openSession(routes);
+    let parsed: Promise<ParseResult> | undefined;
+    act(() => {
+      parsed = result.current.parseData(TABLE, false, undefined, undefined, {
+        note: 'unemployment rate per country',
+      });
+    });
+    await waitFor(() => expect(result.current.state.run?.kind).toBe('message'));
+    first.resolve(
+      sse([
+        ['refusal', { code: 'out_of_scope', text: 'I can only help with this plot.' }],
+        ['done', {}],
+      ])
+    );
+    await act(async () => {
+      await parsed;
+    });
+    expect(turnBodies()).toEqual([
+      { text: 'unemployment rate per country' },
+      { action: 'summarize_data' },
+    ]);
   });
 
   it.each([['session_closed'], ['budget']])(
@@ -3101,6 +3175,21 @@ describe('agentReducer', () => {
     expect(state.run).toBeNull();
   });
 
+  it('ends the wait on the queue\'s "started", also for a turn that never reaches a step', () => {
+    // A summary that runs data code has no pipeline step: its badge stayed until the reply.
+    let state: AgentSessionState = { ...initialAgentState('matplotlib'), sessionId: 'S1' };
+    state = agentReducer(state, { type: 'run_start', kind: 'summarize_data' });
+    state = agentReducer(state, { type: 'run_queued', position: 1, waiting: 2 });
+    state = agentReducer(state, { type: 'run_started' });
+    expect(state.run?.queue).toBeNull();
+    expect(state.run?.steps).toEqual([]);
+    // A replay after a resume sends it again: nothing changes.
+    expect(agentReducer(state, { type: 'run_started' })).toEqual(state);
+    // No turn, nothing to clear.
+    const idle = { ...initialAgentState('matplotlib'), sessionId: 'S1' };
+    expect(agentReducer(idle, { type: 'run_started' })).toBe(idle);
+  });
+
   it('stores a transcription beside the data and clears it on a decision, a parse or a switch', () => {
     const transcription: TranscriptionState = {
       text: TRANSCRIBED.text,
@@ -3274,7 +3363,7 @@ describe('agentReducer', () => {
       notice: lastItem(next.items),
     });
     const notice = (text: string) => ({ kind: 'notice', tone: 'warning', text });
-    const changed = notice('the data changed · check it, then .create_plot()');
+    const changed = notice('data changed · check it, then plot the new data');
     for (const next of [
       agentReducer(confirmed, { type: 'parse_done', parsed, bytes: 10 }),
       agentReducer(confirmed, { type: 'data_prepared', dataset: PREPARED as DatasetChanged }),
@@ -3282,7 +3371,7 @@ describe('agentReducer', () => {
     ]) {
       expect(reasonOf(next)).toMatchObject({ reason: 'data', notice: changed });
     }
-    const server = notice('not confirmed on the server · check the data, then .create_plot()');
+    const server = notice('check the data again, then .create_plot()');
     expect(reasonOf(agentReducer(confirmed, { type: 'confirm_lost' }))).toMatchObject({
       reason: 'server',
       notice: server,

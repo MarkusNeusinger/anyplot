@@ -174,7 +174,15 @@ import { Remembered } from 'src/sections/agent-chat/Remembered';
 import { SessionMenu } from 'src/sections/agent-chat/SessionMenu';
 import { columnLines, previewsByLibrary } from 'src/sections/agent-chat/specReference';
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
-import { inStep2, runView, showsTimeline, stepOneLine } from 'src/sections/agent-chat/steps';
+import {
+  dataChanged,
+  inStep2,
+  plotButtonLabel,
+  runLine,
+  runView,
+  showsTimeline,
+  stepOneLine,
+} from 'src/sections/agent-chat/steps';
 import {
   bodyTextSx,
   CHAT_SECTION_GAP,
@@ -588,7 +596,11 @@ function AgentChat({
   const exampleWorking = exampleOffer && state.run?.kind === 'example_data';
   // Step 1's line above the composer, the plot button's description: what it waits for (a
   // pending table read from text, a required role without a column), else what to check.
-  const stepLine = stepOneLine(state, plotAll ? '.plot_all()' : undefined);
+  // The composer's plot action, which the step line and the card's own step-1 line both name.
+  const plotAction = plotAll ? '.plot_all()' : plotButtonLabel(state);
+  const stepLine = stepOneLine(state, plotAction);
+  // After a change to data the user had confirmed, the filled plot button says so in its name.
+  const newData = dataChanged(state);
   // While a run's timeline stands below the thread, what the run sends into the thread waits
   // for its plot, which takes the timeline's place (`runView`).
   const view = runView(state);
@@ -642,8 +654,15 @@ function AgentChat({
     const text = draft.trim();
     // Text over the cap is never cut: the counter is red and nothing goes until it fits.
     if (!text || text.length > MAX_MESSAGE_CHARS || busy || chatLocked) return;
-    void session.sendMessage(text);
+    // A table in the box is data, as its paste would have been: the assistant reads no data from
+    // a message. It goes without a note, because the parser keeps the lines around it as notes.
+    const typed = attach.attachTyped(text);
     setDraft('');
+    if (typed) {
+      void sendAttachment(typed, '');
+      return;
+    }
+    void session.sendMessage(text);
   };
 
   /** Text back into the box, before anything typed since, with a blank line between them. */
@@ -656,16 +675,22 @@ function AgentChat({
 
   /**
    * `.discard()`: the table read from text goes, and what it came from comes back. Short pasted
-   * text goes into the box, to edit and send as a message; a file's text, or text the box could
-   * not send, waits as the attachment again, unless the user attached something since.
+   * or typed text goes into the box, to edit and send as a message; a file's text, or text the
+   * box could not send, waits as the attachment again, unless the user attached something since.
    */
   const handleDiscard = () => {
     session.discardTranscription();
     const sent = transcribedFrom.current;
     transcribedFrom.current = null;
     if (!sent) return;
-    if (sent.via === 'paste' && sent.text.length <= MAX_MESSAGE_CHARS) restoreText(sent.text);
+    if (sent.via !== 'file' && sent.text.length <= MAX_MESSAGE_CHARS) restoreText(sent.text);
     else if (!attachment) attach.reattach(sent);
+  };
+
+  /** ×: the attachment goes; a typed table goes back into the box, since nothing else holds it. */
+  const handleRemoveAttachment = () => {
+    if (attachment?.via === 'typed') restoreText(attachment.text);
+    attach.remove();
   };
 
   /**
@@ -674,11 +699,12 @@ function AgentChat({
    * once; when nothing was stored (a table read from text to decide on, text that went to the
    * chat, a refusal, nothing started), the note goes back into it, before anything typed since.
    * A refused attachment stays red with the reason, for Enter to try again or × to drop it.
+   * `ownNote` replaces the box's text as the note: a typed table was that text, and goes alone.
    */
-  const sendAttachment = async (sent: Attachment) => {
+  const sendAttachment = async (sent: Attachment, ownNote?: string) => {
     if (busy || (sent.status !== 'ready' && sent.status !== 'failed')) return;
     // While `all` holds the box in step 2 it takes no text: the attachment goes alone.
-    const note = chatLocked ? '' : draft.trim();
+    const note = ownNote ?? (chatLocked ? '' : draft.trim());
     if (note.length > MAX_MESSAGE_CHARS) return;
     if (note) setDraft(current => (current.trim() === note ? '' : current));
     attach.settle(sent.id, 'sending');
@@ -717,13 +743,15 @@ function AgentChat({
    * is confirmed first; a refusal stops here and shows under the composer, and nothing is
    * plotted. Then the plot starts: the box's text, when the button takes it (`withText`, the
    * filled CTA), goes as the turn that makes the plot with that request, else the catalogue
-   * plot (`create_plot`) or the switch's offer (`carry_plot`). The confirmation's busy state and
-   * the session's own guards hold back a second click, also one before the state caught up.
+   * plot (`create_plot`) or the switch's offer (`carry_plot`), under `label`, the button as it
+   * read, which the thread shows for the turn. The confirmation's busy state and the session's
+   * own guards hold back a second click, also one before the state caught up.
    */
   const startPlot = async (
     event: React.MouseEvent,
     kind: 'create' | 'carry',
-    withText: boolean
+    withText: boolean,
+    label: string
   ) => {
     keepKeyboardFocus(event);
     if (!canCreate) return;
@@ -736,7 +764,7 @@ function AgentChat({
       setDraft(current => (current.trim() === text ? '' : current));
       void session.sendMessage(text);
     } else {
-      void (kind === 'carry' ? session.carryPlot() : session.createPlot());
+      void (kind === 'carry' ? session.carryPlot(label) : session.createPlot(label));
     }
   };
 
@@ -807,21 +835,24 @@ function AgentChat({
    * library has a plot: the fresh plot from the catalogue code, with the remembered decisions;
    * text in the box stays there for `.send()`.
    */
-  const handleCreate = (event: React.MouseEvent) => void startPlot(event, 'create', false);
+  const handleCreate = (event: React.MouseEvent) =>
+    void startPlot(event, 'create', false, hasPlot ? '.start_over()' : '.create_plot()');
 
   /**
    * The offer after a switch: the plot in this library with the remembered decisions. While it
    * is the filled CTA (data unconfirmed, or no plot here yet) the box's text goes along as the
    * turn that makes it; beside `.send()` once the confirmed data has a plot, it takes none.
    */
-  const handleCarry = (event: React.MouseEvent) => void startPlot(event, 'carry', ctaPlot);
+  const handleCarry = (event: React.MouseEvent) =>
+    void startPlot(event, 'carry', ctaPlot, carryText);
 
   /**
-   * The filled `.create_plot()`: the plot, with the box's text as its request; after a switch
-   * whose offer carries no decisions, the carry itself.
+   * The filled `.create_plot()` (`plot the new data` after a change to confirmed data): the plot,
+   * with the box's text as its request; after a switch whose offer carries no decisions, the
+   * carry itself. The thread names it as the button read.
    */
   const handlePlot = (event: React.MouseEvent) =>
-    void startPlot(event, carry && !shownCarry ? 'carry' : 'create', true);
+    void startPlot(event, carry && !shownCarry ? 'carry' : 'create', true, plotButtonLabel(state));
 
   if (state.phase === 'unauthorized') return lane === 'public' ? <LaneClosed /> : <AdminRequired />;
   const chatPath = lane === 'public' ? paths.publicAgentChat : paths.agentChat;
@@ -1034,6 +1065,7 @@ function AgentChat({
                 onToLong={() => void session.toLongData()}
                 // Not while the fan-out's panel is open: its sessions copy this session's data.
                 locked={!!fanOut}
+                plotAction={plotAction}
                 onLoadData={session.fetchDataCsv}
                 // A look at the session's data, not at a result: version 0.
                 onDataViewShown={() => session.reportOutcome('opened_data_view', 0)}
@@ -1099,7 +1131,7 @@ function AgentChat({
               onPaste={event => void attach.handlePaste(event)}
               attachment={attachment}
               attachmentNotice={attach.notice}
-              onRemoveAttachment={attach.remove}
+              onRemoveAttachment={handleRemoveAttachment}
               dropHint={
                 attach.dragOver
                   ? {
@@ -1141,6 +1173,8 @@ function AgentChat({
               fanOutOpen={!!fanOut}
               carryText={shownCarry ? carryText : null}
               stepLine={stepLine}
+              runLine={runLine(state)}
+              newData={newData}
               confirming={state.confirmBusy}
               confirmError={state.confirmError}
               pausedUntil={pausedUntil}

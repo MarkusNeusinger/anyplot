@@ -4,8 +4,8 @@
  * the message box and its buttons, and the counter near the message cap.
  *
  * The step's one filled call to action sits at the composer's right end from the moment data is
- * stored: `.create_plot()` (with `all` pressed `.plot_all()`, after a switch's offer the carry),
- * while the data is unconfirmed, also when this library already has a plot (the click makes a
+ * stored: `.create_plot()` (with `all` pressed `.plot_all()`, after a switch's offer the carry,
+ * after a change to data the user had confirmed `plot the new data`), while the data is unconfirmed, also when this library already has a plot (the click makes a
  * new version from the data as the card shows it), and while the data is confirmed and the
  * library has no plot yet. Its click takes the data and the bindings as shown, confirms them
  * first when they are not (the page chains it), and starts the plot, with the box's text as its
@@ -38,6 +38,7 @@ import {
   attachmentWaitLine,
   describeDataFailure,
   ERROR_TEXT,
+  NEW_DATA_PLOT,
   NO_DATA_PLACEHOLDER,
   servicePausedText,
 } from 'src/sections/agent-chat/messages';
@@ -113,6 +114,10 @@ export interface ComposerProps {
   carryText: string | null;
   /** Step 1's line above the box (`stepOneLine`); null without data and in step 2. */
   stepLine: string | null;
+  /** While a plot runs, the line that takes the step's (`runLine`); null otherwise. */
+  runLine: string | null;
+  /** Data the user had confirmed changed (`dataChanged`): the filled plot button reads `plot the new data`. */
+  newData: boolean;
   /** The confirmation a plot button starts with is in flight. */
   confirming: boolean;
   /** Why that confirmation was refused; it shows under the composer. */
@@ -140,15 +145,22 @@ export function Composer(props: ComposerProps) {
   const { ready, busy, running, stopping, hasData, dataRows, step2, hasPlot, ctaPlot, canCreate } =
     props;
   const { plotAll, chatLocked, libraryCount, fanOutOpen, carryText, stepLine } = props;
+  const { runLine, newData } = props;
   const { confirming, confirmError, pausedUntil, exampleOffer, exampleWorking } = props;
   const { onExampleData, onStop, onPlot, onCreate, onCarry, onPlotAll, keepKeyboardFocus } = props;
   const carry = carryText !== null;
-  // A table or a file waits for Enter: its line takes the step's place, and the plot buttons
-  // wait, since they would plot the data before it, or none. With data, the line says it replaces it.
-  const waitLine = attachment ? attachmentWaitLine(dataRows) : stepLine;
   // Step 2 before this library's first plot: the line above the box says what the CTA does.
   const firstPlot = step2 && !hasPlot;
-  const createLine = !attachment && (firstPlot || chatLocked);
+  const stepCreateLine = !attachment && (firstPlot || chatLocked);
+  // While a plot runs, its line stands where the step's line stood, which would still invite the
+  // click that started it; only where a line stands, so the box below never moves. The line of
+  // `all`, which the box and `.send()` name as their description, stays.
+  const busyLine =
+    runLine && !attachment && !chatLocked && (stepLine || stepCreateLine) ? runLine : null;
+  // A table or a file waits for Enter: its line takes the step's place, and the plot buttons
+  // wait, since they would plot the data before it, or none. With data, the line says it replaces it.
+  const waitLine = busyLine ?? (attachment ? attachmentWaitLine(dataRows) : stepLine);
+  const createLine = !busyLine && stepCreateLine;
   // The confirmation the click starts with: the button says it works on it.
   const working = (label: string) => (confirming ? `${label} …` : label);
   // An attachment goes once it is read and the dataset route can take it; a refused one again.
@@ -260,7 +272,8 @@ export function Composer(props: ComposerProps) {
 
   // The step's one filled action while it is a plot button: a plain button, so Enter in the box
   // sends a turn and never confirms. It stays in its place while a turn runs, waiting beside
-  // `.stop()`, so the next step is in view the whole time.
+  // `.stop()`, so the next step is in view the whole time. After a change to data the user had
+  // confirmed, its name says in words what the click plots (`plotButtonLabel` names it the same).
   const filledCta = plotAll ? (
     plotAllButton
   ) : carry ? (
@@ -273,11 +286,11 @@ export function Composer(props: ComposerProps) {
       ref={createRef}
       onClick={onPlot}
       disabled={!canCreate}
-      aria-label="Create plot"
+      aria-label={newData ? 'Plot the new data' : 'Create plot'}
       aria-describedby={ctaDescription}
       sx={ctaButtonSx}
     >
-      {working('.create_plot()')}
+      {working(newData ? NEW_DATA_PLOT : '.create_plot()')}
     </Box>
   );
 

@@ -7,9 +7,11 @@
  * its tests.
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import Box from '@mui/material/Box';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 
 import type { DataChange, Failure, TranscriptionState } from 'src/hooks/useAgentSession';
 import type { ColumnProfile, LongSuggestion } from 'src/lib/agent';
@@ -483,6 +485,205 @@ interface BindingsBlockProps {
   onBind: (role: string, column: string | null) => void;
 }
 
+/** A chip's height: a phone's touch target, smaller with a pointer. */
+const CHIP_HEIGHT = { xs: 32, sm: 28 } as const;
+
+const chipSx = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  height: CHIP_HEIGHT,
+  pl: 1.25,
+  border: '1px solid var(--rule)',
+  borderRadius: '16px',
+  bgcolor: 'var(--bg-elevated)',
+  fontFamily: typography.mono,
+  fontSize: fontSize.md,
+  color: 'var(--ink)',
+  whiteSpace: 'nowrap',
+  maxWidth: '100%',
+  minWidth: 0,
+} as const;
+
+const removeSx = {
+  all: 'unset',
+  boxSizing: 'border-box',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+  width: CHIP_HEIGHT,
+  height: CHIP_HEIGHT,
+  borderRadius: '50%',
+  cursor: 'pointer',
+  color: 'var(--ink-soft)',
+  '&:hover:not(:disabled)': { color: colors.error },
+  '&:focus-visible': { outline: `2px solid ${colors.primary}`, outlineOffset: -2 },
+  '&:disabled': { cursor: 'default', opacity: 0.6 },
+} as const;
+
+/**
+ * A variadic family's bound columns as chips, each with `×`, then `+ y ▾`, a menu of the
+ * columns left, the ones the role cannot take greyed out with the reason. One row for two
+ * series or eight, wrapping at a phone's width. After a change the keyboard stays in the
+ * row: on the chip that took a removed one's place (or `+`), and on `+` after an addition.
+ */
+function FamilyChips({
+  row,
+  columns,
+  disabled,
+  labelId,
+  hintOf,
+  onBind,
+}: {
+  row: BindingRow;
+  columns: ColumnProfile[];
+  disabled: boolean;
+  labelId: string;
+  hintOf: (column: string) => string | null;
+  onBind: (role: string, column: string | null) => void;
+}) {
+  const family = row.role.name;
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const addRef = useRef<HTMLButtonElement>(null);
+  const removeRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  // The controls wait while the change is on its way; the focus follows once they answer again,
+  // unless the user has moved it elsewhere meanwhile.
+  const refocus = useRef<number | 'add' | null>(null);
+  const count = row.members.length;
+  useEffect(() => {
+    const target = refocus.current;
+    if (target === null || disabled) return;
+    refocus.current = null;
+    const active = document.activeElement;
+    if (active && active !== document.body && !listRef.current?.contains(active)) return;
+    const last = removeRefs.current[count - 1];
+    // `+` is gone once the last column is taken: the chip that took it holds the focus then.
+    // A removed chip's place goes to the chip after it; the last one's to `+`, which follows it.
+    const element =
+      target === 'add'
+        ? (addRef.current ?? last)
+        : ((target < count ? removeRefs.current[target] : null) ?? addRef.current ?? last);
+    element?.focus();
+  }, [disabled, count]);
+
+  const taken = new Set(row.members.map(([, column]) => column));
+  const choices = columns.filter(column => !taken.has(column.name));
+  const menuId = `${labelId}-menu`;
+  const buttonId = `${labelId}-add`;
+  const hints = row.members.flatMap(([member, column]) => {
+    const hint = hintOf(column);
+    return hint ? [{ member, text: `${column}: ${hint}` }] : [];
+  });
+  return (
+    // On a phone the chips take the card's width under the role's name: beside it they had
+    // room for one chip a line, eight series made eight lines.
+    <Box sx={{ minWidth: 0, gridColumn: { xs: '1 / -1', sm: 'auto' } }}>
+      <Box
+        component="ul"
+        ref={listRef}
+        aria-labelledby={labelId}
+        aria-describedby={hints.length ? `${labelId}-hints` : undefined}
+        sx={{
+          listStyle: 'none',
+          m: 0,
+          p: 0,
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          gap: 0.75,
+        }}
+      >
+        {row.members.map(([member, column], index) => (
+          <Box component="li" key={member} sx={chipSx}>
+            {/* A long column name is cut with an ellipsis inside the card; its × names it in full. */}
+            <Box
+              component="span"
+              title={column}
+              sx={{ overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}
+            >
+              {column}
+            </Box>
+            <Box
+              component="button"
+              type="button"
+              ref={(element: HTMLButtonElement | null) => {
+                removeRefs.current[index] = element;
+              }}
+              aria-label={`Remove ${column} from ${family}`}
+              disabled={disabled}
+              onClick={() => {
+                refocus.current = index;
+                onBind(member, null);
+              }}
+              sx={removeSx}
+            >
+              ×
+            </Box>
+          </Box>
+        ))}
+        {row.next && (
+          <Box component="li">
+            <Box
+              component="button"
+              type="button"
+              ref={addRef}
+              id={buttonId}
+              // The visible "+ y" leads the name, so a voice command that says it finds the button.
+              aria-label={`+ ${family}: add a column`}
+              aria-haspopup="menu"
+              aria-expanded={!!anchor}
+              aria-controls={anchor ? menuId : undefined}
+              disabled={disabled}
+              onClick={(event: React.MouseEvent<HTMLElement>) => setAnchor(event.currentTarget)}
+              sx={{ ...ghostButtonSx, height: CHIP_HEIGHT, minHeight: 0, py: 0 }}
+            >
+              + {family} ▾
+            </Box>
+            <Menu
+              id={menuId}
+              anchorEl={anchor}
+              open={!!anchor}
+              onClose={() => setAnchor(null)}
+              slotProps={{ list: { 'aria-labelledby': buttonId, disabledItemsFocusable: true } }}
+            >
+              {/* A column the role cannot take stays listed, greyed out with the reason. */}
+              {choices.map(column => (
+                <MenuItem
+                  key={column.name}
+                  dense
+                  disabled={!fits(row.role, column.dtype)}
+                  onClick={() => {
+                    setAnchor(null);
+                    refocus.current = 'add';
+                    if (row.next) onBind(row.next, column.name);
+                  }}
+                  sx={{ fontFamily: typography.mono, fontSize: fontSize.md, minHeight: 32 }}
+                >
+                  {columnLabel(row.role, column)}
+                </MenuItem>
+              ))}
+            </Menu>
+          </Box>
+        )}
+      </Box>
+      {hints.length > 0 && (
+        <Box id={`${labelId}-hints`}>
+          {hints.map(hint => (
+            <Box
+              key={hint.member}
+              data-testid="sign-hint"
+              sx={{ ...labelSx, fontSize: smallText, color: colors.warning, mt: 0.25 }}
+            >
+              {hint.text}
+            </Box>
+          ))}
+        </Box>
+      )}
+    </Box>
+  );
+}
+
 /** The bindings' heading, and the two it swaps to while the server works. */
 const HEADING = {
   idle: '# bindings — which column plays which role',
@@ -541,74 +742,88 @@ export function BindingsBlock({
         }}
       >
         {rows.map(row => {
-          const missing = row.first && missingRoles.includes(row.role.name);
+          const missing = missingRoles.includes(row.role.name);
           const id = `agent-role-${row.name}`;
+          const family = row.role.variadic;
           const bound = bindings[row.name];
           // A wide table's number column in a role that wants labels comes first: the plot would be meaningless.
-          const sign =
-            siblingHint(row.role, bound, suggestion) ??
+          const hintOf = (column: string | undefined) =>
+            siblingHint(row.role, column, suggestion) ??
             signHint(
               row.role,
-              columns.find(column => column.name === bound)
+              columns.find(profile => profile.name === column)
             );
+          const sign = family ? null : hintOf(bound);
           return (
             <Box key={row.name} sx={{ display: 'contents' }}>
+              {/* A family's chips are a list it names; a single role's dropdown has the label. */}
               <Box
-                component="label"
-                htmlFor={id}
+                component={family ? 'div' : 'label'}
+                id={`${id}-label`}
+                htmlFor={family ? undefined : id}
                 title={row.role.description || undefined}
                 sx={{
                   fontFamily: typography.mono,
                   fontSize: fontSize.md,
-                  color: missing ? colors.error : row.next ? 'var(--ink-muted)' : 'var(--ink)',
+                  color: missing ? colors.error : 'var(--ink)',
                   overflowWrap: 'anywhere',
                   // The kinds line wraps instead of squeezing the dropdowns.
                   maxWidth: { xs: '13ch', sm: '16ch' },
+                  alignSelf: family ? 'start' : undefined,
                 }}
               >
                 {row.name}
-                {row.first && row.role.required ? ' *' : ''}
-                {row.first && (
-                  <Box component="span" sx={{ display: 'block', ...labelSx, fontSize: smallText }}>
-                    {kindsHint(row.role)}
-                  </Box>
-                )}
-              </Box>
-              <Box sx={{ minWidth: 0 }}>
-                <Box
-                  component="select"
-                  id={id}
-                  value={bound ?? ''}
-                  disabled={!ready || busy}
-                  aria-describedby={sign ? `${id}-sign` : undefined}
-                  onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
-                    onBind(row.name, event.target.value || null)
-                  }
-                  sx={{ ...nativeControlSx, width: '100%' }}
-                >
-                  <option value="">{emptyChoice(row)}</option>
-                  {/* A column the role cannot take stays listed, greyed out with the reason,
-                      so the user sees why it is no choice instead of meeting a refusal. */}
-                  {columns.map(column => (
-                    <option
-                      key={column.name}
-                      value={column.name}
-                      disabled={column.name !== bound && !fits(row.role, column.dtype)}
-                    >
-                      {columnLabel(row.role, column)}
-                    </option>
-                  ))}
+                {row.role.required ? ' *' : ''}
+                <Box component="span" sx={{ display: 'block', ...labelSx, fontSize: smallText }}>
+                  {kindsHint(row.role)}
                 </Box>
-                {sign && (
-                  <Box
-                    id={`${id}-sign`}
-                    data-testid="sign-hint"
-                    sx={{ ...labelSx, fontSize: smallText, color: colors.warning, mt: 0.25 }}
-                  >
-                    {sign}
-                  </Box>
-                )}
               </Box>
+              {family ? (
+                <FamilyChips
+                  row={row}
+                  columns={columns}
+                  disabled={!ready || busy}
+                  labelId={`${id}-label`}
+                  hintOf={hintOf}
+                  onBind={onBind}
+                />
+              ) : (
+                <Box sx={{ minWidth: 0 }}>
+                  <Box
+                    component="select"
+                    id={id}
+                    value={bound ?? ''}
+                    disabled={!ready || busy}
+                    aria-describedby={sign ? `${id}-sign` : undefined}
+                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
+                      onBind(row.name, event.target.value || null)
+                    }
+                    sx={{ ...nativeControlSx, width: '100%' }}
+                  >
+                    <option value="">{emptyChoice(row.role)}</option>
+                    {/* A column the role cannot take stays listed, greyed out with the reason,
+                      so the user sees why it is no choice instead of meeting a refusal. */}
+                    {columns.map(column => (
+                      <option
+                        key={column.name}
+                        value={column.name}
+                        disabled={column.name !== bound && !fits(row.role, column.dtype)}
+                      >
+                        {columnLabel(row.role, column)}
+                      </option>
+                    ))}
+                  </Box>
+                  {sign && (
+                    <Box
+                      id={`${id}-sign`}
+                      data-testid="sign-hint"
+                      sx={{ ...labelSx, fontSize: smallText, color: colors.warning, mt: 0.25 }}
+                    >
+                      {sign}
+                    </Box>
+                  )}
+                </Box>
+              )}
             </Box>
           );
         })}
