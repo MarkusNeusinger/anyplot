@@ -10,6 +10,12 @@ The matching is deliberately loose about the prose and strict about the claim: a
 keyword ("starts at 90", "one repair round"), so a sentence can be reworded freely as long as that phrase stays,
 while a wider window would let a neighbouring number ("two reviews" next to "repair round") pass for the claim.
 Values are read with `ast` from the agents' source, never by importing it, so the test needs no ADK.
+
+One claim has no offline source: the number of pull requests merged from the owner's account. The texts state it as a
+floor ("more than 850 pull requests from my account have merged"), and `MERGED_PRS_SNAPSHOT` below records the count
+and the day it was taken. The floor must be a multiple of 50, below the snapshot and at most 50 below it, so it can
+neither overclaim nor go stale by more than one step. The release procedure (`agentic/commands/release.md`, step 4)
+counts again, updates the snapshot and raises the floor in the same commit.
 """
 
 from __future__ import annotations
@@ -32,6 +38,12 @@ WORKFLOW_PAGE = ROOT / "docs" / "concepts" / "ai-workflow.md"
 ABOUT_PAGE = ROOT / "app" / "src" / "pages" / "AboutPage.tsx"
 SEO = ROOT / "api" / "routers" / "seo.py"
 LINKED_DOCS = (README, WORKFLOW_PAGE)
+
+# Pull requests merged from the owner's account, and when that was counted:
+# `gh pr list --state merged --author MarkusNeusinger --limit 5000 --json number --jq length`.
+# Updated by the release procedure (agentic/commands/release.md, step 4) together with the texts' floor.
+MERGED_PRS_SNAPSHOT = (869, "2026-11-04")
+PR_FLOOR_STEP = 50
 
 NUMBER_WORDS = {
     1: "one",
@@ -125,7 +137,7 @@ def field_default(relative: str, class_name: str, field: str) -> object:
 def review_bar() -> tuple[int, int]:
     """The first review's bar and the drop per repair, from impl-review.yml's threshold formula."""
     workflow = read(ROOT / ".github" / "workflows" / "impl-review.yml")
-    match = re.search(r"THRESHOLD=\$\(\((\d+) - ATTEMPT_COUNT \* (\d+)\)\)", workflow)
+    match = re.search(r"THRESHOLD=\$\(\(\s*(\d+)\s*-\s*ATTEMPT_COUNT\s*\*\s*(\d+)\s*\)\)", workflow)
     assert match, "impl-review.yml no longer computes THRESHOLD as <start> - ATTEMPT_COUNT * <step>"
     return int(match.group(1)), int(match.group(2))
 
@@ -262,9 +274,22 @@ def test_the_workflow_page_floor_on_recorded_decisions_holds():
     assert recorded > int(match.group(1)), f"agent-network.md names {recorded} owner decisions, rules or requests"
 
 
-def test_merged_pull_request_claims_are_floors():
-    """A count of merged pull requests only grows: the texts state a floor ("more than N"), never an exact number."""
+def test_merged_pull_request_claims_are_sane_floors():
+    """The owner's merged pull requests, stated as a floor that the recorded snapshot bounds (module docstring)."""
+    count, taken = MERGED_PRS_SNAPSHOT
+    # The claim itself, whatever precedes the number; "more than" and "over" are the floors.
+    claim = re.compile(r"(\S+ \S+ )?(\d[\d,]*) pull requests from my account have merged", re.IGNORECASE)
     for path in LINKED_DOCS:
-        text = collapse(read(path))
-        for match in re.finditer(r"(\S+ )?(\d[\d,]*) (?:merged )?pull requests", text):
-            assert match.group(1) == "than ", f"{path.name}: '{match.group(0)}' is no floor"
+        matches = list(claim.finditer(collapse(read(path))))
+        assert matches, f"{path.name} no longer states the merged pull requests from the owner's account"
+        for match in matches:
+            assert re.search(r"(?:more than|over) $", match.group(1) or "", re.IGNORECASE), (
+                f"{path.name}: '{match.group(0)}' is no floor; write 'more than N' or 'over N'"
+            )
+            floor = int(match.group(2).replace(",", ""))
+            assert floor % PR_FLOOR_STEP == 0, f"{path.name}: the floor {floor} is no multiple of {PR_FLOOR_STEP}"
+            assert floor < count, f"{path.name}: the floor {floor} overclaims the {count} counted on {taken}"
+            assert count - floor <= PR_FLOOR_STEP, (
+                f"{path.name}: the floor {floor} is stale against the {count} counted on {taken}; "
+                f"raise it to {(count - 1) // PR_FLOOR_STEP * PR_FLOOR_STEP}"
+            )

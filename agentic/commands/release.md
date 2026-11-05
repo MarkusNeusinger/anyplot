@@ -50,14 +50,19 @@ version: $1 (optional — e.g. `3.1.0`; if omitted, propose one from the `[Unrel
 4. **Refresh the README showcase**, on the release branch. Run
    `uv run python scripts/readme_showcase.py`: it redraws `docs/assets/readme-showcase.png` from the
    live `/stats` and stops when MonoLisa or a pick's preview is missing; look at the image before
-   committing it. Then check the floor on merged pull requests in `README.md` and
-   `docs/concepts/ai-workflow.md` ("more than N pull requests from my account have merged") against
-   `gh pr list --state merged --author MarkusNeusinger --limit 5000 --json number --jq length`, and
-   raise it to the last round fifty below the count (869 merged gave "more than 850"). It stays a floor, never an exact number:
-   `tests/unit/test_readme_claims.py` refuses an exact count. Commit the image and the wording on
-   the release branch.
+   committing it. Then count the merged pull requests from the owner's account
+   (`gh pr list --state merged --author MarkusNeusinger --limit 5000 --json number --jq length`) and
+   update three places in one commit:
+   - `MERGED_PRS_SNAPSHOT` in `tests/unit/test_readme_claims.py`: the count and today's date.
+   - The floor in `README.md` and in `docs/concepts/ai-workflow.md` ("more than N pull requests from
+     my account have merged"): the last multiple of 50 below the count (869 merged gave "more than
+     850").
+
+   It stays a floor, never an exact number. The test refuses an exact count, a floor that isn't a
+   multiple of 50, a floor at or above the snapshot, and one more than 50 below it. Commit the image,
+   the snapshot and the wording on the release branch.
 5. **Read the diff.** It touches `CHANGELOG.md`, `pyproject.toml`, `uv.lock`, `app/package.json`,
-   the deleted fragments and step 4's showcase image and pull-request floor — nothing else. Run
+   the deleted fragments and step 4's showcase image, pull-request snapshot and floor — nothing else. Run
    `uv lock` if the lock needs more than its own version line.
 6. **Open the release PR** (`release: vX.Y.Z` title) and follow the standard PR follow-through
    from `CLAUDE.md`. Ask the user to merge unless explicitly authorized to merge autonomously.

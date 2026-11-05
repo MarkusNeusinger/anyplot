@@ -62,7 +62,9 @@ Checklist for adding, renaming, or removing a doc:
   each of those values from its source and fails until the text
   follows; it also checks every relative link and anchor of both
   docs and the About page's copy of the rubric. A count that only
-  grows (merged pull requests) is written as a floor, "more than N".
+  grows (merged pull requests) is written as a floor, "more than N",
+  bounded by the test's `MERGED_PRS_SNAPSHOT`, which every release
+  updates.
   The showcase image (`docs/assets/readme-showcase.png`) is redrawn
   from live data by `scripts/readme_showcase.py`, at every release
   (`agentic/commands/release.md` step 4) and whenever a pick or the
