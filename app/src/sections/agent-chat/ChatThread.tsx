@@ -36,13 +36,15 @@ import { type CardOutcome, ResultCard } from 'src/sections/agent-chat/ResultCard
 import { type PendingReply, pendingReply } from 'src/sections/agent-chat/steps';
 import {
   bodyTextSx,
+  CHAT_SECTION_GAP,
   CHAT_TEXT_MAX,
   labelSx,
   readableSx as textSx,
+  THREAD_GAP,
 } from 'src/sections/agent-chat/styles';
-import { colors, typography } from 'src/theme';
+import { colors, fontSize, typography } from 'src/theme';
 
-/** The in-progress line's words; the site's loader follows them. */
+/** The in-progress line's words, beside the site's loader. */
 const PENDING_TEXT: Record<PendingReply, string> = {
   summarize_data: 'summarizing your data',
   example_data: 'making example data',
@@ -295,7 +297,7 @@ export function ChatThread(props: ChatThreadProps) {
     <Box
       role="log"
       aria-label="Conversation"
-      sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, minWidth: 0 }}
+      sx={{ display: 'flex', flexDirection: 'column', gap: THREAD_GAP, minWidth: 0 }}
     >
       {items.map((item, index) => {
         // The page's summary turn right after its card says nothing the card does not, also once
@@ -326,22 +328,33 @@ export function ChatThread(props: ChatThreadProps) {
       })}
       {/* The assistant's slot, in its style, in softer ink: provisional until the reply. The
           site's loader says it works; the log's live region reads the words alone. */}
+      {/* Laid out as the progress timeline is (`ProgressTimeline.tsx`): a turn that reaches a
+          pipeline step hands the line over to the timeline below the thread, and the loader must
+          stay where it is, only the text beside it changing. So the loader stands first, in a
+          box one line of the run's font tall, on a phone above the text; and the line keeps a
+          margin of the difference between the thread's gap and the gap above the timeline, so
+          the timeline's top lands where this line's top was. */}
       {pending && (
         <Box
           data-testid="pending-reply"
           sx={{
-            ...bodyTextSx,
-            ...textSx,
-            color: 'var(--ink-soft)',
-            borderLeft: '2px solid var(--rule)',
-            pl: 1.5,
             display: 'flex',
-            alignItems: 'center',
-            gap: 1.5,
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: 'flex-start',
+            gap: { xs: 1, sm: 1.5 },
+            fontFamily: typography.mono,
+            fontSize: fontSize.md,
+            color: 'var(--ink-soft)',
+            mt: CHAT_SECTION_GAP - THREAD_GAP,
           }}
         >
-          {PENDING_TEXT[pending]}
-          <LoaderSpinner size="inline" />
+          <Box
+            component="span"
+            sx={{ display: 'flex', alignItems: 'center', '&::before': { content: '"\\200b"' } }}
+          >
+            <LoaderSpinner size="inline" />
+          </Box>
+          <Box sx={{ minWidth: 0 }}>{PENDING_TEXT[pending]}</Box>
         </Box>
       )}
     </Box>

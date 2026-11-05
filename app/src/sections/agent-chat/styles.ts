@@ -135,6 +135,15 @@ export const visuallyHiddenSx = {
 export const CHAT_TEXT_MAX = '80ch';
 export const readableSx = { maxWidth: CHAT_TEXT_MAX } as const;
 
+/**
+ * The gap between the thread's items, and between the chat section's parts (the thread, the
+ * foot with the progress timeline and the composer), in theme spacing units. The thread's
+ * in-progress line offsets itself by their difference, so the timeline that follows it stands
+ * where it stood (`ChatThread.tsx`).
+ */
+export const THREAD_GAP = 1.5;
+export const CHAT_SECTION_GAP = 2;
+
 /** Small mono label above a control or a list. */
 export const labelSx = {
   fontFamily: typography.mono,

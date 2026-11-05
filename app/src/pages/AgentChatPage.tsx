@@ -174,7 +174,13 @@ import { SessionMenu } from 'src/sections/agent-chat/SessionMenu';
 import { columnLines, previewsByLibrary } from 'src/sections/agent-chat/specReference';
 import { StepHeader } from 'src/sections/agent-chat/StepHeader';
 import { inStep2, showsTimeline, stepOneLine } from 'src/sections/agent-chat/steps';
-import { bodyTextSx, labelSx, panelSx, smallText } from 'src/sections/agent-chat/styles';
+import {
+  bodyTextSx,
+  CHAT_SECTION_GAP,
+  labelSx,
+  panelSx,
+  smallText,
+} from 'src/sections/agent-chat/styles';
 import { type Attachment, useChatAttachment } from 'src/sections/agent-chat/useChatAttachment';
 import { useDataCardView } from 'src/sections/agent-chat/useDataCardView';
 import { parseInlineCode } from 'src/sections/spec-detail/SpecTabs/utils';
@@ -967,7 +973,7 @@ function AgentChat({
           onDragOver={attach.handleDragOver}
           onDragLeave={attach.handleDragLeave}
           onDrop={attach.handleDrop}
-          sx={{ ...panelSx, display: 'flex', flexDirection: 'column', gap: 2 }}
+          sx={{ ...panelSx, display: 'flex', flexDirection: 'column', gap: CHAT_SECTION_GAP }}
         >
           {/* The how-to of the data that comes in through the message box sits beside the label,
               not in it, so it never joins the section's name. */}

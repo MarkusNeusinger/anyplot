@@ -235,6 +235,12 @@ describe('ChatThread in-progress line', () => {
     // The site's loader beside the words, hidden from screen readers, which read the words.
     expect(within(pending).getByTestId('loader-spinner')).toHaveAttribute('aria-hidden', 'true');
     expect(screen.getByRole('log').lastElementChild).toBe(pending);
+    // As in the progress timeline the line hands over to: the loader first, the words after it,
+    // so the loader keeps its place when the timeline takes over.
+    expect(pending.firstElementChild).toContainElement(
+      within(pending).getByTestId('loader-spinner')
+    );
+    expect(pending.lastElementChild).toHaveTextContent(/^summarizing your data$/);
   });
 
   it('gives way to the reply', () => {
