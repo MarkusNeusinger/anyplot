@@ -429,7 +429,7 @@ describe('useAgentSession: data and bindings', () => {
     ).toEqual([expect.objectContaining(languageNoticeItem('de', 'your pasted data'))]);
   });
 
-  it('shows a missing required role and lets a column move between roles', async () => {
+  it('shows a missing required role and lets one column serve two roles', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/dataset'] = () =>
       json(200, { ...DATASET, bindings: [{ role: 'x', column: 'Study Hours' }] });
@@ -444,14 +444,52 @@ describe('useAgentSession: data and bindings', () => {
     expect(result.current.state.missingRoles).toEqual(['y']);
     expect(result.current.state.bindingsComplete).toBe(false);
 
-    // Taking x's column for y frees x.
+    // Taking x's column for y keeps x on it too (owner decision of 2026-11-04).
     await act(async () => result.current.setBinding('y', 'Study Hours'));
     await waitFor(() => expect(result.current.state.bindingsBusy).toBe(false));
     expect(calls.filter(call => call.method === 'PUT').pop()?.body).toEqual([
+      { role: 'x', column: 'Study Hours' },
       { role: 'y', column: 'Study Hours' },
     ]);
-    expect(result.current.state.bindings).toEqual({ y: 'Study Hours' });
-    expect(result.current.state.missingRoles).toEqual(['x']);
+    expect(result.current.state.bindings).toEqual({ x: 'Study Hours', y: 'Study Hours' });
+    expect(result.current.state.missingRoles).toEqual([]);
+    expect(result.current.state.bindingsComplete).toBe(true);
+  });
+
+  it("lets an earlier role take a later role's column and keeps both", async () => {
+    const { result } = await openSession(baseRoutes());
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    expect(result.current.state.bindings).toEqual({ x: 'Study Hours', y: 'Exam Score' });
+
+    await act(async () => result.current.setBinding('x', 'Exam Score'));
+    await waitFor(() => expect(result.current.state.bindingsBusy).toBe(false));
+    expect(calls.filter(call => call.method === 'PUT').pop()?.body).toEqual([
+      { role: 'x', column: 'Exam Score' },
+      { role: 'y', column: 'Exam Score' },
+    ]);
+  });
+
+  it('lets two families share a column: only the members of one take it once each', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () =>
+      json(200, {
+        ...DATASET,
+        bindings: [
+          { role: 'x', column: 'Student' },
+          { role: 'y1', column: 'Study Hours' },
+        ],
+        roles: [role('x'), role('y', { variadic: true }), role('w', { variadic: true })],
+      });
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+
+    await act(async () => result.current.setBinding('w1', 'Study Hours'));
+    await waitFor(() => expect(result.current.state.bindingsBusy).toBe(false));
+    expect(result.current.state.bindings).toEqual({
+      x: 'Student',
+      y1: 'Study Hours',
+      w1: 'Study Hours',
+    });
   });
 
   it('binds a variadic family through numbered members and keeps them contiguous', async () => {
@@ -484,6 +522,42 @@ describe('useAgentSession: data and bindings', () => {
       { role: 'x', column: 'Student' },
       { role: 'y1', column: 'Exam Score' },
     ]);
+  });
+
+  it('moves a column inside a family and shares it with the other roles', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () =>
+      json(200, {
+        ...DATASET,
+        bindings: [
+          { role: 'x', column: 'Student' },
+          { role: 'y1', column: 'Study Hours' },
+          { role: 'y2', column: 'Exam Score' },
+        ],
+        roles: [role('x'), role('y', { variadic: true }), role('series', { required: false })],
+      });
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+
+    // The same series twice is never meant: y2 takes y1's column, and y1 gives it up.
+    await act(async () => result.current.setBinding('y2', 'Study Hours'));
+    await waitFor(() => expect(result.current.state.bindingsBusy).toBe(false));
+    expect(calls.filter(call => call.method === 'PUT').pop()?.body).toEqual([
+      { role: 'x', column: 'Student' },
+      { role: 'y1', column: 'Study Hours' },
+    ]);
+
+    // A single role keeps a family member's column, and a member keeps a single role's.
+    await act(async () => result.current.setBinding('series', 'Study Hours'));
+    await waitFor(() => expect(result.current.state.bindingsBusy).toBe(false));
+    await act(async () => result.current.setBinding('y2', 'Student'));
+    await waitFor(() => expect(result.current.state.bindingsBusy).toBe(false));
+    expect(result.current.state.bindings).toEqual({
+      x: 'Student',
+      y1: 'Study Hours',
+      y2: 'Student',
+      series: 'Study Hours',
+    });
   });
 
   it("keeps the binding check's lines of a refused set and restores the bindings", async () => {

@@ -31,6 +31,7 @@ It returns a pandas DataFrame with exactly the loader columns, typed: `integer` 
 <!-- slot: data_columns -->
 - When the working form has no `df = load_user_data()` line yet (the first attempt), replace the block that creates the example data (the seed, random draws, literal lists of values, the formulas behind the invented data, and the construction of the example DataFrame or arrays) with that single line, and rewrite the plot code to read from `df`.
 - Address columns only by subscript with the exact bound name: `df["Revenue (EUR)"]`, never `df.Revenue`.
+- In pandas, never `df[[Y, SIZE]]` when both name one column: it makes two columns of one name.
 
 <!-- slot: data_order -->
 - Keep the data's first-appearance order for categories (`df[col].unique()`, `groupby(..., sort=False)`), never an alphabetical sort, unless they are ordered (ordinal) categories, such as sizes, ratings, age bands or month and weekday names, which keep their natural order. A sort the spec asks for (bars by value) still applies.- Never create data: no random draws to make values (a seeded `np.random.default_rng(<int>)` used only with `.choice`, `.permutation` or `.uniform` for jitter or subsampling is allowed), no literal lists of more than 20 numbers, no file reads, no downloads.
