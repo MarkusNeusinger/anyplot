@@ -1240,6 +1240,16 @@ class TestOneColumnOnSeveralRoles:
 
         assert (check.complete, check.errors, check.missing_roles, check.warnings) == (True, [], [], [])
 
+    def test_two_families_may_share_a_column(self) -> None:
+        """Only the members of one family take a column once each; another family is another role."""
+        roles = [role("x", "datetime"), role("y", "numeric", variadic=True), role("w", "numeric", variadic=True)]
+
+        check = check_bindings(
+            bind(("x", "day"), ("y1", "sales"), ("w1", "sales"), ("w2", "cost")), roles, profile(self.DATA)
+        )
+
+        assert (check.complete, check.errors, check.warnings) == (True, [], [])
+
     def test_a_role_bound_twice_stays_an_error(self) -> None:
         check = check_bindings(bind(("x", "cost"), ("y", "sales"), ("y", "sales")), self.BUBBLE, profile(self.DATA))
 

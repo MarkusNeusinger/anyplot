@@ -456,6 +456,42 @@ describe('useAgentSession: data and bindings', () => {
     expect(result.current.state.bindingsComplete).toBe(true);
   });
 
+  it("lets an earlier role take a later role's column and keeps both", async () => {
+    const { result } = await openSession(baseRoutes());
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+    expect(result.current.state.bindings).toEqual({ x: 'Study Hours', y: 'Exam Score' });
+
+    await act(async () => result.current.setBinding('x', 'Exam Score'));
+    await waitFor(() => expect(result.current.state.bindingsBusy).toBe(false));
+    expect(calls.filter(call => call.method === 'PUT').pop()?.body).toEqual([
+      { role: 'x', column: 'Exam Score' },
+      { role: 'y', column: 'Exam Score' },
+    ]);
+  });
+
+  it('lets two families share a column: only the members of one take it once each', async () => {
+    const routes = baseRoutes();
+    routes['POST /sessions/S1/dataset'] = () =>
+      json(200, {
+        ...DATASET,
+        bindings: [
+          { role: 'x', column: 'Student' },
+          { role: 'y1', column: 'Study Hours' },
+        ],
+        roles: [role('x'), role('y', { variadic: true }), role('w', { variadic: true })],
+      });
+    const { result } = await openSession(routes);
+    await act(() => result.current.parseData('a,b\n1,2\n'));
+
+    await act(async () => result.current.setBinding('w1', 'Study Hours'));
+    await waitFor(() => expect(result.current.state.bindingsBusy).toBe(false));
+    expect(result.current.state.bindings).toEqual({
+      x: 'Student',
+      y1: 'Study Hours',
+      w1: 'Study Hours',
+    });
+  });
+
   it('binds a variadic family through numbered members and keeps them contiguous', async () => {
     const routes = baseRoutes();
     routes['POST /sessions/S1/dataset'] = () =>
