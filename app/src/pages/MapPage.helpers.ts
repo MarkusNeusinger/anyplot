@@ -14,10 +14,22 @@
 
 import { selectPreviewUrl } from 'src/utils/themedPreview';
 
-/** A d3 force as ForceGraph2D hands it back from `d3Force(name)`: the setters the map calls. */
-export interface MapD3Force {
+/**
+ * The link force as ForceGraph2D hands it back from `d3Force('link')`. Its
+ * accessors receive a link, so only this force takes per-link functions.
+ */
+export interface MapLinkForce {
   strength: (value: number | ((link: MapLink) => number)) => unknown;
   distance: (value: number | ((link: MapLink) => number)) => unknown;
+}
+
+/**
+ * Any other d3 force the map tunes (`charge`, `center`). Their accessors would
+ * receive nodes, not links, and the map only ever passes a number, so the
+ * setter takes nothing else.
+ */
+export interface MapStrengthForce {
+  strength: (value: number) => unknown;
 }
 
 /**
@@ -28,7 +40,8 @@ export interface MapD3Force {
  * custom forces are registered.
  */
 export interface ForceGraphHandle {
-  d3Force(name: string): MapD3Force | undefined;
+  d3Force(name: 'link'): MapLinkForce | undefined;
+  d3Force(name: string): MapStrengthForce | undefined;
   d3Force(name: string, force: unknown): unknown;
   d3ReheatSimulation?: () => unknown;
   centerAt?: (x: number, y: number, durationMs?: number) => unknown;

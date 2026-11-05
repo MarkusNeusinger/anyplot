@@ -483,11 +483,17 @@ AGENT_OPERATIONS_ANCHORS = [
     "on sonnet for bounded work inside its own worktree that a command verifies",
     "on haiku only to read or poll",
     "escalate to fable for high-risk reviews",
+    "as brief files in `~/projects/anyplot-briefs/` (a `gemini`-labelled issue only when the owner asks for one)",
+    "that the owner works in his interactive agy session",
+    "one package of at most 20 to 25 files per fresh agy subagent",
     "`/gemini-task`",
     "gemini pushes only its `gemini/*` branch and opens only draft prs",
+    "which claude reviews before marking them ready",
     "claude never runs `agy` itself",
     "never extract, copy, or proxy the agy login",
     "checks every code pr claude opens before it opens (gemini 3.8 flash;",
+    "diffs only of docs, instruction files, changelog fragments, or `plots/`, diffs under about 20 lines, and "
+    "dependabot bumps excepted",
     "runs only when the owner asks for one",
 ]
 
