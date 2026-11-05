@@ -1,24 +1,28 @@
 /**
- * The data card of the agent chat, the first turn of the thread: the data the
+ * The data card of the agent chat, at its place in the thread: right after the
+ * paste it came from (its `data` item, `ChatThread.tsx`), the data the
  * composer's message box sent (a pasted table or a file, with a note), as the
  * server parsed it: the 20-row preview and the parser's warnings, and a column
- * for each spec role (the server's defaults come preselected). The card shows
- * once there is data or a table read from text to decide on.
+ * for each spec role (the server's defaults come preselected). A later paste
+ * gets a card of its own below it, and this one stays as a stub of its shape;
+ * a change to the data, an undo, `.to_long()` and the table and sheet pickers
+ * update the card where it is. A table read from text waits in a card of its
+ * own at its paste (`part: 'transcription'`).
  *
  * Two steps, data first. Step 1 ends with `.create_plot()` at the composer's end
  * (`Composer.tsx`), once every required role has a column: its click takes the
  * preview and the bindings as shown, confirms them on the server and starts the
- * plot. The card collapses with that click into a pinned header at the top
- * of the thread, which stays in view on scroll: `✓ data fits · N rows · M
- * columns · version V` with `.show()`, which opens the full card again below it
- * without leaving step 2 and brings its top into view, and `.hide()`, which
- * closes it and goes back to where the user was. The plot buttons are the
- * page's composer's, not the card's. A new parse, a binding change, a change
- * the assistant made to the data and an undo take the page back to step 1 with
- * the card open, because a plot of the wrong data is wrong however good it
- * looks; the server drops its confirmation for each of them already. The
- * header stays then and reads as a warning (`! check again · ...`, the
- * phrase in bold on a surface tinted with the warning token), and its
+ * plot. The card collapses with that click; the pinned header above the thread
+ * (`PinnedHeader`), which stays in view on scroll, says `✓ data fits · N rows ·
+ * M columns · version V` with `.show()`, which opens the card again at its
+ * place without leaving step 2 and brings its top into view, and `.hide()`,
+ * which closes it and goes back to where the user was (`useDataCardView`). The
+ * plot buttons are the page's composer's, not the card's. A new parse, a
+ * binding change, a change the assistant made to the data and an undo take the
+ * page back to step 1 with the card open, because a plot of the wrong data is
+ * wrong however good it looks; the server drops its confirmation for each of
+ * them already. The header stays then and reads as a warning (`! check again ·
+ * ...`, the phrase in bold on a surface tinted with the warning token), and its
  * `.show()` leads back to the card from anywhere in the thread, for example
  * after a data request sent from below the plot. The step line above the
  * composer names what dropped the confirmation, as the thread's notice
@@ -95,7 +99,7 @@
  * when it closes.
  */
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import Box from '@mui/material/Box';
 
@@ -104,19 +108,23 @@ import { AgentApiError, type ConvertAnswer, tableChoice } from 'src/lib/agent';
 import { DataCard } from 'src/sections/agent-chat/DataCard';
 import { DataViewUnavailable } from 'src/sections/agent-chat/dataCardParts';
 import { describeConvertFailure } from 'src/sections/agent-chat/messages';
-import { DATA_LOCK_TEXT, DATA_SUMMARY_ID, PinnedData } from 'src/sections/agent-chat/PinnedData';
-import { inStep2 } from 'src/sections/agent-chat/steps';
-import { visuallyHiddenSx } from 'src/sections/agent-chat/styles';
+import { DATA_LOCK_TEXT, DATA_SUMMARY_ID, DataCardShell } from 'src/sections/agent-chat/PinnedData';
+import { cardSx } from 'src/sections/agent-chat/styles';
 import {
   type ConvertedFile,
   convertedSource,
   sheetLabel,
 } from 'src/sections/agent-chat/useChatAttachment';
+import type { DataCardView } from 'src/sections/agent-chat/useDataCardView';
 
 export { DATA_LOCK_TEXT, DATA_SUMMARY_ID, DataViewUnavailable };
 
 interface DataPanelProps {
   state: AgentSessionState;
+  /** The card's view, shared with the pinned header above the thread (`useDataCardView`). */
+  view: DataCardView;
+  /** Which item this card stands for: the stored data, or a table read from text that waits. */
+  part: 'data' | 'transcription';
   /**
    * A parse of the stored data's text again: `table` reads another of the tables the stored
    * paste named (the table picker), `file` is the workbook a sheet picker's text came from.
@@ -153,6 +161,8 @@ interface DataPanelProps {
 
 export function DataPanel({
   state,
+  view,
+  part,
   onParse,
   onConfirmTranscription,
   onDiscardTranscription,
@@ -173,13 +183,6 @@ export function DataPanel({
   const [sheetError, setSheetError] = useState<string | null>(null);
   // Counts sheet reads, so the answer of a superseded one is dropped.
   const sheetSeq = useRef(0);
-  // Step 2 only: whether the full card shows below the pinned header.
-  const [expanded, setExpanded] = useState(false);
-  const cardRef = useRef<HTMLElement>(null);
-  // Where the commit after a toggle scrolls: the card's top after `.show()`,
-  // back to the reading position from before it after `.hide()`.
-  const scrollTarget = useRef<'card' | number | null>(null);
-  const returnTo = useRef<number | null>(null);
   const ready = state.phase === 'ready' && !!state.sessionId;
   // A turn, a theme render, a parse, a binding change or a confirmation in
   // flight: the server would refuse or race a second one.
@@ -188,59 +191,11 @@ export function DataPanel({
   const busy = working || locked;
   const transcription = state.transcription;
   const dataset = state.dataset;
-  // Step 2: the card is collapsed into the pinned header unless the user opened it. Without data
-  // or a table read from text there is nothing to show: the data comes in through the composer.
-  const confirmed = inStep2(state);
-  const open = (!!dataset || !!transcription) && (!confirmed || expanded);
-  // Once the data was confirmed, the pinned header stays, also when the page is
-  // back at step 1: it leads back to the card from anywhere in the thread, and
-  // the content below it does not jump when the confirmation drops.
-  const everConfirmed = useRef(false);
-  if (confirmed) everConfirmed.current = true;
-  const pinned = !!dataset && everConfirmed.current;
-  // The confirmation a plot button starts with (`.create_plot()` at the composer's end) collapses
-  // the card as it starts; a later step 1 opens it in full anyway. A step 2 that returns without it (a discarded table) keeps
-  // the card as the user left it. Adjusted while rendering, React's pattern for state that
-  // follows a prop.
-  const [confirmSeen, setConfirmSeen] = useState(state.confirmBusy);
-  if (state.confirmBusy !== confirmSeen) {
-    setConfirmSeen(state.confirmBusy);
-    if (state.confirmBusy) setExpanded(false);
-  }
 
-  // A paste of several tables: the picker reads another one (live test round 5 of 2026-10-15). The text
-  // is the stored paste's own (`DatasetState.paste`): a failed parse since does not count.
+  // A paste of several tables: the picker reads another one. The text is the stored paste's
+  // own (`DatasetState.paste`): a failed parse since does not count.
   const paste = dataset?.paste;
   const choice = dataset && paste ? tableChoice(dataset.parsed) : null;
-
-  // `.show()` from far down the thread opens the card at the top of the thread,
-  // out of view: bring its top in below the pinned header (the page's
-  // scroll-padding keeps it clear). `.hide()` goes back to where the user read.
-  useLayoutEffect(() => {
-    const target = scrollTarget.current;
-    scrollTarget.current = null;
-    if (target === 'card') {
-      cardRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
-    } else if (target !== null && target !== window.scrollY) {
-      window.scrollTo({ top: target });
-    }
-  }, [expanded]);
-
-  const handleToggle = () => {
-    // Step 1 again: the card is open anyway, somewhere above; the header leads to it.
-    if (!confirmed) {
-      cardRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
-      return;
-    }
-    if (expanded) {
-      scrollTarget.current = returnTo.current;
-      returnTo.current = null;
-    } else {
-      returnTo.current = window.scrollY;
-      scrollTarget.current = 'card';
-    }
-    setExpanded(!expanded);
-  };
 
   // `.use()`: the table read from the text is stored through the normal parse.
   const handleUse = () => {
@@ -295,53 +250,45 @@ export function DataPanel({
     }
   };
 
-  return (
-    <>
-      {/* Stays mounted, so a screen reader hears the step change: the lines that
-          say it on screen come and go with the card. */}
-      <Box data-testid="data-step-status" aria-live="polite" sx={visuallyHiddenSx}>
-        {state.parsing
-          ? 'parsing your data'
-          : confirmed
-            ? 'step 2: the data is confirmed; create the plot below'
-            : dataset
-              ? 'step 1: check the data, then create the plot'
-              : ''}
-      </Box>
+  const card = (
+    <DataCard
+      state={state}
+      part={part}
+      ready={ready}
+      working={working}
+      busy={busy}
+      choice={choice}
+      viewOpen={viewOpen}
+      setViewOpen={setViewOpen}
+      viewButtonRef={viewButtonRef}
+      onTable={handleTable}
+      onSheet={sheet => void handleSheet(sheet)}
+      sheetLine={sheetLine}
+      sheetError={sheetError}
+      onUse={handleUse}
+      onDiscardTranscription={onDiscardTranscription}
+      onBind={onBind}
+      onUndo={onUndo}
+      onToLong={onToLong}
+      onLoadData={onLoadData}
+      onDataViewShown={onDataViewShown}
+    />
+  );
 
-      <PinnedData
-        pinned={pinned}
-        confirmed={confirmed}
-        expanded={expanded}
-        open={open}
-        locked={locked}
-        dataset={dataset}
-        hasTranscription={!!transcription}
-        cardRef={cardRef}
-        onToggle={handleToggle}
-      >
-        <DataCard
-          state={state}
-          ready={ready}
-          working={working}
-          busy={busy}
-          choice={choice}
-          viewOpen={viewOpen}
-          setViewOpen={setViewOpen}
-          viewButtonRef={viewButtonRef}
-          onTable={handleTable}
-          onSheet={sheet => void handleSheet(sheet)}
-          sheetLine={sheetLine}
-          sheetError={sheetError}
-          onUse={handleUse}
-          onDiscardTranscription={onDiscardTranscription}
-          onBind={onBind}
-          onUndo={onUndo}
-          onToLong={onToLong}
-          onLoadData={onLoadData}
-          onDataViewShown={onDataViewShown}
-        />
-      </PinnedData>
-    </>
+  // A table read from text waits in a frame of its own at its paste; the stored data's card
+  // above it stays as it is until `.use()`.
+  if (part === 'transcription') {
+    return transcription ? (
+      <Box data-testid="transcription-item" sx={cardSx}>
+        {card}
+      </Box>
+    ) : null;
+  }
+  // Step 2 without `.show()`: the card waits behind the pinned header.
+  if (!view.open) return null;
+  return (
+    <DataCardShell view={view} locked={locked}>
+      {card}
+    </DataCardShell>
   );
 }

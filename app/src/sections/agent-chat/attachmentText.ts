@@ -21,9 +21,14 @@ export function attachmentLabel(attachment: Attachment): string {
   return `Attached ${what}, ${countOf(attachment.lines, 'line')}, ${formatSize(attachment.bytes)}`;
 }
 
+/** What was attached, in one line: `▤ table · 1,204 lines · 48 KB`; the thread names a sent paste so. */
+export function attachmentSummary(attachment: Attachment): string {
+  return `▤ ${title(attachment)} · ${countOf(attachment.lines, 'line')} · ${formatSize(attachment.bytes)}`;
+}
+
 /** The chip's line as the screen shows it. */
 export function attachmentLine(attachment: Attachment): string {
   if (attachment.status === 'reading') return attachment.readingLine ?? 'reading the file';
   if (attachment.status === 'sending') return 'parsing your data';
-  return `▤ ${title(attachment)} · ${countOf(attachment.lines, 'line')} · ${formatSize(attachment.bytes)}`;
+  return attachmentSummary(attachment);
 }

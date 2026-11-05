@@ -1,11 +1,12 @@
 /**
- * Sticky pinned summary header and card shell for the agent chat's data panel
- * (`DataPanel.tsx`).
+ * The data card's two halves, which stand apart since the card moved into the thread: the
+ * sticky header above the thread (`PinnedHeader`), and the card's shell at its place in the
+ * thread after the paste it came from (`DataCardShell`). The page joins them through
+ * `useDataCardView`.
  *
- * Once the data has been confirmed at least once, the sticky header stays at
- * the top of the thread (`✓ data fits · …` in step 2, `! check again · …`
- * when a change takes the session back to step 1) and toggles or scrolls to the
- * full data card below it.
+ * Once the data has been confirmed at least once, the header stays at the top of the thread
+ * (`✓ data fits · …` in step 2, `! check again · …` when a change takes the session back to
+ * step 1) and opens or scrolls to the card.
  */
 
 import Box from '@mui/material/Box';
@@ -20,7 +21,9 @@ import {
   labelSx,
   PINNED_CLEARANCE,
   PINNED_TOP,
+  visuallyHiddenSx,
 } from 'src/sections/agent-chat/styles';
+import type { DataCardView } from 'src/sections/agent-chat/useDataCardView';
 import { colors } from 'src/theme';
 
 export { DATA_SUMMARY_ID };
@@ -36,33 +39,31 @@ function dataShape(dataset: NonNullable<AgentSessionState['dataset']>): string {
   return `${countOf(profile.rows, 'row')} · ${countOf(profile.columns.length, 'column')} · version ${version ?? 1}`;
 }
 
-export interface PinnedDataProps {
-  pinned: boolean;
-  confirmed: boolean;
-  expanded: boolean;
-  open: boolean;
-  locked: boolean;
-  dataset: AgentSessionState['dataset'];
-  hasTranscription: boolean;
-  cardRef: React.RefObject<HTMLElement | null>;
-  onToggle: () => void;
-  children: React.ReactNode;
+export interface PinnedHeaderProps {
+  state: AgentSessionState;
+  view: DataCardView;
 }
 
-export function PinnedData({
-  pinned,
-  confirmed,
-  expanded,
-  open,
-  locked,
-  dataset,
-  hasTranscription,
-  cardRef,
-  onToggle,
-  children,
-}: PinnedDataProps) {
+/**
+ * The sticky header above the thread, and the live region that says the step: it stays mounted,
+ * so a screen reader hears the step change, while the lines that say it on screen come and go
+ * with the card.
+ */
+export function PinnedHeader({ state, view }: PinnedHeaderProps) {
+  const { pinned, confirmed, expanded, open, toggle } = view;
+  const dataset = state.dataset;
+  const hasTranscription = !!state.transcription;
   return (
     <>
+      <Box data-testid="data-step-status" aria-live="polite" sx={visuallyHiddenSx}>
+        {state.parsing
+          ? 'parsing your data'
+          : confirmed
+            ? 'step 2: the data is confirmed; create the plot below'
+            : dataset
+              ? 'step 1: check the data, then create the plot'
+              : ''}
+      </Box>
       {/* While the header sticks, the page's focus and scrolling land below it (WCAG 2.4.11). */}
       {pinned && <GlobalStyles styles={{ html: { scrollPaddingTop: PINNED_CLEARANCE } }} />}
       {pinned && dataset && (
@@ -124,7 +125,7 @@ export function PinnedData({
           <Box
             component="button"
             type="button"
-            onClick={onToggle}
+            onClick={toggle}
             // Step 1 again: the card is open, and the button leads to it.
             aria-expanded={confirmed ? expanded : undefined}
             aria-controls={open ? 'agent-data-card' : undefined}
@@ -137,39 +138,48 @@ export function PinnedData({
           </Box>
         </Box>
       )}
+    </>
+  );
+}
 
-      {open && (
+export interface DataCardShellProps {
+  view: DataCardView;
+  locked: boolean;
+  children: React.ReactNode;
+}
+
+/** The card's frame at its place in the thread: the section the header's button controls. */
+export function DataCardShell({ view, locked, children }: DataCardShellProps) {
+  return (
+    <Box
+      component="section"
+      aria-label="Your data"
+      aria-describedby={locked ? DATA_LOCK_ID : undefined}
+      id="agent-data-card"
+      data-testid="data-card"
+      ref={view.cardRef}
+      sx={cardSx}
+    >
+      {/* Why every control below waits: the fan-out's sessions copy this data. */}
+      {locked && (
         <Box
-          component="section"
-          aria-label="Your data"
-          aria-describedby={locked ? DATA_LOCK_ID : undefined}
-          id="agent-data-card"
-          data-testid="data-card"
-          ref={cardRef}
-          sx={cardSx}
+          id={DATA_LOCK_ID}
+          data-testid="data-lock"
+          sx={{ ...labelSx, color: 'var(--ink)', mb: 1.5 }}
         >
-          {/* Why every control below waits: the fan-out's sessions copy this data. */}
-          {locked && (
-            <Box
-              id={DATA_LOCK_ID}
-              data-testid="data-lock"
-              sx={{ ...labelSx, color: 'var(--ink)', mb: 1.5 }}
-            >
-              {DATA_LOCK_TEXT}
-            </Box>
-          )}
-          {/* With the header above it, one line says what a change here does; the line
-              stays when the confirmation drops, so the controls below it do not jump. */}
-          {pinned && (
-            <Box sx={{ ...labelSx, mb: 1.5 }}>
-              {confirmed
-                ? '# a change here takes the data back to step 1, where you check it and .create_plot() again'
-                : '# step 1 again: check the data, then .create_plot() below'}
-            </Box>
-          )}
-          {children}
+          {DATA_LOCK_TEXT}
         </Box>
       )}
-    </>
+      {/* With the header above, one line says what a change here does; the line stays when the
+          confirmation drops, so the controls below it do not jump. */}
+      {view.pinned && (
+        <Box sx={{ ...labelSx, mb: 1.5 }}>
+          {view.confirmed
+            ? '# a change here takes the data back to step 1, where you check it and .create_plot() again'
+            : '# step 1 again: check the data, then .create_plot() below'}
+        </Box>
+      )}
+      {children}
+    </Box>
   );
 }

@@ -944,7 +944,8 @@ describe('useAgentSession: copying the confirmed data (the admin fan-out)', () =
     // Computed data has no upload: the copy needs none.
     expect(state.dataset?.upload).toBeUndefined();
     expect(state.plotLanguage).toEqual({ language: 'de', source: 'chosen' });
-    expect(state.items).toEqual([]);
+    // The card alone: no paste and no turn.
+    expect(state.items).toEqual([{ id: 1, kind: 'data' }]);
     expect(state.parsing).toBe(false);
   });
 
@@ -1060,7 +1061,8 @@ describe('useAgentSession: replaying an upload (a server without the copy)', () 
     ]);
     expect(result.current.state.dataConfirmed).toBe(true);
     expect(result.current.state.bindings).toEqual(BOUND);
-    expect(result.current.state.items).toEqual([]);
+    // The card alone: no turn.
+    expect(result.current.state.items).toEqual([{ id: 1, kind: 'data' }]);
   });
 
   it('stops at the step that failed and says why', async () => {
@@ -1143,7 +1145,9 @@ describe('useAgentSession: a note with the attachment', () => {
     });
     expect(turnBodies()).toEqual([{ text: 'only 2024' }]);
     expect(parsed).toMatchObject({ outcome: 'stored', turnEnd: 'done' });
-    expect(result.current.state.items[0]).toMatchObject({ kind: 'user', text: 'only 2024' });
+    // The card, then the note as the user's line.
+    expect(result.current.state.items[0]).toMatchObject({ kind: 'data' });
+    expect(result.current.state.items[1]).toMatchObject({ kind: 'user', text: 'only 2024' });
   });
 
   it.each([['out_of_scope'], ['needs_data'], ['other_library']])(
@@ -1175,8 +1179,8 @@ describe('useAgentSession: a note with the attachment', () => {
       result.current.parseData(TABLE, false, undefined, undefined, { note: 'only 2024' })
     );
     expect(turnBodies()).toEqual([{ text: 'only 2024' }, { action: 'summarize_data' }]);
-    // The note stays the user's line in the thread, with the error under it.
-    expect(result.current.state.items[0]).toMatchObject({ kind: 'user', text: 'only 2024' });
+    // The note stays the user's line in the thread, after the card, with the error under it.
+    expect(result.current.state.items[1]).toMatchObject({ kind: 'user', text: 'only 2024' });
   });
 
   it.each([['session_closed'], ['budget']])(
@@ -1362,6 +1366,7 @@ describe('useAgentSession: the step-1 summary and data changes', () => {
       order.indexOf('POST /sessions/S1/messages')
     );
     expect(result.current.state.items).toEqual([
+      expect.objectContaining({ kind: 'data' }),
       expect.objectContaining({ kind: 'action', action: 'summarize_data' }),
       expect.objectContaining({ kind: 'assistant', text: SUMMARY_TEXT }),
     ]);
@@ -3222,7 +3227,8 @@ describe('agentReducer', () => {
       complete: true,
       missingRoles: [],
     });
-    expect(state.items).toEqual([]);
+    // The card, and no notice.
+    expect(state.items).toEqual([{ id: 1, kind: 'data' }]);
     expect(state.confirmLoss).toBeNull();
 
     const confirmed = agentReducer(state, { type: 'confirm_done' });
@@ -3238,8 +3244,9 @@ describe('agentReducer', () => {
     let lost = agentReducer(confirmed, bindingsDone);
     expect(lost).toMatchObject({ dataConfirmed: false, confirmLoss: 'bindings' });
     expect(lost.items).toEqual([
+      { id: 1, kind: 'data' },
       {
-        id: 1,
+        id: 2,
         kind: 'notice',
         tone: 'warning',
         text: 'bindings changed · check them, then .create_plot()',
@@ -3247,12 +3254,12 @@ describe('agentReducer', () => {
     ]);
     // Back and forth: the confirmation is gone already, so no second notice.
     lost = agentReducer(lost, { ...bindingsDone, bindings: { x: 'Study Hours', y: 'Exam Score' } });
-    expect(lost.items).toHaveLength(1);
+    expect(lost.items).toHaveLength(2);
     expect(lost.confirmLoss).toBe('bindings');
     // Confirmed again, the reason is gone; the notice stays in the thread.
     const again = agentReducer(lost, { type: 'confirm_done' });
     expect(again).toMatchObject({ dataConfirmed: true, confirmLoss: null });
-    expect(again.items).toHaveLength(1);
+    expect(again.items).toHaveLength(2);
 
     const reasonOf = (next: AgentSessionState) => ({
       reason: next.confirmLoss,
@@ -3304,7 +3311,8 @@ describe('agentReducer', () => {
       note: '',
       bytes: 26,
     };
-    expect(agentReducer(confirmed, { type: 'transcribed', transcription }).items).toEqual([]);
+    const transcribed = agentReducer(confirmed, { type: 'transcribed', transcription });
+    expect(transcribed.items.filter(item => item.kind === 'notice')).toEqual([]);
   });
 
   it('keeps the reason of a lost confirmation with the data the card shows', () => {
@@ -3321,7 +3329,7 @@ describe('agentReducer', () => {
       agentReducer(state, { type: 'data_prepared', dataset: PREPARED as DatasetChanged }),
       agentReducer(state, { type: 'undo_done', parsed }),
     ]) {
-      expect(next).toMatchObject({ confirmLoss: null, items: [] });
+      expect(next).toMatchObject({ confirmLoss: null, items: [{ id: 1, kind: 'data' }] });
     }
 
     const lost = agentReducer(agentReducer(state, { type: 'confirm_done' }), {
@@ -3331,7 +3339,7 @@ describe('agentReducer', () => {
       missingRoles: [],
     });
     expect(lost.confirmLoss).toBe('bindings');
-    expect(lost.items).toHaveLength(1);
+    expect(lost.items).toHaveLength(2);
 
     // A new paste is data nobody confirmed: its card names no loss, and the thread
     // keeps the one notice it has.
@@ -3546,3 +3554,103 @@ describe('variadic families', () => {
     ).toEqual({ x: 'a', y2: 'single', y1: 'c', y3: 'd', yerr1: 'e' });
   });
 });
+
+describe('agentReducer: the card in the thread', () => {
+  const profile = { ...DATASET.profile, columns: [] };
+  const parsed = { ...DATASET, profile } as DatasetParsed;
+  const ready: AgentSessionState = {
+    ...initialAgentState('matplotlib'),
+    phase: 'ready',
+    sessionId: 'S1',
+  };
+  const kinds = (state: AgentSessionState) => state.items.map(item => item.kind);
+  const transcription: TranscriptionState = {
+    text: TRANSCRIBED.text,
+    preview: TRANSCRIBED.preview,
+    profile,
+    warnings: [],
+    note: '',
+    bytes: 26,
+  };
+
+  it('puts the card after its paste, and a later paste leaves a stub of the card it replaces', () => {
+    const first = agentReducer(ready, {
+      type: 'parse_done',
+      parsed,
+      bytes: 10,
+      chip: '▤ table · 3 lines · 46 B',
+    });
+    expect(first.items).toEqual([
+      { id: 1, kind: 'paste', text: '▤ table · 3 lines · 46 B' },
+      { id: 2, kind: 'data' },
+    ]);
+
+    const second = agentReducer(first, {
+      type: 'parse_done',
+      parsed: { ...parsed, profile: { ...profile, rows: 7 } },
+      bytes: 20,
+      chip: '▤ sales.csv · 8 lines · 120 B',
+    });
+    // The stub keeps the shape of the data it showed: the paste before this one.
+    expect(second.items).toEqual([
+      { id: 1, kind: 'paste', text: '▤ table · 3 lines · 46 B' },
+      { id: 2, kind: 'data_stub', rows: DATASET.profile.rows, columns: 0 },
+      { id: 3, kind: 'paste', text: '▤ sales.csv · 8 lines · 120 B' },
+      { id: 4, kind: 'data' },
+    ]);
+  });
+
+  it('updates the card where it is for a change, an undo, .to_long() and the pickers', () => {
+    const pasted = agentReducer(ready, { type: 'parse_done', parsed, bytes: 10, chip: '▤ table' });
+    const changed = agentReducer(pasted, {
+      type: 'data_prepared',
+      dataset: PREPARED as DatasetChanged,
+    });
+    const undone = agentReducer(changed, { type: 'undo_done', parsed });
+    // A table or a sheet read again parses without the attachment's line.
+    const reread = agentReducer(undone, { type: 'parse_done', parsed, bytes: 10 });
+    for (const next of [changed, undone, reread]) expect(next.items).toEqual(pasted.items);
+  });
+
+  it('adds the card at the end for data that had none: example data, a formula, code', () => {
+    const turn = appendTurn(ready);
+    const generated = agentReducer(turn, {
+      type: 'data_prepared',
+      dataset: PREPARED as DatasetChanged,
+    });
+    expect(kinds(generated)).toEqual(['user', 'data']);
+  });
+
+  it('puts a table read from text at its paste; .use() turns it into the card, .discard() into a line', () => {
+    const pasted = agentReducer(ready, { type: 'parse_done', parsed, bytes: 10, chip: '▤ table' });
+    const waiting = agentReducer(pasted, {
+      type: 'transcribed',
+      transcription,
+      chip: '▤ table · 2 lines · 30 B',
+    });
+    // The stored data's card stays live above until the user decides.
+    expect(kinds(waiting)).toEqual(['paste', 'data', 'paste', 'transcription']);
+
+    const used = agentReducer(waiting, {
+      type: 'parse_done',
+      parsed: { ...parsed, profile: { ...profile, rows: 2 } },
+      bytes: 26,
+      fromTranscription: true,
+    });
+    expect(used.items).toEqual([
+      { id: 1, kind: 'paste', text: '▤ table' },
+      { id: 2, kind: 'data_stub', rows: DATASET.profile.rows, columns: 0 },
+      { id: 3, kind: 'paste', text: '▤ table · 2 lines · 30 B' },
+      { id: 4, kind: 'data' },
+    ]);
+
+    const discarded = agentReducer(waiting, { type: 'transcription_clear' });
+    expect(discarded.items[3]).toEqual({ id: 4, kind: 'notice', text: 'table discarded' });
+    expect(kinds(discarded)).toEqual(['paste', 'data', 'paste', 'notice']);
+  });
+});
+
+/** `state` with a typed turn in the thread, as `runTurn` adds it. */
+function appendTurn(state: AgentSessionState): AgentSessionState {
+  return agentReducer(state, { type: 'item', item: { kind: 'user', text: 'zeichne sin(x)' } });
+}

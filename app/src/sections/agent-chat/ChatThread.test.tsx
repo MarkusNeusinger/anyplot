@@ -281,3 +281,134 @@ describe('ChatThread in-progress line', () => {
     expect(screen.queryByTestId('pending-reply')).not.toBeInTheDocument();
   });
 });
+
+describe('ChatThread data items', () => {
+  const ready = (items: ChatItem[], overrides: Partial<AgentSessionState> = {}) => ({
+    ...initialAgentState('matplotlib'),
+    phase: 'ready' as const,
+    sessionId: 'S1',
+    items,
+    ...overrides,
+  });
+  const renderData = (part: 'data' | 'transcription') => (
+    <div data-testid={`rendered-${part}`}>{part} card</div>
+  );
+
+  function renderItems(
+    state: AgentSessionState,
+    followReply: () => boolean = () => false
+  ): ReturnType<typeof render> {
+    return render(
+      <ChatThread
+        state={state}
+        specId="scatter-basic"
+        language="python"
+        onRequestTheme={vi.fn()}
+        onFetchArtifact={vi.fn()}
+        onTrack={vi.fn()}
+        renderData={renderData}
+        followReply={followReply}
+      />
+    );
+  }
+
+  it('shows the paste, its card and a stub in thread order, without the summary action after the card', () => {
+    renderItems(
+      ready([
+        { id: 1, kind: 'paste', text: '▤ table · 3 lines · 46 B' },
+        { id: 2, kind: 'data_stub', rows: 1203, columns: 4 },
+        { id: 3, kind: 'paste', text: '▤ sales.csv · 8 lines · 120 B' },
+        { id: 4, kind: 'data' },
+        { id: 5, kind: 'action', action: 'summarize_data', library: 'matplotlib' },
+        { id: 6, kind: 'assistant', text: '7 rows and 3 columns.' },
+      ])
+    );
+    const log = screen.getByRole('log');
+    expect([...log.children].map(child => child.textContent)).toEqual([
+      '❯▤ table · 3 lines · 46 B',
+      '# earlier data · 1,203 rows · 4 columns · replaced below',
+      '❯▤ sales.csv · 8 lines · 120 B',
+      'data card',
+      '7 rows and 3 columns.',
+    ]);
+  });
+
+  it('keeps a summary action that does not follow a card, and the card of a table that waits', () => {
+    const waiting = ready(
+      [
+        { id: 1, kind: 'transcription' },
+        { id: 2, kind: 'action', action: 'summarize_data', library: 'matplotlib' },
+        { id: 3, kind: 'transcription' },
+      ],
+      {
+        transcription: {
+          text: 'a,b\n1,2\n',
+          preview: [['1', '2']],
+          profile: { rows: 1, columns: [], source_format: 'csv', decimal: '.', warnings: [] },
+          warnings: [],
+          note: '',
+          bytes: 8,
+        },
+      }
+    );
+    renderItems(waiting);
+    const log = screen.getByRole('log');
+    expect([...log.children].map(child => child.textContent)).toEqual([
+      // An older table read from text that a new paste dropped; only the latest one waits.
+      '# table read from text · not used',
+      '❯.summarize_data()',
+      'transcription card',
+    ]);
+  });
+
+  it('brings the first reply after a card into view once, only while the focus is in the composer', () => {
+    const scroll = vi.fn();
+    Object.defineProperty(Element.prototype, 'scrollIntoView', {
+      value: scroll,
+      configurable: true,
+      writable: true,
+    });
+    try {
+      const card: ChatItem[] = [
+        { id: 1, kind: 'paste', text: '▤ table' },
+        { id: 2, kind: 'data' },
+        { id: 3, kind: 'action', action: 'summarize_data', library: 'matplotlib' },
+      ];
+      let atComposer = true;
+      const { rerender } = renderItems(ready(card), () => atComposer);
+      expect(scroll).not.toHaveBeenCalled();
+      const thread = (items: ChatItem[]) => (
+        <ChatThread
+          state={ready(items)}
+          specId="scatter-basic"
+          language="python"
+          onRequestTheme={vi.fn()}
+          onFetchArtifact={vi.fn()}
+          onTrack={vi.fn()}
+          renderData={renderData}
+          followReply={() => atComposer}
+        />
+      );
+      const replied: ChatItem[] = [...card, { id: 4, kind: 'assistant', text: '4 rows.' }];
+      rerender(thread(replied));
+      expect(scroll.mock.contexts).toEqual([screen.getByTestId('first-reply')]);
+      expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'nearest' });
+      // A second reply is no first reply; the first one scrolled once.
+      rerender(thread([...replied, { id: 5, kind: 'assistant', text: 'And a note.' }]));
+      expect(scroll).toHaveBeenCalledTimes(1);
+
+      // Read elsewhere on the page, the reply to the next card stays where it lands.
+      atComposer = false;
+      const next: ChatItem[] = [
+        ...replied,
+        { id: 6, kind: 'paste', text: '▤ table' },
+        { id: 7, kind: 'data' },
+        { id: 8, kind: 'assistant', text: '5 rows.' },
+      ];
+      rerender(thread(next));
+      expect(scroll).toHaveBeenCalledTimes(1);
+    } finally {
+      delete (Element.prototype as Partial<Element>).scrollIntoView;
+    }
+  });
+});

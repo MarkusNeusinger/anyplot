@@ -600,10 +600,14 @@ describe('AgentChatPage gating', () => {
     // composer's end; with an empty box there is nothing to `.send()`.
     expect(composerButtons()).toEqual(['.create_plot()']);
     expect(create).toHaveAttribute('type', 'button');
-    // The data card is the thread's first turn; the summary follows it.
+    // The data card stands in the thread after the paste it came from; the summary follows it.
     const card = screen.getByTestId('data-card');
     const thread = screen.getByRole('log', { name: 'Conversation' });
-    expect(card.compareDocumentPosition(thread) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(thread).toContainElement(card);
+    const follows = (first: Element, second: Element) =>
+      !!(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(follows(screen.getByTestId('paste-item'), card)).toBe(true);
+    expect(follows(card, screen.getByText(SUMMARY))).toBe(true);
     // The first binding setup after a paste dropped no confirmation: nothing to name.
     expect(screen.queryByTestId('confirm-lost')).not.toBeInTheDocument();
     expect(screen.getByTestId('data-step')).toHaveTextContent(
@@ -693,7 +697,9 @@ describe('AgentChatPage gating', () => {
     await attachAndSend('hours,score\n1.5,52 %\n2.0,58 %\n');
     expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
     const thread = screen.getByRole('log', { name: 'Conversation' });
-    expect(thread.firstElementChild).toHaveTextContent('.summarize_data()');
+    // The paste opens the thread, its card follows, and the summary needs no line of its own.
+    expect(thread.firstElementChild).toHaveTextContent(/^❯▤ table · 3 lines · \d+ B$/);
+    expect(thread).not.toHaveTextContent('.summarize_data()');
     await turnEnded();
     expect(screen.getByLabelText('Message')).toHaveAttribute(
       'placeholder',
@@ -1323,6 +1329,86 @@ describe('AgentChatPage catalogue plot', () => {
     });
     await waitFor(() => expect(screen.getByTestId('location')).not.toHaveTextContent('source='));
     expect(screen.getByTestId('location')).toHaveTextContent(PAGE);
+  });
+});
+
+describe('AgentChatPage card in the thread', () => {
+  const follows = (first: Element, second: Element) =>
+    !!(first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING);
+  /** `scrollIntoView` as a spy (jsdom has none), restored by `done`. */
+  function spyScroll() {
+    const scroll = vi.fn();
+    Object.defineProperty(Element.prototype, 'scrollIntoView', {
+      value: scroll,
+      configurable: true,
+      writable: true,
+    });
+    return {
+      scroll,
+      done: () => delete (Element.prototype as Partial<Element>).scrollIntoView,
+    };
+  }
+
+  it('moves the card below a paste in step 2 and leaves a stub of the data it showed', async () => {
+    localStorage.setItem(ADMIN_HINT_KEY, '1');
+    renderAt(PAGE);
+    await parseAndPlot();
+    // Step 2: the card waits behind the pinned header.
+    expect(screen.queryByTestId('data-card')).not.toBeInTheDocument();
+
+    await attachAndSend('hours,score\n3,70\n4,80\n');
+    await waitFor(() => expect(screen.getAllByText(SUMMARY)).toHaveLength(2));
+    await turnEnded();
+    const stub = screen.getByTestId('data-stub');
+    expect(stub).toHaveTextContent('# earlier data · 2 rows · 2 columns · replaced below');
+    const [first, second] = screen.getAllByTestId('paste-item');
+    const card = screen.getByTestId('data-card');
+    // The first paste, its stub, the plot of that data, then the new paste and its card.
+    expect(follows(first, stub)).toBe(true);
+    expect(follows(stub, screen.getByText('Here is your plot.'))).toBe(true);
+    expect(follows(screen.getByText('Here is your plot.'), second)).toBe(true);
+    expect(follows(second, card)).toBe(true);
+    // New data nobody confirmed: step 1, its card open.
+    expect(currentStep()).toEqual(['1 data']);
+  });
+
+  it("opens the card at its place in the thread from the pinned header's .show(), and scrolls to it", async () => {
+    const { scroll, done } = spyScroll();
+    try {
+      localStorage.setItem(ADMIN_HINT_KEY, '1');
+      renderAt(PAGE);
+      await parseAndPlot();
+      scroll.mockClear();
+      fireEvent.click(screen.getByRole('button', { name: 'Show the data' }));
+      const card = await screen.findByTestId('data-card');
+      expect(screen.getByRole('log', { name: 'Conversation' })).toContainElement(card);
+      expect(follows(screen.getByTestId('paste-item'), card)).toBe(true);
+      const calls = scroll.mock.contexts.flatMap((context, index) =>
+        context === card ? [scroll.mock.calls[index][0]] : []
+      );
+      expect(calls).toEqual([{ behavior: 'smooth', block: 'start' }]);
+    } finally {
+      done();
+    }
+  });
+
+  it('brings the summary after a card into view while the focus is in the composer', async () => {
+    const { scroll, done } = spyScroll();
+    try {
+      localStorage.setItem(ADMIN_HINT_KEY, '1');
+      renderAt(PAGE);
+      const box = await screen.findByLabelText('Message');
+      await waitFor(() => expect(box).toBeEnabled());
+      box.focus();
+      await attachAndSend('hours,score\n1.5,52\n2.0,58\n');
+      expect(await screen.findByText(SUMMARY)).toBeInTheDocument();
+      const reply = screen.getByTestId('first-reply');
+      expect(reply).toHaveTextContent(SUMMARY);
+      expect(scroll.mock.contexts).toContain(reply);
+      expect(scroll).toHaveBeenCalledWith({ behavior: 'smooth', block: 'nearest' });
+    } finally {
+      done();
+    }
   });
 });
 

@@ -8,7 +8,26 @@ import {
 import { AgentApiError, type ConvertAnswer, type RoleSpec } from 'src/lib/agent';
 import { bindingRows } from 'src/sections/agent-chat/bindings';
 import { DataPanel, DataViewUnavailable } from 'src/sections/agent-chat/DataPanel';
+import { PinnedHeader } from 'src/sections/agent-chat/PinnedData';
+import { useDataCardView } from 'src/sections/agent-chat/useDataCardView';
 import { act, fireEvent, render, screen, userEvent, waitFor, within } from 'src/test-utils';
+
+type PanelProps = Omit<React.ComponentProps<typeof DataPanel>, 'view' | 'part'>;
+
+/**
+ * The card as the page composes it: the pinned header above the thread, the stored data's card
+ * at its item and the card of a table read from text at its own (`AgentChatPage`, `ChatThread`).
+ */
+function Panel(props: PanelProps) {
+  const view = useDataCardView(props.state);
+  return (
+    <>
+      <PinnedHeader state={props.state} view={view} />
+      <DataPanel {...props} view={view} part="data" />
+      <DataPanel {...props} view={view} part="transcription" />
+    </>
+  );
+}
 
 /** `scrollIntoView` as a spy: jsdom has none. */
 function stubScrollIntoView() {
@@ -118,7 +137,7 @@ describe('DataPanel bindings', () => {
   it('marks required roles, names the kinds and binds the next family member', async () => {
     const onBind = vi.fn();
     render(
-      <DataPanel
+      <Panel
         state={stateWith({ x: 'month', y1: 'shoes' }, { missingRoles: [] })}
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
@@ -152,7 +171,7 @@ describe('DataPanel bindings', () => {
       },
     };
     render(
-      <DataPanel
+      <Panel
         state={state}
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
@@ -181,7 +200,7 @@ describe('DataPanel bindings', () => {
       },
     };
     render(
-      <DataPanel
+      <Panel
         state={state}
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
@@ -199,7 +218,7 @@ describe('DataPanel bindings', () => {
     const roles = [role('close'), role('sma', { required: false, computed: true })];
     const onBind = vi.fn();
     const { container } = render(
-      <DataPanel
+      <Panel
         state={stateWith({ close: 'shoes' }, { roles, missingRoles: [] })}
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
@@ -219,7 +238,7 @@ describe('DataPanel bindings', () => {
 
   it('lists the lines of a refused binding set', () => {
     render(
-      <DataPanel
+      <Panel
         state={stateWith(
           { x: 'month' },
           {
@@ -245,7 +264,7 @@ describe('DataPanel bindings', () => {
 
   it('holds back the bindings while a theme renders, in both steps', async () => {
     const panel = (state: AgentSessionState) => (
-      <DataPanel
+      <Panel
         state={state}
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
@@ -267,7 +286,7 @@ describe('DataPanel bindings', () => {
 
   it('shows no card before there is data or a table read from text', () => {
     render(
-      <DataPanel
+      <Panel
         state={{ ...initialAgentState('matplotlib'), phase: 'ready', sessionId: 'S1' }}
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
@@ -286,7 +305,7 @@ describe('DataPanel bindings', () => {
     const onParse = vi.fn();
     const onUndo = vi.fn();
     const panel = (state: AgentSessionState, locked: boolean) => (
-      <DataPanel
+      <Panel
         state={state}
         onParse={onParse}
         onConfirmTranscription={vi.fn()}
@@ -331,7 +350,7 @@ describe('DataPanel bindings', () => {
 describe('DataPanel steps', () => {
   function renderPanel(state: AgentSessionState) {
     const panel = (next: AgentSessionState) => (
-      <DataPanel
+      <Panel
         state={next}
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
@@ -436,7 +455,7 @@ describe('DataPanel steps', () => {
     const scrollY = vi.spyOn(window, 'scrollY', 'get').mockReturnValue(1400);
     try {
       const { unmount } = render(
-        <DataPanel
+        <Panel
           state={stateWith({ x: 'month', y1: 'shoes' }, { dataConfirmed: true })}
           onParse={vi.fn()}
           onConfirmTranscription={vi.fn()}
@@ -495,7 +514,7 @@ describe('DataPanel steps', () => {
 describe('DataPanel working states', () => {
   function renderPanel(state: AgentSessionState) {
     const panel = (next: AgentSessionState) => (
-      <DataPanel
+      <Panel
         state={next}
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
@@ -577,7 +596,7 @@ describe('DataPanel data changes', () => {
   function renderPanel(state: AgentSessionState) {
     const onUndo = vi.fn();
     const panel = (next: AgentSessionState) => (
-      <DataPanel
+      <Panel
         state={next}
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
@@ -687,7 +706,7 @@ describe('DataPanel full view', () => {
 
   function renderPanel(state: AgentSessionState, extra: Record<string, unknown> = {}) {
     render(
-      <DataPanel
+      <Panel
         state={state}
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
@@ -756,7 +775,7 @@ describe('DataPanel tables', () => {
   function renderPanel() {
     const onParse = vi.fn();
     const panel = (next: AgentSessionState) => (
-      <DataPanel
+      <Panel
         state={next}
         onParse={onParse}
         onConfirmTranscription={vi.fn()}
@@ -833,7 +852,7 @@ describe('DataPanel code that made the data', () => {
   };
 
   const panel = (state: AgentSessionState) => (
-    <DataPanel
+    <Panel
       state={state}
       onParse={vi.fn()}
       onConfirmTranscription={vi.fn()}
@@ -905,7 +924,7 @@ function transcribedState(overrides: Partial<AgentSessionState> = {}): AgentSess
 describe('DataPanel transcription', () => {
   it('shows the table read from the text with its note and warnings', () => {
     render(
-      <DataPanel
+      <Panel
         state={transcribedState()}
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
@@ -930,7 +949,7 @@ describe('DataPanel transcription', () => {
 
   it('leaves the note out when the model had none and names one row in the singular', () => {
     render(
-      <DataPanel
+      <Panel
         state={transcribedState({
           transcription: {
             ...TRANSCRIPTION,
@@ -956,7 +975,7 @@ describe('DataPanel transcription', () => {
     const onConfirm = vi.fn();
     const onDiscard = vi.fn();
     render(
-      <DataPanel
+      <Panel
         state={transcribedState()}
         onParse={vi.fn()}
         onConfirmTranscription={onConfirm}
@@ -973,7 +992,7 @@ describe('DataPanel transcription', () => {
 
   it('holds back .use() while the session is busy, and goes once the table is decided on', () => {
     const panel = (state: AgentSessionState) => (
-      <DataPanel
+      <Panel
         state={state}
         onParse={vi.fn()}
         onConfirmTranscription={vi.fn()}
@@ -1018,7 +1037,7 @@ describe('DataPanel wide-table offer', () => {
     };
   };
   const panel = (state: AgentSessionState, onToLong = vi.fn()) => (
-    <DataPanel
+    <Panel
       state={state}
       onParse={vi.fn()}
       onConfirmTranscription={vi.fn()}
@@ -1096,7 +1115,7 @@ describe('DataPanel notes', () => {
   };
 
   const panel = (state: AgentSessionState) => (
-    <DataPanel
+    <Panel
       state={state}
       onParse={vi.fn()}
       onConfirmTranscription={vi.fn()}
@@ -1151,7 +1170,7 @@ describe('DataPanel files and sheets', () => {
     const onParse = vi.fn();
     const onTrack = vi.fn();
     const panel = (next: AgentSessionState) => (
-      <DataPanel
+      <Panel
         state={next}
         onParse={onParse}
         onConfirmTranscription={vi.fn()}

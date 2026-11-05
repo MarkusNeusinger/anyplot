@@ -1,7 +1,7 @@
 /**
- * Content of the agent chat's data card (`DataPanel.tsx`): the free-text transcription decision
- * card, the stored dataset's preview and full-view dialog, the table and sheet pickers, and the
- * role bindings. The data comes in through the composer's message box (`Composer.tsx`): a
+ * Content of the agent chat's data card (`DataPanel.tsx`): for the stored data (`part: 'data'`)
+ * its preview and full-view dialog, the table and sheet pickers, and the role bindings; for a
+ * table read from text (`part: 'transcription'`) the decision card with `.use()` and `.discard()`. The data comes in through the composer's message box (`Composer.tsx`): a
  * pasted table or a file waits there as an attachment until Enter. `.create_plot()`, which takes
  * the data as shown, sits at the composer's end too.
  */
@@ -47,6 +47,8 @@ const preloadDataView = () => void loadDataView().catch(() => undefined);
 
 export interface DataCardProps {
   state: AgentSessionState;
+  /** The stored data's card, or the card of a table read from text that waits for its decision. */
+  part: 'data' | 'transcription';
   ready: boolean;
   working: boolean;
   busy: boolean;
@@ -71,12 +73,12 @@ export interface DataCardProps {
 }
 
 export function DataCard(props: DataCardProps) {
-  const { state, ready, working, busy, choice, viewOpen, setViewOpen, viewButtonRef } = props;
+  const { state, part, ready, working, busy, choice, viewOpen, setViewOpen, viewButtonRef } = props;
   const { onTable, onSheet, sheetLine, sheetError, onUse, onDiscardTranscription } = props;
   const { onBind, onUndo, onToLong, onLoadData, onDataViewShown } = props;
 
-  const transcription = state.transcription;
-  const dataset = state.dataset;
+  const transcription = part === 'transcription' ? state.transcription : null;
+  const dataset = part === 'data' ? state.dataset : null;
   const file = dataset?.file;
   const columns = dataset?.parsed.profile.columns ?? [];
   // An earlier version exists above the paste's 1, until the server says the
@@ -118,7 +120,7 @@ export function DataCard(props: DataCardProps) {
           {suggestion && onToLong && (
             <LongHint
               suggestion={suggestion}
-              canApply={ready && !busy && !state.toLongBusy && !transcription}
+              canApply={ready && !busy && !state.toLongBusy && !state.transcription}
               busy={state.toLongBusy}
               error={state.toLongError}
               onApply={onToLong}

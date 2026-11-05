@@ -145,6 +145,7 @@ import {
 import { apiGet, endpoints } from 'src/lib/api';
 import { NotFoundPage } from 'src/pages/NotFoundPage';
 import { paths, specPath } from 'src/routes/paths';
+import { attachmentSummary } from 'src/sections/agent-chat/attachmentText';
 import { CataloguePreview } from 'src/sections/agent-chat/CataloguePreview';
 import { ChatFeedback } from 'src/sections/agent-chat/ChatFeedback';
 import { ChatThread } from 'src/sections/agent-chat/ChatThread';
@@ -165,6 +166,7 @@ import {
   ERROR_TEXT,
   LEAVE_TEXT,
 } from 'src/sections/agent-chat/messages';
+import { PinnedHeader } from 'src/sections/agent-chat/PinnedData';
 import { ProgressTimeline } from 'src/sections/agent-chat/ProgressTimeline';
 import { ReloadHint } from 'src/sections/agent-chat/ReloadHint';
 import { Remembered } from 'src/sections/agent-chat/Remembered';
@@ -174,6 +176,7 @@ import { StepHeader } from 'src/sections/agent-chat/StepHeader';
 import { inStep2, showsTimeline, stepOneLine } from 'src/sections/agent-chat/steps';
 import { bodyTextSx, labelSx, panelSx, smallText } from 'src/sections/agent-chat/styles';
 import { type Attachment, useChatAttachment } from 'src/sections/agent-chat/useChatAttachment';
+import { useDataCardView } from 'src/sections/agent-chat/useDataCardView';
 import { parseInlineCode } from 'src/sections/spec-detail/SpecTabs/utils';
 import { colors, fontSize, proseLinkStyle, typography } from 'src/theme';
 import { readAdminHint, readAdminToken, setAdminHint } from 'src/utils/adminAuth';
@@ -498,6 +501,11 @@ function AgentChat({
     if (running) tailRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' });
   }, [running]);
 
+  // The data card in the thread and the pinned header above it share where the card is in view.
+  const dataView = useDataCardView(state);
+  // The first reply after a card follows the user into view only while they are at the composer.
+  const followReply = useCallback(() => !!tailRef.current?.contains(document.activeElement), []);
+
   // A turn, a theme render, a parse, an undo or a binding change in flight: the
   // server runs one at a time and would refuse or race a second.
   const busy = sessionBusy(state);
@@ -662,6 +670,8 @@ function AgentChat({
     const result = await session.parseData(sent.text, false, sent.source, undefined, {
       note,
       file: sent.converted,
+      // The thread names the paste as the chip did, and its card follows it there.
+      chip: attachmentSummary(sent),
       // Stored, or sent to the chat as the user's turn: the attachment goes before that turn
       // runs, and a note the forward did not take goes back into the box.
       onStored: () => attach.settle(sent.id, 'cleared'),
@@ -971,30 +981,9 @@ function AgentChat({
             />
           </Box>
 
-          {/* The first turn: the data card, once confirmed the pinned header. A sibling of
-              the thread, so the header sticks over all of it. */}
-          <DataPanel
-            state={state}
-            onParse={(text, source, table, file) =>
-              void session.parseData(text, false, source, table, { file })
-            }
-            onConfirmTranscription={() => {
-              transcribedFrom.current = null;
-              void session.confirmTranscription();
-            }}
-            onTrack={trackEvent}
-            // The sheet picker's read holds the composer back until its parse starts.
-            onConvert={session.readSheet}
-            onDiscardTranscription={handleDiscard}
-            onBind={session.setBinding}
-            onUndo={() => void session.undoData()}
-            onToLong={() => void session.toLongData()}
-            // Not while the fan-out's panel is open: its sessions copy this session's confirmed data.
-            locked={!!fanOut}
-            onLoadData={session.fetchDataCsv}
-            // A look at the session's data, not at a result: version 0.
-            onDataViewShown={() => session.reportOutcome('opened_data_view', 0)}
-          />
+          {/* Once the data was confirmed, the header that leads to its card. A sibling of the
+              thread, so it sticks over all of it; the card stands in the thread after its paste. */}
+          <PinnedHeader state={state} view={dataView} />
 
           <ChatThread
             state={state}
@@ -1005,6 +994,33 @@ function AgentChat({
             onTrack={trackEvent}
             onOutcome={session.reportOutcome}
             onSendFeedback={session.sendFeedback}
+            renderData={part => (
+              <DataPanel
+                state={state}
+                view={dataView}
+                part={part}
+                onParse={(text, source, table, file) =>
+                  void session.parseData(text, false, source, table, { file })
+                }
+                onConfirmTranscription={() => {
+                  transcribedFrom.current = null;
+                  void session.confirmTranscription();
+                }}
+                onTrack={trackEvent}
+                // The sheet picker's read holds the composer back until its parse starts.
+                onConvert={session.readSheet}
+                onDiscardTranscription={handleDiscard}
+                onBind={session.setBinding}
+                onUndo={() => void session.undoData()}
+                onToLong={() => void session.toLongData()}
+                // Not while the fan-out's panel is open: its sessions copy this session's data.
+                locked={!!fanOut}
+                onLoadData={session.fetchDataCsv}
+                // A look at the session's data, not at a result: version 0.
+                onDataViewShown={() => session.reportOutcome('opened_data_view', 0)}
+              />
+            )}
+            followReply={followReply}
           />
 
           <Box
