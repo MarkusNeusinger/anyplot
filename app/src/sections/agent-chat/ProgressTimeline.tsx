@@ -1,10 +1,16 @@
 /**
- * The progress of the running turn, from its `status` events: the wait in the
- * run queue (with the position) as one line, then the rounds of the pipeline as
- * a grid (`RoundGrid`, `timeline.ts`): one row per round with its steps in
- * fixed columns, the active step marked, the steps still to come muted, and a
- * finished round's outcome on the right (from the repair step's `outcome`).
- * The site's loader stands beside it while the run lasts, also while it stops.
+ * The progress of the running turn, from its `status` events: the rounds of the
+ * pipeline as a grid (`RoundGrid`, `timeline.ts`): one row per round with its
+ * steps in fixed columns, the active step marked, the steps still to come muted,
+ * and a finished round's outcome on the right (from the repair step's
+ * `outcome`). Before the first step, the first try's outcome cell says where the
+ * run stands: `starting…`, or the wait in the run queue with the position. The
+ * site's loader stands beside it while the run lasts, also while it stops.
+ *
+ * From the click to the result card nothing above the grid's first row comes or
+ * goes, so the loader and the grid stand still while the steps advance (a
+ * `starting…` line above the grid used to go away at the first step, and the
+ * grid jumped up one line beside the loader). A stop adds its line below the grid.
  *
  * The page mounts it for a plot run, from the queue on, and for any turn that
  * reached a pipeline step (`showsTimeline` in `steps.ts`). A turn without steps,
@@ -41,11 +47,13 @@ export function ProgressTimeline({ run }: { run: RunState }) {
         ? 'stopping after this step…'
         : 'stopping…'
     : null;
+  // A stop before the run started replaces `starting…`; one in the queue keeps the position.
+  const status = before && !(stopping && !waiting) ? before : null;
 
   return (
     // The site's loader stands beside the run for as long as it lasts, centred on its first line
-    // (the queue line or the grid's first row); on a phone above it, so the grid keeps the full
-    // width. Both columns take the run's font from here, so the loader's box is one line of it.
+    // (the grid's first row); on a phone above it, so the grid keeps the full width. Both columns
+    // take the run's font from here, so the loader's box is one line of it.
     <Box
       sx={{
         display: 'flex',
@@ -69,8 +77,12 @@ export function ProgressTimeline({ run }: { run: RunState }) {
         <LoaderSpinner size="inline" />
       </Box>
       <Box aria-live="polite" sx={{ display: 'grid', gap: 0.75, minWidth: 0 }}>
-        {before && !(stopping && !waiting) && <Box sx={{ color: 'var(--ink)' }}>{before}</Box>}
-        {rows.length > 0 && <RoundGrid rows={rows} label="Progress" />}
+        {rows.length > 0 ? (
+          <RoundGrid rows={rows} label="Progress" status={status} />
+        ) : (
+          // A turn without a grid yet (the page shows its in-progress line instead): the line alone.
+          status && <Box sx={{ color: 'var(--ink)' }}>{status}</Box>
+        )}
         {stopping && <Box sx={{ color: 'var(--ink-muted)' }}>{stopping}</Box>}
       </Box>
     </Box>

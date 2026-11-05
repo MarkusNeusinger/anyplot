@@ -174,7 +174,9 @@
  * position of a turn; 0 skips the queue), MOCK_STOP_MS (2000, how long a run
  * stopped during a pipeline step takes to finish that step before `done`,
  * like the real run, which notices the abort only between steps; a turn that
- * still waits in the queue leaves it at once), MOCK_PARSE_MS (400, how long a
+ * still waits in the queue leaves it at once), MOCK_START_MS (0, how long a
+ * pipeline run takes from leaving the queue to its first step, so the page's
+ * `starting…` stays visible), MOCK_PARSE_MS (400, how long a
  * parse takes, the dataset judge's call in production; a transcription takes
  * 900 ms more), MOCK_OPEN_MS (0, how long `POST /sessions` takes, so the page's
  * opening state, where the bot check runs on the public lane, stays visible).
@@ -218,6 +220,7 @@ const STEP_MS = Number(process.env.MOCK_STEP_MS || 700);
 const QUEUE_MS = Number(process.env.MOCK_QUEUE_MS || 2500);
 const QUEUE_START = Number(process.env.MOCK_QUEUE ?? 2);
 const STOP_MS = Number(process.env.MOCK_STOP_MS ?? 2000);
+const START_MS = Number(process.env.MOCK_START_MS ?? 0);
 const PARSE_MS = Number(process.env.MOCK_PARSE_MS ?? 400);
 const OPEN_MS = Number(process.env.MOCK_OPEN_MS ?? 0);
 const NO_COPY = process.env.MOCK_NO_COPY === '1';
@@ -1293,6 +1296,8 @@ async function streamTurn(req, res, session, body, ref, siteTheme = null) {
             { attempt: 2, outcome: 'review', findings: 1, step: 'reviewing', shipped: true },
           ]
         : [{ attempt: 1, outcome: 'ok', findings: 0, step: 'reviewing', shipped: true }];
+      // The run's start before its first step (the root's call that hands over to the pipeline).
+      await wait(START_MS);
       for (const [step, attempt] of steps) {
         if (stopped()) return;
         // The step that opens a repair round says how the round before it ended.
